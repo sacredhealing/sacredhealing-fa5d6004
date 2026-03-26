@@ -1,39 +1,128 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { ethers } from 'ethers';
-import { 
-  ArrowLeft, Wallet, RefreshCw, Play, Square, Trash2, ExternalLink, 
+import {
+  ArrowLeft, Wallet, RefreshCw, Play, Square, Trash2, ExternalLink,
   AlertCircle, CheckCircle, Clock, TrendingUp, DollarSign, Zap, Shield,
   Activity, Target, BarChart3
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { PnLCard } from '@/components/polymarket/PnLCard';
 import ErrorBoundary from '@/components/ErrorBoundary';
-
-// Import trading services
 import { POLYGON_ADDRESSES, PolymarketTrading } from '@/services/polymarketTrading';
 import { polymarketService } from '@/services/polymarketService';
 import { polymarketAI } from '@/services/polymarketAI';
-import { 
-  whaleMirrorService, 
-  latencyArbitrageService, 
+import {
+  whaleMirrorService,
+  latencyArbitrageService,
   volatilityScalperService,
   paperTradingService,
-  STRATEGY_NAMES 
+  STRATEGY_NAMES
 } from '@/services/polymarket';
 import type { LogEntry, TradeSignal, PolymarketMarket } from '@/types/polymarket';
 
-// RPC endpoints for Polygon
+// ─── SQI 2050 tokens ──────────────────────────────────────────────────────────
+const G = '#D4AF37';
+const CYAN = '#22D3EE';
+const RED = '#FF4757';
+const GREEN = '#2ECC71';
+const AMBER = '#F59E0B';
+const BLACK = '#050505';
+
+const CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap');
+.sqi{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:${BLACK};color:#fff;position:relative;overflow-x:hidden;}
+.sqi *{box-sizing:border-box;}
+.sqi-bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse at 15% 15%,rgba(212,175,55,0.06) 0%,transparent 55%),
+             radial-gradient(ellipse at 85% 85%,rgba(34,211,238,0.04) 0%,transparent 55%);}
+.sqi-z{position:relative;z-index:1;padding:0 20px 120px;}
+.gc{background:rgba(255,255,255,0.025);backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);
+    border:1px solid rgba(255,255,255,0.06);border-radius:22px;padding:18px;}
+.gc-g{border-color:rgba(212,175,55,0.22);box-shadow:0 0 30px rgba(212,175,55,0.1);}
+.gc-gr{border-color:rgba(46,204,113,0.2);background:rgba(46,204,113,0.07);}
+.gc-r{border-color:rgba(255,71,87,0.2);background:rgba(255,71,87,0.07);}
+.gc-a{border-color:rgba(245,158,11,0.25);background:rgba(245,158,11,0.07);}
+.gc-c{border-color:rgba(34,211,238,0.2);background:rgba(34,211,238,0.07);}
+.p{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:50px;
+   font-size:8px;font-weight:800;letter-spacing:0.25em;text-transform:uppercase;}
+.p-g{background:rgba(212,175,55,0.12);color:${G};border:1px solid rgba(212,175,55,0.25);}
+.p-gr{background:rgba(46,204,113,0.12);color:${GREEN};border:1px solid rgba(46,204,113,0.25);}
+.p-r{background:rgba(255,71,87,0.12);color:${RED};border:1px solid rgba(255,71,87,0.25);}
+.p-c{background:rgba(34,211,238,0.1);color:${CYAN};border:1px solid rgba(34,211,238,0.25);}
+.p-a{background:rgba(245,158,11,0.1);color:${AMBER};border:1px solid rgba(245,158,11,0.25);}
+.sb{background:rgba(255,255,255,0.06);border-radius:14px;padding:12px 14px;}
+.sb-lbl{font-size:7px;font-weight:800;letter-spacing:0.5em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:5px;}
+.sb-val{font-size:18px;font-weight:900;letter-spacing:-0.03em;}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;position:relative;vertical-align:middle;}
+.dot::after{content:'';position:absolute;inset:-3px;border-radius:50%;animation:ring 2s ease-out infinite;}
+.dot-g{background:${GREEN};}.dot-g::after{border:1px solid ${GREEN};}
+.dot-r{background:${RED};}.dot-r::after{border:1px solid ${RED};}
+.dot-a{background:${AMBER};}.dot-a::after{border:1px solid ${AMBER};}
+.dot-c{background:${CYAN};}.dot-c::after{border:1px solid ${CYAN};}
+@keyframes ring{0%{opacity:.5;transform:scale(1)}100%{opacity:0;transform:scale(2.8)}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;
+     border-radius:16px;border:none;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;
+     font-size:10px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;transition:all .25s;width:100%;}
+.btn-g{background:linear-gradient(135deg,${G},#f0c040);color:${BLACK};box-shadow:0 0 28px rgba(212,175,55,0.35);}
+.btn-g:hover{box-shadow:0 0 45px rgba(212,175,55,0.55);transform:translateY(-1px);}
+.btn-gr{background:linear-gradient(135deg,${GREEN},#27ae60);color:#fff;box-shadow:0 0 24px rgba(46,204,113,0.35);}
+.btn-gr:hover{box-shadow:0 0 40px rgba(46,204,113,0.5);transform:translateY(-1px);}
+.btn-r{background:linear-gradient(135deg,${RED},#c0392b);color:#fff;box-shadow:0 0 24px rgba(255,71,87,0.35);}
+.btn-r:hover{box-shadow:0 0 40px rgba(255,71,87,0.5);}
+.btn-ghost{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.6);
+           border:1px solid rgba(255,255,255,0.08);padding:10px 14px;width:auto;}
+.btn-ghost:hover{background:rgba(255,255,255,0.1);color:#fff;}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+.tabs{display:flex;gap:3px;background:rgba(255,255,255,0.05);border-radius:16px;
+      padding:4px;border:1px solid rgba(255,255,255,0.07);}
+.tab{flex:1;padding:9px 6px;border-radius:12px;border:none;cursor:pointer;
+     font-family:'Plus Jakarta Sans',sans-serif;font-size:8px;font-weight:800;
+     letter-spacing:.2em;text-transform:uppercase;background:transparent;
+     color:rgba(255,255,255,0.3);transition:all .2s;}
+.tab.on{background:rgba(212,175,55,0.14);color:${G};border-bottom:1px solid ${G};}
+.term{background:rgba(0,0,0,0.65);border:1px solid rgba(255,255,255,0.07);border-radius:16px;
+      padding:16px;height:280px;overflow-y:auto;font-family:'Courier New',monospace;font-size:11px;}
+.term::-webkit-scrollbar{width:3px;}
+.term::-webkit-scrollbar-thumb{background:rgba(212,175,55,0.3);border-radius:2px;}
+.li{color:rgba(255,255,255,0.7);}
+.ls{color:${GREEN};}
+.le{color:${RED};}
+.lw{color:${AMBER};}
+.lt{color:${CYAN};}
+.ld{color:rgba(255,255,255,0.28);}
+.ltime{color:rgba(255,255,255,0.22);margin-right:10px;}
+.inp{width:100%;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.08);
+     border-radius:14px;padding:12px 16px;color:#fff;font-family:'Courier New',monospace;
+     font-size:12px;outline:none;transition:border-color .2s;}
+.inp:focus{border-color:rgba(212,175,55,0.3);box-shadow:0 0 14px rgba(212,175,55,0.12);}
+.inp::placeholder{color:rgba(255,255,255,0.2);}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.running{animation:pulse 2s ease-in-out infinite;}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.spinning{animation:spin 1s linear infinite;}
+.statusbar{position:fixed;bottom:72px;left:0;right:0;padding:0 20px;z-index:50;}
+.statusbar-inner{background:rgba(5,5,5,0.94);backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:10px 16px;
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:9px;font-weight:700;letter-spacing:.2em;color:rgba(255,255,255,0.3);}
+.feat{background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.06);
+      border-radius:18px;padding:16px;transition:border-color .2s,box-shadow .2s;}
+.feat:hover{border-color:rgba(212,175,55,0.22);box-shadow:0 0 20px rgba(212,175,55,0.08);}
+.feat-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;}
+.sig{background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:14px;margin-bottom:8px;}
+.lbl{font-size:7px;font-weight:800;letter-spacing:.5em;text-transform:uppercase;color:rgba(255,255,255,0.3);}
+.title{font-size:28px;font-weight:900;letter-spacing:-.04em;line-height:1.1;
+  background:linear-gradient(135deg,#fff 40%,${G} 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.subtitle{font-size:9px;font-weight:700;letter-spacing:.4em;text-transform:uppercase;color:${G};}
+.mono{font-family:'Courier New',monospace;font-size:10px;color:rgba(255,255,255,0.55);}
+.body{font-size:12px;color:rgba(255,255,255,0.6);line-height:1.6;}
+`;
+
 const getRpcPool = (): string[] => {
-  // Vite env (preferred)
   const viteUrls = [
     import.meta.env.VITE_RPC_URL_1,
     import.meta.env.VITE_RPC_URL_2,
@@ -41,15 +130,11 @@ const getRpcPool = (): string[] => {
     import.meta.env.VITE_POLYGON_RPC_URL_1,
     import.meta.env.VITE_POLYGON_RPC_URL_2,
     import.meta.env.VITE_POLYGON_RPC_URL_3,
-    // If you mirrored Next-style vars into Vite env, support them too
     (import.meta.env as any).VITE_NEXT_PUBLIC_RPC_URL_1,
     (import.meta.env as any).VITE_NEXT_PUBLIC_RPC_URL_2,
     (import.meta.env as any).VITE_NEXT_PUBLIC_RPC_URL_3,
   ].filter((u): u is string => !!u);
-
   if (viteUrls.length > 0) return Array.from(new Set(viteUrls));
-
-  // Public fallback
   return [
     'https://polygon-bor-rpc.publicnode.com',
     'https://polygon.meowrpc.com',
@@ -57,10 +142,8 @@ const getRpcPool = (): string[] => {
     'https://rpc.ankr.com/polygon'
   ];
 };
-
 const RPC_POOL = getRpcPool();
 
-/** Session-only storage; one-time migration from legacy localStorage. */
 const PKEY_STORAGE_KEY = 'polymarket_bot_pkey';
 
 function readStoredPrivateKey(): string | null {
@@ -73,117 +156,93 @@ function readStoredPrivateKey(): string | null {
       localStorage.removeItem(PKEY_STORAGE_KEY);
       return legacy;
     }
-  } catch {
-    /* storage blocked */
-  }
+  } catch { /* storage blocked */ }
   return null;
 }
 
 function setStoredPrivateKey(key: string) {
   try {
     sessionStorage.setItem(PKEY_STORAGE_KEY, key);
-  } catch {
-    /* storage blocked */
-  }
+  } catch { /* storage blocked */ }
 }
 
 function clearStoredPrivateKey() {
   try {
     sessionStorage.removeItem(PKEY_STORAGE_KEY);
     localStorage.removeItem(PKEY_STORAGE_KEY);
-  } catch {
-    /* storage blocked */
-  }
+  } catch { /* storage blocked */ }
 }
 
-// ERC20 ABI for balance checks
+function logLineClass(type: LogEntry['type']): string {
+  const m: Record<LogEntry['type'], string> = {
+    info: 'li',
+    success: 'ls',
+    error: 'le',
+    warn: 'lw',
+    trade: 'lt',
+    debug: 'ld',
+  };
+  return m[type] ?? 'li';
+}
+
 const ERC20_ABI = [
-  "function balanceOf(address account) view returns (uint256)",
-  "function allowance(address owner, address spender) view returns (uint256)",
-  "function approve(address spender, uint256 amount) returns (bool)"
+  'function balanceOf(address account) view returns (uint256)',
+  'function allowance(address owner, address spender) view returns (uint256)',
+  'function approve(address spender, uint256 amount) returns (bool)',
 ];
 
 const PolymarketBotDetailInner: React.FC = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
-  // Wallet state (session-only — see readStoredPrivateKey)
+
   const [privateKey, setPrivateKey] = useState<string | null>(() => readStoredPrivateKey());
-  const [address, setAddress] = useState<string>("");
-  const [importInput, setImportInput] = useState("");
+  const [address, setAddress] = useState<string>('');
+  const [importInput, setImportInput] = useState('');
   const [inputError, setInputError] = useState<string | null>(null);
-  
-  // Balance state
-  const [polBal, setPolBal] = useState<string>("0.0000");
-  const [usdcEBal, setUsdcEBal] = useState<string>("0.00");
-  const [usdcNBal, setUsdcNBal] = useState<string>("0.00");
+  const [polBal, setPolBal] = useState<string>('0.0000');
+  const [usdcEBal, setUsdcEBal] = useState<string>('0.00');
+  const [usdcNBal, setUsdcNBal] = useState<string>('0.00');
   const [allowance, setAllowance] = useState<bigint>(0n);
-  const [ctAllowance, setCtAllowance] = useState<boolean>(false); // Conditional tokens approval
-  
-  // Trading state
   const [trading] = useState(() => new PolymarketTrading());
   const [markets, setMarkets] = useState<PolymarketMarket[]>([]);
   const [activeSignals, setActiveSignals] = useState<TradeSignal[]>([]);
   const [totalTrades, setTotalTrades] = useState(0);
-  const [winRate, setWinRate] = useState(0);
-  const [dailyPnL, setDailyPnL] = useState(0);
-  
-  // Paper trading state
   const [isPaperMode, setIsPaperMode] = useState(true);
-  const [paperBalance, setPaperBalance] = useState(1000); // $1000 simulated
+  const [paperBalance, setPaperBalance] = useState(1000);
   const [totalFeesPaid, setTotalFeesPaid] = useState(0);
-  
-  // PnL tracking state
-  const [pnlSummary, setPnlSummary] = useState({
-    totalPnL: 0,
-    todayPnL: 0,
-    totalTrades: 0,
-    winRate: 0,
-    unrealizedPnL: 0
-  });
-  const [livePnlSummary, setLivePnlSummary] = useState({
-    totalPnL: 0,
-    todayPnL: 0,
-    totalTrades: 0,
-    winRate: 0,
-    unrealizedPnL: 0
-  });
-  
-  // Status state
+  const [pnlSummary, setPnlSummary] = useState({ totalPnL: 0, todayPnL: 0, totalTrades: 0, winRate: 0, unrealizedPnL: 0 });
+  const [livePnlSummary, setLivePnlSummary] = useState({ totalPnL: 0, todayPnL: 0, totalTrades: 0, winRate: 0, unrealizedPnL: 0 });
   const [isSyncing, setIsSyncing] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
-  const [lastSync, setLastSync] = useState<string>("Never");
+  const [lastSync, setLastSync] = useState<string>('Never');
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [activeTab, setActiveTab] = useState('dashboard');
-  
   const logEndRef = useRef<HTMLDivElement>(null);
-  const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const pnlRefreshRef = useRef<NodeJS.Timeout | null>(null);
+  const scanIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pnlRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const addLog = useCallback((msg: string, type: LogEntry['type'] = 'info') => {
-    setLogs(prev => [{
+    setLogs((prev) => [{
       id: Math.random().toString(36),
       msg,
       type,
-      time: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      time: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
     }, ...prev].slice(0, 100));
   }, []);
 
-  // Refresh PnL data from database with live price updates
   const refreshPnL = useCallback(async () => {
     if (!user?.id) return;
     try {
       await Promise.all([
         paperTradingService.refreshPositionPrices(true),
-        paperTradingService.refreshPositionPrices(false)
+        paperTradingService.refreshPositionPrices(false),
       ]);
       const [paperSummary, liveSummary, settings] = await Promise.all([
         paperTradingService.getPnLSummary(true),
         paperTradingService.getPnLSummary(false),
-        paperTradingService.loadSettings()
+        paperTradingService.loadSettings(),
       ]);
       setPnlSummary(paperSummary);
       setLivePnlSummary(liveSummary);
@@ -197,7 +256,6 @@ const PolymarketBotDetailInner: React.FC = () => {
     }
   }, [user?.id]);
 
-  // Reset paper balance handler
   const handleResetPaperBalance = useCallback(async () => {
     const success = await paperTradingService.resetPaperBalance(1000);
     if (success) {
@@ -207,228 +265,207 @@ const PolymarketBotDetailInner: React.FC = () => {
     }
   }, [addLog]);
 
-  // Auto-refresh PnL when bot is running
   useEffect(() => {
     if (isRunning) {
-      // Refresh immediately when starting
       refreshPnL();
-      // Then refresh every 5 seconds
       pnlRefreshRef.current = setInterval(refreshPnL, 5000);
-    } else {
-      if (pnlRefreshRef.current) {
-        clearInterval(pnlRefreshRef.current);
-        pnlRefreshRef.current = null;
-      }
+    } else if (pnlRefreshRef.current) {
+      clearInterval(pnlRefreshRef.current);
+      pnlRefreshRef.current = null;
     }
     return () => {
-      if (pnlRefreshRef.current) {
-        clearInterval(pnlRefreshRef.current);
-      }
+      if (pnlRefreshRef.current) clearInterval(pnlRefreshRef.current);
     };
   }, [isRunning, refreshPnL]);
 
-  // Real blockchain sync using ethers.js with correct checksummed addresses
   const performDeepSync = useCallback(async (forcedAddr?: string) => {
     const activeAddr = forcedAddr || address;
     if (!activeAddr) return;
-    
     setIsSyncing(true);
-    addLog("Connecting to Polygon mainnet...", "info");
-    
+    addLog('Connecting to Polygon mainnet...', 'info');
     let success = false;
-    
     for (const rpcUrl of RPC_POOL) {
       if (success) break;
-      
       try {
         const provider = new ethers.JsonRpcProvider(rpcUrl, undefined, { staticNetwork: true });
-        
-        // Fetch POL balance
         try {
           const rawPol = await provider.getBalance(activeAddr);
-          const polValue = parseFloat(ethers.formatEther(rawPol)).toFixed(4);
-          setPolBal(polValue);
-          addLog(`POL Balance: ${polValue}`, "debug");
-        } catch (err) {
-          addLog("Failed to fetch POL balance", "warn");
+          const pv = parseFloat(ethers.formatEther(rawPol)).toFixed(4);
+          setPolBal(pv);
+          addLog(`POL Balance: ${pv}`, 'debug');
+        } catch {
+          addLog('Failed to fetch POL balance', 'warn');
         }
-        
-        await new Promise(r => setTimeout(r, 200));
-        
-        // Fetch Native USDC balance
+        await new Promise((r) => setTimeout(r, 200));
         try {
-          const usdcNContract = new ethers.Contract(POLYGON_ADDRESSES.USDC_NATIVE, ERC20_ABI, provider);
-          const rawN = await usdcNContract.balanceOf(activeAddr);
-          const usdcNValue = parseFloat(ethers.formatUnits(rawN, 6)).toFixed(2);
-          setUsdcNBal(usdcNValue);
-          addLog(`Native USDC: $${usdcNValue}`, "debug");
-        } catch (err) {
-          addLog("Failed to fetch Native USDC", "warn");
+          const c = new ethers.Contract(POLYGON_ADDRESSES.USDC_NATIVE, ERC20_ABI, provider);
+          const r = await c.balanceOf(activeAddr);
+          const v = parseFloat(ethers.formatUnits(r, 6)).toFixed(2);
+          setUsdcNBal(v);
+          addLog(`Native USDC: $${v}`, 'debug');
+        } catch {
+          addLog('Failed to fetch Native USDC', 'warn');
         }
-        
-        await new Promise(r => setTimeout(r, 200));
-        
-        // Fetch USDC.e balance and allowance (using correct checksummed address)
+        await new Promise((r) => setTimeout(r, 200));
         try {
-          const usdcEContract = new ethers.Contract(POLYGON_ADDRESSES.USDC_E, ERC20_ABI, provider);
-          const [rawE, rawAllow] = await Promise.all([
-            usdcEContract.balanceOf(activeAddr),
-            usdcEContract.allowance(activeAddr, POLYGON_ADDRESSES.CTF_EXCHANGE)
+          const c = new ethers.Contract(POLYGON_ADDRESSES.USDC_E, ERC20_ABI, provider);
+          const [rE, rA] = await Promise.all([
+            c.balanceOf(activeAddr),
+            c.allowance(activeAddr, POLYGON_ADDRESSES.CTF_EXCHANGE),
           ]);
-          const usdcEValue = parseFloat(ethers.formatUnits(rawE, 6)).toFixed(2);
-          setUsdcEBal(usdcEValue);
-          setAllowance(rawAllow);
-          addLog(`Bridged USDC.e: $${usdcEValue} | Allowance: ${rawAllow > 0n ? 'Approved' : 'Pending'}`, "debug");
-        } catch (err) {
-          addLog("Failed to fetch USDC.e balance", "warn");
+          const v = parseFloat(ethers.formatUnits(rE, 6)).toFixed(2);
+          setUsdcEBal(v);
+          setAllowance(rA);
+          addLog(`Bridged USDC.e: $${v} | Allowance: ${rA > 0n ? 'Approved' : 'Pending'}`, 'debug');
+        } catch {
+          addLog('Failed to fetch USDC.e balance', 'warn');
         }
-        
         setLastSync(new Date().toLocaleTimeString());
-        addLog(`Synced: ${activeAddr.slice(0, 10)}...${activeAddr.slice(-6)}`, "success");
+        addLog(`Synced: ${activeAddr.slice(0, 10)}...${activeAddr.slice(-6)}`, 'success');
         success = true;
-        
-      } catch (err) {
-        addLog(`Node failed. Trying next...`, "debug");
+      } catch {
+        addLog('Node failed. Trying next...', 'debug');
       }
     }
-    
-    if (!success) {
-      addLog("All RPC nodes failed. Check network.", "error");
-    }
-    
+    if (!success) addLog('All RPC nodes failed. Check network.', 'error');
     setIsSyncing(false);
   }, [address, addLog]);
 
-  // Initialize wallet from private key
   useEffect(() => {
     if (privateKey) {
       try {
         const wallet = new ethers.Wallet(privateKey);
         setAddress(wallet.address);
-        
         trading.initialize(privateKey, RPC_POOL[0])
-          .then(() => {
-            addLog("Trading engine initialized", "success");
-          })
+          .then(() => addLog('Trading engine initialized', 'success'))
           .catch((err: unknown) => {
             console.error('[PolymarketBot] trading.initialize:', err);
-            addLog(`Trading init failed: ${err instanceof Error ? err.message : 'Unknown'}`, "error");
-            toast.error("Trading engine failed to initialize");
+            addLog(`Trading init failed: ${err instanceof Error ? err.message : 'Unknown'}`, 'error');
+            toast.error('Trading engine failed to initialize');
           });
-        
         if (user?.id) {
           paperTradingService.setUserId(user.id);
-          paperTradingService.loadSettings().then(settings => {
-            if (settings) {
-              setIsPaperMode(settings.is_paper_mode);
-              paperTradingService.setMode(settings.is_paper_mode);
-              addLog(`Mode: ${settings.is_paper_mode ? '📝 PAPER TRADING' : '💰 LIVE TRADING'}`, "info");
+          paperTradingService.loadSettings().then((s) => {
+            if (s) {
+              setIsPaperMode(s.is_paper_mode);
+              paperTradingService.setMode(s.is_paper_mode);
+              addLog(`Mode: ${s.is_paper_mode ? '📝 PAPER TRADING' : '💰 LIVE TRADING'}`, 'info');
             }
-          }).catch((err: unknown) => {
-            console.error('[PolymarketBot] loadSettings:', err);
-          });
-          const loadPnL = async () => {
+          }).catch((err: unknown) => console.error('[PolymarketBot] loadSettings:', err));
+          (async () => {
             try {
-              const [paperSummary, liveSummary] = await Promise.all([
+              const [ps, ls] = await Promise.all([
                 paperTradingService.getPnLSummary(true),
-                paperTradingService.getPnLSummary(false)
+                paperTradingService.getPnLSummary(false),
               ]);
-              setPnlSummary(paperSummary);
-              setLivePnlSummary(liveSummary);
-              setTotalTrades(paperSummary.totalTrades + liveSummary.totalTrades);
+              setPnlSummary(ps);
+              setLivePnlSummary(ls);
+              setTotalTrades(ps.totalTrades + ls.totalTrades);
             } catch (err) {
               console.error('[PolymarketBot] loadPnL:', err);
             }
-          };
-          loadPnL();
+          })();
         }
-        
-        performDeepSync(wallet.address).catch((err: unknown) => {
-          console.error('[PolymarketBot] performDeepSync:', err);
-        });
+        performDeepSync(wallet.address).catch((err: unknown) =>
+          console.error('[PolymarketBot] performDeepSync:', err)
+        );
       } catch (e) {
-        console.error("Invalid private key:", e);
+        console.error('Invalid private key:', e);
         clearStoredPrivateKey();
         setPrivateKey(null);
-        toast.error("Invalid private key format");
+        toast.error('Invalid private key format');
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- init only when key/user changes; avoid re-init on sync fn identity
   }, [privateKey, trading, user?.id]);
 
-  // Auto-refresh every 30 seconds
   useEffect(() => {
     if (address) {
-      const interval = setInterval(() => performDeepSync(), 30000);
-      return () => clearInterval(interval);
+      const i = setInterval(() => performDeepSync(), 30000);
+      return () => clearInterval(i);
     }
   }, [address, performDeepSync]);
 
-  // Market scanning loop when bot is running
+  const executeTradeWithMode = async (signal: TradeSignal, strategy?: string): Promise<boolean> => {
+    if (isPaperMode) {
+      const result = await paperTradingService.executePaperTrade(signal, strategy);
+      if (result.success) {
+        addLog(`📝 PAPER: ${signal.direction} ${signal.outcome} $${signal.suggestedSize.toFixed(2)}`, 'success');
+        setTotalTrades((p) => p + 1);
+        return true;
+      }
+      addLog(`📝 PAPER FAILED: ${result.error}`, 'error');
+      return false;
+    }
+    if (allowance === 0n) {
+      addLog('Cannot trade: USDC.e not approved', 'error');
+      return false;
+    }
+    const result = await trading.executeTrade(signal);
+    if (result.success) {
+      addLog(`💰 LIVE: ${signal.direction} ${signal.outcome} tx: ${result.txHash}`, 'success');
+      setTotalTrades((p) => p + 1);
+      return true;
+    }
+    addLog(`💰 LIVE FAILED: ${result.error}`, 'error');
+    return false;
+  };
+
   useEffect(() => {
     if (isRunning && address) {
-      addLog("🚀 Starting Siddha Quantum Nexus HFT Engine...", "info");
-      addLog(`[1] ${STRATEGY_NAMES.WHALE_MIRROR} - Monitoring 0x8dxd`, "info");
-      addLog(`[2] ${STRATEGY_NAMES.LATENCY_ARB} - Gemini 3 Flash active`, "info");
-      addLog(`[3] ${STRATEGY_NAMES.VOLATILITY_SCALP} - Ladder orders ready`, "info");
-      
-      // Initialize all three strategies (wrapped in async IIFE)
-      const initStrategies = async () => {
+      addLog('🚀 Starting Siddha Quantum Nexus HFT Engine...', 'info');
+      addLog(`[1] ${STRATEGY_NAMES.WHALE_MIRROR} - Monitoring 0x8dxd`, 'info');
+      addLog(`[2] ${STRATEGY_NAMES.LATENCY_ARB} - Gemini 3 Flash active`, 'info');
+      addLog(`[3] ${STRATEGY_NAMES.VOLATILITY_SCALP} - Ladder orders ready`, 'info');
+      const init = async () => {
         if (privateKey) {
           await whaleMirrorService.initialize(privateKey, RPC_POOL[0]);
-          whaleMirrorService.onMirrorSignal(async (signal, whale) => {
-            addLog(`🐋 WHALE MIRROR: ${whale.whaleAddress.slice(0,10)}... ${signal.direction} ${signal.outcome}`, "trade");
-            setActiveSignals(prev => [...prev.slice(-4), signal]);
-            await executeTradeWithMode(signal, 'whale_mirror');
+          whaleMirrorService.onMirrorSignal(async (s, w) => {
+            addLog(`🐋 WHALE MIRROR: ${w.whaleAddress.slice(0, 10)}... ${s.direction} ${s.outcome}`, 'trade');
+            setActiveSignals((p) => [...p.slice(-4), s]);
+            await executeTradeWithMode(s, 'whale_mirror');
           });
           whaleMirrorService.startMonitoring();
         }
       };
-      initStrategies();
-
-      const scanMarkets = async () => {
+      init();
+      const scan = async () => {
         setIsScanning(true);
         try {
-          const fetchedMarkets = await polymarketService.fetchMarkets(50);
-          setMarkets(fetchedMarkets);
-          addLog(`Scanned ${fetchedMarkets.length} markets`, "debug");
-          
-          // Start latency arbitrage & volatility scalping with markets
-          latencyArbitrageService.onLatencySignal(async (signal, event) => {
-            addLog(`⚡ LATENCY ARB: ${event.headline?.slice(0,40)}...`, "trade");
-            setActiveSignals(prev => [...prev.slice(-4), signal]);
-            await executeTradeWithMode(signal, 'latency_arb');
+          const fm = await polymarketService.fetchMarkets(50);
+          setMarkets(fm);
+          addLog(`Scanned ${fm.length} markets`, 'debug');
+          latencyArbitrageService.onLatencySignal(async (s, e) => {
+            addLog(`⚡ LATENCY ARB: ${e.headline?.slice(0, 40)}...`, 'trade');
+            setActiveSignals((p) => [...p.slice(-4), s]);
+            await executeTradeWithMode(s, 'latency_arb');
           });
-          latencyArbitrageService.startMonitoring(fetchedMarkets);
-          
-          volatilityScalperService.onScalpSignal(async (signal, ctx) => {
-            addLog(`📈 SCALP: ${ctx.ladder} vol=${(ctx.volatility*100).toFixed(2)}%`, "trade");
-            setActiveSignals(prev => [...prev.slice(-4), signal]);
-            await executeTradeWithMode(signal, 'volatility_scalp');
+          latencyArbitrageService.startMonitoring(fm);
+          volatilityScalperService.onScalpSignal(async (s, c) => {
+            addLog(`📈 SCALP: ${c.ladder} vol=${(c.volatility * 100).toFixed(2)}%`, 'trade');
+            setActiveSignals((p) => [...p.slice(-4), s]);
+            await executeTradeWithMode(s, 'volatility_scalp');
           });
-          volatilityScalperService.startScalping(fetchedMarkets);
-          
-          // Also run AI analysis for opportunities
-          const opportunities = await polymarketService.findOpportunities(20000);
-          if (opportunities.length > 0) {
-            addLog(`Found ${opportunities.length} potential opportunities`, "info");
-            for (const market of opportunities.slice(0, 3)) {
-              const signal = await polymarketAI.analyzeMarket(market);
-              if (signal) {
-                setActiveSignals(prev => [...prev.slice(-4), signal]);
-                addLog(`🤖 AI SIGNAL: ${signal.direction.toUpperCase()} ${signal.outcome} @ ${(signal.currentPrice * 100).toFixed(1)}%`, "trade");
-                await executeTradeWithMode(signal, 'ai_signal');
+          volatilityScalperService.startScalping(fm);
+          const opps = await polymarketService.findOpportunities(20000);
+          if (opps.length > 0) {
+            addLog(`Found ${opps.length} potential opportunities`, 'info');
+            for (const m of opps.slice(0, 3)) {
+              const s = await polymarketAI.analyzeMarket(m);
+              if (s) {
+                setActiveSignals((p) => [...p.slice(-4), s]);
+                addLog(`🤖 AI SIGNAL: ${s.direction.toUpperCase()} ${s.outcome} @ ${(s.currentPrice * 100).toFixed(1)}%`, 'trade');
+                await executeTradeWithMode(s, 'ai_signal');
               }
             }
           }
-        } catch (error) {
-          addLog(`Scan error: ${error instanceof Error ? error.message : 'Unknown'}`, "error");
+        } catch (e) {
+          addLog(`Scan error: ${e instanceof Error ? e.message : 'Unknown'}`, 'error');
         }
         setIsScanning(false);
       };
-      
-      scanMarkets();
-      scanIntervalRef.current = setInterval(scanMarkets, 15000);
-      
+      scan();
+      scanIntervalRef.current = setInterval(scan, 15000);
       return () => {
         if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
         whaleMirrorService.stopMonitoring();
@@ -440,593 +477,398 @@ const PolymarketBotDetailInner: React.FC = () => {
 
   const handleImport = () => {
     let key = importInput.trim();
-    if (!key.startsWith('0x') && key.length === 64) key = '0x' + key;
-    
+    if (!key.startsWith('0x') && key.length === 64) key = `0x${key}`;
     try {
-      const wallet = new ethers.Wallet(key);
-      
+      const w = new ethers.Wallet(key);
       setStoredPrivateKey(key);
       setPrivateKey(key);
-      setAddress(wallet.address);
+      setAddress(w.address);
       setInputError(null);
-      addLog("Key validated. Initializing trading engine...", "info");
-      performDeepSync(wallet.address);
-      toast.success("Wallet connected successfully");
-    } catch (e) {
-      setInputError("Invalid private key format. Use 64-character hex key.");
+      addLog('Key validated. Initializing trading engine...', 'info');
+      performDeepSync(w.address);
+      toast.success('Wallet connected successfully');
+    } catch {
+      setInputError('Invalid private key format. Use 64-character hex key.');
     }
   };
 
-  // Real on-chain approval
   const handleApprove = async () => {
     if (!privateKey) return;
     setIsApproving(true);
-    addLog("Initiating USDC.e approval transaction...", "info");
-    
+    addLog('Initiating USDC.e approval transaction...', 'info');
     try {
-      // Find a working RPC
-      for (const rpcUrl of RPC_POOL) {
+      for (const rpc of RPC_POOL) {
         try {
-          const provider = new ethers.JsonRpcProvider(rpcUrl);
-          const wallet = new ethers.Wallet(privateKey, provider);
-          
-          const usdcContract = new ethers.Contract(
-            POLYGON_ADDRESSES.USDC_E,
-            ERC20_ABI,
-            wallet
-          );
-          
-          addLog("Sending approval transaction to Polygon...", "info");
-          
-          const tx = await usdcContract.approve(
-            POLYGON_ADDRESSES.CTF_EXCHANGE,
-            ethers.MaxUint256
-          );
-          
-          addLog(`Tx submitted: ${tx.hash.slice(0, 18)}...`, "info");
-          
+          const p = new ethers.JsonRpcProvider(rpc);
+          const w = new ethers.Wallet(privateKey, p);
+          const c = new ethers.Contract(POLYGON_ADDRESSES.USDC_E, ERC20_ABI, w);
+          addLog('Sending approval transaction to Polygon...', 'info');
+          const tx = await c.approve(POLYGON_ADDRESSES.CTF_EXCHANGE, ethers.MaxUint256);
+          addLog(`Tx submitted: ${tx.hash.slice(0, 18)}...`, 'info');
           const receipt = await tx.wait();
-          
           setAllowance(ethers.MaxUint256);
-          addLog(`Approval confirmed in block ${receipt.blockNumber}`, "success");
-          toast.success("Exchange access approved!");
+          addLog(`Approval confirmed in block ${receipt.blockNumber}`, 'success');
+          toast.success('Exchange access approved!');
           break;
-          
-        } catch (rpcError: any) {
-          if (rpcError.code === 'INSUFFICIENT_FUNDS') {
-            addLog("Insufficient POL for gas fees", "error");
-            toast.error("Need POL for gas fees");
+        } catch (e: any) {
+          if (e.code === 'INSUFFICIENT_FUNDS') {
+            addLog('Insufficient POL for gas fees', 'error');
+            toast.error('Need POL for gas fees');
             break;
           }
-          continue;
         }
       }
-    } catch (error: any) {
-      addLog(`Approval failed: ${error.message}`, "error");
-      toast.error("Approval transaction failed");
+    } catch (e: any) {
+      addLog(`Approval failed: ${e.message}`, 'error');
+      toast.error('Approval transaction failed');
     }
-    
     setIsApproving(false);
   };
 
   const clearVault = () => {
     clearStoredPrivateKey();
     setPrivateKey(null);
-    setAddress("");
+    setAddress('');
     setLogs([]);
     setIsRunning(false);
-    if (scanIntervalRef.current) {
-      clearInterval(scanIntervalRef.current);
-    }
-    toast.info("Wallet disconnected");
+    if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
+    toast.info('Wallet disconnected');
   };
 
-  // Toggle paper/live mode
   const toggleTradingMode = async () => {
-    const newMode = !isPaperMode;
-    setIsPaperMode(newMode);
-    paperTradingService.setMode(newMode);
-    await paperTradingService.saveSettings({ is_paper_mode: newMode });
-    addLog(`Switched to ${newMode ? '📝 PAPER TRADING' : '💰 LIVE TRADING'} mode`, "info");
-    toast.success(`${newMode ? 'Paper' : 'Live'} trading mode enabled`);
-  };
-
-  // Execute trade helper - routes to paper or live
-  const executeTradeWithMode = async (signal: TradeSignal, strategy?: string): Promise<boolean> => {
-    if (isPaperMode) {
-      const result = await paperTradingService.executePaperTrade(signal, strategy);
-      if (result.success) {
-        addLog(`📝 PAPER: ${signal.direction} ${signal.outcome} $${signal.suggestedSize.toFixed(2)}`, "success");
-        setTotalTrades(prev => prev + 1);
-        return true;
-      }
-      addLog(`📝 PAPER FAILED: ${result.error}`, "error");
-      return false;
-    } else {
-      if (allowance === 0n) {
-        addLog("Cannot trade: USDC.e not approved", "error");
-        return false;
-      }
-      const result = await trading.executeTrade(signal);
-      if (result.success) {
-        addLog(`💰 LIVE: ${signal.direction} ${signal.outcome} tx: ${result.txHash}`, "success");
-        setTotalTrades(prev => prev + 1);
-        return true;
-      }
-      addLog(`💰 LIVE FAILED: ${result.error}`, "error");
-      return false;
-    }
+    const n = !isPaperMode;
+    setIsPaperMode(n);
+    paperTradingService.setMode(n);
+    await paperTradingService.saveSettings({ is_paper_mode: n });
+    addLog(`Switched to ${n ? '📝 PAPER TRADING' : '💰 LIVE TRADING'} mode`, 'info');
+    toast.success(`${n ? 'Paper' : 'Live'} trading mode enabled`);
   };
 
   const toggleBot = () => {
     if (!isRunning) {
-      // Paper mode doesn't need approval
       if (!isPaperMode) {
         if (allowance === 0n) {
-          toast.error("Approve USDC.e first to enable live trading");
+          toast.error('Approve USDC.e first to enable live trading');
           return;
         }
         if (parseFloat(usdcEBal) < 5) {
-          toast.error("Minimum $5 USDC.e required for live trading");
+          toast.error('Minimum $5 USDC.e required for live trading');
           return;
         }
       }
       setIsRunning(true);
-      addLog(`HFT Engine Started in ${isPaperMode ? 'PAPER' : 'LIVE'} mode...`, "success");
+      addLog(`HFT Engine Started in ${isPaperMode ? 'PAPER' : 'LIVE'} mode...`, 'success');
       toast.success(`Bot started - ${isPaperMode ? 'Paper' : 'Live'} trading active`);
     } else {
       setIsRunning(false);
-      addLog("Engine halted by operator.", "warn");
-      toast.info("Bot stopped");
+      addLog('Engine halted by operator.', 'warn');
+      toast.info('Bot stopped');
     }
   };
 
-  // Landing page for users without wallet connected
   if (!privateKey) {
     return (
-      <div className="min-h-screen pb-24">
-        <div className="px-4 pt-6 pb-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/income-streams')} className="mb-4">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-          
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500/20 to-cyan-500/20">
-              <TrendingUp className="h-6 w-6 text-indigo-400" />
+      <>
+        <style>{CSS}</style>
+        <div className="sqi">
+          <div className="sqi-bg" />
+          <div className="sqi-z">
+            <div style={{ paddingTop: 24, paddingBottom: 20 }}>
+              <button type="button" className="btn btn-ghost" style={{ marginBottom: 20 }} onClick={() => navigate('/income-streams')}>
+                <ArrowLeft size={13} /> Back
+              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 6 }}>
+                <div style={{ width: 50, height: 50, borderRadius: 15, background: `linear-gradient(135deg,${G},rgba(212,175,55,0.3))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, boxShadow: '0 0 22px rgba(212,175,55,0.4)' }}>⟁</div>
+                <div>
+                  <div style={{ fontSize: 21, fontWeight: 900, letterSpacing: '-0.03em', color: '#fff' }}>Polymarket HFT Bot</div>
+                  <div className="subtitle">AI-Powered Prediction Market Trading</div>
+                </div>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Polymarket HFT Bot</h1>
-              <p className="text-sm text-muted-foreground">AI-powered prediction market trading</p>
+
+            <div className="gc gc-g" style={{ marginBottom: 16, textAlign: 'center' }}>
+              <span className="p p-g" style={{ marginBottom: 16, display: 'inline-flex' }}>Live Trading · Polygon Mainnet</span>
+              <div className="title" style={{ fontSize: 30, marginBottom: 12 }}>€10 → Financial Freedom</div>
+              <div className="body" style={{ marginBottom: 20 }}>AI scans Polymarket for mispriced markets.<br />3 strategies running simultaneously.</div>
+              <div className="g3">
+                {[{ v: 'AI', s: 'Gemini Analysis', c: G }, { v: 'Live', s: 'Real Trades', c: GREEN }, { v: 'CLOB', s: 'Order Book', c: CYAN }].map((x, i) => (
+                  <div key={i} className="sb" style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: 17, fontWeight: 900, color: x.c, marginBottom: 4 }}>{x.v}</div>
+                    <div className="lbl">{x.s}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="gc" style={{ marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                <div style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(212,175,55,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Wallet size={16} color={G} />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: 14, color: '#fff' }}>Connect Your Wallet</div>
+                  <div className="lbl" style={{ marginTop: 2 }}>Polygon Mainnet Private Key</div>
+                </div>
+              </div>
+              <input className="inp" type="password" placeholder="0x... (64-character hex key)" value={importInput} onChange={(e) => setImportInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleImport()} style={{ marginBottom: inputError ? 8 : 14 }} />
+              {inputError && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: RED, fontSize: 11, marginBottom: 12 }}>
+                  <AlertCircle size={12} />
+                  {inputError}
+                </div>
+              )}
+              <button type="button" className="btn btn-g" onClick={handleImport}>
+                <Wallet size={14} /> Connect & Initialize Engine
+              </button>
+              <div style={{ textAlign: 'center', marginTop: 12, fontSize: 10, color: 'rgba(255,255,255,0.28)' }}>
+                🔒 Session-only in this tab; key clears when you close the tab.
+              </div>
+            </div>
+
+            <div className="g2">
+              {[
+                { icon: <Zap size={15} color={G} />, bg: 'rgba(212,175,55,0.12)', t: 'AI Signals', s: 'Gemini market analysis' },
+                { icon: <Shield size={15} color={GREEN} />, bg: 'rgba(46,204,113,0.12)', t: 'On-Chain', s: 'Real CTF Exchange' },
+                { icon: <Target size={15} color={CYAN} />, bg: 'rgba(34,211,238,0.1)', t: 'Arbitrage', s: 'Mispricing detection' },
+                { icon: <DollarSign size={15} color={AMBER} />, bg: 'rgba(245,158,11,0.1)', t: '€5 Minimum', s: 'Low entry barrier' },
+              ].map((f, i) => (
+                <div key={i} className="feat">
+                  <div className="feat-icon" style={{ background: f.bg }}>{f.icon}</div>
+                  <div style={{ fontWeight: 800, fontSize: 13, color: '#fff', marginBottom: 3 }}>{f.t}</div>
+                  <div className="body" style={{ fontSize: 11 }}>{f.s}</div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
-
-        <div className="px-4 space-y-6">
-          <Card className="bg-gradient-to-br from-indigo-500/10 to-cyan-500/10 border-indigo-500/20">
-            <CardContent className="p-6 text-center">
-              <Badge className="bg-indigo-500/20 text-indigo-400 mb-4">Live Trading</Badge>
-              <h2 className="text-3xl font-bold mb-2">€10 → Financial Freedom</h2>
-              <p className="text-muted-foreground mb-6">
-                AI scans Polymarket for mispriced markets. Automated arbitrage execution.
-              </p>
-              
-              <div className="grid grid-cols-3 gap-4 mb-6">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-indigo-400">AI</p>
-                  <p className="text-xs text-muted-foreground">Gemini Analysis</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-green-400">Live</p>
-                  <p className="text-xs text-muted-foreground">Real Trades</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-cyan-400">CLOB</p>
-                  <p className="text-xs text-muted-foreground">Order Book</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card/50 border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Wallet className="w-5 h-5 text-primary" />
-                Connect Your Wallet
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-2 block">
-                  Polygon Mainnet Private Key
-                </label>
-                <Input
-                  type="password"
-                  placeholder="0x..."
-                  value={importInput}
-                  onChange={(e) => setImportInput(e.target.value)}
-                  className="font-mono"
-                />
-                {inputError && (
-                  <p className="text-red-500 text-xs mt-2 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {inputError}
-                  </p>
-                )}
-              </div>
-              
-              <Button onClick={handleImport} className="w-full">
-                <Wallet className="w-4 h-4 mr-2" />
-                Connect & Initialize
-              </Button>
-              
-              <p className="text-xs text-muted-foreground text-center">
-                🔒 Session-only in this browser tab; key is not kept after you close the tab.
-              </p>
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-2 gap-3">
-            <Card className="bg-card/50 border-border/50">
-              <CardContent className="p-4">
-                <Zap className="w-5 h-5 text-yellow-500 mb-2" />
-                <h3 className="font-semibold text-sm">AI Signals</h3>
-                <p className="text-xs text-muted-foreground">Gemini market analysis</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-card/50 border-border/50">
-              <CardContent className="p-4">
-                <Shield className="w-5 h-5 text-green-500 mb-2" />
-                <h3 className="font-semibold text-sm">On-Chain</h3>
-                <p className="text-xs text-muted-foreground">Real CTF Exchange</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-card/50 border-border/50">
-              <CardContent className="p-4">
-                <Target className="w-5 h-5 text-indigo-500 mb-2" />
-                <h3 className="font-semibold text-sm">Arbitrage</h3>
-                <p className="text-xs text-muted-foreground">Mispricing detection</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-card/50 border-border/50">
-              <CardContent className="p-4">
-                <DollarSign className="w-5 h-5 text-cyan-500 mb-2" />
-                <h3 className="font-semibold text-sm">$5 Minimum</h3>
-                <p className="text-xs text-muted-foreground">Low entry barrier</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
+      </>
     );
   }
 
-  // Dashboard for connected users
   return (
-    <div className="min-h-screen pb-24">
-      <div className="px-4 pt-6 pb-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/income-streams')} className="mb-4">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
-        </Button>
-        
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className={`p-2.5 rounded-xl ${isRunning ? 'bg-green-500/20' : 'bg-indigo-500/20'}`}>
-              <TrendingUp className={`h-6 w-6 ${isRunning ? 'text-green-400' : 'text-indigo-400'}`} />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">Polymarket Bot</h1>
-              <p className="text-xs text-muted-foreground font-mono">
-                {address.slice(0, 8)}...{address.slice(-6)}
-              </p>
-            </div>
-          </div>
-          <Badge variant={isRunning ? "default" : "secondary"} className={isRunning ? "bg-green-500" : ""}>
-            {isRunning ? (isScanning ? "Scanning" : "Running") : "Stopped"}
-          </Badge>
-        </div>
+    <>
+      <style>{CSS}</style>
+      <div className="sqi">
+        <div className="sqi-bg" />
+        <div className="sqi-z">
 
-        {/* Balance Cards */}
-        <div className="grid grid-cols-3 gap-2 mb-4">
-          <Card className="bg-card/50 border-border/50">
-            <CardContent className="p-3 text-center">
-              <p className="text-xs text-muted-foreground">POL (Gas)</p>
-              <p className={`font-mono font-bold ${parseFloat(polBal) > 0.01 ? 'text-green-400' : 'text-red-400'}`}>
-                {polBal}
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="bg-cyan-500/10 border-cyan-500/20">
-            <CardContent className="p-3 text-center">
-              <p className="text-xs text-cyan-400">USDC</p>
-              <p className="font-mono font-bold text-cyan-400">${usdcNBal}</p>
-            </CardContent>
-          </Card>
-          <Card className={`${parseFloat(usdcEBal) > 0 ? 'bg-indigo-500/10 border-indigo-500/20' : 'bg-card/50 border-border/50'}`}>
-            <CardContent className="p-3 text-center">
-              <p className="text-xs text-muted-foreground">USDC.e</p>
-              <p className={`font-mono font-bold ${parseFloat(usdcEBal) > 0 ? 'text-indigo-400' : 'text-muted-foreground'}`}>
-                ${usdcEBal}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+          <div style={{ paddingTop: 24, paddingBottom: 16 }}>
+            <button type="button" className="btn btn-ghost" style={{ marginBottom: 16 }} onClick={() => navigate('/income-streams')}>
+              <ArrowLeft size={13} /> Back
+            </button>
 
-        {/* Live PnL Card */}
-        <div className="mb-4">
-          <PnLCard 
-            isPaperMode={isPaperMode}
-            totalPnL={isPaperMode ? pnlSummary.totalPnL : livePnlSummary.totalPnL}
-            todayPnL={isPaperMode ? pnlSummary.todayPnL : livePnlSummary.todayPnL}
-            totalTrades={isPaperMode ? pnlSummary.totalTrades : livePnlSummary.totalTrades}
-            winRate={isPaperMode ? pnlSummary.winRate : livePnlSummary.winRate}
-            startingBalance={1000}
-            currentBalance={isPaperMode ? paperBalance : undefined}
-            totalFees={isPaperMode ? totalFeesPaid : undefined}
-            onResetBalance={isPaperMode ? handleResetPaperBalance : undefined}
-          />
-        </div>
-
-        {/* Stats Row */}
-        <div className="grid grid-cols-3 gap-2 mb-4">
-          <Card className="bg-card/50 border-border/50">
-            <CardContent className="p-3 text-center">
-              <p className="text-xs text-muted-foreground">Trades</p>
-              <p className="font-mono font-bold">{totalTrades}</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-card/50 border-border/50">
-            <CardContent className="p-3 text-center">
-              <p className="text-xs text-muted-foreground">Markets</p>
-              <p className="font-mono font-bold">{markets.length}</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-card/50 border-border/50">
-            <CardContent className="p-3 text-center">
-              <p className="text-xs text-muted-foreground">Signals</p>
-              <p className="font-mono font-bold text-amber-400">{activeSignals.length}</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Control Buttons */}
-        <div className="flex gap-2 mb-4">
-          <Button
-            onClick={toggleBot}
-            className={`flex-1 ${isRunning ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}
-            disabled={isApproving}
-          >
-            {isRunning ? <Square className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
-            {isRunning ? 'Stop' : 'Start'}
-          </Button>
-          <Button variant="outline" onClick={() => performDeepSync()} disabled={isSyncing}>
-            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-          </Button>
-          <Button variant="outline" onClick={clearVault}>
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        </div>
-
-        {/* Approval Warning - only show if user has USDC.e and hasn't approved */}
-        {parseFloat(usdcEBal) > 0 && allowance === 0n && (
-          <Card className="bg-amber-500/10 border-amber-500/30 mb-4">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <AlertCircle className="w-5 h-5 text-amber-500" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">CTF Exchange Approval Required</p>
-                  <p className="text-xs text-muted-foreground">Approve USDC.e to trade on Polymarket</p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 46, height: 46, borderRadius: 14, background: isRunning ? 'rgba(46,204,113,0.12)' : 'rgba(212,175,55,0.12)', border: `1px solid ${isRunning ? 'rgba(46,204,113,0.25)' : 'rgba(212,175,55,0.22)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <TrendingUp size={20} color={isRunning ? GREEN : G} className={isRunning ? 'running' : ''} />
                 </div>
-                <Button 
-                  size="sm" 
-                  onClick={handleApprove} 
-                  disabled={isApproving || parseFloat(polBal) < 0.01}
-                  className="bg-primary hover:bg-primary/90"
-                >
-                  {isApproving ? 'Signing...' : 'Approve'}
-                </Button>
-              </div>
-              {parseFloat(polBal) < 0.01 && (
-                <p className="text-xs text-red-400 mt-2">Need POL for gas fees</p>
-              )}
-            </CardContent>
-          </Card>
-        )}
-        
-        {/* No funds warning */}
-        {parseFloat(usdcEBal) === 0 && parseFloat(usdcNBal) === 0 && (
-          <Card className="bg-muted/50 border-border/50 mb-4">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <DollarSign className="w-5 h-5 text-muted-foreground" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">No Trading Funds</p>
-                  <p className="text-xs text-muted-foreground">
-                    Deposit USDC.e to your wallet to start trading. Paper trading works without funds.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="px-4">
-        <TabsList className="w-full">
-          <TabsTrigger value="dashboard" className="flex-1">Terminal</TabsTrigger>
-          <TabsTrigger value="signals" className="flex-1">Signals</TabsTrigger>
-          <TabsTrigger value="settings" className="flex-1">Settings</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="dashboard" className="mt-4">
-          <Card className="bg-card/50 border-border/50">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-green-500 animate-pulse' : 'bg-muted'}`} />
-                  Execution Feed
-                </CardTitle>
-                <Badge variant="outline" className="text-xs">
-                  <Clock className="w-3 h-3 mr-1" />
-                  {lastSync}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[300px]">
-                <div className="space-y-2 font-mono text-xs">
-                  {logs.length === 0 ? (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <Activity className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                      <p>Awaiting Mainnet Activity...</p>
-                    </div>
-                  ) : (
-                    logs.map(log => (
-                      <div key={log.id} className="flex gap-3">
-                        <span className="text-muted-foreground shrink-0">[{log.time}]</span>
-                        <span className={
-                          log.type === 'success' ? 'text-green-400' :
-                          log.type === 'error' ? 'text-red-400' :
-                          log.type === 'warn' ? 'text-amber-400' :
-                          log.type === 'trade' ? 'text-cyan-400' :
-                          log.type === 'debug' ? 'text-muted-foreground' :
-                          'text-foreground'
-                        }>
-                          {log.msg}
-                        </span>
-                      </div>
-                    ))
-                  )}
-                  <div ref={logEndRef} />
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="signals" className="mt-4 space-y-3">
-          {activeSignals.length === 0 ? (
-            <Card className="bg-card/50 border-border/50">
-              <CardContent className="p-8 text-center">
-                <BarChart3 className="w-10 h-10 mx-auto mb-3 text-muted-foreground opacity-50" />
-                <p className="text-muted-foreground">No active signals</p>
-                <p className="text-xs text-muted-foreground mt-1">Start the bot to scan markets</p>
-              </CardContent>
-            </Card>
-          ) : (
-            activeSignals.map((signal, i) => (
-              <Card key={i} className="bg-card/50 border-border/50">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <Badge className={signal.direction === 'buy' ? 'bg-green-500' : 'bg-red-500'}>
-                      {signal.direction.toUpperCase()} {signal.outcome}
-                    </Badge>
-                    <span className="text-sm font-mono">{signal.confidence}% conf</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-2">{signal.reason}</p>
-                  <div className="flex justify-between text-xs">
-                    <span>Entry: {(signal.currentPrice * 100).toFixed(1)}%</span>
-                    <span>Target: {(signal.targetPrice * 100).toFixed(1)}%</span>
-                    <span>Size: ${signal.suggestedSize.toFixed(0)}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </TabsContent>
-
-        <TabsContent value="settings" className="mt-4 space-y-4">
-          {/* Paper/Live Mode Toggle */}
-          <Card className={`border-2 ${isPaperMode ? 'bg-amber-500/10 border-amber-500/30' : 'bg-green-500/10 border-green-500/30'}`}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">{isPaperMode ? '📝 Paper Trading' : '💰 Live Trading'}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {isPaperMode 
-                      ? 'Simulated trades, no real money at risk' 
-                      : 'Real trades with your USDC.e balance'}
-                  </p>
+                  <div style={{ fontWeight: 900, fontSize: 18, letterSpacing: '-0.02em', color: '#fff' }}>Polymarket HFT Bot</div>
+                  <div className="mono">{address.slice(0, 8)}...{address.slice(-6)}</div>
                 </div>
-                <Button 
-                  onClick={toggleTradingMode}
-                  variant={isPaperMode ? "default" : "destructive"}
-                  size="sm"
-                  disabled={isRunning}
-                >
-                  {isPaperMode ? 'Go Live' : 'Go Paper'}
-                </Button>
               </div>
-              {isPaperMode && (
-                <div className="mt-3 pt-3 border-t border-border/50">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Paper Balance:</span>
-                    <span className="font-bold text-amber-400">$1,000.00</span>
+              <span className={`p ${isRunning ? 'p-gr' : 'p-a'}`}>
+                <span className={`dot ${isRunning ? 'dot-g' : 'dot-a'}`} />
+                {isRunning ? (isScanning ? 'Scanning' : 'Running') : 'Stopped'}
+              </span>
+            </div>
+
+            <div className="g3" style={{ marginBottom: 12 }}>
+              <div className={`gc ${parseFloat(polBal) > 0.01 ? 'gc-gr' : 'gc-r'}`} style={{ padding: '12px', textAlign: 'center', borderRadius: 16 }}>
+                <div className="lbl" style={{ marginBottom: 4 }}>POL Gas</div>
+                <div style={{ fontFamily: 'monospace', fontWeight: 900, fontSize: 14, color: parseFloat(polBal) > 0.01 ? GREEN : RED }}>{polBal}</div>
+              </div>
+              <div className="gc gc-c" style={{ padding: '12px', textAlign: 'center', borderRadius: 16 }}>
+                <div className="lbl" style={{ marginBottom: 4, color: CYAN }}>USDC</div>
+                <div style={{ fontFamily: 'monospace', fontWeight: 900, fontSize: 14, color: CYAN }}>${usdcNBal}</div>
+              </div>
+              <div className="gc" style={{ padding: '12px', textAlign: 'center', borderRadius: 16, borderColor: parseFloat(usdcEBal) > 0 ? 'rgba(212,175,55,0.22)' : 'rgba(255,255,255,0.06)' }}>
+                <div className="lbl" style={{ marginBottom: 4 }}>USDC.e</div>
+                <div style={{ fontFamily: 'monospace', fontWeight: 900, fontSize: 14, color: parseFloat(usdcEBal) > 0 ? G : 'rgba(255,255,255,0.25)' }}>${usdcEBal}</div>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 12 }}>
+              <PnLCard
+                isPaperMode={isPaperMode}
+                totalPnL={isPaperMode ? pnlSummary.totalPnL : livePnlSummary.totalPnL}
+                todayPnL={isPaperMode ? pnlSummary.todayPnL : livePnlSummary.todayPnL}
+                totalTrades={isPaperMode ? pnlSummary.totalTrades : livePnlSummary.totalTrades}
+                winRate={isPaperMode ? pnlSummary.winRate : livePnlSummary.winRate}
+                startingBalance={1000}
+                currentBalance={isPaperMode ? paperBalance : undefined}
+                totalFees={isPaperMode ? totalFeesPaid : undefined}
+                onResetBalance={isPaperMode ? handleResetPaperBalance : undefined}
+              />
+            </div>
+
+            <div className="g3" style={{ marginBottom: 12 }}>
+              <div className="sb"><div className="sb-lbl">Trades</div><div className="sb-val">{totalTrades}</div></div>
+              <div className="sb"><div className="sb-lbl">Markets</div><div className="sb-val">{markets.length}</div></div>
+              <div className="sb"><div className="sb-lbl">Signals</div><div className="sb-val" style={{ color: G }}>{activeSignals.length}</div></div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+              <button type="button" className={`btn ${isRunning ? 'btn-r' : 'btn-gr'}`} style={{ flex: 1 }} onClick={toggleBot} disabled={isApproving}>
+                {isRunning ? <><Square size={13} /> Stop Engine</> : <><Play size={13} /> Start Engine</>}
+              </button>
+              <button type="button" className="btn btn-ghost" onClick={() => performDeepSync()} disabled={isSyncing}>
+                <RefreshCw size={14} className={isSyncing ? 'spinning' : ''} />
+              </button>
+              <button type="button" className="btn btn-ghost" onClick={clearVault}><Trash2 size={14} /></button>
+            </div>
+
+            {parseFloat(usdcEBal) > 0 && allowance === 0n && (
+              <div className="gc gc-a" style={{ marginBottom: 12, padding: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <AlertCircle size={18} color={AMBER} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 800, fontSize: 13, color: '#fff', marginBottom: 2 }}>CTF Exchange Approval Required</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>Approve USDC.e to trade on Polymarket</div>
+                  </div>
+                  <button type="button" className="btn btn-g" style={{ width: 'auto', padding: '8px 14px' }} onClick={handleApprove} disabled={isApproving || parseFloat(polBal) < 0.01}>
+                    {isApproving ? 'Signing...' : 'Approve'}
+                  </button>
+                </div>
+                {parseFloat(polBal) < 0.01 && <div style={{ fontSize: 11, color: RED, marginTop: 8 }}>⚠ Need POL for gas fees</div>}
+              </div>
+            )}
+
+            {parseFloat(usdcEBal) === 0 && parseFloat(usdcNBal) === 0 && (
+              <div className="gc" style={{ marginBottom: 12, padding: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <DollarSign size={18} color="rgba(255,255,255,0.25)" />
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: 13, color: '#fff', marginBottom: 2 }}>No Trading Funds</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>Deposit USDC.e to start live trading. Paper mode works without funds.</div>
                   </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card/50 border-border/50">
-            <CardContent className="p-4 space-y-4">
-              <div>
-                <label className="text-sm font-medium">Connected Wallet</label>
-                <p className="font-mono text-xs text-muted-foreground break-all">{address}</p>
               </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-sm">CTF Exchange</span>
-                <Badge variant={allowance > 0n ? "default" : "destructive"}>
-                  {allowance > 0n ? (
-                    <><CheckCircle className="w-3 h-3 mr-1" /> Approved</>
-                  ) : (
-                    <><AlertCircle className="w-3 h-3 mr-1" /> Pending</>
-                  )}
-                </Badge>
+            )}
+          </div>
+
+          <div className="tabs" style={{ marginBottom: 16 }}>
+            {[{ k: 'dashboard', l: '⬡ Terminal' }, { k: 'signals', l: '◈ Signals' }, { k: 'settings', l: '⚙ Settings' }].map((tab) => (
+              <button key={tab.k} type="button" className={`tab ${activeTab === tab.k ? 'on' : ''}`} onClick={() => setActiveTab(tab.k)}>{tab.l}</button>
+            ))}
+          </div>
+
+          {activeTab === 'dashboard' && (
+            <div className="gc">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span className={`dot ${isRunning ? 'dot-g' : 'dot-a'}`} />
+                  <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.25em', color: isRunning ? GREEN : 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Execution Feed</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>
+                  <Clock size={11} /> {lastSync}
+                </div>
+              </div>
+              <div className="term">
+                {logs.length === 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'rgba(255,255,255,0.25)' }}>
+                    <Activity size={26} style={{ marginBottom: 10, opacity: 0.4 }} />
+                    <div>Awaiting Mainnet Activity...</div>
+                  </div>
+                ) : (
+                  logs.map((log) => (
+                    <div key={log.id} style={{ display: 'flex', gap: 6, marginBottom: 4 }}>
+                      <span className="ltime">[{log.time}]</span>
+                      <span className={logLineClass(log.type)}>{log.msg}</span>
+                    </div>
+                  ))
+                )}
+                <div ref={logEndRef} />
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'signals' && (
+            <>
+              {activeSignals.length === 0 ? (
+                <div className="gc" style={{ textAlign: 'center', padding: 40 }}>
+                  <BarChart3 size={34} style={{ margin: '0 auto 12px', color: 'rgba(255,255,255,0.2)' }} />
+                  <div style={{ color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>No active signals</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>Start the engine to begin scanning</div>
+                </div>
+              ) : (
+                activeSignals.map((s, i) => (
+                  <div key={i} className="sig">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                      <span className={`p ${s.direction === 'buy' ? 'p-gr' : 'p-r'}`}>{s.direction.toUpperCase()} {s.outcome}</span>
+                      <span style={{ fontSize: 12, fontFamily: 'monospace', color: G, fontWeight: 800 }}>{s.confidence}% conf</span>
+                    </div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginBottom: 10 }}>{s.reason}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>
+                      <span>Entry: {(s.currentPrice * 100).toFixed(1)}%</span>
+                      <span>Target: {(s.targetPrice * 100).toFixed(1)}%</span>
+                      <span style={{ color: G }}>Size: ${s.suggestedSize.toFixed(0)}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </>
+          )}
+
+          {activeTab === 'settings' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div className={`gc ${isPaperMode ? 'gc-a' : 'gc-gr'}`}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: 14, color: '#fff', marginBottom: 4 }}>{isPaperMode ? '📝 Paper Trading' : '💰 Live Trading'}</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>{isPaperMode ? 'Simulated — no real money at risk' : 'Real trades with your USDC.e balance'}</div>
+                  </div>
+                  <button type="button" className={`btn ${isPaperMode ? 'btn-g' : 'btn-r'}`} style={{ width: 'auto', padding: '8px 14px' }} onClick={toggleTradingMode} disabled={isRunning}>
+                    {isPaperMode ? 'Go Live' : 'Go Paper'}
+                  </button>
+                </div>
+                {isPaperMode && (
+                  <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                    <span style={{ color: 'rgba(255,255,255,0.5)' }}>Paper Balance</span>
+                    <span style={{ fontWeight: 900, color: AMBER }}>$1,000.00</span>
+                  </div>
+                )}
               </div>
 
-              {parseFloat(usdcNBal) > 0.01 && parseFloat(usdcEBal) < 5 && (
-                <Card className="bg-amber-500/10 border-amber-500/30">
-                  <CardContent className="p-3">
-                    <p className="text-xs font-medium text-amber-500 mb-2">Swap USDC to USDC.e for trading</p>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => window.open(`https://app.uniswap.org/#/swap?inputCurrency=${POLYGON_ADDRESSES.USDC_NATIVE}&outputCurrency=${POLYGON_ADDRESSES.USDC_E}&chain=polygon`, '_blank')}
-                    >
-                      <ExternalLink className="w-3 h-3 mr-1" />
-                      Swap on Uniswap
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
+              <div className="gc">
+                <div style={{ marginBottom: 14 }}>
+                  <div className="lbl" style={{ marginBottom: 6 }}>Connected Wallet</div>
+                  <div style={{ fontFamily: 'monospace', fontSize: 10, color: G, wordBreak: 'break-all' }}>{address}</div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)' }}>CTF Exchange</span>
+                  <span className={`p ${allowance > 0n ? 'p-gr' : 'p-r'}`}>
+                    {allowance > 0n ? <><CheckCircle size={10} /> Approved</> : <><AlertCircle size={10} /> Pending</>}
+                  </span>
+                </div>
 
-              <Button variant="destructive" className="w-full" onClick={clearVault}>
-                <Trash2 className="w-4 h-4 mr-2" />
-                Disconnect Wallet
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                {parseFloat(usdcNBal) > 0.01 && parseFloat(usdcEBal) < 5 && (
+                  <div className="gc gc-a" style={{ marginBottom: 14, padding: 12 }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: AMBER, marginBottom: 8 }}>Swap USDC → USDC.e for trading</div>
+                    <button type="button" className="btn btn-ghost" style={{ fontSize: 10 }} onClick={() => window.open(`https://app.uniswap.org/#/swap?inputCurrency=${POLYGON_ADDRESSES.USDC_NATIVE}&outputCurrency=${POLYGON_ADDRESSES.USDC_E}&chain=polygon`, '_blank')}>
+                      <ExternalLink size={12} /> Swap on Uniswap
+                    </button>
+                  </div>
+                )}
 
-      {/* Footer Status */}
-      <div className="fixed bottom-20 left-0 right-0 px-4">
-        <Card className="bg-card/90 backdrop-blur border-border/50">
-          <CardContent className="p-2 flex justify-between items-center text-xs text-muted-foreground">
-            <span className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-green-500 animate-pulse' : 'bg-amber-500'}`} />
+                <button type="button" className="btn btn-r" onClick={clearVault}><Trash2 size={13} /> Disconnect Wallet</button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="statusbar">
+          <div className="statusbar-inner">
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span className={`dot ${isRunning ? 'dot-g' : 'dot-a'}`} />
               {isRunning ? (isPaperMode ? '📝 Paper Trading' : '💰 Live Trading') : 'Engine Ready'}
             </span>
-            <span>{isPaperMode ? 'PAPER' : 'LIVE'} • CLOB v2</span>
+            <span style={{ color: G }}>{isPaperMode ? 'PAPER' : 'LIVE'} · CLOB v2</span>
             <span>v5.1.0</span>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
@@ -1036,14 +878,22 @@ const PolymarketBotDetail: React.FC = () => (
       <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-[#050505] text-white">
         <AlertCircle className="w-12 h-12 text-amber-500 mb-4" />
         <h2 className="text-lg font-semibold mb-2 text-[#D4AF37]">Polymarket engine error</h2>
-        <p className="text-sm text-white/60 text-center mb-6 max-w-md break-words">
-          {error.message}
-        </p>
+        <p className="text-sm text-white/60 text-center mb-6 max-w-md break-words">{error.message}</p>
         <div className="flex flex-col sm:flex-row gap-2">
-          <Button onClick={reset}>Try again</Button>
-          <Button variant="outline" onClick={() => window.location.assign('/income-streams')}>
+          <button
+            type="button"
+            onClick={reset}
+            className="rounded-2xl px-6 py-3 font-bold text-[#050505] bg-[#D4AF37] hover:opacity-90"
+          >
+            Try again
+          </button>
+          <button
+            type="button"
+            onClick={() => window.location.assign('/income-streams')}
+            className="rounded-2xl px-6 py-3 font-bold border border-white/20 text-white/90 hover:bg-white/10"
+          >
             Back to income streams
-          </Button>
+          </button>
         </div>
       </div>
     )}
