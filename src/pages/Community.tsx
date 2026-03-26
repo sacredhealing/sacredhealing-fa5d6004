@@ -880,6 +880,11 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
                       <button
                         type="button"
                         className="c-video-call-btn"
+                        style={{
+                          color: "#22d3ee",
+                          borderColor: "rgba(34,211,238,.45)",
+                          background: "rgba(6,182,212,.12)",
+                        }}
                         onClick={() =>
                           window.open(msg.content.replace("VIDEO_CALL:", ""), "_blank", "noopener,noreferrer")
                         }
@@ -1632,9 +1637,6 @@ const Community = () => {
           user_id: user.id,
           content: `🔴 Live now in ${channelName}`,
           post_type: "live",
-          is_live_recording: true,
-          live_recording_title: `Live in ${channelName}`,
-          live_recording_description: "Streaming via Siddha Quantum Nexus",
           video_url: result.room_url,
         } as any);
         await fetchFeedPosts();
@@ -2414,9 +2416,6 @@ const Community = () => {
                           user_id: user.id,
                           content: "🔴 Live now in Divine Sangha",
                           post_type: "live",
-                          is_live_recording: true,
-                          live_recording_title: "Live from Divine Sangha",
-                          live_recording_description: "Streaming via Siddha Quantum Nexus",
                           video_url: result.room_url,
                         } as any);
                         await fetchFeedPosts();
@@ -2488,7 +2487,31 @@ const Community = () => {
                         }}
                       />
                     )}
-                    {post.video_url && (
+                    {post.video_url && post.post_type === "live" && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          window.open(post.video_url!, "_blank", "noopener,noreferrer")
+                        }
+                        style={{
+                          display: "block",
+                          marginTop: 10,
+                          width: "100%",
+                          padding: "12px 16px",
+                          borderRadius: 16,
+                          border: "1px solid rgba(220,38,38,.55)",
+                          background: "linear-gradient(135deg, rgba(127,29,29,.85), rgba(185,28,28,.95))",
+                          color: "#fecaca",
+                          fontSize: 13,
+                          fontWeight: 800,
+                          letterSpacing: "0.06em",
+                          cursor: "pointer",
+                        }}
+                      >
+                        🔴 JOIN LIVE SESSION
+                      </button>
+                    )}
+                    {post.video_url && post.post_type !== "live" && (
                       <video
                         src={post.video_url}
                         controls
