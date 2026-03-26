@@ -823,11 +823,13 @@ export default function CreativeSoulMeditationTool() {
     // If scalar blend is active, override the solfeggio Hz with the blend
     const solfeggioHz = scalarBlendHz ?? frequencies.solfeggio?.hz ?? healingFreq;
 
-    // Use the actual audio duration (DAW regions, decoded buffer, or fetch URL).
-    // URL-only neural loads now decode into audioBuffer in the engine; this + fetch covers all cases.
-    let audioDuration = engine.getDawDuration?.() || 0;
-    if (audioDuration <= 0 && engine?.audioBuffer) {
+    // Use the actual audio duration: decoded buffer is authoritative for uploaded files.
+    let audioDuration = 0;
+    if (engine?.audioBuffer && engine.audioBuffer.duration > 0) {
       audioDuration = Math.ceil(engine.audioBuffer.duration);
+    }
+    if (audioDuration <= 0) {
+      audioDuration = engine.getDawDuration?.() || 0;
     }
     if (audioDuration <= 0 && (neuralLayer?.exportInput?.directUrl ?? neuralLayer?.source)) {
       const url = neuralLayer?.exportInput?.directUrl ?? (typeof neuralLayer?.source === 'string' ? neuralLayer.source : null);
@@ -879,9 +881,15 @@ export default function CreativeSoulMeditationTool() {
       deEsserEnabled: true,
     } : undefined;
 
+    const directNeuralUrl = neuralLayer?.exportInput?.directUrl;
+    const isFetchableUrl =
+      directNeuralUrl &&
+      (/^https?:\/\//.test(directNeuralUrl) || directNeuralUrl.startsWith('blob:'));
+
     const config = {
       durationSeconds: audioDuration,
-      neuralAudioUrl: neuralLayer?.exportInput?.directUrl ?? neuralLayer?.source ?? undefined,
+      neuralAudioBuffer: engine?.audioBuffer ?? undefined,
+      neuralAudioUrl: isFetchableUrl ? directNeuralUrl : undefined,
       neuralSourceVolume: volumes.user / 100,
       atmosphereAudioUrl: atmosphereLayer?.exportInput?.directUrl ?? atmosphereLayer?.source ?? undefined,
       atmosphereVolume: volumes.ambient / 100,

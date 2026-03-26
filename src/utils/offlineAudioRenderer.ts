@@ -50,6 +50,8 @@ export interface EQSettings {
 export interface OfflineRenderConfig {
   durationSeconds: number;
   sampleRate?: number;
+  /** Decoded neural track (preferred). Use when upload URL is missing or not fetchable (e.g. local filename). */
+  neuralAudioBuffer?: AudioBuffer;
   neuralAudioUrl?: string;
   neuralSourceVolume?: number;
   atmosphereAudioUrl?: string;
@@ -95,6 +97,7 @@ export async function renderOffline(config: OfflineRenderConfig): Promise<AudioB
   const {
     durationSeconds: rawDuration,
     sampleRate = 44100,
+    neuralAudioBuffer,
     neuralAudioUrl,
     neuralSourceVolume = 1.0,
     atmosphereAudioUrl,
@@ -203,15 +206,29 @@ export async function renderOffline(config: OfflineRenderConfig): Promise<AudioB
   // ─── Load audio layers ───
   const layers: AudioLayer[] = [];
 
-  if (neuralAudioUrl) {
+  // Prefer in-memory buffer (always matches what the user loaded / heard). URL fetch can fail for
+  // non-URLs (filename strings) or when storage upload did not set directUrl.
+  if (neuralAudioBuffer && neuralAudioBuffer.duration > 0) {
+    layers.push({ buffer: neuralAudioBuffer, volume: neuralSourceVolume, isNeuralSource: true });
+    console.log('[OfflineRender] Neural source from AudioBuffer:', neuralAudioBuffer.duration, 's, vol:', neuralSourceVolume);
+    onProgress?.(25, 'Neural source loaded (buffer)...');
+  } else if (
+    neuralAudioUrl &&
+    (/^https?:\/\//.test(neuralAudioUrl) || neuralAudioUrl.startsWith('blob:'))
+  ) {
     try {
       const buffer = await fetchAndDecode(offlineCtx, neuralAudioUrl);
       layers.push({ buffer, volume: neuralSourceVolume, isNeuralSource: true });
-      console.log('[OfflineRender] Neural source volume:', neuralSourceVolume);
+      console.log('[OfflineRender] Neural source from URL, volume:', neuralSourceVolume);
       onProgress?.(25, 'Neural source loaded...');
     } catch (e) {
-      console.warn('Failed to load neural audio:', e);
+      console.warn('Failed to load neural audio from URL:', e);
     }
+  } else if (neuralAudioUrl) {
+    console.warn(
+      '[OfflineRender] neuralAudioUrl is not fetchable (expected http(s) or blob:). Got:',
+      String(neuralAudioUrl).slice(0, 80)
+    );
   }
 
   if (atmosphereAudioUrl) {

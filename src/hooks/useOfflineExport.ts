@@ -25,6 +25,8 @@ export interface ExportResult {
 
 export interface ExportConfig {
   durationSeconds: number;
+  /** In-memory decoded upload — ensures mixdown includes neural audio when public URL is missing. */
+  neuralAudioBuffer?: AudioBuffer;
   neuralAudioUrl?: string;
   neuralSourceVolume?: number;
   atmosphereAudioUrl?: string;
@@ -61,6 +63,7 @@ export function useOfflineExport() {
       const renderConfig: OfflineRenderConfig = {
         durationSeconds: config.durationSeconds,
         sampleRate: chosenSampleRate,
+        neuralAudioBuffer: config.neuralAudioBuffer,
         neuralAudioUrl: config.neuralAudioUrl,
         neuralSourceVolume: config.neuralSourceVolume ?? 1.0,
         atmosphereAudioUrl: config.atmosphereAudioUrl,
