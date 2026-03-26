@@ -1,692 +1,987 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { ethers } from 'ethers';
+import { 
+  ArrowLeft, Wallet, RefreshCw, Play, Square, Trash2, ExternalLink, 
+  AlertCircle, CheckCircle, Clock, TrendingUp, DollarSign, Zap, Shield,
+  Activity, Target, BarChart3
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
+import { PnLCard } from '@/components/polymarket/PnLCard';
 
-// ─── SQI 2050 DESIGN TOKENS ───────────────────────────────────────────────────
-const C = {
-  gold: "#D4AF37",
-  goldDim: "rgba(212,175,55,0.15)",
-  goldGlow: "rgba(212,175,55,0.4)",
-  goldBorder: "rgba(212,175,55,0.25)",
-  black: "#050505",
-  glass: "rgba(255,255,255,0.02)",
-  glassBorder: "rgba(255,255,255,0.05)",
-  cyan: "#22D3EE",
-  cyanDim: "rgba(34,211,238,0.12)",
-  red: "#FF4757",
-  green: "#2ECC71",
-  white60: "rgba(255,255,255,0.6)",
-  white30: "rgba(255,255,255,0.3)",
-  white10: "rgba(255,255,255,0.07)",
+// Import trading services
+import { POLYGON_ADDRESSES, PolymarketTrading } from '@/services/polymarketTrading';
+import { polymarketService } from '@/services/polymarketService';
+import { polymarketAI } from '@/services/polymarketAI';
+import { 
+  whaleMirrorService, 
+  latencyArbitrageService, 
+  volatilityScalperService,
+  paperTradingService,
+  STRATEGY_NAMES 
+} from '@/services/polymarket';
+import type { LogEntry, TradeSignal, PolymarketMarket } from '@/types/polymarket';
+
+// RPC endpoints for Polygon
+const getRpcPool = (): string[] => {
+  // Vite env (preferred)
+  const viteUrls = [
+    import.meta.env.VITE_RPC_URL_1,
+    import.meta.env.VITE_RPC_URL_2,
+    import.meta.env.VITE_RPC_URL_3,
+    import.meta.env.VITE_POLYGON_RPC_URL_1,
+    import.meta.env.VITE_POLYGON_RPC_URL_2,
+    import.meta.env.VITE_POLYGON_RPC_URL_3,
+    // If you mirrored Next-style vars into Vite env, support them too
+    (import.meta.env as any).VITE_NEXT_PUBLIC_RPC_URL_1,
+    (import.meta.env as any).VITE_NEXT_PUBLIC_RPC_URL_2,
+    (import.meta.env as any).VITE_NEXT_PUBLIC_RPC_URL_3,
+  ].filter((u): u is string => !!u);
+
+  if (viteUrls.length > 0) return Array.from(new Set(viteUrls));
+
+  // Public fallback
+  return [
+    'https://polygon-bor-rpc.publicnode.com',
+    'https://polygon.meowrpc.com',
+    'https://1rpc.io/matic',
+    'https://rpc.ankr.com/polygon'
+  ];
 };
 
-// ─── WALLET INTELLIGENCE DATA ─────────────────────────────────────────────────
-const WALLETS = [
-  {
-    id: "0x8dxd",
-    label: "Alpha-1 · Temporal Sniper",
-    address: "0x8dxd...4f2a",
-    pnl: "+$14,820",
-    pnlPct: "+38.4%",
-    winRate: "73%",
-    tradesPerDay: "11",
-    avgPositionSize: "$240",
-    portfolioSize: "$38,500",
-    strategy: "5–15 min markets · momentum entry",
-    copyMode: "FIXED",
-    fixedAmount: 50,
-    slippage: 5,
-    status: "LIVE",
-    color: C.cyan,
-    markets: ["US Election", "BTC Price", "Econ Events"],
-    recentTrades: [
-      { market: "Will BTC close above 85k?", side: "YES", size: "$240", result: "+$180", time: "4m ago" },
-      { market: "Fed rate cut March?", side: "NO", size: "$200", result: "+$140", time: "18m ago" },
-      { market: "Trump approval >50%?", side: "YES", size: "$260", result: "-$80", time: "31m ago" },
-      { market: "ETH > BTC 30d return?", side: "NO", size: "$220", result: "+$200", time: "47m ago" },
-    ],
-  },
-  {
-    id: "0x3raf",
-    label: "Alpha-2 · Risk Matrix",
-    address: "0x3raf...9c1b",
-    pnl: "+$9,340",
-    pnlPct: "+22.1%",
-    winRate: "68%",
-    tradesPerDay: "7",
-    avgPositionSize: "$180",
-    portfolioSize: "$42,200",
-    strategy: "5–15 min markets · risk-managed 1x ratio",
-    copyMode: "RISK_RATIO",
-    riskRatio: 1.0,
-    slippage: 5,
-    status: "PAPER",
-    color: C.gold,
-    markets: ["Sports", "Crypto", "Politics"],
-    recentTrades: [
-      { market: "Lakers win tonight?", side: "NO", size: "$180", result: "+$130", time: "2m ago" },
-      { market: "SOL > $200 this week?", side: "YES", size: "$150", result: "+$110", time: "22m ago" },
-      { market: "Ukraine ceasefire April?", side: "NO", size: "$200", result: "+$160", time: "38m ago" },
-      { market: "Apple earnings beat?", side: "YES", size: "$170", result: "-$50", time: "55m ago" },
-    ],
-  },
+const RPC_POOL = getRpcPool();
+
+// ERC20 ABI for balance checks
+const ERC20_ABI = [
+  "function balanceOf(address account) view returns (uint256)",
+  "function allowance(address owner, address spender) view returns (uint256)",
+  "function approve(address spender, uint256 amount) returns (bool)"
 ];
 
-const METRICS = [
-  { label: "TOTAL SIGNALS", value: "2,847", sub: "all-time" },
-  { label: "WIN RATE", value: "71%", sub: "combined" },
-  { label: "TOTAL PnL", value: "+$24,160", sub: "since activation" },
-  { label: "ACTIVE MARKETS", value: "14", sub: "monitoring now" },
-];
+const PolymarketBotDetail: React.FC = () => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  // Wallet state
+  const [privateKey, setPrivateKey] = useState<string | null>(() => localStorage.getItem('polymarket_bot_pkey'));
+  const [address, setAddress] = useState<string>("");
+  const [importInput, setImportInput] = useState("");
+  const [inputError, setInputError] = useState<string | null>(null);
+  
+  // Balance state
+  const [polBal, setPolBal] = useState<string>("0.0000");
+  const [usdcEBal, setUsdcEBal] = useState<string>("0.00");
+  const [usdcNBal, setUsdcNBal] = useState<string>("0.00");
+  const [allowance, setAllowance] = useState<bigint>(0n);
+  const [ctAllowance, setCtAllowance] = useState<boolean>(false); // Conditional tokens approval
+  
+  // Trading state
+  const [trading] = useState(() => new PolymarketTrading());
+  const [markets, setMarkets] = useState<PolymarketMarket[]>([]);
+  const [activeSignals, setActiveSignals] = useState<TradeSignal[]>([]);
+  const [totalTrades, setTotalTrades] = useState(0);
+  const [winRate, setWinRate] = useState(0);
+  const [dailyPnL, setDailyPnL] = useState(0);
+  
+  // Paper trading state
+  const [isPaperMode, setIsPaperMode] = useState(true);
+  const [paperBalance, setPaperBalance] = useState(1000); // $1000 simulated
+  const [totalFeesPaid, setTotalFeesPaid] = useState(0);
+  
+  // PnL tracking state
+  const [pnlSummary, setPnlSummary] = useState({
+    totalPnL: 0,
+    todayPnL: 0,
+    totalTrades: 0,
+    winRate: 0,
+    unrealizedPnL: 0
+  });
+  const [livePnlSummary, setLivePnlSummary] = useState({
+    totalPnL: 0,
+    todayPnL: 0,
+    totalTrades: 0,
+    winRate: 0,
+    unrealizedPnL: 0
+  });
+  
+  // Status state
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  const [lastSync, setLastSync] = useState<string>("Never");
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [activeTab, setActiveTab] = useState('dashboard');
+  
+  const logEndRef = useRef<HTMLDivElement>(null);
+  const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pnlRefreshRef = useRef<NodeJS.Timeout | null>(null);
 
-// ─── PULSE ANIMATION COMPONENT ────────────────────────────────────────────────
-function PulseDot({ color = C.cyan, size = 8 }: { color?: string; size?: number }) {
-  return (
-    <span style={{ position: "relative", display: "inline-block", width: size, height: size }}>
-      <span style={{
-        position: "absolute", inset: 0, borderRadius: "50%",
-        background: color, animation: "sqiPulse 2s ease-in-out infinite",
-      }} />
-      <span style={{
-        position: "absolute", inset: 0, borderRadius: "50%",
-        background: color, opacity: 0.4,
-        animation: "sqiPulseRing 2s ease-in-out infinite",
-        transform: "scale(2.5)",
-      }} />
-    </span>
-  );
-}
-
-// ─── GLASS CARD ───────────────────────────────────────────────────────────────
-function GlassCard({ children, style = {}, glow = false }: any) {
-  return (
-    <div style={{
-      background: C.glass,
-      backdropFilter: "blur(40px)",
-      WebkitBackdropFilter: "blur(40px)",
-      border: `1px solid ${glow ? C.goldBorder : C.glassBorder}`,
-      borderRadius: 32,
-      boxShadow: glow ? `0 0 40px ${C.goldDim}, inset 0 1px 0 ${C.goldBorder}` : "none",
-      ...style,
-    }}>
-      {children}
-    </div>
-  );
-}
-
-// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
-export default function SovereignSignalOracle() {
-  const [activeWallet, setActiveWallet] = useState(0);
-  const [mode, setMode] = useState<"PAPER" | "LIVE">("PAPER");
-  const [tab, setTab] = useState<"dashboard" | "wallets" | "config" | "activity">("dashboard");
-  const [fixedAmount, setFixedAmount] = useState(50);
-  const [riskRatio, setRiskRatio] = useState(1.0);
-  const [slippage, setSlippage] = useState(5);
-  const [copyMode, setCopyMode] = useState<"FIXED" | "PCT" | "RISK_RATIO">("FIXED");
-  const [pctAmount, setPctAmount] = useState(5);
-  const [live, setLive] = useState(true);
-  const [ticker, setTicker] = useState(0);
-  const wallet = WALLETS[activeWallet];
-
-  useEffect(() => {
-    const t = setInterval(() => setTicker(x => x + 1), 3000);
-    return () => clearInterval(t);
+  const addLog = useCallback((msg: string, type: LogEntry['type'] = 'info') => {
+    setLogs(prev => [{
+      id: Math.random().toString(36),
+      msg,
+      type,
+      time: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    }, ...prev].slice(0, 100));
   }, []);
 
-  const styles: Record<string, React.CSSProperties> = {
-    root: {
-      minHeight: "100vh",
-      background: C.black,
-      fontFamily: "'Plus Jakarta Sans', 'Montserrat', sans-serif",
-      color: "#fff",
-      padding: "0 0 80px",
-      position: "relative",
-      overflow: "hidden",
-    },
-    starfield: {
-      position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none",
-      background: `radial-gradient(ellipse at 20% 20%, rgba(212,175,55,0.04) 0%, transparent 60%),
-                   radial-gradient(ellipse at 80% 80%, rgba(34,211,238,0.03) 0%, transparent 60%),
-                   radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.9) 0%, ${C.black} 100%)`,
-    },
-    header: {
-      position: "relative", zIndex: 10,
-      padding: "32px 32px 0",
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-    },
-    logo: {
-      display: "flex", alignItems: "center", gap: 12,
-    },
-    logoIcon: {
-      width: 44, height: 44, borderRadius: 14,
-      background: `linear-gradient(135deg, ${C.gold} 0%, rgba(212,175,55,0.3) 100%)`,
-      display: "flex", alignItems: "center", justifyContent: "center",
-      fontSize: 22, boxShadow: `0 0 20px ${C.goldGlow}`,
-    },
-    logoText: {
-      fontSize: 11, fontWeight: 800, letterSpacing: "0.4em",
-      textTransform: "uppercase" as const, color: C.gold,
-    },
-    logoSub: {
-      fontSize: 9, fontWeight: 600, letterSpacing: "0.3em",
-      textTransform: "uppercase" as const, color: C.white30, marginTop: 2,
-    },
-    modeToggle: {
-      display: "flex", background: "rgba(255,255,255,0.04)",
-      borderRadius: 50, padding: 4, gap: 4, border: `1px solid ${C.glassBorder}`,
-    },
-    modeBtn: (active: boolean, color: string): React.CSSProperties => ({
-      padding: "8px 20px", borderRadius: 50, border: "none", cursor: "pointer",
-      fontSize: 10, fontWeight: 800, letterSpacing: "0.3em",
-      textTransform: "uppercase",
-      background: active ? color : "transparent",
-      color: active ? (color === C.red ? "#fff" : C.black) : C.white60,
-      transition: "all 0.3s ease",
-      boxShadow: active ? `0 0 20px ${color}66` : "none",
-    }),
-    content: { position: "relative", zIndex: 10, padding: "24px 32px" },
-    heroTitle: {
-      fontSize: 42, fontWeight: 900, letterSpacing: "-0.04em",
-      lineHeight: 1, marginBottom: 8,
-      background: `linear-gradient(135deg, #fff 40%, ${C.gold} 100%)`,
-      WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-    },
-    heroSub: {
-      fontSize: 11, fontWeight: 700, letterSpacing: "0.5em",
-      textTransform: "uppercase" as const, color: C.gold, marginBottom: 32,
-    },
-    metricsGrid: {
-      display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 24,
-    },
-    metricCard: {
-      padding: "20px 24px", borderRadius: 24,
-      background: C.glass, border: `1px solid ${C.glassBorder}`,
-      backdropFilter: "blur(40px)",
-    },
-    metricLabel: {
-      fontSize: 8, fontWeight: 800, letterSpacing: "0.5em",
-      textTransform: "uppercase" as const, color: C.white30, marginBottom: 8,
-    },
-    metricValue: {
-      fontSize: 28, fontWeight: 900, letterSpacing: "-0.04em", color: "#fff",
-    },
-    metricSub: {
-      fontSize: 9, color: C.white30, marginTop: 4,
-    },
-    tabs: {
-      display: "flex", gap: 4, marginBottom: 24,
-      background: "rgba(255,255,255,0.03)", borderRadius: 16, padding: 4,
-      border: `1px solid ${C.glassBorder}`, width: "fit-content",
-    },
-    tabBtn: (active: boolean): React.CSSProperties => ({
-      padding: "10px 22px", borderRadius: 12, border: "none", cursor: "pointer",
-      fontSize: 10, fontWeight: 800, letterSpacing: "0.3em",
-      textTransform: "uppercase",
-      background: active ? C.goldDim : "transparent",
-      color: active ? C.gold : C.white30,
-      borderBottom: active ? `1px solid ${C.gold}` : "1px solid transparent",
-      transition: "all 0.2s",
-    }),
-    grid2: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 },
-    grid3: { display: "grid", gridTemplateColumns: "2fr 1fr", gap: 20 },
-    sectionLabel: {
-      fontSize: 8, fontWeight: 800, letterSpacing: "0.5em",
-      textTransform: "uppercase" as const, color: C.white30, marginBottom: 16,
-    },
-    walletCard: (active: boolean, color: string): React.CSSProperties => ({
-      padding: "24px", borderRadius: 28, cursor: "pointer",
-      background: active ? `rgba(212,175,55,0.06)` : C.glass,
-      border: `1px solid ${active ? color + "44" : C.glassBorder}`,
-      backdropFilter: "blur(40px)",
-      transition: "all 0.3s ease",
-      boxShadow: active ? `0 0 30px ${color}22` : "none",
-    }),
-    walletAddr: {
-      fontSize: 9, fontWeight: 700, letterSpacing: "0.3em",
-      color: C.white30, fontFamily: "monospace",
-    },
-    walletName: {
-      fontSize: 15, fontWeight: 800, color: "#fff", marginTop: 6, marginBottom: 16,
-    },
-    statRow: {
-      display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8,
-    },
-    statBox: {
-      background: C.white10, borderRadius: 12, padding: "10px 12px",
-    },
-    statLabel: {
-      fontSize: 7, fontWeight: 800, letterSpacing: "0.4em",
-      textTransform: "uppercase" as const, color: C.white30,
-    },
-    statVal: {
-      fontSize: 14, fontWeight: 900, color: "#fff", marginTop: 4,
-    },
-    tradeRow: {
-      display: "flex", justifyContent: "space-between", alignItems: "center",
-      padding: "12px 16px", borderRadius: 14, marginBottom: 8,
-      background: C.white10, border: `1px solid ${C.glassBorder}`,
-    },
-    pill: (color: string): React.CSSProperties => ({
-      padding: "3px 10px", borderRadius: 50, fontSize: 8,
-      fontWeight: 800, letterSpacing: "0.3em",
-      background: color + "22", color, border: `1px solid ${color}44`,
-    }),
-    configBlock: {
-      padding: "24px", borderRadius: 24,
-      background: C.glass, border: `1px solid ${C.glassBorder}`,
-      backdropFilter: "blur(40px)", marginBottom: 16,
-    },
-    configLabel: {
-      fontSize: 9, fontWeight: 800, letterSpacing: "0.4em",
-      textTransform: "uppercase" as const, color: C.white30, marginBottom: 12,
-    },
-    slider: {
-      width: "100%", accentColor: C.gold, cursor: "pointer",
-    },
-    copyModeBtn: (active: boolean): React.CSSProperties => ({
-      flex: 1, padding: "12px 8px", borderRadius: 14, border: "none",
-      cursor: "pointer", fontSize: 9, fontWeight: 800, letterSpacing: "0.2em",
-      textTransform: "uppercase",
-      background: active ? C.goldDim : "rgba(255,255,255,0.03)",
-      color: active ? C.gold : C.white30,
-      border: `1px solid ${active ? C.goldBorder : C.glassBorder}`,
-      transition: "all 0.2s",
-    }),
-    activateBig: {
-      width: "100%", padding: "18px", borderRadius: 24, border: "none",
-      cursor: "pointer", fontSize: 12, fontWeight: 900, letterSpacing: "0.4em",
-      textTransform: "uppercase" as const,
-      background: mode === "LIVE"
-        ? `linear-gradient(135deg, ${C.red} 0%, #ff6b6b 100%)`
-        : `linear-gradient(135deg, ${C.gold} 0%, #f0c040 100%)`,
-      color: mode === "LIVE" ? "#fff" : C.black,
-      boxShadow: mode === "LIVE" ? `0 0 40px ${C.red}66` : `0 0 40px ${C.goldGlow}`,
-      transition: "all 0.3s",
-    },
+  // Refresh PnL data from database with live price updates
+  const refreshPnL = useCallback(async () => {
+    if (!user?.id) return;
+    
+    // First, refresh position prices from market
+    await Promise.all([
+      paperTradingService.refreshPositionPrices(true),
+      paperTradingService.refreshPositionPrices(false)
+    ]);
+    
+    // Then get updated PnL summary and settings
+    const [paperSummary, liveSummary, settings] = await Promise.all([
+      paperTradingService.getPnLSummary(true),
+      paperTradingService.getPnLSummary(false),
+      paperTradingService.loadSettings()
+    ]);
+    setPnlSummary(paperSummary);
+    setLivePnlSummary(liveSummary);
+    setTotalTrades(paperSummary.totalTrades + liveSummary.totalTrades);
+    
+    // Update paper balance and fees from settings
+    if (settings) {
+      setPaperBalance(settings.paper_balance ?? 1000);
+      setTotalFeesPaid(settings.total_fees_paid ?? 0);
+    }
+  }, [user?.id]);
+
+  // Reset paper balance handler
+  const handleResetPaperBalance = useCallback(async () => {
+    const success = await paperTradingService.resetPaperBalance(1000);
+    if (success) {
+      setPaperBalance(1000);
+      setTotalFeesPaid(0);
+      addLog('Paper balance reset to €1000', 'success');
+    }
+  }, [addLog]);
+
+  // Auto-refresh PnL when bot is running
+  useEffect(() => {
+    if (isRunning) {
+      // Refresh immediately when starting
+      refreshPnL();
+      // Then refresh every 5 seconds
+      pnlRefreshRef.current = setInterval(refreshPnL, 5000);
+    } else {
+      if (pnlRefreshRef.current) {
+        clearInterval(pnlRefreshRef.current);
+        pnlRefreshRef.current = null;
+      }
+    }
+    return () => {
+      if (pnlRefreshRef.current) {
+        clearInterval(pnlRefreshRef.current);
+      }
+    };
+  }, [isRunning, refreshPnL]);
+
+  // Real blockchain sync using ethers.js with correct checksummed addresses
+  const performDeepSync = useCallback(async (forcedAddr?: string) => {
+    const activeAddr = forcedAddr || address;
+    if (!activeAddr) return;
+    
+    setIsSyncing(true);
+    addLog("Connecting to Polygon mainnet...", "info");
+    
+    let success = false;
+    
+    for (const rpcUrl of RPC_POOL) {
+      if (success) break;
+      
+      try {
+        const provider = new ethers.JsonRpcProvider(rpcUrl, undefined, { staticNetwork: true });
+        
+        // Fetch POL balance
+        try {
+          const rawPol = await provider.getBalance(activeAddr);
+          const polValue = parseFloat(ethers.formatEther(rawPol)).toFixed(4);
+          setPolBal(polValue);
+          addLog(`POL Balance: ${polValue}`, "debug");
+        } catch (err) {
+          addLog("Failed to fetch POL balance", "warn");
+        }
+        
+        await new Promise(r => setTimeout(r, 200));
+        
+        // Fetch Native USDC balance
+        try {
+          const usdcNContract = new ethers.Contract(POLYGON_ADDRESSES.USDC_NATIVE, ERC20_ABI, provider);
+          const rawN = await usdcNContract.balanceOf(activeAddr);
+          const usdcNValue = parseFloat(ethers.formatUnits(rawN, 6)).toFixed(2);
+          setUsdcNBal(usdcNValue);
+          addLog(`Native USDC: $${usdcNValue}`, "debug");
+        } catch (err) {
+          addLog("Failed to fetch Native USDC", "warn");
+        }
+        
+        await new Promise(r => setTimeout(r, 200));
+        
+        // Fetch USDC.e balance and allowance (using correct checksummed address)
+        try {
+          const usdcEContract = new ethers.Contract(POLYGON_ADDRESSES.USDC_E, ERC20_ABI, provider);
+          const [rawE, rawAllow] = await Promise.all([
+            usdcEContract.balanceOf(activeAddr),
+            usdcEContract.allowance(activeAddr, POLYGON_ADDRESSES.CTF_EXCHANGE)
+          ]);
+          const usdcEValue = parseFloat(ethers.formatUnits(rawE, 6)).toFixed(2);
+          setUsdcEBal(usdcEValue);
+          setAllowance(rawAllow);
+          addLog(`Bridged USDC.e: $${usdcEValue} | Allowance: ${rawAllow > 0n ? 'Approved' : 'Pending'}`, "debug");
+        } catch (err) {
+          addLog("Failed to fetch USDC.e balance", "warn");
+        }
+        
+        setLastSync(new Date().toLocaleTimeString());
+        addLog(`Synced: ${activeAddr.slice(0, 10)}...${activeAddr.slice(-6)}`, "success");
+        success = true;
+        
+      } catch (err) {
+        addLog(`Node failed. Trying next...`, "debug");
+      }
+    }
+    
+    if (!success) {
+      addLog("All RPC nodes failed. Check network.", "error");
+    }
+    
+    setIsSyncing(false);
+  }, [address, addLog]);
+
+  // Initialize wallet from private key
+  useEffect(() => {
+    if (privateKey) {
+      try {
+        const wallet = new ethers.Wallet(privateKey);
+        setAddress(wallet.address);
+        
+        // Initialize trading service
+        trading.initialize(privateKey, RPC_POOL[0]).then(() => {
+          addLog("Trading engine initialized", "success");
+        });
+        
+        // Initialize paper trading with user ID and sync mode from database
+        if (user?.id) {
+          paperTradingService.setUserId(user.id);
+          paperTradingService.loadSettings().then(settings => {
+            if (settings) {
+              setIsPaperMode(settings.is_paper_mode);
+              paperTradingService.setMode(settings.is_paper_mode); // Sync service state
+              addLog(`Mode: ${settings.is_paper_mode ? '📝 PAPER TRADING' : '💰 LIVE TRADING'}`, "info");
+            }
+          });
+          // Load P&L summary for both modes
+          const loadPnL = async () => {
+            const [paperSummary, liveSummary] = await Promise.all([
+              paperTradingService.getPnLSummary(true),
+              paperTradingService.getPnLSummary(false)
+            ]);
+            setPnlSummary(paperSummary);
+            setLivePnlSummary(liveSummary);
+            setTotalTrades(paperSummary.totalTrades + liveSummary.totalTrades);
+          };
+          loadPnL();
+        }
+        
+        performDeepSync(wallet.address);
+      } catch (e) {
+        console.error("Invalid private key:", e);
+        localStorage.removeItem('polymarket_bot_pkey');
+        setPrivateKey(null);
+        toast.error("Invalid private key format");
+      }
+    }
+  }, [privateKey, trading, user?.id]);
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    if (address) {
+      const interval = setInterval(() => performDeepSync(), 30000);
+      return () => clearInterval(interval);
+    }
+  }, [address]);
+
+  // Market scanning loop when bot is running
+  useEffect(() => {
+    if (isRunning && address) {
+      addLog("🚀 Starting Siddha Quantum Nexus HFT Engine...", "info");
+      addLog(`[1] ${STRATEGY_NAMES.WHALE_MIRROR} - Monitoring 0x8dxd`, "info");
+      addLog(`[2] ${STRATEGY_NAMES.LATENCY_ARB} - Gemini 3 Flash active`, "info");
+      addLog(`[3] ${STRATEGY_NAMES.VOLATILITY_SCALP} - Ladder orders ready`, "info");
+      
+      // Initialize all three strategies (wrapped in async IIFE)
+      const initStrategies = async () => {
+        if (privateKey) {
+          await whaleMirrorService.initialize(privateKey, RPC_POOL[0]);
+          whaleMirrorService.onMirrorSignal(async (signal, whale) => {
+            addLog(`🐋 WHALE MIRROR: ${whale.whaleAddress.slice(0,10)}... ${signal.direction} ${signal.outcome}`, "trade");
+            setActiveSignals(prev => [...prev.slice(-4), signal]);
+            await executeTradeWithMode(signal, 'whale_mirror');
+          });
+          whaleMirrorService.startMonitoring();
+        }
+      };
+      initStrategies();
+
+      const scanMarkets = async () => {
+        setIsScanning(true);
+        try {
+          const fetchedMarkets = await polymarketService.fetchMarkets(50);
+          setMarkets(fetchedMarkets);
+          addLog(`Scanned ${fetchedMarkets.length} markets`, "debug");
+          
+          // Start latency arbitrage & volatility scalping with markets
+          latencyArbitrageService.onLatencySignal(async (signal, event) => {
+            addLog(`⚡ LATENCY ARB: ${event.headline?.slice(0,40)}...`, "trade");
+            setActiveSignals(prev => [...prev.slice(-4), signal]);
+            await executeTradeWithMode(signal, 'latency_arb');
+          });
+          latencyArbitrageService.startMonitoring(fetchedMarkets);
+          
+          volatilityScalperService.onScalpSignal(async (signal, ctx) => {
+            addLog(`📈 SCALP: ${ctx.ladder} vol=${(ctx.volatility*100).toFixed(2)}%`, "trade");
+            setActiveSignals(prev => [...prev.slice(-4), signal]);
+            await executeTradeWithMode(signal, 'volatility_scalp');
+          });
+          volatilityScalperService.startScalping(fetchedMarkets);
+          
+          // Also run AI analysis for opportunities
+          const opportunities = await polymarketService.findOpportunities(20000);
+          if (opportunities.length > 0) {
+            addLog(`Found ${opportunities.length} potential opportunities`, "info");
+            for (const market of opportunities.slice(0, 3)) {
+              const signal = await polymarketAI.analyzeMarket(market);
+              if (signal) {
+                setActiveSignals(prev => [...prev.slice(-4), signal]);
+                addLog(`🤖 AI SIGNAL: ${signal.direction.toUpperCase()} ${signal.outcome} @ ${(signal.currentPrice * 100).toFixed(1)}%`, "trade");
+                await executeTradeWithMode(signal, 'ai_signal');
+              }
+            }
+          }
+        } catch (error) {
+          addLog(`Scan error: ${error instanceof Error ? error.message : 'Unknown'}`, "error");
+        }
+        setIsScanning(false);
+      };
+      
+      scanMarkets();
+      scanIntervalRef.current = setInterval(scanMarkets, 15000);
+      
+      return () => {
+        if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
+        whaleMirrorService.stopMonitoring();
+        latencyArbitrageService.stopMonitoring();
+        volatilityScalperService.stopScalping();
+      };
+    }
+  }, [isRunning, address, allowance, usdcEBal, trading, addLog]);
+
+  const handleImport = () => {
+    let key = importInput.trim();
+    if (!key.startsWith('0x') && key.length === 64) key = '0x' + key;
+    
+    try {
+      const wallet = new ethers.Wallet(key);
+      
+      localStorage.setItem('polymarket_bot_pkey', key);
+      setPrivateKey(key);
+      setAddress(wallet.address);
+      setInputError(null);
+      addLog("Key validated. Initializing trading engine...", "info");
+      performDeepSync(wallet.address);
+      toast.success("Wallet connected successfully");
+    } catch (e) {
+      setInputError("Invalid private key format. Use 64-character hex key.");
+    }
   };
 
-  return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap');
-        @keyframes sqiPulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
-        @keyframes sqiPulseRing { 0%,100%{opacity:0.3;transform:scale(2)} 50%{opacity:0;transform:scale(3.5)} }
-        @keyframes scanLine { 0%{transform:translateY(-100%)} 100%{transform:translateY(400%)} }
-        @keyframes goldBlink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: ${C.goldBorder}; border-radius: 2px; }
-        input[type=range] { -webkit-appearance: none; height: 3px; border-radius: 2px;
-          background: ${C.glassBorder}; outline: none; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px;
-          border-radius: 50%; background: ${C.gold}; cursor: pointer;
-          box-shadow: 0 0 10px ${C.goldGlow}; }
-      `}</style>
+  // Real on-chain approval
+  const handleApprove = async () => {
+    if (!privateKey) return;
+    setIsApproving(true);
+    addLog("Initiating USDC.e approval transaction...", "info");
+    
+    try {
+      // Find a working RPC
+      for (const rpcUrl of RPC_POOL) {
+        try {
+          const provider = new ethers.JsonRpcProvider(rpcUrl);
+          const wallet = new ethers.Wallet(privateKey, provider);
+          
+          const usdcContract = new ethers.Contract(
+            POLYGON_ADDRESSES.USDC_E,
+            ERC20_ABI,
+            wallet
+          );
+          
+          addLog("Sending approval transaction to Polygon...", "info");
+          
+          const tx = await usdcContract.approve(
+            POLYGON_ADDRESSES.CTF_EXCHANGE,
+            ethers.MaxUint256
+          );
+          
+          addLog(`Tx submitted: ${tx.hash.slice(0, 18)}...`, "info");
+          
+          const receipt = await tx.wait();
+          
+          setAllowance(ethers.MaxUint256);
+          addLog(`Approval confirmed in block ${receipt.blockNumber}`, "success");
+          toast.success("Exchange access approved!");
+          break;
+          
+        } catch (rpcError: any) {
+          if (rpcError.code === 'INSUFFICIENT_FUNDS') {
+            addLog("Insufficient POL for gas fees", "error");
+            toast.error("Need POL for gas fees");
+            break;
+          }
+          continue;
+        }
+      }
+    } catch (error: any) {
+      addLog(`Approval failed: ${error.message}`, "error");
+      toast.error("Approval transaction failed");
+    }
+    
+    setIsApproving(false);
+  };
 
-      <div style={styles.root}>
-        <div style={styles.starfield} />
+  const clearVault = () => {
+    localStorage.removeItem('polymarket_bot_pkey');
+    setPrivateKey(null);
+    setAddress("");
+    setLogs([]);
+    setIsRunning(false);
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current);
+    }
+    toast.info("Wallet disconnected");
+  };
 
-        {/* HEADER */}
-        <div style={styles.header}>
-          <div style={styles.logo}>
-            <div style={styles.logoIcon}>⟁</div>
+  // Toggle paper/live mode
+  const toggleTradingMode = async () => {
+    const newMode = !isPaperMode;
+    setIsPaperMode(newMode);
+    paperTradingService.setMode(newMode);
+    await paperTradingService.saveSettings({ is_paper_mode: newMode });
+    addLog(`Switched to ${newMode ? '📝 PAPER TRADING' : '💰 LIVE TRADING'} mode`, "info");
+    toast.success(`${newMode ? 'Paper' : 'Live'} trading mode enabled`);
+  };
+
+  // Execute trade helper - routes to paper or live
+  const executeTradeWithMode = async (signal: TradeSignal, strategy?: string): Promise<boolean> => {
+    if (isPaperMode) {
+      const result = await paperTradingService.executePaperTrade(signal, strategy);
+      if (result.success) {
+        addLog(`📝 PAPER: ${signal.direction} ${signal.outcome} $${signal.suggestedSize.toFixed(2)}`, "success");
+        setTotalTrades(prev => prev + 1);
+        return true;
+      }
+      addLog(`📝 PAPER FAILED: ${result.error}`, "error");
+      return false;
+    } else {
+      if (allowance === 0n) {
+        addLog("Cannot trade: USDC.e not approved", "error");
+        return false;
+      }
+      const result = await trading.executeTrade(signal);
+      if (result.success) {
+        addLog(`💰 LIVE: ${signal.direction} ${signal.outcome} tx: ${result.txHash}`, "success");
+        setTotalTrades(prev => prev + 1);
+        return true;
+      }
+      addLog(`💰 LIVE FAILED: ${result.error}`, "error");
+      return false;
+    }
+  };
+
+  const toggleBot = () => {
+    if (!isRunning) {
+      // Paper mode doesn't need approval
+      if (!isPaperMode) {
+        if (allowance === 0n) {
+          toast.error("Approve USDC.e first to enable live trading");
+          return;
+        }
+        if (parseFloat(usdcEBal) < 5) {
+          toast.error("Minimum $5 USDC.e required for live trading");
+          return;
+        }
+      }
+      setIsRunning(true);
+      addLog(`HFT Engine Started in ${isPaperMode ? 'PAPER' : 'LIVE'} mode...`, "success");
+      toast.success(`Bot started - ${isPaperMode ? 'Paper' : 'Live'} trading active`);
+    } else {
+      setIsRunning(false);
+      addLog("Engine halted by operator.", "warn");
+      toast.info("Bot stopped");
+    }
+  };
+
+  // Landing page for users without wallet connected
+  if (!privateKey) {
+    return (
+      <div className="min-h-screen pb-24">
+        <div className="px-4 pt-6 pb-4">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/income-streams')} className="mb-4">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+          
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500/20 to-cyan-500/20">
+              <TrendingUp className="h-6 w-6 text-indigo-400" />
+            </div>
             <div>
-              <div style={styles.logoText}>Sovereign Signal Oracle</div>
-              <div style={styles.logoSub}>SQI · Prediction Market Intelligence · 2050</div>
-            </div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <PulseDot color={live ? C.green : C.white30} />
-              <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.3em", color: live ? C.green : C.white30 }}>
-                {live ? "SCANNING LIVE" : "OFFLINE"}
-              </span>
-            </div>
-            <div style={styles.modeToggle}>
-              <button style={styles.modeBtn(mode === "PAPER", C.cyan)} onClick={() => setMode("PAPER")}>
-                Paper
-              </button>
-              <button style={styles.modeBtn(mode === "LIVE", C.red)} onClick={() => setMode("LIVE")}>
-                ⚡ Live
-              </button>
+              <h1 className="text-2xl font-bold text-foreground">Polymarket HFT Bot</h1>
+              <p className="text-sm text-muted-foreground">AI-powered prediction market trading</p>
             </div>
           </div>
         </div>
 
-        {/* LIVE WARNING BANNER */}
-        {mode === "LIVE" && (
-          <div style={{
-            margin: "16px 32px 0", padding: "12px 20px", borderRadius: 14,
-            background: "rgba(255,71,87,0.1)", border: `1px solid ${C.red}44`,
-            display: "flex", alignItems: "center", gap: 10, position: "relative", zIndex: 10,
-          }}>
-            <PulseDot color={C.red} />
-            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.3em", color: C.red }}>
-              LIVE MODE ACTIVE — SIGNALS WILL EXECUTE ON-CHAIN · CONFIRM ALL POSITIONS BEFORE ENABLING
-            </span>
-          </div>
-        )}
-
-        {/* MAIN CONTENT */}
-        <div style={styles.content}>
-
-          {/* HERO */}
-          <div style={{ marginBottom: 32 }}>
-            <div style={styles.heroTitle}>Signal Oracle</div>
-            <div style={styles.heroSub}>Prema-Pulse · Wallet Intelligence · Akasha-Neural Archive</div>
-          </div>
-
-          {/* METRICS */}
-          <div style={styles.metricsGrid}>
-            {METRICS.map((m, i) => (
-              <div key={i} style={styles.metricCard}>
-                <div style={styles.metricLabel}>{m.label}</div>
-                <div style={{ ...styles.metricValue, color: i === 2 ? C.green : "#fff" }}>{m.value}</div>
-                <div style={styles.metricSub}>{m.sub}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* TABS */}
-          <div style={styles.tabs}>
-            {(["dashboard", "wallets", "config", "activity"] as const).map(t => (
-              <button key={t} style={styles.tabBtn(tab === t)} onClick={() => setTab(t)}>
-                {t === "dashboard" ? "⬡ Dashboard" : t === "wallets" ? "◈ Wallets" : t === "config" ? "⚙ Config" : "⏱ Activity"}
-              </button>
-            ))}
-          </div>
-
-          {/* ─── DASHBOARD TAB ─── */}
-          {tab === "dashboard" && (
-            <div style={styles.grid3}>
-              {/* LEFT: Wallet Cards */}
-              <div>
-                <div style={styles.sectionLabel}>Alpha Wallets · Bhakti-Algorithm Tracked</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                  {WALLETS.map((w, i) => (
-                    <div key={i} style={styles.walletCard(i === activeWallet, w.color)} onClick={() => setActiveWallet(i)}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                        <div>
-                          <div style={styles.walletAddr}>{w.address}</div>
-                          <div style={styles.walletName}>{w.label}</div>
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
-                          <span style={styles.pill(w.status === "LIVE" ? C.red : C.cyan)}>
-                            {w.status === "LIVE" ? "⚡ LIVE" : "◎ PAPER"}
-                          </span>
-                          <span style={{ fontSize: 18, fontWeight: 900, color: C.green }}>{w.pnl}</span>
-                          <span style={{ fontSize: 9, color: C.green }}>{w.pnlPct}</span>
-                        </div>
-                      </div>
-                      <div style={styles.statRow}>
-                        <div style={styles.statBox}>
-                          <div style={styles.statLabel}>Win Rate</div>
-                          <div style={{ ...styles.statVal, color: C.gold }}>{w.winRate}</div>
-                        </div>
-                        <div style={styles.statBox}>
-                          <div style={styles.statLabel}>Trades/Day</div>
-                          <div style={styles.statVal}>{w.tradesPerDay}</div>
-                        </div>
-                        <div style={styles.statBox}>
-                          <div style={styles.statLabel}>Avg Size</div>
-                          <div style={styles.statVal}>{w.avgPositionSize}</div>
-                        </div>
-                      </div>
-                      <div style={{ marginTop: 12, fontSize: 9, color: C.white30, lineHeight: 1.6 }}>
-                        {w.strategy}
-                      </div>
-                    </div>
-                  ))}
+        <div className="px-4 space-y-6">
+          <Card className="bg-gradient-to-br from-indigo-500/10 to-cyan-500/10 border-indigo-500/20">
+            <CardContent className="p-6 text-center">
+              <Badge className="bg-indigo-500/20 text-indigo-400 mb-4">Live Trading</Badge>
+              <h2 className="text-3xl font-bold mb-2">€10 → Financial Freedom</h2>
+              <p className="text-muted-foreground mb-6">
+                AI scans Polymarket for mispriced markets. Automated arbitrage execution.
+              </p>
+              
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-indigo-400">AI</p>
+                  <p className="text-xs text-muted-foreground">Gemini Analysis</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-green-400">Live</p>
+                  <p className="text-xs text-muted-foreground">Real Trades</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-cyan-400">CLOB</p>
+                  <p className="text-xs text-muted-foreground">Order Book</p>
                 </div>
               </div>
+            </CardContent>
+          </Card>
 
-              {/* RIGHT: Live Signal Feed */}
+          <Card className="bg-card/50 border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Wallet className="w-5 h-5 text-primary" />
+                Connect Your Wallet
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div>
-                <div style={styles.sectionLabel}>Live Signal Feed · {wallet.label}</div>
-                <GlassCard style={{ padding: 20 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                    <PulseDot color={wallet.color} />
-                    <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.3em", color: wallet.color }}>
-                      MONITORING ACTIVE
-                    </span>
-                  </div>
-                  {wallet.recentTrades.map((t, i) => (
-                    <div key={i} style={styles.tradeRow}>
-                      <div>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: "#fff", marginBottom: 4, maxWidth: 160 }}>{t.market}</div>
-                        <div style={{ fontSize: 8, color: C.white30 }}>{t.time}</div>
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-                        <span style={styles.pill(t.side === "YES" ? C.cyan : C.gold)}>{t.side}</span>
-                        <span style={{ fontSize: 10, fontWeight: 800, color: t.result.startsWith("+") ? C.green : C.red }}>
-                          {t.result}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </GlassCard>
-
-                {/* Copy Config Summary */}
-                <GlassCard style={{ padding: 20, marginTop: 16 }} glow>
-                  <div style={styles.sectionLabel}>Signal Copy Config</div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>Copy Mode</div>
-                      <div style={{ ...styles.statVal, color: C.gold, fontSize: 11 }}>{copyMode}</div>
-                    </div>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>Amount</div>
-                      <div style={{ ...styles.statVal, fontSize: 11 }}>
-                        {copyMode === "FIXED" ? `$${fixedAmount}` : copyMode === "PCT" ? `${pctAmount}%` : `${riskRatio}x`}
-                      </div>
-                    </div>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>Slippage</div>
-                      <div style={{ ...styles.statVal, color: C.cyan, fontSize: 11 }}>{slippage}%</div>
-                    </div>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>Mode</div>
-                      <div style={{ ...styles.statVal, color: mode === "LIVE" ? C.red : C.cyan, fontSize: 11 }}>{mode}</div>
-                    </div>
-                  </div>
-                </GlassCard>
+                <label className="text-xs font-medium text-muted-foreground mb-2 block">
+                  Polygon Mainnet Private Key
+                </label>
+                <Input
+                  type="password"
+                  placeholder="0x..."
+                  value={importInput}
+                  onChange={(e) => setImportInput(e.target.value)}
+                  className="font-mono"
+                />
+                {inputError && (
+                  <p className="text-red-500 text-xs mt-2 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {inputError}
+                  </p>
+                )}
               </div>
-            </div>
-          )}
+              
+              <Button onClick={handleImport} className="w-full">
+                <Wallet className="w-4 h-4 mr-2" />
+                Connect & Initialize
+              </Button>
+              
+              <p className="text-xs text-muted-foreground text-center">
+                🔒 Local encryption only. Keys never leave your device.
+              </p>
+            </CardContent>
+          </Card>
 
-          {/* ─── WALLETS TAB ─── */}
-          {tab === "wallets" && (
-            <div style={styles.grid2}>
-              {WALLETS.map((w, i) => (
-                <GlassCard key={i} style={{ padding: 28 }} glow={i === activeWallet}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
-                    <div>
-                      <div style={styles.walletAddr}>{w.address}</div>
-                      <div style={{ fontSize: 18, fontWeight: 900, color: "#fff", marginTop: 6 }}>{w.label}</div>
-                    </div>
-                    <span style={styles.pill(w.color)}>{w.copyMode}</span>
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
-                    {[
-                      ["PnL", w.pnl, C.green],
-                      ["PnL %", w.pnlPct, C.green],
-                      ["Win Rate", w.winRate, C.gold],
-                      ["Trades/Day", w.tradesPerDay, "#fff"],
-                      ["Avg Position", w.avgPositionSize, "#fff"],
-                      ["Portfolio", w.portfolioSize, C.cyan],
-                    ].map(([label, val, color], j) => (
-                      <div key={j} style={styles.statBox}>
-                        <div style={styles.statLabel}>{label as string}</div>
-                        <div style={{ ...styles.statVal, color: color as string }}>{val as string}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ fontSize: 9, color: C.white30, lineHeight: 1.8, marginBottom: 16 }}>
-                    <strong style={{ color: C.white60 }}>Strategy: </strong>{w.strategy}
-                  </div>
-                  <div style={{ marginBottom: 16 }}>
-                    <div style={styles.configLabel}>Markets Tracked</div>
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const }}>
-                      {w.markets.map((m, j) => (
-                        <span key={j} style={styles.pill(w.color)}>{m}</span>
-                      ))}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setActiveWallet(i)}
-                    style={{
-                      width: "100%", padding: "12px", borderRadius: 16, border: "none",
-                      cursor: "pointer", fontSize: 9, fontWeight: 800, letterSpacing: "0.3em",
-                      background: i === activeWallet ? C.goldDim : C.white10,
-                      color: i === activeWallet ? C.gold : C.white60,
-                      border: `1px solid ${i === activeWallet ? C.goldBorder : C.glassBorder}`,
-                    }}
-                  >
-                    {i === activeWallet ? "✓ ACTIVE SIGNAL SOURCE" : "SET AS SIGNAL SOURCE"}
-                  </button>
-                </GlassCard>
-              ))}
-            </div>
-          )}
-
-          {/* ─── CONFIG TAB ─── */}
-          {tab === "config" && (
-            <div style={styles.grid2}>
-              <div>
-                {/* Copy Mode */}
-                <GlassCard style={{ padding: 24, marginBottom: 16 }}>
-                  <div style={styles.configLabel}>Copy Mode · Vedic Signal Allocation</div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    {(["FIXED", "PCT", "RISK_RATIO"] as const).map(m => (
-                      <button key={m} style={styles.copyModeBtn(copyMode === m)} onClick={() => setCopyMode(m)}>
-                        {m === "FIXED" ? "Fixed $" : m === "PCT" ? "% Portfolio" : "Risk Ratio"}
-                      </button>
-                    ))}
-                  </div>
-                </GlassCard>
-
-                {/* Amount Config */}
-                <GlassCard style={{ padding: 24, marginBottom: 16 }}>
-                  <div style={styles.configLabel}>
-                    {copyMode === "FIXED" ? "Fixed Amount Per Signal" : copyMode === "PCT" ? "% of Portfolio" : "Risk Ratio"}
-                  </div>
-                  <div style={{ fontSize: 32, fontWeight: 900, color: C.gold, marginBottom: 16, textShadow: `0 0 20px ${C.goldGlow}` }}>
-                    {copyMode === "FIXED" ? `$${fixedAmount}` : copyMode === "PCT" ? `${pctAmount}%` : `${riskRatio}x`}
-                  </div>
-                  <input
-                    type="range"
-                    style={styles.slider}
-                    min={copyMode === "FIXED" ? 10 : copyMode === "PCT" ? 1 : 0.5}
-                    max={copyMode === "FIXED" ? 500 : copyMode === "PCT" ? 25 : 5}
-                    step={copyMode === "FIXED" ? 10 : copyMode === "PCT" ? 0.5 : 0.25}
-                    value={copyMode === "FIXED" ? fixedAmount : copyMode === "PCT" ? pctAmount : riskRatio}
-                    onChange={e => {
-                      const v = parseFloat(e.target.value);
-                      if (copyMode === "FIXED") setFixedAmount(v);
-                      else if (copyMode === "PCT") setPctAmount(v);
-                      else setRiskRatio(v);
-                    }}
-                  />
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 8, color: C.white30, marginTop: 8 }}>
-                    <span>{copyMode === "FIXED" ? "$10" : copyMode === "PCT" ? "1%" : "0.5x"}</span>
-                    <span>{copyMode === "FIXED" ? "$500" : copyMode === "PCT" ? "25%" : "5x"}</span>
-                  </div>
-                </GlassCard>
-
-                {/* Slippage */}
-                <GlassCard style={{ padding: 24, marginBottom: 16 }}>
-                  <div style={styles.configLabel}>Slippage Tolerance · Nadi Scanner</div>
-                  <div style={{ fontSize: 32, fontWeight: 900, color: C.cyan, marginBottom: 16 }}>{slippage}%</div>
-                  <input type="range" style={styles.slider} min={1} max={15} step={0.5} value={slippage} onChange={e => setSlippage(parseFloat(e.target.value))} />
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 8, color: C.white30, marginTop: 8 }}>
-                    <span>1% · Tight</span>
-                    <span>5% · Recommended</span>
-                    <span>15% · Wide</span>
-                  </div>
-                  {slippage > 8 && (
-                    <div style={{ marginTop: 10, padding: "8px 12px", borderRadius: 10, background: "rgba(255,71,87,0.1)", border: `1px solid ${C.red}33`, fontSize: 9, color: C.red }}>
-                      ⚠ High slippage may lead to unfavorable fills
-                    </div>
-                  )}
-                </GlassCard>
-
-                {/* Recommended Config Note */}
-                <GlassCard style={{ padding: 20 }}>
-                  <div style={styles.configLabel}>Akasha-Archive Recommendation</div>
-                  <div style={{ fontSize: 9, color: C.white60, lineHeight: 1.8 }}>
-                    <div style={{ color: C.gold, fontWeight: 800, marginBottom: 6 }}>Alpha-1 Wallet</div>
-                    Fixed $50 · 5% Slippage · Paper mode first<br />
-                    <div style={{ color: C.gold, fontWeight: 800, margin: "10px 0 6px" }}>Alpha-2 Wallet</div>
-                    Risk Ratio 1.0x · 5% Slippage · Paper mode first
-                  </div>
-                </GlassCard>
-              </div>
-
-              <div>
-                {/* Activate Button */}
-                <GlassCard style={{ padding: 24, marginBottom: 16 }} glow>
-                  <div style={styles.configLabel}>Signal Activation · {mode} Mode</div>
-                  <div style={{ marginBottom: 20, fontSize: 9, color: C.white30, lineHeight: 1.8 }}>
-                    Source: <span style={{ color: C.gold }}>{wallet.label}</span><br />
-                    Mode: <span style={{ color: mode === "LIVE" ? C.red : C.cyan }}>{mode}</span><br />
-                    Copy: <span style={{ color: "#fff" }}>
-                      {copyMode === "FIXED" ? `$${fixedAmount} fixed` : copyMode === "PCT" ? `${pctAmount}% of portfolio` : `${riskRatio}x risk ratio`}
-                    </span><br />
-                    Slippage: <span style={{ color: C.cyan }}>{slippage}%</span>
-                  </div>
-                  <button style={styles.activateBig}>
-                    {mode === "PAPER" ? "◎ Activate Paper Signal" : "⚡ Activate Live Signal"}
-                  </button>
-                  {mode === "LIVE" && (
-                    <div style={{ marginTop: 12, fontSize: 8, color: C.red, textAlign: "center" as const, lineHeight: 1.6 }}>
-                      Live mode connects to on-chain execution.<br />Connect your wallet to proceed.
-                    </div>
-                  )}
-                </GlassCard>
-
-                {/* Wallet Connection */}
-                <GlassCard style={{ padding: 24 }}>
-                  <div style={styles.configLabel}>Wallet Connection</div>
-                  <button style={{
-                    width: "100%", padding: "14px", borderRadius: 16, border: `1px solid ${C.goldBorder}`,
-                    cursor: "pointer", fontSize: 10, fontWeight: 800, letterSpacing: "0.3em",
-                    background: C.goldDim, color: C.gold,
-                  }}>
-                    Connect Wallet
-                  </button>
-                  <div style={{ marginTop: 12, fontSize: 8, color: C.white30, textAlign: "center" as const }}>
-                    Supports MetaMask · WalletConnect · Coinbase Wallet
-                  </div>
-                </GlassCard>
-              </div>
-            </div>
-          )}
-
-          {/* ─── ACTIVITY TAB ─── */}
-          {tab === "activity" && (
-            <div>
-              <div style={styles.sectionLabel}>Full Signal History · Both Alpha Wallets</div>
-              {WALLETS.flatMap(w => w.recentTrades.map(t => ({ ...t, wallet: w.label, color: w.color }))).map((t, i) => (
-                <div key={i} style={{ ...styles.tradeRow, marginBottom: 10 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                    <span style={styles.pill(t.color)}>{t.wallet.split("·")[0].trim()}</span>
-                    <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: "#fff" }}>{t.market}</div>
-                      <div style={{ fontSize: 8, color: C.white30, marginTop: 3 }}>{t.time}</div>
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                    <span style={styles.pill(t.side === "YES" ? C.cyan : C.gold)}>{t.side}</span>
-                    <span style={{ fontSize: 12, fontWeight: 800, color: C.white30 }}>{t.size}</span>
-                    <span style={{ fontSize: 14, fontWeight: 900, color: t.result.startsWith("+") ? C.green : C.red, minWidth: 60, textAlign: "right" as const }}>
-                      {t.result}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="grid grid-cols-2 gap-3">
+            <Card className="bg-card/50 border-border/50">
+              <CardContent className="p-4">
+                <Zap className="w-5 h-5 text-yellow-500 mb-2" />
+                <h3 className="font-semibold text-sm">AI Signals</h3>
+                <p className="text-xs text-muted-foreground">Gemini market analysis</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-card/50 border-border/50">
+              <CardContent className="p-4">
+                <Shield className="w-5 h-5 text-green-500 mb-2" />
+                <h3 className="font-semibold text-sm">On-Chain</h3>
+                <p className="text-xs text-muted-foreground">Real CTF Exchange</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-card/50 border-border/50">
+              <CardContent className="p-4">
+                <Target className="w-5 h-5 text-indigo-500 mb-2" />
+                <h3 className="font-semibold text-sm">Arbitrage</h3>
+                <p className="text-xs text-muted-foreground">Mispricing detection</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-card/50 border-border/50">
+              <CardContent className="p-4">
+                <DollarSign className="w-5 h-5 text-cyan-500 mb-2" />
+                <h3 className="font-semibold text-sm">$5 Minimum</h3>
+                <p className="text-xs text-muted-foreground">Low entry barrier</p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
-    </>
+    );
+  }
+
+  // Dashboard for connected users
+  return (
+    <div className="min-h-screen pb-24">
+      <div className="px-4 pt-6 pb-4">
+        <Button variant="ghost" size="sm" onClick={() => navigate('/income-streams')} className="mb-4">
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back
+        </Button>
+        
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className={`p-2.5 rounded-xl ${isRunning ? 'bg-green-500/20' : 'bg-indigo-500/20'}`}>
+              <TrendingUp className={`h-6 w-6 ${isRunning ? 'text-green-400' : 'text-indigo-400'}`} />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-foreground">Polymarket Bot</h1>
+              <p className="text-xs text-muted-foreground font-mono">
+                {address.slice(0, 8)}...{address.slice(-6)}
+              </p>
+            </div>
+          </div>
+          <Badge variant={isRunning ? "default" : "secondary"} className={isRunning ? "bg-green-500" : ""}>
+            {isRunning ? (isScanning ? "Scanning" : "Running") : "Stopped"}
+          </Badge>
+        </div>
+
+        {/* Balance Cards */}
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          <Card className="bg-card/50 border-border/50">
+            <CardContent className="p-3 text-center">
+              <p className="text-xs text-muted-foreground">POL (Gas)</p>
+              <p className={`font-mono font-bold ${parseFloat(polBal) > 0.01 ? 'text-green-400' : 'text-red-400'}`}>
+                {polBal}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="bg-cyan-500/10 border-cyan-500/20">
+            <CardContent className="p-3 text-center">
+              <p className="text-xs text-cyan-400">USDC</p>
+              <p className="font-mono font-bold text-cyan-400">${usdcNBal}</p>
+            </CardContent>
+          </Card>
+          <Card className={`${parseFloat(usdcEBal) > 0 ? 'bg-indigo-500/10 border-indigo-500/20' : 'bg-card/50 border-border/50'}`}>
+            <CardContent className="p-3 text-center">
+              <p className="text-xs text-muted-foreground">USDC.e</p>
+              <p className={`font-mono font-bold ${parseFloat(usdcEBal) > 0 ? 'text-indigo-400' : 'text-muted-foreground'}`}>
+                ${usdcEBal}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Live PnL Card */}
+        <div className="mb-4">
+          <PnLCard 
+            isPaperMode={isPaperMode}
+            totalPnL={isPaperMode ? pnlSummary.totalPnL : livePnlSummary.totalPnL}
+            todayPnL={isPaperMode ? pnlSummary.todayPnL : livePnlSummary.todayPnL}
+            totalTrades={isPaperMode ? pnlSummary.totalTrades : livePnlSummary.totalTrades}
+            winRate={isPaperMode ? pnlSummary.winRate : livePnlSummary.winRate}
+            startingBalance={1000}
+            currentBalance={isPaperMode ? paperBalance : undefined}
+            totalFees={isPaperMode ? totalFeesPaid : undefined}
+            onResetBalance={isPaperMode ? handleResetPaperBalance : undefined}
+          />
+        </div>
+
+        {/* Stats Row */}
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          <Card className="bg-card/50 border-border/50">
+            <CardContent className="p-3 text-center">
+              <p className="text-xs text-muted-foreground">Trades</p>
+              <p className="font-mono font-bold">{totalTrades}</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-card/50 border-border/50">
+            <CardContent className="p-3 text-center">
+              <p className="text-xs text-muted-foreground">Markets</p>
+              <p className="font-mono font-bold">{markets.length}</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-card/50 border-border/50">
+            <CardContent className="p-3 text-center">
+              <p className="text-xs text-muted-foreground">Signals</p>
+              <p className="font-mono font-bold text-amber-400">{activeSignals.length}</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Control Buttons */}
+        <div className="flex gap-2 mb-4">
+          <Button
+            onClick={toggleBot}
+            className={`flex-1 ${isRunning ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}
+            disabled={isApproving}
+          >
+            {isRunning ? <Square className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
+            {isRunning ? 'Stop' : 'Start'}
+          </Button>
+          <Button variant="outline" onClick={() => performDeepSync()} disabled={isSyncing}>
+            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+          </Button>
+          <Button variant="outline" onClick={clearVault}>
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Approval Warning - only show if user has USDC.e and hasn't approved */}
+        {parseFloat(usdcEBal) > 0 && allowance === 0n && (
+          <Card className="bg-amber-500/10 border-amber-500/30 mb-4">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 text-amber-500" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">CTF Exchange Approval Required</p>
+                  <p className="text-xs text-muted-foreground">Approve USDC.e to trade on Polymarket</p>
+                </div>
+                <Button 
+                  size="sm" 
+                  onClick={handleApprove} 
+                  disabled={isApproving || parseFloat(polBal) < 0.01}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  {isApproving ? 'Signing...' : 'Approve'}
+                </Button>
+              </div>
+              {parseFloat(polBal) < 0.01 && (
+                <p className="text-xs text-red-400 mt-2">Need POL for gas fees</p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+        
+        {/* No funds warning */}
+        {parseFloat(usdcEBal) === 0 && parseFloat(usdcNBal) === 0 && (
+          <Card className="bg-muted/50 border-border/50 mb-4">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <DollarSign className="w-5 h-5 text-muted-foreground" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">No Trading Funds</p>
+                  <p className="text-xs text-muted-foreground">
+                    Deposit USDC.e to your wallet to start trading. Paper trading works without funds.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="px-4">
+        <TabsList className="w-full">
+          <TabsTrigger value="dashboard" className="flex-1">Terminal</TabsTrigger>
+          <TabsTrigger value="signals" className="flex-1">Signals</TabsTrigger>
+          <TabsTrigger value="settings" className="flex-1">Settings</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="dashboard" className="mt-4">
+          <Card className="bg-card/50 border-border/50">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-green-500 animate-pulse' : 'bg-muted'}`} />
+                  Execution Feed
+                </CardTitle>
+                <Badge variant="outline" className="text-xs">
+                  <Clock className="w-3 h-3 mr-1" />
+                  {lastSync}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[300px]">
+                <div className="space-y-2 font-mono text-xs">
+                  {logs.length === 0 ? (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <Activity className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p>Awaiting Mainnet Activity...</p>
+                    </div>
+                  ) : (
+                    logs.map(log => (
+                      <div key={log.id} className="flex gap-3">
+                        <span className="text-muted-foreground shrink-0">[{log.time}]</span>
+                        <span className={
+                          log.type === 'success' ? 'text-green-400' :
+                          log.type === 'error' ? 'text-red-400' :
+                          log.type === 'warn' ? 'text-amber-400' :
+                          log.type === 'trade' ? 'text-cyan-400' :
+                          log.type === 'debug' ? 'text-muted-foreground' :
+                          'text-foreground'
+                        }>
+                          {log.msg}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                  <div ref={logEndRef} />
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="signals" className="mt-4 space-y-3">
+          {activeSignals.length === 0 ? (
+            <Card className="bg-card/50 border-border/50">
+              <CardContent className="p-8 text-center">
+                <BarChart3 className="w-10 h-10 mx-auto mb-3 text-muted-foreground opacity-50" />
+                <p className="text-muted-foreground">No active signals</p>
+                <p className="text-xs text-muted-foreground mt-1">Start the bot to scan markets</p>
+              </CardContent>
+            </Card>
+          ) : (
+            activeSignals.map((signal, i) => (
+              <Card key={i} className="bg-card/50 border-border/50">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <Badge className={signal.direction === 'buy' ? 'bg-green-500' : 'bg-red-500'}>
+                      {signal.direction.toUpperCase()} {signal.outcome}
+                    </Badge>
+                    <span className="text-sm font-mono">{signal.confidence}% conf</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-2">{signal.reason}</p>
+                  <div className="flex justify-between text-xs">
+                    <span>Entry: {(signal.currentPrice * 100).toFixed(1)}%</span>
+                    <span>Target: {(signal.targetPrice * 100).toFixed(1)}%</span>
+                    <span>Size: ${signal.suggestedSize.toFixed(0)}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </TabsContent>
+
+        <TabsContent value="settings" className="mt-4 space-y-4">
+          {/* Paper/Live Mode Toggle */}
+          <Card className={`border-2 ${isPaperMode ? 'bg-amber-500/10 border-amber-500/30' : 'bg-green-500/10 border-green-500/30'}`}>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">{isPaperMode ? '📝 Paper Trading' : '💰 Live Trading'}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {isPaperMode 
+                      ? 'Simulated trades, no real money at risk' 
+                      : 'Real trades with your USDC.e balance'}
+                  </p>
+                </div>
+                <Button 
+                  onClick={toggleTradingMode}
+                  variant={isPaperMode ? "default" : "destructive"}
+                  size="sm"
+                  disabled={isRunning}
+                >
+                  {isPaperMode ? 'Go Live' : 'Go Paper'}
+                </Button>
+              </div>
+              {isPaperMode && (
+                <div className="mt-3 pt-3 border-t border-border/50">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Paper Balance:</span>
+                    <span className="font-bold text-amber-400">$1,000.00</span>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card/50 border-border/50">
+            <CardContent className="p-4 space-y-4">
+              <div>
+                <label className="text-sm font-medium">Connected Wallet</label>
+                <p className="font-mono text-xs text-muted-foreground break-all">{address}</p>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-sm">CTF Exchange</span>
+                <Badge variant={allowance > 0n ? "default" : "destructive"}>
+                  {allowance > 0n ? (
+                    <><CheckCircle className="w-3 h-3 mr-1" /> Approved</>
+                  ) : (
+                    <><AlertCircle className="w-3 h-3 mr-1" /> Pending</>
+                  )}
+                </Badge>
+              </div>
+
+              {parseFloat(usdcNBal) > 0.01 && parseFloat(usdcEBal) < 5 && (
+                <Card className="bg-amber-500/10 border-amber-500/30">
+                  <CardContent className="p-3">
+                    <p className="text-xs font-medium text-amber-500 mb-2">Swap USDC to USDC.e for trading</p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => window.open(`https://app.uniswap.org/#/swap?inputCurrency=${POLYGON_ADDRESSES.USDC_NATIVE}&outputCurrency=${POLYGON_ADDRESSES.USDC_E}&chain=polygon`, '_blank')}
+                    >
+                      <ExternalLink className="w-3 h-3 mr-1" />
+                      Swap on Uniswap
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+
+              <Button variant="destructive" className="w-full" onClick={clearVault}>
+                <Trash2 className="w-4 h-4 mr-2" />
+                Disconnect Wallet
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Footer Status */}
+      <div className="fixed bottom-20 left-0 right-0 px-4">
+        <Card className="bg-card/90 backdrop-blur border-border/50">
+          <CardContent className="p-2 flex justify-between items-center text-xs text-muted-foreground">
+            <span className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-green-500 animate-pulse' : 'bg-amber-500'}`} />
+              {isRunning ? (isPaperMode ? '📝 Paper Trading' : '💰 Live Trading') : 'Engine Ready'}
+            </span>
+            <span>{isPaperMode ? 'PAPER' : 'LIVE'} • CLOB v2</span>
+            <span>v5.1.0</span>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
-}
+};
+
+export default PolymarketBotDetail;
