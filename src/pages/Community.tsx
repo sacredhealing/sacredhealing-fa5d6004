@@ -875,7 +875,19 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
                   <div className="c-msg-meta">
                     <span className="c-msg-author">{isMine ? "You" : (msg.sender_profile?.full_name || "Member")}</span>
                   </div>
-                  <div className={`c-bubble ${isMine ? "mine" : ""}`}>{msg.content}</div>
+                  <div className={`c-bubble ${isMine ? "mine" : ""}`}>
+                    {typeof msg.content === "string" && msg.content.startsWith("VIDEO_CALL:") ? (
+                      <button
+                        type="button"
+                        className="c-video-call-btn"
+                        onClick={() => window.open(msg.content.slice("VIDEO_CALL:".length), "_blank", "noopener,noreferrer")}
+                      >
+                        JOIN VIDEO CALL
+                      </button>
+                    ) : (
+                      msg.content
+                    )}
+                  </div>
                   <div className={`c-msg-time ${isMine ? "mine" : ""}`}>
                     {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
                   </div>
@@ -1280,7 +1292,7 @@ const Community = () => {
         const createPromises = missingChannels.map(async (ch) => {
           const { data: created, error: createErr } = await supabase
             .from("chat_rooms")
-            .insert({ name: ch.name, created_by: user.id })
+            .insert({ name: ch.name })
             .select("id")
             .single();
           if (!createErr && created?.id) return { channelId: ch.id, roomId: (created as any).id };
@@ -1339,10 +1351,9 @@ const Community = () => {
           .maybeSingle();
 
         if (!room) {
-          // Insert name only (created_by if schema requires it for RLS)
           const { data: newRoom, error } = await supabase
             .from("chat_rooms")
-            .insert({ name: channelName, created_by: user.id })
+            .insert({ name: channelName })
             .select("id")
             .single();
           if (!error && newRoom) {
@@ -1659,6 +1670,13 @@ const Community = () => {
     );
     if (result) {
       setDmVideoUrl(result.room_url);
+      if (partnerId) {
+        await supabase.from("private_messages").insert({
+          sender_id: user.id,
+          receiver_id: partnerId,
+          content: "VIDEO_CALL:" + result.room_url,
+        });
+      }
     }
   };
 
@@ -1812,7 +1830,7 @@ const Community = () => {
         if (!room) {
           const { data: newRoom, error } = await supabase
             .from("chat_rooms")
-            .insert({ name: channelName, created_by: user.id })
+            .insert({ name: channelName })
             .select("id")
             .single();
           if (!error && newRoom) room = newRoom;

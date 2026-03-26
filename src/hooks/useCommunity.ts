@@ -479,8 +479,6 @@ export const usePrivateChat = (partnerId: string) => {
       sender_id: user.id,
       receiver_id: partnerId,
       content,
-      message_type: type,
-      status: 'sent'
     };
 
     if (fileData) {
