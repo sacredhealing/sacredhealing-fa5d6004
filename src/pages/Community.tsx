@@ -880,9 +880,11 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
                       <button
                         type="button"
                         className="c-video-call-btn"
-                        onClick={() => window.open(msg.content.slice("VIDEO_CALL:".length), "_blank", "noopener,noreferrer")}
+                        onClick={() =>
+                          window.open(msg.content.replace("VIDEO_CALL:", ""), "_blank", "noopener,noreferrer")
+                        }
                       >
-                        JOIN VIDEO CALL
+                        🔗 JOIN VIDEO CALL
                       </button>
                     ) : (
                       msg.content
