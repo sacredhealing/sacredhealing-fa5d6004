@@ -697,6 +697,15 @@ export default function CreativeSoulMeditationTool() {
   const [tab, setTab]                           = useState('alchemy');
   const [meditationName, setMeditationName]     = useState('');
   const [sessionKey, setSessionKey]             = useState(0);
+  /** Seconds — set when neural audio loads (NeuralSourceInput). Export caps at 60 min. */
+  const [neuralAudioDuration, setNeuralAudioDuration] = useState(3600);
+
+  useEffect(() => {
+    const d = engine?.audioBuffer?.duration;
+    if (typeof d === 'number' && d > 0 && !Number.isNaN(d)) {
+      setNeuralAudioDuration(d);
+    }
+  }, [engine?.audioBuffer]);
 
   // consciousness-field scalars (Tulsi, Kailash, Babaji, etc.)
   const [activeScalars, setActiveScalars]       = useState<ScalarWave[]>([]);
@@ -802,6 +811,7 @@ export default function CreativeSoulMeditationTool() {
     setMeditationName('');
     setExportResult(null);
     setScalarBlendHz(null);
+    setNeuralAudioDuration(3600);
     setTab('alchemy');
     setSessionKey(k => k + 1);  // Forces NeuralSourceInput to remount/clear
     toast.success('New session started');
@@ -823,37 +833,10 @@ export default function CreativeSoulMeditationTool() {
     // If scalar blend is active, override the solfeggio Hz with the blend
     const solfeggioHz = scalarBlendHz ?? frequencies.solfeggio?.hz ?? healingFreq;
 
-    // Use the actual audio duration: decoded buffer is authoritative for uploaded files.
-    let audioDuration = 0;
-    if (engine?.audioBuffer && engine.audioBuffer.duration > 0) {
-      audioDuration = Math.ceil(engine.audioBuffer.duration);
-    }
-    if (audioDuration <= 0) {
-      audioDuration = engine.getDawDuration?.() || 0;
-    }
-    if (audioDuration <= 0 && (neuralLayer?.exportInput?.directUrl ?? neuralLayer?.source)) {
-      const url = neuralLayer?.exportInput?.directUrl ?? (typeof neuralLayer?.source === 'string' ? neuralLayer.source : null);
-      if (url) {
-        try {
-          const resp = await fetch(url);
-          const buf = await resp.arrayBuffer();
-          const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-          const decoded = await ctx.decodeAudioData(buf);
-          audioDuration = Math.ceil(decoded.duration);
-          ctx.close();
-        } catch (e) {
-          console.warn('[Export] Could not fetch duration from neural URL', e);
-        }
-      }
-    }
-    const neuralExportUrl =
-      neuralLayer?.exportInput?.directUrl ??
-      (typeof neuralLayer?.source === 'string' && /^https?:\/\//.test(neuralLayer.source) ? neuralLayer.source : undefined);
-    if (audioDuration <= 0 && neuralExportUrl) {
-      toast.error('Could not read your meditation length. Re-upload the audio or reload the page, then export again.');
-      return;
-    }
-    if (audioDuration <= 0) audioDuration = 300; // fallback when exporting tones/atmosphere without a neural file
+    // Duration: neural clip length from NeuralSourceInput callback (and engine buffer), max 60 min; no neural → 60 min default for tone-only export.
+    const durationSeconds = neuralLayer?.source
+      ? Math.min(neuralAudioDuration || 3600, 3600)
+      : 3600;
 
     // Map the rich DSP object ({ reverb: { enabled, decay, wet }, ... }) to flat numbers
     // that the offline renderer expects ({ reverb: number, delay: number, warmth: number })
@@ -887,7 +870,7 @@ export default function CreativeSoulMeditationTool() {
       (/^https?:\/\//.test(directNeuralUrl) || directNeuralUrl.startsWith('blob:'));
 
     const config = {
-      durationSeconds: audioDuration,
+      durationSeconds,
       neuralAudioBuffer: engine?.audioBuffer ?? undefined,
       neuralAudioUrl: isFetchableUrl ? directNeuralUrl : undefined,
       neuralSourceVolume: volumes.user / 100,
@@ -913,7 +896,7 @@ export default function CreativeSoulMeditationTool() {
     } catch (e) {
       toast.error('Export failed: ' + e.message);
     }
-  }, [engine, isAdmin, hasExportAccess, user, navigate, exportMeditation, scalarBlendHz, frequencies, healingFreq, healingVolume, brainwaveFreq, brainwaveVolume, dsp, neuralLayer, atmosphereLayer, volumes]);
+  }, [engine, isAdmin, hasExportAccess, user, navigate, exportMeditation, scalarBlendHz, frequencies, healingFreq, healingVolume, brainwaveFreq, brainwaveVolume, dsp, neuralLayer, atmosphereLayer, volumes, neuralAudioDuration]);
 
   const handlePayForExport = useCallback(async () => {
     if (!user) { navigate('/auth'); return; }
@@ -1182,7 +1165,15 @@ export default function CreativeSoulMeditationTool() {
                   <span className="text-[11px] font-extrabold uppercase tracking-[0.3em] text-white/70">Source</span>
               </div>
                 <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.06] rounded-[28px] p-6">
-                  <NeuralSourceInput engine={engine} key={sessionKey} />
+                  <NeuralSourceInput
+                    engine={engine}
+                    key={sessionKey}
+                    onDurationKnown={(seconds) => {
+                      if (typeof seconds === 'number' && seconds > 0 && !Number.isNaN(seconds)) {
+                        setNeuralAudioDuration(seconds);
+                      }
+                    }}
+                  />
             </div>
               </div>
 

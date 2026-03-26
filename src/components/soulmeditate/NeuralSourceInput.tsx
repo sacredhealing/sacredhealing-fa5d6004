@@ -14,9 +14,11 @@ const ACCEPTED_EXT = ['mp3', 'wav', 'm4a', 'flac', 'aac', 'ogg'];
 
 interface NeuralSourceInputProps {
   engine: any;
+  /** Called with decoded duration in seconds when neural audio finishes loading. */
+  onDurationKnown?: (seconds: number) => void;
 }
 
-export default function NeuralSourceInput({ engine }: NeuralSourceInputProps) {
+export default function NeuralSourceInput({ engine, onDurationKnown }: NeuralSourceInputProps) {
   const [isDragging, setIsDragging]     = useState(false);
   const [isLoading, setIsLoading]       = useState(false);
   // ── DEFAULT SOURCE VOLUME = 1.0 (100%) ──────────────────────
@@ -38,6 +40,15 @@ export default function NeuralSourceInput({ engine }: NeuralSourceInputProps) {
       if (ok) {
         // Apply the current source volume immediately after load
         engine?.updateNeuralVolume?.(sourceVolume);
+        const reportDuration = () => {
+          const d = engine?.audioBuffer?.duration ?? engine?.getDawDuration?.();
+          if (typeof d === 'number' && d > 0 && !Number.isNaN(d)) {
+            onDurationKnown?.(d);
+          }
+        };
+        reportDuration();
+        queueMicrotask(reportDuration);
+        setTimeout(reportDuration, 50);
         toast.success(`Loaded: ${file.name}`);
       } else {
         toast.error('Failed to load audio file');
@@ -47,7 +58,7 @@ export default function NeuralSourceInput({ engine }: NeuralSourceInputProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [engine, sourceVolume]);
+  }, [engine, sourceVolume, onDurationKnown]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
