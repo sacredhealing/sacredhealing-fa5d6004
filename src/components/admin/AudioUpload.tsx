@@ -68,15 +68,64 @@ const AudioUpload = ({ value, onChange, folder = 'mantras', label = 'Audio File'
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium">{label}</label>
-      
+
+      {/* Always mounted so "Replace file" works when a URL is already set */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="audio/*"
+        onChange={handleFileUpload}
+        className="hidden"
+      />
+
       {value ? (
-        <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-          <Music className="w-5 h-5 text-primary flex-shrink-0" />
-          <span className="text-sm truncate flex-1">{value.split('/').pop()}</span>
-          <audio src={value} controls className="h-8 max-w-[150px]" />
-          <Button variant="ghost" size="icon" onClick={clearAudio}>
-            <X className="w-4 h-4" />
-          </Button>
+        <div className="space-y-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center p-3 bg-muted rounded-lg">
+            <Music className="w-5 h-5 text-primary flex-shrink-0 hidden sm:block" />
+            <span className="text-sm truncate flex-1 min-w-0" title={value}>
+              {value.split('/').pop()}
+            </span>
+            <audio src={value} controls className="h-8 w-full max-w-[min(100%,220px)] sm:max-w-[200px]" />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (fileInputRef.current) fileInputRef.current.value = '';
+                fileInputRef.current?.click();
+              }}
+              disabled={uploading}
+            >
+              {uploading ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Upload className="w-4 h-4 mr-2" />
+              )}
+              {uploading ? 'Uploading…' : 'Replace file'}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => setShowUrlInput((v) => !v)}
+            >
+              {showUrlInput ? 'Hide URL' : 'Edit URL'}
+            </Button>
+            <Button type="button" variant="ghost" size="sm" onClick={clearAudio}>
+              <X className="w-4 h-4 mr-1" />
+              Remove
+            </Button>
+          </div>
+          {showUrlInput && (
+            <Input
+              placeholder="Paste new audio URL…"
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              className="font-mono text-xs"
+            />
+          )}
         </div>
       ) : (
         <div className="space-y-2">
@@ -103,15 +152,7 @@ const AudioUpload = ({ value, onChange, folder = 'mantras', label = 'Audio File'
               URL
             </Button>
           </div>
-          
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="audio/*"
-            onChange={handleFileUpload}
-            className="hidden"
-          />
-          
+
           {showUrlInput && (
             <Input
               placeholder="Or paste audio URL..."

@@ -393,6 +393,7 @@ const AdminMantras = () => {
 
                 <div className="am-glass p-4 border border-white/[0.06]">
                   <AudioUpload
+                    key={editingId ?? 'create'}
                     value={formData.audio_url}
                     onChange={(url) => setFormData({ ...formData, audio_url: url })}
                     folder="mantras"
