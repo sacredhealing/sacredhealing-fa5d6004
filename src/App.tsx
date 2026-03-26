@@ -92,7 +92,7 @@ const CopyTradingDetail = React.lazy(() => import("./pages/income-streams/CopyTr
 const BitcoinMiningDetail = React.lazy(() => import("./pages/income-streams/BitcoinMiningDetail"));
 const AIIncomeDetail = React.lazy(() => import("./pages/income-streams/AIIncomeDetail"));
 const EducationDetail = React.lazy(() => import("./pages/income-streams/EducationDetail"));
-const PolymarketBotDetail = React.lazy(() => import("./pages/income-streams/PolymarketBotDetail"));
+const SovereignSignalOracle = React.lazy(() => import("./pages/income-streams/PolymarketBotDetail"));
 const AdminSystem = React.lazy(() => import("./pages/AdminSystem"));
 const AdminGrantAccess = React.lazy(() => import("./pages/AdminGrantAccess"));
 const AdminBreathing = React.lazy(() => import("./pages/AdminBreathing"));
@@ -273,7 +273,7 @@ function AppRoutes() {
                   <Route path="/income-streams/bitcoin-mining" element={<BitcoinMiningDetail />} />
                   <Route path="/income-streams/ai-income" element={<AIIncomeDetail />} />
                   <Route path="/income-streams/education" element={<EducationDetail />} />
-                  <Route path="/income-streams/polymarket-bot" element={<PolymarketBotDetail />} />
+                  <Route path="/income-streams/polymarket-bot" element={<SovereignSignalOracle />} />
                   <Route path="/spiritual-education" element={<SpiritualEducation />} />
                   <Route path="/community" element={<Community />} />
                   <Route path="/private-sessions" element={<PrivateSessions />} />
