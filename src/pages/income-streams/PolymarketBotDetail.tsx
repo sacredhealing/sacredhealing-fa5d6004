@@ -16,6 +16,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { PnLCard } from '@/components/polymarket/PnLCard';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 // Import trading services
 import { POLYGON_ADDRESSES, PolymarketTrading } from '@/services/polymarketTrading';
@@ -59,6 +60,42 @@ const getRpcPool = (): string[] => {
 
 const RPC_POOL = getRpcPool();
 
+/** Session-only storage; one-time migration from legacy localStorage. */
+const PKEY_STORAGE_KEY = 'polymarket_bot_pkey';
+
+function readStoredPrivateKey(): string | null {
+  try {
+    const session = sessionStorage.getItem(PKEY_STORAGE_KEY);
+    if (session) return session;
+    const legacy = localStorage.getItem(PKEY_STORAGE_KEY);
+    if (legacy) {
+      sessionStorage.setItem(PKEY_STORAGE_KEY, legacy);
+      localStorage.removeItem(PKEY_STORAGE_KEY);
+      return legacy;
+    }
+  } catch {
+    /* storage blocked */
+  }
+  return null;
+}
+
+function setStoredPrivateKey(key: string) {
+  try {
+    sessionStorage.setItem(PKEY_STORAGE_KEY, key);
+  } catch {
+    /* storage blocked */
+  }
+}
+
+function clearStoredPrivateKey() {
+  try {
+    sessionStorage.removeItem(PKEY_STORAGE_KEY);
+    localStorage.removeItem(PKEY_STORAGE_KEY);
+  } catch {
+    /* storage blocked */
+  }
+}
+
 // ERC20 ABI for balance checks
 const ERC20_ABI = [
   "function balanceOf(address account) view returns (uint256)",
@@ -66,13 +103,13 @@ const ERC20_ABI = [
   "function approve(address spender, uint256 amount) returns (bool)"
 ];
 
-const PolymarketBotDetail: React.FC = () => {
+const PolymarketBotDetailInner: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   
-  // Wallet state
-  const [privateKey, setPrivateKey] = useState<string | null>(() => localStorage.getItem('polymarket_bot_pkey'));
+  // Wallet state (session-only — see readStoredPrivateKey)
+  const [privateKey, setPrivateKey] = useState<string | null>(() => readStoredPrivateKey());
   const [address, setAddress] = useState<string>("");
   const [importInput, setImportInput] = useState("");
   const [inputError, setInputError] = useState<string | null>(null);
@@ -138,27 +175,25 @@ const PolymarketBotDetail: React.FC = () => {
   // Refresh PnL data from database with live price updates
   const refreshPnL = useCallback(async () => {
     if (!user?.id) return;
-    
-    // First, refresh position prices from market
-    await Promise.all([
-      paperTradingService.refreshPositionPrices(true),
-      paperTradingService.refreshPositionPrices(false)
-    ]);
-    
-    // Then get updated PnL summary and settings
-    const [paperSummary, liveSummary, settings] = await Promise.all([
-      paperTradingService.getPnLSummary(true),
-      paperTradingService.getPnLSummary(false),
-      paperTradingService.loadSettings()
-    ]);
-    setPnlSummary(paperSummary);
-    setLivePnlSummary(liveSummary);
-    setTotalTrades(paperSummary.totalTrades + liveSummary.totalTrades);
-    
-    // Update paper balance and fees from settings
-    if (settings) {
-      setPaperBalance(settings.paper_balance ?? 1000);
-      setTotalFeesPaid(settings.total_fees_paid ?? 0);
+    try {
+      await Promise.all([
+        paperTradingService.refreshPositionPrices(true),
+        paperTradingService.refreshPositionPrices(false)
+      ]);
+      const [paperSummary, liveSummary, settings] = await Promise.all([
+        paperTradingService.getPnLSummary(true),
+        paperTradingService.getPnLSummary(false),
+        paperTradingService.loadSettings()
+      ]);
+      setPnlSummary(paperSummary);
+      setLivePnlSummary(liveSummary);
+      setTotalTrades(paperSummary.totalTrades + liveSummary.totalTrades);
+      if (settings) {
+        setPaperBalance(settings.paper_balance ?? 1000);
+        setTotalFeesPaid(settings.total_fees_paid ?? 0);
+      }
+    } catch (e) {
+      console.error('[PolymarketBot] refreshPnL:', e);
     }
   }, [user?.id]);
 
@@ -271,38 +306,49 @@ const PolymarketBotDetail: React.FC = () => {
         const wallet = new ethers.Wallet(privateKey);
         setAddress(wallet.address);
         
-        // Initialize trading service
-        trading.initialize(privateKey, RPC_POOL[0]).then(() => {
-          addLog("Trading engine initialized", "success");
-        });
+        trading.initialize(privateKey, RPC_POOL[0])
+          .then(() => {
+            addLog("Trading engine initialized", "success");
+          })
+          .catch((err: unknown) => {
+            console.error('[PolymarketBot] trading.initialize:', err);
+            addLog(`Trading init failed: ${err instanceof Error ? err.message : 'Unknown'}`, "error");
+            toast.error("Trading engine failed to initialize");
+          });
         
-        // Initialize paper trading with user ID and sync mode from database
         if (user?.id) {
           paperTradingService.setUserId(user.id);
           paperTradingService.loadSettings().then(settings => {
             if (settings) {
               setIsPaperMode(settings.is_paper_mode);
-              paperTradingService.setMode(settings.is_paper_mode); // Sync service state
+              paperTradingService.setMode(settings.is_paper_mode);
               addLog(`Mode: ${settings.is_paper_mode ? '📝 PAPER TRADING' : '💰 LIVE TRADING'}`, "info");
             }
+          }).catch((err: unknown) => {
+            console.error('[PolymarketBot] loadSettings:', err);
           });
-          // Load P&L summary for both modes
           const loadPnL = async () => {
-            const [paperSummary, liveSummary] = await Promise.all([
-              paperTradingService.getPnLSummary(true),
-              paperTradingService.getPnLSummary(false)
-            ]);
-            setPnlSummary(paperSummary);
-            setLivePnlSummary(liveSummary);
-            setTotalTrades(paperSummary.totalTrades + liveSummary.totalTrades);
+            try {
+              const [paperSummary, liveSummary] = await Promise.all([
+                paperTradingService.getPnLSummary(true),
+                paperTradingService.getPnLSummary(false)
+              ]);
+              setPnlSummary(paperSummary);
+              setLivePnlSummary(liveSummary);
+              setTotalTrades(paperSummary.totalTrades + liveSummary.totalTrades);
+            } catch (err) {
+              console.error('[PolymarketBot] loadPnL:', err);
+            }
           };
           loadPnL();
         }
         
-        performDeepSync(wallet.address);
+        performDeepSync(wallet.address).catch((err: unknown) => {
+          console.error('[PolymarketBot] performDeepSync:', err);
+        });
       } catch (e) {
         console.error("Invalid private key:", e);
-        localStorage.removeItem('polymarket_bot_pkey');
+        clearStoredPrivateKey();
         setPrivateKey(null);
         toast.error("Invalid private key format");
       }
@@ -315,7 +361,7 @@ const PolymarketBotDetail: React.FC = () => {
       const interval = setInterval(() => performDeepSync(), 30000);
       return () => clearInterval(interval);
     }
-  }, [address]);
+  }, [address, performDeepSync]);
 
   // Market scanning loop when bot is running
   useEffect(() => {
@@ -399,7 +445,7 @@ const PolymarketBotDetail: React.FC = () => {
     try {
       const wallet = new ethers.Wallet(key);
       
-      localStorage.setItem('polymarket_bot_pkey', key);
+      setStoredPrivateKey(key);
       setPrivateKey(key);
       setAddress(wallet.address);
       setInputError(null);
@@ -464,7 +510,7 @@ const PolymarketBotDetail: React.FC = () => {
   };
 
   const clearVault = () => {
-    localStorage.removeItem('polymarket_bot_pkey');
+    clearStoredPrivateKey();
     setPrivateKey(null);
     setAddress("");
     setLogs([]);
@@ -615,7 +661,7 @@ const PolymarketBotDetail: React.FC = () => {
               </Button>
               
               <p className="text-xs text-muted-foreground text-center">
-                🔒 Local encryption only. Keys never leave your device.
+                🔒 Session-only in this browser tab; key is not kept after you close the tab.
               </p>
             </CardContent>
           </Card>
@@ -983,5 +1029,27 @@ const PolymarketBotDetail: React.FC = () => {
     </div>
   );
 };
+
+const PolymarketBotDetail: React.FC = () => (
+  <ErrorBoundary
+    fallbackRender={(error, _info, reset) => (
+      <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-[#050505] text-white">
+        <AlertCircle className="w-12 h-12 text-amber-500 mb-4" />
+        <h2 className="text-lg font-semibold mb-2 text-[#D4AF37]">Polymarket engine error</h2>
+        <p className="text-sm text-white/60 text-center mb-6 max-w-md break-words">
+          {error.message}
+        </p>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button onClick={reset}>Try again</Button>
+          <Button variant="outline" onClick={() => window.location.assign('/income-streams')}>
+            Back to income streams
+          </Button>
+        </div>
+      </div>
+    )}
+  >
+    <PolymarketBotDetailInner />
+  </ErrorBoundary>
+);
 
 export default PolymarketBotDetail;
