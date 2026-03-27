@@ -733,6 +733,22 @@
   50% { opacity: 0.15; }
 }
 
+/* /explore — Sacred Tools: Quantum Apothecary + Virtual Pilgrimage halo */
+@keyframes exploreSacredHalo {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px rgba(212, 175, 55, 0.42),
+      0 0 18px rgba(212, 175, 55, 0.32),
+      0 0 40px rgba(212, 175, 55, 0.14);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(255, 230, 160, 0.65),
+      0 0 32px rgba(255, 220, 130, 0.55),
+      0 0 64px rgba(212, 175, 55, 0.35);
+  }
+}
+
 /* SQI 2050 Dashboard Tiles — Glass-Base, Glass-Border, 28px radius */
 .sq-tile {
   position: relative;
