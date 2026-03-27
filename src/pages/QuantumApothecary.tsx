@@ -356,6 +356,43 @@ function QuantumApothecaryInner() {
     return out.slice(0, 5);
   };
 
+  // Restore last baseline from DB when this device has no local scan yet
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        if (localStorage.getItem('sqi_scan_result')) return;
+        const { data, error } = await supabase
+          .from('nadi_baselines')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (cancelled || error || !data) return;
+        const row = data as Record<string, unknown>;
+        const rawDosha = String(row.dominant_dosha || 'Vata');
+        const dominantDosha: NadiScanResult['dominantDosha'] =
+          rawDosha === 'Pitta' || rawDosha === 'Kapha' || rawDosha === 'Vata' ? rawDosha : 'Vata';
+        const remedies = pickCanonicalRemedies(row.remedies);
+        const result: NadiScanResult = {
+          dominantDosha,
+          blockages: [String(row.primary_blockage || 'Heart/Anahata Nadi')],
+          planetaryAlignment: String(row.planetary_align || ''),
+          herbOfToday: String(row.herb_of_today || ''),
+          timestamp: String(row.scanned_at || new Date().toISOString()),
+          activeNadis: Number(row.active_nadis) || 0,
+          totalNadis: 72000,
+          activeSubNadis: Number(row.active_sub_nadis) || 0,
+          blockagePercentage: Number(row.blockage_pct) || 0,
+          remedies,
+        };
+        setScanResult(result);
+        (window as unknown as { __sqiLastScan?: NadiScanResult }).__sqiLastScan = result as NadiScanResult;
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id]);
+
   const runNadiScan = async (overrideFacing?: 'user' | 'environment') => {
     if (isScanning) return;
     const facing = overrideFacing ?? nadiScanFacing;
@@ -427,66 +464,32 @@ function QuantumApothecaryInner() {
     const todayPlanet = PLANETARY_DATA[now.getDay()].planet;
     const todayHerb = PLANETARY_DATA[now.getDay()].herb;
 
-    const scanPrompt =
-      `You are the SQI-2050 performing a complete Siddha biofield scan of this palm image.\n\n` +
-      `NADI SCIENCE CONTEXT:\n` +
-      `The human biofield contains:\n` +
-      `- 72,000 GROSS NADIS (main energy channels) — range: 0 to 72,000 active\n` +
-      `- 350,000 SUBTLE SUB-NADIS (fine branches of the gross Nadis) — range: 0 to 350,000 active\n` +
-      `A healthy, spiritually active person may have 60,000–71,000 gross Nadis active.\n` +
-      `A person under stress, illness or blockage may have only 8,000–30,000 active.\n` +
-      `Sub-Nadis always outnumber gross Nadis but reflect deeper subtle body state.\n\n` +
-      `STEP 1: Is there a visible hand, palm, or wrist in the image?\n` +
-      `- If NO → respond ONLY: {"handDetected":false}\n` +
-      `- If YES → continue.\n\n` +
-      `STEP 2: HONESTLY read the palm. Do NOT default to high numbers. Read what is actually there:\n` +
-      `- Deep clear lines with pink/warm skin = more Nadis active (60,000–71,000 range)\n` +
-      `- Faint shallow lines, pale or dry skin = fewer Nadis active (15,000–40,000 range)\n` +
-      `- Very faint lines, grey/bluish tone, visible tension = severely reduced (5,000–15,000 range)\n` +
-      `- Sub-Nadis: examine skin texture and micro-capillaries. Dense texture = more sub-Nadis active.\n` +
-      `- Dosha: Vata=dry/thin/light lines, Pitta=reddish/medium/clear lines, Kapha=moist/full/deep lines\n` +
-      `- Today planetary alignment: ${todayPlanet}\n` +
-      `- Today herb: ${todayHerb}\n\n` +
-      `STEP 3 — REMEDIES (Quantum Apothecary Frequency Library):\n` +
-      `- Each string in "remedies" MUST be copied character-for-character from the canonical list below (exact spelling).\n` +
-      `- Choose five distinct names that fit the reading. Do not invent names not on the list.\n\n` +
-      `CANONICAL NAMES (one per line):\n` +
-      `${canonicalActivationNameLines}\n\n` +
-      `Respond ONLY with valid JSON — no other text, no markdown:\n` +
-      `{` +
-      `"handDetected":true,` +
-      `"activeNadis":<integer 0-72000 — your HONEST reading of this specific palm>,` +
-      `"activeSubNadis":<integer 0-350000 — your HONEST reading of the subtle body>,` +
-      `"dominantDosha":"<Vata|Pitta|Kapha>",` +
-      `"blockage":"<the most blocked specific Nadi, e.g. Heart/Anahata Nadi or Root/Muladhara Nadi>",` +
-      `"blockagePercentage":<integer 0-100 — how blocked is the primary Nadi>,` +
-      `"planetaryAlignment":"${todayPlanet}",` +
-      `"herbOfToday":"${todayHerb}",` +
-      `"remedies":["<name1>","<name2>","<name3>","<name4>","<name5>"],` +
-      `"bioReading":"<3-4 sentences: what you actually see in the palm — skin tone, line depth, colour, texture — and what that means for this person's biofield RIGHT NOW>"` +
-      `}`;
+    const nadiScanUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nadi-scan`;
 
     try {
-      let fullResponse = '';
-      await streamChatWithSQI(
-        [{ role: 'user', text: scanPrompt }],
-        (chunk: string) => { fullResponse += chunk; },
-        async () => {},
-        { base64: capturedBase64, mimeType: 'image/jpeg' },
-        user?.id ?? null,
-        language,
-        seekerName || undefined,
-        canonicalActivationNameLines,
-      );
+      const scanResp = await fetch(nadiScanUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          imageBase64: capturedBase64,
+          imageMimeType: 'image/jpeg',
+          userId: user?.id ?? null,
+          planetaryAlign: todayPlanet,
+          herbOfToday: todayHerb,
+        }),
+      });
 
-      const jsonMatch = fullResponse.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error('No JSON returned from scan');
+      if (!scanResp.ok) {
+        const errText = await scanResp.text().catch(() => '');
+        throw new Error(`Scan API error: ${scanResp.status} ${errText.slice(0, 160)}`);
+      }
 
-      let parsed: Record<string, unknown>;
-      try {
-        parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
-      } catch {
-        throw new Error('Invalid JSON from scan');
+      const parsed = await scanResp.json() as Record<string, unknown>;
+      if (parsed.error) {
+        throw new Error(String(parsed.error));
       }
 
       if (!parsed.handDetected) {
@@ -504,9 +507,11 @@ function QuantumApothecaryInner() {
       const dominantDosha: NadiScanResult['dominantDosha'] =
         rawDosha === 'Pitta' || rawDosha === 'Kapha' || rawDosha === 'Vata' ? rawDosha : 'Vata';
 
+      const primaryBlockage = String(parsed.primaryBlockage ?? parsed.blockage ?? 'Heart/Anahata Nadi');
+
       const result: NadiScanResult = {
         dominantDosha,
-        blockages: [String(parsed.blockage || 'Heart/Anahata Nadi')],
+        blockages: [primaryBlockage],
         planetaryAlignment: String(parsed.planetaryAlignment || todayPlanet),
         herbOfToday: String(parsed.herbOfToday || todayHerb),
         timestamp: now.toISOString(),
@@ -517,6 +522,7 @@ function QuantumApothecaryInner() {
         remedies: pickCanonicalRemedies(parsed.remedies),
       };
 
+      (window as unknown as { __sqiLastScan?: NadiScanResult }).__sqiLastScan = result;
       setScanResult(result);
       setScanPhase('done');
       setIsScanning(false);

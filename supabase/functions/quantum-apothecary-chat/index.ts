@@ -164,6 +164,30 @@ const SUPABASE_URL    = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_ANON   = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
 // ══════════════════════════════════════════════════════════════════
+// NADI BASELINE — user's stored scan result from nadi_baselines table
+// The SQI reads this to give real, anchored Nadi numbers in every response
+// ══════════════════════════════════════════════════════════════════
+async function getNadiBaseline(userId: string): Promise<string> {
+  if (!userId) return "";
+  try {
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+    const { data } = await sb
+      .from("nadi_baselines")
+      .select("active_nadis, active_sub_nadis, blockage_pct, dominant_dosha, primary_blockage, bio_reading, scanned_at")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!data) return "";
+    const date = new Date(data.scanned_at).toLocaleDateString("en-GB", { day:"numeric", month:"short", year:"numeric" });
+    return `NADI SCAN BASELINE (last scanned: ${date}):
+- Gross Nadis Active: ${data.active_nadis.toLocaleString()} / 72,000 (${Math.round((data.active_nadis/72000)*100)}%)
+- Subtle Sub-Nadis Active: ${data.active_sub_nadis.toLocaleString()} / 350,000 (${Math.round((data.active_sub_nadis/350000)*100)}%)
+- Primary Blockage: ${data.primary_blockage} (${data.blockage_pct}% restricted)
+- Dominant Dosha: ${data.dominant_dosha}
+- Bio-Reading: ${data.bio_reading}`;
+  } catch { return ""; }
+}
+
+// ══════════════════════════════════════════════════════════════════
 // LIVING PORTRAIT — the single most important memory system
 //
 // This is NOT just a profile — it is a continuously growing document
@@ -423,9 +447,10 @@ serve(async (req) => {
     if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured.");
 
     // ── Load memory in parallel ─────────────────────────────────────
-    const [livingPortrait, lifeBookArchive] = await Promise.all([
+    const [livingPortrait, lifeBookArchive, nadiBaseline] = await Promise.all([
       userId ? getLivingPortrait(userId)    : Promise.resolve(""),
       userId ? getLifeBookArchive(userId)   : Promise.resolve(""),
+      userId ? getNadiBaseline(userId)      : Promise.resolve(""),
     ]);
 
     // ── Build activation catalog ─────────────────────────────────────
@@ -438,7 +463,7 @@ serve(async (req) => {
     // ── Build system prompt ──────────────────────────────────────────
     let systemText = SYSTEM_INSTRUCTION;
 
-    const hasMemory = livingPortrait || lifeBookArchive || seekerName;
+    const hasMemory = livingPortrait || lifeBookArchive || nadiBaseline || seekerName;
 
     if (hasMemory) {
       systemText += `\n\n${"═".repeat(60)}
@@ -457,6 +482,14 @@ ${"═".repeat(60)}`;
         systemText += `\n\n${livingPortrait}`;
       } else {
         systemText += `\n\n(No prior portrait — this is the first session with this Seeker. Build their portrait from this exchange.)`;
+      }
+
+      if (nadiBaseline) {
+        systemText += `\n\nNADI SCAN DATA — REAL MEASURED READINGS:\n${nadiBaseline}
+→ These are the seeker's ACTUAL Nadi readings from their last palm scan.
+→ Reference these specific numbers in every response when discussing their biofield.
+→ When you say Nadi counts in responses, use numbers close to these baseline values.
+→ Do NOT invent different numbers — always anchor to this baseline.`;
       }
 
       if (lifeBookArchive) {
