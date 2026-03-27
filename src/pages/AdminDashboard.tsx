@@ -3,6 +3,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import type { LucideIcon } from 'lucide-react';
 import { 
   ArrowLeft, 
   Music, 
@@ -77,18 +78,107 @@ const ADMIN_DASH_SQI_CSS = `
     text-transform: uppercase;
     color: rgba(255, 255, 255, 0.38);
   }
-  .sqi-admin-dash .ad-icon-tile {
-    border-radius: 16px;
-    background: linear-gradient(145deg, rgba(212, 175, 55, 0.12), rgba(212, 175, 55, 0.03));
-    border: 1px solid rgba(212, 175, 55, 0.2);
-    color: #D4AF37;
-    box-shadow: 0 0 24px rgba(212, 175, 55, 0.08);
+  /* Sealed sigil wells — light contained (no diffuse bleed) */
+  .sqi-admin-dash .ad-sigil {
+    position: relative;
+    flex-shrink: 0;
+    width: 52px;
+    height: 52px;
+    border-radius: 18px;
+    padding: 1px;
+    isolation: isolate;
+    contain: layout style paint;
+    background: linear-gradient(155deg, rgba(212, 175, 55, 0.42), rgba(212, 175, 55, 0.06));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 4px 16px rgba(0, 0, 0, 0.55);
   }
-  .sqi-admin-dash .ad-icon-tile--cyan {
-    background: linear-gradient(145deg, rgba(34, 211, 238, 0.1), rgba(34, 211, 238, 0.02));
-    border-color: rgba(34, 211, 238, 0.22);
+  .sqi-admin-dash .ad-sigil--sm {
+    width: 46px;
+    height: 46px;
+    border-radius: 16px;
+  }
+  .sqi-admin-dash .ad-sigil--sm .ad-sigil__inner {
+    border-radius: 15px;
+  }
+  .sqi-admin-dash .ad-sigil--cyan {
+    background: linear-gradient(155deg, rgba(34, 211, 238, 0.38), rgba(34, 211, 238, 0.05));
+  }
+  .sqi-admin-dash .ad-sigil__inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 17px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid rgba(212, 175, 55, 0.22);
+    background:
+      radial-gradient(ellipse 90% 75% at 35% 22%, rgba(212, 175, 55, 0.14), transparent 58%),
+      linear-gradient(168deg, rgba(22, 20, 16, 0.99), rgba(5, 5, 5, 1));
+  }
+  .sqi-admin-dash .ad-sigil--cyan .ad-sigil__inner {
+    border-color: rgba(34, 211, 238, 0.28);
+    background:
+      radial-gradient(ellipse 90% 75% at 35% 22%, rgba(34, 211, 238, 0.12), transparent 58%),
+      linear-gradient(168deg, rgba(12, 22, 26, 0.99), rgba(5, 5, 5, 1));
+  }
+  .sqi-admin-dash .ad-sigil__svg {
+    width: 22px;
+    height: 22px;
+    stroke-width: 1.35px;
+    opacity: 0.94;
+    color: #D4AF37;
+  }
+  .sqi-admin-dash .ad-sigil--sm .ad-sigil__svg {
+    width: 19px;
+    height: 19px;
+    stroke-width: 1.45px;
+  }
+  .sqi-admin-dash .ad-sigil--cyan .ad-sigil__svg {
     color: #22D3EE;
-    box-shadow: 0 0 20px rgba(34, 211, 238, 0.08);
+  }
+  .sqi-admin-dash .ad-sigil--mini {
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
+    padding: 1px;
+  }
+  .sqi-admin-dash .ad-sigil--mini .ad-sigil__inner {
+    border-radius: 9px;
+  }
+  .sqi-admin-dash .ad-sigil--mini .ad-sigil__svg {
+    width: 14px;
+    height: 14px;
+    stroke-width: 1.5px;
+  }
+  .sqi-admin-dash .ad-back-sigil {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    padding: 1px;
+    isolation: isolate;
+    contain: layout style paint;
+    background: linear-gradient(155deg, rgba(212, 175, 55, 0.28), rgba(212, 175, 55, 0.04));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 2px 12px rgba(0, 0, 0, 0.45);
+  }
+  .sqi-admin-dash .ad-back-sigil__inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid rgba(212, 175, 55, 0.18);
+    background: linear-gradient(168deg, rgba(14, 13, 10, 0.98), rgba(5, 5, 5, 1));
+  }
+  .sqi-admin-dash .ad-back-sigil__svg {
+    width: 18px;
+    height: 18px;
+    stroke-width: 1.4px;
+    color: #D4AF37;
+    opacity: 0.9;
   }
   .sqi-admin-dash .ad-btn-outline {
     border-radius: 40px;
@@ -102,6 +192,34 @@ const ADMIN_DASH_SQI_CSS = `
     background: rgba(212, 175, 55, 0.06);
   }
 `;
+
+/** Contained Siddha sigil — glow stays inside the well (no outward bleed). */
+function AdminSigilIcon({
+  icon: Icon,
+  variant = 'gold',
+  size = 'md',
+}: {
+  icon: LucideIcon;
+  variant?: 'gold' | 'cyan';
+  size?: 'md' | 'sm' | 'mini';
+}) {
+  const classes = [
+    'ad-sigil',
+    variant === 'cyan' ? 'ad-sigil--cyan' : '',
+    size === 'sm' ? 'ad-sigil--sm' : '',
+    size === 'mini' ? 'ad-sigil--mini' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  const sw = size === 'mini' ? 1.5 : size === 'sm' ? 1.4 : 1.35;
+  return (
+    <div className={classes} aria-hidden>
+      <div className="ad-sigil__inner">
+        <Icon className="ad-sigil__svg" strokeWidth={sw} />
+      </div>
+    </div>
+  );
+}
 
 const adminSections = [
   {
@@ -320,9 +438,14 @@ const AdminDashboard: React.FC = () => {
               variant="ghost"
               size="icon"
               onClick={() => navigate('/profile')}
-              className="rounded-full text-white/60 hover:text-[#D4AF37] hover:bg-white/5 shrink-0"
+              className="h-auto w-auto p-0 shrink-0 rounded-[14px] border-0 bg-transparent hover:bg-transparent text-[#D4AF37] shadow-none"
+              aria-label="Back to profile"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <div className="ad-back-sigil">
+                <div className="ad-back-sigil__inner">
+                  <ArrowLeft className="ad-back-sigil__svg" strokeWidth={1.4} />
+                </div>
+              </div>
             </Button>
             <div className="min-w-0">
               <p className="ad-kicker mb-1">NADA · ADMIN NEXUS</p>
@@ -333,22 +456,22 @@ const AdminDashboard: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <Card className="ad-glass border-0 shadow-none bg-transparent p-5 sm:p-6 text-center">
-              <div className="ad-icon-tile w-11 h-11 mx-auto mb-3 flex items-center justify-center">
-                <Users className="w-6 h-6" />
+              <div className="mx-auto mb-3 flex justify-center">
+                <AdminSigilIcon icon={Users} variant="gold" size="sm" />
               </div>
               <p className="text-2xl font-black tracking-tight text-[#D4AF37] tabular-nums">{stats.members.toLocaleString()}</p>
               <p className="ad-stat-lbl mt-2">Total Members</p>
             </Card>
             <Card className="ad-glass border-0 shadow-none bg-transparent p-5 sm:p-6 text-center">
-              <div className="ad-icon-tile ad-icon-tile--cyan w-11 h-11 mx-auto mb-3 flex items-center justify-center">
-                <Trophy className="w-6 h-6" />
+              <div className="mx-auto mb-3 flex justify-center">
+                <AdminSigilIcon icon={Trophy} variant="cyan" size="sm" />
               </div>
               <p className="text-2xl font-black tracking-tight text-[#22D3EE] tabular-nums">{stats.activeThisMonth.toLocaleString()}</p>
               <p className="ad-stat-lbl mt-2">Active This Month</p>
             </Card>
             <Card className="ad-glass border-0 shadow-none bg-transparent p-5 sm:p-6 text-center">
-              <div className="ad-icon-tile w-11 h-11 mx-auto mb-3 flex items-center justify-center">
-                <Sparkles className="w-6 h-6" />
+              <div className="mx-auto mb-3 flex justify-center">
+                <AdminSigilIcon icon={Sparkles} variant="gold" size="sm" />
               </div>
               <p className="text-2xl font-black tracking-tight text-[#D4AF37] tabular-nums">{(stats.totalSHC / 1000).toFixed(1)}K</p>
               <p className="ad-stat-lbl mt-2">SHC Distributed</p>
@@ -360,9 +483,7 @@ const AdminDashboard: React.FC = () => {
               <Link key={section.href} to={section.href}>
                 <Card className="ad-glass border-0 shadow-none bg-transparent p-5 sm:p-6 cursor-pointer h-full transition-transform hover:scale-[1.01]">
                   <div className="flex items-start gap-4">
-                    <div className="ad-icon-tile p-3 shrink-0">
-                      <section.icon className="w-6 h-6" />
-                    </div>
+                    <AdminSigilIcon icon={section.icon} variant="gold" size="md" />
                     <div className="flex-1 min-w-0">
                       <h3 className="font-black tracking-tight text-[15px] sm:text-base text-[#D4AF37]" style={{ textShadow: '0 0 12px rgba(212,175,55,0.2)' }}>{section.title}</h3>
                       <p className="ad-body text-sm mt-1.5">{section.description}</p>
@@ -376,20 +497,20 @@ const AdminDashboard: React.FC = () => {
           <Card className="ad-glass border-0 shadow-none bg-transparent p-5 sm:p-6">
             <h2 className="ad-kicker mb-4 block">Quick Actions</h2>
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={() => navigate('/admin/content')} className="ad-btn-outline rounded-[40px] border-0">
-                <FileText className="w-4 h-4 mr-2 text-[#D4AF37]" />
+              <Button variant="outline" size="sm" onClick={() => navigate('/admin/content')} className="ad-btn-outline rounded-[40px] border-0 gap-2">
+                <AdminSigilIcon icon={FileText} size="mini" />
                 Edit Healing Page
               </Button>
-              <Button variant="outline" size="sm" onClick={() => navigate('/admin/meditations')} className="ad-btn-outline rounded-[40px] border-0">
-                <Play className="w-4 h-4 mr-2 text-[#D4AF37]" />
+              <Button variant="outline" size="sm" onClick={() => navigate('/admin/meditations')} className="ad-btn-outline rounded-[40px] border-0 gap-2">
+                <AdminSigilIcon icon={Play} size="mini" />
                 Add Meditation
               </Button>
-              <Button variant="outline" size="sm" onClick={() => navigate('/admin/healing')} className="ad-btn-outline rounded-[40px] border-0">
-                <Sparkles className="w-4 h-4 mr-2 text-[#D4AF37]" />
+              <Button variant="outline" size="sm" onClick={() => navigate('/admin/healing')} className="ad-btn-outline rounded-[40px] border-0 gap-2">
+                <AdminSigilIcon icon={Sparkles} size="mini" />
                 Add Healing Audio
               </Button>
-              <Button variant="outline" size="sm" onClick={() => navigate('/admin/music')} className="ad-btn-outline rounded-[40px] border-0">
-                <Music className="w-4 h-4 mr-2 text-[#D4AF37]" />
+              <Button variant="outline" size="sm" onClick={() => navigate('/admin/music')} className="ad-btn-outline rounded-[40px] border-0 gap-2">
+                <AdminSigilIcon icon={Music} size="mini" />
                 Add Music Track
               </Button>
             </div>
