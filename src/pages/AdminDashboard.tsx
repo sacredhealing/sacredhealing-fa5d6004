@@ -1,3 +1,6 @@
+/**
+ * SQI-2050 Admin Nexus — visual layer only; all routes & Supabase stats logic preserved.
+ */
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
@@ -6,9 +9,7 @@ import {
   Sparkles, 
   FileText, 
   Play, 
-  Settings,
   Users,
-  CreditCard,
   BookOpen,
   Bell,
   DollarSign,
@@ -30,6 +31,77 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
+
+const ADMIN_DASH_SQI_CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap');
+  .sqi-admin-dash {
+    font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    background: #050505;
+    color: rgba(255, 255, 255, 0.92);
+    min-height: 100vh;
+  }
+  .sqi-admin-dash .ad-glass {
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 40px;
+    box-shadow: 0 0 48px rgba(212, 175, 55, 0.06);
+  }
+  .sqi-admin-dash .ad-glass:hover {
+    border-color: rgba(212, 175, 55, 0.14);
+    box-shadow: 0 0 56px rgba(212, 175, 55, 0.1);
+  }
+  .sqi-admin-dash .ad-kicker {
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0.5em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.42);
+  }
+  .sqi-admin-dash .ad-h1 {
+    font-weight: 900;
+    letter-spacing: -0.05em;
+    color: #D4AF37;
+    text-shadow: 0 0 20px rgba(212, 175, 55, 0.25);
+  }
+  .sqi-admin-dash .ad-body {
+    font-weight: 400;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.6);
+  }
+  .sqi-admin-dash .ad-stat-lbl {
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0.5em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.38);
+  }
+  .sqi-admin-dash .ad-icon-tile {
+    border-radius: 16px;
+    background: linear-gradient(145deg, rgba(212, 175, 55, 0.12), rgba(212, 175, 55, 0.03));
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    color: #D4AF37;
+    box-shadow: 0 0 24px rgba(212, 175, 55, 0.08);
+  }
+  .sqi-admin-dash .ad-icon-tile--cyan {
+    background: linear-gradient(145deg, rgba(34, 211, 238, 0.1), rgba(34, 211, 238, 0.02));
+    border-color: rgba(34, 211, 238, 0.22);
+    color: #22D3EE;
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.08);
+  }
+  .sqi-admin-dash .ad-btn-outline {
+    border-radius: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+    color: rgba(255, 255, 255, 0.85);
+  }
+  .sqi-admin-dash .ad-btn-outline:hover {
+    border-color: rgba(212, 175, 55, 0.35);
+    color: #D4AF37;
+    background: rgba(212, 175, 55, 0.06);
+  }
+`;
 
 const adminSections = [
   {
@@ -239,81 +311,92 @@ const AdminDashboard: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/profile')}>
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
-            <p className="text-muted-foreground">Manage all your app content</p>
+    <>
+      <style dangerouslySetInnerHTML={{ __html: ADMIN_DASH_SQI_CSS }} />
+      <div className="sqi-admin-dash pb-28 px-4 pt-6 sm:px-6">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/profile')}
+              className="rounded-full text-white/60 hover:text-[#D4AF37] hover:bg-white/5 shrink-0"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div className="min-w-0">
+              <p className="ad-kicker mb-1">NADA · ADMIN NEXUS</p>
+              <h1 className="ad-h1 text-xl sm:text-2xl">Admin Dashboard</h1>
+              <p className="ad-body text-sm mt-1">Manage all your app content — Vedic Light-Codes & Bhakti-Algorithms</p>
+            </div>
           </div>
-        </div>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-3 gap-4">
-          <Card className="p-4 text-center">
-            <Users className="w-6 h-6 mx-auto text-primary mb-2" />
-            <p className="text-2xl font-bold text-foreground">{stats.members.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground">Total Members</p>
-          </Card>
-          <Card className="p-4 text-center">
-            <Trophy className="w-6 h-6 mx-auto text-secondary mb-2" />
-            <p className="text-2xl font-bold text-foreground">{stats.activeThisMonth.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground">Active This Month</p>
-          </Card>
-          <Card className="p-4 text-center">
-            <Sparkles className="w-6 h-6 mx-auto text-accent mb-2" />
-            <p className="text-2xl font-bold text-foreground">{(stats.totalSHC / 1000).toFixed(1)}K</p>
-            <p className="text-xs text-muted-foreground">SHC Distributed</p>
-          </Card>
-        </div>
-
-        {/* Admin Sections Grid */}
-        <div className="grid gap-4 md:grid-cols-2">
-          {adminSections.map((section) => (
-            <Link key={section.href} to={section.href}>
-              <Card className="p-6 hover:border-primary/50 transition-colors cursor-pointer h-full">
-                <div className="flex items-start gap-4">
-                  <div className={`p-3 rounded-lg bg-muted ${section.color}`}>
-                    <section.icon className="w-6 h-6" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-foreground">{section.title}</h3>
-                    <p className="text-sm text-muted-foreground mt-1">{section.description}</p>
-                  </div>
-                </div>
-              </Card>
-            </Link>
-          ))}
-        </div>
-
-        {/* Quick Stats */}
-        <Card className="p-6">
-          <h2 className="font-semibold text-foreground mb-4">Quick Actions</h2>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={() => navigate('/admin/content')}>
-              <FileText className="w-4 h-4 mr-2" />
-              Edit Healing Page
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => navigate('/admin/meditations')}>
-              <Play className="w-4 h-4 mr-2" />
-              Add Meditation
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => navigate('/admin/healing')}>
-              <Sparkles className="w-4 h-4 mr-2" />
-              Add Healing Audio
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => navigate('/admin/music')}>
-              <Music className="w-4 h-4 mr-2" />
-              Add Music Track
-            </Button>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            <Card className="ad-glass border-0 shadow-none bg-transparent p-5 sm:p-6 text-center">
+              <div className="ad-icon-tile w-11 h-11 mx-auto mb-3 flex items-center justify-center">
+                <Users className="w-6 h-6" />
+              </div>
+              <p className="text-2xl font-black tracking-tight text-[#D4AF37] tabular-nums">{stats.members.toLocaleString()}</p>
+              <p className="ad-stat-lbl mt-2">Total Members</p>
+            </Card>
+            <Card className="ad-glass border-0 shadow-none bg-transparent p-5 sm:p-6 text-center">
+              <div className="ad-icon-tile ad-icon-tile--cyan w-11 h-11 mx-auto mb-3 flex items-center justify-center">
+                <Trophy className="w-6 h-6" />
+              </div>
+              <p className="text-2xl font-black tracking-tight text-[#22D3EE] tabular-nums">{stats.activeThisMonth.toLocaleString()}</p>
+              <p className="ad-stat-lbl mt-2">Active This Month</p>
+            </Card>
+            <Card className="ad-glass border-0 shadow-none bg-transparent p-5 sm:p-6 text-center">
+              <div className="ad-icon-tile w-11 h-11 mx-auto mb-3 flex items-center justify-center">
+                <Sparkles className="w-6 h-6" />
+              </div>
+              <p className="text-2xl font-black tracking-tight text-[#D4AF37] tabular-nums">{(stats.totalSHC / 1000).toFixed(1)}K</p>
+              <p className="ad-stat-lbl mt-2">SHC Distributed</p>
+            </Card>
           </div>
-        </Card>
+
+          <div className="grid gap-3 md:gap-4 md:grid-cols-2">
+            {adminSections.map((section) => (
+              <Link key={section.href} to={section.href}>
+                <Card className="ad-glass border-0 shadow-none bg-transparent p-5 sm:p-6 cursor-pointer h-full transition-transform hover:scale-[1.01]">
+                  <div className="flex items-start gap-4">
+                    <div className="ad-icon-tile p-3 shrink-0">
+                      <section.icon className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-black tracking-tight text-[15px] sm:text-base text-[#D4AF37]" style={{ textShadow: '0 0 12px rgba(212,175,55,0.2)' }}>{section.title}</h3>
+                      <p className="ad-body text-sm mt-1.5">{section.description}</p>
+                    </div>
+                  </div>
+                </Card>
+              </Link>
+            ))}
+          </div>
+
+          <Card className="ad-glass border-0 shadow-none bg-transparent p-5 sm:p-6">
+            <h2 className="ad-kicker mb-4 block">Quick Actions</h2>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={() => navigate('/admin/content')} className="ad-btn-outline rounded-[40px] border-0">
+                <FileText className="w-4 h-4 mr-2 text-[#D4AF37]" />
+                Edit Healing Page
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => navigate('/admin/meditations')} className="ad-btn-outline rounded-[40px] border-0">
+                <Play className="w-4 h-4 mr-2 text-[#D4AF37]" />
+                Add Meditation
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => navigate('/admin/healing')} className="ad-btn-outline rounded-[40px] border-0">
+                <Sparkles className="w-4 h-4 mr-2 text-[#D4AF37]" />
+                Add Healing Audio
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => navigate('/admin/music')} className="ad-btn-outline rounded-[40px] border-0">
+                <Music className="w-4 h-4 mr-2 text-[#D4AF37]" />
+                Add Music Track
+              </Button>
+            </div>
+          </Card>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
