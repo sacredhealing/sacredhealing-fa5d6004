@@ -236,20 +236,37 @@ export default function AdminAnnouncements() {
         expires_at = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
       }
       const starts_at = startsAt ? new Date(startsAt).toISOString() : new Date().toISOString();
-      const { error } = await supabase.from('announcements').insert({
-        title,
-        message,
-        type,
-        expires_at,
-        starts_at,
-        image_url: imageUrl || null,
-        link_url: linkUrl || null,
-        audio_url: audioUrl || null,
-        recurring: recurring || null,
-      });
+      const { data: saved, error } = await supabase
+        .from('announcements')
+        .insert({
+          title,
+          message,
+          type,
+          expires_at,
+          starts_at,
+          image_url: imageUrl || null,
+          link_url: linkUrl || null,
+          audio_url: audioUrl || null,
+          recurring: recurring || null,
+        })
+        .select('id')
+        .single();
       if (error) throw error;
+
+      let emailBlastFailed = false;
+      if (saved?.id) {
+        const { error: emailFnError } = await supabase.functions.invoke('send-announcement-email', {
+          body: { announcement_id: saved.id },
+        });
+        if (emailFnError) {
+          console.error('send-announcement-email:', emailFnError);
+          emailBlastFailed = true;
+        }
+      }
+
+      return { emailBlastFailed };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-announcements'] });
       setTitle('');
       setMessage('');
@@ -261,7 +278,12 @@ export default function AdminAnnouncements() {
       setAudioUrl('');
       setRecurring('');
       setStartsAt('');
-      toast({ title: '✦ Prema-Pulse Transmitted', description: 'Users will receive this on next login.' });
+      toast({
+        title: '✦ Prema-Pulse Transmitted',
+        description: data.emailBlastFailed
+          ? 'In-app notice is live. The email blast could not be started (check Edge Functions / Resend).'
+          : 'In-app notice is live; announcement emails are being sent to all accounts.',
+      });
     },
     onError: (error: Error) => {
       toast({ title: 'Transmission Error', description: error.message, variant: 'destructive' });
