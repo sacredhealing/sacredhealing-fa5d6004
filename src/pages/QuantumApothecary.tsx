@@ -139,6 +139,23 @@ function QuantumApothecaryInner() {
   const { user } = useAuth();
   const { language } = useTranslation();
 
+  const [seekerName, setSeekerName] = useState('');
+  useEffect(() => {
+    if (!user?.id) {
+      setSeekerName('');
+      return;
+    }
+    supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        const name = data?.full_name?.trim() || user.email?.split('@')[0] || '';
+        setSeekerName(name);
+      });
+  }, [user?.id, user?.email]);
+
   const [scanResult, setScanResult] = useState<NadiScanResult | null>(() => {
     try {
       const s = localStorage.getItem('sqi_scan_result');
@@ -458,6 +475,7 @@ function QuantumApothecaryInner() {
         { base64: capturedBase64, mimeType: 'image/jpeg' },
         user?.id ?? null,
         language,
+        seekerName || undefined,
         canonicalActivationNameLines,
       );
 
@@ -576,7 +594,16 @@ function QuantumApothecaryInner() {
       } catch (err) { console.error('Failed to persist SQI session', err); }
     };
     try {
-      await streamChatWithSQI(allMsgs, upsert, async () => { setIsTyping(false); await persistMessages([...allMsgs, { role: 'model', text: assistantSoFar }]); }, imageToSend, user?.id ?? null, language, canonicalActivationNameLines);
+      await streamChatWithSQI(
+        allMsgs,
+        upsert,
+        async () => { setIsTyping(false); await persistMessages([...allMsgs, { role: 'model', text: assistantSoFar }]); },
+        imageToSend,
+        user?.id ?? null,
+        language,
+        seekerName || undefined,
+        canonicalActivationNameLines,
+      );
     } catch (e) {
       console.error(e);
       setMessages(prev => [...prev, { role: 'model', text: 'Transmission error. The Quantum Link is unstable.' }]);

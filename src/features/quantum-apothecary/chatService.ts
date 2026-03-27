@@ -14,10 +14,10 @@ export async function streamChatWithSQI(
   userImage?: UserImagePayload,
   userId?: string | null,
   language?: string,
+  seekerName?: string,
   canonicalActivationNames?: string,
 ) {
   const recent = messages.slice(-15);
-
   const apiMessages = recent.map(m => ({
     role: m.role === 'model' ? 'assistant' : 'user',
     content: m.text,
@@ -28,22 +28,15 @@ export async function streamChatWithSQI(
     userImage?: UserImagePayload;
     userId?: string | null;
     language?: string;
+    seekerName?: string;
     canonicalActivationNames?: string;
-  } = {
-    messages: apiMessages,
-  };
-  if (userImage?.base64 && userImage?.mimeType) {
-    body.userImage = userImage;
-  }
-  if (userId) {
-    body.userId = userId;
-  }
-  if (language) {
-    body.language = language;
-  }
-  if (canonicalActivationNames?.trim()) {
-    body.canonicalActivationNames = canonicalActivationNames.trim();
-  }
+  } = { messages: apiMessages };
+
+  if (userImage?.base64 && userImage?.mimeType) body.userImage = userImage;
+  if (userId) body.userId = userId;
+  if (language) body.language = language;
+  if (seekerName?.trim()) body.seekerName = seekerName.trim();
+  if (canonicalActivationNames?.trim()) body.canonicalActivationNames = canonicalActivationNames.trim();
 
   const resp = await fetch(CHAT_URL, {
     method: 'POST',
@@ -60,7 +53,7 @@ export async function streamChatWithSQI(
     throw new Error('Failed to start stream');
   }
 
-  const reader = resp.body.getReader();
+  const reader  = resp.body.getReader();
   const decoder = new TextDecoder();
   let buf = '';
   let streamDone = false;
@@ -69,7 +62,6 @@ export async function streamChatWithSQI(
     const { done, value } = await reader.read();
     if (done) break;
     buf += decoder.decode(value, { stream: true });
-
     let idx: number;
     while ((idx = buf.indexOf('\n')) !== -1) {
       let line = buf.slice(0, idx);
@@ -80,13 +72,10 @@ export async function streamChatWithSQI(
       const json = line.slice(6).trim();
       if (json === '[DONE]') { streamDone = true; break; }
       try {
-        const parsed = JSON.parse(json);
+        const parsed  = JSON.parse(json);
         const content = parsed.choices?.[0]?.delta?.content as string | undefined;
         if (content) onDelta(content);
-      } catch {
-        buf = line + '\n' + buf;
-        break;
-      }
+      } catch { buf = line + '\n' + buf; break; }
     }
   }
 
@@ -100,7 +89,7 @@ export async function streamChatWithSQI(
       const json = raw.slice(6).trim();
       if (json === '[DONE]') continue;
       try {
-        const parsed = JSON.parse(json);
+        const parsed  = JSON.parse(json);
         const content = parsed.choices?.[0]?.delta?.content as string | undefined;
         if (content) onDelta(content);
       } catch { /* ignore */ }
