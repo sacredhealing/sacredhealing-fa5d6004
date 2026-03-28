@@ -19,11 +19,16 @@ import { vayuProtocolEn } from './locales/vayuProtocol';
 import { vayuProtocolSvPartial } from './locales/vayuProtocol/vayuProtocolSvPartial';
 import { vayuProtocolEsPartial } from './locales/vayuProtocol/vayuProtocolEsPartial';
 import { vayuProtocolNoPartial } from './locales/vayuProtocol/vayuProtocolNoPartial';
+import { sriYantraShieldEn } from './locales/sriYantraShield';
+import { sriYantraShieldSvPartial } from './locales/sriYantraShield/sriYantraShieldSvPartial';
+import { sriYantraShieldEsPartial } from './locales/sriYantraShield/sriYantraShieldEsPartial';
+import { sriYantraShieldNoPartial } from './locales/sriYantraShield/sriYantraShieldNoPartial';
 
 const enRoot = deepMergeLocales(en as Record<string, unknown>, {
   templeHome: templeHomeEn,
   quantumApothecary: quantumApothecaryEn,
   vayuProtocol: vayuProtocolEn,
+  sriYantraShield: sriYantraShieldEn,
 } as Record<string, unknown>);
 const svMerged = deepMergeLocales(
   deepMergeLocales(enRoot, sv as Record<string, unknown>),
@@ -39,6 +44,10 @@ const svMerged = deepMergeLocales(
     vayuProtocol: deepMergeLocales(
       vayuProtocolEn as Record<string, unknown>,
       vayuProtocolSvPartial as Record<string, unknown>
+    ),
+    sriYantraShield: deepMergeLocales(
+      sriYantraShieldEn as Record<string, unknown>,
+      sriYantraShieldSvPartial as Record<string, unknown>
     ),
   } as Record<string, unknown>
 );
@@ -57,6 +66,10 @@ const esMerged = deepMergeLocales(
       vayuProtocolEn as Record<string, unknown>,
       vayuProtocolEsPartial as Record<string, unknown>
     ),
+    sriYantraShield: deepMergeLocales(
+      sriYantraShieldEn as Record<string, unknown>,
+      sriYantraShieldEsPartial as Record<string, unknown>
+    ),
   } as Record<string, unknown>
 );
 const noMerged = deepMergeLocales(
@@ -73,6 +86,10 @@ const noMerged = deepMergeLocales(
     vayuProtocol: deepMergeLocales(
       vayuProtocolEn as Record<string, unknown>,
       vayuProtocolNoPartial as Record<string, unknown>
+    ),
+    sriYantraShield: deepMergeLocales(
+      sriYantraShieldEn as Record<string, unknown>,
+      sriYantraShieldNoPartial as Record<string, unknown>
     ),
   } as Record<string, unknown>
 );

@@ -1,0 +1,96 @@
+{
+  "loadingAccess": "Checking access…",
+  "backLibrary": "LIBRARY",
+  "title": "SRI YANTRA 2026",
+  "subtitle": "Universal Protection Shield v2.6.GLOBAL",
+  "fieldInstabilityTitle": "FIELD INSTABILITY",
+  "fieldInstabilityBody": "High EMF and collective anxiety detected in local geospatial sector.",
+  "btnTransmuting": "TRANSMUTING...",
+  "btnShieldActive": "SHIELD ACTIVE",
+  "btnActivate": "ACTIVATE SHIELD",
+  "proofRunning": "RUNNING PROOF PROTOCOL...",
+  "proofCta": "RUN VERIFICATION PROTOCOL",
+  "systemLogs": "System Logs",
+  "logsAwaiting": "Awaiting initialization...",
+  "locating": "LOCATING...",
+  "radiusLine": "Radius: 1000m",
+  "protocolLine": "Protocol: Siddha-Quantum v2",
+  "shieldRestoredLog": "Shield state restored: PROTECTION_ACTIVE from previous session.",
+  "deactivateLog": "Shield Deactivated. Reverting to local chaotic field.",
+  "fluxErrorLog": "ERROR: Quantum Flux Instability Detected.",
+  "proofInitLog": "Initializing SIDDHA-QUANTUM VERIFICATION PROTOCOL...",
+  "proofErrorLog": "Verification protocol encountered an error. Please retry.",
+  "log": {
+    "deployInit": "Initializing UNIVERSAL PROTECTION SHIELD v2026.ANONYMOUS...",
+    "anchorCoords": "Handshake Complete. Anchoring Sri Yantra to Space-Time Fabric at {{lat}}, {{lng}}.",
+    "anchorAnonymous": "Handshake Complete. Anonymous anchor established (GPS not required).",
+    "locationReleased": "All location services released — no persistent tracking.",
+    "bhupura": "Projecting 1km Sri Yantra Bhupura (Safe Space walls)...",
+    "shell": "Deploying 1000m_RADIUS non-physical geometry shell around anchor point.",
+    "broadcast": "Broadcasting Solar Fire & EMF Transmutation codes: {{mantras}} with {{minerals}}.",
+    "fieldLocked": "FIELD_LOCKED_PERMANENTLY. Protection: ACTIVE_24_7. GPS status: OFF.",
+    "boostCoherence": "Boosting shield coherence x{{multiplier}} for verification window (60s).",
+    "verificationComplete": "Verification window complete. Returning to stable shield baseline.",
+    "cameraUnavailable": "Camera access not available. You can still run EMF and water tests manually.",
+    "cameraHandshake": "Camera handshake complete. Use your camera to observe orbs / light coherence in the room.",
+    "cameraDeclined": "Camera permission declined. Proceed with meters and water tests manually.",
+    "proofActive": "Proof Protocol Active. Shield is now at Max Resonance.",
+    "verificationBlood": "VERIFICATION_TOOL: Blood analysis — {{desc}}",
+    "verificationEmf": "VERIFICATION_TOOL: EMF meter sync — {{desc}}",
+    "verificationWater": "VERIFICATION_TOOL: Water structuring — {{desc}}"
+  },
+  "verification": {
+    "blood_analysis": "Visual guide for Live Blood un-clumping",
+    "emf_meter_sync": "Calibrate HUD with external EMF / TriField meters",
+    "water_structuring": "Instructions for the Hexagonal Freeze Test"
+  },
+  "hudLabels": {
+    "emf": "EMF FLUX",
+    "pathogen": "PATHOGEN LOAD",
+    "fear": "FEAR INDEX"
+  },
+  "hudTokens": {
+    "emf": {
+      "95mG_CHAOTIC": "95mG_CHAOTIC",
+      "0.5mG_COHERENT": "0.5mG_COHERENT",
+      "0.1mG_SUPER_COHERENT": "0.1mG_SUPER_COHERENT"
+    },
+    "pathogen": {
+      "HIGH_MOLD_VIRUS_VIBRATION": "HIGH_MOLD_VIRUS_VIBRATION",
+      "NEUTRALIZED_BY_VIOLET_FLAME": "NEUTRALIZED_BY_VIOLET_FLAME",
+      "ZERO_FIELD_MEASURABLE": "ZERO_FIELD_MEASURABLE"
+    },
+    "fear": {
+      "COLLECTIVE_ANXIETY_DETECTED": "COLLECTIVE_ANXIETY_DETECTED",
+      "PEACE_RESTORATION_ACTIVE": "PEACE_RESTORATION_ACTIVE",
+      "UNITY_CONSCIOUSNESS_WINDOW": "UNITY_CONSCIOUSNESS_WINDOW"
+    }
+  },
+  "landing": {
+    "toastSignIn": "Please sign in to purchase",
+    "toastCheckoutFail": "Failed to start checkout. Please try again.",
+    "heroTitle": "v2026.SUPREME",
+    "heroSub": "ACTIVATING THE SIDDHA-QUANTUM 1KM BIO-FIELD",
+    "anchorTitle": "1. THE 1000M SRI YANTRA ANCHOR",
+    "anchorLead": "One-Time GPS Lock:",
+    "anchorBody": "Privacy-First Stationary Shield. The app anchors the Bindu (center point) to your coordinates once, then shuts off GPS. The field remains fixed in the Akasha 24/7.",
+    "mineralTitle": "MINERAL RESONANCE MATRIX",
+    "mineralLead": "Elite Shungite + Orgonite:",
+    "mineralBody": "Our 2050 technology uses the non-physical vibrational signature of Shungite Fullerenes to absorb EMF and Orgonite to pump constant Positive Orgone Radiation (POR) across the 1km radius.",
+    "mantraTitle": "2. SIDDHA FREQUENCY & MANTRA CODES",
+    "mantra1Line": "Solar-Fire Pathogen Killer (Mold, Viruses, Parasites).",
+    "mantra2Line": "EMF Transmutation: Chaotic 7G to Coherent Field Memory.",
+    "mantra3Line": "Atmospheric Scrubbing (Chemtrails / Pollution Deletion).",
+    "mantra4Line": "1km Boundary Protection & Akashic Grounding.",
+    "scannerTitle": "QUANTUM SCANNER: 1000M RADIUS",
+    "beforeTitle": "BEFORE ACTIVATION",
+    "beforeHud": "Chaotic EMF spikes, active pathogens, fear spikes.",
+    "afterTitle": "AFTER SIDDHA SHIELD",
+    "afterHud": "Harmonic coherence, inert neutralized mold / viruses.",
+    "ctaBody": "Test with any EMF meter to see spike stabilization. Perform a Water Freeze Test to see hexagonal symmetry. Experience Live Blood unclumping in 20 minutes.",
+    "buyLoading": "Redirecting…",
+    "buyCta": "GET 24/7 1KM PROTECTION - €49 (STRIPE / CRYPTO)",
+    "payments": "Accepted: VISA, MC, BTC, ETH",
+    "backLibrary": "LIBRARY"
+  }
+}

@@ -6,14 +6,15 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { SriYantra } from "@/components/sri-yantra/SriYantra";
 
 const COSMIC_BLUE = "#0A0F1E";
 const SIDDHA_GOLD = "#D4AF37";
-const QUANTUM_BLUE = "#4A90E2";
 const VIRUS_RED = "#E74C3C";
 
 export default function SriYantraLanding() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
@@ -33,7 +34,7 @@ export default function SriYantraLanding() {
 
   const handleBuy = async () => {
     if (!user) {
-      toast.info("Please sign in to purchase");
+      toast.info(t("sriYantraShield.landing.toastSignIn"));
       navigate("/auth");
       return;
     }
@@ -59,7 +60,7 @@ export default function SriYantraLanding() {
       }
     } catch (err: unknown) {
       console.error("Sri Yantra checkout error:", err);
-      toast.error("Failed to start checkout. Please try again.");
+      toast.error(t("sriYantraShield.landing.toastCheckoutFail"));
       setPurchaseLoading(false);
     }
   };
@@ -80,10 +81,10 @@ export default function SriYantraLanding() {
           <SriYantra isActive={false} />
         </div>
         <h1 className="text-3xl md:text-4xl font-bold tracking-[0.3em] mb-2 text-center">
-          v2026.SUPREME
+          {t("sriYantraShield.landing.heroTitle")}
         </h1>
         <p className="text-lg md:text-xl text-center" style={{ color: SIDDHA_GOLD }}>
-          ACTIVATING THE SIDDHA-QUANTUM 1KM BIO-FIELD
+          {t("sriYantraShield.landing.heroSub")}
         </p>
       </section>
 
@@ -91,58 +92,50 @@ export default function SriYantraLanding() {
       <section className="max-w-5xl mx-auto grid gap-8 md:grid-cols-2 px-4 md:px-[10%] py-10">
         <div className="bg-white/5 border border-yellow-500/30 rounded-2xl p-6 md:p-8">
           <h3 className="text-lg md:text-xl font-semibold mb-3">
-            1. THE 1000M SRI YANTRA ANCHOR
+            {t("sriYantraShield.landing.anchorTitle")}
           </h3>
           <p className="text-sm md:text-base text-white/80">
-            <span className="font-semibold">One-Time GPS Lock:</span> Privacy-First Stationary
-            Shield. The app anchors the Bindu (center point) to your coordinates once, then shuts
-            off GPS. The field remains fixed in the Akasha 24/7.
+            <span className="font-semibold">{t("sriYantraShield.landing.anchorLead")}</span>{" "}
+            {t("sriYantraShield.landing.anchorBody")}
           </p>
           <hr className="my-5 border-white/10" />
-          <h3 className="text-lg md:text-xl font-semibold mb-3">MINERAL RESONANCE MATRIX</h3>
+          <h3 className="text-lg md:text-xl font-semibold mb-3">
+            {t("sriYantraShield.landing.mineralTitle")}
+          </h3>
           <p className="text-sm md:text-base text-white/80">
-            <span className="font-semibold">Elite Shungite + Orgonite:</span> Our 2050 technology
-            uses the non-physical vibrational signature of Shungite Fullerenes to absorb EMF and
-            Orgonite to pump constant Positive Orgone Radiation (POR) across the 1km radius.
+            <span className="font-semibold">{t("sriYantraShield.landing.mineralLead")}</span>{" "}
+            {t("sriYantraShield.landing.mineralBody")}
           </p>
         </div>
 
         <div className="bg-white/5 border border-yellow-500/30 rounded-2xl p-6 md:p-8">
           <h3 className="text-lg md:text-xl font-semibold mb-4">
-            2. SIDDHA FREQUENCY &amp; MANTRA CODES
+            {t("sriYantraShield.landing.mantraTitle")}
           </h3>
           <ul className="space-y-4 text-sm md:text-base">
             <li className="border-b border-white/10 pb-3">
               <p className="font-serif italic text-[15px]" style={{ color: SIDDHA_GOLD }}>
                 OM RAM RAMAYA NAMAHA
               </p>
-              <p className="text-white/80">
-                Solar-Fire Pathogen Killer (Mold, Viruses, Parasites).
-              </p>
+              <p className="text-white/80">{t("sriYantraShield.landing.mantra1Line")}</p>
             </li>
             <li className="border-b border-white/10 pb-3">
               <p className="font-serif italic text-[15px]" style={{ color: SIDDHA_GOLD }}>
                 OM HRIM SHRIM KLIM ADYA KALIKA...
               </p>
-              <p className="text-white/80">
-                EMF Transmutation: Chaotic 7G to Coherent Field Memory.
-              </p>
+              <p className="text-white/80">{t("sriYantraShield.landing.mantra2Line")}</p>
             </li>
             <li className="border-b border-white/10 pb-3">
               <p className="font-serif italic text-[15px]" style={{ color: SIDDHA_GOLD }}>
                 OM NAMAH SHIVAYA
               </p>
-              <p className="text-white/80">
-                Atmospheric Scrubbing (Chemtrails / Pollution Deletion).
-              </p>
+              <p className="text-white/80">{t("sriYantraShield.landing.mantra3Line")}</p>
             </li>
             <li>
               <p className="font-serif italic text-[15px]" style={{ color: SIDDHA_GOLD }}>
                 MAHA MRITYUNJAYA
               </p>
-              <p className="text-white/80">
-                1km Boundary Protection &amp; Akashic Grounding.
-              </p>
+              <p className="text-white/80">{t("sriYantraShield.landing.mantra4Line")}</p>
             </li>
           </ul>
         </div>
@@ -154,30 +147,30 @@ export default function SriYantraLanding() {
         style={{ background: "#111" }}
       >
         <h2 className="text-xl font-mono tracking-widest uppercase mb-8">
-          QUANTUM SCANNER: 1000M RADIUS
+          {t("sriYantraShield.landing.scannerTitle")}
         </h2>
         <div className="flex flex-col md:flex-row justify-center gap-6 max-w-4xl mx-auto">
           <div className="flex-1 border border-[#333] rounded-lg p-6 text-left">
             <p className="text-sm font-mono uppercase mb-3 opacity-80">
-              BEFORE ACTIVATION
+              {t("sriYantraShield.landing.beforeTitle")}
             </p>
             <div
               className="font-mono text-sm font-bold uppercase"
               style={{ color: VIRUS_RED }}
             >
-              Chaotic EMF spikes, active pathogens, fear spikes.
+              {t("sriYantraShield.landing.beforeHud")}
             </div>
             <div className="mt-3 h-24 rounded-md bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.4)_0,transparent_60%)] border border-red-500/40" />
           </div>
           <div className="flex-1 border border-[#27AE60] bg-[#e8f5e9] rounded-lg p-6 text-left text-[#111]">
             <p className="text-sm font-mono uppercase mb-3 opacity-80">
-              AFTER SIDDHA SHIELD
+              {t("sriYantraShield.landing.afterTitle")}
             </p>
             <div
               className="font-mono text-sm font-bold uppercase"
               style={{ color: "#27AE60" }}
             >
-              Harmonic coherence, inert neutralized mold / viruses.
+              {t("sriYantraShield.landing.afterHud")}
             </div>
             <div className="mt-3 h-24 rounded-md bg-[radial-gradient(circle_at_center,rgba(34,197,94,0.45)_0,transparent_60%)] border border-emerald-500/60" />
           </div>
@@ -190,8 +183,7 @@ export default function SriYantraLanding() {
         style={{ background: COSMIC_BLUE }}
       >
         <p className="text-base opacity-70 mb-8 max-w-xl mx-auto">
-          Test with any EMF meter to see spike stabilization. Perform a Water Freeze Test to see
-          hexagonal symmetry. Experience Live Blood unclumping in 20 minutes.
+          {t("sriYantraShield.landing.ctaBody")}
         </p>
 
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
@@ -208,17 +200,15 @@ export default function SriYantraLanding() {
             {purchaseLoading ? (
               <>
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Redirecting…
+                {t("sriYantraShield.landing.buyLoading")}
               </>
             ) : (
-              "GET 24/7 1KM PROTECTION - €49 (STRIPE / CRYPTO)"
+              t("sriYantraShield.landing.buyCta")
             )}
           </Button>
         </motion.div>
 
-        <p className="mt-8 text-sm opacity-50">
-          Accepted: VISA, MC, BTC, ETH
-        </p>
+        <p className="mt-8 text-sm opacity-50">{t("sriYantraShield.landing.payments")}</p>
       </section>
 
       {/* Back */}
@@ -229,7 +219,7 @@ export default function SriYantraLanding() {
           className="text-white/80 hover:text-white hover:bg-white/10 flex items-center gap-2 font-mono text-sm"
         >
           <ArrowLeft size={18} />
-          LIBRARY
+          {t("sriYantraShield.landing.backLibrary")}
         </Button>
       </div>
     </div>
