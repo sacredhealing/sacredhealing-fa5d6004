@@ -23,12 +23,17 @@ import { sriYantraShieldEn } from './locales/sriYantraShield';
 import { sriYantraShieldSvPartial } from './locales/sriYantraShield/sriYantraShieldSvPartial';
 import { sriYantraShieldEsPartial } from './locales/sriYantraShield/sriYantraShieldEsPartial';
 import { sriYantraShieldNoPartial } from './locales/sriYantraShield/sriYantraShieldNoPartial';
+import { digitalNadiEn } from './locales/digitalNadi';
+import { digitalNadiSvPartial } from './locales/digitalNadi/digitalNadiSvPartial';
+import { digitalNadiEsPartial } from './locales/digitalNadi/digitalNadiEsPartial';
+import { digitalNadiNoPartial } from './locales/digitalNadi/digitalNadiNoPartial';
 
 const enRoot = deepMergeLocales(en as Record<string, unknown>, {
   templeHome: templeHomeEn,
   quantumApothecary: quantumApothecaryEn,
   vayuProtocol: vayuProtocolEn,
   sriYantraShield: sriYantraShieldEn,
+  digitalNadi: digitalNadiEn,
 } as Record<string, unknown>);
 const svMerged = deepMergeLocales(
   deepMergeLocales(enRoot, sv as Record<string, unknown>),
@@ -48,6 +53,10 @@ const svMerged = deepMergeLocales(
     sriYantraShield: deepMergeLocales(
       sriYantraShieldEn as Record<string, unknown>,
       sriYantraShieldSvPartial as Record<string, unknown>
+    ),
+    digitalNadi: deepMergeLocales(
+      digitalNadiEn as Record<string, unknown>,
+      digitalNadiSvPartial as Record<string, unknown>
     ),
   } as Record<string, unknown>
 );
@@ -70,6 +79,10 @@ const esMerged = deepMergeLocales(
       sriYantraShieldEn as Record<string, unknown>,
       sriYantraShieldEsPartial as Record<string, unknown>
     ),
+    digitalNadi: deepMergeLocales(
+      digitalNadiEn as Record<string, unknown>,
+      digitalNadiEsPartial as Record<string, unknown>
+    ),
   } as Record<string, unknown>
 );
 const noMerged = deepMergeLocales(
@@ -90,6 +103,10 @@ const noMerged = deepMergeLocales(
     sriYantraShield: deepMergeLocales(
       sriYantraShieldEn as Record<string, unknown>,
       sriYantraShieldNoPartial as Record<string, unknown>
+    ),
+    digitalNadi: deepMergeLocales(
+      digitalNadiEn as Record<string, unknown>,
+      digitalNadiNoPartial as Record<string, unknown>
     ),
   } as Record<string, unknown>
 );

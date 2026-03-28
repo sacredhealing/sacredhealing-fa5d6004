@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wind } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface BreathingGuideProps {
   bpm: number | null;
 }
 
 export const BreathingGuide: React.FC<BreathingGuideProps> = ({ bpm }) => {
+  const { t } = useTranslation();
   const [phase, setPhase] = useState<'inhale' | 'hold' | 'exhale'>('inhale');
   const [cycleCount, setCycleCount] = useState(0);
 
@@ -67,7 +69,7 @@ export const BreathingGuide: React.FC<BreathingGuideProps> = ({ bpm }) => {
         >
           <Wind className="text-white/40 mb-2" size={32} />
           <span className="text-2xl font-serif font-light tracking-widest uppercase text-white/90">
-            {phase}
+            {t(`digitalNadi.breathingPhases.${phase}`)}
           </span>
         </motion.div>
 
@@ -77,12 +79,12 @@ export const BreathingGuide: React.FC<BreathingGuideProps> = ({ bpm }) => {
 
       <div className="text-center space-y-2">
         <h3 className="text-xl font-serif italic text-white/80">
-          {bpm && bpm > 80 ? 'Calming the Nadi…' : 'Balanced Flow'}
+          {bpm && bpm > 80 ? t('digitalNadi.breathingGuide.calming') : t('digitalNadi.breathingGuide.balanced')}
         </h3>
         <p className="text-sm text-white/40 font-light max-w-[240px]">
-          {phase === 'inhale' && 'Draw in the life force (Prana)'}
-          {phase === 'hold' && 'Let the energy settle'}
-          {phase === 'exhale' && 'Release all tension and doubt'}
+          {phase === 'inhale' && t('digitalNadi.breathingGuide.inhaleHint')}
+          {phase === 'hold' && t('digitalNadi.breathingGuide.holdHint')}
+          {phase === 'exhale' && t('digitalNadi.breathingGuide.exhaleHint')}
         </p>
       </div>
 
