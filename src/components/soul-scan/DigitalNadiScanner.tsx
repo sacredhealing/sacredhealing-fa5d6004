@@ -3,6 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Zap, Shield, Heart, RefreshCw, Hand, Video, VideoOff } from 'lucide-react';
 import type { ScanResults } from '@/types/soulScan';
 import { runSoulScanLogic } from '@/components/soul-scan/soulScanLogic';
+import { useTranslation } from '@/hooks/useTranslation';
+import {
+  translateChakraName,
+  translateChakraStatus,
+  translateDoshaValue,
+  translateNervousValue,
+  translatePresentKarma,
+} from '@/components/soul-scan/soulScanI18n';
 
 interface DigitalNadiScannerProps {
   isHealerPresent: boolean;
@@ -17,6 +25,7 @@ export default function DigitalNadiScanner({
   label,
   modalityName,
 }: DigitalNadiScannerProps) {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<'idle' | 'scanning' | 'finished'>('idle');
   const [results, setResults] = useState<ScanResults | null>(null);
   const [progress, setProgress] = useState(0);
@@ -27,7 +36,7 @@ export default function DigitalNadiScanner({
   // Request camera on mount and attach to video element
   useEffect(() => {
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
-      setCameraError('Camera not supported in this browser.');
+      setCameraError(t('soulScan.scannerCameraUnsupported'));
       return;
     }
     let stream: MediaStream | null = null;
@@ -43,7 +52,7 @@ export default function DigitalNadiScanner({
         setCameraError(null);
       } catch (err) {
         console.error('[DigitalNadiScanner] Camera error:', err);
-        setCameraError('Camera access denied or unavailable. You can still run the scan.');
+        setCameraError(t('soulScan.scannerCameraDenied'));
       }
     };
     startCamera();
@@ -89,10 +98,10 @@ export default function DigitalNadiScanner({
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-lg font-black tracking-tight text-[#D4AF37] flex items-center gap-2">
             <Activity className="w-5 h-5" />
-            SIDDHA 2050 SCANNER
+            {t('soulScan.scannerTitle')}
           </h2>
           <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40">
-            Quantum Bio-Twinning v4.2
+            {t('soulScan.scannerVersion')}
           </div>
         </div>
 
@@ -127,7 +136,7 @@ export default function DigitalNadiScanner({
                 {status === 'idle' && !cameraError && (
                   <div className="absolute bottom-3 left-3 flex items-center gap-2 text-[10px] text-white/70">
                     <Video className="w-4 h-4" />
-                    Camera active — position your hand in frame
+                    {t('soulScan.scannerCameraActive')}
                   </div>
                 )}
                 {status === 'idle' && (
@@ -136,7 +145,7 @@ export default function DigitalNadiScanner({
                       <Hand className="w-12 h-12 text-[#D4AF37]/50" />
                     </div>
                     <p className="mt-3 text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/70 text-center px-4">
-                      Place hand in frame
+                      {t('soulScan.scannerPlaceHand')}
                     </p>
                   </div>
                 )}
@@ -161,8 +170,8 @@ export default function DigitalNadiScanner({
               </div>
               {status === 'idle' && (
                 <>
-                  <p className="text-xs mb-6 text-white/40 leading-relaxed text-center">
-                    Initialize the 2050 Quantum Intelligence to map 72,000 Nadis, analyze Causal Body Density, and verify DNA Blueprint alignment.
+                    <p className="text-xs mb-6 text-white/40 leading-relaxed text-center">
+                    {t('soulScan.scannerInitializeDesc')}
                   </p>
                   <button
                     onClick={start2050Scan}
@@ -170,7 +179,7 @@ export default function DigitalNadiScanner({
                     className="w-full py-4 bg-[#D4AF37] text-black font-black tracking-tighter rounded-2xl hover:brightness-110 transition-all active:scale-95 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(212,175,55,0.2)]"
                   >
                     <Zap className="w-5 h-5" />
-                    {label ?? 'INITIALIZE 2050 BIO-SCAN'}
+                    {label ?? t('soulScan.scannerDefaultCta')}
                   </button>
                 </>
               )}
@@ -179,15 +188,15 @@ export default function DigitalNadiScanner({
                   <div className="text-center mb-6">
                     <div className="text-2xl font-black text-[#D4AF37] mb-2">{Math.round(progress)}%</div>
                     <p className="animate-pulse text-[10px] tracking-[0.3em] uppercase text-[#D4AF37]/60">
-                      MAPPING NADIS & ANAHATA OPENING...
+                      {t('soulScan.scannerMappingNadis')}
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-4 w-full">
                     <div className="flex items-center gap-2 text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40">
-                      <Shield className="w-3 h-3" /> SCALAR TRANSMISSION
+                      <Shield className="w-3 h-3" /> {t('soulScan.scannerScalarTransmission')}
                     </div>
                     <div className="flex items-center gap-2 text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40">
-                      <Heart className="w-3 h-3" /> PREMA-PULSE
+                      <Heart className="w-3 h-3" /> {t('soulScan.scannerPremaPulse')}
                     </div>
                   </div>
                 </>
@@ -200,40 +209,40 @@ export default function DigitalNadiScanner({
               <div className="p-5 bg-white/5 rounded-3xl border border-white/10 mb-4">
                 <h3 className="font-black text-white flex items-center gap-2 mb-2">
                   <Activity className="w-4 h-4 text-[#D4AF37]" />
-                  Scan Complete: {results.focus}
+                  {t('soulScan.scannerCompleteTitle', { focus: results.focus })}
                 </h3>
                 <p className="text-xs text-white/60 leading-relaxed">{results.summary}</p>
               </div>
               <div className="grid grid-cols-2 gap-3 mb-6">
                 <div className="p-3 bg-white/5 border border-white/10 rounded-2xl">
-                  <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40 mb-1">Active Nadis</div>
-                  <div className="text-sm font-bold text-[#D4AF37]">{results.technicalData.activeNadis.toLocaleString()} / 72,000</div>
+                  <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40 mb-1">{t('soulScan.scannerActiveNadis')}</div>
+                  <div className="text-sm font-bold text-[#D4AF37]">{t('soulScan.scannerActiveNadisValue', { count: results.technicalData.activeNadis })}</div>
                 </div>
                 <div className="p-3 bg-white/5 border border-white/10 rounded-2xl">
-                  <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40 mb-1">Dosha Balance</div>
-                  <div className="text-sm font-bold text-[#D4AF37]">{results.technicalData.doshaImbalance}</div>
+                  <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40 mb-1">{t('soulScan.scannerDoshaBalance')}</div>
+                  <div className="text-sm font-bold text-[#D4AF37]">{translateDoshaValue(results.technicalData.doshaImbalance, t)}</div>
                 </div>
                 <div className="p-3 bg-white/5 border border-white/10 rounded-2xl">
-                  <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40 mb-1">Nervous System</div>
-                  <div className="text-[10px] font-bold text-[#D4AF37] leading-tight">{results.technicalData.nervousSystemLevel}</div>
+                  <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40 mb-1">{t('soulScan.scannerNervousSystem')}</div>
+                  <div className="text-[10px] font-bold text-[#D4AF37] leading-tight">{translateNervousValue(results.technicalData.nervousSystemLevel, t)}</div>
                 </div>
                 <div className="p-3 bg-white/5 border border-white/10 rounded-2xl">
-                  <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40 mb-1">Water Balance</div>
+                  <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40 mb-1">{t('soulScan.scannerWaterBalance')}</div>
                   <div className="text-sm font-bold text-[#D4AF37]">{results.technicalData.waterBalance}%</div>
                 </div>
                 <div className="p-3 bg-white/5 border border-white/10 rounded-2xl">
-                  <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40 mb-1">Torus Diameter</div>
+                  <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40 mb-1">{t('soulScan.scannerTorusDiameter')}</div>
                   <div className="text-sm font-bold text-[#D4AF37]">{results.technicalData.torusFieldDiameter}m</div>
                 </div>
                 {results.technicalData.karmicNodesExtracted != null && (
                   <div className="p-3 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-2xl col-span-2">
-                    <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-[#D4AF37] mb-1">Karmic Nodes Extracted</div>
-                    <div className="text-lg font-bold text-white">{results.technicalData.karmicNodesExtracted} Nodes</div>
+                    <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-[#D4AF37] mb-1">{t('soulScan.scannerKarmicNodesTitle')}</div>
+                    <div className="text-lg font-bold text-white">{t('soulScan.scannerKarmicNodesValue', { count: results.technicalData.karmicNodesExtracted })}</div>
                   </div>
                 )}
               </div>
               <div className="p-4 bg-white/5 border border-white/10 rounded-2xl mb-6">
-                <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40 mb-2">Chakra Alignment</div>
+                <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40 mb-2">{t('soulScan.scannerChakraAlignment')}</div>
                 <div className="flex flex-wrap gap-2">
                   {results.technicalData.chakras.map((chakra, i) => (
                     <div
@@ -247,24 +256,24 @@ export default function DigitalNadiScanner({
                             : 'bg-white/20'
                         }`}
                       />
-                      <span className="text-white/60">{chakra.name}:</span>
+                      <span className="text-white/60">{translateChakraName(chakra.name, t)}:</span>
                       <span className={chakra.status === 'Aligned' || chakra.status === 'Opening' ? 'text-[#D4AF37]' : 'text-white/40'}>
-                        {chakra.status}
+                        {translateChakraStatus(chakra.status, t)}
                       </span>
                     </div>
                   ))}
                 </div>
               </div>
               <div className="p-4 bg-[#D4AF37]/5 border border-[#D4AF37]/20 rounded-2xl mb-6">
-                <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-[#D4AF37] mb-1">Karmic Signature</div>
-                <div className="text-xs font-bold text-white">{results.technicalData.presentKarma}</div>
+                <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-[#D4AF37] mb-1">{t('soulScan.scannerKarmicSignature')}</div>
+                <div className="text-xs font-bold text-white">{translatePresentKarma(results.technicalData.presentKarma, t)}</div>
               </div>
               <button
                 onClick={() => setStatus('idle')}
                 className="w-full py-3 text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/40 hover:text-[#D4AF37] transition-colors flex items-center justify-center gap-2 border border-white/10 rounded-2xl"
               >
                 <RefreshCw className="w-3 h-3" />
-                Reset Scanner
+                {t('soulScan.scannerReset')}
               </button>
             </motion.div>
           )}

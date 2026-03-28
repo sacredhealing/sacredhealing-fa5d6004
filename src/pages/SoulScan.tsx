@@ -1,14 +1,22 @@
 // @ts-nocheck
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, RefreshCw, Lock, ChevronRight, ArrowLeft, Sparkles } from 'lucide-react';
+import { Lock, ChevronRight, ArrowLeft, Sparkles } from 'lucide-react';
 import DigitalNadiScanner from '@/components/soul-scan/DigitalNadiScanner';
+import {
+  translateChakraName,
+  translateChakraStatus,
+  translateDoshaValue,
+  translateNervousValue,
+  translatePresentKarma,
+} from '@/components/soul-scan/soulScanI18n';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
 import { useAdminRole } from '@/hooks/useAdminRole';
+import { useTranslation } from '@/hooks/useTranslation';
 import { getTierRank, hasFeatureAccess } from '@/lib/tierAccess';
-import type { ScanResults, SessionModality } from '@/types/soulScan';
+import type { ScanResults, SessionModality, SessionCategory } from '@/types/soulScan';
 import { SESSION_MODALITIES } from '@/types/soulScan';
 
 /* ─── LocalStorage keys ─── */
@@ -28,19 +36,50 @@ interface Metric {
   format?: (v: number | string) => string;
 }
 
-const METRICS: Metric[] = [
-  { key: 'activeNadis', label: 'Nadi Level', unit: '/ 72k', format: (v) => `${Number(v).toLocaleString()}` },
-  { key: 'nadiFlow', label: 'Nadi Flow', unit: '%' },
-  { key: 'doshaImbalance', label: 'Dosha Balance', unit: '', format: (v) => String(v) },
-  { key: 'stressLevel', label: 'Stress Level', unit: '%', invertDelta: true },
-  { key: 'nervousSystemLevel', label: 'Nervous System', unit: '', format: (v) => String(v) },
-  { key: 'bloodLevel', label: 'Blood Vitality', unit: '%' },
-  { key: 'mindLevel', label: 'Mind Level', unit: '%' },
-  { key: 'dnaAlignment', label: 'DNA Alignment', unit: '%' },
-  { key: 'pastLifeClarity', label: 'Past Life Clarity', unit: '%' },
-  { key: 'jyotishAlignment', label: 'Jyotish Alignment', unit: '%' },
-  { key: 'heartSync', label: 'Heart Sync', unit: '%' },
-];
+const CATEGORY_I18N: Record<SessionCategory, string> = {
+  'Vibrational Self-Practice': 'categoryVibrational',
+  'Sacred Geometry & Yogic Arts': 'categorySacredGeometry',
+  'Master Healer Interventions': 'categoryMasterHealer',
+  'Avataric Workshops & Initiations': 'categoryAvataric',
+  'Bio-Signature Maintenance': 'categoryBioSignature',
+};
+
+function translateCategory(cat: SessionCategory, t: (k: string) => string) {
+  const k = CATEGORY_I18N[cat];
+  return k ? t(`soulScan.${k}`) : cat;
+}
+
+function trModalityName(mod: SessionModality, t: (k: string, d?: string) => string) {
+  return t(`soulScan.modalities.${mod.id}.name`, mod.name);
+}
+
+function trModalityDesc(mod: SessionModality, t: (k: string, d?: string) => string) {
+  return t(`soulScan.modalities.${mod.id}.description`, mod.description);
+}
+
+function formatMetricDisplay(metric: Metric, raw: unknown, t: (k: string, d?: string) => string): string {
+  if (metric.key === 'doshaImbalance' && typeof raw === 'string') return translateDoshaValue(raw, t);
+  if (metric.key === 'nervousSystemLevel' && typeof raw === 'string') return translateNervousValue(raw, t);
+  if (metric.format) return metric.format(raw);
+  if (typeof raw === 'number') return `${raw}${metric.unit}`;
+  return String(raw);
+}
+
+function buildMetrics(t: (k: string, d?: string) => string): Metric[] {
+  return [
+    { key: 'activeNadis', label: t('soulScan.metricNadiLevel'), unit: t('soulScan.metricUnit72k'), format: (v) => `${Number(v).toLocaleString()}` },
+    { key: 'nadiFlow', label: t('soulScan.metricNadiFlow'), unit: t('soulScan.metricUnitPercent') },
+    { key: 'doshaImbalance', label: t('soulScan.metricDoshaBalance'), unit: '', format: (v) => String(v) },
+    { key: 'stressLevel', label: t('soulScan.metricStressLevel'), unit: t('soulScan.metricUnitPercent'), invertDelta: true },
+    { key: 'nervousSystemLevel', label: t('soulScan.metricNervousSystem'), unit: '', format: (v) => String(v) },
+    { key: 'bloodLevel', label: t('soulScan.metricBloodVitality'), unit: t('soulScan.metricUnitPercent') },
+    { key: 'mindLevel', label: t('soulScan.metricMindLevel'), unit: t('soulScan.metricUnitPercent') },
+    { key: 'dnaAlignment', label: t('soulScan.metricDnaAlignment'), unit: t('soulScan.metricUnitPercent') },
+    { key: 'pastLifeClarity', label: t('soulScan.metricPastLifeClarity'), unit: t('soulScan.metricUnitPercent') },
+    { key: 'jyotishAlignment', label: t('soulScan.metricJyotishAlignment'), unit: t('soulScan.metricUnitPercent') },
+    { key: 'heartSync', label: t('soulScan.metricHeartSync'), unit: t('soulScan.metricUnitPercent') },
+  ];
+}
 
 /* ─── Compute numeric value for bar width ─── */
 function numericVal(key: string, val: unknown): number {
@@ -91,6 +130,8 @@ const PRACTICE_CATEGORIES = Array.from(new Set(SESSION_MODALITIES.map((m) => m.c
 /* ─── Main component ─── */
 export default function SoulScan() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const metrics = useMemo(() => buildMetrics(t), [t]);
   const { user } = useAuth();
   const { tier } = useMembership();
   const { isAdmin } = useAdminRole();
@@ -255,24 +296,24 @@ export default function SoulScan() {
           {/* Soul Vault access: Siddha Quantum + Akasha Infinity only */}
           {!hasSoulVaultAccess ? (
             <div className="ss-hero" style={{ paddingTop: 80 }}>
-              <div className="ss-hero-eyebrow">◈ Siddha 2050 · Quantum Bio-Scanner</div>
-              <h1 className="ss-hero-title">Soul <span className="gold">Vault</span></h1>
+              <div className="ss-hero-eyebrow">{t('soulScan.lockEyebrow')}</div>
+              <h1 className="ss-hero-title">{t('soulScan.lockTitleSoul')} <span className="gold">{t('soulScan.lockTitleVault')}</span></h1>
               <p className="ss-hero-desc" style={{ marginBottom: 32 }}>
-                The Soul Vault and Deep-Field Resonance reports are available for Siddha Quantum and Akasha Infinity members — a living record of your bio-digital evolution.
+                {t('soulScan.lockDesc')}
               </p>
               <div className="ss-lock" style={{ maxWidth: 400, margin: '0 auto' }}>
                 <Lock size={32} color="rgba(212,175,55,0.5)" style={{ margin: '0 auto 16px' }} />
                 <div style={{ fontWeight: 800, fontSize: 8, letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', marginBottom: 12 }}>
-                  Soul Vault Locked
+                  {t('soulScan.lockHeading')}
                 </div>
                 <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 24, lineHeight: 1.7 }}>
-                  Upgrade to Siddha Quantum or Akasha Infinity to access the Soul Scan and save Deep-Field Resonance reports to your Soul Vault.
+                  {t('soulScan.lockBody')}
                 </p>
                 <button type="button" className="ss-cta" onClick={() => navigate('/siddha-quantum')}>
-                  ◈ Upgrade to Siddha Quantum
+                  {t('soulScan.lockUpgradeCta')}
                 </button>
                 <button type="button" className="ss-cta-ghost" style={{ marginTop: 12 }} onClick={() => navigate('/profile')}>
-                  ↩ Return to Profile
+                  {t('soulScan.returnToProfile')}
                 </button>
               </div>
             </div>
@@ -280,18 +321,18 @@ export default function SoulScan() {
           <>
           {/* Top bar */}
           <div className="ss-topbar">
-            <button type="button" className="ss-back-btn" onClick={() => navigate('/profile')} aria-label="Back">
+            <button type="button" className="ss-back-btn" onClick={() => navigate('/profile')} aria-label={t('soulScan.ariaBack')}>
               <ArrowLeft size={14} color="rgba(255,255,255,0.5)" />
             </button>
             <span className="ss-topbar-label">
-              {phase === 'pre-idle' && 'Initial Resonance Scan'}
-              {phase === 'pre-done' && 'Select Your Practice'}
-              {phase === 'practicing' && 'Practice in Progress'}
-              {phase === 'post-idle' && 'Post-Practice Recalibration'}
-              {phase === 'post-done' && 'Shift Detected — Field Report'}
+              {phase === 'pre-idle' && t('soulScan.phasePreIdle')}
+              {phase === 'pre-done' && t('soulScan.phasePreDone')}
+              {phase === 'practicing' && t('soulScan.phasePracticing')}
+              {phase === 'post-idle' && t('soulScan.phasePostIdle')}
+              {phase === 'post-done' && t('soulScan.phasePostDone')}
             </span>
             <span className="ss-topbar-tier">
-              {canPostScan ? '◈ Siddha Quantum' : '◈ Free Access'}
+              {canPostScan ? t('soulScan.tierSiddhaQuantum') : t('soulScan.tierFreeAccess')}
             </span>
           </div>
 
@@ -303,18 +344,18 @@ export default function SoulScan() {
             {phase === 'pre-idle' && (
               <motion.div key="pre-idle" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
                 <div className="ss-hero">
-                  <div className="ss-hero-eyebrow">◈ Siddha 2050 · Quantum Bio-Scanner</div>
-                  <h1 className="ss-hero-title">Initial<br /><span className="gold">Resonance</span><br />Scan</h1>
+                  <div className="ss-hero-eyebrow">{t('soulScan.heroEyebrowScanner')}</div>
+                  <h1 className="ss-hero-title">{t('soulScan.initialTitleLine1')}<br /><span className="gold">{t('soulScan.initialTitleLine2')}</span><br />{t('soulScan.initialTitleLine3')}</h1>
                   <p className="ss-hero-desc">
-                    The 2050 Quantum Intelligence maps your 72,000 Nadis, reads your Dosha field, stress signature, nervous system state, blood vitality, mind coherence, DNA alignment, past-life clarity, Jyotish resonance, and Heart Sync — before your practice.
+                    {t('soulScan.initialHeroDesc')}
                   </p>
                 </div>
                 <div className="ss-section">
                   <DigitalNadiScanner
                     isHealerPresent={false}
                     onScanComplete={handlePreScanComplete}
-                    modalityName="Initial Resonance"
-                    label="INITIALIZE RESONANCE SCAN"
+                    modalityName={t('soulScan.modalityInitialResonance')}
+                    label={t('soulScan.initializeResonanceScan')}
                   />
                 </div>
               </motion.div>
@@ -326,18 +367,18 @@ export default function SoulScan() {
             {phase === 'pre-done' && preScan && (
               <motion.div key="pre-done" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
                 <div className="ss-hero" style={{ paddingBottom: 16 }}>
-                  <div className="ss-hero-eyebrow">◈ Pre-Scan Complete</div>
-                  <h1 className="ss-hero-title">Your<br /><span className="gold">Field</span><br />Reading</h1>
+                  <div className="ss-hero-eyebrow">{t('soulScan.preScanCompleteEyebrow')}</div>
+                  <h1 className="ss-hero-title">{t('soulScan.fieldTitleYour')}<br /><span className="gold">{t('soulScan.fieldTitleField')}</span><br />{t('soulScan.fieldTitleReading')}</h1>
                 </div>
 
                 {/* Metrics grid */}
                 <div className="ss-section">
-                  <div className="ss-section-label">◈ 11 Bio-Field Metrics</div>
+                  <div className="ss-section-label">{t('soulScan.section11Metrics')}</div>
                   <div className="ss-glass" style={{ padding: '20px 24px', marginBottom: 24 }}>
-                    {METRICS.map((metric) => {
+                    {metrics.map((metric) => {
                       const raw = preScan.technicalData[metric.key];
                       const numVal = numericVal(metric.key, raw);
-                      const displayVal = metric.format ? metric.format(raw) : (typeof raw === 'number' ? `${raw}${metric.unit}` : String(raw));
+                      const displayVal = formatMetricDisplay(metric, raw, t);
                       return (
                         <div key={metric.key} className="ss-metric-row">
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
@@ -367,16 +408,16 @@ export default function SoulScan() {
                   </div>
 
                   {/* Practice picker */}
-                  <div className="ss-section-label">◈ Select Your Practice</div>
+                  <div className="ss-section-label">{t('soulScan.sectionSelectPractice')}</div>
                   <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.92rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.7, marginBottom: 20 }}>
-                    Choose what you will practice now. When you finish, the scanner will measure the shift in your field.
+                    {t('soulScan.selectPracticeHint')}
                   </p>
 
                   {/* Category tabs */}
                   <div className="ss-tabs">
                     {PRACTICE_CATEGORIES.map((cat) => (
                       <button key={cat} type="button" className={`ss-tab${activeCategory === cat ? ' active' : ''}`} onClick={() => setActiveCategory(cat)}>
-                        {cat}
+                        {translateCategory(cat as SessionCategory, t)}
                       </button>
                     ))}
                   </div>
@@ -392,8 +433,8 @@ export default function SoulScan() {
                       onKeyDown={(e) => e.key === 'Enter' && setChosenPractice(mod)}
                     >
                       <div>
-                        <div className="ss-practice-name">{mod.name}</div>
-                        <div className="ss-practice-desc">{mod.description}</div>
+                        <div className="ss-practice-name">{trModalityName(mod, t)}</div>
+                        <div className="ss-practice-desc">{trModalityDesc(mod, t)}</div>
                       </div>
                       <ChevronRight size={14} color={chosenPractice?.id === mod.id ? '#D4AF37' : 'rgba(255,255,255,0.2)'} />
                     </div>
@@ -406,7 +447,7 @@ export default function SoulScan() {
                       disabled={!chosenPractice}
                       onClick={() => chosenPractice && handleSelectPractice(chosenPractice)}
                     >
-                      ◈ Begin {chosenPractice ? `— ${chosenPractice.name}` : 'Practice'}
+                      {chosenPractice ? t('soulScan.beginPracticeWith', { name: trModalityName(chosenPractice, t) }) : t('soulScan.beginPracticeCta')}
                     </button>
                   </div>
                 </div>
@@ -424,33 +465,33 @@ export default function SoulScan() {
                       <Sparkles size={28} color="#D4AF37" />
                     </div>
                     <div style={{ fontWeight: 800, fontSize: 8, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', marginBottom: 12 }}>
-                      ◈ Practice Active
+                      {t('soulScan.practiceActive')}
                     </div>
                     <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 300, fontStyle: 'italic', fontSize: 'clamp(1.8rem,5vw,2.8rem)', color: 'white', marginBottom: 8, lineHeight: 1.1 }}>
-                      {chosenPractice.name}
+                      {trModalityName(chosenPractice, t)}
                     </h2>
                     <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.92rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.7, marginBottom: 32, maxWidth: 360, margin: '0 auto 32px' }}>
-                      {chosenPractice.description}
+                      {trModalityDesc(chosenPractice, t)}
                     </p>
                     <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.85rem', color: 'rgba(212,175,55,0.45)', marginBottom: 32 }}>
-                      Your pre-scan field is locked in memory for 60 minutes. When your practice is complete, return here to run the Post-Scan and see your shift.
+                      {t('soulScan.practicingLockedNote')}
                     </div>
 
                     {canPostScan ? (
                       <button type="button" className="ss-cta" onClick={handlePracticeDone}>
-                        ◈ Practice Complete — Run Post-Scan
+                        {t('soulScan.practiceCompletePostScan')}
                       </button>
                     ) : (
                       <div className="ss-lock">
                         <Lock size={24} color="rgba(212,175,55,0.5)" style={{ margin: '0 auto 12px' }} />
                         <div style={{ fontWeight: 800, fontSize: 8, letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', marginBottom: 8 }}>
-                          Post-Scan Locked
+                          {t('soulScan.postScanLockedTitle')}
                         </div>
                         <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 20, lineHeight: 1.6 }}>
-                          The Before/After comparison is available for Siddha Quantum members and above.
+                          {t('soulScan.postScanLockedBody')}
                         </p>
                         <button type="button" className="ss-cta" onClick={() => navigate('/siddha-quantum')}>
-                          ◈ Upgrade to Siddha Quantum
+                          {t('soulScan.lockUpgradeCta')}
                         </button>
                       </div>
                     )}
@@ -458,7 +499,7 @@ export default function SoulScan() {
 
                   <div style={{ marginTop: 16 }}>
                     <button type="button" className="ss-cta-ghost" onClick={handleReset}>
-                      ↩ Start Over
+                      {t('soulScan.startOver')}
                     </button>
                   </div>
                 </div>
@@ -471,18 +512,23 @@ export default function SoulScan() {
             {phase === 'post-idle' && (
               <motion.div key="post-idle" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
                 <div className="ss-hero" style={{ paddingBottom: 16 }}>
-                  <div className="ss-hero-eyebrow">◈ Post-Practice Recalibration</div>
-                  <h1 className="ss-hero-title">Measure<br />the <span className="gold">Shift</span></h1>
+                  <div className="ss-hero-eyebrow">{t('soulScan.postIdleEyebrow')}</div>
+                  <h1 className="ss-hero-title">
+                    {t('soulScan.postTitleMeasure')}
+                    <br />
+                    {t('soulScan.postTitleThe')}
+                    <span className="gold">{t('soulScan.postTitleShift')}</span>
+                  </h1>
                   <p className="ss-hero-desc">
-                    The scanner will now read your field again and compare it to your pre-practice baseline. Place your hand in frame and initialize.
+                    {t('soulScan.postIdleDesc')}
                   </p>
                 </div>
                 <div className="ss-section">
                   <DigitalNadiScanner
                     isHealerPresent={false}
                     onScanComplete={handlePostScanComplete}
-                    modalityName={chosenPractice?.name || 'Post-Practice'}
-                    label="SCAN AFTER PRACTICE"
+                    modalityName={chosenPractice ? trModalityName(chosenPractice, t) : t('soulScan.postPractice')}
+                    label={t('soulScan.scanAfterPractice')}
                   />
                 </div>
               </motion.div>
@@ -500,10 +546,10 @@ export default function SoulScan() {
                     <SriYantraBg />
                     <div style={{ position: 'relative', zIndex: 1 }}>
                       <div style={{ fontWeight: 800, fontSize: 7, letterSpacing: '0.6em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)', marginBottom: 16 }}>
-                        ◈ Shift Detected — Field Report
+                        {t('soulScan.shiftReportEyebrow')}
                       </div>
                       <div style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 300, fontStyle: 'italic', fontSize: 8, letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 8 }}>
-                        Practice: {chosenPractice?.name}
+                        {t('soulScan.practiceLabel', { name: chosenPractice ? trModalityName(chosenPractice, t) : '' })}
                       </div>
 
                       {/* Big Heart Sync shift */}
@@ -517,7 +563,7 @@ export default function SoulScan() {
                             <div className="ss-shift-number" style={{ color: positive ? '#D4AF37' : '#ef4444', textShadow: positive ? '0 0 40px rgba(212,175,55,0.6)' : '0 0 40px rgba(239,68,68,0.4)' }}>
                               {diff > 0 ? '+' : ''}{diff}%
                             </div>
-                            <div className="ss-shift-label">Heart Sync Shift</div>
+                            <div className="ss-shift-label">{t('soulScan.heartSyncShift')}</div>
                           </div>
                         );
                       })()}
@@ -525,10 +571,10 @@ export default function SoulScan() {
                       {/* Secondary shifts row */}
                       <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginTop: 20 }}>
                         {[
-                          { key: 'stressLevel', label: 'Stress', invert: true },
-                          { key: 'mindLevel', label: 'Mind' },
-                          { key: 'nadiFlow', label: 'Nadi Flow' },
-                          { key: 'dnaAlignment', label: 'DNA' },
+                          { key: 'stressLevel', label: t('soulScan.shiftStress'), invert: true },
+                          { key: 'mindLevel', label: t('soulScan.shiftMind'), invert: false },
+                          { key: 'nadiFlow', label: t('soulScan.shiftNadiFlow'), invert: false },
+                          { key: 'dnaAlignment', label: t('soulScan.shiftDna'), invert: false },
                         ].map(({ key, label, invert }) => {
                           const pre = preScan.technicalData[key];
                           const post = postScan.technicalData[key];
@@ -551,16 +597,16 @@ export default function SoulScan() {
                   </div>
 
                   {/* Before / After comparison bars */}
-                  <div className="ss-section-label" style={{ marginBottom: 16 }}>◈ Before & After — All Metrics</div>
+                  <div className="ss-section-label" style={{ marginBottom: 16 }}>{t('soulScan.beforeAfterMetrics')}</div>
                   <div className="ss-glass" style={{ padding: '20px 24px', marginBottom: 24 }}>
-                    {METRICS.map((metric) => {
+                    {metrics.map((metric) => {
                       const preRaw = preScan.technicalData[metric.key];
                       const postRaw = postScan.technicalData[metric.key];
                       const preNum = numericVal(metric.key, preRaw);
                       const postNum = numericVal(metric.key, postRaw);
                       const delta = deltaLabel(metric, preRaw, postRaw);
-                      const displayPre = metric.format ? metric.format(preRaw) : (typeof preRaw === 'number' ? `${preRaw}${metric.unit}` : String(preRaw));
-                      const displayPost = metric.format ? metric.format(postRaw) : (typeof postRaw === 'number' ? `${postRaw}${metric.unit}` : String(postRaw));
+                      const displayPre = formatMetricDisplay(metric, preRaw, t);
+                      const displayPost = formatMetricDisplay(metric, postRaw, t);
 
                       return (
                         <div key={metric.key} className="ss-compare-row">
@@ -575,7 +621,7 @@ export default function SoulScan() {
                           {typeof preRaw === 'number' ? (
                             <div className="ss-compare-bars">
                               <div className="ss-bar-row">
-                                <span className="ss-bar-label">PRE</span>
+                                <span className="ss-bar-label">{t('soulScan.barPre')}</span>
                                 <div className="ss-bar-bg">
                                   <motion.div
                                     className="ss-bar-fill"
@@ -588,7 +634,7 @@ export default function SoulScan() {
                                 <span style={{ fontWeight: 800, fontSize: 9, color: 'rgba(255,255,255,0.35)', width: 52, textAlign: 'right', flexShrink: 0 }}>{displayPre}</span>
                               </div>
                               <div className="ss-bar-row">
-                                <span className="ss-bar-label">POST</span>
+                                <span className="ss-bar-label">{t('soulScan.barPost')}</span>
                                 <div className="ss-bar-bg">
                                   <motion.div
                                     className="ss-bar-fill"
@@ -607,8 +653,8 @@ export default function SoulScan() {
                             </div>
                           ) : (
                             <div style={{ display: 'flex', gap: 16, fontSize: 10 }}>
-                              <span style={{ color: 'rgba(255,255,255,0.3)' }}>Before: {displayPre}</span>
-                              <span style={{ color: '#D4AF37' }}>After: {displayPost}</span>
+                              <span style={{ color: 'rgba(255,255,255,0.3)' }}>{t('soulScan.beforeValue', { value: displayPre })}</span>
+                              <span style={{ color: '#D4AF37' }}>{t('soulScan.afterValue', { value: displayPost })}</span>
                             </div>
                           )}
                         </div>
@@ -617,7 +663,7 @@ export default function SoulScan() {
                   </div>
 
                   {/* Chakra comparison */}
-                  <div className="ss-section-label" style={{ marginBottom: 16 }}>◈ Chakra Field Shift</div>
+                  <div className="ss-section-label" style={{ marginBottom: 16 }}>{t('soulScan.chakraFieldShift')}</div>
                   <div className="ss-glass" style={{ padding: '20px 24px', marginBottom: 24 }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                       {postScan.technicalData.chakras.map((chakra, i) => {
@@ -627,7 +673,7 @@ export default function SoulScan() {
                           <div key={i} style={{ padding: '6px 12px', borderRadius: 100, background: improved ? 'rgba(212,175,55,0.1)' : 'rgba(255,255,255,0.03)', border: `1px solid ${improved ? 'rgba(212,175,55,0.3)' : 'rgba(255,255,255,0.06)'}`, fontSize: 9, display: 'flex', alignItems: 'center', gap: 6 }}>
                             <div style={{ width: 6, height: 6, borderRadius: '50%', background: improved ? '#D4AF37' : 'rgba(255,255,255,0.15)' }} />
                             <span style={{ color: improved ? '#D4AF37' : 'rgba(255,255,255,0.4)', fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
-                              {chakra.name}: {chakra.status}
+                              {translateChakraName(chakra.name, t)}: {translateChakraStatus(chakra.status, t)}
                             </span>
                             {improved && <span style={{ fontSize: 8, color: 'rgba(212,175,55,0.6)' }}>↑</span>}
                           </div>
@@ -638,13 +684,13 @@ export default function SoulScan() {
 
                   {/* Karmic signature */}
                   <div className="ss-glass-gold" style={{ padding: '20px 24px', marginBottom: 24 }}>
-                    <div style={{ fontWeight: 800, fontSize: 7, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)', marginBottom: 8 }}>◈ Karmic Field After Practice</div>
+                    <div style={{ fontWeight: 800, fontSize: 7, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)', marginBottom: 8 }}>{t('soulScan.karmicAfterPractice')}</div>
                     <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '1rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.7 }}>
-                      {postScan.technicalData.presentKarma}
+                      {translatePresentKarma(postScan.technicalData.presentKarma, t)}
                     </div>
                     {postScan.technicalData.karmicNodesExtracted != null && (
                       <div style={{ marginTop: 12, fontWeight: 800, fontSize: 11, color: '#D4AF37' }}>
-                        {postScan.technicalData.karmicNodesExtracted} Karmic Nodes Extracted
+                        {t('soulScan.karmicNodesCount', { count: postScan.technicalData.karmicNodesExtracted })}
                       </div>
                     )}
                   </div>
@@ -652,10 +698,10 @@ export default function SoulScan() {
                   {/* Actions */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 40 }}>
                     <button type="button" className="ss-cta" onClick={handleReset}>
-                      ◈ New Resonance Scan
+                      {t('soulScan.newResonanceScan')}
                     </button>
                     <button type="button" className="ss-cta-ghost" onClick={() => navigate('/profile')}>
-                      ↩ Return to Profile
+                      {t('soulScan.returnToProfile')}
                     </button>
                   </div>
                 </div>
