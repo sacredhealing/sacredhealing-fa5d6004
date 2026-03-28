@@ -11,9 +11,14 @@ import { templeHomeEn } from './locales/templeHome';
 import { templeHomeSvPartial } from './locales/templeHome/templeHomeSvPartial';
 import { templeHomeEsPartial } from './locales/templeHome/templeHomeEsPartial';
 import { templeHomeNoPartial } from './locales/templeHome/templeHomeNoPartial';
+import { quantumApothecaryEn } from './locales/quantumApothecary';
+import { quantumApothecarySvPartial } from './locales/quantumApothecary/quantumApothecarySvPartial';
+import { quantumApothecaryEsPartial } from './locales/quantumApothecary/quantumApothecaryEsPartial';
+import { quantumApothecaryNoPartial } from './locales/quantumApothecary/quantumApothecaryNoPartial';
 
 const enRoot = deepMergeLocales(en as Record<string, unknown>, {
   templeHome: templeHomeEn,
+  quantumApothecary: quantumApothecaryEn,
 } as Record<string, unknown>);
 const svMerged = deepMergeLocales(
   deepMergeLocales(enRoot, sv as Record<string, unknown>),
@@ -21,6 +26,10 @@ const svMerged = deepMergeLocales(
     templeHome: deepMergeLocales(
       templeHomeEn as Record<string, unknown>,
       templeHomeSvPartial as Record<string, unknown>
+    ),
+    quantumApothecary: deepMergeLocales(
+      quantumApothecaryEn as Record<string, unknown>,
+      quantumApothecarySvPartial as Record<string, unknown>
     ),
   } as Record<string, unknown>
 );
@@ -31,6 +40,10 @@ const esMerged = deepMergeLocales(
       templeHomeEn as Record<string, unknown>,
       templeHomeEsPartial as Record<string, unknown>
     ),
+    quantumApothecary: deepMergeLocales(
+      quantumApothecaryEn as Record<string, unknown>,
+      quantumApothecaryEsPartial as Record<string, unknown>
+    ),
   } as Record<string, unknown>
 );
 const noMerged = deepMergeLocales(
@@ -39,6 +52,10 @@ const noMerged = deepMergeLocales(
     templeHome: deepMergeLocales(
       templeHomeEn as Record<string, unknown>,
       templeHomeNoPartial as Record<string, unknown>
+    ),
+    quantumApothecary: deepMergeLocales(
+      quantumApothecaryEn as Record<string, unknown>,
+      quantumApothecaryNoPartial as Record<string, unknown>
     ),
   } as Record<string, unknown>
 );
