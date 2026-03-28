@@ -281,7 +281,11 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
     } finally { setIsLoading(false); }
   };
 
-  const suggestions = ['How do I balance my Vata dosha?', 'What herbs help anxiety and insomnia?', 'Create my daily Dinacharya routine'];
+  const suggestions = [
+    t('ayurvedaChat.suggestion1', 'How do I balance my Vata dosha?'),
+    t('ayurvedaChat.suggestion2', 'What herbs help anxiety and insomnia?'),
+    t('ayurvedaChat.suggestion3', 'Create my daily Dinacharya routine'),
+  ];
 
   const overlay = (
     <AnimatePresence>
@@ -297,7 +301,7 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
               <div className="sqi-chat-name">{t('ayurvedaChat.headerTitle', 'Dhanvantari — Divine Physician')}</div>
               <div className="sqi-chat-sub">{t('ayurvedaChat.headerSubtitle', { defaultValue: 'Bhrigu Nadi Enhanced • {{protocol}} Protocol', protocol: dosha?.primary || t('ayurvedaChat.unknownProtocol', 'Unknown') })}</div>
             </div>
-            <div className="sqi-live-pill"><div className="sqi-live-dot" /><span className="sqi-live-lbl">Live</span></div>
+            <div className="sqi-live-pill"><div className="sqi-live-dot" /><span className="sqi-live-lbl">{t('ayurvedaChat.liveBadge', 'Live')}</span></div>
             {onClose && <button type="button" className="sqi-close" onClick={onClose}><X style={{ width: 15, height: 15 }} /></button>}
           </div>
 

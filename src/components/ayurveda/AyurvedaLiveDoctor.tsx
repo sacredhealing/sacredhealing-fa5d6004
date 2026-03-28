@@ -341,7 +341,11 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
           {profile && dosha && (
             <div className="mt-4 p-3 bg-white/10 rounded-xl inline-block">
               <p className="text-sm">
-                {profile.name} • <span className="opacity-80">{dosha.primary} Prakriti</span>
+                {profile.name} •{' '}
+                <span className="opacity-80">
+                  {dosha.primary}
+                  {t('ayurvedaDash.prakritiSuffix', ' Prakriti')}
+                </span>
               </p>
             </div>
           )}

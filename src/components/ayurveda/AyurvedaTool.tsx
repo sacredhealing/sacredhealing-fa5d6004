@@ -746,7 +746,7 @@ const TiersSection: React.FC<{
         t={t}
         features={[
           t('ayurveda.freeDesc', 'Basic Dosha Analysis'),
-          t('common.free', 'General Daily Routine'),
+          t('ayurvedaPage.featDailyRoutine', 'General Daily Routine'),
           t('ayurvedaPage.featAuraWellness', 'Aura of Wellness Blueprint'),
           t('ayurvedaPage.featHerbarium', 'Sacred Herbarium Access'),
         ]}
@@ -759,7 +759,7 @@ const TiersSection: React.FC<{
         features={[
           t('ayurveda.premiumDesc', 'Personality & Karma Matching'),
           t('ayurvedaPage.featLifeAdvice', 'Life Situation Vedic Advice'),
-          t('ayurveda.aiDoctor', 'AI Chat Consultations'),
+          t('ayurvedaPage.featAiChatConsultations', 'AI Chat Consultations'),
           t('ayurvedaPage.featPranaDash', 'Prana Flow Dashboard'),
           t('ayurvedaPage.featDivinePortal', 'Divine Physician Portal'),
         ]}
@@ -770,7 +770,7 @@ const TiersSection: React.FC<{
         onSelect={setMembership}
         t={t}
         features={[
-          t('ayurveda.aiDoctor', 'Live Audio AI Doctor Sessions'),
+          t('ayurvedaPage.featLiveAudioDoctor', 'Live Audio AI Doctor Sessions'),
           t('ayurvedaPage.featDeepSync', 'Deep Jyotish-Ayurveda Sync'),
           t('ayurveda.lifetimeDesc', 'Priority Healing Access'),
           t('ayurvedaPage.featNadiScanner', 'Nadi Scanner Transmissions'),
