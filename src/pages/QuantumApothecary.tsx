@@ -104,7 +104,7 @@ function renderInline(text: string, variant: InlineVariant = 'body'): React.Reac
       if (variant === 'heading') {
         return <strong key={i} style={{ color: 'inherit', fontWeight: 700 }}>{inner}</strong>;
       }
-      return <strong key={i} style={{ color: '#D4AF37', fontWeight: 700 }}>{inner}</strong>;
+      return <strong key={i} style={{ color: 'rgba(255,255,255,0.95)', fontWeight: 700 }}>{inner}</strong>;
     }
     if (p.startsWith('*') && p.endsWith('*')) {
       return <em key={i} style={{ fontStyle: 'italic', color: variant === 'heading' ? 'inherit' : 'rgba(255,255,255,0.78)' }}>{p.slice(1, -1)}</em>;
@@ -119,7 +119,7 @@ function renderInline(text: string, variant: InlineVariant = 'body'): React.Reac
         );
       }
       return (
-        <code key={i} style={{ background: 'rgba(212,175,55,0.12)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: '#D4AF37' }}>
+        <code key={i} style={{ background: 'rgba(255,255,255,0.08)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: 'rgba(255,255,255,0.82)' }}>
           {inner}
         </code>
       );
@@ -465,13 +465,23 @@ function QuantumApothecaryInner() {
     const todayHerb = PLANETARY_DATA[now.getDay()].herb;
 
     const nadiScanUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nadi-scan`;
+    const { data: authData } = await supabase.auth.getSession();
+    const anonOrPublishable =
+      import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+      import.meta.env.VITE_SUPABASE_ANON_KEY ||
+      '';
+    const scanBearer = authData.session?.access_token || anonOrPublishable;
 
     try {
+      if (!scanBearer) {
+        throw new Error('Missing Supabase key (VITE_SUPABASE_PUBLISHABLE_KEY or VITE_SUPABASE_ANON_KEY).');
+      }
       const scanResp = await fetch(nadiScanUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${scanBearer}`,
+          ...(anonOrPublishable ? { apikey: anonOrPublishable } : {}),
         },
         body: JSON.stringify({
           imageBase64: capturedBase64,
@@ -557,7 +567,12 @@ function QuantumApothecaryInner() {
       }]);
     } catch (err) {
       console.error('Nadi scan analysis error:', err);
-      setScanError('Biofield analysis failed. Please try the scan again.');
+      const msg = err instanceof Error ? err.message : '';
+      setScanError(
+        msg && msg.length < 220
+          ? msg
+          : 'Biofield analysis failed. Please try the scan again.',
+      );
       setIsScanning(false);
       setScanPhase('idle');
     }
@@ -684,9 +699,9 @@ function QuantumApothecaryInner() {
      CHAT PANEL — Logic 100% preserved, UI upgraded to SQI-2050
      ══════════════════════════════════════════════════════ */
   const renderChatPanel = () => (
-    <div className="glass-card overflow-hidden flex flex-col" style={{ minHeight: '70vh', background: '#050505', border: '1px solid rgba(212,175,55,0.1)' }}>
+    <div className="glass-card overflow-hidden flex flex-col" style={{ minHeight: '70vh', background: '#050505', border: 'none' }}>
       {/* Chat Header */}
-      <div className="px-5 py-4 border-b border-white/[0.05] flex items-center justify-between">
+      <div className="px-5 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           {isChatFullscreen && (
             <button type="button" onClick={() => setIsChatFullscreen(false)} className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition">
@@ -754,7 +769,7 @@ function QuantumApothecaryInner() {
       </div>
 
       {/* Chat Input */}
-      <div className="p-4 border-t border-white/[0.05]" style={isChatFullscreen ? { paddingBottom: 'env(safe-area-inset-bottom, 16px)' } : undefined}>
+      <div className="p-4" style={isChatFullscreen ? { paddingBottom: 'env(safe-area-inset-bottom, 16px)' } : undefined}>
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
         {pendingImage && (
           <div className="flex items-center gap-2 mb-3 p-2 rounded-xl bg-[#D4AF37]/5 border border-[#D4AF37]/15">
