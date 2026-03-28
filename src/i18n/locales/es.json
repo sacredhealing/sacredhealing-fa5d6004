@@ -1667,6 +1667,14 @@
     "exploreOpportunity": "Explorar esta oportunidad",
     "ctaText": "¿Listo para empezar a ganar? Explora cualquier fuente arriba para comenzar.",
     "quickStart": "Inicio Rápido: Programa de Afiliados",
+    "sovereignFeatured": "SOBERANO",
+    "fallbackPolymarket": {
+      "title": "Bot Polymarket",
+      "description": "Terminal HFT soberano. Primero en papel. En vivo cuando esté aprobado. Polygon + USDC.e.",
+      "potentialEarnings": "Ventaja de latencia + micro-arbitraje",
+      "badgeText": "NUEVO • SQI 2050",
+      "ctaButtonText": "Abrir terminal"
+    },
     "shcCoin": {
       "title": "La Moneda de Sanación Sagrada",
       "badge": "Token SHC",

@@ -1716,6 +1716,14 @@
     "exploreOpportunity": "Utforska denna möjlighet",
     "ctaText": "Redo att börja tjäna? Utforska någon ström ovan för att komma igång.",
     "quickStart": "Snabbstart: Affiliateprogram",
+    "sovereignFeatured": "SUVERÄN",
+    "fallbackPolymarket": {
+      "title": "Polymarket-bot",
+      "description": "Suverän HFT-terminal. Först på paper trading. Live när det är godkänt. Polygon + USDC.e.",
+      "potentialEarnings": "Latenfördel + mikroarbitrage",
+      "badgeText": "NYTT • SQI 2050",
+      "ctaButtonText": "Öppna terminal"
+    },
     "shcCoin": {
       "title": "Det Heliga Läkande Myntet",
       "badge": "SHC Token",

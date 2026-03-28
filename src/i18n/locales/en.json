@@ -1699,6 +1699,14 @@
     "exploreOpportunity": "Explore this opportunity",
     "ctaText": "Ready to start earning? Explore any stream above to get started.",
     "quickStart": "Quick Start: Affiliate Program",
+    "sovereignFeatured": "SOVEREIGN",
+    "fallbackPolymarket": {
+      "title": "Polymarket Bot",
+      "description": "Sovereign HFT terminal. Paper-first. Live when approved. Polygon + USDC.e.",
+      "potentialEarnings": "Latency edge + micro-arbitrage",
+      "badgeText": "NEW • SQI 2050",
+      "ctaButtonText": "Open Terminal"
+    },
     "shcCoin": {
       "title": "The Siddha Quantum Nexus Coin",
       "badge": "SHC Token",

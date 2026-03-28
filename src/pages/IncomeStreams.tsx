@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Link } from 'react-router-dom';
 import { 
   DollarSign, TrendingUp, Users, Sparkles, ArrowRight, Coins, 
@@ -64,18 +64,11 @@ const iconMap: Record<string, LucideIcon> = {
 };
 
 const IncomeStreams: React.FC = () => {
-  const { t, i18n } = useTranslation();
+  const { t, language: currentLang } = useTranslation();
   const [streams, setStreams] = useState<IncomeStream[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Get current language reactively
-  const currentLang = i18n.language?.split('-')[0] || 'en';
 
-  useEffect(() => {
-    fetchStreams();
-  }, [currentLang]); // Re-fetch when language changes to ensure fresh render
-
-  const fetchStreams = async () => {
+  const fetchStreams = useCallback(async () => {
     const { data, error } = await supabase
       .from('income_streams')
       .select('*')
@@ -86,7 +79,8 @@ const IncomeStreams: React.FC = () => {
       const fetched = data as unknown as IncomeStream[];
 
       // Ensure the Polymarket Bot stream exists even if DB row isn't created yet
-      // (UI-only fallback; does not modify affiliate/Stripe logic)
+      // (UI-only fallback; does not modify affiliate/Stripe logic).
+      // Card copy for this row is resolved via i18n (`incomeStreams.fallbackPolymarket.*`).
       const hasPolymarketBot = fetched.some((s) => s.internal_slug === 'polymarket-bot' || s.link === '/income-streams/polymarket-bot');
       const polymarketFallback: IncomeStream = {
         id: 'polymarket-bot-fallback',
@@ -125,7 +119,11 @@ const IncomeStreams: React.FC = () => {
     }
     if (error) console.error('Error fetching streams:', error);
     setIsLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    void fetchStreams();
+  }, [fetchStreams]);
 
   const getLocalizedField = (stream: IncomeStream, field: 'title' | 'description' | 'potential_earnings' | 'badge_text' | 'cta_button_text') => {
     if (currentLang === 'sv' && stream[`${field}_sv` as keyof IncomeStream]) {
@@ -139,6 +137,9 @@ const IncomeStreams: React.FC = () => {
     }
     return stream[field] as string | null;
   };
+
+  /** UI-only DB row: always use i18n so profile language applies. */
+  const isPolymarketFallback = (stream: IncomeStream) => stream.id === 'polymarket-bot-fallback';
 
   const getIcon = (iconName: string | null): LucideIcon => {
     if (!iconName) return Sparkles;
@@ -203,10 +204,21 @@ const IncomeStreams: React.FC = () => {
         ) : (
           streams.map((stream) => {
             const IconComponent = getIcon(stream.icon_name);
-            const title = getLocalizedField(stream, 'title') || stream.title;
-            const description = getLocalizedField(stream, 'description') || stream.description;
-            const badge = getLocalizedField(stream, 'badge_text') || stream.badge_text;
-            const earnings = getLocalizedField(stream, 'potential_earnings');
+            const title = isPolymarketFallback(stream)
+              ? t('incomeStreams.fallbackPolymarket.title', 'Polymarket Bot')
+              : getLocalizedField(stream, 'title') || stream.title;
+            const description = isPolymarketFallback(stream)
+              ? t(
+                  'incomeStreams.fallbackPolymarket.description',
+                  'Sovereign HFT terminal. Paper-first. Live when approved. Polygon + USDC.e.',
+                )
+              : getLocalizedField(stream, 'description') || stream.description;
+            const badge = isPolymarketFallback(stream)
+              ? t('incomeStreams.fallbackPolymarket.badgeText', 'NEW • SQI 2050')
+              : getLocalizedField(stream, 'badge_text') || stream.badge_text;
+            const earnings = isPolymarketFallback(stream)
+              ? t('incomeStreams.fallbackPolymarket.potentialEarnings', 'Latency edge + micro-arbitrage')
+              : getLocalizedField(stream, 'potential_earnings');
             const colorFrom = stream.color_from || 'primary';
             const colorTo = stream.color_to || 'primary/70';
 
@@ -238,7 +250,7 @@ const IncomeStreams: React.FC = () => {
                         )}
                         {stream.is_featured && (
                           <Badge className="bg-[#D4AF37]/15 text-[#D4AF37] text-[10px] shrink-0 rounded-full border border-[#D4AF37]/20">
-                            SOVEREIGN
+                            {t('incomeStreams.sovereignFeatured', 'SOVEREIGN')}
                           </Badge>
                         )}
                       </div>
