@@ -18,6 +18,11 @@ export const BackButton: React.FC<BackButtonProps> = ({ variant = 'floating' }) 
   }
 
   const handleBack = () => {
+    // /podcast is usually opened from Explore; /home is not a registered route (dead end on history.back).
+    if (location.pathname === '/podcast') {
+      navigate('/explore');
+      return;
+    }
     if (window.history.length > 2) {
       navigate(-1);
     } else {
