@@ -1703,6 +1703,24 @@
     "affiliateBalance": "Affiliatsaldo",
     "goToWallet": "Gå til lommebok"
   },
+  "podcastPage": {
+    "heroEyebrow": "Prema-puls · Vedisk lyd",
+    "subtitle": "Våkn din åndelige bliss — strømmet i helligdommen.",
+    "streamsValue": "280 545",
+    "streamsLabel": "Strømmer og nedlastinger",
+    "followersValue": "1 107",
+    "followersLabel": "Spotify-fellesskap",
+    "allEpisodes": "Alle episoder",
+    "intro": "Lytt til hver episode her. Lyd kommer fra Akasha-strømmen — du trenger ikke forlate appen.",
+    "episodesAvailable": "{{count}} overføringer tilgjengelig",
+    "noEpisodes": "Ingen episoder kunne lastes.",
+    "loadError": "Kunne ikke laste podcast-feed.",
+    "tryAgain": "Prøv igjen",
+    "listenInApp": "Spill i helligdommen",
+    "openSpotifyOptional": "Åpne i Spotify (valgfritt)",
+    "duration": "Varighet",
+    "published": "Publisert"
+  },
   "leaderboard": {
     "title": "Ledertavle",
     "subtitle": "Topp SHC-tjenere",

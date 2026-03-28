@@ -2011,6 +2011,24 @@
     "affiliateBalance": "Affiliatsaldo",
     "goToWallet": "Gå till plånbok"
   },
+  "podcastPage": {
+    "heroEyebrow": "Prema-puls · Vediskt ljud",
+    "subtitle": "Väck din andliga bliss — strömmat i helgedomen.",
+    "streamsValue": "280 545",
+    "streamsLabel": "Streams och nedladdningar",
+    "followersValue": "1 107",
+    "followersLabel": "Spotify-gemenskap",
+    "allEpisodes": "Alla avsnitt",
+    "intro": "Lyssna på varje avsnitt här. Ljud kommer från Akasha-flödet — du behöver inte lämna appen.",
+    "episodesAvailable": "{{count}} transmissioner tillgängliga",
+    "noEpisodes": "Inga avsnitt kunde laddas.",
+    "loadError": "Podcastflödet kunde inte laddas.",
+    "tryAgain": "Försök igen",
+    "listenInApp": "Spela i helgedomen",
+    "openSpotifyOptional": "Öppna i Spotify (valfritt)",
+    "duration": "Längd",
+    "published": "Publicerad"
+  },
   "leaderboard": {
     "title": "Topplista",
     "subtitle": "Topp SHC-tjänare",

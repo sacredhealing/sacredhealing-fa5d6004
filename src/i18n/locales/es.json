@@ -1962,6 +1962,24 @@
     "affiliateBalance": "Saldo de Afiliados",
     "goToWallet": "Ir a Cartera"
   },
+  "podcastPage": {
+    "heroEyebrow": "Pulso prema · Audio código védico",
+    "subtitle": "Despierta tu dicha espiritual — en streaming dentro del santuario.",
+    "streamsValue": "280.545",
+    "streamsLabel": "Streams y descargas",
+    "followersValue": "1.107",
+    "followersLabel": "Comunidad en Spotify",
+    "allEpisodes": "Todos los episodios",
+    "intro": "Escucha cada episodio aquí. El audio viene del flujo Akasha — no hace falta salir de la app.",
+    "episodesAvailable": "{{count}} transmisiones disponibles",
+    "noEpisodes": "No se pudieron cargar episodios.",
+    "loadError": "No se pudo cargar el feed del podcast.",
+    "tryAgain": "Reintentar",
+    "listenInApp": "Reproducir en el santuario",
+    "openSpotifyOptional": "Abrir en Spotify (opcional)",
+    "duration": "Duración",
+    "published": "Publicado"
+  },
   "leaderboard": {
     "title": "Clasificación",
     "subtitle": "Top Ganadores de SHC",
