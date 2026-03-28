@@ -4276,5 +4276,69 @@
     "dosha_vata": "Vata",
     "dosha_pitta": "Pitta",
     "dosha_kapha": "Kapha"
+  },
+  "handAnalyzer": {
+    "title": "Palm Oracle",
+    "goBack": "Go back",
+    "initializingLens": "Initializing Siddha Lens...",
+    "alignPalm": "Align Palm with Golden Outline",
+    "neuralMapActive": "Neural Map active — 15 points",
+    "uploadPalmPhoto": "Upload Palm Photo",
+    "tryAgain": "Try Again",
+    "takePhoto": "Take Photo",
+    "upload": "Upload",
+    "hintError": "Use Take Photo or Upload a palm image",
+    "hintStarting": "Camera starting… or use Take Photo / Upload",
+    "statusDeciphering": "Deciphering Soul Lines...",
+    "statusAlign": "Align Palm with Golden Outline",
+    "statusUploadOrRetry": "Upload a palm photo or try again",
+    "statusInitializing": "Initializing Siddha Lens...",
+    "vpkTitle": "Vata–Pitta–Kapha balance",
+    "vpkSubtitle": "From hand texture and color",
+    "continueAkashic": "OK — Continue to Akashic Decoder",
+    "scanningAkasha": "Scanning the Akasha...",
+    "ariaCapture": "Capture from camera",
+    "ariaScanning": "Scanning",
+    "errors": {
+      "permissionDenied": "Permission denied or camera in use.",
+      "notSupported": "Camera not supported in this browser.",
+      "timeout": "Camera bridge timed out. Please upload a clear photo of your palm."
+    },
+    "toast": {
+      "signIn": "Please sign in to use Hand Analyzer",
+      "analysisComplete": "Analysis complete!",
+      "analysisFailed": "Analysis failed. Please try again.",
+      "captureFailed": "Failed to capture palm image. Please try again.",
+      "cameraNotReady": "Camera not ready. Please wait or upload a photo."
+    },
+    "elements": {
+      "earth": "Earth",
+      "water": "Water",
+      "fire": "Fire",
+      "air": "Air",
+      "ether": "Ether"
+    },
+    "palmOracle": {
+      "title": "Master Siddha Palm Analysis",
+      "subtitle": "Samudrika Shastra reading with extreme precision — lines and mounts only.",
+      "yourPalmAlt": "Your palm",
+      "discoveredLines": "Discovered lines & mounts — Life · Head · Heart · Jupiter · Saturn · Venus",
+      "lifeLineTitle": "Life Line — Ojas Reserve",
+      "lifeLineBody": "Depth and arc indicate physical vitality carried from past lives. A strong line suggests abundant ojas reserve; a lighter line suggests a soul rebuilding vitality in this incarnation.",
+      "headLineTitle": "Head Line — Siddhis",
+      "headLineBody": "Length and clarity reveal mental powers and ancient wisdom retention. The Siddha reads here the capacity for focused mind and wisdom carried across lifetimes.",
+      "heartLineTitle": "Heart Line — Karmic Leaks",
+      "heartLineBody": "Curvature and breaks indicate karmic leaks and dharmic debt in relationship and emotion. The Master identifies where the heart has given or withheld, and what remains to be balanced.",
+      "mountTitle": "Mount Analysis",
+      "mountJupiterLabel": "Mount of Jupiter:",
+      "mountJupiterDesc": "Leadership and authority — capacity to lead and inspire.",
+      "mountSaturnLabel": "Mount of Saturn:",
+      "mountSaturnDesc": "Karma and discipline — the weight and lesson of time.",
+      "mountVenusLabel": "Mount of Venus:",
+      "mountVenusDesc": "Creativity and love — the creative force and desire nature.",
+      "elementScoreTitle": "Siddha Element Score",
+      "elementScoreIntro": "Mapping of the lines and mounts to the five elements (Earth, Water, Fire, Air, Ether).",
+      "dominantLine": "Dominant element: {{element}}. Your palm resonates most with this element in this incarnation."
+    }
   }
 }
