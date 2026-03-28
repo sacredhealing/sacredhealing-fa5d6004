@@ -3871,6 +3871,19 @@
     "badge5kShc": "5,000 SHC",
     "badge30pct": "30%"
   },
+  "libraryAbundance": {
+    "title": "Inner Abundance",
+    "subtitle": "A calm space for life support — feeling alive, held, and open to what's possible.",
+    "whatThisIs": "What this is",
+    "whatThisIsBody": "Inner Abundance is not about money or investing. It's about feeling resourced from the inside: safety, breath, connection, and a sense that life can support you. When you're ready, you can explore coins, wallet, and earning in one dedicated place below.",
+    "promptTodayLabel": "Today:",
+    "promptToday": "Where do you feel already full? Notice one small thing.",
+    "promptWeekLabel": "This week:",
+    "promptWeek": "One practice that makes you feel alive — return to it.",
+    "optionalLabel": "Optional",
+    "optionalBody": "Wallet, SHC coins, affiliate, and other earning tools live in one place if you want to go there.",
+    "ctaAdvanced": "Wallet & Earnings (Advanced)"
+  },
   "exploreAkasha": {
     "back": "Back",
     "headerMicro": "◈ Explore Akasha",

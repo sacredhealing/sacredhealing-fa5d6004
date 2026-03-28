@@ -3766,6 +3766,19 @@
     "badge5kShc": "5 000 SHC",
     "badge30pct": "30 %"
   },
+  "libraryAbundance": {
+    "title": "Inre överflöd",
+    "subtitle": "Ett lugnt utrymme för livsstöd — att känna dig levande, hållen och öppen för det som är möjligt.",
+    "whatThisIs": "Vad det här är",
+    "whatThisIsBody": "Inre överflöd handlar inte om pengar eller investeringar. Det handlar om att känna sig resursstark inifrån: trygghet, andetag, samhörighet och en känsla av att livet kan bära dig. När du är redo kan du utforska mynt, plånbok och intjäning på ett ställe längre ned.",
+    "promptTodayLabel": "Idag:",
+    "promptToday": "Var känner du dig redan full? Lägg märke till en liten sak.",
+    "promptWeekLabel": "Den här veckan:",
+    "promptWeek": "En praktik som får dig att känna dig levande — återvänd till den.",
+    "optionalLabel": "Valfritt",
+    "optionalBody": "Plånbok, SHC-mynt, affiliate och andra intjäningsverktyg finns på ett ställe om du vill gå dit.",
+    "ctaAdvanced": "Plånbok & intjäning (avancerat)"
+  },
   "exploreAkasha": {
     "back": "Tillbaka",
     "headerMicro": "◈ Utforska Akasha",

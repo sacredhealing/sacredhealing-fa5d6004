@@ -3716,6 +3716,19 @@
     "badge5kShc": "5.000 SHC",
     "badge30pct": "30 %"
   },
+  "libraryAbundance": {
+    "title": "Abundancia interior",
+    "subtitle": "Un espacio sereno de apoyo vital — sentirte vivo, sostenido y abierto a lo posible.",
+    "whatThisIs": "Qué es esto",
+    "whatThisIsBody": "La abundancia interior no trata de dinero ni de inversiones. Trata de sentirte con recursos por dentro: seguridad, respiración, conexión y la sensación de que la vida puede sostenerte. Cuando estés listo, puedes explorar monedas, cartera y ganancias en un solo lugar más abajo.",
+    "promptTodayLabel": "Hoy:",
+    "promptToday": "¿Dónde te sientes ya lleno? Nota una pequeña cosa.",
+    "promptWeekLabel": "Esta semana:",
+    "promptWeek": "Una práctica que te hace sentir vivo — vuelve a ella.",
+    "optionalLabel": "Opcional",
+    "optionalBody": "Cartera, monedas SHC, afiliados y otras herramientas de ingresos están en un solo lugar si quieres ir allí.",
+    "ctaAdvanced": "Cartera e ingresos (avanzado)"
+  },
   "exploreAkasha": {
     "back": "Volver",
     "headerMicro": "◈ Explorar Akasha",

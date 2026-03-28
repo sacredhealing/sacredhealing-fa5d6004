@@ -3620,6 +3620,19 @@
     "badge5kShc": "5 000 SHC",
     "badge30pct": "30 %"
   },
+  "libraryAbundance": {
+    "title": "Indre overflod",
+    "subtitle": "Et rolig rom for livsstøtte — å føle deg levende, holdt og åpen for det som er mulig.",
+    "whatThisIs": "Hva dette er",
+    "whatThisIsBody": "Indre overflod handler ikke om penger eller investering. Det handler om å føle seg forsynt innenfra: trygghet, pust, tilhørighet og en følelse av at livet kan bære deg. Når du er klar, kan du utforske mynter, lommebok og inntekt på ett sted lenger ned.",
+    "promptTodayLabel": "I dag:",
+    "promptToday": "Hvor føler du deg allerede full? Legg merke til én liten ting.",
+    "promptWeekLabel": "Denne uken:",
+    "promptWeek": "Én praksis som får deg til å føle deg levende — vend tilbake til den.",
+    "optionalLabel": "Valgfritt",
+    "optionalBody": "Lommebok, SHC-mynter, affiliate og andre inntektsverktøy finnes samlet hvis du vil gå dit.",
+    "ctaAdvanced": "Lommebok og inntekt (avansert)"
+  },
   "exploreAkasha": {
     "back": "Tilbake",
     "headerMicro": "◈ Utforsk Akasha",
