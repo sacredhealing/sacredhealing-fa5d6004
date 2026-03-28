@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Calendar, User, Sparkles, Heart, Shield, CreditCard, Wallet, ExternalLink, ArrowLeft } from 'lucide-react';
+import { Calendar, Sparkles, Heart, Shield, CreditCard, Wallet, ExternalLink, ArrowLeft } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -62,7 +63,11 @@ const categoryIconShell = (category: string) =>
     ? 'border border-[#22D3EE]/30 bg-[#22D3EE]/10 shadow-[0_0_20px_-6px_rgba(34,211,238,0.35)]'
     : 'border border-[#D4AF37]/25 bg-[#D4AF37]/10 shadow-[0_0_20px_-6px_rgba(212,175,55,0.25)]';
 
+const SOL_WALLET = 'BAfPGN6DUAKYVwmmGkhMQxJyDv2cHEHRnfcbzy1GNy5j';
+const CRYPTO_CONTACT_EMAIL = 'sacredhealingvibe@gmail.com';
+
 const PrivateSessions: React.FC = () => {
+  const { t } = useTranslation();
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -93,18 +98,18 @@ const PrivateSessions: React.FC = () => {
     const calendlyUrl = searchParams.get('calendly');
     
     if (success === 'true') {
-      toast.success('Payment successful! Redirecting to booking...');
+      toast.success(t('privateSessions.toastPaymentSuccess'));
       if (calendlyUrl) {
         setTimeout(() => {
           window.open(calendlyUrl, '_blank');
         }, 1500);
       }
     }
-    
+
     if (searchParams.get('canceled') === 'true') {
-      toast.error('Payment was canceled');
+      toast.error(t('privateSessions.toastPaymentCanceled'));
     }
-  }, [searchParams]);
+  }, [searchParams, t]);
 
   useEffect(() => {
     if (user?.email) {
@@ -139,13 +144,13 @@ const PrivateSessions: React.FC = () => {
 
   const handleBookSession = () => {
     if (!isAuthenticated) {
-      toast.error('Please sign in to book a session');
+      toast.error(t('privateSessions.toastSignInBook'));
       navigate('/auth');
       return;
     }
 
     if (!selectedType || !selectedPackage) {
-      toast.error('Please select a session type and package');
+      toast.error(t('privateSessions.toastSelectBoth'));
       return;
     }
 
@@ -174,7 +179,7 @@ const PrivateSessions: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Error creating checkout:', error);
-      toast.error('Failed to create payment session');
+      toast.error(t('privateSessions.toastCheckoutFail'));
     } finally {
       setIsSubmitting(false);
     }
@@ -185,11 +190,15 @@ const PrivateSessions: React.FC = () => {
     const selectedPackageData = packages.find(p => p.id === selectedPackage);
     
     toast.info(
-      `Send €${selectedPackageData?.price_eur} worth of SOL to: BAfPGN6DUAKYVwmmGkhMQxJyDv2cHEHRnfcbzy1GNy5j and email sacredhealingvibe@gmail.com with your transaction ID and session details.`
+      t('privateSessions.cryptoToastInstruction', {
+        amount: String(selectedPackageData?.price_eur ?? ''),
+        wallet: SOL_WALLET,
+        email: CRYPTO_CONTACT_EMAIL,
+      })
     );
-    
-    navigator.clipboard.writeText('BAfPGN6DUAKYVwmmGkhMQxJyDv2cHEHRnfcbzy1GNy5j');
-    toast.success('Wallet address copied!');
+
+    navigator.clipboard.writeText(SOL_WALLET);
+    toast.success(t('privateSessions.toastWalletCopied'));
     
     setPaymentDialogOpen(false);
     
@@ -205,9 +214,12 @@ const PrivateSessions: React.FC = () => {
     if (selectedTypeData?.calendly_url) {
       window.open(selectedTypeData.calendly_url, '_blank');
     } else {
-      toast.info('No Calendly link configured for this session type');
+      toast.info(t('privateSessions.toastNoCalendly'));
     }
   };
+
+  const practitionerFallbackSubtitle = (slug: string) =>
+    slug === 'adam' ? t('privateSessions.fallbackAdamSubtitle') : t('privateSessions.fallbackLailaSubtitle');
 
   const selectedPackageData = packages.find(p => p.id === selectedPackage);
 
@@ -217,7 +229,8 @@ const PrivateSessions: React.FC = () => {
         {akashaField}
         <div
           className="animate-spin rounded-full h-9 w-9 border-2 border-[#D4AF37]/30 border-t-[#D4AF37] relative z-10 shadow-[0_0_24px_rgba(212,175,55,0.35)]"
-          aria-hidden
+          aria-label={t('privateSessions.loadingAria')}
+          role="status"
         />
       </div>
     );
@@ -229,13 +242,13 @@ const PrivateSessions: React.FC = () => {
       <div className="min-h-screen px-4 py-6 pb-32 relative overflow-hidden bg-[#050505]">
         {akashaField}
         <div className="relative z-10 max-w-lg mx-auto">
-          <p className="sqi-label-text mb-3 text-[#D4AF37]/70">Bhakti-Algorithm · Prema-Pulse</p>
+          <p className="sqi-label-text mb-3 text-[#D4AF37]/70">{t('privateSessions.eyebrowHero')}</p>
           <header className="mb-8 animate-fade-in">
             <h1 className="text-3xl md:text-[2rem] font-black tracking-[-0.05em] font-heading text-[#D4AF37] gold-glow mb-2">
-              Private Sessions
+              {t('privateSessions.title')}
             </h1>
             <p className="sqi-body-text text-base">
-              Choose your guide for a transformative 1-on-1 session
+              {t('privateSessions.heroSubtitle')}
             </p>
           </header>
 
@@ -267,10 +280,10 @@ const PrivateSessions: React.FC = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h2 className="text-xl font-black tracking-[-0.05em] font-heading text-white">
-                      Sessions with {practitioner?.name || slug}
+                      {t('privateSessions.sessionsWith', { name: practitioner?.name || slug })}
                     </h2>
                     <p className="sqi-body-text text-sm mt-1">
-                      {practitioner?.subtitle || (slug === 'adam' ? 'Spiritual Guide & Energy Practitioner' : 'Yogi & Sound Healer')}
+                      {practitioner?.subtitle || practitionerFallbackSubtitle(slug)}
                     </p>
                   </div>
                 </div>
@@ -302,7 +315,7 @@ const PrivateSessions: React.FC = () => {
             }}
           >
             <ArrowLeft size={16} className="mr-2" />
-            Choose different guide
+            {t('privateSessions.backChooseGuide')}
           </Button>
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-[#D4AF37]/40 shrink-0 shadow-[0_0_24px_-4px_rgba(212,175,55,0.35)]">
@@ -313,14 +326,12 @@ const PrivateSessions: React.FC = () => {
               />
             </div>
             <div className="min-w-0">
-              <p className="sqi-label-text mb-1 !text-[#D4AF37]/55">Vedic Light-Code · Session</p>
+              <p className="sqi-label-text mb-1 !text-[#D4AF37]/55">{t('privateSessions.headerEyebrow')}</p>
               <h1 className="text-xl sm:text-2xl font-black tracking-[-0.05em] font-heading text-[#D4AF37] gold-glow leading-tight">
-                Sessions with {currentPractitioner?.name || selectedPractitioner}
+                {t('privateSessions.sessionsWith', { name: currentPractitioner?.name || selectedPractitioner })}
               </h1>
               <p className="sqi-body-text text-sm mt-1">
-                {currentPractitioner?.subtitle || (selectedPractitioner === 'adam'
-                  ? 'Spiritual Guide & Energy Practitioner'
-                  : 'Yogi & Sound Healer')}
+                {currentPractitioner?.subtitle || practitionerFallbackSubtitle(selectedPractitioner)}
               </p>
             </div>
           </div>
@@ -331,13 +342,13 @@ const PrivateSessions: React.FC = () => {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-lg font-black tracking-[-0.05em] text-[#D4AF37] gold-glow !text-[#D4AF37]">
               <Sparkles size={20} className="text-[#D4AF37]" />
-              Select Session Type
+              {t('privateSessions.selectSessionType')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {filteredSessionTypes.length === 0 ? (
               <p className="sqi-body-text text-center py-6">
-                No sessions available for this practitioner yet.
+                {t('privateSessions.noSessionsForPractitioner')}
               </p>
             ) : (
               <RadioGroup value={selectedType} onValueChange={setSelectedType} className="space-y-3">
@@ -371,7 +382,7 @@ const PrivateSessions: React.FC = () => {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-lg font-black tracking-[-0.05em] text-[#D4AF37] gold-glow !text-[#D4AF37]">
               <Calendar size={20} className="text-[#D4AF37]" />
-              Choose Package
+              {t('privateSessions.choosePackage')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -391,7 +402,9 @@ const PrivateSessions: React.FC = () => {
                       <span className="text-2xl font-black tracking-[-0.04em] font-heading text-gradient-gold">€{pkg.price_eur}</span>
                       {pkg.session_count > 1 && (
                         <span className="text-xs sqi-body-text block">
-                          €{(pkg.price_eur / pkg.session_count).toFixed(0)}/session
+                          {t('privateSessions.perSession', {
+                            price: (pkg.price_eur / pkg.session_count).toFixed(0),
+                          })}
                         </span>
                       )}
                     </div>
@@ -409,35 +422,35 @@ const PrivateSessions: React.FC = () => {
         >
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-black tracking-[-0.05em] text-[#D4AF37] gold-glow !text-[#D4AF37]">
-              Your Details
+              {t('privateSessions.yourDetails')}
             </CardTitle>
             <CardDescription className="sqi-body-text !text-white/55">
-              We&apos;ll contact you to schedule your session
+              {t('privateSessions.detailsScheduleNote')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="email" className="sqi-label-text !tracking-[0.35em] text-[#D4AF37]/80">
-                Contact Email
+                {t('privateSessions.contactEmail')}
               </Label>
               <Input
                 id="email"
                 type="email"
                 value={contactEmail}
                 onChange={(e) => setContactEmail(e.target.value)}
-                placeholder="your@email.com"
+                placeholder={t('privateSessions.emailPlaceholder')}
                 className="mt-2 rounded-[24px] border-white/[0.08] bg-white/[0.03] text-white placeholder:text-white/35 backdrop-blur-[40px] focus-visible:border-[#D4AF37]/45 focus-visible:ring-[#D4AF37]/25 h-11"
               />
             </div>
             <div>
               <Label htmlFor="notes" className="sqi-label-text !tracking-[0.35em] text-[#D4AF37]/80">
-                Additional Notes (optional)
+                {t('privateSessions.notesOptional')}
               </Label>
               <Textarea
                 id="notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Tell us about your goals or any specific concerns..."
+                placeholder={t('privateSessions.notesPlaceholder')}
                 className="mt-2 min-h-[100px] rounded-[24px] border-white/[0.08] bg-white/[0.03] text-white placeholder:text-white/35 backdrop-blur-[40px] focus-visible:border-[#D4AF37]/45 focus-visible:ring-[#D4AF37]/25"
               />
             </div>
@@ -453,7 +466,11 @@ const PrivateSessions: React.FC = () => {
               className="w-full h-14 text-sm font-black tracking-[0.2em] uppercase rounded-[40px] shadow-[0_0_40px_-8px_rgba(212,175,55,0.35)]"
               variant="gold"
             >
-              {isSubmitting ? 'Processing...' : selectedPackageData ? `Book for €${selectedPackageData.price_eur}` : 'Select options to book'}
+              {isSubmitting
+                ? t('privateSessions.processing')
+                : selectedPackageData
+                  ? t('privateSessions.bookFor', { price: String(selectedPackageData.price_eur) })
+                  : t('privateSessions.selectOptionsToBook')}
             </Button>
           </div>
         </div>
@@ -463,7 +480,7 @@ const PrivateSessions: React.FC = () => {
           <DialogContent className="max-w-sm rounded-[40px] border border-white/[0.08] bg-white/[0.04] backdrop-blur-[40px] shadow-[0_0_56px_-8px_rgba(212,175,55,0.25)] sm:rounded-[40px]">
             <DialogHeader>
               <DialogTitle className="font-black tracking-[-0.04em] text-[#D4AF37] gold-glow text-center">
-                Choose Payment Method
+                {t('privateSessions.choosePaymentMethod')}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-3">
@@ -475,8 +492,8 @@ const PrivateSessions: React.FC = () => {
               >
                 <CreditCard size={20} className="text-[#D4AF37]" />
                 <div className="text-left">
-                  <div className="font-bold tracking-tight">Pay with Card</div>
-                  <div className="text-xs sqi-body-text">Secure Stripe checkout</div>
+                  <div className="font-bold tracking-tight">{t('privateSessions.payWithCard')}</div>
+                  <div className="text-xs sqi-body-text">{t('privateSessions.stripeCheckoutHint')}</div>
                 </div>
               </Button>
 
@@ -488,12 +505,12 @@ const PrivateSessions: React.FC = () => {
               >
                 <Wallet size={20} className="text-[#22D3EE]" />
                 <div className="text-left">
-                  <div className="font-bold tracking-tight">Pay with Crypto</div>
-                  <div className="text-xs sqi-body-text">SOL via Phantom wallet</div>
+                  <div className="font-bold tracking-tight">{t('privateSessions.payWithCrypto')}</div>
+                  <div className="text-xs sqi-body-text">{t('privateSessions.cryptoWalletHint')}</div>
                 </div>
               </Button>
 
-              {sessionTypes.find(t => t.id === selectedType)?.calendly_url && (
+              {sessionTypes.find(st => st.id === selectedType)?.calendly_url && (
                 <Button
                   onClick={openCalendlyDirectly}
                   className="w-full h-12 justify-start gap-3 rounded-[28px] text-[#D4AF37] hover:bg-white/[0.06]"
@@ -501,8 +518,8 @@ const PrivateSessions: React.FC = () => {
                 >
                   <ExternalLink size={20} />
                   <div className="text-left">
-                    <div className="font-bold tracking-tight">Book on Calendly</div>
-                    <div className="text-xs sqi-body-text">Schedule directly</div>
+                    <div className="font-bold tracking-tight">{t('privateSessions.bookCalendly')}</div>
+                    <div className="text-xs sqi-body-text">{t('privateSessions.scheduleDirectly')}</div>
                   </div>
                 </Button>
               )}
