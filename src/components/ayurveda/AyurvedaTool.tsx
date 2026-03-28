@@ -133,6 +133,45 @@ const SQI_GLOBAL_CSS = `
   /* Tab pill hover */
   .sqi-tab:hover { background: rgba(212, 175, 55, 0.08) !important; }
 
+  /* Ayurveda store nav: always reachable on narrow viewports */
+  .sqi-ayurveda-nav-scroll {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    padding-bottom: 4px;
+    scrollbar-width: thin;
+  }
+  .sqi-ayurveda-nav-scroll::-webkit-scrollbar { height: 4px; }
+  .sqi-ayurveda-nav-scroll::-webkit-scrollbar-thumb {
+    background: rgba(212, 175, 55, 0.35);
+    border-radius: 4px;
+  }
+  .sqi-ayurveda-nav-inner {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 8px;
+    width: max-content;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 4px 8px;
+    min-height: 48px;
+    align-items: center;
+  }
+  @media (max-width: 640px) {
+    .sqi-ayurveda-nav-inner { justify-content: flex-start; padding-left: 4px; padding-right: 4px; }
+  }
+  @media (max-width: 480px) {
+    .sqi-tab.sqi-ayurveda-nav-tab--compact {
+      padding: 9px 11px !important;
+      gap: 5px !important;
+      font-size: 11px !important;
+    }
+  }
+
   /* Card hover lift */
   .sqi-card-hover {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -493,12 +532,12 @@ const NavTab: React.FC<{
     <motion.button
       whileTap={{ scale: 0.97 }}
       onClick={onClick}
-      className="sqi-tab"
+      className="sqi-tab sqi-ayurveda-nav-tab--compact shrink-0"
       style={{
         display: 'flex',
         alignItems: 'center',
         gap: 8,
-        padding: '10px 22px',
+        padding: '10px 16px',
         borderRadius: 999,
         border: active ? `1px solid ${SQI.goldBorderStrong}` : `1px solid ${SQI.glassBorder}`,
         background: active
@@ -1118,40 +1157,37 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: 8,
-              padding: '24px 16px 8px',
-              flexWrap: 'wrap',
-            }}
+            className="sqi-ayurveda-nav-scroll"
+            style={{ paddingTop: 8, paddingBottom: 4 }}
           >
-            <NavTab
-              icon={<Leaf style={{ width: 15, height: 15 }} />}
-              label={t('ayurvedaPage.navDashboard', 'Dashboard')}
-              active={activeTab === 'home'}
-              onClick={() => setActiveTab('home')}
-            />
-            <NavTab
-              icon={<Stethoscope style={{ width: 15, height: 15 }} />}
-              label={t('ayurvedaPage.navDivinePhysician', 'Divine Physician')}
-              active={activeTab === 'chat'}
-              tier="premium"
-              onClick={() => {
-                if (membership === ('FREE' as AyurvedaMembershipLevel)) {
-                  setActiveTab('chat');
-                } else {
-                  setShowChat(true);
-                }
-              }}
-            />
-            <NavTab
-              icon={<Mic style={{ width: 15, height: 15 }} />}
-              label={t('ayurvedaPage.navLiveDoctor', 'Live Doctor')}
-              active={activeTab === 'doctor'}
-              tier="lifetime"
-              onClick={() => setActiveTab('doctor')}
-            />
+            <div className="sqi-ayurveda-nav-inner">
+              <NavTab
+                icon={<Leaf style={{ width: 15, height: 15 }} />}
+                label={t('ayurvedaPage.navDashboard', 'Dashboard')}
+                active={activeTab === 'home'}
+                onClick={() => setActiveTab('home')}
+              />
+              <NavTab
+                icon={<Stethoscope style={{ width: 15, height: 15 }} />}
+                label={t('ayurvedaPage.navDivinePhysician', 'Divine Physician')}
+                active={activeTab === 'chat'}
+                tier="premium"
+                onClick={() => {
+                  if (membership === ('FREE' as AyurvedaMembershipLevel)) {
+                    setActiveTab('chat');
+                  } else {
+                    setShowChat(true);
+                  }
+                }}
+              />
+              <NavTab
+                icon={<Mic style={{ width: 15, height: 15 }} />}
+                label={t('ayurvedaPage.navLiveDoctor', 'Live Doctor')}
+                active={activeTab === 'doctor'}
+                tier="lifetime"
+                onClick={() => setActiveTab('doctor')}
+              />
+            </div>
           </motion.div>
         )}
 

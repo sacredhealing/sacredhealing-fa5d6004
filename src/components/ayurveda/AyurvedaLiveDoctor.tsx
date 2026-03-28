@@ -326,7 +326,7 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
   };
 
   return (
-    <Card className="max-w-2xl mx-auto overflow-hidden border-2 border-amber-500/20">
+    <Card className="mx-auto w-full min-w-0 max-w-2xl overflow-x-auto overflow-y-visible border-2 border-amber-500/20 sm:overflow-x-hidden">
       <CardContent className="p-0">
         {/* Header */}
         <div className="bg-gradient-to-r from-amber-600 to-amber-700 p-6 text-white text-center">

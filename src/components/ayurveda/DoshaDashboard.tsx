@@ -237,26 +237,28 @@ export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
             <ScanLine />
             <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: 1, background: `linear-gradient(90deg,transparent,${C.saffron}55,${C.gold}88,${C.saffron}55,transparent)` }} />
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 28 }}>
-              <motion.div
-                style={{
-                  width: 56, height: 56, borderRadius: 18,
-                  background: `linear-gradient(135deg, ${C.g(C.saffron, 0.25)}, ${C.g(C.gold, 0.1)})`,
-                  border: `1.5px solid ${C.g(C.gold, 0.5)}`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 20, fontWeight: 900, color: C.gold,
-                  boxShadow: `0 0 20px ${C.g(C.gold, 0.2)}`,
-                }}
-                animate={{ boxShadow: [`0 0 20px ${C.g(C.gold, 0.2)}`, `0 0 35px ${C.g(C.saffron, 0.4)}`, `0 0 20px ${C.g(C.gold, 0.2)}`] }}
-                transition={{ duration: 4, repeat: Infinity }}
-              >
-                {profile.name[0]}
-              </motion.div>
-              <div style={{ flex: 1 }}>
-                <h2 style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.04em', color: 'rgba(255,255,255,0.92)', marginBottom: 6 }}>{profile.name}</h2>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '3px 12px', borderRadius: 999, background: `${C.g(C.saffron, 0.1)}`, border: `1px solid ${C.g(C.saffron, 0.3)}`, fontSize: 9, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: C.saffron }}>
-                  {getDoshaEmoji(dosha.primary)} {doshaLabel(dosha.primary, t)}
-                  {t('ayurvedaDash.prakritiSuffix', ' Prakriti')}
+            <div className="mb-7 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 flex-1 items-center gap-4">
+                <motion.div
+                  style={{
+                    width: 56, height: 56, borderRadius: 18, flexShrink: 0,
+                    background: `linear-gradient(135deg, ${C.g(C.saffron, 0.25)}, ${C.g(C.gold, 0.1)})`,
+                    border: `1.5px solid ${C.g(C.gold, 0.5)}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 20, fontWeight: 900, color: C.gold,
+                    boxShadow: `0 0 20px ${C.g(C.gold, 0.2)}`,
+                  }}
+                  animate={{ boxShadow: [`0 0 20px ${C.g(C.gold, 0.2)}`, `0 0 35px ${C.g(C.saffron, 0.4)}`, `0 0 20px ${C.g(C.gold, 0.2)}`] }}
+                  transition={{ duration: 4, repeat: Infinity }}
+                >
+                  {profile.name[0]}
+                </motion.div>
+                <div className="min-w-0 flex-1">
+                  <h2 style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.04em', color: 'rgba(255,255,255,0.92)', marginBottom: 6 }}>{profile.name}</h2>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '3px 12px', borderRadius: 999, background: `${C.g(C.saffron, 0.1)}`, border: `1px solid ${C.g(C.saffron, 0.3)}`, fontSize: 9, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: C.saffron }}>
+                    {getDoshaEmoji(dosha.primary)} {doshaLabel(dosha.primary, t)}
+                    {t('ayurvedaDash.prakritiSuffix', ' Prakriti')}
+                  </div>
                 </div>
               </div>
               <motion.button
@@ -264,6 +266,7 @@ export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
                 whileTap={{ scale: 0.96 }}
                 onClick={handleSync}
                 disabled={syncing}
+                className="w-full shrink-0 justify-center sm:w-auto sm:justify-center"
                 style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 20, background: syncing ? `${C.g(C.gold, 0.12)}` : 'rgba(255,255,255,0.03)', border: `1px solid ${C.g(C.gold, 0.25)}`, color: syncing ? C.gold : 'rgba(255,255,255,0.5)', fontFamily: 'inherit', fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', boxShadow: syncing ? `0 0 20px ${C.g(C.gold, 0.25)}` : 'none' }}
               >
                 <RefreshCw style={{ width: 12, height: 12, animation: syncing ? 'spin 1s linear infinite' : undefined }} />
