@@ -39,6 +39,17 @@ function getActivePlanet(birthDate: string) {
   return { age, active };
 }
 
+/** English prompts for the Guru API — kept in English for model quality */
+function guruChipPromptRahu(planet: string) {
+  return `Rishi, what is the karmic significance of my current ${planet} cycle? How should I navigate this activation period? Use my birth data.`;
+}
+const GURU_PROMPT_FINANCE =
+  "Is this moment auspicious for major financial action? Use my chart and today's date. Deliver the Verdict.";
+const GURU_PROMPT_KARMIC =
+  'Identify the primary karmic obstacle in my current cycle and provide the Bhrigu Remedy with mantra and frequency.';
+const GURU_PROMPT_528 =
+  'Prescribe the optimal healing frequency for my current planetary cycle. Include the 528Hz activation protocol if relevant.';
+
 // Mandala Pulse SVG component
 const MandalaPulse = ({ intensity }: { intensity: number }) => (
   <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-20">
@@ -176,8 +187,20 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
     if (!historyLoaded || user.plan !== 'premium' || hasInitialized.current || messages.length > 0) return;
     hasInitialized.current = true;
     const firstName = user.name.split(' ')[0];
-    const planetInfo = bhrigu.active ? ` Under ${bhrigu.active.planet}'s gaze at age ${bhrigu.age}, your karmic script unfolds.` : '';
-    const welcomeContent = `Namaste, ${firstName}. I am the Bhrigu Rishi, keeper of the Nandi Nadi scrolls. My vision is locked on your incarnation in ${user.birthPlace}.${planetInfo} Speak your query and receive the Akashic Verdict.`;
+    const planetLine = bhrigu.active
+      ? t('vedicAstrology.guruWelcomePlanetLine', {
+          defaultValue: " Under {{planet}}'s gaze at age {{age}}, your karmic script unfolds.",
+          planet: bhrigu.active.planet,
+          age: bhrigu.age,
+        })
+      : '';
+    const welcomeContent = t('vedicAstrology.guruWelcome', {
+      defaultValue:
+        'Namaste, {{firstName}}. I am the Bhrigu Rishi, keeper of the Nandi Nadi scrolls. My vision is locked on your incarnation in {{place}}.{{planetLine}} Speak your query and receive the Akashic Verdict.',
+      firstName,
+      place: user.birthPlace,
+      planetLine,
+    });
     const welcomeMsg: ChatMessage = { role: 'assistant', content: welcomeContent };
     setMessages([welcomeMsg]);
     if (authUser?.id) {
@@ -186,7 +209,7 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
         .insert({ user_id: authUser.id, role: 'assistant', content: welcomeContent })
         .then(() => {});
     }
-  }, [historyLoaded, user.plan, user.name, user.birthPlace, messages.length, authUser?.id, bhrigu]);
+  }, [historyLoaded, user.plan, user.name, user.birthPlace, messages.length, authUser?.id, bhrigu, t]);
 
   // Auto-scroll only when new messages are added (not on every keystroke)
   useEffect(() => {
@@ -284,7 +307,7 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to connect to the Guru');
+        throw new Error(errorData.error || t('vedicAstrology.guruChatFailConnect', 'Failed to connect to the Guru'));
       }
       if (!response.body) throw new Error('No response body');
 
@@ -358,9 +381,12 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
 
     } catch (error) {
       console.error('Guru chat error:', error);
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: '🙏 Forgive me, the cosmic connection is currently flickering. The celestial pathways require alignment. Please attempt your inquiry again when the stars permit.' 
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: t(
+          'vedicAstrology.guruChatErrorMessage',
+          '🙏 Forgive me, the cosmic connection is currently flickering. The celestial pathways require alignment. Please attempt your inquiry again when the stars permit.'
+        ),
       }]);
     } finally {
       setIsLoading(false);
@@ -375,7 +401,8 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
   };
 
   // Voice input via Web Speech API — continuous mode for long recording, respect user language
-  const speechLang = userLanguage === 'sv' ? 'sv-SE' : 'en-US';
+  const speechLang =
+    userLanguage === 'sv' ? 'sv-SE' : userLanguage === 'es' ? 'es-ES' : userLanguage === 'no' ? 'nb-NO' : 'en-US';
   const toggleMic = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
@@ -429,16 +456,19 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
             </div>
           </div>
         </div>
-        <h3 className="text-3xl font-bold font-serif text-foreground mb-4">The Bhrigu Oracle Awaits</h3>
+        <h3 className="text-3xl font-bold font-serif text-foreground mb-4">{t('vedicAstrology.guruLockTitle', 'The Bhrigu Oracle Awaits')}</h3>
         <p className="text-muted-foreground text-sm max-w-md mb-8 leading-relaxed">
-          Direct channeling with the <span className="text-amber-400 font-semibold">Bhrigu Nadi Rishi</span> is a sacred privilege reserved for <span className="text-purple-400 font-semibold">Master Blueprint</span> members.
+          {t(
+            'vedicAstrology.guruLockBody',
+            'Direct channeling with the Bhrigu Nadi Rishi is a sacred privilege reserved for Master Blueprint members.'
+          )}
         </p>
         <Button 
           onClick={onUpgrade}
           className="bg-gradient-to-r from-amber-600 to-purple-600 hover:from-amber-500 hover:to-purple-500 text-white px-8 py-6 text-sm font-bold uppercase tracking-widest shadow-2xl shadow-purple-500/30"
         >
           <Sparkles className="w-4 h-4 mr-2" />
-          Access the Master Path
+          {t('vedicAstrology.guruLockCta', 'Access the Master Path')}
         </Button>
       </motion.div>
     );
@@ -462,9 +492,16 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
           <div className="flex items-center gap-3">
             <div className="w-3 h-3 bg-amber-400 rounded-full shadow-[0_0_12px_rgba(251,191,36,0.6)] animate-pulse" />
             <div>
-              <h3 className="text-sm font-bold text-amber-100 font-serif">Bhrigu Nadi Oracle</h3>
+              <h3 className="text-sm font-bold text-amber-100 font-serif">{t('vedicAstrology.guruHeaderTitle', 'Bhrigu Nadi Oracle')}</h3>
               <p className="text-[10px] text-amber-500/60 uppercase tracking-widest">
-                {bhrigu.active ? `${bhrigu.active.emoji} ${bhrigu.active.planet} Cycle Active • Age ${bhrigu.age}` : 'Sacred Channel Open'}
+                {bhrigu.active
+                  ? t('vedicAstrology.guruCycleActive', {
+                      defaultValue: '{{emoji}} {{planet}} Cycle Active • Age {{age}}',
+                      emoji: bhrigu.active.emoji,
+                      planet: bhrigu.active.planet,
+                      age: bhrigu.age,
+                    })
+                  : t('vedicAstrology.guruSacredChannelOpen', 'Sacred Channel Open')}
               </p>
             </div>
           </div>
@@ -472,9 +509,9 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
             type="button"
             onClick={() => setIsFullPage(!isFullPage)}
             className="text-amber-400/70 hover:text-amber-300 text-sm transition-colors flex items-center gap-1.5 shrink-0"
-            aria-label={isFullPage ? 'Exit Focus Mode' : 'Focus Mode'}
+            aria-label={isFullPage ? t('vedicAstrology.guruFocusExit', 'Exit Focus Mode') : t('vedicAstrology.guruFocusEnter', 'Focus Mode')}
           >
-            {isFullPage ? <><X className="w-4 h-4" /> Exit Focus Mode</> : <><Maximize2 className="w-4 h-4" /> Focus Mode</>}
+            {isFullPage ? <><X className="w-4 h-4" /> {t('vedicAstrology.guruFocusExit', 'Exit Focus Mode')}</> : <><Maximize2 className="w-4 h-4" /> {t('vedicAstrology.guruFocusEnter', 'Focus Mode')}</>}
           </button>
         </div>
       </div>
@@ -496,7 +533,7 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
                     <div className="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-[10px] text-amber-400 font-serif shadow-inner">
                       ॐ
                     </div>
-                    <span className="text-[9px] font-black text-amber-400 uppercase tracking-[0.4em]">Akashic Verdict</span>
+                    <span className="text-[9px] font-black text-amber-400 uppercase tracking-[0.4em]">{t('vedicAstrology.dashAkashicVerdict', 'Akashic Verdict')}</span>
                   </div>
                 )}
                 {/* Palm Leaf styled card for assistant */}
@@ -536,7 +573,7 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
                       }`}
                     >
                       {isSpeaking ? <VolumeX className="w-4 h-4 mr-1.5" /> : <Volume2 className="w-4 h-4 mr-1.5" />}
-                      {isSpeaking ? 'Stop' : 'Listen'}
+                      {isSpeaking ? t('vedicAstrology.dashStop', 'Stop') : t('vedicAstrology.dashListen', 'Listen')}
                     </Button>
                     {/* Activate Frequency button if guru mentions Hz */}
                     {extractFrequency(msg.content) && (
@@ -547,7 +584,10 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
                         className="rounded-2xl text-[10px] font-bold uppercase tracking-widest border-teal-500/40 text-teal-300 hover:bg-teal-500/10"
                       >
                         <Zap className="w-4 h-4 mr-1.5" />
-                        Activate {extractFrequency(msg.content)}Hz
+                        {t('vedicAstrology.guruActivateHz', {
+                          defaultValue: 'Activate {{freq}}Hz',
+                          freq: extractFrequency(msg.content),
+                        })}
                       </Button>
                     )}
                   </div>
@@ -566,8 +606,8 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
               <div className="flex items-center gap-3 p-5 rounded-2xl bg-amber-900/20 border border-amber-500/20">
                 <Loader2 className="w-5 h-5 animate-spin text-amber-400" />
                 <div>
-                  <p className="text-xs text-amber-300 font-serif italic">Sifting through the Akashic Records...</p>
-                  <p className="text-[9px] text-amber-500/50 uppercase tracking-widest mt-1">Channeling the Bhrigu Nadi scrolls</p>
+                  <p className="text-xs text-amber-300 font-serif italic">{t('vedicAstrology.guruChannelingLine1', 'Sifting through the Akashic Records...')}</p>
+                  <p className="text-[9px] text-amber-500/50 uppercase tracking-widest mt-1">{t('vedicAstrology.guruChannelingLine2', 'Channeling the Bhrigu Nadi scrolls')}</p>
                 </div>
               </div>
             </motion.div>
@@ -581,7 +621,7 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
             >
               <div className="flex items-center gap-2 p-4 rounded-2xl bg-amber-900/20 border border-amber-500/20">
                 <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
-                <span className="text-xs text-amber-300/70 font-serif italic">The Rishi is speaking...</span>
+                <span className="text-xs text-amber-300/70 font-serif italic">{t('vedicAstrology.guruRishiLoading', 'The Rishi is speaking...')}</span>
               </div>
             </motion.div>
           )}
@@ -614,7 +654,7 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
                 onClick={toggleMic}
                 disabled={isLoading}
                 className={`min-w-[44px] min-h-[44px] w-12 h-12 p-0 rounded-full flex items-center justify-center shrink-0 ${isListening ? 'bg-rose-600 hover:bg-rose-500' : 'border-amber-500/30 text-amber-300'} transition-all active:scale-95`}
-                aria-label={isListening ? 'Stop listening' : 'Speak'}
+                aria-label={isListening ? t('vedicAstrology.guruAriaStopListening', 'Stop listening') : t('vedicAstrology.guruAriaSpeak', 'Speak')}
               >
                 {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
               </Button>
@@ -631,10 +671,10 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
         
         {/* Action Chips — horizontal scroll on mobile */}
         <div className="flex gap-2 justify-center flex-wrap overflow-x-auto pb-1 scrollbar-hide min-h-[44px] items-center">
-          <ActionChip icon="🐉" label="Rahu Cycle Reading" onClick={() => handleSendMessage(`Rishi, what is the karmic significance of my current ${bhrigu.active?.planet || 'planetary'} cycle? How should I navigate this activation period? Use my birth data.`)} />
-          <ActionChip icon="💰" label="Financial Verdict" onClick={() => handleSendMessage("Is this moment auspicious for major financial action? Use my chart and today's date. Deliver the Verdict.")} />
-          <ActionChip icon="⚡" label="Karmic Blockage" onClick={() => handleSendMessage("Identify the primary karmic obstacle in my current cycle and provide the Bhrigu Remedy with mantra and frequency.")} />
-          <ActionChip icon="🔱" label="528Hz Remedy" onClick={() => handleSendMessage("Prescribe the optimal healing frequency for my current planetary cycle. Include the 528Hz activation protocol if relevant.")} />
+          <ActionChip icon="🐉" label={t('vedicAstrology.guruChipRahu', 'Rahu Cycle Reading')} onClick={() => handleSendMessage(guruChipPromptRahu(bhrigu.active?.planet || 'planetary'))} />
+          <ActionChip icon="💰" label={t('vedicAstrology.guruChipFinance', 'Financial Verdict')} onClick={() => handleSendMessage(GURU_PROMPT_FINANCE)} />
+          <ActionChip icon="⚡" label={t('vedicAstrology.guruChipKarmic', 'Karmic Blockage')} onClick={() => handleSendMessage(GURU_PROMPT_KARMIC)} />
+          <ActionChip icon="🔱" label={t('vedicAstrology.guruChip528', '528Hz Remedy')} onClick={() => handleSendMessage(GURU_PROMPT_528)} />
         </div>
       </div>
       </div>

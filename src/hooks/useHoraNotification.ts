@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const AUTO_DISMISS_MS = 10000;
 
@@ -16,6 +17,7 @@ export function useHoraNotification(
   currentHora: string | undefined,
   enabled: boolean
 ): HoraNotificationState {
+  const { t } = useTranslation();
   const prevHoraRef = useRef<string | undefined>(currentHora);
   const [notification, setNotification] = useState<string | null>(null);
   const [prevHora, setPrevHora] = useState<string | null>(null);
@@ -25,14 +27,23 @@ export function useHoraNotification(
 
     const prev = prevHoraRef.current;
     if (prev !== undefined && prev !== '' && prev !== currentHora) {
-      const message = `${prev} Hora has ended. ${currentHora} Hora is now active.`;
+      const message = t('vedicAstrology.horaNotifyBanner', {
+        defaultValue: '{{prev}} Hora has ended. {{current}} Hora is now active.',
+        prev,
+        current: currentHora,
+      });
       setPrevHora(prev);
       setNotification(message);
 
       if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
         try {
-          new Notification('Sacred Healing — Hora Change', {
-            body: `🔱 ${message}\nGo to Mantra page and chant the mantra.`,
+          const hint = t('vedicAstrology.horaNotifyHint', 'Go to Mantra page and chant the mantra.');
+          new Notification(t('vedicAstrology.horaNotifyBrowserTitle', 'Sacred Healing — Hora Change'), {
+            body: t('vedicAstrology.horaNotifyBrowserBody', {
+              defaultValue: '🔱 {{message}}\n{{hint}}',
+              message,
+              hint,
+            }),
             icon: '/favicon.ico',
           });
         } catch {
@@ -40,12 +51,12 @@ export function useHoraNotification(
         }
       }
 
-      const t = setTimeout(() => setNotification(null), AUTO_DISMISS_MS);
-      return () => clearTimeout(t);
+      const dismissTimer = setTimeout(() => setNotification(null), AUTO_DISMISS_MS);
+      return () => clearTimeout(dismissTimer);
     }
 
     prevHoraRef.current = currentHora;
-  }, [currentHora, enabled]);
+  }, [currentHora, enabled, t]);
 
   return {
     message: notification,

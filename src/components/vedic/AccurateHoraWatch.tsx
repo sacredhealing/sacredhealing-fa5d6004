@@ -1,10 +1,12 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Timer, Sunrise, Sunset, Clock } from 'lucide-react';
+import { Sunrise, Sunset } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { useHoraWatch } from '@/hooks/useHoraWatch';
 import { getPlanetEmoji, getEnergyGradient, getSuccessColor, type HoraEnergyType } from '@/lib/vedicTypes';
+import { useTranslation } from '@/hooks/useTranslation';
+import { vedicLocaleTag } from '@/lib/vedicLocale';
 
 interface AccurateHoraWatchProps {
   timezone: string;
@@ -40,8 +42,24 @@ function getEnergyType(planet: string): HoraEnergyType {
   return 'Neutral';
 }
 
+function labelEnergyType(type: HoraEnergyType, t: (k: string, d?: string) => string): string {
+  if (type === 'Auspicious') return t('vedicAstrology.horaEnergyAuspicious', 'Auspicious');
+  if (type === 'Inauspicious') return t('vedicAstrology.horaEnergyInauspicious', 'Inauspicious');
+  return t('vedicAstrology.horaEnergyNeutral', 'Neutral');
+}
+
 // Progress Ring for remaining time
-const ProgressRing = ({ remainingMs, totalMs, remainingTime }: { remainingMs: number; totalMs: number; remainingTime: string }) => {
+const ProgressRing = ({
+  remainingMs,
+  totalMs,
+  remainingTime,
+  remainingLabel,
+}: {
+  remainingMs: number;
+  totalMs: number;
+  remainingTime: string;
+  remainingLabel: string;
+}) => {
   const radius = 52;
   const circumference = 2 * Math.PI * radius;
   const progress = Math.max(0, Math.min(1, remainingMs / totalMs));
@@ -69,7 +87,7 @@ const ProgressRing = ({ remainingMs, totalMs, remainingTime }: { remainingMs: nu
         <span className={`font-mono text-xl font-black ${isUrgent ? 'text-rose-400 animate-pulse' : 'text-foreground'}`}>
           {remainingTime}
         </span>
-        <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">remaining</span>
+        <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">{remainingLabel}</span>
       </div>
     </div>
   );
@@ -90,13 +108,16 @@ export const AccurateHoraWatch: React.FC<AccurateHoraWatchProps> = ({
   timeOffset = 0,
   userBirthChart,
 }) => {
+  const { t, language } = useTranslation();
+  const locale = vedicLocaleTag(language);
   const { calculation, remainingTimeStr, remainingMs, isLoading } = useHoraWatch({ timezone, timeOffset });
-  
+
   const horaData = useMemo(() => {
     if (!calculation) return null;
     const { currentHora, upcomingHoras, sunrise, sunset, dayRuler } = calculation;
     const successRating = calculateSuccessRating(currentHora.planet, userBirthChart);
     const energyType = getEnergyType(currentHora.planet);
+    const timeOpts: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: '2-digit', hour12: true };
     return {
       currentHora: { ...currentHora, successRating, energyType },
       upcomingHoras: upcomingHoras.map(hora => ({
@@ -104,25 +125,26 @@ export const AccurateHoraWatch: React.FC<AccurateHoraWatchProps> = ({
         successRating: calculateSuccessRating(hora.planet, userBirthChart),
         energyType: getEnergyType(hora.planet),
       })),
-      sunrise: sunrise.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
-      sunset: sunset.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+      sunrise: sunrise.toLocaleTimeString(locale, timeOpts),
+      sunset: sunset.toLocaleTimeString(locale, timeOpts),
       dayRuler,
       totalDurationMs: (currentHora.durationMinutes || 60) * 60 * 1000,
     };
-  }, [calculation, userBirthChart]);
-  
+  }, [calculation, userBirthChart, locale]);
+
   if (isLoading || !horaData) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="flex flex-col items-center gap-4">
           <motion.div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} />
-          <p className="text-sm text-muted-foreground">Calculating Hora...</p>
+          <p className="text-sm text-muted-foreground">{t('vedicAstrology.horaCalcLoading', 'Calculating Hora...')}</p>
         </div>
       </div>
     );
   }
-  
+
   const { currentHora, upcomingHoras, sunrise, sunset, dayRuler, totalDurationMs } = horaData;
+  const energyLabel = labelEnergyType(currentHora.energyType, t);
   const energyColor = currentHora.energyType === 'Auspicious' ? 'emerald' : currentHora.energyType === 'Neutral' ? 'amber' : 'rose';
   
   return (
@@ -140,7 +162,9 @@ export const AccurateHoraWatch: React.FC<AccurateHoraWatchProps> = ({
             <span className="text-4xl">{getPlanetEmoji(dayRuler)}</span>
           </div>
           <div>
-            <p className="text-[10px] font-black text-amber-400/70 uppercase tracking-[0.4em]">Day Ruler</p>
+            <p className="text-[10px] font-black text-amber-400/70 uppercase tracking-[0.4em]">
+              {t('vedicAstrology.horaDayRuler', 'Day Ruler')}
+            </p>
             <h2 className="text-4xl font-black text-amber-100 font-serif">{dayRuler}</h2>
           </div>
           <div className="ml-auto hidden sm:flex items-center gap-4 text-xs">
@@ -173,7 +197,12 @@ export const AccurateHoraWatch: React.FC<AccurateHoraWatchProps> = ({
         <div className="relative p-6 sm:p-8 rounded-3xl bg-card/80 backdrop-blur-sm border border-border/50 overflow-hidden">
           <div className="flex flex-col sm:flex-row items-center gap-6">
             {/* Progress Ring */}
-            <ProgressRing remainingMs={remainingMs} totalMs={totalDurationMs} remainingTime={remainingTimeStr} />
+            <ProgressRing
+              remainingMs={remainingMs}
+              totalMs={totalDurationMs}
+              remainingTime={remainingTimeStr}
+              remainingLabel={t('vedicAstrology.horaRemaining', 'remaining')}
+            />
 
             <div className="flex-1 space-y-3 text-center sm:text-left">
               <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-2">
@@ -185,12 +214,14 @@ export const AccurateHoraWatch: React.FC<AccurateHoraWatchProps> = ({
                   variant="outline"
                   className={`text-[10px] font-bold border-${energyColor}-500/30 text-${energyColor}-400`}
                 >
-                  {currentHora.energyType}
+                  {energyLabel}
                 </Badge>
               </div>
 
               <p className="text-xs text-muted-foreground font-mono">
-                {currentHora.startTimeStr} — {currentHora.endTimeStr} • ~{currentHora.durationMinutes} min {currentHora.isDay ? '☀️' : '🌙'}
+                {currentHora.startTimeStr} — {currentHora.endTimeStr} •{' '}
+                {t('vedicAstrology.horaApproxMin', { defaultValue: '~{{n}} min', n: currentHora.durationMinutes })}{' '}
+                {currentHora.isDay ? '☀️' : '🌙'}
               </p>
 
               <p className="text-sm text-muted-foreground italic leading-relaxed">"{currentHora.ruler}"</p>
@@ -209,7 +240,9 @@ export const AccurateHoraWatch: React.FC<AccurateHoraWatchProps> = ({
 
       {/* 3. UPCOMING FLOW - Horizontal Scrolling Mini Cards */}
       <div>
-        <h4 className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-4 pl-1">Upcoming Flow</h4>
+        <h4 className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-4 pl-1">
+          {t('vedicAstrology.horaUpcomingFlow', 'Upcoming Flow')}
+        </h4>
         <ScrollArea className="w-full">
           <div className="flex gap-3 pb-4">
             {upcomingHoras.map((hora, i) => (

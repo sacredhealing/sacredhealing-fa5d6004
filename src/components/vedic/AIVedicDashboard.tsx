@@ -109,16 +109,16 @@ const BlueprintCard = ({ title, preview, content, icon }: { title: string; previ
   );
 };
 
-// Bhrigu Nandi Nadi - Planet Activation Ages
-const BHRIGU_ACTIVATIONS = [
-  { age: 16, planet: 'Jupiter', emoji: '♃', desc: 'Wisdom awakening. Guru energy ignites your path of higher learning and spiritual growth.' },
-  { age: 22, planet: 'Sun', emoji: '☀️', desc: 'Soul identity crystallizes. Your Atma-karaka activates authority and self-expression.' },
-  { age: 24, planet: 'Moon', emoji: '🌙', desc: 'Emotional mastery cycle. Deep intuition and nurturing power reach peak activation.' },
-  { age: 28, planet: 'Venus', emoji: '♀️', desc: 'Creative abundance unlocked. Relationships, art, and material pleasures align with destiny.' },
-  { age: 32, planet: 'Mars', emoji: '♂️', desc: 'Warrior energy peaks. Courage, ambition, and physical vitality drive transformation.' },
-  { age: 36, planet: 'Mercury', emoji: '☿️', desc: 'Intellectual mastery. Communication, business acumen, and analytical power ascend.' },
-  { age: 42, planet: 'Rahu/Ketu', emoji: '🐉', desc: 'Digital expansion and breaking old patterns. The shadow nodes activate karmic liberation.' },
-  { age: 48, planet: 'Saturn', emoji: '\u2644', desc: "Shani's final teaching. Discipline, structure, and karmic harvest define this sovereign phase." },
+// Bhrigu Nandi Nadi — ages/planets fixed; descriptions from vedicAstrology.bhriguDesc*
+const BHRIGU_ACTIVATION_META = [
+  { age: 16, planet: 'Jupiter', emoji: '♃', descKey: 'vedicAstrology.bhriguDesc16' as const },
+  { age: 22, planet: 'Sun', emoji: '☀️', descKey: 'vedicAstrology.bhriguDesc22' as const },
+  { age: 24, planet: 'Moon', emoji: '🌙', descKey: 'vedicAstrology.bhriguDesc24' as const },
+  { age: 28, planet: 'Venus', emoji: '♀️', descKey: 'vedicAstrology.bhriguDesc28' as const },
+  { age: 32, planet: 'Mars', emoji: '♂️', descKey: 'vedicAstrology.bhriguDesc32' as const },
+  { age: 36, planet: 'Mercury', emoji: '☿️', descKey: 'vedicAstrology.bhriguDesc36' as const },
+  { age: 42, planet: 'Rahu/Ketu', emoji: '🐉', descKey: 'vedicAstrology.bhriguDesc42' as const },
+  { age: 48, planet: 'Saturn', emoji: '\u2644', descKey: 'vedicAstrology.bhriguDesc48' as const },
 ];
 
 // Nadi Directional Mapping (labels via vedicAstrology.dashDir* / dashTheme* / dashBlurb*)
@@ -202,18 +202,27 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
   const currentHoraPlanet = calculation?.currentHora?.planet;
   const { message: horaNotificationMessage, dismiss: dismissHoraNotification } = useHoraNotification(currentHoraPlanet, horaNotifyEnabled);
 
+  const bhriguActivations = useMemo(
+    () =>
+      BHRIGU_ACTIVATION_META.map((a) => ({
+        age: a.age,
+        planet: a.planet,
+        emoji: a.emoji,
+        desc: t(a.descKey),
+      })),
+    [t]
+  );
+
   // Calculate user's age and active Bhrigu cycle
   const bhriguData = useMemo(() => {
     if (!user.birthDate) return null;
     const birthYear = new Date(user.birthDate).getFullYear();
     const currentYear = new Date().getFullYear();
     const age = currentYear - birthYear;
-    // Find active cycle (the one whose age is <= user's age, take the latest)
-    const active = [...BHRIGU_ACTIVATIONS].reverse().find(a => age >= a.age);
-    // Find next cycle
-    const next = BHRIGU_ACTIVATIONS.find(a => a.age > age);
+    const active = [...bhriguActivations].reverse().find(a => age >= a.age);
+    const next = bhriguActivations.find(a => a.age > age);
     return { age, active, next };
-  }, [user.birthDate]);
+  }, [user.birthDate, bhriguActivations]);
 
   // useLayoutEffect: apply cached reading synchronously before paint; avoids long blank screen
   useLayoutEffect(() => {
@@ -317,9 +326,9 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
               <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">{t('vedicAstrology.dashTimeScrubber')}</span>
               <Slider value={[timeOffset]} min={-720} max={720} step={30} onValueChange={handleTimeOffsetChange} className="w-full" />
               <div className="flex justify-between text-[9px] text-muted-foreground">
-                <span>-12h</span>
+                <span>{t('vedicAstrology.dashH12Minus', '-12h')}</span>
                 <span>{timeOffset === 0 ? t('vedicAstrology.dashNow') : `${timeOffset > 0 ? '+' : ''}${timeOffset}m`}</span>
-                <span>+12h</span>
+                <span>{t('vedicAstrology.dashH12Plus', '+12h')}</span>
               </div>
             </div>
           )}
@@ -366,7 +375,16 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handleSpeak(`${reading.todayInfluence.wisdomQuote}. Today's Nakshatra is ${reading.todayInfluence.nakshatra}. ${reading.todayInfluence.description}`)}
+                onClick={() =>
+                  handleSpeak(
+                    t('vedicAstrology.dashSpeakVerdict', {
+                      defaultValue: "{{quote}} Today's Nakshatra is {{nakshatra}}. {{description}}",
+                      quote: reading.todayInfluence.wisdomQuote,
+                      nakshatra: reading.todayInfluence.nakshatra,
+                      description: reading.todayInfluence.description,
+                    })
+                  )
+                }
                 className={`flex-shrink-0 rounded-2xl ${isSpeaking ? 'bg-purple-500 text-white border-purple-500' : 'border-purple-500/40 text-purple-300'}`}
               >
                 {isSpeaking ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
@@ -613,7 +631,7 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
 
           {/* All Activation Timeline */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {BHRIGU_ACTIVATIONS.map((a) => {
+            {bhriguActivations.map((a) => {
               const isActive = bhriguData.active?.age === a.age;
               const isPast = bhriguData.age >= a.age;
               return (
@@ -711,21 +729,31 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
                       <div className="px-5 sm:px-6 pb-6 pt-2 border-t border-teal-500/20 space-y-4">
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           <div className="p-4 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-center">
-                            <p className="text-[9px] font-black text-teal-400 uppercase tracking-widest mb-2">Beeja Mantra</p>
+                            <p className="text-[9px] font-black text-teal-400 uppercase tracking-widest mb-2">
+                              {t('vedicAstrology.dashYogaBeeja', 'Beeja Mantra')}
+                            </p>
                             <p className="text-lg font-serif text-teal-100 italic">
                               {i % 3 === 0 ? '"Om Hreem Shreem"' : i % 3 === 1 ? '"Om Gam Ganapataye"' : '"Om Namah Shivaya"'}
                             </p>
                           </div>
                           <div className="p-4 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-center">
-                            <p className="text-[9px] font-black text-teal-400 uppercase tracking-widest mb-2">Frequency</p>
+                            <p className="text-[9px] font-black text-teal-400 uppercase tracking-widest mb-2">
+                              {t('vedicAstrology.dashYogaFrequency', 'Frequency')}
+                            </p>
                             <p className="text-lg font-mono text-teal-100">
                               {i % 3 === 0 ? '528 Hz' : i % 3 === 1 ? '432 Hz' : '741 Hz'}
                             </p>
                           </div>
                           <div className="p-4 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-center">
-                            <p className="text-[9px] font-black text-teal-400 uppercase tracking-widest mb-2">Physical Action</p>
+                            <p className="text-[9px] font-black text-teal-400 uppercase tracking-widest mb-2">
+                              {t('vedicAstrology.dashYogaPhysical', 'Physical Action')}
+                            </p>
                             <p className="text-xs text-teal-100">
-                              {i % 3 === 0 ? 'Wear white on Fridays' : i % 3 === 1 ? 'Donate yellow cloth' : 'Fast on Mondays'}
+                              {i % 3 === 0
+                                ? t('vedicAstrology.dashYogaAction0', 'Wear white on Fridays')
+                                : i % 3 === 1
+                                  ? t('vedicAstrology.dashYogaAction1', 'Donate yellow cloth')
+                                  : t('vedicAstrology.dashYogaAction2', 'Fast on Mondays')}
                             </p>
                           </div>
                         </div>
@@ -735,12 +763,21 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
                           onClick={(e) => {
                             e.stopPropagation();
                             const mantra = i % 3 === 0 ? 'Om Hreem Shreem' : i % 3 === 1 ? 'Om Gam Ganapataye' : 'Om Namah Shivaya';
-                            handleSpeak(`Bhrigu Remedy for ${yoga.name}. Chant the mantra: ${mantra}. ${yoga.impact}`);
+                            handleSpeak(
+                              t('vedicAstrology.dashYogaSpeakScript', {
+                                defaultValue: 'Bhrigu Remedy for {{yoga}}. Chant the mantra: {{mantra}}. {{impact}}',
+                                yoga: yoga.name,
+                                mantra,
+                                impact: yoga.impact,
+                              })
+                            );
                           }}
                           className="w-full border-teal-500/40 text-teal-300 hover:bg-teal-500/10"
                         >
                           <Volume2 className="w-4 h-4 mr-2" />
-                          <span className="text-[10px] font-bold uppercase tracking-widest">Speak Remedy Aloud</span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest">
+                            {t('vedicAstrology.dashYogaSpeakRemedy', 'Speak Remedy Aloud')}
+                          </span>
                         </Button>
                       </div>
                     </motion.div>

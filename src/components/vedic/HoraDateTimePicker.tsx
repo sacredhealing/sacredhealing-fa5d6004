@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface HoraDateTimePickerProps {
   timeOffset: number;
@@ -45,7 +46,7 @@ export const HoraDateTimePicker: React.FC<HoraDateTimePickerProps> = ({
   };
 
   const displayLabel = isLive
-    ? 'Check Future Hora'
+    ? t('vedicAstrology.horaPickerLiveCta', 'Check Future Hora')
     : selectedDate
     ? format(selectedDate, 'MMM d, yyyy') + ` ${String(selectedHour).padStart(2, '0')}:${String(selectedMinute).padStart(2, '0')}`
     : `${timeOffset > 0 ? '+' : ''}${Math.round(timeOffset / 60)}h ${Math.abs(timeOffset % 60)}m`;
@@ -70,7 +71,7 @@ export const HoraDateTimePicker: React.FC<HoraDateTimePickerProps> = ({
         <PopoverContent className="w-auto p-0 z-50 bg-background border-border shadow-2xl" align="start" sideOffset={8}>
           <div className="p-4 space-y-4">
             <p className="text-xs font-bold text-amber-400 uppercase tracking-wider">
-              Check Hora for any date & time
+              {t('vedicAstrology.horaPickerTitle', 'Check Hora for any date & time')}
             </p>
             <Calendar
               mode="single"
@@ -107,11 +108,11 @@ export const HoraDateTimePicker: React.FC<HoraDateTimePickerProps> = ({
             </div>
             <div className="flex gap-2">
               <Button size="sm" onClick={handleApply} disabled={!selectedDate} className="flex-1">
-                Check Hora
+                {t('vedicAstrology.horaPickerApply', 'Check Hora')}
               </Button>
               <Button size="sm" variant="ghost" onClick={handleReset}>
                 <RotateCcw className="w-3.5 h-3.5 mr-1" />
-                Live
+                {t('vedicAstrology.horaPickerLiveBtn', 'Live')}
               </Button>
             </div>
           </div>
@@ -125,7 +126,7 @@ export const HoraDateTimePicker: React.FC<HoraDateTimePickerProps> = ({
           className="text-xs text-amber-400 hover:text-amber-300 gap-1 px-2"
         >
           <RotateCcw className="w-3.5 h-3.5" />
-          Reset to Live
+          {t('vedicAstrology.horaPickerReset', 'Reset to Live')}
         </Button>
       )}
     </div>
