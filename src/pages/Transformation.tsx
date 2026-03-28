@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { 
   Sparkles, 
   Video, 
@@ -62,6 +62,8 @@ interface Practitioner {
   subtitle: string | null;
   image_url: string | null;
 }
+
+const CRYPTO_WALLET = 'BAfPGN6DUAKYVwmmGkhMQxJyDv2cHEHRnfcbzy1GNy5j';
 
 const getFeatureIcon = (feature: string): React.ElementType => {
   const lower = feature.toLowerCase();
@@ -163,7 +165,7 @@ const Transformation = () => {
     
     // Check if practitioner selection is needed
     if (program?.practitioner === 'both' && !selectedPractitioner) {
-      toast.error('Please select a practitioner first');
+      toast.error(t('transformation.toastSelectPractitioner'));
       return;
     }
     
@@ -192,11 +194,11 @@ const Transformation = () => {
           window.open(data.url, '_blank');
         }
       } else {
-        toast.info('Please send payment to: BAfPGN6DUAKYVwmmGkhMQxJyDv2cHEHRnfcbzy1GNy5j');
+        toast.info(t('transformation.toastCryptoSend', { wallet: CRYPTO_WALLET }));
       }
     } catch (error) {
       console.error('Payment error:', error);
-      toast.error('Payment failed. Please try again.');
+      toast.error(t('transformation.toastPaymentFailed'));
     }
     
     setEnrolling(false);
@@ -206,7 +208,11 @@ const Transformation = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div
+          className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"
+          role="status"
+          aria-label={t('transformation.loadingAria')}
+        />
       </div>
     );
   }
@@ -216,9 +222,9 @@ const Transformation = () => {
       <div className="min-h-screen bg-background flex items-center justify-center px-4">
         <Card className="p-8 text-center">
           <Sparkles className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="font-semibold text-foreground mb-2">Program Not Available</h3>
+          <h3 className="font-semibold text-foreground mb-2">{t('transformation.emptyTitle')}</h3>
           <p className="text-muted-foreground text-sm">
-            The transformation program is currently being prepared.
+            {t('transformation.emptyDescription')}
           </p>
         </Card>
       </div>
@@ -234,7 +240,7 @@ const Transformation = () => {
       <div className="bg-gradient-to-br from-amber-500/30 via-primary/20 to-purple-500/30 px-4 py-10 text-center relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,215,0,0.1),transparent_70%)]" />
         <div className="relative">
-          <Badge className="bg-amber-500 text-white mb-4">Life-Changing Journey</Badge>
+          <Badge className="bg-amber-500 text-white mb-4">{t('transformation.badgeJourney')}</Badge>
           <h1 className="text-3xl font-bold text-foreground mb-3">{program.name}</h1>
           <p className="text-muted-foreground max-w-md mx-auto mb-6">
             {program.description}
@@ -242,11 +248,11 @@ const Transformation = () => {
           <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
               <Calendar className="w-4 h-4" />
-              {currentSource.duration_months} months
+              {t('transformation.metaMonths', { count: currentSource.duration_months })}
             </span>
             <span className="flex items-center gap-1">
               <BookOpen className="w-4 h-4" />
-              {program.modules.length} modules
+              {t('transformation.metaModules', { count: program.modules.length })}
             </span>
           </div>
         </div>
@@ -255,7 +261,7 @@ const Transformation = () => {
       {/* Variations Banner */}
       {variations.length > 0 && (
         <div className="px-4 py-4">
-          <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">Choose Your Package</h2>
+          <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">{t('transformation.choosePackage')}</h2>
           <div className="flex gap-3 overflow-x-auto pb-2">
             <Card 
               className={`p-4 min-w-[160px] cursor-pointer transition-all ${
@@ -263,9 +269,9 @@ const Transformation = () => {
               }`}
               onClick={() => setSelectedVariation(null)}
             >
-              <h3 className="font-semibold text-foreground text-sm">Standard</h3>
+              <h3 className="font-semibold text-foreground text-sm">{t('transformation.packageStandard')}</h3>
               <p className="text-amber-500 font-bold mt-1">€{program.price_eur}</p>
-              <p className="text-xs text-muted-foreground mt-1">{program.duration_months} months</p>
+              <p className="text-xs text-muted-foreground mt-1">{t('transformation.metaMonths', { count: program.duration_months })}</p>
             </Card>
             {variations.map((v) => (
               <Card 
@@ -277,7 +283,7 @@ const Transformation = () => {
               >
                 <h3 className="font-semibold text-foreground text-sm">{v.name}</h3>
                 <p className="text-amber-500 font-bold mt-1">€{v.price_eur}</p>
-                <p className="text-xs text-muted-foreground mt-1">{v.duration_months} months</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('transformation.metaMonths', { count: v.duration_months })}</p>
               </Card>
             ))}
           </div>
@@ -287,7 +293,7 @@ const Transformation = () => {
       {/* Practitioner Selection */}
       {showPractitionerSelection && practitioners.length > 0 && (
         <div className="px-4 py-4">
-          <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">Choose Your Guide</h2>
+          <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">{t('transformation.chooseGuide')}</h2>
           <div className="grid grid-cols-2 gap-3">
             {practitioners.map((p) => (
               <Card 
@@ -320,7 +326,7 @@ const Transformation = () => {
       <div className="px-4 py-4">
         <Card className="p-6 bg-gradient-to-br from-amber-500/10 to-purple-500/10 border-amber-500/30">
           <div className="text-center mb-4">
-            <p className="text-sm text-muted-foreground mb-1">Investment in Your Transformation</p>
+            <p className="text-sm text-muted-foreground mb-1">{t('transformation.investmentTitle')}</p>
             
             {/* Payment Type Toggle */}
             {currentSource.installment_price_eur > 0 && (
@@ -331,7 +337,7 @@ const Transformation = () => {
                   onClick={() => setPaymentType('full')}
                   className={paymentType === 'full' ? 'bg-amber-500 hover:bg-amber-600' : ''}
                 >
-                  Full Payment
+                  {t('transformation.payFull')}
                 </Button>
                 <Button
                   variant={paymentType === 'installment' ? 'default' : 'outline'}
@@ -339,7 +345,7 @@ const Transformation = () => {
                   onClick={() => setPaymentType('installment')}
                   className={paymentType === 'installment' ? 'bg-amber-500 hover:bg-amber-600' : ''}
                 >
-                  {getInstallmentCount()} Installments
+                  {t('transformation.payInstallments', { count: getInstallmentCount() })}
                 </Button>
               </div>
             )}
@@ -347,19 +353,25 @@ const Transformation = () => {
             {paymentType === 'full' ? (
               <>
                 <div className="text-4xl font-bold text-foreground mb-2">€{currentSource.price_eur.toLocaleString()}</div>
-                <p className="text-sm text-muted-foreground mb-4">One-time payment • Lifetime access to materials</p>
+                <p className="text-sm text-muted-foreground mb-4">{t('transformation.oneTimeLifetime')}</p>
               </>
             ) : (
               <>
                 <div className="text-4xl font-bold text-foreground mb-2">
-                  €{currentSource.installment_price_eur.toLocaleString()}<span className="text-lg">/month</span>
+                  €{currentSource.installment_price_eur.toLocaleString()}
+                  <span className="text-lg">{t('transformation.perMonthShort')}</span>
                 </div>
                 <p className="text-sm text-muted-foreground mb-2">
-                  {getInstallmentCount()} payments • Total: €{getTotalInstallmentPrice().toLocaleString()}
+                  {t('transformation.installmentLine', {
+                    count: getInstallmentCount(),
+                    total: getTotalInstallmentPrice().toLocaleString(),
+                  })}
                 </p>
                 {getTotalInstallmentPrice() > currentSource.price_eur && (
                   <p className="text-xs text-amber-500 mb-4">
-                    Save €{(getTotalInstallmentPrice() - currentSource.price_eur).toLocaleString()} with full payment!
+                    {t('transformation.saveWithFull', {
+                      amount: (getTotalInstallmentPrice() - currentSource.price_eur).toLocaleString(),
+                    })}
                   </p>
                 )}
               </>
@@ -371,7 +383,7 @@ const Transformation = () => {
               className="w-full bg-amber-500 hover:bg-amber-600 text-white"
               size="lg"
             >
-              {enrolling ? 'Processing...' : 'Begin Your Transformation'}
+              {enrolling ? t('transformation.processing') : t('transformation.beginTransformation')}
             </Button>
           </div>
         </Card>
@@ -379,7 +391,7 @@ const Transformation = () => {
 
       {/* What's Included */}
       <div className="px-4 py-6">
-        <h2 className="text-lg font-bold text-foreground mb-4">What's Included</h2>
+        <h2 className="text-lg font-bold text-foreground mb-4">{t('transformation.whatsIncluded')}</h2>
         <div className="grid grid-cols-2 gap-3">
           {(selectedVariation?.features || program.features).map((feature, idx) => {
             const Icon = getFeatureIcon(feature);
@@ -397,7 +409,7 @@ const Transformation = () => {
 
       {/* Modules */}
       <div className="px-4 py-6">
-        <h2 className="text-lg font-bold text-foreground mb-4">The 3 Modules</h2>
+        <h2 className="text-lg font-bold text-foreground mb-4">{t('transformation.modulesHeading', { count: program.modules.length })}</h2>
         <Accordion type="single" collapsible className="space-y-3">
           {program.modules.map((module) => (
             <AccordionItem key={module.number} value={`module-${module.number}`} className="border rounded-lg overflow-hidden">
@@ -408,7 +420,7 @@ const Transformation = () => {
                   </div>
                   <div className="text-left">
                     <h3 className="font-semibold text-foreground">{module.name}</h3>
-                    <p className="text-xs text-muted-foreground">{module.duration_months} months</p>
+                    <p className="text-xs text-muted-foreground">{t('transformation.metaMonths', { count: module.duration_months })}</p>
                   </div>
                 </div>
               </AccordionTrigger>
@@ -430,10 +442,11 @@ const Transformation = () => {
               <MessageCircle className="w-6 h-6 text-green-500" />
             </div>
             <div>
-              <h3 className="font-semibold text-foreground mb-2">Daily WhatsApp Connection</h3>
+              <h3 className="font-semibold text-foreground mb-2">{t('transformation.dailyWhatsappTitle')}</h3>
               <p className="text-sm text-muted-foreground">
-                Stay connected with {selectedPractitioner?.name || 'your practitioner'} every day. Get guidance, share your experiences, 
-                and receive healing support whenever you need it throughout your transformation journey.
+                {t('transformation.dailyWhatsappBody', {
+                  name: selectedPractitioner?.name || t('transformation.yourPractitionerFallback'),
+                })}
               </p>
             </div>
           </div>
@@ -446,10 +459,9 @@ const Transformation = () => {
           <div className="text-center">
             <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
             <p className="text-sm text-muted-foreground italic">
-              "This program changed my life completely. The daily support and healing sessions 
-              helped me release years of trauma and step into my true power."
+              {t('transformation.testimonialQuote')}
             </p>
-            <p className="text-sm font-medium text-foreground mt-3">— Transformation Graduate</p>
+            <p className="text-sm font-medium text-foreground mt-3">{t('transformation.testimonialBy')}</p>
           </div>
         </Card>
       </div>
@@ -462,10 +474,11 @@ const Transformation = () => {
           className="w-full bg-amber-500 hover:bg-amber-600 text-white shadow-lg"
           size="lg"
         >
-          {enrolling ? 'Processing...' : paymentType === 'full' 
-            ? `Enroll Now • €${currentSource.price_eur.toLocaleString()}`
-            : `Enroll Now • €${currentSource.installment_price_eur}/mo`
-          }
+          {enrolling
+            ? t('transformation.processing')
+            : paymentType === 'full'
+              ? t('transformation.enrollNowFull', { price: currentSource.price_eur.toLocaleString() })
+              : t('transformation.enrollNowMonthly', { price: currentSource.installment_price_eur.toLocaleString() })}
         </Button>
       </div>
 
@@ -473,18 +486,18 @@ const Transformation = () => {
       <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Choose Payment Method</DialogTitle>
+            <DialogTitle>{t('transformation.choosePaymentMethod')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div className="text-center mb-4">
               <p className="text-sm text-muted-foreground">
-                {selectedVariation?.name || 'Standard Package'}
-                {selectedPractitioner && ` with ${selectedPractitioner.name}`}
+                {(selectedVariation?.name || t('transformation.packageStandard')) +
+                  (selectedPractitioner ? t('transformation.withGuide', { name: selectedPractitioner.name }) : '')}
               </p>
               <p className="text-2xl font-bold text-foreground">
                 {paymentType === 'full' 
                   ? `€${currentSource.price_eur.toLocaleString()}`
-                  : `€${currentSource.installment_price_eur}/mo × ${getInstallmentCount()}`
+                  : `€${currentSource.installment_price_eur}${t('transformation.perMonthShort')} × ${getInstallmentCount()}`
                 }
               </p>
             </div>
@@ -496,7 +509,7 @@ const Transformation = () => {
               size="lg"
             >
               <CreditCard className="w-5 h-5 mr-2" />
-              Pay with Card
+              {t('transformation.payWithCard')}
             </Button>
             
             <Button 
@@ -507,7 +520,7 @@ const Transformation = () => {
               size="lg"
             >
               <Wallet className="w-5 h-5 mr-2" />
-              Pay with Crypto
+              {t('transformation.payWithCrypto')}
             </Button>
           </div>
         </DialogContent>
