@@ -1,5 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, Trophy, Activity, Wallet, Receipt, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,7 @@ export const PnLCard: React.FC<PnLCardProps> = ({
   totalFees = 0,
   onResetBalance
 }) => {
+  const { t } = useTranslation();
   // Calculate percentage gain/loss based on starting balance
   const totalPnLPercent = startingBalance > 0 ? (totalPnL / startingBalance) * 100 : 0;
   const todayPnLPercent = startingBalance > 0 ? (todayPnL / startingBalance) * 100 : 0;
@@ -42,12 +44,12 @@ export const PnLCard: React.FC<PnLCardProps> = ({
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-3">
           <Badge variant="outline" className={isPaperMode ? 'border-amber-500/50 text-amber-400' : 'border-green-500/50 text-green-400'}>
-            {isPaperMode ? '📝 PAPER TRADING' : '💰 LIVE TRADING'}
+            {isPaperMode ? t('polymarketBot.pnl.paperTrading') : t('polymarketBot.pnl.liveTrading')}
           </Badge>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
               <Trophy className="w-3.5 h-3.5 text-amber-400" />
-              <span className="text-xs font-medium">{winRate.toFixed(1)}% Win</span>
+              <span className="text-xs font-medium">{t('polymarketBot.pnl.winRate', { pct: winRate.toFixed(1) })}</span>
             </div>
             {isPaperMode && onResetBalance && (
               <Button 
@@ -55,7 +57,7 @@ export const PnLCard: React.FC<PnLCardProps> = ({
                 size="icon" 
                 className="h-6 w-6"
                 onClick={onResetBalance}
-                title="Reset paper balance to €1000"
+                title={t('polymarketBot.pnl.resetTitle')}
               >
                 <RefreshCw className="w-3 h-3" />
               </Button>
@@ -69,12 +71,12 @@ export const PnLCard: React.FC<PnLCardProps> = ({
             <Wallet className="w-4 h-4 text-amber-400" />
             <div className="flex-1">
               <span className="text-sm font-medium">€{displayBalance.toFixed(2)}</span>
-              <span className="text-xs text-muted-foreground ml-1">available</span>
+              <span className="text-xs text-muted-foreground ml-1">{t('polymarketBot.pnl.available')}</span>
             </div>
             {totalFees > 0 && (
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Receipt className="w-3 h-3" />
-                <span>€{totalFees.toFixed(2)} fees</span>
+                <span>{t('polymarketBot.pnl.fees', { amount: totalFees.toFixed(2) })}</span>
               </div>
             )}
           </div>
@@ -96,7 +98,7 @@ export const PnLCard: React.FC<PnLCardProps> = ({
                 ({isPositive ? '+' : ''}{totalPnLPercent.toFixed(2)}%)
               </span>
             </div>
-            <p className="text-xs text-muted-foreground">Total P&L (after fees & slippage)</p>
+            <p className="text-xs text-muted-foreground">{t('polymarketBot.pnl.totalPnlLine')}</p>
           </div>
         </div>
 
@@ -106,20 +108,20 @@ export const PnLCard: React.FC<PnLCardProps> = ({
             <p className={`font-mono text-sm font-bold ${isTodayPositive ? 'text-green-400' : 'text-red-400'}`}>
               {isTodayPositive ? '+' : ''}€{todayPnL.toFixed(2)}
             </p>
-            <p className="text-[10px] text-muted-foreground">Today</p>
+            <p className="text-[10px] text-muted-foreground">{t('polymarketBot.pnl.today')}</p>
           </div>
           <div className="bg-background/50 rounded-lg p-2 text-center">
             <p className={`font-mono text-sm font-bold ${isTodayPositive ? 'text-green-400' : 'text-red-400'}`}>
               {isTodayPositive ? '+' : ''}{todayPnLPercent.toFixed(1)}%
             </p>
-            <p className="text-[10px] text-muted-foreground">Today %</p>
+            <p className="text-[10px] text-muted-foreground">{t('polymarketBot.pnl.todayPct')}</p>
           </div>
           <div className="bg-background/50 rounded-lg p-2 text-center">
             <div className="flex items-center justify-center gap-1">
               <Activity className="w-3 h-3 text-primary" />
               <p className="font-mono text-sm font-bold">{totalTrades}</p>
             </div>
-            <p className="text-[10px] text-muted-foreground">Trades</p>
+            <p className="text-[10px] text-muted-foreground">{t('polymarketBot.pnl.trades')}</p>
           </div>
         </div>
       </CardContent>

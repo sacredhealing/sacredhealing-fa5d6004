@@ -17,10 +17,13 @@ import {
   whaleMirrorService,
   latencyArbitrageService,
   volatilityScalperService,
-  paperTradingService,
-  STRATEGY_NAMES
+  paperTradingService
 } from '@/services/polymarket';
 import type { LogEntry, TradeSignal, PolymarketMarket } from '@/types/polymarket';
+import i18n from '@/i18n/setup';
+import { useTranslation } from '@/hooks/useTranslation';
+
+const LOCALE_MAP: Record<string, string> = { en: 'en-US', sv: 'sv-SE', es: 'es-ES', no: 'nb-NO' };
 
 // ─── SQI 2050 tokens ──────────────────────────────────────────────────────────
 const G = '#D4AF37';
@@ -194,6 +197,8 @@ const ERC20_ABI = [
 const PolymarketBotDetailInner: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t, language } = useTranslation();
+  const timeLocale = LOCALE_MAP[language] || 'en-US';
 
   const [privateKey, setPrivateKey] = useState<string | null>(() => readStoredPrivateKey());
   const [address, setAddress] = useState<string>('');
@@ -216,7 +221,7 @@ const PolymarketBotDetailInner: React.FC = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
-  const [lastSync, setLastSync] = useState<string>('Never');
+  const [lastSync, setLastSync] = useState<string>('');
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [activeTab, setActiveTab] = useState('dashboard');
   const logEndRef = useRef<HTMLDivElement>(null);
@@ -228,9 +233,9 @@ const PolymarketBotDetailInner: React.FC = () => {
       id: Math.random().toString(36),
       msg,
       type,
-      time: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      time: new Date().toLocaleTimeString(timeLocale, { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
     }, ...prev].slice(0, 100));
-  }, []);
+  }, [timeLocale]);
 
   const refreshPnL = useCallback(async () => {
     if (!user?.id) return;
@@ -261,7 +266,7 @@ const PolymarketBotDetailInner: React.FC = () => {
     if (success) {
       setPaperBalance(1000);
       setTotalFeesPaid(0);
-      addLog('Paper balance reset to €1000', 'success');
+      addLog(i18n.t('polymarketBot.logs.paperReset'), 'success');
     }
   }, [addLog]);
 
@@ -282,7 +287,7 @@ const PolymarketBotDetailInner: React.FC = () => {
     const activeAddr = forcedAddr || address;
     if (!activeAddr) return;
     setIsSyncing(true);
-    addLog('Connecting to Polygon mainnet...', 'info');
+    addLog(i18n.t('polymarketBot.logs.connectingPolygon'), 'info');
     let success = false;
     for (const rpcUrl of RPC_POOL) {
       if (success) break;
@@ -292,9 +297,9 @@ const PolymarketBotDetailInner: React.FC = () => {
           const rawPol = await provider.getBalance(activeAddr);
           const pv = parseFloat(ethers.formatEther(rawPol)).toFixed(4);
           setPolBal(pv);
-          addLog(`POL Balance: ${pv}`, 'debug');
+          addLog(i18n.t('polymarketBot.logs.polBalance', { balance: pv }), 'debug');
         } catch {
-          addLog('Failed to fetch POL balance', 'warn');
+          addLog(i18n.t('polymarketBot.logs.polBalanceFail'), 'warn');
         }
         await new Promise((r) => setTimeout(r, 200));
         try {
@@ -302,9 +307,9 @@ const PolymarketBotDetailInner: React.FC = () => {
           const r = await c.balanceOf(activeAddr);
           const v = parseFloat(ethers.formatUnits(r, 6)).toFixed(2);
           setUsdcNBal(v);
-          addLog(`Native USDC: $${v}`, 'debug');
+          addLog(i18n.t('polymarketBot.logs.nativeUsdc', { amount: v }), 'debug');
         } catch {
-          addLog('Failed to fetch Native USDC', 'warn');
+          addLog(i18n.t('polymarketBot.logs.nativeUsdcFail'), 'warn');
         }
         await new Promise((r) => setTimeout(r, 200));
         try {
@@ -316,20 +321,23 @@ const PolymarketBotDetailInner: React.FC = () => {
           const v = parseFloat(ethers.formatUnits(rE, 6)).toFixed(2);
           setUsdcEBal(v);
           setAllowance(rA);
-          addLog(`Bridged USDC.e: $${v} | Allowance: ${rA > 0n ? 'Approved' : 'Pending'}`, 'debug');
+          const allowanceLabel = rA > 0n
+            ? i18n.t('polymarketBot.logs.allowanceApproved')
+            : i18n.t('polymarketBot.logs.allowancePending');
+          addLog(i18n.t('polymarketBot.logs.bridgedUsdc', { amount: v, allowance: allowanceLabel }), 'debug');
         } catch {
-          addLog('Failed to fetch USDC.e balance', 'warn');
+          addLog(i18n.t('polymarketBot.logs.usdceFail'), 'warn');
         }
-        setLastSync(new Date().toLocaleTimeString());
-        addLog(`Synced: ${activeAddr.slice(0, 10)}...${activeAddr.slice(-6)}`, 'success');
+        setLastSync(new Date().toLocaleTimeString(timeLocale, { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+        addLog(i18n.t('polymarketBot.logs.synced', { start: activeAddr.slice(0, 10), end: activeAddr.slice(-6) }), 'success');
         success = true;
       } catch {
-        addLog('Node failed. Trying next...', 'debug');
+        addLog(i18n.t('polymarketBot.logs.nodeRetry'), 'debug');
       }
     }
-    if (!success) addLog('All RPC nodes failed. Check network.', 'error');
+    if (!success) addLog(i18n.t('polymarketBot.logs.allRpcFailed'), 'error');
     setIsSyncing(false);
-  }, [address, addLog]);
+  }, [address, addLog, timeLocale]);
 
   useEffect(() => {
     if (privateKey) {
@@ -337,11 +345,11 @@ const PolymarketBotDetailInner: React.FC = () => {
         const wallet = new ethers.Wallet(privateKey);
         setAddress(wallet.address);
         trading.initialize(privateKey, RPC_POOL[0])
-          .then(() => addLog('Trading engine initialized', 'success'))
+          .then(() => addLog(i18n.t('polymarketBot.logs.tradingInitOk'), 'success'))
           .catch((err: unknown) => {
             console.error('[PolymarketBot] trading.initialize:', err);
-            addLog(`Trading init failed: ${err instanceof Error ? err.message : 'Unknown'}`, 'error');
-            toast.error('Trading engine failed to initialize');
+            addLog(i18n.t('polymarketBot.logs.tradingInitFail', { msg: err instanceof Error ? err.message : 'Unknown' }), 'error');
+            toast.error(i18n.t('polymarketBot.toastTradingInitFail'));
           });
         if (user?.id) {
           paperTradingService.setUserId(user.id);
@@ -349,7 +357,7 @@ const PolymarketBotDetailInner: React.FC = () => {
             if (s) {
               setIsPaperMode(s.is_paper_mode);
               paperTradingService.setMode(s.is_paper_mode);
-              addLog(`Mode: ${s.is_paper_mode ? '📝 PAPER TRADING' : '💰 LIVE TRADING'}`, 'info');
+              addLog(s.is_paper_mode ? i18n.t('polymarketBot.logs.modePaper') : i18n.t('polymarketBot.logs.modeLive'), 'info');
             }
           }).catch((err: unknown) => console.error('[PolymarketBot] loadSettings:', err));
           (async () => {
@@ -373,7 +381,7 @@ const PolymarketBotDetailInner: React.FC = () => {
         console.error('Invalid private key:', e);
         clearStoredPrivateKey();
         setPrivateKey(null);
-        toast.error('Invalid private key format');
+        toast.error(i18n.t('polymarketBot.toastInvalidKey'));
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- init only when key/user changes; avoid re-init on sync fn identity
@@ -387,41 +395,55 @@ const PolymarketBotDetailInner: React.FC = () => {
   }, [address, performDeepSync]);
 
   const executeTradeWithMode = async (signal: TradeSignal, strategy?: string): Promise<boolean> => {
+    const dirLabel = signal.direction === 'buy' ? i18n.t('polymarketBot.buy') : i18n.t('polymarketBot.sell');
     if (isPaperMode) {
       const result = await paperTradingService.executePaperTrade(signal, strategy);
       if (result.success) {
-        addLog(`📝 PAPER: ${signal.direction} ${signal.outcome} $${signal.suggestedSize.toFixed(2)}`, 'success');
+        addLog(i18n.t('polymarketBot.logs.paperTradeOk', {
+          direction: dirLabel,
+          outcome: signal.outcome,
+          size: signal.suggestedSize.toFixed(2),
+        }), 'success');
         setTotalTrades((p) => p + 1);
         return true;
       }
-      addLog(`📝 PAPER FAILED: ${result.error}`, 'error');
+      addLog(i18n.t('polymarketBot.logs.paperTradeFail', { error: result.error }), 'error');
       return false;
     }
     if (allowance === 0n) {
-      addLog('Cannot trade: USDC.e not approved', 'error');
+      addLog(i18n.t('polymarketBot.logs.noUsdcApprove'), 'error');
       return false;
     }
     const result = await trading.executeTrade(signal);
     if (result.success) {
-      addLog(`💰 LIVE: ${signal.direction} ${signal.outcome} tx: ${result.txHash}`, 'success');
+      addLog(i18n.t('polymarketBot.logs.liveTradeOk', {
+        direction: dirLabel,
+        outcome: signal.outcome,
+        tx: result.txHash ?? '',
+      }), 'success');
       setTotalTrades((p) => p + 1);
       return true;
     }
-    addLog(`💰 LIVE FAILED: ${result.error}`, 'error');
+    addLog(i18n.t('polymarketBot.logs.liveTradeFail', { error: result.error }), 'error');
     return false;
   };
 
   useEffect(() => {
     if (isRunning && address) {
-      addLog('🚀 Starting Siddha Quantum Nexus HFT Engine...', 'info');
-      addLog(`[1] ${STRATEGY_NAMES.WHALE_MIRROR} - Monitoring 0x8dxd`, 'info');
-      addLog(`[2] ${STRATEGY_NAMES.LATENCY_ARB} - Gemini 3 Flash active`, 'info');
-      addLog(`[3] ${STRATEGY_NAMES.VOLATILITY_SCALP} - Ladder orders ready`, 'info');
+      addLog(i18n.t('polymarketBot.logs.engineStart'), 'info');
+      addLog(i18n.t('polymarketBot.logs.strategy1'), 'info');
+      addLog(i18n.t('polymarketBot.logs.strategy2'), 'info');
+      addLog(i18n.t('polymarketBot.logs.strategy3'), 'info');
       const init = async () => {
         if (privateKey) {
           await whaleMirrorService.initialize(privateKey, RPC_POOL[0]);
           whaleMirrorService.onMirrorSignal(async (s, w) => {
-            addLog(`🐋 WHALE MIRROR: ${w.whaleAddress.slice(0, 10)}... ${s.direction} ${s.outcome}`, 'trade');
+            const wd = s.direction === 'buy' ? i18n.t('polymarketBot.buy') : i18n.t('polymarketBot.sell');
+            addLog(i18n.t('polymarketBot.logs.whaleMirror', {
+              addr: w.whaleAddress.slice(0, 10),
+              direction: wd,
+              outcome: s.outcome,
+            }), 'trade');
             setActiveSignals((p) => [...p.slice(-4), s]);
             await executeTradeWithMode(s, 'whale_mirror');
           });
@@ -434,33 +456,41 @@ const PolymarketBotDetailInner: React.FC = () => {
         try {
           const fm = await polymarketService.fetchMarkets(50);
           setMarkets(fm);
-          addLog(`Scanned ${fm.length} markets`, 'debug');
+          addLog(i18n.t('polymarketBot.logs.scannedMarkets', { count: fm.length }), 'debug');
           latencyArbitrageService.onLatencySignal(async (s, e) => {
-            addLog(`⚡ LATENCY ARB: ${e.headline?.slice(0, 40)}...`, 'trade');
+            addLog(i18n.t('polymarketBot.logs.latencyArb', { headline: (e.headline ?? '').slice(0, 40) }), 'trade');
             setActiveSignals((p) => [...p.slice(-4), s]);
             await executeTradeWithMode(s, 'latency_arb');
           });
           latencyArbitrageService.startMonitoring(fm);
           volatilityScalperService.onScalpSignal(async (s, c) => {
-            addLog(`📈 SCALP: ${c.ladder} vol=${(c.volatility * 100).toFixed(2)}%`, 'trade');
+            addLog(i18n.t('polymarketBot.logs.scalp', {
+              ladder: c.ladder,
+              vol: (c.volatility * 100).toFixed(2),
+            }), 'trade');
             setActiveSignals((p) => [...p.slice(-4), s]);
             await executeTradeWithMode(s, 'volatility_scalp');
           });
           volatilityScalperService.startScalping(fm);
           const opps = await polymarketService.findOpportunities(20000);
           if (opps.length > 0) {
-            addLog(`Found ${opps.length} potential opportunities`, 'info');
+            addLog(i18n.t('polymarketBot.logs.foundOpps', { count: opps.length }), 'info');
             for (const m of opps.slice(0, 3)) {
               const s = await polymarketAI.analyzeMarket(m);
               if (s) {
                 setActiveSignals((p) => [...p.slice(-4), s]);
-                addLog(`🤖 AI SIGNAL: ${s.direction.toUpperCase()} ${s.outcome} @ ${(s.currentPrice * 100).toFixed(1)}%`, 'trade');
+                const ad = s.direction === 'buy' ? i18n.t('polymarketBot.buy') : i18n.t('polymarketBot.sell');
+                addLog(i18n.t('polymarketBot.logs.aiSignal', {
+                  direction: ad,
+                  outcome: s.outcome,
+                  price: (s.currentPrice * 100).toFixed(1),
+                }), 'trade');
                 await executeTradeWithMode(s, 'ai_signal');
               }
             }
           }
         } catch (e) {
-          addLog(`Scan error: ${e instanceof Error ? e.message : 'Unknown'}`, 'error');
+          addLog(i18n.t('polymarketBot.logs.scanError', { msg: e instanceof Error ? e.message : 'Unknown' }), 'error');
         }
         setIsScanning(false);
       };
@@ -484,43 +514,43 @@ const PolymarketBotDetailInner: React.FC = () => {
       setPrivateKey(key);
       setAddress(w.address);
       setInputError(null);
-      addLog('Key validated. Initializing trading engine...', 'info');
+      addLog(i18n.t('polymarketBot.logs.keyValidated'), 'info');
       performDeepSync(w.address);
-      toast.success('Wallet connected successfully');
+      toast.success(i18n.t('polymarketBot.toastWalletConnected'));
     } catch {
-      setInputError('Invalid private key format. Use 64-character hex key.');
+      setInputError(i18n.t('polymarketBot.invalidKeyHint'));
     }
   };
 
   const handleApprove = async () => {
     if (!privateKey) return;
     setIsApproving(true);
-    addLog('Initiating USDC.e approval transaction...', 'info');
+    addLog(i18n.t('polymarketBot.logs.approveStart'), 'info');
     try {
       for (const rpc of RPC_POOL) {
         try {
           const p = new ethers.JsonRpcProvider(rpc);
           const w = new ethers.Wallet(privateKey, p);
           const c = new ethers.Contract(POLYGON_ADDRESSES.USDC_E, ERC20_ABI, w);
-          addLog('Sending approval transaction to Polygon...', 'info');
+          addLog(i18n.t('polymarketBot.logs.approveSend'), 'info');
           const tx = await c.approve(POLYGON_ADDRESSES.CTF_EXCHANGE, ethers.MaxUint256);
-          addLog(`Tx submitted: ${tx.hash.slice(0, 18)}...`, 'info');
+          addLog(i18n.t('polymarketBot.logs.txSubmitted', { hash: tx.hash.slice(0, 18) }), 'info');
           const receipt = await tx.wait();
           setAllowance(ethers.MaxUint256);
-          addLog(`Approval confirmed in block ${receipt.blockNumber}`, 'success');
-          toast.success('Exchange access approved!');
+          addLog(i18n.t('polymarketBot.logs.approveConfirmed', { block: String(receipt?.blockNumber ?? '') }), 'success');
+          toast.success(i18n.t('polymarketBot.toastExchangeApproved'));
           break;
         } catch (e: any) {
           if (e.code === 'INSUFFICIENT_FUNDS') {
-            addLog('Insufficient POL for gas fees', 'error');
-            toast.error('Need POL for gas fees');
+            addLog(i18n.t('polymarketBot.logs.insufficientPol'), 'error');
+            toast.error(i18n.t('polymarketBot.toastNeedPolGas'));
             break;
           }
         }
       }
     } catch (e: any) {
-      addLog(`Approval failed: ${e.message}`, 'error');
-      toast.error('Approval transaction failed');
+      addLog(i18n.t('polymarketBot.logs.approveError', { msg: e.message }), 'error');
+      toast.error(i18n.t('polymarketBot.toastApprovalFailed'));
     }
     setIsApproving(false);
   };
@@ -532,7 +562,7 @@ const PolymarketBotDetailInner: React.FC = () => {
     setLogs([]);
     setIsRunning(false);
     if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
-    toast.info('Wallet disconnected');
+    toast.info(i18n.t('polymarketBot.toastWalletDisconnected'));
   };
 
   const toggleTradingMode = async () => {
@@ -540,29 +570,31 @@ const PolymarketBotDetailInner: React.FC = () => {
     setIsPaperMode(n);
     paperTradingService.setMode(n);
     await paperTradingService.saveSettings({ is_paper_mode: n });
-    addLog(`Switched to ${n ? '📝 PAPER TRADING' : '💰 LIVE TRADING'} mode`, 'info');
-    toast.success(`${n ? 'Paper' : 'Live'} trading mode enabled`);
+    addLog(n ? i18n.t('polymarketBot.logs.modeSwitchedPaper') : i18n.t('polymarketBot.logs.modeSwitchedLive'), 'info');
+    toast.success(n ? i18n.t('polymarketBot.toastPaperModeOn') : i18n.t('polymarketBot.toastLiveModeOn'));
   };
 
   const toggleBot = () => {
     if (!isRunning) {
       if (!isPaperMode) {
         if (allowance === 0n) {
-          toast.error('Approve USDC.e first to enable live trading');
+          toast.error(i18n.t('polymarketBot.toastApproveUsdcFirst'));
           return;
         }
         if (parseFloat(usdcEBal) < 5) {
-          toast.error('Minimum $5 USDC.e required for live trading');
+          toast.error(i18n.t('polymarketBot.toastMinUsdcLive'));
           return;
         }
       }
       setIsRunning(true);
-      addLog(`HFT Engine Started in ${isPaperMode ? 'PAPER' : 'LIVE'} mode...`, 'success');
-      toast.success(`Bot started - ${isPaperMode ? 'Paper' : 'Live'} trading active`);
+      addLog(i18n.t('polymarketBot.logs.engineStartMode', {
+        mode: isPaperMode ? i18n.t('polymarketBot.logs.engineModePaper') : i18n.t('polymarketBot.logs.engineModeLive'),
+      }), 'success');
+      toast.success(isPaperMode ? i18n.t('polymarketBot.toastBotStartedPaper') : i18n.t('polymarketBot.toastBotStartedLive'));
     } else {
       setIsRunning(false);
-      addLog('Engine halted by operator.', 'warn');
-      toast.info('Bot stopped');
+      addLog(i18n.t('polymarketBot.logs.engineHalted'), 'warn');
+      toast.info(i18n.t('polymarketBot.toastBotStopped'));
     }
   };
 
@@ -575,23 +607,27 @@ const PolymarketBotDetailInner: React.FC = () => {
           <div className="sqi-z">
             <div style={{ paddingTop: 24, paddingBottom: 20 }}>
               <button type="button" className="btn btn-ghost" style={{ marginBottom: 20 }} onClick={() => navigate('/income-streams')}>
-                <ArrowLeft size={13} /> Back
+                <ArrowLeft size={13} /> {t('polymarketBot.back')}
               </button>
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 6 }}>
                 <div style={{ width: 50, height: 50, borderRadius: 15, background: `linear-gradient(135deg,${G},rgba(212,175,55,0.3))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, boxShadow: '0 0 22px rgba(212,175,55,0.4)' }}>⟁</div>
                 <div>
-                  <div style={{ fontSize: 21, fontWeight: 900, letterSpacing: '-0.03em', color: '#fff' }}>Polymarket HFT Bot</div>
-                  <div className="subtitle">AI-Powered Prediction Market Trading</div>
+                  <div style={{ fontSize: 21, fontWeight: 900, letterSpacing: '-0.03em', color: '#fff' }}>{t('polymarketBot.title')}</div>
+                  <div className="subtitle">{t('polymarketBot.subtitle')}</div>
                 </div>
               </div>
             </div>
 
             <div className="gc gc-g" style={{ marginBottom: 16, textAlign: 'center' }}>
-              <span className="p p-g" style={{ marginBottom: 16, display: 'inline-flex' }}>Live Trading · Polygon Mainnet</span>
-              <div className="title" style={{ fontSize: 30, marginBottom: 12 }}>€10 → Financial Freedom</div>
-              <div className="body" style={{ marginBottom: 20 }}>AI scans Polymarket for mispriced markets.<br />3 strategies running simultaneously.</div>
+              <span className="p p-g" style={{ marginBottom: 16, display: 'inline-flex' }}>{t('polymarketBot.liveBadge')}</span>
+              <div className="title" style={{ fontSize: 30, marginBottom: 12 }}>{t('polymarketBot.heroTitle')}</div>
+              <div className="body" style={{ marginBottom: 20 }}>{t('polymarketBot.heroBodyLine1')}<br />{t('polymarketBot.heroBodyLine2')}</div>
               <div className="g3">
-                {[{ v: 'AI', s: 'Gemini Analysis', c: G }, { v: 'Live', s: 'Real Trades', c: GREEN }, { v: 'CLOB', s: 'Order Book', c: CYAN }].map((x, i) => (
+                {[
+                  { v: t('polymarketBot.pillAi'), s: t('polymarketBot.pillAiSub'), c: G },
+                  { v: t('polymarketBot.pillLive'), s: t('polymarketBot.pillLiveSub'), c: GREEN },
+                  { v: t('polymarketBot.pillClob'), s: t('polymarketBot.pillClobSub'), c: CYAN },
+                ].map((x, i) => (
                   <div key={i} className="sb" style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: 17, fontWeight: 900, color: x.c, marginBottom: 4 }}>{x.v}</div>
                     <div className="lbl">{x.s}</div>
@@ -606,11 +642,11 @@ const PolymarketBotDetailInner: React.FC = () => {
                   <Wallet size={16} color={G} />
                 </div>
                 <div>
-                  <div style={{ fontWeight: 800, fontSize: 14, color: '#fff' }}>Connect Your Wallet</div>
-                  <div className="lbl" style={{ marginTop: 2 }}>Polygon Mainnet Private Key</div>
+                  <div style={{ fontWeight: 800, fontSize: 14, color: '#fff' }}>{t('polymarketBot.connectTitle')}</div>
+                  <div className="lbl" style={{ marginTop: 2 }}>{t('polymarketBot.connectSub')}</div>
                 </div>
               </div>
-              <input className="inp" type="password" placeholder="0x... (64-character hex key)" value={importInput} onChange={(e) => setImportInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleImport()} style={{ marginBottom: inputError ? 8 : 14 }} />
+              <input className="inp" type="password" placeholder={t('polymarketBot.keyPlaceholder')} value={importInput} onChange={(e) => setImportInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleImport()} style={{ marginBottom: inputError ? 8 : 14 }} />
               {inputError && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: RED, fontSize: 11, marginBottom: 12 }}>
                   <AlertCircle size={12} />
@@ -618,19 +654,19 @@ const PolymarketBotDetailInner: React.FC = () => {
                 </div>
               )}
               <button type="button" className="btn btn-g" onClick={handleImport}>
-                <Wallet size={14} /> Connect & Initialize Engine
+                <Wallet size={14} /> {t('polymarketBot.connectCta')}
               </button>
               <div style={{ textAlign: 'center', marginTop: 12, fontSize: 10, color: 'rgba(255,255,255,0.28)' }}>
-                🔒 Session-only in this tab; key clears when you close the tab.
+                {t('polymarketBot.sessionNote')}
               </div>
             </div>
 
             <div className="g2">
               {[
-                { icon: <Zap size={15} color={G} />, bg: 'rgba(212,175,55,0.12)', t: 'AI Signals', s: 'Gemini market analysis' },
-                { icon: <Shield size={15} color={GREEN} />, bg: 'rgba(46,204,113,0.12)', t: 'On-Chain', s: 'Real CTF Exchange' },
-                { icon: <Target size={15} color={CYAN} />, bg: 'rgba(34,211,238,0.1)', t: 'Arbitrage', s: 'Mispricing detection' },
-                { icon: <DollarSign size={15} color={AMBER} />, bg: 'rgba(245,158,11,0.1)', t: '€5 Minimum', s: 'Low entry barrier' },
+                { icon: <Zap size={15} color={G} />, bg: 'rgba(212,175,55,0.12)', t: t('polymarketBot.feat1Title'), s: t('polymarketBot.feat1Sub') },
+                { icon: <Shield size={15} color={GREEN} />, bg: 'rgba(46,204,113,0.12)', t: t('polymarketBot.feat2Title'), s: t('polymarketBot.feat2Sub') },
+                { icon: <Target size={15} color={CYAN} />, bg: 'rgba(34,211,238,0.1)', t: t('polymarketBot.feat3Title'), s: t('polymarketBot.feat3Sub') },
+                { icon: <DollarSign size={15} color={AMBER} />, bg: 'rgba(245,158,11,0.1)', t: t('polymarketBot.feat4Title'), s: t('polymarketBot.feat4Sub') },
               ].map((f, i) => (
                 <div key={i} className="feat">
                   <div className="feat-icon" style={{ background: f.bg }}>{f.icon}</div>
@@ -654,7 +690,7 @@ const PolymarketBotDetailInner: React.FC = () => {
 
           <div style={{ paddingTop: 24, paddingBottom: 16 }}>
             <button type="button" className="btn btn-ghost" style={{ marginBottom: 16 }} onClick={() => navigate('/income-streams')}>
-              <ArrowLeft size={13} /> Back
+              <ArrowLeft size={13} /> {t('polymarketBot.back')}
             </button>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
@@ -663,27 +699,27 @@ const PolymarketBotDetailInner: React.FC = () => {
                   <TrendingUp size={20} color={isRunning ? GREEN : G} className={isRunning ? 'running' : ''} />
                 </div>
                 <div>
-                  <div style={{ fontWeight: 900, fontSize: 18, letterSpacing: '-0.02em', color: '#fff' }}>Polymarket HFT Bot</div>
+                  <div style={{ fontWeight: 900, fontSize: 18, letterSpacing: '-0.02em', color: '#fff' }}>{t('polymarketBot.title')}</div>
                   <div className="mono">{address.slice(0, 8)}...{address.slice(-6)}</div>
                 </div>
               </div>
               <span className={`p ${isRunning ? 'p-gr' : 'p-a'}`}>
                 <span className={`dot ${isRunning ? 'dot-g' : 'dot-a'}`} />
-                {isRunning ? (isScanning ? 'Scanning' : 'Running') : 'Stopped'}
+                {isRunning ? (isScanning ? t('polymarketBot.statusScanning') : t('polymarketBot.statusRunning')) : t('polymarketBot.statusStopped')}
               </span>
             </div>
 
             <div className="g3" style={{ marginBottom: 12 }}>
               <div className={`gc ${parseFloat(polBal) > 0.01 ? 'gc-gr' : 'gc-r'}`} style={{ padding: '12px', textAlign: 'center', borderRadius: 16 }}>
-                <div className="lbl" style={{ marginBottom: 4 }}>POL Gas</div>
+                <div className="lbl" style={{ marginBottom: 4 }}>{t('polymarketBot.polGas')}</div>
                 <div style={{ fontFamily: 'monospace', fontWeight: 900, fontSize: 14, color: parseFloat(polBal) > 0.01 ? GREEN : RED }}>{polBal}</div>
               </div>
               <div className="gc gc-c" style={{ padding: '12px', textAlign: 'center', borderRadius: 16 }}>
-                <div className="lbl" style={{ marginBottom: 4, color: CYAN }}>USDC</div>
+                <div className="lbl" style={{ marginBottom: 4, color: CYAN }}>{t('polymarketBot.usdcNative')}</div>
                 <div style={{ fontFamily: 'monospace', fontWeight: 900, fontSize: 14, color: CYAN }}>${usdcNBal}</div>
               </div>
               <div className="gc" style={{ padding: '12px', textAlign: 'center', borderRadius: 16, borderColor: parseFloat(usdcEBal) > 0 ? 'rgba(212,175,55,0.22)' : 'rgba(255,255,255,0.06)' }}>
-                <div className="lbl" style={{ marginBottom: 4 }}>USDC.e</div>
+                <div className="lbl" style={{ marginBottom: 4 }}>{t('polymarketBot.usdcE')}</div>
                 <div style={{ fontFamily: 'monospace', fontWeight: 900, fontSize: 14, color: parseFloat(usdcEBal) > 0 ? G : 'rgba(255,255,255,0.25)' }}>${usdcEBal}</div>
               </div>
             </div>
@@ -703,14 +739,14 @@ const PolymarketBotDetailInner: React.FC = () => {
             </div>
 
             <div className="g3" style={{ marginBottom: 12 }}>
-              <div className="sb"><div className="sb-lbl">Trades</div><div className="sb-val">{totalTrades}</div></div>
-              <div className="sb"><div className="sb-lbl">Markets</div><div className="sb-val">{markets.length}</div></div>
-              <div className="sb"><div className="sb-lbl">Signals</div><div className="sb-val" style={{ color: G }}>{activeSignals.length}</div></div>
+              <div className="sb"><div className="sb-lbl">{t('polymarketBot.lblTrades')}</div><div className="sb-val">{totalTrades}</div></div>
+              <div className="sb"><div className="sb-lbl">{t('polymarketBot.lblMarkets')}</div><div className="sb-val">{markets.length}</div></div>
+              <div className="sb"><div className="sb-lbl">{t('polymarketBot.lblSignals')}</div><div className="sb-val" style={{ color: G }}>{activeSignals.length}</div></div>
             </div>
 
             <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
               <button type="button" className={`btn ${isRunning ? 'btn-r' : 'btn-gr'}`} style={{ flex: 1 }} onClick={toggleBot} disabled={isApproving}>
-                {isRunning ? <><Square size={13} /> Stop Engine</> : <><Play size={13} /> Start Engine</>}
+                {isRunning ? <><Square size={13} /> {t('polymarketBot.stopEngine')}</> : <><Play size={13} /> {t('polymarketBot.startEngine')}</>}
               </button>
               <button type="button" className="btn btn-ghost" onClick={() => performDeepSync()} disabled={isSyncing}>
                 <RefreshCw size={14} className={isSyncing ? 'spinning' : ''} />
@@ -723,14 +759,14 @@ const PolymarketBotDetailInner: React.FC = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <AlertCircle size={18} color={AMBER} />
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 800, fontSize: 13, color: '#fff', marginBottom: 2 }}>CTF Exchange Approval Required</div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>Approve USDC.e to trade on Polymarket</div>
+                    <div style={{ fontWeight: 800, fontSize: 13, color: '#fff', marginBottom: 2 }}>{t('polymarketBot.approveTitle')}</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>{t('polymarketBot.approveSub')}</div>
                   </div>
                   <button type="button" className="btn btn-g" style={{ width: 'auto', padding: '8px 14px' }} onClick={handleApprove} disabled={isApproving || parseFloat(polBal) < 0.01}>
-                    {isApproving ? 'Signing...' : 'Approve'}
+                    {isApproving ? t('polymarketBot.approveSigning') : t('polymarketBot.approveBtn')}
                   </button>
                 </div>
-                {parseFloat(polBal) < 0.01 && <div style={{ fontSize: 11, color: RED, marginTop: 8 }}>⚠ Need POL for gas fees</div>}
+                {parseFloat(polBal) < 0.01 && <div style={{ fontSize: 11, color: RED, marginTop: 8 }}>{t('polymarketBot.needPolGas')}</div>}
               </div>
             )}
 
@@ -739,8 +775,8 @@ const PolymarketBotDetailInner: React.FC = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <DollarSign size={18} color="rgba(255,255,255,0.25)" />
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: 13, color: '#fff', marginBottom: 2 }}>No Trading Funds</div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>Deposit USDC.e to start live trading. Paper mode works without funds.</div>
+                    <div style={{ fontWeight: 800, fontSize: 13, color: '#fff', marginBottom: 2 }}>{t('polymarketBot.noFundsTitle')}</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{t('polymarketBot.noFundsSub')}</div>
                   </div>
                 </div>
               </div>
@@ -748,7 +784,7 @@ const PolymarketBotDetailInner: React.FC = () => {
           </div>
 
           <div className="tabs" style={{ marginBottom: 16 }}>
-            {[{ k: 'dashboard', l: '⬡ Terminal' }, { k: 'signals', l: '◈ Signals' }, { k: 'settings', l: '⚙ Settings' }].map((tab) => (
+            {[{ k: 'dashboard', l: t('polymarketBot.tabTerminal') }, { k: 'signals', l: t('polymarketBot.tabSignals') }, { k: 'settings', l: t('polymarketBot.tabSettings') }].map((tab) => (
               <button key={tab.k} type="button" className={`tab ${activeTab === tab.k ? 'on' : ''}`} onClick={() => setActiveTab(tab.k)}>{tab.l}</button>
             ))}
           </div>
@@ -758,17 +794,17 @@ const PolymarketBotDetailInner: React.FC = () => {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span className={`dot ${isRunning ? 'dot-g' : 'dot-a'}`} />
-                  <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.25em', color: isRunning ? GREEN : 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Execution Feed</span>
+                  <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.25em', color: isRunning ? GREEN : 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>{t('polymarketBot.executionFeed')}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>
-                  <Clock size={11} /> {lastSync}
+                  <Clock size={11} /> {lastSync || t('polymarketBot.lastSyncNever')}
                 </div>
               </div>
               <div className="term">
                 {logs.length === 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'rgba(255,255,255,0.25)' }}>
                     <Activity size={26} style={{ marginBottom: 10, opacity: 0.4 }} />
-                    <div>Awaiting Mainnet Activity...</div>
+                    <div>{t('polymarketBot.awaitingActivity')}</div>
                   </div>
                 ) : (
                   logs.map((log) => (
@@ -788,21 +824,23 @@ const PolymarketBotDetailInner: React.FC = () => {
               {activeSignals.length === 0 ? (
                 <div className="gc" style={{ textAlign: 'center', padding: 40 }}>
                   <BarChart3 size={34} style={{ margin: '0 auto 12px', color: 'rgba(255,255,255,0.2)' }} />
-                  <div style={{ color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>No active signals</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>Start the engine to begin scanning</div>
+                  <div style={{ color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>{t('polymarketBot.signalsEmptyTitle')}</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>{t('polymarketBot.signalsEmptySub')}</div>
                 </div>
               ) : (
                 activeSignals.map((s, i) => (
                   <div key={i} className="sig">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                      <span className={`p ${s.direction === 'buy' ? 'p-gr' : 'p-r'}`}>{s.direction.toUpperCase()} {s.outcome}</span>
-                      <span style={{ fontSize: 12, fontFamily: 'monospace', color: G, fontWeight: 800 }}>{s.confidence}% conf</span>
+                      <span className={`p ${s.direction === 'buy' ? 'p-gr' : 'p-r'}`}>
+                        {(s.direction === 'buy' ? t('polymarketBot.buy') : t('polymarketBot.sell'))} {s.outcome}
+                      </span>
+                      <span style={{ fontSize: 12, fontFamily: 'monospace', color: G, fontWeight: 800 }}>{t('polymarketBot.signalConf', { pct: s.confidence })}</span>
                     </div>
                     <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginBottom: 10 }}>{s.reason}</div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>
-                      <span>Entry: {(s.currentPrice * 100).toFixed(1)}%</span>
-                      <span>Target: {(s.targetPrice * 100).toFixed(1)}%</span>
-                      <span style={{ color: G }}>Size: ${s.suggestedSize.toFixed(0)}</span>
+                      <span>{t('polymarketBot.signalEntry')} {(s.currentPrice * 100).toFixed(1)}%</span>
+                      <span>{t('polymarketBot.signalTarget')} {(s.targetPrice * 100).toFixed(1)}%</span>
+                      <span style={{ color: G }}>{t('polymarketBot.signalSize')} ${s.suggestedSize.toFixed(0)}</span>
                     </div>
                   </div>
                 ))
@@ -815,16 +853,16 @@ const PolymarketBotDetailInner: React.FC = () => {
               <div className={`gc ${isPaperMode ? 'gc-a' : 'gc-gr'}`}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: 14, color: '#fff', marginBottom: 4 }}>{isPaperMode ? '📝 Paper Trading' : '💰 Live Trading'}</div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>{isPaperMode ? 'Simulated — no real money at risk' : 'Real trades with your USDC.e balance'}</div>
+                    <div style={{ fontWeight: 800, fontSize: 14, color: '#fff', marginBottom: 4 }}>{isPaperMode ? t('polymarketBot.settingsPaperTitle') : t('polymarketBot.settingsLiveTitle')}</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>{isPaperMode ? t('polymarketBot.settingsPaperSub') : t('polymarketBot.settingsLiveSub')}</div>
                   </div>
                   <button type="button" className={`btn ${isPaperMode ? 'btn-g' : 'btn-r'}`} style={{ width: 'auto', padding: '8px 14px' }} onClick={toggleTradingMode} disabled={isRunning}>
-                    {isPaperMode ? 'Go Live' : 'Go Paper'}
+                    {isPaperMode ? t('polymarketBot.goLive') : t('polymarketBot.goPaper')}
                   </button>
                 </div>
                 {isPaperMode && (
                   <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                    <span style={{ color: 'rgba(255,255,255,0.5)' }}>Paper Balance</span>
+                    <span style={{ color: 'rgba(255,255,255,0.5)' }}>{t('polymarketBot.paperBalanceLabel')}</span>
                     <span style={{ fontWeight: 900, color: AMBER }}>$1,000.00</span>
                   </div>
                 )}
@@ -832,26 +870,26 @@ const PolymarketBotDetailInner: React.FC = () => {
 
               <div className="gc">
                 <div style={{ marginBottom: 14 }}>
-                  <div className="lbl" style={{ marginBottom: 6 }}>Connected Wallet</div>
+                  <div className="lbl" style={{ marginBottom: 6 }}>{t('polymarketBot.connectedWallet')}</div>
                   <div style={{ fontFamily: 'monospace', fontSize: 10, color: G, wordBreak: 'break-all' }}>{address}</div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)' }}>CTF Exchange</span>
+                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)' }}>{t('polymarketBot.ctfExchange')}</span>
                   <span className={`p ${allowance > 0n ? 'p-gr' : 'p-r'}`}>
-                    {allowance > 0n ? <><CheckCircle size={10} /> Approved</> : <><AlertCircle size={10} /> Pending</>}
+                    {allowance > 0n ? <><CheckCircle size={10} /> {t('polymarketBot.approved')}</> : <><AlertCircle size={10} /> {t('polymarketBot.pending')}</>}
                   </span>
                 </div>
 
                 {parseFloat(usdcNBal) > 0.01 && parseFloat(usdcEBal) < 5 && (
                   <div className="gc gc-a" style={{ marginBottom: 14, padding: 12 }}>
-                    <div style={{ fontSize: 11, fontWeight: 800, color: AMBER, marginBottom: 8 }}>Swap USDC → USDC.e for trading</div>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: AMBER, marginBottom: 8 }}>{t('polymarketBot.swapHintTitle')}</div>
                     <button type="button" className="btn btn-ghost" style={{ fontSize: 10 }} onClick={() => window.open(`https://app.uniswap.org/#/swap?inputCurrency=${POLYGON_ADDRESSES.USDC_NATIVE}&outputCurrency=${POLYGON_ADDRESSES.USDC_E}&chain=polygon`, '_blank')}>
-                      <ExternalLink size={12} /> Swap on Uniswap
+                      <ExternalLink size={12} /> {t('polymarketBot.swapUniswapCta')}
                     </button>
                   </div>
                 )}
 
-                <button type="button" className="btn btn-r" onClick={clearVault}><Trash2 size={13} /> Disconnect Wallet</button>
+                <button type="button" className="btn btn-r" onClick={clearVault}><Trash2 size={13} /> {t('polymarketBot.disconnectWallet')}</button>
               </div>
             </div>
           )}
@@ -861,9 +899,9 @@ const PolymarketBotDetailInner: React.FC = () => {
           <div className="statusbar-inner">
             <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span className={`dot ${isRunning ? 'dot-g' : 'dot-a'}`} />
-              {isRunning ? (isPaperMode ? '📝 Paper Trading' : '💰 Live Trading') : 'Engine Ready'}
+              {isRunning ? (isPaperMode ? t('polymarketBot.statusPaperShort') : t('polymarketBot.statusLiveShort')) : t('polymarketBot.engineReady')}
             </span>
-            <span style={{ color: G }}>{isPaperMode ? 'PAPER' : 'LIVE'} · CLOB v2</span>
+            <span style={{ color: G }}>{isPaperMode ? t('polymarketBot.modeLinePaper') : t('polymarketBot.modeLineLive')} · {t('polymarketBot.clobVersion')}</span>
             <span>v5.1.0</span>
           </div>
         </div>
@@ -872,30 +910,40 @@ const PolymarketBotDetailInner: React.FC = () => {
   );
 };
 
+const PolymarketBotErrorFallback: React.FC<{ error: Error; reset: () => void }> = ({
+  error,
+  reset,
+}) => {
+  const { t } = useTranslation();
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-[#050505] text-white">
+      <AlertCircle className="w-12 h-12 text-amber-500 mb-4" />
+      <h2 className="text-lg font-semibold mb-2 text-[#D4AF37]">{t('polymarketBot.errorTitle')}</h2>
+      <p className="text-sm text-white/60 text-center mb-6 max-w-md break-words">{error.message}</p>
+      <div className="flex flex-col sm:flex-row gap-2">
+        <button
+          type="button"
+          onClick={reset}
+          className="rounded-2xl px-6 py-3 font-bold text-[#050505] bg-[#D4AF37] hover:opacity-90"
+        >
+          {t('polymarketBot.tryAgain')}
+        </button>
+        <button
+          type="button"
+          onClick={() => window.location.assign('/income-streams')}
+          className="rounded-2xl px-6 py-3 font-bold border border-white/20 text-white/90 hover:bg-white/10"
+        >
+          {t('polymarketBot.backIncomeStreams')}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const PolymarketBotDetail: React.FC = () => (
   <ErrorBoundary
     fallbackRender={(error, _info, reset) => (
-      <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-[#050505] text-white">
-        <AlertCircle className="w-12 h-12 text-amber-500 mb-4" />
-        <h2 className="text-lg font-semibold mb-2 text-[#D4AF37]">Polymarket engine error</h2>
-        <p className="text-sm text-white/60 text-center mb-6 max-w-md break-words">{error.message}</p>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <button
-            type="button"
-            onClick={reset}
-            className="rounded-2xl px-6 py-3 font-bold text-[#050505] bg-[#D4AF37] hover:opacity-90"
-          >
-            Try again
-          </button>
-          <button
-            type="button"
-            onClick={() => window.location.assign('/income-streams')}
-            className="rounded-2xl px-6 py-3 font-bold border border-white/20 text-white/90 hover:bg-white/10"
-          >
-            Back to income streams
-          </button>
-        </div>
-      </div>
+      <PolymarketBotErrorFallback error={error} reset={reset} />
     )}
   >
     <PolymarketBotDetailInner />
