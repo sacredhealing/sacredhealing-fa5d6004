@@ -1,4 +1,5 @@
 import type { Message } from './types';
+import { supabase } from '@/integrations/supabase/client';
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/quantum-apothecary-chat`;
 
@@ -38,11 +39,22 @@ export async function streamChatWithSQI(
   if (seekerName?.trim()) body.seekerName = seekerName.trim();
   if (canonicalActivationNames?.trim()) body.canonicalActivationNames = canonicalActivationNames.trim();
 
+  const apikey =
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    import.meta.env.VITE_SUPABASE_ANON_KEY ||
+    '';
+  const { data: sess } = await supabase.auth.getSession();
+  const bearer = sess.session?.access_token || apikey;
+  if (!bearer) {
+    throw new Error('Not signed in and no Supabase anon key configured.');
+  }
+
   const resp = await fetch(CHAT_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      Authorization: `Bearer ${bearer}`,
+      ...(apikey ? { apikey } : {}),
     },
     body: JSON.stringify(body),
   });
@@ -50,7 +62,10 @@ export async function streamChatWithSQI(
   if (!resp.ok || !resp.body) {
     if (resp.status === 429) throw new Error('Rate limited — please try again shortly.');
     if (resp.status === 402) throw new Error('Credits exhausted — please top up.');
-    throw new Error('Failed to start stream');
+    const errSnippet = await resp.text().catch(() => '');
+    throw new Error(
+      errSnippet ? `Chat connect failed (${resp.status}): ${errSnippet.slice(0, 160)}` : `Failed to start stream (${resp.status})`,
+    );
   }
 
   const reader  = resp.body.getReader();

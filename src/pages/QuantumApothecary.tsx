@@ -464,40 +464,56 @@ function QuantumApothecaryInner() {
     const todayPlanet = PLANETARY_DATA[now.getDay()].planet;
     const todayHerb = PLANETARY_DATA[now.getDay()].herb;
 
-    const nadiScanUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nadi-scan`;
-    const { data: authData } = await supabase.auth.getSession();
-    const anonOrPublishable =
-      import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-      import.meta.env.VITE_SUPABASE_ANON_KEY ||
-      '';
-    const scanBearer = authData.session?.access_token || anonOrPublishable;
-
     try {
-      if (!scanBearer) {
-        throw new Error('Missing Supabase key (VITE_SUPABASE_PUBLISHABLE_KEY or VITE_SUPABASE_ANON_KEY).');
+      if (!import.meta.env.VITE_SUPABASE_URL) {
+        throw new Error('App misconfigured: VITE_SUPABASE_URL is missing.');
       }
-      const scanResp = await fetch(nadiScanUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${scanBearer}`,
-          ...(anonOrPublishable ? { apikey: anonOrPublishable } : {}),
+      const publishableOrAnon =
+        import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+        import.meta.env.VITE_SUPABASE_ANON_KEY ||
+        '';
+      if (!publishableOrAnon) {
+        throw new Error('App misconfigured: VITE_SUPABASE_PUBLISHABLE_KEY (or ANON) is missing.');
+      }
+
+      // Use client invoke — sets URL, apikey, and session JWT like every other edge call in the app.
+      const { data: scanPayload, error: scanError } = await supabase.functions.invoke<Record<string, unknown>>(
+        'nadi-scan',
+        {
+          body: {
+            imageBase64: capturedBase64,
+            imageMimeType: 'image/jpeg',
+            userId: user?.id ?? null,
+            planetaryAlign: todayPlanet,
+            herbOfToday: todayHerb,
+          },
         },
-        body: JSON.stringify({
-          imageBase64: capturedBase64,
-          imageMimeType: 'image/jpeg',
-          userId: user?.id ?? null,
-          planetaryAlign: todayPlanet,
-          herbOfToday: todayHerb,
-        }),
-      });
+      );
 
-      if (!scanResp.ok) {
-        const errText = await scanResp.text().catch(() => '');
-        throw new Error(`Scan API error: ${scanResp.status} ${errText.slice(0, 160)}`);
+      if (scanError) {
+        let msg = scanError.message || 'Nadi scan request failed';
+        const ctx = (scanError as { context?: Response }).context;
+        if (ctx && typeof ctx.text === 'function') {
+          try {
+            const raw = await ctx.text();
+            if (raw) {
+              try {
+                const errBody = JSON.parse(raw) as { error?: string };
+                if (errBody?.error) msg = errBody.error;
+                else msg = `${msg}: ${raw.slice(0, 160)}`;
+              } catch {
+                msg = `${msg}: ${raw.slice(0, 160)}`;
+              }
+            }
+          } catch { /* keep msg */ }
+        }
+        throw new Error(msg);
       }
 
-      const parsed = await scanResp.json() as Record<string, unknown>;
+      const parsed = scanPayload;
+      if (!parsed || typeof parsed !== 'object') {
+        throw new Error('Empty response from nadi-scan.');
+      }
       if (parsed.error) {
         throw new Error(String(parsed.error));
       }
