@@ -31,6 +31,10 @@ import { vajraSkyBreakerEn } from './locales/vajraSkyBreaker';
 import { vajraSkyBreakerSvPartial } from './locales/vajraSkyBreaker/vajraSkyBreakerSvPartial';
 import { vajraSkyBreakerEsPartial } from './locales/vajraSkyBreaker/vajraSkyBreakerEsPartial';
 import { vajraSkyBreakerNoPartial } from './locales/vajraSkyBreaker/vajraSkyBreakerNoPartial';
+import { wealthBeaconEn } from './locales/wealthBeacon';
+import { wealthBeaconSvPartial } from './locales/wealthBeacon/wealthBeaconSvPartial';
+import { wealthBeaconEsPartial } from './locales/wealthBeacon/wealthBeaconEsPartial';
+import { wealthBeaconNoPartial } from './locales/wealthBeacon/wealthBeaconNoPartial';
 
 const enRoot = deepMergeLocales(en as Record<string, unknown>, {
   templeHome: templeHomeEn,
@@ -39,6 +43,7 @@ const enRoot = deepMergeLocales(en as Record<string, unknown>, {
   sriYantraShield: sriYantraShieldEn,
   digitalNadi: digitalNadiEn,
   vajraSkyBreaker: vajraSkyBreakerEn,
+  wealthBeacon: wealthBeaconEn,
 } as Record<string, unknown>);
 const svMerged = deepMergeLocales(
   deepMergeLocales(enRoot, sv as Record<string, unknown>),
@@ -66,6 +71,10 @@ const svMerged = deepMergeLocales(
     vajraSkyBreaker: deepMergeLocales(
       vajraSkyBreakerEn as Record<string, unknown>,
       vajraSkyBreakerSvPartial as Record<string, unknown>
+    ),
+    wealthBeacon: deepMergeLocales(
+      wealthBeaconEn as Record<string, unknown>,
+      wealthBeaconSvPartial as Record<string, unknown>
     ),
   } as Record<string, unknown>
 );
@@ -96,6 +105,10 @@ const esMerged = deepMergeLocales(
       vajraSkyBreakerEn as Record<string, unknown>,
       vajraSkyBreakerEsPartial as Record<string, unknown>
     ),
+    wealthBeacon: deepMergeLocales(
+      wealthBeaconEn as Record<string, unknown>,
+      wealthBeaconEsPartial as Record<string, unknown>
+    ),
   } as Record<string, unknown>
 );
 const noMerged = deepMergeLocales(
@@ -124,6 +137,10 @@ const noMerged = deepMergeLocales(
     vajraSkyBreaker: deepMergeLocales(
       vajraSkyBreakerEn as Record<string, unknown>,
       vajraSkyBreakerNoPartial as Record<string, unknown>
+    ),
+    wealthBeacon: deepMergeLocales(
+      wealthBeaconEn as Record<string, unknown>,
+      wealthBeaconNoPartial as Record<string, unknown>
     ),
   } as Record<string, unknown>
 );
