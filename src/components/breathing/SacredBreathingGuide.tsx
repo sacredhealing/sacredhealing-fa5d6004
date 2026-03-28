@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Pause, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface SacredBreathingGuideProps {
   inhaleSeconds?: number;
@@ -52,6 +53,7 @@ export const SacredBreathingGuide: React.FC<SacredBreathingGuideProps> = ({
   onComplete,
   autoStart = false,
 }) => {
+  const { t } = useTranslation();
   const [isActive, setIsActive] = useState(autoStart);
   const [phase, setPhase] = useState<'inhale' | 'exhale' | 'idle'>('idle');
   const [progress, setProgress] = useState(0);
@@ -189,7 +191,7 @@ export const SacredBreathingGuide: React.FC<SacredBreathingGuideProps> = ({
           animate={{ opacity: 1 }}
           className="text-sm text-muted-foreground mb-4"
         >
-          Cycle {cycleCount + 1}
+          {t('breathing.sacredCycle', { count: cycleCount + 1 })}
         </motion.p>
       )}
 
@@ -201,17 +203,17 @@ export const SacredBreathingGuide: React.FC<SacredBreathingGuideProps> = ({
             className="bg-[#D4AF37] text-black font-semibold hover:bg-[#c4a030] animate-kriya-commence-pulse"
           >
             <Play className="w-4 h-4 mr-2" />
-            Begin the Kriya
+            {t('breathing.sacredBegin', 'Begin the Kriya')}
           </Button>
         ) : (
           <>
             <Button onClick={stopBreathing} variant="outline" size="sm">
               <Pause className="w-4 h-4 mr-2" />
-              Pause
+              {t('breathing.sacredPause', 'Pause')}
             </Button>
             <Button onClick={resetBreathing} variant="ghost" size="sm">
               <RotateCcw className="w-4 h-4 mr-2" />
-              Reset
+              {t('breathing.sacredReset', 'Reset')}
             </Button>
           </>
         )}
@@ -230,7 +232,7 @@ export const SacredBreathingGuide: React.FC<SacredBreathingGuideProps> = ({
             className="py-2.5 px-6 rounded-full border border-amber-500/30 text-amber-200/90 text-sm font-serif hover:bg-amber-500/10 hover:border-amber-500/50 transition-colors"
             style={{ fontFamily: 'Cinzel, DM Serif Display, Georgia, serif' }}
           >
-            Seal the Practice
+            {t('breathing.sacredSeal', 'Seal the Practice')}
           </button>
         </motion.div>
       )}
