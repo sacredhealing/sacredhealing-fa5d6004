@@ -104,7 +104,7 @@ function renderInline(text: string, variant: InlineVariant = 'body'): React.Reac
       if (variant === 'heading') {
         return <strong key={i} style={{ color: 'inherit', fontWeight: 700 }}>{inner}</strong>;
       }
-      return <strong key={i} style={{ color: 'rgba(255,255,255,0.98)', fontWeight: 700 }}>{inner}</strong>;
+      return <strong key={i} style={{ color: '#D4AF37', fontWeight: 700 }}>{inner}</strong>;
     }
     if (p.startsWith('*') && p.endsWith('*')) {
       return <em key={i} style={{ fontStyle: 'italic', color: variant === 'heading' ? 'inherit' : 'rgba(255,255,255,0.78)' }}>{p.slice(1, -1)}</em>;
@@ -119,7 +119,7 @@ function renderInline(text: string, variant: InlineVariant = 'body'): React.Reac
         );
       }
       return (
-        <code key={i} style={{ background: 'rgba(255,255,255,0.08)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: 'rgba(255,255,255,0.88)' }}>
+        <code key={i} style={{ background: 'rgba(212,175,55,0.12)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: '#D4AF37' }}>
           {inner}
         </code>
       );
