@@ -24,15 +24,13 @@ import {
 import { useMembership } from '@/hooks/useMembership';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
+import i18n from '@/i18n/setup';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
 interface Pillar {
   id: string;
   num: string;
-  name: string;
-  desc: string;
-  statusOn: string;
   icon: string;
   energyType: 'scalar' | 'orgone' | 'shungite' | 'solfeggio';
   hz: number;
@@ -43,9 +41,6 @@ interface Pillar {
 
 interface Activation {
   id: string;
-  name: string;
-  description: string;
-  protocol: string;
   hz: number;
   binauralHz: number;
   oscType: OscillatorType;
@@ -62,9 +57,6 @@ const PILLARS: Pillar[] = [
   {
     id: 'anchor',
     num: '01',
-    name: 'Earth Anchor',
-    desc: 'Shilajit & Uva Ursi — Gravitational extraction. Pull atmospheric dross downward.',
-    statusOn: 'Gravitational Extraction — Active',
     icon: '⬇',
     energyType: 'scalar',
     hz: 7.83,
@@ -75,9 +67,6 @@ const PILLARS: Pillar[] = [
   {
     id: 'sovereignty',
     num: '02',
-    name: 'Crystalline Sovereignty',
-    desc: 'Shungite & Valor — EMF-Zero Zone. Artificial clouds lose structural cohesion.',
-    statusOn: 'Radius Secured · Cohesion Lost',
     icon: '⬡',
     energyType: 'shungite',
     hz: 432,
@@ -88,9 +77,6 @@ const PILLARS: Pillar[] = [
   {
     id: 'ignition',
     num: '03',
-    name: 'Solar Ignition',
-    desc: 'Sativa Spark & San Pedro — Light-Fire thermal vaporisation. Sky → Transparent Gold.',
-    statusOn: 'Light-Fire Engaged · Sky Igniting',
     icon: '☀',
     energyType: 'orgone',
     hz: 963,
@@ -101,9 +87,6 @@ const PILLARS: Pillar[] = [
   {
     id: 'detox',
     num: '04',
-    name: 'Shadow Detox',
-    desc: 'Charcoal & Myrrh — Scours jet-trail soot & heavy metal particulates to earth.',
-    statusOn: 'Transmutation In Progress',
     icon: '↓',
     energyType: 'scalar',
     hz: 528,
@@ -113,34 +96,23 @@ const PILLARS: Pillar[] = [
   },
 ];
 
-// ─── Sky Phases ────────────────────────────────────────────────────────────
-
-const SKY_PHASES = [
-  { label: 'Scalar Field Initialising',              pct: 0   },
-  { label: 'Shungite Shield — EMF-Zero Zone Active', pct: 12  },
-  { label: 'Orgone Torus Field Spinning',            pct: 25  },
-  { label: 'Standing Wave Nodes Established',        pct: 38  },
-  { label: 'Chemtrail Metal Grid Dissolving',        pct: 52  },
-  { label: 'Atmospheric Antenna Array — Offline',    pct: 65  },
-  { label: 'Solar Download Channel Opening',         pct: 78  },
-  { label: 'Blue Hole Vortex Anchored',              pct: 90  },
-  { label: '☀ Sun Restored — Channel Clear',        pct: 100 },
-];
+/** Threshold percentages for sky phase index (labels in i18n: vajraSkyBreaker.skyPhases.0 … .8) */
+const SKY_PHASE_PCTS = [0, 12, 25, 38, 52, 65, 78, 90, 100];
 
 // ─── Activations ───────────────────────────────────────────────────────────
 
 const ACTIVATIONS: Activation[] = [
-  { id:'earth-anchor', name:'Earth Anchor', description:'Shilajit & Uva Ursi: Gravitational density pulls atmospheric dross to earth.', protocol:'SCALAR · 7.83 Hz standing wave. Phase-inverted twin oscillators create gravitational nodes.', hz:7.83, binauralHz:4, oscType:'sine', vibePattern:[100,50,100,50,400], energyType:'scalar', Icon:Layers, color:'#D4AF37', glowColor:'rgba(212,175,55,0.4)' },
-  { id:'crystalline-sovereignty', name:'Crystalline Sovereignty', description:'Shungite C60: 10-mile EMF-Zero Zone. Artificial clouds lose structural cohesion.', protocol:'SHUNGITE · 40Hz sub-bass ground pulse + bandpass EMF absorption + 7.83Hz Schumann carrier.', hz:432, binauralHz:8, oscType:'sine', vibePattern:[200,100,200,100,200], energyType:'shungite', Icon:Shield, color:'#22D3EE', glowColor:'rgba(34,211,238,0.4)' },
-  { id:'solar-ignition', name:'Solar Ignition', description:'San Pedro Resonance: Light-Fire thermal vaporisation. Sky becomes transparent gold.', protocol:'ORGONE · Torus rotation at 963 Hz. L-ear rises, R-ear descends — spinning solar field.', hz:963, binauralHz:12, oscType:'triangle', vibePattern:[50,30,50,30,50,30,300], energyType:'orgone', Icon:Sun, color:'#F59E0B', glowColor:'rgba(245,158,11,0.4)' },
-  { id:'shadow-detox', name:'Shadow Detox', description:'Charcoal & Myrrh: Scours jet-trail soot. Ba · Sr · Al ionic decoupling.', protocol:'SCALAR · 528 Hz Miracle Tone. Phase nodes decouple heavy metal ionic bonds.', hz:528, binauralHz:6, oscType:'sine', vibePattern:[300,100,100,100,100], energyType:'scalar', Icon:Wind, color:'#94A3B8', glowColor:'rgba(148,163,184,0.3)' },
-  { id:'nadi-sync', name:'Nadi Sync', description:'Pingala-Nadi alignment: Solar channel opens for atmospheric co-creation.', protocol:'SOLFEGGIO · 741 Hz binaural. Right hemisphere solar nadi activation.', hz:741, binauralHz:10, oscType:'sine', vibePattern:[80,40,80,40,80], energyType:'solfeggio', Icon:Activity, color:'#EF4444', glowColor:'rgba(239,68,68,0.4)' },
-  { id:'aetheric-code', name:'Aetheric Code', description:'Tulsi Aura Sanitizer: Dissolves chemical toxin resonance in atmosphere.', protocol:'SHUNGITE · 396 Hz absorption field. Neutralises chemical resonance signatures.', hz:396, binauralHz:7, oscType:'sine', vibePattern:[150,60,150], energyType:'shungite', Icon:Sparkles, color:'#10B981', glowColor:'rgba(16,185,129,0.4)' },
-  { id:'vortex-command', name:'Vortex Command', description:'Orgonite Vortex: DOR converted to POR. Dead field becomes living field.', protocol:'ORGONE · 852 Hz torus spin. Full DOR→POR inversion through rotating stereo field.', hz:852, binauralHz:9, oscType:'sine', vibePattern:[200,80,200,80,400], energyType:'orgone', Icon:Compass, color:'#8B5CF6', glowColor:'rgba(139,92,246,0.4)' },
-  { id:'photon-rain', name:'Photon Rain', description:'Galactic Central Sun download: Photonic light codes through cleared atmosphere.', protocol:'SCALAR · 1111 Hz standing wave. Opens solar download channel via harmonic nodes.', hz:1111, binauralHz:14, oscType:'triangle', vibePattern:[50,50,50,50,50,50,200], energyType:'scalar', Icon:Flame, color:'#FCD34D', glowColor:'rgba(252,211,77,0.4)' },
-  { id:'hydro-purge', name:'Hydro-Purge', description:'Masaru Emoto water memory: Heavy metals lose adhesion to atmospheric moisture.', protocol:'ORGONE · 285 Hz torus rotation. Restructures hydrogen bonds in water vapour.', hz:285, binauralHz:5, oscType:'sine', vibePattern:[120,80,120], energyType:'orgone', Icon:Droplets, color:'#60A5FA', glowColor:'rgba(96,165,250,0.4)' },
-  { id:'akasha-eye', name:'Akasha Eye', description:'Third Eye scan: Locates and targets atmospheric antenna arrays for neutralisation.', protocol:'SOLFEGGIO · 936 Hz ajna activation. Remote scan of density pockets and arrays.', hz:936, binauralHz:11, oscType:'triangle', vibePattern:[60,40,60,40,300], energyType:'solfeggio', Icon:Eye, color:'#A78BFA', glowColor:'rgba(167,139,250,0.4)' },
-  { id:'quantum-nucleus', name:'Quantum Nucleus', description:'DNA activation: Cellular scalar coherence restores biological solar reception.', protocol:'SCALAR · 528 Hz Miracle Tone. Recalibrates DNA antenna to Sun frequency.', hz:528, binauralHz:6, oscType:'sine', vibePattern:[100,60,100,60,500], energyType:'scalar', Icon:Atom, color:'#34D399', glowColor:'rgba(52,211,153,0.4)' },
+  { id:'earth-anchor', hz:7.83, binauralHz:4, oscType:'sine', vibePattern:[100,50,100,50,400], energyType:'scalar', Icon:Layers, color:'#D4AF37', glowColor:'rgba(212,175,55,0.4)' },
+  { id:'crystalline-sovereignty', hz:432, binauralHz:8, oscType:'sine', vibePattern:[200,100,200,100,200], energyType:'shungite', Icon:Shield, color:'#22D3EE', glowColor:'rgba(34,211,238,0.4)' },
+  { id:'solar-ignition', hz:963, binauralHz:12, oscType:'triangle', vibePattern:[50,30,50,30,50,30,300], energyType:'orgone', Icon:Sun, color:'#F59E0B', glowColor:'rgba(245,158,11,0.4)' },
+  { id:'shadow-detox', hz:528, binauralHz:6, oscType:'sine', vibePattern:[300,100,100,100,100], energyType:'scalar', Icon:Wind, color:'#94A3B8', glowColor:'rgba(148,163,184,0.3)' },
+  { id:'nadi-sync', hz:741, binauralHz:10, oscType:'sine', vibePattern:[80,40,80,40,80], energyType:'solfeggio', Icon:Activity, color:'#EF4444', glowColor:'rgba(239,68,68,0.4)' },
+  { id:'aetheric-code', hz:396, binauralHz:7, oscType:'sine', vibePattern:[150,60,150], energyType:'shungite', Icon:Sparkles, color:'#10B981', glowColor:'rgba(16,185,129,0.4)' },
+  { id:'vortex-command', hz:852, binauralHz:9, oscType:'sine', vibePattern:[200,80,200,80,400], energyType:'orgone', Icon:Compass, color:'#8B5CF6', glowColor:'rgba(139,92,246,0.4)' },
+  { id:'photon-rain', hz:1111, binauralHz:14, oscType:'triangle', vibePattern:[50,50,50,50,50,50,200], energyType:'scalar', Icon:Flame, color:'#FCD34D', glowColor:'rgba(252,211,77,0.4)' },
+  { id:'hydro-purge', hz:285, binauralHz:5, oscType:'sine', vibePattern:[120,80,120], energyType:'orgone', Icon:Droplets, color:'#60A5FA', glowColor:'rgba(96,165,250,0.4)' },
+  { id:'akasha-eye', hz:936, binauralHz:11, oscType:'triangle', vibePattern:[60,40,60,40,300], energyType:'solfeggio', Icon:Eye, color:'#A78BFA', glowColor:'rgba(167,139,250,0.4)' },
+  { id:'quantum-nucleus', hz:528, binauralHz:6, oscType:'sine', vibePattern:[100,60,100,60,500], energyType:'scalar', Icon:Atom, color:'#34D399', glowColor:'rgba(52,211,153,0.4)' },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -309,6 +281,7 @@ function getSovereignRegion(): string {
 // ═══════════════════════════════════════════════════════════════════════
 
 function RadarMap({ active, sovereigntyOn, pulseIntensity }: { active: boolean; sovereigntyOn: boolean; pulseIntensity: number }) {
+  const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frameRef  = useRef(0);
 
@@ -382,14 +355,14 @@ function RadarMap({ active, sovereigntyOn, pulseIntensity }: { active: boolean; 
       ctx.fillStyle   = 'rgba(212,175,55,0.5)';
       ctx.font        = '700 8px Rajdhani, sans-serif';
       ctx.textAlign   = 'center';
-      ctx.fillText('BROADCAST ORIGIN', cx, cy + 18);
+      ctx.fillText(t('vajraSkyBreaker.radarBroadcastOrigin'), cx, cy + 18);
 
       frameRef.current++;
       animId = requestAnimationFrame(draw);
     };
     draw();
     return () => cancelAnimationFrame(animId);
-  }, [active, sovereigntyOn]);
+  }, [active, sovereigntyOn, t]);
 
   return (
     <canvas
@@ -461,7 +434,14 @@ export default function VajraSkyBreaker() {
           if (pillar.energyType === 'shungite') emitShungiteShield(pillar.hz, 4);
         }
         vibrate(pillar.id === 'sovereignty' ? [200, 100, 200, 100, 200] : [100, 50, 100]);
-        addLog(`◈ ${pillar.name} — ${pillar.energyType.toUpperCase()} · ${pillar.hz} Hz`, 'gold');
+        addLog(
+          i18n.t('vajraSkyBreaker.log.pillarOn', {
+            name: i18n.t(`vajraSkyBreaker.pillars.${pillar.id}.name`),
+            energy: i18n.t(`vajraSkyBreaker.energyShort.${pillar.energyType}`),
+            hz: pillar.hz,
+          }),
+          'gold'
+        );
       }
       return next;
     });
@@ -482,20 +462,22 @@ export default function VajraSkyBreaker() {
     vibrate([100, 50, 100, 50, 100, 50, 100, 50, 800, 200, 800]);
     if (audioEnabled) emitFullSequence();
 
-    addLog('◈ FULL SEQUENCE INITIATED — Scalar · Orgone · Shungite', 'gold');
-    addLog('By the power of the Anahata-Sahasrara bridge…', 'gold');
+    addLog(i18n.t('vajraSkyBreaker.log.fullSequence'), 'gold');
+    addLog(i18n.t('vajraSkyBreaker.log.anahata'), 'gold');
 
     const logTimings: [number, string, string][] = [
-      [300,  '⬡ Shungite EMF Shield — 10-mile zone establishing…', 'cyan'],
-      [1200, '⟐ Scalar standing wave — phase-inverted nodes forming', 'gold'],
-      [2400, '◉ Orgone torus — L-ear rising, R-ear descending, field rotating', 'gold'],
-      [3200, '⬡ 40Hz sub-bass — felt in hands. Earth grounding pulse active', ''],
-      [4200, '⟐ Chemtrail metal grid — Ba · Sr · Al ionic bonds dissolving', ''],
-      [5500, '⬡ Atmospheric antenna array — structural coherence failing', 'cyan'],
-      [6500, '◉ Blue Hole vortex — anchoring. Solar channel opening…', 'gold'],
-      [7500, '⟐ DOR → POR conversion complete. Living field established', 'gold'],
+      [300,  'timing0', 'cyan'],
+      [1200, 'timing1', 'gold'],
+      [2400, 'timing2', 'gold'],
+      [3200, 'timing3', ''],
+      [4200, 'timing4', ''],
+      [5500, 'timing5', 'cyan'],
+      [6500, 'timing6', 'gold'],
+      [7500, 'timing7', 'gold'],
     ];
-    logTimings.forEach(([delay, msg, cls]) => setTimeout(() => addLog(msg, cls), delay));
+    logTimings.forEach(([delay, key, cls]) =>
+      setTimeout(() => addLog(i18n.t(`vajraSkyBreaker.log.${key}`), cls), delay)
+    );
 
     // Activate pillars visually in sequence
     const pillarSeq: (keyof typeof pillarState)[] = ['anchor', 'sovereignty', 'ignition', 'detox'];
@@ -509,13 +491,13 @@ export default function VajraSkyBreaker() {
       setSunReveal(intensity / 100);
       setThermalLevel(intensity);
 
-      const nextIdx     = SKY_PHASES.findIndex(p => p.pct > intensity);
-      const newPhaseIdx = nextIdx === -1 ? SKY_PHASES.length - 1 : nextIdx - 1;
+      const nextIdx     = SKY_PHASE_PCTS.findIndex(p => p > intensity);
+      const newPhaseIdx = nextIdx === -1 ? SKY_PHASE_PCTS.length - 1 : nextIdx - 1;
       if (newPhaseIdx !== phaseIdx && newPhaseIdx >= 0) {
         phaseIdx = newPhaseIdx;
         setSkyPhaseIdx(newPhaseIdx);
-        const isLast = newPhaseIdx === SKY_PHASES.length - 1;
-        addLog(`◈ ${SKY_PHASES[newPhaseIdx].label}`, isLast ? 'gold' : '');
+        const isLast = newPhaseIdx === SKY_PHASE_PCTS.length - 1;
+        addLog(`◈ ${i18n.t(`vajraSkyBreaker.skyPhases.${newPhaseIdx}`)}`, isLast ? 'gold' : '');
         vibrate([60, 30, 60]);
       }
 
@@ -524,14 +506,14 @@ export default function VajraSkyBreaker() {
         const ts = new Date().toLocaleTimeString();
         setLastTime(ts);
         setMissionDone(true);
-        addLog('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'gold');
-        addLog('RADIUS SECURED. COHESION LOST.', 'gold');
-        addLog('TRANSMUTATION IN PROGRESS.', 'gold');
-        addLog('SOLAR DOWNLOAD CHANNEL — OPEN.', 'gold');
-        addLog('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'gold');
+        addLog(i18n.t('vajraSkyBreaker.log.separator'), 'gold');
+        addLog(i18n.t('vajraSkyBreaker.log.radiusSecured'), 'gold');
+        addLog(i18n.t('vajraSkyBreaker.log.transmutation'), 'gold');
+        addLog(i18n.t('vajraSkyBreaker.log.solarChannel'), 'gold');
+        addLog(i18n.t('vajraSkyBreaker.log.separator'), 'gold');
         vibrate([200, 100, 200, 100, 800]);
         if (audioEnabled) { emitScalarWave(963, 3); emitSolfeggio(963, 12, 3, 0.09); }
-        pushNotification('◈ Sky Cleared', 'RADIUS SECURED. Solar channel open. 72-hour field active.');
+        pushNotification(i18n.t('vajraSkyBreaker.notifyTitle'), i18n.t('vajraSkyBreaker.notifyBody'));
         window.setTimeout(() => { setIsActivating(false); setPulseIntensity(0); }, 2000);
       }
     }, 50);
@@ -542,15 +524,31 @@ export default function VajraSkyBreaker() {
     const isOpen = activeRemedy === remedy.id;
     setActiveRemedy(isOpen ? null : remedy.id);
     if (!isOpen) {
-      if (audioEnabled) { fireEngine(remedy, 5); addLog(`◈ ${remedy.name} — ${remedy.hz} Hz ${remedy.energyType.toUpperCase()} fired`, 'gold'); }
+      if (audioEnabled) {
+        fireEngine(remedy, 5);
+        addLog(
+          i18n.t('vajraSkyBreaker.log.remedyFired', {
+            name: i18n.t(`vajraSkyBreaker.activations.${remedy.id}.name`),
+            hz: remedy.hz,
+            energy: i18n.t(`vajraSkyBreaker.energyShort.${remedy.energyType}`),
+          }),
+          'gold'
+        );
+      }
       vibrate(remedy.vibePattern);
     }
   }, [activeRemedy, audioEnabled, addLog]);
 
-  const currentPhase = SKY_PHASES[skyPhaseIdx];
-  const thermalLabel = thermalLevel < 20 ? 'Synthetic Grey' : thermalLevel < 50 ? 'Cloud Breaking' : thermalLevel < 80 ? 'Veil Thinning' : '☀ Transparent Gold';
+  const phaseBannerLabel = isActivating
+    ? t(`vajraSkyBreaker.skyPhases.${String(skyPhaseIdx)}`)
+    : t('vajraSkyBreaker.phaseMonitoring');
+  const thermalLabel =
+    thermalLevel < 20 ? t('vajraSkyBreaker.thermalStates.grey')
+    : thermalLevel < 50 ? t('vajraSkyBreaker.thermalStates.breaking')
+    : thermalLevel < 80 ? t('vajraSkyBreaker.thermalStates.veil')
+    : t('vajraSkyBreaker.thermalStates.gold');
   const energyColors: Record<string, string> = { scalar:'#D4AF37', orgone:'#8B5CF6', shungite:'#22D3EE', solfeggio:'#10B981' };
-  const energyBadge:  Record<string, string> = { scalar:'⟐ SCALAR', orgone:'◉ ORGONE', shungite:'⬡ SHUNGITE', solfeggio:'♪ SOLFEGGIO' };
+  const regionLabel = t(`vajraSkyBreaker.regions.${region}`);
 
   return (
     <div
@@ -619,11 +617,11 @@ export default function VajraSkyBreaker() {
         {/* Scalar nodes */}
         {pillarState.anchor && (
           <div className="absolute inset-0 pointer-events-none">
-            {[0.18, 0.32, 0.5, 0.68, 0.82].map((t, i) => (
+            {[0.18, 0.32, 0.5, 0.68, 0.82].map((pos, i) => (
               <motion.div
                 key={i}
                 className="absolute rounded-full"
-                style={{ width: 5, height: 5, left: `${t * 100}%`, top: '55%', background: '#D4AF37', boxShadow: '0 0 6px rgba(212,175,55,0.5)' }}
+                style={{ width: 5, height: 5, left: `${pos * 100}%`, top: '55%', background: '#D4AF37', boxShadow: '0 0 6px rgba(212,175,55,0.5)' }}
                 animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.4, 0.8] }}
                 transition={{ duration: 2, repeat: Infinity, delay: i * 0.18 }}
               />
@@ -676,7 +674,7 @@ export default function VajraSkyBreaker() {
               color:          'rgba(212,175,55,0.65)',
             }}
           >
-            {isActivating ? currentPhase.label : 'Atmospheric Monitoring Active'}
+            {phaseBannerLabel}
           </span>
         </div>
       </div>
@@ -693,7 +691,7 @@ export default function VajraSkyBreaker() {
 
         <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
           <span style={{ display: 'block', fontSize: 8, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.32)', marginBottom: 8, fontFamily: "'Rajdhani', sans-serif" }}>
-            ◈ Akasha-Neural Archive v5.0 · Scalar · Orgone · Shungite
+            {t('vajraSkyBreaker.archiveLine')}
           </span>
           <h1
             style={{
@@ -707,10 +705,10 @@ export default function VajraSkyBreaker() {
               lineHeight:     1,
             }}
           >
-            VAJRA·SKY·BREAKER
+            {t('vajraSkyBreaker.title')}
           </h1>
           <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontStyle: 'italic', fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 1.5, marginBottom: 12 }}>
-            Sovereign Atmospheric Clearance Station<br />No GPS · No Tracking · Pure Energy
+            {t('vajraSkyBreaker.taglineLine1')}<br />{t('vajraSkyBreaker.taglineLine2')}
           </p>
 
           {/* Chips row */}
@@ -718,7 +716,7 @@ export default function VajraSkyBreaker() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 20, border: '1px solid rgba(212,175,55,0.25)', background: 'rgba(212,175,55,0.06)', padding: '5px 12px' }}>
               <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#D4AF37', animation: 'blink 1.5s infinite' }} />
               <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 8, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.8)' }}>
-                {region} · Sovereign
+                {t('vajraSkyBreaker.regionSovereign', { region: regionLabel })}
               </span>
             </div>
             <button
@@ -734,7 +732,7 @@ export default function VajraSkyBreaker() {
                 color: audioEnabled ? 'rgba(34,211,238,0.85)' : 'rgba(255,255,255,0.3)',
               }}
             >
-              {audioEnabled ? '⚡ Energies ON' : '— Energies OFF'}
+              {audioEnabled ? t('vajraSkyBreaker.audioOn') : t('vajraSkyBreaker.audioOff')}
             </button>
           </div>
 
@@ -742,7 +740,7 @@ export default function VajraSkyBreaker() {
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid rgba(212,175,55,0.22)', borderRadius: 20, padding: '5px 14px', marginTop: 10 }}>
               <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#D4AF37', animation: 'pulse 2s infinite' }} />
               <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 9, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.75)' }}>
-                Last Transmission: {lastTime}
+                {t('vajraSkyBreaker.lastTransmission', { time: lastTime })}
               </span>
             </div>
           )}
@@ -762,7 +760,7 @@ export default function VajraSkyBreaker() {
           }}
         >
           <div style={{ position: 'absolute', top: 12, left: 16, fontFamily: "'Rajdhani',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', zIndex: 2 }}>
-            ◈ Clearance Radius
+            {t('vajraSkyBreaker.clearanceRadius')}
           </div>
           <div
             style={{
@@ -772,11 +770,11 @@ export default function VajraSkyBreaker() {
               fontWeight: 700,
             }}
           >
-            10 mi · {pillarState.sovereignty ? 'SECURED' : 'Standby'}
+            {pillarState.sovereignty ? t('vajraSkyBreaker.tenMiSecured') : t('vajraSkyBreaker.tenMiStandby')}
           </div>
           {pillarState.sovereignty && (
             <div style={{ position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)', fontFamily: "'Orbitron',monospace", fontSize: 7, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: '#22D3EE', zIndex: 2 }}>
-              COHESION LOST
+              {t('vajraSkyBreaker.cohesionLost')}
             </div>
           )}
           <RadarMap
@@ -790,7 +788,7 @@ export default function VajraSkyBreaker() {
       {/* ── FOUR PILLAR CARDS ────────────────────────────────────── */}
       <div className="mx-auto max-w-[480px] px-4 mb-3">
         <span style={{ display: 'block', fontFamily: "'Rajdhani',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.22)', marginBottom: 10 }}>
-          ◈ Four Pillars of Terrestrial Transmutation
+          {t('vajraSkyBreaker.fourPillarsTitle')}
         </span>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           {PILLARS.map(pillar => {
@@ -832,17 +830,17 @@ export default function VajraSkyBreaker() {
                 </div>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, border: `1px solid ${pillar.color}50`, borderRadius: 6, padding: '2px 6px', marginBottom: 6, width: 'fit-content', position: 'relative' }}>
                   <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.28em', textTransform: 'uppercase', color: pillar.color, opacity: 0.8 }}>
-                    {pillar.energyType === 'scalar' ? '⟐ SCALAR' : pillar.energyType === 'orgone' ? '◉ ORGONE' : '⬡ SHUNGITE'}
+                    {t(`vajraSkyBreaker.energyTypeBadge.${pillar.energyType}`)}
                   </span>
                 </div>
                 <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 8, fontWeight: 800, letterSpacing: '0.32em', textTransform: 'uppercase', color: pillar.color, marginBottom: 6, opacity: 0.9, position: 'relative' }}>
-                  {pillar.name}
+                  {t(`vajraSkyBreaker.pillars.${pillar.id}.name`)}
                 </div>
                 <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: 11, color: 'rgba(255,255,255,0.42)', lineHeight: 1.4, flex: 1, position: 'relative' }}>
-                  {pillar.desc}
+                  {t(`vajraSkyBreaker.pillars.${pillar.id}.desc`)}
                 </div>
                 <div style={{ marginTop: 10, fontFamily: "'Rajdhani',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.28em', textTransform: 'uppercase', color: isOn ? pillar.color : 'rgba(255,255,255,0.2)', transition: 'color 0.3s', position: 'relative' }}>
-                  {isOn ? `◈ ${pillar.statusOn}` : '◦ Dormant'}
+                  {isOn ? `◈ ${t(`vajraSkyBreaker.pillars.${pillar.id}.statusOn`)}` : t('vajraSkyBreaker.statusDormant')}
                 </div>
                 <div style={{ position: 'absolute', bottom: 12, right: 14, fontSize: 24, opacity: isOn ? 0.45 : 0.12, transition: 'all 0.4s', transform: isOn ? 'scale(1.2)' : 'scale(1)', color: pillar.color }}>
                   {pillar.icon}
@@ -866,7 +864,7 @@ export default function VajraSkyBreaker() {
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 8, fontWeight: 800, letterSpacing: '0.45em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)' }}>
-              ◈ Solar Ignition · Thermal Level
+              {t('vajraSkyBreaker.thermalTitle')}
             </span>
             <span style={{ fontFamily: "'Orbitron',monospace", fontSize: 14, fontWeight: 700, color: `rgba(245,158,11,${0.3 + thermalLevel / 100 * 0.7})`, textShadow: thermalLevel > 50 ? '0 0 12px rgba(245,158,11,0.5)' : 'none' }}>
               {Math.round(thermalLevel * 9.63)}°
@@ -880,8 +878,8 @@ export default function VajraSkyBreaker() {
           {/* Gradient bar */}
           <div style={{ height: 8, borderRadius: 4, background: 'linear-gradient(90deg, #3a3a4a 0%, #888 25%, #D4AF37 60%, #FF8C00 80%, #FFD700 100%)', marginBottom: 6, opacity: 0.7 }} />
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.22)' }}>Synthetic Grey</span>
-            <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.22)' }}>Cloud Break</span>
+            <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.22)' }}>{t('vajraSkyBreaker.thermalSyntheticGrey')}</span>
+            <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.22)' }}>{t('vajraSkyBreaker.thermalCloudBreak')}</span>
             <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase', color: `rgba(245,158,11,${0.3 + thermalLevel/100*0.7})` }}>
               {thermalLabel} ☀
             </span>
@@ -904,7 +902,7 @@ export default function VajraSkyBreaker() {
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
             <div>
-              <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', marginBottom: 6 }}>System Status</div>
+              <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', marginBottom: 6 }}>{t('vajraSkyBreaker.systemStatus')}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <motion.div
                   style={{ width: 8, height: 8, borderRadius: '50%', background: isActivating ? '#D4AF37' : '#22c55e' }}
@@ -912,12 +910,12 @@ export default function VajraSkyBreaker() {
                   transition={{ duration: 0.7, repeat: Infinity }}
                 />
                 <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.65)' }}>
-                  {isActivating ? 'All Three Energies Broadcasting' : 'Ready for Sync'}
+                  {isActivating ? t('vajraSkyBreaker.statusBroadcasting') : t('vajraSkyBreaker.statusReady')}
                 </span>
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>Clearance</div>
+              <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>{t('vajraSkyBreaker.clearanceLabel')}</div>
               <div style={{ fontFamily: "'Orbitron',monospace", fontSize: 24, fontWeight: 900, color: '#D4AF37', textShadow: isActivating ? '0 0 20px rgba(212,175,55,0.7)' : 'none' }}>
                 {isActivating ? `${pulseIntensity}%` : '—'}
               </div>
@@ -928,7 +926,7 @@ export default function VajraSkyBreaker() {
           {isActivating && (
             <div style={{ marginBottom: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)' }}>Sky Clearance</span>
+                <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)' }}>{t('vajraSkyBreaker.skyClearance')}</span>
                 <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 7, fontWeight: 800, color: 'rgba(212,175,55,0.75)' }}>{pulseIntensity}%</span>
               </div>
               <div style={{ height: 3, background: 'rgba(255,255,255,0.05)', borderRadius: 2, overflow: 'hidden' }}>
@@ -989,7 +987,7 @@ export default function VajraSkyBreaker() {
                 cursor: 'pointer',
               }}
             >
-              {tab === 'remedies' ? '◈ Activations' : '◈ Broadcast Log'}
+              {tab === 'remedies' ? t('vajraSkyBreaker.tabActivations') : t('vajraSkyBreaker.tabLog')}
             </button>
           ))}
         </div>
@@ -999,7 +997,7 @@ export default function VajraSkyBreaker() {
       {activeTab === 'remedies' && (
         <div className="mx-auto max-w-[480px] px-4 mb-3">
           <span style={{ display: 'block', fontFamily: "'Rajdhani',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.22)', marginBottom: 10 }}>
-            Bhakti-Algorithm · {ACTIVATIONS.length} Energy Activations
+            {t('vajraSkyBreaker.activationsIntro', { count: ACTIVATIONS.length })}
           </span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {ACTIVATIONS.map(remedy => {
@@ -1032,10 +1030,10 @@ export default function VajraSkyBreaker() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 2 }}>
                       <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 10, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', color: isActive ? remedy.color : 'rgba(255,255,255,0.8)' }}>
-                        {remedy.name}
+                        {t(`vajraSkyBreaker.activations.${remedy.id}.name`)}
                       </span>
                       <span style={{ border: `1px solid ${ec}30`, background: ec + '15', color: ec + 'cc', borderRadius: 6, padding: '1px 5px', fontFamily: "'Rajdhani',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
-                        {energyBadge[remedy.energyType]}
+                        {t(`vajraSkyBreaker.energyTypeBadge.${remedy.energyType}`)}
                       </span>
                       <span style={{ border: `1px solid ${remedy.color}28`, background: remedy.color + '12', color: remedy.color + 'aa', borderRadius: 6, padding: '1px 5px', fontFamily: "'Orbitron',monospace", fontSize: 7, fontWeight: 700 }}>
                         {remedy.hz} Hz
@@ -1050,14 +1048,17 @@ export default function VajraSkyBreaker() {
                           transition={{ duration: 0.2 }}
                         >
                           <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: 11, color: 'rgba(255,255,255,0.45)', lineHeight: 1.4, marginTop: 6 }}>
-                            {remedy.description}
+                            {t(`vajraSkyBreaker.activations.${remedy.id}.description`)}
                           </p>
                           <div style={{ marginTop: 6, border: `1px solid ${ec}28`, background: ec + '07', borderRadius: 10, padding: '5px 8px', fontFamily: "'Rajdhani',sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: ec + 'aa' }}>
-                            {remedy.protocol}
+                            {t(`vajraSkyBreaker.activations.${remedy.id}.protocol`)}
                           </div>
                           {audioEnabled && (
                             <div style={{ marginTop: 4, fontFamily: "'Rajdhani',sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: ec + '80' }}>
-                              ◈ {remedy.hz} Hz {remedy.energyType} engine fired
+                              {t('vajraSkyBreaker.log.engineFired', {
+                                hz: remedy.hz,
+                                energy: t(`vajraSkyBreaker.energyShort.${remedy.energyType}`),
+                              })}
                             </div>
                           )}
                         </motion.div>
@@ -1076,7 +1077,7 @@ export default function VajraSkyBreaker() {
       {activeTab === 'log' && (
         <div className="mx-auto max-w-[480px] px-4 mb-3">
           <span style={{ display: 'block', fontFamily: "'Rajdhani',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.22)', marginBottom: 10 }}>
-            Sovereign Weather Log · Real-Time Transmission
+            {t('vajraSkyBreaker.logPanelTitle')}
           </span>
           <div
             ref={logRef}
@@ -1084,7 +1085,7 @@ export default function VajraSkyBreaker() {
           >
             {broadcastLog.length === 0 ? (
               <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 9, letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.18)' }}>Awaiting Activation…</span>
+                <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 9, letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.18)' }}>{t('vajraSkyBreaker.awaitingActivation')}</span>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -1119,9 +1120,9 @@ export default function VajraSkyBreaker() {
       {/* ── FIELD BAR ─────────────────────────────────────────────── */}
       <div className="mx-auto max-w-[480px] px-4 mb-4">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.012)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 14, padding: '8px 14px' }}>
-          <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)' }}>Field Origin</span>
+          <span style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)' }}>{t('vajraSkyBreaker.fieldOrigin')}</span>
           <span style={{ fontFamily: "'Orbitron',monospace", fontSize: 8, fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.45)' }}>
-            {region} · Sovereign · No Tracking
+            {t('vajraSkyBreaker.fieldOriginValue', { region: regionLabel })}
           </span>
         </div>
       </div>
@@ -1161,10 +1162,10 @@ export default function VajraSkyBreaker() {
             {missionDone ? '☀' : isActivating ? '◈' : '⚡'}
           </span>
           {missionDone
-            ? 'Mission Complete — 72Hr Active'
+            ? t('vajraSkyBreaker.missionComplete')
             : isActivating
-            ? `Clearing Sky — ${pulseIntensity}%`
-            : 'Initiate · Scalar · Orgone · Shungite'}
+            ? t('vajraSkyBreaker.clearingSky', { pct: pulseIntensity })
+            : t('vajraSkyBreaker.initiateButton')}
         </motion.button>
       </div>
 
@@ -1176,7 +1177,7 @@ export default function VajraSkyBreaker() {
           <Activity style={{ width: 14, height: 14 }} />
         </div>
         <p style={{ marginTop: 8, fontFamily: "'Rajdhani',sans-serif", fontSize: 9, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.15)' }}>
-          Scalar · Orgone · Shungite · Sovereign · SQI 2050
+          {t('vajraSkyBreaker.footerLine')}
         </p>
       </footer>
 

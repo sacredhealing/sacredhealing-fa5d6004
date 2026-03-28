@@ -27,6 +27,10 @@ import { digitalNadiEn } from './locales/digitalNadi';
 import { digitalNadiSvPartial } from './locales/digitalNadi/digitalNadiSvPartial';
 import { digitalNadiEsPartial } from './locales/digitalNadi/digitalNadiEsPartial';
 import { digitalNadiNoPartial } from './locales/digitalNadi/digitalNadiNoPartial';
+import { vajraSkyBreakerEn } from './locales/vajraSkyBreaker';
+import { vajraSkyBreakerSvPartial } from './locales/vajraSkyBreaker/vajraSkyBreakerSvPartial';
+import { vajraSkyBreakerEsPartial } from './locales/vajraSkyBreaker/vajraSkyBreakerEsPartial';
+import { vajraSkyBreakerNoPartial } from './locales/vajraSkyBreaker/vajraSkyBreakerNoPartial';
 
 const enRoot = deepMergeLocales(en as Record<string, unknown>, {
   templeHome: templeHomeEn,
@@ -34,6 +38,7 @@ const enRoot = deepMergeLocales(en as Record<string, unknown>, {
   vayuProtocol: vayuProtocolEn,
   sriYantraShield: sriYantraShieldEn,
   digitalNadi: digitalNadiEn,
+  vajraSkyBreaker: vajraSkyBreakerEn,
 } as Record<string, unknown>);
 const svMerged = deepMergeLocales(
   deepMergeLocales(enRoot, sv as Record<string, unknown>),
@@ -57,6 +62,10 @@ const svMerged = deepMergeLocales(
     digitalNadi: deepMergeLocales(
       digitalNadiEn as Record<string, unknown>,
       digitalNadiSvPartial as Record<string, unknown>
+    ),
+    vajraSkyBreaker: deepMergeLocales(
+      vajraSkyBreakerEn as Record<string, unknown>,
+      vajraSkyBreakerSvPartial as Record<string, unknown>
     ),
   } as Record<string, unknown>
 );
@@ -83,6 +92,10 @@ const esMerged = deepMergeLocales(
       digitalNadiEn as Record<string, unknown>,
       digitalNadiEsPartial as Record<string, unknown>
     ),
+    vajraSkyBreaker: deepMergeLocales(
+      vajraSkyBreakerEn as Record<string, unknown>,
+      vajraSkyBreakerEsPartial as Record<string, unknown>
+    ),
   } as Record<string, unknown>
 );
 const noMerged = deepMergeLocales(
@@ -107,6 +120,10 @@ const noMerged = deepMergeLocales(
     digitalNadi: deepMergeLocales(
       digitalNadiEn as Record<string, unknown>,
       digitalNadiNoPartial as Record<string, unknown>
+    ),
+    vajraSkyBreaker: deepMergeLocales(
+      vajraSkyBreakerEn as Record<string, unknown>,
+      vajraSkyBreakerNoPartial as Record<string, unknown>
     ),
   } as Record<string, unknown>
 );

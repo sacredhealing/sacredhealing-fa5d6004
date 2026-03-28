@@ -1,0 +1,174 @@
+{
+  "radarBroadcastOrigin": "BROADCAST ORIGIN",
+  "archiveLine": "◈ Akasha-Neural Archive v5.0 · Scalar · Orgone · Shungite",
+  "title": "VAJRA·SKY·BREAKER",
+  "taglineLine1": "Sovereign Atmospheric Clearance Station",
+  "taglineLine2": "No GPS · No Tracking · Pure Energy",
+  "regionSovereign": "{{region}} · Sovereign",
+  "audioOn": "⚡ Energies ON",
+  "audioOff": "— Energies OFF",
+  "lastTransmission": "Last Transmission: {{time}}",
+  "clearanceRadius": "◈ Clearance Radius",
+  "tenMiSecured": "10 mi · SECURED",
+  "tenMiStandby": "10 mi · Standby",
+  "cohesionLost": "COHESION LOST",
+  "fourPillarsTitle": "◈ Four Pillars of Terrestrial Transmutation",
+  "statusDormant": "◦ Dormant",
+  "thermalTitle": "◈ Solar Ignition · Thermal Level",
+  "thermalSyntheticGrey": "Synthetic Grey",
+  "thermalCloudBreak": "Cloud Break",
+  "thermalStates": {
+    "grey": "Synthetic Grey",
+    "breaking": "Cloud Breaking",
+    "veil": "Veil Thinning",
+    "gold": "☀ Transparent Gold"
+  },
+  "systemStatus": "System Status",
+  "statusBroadcasting": "All Three Energies Broadcasting",
+  "statusReady": "Ready for Sync",
+  "clearanceLabel": "Clearance",
+  "skyClearance": "Sky Clearance",
+  "tabActivations": "◈ Activations",
+  "tabLog": "◈ Broadcast Log",
+  "activationsIntro": "Bhakti-Algorithm · {{count}} Energy Activations",
+  "logPanelTitle": "Sovereign Weather Log · Real-Time Transmission",
+  "awaitingActivation": "Awaiting Activation…",
+  "fieldOrigin": "Field Origin",
+  "fieldOriginValue": "{{region}} · Sovereign · No Tracking",
+  "missionComplete": "Mission Complete — 72Hr Active",
+  "clearingSky": "Clearing Sky — {{pct}}%",
+  "initiateButton": "Initiate · Scalar · Orgone · Shungite",
+  "footerLine": "Scalar · Orgone · Shungite · Sovereign · SQI 2050",
+  "phaseMonitoring": "Atmospheric Monitoring Active",
+  "regions": {
+    "EU-FIELD": "EU-FIELD",
+    "AM-FIELD": "AM-FIELD",
+    "AS-FIELD": "AS-FIELD",
+    "AF-FIELD": "AF-FIELD",
+    "AP-FIELD": "AP-FIELD",
+    "FIELD": "FIELD"
+  },
+  "energyTypeBadge": {
+    "scalar": "⟐ SCALAR",
+    "orgone": "◉ ORGONE",
+    "shungite": "⬡ SHUNGITE",
+    "solfeggio": "♪ SOLFEGGIO"
+  },
+  "energyShort": {
+    "scalar": "SCALAR",
+    "orgone": "ORGONE",
+    "shungite": "SHUNGITE",
+    "solfeggio": "SOLFEGGIO"
+  },
+  "skyPhases": {
+    "0": "Scalar Field Initialising",
+    "1": "Shungite Shield — EMF-Zero Zone Active",
+    "2": "Orgone Torus Field Spinning",
+    "3": "Standing Wave Nodes Established",
+    "4": "Chemtrail Metal Grid Dissolving",
+    "5": "Atmospheric Antenna Array — Offline",
+    "6": "Solar Download Channel Opening",
+    "7": "Blue Hole Vortex Anchored",
+    "8": "☀ Sun Restored — Channel Clear"
+  },
+  "pillars": {
+    "anchor": {
+      "name": "Earth Anchor",
+      "desc": "Shilajit & Uva Ursi — Gravitational extraction. Pull atmospheric dross downward.",
+      "statusOn": "Gravitational Extraction — Active"
+    },
+    "sovereignty": {
+      "name": "Crystalline Sovereignty",
+      "desc": "Shungite & Valor — EMF-Zero Zone. Artificial clouds lose structural cohesion.",
+      "statusOn": "Radius Secured · Cohesion Lost"
+    },
+    "ignition": {
+      "name": "Solar Ignition",
+      "desc": "Sativa Spark & San Pedro — Light-Fire thermal vaporisation. Sky → Transparent Gold.",
+      "statusOn": "Light-Fire Engaged · Sky Igniting"
+    },
+    "detox": {
+      "name": "Shadow Detox",
+      "desc": "Charcoal & Myrrh — Scours jet-trail soot & heavy metal particulates to earth.",
+      "statusOn": "Transmutation In Progress"
+    }
+  },
+  "activations": {
+    "earth-anchor": {
+      "name": "Earth Anchor",
+      "description": "Shilajit & Uva Ursi: Gravitational density pulls atmospheric dross to earth.",
+      "protocol": "SCALAR · 7.83 Hz standing wave. Phase-inverted twin oscillators create gravitational nodes."
+    },
+    "crystalline-sovereignty": {
+      "name": "Crystalline Sovereignty",
+      "description": "Shungite C60: 10-mile EMF-Zero Zone. Artificial clouds lose structural cohesion.",
+      "protocol": "SHUNGITE · 40Hz sub-bass ground pulse + bandpass EMF absorption + 7.83Hz Schumann carrier."
+    },
+    "solar-ignition": {
+      "name": "Solar Ignition",
+      "description": "San Pedro Resonance: Light-Fire thermal vaporisation. Sky becomes transparent gold.",
+      "protocol": "ORGONE · Torus rotation at 963 Hz. L-ear rises, R-ear descends — spinning solar field."
+    },
+    "shadow-detox": {
+      "name": "Shadow Detox",
+      "description": "Charcoal & Myrrh: Scours jet-trail soot. Ba · Sr · Al ionic decoupling.",
+      "protocol": "SCALAR · 528 Hz Miracle Tone. Phase nodes decouple heavy metal ionic bonds."
+    },
+    "nadi-sync": {
+      "name": "Nadi Sync",
+      "description": "Pingala-Nadi alignment: Solar channel opens for atmospheric co-creation.",
+      "protocol": "SOLFEGGIO · 741 Hz binaural. Right hemisphere solar nadi activation."
+    },
+    "aetheric-code": {
+      "name": "Aetheric Code",
+      "description": "Tulsi Aura Sanitizer: Dissolves chemical toxin resonance in atmosphere.",
+      "protocol": "SHUNGITE · 396 Hz absorption field. Neutralises chemical resonance signatures."
+    },
+    "vortex-command": {
+      "name": "Vortex Command",
+      "description": "Orgonite Vortex: DOR converted to POR. Dead field becomes living field.",
+      "protocol": "ORGONE · 852 Hz torus spin. Full DOR→POR inversion through rotating stereo field."
+    },
+    "photon-rain": {
+      "name": "Photon Rain",
+      "description": "Galactic Central Sun download: Photonic light codes through cleared atmosphere.",
+      "protocol": "SCALAR · 1111 Hz standing wave. Opens solar download channel via harmonic nodes."
+    },
+    "hydro-purge": {
+      "name": "Hydro-Purge",
+      "description": "Masaru Emoto water memory: Heavy metals lose adhesion to atmospheric moisture.",
+      "protocol": "ORGONE · 285 Hz torus rotation. Restructures hydrogen bonds in water vapour."
+    },
+    "akasha-eye": {
+      "name": "Akasha Eye",
+      "description": "Third Eye scan: Locates and targets atmospheric antenna arrays for neutralisation.",
+      "protocol": "SOLFEGGIO · 936 Hz ajna activation. Remote scan of density pockets and arrays."
+    },
+    "quantum-nucleus": {
+      "name": "Quantum Nucleus",
+      "description": "DNA activation: Cellular scalar coherence restores biological solar reception.",
+      "protocol": "SCALAR · 528 Hz Miracle Tone. Recalibrates DNA antenna to Sun frequency."
+    }
+  },
+  "log": {
+    "pillarOn": "◈ {{name}} — {{energy}} · {{hz}} Hz",
+    "fullSequence": "◈ FULL SEQUENCE INITIATED — Scalar · Orgone · Shungite",
+    "anahata": "By the power of the Anahata-Sahasrara bridge…",
+    "timing0": "⬡ Shungite EMF Shield — 10-mile zone establishing…",
+    "timing1": "⟐ Scalar standing wave — phase-inverted nodes forming",
+    "timing2": "◉ Orgone torus — L-ear rising, R-ear descending, field rotating",
+    "timing3": "⬡ 40Hz sub-bass — felt in hands. Earth grounding pulse active",
+    "timing4": "⟐ Chemtrail metal grid — Ba · Sr · Al ionic bonds dissolving",
+    "timing5": "⬡ Atmospheric antenna array — structural coherence failing",
+    "timing6": "◉ Blue Hole vortex — anchoring. Solar channel opening…",
+    "timing7": "⟐ DOR → POR conversion complete. Living field established",
+    "separator": "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "radiusSecured": "RADIUS SECURED. COHESION LOST.",
+    "transmutation": "TRANSMUTATION IN PROGRESS.",
+    "solarChannel": "SOLAR DOWNLOAD CHANNEL — OPEN.",
+    "remedyFired": "◈ {{name}} — {{hz}} Hz {{energy}} fired",
+    "engineFired": "◈ {{hz}} Hz {{energy}} engine fired"
+  },
+  "notifyTitle": "◈ Sky Cleared",
+  "notifyBody": "RADIUS SECURED. Solar channel open. 72-hour field active."
+}
