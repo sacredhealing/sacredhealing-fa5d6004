@@ -15,11 +15,12 @@
  * ████████████████████████████████████████████████████████████████
  */
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sun, Brain, Heart, Leaf, RotateCcw, Moon, Zap, RefreshCw } from 'lucide-react';
 import type { AyurvedaUserProfile, DoshaProfile } from '@/lib/ayurvedaTypes';
 import { getDoshaEmoji } from '@/lib/ayurvedaTypes';
+import { useTranslation } from '@/hooks/useTranslation';
 
 // ── SIDDHA COLOR SYSTEM ────────────────────────────────────────
 const C = {
@@ -54,13 +55,35 @@ const getSiddha = (herb: string) => {
   return SIDDHA_HERBS[key] || { siddhaProperty: 'Sacred Essence', element: 'Ether ☯️', color: '#C4B5FD' };
 };
 
-const RITUAL_PHASES = [
-  { time:'5:00 AM',  label:'Brahma Muhurta', icon:'🌅', phase:'dawn'    },
-  { time:'7:00 AM',  label:'Morning Agni',   icon:'☀️', phase:'morning' },
-  { time:'12:00 PM', label:'Pitta Peak',     icon:'🔥', phase:'midday'  },
-  { time:'6:00 PM',  label:'Sandhya Kala',  icon:'🌇', phase:'evening' },
-  { time:'9:00 PM',  label:'Kapha Rest',     icon:'🌙', phase:'night'   },
+const RITUAL_META = [
+  { time: '5:00 AM', icon: '🌅', phase: 'dawn', labelKey: 'ritualBrahma' as const },
+  { time: '7:00 AM', icon: '☀️', phase: 'morning', labelKey: 'ritualMorning' as const },
+  { time: '12:00 PM', icon: '🔥', phase: 'midday', labelKey: 'ritualMidday' as const },
+  { time: '6:00 PM', icon: '🌇', phase: 'evening', labelKey: 'ritualEvening' as const },
+  { time: '9:00 PM', icon: '🌙', phase: 'night', labelKey: 'ritualNight' as const },
 ];
+
+type AyurvedaDashT = (key: string, fallback?: string) => string;
+
+function getHerbDisplay(herb: string, t: AyurvedaDashT) {
+  const key = herb.toLowerCase().split(' ')[0].replace(/[^a-z]/g, '');
+  const fb = getSiddha(herb);
+  const propK = `ayurvedaDash.herb_${key}_prop`;
+  const elK = `ayurvedaDash.herb_${key}_el`;
+  return {
+    siddhaProperty: t(propK, fb.siddhaProperty),
+    element: t(elK, fb.element),
+    color: fb.color,
+  };
+}
+
+function doshaLabel(primary: string | undefined, t: AyurvedaDashT): string {
+  const k = (primary || '').toLowerCase();
+  if (k === 'vata') return t('ayurvedaDash.dosha_vata', 'Vata');
+  if (k === 'pitta') return t('ayurvedaDash.dosha_pitta', 'Pitta');
+  if (k === 'kapha') return t('ayurvedaDash.dosha_kapha', 'Kapha');
+  return primary || '';
+}
 
 const SANSKRIT_TICKER = '✦ OM NAMAH SHIVAYA ✦ SARVE BHAVANTU SUKHINAH ✦ AROGYA PARAM BHAGYAM ✦ OM SHANTI SHANTI SHANTI ✦ DHANVANTARI NAMOSTUTE ✦ AYUR AROGYA SAUKHYAM ✦ ';
 
@@ -165,14 +188,23 @@ export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
   profile, dosha, dailyGuidance, isLoadingGuidance,
   onRestart, onFetchGuidance, isPremium = false,
 }) => {
+  const { t } = useTranslation();
+  const ritualPhases = useMemo(
+    () =>
+      RITUAL_META.map((r) => ({
+        ...r,
+        label: t(`ayurvedaDash.${r.labelKey}`, ''),
+      })),
+    [t]
+  );
   const [syncing, setSyncing] = useState(false);
 
   useEffect(() => { onFetchGuidance(); }, [onFetchGuidance]);
   const handleSync = () => { setSyncing(true); setTimeout(() => setSyncing(false), 2000); };
   const getRitualItems = (phase: string) => {
     const all = [...dosha.guidelines.diet.map(d => ({ text: d, type: 'diet' })), ...dosha.guidelines.lifestyle.map(l => ({ text: l, type: 'lifestyle' }))];
-    const per = Math.ceil(all.length / RITUAL_PHASES.length);
-    const idx = RITUAL_PHASES.findIndex(r => r.phase === phase);
+    const per = Math.ceil(all.length / ritualPhases.length);
+    const idx = ritualPhases.findIndex(r => r.phase === phase);
     return all.slice(idx * per, (idx + 1) * per);
   };
 
@@ -223,7 +255,8 @@ export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
               <div style={{ flex: 1 }}>
                 <h2 style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.04em', color: 'rgba(255,255,255,0.92)', marginBottom: 6 }}>{profile.name}</h2>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '3px 12px', borderRadius: 999, background: `${C.g(C.saffron, 0.1)}`, border: `1px solid ${C.g(C.saffron, 0.3)}`, fontSize: 9, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: C.saffron }}>
-                  {getDoshaEmoji(dosha.primary)} {dosha.primary} Prakriti
+                  {getDoshaEmoji(dosha.primary)} {doshaLabel(dosha.primary, t)}
+                  {t('ayurvedaDash.prakritiSuffix', ' Prakriti')}
                 </div>
               </div>
               <motion.button
@@ -234,20 +267,20 @@ export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
                 style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 20, background: syncing ? `${C.g(C.gold, 0.12)}` : 'rgba(255,255,255,0.03)', border: `1px solid ${C.g(C.gold, 0.25)}`, color: syncing ? C.gold : 'rgba(255,255,255,0.5)', fontFamily: 'inherit', fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', boxShadow: syncing ? `0 0 20px ${C.g(C.gold, 0.25)}` : 'none' }}
               >
                 <RefreshCw style={{ width: 12, height: 12, animation: syncing ? 'spin 1s linear infinite' : undefined }} />
-                {syncing ? 'Syncing…' : 'Jyotish Sync'}
+                {syncing ? t('ayurvedaDash.jyotishSyncing', 'Syncing…') : t('ayurvedaDash.jyotishSync', 'Jyotish Sync')}
               </motion.button>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'center', gap: 40, padding: '20px 0 24px', flexWrap: 'wrap' }}>
-              <DoshaOrb name="Vata"  value={dosha.vata}  orbColor={C.vata}  glowHex="#60A5FA" delay={0}   />
-              <DoshaOrb name="Pitta" value={dosha.pitta} orbColor={C.pitta} glowHex="#F59E0B" delay={0.18} />
-              <DoshaOrb name="Kapha" value={dosha.kapha} orbColor={C.kapha} glowHex="#10B981" delay={0.36} />
+              <DoshaOrb name={t('ayurvedaDash.dosha_vata', 'Vata')} value={dosha.vata} orbColor={C.vata} glowHex="#60A5FA" delay={0} />
+              <DoshaOrb name={t('ayurvedaDash.dosha_pitta', 'Pitta')} value={dosha.pitta} orbColor={C.pitta} glowHex="#F59E0B" delay={0.18} />
+              <DoshaOrb name={t('ayurvedaDash.dosha_kapha', 'Kapha')} value={dosha.kapha} orbColor={C.kapha} glowHex="#10B981" delay={0.36} />
             </div>
 
             <AnimatePresence>
               {syncing && (
                 <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ textAlign: 'center', color: `${C.saffron}99`, fontSize: 11, fontStyle: 'italic', letterSpacing: '0.15em', marginTop: 4 }}>
-                  ✦ Aligning Dosha frequencies with current planetary transits… ✦
+                  {t('ayurvedaDash.syncBanner', '✦ Aligning Dosha frequencies with current planetary transits… ✦')}
                 </motion.p>
               )}
             </AnimatePresence>
@@ -256,7 +289,7 @@ export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
               onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = 'rgba(212,175,55,0.7)'}
               onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.25)'}
             >
-              <RotateCcw style={{ width: 11, height: 11 }} /> Reset Cosmic Blueprint
+              <RotateCcw style={{ width: 11, height: 11 }} /> {t('ayurvedaDash.resetBlueprint', 'Reset Cosmic Blueprint')}
             </button>
           </>, C.gold, 0,
         )}
@@ -266,7 +299,8 @@ export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} style={{ background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(40px)', border: `1px solid ${C.g(C.indigo, 0.4)}`, borderRadius: 40, padding: '28px', position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: `linear-gradient(90deg,transparent,${C.g(C.indigoL, 0.6)},transparent)` }} />
             <h3 style={{ fontSize: 15, fontWeight: 900, letterSpacing: '-0.03em', color: 'rgba(255,255,255,0.88)', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <Brain style={{ width: 16, height: 16, color: C.indigoL }} /> Personality & Mind
+              <Brain style={{ width: 16, height: 16, color: C.indigoL }} />{' '}
+              {t('ayurvedaDash.personalityMind', 'Personality & Mind')}
             </h3>
             <div style={{ display: 'inline-block', padding: '2px 12px', borderRadius: 999, background: `${C.g(C.indigoL, 0.12)}`, border: `1px solid ${C.g(C.indigoL, 0.3)}`, fontSize: 9, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', color: C.indigoL, marginBottom: 14 }}>
               {dosha.mentalConstitution}
@@ -279,9 +313,11 @@ export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: `linear-gradient(90deg,transparent,${C.g(C.lotus, 0.7)},transparent)` }} />
             <div style={{ position: 'relative', zIndex: 1 }}>
               <h3 style={{ fontSize: 15, fontWeight: 900, color: C.saffron, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                <Heart style={{ width: 16, height: 16, color: C.lotus }} /> The Rishi&apos;s Mirror
+                <Heart style={{ width: 16, height: 16, color: C.lotus }} /> {t('ayurvedaDash.rishisMirror', "The Rishi's Mirror")}
               </h3>
-              <p style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: `${C.lotus}80`, marginBottom: 14 }}>YOUR KARMIC CONSTITUTION</p>
+              <p style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: `${C.lotus}80`, marginBottom: 14 }}>
+                {t('ayurvedaDash.karmicConstitution', 'YOUR KARMIC CONSTITUTION')}
+              </p>
               <p style={{ fontSize: 13, lineHeight: 1.75, color: 'rgba(255,255,255,0.75)', fontStyle: 'italic' }}>&ldquo;{dosha.lifeSituationAdvice}&rdquo;</p>
             </div>
           </motion.div>
@@ -295,7 +331,7 @@ export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
           </div>
           <h3 style={{ fontSize: 17, fontWeight: 900, letterSpacing: '-0.03em', color: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
             <motion.span animate={{ rotate: [0, 20, 0, -20, 0] }} transition={{ duration: 4, repeat: Infinity }}><Moon style={{ width: 17, height: 17, color: C.saffron }} /></motion.span>
-            Daily Guidance
+            {t('ayurvedaDash.dailyGuidance', 'Daily Guidance')}
             <motion.span animate={{ scale: [1, 1.3, 1], opacity: [0.4, 1, 0.4] }} transition={{ duration: 2, repeat: Infinity }}><Sun style={{ width: 15, height: 15, color: C.gold, opacity: 0.5 }} /></motion.span>
           </h3>
           {isLoadingGuidance ? (
@@ -313,13 +349,17 @@ export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} style={{ background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(40px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 40, padding: '28px 32px', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: `linear-gradient(90deg,transparent,${C.g(C.gold, 0.4)},transparent)` }} />
-          <h2 style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.04em', color: 'rgba(255,255,255,0.9)', marginBottom: 3 }}>Sacred Daily Ritual</h2>
-          <p style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: `${C.gold}99`, marginBottom: 28 }}>Integrated Healing Timeline</p>
+          <h2 style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.04em', color: 'rgba(255,255,255,0.9)', marginBottom: 3 }}>
+            {t('ayurvedaDash.sacredRitual', 'Sacred Daily Ritual')}
+          </h2>
+          <p style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: `${C.gold}99`, marginBottom: 28 }}>
+            {t('ayurvedaDash.ritualTimeline', 'Integrated Healing Timeline')}
+          </p>
 
           <div style={{ position: 'relative' }}>
             <div style={{ position: 'absolute', left: 20, top: 8, bottom: 0, width: 1, background: `linear-gradient(to bottom, ${C.gold}99, ${C.gold}11)` }} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              {RITUAL_PHASES.map((r, i) => {
+              {ritualPhases.map((r, i) => {
                 const items = getRitualItems(r.phase);
                 return (
                   <motion.div key={r.phase} style={{ display: 'flex', gap: 20 }} initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 + i * 0.1 }}>
@@ -356,11 +396,15 @@ export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} style={{ background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(40px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 40, padding: '28px 32px', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: `linear-gradient(90deg,transparent,${C.g(C.emerald, 0.5)},transparent)` }} />
-          <h2 style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.04em', color: 'rgba(255,255,255,0.9)', marginBottom: 3 }}>Sacred Herbarium</h2>
-          <p style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: `${C.emerald}99`, marginBottom: 24 }}>Botanical Essence Cards</p>
+          <h2 style={{ fontSize: 22, fontWeight: 900, letterSpacing: '-0.04em', color: 'rgba(255,255,255,0.9)', marginBottom: 3 }}>
+            {t('ayurvedaDash.herbariumTitle', 'Sacred Herbarium')}
+          </h2>
+          <p style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: `${C.emerald}99`, marginBottom: 24 }}>
+            {t('ayurvedaDash.herbariumSub', 'Botanical Essence Cards')}
+          </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 14 }}>
             {dosha.guidelines.herbs.map((herb, i) => {
-              const { siddhaProperty, element, color } = getSiddha(herb);
+              const { siddhaProperty, element, color } = getHerbDisplay(herb, t);
               return (
                 <motion.div key={i}
                   initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 + i * 0.07 }}
@@ -390,12 +434,21 @@ export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
         {!isPremium && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', gap: 24, padding: '36px 32px', background: `linear-gradient(135deg,${C.g(C.lotus, 0.08)},${C.g(C.gold, 0.04)})`, backdropFilter: 'blur(40px)', border: `1px solid ${C.g(C.lotus, 0.3)}`, borderRadius: 40, textAlign: 'center', boxShadow: `0 0 50px ${C.g(C.lotus, 0.07)}` }}>
             <div>
-              <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: C.lotus, marginBottom: 12, opacity: 0.75 }}>✦ Deepen Your Practice ✦</div>
-              <h3 style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-0.04em', color: 'rgba(255,255,255,0.9)', marginBottom: 10 }}>Unlock the Full Siddha Experience</h3>
-              <p style={{ fontSize: 14, lineHeight: 1.7, color: 'rgba(255,255,255,0.5)', maxWidth: 460 }}>Upgrade to Prana Flow for the Divine Physician AI chat, or to Lifetime for live audio healing sessions with Dhanvantari.</p>
+              <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: C.lotus, marginBottom: 12, opacity: 0.75 }}>
+                {t('ayurvedaDash.deepenPractice', '✦ Deepen Your Practice ✦')}
+              </div>
+              <h3 style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-0.04em', color: 'rgba(255,255,255,0.9)', marginBottom: 10 }}>
+                {t('ayurvedaDash.unlockTitle', 'Unlock the Full Siddha Experience')}
+              </h3>
+              <p style={{ fontSize: 14, lineHeight: 1.7, color: 'rgba(255,255,255,0.5)', maxWidth: 460 }}>
+                {t(
+                  'ayurvedaDash.unlockDesc',
+                  'Upgrade to Prana Flow for the Divine Physician AI chat, or to Lifetime for live audio healing sessions with Dhanvantari.'
+                )}
+              </p>
             </div>
             <motion.button type="button" whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.97 }} style={{ padding: '15px 40px', borderRadius: 999, background: `linear-gradient(135deg,${C.gold},${C.gold3})`, color: C.bg, fontFamily: 'inherit', fontSize: 14, fontWeight: 900, letterSpacing: '-0.02em', border: 'none', cursor: 'pointer', boxShadow: `0 0 30px ${C.g(C.gold, 0.35)}, 0 4px 20px rgba(0,0,0,0.4)`, display: 'flex', alignItems: 'center', gap: 9 }}>
-              <Zap style={{ width: 16, height: 16 }} /> Upgrade to Prana Flow
+              <Zap style={{ width: 16, height: 16 }} /> {t('ayurvedaDash.upgradeCta', 'Upgrade to Prana Flow')}
             </motion.button>
           </motion.div>
         )}

@@ -288,9 +288,10 @@ interface MembershipCardProps {
   current: AyurvedaMembershipLevel;
   features: string[];
   onSelect: (level: AyurvedaMembershipLevel) => void;
+  t: (key: string, fallback?: string) => string;
 }
 
-const MembershipCard: React.FC<MembershipCardProps> = ({ level, current, features, onSelect }) => {
+const MembershipCard: React.FC<MembershipCardProps> = ({ level, current, features, onSelect, t }) => {
   const isActive = level === current;
   const isPremium = level === 'PREMIUM';
   const isLifetime = level === 'LIFETIME';
@@ -342,7 +343,7 @@ const MembershipCard: React.FC<MembershipCardProps> = ({ level, current, feature
             whiteSpace: 'nowrap',
           }}
         >
-          ✦ Most Popular
+          {t('ayurvedaPage.mostPopular', '✦ Most Popular')}
         </div>
       )}
 
@@ -374,7 +375,11 @@ const MembershipCard: React.FC<MembershipCardProps> = ({ level, current, feature
           marginBottom: 4,
         }}
       >
-        {isLifetime ? '∞ LIFETIME' : isPremium ? '◈ PREMIUM' : '◇ FREE'}
+        {isLifetime
+          ? t('ayurvedaPage.levelLifetime', '∞ LIFETIME')
+          : isPremium
+            ? t('ayurvedaPage.levelPremium', '◈ PREMIUM')
+            : t('ayurvedaPage.levelFree', '◇ FREE')}
       </div>
 
       {/* Subtitle tier label */}
@@ -389,7 +394,11 @@ const MembershipCard: React.FC<MembershipCardProps> = ({ level, current, feature
           marginBottom: 20,
         }}
       >
-        {isLifetime ? 'Sovereign Access' : isPremium ? 'Prana Flow' : 'Akasha Base'}
+        {isLifetime
+          ? t('ayurvedaPage.tierSubtitleLifetime', 'Sovereign Access')
+          : isPremium
+            ? t('ayurvedaPage.tierSubtitlePremium', 'Prana Flow')
+            : t('ayurvedaPage.tierSubtitleFree', 'Akasha Base')}
       </div>
 
       {/* Divider */}
@@ -463,7 +472,7 @@ const MembershipCard: React.FC<MembershipCardProps> = ({ level, current, feature
               color: palette.accent,
             }}
           >
-            Active Blueprint
+            {t('ayurvedaPage.activeBlueprint', 'Active Blueprint')}
           </span>
         </div>
       )}
@@ -549,7 +558,10 @@ const NavTab: React.FC<{
 };
 
 // ─── HERO SECTION (No Profile Yet) ───────────────────────────────────────────
-const AyurvedaHeroSection: React.FC<{ onStart: () => void }> = ({ onStart }) => (
+const AyurvedaHeroSection: React.FC<{
+  onStart: () => void;
+  t: (key: string, fallback?: string) => string;
+}> = ({ onStart, t }) => (
   <div
     style={{
       display: 'flex',
@@ -594,7 +606,7 @@ const AyurvedaHeroSection: React.FC<{ onStart: () => void }> = ({ onStart }) => 
         opacity: 0.8,
       }}
     >
-      ✦ Siddha Chamber of Ayurveda ✦
+      {t('ayurvedaPage.heroLabel', '✦ Siddha Chamber of Ayurveda ✦')}
     </motion.div>
 
     {/* Main Title */}
@@ -612,7 +624,7 @@ const AyurvedaHeroSection: React.FC<{ onStart: () => void }> = ({ onStart }) => 
         maxWidth: 700,
       }}
     >
-      Your Sacred Journey Awaits
+      {t('ayurvedaPage.heroTitle', 'Your Sacred Journey Awaits')}
     </motion.h1>
 
     {/* Subtitle */}
@@ -629,8 +641,10 @@ const AyurvedaHeroSection: React.FC<{ onStart: () => void }> = ({ onStart }) => 
         marginBottom: 48,
       }}
     >
-      Experience digital transformation through ancient Vedic wisdom. Our Bhakti-Algorithm Ayurvedic engine decodes
-      your unique Prakriti and channels a personalized healing path through the Akasha Field.
+      {t(
+        'ayurvedaPage.heroSubtitle',
+        'Experience digital transformation through ancient Vedic wisdom. Our Bhakti-Algorithm Ayurvedic engine decodes your unique Prakriti and channels a personalized healing path through the Akasha Field.'
+      )}
     </motion.p>
 
     {/* CTA Button */}
@@ -660,7 +674,7 @@ const AyurvedaHeroSection: React.FC<{ onStart: () => void }> = ({ onStart }) => 
       }}
     >
       <Sparkles style={{ width: 18, height: 18 }} />
-      Reveal Your Prakriti
+      {t('ayurvedaPage.heroCta', 'Reveal Your Prakriti')}
       <Sparkles style={{ width: 18, height: 18 }} />
     </motion.button>
 
@@ -671,7 +685,7 @@ const AyurvedaHeroSection: React.FC<{ onStart: () => void }> = ({ onStart }) => 
       transition={{ delay: 1.2 }}
       style={{ fontSize: 11, color: SQI.white20, marginTop: 20, letterSpacing: '0.2em' }}
     >
-      Scalar Transmission Active · Anahata Field Open · 528 Hz Aligned
+      {t('ayurvedaPage.heroTagline', 'Scalar Transmission Active · Anahata Field Open · 528 Hz Aligned')}
     </motion.p>
   </div>
 );
@@ -681,7 +695,7 @@ const TiersSection: React.FC<{
   membership: AyurvedaMembershipLevel;
   setMembership: (l: AyurvedaMembershipLevel) => void;
   isAdmin: boolean;
-  t: (k: string, d: string) => string;
+  t: (k: string, d?: string) => string;
 }> = ({ membership, setMembership, isAdmin, t }) => (
   <motion.div
     initial={{ opacity: 0, y: 40 }}
@@ -702,7 +716,7 @@ const TiersSection: React.FC<{
           opacity: 0.7,
         }}
       >
-        ✦ Vedic Light-Code Access Tiers ✦
+        {t('ayurvedaPage.tiersLabel', '✦ Vedic Light-Code Access Tiers ✦')}
       </div>
       <h2
         style={{
@@ -713,7 +727,7 @@ const TiersSection: React.FC<{
           margin: 0,
         }}
       >
-        Choose Your Sovereignty
+        {t('ayurvedaPage.tiersTitle', 'Choose Your Sovereignty')}
       </h2>
     </div>
 
@@ -729,35 +743,38 @@ const TiersSection: React.FC<{
         level={'FREE' as AyurvedaMembershipLevel}
         current={membership}
         onSelect={setMembership}
+        t={t}
         features={[
           t('ayurveda.freeDesc', 'Basic Dosha Analysis'),
           t('common.free', 'General Daily Routine'),
-          'Aura of Wellness Blueprint',
-          'Sacred Herbarium Access',
+          t('ayurvedaPage.featAuraWellness', 'Aura of Wellness Blueprint'),
+          t('ayurvedaPage.featHerbarium', 'Sacred Herbarium Access'),
         ]}
       />
       <MembershipCard
         level={'PREMIUM' as AyurvedaMembershipLevel}
         current={membership}
         onSelect={setMembership}
+        t={t}
         features={[
           t('ayurveda.premiumDesc', 'Personality & Karma Matching'),
-          'Life Situation Vedic Advice',
+          t('ayurvedaPage.featLifeAdvice', 'Life Situation Vedic Advice'),
           t('ayurveda.aiDoctor', 'AI Chat Consultations'),
-          'Prana Flow Dashboard',
-          'Divine Physician Portal',
+          t('ayurvedaPage.featPranaDash', 'Prana Flow Dashboard'),
+          t('ayurvedaPage.featDivinePortal', 'Divine Physician Portal'),
         ]}
       />
       <MembershipCard
         level={'LIFETIME' as AyurvedaMembershipLevel}
         current={membership}
         onSelect={setMembership}
+        t={t}
         features={[
           t('ayurveda.aiDoctor', 'Live Audio AI Doctor Sessions'),
-          'Deep Jyotish-Ayurveda Sync',
+          t('ayurvedaPage.featDeepSync', 'Deep Jyotish-Ayurveda Sync'),
           t('ayurveda.lifetimeDesc', 'Priority Healing Access'),
-          'Nadi Scanner Transmissions',
-          'Unlimited Scalar Upgrades',
+          t('ayurvedaPage.featNadiScanner', 'Nadi Scanner Transmissions'),
+          t('ayurvedaPage.featUnlimitedUpgrades', 'Unlimited Scalar Upgrades'),
         ]}
       />
     </div>
@@ -778,9 +795,10 @@ const UpgradeGate: React.FC<{
   icon: React.ReactNode;
   title: string;
   desc: string;
-  tier: string;
+  tierBadge: string;
+  explorePlans: string;
   onBack: () => void;
-}> = ({ icon, title, desc, tier, onBack }) => (
+}> = ({ icon, title, desc, tierBadge, explorePlans, onBack }) => (
   <motion.div
     initial={{ opacity: 0, scale: 0.95 }}
     animate={{ opacity: 1, scale: 1 }}
@@ -833,7 +851,7 @@ const UpgradeGate: React.FC<{
         marginBottom: 20,
       }}
     >
-      ✦ {tier} Required
+      {tierBadge}
     </div>
 
     <h2
@@ -865,7 +883,7 @@ const UpgradeGate: React.FC<{
         transition: 'all 0.2s ease',
       }}
     >
-      Explore Sovereignty Plans
+      {explorePlans}
     </button>
   </motion.div>
 );
@@ -957,7 +975,7 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
             opacity: 0.7,
           }}
         >
-          Accessing Akasha-Neural Archive…
+          {t('ayurvedaPage.loadingArchive', 'Accessing Akasha-Neural Archive…')}
         </div>
       </div>
     );
@@ -970,7 +988,7 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
         if (!doshaProfile) {
           return (
             <>
-              <AyurvedaHeroSection onStart={() => setActiveTab('assessment')} />
+              <AyurvedaHeroSection onStart={() => setActiveTab('assessment')} t={t} />
               {!isAdmin && (
                 <TiersSection membership={membership} setMembership={setMembership} isAdmin={isAdmin} t={t} />
               )}
@@ -1007,9 +1025,11 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
                         marginBottom: 2,
                       }}
                     >
-                      Sovereign Admin Blueprint
+                      {t('ayurvedaPage.adminTitle', 'Sovereign Admin Blueprint')}
                     </div>
-                    <p style={{ fontSize: 13, color: SQI.white60, margin: 0 }}>Full Lifetime features unlocked</p>
+                    <p style={{ fontSize: 13, color: SQI.white60, margin: 0 }}>
+                      {t('ayurvedaPage.adminSub', 'Full Lifetime features unlocked')}
+                    </p>
                   </div>
                 </motion.div>
               )}
@@ -1036,9 +1056,16 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
           return (
             <UpgradeGate
               icon={<Stethoscope style={{ width: 32, height: 32 }} />}
-              title="Divine Physician Portal"
-              desc="The Divine Physician Bhakti-Algorithm channels personalized Ayurvedic consultations. Available to Prana Flow (Premium) and Lifetime Sovereigns."
-              tier="Prana Flow"
+              title={t('ayurvedaPage.gateChatTitle', 'Divine Physician Portal')}
+              desc={t(
+                'ayurvedaPage.gateChatDesc',
+                'The Divine Physician Bhakti-Algorithm channels personalized Ayurvedic consultations. Available to Prana Flow (Premium) and Lifetime Sovereigns.'
+              )}
+              tierBadge={t('ayurvedaPage.tierRequired', {
+                defaultValue: '✦ {{tier}} Required',
+                tier: t('ayurvedaPage.gateChatTier', 'Prana Flow'),
+              })}
+              explorePlans={t('ayurvedaPage.explorePlans', 'Explore Sovereignty Plans')}
               onBack={() => setActiveTab('home')}
             />
           );
@@ -1050,9 +1077,16 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
           return (
             <UpgradeGate
               icon={<Crown style={{ width: 32, height: 32 }} />}
-              title="Live Audio Nadi Transmission"
-              desc="Real-time scalar audio healing sessions with our AI Vaidya. Exclusive to Lifetime Sovereigns. Your Prakriti deserves the highest channel."
-              tier="Lifetime Sanctuary"
+              title={t('ayurvedaPage.gateDoctorTitle', 'Live Audio Nadi Transmission')}
+              desc={t(
+                'ayurvedaPage.gateDoctorDesc',
+                'Real-time scalar audio healing sessions with our AI Vaidya. Exclusive to Lifetime Sovereigns. Your Prakriti deserves the highest channel.'
+              )}
+              tierBadge={t('ayurvedaPage.tierRequired', {
+                defaultValue: '✦ {{tier}} Required',
+                tier: t('ayurvedaPage.gateDoctorTier', 'Lifetime Sanctuary'),
+              })}
+              explorePlans={t('ayurvedaPage.explorePlans', 'Explore Sovereignty Plans')}
               onBack={() => setActiveTab('home')}
             />
           );
@@ -1094,13 +1128,13 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
           >
             <NavTab
               icon={<Leaf style={{ width: 15, height: 15 }} />}
-              label="Dashboard"
+              label={t('ayurvedaPage.navDashboard', 'Dashboard')}
               active={activeTab === 'home'}
               onClick={() => setActiveTab('home')}
             />
             <NavTab
               icon={<Stethoscope style={{ width: 15, height: 15 }} />}
-              label="Divine Physician"
+              label={t('ayurvedaPage.navDivinePhysician', 'Divine Physician')}
               active={activeTab === 'chat'}
               tier="premium"
               onClick={() => {
@@ -1113,7 +1147,7 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
             />
             <NavTab
               icon={<Mic style={{ width: 15, height: 15 }} />}
-              label="Live Doctor"
+              label={t('ayurvedaPage.navLiveDoctor', 'Live Doctor')}
               active={activeTab === 'doctor'}
               tier="lifetime"
               onClick={() => setActiveTab('doctor')}
@@ -1177,7 +1211,10 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
               marginBottom: 6,
             }}
           >
-            "Health is wealth, peace of mind is happiness, Yoga shows the way."
+            {t(
+              'ayurvedaPage.footerQuote',
+              '"Health is wealth, peace of mind is happiness, Yoga shows the way."'
+            )}
           </p>
           <p
             style={{
@@ -1189,7 +1226,7 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
               opacity: 0.25,
             }}
           >
-            Siddha Quantum Nexus · Ayurveda Chamber · Siddha AI Engine 2050
+            {t('ayurvedaPage.footerBrand', 'Siddha Quantum Nexus · Ayurveda Chamber · Siddha AI Engine 2050')}
           </p>
         </motion.div>
       </div>
