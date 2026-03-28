@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { ShoppingBag, Palette, Shirt, Star, Heart, Sparkles, PenTool, Check, ArrowRight, Info } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -49,11 +49,33 @@ const categoryIcons: Record<string, React.ElementType> = {
 };
 
 const SHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-const SHIRT_COLORS = ['White', 'Black', 'Natural', 'Navy'];
+const SHIRT_COLORS = ['White', 'Black', 'Natural', 'Navy'] as const;
+const CUSTOM_SHIRT_PRICE = '89';
+
+const shirtColorTranslationKey = (color: string): string => {
+  const map: Record<string, string> = {
+    White: 'shop.colorWhite',
+    Black: 'shop.colorBlack',
+    Natural: 'shop.colorNatural',
+    Navy: 'shop.colorNavy',
+  };
+  return map[color] ?? 'shop.colorWhite';
+};
 
 const Shop = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+
+  const formatProductCategory = (category: string) => {
+    if (category === 'healing-shirts') return t('shop.categoryHealingArt');
+    const keyByCat: Record<string, string> = {
+      clothing: 'shop.catClothing',
+      art: 'shop.catArt',
+      accessories: 'shop.catAccessories',
+    };
+    const key = keyByCat[category];
+    return key ? t(key) : category;
+  };
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { isInWishlist, toggleWishlist } = useWishlist();
@@ -78,11 +100,11 @@ const Shop = () => {
     const canceled = searchParams.get('canceled');
     
     if (success === 'true') {
-      toast.success('Payment successful! Your order is being processed.');
+      toast.success(t('shop.toastPaymentSuccess'));
     } else if (canceled === 'true') {
-      toast.info('Payment was canceled.');
+      toast.info(t('shop.toastPaymentCanceled'));
     }
-  }, [searchParams]);
+  }, [searchParams, t]);
 
   const fetchProducts = async () => {
     const { data, error } = await supabase
@@ -132,7 +154,7 @@ const Shop = () => {
       }
     } catch (error) {
       console.error('Checkout error:', error);
-      toast.error('Failed to start checkout. Please try again.');
+      toast.error(t('shop.toastCheckoutFail'));
     } finally {
       setPurchasing(null);
     }
@@ -145,12 +167,12 @@ const Shop = () => {
     }
     
     if (!customFormData.intention || !customFormData.shirtSize || !customFormData.shirtColor || !customFormData.email) {
-      toast.error('Please fill in all required fields');
+      toast.error(t('shop.toastFillRequired'));
       return;
     }
     
     // TODO: Implement Stripe checkout for custom orders
-    toast.success('Custom design request submitted! We will contact you soon.');
+    toast.success(t('shop.toastCustomSubmitted'));
     setCustomOrderOpen(false);
     setCustomFormData({ intention: '', shirtSize: '', shirtColor: '', email: '', notes: '' });
   };
@@ -170,10 +192,8 @@ const Shop = () => {
         <div className="w-16 h-16 rounded-full bg-pink-500/20 flex items-center justify-center mx-auto mb-4">
           <ShoppingBag className="w-8 h-8 text-pink-400" />
         </div>
-        <h1 className="text-2xl font-bold text-foreground mb-2">Sacred Shop</h1>
-        <p className="text-muted-foreground">
-          Laila's Siddha Quantum Nexus Clothing & Art Collection
-        </p>
+        <h1 className="text-2xl font-bold text-foreground mb-2">{t('shop.title')}</h1>
+        <p className="text-muted-foreground">{t('shop.heroTagline')}</p>
       </div>
 
       {/* Healing Art Shirts Section */}
@@ -187,14 +207,10 @@ const Shop = () => {
               </div>
               <div className="flex-1">
                 <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 mb-2">
-                  Wearable Healing Art
+                  {t('shop.badgeWearableHealingArt')}
                 </Badge>
-                <h2 className="text-xl font-bold text-foreground mb-2">
-                  Healing Art on Shirts — Ready-Made Designs
-                </h2>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Original sacred artwork printed on soft, high-quality shirts. Choose from a curated gallery of ready-made designs that carry uplifting energy and support your daily practice.
-                </p>
+                <h2 className="text-xl font-bold text-foreground mb-2">{t('shop.readyMadeTitle')}</h2>
+                <p className="text-sm text-muted-foreground leading-relaxed">{t('shop.readyMadeBody')}</p>
               </div>
             </div>
             
@@ -202,29 +218,29 @@ const Shop = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-xs text-muted-foreground">Sacred-geometry artwork</span>
+                  <span className="text-xs text-muted-foreground">{t('shop.readyCheck1')}</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-xs text-muted-foreground">Comfortable fabric</span>
+                  <span className="text-xs text-muted-foreground">{t('shop.readyCheck2')}</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-xs text-muted-foreground">Multiple sizes (XS-XXL)</span>
+                  <span className="text-xs text-muted-foreground">{t('shop.readyCheck3')}</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-xs text-muted-foreground">High-quality print</span>
+                  <span className="text-xs text-muted-foreground">{t('shop.readyCheck4')}</span>
                 </div>
               </div>
               
               <div className="pt-3 border-t border-border/50">
                 <p className="text-xs text-muted-foreground mb-3">
                   <Info className="w-3 h-3 inline mr-1" />
-                  Created by Laila & Adam with intentional vibration for your spiritual focus
+                  {t('shop.readyInfoLine')}
                 </p>
                 <Button className="w-full" onClick={() => setActiveCategory('healing-shirts')}>
-                  Browse Designs
+                  {t('shop.browseDesigns')}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>
@@ -241,14 +257,10 @@ const Shop = () => {
               </div>
               <div className="flex-1">
                 <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 mb-2">
-                  Personalized Creation
+                  {t('shop.badgePersonalized')}
                 </Badge>
-                <h2 className="text-xl font-bold text-foreground mb-2">
-                  Healing Art on Shirts — Custom Design
-                </h2>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Your own healing art, printed on a shirt. Laila crafts one-of-a-kind artwork tailored to your energy, intention, or mantra—perfect for personal rituals or meaningful gifts.
-                </p>
+                <h2 className="text-xl font-bold text-foreground mb-2">{t('shop.customTitle')}</h2>
+                <p className="text-sm text-muted-foreground leading-relaxed">{t('shop.customBody')}</p>
               </div>
             </div>
             
@@ -256,54 +268,50 @@ const Shop = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-xs text-muted-foreground">Personalized by Laila</span>
+                  <span className="text-xs text-muted-foreground">{t('shop.customCheck1')}</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-xs text-muted-foreground">Choose shirt style & color</span>
+                  <span className="text-xs text-muted-foreground">{t('shop.customCheck2')}</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-xs text-muted-foreground">Amplify your intention</span>
+                  <span className="text-xs text-muted-foreground">{t('shop.customCheck3')}</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-xs text-muted-foreground">Review before final print</span>
+                  <span className="text-xs text-muted-foreground">{t('shop.customCheck4')}</span>
                 </div>
               </div>
               
               <div className="bg-background/50 rounded-lg p-3 mt-3">
-                <p className="text-xs text-muted-foreground mb-1 font-medium">Process:</p>
-                <p className="text-xs text-muted-foreground">
-                  Submit intention → Design draft → Approve → Print & ship (Est. 2-3 weeks)
-                </p>
+                <p className="text-xs text-muted-foreground mb-1 font-medium">{t('shop.processLabel')}</p>
+                <p className="text-xs text-muted-foreground">{t('shop.processSteps')}</p>
               </div>
               
               <div className="flex items-center justify-between pt-3 border-t border-border/50">
                 <div>
-                  <span className="text-2xl font-bold text-foreground">€89</span>
-                  <span className="text-sm text-muted-foreground ml-1">starting price</span>
+                  <span className="text-2xl font-bold text-foreground">€{CUSTOM_SHIRT_PRICE}</span>
+                  <span className="text-sm text-muted-foreground ml-1">{t('shop.startingPriceNote')}</span>
                 </div>
                 <Dialog open={customOrderOpen} onOpenChange={setCustomOrderOpen}>
                   <DialogTrigger asChild>
                     <Button variant="default" className="bg-amber-500 hover:bg-amber-600">
-                      Order Custom
+                      {t('shop.orderCustom')}
                       <Sparkles className="w-4 h-4 ml-2" />
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-md">
                     <DialogHeader>
-                      <DialogTitle>Custom Healing Art Shirt</DialogTitle>
-                      <DialogDescription>
-                        Share your intention and we'll create a unique design for you
-                      </DialogDescription>
+                      <DialogTitle>{t('shop.dialogCustomTitle')}</DialogTitle>
+                      <DialogDescription>{t('shop.dialogCustomDesc')}</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 pt-4">
                       <div className="space-y-2">
-                        <Label htmlFor="intention">Your Intention / Mantra *</Label>
+                        <Label htmlFor="intention">{t('shop.labelIntention')}</Label>
                         <Textarea
                           id="intention"
-                          placeholder="Describe your intention, mantra, or theme for the artwork..."
+                          placeholder={t('shop.placeholderIntention')}
                           value={customFormData.intention}
                           onChange={(e) => setCustomFormData(prev => ({ ...prev, intention: e.target.value }))}
                           rows={3}
@@ -312,13 +320,13 @@ const Shop = () => {
                       
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>Shirt Size *</Label>
+                          <Label>{t('shop.labelShirtSize')}</Label>
                           <Select
                             value={customFormData.shirtSize}
                             onValueChange={(value) => setCustomFormData(prev => ({ ...prev, shirtSize: value }))}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Select size" />
+                              <SelectValue placeholder={t('shop.selectSize')} />
                             </SelectTrigger>
                             <SelectContent>
                               {SHIRT_SIZES.map(size => (
@@ -329,17 +337,19 @@ const Shop = () => {
                         </div>
                         
                         <div className="space-y-2">
-                          <Label>Shirt Color *</Label>
+                          <Label>{t('shop.labelShirtColor')}</Label>
                           <Select
                             value={customFormData.shirtColor}
                             onValueChange={(value) => setCustomFormData(prev => ({ ...prev, shirtColor: value }))}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Select color" />
+                              <SelectValue placeholder={t('shop.selectColor')} />
                             </SelectTrigger>
                             <SelectContent>
                               {SHIRT_COLORS.map(color => (
-                                <SelectItem key={color} value={color}>{color}</SelectItem>
+                                <SelectItem key={color} value={color}>
+                                  {t(shirtColorTranslationKey(color))}
+                                </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -347,21 +357,21 @@ const Shop = () => {
                       </div>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="email">Contact Email *</Label>
+                        <Label htmlFor="email">{t('shop.labelContactEmail')}</Label>
                         <Input
                           id="email"
                           type="email"
-                          placeholder="your@email.com"
+                          placeholder={t('shop.emailPlaceholder')}
                           value={customFormData.email}
                           onChange={(e) => setCustomFormData(prev => ({ ...prev, email: e.target.value }))}
                         />
                       </div>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="notes">Additional Notes (Optional)</Label>
+                        <Label htmlFor="notes">{t('shop.labelNotesOptional')}</Label>
                         <Textarea
                           id="notes"
-                          placeholder="Any specific colors, symbols, or preferences..."
+                          placeholder={t('shop.placeholderNotes')}
                           value={customFormData.notes}
                           onChange={(e) => setCustomFormData(prev => ({ ...prev, notes: e.target.value }))}
                           rows={2}
@@ -370,12 +380,12 @@ const Shop = () => {
                       
                       <div className="bg-muted/50 rounded-lg p-3">
                         <p className="text-xs text-muted-foreground">
-                          <strong>What's included:</strong> Personalized sacred artwork, high-quality print, one revision round, and shipping within Europe.
+                          <strong>{t('shop.whatsIncludedLead')}</strong> {t('shop.whatsIncludedBody')}
                         </p>
                       </div>
                       
                       <Button onClick={handleCustomOrder} className="w-full bg-amber-500 hover:bg-amber-600">
-                        Submit Request — €89
+                        {t('shop.submitRequest', { price: CUSTOM_SHIRT_PRICE })}
                       </Button>
                     </div>
                   </DialogContent>
@@ -390,20 +400,20 @@ const Shop = () => {
       <div className="px-4 py-4">
         <Tabs defaultValue="all" value={activeCategory} onValueChange={setActiveCategory}>
           <TabsList className="w-full grid grid-cols-5">
-            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="all">{t('shop.tabAll')}</TabsTrigger>
             <TabsTrigger value="healing-shirts">
               <Sparkles className="w-4 h-4 mr-1" />
-              Shirts
+              {t('shop.tabShirts')}
             </TabsTrigger>
             <TabsTrigger value="clothing">
               <Shirt className="w-4 h-4 mr-1" />
-              Clothing
+              {t('shop.tabClothing')}
             </TabsTrigger>
             <TabsTrigger value="art">
               <Palette className="w-4 h-4 mr-1" />
-              Art
+              {t('shop.tabArt')}
             </TabsTrigger>
-            <TabsTrigger value="accessories">Acc.</TabsTrigger>
+            <TabsTrigger value="accessories">{t('shop.tabAccessoriesShort')}</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -413,10 +423,8 @@ const Shop = () => {
         {filteredProducts.length === 0 ? (
           <Card className="p-8 text-center">
             <ShoppingBag className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="font-semibold text-foreground mb-2">Coming Soon</h3>
-            <p className="text-muted-foreground text-sm">
-              Beautiful sacred items will be available here soon!
-            </p>
+            <h3 className="font-semibold text-foreground mb-2">{t('shop.comingSoonTitle')}</h3>
+            <p className="text-muted-foreground text-sm">{t('shop.comingSoonBody')}</p>
           </Card>
         ) : (
           <div className="grid grid-cols-2 gap-4">
@@ -445,20 +453,18 @@ const Shop = () => {
                     )}
                     
                     {product.is_featured && (
-                      <Badge className="absolute top-2 left-2 bg-pink-500 text-white">
-                        Featured
-                      </Badge>
+                      <Badge className="absolute top-2 left-2 bg-pink-500 text-white">{t('shop.featured')}</Badge>
                     )}
 
                     {product.stock_quantity <= 5 && product.stock_quantity > 0 && (
                       <Badge className="absolute top-2 right-2 bg-amber-500 text-white text-xs">
-                        Only {product.stock_quantity} left
+                        {t('shop.onlyLeft', { count: product.stock_quantity })}
                       </Badge>
                     )}
 
                     {product.stock_quantity === 0 && (
                       <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
-                        <Badge variant="outline">Sold Out</Badge>
+                        <Badge variant="outline">{t('shop.soldOut')}</Badge>
                       </div>
                     )}
 
@@ -480,7 +486,7 @@ const Shop = () => {
                   {/* Product Info */}
                   <div className="p-3">
                     <Badge variant="outline" className="text-xs mb-2 capitalize">
-                      {product.category === 'healing-shirts' ? 'Healing Art' : product.category}
+                      {formatProductCategory(product.category)}
                     </Badge>
                     <h3 className="font-semibold text-foreground text-sm truncate">
                       {product.name}
@@ -501,7 +507,7 @@ const Shop = () => {
                         }}
                         disabled={product.stock_quantity === 0 || purchasing === product.id}
                       >
-                        {purchasing === product.id ? '...' : 'Buy'}
+                        {purchasing === product.id ? '...' : t('shop.buyShort')}
                       </Button>
                     </div>
                   </div>
@@ -517,25 +523,21 @@ const Shop = () => {
         <Card className="p-5 bg-gradient-to-br from-pink-500/10 to-purple-500/10 border-pink-500/20">
           <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
             <Heart className="w-5 h-5 text-pink-400" />
-            About Our Collection
+            {t('shop.aboutTitle')}
           </h3>
-          <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-            Each piece in our collection is infused with Siddha Quantum Nexus energy by Laila. 
-            Our clothing features unique spiritual designs, and our art pieces carry powerful 
-            healing frequencies to transform your space and energy field.
-          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-4">{t('shop.aboutBody')}</p>
           <div className="grid grid-cols-2 gap-3 text-xs text-muted-foreground">
             <div>
-              <strong className="text-foreground">Fabric:</strong> 100% organic cotton, soft & breathable
+              <strong className="text-foreground">{t('shop.aboutFabricLabel')}</strong> {t('shop.aboutFabric')}
             </div>
             <div>
-              <strong className="text-foreground">Fit:</strong> Regular & relaxed options
+              <strong className="text-foreground">{t('shop.aboutFitLabel')}</strong> {t('shop.aboutFit')}
             </div>
             <div>
-              <strong className="text-foreground">Care:</strong> Machine wash cold, tumble dry low
+              <strong className="text-foreground">{t('shop.aboutCareLabel')}</strong> {t('shop.aboutCare')}
             </div>
             <div>
-              <strong className="text-foreground">Use:</strong> Daily wear, meditation, gifting
+              <strong className="text-foreground">{t('shop.aboutUseLabel')}</strong> {t('shop.aboutUse')}
             </div>
           </div>
         </Card>

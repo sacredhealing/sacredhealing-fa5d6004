@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from '@/hooks/useTranslation';
 import { ArrowLeft, Heart, Ruler, Shirt, Sparkles, Check, ShoppingBag } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,7 +35,43 @@ const SIZE_GUIDE = [
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user } = useAuth();
+
+  const formatProductCategory = (category: string) => {
+    if (category === 'healing-shirts') return t('shop.categoryHealingArt');
+    const keyByCat: Record<string, string> = {
+      clothing: 'shop.catClothing',
+      art: 'shop.catArt',
+      accessories: 'shop.catAccessories',
+    };
+    const key = keyByCat[category];
+    return key ? t(key) : category;
+  };
+
+  const fabricBullets = useMemo(
+    () => [
+      t('shop.fabricBullet1'),
+      t('shop.fabricBullet2'),
+      t('shop.fabricBullet3'),
+      t('shop.fabricBullet4'),
+      t('shop.fabricBullet5'),
+      t('shop.fabricBullet6'),
+    ],
+    [t]
+  );
+
+  const careItems = useMemo(
+    () => [
+      t('shop.careItem1'),
+      t('shop.careItem2'),
+      t('shop.careItem3'),
+      t('shop.careItem4'),
+      t('shop.careItem5'),
+      t('shop.careItem6'),
+    ],
+    [t]
+  );
   const { isInWishlist, toggleWishlist } = useWishlist();
   const [product, setProduct] = useState<ShopProduct | null>(null);
   const [loading, setLoading] = useState(true);
@@ -42,30 +79,38 @@ const ProductDetail = () => {
   const [selectedImage, setSelectedImage] = useState(0);
 
   useEffect(() => {
-    if (id) {
-      fetchProduct();
-    }
-  }, [id]);
+    if (!id) return;
 
-  const fetchProduct = async () => {
-    const { data, error } = await supabase
-      .from('shop_products')
-      .select('*')
-      .eq('id', id)
-      .single();
+    let cancelled = false;
 
-    if (data) {
-      setProduct({
-        ...data,
-        images: (data.images as string[]) || [],
-        sizes: (data.sizes as string[]) || [],
-      });
-    } else if (error) {
-      toast.error('Product not found');
-      navigate('/shop');
-    }
-    setLoading(false);
-  };
+    const load = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('shop_products')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (cancelled) return;
+
+      if (data) {
+        setProduct({
+          ...data,
+          images: (data.images as string[]) || [],
+          sizes: (data.sizes as string[]) || [],
+        });
+      } else if (error) {
+        toast.error(t('shop.toastProductNotFound'));
+        navigate('/shop');
+      }
+      setLoading(false);
+    };
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [id, navigate, t]);
 
   const handleBuyNow = async () => {
     if (!user) {
@@ -96,7 +141,7 @@ const ProductDetail = () => {
       }
     } catch (error) {
       console.error('Checkout error:', error);
-      toast.error('Failed to start checkout. Please try again.');
+      toast.error(t('shop.toastCheckoutFail'));
     } finally {
       setPurchasing(false);
     }
@@ -129,7 +174,7 @@ const ProductDetail = () => {
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="text-lg font-semibold text-foreground">Product Details</h1>
+          <h1 className="text-lg font-semibold text-foreground">{t('shop.productDetailsTitle')}</h1>
         </div>
       </div>
 
@@ -149,9 +194,7 @@ const ProductDetail = () => {
           )}
 
           {product.is_featured && (
-            <Badge className="absolute top-4 left-4 bg-pink-500 text-white">
-              Featured
-            </Badge>
+            <Badge className="absolute top-4 left-4 bg-pink-500 text-white">{t('shop.featured')}</Badge>
           )}
 
           <Button
@@ -167,7 +210,7 @@ const ProductDetail = () => {
 
           {product.stock_quantity <= 5 && product.stock_quantity > 0 && (
             <Badge className="absolute bottom-4 left-4 bg-amber-500 text-white">
-              Only {product.stock_quantity} left
+              {t('shop.onlyLeft', { count: product.stock_quantity })}
             </Badge>
           )}
         </div>
@@ -194,7 +237,7 @@ const ProductDetail = () => {
       <div className="px-4 space-y-4">
         <div>
           <Badge variant="outline" className="mb-2 capitalize">
-            {product.category === 'healing-shirts' ? 'Healing Art' : product.category}
+            {formatProductCategory(product.category)}
           </Badge>
           <h2 className="text-2xl font-bold text-foreground">{product.name}</h2>
           {product.description && (
@@ -205,7 +248,7 @@ const ProductDetail = () => {
         <div className="flex items-center justify-between">
           <span className="text-3xl font-bold text-foreground">€{product.price_eur}</span>
           <Badge variant="outline" className="text-green-500 border-green-500/30">
-            Free Shipping
+            {t('shop.freeShipping')}
           </Badge>
         </div>
 
@@ -216,13 +259,13 @@ const ProductDetail = () => {
           disabled={product.stock_quantity === 0 || purchasing}
         >
           {purchasing ? (
-            'Processing...'
+            t('shop.processing')
           ) : product.stock_quantity === 0 ? (
-            'Sold Out'
+            t('shop.soldOut')
           ) : (
             <>
               <ShoppingBag className="w-5 h-5 mr-2" />
-              Buy Now — €{product.price_eur}
+              {t('shop.buyNowWithPrice', { price: String(product.price_eur) })}
             </>
           )}
         </Button>
@@ -230,12 +273,12 @@ const ProductDetail = () => {
         {/* Tabs for Details */}
         <Tabs defaultValue="details" className="mt-6">
           <TabsList className="w-full grid grid-cols-3">
-            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="details">{t('shop.tabDetails')}</TabsTrigger>
             <TabsTrigger value="sizing">
               <Ruler className="w-4 h-4 mr-1" />
-              Sizing
+              {t('shop.tabSizing')}
             </TabsTrigger>
-            <TabsTrigger value="care">Care</TabsTrigger>
+            <TabsTrigger value="care">{t('shop.tabCare')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="details" className="mt-4">
@@ -245,24 +288,15 @@ const ProductDetail = () => {
                   <Sparkles className="w-5 h-5 text-purple-400" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-foreground">Sacred Energy Infused</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Each design is created with intentional healing energy by Laila, carrying sacred geometry and spiritual vibrations.
-                  </p>
+                  <h4 className="font-semibold text-foreground">{t('shop.detailSacredTitle')}</h4>
+                  <p className="text-sm text-muted-foreground">{t('shop.detailSacredBody')}</p>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <h4 className="font-semibold text-foreground">Fabric & Quality</h4>
+                <h4 className="font-semibold text-foreground">{t('shop.fabricQualityTitle')}</h4>
                 <ul className="space-y-2">
-                  {[
-                    '100% Organic Cotton',
-                    'Pre-shrunk & enzyme-washed',
-                    '180 GSM midweight fabric',
-                    'Soft, breathable & comfortable',
-                    'High-quality DTG printing',
-                    'Colors stay vibrant after washing',
-                  ].map((item, idx) => (
+                  {fabricBullets.map((item, idx) => (
                     <li key={idx} className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Check className="w-4 h-4 text-green-400 flex-shrink-0" />
                       {item}
@@ -272,7 +306,7 @@ const ProductDetail = () => {
               </div>
 
               <div className="space-y-2">
-                <h4 className="font-semibold text-foreground">Available Sizes</h4>
+                <h4 className="font-semibold text-foreground">{t('shop.availableSizes')}</h4>
                 <div className="flex flex-wrap gap-2">
                   {(product.sizes.length > 0 ? product.sizes : ['XS', 'S', 'M', 'L', 'XL', 'XXL']).map((size) => (
                     <Badge key={size} variant="outline">
@@ -288,16 +322,16 @@ const ProductDetail = () => {
             <Card className="p-4">
               <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2">
                 <Ruler className="w-5 h-5 text-primary" />
-                Size Guide (cm)
+                {t('shop.sizeGuideTitle')}
               </h4>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left py-2 font-medium text-foreground">Size</th>
-                      <th className="text-left py-2 font-medium text-foreground">Chest</th>
-                      <th className="text-left py-2 font-medium text-foreground">Waist</th>
-                      <th className="text-left py-2 font-medium text-foreground">Hip</th>
+                      <th className="text-left py-2 font-medium text-foreground">{t('shop.tableSize')}</th>
+                      <th className="text-left py-2 font-medium text-foreground">{t('shop.tableChest')}</th>
+                      <th className="text-left py-2 font-medium text-foreground">{t('shop.tableWaist')}</th>
+                      <th className="text-left py-2 font-medium text-foreground">{t('shop.tableHip')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -312,33 +346,23 @@ const ProductDetail = () => {
                   </tbody>
                 </table>
               </div>
-              <p className="text-xs text-muted-foreground mt-4">
-                * Measurements in centimeters. If between sizes, we recommend sizing up for a relaxed fit.
-              </p>
+              <p className="text-xs text-muted-foreground mt-4">{t('shop.sizingFootnote')}</p>
             </Card>
           </TabsContent>
 
           <TabsContent value="care" className="mt-4">
             <Card className="p-4 space-y-4">
-              <h4 className="font-semibold text-foreground">Care Instructions</h4>
+              <h4 className="font-semibold text-foreground">{t('shop.careTitle')}</h4>
               <ul className="space-y-3">
-                {[
-                  { icon: '🧺', text: 'Machine wash cold (30°C max)' },
-                  { icon: '🔄', text: 'Wash inside out to protect print' },
-                  { icon: '🚫', text: 'Do not bleach' },
-                  { icon: '🌀', text: 'Tumble dry low or hang dry' },
-                  { icon: '♨️', text: 'Iron on reverse side only' },
-                  { icon: '🧴', text: 'Do not dry clean' },
-                ].map((item, idx) => (
-                  <li key={idx} className="flex items-center gap-3 text-sm text-muted-foreground">
-                    <span className="text-lg">{item.icon}</span>
-                    {item.text}
+                {careItems.map((text, idx) => (
+                  <li key={idx} className="text-sm text-muted-foreground">
+                    {text}
                   </li>
                 ))}
               </ul>
               <div className="bg-muted/50 rounded-lg p-3 mt-4">
                 <p className="text-xs text-muted-foreground">
-                  <strong>Pro tip:</strong> Following these care instructions will help maintain the vibrant colors and energy of your Siddha Quantum Nexus shirt for years to come.
+                  <strong>{t('shop.careProTipLead')}</strong> {t('shop.careProTipBody')}
                 </p>
               </div>
             </Card>
