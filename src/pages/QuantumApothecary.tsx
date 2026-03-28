@@ -436,16 +436,23 @@ function QuantumApothecaryInner() {
     // ── Step 2: Wait 4 seconds — user holds palm to camera ──
     await new Promise((res) => setTimeout(res, 4000));
 
-    // ── Step 3: Capture real frame from video ──
+    // ── Step 3: Capture real frame from video (cap size + JPEG quality for edge payload limits) ──
     let capturedBase64 = '';
     try {
       const canvas = document.createElement('canvas');
       const vid = videoRef.current!;
-      canvas.width = vid.videoWidth || 640;
-      canvas.height = vid.videoHeight || 480;
+      const MAX_W = 960;
+      let w = vid.videoWidth || 640;
+      let h = vid.videoHeight || 480;
+      if (w > MAX_W) {
+        h = Math.max(1, Math.round((h * MAX_W) / w));
+        w = MAX_W;
+      }
+      canvas.width = w;
+      canvas.height = h;
       const ctx = canvas.getContext('2d')!;
       ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
-      capturedBase64 = canvas.toDataURL('image/jpeg', 0.92).split(',')[1]!;
+      capturedBase64 = canvas.toDataURL('image/jpeg', 0.82).split(',')[1]!;
     } catch {
       setScanError('Failed to capture image. Please try again.');
       setIsScanning(false);
@@ -476,23 +483,17 @@ function QuantumApothecaryInner() {
         throw new Error('App misconfigured: VITE_SUPABASE_PUBLISHABLE_KEY (or ANON) is missing.');
       }
 
-      // Use client invoke — sets URL, apikey, and session JWT like every other edge call in the app.
-      const { data: scanPayload, error: scanError } = await supabase.functions.invoke<Record<string, unknown>>(
-        'nadi-scan',
-        {
-          body: {
-            imageBase64: capturedBase64,
-            imageMimeType: 'image/jpeg',
-            userId: user?.id ?? null,
-            planetaryAlign: todayPlanet,
-            herbOfToday: todayHerb,
-          },
-        },
-      );
+      const scanBody = {
+        imageBase64: capturedBase64,
+        imageMimeType: 'image/jpeg',
+        userId: user?.id ?? null,
+        planetaryAlign: todayPlanet,
+        herbOfToday: todayHerb,
+      };
 
-      if (scanError) {
+      const parseScanError = async (scanError: { message?: string; context?: Response }) => {
         let msg = scanError.message || 'Nadi scan request failed';
-        const ctx = (scanError as { context?: Response }).context;
+        const ctx = scanError.context;
         if (ctx && typeof ctx.text === 'function') {
           try {
             const raw = await ctx.text();
@@ -507,10 +508,61 @@ function QuantumApothecaryInner() {
             }
           } catch { /* keep msg */ }
         }
-        throw new Error(msg);
+        return msg;
+      };
+
+      let parsed: Record<string, unknown> | null = null;
+
+      const { data: scanPayload, error: scanError } =
+        await supabase.functions.invoke<Record<string, unknown>>('nadi-scan', { body: scanBody });
+
+      if (!scanError && scanPayload && typeof scanPayload === 'object' && !Array.isArray(scanPayload)) {
+        parsed = scanPayload;
+      } else {
+        // Fallback: direct fetch (avoids rare invoke/network issues; same auth as chat).
+        if (scanError) {
+          console.warn(
+            'nadi-scan invoke failed, retrying with fetch:',
+            await parseScanError(scanError as { message?: string; context?: Response }),
+          );
+        }
+        const baseUrl = String(import.meta.env.VITE_SUPABASE_URL).replace(/\/$/, '');
+        const scanUrl = `${baseUrl}/functions/v1/nadi-scan`;
+        const { data: sess } = await supabase.auth.getSession();
+        const bearer = sess.session?.access_token || publishableOrAnon;
+        let res: Response;
+        try {
+          res = await fetch(scanUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${bearer}`,
+              apikey: publishableOrAnon,
+            },
+            body: JSON.stringify(scanBody),
+          });
+        } catch (netErr) {
+          const hint = netErr instanceof Error ? netErr.message : 'Network error';
+          throw new Error(
+            `${hint}. Check connection, ad blockers, and that nadi-scan is deployed on your Supabase project.`,
+          );
+        }
+        const rawText = await res.text();
+        if (!res.ok) {
+          let detail = rawText.slice(0, 200);
+          try {
+            const j = JSON.parse(rawText) as { error?: string };
+            if (j.error) detail = j.error;
+          } catch { /* use raw snippet */ }
+          throw new Error(`Scan failed (${res.status}): ${detail}`);
+        }
+        try {
+          parsed = JSON.parse(rawText) as Record<string, unknown>;
+        } catch {
+          throw new Error(`Invalid JSON from nadi-scan: ${rawText.slice(0, 120)}`);
+        }
       }
 
-      const parsed = scanPayload;
       if (!parsed || typeof parsed !== 'object') {
         throw new Error('Empty response from nadi-scan.');
       }
