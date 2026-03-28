@@ -7,11 +7,41 @@ import sv from './locales/sv.json';
 import es from './locales/es.json';
 import no from './locales/no.json';
 import { deepMergeLocales } from './deepMergeLocales';
+import { templeHomeEn } from './locales/templeHome';
+import { templeHomeSvPartial } from './locales/templeHome/templeHomeSvPartial';
+import { templeHomeEsPartial } from './locales/templeHome/templeHomeEsPartial';
+import { templeHomeNoPartial } from './locales/templeHome/templeHomeNoPartial';
 
-const enRoot = en as Record<string, unknown>;
-const svMerged = deepMergeLocales(enRoot, sv as Record<string, unknown>);
-const esMerged = deepMergeLocales(enRoot, es as Record<string, unknown>);
-const noMerged = deepMergeLocales(enRoot, no as Record<string, unknown>);
+const enRoot = deepMergeLocales(en as Record<string, unknown>, {
+  templeHome: templeHomeEn,
+} as Record<string, unknown>);
+const svMerged = deepMergeLocales(
+  deepMergeLocales(enRoot, sv as Record<string, unknown>),
+  {
+    templeHome: deepMergeLocales(
+      templeHomeEn as Record<string, unknown>,
+      templeHomeSvPartial as Record<string, unknown>
+    ),
+  } as Record<string, unknown>
+);
+const esMerged = deepMergeLocales(
+  deepMergeLocales(enRoot, es as Record<string, unknown>),
+  {
+    templeHome: deepMergeLocales(
+      templeHomeEn as Record<string, unknown>,
+      templeHomeEsPartial as Record<string, unknown>
+    ),
+  } as Record<string, unknown>
+);
+const noMerged = deepMergeLocales(
+  deepMergeLocales(enRoot, no as Record<string, unknown>),
+  {
+    templeHome: deepMergeLocales(
+      templeHomeEn as Record<string, unknown>,
+      templeHomeNoPartial as Record<string, unknown>
+    ),
+  } as Record<string, unknown>
+);
 
 /**
  * Legacy i18n init (react-i18next): English, Spanish, Swedish, Norwegian.
@@ -25,7 +55,7 @@ i18n
   .use(initReactI18next)
   .init({
     resources: {
-      en: { translation: en },
+      en: { translation: enRoot as typeof en },
       es: { translation: esMerged as typeof en },
       sv: { translation: svMerged as typeof en },
       no: { translation: noMerged as typeof en },
