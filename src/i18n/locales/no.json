@@ -576,6 +576,17 @@
       "advanced": "Avansert"
     }
   },
+  "pathsIndex": {
+    "title": "Åndelige stier",
+    "subtitle": "Veiledede reiser som forvandler praksisen din",
+    "inProgress": "Pågår",
+    "completed": "Fullført",
+    "daysCount": "{{count}} dager",
+    "dayProgress": "Dag {{current}} av {{total}}",
+    "empty": "Ingen stier tilgjengelig ennå.",
+    "pathBegunToast": "Din åndelige sti har begynt! 🌟",
+    "pathStartErrorToast": "Kunne ikke starte stien"
+  },
   "spiritualPath": {
     "yourPath": "Din vei",
     "continueDay": "Fortsett dag",
@@ -583,7 +594,7 @@
     "resumeTransmissionCycle": "Gjenoppta transmisjon: syklus {{day}}",
     "daySlashTotal": "Dag {{current}} / {{total}}",
     "innerPeaceLabel": "SHANTI - SATTVA PROTOCOOL",
-    "innerPeaceEquilibriumTitle": "Equilibrium Mastery",
+    "innerPeaceEquilibriumTitle": "Mestring av likevekt",
     "progressComplete": "{{percent}}% fullført",
     "startJourney": "Start reisen din",
     "day": "Dag",
@@ -596,43 +607,169 @@
             "title": "Finne stillhet",
             "description": "Begynn reisen din ved å koble til stillheten inni deg.",
             "affirmation": "Jeg er i fred med meg selv og verden rundt meg.",
-            "journalPrompt": "Hva betyr indre fred for deg?"
+            "journalPrompt": "Hva betyr indre fred for deg?",
+            "mantraText": "Jeg hviler i stillheten som allerede finnes i meg.",
+            "breathingDescription": "Langsom nesepust med lengre utpust — fem minutter i myk takt."
           },
           "2": {
             "title": "Pustevitenskap",
             "description": "Oppdag den beroligende kraften i bevisst pusting.",
             "affirmation": "Med hvert pust inviterer jeg ro og slipper uro.",
-            "journalPrompt": "Hvordan påvirker pusten din emosjonelle tilstand?"
+            "journalPrompt": "Hvordan påvirker pusten din emosjonelle tilstand?",
+            "mantraText": "Hvert pust bærer ro.",
+            "breathingDescription": "Tell fire inn, fire ut; la utpusten gradvis bli lengre."
           },
           "3": {
             "title": "Slippe spenning",
             "description": "Lær å frigjøre fysisk og mental spenning.",
             "affirmation": "Jeg slipper det som ikke lenger tjener meg med kjærlighet.",
-            "journalPrompt": "Hvor holder du spenning i kroppen?"
+            "journalPrompt": "Hvor holder du spenning i kroppen?",
+            "mantraText": "Jeg slipper spenning uten kamp.",
+            "breathingDescription": "Myk utpust gjennom munnen — skuldre og kjeve mykes opp."
           },
           "4": {
             "title": "Nåværende øyeblikk",
             "description": "Finn fred i øyeblikk av stillhet og ensomhet.",
             "affirmation": "I stillhet finner jeg mitt sanne jeg.",
-            "journalPrompt": "Hva oppstår når du sitter i stillhet?"
+            "journalPrompt": "Hva oppstår når du sitter i stillhet?",
+            "mantraText": "I stillhet er jeg hel.",
+            "breathingDescription": "Tre minutter med naturlig pust i stillhet — bare vitne."
           },
           "5": {
             "title": "Selvmedfølelse",
             "description": "Fred begynner med hvordan vi behandler oss selv. I dag dyrker vi dyp selvmedfølelse.",
             "affirmation": "Jeg er verdig kjærlighet og vennlighet. Jeg behandler meg selv med samme medfølelse jeg tilbyr andre.",
-            "journalPrompt": "Hva ville du si til ditt yngre jeg?"
+            "journalPrompt": "Hva ville du si til ditt yngre jeg?",
+            "mantraText": "Jeg behandler meg med varme og ømhet.",
+            "breathingDescription": "Hånd på hjertet: inn med vennlighet, ut med selvbebreidelse."
           },
           "6": {
             "title": "Jordnær nærvær",
             "description": "Jord deg i det nåværende øyeblikket.",
             "affirmation": "Jeg er jordet, sentrert og trygg.",
-            "journalPrompt": "Hva hjelper deg å føle deg jordet?"
+            "journalPrompt": "Hva hjelper deg å føle deg jordet?",
+            "mantraText": "Jeg er forankret i nåtidens øyeblikk.",
+            "breathingDescription": "Kjenn fotsåler mot gulvet; inn tre, ut seks — ti rolige runder."
           },
           "7": {
             "title": "Fredelig integrasjon",
             "description": "Integrer læringene dine i hverdagen.",
             "affirmation": "Fred flyter gjennom meg i hvert øyeblikk.",
-            "journalPrompt": "Hvordan vil du opprettholde fred i hverdagen?"
+            "journalPrompt": "Hvordan vil du opprettholde fred i hverdagen?",
+            "mantraText": "Om shanti shanti shanti — fred i kropp, tale og sinn.",
+            "breathingDescription": "4-7-8-pust: inn fire, hold sju, ut åtte langsomt, fem runder."
+          },
+          "8": {
+            "title": "Takknemlighet og mykhet",
+            "description": "Dyrk mild takknemlighet for små ting som bar deg i dag.",
+            "affirmation": "Jeg mykner der livet møter meg.",
+            "journalPrompt": "Hvilke tre små ting føltes stille støttende i dag?",
+            "mantraText": "Takk — jeg tar imot det gode som allerede er her.",
+            "breathingDescription": "Myk magepust: inn omsorg, ut spenning — seks sykluser."
+          },
+          "9": {
+            "title": "Kroppskanning",
+            "description": "Flytt langsomt oppmerksomheten fra hode til tær uten å måtte fikse noe.",
+            "affirmation": "Kroppen min får være som den er.",
+            "journalPrompt": "Hvor la du merke til uventet lettelse i kroppen?",
+            "mantraText": "Innenfor denne formen hviler bevisstheten og finner rom.",
+            "breathingDescription": "Like lang inn- som utpust (4-4), ett kroppsområde per åndedrag."
+          },
+          "10": {
+            "title": "Vennlig medfølelse (metta)",
+            "description": "Tilby enkle fraser om ønsket lykke mot deg selv og deretter andre.",
+            "affirmation": "Må jeg være fredfull; må alle vesener være fredfulle.",
+            "journalPrompt": "Hvem inkluderte vennligheten din naturlig i dag — inkludert deg selv?",
+            "mantraText": "Må jeg være trygg. Må jeg ha det bra. Må jeg være lett til sinns.",
+            "breathingDescription": "Pust inn omsorg for deg; pust ut omsorg mot noen du velger mykt."
+          },
+          "11": {
+            "title": "Sunne grenser",
+            "description": "Noen ganger trenger fred et tydelig, vennlig nei som beskytter energien din.",
+            "affirmation": "Jeg beskytter freden min med klarhet og omsorg.",
+            "journalPrompt": "Hvor trengs en myk grense — uten unnskyldning?",
+            "mantraText": "Et nei kan være kjærlighet når det beskytter det som er hellig.",
+            "breathingDescription": "Boksepust: fire inn, fire hold, fire ut, fire hold — tre bokser."
+          },
+          "12": {
+            "title": "Jord og forankring",
+            "description": "Kjenn vekt, kontaktpunkter og det stødige underlaget under deg.",
+            "affirmation": "Jeg blir holdt; jeg hører hjemme her.",
+            "journalPrompt": "Hva ga stabilitet i natur, lyd eller enkel berøring i dag?",
+            "mantraText": "Røtter puster nedover, krone åpner oppover; jeg holdes mellom dem.",
+            "breathingDescription": "Lengre ut enn inn (tre inn, seks ut) med føttene lett presset mot gulvet."
+          },
+          "13": {
+            "title": "Hellig lyd",
+            "description": "Bruk summing, mantra eller beroligende toner for nervesystemet.",
+            "affirmation": "Lyd beveger seg gjennom meg og etterlater stillhet.",
+            "journalPrompt": "Hvilken lyd — eller stillheten etter — ga deg ro?",
+            "mantraText": "Summ mykt på utpusten i fem minutter på en behagelig tone.",
+            "breathingDescription": "Pust inn gjennom nesen; ut med mild lukket-munn-summing."
+          },
+          "14": {
+            "title": "Refleksjon ved terskelen",
+            "description": "Halvveis invitasjon: merk hva som har myknet siden dag 1.",
+            "affirmation": "Jeg ærer hvor langt jeg har kommet.",
+            "journalPrompt": "Hvilket mønster føles mykere nå enn på dag 1?",
+            "mantraText": "Hvert steg teller; ingenting ekte er bortkastet.",
+            "breathingDescription": "Naturlig pust mens du navngir tre gevinster — ett ord per utpust."
+          },
+          "15": {
+            "title": "Tålmodighet og å slippe taket",
+            "description": "La innsikt komme; slutt å tvinge øyeblikket til å bli noe annet.",
+            "affirmation": "Timingen tilhører livet; jeg øver tålmodighet.",
+            "journalPrompt": "Hvor endret tålmodigheten teksturen på dagen din?",
+            "mantraText": "Også dette hører til hvordan fred får vokse.",
+            "breathingDescription": "Tre minutter med ustyrt pust — bare vitne."
+          },
+          "16": {
+            "title": "Slippe kontrollbehovet",
+            "description": "Løsne grepet om utfallet; vend tilbake til pusten.",
+            "affirmation": "Jeg gjør min del og slipper resten.",
+            "journalPrompt": "Hva er du villig til å slutte å tvinge — om så lite?",
+            "mantraText": "Overgivelse er styrke når jeg stoler på den større rytmen.",
+            "breathingDescription": "Sukk ut gjennom munnen ved hver utpust — fem ganger."
+          },
+          "17": {
+            "title": "Enkelhet og nok",
+            "description": "Velg én liten forenkling; smak på det som allerede finnes.",
+            "affirmation": "Nok er en port til fred.",
+            "journalPrompt": "Hva føltes romslig da du forenklet i dag?",
+            "mantraText": "Det som er her lærer meg allerede om stillhet.",
+            "breathingDescription": "Ett-minutts pauser: tre ganger i dag, tre bevisste pust hver gang."
+          },
+          "18": {
+            "title": "Tilgivelse og frigjøring",
+            "description": "Lett tilgivelsespraksis — begynn hos deg selv.",
+            "affirmation": "Jeg slipper fortellingen som holder smerten levende.",
+            "journalPrompt": "Hvilken unnskyldning trenger hjertet ditt å høre fra deg?",
+            "mantraText": "Jeg tilgir meg selv for at jeg glemte helheten min.",
+            "breathingDescription": "Hånd på hjertet: inn aksept, ut skyld — to minutter."
+          },
+          "19": {
+            "title": "Tillit og åpenhet",
+            "description": "Stol på stien; åpenhet er ikke kollaps men myk respons.",
+            "affirmation": "Jeg stoler på det jeg ennå ikke kan se.",
+            "journalPrompt": "Hva blir mulig når du stoler litt mer?",
+            "mantraText": "Samme fred som holder stjernene holder meg.",
+            "breathingDescription": "Pust i hjarterommet: varme inn, myk utvidelse ut."
+          },
+          "20": {
+            "title": "Levende integrasjon",
+            "description": "Vev øvelsene inn i hverdagen — ikke bare i formelle økter.",
+            "affirmation": "Fred øves i små, gjentakelige ritualer.",
+            "journalPrompt": "Hvordan husker du fred på et fast tidspunkt i morgen (f.eks. lunsj)?",
+            "mantraText": "Vanlige øyeblikk er alter når jeg bærer nærvær.",
+            "breathingDescription": "Før en daglig rutine: ett langsomt pust som starter med utpust."
+          },
+          "21": {
+            "title": "Forsegl freden din",
+            "description": "Velg ett anker — pust, mantra eller grense — for måneden som kommer.",
+            "affirmation": "Min fred er levende praksis, ikke en avsluttet hendelse.",
+            "journalPrompt": "Hvilken ene vane vil du beholde for å beskytte det du har dyrket her?",
+            "mantraText": "Jeg forsegler denne roen som et løfte til mitt fremtidige jeg.",
+            "breathingDescription": "Tre dype pust: takknemlighet for reisen inn, forpliktelse ut."
           }
         }
       },

@@ -762,6 +762,17 @@
       "advanced": "Advanced"
     }
   },
+  "pathsIndex": {
+    "title": "Spiritual Paths",
+    "subtitle": "Guided journeys to transform your practice",
+    "inProgress": "In Progress",
+    "completed": "Completed",
+    "daysCount": "{{count}} days",
+    "dayProgress": "Day {{current}} of {{total}}",
+    "empty": "No paths available yet.",
+    "pathBegunToast": "Your spiritual path has begun! 🌟",
+    "pathStartErrorToast": "Failed to start path"
+  },
   "spiritualPath": {
     "yourPath": "Your Path",
     "continueDay": "Continue Day",
@@ -818,7 +829,121 @@
             "title": "Peaceful Integration",
             "description": "Integrate your learnings into daily life.",
             "affirmation": "Peace flows through me in every moment.",
-            "journalPrompt": "How will you maintain peace in daily life?"
+            "journalPrompt": "How will you maintain peace in daily life?",
+            "mantraText": "Om Shanti Shanti Shanti — peace in body, speech, and mind.",
+            "breathingDescription": "4-7-8 breath: inhale 4, hold 7, exhale 8 slowly, for five rounds."
+          },
+          "8": {
+            "title": "Gratitude & Softening",
+            "description": "Cultivate gentle gratitude for small things that held you today.",
+            "affirmation": "I soften where life meets me.",
+            "journalPrompt": "What three small things felt quietly supportive today?",
+            "mantraText": "Thank you — I receive the good that is already here.",
+            "breathingDescription": "Soft belly breath: inhale kindness, exhale tension, six slow cycles."
+          },
+          "9": {
+            "title": "Body Awareness Scan",
+            "description": "Slowly move attention from head to toe without needing to fix anything.",
+            "affirmation": "My body is allowed to be as it is.",
+            "journalPrompt": "Where did you notice unexpected ease in the body?",
+            "mantraText": "Within this form, awareness rests and finds space.",
+            "breathingDescription": "Equal inhale and exhale (4-4) while scanning one body area per breath."
+          },
+          "10": {
+            "title": "Loving-Kindness (Metta)",
+            "description": "Offer simple phrases of goodwill toward yourself, then toward others.",
+            "affirmation": "May I be peaceful; may all beings be peaceful.",
+            "journalPrompt": "Who did your kindness naturally include today — including you?",
+            "mantraText": "May I be safe. May I be well. May I be at ease.",
+            "breathingDescription": "Breathe in care for yourself; breathe out care for someone you choose gently."
+          },
+          "11": {
+            "title": "Healthy Boundaries",
+            "description": "Peace sometimes requires a clear, kind limit that protects your energy.",
+            "affirmation": "I protect my peace with clarity and care.",
+            "journalPrompt": "Where does a gentle boundary feel needed — without apology?",
+            "mantraText": "No can be love when it protects what is sacred.",
+            "breathingDescription": "Box breathing: 4 in, 4 hold, 4 out, 4 hold — three full boxes."
+          },
+          "12": {
+            "title": "Earth & Grounding",
+            "description": "Feel weight, contact points, and the steady support beneath you.",
+            "affirmation": "I am supported; I belong here.",
+            "journalPrompt": "What steadied you in nature, sound, or simple contact today?",
+            "mantraText": "Roots breathe downward; crown opens upward; I am held between.",
+            "breathingDescription": "Longer exhale than inhale (in 3, out 6) with feet pressing lightly into the floor."
+          },
+          "13": {
+            "title": "Sacred Sound",
+            "description": "Use humming, mantra, or soothing tones to settle the nervous system.",
+            "affirmation": "Sound moves through me and leaves quiet.",
+            "journalPrompt": "What sound — or silence after sound — brought you calm?",
+            "mantraText": "Hum on the exhale on a comfortable pitch for five minutes.",
+            "breathingDescription": "Inhale through the nose; exhale with a gentle closed-mouth hum."
+          },
+          "14": {
+            "title": "Reflection at the Threshold",
+            "description": "Halfway invitation: notice what has softened since you began.",
+            "affirmation": "I honor how far I have come.",
+            "journalPrompt": "What pattern feels softer now than on Day 1?",
+            "mantraText": "Each step counts; nothing real is wasted.",
+            "breathingDescription": "Natural breath while naming three wins — one word per exhale."
+          },
+          "15": {
+            "title": "Patience & Allowing",
+            "description": "Let insight arrive; stop forcing the moment to become something else.",
+            "affirmation": "Timing belongs to life; I practice patience.",
+            "journalPrompt": "Where did patience change the texture of your day?",
+            "mantraText": "This too belongs in the unfoldment of peace.",
+            "breathingDescription": "Sit with uncontrolled breath for three minutes — only witnessing."
+          },
+          "16": {
+            "title": "Releasing the Need to Control",
+            "description": "Loosen the grip on outcomes; return again to the breath.",
+            "affirmation": "I do my part and release the rest.",
+            "journalPrompt": "What are you willing to stop forcing — even a little?",
+            "mantraText": "Surrender is strength when I trust the greater rhythm.",
+            "breathingDescription": "Sigh out the mouth on each exhale — inhale easy through the nose, five times."
+          },
+          "17": {
+            "title": "Simplicity & Enoughness",
+            "description": "Choose one small simplification; savor what is already present.",
+            "affirmation": "Enough is a gate to peace.",
+            "journalPrompt": "What felt spacious when you chose simplicity today?",
+            "mantraText": "What is here is already teaching me quiet.",
+            "breathingDescription": "One-minute micro-pauses: three times today, three conscious breaths each."
+          },
+          "18": {
+            "title": "Forgiveness & Release",
+            "description": "A light forgiveness practice — begin with yourself.",
+            "affirmation": "I release the story that keeps pain alive.",
+            "journalPrompt": "What apology does your own heart need to hear from you?",
+            "mantraText": "I forgive myself for forgetting my wholeness.",
+            "breathingDescription": "Hand on heart: inhale acceptance, exhale blame — two minutes."
+          },
+          "19": {
+            "title": "Trust & Opening",
+            "description": "Trust the path; opening is not collapse but responsive softness.",
+            "affirmation": "I trust what I cannot yet see.",
+            "journalPrompt": "What becomes possible when you trust a little more?",
+            "mantraText": "The same peace that holds stars holds me.",
+            "breathingDescription": "Heart-space breathing: imagine warmth on inhale, soft expansion on exhale."
+          },
+          "20": {
+            "title": "Living Integration",
+            "description": "Weave your practices into ordinary moments — not only formal sittings.",
+            "affirmation": "Peace is practiced in small, repeatable rituals.",
+            "journalPrompt": "How will you remember peace at a fixed time tomorrow (e.g. noon)?",
+            "mantraText": "Ordinary moments are altars when I bring presence.",
+            "breathingDescription": "Before a routine task you do daily, take one slow exhale-first breath."
+          },
+          "21": {
+            "title": "Seal Your Peace",
+            "description": "Choose one anchor — breath, mantra, or boundary — for the month ahead.",
+            "affirmation": "My peace is a living practice, not a finished event.",
+            "journalPrompt": "What single habit will you keep to protect what you cultivated here?",
+            "mantraText": "I seal this calm as a vow to my future self.",
+            "breathingDescription": "Three deep breaths: inhale gratitude for the journey, exhale commitment."
           }
         }
       },

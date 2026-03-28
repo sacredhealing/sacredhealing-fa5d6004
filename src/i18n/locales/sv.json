@@ -586,6 +586,17 @@
       "advanced": "Avancerad"
     }
   },
+  "pathsIndex": {
+    "title": "Andliga vägar",
+    "subtitle": "Guidade resor som förändrar din praktik",
+    "inProgress": "Pågår",
+    "completed": "Slutförd",
+    "daysCount": "{{count}} dagar",
+    "dayProgress": "Dag {{current}} av {{total}}",
+    "empty": "Inga vägar tillgängliga ännu.",
+    "pathBegunToast": "Din andliga väg har börjat! 🌟",
+    "pathStartErrorToast": "Det gick inte att starta vägen"
+  },
   "spiritualPath": {
     "yourPath": "Din väg",
     "continueDay": "Fortsätt dag",
@@ -593,7 +604,7 @@
     "resumeTransmissionCycle": "Återuppta transmission: cykel {{day}}",
     "daySlashTotal": "Dag {{current}} / {{total}}",
     "innerPeaceLabel": "SHANTI - SATTVA PROTOCOOL",
-    "innerPeaceEquilibriumTitle": "Equilibrium Mastery",
+    "innerPeaceEquilibriumTitle": "Mästerlig jämvikt",
     "progressComplete": "{{percent}}% klart",
     "startJourney": "Börja din resa",
     "day": "Dag",
@@ -606,43 +617,169 @@
             "title": "Hitta stillhet",
             "description": "Börja din resa genom att ansluta till stillheten inom dig.",
             "affirmation": "Jag är i fred med mig själv och världen runt mig.",
-            "journalPrompt": "Vad betyder inre frid för dig?"
+            "journalPrompt": "Vad betyder inre frid för dig?",
+            "mantraText": "Jag vilar i stillheten som redan finns inom mig.",
+            "breathingDescription": "Långsam näsandning med längre utandning — fem minuter i mjuk takt."
           },
           "2": {
             "title": "Andningsmedvetenhet",
             "description": "Upptäck den lugnande kraften i medveten andning.",
             "affirmation": "Med varje andetag bjuder jag in lugn och släpper oron.",
-            "journalPrompt": "Hur påverkar din andning ditt emotionella tillstånd?"
+            "journalPrompt": "Hur påverkar din andning ditt emotionella tillstånd?",
+            "mantraText": "Varje andetag bär lugn.",
+            "breathingDescription": "Räkna fyra in, fyra ut; låt utandningen successivt bli längre."
           },
           "3": {
             "title": "Släpp spänning",
             "description": "Lär dig släppa fysisk och mental spänning.",
             "affirmation": "Jag släpper det som inte längre tjänar mig med kärlek.",
-            "journalPrompt": "Var håller du spänning i kroppen?"
+            "journalPrompt": "Var håller du spänning i kroppen?",
+            "mantraText": "Jag släpper spänning utan kamp.",
+            "breathingDescription": "Mjuk utandning genom munnen som en lätt suck — axlar och käke löses upp."
           },
           "4": {
             "title": "Nuvarande ögonblick",
             "description": "Hitta frid i stunder av tystnad och ensamhet.",
             "affirmation": "I tystnad hittar jag mitt verkliga jag.",
-            "journalPrompt": "Vad uppstår när du sitter i tystnad?"
+            "journalPrompt": "Vad uppstår när du sitter i tystnad?",
+            "mantraText": "I tystnad är jag hel.",
+            "breathingDescription": "Sitt med naturlig andning i tystnad i tre minuter — bara vittna."
           },
           "5": {
             "title": "Självmedkänsla",
             "description": "Frid börjar med hur vi behandlar oss själva. Idag odlar vi djup självmedkänsla.",
             "affirmation": "Jag är värd kärlek och vänlighet. Jag behandlar mig själv med samma medkänsla jag ger andra.",
-            "journalPrompt": "Vad skulle du säga till ditt yngre jag?"
+            "journalPrompt": "Vad skulle du säga till ditt yngre jag?",
+            "mantraText": "Jag behandlar mig med värme och ömhet.",
+            "breathingDescription": "Handen på hjärtat: in med vänlighet, ut med all självkritik — två minuter."
           },
           "6": {
             "title": "Grundande närvaro",
             "description": "Grund dig i nuvarande ögonblicket.",
             "affirmation": "Jag är grundad, centrerad och säker.",
-            "journalPrompt": "Vad hjälper dig att känna dig grundad?"
+            "journalPrompt": "Vad hjälper dig att känna dig grundad?",
+            "mantraText": "Jag är rotad i nuet.",
+            "breathingDescription": "Känn fotsulor mot golvet; in tre, ut sex — tio lugna varv."
           },
           "7": {
             "title": "Fridfull integration",
             "description": "Integrera dina lärdomar i vardagen.",
             "affirmation": "Frid flyter genom mig i varje ögonblick.",
-            "journalPrompt": "Hur kommer du att upprätthålla frid i vardagen?"
+            "journalPrompt": "Hur kommer du att upprätthålla frid i vardagen?",
+            "mantraText": "Om shanti shanti shanti — frid i kropp, tal och sinne.",
+            "breathingDescription": "4-7-8-andning: in fyra, håll sju, ut åtta långsamt, fem varv."
+          },
+          "8": {
+            "title": "Tacksamhet och mjukning",
+            "description": "Odna mjuk tacksamhet för små saker som bar dig idag.",
+            "affirmation": "Jag mjuknar där livet möter mig.",
+            "journalPrompt": "Vilka tre små saker kändes tyst stödjande idag?",
+            "mantraText": "Tack — jag tar emot det goda som redan finns här.",
+            "breathingDescription": "Mjuk magandning: in med värme, ut med spänning — sex långsamma cykler."
+          },
+          "9": {
+            "title": "Kroppsmedveten skanning",
+            "description": "Flytta långsamt uppmärksamheten från huvud till tår utan att behöva fixa något.",
+            "affirmation": "Min kropp får vara som den är.",
+            "journalPrompt": "Var märkte du oväntad lättnad i kroppen?",
+            "mantraText": "Inom denna form vilar medvetenheten och hittar rum.",
+            "breathingDescription": "Lika lång in- som utandning (fyra-fyra) med ett kroppsområde per andetag."
+          },
+          "10": {
+            "title": "Vänlig medkänsla (metta)",
+            "description": "Erbjud enkla fraser av välönskan till dig själv och sedan till andra.",
+            "affirmation": "Må jag vara fridfull; må alla varelser vara fridfulla.",
+            "journalPrompt": "Vem inkluderade din vänlighet naturligt idag — inklusive du själv?",
+            "mantraText": "Må jag vara trygg. Må jag vara väl. Må jag vara lätt till sinnes.",
+            "breathingDescription": "Andas in omtanke för dig; andas ut omtanke för någon du väljer mjukt."
+          },
+          "11": {
+            "title": "Sunda gränser",
+            "description": "Frid kräver ibland en tydlig, snäll gräns som skyddar din energi.",
+            "affirmation": "Jag skyddar min frid med tydlighet och omsorg.",
+            "journalPrompt": "Var behövs en mjuk gräns — utan ursäkt?",
+            "mantraText": "Nej kan vara kärlek när det skyddar det som är heligt.",
+            "breathingDescription": "Lådandning: fyra in, fyra håll, fyra ut, fyra håll — tre hela lådor."
+          },
+          "12": {
+            "title": "Jord och grundning",
+            "description": "Känn tyngd, kontaktpunkter och det stadiga stödet under dig.",
+            "affirmation": "Jag är buren; jag hör hemma här.",
+            "journalPrompt": "Vad gav stadga i natur, ljud eller enkel beröring idag?",
+            "mantraText": "Rötter andas nedåt, krona öppnar uppåt; jag hålls mellan dem.",
+            "breathingDescription": "Längre ut än in (in tre, ut sex) med fötterna lätt pressande mot golvet."
+          },
+          "13": {
+            "title": "Heligt ljud",
+            "description": "Använd summning, mantra eller lugnande toner för att stilla nervsystemet.",
+            "affirmation": "Ljud rör sig genom mig och lämnar tystnad.",
+            "journalPrompt": "Vilket ljud — eller tystnaden efter — gav dig lugn?",
+            "mantraText": "Summer mjukt på utandningen på en behaglig ton i fem minuter.",
+            "breathingDescription": "Andas in genom näsan; ut genom lätt sluten mun med summning."
+          },
+          "14": {
+            "title": "Reflektion vid tröskeln",
+            "description": "Halvvägsinbjudan: märk vad som mjuknat sedan du började.",
+            "affirmation": "Jag hedrar hur långt jag kommit.",
+            "journalPrompt": "Vilket mönster känns mjukare nu än dag 1?",
+            "mantraText": "Varje steg räknas; inget verkligt är förgäves.",
+            "breathingDescription": "Naturlig andning medan du nämner tre vinster — ett ord per utandning."
+          },
+          "15": {
+            "title": "Tålamod och tillåtande",
+            "description": "Låt insikten komma; sluta tvinga stunden att bli något annat.",
+            "affirmation": "Tidningen tillhör livet; jag övar tålamod.",
+            "journalPrompt": "Var förändrade tålamodet känslan av din dag?",
+            "mantraText": "Också detta hör till hur friden får växa.",
+            "breathingDescription": "Sitt med orydd andning i tre minuter — bara vittna."
+          },
+          "16": {
+            "title": "Släppa kontrollbehovet",
+            "description": "Lossa greppet om utfall; återvänd till andetaget.",
+            "affirmation": "Jag gör min del och släpper resten.",
+            "journalPrompt": "Vad är du villig att sluta tvinga — även lite grann?",
+            "mantraText": "Överlämnande är styrka när jag litar på den större rytmen.",
+            "breathingDescription": "Sucka ut genom munnen varje utandning — in lätt genom näsan, fem gånger."
+          },
+          "17": {
+            "title": "Enkelhet och tillräcklighet",
+            "description": "Välj en liten förenkling; smaka på det som redan finns.",
+            "affirmation": "Tillräckligt är en port till frid.",
+            "journalPrompt": "Vad kändes rymligt när du förenklade idag?",
+            "mantraText": "Det som är här undervisar mig redan om tystnad.",
+            "breathingDescription": "Enminuterspauser: tre gånger idag, tre medvetna andetag varje gång."
+          },
+          "18": {
+            "title": "Förlåtelse och utsläpp",
+            "description": "Lätt förlåtelseövning — börja hos dig själv.",
+            "affirmation": "Jag släpper berättelsen som håller smärtan vid liv.",
+            "journalPrompt": "Vilken ursäkt behöver ditt hjärta höra från dig?",
+            "mantraText": "Jag förlåter mig för att jag glömde min helhet.",
+            "breathingDescription": "Handen på hjärtat: in med acceptans, ut med skuld — två minuter."
+          },
+          "19": {
+            "title": "Tillit och öppning",
+            "description": "Lita på vägen; öppning är inte kollaps utan responsiv mjukhet.",
+            "affirmation": "Jag litar på det jag inte kan se än.",
+            "mantraText": "Samma frid som håller stjärnorna håller mig.",
+            "journalPrompt": "Vad blir möjligt när du litar lite mer?",
+            "breathingDescription": "Andning i hjärtrummet: föreställ värme in, mjuk expansion ut."
+          },
+          "20": {
+            "title": "Levande integration",
+            "description": "Väv in övningarna i vardagen — inte bara i formella sittningar.",
+            "affirmation": "Frid övas i små, upprepningsbara ritualer.",
+            "journalPrompt": "Hur kommer du minnas frid vid en bestämd tid imorgon (t.ex. lunch)?",
+            "mantraText": "Vardagsstunder är altare när jag bär med mig närvaro.",
+            "breathingDescription": "Före en vardagsuppgift du gör dagligen: ett långsamt andetag som börjar med utandning."
+          },
+          "21": {
+            "title": "Försegla din frid",
+            "description": "Välj ett ankare — andning, mantra eller gräns — för månaden som kommer.",
+            "affirmation": "Min frid är levande praktik, inte en avslutad händelse.",
+            "journalPrompt": "Vilken enda vana behåller du för att skydda det du odlat här?",
+            "mantraText": "Jag förseglar detta lugn som ett löfte till mitt framtida jag.",
+            "breathingDescription": "Tre djupa andetag: in med tacksamhet för resan, ut med ett löfte."
           }
         }
       },

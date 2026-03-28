@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSHC } from '@/contexts/SHCContext';
 import { toast } from 'sonner';
+import i18n from '@/i18n/setup';
 
 export interface SpiritualPath {
   id: string;
@@ -157,12 +158,12 @@ export const useSpiritualPaths = () => {
       // Only show "begun" message if this is truly a new start
       const isNewStart = data.current_day === 1 && !data.completed_at;
       if (isNewStart) {
-        toast.success('Your spiritual path has begun! 🌟');
+        toast.success(i18n.t('pathsIndex.pathBegunToast'));
       }
     },
     onError: (error) => {
       console.error('Error starting path:', error);
-      toast.error('Failed to start path');
+      toast.error(i18n.t('pathsIndex.pathStartErrorToast'));
     },
   });
 

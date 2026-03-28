@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Clock, Star, Play, BookOpen, CheckCircle2, Lock, Wind, Music, Headphones } from 'lucide-react';
 import { useSpiritualPaths, SpiritualPath, PathDay } from '@/hooks/useSpiritualPaths';
@@ -89,6 +89,8 @@ const PathDetail: React.FC = () => {
     ? Math.round((progress.current_day / path.duration_days) * 100) 
     : 0;
 
+  const localizedPathTitle = pathKey ? t(`spiritualPath.paths.${pathKey}.title`, path.title) : path.title;
+
   const handleStartPath = async () => {
     await startPath.mutateAsync(path.id);
     setProgress(getProgressForPath(path.id));
@@ -108,7 +110,7 @@ const PathDetail: React.FC = () => {
         {path.cover_image_url && (
           <img
             src={path.cover_image_url}
-            alt={path.title}
+            alt={localizedPathTitle}
             className="w-full h-full object-cover"
           />
         )}
@@ -129,7 +131,7 @@ const PathDetail: React.FC = () => {
         >
           <Badge className="mb-2 capitalize">{t(`pathDetail.difficulty.${path.difficulty.toLowerCase()}`, path.difficulty)}</Badge>
           <h1 className="text-2xl font-heading font-bold text-foreground mb-2">
-            {pathKey ? t(`spiritualPath.paths.${pathKey}.title`, path.title) : path.title}
+            {localizedPathTitle}
           </h1>
           <p className="text-muted-foreground mb-4">
             {pathKey ? t(`spiritualPath.paths.${pathKey}.description`, path.description || '') : (path.description || '')}
@@ -234,25 +236,43 @@ const PathDetail: React.FC = () => {
                         ) : null;
                       })()}
 
-                      {day.mantra_text && (
-                        <div className="flex items-start gap-2">
-                          <Music className="w-4 h-4 text-accent mt-0.5" />
-                          <div>
-                            <p className="text-xs text-muted-foreground mb-1">{t('pathDetail.todaysMantra')}</p>
-                            <p className="text-sm text-foreground font-medium">{day.mantra_text}</p>
+                      {(() => {
+                        const mantra =
+                          pathKey && day.day_number != null
+                            ? t(
+                                `spiritualPath.paths.${pathKey}.days.${day.day_number}.mantraText`,
+                                day.mantra_text || ''
+                              )
+                            : day.mantra_text || '';
+                        return mantra.trim() ? (
+                          <div className="flex items-start gap-2">
+                            <Music className="w-4 h-4 text-accent mt-0.5" />
+                            <div>
+                              <p className="text-xs text-muted-foreground mb-1">{t('pathDetail.todaysMantra')}</p>
+                              <p className="text-sm text-foreground font-medium">{mantra}</p>
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        ) : null;
+                      })()}
 
-                      {day.breathing_description && (
-                        <div className="flex items-start gap-2">
-                          <Wind className="w-4 h-4 text-primary mt-0.5" />
-                          <div>
-                            <p className="text-xs text-muted-foreground mb-1">{t('pathDetail.breathingPractice')}</p>
-                            <p className="text-sm text-foreground">{day.breathing_description}</p>
+                      {(() => {
+                        const breath =
+                          pathKey && day.day_number != null
+                            ? t(
+                                `spiritualPath.paths.${pathKey}.days.${day.day_number}.breathingDescription`,
+                                day.breathing_description || ''
+                              )
+                            : day.breathing_description || '';
+                        return breath.trim() ? (
+                          <div className="flex items-start gap-2">
+                            <Wind className="w-4 h-4 text-primary mt-0.5" />
+                            <div>
+                              <p className="text-xs text-muted-foreground mb-1">{t('pathDetail.breathingPractice')}</p>
+                              <p className="text-sm text-foreground">{breath}</p>
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        ) : null;
+                      })()}
 
                       {isCurrentDay && progress && !progress.completed_at && (
                         <Button

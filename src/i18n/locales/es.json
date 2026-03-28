@@ -764,6 +764,17 @@
       "advanced": "Avanzado"
     }
   },
+  "pathsIndex": {
+    "title": "Caminos espirituales",
+    "subtitle": "Viajes guiados para transformar tu práctica",
+    "inProgress": "En curso",
+    "completed": "Completado",
+    "daysCount": "{{count}} días",
+    "dayProgress": "Día {{current}} de {{total}}",
+    "empty": "Aún no hay caminos disponibles.",
+    "pathBegunToast": "¡Tu camino espiritual ha comenzado! 🌟",
+    "pathStartErrorToast": "No se pudo iniciar el camino"
+  },
   "spiritualPath": {
     "yourPath": "Tu camino",
     "continueDay": "Continuar día",
@@ -771,7 +782,7 @@
     "resumeTransmissionCycle": "Reanudar transmisión: ciclo {{day}}",
     "daySlashTotal": "Día {{current}} / {{total}}",
     "innerPeaceLabel": "SHANTI - SATTVA PROTOCOOL",
-    "innerPeaceEquilibriumTitle": "Equilibrium Mastery",
+    "innerPeaceEquilibriumTitle": "Dominio del equilibrio",
     "progressComplete": "{{percent}}% completado",
     "startJourney": "Comienza tu viaje",
     "day": "Día",
@@ -784,43 +795,169 @@
             "title": "Encontrar la quietud",
             "description": "Comienza tu viaje conectando con la quietud interior.",
             "affirmation": "Estoy en paz conmigo mismo y el mundo que me rodea.",
-            "journalPrompt": "¿Qué significa para ti la paz interior?"
+            "journalPrompt": "¿Qué significa para ti la paz interior?",
+            "mantraText": "Descanso en la quietud que ya mora en mí.",
+            "breathingDescription": "Respiración nasal lenta, exhalación más larga — cinco minutos en ritmo suave."
           },
           "2": {
             "title": "Conciencia de la respiración",
             "description": "Descubre el poder calmante de la respiración consciente.",
             "affirmation": "Con cada respiración, invito la calma y libero la preocupación.",
-            "journalPrompt": "¿Cómo afecta tu respiración tu estado emocional?"
+            "journalPrompt": "¿Cómo afecta tu respiración tu estado emocional?",
+            "mantraText": "Cada respiración trae calma.",
+            "breathingDescription": "Cuatro al inhalar, cuatro al exhalar; deja que la exhalación se alargue suavemente."
           },
           "3": {
             "title": "Soltar la tensión",
             "description": "Aprende a liberar la tensión física y mental.",
             "affirmation": "Libero con amor lo que ya no me sirve.",
-            "journalPrompt": "¿Dónde guardas tensión en tu cuerpo?"
+            "journalPrompt": "¿Dónde guardas tensión en tu cuerpo?",
+            "mantraText": "Suelto tensión sin luchar.",
+            "breathingDescription": "Exhalación suave por la boca, hombros y mandíbula relajados."
           },
           "4": {
             "title": "Momento presente",
             "description": "Encuentra paz en momentos de silencio y soledad.",
             "affirmation": "En el silencio encuentro mi verdadero yo.",
-            "journalPrompt": "¿Qué surge cuando te sientas en silencio?"
+            "journalPrompt": "¿Qué surge cuando te sientas en silencio?",
+            "mantraText": "En el silencio estoy completo.",
+            "breathingDescription": "Tres minutos de respiración natural en silencio — solo observa."
           },
           "5": {
             "title": "Autocompasión",
             "description": "La paz comienza con cómo nos tratamos a nosotros mismos. Hoy cultivamos profunda autocompasión.",
             "affirmation": "Merezco amor y amabilidad. Me trato con la misma compasión que ofrezco a otros.",
-            "journalPrompt": "¿Qué le dirías a tu yo más joven?"
+            "journalPrompt": "¿Qué le dirías a tu yo más joven?",
+            "mantraText": "Me trato con calidez y ternura.",
+            "breathingDescription": "Mano en el corazón: inhala bondad, exhala culpa — dos minutos."
           },
           "6": {
             "title": "Presencia enraizada",
             "description": "Enraízate en el momento presente.",
             "affirmation": "Estoy enraizado, centrado y seguro.",
-            "journalPrompt": "¿Qué te ayuda a sentirte enraizado?"
+            "journalPrompt": "¿Qué te ayuda a sentirte enraizado?",
+            "mantraText": "Estoy arraigado en el ahora.",
+            "breathingDescription": "Siente los pies en el suelo; inhala tres, exhala seis — diez ciclos."
           },
           "7": {
             "title": "Integración pacífica",
             "description": "Integra tus aprendizajes en la vida diaria.",
             "affirmation": "La paz fluye a través de mí en cada momento.",
-            "journalPrompt": "¿Cómo mantendrás la paz en la vida diaria?"
+            "journalPrompt": "¿Cómo mantendrás la paz en la vida diaria?",
+            "mantraText": "Om shanti shanti shanti — paz en cuerpo, habla y mente.",
+            "breathingDescription": "Respiración 4-7-8: inhala cuatro, siete de retención, exhala ocho despacio, cinco rondas."
+          },
+          "8": {
+            "title": "Gratitud y suavidad",
+            "description": "Cultiva gratitud amable por las pequeñas cosas que te sostuvieron hoy.",
+            "affirmation": "Me suavizo donde la vida me encuentra.",
+            "journalPrompt": "¿Qué tres cosas pequeñas se sintieron silenciosamente de apoyo hoy?",
+            "mantraText": "Gracias — recibo el bien que ya está aquí.",
+            "breathingDescription": "Vientre suave: inhala ternura, exhala tensión — seis ciclos lentos."
+          },
+          "9": {
+            "title": "Escaneo corporal consciente",
+            "description": "Mueve lentamente la atención de la cabeza a los pies sin necesidad de arreglar nada.",
+            "affirmation": "Mi cuerpo puede ser como es.",
+            "journalPrompt": "¿Dónde notaste ligereza inesperada en el cuerpo?",
+            "mantraText": "Dentro de esta forma, la conciencia descansa y halla espacio.",
+            "breathingDescription": "Inhalación y exhalación iguales (4-4), un área del cuerpo por respiro."
+          },
+          "10": {
+            "title": "Bondad amorosa (metta)",
+            "description": "Ofrece frases simples de buen deseo hacia ti y luego hacia los demás.",
+            "affirmation": "Que yo sea pacífico; que todos los seres sean pacíficos.",
+            "journalPrompt": "¿A quién incluyó tu bondad de forma natural hoy — tú incluido?",
+            "mantraText": "Que esté a salvo. Que esté bien. Que esté en calma.",
+            "breathingDescription": "Inhala cuidado para ti; exhala cuidado hacia alguien que elijas con suavidad."
+          },
+          "11": {
+            "title": "Límites saludables",
+            "description": "A veces la paz necesita un no claro y amable que proteja tu energía.",
+            "affirmation": "Protejo mi paz con claridad y cuidado.",
+            "journalPrompt": "¿Dónde haría falta un límite suave — sin disculparte?",
+            "mantraText": "Un no puede ser amor cuando protege lo sagrado.",
+            "breathingDescription": "Caja: cuatro inhalar, cuatro sostener, cuatro exhalar, cuatro sostener — tres cajas."
+          },
+          "12": {
+            "title": "Tierra y enraizamiento",
+            "description": "Siente peso, puntos de contacto y el apoyo firme bajo ti.",
+            "affirmation": "Estoy sostenido; pertenezco aquí.",
+            "journalPrompt": "¿Qué te estabilizó en la naturaleza, un sonido o un contacto simple hoy?",
+            "mantraText": "Las raíces respiran hacia abajo, la coronilla se abre arriba; me sostienen entre ambas.",
+            "breathingDescription": "Exhalación más larga que la inhalación (tres dentro, seis fuera) con pies apoyados."
+          },
+          "13": {
+            "title": "Sonido sagrado",
+            "description": "Usa tarareo, mantra o tonos calmantes para apaciguar el sistema nervioso.",
+            "affirmation": "El sonido me atraviesa y deja quietud.",
+            "journalPrompt": "¿Qué sonido — o el silencio después — te calmó?",
+            "mantraText": "Tararea suave en la exhalación durante cinco minutos.",
+            "breathingDescription": "Inhala por la nariz; exhala con tarareo suave y boca casi cerrada."
+          },
+          "14": {
+            "title": "Reflexión en el umbral",
+            "description": "Invitación a mitad del camino: nota qué se suavizó desde el día 1.",
+            "affirmation": "Honro lo lejos que he llegado.",
+            "journalPrompt": "¿Qué patrón se siente más liviano ahora que el día 1?",
+            "mantraText": "Cada paso cuenta; nada real se pierde.",
+            "breathingDescription": "Respiración natural nombrando tres logros — una palabra por exhalación."
+          },
+          "15": {
+            "title": "Paciencia y dejar ser",
+            "description": "Deja llegar la comprensión; deja de forzar el momento.",
+            "affirmation": "El tiempo pertenece a la vida; practico la paciencia.",
+            "journalPrompt": "¿Dónde la paciencia cambió la textura de tu día?",
+            "mantraText": "Esto también pertenece a cómo crece la paz.",
+            "breathingDescription": "Tres minutos de respiración sin guiar — solo atestigua."
+          },
+          "16": {
+            "title": "Soltar la necesidad de control",
+            "description": "Afloja el agarre a los resultados; vuelve al aliento.",
+            "affirmation": "Hago mi parte y suelto el resto.",
+            "journalPrompt": "¿Qué estás dispuesto a dejar de forzar — siquiera un poco?",
+            "mantraText": "Entregarse es fuerza cuando confío en el ritmo mayor.",
+            "breathingDescription": "Suspira por la boca al exhalar — cinco veces."
+          },
+          "17": {
+            "title": "Sencillez y suficiencia",
+            "description": "Elige una pequeña simplificación; saborea lo que ya está.",
+            "affirmation": "Lo suficiente es una puerta a la paz.",
+            "journalPrompt": "¿Qué sintió espacioso al simplificar hoy?",
+            "mantraText": "Lo que está aquí ya me enseña quietud.",
+            "breathingDescription": "Pausas de un minuto: tres veces hoy, tres respiras conscientes cada una."
+          },
+          "18": {
+            "title": "Perdón y liberación",
+            "description": "Práctica ligera de perdón — empieza contigo.",
+            "affirmation": "Suelto la historia que mantiene vivo el dolor.",
+            "journalPrompt": "¿Qué disculpa necesita oír tu corazón de ti?",
+            "mantraText": "Me perdono por olvidar mi totalidad.",
+            "breathingDescription": "Mano en el corazón: inhala aceptación, exhala culpa — dos minutos."
+          },
+          "19": {
+            "title": "Confianza y apertura",
+            "description": "Confía en el camino; abrir no es colapso sino suavidad respondiendo.",
+            "affirmation": "Confío en lo que aún no puedo ver.",
+            "journalPrompt": "¿Qué se abre cuando confías un poco más?",
+            "mantraText": "La misma paz que sostiene las estrellas me sostiene.",
+            "breathingDescription": "Respira en el espacio del corazón: calor al inhalar, suave expansión al exhalar."
+          },
+          "20": {
+            "title": "Integración viva",
+            "description": "Teje las prácticas en lo cotidiano, no solo en sentidas formales.",
+            "affirmation": "La paz se practica en pequeños rituales repetibles.",
+            "journalPrompt": "¿Cómo recordarás la paz a una hora fija mañana (por ejemplo, el mediodía)?",
+            "mantraText": "Los momentos cotidianos son altar cuando traigo presencia.",
+            "breathingDescription": "Antes de una rutina diaria: un respiro lento empezando por exhalar."
+          },
+          "21": {
+            "title": "Sella tu paz",
+            "description": "Elige un ancla — respiración, mantra o límite — para el mes que viene.",
+            "affirmation": "Mi paz es una práctica viva, no un evento terminado.",
+            "journalPrompt": "¿Qué único hábito mantendrás para proteger lo cultivado aquí?",
+            "mantraText": "Sello esta calma como promesa a mi yo futuro.",
+            "breathingDescription": "Tres respiras profundas: gratitud por el viaje al inhalar, compromiso al exhalar."
           }
         }
       },
