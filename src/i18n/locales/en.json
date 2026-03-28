@@ -2177,7 +2177,14 @@
     "howItWorks": "How it works:",
     "step1": "Select your package and upload your audio file(s)",
     "step2": "Complete the secure payment via Stripe",
-    "step3": "Receive your professionally mastered track(s) via email within 3-5 business days"
+    "step3": "Receive your professionally mastered track(s) via email within 3-5 business days",
+    "uploadFilesLabelSingle": "Upload files (1 file)",
+    "uploadFilesLabelBundle": "Upload files (up to 3 files)",
+    "dropzoneEmpty": "WAV or MP3 files",
+    "payCta": "Pay {{amount}}",
+    "toastMissingTitle": "Missing info",
+    "toastMissingDesc": "Please add your email and at least one file.",
+    "emailPlaceholder": "your@email.com"
   },
   "customMeditation": {
     "badge": "Personalized Experience",

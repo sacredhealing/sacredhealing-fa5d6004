@@ -1886,7 +1886,14 @@
     "howItWorks": "Slik fungerer det:",
     "step1": "Velg pakken din og last opp lydfilene dine",
     "step2": "Fullfør den sikre betalingen via Stripe",
-    "step3": "Motta dine profesjonelt mastrede spor via e-post innen 3-5 virkedager"
+    "step3": "Motta dine profesjonelt mastrede spor via e-post innen 3-5 virkedager",
+    "uploadFilesLabelSingle": "Last opp filer (1 fil)",
+    "uploadFilesLabelBundle": "Last opp filer (opptil 3 filer)",
+    "dropzoneEmpty": "WAV- eller MP3-filer",
+    "payCta": "Betal {{amount}}",
+    "toastMissingTitle": "Mangler informasjon",
+    "toastMissingDesc": "Legg til e-post og minst én fil.",
+    "emailPlaceholder": "din@epost.no"
   },
   "customMeditation": {
     "badge": "Personlig opplevelse",

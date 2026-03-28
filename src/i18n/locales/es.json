@@ -2145,7 +2145,14 @@
     "howItWorks": "Cómo funciona:",
     "step1": "Selecciona tu paquete y sube tu(s) archivo(s) de audio",
     "step2": "Completa el pago seguro vía Stripe",
-    "step3": "Recibe tu(s) pista(s) masterizadas profesionalmente vía email en 3-5 días hábiles"
+    "step3": "Recibe tu(s) pista(s) masterizadas profesionalmente vía email en 3-5 días hábiles",
+    "uploadFilesLabelSingle": "Subir archivos (1 archivo)",
+    "uploadFilesLabelBundle": "Subir archivos (hasta 3 archivos)",
+    "dropzoneEmpty": "Archivos WAV o MP3",
+    "payCta": "Pagar {{amount}}",
+    "toastMissingTitle": "Falta información",
+    "toastMissingDesc": "Añade tu correo y al menos un archivo.",
+    "emailPlaceholder": "tu@email.com"
   },
   "customMeditation": {
     "badge": "Experiencia Personalizada",

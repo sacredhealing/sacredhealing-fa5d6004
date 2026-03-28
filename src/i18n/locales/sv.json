@@ -2194,7 +2194,14 @@
     "howItWorks": "Så fungerar det:",
     "step1": "Välj ditt paket och ladda upp dina ljudfiler",
     "step2": "Slutför den säkra betalningen via Stripe",
-    "step3": "Få dina professionellt mastrade spår via e-post inom 3-5 arbetsdagar"
+    "step3": "Få dina professionellt mastrade spår via e-post inom 3-5 arbetsdagar",
+    "uploadFilesLabelSingle": "Ladda upp filer (1 fil)",
+    "uploadFilesLabelBundle": "Ladda upp filer (upp till 3 filer)",
+    "dropzoneEmpty": "WAV- eller MP3-filer",
+    "payCta": "Betala {{amount}}",
+    "toastMissingTitle": "Saknad information",
+    "toastMissingDesc": "Lägg till din e-post och minst en fil.",
+    "emailPlaceholder": "din@epost.se"
   },
   "customMeditation": {
     "badge": "Personlig upplevelse",
