@@ -749,7 +749,7 @@ const CSS = `
 
 /* ── DESKTOP ── */
 @media (min-width: 768px) {
-  .c-top-tabs { display: none; }
+  /* Keep Chat / Feed / Members tabs visible on large screens so feed & members are reachable */
   .c-body { gap: 0; }
   .c-live-frame iframe { height: 400px; }
 }
@@ -1960,9 +1960,6 @@ const Community = () => {
     catch { return ""; }
   };
 
-  // Avoid referencing window directly in render on environments without DOM (SSR/preview)
-  const isDesktop = typeof window !== "undefined" && window.innerWidth >= 768;
-
   // ── RENDER ──
   return (
     <>
@@ -2072,7 +2069,7 @@ const Community = () => {
           </div>
         </div>
 
-        {/* Mobile tabs */}
+        {/* Chat / Feed / Members — all breakpoints */}
         <div className="c-top-tabs">
           <button className={`c-top-tab ${mobileTab === "chat" ? "active" : ""}`} onClick={() => setMobileTab("chat")}>Chat</button>
           <button className={`c-top-tab ${mobileTab === "feed" ? "active" : ""}`} onClick={() => setMobileTab("feed")}>Feed</button>
@@ -2082,7 +2079,7 @@ const Community = () => {
         {/* Body */}
         <div className="c-body">
           {/* ─── CHANNEL LIST / CHAT ─── */}
-          {(mobileTab === "chat" || isDesktop) ? (
+          {mobileTab === "chat" ? (
             activeChannel && currentChannel ? (
               isDmChannel(activeChannel) ? (
                 (() => {
