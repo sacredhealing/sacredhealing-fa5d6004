@@ -2778,7 +2778,35 @@
     "quickWealthN": "Rikedom (N)",
     "quickEnergySE": "Energi (SO)",
     "quickStabilitySW": "Stabilitet (SV)",
-    "quickGraceNE": "Nåd (NO)"
+    "quickGraceNE": "Nåd (NO)",
+    "moduleOfTotal": "{{current}} / {{total}}",
+    "selectedThumbAlt": "Valt foto",
+    "transmissionTitles": {
+      "0": "Inbjudan",
+      "1": "Fältinvigning (OM)",
+      "2": "Lyckans mun (GAM)",
+      "3": "Expansiv cirkulation (GLAUM)",
+      "4": "Den alkemiska elden (RAM)",
+      "5": "Oändligt inflöde (SHREEM)",
+      "6": "Nåd och visdom (EEM)",
+      "7": "Jordad helgedom (LUM)",
+      "8": "Digital sköld (HUM)",
+      "9": "Bevarandets sigill (KREEM)",
+      "10": "Universell invigning (HREEM)"
+    },
+    "transmissionScripts": {
+      "0": "Välkommen till hemmets evolution. Innan vi flyttar en stol eller målar en vägg måste vi bjuda in överflödets energi att skapa med oss. Stå i din entre. Lägg handen på hjärtat. Föreställ dig en gyllene inbjudan från din ande till husets ande. Säg tydligt: \"Jag är här. Jag är redo. Låt oss förvandlas tillsammans.\" Känn rummets tysta svar.",
+      "1": "Stå i hemmets centrum (Brahmasthan). Strö en blandning av havssalt och gurkmejavatten för att rena psykisk belastning. Medan du gör det, sjung 'OM'—hubbens ursprungsljud. Säg: \"Jag rensar mitten. Jag öppnar hemmets hjärta. Låt Prana flöda fritt.\"",
+      "2": "Vänd mot huvudingången. Ställ en liten skål med vitt ris och ett kopparmynt till höger om tröskeln. Torka dörrkarmen med sandelolja för nåd. Sjung 'GAM'—Ganeshas frekvens, hinderlösaren. Säg: \"Genom denna dörr får bara välstånd och ljus passera. All skugga löses vid tröskeln.\"",
+      "3": "I norra vinkeln av ditt vardagsrum, placera en livlig jade- eller pengaplanta. Sjung 'GLAUM' för att vibrera jord- och rymdelementen till expansion. Säg: \"Varje ord här är frön av välstånd. Varje rörelse är glädje och gemenskap.\"",
+      "4": "Stå framför spisen. Ställ en liten burk med ren ghee som offer åt Agni. Sjung 'RAM' för att harmonisera den förvandlande värmen. Säg: \"Detta rum ger näring åt mina drömmar. Min skapelse är ren och full av liv.\" Se elden omvanda potential till gyllene överflöd.",
+      "5": "Vänd mot rakt norr. Fäst en ren spegel på norrväggen för att visuellt 'dubbla' det inkommande välståndet. Lägg till blå blommor eller skål med vatten. Sjung 'SHREEM'—Lakshmis resonans. Säg: \"Jag är en magnet för välståndets ström. Mitt norr är öppet, djupt och klart.\"",
+      "6": "Finn nordost. Håll det lätt och tomt. Ställ rent vatten i en polerad kopparskål. Sjung 'EEM'—Saraswatis frekvens. Säg: \"Jag tar emot kosmisk vägledning. Min syn är klar. Jag handlar med visdom och gudomligt stöd.\" Känn klarheten sänka sig i rummet.",
+      "7": "Sitt i sydväst i sovrummet. Lägg ametist eller en tung sten för att förankra rötterna. Sjung 'LUM'—jordelementets ljud. Säg: \"Jag är trygg. Jag är stabil. Min grund skakas inte. Min vila är min läkning.\" Känn jorden bära ditt nervsystem.",
+      "8": "Stå nära routern eller tekniknavet. Lägg shungit eller svart turmalin för att dämpa kaotiska frekvenser. Sjung 'HUM' för ett skyddande sköldfält. Säg: \"Mina verktyg tjänar mig. Mina speglar återspeglar skönhet. Jag styr hemmets frekvens.\" Se ett mörkblått fält skydda rummet.",
+      "9": "Öppna kassaskåpet eller sparboxen. Knyt en röd tråd runt handtaget eller inuti. Sjung 'KREEM' för att låsa bevarandets energi. Säg: \"Mitt välstånd skyddas av tiden. Mina reserver växer tyst. Jag har mer än nog att dela och att lysa.\"",
+      "10": "Tänd en ghee-lampa i hemmets centrum. Gå tre varv medsols runt mitten. Sjung 'HREEM'—det universella sigillet. Säg: \"Detta hem är nu ett tempel. Det är ett överflödsfält. Det är förseglat i ljus. Så är det.\" Känn huset sjunka in i djup, levande harmoni."
+    }
   },
   "announcements": {
     "newAnnouncement": "Nytt meddelande",

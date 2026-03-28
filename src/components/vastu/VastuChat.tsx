@@ -40,6 +40,13 @@ interface AudioTransmissionCardProps { id: number; title: string; }
 
 const AudioTransmissionCard: React.FC<AudioTransmissionCardProps> = ({ id, title }) => {
   const { t } = useTranslation();
+  const scriptData = TRANSMISSION_SCRIPTS[id];
+  const displayTitle = scriptData
+    ? t(`vastuChat.transmissionTitles.${id}`, scriptData.title)
+    : title;
+  const displayScript = scriptData
+    ? t(`vastuChat.transmissionScripts.${id}`, { defaultValue: scriptData.script })
+    : '';
   const [showScript, setShowScript]     = useState(false);
   const [isRecording, setIsRecording]   = useState(false);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
@@ -59,8 +66,6 @@ const AudioTransmissionCard: React.FC<AudioTransmissionCardProps> = ({ id, title
   const stopRecording = () => { if (mrRef.current && isRecording) { mrRef.current.stop(); setIsRecording(false); } };
   const playRecording = () => { if (recordedBlob) new Audio(URL.createObjectURL(recordedBlob)).play(); };
 
-  const scriptData = TRANSMISSION_SCRIPTS[id];
-
   return (
     <div style={{
       margin:'16px 0', background:'rgba(212,175,55,0.03)',
@@ -77,7 +82,7 @@ const AudioTransmissionCard: React.FC<AudioTransmissionCardProps> = ({ id, title
         <div style={{ flexGrow:1 }}>
           <p style={{ ...lbl, marginBottom:'6px' }}>{t('vastuChat.soundAlchemyLayer', { defaultValue: 'Sound Alchemy Layer: {{lid}}', lid: String(id) })}</p>
           <h3 style={{ fontFamily:'Georgia,serif', fontSize:'18px', fontWeight:600,
-            color:'#fff', letterSpacing:'-0.01em', margin:'0 0 8px' }}>{title}</h3>
+            color:'#fff', letterSpacing:'-0.01em', margin:'0 0 8px' }}>{displayTitle}</h3>
           <p style={{ fontSize:'12px', color: BODY_TEXT, lineHeight:1.7, margin:'0 0 16px' }}>
             {t('vastuChat.recordBeejaDesc', 'Record the Beeja Mantras into this sanctuary. Vibrate your intention into the physical walls.')}
           </p>
@@ -109,11 +114,11 @@ const AudioTransmissionCard: React.FC<AudioTransmissionCardProps> = ({ id, title
           </div>
         </div>
       </div>
-      {showScript && scriptData && (
+      {showScript && displayScript && (
         <div style={{ background:'rgba(212,175,55,0.03)', borderTop:'1px solid rgba(212,175,55,0.12)', padding:'20px' }}>
           <p style={{ ...lbl, marginBottom:'12px' }}>📜 {t('vastuChat.sacredScript', 'Sacred Script')}</p>
           <p style={{ fontFamily:'Georgia,serif', fontSize:'14px', fontStyle:'italic',
-            color:'rgba(255,255,255,0.7)', lineHeight:1.8, margin:'0 0 14px' }}>"{scriptData.script}"</p>
+            color:'rgba(255,255,255,0.7)', lineHeight:1.8, margin:'0 0 14px' }}>"{displayScript}"</p>
           <p style={{ ...lbl, color: MUTED }}>{t('vastuChat.speakSlowly', 'Speak slowly. Let the sound emerge from your heart center.')}</p>
         </div>)}
     </div>
@@ -240,11 +245,13 @@ const WelcomeScreen: React.FC<{onSendMessage:(t:string)=>void}> = ({onSendMessag
       fontWeight:300, fontStyle:'italic', letterSpacing:'-0.02em',
       color:'#fff', margin:'0 0 8px',
       textShadow:'0 0 60px rgba(212,175,55,0.2)',
-    }}>The Siddha Architect</h2>
+    }}>{t('vastuChat.welcomeTitle', 'The Siddha Architect')}</h2>
 
     <p style={{fontSize:'13px',color:BODY_TEXT,lineHeight:1.7,margin:'0 0 20px',maxWidth:'400px'}}>
-      Welcome, Initiate. We do not just decorate; we consecrate.
-      Prepare to align your physical realm with cosmic abundance.
+      {t(
+        'vastuChat.welcomeIntro',
+        'Welcome, Initiate. We do not just decorate; we consecrate. Prepare to align your physical realm with cosmic abundance.'
+      )}
     </p>
 
     {/* CTA cards */}
@@ -252,14 +259,7 @@ const WelcomeScreen: React.FC<{onSendMessage:(t:string)=>void}> = ({onSendMessag
       display:'grid', gridTemplateColumns:'1fr 1fr',
       gap:'8px', width:'100%', maxWidth:'490px',
     }}>
-      {[
-        { label:'Initiate Path →', title:'The Living Field', icon:'🏛️',
-          desc:"Begin Module 1: Overview of your home's energetic anatomy.",
-          msg:'Architect, I am ready to begin the transformation. Open the first module.' },
-        { label:'Third Eye Audit →', title:'360° Diagnostic', icon:'👁️',
-          desc:'Upload multiple photos for complete spatial synthesis.',
-          msg:'I have photos of my room from multiple angles. I request a holistic Diagnostic Darshan.' },
-      ].map(card=>(
+      {ctaCards.map(card=>(
         <button key={card.label} onClick={()=>onSendMessage(card.msg)} style={{
           padding:'14px 12px', textAlign:'left', cursor:'pointer',
           background: GLASS, border:`1px solid ${BORDER}`, borderRadius:'24px',
@@ -462,7 +462,7 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
                 {selectedImages.map((img,i)=>(
                   <div key={i} style={{position:'relative',width:60,height:60,borderRadius:'12px',
                     overflow:'hidden',border:'1px solid rgba(212,175,55,0.2)'}}>
-                    <img src={img} style={{width:'100%',height:'100%',objectFit:'cover'}} alt="Selected"/>
+                    <img src={img} style={{width:'100%',height:'100%',objectFit:'cover'}} alt={t('vastuChat.selectedThumbAlt', 'Selected photo')}
                     <button type="button" onClick={()=>removeImage(i)} style={{
                       position:'absolute',inset:0,background:'rgba(0,0,0,0.65)',
                       border:'none',cursor:'pointer',color:'#fff',fontSize:'12px',

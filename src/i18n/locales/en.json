@@ -2802,7 +2802,35 @@
     "quickWealthN": "Wealth (N)",
     "quickEnergySE": "Energy (SE)",
     "quickStabilitySW": "Stability (SW)",
-    "quickGraceNE": "Grace (NE)"
+    "quickGraceNE": "Grace (NE)",
+    "moduleOfTotal": "{{current}} / {{total}}",
+    "selectedThumbAlt": "Selected photo",
+    "transmissionTitles": {
+      "0": "The Invitation",
+      "1": "Field Consecration (OM)",
+      "2": "The Mouth of Fortune (GAM)",
+      "3": "Expansive Circulation (GLAUM)",
+      "4": "The Alchemical Fire (RAM)",
+      "5": "The Infinite Inflow (SHREEM)",
+      "6": "Grace and Wisdom (EEM)",
+      "7": "Grounded Sanctuary (LUM)",
+      "8": "Digital Shielding (HUM)",
+      "9": "Preservation Seal (KREEM)",
+      "10": "Universal Consecration (HREEM)"
+    },
+    "transmissionScripts": {
+      "0": "Welcome to your home's evolution. Before we move a single chair or paint a single wall, we must invite the energy of abundance to co-create with us. Stand in your entryway. Place your hand on your heart. Visualize a golden invitation being sent from your spirit to the spirit of this house. State clearly: 'I am here. I am ready. Let us transform together.' Feel the quiet response of the space around you.",
+      "1": "Stand in the center of your home (the Brahmasthan). Sprinkle a mixture of sea salt and turmeric water to cleanse the psychic debris. As you do, chant 'OM'—the primordial sound of the hub. Say: 'I clear the center. I open the heart of this home. Let Prana flow without obstruction.'",
+      "2": "Face your main entrance. Place a small bowl containing white rice and a single copper coin to the right side of the threshold. Wipe the door frame with sandalwood oil to attract grace. Chant 'GAM'—the frequency of Ganesha, the remover of obstacles. Say: 'Through this door, only prosperity and light may pass. All shadows are dissolved at the threshold.'",
+      "3": "In the North angle of your living space, place a vibrant Jade or Money Plant. Chant 'GLAUM' to vibrate the Earth and Space elements into expansion. Say: 'May every word spoken here be seeds of wealth. May every movement be a dance of joy and connection.'",
+      "4": "Stand before your stove. Place a small jar of pure Ghee nearby as an offering to Agni. Chant 'RAM' to harmonize the transformative heat. Say: 'This space nourishes my dreams. My creation is pure and full of life.' Visualize the fire transmuting raw potential into golden abundance.",
+      "5": "Face the absolute North. Secure a clean mirror on the North wall to visually 'double' the incoming wealth. Add blue flowers or a bowl of water nearby. Chant 'SHREEM'—the resonance of Lakshmi. Say: 'I am a magnet for the infinite current of wealth. My North is open, deep, and clear.'",
+      "6": "Locate the North-East. Keep it empty and light. Place pure water in a polished copper bowl. Chant 'EEM'—the frequency of Saraswati. Say: 'I receive cosmic guidance. My vision is clear. I act with wisdom and divine support.' Feel the clarity descending into the space.",
+      "7": "Sit in the South-West of your bedroom. Place a piece of Amethyst or a heavy smooth stone here to anchor your roots. Chant 'LUM'—the sound of the Earth element. Say: 'I am safe. I am stable. My foundations are unshakeable. My rest is my recovery.' Feel the weight of the earth supporting your nervous system.",
+      "8": "Stand near your router or primary technology hub. Place a piece of Shungite or Black Tourmaline nearby to absorb chaotic frequencies. Chant 'HUM' to create a protective vibrational shield. Say: 'My tools serve me. My mirrors reflect beauty. I control the frequency of my home.' Visualize a dark blue field protecting the space.",
+      "9": "Open your safe or savings box. Tie a small red thread around the handle or inside the box. Chant 'KREEM' to lock the energy of preservation. Say: 'My wealth is protected by time. My reserves grow silently. I have more than enough to share and to shine.'",
+      "10": "Light a Ghee lamp in the center of your home. Slowly circle the center three times clockwise. Chant 'HREEM'—the universal seal. Say: 'This home is now a temple. It is a field of abundance. It is sealed in light. And so it is.' Feel the house settle into a deep, vibrant harmony."
+    }
   },
   "announcements": {
     "newAnnouncement": "New Announcement",

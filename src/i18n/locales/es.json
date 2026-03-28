@@ -2728,7 +2728,35 @@
     "quickWealthN": "Riqueza (N)",
     "quickEnergySE": "Energía (SE)",
     "quickStabilitySW": "Estabilidad (SO)",
-    "quickGraceNE": "Gracia (NE)"
+    "quickGraceNE": "Gracia (NE)",
+    "moduleOfTotal": "{{current}} / {{total}}",
+    "selectedThumbAlt": "Foto seleccionado",
+    "transmissionTitles": {
+      "0": "La invitación",
+      "1": "Consagración del campo (OM)",
+      "2": "La boca de la fortuna (GAM)",
+      "3": "Circulación expansiva (GLAUM)",
+      "4": "El fuego alquímico (RAM)",
+      "5": "El flujo infinito (SHREEM)",
+      "6": "Gracia y sabiduría (EEM)",
+      "7": "Santuario arraigado (LUM)",
+      "8": "Protección digital (HUM)",
+      "9": "Sello de preservación (KREEM)",
+      "10": "Consagración universal (HREEM)"
+    },
+    "transmissionScripts": {
+      "0": "Bienvenido a la evolución de tu hogar. Antes de mover una silla o pintar una pared, invita la energía de la abundancia a co-crear contigo. Párate en la entrada. Pon la mano en el corazón. Visualiza una invitación dorada de tu espíritu al espíritu de la casa. Di con claridad: \"Estoy aquí. Estoy listo. Transformémonos juntos.\" Siente la respuesta silenciosa del espacio.",
+      "1": "Párate en el centro de tu hogar (Brahmasthan). Espolvorea una mezcla de sal marina y agua con cúrcuma para limpiar residuos psíquicos. Mientras tanto, canta \"OM\", el sonido primordial del eje. Di: \"Libero el centro. Abro el corazón de este hogar. Que el Prana fluya sin obstrucción.\"",
+      "2": "Encara la entrada principal. Coloca un cuenco con arroz blanco y una moneda de cobre a la derecha del umbral. Pasa aceite de sándalo en el marco para atraer gracia. Canta \"GAM\", la frecuencia de Ganesha. Di: \"Por esta puerta solo pasan prosperidad y luz. Las sombras se disuelven en el umbral.\"",
+      "3": "En el ángulo norte del salón, coloca una planta jade o del dinero viva. Canta \"GLAUM\" para expandir tierra y espacio. Di: \"Cada palabra aquí es semilla de riqueza. Cada movimiento es alegría y conexión.\"",
+      "4": "Ante la cocina. Pon un tarro pequeño de ghee puro como ofrenda a Agni. Canta \"RAM\" para armonizar el fuego transformador. Di: \"Este espacio nutre mis sueños. Mi creación es pura y llena de vida.\" Visualiza el fuego transmutando el potencial en abundancia dorada.",
+      "5": "Mira al norte absoluto. Fija un espejo limpio en la pared norte para \"duplicar\" la riqueza que entra. Añade flores azules o un cuenco de agua. Canta \"SHREEM\", la resonancia de Lakshmi. Di: \"Soy un imán de la corriente infinita de riqueza. Mi norte está abierto, profundo y claro.\"",
+      "6": "Localiza el noreste. Mantén ese sector ligero y vacío. Pon agua pura en un cuenco de cobre pulido. Canta \"EEM\", la frecuencia de Saraswati. Di: \"Recibo guía cósmica. Mi visión es clara. Actúo con sabiduría y apoyo divino.\" Siente la claridad descender en el espacio.",
+      "7": "Siéntate en el suroeste del dormitorio. Pon amatista o una piedra pesada para anclar tus raíces. Canta \"LUM\", sonido del elemento tierra. Di: \"Estoy a salvo. Estoy estable. Mis cimientos no se mueven. Mi descanso es mi sanación.\" Siente la tierra sostener tu sistema nervioso.",
+      "8": "Párate cerca del router o centro tecnológico. Pon shungita o turmalina negra para absorber frecuencias caóticas. Canta \"HUM\" para un escudo protector. Di: \"Mis herramientas me sirven. Mis espejos reflejan belleza. Yo gobierno la frecuencia de mi hogar.\" Visualiza un campo azul oscuro protegiendo el espacio.",
+      "9": "Abre tu caja fuerte o alcancía. Ata un hilo rojo en la manija o dentro. Canta \"KREEM\" para sellar la energía de preservación. Di: \"Mi riqueza está protegida en el tiempo. Mis reservas crecen en silencio. Tengo de sobra para compartir y brillar.\"",
+      "10": "Enciende una lámpara de ghee en el centro del hogar. Rodea el centro tres veces en sentido horario. Canta \"HREEM\", el sello universal. Di: \"Este hogar es ahora un templo. Es un campo de abundancia. Queda sellado en luz. Así es.\" Siente la casa armonizarse en profunda vibración."
+    }
   },
   "announcements": {
     "newAnnouncement": "Nuevo Anuncio",
