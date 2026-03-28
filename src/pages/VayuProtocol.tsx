@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useMembership } from "@/hooks/useMembership";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { hasFeatureAccess, FEATURE_TIER } from "@/lib/tierAccess";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // ═══════════════════════════════════════════════════════════════
 //  VAYU PROTOCOL — SQI-2050 SCALAR REBUILD
@@ -19,35 +20,30 @@ const BREATH_DURATIONS = { inhale: 4000, hold: 8000, exhale: 16000 };
 
 const PHASE_CONFIG = {
   standby: {
-    geometry: "torus",
+    geometry: "torus" as const,
     color: 0xf5a800,
     emissive: 0x7a4800,
-    label: "STANDBY",
     statusColor: "#888",
-    element: "VAYU (AIR)",
     aethericDensity: "0.842",
   },
   scrubbing: {
-    geometry: "torus",
+    geometry: "torus" as const,
     color: 0xf5c842,
     emissive: 0x8a5f00,
-    label: "SCRUBBING...",
     statusColor: "#f5a800",
-    element: "VAYU (AIR)",
     aethericDensity: "0.842",
   },
   stabilized: {
-    geometry: "icosahedron",
+    geometry: "icosahedron" as const,
     color: 0x2244ff,
     emissive: 0x0a1a88,
-    label: "STABILIZED",
     statusColor: "#00e5ff",
-    element: "APAS (WATER)",
     aethericDensity: "0.002",
   },
 } as const;
 
 function VayuProtocolInner() {
+  const { t } = useTranslation();
   const mountRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -302,11 +298,7 @@ function VayuProtocolInner() {
           transition: "transform 1.2s cubic-bezier(0.23,1,0.32,1)",
         };
 
-  const breathLabel = {
-    inhale: "INHALE",
-    hold: "HOLD",
-    exhale: "EXHALE",
-  }[breathStage];
+  const breathLabel = t(`vayuProtocol.breath.${breathStage}`);
 
   return (
     <div
@@ -405,7 +397,7 @@ function VayuProtocolInner() {
               color: phase === "stabilized" ? "#00e5ff" : "#f5c842",
             }}
           >
-            VAYU PROTOCOL
+            {t("vayuProtocol.brand")}
           </span>
         </div>
         <div
@@ -415,7 +407,7 @@ function VayuProtocolInner() {
             color: "#888",
           }}
         >
-          SIDDHA ATMOSPHERIC ENGINEERING // 2060
+          {t("vayuProtocol.tagline")}
         </div>
       </div>
 
@@ -432,7 +424,7 @@ function VayuProtocolInner() {
         <div
           style={{ fontSize: 10, letterSpacing: "0.2em", color: "#666", marginBottom: 4 }}
         >
-          FIELD STATUS
+          {t("vayuProtocol.fieldStatus")}
         </div>
         <div
           style={{
@@ -447,7 +439,7 @@ function VayuProtocolInner() {
             marginBottom: 16,
           }}
         >
-          {cfg.label}
+          {t(`vayuProtocol.phase.${phase}.label`)}
           <div
             style={{
               width: 8,
@@ -463,7 +455,7 @@ function VayuProtocolInner() {
         <div
           style={{ fontSize: 10, letterSpacing: "0.2em", color: "#666", marginBottom: 6 }}
         >
-          ENVIRONMENTAL CLARITY
+          {t("vayuProtocol.environmentalClarity")}
         </div>
         <div
           style={{
@@ -562,7 +554,7 @@ function VayuProtocolInner() {
               color: "rgba(245,200,66,0.6)",
             }}
           >
-            4-8-16 BREATHING
+            {t("vayuProtocol.breathingPattern")}
           </div>
         </div>
       )}
@@ -605,12 +597,11 @@ function VayuProtocolInner() {
               <span
                 style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.2em", color: "#f5c842" }}
               >
-                SYSTEM READY
+                {t("vayuProtocol.standbyPanel.title")}
               </span>
             </div>
             <p style={{ fontSize: 12, color: "#777", lineHeight: 1.5, margin: 0 }}>
-              Initialize the 1km Aetheric Vortex to scrub local atmosphere of particulates and
-              aerosols.
+              {t("vayuProtocol.standbyPanel.body")}
             </p>
           </>
         )}
@@ -637,11 +628,11 @@ function VayuProtocolInner() {
               <span
                 style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.2em", color: "#f5c842" }}
               >
-                VAYU-VORTEX PROTOCOL
+                {t("vayuProtocol.scrubbingPanel.title")}
               </span>
             </div>
             <p style={{ fontSize: 12, color: "#888", lineHeight: 1.5, margin: 0 }}>
-              Golden Torus active. Synchronize breath with the 4-8-16 Vedic Light-Code pattern.
+              {t("vayuProtocol.scrubbingPanel.body")}
             </p>
           </>
         )}
@@ -663,12 +654,11 @@ function VayuProtocolInner() {
               <span
                 style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.2em", color: "#00e5ff" }}
               >
-                VAYU-LOCK STABILIZED
+                {t("vayuProtocol.stabilizedPanel.title")}
               </span>
             </div>
             <p style={{ fontSize: 12, color: "#77aacc", lineHeight: 1.5, margin: 0 }}>
-              Sapphire Icosahedron locked. 24/7 passive hygroscopic net maintains atmospheric purity
-              via the Apas element.
+              {t("vayuProtocol.stabilizedPanel.body")}
             </p>
           </>
         )}
@@ -719,7 +709,7 @@ function VayuProtocolInner() {
                 strokeLinecap="round"
               />
             </svg>
-            ACTIVATE VAYU
+            {t("vayuProtocol.btnActivate")}
           </button>
         )}
 
@@ -760,7 +750,7 @@ function VayuProtocolInner() {
                 strokeLinecap="round"
               />
             </svg>
-            LOCK PROTOCOL
+            {t("vayuProtocol.btnLock")}
           </button>
         )}
 
@@ -821,12 +811,12 @@ function VayuProtocolInner() {
           lineHeight: 1.8,
         }}
       >
-        <div>LAT: 37.7749 // LONG: -122.4194</div>
+        <div>{t("vayuProtocol.coordsLine")}</div>
         <div>
-          AETHERIC DENSITY: {cfg.aethericDensity} MG/M³
+          {t("vayuProtocol.aethericDensity", { density: cfg.aethericDensity })}
         </div>
-        <div>GEOMETRY: {cfg.geometry.toUpperCase()}</div>
-        <div>ELEMENT: {cfg.element}</div>
+        <div>{t("vayuProtocol.geometryLine", { shape: t(`vayuProtocol.geometry.${cfg.geometry}`) })}</div>
+        <div>{t("vayuProtocol.elementLine", { element: t(`vayuProtocol.phase.${phase}.element`) })}</div>
       </div>
 
       <style>{`
@@ -846,6 +836,7 @@ function VayuProtocolInner() {
 }
 
 export default function VayuProtocol() {
+  const { t } = useTranslation();
   const { user, isLoading: authLoading } = useAuth();
   const { tier, loading: membershipLoading } = useMembership();
   const { isAdmin } = useAdminRole();
@@ -853,7 +844,7 @@ export default function VayuProtocol() {
   if (authLoading || membershipLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#050505] text-white">
-        <span className="text-sm uppercase tracking-[0.3em] text-white/40">Loading…</span>
+        <span className="text-sm uppercase tracking-[0.3em] text-white/40">{t("vayuProtocol.loading")}</span>
       </div>
     );
   }

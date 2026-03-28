@@ -15,10 +15,15 @@ import { quantumApothecaryEn } from './locales/quantumApothecary';
 import { quantumApothecarySvPartial } from './locales/quantumApothecary/quantumApothecarySvPartial';
 import { quantumApothecaryEsPartial } from './locales/quantumApothecary/quantumApothecaryEsPartial';
 import { quantumApothecaryNoPartial } from './locales/quantumApothecary/quantumApothecaryNoPartial';
+import { vayuProtocolEn } from './locales/vayuProtocol';
+import { vayuProtocolSvPartial } from './locales/vayuProtocol/vayuProtocolSvPartial';
+import { vayuProtocolEsPartial } from './locales/vayuProtocol/vayuProtocolEsPartial';
+import { vayuProtocolNoPartial } from './locales/vayuProtocol/vayuProtocolNoPartial';
 
 const enRoot = deepMergeLocales(en as Record<string, unknown>, {
   templeHome: templeHomeEn,
   quantumApothecary: quantumApothecaryEn,
+  vayuProtocol: vayuProtocolEn,
 } as Record<string, unknown>);
 const svMerged = deepMergeLocales(
   deepMergeLocales(enRoot, sv as Record<string, unknown>),
@@ -30,6 +35,10 @@ const svMerged = deepMergeLocales(
     quantumApothecary: deepMergeLocales(
       quantumApothecaryEn as Record<string, unknown>,
       quantumApothecarySvPartial as Record<string, unknown>
+    ),
+    vayuProtocol: deepMergeLocales(
+      vayuProtocolEn as Record<string, unknown>,
+      vayuProtocolSvPartial as Record<string, unknown>
     ),
   } as Record<string, unknown>
 );
@@ -44,6 +53,10 @@ const esMerged = deepMergeLocales(
       quantumApothecaryEn as Record<string, unknown>,
       quantumApothecaryEsPartial as Record<string, unknown>
     ),
+    vayuProtocol: deepMergeLocales(
+      vayuProtocolEn as Record<string, unknown>,
+      vayuProtocolEsPartial as Record<string, unknown>
+    ),
   } as Record<string, unknown>
 );
 const noMerged = deepMergeLocales(
@@ -56,6 +69,10 @@ const noMerged = deepMergeLocales(
     quantumApothecary: deepMergeLocales(
       quantumApothecaryEn as Record<string, unknown>,
       quantumApothecaryNoPartial as Record<string, unknown>
+    ),
+    vayuProtocol: deepMergeLocales(
+      vayuProtocolEn as Record<string, unknown>,
+      vayuProtocolNoPartial as Record<string, unknown>
     ),
   } as Record<string, unknown>
 );
