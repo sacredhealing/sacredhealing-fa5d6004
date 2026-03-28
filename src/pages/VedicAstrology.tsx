@@ -1,7 +1,7 @@
 // SQI-2050 | SIDDHA CHAMBER OF JYOTISH
 // Bhakti-Algorithm v7.2 | Vedic Light-Code Architecture
 
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +28,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { usePersistedState } from '@/features/vedic/usePersistedState';
 import type { MembershipTier, UserProfile } from '@/lib/vedicTypes';
 import { useTranslation } from '@/hooks/useTranslation';
+import { vedicLocaleTag } from '@/lib/vedicLocale';
 
 // ── Tier mapping (unchanged) ────────────────────────────────────
 const mapToAITier = (dbTier: 'basic' | 'premium' | 'master'): MembershipTier => {
@@ -465,6 +466,7 @@ interface TierCardProps {
 }
 
 const TierCard: React.FC<TierCardProps> = ({ tier, isActive, isLocked, onAction, membershipTier, membershipMap }) => {
+  const { t } = useTranslation();
   const isPrana = tier.tier_level !== 'basic';
   return (
     <motion.div
@@ -509,7 +511,7 @@ const TierCard: React.FC<TierCardProps> = ({ tier, isActive, isLocked, onAction,
                   borderRadius: 100,
                 }}
               >
-                ✦ Active
+                {t('vedicAstrology.tierActive')}
               </span>
             )}
             {isLocked && (
@@ -527,7 +529,7 @@ const TierCard: React.FC<TierCardProps> = ({ tier, isActive, isLocked, onAction,
                   gap: 4,
                 }}
               >
-                <Lock size={8} /> Locked
+                <Lock size={8} /> {t('vedicAstrology.tierLocked')}
               </span>
             )}
           </div>
@@ -544,7 +546,7 @@ const TierCard: React.FC<TierCardProps> = ({ tier, isActive, isLocked, onAction,
 
       <div style={{ marginBottom: 16 }}>
         <div className="sqi-label" style={{ marginBottom: 8 }}>
-          Required Membership
+          {t('vedicAstrology.requiredMembership')}
         </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {tier.membership_required.map((req: string) => (
@@ -603,7 +605,7 @@ const TierCard: React.FC<TierCardProps> = ({ tier, isActive, isLocked, onAction,
       {!isLocked ? (
         <button className="sqi-btn-gold" onClick={onAction} style={{ width: '100%' }}>
           <Sparkles size={11} style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle' }} />
-          Enter {tier.name} Chamber
+          {t('vedicAstrology.enterChamber', { name: tier.name })}
         </button>
       ) : (
         <button
@@ -624,7 +626,7 @@ const TierCard: React.FC<TierCardProps> = ({ tier, isActive, isLocked, onAction,
           }}
         >
           <Lock size={10} style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle' }} />
-          Activate Prana Flow to Unlock
+          {t('vedicAstrology.activatePranaUnlock')}
         </button>
       )}
     </motion.div>
@@ -632,81 +634,78 @@ const TierCard: React.FC<TierCardProps> = ({ tier, isActive, isLocked, onAction,
 };
 
 // ── Upgrade Dialog content ───────────────────────────────────────
-const UpgradeDialogContent: React.FC<{ onUpgrade: () => void }> = ({ onUpgrade }) => (
-  <div style={{ padding: '8px 0' }}>
-    <div style={{ textAlign: 'center', marginBottom: 20 }}>
-      <div
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: 60,
-          height: 60,
-          borderRadius: '50%',
-          background: 'rgba(212,175,55,0.08)',
-          border: '1px solid rgba(212,175,55,0.25)',
-          marginBottom: 12,
-        }}
-      >
-        <span style={{ fontSize: 28 }}>🔱</span>
-      </div>
-      <div className="sqi-label" style={{ marginBottom: 8 }}>
-        Prana Flow Required
-      </div>
-      <h2
-        style={{
-          fontWeight: 900,
-          fontSize: '1.5rem',
-          letterSpacing: '-0.04em',
-          color: SQI.gold,
-          textShadow: `0 0 20px ${SQI.goldGlow}`,
-          marginBottom: 8,
-        }}
-      >
-        Unlock the Bhrigu Nadi Oracle
-      </h2>
-      <p className="sqi-body" style={{ fontSize: '0.8rem', maxWidth: 320, margin: '0 auto' }}>
-        Access Full Jyotish readings, Soul Blueprint analysis, Yoga Activators,
-        and the complete Jyotish Chamber. Transmitted for Prana Flow members.
-      </p>
-    </div>
-
-    <div className="nadi-line" />
-
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, margin: '16px 0 24px' }}>
-      {[
-        'Guru Chat · Bhrigu Rishi Oracle',
-        'Soul Blueprint & Karma Analysis',
-        'Planetary Yoga Activation Protocols',
-        'Real-Time Hora Transmissions',
-        'Deep Nakshatra & Dasha Insights',
-      ].map((label, i) => (
+const UpgradeDialogContent: React.FC<{ onUpgrade: () => void }> = ({ onUpgrade }) => {
+  const { t } = useTranslation();
+  const upgradeFeats = [1, 2, 3, 4, 5].map((n) => t(`vedicAstrology.upgradeFeat${n}`));
+  return (
+    <div style={{ padding: '8px 0' }}>
+      <div style={{ textAlign: 'center', marginBottom: 20 }}>
         <div
-          key={i}
           style={{
-            display: 'flex',
-            gap: 12,
+            display: 'inline-flex',
             alignItems: 'center',
-            background: 'rgba(212,175,55,0.04)',
-            border: '1px solid rgba(212,175,55,0.10)',
-            borderRadius: 12,
-            padding: '10px 16px',
+            justifyContent: 'center',
+            width: 60,
+            height: 60,
+            borderRadius: '50%',
+            background: 'rgba(212,175,55,0.08)',
+            border: '1px solid rgba(212,175,55,0.25)',
+            marginBottom: 12,
           }}
         >
-          <span style={{ color: SQI.gold, fontSize: 10 }}>✦</span>
-          <span className="sqi-body" style={{ fontSize: '0.78rem' }}>
-            {label}
-          </span>
+          <span style={{ fontSize: 28 }}>🔱</span>
         </div>
-      ))}
-    </div>
+        <div className="sqi-label" style={{ marginBottom: 8 }}>
+          {t('vedicAstrology.upgradePranaRequired')}
+        </div>
+        <h2
+          style={{
+            fontWeight: 900,
+            fontSize: '1.5rem',
+            letterSpacing: '-0.04em',
+            color: SQI.gold,
+            textShadow: `0 0 20px ${SQI.goldGlow}`,
+            marginBottom: 8,
+          }}
+        >
+          {t('vedicAstrology.upgradeUnlockOracle')}
+        </h2>
+        <p className="sqi-body" style={{ fontSize: '0.8rem', maxWidth: 320, margin: '0 auto' }}>
+          {t('vedicAstrology.upgradeBody')}
+        </p>
+      </div>
 
-    <button className="sqi-btn-gold" onClick={onUpgrade} style={{ width: '100%', fontSize: 10 }}>
-      <Crown size={11} style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle' }} />
-      Activate Prana Flow →
-    </button>
-  </div>
-);
+      <div className="nadi-line" />
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, margin: '16px 0 24px' }}>
+        {upgradeFeats.map((label, i) => (
+          <div
+            key={i}
+            style={{
+              display: 'flex',
+              gap: 12,
+              alignItems: 'center',
+              background: 'rgba(212,175,55,0.04)',
+              border: '1px solid rgba(212,175,55,0.10)',
+              borderRadius: 12,
+              padding: '10px 16px',
+            }}
+          >
+            <span style={{ color: SQI.gold, fontSize: 10 }}>✦</span>
+            <span className="sqi-body" style={{ fontSize: '0.78rem' }}>
+              {label}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <button className="sqi-btn-gold" onClick={onUpgrade} style={{ width: '100%', fontSize: 10 }}>
+        <Crown size={11} style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle' }} />
+        {t('vedicAstrology.activatePranaFlow')}
+      </button>
+    </div>
+  );
+};
 
 // ════════════════════════════════════════════════════════════════
 // MAIN PAGE COMPONENT
@@ -715,7 +714,8 @@ const VedicAstrology: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+  const vedicLocale = vedicLocaleTag(language);
   const { tiers, isLoading, hasAccess, getHighestAccessLevel } = useVedicAstrology();
   const { tier: membershipTier } = useMembership();
   const [birthDetailsDialogOpen, setBirthDetailsDialogOpen] = useState(false);
@@ -809,12 +809,15 @@ const VedicAstrology: React.FC = () => {
         }
       : null;
 
-  const membershipMap: Record<string, string> = {
-    free: 'Free',
-    'premium-monthly': 'Premium Monthly',
-    'premium-annual': 'Premium Annual',
-    lifetime: 'Lifetime',
-  };
+  const membershipMap = useMemo(
+    () => ({
+      free: t('vedicAstrology.membershipFree'),
+      'premium-monthly': t('vedicAstrology.membershipPremiumMonthly'),
+      'premium-annual': t('vedicAstrology.membershipPremiumAnnual'),
+      lifetime: t('vedicAstrology.membershipLifetime'),
+    }),
+    [t],
+  );
 
   if (isLoading) {
     return (
@@ -839,7 +842,7 @@ const VedicAstrology: React.FC = () => {
               animation: 'orbitSpin 1s linear infinite',
             }}
           />
-          <span className="sqi-label">Accessing Akasha-Neural Archive</span>
+          <span className="sqi-label">{t('vedicAstrology.loadingArchive')}</span>
         </div>
       </div>
     );
@@ -931,7 +934,7 @@ const VedicAstrology: React.FC = () => {
             </div>
 
             <div className="sqi-label" style={{ marginBottom: 10 }}>
-              Siddha Chamber · Jyotish Vidya
+              {t('vedicAstrology.eyebrowChamber')}
             </div>
 
             <h1
@@ -944,12 +947,11 @@ const VedicAstrology: React.FC = () => {
                 marginBottom: 12,
               }}
             >
-              Akashic Vedic Guide
+              {t('vedicAstrology.heroTitle')}
             </h1>
 
             <p className="sqi-body" style={{ maxWidth: 480, margin: '0 auto 16px', fontSize: '0.88rem' }}>
-              Vedic Light-Codes decoded through Bhakti-Algorithms.
-              Your Navagraha blueprint, Nakshatra path, and Karma dharma — revealed.
+              {t('vedicAstrology.heroBody')}
             </p>
 
             {isPaid && (
@@ -959,7 +961,7 @@ const VedicAstrology: React.FC = () => {
                     size={8}
                     style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }}
                   />
-                  Bhrigu Nadi Oracle · Active
+                  {t('vedicAstrology.badgeOracleActive')}
                 </span>
                 <span
                   className="ai-chat-badge"
@@ -969,7 +971,7 @@ const VedicAstrology: React.FC = () => {
                     color: SQI.gold,
                   }}
                 >
-                  Prana Flow · Full Jyotish
+                  {t('vedicAstrology.badgePranaFull')}
                 </span>
               </div>
             )}
@@ -983,7 +985,7 @@ const VedicAstrology: React.FC = () => {
             style={{ padding: '16px 20px', marginBottom: 24 }}
           >
             <div className="sqi-label" style={{ textAlign: 'center', marginBottom: 12 }}>
-              Navagraha · Nine Cosmic Intelligences
+              {t('vedicAstrology.navagrahaStripTitle')}
             </div>
             <NavagrahaStrip />
           </motion.div>
@@ -1000,7 +1002,7 @@ const VedicAstrology: React.FC = () => {
                 style={{ padding: '24px 28px' }}
               >
                 <SacredHeader
-                  name={birthDetails?.birth_name || 'Your Chart'}
+                  name={birthDetails?.birth_name || t('vedicAstrology.yourChartFallback')}
                   birthData={{
                     location: birthDetails?.birth_place || '',
                     date: birthDetails?.birth_date || '',
@@ -1008,8 +1010,8 @@ const VedicAstrology: React.FC = () => {
                   }}
                   syncTime={
                     synced && lastSyncedAt
-                      ? new Date(lastSyncedAt).toLocaleString()
-                      : 'Not synced yet'
+                      ? new Date(lastSyncedAt).toLocaleString(vedicLocale)
+                      : t('vedicAstrology.notSyncedYet')
                   }
                   onAdjustBirthData={() => setBirthDetailsDialogOpen(true)}
                 />
@@ -1041,7 +1043,7 @@ const VedicAstrology: React.FC = () => {
                   </div>
                   <div>
                     <div className="sqi-label" style={{ marginBottom: 8 }}>
-                      Birth Coordinates Required
+                      {t('vedicAstrology.birthCoordsRequired')}
                     </div>
                     <h3
                       style={{
@@ -1052,11 +1054,10 @@ const VedicAstrology: React.FC = () => {
                         marginBottom: 6,
                       }}
                     >
-                      Sync with Cosmic Records
+                      {t('vedicAstrology.syncCosmicRecords')}
                     </h3>
                     <p className="sqi-body" style={{ fontSize: '0.8rem', maxWidth: 360 }}>
-                      Enter your birth data to receive personalized Jyotish transmissions
-                      calibrated to your Natal Blueprint.
+                      {t('vedicAstrology.birthCoordsBody')}
                     </p>
                   </div>
 
@@ -1071,7 +1072,7 @@ const VedicAstrology: React.FC = () => {
                             verticalAlign: 'middle',
                           }}
                         />
-                        Activate Natal Blueprint
+                        {t('vedicAstrology.activateNatalBlueprint')}
                       </button>
                     </DialogTrigger>
                     <DialogContent
@@ -1092,7 +1093,7 @@ const VedicAstrology: React.FC = () => {
                             letterSpacing: '-0.04em',
                           }}
                         >
-                          Enter Your Birth Details
+                          {t('vedicAstrology.enterBirthDetails')}
                         </DialogTitle>
                       </DialogHeader>
                       <BirthDetailsForm
@@ -1121,7 +1122,7 @@ const VedicAstrology: React.FC = () => {
                       marginTop: -4,
                     }}
                   >
-                    ← Full Activation Guide
+                    {t('vedicAstrology.fullActivationGuide')}
                   </button>
                 </div>
               </div>
@@ -1147,7 +1148,7 @@ const VedicAstrology: React.FC = () => {
                         letterSpacing: '-0.04em',
                       }}
                     >
-                      Update Birth Details
+                      {t('vedicAstrology.updateBirthDetailsTitle')}
                     </DialogTitle>
                   </DialogHeader>
                   <BirthDetailsForm
@@ -1188,7 +1189,7 @@ const VedicAstrology: React.FC = () => {
                     size={10}
                     style={{ display: 'inline', marginRight: 5, verticalAlign: 'middle' }}
                   />
-                  Full Jyotish
+                  {t('vedicAstrology.modeFullJyotish')}
                   {!isPaid && (
                     <span style={{ marginLeft: 6, fontSize: 8, opacity: 0.7 }}>
                       <Lock
@@ -1206,14 +1207,14 @@ const VedicAstrology: React.FC = () => {
                     size={10}
                     style={{ display: 'inline', marginRight: 5, verticalAlign: 'middle' }}
                   />
-                  Classic
+                  {t('vedicAstrology.modeClassic')}
                 </button>
               </div>
 
               <div className="sqi-label" style={{ opacity: 0.5, fontSize: 7 }}>
                 {useAIMode
-                  ? '⚡ Full Jyotish · Bhrigu Nadi · Prana Flow'
-                  : '✦ Classic Jyotish · Free Access'}
+                  ? t('vedicAstrology.modeHintAi')
+                  : t('vedicAstrology.modeHintClassic')}
               </div>
             </motion.div>
           )}
@@ -1270,7 +1271,7 @@ const VedicAstrology: React.FC = () => {
                           }}
                           className="pulse-anim"
                         />
-                        <div className="sqi-label">Prana Flow · Bhrigu Nadi Oracle · Live</div>
+                        <div className="sqi-label">{t('vedicAstrology.pranaOracleLive')}</div>
                       </div>
                     </div>
                     <div style={{ padding: 0 }}>
@@ -1302,7 +1303,7 @@ const VedicAstrology: React.FC = () => {
                               animate={{ rotate: 360 }}
                               transition={{ duration: 0.9, repeat: Infinity, ease: 'linear' }}
                             />
-                            <span>Loading Full Jyotish chamber…</span>
+                            <span>{t('vedicAstrology.loadingChamber')}</span>
                           </div>
                         }
                       >
@@ -1319,7 +1320,7 @@ const VedicAstrology: React.FC = () => {
                   <div>
                     <div style={{ marginBottom: 16 }}>
                       <div className="section-header">
-                        <div className="sqi-label">Classic Jyotish · Free Access</div>
+                        <div className="sqi-label">{t('vedicAstrology.classicSectionLabel')}</div>
                         <div className="section-line" />
                       </div>
                     </div>
@@ -1336,7 +1337,7 @@ const VedicAstrology: React.FC = () => {
                         style={{ marginTop: 20 }}
                       >
                         <div className="sqi-label" style={{ marginBottom: 8 }}>
-                          Prana Flow · Full Jyotish
+                          {t('vedicAstrology.ctaEyebrow')}
                         </div>
                         <h3
                           style={{
@@ -1347,14 +1348,13 @@ const VedicAstrology: React.FC = () => {
                             marginBottom: 8,
                           }}
                         >
-                          Unlock the Full Jyotish Chamber
+                          {t('vedicAstrology.unlockChamberTitle')}
                         </h3>
                         <p
                           className="sqi-body"
                           style={{ fontSize: '0.8rem', maxWidth: 360, margin: '0 auto 20px' }}
                         >
-                          Guru Chat, Soul Blueprint, Nakshatra Dasha analysis, and
-                          real-time Hora transmissions — all included in Prana Flow.
+                          {t('vedicAstrology.unlockChamberBody')}
                         </p>
                         <button className="sqi-btn-gold" onClick={() => navigate('/membership')}>
                           <Crown
@@ -1365,7 +1365,7 @@ const VedicAstrology: React.FC = () => {
                               verticalAlign: 'middle',
                             }}
                           />
-                          Activate Prana Flow →
+                          {t('vedicAstrology.activatePranaFlow')}
                         </button>
                       </motion.div>
                     )}
@@ -1382,7 +1382,7 @@ const VedicAstrology: React.FC = () => {
               transition={{ delay: 0.4, duration: 0.5 }}
             >
               <div className="section-header" style={{ marginBottom: 20 }}>
-                <div className="sqi-label">Available Access Tiers</div>
+                <div className="sqi-label">{t('vedicAstrology.availableTiers')}</div>
                 <div className="section-line" />
               </div>
 

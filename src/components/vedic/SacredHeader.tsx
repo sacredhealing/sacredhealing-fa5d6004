@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export interface BirthDataDisplay {
   location: string;
@@ -22,6 +23,7 @@ export const SacredHeader: React.FC<SacredHeaderProps> = ({
   syncTime,
   onAdjustBirthData,
 }) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -46,7 +48,7 @@ export const SacredHeader: React.FC<SacredHeaderProps> = ({
           <h2 className="text-lg font-serif tracking-wide text-amber-100">{name}</h2>
         </div>
         <span className="text-amber-400/40 text-sm">
-          {isOpen ? 'Close ↑' : 'Birth Details ↓'}
+          {isOpen ? t('vedicAstrology.sacredHeaderClose') : t('vedicAstrology.sacredHeaderOpen')}
         </span>
       </div>
 
@@ -59,8 +61,8 @@ export const SacredHeader: React.FC<SacredHeaderProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
             <div className="text-sm text-amber-200/50 space-y-1">
               <p>📍 {birthData.location}</p>
-              <p>🗓️ {birthData.date} at {birthData.time}</p>
-              <p className="text-xs italic">Last Synced: {syncTime}</p>
+              <p>🗓️ {birthData.date} {t('vedicAstrology.sacredHeaderAt')} {birthData.time}</p>
+              <p className="text-xs italic">{t('vedicAstrology.sacredHeaderLastSynced', { time: syncTime })}</p>
             </div>
             <div className="flex flex-col gap-2">
               {onAdjustBirthData && (
@@ -72,7 +74,7 @@ export const SacredHeader: React.FC<SacredHeaderProps> = ({
                   }}
                   className="px-4 py-2 bg-amber-900/20 border border-amber-700/30 rounded-lg text-amber-200/70 hover:bg-amber-900/30 transition text-sm"
                 >
-                  Adjust Birth Data
+                  {t('vedicAstrology.adjustBirthData')}
                 </button>
               )}
             </div>

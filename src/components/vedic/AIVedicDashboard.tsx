@@ -21,6 +21,8 @@ import { HoraNotificationBanner } from './HoraNotificationBanner';
 import { TempleSection } from './TempleSection';
 import { useHoraNotification } from '@/hooks/useHoraNotification';
 import { useHoraWatch } from '@/hooks/useHoraWatch';
+import { useTranslation } from '@/hooks/useTranslation';
+import { vedicLocaleTag } from '@/lib/vedicLocale';
 
 const CosmicConsultation = lazy(() => import('./CosmicConsultation').then((m) => ({ default: m.CosmicConsultation })));
 const AccurateHoraWatch = lazy(() => import('./AccurateHoraWatch').then((m) => ({ default: m.AccurateHoraWatch })));
@@ -31,38 +33,6 @@ interface AIVedicDashboardProps {
   onEditDetails?: () => void;
   onUpgrade?: () => void;
 }
-
-const LoadingSpinner = () => (
-  <div className="flex flex-col items-center justify-center min-h-[420px] space-y-6 px-4">
-    <div className="relative w-24 h-24">
-      <div className="absolute inset-0 border-[3px] border-amber-500/15 rounded-full" />
-      <motion.div
-        className="absolute inset-0 border-[3px] border-amber-500/80 border-t-transparent rounded-full"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
-      />
-      <div className="absolute inset-4 border-[3px] border-amber-400/15 rounded-full" />
-      <motion.div
-        className="absolute inset-4 border-[3px] border-amber-400/70 border-b-transparent rounded-full"
-        animate={{ rotate: -360 }}
-        transition={{ duration: 1.7, repeat: Infinity, ease: 'linear' }}
-      />
-      <div className="absolute inset-0 flex items-center justify-center">
-        <motion.div
-          className="w-2 h-2 bg-amber-200 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.9)]"
-          animate={{ scale: [1, 1.5, 1] }}
-          transition={{ duration: 1, repeat: Infinity }}
-        />
-      </div>
-    </div>
-    <div className="text-center space-y-2 max-w-sm">
-      <h3 className="text-lg font-serif text-amber-100/90 animate-pulse">Opening Full Jyotish…</h3>
-      <p className="text-muted-foreground text-[11px] leading-relaxed uppercase tracking-[0.2em]">
-        Loading saved reading if available, then Bhrigu Nadi transmission
-      </p>
-    </div>
-  </div>
-);
 
 // Compass Pillar Card
 const CompassCard = ({ icon: Icon, title, content }: { icon: React.ElementType; title: string; content: string }) => {
@@ -151,15 +121,73 @@ const BHRIGU_ACTIVATIONS = [
   { age: 48, planet: 'Saturn', emoji: '\u2644', desc: "Shani's final teaching. Discipline, structure, and karmic harvest define this sovereign phase." },
 ];
 
-// Nadi Directional Mapping
+// Nadi Directional Mapping (labels via vedicAstrology.dashDir* / dashTheme* / dashBlurb*)
 const NADI_DIRECTIONS = [
-  { direction: 'East', houses: '1, 5, 9', icon: '🌅', theme: 'Dharma Trikona', color: 'amber' },
-  { direction: 'South', houses: '2, 6, 10', icon: '🔥', theme: 'Artha Trikona', color: 'rose' },
-  { direction: 'West', houses: '3, 7, 11', icon: '🌊', theme: 'Kama Trikona', color: 'indigo' },
-  { direction: 'North', houses: '4, 8, 12', icon: '❄️', theme: 'Moksha Trikona', color: 'emerald' },
+  { id: 'east' as const, houses: '1, 5, 9', icon: '🌅', color: 'amber' },
+  { id: 'south' as const, houses: '2, 6, 10', icon: '🔥', color: 'rose' },
+  { id: 'west' as const, houses: '3, 7, 11', icon: '🌊', color: 'indigo' },
+  { id: 'north' as const, houses: '4, 8, 12', icon: '❄️', color: 'emerald' },
 ];
 
+type NadiId = (typeof NADI_DIRECTIONS)[number]['id'];
+
+const NADI_DIR_KEY: Record<NadiId, string> = {
+  east: 'vedicAstrology.dashDirEast',
+  south: 'vedicAstrology.dashDirSouth',
+  west: 'vedicAstrology.dashDirWest',
+  north: 'vedicAstrology.dashDirNorth',
+};
+
+const NADI_THEME_KEY: Record<NadiId, string> = {
+  east: 'vedicAstrology.dashThemeDharma',
+  south: 'vedicAstrology.dashThemeArtha',
+  west: 'vedicAstrology.dashThemeKama',
+  north: 'vedicAstrology.dashThemeMoksha',
+};
+
+const NADI_BLURB_KEY: Record<NadiId, string> = {
+  east: 'vedicAstrology.dashBlurbEast',
+  south: 'vedicAstrology.dashBlurbSouth',
+  west: 'vedicAstrology.dashBlurbWest',
+  north: 'vedicAstrology.dashBlurbNorth',
+};
+
 export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId, onEditDetails, onUpgrade }) => {
+  const { t, language } = useTranslation();
+  const locale = vedicLocaleTag(language);
+
+  const LoadingSpinner = () => (
+    <div className="flex flex-col items-center justify-center min-h-[420px] space-y-6 px-4">
+      <div className="relative w-24 h-24">
+        <div className="absolute inset-0 border-[3px] border-amber-500/15 rounded-full" />
+        <motion.div
+          className="absolute inset-0 border-[3px] border-amber-500/80 border-t-transparent rounded-full"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+        />
+        <div className="absolute inset-4 border-[3px] border-amber-400/15 rounded-full" />
+        <motion.div
+          className="absolute inset-4 border-[3px] border-amber-400/70 border-b-transparent rounded-full"
+          animate={{ rotate: -360 }}
+          transition={{ duration: 1.7, repeat: Infinity, ease: 'linear' }}
+        />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <motion.div
+            className="w-2 h-2 bg-amber-200 rounded-full shadow-[0_0_15px_rgba(212,175,55,0.9)]"
+            animate={{ scale: [1, 1.5, 1] }}
+            transition={{ duration: 1, repeat: Infinity }}
+          />
+        </div>
+      </div>
+      <div className="text-center space-y-2 max-w-sm">
+        <h3 className="text-lg font-serif text-amber-100/90 animate-pulse">{t('vedicAstrology.dashLoadingTitle')}</h3>
+        <p className="text-muted-foreground text-[11px] leading-relaxed uppercase tracking-[0.2em]">
+          {t('vedicAstrology.dashLoadingSub')}
+        </p>
+      </div>
+    </div>
+  );
+
   const { reading, isLoading, error, generateReading } = useAIVedicReading();
   const { timezone, setTimezone, loading: timezoneLoading } = useUserTimezone();
   const [lastSync, setLastSync] = useState<string>("");
@@ -193,12 +221,12 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
       void generateReading(user, timeOffset, timezone, userId);
       try {
         const targetTime = new Date(Date.now() + timeOffset * 60000);
-        setLastSync(targetTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: timezone }));
+        setLastSync(targetTime.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', timeZone: timezone }));
       } catch {
-        setLastSync(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
+        setLastSync(new Date().toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }));
       }
     }
-  }, [user.plan, user.birthDate, user.birthTime, user.birthPlace, timeOffset, timezone, timezoneLoading, userId, generateReading]);
+  }, [user.plan, user.birthDate, user.birthTime, user.birthPlace, timeOffset, timezone, timezoneLoading, userId, generateReading, locale]);
 
   const handleTimeOffsetChange = (value: number[]) => setTimeOffset(value[0]);
 
@@ -223,9 +251,9 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
       <Card className="border-2 border-primary/30">
         <CardContent className="p-8 text-center">
           <Sparkles className="w-12 h-12 text-primary mx-auto mb-4 opacity-50" />
-          <h3 className="text-lg font-semibold text-foreground mb-2">Birth Details Required</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-2">{t('vedicAstrology.dashBirthRequiredTitle')}</h3>
           <p className="text-muted-foreground text-sm mb-4">
-            Add your complete birth details to open your personalized Full Jyotish reading.
+            {t('vedicAstrology.dashBirthRequiredBody')}
           </p>
         </CardContent>
       </Card>
@@ -241,9 +269,9 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
       <Card className="border-2 border-destructive/30">
         <CardContent className="p-6 text-center">
           <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-foreground mb-2">Celestial Sync Failed</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-2">{t('vedicAstrology.dashSyncFailedTitle')}</h3>
           <p className="text-muted-foreground text-sm">{error}</p>
-          <Button onClick={() => generateReading(user, timeOffset, undefined, userId)} className="mt-4">Retry Reading</Button>
+          <Button onClick={() => generateReading(user, timeOffset, undefined, userId)} className="mt-4">{t('vedicAstrology.dashRetryReading')}</Button>
         </CardContent>
       </Card>
     );
@@ -262,8 +290,8 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
 
       {/* ══════════ HORA WATCH ══════════ */}
       <div id="hora" />
-      <TempleSection title="Hora Watch" icon="⏱️" defaultOpen={false}>
-        <p className="text-[11px] text-amber-500/80 font-black uppercase tracking-[0.3em] mb-4">Planetary Success Timing • Dr. Pillai Method</p>
+      <TempleSection title={t('vedicAstrology.dashSectionHora')} icon="⏱️" defaultOpen={false}>
+        <p className="text-[11px] text-amber-500/80 font-black uppercase tracking-[0.3em] mb-4">{t('vedicAstrology.dashHoraSubtitle')}</p>
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -274,7 +302,7 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
 
           <div className="flex items-center justify-between p-4 rounded-2xl bg-amber-900/10 border border-amber-500/20">
             <Label htmlFor="hora-notify" className="text-sm font-serif text-amber-200/80 cursor-pointer">
-              Notify me when Hora changes
+              {t('vedicAstrology.dashHoraNotify')}
             </Label>
             <Switch
               id="hora-notify"
@@ -286,28 +314,28 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
 
           {user.plan !== 'free' && (
             <div className="bg-background/80 border border-border p-5 rounded-3xl shadow-2xl space-y-4">
-              <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Time-Travel Scrubber</span>
+              <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">{t('vedicAstrology.dashTimeScrubber')}</span>
               <Slider value={[timeOffset]} min={-720} max={720} step={30} onValueChange={handleTimeOffsetChange} className="w-full" />
               <div className="flex justify-between text-[9px] text-muted-foreground">
                 <span>-12h</span>
-                <span>{timeOffset === 0 ? 'Now' : `${timeOffset > 0 ? '+' : ''}${timeOffset}m`}</span>
+                <span>{timeOffset === 0 ? t('vedicAstrology.dashNow') : `${timeOffset > 0 ? '+' : ''}${timeOffset}m`}</span>
                 <span>+12h</span>
               </div>
             </div>
           )}
         </div>
 
-        <Suspense fallback={<div className="p-4 text-amber-400/50 font-serif text-sm">Loading Hora Watch…</div>}>
+        <Suspense fallback={<div className="p-4 text-amber-400/50 font-serif text-sm">{t('vedicAstrology.dashLoadingHora')}</div>}>
           <AccurateHoraWatch timezone={timezone} timeOffset={timeOffset} userBirthChart={{}} />
         </Suspense>
       </TempleSection>
 
       {/* ══════════ GURU ORACLE with SPEECH BUBBLE ══════════ */}
       <div id="consult-guru" />
-      <TempleSection title="Consult the Guru" icon="💬" defaultOpen={false}>
+      <TempleSection title={t('vedicAstrology.dashConsultGuru')} icon="💬" defaultOpen={false}>
         {user.plan === 'premium' && (
           <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[10px] uppercase tracking-widest mb-4">
-            Oracle Active
+            {t('vedicAstrology.dashOracleActive')}
           </Badge>
         )}
 
@@ -330,7 +358,7 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
             <div className="absolute -bottom-3 left-10 w-6 h-6 bg-purple-900/15 border-b border-r border-purple-500/30 transform rotate-45" />
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
-                <span className="text-[9px] font-black text-purple-400 uppercase tracking-[0.4em] block mb-2">Akashic Verdict</span>
+                <span className="text-[9px] font-black text-purple-400 uppercase tracking-[0.4em] block mb-2">{t('vedicAstrology.dashAkashicVerdict')}</span>
                 <p className="text-base sm:text-lg font-serif italic text-purple-100/90 leading-relaxed">
                   "{reading.todayInfluence.wisdomQuote}"
                 </p>
@@ -342,23 +370,23 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
                 className={`flex-shrink-0 rounded-2xl ${isSpeaking ? 'bg-purple-500 text-white border-purple-500' : 'border-purple-500/40 text-purple-300'}`}
               >
                 {isSpeaking ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                <span className="ml-1.5 text-[10px] font-bold uppercase hidden sm:inline">{isSpeaking ? 'Stop' : 'Listen'}</span>
+                <span className="ml-1.5 text-[10px] font-bold uppercase hidden sm:inline">{isSpeaking ? t('vedicAstrology.dashStop') : t('vedicAstrology.dashListen')}</span>
               </Button>
             </div>
           </motion.div>
         )}
 
-        <Suspense fallback={<div className="p-4 text-amber-400/50 font-serif text-sm">Loading Guru Chat…</div>}>
+        <Suspense fallback={<div className="p-4 text-amber-400/50 font-serif text-sm">{t('vedicAstrology.dashLoadingGuru')}</div>}>
           <CosmicConsultation user={user} onUpgrade={onUpgrade} />
         </Suspense>
       </TempleSection>
 
       {/* ══════════ COSMIC PULSE (Nakshatra) ══════════ */}
       <div id="nakshatra" />
-      <TempleSection title="Cosmic Pulse" icon="🌙" defaultOpen={false}>
+      <TempleSection title={t('vedicAstrology.dashCosmicPulse')} icon="🌙" defaultOpen={false}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2 p-6 sm:p-8 rounded-3xl bg-card/80 backdrop-blur-sm border border-purple-500/30">
-            <span className="text-[11px] font-black text-purple-400 uppercase tracking-widest block mb-1">Nakshatra Focus</span>
+            <span className="text-[11px] font-black text-purple-400 uppercase tracking-widest block mb-1">{t('vedicAstrology.dashNakshatraFocus')}</span>
             <h3 className="text-3xl font-black text-foreground mb-4">{reading.todayInfluence.nakshatra}</h3>
             <p className="text-muted-foreground text-sm leading-relaxed mb-6 border-l-2 border-muted pl-4 italic">
               {reading.todayInfluence.description}
@@ -366,7 +394,7 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="space-y-3">
                 <h4 className="text-[11px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4" /> Optimal Flow
+                  <CheckCircle className="w-4 h-4" /> {t('vedicAstrology.dashOptimalFlow')}
                 </h4>
                 <ul className="space-y-2">
                   {reading.todayInfluence.whatToDo.map((item, i) => (
@@ -378,7 +406,7 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
               </div>
               <div className="space-y-3">
                 <h4 className="text-[11px] font-black text-rose-400 uppercase tracking-widest flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4" /> Karmic Friction
+                  <AlertCircle className="w-4 h-4" /> {t('vedicAstrology.dashKarmicFriction')}
                 </h4>
                 <ul className="space-y-2">
                   {reading.todayInfluence.whatToAvoid.map((item, i) => (
@@ -395,7 +423,7 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
           <div className="p-6 sm:p-8 rounded-3xl bg-amber-500/5 border border-amber-500/10 flex flex-col justify-center text-center relative overflow-hidden">
             <div className="absolute top-4 right-4 text-4xl opacity-5">ॐ</div>
             <Quote className="w-8 h-8 text-amber-500/40 mx-auto mb-4" />
-            <h4 className="text-[10px] font-black text-amber-500/60 uppercase tracking-[0.3em] mb-4">Soul Seed</h4>
+            <h4 className="text-[10px] font-black text-amber-500/60 uppercase tracking-[0.3em] mb-4">{t('vedicAstrology.dashSoulSeed')}</h4>
             <p className="text-lg font-serif text-amber-100/80 leading-relaxed italic">
               "{reading.todayInfluence.wisdomQuote}"
             </p>
@@ -405,28 +433,28 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
 
       {/* ══════════ 4 ETERNAL PILLARS (Compass Tier) ══════════ */}
       {user.plan !== 'free' && reading.personalCompass && (
-        <TempleSection title="The 4 Eternal Pillars" icon="🏛️" defaultOpen={false}>
+        <TempleSection title={t('vedicAstrology.dashPillarsTitle')} icon="🏛️" defaultOpen={false}>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            <CompassCard icon={Briefcase} title="Career" content={reading.personalCompass.career} />
-            <CompassCard icon={Heart} title="Harmony" content={reading.personalCompass.relationship} />
-            <CompassCard icon={Leaf} title="Health" content={reading.personalCompass.health} />
-            <CompassCard icon={Coins} title="Financial" content={reading.personalCompass.financial} />
+            <CompassCard icon={Briefcase} title={t('vedicAstrology.dashPillarCareer')} content={reading.personalCompass.career} />
+            <CompassCard icon={Heart} title={t('vedicAstrology.dashPillarHarmony')} content={reading.personalCompass.relationship} />
+            <CompassCard icon={Leaf} title={t('vedicAstrology.dashPillarHealth')} content={reading.personalCompass.health} />
+            <CompassCard icon={Coins} title={t('vedicAstrology.dashPillarFinancial')} content={reading.personalCompass.financial} />
           </div>
 
           <div className="p-6 sm:p-8 rounded-3xl bg-indigo-900/5 border border-indigo-500/20">
             <div className="flex flex-col sm:flex-row items-center gap-6">
               <div className="w-20 h-20 rounded-full border-2 border-dashed border-indigo-500/30 flex items-center justify-center shrink-0">
                 <div className="text-center">
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold">Timing</p>
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold">{t('vedicAstrology.dashTimingLabel')}</p>
                   <p className="text-lg font-bold text-foreground">{reading.personalCompass.currentDasha.period.split(' ')[0]}</p>
                 </div>
               </div>
               <div className="space-y-2 text-center sm:text-left">
-                <h3 className="text-xl font-bold text-foreground">Major Period: {reading.personalCompass.currentDasha.period}</h3>
+                <h3 className="text-xl font-bold text-foreground">{t('vedicAstrology.dashMajorPeriod', { period: reading.personalCompass.currentDasha.period })}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{reading.personalCompass.currentDasha.meaning}</p>
                 <Badge className="mt-2 px-4 py-1 bg-indigo-500/20 text-indigo-300 text-xs font-bold uppercase tracking-widest">
                   <Target className="w-3 h-3 mr-1" />
-                  Focus: {reading.personalCompass.currentDasha.focusArea}
+                  {t('vedicAstrology.dashFocus', { area: reading.personalCompass.currentDasha.focusArea })}
                 </Badge>
               </div>
             </div>
@@ -437,41 +465,41 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
       {/* ══════════ SOUL BLUEPRINT - TAPPABLE CARD GRID ══════════ */}
       <div id="blueprint" />
       {user.plan === 'premium' && reading.masterBlueprint && (
-        <TempleSection title="Soul Blueprint" icon="👑" defaultOpen={false}>
+        <TempleSection title={t('vedicAstrology.dashSoulBlueprint')} icon="👑" defaultOpen={false}>
           {/* Tappable Card Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <BlueprintCard
-              title="Soul Purpose"
+              title={t('vedicAstrology.dashBpSoulPurpose')}
               preview={reading.masterBlueprint.soulPurpose.split('.')[0]}
               content={reading.masterBlueprint.soulPurpose}
               icon="🔥"
             />
             <BlueprintCard
-              title="D9 Navamsha"
+              title={t('vedicAstrology.dashBpNavamsha')}
               preview={reading.masterBlueprint.navamshaAnalysis.split('.')[0]}
               content={reading.masterBlueprint.navamshaAnalysis}
               icon="💎"
             />
             <BlueprintCard
-              title="Karmic Nodes"
+              title={t('vedicAstrology.dashBpKarmicNodes')}
               preview={reading.masterBlueprint.karmicNodes.split('.')[0]}
               content={reading.masterBlueprint.karmicNodes}
               icon="🌀"
             />
             <BlueprintCard
-              title="Karma Patterns"
+              title={t('vedicAstrology.dashBpKarmaPatterns')}
               preview={reading.masterBlueprint.karmaPatterns.split('.')[0]}
               content={reading.masterBlueprint.karmaPatterns}
               icon="⚡"
             />
             <BlueprintCard
-              title="12-House Mapping"
+              title={t('vedicAstrology.dashBp12House')}
               preview={reading.masterBlueprint.soulMap12Houses.split('.')[0]}
               content={reading.masterBlueprint.soulMap12Houses}
               icon="✵"
             />
             <BlueprintCard
-              title="Sade Sati Status"
+              title={t('vedicAstrology.dashBpSadeSati')}
               preview={reading.masterBlueprint.sadeSatiStatus}
               content={reading.masterBlueprint.sadeSatiStatus}
               icon="♄"
@@ -482,7 +510,7 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
           <div className="p-6 rounded-3xl bg-amber-500/5 border border-amber-500/20">
             <h4 className="text-[11px] font-black text-amber-400 uppercase tracking-widest mb-4 text-center flex items-center justify-center gap-2">
               <Gem className="w-4 h-4" />
-              Active Planetary Yogas
+              {t('vedicAstrology.dashActiveYogas')}
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {reading.masterBlueprint.significantYogas.map((yoga, i) => (
@@ -498,10 +526,10 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
           <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-emerald-900/15 to-teal-900/10 border border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.1)]">
             <div className="flex items-center gap-3 mb-6">
               <Wand2 className="w-6 h-6 text-emerald-400" />
-              <h3 className="text-[clamp(24px,4vw,36px)] font-black text-emerald-300 font-serif">Remedial Protocols</h3>
+              <h3 className="text-[clamp(24px,4vw,36px)] font-black text-emerald-300 font-serif">{t('vedicAstrology.dashRemedialProtocols')}</h3>
             </div>
             <p className="text-xs text-emerald-300/60 uppercase tracking-widest font-bold mb-6">
-              Tap to mark as completed today
+              {t('vedicAstrology.dashTapComplete')}
             </p>
             <div className="space-y-4">
               {reading.masterBlueprint.divineRemedies.map((remedy, i) => (
@@ -528,7 +556,7 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
 
           {/* Timing Peaks */}
           <div className="p-5 rounded-2xl bg-muted/20 border border-border">
-<h4 className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-2">Primary Timing Peaks</h4>
+<h4 className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-2">{t('vedicAstrology.dashPrimaryTimingPeaks')}</h4>
           <p className="text-sm text-foreground font-medium">{reading.masterBlueprint.timingPeaks}</p>
           </div>
         </TempleSection>
@@ -536,9 +564,9 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
 
       {/* ══════════ BHRIGU NANDI NADI - PLANET ACTIVATION TRACKER ══════════ */}
       {bhriguData && (
-        <TempleSection title="Bhrigu Activation" icon="🔱" defaultOpen={false}>
+        <TempleSection title={t('vedicAstrology.dashBhriguActivation')} icon="🔱" defaultOpen={false}>
           <p className="text-[11px] text-orange-500/80 font-black uppercase tracking-[0.3em] mb-4">
-            Nandi Nadi Planetary Progression • Age {bhriguData.age}
+            {t('vedicAstrology.dashNandiSubtitle', { age: bhriguData.age })}
           </p>
 
           {/* Active Cycle Banner */}
@@ -553,16 +581,16 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
             >
               <div className="absolute top-4 right-4 text-6xl opacity-10">{bhriguData.active.emoji}</div>
               <span className="text-[9px] font-black text-orange-400 uppercase tracking-[0.4em] block mb-2">
-                Active Planetary Cycle
+                {t('vedicAstrology.dashActivePlanetaryCycle')}
               </span>
               <div className="flex items-center gap-4 mb-3">
                 <span className="text-4xl">{bhriguData.active.emoji}</span>
                 <div>
                   <h3 className="text-2xl sm:text-3xl font-black text-orange-100">
-                    {bhriguData.active.planet} Cycle
+                    {bhriguData.active.planet} {t('vedicAstrology.dashCycleSuffix')}
                   </h3>
                   <p className="text-xs text-orange-300/60 font-bold">
-                    Activated at age {bhriguData.active.age} • You are {bhriguData.age}
+                    {t('vedicAstrology.dashActivatedAt', { age: bhriguData.active.age, currentAge: bhriguData.age })}
                   </p>
                 </div>
               </div>
@@ -572,7 +600,11 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
               {bhriguData.next && (
                 <div className="mt-4 pt-4 border-t border-orange-500/20">
                   <p className="text-[10px] text-orange-400/60 uppercase tracking-widest">
-                    Next Activation: <span className="text-orange-300 font-bold">{bhriguData.next.planet}</span> at age {bhriguData.next.age} ({bhriguData.next.age - bhriguData.age} years away)
+                    {t('vedicAstrology.dashNextActivation', {
+                      planet: bhriguData.next.planet,
+                      age: bhriguData.next.age,
+                      years: bhriguData.next.age - bhriguData.age,
+                    })}
                   </p>
                 </div>
               )}
@@ -597,7 +629,7 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
                 >
                   <span className="text-2xl block mb-1">{a.emoji}</span>
                   <p className="text-xs font-black text-foreground">{a.planet}</p>
-                  <p className="text-[10px] text-muted-foreground">Age {a.age}</p>
+                  <p className="text-[10px] text-muted-foreground">{t('vedicAstrology.dashAgeYears', { age: a.age })}</p>
                   {isActive && <div className="w-2 h-2 bg-orange-400 rounded-full mx-auto mt-2 animate-pulse" />}
                 </div>
               );
@@ -608,29 +640,31 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
 
       {/* ══════════ NADI DIRECTIONAL MAPPING ══════════ */}
       {user.plan !== 'free' && reading && (
-        <TempleSection title="Planetary Alliances" icon="🧭" defaultOpen={false}>
+        <TempleSection title={t('vedicAstrology.dashPlanetaryAlliances')} icon="🧭" defaultOpen={false}>
           <p className="text-[11px] text-cyan-500/80 font-black uppercase tracking-[0.3em] mb-4">
-            Nadi Directional Mapping • Trikona Analysis
+            {t('vedicAstrology.dashNadiMappingSubtitle')}
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {NADI_DIRECTIONS.map((nd) => (
               <div
-                key={nd.direction}
+                key={nd.id}
                 className={`p-5 sm:p-6 rounded-3xl border border-${nd.color}-500/30 bg-${nd.color}-500/5 hover:bg-${nd.color}-500/10 transition-all`}
               >
                 <div className="flex items-center gap-3 mb-3">
                   <span className="text-3xl">{nd.icon}</span>
                   <div>
-                    <h4 className="text-sm font-black text-foreground uppercase tracking-wider">{nd.direction}</h4>
-                    <p className="text-[10px] text-muted-foreground">Houses {nd.houses} • {nd.theme}</p>
+                    <h4 className="text-sm font-black text-foreground uppercase tracking-wider">{t(NADI_DIR_KEY[nd.id])}</h4>
+                    <p className="text-[10px] text-muted-foreground">
+                      {t('vedicAstrology.dashHousesTheme', {
+                        houses: nd.houses,
+                        theme: t(NADI_THEME_KEY[nd.id]),
+                      })}
+                    </p>
                   </div>
                 </div>
                 <p className="text-xs text-foreground/70 italic leading-relaxed border-l-2 border-current pl-3 opacity-80">
-                  {nd.direction === 'East' && 'Jupiter & Venus align here: A soul born for Creative Mastery and Dharmic Leadership.'}
-                  {nd.direction === 'South' && 'Mercury & Saturn converge: Material abundance through disciplined service and analytical precision.'}
-                  {nd.direction === 'West' && 'Mars & Venus interact: Passionate relationships fuel your desire for expansion and social influence.'}
-                  {nd.direction === 'North' && 'Moon & Ketu reside: Deep spiritual liberation through emotional intelligence and mystical surrender.'}
+                  {t(NADI_BLURB_KEY[nd.id])}
                 </p>
               </div>
             ))}
@@ -640,9 +674,9 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
 
       {/* ══════════ ARTIFICIAL YOGA ACTIVATOR ══════════ */}
       {user.plan === 'premium' && reading?.masterBlueprint && (
-        <TempleSection title="Yoga Activator" icon="🕉️" defaultOpen={false}>
+        <TempleSection title={t('vedicAstrology.dashYogaActivator')} icon="🕉️" defaultOpen={false}>
           <p className="text-[11px] text-teal-500/80 font-black uppercase tracking-[0.3em] mb-4">
-            Bhrigu Remedies • Mantra + Frequency + Action
+            {t('vedicAstrology.dashYogaActivatorSubtitle')}
           </p>
 
           <div className="space-y-4">
@@ -658,7 +692,7 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-[9px] font-black text-teal-400 uppercase tracking-widest hidden sm:inline">
-                      {expandedYogaIdx === i ? 'Close' : 'Activate'}
+                      {expandedYogaIdx === i ? t('vedicAstrology.dashClose') : t('vedicAstrology.dashActivate')}
                     </span>
                     <motion.div animate={{ rotate: expandedYogaIdx === i ? 180 : 0 }}>
                       <ChevronDown className="w-5 h-5 text-teal-400" />

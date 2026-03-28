@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from '@/hooks/useTranslation';
 import { toast } from 'sonner';
 
 interface BirthDetailsFormProps {
@@ -20,6 +21,7 @@ interface BirthDetailsFormProps {
 
 export const BirthDetailsForm: React.FC<BirthDetailsFormProps> = ({ onSaved, initialData }) => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     birth_name: initialData?.birth_name || '',
@@ -32,28 +34,28 @@ export const BirthDetailsForm: React.FC<BirthDetailsFormProps> = ({ onSaved, ini
     e.preventDefault();
 
     if (!user) {
-      toast.error('Please sign in to save birth details');
+      toast.error(t('vedicAstrology.toastSignIn'));
       return;
     }
 
     // Validation
     if (!formData.birth_name.trim()) {
-      toast.error('Please enter your full name at birth');
+      toast.error(t('vedicAstrology.toastName'));
       return;
     }
 
     if (!formData.birth_date) {
-      toast.error('Please enter your date of birth');
+      toast.error(t('vedicAstrology.toastDob'));
       return;
     }
 
     if (!formData.birth_time) {
-      toast.error('Please enter your time of birth');
+      toast.error(t('vedicAstrology.toastTime'));
       return;
     }
 
     if (!formData.birth_place.trim()) {
-      toast.error('Please enter your place of birth');
+      toast.error(t('vedicAstrology.toastPlace'));
       return;
     }
 
@@ -75,11 +77,11 @@ export const BirthDetailsForm: React.FC<BirthDetailsFormProps> = ({ onSaved, ini
 
       if (error) throw error;
 
-      toast.success('Birth details saved! Your Vedic chart is being calculated...');
+      toast.success(t('vedicAstrology.toastSaved'));
       onSaved?.();
     } catch (error: any) {
       console.error('Error saving birth details:', error);
-      toast.error(error?.message || 'Failed to save birth details. Please try again.');
+      toast.error(error?.message || t('vedicAstrology.toastSaveFail'));
     } finally {
       setIsLoading(false);
     }
@@ -90,10 +92,10 @@ export const BirthDetailsForm: React.FC<BirthDetailsFormProps> = ({ onSaved, ini
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <User className="w-5 h-5 text-primary" />
-          Vedic Birth Details
+          {t('vedicAstrology.formTitle')}
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Enter your birth information for accurate Vedic astrology calculations and daily guidance
+          {t('vedicAstrology.formIntro')}
         </p>
       </CardHeader>
       <CardContent>
@@ -101,12 +103,12 @@ export const BirthDetailsForm: React.FC<BirthDetailsFormProps> = ({ onSaved, ini
           <div className="space-y-2">
             <Label htmlFor="birth_name" className="flex items-center gap-2">
               <User className="w-4 h-4" />
-              Full Name at Birth *
+              {t('vedicAstrology.formFullNameLabel')}
             </Label>
             <Input
               id="birth_name"
               type="text"
-              placeholder="Enter your full birth name"
+              placeholder={t('vedicAstrology.formFullNamePlaceholder')}
               value={formData.birth_name}
               onChange={(e) => setFormData({ ...formData, birth_name: e.target.value })}
               required
@@ -117,7 +119,7 @@ export const BirthDetailsForm: React.FC<BirthDetailsFormProps> = ({ onSaved, ini
             <div className="space-y-2">
               <Label htmlFor="birth_date" className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
-                Date of Birth *
+                {t('vedicAstrology.formDobLabel')}
               </Label>
               <Input
                 id="birth_date"
@@ -132,7 +134,7 @@ export const BirthDetailsForm: React.FC<BirthDetailsFormProps> = ({ onSaved, ini
             <div className="space-y-2">
               <Label htmlFor="birth_time" className="flex items-center gap-2">
                 <Clock className="w-4 h-4" />
-                Time of Birth *
+                {t('vedicAstrology.formTimeLabel')}
               </Label>
               <Input
                 id="birth_time"
@@ -142,7 +144,7 @@ export const BirthDetailsForm: React.FC<BirthDetailsFormProps> = ({ onSaved, ini
                 required
               />
               <p className="text-xs text-muted-foreground">
-                Use 24-hour format (e.g., 14:30 for 2:30 PM)
+                {t('vedicAstrology.formTimeHint')}
               </p>
             </div>
           </div>
@@ -150,18 +152,18 @@ export const BirthDetailsForm: React.FC<BirthDetailsFormProps> = ({ onSaved, ini
           <div className="space-y-2">
             <Label htmlFor="birth_place" className="flex items-center gap-2">
               <MapPin className="w-4 h-4" />
-              Place of Birth *
+              {t('vedicAstrology.formPlaceLabel')}
             </Label>
             <Input
               id="birth_place"
               type="text"
-              placeholder="City, Country (e.g., Stockholm, Sweden)"
+              placeholder={t('vedicAstrology.formPlacePlaceholder')}
               value={formData.birth_place}
               onChange={(e) => setFormData({ ...formData, birth_place: e.target.value })}
               required
             />
             <p className="text-xs text-muted-foreground">
-              Enter the city and country where you were born for accurate calculations
+              {t('vedicAstrology.formPlaceHint')}
             </p>
           </div>
 
@@ -174,18 +176,18 @@ export const BirthDetailsForm: React.FC<BirthDetailsFormProps> = ({ onSaved, ini
             {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Saving...
+                {t('vedicAstrology.formSaving')}
               </>
             ) : (
               <>
                 <Save className="w-4 h-4 mr-2" />
-                Save Birth Details & Calculate Chart
+                {t('vedicAstrology.formSubmit')}
               </>
             )}
           </Button>
 
           <p className="text-xs text-muted-foreground text-center">
-            Your birth details are encrypted and stored securely. They are only used for Vedic astrology calculations.
+            {t('vedicAstrology.formFooter')}
           </p>
         </form>
       </CardContent>
