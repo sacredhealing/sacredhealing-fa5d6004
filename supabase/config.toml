@@ -188,3 +188,6 @@ verify_jwt = false
 
 [functions.nadi-scan]
 verify_jwt = true
+
+[functions.quantum-apothecary-chat]
+verify_jwt = false
