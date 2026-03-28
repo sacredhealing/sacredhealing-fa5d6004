@@ -17,7 +17,8 @@ const PodcastEpisodeList: React.FC = () => {
   const { t, language } = useTranslation();
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  /** Resolves to podcastPage.{key} so copy follows profile language when it changes. */
+  const [fetchErrorKey, setFetchErrorKey] = useState<'noEpisodes' | 'loadError' | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   const localeTag =
@@ -26,7 +27,7 @@ const PodcastEpisodeList: React.FC = () => {
   const fetchEpisodes = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
+      setFetchErrorKey(null);
 
       const rssUrl =
         (typeof import.meta !== 'undefined' && import.meta.env?.VITE_PODCAST_RSS_URL) || DEFAULT_PODCAST_RSS_URL;
@@ -48,13 +49,15 @@ const PodcastEpisodeList: React.FC = () => {
       }
 
       if (list.length === 0) {
-        setError(t('podcastPage.noEpisodes', 'No episodes could be loaded.'));
+        setFetchErrorKey('noEpisodes');
+        setEpisodes([]);
       } else {
         setEpisodes(list);
       }
     } catch (err) {
       console.error('Error fetching episodes:', err);
-      setError(t('podcastPage.loadError', 'Could not load the podcast feed.'));
+      setFetchErrorKey('loadError');
+      setEpisodes([]);
     } finally {
       setLoading(false);
     }
@@ -99,20 +102,22 @@ const PodcastEpisodeList: React.FC = () => {
       <div className="flex flex-col items-center justify-center py-20 gap-4" role="status">
         <Loader2 className="w-10 h-10 animate-spin" style={{ color: GOLD }} aria-hidden />
         <span className="text-[8px] font-extrabold uppercase tracking-[0.45em] text-white/40">
-          {t('leaderboard.loading', 'Syncing the field…')}
+          {t('podcastPage.loading', 'Syncing transmissions…')}
         </span>
       </div>
     );
   }
 
-  if (error) {
+  if (fetchErrorKey) {
     return (
       <div
         className={`${glassCard} p-8 text-center`}
         style={{ background: GLASS_BG, borderColor: GLASS_BORDER }}
       >
         <p className="mb-6" style={{ color: 'rgba(255,255,255,0.55)' }}>
-          {error}
+          {fetchErrorKey === 'noEpisodes'
+            ? t('podcastPage.noEpisodes', 'No episodes could be loaded.')
+            : t('podcastPage.loadError', 'Could not load the podcast feed.')}
         </p>
         <Button
           type="button"
@@ -140,10 +145,7 @@ const PodcastEpisodeList: React.FC = () => {
   return (
     <div ref={listRef} className="space-y-4">
       <p className="text-[8px] font-extrabold uppercase tracking-[0.5em] mb-2" style={{ color: 'rgba(212,175,55,0.65)' }}>
-        {t('podcastPage.episodesAvailable', {
-          count: episodes.length,
-          defaultValue: '{{count}} transmissions available',
-        })}
+        {t('podcastPage.episodesAvailable', { count: episodes.length })}
       </p>
 
       {episodes.map((episode, index) => (
@@ -162,7 +164,11 @@ const PodcastEpisodeList: React.FC = () => {
               style={{ background: 'rgba(212,175,55,0.06)' }}
             >
               {episode.imageUrl ? (
-                <img src={episode.imageUrl} alt="" className="w-full h-full object-cover" />
+                <img
+                  src={episode.imageUrl}
+                  alt={t('podcastPage.episodeCoverAlt', { title: episode.title })}
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <Headphones className="w-10 h-10 opacity-40" style={{ color: GOLD }} aria-hidden />

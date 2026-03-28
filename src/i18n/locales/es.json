@@ -506,7 +506,7 @@
     "personalizedForYou": "Personalizado para ti",
     "privateSessions": "Sesiones Privadas",
     "privateSessionsDesc": "1-a-1 con Adam o Laila",
-    "podcast": "Podcast",
+    "podcast": "Pódcast",
     "podcastDesc": "280K+ reproducciones en Spotify",
     "aiIncomeEngine": "Abundancia de Sanación Sagrada",
     "aiIncomeDesc": "Gana con nosotros",
@@ -1963,6 +1963,7 @@
     "goToWallet": "Ir a Cartera"
   },
   "podcastPage": {
+    "title": "Pódcast",
     "heroEyebrow": "Pulso prema · Audio código védico",
     "subtitle": "Despierta tu dicha espiritual — en streaming dentro del santuario.",
     "streamsValue": "280.545",
@@ -1978,7 +1979,9 @@
     "listenInApp": "Reproducir en el santuario",
     "openSpotifyOptional": "Abrir en Spotify (opcional)",
     "duration": "Duración",
-    "published": "Publicado"
+    "published": "Publicado",
+    "loading": "Sincronizando transmisiones…",
+    "episodeCoverAlt": "Arte del episodio: {{title}}"
   },
   "leaderboard": {
     "title": "Clasificación",
@@ -2301,7 +2304,7 @@
     "privateSessionsDesc": "1 a 1 con Adam o Laila",
     "community": "Comunidad",
     "communityDesc": "Chatea con guías y miembros",
-    "podcast": "Podcast",
+    "podcast": "Pódcast",
     "podcastDesc": "Transmisiones en Spotify",
     "videos": "Videos",
     "videosDesc": "Mira y aprende",

@@ -318,7 +318,7 @@
     "personalizedForYou": "Personlig for deg",
     "privateSessions": "Private økter",
     "privateSessionsDesc": "1-til-1 med Adam eller Laila",
-    "podcast": "Podcast",
+    "podcast": "Podkast",
     "podcastDesc": "280K+ strømmer på Spotify",
     "aiIncomeEngine": "Hellig Helbredelse Overflod",
     "aiIncomeDesc": "Tjen med oss",
@@ -1704,6 +1704,7 @@
     "goToWallet": "Gå til lommebok"
   },
   "podcastPage": {
+    "title": "Podkast",
     "heroEyebrow": "Prema-puls · Vedisk lyd",
     "subtitle": "Våkn din åndelige bliss — strømmet i helligdommen.",
     "streamsValue": "280 545",
@@ -1712,14 +1713,16 @@
     "followersLabel": "Spotify-fellesskap",
     "allEpisodes": "Alle episoder",
     "intro": "Lytt til hver episode her. Lyd kommer fra Akasha-strømmen — du trenger ikke forlate appen.",
-    "episodesAvailable": "{{count}} overføringer tilgjengelig",
+    "episodesAvailable": "{{count}} overføringer tilgjengelige",
     "noEpisodes": "Ingen episoder kunne lastes.",
     "loadError": "Kunne ikke laste podcast-feed.",
     "tryAgain": "Prøv igjen",
     "listenInApp": "Spill i helligdommen",
     "openSpotifyOptional": "Åpne i Spotify (valgfritt)",
     "duration": "Varighet",
-    "published": "Publisert"
+    "published": "Publisert",
+    "loading": "Synkroniserer sendinger…",
+    "episodeCoverAlt": "Episodekunst: {{title}}"
   },
   "leaderboard": {
     "title": "Ledertavle",
@@ -2205,7 +2208,7 @@
     "privateSessionsDesc": "1-til-1 med Adam eller Laila",
     "community": "Fellesskap",
     "communityDesc": "Chat med veiledere og medlemmer",
-    "podcast": "Podcast",
+    "podcast": "Podkast",
     "podcastDesc": "Strømmer på Spotify",
     "videos": "Videoer",
     "videosDesc": "Se og lær",

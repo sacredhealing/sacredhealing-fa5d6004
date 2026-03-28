@@ -328,7 +328,7 @@
     "personalizedForYou": "Personligt för dig",
     "privateSessions": "Privata sessioner",
     "privateSessionsDesc": "1-till-1 med Adam eller Laila",
-    "podcast": "Podcast",
+    "podcast": "Podden",
     "podcastDesc": "280K+ strömmar på Spotify",
     "aiIncomeEngine": "Helig Läkande Överflöd",
     "aiIncomeDesc": "Tjäna med oss",
@@ -2012,6 +2012,7 @@
     "goToWallet": "Gå till plånbok"
   },
   "podcastPage": {
+    "title": "Podden",
     "heroEyebrow": "Prema-puls · Vediskt ljud",
     "subtitle": "Väck din andliga bliss — strömmat i helgedomen.",
     "streamsValue": "280 545",
@@ -2027,7 +2028,9 @@
     "listenInApp": "Spela i helgedomen",
     "openSpotifyOptional": "Öppna i Spotify (valfritt)",
     "duration": "Längd",
-    "published": "Publicerad"
+    "published": "Publicerad",
+    "loading": "Synkar sändningar…",
+    "episodeCoverAlt": "Avsnittsbild: {{title}}"
   },
   "leaderboard": {
     "title": "Topplista",
@@ -2351,7 +2354,7 @@
     "privateSessionsDesc": "1-till-1 med Adam eller Laila",
     "community": "Gemenskap",
     "communityDesc": "Chatta med guider och medlemmar",
-    "podcast": "Podcast",
+    "podcast": "Podden",
     "podcastDesc": "Strömmar på Spotify",
     "videos": "Videor",
     "videosDesc": "Titta och lär",

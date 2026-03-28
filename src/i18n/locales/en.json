@@ -1995,6 +1995,7 @@
     "goToWallet": "Go to Wallet"
   },
   "podcastPage": {
+    "title": "Podcast",
     "heroEyebrow": "Prema-Pulse · Vedic Light-Code Audio",
     "subtitle": "Awaken your spiritual bliss — streamed inside the sanctuary.",
     "streamsValue": "280,545",
@@ -2010,7 +2011,9 @@
     "listenInApp": "Play in sanctuary",
     "openSpotifyOptional": "Open in Spotify (optional)",
     "duration": "Duration",
-    "published": "Published"
+    "published": "Published",
+    "loading": "Syncing transmissions…",
+    "episodeCoverAlt": "Episode artwork: {{title}}"
   },
   "leaderboard": {
     "title": "Leaderboard",

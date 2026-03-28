@@ -29,7 +29,7 @@ const Podcast: React.FC = () => {
           style={{ color: GOLD, textShadow: '0 0 24px rgba(212, 175, 55, 0.22)', letterSpacing: '-0.05em' }}
         >
           <Headphones className="w-8 h-8 shrink-0 opacity-95" strokeWidth={2} aria-hidden />
-          {t('dashboard.podcast', 'Podcast')}
+          {t('podcastPage.title', 'Podcast')}
         </h1>
         <p className="mt-3 text-[15px] leading-relaxed max-w-xl" style={{ color: 'rgba(255, 255, 255, 0.6)', fontWeight: 400 }}>
           {t('podcastPage.subtitle', 'Awaken your spiritual bliss — streamed inside the sanctuary.')}
