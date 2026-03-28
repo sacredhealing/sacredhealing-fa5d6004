@@ -101,7 +101,7 @@ const SQTile: React.FC<{
 );
 
 const Dashboard: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -286,6 +286,10 @@ const Dashboard: React.FC = () => {
   const userName = userProfile?.full_name?.split(' ')[0] || t('dashboard.defaultGreetingName');
   const dashaCycle = vedicReading?.personalCompass?.currentDasha?.period?.split(' ')[0] || 'Rahu';
   const horaPlanet = horaWatch.calculation?.currentHora?.planet || 'Venus';
+  const heroWisdom =
+    language === 'en' && vedicReading?.todayInfluence?.wisdomQuote
+      ? vedicReading.todayInfluence.wisdomQuote
+      : t('dashboard.wisdomFallback', { dasha: dashaCycle, planet: horaPlanet });
   const horaDurationMs = horaWatch.calculation?.currentHora?.durationMinutes
     ? horaWatch.calculation.currentHora.durationMinutes * 60 * 1000
     : 1;
@@ -387,7 +391,7 @@ const Dashboard: React.FC = () => {
 
             <p style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.3)', textAlign: 'center', marginBottom: 10 }}>{t('dashboard.heroTagline')}</p>
             <p style={{ fontFamily: 'Cormorant Garamond,serif', fontStyle: 'italic', fontSize: '1.12rem', color: 'rgba(255,255,255,0.72)', lineHeight: 1.55, textAlign: 'center', marginBottom: 14, maxWidth: 300 }}>
-              {vedicReading?.todayInfluence?.wisdomQuote || t('dashboard.wisdomFallback', { dasha: dashaCycle, planet: horaPlanet })}
+              {heroWisdom}
             </p>
             <button onClick={() => navigate('/vedic-astrology')} style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 8, fontWeight: 800, letterSpacing: '0.42em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.55)', background: 'none', border: 'none', cursor: 'pointer' }}>
               {t('dashboard.receiveTransmission')}
