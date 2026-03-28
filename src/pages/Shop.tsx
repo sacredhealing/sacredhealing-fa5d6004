@@ -476,10 +476,12 @@ const Shop = () => {
       {/* Products Grid */}
       <div className="py-2">
         {filteredProducts.length === 0 ? (
-          <Card className={`${shopGlassCard} p-8 text-center`}>
-            <ShoppingBag className="w-12 h-12 text-[#D4AF37]/65 mx-auto mb-4" />
-            <h3 className="font-black font-heading tracking-[-0.03em] text-white mb-2">{t('shop.comingSoonTitle')}</h3>
-            <p className="sqi-body-text text-sm">{t('shop.comingSoonBody')}</p>
+          <Card className={shopGlassCard}>
+            <div className="relative z-[1] p-8 text-center">
+              <ShoppingBag className="w-12 h-12 text-[#D4AF37]/65 mx-auto mb-4" />
+              <h3 className="font-black font-heading tracking-[-0.03em] text-white mb-2">{t('shop.comingSoonTitle')}</h3>
+              <p className="sqi-body-text text-sm">{t('shop.comingSoonBody')}</p>
+            </div>
           </Card>
         ) : (
           <div className="grid grid-cols-2 gap-4">
