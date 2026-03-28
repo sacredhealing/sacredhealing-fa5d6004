@@ -35,6 +35,10 @@ import { wealthBeaconEn } from './locales/wealthBeacon';
 import { wealthBeaconSvPartial } from './locales/wealthBeacon/wealthBeaconSvPartial';
 import { wealthBeaconEsPartial } from './locales/wealthBeacon/wealthBeaconEsPartial';
 import { wealthBeaconNoPartial } from './locales/wealthBeacon/wealthBeaconNoPartial';
+import { atmosphericClearanceEngineEn } from './locales/atmosphericClearanceEngine';
+import { atmosphericClearanceEngineSvPartial } from './locales/atmosphericClearanceEngine/atmosphericClearanceEngineSvPartial';
+import { atmosphericClearanceEngineEsPartial } from './locales/atmosphericClearanceEngine/atmosphericClearanceEngineEsPartial';
+import { atmosphericClearanceEngineNoPartial } from './locales/atmosphericClearanceEngine/atmosphericClearanceEngineNoPartial';
 
 const enRoot = deepMergeLocales(en as Record<string, unknown>, {
   templeHome: templeHomeEn,
@@ -44,6 +48,7 @@ const enRoot = deepMergeLocales(en as Record<string, unknown>, {
   digitalNadi: digitalNadiEn,
   vajraSkyBreaker: vajraSkyBreakerEn,
   wealthBeacon: wealthBeaconEn,
+  atmosphericClearanceEngine: atmosphericClearanceEngineEn,
 } as Record<string, unknown>);
 const svMerged = deepMergeLocales(
   deepMergeLocales(enRoot, sv as Record<string, unknown>),
@@ -75,6 +80,10 @@ const svMerged = deepMergeLocales(
     wealthBeacon: deepMergeLocales(
       wealthBeaconEn as Record<string, unknown>,
       wealthBeaconSvPartial as Record<string, unknown>
+    ),
+    atmosphericClearanceEngine: deepMergeLocales(
+      atmosphericClearanceEngineEn as Record<string, unknown>,
+      atmosphericClearanceEngineSvPartial as Record<string, unknown>
     ),
   } as Record<string, unknown>
 );
@@ -109,6 +118,10 @@ const esMerged = deepMergeLocales(
       wealthBeaconEn as Record<string, unknown>,
       wealthBeaconEsPartial as Record<string, unknown>
     ),
+    atmosphericClearanceEngine: deepMergeLocales(
+      atmosphericClearanceEngineEn as Record<string, unknown>,
+      atmosphericClearanceEngineEsPartial as Record<string, unknown>
+    ),
   } as Record<string, unknown>
 );
 const noMerged = deepMergeLocales(
@@ -141,6 +154,10 @@ const noMerged = deepMergeLocales(
     wealthBeacon: deepMergeLocales(
       wealthBeaconEn as Record<string, unknown>,
       wealthBeaconNoPartial as Record<string, unknown>
+    ),
+    atmosphericClearanceEngine: deepMergeLocales(
+      atmosphericClearanceEngineEn as Record<string, unknown>,
+      atmosphericClearanceEngineNoPartial as Record<string, unknown>
     ),
   } as Record<string, unknown>
 );

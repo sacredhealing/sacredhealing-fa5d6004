@@ -97,9 +97,9 @@ export default function SiddhaPortal() {
 
       <div onClick={() => navigate('/atmospheric-clearance-engine')} style={{ margin: '0 16px 16px', background: 'linear-gradient(135deg,rgba(74,222,128,0.06),rgba(212,175,55,0.02))', border: '1px solid rgba(74,222,128,0.22)', borderRadius: 20, padding: '18px 16px', cursor: 'pointer', position: 'relative' }}>
         <span style={{ position: 'absolute', top: 10, right: 10, fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.28)', color: 'rgba(134,239,172,0.95)', borderRadius: 20, padding: '2px 7px' }}>SQI</span>
-        <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 8, fontWeight: 800, letterSpacing: '0.28em', textTransform: 'uppercase', color: 'rgba(134,239,172,0.9)', marginBottom: 6 }}>Atmospheric Clearance Engine</div>
-        <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.88rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5, marginBottom: 12 }}>Industrial-spiritual vacuum for mental obstructions, metallic density, and aetheric fog.</p>
-        <button style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase', color: 'rgba(134,239,172,0.85)', background: 'none', border: 'none', cursor: 'pointer' }}>Open Engine →</button>
+        <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 8, fontWeight: 800, letterSpacing: '0.28em', textTransform: 'uppercase', color: 'rgba(134,239,172,0.9)', marginBottom: 6 }}>{t('atmosphericClearanceEngine.portalCardTitle')}</div>
+        <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.88rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5, marginBottom: 12 }}>{t('atmosphericClearanceEngine.portalCardDesc')}</p>
+        <button style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase', color: 'rgba(134,239,172,0.85)', background: 'none', border: 'none', cursor: 'pointer' }}>{t('atmosphericClearanceEngine.portalCardOpenCta')}</button>
       </div>
 
       <div onClick={() => navigate('/wealth-beacon')} style={{ margin: '0 16px 16px', background: 'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(157,80,187,0.06))', border: '1px solid rgba(212,175,55,0.28)', borderRadius: 20, padding: '18px 16px', cursor: 'pointer', position: 'relative' }}>
