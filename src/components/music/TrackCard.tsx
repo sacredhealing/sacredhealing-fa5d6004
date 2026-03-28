@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Play, Pause, Heart, Plus, Clock, Music2, Users, Sparkles, Moon, Zap, Leaf, Brain, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useMusicPlayer, Track } from '@/contexts/MusicPlayerContext';
+import { useTranslation } from '@/hooks/useTranslation';
+import { tMusicGenre, tMusicMood, tMusicSpiritualPath } from '@/features/music/musicDisplayI18n';
 
 interface Playlist {
   id: string;
@@ -24,6 +26,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
   onPurchase,
   allTracks,
 }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { currentTrack, isPlaying, playTrack, hasAccess, likedIds, toggleLike, isSubscribed } = useMusicPlayer();
   const [showPlaylistMenu, setShowPlaylistMenu] = useState(false);
@@ -84,12 +87,12 @@ export const TrackCard: React.FC<TrackCardProps> = ({
                 {track.mood === 'healing' && <Sparkles size={9} />}
                 {track.mood === 'meditative' && <Brain size={9} />}
                 {track.mood === 'grounding' && <Leaf size={9} />}
-                {track.mood.charAt(0).toUpperCase() + track.mood.slice(1)}
+                {tMusicMood(track.mood, t)}
               </span>
             )}
             {track.spiritual_path && (
               <span className="bg-purple-500/15 text-purple-400 px-1.5 py-0.5 rounded text-[10px] font-medium capitalize">
-                {track.spiritual_path.replace('_', ' ')}
+                {tMusicSpiritualPath(track.spiritual_path, t)}
               </span>
             )}
             {track.intended_use && (
@@ -108,7 +111,9 @@ export const TrackCard: React.FC<TrackCardProps> = ({
             {track.bpm && (
               <span className="bg-muted/50 px-1.5 py-0.5 rounded">{track.bpm} BPM</span>
             )}
-            <span className="bg-primary/20 text-primary px-1.5 py-0.5 rounded capitalize">{track.genre.replace('-', ' ')}</span>
+            <span className="bg-primary/20 text-primary px-1.5 py-0.5 rounded capitalize">
+              {tMusicGenre(track.genre, t)}
+            </span>
             <span className="flex items-center gap-0.5">
               <Users size={10} />
               {track.play_count}
@@ -136,7 +141,9 @@ export const TrackCard: React.FC<TrackCardProps> = ({
 
           {/* Price / Access */}
           {canPlay || isSubscribed ? (
-            <span className="text-[10px] text-green-500 font-medium">Included</span>
+            <span className="text-[10px] text-green-500 font-medium">
+              {t('music.included', 'Included')}
+            </span>
           ) : (
             <Button 
               size="sm" 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, Pause, Heart, Share2, Plus, Clock, Users, Music2, Sparkles, Moon, Zap, Leaf, Brain, Quote, Sun, Sunset, CloudMoon } from 'lucide-react';
+import { ArrowLeft, Play, Pause, Heart, Share2, Clock, Users, Music2, Sparkles, Moon, Zap, Leaf, Brain, Quote, Sun, Sunset, CloudMoon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,8 +8,11 @@ import { useMusicPlayer, Track } from '@/contexts/MusicPlayerContext';
 import { TrackCard } from '@/components/music/TrackCard';
 import { MusicShareCard } from '@/components/music/MusicShareCard';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
+import { tMusicGenre, tMusicMood, tMusicSpiritualPath, tMusicTimeOfDay, tMusicEnergyLevel } from '@/features/music/musicDisplayI18n';
 
 const TrackDetail: React.FC = () => {
+  const { t } = useTranslation();
   const { trackId } = useParams<{ trackId: string }>();
   const navigate = useNavigate();
   const { currentTrack, isPlaying, playTrack, hasAccess, likedIds, toggleLike, isSubscribed } = useMusicPlayer();
@@ -94,9 +97,9 @@ const TrackDetail: React.FC = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-4">
         <Music2 size={48} className="text-muted-foreground mb-4" />
-        <p className="text-muted-foreground">Track not found</p>
+        <p className="text-muted-foreground">{t('music.trackDetail.notFound', 'Track not found')}</p>
         <Button variant="outline" className="mt-4" onClick={() => navigate('/music')}>
-          Back to Music
+          {t('music.trackDetail.backToMusic', 'Back to Music')}
         </Button>
       </div>
     );
@@ -113,7 +116,9 @@ const TrackDetail: React.FC = () => {
         <Button variant="ghost" size="icon" onClick={() => navigate('/music')}>
           <ArrowLeft size={20} />
         </Button>
-        <h1 className="text-lg font-heading font-semibold text-foreground">Track Details</h1>
+        <h1 className="text-lg font-heading font-semibold text-foreground">
+          {t('music.trackDetail.headerTitle', 'Track Details')}
+        </h1>
       </header>
 
       {/* Main Track Section */}
@@ -154,16 +159,16 @@ const TrackDetail: React.FC = () => {
           {track.mood && (
             <span className="inline-flex items-center gap-1 bg-amber-500/15 text-amber-400 px-3 py-1.5 rounded-full text-sm font-medium">
               {getMoodIcon(track.mood)}
-              {track.mood.charAt(0).toUpperCase() + track.mood.slice(1)}
+              {tMusicMood(track.mood, t)}
             </span>
           )}
           {track.spiritual_path && (
             <span className="bg-purple-500/15 text-purple-400 px-3 py-1.5 rounded-full text-sm font-medium capitalize">
-              {track.spiritual_path.replace('_', ' ')}
+              {tMusicSpiritualPath(track.spiritual_path, t)}
             </span>
           )}
           <span className="bg-primary/20 text-primary px-3 py-1.5 rounded-full text-sm font-medium capitalize">
-            {track.genre.replace('-', ' ')}
+            {tMusicGenre(track.genre, t)}
           </span>
         </div>
 
@@ -173,10 +178,12 @@ const TrackDetail: React.FC = () => {
             <Clock size={16} />
             {formatDuration(track.duration_seconds)}
           </span>
-          {track.bpm && <span>{track.bpm} BPM</span>}
+          {track.bpm && (
+            <span>{t('music.trackDetail.bpmLabel', { defaultValue: '{{bpm}} BPM', bpm: String(track.bpm) })}</span>
+          )}
           <span className="flex items-center gap-1">
             <Users size={16} />
-            {track.play_count} plays
+            {t('music.trackDetail.plays', { defaultValue: '{{count}} plays', count: String(track.play_count) })}
           </span>
         </div>
 
@@ -188,7 +195,9 @@ const TrackDetail: React.FC = () => {
             className="gap-2"
           >
             {isCurrentTrack && isPlaying ? <Pause size={20} /> : <Play size={20} />}
-            {isCurrentTrack && isPlaying ? 'Playing' : 'Play Now'}
+            {isCurrentTrack && isPlaying
+              ? t('music.trackDetail.playing', 'Playing')
+              : t('music.trackDetail.playNow', 'Play Now')}
           </Button>
           
           <Button
@@ -212,10 +221,12 @@ const TrackDetail: React.FC = () => {
         {/* Price/Access */}
         {!canPlay && !isSubscribed && (
           <Card className="bg-muted/30 border-border/50 p-4 text-center">
-            <p className="text-sm text-muted-foreground mb-2">Purchase this track for</p>
+            <p className="text-sm text-muted-foreground mb-2">
+              {t('music.trackDetail.purchasePrompt', 'Purchase this track for')}
+            </p>
             <p className="text-2xl font-bold text-primary mb-3">€{track.price_usd}</p>
             <Button className="w-full" onClick={() => navigate('/music')}>
-              Purchase Track
+              {t('music.trackDetail.purchaseTrack', 'Purchase Track')}
             </Button>
           </Card>
         )}
@@ -226,7 +237,7 @@ const TrackDetail: React.FC = () => {
         <Card className="bg-gradient-to-br from-indigo-900/30 via-purple-900/20 to-violet-900/30 border-purple-500/20 p-5 mb-6">
           <h3 className="text-sm font-semibold text-purple-200 mb-4 flex items-center gap-2">
             <Sparkles size={16} />
-            Spiritual Context
+            {t('music.trackDetail.spiritualContext', 'Spiritual Context')}
           </h3>
           
           {/* Spiritual Description */}
@@ -242,8 +253,12 @@ const TrackDetail: React.FC = () => {
               <div className="flex items-center gap-2 bg-white/5 rounded-lg p-3">
                 {getTimeIcon(track.best_time_of_day)}
                 <div>
-                  <p className="text-xs text-muted-foreground">Best Time</p>
-                  <p className="text-sm font-medium capitalize">{track.best_time_of_day}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t('music.trackDetail.bestTime', 'Best Time')}
+                  </p>
+                  <p className="text-sm font-medium capitalize">
+                    {tMusicTimeOfDay(track.best_time_of_day, t)}
+                  </p>
                 </div>
               </div>
             )}
@@ -251,8 +266,12 @@ const TrackDetail: React.FC = () => {
               <div className="flex items-center gap-2 bg-white/5 rounded-lg p-3">
                 <Zap size={14} className={track.energy_level === 'high' ? 'text-yellow-400' : track.energy_level === 'low' ? 'text-blue-400' : 'text-green-400'} />
                 <div>
-                  <p className="text-xs text-muted-foreground">Energy</p>
-                  <p className="text-sm font-medium capitalize">{track.energy_level}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t('music.trackDetail.energy', 'Energy')}
+                  </p>
+                  <p className="text-sm font-medium capitalize">
+                    {tMusicEnergyLevel(track.energy_level, t)}
+                  </p>
                 </div>
               </div>
             )}
@@ -260,7 +279,9 @@ const TrackDetail: React.FC = () => {
               <div className="flex items-center gap-2 bg-white/5 rounded-lg p-3">
                 <Music2 size={14} />
                 <div>
-                  <p className="text-xs text-muted-foreground">Rhythm</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t('music.trackDetail.rhythm', 'Rhythm')}
+                  </p>
                   <p className="text-sm font-medium capitalize">{track.rhythm_type}</p>
                 </div>
               </div>
@@ -269,7 +290,9 @@ const TrackDetail: React.FC = () => {
               <div className="flex items-center gap-2 bg-white/5 rounded-lg p-3">
                 <Music2 size={14} />
                 <div>
-                  <p className="text-xs text-muted-foreground">Style</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t('music.trackDetail.style', 'Style')}
+                  </p>
                   <p className="text-sm font-medium capitalize">{track.vocal_type}</p>
                 </div>
               </div>
@@ -285,7 +308,9 @@ const TrackDetail: React.FC = () => {
             <Quote className="w-12 h-12 text-purple-300" />
           </div>
           <div className="relative">
-            <h3 className="text-sm font-medium text-purple-200 mb-3">Associated Affirmation</h3>
+            <h3 className="text-sm font-medium text-purple-200 mb-3">
+              {t('music.trackDetail.affirmationHeading', 'Associated Affirmation')}
+            </h3>
             <blockquote className="text-lg text-white font-medium italic leading-relaxed">
               "{track.affirmation}"
             </blockquote>
@@ -296,7 +321,9 @@ const TrackDetail: React.FC = () => {
       {/* Creator Notes */}
       {track.creator_notes && (
         <Card className="bg-muted/20 border-border/50 p-5 mb-8">
-          <h3 className="text-sm font-medium text-muted-foreground mb-2">Creator Notes</h3>
+          <h3 className="text-sm font-medium text-muted-foreground mb-2">
+            {t('music.trackDetail.creatorNotes', 'Creator Notes')}
+          </h3>
           <p className="text-foreground leading-relaxed">{track.creator_notes}</p>
         </Card>
       )}
@@ -304,7 +331,9 @@ const TrackDetail: React.FC = () => {
       {/* Intended Use */}
       {track.intended_use && (
         <div className="mb-8">
-          <h3 className="text-sm font-medium text-muted-foreground mb-2">Best For</h3>
+          <h3 className="text-sm font-medium text-muted-foreground mb-2">
+            {t('music.trackDetail.bestFor', 'Best For')}
+          </h3>
           <span className="inline-block bg-muted/30 px-4 py-2 rounded-lg text-sm capitalize">
             {track.intended_use.replace(/_/g, ' ')}
           </span>
@@ -314,7 +343,9 @@ const TrackDetail: React.FC = () => {
       {/* Related Tracks */}
       {relatedTracks.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold mb-4">You Might Also Like</h3>
+          <h3 className="text-lg font-semibold mb-4">
+            {t('music.trackDetail.relatedTitle', 'You Might Also Like')}
+          </h3>
           <div className="space-y-2">
             {relatedTracks.slice(0, 4).map(related => (
               <TrackCard

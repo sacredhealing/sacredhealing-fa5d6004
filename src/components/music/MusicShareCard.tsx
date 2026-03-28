@@ -5,6 +5,8 @@ import { Card } from '@/components/ui/card';
 import { LotusIcon } from '@/components/icons/LotusIcon';
 import { toast } from 'sonner';
 import { Track } from '@/contexts/MusicPlayerContext';
+import { useTranslation } from '@/hooks/useTranslation';
+import { tMusicMood, tMusicSpiritualPath } from '@/features/music/musicDisplayI18n';
 
 interface MusicShareCardProps {
   track: Track;
@@ -17,11 +19,22 @@ export const MusicShareCard: React.FC<MusicShareCardProps> = ({
   onClose,
   onShare,
 }) => {
+  const { t } = useTranslation();
+
+  const buildShareText = () => {
+    const by = t('music.shareCard.by', 'by');
+    const tagline = t('music.shareCard.discoverTagline', 'Discover healing music at Siddha Quantum Nexus');
+    let text = `🎵 "${track.title}" ${by} ${track.artist}\n\n`;
+    if (track.affirmation) {
+      text += `${t('music.shareCard.affirmationLine', { defaultValue: '✨ "{{text}}"', text: track.affirmation })}\n\n`;
+    }
+    text += tagline;
+    return text;
+  };
+
   const handleShare = async () => {
     const shareUrl = `https://sacredhealing.lovable.app/music/track/${track.id}?utm_source=share&utm_medium=music`;
-    const shareText = track.affirmation 
-      ? `🎵 "${track.title}" by ${track.artist}\n\n✨ "${track.affirmation}"\n\nDiscover healing music at Siddha Quantum Nexus`
-      : `🎵 "${track.title}" by ${track.artist}\n\nDiscover healing music at Siddha Quantum Nexus`;
+    const shareText = buildShareText();
 
     if (navigator.share) {
       try {
@@ -31,7 +44,7 @@ export const MusicShareCard: React.FC<MusicShareCardProps> = ({
           url: shareUrl,
         });
         onShare?.();
-        toast.success('Shared successfully!');
+        toast.success(t('music.shareCard.sharedOk', 'Shared successfully!'));
       } catch (err) {
         if ((err as Error).name !== 'AbortError') {
           copyToClipboard(shareText + '\n' + shareUrl);
@@ -45,10 +58,10 @@ export const MusicShareCard: React.FC<MusicShareCardProps> = ({
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      toast.success('Copied to clipboard!');
+      toast.success(t('music.shareCard.copiedOk', 'Copied to clipboard!'));
       onShare?.();
     } catch (err) {
-      toast.error('Failed to copy');
+      toast.error(t('music.shareCard.copyFail', 'Failed to copy'));
     }
   };
 
@@ -93,12 +106,12 @@ export const MusicShareCard: React.FC<MusicShareCardProps> = ({
         <div className="flex items-center justify-center gap-2 mb-4">
           {track.mood && (
             <span className="bg-amber-500/20 text-amber-300 px-2.5 py-1 rounded-full text-xs font-medium capitalize">
-              {track.mood}
+              {tMusicMood(track.mood, t)}
             </span>
           )}
           {track.spiritual_path && (
             <span className="bg-purple-500/20 text-purple-200 px-2.5 py-1 rounded-full text-xs font-medium capitalize">
-              {track.spiritual_path.replace('_', ' ')}
+              {tMusicSpiritualPath(track.spiritual_path, t)}
             </span>
           )}
         </div>
@@ -114,7 +127,9 @@ export const MusicShareCard: React.FC<MusicShareCardProps> = ({
         <div className="flex items-center justify-between pt-4 border-t border-white/10">
           <div className="flex items-center gap-2">
             <LotusIcon size={20} className="text-amber-400" />
-            <span className="text-sm font-medium text-amber-400">Siddha Quantum Nexus</span>
+            <span className="text-sm font-medium text-amber-400">
+              {t('music.shareCard.brandName', 'Siddha Quantum Nexus')}
+            </span>
           </div>
 
           <Button 
@@ -123,7 +138,7 @@ export const MusicShareCard: React.FC<MusicShareCardProps> = ({
             className="bg-white/15 hover:bg-white/25 text-white border-0 gap-2"
           >
             <Share2 size={14} />
-            Share
+            {t('music.shareCard.shareCta', 'Share')}
           </Button>
         </div>
       </div>

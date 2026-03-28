@@ -1,12 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Heart, X, ChevronUp, Music, Sparkles, Leaf } from 'lucide-react';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const COLLAPSED_HEIGHT = 80;
 const EXPANDED_HEIGHT = 280;
 const DRAG_THRESHOLD = 60;
 
 export const NowPlayingBar: React.FC = () => {
+  const { t } = useTranslation();
   const {
     currentTrack,
     currentAudio,
@@ -62,7 +64,9 @@ export const NowPlayingBar: React.FC = () => {
           ? 'bg-violet-500/20 text-violet-400' 
           : 'bg-emerald-500/20 text-emerald-400'
       }`}>
-        {audioContentType === 'meditation' ? 'Meditation' : 'Healing'}
+        {audioContentType === 'meditation'
+          ? t('music.nowPlaying.badgeMeditation', 'Meditation')
+          : t('music.nowPlaying.badgeHealing', 'Healing')}
       </span>
     );
   };
@@ -177,7 +181,9 @@ export const NowPlayingBar: React.FC = () => {
             </div>
 
             {!canPlayFull && currentTrack && (
-              <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full shrink-0 font-medium">Preview</span>
+              <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full shrink-0 font-medium">
+                {t('music.nowPlaying.preview', 'Preview')}
+              </span>
             )}
             
             {getContentTypeBadge()}
@@ -233,7 +239,9 @@ export const NowPlayingBar: React.FC = () => {
             <p className="font-bold text-lg text-foreground truncate">{displayTitle}</p>
             <p className="text-sm text-muted-foreground">{displayArtist}</p>
             {!canPlayFull && currentTrack && (
-              <span className="inline-block mt-1 text-xs bg-primary/20 text-primary px-3 py-0.5 rounded-full font-medium">Preview Only</span>
+              <span className="inline-block mt-1 text-xs bg-primary/20 text-primary px-3 py-0.5 rounded-full font-medium">
+                {t('music.nowPlaying.previewOnly', 'Preview Only')}
+              </span>
             )}
             {getContentTypeBadge() && (
               <div className="mt-1">{getContentTypeBadge()}</div>

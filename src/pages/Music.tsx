@@ -11,6 +11,7 @@ import { CuratedPlaylistCard } from '@/components/music/CuratedPlaylistCard';
 import { useCuratedPlaylists, CuratedPlaylist } from '@/hooks/useCuratedPlaylists';
 import { useAuth } from '@/hooks/useAuth';
 import { selectTrackForMood, type MoodKey, getTrackIdSafe, getTrackLabel } from '@/features/music/selectTrackForMood';
+import { tMusicGenre, tMusicMood } from '@/features/music/musicDisplayI18n';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -687,11 +688,11 @@ const Music: React.FC = () => {
 
   const moodCards = useMemo(
     () => [
-      { hz: '432 HZ', title: t('music.portal.cardCalmThoughts', 'Calm my thoughts'), trackLabel: 'HARE KRISHNA SLOW (Beat)', tag: t('music.portal.tagCalming', 'Calming'), moodKey: 'calm' as MoodKey },
-      { hz: '528 HZ', title: t('music.portal.cardComfort', 'Feel comfort'), trackLabel: 'ABUNDANCE ACTIVATION', tag: t('music.portal.tagHealing', 'Healing'), moodKey: 'comfort' as MoodKey },
-      { hz: '417 HZ', title: t('music.portal.cardEnergy', 'More energy'), trackLabel: 'DISCIPLE 2 DISCIPLINE (Beat)', tag: t('music.portal.tagEnergizing', 'Energizing'), moodKey: 'energy' as MoodKey },
-      { hz: '396 HZ', title: t('music.portal.cardRest', 'Deep rest'), trackLabel: 'DEVI MARYADA (Beat)', tag: t('music.portal.tagRest', 'Rest'), moodKey: 'rest' as MoodKey },
-      { hz: '432 HZ', title: t('music.portal.cardBackground', 'Silent background'), trackLabel: 'SCRIPTUREZ OF GIZA (Beat)', tag: t('music.portal.tagFocus', 'Focus'), moodKey: 'background' as MoodKey, full: true },
+      { hz: '432 HZ', title: t('music.portal.cardCalmThoughts', 'Calm my thoughts'), trackLabel: t('music.portal.trackExampleCalm', 'HARE KRISHNA SLOW (Beat)'), tag: t('music.portal.tagCalming', 'Calming'), moodKey: 'calm' as MoodKey },
+      { hz: '528 HZ', title: t('music.portal.cardComfort', 'Feel comfort'), trackLabel: t('music.portal.trackExampleComfort', 'ABUNDANCE ACTIVATION'), tag: t('music.portal.tagHealing', 'Healing'), moodKey: 'comfort' as MoodKey },
+      { hz: '417 HZ', title: t('music.portal.cardEnergy', 'More energy'), trackLabel: t('music.portal.trackExampleEnergy', 'DISCIPLE 2 DISCIPLINE (Beat)'), tag: t('music.portal.tagEnergizing', 'Energizing'), moodKey: 'energy' as MoodKey },
+      { hz: '396 HZ', title: t('music.portal.cardRest', 'Deep rest'), trackLabel: t('music.portal.trackExampleRest', 'DEVI MARYADA (Beat)'), tag: t('music.portal.tagRest', 'Rest'), moodKey: 'rest' as MoodKey },
+      { hz: '432 HZ', title: t('music.portal.cardBackground', 'Silent background'), trackLabel: t('music.portal.trackExampleBackground', 'SCRIPTUREZ OF GIZA (Beat)'), tag: t('music.portal.tagFocus', 'Focus'), moodKey: 'background' as MoodKey, full: true },
     ],
     [t]
   );
@@ -1078,7 +1079,7 @@ const Music: React.FC = () => {
               <div className="path-freq-badge">{index === 0 ? '432 Hz' : '528 Hz'}</div>
               <div style={{ flex: 1 }}>
                 <div className="path-title">{track.title}</div>
-                {track.mood && <div className="path-sub">{track.mood}</div>}
+                {track.mood && <div className="path-sub">{tMusicMood(track.mood, t)}</div>}
               </div>
               <div className="path-play">▶</div>
             </div>
@@ -1188,7 +1189,10 @@ const Music: React.FC = () => {
                             <span className="text-xs text-primary mt-2 inline-block">{t('music.portal.fullAccess', '✓ Full access')}</span>
                           ) : (
                             <Button size="sm" className="mt-2" onClick={() => handlePurchaseAlbum(selectedAlbum)}>
-                              {t('music.portal.buyAlbum', `Buy Album $${selectedAlbum.price_usd}`)}
+                              {t('music.portal.buyAlbumCta', {
+                                defaultValue: 'Buy album {{price}}',
+                                price: `$${selectedAlbum.price_usd}`,
+                              })}
                             </Button>
                           )}
                         </div>
@@ -1294,8 +1298,11 @@ const Music: React.FC = () => {
                             </p>
                           )}
                           <p className="text-xs text-muted-foreground mt-2">
-                            {selectedCuratedPlaylist.track_count} tracks •{' '}
-                            {Math.floor(selectedCuratedPlaylist.total_duration / 60)} min
+                            {t('music.portal.curatedPlaylistMeta', {
+                              defaultValue: '{{count}} tracks · {{minutes}} min',
+                              count: String(selectedCuratedPlaylist.track_count),
+                              minutes: String(Math.floor(selectedCuratedPlaylist.total_duration / 60)),
+                            })}
                           </p>
                         </div>
                       </div>
@@ -1358,9 +1365,7 @@ const Music: React.FC = () => {
                                   : 'bg-muted/50 text-muted-foreground hover:bg-muted'
                               }`}
                             >
-                              {g === 'all'
-                                ? t('music.portal.filterAll', 'All')
-                                : g.charAt(0).toUpperCase() + g.slice(1).replace('-', ' ')}
+                              {tMusicGenre(g, t)}
                             </button>
                           ))}
                         </div>

@@ -4,8 +4,9 @@ import { ArrowLeft, Globe, Music2, Users, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
-import { Track, useMusicPlayer } from '@/contexts/MusicPlayerContext';
+import { Track } from '@/contexts/MusicPlayerContext';
 import { TrackCard } from '@/components/music/TrackCard';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Artist {
   id: string;
@@ -20,9 +21,9 @@ interface Artist {
 }
 
 const ArtistProfile: React.FC = () => {
+  const { t } = useTranslation();
   const { artistId } = useParams<{ artistId: string }>();
   const navigate = useNavigate();
-  const { playTrack } = useMusicPlayer();
   
   const [artist, setArtist] = useState<Artist | null>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -75,9 +76,9 @@ const ArtistProfile: React.FC = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-4">
         <Music2 size={48} className="text-muted-foreground mb-4" />
-        <p className="text-muted-foreground">Artist not found</p>
+        <p className="text-muted-foreground">{t('music.artistPage.notFound', 'Artist not found')}</p>
         <Button variant="outline" className="mt-4" onClick={() => navigate('/music')}>
-          Back to Music
+          {t('music.artistPage.backToMusic', 'Back to Music')}
         </Button>
       </div>
     );
@@ -90,7 +91,9 @@ const ArtistProfile: React.FC = () => {
         <Button variant="ghost" size="icon" onClick={() => navigate('/music')}>
           <ArrowLeft size={20} />
         </Button>
-        <h1 className="text-lg font-heading font-semibold text-foreground">Artist</h1>
+        <h1 className="text-lg font-heading font-semibold text-foreground">
+          {t('music.artistPage.headerTitle', 'Artist')}
+        </h1>
       </header>
 
       {/* Artist Hero */}
@@ -120,11 +123,17 @@ const ArtistProfile: React.FC = () => {
         <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground mb-4">
           <span className="flex items-center gap-1">
             <Music2 size={16} />
-            {tracks.length} tracks
+            {t('music.artistPage.trackCountStats', {
+              defaultValue: '{{count}} tracks',
+              count: String(tracks.length),
+            })}
           </span>
           <span className="flex items-center gap-1">
             <Users size={16} />
-            {totalPlays.toLocaleString()} plays
+            {t('music.artistPage.playCountStats', {
+              defaultValue: '{{count}} plays',
+              count: totalPlays.toLocaleString(),
+            })}
           </span>
         </div>
 
@@ -137,7 +146,7 @@ const ArtistProfile: React.FC = () => {
             className="gap-2"
           >
             <Globe size={16} />
-            Visit Website
+            {t('music.artistPage.visitWebsite', 'Visit Website')}
           </Button>
         )}
       </div>
@@ -145,7 +154,9 @@ const ArtistProfile: React.FC = () => {
       {/* Bio */}
       {artist.bio && (
         <Card className="bg-muted/20 border-border/50 p-5 mb-8">
-          <h3 className="text-sm font-medium text-muted-foreground mb-2">About</h3>
+          <h3 className="text-sm font-medium text-muted-foreground mb-2">
+            {t('music.artistPage.about', 'About')}
+          </h3>
           <p className="text-foreground leading-relaxed">{artist.bio}</p>
         </Card>
       )}
@@ -170,7 +181,9 @@ const ArtistProfile: React.FC = () => {
       {/* Signature Tracks */}
       {signatureTracks.length > 0 && (
         <div className="mb-8">
-          <h3 className="text-lg font-semibold mb-4">Signature Tracks</h3>
+          <h3 className="text-lg font-semibold mb-4">
+            {t('music.artistPage.signatureTracks', 'Signature Tracks')}
+          </h3>
           <div className="space-y-2">
             {signatureTracks.map(track => (
               <TrackCard
@@ -186,7 +199,12 @@ const ArtistProfile: React.FC = () => {
       {/* Full Discography */}
       {tracks.length > 5 && (
         <div>
-          <h3 className="text-lg font-semibold mb-4">All Tracks ({tracks.length})</h3>
+          <h3 className="text-lg font-semibold mb-4">
+            {t('music.artistPage.allTracksCount', {
+              defaultValue: 'All Tracks ({{count}})',
+              count: String(tracks.length),
+            })}
+          </h3>
           <div className="space-y-2">
             {tracks.slice(5).map(track => (
               <TrackCard
@@ -202,7 +220,9 @@ const ArtistProfile: React.FC = () => {
       {tracks.length === 0 && (
         <Card className="bg-muted/20 border-border/50 p-8 text-center">
           <Music2 size={32} className="mx-auto text-muted-foreground mb-2" />
-          <p className="text-muted-foreground">No tracks available yet</p>
+          <p className="text-muted-foreground">
+            {t('music.artistPage.noTracksYet', 'No tracks available yet')}
+          </p>
         </Card>
       )}
     </div>
