@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Clock, Star, ChevronRight, Sparkles } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { normalizeSpiritualPathSlugKey } from '@/lib/spiritualPathSlug';
 import { useSpiritualPaths } from '@/hooks/useSpiritualPaths';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -46,7 +47,7 @@ const SpiritualPaths: React.FC = () => {
           const progressPercent = progress 
             ? Math.round((progress.current_day / path.duration_days) * 100) 
             : 0;
-          const pathKey = path.slug.replace(/-/g, '_');
+          const pathKey = normalizeSpiritualPathSlugKey(path.slug);
           const pathTitle = t(`spiritualPath.paths.${pathKey}.title`, path.title);
           const pathDesc = t(`spiritualPath.paths.${pathKey}.description`, path.description || '');
 

@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { normalizeSpiritualPathSlugKey } from '@/lib/spiritualPathSlug';
 // Map path slugs to spiritual path values used in music tracks
 const PATH_SLUG_MAP: Record<string, string> = {
   'inner-peace': 'inner_peace',
@@ -25,10 +26,12 @@ const PathDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { getPathBySlug, getPathDays, getProgressForPath, startPath, completeDay, isProgressLoading, userProgress } = useSpiritualPaths();
-  const pathKey = slug ? slug.replace(/-/g, '_') : '';
-  
+  const pathKey = slug ? normalizeSpiritualPathSlugKey(slug) : '';
+
   // Fetch path-specific music tracks
-  const pathTrackSlug = slug ? PATH_SLUG_MAP[slug] || slug.replace(/-/g, '_') : undefined;
+  const pathTrackSlug = slug
+    ? PATH_SLUG_MAP[slug.toLowerCase()] || normalizeSpiritualPathSlugKey(slug)
+    : undefined;
   const { data: pathTracks = [] } = usePathTracks(pathTrackSlug);
   
   const [path, setPath] = useState<SpiritualPath | null>(null);
