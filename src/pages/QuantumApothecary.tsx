@@ -74,19 +74,19 @@ function renderChatText(text: string) {
       </p>
     );
     if (trimmed.startsWith('### ')) return (
-      <h3 key={i} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase' as const, marginTop: '10px', marginBottom: '4px' }}>
+      <p key={i} role="heading" aria-level={3} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase' as const, marginTop: '10px', marginBottom: '4px' }}>
         {renderInline(trimmed.slice(4), 'heading')}
-      </h3>
+      </p>
     );
     if (trimmed.startsWith('## ')) return (
-      <h2 key={i} style={{ color: '#D4AF37', fontWeight: 900, fontSize: '14px', letterSpacing: '-0.02em', marginTop: '12px', marginBottom: '5px' }}>
+      <p key={i} role="heading" aria-level={2} style={{ color: '#D4AF37', fontWeight: 900, fontSize: '14px', letterSpacing: '-0.02em', marginTop: '12px', marginBottom: '5px' }}>
         {renderInline(trimmed.slice(3), 'heading')}
-      </h2>
+      </p>
     );
     if (trimmed.startsWith('# ')) return (
-      <h1 key={i} style={{ color: '#D4AF37', fontWeight: 900, fontSize: '15px', letterSpacing: '-0.02em', marginTop: '12px', marginBottom: '5px' }}>
+      <p key={i} role="heading" aria-level={1} style={{ color: '#D4AF37', fontWeight: 900, fontSize: '15px', letterSpacing: '-0.02em', marginTop: '12px', marginBottom: '5px' }}>
         {renderInline(trimmed.slice(2), 'heading')}
-      </h1>
+      </p>
     );
     if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) return (
       <li key={i} style={{ marginLeft: '16px', listStyleType: 'disc', fontSize: '13px', lineHeight: '1.5', color: 'rgba(255,255,255,0.92)', marginBottom: '4px' }}>
