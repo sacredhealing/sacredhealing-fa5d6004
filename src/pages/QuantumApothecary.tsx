@@ -493,13 +493,8 @@ function QuantumApothecaryInner() {
         throw new Error('App misconfigured: VITE_SUPABASE_PUBLISHABLE_KEY (or ANON) is missing.');
       }
 
-      const scanBody = {
-        imageBase64: capturedBase64,
-        imageMimeType: 'image/jpeg',
-        userId: user?.id ?? null,
-        planetaryAlign: todayPlanet,
-        herbOfToday: todayHerb,
-      };
+      const { data: sess } = await supabase.auth.getSession();
+      const bearer = sess.session?.access_token || publishableOrAnon;
 
       const parseScanError = async (scanError: { message?: string; context?: Response }) => {
         let msg = scanError.message || t('quantumApothecary.scan.nadiRequestFailed');
@@ -529,7 +524,7 @@ function QuantumApothecaryInner() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          'Authorization': `Bearer ${bearer}`,
         },
         body: JSON.stringify({
           scanMode: true,
