@@ -1021,7 +1021,7 @@ function QuantumApothecaryInner() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar" style={{ padding: '16px', background: '#050505' }}>
+      <div ref={chatScrollRef} className="flex-1 overflow-y-auto custom-scrollbar" style={{ padding: '16px', background: '#050505' }}>
         <div className="flex flex-col justify-end min-h-full space-y-2">
           {messages.map((msg, i) => {
               const isLastUser = msg.role === 'user'  && !messages.slice(i + 1).some(m => m.role === 'user');
