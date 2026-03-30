@@ -62,7 +62,7 @@ const ENERGY_KEYS: Record<string, string> = {
   low: 'music.energyLow',
 };
 
-export function tMusicTimeOfDay(time: string, t: TFunction): string {
+export function tMusicTimeOfDay(time: string, t: TFn): string {
   const key = TIME_KEYS[time];
   if (key) return t(key);
   return time.charAt(0).toUpperCase() + time.slice(1);
