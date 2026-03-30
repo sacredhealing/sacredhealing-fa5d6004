@@ -176,10 +176,8 @@ function QuantumApothecaryInner() {
   });
   const [isScanning, setIsScanning] = useState(false);
   const [selectedActivations, setSelectedActivations] = useState<Activation[]>([]);
-  const [activeTransmissions, setActiveTransmissions] = useState<Activation[]>(() => {
-    try { return JSON.parse(localStorage.getItem('active_resonators') || '[]'); }
-    catch { return []; }
-  });
+  const [activeTransmissions, setActiveTransmissions] = useState<Activation[]>([]);
+  const transmissionsLoadedRef = useRef(false);
   const [messages, setMessages] = useState<Message[]>(() => {
     try {
       const saved = localStorage.getItem('sqi_chat_messages');
