@@ -137,7 +137,7 @@ function QuantumApothecaryInner() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const { language } = useTranslation();
+  const { t, language } = useTranslation();
 
   const [seekerName, setSeekerName] = useState('');
   useEffect(() => {
