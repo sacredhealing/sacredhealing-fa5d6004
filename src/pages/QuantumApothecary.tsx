@@ -579,6 +579,7 @@ function QuantumApothecaryInner() {
         setScanError('No hand detected. Hold your palm clearly up to the camera and try again.');
         setIsScanning(false);
         setScanPhase('idle');
+        document.body.style.overflow = '';
         return;
       }
 
