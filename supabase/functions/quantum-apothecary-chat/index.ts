@@ -450,38 +450,165 @@ serve(async (req) => {
       const { imageBase64, imageMimeType, userId: scanUserId, planetaryAlign, herbOfToday } = body;
       const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
       if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured.");
-      const prompt = `You are a Siddha biofield vision analyser. Analyse this palm image and return precise JSON only.
 
-GROSS NADIS: 72,000 channels. Healthy: 60,000-71,000. Stressed: 8,000-30,000. Depleted: 2,000-8,000.
-SUBTLE SUB-NADIS: 350,000 channels.
+      // Unique seed to prevent cached/repetitive responses
+      const scanSeed = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-If no hand visible return only: {"handDetected":false}
+      const prompt = `You are a Siddha biofield vision analyser. Your ONLY job is to analyse this palm image and return a precise JSON reading.
 
-Read the palm honestly:
-- Deep clear lines + warm pink skin = 65,000-71,000 gross nadis
-- Faint lines + pale/dry = 15,000-40,000
-- Grey/bluish + tense = 5,000-15,000
-- Dosha: Vata=dry/thin, Pitta=reddish/warm, Kapha=moist/full
-Today planetary alignment: ${planetaryAlign}
-Today herb: ${herbOfToday}
+UNIQUE SCAN ID: ${scanSeed}
+Each scan is independent. Do NOT reuse numbers from any previous reading.
 
-Return ONLY this JSON:
-{"handDetected":true,"activeNadis":<0-72000>,"activeSubNadis":<0-350000>,"blockagePercentage":<0-100>,"dominantDosha":"<Vata|Pitta|Kapha>","primaryBlockage":"<Nadi name>","planetaryAlignment":"<planet>","herbOfToday":"<herb>","remedies":["<1>","<2>","<3>","<4>","<5>"],"bioReading":"<3-4 sentences describing what you actually see in this palm>"}`;
+SIDDHA NADI SCIENCE:
+The human biofield has two channel systems:
+- GROSS NADIS: 72,000 main energy channels. Range: 0–72,000 active.
+- SUBTLE SUB-NADIS: 350,000 fine branches. Range: 0–350,000 active.
+
+CALIBRATION RANGES:
+- Advanced practitioner with vibrant palm: 60,000–71,000 gross, 250,000–330,000 subtle
+- Healthy average person: 40,000–60,000 gross, 150,000–250,000 subtle  
+- Mild stress or sedentary: 25,000–40,000 gross, 80,000–150,000 subtle
+- Significant stress/blockage: 12,000–25,000 gross, 40,000–80,000 subtle
+- Severely depleted: 3,000–12,000 gross, 10,000–40,000 subtle
+
+STEP 1 — Is there a visible palm or hand in the image?
+If NO hand visible → return ONLY: {"handDetected":false}
+
+STEP 2 — Read the palm HONESTLY. Base your numbers on what you actually observe:
+
+GROSS NADI INDICATORS (examine carefully):
+- Line depth and clarity: deep, clear, well-defined lines = higher activity
+- Skin tone and warmth: warm pink/rosy = energised; pale/grey/yellowish = depleted
+- Vein visibility: visible healthy veins = good circulatory flow
+- Skin texture: firm and supple = active channels; dry/papery/cracked = restricted
+- Palm colour uniformity: even warm tone = balanced; patchy/mottled/cold spots = blocked
+- Finger spread and tension: relaxed open hand = flowing; tense/curled = restricted
+- Mount prominence: well-developed mounts (Venus, Jupiter, etc.) = strong Nadi flow
+
+SUB-NADI INDICATORS (examine micro-texture):
+- Fine skin lines density: dense network of fine lines = more sub-Nadis active
+- Capillary flush: visible micro-circulation under skin = high sub-Nadi activity
+- Moisture level: healthy moisture = sub-Nadis flowing; overly dry or sweaty = imbalance
+- Skin elasticity: supple = good; rigid or slack = restricted
+
+DOSHA READING FROM PALM:
+- Vata: dry, thin, prominent bones/joints, light colour, irregular/fine lines, cool to touch
+- Pitta: reddish/pinkish tinge, medium build, sharp clear lines, warm, possible freckles
+- Kapha: moist, full/padded palm, deep smooth lines, cool, even pale tone, thick skin
+
+CRITICAL RULES:
+- Do NOT default to 35,000 or any round number. Be specific based on what you SEE.
+- Do NOT simply double a previous reading. Each image is unique.
+- Look at SPECIFIC features: exact line patterns, colour variations, skin quality.
+- Numbers should reflect the ACTUAL visual state of THIS specific palm.
+- Blockage percentage should correlate inversely with activeNadis (high nadis = low blockage).
+- The bioReading MUST describe specific visual features you observe in THIS image.
+
+Today planetary alignment: ${planetaryAlign || "Not specified"}
+Today herb: ${herbOfToday || "Not specified"}
+
+RESPOND ONLY with this exact JSON — no other text, no markdown, no explanation:
+{
+  "handDetected": true,
+  "activeNadis": <integer 0-72000 — be precise based on what you see>,
+  "activeSubNadis": <integer 0-350000 — proportional to gross reading>,
+  "blockagePercentage": <integer 0-100>,
+  "dominantDosha": "<Vata|Pitta|Kapha>",
+  "primaryBlockage": "<specific Nadi name, e.g. Heart/Anahata Nadi, Throat/Vishuddha Nadi>",
+  "planetaryAlignment": "<planet>",
+  "herbOfToday": "<herb>",
+  "remedies": ["<name1>","<name2>","<name3>","<name4>","<name5>"],
+  "bioReading": "<3-4 sentences describing exactly what you see in this specific palm — skin tone, line depth, colour, texture, mounts — and what it means for this person's biofield>"
+}`;
 
       const gr = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ inline_data: { mime_type: imageMimeType || "image/jpeg", data: imageBase64 } }, { text: prompt }] }],
-          generationConfig: { temperature: 0.1, topK: 1, topP: 0.1, maxOutputTokens: 512 },
+          contents: [{ role: "user", parts: [
+            { inline_data: { mime_type: imageMimeType || "image/jpeg", data: imageBase64 } },
+            { text: prompt },
+          ] }],
+          generationConfig: { temperature: 0.4, topK: 20, topP: 0.6, maxOutputTokens: 700 },
         }),
       });
+
+      if (!gr.ok) {
+        const errText = await gr.text();
+        console.error("Gemini scan error:", gr.status, errText);
+        return new Response(JSON.stringify({ error: `Gemini error: ${gr.status}` }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       const gd = await gr.json();
       const raw = gd.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
       const jm = raw.match(/\{[\s\S]*\}/);
-      if (!jm) return new Response(JSON.stringify({ error: "No scan result" }), { status: 500, headers: corsHeaders });
-      const result = JSON.parse(jm[0]);
-      return new Response(JSON.stringify(result), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (!jm) return new Response(JSON.stringify({ error: "No scan result from vision model" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+
+      let scanResult: Record<string, unknown>;
+      try { scanResult = JSON.parse(jm[0]); }
+      catch { return new Response(JSON.stringify({ error: "Invalid JSON from scan" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }); }
+
+      // If no hand detected, return early
+      if (!scanResult.handDetected) {
+        return new Response(JSON.stringify({ handDetected: false }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Validate and clamp values
+      const activeNadis = Math.max(0, Math.min(72000, Math.round(Number(scanResult.activeNadis) || 0)));
+      const activeSubNadis = Math.max(0, Math.min(350000, Math.round(Number(scanResult.activeSubNadis) || 0)));
+      const blockagePct = Math.max(0, Math.min(100, Math.round(Number(scanResult.blockagePercentage) || 0)));
+
+      const finalResult = {
+        handDetected: true,
+        activeNadis,
+        activeSubNadis,
+        blockagePercentage: blockagePct,
+        dominantDosha: String(scanResult.dominantDosha || "Vata"),
+        primaryBlockage: String(scanResult.primaryBlockage || "Heart/Anahata Nadi"),
+        planetaryAlignment: String(scanResult.planetaryAlignment || planetaryAlign || ""),
+        herbOfToday: String(scanResult.herbOfToday || herbOfToday || ""),
+        remedies: Array.isArray(scanResult.remedies) ? (scanResult.remedies as string[]).slice(0, 5) : [],
+        bioReading: String(scanResult.bioReading || ""),
+        scannedAt: new Date().toISOString(),
+      };
+
+      // Save to nadi_baselines (upsert — one per user)
+      if (scanUserId) {
+        try {
+          const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+          await sb.from("nadi_baselines").upsert(
+            {
+              user_id: scanUserId,
+              active_nadis: finalResult.activeNadis,
+              active_sub_nadis: finalResult.activeSubNadis,
+              blockage_pct: finalResult.blockagePercentage,
+              dominant_dosha: finalResult.dominantDosha,
+              primary_blockage: finalResult.primaryBlockage,
+              planetary_align: finalResult.planetaryAlignment,
+              herb_of_today: finalResult.herbOfToday,
+              bio_reading: finalResult.bioReading,
+              remedies: finalResult.remedies,
+              scanned_at: finalResult.scannedAt,
+              updated_at: finalResult.scannedAt,
+            },
+            { onConflict: "user_id" }
+          );
+        } catch (dbErr) {
+          console.error("Failed to save nadi baseline:", dbErr);
+        }
+      }
+
+      return new Response(JSON.stringify(finalResult), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // ── Normal chat mode ─────────────────────────────────────────────
