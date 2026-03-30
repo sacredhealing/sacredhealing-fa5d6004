@@ -164,7 +164,7 @@ const TrackDetail: React.FC = () => {
           )}
           {track.spiritual_path && (
             <span className="bg-purple-500/15 text-purple-400 px-3 py-1.5 rounded-full text-sm font-medium capitalize">
-              {tMusicSpiritualPath(track.spiritual_path, t)}
+              {tMusicSpiritualPath(track.spiritual_path, t as any)}
             </span>
           )}
           <span className="bg-primary/20 text-primary px-3 py-1.5 rounded-full text-sm font-medium capitalize">
