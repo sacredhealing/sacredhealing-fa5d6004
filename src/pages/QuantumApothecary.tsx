@@ -426,6 +426,7 @@ function QuantumApothecaryInner() {
         setScanError('Camera access denied. Please allow camera to initiate scan.');
         setIsScanning(false);
         setScanPhase('idle');
+        document.body.style.overflow = '';
         return;
       }
     }
