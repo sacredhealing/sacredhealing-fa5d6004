@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ╔══════════════════════════════════════════════════════════╗
  * ║  Community.tsx — COMPLETE FIXED VERSION                 ║

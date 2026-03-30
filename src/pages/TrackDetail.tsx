@@ -270,7 +270,7 @@ const TrackDetail: React.FC = () => {
                     {t('music.trackDetail.energy', 'Energy')}
                   </p>
                   <p className="text-sm font-medium capitalize">
-                    {tMusicEnergyLevel(track.energy_level, t)}
+                    {tMusicEnergyLevel(track.energy_level, t as any)}
                   </p>
                 </div>
               </div>

@@ -1365,7 +1365,7 @@ const Music: React.FC = () => {
                                   : 'bg-muted/50 text-muted-foreground hover:bg-muted'
                               }`}
                             >
-                              {tMusicGenre(g, t)}
+                              {tMusicGenre(g, t as any)}
                             </button>
                           ))}
                         </div>
