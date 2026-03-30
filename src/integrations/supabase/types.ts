@@ -5233,6 +5233,30 @@ export type Database = {
           },
         ]
       }
+      user_active_transmissions: {
+        Row: {
+          activated_at: string
+          activation_data: Json
+          activation_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          activated_at?: string
+          activation_data?: Json
+          activation_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          activated_at?: string
+          activation_data?: Json
+          activation_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_balances: {
         Row: {
           balance: number
