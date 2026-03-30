@@ -14,7 +14,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Zap, Activity, MessageSquare,
   Plus, Trash2, Send, Cpu, Globe,
-  Info, X, ArrowLeft, Camera, Mic, Hand,
+  Info, X, ArrowLeft, Camera, Mic, Hand, ChevronUp,
 } from 'lucide-react';
 import { Activation, NadiScanResult, Message } from '@/features/quantum-apothecary/types';
 import { ACTIVATIONS, PLANETARY_DATA } from '@/features/quantum-apothecary/constants';
