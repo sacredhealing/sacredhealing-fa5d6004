@@ -168,7 +168,7 @@ const TrackDetail: React.FC = () => {
             </span>
           )}
           <span className="bg-primary/20 text-primary px-3 py-1.5 rounded-full text-sm font-medium capitalize">
-            {tMusicGenre(track.genre, t)}
+            {tMusicGenre(track.genre, t as any)}
           </span>
         </div>
 
