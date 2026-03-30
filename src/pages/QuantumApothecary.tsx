@@ -404,7 +404,12 @@ function QuantumApothecaryInner() {
         if (valid.has(s) && !out.includes(s)) out.push(s);
       }
     }
+    // Shuffle pool so fallback picks from ALL categories (including Bioenergetic)
     const pool = ACTIVATIONS.map((a) => a.name).filter((n) => !out.includes(n));
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
     while (out.length < 5 && pool.length > 0) {
       out.push(pool.shift()!);
     }
