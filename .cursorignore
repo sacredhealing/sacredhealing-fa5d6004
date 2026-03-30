@@ -13,7 +13,9 @@ railway-worker/
 *.lock
 *.lockb
 
-# Allow edge functions and migrations
+
+
+# Ignore Supabase by default, but allow functions + migrations
+supabase/
 !supabase/functions/
 !supabase/migrations/
-supabase/
