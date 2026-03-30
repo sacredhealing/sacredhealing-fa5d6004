@@ -68,7 +68,7 @@ export function tMusicTimeOfDay(time: string, t: TFn): string {
   return time.charAt(0).toUpperCase() + time.slice(1);
 }
 
-export function tMusicEnergyLevel(level: string, t: TFunction): string {
+export function tMusicEnergyLevel(level: string, t: TFn): string {
   const key = ENERGY_KEYS[level];
   if (key) return t(key);
   return level.charAt(0).toUpperCase() + level.slice(1);
