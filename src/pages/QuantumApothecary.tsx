@@ -1170,18 +1170,11 @@ function QuantumApothecaryInner() {
                     </div>
                   </div>
                   <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/25 text-center pt-1">{t('quantumApothecary.app.freshReading')}</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button type="button" onClick={() => runNadiScan('user')} disabled={isScanning}
-                      className="sqi-btn-ghost py-3 text-[9px] flex flex-col items-center gap-1.5 disabled:opacity-35">
-                      <Hand size={16} className="text-[#D4AF37]/80" />
-                      <span>{t('quantumApothecary.app.newPalmFront')}</span>
-                    </button>
-                    <button type="button" onClick={() => runNadiScan('environment')} disabled={isScanning}
-                      className="sqi-btn-ghost py-3 text-[9px] flex flex-col items-center gap-1.5 disabled:opacity-35">
-                      <Camera size={16} className="text-[#D4AF37]/80" />
-                      <span>{t('quantumApothecary.app.newRearCam')}</span>
-                    </button>
-                  </div>
+                  <button type="button" onClick={() => runNadiScan('environment')} disabled={isScanning}
+                    className="sqi-btn-ghost w-full py-3 text-[9px] flex items-center justify-center gap-2 disabled:opacity-35">
+                    <Camera size={16} className="text-[#D4AF37]/80" />
+                    <span>{t('quantumApothecary.app.newRearCam')}</span>
+                  </button>
                   <button type="button" onClick={() => runNadiScan()} disabled={isScanning}
                     className="sqi-btn-primary w-full py-3 text-[10px] disabled:opacity-35">
                     {t('quantumApothecary.app.newScanSameCam')}
