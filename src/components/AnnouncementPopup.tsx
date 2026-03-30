@@ -10,7 +10,7 @@ interface Announcement {
   type: string;
   image_url: string | null;
   link_url: string | null;
-  link_label: string | null;
+  link_label?: string | null;
   audio_url: string | null;
   recurring: string | null;
 }

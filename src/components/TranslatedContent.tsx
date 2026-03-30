@@ -3,7 +3,7 @@ import { useTranslatedText } from '@/hooks/useTranslateContent';
 interface TranslatedContentProps {
   text: string;
   className?: string;
-  as?: keyof JSX.IntrinsicElements;
+  as?: React.ElementType;
 }
 
 // Component for translating dynamic database content

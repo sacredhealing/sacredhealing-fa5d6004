@@ -1,4 +1,4 @@
-import type { TFunction } from 'i18next';
+type TFn = (key: string, ...args: any[]) => string;
 
 const GENRE_KEYS: Record<string, string> = {
   all: 'music.portal.filterAll',
