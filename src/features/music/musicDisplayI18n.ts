@@ -29,7 +29,7 @@ const PATH_KEYS: Record<string, string> = {
   awakening: 'music.portal.pathAwakening',
 };
 
-export function tMusicGenre(genre: string, t: TFunction): string {
+export function tMusicGenre(genre: string, t: TFn): string {
   const key = GENRE_KEYS[genre];
   if (key) return t(key);
   return genre.charAt(0).toUpperCase() + genre.slice(1).replace('-', ' ');
