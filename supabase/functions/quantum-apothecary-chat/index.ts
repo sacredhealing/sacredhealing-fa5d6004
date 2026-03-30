@@ -4,6 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 // ╔══════════════════════════════════════════════════════════════════╗
@@ -442,105 +443,9 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const body = await req.json();
+    const { messages, userImage, userId, seekerName, canonicalActivationNames } = await req.json();
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured.");
-
-    // ── SCAN MODE — pure vision, no SQI personality ──────────────
-    if (body.scanMode === true) {
-      const { imageBase64, imageMimeType, userId, planetaryAlign, herbOfToday } = body;
-      if (!imageBase64) throw new Error("No image provided for scan");
-
-      const scanPrompt = `You are a Siddha biofield vision analyser. Analyse this palm image and return precise JSON.
-
-SIDDHA NADI SCIENCE:
-- GROSS NADIS: 72,000 main channels. Healthy practitioner: 60,000-71,000. Stressed: 8,000-30,000. Depleted: 2,000-8,000.
-- SUBTLE SUB-NADIS: 350,000 fine branches. Reflect deeper subtle body state.
-
-STEP 1: Is there a visible palm/hand? If NO → return ONLY: {"handDetected":false}
-
-STEP 2: Read the palm HONESTLY based on what you actually observe:
-- Deep clear lines + pink/warm skin = high activity (65,000-71,000 gross)
-- Faint lines + pale/dry skin = fewer active (15,000-40,000 gross)  
-- Grey/bluish tone + tension = severely reduced (5,000-15,000 gross)
-- Sub-Nadis: examine micro-texture and capillary density
-- Dosha: Vata=dry/thin/light, Pitta=reddish/warm/clear, Kapha=moist/full/deep
-
-Today planetary alignment: ${planetaryAlign || ""}
-Today herb: ${herbOfToday || ""}
-
-Return ONLY valid JSON, no other text:
-{"handDetected":true,"activeNadis":<0-72000>,"activeSubNadis":<0-350000>,"blockagePercentage":<0-100>,"dominantDosha":"<Vata|Pitta|Kapha>","primaryBlockage":"<Nadi name>","planetaryAlignment":"<planet>","herbOfToday":"<herb>","remedies":["<1>","<2>","<3>","<4>","<5>"],"bioReading":"<3-4 sentences on what you actually see>"}`;
-
-      const geminiResp = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{
-              role: "user",
-              parts: [
-                { inline_data: { mime_type: imageMimeType || "image/jpeg", data: imageBase64 } },
-                { text: scanPrompt },
-              ],
-            }],
-            generationConfig: { temperature: 0.1, topK: 1, topP: 0.1, maxOutputTokens: 512 },
-          }),
-        }
-      );
-
-      if (!geminiResp.ok) throw new Error(`Gemini vision error: ${geminiResp.status}`);
-      const geminiData = await geminiResp.json();
-      const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error("No JSON from Gemini scan");
-
-      let parsed: Record<string, unknown>;
-      try { parsed = JSON.parse(jsonMatch[0]); }
-      catch { throw new Error("Invalid scan JSON"); }
-
-      if (!parsed.handDetected) {
-        return new Response(JSON.stringify({ handDetected: false }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      const result = {
-        handDetected:       true,
-        activeNadis:        Math.max(0, Math.min(72000,  Math.round(Number(parsed.activeNadis)       || 0))),
-        activeSubNadis:     Math.max(0, Math.min(350000, Math.round(Number(parsed.activeSubNadis)    || 0))),
-        blockagePercentage: Math.max(0, Math.min(100,    Math.round(Number(parsed.blockagePercentage)|| 0))),
-        dominantDosha:      String(parsed.dominantDosha    || "Vata"),
-        primaryBlockage:    String(parsed.primaryBlockage  || "Heart/Anahata Nadi"),
-        planetaryAlignment: String(parsed.planetaryAlignment || planetaryAlign || ""),
-        herbOfToday:        String(parsed.herbOfToday       || herbOfToday     || ""),
-        remedies:           Array.isArray(parsed.remedies) ? (parsed.remedies as string[]).slice(0,5) : [],
-        bioReading:         String(parsed.bioReading        || ""),
-        scannedAt:          new Date().toISOString(),
-      };
-
-      // Save to nadi_baselines if table exists
-      if (userId) {
-        try {
-          const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
-          await sb.from("nadi_baselines").upsert(
-            { user_id: userId, active_nadis: result.activeNadis, active_sub_nadis: result.activeSubNadis,
-              blockage_pct: result.blockagePercentage, dominant_dosha: result.dominantDosha,
-              primary_blockage: result.primaryBlockage, bio_reading: result.bioReading,
-              remedies: result.remedies, scanned_at: result.scannedAt, updated_at: result.scannedAt },
-            { onConflict: "user_id" }
-          );
-        } catch { /* table may not exist yet — scan still returns */ }
-      }
-
-      return new Response(JSON.stringify(result), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    // ── END SCAN MODE ─────────────────────────────────────────────
-
-    const { messages, userImage, userId, seekerName, canonicalActivationNames } = body;
 
     // ── Load memory in parallel ─────────────────────────────────────
     const [livingPortrait, lifeBookArchive, nadiBaseline] = await Promise.all([

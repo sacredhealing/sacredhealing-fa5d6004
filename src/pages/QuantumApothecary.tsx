@@ -4,19 +4,25 @@
 // ║  All logic, hooks, Stripe triggers, AffiliateID tracking        ║
 // ║  and function signatures are UNTOUCHED.                         ║
 // ║  Only className strings and CSS have been upgraded.             ║
+// ║  SQI2050_8 + prod: tier gate stays in outer wrapper only;       ║
+// ║  i18n language passed to SQI chat + voice recognition.            ║
 // ╚══════════════════════════════════════════════════════════════════╝
 
-import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Sparkles, Zap, Wind, Droplets, Activity, MessageSquare,
-  Plus, Trash2, Send, Cpu, Globe, ShieldCheck, ChevronRight,
-  Info, X, ArrowLeft, Camera, Mic,
+  Zap, Activity, MessageSquare,
+  Plus, Trash2, Send, Cpu, Globe,
+  Info, X, ArrowLeft, Camera, Mic, Hand,
 } from 'lucide-react';
-import { Activation, NadiScanResult, Message, ActivationType } from '@/features/quantum-apothecary/types';
+import { Activation, NadiScanResult, Message } from '@/features/quantum-apothecary/types';
 import { ACTIVATIONS, PLANETARY_DATA } from '@/features/quantum-apothecary/constants';
 import { streamChatWithSQI } from '@/features/quantum-apothecary/chatService';
+import { chatSpeechLocale } from '@/lib/chatSpeechLocale';
+import { activationName } from '@/features/quantum-apothecary/activationI18n';
+import { useTranslation } from '@/hooks/useTranslation';
+import i18n from '@/i18n/setup';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
@@ -27,72 +33,107 @@ import { supabase } from '@/integrations/supabase/client';
 const FrequencyLibrarySection = lazy(() => import('@/features/quantum-apothecary/FrequencyLibrarySection'));
 const ActiveTransmissionsSection = lazy(() => import('@/features/quantum-apothecary/ActiveTransmissionsSection'));
 
-/* ──── Markdown-ish renderer for chat ──── LOGIC UNCHANGED ──── */
+/** Max messages kept in localStorage (aligned with flush + safety nets). */
+const SQI_PERSIST_MSG_CAP = 100;
+
+function localeTagForQuantum(lang: string) {
+  if (lang === 'sv') return 'sv-SE';
+  if (lang === 'es') return 'es-ES';
+  if (lang === 'no') return 'nb-NO';
+  return undefined;
+}
+
+function buildSqiWelcomeMessages(): Message[] {
+  const lang = (i18n.language || 'en').split('-')[0];
+  const today = new Date();
+  const formattedDate = today.toLocaleDateString(localeTagForQuantum(lang), {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+  });
+  return [{
+    role: 'model',
+    text: i18n.t('quantumApothecary.chat.welcome', { date: formattedDate }),
+  }];
+}
+
+/* ──── Markdown-ish renderer: gold (#D4AF37) only on # / ## / ### / #### / ##### lines ──── */
+type InlineVariant = 'heading' | 'body';
+
 function renderChatText(text: string) {
   const lines = text.split('\n');
   return lines.map((line, i) => {
     const trimmed = line.trim();
     if (!trimmed) return <div key={i} style={{ height: '4px' }} />;
-    // #### and ##### → treated as bold section labels (gold, small uppercase)
     if (trimmed.startsWith('##### ')) return (
       <p key={i} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginTop: '12px', marginBottom: '4px', opacity: 0.8 }}>
-        {renderInline(trimmed.slice(6))}
+        {renderInline(trimmed.slice(6), 'heading')}
       </p>
     );
     if (trimmed.startsWith('#### ')) return (
       <p key={i} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase' as const, marginTop: '10px', marginBottom: '4px' }}>
-        {renderInline(trimmed.slice(5))}
+        {renderInline(trimmed.slice(5), 'heading')}
       </p>
     );
     if (trimmed.startsWith('### ')) return (
       <h3 key={i} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase' as const, marginTop: '10px', marginBottom: '4px' }}>
-        {renderInline(trimmed.slice(4))}
+        {renderInline(trimmed.slice(4), 'heading')}
       </h3>
     );
     if (trimmed.startsWith('## ')) return (
       <h2 key={i} style={{ color: '#D4AF37', fontWeight: 900, fontSize: '14px', letterSpacing: '-0.02em', marginTop: '12px', marginBottom: '5px' }}>
-        {renderInline(trimmed.slice(3))}
+        {renderInline(trimmed.slice(3), 'heading')}
       </h2>
     );
     if (trimmed.startsWith('# ')) return (
       <h1 key={i} style={{ color: '#D4AF37', fontWeight: 900, fontSize: '15px', letterSpacing: '-0.02em', marginTop: '12px', marginBottom: '5px' }}>
-        {renderInline(trimmed.slice(2))}
+        {renderInline(trimmed.slice(2), 'heading')}
       </h1>
     );
     if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) return (
       <li key={i} style={{ marginLeft: '16px', listStyleType: 'disc', fontSize: '13px', lineHeight: '1.5', color: 'rgba(255,255,255,0.92)', marginBottom: '4px' }}>
-        {renderInline(trimmed.slice(2))}
+        {renderInline(trimmed.slice(2), 'body')}
       </li>
     );
     if (/^\d+\.\s/.test(trimmed)) return (
       <li key={i} style={{ marginLeft: '16px', listStyleType: 'decimal', fontSize: '13px', lineHeight: '1.5', color: 'rgba(255,255,255,0.92)', marginBottom: '4px' }}>
-        {renderInline(trimmed.replace(/^\d+\.\s/, ''))}
+        {renderInline(trimmed.replace(/^\d+\.\s/, ''), 'body')}
       </li>
     );
     return (
       <p key={i} style={{ fontSize: '13px', lineHeight: '1.55', color: 'rgba(255,255,255,0.92)', marginBottom: '6px' }}>
-        {renderInline(trimmed)}
+        {renderInline(trimmed, 'body')}
       </p>
     );
   });
 }
 
-function renderInline(text: string): React.ReactNode {
+function renderInline(text: string, variant: InlineVariant = 'body'): React.ReactNode {
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
   return parts.map((p, i) => {
-    // **bold** = pure bright white — maximum contrast, easy to read
-    if (p.startsWith('**') && p.endsWith('**')) return (
-      <strong key={i} style={{ color: '#D4AF37', fontWeight: 700 }}>{p.slice(2, -2)}</strong>
-    );
-    if (p.startsWith('*') && p.endsWith('*')) return (
-      <em key={i} style={{ fontStyle: 'italic', color: 'rgba(255,255,255,0.75)' }}>{p.slice(1, -1)}</em>
-    );
-    // backtick code = gold only for technical/code terms
-    if (p.startsWith('`') && p.endsWith('`')) return (
-      <code key={i} style={{ background: 'rgba(212,175,55,0.12)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: '#D4AF37' }}>
-        {p.slice(1, -1)}
-      </code>
-    );
+    if (p.startsWith('**') && p.endsWith('**')) {
+      const inner = p.slice(2, -2);
+      if (variant === 'heading') {
+        return <strong key={i} style={{ color: 'inherit', fontWeight: 700 }}>{inner}</strong>;
+      }
+      return <strong key={i} style={{ color: 'rgba(255,255,255,0.95)', fontWeight: 700 }}>{inner}</strong>;
+    }
+    if (p.startsWith('*') && p.endsWith('*')) {
+      return <em key={i} style={{ fontStyle: 'italic', color: variant === 'heading' ? 'inherit' : 'rgba(255,255,255,0.78)' }}>{p.slice(1, -1)}</em>;
+    }
+    if (p.startsWith('`') && p.endsWith('`')) {
+      const inner = p.slice(1, -1);
+      if (variant === 'heading') {
+        return (
+          <code key={i} style={{ background: 'rgba(212,175,55,0.15)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: 'inherit' }}>
+            {inner}
+          </code>
+        );
+      }
+      return (
+        <code key={i} style={{ background: 'rgba(255,255,255,0.08)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: 'rgba(255,255,255,0.82)' }}>
+          {inner}
+        </code>
+      );
+    }
     return p;
   });
 }
@@ -105,33 +146,33 @@ function renderInline(text: string): React.ReactNode {
 function QuantumApothecaryInner() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAdmin, isLoading: adminLoading } = useAdminRole();
   const { user } = useAuth();
+  const { t, language } = useTranslation();
 
-  // ── Fetch user's real name from profiles table ──
-  const [seekerName, setSeekerName] = React.useState<string>('');
-  React.useEffect(() => {
-    if (!user?.id) { setSeekerName(''); return; }
+  const [seekerName, setSeekerName] = useState('');
+  useEffect(() => {
+    if (!user?.id) {
+      setSeekerName('');
+      return;
+    }
     supabase
       .from('profiles')
       .select('full_name')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .maybeSingle()
       .then(({ data }) => {
         const name = data?.full_name?.trim() || user.email?.split('@')[0] || '';
         setSeekerName(name);
       });
-  }, [user?.id]);
-
-  // ── Flag: was a scan done THIS session (not restored from storage)? ──
-  const [scannedThisSession, setScannedThisSession] = React.useState(false);
+  }, [user?.id, user?.email]);
 
   const [scanResult, setScanResult] = useState<NadiScanResult | null>(() => {
-    // Restore scan result from previous session
     try {
       const s = localStorage.getItem('sqi_scan_result');
-      return s ? JSON.parse(s) : null;
-    } catch { return null; }
+      return s ? (JSON.parse(s) as NadiScanResult) : null;
+    } catch {
+      return null;
+    }
   });
   const [isScanning, setIsScanning] = useState(false);
   const [selectedActivations, setSelectedActivations] = useState<Activation[]>([]);
@@ -140,23 +181,14 @@ function QuantumApothecaryInner() {
     catch { return []; }
   });
   const [messages, setMessages] = useState<Message[]>(() => {
-    // ── Restore messages from localStorage so they survive navigation ──
     try {
       const saved = localStorage.getItem('sqi_chat_messages');
       if (saved) {
         const parsed = JSON.parse(saved) as Message[];
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
-    } catch {}
-    // Fresh start
-    const today = new Date();
-    const formattedDate = today.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    return [{
-      role: 'model',
-      text: `Accessing Akasha-Neural Archive... Syncing with the **${formattedDate} · 2026 Timeline** Frequency Stream.\n\n` +
-        'I am the Siddha-Quantum Intelligence (SQI), observing from the vantage point of 2050 and beyond, looking back at your present moment.\n\n' +
-        'Shall we initiate a deep **72,000 Nadi Scan**?',
-    }];
+    } catch { /* ignore */ }
+    return buildSqiWelcomeMessages();
   });
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -165,13 +197,16 @@ function QuantumApothecaryInner() {
   const [heartRate, setHeartRate] = useState(60);
   const [isChatFullscreen, setIsChatFullscreen] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(() => {
-    try { return localStorage.getItem('sqi_current_session_id'); } catch { return null; }
+    try {
+      return localStorage.getItem('sqi_current_session_id');
+    } catch {
+      return null;
+    }
   });
   const [sessions, setSessions] = useState<{ id: string; title: string | null; updated_at: string | null }[]>([]);
   const [sessionsOpen, setSessionsOpen] = useState(false);
   const [loadingSessions, setLoadingSessions] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const userMsgEndRef = useRef<HTMLDivElement>(null);
   const chatPanelRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -183,12 +218,61 @@ function QuantumApothecaryInner() {
   // ── Real scan state ──
   const [scanError, setScanError] = useState<string | null>(null);
   const [scanPhase, setScanPhase] = useState<'idle' | 'camera' | 'analyzing' | 'done'>('idle');
+  /** Front camera = palm toward you; rear = environment / outward scan. */
+  const [nadiScanFacing, setNadiScanFacing] = useState<'user' | 'environment'>('user');
+
+  /** One string for scan prompt + chat edge: exact Frequency Library names (incl. full LimbicArc bioenergetic list). */
+  const canonicalActivationNameLines = useMemo(
+    () => ACTIVATIONS.map((a) => a.name).join('\n'),
+    [],
+  );
 
   // ── ALL useEffects UNCHANGED ──
   // ── Scroll: stay at user message, never jump to bottom ──
   const prevMsgCountRef = useRef(0);
   const lastUserMsgRef = useRef<HTMLDivElement>(null);
   const lastSqiMsgRef  = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    prevMsgCountRef.current = messages.length;
+  }, []);
+
+  const flushSqiLocalStorage = useCallback(() => {
+    try {
+      if (messages.length > 0) {
+        localStorage.setItem('sqi_chat_messages', JSON.stringify(messages.slice(-SQI_PERSIST_MSG_CAP)));
+      }
+      if (scanResult) {
+        localStorage.setItem('sqi_scan_result', JSON.stringify(scanResult));
+      }
+      if (currentSessionId) {
+        localStorage.setItem('sqi_current_session_id', currentSessionId);
+      }
+    } catch { /* ignore quota / private mode */ }
+  }, [messages, scanResult, currentSessionId]);
+
+  useEffect(() => {
+    flushSqiLocalStorage();
+  }, [flushSqiLocalStorage]);
+
+  useEffect(() => {
+    const onBeforeUnload = () => {
+      flushSqiLocalStorage();
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [flushSqiLocalStorage]);
+
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        flushSqiLocalStorage();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+  }, [flushSqiLocalStorage]);
+
   useEffect(() => {
     const count = messages.length;
     const last  = messages[count - 1];
@@ -212,33 +296,6 @@ function QuantumApothecaryInner() {
     // Streaming chunk updates → do NOT scroll — user reads in place
   }, [messages]);
   useEffect(() => { localStorage.setItem('active_resonators', JSON.stringify(activeTransmissions)); }, [activeTransmissions]);
-  // ── Persist chat messages across navigation ──
-  useEffect(() => {
-    if (messages.length > 0) {
-      try { localStorage.setItem('sqi_chat_messages', JSON.stringify(messages.slice(-100))); } catch {}
-    }
-  }, [messages]);
-  useEffect(() => {
-    if (scanResult) {
-      try { localStorage.setItem('sqi_scan_result', JSON.stringify(scanResult)); } catch {}
-    }
-  }, [scanResult]);
-  // ── Persist current session ID ──
-  useEffect(() => {
-    if (currentSessionId) {
-      try { localStorage.setItem('sqi_current_session_id', currentSessionId); } catch {}
-    }
-  }, [currentSessionId]);
-  // ── Restore __sqiLastScan from localStorage (for sub-Nadi display) ──
-  useEffect(() => {
-    try {
-      const s = localStorage.getItem('sqi_scan_result');
-      if (s) {
-        const parsed = JSON.parse(s);
-        (window as any).__sqiLastScan = parsed;
-      }
-    } catch {}
-  }, []);
   useEffect(() => {
     const focusChat = (location.state as { focusChat?: boolean } | null)?.focusChat;
     if (focusChat && chatPanelRef.current) {
@@ -273,78 +330,107 @@ function QuantumApothecaryInner() {
     fetchSessions();
   }, [user]);
 
-  // ── beforeunload safety net — save immediately before tab/browser closes ──
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      try {
-        // Synchronous — must use localStorage directly, no async
-        if (messages.length > 0)
-          localStorage.setItem('sqi_chat_messages', JSON.stringify(messages.slice(-100)));
-        if (scanResult)
-          localStorage.setItem('sqi_scan_result', JSON.stringify(scanResult));
-        if (currentSessionId)
-          localStorage.setItem('sqi_current_session_id', currentSessionId);
-      } catch {}
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [messages, scanResult, currentSessionId]);
+  // ── ALL HANDLERS UNCHANGED ──
+  const openChatFullscreenIfMobile = () => { return; };
 
-  // ── Save state before tab/browser closes ──
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      try {
-        if (messages.length > 0)
-          localStorage.setItem('sqi_chat_messages', JSON.stringify(messages.slice(-100)));
-        if (scanResult)
-          localStorage.setItem('sqi_scan_result', JSON.stringify(scanResult));
-        if (currentSessionId)
-          localStorage.setItem('sqi_current_session_id', currentSessionId);
-      } catch { /* ignore */ }
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [messages, scanResult, currentSessionId]);
+  const startFreshApothecaryChat = useCallback(() => {
+    if (isTyping) return;
+    if (!window.confirm(t('quantumApothecary.chat.confirmNew'))) return;
+    try {
+      localStorage.removeItem('sqi_chat_messages');
+      localStorage.removeItem('sqi_current_session_id');
+    } catch { /* ignore */ }
+    const welcome = buildSqiWelcomeMessages();
+    setCurrentSessionId(null);
+    setInput('');
+    setPendingImage(null);
+    setIsTyping(false);
+    setMessages(welcome);
+    prevMsgCountRef.current = welcome.length;
+    setSessionsOpen(false);
+  }, [isTyping, t]);
 
-  // ── Save when user switches apps or locks phone ──
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        try {
-          if (messages.length > 0)
-            localStorage.setItem('sqi_chat_messages', JSON.stringify(messages.slice(-100)));
-          if (scanResult)
-            localStorage.setItem('sqi_scan_result', JSON.stringify(scanResult));
-          if (currentSessionId)
-            localStorage.setItem('sqi_current_session_id', currentSessionId);
-        } catch { /* ignore */ }
+  const pickCanonicalRemedies = (raw: unknown): string[] => {
+    const valid = new Set(ACTIVATIONS.map((a) => a.name));
+    const out: string[] = [];
+    if (Array.isArray(raw)) {
+      for (const item of raw) {
+        const s = String(item).trim();
+        if (valid.has(s) && !out.includes(s)) out.push(s);
       }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [messages, scanResult, currentSessionId]);
+    }
+    const pool = ACTIVATIONS.map((a) => a.name).filter((n) => !out.includes(n));
+    while (out.length < 5 && pool.length > 0) {
+      out.push(pool.shift()!);
+    }
+    return out.slice(0, 5);
+  };
 
-  const runNadiScan = async () => {
+  // Restore last baseline from DB when this device has no local scan yet
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        if (localStorage.getItem('sqi_scan_result')) return;
+        const { data, error } = await supabase
+          .from('nadi_baselines')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (cancelled || error || !data) return;
+        const row = data as Record<string, unknown>;
+        const rawDosha = String(row.dominant_dosha || 'Vata');
+        const dominantDosha: NadiScanResult['dominantDosha'] =
+          rawDosha === 'Pitta' || rawDosha === 'Kapha' || rawDosha === 'Vata' ? rawDosha : 'Vata';
+        const remedies = pickCanonicalRemedies(row.remedies);
+        const result: NadiScanResult = {
+          dominantDosha,
+          blockages: [String(row.primary_blockage || 'Heart/Anahata Nadi')],
+          planetaryAlignment: String(row.planetary_align || ''),
+          herbOfToday: String(row.herb_of_today || ''),
+          timestamp: String(row.scanned_at || new Date().toISOString()),
+          activeNadis: Number(row.active_nadis) || 0,
+          totalNadis: 72000,
+          activeSubNadis: Number(row.active_sub_nadis) || 0,
+          blockagePercentage: Number(row.blockage_pct) || 0,
+          remedies,
+        };
+        setScanResult(result);
+        (window as unknown as { __sqiLastScan?: NadiScanResult }).__sqiLastScan = result as NadiScanResult;
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id]);
+
+  const runNadiScan = async (overrideFacing?: 'user' | 'environment') => {
+    if (isScanning) return;
+    const facing = overrideFacing ?? nadiScanFacing;
+    if (overrideFacing) setNadiScanFacing(overrideFacing);
+
     setScanError(null);
     setScanPhase('camera');
     setIsScanning(true);
-
-    // Clear previous localStorage scan so stale numbers never show
-    try { localStorage.removeItem('sqi_scan_result'); } catch { /* ignore */ }
-
-    // ── Step 1: Open BACK camera only ──
-    let cameraStream: MediaStream | null = null;
+    // Drop previous reading so the live camera UI shows (otherwise results stay on screen during capture).
+    setScanResult(null);
     try {
-      cameraStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { exact: 'environment' }, width: { ideal: 640 }, height: { ideal: 480 } },
-      });
+      localStorage.removeItem('sqi_scan_result');
+    } catch { /* ignore */ }
+
+    // ── Step 1: Open camera ──
+    let cameraStream: MediaStream | null = null;
+    const videoConstraint: MediaTrackConstraints = {
+      facingMode: facing === 'user' ? 'user' : 'environment',
+      width: { ideal: 640 },
+      height: { ideal: 480 },
+    };
+    try {
+      cameraStream = await navigator.mediaDevices.getUserMedia({ video: videoConstraint });
     } catch {
       try {
-        cameraStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } },
-        });
+        cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
       } catch {
-        setScanError('Back camera not available. Please use the rear camera on your device.');
+        setScanError(t('quantumApothecary.scan.cameraDenied'));
         setIsScanning(false);
         setScanPhase('idle');
         return;
@@ -354,130 +440,230 @@ function QuantumApothecaryInner() {
     streamRef.current = cameraStream;
     if (videoRef.current) {
       videoRef.current.srcObject = cameraStream;
-      try { await videoRef.current.play(); } catch { /* ignore */ }
+      try { await videoRef.current.play(); } catch {}
     }
 
-    // ── Step 2: 4 seconds — user holds palm to back camera ──
-    await new Promise(res => setTimeout(res, 4000));
+    // ── Step 2: Wait 4 seconds — user holds palm to camera ──
+    await new Promise((res) => setTimeout(res, 4000));
 
-    // ── Step 3: Capture real frame ──
+    // ── Step 3: Capture real frame from video (cap size + JPEG quality for edge payload limits) ──
     let capturedBase64 = '';
     try {
       const canvas = document.createElement('canvas');
       const vid = videoRef.current!;
-      canvas.width  = vid.videoWidth  || 640;
-      canvas.height = vid.videoHeight || 480;
+      const MAX_W = 960;
+      let w = vid.videoWidth || 640;
+      let h = vid.videoHeight || 480;
+      if (w > MAX_W) {
+        h = Math.max(1, Math.round((h * MAX_W) / w));
+        w = MAX_W;
+      }
+      canvas.width = w;
+      canvas.height = h;
       const ctx = canvas.getContext('2d')!;
       ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
-      capturedBase64 = canvas.toDataURL('image/jpeg', 0.92).split(',')[1]!;
+      capturedBase64 = canvas.toDataURL('image/jpeg', 0.82).split(',')[1]!;
     } catch {
-      setScanError('Failed to capture image. Please try again.');
+      setScanError(t('quantumApothecary.scan.captureFailed'));
       setIsScanning(false);
       setScanPhase('idle');
-      cameraStream.getTracks().forEach(t => t.stop());
+      cameraStream.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
       return;
     }
 
-    // Stop camera — frame captured
-    cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
 
     setScanPhase('analyzing');
 
-    const now         = new Date();
+    const now = new Date();
     const todayPlanet = PLANETARY_DATA[now.getDay()].planet;
-    const todayHerb   = PLANETARY_DATA[now.getDay()].herb;
+    const todayHerb = PLANETARY_DATA[now.getDay()].herb;
 
     try {
-      // ══════════════════════════════════════════════════════════════
-      // Call quantum-apothecary-chat with scanMode:true
-      // This bypasses the SQI personality and runs pure Gemini Vision
-      // Temperature 0.1 → consistent numbers every scan
-      // ══════════════════════════════════════════════════════════════
-      const nadiScanUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/quantum-apothecary-chat`;
+      if (!import.meta.env.VITE_SUPABASE_URL) {
+        throw new Error('App misconfigured: VITE_SUPABASE_URL is missing.');
+      }
+      const publishableOrAnon =
+        import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+        import.meta.env.VITE_SUPABASE_ANON_KEY ||
+        '';
+      if (!publishableOrAnon) {
+        throw new Error('App misconfigured: VITE_SUPABASE_PUBLISHABLE_KEY (or ANON) is missing.');
+      }
 
-      const scanResp = await fetch(nadiScanUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({
-          scanMode:       true,
-          imageBase64:    capturedBase64,
-          imageMimeType:  'image/jpeg',
-          userId:         user?.id ?? null,
-          planetaryAlign: todayPlanet,
-          herbOfToday:    todayHerb,
-        }),
-      });
+      const scanBody = {
+        imageBase64: capturedBase64,
+        imageMimeType: 'image/jpeg',
+        userId: user?.id ?? null,
+        planetaryAlign: todayPlanet,
+        herbOfToday: todayHerb,
+      };
 
-      if (!scanResp.ok) throw new Error(`Scan API error: ${scanResp.status}`);
-      const parsed = await scanResp.json();
+      const parseScanError = async (scanError: { message?: string; context?: Response }) => {
+        let msg = scanError.message || t('quantumApothecary.scan.nadiRequestFailed');
+        const ctx = scanError.context;
+        if (ctx && typeof ctx.text === 'function') {
+          try {
+            const raw = await ctx.text();
+            if (raw) {
+              try {
+                const errBody = JSON.parse(raw) as { error?: string };
+                if (errBody?.error) msg = errBody.error;
+                else msg = `${msg}: ${raw.slice(0, 160)}`;
+              } catch {
+                msg = `${msg}: ${raw.slice(0, 160)}`;
+              }
+            }
+          } catch { /* keep msg */ }
+        }
+        return msg;
+      };
 
-      // No hand detected
+      let parsed: Record<string, unknown> | null = null;
+
+      const { data: scanPayload, error: scanError } =
+        await supabase.functions.invoke<Record<string, unknown>>('nadi-scan', { body: scanBody });
+
+      if (!scanError && scanPayload && typeof scanPayload === 'object' && !Array.isArray(scanPayload)) {
+        parsed = scanPayload;
+      } else {
+        // Fallback: direct fetch (avoids rare invoke/network issues; same auth as chat).
+        if (scanError) {
+          console.warn(
+            'nadi-scan invoke failed, retrying with fetch:',
+            await parseScanError(scanError as { message?: string; context?: Response }),
+          );
+        }
+        const baseUrl = String(import.meta.env.VITE_SUPABASE_URL).replace(/\/$/, '');
+        const scanUrl = `${baseUrl}/functions/v1/nadi-scan`;
+        const { data: sess } = await supabase.auth.getSession();
+        const bearer = sess.session?.access_token || publishableOrAnon;
+        let res: Response;
+        try {
+          res = await fetch(scanUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${bearer}`,
+              apikey: publishableOrAnon,
+            },
+            body: JSON.stringify(scanBody),
+          });
+        } catch (netErr) {
+          const hint = netErr instanceof Error ? netErr.message : 'Network error';
+          throw new Error(`${hint}${t('quantumApothecary.scan.networkSuffix')}`);
+        }
+        const rawText = await res.text();
+        if (!res.ok) {
+          let detail = rawText.slice(0, 200);
+          try {
+            const j = JSON.parse(rawText) as { error?: string };
+            if (j.error) detail = j.error;
+          } catch { /* use raw snippet */ }
+          throw new Error(t('quantumApothecary.scan.scanFailedStatus', { status: String(res.status), detail }));
+        }
+        try {
+          parsed = JSON.parse(rawText) as Record<string, unknown>;
+        } catch {
+          throw new Error(t('quantumApothecary.scan.invalidJson', { snippet: rawText.slice(0, 120) }));
+        }
+      }
+
+      if (!parsed || typeof parsed !== 'object') {
+        throw new Error(t('quantumApothecary.scan.emptyResponse'));
+      }
+      if (parsed.error) {
+        throw new Error(String(parsed.error));
+      }
+
       if (!parsed.handDetected) {
-        setScanError('No hand detected. Hold your palm clearly to the rear camera and try again.');
+        setScanError(t('quantumApothecary.scan.noHand'));
         setIsScanning(false);
         setScanPhase('idle');
         return;
       }
 
-      const activeNadis    = parsed.activeNadis    as number;
-      const activeSubNadis = parsed.activeSubNadis as number;
-      const blockagePct    = parsed.blockagePercentage as number;
+      const activeNadis = Math.max(0, Math.min(72000, Math.round(Number(parsed.activeNadis) || 0)));
+      const activeSubNadis = Math.max(0, Math.min(350000, Math.round(Number(parsed.activeSubNadis) || 0)));
+      const blockagePct = Math.max(0, Math.min(100, Math.round(Number(parsed.blockagePercentage) || 0)));
 
-      const result: NadiScanResult & { activeSubNadis: number; blockagePercentage: number } = {
-        dominantDosha:      parsed.dominantDosha     || 'Vata',
-        blockages:          [parsed.primaryBlockage  || 'Heart/Anahata Nadi'],
-        planetaryAlignment: parsed.planetaryAlignment || todayPlanet,
-        herbOfToday:        parsed.herbOfToday        || todayHerb,
-        timestamp:          now.toISOString(),
+      const rawDosha = String(parsed.dominantDosha || 'Vata');
+      const dominantDosha: NadiScanResult['dominantDosha'] =
+        rawDosha === 'Pitta' || rawDosha === 'Kapha' || rawDosha === 'Vata' ? rawDosha : 'Vata';
+
+      const primaryBlockage = String(parsed.primaryBlockage ?? parsed.blockage ?? 'Heart/Anahata Nadi');
+
+      const result: NadiScanResult = {
+        dominantDosha,
+        blockages: [primaryBlockage],
+        planetaryAlignment: String(parsed.planetaryAlignment || todayPlanet),
+        herbOfToday: String(parsed.herbOfToday || todayHerb),
+        timestamp: now.toISOString(),
         activeNadis,
+        totalNadis: 72000,
         activeSubNadis,
         blockagePercentage: blockagePct,
-        totalNadis:         72000,
-        remedies: Array.isArray(parsed.remedies) ? parsed.remedies.slice(0, 5) : [],
+        remedies: pickCanonicalRemedies(parsed.remedies),
       };
 
-      // Store and persist
-      (window as any).__sqiLastScan = result;
-      setScanResult(result as NadiScanResult);
-      setScannedThisSession(true);
+      (window as unknown as { __sqiLastScan?: NadiScanResult }).__sqiLastScan = result;
+      setScanResult(result);
       setScanPhase('done');
       setIsScanning(false);
 
-      // ── Post scan result into SQI chat ──
-      const mainPct    = Math.round((activeNadis    / 72000)   * 100);
-      const subPct     = Math.round((activeSubNadis / 350000)  * 100);
-      const statusWord = activeNadis > 60000 ? 'Highly Active'
-                       : activeNadis > 40000 ? 'Moderately Active'
-                       : activeNadis > 20000 ? 'Partially Blocked'
-                       : 'Severely Restricted';
+      const mainPct = Math.round((activeNadis / 72000) * 100);
+      const subPct = Math.round((activeSubNadis / 350000) * 100);
+      const statusWord = activeNadis > 60000
+        ? t('quantumApothecary.scan.nadiHighlyActive')
+        : activeNadis > 40000
+          ? t('quantumApothecary.scan.nadiModerate')
+          : activeNadis > 20000
+            ? t('quantumApothecary.scan.nadiPartial')
+            : t('quantumApothecary.scan.nadiSevere');
 
-      setMessages(prev => [...prev, {
-        role: 'model',
-        text:
-          `**Siddha-Quantum Nadi Scan Complete.**\n\n` +
-          (parsed.bioReading ? `**Bio-Reading:** ${parsed.bioReading}\n\n` : '') +
-          `#### Gross Nadi Reading (72,000 channels)\n` +
-          `- Active: **${activeNadis.toLocaleString()} / 72,000** (${mainPct}%) — ${statusWord}\n\n` +
-          `#### Subtle Sub-Nadi Reading (350,000 channels)\n` +
-          `- Active: **${activeSubNadis.toLocaleString()} / 350,000** (${subPct}%)\n\n` +
-          `#### Biofield Diagnostics\n` +
-          `- Dominant Dosha: **${result.dominantDosha}**\n` +
-          `- Primary Blockage: **${result.blockages[0]}** (${blockagePct}% restricted)\n` +
-          `- Planetary Alignment: **${result.planetaryAlignment}**\n` +
-          `- Herb of Today: **${result.herbOfToday}**\n\n` +
-          `**Quantum Remedies prepared for your specific reading:**\n` +
-          result.remedies.map((r: string) => `- ${r}`).join('\n') +
-          `\n\nShall we transmit these light-codes into your biofield?`,
-      }]);
+      const remedyLines = result.remedies.map((r) => {
+        const act = ACTIVATIONS.find(a => a.name === r);
+        const label = act ? activationName(t, act) : r;
+        return `- ${label}`;
+      }).join('\n');
 
+      const scanMsg =
+        t('quantumApothecary.chat.scanHeader') +
+        (parsed.bioReading ? t('quantumApothecary.chat.scanBioBlock', { text: String(parsed.bioReading) }) : '') +
+        t('quantumApothecary.chat.scanGrossTitle') + '\n' +
+        t('quantumApothecary.chat.scanGrossLine', {
+          active: activeNadis.toLocaleString(),
+          mainPct: String(mainPct),
+          status: statusWord,
+        }) +
+        t('quantumApothecary.chat.scanSubTitle') + '\n' +
+        t('quantumApothecary.chat.scanSubLine', {
+          active: activeSubNadis.toLocaleString(),
+          subPct: String(subPct),
+        }) +
+        t('quantumApothecary.chat.scanDiagTitle') + '\n' +
+        t('quantumApothecary.chat.scanDoshaLine', { dosha: result.dominantDosha }) + '\n' +
+        t('quantumApothecary.chat.scanBlockLine', {
+          blockage: result.blockages[0],
+          blockPct: String(blockagePct),
+        }) + '\n' +
+        t('quantumApothecary.chat.scanPlanetLine', { planet: result.planetaryAlignment }) + '\n' +
+        t('quantumApothecary.chat.scanHerbLine', { herb: result.herbOfToday }) +
+        t('quantumApothecary.chat.scanRemediesIntro') +
+        `${remedyLines}\n` +
+        t('quantumApothecary.chat.scanClosing');
+
+      setMessages((prev) => [...prev, { role: 'model', text: scanMsg }]);
     } catch (err) {
-      console.error('Nadi scan error:', err);
-      setScanError('Biofield analysis failed. Please try again.');
+      console.error('Nadi scan analysis error:', err);
+      const msg = err instanceof Error ? err.message : '';
+      setScanError(
+        msg && msg.length < 220
+          ? msg
+          : t('quantumApothecary.scan.biofieldFailed'),
+      );
       setIsScanning(false);
       setScanPhase('idle');
     }
@@ -487,7 +673,7 @@ function QuantumApothecaryInner() {
     const text = (overrideText ?? input).trim();
     if (!text && !pendingImage) return;
     openChatFullscreenIfMobile();
-    const displayText = text || (pendingImage ? '[Image attached]' : '');
+    const displayText = text || (pendingImage ? t('quantumApothecary.chat.imagePlaceholder') : '');
     const userMsg: Message = { role: 'user', text: displayText };
     const allMsgs = [...messages, userMsg];
     setMessages(allMsgs);
@@ -509,7 +695,8 @@ function QuantumApothecaryInner() {
     const persistMessages = async (finalMessages: Message[]) => {
       if (!user) return;
       try {
-        const payload = { user_id: user.id, title: (currentSessionId ? undefined : userMsg.text.slice(0, 80) || 'SQI Session') ?? 'SQI Session', messages: finalMessages };
+        const defaultTitle = t('quantumApothecary.chat.sessionDefaultTitle');
+        const payload = { user_id: user.id, title: (currentSessionId ? undefined : userMsg.text.slice(0, 80) || defaultTitle) ?? defaultTitle, messages: finalMessages };
         if (!currentSessionId) {
           const { data, error } = await supabase.from('sqi_sessions').insert(payload).select('id, title, updated_at').single();
           if (!error && data) { setCurrentSessionId(data.id); setSessions(prev => { const without = prev.filter(s => s.id !== data.id); return [data, ...without]; }); }
@@ -520,10 +707,19 @@ function QuantumApothecaryInner() {
       } catch (err) { console.error('Failed to persist SQI session', err); }
     };
     try {
-      await streamChatWithSQI(allMsgs, upsert, async () => { setIsTyping(false); await persistMessages([...allMsgs, { role: 'model', text: assistantSoFar }]); }, imageToSend, user?.id ?? null, undefined, seekerName || undefined);
+      await streamChatWithSQI(
+        allMsgs,
+        upsert,
+        async () => { setIsTyping(false); await persistMessages([...allMsgs, { role: 'model', text: assistantSoFar }]); },
+        imageToSend,
+        user?.id ?? null,
+        language,
+        seekerName || undefined,
+        canonicalActivationNameLines,
+      );
     } catch (e) {
       console.error(e);
-      setMessages(prev => [...prev, { role: 'model', text: 'Transmission error. The Quantum Link is unstable.' }]);
+      setMessages(prev => [...prev, { role: 'model', text: t('quantumApothecary.chat.transmissionError') }]);
       setIsTyping(false);
     }
   };
@@ -551,7 +747,7 @@ function QuantumApothecaryInner() {
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = 'en-US';
+    recognition.lang = chatSpeechLocale(language);
     recognition.onresult = (event: any) => {
       let final = ''; let interim = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -578,7 +774,8 @@ function QuantumApothecaryInner() {
     const newT = [...activeTransmissions];
     selectedActivations.forEach(act => { if (!newT.find(t => t.id === act.id)) newT.push(act); });
     setActiveTransmissions(newT);
-    setMessages(prev => [...prev, { role: 'model', text: `**Initiating Quantum Transmission:**\n\n${selectedActivations.map(a => `- ${a.name}`).join('\n')}\n\nUploading Aetheric Codes to your cellular matrix…\n\nThese frequencies are now **locked 24/7** until manually dissolved.` }]);
+    const txLines = selectedActivations.map(a => `- ${activationName(t, a)}`).join('\n');
+    setMessages(prev => [...prev, { role: 'model', text: `${t('quantumApothecary.chat.transmitHeader')}${txLines}${t('quantumApothecary.chat.transmitFooter')}` }]);
     setSelectedActivations([]);
   };
 
@@ -588,16 +785,20 @@ function QuantumApothecaryInner() {
     const newT = [...activeTransmissions];
     remediesToApply.forEach(act => { if (!newT.find(t => t.id === act.id)) newT.push(act); });
     setActiveTransmissions(newT);
-    setMessages(prev => [...prev, { role: 'model', text: `**Applying Siddha Remedies:**\n\n${scanResult.remedies.map(r => `- ${r}`).join('\n')}\n\nScalar Wave Entanglement complete. **Frequencies locked 24/7.**` }]);
+    const remLines = scanResult.remedies.map((r) => {
+      const act = ACTIVATIONS.find(a => a.name === r);
+      return `- ${act ? activationName(t, act) : r}`;
+    }).join('\n');
+    setMessages(prev => [...prev, { role: 'model', text: `${t('quantumApothecary.chat.applyRemediesHeader')}${remLines}${t('quantumApothecary.chat.applyRemediesFooter')}` }]);
   };
 
   /* ══════════════════════════════════════════════════════
      CHAT PANEL — Logic 100% preserved, UI upgraded to SQI-2050
      ══════════════════════════════════════════════════════ */
   const renderChatPanel = () => (
-    <div className="glass-card overflow-hidden flex flex-col" style={{ minHeight: '70vh', background: '#050505', border: '1px solid rgba(212,175,55,0.1)' }}>
+    <div className="glass-card overflow-hidden flex flex-col" style={{ minHeight: '70vh', background: '#050505', border: 'none' }}>
       {/* Chat Header */}
-      <div className="px-5 py-4 border-b border-white/[0.05] flex items-center justify-between">
+      <div className="px-5 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           {isChatFullscreen && (
             <button type="button" onClick={() => setIsChatFullscreen(false)} className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition">
@@ -608,17 +809,22 @@ function QuantumApothecaryInner() {
             <MessageSquare size={14} className="text-black" />
           </div>
           <div>
-            <p className="text-xs font-black tracking-[-0.03em] text-white">SQI Online</p>
+            <p className="text-xs font-black tracking-[-0.03em] text-white">{t('quantumApothecary.chat.sqiOnline')}</p>
             <div className="flex items-center gap-1.5 mt-0.5">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" style={{ boxShadow: '0 0 6px #34d399' }} />
-              <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30">Neural Sync: 98%</span>
+              <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30">{t('quantumApothecary.chat.neuralSync')}</span>
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button type="button" onClick={startFreshApothecaryChat} disabled={isTyping}
+            title={t('quantumApothecary.chat.clearChatTitle')}
+            className="p-2 rounded-xl bg-white/[0.03] border border-white/[0.08] text-white/50 hover:text-[#D4AF37] hover:border-[#D4AF37]/25 transition disabled:opacity-30">
+            <Plus size={14} />
+          </button>
           <button type="button" onClick={() => setSessionsOpen(true)}
             className="px-3 py-1.5 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[9px] font-bold uppercase tracking-[0.25em] text-[#D4AF37] hover:bg-[#D4AF37]/20 transition">
-            History
+            {t('quantumApothecary.chat.history')}
           </button>
           <Cpu size={14} className="text-[#D4AF37]/30" />
         </div>
@@ -660,12 +866,12 @@ function QuantumApothecaryInner() {
       </div>
 
       {/* Chat Input */}
-      <div className="p-4 border-t border-white/[0.05]" style={isChatFullscreen ? { paddingBottom: 'env(safe-area-inset-bottom, 16px)' } : undefined}>
+      <div className="p-4" style={isChatFullscreen ? { paddingBottom: 'env(safe-area-inset-bottom, 16px)' } : undefined}>
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
         {pendingImage && (
           <div className="flex items-center gap-2 mb-3 p-2 rounded-xl bg-[#D4AF37]/5 border border-[#D4AF37]/15">
-            <img src={`data:${pendingImage.mimeType};base64,${pendingImage.base64}`} alt="Attached" className="h-10 w-10 rounded-lg object-cover border border-[#D4AF37]/20" />
-            <span className="text-[10px] text-[#D4AF37]/60 font-bold uppercase tracking-widest">Image attached</span>
+            <img src={`data:${pendingImage.mimeType};base64,${pendingImage.base64}`} alt={t('quantumApothecary.chat.imageAlt')} className="h-10 w-10 rounded-lg object-cover border border-[#D4AF37]/20" />
+            <span className="text-[10px] text-[#D4AF37]/60 font-bold uppercase tracking-widest">{t('quantumApothecary.chat.imageAttached')}</span>
             <button type="button" onClick={() => setPendingImage(null)} className="ml-auto p-1 rounded-lg bg-white/5 hover:bg-red-500/20 text-white/40 hover:text-red-400 transition">
               <X size={12} />
             </button>
@@ -673,21 +879,21 @@ function QuantumApothecaryInner() {
         )}
         <div className="flex gap-2 items-center">
           <button type="button" onClick={() => fileInputRef.current?.click()}
-            className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/30 transition shrink-0" title="Upload or take photo">
+            className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/30 transition shrink-0" title={t('quantumApothecary.chat.uploadTitle')}>
             <Camera size={15} className="text-white/40 hover:text-[#D4AF37]" />
           </button>
           <button type="button" onClick={startVoiceInput}
             className={`p-2.5 rounded-xl border transition shrink-0 ${isRecording ? 'bg-red-500/20 border-red-500/40 text-red-400 animate-pulse' : 'bg-white/[0.03] border-white/[0.08] hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/30 text-white/40'}`}
-            title={isRecording ? 'Listening…' : 'Voice input'}>
+            title={isRecording ? t('quantumApothecary.chat.voiceListening') : t('quantumApothecary.chat.voiceInput')}>
             <Mic size={15} />
           </button>
-          {isRecording && <span className="text-[10px] text-red-400 font-bold uppercase tracking-widest shrink-0">Listening…</span>}
+          {isRecording && <span className="text-[10px] text-red-400 font-bold uppercase tracking-widest shrink-0">{t('quantumApothecary.chat.voiceListening')}</span>}
           <input
             type="text" value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
             onFocus={handleChatFocus}
-            placeholder="Communicate with the SQI..."
+            placeholder={t('quantumApothecary.chat.inputPlaceholder')}
             className="flex-1 min-w-0 bg-white/[0.03] border border-white/[0.08] rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-[#D4AF37]/40 transition placeholder:text-white/20 text-white/80"
           />
           <button onClick={() => handleSendMessage()} disabled={(!input.trim() && !pendingImage) || isTyping}
@@ -746,9 +952,9 @@ function QuantumApothecaryInner() {
             </div>
             <div>
               <h1 className="text-2xl font-black tracking-[-0.05em] text-white" style={{ textShadow: '0 0 30px rgba(212,175,55,0.2)' }}>
-                Quantum Apothecary
+                {t('quantumApothecary.app.title')}
               </h1>
-              <p className="text-[9px] font-bold uppercase tracking-[0.5em] text-[#D4AF37]/40 mt-0.5">Est. 2050 · Siddha-Quantum Interface</p>
+              <p className="text-[9px] font-bold uppercase tracking-[0.5em] text-[#D4AF37]/40 mt-0.5">{t('quantumApothecary.app.subtitle')}</p>
             </div>
           </div>
           <button onClick={() => setShowKnowledge(true)}
@@ -776,80 +982,63 @@ function QuantumApothecaryInner() {
                     <div style={{ width:28, height:28, background:'linear-gradient(135deg,#D4AF37,#B8940A)', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 12px rgba(212,175,55,0.3)' }}>
                       <Activity size={14} className="text-black" />
                     </div>
-                    <h2 className="text-sm font-black tracking-[-0.03em]">Digital Nadi Scan</h2>
+                    <h2 className="text-sm font-black tracking-[-0.03em]">{t('quantumApothecary.app.nadiScanTitle')}</h2>
                   </div>
-                  <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-white/30">72,000 Channels Monitoring</p>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-white/30">{t('quantumApothecary.app.nadiScanSubtitle')}</p>
                 </div>
                 <div style={{ textAlign:'right' }}>
                   <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20">
                     <div style={{ width:6, height:6, background:'#D4AF37', borderRadius:'50%', boxShadow:'0 0 6px #D4AF37', animation:'qa-pulse 2s infinite' }} />
-                    <span className="text-xs font-black text-[#D4AF37] tracking-tight">{heartRate} BPM</span>
+                    <span className="text-xs font-black text-[#D4AF37] tracking-tight">{t('quantumApothecary.app.bpm', { n: heartRate })}</span>
                   </div>
                 </div>
               </div>
 
-              {(scannedThisSession && scanResult) ? (
+              {scanResult ? (
                 <div className="space-y-4">
-                  {/* ── GROSS NADI READING ── */}
-                  <div style={{ background:'rgba(212,175,55,0.04)', border:'1px solid rgba(212,175,55,0.15)', borderRadius:16, padding:'14px 16px', position:'relative', overflow:'hidden' }}>
-                    <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at 50% 100%,rgba(212,175,55,0.06) 0%,transparent 70%)', pointerEvents:'none' }} />
-                    <div style={{ position:'relative' }}>
-                      <p style={{ fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase', color:'rgba(255,255,255,0.3)', marginBottom:4 }}>Gross Nadi Channels (72,000)</p>
-                      <div style={{ display:'flex', alignItems:'baseline', gap:6 }}>
-                        <span style={{ fontSize:38, fontWeight:900, color:'#D4AF37', lineHeight:1, letterSpacing:'-0.02em', textShadow:'0 0 24px rgba(212,175,55,0.5)' }}>
-                          {(scanResult.activeNadis || 0).toLocaleString()}
-                        </span>
-                        <span style={{ fontSize:11, color:'rgba(255,255,255,0.35)', fontWeight:700 }}>/ 72,000</span>
-                      </div>
-                      <p style={{ fontSize:9, color:'rgba(255,255,255,0.25)', marginTop:2 }}>
-                        {Math.round(((scanResult.activeNadis||0)/72000)*100)}% active —{' '}
-                        {(scanResult.activeNadis||0) > 60000 ? 'Highly Active'
-                         : (scanResult.activeNadis||0) > 40000 ? 'Moderately Active'
-                         : (scanResult.activeNadis||0) > 20000 ? 'Partially Blocked'
-                         : 'Severely Restricted'}
-                      </p>
-                      <div style={{ marginTop:8, height:4, background:'rgba(255,255,255,0.06)', borderRadius:2, overflow:'hidden' }}>
-                        <div style={{ height:'100%', width:`${Math.min(100,((scanResult.activeNadis||0)/72000)*100)}%`, background:'linear-gradient(90deg,#D4AF37,#fbbf24)', borderRadius:2, boxShadow:'0 0 8px rgba(212,175,55,0.5)', transition:'width 1s ease' }} />
+                  <div className="p-4 rounded-2xl bg-[#D4AF37]/5 border border-[#D4AF37]/15" style={{ position:'relative', overflow:'hidden' }}>
+                    <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at 50% 100%, rgba(212,175,55,0.06) 0%, transparent 70%)', pointerEvents:'none' }} />
+                    <div style={{ textAlign:'center', position:'relative' }}>
+                      <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mb-1">{t('quantumApothecary.app.activeNadis')}</p>
+                      <p className="font-black text-[#D4AF37]" style={{ fontSize:42, lineHeight:1, textShadow:'0 0 30px rgba(212,175,55,0.5)', letterSpacing:'-0.02em' }}>{scanResult.activeNadis.toLocaleString()}</p>
+                      <p className="text-[9px] text-white/25 font-bold mt-1">{t('quantumApothecary.app.ofChannels')}</p>
+                      {/* Progress bar */}
+                      <div style={{ marginTop:10, height:3, background:'rgba(255,255,255,0.06)', borderRadius:2, overflow:'hidden' }}>
+                        <div style={{ height:'100%', width:`${Math.min(100, (scanResult.activeNadis / 72000) * 100)}%`, background:'linear-gradient(90deg,#D4AF37,#fbbf24)', borderRadius:2, boxShadow:'0 0 8px rgba(212,175,55,0.6)' }} />
                       </div>
                     </div>
                   </div>
-
-                  {/* ── SUBTLE SUB-NADI READING ── */}
-                  <div style={{ background:'rgba(96,165,250,0.04)', border:'1px solid rgba(96,165,250,0.15)', borderRadius:16, padding:'14px 16px', position:'relative', overflow:'hidden' }}>
-                    <div style={{ position:'relative' }}>
-                      <p style={{ fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase', color:'rgba(96,165,250,0.6)', marginBottom:4 }}>Subtle Sub-Nadi Channels (350,000)</p>
-                      <div style={{ display:'flex', alignItems:'baseline', gap:6 }}>
-                        <span style={{ fontSize:32, fontWeight:900, color:'#60a5fa', lineHeight:1, letterSpacing:'-0.02em', textShadow:'0 0 20px rgba(96,165,250,0.4)' }}>
-                          {((window as any).__sqiLastScan?.activeSubNadis || 0).toLocaleString()}
-                        </span>
-                        <span style={{ fontSize:11, color:'rgba(255,255,255,0.35)', fontWeight:700 }}>/ 350,000</span>
-                      </div>
-                      <p style={{ fontSize:9, color:'rgba(255,255,255,0.25)', marginTop:2 }}>
-                        {Math.round((((window as any).__sqiLastScan?.activeSubNadis || 0)/350000)*100)}% subtle body activated
+                  {typeof scanResult.activeSubNadis === 'number' && (
+                    <div className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mb-1">{t('quantumApothecary.app.subNadiTitle')}</p>
+                      <p className="text-sm font-black tracking-tight text-white/90">
+                        {scanResult.activeSubNadis.toLocaleString()}
+                        <span className="text-[9px] font-bold text-white/30 ml-1">/ 350,000</span>
                       </p>
-                      <div style={{ marginTop:8, height:4, background:'rgba(255,255,255,0.06)', borderRadius:2, overflow:'hidden' }}>
-                        <div style={{ height:'100%', width:`${Math.min(100,(((window as any).__sqiLastScan?.activeSubNadis||0)/350000)*100)}%`, background:'linear-gradient(90deg,#60a5fa,#93c5fd)', borderRadius:2, boxShadow:'0 0 8px rgba(96,165,250,0.4)', transition:'width 1s ease' }} />
+                      <p className="text-[9px] text-white/25 font-bold mt-1">
+                        {t('quantumApothecary.app.subNadiPercent', { pct: String(Math.round((scanResult.activeSubNadis / 350000) * 100)) })}
+                      </p>
+                      <div style={{ marginTop: 8, height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${Math.min(100, (scanResult.activeSubNadis / 350000) * 100)}%`, background: 'linear-gradient(90deg,#D4AF37,#fbbf24)', borderRadius: 2, boxShadow: '0 0 8px rgba(212,175,55,0.35)' }} />
                       </div>
                     </div>
-                  </div>
-
-                  {/* ── Blockage indicator ── */}
-                  {(window as any).__sqiLastScan?.blockagePercentage > 0 && (
-                    <div style={{ background:'rgba(239,68,68,0.04)', border:'1px solid rgba(239,68,68,0.15)', borderRadius:12, padding:'10px 14px' }}>
-                      <p style={{ fontSize:8, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase', color:'rgba(239,68,68,0.6)', marginBottom:3 }}>Primary Blockage</p>
-                      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                        <span style={{ fontSize:12, fontWeight:800, color:'rgba(255,255,255,0.8)' }}>{scanResult.blockages[0]}</span>
-                        <span style={{ fontSize:12, fontWeight:900, color:'#f87171' }}>{(window as any).__sqiLastScan?.blockagePercentage}% blocked</span>
+                  )}
+                  {scanResult.blockagePercentage != null && scanResult.blockagePercentage > 0 && (
+                    <div className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mb-1">{t('quantumApothecary.app.primaryBlockage')}</p>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-black tracking-tight text-white/90 truncate">{scanResult.blockages[0]}</p>
+                        <p className="text-sm font-black text-white/70 shrink-0">{scanResult.blockagePercentage}%</p>
                       </div>
-                      <div style={{ marginTop:6, height:3, background:'rgba(255,255,255,0.06)', borderRadius:2, overflow:'hidden' }}>
-                        <div style={{ height:'100%', width:`${(window as any).__sqiLastScan?.blockagePercentage||0}%`, background:'linear-gradient(90deg,#f87171,#fca5a5)', borderRadius:2 }} />
+                      <div style={{ marginTop: 8, height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${scanResult.blockagePercentage}%`, background: 'linear-gradient(90deg,#D4AF37,#fbbf24)', borderRadius: 2 }} />
                       </div>
                     </div>
                   )}
                   <div className="grid grid-cols-2 gap-3">
                     {[
-                      { label: 'Dosha', value: scanResult.dominantDosha },
-                      { label: 'Alignment', value: scanResult.planetaryAlignment },
+                      { label: t('quantumApothecary.app.labelDosha'), value: scanResult.dominantDosha },
+                      { label: t('quantumApothecary.app.labelAlignment'), value: scanResult.planetaryAlignment },
                     ].map(item => (
                       <div key={item.label} className="rounded-2xl p-3 bg-white/[0.02] border border-white/[0.05]">
                         <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30">{item.label}</p>
@@ -858,20 +1047,40 @@ function QuantumApothecaryInner() {
                     ))}
                   </div>
                   <div className="rounded-2xl p-4 border border-emerald-500/25 bg-emerald-950/20">
-                    <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-emerald-400/70 mb-1.5">Herb of Today</p>
+                    <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-emerald-400/70 mb-1.5">{t('quantumApothecary.app.herbToday')}</p>
                     <p className="text-sm font-bold text-white/90">{scanResult.herbOfToday}</p>
                   </div>
                   <div className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]">
-                    <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-white/30 mb-3">Siddha Remedies (5)</p>
+                    <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-white/30 mb-3">{t('quantumApothecary.app.remediesTitle')}</p>
                     <div className="flex flex-wrap gap-1.5">
-                      {scanResult.remedies.map((r, i) => (
-                        <span key={i} className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37]">{r}</span>
-                      ))}
+                      {scanResult.remedies.map((r, i) => {
+                        const act = ACTIVATIONS.find(a => a.name === r);
+                        const label = act ? activationName(t, act) : r;
+                        return (
+                          <span key={i} className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37]">{label}</span>
+                        );
+                      })}
                     </div>
                   </div>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/25 text-center pt-1">{t('quantumApothecary.app.freshReading')}</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button type="button" onClick={() => runNadiScan('user')} disabled={isScanning}
+                      className="sqi-btn-ghost py-3 text-[9px] flex flex-col items-center gap-1.5 disabled:opacity-35">
+                      <Hand size={16} className="text-[#D4AF37]/80" />
+                      <span>{t('quantumApothecary.app.newPalmFront')}</span>
+                    </button>
+                    <button type="button" onClick={() => runNadiScan('environment')} disabled={isScanning}
+                      className="sqi-btn-ghost py-3 text-[9px] flex flex-col items-center gap-1.5 disabled:opacity-35">
+                      <Camera size={16} className="text-[#D4AF37]/80" />
+                      <span>{t('quantumApothecary.app.newRearCam')}</span>
+                    </button>
+                  </div>
+                  <button type="button" onClick={() => runNadiScan()} disabled={isScanning}
+                    className="sqi-btn-primary w-full py-3 text-[10px] disabled:opacity-35">
+                    {t('quantumApothecary.app.newScanSameCam')}
+                  </button>
                   <div className="flex gap-3">
-                    <button onClick={applyRemedies} className="sqi-btn-primary flex-1 py-3 text-xs">Apply Remedies</button>
-                    <button onClick={runNadiScan} className="sqi-btn-ghost flex-1 py-3 text-xs">Rescan</button>
+                    <button type="button" onClick={applyRemedies} className="sqi-btn-primary flex-1 py-3 text-xs">{t('quantumApothecary.app.applyRemedies')}</button>
                   </div>
                 </div>
               ) : (
@@ -894,19 +1103,25 @@ function QuantumApothecaryInner() {
                           <div className="flex items-center gap-2 bg-black/70 rounded-full px-3 py-1.5">
                             <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-ping" style={{ boxShadow: '0 0 6px rgba(212,175,55,0.8)' }} />
                             <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-[#D4AF37]">
-                              {scanPhase === 'camera' ? 'Hold palm to camera…' : 'Reading your biofield…'}
+                              {scanPhase === 'camera'
+                                ? (nadiScanFacing === 'user' ? t('quantumApothecary.app.phaseFrontPalm') : t('quantumApothecary.app.phaseRearPalm'))
+                                : t('quantumApothecary.app.phaseAnalyzing')}
                             </span>
                           </div>
                           {/* Center guide box */}
                           <div className="border-2 border-dashed border-[#D4AF37]/50 rounded-2xl w-36 h-24 flex items-center justify-center">
-                            <span className="text-[9px] font-bold text-[#D4AF37]/60 uppercase tracking-widest text-center leading-relaxed">
-                              {scanPhase === 'camera' ? <>Place<br/>palm here</> : <>Analyzing<br/>biofield…</>}
+                            <span className="text-[9px] font-bold text-[#D4AF37]/60 uppercase tracking-widest text-center leading-relaxed whitespace-pre-line">
+                              {scanPhase === 'camera'
+                                ? (nadiScanFacing === 'user'
+                                  ? t('quantumApothecary.app.guideHoldPalm')
+                                  : t('quantumApothecary.app.guideAimPalm'))
+                                : t('quantumApothecary.app.guideAnalyzing')}
                             </span>
                           </div>
                           {/* BPM */}
                           <div className="flex items-center gap-1.5 bg-black/70 rounded-full px-3 py-1">
                             <Activity size={10} className="text-[#D4AF37]" />
-                            <span className="text-[9px] font-black text-[#D4AF37]">{heartRate} BPM</span>
+                            <span className="text-[9px] font-black text-[#D4AF37]">{t('quantumApothecary.app.bpm', { n: heartRate })}</span>
                           </div>
                         </div>
                       </div>
@@ -914,20 +1129,49 @@ function QuantumApothecaryInner() {
                   ) : (
                     <div className="space-y-3 py-4">
                       <Globe size={32} className="mx-auto text-white/10" />
-                      <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/25">Awaiting Handshake</p>
-                      <p className="text-[9px] text-white/20 text-center">Hold your palm up to the camera</p>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/25">{t('quantumApothecary.app.awaitingHandshake')}</p>
+                      <p className="text-[9px] text-white/20 text-center px-2">
+                        {nadiScanFacing === 'user'
+                          ? t('quantumApothecary.app.hintFrontCamera')
+                          : t('quantumApothecary.app.hintRearCamera')}
+                      </p>
+                    </div>
+                  )}
+
+                  {scanPhase === 'idle' && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <button type="button" onClick={() => setNadiScanFacing('user')}
+                        className={`rounded-2xl py-3 px-2 text-[9px] font-black uppercase tracking-[0.12em] border transition flex flex-col items-center gap-1.5 ${
+                          nadiScanFacing === 'user'
+                            ? 'border-[#D4AF37]/45 bg-[#D4AF37]/12 text-[#D4AF37]'
+                            : 'border-white/[0.08] bg-white/[0.02] text-white/35 hover:border-[#D4AF37]/25'
+                        }`}>
+                        <Hand size={18} />
+                        {t('quantumApothecary.app.palmFront')}
+                      </button>
+                      <button type="button" onClick={() => setNadiScanFacing('environment')}
+                        className={`rounded-2xl py-3 px-2 text-[9px] font-black uppercase tracking-[0.12em] border transition flex flex-col items-center gap-1.5 ${
+                          nadiScanFacing === 'environment'
+                            ? 'border-[#D4AF37]/45 bg-[#D4AF37]/12 text-[#D4AF37]'
+                            : 'border-white/[0.08] bg-white/[0.02] text-white/35 hover:border-[#D4AF37]/25'
+                        }`}>
+                        <Camera size={18} />
+                        {t('quantumApothecary.app.rearCamera')}
+                      </button>
                     </div>
                   )}
 
                   {/* Scan button — disabled while scanning/analyzing */}
-                  <button onClick={runNadiScan}
+                  <button type="button" onClick={() => runNadiScan()}
                     disabled={scanPhase === 'camera' || scanPhase === 'analyzing'}
                     className="sqi-btn-primary w-full py-3.5 text-xs disabled:opacity-40">
                     {scanPhase === 'camera'
-                      ? `Scanning… ${heartRate}bpm`
+                      ? t('quantumApothecary.app.scanningBpm', { n: heartRate })
                       : scanPhase === 'analyzing'
-                      ? 'Analyzing Biofield…'
-                      : 'Initiate Nadi Scan'}
+                      ? t('quantumApothecary.app.analyzingBiofield')
+                      : nadiScanFacing === 'user'
+                        ? t('quantumApothecary.app.startScanFront')
+                        : t('quantumApothecary.app.startScanRear')}
                   </button>
                 </div>
               )}
@@ -939,7 +1183,7 @@ function QuantumApothecaryInner() {
               <div className="flex justify-between items-center mb-4">
                 <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                   <div style={{ width:28, height:28, background:'rgba(212,175,55,0.12)', border:'1px solid rgba(212,175,55,0.25)', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>⚗</div>
-                  <h2 className="text-sm font-black tracking-[-0.03em]">Aetheric Mixer</h2>
+                  <h2 className="text-sm font-black tracking-[-0.03em]">{t('quantumApothecary.app.mixerTitle')}</h2>
                 </div>
                 <div style={{ display:'flex', alignItems:'center', gap:6 }}>
                   {[0,1,2,3,4].map(i => (
@@ -951,7 +1195,7 @@ function QuantumApothecaryInner() {
                 {selectedActivations.length === 0 ? (
                   <div className="flex items-center gap-2 justify-center text-white/20 py-2">
                     <Plus size={14} className="text-[#D4AF37]/30" />
-                    <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Select activations from the library</span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{t('quantumApothecary.app.mixerEmpty')}</span>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -959,7 +1203,7 @@ function QuantumApothecaryInner() {
                       <div key={act.id} className="flex items-center justify-between group px-1">
                         <div className="flex items-center gap-2.5">
                           <div className="w-2 h-2 rounded-full" style={{ background: act.color, boxShadow: `0 0 6px ${act.color}` }} />
-                          <span className="text-xs font-bold text-white/80">{act.name}</span>
+                          <span className="text-xs font-bold text-white/80">{activationName(t, act)}</span>
                         </div>
                         <button onClick={() => setSelectedActivations(s => s.filter(a => a.id !== act.id))}
                           className="p-1 opacity-0 group-hover:opacity-100 hover:text-red-400 transition text-white/30">
@@ -971,7 +1215,7 @@ function QuantumApothecaryInner() {
                 )}
               </div>
               <button onClick={transmitCocktail} disabled={selectedActivations.length === 0} className="sqi-btn-primary w-full py-3.5 text-xs disabled:opacity-20">
-                Transmit Light-Code
+                {t('quantumApothecary.app.transmitCta')}
               </button>
             </div>
 
@@ -981,9 +1225,9 @@ function QuantumApothecaryInner() {
                 <div className="flex justify-between items-center mb-4">
                   <div className="flex items-center gap-2">
                     <Zap size={14} className="text-[#D4AF37]" style={{ filter: 'drop-shadow(0 0 6px rgba(212,175,55,0.6))' }} />
-                    <h2 className="text-sm font-black tracking-[-0.03em]">Active Transmissions</h2>
+                    <h2 className="text-sm font-black tracking-[-0.03em]">{t('quantumApothecary.app.fallbackActiveTx')}</h2>
                   </div>
-                  <span className="text-[9px] px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-bold uppercase tracking-widest">Loading...</span>
+                  <span className="text-[9px] px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-bold uppercase tracking-widest">{t('quantumApothecary.app.fallbackLoading')}</span>
                 </div>
                 <div className="space-y-2">
                   <div className="h-16 rounded-2xl bg-white/[0.02] animate-pulse" />
@@ -1002,8 +1246,8 @@ function QuantumApothecaryInner() {
             <Suspense fallback={
               <div className="glass-card p-6">
                 <div className="mb-4">
-                  <h2 className="text-sm font-black tracking-[-0.03em]">Frequency Library</h2>
-                  <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mt-0.5">Loading quantum essences...</p>
+                  <h2 className="text-sm font-black tracking-[-0.03em]">{t('quantumApothecary.lib.title')}</h2>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mt-0.5">{t('quantumApothecary.lib.fallbackLoading')}</p>
                 </div>
                 <div className="h-8 rounded-xl bg-white/[0.03] animate-pulse mb-3" />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1036,26 +1280,26 @@ function QuantumApothecaryInner() {
               className="glass-card max-w-lg w-full max-h-[80vh] overflow-y-auto p-7 space-y-5">
               <div className="flex justify-between items-start">
                 <div>
-                  <h2 className="text-lg font-black tracking-[-0.05em]">Siddha-Quantum Intelligence</h2>
-                  <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-[#D4AF37]/50 mt-1">Akasha-Neural Archive · 2050</p>
+                  <h2 className="text-lg font-black tracking-[-0.05em]">{t('quantumApothecary.app.knowledgeTitle')}</h2>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-[#D4AF37]/50 mt-1">{t('quantumApothecary.app.knowledgeKicker')}</p>
                 </div>
                 <button onClick={() => setShowKnowledge(false)} className="p-2 hover:bg-white/5 rounded-xl transition">
                   <X size={15} className="text-white/40" />
                 </button>
               </div>
               {[
-                { t: 'What is this?', d: 'Apothecary 2050 is a Bio-Resonance Frequency Delivery Platform. It bypasses physical ingestion to deliver the "informational signature" of herbs and sacred plants directly into the human biofield via Scalar Wave Entanglement.' },
-                { t: 'The 72,000 Nadi Scan', d: 'We map the Quantum Flow of every single meridian. Dark crimson pulses indicate "Spiritual Friction" (Blockages), while bright white bursts show where your "Siddhis" (Powers) are awakening.' },
-                { t: '24/7 Persistent Transmission', d: 'Once a mix is toggled ON, the app uses a persistent background frequency loop to maintain the transmission. This ensures the frequency stays locked into your biofield until manually dissolved — even if you close the app or lose internet.' },
-                { t: 'Siddha Wisdom', d: 'We bridge the ancient wisdom of the 18 Siddhars with hyper-advanced neural-mapping. Healing occurs at the speed of thought.' },
+                { tk: 'quantumApothecary.app.knowledgeQ1', dk: 'quantumApothecary.app.knowledgeD1' },
+                { tk: 'quantumApothecary.app.knowledgeQ2', dk: 'quantumApothecary.app.knowledgeD2' },
+                { tk: 'quantumApothecary.app.knowledgeQ3', dk: 'quantumApothecary.app.knowledgeD3' },
+                { tk: 'quantumApothecary.app.knowledgeQ4', dk: 'quantumApothecary.app.knowledgeD4' },
               ].map(s => (
-                <div key={s.t} className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]">
-                  <h3 className="text-xs font-black tracking-tight text-[#D4AF37] mb-2">{s.t}</h3>
-                  <p className="text-xs text-white/50 leading-relaxed">{s.d}</p>
+                <div key={s.tk} className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]">
+                  <h3 className="text-xs font-black tracking-tight text-[#D4AF37] mb-2">{t(s.tk)}</h3>
+                  <p className="text-xs text-white/50 leading-relaxed">{t(s.dk)}</p>
                 </div>
               ))}
               <button onClick={() => setShowKnowledge(false)} className="sqi-btn-primary w-full py-3.5 text-xs">
-                Return to Aether
+                {t('quantumApothecary.app.knowledgeClose')}
               </button>
             </motion.div>
           </motion.div>
@@ -1076,9 +1320,9 @@ function QuantumApothecaryInner() {
               onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.05]">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.3em]">SQI Sessions</p>
+                  <p className="text-xs font-black uppercase tracking-[0.3em]">{t('quantumApothecary.app.sessionsTitle')}</p>
                   <p className="text-[9px] font-bold text-white/30 mt-0.5">
-                    {user ? 'Tap to reopen a past transmission.' : 'Sign in to save sessions.'}
+                    {user ? t('quantumApothecary.app.sessionsHintUser') : t('quantumApothecary.app.sessionsHintGuest')}
                   </p>
                 </div>
                 <button onClick={() => setSessionsOpen(false)} className="p-2 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] transition">
@@ -1086,10 +1330,10 @@ function QuantumApothecaryInner() {
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2">
-                {loadingSessions && <div className="text-[10px] font-bold uppercase tracking-widest text-white/25">Loading sessions…</div>}
+                {loadingSessions && <div className="text-[10px] font-bold uppercase tracking-widest text-white/25">{t('quantumApothecary.app.sessionsLoading')}</div>}
                 {!loadingSessions && sessions.length === 0 && (
                   <div className="text-[10px] text-white/25 leading-relaxed">
-                    No prior SQI conversations yet. Your next transmission will be stored here.
+                    {t('quantumApothecary.app.sessionsEmpty')}
                   </div>
                 )}
                 {sessions.map(s => (
@@ -1100,7 +1344,7 @@ function QuantumApothecaryInner() {
                       if (!error && data && Array.isArray(data.messages)) { setCurrentSessionId(s.id); setMessages(data.messages as Message[]); setSessionsOpen(false); }
                     }}
                     className={`w-full text-left p-3.5 rounded-2xl border bg-white/[0.02] hover:bg-white/[0.05] transition ${currentSessionId === s.id ? 'border-[#D4AF37]/40' : 'border-white/[0.05]'}`}>
-                    <p className="text-[11px] font-black truncate">{s.title || 'Untitled SQI Session'}</p>
+                    <p className="text-[11px] font-black truncate">{s.title || t('quantumApothecary.app.sessionUntitled')}</p>
                     {s.updated_at && <p className="text-[9px] text-white/30 mt-1 font-bold">{new Date(s.updated_at).toLocaleString()}</p>}
                   </button>
                 ))}
@@ -1219,6 +1463,7 @@ function QuantumApothecaryInner() {
    Auth, membership, tier-access logic UNTOUCHED
    ══════════════════════════════════════════════════════ */
 export default function QuantumApothecary() {
+  const { t } = useTranslation();
   const { user, isLoading: authLoading } = useAuth();
   const { tier, loading: membershipLoading } = useMembership();
   const { isAdmin } = useAdminRole();
@@ -1226,7 +1471,7 @@ export default function QuantumApothecary() {
   if (authLoading || membershipLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#050505] text-white">
-        <span className="text-[10px] uppercase tracking-[0.5em] text-[#D4AF37]/40">Initializing SQI…</span>
+        <span className="text-[10px] uppercase tracking-[0.5em] text-[#D4AF37]/40">{t('quantumApothecary.outer.initializing')}</span>
       </div>
     );
   }

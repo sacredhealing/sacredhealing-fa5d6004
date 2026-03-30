@@ -1,6 +1,11 @@
 import type { Message } from './types';
+import { supabase } from '@/integrations/supabase/client';
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/quantum-apothecary-chat`;
+function chatUrl(): string {
+  const base = import.meta.env.VITE_SUPABASE_URL;
+  if (!base) throw new Error('VITE_SUPABASE_URL is not set — cannot reach quantum-apothecary-chat.');
+  return `${String(base).replace(/\/$/, '')}/functions/v1/quantum-apothecary-chat`;
+}
 
 export interface UserImagePayload {
   base64: string;
@@ -14,7 +19,7 @@ export async function streamChatWithSQI(
   userImage?: UserImagePayload,
   userId?: string | null,
   language?: string,
-  seekerName?: string,          // ← user's real display name from profiles
+  seekerName?: string,
   canonicalActivationNames?: string,
 ) {
   const recent = messages.slice(-15);
@@ -33,24 +38,46 @@ export async function streamChatWithSQI(
   } = { messages: apiMessages };
 
   if (userImage?.base64 && userImage?.mimeType) body.userImage = userImage;
-  if (userId)                                    body.userId = userId;
-  if (language)                                  body.language = language;
-  if (seekerName?.trim())                        body.seekerName = seekerName.trim();
-  if (canonicalActivationNames?.trim())          body.canonicalActivationNames = canonicalActivationNames.trim();
+  if (userId) body.userId = userId;
+  if (language) body.language = language;
+  if (seekerName?.trim()) body.seekerName = seekerName.trim();
+  if (canonicalActivationNames?.trim()) body.canonicalActivationNames = canonicalActivationNames.trim();
 
-  const resp = await fetch(CHAT_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-    },
-    body: JSON.stringify(body),
-  });
+  const apikey =
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    import.meta.env.VITE_SUPABASE_ANON_KEY ||
+    '';
+  const { data: sess } = await supabase.auth.getSession();
+  const bearer = sess.session?.access_token || apikey;
+  if (!bearer) {
+    throw new Error('Not signed in and no Supabase anon key configured.');
+  }
+
+  let resp: Response;
+  try {
+    resp = await fetch(chatUrl(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${bearer}`,
+        ...(apikey ? { apikey } : {}),
+      },
+      body: JSON.stringify(body),
+    });
+  } catch (e) {
+    const m = e instanceof Error ? e.message : 'Network error';
+    throw new Error(
+      `${m} — check connection, disable blockers, and deploy quantum-apothecary-chat on Supabase.`,
+    );
+  }
 
   if (!resp.ok || !resp.body) {
     if (resp.status === 429) throw new Error('Rate limited — please try again shortly.');
     if (resp.status === 402) throw new Error('Credits exhausted — please top up.');
-    throw new Error('Failed to start stream');
+    const errSnippet = await resp.text().catch(() => '');
+    throw new Error(
+      errSnippet ? `Chat connect failed (${resp.status}): ${errSnippet.slice(0, 160)}` : `Failed to start stream (${resp.status})`,
+    );
   }
 
   const reader  = resp.body.getReader();

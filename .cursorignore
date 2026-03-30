@@ -5,17 +5,12 @@ public/
 docs/
 bun.lockb
 package-lock.json
+*.sql
 *.md
 audio-worker/
 railway-worker/
+supabase/
 .env
 .env.*
 *.lock
 *.lockb
-
-
-
-# Ignore Supabase by default, but allow functions + migrations
-supabase/
-!supabase/functions/
-!supabase/migrations/
