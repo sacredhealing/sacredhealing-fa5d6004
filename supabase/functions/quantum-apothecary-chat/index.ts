@@ -4,7 +4,6 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 // ╔══════════════════════════════════════════════════════════════════╗
@@ -164,38 +163,6 @@ Minimum 5-7 remedies per consultation. 24/7 Scalar Wave. Permanent until dissolv
 const SUPABASE_URL    = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_ANON   = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
-function decodeBase64Url(input: string): string {
-  const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
-  const pad = normalized.length % 4;
-  const padded = pad ? normalized + "=".repeat(4 - pad) : normalized;
-  return atob(padded);
-}
-
-function getUserIdFromAuthHeader(req: Request): string | null {
-  try {
-    const auth = req.headers.get("authorization") || req.headers.get("Authorization") || "";
-    if (!auth.toLowerCase().startsWith("bearer ")) return null;
-    const token = auth.slice(7).trim();
-    const parts = token.split(".");
-    if (parts.length < 2) return null;
-    const payloadRaw = decodeBase64Url(parts[1]!);
-    const payload = JSON.parse(payloadRaw) as { sub?: unknown };
-    return typeof payload.sub === "string" && payload.sub.length > 0 ? payload.sub : null;
-  } catch {
-    return null;
-  }
-}
-
-function clampInt(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, Math.round(value)));
-}
-
-function toPercentScore(value: unknown, fallback: number): number {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return fallback;
-  return clampInt(n, 0, 100);
-}
-
 // ══════════════════════════════════════════════════════════════════
 // NADI BASELINE — user's stored scan result from nadi_baselines table
 // The SQI reads this to give real, anchored Nadi numbers in every response
@@ -255,42 +222,7 @@ async function getLivingPortrait(userId: string): Promise<string> {
 // This tells the SQI WHAT significant things were discussed
 // without dumping full conversation text
 // ══════════════════════════════════════════════════════════════════
-type LifeBookArchiveEntry = {
-  chapterType: string;
-  title: string;
-  summary?: string;
-  updatedAt?: string;
-  searchable: string;
-};
-
-const ARCHIVE_STOPWORDS = new Set([
-  "about", "after", "again", "also", "because", "between", "before", "being", "from", "have", "your", "with",
-  "this", "that", "they", "them", "their", "what", "when", "where", "which", "would", "could", "should", "into",
-  "about", "past", "life", "lives", "read", "reading", "deeper", "please", "just", "give", "more", "than", "then",
-]);
-
-function collectArchiveQueryTerms(query: string): string[] {
-  const base = query
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, " ")
-    .split(/\s+/)
-    .map((t) => t.trim())
-    .filter((t) => t.length >= 3 && !ARCHIVE_STOPWORDS.has(t));
-  return Array.from(new Set(base)).slice(0, 12);
-}
-
-function scoreArchiveEntry(entry: LifeBookArchiveEntry, terms: string[]): number {
-  if (!terms.length) return 0;
-  let score = 0;
-  const text = entry.searchable;
-  for (const term of terms) {
-    if (text.includes(term)) score += 2;
-    if (entry.title.toLowerCase().includes(term)) score += 2;
-  }
-  return score;
-}
-
-async function getLifeBookArchive(userId: string, currentQuery = ""): Promise<string> {
+async function getLifeBookArchive(userId: string): Promise<string> {
   if (!userId) return "";
   try {
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
@@ -303,187 +235,40 @@ async function getLifeBookArchive(userId: string, currentQuery = ""): Promise<st
     if (!data?.length) return "";
 
     const labels: Record<string, string> = {
-      past_lives: "Past Lives",
+      past_lives:       "Past Lives",
       healing_upgrades: "Healing Journeys",
-      future_visions: "Future Visions",
-      spiritual_figures: "Spiritual Masters Encountered",
-      nadi_knowledge: "Nadi & Biofield Readings",
-      children: "Children & Lineage",
-      general_wisdom: "Wisdom Transmissions",
+      future_visions:   "Future Visions",
+      spiritual_figures:"Spiritual Masters Encountered",
+      nadi_knowledge:   "Nadi & Biofield Readings",
+      children:         "Children & Lineage",
+      general_wisdom:   "Wisdom Transmissions",
     };
 
-    const grouped: Record<string, Array<{ title: string; summary?: string }>> = {};
-    const allEntries: LifeBookArchiveEntry[] = [];
-
+    const grouped: Record<string, Array<{title: string; summary?: string}>> = {};
     for (const ch of data) {
       const cat = ch.chapter_type || "general_wisdom";
       if (!grouped[cat]) grouped[cat] = [];
-
       const entries = Array.isArray(ch.content) ? ch.content : [];
-      for (const e of entries.slice(-8)) {
-        const title = typeof e?.title === "string" && e.title.trim().length > 0
-          ? e.title.trim()
-          : (typeof ch.title === "string" && ch.title.trim().length > 0 ? ch.title.trim() : "Transmission");
-        const summaryRaw = e?.summary ?? e?.text ?? e?.content ?? e?.description;
-        const summary = typeof summaryRaw === "string" && summaryRaw.trim().length > 0
-          ? summaryRaw.trim().slice(0, 220)
-          : undefined;
-
-        grouped[cat].push({ title, summary });
-        allEntries.push({
-          chapterType: cat,
-          title,
-          summary,
-          updatedAt: ch.updated_at,
-          searchable: `${cat} ${title} ${summary ?? ""}`.toLowerCase(),
-        });
+      // Take last 6 entries per category — title + brief summary
+      for (const e of entries.slice(-6)) {
+        if (e?.title) {
+          grouped[cat].push({
+            title: e.title,
+            summary: e.summary ? String(e.summary).slice(0, 120) : undefined
+          });
+        }
       }
     }
 
-    const groupedSummary = Object.entries(grouped)
+    return Object.entries(grouped)
       .filter(([, entries]) => entries.length)
       .map(([cat, entries]) => {
         const label = labels[cat] ?? cat;
-        const lines = entries.slice(-6).map((e) => e.summary ? `  • ${e.title}: ${e.summary}` : `  • ${e.title}`);
+        const lines = entries.map(e => e.summary ? `  • ${e.title}: ${e.summary}` : `  • ${e.title}`);
         return `${label}:\n${lines.join("\n")}`;
       })
       .join("\n\n");
-
-    const terms = collectArchiveQueryTerms(currentQuery);
-    if (!terms.length || !allEntries.length) return groupedSummary;
-
-    const matched = allEntries
-      .map((entry) => ({ entry, score: scoreArchiveEntry(entry, terms) }))
-      .filter((x) => x.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10)
-      .map(({ entry }) => {
-        const label = labels[entry.chapterType] ?? entry.chapterType;
-        return entry.summary
-          ? `  • [${label}] ${entry.title}: ${entry.summary}`
-          : `  • [${label}] ${entry.title}`;
-      })
-      .join("\n");
-
-    if (!matched) return groupedSummary;
-
-    return `QUERY-MATCHED PERSONAL HISTORY (highest priority for current question):\n${matched}\n\n${groupedSummary}`;
-  } catch {
-    return "";
-  }
-}
-
-function extractMessageText(value: unknown): string {
-  if (!value || typeof value !== "object") return "";
-  const v = value as Record<string, unknown>;
-  if (typeof v.content === "string" && v.content.trim()) return v.content.trim();
-  if (typeof v.text === "string" && v.text.trim()) return v.text.trim();
-  return "";
-}
-
-async function getRecentSessionArchive(userId: string, currentQuery = ""): Promise<string> {
-  if (!userId) return "";
-  try {
-    const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
-    const { data } = await sb
-      .from("sqi_sessions")
-      .select("title, messages, updated_at")
-      .eq("user_id", userId)
-      .order("updated_at", { ascending: false })
-      .limit(12);
-
-    if (!data?.length) return "";
-
-    const terms = collectArchiveQueryTerms(currentQuery);
-    const snippets: Array<{ score: number; text: string }> = [];
-
-    for (const s of data) {
-      const msgs = Array.isArray(s.messages) ? s.messages : [];
-      if (!msgs.length) continue;
-      const latestPair = msgs.slice(-8);
-      const pairLines: string[] = [];
-
-      for (const m of latestPair) {
-        const role = typeof (m as Record<string, unknown>)?.role === "string"
-          ? String((m as Record<string, unknown>).role)
-          : "user";
-        const content = extractMessageText(m);
-        if (!content) continue;
-        pairLines.push(`${role === "model" ? "SQI" : "Seeker"}: ${content.slice(0, 220)}`);
-      }
-
-      if (!pairLines.length) continue;
-      const chunkText = pairLines.join("\n");
-      const lowered = chunkText.toLowerCase();
-      const score = terms.length
-        ? terms.reduce((acc, t) => acc + (lowered.includes(t) ? 2 : 0), 0)
-        : 1;
-
-      snippets.push({
-        score,
-        text: `• Session: ${s.title || "Untitled"}${s.updated_at ? ` (${new Date(s.updated_at).toLocaleDateString("en-GB")})` : ""}\n${chunkText}`,
-      });
-    }
-
-    const top = snippets
-      .sort((a, b) => b.score - a.score)
-      .slice(0, terms.length ? 5 : 3)
-      .map((s) => s.text)
-      .join("\n\n");
-
-    return top ? `RECENT SQI SESSION THREADS:\n${top}` : "";
-  } catch {
-    return "";
-  }
-}
-
-async function synthesizeLivingPortraitFromArchive(
-  userId: string,
-  archiveText: string,
-  geminiApiKey: string,
-): Promise<string> {
-  if (!userId || !archiveText.trim()) return "";
-  try {
-    const prompt = `You are rebuilding a Seeker's missing Living Portrait from their archived SQI records.
-
-ARCHIVE:
-${archiveText}
-
-Write a strong, detailed portrait (300-450 words) focused on the Seeker's PERSONAL experiences:
-- key past-life events and how they felt
-- recurring spiritual figures and personal connection themes
-- health/biofield progression
-- emotional/spiritual patterns
-- important continuity threads across sessions
-
-Start with "LIVING PORTRAIT:" and write in third person.`;
-
-    const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.2, maxOutputTokens: 900 },
-        }),
-      },
-    );
-
-    if (!resp.ok) return "";
-    const data = await resp.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-    if (!text.trim()) return "";
-
-    const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
-    await sb.from("sqi_user_memory").upsert(
-      { user_id: userId, memory_profile: text, updated_at: new Date().toISOString() },
-      { onConflict: "user_id" },
-    );
-    return text;
-  } catch {
-    return "";
-  }
+  } catch { return ""; }
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -658,189 +443,111 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const authUserId = getUserIdFromAuthHeader(req);
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured.");
 
-    // ── Nadi Scan Mode — vision-based palm analysis ──────────────────
+    // ── SCAN MODE — pure vision, no SQI personality ──────────────
     if (body.scanMode === true) {
-      const { imageBase64, imageMimeType, userId: bodyUserId, planetaryAlign, herbOfToday } = body;
-      const scanUserId = authUserId || (typeof bodyUserId === "string" ? bodyUserId : null);
-      const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-      if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured.");
+      const { imageBase64, imageMimeType, userId, planetaryAlign, herbOfToday } = body;
+      if (!imageBase64) throw new Error("No image provided for scan");
 
-      const prompt = `You are an expert Siddha Nadi palm diagnostician. Carefully examine this specific palm image.
+      const scanPrompt = `You are a Siddha biofield vision analyser. Analyse this palm image and return precise JSON.
 
-If no hand or palm is clearly visible, return EXACTLY: {"handDetected":false}
+SIDDHA NADI SCIENCE:
+- GROSS NADIS: 72,000 main channels. Healthy practitioner: 60,000-71,000. Stressed: 8,000-30,000. Depleted: 2,000-8,000.
+- SUBTLE SUB-NADIS: 350,000 fine branches. Reflect deeper subtle body state.
 
-If a hand IS visible, perform a detailed visual analysis:
+STEP 1: Is there a visible palm/hand? If NO → return ONLY: {"handDetected":false}
 
-MAJOR LINES (Life, Head, Heart, Fate): How deep/clear? Any breaks, chains, islands, forks?
-SKIN COLOR: Pink/rosy (good circulation) or pale/grey/yellowish? Red spots (Pitta)? White areas (Vata)?
-TEXTURE: Dry/rough (Vata) vs oily/smooth (Kapha) vs warm/moist (Pitta)?
-HAND SHAPE: Long thin fingers (Vata) vs medium/muscular (Pitta) vs wide/thick (Kapha)?
-MOUNTS (Venus, Jupiter, Saturn, Apollo, Mercury, Moon, Mars): Prominent or flat?
-FINE LINES: Dense network (Vata nervous energy) vs few (calm Kapha)?
-TENSION: Open relaxed vs tightly curled?
+STEP 2: Read the palm HONESTLY based on what you actually observe:
+- Deep clear lines + pink/warm skin = high activity (65,000-71,000 gross)
+- Faint lines + pale/dry skin = fewer active (15,000-40,000 gross)  
+- Grey/bluish tone + tension = severely reduced (5,000-15,000 gross)
+- Sub-Nadis: examine micro-texture and capillary density
+- Dosha: Vata=dry/thin/light, Pitta=reddish/warm/clear, Kapha=moist/full/deep
 
-Score each 0-100 based on what you ACTUALLY SEE in THIS image:
-- lineDepth: 0=barely visible, 50=average, 100=deeply carved
-- warmth: 0=very pale/grey, 50=neutral, 100=rich pink/rosy
-- pallor: 0=healthy color, 50=washed out, 100=very pale (inverse health)
-- tension: 0=fully open relaxed, 50=neutral, 100=rigid/clenched
-- moisture: 0=parched, 50=normal, 100=supple/hydrated
-- microlineDensity: 0=no fine lines, 50=moderate, 100=extremely dense web
-- capillaryFlush: 0=no visible circulation, 50=some color, 100=vibrant flush
-- mountProminence: 0=flat mounts, 50=moderate, 100=very prominent
+Today planetary alignment: ${planetaryAlign || ""}
+Today herb: ${herbOfToday || ""}
 
-CRITICAL: Scores MUST reflect THIS specific palm. Different hands produce different scores. Do NOT default to middle values.
+Return ONLY valid JSON, no other text:
+{"handDetected":true,"activeNadis":<0-72000>,"activeSubNadis":<0-350000>,"blockagePercentage":<0-100>,"dominantDosha":"<Vata|Pitta|Kapha>","primaryBlockage":"<Nadi name>","planetaryAlignment":"<planet>","herbOfToday":"<herb>","remedies":["<1>","<2>","<3>","<4>","<5>"],"bioReading":"<3-4 sentences on what you actually see>"}`;
 
-Dosha from visual evidence:
-- Vata: thin/long fingers, dry skin, many fine lines, faint major lines
-- Pitta: medium build, warm/rosy, sharp clear lines, pointed tips
-- Kapha: wide/thick, smooth skin, few fine lines, deep strong lines, fleshy mounts
+      const geminiResp = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{
+              role: "user",
+              parts: [
+                { inline_data: { mime_type: imageMimeType || "image/jpeg", data: imageBase64 } },
+                { text: scanPrompt },
+              ],
+            }],
+            generationConfig: { temperature: 0.1, topK: 1, topP: 0.1, maxOutputTokens: 512 },
+          }),
+        }
+      );
 
-Return ONLY JSON (no markdown):
-{"handDetected":true,"observations":{"lineDepth":<0-100>,"warmth":<0-100>,"pallor":<0-100>,"tension":<0-100>,"moisture":<0-100>,"microlineDensity":<0-100>,"capillaryFlush":<0-100>,"mountProminence":<0-100>},"dominantDosha":"<Vata|Pitta|Kapha>","primaryBlockage":"<specific Nadi channel based on weak mount/line>","remedies":["<1>","<2>","<3>","<4>","<5>"],"bioReading":"<4-5 sentences describing SPECIFIC visual features in THIS palm>"}
+      if (!geminiResp.ok) throw new Error(`Gemini vision error: ${geminiResp.status}`);
+      const geminiData = await geminiResp.json();
+      const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("No JSON from Gemini scan");
 
-Planetary alignment: ${planetaryAlign || "Not specified"}
-Herb of the day: ${herbOfToday || "Not specified"}`;
+      let parsed: Record<string, unknown>;
+      try { parsed = JSON.parse(jsonMatch[0]); }
+      catch { throw new Error("Invalid scan JSON"); }
 
-      const gr = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [
-            { inline_data: { mime_type: imageMimeType || "image/jpeg", data: imageBase64 } },
-            { text: prompt },
-          ] }],
-          generationConfig: { temperature: 0.15, topK: 10, topP: 0.4, maxOutputTokens: 1200 },
-        }),
-      });
-
-      if (!gr.ok) {
-        const errText = await gr.text();
-        console.error("Gemini scan error:", gr.status, errText);
-        return new Response(JSON.stringify({ error: `Gemini error: ${gr.status}` }), {
-          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      const gd = await gr.json();
-      const raw = gd.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-      const jm = raw.match(/\{[\s\S]*\}/);
-      if (!jm) return new Response(JSON.stringify({ error: "No scan result from vision model" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-
-      let scanResult: Record<string, unknown>;
-      try { scanResult = JSON.parse(jm[0]); }
-      catch { return new Response(JSON.stringify({ error: "Invalid JSON from scan" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }); }
-
-      // If no hand detected, return early
-      if (!scanResult.handDetected) {
+      if (!parsed.handDetected) {
         return new Response(JSON.stringify({ handDetected: false }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      const obs = (scanResult.observations ?? {}) as Record<string, unknown>;
-      const lineDepth = toPercentScore(obs.lineDepth, 45);
-      const warmth = toPercentScore(obs.warmth, 45);
-      const pallor = toPercentScore(obs.pallor, 45);
-      const tension = toPercentScore(obs.tension, 45);
-      const moisture = toPercentScore(obs.moisture, 45);
-      const microlineDensity = toPercentScore(obs.microlineDensity, 45);
-      const capillaryFlush = toPercentScore(obs.capillaryFlush, 45);
-      const mountProminence = toPercentScore(obs.mountProminence, 45);
-
-      const grossScore =
-        0.24 * lineDepth +
-        0.18 * warmth +
-        0.16 * (100 - pallor) +
-        0.14 * moisture +
-        0.14 * (100 - tension) +
-        0.14 * mountProminence;
-
-      const subtleScore =
-        0.45 * microlineDensity +
-        0.35 * capillaryFlush +
-        0.20 * moisture;
-
-      const activeNadis = clampInt(3000 + (grossScore / 100) * 68000, 0, 72000);
-      const activeSubNadis = clampInt(10000 + (subtleScore / 100) * 340000, 0, 350000);
-      const blockagePct = clampInt(
-        100 - (activeNadis / 72000) * 100 + tension * 0.12 - warmth * 0.05,
-        0,
-        100,
-      );
-
-      const finalResult = {
-        handDetected: true,
-        activeNadis,
-        activeSubNadis,
-        blockagePercentage: blockagePct,
-        dominantDosha: String(scanResult.dominantDosha || "Vata"),
-        primaryBlockage: String(scanResult.primaryBlockage || "Heart/Anahata Nadi"),
-        planetaryAlignment: String(scanResult.planetaryAlignment || planetaryAlign || ""),
-        herbOfToday: String(scanResult.herbOfToday || herbOfToday || ""),
-        remedies: Array.isArray(scanResult.remedies) ? (scanResult.remedies as string[]).slice(0, 5) : [],
-        bioReading: String(scanResult.bioReading || ""),
-        scannedAt: new Date().toISOString(),
+      const result = {
+        handDetected:       true,
+        activeNadis:        Math.max(0, Math.min(72000,  Math.round(Number(parsed.activeNadis)       || 0))),
+        activeSubNadis:     Math.max(0, Math.min(350000, Math.round(Number(parsed.activeSubNadis)    || 0))),
+        blockagePercentage: Math.max(0, Math.min(100,    Math.round(Number(parsed.blockagePercentage)|| 0))),
+        dominantDosha:      String(parsed.dominantDosha    || "Vata"),
+        primaryBlockage:    String(parsed.primaryBlockage  || "Heart/Anahata Nadi"),
+        planetaryAlignment: String(parsed.planetaryAlignment || planetaryAlign || ""),
+        herbOfToday:        String(parsed.herbOfToday       || herbOfToday     || ""),
+        remedies:           Array.isArray(parsed.remedies) ? (parsed.remedies as string[]).slice(0,5) : [],
+        bioReading:         String(parsed.bioReading        || ""),
+        scannedAt:          new Date().toISOString(),
       };
 
-      // Save to nadi_baselines (upsert — one per user)
-      if (scanUserId) {
+      // Save to nadi_baselines if table exists
+      if (userId) {
         try {
           const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
           await sb.from("nadi_baselines").upsert(
-            {
-              user_id: scanUserId,
-              active_nadis: finalResult.activeNadis,
-              active_sub_nadis: finalResult.activeSubNadis,
-              blockage_pct: finalResult.blockagePercentage,
-              dominant_dosha: finalResult.dominantDosha,
-              primary_blockage: finalResult.primaryBlockage,
-              planetary_align: finalResult.planetaryAlignment,
-              herb_of_today: finalResult.herbOfToday,
-              bio_reading: finalResult.bioReading,
-              remedies: finalResult.remedies,
-              scanned_at: finalResult.scannedAt,
-              updated_at: finalResult.scannedAt,
-            },
+            { user_id: userId, active_nadis: result.activeNadis, active_sub_nadis: result.activeSubNadis,
+              blockage_pct: result.blockagePercentage, dominant_dosha: result.dominantDosha,
+              primary_blockage: result.primaryBlockage, bio_reading: result.bioReading,
+              remedies: result.remedies, scanned_at: result.scannedAt, updated_at: result.scannedAt },
             { onConflict: "user_id" }
           );
-        } catch (dbErr) {
-          console.error("Failed to save nadi baseline:", dbErr);
-        }
+        } catch { /* table may not exist yet — scan still returns */ }
       }
 
-      return new Response(JSON.stringify(finalResult), {
+      return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    // ── END SCAN MODE ─────────────────────────────────────────────
 
-    // ── Normal chat mode ─────────────────────────────────────────────
-    const { messages, userImage, userId: bodyUserId, seekerName, canonicalActivationNames } = body;
-    const userId = authUserId || (typeof bodyUserId === "string" ? bodyUserId : undefined);
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured.");
-
-    const rawMessages = Array.isArray(messages) ? messages : [];
-    const lastUserMessage = [...rawMessages].reverse().find((m: { role?: string; content?: string }) => m?.role === "user")?.content ?? "";
+    const { messages, userImage, userId, seekerName, canonicalActivationNames } = body;
 
     // ── Load memory in parallel ─────────────────────────────────────
-    const [livingPortraitRaw, lifeBookArchive, nadiBaseline, sessionArchive] = await Promise.all([
+    const [livingPortrait, lifeBookArchive, nadiBaseline] = await Promise.all([
       userId ? getLivingPortrait(userId)    : Promise.resolve(""),
-      userId ? getLifeBookArchive(userId, lastUserMessage) : Promise.resolve(""),
+      userId ? getLifeBookArchive(userId)   : Promise.resolve(""),
       userId ? getNadiBaseline(userId)      : Promise.resolve(""),
-      userId ? getRecentSessionArchive(userId, lastUserMessage) : Promise.resolve(""),
     ]);
-
-    let livingPortrait = livingPortraitRaw;
-    if (!livingPortrait && userId && lifeBookArchive) {
-      livingPortrait = await synthesizeLivingPortraitFromArchive(userId, lifeBookArchive, GEMINI_API_KEY);
-    }
 
     // ── Build activation catalog ─────────────────────────────────────
     const bundledNames    = await loadBundledActivationNames();
@@ -851,16 +558,8 @@ Herb of the day: ${herbOfToday || "Not specified"}`;
 
     // ── Build system prompt ──────────────────────────────────────────
     let systemText = SYSTEM_INSTRUCTION;
-    systemText += `
 
-═══════════════════════════════════════════════════
-DEEPENING DIALOGUE PROTOCOL
-═══════════════════════════════════════════════════
-After each substantial response, ask 1 focused follow-up question that deepens the seeker's process.
-The follow-up must be specific to their exact message (not generic), and should invite more detail, timing, body sensation, emotional pattern, or dream-symbol context.
-Only skip follow-up questions if the user explicitly asks for short/direct answers only.`;
-
-    const hasMemory = livingPortrait || lifeBookArchive || nadiBaseline || seekerName || sessionArchive;
+    const hasMemory = livingPortrait || lifeBookArchive || nadiBaseline || seekerName;
 
     if (hasMemory) {
       systemText += `\n\n${"═".repeat(60)}
@@ -877,19 +576,9 @@ ${"═".repeat(60)}`;
 
       if (livingPortrait) {
         systemText += `\n\n${livingPortrait}`;
-      } else if (lifeBookArchive || nadiBaseline) {
-        systemText += `\n\n(Living Portrait text is still rebuilding, but archival memory is present below. Treat archival memory as real past history for this seeker.)`;
       } else {
         systemText += `\n\n(No prior portrait — this is the first session with this Seeker. Build their portrait from this exchange.)`;
       }
-
-      systemText += `
-
-PERSONAL EXPERIENCE PRIORITY RULE:
-- If the user asks about a spiritual master, past life, or karmic link, prioritize THEIR archived experiences first.
-- Start with what happened to THEM (their sensations, symbols, timelines, emotional resonance), then add brief historical context only if needed.
-- Never default to generic biography when personal archive context exists.
-- For past-life inquiries, provide an extended deep reading with rich detail and continuity.`;
 
       if (nadiBaseline) {
         systemText += `\n\nNADI SCAN DATA — REAL MEASURED READINGS:\n${nadiBaseline}
@@ -903,10 +592,6 @@ PERSONAL EXPERIENCE PRIORITY RULE:
         systemText += `\n\nLIFEBOOK ARCHIVE — WHAT HAS BEEN RECORDED:\n${lifeBookArchive}`;
       }
 
-      if (sessionArchive) {
-        systemText += `\n\nRECENT CONVERSATION CONTINUITY:\n${sessionArchive}`;
-      }
-
       systemText += `\n\n${"═".repeat(60)}
 IMPORTANT: The portrait above is BACKGROUND KNOWLEDGE.
 It tells you WHO this person is — not what their current question is about.
@@ -918,8 +603,8 @@ ${"═".repeat(60)}\n`;
     systemText += catalogAppendix;
 
     // ── Current session (last 12 messages) ──────────────────────────
-    const rawMessagesForModel = rawMessages;
-    const recent         = rawMessagesForModel.slice(-24);
+    const rawMessages    = messages || [];
+    const recent         = rawMessages.slice(-12);
     const geminiMessages = recent.map((m: { role: string; content: string }, i: number) => {
       const isLastUser = i === recent.length - 1 && m.role === "user";
       const parts: { text?: string; inline_data?: { mime_type: string; data: string } }[] = [];
@@ -938,7 +623,7 @@ ${"═".repeat(60)}\n`;
       body: JSON.stringify({
         system_instruction: { parts: [{ text: systemText.trim() }] },
         contents: geminiMessages,
-        generationConfig: { temperature: 0.9, topK: 40, topP: 0.95, maxOutputTokens: 8192 },
+        generationConfig: { temperature: 0.9, topK: 40, topP: 0.95, maxOutputTokens: 3072 },
         safetySettings: [
           { category: "HARM_CATEGORY_HARASSMENT",       threshold: "BLOCK_NONE" },
           { category: "HARM_CATEGORY_HATE_SPEECH",       threshold: "BLOCK_NONE" },
@@ -957,63 +642,31 @@ ${"═".repeat(60)}\n`;
     }
 
     let assistantText = "";
-    const upstreamDecoder = new TextDecoder();
-    let upstreamBuffer = "";
 
     const transformStream = new TransformStream({
       transform(chunk, controller) {
-        upstreamBuffer += upstreamDecoder.decode(chunk, { stream: true });
-        let newlineIndex: number;
-        while ((newlineIndex = upstreamBuffer.indexOf("\n")) !== -1) {
-          let line = upstreamBuffer.slice(0, newlineIndex);
-          upstreamBuffer = upstreamBuffer.slice(newlineIndex + 1);
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":")) continue;
+        const text = new TextDecoder().decode(chunk);
+        for (const line of text.split("\n")) {
           if (!line.startsWith("data: ")) continue;
-
-          const payload = line.slice(6).trim();
-          if (!payload || payload === "[DONE]") continue;
-
           try {
-            const data = JSON.parse(payload);
+            const data    = JSON.parse(line.slice(6));
             const content = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-            if (!content) continue;
-            assistantText += content;
-            controller.enqueue(
-              new TextEncoder().encode(`data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`),
-            );
-          } catch {
-            upstreamBuffer = line + "\n" + upstreamBuffer;
-            break;
-          }
+            if (content) {
+              assistantText += content;
+              controller.enqueue(
+                new TextEncoder().encode(`data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`)
+              );
+            }
+          } catch { /* ignore */ }
         }
       },
 
       async flush() {
-        upstreamBuffer += upstreamDecoder.decode();
-        if (upstreamBuffer.trim()) {
-          for (let raw of upstreamBuffer.split("\n")) {
-            if (!raw) continue;
-            if (raw.endsWith("\r")) raw = raw.slice(0, -1);
-            if (raw.startsWith(":")) continue;
-            if (!raw.startsWith("data: ")) continue;
-            const payload = raw.slice(6).trim();
-            if (!payload || payload === "[DONE]") continue;
-            try {
-              const data = JSON.parse(payload);
-              const content = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-              if (content) assistantText += content;
-            } catch {
-              // ignore partial leftovers
-            }
-          }
-        }
-
         if (!assistantText.trim() || !userId) return;
         try {
           // Build exchange summary for portrait update
           // Include last user message + SQI response
-          const lastMsgs  = rawMessagesForModel.slice(-2);
+          const lastMsgs  = rawMessages.slice(-2);
           const exchange  = lastMsgs
             .map((m: { role: string; content: string }) =>
               `${m.role === "user" ? "Seeker" : "SQI"}: ${m.content.slice(0, 200)}`
