@@ -513,10 +513,60 @@ function QuantumApothecaryInner() {
       try { await videoRef.current.play(); } catch {}
     }
 
-    // ── Step 2: Wait 4 seconds — user holds palm to camera ──
-    await new Promise((res) => setTimeout(res, 4000));
+    // ── Step 2: Wait for hand to be detected via skin-color analysis ──
+    setHandDetected(false);
+    const detectHand = (vid: HTMLVideoElement): boolean => {
+      try {
+        const c = document.createElement('canvas');
+        const sw = 160;
+        const sh = Math.max(1, Math.round((vid.videoHeight / vid.videoWidth) * sw)) || 120;
+        c.width = sw; c.height = sh;
+        const cx = c.getContext('2d', { willReadFrequently: true });
+        if (!cx) return false;
+        cx.drawImage(vid, 0, 0, sw, sh);
+        const img = cx.getImageData(0, 0, sw, sh);
+        const d = img.data;
+        let skinPx = 0;
+        const total = sw * sh;
+        for (let i = 0; i < d.length; i += 4) {
+          const r = d[i], g = d[i+1], b = d[i+2];
+          // YCbCr skin-color rule (works across skin tones, robust to lighting)
+          const y  = 0.299 * r + 0.587 * g + 0.114 * b;
+          const cb = 128 - 0.169 * r - 0.331 * g + 0.500 * b;
+          const cr = 128 + 0.500 * r - 0.419 * g - 0.081 * b;
+          if (y > 50 && cb > 77 && cb < 127 && cr > 133 && cr < 173) skinPx++;
+        }
+        // Require at least 15% skin pixels → a hand is clearly in frame
+        return skinPx / total > 0.15;
+      } catch { return false; }
+    };
 
-    // ── Step 3: Capture real frame from video (cap size + JPEG quality for edge payload limits) ──
+    // Poll every 500ms for up to 20s; abort if component unmounts or stream stops
+    let detected = false;
+    for (let attempt = 0; attempt < 40; attempt++) {
+      if (!streamRef.current || !videoRef.current) break;
+      if (videoRef.current.readyState >= 2 && detectHand(videoRef.current)) {
+        detected = true;
+        setHandDetected(true);
+        break;
+      }
+      await new Promise((r) => setTimeout(r, 500));
+    }
+
+    if (!detected) {
+      setScanError(t('quantumApothecary.scan.noHand'));
+      setIsScanning(false);
+      setScanPhase('idle');
+      setHandDetected(false);
+      cameraStream.getTracks().forEach((tk) => tk.stop());
+      streamRef.current = null;
+      return;
+    }
+
+    // Hand found — hold 2s for user to stabilize position
+    await new Promise((r) => setTimeout(r, 2000));
+
+    // ── Step 3: Capture real frame from video ──
     let capturedBase64 = '';
     try {
       const canvas = document.createElement('canvas');
