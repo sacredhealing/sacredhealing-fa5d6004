@@ -159,7 +159,7 @@ const TrackDetail: React.FC = () => {
           {track.mood && (
             <span className="inline-flex items-center gap-1 bg-amber-500/15 text-amber-400 px-3 py-1.5 rounded-full text-sm font-medium">
               {getMoodIcon(track.mood)}
-              {tMusicMood(track.mood, t)}
+              {tMusicMood(track.mood, t as any)}
             </span>
           )}
           {track.spiritual_path && (
