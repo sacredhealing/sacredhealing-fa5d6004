@@ -191,6 +191,9 @@ serve(async (req) => {
         const bodyHtml = formatBodyHtml(bodyText);
         const subjectHtml = escapeHtml(subject);
 
+        const siteUrl = Deno.env.get("SITE_URL") || "https://sacredhealing.lovable.app";
+        const unsubLink = `${siteUrl}/dashboard?unsubscribe=true`;
+
         await resend.emails.send({
           from,
           to: [user.email!],
@@ -199,6 +202,11 @@ serve(async (req) => {
             <div style="background:#050505;color:#fff;font-family:sans-serif;padding:40px;border-radius:16px;max-width:560px;margin:0 auto;">
               <h1 style="color:#D4AF37;font-size:22px;margin:0 0 24px;">${subjectHtml}</h1>
               ${bodyHtml}
+              <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:32px 0 16px;" />
+              <p style="font-size:11px;color:rgba(255,255,255,0.25);text-align:center;margin:0;">
+                You're receiving this because you subscribed to Sacred Healing updates.
+                <br/><a href="${unsubLink}" style="color:rgba(212,175,55,0.5);text-decoration:underline;">Unsubscribe</a>
+              </p>
             </div>
           `,
         });
@@ -215,7 +223,7 @@ serve(async (req) => {
     }
   }
 
-  return new Response(JSON.stringify({ sent, failed, total: targets.length }), {
+  return new Response(JSON.stringify({ sent, failed, skipped, total: targets.length }), {
     headers: { "Content-Type": "application/json", ...corsHeaders },
   });
 });
