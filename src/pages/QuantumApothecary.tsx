@@ -401,8 +401,11 @@ function QuantumApothecaryInner() {
     setScanError(null);
     setScanPhase('camera');
     setIsScanning(true);
-    // Drop previous reading so the live camera UI shows (otherwise results stay on screen during capture).
+    // Drop previous reading so the live camera UI shows
     setScanResult(null);
+
+    // Lock viewport so user can't scroll away during scan
+    document.body.style.overflow = 'hidden';
     try {
       localStorage.removeItem('sqi_scan_result');
     } catch { /* ignore */ }
