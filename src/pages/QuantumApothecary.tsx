@@ -45,7 +45,9 @@ function buildSqiWelcomeMessages(): Message[] {
   }];
 }
 
-/* ──── Markdown-ish renderer: gold (#D4AF37) only on # / ## / ### / #### / ##### lines ──── */
+/* ──── Markdown-ish renderer: gold (#D4AF37) on # / ## / … lines and on leading **…** (headline bullets / labels) ──── */
+const CHAT_HEADLINE_GOLD = '#D4AF37';
+
 type InlineVariant = 'heading' | 'body';
 
 function renderChatText(text: string) {
@@ -54,40 +56,57 @@ function renderChatText(text: string) {
     const trimmed = line.trim();
     if (!trimmed) return <div key={i} style={{ height: '4px' }} />;
     if (trimmed.startsWith('##### ')) return (
-      <p key={i} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginTop: '12px', marginBottom: '4px', opacity: 0.8 }}>
+      <p key={i} style={{ color: CHAT_HEADLINE_GOLD, fontWeight: 800, fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginTop: '12px', marginBottom: '4px', opacity: 0.8 }}>
         {renderInline(trimmed.slice(6), 'heading')}
       </p>
     );
     if (trimmed.startsWith('#### ')) return (
-      <p key={i} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase' as const, marginTop: '10px', marginBottom: '4px' }}>
+      <p key={i} style={{ color: CHAT_HEADLINE_GOLD, fontWeight: 800, fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase' as const, marginTop: '10px', marginBottom: '4px' }}>
         {renderInline(trimmed.slice(5), 'heading')}
       </p>
     );
     if (trimmed.startsWith('### ')) return (
-      <h3 key={i} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase' as const, marginTop: '10px', marginBottom: '4px' }}>
+      <h3 key={i} style={{ color: CHAT_HEADLINE_GOLD, fontWeight: 800, fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase' as const, marginTop: '10px', marginBottom: '4px' }}>
         {renderInline(trimmed.slice(4), 'heading')}
       </h3>
     );
     if (trimmed.startsWith('## ')) return (
-      <h2 key={i} style={{ color: '#D4AF37', fontWeight: 900, fontSize: '14px', letterSpacing: '-0.02em', marginTop: '12px', marginBottom: '5px' }}>
+      <h2 key={i} style={{ color: CHAT_HEADLINE_GOLD, fontWeight: 900, fontSize: '14px', letterSpacing: '-0.02em', marginTop: '12px', marginBottom: '5px' }}>
         {renderInline(trimmed.slice(3), 'heading')}
       </h2>
     );
     if (trimmed.startsWith('# ')) return (
-      <h1 key={i} style={{ color: '#D4AF37', fontWeight: 900, fontSize: '15px', letterSpacing: '-0.02em', marginTop: '12px', marginBottom: '5px' }}>
+      <h1 key={i} style={{ color: CHAT_HEADLINE_GOLD, fontWeight: 900, fontSize: '15px', letterSpacing: '-0.02em', marginTop: '12px', marginBottom: '5px' }}>
         {renderInline(trimmed.slice(2), 'heading')}
       </h1>
     );
-    if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) return (
-      <li key={i} style={{ marginLeft: '16px', listStyleType: 'disc', fontSize: '13px', lineHeight: '1.5', color: 'rgba(255,255,255,0.92)', marginBottom: '4px' }}>
-        {renderInline(trimmed.slice(2), 'body')}
-      </li>
-    );
-    if (/^\d+\.\s/.test(trimmed)) return (
-      <li key={i} style={{ marginLeft: '16px', listStyleType: 'decimal', fontSize: '13px', lineHeight: '1.5', color: 'rgba(255,255,255,0.92)', marginBottom: '4px' }}>
-        {renderInline(trimmed.replace(/^\d+\.\s/, ''), 'body')}
-      </li>
-    );
+    if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+      const bulletBody = trimmed.slice(2);
+      const goldBullet = renderLeadingBoldHeadline(bulletBody);
+      return (
+        <li key={i} style={{ marginLeft: '16px', listStyleType: 'disc', fontSize: '13px', lineHeight: '1.5', color: 'rgba(255,255,255,0.92)', marginBottom: '4px' }}>
+          {goldBullet ?? renderInline(bulletBody, 'body')}
+        </li>
+      );
+    }
+    if (/^\d+\.\s/.test(trimmed)) {
+      const numBody = trimmed.replace(/^\d+\.\s/, '');
+      const goldNum = renderLeadingBoldHeadline(numBody);
+      return (
+        <li key={i} style={{ marginLeft: '16px', listStyleType: 'decimal', fontSize: '13px', lineHeight: '1.5', color: 'rgba(255,255,255,0.92)', marginBottom: '4px' }}>
+          {goldNum ?? renderInline(numBody, 'body')}
+        </li>
+      );
+    }
+    const goldPara =
+      renderLeadingBoldHeadline(trimmed) ?? renderStandaloneTitleLine(trimmed) ?? renderTitleColonWithBody(trimmed);
+    if (goldPara) {
+      return (
+        <p key={i} style={{ fontSize: '13px', lineHeight: '1.55', color: 'rgba(255,255,255,0.92)', marginBottom: '6px' }}>
+          {goldPara}
+        </p>
+      );
+    }
     return (
       <p key={i} style={{ fontSize: '13px', lineHeight: '1.55', color: 'rgba(255,255,255,0.92)', marginBottom: '6px' }}>
         {renderInline(trimmed, 'body')}
@@ -126,6 +145,48 @@ function renderInline(text: string, variant: InlineVariant = 'body'): React.Reac
     }
     return p;
   });
+}
+
+/** Leading `**Label**` / `**Label:** rest` → gold headline + body (matches SQI output when it skips ## headers). */
+function renderLeadingBoldHeadline(content: string): React.ReactNode | null {
+  const m = content.match(/^\*\*([^*]+)\*\*(.*)$/);
+  if (!m || !m[1].trim()) return null;
+  const [, inner, rest] = m;
+  return (
+    <>
+      <strong style={{ color: CHAT_HEADLINE_GOLD, fontWeight: 800 }}>{inner}</strong>
+      {rest ? renderInline(rest, 'body') : null}
+    </>
+  );
+}
+
+/** One-line titles like `The Nature of Your Tool:` (no ** wrap, common in SQI prose). */
+function renderStandaloneTitleLine(trimmed: string): React.ReactNode | null {
+  const m = trimmed.match(/^([A-Z0-9][^:*\n]{2,118}?):\s*$/);
+  if (!m) return null;
+  const label = m[1];
+  if (/^(I|We|It|This|That|There|Here|When|If|As|But|So|You|They)\b/i.test(label)) return null;
+  return (
+    <strong style={{ color: CHAT_HEADLINE_GOLD, fontWeight: 800, display: 'block', marginTop: '10px', marginBottom: '4px', fontSize: '13px' }}>
+      {label}:
+    </strong>
+  );
+}
+
+/** `Section Title: body text` on one line (e.g. protocol steps). */
+function renderTitleColonWithBody(trimmed: string): React.ReactNode | null {
+  const m = trimmed.match(/^([A-Z0-9][^:*\n]{2,118}?):(\s+)([\s\S]+)$/);
+  if (!m) return null;
+  const [, label, sp, rest] = m;
+  if (/^(I|We|It|This|That|There|Here|When|If|As|But|So|You|They)\b/i.test(label)) return null;
+  const words = label.trim().split(/\s+/).filter(Boolean).length;
+  if (words < 2 && label.length < 16) return null;
+  return (
+    <>
+      <strong style={{ color: CHAT_HEADLINE_GOLD, fontWeight: 800 }}>{label}:</strong>
+      {renderInline(sp + rest, 'body')}
+    </>
+  );
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -198,6 +259,7 @@ function QuantumApothecaryInner() {
   const [loadingSessions, setLoadingSessions] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const chatPanelRef = useRef<HTMLDivElement>(null);
+  const nadiScanCameraRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -262,6 +324,15 @@ function QuantumApothecaryInner() {
     document.addEventListener('visibilitychange', onVisibilityChange);
     return () => document.removeEventListener('visibilitychange', onVisibilityChange);
   }, [flushSqiLocalStorage]);
+
+  /** Keep the inline scan viewport visible; avoids iOS jumping the page when a fixed overlay + body lock was used. */
+  useEffect(() => {
+    if (scanPhase !== 'camera' && scanPhase !== 'analyzing') return;
+    const t = window.setTimeout(() => {
+      nadiScanCameraRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    }, 80);
+    return () => window.clearTimeout(t);
+  }, [scanPhase]);
 
   useEffect(() => {
     const count = messages.length;
@@ -404,8 +475,6 @@ function QuantumApothecaryInner() {
     // Drop previous reading so the live camera UI shows
     setScanResult(null);
 
-    // Lock viewport so user can't scroll away during scan
-    document.body.style.overflow = 'hidden';
     try {
       localStorage.removeItem('sqi_scan_result');
     } catch { /* ignore */ }
@@ -426,7 +495,6 @@ function QuantumApothecaryInner() {
         setScanError('Camera access denied. Please allow camera to initiate scan.');
         setIsScanning(false);
         setScanPhase('idle');
-        document.body.style.overflow = '';
         return;
       }
     }
@@ -461,7 +529,6 @@ function QuantumApothecaryInner() {
       setScanError('Failed to capture image. Please try again.');
       setIsScanning(false);
       setScanPhase('idle');
-      document.body.style.overflow = '';
       cameraStream.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
       return;
@@ -579,7 +646,6 @@ function QuantumApothecaryInner() {
         setScanError('No hand detected. Hold your palm clearly up to the camera and try again.');
         setIsScanning(false);
         setScanPhase('idle');
-        document.body.style.overflow = '';
         return;
       }
 
@@ -610,7 +676,6 @@ function QuantumApothecaryInner() {
       setScanResult(result);
       setScanPhase('done');
       setIsScanning(false);
-      document.body.style.overflow = '';
 
       const mainPct = Math.round((activeNadis / 72000) * 100);
       const subPct = Math.round((activeSubNadis / 350000) * 100);
@@ -650,7 +715,6 @@ function QuantumApothecaryInner() {
       );
       setIsScanning(false);
       setScanPhase('idle');
-      document.body.style.overflow = '';
     }
   };
 
@@ -1057,26 +1121,35 @@ function QuantumApothecaryInner() {
 
                   {/* Camera live feed */}
                   {(scanPhase === 'camera' || scanPhase === 'analyzing') ? (
-                    <div className="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center">
-                      <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover absolute inset-0" />
-                      <div className="absolute inset-0 flex flex-col items-center justify-between p-6 pointer-events-none">
-                        {/* Top badge */}
-                        <div className="flex items-center gap-2 bg-black/70 rounded-full px-4 py-2 mt-[env(safe-area-inset-top)]">
-                          <div className="w-2 h-2 rounded-full bg-[#D4AF37] animate-ping" style={{ boxShadow: '0 0 6px rgba(212,175,55,0.8)' }} />
-                          <span className="text-xs font-bold uppercase tracking-[0.3em] text-[#D4AF37]">
+                    <div
+                      ref={nadiScanCameraRef}
+                      className="relative w-full max-w-[min(100%,380px)] mx-auto rounded-2xl overflow-hidden border border-[#D4AF37]/35 bg-black shadow-[0_0_32px_rgba(212,175,55,0.12)]"
+                      style={{ aspectRatio: '3 / 4', maxHeight: 'min(70dvh, 520px)' }}
+                    >
+                      <video
+                        ref={videoRef}
+                        autoPlay
+                        muted
+                        playsInline
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                      <div className="absolute inset-0 flex flex-col items-center justify-between p-4 sm:p-5 pointer-events-none">
+                        <div className="flex items-center gap-2 rounded-full bg-black/75 px-3 py-1.5 border border-[#D4AF37]/20">
+                          <div className="h-2 w-2 rounded-full bg-[#D4AF37] animate-ping" style={{ boxShadow: '0 0 6px rgba(212,175,55,0.8)' }} />
+                          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-[#D4AF37]">
                             {scanPhase === 'camera' ? 'Rear cam · frame your palm…' : 'Reading your biofield…'}
                           </span>
                         </div>
-                        {/* Center guide box */}
-                        <div className="border-2 border-dashed border-[#D4AF37]/50 rounded-2xl w-48 h-32 flex items-center justify-center">
-                          <span className="text-sm font-bold text-[#D4AF37]/60 uppercase tracking-widest text-center leading-relaxed">
-                            {scanPhase === 'camera' ? <>Aim camera<br />at palm</> : <>Analyzing<br/>biofield…</>}
-                          </span>
+                        <div className="flex flex-1 items-center justify-center py-2">
+                          <div className="flex h-28 w-44 sm:h-32 sm:w-48 items-center justify-center rounded-2xl border-2 border-dashed border-[#D4AF37]/50">
+                            <span className="px-2 text-center text-xs font-bold uppercase leading-relaxed tracking-widest text-[#D4AF37]/70 sm:text-sm">
+                              {scanPhase === 'camera' ? <>Aim camera<br />at palm</> : <>Analyzing<br />biofield…</>}
+                            </span>
+                          </div>
                         </div>
-                        {/* BPM */}
-                        <div className="flex items-center gap-2 bg-black/70 rounded-full px-4 py-2 mb-[env(safe-area-inset-bottom)]">
+                        <div className="flex items-center gap-2 rounded-full bg-black/75 px-3 py-1.5 border border-[#D4AF37]/20">
                           <Activity size={14} className="text-[#D4AF37]" />
-                          <span className="text-sm font-black text-[#D4AF37]">{heartRate} BPM</span>
+                          <span className="text-xs font-black text-[#D4AF37] sm:text-sm">{heartRate} BPM</span>
                         </div>
                       </div>
                     </div>
