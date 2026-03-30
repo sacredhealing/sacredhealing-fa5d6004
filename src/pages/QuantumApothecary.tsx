@@ -968,18 +968,33 @@ function QuantumApothecaryInner() {
 
               {scanResult ? (
                 <div className="space-y-4">
-                  <div className="p-4 rounded-2xl bg-[#D4AF37]/5 border border-[#D4AF37]/15" style={{ position:'relative', overflow:'hidden' }}>
-                    <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at 50% 100%, rgba(212,175,55,0.06) 0%, transparent 70%)', pointerEvents:'none' }} />
+                  {/* Active Nadis — hero number */}
+                  <div className="p-5 rounded-2xl border border-[#D4AF37]/20" style={{ position:'relative', overflow:'hidden', background:'radial-gradient(ellipse at 50% 80%, rgba(212,175,55,0.08) 0%, rgba(5,5,5,0.9) 70%)' }}>
+                    <div style={{ position:'absolute', top:'-50%', left:'50%', transform:'translateX(-50%)', width:200, height:200, background:'radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 70%)', pointerEvents:'none' }} />
                     <div style={{ textAlign:'center', position:'relative' }}>
-                      <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mb-1">Active Nadis</p>
-                      <p className="font-black text-[#D4AF37]" style={{ fontSize:42, lineHeight:1, textShadow:'0 0 30px rgba(212,175,55,0.5)', letterSpacing:'-0.02em' }}>{scanResult.activeNadis.toLocaleString()}</p>
-                      <p className="text-[9px] text-white/25 font-bold mt-1">of 72,000 channels active</p>
-                      {/* Progress bar */}
-                      <div style={{ marginTop:10, height:3, background:'rgba(255,255,255,0.06)', borderRadius:2, overflow:'hidden' }}>
-                        <div style={{ height:'100%', width:`${Math.min(100, (scanResult.activeNadis / 72000) * 100)}%`, background:'linear-gradient(90deg,#D4AF37,#fbbf24)', borderRadius:2, boxShadow:'0 0 8px rgba(212,175,55,0.6)' }} />
+                      <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mb-2">Active Nadis</p>
+                      <motion.p
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.6, ease: 'easeOut' }}
+                        className="font-black text-[#D4AF37]"
+                        style={{ fontSize:48, lineHeight:1, textShadow:'0 0 40px rgba(212,175,55,0.5), 0 0 80px rgba(212,175,55,0.2)', letterSpacing:'-0.02em' }}
+                      >
+                        {scanResult.activeNadis.toLocaleString()}
+                      </motion.p>
+                      <p className="text-[9px] text-white/25 font-bold mt-2">of 72,000 channels active</p>
+                      <div style={{ marginTop:12, height:4, background:'rgba(255,255,255,0.06)', borderRadius:2, overflow:'hidden' }}>
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.min(100, (scanResult.activeNadis / 72000) * 100)}%` }}
+                          transition={{ duration: 1.2, ease: 'easeOut', delay: 0.3 }}
+                          style={{ height:'100%', background:'linear-gradient(90deg,#B8940A,#D4AF37,#fbbf24)', borderRadius:2, boxShadow:'0 0 12px rgba(212,175,55,0.6)' }}
+                        />
                       </div>
                     </div>
                   </div>
+
+                  {/* Sub-Nadis */}
                   {typeof scanResult.activeSubNadis === 'number' && (
                     <div className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]">
                       <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mb-1">Subtle Sub-Nadi (350,000)</p>
@@ -991,57 +1006,102 @@ function QuantumApothecaryInner() {
                         {Math.round((scanResult.activeSubNadis / 350000) * 100)}% subtle body activated
                       </p>
                       <div style={{ marginTop: 8, height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${Math.min(100, (scanResult.activeSubNadis / 350000) * 100)}%`, background: 'linear-gradient(90deg,#D4AF37,#fbbf24)', borderRadius: 2, boxShadow: '0 0 8px rgba(212,175,55,0.35)' }} />
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.min(100, (scanResult.activeSubNadis / 350000) * 100)}%` }}
+                          transition={{ duration: 1, ease: 'easeOut', delay: 0.5 }}
+                          style={{ height: '100%', background: 'linear-gradient(90deg,#D4AF37,#fbbf24)', borderRadius: 2, boxShadow: '0 0 8px rgba(212,175,55,0.35)' }}
+                        />
                       </div>
                     </div>
                   )}
+
+                  {/* Primary Blockage */}
                   {scanResult.blockagePercentage != null && scanResult.blockagePercentage > 0 && (
                     <div className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]">
                       <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mb-1">Primary Blockage</p>
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-sm font-black tracking-tight text-white/90 truncate">{scanResult.blockages[0]}</p>
-                        <p className="text-sm font-black text-white/70 shrink-0">{scanResult.blockagePercentage}%</p>
+                        <p className="text-sm font-black text-[#D4AF37] shrink-0">{scanResult.blockagePercentage}%</p>
                       </div>
                       <div style={{ marginTop: 8, height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${scanResult.blockagePercentage}%`, background: 'linear-gradient(90deg,#D4AF37,#fbbf24)', borderRadius: 2 }} />
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${scanResult.blockagePercentage}%` }}
+                          transition={{ duration: 0.8, ease: 'easeOut', delay: 0.6 }}
+                          style={{ height: '100%', background: 'linear-gradient(90deg,#D4AF37,#fbbf24)', borderRadius: 2 }}
+                        />
                       </div>
                     </div>
                   )}
+
+                  {/* Dosha + Alignment grid */}
                   <div className="grid grid-cols-2 gap-3">
                     {[
                       { label: 'Dosha', value: scanResult.dominantDosha },
                       { label: 'Alignment', value: scanResult.planetaryAlignment },
                     ].map(item => (
-                      <div key={item.label} className="rounded-2xl p-3 bg-white/[0.02] border border-white/[0.05]">
+                      <motion.div
+                        key={item.label}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: 0.7 }}
+                        className="rounded-2xl p-3 bg-white/[0.02] border border-white/[0.05]"
+                      >
                         <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30">{item.label}</p>
                         <p className="text-sm font-black tracking-tight mt-1 text-white/90">{item.value}</p>
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
-                  <div className="rounded-2xl p-4 border border-emerald-500/25 bg-emerald-950/20">
+
+                  {/* Herb of Today */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.8 }}
+                    className="rounded-2xl p-4 border border-emerald-500/25 bg-emerald-950/20"
+                  >
                     <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-emerald-400/70 mb-1.5">Herb of Today</p>
                     <p className="text-sm font-bold text-white/90">{scanResult.herbOfToday}</p>
-                  </div>
-                  <div className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]">
-                    <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-white/30 mb-3">Siddha Remedies (5)</p>
+                  </motion.div>
+
+                  {/* Siddha Remedies */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.9 }}
+                    className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]"
+                  >
+                    <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-white/30 mb-3">Siddha Remedies ({scanResult.remedies.length})</p>
                     <div className="flex flex-wrap gap-1.5">
                       {scanResult.remedies.map((r, i) => (
-                        <span key={i} className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37]">{r}</span>
+                        <motion.span
+                          key={i}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.3, delay: 1 + i * 0.08 }}
+                          className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37]"
+                        >
+                          {r}
+                        </motion.span>
                       ))}
                     </div>
-                  </div>
-                  <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/25 text-center pt-1">Get a fresh reading</p>
-                  <button type="button" onClick={() => runNadiScan('environment')} disabled={isScanning}
-                    className="sqi-btn-primary w-full py-3 text-[10px] disabled:opacity-35">
-                    New scan · rear camera
-                  </button>
-                  <div className="flex gap-3">
-                    <button type="button" onClick={applyRemedies} className="sqi-btn-primary flex-1 py-3 text-xs">Apply Remedies</button>
+                  </motion.div>
+
+                  {/* Actions */}
+                  <div className="space-y-2.5 pt-2">
+                    <button type="button" onClick={applyRemedies} className="sqi-btn-primary w-full py-3 text-xs">
+                      Apply Remedies · Scalar Lock
+                    </button>
+                    <button type="button" onClick={() => runNadiScan('environment')} disabled={isScanning}
+                      className="w-full py-3 text-[10px] font-bold uppercase tracking-[0.2em] rounded-xl border border-white/10 bg-white/[0.03] text-white/50 hover:text-white/80 hover:border-white/20 transition-all disabled:opacity-35">
+                      Rescan · Rear Camera
+                    </button>
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-8 space-y-5">
-                  {/* Error — no hand detected */}
+                <div className="text-center space-y-5">
+                  {/* Error */}
                   {scanError && (
                     <div className="rounded-2xl p-4 border border-red-500/30 bg-red-950/20 mb-3">
                       <p className="text-[12px] font-bold text-red-400 leading-relaxed">{scanError}</p>
@@ -1053,47 +1113,87 @@ function QuantumApothecaryInner() {
                     <div className="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center">
                       <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover absolute inset-0" />
                       <div className="absolute inset-0 flex flex-col items-center justify-between p-6 pointer-events-none">
-                        {/* Top badge */}
                         <div className="flex items-center gap-2 bg-black/70 rounded-full px-4 py-2 mt-[env(safe-area-inset-top)]">
                           <div className="w-2 h-2 rounded-full bg-[#D4AF37] animate-ping" style={{ boxShadow: '0 0 6px rgba(212,175,55,0.8)' }} />
                           <span className="text-xs font-bold uppercase tracking-[0.3em] text-[#D4AF37]">
                             {scanPhase === 'camera' ? 'Rear cam · frame your palm…' : 'Reading your biofield…'}
                           </span>
                         </div>
-                        {/* Center guide box */}
                         <div className="border-2 border-dashed border-[#D4AF37]/50 rounded-2xl w-48 h-32 flex items-center justify-center">
                           <span className="text-sm font-bold text-[#D4AF37]/60 uppercase tracking-widest text-center leading-relaxed">
                             {scanPhase === 'camera' ? <>Aim camera<br />at palm</> : <>Analyzing<br/>biofield…</>}
                           </span>
                         </div>
-                        {/* BPM */}
                         <div className="flex items-center gap-2 bg-black/70 rounded-full px-4 py-2 mb-[env(safe-area-inset-bottom)]">
                           <Activity size={14} className="text-[#D4AF37]" />
-                          <span className="text-sm font-black text-[#D4AF37]">{heartRate} BPM</span>
+                          <span className="text-sm font-black text-[#D4AF37]">Scanning…</span>
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <div className="space-y-3 py-4">
-                      <Globe size={32} className="mx-auto text-white/10" />
-                      <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/25">Awaiting Handshake</p>
-                      <p className="text-[9px] text-white/20 text-center px-2">
-                        {nadiScanFacing === 'user'
-                          ? 'Front camera: hold your palm toward the screen.'
-                          : 'Rear camera: point the phone at your palm.'}
-                      </p>
+                    /* Sacred empty state */
+                    <div className="py-6 space-y-5">
+                      {/* Sacred geometry animation */}
+                      <div className="relative mx-auto" style={{ width: 120, height: 120 }}>
+                        {/* Outer ring */}
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                          style={{ position: 'absolute', inset: 0, border: '1px solid rgba(212,175,55,0.2)', borderRadius: '50%' }}
+                        />
+                        {/* Middle ring */}
+                        <motion.div
+                          animate={{ rotate: -360 }}
+                          transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
+                          style={{ position: 'absolute', inset: 12, border: '1px solid rgba(212,175,55,0.15)', borderRadius: '50%' }}
+                        />
+                        {/* Inner ring */}
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
+                          style={{ position: 'absolute', inset: 24, border: '1px dashed rgba(212,175,55,0.25)', borderRadius: '50%' }}
+                        />
+                        {/* Center glow */}
+                        <motion.div
+                          animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0.8, 0.4] }}
+                          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                          style={{ position: 'absolute', inset: 40, background: 'radial-gradient(circle, rgba(212,175,55,0.4) 0%, transparent 70%)', borderRadius: '50%' }}
+                        />
+                        {/* Core dot */}
+                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 8, height: 8, background: '#D4AF37', borderRadius: '50%', boxShadow: '0 0 20px rgba(212,175,55,0.6), 0 0 40px rgba(212,175,55,0.3)' }} />
+                        {/* Orbiting dots */}
+                        {[0, 60, 120, 180, 240, 300].map((deg, i) => (
+                          <motion.div
+                            key={i}
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 12, repeat: Infinity, ease: 'linear', delay: i * 0.4 }}
+                            style={{ position: 'absolute', inset: 0, transformOrigin: 'center' }}
+                          >
+                            <div style={{ position: 'absolute', top: 0, left: '50%', transform: `translateX(-50%) rotate(${deg}deg)`, width: 4, height: 4, background: '#D4AF37', borderRadius: '50%', opacity: 0.4, boxShadow: '0 0 6px rgba(212,175,55,0.5)' }} />
+                          </motion.div>
+                        ))}
+                      </div>
+
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#D4AF37]/60">72,000 Channels Monitoring</p>
+                        <p className="text-[9px] text-white/20 mt-1">Awaiting biofield handshake · Rear camera</p>
+                      </div>
                     </div>
                   )}
 
-                  {/* Scan button — disabled while scanning/analyzing */}
+                  {/* Scan button */}
                   <button type="button" onClick={() => runNadiScan('environment')}
                     disabled={scanPhase === 'camera' || scanPhase === 'analyzing'}
-                    className="sqi-btn-primary w-full py-3.5 text-xs disabled:opacity-40">
+                    style={{
+                      background: (scanPhase === 'camera' || scanPhase === 'analyzing') ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg, #D4AF37, #B8940A)',
+                      boxShadow: (scanPhase === 'camera' || scanPhase === 'analyzing') ? 'none' : '0 0 20px rgba(212,175,55,0.3), 0 0 40px rgba(212,175,55,0.1)',
+                    }}
+                    className="w-full py-3.5 text-xs font-black uppercase tracking-[0.2em] rounded-xl border-0 text-black disabled:text-white/40 disabled:opacity-60 transition-all">
                     {scanPhase === 'camera'
-                      ? `Scanning… ${heartRate}bpm`
+                      ? 'Scanning…'
                       : scanPhase === 'analyzing'
                       ? 'Analyzing Biofield…'
-                      : 'Start Nadi scan · rear camera'}
+                      : '◈  Initiate Nadi Scan'}
                   </button>
                 </div>
               )}
