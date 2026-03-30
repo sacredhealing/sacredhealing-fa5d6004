@@ -777,35 +777,35 @@ function QuantumApothecaryInner() {
   const renderChatPanel = () => (
     <div className="glass-card overflow-hidden flex flex-col" style={{ minHeight: '70vh', background: '#050505', border: 'none' }}>
       {/* Chat Header */}
-      <div className="px-5 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="px-3 sm:px-5 py-3 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           {isChatFullscreen && (
-            <button type="button" onClick={() => setIsChatFullscreen(false)} className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition">
+            <button type="button" onClick={() => setIsChatFullscreen(false)} className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition shrink-0">
               <X size={14} className="text-white/80" />
             </button>
           )}
-          <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#D4AF37] to-[#B8940A] flex items-center justify-center shadow-lg" style={{ boxShadow: '0 0 20px rgba(212,175,55,0.3)' }}>
-            <MessageSquare size={14} className="text-black" />
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl bg-gradient-to-br from-[#D4AF37] to-[#B8940A] flex items-center justify-center shadow-lg shrink-0" style={{ boxShadow: '0 0 20px rgba(212,175,55,0.3)' }}>
+            <MessageSquare size={13} className="text-black" />
           </div>
-          <div>
-            <p className="text-xs font-black tracking-[-0.03em] text-[#D4AF37]">{t('quantumApothecary.chat.sqiOnline')}</p>
+          <div className="min-w-0">
+            <p className="text-[11px] sm:text-xs font-black tracking-[-0.03em] text-[#D4AF37] truncate">{t('quantumApothecary.chat.sqiOnline')}</p>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" style={{ boxShadow: '0 0 6px #34d399' }} />
-              <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-[#D4AF37]/50">{t('quantumApothecary.chat.neuralSync')}</span>
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" style={{ boxShadow: '0 0 6px #34d399' }} />
+              <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.2em] sm:tracking-[0.3em] text-[#D4AF37]/50 truncate">{t('quantumApothecary.chat.neuralSync')}</span>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <button type="button" onClick={startFreshApothecaryChat} disabled={isTyping}
             title="Clear this chat and start a new thread"
-            className="p-2 rounded-xl bg-white/[0.03] border border-white/[0.08] text-white/50 hover:text-[#D4AF37] hover:border-[#D4AF37]/25 transition disabled:opacity-30">
+            className="p-1.5 sm:p-2 rounded-xl bg-white/[0.03] border border-white/[0.08] text-white/50 hover:text-[#D4AF37] hover:border-[#D4AF37]/25 transition disabled:opacity-30">
             <Plus size={14} />
           </button>
           <button type="button" onClick={() => setSessionsOpen(true)}
-            className="px-3 py-1.5 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[9px] font-bold uppercase tracking-[0.25em] text-[#D4AF37] hover:bg-[#D4AF37]/20 transition">
+            className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.25em] text-[#D4AF37] hover:bg-[#D4AF37]/20 transition whitespace-nowrap">
             History
           </button>
-          <Cpu size={14} className="text-[#D4AF37]/30" />
+          <Cpu size={14} className="text-[#D4AF37]/30 hidden sm:block" />
         </div>
       </div>
 
