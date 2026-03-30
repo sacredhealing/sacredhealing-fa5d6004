@@ -351,7 +351,7 @@ function MotionNadiScanner({ intensity }: { intensity: number }) {
   }, []);
 
   const startScan = useCallback(async () => {
-    const win = window as Record<string, unknown>;
+    const win = window as unknown as Record<string, unknown>;
     if (!('DeviceMotionEvent' in win)) {
       setMotionState('unavailable');
       return;

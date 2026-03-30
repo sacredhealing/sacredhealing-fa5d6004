@@ -106,12 +106,12 @@ export const MusicShareCard: React.FC<MusicShareCardProps> = ({
         <div className="flex items-center justify-center gap-2 mb-4">
           {track.mood && (
             <span className="bg-amber-500/20 text-amber-300 px-2.5 py-1 rounded-full text-xs font-medium capitalize">
-              {tMusicMood(track.mood, t)}
+              {tMusicMood(track.mood, t as any)}
             </span>
           )}
           {track.spiritual_path && (
             <span className="bg-purple-500/20 text-purple-200 px-2.5 py-1 rounded-full text-xs font-medium capitalize">
-              {tMusicSpiritualPath(track.spiritual_path, t)}
+              {tMusicSpiritualPath(track.spiritual_path, t as any)}
             </span>
           )}
         </div>

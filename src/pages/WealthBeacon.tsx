@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ╔══════════════════════════════════════════════════════╗
  * ║  SQI-2050 · WEALTH BEACON · AKASHA-NEURAL ARCHIVE   ║

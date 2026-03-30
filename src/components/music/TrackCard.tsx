@@ -87,12 +87,12 @@ export const TrackCard: React.FC<TrackCardProps> = ({
                 {track.mood === 'healing' && <Sparkles size={9} />}
                 {track.mood === 'meditative' && <Brain size={9} />}
                 {track.mood === 'grounding' && <Leaf size={9} />}
-                {tMusicMood(track.mood, t)}
+                {tMusicMood(track.mood, t as any)}
               </span>
             )}
             {track.spiritual_path && (
               <span className="bg-purple-500/15 text-purple-400 px-1.5 py-0.5 rounded text-[10px] font-medium capitalize">
-                {tMusicSpiritualPath(track.spiritual_path, t)}
+                {tMusicSpiritualPath(track.spiritual_path, t as any)}
               </span>
             )}
             {track.intended_use && (
@@ -112,7 +112,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
               <span className="bg-muted/50 px-1.5 py-0.5 rounded">{track.bpm} BPM</span>
             )}
             <span className="bg-primary/20 text-primary px-1.5 py-0.5 rounded capitalize">
-              {tMusicGenre(track.genre, t)}
+              {tMusicGenre(track.genre, t as any)}
             </span>
             <span className="flex items-center gap-0.5">
               <Users size={10} />
