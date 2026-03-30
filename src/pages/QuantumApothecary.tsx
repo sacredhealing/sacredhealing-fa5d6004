@@ -156,14 +156,7 @@ function QuantumApothecaryInner() {
       });
   }, [user?.id, user?.email]);
 
-  const [scanResult, setScanResult] = useState<NadiScanResult | null>(() => {
-    try {
-      const s = localStorage.getItem('sqi_scan_result');
-      return s ? (JSON.parse(s) as NadiScanResult) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [scanResult, setScanResult] = useState<NadiScanResult | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [selectedActivations, setSelectedActivations] = useState<Activation[]>([]);
   const [activeTransmissions, setActiveTransmissions] = useState<Activation[]>(() => {
