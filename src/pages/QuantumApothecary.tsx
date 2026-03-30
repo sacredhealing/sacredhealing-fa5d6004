@@ -1026,6 +1026,20 @@ function QuantumApothecaryInner() {
           )}
           <div ref={chatEndRef} />
         </div>
+        {/* Scroll-to-top button */}
+        <div className="sticky bottom-2 flex justify-center py-2 pointer-events-none">
+          <button
+            type="button"
+            onClick={() => {
+              const container = chatEndRef.current?.parentElement?.parentElement;
+              container?.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="pointer-events-auto p-2 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 hover:bg-[#D4AF37]/25 transition"
+            title="Scroll to top"
+          >
+            <ChevronUp size={16} className="text-[#D4AF37]" />
+          </button>
+        </div>
       </div>
 
       {/* Chat Input */}
