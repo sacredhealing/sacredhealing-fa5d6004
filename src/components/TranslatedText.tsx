@@ -3,7 +3,7 @@ import { useTranslatedText } from '@/hooks/useTranslateContent';
 interface TranslatedTextProps {
   children: string;
   className?: string;
-  as?: keyof JSX.IntrinsicElements;
+  as?: React.ElementType;
 }
 
 export const TranslatedText = ({ children, className, as: Component = 'span' }: TranslatedTextProps) => {

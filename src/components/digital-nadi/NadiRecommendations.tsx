@@ -67,7 +67,7 @@ function getDoshaConfig(dosha: Dosha, stress: number, _bpm: number | null) {
     healingCategories?: string[];
     musicMoods?: string[];
     musicEnergyLevels?: string[];
-    musicBestTime: string;
+    musicBestTime?: string;
     sectionLabel: string;
     sectionReason: string;
     color: string;
