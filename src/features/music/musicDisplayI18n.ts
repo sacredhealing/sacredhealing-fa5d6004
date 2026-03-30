@@ -41,7 +41,7 @@ export function tMusicMood(mood: string, t: TFn): string {
   return mood.charAt(0).toUpperCase() + mood.slice(1);
 }
 
-export function tMusicSpiritualPath(path: string, t: TFunction): string {
+export function tMusicSpiritualPath(path: string, t: TFn): string {
   const key = PATH_KEYS[path];
   if (key) return t(key);
   return path
