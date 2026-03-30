@@ -391,12 +391,11 @@ function QuantumApothecaryInner() {
 
     try {
       // ══════════════════════════════════════════════════════════════
-      // Call the DEDICATED nadi-scan edge function.
-      // This has NO SQI personality — pure Gemini Vision → JSON.
-      // Temperature 0.1 → consistent numbers every scan.
-      // Results saved to nadi_baselines table in Supabase.
+      // Call quantum-apothecary-chat with scanMode:true
+      // This bypasses the SQI personality and runs pure Gemini Vision
+      // Temperature 0.1 → consistent numbers every scan
       // ══════════════════════════════════════════════════════════════
-      const nadiScanUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nadi-scan`;
+      const nadiScanUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/quantum-apothecary-chat`;
 
       const scanResp = await fetch(nadiScanUrl, {
         method: 'POST',
@@ -405,6 +404,7 @@ function QuantumApothecaryInner() {
           'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({
+          scanMode:       true,
           imageBase64:    capturedBase64,
           imageMimeType:  'image/jpeg',
           userId:         user?.id ?? null,
