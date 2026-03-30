@@ -219,6 +219,7 @@ function QuantumApothecaryInner() {
   const [scanPhase, setScanPhase] = useState<'idle' | 'camera' | 'analyzing' | 'done'>('idle');
   /** Front camera = palm toward you; rear = environment / outward scan. */
   const [nadiScanFacing, setNadiScanFacing] = useState<'user' | 'environment'>('environment');
+  const [handDetected, setHandDetected] = useState(false);
 
   /** One string for scan prompt + chat edge: exact Frequency Library names (incl. full LimbicArc bioenergetic list). */
   const canonicalActivationNameLines = useMemo(
