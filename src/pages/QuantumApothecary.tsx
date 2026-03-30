@@ -410,42 +410,67 @@ function QuantumApothecaryInner() {
     return out.slice(0, 5);
   };
 
-  // Restore last baseline from DB when this device has no local scan yet
+  // Helper: parse a nadi_baselines row into NadiScanResult
+  const parseBaselineRow = useCallback((row: Record<string, unknown>): NadiScanResult => {
+    const rawDosha = String(row.dominant_dosha || 'Vata');
+    const dominantDosha: NadiScanResult['dominantDosha'] =
+      rawDosha === 'Pitta' || rawDosha === 'Kapha' || rawDosha === 'Vata' ? rawDosha : 'Vata';
+    const remedies = pickCanonicalRemedies(row.remedies);
+    return {
+      dominantDosha,
+      blockages: [String(row.primary_blockage || 'Heart/Anahata Nadi')],
+      planetaryAlignment: String(row.planetary_align || ''),
+      herbOfToday: String(row.herb_of_today || ''),
+      timestamp: String(row.scanned_at || new Date().toISOString()),
+      activeNadis: Number(row.active_nadis) || 0,
+      totalNadis: 72000,
+      activeSubNadis: Number(row.active_sub_nadis) || 0,
+      blockagePercentage: Number(row.blockage_pct) || 0,
+      remedies,
+    };
+  }, []);
+
+  // Always load latest baseline from DB on mount
   useEffect(() => {
     if (!user?.id) return;
     let cancelled = false;
     (async () => {
       try {
-        if (localStorage.getItem('sqi_scan_result')) return;
         const { data, error } = await supabase
           .from('nadi_baselines')
           .select('*')
           .eq('user_id', user.id)
           .maybeSingle();
         if (cancelled || error || !data) return;
-        const row = data as Record<string, unknown>;
-        const rawDosha = String(row.dominant_dosha || 'Vata');
-        const dominantDosha: NadiScanResult['dominantDosha'] =
-          rawDosha === 'Pitta' || rawDosha === 'Kapha' || rawDosha === 'Vata' ? rawDosha : 'Vata';
-        const remedies = pickCanonicalRemedies(row.remedies);
-        const result: NadiScanResult = {
-          dominantDosha,
-          blockages: [String(row.primary_blockage || 'Heart/Anahata Nadi')],
-          planetaryAlignment: String(row.planetary_align || ''),
-          herbOfToday: String(row.herb_of_today || ''),
-          timestamp: String(row.scanned_at || new Date().toISOString()),
-          activeNadis: Number(row.active_nadis) || 0,
-          totalNadis: 72000,
-          activeSubNadis: Number(row.active_sub_nadis) || 0,
-          blockagePercentage: Number(row.blockage_pct) || 0,
-          remedies,
-        };
+        const result = parseBaselineRow(data as Record<string, unknown>);
         setScanResult(result);
-        (window as unknown as { __sqiLastScan?: NadiScanResult }).__sqiLastScan = result as NadiScanResult;
+        localStorage.setItem('sqi_scan_result', JSON.stringify(result));
+        (window as unknown as { __sqiLastScan?: NadiScanResult }).__sqiLastScan = result;
       } catch { /* ignore */ }
     })();
     return () => { cancelled = true; };
-  }, [user?.id]);
+  }, [user?.id, parseBaselineRow]);
+
+  // Realtime: update Nadi screen live after each scan
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase
+      .channel('nadi-baselines-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'nadi_baselines', filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          const row = (payload.new || {}) as Record<string, unknown>;
+          if (!row.active_nadis) return;
+          const result = parseBaselineRow(row);
+          setScanResult(result);
+          localStorage.setItem('sqi_scan_result', JSON.stringify(result));
+          (window as unknown as { __sqiLastScan?: NadiScanResult }).__sqiLastScan = result;
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user?.id, parseBaselineRow]);
 
   const runNadiScan = async (overrideFacing?: 'user' | 'environment') => {
     if (isScanning) return;
