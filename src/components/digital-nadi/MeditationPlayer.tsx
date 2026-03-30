@@ -1,53 +1,46 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Pause, SkipForward, Volume2, Sparkles } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface MeditationPlayerProps {
   bpm: number | null;
   hrv: number | null;
 }
 
-const MANTRAS = [
-  {
-    title: 'The Silent Witness',
-    subtitle: 'Grounding & Presence',
-    lyrics: [
-      'I am not the body.',
-      'I am not even the mind.',
-      'I am the silent witness of all that arises.',
-      'Peace is my natural state.',
-    ],
-    color: 'from-stone-900 to-orange-950',
-  },
-  {
-    title: 'Ocean of Calm',
-    subtitle: 'Stress Release',
-    lyrics: [
-      'Every breath is a wave.',
-      'The ocean is deep and still.',
-      'The surface may ripple,',
-      'But the depths remain untouched.',
-    ],
-    color: 'from-blue-900 to-emerald-950',
-  },
-];
+const TRACK_COLORS = [
+  'from-stone-900 to-orange-950',
+  'from-blue-900 to-emerald-950',
+] as const;
 
-export const MeditationPlayer: React.FC<MeditationPlayerProps> = ({ bpm, hrv }) => {
+const LYRIC_COUNT = 4;
+const TRACK_COUNT = 2;
+
+export const MeditationPlayer: React.FC<MeditationPlayerProps> = ({ bpm, hrv: _hrv }) => {
+  const { t } = useTranslation();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentMantraIdx, setCurrentMantraIdx] = useState(0);
   const [currentLineIdx, setCurrentLineIdx] = useState(0);
 
-  const mantra = MANTRAS[currentMantraIdx];
+  const lyrics = useMemo(() => {
+    return Array.from({ length: LYRIC_COUNT }, (_, i) =>
+      t(`digitalNadi.meditationPlayer.track${currentMantraIdx}.line${i}`)
+    );
+  }, [currentMantraIdx, t]);
+
+  const title = t(`digitalNadi.meditationPlayer.track${currentMantraIdx}.title`);
+  const subtitle = t(`digitalNadi.meditationPlayer.track${currentMantraIdx}.subtitle`);
+  const colorClass = TRACK_COLORS[currentMantraIdx] ?? TRACK_COLORS[0];
 
   useEffect(() => {
     if (!isPlaying) return;
 
     const interval = setInterval(() => {
-      setCurrentLineIdx(prev => (prev + 1) % mantra.lyrics.length);
+      setCurrentLineIdx(prev => (prev + 1) % lyrics.length);
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [isPlaying, mantra.lyrics.length]);
+  }, [isPlaying, lyrics.length]);
 
   useEffect(() => {
     if (bpm && bpm > 90 && currentMantraIdx !== 1) {
@@ -61,7 +54,7 @@ export const MeditationPlayer: React.FC<MeditationPlayerProps> = ({ bpm, hrv }) 
 
   return (
     <div
-      className={`flex flex-col p-8 rounded-[32px] border border-white/10 overflow-hidden relative min-h-[400px] transition-all duration-1000 bg-gradient-to-br ${mantra.color}`}
+      className={`flex flex-col p-8 rounded-[32px] border border-white/10 overflow-hidden relative min-h-[400px] transition-all duration-1000 bg-gradient-to-br ${colorClass}`}
     >
       <div className="absolute inset-0 opacity-20 pointer-events-none">
         <div
@@ -75,9 +68,11 @@ export const MeditationPlayer: React.FC<MeditationPlayerProps> = ({ bpm, hrv }) 
       <div className="relative z-10 flex flex-col h-full">
         <div className="flex justify-between items-start mb-12">
           <div>
-            <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 mb-1 block">Current Session</span>
-            <h2 className="text-3xl font-serif italic text-white">{mantra.title}</h2>
-            <p className="text-sm text-white/40 font-light">{mantra.subtitle}</p>
+            <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 mb-1 block">
+              {t('digitalNadi.meditationPlayer.currentSession')}
+            </span>
+            <h2 className="text-3xl font-serif italic text-white">{title}</h2>
+            <p className="text-sm text-white/40 font-light">{subtitle}</p>
           </div>
           <div className="p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/10">
             <Sparkles size={20} className="text-[#FF6B4A]" />
@@ -94,12 +89,12 @@ export const MeditationPlayer: React.FC<MeditationPlayerProps> = ({ bpm, hrv }) 
               transition={{ duration: 1.5, ease: 'easeOut' }}
               className="text-2xl font-serif italic text-white/90 leading-relaxed max-w-xs"
             >
-              {mantra.lyrics[currentLineIdx]}
+              {lyrics[currentLineIdx]}
             </motion.p>
           </AnimatePresence>
 
           <div className="flex gap-1">
-            {mantra.lyrics.map((_, i) => (
+            {lyrics.map((_, i) => (
               <div
                 key={i}
                 className={`h-0.5 transition-all duration-1000 ${i === currentLineIdx ? 'w-8 bg-white' : 'w-2 bg-white/20'}`}
@@ -119,7 +114,7 @@ export const MeditationPlayer: React.FC<MeditationPlayerProps> = ({ bpm, hrv }) 
               </button>
               <button
                 onClick={() => {
-                  setCurrentMantraIdx(i => (i + 1) % MANTRAS.length);
+                  setCurrentMantraIdx(i => (i + 1) % TRACK_COUNT);
                   setCurrentLineIdx(0);
                 }}
                 className="text-white/40 hover:text-white transition-colors"
@@ -139,7 +134,7 @@ export const MeditationPlayer: React.FC<MeditationPlayerProps> = ({ bpm, hrv }) 
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/20 border border-white/5 self-start">
               <div className="w-2 h-2 rounded-full bg-[#FF6B4A] animate-pulse" />
               <span className="text-[10px] uppercase tracking-widest text-white/60">
-                Resonating with your Nadi: {bpm} BPM
+                {t('digitalNadi.meditationPlayer.resonatingNadi', { bpm })}
               </span>
             </div>
           )}

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Play, Pause, Heart, Share2, Clock, Users, Music2, Sparkles, Moon, Zap, Leaf, Brain, Quote, Sun, Sunset, CloudMoon } from 'lucide-react';
@@ -160,16 +159,16 @@ const TrackDetail: React.FC = () => {
           {track.mood && (
             <span className="inline-flex items-center gap-1 bg-amber-500/15 text-amber-400 px-3 py-1.5 rounded-full text-sm font-medium">
               {getMoodIcon(track.mood)}
-              {tMusicMood(track.mood, t)}
+              {tMusicMood(track.mood, t as any)}
             </span>
           )}
           {track.spiritual_path && (
             <span className="bg-purple-500/15 text-purple-400 px-3 py-1.5 rounded-full text-sm font-medium capitalize">
-              {tMusicSpiritualPath(track.spiritual_path, t)}
+              {tMusicSpiritualPath(track.spiritual_path, t as any)}
             </span>
           )}
           <span className="bg-primary/20 text-primary px-3 py-1.5 rounded-full text-sm font-medium capitalize">
-            {tMusicGenre(track.genre, t)}
+            {tMusicGenre(track.genre, t as any)}
           </span>
         </div>
 
@@ -258,7 +257,7 @@ const TrackDetail: React.FC = () => {
                     {t('music.trackDetail.bestTime', 'Best Time')}
                   </p>
                   <p className="text-sm font-medium capitalize">
-                    {tMusicTimeOfDay(track.best_time_of_day, t)}
+                    {tMusicTimeOfDay(track.best_time_of_day, t as any)}
                   </p>
                 </div>
               </div>
@@ -271,7 +270,7 @@ const TrackDetail: React.FC = () => {
                     {t('music.trackDetail.energy', 'Energy')}
                   </p>
                   <p className="text-sm font-medium capitalize">
-                    {tMusicEnergyLevel(track.energy_level, t)}
+                    {tMusicEnergyLevel(track.energy_level, t as any)}
                   </p>
                 </div>
               </div>

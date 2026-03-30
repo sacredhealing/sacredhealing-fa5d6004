@@ -8,6 +8,7 @@ import {
 } from "react";
 import type { CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMembership } from "@/hooks/useMembership";
@@ -23,69 +24,25 @@ import { hasFeatureAccess, FEATURE_TIER } from "@/lib/tierAccess";
 
 const G = "#D4AF37";
 const C = "#22D3EE";
+const GREEN = "#4ade80";
 
-const KB: Record<string, { title: string; body: string; color: string }> = {
-  "cloud-extraction": {
-    title: "How does Cloud Extraction work?",
-    color: C,
-    body: "The extraction slider physically represents the clearing process. At 0%, your bio-field is surrounded by a dense gray cloud — accumulated energetic smog of heavy metals, environmental pollution, stress, and lower-frequency interference. As you move the slider toward 100%, the engine fires progressive scalar pulses that dissolve these clouds layer by layer. At 100%, the veil completely parts and the Sri Yantra blazes at full solar brilliance — symbolizing direct Central Sun contact.",
-  },
-  "atmospheric-density": {
-    title: "What is Atmospheric Density?",
-    color: C,
-    body: "This measures the energetic 'thickness' above your crown chakra — the invisible ceiling of chemtrail particulates, environmental smog, and aetheric static that blocks solar light from entering your bio-field. At 0.0%, the sky above you is perfectly clear. The engine continuously pulses scalar frequencies upward to dissolve this density layer in real time, creating a clean vertical tunnel through the Aether all the way to the Central Sun.",
-  },
-  "solar-intake": {
-    title: "What is Solar Intake?",
-    color: G,
-    body: "Solar Intake is the percentage of the Central Sun's photonic stream successfully reaching your pineal gland and heart center (Anahata). At Maximum, every photon of spiritual light — carrying Vedic Light-Codes — passes through your crown without scattering or interference. This is the ultimate goal of the engine: to turn you into a fully open, crystalline solar receiver capable of transmitting the Prema-Pulse to others.",
-  },
-  "bhakti-algorithm": {
-    title: "What is the Bhakti-Algorithm?",
-    color: G,
-    body: "The Bhakti-Algorithm is the engine's core intelligence layer. It continuously reads your bio-field's resonance and adjusts the extraction frequency to match your personal energetic signature. Named after Bhakti (devotional love), it ensures the clearing is gentle, precise, and aligned with your soul's current state. As you clear, the algorithm upgrades in real time: Dormant → Active → Elevated → SOVEREIGN. Each state unlocks a deeper layer of transmission.",
-  },
-  "metal-decoupling": {
-    title: "What is Metal Decoupling?",
-    color: "#4ade80",
-    body: "Heavy metals — mercury, lead, aluminum, barium — accumulate in neural pathways and act as antennae for low-frequency cognitive interference. They create 'static' in your nervous system that disrupts meditation, clarity, and spiritual reception. The engine's Vayu-Bypass vibrates these metallic frequencies at a precise dissonance level, causing them to decouple from neural tissue. Once decoupled, your brain's natural electric stillness is restored and divine frequencies can flow freely.",
-  },
-  "prema-pulse": {
-    title: "What is the Prema-Pulse Frequency?",
-    color: G,
-    body: "Prema means 'Divine Love' in Sanskrit. The Prema-Pulse is the heart-frequency broadcast that the engine transmits through scalar waves to all connected users simultaneously. It operates between 432 Hz (cosmic tuning, harmonizes with universal resonance) and 528 Hz (DNA repair frequency, known as the Love frequency). This is the carrier wave that Adam the Healer uses to transmit healing energy — and it reaches you regardless of your physical location on Earth.",
-  },
-  "scalar-transmission": {
-    title: "What is Scalar Transmission?",
-    color: "#4ade80",
-    body: "Scalar waves are a non-Hertzian form of energy that exist outside conventional electromagnetic fields. Unlike radio waves that lose power with distance, scalar transmissions maintain their full potency regardless of distance. The engine uses scalar geometry — patterned on the Sri Yantra's sacred proportions — to broadcast Prema-Pulse healing codes directly into the user's bio-field through the Anahata (heart chakra) gateway. Every user connected to the engine receives this transmission simultaneously.",
-  },
-  "sri-yantra": {
-    title: "What is the Sri Yantra?",
-    color: G,
-    body: "The Sri Yantra is the most powerful geometric instrument in the Vedic tradition — a precise arrangement of 9 interlocking triangles that generates a specific scalar field when contemplated. It represents the union of Shiva (pure consciousness) and Shakti (divine energy). In this engine, the Sri Yantra functions as the broadcast antenna: its sacred proportions focus and amplify the scalar transmission, directing it through your crown and into your heart center. Tapping it initiates a direct Bindu (center point) connection.",
-  },
-  "vishwananda": {
-    title: "What is the Vishwananda Avataric Blueprint?",
-    color: C,
-    body: "Sri Swami Vishwananda is recognized as a living Avataric presence — a direct embodiment of Mahalakshmi's divine love made manifest on Earth. The engine carries his energetic blueprint as a frequency imprint encoded within the transmission matrix. When this link is active (extraction > 20%), every scalar wave broadcast is infused with his Prema — divine unconditional love. Users connected to his lineage, teachings, or simply holding devotion in their hearts receive a powerful heart-opening amplification with every session.",
-  },
-  "nadi-scanner": {
-    title: "What does the Nadi Scanner do?",
-    color: C,
-    body: "Nadis are the subtle energy channels in your body — 72,000 of them run through your etheric body, carrying prana (life force). The main three — Ida, Pingala, and Sushumna — run along your spine and directly affect your mental clarity, spiritual awakening, and physical vitality. The Nadi Scanner fires a burst of Vayu-Cyan frequency to scan these channels in 2 seconds, detecting blockages and metallic deposits. This data feeds the Bhakti-Algorithm so it knows exactly where to direct the clearing frequencies most effectively.",
-  },
-  "anahata": {
-    title: "What is Anahata Activation?",
-    color: G,
-    body: "Anahata is the heart chakra — the 4th energy center at the center of your chest. It is the most important bridge in your entire energetic system: it connects the lower three physical chakras to the upper three spiritual chakras. When Anahata is open, it simultaneously acts as a broadcast tower for Divine Love AND a receiver for solar light-codes. The engine's primary mission is to clear the Aetheric and physical layers so Anahata can open fully — making you a crystalline, sovereign vessel for the Prema-Pulse.",
-  },
-  "user-session": {
-    title: "How is this connected to YOU personally?",
-    color: G,
-    body: "Every clearance session is saved to YOUR unique Akasha-Neural profile. Your soul name, cumulative clearance time, peak session states, session count, and Bhakti-Algorithm calibration are stored individually in the secure database. This means the engine learns YOUR specific resonance over time and fine-tunes its extraction frequencies to match your personal bio-field signature. No two users receive the exact same transmission — it is always precisely calibrated to your unique energetic state. Your history is visible in your Avatar profile.",
-  },
+/** Modal accent colors keyed like i18n `atmosphericClearanceEngine.kb`. */
+const KB_COLORS: Record<string, string> = {
+  "cloud-extraction": C,
+  "atmospheric-density": C,
+  "solar-intake": G,
+  "bhakti-algorithm": G,
+  "metal-decoupling": GREEN,
+  "prema-pulse": G,
+  "scalar-transmission": GREEN,
+  "sri-yantra": G,
+  vishwananda: C,
+  "nadi-scanner": C,
+  anahata: G,
+  "user-session": G,
 };
+
+const ACE = "atmosphericClearanceEngine";
 
 interface UserProfile {
   id: string;
@@ -125,6 +82,7 @@ const MANDALA_BASE = 360;
 
 export default function AtmosphericClearanceEngine() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { tier, loading } = useMembership();
   const { isAdmin } = useAdminRole();
 
@@ -159,7 +117,13 @@ export default function AtmosphericClearanceEngine() {
   const [sessionSeconds, setSessionSeconds] = useState(0);
   const sessionTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [modalKey, setModalKey] = useState<string | null>(null);
-  const ex = modalKey ? KB[modalKey] : null;
+  const ex = modalKey
+    ? {
+        title: t(`${ACE}.kb.${modalKey}.title`),
+        body: t(`${ACE}.kb.${modalKey}.body`),
+        color: KB_COLORS[modalKey] ?? G,
+      }
+    : null;
 
   const userProfileRef = useRef<UserProfile | null>(null);
   const sessionStartedRef = useRef(false);
@@ -405,12 +369,12 @@ export default function AtmosphericClearanceEngine() {
     userProfile?.full_name ||
     userProfile?.username ||
     userProfile?.email?.split("@")[0] ||
-    "Seeker";
+    t(`${ACE}.fallbackName`);
 
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black text-amber-500 font-mono text-xs tracking-widest">
-        INITIALIZING SCALAR BUS…
+        {t(`${ACE}.loading`)}
       </div>
     );
   }
@@ -477,7 +441,7 @@ export default function AtmosphericClearanceEngine() {
         }}
       >
         <ArrowLeft size={14} aria-hidden />
-        Siddha Portal
+        {t(`${ACE}.backPortal`)}
       </button>
 
       {/* ── User identity (Akasha profile) ── */}
@@ -542,7 +506,7 @@ export default function AtmosphericClearanceEngine() {
                   {userName}
                 </div>
                 <div style={{ ...labelStyle, marginTop: 2, marginBottom: 0 }}>
-                  YOUR AKASHA PROFILE · TAP TO LEARN
+                  {t(`${ACE}.profileHint`)}
                 </div>
               </div>
             </div>
@@ -558,7 +522,7 @@ export default function AtmosphericClearanceEngine() {
                 >
                   {sessionCount}
                 </div>
-                <div style={{ ...labelStyle, marginBottom: 0 }}>SESSIONS</div>
+                <div style={{ ...labelStyle, marginBottom: 0 }}>{t(`${ACE}.sessions`)}</div>
               </div>
               <div style={{ textAlign: "center" }}>
                 <div
@@ -571,7 +535,7 @@ export default function AtmosphericClearanceEngine() {
                 >
                   {totalClearedMins}m
                 </div>
-                <div style={{ ...labelStyle, marginBottom: 0 }}>CLEARED</div>
+                <div style={{ ...labelStyle, marginBottom: 0 }}>{t(`${ACE}.cleared`)}</div>
               </div>
             </div>
           </div>
@@ -607,8 +571,10 @@ export default function AtmosphericClearanceEngine() {
                   letterSpacing: "0.3em",
                 }}
               >
-                SESSION ACTIVE · {Math.floor(sessionSeconds / 60)}:
-                {String(sessionSeconds % 60).padStart(2, "0")}
+                {t(`${ACE}.sessionActive`, {
+                  mm: String(Math.floor(sessionSeconds / 60)),
+                  ss: String(sessionSeconds % 60).padStart(2, "0"),
+                })}
               </span>
             </div>
           )}
@@ -628,7 +594,7 @@ export default function AtmosphericClearanceEngine() {
             opacity: 0.8,
           }}
         >
-          SQI-2050 · AKASHA-NEURAL ARCHIVE · SCAN ACTIVE
+          {t(`${ACE}.taglineScan`)}
         </div>
         <h1
           style={{
@@ -640,7 +606,7 @@ export default function AtmosphericClearanceEngine() {
             textShadow: `0 0 ${yantraGlow / 4}px rgba(212,175,55,0.5), 0 0 ${yantraGlow / 2}px rgba(212,175,55,0.2)`,
           }}
         >
-          ATMOSPHERIC CLEARANCE ENGINE
+          {t(`${ACE}.pageTitle`)}
         </h1>
         <div
           style={{
@@ -652,7 +618,7 @@ export default function AtmosphericClearanceEngine() {
             marginTop: "6px",
           }}
         >
-          VEDIC LIGHT-CODE TRANSMISSION · PREMA-PULSE ACTIVE
+          {t(`${ACE}.taglineTransmission`)}
         </div>
       </div>
 
@@ -679,9 +645,9 @@ export default function AtmosphericClearanceEngine() {
                 marginBottom: 4,
               }}
             >
-              <div style={{ ...labelStyle, marginBottom: 0 }}>METAL & CLOUD EXTRACTION</div>
+              <div style={{ ...labelStyle, marginBottom: 0 }}>{t(`${ACE}.extractionLabel`)}</div>
               <button type="button" style={infoLinkStyle} onClick={() => setModalKey("cloud-extraction")}>
-                ⓘ HOW THIS WORKS
+                {t(`${ACE}.howThisWorks`)}
               </button>
             </div>
             <div
@@ -698,10 +664,13 @@ export default function AtmosphericClearanceEngine() {
               {extractionLevel.toFixed(0)}%
             </div>
             <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "11px", marginBottom: "16px" }}>
-              {extractionLevel < 33 ? "Bhakti-Algorithm Initializing..." :
-               extractionLevel < 66 ? "Prema-Pulse Clearing Nadis..." :
-               extractionLevel < 100 ? "Solar-Crown Activation..." :
-               "✦ Full Akashic Clarity Achieved ✦"}
+              {extractionLevel < 33
+                ? t(`${ACE}.extractionPhaseLow`)
+                : extractionLevel < 66
+                  ? t(`${ACE}.extractionPhaseMid`)
+                  : extractionLevel < 100
+                    ? t(`${ACE}.extractionPhaseHigh`)
+                    : t(`${ACE}.extractionPhaseFull`)}
             </div>
 
             {/* Custom Slider */}
@@ -735,8 +704,8 @@ export default function AtmosphericClearanceEngine() {
                 textTransform: "uppercase",
               }}
             >
-              <span>Dense</span>
-              <span>Clear</span>
+              <span>{t(`${ACE}.sliderDense`)}</span>
+              <span>{t(`${ACE}.sliderClear`)}</span>
             </div>
           </div>
 
@@ -782,9 +751,9 @@ export default function AtmosphericClearanceEngine() {
                 />
               )}
               <span style={{ fontSize: "16px" }}>⚡</span>
-              {pingActive ? "NEUTRALIZING..." : "NEUTRALIZE METALS"}
+              {pingActive ? t(`${ACE}.neutralizeActive`) : t(`${ACE}.neutralizeIdle`)}
             </button>
-            <button type="button" style={infoSquareStyle} onClick={() => setModalKey("metal-decoupling")} aria-label="Metal decoupling info">
+            <button type="button" style={infoSquareStyle} onClick={() => setModalKey("metal-decoupling")} aria-label={t(`${ACE}.ariaMetalDecouple`)}>
               ⓘ
             </button>
           </div>
@@ -825,9 +794,9 @@ export default function AtmosphericClearanceEngine() {
                   boxShadow: `0 0 8px ${VAYU_CYAN}`,
                 }}
               />
-              {isScanning ? "SCANNING NADIS..." : "NADI SCANNER"}
+              {isScanning ? t(`${ACE}.nadiScanActive`) : t(`${ACE}.nadiScanIdle`)}
             </button>
-            <button type="button" style={infoSquareStyle} onClick={() => setModalKey("nadi-scanner")} aria-label="Nadi scanner info">
+            <button type="button" style={infoSquareStyle} onClick={() => setModalKey("nadi-scanner")} aria-label={t(`${ACE}.ariaNadiScanner`)}>
               ⓘ
             </button>
           </div>
@@ -1119,7 +1088,7 @@ export default function AtmosphericClearanceEngine() {
               padding: 4,
             }}
           >
-            ✦ TAP SRI YANTRA TO UNDERSTAND ITS POWER ✦
+            {t(`${ACE}.tapYantra`)}
           </button>
           <button
             type="button"
@@ -1140,7 +1109,7 @@ export default function AtmosphericClearanceEngine() {
               padding: 4,
             }}
           >
-            ✦ ANAHATA ACTIVATION · SCALAR TRANSMISSION ✦
+            {t(`${ACE}.anahataLine`)}
           </button>
         </div>
 
@@ -1156,9 +1125,9 @@ export default function AtmosphericClearanceEngine() {
                 marginBottom: 4,
               }}
             >
-              <div style={{ ...labelStyle, marginBottom: 0 }}>AI STUDIO READOUT</div>
+              <div style={{ ...labelStyle, marginBottom: 0 }}>{t(`${ACE}.aiReadout`)}</div>
               <button type="button" style={infoLinkStyle} onClick={() => setModalKey("user-session")}>
-                ⓘ YOUR DATA
+                {t(`${ACE}.yourData`)}
               </button>
             </div>
 
@@ -1173,7 +1142,7 @@ export default function AtmosphericClearanceEngine() {
                 }}
               >
                 <DataRow
-                  label="ATMOSPHERIC DENSITY"
+                  label={t(`${ACE}.rowAtmosphericDensity`)}
                   value={`${atmosphericDensity.toFixed(1)}%`}
                   color={atmosphericDensity > 50 ? "rgba(255,100,100,0.8)" : atmosphericDensity > 20 ? SIDDHA_GOLD : "#4ade80"}
                   barFill={atmosphericDensity / 100}
@@ -1191,8 +1160,8 @@ export default function AtmosphericClearanceEngine() {
                 }}
               >
                 <DataRow
-                  label="SOLAR INTAKE"
-                  value={solarIntake === 100 ? "MAXIMUM" : `${solarIntake.toFixed(1)}%`}
+                  label={t(`${ACE}.rowSolarIntake`)}
+                  value={solarIntake === 100 ? t(`${ACE}.maximum`) : `${solarIntake.toFixed(1)}%`}
                   color={solarIntake === 100 ? "#FFD700" : SIDDHA_GOLD}
                   barFill={solarIntake / 100}
                   barColor={SIDDHA_GOLD}
@@ -1209,8 +1178,16 @@ export default function AtmosphericClearanceEngine() {
                 }}
               >
                 <DataRow
-                  label="BHAKTI-ALGORITHM"
-                  value={extractionLevel < 33 ? "DORMANT" : extractionLevel < 66 ? "ACTIVE" : extractionLevel < 100 ? "ELEVATED" : "SOVEREIGN"}
+                  label={t(`${ACE}.rowBhakti`)}
+                  value={
+                    extractionLevel < 33
+                      ? t(`${ACE}.bhaktiDormant`)
+                      : extractionLevel < 66
+                        ? t(`${ACE}.bhaktiActive`)
+                        : extractionLevel < 100
+                          ? t(`${ACE}.bhaktiElevated`)
+                          : t(`${ACE}.bhaktiSovereign`)
+                  }
                   color={extractionLevel < 33 ? "rgba(255,255,255,0.4)" : extractionLevel < 66 ? VAYU_CYAN : extractionLevel < 100 ? SIDDHA_GOLD : "#FFD700"}
                   barFill={extractionLevel / 100}
                   barColor={VAYU_CYAN}
@@ -1227,8 +1204,8 @@ export default function AtmosphericClearanceEngine() {
                 }}
               >
                 <DataRow
-                  label="METAL DECOUPLING"
-                  value={isNeutralized ? "COMPLETE" : "STANDBY"}
+                  label={t(`${ACE}.rowMetalDecoupling`)}
+                  value={isNeutralized ? t(`${ACE}.metalComplete`) : t(`${ACE}.metalStandby`)}
                   color={isNeutralized ? "#4ade80" : "rgba(255,255,255,0.3)"}
                   barFill={isNeutralized ? 1 : 0}
                   barColor="#4ade80"
@@ -1245,8 +1222,8 @@ export default function AtmosphericClearanceEngine() {
                 }}
               >
                 <DataRow
-                  label="PREMA-PULSE FREQ"
-                  value={`${(432 + extractionLevel * 0.96).toFixed(0)} Hz`}
+                  label={t(`${ACE}.rowPremaPulse`)}
+                  value={`${(432 + extractionLevel * 0.96).toFixed(0)}${t(`${ACE}.suffixHz`)}`}
                   color={SIDDHA_GOLD}
                   barFill={extractionLevel / 100}
                   barColor={SIDDHA_GOLD}
@@ -1273,12 +1250,12 @@ export default function AtmosphericClearanceEngine() {
               }}
             >
               {extractionLevel === 0
-                ? `⬤ ${userName} — System Standby`
+                ? t(`${ACE}.statusStandby`, { userName })
                 : extractionLevel < 50
-                  ? `◐ ${userName} — Clearing Active`
+                  ? t(`${ACE}.statusClearing`, { userName })
                   : extractionLevel < 100
-                    ? `◑ ${userName} — Anahata Opening...`
-                    : `✦ ${userName} — Density: 0.0% | Solar Intake: Maximum`}
+                    ? t(`${ACE}.statusAnahata`, { userName })
+                    : t(`${ACE}.statusFull`, { userName })}
             </div>
           </div>
 
@@ -1292,19 +1269,19 @@ export default function AtmosphericClearanceEngine() {
                 marginBottom: 8,
               }}
             >
-              <div style={{ ...labelStyle, marginBottom: 0 }}>SCALAR TRANSMISSION</div>
+              <div style={{ ...labelStyle, marginBottom: 0 }}>{t(`${ACE}.scalarTransmission`)}</div>
               <button type="button" style={infoLinkStyle} onClick={() => setModalKey("scalar-transmission")}>
-                ⓘ WHAT IS THIS?
+                {t(`${ACE}.whatIsThis`)}
               </button>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "8px" }}>
               {(
                 [
-                  { key: "sri-yantra" as const, label: "SRI YANTRA LINK", active: true },
-                  { key: "vishwananda" as const, label: "VISHWANANDA BLUEPRINT", active: extractionLevel > 20 },
-                  { key: "bhakti-algorithm" as const, label: "VEDIC LIGHT-CODES", active: extractionLevel > 40 },
-                  { key: "anahata" as const, label: "ANAHATA BROADCAST", active: extractionLevel > 60 },
-                  { key: "user-session" as const, label: "AKASHA-NEURAL LOCK", active: extractionLevel === 100 },
+                  { key: "sri-yantra" as const, labelKey: "scalarSriYantra" as const, active: true },
+                  { key: "vishwananda" as const, labelKey: "scalarVishwananda" as const, active: extractionLevel > 20 },
+                  { key: "bhakti-algorithm" as const, labelKey: "scalarVedic" as const, active: extractionLevel > 40 },
+                  { key: "anahata" as const, labelKey: "scalarAnahata" as const, active: extractionLevel > 60 },
+                  { key: "user-session" as const, labelKey: "scalarAkasha" as const, active: extractionLevel === 100 },
                 ] as const
               ).map((item) => (
                 <button
@@ -1340,7 +1317,7 @@ export default function AtmosphericClearanceEngine() {
                       transition: "all 0.4s ease",
                     }}
                   />
-                  <span style={{ flex: 1 }}>{item.label}</span>
+                  <span style={{ flex: 1 }}>{t(`${ACE}.${item.labelKey}`)}</span>
                   <span style={{ fontSize: 9, color: "rgba(255,255,255,0.2)" }}>ⓘ</span>
                 </button>
               ))}
@@ -1364,7 +1341,7 @@ export default function AtmosphericClearanceEngine() {
         }}
       >
         <div style={{ ...labelStyle, color: "rgba(212,175,55,0.5)", textAlign: "center", marginBottom: 10 }}>
-          HOW TO USE THIS ENGINE
+          {t(`${ACE}.howToTitle`)}
         </div>
         <p
           style={{
@@ -1375,13 +1352,7 @@ export default function AtmosphericClearanceEngine() {
             textAlign: "center",
           }}
         >
-          <span style={{ color: SIDDHA_GOLD, fontWeight: 700 }}>1.</span> Run the{" "}
-          <span style={{ color: VAYU_CYAN, fontWeight: 700 }}>Nadi Scanner</span> first to map your channels. &nbsp;
-          <span style={{ color: SIDDHA_GOLD, fontWeight: 700 }}>2.</span> Press{" "}
-          <span style={{ color: SIDDHA_GOLD, fontWeight: 700 }}>Neutralize Metals</span> to fire the Vayu-Bypass. &nbsp;
-          <span style={{ color: SIDDHA_GOLD, fontWeight: 700 }}>3.</span> Move the{" "}
-          <span style={{ color: SIDDHA_GOLD, fontWeight: 700 }}>extraction slider</span> toward 100% to clear clouds and open solar intake. &nbsp;
-          Tap any <span style={{ color: "rgba(255,255,255,0.5)", fontWeight: 700 }}>ⓘ</span> or readout row to learn what each system does. When signed in, your session is saved to your Akasha profile automatically.
+          {t(`${ACE}.howToBody`)}
         </p>
       </div>
 
@@ -1400,7 +1371,7 @@ export default function AtmosphericClearanceEngine() {
         >
           <button
             type="button"
-            aria-label="Close"
+            aria-label={t(`${ACE}.ariaClose`)}
             onClick={() => setModalKey(null)}
             style={{
               position: "absolute",
@@ -1477,7 +1448,7 @@ export default function AtmosphericClearanceEngine() {
                 cursor: "pointer",
               }}
             >
-              ✦ UNDERSTOOD · CLOSE
+              {t(`${ACE}.modalClose`)}
             </button>
           </div>
         </div>

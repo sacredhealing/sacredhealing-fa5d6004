@@ -1,0 +1,138 @@
+{
+  "loadingGate": "Loading Digital Nāḍī…",
+  "loadingFallback": "Loading Digital Nāḍī…",
+  "navNadi": "Nāḍī",
+  "navPrana": "Prāṇa",
+  "navDhyana": "Dhyāna",
+  "breathingLabel": "Prāṇāyāma · Vedic Light-Code",
+  "breathingTitle": "Breath is the bridge",
+  "breathingSubtitle": "between body and spirit.",
+  "breathingContinue": "Continue to Dhyāna →",
+  "meditationHeaderLabel": "Mantra · Dhyāna · Transmission",
+  "meditationHeaderTitle": "Resonating with peace",
+  "meditationHeaderSubtitle": "The frequency of stillness.",
+  "scanHeaderLabel": "रक्त नाडी परीक्षा",
+  "scanTitle": "DIGITAL NĀḌĪ",
+  "subtitleTapMode": "Bhakti-Algorithm · Tap-Pulse Mode",
+  "subtitleRppg": "Remote Photoplethysmography",
+  "idleInstructionsLine1": "Position your face within camera view.",
+  "idleInstructionsLine2": "Ensure even, natural lighting — avoid direct sunlight.",
+  "beginScan": "Begin Scan",
+  "initEllipsis": "INIT…",
+  "calibratingScanner": "Calibrating Nāḍī Scanner",
+  "cancel": "Cancel",
+  "scanningLabel": "Acquiring Prema-Pulse",
+  "readingLabel": "Reading Nāḍī",
+  "bpm": "BPM",
+  "hrvMs": "HRV · {{hrv}} ms",
+  "viewReading": "View Reading →",
+  "pulseLockHint": "Pulse lock still calibrating. Hold still, face the camera, and add soft front light — or use tap mode for an immediate reading.",
+  "useTapPulse": "Use tap pulse instead →",
+  "beginPranayama": "Begin Prāṇāyāma →",
+  "manualModeTitle": "Bhakti-Algorithm Mode",
+  "manualModeBody": "Camera not available in this environment. Tap to the rhythm of your heartbeat for 10 seconds.",
+  "tapToBegin": "Tap to Begin",
+  "tapRhythmHint": "Tap 10× in the rhythm of your pulse",
+  "tapYourPulse": "TAP YOUR PULSE",
+  "tapProgress": "{{elapsed}}s / {{total}}s",
+  "pulseReading": "Pulse Reading",
+  "retry": "Retry",
+  "retryWithIcon": "↺ Retry",
+  "acceptReading": "Accept Reading →",
+  "viewNadiReading": "View Nāḍī Reading →",
+  "notEnoughTaps": "Not enough taps detected. Please try again.",
+  "tryAgain": "Try Again",
+  "cameraTimeout": "Scanner did not start in time. Try again — or use tap pulse when prompted.",
+  "cameraDenied": "Camera access denied",
+  "readingComplete": "Nāḍī Reading Complete",
+  "hrvLabel": "HRV ms",
+  "stressLabel": "STRESS",
+  "doshaBadge": "{{name}} Dosha",
+  "fallbackNote": "* Reading via Bhakti-Algorithm tap mode",
+  "rescan": "Re-scan",
+  "breathingPhases": {
+    "inhale": "inhale",
+    "hold": "hold",
+    "exhale": "exhale"
+  },
+  "breathingGuide": {
+    "calming": "Calming the Nadi…",
+    "balanced": "Balanced Flow",
+    "inhaleHint": "Draw in the life force (Prana)",
+    "holdHint": "Let the energy settle",
+    "exhaleHint": "Release all tension and doubt"
+  },
+  "meditationPlayer": {
+    "currentSession": "Current Session",
+    "track0": {
+      "title": "The Silent Witness",
+      "subtitle": "Grounding & Presence",
+      "line0": "I am not the body.",
+      "line1": "I am not even the mind.",
+      "line2": "I am the silent witness of all that arises.",
+      "line3": "Peace is my natural state."
+    },
+    "track1": {
+      "title": "Ocean of Calm",
+      "subtitle": "Stress Release",
+      "line0": "Every breath is a wave.",
+      "line1": "The ocean is deep and still.",
+      "line2": "The surface may ripple,",
+      "line3": "But the depths remain untouched."
+    },
+    "resonatingNadi": "Resonating with your Nadi: {{bpm}} BPM"
+  },
+  "dosha": {
+    "Balanced": "Balanced",
+    "Pitta": "Pitta",
+    "Kapha": "Kapha",
+    "Vata": "Vāta"
+  },
+  "reco": {
+    "defaultArtist": "Sacred Healing",
+    "headerTitle": "Akasha-Neural Recommendations",
+    "headerSubtitle": "Curated from your live Nāḍī reading",
+    "stop": "Stop",
+    "stopTitle": "Stop playback and clear the player",
+    "refreshTitle": "Refresh recommendations",
+    "scanningArchive": "Scanning Akasha Archive…",
+    "noTransmissions": "No transmissions found — more content arriving soon.",
+    "moreTransmissions": "+ {{count}} more transmissions",
+    "openFullLibrary": "Open full {{library}} library",
+    "openIn": "Open in {{library}}",
+    "libraryNames": {
+      "meditations": "meditations",
+      "mantras": "mantras",
+      "healing": "healing",
+      "music": "music"
+    },
+    "meditation": {
+      "label": "Dhyāna · Meditation",
+      "reasonHigh": "Deep rest for your nervous system",
+      "reasonMid": "Balance and centre your mind",
+      "reasonLow": "Deepen your stillness"
+    },
+    "mantra": {
+      "label": "Mantra · Sacred Sound",
+      "reasonPitta": "Cooling vibrations to pacify inner fire",
+      "reasonKapha": "Activating frequencies to awaken your fire",
+      "reasonVata": "Grounding tones to anchor scattered energy",
+      "reasonBalanced": "Harmonising vibrations for your natural state"
+    },
+    "healing": {
+      "label": "Healing Audio · Scalar Waves",
+      "reasonHigh": "Restore your bioenergetic field",
+      "reasonDefault": "Fine-tune your frequency today"
+    },
+    "music": {
+      "label": "Sacred Music · Nāda Yoga",
+      "reason": "Resonant frequencies aligned to your pulse"
+    }
+  },
+  "duration": {
+    "empty": "—",
+    "minutesOnly": "{{m}}m",
+    "minutesSeconds": "{{m}}m {{s}}s",
+    "secondsOnly": "{{s}}s"
+  }
+}

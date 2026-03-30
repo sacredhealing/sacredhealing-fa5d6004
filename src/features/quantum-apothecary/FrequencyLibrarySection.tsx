@@ -8,6 +8,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Check } from 'lucide-react';
 import { ACTIVATIONS } from '@/features/quantum-apothecary/constants';
 import type { Activation } from '@/features/quantum-apothecary/types';
+import { activationName, activationBenefit, activationTypeLabel, categoryTabLabel } from '@/features/quantum-apothecary/activationI18n';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   activeCategory: string;
@@ -34,11 +36,16 @@ const CAT_COLORS: Record<string, string> = {
 export default function FrequencyLibrarySection({
   activeCategory, setActiveCategory, selectedActivations, addActivation,
 }: Props) {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
 
   const filtered = ACTIVATIONS.filter(act => {
     const matchCat = activeCategory === 'All' || act.type === activeCategory;
-    const matchSearch = !search || act.name.toLowerCase().includes(search.toLowerCase()) || act.benefit.toLowerCase().includes(search.toLowerCase());
+    const q = search.toLowerCase();
+    const nameT = activationName(t, act).toLowerCase();
+    const benT = activationBenefit(t, act).toLowerCase();
+    const matchSearch = !search || nameT.includes(q) || benT.includes(q)
+      || act.name.toLowerCase().includes(q) || act.benefit.toLowerCase().includes(q);
     return matchCat && matchSearch;
   });
 
@@ -54,9 +61,9 @@ export default function FrequencyLibrarySection({
       <div style={{ padding: '18px 20px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
           <div>
-            <h2 style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.03em', color: '#fff' }}>Frequency Library</h2>
+            <h2 style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.03em', color: '#fff' }}>{t('quantumApothecary.lib.title')}</h2>
             <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>
-              {filtered.length} Essences Available
+              {t('quantumApothecary.lib.essencesCount', { count: String(filtered.length) })}
             </p>
           </div>
           {/* Search */}
@@ -66,7 +73,7 @@ export default function FrequencyLibrarySection({
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search..."
+              placeholder={t('quantumApothecary.lib.searchPlaceholder')}
               style={{
                 background: 'rgba(255,255,255,0.04)',
                 border: '1px solid rgba(255,255,255,0.08)',
@@ -102,7 +109,7 @@ export default function FrequencyLibrarySection({
                   fontFamily: 'inherit',
                   boxShadow: active ? `0 0 12px ${col}25` : 'none',
                 }}>
-                {cat}
+                {categoryTabLabel(t, cat)}
               </button>
             );
           })}
@@ -157,7 +164,7 @@ export default function FrequencyLibrarySection({
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, flex: 1, minWidth: 0 }}>
                       <div style={{ width: 8, height: 8, borderRadius: '50%', background: act.color, flexShrink: 0, boxShadow: `0 0 6px ${act.color}80` }} />
                       <p style={{ fontSize: 11, fontWeight: 800, color: '#fff', lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                        {act.name}
+                        {activationName(t, act)}
                       </p>
                     </div>
                     {isSelected && (
@@ -166,13 +173,13 @@ export default function FrequencyLibrarySection({
                   </div>
 
                   <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.38)', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                    {act.benefit}
+                    {activationBenefit(t, act)}
                   </p>
 
                   {/* Type badge */}
                   <div style={{ marginTop: 7, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                     <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase', color: act.color, opacity: 0.7 }}>
-                      {act.type}
+                      {activationTypeLabel(t, act)}
                     </span>
                   </div>
                 </motion.button>
@@ -181,7 +188,7 @@ export default function FrequencyLibrarySection({
           </AnimatePresence>
           {filtered.length === 0 && (
             <div style={{ gridColumn: 'span 2', textAlign: 'center', padding: '32px 0', color: 'rgba(255,255,255,0.2)' }}>
-              <p style={{ fontSize: 11 }}>No essences found</p>
+              <p style={{ fontSize: 11 }}>{t('quantumApothecary.lib.noResults')}</p>
             </div>
           )}
         </div>

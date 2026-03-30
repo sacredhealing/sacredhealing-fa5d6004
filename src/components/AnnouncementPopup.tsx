@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -78,7 +77,7 @@ export const AnnouncementPopup: React.FC = () => {
     const unread = validAnnouncements.find((a) => !dismissedIds.has(a.id));
 
     if (unread) {
-      const row = unread as Announcement & { link_label?: string | null };
+      const row = unread as unknown as Announcement & { link_label?: string | null };
       setAnnouncement({
         ...row,
         link_label: row.link_label ?? null,

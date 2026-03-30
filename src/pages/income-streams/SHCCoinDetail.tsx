@@ -1,13 +1,46 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { ArrowLeft, Coins, Check, ExternalLink, Copy, Wallet, CreditCard, TrendingUp, AlertTriangle } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
 const SHC_TOKEN_ADDRESS = 'GLtvJisfuAVxV9VSP8wekeAVceZMTCxvbvNJGE8KZBxm';
+
+const G = '#D4AF37';
+const BG = '#050505';
+const CYAN = '#22D3EE';
+const GLASS = 'rgba(255,255,255,0.02)';
+const GLASS_B = 'rgba(255,255,255,0.05)';
+
+const SQI_SHC_CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap');
+.sqi-shc{font-family:'Plus Jakarta Sans',system-ui,sans-serif;min-height:100vh;background:${BG};color:#fff;position:relative;overflow-x:hidden;padding-bottom:120px;}
+.sqi-shc::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 50% at 50% -15%,rgba(212,175,55,0.07) 0%,transparent 55%),
+    radial-gradient(ellipse 45% 35% at 15% 95%,rgba(34,211,238,0.05) 0%,transparent 50%);}
+.sqi-shc-z{position:relative;z-index:1;}
+.sqi-shc-glass{
+  background:${GLASS};backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);
+  border:1px solid ${GLASS_B};border-radius:40px;
+}
+.sqi-shc-gold-ring{
+  background:${GLASS};backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);
+  border:1px solid rgba(212,175,55,0.22);border-radius:40px;
+  box-shadow:0 0 30px rgba(212,175,55,0.08);
+}
+.sqi-shc-gold-ring::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;border-radius:40px 40px 0 0;
+  background:linear-gradient(90deg,transparent,rgba(212,175,55,0.35),transparent);
+}
+.sqi-shc-label{font-size:8px;font-weight:800;letter-spacing:0.5em;text-transform:uppercase;color:rgba(255,255,255,0.32);}
+.sqi-shc-title{font-weight:900;letter-spacing:-0.05em;color:${G};text-shadow:0 0 18px rgba(212,175,55,0.28);}
+.sqi-shc-body{font-weight:400;line-height:1.6;color:rgba(255,255,255,0.58);font-size:13px;}
+.sqi-shc-back{display:inline-flex;align-items:center;gap:8px;color:rgba(255,255,255,0.38);font-size:12px;font-weight:600;transition:color .2s;}
+.sqi-shc-back:hover{color:${G};}
+.sqi-shc-badge{display:inline-flex;align-items:center;padding:4px 12px;border-radius:999px;font-size:9px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;
+  background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.25);color:${CYAN};margin-top:6px;}
+`;
 
 const SHCCoinDetail: React.FC = () => {
   const { t } = useTranslation();
@@ -38,132 +71,161 @@ const SHCCoinDetail: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen pb-24">
-      {/* Header */}
-      <div className="px-4 pt-4 pb-6">
-        <Link to="/income-streams" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4">
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">{t('common.back', 'Back to Income Streams')}</span>
-        </Link>
-        
-        <div className="flex items-center gap-3">
-          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-accent to-amber-500 flex items-center justify-center">
-            <Coins className="w-7 h-7 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">{t('shcCoin.title', 'SHC Coin')}</h1>
-            <Badge variant="secondary" className="mt-1">{t('shcCoin.badge', 'Investment')}</Badge>
-          </div>
-        </div>
-      </div>
+    <>
+      <style>{SQI_SHC_CSS}</style>
+      <div className="sqi-shc">
+        <div className="sqi-shc-z px-4 pt-5 pb-8 max-w-lg mx-auto">
+          <Link to="/income-streams" className="sqi-shc-back mb-6">
+            <ArrowLeft className="w-4 h-4" strokeWidth={2} />
+            <span>{t('common.back', 'Back to Income Streams')}</span>
+          </Link>
 
-      <div className="px-4 space-y-6">
-        {/* Overview */}
-        <Card className="bg-card/50 border-border/50">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Coins className="w-5 h-5 text-accent" />
-              {t('shcCoin.whatIsIt', 'What is SHC Coin?')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-muted-foreground">
-            <p>
-              {t('shcCoin.overviewP1', 'SHC (Siddha Quantum Nexus Coin) is our native utility token built on the Solana blockchain. It powers the ecosystem and rewards active community members.')}
-            </p>
-            <p>
-              {t('shcCoin.overviewP2', 'As the platform grows, so does the value and utility of SHC. Early adopters benefit from holding and using the token.')}
-            </p>
-          </CardContent>
-        </Card>
+          <div className="flex items-start gap-4 mb-8">
+            <div
+              className="w-[60px] h-[60px] rounded-[22px] shrink-0 flex items-center justify-center"
+              style={{
+                background: 'linear-gradient(135deg, rgba(212,175,55,0.25), rgba(212,175,55,0.06))',
+                border: '1px solid rgba(212,175,55,0.35)',
+                boxShadow: '0 0 28px rgba(212,175,55,0.22)',
+              }}
+            >
+              <Coins className="w-8 h-8" style={{ color: G }} strokeWidth={2} />
+            </div>
+            <div className="min-w-0 pt-1">
+              <p className="sqi-shc-label mb-2">◈ Vedic Light-Code · Prema-Pulse</p>
+              <h1 className="sqi-shc-title text-2xl sm:text-[1.65rem] leading-tight">
+                {t('shcCoin.title', 'SHC Coin')}
+              </h1>
+              <span className="sqi-shc-badge">{t('shcCoin.badge', 'Investment')}</span>
+            </div>
+          </div>
 
-        {/* Token Address */}
-        <Card className="bg-gradient-to-br from-accent/10 to-primary/10 border-accent/30">
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground mb-2">{t('shcCoin.tokenAddressLabel', 'Token Address (Solana)')}</p>
-            <div className="flex items-center gap-2">
-              <code className="flex-1 text-xs bg-background/50 rounded-lg p-3 text-foreground font-mono break-all">
+          <div className="sqi-shc-glass p-5 mb-6 relative overflow-hidden">
+            <div className="flex items-center gap-2 mb-4">
+              <Coins className="w-5 h-5 shrink-0" style={{ color: G }} />
+              <h2 className="sqi-shc-title text-lg tracking-tight">
+                {t('shcCoin.whatIsIt', 'What is SHC Coin?')}
+              </h2>
+            </div>
+            <div className="space-y-3 sqi-shc-body">
+              <p>{t('shcCoin.overviewP1', 'SHC (Siddha Quantum Nexus Coin) is our native utility token built on the Solana blockchain. It powers the ecosystem and rewards active community members.')}</p>
+              <p>{t('shcCoin.overviewP2', 'As the platform grows, so does the value and utility of SHC. Early adopters benefit from holding and using the token.')}</p>
+            </div>
+          </div>
+
+          <div className="sqi-shc-gold-ring relative p-5 mb-6 overflow-hidden">
+            <p className="sqi-shc-label mb-3">{t('shcCoin.tokenAddressLabel', 'Token Address (Solana)')}</p>
+            <div className="flex items-stretch gap-2">
+              <code
+                className="flex-1 text-[11px] sm:text-xs font-mono break-all p-4 rounded-[20px] leading-relaxed"
+                style={{ background: 'rgba(0,0,0,0.45)', border: `1px solid ${GLASS_B}` }}
+              >
                 {SHC_TOKEN_ADDRESS}
               </code>
-              <Button variant="ghost" size="icon" onClick={copyAddress} className="shrink-0">
-                {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={copyAddress}
+                className="shrink-0 w-12 h-auto min-h-[3rem] rounded-[18px] border self-stretch"
+                style={{ borderColor: 'rgba(212,175,55,0.25)', background: 'rgba(212,175,55,0.08)' }}
+              >
+                {copied ? <Check className="w-5 h-5 text-emerald-400" /> : <Copy className="w-5 h-5" style={{ color: G }} />}
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* How to Buy - Phantom */}
-        <Card className="bg-card/50 border-border/50">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Wallet className="w-5 h-5 text-primary" />
+          <div className="sqi-shc-glass p-5 mb-6">
+            <h3 className="sqi-shc-title text-base mb-4 flex items-center gap-2">
+              <Wallet className="h-5 w-5" style={{ color: G }} />
               {t('shcCoin.buyWithPhantom', 'Buy with Phantom Wallet')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ol className="space-y-3">
+            </h3>
+            <ol className="space-y-4">
               {phantomSteps.map((step, index) => (
                 <li key={index} className="flex gap-3">
-                  <div className="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center shrink-0 text-xs font-medium">
+                  <div
+                    className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-black"
+                    style={{
+                      background: 'rgba(34,211,238,0.12)',
+                      border: '1px solid rgba(34,211,238,0.28)',
+                      color: CYAN,
+                    }}
+                  >
                     {index + 1}
                   </div>
-                  <span className="text-sm text-muted-foreground">{step}</span>
+                  <span className="sqi-shc-body text-[13px] pt-1">{step}</span>
                 </li>
               ))}
             </ol>
-            <Button variant="outline" className="w-full mt-4" onClick={() => window.open('https://phantom.app', '_blank')}>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full mt-5 h-12 rounded-full font-extrabold border-[#22D3EE]/35 bg-[#22D3EE]/10 text-[#22D3EE] hover:bg-[#22D3EE]/18"
+              onClick={() => window.open('https://phantom.app', '_blank')}
+            >
               <ExternalLink className="w-4 h-4 mr-2" />
               {t('shcCoin.getPhantom', 'Get Phantom Wallet')}
             </Button>
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* How to Buy - Card */}
-        <Card className="bg-card/50 border-border/50">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <CreditCard className="w-5 h-5 text-secondary" />
+          <div className="sqi-shc-glass p-5 mb-6">
+            <h3 className="sqi-shc-title text-base mb-4 flex items-center gap-2">
+              <CreditCard className="h-5 w-5" style={{ color: G }} />
               {t('shcCoin.buyWithCard', 'Buy with Credit Card')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ol className="space-y-3">
+            </h3>
+            <ol className="space-y-4">
               {cardSteps.map((step, index) => (
                 <li key={index} className="flex gap-3">
-                  <div className="w-6 h-6 rounded-full bg-secondary/20 text-secondary flex items-center justify-center shrink-0 text-xs font-medium">
+                  <div
+                    className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-black"
+                    style={{
+                      background: 'rgba(212,175,55,0.12)',
+                      border: '1px solid rgba(212,175,55,0.28)',
+                      color: G,
+                    }}
+                  >
                     {index + 1}
                   </div>
-                  <span className="text-sm text-muted-foreground">{step}</span>
+                  <span className="sqi-shc-body text-[13px] pt-1">{step}</span>
                 </li>
               ))}
             </ol>
-            <p className="text-xs text-muted-foreground mt-3 p-2 bg-muted/30 rounded-lg">
+            <p
+              className="text-[12px] mt-4 p-4 rounded-[20px] sqi-shc-body"
+              style={{ background: 'rgba(0,0,0,0.35)', border: `1px solid ${GLASS_B}` }}
+            >
               💡 {t('shcCoin.tip', 'Tip: Moonpay and other providers in Phantom support card purchases.')}
             </p>
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Risk Disclaimer */}
-        <Card className="bg-amber-500/10 border-amber-500/30">
-          <CardContent className="p-4">
+          <div
+            className="sqi-shc-glass p-5 mb-8"
+            style={{ borderColor: 'rgba(245,158,11,0.22)', background: 'rgba(245,158,11,0.06)' }}
+          >
             <div className="flex gap-3">
-              <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+              <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" style={{ color: '#f59e0b' }} />
               <div>
-                <h4 className="font-medium text-foreground mb-1">{t('shcCoin.riskTitle', 'Risk Disclaimer')}</h4>
-                <p className="text-sm text-muted-foreground">
+                <h4 className="font-bold text-white text-sm mb-2 tracking-tight">{t('shcCoin.riskTitle', 'Risk Disclaimer')}</h4>
+                <p className="sqi-shc-body text-[12px]">
                   {t('shcCoin.riskDesc', 'Cryptocurrency investments carry significant risk. Only invest what you can afford to lose. Past performance does not guarantee future results. Do your own research before investing.')}
                 </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* CTA */}
-        <Button variant="gold" className="w-full" size="lg" onClick={() => window.open(`https://raydium.io/swap/?inputMint=sol&outputMint=${SHC_TOKEN_ADDRESS}`, '_blank')}>
-          <TrendingUp className="w-4 h-4 mr-2" />
-          {t('shcCoin.tradeOnRaydium', 'Trade on Raydium DEX')}
-        </Button>
+          <Button
+            type="button"
+            className="w-full h-14 rounded-full font-extrabold text-[#050505] text-base shadow-[0_0_32px_rgba(212,175,55,0.4)] hover:shadow-[0_0_48px_rgba(212,175,55,0.5)] border-0"
+            size="lg"
+            style={{ background: `linear-gradient(135deg, ${G}, #e8c547)` }}
+            onClick={() => window.open(`https://raydium.io/swap/?inputMint=sol&outputMint=${SHC_TOKEN_ADDRESS}`, '_blank')}
+          >
+            <TrendingUp className="w-5 h-5 mr-2" />
+            {t('shcCoin.tradeOnRaydium', 'Trade on Raydium DEX')}
+          </Button>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

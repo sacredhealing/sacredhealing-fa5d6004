@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from 'react';
 import { Share2, Music } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,6 +21,7 @@ export const MantraGraphic: React.FC<MantraGraphicProps> = ({
   shcReward,
   onShare,
 }) => {
+  const { t } = useTranslation();
   const handleShare = async () => {
     const shareUrl = 'https://sacredhealing.lovable.app/mantras?utm_source=share&utm_medium=mantra';
     const shareText = `🕉️ ${title || 'Sacred Mantra'}\n\n"${mantra}"\n\n✨ Chant with me on Siddha Quantum Nexus`;

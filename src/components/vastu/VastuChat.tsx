@@ -462,7 +462,11 @@ export const VastuChatWindow: React.FC<VastuChatWindowProps> = ({
                 {selectedImages.map((img,i)=>(
                   <div key={i} style={{position:'relative',width:60,height:60,borderRadius:'12px',
                     overflow:'hidden',border:'1px solid rgba(212,175,55,0.2)'}}>
-                    <img src={img} style={{width:'100%',height:'100%',objectFit:'cover'}} alt={t('vastuChat.selectedThumbAlt', 'Selected photo')} />
+                    <img
+                      src={img}
+                      style={{width:'100%',height:'100%',objectFit:'cover'}}
+                      alt={t('vastuChat.selectedThumbAlt', 'Selected photo')}
+                    />
                     <button type="button" onClick={()=>removeImage(i)} style={{
                       position:'absolute',inset:0,background:'rgba(0,0,0,0.65)',
                       border:'none',cursor:'pointer',color:'#fff',fontSize:'12px',

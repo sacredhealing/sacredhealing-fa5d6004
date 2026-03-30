@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Music2, Plus, List, Crown, ChevronRight, X, GripVertical, Edit2, Check, Loader2, Disc, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -1080,7 +1079,7 @@ const Music: React.FC = () => {
               <div className="path-freq-badge">{index === 0 ? '432 Hz' : '528 Hz'}</div>
               <div style={{ flex: 1 }}>
                 <div className="path-title">{track.title}</div>
-                {track.mood && <div className="path-sub">{tMusicMood(track.mood, t)}</div>}
+                {track.mood && <div className="path-sub">{tMusicMood(track.mood, t as any)}</div>}
               </div>
               <div className="path-play">▶</div>
             </div>
@@ -1366,7 +1365,7 @@ const Music: React.FC = () => {
                                   : 'bg-muted/50 text-muted-foreground hover:bg-muted'
                               }`}
                             >
-                              {tMusicGenre(g, t)}
+                              {tMusicGenre(g, t as any)}
                             </button>
                           ))}
                         </div>

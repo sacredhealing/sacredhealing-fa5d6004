@@ -1,0 +1,50 @@
+{
+  "brand": "VAYU PROTOCOL",
+  "tagline": "SIDDHA ATMOSPHERIC ENGINEERING // 2060",
+  "fieldStatus": "FIELD STATUS",
+  "environmentalClarity": "ENVIRONMENTAL CLARITY",
+  "breathingPattern": "4-8-16 BREATHING",
+  "breath": {
+    "inhale": "INHALE",
+    "hold": "HOLD",
+    "exhale": "EXHALE"
+  },
+  "phase": {
+    "standby": {
+      "label": "STANDBY",
+      "element": "VAYU (AIR)"
+    },
+    "scrubbing": {
+      "label": "SCRUBBING...",
+      "element": "VAYU (AIR)"
+    },
+    "stabilized": {
+      "label": "STABILIZED",
+      "element": "APAS (WATER)"
+    }
+  },
+  "standbyPanel": {
+    "title": "SYSTEM READY",
+    "body": "Initialize the 1km Aetheric Vortex to scrub local atmosphere of particulates and aerosols."
+  },
+  "scrubbingPanel": {
+    "title": "VAYU-VORTEX PROTOCOL",
+    "body": "Golden Torus active. Synchronize breath with the 4-8-16 Vedic Light-Code pattern."
+  },
+  "stabilizedPanel": {
+    "title": "VAYU-LOCK STABILIZED",
+    "body": "Sapphire Icosahedron locked. 24/7 passive hygroscopic net maintains atmospheric purity via the Apas element."
+  },
+  "btnActivate": "ACTIVATE VAYU",
+  "btnLock": "LOCK PROTOCOL",
+  "btnReset": "RESET FIELD",
+  "coordsLine": "LAT: 37.7749 // LONG: -122.4194",
+  "aethericDensity": "AETHERIC DENSITY: {{density}} MG/M³",
+  "geometryLine": "GEOMETRY: {{shape}}",
+  "elementLine": "ELEMENT: {{element}}",
+  "geometry": {
+    "torus": "TORUS",
+    "icosahedron": "ICOSAHEDRON"
+  },
+  "loading": "Loading…"
+}
