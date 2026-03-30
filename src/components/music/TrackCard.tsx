@@ -112,7 +112,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
               <span className="bg-muted/50 px-1.5 py-0.5 rounded">{track.bpm} BPM</span>
             )}
             <span className="bg-primary/20 text-primary px-1.5 py-0.5 rounded capitalize">
-              {tMusicGenre(track.genre, t)}
+              {tMusicGenre(track.genre, t as any)}
             </span>
             <span className="flex items-center gap-0.5">
               <Users size={10} />
