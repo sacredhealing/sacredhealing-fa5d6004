@@ -205,6 +205,7 @@ function QuantumApothecaryInner() {
   const [sessionsOpen, setSessionsOpen] = useState(false);
   const [loadingSessions, setLoadingSessions] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
   const chatPanelRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -1020,7 +1021,7 @@ function QuantumApothecaryInner() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar" style={{ padding: '16px', background: '#050505' }}>
+      <div ref={chatScrollRef} className="flex-1 overflow-y-auto custom-scrollbar" style={{ padding: '16px', background: '#050505' }}>
         <div className="flex flex-col justify-end min-h-full space-y-2">
           {messages.map((msg, i) => {
               const isLastUser = msg.role === 'user'  && !messages.slice(i + 1).some(m => m.role === 'user');
@@ -1057,8 +1058,7 @@ function QuantumApothecaryInner() {
           <button
             type="button"
             onClick={() => {
-              const container = chatEndRef.current?.parentElement?.parentElement;
-              container?.scrollTo({ top: 0, behavior: 'smooth' });
+              chatScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
             }}
             className="pointer-events-auto p-2 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 hover:bg-[#D4AF37]/25 transition"
             title="Scroll to top"
