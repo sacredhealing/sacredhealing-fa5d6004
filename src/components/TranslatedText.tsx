@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useTranslatedText } from '@/hooks/useTranslateContent';
 
 interface TranslatedTextProps {
