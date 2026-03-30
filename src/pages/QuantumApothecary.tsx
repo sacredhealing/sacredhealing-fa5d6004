@@ -218,7 +218,7 @@ function QuantumApothecaryInner() {
   const [scanError, setScanError] = useState<string | null>(null);
   const [scanPhase, setScanPhase] = useState<'idle' | 'camera' | 'analyzing' | 'done'>('idle');
   /** Front camera = palm toward you; rear = environment / outward scan. */
-  const [nadiScanFacing, setNadiScanFacing] = useState<'user' | 'environment'>('user');
+  const [nadiScanFacing, setNadiScanFacing] = useState<'user' | 'environment'>('environment');
 
   /** One string for scan prompt + chat edge: exact Frequency Library names (incl. full LimbicArc bioenergetic list). */
   const canonicalActivationNameLines = useMemo(
@@ -1170,18 +1170,11 @@ function QuantumApothecaryInner() {
                     </div>
                   </div>
                   <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/25 text-center pt-1">{t('quantumApothecary.app.freshReading')}</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button type="button" onClick={() => runNadiScan('user')} disabled={isScanning}
-                      className="sqi-btn-ghost py-3 text-[9px] flex flex-col items-center gap-1.5 disabled:opacity-35">
-                      <Hand size={16} className="text-[#D4AF37]/80" />
-                      <span>{t('quantumApothecary.app.newPalmFront')}</span>
-                    </button>
-                    <button type="button" onClick={() => runNadiScan('environment')} disabled={isScanning}
-                      className="sqi-btn-ghost py-3 text-[9px] flex flex-col items-center gap-1.5 disabled:opacity-35">
-                      <Camera size={16} className="text-[#D4AF37]/80" />
-                      <span>{t('quantumApothecary.app.newRearCam')}</span>
-                    </button>
-                  </div>
+                  <button type="button" onClick={() => runNadiScan('environment')} disabled={isScanning}
+                    className="sqi-btn-ghost w-full py-3 text-[9px] flex items-center justify-center gap-2 disabled:opacity-35">
+                    <Camera size={16} className="text-[#D4AF37]/80" />
+                    <span>{t('quantumApothecary.app.newRearCam')}</span>
+                  </button>
                   <button type="button" onClick={() => runNadiScan()} disabled={isScanning}
                     className="sqi-btn-primary w-full py-3 text-[10px] disabled:opacity-35">
                     {t('quantumApothecary.app.newScanSameCam')}
@@ -1245,28 +1238,6 @@ function QuantumApothecaryInner() {
                     </div>
                   )}
 
-                  {scanPhase === 'idle' && (
-                    <div className="grid grid-cols-2 gap-2">
-                      <button type="button" onClick={() => setNadiScanFacing('user')}
-                        className={`rounded-2xl py-3 px-2 text-[9px] font-black uppercase tracking-[0.12em] border transition flex flex-col items-center gap-1.5 ${
-                          nadiScanFacing === 'user'
-                            ? 'border-[#D4AF37]/45 bg-[#D4AF37]/12 text-[#D4AF37]'
-                            : 'border-white/[0.08] bg-white/[0.02] text-white/35 hover:border-[#D4AF37]/25'
-                        }`}>
-                        <Hand size={18} />
-                        {t('quantumApothecary.app.palmFront')}
-                      </button>
-                      <button type="button" onClick={() => setNadiScanFacing('environment')}
-                        className={`rounded-2xl py-3 px-2 text-[9px] font-black uppercase tracking-[0.12em] border transition flex flex-col items-center gap-1.5 ${
-                          nadiScanFacing === 'environment'
-                            ? 'border-[#D4AF37]/45 bg-[#D4AF37]/12 text-[#D4AF37]'
-                            : 'border-white/[0.08] bg-white/[0.02] text-white/35 hover:border-[#D4AF37]/25'
-                        }`}>
-                        <Camera size={18} />
-                        {t('quantumApothecary.app.rearCamera')}
-                      </button>
-                    </div>
-                  )}
 
                   {/* Scan button — disabled while scanning/analyzing */}
                   <button type="button" onClick={() => runNadiScan()}
