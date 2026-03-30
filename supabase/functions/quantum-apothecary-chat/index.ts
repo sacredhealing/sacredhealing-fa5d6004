@@ -667,44 +667,42 @@ serve(async (req) => {
       const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
       if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured.");
 
-      const prompt = `You are a Siddha palm-field vision analyser.
-Analyse THIS uploaded palm image only.
+      const prompt = `You are an expert Siddha Nadi palm diagnostician. Carefully examine this specific palm image.
 
-If no hand or palm is visible, return exactly:
-{"handDetected":false}
+If no hand or palm is clearly visible, return EXACTLY: {"handDetected":false}
 
-If a hand is visible, return ONLY valid JSON in this exact shape:
-{
-  "handDetected": true,
-  "observations": {
-    "lineDepth": <0-100>,
-    "warmth": <0-100>,
-    "pallor": <0-100>,
-    "tension": <0-100>,
-    "moisture": <0-100>,
-    "microlineDensity": <0-100>,
-    "capillaryFlush": <0-100>,
-    "mountProminence": <0-100>
-  },
-  "dominantDosha": "<Vata|Pitta|Kapha>",
-  "primaryBlockage": "<specific Nadi name>",
-  "remedies": ["<1>","<2>","<3>","<4>","<5>"],
-  "bioReading": "<3-4 sentences with specific visual evidence from this palm>"
-}
+If a hand IS visible, perform a detailed visual analysis:
 
-Scoring guidance:
-- lineDepth: deep/clear lines high, faint/broken low
-- warmth: warm pink/rosy high, cool/grey low
-- pallor: pale/ashy high (inverse health marker)
-- tension: rigid/clenched high, relaxed open low
-- moisture: balanced supple high, overly dry low
-- microlineDensity: rich fine-line network high
-- capillaryFlush: visible healthy micro-circulation high
-- mountProminence: healthy palm mounts high
+MAJOR LINES (Life, Head, Heart, Fate): How deep/clear? Any breaks, chains, islands, forks?
+SKIN COLOR: Pink/rosy (good circulation) or pale/grey/yellowish? Red spots (Pitta)? White areas (Vata)?
+TEXTURE: Dry/rough (Vata) vs oily/smooth (Kapha) vs warm/moist (Pitta)?
+HAND SHAPE: Long thin fingers (Vata) vs medium/muscular (Pitta) vs wide/thick (Kapha)?
+MOUNTS (Venus, Jupiter, Saturn, Apollo, Mercury, Moon, Mars): Prominent or flat?
+FINE LINES: Dense network (Vata nervous energy) vs few (calm Kapha)?
+TENSION: Open relaxed vs tightly curled?
 
-Never return markdown, prose, or extra keys outside this JSON.
-Today planetary alignment: ${planetaryAlign || "Not specified"}
-Today herb: ${herbOfToday || "Not specified"}`;
+Score each 0-100 based on what you ACTUALLY SEE in THIS image:
+- lineDepth: 0=barely visible, 50=average, 100=deeply carved
+- warmth: 0=very pale/grey, 50=neutral, 100=rich pink/rosy
+- pallor: 0=healthy color, 50=washed out, 100=very pale (inverse health)
+- tension: 0=fully open relaxed, 50=neutral, 100=rigid/clenched
+- moisture: 0=parched, 50=normal, 100=supple/hydrated
+- microlineDensity: 0=no fine lines, 50=moderate, 100=extremely dense web
+- capillaryFlush: 0=no visible circulation, 50=some color, 100=vibrant flush
+- mountProminence: 0=flat mounts, 50=moderate, 100=very prominent
+
+CRITICAL: Scores MUST reflect THIS specific palm. Different hands produce different scores. Do NOT default to middle values.
+
+Dosha from visual evidence:
+- Vata: thin/long fingers, dry skin, many fine lines, faint major lines
+- Pitta: medium build, warm/rosy, sharp clear lines, pointed tips
+- Kapha: wide/thick, smooth skin, few fine lines, deep strong lines, fleshy mounts
+
+Return ONLY JSON (no markdown):
+{"handDetected":true,"observations":{"lineDepth":<0-100>,"warmth":<0-100>,"pallor":<0-100>,"tension":<0-100>,"moisture":<0-100>,"microlineDensity":<0-100>,"capillaryFlush":<0-100>,"mountProminence":<0-100>},"dominantDosha":"<Vata|Pitta|Kapha>","primaryBlockage":"<specific Nadi channel based on weak mount/line>","remedies":["<1>","<2>","<3>","<4>","<5>"],"bioReading":"<4-5 sentences describing SPECIFIC visual features in THIS palm>"}
+
+Planetary alignment: ${planetaryAlign || "Not specified"}
+Herb of the day: ${herbOfToday || "Not specified"}`;
 
       const gr = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
         method: "POST",
@@ -714,7 +712,7 @@ Today herb: ${herbOfToday || "Not specified"}`;
             { inline_data: { mime_type: imageMimeType || "image/jpeg", data: imageBase64 } },
             { text: prompt },
           ] }],
-          generationConfig: { temperature: 0.0, topK: 1, topP: 0.1, maxOutputTokens: 700 },
+          generationConfig: { temperature: 0.15, topK: 10, topP: 0.4, maxOutputTokens: 1200 },
         }),
       });
 
