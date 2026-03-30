@@ -1030,21 +1030,9 @@ function QuantumApothecaryInner() {
                     </div>
                   </div>
                   <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/25 text-center pt-1">Get a fresh reading</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button type="button" onClick={() => runNadiScan('user')} disabled={isScanning}
-                      className="sqi-btn-ghost py-3 text-[9px] flex flex-col items-center gap-1.5 disabled:opacity-35">
-                      <Hand size={16} className="text-[#D4AF37]/80" />
-                      <span>New · palm / front</span>
-                    </button>
-                    <button type="button" onClick={() => runNadiScan('environment')} disabled={isScanning}
-                      className="sqi-btn-ghost py-3 text-[9px] flex flex-col items-center gap-1.5 disabled:opacity-35">
-                      <Camera size={16} className="text-[#D4AF37]/80" />
-                      <span>New · rear cam</span>
-                    </button>
-                  </div>
-                  <button type="button" onClick={() => runNadiScan()} disabled={isScanning}
+                  <button type="button" onClick={() => runNadiScan('environment')} disabled={isScanning}
                     className="sqi-btn-primary w-full py-3 text-[10px] disabled:opacity-35">
-                    New scan · same camera as last
+                    New scan · rear camera
                   </button>
                   <div className="flex gap-3">
                     <button type="button" onClick={applyRemedies} className="sqi-btn-primary flex-1 py-3 text-xs">Apply Remedies</button>
@@ -1105,40 +1093,15 @@ function QuantumApothecaryInner() {
                     </div>
                   )}
 
-                  {scanPhase === 'idle' && (
-                    <div className="grid grid-cols-2 gap-2">
-                      <button type="button" onClick={() => setNadiScanFacing('user')}
-                        className={`rounded-2xl py-3 px-2 text-[9px] font-black uppercase tracking-[0.12em] border transition flex flex-col items-center gap-1.5 ${
-                          nadiScanFacing === 'user'
-                            ? 'border-[#D4AF37]/45 bg-[#D4AF37]/12 text-[#D4AF37]'
-                            : 'border-white/[0.08] bg-white/[0.02] text-white/35 hover:border-[#D4AF37]/25'
-                        }`}>
-                        <Hand size={18} />
-                        Palm · front
-                      </button>
-                      <button type="button" onClick={() => setNadiScanFacing('environment')}
-                        className={`rounded-2xl py-3 px-2 text-[9px] font-black uppercase tracking-[0.12em] border transition flex flex-col items-center gap-1.5 ${
-                          nadiScanFacing === 'environment'
-                            ? 'border-[#D4AF37]/45 bg-[#D4AF37]/12 text-[#D4AF37]'
-                            : 'border-white/[0.08] bg-white/[0.02] text-white/35 hover:border-[#D4AF37]/25'
-                        }`}>
-                        <Camera size={18} />
-                        Rear camera
-                      </button>
-                    </div>
-                  )}
-
                   {/* Scan button — disabled while scanning/analyzing */}
-                  <button type="button" onClick={() => runNadiScan()}
+                  <button type="button" onClick={() => runNadiScan('environment')}
                     disabled={scanPhase === 'camera' || scanPhase === 'analyzing'}
                     className="sqi-btn-primary w-full py-3.5 text-xs disabled:opacity-40">
                     {scanPhase === 'camera'
                       ? `Scanning… ${heartRate}bpm`
                       : scanPhase === 'analyzing'
                       ? 'Analyzing Biofield…'
-                      : nadiScanFacing === 'user'
-                        ? 'Start Nadi scan · palm (front cam)'
-                        : 'Start Nadi scan · rear camera'}
+                      : 'Start Nadi scan · rear camera'}
                   </button>
                 </div>
               )}
