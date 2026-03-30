@@ -219,6 +219,7 @@ function QuantumApothecaryInner() {
   const [scanPhase, setScanPhase] = useState<'idle' | 'camera' | 'analyzing' | 'done'>('idle');
   /** Front camera = palm toward you; rear = environment / outward scan. */
   const [nadiScanFacing, setNadiScanFacing] = useState<'user' | 'environment'>('environment');
+  const [handDetected, setHandDetected] = useState(false);
 
   /** One string for scan prompt + chat edge: exact Frequency Library names (incl. full LimbicArc bioenergetic list). */
   const canonicalActivationNameLines = useMemo(
@@ -512,10 +513,60 @@ function QuantumApothecaryInner() {
       try { await videoRef.current.play(); } catch {}
     }
 
-    // ── Step 2: Wait 4 seconds — user holds palm to camera ──
-    await new Promise((res) => setTimeout(res, 4000));
+    // ── Step 2: Wait for hand to be detected via skin-color analysis ──
+    setHandDetected(false);
+    const detectHand = (vid: HTMLVideoElement): boolean => {
+      try {
+        const c = document.createElement('canvas');
+        const sw = 160;
+        const sh = Math.max(1, Math.round((vid.videoHeight / vid.videoWidth) * sw)) || 120;
+        c.width = sw; c.height = sh;
+        const cx = c.getContext('2d', { willReadFrequently: true });
+        if (!cx) return false;
+        cx.drawImage(vid, 0, 0, sw, sh);
+        const img = cx.getImageData(0, 0, sw, sh);
+        const d = img.data;
+        let skinPx = 0;
+        const total = sw * sh;
+        for (let i = 0; i < d.length; i += 4) {
+          const r = d[i], g = d[i+1], b = d[i+2];
+          // YCbCr skin-color rule (works across skin tones, robust to lighting)
+          const y  = 0.299 * r + 0.587 * g + 0.114 * b;
+          const cb = 128 - 0.169 * r - 0.331 * g + 0.500 * b;
+          const cr = 128 + 0.500 * r - 0.419 * g - 0.081 * b;
+          if (y > 50 && cb > 77 && cb < 127 && cr > 133 && cr < 173) skinPx++;
+        }
+        // Require at least 15% skin pixels → a hand is clearly in frame
+        return skinPx / total > 0.15;
+      } catch { return false; }
+    };
 
-    // ── Step 3: Capture real frame from video (cap size + JPEG quality for edge payload limits) ──
+    // Poll every 500ms for up to 20s; abort if component unmounts or stream stops
+    let detected = false;
+    for (let attempt = 0; attempt < 40; attempt++) {
+      if (!streamRef.current || !videoRef.current) break;
+      if (videoRef.current.readyState >= 2 && detectHand(videoRef.current)) {
+        detected = true;
+        setHandDetected(true);
+        break;
+      }
+      await new Promise((r) => setTimeout(r, 500));
+    }
+
+    if (!detected) {
+      setScanError(t('quantumApothecary.scan.noHand'));
+      setIsScanning(false);
+      setScanPhase('idle');
+      setHandDetected(false);
+      cameraStream.getTracks().forEach((tk) => tk.stop());
+      streamRef.current = null;
+      return;
+    }
+
+    // Hand found — hold 2s for user to stabilize position
+    await new Promise((r) => setTimeout(r, 2000));
+
+    // ── Step 3: Capture real frame from video ──
     let capturedBase64 = '';
     try {
       const canvas = document.createElement('canvas');
@@ -1201,21 +1252,25 @@ function QuantumApothecaryInner() {
                         <div className="absolute inset-0 flex flex-col items-center justify-between p-4 pointer-events-none">
                           {/* Top badge */}
                           <div className="flex items-center gap-2 bg-black/70 rounded-full px-3 py-1.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-ping" style={{ boxShadow: '0 0 6px rgba(212,175,55,0.8)' }} />
-                            <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-[#D4AF37]">
-                              {scanPhase === 'camera'
-                                ? (nadiScanFacing === 'user' ? t('quantumApothecary.app.phaseFrontPalm') : t('quantumApothecary.app.phaseRearPalm'))
-                                : t('quantumApothecary.app.phaseAnalyzing')}
+                            <div className={`w-1.5 h-1.5 rounded-full ${handDetected ? 'bg-emerald-400' : 'bg-[#D4AF37]'} animate-ping`} style={{ boxShadow: handDetected ? '0 0 6px rgba(52,211,153,0.8)' : '0 0 6px rgba(212,175,55,0.8)' }} />
+                            <span className={`text-[9px] font-bold uppercase tracking-[0.3em] ${handDetected ? 'text-emerald-400' : 'text-[#D4AF37]'}`}>
+                              {scanPhase === 'analyzing'
+                                ? t('quantumApothecary.app.phaseAnalyzing')
+                                : handDetected
+                                  ? t('quantumApothecary.app.phaseHandDetected', 'HAND DETECTED — HOLD STILL')
+                                  : (nadiScanFacing === 'user' ? t('quantumApothecary.app.phaseFrontPalm') : t('quantumApothecary.app.phaseRearPalm'))}
                             </span>
                           </div>
                           {/* Center guide box */}
-                          <div className="border-2 border-dashed border-[#D4AF37]/50 rounded-2xl w-36 h-24 flex items-center justify-center">
-                            <span className="text-[9px] font-bold text-[#D4AF37]/60 uppercase tracking-widest text-center leading-relaxed whitespace-pre-line">
-                              {scanPhase === 'camera'
-                                ? (nadiScanFacing === 'user'
-                                  ? t('quantumApothecary.app.guideHoldPalm')
-                                  : t('quantumApothecary.app.guideAimPalm'))
-                                : t('quantumApothecary.app.guideAnalyzing')}
+                          <div className={`border-2 border-dashed ${handDetected ? 'border-emerald-400/60' : 'border-[#D4AF37]/50'} rounded-2xl w-36 h-24 flex items-center justify-center`}>
+                            <span className={`text-[9px] font-bold ${handDetected ? 'text-emerald-400/80' : 'text-[#D4AF37]/60'} uppercase tracking-widest text-center leading-relaxed whitespace-pre-line`}>
+                              {scanPhase === 'analyzing'
+                                ? t('quantumApothecary.app.guideAnalyzing')
+                                : handDetected
+                                  ? '✦ SCANNING ✦'
+                                  : (nadiScanFacing === 'user'
+                                    ? t('quantumApothecary.app.guideHoldPalm')
+                                    : t('quantumApothecary.app.guideAimPalm'))}
                             </span>
                           </div>
                           {/* BPM */}
