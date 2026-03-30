@@ -1058,8 +1058,7 @@ function QuantumApothecaryInner() {
           <button
             type="button"
             onClick={() => {
-              const container = chatEndRef.current?.parentElement?.parentElement;
-              container?.scrollTo({ top: 0, behavior: 'smooth' });
+              chatScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
             }}
             className="pointer-events-auto p-2 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 hover:bg-[#D4AF37]/25 transition"
             title="Scroll to top"
