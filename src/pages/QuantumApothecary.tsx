@@ -1030,21 +1030,9 @@ function QuantumApothecaryInner() {
                     </div>
                   </div>
                   <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/25 text-center pt-1">Get a fresh reading</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button type="button" onClick={() => runNadiScan('user')} disabled={isScanning}
-                      className="sqi-btn-ghost py-3 text-[9px] flex flex-col items-center gap-1.5 disabled:opacity-35">
-                      <Hand size={16} className="text-[#D4AF37]/80" />
-                      <span>New · palm / front</span>
-                    </button>
-                    <button type="button" onClick={() => runNadiScan('environment')} disabled={isScanning}
-                      className="sqi-btn-ghost py-3 text-[9px] flex flex-col items-center gap-1.5 disabled:opacity-35">
-                      <Camera size={16} className="text-[#D4AF37]/80" />
-                      <span>New · rear cam</span>
-                    </button>
-                  </div>
-                  <button type="button" onClick={() => runNadiScan()} disabled={isScanning}
+                  <button type="button" onClick={() => runNadiScan('environment')} disabled={isScanning}
                     className="sqi-btn-primary w-full py-3 text-[10px] disabled:opacity-35">
-                    New scan · same camera as last
+                    New scan · rear camera
                   </button>
                   <div className="flex gap-3">
                     <button type="button" onClick={applyRemedies} className="sqi-btn-primary flex-1 py-3 text-xs">Apply Remedies</button>
