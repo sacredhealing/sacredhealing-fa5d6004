@@ -131,6 +131,16 @@ serve(async (req) => {
 
   const row = announcement as AnnouncementRow;
 
+  // Fetch active email subscribers to filter recipients
+  const { data: subscribers } = await supabase
+    .from("email_subscribers")
+    .select("email")
+    .eq("is_active", true);
+
+  const activeEmails = new Set(
+    (subscribers ?? []).map((s: { email: string }) => s.email.toLowerCase()),
+  );
+
   const { data: profiles, error: profErr } = await supabase
     .from("profiles")
     .select("user_id, preferred_language");
@@ -159,7 +169,13 @@ serve(async (req) => {
     });
   }
 
-  const targets = authUsers.filter((u) => u.email && u.email.includes("@"));
+  // Only send to users whose email is in the active subscribers list
+  const targets = authUsers.filter(
+    (u) => u.email && u.email.includes("@") && activeEmails.has(u.email.toLowerCase()),
+  );
+  const skipped = authUsers.filter(
+    (u) => u.email && u.email.includes("@") && !activeEmails.has(u.email.toLowerCase()),
+  ).length;
 
   const batchSize = 8;
   let sent = 0;
