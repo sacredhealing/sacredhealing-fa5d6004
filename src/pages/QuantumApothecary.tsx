@@ -587,7 +587,7 @@ function QuantumApothecaryInner() {
 
       let parsed: Record<string, unknown> | null = null;
 
-      const nadiScanUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/quantum-apothecary-chat`;
+      const nadiScanUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nadi-scan`;
 
       const scanResp = await fetch(nadiScanUrl, {
         method: 'POST',
@@ -813,12 +813,17 @@ function QuantumApothecaryInner() {
 
     let currentInterim = '';
 
+    let lastFinalIndex = -1;
+
     recognition.onresult = (event: any) => {
       let newFinal = '';
       let interim = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
+          // Skip if we already processed this final result index (Android duplicate bug)
+          if (i <= lastFinalIndex) continue;
+          lastFinalIndex = i;
           newFinal += transcript;
         } else {
           interim += transcript;
@@ -826,7 +831,6 @@ function QuantumApothecaryInner() {
       }
 
       if (newFinal) {
-        // Append finalized speech — do NOT stop or send yet
         const sep = voiceTranscriptRef.current.length > 0 ? ' ' : '';
         voiceTranscriptRef.current = (voiceTranscriptRef.current + sep + newFinal).trim();
         currentInterim = '';

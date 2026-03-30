@@ -22,7 +22,7 @@ export async function streamChatWithSQI(
   seekerName?: string,
   canonicalActivationNames?: string,
 ) {
-  const recent = messages.slice(-15);
+  const recent = messages.slice(-40);
   const apiMessages = recent.map(m => ({
     role: m.role === 'model' ? 'assistant' : 'user',
     content: m.text,
