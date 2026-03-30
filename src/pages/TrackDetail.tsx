@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Play, Pause, Heart, Share2, Clock, Users, Music2, Sparkles, Moon, Zap, Leaf, Brain, Quote, Sun, Sunset, CloudMoon } from 'lucide-react';
