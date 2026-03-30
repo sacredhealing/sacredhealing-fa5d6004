@@ -610,6 +610,7 @@ function QuantumApothecaryInner() {
       setScanResult(result);
       setScanPhase('done');
       setIsScanning(false);
+      document.body.style.overflow = '';
 
       const mainPct = Math.round((activeNadis / 72000) * 100);
       const subPct = Math.round((activeSubNadis / 350000) * 100);
