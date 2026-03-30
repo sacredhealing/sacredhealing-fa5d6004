@@ -18,11 +18,16 @@ const MessageBubble = ({
   return (
     <div className={`flex w-full mb-2 ${isMe ? 'justify-end' : 'justify-start'}`}>
       <div
-        className={`max-w-[75%] px-4 py-2.5 relative shadow-sm ${
+        className={`max-w-[75%] px-4 py-2.5 relative ${
           isMe
-            ? 'bg-primary text-primary-foreground rounded-2xl rounded-br-sm'
-            : 'bg-muted text-foreground rounded-2xl rounded-bl-sm border border-border'
+            ? 'bg-primary text-primary-foreground rounded-2xl rounded-br-sm shadow-sm'
+            : 'rounded-2xl rounded-bl-sm text-foreground'
         }`}
+        style={!isMe ? {
+          background: '#0a0a0a',
+          border: '1px solid #D4AF37',
+          boxShadow: '0 0 8px rgba(212,175,55,0.15), inset 0 0 4px rgba(212,175,55,0.05)'
+        } : undefined}
       >
         <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">
           {content}
