@@ -159,16 +159,16 @@ const TrackDetail: React.FC = () => {
           {track.mood && (
             <span className="inline-flex items-center gap-1 bg-amber-500/15 text-amber-400 px-3 py-1.5 rounded-full text-sm font-medium">
               {getMoodIcon(track.mood)}
-              {tMusicMood(track.mood, t as any)}
+              {tMusicMood(track.mood, t)}
             </span>
           )}
           {track.spiritual_path && (
             <span className="bg-purple-500/15 text-purple-400 px-3 py-1.5 rounded-full text-sm font-medium capitalize">
-              {tMusicSpiritualPath(track.spiritual_path, t as any)}
+              {tMusicSpiritualPath(track.spiritual_path, t)}
             </span>
           )}
           <span className="bg-primary/20 text-primary px-3 py-1.5 rounded-full text-sm font-medium capitalize">
-            {tMusicGenre(track.genre, t as any)}
+            {tMusicGenre(track.genre, t)}
           </span>
         </div>
 
@@ -257,7 +257,7 @@ const TrackDetail: React.FC = () => {
                     {t('music.trackDetail.bestTime', 'Best Time')}
                   </p>
                   <p className="text-sm font-medium capitalize">
-                    {tMusicTimeOfDay(track.best_time_of_day, t as any)}
+                    {tMusicTimeOfDay(track.best_time_of_day, t)}
                   </p>
                 </div>
               </div>
@@ -270,7 +270,7 @@ const TrackDetail: React.FC = () => {
                     {t('music.trackDetail.energy', 'Energy')}
                   </p>
                   <p className="text-sm font-medium capitalize">
-                    {tMusicEnergyLevel(track.energy_level, t as any)}
+                    {tMusicEnergyLevel(track.energy_level, t)}
                   </p>
                 </div>
               </div>

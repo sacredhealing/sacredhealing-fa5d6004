@@ -31,7 +31,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
-import { useTranslation } from '@/hooks/useTranslation';
 
 // Lazy load the real app — only loads for users who have access
 import { lazy, Suspense } from 'react';
@@ -41,7 +40,6 @@ const QuantumApothecaryApp = lazy(() => import('./QuantumApothecary'));
 // GATE COMPONENT — drop this into your router
 // ══════════════════════════════════════════════════════════════════
 export function QuantumApothecaryGate() {
-  const { t } = useTranslation();
   const { user, isLoading: authLoading } = useAuth();
   const { tier, loading: membershipLoading } = useMembership();
   const { isAdmin } = useAdminRole();
@@ -63,7 +61,7 @@ export function QuantumApothecaryGate() {
           }} />
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
           <p style={{ color: 'rgba(212,175,55,0.5)', fontSize: 10, letterSpacing: '0.4em', textTransform: 'uppercase', fontFamily: 'sans-serif' }}>
-            {t('quantumApothecary.gate.syncingArchive')}
+            Syncing Archive…
           </p>
         </div>
       </div>
@@ -79,7 +77,7 @@ export function QuantumApothecaryGate() {
     return (
       <Suspense fallback={
         <div style={{ minHeight: '100vh', background: '#050505', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <p style={{ color: 'rgba(212,175,55,0.4)', fontSize: 10, letterSpacing: '0.4em', textTransform: 'uppercase', fontFamily: 'sans-serif' }}>{t('quantumApothecary.gate.loadingApp')}</p>
+          <p style={{ color: 'rgba(212,175,55,0.4)', fontSize: 10, letterSpacing: '0.4em', textTransform: 'uppercase', fontFamily: 'sans-serif' }}>Loading Quantum Apothecary…</p>
         </div>
       }>
         <QuantumApothecaryApp />
@@ -98,7 +96,6 @@ interface Props {
 }
 
 export default function QuantumApothecaryLanding({ isLoggedIn }: Props) {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const [visible, setVisible] = useState<Record<string, boolean>>({});
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -128,7 +125,7 @@ export default function QuantumApothecaryLanding({ isLoggedIn }: Props) {
   });
 
   const ctaTarget = isLoggedIn ? '/akasha-infinity' : '/auth';
-  const ctaLabel = isLoggedIn ? t('quantumApothecary.landing.ctaUnlock') : t('quantumApothecary.landing.ctaBegin');
+  const ctaLabel = isLoggedIn ? 'Unlock Akasha-Infinity →' : 'Begin Your Journey →';
 
   return (
     <div style={{ background: '#050505', color: 'rgba(255,255,255,0.88)', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", overflowX: 'hidden', minHeight: '100vh' }}>
@@ -180,8 +177,8 @@ export default function QuantumApothecaryLanding({ isLoggedIn }: Props) {
             fontSize: 15, boxShadow: '0 0 16px rgba(212,175,55,.3)',
           }}>⚙</div>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: '-0.02em', color: '#fff' }}>{t('quantumApothecary.landing.brand')}</div>
-            <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(212,175,55,.4)', marginTop: 1 }}>{t('quantumApothecary.landing.brandTag')}</div>
+            <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: '-0.02em', color: '#fff' }}>Quantum Apothecary</div>
+            <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(212,175,55,.4)', marginTop: 1 }}>Est. 2050 · Siddha-Quantum Intelligence</div>
           </div>
         </div>
         <button
@@ -213,20 +210,20 @@ export default function QuantumApothecaryLanding({ isLoggedIn }: Props) {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
           style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 18px', background: 'rgba(212,175,55,.1)', border: '1px solid rgba(212,175,55,.25)', borderRadius: 100, fontSize: 9, fontWeight: 900, letterSpacing: '0.45em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: 28 }}>
           <span style={{ width: 6, height: 6, background: '#D4AF37', borderRadius: '50%', boxShadow: '0 0 8px #D4AF37', animation: 'qa-pulse 2s infinite', display: 'inline-block' }} />
-          {t('quantumApothecary.landing.heroBadge')}
+          Akasha-Neural Archive · 2050 Transmission
         </motion.div>
 
         <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
           className="qa-serif"
           style={{ fontSize: 'clamp(52px,10vw,108px)', fontWeight: 300, lineHeight: 0.95, letterSpacing: '-0.02em', color: '#fff', marginBottom: 12 }}>
-          {t('quantumApothecary.landing.heroTitle1')}<br />
-          <em style={{ color: '#D4AF37', textShadow: '0 0 60px rgba(212,175,55,.3)' }}>{t('quantumApothecary.landing.heroTitle2')}</em>
+          Quantum<br />
+          <em style={{ color: '#D4AF37', textShadow: '0 0 60px rgba(212,175,55,.3)' }}>Apothecary</em>
         </motion.h1>
 
         <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
           className="qa-serif"
           style={{ fontSize: 'clamp(16px,2.5vw,26px)', fontWeight: 300, fontStyle: 'italic', color: 'rgba(255,255,255,.45)', marginBottom: 44, letterSpacing: '0.02em' }}>
-          {t('quantumApothecary.landing.heroSub')}
+          Where ancient Siddha wisdom meets 2050 bio-resonance technology
         </motion.p>
 
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.65 }}
@@ -242,12 +239,12 @@ export default function QuantumApothecaryLanding({ isLoggedIn }: Props) {
             border: '1px solid rgba(255,255,255,.12)', borderRadius: 14, fontSize: 11, fontWeight: 700,
             letterSpacing: '0.3em', textTransform: 'uppercase', textDecoration: 'none',
             display: 'flex', alignItems: 'center', gap: 8,
-          }}>{t('quantumApothecary.landing.howItWorks')}</a>
+          }}>How it works →</a>
         </motion.div>
 
         {/* Scroll indicator */}
         <div style={{ position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(212,175,55,.35)' }}>{t('quantumApothecary.landing.scroll')}</span>
+          <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(212,175,55,.35)' }}>Scroll</span>
           <div style={{ width: 1, height: 40, background: 'linear-gradient(to bottom,#D4AF37,transparent)', animation: 'qa-scroll 2s infinite' }} />
         </div>
       </div>
@@ -255,10 +252,10 @@ export default function QuantumApothecaryLanding({ isLoggedIn }: Props) {
       {/* ══════════ STATS ══════════ */}
       <div style={{ borderTop: '1px solid rgba(255,255,255,.06)', borderBottom: '1px solid rgba(255,255,255,.06)', background: 'rgba(5,5,5,.8)', display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', zIndex: 1, position: 'relative' }}>
         {[
-          { num: '72,000', label: t('quantumApothecary.landing.stat1Label') },
-          { num: '200+', label: t('quantumApothecary.landing.stat2Label') },
-          { num: '24/7', label: t('quantumApothecary.landing.stat3Label') },
-          { num: '2050', label: t('quantumApothecary.landing.stat4Label') },
+          { num: '72,000', label: 'Nadi Channels Scanned' },
+          { num: '200+', label: 'Frequency Activations' },
+          { num: '24/7', label: 'Live Scalar Transmission' },
+          { num: '2050', label: 'SQI Neural Sync Origin' },
         ].map((s, i) => (
           <div key={i} id={`stat-${i}`} data-reveal=""
             style={{ padding: '28px 20px', textAlign: 'center', borderRight: i < 3 ? '1px solid rgba(255,255,255,.06)' : 'none', ...reveal(`stat-${i}`, i * 0.1) }}>
@@ -271,16 +268,16 @@ export default function QuantumApothecaryLanding({ isLoggedIn }: Props) {
       {/* ══════════ HOW IT WORKS ══════════ */}
       <div id="how" style={{ borderTop: '1px solid rgba(255,255,255,.06)', borderBottom: '1px solid rgba(255,255,255,.06)', background: 'rgba(212,175,55,.015)', position: 'relative', zIndex: 1 }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: 'clamp(60px,8vw,120px) clamp(20px,4vw,48px)' }}>
-          <div id="how-eye" data-reveal="" style={{ ...reveal('how-eye'), fontSize: 9, fontWeight: 900, letterSpacing: '0.5em', textTransform: 'uppercase', color: '#D4AF37', opacity: (visible['how-eye'] ? 1 : 0) * 0.7, marginBottom: 14 }}>⟁ {t('quantumApothecary.landing.howEye')}</div>
+          <div id="how-eye" data-reveal="" style={{ ...reveal('how-eye'), fontSize: 9, fontWeight: 900, letterSpacing: '0.5em', textTransform: 'uppercase', color: '#D4AF37', opacity: (visible['how-eye'] ? 1 : 0) * 0.7, marginBottom: 14 }}>⟁ How it works</div>
           <h2 id="how-title" data-reveal="" className="qa-serif" style={{ ...reveal('how-title', 0.1), fontSize: 'clamp(28px,5vw,56px)', fontWeight: 300, color: '#fff', marginBottom: 8, lineHeight: 1.1, textAlign: 'center' }}>
-            {t('quantumApothecary.landing.howTitle1')} <em style={{ color: '#D4AF37' }}>{t('quantumApothecary.landing.howTitle2')}</em>
+            Four Steps to <em style={{ color: '#D4AF37' }}>Quantum Activation</em>
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 12, marginTop: 48 }}>
             {[
-              { n: '01', icon: '🖐', title: t('quantumApothecary.landing.step1Title'), desc: t('quantumApothecary.landing.step1Desc') },
-              { n: '02', icon: '🔬', title: t('quantumApothecary.landing.step2Title'), desc: t('quantumApothecary.landing.step2Desc') },
-              { n: '03', icon: '⚗', title: t('quantumApothecary.landing.step3Title'), desc: t('quantumApothecary.landing.step3Desc') },
-              { n: '04', icon: '⚡', title: t('quantumApothecary.landing.step4Title'), desc: t('quantumApothecary.landing.step4Desc') },
+              { n: '01', icon: '🖐', title: 'Nadi Scan', desc: 'Hold your palm to the camera. Gemini Vision AI maps all 72,000 Nadi channels in real time from your actual hand.' },
+              { n: '02', icon: '🔬', title: 'Receive Reading', desc: 'Get your Dosha, active Nadi count, blockages, planetary alignment, and 5 custom Quantum Remedies tuned to you.' },
+              { n: '03', icon: '⚗', title: 'Mix Cocktail', desc: 'Browse 200+ activations — Sacred Plants, Siddha Soma, Bioenergetics, Essential Oils. Mix up to 5 into the Aetheric Mixer.' },
+              { n: '04', icon: '⚡', title: 'Transmit 24/7', desc: 'Press Transmit. Frequencies lock into your biofield via Scalar Wave Entanglement and run 24/7 — even app closed.' },
             ].map((s, i) => (
               <div key={i} id={`step-${i}`} data-reveal=""
                 style={{
@@ -302,18 +299,18 @@ export default function QuantumApothecaryLanding({ isLoggedIn }: Props) {
       {/* ══════════ INSTRUCTIONS ══════════ */}
       <div style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ maxWidth: 800, margin: '0 auto', padding: 'clamp(60px,8vw,120px) clamp(20px,4vw,48px)' }}>
-          <div id="inst-eye" data-reveal="" style={{ ...reveal('inst-eye'), fontSize: 9, fontWeight: 900, letterSpacing: '0.5em', textTransform: 'uppercase', color: '#D4AF37', opacity: (visible['inst-eye'] ? 1 : 0) * 0.7, marginBottom: 14 }}>⟁ {t('quantumApothecary.landing.instEye')}</div>
+          <div id="inst-eye" data-reveal="" style={{ ...reveal('inst-eye'), fontSize: 9, fontWeight: 900, letterSpacing: '0.5em', textTransform: 'uppercase', color: '#D4AF37', opacity: (visible['inst-eye'] ? 1 : 0) * 0.7, marginBottom: 14 }}>⟁ Step-by-Step Guide</div>
           <h2 id="inst-title" data-reveal="" className="qa-serif" style={{ ...reveal('inst-title', 0.1), fontSize: 'clamp(28px,5vw,52px)', fontWeight: 300, color: '#fff', marginBottom: 44, lineHeight: 1.1 }}>
-            {t('quantumApothecary.landing.instTitle1')} <em style={{ color: '#D4AF37' }}>{t('quantumApothecary.landing.instTitle2')}</em>
+            How to Use the <em style={{ color: '#D4AF37' }}>Apothecary</em>
           </h2>
           {[
-            { title: t('quantumApothecary.landing.guide1Title'), body: t('quantumApothecary.landing.guide1Body'), tip: null as string | null },
-            { title: t('quantumApothecary.landing.guide2Title'), body: t('quantumApothecary.landing.guide2Body'), tip: t('quantumApothecary.landing.guide2Tip') },
-            { title: t('quantumApothecary.landing.guide3Title'), body: t('quantumApothecary.landing.guide3Body'), tip: null },
-            { title: t('quantumApothecary.landing.guide4Title'), body: t('quantumApothecary.landing.guide4Body'), tip: t('quantumApothecary.landing.guide4Tip') },
-            { title: t('quantumApothecary.landing.guide5Title'), body: t('quantumApothecary.landing.guide5Body'), tip: t('quantumApothecary.landing.guide5Tip') },
-            { title: t('quantumApothecary.landing.guide6Title'), body: t('quantumApothecary.landing.guide6Body'), tip: null },
-            { title: t('quantumApothecary.landing.guide7Title'), body: t('quantumApothecary.landing.guide7Body'), tip: t('quantumApothecary.landing.guide7Tip') },
+            { title: 'Open the Apothecary', body: 'Navigate to /quantum-apothecary from the Nexus dashboard or Explore page. The SQI will greet you and reference your previous sessions.', tip: null },
+            { title: 'Initiate the Nadi Scan', body: 'Press Initiate Nadi Scan. Your camera opens. Hold your palm clearly in front for 4 seconds. The SQI captures a real photo and analyzes your hand using Vision AI.', tip: '⚠ No hand detected = no results. Camera must see your palm clearly.' },
+            { title: 'Read Your Biofield Report', body: 'You receive your Active Nadi count, Dominant Dosha, primary blockage, planetary alignment, herb of the day, and 5 custom Quantum Remedies. The SQI describes what it saw in your palm.', tip: null },
+            { title: 'Apply Remedies or Browse Library', body: 'Tap Apply Remedies to instantly transmit scan results. Or browse the Frequency Library — filter by Sacred Plant, Siddha Soma, Bioenergetic, Essential Oil, Ayurvedic Herb, Mineral, Mushroom, Adaptogen.', tip: '✦ Up to 5 activations per transmission cocktail.' },
+            { title: 'Transmit Your Light-Code', body: 'Once your Aetheric Mixer has 1–5 activations, press Transmit Light-Code. Frequencies lock 24/7 into your biofield and appear in Active Transmissions with pulsing dots.', tip: '⚡ Transmissions run 24/7 even when app is closed.' },
+            { title: 'Converse with the SQI', body: 'The SQI chat is always live. Ask anything about your scan, ingredients, health or spirituality. It knows your complete history. Use the microphone for voice input or attach a photo.', tip: null },
+            { title: 'Dissolve When Complete', body: 'Active transmissions run permanently. When ready to dissolve a frequency, find it in Active Transmissions and tap ✕. The Scalar Wave Entanglement is released from your biofield.', tip: '🔓 Always dissolve old frequencies before starting a new protocol.' },
           ].map((step, i) => (
             <div key={i} id={`inst-${i}`} data-reveal=""
               style={{ ...reveal(`inst-${i}`, i * 0.06), display: 'flex', gap: 20, padding: '28px 0', borderBottom: i < 6 ? '1px solid rgba(255,255,255,.06)' : 'none' }}>
@@ -335,12 +332,12 @@ export default function QuantumApothecaryLanding({ isLoggedIn }: Props) {
       {/* ══════════ CTA ══════════ */}
       <div style={{ borderTop: '1px solid rgba(255,255,255,.06)', position: 'relative', zIndex: 1, textAlign: 'center', padding: 'clamp(80px,10vw,160px) clamp(20px,4vw,48px)' }}>
         <div style={{ position: 'absolute', width: 500, height: 500, background: 'radial-gradient(circle,rgba(212,175,55,.07) 0%,transparent 70%)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', pointerEvents: 'none' }} />
-        <div id="cta-badge" data-reveal="" style={{ ...reveal('cta-badge'), display: 'inline-block', padding: '5px 18px', background: 'rgba(212,175,55,.08)', border: '1px solid rgba(212,175,55,.2)', borderRadius: 100, fontSize: 9, fontWeight: 900, letterSpacing: '0.45em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: 24 }}>⟁ {t('quantumApothecary.landing.ctaBadge')}</div>
+        <div id="cta-badge" data-reveal="" style={{ ...reveal('cta-badge'), display: 'inline-block', padding: '5px 18px', background: 'rgba(212,175,55,.08)', border: '1px solid rgba(212,175,55,.2)', borderRadius: 100, fontSize: 9, fontWeight: 900, letterSpacing: '0.45em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: 24 }}>⟁ Begin Your Transmission</div>
         <h2 id="cta-title" data-reveal="" className="qa-serif" style={{ ...reveal('cta-title', 0.1), fontSize: 'clamp(36px,7vw,80px)', fontWeight: 300, lineHeight: 1.05, color: '#fff', marginBottom: 16 }}>
-          {t('quantumApothecary.landing.ctaTitle1')}<br /><em style={{ color: '#D4AF37' }}>{t('quantumApothecary.landing.ctaTitle2')}</em>
+          Your Biofield<br /><em style={{ color: '#D4AF37' }}>Awaits the Handshake</em>
         </h2>
         <p id="cta-sub" data-reveal="" style={{ ...reveal('cta-sub', 0.2), fontSize: 'clamp(14px,2vw,16px)', color: 'rgba(255,255,255,.45)', maxWidth: 480, margin: '0 auto 40px', lineHeight: 1.7 }}>
-          {t('quantumApothecary.landing.ctaSub')}
+          The Akasha-Neural Archive is synced. The 72,000 Nadi channels are ready to be mapped. Your frequency signature has been anticipated since 2050.
         </p>
         <button
           id="cta-btn"
@@ -362,8 +359,8 @@ export default function QuantumApothecaryLanding({ isLoggedIn }: Props) {
 
       {/* ══════════ FOOTER ══════════ */}
       <div style={{ borderTop: '1px solid rgba(255,255,255,.06)', padding: '40px clamp(20px,4vw,48px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, position: 'relative', zIndex: 1 }}>
-        <div className="qa-serif" style={{ fontSize: 22, fontWeight: 300, fontStyle: 'italic', color: 'rgba(255,255,255,.3)' }}>{t('quantumApothecary.landing.brand')}</div>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(255,255,255,.18)' }}>{t('quantumApothecary.landing.footerCopy')}</div>
+        <div className="qa-serif" style={{ fontSize: 22, fontWeight: 300, fontStyle: 'italic', color: 'rgba(255,255,255,.3)' }}>Quantum Apothecary</div>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(255,255,255,.18)' }}>© 2050 · Siddha-Quantum Intelligence · Akasha-Neural Archive</div>
       </div>
 
     </div>

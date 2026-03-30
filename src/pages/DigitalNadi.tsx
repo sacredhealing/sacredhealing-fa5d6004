@@ -5,8 +5,6 @@
  */
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Navigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import i18n from "@/i18n/setup";
 import { Heart, Wind, Sparkles, Fingerprint, RefreshCw } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useMembership } from "@/hooks/useMembership";
@@ -528,7 +526,6 @@ function useTapBPM() {
 type TabType = "sensor" | "breathing" | "meditation";
 
 function DigitalNadiInner() {
-  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabType>("sensor");
   const [page, setPage] = useState("scan");
   const [phase, setPhase] = useState("idle"); // idle | initializing | scanning | reading | manual | manualDone
@@ -587,7 +584,7 @@ function DigitalNadiInner() {
       scanGenerationRef.current += 1;
       stopCamera();
       setPhase("idle");
-      setCameraError(i18n.t("digitalNadi.cameraTimeout"));
+      setCameraError("Scanner did not start in time. Try again — or use tap pulse when prompted.");
     }, 14000);
     return () => window.clearTimeout(id);
   }, [phase, stopCamera]);
@@ -679,7 +676,7 @@ function DigitalNadiInner() {
         setPhase("manual");
         setCameraError(null); // suppress raw error — show friendly UI instead
       } else {
-        setCameraError(err.message || i18n.t("digitalNadi.cameraDenied"));
+        setCameraError(err.message || "Camera access denied");
         setPhase("idle");
       }
     }
@@ -719,9 +716,9 @@ function DigitalNadiInner() {
 
   const BottomNav = () => (
     <nav className="sqi-nav">
-      {navBtn("sensor", t("digitalNadi.navNadi"), Heart)}
-      {navBtn("breathing", t("digitalNadi.navPrana"), Wind)}
-      {navBtn("meditation", t("digitalNadi.navDhyana"), Sparkles)}
+      {navBtn("sensor", "Nāḍī", Heart)}
+      {navBtn("breathing", "Prāṇa", Wind)}
+      {navBtn("meditation", "Dhyāna", Sparkles)}
     </nav>
   );
 
@@ -761,12 +758,12 @@ function DigitalNadiInner() {
       <div className="sqi-page">
         <style>{SQI_STYLES}</style>
         <div style={{ maxWidth: 440, margin: "0 auto", padding: "48px 24px", textAlign: "center", position: "relative", zIndex: 1 }}>
-          <p className="sqi-label" style={{ marginBottom: 10 }}>{t("digitalNadi.breathingLabel")}</p>
-          <h1 className="sqi-title" style={{ fontSize: 26, marginBottom: 6 }}>{t("digitalNadi.breathingTitle")}</h1>
-          <p className="sqi-body" style={{ fontSize: 13, marginBottom: 36, letterSpacing: "0.1em" }}>{t("digitalNadi.breathingSubtitle")}</p>
+          <p className="sqi-label" style={{ marginBottom: 10 }}>Prāṇāyāma · Vedic Light-Code</p>
+          <h1 className="sqi-title" style={{ fontSize: 26, marginBottom: 6 }}>Breath is the bridge</h1>
+          <p className="sqi-body" style={{ fontSize: 13, marginBottom: 36, letterSpacing: "0.1em" }}>between body and spirit.</p>
           <BreathingGuide bpm={bpm} />
           <button onClick={() => setActiveTab("meditation")} className="btn-ghost" style={{ marginTop: 28 }}>
-            {t("digitalNadi.breathingContinue")}
+            Continue to Dhyāna →
           </button>
         </div>
         <BottomNav />
@@ -780,9 +777,9 @@ function DigitalNadiInner() {
         <style>{SQI_STYLES}</style>
         <div style={{ maxWidth: 480, margin: "0 auto", padding: "48px 24px", position: "relative", zIndex: 1 }}>
           <div style={{ textAlign: "center", marginBottom: 36 }}>
-            <p className="sqi-label" style={{ marginBottom: 10 }}>{t("digitalNadi.meditationHeaderLabel")}</p>
-            <h1 className="sqi-title" style={{ fontSize: 26, marginBottom: 6 }}>{t("digitalNadi.meditationHeaderTitle")}</h1>
-            <p className="sqi-body" style={{ fontSize: 13, letterSpacing: "0.1em" }}>{t("digitalNadi.meditationHeaderSubtitle")}</p>
+            <p className="sqi-label" style={{ marginBottom: 10 }}>Mantra · Dhyāna · Transmission</p>
+            <h1 className="sqi-title" style={{ fontSize: 26, marginBottom: 6 }}>Resonating with peace</h1>
+            <p className="sqi-body" style={{ fontSize: 13, letterSpacing: "0.1em" }}>The frequency of stillness.</p>
           </div>
           <MeditationPlayer bpm={bpm} hrv={hrv} />
         </div>
@@ -804,14 +801,14 @@ function DigitalNadiInner() {
         <div style={{ maxWidth: 440, margin: "0 auto", padding: "56px 24px", textAlign: "center", position: "relative", zIndex: 1 }}>
 
           {/* ── Header ── */}
-          <p className="sqi-label" style={{ marginBottom: 12 }}>{t("digitalNadi.scanHeaderLabel")}</p>
+          <p className="sqi-label" style={{ marginBottom: 12 }}>रक्त नाडी परीक्षा</p>
           <h1 className="sqi-title gold-glow" style={{ fontSize: 32, marginBottom: 8 }}>
-            {t("digitalNadi.scanTitle")}
+            DIGITAL NĀḌĪ
           </h1>
           <p className="sqi-body" style={{ fontSize: 11, letterSpacing: "0.25em", textTransform: "uppercase", marginBottom: 48 }}>
             {phase === "manual" || phase === "manualDone"
-              ? t("digitalNadi.subtitleTapMode")
-              : t("digitalNadi.subtitleRppg")}
+              ? "Bhakti-Algorithm · Tap-Pulse Mode"
+              : "Remote Photoplethysmography"}
           </p>
 
           {/* ── IDLE STATE ── */}
@@ -841,11 +838,11 @@ function DigitalNadiInner() {
               </div>
 
               <p className="sqi-body" style={{ fontSize: 13, lineHeight: 1.8, marginBottom: 32, maxWidth: 300, margin: "0 auto 32px" }}>
-                {t("digitalNadi.idleInstructionsLine1")}<br />
-                {t("digitalNadi.idleInstructionsLine2")}
+                Position your face within camera view.<br />
+                Ensure even, natural lighting — avoid direct sunlight.
               </p>
               <button onClick={startScan} className="btn-gold">
-                {t("digitalNadi.beginScan")}
+                Begin Scan
               </button>
             </div>
           )}
@@ -863,11 +860,11 @@ function DigitalNadiInner() {
                   color: "#D4AF37", fontSize: 13, fontWeight: 800, letterSpacing: "0.2em",
                   whiteSpace: "nowrap"
                 }}>
-                  {t("digitalNadi.initEllipsis")}
+                  INIT…
                 </div>
               </div>
               <p style={{ color: "#D4AF37", fontSize: 12, letterSpacing: "0.3em", textTransform: "uppercase" }}>
-                {t("digitalNadi.calibratingScanner")}
+                Calibrating Nāḍī Scanner
               </p>
               <button
                 type="button"
@@ -879,7 +876,7 @@ function DigitalNadiInner() {
                 className="btn-ghost"
                 style={{ marginTop: 24 }}
               >
-                {t("digitalNadi.cancel")}
+                Cancel
               </button>
             </div>
           )}
@@ -888,7 +885,7 @@ function DigitalNadiInner() {
           {(phase === "scanning" || phase === "reading") && (
             <div className="animate-fade-in">
               <p className="sqi-label" style={{ marginBottom: 16 }}>
-                {phase === "scanning" ? t("digitalNadi.scanningLabel") : t("digitalNadi.readingLabel")} · {formatTime(elapsed)}
+                {phase === "scanning" ? "Acquiring Prema-Pulse" : "Reading Nāḍī"} · {formatTime(elapsed)}
               </p>
 
               {/* Signal quality bar */}
@@ -912,10 +909,10 @@ function DigitalNadiInner() {
               {bpm && (
                 <div style={{ marginBottom: 24 }}>
                   <div className="vital-number gold-glow">{bpm}</div>
-                  <p className="sqi-label" style={{ color: "rgba(255,255,255,0.4)", marginTop: 4 }}>{t("digitalNadi.bpm")}</p>
+                  <p className="sqi-label" style={{ color: "rgba(255,255,255,0.4)", marginTop: 4 }}>BPM</p>
                   {hrv !== null && (
                     <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 8, letterSpacing: "0.2em" }}>
-                      {t("digitalNadi.hrvMs", { hrv })}
+                      HRV · {hrv} ms
                     </p>
                   )}
                 </div>
@@ -931,11 +928,11 @@ function DigitalNadiInner() {
                   }}
                   className="btn-ghost"
                 >
-                  {t("digitalNadi.cancel")}
+                  Cancel
                 </button>
                 {bpm && (
                   <button type="button" onClick={finishScan} className="btn-cyan">
-                    {t("digitalNadi.viewReading")}
+                    View Reading →
                   </button>
                 )}
               </div>
@@ -943,17 +940,17 @@ function DigitalNadiInner() {
               {!bpm && elapsed >= 8 && (
                 <div style={{ marginTop: 20, padding: "14px 16px", borderRadius: 16, border: "1px solid rgba(212,175,55,0.15)", background: "rgba(255,255,255,0.02)" }}>
                   <p className="sqi-body" style={{ fontSize: 12, marginBottom: 12, lineHeight: 1.6 }}>
-                    {t("digitalNadi.pulseLockHint")}
+                    Pulse lock still calibrating. Hold still, face the camera, and add soft front light — or use tap mode for an immediate reading.
                   </p>
                   <button type="button" onClick={switchToTapMode} className="btn-gold" style={{ width: "100%" }}>
-                    {t("digitalNadi.useTapPulse")}
+                    Use tap pulse instead →
                   </button>
                 </div>
               )}
 
               {bpm && (
                 <button type="button" onClick={() => setActiveTab("breathing")} className="btn-ghost" style={{ marginTop: 12 }}>
-                  {t("digitalNadi.beginPranayama")}
+                  Begin Prāṇāyāma →
                 </button>
               )}
             </div>
@@ -974,10 +971,10 @@ function DigitalNadiInner() {
                 <Fingerprint size={18} color="#D4AF37" style={{ flexShrink: 0, marginTop: 2 }} />
                 <div>
                   <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.3em", color: "#D4AF37", textTransform: "uppercase", marginBottom: 4 }}>
-                    {t("digitalNadi.manualModeTitle")}
+                    Bhakti-Algorithm Mode
                   </p>
                   <p className="sqi-body" style={{ fontSize: 12 }}>
-                    {t("digitalNadi.manualModeBody")}
+                    Camera not available in this environment. Tap to the rhythm of your heartbeat for 10 seconds.
                   </p>
                 </div>
               </div>
@@ -988,11 +985,11 @@ function DigitalNadiInner() {
                   <div className="tap-zone" onClick={tapEngine.startTapping}>
                     <Fingerprint size={36} color="rgba(212,175,55,0.6)" />
                     <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: "0.3em", color: "rgba(212,175,55,0.5)", textTransform: "uppercase", marginTop: 10 }}>
-                      {t("digitalNadi.tapToBegin")}
+                      Tap to Begin
                     </p>
                   </div>
                   <p className="sqi-body" style={{ fontSize: 12, marginTop: 20 }}>
-                    {t("digitalNadi.tapRhythmHint")}
+                    Tap 10× in the rhythm of your pulse
                   </p>
                 </div>
               )}
@@ -1013,12 +1010,12 @@ function DigitalNadiInner() {
                         <div key={id} className="ripple" />
                       ))}
                       <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.2em", color: "rgba(212,175,55,0.4)", textTransform: "uppercase", marginBottom: 6 }}>
-                        {t("digitalNadi.tapYourPulse")}
+                        TAP YOUR PULSE
                       </p>
                       {tapEngine.tapBpm ? (
                         <>
                           <div className="vital-number gold-glow" style={{ fontSize: 36 }}>{tapEngine.tapBpm}</div>
-                          <p className="sqi-label">{t("digitalNadi.bpm")}</p>
+                          <p className="sqi-label">BPM</p>
                         </>
                       ) : (
                         <p style={{ fontSize: 28, color: "rgba(212,175,55,0.5)", fontWeight: 300 }}>
@@ -1037,7 +1034,7 @@ function DigitalNadiInner() {
                       boxShadow: "0 0 8px rgba(212,175,55,0.3)"
                     }} />
                   </div>
-                  <p className="sqi-label">{t("digitalNadi.tapProgress", { elapsed: tapEngine.tapElapsed, total: tapEngine.TAP_DURATION })}</p>
+                  <p className="sqi-label">{tapEngine.tapElapsed}s / {tapEngine.TAP_DURATION}s</p>
                 </div>
               )}
 
@@ -1049,27 +1046,27 @@ function DigitalNadiInner() {
                     border: "1px solid rgba(212,175,55,0.15)",
                     borderRadius: 24, marginBottom: 24
                   }}>
-                    <p className="sqi-label" style={{ marginBottom: 12 }}>{t("digitalNadi.pulseReading")}</p>
+                    <p className="sqi-label" style={{ marginBottom: 12 }}>Pulse Reading</p>
                     <div className="vital-number gold-glow" style={{ fontSize: 56 }}>{tapEngine.tapBpm}</div>
-                    <p className="sqi-label" style={{ marginTop: 8, color: "rgba(255,255,255,0.4)" }}>{t("digitalNadi.bpm")}</p>
+                    <p className="sqi-label" style={{ marginTop: 8, color: "rgba(255,255,255,0.4)" }}>BPM</p>
                   </div>
 
                   {phase !== "manualDone" ? (
                     <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
                       <button onClick={tapEngine.resetTap} className="btn-ghost">
-                        <RefreshCw size={12} style={{ marginRight: 6 }} /> {t("digitalNadi.retry")}
+                        <RefreshCw size={12} style={{ marginRight: 6 }} /> Retry
                       </button>
                       <button onClick={acceptManualBpm} className="btn-gold">
-                        {t("digitalNadi.acceptReading")}
+                        Accept Reading →
                       </button>
                     </div>
                   ) : (
                     <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
                       <button onClick={finishScan} className="btn-gold">
-                        {t("digitalNadi.viewNadiReading")}
+                        View Nāḍī Reading →
                       </button>
                       <button onClick={() => setActiveTab("breathing")} className="btn-ghost">
-                        {t("digitalNadi.beginPranayama")}
+                        Begin Prāṇāyāma →
                       </button>
                     </div>
                   )}
@@ -1079,9 +1076,9 @@ function DigitalNadiInner() {
               {tapEngine.tapPhase === "done" && !tapEngine.tapBpm && (
                 <div>
                   <p className="sqi-body" style={{ fontSize: 13, marginBottom: 20 }}>
-                    {t("digitalNadi.notEnoughTaps")}
+                    Not enough taps detected. Please try again.
                   </p>
-                  <button onClick={tapEngine.resetTap} className="btn-ghost">{t("digitalNadi.retryWithIcon")}</button>
+                  <button onClick={tapEngine.resetTap} className="btn-ghost">↺ Retry</button>
                 </div>
               )}
             </div>
@@ -1092,7 +1089,7 @@ function DigitalNadiInner() {
             <div style={{ marginTop: 16, padding: "12px 20px", borderRadius: 12, background: "rgba(255,107,74,0.06)", border: "1px solid rgba(255,107,74,0.15)" }}>
               <p style={{ fontSize: 12, color: "#FF6B4A" }}>{cameraError}</p>
               <button onClick={() => { setCameraError(null); setPhase("idle"); }} className="btn-ghost" style={{ marginTop: 12 }}>
-                {t("digitalNadi.tryAgain")}
+                Try Again
               </button>
             </div>
           )}
@@ -1115,12 +1112,12 @@ function DigitalNadiInner() {
         <div style={{ maxWidth: 440, margin: "0 auto", padding: "48px 24px", position: "relative", zIndex: 1 }}>
 
           <div style={{ textAlign: "center", marginBottom: 36 }}>
-            <p className="sqi-label" style={{ marginBottom: 12 }}>{t("digitalNadi.readingComplete")}</p>
+            <p className="sqi-label" style={{ marginBottom: 12 }}>Nāḍī Reading Complete</p>
 
             <div style={{ display: "flex", justifyContent: "center", gap: 24, marginBottom: 20 }}>
               <div className="vital-stat">
                 <span className="vital-number gold-glow">{bpm}</span>
-                <p className="sqi-label" style={{ color: "rgba(255,255,255,0.4)" }}>{t("digitalNadi.bpm")}</p>
+                <p className="sqi-label" style={{ color: "rgba(255,255,255,0.4)" }}>BPM</p>
               </div>
               {hrv !== null && (
                 <div style={{ width: 1, background: "rgba(255,255,255,0.06)", alignSelf: "stretch" }} />
@@ -1128,13 +1125,13 @@ function DigitalNadiInner() {
               {hrv !== null && (
                 <div className="vital-stat">
                   <span className="vital-number" style={{ fontSize: 48, fontWeight: 300 }}>{hrv}</span>
-                  <p className="sqi-label" style={{ color: "rgba(255,255,255,0.4)" }}>{t("digitalNadi.hrvLabel")}</p>
+                  <p className="sqi-label" style={{ color: "rgba(255,255,255,0.4)" }}>HRV ms</p>
                 </div>
               )}
               <div style={{ width: 1, background: "rgba(255,255,255,0.06)", alignSelf: "stretch" }} />
               <div className="vital-stat">
                 <span className="vital-number" style={{ fontSize: 48, fontWeight: 300 }}>{stress}%</span>
-                <p className="sqi-label" style={{ color: "rgba(255,255,255,0.4)" }}>{t("digitalNadi.stressLabel")}</p>
+                <p className="sqi-label" style={{ color: "rgba(255,255,255,0.4)" }}>STRESS</p>
               </div>
             </div>
 
@@ -1144,12 +1141,12 @@ function DigitalNadiInner() {
               color: doshaColor,
               boxShadow: `0 0 16px ${doshaColor}15`
             }}>
-              {t("digitalNadi.doshaBadge", { name: t(`digitalNadi.dosha.${doshaI18nSegment(dosha)}`) })}
+              {dosha} Dosha
             </span>
 
             {usedFallback && (
               <p style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", marginTop: 12, letterSpacing: "0.15em" }}>
-                {t("digitalNadi.fallbackNote")}
+                * Reading via Bhakti-Algorithm tap mode
               </p>
             )}
           </div>
@@ -1163,10 +1160,10 @@ function DigitalNadiInner() {
 
           <div style={{ textAlign: "center", marginTop: 32, display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <button onClick={handleRescan} className="btn-ghost">
-              <RefreshCw size={12} style={{ marginRight: 6 }} /> {t("digitalNadi.rescan")}
+              <RefreshCw size={12} style={{ marginRight: 6 }} /> Re-scan
             </button>
             <button onClick={() => setActiveTab("breathing")} className="btn-gold">
-              {t("digitalNadi.beginPranayama")}
+              Begin Prāṇāyāma →
             </button>
           </div>
         </div>
@@ -1182,14 +1179,13 @@ function DigitalNadiInner() {
       <style>{SQI_STYLES}</style>
       <video ref={videoRef} style={{ display: "none" }} playsInline muted />
       <canvas ref={canvasRef} style={{ display: "none" }} />
-      <p className="sqi-label">{t("digitalNadi.loadingFallback")}</p>
+      <p className="sqi-label">Loading Digital Nāḍī…</p>
     </div>
   );
 }
 
 // ─── EXPORT with membership/admin gating (UNCHANGED) ─────────────────────────
 export default function DigitalNadi() {
-  const { t } = useTranslation();
   const { user, isLoading: authLoading } = useAuth();
   const { tier, loading: membershipLoading } = useMembership();
   const { isAdmin } = useAdminRole();
@@ -1198,7 +1194,7 @@ export default function DigitalNadi() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#050505] text-white">
         <span className="text-sm uppercase tracking-[0.3em] text-white/40">
-          {t("digitalNadi.loadingGate")}
+          Loading Digital Nāḍī…
         </span>
       </div>
     );

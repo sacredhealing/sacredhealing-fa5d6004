@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 type MeditationCatalogLang = 'en' | 'sv';
 
 const MEDITATION_PICK_COLUMNS =
-  'id, title, description, duration_minutes, shc_reward, category, language' as const;
+  'id, title, title_sv, description, duration_minutes, shc_reward, category, language' as const;
 
 function catalogLangFromAppLanguage(appLanguage: string): MeditationCatalogLang {
   return appLanguage.split('-')[0].toLowerCase() === 'sv' ? 'sv' : 'en';

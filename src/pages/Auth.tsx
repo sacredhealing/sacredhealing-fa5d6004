@@ -458,6 +458,9 @@ const Auth: React.FC = () => {
                         redirectTo: `${window.location.origin}/reset-password`,
                       });
                       if (error) throw error;
+                      await supabase.functions.invoke('send-reset-email', {
+                        body: { email, language: i18n.language },
+                      });
                       toast({
                         title: t('auth.resetEmailTitle'),
                         description: t('auth.resetEmailDescription'),

@@ -12,25 +12,10 @@
  */
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import type { TFunction } from 'i18next';
-import { useTranslation } from 'react-i18next';
 import { Play, Pause, Clock, Loader2, ExternalLink, RefreshCw, Square } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useMusicPlayer, UniversalAudioItem, type Track } from '@/contexts/MusicPlayerContext';
 import { useNavigate } from 'react-router-dom';
-
-const NAV_LIBRARY_KEY: Record<string, 'meditations' | 'mantras' | 'healing' | 'music'> = {
-  '/meditations': 'meditations',
-  '/mantras': 'mantras',
-  '/healing': 'healing',
-  '/music': 'music',
-};
-
-function libraryLabelForPath(path: string, t: TFunction): string {
-  const key = NAV_LIBRARY_KEY[path];
-  if (key) return t(`digitalNadi.reco.libraryNames.${key}`);
-  return path.replace('/', '') || path;
-}
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -70,7 +55,8 @@ interface Props {
 
 // ─── Dosha → Query Config ─────────────────────────────────────────────────────
 
-function getDoshaConfig(dosha: Dosha, stress: number, _bpm: number | null, t: TFunction) {
+function getDoshaConfig(dosha: Dosha, stress: number, _bpm: number | null) {
+  // Returns filter hints per table
   const highStress = stress > 60;
   const midStress = stress > 35;
 
@@ -81,7 +67,7 @@ function getDoshaConfig(dosha: Dosha, stress: number, _bpm: number | null, t: TF
     healingCategories?: string[];
     musicMoods?: string[];
     musicEnergyLevels?: string[];
-    musicBestTime?: string;
+    musicBestTime: string;
     sectionLabel: string;
     sectionReason: string;
     color: string;
@@ -94,12 +80,12 @@ function getDoshaConfig(dosha: Dosha, stress: number, _bpm: number | null, t: TF
         : midStress
         ? ['Mindfulness', 'Healing', 'Relaxation', 'Breathing']
         : ['Manifestation', 'Spiritual', 'Chakra', 'Mindfulness'],
-      sectionLabel: t('digitalNadi.reco.meditation.label'),
+      sectionLabel: 'Dhyāna · Meditation',
       sectionReason: highStress
-        ? t('digitalNadi.reco.meditation.reasonHigh')
+        ? 'Deep rest for your nervous system'
         : midStress
-        ? t('digitalNadi.reco.meditation.reasonMid')
-        : t('digitalNadi.reco.meditation.reasonLow'),
+        ? 'Balance and centre your mind'
+        : 'Deepen your stillness',
       color: '#B084FF',
       icon: '◎',
     },
@@ -112,15 +98,14 @@ function getDoshaConfig(dosha: Dosha, stress: number, _bpm: number | null, t: TF
         : dosha === 'Vāta'
         ? ['Grounding', 'Earth', 'Root', 'Stability']
         : ['Universal', 'OM', 'Heart', 'Love'],
-      sectionLabel: t('digitalNadi.reco.mantra.label'),
-      sectionReason:
-        dosha === 'Pitta'
-          ? t('digitalNadi.reco.mantra.reasonPitta')
-          : dosha === 'Kapha'
-          ? t('digitalNadi.reco.mantra.reasonKapha')
-          : dosha === 'Vāta'
-          ? t('digitalNadi.reco.mantra.reasonVata')
-          : t('digitalNadi.reco.mantra.reasonBalanced'),
+      sectionLabel: 'Mantra · Sacred Sound',
+      sectionReason: dosha === 'Pitta'
+        ? 'Cooling vibrations to pacify inner fire'
+        : dosha === 'Kapha'
+        ? 'Activating frequencies to awaken your fire'
+        : dosha === 'Vāta'
+        ? 'Grounding tones to anchor scattered energy'
+        : 'Harmonising vibrations for your natural state',
       color: '#FFB84A',
       icon: 'ॐ',
     },
@@ -135,10 +120,10 @@ function getDoshaConfig(dosha: Dosha, stress: number, _bpm: number | null, t: TF
         : dosha === 'Vāta'
         ? ['Grounding', 'Nervous System', 'Root', 'Stability']
         : ['Balance', 'Chakra', 'DNA', 'Frequency'],
-      sectionLabel: t('digitalNadi.reco.healing.label'),
+      sectionLabel: 'Healing Audio · Scalar Waves',
       sectionReason: highStress
-        ? t('digitalNadi.reco.healing.reasonHigh')
-        : t('digitalNadi.reco.healing.reasonDefault'),
+        ? 'Restore your bioenergetic field'
+        : 'Fine-tune your frequency today',
       color: '#5AE4A8',
       icon: '∿',
     },
@@ -151,8 +136,8 @@ function getDoshaConfig(dosha: Dosha, stress: number, _bpm: number | null, t: TF
         : ['joyful', 'devotional', 'blissful', 'uplifting'],
       musicEnergyLevels: highStress ? ['low', 'gentle'] : midStress ? ['medium', 'gentle'] : ['medium', 'high'],
       musicBestTime: getBestTime(),
-      sectionLabel: t('digitalNadi.reco.music.label'),
-      sectionReason: t('digitalNadi.reco.music.reason'),
+      sectionLabel: 'Sacred Music · Nāda Yoga',
+      sectionReason: 'Resonant frequencies aligned to your pulse',
       color: '#FF6B4A',
       icon: '♪',
     },
@@ -171,12 +156,11 @@ function getBestTime(): string {
   return 'night';
 }
 
-function formatDuration(seconds: number, t: TFunction): string {
-  if (!seconds) return t('digitalNadi.duration.empty');
+function formatDuration(seconds: number): string {
+  if (!seconds) return '—';
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
-  if (m > 0) return s > 0 ? t('digitalNadi.duration.minutesSeconds', { m, s }) : t('digitalNadi.duration.minutesOnly', { m });
-  return t('digitalNadi.duration.secondsOnly', { s });
+  return m > 0 ? `${m}m${s > 0 ? ` ${s}s` : ''}` : `${s}s`;
 }
 
 // ─── Supabase Fetchers ────────────────────────────────────────────────────────
@@ -346,9 +330,7 @@ const SectionCard: React.FC<{
   onPlay: () => void;
   onNavigate: () => void;
   navigatePath: string;
-  openInTitle: string;
-  durationFormatted: string;
-}> = ({ track, color, isPlaying, isCurrentTrack, onPlay, onNavigate, navigatePath, openInTitle, durationFormatted }) => {
+}> = ({ track, color, isPlaying, isCurrentTrack, onPlay, onNavigate, navigatePath }) => {
   return (
     <div
       style={{
@@ -444,7 +426,7 @@ const SectionCard: React.FC<{
             fontSize: 10, fontWeight: 700, letterSpacing: '0.15em',
             color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase',
           }}>
-            {durationFormatted}
+            {formatDuration(track.duration_seconds)}
           </span>
           {isCurrentTrack && isPlaying && (
             <span style={{
@@ -483,7 +465,7 @@ const SectionCard: React.FC<{
         </button>
         <button
           onClick={onNavigate}
-          title={openInTitle}
+          title={`Open in ${navigatePath.replace('/', '')}`}
           style={{
             width: 24, height: 24, borderRadius: '50%',
             background: 'transparent',
@@ -513,10 +495,7 @@ const NadiSection: React.FC<{
   onPlay: (track: NadiTrack) => void;
   navigatePath: string;
   onNavigate: (path: string) => void;
-  t: TFunction;
-  openInTitle: string;
-  openFullLibraryLabel: string;
-}> = ({ icon, label, reason, color, tracks, loading, currentAudioId, isPlaying, onPlay, navigatePath, onNavigate, t, openInTitle, openFullLibraryLabel }) => {
+}> = ({ icon, label, reason, color, tracks, loading, currentAudioId, isPlaying, onPlay, navigatePath, onNavigate }) => {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -558,12 +537,12 @@ const NadiSection: React.FC<{
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0' }}>
           <Loader2 size={14} color={color} style={{ animation: 'spin 1s linear infinite' }} />
           <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-            {t('digitalNadi.reco.scanningArchive')}
+            Scanning Akasha Archive…
           </span>
         </div>
       ) : tracks.length === 0 ? (
         <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', fontFamily: "'Plus Jakarta Sans', sans-serif", margin: 0 }}>
-          {t('digitalNadi.reco.noTransmissions')}
+          No transmissions found — more content arriving soon.
         </p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -576,8 +555,6 @@ const NadiSection: React.FC<{
             onPlay={() => onPlay(tracks[0])}
             onNavigate={() => onNavigate(navigatePath)}
             navigatePath={navigatePath}
-            openInTitle={openInTitle}
-            durationFormatted={formatDuration(tracks[0].duration_seconds, t)}
           />
           {/* Expand button if more tracks */}
           {tracks.length > 1 && !expanded && (
@@ -591,22 +568,20 @@ const NadiSection: React.FC<{
                 padding: '4px 0', textAlign: 'left',
               }}
             >
-              {t('digitalNadi.reco.moreTransmissions', { count: tracks.length - 1 })}
+              + {tracks.length - 1} more transmissions
             </button>
           )}
           {/* Remaining tracks */}
-          {expanded && tracks.slice(1).map((tr) => (
+          {expanded && tracks.slice(1).map(t => (
             <SectionCard
-              key={tr.id}
-              track={tr}
+              key={t.id}
+              track={t}
               color={color}
-              isCurrentTrack={currentAudioId === tr.id}
-              isPlaying={isPlaying && currentAudioId === tr.id}
-              onPlay={() => onPlay(tr)}
+              isCurrentTrack={currentAudioId === t.id}
+              isPlaying={isPlaying && currentAudioId === t.id}
+              onPlay={() => onPlay(t)}
               onNavigate={() => onNavigate(navigatePath)}
               navigatePath={navigatePath}
-              openInTitle={openInTitle}
-              durationFormatted={formatDuration(tr.duration_seconds, t)}
             />
           ))}
           {/* Navigate to full page */}
@@ -621,7 +596,7 @@ const NadiSection: React.FC<{
               alignItems: 'center', gap: 4, marginTop: 2,
             }}
           >
-            <ExternalLink size={10} /> {openFullLibraryLabel}
+            <ExternalLink size={10} /> Open full {navigatePath.replace('/', '')} library
           </button>
         </div>
       )}
@@ -632,7 +607,6 @@ const NadiSection: React.FC<{
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export const NadiRecommendations: React.FC<Props> = ({ bpm, hrv: _hrv, dosha, stress }) => {
-  const { t } = useTranslation();
   const { playUniversalAudio, playTrack, currentAudio, currentTrack, isPlaying, stopTrack } = useMusicPlayer();
   const navigate = useNavigate();
 
@@ -646,7 +620,7 @@ export const NadiRecommendations: React.FC<Props> = ({ bpm, hrv: _hrv, dosha, st
   const [loadingHeal, setLoadingHeal] = useState(true);
   const [loadingMusic, setLoadingMusic] = useState(true);
 
-  const config = useMemo(() => getDoshaConfig(dosha, stress, bpm, t), [dosha, stress, bpm, t]);
+  const config = useMemo(() => getDoshaConfig(dosha, stress, bpm), [dosha, stress, bpm]);
 
   const loadAll = useCallback(async () => {
     setLoadingMed(true); setLoadingMan(true);
@@ -689,7 +663,7 @@ export const NadiRecommendations: React.FC<Props> = ({ bpm, hrv: _hrv, dosha, st
       const universalItem: UniversalAudioItem = {
         id: track.id,
         title: track.title,
-        artist: track.artist || t('digitalNadi.reco.defaultArtist'),
+        artist: track.artist || 'Sacred Healing',
         audio_url: track.audio_url,
         preview_url: null,
         cover_image_url: track.cover_image_url,
@@ -700,7 +674,7 @@ export const NadiRecommendations: React.FC<Props> = ({ bpm, hrv: _hrv, dosha, st
       };
       playUniversalAudio(universalItem);
     }
-  }, [playTrack, playUniversalAudio, t]);
+  }, [playTrack, playUniversalAudio]);
 
   const handleNavigate = useCallback((path: string) => {
     navigate(path);
@@ -764,14 +738,14 @@ export const NadiRecommendations: React.FC<Props> = ({ bpm, hrv: _hrv, dosha, st
             textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)',
             margin: 0, marginBottom: 4,
           }}>
-            {t('digitalNadi.reco.headerTitle')}
+            Akasha-Neural Recommendations
           </p>
           <p style={{
             fontFamily: "'Plus Jakarta Sans', sans-serif",
             fontSize: 13, color: 'rgba(255,255,255,0.55)',
             margin: 0, lineHeight: 1.5,
           }}>
-            {t('digitalNadi.reco.headerSubtitle')}
+            Curated from your live Nāḍī reading
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -789,10 +763,10 @@ export const NadiRecommendations: React.FC<Props> = ({ bpm, hrv: _hrv, dosha, st
                 fontSize: 9, fontWeight: 800, letterSpacing: '0.2em',
                 textTransform: 'uppercase', color: 'rgba(248,113,113,0.95)',
               }}
-              title={t('digitalNadi.reco.stopTitle')}
+              title="Stop playback and clear the player"
             >
               <Square size={10} fill="currentColor" />
-              {t('digitalNadi.reco.stop')}
+              Stop
             </button>
           )}
           <button
@@ -805,7 +779,7 @@ export const NadiRecommendations: React.FC<Props> = ({ bpm, hrv: _hrv, dosha, st
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer',
             }}
-            title={t('digitalNadi.reco.refreshTitle')}
+            title="Refresh recommendations"
           >
             <RefreshCw size={13} color="rgba(212,175,55,0.5)" />
           </button>
@@ -815,9 +789,6 @@ export const NadiRecommendations: React.FC<Props> = ({ bpm, hrv: _hrv, dosha, st
       {/* Sections */}
       {SECTION_ORDER.map(({ key, tracks, loading, navigatePath }) => {
         const cfg = config[key];
-        const lib = libraryLabelForPath(navigatePath, t);
-        const openInTitle = t('digitalNadi.reco.openIn', { library: lib });
-        const openFullLibraryLabel = t('digitalNadi.reco.openFullLibrary', { library: lib });
         return (
           <NadiSection
             key={key}
@@ -832,9 +803,6 @@ export const NadiRecommendations: React.FC<Props> = ({ bpm, hrv: _hrv, dosha, st
             onPlay={handlePlay}
             navigatePath={navigatePath}
             onNavigate={handleNavigate}
-            t={t}
-            openInTitle={openInTitle}
-            openFullLibraryLabel={openFullLibraryLabel}
           />
         );
       })}

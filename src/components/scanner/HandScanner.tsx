@@ -24,7 +24,7 @@ const HandScanner: React.FC<HandScannerProps> = ({ onComplete }) => {
     let stream: MediaStream | null = null;
     async function setupCamera() {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: 'environment' } } });
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }

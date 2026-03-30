@@ -4,8 +4,7 @@
  * Scene is intentionally “alive”: pulsing core, orbital rings, sparkles,
  * gentle camera sway — so the beacon reads as active, not inert floaters.
  */
-import { useRef, useMemo } from "react";
-import { useTranslation } from "react-i18next";
+import { useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Float, Sphere, Stars, Text, Sparkles } from "@react-three/drei";
 import * as THREE from "three";
@@ -127,14 +126,9 @@ function FlowerOfLife() {
   );
 }
 
-const CODE_INDEXES = [0, 1, 2, 3];
+const CODES = ["SHREEM", "BRZEE", "OM", "LAKSHMI"];
 
 function LightCodes() {
-  const { t } = useTranslation();
-  const codes = useMemo(
-    () => CODE_INDEXES.map((idx) => t(`wealthBeacon.quantumCodes.${idx}`)),
-    [t]
-  );
   const groupRef = useRef<THREE.Group>(null);
   useFrame(({ clock }) => {
     if (groupRef.current) {
@@ -143,10 +137,10 @@ function LightCodes() {
   });
   return (
     <group ref={groupRef}>
-      {codes.map((code, i) => {
-        const a = (i / codes.length) * Math.PI * 2;
+      {CODES.map((code, i) => {
+        const a = (i / CODES.length) * Math.PI * 2;
         return (
-          <Float key={`${code}-${i}`} speed={3.5} rotationIntensity={0.85} floatIntensity={1.4}>
+          <Float key={code} speed={3.5} rotationIntensity={0.85} floatIntensity={1.4}>
             <Text
               position={[Math.cos(a) * 2.85, Math.sin(a) * 2.85, 0.15]}
               fontSize={0.38}

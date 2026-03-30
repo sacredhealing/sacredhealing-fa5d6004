@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from 'react';
-import { useTranslation } from '@/hooks/useTranslation';
 
 /**
  * 18-Siddha lineage Master — 15 specific points for AI analysis.
@@ -27,14 +26,6 @@ Do not give general advice. Report only what you read from the palm.`;
 
 const ELEMENTS = ['Earth', 'Water', 'Fire', 'Air', 'Ether'] as const;
 type Element = typeof ELEMENTS[number];
-
-const ELEMENT_I18N_KEY: Record<Element, string> = {
-  Earth: 'earth',
-  Water: 'water',
-  Fire: 'fire',
-  Air: 'air',
-  Ether: 'ether',
-};
 
 /** Deterministic Siddha Element scores from seed */
 function getSiddhaElementScores(seed: string): Record<Element, number> {
@@ -121,7 +112,6 @@ const PalmOracle: React.FC<PalmOracleProps> = ({
   handImageUrl,
   className = '',
 }) => {
-  const { t } = useTranslation();
   const [imgSize, setImgSize] = useState<{ w: number; h: number } | null>(null);
   const elementScores = useMemo(() => getSiddhaElementScores(seed), [seed]);
   const linePaths = useMemo(() => getLinePaths(seed), [seed]);
@@ -140,10 +130,10 @@ const PalmOracle: React.FC<PalmOracleProps> = ({
   return (
     <div className={`space-y-5 text-left ${className}`}>
       <h3 className="text-[#D4AF37] font-serif text-lg font-bold border-b border-[#D4AF37]/30 pb-2">
-        {t('handAnalyzer.palmOracle.title')}
+        Master Siddha Palm Analysis
       </h3>
       <p className="text-white/70 text-xs italic">
-        {t('handAnalyzer.palmOracle.subtitle')}
+        You are a Siddha Master of Samudrika Shastra. Analysis with extreme precision — lines and mounts only.
       </p>
 
       {/* Hand image with glowing SVG overlays */}
@@ -152,7 +142,7 @@ const PalmOracle: React.FC<PalmOracleProps> = ({
           <div className="relative w-full max-w-sm mx-auto aspect-[3/4]">
             <img
               src={handImageUrl}
-              alt={t('handAnalyzer.palmOracle.yourPalmAlt')}
+              alt="Your palm"
               className="absolute inset-0 w-full h-full object-contain"
               onLoad={onImageLoad}
             />
@@ -230,56 +220,56 @@ const PalmOracle: React.FC<PalmOracleProps> = ({
             )}
           </div>
           <p className="text-center text-[10px] uppercase tracking-widest text-[#D4AF37]/70 py-2">
-            {t('handAnalyzer.palmOracle.discoveredLines')}
+            Discovered lines & mounts — Life · Head · Heart · Jupiter · Saturn · Venus
           </p>
         </section>
       )}
 
       {/* Line Analysis */}
       <section>
-        <h4 className="text-sm font-bold uppercase tracking-widest text-[#D4AF37]/90">{t('handAnalyzer.palmOracle.lifeLineTitle')}</h4>
-        <p className="text-white/90 text-sm mt-1">{t('handAnalyzer.palmOracle.lifeLineBody')}</p>
+        <h4 className="text-sm font-bold uppercase tracking-widest text-[#D4AF37]/90">Life Line — Ojas Reserve</h4>
+        <p className="text-white/90 text-sm mt-1">
+          Depth and arc indicate <strong>Physical Vitality</strong> carried from past lives. A strong line suggests
+          abundant ojas reserve; a lighter line suggests a soul rebuilding vitality in this incarnation.
+        </p>
       </section>
 
       <section>
-        <h4 className="text-sm font-bold uppercase tracking-widest text-[#D4AF37]/90">{t('handAnalyzer.palmOracle.headLineTitle')}</h4>
-        <p className="text-white/90 text-sm mt-1">{t('handAnalyzer.palmOracle.headLineBody')}</p>
+        <h4 className="text-sm font-bold uppercase tracking-widest text-[#D4AF37]/90">Head Line — Siddhis</h4>
+        <p className="text-white/90 text-sm mt-1">
+          Length and clarity reveal <strong>Mental Powers</strong> and <strong>Ancient Wisdom</strong> retention. The
+          Siddha reads here the capacity for focused mind and wisdom carried across lifetimes.
+        </p>
       </section>
 
       <section>
-        <h4 className="text-sm font-bold uppercase tracking-widest text-[#D4AF37]/90">{t('handAnalyzer.palmOracle.heartLineTitle')}</h4>
-        <p className="text-white/90 text-sm mt-1">{t('handAnalyzer.palmOracle.heartLineBody')}</p>
+        <h4 className="text-sm font-bold uppercase tracking-widest text-[#D4AF37]/90">Heart Line — Karmic Leaks</h4>
+        <p className="text-white/90 text-sm mt-1">
+          Curvature and breaks indicate <strong>Karmic Leaks</strong> and <strong>Dharmic Debt</strong> in relationship
+          and emotion. The Master identifies where the heart has given or withheld, and what remains to be balanced.
+        </p>
       </section>
 
       {/* Mount Analysis */}
       <section className="bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-xl p-4">
-        <h4 className="text-sm font-bold uppercase tracking-widest text-[#D4AF37] mb-3">{t('handAnalyzer.palmOracle.mountTitle')}</h4>
+        <h4 className="text-sm font-bold uppercase tracking-widest text-[#D4AF37] mb-3">Mount Analysis</h4>
         <ul className="space-y-2 text-sm text-white/90">
-          <li>
-            <strong className="text-[#D4AF37]/90">{t('handAnalyzer.palmOracle.mountJupiterLabel')}</strong>{' '}
-            {t('handAnalyzer.palmOracle.mountJupiterDesc')}
-          </li>
-          <li>
-            <strong className="text-[#D4AF37]/90">{t('handAnalyzer.palmOracle.mountSaturnLabel')}</strong>{' '}
-            {t('handAnalyzer.palmOracle.mountSaturnDesc')}
-          </li>
-          <li>
-            <strong className="text-[#D4AF37]/90">{t('handAnalyzer.palmOracle.mountVenusLabel')}</strong>{' '}
-            {t('handAnalyzer.palmOracle.mountVenusDesc')}
-          </li>
+          <li><strong className="text-[#D4AF37]/90">Mount of Jupiter:</strong> Leadership and authority — capacity to lead and inspire.</li>
+          <li><strong className="text-[#D4AF37]/90">Mount of Saturn:</strong> Karma and discipline — the weight and lesson of time.</li>
+          <li><strong className="text-[#D4AF37]/90">Mount of Venus:</strong> Creativity and love — the creative force and desire nature.</li>
         </ul>
       </section>
 
       {/* Siddha Element Score */}
       <section className="bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-xl p-4">
-        <h4 className="text-sm font-bold uppercase tracking-widest text-[#D4AF37] mb-3">{t('handAnalyzer.palmOracle.elementScoreTitle')}</h4>
-        <p className="text-white/80 text-xs mb-3">{t('handAnalyzer.palmOracle.elementScoreIntro')}</p>
+        <h4 className="text-sm font-bold uppercase tracking-widest text-[#D4AF37] mb-3">Siddha Element Score</h4>
+        <p className="text-white/80 text-xs mb-3">
+          Mapping of the lines and mounts to the five elements (Earth, Water, Fire, Air, Ether).
+        </p>
         <div className="space-y-2">
           {ELEMENTS.map((el) => (
             <div key={el} className="flex items-center gap-3">
-              <span className="text-white/90 text-sm w-16 shrink-0">
-                {t(`handAnalyzer.elements.${ELEMENT_I18N_KEY[el]}`)}
-              </span>
+              <span className="text-white/90 text-sm w-16 shrink-0">{el}</span>
               <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-[#D4AF37] rounded-full transition-all duration-500"
@@ -291,9 +281,7 @@ const PalmOracle: React.FC<PalmOracleProps> = ({
           ))}
         </div>
         <p className="text-[#D4AF37] text-sm font-serif mt-3">
-          {t('handAnalyzer.palmOracle.dominantLine', {
-            element: t(`handAnalyzer.elements.${ELEMENT_I18N_KEY[dominantElement]}`),
-          })}
+          Dominant element: <strong>{dominantElement}</strong> — your palm resonates most with {dominantElement.toLowerCase()} in this incarnation.
         </p>
       </section>
     </div>

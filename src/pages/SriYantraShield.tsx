@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useTranslation } from "react-i18next";
 import {
   Shield,
   ShieldCheck,
@@ -18,12 +17,17 @@ import { INITIAL_DATA, ACTIVE_DATA } from "@/components/sri-yantra/types";
 import type { ShieldData } from "@/components/sri-yantra/types";
 import { useSriYantraAccess } from "@/hooks/useSriYantraAccess";
 import SriYantraLanding from "@/pages/SriYantraLanding";
-import i18n from "@/i18n/setup";
 
 const SHIELD_CORE = {
   mantras: ["OM_RAM_RAMAYA_NAMAHA", "MAHA_MRITYUNJAYA"],
   minerals: "SHUNGITE_ORGONITE_HYBRID",
   persistence: "AKASHA_FIXED",
+} as const;
+
+const VERIFICATION_TOOLS = {
+  blood_analysis: "Visual guide for Live Blood un-clumping",
+  emf_meter_sync: "Calibrate HUD with external EMF / TriField meters",
+  water_structuring: "Instructions for the Hexagonal Freeze Test",
 } as const;
 
 const SHIELD_STORAGE_KEY = "sri_yantra_shield_active_v1";
@@ -70,38 +74,36 @@ async function deployStationaryShield(
   addLog: (msg: string) => void,
   setIsActive: (value: boolean) => void
 ) {
-  addLog(i18n.t("sriYantraShield.log.deployInit"));
+  addLog("Initializing UNIVERSAL PROTECTION SHIELD v2026.ANONYMOUS...");
   const initialAnchor = await getOneTimeLocation();
 
   if (initialAnchor) {
     setLocation(initialAnchor);
     addLog(
-      i18n.t("sriYantraShield.log.anchorCoords", {
-        lat: initialAnchor.lat.toFixed(4),
-        lng: initialAnchor.lng.toFixed(4),
-      })
+      `Handshake Complete. Anchoring Sri Yantra to Space-Time Fabric at ${initialAnchor.lat.toFixed(
+        4
+      )}, ${initialAnchor.lng.toFixed(4)}.`
     );
   } else {
-    addLog(i18n.t("sriYantraShield.log.anchorAnonymous"));
+    addLog("Handshake Complete. Anonymous anchor established (GPS not required).");
   }
 
   stopAllLocationServices();
-  addLog(i18n.t("sriYantraShield.log.locationReleased"));
+  addLog("All location services released — no persistent tracking.");
 
-  addLog(i18n.t("sriYantraShield.log.bhupura"));
-  addLog(i18n.t("sriYantraShield.log.shell"));
+  addLog("Projecting 1km Sri Yantra Bhupura (Safe Space walls)...");
+  addLog("Deploying 1000m_RADIUS non-physical geometry shell around anchor point.");
 
   addLog(
-    i18n.t("sriYantraShield.log.broadcast", {
-      mantras: SHIELD_CORE.mantras.join(" + "),
-      minerals: SHIELD_CORE.minerals,
-    })
+    `Broadcasting Solar Fire & EMF Transmutation codes: ${SHIELD_CORE.mantras.join(
+      " + "
+    )} with ${SHIELD_CORE.minerals}.`
   );
 
   setIsActive(true);
   setData(ACTIVE_DATA);
 
-  addLog(i18n.t("sriYantraShield.log.fieldLocked"));
+  addLog("FIELD_LOCKED_PERMANENTLY. Protection: ACTIVE_24_7. GPS status: OFF.");
 
   return {
     status: "FIELD_LOCKED_PERMANENTLY",
@@ -115,11 +117,7 @@ async function boostShieldCoherence(
   setData: (data: ShieldData) => void,
   addLog: (msg: string) => void
 ) {
-  addLog(
-    i18n.t("sriYantraShield.log.boostCoherence", {
-      multiplier: multiplier.toFixed(1),
-    })
-  );
+  addLog(`Boosting shield coherence x${multiplier.toFixed(1)} for verification window (60s).`);
   setData({
     emf: "0.1mG_SUPER_COHERENT",
     pathogenLoad: "ZERO_FIELD_MEASURABLE",
@@ -128,23 +126,25 @@ async function boostShieldCoherence(
 
   // After 60s, gently return to the regular ACTIVE_DATA HUD
   setTimeout(() => {
-    addLog(i18n.t("sriYantraShield.log.verificationComplete"));
+    addLog("Verification window complete. Returning to stable shield baseline.");
     setData(ACTIVE_DATA);
   }, 60000);
 }
 
 async function openQuantumCameraHUD(addLog: (msg: string) => void) {
   if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
-    addLog(i18n.t("sriYantraShield.log.cameraUnavailable"));
+    addLog("Camera access not available. You can still run EMF and water tests manually.");
     return;
   }
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
     stream.getTracks().forEach((track) => track.stop());
-    addLog(i18n.t("sriYantraShield.log.cameraHandshake"));
+    addLog(
+      "Camera handshake complete. Use your camera to observe orbs / light coherence in the room."
+    );
   } catch {
-    addLog(i18n.t("sriYantraShield.log.cameraDeclined"));
+    addLog("Camera permission declined. Proceed with meters and water tests manually.");
   }
 }
 
@@ -156,27 +156,20 @@ async function runProofProtocol(
 
   await openQuantumCameraHUD(addLog);
 
-  addLog(i18n.t("sriYantraShield.log.proofActive"));
+  addLog("Proof Protocol Active. Shield is now at Max Resonance.");
 
   addLog(
-    i18n.t("sriYantraShield.log.verificationBlood", {
-      desc: i18n.t("sriYantraShield.verification.blood_analysis"),
-    })
+    `VERIFICATION_TOOL: Blood analysis — ${VERIFICATION_TOOLS.blood_analysis}`
   );
   addLog(
-    i18n.t("sriYantraShield.log.verificationEmf", {
-      desc: i18n.t("sriYantraShield.verification.emf_meter_sync"),
-    })
+    `VERIFICATION_TOOL: EMF meter sync — ${VERIFICATION_TOOLS.emf_meter_sync}`
   );
   addLog(
-    i18n.t("sriYantraShield.log.verificationWater", {
-      desc: i18n.t("sriYantraShield.verification.water_structuring"),
-    })
+    `VERIFICATION_TOOL: Water structuring — ${VERIFICATION_TOOLS.water_structuring}`
   );
 }
 
 export default function SriYantraShield() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { hasAccess, loading: accessLoading, refetch: refetchAccess } = useSriYantraAccess();
@@ -206,9 +199,7 @@ export default function SriYantraShield() {
       if (stored === "true") {
         setIsActive(true);
         setData(ACTIVE_DATA);
-        setLogs((prev) =>
-          [i18n.t("sriYantraShield.shieldRestoredLog"), ...prev].slice(0, 5)
-        );
+        addLog("Shield state restored: PROTECTION_ACTIVE from previous session.");
       }
     } catch {
       // Ignore storage errors
@@ -218,9 +209,8 @@ export default function SriYantraShield() {
 
   if (accessLoading) {
     return (
-      <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center gap-4">
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
         <Loader2 className="h-10 w-10 animate-spin text-blue-400" />
-        <p className="text-xs font-mono text-white/50">{t("sriYantraShield.loadingAccess")}</p>
       </div>
     );
   }
@@ -233,7 +223,7 @@ export default function SriYantraShield() {
     if (isActive) {
       setIsActive(false);
       setData(INITIAL_DATA);
-      addLog(t("sriYantraShield.deactivateLog"));
+      addLog("Shield Deactivated. Reverting to local chaotic field.");
       try {
         if (typeof window !== "undefined") {
           window.localStorage.removeItem(SHIELD_STORAGE_KEY);
@@ -255,7 +245,7 @@ export default function SriYantraShield() {
         // ignore
       }
     } catch {
-      addLog(t("sriYantraShield.fluxErrorLog"));
+      addLog("ERROR: Quantum Flux Instability Detected.");
     } finally {
       setIsActivating(false);
     }
@@ -264,11 +254,11 @@ export default function SriYantraShield() {
   const handleRunProof = async () => {
     if (!isActive || isProofRunning) return;
     setIsProofRunning(true);
-    addLog(t("sriYantraShield.proofInitLog"));
+    addLog("Initializing SIDDHA-QUANTUM VERIFICATION PROTOCOL...");
     try {
       await runProofProtocol(setData, addLog);
     } catch {
-      addLog(t("sriYantraShield.proofErrorLog"));
+      addLog("Verification protocol encountered an error. Please retry.");
     } finally {
       setIsProofRunning(false);
     }
@@ -298,7 +288,7 @@ export default function SriYantraShield() {
             className="p-2 rounded-lg border border-white/20 hover:border-white/40 hover:bg-white/5 transition flex items-center gap-2 text-white/80 hover:text-white text-sm font-mono"
           >
             <ArrowLeft size={18} />
-            <span className="tracking-wider">{t("sriYantraShield.backLibrary")}</span>
+            <span className="tracking-wider">LIBRARY</span>
           </button>
         </div>
 
@@ -318,12 +308,10 @@ export default function SriYantraShield() {
                 <Shield className="text-red-400" />
               )}
             </div>
-            <h1 className="text-2xl font-mono tracking-[0.3em] font-bold">
-              {t("sriYantraShield.title")}
-            </h1>
+            <h1 className="text-2xl font-mono tracking-[0.3em] font-bold">SRI YANTRA 2026</h1>
           </motion.div>
           <p className="text-xs font-mono opacity-40 tracking-widest uppercase">
-            {t("sriYantraShield.subtitle")}
+            Universal Protection Shield v2.6.GLOBAL
           </p>
         </header>
 
@@ -343,11 +331,9 @@ export default function SriYantraShield() {
                 >
                   <div className="text-center bg-black/60 backdrop-blur-md p-6 rounded-2xl border border-red-500/20 max-w-[280px]">
                     <AlertTriangle className="mx-auto mb-3 text-red-500" size={32} />
-                    <h2 className="text-red-400 font-mono text-sm mb-2">
-                      {t("sriYantraShield.fieldInstabilityTitle")}
-                    </h2>
+                    <h2 className="text-red-400 font-mono text-sm mb-2">FIELD INSTABILITY</h2>
                     <p className="text-[10px] opacity-60 leading-relaxed">
-                      {t("sriYantraShield.fieldInstabilityBody")}
+                      High EMF and collective anxiety detected in local geospatial sector.
                     </p>
                   </div>
                 </motion.div>
@@ -370,12 +356,12 @@ export default function SriYantraShield() {
                 {isActivating ? (
                   <>
                     <Loader2 className="animate-spin" size={18} />
-                    {t("sriYantraShield.btnTransmuting")}
+                    TRANSMUTING...
                   </>
                 ) : isActive ? (
-                  t("sriYantraShield.btnShieldActive")
+                  "SHIELD ACTIVE"
                 ) : (
-                  t("sriYantraShield.btnActivate")
+                  "ACTIVATE SHIELD"
                 )}
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-0 group-hover:opacity-10 transition-opacity" />
@@ -389,12 +375,12 @@ export default function SriYantraShield() {
               {isProofRunning ? (
                 <>
                   <Loader2 className="h-3 w-3 animate-spin" />
-                  {t("sriYantraShield.proofRunning")}
+                  RUNNING PROOF PROTOCOL...
                 </>
               ) : (
                 <>
                   <Sparkles className="h-3 w-3" />
-                  {t("sriYantraShield.proofCta")}
+                  RUN VERIFICATION PROTOCOL
                 </>
               )}
             </button>
@@ -409,9 +395,7 @@ export default function SriYantraShield() {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-4 opacity-40">
               <Info size={14} />
-              <span className="text-[10px] font-mono tracking-widest uppercase">
-                {t("sriYantraShield.systemLogs")}
-              </span>
+              <span className="text-[10px] font-mono tracking-widest uppercase">System Logs</span>
             </div>
             <div className="space-y-2">
               {logs.map((log, i) => (
@@ -426,9 +410,7 @@ export default function SriYantraShield() {
                 </motion.div>
               ))}
               {logs.length === 0 && (
-                <p className="text-[10px] font-mono opacity-20 italic">
-                  {t("sriYantraShield.logsAwaiting")}
-                </p>
+                <p className="text-[10px] font-mono opacity-20 italic">Awaiting initialization...</p>
               )}
             </div>
           </div>
@@ -439,14 +421,12 @@ export default function SriYantraShield() {
               <span className="text-[10px] font-mono uppercase tracking-widest">
                 {location
                   ? `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`
-                  : t("sriYantraShield.locating")}
+                  : "LOCATING..."}
               </span>
             </div>
+            <div className="text-[10px] font-mono uppercase tracking-widest">Radius: 1000m</div>
             <div className="text-[10px] font-mono uppercase tracking-widest">
-              {t("sriYantraShield.radiusLine")}
-            </div>
-            <div className="text-[10px] font-mono uppercase tracking-widest">
-              {t("sriYantraShield.protocolLine")}
+              Protocol: Siddha-Quantum v2
             </div>
           </div>
         </footer>

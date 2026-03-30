@@ -1,4 +1,3 @@
-import React from 'react';
 import { useTranslatedText } from '@/hooks/useTranslateContent';
 
 interface TranslatedContentProps {
@@ -11,5 +10,9 @@ interface TranslatedContentProps {
 export const TranslatedContent = ({ text, className, as: Component = 'span' }: TranslatedContentProps) => {
   const { text: translatedText, isLoading } = useTranslatedText(text);
   
-  return React.createElement(Component as any, { className, style: { opacity: isLoading ? 0.7 : 1, transition: 'opacity 0.2s' } }, translatedText);
+  return (
+    <Component className={className} style={{ opacity: isLoading ? 0.7 : 1, transition: 'opacity 0.2s' }}>
+      {translatedText}
+    </Component>
+  );
 };

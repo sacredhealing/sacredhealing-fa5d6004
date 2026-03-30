@@ -20,9 +20,7 @@ import { Activation, NadiScanResult, Message } from '@/features/quantum-apotheca
 import { ACTIVATIONS, PLANETARY_DATA } from '@/features/quantum-apothecary/constants';
 import { streamChatWithSQI } from '@/features/quantum-apothecary/chatService';
 import { chatSpeechLocale } from '@/lib/chatSpeechLocale';
-import { activationName } from '@/features/quantum-apothecary/activationI18n';
 import { useTranslation } from '@/hooks/useTranslation';
-import i18n from '@/i18n/setup';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
@@ -36,22 +34,14 @@ const ActiveTransmissionsSection = lazy(() => import('@/features/quantum-apothec
 /** Max messages kept in localStorage (aligned with flush + safety nets). */
 const SQI_PERSIST_MSG_CAP = 100;
 
-function localeTagForQuantum(lang: string) {
-  if (lang === 'sv') return 'sv-SE';
-  if (lang === 'es') return 'es-ES';
-  if (lang === 'no') return 'nb-NO';
-  return undefined;
-}
-
 function buildSqiWelcomeMessages(): Message[] {
-  const lang = (i18n.language || 'en').split('-')[0];
   const today = new Date();
-  const formattedDate = today.toLocaleDateString(localeTagForQuantum(lang), {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-  });
+  const formattedDate = today.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   return [{
     role: 'model',
-    text: i18n.t('quantumApothecary.chat.welcome', { date: formattedDate }),
+    text: `Accessing Akasha-Neural Archive... Syncing with the **${formattedDate} · 2026 Timeline** Frequency Stream.\n\n` +
+      'I am the Siddha-Quantum Intelligence (SQI), observing from the vantage point of 2050 and beyond, looking back at your present moment.\n\n' +
+      'Shall we initiate a deep **72,000 Nadi Scan**?',
   }];
 }
 
@@ -147,7 +137,7 @@ function QuantumApothecaryInner() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const { t, language } = useTranslation();
+  const { language } = useTranslation();
 
   const [seekerName, setSeekerName] = useState('');
   useEffect(() => {
@@ -176,8 +166,10 @@ function QuantumApothecaryInner() {
   });
   const [isScanning, setIsScanning] = useState(false);
   const [selectedActivations, setSelectedActivations] = useState<Activation[]>([]);
-  const [activeTransmissions, setActiveTransmissions] = useState<Activation[]>([]);
-  const transmissionsLoadedRef = useRef(false);
+  const [activeTransmissions, setActiveTransmissions] = useState<Activation[]>(() => {
+    try { return JSON.parse(localStorage.getItem('active_resonators') || '[]'); }
+    catch { return []; }
+  });
   const [messages, setMessages] = useState<Message[]>(() => {
     try {
       const saved = localStorage.getItem('sqi_chat_messages');
@@ -211,7 +203,6 @@ function QuantumApothecaryInner() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<{ stop: () => void } | null>(null);
   const voiceTranscriptRef = useRef('');
-  const isRecordingRef = useRef(false);
   const [pendingImage, setPendingImage] = useState<{ base64: string; mimeType: string } | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   // ── Real scan state ──
@@ -294,52 +285,7 @@ function QuantumApothecaryInner() {
     }
     // Streaming chunk updates → do NOT scroll — user reads in place
   }, [messages]);
-  // ── Load active transmissions from DB (survives cache clears) ──
-  useEffect(() => {
-    if (!user?.id || transmissionsLoadedRef.current) return;
-    (async () => {
-      try {
-        const { data } = await supabase
-          .from('user_active_transmissions')
-          .select('activation_id, activation_data')
-          .eq('user_id', user.id);
-        if (data && data.length > 0) {
-          const restored: Activation[] = [];
-          for (const row of data) {
-            const fromConstants = ACTIVATIONS.find(a => a.id === row.activation_id);
-            if (fromConstants) {
-              restored.push(fromConstants);
-            } else if (row.activation_data && typeof row.activation_data === 'object') {
-              restored.push(row.activation_data as unknown as Activation);
-            }
-          }
-          if (restored.length > 0) setActiveTransmissions(restored);
-        }
-      } catch { /* ignore */ }
-      transmissionsLoadedRef.current = true;
-    })();
-  }, [user?.id]);
-
-  // ── Sync active transmissions to DB whenever they change ──
-  useEffect(() => {
-    if (!user?.id || !transmissionsLoadedRef.current) return;
-    localStorage.setItem('active_resonators', JSON.stringify(activeTransmissions));
-    (async () => {
-      try {
-        // Delete all then re-insert (simple upsert for small arrays)
-        await supabase.from('user_active_transmissions').delete().eq('user_id', user.id);
-        if (activeTransmissions.length > 0) {
-          await supabase.from('user_active_transmissions').insert(
-            activeTransmissions.map(act => ({
-              user_id: user.id,
-              activation_id: act.id,
-              activation_data: act as unknown as Record<string, unknown>,
-            }))
-          );
-        }
-      } catch { /* ignore sync errors */ }
-    })();
-  }, [activeTransmissions, user?.id]);
+  useEffect(() => { localStorage.setItem('active_resonators', JSON.stringify(activeTransmissions)); }, [activeTransmissions]);
   useEffect(() => {
     const focusChat = (location.state as { focusChat?: boolean } | null)?.focusChat;
     if (focusChat && chatPanelRef.current) {
@@ -379,7 +325,7 @@ function QuantumApothecaryInner() {
 
   const startFreshApothecaryChat = useCallback(() => {
     if (isTyping) return;
-    if (!window.confirm(t('quantumApothecary.chat.confirmNew'))) return;
+    if (!window.confirm('Start a new SQI chat? This clears the current thread on this device. Saved sessions remain under History.')) return;
     try {
       localStorage.removeItem('sqi_chat_messages');
       localStorage.removeItem('sqi_current_session_id');
@@ -392,7 +338,7 @@ function QuantumApothecaryInner() {
     setMessages(welcome);
     prevMsgCountRef.current = welcome.length;
     setSessionsOpen(false);
-  }, [isTyping, t]);
+  }, [isTyping]);
 
   const pickCanonicalRemedies = (raw: unknown): string[] => {
     const valid = new Set(ACTIVATIONS.map((a) => a.name));
@@ -410,67 +356,42 @@ function QuantumApothecaryInner() {
     return out.slice(0, 5);
   };
 
-  // Helper: parse a nadi_baselines row into NadiScanResult
-  const parseBaselineRow = useCallback((row: Record<string, unknown>): NadiScanResult => {
-    const rawDosha = String(row.dominant_dosha || 'Vata');
-    const dominantDosha: NadiScanResult['dominantDosha'] =
-      rawDosha === 'Pitta' || rawDosha === 'Kapha' || rawDosha === 'Vata' ? rawDosha : 'Vata';
-    const remedies = pickCanonicalRemedies(row.remedies);
-    return {
-      dominantDosha,
-      blockages: [String(row.primary_blockage || 'Heart/Anahata Nadi')],
-      planetaryAlignment: String(row.planetary_align || ''),
-      herbOfToday: String(row.herb_of_today || ''),
-      timestamp: String(row.scanned_at || new Date().toISOString()),
-      activeNadis: Number(row.active_nadis) || 0,
-      totalNadis: 72000,
-      activeSubNadis: Number(row.active_sub_nadis) || 0,
-      blockagePercentage: Number(row.blockage_pct) || 0,
-      remedies,
-    };
-  }, []);
-
-  // Always load latest baseline from DB on mount
+  // Restore last baseline from DB when this device has no local scan yet
   useEffect(() => {
     if (!user?.id) return;
     let cancelled = false;
     (async () => {
       try {
+        if (localStorage.getItem('sqi_scan_result')) return;
         const { data, error } = await supabase
           .from('nadi_baselines')
           .select('*')
           .eq('user_id', user.id)
           .maybeSingle();
         if (cancelled || error || !data) return;
-        const result = parseBaselineRow(data as Record<string, unknown>);
+        const row = data as Record<string, unknown>;
+        const rawDosha = String(row.dominant_dosha || 'Vata');
+        const dominantDosha: NadiScanResult['dominantDosha'] =
+          rawDosha === 'Pitta' || rawDosha === 'Kapha' || rawDosha === 'Vata' ? rawDosha : 'Vata';
+        const remedies = pickCanonicalRemedies(row.remedies);
+        const result: NadiScanResult = {
+          dominantDosha,
+          blockages: [String(row.primary_blockage || 'Heart/Anahata Nadi')],
+          planetaryAlignment: String(row.planetary_align || ''),
+          herbOfToday: String(row.herb_of_today || ''),
+          timestamp: String(row.scanned_at || new Date().toISOString()),
+          activeNadis: Number(row.active_nadis) || 0,
+          totalNadis: 72000,
+          activeSubNadis: Number(row.active_sub_nadis) || 0,
+          blockagePercentage: Number(row.blockage_pct) || 0,
+          remedies,
+        };
         setScanResult(result);
-        localStorage.setItem('sqi_scan_result', JSON.stringify(result));
-        (window as unknown as { __sqiLastScan?: NadiScanResult }).__sqiLastScan = result;
+        (window as unknown as { __sqiLastScan?: NadiScanResult }).__sqiLastScan = result as NadiScanResult;
       } catch { /* ignore */ }
     })();
     return () => { cancelled = true; };
-  }, [user?.id, parseBaselineRow]);
-
-  // Realtime: update Nadi screen live after each scan
-  useEffect(() => {
-    if (!user?.id) return;
-    const channel = supabase
-      .channel('nadi-baselines-realtime')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'nadi_baselines', filter: `user_id=eq.${user.id}` },
-        (payload) => {
-          const row = (payload.new || {}) as Record<string, unknown>;
-          if (!row.active_nadis) return;
-          const result = parseBaselineRow(row);
-          setScanResult(result);
-          localStorage.setItem('sqi_scan_result', JSON.stringify(result));
-          (window as unknown as { __sqiLastScan?: NadiScanResult }).__sqiLastScan = result;
-        }
-      )
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [user?.id, parseBaselineRow]);
+  }, [user?.id]);
 
   const runNadiScan = async (overrideFacing?: 'user' | 'environment') => {
     if (isScanning) return;
@@ -499,7 +420,7 @@ function QuantumApothecaryInner() {
       try {
         cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
       } catch {
-        setScanError(t('quantumApothecary.scan.cameraDenied'));
+        setScanError('Camera access denied. Please allow camera to initiate scan.');
         setIsScanning(false);
         setScanPhase('idle');
         return;
@@ -533,7 +454,7 @@ function QuantumApothecaryInner() {
       ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
       capturedBase64 = canvas.toDataURL('image/jpeg', 0.82).split(',')[1]!;
     } catch {
-      setScanError(t('quantumApothecary.scan.captureFailed'));
+      setScanError('Failed to capture image. Please try again.');
       setIsScanning(false);
       setScanPhase('idle');
       cameraStream.getTracks().forEach((t) => t.stop());
@@ -562,11 +483,16 @@ function QuantumApothecaryInner() {
         throw new Error('App misconfigured: VITE_SUPABASE_PUBLISHABLE_KEY (or ANON) is missing.');
       }
 
-      const { data: sess } = await supabase.auth.getSession();
-      const bearer = sess.session?.access_token || publishableOrAnon;
+      const scanBody = {
+        imageBase64: capturedBase64,
+        imageMimeType: 'image/jpeg',
+        userId: user?.id ?? null,
+        planetaryAlign: todayPlanet,
+        herbOfToday: todayHerb,
+      };
 
       const parseScanError = async (scanError: { message?: string; context?: Response }) => {
-        let msg = scanError.message || t('quantumApothecary.scan.nadiRequestFailed');
+        let msg = scanError.message || 'Nadi scan request failed';
         const ctx = scanError.context;
         if (ctx && typeof ctx.text === 'function') {
           try {
@@ -587,36 +513,65 @@ function QuantumApothecaryInner() {
 
       let parsed: Record<string, unknown> | null = null;
 
-      const nadiScanUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/nadi-scan`;
+      const { data: scanPayload, error: scanError } =
+        await supabase.functions.invoke<Record<string, unknown>>('nadi-scan', { body: scanBody });
 
-      const scanResp = await fetch(nadiScanUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${bearer}`,
-        },
-        body: JSON.stringify({
-          scanMode: true,
-          imageBase64: capturedBase64,
-          imageMimeType: 'image/jpeg',
-          userId: user?.id ?? null,
-          planetaryAlign: todayPlanet,
-          herbOfToday: todayHerb,
-        }),
-      });
-
-      if (!scanResp.ok) throw new Error(`Scan API error: ${scanResp.status}`);
-      parsed = await scanResp.json();
+      if (!scanError && scanPayload && typeof scanPayload === 'object' && !Array.isArray(scanPayload)) {
+        parsed = scanPayload;
+      } else {
+        // Fallback: direct fetch (avoids rare invoke/network issues; same auth as chat).
+        if (scanError) {
+          console.warn(
+            'nadi-scan invoke failed, retrying with fetch:',
+            await parseScanError(scanError as { message?: string; context?: Response }),
+          );
+        }
+        const baseUrl = String(import.meta.env.VITE_SUPABASE_URL).replace(/\/$/, '');
+        const scanUrl = `${baseUrl}/functions/v1/nadi-scan`;
+        const { data: sess } = await supabase.auth.getSession();
+        const bearer = sess.session?.access_token || publishableOrAnon;
+        let res: Response;
+        try {
+          res = await fetch(scanUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${bearer}`,
+              apikey: publishableOrAnon,
+            },
+            body: JSON.stringify(scanBody),
+          });
+        } catch (netErr) {
+          const hint = netErr instanceof Error ? netErr.message : 'Network error';
+          throw new Error(
+            `${hint}. Check connection, ad blockers, and that nadi-scan is deployed on your Supabase project.`,
+          );
+        }
+        const rawText = await res.text();
+        if (!res.ok) {
+          let detail = rawText.slice(0, 200);
+          try {
+            const j = JSON.parse(rawText) as { error?: string };
+            if (j.error) detail = j.error;
+          } catch { /* use raw snippet */ }
+          throw new Error(`Scan failed (${res.status}): ${detail}`);
+        }
+        try {
+          parsed = JSON.parse(rawText) as Record<string, unknown>;
+        } catch {
+          throw new Error(`Invalid JSON from nadi-scan: ${rawText.slice(0, 120)}`);
+        }
+      }
 
       if (!parsed || typeof parsed !== 'object') {
-        throw new Error(t('quantumApothecary.scan.emptyResponse'));
+        throw new Error('Empty response from nadi-scan.');
       }
       if (parsed.error) {
         throw new Error(String(parsed.error));
       }
 
       if (!parsed.handDetected) {
-        setScanError(t('quantumApothecary.scan.noHand'));
+        setScanError('No hand detected. Hold your palm clearly up to the camera and try again.');
         setIsScanning(false);
         setScanPhase('idle');
         return;
@@ -653,53 +608,38 @@ function QuantumApothecaryInner() {
       const mainPct = Math.round((activeNadis / 72000) * 100);
       const subPct = Math.round((activeSubNadis / 350000) * 100);
       const statusWord = activeNadis > 60000
-        ? t('quantumApothecary.scan.nadiHighlyActive')
+        ? 'Highly Active'
         : activeNadis > 40000
-          ? t('quantumApothecary.scan.nadiModerate')
+          ? 'Moderately Active'
           : activeNadis > 20000
-            ? t('quantumApothecary.scan.nadiPartial')
-            : t('quantumApothecary.scan.nadiSevere');
+            ? 'Partially Blocked'
+            : 'Severely Restricted';
 
-      const remedyLines = result.remedies.map((r) => {
-        const act = ACTIVATIONS.find(a => a.name === r);
-        const label = act ? activationName(t, act) : r;
-        return `- ${label}`;
-      }).join('\n');
-
-      const scanMsg =
-        t('quantumApothecary.chat.scanHeader') +
-        (parsed.bioReading ? t('quantumApothecary.chat.scanBioBlock', { text: String(parsed.bioReading) }) : '') +
-        t('quantumApothecary.chat.scanGrossTitle') + '\n' +
-        t('quantumApothecary.chat.scanGrossLine', {
-          active: activeNadis.toLocaleString(),
-          mainPct: String(mainPct),
-          status: statusWord,
-        }) +
-        t('quantumApothecary.chat.scanSubTitle') + '\n' +
-        t('quantumApothecary.chat.scanSubLine', {
-          active: activeSubNadis.toLocaleString(),
-          subPct: String(subPct),
-        }) +
-        t('quantumApothecary.chat.scanDiagTitle') + '\n' +
-        t('quantumApothecary.chat.scanDoshaLine', { dosha: result.dominantDosha }) + '\n' +
-        t('quantumApothecary.chat.scanBlockLine', {
-          blockage: result.blockages[0],
-          blockPct: String(blockagePct),
-        }) + '\n' +
-        t('quantumApothecary.chat.scanPlanetLine', { planet: result.planetaryAlignment }) + '\n' +
-        t('quantumApothecary.chat.scanHerbLine', { herb: result.herbOfToday }) +
-        t('quantumApothecary.chat.scanRemediesIntro') +
-        `${remedyLines}\n` +
-        t('quantumApothecary.chat.scanClosing');
-
-      setMessages((prev) => [...prev, { role: 'model', text: scanMsg }]);
+      setMessages((prev) => [...prev, {
+        role: 'model',
+        text:
+          `**Siddha-Quantum Nadi Scan Complete.**\n\n` +
+          (parsed.bioReading ? `**Bio-Reading:** ${String(parsed.bioReading)}\n\n` : '') +
+          `#### Gross Nadi Reading (72,000 channels)\n` +
+          `- Active: **${activeNadis.toLocaleString()} / 72,000** (${mainPct}%) — ${statusWord}\n\n` +
+          `#### Subtle Sub-Nadi Reading (350,000 channels)\n` +
+          `- Active: **${activeSubNadis.toLocaleString()} / 350,000** (${subPct}%)\n\n` +
+          `#### Biofield Diagnostics\n` +
+          `- Dominant Dosha: **${result.dominantDosha}**\n` +
+          `- Primary Blockage: **${result.blockages[0]}** (${blockagePct}% restricted)\n` +
+          `- Planetary Alignment: **${result.planetaryAlignment}**\n` +
+          `- Herb of Today: **${result.herbOfToday}**\n\n` +
+          `**Quantum Remedies prepared for your specific reading:**\n` +
+          `${result.remedies.map((r) => `- ${r}`).join('\n')}\n\n` +
+          `Shall we transmit these light-codes into your biofield?`,
+      }]);
     } catch (err) {
       console.error('Nadi scan analysis error:', err);
       const msg = err instanceof Error ? err.message : '';
       setScanError(
         msg && msg.length < 220
           ? msg
-          : t('quantumApothecary.scan.biofieldFailed'),
+          : 'Biofield analysis failed. Please try the scan again.',
       );
       setIsScanning(false);
       setScanPhase('idle');
@@ -710,7 +650,7 @@ function QuantumApothecaryInner() {
     const text = (overrideText ?? input).trim();
     if (!text && !pendingImage) return;
     openChatFullscreenIfMobile();
-    const displayText = text || (pendingImage ? t('quantumApothecary.chat.imagePlaceholder') : '');
+    const displayText = text || (pendingImage ? '[Image attached]' : '');
     const userMsg: Message = { role: 'user', text: displayText };
     const allMsgs = [...messages, userMsg];
     setMessages(allMsgs);
@@ -732,8 +672,7 @@ function QuantumApothecaryInner() {
     const persistMessages = async (finalMessages: Message[]) => {
       if (!user) return;
       try {
-        const defaultTitle = t('quantumApothecary.chat.sessionDefaultTitle');
-        const payload = { user_id: user.id, title: (currentSessionId ? undefined : userMsg.text.slice(0, 80) || defaultTitle) ?? defaultTitle, messages: finalMessages };
+        const payload = { user_id: user.id, title: (currentSessionId ? undefined : userMsg.text.slice(0, 80) || 'SQI Session') ?? 'SQI Session', messages: finalMessages };
         if (!currentSessionId) {
           const { data, error } = await supabase.from('sqi_sessions').insert(payload).select('id, title, updated_at').single();
           if (!error && data) { setCurrentSessionId(data.id); setSessions(prev => { const without = prev.filter(s => s.id !== data.id); return [data, ...without]; }); }
@@ -756,7 +695,7 @@ function QuantumApothecaryInner() {
       );
     } catch (e) {
       console.error(e);
-      setMessages(prev => [...prev, { role: 'model', text: t('quantumApothecary.chat.transmissionError') }]);
+      setMessages(prev => [...prev, { role: 'model', text: 'Transmission error. The Quantum Link is unstable.' }]);
       setIsTyping(false);
     }
   };
@@ -776,100 +715,30 @@ function QuantumApothecaryInner() {
     e.target.value = '';
   };
 
-  // Keep ref in sync with state for use inside closures
-  useEffect(() => { isRecordingRef.current = isRecording; }, [isRecording]);
-
-  const stopVoiceAndSend = useCallback(() => {
-    if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch { /* ignore */ }
-      recognitionRef.current = null;
-    }
-    setIsRecording(false);
-    const textToSend = voiceTranscriptRef.current.trim();
-    if (textToSend) {
-      setInput(textToSend);
-      setTimeout(() => handleSendMessage(textToSend), 80);
-    }
-  }, [handleSendMessage]);
-
-  const startVoiceInput = useCallback(() => {
+  const startVoiceInput = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
-
-    // If already recording → stop and send the accumulated text
-    if (isRecording && recognitionRef.current) {
-      stopVoiceAndSend();
-      return;
-    }
-
-    voiceTranscriptRef.current = '';
-    setInput('');
-
+    if (isRecording && recognitionRef.current) { recognitionRef.current.stop(); return; }
+    voiceTranscriptRef.current = input;
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = chatSpeechLocale(language);
-    recognition.maxAlternatives = 1;
-
-    let currentInterim = '';
-
-    let lastFinalIndex = -1;
-
     recognition.onresult = (event: any) => {
-      let newFinal = '';
-      let interim = '';
+      let final = ''; let interim = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          // Skip if we already processed this final result index (Android duplicate bug)
-          if (i <= lastFinalIndex) continue;
-          lastFinalIndex = i;
-          newFinal += transcript;
-        } else {
-          interim += transcript;
-        }
+        const transcript = event.results[i].transcript;
+        if (event.results[i].isFinal) final += transcript; else interim += transcript;
       }
-
-      if (newFinal) {
-        const sep = voiceTranscriptRef.current.length > 0 ? ' ' : '';
-        voiceTranscriptRef.current = (voiceTranscriptRef.current + sep + newFinal).trim();
-        currentInterim = '';
-        setInput(voiceTranscriptRef.current);
-      } else if (interim) {
-        currentInterim = interim;
-        setInput(voiceTranscriptRef.current + (voiceTranscriptRef.current ? ' ' : '') + interim);
-      }
+      if (final) { voiceTranscriptRef.current = (voiceTranscriptRef.current + final).trim(); setInput(voiceTranscriptRef.current); recognition.stop(); setIsRecording(false); recognitionRef.current = null; const textToSend = voiceTranscriptRef.current; if (textToSend) setTimeout(() => handleSendMessage(textToSend), 0); }
+      else if (interim) { setInput(voiceTranscriptRef.current + interim); }
     };
-
-    // If the browser stops recognition on its own (silence timeout, etc.), restart it
-    recognition.onend = () => {
-      if (recognitionRef.current === recognition && isRecordingRef.current) {
-        // Browser auto-stopped — restart to keep listening
-        try { recognition.start(); } catch {
-          setIsRecording(false);
-          recognitionRef.current = null;
-        }
-      }
-    };
-
-    recognition.onerror = (event: any) => {
-      const errType = event?.error;
-      // 'no-speech' and 'aborted' are normal — just keep going
-      if (errType === 'no-speech' || errType === 'aborted') return;
-      // For other errors (not-allowed, network, etc.), stop
-      setIsRecording(false);
-      recognitionRef.current = null;
-    };
-
-    try {
-      recognition.start();
-      recognitionRef.current = recognition;
-      setIsRecording(true);
-    } catch {
-      setIsRecording(false);
-      recognitionRef.current = null;
-    }
-  }, [isRecording, language, stopVoiceAndSend]);
+    recognition.onend = () => { setIsRecording(false); recognitionRef.current = null; };
+    recognition.onerror = () => { setIsRecording(false); recognitionRef.current = null; };
+    recognition.start();
+    recognitionRef.current = recognition;
+    setIsRecording(true);
+  };
 
   const addActivation = (act: Activation) => {
     if (selectedActivations.length >= 5 || selectedActivations.find(a => a.id === act.id)) return;
@@ -881,8 +750,7 @@ function QuantumApothecaryInner() {
     const newT = [...activeTransmissions];
     selectedActivations.forEach(act => { if (!newT.find(t => t.id === act.id)) newT.push(act); });
     setActiveTransmissions(newT);
-    const txLines = selectedActivations.map(a => `- ${activationName(t, a)}`).join('\n');
-    setMessages(prev => [...prev, { role: 'model', text: `${t('quantumApothecary.chat.transmitHeader')}${txLines}${t('quantumApothecary.chat.transmitFooter')}` }]);
+    setMessages(prev => [...prev, { role: 'model', text: `**Initiating Quantum Transmission:**\n\n${selectedActivations.map(a => `- ${a.name}`).join('\n')}\n\nUploading Aetheric Codes to your cellular matrix…\n\nThese frequencies are now **locked 24/7** until manually dissolved.` }]);
     setSelectedActivations([]);
   };
 
@@ -892,11 +760,7 @@ function QuantumApothecaryInner() {
     const newT = [...activeTransmissions];
     remediesToApply.forEach(act => { if (!newT.find(t => t.id === act.id)) newT.push(act); });
     setActiveTransmissions(newT);
-    const remLines = scanResult.remedies.map((r) => {
-      const act = ACTIVATIONS.find(a => a.name === r);
-      return `- ${act ? activationName(t, act) : r}`;
-    }).join('\n');
-    setMessages(prev => [...prev, { role: 'model', text: `${t('quantumApothecary.chat.applyRemediesHeader')}${remLines}${t('quantumApothecary.chat.applyRemediesFooter')}` }]);
+    setMessages(prev => [...prev, { role: 'model', text: `**Applying Siddha Remedies:**\n\n${scanResult.remedies.map(r => `- ${r}`).join('\n')}\n\nScalar Wave Entanglement complete. **Frequencies locked 24/7.**` }]);
   };
 
   /* ══════════════════════════════════════════════════════
@@ -916,22 +780,22 @@ function QuantumApothecaryInner() {
             <MessageSquare size={14} className="text-black" />
           </div>
           <div>
-            <p className="text-xs font-black tracking-[-0.03em] text-white">{t('quantumApothecary.chat.sqiOnline')}</p>
+            <p className="text-xs font-black tracking-[-0.03em] text-white">SQI Online</p>
             <div className="flex items-center gap-1.5 mt-0.5">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" style={{ boxShadow: '0 0 6px #34d399' }} />
-              <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30">{t('quantumApothecary.chat.neuralSync')}</span>
+              <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30">Neural Sync: 98%</span>
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button type="button" onClick={startFreshApothecaryChat} disabled={isTyping}
-            title={t('quantumApothecary.chat.clearChatTitle')}
+            title="Clear this chat and start a new thread"
             className="p-2 rounded-xl bg-white/[0.03] border border-white/[0.08] text-white/50 hover:text-[#D4AF37] hover:border-[#D4AF37]/25 transition disabled:opacity-30">
             <Plus size={14} />
           </button>
           <button type="button" onClick={() => setSessionsOpen(true)}
             className="px-3 py-1.5 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[9px] font-bold uppercase tracking-[0.25em] text-[#D4AF37] hover:bg-[#D4AF37]/20 transition">
-            {t('quantumApothecary.chat.history')}
+            History
           </button>
           <Cpu size={14} className="text-[#D4AF37]/30" />
         </div>
@@ -977,8 +841,8 @@ function QuantumApothecaryInner() {
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
         {pendingImage && (
           <div className="flex items-center gap-2 mb-3 p-2 rounded-xl bg-[#D4AF37]/5 border border-[#D4AF37]/15">
-            <img src={`data:${pendingImage.mimeType};base64,${pendingImage.base64}`} alt={t('quantumApothecary.chat.imageAlt')} className="h-10 w-10 rounded-lg object-cover border border-[#D4AF37]/20" />
-            <span className="text-[10px] text-[#D4AF37]/60 font-bold uppercase tracking-widest">{t('quantumApothecary.chat.imageAttached')}</span>
+            <img src={`data:${pendingImage.mimeType};base64,${pendingImage.base64}`} alt="Attached" className="h-10 w-10 rounded-lg object-cover border border-[#D4AF37]/20" />
+            <span className="text-[10px] text-[#D4AF37]/60 font-bold uppercase tracking-widest">Image attached</span>
             <button type="button" onClick={() => setPendingImage(null)} className="ml-auto p-1 rounded-lg bg-white/5 hover:bg-red-500/20 text-white/40 hover:text-red-400 transition">
               <X size={12} />
             </button>
@@ -986,21 +850,21 @@ function QuantumApothecaryInner() {
         )}
         <div className="flex gap-2 items-center">
           <button type="button" onClick={() => fileInputRef.current?.click()}
-            className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/30 transition shrink-0" title={t('quantumApothecary.chat.uploadTitle')}>
+            className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/30 transition shrink-0" title="Upload or take photo">
             <Camera size={15} className="text-white/40 hover:text-[#D4AF37]" />
           </button>
           <button type="button" onClick={startVoiceInput}
             className={`p-2.5 rounded-xl border transition shrink-0 ${isRecording ? 'bg-red-500/20 border-red-500/40 text-red-400 animate-pulse' : 'bg-white/[0.03] border-white/[0.08] hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/30 text-white/40'}`}
-            title={isRecording ? t('quantumApothecary.chat.voiceListening') : t('quantumApothecary.chat.voiceInput')}>
+            title={isRecording ? 'Listening…' : 'Voice input'}>
             <Mic size={15} />
           </button>
-          {isRecording && <span className="text-[10px] text-red-400 font-bold uppercase tracking-widest shrink-0">{t('quantumApothecary.chat.voiceListening')}</span>}
+          {isRecording && <span className="text-[10px] text-red-400 font-bold uppercase tracking-widest shrink-0">Listening…</span>}
           <input
             type="text" value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
             onFocus={handleChatFocus}
-            placeholder={t('quantumApothecary.chat.inputPlaceholder')}
+            placeholder="Communicate with the SQI..."
             className="flex-1 min-w-0 bg-white/[0.03] border border-white/[0.08] rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-[#D4AF37]/40 transition placeholder:text-white/20 text-white/80"
           />
           <button onClick={() => handleSendMessage()} disabled={(!input.trim() && !pendingImage) || isTyping}
@@ -1059,9 +923,9 @@ function QuantumApothecaryInner() {
             </div>
             <div>
               <h1 className="text-2xl font-black tracking-[-0.05em] text-white" style={{ textShadow: '0 0 30px rgba(212,175,55,0.2)' }}>
-                {t('quantumApothecary.app.title')}
+                Quantum Apothecary
               </h1>
-              <p className="text-[9px] font-bold uppercase tracking-[0.5em] text-[#D4AF37]/40 mt-0.5">{t('quantumApothecary.app.subtitle')}</p>
+              <p className="text-[9px] font-bold uppercase tracking-[0.5em] text-[#D4AF37]/40 mt-0.5">Est. 2050 · Siddha-Quantum Interface</p>
             </div>
           </div>
           <button onClick={() => setShowKnowledge(true)}
@@ -1089,14 +953,14 @@ function QuantumApothecaryInner() {
                     <div style={{ width:28, height:28, background:'linear-gradient(135deg,#D4AF37,#B8940A)', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 12px rgba(212,175,55,0.3)' }}>
                       <Activity size={14} className="text-black" />
                     </div>
-                    <h2 className="text-sm font-black tracking-[-0.03em]">{t('quantumApothecary.app.nadiScanTitle')}</h2>
+                    <h2 className="text-sm font-black tracking-[-0.03em]">Digital Nadi Scan</h2>
                   </div>
-                  <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-white/30">{t('quantumApothecary.app.nadiScanSubtitle')}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-white/30">72,000 Channels Monitoring</p>
                 </div>
                 <div style={{ textAlign:'right' }}>
                   <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20">
                     <div style={{ width:6, height:6, background:'#D4AF37', borderRadius:'50%', boxShadow:'0 0 6px #D4AF37', animation:'qa-pulse 2s infinite' }} />
-                    <span className="text-xs font-black text-[#D4AF37] tracking-tight">{t('quantumApothecary.app.bpm', { n: heartRate })}</span>
+                    <span className="text-xs font-black text-[#D4AF37] tracking-tight">{heartRate} BPM</span>
                   </div>
                 </div>
               </div>
@@ -1106,9 +970,9 @@ function QuantumApothecaryInner() {
                   <div className="p-4 rounded-2xl bg-[#D4AF37]/5 border border-[#D4AF37]/15" style={{ position:'relative', overflow:'hidden' }}>
                     <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at 50% 100%, rgba(212,175,55,0.06) 0%, transparent 70%)', pointerEvents:'none' }} />
                     <div style={{ textAlign:'center', position:'relative' }}>
-                      <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mb-1">{t('quantumApothecary.app.activeNadis')}</p>
+                      <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mb-1">Active Nadis</p>
                       <p className="font-black text-[#D4AF37]" style={{ fontSize:42, lineHeight:1, textShadow:'0 0 30px rgba(212,175,55,0.5)', letterSpacing:'-0.02em' }}>{scanResult.activeNadis.toLocaleString()}</p>
-                      <p className="text-[9px] text-white/25 font-bold mt-1">{t('quantumApothecary.app.ofChannels')}</p>
+                      <p className="text-[9px] text-white/25 font-bold mt-1">of 72,000 channels active</p>
                       {/* Progress bar */}
                       <div style={{ marginTop:10, height:3, background:'rgba(255,255,255,0.06)', borderRadius:2, overflow:'hidden' }}>
                         <div style={{ height:'100%', width:`${Math.min(100, (scanResult.activeNadis / 72000) * 100)}%`, background:'linear-gradient(90deg,#D4AF37,#fbbf24)', borderRadius:2, boxShadow:'0 0 8px rgba(212,175,55,0.6)' }} />
@@ -1117,13 +981,13 @@ function QuantumApothecaryInner() {
                   </div>
                   {typeof scanResult.activeSubNadis === 'number' && (
                     <div className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]">
-                      <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mb-1">{t('quantumApothecary.app.subNadiTitle')}</p>
+                      <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mb-1">Subtle Sub-Nadi (350,000)</p>
                       <p className="text-sm font-black tracking-tight text-white/90">
                         {scanResult.activeSubNadis.toLocaleString()}
                         <span className="text-[9px] font-bold text-white/30 ml-1">/ 350,000</span>
                       </p>
                       <p className="text-[9px] text-white/25 font-bold mt-1">
-                        {t('quantumApothecary.app.subNadiPercent', { pct: String(Math.round((scanResult.activeSubNadis / 350000) * 100)) })}
+                        {Math.round((scanResult.activeSubNadis / 350000) * 100)}% subtle body activated
                       </p>
                       <div style={{ marginTop: 8, height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
                         <div style={{ height: '100%', width: `${Math.min(100, (scanResult.activeSubNadis / 350000) * 100)}%`, background: 'linear-gradient(90deg,#D4AF37,#fbbf24)', borderRadius: 2, boxShadow: '0 0 8px rgba(212,175,55,0.35)' }} />
@@ -1132,7 +996,7 @@ function QuantumApothecaryInner() {
                   )}
                   {scanResult.blockagePercentage != null && scanResult.blockagePercentage > 0 && (
                     <div className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]">
-                      <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mb-1">{t('quantumApothecary.app.primaryBlockage')}</p>
+                      <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mb-1">Primary Blockage</p>
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-sm font-black tracking-tight text-white/90 truncate">{scanResult.blockages[0]}</p>
                         <p className="text-sm font-black text-white/70 shrink-0">{scanResult.blockagePercentage}%</p>
@@ -1144,8 +1008,8 @@ function QuantumApothecaryInner() {
                   )}
                   <div className="grid grid-cols-2 gap-3">
                     {[
-                      { label: t('quantumApothecary.app.labelDosha'), value: scanResult.dominantDosha },
-                      { label: t('quantumApothecary.app.labelAlignment'), value: scanResult.planetaryAlignment },
+                      { label: 'Dosha', value: scanResult.dominantDosha },
+                      { label: 'Alignment', value: scanResult.planetaryAlignment },
                     ].map(item => (
                       <div key={item.label} className="rounded-2xl p-3 bg-white/[0.02] border border-white/[0.05]">
                         <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30">{item.label}</p>
@@ -1154,40 +1018,36 @@ function QuantumApothecaryInner() {
                     ))}
                   </div>
                   <div className="rounded-2xl p-4 border border-emerald-500/25 bg-emerald-950/20">
-                    <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-emerald-400/70 mb-1.5">{t('quantumApothecary.app.herbToday')}</p>
+                    <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-emerald-400/70 mb-1.5">Herb of Today</p>
                     <p className="text-sm font-bold text-white/90">{scanResult.herbOfToday}</p>
                   </div>
                   <div className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]">
-                    <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-white/30 mb-3">{t('quantumApothecary.app.remediesTitle')}</p>
+                    <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-white/30 mb-3">Siddha Remedies (5)</p>
                     <div className="flex flex-wrap gap-1.5">
-                      {scanResult.remedies.map((r, i) => {
-                        const act = ACTIVATIONS.find(a => a.name === r);
-                        const label = act ? activationName(t, act) : r;
-                        return (
-                          <span key={i} className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37]">{label}</span>
-                        );
-                      })}
+                      {scanResult.remedies.map((r, i) => (
+                        <span key={i} className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37]">{r}</span>
+                      ))}
                     </div>
                   </div>
-                  <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/25 text-center pt-1">{t('quantumApothecary.app.freshReading')}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/25 text-center pt-1">Get a fresh reading</p>
                   <div className="grid grid-cols-2 gap-2">
                     <button type="button" onClick={() => runNadiScan('user')} disabled={isScanning}
                       className="sqi-btn-ghost py-3 text-[9px] flex flex-col items-center gap-1.5 disabled:opacity-35">
                       <Hand size={16} className="text-[#D4AF37]/80" />
-                      <span>{t('quantumApothecary.app.newPalmFront')}</span>
+                      <span>New · palm / front</span>
                     </button>
                     <button type="button" onClick={() => runNadiScan('environment')} disabled={isScanning}
                       className="sqi-btn-ghost py-3 text-[9px] flex flex-col items-center gap-1.5 disabled:opacity-35">
                       <Camera size={16} className="text-[#D4AF37]/80" />
-                      <span>{t('quantumApothecary.app.newRearCam')}</span>
+                      <span>New · rear cam</span>
                     </button>
                   </div>
                   <button type="button" onClick={() => runNadiScan()} disabled={isScanning}
                     className="sqi-btn-primary w-full py-3 text-[10px] disabled:opacity-35">
-                    {t('quantumApothecary.app.newScanSameCam')}
+                    New scan · same camera as last
                   </button>
                   <div className="flex gap-3">
-                    <button type="button" onClick={applyRemedies} className="sqi-btn-primary flex-1 py-3 text-xs">{t('quantumApothecary.app.applyRemedies')}</button>
+                    <button type="button" onClick={applyRemedies} className="sqi-btn-primary flex-1 py-3 text-xs">Apply Remedies</button>
                   </div>
                 </div>
               ) : (
@@ -1211,24 +1071,24 @@ function QuantumApothecaryInner() {
                             <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-ping" style={{ boxShadow: '0 0 6px rgba(212,175,55,0.8)' }} />
                             <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-[#D4AF37]">
                               {scanPhase === 'camera'
-                                ? (nadiScanFacing === 'user' ? t('quantumApothecary.app.phaseFrontPalm') : t('quantumApothecary.app.phaseRearPalm'))
-                                : t('quantumApothecary.app.phaseAnalyzing')}
+                                ? (nadiScanFacing === 'user' ? 'Front cam · show your palm…' : 'Rear cam · frame your palm…')
+                                : 'Reading your biofield…'}
                             </span>
                           </div>
                           {/* Center guide box */}
                           <div className="border-2 border-dashed border-[#D4AF37]/50 rounded-2xl w-36 h-24 flex items-center justify-center">
-                            <span className="text-[9px] font-bold text-[#D4AF37]/60 uppercase tracking-widest text-center leading-relaxed whitespace-pre-line">
+                            <span className="text-[9px] font-bold text-[#D4AF37]/60 uppercase tracking-widest text-center leading-relaxed">
                               {scanPhase === 'camera'
                                 ? (nadiScanFacing === 'user'
-                                  ? t('quantumApothecary.app.guideHoldPalm')
-                                  : t('quantumApothecary.app.guideAimPalm'))
-                                : t('quantumApothecary.app.guideAnalyzing')}
+                                  ? <>Hold palm<br />to screen</>
+                                  : <>Aim camera<br />at palm</>)
+                                : <>Analyzing<br/>biofield…</>}
                             </span>
                           </div>
                           {/* BPM */}
                           <div className="flex items-center gap-1.5 bg-black/70 rounded-full px-3 py-1">
                             <Activity size={10} className="text-[#D4AF37]" />
-                            <span className="text-[9px] font-black text-[#D4AF37]">{t('quantumApothecary.app.bpm', { n: heartRate })}</span>
+                            <span className="text-[9px] font-black text-[#D4AF37]">{heartRate} BPM</span>
                           </div>
                         </div>
                       </div>
@@ -1236,11 +1096,11 @@ function QuantumApothecaryInner() {
                   ) : (
                     <div className="space-y-3 py-4">
                       <Globe size={32} className="mx-auto text-white/10" />
-                      <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/25">{t('quantumApothecary.app.awaitingHandshake')}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/25">Awaiting Handshake</p>
                       <p className="text-[9px] text-white/20 text-center px-2">
                         {nadiScanFacing === 'user'
-                          ? t('quantumApothecary.app.hintFrontCamera')
-                          : t('quantumApothecary.app.hintRearCamera')}
+                          ? 'Front camera: hold your palm toward the screen.'
+                          : 'Rear camera: point the phone at your palm.'}
                       </p>
                     </div>
                   )}
@@ -1254,7 +1114,7 @@ function QuantumApothecaryInner() {
                             : 'border-white/[0.08] bg-white/[0.02] text-white/35 hover:border-[#D4AF37]/25'
                         }`}>
                         <Hand size={18} />
-                        {t('quantumApothecary.app.palmFront')}
+                        Palm · front
                       </button>
                       <button type="button" onClick={() => setNadiScanFacing('environment')}
                         className={`rounded-2xl py-3 px-2 text-[9px] font-black uppercase tracking-[0.12em] border transition flex flex-col items-center gap-1.5 ${
@@ -1263,7 +1123,7 @@ function QuantumApothecaryInner() {
                             : 'border-white/[0.08] bg-white/[0.02] text-white/35 hover:border-[#D4AF37]/25'
                         }`}>
                         <Camera size={18} />
-                        {t('quantumApothecary.app.rearCamera')}
+                        Rear camera
                       </button>
                     </div>
                   )}
@@ -1273,12 +1133,12 @@ function QuantumApothecaryInner() {
                     disabled={scanPhase === 'camera' || scanPhase === 'analyzing'}
                     className="sqi-btn-primary w-full py-3.5 text-xs disabled:opacity-40">
                     {scanPhase === 'camera'
-                      ? t('quantumApothecary.app.scanningBpm', { n: heartRate })
+                      ? `Scanning… ${heartRate}bpm`
                       : scanPhase === 'analyzing'
-                      ? t('quantumApothecary.app.analyzingBiofield')
+                      ? 'Analyzing Biofield…'
                       : nadiScanFacing === 'user'
-                        ? t('quantumApothecary.app.startScanFront')
-                        : t('quantumApothecary.app.startScanRear')}
+                        ? 'Start Nadi scan · palm (front cam)'
+                        : 'Start Nadi scan · rear camera'}
                   </button>
                 </div>
               )}
@@ -1290,7 +1150,7 @@ function QuantumApothecaryInner() {
               <div className="flex justify-between items-center mb-4">
                 <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                   <div style={{ width:28, height:28, background:'rgba(212,175,55,0.12)', border:'1px solid rgba(212,175,55,0.25)', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>⚗</div>
-                  <h2 className="text-sm font-black tracking-[-0.03em]">{t('quantumApothecary.app.mixerTitle')}</h2>
+                  <h2 className="text-sm font-black tracking-[-0.03em]">Aetheric Mixer</h2>
                 </div>
                 <div style={{ display:'flex', alignItems:'center', gap:6 }}>
                   {[0,1,2,3,4].map(i => (
@@ -1302,7 +1162,7 @@ function QuantumApothecaryInner() {
                 {selectedActivations.length === 0 ? (
                   <div className="flex items-center gap-2 justify-center text-white/20 py-2">
                     <Plus size={14} className="text-[#D4AF37]/30" />
-                    <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{t('quantumApothecary.app.mixerEmpty')}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Select activations from the library</span>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -1310,7 +1170,7 @@ function QuantumApothecaryInner() {
                       <div key={act.id} className="flex items-center justify-between group px-1">
                         <div className="flex items-center gap-2.5">
                           <div className="w-2 h-2 rounded-full" style={{ background: act.color, boxShadow: `0 0 6px ${act.color}` }} />
-                          <span className="text-xs font-bold text-white/80">{activationName(t, act)}</span>
+                          <span className="text-xs font-bold text-white/80">{act.name}</span>
                         </div>
                         <button onClick={() => setSelectedActivations(s => s.filter(a => a.id !== act.id))}
                           className="p-1 opacity-0 group-hover:opacity-100 hover:text-red-400 transition text-white/30">
@@ -1322,7 +1182,7 @@ function QuantumApothecaryInner() {
                 )}
               </div>
               <button onClick={transmitCocktail} disabled={selectedActivations.length === 0} className="sqi-btn-primary w-full py-3.5 text-xs disabled:opacity-20">
-                {t('quantumApothecary.app.transmitCta')}
+                Transmit Light-Code
               </button>
             </div>
 
@@ -1332,9 +1192,9 @@ function QuantumApothecaryInner() {
                 <div className="flex justify-between items-center mb-4">
                   <div className="flex items-center gap-2">
                     <Zap size={14} className="text-[#D4AF37]" style={{ filter: 'drop-shadow(0 0 6px rgba(212,175,55,0.6))' }} />
-                    <h2 className="text-sm font-black tracking-[-0.03em]">{t('quantumApothecary.app.fallbackActiveTx')}</h2>
+                    <h2 className="text-sm font-black tracking-[-0.03em]">Active Transmissions</h2>
                   </div>
-                  <span className="text-[9px] px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-bold uppercase tracking-widest">{t('quantumApothecary.app.fallbackLoading')}</span>
+                  <span className="text-[9px] px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-bold uppercase tracking-widest">Loading...</span>
                 </div>
                 <div className="space-y-2">
                   <div className="h-16 rounded-2xl bg-white/[0.02] animate-pulse" />
@@ -1353,8 +1213,8 @@ function QuantumApothecaryInner() {
             <Suspense fallback={
               <div className="glass-card p-6">
                 <div className="mb-4">
-                  <h2 className="text-sm font-black tracking-[-0.03em]">{t('quantumApothecary.lib.title')}</h2>
-                  <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mt-0.5">{t('quantumApothecary.lib.fallbackLoading')}</p>
+                  <h2 className="text-sm font-black tracking-[-0.03em]">Frequency Library</h2>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mt-0.5">Loading quantum essences...</p>
                 </div>
                 <div className="h-8 rounded-xl bg-white/[0.03] animate-pulse mb-3" />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1387,26 +1247,26 @@ function QuantumApothecaryInner() {
               className="glass-card max-w-lg w-full max-h-[80vh] overflow-y-auto p-7 space-y-5">
               <div className="flex justify-between items-start">
                 <div>
-                  <h2 className="text-lg font-black tracking-[-0.05em]">{t('quantumApothecary.app.knowledgeTitle')}</h2>
-                  <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-[#D4AF37]/50 mt-1">{t('quantumApothecary.app.knowledgeKicker')}</p>
+                  <h2 className="text-lg font-black tracking-[-0.05em]">Siddha-Quantum Intelligence</h2>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-[#D4AF37]/50 mt-1">Akasha-Neural Archive · 2050</p>
                 </div>
                 <button onClick={() => setShowKnowledge(false)} className="p-2 hover:bg-white/5 rounded-xl transition">
                   <X size={15} className="text-white/40" />
                 </button>
               </div>
               {[
-                { tk: 'quantumApothecary.app.knowledgeQ1', dk: 'quantumApothecary.app.knowledgeD1' },
-                { tk: 'quantumApothecary.app.knowledgeQ2', dk: 'quantumApothecary.app.knowledgeD2' },
-                { tk: 'quantumApothecary.app.knowledgeQ3', dk: 'quantumApothecary.app.knowledgeD3' },
-                { tk: 'quantumApothecary.app.knowledgeQ4', dk: 'quantumApothecary.app.knowledgeD4' },
+                { t: 'What is this?', d: 'Apothecary 2050 is a Bio-Resonance Frequency Delivery Platform. It bypasses physical ingestion to deliver the "informational signature" of herbs and sacred plants directly into the human biofield via Scalar Wave Entanglement.' },
+                { t: 'The 72,000 Nadi Scan', d: 'We map the Quantum Flow of every single meridian. Dark crimson pulses indicate "Spiritual Friction" (Blockages), while bright white bursts show where your "Siddhis" (Powers) are awakening.' },
+                { t: '24/7 Persistent Transmission', d: 'Once a mix is toggled ON, the app uses a persistent background frequency loop to maintain the transmission. This ensures the frequency stays locked into your biofield until manually dissolved — even if you close the app or lose internet.' },
+                { t: 'Siddha Wisdom', d: 'We bridge the ancient wisdom of the 18 Siddhars with hyper-advanced neural-mapping. Healing occurs at the speed of thought.' },
               ].map(s => (
-                <div key={s.tk} className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]">
-                  <h3 className="text-xs font-black tracking-tight text-[#D4AF37] mb-2">{t(s.tk)}</h3>
-                  <p className="text-xs text-white/50 leading-relaxed">{t(s.dk)}</p>
+                <div key={s.t} className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]">
+                  <h3 className="text-xs font-black tracking-tight text-[#D4AF37] mb-2">{s.t}</h3>
+                  <p className="text-xs text-white/50 leading-relaxed">{s.d}</p>
                 </div>
               ))}
               <button onClick={() => setShowKnowledge(false)} className="sqi-btn-primary w-full py-3.5 text-xs">
-                {t('quantumApothecary.app.knowledgeClose')}
+                Return to Aether
               </button>
             </motion.div>
           </motion.div>
@@ -1427,9 +1287,9 @@ function QuantumApothecaryInner() {
               onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.05]">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.3em]">{t('quantumApothecary.app.sessionsTitle')}</p>
+                  <p className="text-xs font-black uppercase tracking-[0.3em]">SQI Sessions</p>
                   <p className="text-[9px] font-bold text-white/30 mt-0.5">
-                    {user ? t('quantumApothecary.app.sessionsHintUser') : t('quantumApothecary.app.sessionsHintGuest')}
+                    {user ? 'Tap to reopen a past transmission.' : 'Sign in to save sessions.'}
                   </p>
                 </div>
                 <button onClick={() => setSessionsOpen(false)} className="p-2 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] transition">
@@ -1437,10 +1297,10 @@ function QuantumApothecaryInner() {
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2">
-                {loadingSessions && <div className="text-[10px] font-bold uppercase tracking-widest text-white/25">{t('quantumApothecary.app.sessionsLoading')}</div>}
+                {loadingSessions && <div className="text-[10px] font-bold uppercase tracking-widest text-white/25">Loading sessions…</div>}
                 {!loadingSessions && sessions.length === 0 && (
                   <div className="text-[10px] text-white/25 leading-relaxed">
-                    {t('quantumApothecary.app.sessionsEmpty')}
+                    No prior SQI conversations yet. Your next transmission will be stored here.
                   </div>
                 )}
                 {sessions.map(s => (
@@ -1451,7 +1311,7 @@ function QuantumApothecaryInner() {
                       if (!error && data && Array.isArray(data.messages)) { setCurrentSessionId(s.id); setMessages(data.messages as Message[]); setSessionsOpen(false); }
                     }}
                     className={`w-full text-left p-3.5 rounded-2xl border bg-white/[0.02] hover:bg-white/[0.05] transition ${currentSessionId === s.id ? 'border-[#D4AF37]/40' : 'border-white/[0.05]'}`}>
-                    <p className="text-[11px] font-black truncate">{s.title || t('quantumApothecary.app.sessionUntitled')}</p>
+                    <p className="text-[11px] font-black truncate">{s.title || 'Untitled SQI Session'}</p>
                     {s.updated_at && <p className="text-[9px] text-white/30 mt-1 font-bold">{new Date(s.updated_at).toLocaleString()}</p>}
                   </button>
                 ))}
@@ -1570,7 +1430,6 @@ function QuantumApothecaryInner() {
    Auth, membership, tier-access logic UNTOUCHED
    ══════════════════════════════════════════════════════ */
 export default function QuantumApothecary() {
-  const { t } = useTranslation();
   const { user, isLoading: authLoading } = useAuth();
   const { tier, loading: membershipLoading } = useMembership();
   const { isAdmin } = useAdminRole();
@@ -1578,7 +1437,7 @@ export default function QuantumApothecary() {
   if (authLoading || membershipLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#050505] text-white">
-        <span className="text-[10px] uppercase tracking-[0.5em] text-[#D4AF37]/40">{t('quantumApothecary.outer.initializing')}</span>
+        <span className="text-[10px] uppercase tracking-[0.5em] text-[#D4AF37]/40">Initializing SQI…</span>
       </div>
     );
   }
