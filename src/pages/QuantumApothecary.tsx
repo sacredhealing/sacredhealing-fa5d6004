@@ -1057,38 +1057,29 @@ function QuantumApothecaryInner() {
 
                   {/* Camera live feed */}
                   {(scanPhase === 'camera' || scanPhase === 'analyzing') ? (
-                    <>
-                      <div className="relative w-full h-48 rounded-2xl overflow-hidden bg-black/60 border border-[#D4AF37]/20">
-                        {/* Full brightness — user needs to see their hand */}
-                        <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 flex flex-col items-center justify-between p-4 pointer-events-none">
-                          {/* Top badge */}
-                          <div className="flex items-center gap-2 bg-black/70 rounded-full px-3 py-1.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-ping" style={{ boxShadow: '0 0 6px rgba(212,175,55,0.8)' }} />
-                            <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-[#D4AF37]">
-                              {scanPhase === 'camera'
-                                ? (nadiScanFacing === 'user' ? 'Front cam · show your palm…' : 'Rear cam · frame your palm…')
-                                : 'Reading your biofield…'}
-                            </span>
-                          </div>
-                          {/* Center guide box */}
-                          <div className="border-2 border-dashed border-[#D4AF37]/50 rounded-2xl w-36 h-24 flex items-center justify-center">
-                            <span className="text-[9px] font-bold text-[#D4AF37]/60 uppercase tracking-widest text-center leading-relaxed">
-                              {scanPhase === 'camera'
-                                ? (nadiScanFacing === 'user'
-                                  ? <>Hold palm<br />to screen</>
-                                  : <>Aim camera<br />at palm</>)
-                                : <>Analyzing<br/>biofield…</>}
-                            </span>
-                          </div>
-                          {/* BPM */}
-                          <div className="flex items-center gap-1.5 bg-black/70 rounded-full px-3 py-1">
-                            <Activity size={10} className="text-[#D4AF37]" />
-                            <span className="text-[9px] font-black text-[#D4AF37]">{heartRate} BPM</span>
-                          </div>
+                    <div className="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center">
+                      <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover absolute inset-0" />
+                      <div className="absolute inset-0 flex flex-col items-center justify-between p-6 pointer-events-none">
+                        {/* Top badge */}
+                        <div className="flex items-center gap-2 bg-black/70 rounded-full px-4 py-2 mt-[env(safe-area-inset-top)]">
+                          <div className="w-2 h-2 rounded-full bg-[#D4AF37] animate-ping" style={{ boxShadow: '0 0 6px rgba(212,175,55,0.8)' }} />
+                          <span className="text-xs font-bold uppercase tracking-[0.3em] text-[#D4AF37]">
+                            {scanPhase === 'camera' ? 'Rear cam · frame your palm…' : 'Reading your biofield…'}
+                          </span>
+                        </div>
+                        {/* Center guide box */}
+                        <div className="border-2 border-dashed border-[#D4AF37]/50 rounded-2xl w-48 h-32 flex items-center justify-center">
+                          <span className="text-sm font-bold text-[#D4AF37]/60 uppercase tracking-widest text-center leading-relaxed">
+                            {scanPhase === 'camera' ? <>Aim camera<br />at palm</> : <>Analyzing<br/>biofield…</>}
+                          </span>
+                        </div>
+                        {/* BPM */}
+                        <div className="flex items-center gap-2 bg-black/70 rounded-full px-4 py-2 mb-[env(safe-area-inset-bottom)]">
+                          <Activity size={14} className="text-[#D4AF37]" />
+                          <span className="text-sm font-black text-[#D4AF37]">{heartRate} BPM</span>
                         </div>
                       </div>
-                    </>
+                    </div>
                   ) : (
                     <div className="space-y-3 py-4">
                       <Globe size={32} className="mx-auto text-white/10" />
