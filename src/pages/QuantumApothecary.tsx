@@ -14,7 +14,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Zap, Activity, MessageSquare,
   Plus, Trash2, Send, Cpu, Globe,
-  Info, X, ArrowLeft, Camera, Mic, Hand,
+  Info, X, ArrowLeft, Camera, Mic, Hand, ChevronUp,
 } from 'lucide-react';
 import { Activation, NadiScanResult, Message } from '@/features/quantum-apothecary/types';
 import { ACTIVATIONS, PLANETARY_DATA } from '@/features/quantum-apothecary/constants';
@@ -404,7 +404,12 @@ function QuantumApothecaryInner() {
         if (valid.has(s) && !out.includes(s)) out.push(s);
       }
     }
+    // Shuffle pool so fallback picks from ALL categories (including Bioenergetic)
     const pool = ACTIVATIONS.map((a) => a.name).filter((n) => !out.includes(n));
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
     while (out.length < 5 && pool.length > 0) {
       out.push(pool.shift()!);
     }
@@ -798,7 +803,33 @@ function QuantumApothecaryInner() {
       await streamChatWithSQI(
         allMsgs,
         upsert,
-        async () => { setIsTyping(false); await persistMessages([...allMsgs, { role: 'model', text: assistantSoFar }]); },
+        async () => {
+          setIsTyping(false);
+          // Parse Nadi values from SQI response and update the scan display
+          if (assistantSoFar) {
+            const grossMatch = assistantSoFar.match(/Gross\s*Nadis?\s*(?:Active)?[:\s]*?([\d,]+)\s*\/\s*72[,.]?000/i);
+            const subtleMatch = assistantSoFar.match(/Subtle\s*(?:Sub[- ]?)?Nadis?[:\s]*?([\d,]+)\s*\/\s*350[,.]?000/i);
+            const blockMatch = assistantSoFar.match(/(?:Primary\s*Blockage|blocked?)[:\s]*([A-Za-z/ ]+?)\s*\((\d+)%/i);
+            if (grossMatch || subtleMatch) {
+              setScanResult(prev => {
+                const base = prev || {
+                  dominantDosha: 'Vata' as const, blockages: ['Unknown'], planetaryAlignment: 'Saturn',
+                  herbOfToday: 'Ashwagandha', timestamp: new Date().toISOString(),
+                  activeNadis: 0, totalNadis: 72000, activeSubNadis: 0,
+                  blockagePercentage: 0, remedies: [],
+                };
+                return {
+                  ...base,
+                  activeNadis: grossMatch ? parseInt(grossMatch[1].replace(/,/g, ''), 10) : base.activeNadis,
+                  activeSubNadis: subtleMatch ? parseInt(subtleMatch[1].replace(/,/g, ''), 10) : (base.activeSubNadis ?? 0),
+                  blockages: blockMatch ? [blockMatch[1].trim()] : base.blockages,
+                  blockagePercentage: blockMatch ? parseInt(blockMatch[2], 10) : (base.blockagePercentage ?? 0),
+                };
+              });
+            }
+          }
+          await persistMessages([...allMsgs, { role: 'model', text: assistantSoFar }]);
+        },
         imageToSend,
         user?.id ?? null,
         language,
@@ -1020,6 +1051,20 @@ function QuantumApothecaryInner() {
             </div>
           )}
           <div ref={chatEndRef} />
+        </div>
+        {/* Scroll-to-top button */}
+        <div className="sticky bottom-2 flex justify-center py-2 pointer-events-none">
+          <button
+            type="button"
+            onClick={() => {
+              const container = chatEndRef.current?.parentElement?.parentElement;
+              container?.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="pointer-events-auto p-2 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 hover:bg-[#D4AF37]/25 transition"
+            title="Scroll to top"
+          >
+            <ChevronUp size={16} className="text-[#D4AF37]" />
+          </button>
         </div>
       </div>
 
