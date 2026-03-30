@@ -36,6 +36,9 @@ export default function FrequencyLibrarySection({
 }: Props) {
   const [search, setSearch] = useState('');
 
+  const displayBenefit = (benefit: string) =>
+    benefit.replace(/\bLimbicArc\b/g, '').replace(/\s{2,}/g, ' ').trim();
+
   const filtered = ACTIVATIONS.filter(act => {
     const matchCat = activeCategory === 'All' || act.type === activeCategory;
     const matchSearch = !search || act.name.toLowerCase().includes(search.toLowerCase()) || act.benefit.toLowerCase().includes(search.toLowerCase());
@@ -166,7 +169,7 @@ export default function FrequencyLibrarySection({
                   </div>
 
                   <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.38)', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                    {act.benefit}
+                    {displayBenefit(act.benefit)}
                   </p>
 
                   {/* Type badge */}
