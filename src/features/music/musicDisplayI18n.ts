@@ -35,7 +35,7 @@ export function tMusicGenre(genre: string, t: TFn): string {
   return genre.charAt(0).toUpperCase() + genre.slice(1).replace('-', ' ');
 }
 
-export function tMusicMood(mood: string, t: TFunction): string {
+export function tMusicMood(mood: string, t: TFn): string {
   const key = MOOD_KEYS[mood];
   if (key) return t(key);
   return mood.charAt(0).toUpperCase() + mood.slice(1);
