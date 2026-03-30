@@ -3577,6 +3577,57 @@ export type Database = {
           },
         ]
       }
+      nadi_baselines: {
+        Row: {
+          active_nadis: number
+          active_sub_nadis: number
+          bio_reading: string | null
+          blockage_pct: number
+          created_at: string
+          dominant_dosha: string
+          herb_of_today: string | null
+          id: string
+          planetary_align: string | null
+          primary_blockage: string
+          remedies: Json | null
+          scanned_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active_nadis?: number
+          active_sub_nadis?: number
+          bio_reading?: string | null
+          blockage_pct?: number
+          created_at?: string
+          dominant_dosha?: string
+          herb_of_today?: string | null
+          id?: string
+          planetary_align?: string | null
+          primary_blockage?: string
+          remedies?: Json | null
+          scanned_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active_nadis?: number
+          active_sub_nadis?: number
+          bio_reading?: string | null
+          blockage_pct?: number
+          created_at?: string
+          dominant_dosha?: string
+          herb_of_today?: string | null
+          id?: string
+          planetary_align?: string | null
+          primary_blockage?: string
+          remedies?: Json | null
+          scanned_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       path_days: {
         Row: {
           affirmation: string | null
@@ -4841,6 +4892,57 @@ export type Database = {
         }
         Relationships: []
       }
+      sqi_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          messages: Json
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          messages?: Json
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          messages?: Json
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sqi_user_memory: {
+        Row: {
+          created_at: string
+          id: string
+          memory_profile: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          memory_profile?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          memory_profile?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       stripe_webhook_logs: {
         Row: {
           created_at: string | null
@@ -5130,6 +5232,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_active_transmissions: {
+        Row: {
+          activated_at: string
+          activation_data: Json
+          activation_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          activated_at?: string
+          activation_data?: Json
+          activation_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          activated_at?: string
+          activation_data?: Json
+          activation_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_balances: {
         Row: {
