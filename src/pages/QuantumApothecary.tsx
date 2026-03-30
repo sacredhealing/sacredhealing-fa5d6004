@@ -294,7 +294,52 @@ function QuantumApothecaryInner() {
     }
     // Streaming chunk updates → do NOT scroll — user reads in place
   }, [messages]);
-  useEffect(() => { localStorage.setItem('active_resonators', JSON.stringify(activeTransmissions)); }, [activeTransmissions]);
+  // ── Load active transmissions from DB (survives cache clears) ──
+  useEffect(() => {
+    if (!user?.id || transmissionsLoadedRef.current) return;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('user_active_transmissions')
+          .select('activation_id, activation_data')
+          .eq('user_id', user.id);
+        if (data && data.length > 0) {
+          const restored: Activation[] = [];
+          for (const row of data) {
+            const fromConstants = ACTIVATIONS.find(a => a.id === row.activation_id);
+            if (fromConstants) {
+              restored.push(fromConstants);
+            } else if (row.activation_data && typeof row.activation_data === 'object') {
+              restored.push(row.activation_data as unknown as Activation);
+            }
+          }
+          if (restored.length > 0) setActiveTransmissions(restored);
+        }
+      } catch { /* ignore */ }
+      transmissionsLoadedRef.current = true;
+    })();
+  }, [user?.id]);
+
+  // ── Sync active transmissions to DB whenever they change ──
+  useEffect(() => {
+    if (!user?.id || !transmissionsLoadedRef.current) return;
+    localStorage.setItem('active_resonators', JSON.stringify(activeTransmissions));
+    (async () => {
+      try {
+        // Delete all then re-insert (simple upsert for small arrays)
+        await supabase.from('user_active_transmissions').delete().eq('user_id', user.id);
+        if (activeTransmissions.length > 0) {
+          await supabase.from('user_active_transmissions').insert(
+            activeTransmissions.map(act => ({
+              user_id: user.id,
+              activation_id: act.id,
+              activation_data: act as unknown as Record<string, unknown>,
+            }))
+          );
+        }
+      } catch { /* ignore sync errors */ }
+    })();
+  }, [activeTransmissions, user?.id]);
   useEffect(() => {
     const focusChat = (location.state as { focusChat?: boolean } | null)?.focusChat;
     if (focusChat && chatPanelRef.current) {
