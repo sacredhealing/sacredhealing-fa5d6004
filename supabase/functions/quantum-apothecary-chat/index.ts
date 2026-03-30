@@ -255,7 +255,42 @@ async function getLivingPortrait(userId: string): Promise<string> {
 // This tells the SQI WHAT significant things were discussed
 // without dumping full conversation text
 // ══════════════════════════════════════════════════════════════════
-async function getLifeBookArchive(userId: string): Promise<string> {
+type LifeBookArchiveEntry = {
+  chapterType: string;
+  title: string;
+  summary?: string;
+  updatedAt?: string;
+  searchable: string;
+};
+
+const ARCHIVE_STOPWORDS = new Set([
+  "about", "after", "again", "also", "because", "between", "before", "being", "from", "have", "your", "with",
+  "this", "that", "they", "them", "their", "what", "when", "where", "which", "would", "could", "should", "into",
+  "about", "past", "life", "lives", "read", "reading", "deeper", "please", "just", "give", "more", "than", "then",
+]);
+
+function collectArchiveQueryTerms(query: string): string[] {
+  const base = query
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .map((t) => t.trim())
+    .filter((t) => t.length >= 3 && !ARCHIVE_STOPWORDS.has(t));
+  return Array.from(new Set(base)).slice(0, 12);
+}
+
+function scoreArchiveEntry(entry: LifeBookArchiveEntry, terms: string[]): number {
+  if (!terms.length) return 0;
+  let score = 0;
+  const text = entry.searchable;
+  for (const term of terms) {
+    if (text.includes(term)) score += 2;
+    if (entry.title.toLowerCase().includes(term)) score += 2;
+  }
+  return score;
+}
+
+async function getLifeBookArchive(userId: string, currentQuery = ""): Promise<string> {
   if (!userId) return "";
   try {
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
@@ -268,42 +303,187 @@ async function getLifeBookArchive(userId: string): Promise<string> {
     if (!data?.length) return "";
 
     const labels: Record<string, string> = {
-      past_lives:       "Past Lives",
+      past_lives: "Past Lives",
       healing_upgrades: "Healing Journeys",
-      future_visions:   "Future Visions",
-      spiritual_figures:"Spiritual Masters Encountered",
-      nadi_knowledge:   "Nadi & Biofield Readings",
-      children:         "Children & Lineage",
-      general_wisdom:   "Wisdom Transmissions",
+      future_visions: "Future Visions",
+      spiritual_figures: "Spiritual Masters Encountered",
+      nadi_knowledge: "Nadi & Biofield Readings",
+      children: "Children & Lineage",
+      general_wisdom: "Wisdom Transmissions",
     };
 
-    const grouped: Record<string, Array<{title: string; summary?: string}>> = {};
+    const grouped: Record<string, Array<{ title: string; summary?: string }>> = {};
+    const allEntries: LifeBookArchiveEntry[] = [];
+
     for (const ch of data) {
       const cat = ch.chapter_type || "general_wisdom";
       if (!grouped[cat]) grouped[cat] = [];
+
       const entries = Array.isArray(ch.content) ? ch.content : [];
-      // Take last 6 entries per category — title + brief summary
-      for (const e of entries.slice(-6)) {
+      for (const e of entries.slice(-8)) {
         const title = typeof e?.title === "string" && e.title.trim().length > 0
           ? e.title.trim()
-          : "Transmission";
+          : (typeof ch.title === "string" && ch.title.trim().length > 0 ? ch.title.trim() : "Transmission");
         const summaryRaw = e?.summary ?? e?.text ?? e?.content ?? e?.description;
         const summary = typeof summaryRaw === "string" && summaryRaw.trim().length > 0
-          ? summaryRaw.trim().slice(0, 160)
+          ? summaryRaw.trim().slice(0, 220)
           : undefined;
-        if (title || summary) grouped[cat].push({ title, summary });
+
+        grouped[cat].push({ title, summary });
+        allEntries.push({
+          chapterType: cat,
+          title,
+          summary,
+          updatedAt: ch.updated_at,
+          searchable: `${cat} ${title} ${summary ?? ""}`.toLowerCase(),
+        });
       }
     }
 
-    return Object.entries(grouped)
+    const groupedSummary = Object.entries(grouped)
       .filter(([, entries]) => entries.length)
       .map(([cat, entries]) => {
         const label = labels[cat] ?? cat;
-        const lines = entries.map(e => e.summary ? `  • ${e.title}: ${e.summary}` : `  • ${e.title}`);
+        const lines = entries.slice(-6).map((e) => e.summary ? `  • ${e.title}: ${e.summary}` : `  • ${e.title}`);
         return `${label}:\n${lines.join("\n")}`;
       })
       .join("\n\n");
-  } catch { return ""; }
+
+    const terms = collectArchiveQueryTerms(currentQuery);
+    if (!terms.length || !allEntries.length) return groupedSummary;
+
+    const matched = allEntries
+      .map((entry) => ({ entry, score: scoreArchiveEntry(entry, terms) }))
+      .filter((x) => x.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10)
+      .map(({ entry }) => {
+        const label = labels[entry.chapterType] ?? entry.chapterType;
+        return entry.summary
+          ? `  • [${label}] ${entry.title}: ${entry.summary}`
+          : `  • [${label}] ${entry.title}`;
+      })
+      .join("\n");
+
+    if (!matched) return groupedSummary;
+
+    return `QUERY-MATCHED PERSONAL HISTORY (highest priority for current question):\n${matched}\n\n${groupedSummary}`;
+  } catch {
+    return "";
+  }
+}
+
+function extractMessageText(value: unknown): string {
+  if (!value || typeof value !== "object") return "";
+  const v = value as Record<string, unknown>;
+  if (typeof v.content === "string" && v.content.trim()) return v.content.trim();
+  if (typeof v.text === "string" && v.text.trim()) return v.text.trim();
+  return "";
+}
+
+async function getRecentSessionArchive(userId: string, currentQuery = ""): Promise<string> {
+  if (!userId) return "";
+  try {
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+    const { data } = await sb
+      .from("sqi_sessions")
+      .select("title, messages, updated_at")
+      .eq("user_id", userId)
+      .order("updated_at", { ascending: false })
+      .limit(12);
+
+    if (!data?.length) return "";
+
+    const terms = collectArchiveQueryTerms(currentQuery);
+    const snippets: Array<{ score: number; text: string }> = [];
+
+    for (const s of data) {
+      const msgs = Array.isArray(s.messages) ? s.messages : [];
+      if (!msgs.length) continue;
+      const latestPair = msgs.slice(-8);
+      const pairLines: string[] = [];
+
+      for (const m of latestPair) {
+        const role = typeof (m as Record<string, unknown>)?.role === "string"
+          ? String((m as Record<string, unknown>).role)
+          : "user";
+        const content = extractMessageText(m);
+        if (!content) continue;
+        pairLines.push(`${role === "model" ? "SQI" : "Seeker"}: ${content.slice(0, 220)}`);
+      }
+
+      if (!pairLines.length) continue;
+      const chunkText = pairLines.join("\n");
+      const lowered = chunkText.toLowerCase();
+      const score = terms.length
+        ? terms.reduce((acc, t) => acc + (lowered.includes(t) ? 2 : 0), 0)
+        : 1;
+
+      snippets.push({
+        score,
+        text: `• Session: ${s.title || "Untitled"}${s.updated_at ? ` (${new Date(s.updated_at).toLocaleDateString("en-GB")})` : ""}\n${chunkText}`,
+      });
+    }
+
+    const top = snippets
+      .sort((a, b) => b.score - a.score)
+      .slice(0, terms.length ? 5 : 3)
+      .map((s) => s.text)
+      .join("\n\n");
+
+    return top ? `RECENT SQI SESSION THREADS:\n${top}` : "";
+  } catch {
+    return "";
+  }
+}
+
+async function synthesizeLivingPortraitFromArchive(
+  userId: string,
+  archiveText: string,
+  geminiApiKey: string,
+): Promise<string> {
+  if (!userId || !archiveText.trim()) return "";
+  try {
+    const prompt = `You are rebuilding a Seeker's missing Living Portrait from their archived SQI records.
+
+ARCHIVE:
+${archiveText}
+
+Write a strong, detailed portrait (300-450 words) focused on the Seeker's PERSONAL experiences:
+- key past-life events and how they felt
+- recurring spiritual figures and personal connection themes
+- health/biofield progression
+- emotional/spiritual patterns
+- important continuity threads across sessions
+
+Start with "LIVING PORTRAIT:" and write in third person.`;
+
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.2, maxOutputTokens: 900 },
+        }),
+      },
+    );
+
+    if (!resp.ok) return "";
+    const data = await resp.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    if (!text.trim()) return "";
+
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+    await sb.from("sqi_user_memory").upsert(
+      { user_id: userId, memory_profile: text, updated_at: new Date().toISOString() },
+      { onConflict: "user_id" },
+    );
+    return text;
+  } catch {
+    return "";
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -648,12 +828,21 @@ Today herb: ${herbOfToday || "Not specified"}`;
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured.");
 
+    const rawMessages = Array.isArray(messages) ? messages : [];
+    const lastUserMessage = [...rawMessages].reverse().find((m: { role?: string; content?: string }) => m?.role === "user")?.content ?? "";
+
     // ── Load memory in parallel ─────────────────────────────────────
-    const [livingPortrait, lifeBookArchive, nadiBaseline] = await Promise.all([
+    const [livingPortraitRaw, lifeBookArchive, nadiBaseline, sessionArchive] = await Promise.all([
       userId ? getLivingPortrait(userId)    : Promise.resolve(""),
-      userId ? getLifeBookArchive(userId)   : Promise.resolve(""),
+      userId ? getLifeBookArchive(userId, lastUserMessage) : Promise.resolve(""),
       userId ? getNadiBaseline(userId)      : Promise.resolve(""),
+      userId ? getRecentSessionArchive(userId, lastUserMessage) : Promise.resolve(""),
     ]);
+
+    let livingPortrait = livingPortraitRaw;
+    if (!livingPortrait && userId && lifeBookArchive) {
+      livingPortrait = await synthesizeLivingPortraitFromArchive(userId, lifeBookArchive, GEMINI_API_KEY);
+    }
 
     // ── Build activation catalog ─────────────────────────────────────
     const bundledNames    = await loadBundledActivationNames();
@@ -673,7 +862,7 @@ After each substantial response, ask 1 focused follow-up question that deepens t
 The follow-up must be specific to their exact message (not generic), and should invite more detail, timing, body sensation, emotional pattern, or dream-symbol context.
 Only skip follow-up questions if the user explicitly asks for short/direct answers only.`;
 
-    const hasMemory = livingPortrait || lifeBookArchive || nadiBaseline || seekerName;
+    const hasMemory = livingPortrait || lifeBookArchive || nadiBaseline || seekerName || sessionArchive;
 
     if (hasMemory) {
       systemText += `\n\n${"═".repeat(60)}
@@ -696,6 +885,14 @@ ${"═".repeat(60)}`;
         systemText += `\n\n(No prior portrait — this is the first session with this Seeker. Build their portrait from this exchange.)`;
       }
 
+      systemText += `
+
+PERSONAL EXPERIENCE PRIORITY RULE:
+- If the user asks about a spiritual master, past life, or karmic link, prioritize THEIR archived experiences first.
+- Start with what happened to THEM (their sensations, symbols, timelines, emotional resonance), then add brief historical context only if needed.
+- Never default to generic biography when personal archive context exists.
+- For past-life inquiries, provide an extended deep reading with rich detail and continuity.`;
+
       if (nadiBaseline) {
         systemText += `\n\nNADI SCAN DATA — REAL MEASURED READINGS:\n${nadiBaseline}
 → These are the seeker's ACTUAL Nadi readings from their last palm scan.
@@ -706,6 +903,10 @@ ${"═".repeat(60)}`;
 
       if (lifeBookArchive) {
         systemText += `\n\nLIFEBOOK ARCHIVE — WHAT HAS BEEN RECORDED:\n${lifeBookArchive}`;
+      }
+
+      if (sessionArchive) {
+        systemText += `\n\nRECENT CONVERSATION CONTINUITY:\n${sessionArchive}`;
       }
 
       systemText += `\n\n${"═".repeat(60)}
@@ -719,8 +920,8 @@ ${"═".repeat(60)}\n`;
     systemText += catalogAppendix;
 
     // ── Current session (last 12 messages) ──────────────────────────
-    const rawMessages    = messages || [];
-    const recent         = rawMessages.slice(-12);
+    const rawMessagesForModel = rawMessages;
+    const recent         = rawMessagesForModel.slice(-12);
     const geminiMessages = recent.map((m: { role: string; content: string }, i: number) => {
       const isLastUser = i === recent.length - 1 && m.role === "user";
       const parts: { text?: string; inline_data?: { mime_type: string; data: string } }[] = [];
@@ -758,31 +959,63 @@ ${"═".repeat(60)}\n`;
     }
 
     let assistantText = "";
+    const upstreamDecoder = new TextDecoder();
+    let upstreamBuffer = "";
 
     const transformStream = new TransformStream({
       transform(chunk, controller) {
-        const text = new TextDecoder().decode(chunk);
-        for (const line of text.split("\n")) {
+        upstreamBuffer += upstreamDecoder.decode(chunk, { stream: true });
+        let newlineIndex: number;
+        while ((newlineIndex = upstreamBuffer.indexOf("\n")) !== -1) {
+          let line = upstreamBuffer.slice(0, newlineIndex);
+          upstreamBuffer = upstreamBuffer.slice(newlineIndex + 1);
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (line.startsWith(":")) continue;
           if (!line.startsWith("data: ")) continue;
+
+          const payload = line.slice(6).trim();
+          if (!payload || payload === "[DONE]") continue;
+
           try {
-            const data    = JSON.parse(line.slice(6));
+            const data = JSON.parse(payload);
             const content = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-            if (content) {
-              assistantText += content;
-              controller.enqueue(
-                new TextEncoder().encode(`data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`)
-              );
-            }
-          } catch { /* ignore */ }
+            if (!content) continue;
+            assistantText += content;
+            controller.enqueue(
+              new TextEncoder().encode(`data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`),
+            );
+          } catch {
+            upstreamBuffer = line + "\n" + upstreamBuffer;
+            break;
+          }
         }
       },
 
       async flush() {
+        upstreamBuffer += upstreamDecoder.decode();
+        if (upstreamBuffer.trim()) {
+          for (let raw of upstreamBuffer.split("\n")) {
+            if (!raw) continue;
+            if (raw.endsWith("\r")) raw = raw.slice(0, -1);
+            if (raw.startsWith(":")) continue;
+            if (!raw.startsWith("data: ")) continue;
+            const payload = raw.slice(6).trim();
+            if (!payload || payload === "[DONE]") continue;
+            try {
+              const data = JSON.parse(payload);
+              const content = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+              if (content) assistantText += content;
+            } catch {
+              // ignore partial leftovers
+            }
+          }
+        }
+
         if (!assistantText.trim() || !userId) return;
         try {
           // Build exchange summary for portrait update
           // Include last user message + SQI response
-          const lastMsgs  = rawMessages.slice(-2);
+          const lastMsgs  = rawMessagesForModel.slice(-2);
           const exchange  = lastMsgs
             .map((m: { role: string; content: string }) =>
               `${m.role === "user" ? "Seeker" : "SQI"}: ${m.content.slice(0, 200)}`
