@@ -803,7 +803,33 @@ function QuantumApothecaryInner() {
       await streamChatWithSQI(
         allMsgs,
         upsert,
-        async () => { setIsTyping(false); await persistMessages([...allMsgs, { role: 'model', text: assistantSoFar }]); },
+        async () => {
+          setIsTyping(false);
+          // Parse Nadi values from SQI response and update the scan display
+          if (assistantSoFar) {
+            const grossMatch = assistantSoFar.match(/Gross\s*Nadis?\s*(?:Active)?[:\s]*?([\d,]+)\s*\/\s*72[,.]?000/i);
+            const subtleMatch = assistantSoFar.match(/Subtle\s*(?:Sub[- ]?)?Nadis?[:\s]*?([\d,]+)\s*\/\s*350[,.]?000/i);
+            const blockMatch = assistantSoFar.match(/(?:Primary\s*Blockage|blocked?)[:\s]*([A-Za-z/ ]+?)\s*\((\d+)%/i);
+            if (grossMatch || subtleMatch) {
+              setScanResult(prev => {
+                const base = prev || {
+                  dominantDosha: 'Vata' as const, blockages: ['Unknown'], planetaryAlignment: 'Saturn',
+                  herbOfToday: 'Ashwagandha', timestamp: new Date().toISOString(),
+                  activeNadis: 0, totalNadis: 72000, activeSubNadis: 0,
+                  blockagePercentage: 0, remedies: [],
+                };
+                return {
+                  ...base,
+                  activeNadis: grossMatch ? parseInt(grossMatch[1].replace(/,/g, ''), 10) : base.activeNadis,
+                  activeSubNadis: subtleMatch ? parseInt(subtleMatch[1].replace(/,/g, ''), 10) : (base.activeSubNadis ?? 0),
+                  blockages: blockMatch ? [blockMatch[1].trim()] : base.blockages,
+                  blockagePercentage: blockMatch ? parseInt(blockMatch[2], 10) : (base.blockagePercentage ?? 0),
+                };
+              });
+            }
+          }
+          await persistMessages([...allMsgs, { role: 'model', text: assistantSoFar }]);
+        },
         imageToSend,
         user?.id ?? null,
         language,
