@@ -213,6 +213,7 @@ function QuantumApothecaryInner() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<{ stop: () => void } | null>(null);
   const voiceTranscriptRef = useRef('');
+  const isRecordingRef = useRef(false);
   const [pendingImage, setPendingImage] = useState<{ base64: string; mimeType: string } | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   // ── Real scan state ──
@@ -707,6 +708,9 @@ function QuantumApothecaryInner() {
     e.target.value = '';
   };
 
+  // Keep ref in sync with state for use inside closures
+  useEffect(() => { isRecordingRef.current = isRecording; }, [isRecording]);
+
   const stopVoiceAndSend = useCallback(() => {
     if (recognitionRef.current) {
       try { recognitionRef.current.stop(); } catch { /* ignore */ }
@@ -767,7 +771,7 @@ function QuantumApothecaryInner() {
 
     // If the browser stops recognition on its own (silence timeout, etc.), restart it
     recognition.onend = () => {
-      if (recognitionRef.current === recognition && isRecording) {
+      if (recognitionRef.current === recognition && isRecordingRef.current) {
         // Browser auto-stopped — restart to keep listening
         try { recognition.start(); } catch {
           setIsRecording(false);
