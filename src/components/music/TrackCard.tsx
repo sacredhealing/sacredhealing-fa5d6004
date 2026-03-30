@@ -87,7 +87,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
                 {track.mood === 'healing' && <Sparkles size={9} />}
                 {track.mood === 'meditative' && <Brain size={9} />}
                 {track.mood === 'grounding' && <Leaf size={9} />}
-                {tMusicMood(track.mood, t)}
+                {tMusicMood(track.mood, t as any)}
               </span>
             )}
             {track.spiritual_path && (
