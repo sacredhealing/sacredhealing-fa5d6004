@@ -257,7 +257,7 @@ const TrackDetail: React.FC = () => {
                     {t('music.trackDetail.bestTime', 'Best Time')}
                   </p>
                   <p className="text-sm font-medium capitalize">
-                    {tMusicTimeOfDay(track.best_time_of_day, t)}
+                    {tMusicTimeOfDay(track.best_time_of_day, t as any)}
                   </p>
                 </div>
               </div>
