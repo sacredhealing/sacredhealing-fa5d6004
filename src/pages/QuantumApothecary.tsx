@@ -961,7 +961,7 @@ function QuantumApothecaryInner() {
                 <div style={{ textAlign:'right' }}>
                   <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20">
                     <div style={{ width:6, height:6, background:'#D4AF37', borderRadius:'50%', boxShadow:'0 0 6px #D4AF37', animation:'qa-pulse 2s infinite' }} />
-                    <span className="text-xs font-black text-[#D4AF37] tracking-tight">{heartRate} BPM</span>
+                    <span className="text-xs font-black text-[#D4AF37] tracking-tight">LIVE</span>
                   </div>
                 </div>
               </div>
