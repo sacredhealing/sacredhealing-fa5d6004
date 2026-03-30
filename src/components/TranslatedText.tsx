@@ -1,3 +1,4 @@
+import React from 'react';
 import { useTranslatedText } from '@/hooks/useTranslateContent';
 
 interface TranslatedTextProps {
