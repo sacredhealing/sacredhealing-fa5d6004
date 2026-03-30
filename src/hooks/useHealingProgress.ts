@@ -12,13 +12,11 @@ function catalogLangFromAppLanguage(appLanguage: string): MeditationCatalogLang 
   return appLanguage.split('-')[0].toLowerCase() === 'sv' ? 'sv' : 'en';
 }
 
-/** Match Meditations page: Swedish UI prefers `title_sv` when present; otherwise primary `title` (English). */
+/** Pick display title for meditation based on app language. */
 function pickMeditationDisplayTitle(
-  row: { title: string; title_sv?: string | null },
-  appLanguage: string
+  row: { title: string; [key: string]: any },
+  _appLanguage: string
 ): string {
-  const base = appLanguage.split('-')[0].toLowerCase();
-  if (base === 'sv' && row.title_sv) return row.title_sv;
   return row.title;
 }
 
