@@ -650,6 +650,7 @@ function QuantumApothecaryInner() {
       );
       setIsScanning(false);
       setScanPhase('idle');
+      document.body.style.overflow = '';
     }
   };
 
