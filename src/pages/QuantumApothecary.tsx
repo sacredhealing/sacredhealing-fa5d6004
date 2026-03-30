@@ -523,53 +523,26 @@ function QuantumApothecaryInner() {
 
       let parsed: Record<string, unknown> | null = null;
 
-      const { data: scanPayload, error: scanError } =
-        await supabase.functions.invoke<Record<string, unknown>>('nadi-scan', { body: scanBody });
+      const nadiScanUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/quantum-apothecary-chat`;
 
-      if (!scanError && scanPayload && typeof scanPayload === 'object' && !Array.isArray(scanPayload)) {
-        parsed = scanPayload;
-      } else {
-        // Fallback: direct fetch (avoids rare invoke/network issues; same auth as chat).
-        if (scanError) {
-          console.warn(
-            'nadi-scan invoke failed, retrying with fetch:',
-            await parseScanError(scanError as { message?: string; context?: Response }),
-          );
-        }
-        const baseUrl = String(import.meta.env.VITE_SUPABASE_URL).replace(/\/$/, '');
-        const scanUrl = `${baseUrl}/functions/v1/nadi-scan`;
-        const { data: sess } = await supabase.auth.getSession();
-        const bearer = sess.session?.access_token || publishableOrAnon;
-        let res: Response;
-        try {
-          res = await fetch(scanUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${bearer}`,
-              apikey: publishableOrAnon,
-            },
-            body: JSON.stringify(scanBody),
-          });
-        } catch (netErr) {
-          const hint = netErr instanceof Error ? netErr.message : 'Network error';
-          throw new Error(`${hint}${t('quantumApothecary.scan.networkSuffix')}`);
-        }
-        const rawText = await res.text();
-        if (!res.ok) {
-          let detail = rawText.slice(0, 200);
-          try {
-            const j = JSON.parse(rawText) as { error?: string };
-            if (j.error) detail = j.error;
-          } catch { /* use raw snippet */ }
-          throw new Error(t('quantumApothecary.scan.scanFailedStatus', { status: String(res.status), detail }));
-        }
-        try {
-          parsed = JSON.parse(rawText) as Record<string, unknown>;
-        } catch {
-          throw new Error(t('quantumApothecary.scan.invalidJson', { snippet: rawText.slice(0, 120) }));
-        }
-      }
+      const scanResp = await fetch(nadiScanUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          scanMode: true,
+          imageBase64: capturedBase64,
+          imageMimeType: 'image/jpeg',
+          userId: user?.id ?? null,
+          planetaryAlign: todayPlanet,
+          herbOfToday: todayHerb,
+        }),
+      });
+
+      if (!scanResp.ok) throw new Error(`Scan API error: ${scanResp.status}`);
+      parsed = await scanResp.json();
 
       if (!parsed || typeof parsed !== 'object') {
         throw new Error(t('quantumApothecary.scan.emptyResponse'));

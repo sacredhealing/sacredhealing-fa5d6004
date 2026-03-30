@@ -443,7 +443,49 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, userImage, userId, seekerName, canonicalActivationNames } = await req.json();
+    const body = await req.json();
+
+    // ── Nadi Scan Mode — vision-based palm analysis ──────────────────
+    if (body.scanMode === true) {
+      const { imageBase64, imageMimeType, userId: scanUserId, planetaryAlign, herbOfToday } = body;
+      const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+      if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured.");
+      const prompt = `You are a Siddha biofield vision analyser. Analyse this palm image and return precise JSON only.
+
+GROSS NADIS: 72,000 channels. Healthy: 60,000-71,000. Stressed: 8,000-30,000. Depleted: 2,000-8,000.
+SUBTLE SUB-NADIS: 350,000 channels.
+
+If no hand visible return only: {"handDetected":false}
+
+Read the palm honestly:
+- Deep clear lines + warm pink skin = 65,000-71,000 gross nadis
+- Faint lines + pale/dry = 15,000-40,000
+- Grey/bluish + tense = 5,000-15,000
+- Dosha: Vata=dry/thin, Pitta=reddish/warm, Kapha=moist/full
+Today planetary alignment: ${planetaryAlign}
+Today herb: ${herbOfToday}
+
+Return ONLY this JSON:
+{"handDetected":true,"activeNadis":<0-72000>,"activeSubNadis":<0-350000>,"blockagePercentage":<0-100>,"dominantDosha":"<Vata|Pitta|Kapha>","primaryBlockage":"<Nadi name>","planetaryAlignment":"<planet>","herbOfToday":"<herb>","remedies":["<1>","<2>","<3>","<4>","<5>"],"bioReading":"<3-4 sentences describing what you actually see in this palm>"}`;
+
+      const gr = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ inline_data: { mime_type: imageMimeType || "image/jpeg", data: imageBase64 } }, { text: prompt }] }],
+          generationConfig: { temperature: 0.1, topK: 1, topP: 0.1, maxOutputTokens: 512 },
+        }),
+      });
+      const gd = await gr.json();
+      const raw = gd.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+      const jm = raw.match(/\{[\s\S]*\}/);
+      if (!jm) return new Response(JSON.stringify({ error: "No scan result" }), { status: 500, headers: corsHeaders });
+      const result = JSON.parse(jm[0]);
+      return new Response(JSON.stringify(result), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ── Normal chat mode ─────────────────────────────────────────────
+    const { messages, userImage, userId, seekerName, canonicalActivationNames } = body;
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured.");
 
