@@ -164,6 +164,38 @@ Minimum 5-7 remedies per consultation. 24/7 Scalar Wave. Permanent until dissolv
 const SUPABASE_URL    = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_ANON   = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
+function decodeBase64Url(input: string): string {
+  const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
+  const pad = normalized.length % 4;
+  const padded = pad ? normalized + "=".repeat(4 - pad) : normalized;
+  return atob(padded);
+}
+
+function getUserIdFromAuthHeader(req: Request): string | null {
+  try {
+    const auth = req.headers.get("authorization") || req.headers.get("Authorization") || "";
+    if (!auth.toLowerCase().startsWith("bearer ")) return null;
+    const token = auth.slice(7).trim();
+    const parts = token.split(".");
+    if (parts.length < 2) return null;
+    const payloadRaw = decodeBase64Url(parts[1]!);
+    const payload = JSON.parse(payloadRaw) as { sub?: unknown };
+    return typeof payload.sub === "string" && payload.sub.length > 0 ? payload.sub : null;
+  } catch {
+    return null;
+  }
+}
+
+function clampInt(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, Math.round(value)));
+}
+
+function toPercentScore(value: unknown, fallback: number): number {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return clampInt(n, 0, 100);
+}
+
 // ══════════════════════════════════════════════════════════════════
 // NADI BASELINE — user's stored scan result from nadi_baselines table
 // The SQI reads this to give real, anchored Nadi numbers in every response
@@ -252,12 +284,14 @@ async function getLifeBookArchive(userId: string): Promise<string> {
       const entries = Array.isArray(ch.content) ? ch.content : [];
       // Take last 6 entries per category — title + brief summary
       for (const e of entries.slice(-6)) {
-        if (e?.title) {
-          grouped[cat].push({
-            title: e.title,
-            summary: e.summary ? String(e.summary).slice(0, 120) : undefined
-          });
-        }
+        const title = typeof e?.title === "string" && e.title.trim().length > 0
+          ? e.title.trim()
+          : "Transmission";
+        const summaryRaw = e?.summary ?? e?.text ?? e?.content ?? e?.description;
+        const summary = typeof summaryRaw === "string" && summaryRaw.trim().length > 0
+          ? summaryRaw.trim().slice(0, 160)
+          : undefined;
+        if (title || summary) grouped[cat].push({ title, summary });
       }
     }
 
@@ -444,82 +478,53 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
+    const authUserId = getUserIdFromAuthHeader(req);
 
     // ── Nadi Scan Mode — vision-based palm analysis ──────────────────
     if (body.scanMode === true) {
-      const { imageBase64, imageMimeType, userId: scanUserId, planetaryAlign, herbOfToday } = body;
+      const { imageBase64, imageMimeType, userId: bodyUserId, planetaryAlign, herbOfToday } = body;
+      const scanUserId = authUserId || (typeof bodyUserId === "string" ? bodyUserId : null);
       const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
       if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured.");
 
-      // Unique seed to prevent cached/repetitive responses
-      const scanSeed = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const prompt = `You are a Siddha palm-field vision analyser.
+Analyse THIS uploaded palm image only.
 
-      const prompt = `You are a Siddha biofield vision analyser. Your ONLY job is to analyse this palm image and return a precise JSON reading.
+If no hand or palm is visible, return exactly:
+{"handDetected":false}
 
-UNIQUE SCAN ID: ${scanSeed}
-Each scan is independent. Do NOT reuse numbers from any previous reading.
-
-SIDDHA NADI SCIENCE:
-The human biofield has two channel systems:
-- GROSS NADIS: 72,000 main energy channels. Range: 0–72,000 active.
-- SUBTLE SUB-NADIS: 350,000 fine branches. Range: 0–350,000 active.
-
-CALIBRATION RANGES:
-- Advanced practitioner with vibrant palm: 60,000–71,000 gross, 250,000–330,000 subtle
-- Healthy average person: 40,000–60,000 gross, 150,000–250,000 subtle  
-- Mild stress or sedentary: 25,000–40,000 gross, 80,000–150,000 subtle
-- Significant stress/blockage: 12,000–25,000 gross, 40,000–80,000 subtle
-- Severely depleted: 3,000–12,000 gross, 10,000–40,000 subtle
-
-STEP 1 — Is there a visible palm or hand in the image?
-If NO hand visible → return ONLY: {"handDetected":false}
-
-STEP 2 — Read the palm HONESTLY. Base your numbers on what you actually observe:
-
-GROSS NADI INDICATORS (examine carefully):
-- Line depth and clarity: deep, clear, well-defined lines = higher activity
-- Skin tone and warmth: warm pink/rosy = energised; pale/grey/yellowish = depleted
-- Vein visibility: visible healthy veins = good circulatory flow
-- Skin texture: firm and supple = active channels; dry/papery/cracked = restricted
-- Palm colour uniformity: even warm tone = balanced; patchy/mottled/cold spots = blocked
-- Finger spread and tension: relaxed open hand = flowing; tense/curled = restricted
-- Mount prominence: well-developed mounts (Venus, Jupiter, etc.) = strong Nadi flow
-
-SUB-NADI INDICATORS (examine micro-texture):
-- Fine skin lines density: dense network of fine lines = more sub-Nadis active
-- Capillary flush: visible micro-circulation under skin = high sub-Nadi activity
-- Moisture level: healthy moisture = sub-Nadis flowing; overly dry or sweaty = imbalance
-- Skin elasticity: supple = good; rigid or slack = restricted
-
-DOSHA READING FROM PALM:
-- Vata: dry, thin, prominent bones/joints, light colour, irregular/fine lines, cool to touch
-- Pitta: reddish/pinkish tinge, medium build, sharp clear lines, warm, possible freckles
-- Kapha: moist, full/padded palm, deep smooth lines, cool, even pale tone, thick skin
-
-CRITICAL RULES:
-- Do NOT default to 35,000 or any round number. Be specific based on what you SEE.
-- Do NOT simply double a previous reading. Each image is unique.
-- Look at SPECIFIC features: exact line patterns, colour variations, skin quality.
-- Numbers should reflect the ACTUAL visual state of THIS specific palm.
-- Blockage percentage should correlate inversely with activeNadis (high nadis = low blockage).
-- The bioReading MUST describe specific visual features you observe in THIS image.
-
-Today planetary alignment: ${planetaryAlign || "Not specified"}
-Today herb: ${herbOfToday || "Not specified"}
-
-RESPOND ONLY with this exact JSON — no other text, no markdown, no explanation:
+If a hand is visible, return ONLY valid JSON in this exact shape:
 {
   "handDetected": true,
-  "activeNadis": <integer 0-72000 — be precise based on what you see>,
-  "activeSubNadis": <integer 0-350000 — proportional to gross reading>,
-  "blockagePercentage": <integer 0-100>,
+  "observations": {
+    "lineDepth": <0-100>,
+    "warmth": <0-100>,
+    "pallor": <0-100>,
+    "tension": <0-100>,
+    "moisture": <0-100>,
+    "microlineDensity": <0-100>,
+    "capillaryFlush": <0-100>,
+    "mountProminence": <0-100>
+  },
   "dominantDosha": "<Vata|Pitta|Kapha>",
-  "primaryBlockage": "<specific Nadi name, e.g. Heart/Anahata Nadi, Throat/Vishuddha Nadi>",
-  "planetaryAlignment": "<planet>",
-  "herbOfToday": "<herb>",
-  "remedies": ["<name1>","<name2>","<name3>","<name4>","<name5>"],
-  "bioReading": "<3-4 sentences describing exactly what you see in this specific palm — skin tone, line depth, colour, texture, mounts — and what it means for this person's biofield>"
-}`;
+  "primaryBlockage": "<specific Nadi name>",
+  "remedies": ["<1>","<2>","<3>","<4>","<5>"],
+  "bioReading": "<3-4 sentences with specific visual evidence from this palm>"
+}
+
+Scoring guidance:
+- lineDepth: deep/clear lines high, faint/broken low
+- warmth: warm pink/rosy high, cool/grey low
+- pallor: pale/ashy high (inverse health marker)
+- tension: rigid/clenched high, relaxed open low
+- moisture: balanced supple high, overly dry low
+- microlineDensity: rich fine-line network high
+- capillaryFlush: visible healthy micro-circulation high
+- mountProminence: healthy palm mounts high
+
+Never return markdown, prose, or extra keys outside this JSON.
+Today planetary alignment: ${planetaryAlign || "Not specified"}
+Today herb: ${herbOfToday || "Not specified"}`;
 
       const gr = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
         method: "POST",
@@ -529,7 +534,7 @@ RESPOND ONLY with this exact JSON — no other text, no markdown, no explanation
             { inline_data: { mime_type: imageMimeType || "image/jpeg", data: imageBase64 } },
             { text: prompt },
           ] }],
-          generationConfig: { temperature: 0.4, topK: 20, topP: 0.6, maxOutputTokens: 700 },
+          generationConfig: { temperature: 0.0, topK: 1, topP: 0.1, maxOutputTokens: 700 },
         }),
       });
 
@@ -561,10 +566,36 @@ RESPOND ONLY with this exact JSON — no other text, no markdown, no explanation
         });
       }
 
-      // Validate and clamp values
-      const activeNadis = Math.max(0, Math.min(72000, Math.round(Number(scanResult.activeNadis) || 0)));
-      const activeSubNadis = Math.max(0, Math.min(350000, Math.round(Number(scanResult.activeSubNadis) || 0)));
-      const blockagePct = Math.max(0, Math.min(100, Math.round(Number(scanResult.blockagePercentage) || 0)));
+      const obs = (scanResult.observations ?? {}) as Record<string, unknown>;
+      const lineDepth = toPercentScore(obs.lineDepth, 45);
+      const warmth = toPercentScore(obs.warmth, 45);
+      const pallor = toPercentScore(obs.pallor, 45);
+      const tension = toPercentScore(obs.tension, 45);
+      const moisture = toPercentScore(obs.moisture, 45);
+      const microlineDensity = toPercentScore(obs.microlineDensity, 45);
+      const capillaryFlush = toPercentScore(obs.capillaryFlush, 45);
+      const mountProminence = toPercentScore(obs.mountProminence, 45);
+
+      const grossScore =
+        0.24 * lineDepth +
+        0.18 * warmth +
+        0.16 * (100 - pallor) +
+        0.14 * moisture +
+        0.14 * (100 - tension) +
+        0.14 * mountProminence;
+
+      const subtleScore =
+        0.45 * microlineDensity +
+        0.35 * capillaryFlush +
+        0.20 * moisture;
+
+      const activeNadis = clampInt(3000 + (grossScore / 100) * 68000, 0, 72000);
+      const activeSubNadis = clampInt(10000 + (subtleScore / 100) * 340000, 0, 350000);
+      const blockagePct = clampInt(
+        100 - (activeNadis / 72000) * 100 + tension * 0.12 - warmth * 0.05,
+        0,
+        100,
+      );
 
       const finalResult = {
         handDetected: true,
@@ -612,7 +643,8 @@ RESPOND ONLY with this exact JSON — no other text, no markdown, no explanation
     }
 
     // ── Normal chat mode ─────────────────────────────────────────────
-    const { messages, userImage, userId, seekerName, canonicalActivationNames } = body;
+    const { messages, userImage, userId: bodyUserId, seekerName, canonicalActivationNames } = body;
+    const userId = authUserId || (typeof bodyUserId === "string" ? bodyUserId : undefined);
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured.");
 
@@ -632,6 +664,14 @@ RESPOND ONLY with this exact JSON — no other text, no markdown, no explanation
 
     // ── Build system prompt ──────────────────────────────────────────
     let systemText = SYSTEM_INSTRUCTION;
+    systemText += `
+
+═══════════════════════════════════════════════════
+DEEPENING DIALOGUE PROTOCOL
+═══════════════════════════════════════════════════
+After each substantial response, ask 1 focused follow-up question that deepens the seeker's process.
+The follow-up must be specific to their exact message (not generic), and should invite more detail, timing, body sensation, emotional pattern, or dream-symbol context.
+Only skip follow-up questions if the user explicitly asks for short/direct answers only.`;
 
     const hasMemory = livingPortrait || lifeBookArchive || nadiBaseline || seekerName;
 
@@ -650,6 +690,8 @@ ${"═".repeat(60)}`;
 
       if (livingPortrait) {
         systemText += `\n\n${livingPortrait}`;
+      } else if (lifeBookArchive || nadiBaseline) {
+        systemText += `\n\n(Living Portrait text is still rebuilding, but archival memory is present below. Treat archival memory as real past history for this seeker.)`;
       } else {
         systemText += `\n\n(No prior portrait — this is the first session with this Seeker. Build their portrait from this exchange.)`;
       }
