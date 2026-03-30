@@ -65,7 +65,7 @@ const ChatMessageInput = ({
             placeholder={placeholder}
             rows={1}
             disabled={disabled}
-            className="flex-1 bg-transparent border-none outline-none text-sm text-foreground px-2 py-1 resize-none max-h-32 placeholder:text-muted-foreground disabled:opacity-50"
+            className="flex-1 bg-transparent border-none outline-none text-base text-foreground px-2 py-1.5 resize-none max-h-[200px] placeholder:text-muted-foreground disabled:opacity-50 leading-relaxed"
           />
           <Button 
             type="button" 
