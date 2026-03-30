@@ -707,30 +707,93 @@ function QuantumApothecaryInner() {
     e.target.value = '';
   };
 
-  const startVoiceInput = () => {
+  const stopVoiceAndSend = useCallback(() => {
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch { /* ignore */ }
+      recognitionRef.current = null;
+    }
+    setIsRecording(false);
+    const textToSend = voiceTranscriptRef.current.trim();
+    if (textToSend) {
+      setInput(textToSend);
+      setTimeout(() => handleSendMessage(textToSend), 80);
+    }
+  }, [handleSendMessage]);
+
+  const startVoiceInput = useCallback(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
-    if (isRecording && recognitionRef.current) { recognitionRef.current.stop(); return; }
-    voiceTranscriptRef.current = input;
+
+    // If already recording → stop and send the accumulated text
+    if (isRecording && recognitionRef.current) {
+      stopVoiceAndSend();
+      return;
+    }
+
+    voiceTranscriptRef.current = '';
+    setInput('');
+
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = chatSpeechLocale(language);
+    recognition.maxAlternatives = 1;
+
+    let currentInterim = '';
+
     recognition.onresult = (event: any) => {
-      let final = ''; let interim = '';
+      let newFinal = '';
+      let interim = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i].transcript;
-        if (event.results[i].isFinal) final += transcript; else interim += transcript;
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          newFinal += transcript;
+        } else {
+          interim += transcript;
+        }
       }
-      if (final) { voiceTranscriptRef.current = (voiceTranscriptRef.current + final).trim(); setInput(voiceTranscriptRef.current); recognition.stop(); setIsRecording(false); recognitionRef.current = null; const textToSend = voiceTranscriptRef.current; if (textToSend) setTimeout(() => handleSendMessage(textToSend), 0); }
-      else if (interim) { setInput(voiceTranscriptRef.current + interim); }
+
+      if (newFinal) {
+        // Append finalized speech — do NOT stop or send yet
+        const sep = voiceTranscriptRef.current.length > 0 ? ' ' : '';
+        voiceTranscriptRef.current = (voiceTranscriptRef.current + sep + newFinal).trim();
+        currentInterim = '';
+        setInput(voiceTranscriptRef.current);
+      } else if (interim) {
+        currentInterim = interim;
+        setInput(voiceTranscriptRef.current + (voiceTranscriptRef.current ? ' ' : '') + interim);
+      }
     };
-    recognition.onend = () => { setIsRecording(false); recognitionRef.current = null; };
-    recognition.onerror = () => { setIsRecording(false); recognitionRef.current = null; };
-    recognition.start();
-    recognitionRef.current = recognition;
-    setIsRecording(true);
-  };
+
+    // If the browser stops recognition on its own (silence timeout, etc.), restart it
+    recognition.onend = () => {
+      if (recognitionRef.current === recognition && isRecording) {
+        // Browser auto-stopped — restart to keep listening
+        try { recognition.start(); } catch {
+          setIsRecording(false);
+          recognitionRef.current = null;
+        }
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      const errType = event?.error;
+      // 'no-speech' and 'aborted' are normal — just keep going
+      if (errType === 'no-speech' || errType === 'aborted') return;
+      // For other errors (not-allowed, network, etc.), stop
+      setIsRecording(false);
+      recognitionRef.current = null;
+    };
+
+    try {
+      recognition.start();
+      recognitionRef.current = recognition;
+      setIsRecording(true);
+    } catch {
+      setIsRecording(false);
+      recognitionRef.current = null;
+    }
+  }, [isRecording, language, stopVoiceAndSend]);
 
   const addActivation = (act: Activation) => {
     if (selectedActivations.length >= 5 || selectedActivations.find(a => a.id === act.id)) return;
