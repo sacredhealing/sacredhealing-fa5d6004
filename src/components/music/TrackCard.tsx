@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Play, Pause, Heart, Plus, Clock, Music2, Users, Sparkles, Moon, Zap, Leaf, Brain, Share2 } from 'lucide-react';

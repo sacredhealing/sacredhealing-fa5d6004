@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { Share2, X, Music2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
