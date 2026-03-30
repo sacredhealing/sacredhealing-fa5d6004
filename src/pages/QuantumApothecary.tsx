@@ -461,6 +461,7 @@ function QuantumApothecaryInner() {
       setScanError('Failed to capture image. Please try again.');
       setIsScanning(false);
       setScanPhase('idle');
+      document.body.style.overflow = '';
       cameraStream.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
       return;
