@@ -3577,6 +3577,57 @@ export type Database = {
           },
         ]
       }
+      nadi_baselines: {
+        Row: {
+          active_nadis: number
+          active_sub_nadis: number
+          bio_reading: string | null
+          blockage_pct: number
+          created_at: string
+          dominant_dosha: string
+          herb_of_today: string | null
+          id: string
+          planetary_align: string | null
+          primary_blockage: string
+          remedies: Json | null
+          scanned_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active_nadis?: number
+          active_sub_nadis?: number
+          bio_reading?: string | null
+          blockage_pct?: number
+          created_at?: string
+          dominant_dosha?: string
+          herb_of_today?: string | null
+          id?: string
+          planetary_align?: string | null
+          primary_blockage?: string
+          remedies?: Json | null
+          scanned_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active_nadis?: number
+          active_sub_nadis?: number
+          bio_reading?: string | null
+          blockage_pct?: number
+          created_at?: string
+          dominant_dosha?: string
+          herb_of_today?: string | null
+          id?: string
+          planetary_align?: string | null
+          primary_blockage?: string
+          remedies?: Json | null
+          scanned_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       path_days: {
         Row: {
           affirmation: string | null
@@ -4838,6 +4889,30 @@ export type Database = {
           slug?: string
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      sqi_user_memory: {
+        Row: {
+          created_at: string
+          id: string
+          memory_profile: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          memory_profile?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          memory_profile?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
