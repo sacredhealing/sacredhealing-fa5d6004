@@ -1421,7 +1421,30 @@ function QuantumApothecaryInner() {
   .qa-btn-shine { position:relative; overflow:hidden; }
   .qa-btn-shine::after { content:''; position:absolute; inset:0; background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.15) 50%,transparent 60%); background-size:200% 100%; animation:qa-shimmer 3s infinite; }
       `}</style>
+
+      {/* Scroll-to-top FAB */}
+      <ScrollToTopButton />
     </div>
+  );
+}
+
+function ScrollToTopButton() {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setShow(window.scrollY > 600);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  if (!show) return null;
+  return (
+    <button
+      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      className="fixed bottom-24 right-4 z-50 w-10 h-10 rounded-full border border-[#D4AF37]/30 bg-[#0a0a0a]/80 backdrop-blur-sm flex items-center justify-center text-[#D4AF37] hover:bg-[#D4AF37]/10 transition shadow-lg"
+      aria-label="Scroll to top"
+    >
+      <ChevronUp size={20} />
+    </button>
   );
 }
 
