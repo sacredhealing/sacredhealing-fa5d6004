@@ -5,12 +5,15 @@ public/
 docs/
 bun.lockb
 package-lock.json
-*.sql
 *.md
 audio-worker/
 railway-worker/
-supabase/
 .env
 .env.*
 *.lock
 *.lockb
+
+# Allow edge functions and migrations
+!supabase/functions/
+!supabase/migrations/
+supabase/
