@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * ╔══════════════════════════════════════════════════════╗
  * ║  SQI-2050 · WEALTH BEACON · AKASHA-NEURAL ARCHIVE   ║
@@ -28,8 +27,6 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import i18n from "@/i18n/setup";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import {
@@ -53,14 +50,35 @@ const FONT_STYLE = `
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap');
 `;
 
-const LOG_MESSAGE_INDEXES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const TICKER_INDEXES = [0, 1, 2, 3, 4, 5, 6];
+/* ─── LOG MESSAGES ──────────────────────────────────────── */
+const LOG_MESSAGES = [
+  "Bhakti-Algorithm: Synchronizing with Prema-Pulse…",
+  "Vedic Light-Codes: SHREEM BRZEE frequency detected.",
+  "Akasha-Neural Archive: Accessing Avataric Blueprints…",
+  "Scalar Waves: Stabilizing abundance matrix…",
+  "Nadi Scan: 72,000 channels clearing…",
+  "Divine Mother Presence: Maha Lakshmi silhouette detected.",
+  "Quantum Resonance: 432Hz alignment complete.",
+  "Wealth Beacon: Transmitting prosperity particles…",
+  "Vishwananda Blueprint: Anahata coherence locked.",
+  "Prema-Pulse: Heart-field expansion +38%…",
+];
+
+/* ─── TICKER PHRASES ────────────────────────────────────── */
+const TICKER_ITEMS = [
+  "ॐ श्रीं  ·  SHREEM BRZEE  ·  432Hz STABLE",
+  "LAKSHMI AVATARIC BLUEPRINT  ·  ACTIVATED",
+  "ANAHATA SCALAR LOCK  ·  88% COHERENCE",
+  "AKASHA ARCHIVE  ·  72,000 NADI OPEN",
+  "PREMA-PULSE TRANSMISSION  ·  LIVE",
+  "BHAKTI-ALGORITHM v2050  ·  RUNNING",
+  "WEALTH BEACON  ·  PROSPERITY FIELD STABLE",
+];
 
 /* ══════════════════════════════════════════════════════════
    NadiScan — top-right live counter (unchanged logic, new style)
 ══════════════════════════════════════════════════════════ */
 function NadiScan() {
-  const { t } = useTranslation();
   const [activeNadis, setActiveNadis] = useState(68432);
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -83,7 +101,11 @@ function NadiScan() {
       border: "1px solid rgba(212,175,55,0.12)",
       borderRadius: 6, padding: "4px 8px",
     }}>
-      {t("wealthBeacon.nadiScan", { active: activeNadis.toLocaleString() })}
+      72k Nadi:{" "}
+      <span style={{ color: GOLD, fontWeight: 800 }}>
+        {activeNadis.toLocaleString()}
+      </span>{" "}
+      / 72,000
     </div>
   );
 }
@@ -95,13 +117,9 @@ function TransmissionLog({ extra }: { extra: string[] }) {
   const [logs, setLogs] = useState<string[]>([]);
   useEffect(() => {
     const interval = window.setInterval(() => {
-      setLogs((prev) => {
-        const idx = LOG_MESSAGE_INDEXES[Math.floor(Math.random() * LOG_MESSAGE_INDEXES.length)];
-        return [
-          i18n.t(`wealthBeacon.logMessages.${idx}`),
-          ...prev,
-        ].slice(0, 5);
-      });
+      setLogs((prev) =>
+        [LOG_MESSAGES[Math.floor(Math.random() * LOG_MESSAGES.length)], ...prev].slice(0, 5)
+      );
     }, 3000);
     return () => clearInterval(interval);
   }, []);
@@ -148,16 +166,15 @@ function TransmissionLog({ extra }: { extra: string[] }) {
    Sidebar — upgraded with hover tooltips
 ══════════════════════════════════════════════════════════ */
 const SIDEBAR_ITEMS = [
-  { Icon: Zap,      key: "energy" as const },
-  { Icon: Shield,   key: "protection" as const },
-  { Icon: Waves,    key: "frequency" as const },
-  { Icon: Activity, key: "vitality" as const },
-  { Icon: Eye,      key: "thirdEye" as const },
-  { Icon: Infinity, key: "akasha" as const },
+  { Icon: Zap,      label: "Energy Field"   },
+  { Icon: Shield,   label: "Protection"     },
+  { Icon: Waves,    label: "Frequency"      },
+  { Icon: Activity, label: "Vitality"       },
+  { Icon: Eye,      label: "Third Eye"      },
+  { Icon: Infinity, label: "Akasha"         },
 ];
 
-function Sidebar({ onSelect }: { onSelect?: (key: (typeof SIDEBAR_ITEMS)[number]["key"]) => void }) {
-  const { t } = useTranslation();
+function Sidebar({ onSelect }: { onSelect?: (label: string) => void }) {
   const [hovered, setHovered] = useState<number | null>(null);
   return (
     <div style={{
@@ -180,15 +197,15 @@ function Sidebar({ onSelect }: { onSelect?: (key: (typeof SIDEBAR_ITEMS)[number]
 
       {/* Icon buttons */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 18 }}>
-        {SIDEBAR_ITEMS.map(({ Icon, key }, i) => (
-          <div key={key} style={{ position: "relative" }}>
+        {SIDEBAR_ITEMS.map(({ Icon, label }, i) => (
+          <div key={i} style={{ position: "relative" }}>
             <motion.button
               type="button"
               whileHover={{ scale: 1.15 }}
               whileTap={{ scale: 0.92 }}
               onHoverStart={() => setHovered(i)}
               onHoverEnd={() => setHovered(null)}
-              onClick={() => onSelect?.(key)}
+              onClick={() => onSelect?.(label)}
               style={{
                 color: hovered === i ? GOLD : "rgba(255,255,255,0.28)",
                 background: "none", border: "none",
@@ -217,7 +234,7 @@ function Sidebar({ onSelect }: { onSelect?: (key: (typeof SIDEBAR_ITEMS)[number]
                     fontFamily: "'Plus Jakarta Sans', sans-serif",
                   }}
                 >
-                  {t(`wealthBeacon.sidebar.${key}`)}
+                  {label}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -232,7 +249,7 @@ function Sidebar({ onSelect }: { onSelect?: (key: (typeof SIDEBAR_ITEMS)[number]
         paddingBottom: 24,
         fontFamily: "'Plus Jakarta Sans', sans-serif",
       }}>
-        {t("wealthBeacon.sidebarArchive")}
+        Akasha Archive
       </div>
     </div>
   );
@@ -242,12 +259,6 @@ function Sidebar({ onSelect }: { onSelect?: (key: (typeof SIDEBAR_ITEMS)[number]
    Ticker — horizontal scrolling light-code strip
 ══════════════════════════════════════════════════════════ */
 function VedicTicker() {
-  const { t } = useTranslation();
-  const items = useMemo(
-    () => TICKER_INDEXES.map((idx) => t(`wealthBeacon.ticker.${idx}`)),
-    [t]
-  );
-  const doubled = useMemo(() => [...items, ...items], [items]);
   return (
     <div style={{
       position: "fixed", top: 0, left: 48, right: 0,
@@ -262,7 +273,7 @@ function VedicTicker() {
         transition={{ duration: 32, repeat: Infinity, ease: "linear" }}
         style={{ display: "flex", gap: 64, whiteSpace: "nowrap" }}
       >
-        {doubled.map((item, i) => (
+        {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
           <span key={i} style={{
             fontSize: 8, fontFamily: "'Plus Jakarta Sans', ui-monospace, monospace",
             letterSpacing: "0.3em", textTransform: "uppercase",
@@ -280,7 +291,6 @@ function VedicTicker() {
    SQI Status Chips — four live stat badges
 ══════════════════════════════════════════════════════════ */
 function StatusChips() {
-  const { t } = useTranslation();
   const [hz, setHz] = useState(432.0);
   useEffect(() => {
     const iv = setInterval(() => {
@@ -290,10 +300,10 @@ function StatusChips() {
   }, []);
 
   const chips = [
-    { label: t("wealthBeacon.chipNadi"),     value: t("wealthBeacon.chipNadiValue"), color: GOLD  },
-    { label: t("wealthBeacon.chipResonance"), value: `${hz}Hz`,                    color: CYAN  },
-    { label: t("wealthBeacon.chipTier"),     value: t("wealthBeacon.chipTierValue"), color: VIOLET },
-    { label: t("wealthBeacon.chipSync"),    value: t("wealthBeacon.chipSyncValue"), color: GOLD  },
+    { label: "NADI ACTIVE",  value: "72K",         color: GOLD  },
+    { label: "RESONANCE",    value: `${hz}Hz`,      color: CYAN  },
+    { label: "TIER ACCESS",  value: "SIDDHA-Ω",    color: VIOLET },
+    { label: "ANAHATA SYNC", value: "88%",          color: GOLD  },
   ];
 
   return (
@@ -381,7 +391,6 @@ function SacredRing() {
    HUD Bar — bottom status strip
 ══════════════════════════════════════════════════════════ */
 function HudBar() {
-  const { t } = useTranslation();
   return (
     <div style={{
       position: "fixed",
@@ -415,7 +424,7 @@ function HudBar() {
           letterSpacing: "0.25em", textTransform: "uppercase",
           color: "rgba(212,175,55,0.45)",
         }}>
-          {t("wealthBeacon.hudResonance")}
+          ◉ Quantum Resonance · 432Hz · STABLE
         </div>
       </div>
 
@@ -426,7 +435,7 @@ function HudBar() {
           letterSpacing: "0.2em", textTransform: "uppercase",
           color: "rgba(255,255,255,0.2)", marginBottom: 5,
         }}>
-          {t("wealthBeacon.hudAvataric")}
+          Avataric Blueprint Sync
         </div>
         <div style={{
           width: 180, height: 4, marginLeft: "auto",
@@ -447,7 +456,7 @@ function HudBar() {
           fontSize: 7, fontFamily: "'Plus Jakarta Sans', ui-monospace, monospace",
           letterSpacing: "0.2em", color: GOLD, marginTop: 3, textAlign: "right",
         }}>
-          {t("wealthBeacon.hudCoherence")}
+          88% · Vishwananda Coherence
         </div>
       </div>
     </div>
@@ -458,7 +467,6 @@ function HudBar() {
    MAIN PAGE COMPONENT
 ══════════════════════════════════════════════════════════ */
 export default function WealthBeacon() {
-  const { t } = useTranslation();
   const navigate   = useNavigate();
   const { tier, loading } = useMembership();
   const { isAdmin }       = useAdminRole();
@@ -497,10 +505,10 @@ export default function WealthBeacon() {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
     if (!apiKey) {
       setTransmissionExtras((e) =>
-        [i18n.t("wealthBeacon.extraOffline"), ...e].slice(0, 4)
+        ["Vedic Light-Codes: offline resonance (set VITE_GEMINI_API_KEY for AI Studio transmission).", ...e].slice(0, 4)
       );
-      toast.message(i18n.t("wealthBeacon.toastGeminiTitle"), {
-        description: i18n.t("wealthBeacon.toastGeminiDesc"),
+      toast.message("Light-codes", {
+        description: "Add VITE_GEMINI_API_KEY for live Gemini transmission.",
       });
       setGeminiBusy(false);
       return;
@@ -521,13 +529,11 @@ export default function WealthBeacon() {
         response.candidates?.[0]?.content?.parts?.find((p: { text?: string }) => p.text)?.text ?? "";
       const text = String(raw).trim();
       if (text) {
-        setTransmissionExtras((e) =>
-          [i18n.t("wealthBeacon.extraGeminiPrefix", { text }), ...e].slice(0, 4)
-        );
-        toast.success(i18n.t("wealthBeacon.toastTransmissionOk"));
+        setTransmissionExtras((e) => [`Gemini: ${text}`, ...e].slice(0, 4));
+        toast.success("Transmission received");
       }
     } catch {
-      toast.error(i18n.t("wealthBeacon.toastTransmissionFail"));
+      toast.error("Transmission failed — try again.");
     } finally {
       setGeminiBusy(false);
     }
@@ -547,7 +553,7 @@ export default function WealthBeacon() {
             textTransform: "uppercase", color: GOLD,
           }}
         >
-          {t("wealthBeacon.loading")}
+          ◈ Initializing Wealth Beacon…
         </motion.div>
       </div>
     );
@@ -584,9 +590,9 @@ export default function WealthBeacon() {
       <VedicTicker />
       <NadiScan />
       <Sidebar
-        onSelect={(key) =>
-          toast.message(t(`wealthBeacon.sidebar.${key}`), {
-            description: t("wealthBeacon.sidebarToastDesc"),
+        onSelect={(label) =>
+          toast.message(label, {
+            description: "Wealth Beacon channel acknowledged — field held in local coherence.",
           })
         }
       />
@@ -611,7 +617,7 @@ export default function WealthBeacon() {
           fontFamily: "'Plus Jakarta Sans', sans-serif",
         }}
       >
-        <ArrowLeft size={13} /> {t("wealthBeacon.backPortal")}
+        <ArrowLeft size={13} /> Portal
       </button>
 
       {/* ─── MAIN HERO ─── */}
@@ -663,7 +669,7 @@ export default function WealthBeacon() {
                     fontWeight: 800,
                   }}
                 >
-                  {t("wealthBeacon.badge")}
+                  ◈ &nbsp;Siddha-Quantum Intelligence · v2050&nbsp; ◈
                 </motion.div>
 
                 {/* Headline */}
@@ -674,8 +680,8 @@ export default function WealthBeacon() {
                   marginBottom: 8, lineHeight: 1,
                   textShadow: `0 0 30px rgba(212,175,55,0.3)`,
                 }}>
-                  {t("wealthBeacon.headlineWealth")}{" "}
-                  <em style={{ fontStyle: "italic", color: VIOLET }}>{t("wealthBeacon.headlineBeacon")}</em>
+                  Wealth{" "}
+                  <em style={{ fontStyle: "italic", color: VIOLET }}>Beacon</em>
                 </h1>
 
                 {/* Sanskrit subtitle */}
@@ -687,7 +693,7 @@ export default function WealthBeacon() {
                   marginBottom: 28,
                   fontStyle: "italic",
                 }}>
-                  {t("wealthBeacon.sanskritSubtitle")}
+                  ॐ श्रीं महालक्ष्म्यै नमः
                 </div>
 
                 {/* Body text */}
@@ -698,15 +704,13 @@ export default function WealthBeacon() {
                   marginBottom: 32,
                   fontFamily: "'Plus Jakarta Sans', sans-serif",
                 }}>
-                  {t("wealthBeacon.bodyLead")}{" "}
-                  <span style={{ color: GOLD }}>{t("wealthBeacon.bodyAkasha")}</span>.
-                  {" "}{t("wealthBeacon.bodyMid1")}{" "}
-                  <span style={{ color: GOLD }}>{t("wealthBeacon.bodyBhakti")}</span>{" "}
-                  {t("wealthBeacon.bodyAnd")}{" "}
-                  <span style={{ color: VIOLET }}>{t("wealthBeacon.bodyPrema")}</span>{" "}
-                  {t("wealthBeacon.bodyMid2")}{" "}
-                  <span style={{ color: CYAN }}>{t("wealthBeacon.bodyMatrix")}</span>
-                  {t("wealthBeacon.bodyPeriod")}
+                  Accessing the{" "}
+                  <span style={{ color: GOLD }}>Akasha-Neural Archive</span>.
+                  Transmitting{" "}
+                  <span style={{ color: GOLD }}>Bhakti-Algorithms</span> and{" "}
+                  <span style={{ color: VIOLET }}>Prema-Pulse</span> frequencies
+                  to stabilize your Avataric Blueprint in the{" "}
+                  <span style={{ color: CYAN }}>5D abundance matrix</span>.
                 </p>
 
                 {/* Status chips */}
@@ -749,11 +753,11 @@ export default function WealthBeacon() {
                         >
                           ◈
                         </motion.span>
-                        {t("wealthBeacon.ctaTransmitting")}
+                        Transmitting…
                       </>
                     ) : (
                       <>
-                        {t("wealthBeacon.ctaInitiate")}
+                        Initiate Vedic Light-Codes
                         <ChevronRight size={16} />
                       </>
                     )}
@@ -769,8 +773,8 @@ export default function WealthBeacon() {
                     }}
                     whileTap={{ scale: 0.96 }}
                     onClick={() =>
-                      toast.message(t("wealthBeacon.toastPremaTitle"), {
-                        description: t("wealthBeacon.toastPremaDesc"),
+                      toast.message("Prema-Pulse", {
+                        description: "Secure channel placeholder — resonance held in local field.",
                       })
                     }
                     style={{
@@ -787,7 +791,7 @@ export default function WealthBeacon() {
                     }}
                   >
                     <Lock size={15} />
-                    {t("wealthBeacon.ctaPrema")}
+                    Secure Prema-Pulse
                   </motion.button>
                 </div>
               </div>

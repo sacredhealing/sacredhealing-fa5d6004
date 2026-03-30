@@ -486,9 +486,7 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
               gap: '8px',
             }}
           >
-            {isMasterUnlocked
-              ? `🔓 ${t('vastuChat.lockCourse', 'Lock Course')}`
-              : `🔒 ${t('vastuChat.unlockAll', 'Unlock All')}`}
+            {isMasterUnlocked ? '🔓 Lock Course' : '🔒 Unlock All'}
           </button>
         </div>
       </aside>
@@ -620,11 +618,8 @@ export const VastuTool: React.FC<VastuToolProps> = ({ isAdmin = false }) => {
                 textShadow: '0 0 20px rgba(212,175,55,0.5)',
               }}
             >
-              {t('vastuChat.moduleOfTotal', {
-                defaultValue: '{{current}} / {{total}}',
-                current: String(currentModule),
-                total: '10',
-              })}
+              {currentModule}{' '}
+              <span style={{ fontSize: '13px', opacity: 0.5 }}>/ 10</span>
             </p>
           </div>
         </div>

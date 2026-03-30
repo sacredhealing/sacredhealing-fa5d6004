@@ -10,11 +10,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
-import { useTranslation } from '@/hooks/useTranslation';
 
 const CAMERA_TIMEOUT_MS = 4000;
-
-type HandAnalyzerErrorKey = 'permissionDenied' | 'notSupported' | 'timeout';
 
 /** Neural Map — glowing Life, Head, Heart paths over the camera feed during scan */
 const LIFE_PATH = 'M 22,28 Q 28,36 26,72';
@@ -78,9 +75,8 @@ const NeuralMapOverlay: React.FC<{ active: boolean }> = ({ active }) => {
 };
 
 const HandAnalyzer = () => {
-  const { t } = useTranslation();
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [errorKey, setErrorKey] = useState<HandAnalyzerErrorKey | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<boolean>(false);
@@ -96,7 +92,7 @@ const HandAnalyzer = () => {
 
   const startCamera = async () => {
     setIsInitializing(true);
-    setErrorKey(null);
+    setError(null);
     cameraReadyRef.current = false;
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
@@ -119,14 +115,14 @@ const HandAnalyzer = () => {
       setIsInitializing(false);
     } catch (err) {
       console.error('Camera Error:', err);
-      setErrorKey('permissionDenied');
+      setError('Permission denied or camera in use.');
       setIsInitializing(false);
     }
   };
 
   useEffect(() => {
     if (!navigator.mediaDevices?.getUserMedia) {
-      setErrorKey('notSupported');
+      setError('Camera not supported in this browser.');
       setIsInitializing(false);
       return () => {};
     }
@@ -135,7 +131,7 @@ const HandAnalyzer = () => {
     const timer = setTimeout(() => {
       if (!cameraReadyRef.current) {
         setIsInitializing(false);
-        setErrorKey('timeout');
+        setError('Camera bridge timed out. Please upload a clear photo of your palm.');
       }
     }, CAMERA_TIMEOUT_MS);
 
@@ -170,14 +166,14 @@ const HandAnalyzer = () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
-          toast.error(t('handAnalyzer.toast.signIn'));
+          toast.error('Please sign in to use Hand Analyzer');
           setIsScanning(false);
           return;
         }
         setTimeout(() => {
           const seed = imageData.slice(0, 120);
           setIsScanning(false);
-          toast.success(t('handAnalyzer.toast.analysisComplete'));
+          toast.success('Analysis complete!');
           setAnalysisSeed(seed);
           setAnalysisImageUrl(imageData);
           setAnalysisResult(true);
@@ -194,7 +190,7 @@ const HandAnalyzer = () => {
         }, 4000);
       } catch (err: unknown) {
         setIsScanning(false);
-        toast.error(err instanceof Error ? err.message : t('handAnalyzer.toast.analysisFailed'));
+        toast.error(err instanceof Error ? err.message : 'Analysis failed. Please try again.');
       }
     })();
   };
@@ -212,13 +208,13 @@ const HandAnalyzer = () => {
     if (stream && videoRef.current) {
       const imageData = captureImage();
       if (!imageData) {
-        toast.error(t('handAnalyzer.toast.captureFailed'));
+        toast.error('Failed to capture palm image. Please try again.');
         return;
       }
       runAnalysis(imageData);
       return;
     }
-    toast.error(t('handAnalyzer.toast.cameraNotReady'));
+    toast.error('Camera not ready. Please wait or upload a photo.');
   };
 
   const handleGalleryUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -233,17 +229,16 @@ const HandAnalyzer = () => {
     e.target.value = '';
   };
 
-  const hasCamera = !!stream && !errorKey;
-  const errorMessage = errorKey ? t(`handAnalyzer.errors.${errorKey}`) : null;
+  const hasCamera = !!stream && !error;
 
   return (
     <div className="min-h-screen bg-black text-white relative overflow-hidden font-serif">
       {/* HEADER */}
       <div className="absolute top-6 left-6 z-50 flex items-center gap-4">
-        <button type="button" onClick={() => navigate(-1)} className="text-[#D4AF37] text-2xl" aria-label={t('handAnalyzer.goBack')}>
+        <button type="button" onClick={() => navigate(-1)} className="text-[#D4AF37] text-2xl" aria-label="Go back">
           ←
         </button>
-        <h1 className="text-xl font-bold tracking-widest uppercase">{t('handAnalyzer.title')}</h1>
+        <h1 className="text-xl font-bold tracking-widest uppercase">Palm Oracle</h1>
       </div>
 
       {/* CAMERA VIEWPORT */}
@@ -256,12 +251,12 @@ const HandAnalyzer = () => {
               transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
               className="w-12 h-12 border-2 border-t-[#D4AF37] border-transparent rounded-full mb-4"
             />
-            <p className="text-[#D4AF37] tracking-widest text-xs uppercase animate-pulse">{t('handAnalyzer.initializingLens')}</p>
+            <p className="text-[#D4AF37] tracking-widest text-xs uppercase animate-pulse">Initializing Siddha Lens...</p>
           </div>
         )}
 
         {/* 2. CAMERA VIEW */}
-        {!errorKey && !isInitializing && stream && (
+        {!error && !isInitializing && stream && (
           <div className="relative w-full h-full">
             <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover opacity-60" />
             {/* Neural Map overlay — glowing SVG paths (Life, Head, Heart) drawn as camera scans */}
@@ -274,29 +269,29 @@ const HandAnalyzer = () => {
             </div>
             <div className="absolute bottom-6 w-full text-center">
               <p className="text-white text-[10px] uppercase tracking-widest bg-black/50 py-2 inline-block px-4 rounded-full">
-                {isScanning ? t('handAnalyzer.neuralMapActive') : t('handAnalyzer.alignPalm')}
+                {isScanning ? 'Neural Map active — 15 points' : 'Align Palm with Golden Outline'}
               </p>
             </div>
           </div>
         )}
 
         {/* 3. ERROR / FALLBACK STATE */}
-        {errorKey && (
+        {error && (
           <div className="flex flex-col items-center p-10 text-center">
-            <p className="text-white/60 text-sm mb-6">{errorMessage}</p>
+            <p className="text-white/60 text-sm mb-6">{error}</p>
             <button
               type="button"
               className="px-8 py-3 bg-[#D4AF37] text-black rounded-full font-bold uppercase text-xs"
               onClick={() => fileInputRef.current?.click()}
             >
-              {t('handAnalyzer.uploadPalmPhoto')}
+              Upload Palm Photo
             </button>
             <button
               type="button"
               onClick={startCamera}
               className="mt-4 text-[#D4AF37] text-[10px] uppercase underline"
             >
-              {t('handAnalyzer.tryAgain')}
+              Try Again
             </button>
           </div>
         )}
@@ -336,7 +331,7 @@ const HandAnalyzer = () => {
               onClick={handleScan}
               disabled={isScanning}
               className={`w-20 h-20 rounded-full border-4 ${isScanning ? 'border-white/20' : 'border-[#D4AF37]'} flex items-center justify-center bg-black/40 backdrop-blur-md`}
-              aria-label={isScanning ? t('handAnalyzer.ariaScanning') : t('handAnalyzer.ariaCapture')}
+              aria-label={isScanning ? 'Scanning' : 'Capture from camera'}
             >
               <div className={`w-14 h-14 rounded-full ${isScanning ? 'bg-white/20' : 'bg-[#D4AF37] shadow-[0_0_20px_#D4AF37]'}`} />
             </motion.button>
@@ -349,7 +344,7 @@ const HandAnalyzer = () => {
             className="flex items-center gap-2 px-5 py-3 rounded-full bg-[#D4AF37] text-black font-bold text-sm uppercase tracking-wider disabled:opacity-50"
           >
             <Camera className="w-5 h-5" />
-            {t('handAnalyzer.takePhoto')}
+            Take Photo
           </motion.button>
           <motion.button
             type="button"
@@ -358,12 +353,12 @@ const HandAnalyzer = () => {
             disabled={isScanning}
             className="flex items-center gap-2 px-5 py-3 rounded-full border-2 border-[#D4AF37]/50 text-[#D4AF37] font-semibold text-sm uppercase tracking-wider disabled:opacity-50"
           >
-            {t('handAnalyzer.upload')}
+            Upload
           </motion.button>
         </div>
-        {(!hasCamera || errorKey) && (
+        {(!hasCamera || error) && (
           <p className="text-[10px] text-[#D4AF37]/70 uppercase tracking-wider text-center">
-            {errorKey ? t('handAnalyzer.hintError') : t('handAnalyzer.hintStarting')}
+            {error ? 'Use Take Photo or Upload a palm image' : 'Camera starting… or use Take Photo / Upload'}
           </p>
         )}
       </div>
@@ -373,13 +368,7 @@ const HandAnalyzer = () => {
       {/* STATUS TEXT */}
       <div className="absolute bottom-36 left-0 right-0 text-center">
         <p className="text-[#D4AF37] text-xs uppercase tracking-[0.3em]">
-          {isScanning
-            ? t('handAnalyzer.statusDeciphering')
-            : hasCamera
-              ? t('handAnalyzer.statusAlign')
-              : errorKey
-                ? t('handAnalyzer.statusUploadOrRetry')
-                : t('handAnalyzer.statusInitializing')}
+          {isScanning ? 'Deciphering Soul Lines...' : hasCamera ? 'Align Palm with Golden Outline' : error ? 'Upload a palm photo or try again' : 'Initializing Siddha Lens...'}
         </p>
       </div>
 
@@ -406,18 +395,12 @@ const HandAnalyzer = () => {
                 const vpk = getVataPittaKapha(analysisSeed);
                 return (
                   <section className="mb-6 rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/5 p-4">
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-[#D4AF37]/90 mb-3">{t('handAnalyzer.vpkTitle')}</h4>
-                    <p className="text-white/70 text-xs mb-2">{t('handAnalyzer.vpkSubtitle')}</p>
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-[#D4AF37]/90 mb-3">Vata–Pitta–Kapha balance</h4>
+                    <p className="text-white/70 text-xs mb-2">From hand texture and color</p>
                     <div className="space-y-2">
                       {(['vata', 'pitta', 'kapha'] as const).map((d) => (
                         <div key={d} className="flex items-center gap-2">
-                          <span className="text-white/80 text-sm w-12 capitalize">
-                            {d === 'vata'
-                              ? t('ayurvedaDash.dosha_vata')
-                              : d === 'pitta'
-                                ? t('ayurvedaDash.dosha_pitta')
-                                : t('ayurvedaDash.dosha_kapha')}
-                          </span>
+                          <span className="text-white/80 text-sm w-12 capitalize">{d}</span>
                           <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
                             <motion.div
                               className="h-full bg-[#D4AF37] rounded-full"
@@ -438,7 +421,7 @@ const HandAnalyzer = () => {
                 onClick={handleAnalysisOk}
                 className="w-full py-3 rounded-xl bg-[#D4AF37] text-black font-bold uppercase text-sm tracking-wider hover:bg-[#D4AF37]/90 transition-colors"
               >
-                {t('handAnalyzer.continueAkashic')}
+                OK — Continue to Akashic Decoder
               </button>
             </motion.div>
           </motion.div>
@@ -454,7 +437,7 @@ const HandAnalyzer = () => {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[101] flex flex-col items-center justify-center bg-black/95"
           >
-            <p className="text-[#D4AF37] text-sm uppercase tracking-widest mb-6 animate-pulse">{t('handAnalyzer.scanningAkasha')}</p>
+            <p className="text-[#D4AF37] text-sm uppercase tracking-widest mb-6 animate-pulse">Scanning the Akasha...</p>
             <div className="w-64 h-1.5 bg-white/10 rounded-full overflow-hidden">
               <motion.div
                 className="h-full bg-[#D4AF37] rounded-full"
@@ -471,7 +454,6 @@ const HandAnalyzer = () => {
 };
 
 function HandAnalyzerGated() {
-  const { t } = useTranslation();
   const { user, isLoading: authLoading } = useAuth();
   const { tier, loading: membershipLoading } = useMembership();
   const { isAdmin } = useAdminRole();
@@ -479,7 +461,7 @@ function HandAnalyzerGated() {
   if (authLoading || membershipLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#050505] text-white">
-        <span className="text-sm uppercase tracking-[0.3em] text-white/40">{t('common.loading')}</span>
+        <span className="text-sm uppercase tracking-[0.3em] text-white/40">Loading…</span>
       </div>
     );
   }

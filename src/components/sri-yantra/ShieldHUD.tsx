@@ -1,7 +1,6 @@
 import React from "react";
-import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
-import { Activity, Zap, Wind } from "lucide-react";
+import { Activity, Shield, Zap, Wind } from "lucide-react";
 import type { ShieldData } from "./types";
 
 interface HUDProps {
@@ -48,29 +47,24 @@ const HUDCard = ({
 );
 
 export const ShieldHUD = ({ data, isActive }: HUDProps) => {
-  const { t } = useTranslation();
-  const emfVal = t(`sriYantraShield.hudTokens.emf.${data.emf}`, data.emf);
-  const pathogenVal = t(`sriYantraShield.hudTokens.pathogen.${data.pathogenLoad}`, data.pathogenLoad);
-  const fearVal = t(`sriYantraShield.hudTokens.fear.${data.fearIndex}`, data.fearIndex);
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-4xl">
       <HUDCard
         icon={<Zap className={isActive ? "text-blue-400" : "text-red-400"} size={20} />}
-        label={t("sriYantraShield.hudLabels.emf")}
-        value={emfVal}
+        label="EMF FLUX"
+        value={data.emf}
         isActive={isActive}
       />
       <HUDCard
         icon={<Wind className={isActive ? "text-blue-400" : "text-red-400"} size={20} />}
-        label={t("sriYantraShield.hudLabels.pathogen")}
-        value={pathogenVal}
+        label="PATHOGEN LOAD"
+        value={data.pathogenLoad}
         isActive={isActive}
       />
       <HUDCard
         icon={<Activity className={isActive ? "text-blue-400" : "text-red-400"} size={20} />}
-        label={t("sriYantraShield.hudLabels.fear")}
-        value={fearVal}
+        label="FEAR INDEX"
+        value={data.fearIndex}
         isActive={isActive}
       />
     </div>

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useTranslation } from '@/hooks/useTranslation';
+import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Play, Pause, RotateCcw, Wind, Heart, Sparkles, Clock, Youtube, Music } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -826,6 +826,37 @@ const SQI_STYLES = `
 `;
 
 // ─────────────────────────────────────────────
+// Cave Pranayama Guide Data (Western-Friendly)
+// ─────────────────────────────────────────────
+const CAVE_GUIDE = [
+  {
+    sanskrit: 'PRANAYAMA',
+    title: 'What is Pranayama?',
+    desc: "Prana means 'life force energy' — the breath is your bridge between body and soul. Pranayama is the ancient Vedic science of directing this energy through conscious breathing.",
+  },
+  {
+    sanskrit: 'NADI SHODHANA',
+    title: 'Alternate Nostril Breathing',
+    desc: "Balances left & right hemispheres of the brain. Close your right nostril, inhale left. Close left, exhale right. Switch. Like charging a battery — calms anxiety in 3 minutes.",
+  },
+  {
+    sanskrit: 'KAPALABHATI',
+    title: 'Skull-Shining Breath',
+    desc: 'Short, sharp exhales through the nose with passive inhales. Clears stale prana from your lungs, activates solar plexus energy, sharpens mental clarity instantly.',
+  },
+  {
+    sanskrit: 'BHRAMARI',
+    title: 'Humming Bee Breath',
+    desc: 'Inhale deeply, then hum like a bee on the exhale. The vibration stimulates the vagus nerve, drops cortisol, and activates Anahata (heart chakra) healing.',
+  },
+  {
+    sanskrit: 'UJJAYI',
+    title: 'Ocean Victory Breath',
+    desc: 'Breathe through the nose with a slight constriction in the throat, creating an ocean sound. Used in yoga — heats the body, builds focus, and activates the parasympathetic system.',
+  },
+];
+
+// ─────────────────────────────────────────────
 // TYPE DEFS (unchanged from original)
 // ─────────────────────────────────────────────
 type BreathPhase = 'inhale' | 'hold' | 'exhale' | 'holdOut' | 'idle';
@@ -843,12 +874,11 @@ interface BreathingPattern {
   audio_url?: string | null;
 }
 
-/** Box pattern IDs; display strings come from i18n (`breathing.patternBox*`). */
 const defaultPatterns: BreathingPattern[] = [
   {
     id: 'box',
-    name: 'box',
-    description: '',
+    name: 'Box Breathing',
+    description: 'Equal counts for calm and focus. Used by Navy SEALs.',
     inhale: 4,
     hold: 4,
     exhale: 4,
@@ -879,18 +909,6 @@ const getPatternEmoji = (id: string, name: string) => {
   return '🕉️';
 };
 
-function patternDisplayName(pattern: BreathingPattern, t: (k: string, f?: string) => string): string {
-  if (pattern.id === 'box') return t('breathing.patternBoxName', 'Box Breathing');
-  return pattern.name;
-}
-
-function patternDisplayDescription(pattern: BreathingPattern, t: (k: string, f?: string) => string): string {
-  if (pattern.id === 'box') {
-    return t('breathing.patternBoxDesc', 'Equal counts for calm and focus. Used by Navy SEALs.');
-  }
-  return pattern.description ?? '';
-}
-
 // ─────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────
@@ -912,16 +930,6 @@ const Breathing: React.FC = () => {
   const [currentCycle, setCurrentCycle] = useState(0);
   const [totalSeconds, setTotalSeconds] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  const caveGuideItems = useMemo(
-    () =>
-      [1, 2, 3, 4, 5].map((i) => ({
-        sanskrit: t(`breathing.guide${i}_sk`),
-        title: t(`breathing.guide${i}_title`),
-        desc: t(`breathing.guide${i}_desc`),
-      })),
-    [t]
-  );
 
   // Fetch patterns from database (unchanged)
   useEffect(() => {
@@ -1031,7 +1039,7 @@ const Breathing: React.FC = () => {
                 <span>{t('common.back', 'Back')}</span>
               </button>
               <button onClick={() => navigate('/dashboard')} className="temple-btn">
-                {t('breathing.returnToTemple', 'Return to Temple')}
+                ✦ Return to Temple
               </button>
             </div>
             <div className="hero-header">
@@ -1040,8 +1048,8 @@ const Breathing: React.FC = () => {
                   <Wind size={28} color="#D4AF37" />
                 </div>
                 <div className="hero-titles">
-                  <h1>{content['breathing_title'] || t('breathing.heroTitleDefault', 'Pranayama Cave')}</h1>
-                  <p>{content['breathing_subtitle'] || t('breathing.heroSubtitleDefault', 'Sacred Breath · Vedic Light-Codes')}</p>
+                  <h1>{content['breathing_title'] || 'Pranayama Cave'}</h1>
+                  <p>{content['breathing_subtitle'] || 'Sacred Breath · Vedic Light-Codes'}</p>
                 </div>
               </div>
               <AmbientSoundToggle />
@@ -1050,18 +1058,16 @@ const Breathing: React.FC = () => {
 
           {/* ── ACCESS BADGES ── */}
           <div className="access-badges">
-            <span className="badge badge-free">{t('breathing.badgeFree', '✓ Free Access')}</span>
-            <span className="badge badge-prana">{t('breathing.badgePrana', '✦ Prana Flow Included')}</span>
+            <span className="badge badge-free">✓ Free Access</span>
+            <span className="badge badge-prana">✦ Prana Flow Included</span>
           </div>
 
           {/* ── INTRO BANNER ── */}
           <div className="intro-banner glass-card">
             <p>
               {content['breathing_description'] ||
-                t(
-                  'breathing.introFallback',
-                  'Enter the Cave of Pranayama — where breath becomes Bhakti-Algorithm. Each inhale draws cosmic Prana. Each exhale releases karmic density. Anahata opens. Healing flows.'
-                )}
+                <>Enter the <strong>Cave of Pranayama</strong> — where breath becomes Bhakti-Algorithm. Each inhale draws cosmic Prana. Each exhale releases karmic density. <strong>Anahata opens. Healing flows.</strong></>
+              }
             </p>
           </div>
 
@@ -1071,20 +1077,17 @@ const Breathing: React.FC = () => {
           <div className="kriya-portal">
             <div className="kriya-portal-title">
               <Sparkles size={18} color="#D4AF37" />
-              {t('breathing.kriyaPortalTitle', 'Siddha Kriya Portal')}
+              Siddha Kriya Portal
             </div>
             <div className="kriya-portal-sub">
-              {t(
-                'breathing.kriyaPortalSub',
-                'Sync breath with the orb · Awaken the Kundalini · Release the Karma'
-              )}
+              Sync breath with the orb · Awaken the Kundalini · Release the Karma
             </div>
             <SacredBreathingGuide inhaleSeconds={4} exhaleSeconds={4} />
           </div>
 
           {/* ── PATTERN SELECTION GRID ── */}
           <div style={{ margin: '0 20px 8px', padding: '0' }}>
-            <span className="section-label">{t('breathing.chooseKriya', '⬡ Choose Your Kriya')}</span>
+            <span className="section-label">⬡ Choose Your Kriya</span>
           </div>
           <div className="cave-grid">
             {patterns.map((pattern) => (
@@ -1095,9 +1098,9 @@ const Breathing: React.FC = () => {
                 className={`cave-technique-card ${selectedPattern.id === pattern.id ? 'active' : ''} ${isActive ? 'disabled' : ''}`}
               >
                 {selectedPattern.id === pattern.id && <div className="active-glow-dot" />}
-                <span className="technique-emoji">{getPatternEmoji(pattern.id, patternDisplayName(pattern, t))}</span>
-                <div className="technique-name">{patternDisplayName(pattern, t)}</div>
-                <div className="technique-desc">{patternDisplayDescription(pattern, t)}</div>
+                <span className="technique-emoji">{getPatternEmoji(pattern.id, pattern.name)}</span>
+                <div className="technique-name">{pattern.name}</div>
+                <div className="technique-desc">{pattern.description}</div>
                 <div className="technique-ratio">
                   {pattern.inhale}-{pattern.hold}-{pattern.exhale}{pattern.hold_out > 0 ? `-${pattern.hold_out}` : ''}
                 </div>
@@ -1107,7 +1110,7 @@ const Breathing: React.FC = () => {
 
           {/* ── CLASSIC TIMER ── */}
           <div className="timer-section glass-card">
-            <div className="timer-section-title">{t('breathing.timerTitle', 'Prana Flow Timer')}</div>
+            <div className="timer-section-title">Prana Flow Timer</div>
             <div className="timer-circle-wrap">
               <div className={`timer-orb ${orbColorClass} ${orbScaleClass}`}>
                 <div className="orb-inner-text">
@@ -1135,7 +1138,7 @@ const Breathing: React.FC = () => {
             {!isActive ? (
               <button onClick={startExercise} className="btn-begin">
                 <Play size={16} />
-                {t('breathing.beginKriya', 'Begin the Kriya')}
+                Begin the Kriya
               </button>
             ) : (
               <>
@@ -1160,7 +1163,7 @@ const Breathing: React.FC = () => {
                   style={{ width: '100%', height: '100%', border: 'none' }}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
-                  title={patternDisplayName(selectedPattern, t)}
+                  title={selectedPattern.name}
                 />
               </div>
             </div>
@@ -1182,11 +1185,9 @@ const Breathing: React.FC = () => {
 
           {/* ── PRANAYAMA CAVE GUIDE ── */}
           <div className="cave-guide glass-card">
-            <div className="cave-guide-title">{t('breathing.caveTeachingsTitle', '🕉 The Cave Teachings')}</div>
-            <div className="cave-guide-sub">
-              {t('breathing.caveTeachingsSub', 'Ancient Pranayama · Decoded for the Western Mind')}
-            </div>
-            {caveGuideItems.map((item, i) => (
+            <div className="cave-guide-title">🕉 The Cave Teachings</div>
+            <div className="cave-guide-sub">Ancient Pranayama · Decoded for the Western Mind</div>
+            {CAVE_GUIDE.map((item, i) => (
               <div key={i} className="pranayama-guide-item">
                 <div className="guide-number">{i + 1}</div>
                 <div className="guide-text">
@@ -1224,7 +1225,7 @@ const Breathing: React.FC = () => {
               <Sparkles size={15} color="#D4AF37" />
               {t('breathing.choosePattern', 'All Sacred Patterns')}
             </div>
-            <div className="pattern-list-sub">{t('breathing.patternListSub', 'Vedic Breath Sequences')}</div>
+            <div className="pattern-list-sub">Vedic Breath Sequences</div>
             {patterns.map((pattern) => (
               <button
                 key={pattern.id}
@@ -1234,14 +1235,13 @@ const Breathing: React.FC = () => {
               >
                 <div className="pattern-item-row">
                   <span className="pattern-item-name">
-                    {getPatternEmoji(pattern.id, patternDisplayName(pattern, t))}{' '}
-                    {patternDisplayName(pattern, t)}
+                    {getPatternEmoji(pattern.id, pattern.name)} {pattern.name}
                   </span>
                   <span className="pattern-item-ratio">
                     {pattern.inhale}-{pattern.hold}-{pattern.exhale}{pattern.hold_out > 0 ? `-${pattern.hold_out}` : ''}
                   </span>
                 </div>
-                <div className="pattern-item-desc">{patternDisplayDescription(pattern, t)}</div>
+                <div className="pattern-item-desc">{pattern.description}</div>
               </button>
             ))}
           </div>

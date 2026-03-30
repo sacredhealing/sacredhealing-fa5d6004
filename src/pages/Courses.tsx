@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Lock, Award, Clock, Sparkles, CheckCircle, Loader2, RefreshCw, MessageSquare, Wallet, PlayCircle, Music, FileText, ChevronDown } from 'lucide-react';
+import { Play, Lock, Award, Clock, Sparkles, CheckCircle, Loader2, RefreshCw, MessageSquare, Globe, Wallet, PlayCircle, Music, FileText, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -7,19 +7,10 @@ import { toast } from 'sonner';
 import { ReviewSection } from '@/components/reviews/ReviewSection';
 import WealthCourseUpsell from '@/components/courses/WealthCourseUpsell';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 // Swedish Wealth Course ID
 const WEALTH_COURSE_ID = 'f6b3a3e2-c78e-4234-8cf4-cc059655e118';
-
-const akashaField = (
-  <>
-    <div className="pointer-events-none fixed inset-0 bg-[#050505] z-0" aria-hidden />
-    <div
-      className="pointer-events-none fixed inset-0 z-0 opacity-[0.95] bg-[radial-gradient(ellipse_100%_70%_at_50%_-15%,rgba(212,175,55,0.1)_0%,transparent_55%),radial-gradient(ellipse_90%_55%_at_100%_25%,rgba(212,175,55,0.05)_0%,transparent_50%),radial-gradient(ellipse_70%_45%_at_0%_75%,rgba(34,211,238,0.035)_0%,transparent_45%)]"
-      aria-hidden
-    />
-  </>
-);
 
 const languages: Record<string, { name: string; flag: string }> = {
   en: { name: 'English', flag: '🇬🇧' },
@@ -64,6 +55,7 @@ interface Lesson {
 const Courses: React.FC = () => {
   const { user, session } = useAuth();
   const navigate = useNavigate();
+  const { i18n } = useTranslation();
   const [courses, setCourses] = useState<Course[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -73,6 +65,8 @@ const Courses: React.FC = () => {
   const [expandedCourseId, setExpandedCourseId] = useState<string | null>(null);
   const [courseLessons, setCourseLessons] = useState<Record<string, Lesson[]>>({});
   const [loadingLessons, setLoadingLessons] = useState<Record<string, boolean>>({});
+
+  const currentLanguage = i18n.language?.split('-')[0] || 'en';
 
   useEffect(() => {
     fetchCourses();
@@ -133,13 +127,13 @@ const Courses: React.FC = () => {
   const getLessonIcon = (contentType: string) => {
     switch (contentType?.toLowerCase()) {
       case 'video':
-        return <PlayCircle size={16} className="text-[#D4AF37]" />;
+        return <PlayCircle size={16} className="text-gray-400" />;
       case 'audio':
-        return <Music size={16} className="text-[#22D3EE]" />;
+        return <Music size={16} className="text-gray-400" />;
       case 'pdf':
-        return <FileText size={16} className="text-[#D4AF37]/80" />;
+        return <FileText size={16} className="text-gray-400" />;
       default:
-        return <FileText size={16} className="text-white/50" />;
+        return <FileText size={16} className="text-gray-400" />;
     }
   };
 
@@ -209,45 +203,43 @@ const Courses: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-        {akashaField}
-        <Loader2 className="w-9 h-9 animate-spin text-[#D4AF37] relative z-10 drop-shadow-[0_0_16px_rgba(212,175,55,0.45)]" aria-hidden />
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-[#050505] pb-28">
-      {akashaField}
-      <div className="relative z-10 px-4 pt-6 max-w-4xl mx-auto">
+    <div className="min-h-screen px-4 pt-6 pb-24">
       <WealthCourseUpsell isOpen={showWealthUpsell} onOpenChange={setShowWealthUpsell} />
-
-      <header className="mb-8 animate-fade-in">
-        <p className="sqi-label-text mb-2 text-[#D4AF37]/70">Bhakti-Algorithm · Prema-Pulse</p>
-        <h1 className="text-3xl md:text-4xl font-black tracking-[-0.05em] font-heading text-[#D4AF37] gold-glow">Courses</h1>
-        <p className="sqi-body-text mt-2 text-base">Expand your consciousness</p>
+      
+      {/* Header */}
+      <header className="mb-6 animate-fade-in">
+        <h1 className="text-3xl font-heading font-bold text-foreground">Courses</h1>
+        <p className="text-muted-foreground mt-1">Expand your consciousness</p>
       </header>
 
-      <div className="grid grid-cols-3 gap-3 mb-8 animate-slide-up">
-        <div className="rounded-[28px] p-4 text-center border border-white/[0.08] bg-white/[0.02] backdrop-blur-[40px] shadow-[0_0_36px_-12px_rgba(212,175,55,0.12)] hover:border-[#D4AF37]/20 transition-colors">
-          <p className="text-2xl font-black tracking-[-0.04em] font-heading text-[#D4AF37]">{completedCount}</p>
-          <p className="text-[10px] sqi-label-text mt-1 !text-white/50 !tracking-[0.35em]">Completed</p>
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3 mb-6 animate-slide-up">
+        <div className="bg-muted/30 rounded-xl p-4 text-center border border-border/30">
+          <p className="text-2xl font-heading font-bold text-primary">{completedCount}</p>
+          <p className="text-xs text-muted-foreground">Completed</p>
         </div>
-        <div className="rounded-[28px] p-4 text-center border border-white/[0.08] bg-white/[0.02] backdrop-blur-[40px] shadow-[0_0_36px_-12px_rgba(34,211,238,0.08)] hover:border-[#22D3EE]/25 transition-colors">
-          <p className="text-2xl font-black tracking-[-0.04em] font-heading text-[#22D3EE]">{inProgressCount}</p>
-          <p className="text-[10px] sqi-label-text mt-1 !text-white/50 !tracking-[0.35em]">In Progress</p>
+        <div className="bg-muted/30 rounded-xl p-4 text-center border border-border/30">
+          <p className="text-2xl font-heading font-bold text-secondary">{inProgressCount}</p>
+          <p className="text-xs text-muted-foreground">In Progress</p>
         </div>
-        <div className="rounded-[28px] p-4 text-center border border-white/[0.08] bg-white/[0.02] backdrop-blur-[40px] shadow-[0_0_36px_-12px_rgba(212,175,55,0.1)] hover:border-[#D4AF37]/20 transition-colors">
-          <p className="text-2xl font-black tracking-[-0.04em] font-heading text-[#D4AF37]">{availableCount}</p>
-          <p className="text-[10px] sqi-label-text mt-1 !text-white/50 !tracking-[0.35em]">Available</p>
+        <div className="bg-muted/30 rounded-xl p-4 text-center border border-border/30">
+          <p className="text-2xl font-heading font-bold text-accent">{availableCount}</p>
+          <p className="text-xs text-muted-foreground">Available</p>
         </div>
       </div>
 
-      <div className="space-y-4">
+      {/* Course List */}
+      <div className="space-y-4 max-w-4xl mx-auto">
         {filteredCourses.length === 0 ? (
-          <div className="w-full text-center py-16 rounded-[40px] border border-dashed border-[#D4AF37]/20 bg-white/[0.02]">
-            <Sparkles className="w-10 h-10 text-[#D4AF37]/60 mx-auto mb-3" />
-            <p className="sqi-body-text">No courses available yet</p>
+          <div className="w-full text-center py-12">
+            <p className="text-muted-foreground">No courses available yet</p>
           </div>
         ) : (
           filteredCourses.map((course, index) => {
@@ -259,112 +251,116 @@ const Courses: React.FC = () => {
             return (
               <div
                 key={course.id}
-                className="rounded-[40px] border border-white/[0.08] bg-white/[0.02] backdrop-blur-[40px] p-5 relative cursor-pointer shadow-[0_0_48px_-16px_rgba(212,175,55,0.12)] hover:border-[#D4AF37]/28 hover:shadow-[0_0_56px_-12px_rgba(212,175,55,0.2)] transition-all duration-300 animate-slide-up"
+                className="bg-card rounded-xl border border-border/30 p-5 relative cursor-pointer hover:border-primary/50 transition-all animate-slide-up"
                 style={{ animationDelay: `${index * 0.05}s` }}
                 onClick={() => navigate(`/courses/${course.id}`)}
               >
                 <div className="flex gap-4">
-                  <div className="w-11 h-11 rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 flex items-center justify-center shrink-0 shadow-[0_0_20px_-8px_rgba(212,175,55,0.25)]">
+                  <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
                     {isEnrolled ? (
                       progress === 100 ? (
-                        <CheckCircle className="w-5 h-5 text-[#D4AF37]" />
+                        <CheckCircle className="w-5 h-5 text-secondary" />
                       ) : (
-                        <Lock className="w-5 h-5 text-[#22D3EE]" />
+                        <Lock className="w-5 h-5 text-primary" />
                       )
                     ) : (
-                      <Lock className="w-5 h-5 text-white/40" />
+                      <Lock className="w-5 h-5 text-muted-foreground" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-black tracking-[-0.04em] font-heading text-lg text-white leading-snug">{course.title}</h3>
+                        <h3 className="font-heading font-bold text-lg text-foreground">{course.title}</h3>
                         <span className="text-base shrink-0" title={langInfo.name}>{langInfo.flag}</span>
                       </div>
                       <div className="flex flex-wrap gap-1.5">
                         {course.recurring_price_usd && (
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border border-[#D4AF37]/35 bg-[#D4AF37]/15 text-[#D4AF37] whitespace-nowrap">
+                          <span className="px-2 py-0.5 bg-primary/90 rounded-full text-[10px] font-medium text-primary-foreground whitespace-nowrap">
                             Subscription
                           </span>
                         )}
                         {course.is_free && (
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border border-white/15 bg-white/[0.06] text-white/80 whitespace-nowrap">
+                          <span className="px-2 py-0.5 bg-secondary/90 rounded-full text-[10px] font-medium text-secondary-foreground whitespace-nowrap">
                             Free
                           </span>
                         )}
                       </div>
                     </div>
-                    <p className="text-sm sqi-body-text mt-2 line-clamp-2">
+                    <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
                       {course.description || 'Expand your consciousness with this transformative course.'}
                     </p>
-
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-xs sqi-body-text">
+                    
+                    <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
-                        <Play size={12} className="text-[#D4AF37]" />
+                        <Play size={12} />
                         {course.lesson_count} lessons
                       </span>
                       <span className="flex items-center gap-1">
-                        <Clock size={12} className="text-[#D4AF37]" />
+                        <Clock size={12} />
                         {course.duration_hours}h
                       </span>
                       {course.has_certificate && (
                         <span className="flex items-center gap-1">
-                          <Award size={12} className="text-[#D4AF37]" />
+                          <Award size={12} className="text-accent" />
                           Certificate
                         </span>
                       )}
                     </div>
 
+                    {/* Pricing Badges - No SHC, added Crypto */}
                     <div className="flex flex-wrap items-center gap-2 mt-4">
                       {!course.is_free && course.price_usd > 0 && (
-                        <span className="px-3 py-1.5 rounded-full text-xs font-bold border border-white/10 bg-white/[0.04] text-white">
+                        <span className="px-3 py-1.5 bg-muted rounded-full text-xs font-medium text-foreground">
                           ${course.price_usd}
                         </span>
                       )}
                       {course.recurring_price_usd && course.recurring_interval && (
-                        <span className="px-3 py-1.5 rounded-full text-xs font-bold border border-[#D4AF37]/30 bg-[#D4AF37]/10 text-[#D4AF37] flex items-center gap-1">
+                        <span className="px-3 py-1.5 bg-primary/20 rounded-full text-xs font-medium text-primary flex items-center gap-1">
                           <RefreshCw size={12} />
                           ${course.recurring_price_usd}/{course.recurring_interval === 'month' ? 'mo' : course.recurring_interval}
                         </span>
                       )}
                       {!course.is_free && (
-                        <span className="px-3 py-1.5 rounded-full text-xs font-bold border border-[#22D3EE]/25 bg-[#22D3EE]/10 text-[#22D3EE] flex items-center gap-1">
+                        <span className="px-3 py-1.5 bg-secondary/20 rounded-full text-xs font-medium text-secondary flex items-center gap-1">
                           <Wallet size={12} />
                           Crypto
                         </span>
                       )}
                     </div>
 
+                    {/* Progress Bar */}
                     {isEnrolled && progress > 0 && progress < 100 && (
                       <div className="mt-3">
-                        <div className="h-1.5 bg-white/[0.08] rounded-full overflow-hidden border border-white/[0.06]">
-                          <div
-                            className="h-full rounded-full transition-all glowing-filament"
+                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-primary rounded-full transition-all"
                             style={{ width: `${progress}%` }}
                           />
                         </div>
-                        <p className="text-xs sqi-body-text mt-1.5">{progress}% complete</p>
+                        <p className="text-xs text-muted-foreground mt-1">{progress}% complete</p>
                       </div>
                     )}
 
-                    <button
-                      className="flex items-center gap-1.5 text-xs sqi-body-text hover:text-[#D4AF37] mt-3 transition-colors"
+                    {/* Reviews Link */}
+                    <button 
+                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary mt-3 transition-colors"
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedCourseForReview(course.id);
                       }}
                     >
-                      <MessageSquare size={12} className="text-[#D4AF37]/70" />
+                      <MessageSquare size={12} />
                       Reviews & Comments
                     </button>
 
-                    <div className="mt-5 border-t border-white/[0.06] pt-4">
+                    {/* Curriculum Preview */}
+                    <div className="mt-5 border-t border-white/5 pt-4">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleToggleCurriculum(course.id);
                         }}
-                        className="flex items-center gap-2 text-xs font-semibold text-[#22D3EE] hover:text-[#22D3EE]/90 transition-colors"
+                        className="flex items-center gap-2 text-xs text-purple-400 hover:text-purple-300 transition-colors"
                       >
                         {expandedCourseId === course.id ? 'Hide curriculum' : `See what's inside (${course.lesson_count} lessons)`}
                         <ChevronDown
@@ -377,25 +373,27 @@ const Courses: React.FC = () => {
                         <div className="mt-4 space-y-2">
                           {loadingLessons[course.id] ? (
                             <div className="flex items-center justify-center py-4">
-                              <Loader2 className="w-4 h-4 animate-spin text-[#D4AF37]" />
+                              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
                             </div>
                           ) : courseLessons[course.id] && courseLessons[course.id].length > 0 ? (
                             courseLessons[course.id].map((lesson) => (
                               <div
                                 key={lesson.id}
-                                className="flex items-center justify-between p-3 rounded-[20px] border border-white/[0.06] bg-white/[0.03] backdrop-blur-[20px]"
+                                className="flex items-center justify-between p-3 bg-white/5 border border-white/5 rounded-xl opacity-60"
                               >
-                                <div className="flex items-center gap-3 min-w-0">
+                                <div className="flex items-center gap-3">
                                   {getLessonIcon(lesson.content_type)}
-                                  <span className="text-sm text-white/85 font-medium truncate">{lesson.title}</span>
+                                  <span className="text-sm text-gray-200 font-light">
+                                    {lesson.title}
+                                  </span>
                                 </div>
-                                <span className="text-[10px] font-mono text-white/45 shrink-0 ml-2">
+                                <span className="text-[10px] font-mono text-gray-500">
                                   {formatDuration(lesson.duration_minutes)}
                                 </span>
                               </div>
                             ))
                           ) : (
-                            <div className="text-xs sqi-body-text py-2">
+                            <div className="text-xs text-muted-foreground py-2">
                               No lessons available yet
                             </div>
                           )}
@@ -403,8 +401,9 @@ const Courses: React.FC = () => {
                       )}
                     </div>
 
-                    <Button
-                      className="mt-4 rounded-[28px] font-black text-xs tracking-[0.12em] uppercase border border-[#D4AF37]/30 bg-[#D4AF37] text-[#050505] hover:bg-[#D4AF37]/90 shadow-[0_0_24px_-6px_rgba(212,175,55,0.45)]"
+                    {/* Action Button */}
+                    <Button 
+                      className="mt-4 rounded-xl" 
                       size="sm"
                       disabled={enrollingId === course.id}
                       onClick={(e) => {
@@ -434,28 +433,27 @@ const Courses: React.FC = () => {
         )}
       </div>
 
+      {/* Review Section Modal */}
       {selectedCourseForReview && (
-        <div className="fixed inset-0 bg-[#050505]/85 backdrop-blur-md z-[200] flex items-center justify-center p-4">
-          <div className="max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6 rounded-[40px] border border-white/[0.1] bg-white/[0.04] backdrop-blur-[40px] shadow-[0_0_64px_-12px_rgba(212,175,55,0.25)]">
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-2xl border border-border max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-black tracking-[-0.04em] text-[#D4AF37] gold-glow font-heading text-lg">Reviews & Comments</h3>
-              <Button
-                variant="ghost"
+              <h3 className="font-heading font-bold text-lg">Reviews & Comments</h3>
+              <Button 
+                variant="ghost" 
                 size="sm"
-                className="rounded-full text-[#D4AF37] hover:text-[#D4AF37] hover:bg-white/[0.06]"
                 onClick={() => setSelectedCourseForReview(null)}
               >
                 Close
               </Button>
             </div>
-            <ReviewSection
-              contentType="course"
-              contentId={selectedCourseForReview}
+            <ReviewSection 
+              contentType="course" 
+              contentId={selectedCourseForReview} 
             />
           </div>
         </div>
       )}
-      </div>
     </div>
   );
 };

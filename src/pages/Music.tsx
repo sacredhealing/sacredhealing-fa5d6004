@@ -1079,7 +1079,7 @@ const Music: React.FC = () => {
               <div className="path-freq-badge">{index === 0 ? '432 Hz' : '528 Hz'}</div>
               <div style={{ flex: 1 }}>
                 <div className="path-title">{track.title}</div>
-                {track.mood && <div className="path-sub">{tMusicMood(track.mood, t as any)}</div>}
+                {track.mood && <div className="path-sub">{tMusicMood(track.mood, t)}</div>}
               </div>
               <div className="path-play">▶</div>
             </div>
@@ -1365,7 +1365,7 @@ const Music: React.FC = () => {
                                   : 'bg-muted/50 text-muted-foreground hover:bg-muted'
                               }`}
                             >
-                              {tMusicGenre(g, t as any)}
+                              {tMusicGenre(g, t)}
                             </button>
                           ))}
                         </div>

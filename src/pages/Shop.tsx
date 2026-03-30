@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useTranslation } from '@/hooks/useTranslation';
-import { ShoppingBag, Palette, Shirt, Star, Heart, Sparkles, PenTool, Check, ArrowRight, Info, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { ShoppingBag, Palette, Shirt, Star, Heart, Sparkles, PenTool, Check, ArrowRight, Info } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -49,46 +49,11 @@ const categoryIcons: Record<string, React.ElementType> = {
 };
 
 const SHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-const SHIRT_COLORS = ['White', 'Black', 'Natural', 'Navy'] as const;
-const CUSTOM_SHIRT_PRICE = '89';
-
-const shirtColorTranslationKey = (color: string): string => {
-  const map: Record<string, string> = {
-    White: 'shop.colorWhite',
-    Black: 'shop.colorBlack',
-    Natural: 'shop.colorNatural',
-    Navy: 'shop.colorNavy',
-  };
-  return map[color] ?? 'shop.colorWhite';
-};
-
-const akashaField = (
-  <>
-    <div className="pointer-events-none fixed inset-0 bg-[#050505] z-0" aria-hidden />
-    <div
-      className="pointer-events-none fixed inset-0 z-0 opacity-[0.95] bg-[radial-gradient(ellipse_100%_70%_at_50%_-15%,rgba(212,175,55,0.1)_0%,transparent_55%),radial-gradient(ellipse_90%_55%_at_100%_25%,rgba(212,175,55,0.05)_0%,transparent_50%),radial-gradient(ellipse_70%_45%_at_0%_75%,rgba(34,211,238,0.035)_0%,transparent_45%)]"
-      aria-hidden
-    />
-  </>
-);
-
-const shopGlassCard =
-  '!p-0 overflow-hidden rounded-[40px] border border-white/[0.08] shadow-[0_0_48px_-16px_rgba(212,175,55,0.15)]';
+const SHIRT_COLORS = ['White', 'Black', 'Natural', 'Navy'];
 
 const Shop = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-
-  const formatProductCategory = (category: string) => {
-    if (category === 'healing-shirts') return t('shop.categoryHealingArt');
-    const keyByCat: Record<string, string> = {
-      clothing: 'shop.catClothing',
-      art: 'shop.catArt',
-      accessories: 'shop.catAccessories',
-    };
-    const key = keyByCat[category];
-    return key ? t(key) : category;
-  };
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { isInWishlist, toggleWishlist } = useWishlist();
@@ -113,11 +78,11 @@ const Shop = () => {
     const canceled = searchParams.get('canceled');
     
     if (success === 'true') {
-      toast.success(t('shop.toastPaymentSuccess'));
+      toast.success('Payment successful! Your order is being processed.');
     } else if (canceled === 'true') {
-      toast.info(t('shop.toastPaymentCanceled'));
+      toast.info('Payment was canceled.');
     }
-  }, [searchParams, t]);
+  }, [searchParams]);
 
   const fetchProducts = async () => {
     const { data, error } = await supabase
@@ -167,7 +132,7 @@ const Shop = () => {
       }
     } catch (error) {
       console.error('Checkout error:', error);
-      toast.error(t('shop.toastCheckoutFail'));
+      toast.error('Failed to start checkout. Please try again.');
     } finally {
       setPurchasing(null);
     }
@@ -180,90 +145,86 @@ const Shop = () => {
     }
     
     if (!customFormData.intention || !customFormData.shirtSize || !customFormData.shirtColor || !customFormData.email) {
-      toast.error(t('shop.toastFillRequired'));
+      toast.error('Please fill in all required fields');
       return;
     }
     
     // TODO: Implement Stripe checkout for custom orders
-    toast.success(t('shop.toastCustomSubmitted'));
+    toast.success('Custom design request submitted! We will contact you soon.');
     setCustomOrderOpen(false);
     setCustomFormData({ intention: '', shirtSize: '', shirtColor: '', email: '', notes: '' });
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen relative overflow-hidden bg-[#050505] flex items-center justify-center">
-        {akashaField}
-        <Loader2
-          className="relative z-10 w-9 h-9 animate-spin text-[#D4AF37] drop-shadow-[0_0_16px_rgba(212,175,55,0.45)]"
-          aria-hidden
-        />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-[#050505] pb-28">
-      {akashaField}
-      <div className="relative z-10 px-4 pt-6 max-w-4xl mx-auto">
-      <header className="mb-8 text-center animate-fade-in">
-        <p className="sqi-label-text mb-2 text-[#D4AF37]/70">{t('shop.sqiEyebrow')}</p>
-        <div className="w-16 h-16 rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 flex items-center justify-center mx-auto mb-4 shadow-[0_0_24px_-8px_rgba(212,175,55,0.35)]">
-          <ShoppingBag className="w-8 h-8 text-[#D4AF37]" />
+    <div className="min-h-screen bg-background pb-24">
+      {/* Header */}
+      <div className="bg-gradient-to-br from-pink-500/20 via-background to-purple-500/10 px-4 py-8 text-center">
+        <div className="w-16 h-16 rounded-full bg-pink-500/20 flex items-center justify-center mx-auto mb-4">
+          <ShoppingBag className="w-8 h-8 text-pink-400" />
         </div>
-        <h1 className="text-3xl md:text-4xl font-black tracking-[-0.05em] font-heading text-[#D4AF37] gold-glow">
-          {t('shop.title')}
-        </h1>
-        <p className="sqi-body-text mt-2 text-base max-w-xl mx-auto">{t('shop.heroTagline')}</p>
-      </header>
+        <h1 className="text-2xl font-bold text-foreground mb-2">Sacred Shop</h1>
+        <p className="text-muted-foreground">
+          Laila's Siddha Quantum Nexus Clothing & Art Collection
+        </p>
+      </div>
 
       {/* Healing Art Shirts Section */}
-      <div className="py-2 space-y-6">
+      <div className="px-4 py-6 space-y-6">
         {/* Ready-Made Designs */}
-        <Card className={`${shopGlassCard} relative before:pointer-events-none before:absolute before:inset-0 before:rounded-[40px] before:bg-[radial-gradient(ellipse_80%_50%_at_50%_0%,rgba(212,175,55,0.09)_0%,transparent_55%)]`}>
-          <div className="relative z-[1] p-6">
+        <Card className="overflow-hidden border-primary/20">
+          <div className="bg-gradient-to-br from-purple-500/20 via-pink-500/10 to-amber-500/10 p-6">
             <div className="flex items-start gap-4">
-              <div className="w-14 h-14 rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 flex items-center justify-center flex-shrink-0 shadow-[0_0_20px_-8px_rgba(212,175,55,0.35)]">
-                <Sparkles className="w-7 h-7 text-[#D4AF37]" />
+              <div className="w-14 h-14 rounded-xl bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-7 h-7 text-purple-400" />
               </div>
-              <div className="flex-1 min-w-0">
-                <Badge className="mb-2 border-[#D4AF37]/30 bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/15">
-                  {t('shop.badgeWearableHealingArt')}
+              <div className="flex-1">
+                <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 mb-2">
+                  Wearable Healing Art
                 </Badge>
-                <h2 className="text-xl font-black tracking-[-0.03em] font-heading text-white mb-2">
-                  {t('shop.readyMadeTitle')}
+                <h2 className="text-xl font-bold text-foreground mb-2">
+                  Healing Art on Shirts — Ready-Made Designs
                 </h2>
-                <p className="sqi-body-text text-sm">{t('shop.readyMadeBody')}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Original sacred artwork printed on soft, high-quality shirts. Choose from a curated gallery of ready-made designs that carry uplifting energy and support your daily practice.
+                </p>
               </div>
             </div>
-
+            
             <div className="mt-5 space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#22D3EE] mt-0.5 flex-shrink-0" />
-                  <span className="text-xs sqi-body-text">{t('shop.readyCheck1')}</span>
+                  <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground">Sacred-geometry artwork</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#22D3EE] mt-0.5 flex-shrink-0" />
-                  <span className="text-xs sqi-body-text">{t('shop.readyCheck2')}</span>
+                  <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground">Comfortable fabric</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#22D3EE] mt-0.5 flex-shrink-0" />
-                  <span className="text-xs sqi-body-text">{t('shop.readyCheck3')}</span>
+                  <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground">Multiple sizes (XS-XXL)</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#22D3EE] mt-0.5 flex-shrink-0" />
-                  <span className="text-xs sqi-body-text">{t('shop.readyCheck4')}</span>
+                  <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground">High-quality print</span>
                 </div>
               </div>
-
-              <div className="pt-3 border-t border-white/[0.08]">
-                <p className="sqi-body-text text-xs mb-3">
-                  <Info className="w-3 h-3 inline mr-1 text-[#D4AF37]/80" />
-                  {t('shop.readyInfoLine')}
+              
+              <div className="pt-3 border-t border-border/50">
+                <p className="text-xs text-muted-foreground mb-3">
+                  <Info className="w-3 h-3 inline mr-1" />
+                  Created by Laila & Adam with intentional vibration for your spiritual focus
                 </p>
-                <Button variant="gold" className="w-full font-black tracking-[0.12em] uppercase text-xs" onClick={() => setActiveCategory('healing-shirts')}>
-                  {t('shop.browseDesigns')}
+                <Button className="w-full" onClick={() => setActiveCategory('healing-shirts')}>
+                  Browse Designs
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>
@@ -272,91 +233,92 @@ const Shop = () => {
         </Card>
 
         {/* Custom Designs */}
-        <Card className={`${shopGlassCard} relative before:pointer-events-none before:absolute before:inset-0 before:rounded-[40px] before:bg-[radial-gradient(ellipse_80%_50%_at_50%_0%,rgba(34,211,238,0.08)_0%,transparent_55%)]`}>
-          <div className="relative z-[1] p-6">
+        <Card className="overflow-hidden border-amber-500/20">
+          <div className="bg-gradient-to-br from-amber-500/20 via-orange-500/10 to-pink-500/10 p-6">
             <div className="flex items-start gap-4">
-              <div className="w-14 h-14 rounded-2xl border border-[#22D3EE]/25 bg-[#22D3EE]/10 flex items-center justify-center flex-shrink-0 shadow-[0_0_20px_-8px_rgba(34,211,238,0.25)]">
-                <PenTool className="w-7 h-7 text-[#22D3EE]" />
+              <div className="w-14 h-14 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                <PenTool className="w-7 h-7 text-amber-400" />
               </div>
-              <div className="flex-1 min-w-0">
-                <Badge className="mb-2 border-[#22D3EE]/30 bg-[#22D3EE]/10 text-[#22D3EE] hover:bg-[#22D3EE]/15">
-                  {t('shop.badgePersonalized')}
+              <div className="flex-1">
+                <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 mb-2">
+                  Personalized Creation
                 </Badge>
-                <h2 className="text-xl font-black tracking-[-0.03em] font-heading text-white mb-2">
-                  {t('shop.customTitle')}
+                <h2 className="text-xl font-bold text-foreground mb-2">
+                  Healing Art on Shirts — Custom Design
                 </h2>
-                <p className="sqi-body-text text-sm">{t('shop.customBody')}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Your own healing art, printed on a shirt. Laila crafts one-of-a-kind artwork tailored to your energy, intention, or mantra—perfect for personal rituals or meaningful gifts.
+                </p>
               </div>
             </div>
-
+            
             <div className="mt-5 space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#22D3EE] mt-0.5 flex-shrink-0" />
-                  <span className="text-xs sqi-body-text">{t('shop.customCheck1')}</span>
+                  <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground">Personalized by Laila</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#22D3EE] mt-0.5 flex-shrink-0" />
-                  <span className="text-xs sqi-body-text">{t('shop.customCheck2')}</span>
+                  <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground">Choose shirt style & color</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#22D3EE] mt-0.5 flex-shrink-0" />
-                  <span className="text-xs sqi-body-text">{t('shop.customCheck3')}</span>
+                  <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground">Amplify your intention</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#22D3EE] mt-0.5 flex-shrink-0" />
-                  <span className="text-xs sqi-body-text">{t('shop.customCheck4')}</span>
+                  <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground">Review before final print</span>
                 </div>
               </div>
-
-              <div className="rounded-[20px] border border-white/[0.06] bg-white/[0.03] backdrop-blur-[40px] p-3 mt-3">
-                <p className="sqi-label-text !text-[#D4AF37]/55 mb-1">{t('shop.processLabel')}</p>
-                <p className="sqi-body-text text-xs">{t('shop.processSteps')}</p>
+              
+              <div className="bg-background/50 rounded-lg p-3 mt-3">
+                <p className="text-xs text-muted-foreground mb-1 font-medium">Process:</p>
+                <p className="text-xs text-muted-foreground">
+                  Submit intention → Design draft → Approve → Print & ship (Est. 2-3 weeks)
+                </p>
               </div>
-
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-white/[0.08]">
+              
+              <div className="flex items-center justify-between pt-3 border-t border-border/50">
                 <div>
-                  <span className="text-2xl font-black font-heading text-[#D4AF37]">€{CUSTOM_SHIRT_PRICE}</span>
-                  <span className="sqi-body-text text-sm ml-1">{t('shop.startingPriceNote')}</span>
+                  <span className="text-2xl font-bold text-foreground">€89</span>
+                  <span className="text-sm text-muted-foreground ml-1">starting price</span>
                 </div>
                 <Dialog open={customOrderOpen} onOpenChange={setCustomOrderOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="gold" className="w-full sm:w-auto font-black tracking-[0.1em] uppercase text-xs">
-                      {t('shop.orderCustom')}
+                    <Button variant="default" className="bg-amber-500 hover:bg-amber-600">
+                      Order Custom
                       <Sparkles className="w-4 h-4 ml-2" />
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-md rounded-[28px] border border-white/[0.1] bg-[#050505]/95 backdrop-blur-[40px] text-white shadow-[0_0_60px_-20px_rgba(212,175,55,0.35)]">
+                  <DialogContent className="max-w-md">
                     <DialogHeader>
-                      <DialogTitle className="font-heading font-black tracking-[-0.03em] text-[#D4AF37] gold-glow">
-                        {t('shop.dialogCustomTitle')}
-                      </DialogTitle>
-                      <DialogDescription className="sqi-body-text text-sm">{t('shop.dialogCustomDesc')}</DialogDescription>
+                      <DialogTitle>Custom Healing Art Shirt</DialogTitle>
+                      <DialogDescription>
+                        Share your intention and we'll create a unique design for you
+                      </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 pt-4">
                       <div className="space-y-2">
-                        <Label htmlFor="intention" className="sqi-label-text !text-[10px] !tracking-[0.35em] text-[#D4AF37]/80">
-                          {t('shop.labelIntention')}
-                        </Label>
+                        <Label htmlFor="intention">Your Intention / Mantra *</Label>
                         <Textarea
                           id="intention"
-                          placeholder={t('shop.placeholderIntention')}
+                          placeholder="Describe your intention, mantra, or theme for the artwork..."
                           value={customFormData.intention}
                           onChange={(e) => setCustomFormData(prev => ({ ...prev, intention: e.target.value }))}
                           rows={3}
-                          className="rounded-[20px] border-white/[0.1] bg-white/[0.04] text-white placeholder:text-white/35 backdrop-blur-[40px] focus-visible:border-[#D4AF37]/45 focus-visible:ring-[#D4AF37]/20"
                         />
                       </div>
                       
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label className="sqi-label-text !text-[10px] !tracking-[0.35em] text-[#D4AF37]/80">{t('shop.labelShirtSize')}</Label>
+                          <Label>Shirt Size *</Label>
                           <Select
                             value={customFormData.shirtSize}
                             onValueChange={(value) => setCustomFormData(prev => ({ ...prev, shirtSize: value }))}
                           >
-                            <SelectTrigger className="rounded-[20px] border-white/[0.1] bg-white/[0.04] text-white backdrop-blur-[40px]">
-                              <SelectValue placeholder={t('shop.selectSize')} />
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select size" />
                             </SelectTrigger>
                             <SelectContent>
                               {SHIRT_SIZES.map(size => (
@@ -367,19 +329,17 @@ const Shop = () => {
                         </div>
                         
                         <div className="space-y-2">
-                          <Label className="sqi-label-text !text-[10px] !tracking-[0.35em] text-[#D4AF37]/80">{t('shop.labelShirtColor')}</Label>
+                          <Label>Shirt Color *</Label>
                           <Select
                             value={customFormData.shirtColor}
                             onValueChange={(value) => setCustomFormData(prev => ({ ...prev, shirtColor: value }))}
                           >
-                            <SelectTrigger className="rounded-[20px] border-white/[0.1] bg-white/[0.04] text-white backdrop-blur-[40px]">
-                              <SelectValue placeholder={t('shop.selectColor')} />
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select color" />
                             </SelectTrigger>
                             <SelectContent>
                               {SHIRT_COLORS.map(color => (
-                                <SelectItem key={color} value={color}>
-                                  {t(shirtColorTranslationKey(color))}
-                                </SelectItem>
+                                <SelectItem key={color} value={color}>{color}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -387,41 +347,35 @@ const Shop = () => {
                       </div>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="email" className="sqi-label-text !text-[10px] !tracking-[0.35em] text-[#D4AF37]/80">
-                          {t('shop.labelContactEmail')}
-                        </Label>
+                        <Label htmlFor="email">Contact Email *</Label>
                         <Input
                           id="email"
                           type="email"
-                          placeholder={t('shop.emailPlaceholder')}
+                          placeholder="your@email.com"
                           value={customFormData.email}
                           onChange={(e) => setCustomFormData(prev => ({ ...prev, email: e.target.value }))}
-                          className="rounded-[20px] border-white/[0.1] bg-white/[0.04] text-white placeholder:text-white/35 h-11 backdrop-blur-[40px] focus-visible:border-[#D4AF37]/45 focus-visible:ring-[#D4AF37]/20"
                         />
                       </div>
-
+                      
                       <div className="space-y-2">
-                        <Label htmlFor="notes" className="sqi-label-text !text-[10px] !tracking-[0.35em] text-[#D4AF37]/80">
-                          {t('shop.labelNotesOptional')}
-                        </Label>
+                        <Label htmlFor="notes">Additional Notes (Optional)</Label>
                         <Textarea
                           id="notes"
-                          placeholder={t('shop.placeholderNotes')}
+                          placeholder="Any specific colors, symbols, or preferences..."
                           value={customFormData.notes}
                           onChange={(e) => setCustomFormData(prev => ({ ...prev, notes: e.target.value }))}
                           rows={2}
-                          className="rounded-[20px] border-white/[0.1] bg-white/[0.04] text-white placeholder:text-white/35 backdrop-blur-[40px] focus-visible:border-[#D4AF37]/45 focus-visible:ring-[#D4AF37]/20"
                         />
                       </div>
-
-                      <div className="rounded-[20px] border border-white/[0.06] bg-white/[0.03] p-3">
-                        <p className="sqi-body-text text-xs">
-                          <strong className="text-white/90">{t('shop.whatsIncludedLead')}</strong> {t('shop.whatsIncludedBody')}
+                      
+                      <div className="bg-muted/50 rounded-lg p-3">
+                        <p className="text-xs text-muted-foreground">
+                          <strong>What's included:</strong> Personalized sacred artwork, high-quality print, one revision round, and shipping within Europe.
                         </p>
                       </div>
-
-                      <Button variant="gold" onClick={handleCustomOrder} className="w-full font-black tracking-[0.12em] uppercase text-xs">
-                        {t('shop.submitRequest', { price: CUSTOM_SHIRT_PRICE })}
+                      
+                      <Button onClick={handleCustomOrder} className="w-full bg-amber-500 hover:bg-amber-600">
+                        Submit Request — €89
                       </Button>
                     </div>
                   </DialogContent>
@@ -432,56 +386,37 @@ const Shop = () => {
         </Card>
       </div>
 
-      {/* Category Tabs — Bhakti-Algorithm filters */}
-      <div className="py-4">
+      {/* Category Tabs */}
+      <div className="px-4 py-4">
         <Tabs defaultValue="all" value={activeCategory} onValueChange={setActiveCategory}>
-          <TabsList className="w-full grid grid-cols-5 h-auto p-1.5 gap-1 rounded-[28px] bg-white/[0.04] border border-white/[0.08] backdrop-blur-[40px]">
-            <TabsTrigger
-              value="all"
-              className="rounded-full text-[10px] sm:text-xs py-2.5 px-1 text-white/60 data-[state=active]:bg-[#D4AF37]/20 data-[state=active]:text-[#D4AF37] data-[state=active]:shadow-[0_0_20px_-8px_rgba(212,175,55,0.4)]"
-            >
-              {t('shop.tabAll')}
+          <TabsList className="w-full grid grid-cols-5">
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="healing-shirts">
+              <Sparkles className="w-4 h-4 mr-1" />
+              Shirts
             </TabsTrigger>
-            <TabsTrigger
-              value="healing-shirts"
-              className="rounded-full text-[10px] sm:text-xs py-2.5 px-1 text-white/60 data-[state=active]:bg-[#D4AF37]/20 data-[state=active]:text-[#D4AF37] data-[state=active]:shadow-[0_0_20px_-8px_rgba(212,175,55,0.4)]"
-            >
-              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-0.5 shrink-0" />
-              {t('shop.tabShirts')}
+            <TabsTrigger value="clothing">
+              <Shirt className="w-4 h-4 mr-1" />
+              Clothing
             </TabsTrigger>
-            <TabsTrigger
-              value="clothing"
-              className="rounded-full text-[10px] sm:text-xs py-2.5 px-1 text-white/60 data-[state=active]:bg-[#D4AF37]/20 data-[state=active]:text-[#D4AF37] data-[state=active]:shadow-[0_0_20px_-8px_rgba(212,175,55,0.4)]"
-            >
-              <Shirt className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-0.5 shrink-0" />
-              {t('shop.tabClothing')}
+            <TabsTrigger value="art">
+              <Palette className="w-4 h-4 mr-1" />
+              Art
             </TabsTrigger>
-            <TabsTrigger
-              value="art"
-              className="rounded-full text-[10px] sm:text-xs py-2.5 px-1 text-white/60 data-[state=active]:bg-[#D4AF37]/20 data-[state=active]:text-[#D4AF37] data-[state=active]:shadow-[0_0_20px_-8px_rgba(212,175,55,0.4)]"
-            >
-              <Palette className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-0.5 shrink-0" />
-              {t('shop.tabArt')}
-            </TabsTrigger>
-            <TabsTrigger
-              value="accessories"
-              className="rounded-full text-[10px] sm:text-xs py-2.5 px-1 text-white/60 data-[state=active]:bg-[#D4AF37]/20 data-[state=active]:text-[#D4AF37] data-[state=active]:shadow-[0_0_20px_-8px_rgba(212,175,55,0.4)]"
-            >
-              {t('shop.tabAccessoriesShort')}
-            </TabsTrigger>
+            <TabsTrigger value="accessories">Acc.</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
 
       {/* Products Grid */}
-      <div className="py-2">
+      <div className="px-4 py-2">
         {filteredProducts.length === 0 ? (
-          <Card className={shopGlassCard}>
-            <div className="relative z-[1] p-8 text-center">
-              <ShoppingBag className="w-12 h-12 text-[#D4AF37]/65 mx-auto mb-4" />
-              <h3 className="font-black font-heading tracking-[-0.03em] text-white mb-2">{t('shop.comingSoonTitle')}</h3>
-              <p className="sqi-body-text text-sm">{t('shop.comingSoonBody')}</p>
-            </div>
+          <Card className="p-8 text-center">
+            <ShoppingBag className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="font-semibold text-foreground mb-2">Coming Soon</h3>
+            <p className="text-muted-foreground text-sm">
+              Beautiful sacred items will be available here soon!
+            </p>
           </Card>
         ) : (
           <div className="grid grid-cols-2 gap-4">
@@ -490,45 +425,48 @@ const Shop = () => {
               const mainImage = product.images[0];
 
               return (
-                <Card
-                  key={product.id}
-                  className={`${shopGlassCard} cursor-pointer transition-all duration-300 hover:border-[#D4AF37]/30 hover:shadow-[0_0_40px_-10px_rgba(212,175,55,0.25)] hover:scale-[1.02] animate-slide-up rounded-[28px]`}
+                <Card 
+                  key={product.id} 
+                  className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
                   onClick={() => navigate(`/shop/${product.id}`)}
                 >
-                  <div className="aspect-square bg-[#050505] relative">
+                  {/* Product Image */}
+                  <div className="aspect-square bg-gradient-to-br from-pink-500/10 to-purple-500/10 relative">
                     {mainImage ? (
-                      <img src={mainImage} alt={product.name} className="w-full h-full object-cover" />
+                      <img 
+                        src={mainImage} 
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-white/[0.02]">
-                        <Icon className="w-12 h-12 text-[#D4AF37]/35" />
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Icon className="w-12 h-12 text-muted-foreground/50" />
                       </div>
                     )}
-
+                    
                     {product.is_featured && (
-                      <Badge className="absolute top-2 left-2 border border-[#D4AF37]/40 bg-[#050505]/90 text-[#D4AF37] font-black text-[10px] uppercase tracking-wider">
-                        {t('shop.featured')}
+                      <Badge className="absolute top-2 left-2 bg-pink-500 text-white">
+                        Featured
                       </Badge>
                     )}
 
                     {product.stock_quantity <= 5 && product.stock_quantity > 0 && (
-                      <Badge className="absolute top-2 right-2 border border-[#22D3EE]/40 bg-[#22D3EE]/15 text-[#22D3EE] text-[10px] font-bold">
-                        {t('shop.onlyLeft', { count: product.stock_quantity })}
+                      <Badge className="absolute top-2 right-2 bg-amber-500 text-white text-xs">
+                        Only {product.stock_quantity} left
                       </Badge>
                     )}
 
                     {product.stock_quantity === 0 && (
-                      <div className="absolute inset-0 bg-[#050505]/85 backdrop-blur-sm flex items-center justify-center">
-                        <Badge variant="outline" className="border-white/20 text-white/90 bg-white/[0.04]">
-                          {t('shop.soldOut')}
-                        </Badge>
+                      <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
+                        <Badge variant="outline">Sold Out</Badge>
                       </div>
                     )}
 
                     <Button
                       size="icon"
                       variant="ghost"
-                      className={`absolute bottom-2 right-2 bg-[#050505]/80 border border-white/[0.08] hover:bg-[#050505] hover:border-[#D4AF37]/30 rounded-full w-9 h-9 ${
-                        isInWishlist(product.id) ? 'text-[#D4AF37]' : 'text-white/70'
+                      className={`absolute bottom-2 right-2 bg-background/80 hover:bg-background rounded-full w-8 h-8 ${
+                        isInWishlist(product.id) ? 'text-pink-500' : ''
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -539,31 +477,31 @@ const Shop = () => {
                     </Button>
                   </div>
 
-                  <div className="p-3 border-t border-white/[0.06]">
-                    <Badge
-                      variant="outline"
-                      className="text-[10px] mb-2 capitalize border-[#D4AF37]/25 text-[#D4AF37]/90 bg-[#D4AF37]/5"
-                    >
-                      {formatProductCategory(product.category)}
+                  {/* Product Info */}
+                  <div className="p-3">
+                    <Badge variant="outline" className="text-xs mb-2 capitalize">
+                      {product.category === 'healing-shirts' ? 'Healing Art' : product.category}
                     </Badge>
-                    <h3 className="font-bold font-heading tracking-tight text-white text-sm truncate">{product.name}</h3>
+                    <h3 className="font-semibold text-foreground text-sm truncate">
+                      {product.name}
+                    </h3>
                     {product.description && (
-                      <p className="text-xs sqi-body-text truncate mt-1">{product.description}</p>
+                      <p className="text-xs text-muted-foreground truncate mt-1">
+                        {product.description}
+                      </p>
                     )}
-
-                    <div className="flex items-center justify-between mt-3 gap-2">
-                      <span className="font-black font-heading text-[#D4AF37]">€{product.price_eur}</span>
-                      <Button
-                        variant="gold"
-                        size="sm"
-                        className="font-black text-[10px] tracking-[0.15em] uppercase shrink-0"
+                    
+                    <div className="flex items-center justify-between mt-3">
+                      <span className="font-bold text-foreground">€{product.price_eur}</span>
+                      <Button 
+                        size="sm" 
                         onClick={(e) => {
                           e.stopPropagation();
                           handleBuyNow(product);
                         }}
                         disabled={product.stock_quantity === 0 || purchasing === product.id}
                       >
-                        {purchasing === product.id ? '...' : t('shop.buyShort')}
+                        {purchasing === product.id ? '...' : 'Buy'}
                       </Button>
                     </div>
                   </div>
@@ -575,29 +513,32 @@ const Shop = () => {
       </div>
 
       {/* About Section */}
-      <div className="py-6">
-        <Card className={`${shopGlassCard} p-6 bg-[radial-gradient(ellipse_90%_60%_at_50%_100%,rgba(212,175,55,0.06)_0%,transparent_50%),rgba(255,255,255,0.02)]`}>
-          <h3 className="font-black font-heading tracking-[-0.03em] text-[#D4AF37] gold-glow mb-3 flex items-center gap-2">
-            <Heart className="w-5 h-5 text-[#D4AF37]" />
-            {t('shop.aboutTitle')}
+      <div className="px-4 py-6">
+        <Card className="p-5 bg-gradient-to-br from-pink-500/10 to-purple-500/10 border-pink-500/20">
+          <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+            <Heart className="w-5 h-5 text-pink-400" />
+            About Our Collection
           </h3>
-          <p className="sqi-body-text text-sm mb-4">{t('shop.aboutBody')}</p>
-          <div className="grid grid-cols-2 gap-3 text-xs sqi-body-text">
+          <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+            Each piece in our collection is infused with Siddha Quantum Nexus energy by Laila. 
+            Our clothing features unique spiritual designs, and our art pieces carry powerful 
+            healing frequencies to transform your space and energy field.
+          </p>
+          <div className="grid grid-cols-2 gap-3 text-xs text-muted-foreground">
             <div>
-              <span className="text-white font-bold">{t('shop.aboutFabricLabel')}</span> {t('shop.aboutFabric')}
+              <strong className="text-foreground">Fabric:</strong> 100% organic cotton, soft & breathable
             </div>
             <div>
-              <span className="text-white font-bold">{t('shop.aboutFitLabel')}</span> {t('shop.aboutFit')}
+              <strong className="text-foreground">Fit:</strong> Regular & relaxed options
             </div>
             <div>
-              <span className="text-white font-bold">{t('shop.aboutCareLabel')}</span> {t('shop.aboutCare')}
+              <strong className="text-foreground">Care:</strong> Machine wash cold, tumble dry low
             </div>
             <div>
-              <span className="text-white font-bold">{t('shop.aboutUseLabel')}</span> {t('shop.aboutUse')}
+              <strong className="text-foreground">Use:</strong> Daily wear, meditation, gifting
             </div>
           </div>
         </Card>
-      </div>
       </div>
     </div>
   );

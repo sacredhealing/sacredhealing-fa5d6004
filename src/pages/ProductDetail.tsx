@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useTranslation } from '@/hooks/useTranslation';
-import { ArrowLeft, Heart, Ruler, Shirt, Sparkles, Check, ShoppingBag, Loader2 } from 'lucide-react';
+import { ArrowLeft, Heart, Ruler, Shirt, Sparkles, Check, ShoppingBag } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,19 +22,6 @@ interface ShopProduct {
   is_featured: boolean;
 }
 
-const akashaField = (
-  <>
-    <div className="pointer-events-none fixed inset-0 bg-[#050505] z-0" aria-hidden />
-    <div
-      className="pointer-events-none fixed inset-0 z-0 opacity-[0.95] bg-[radial-gradient(ellipse_100%_70%_at_50%_-15%,rgba(212,175,55,0.1)_0%,transparent_55%),radial-gradient(ellipse_90%_55%_at_100%_25%,rgba(212,175,55,0.05)_0%,transparent_50%),radial-gradient(ellipse_70%_45%_at_0%_75%,rgba(34,211,238,0.035)_0%,transparent_45%)]"
-      aria-hidden
-    />
-  </>
-);
-
-const detailGlassPanel =
-  '!p-5 rounded-[28px] border border-white/[0.08] shadow-[0_0_40px_-14px_rgba(212,175,55,0.12)]';
-
 const SIZE_GUIDE = [
   { size: 'XS', chest: '81-86', waist: '61-66', hip: '86-91' },
   { size: 'S', chest: '86-91', waist: '66-71', hip: '91-96' },
@@ -48,43 +34,7 @@ const SIZE_GUIDE = [
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const { user } = useAuth();
-
-  const formatProductCategory = (category: string) => {
-    if (category === 'healing-shirts') return t('shop.categoryHealingArt');
-    const keyByCat: Record<string, string> = {
-      clothing: 'shop.catClothing',
-      art: 'shop.catArt',
-      accessories: 'shop.catAccessories',
-    };
-    const key = keyByCat[category];
-    return key ? t(key) : category;
-  };
-
-  const fabricBullets = useMemo(
-    () => [
-      t('shop.fabricBullet1'),
-      t('shop.fabricBullet2'),
-      t('shop.fabricBullet3'),
-      t('shop.fabricBullet4'),
-      t('shop.fabricBullet5'),
-      t('shop.fabricBullet6'),
-    ],
-    [t]
-  );
-
-  const careItems = useMemo(
-    () => [
-      t('shop.careItem1'),
-      t('shop.careItem2'),
-      t('shop.careItem3'),
-      t('shop.careItem4'),
-      t('shop.careItem5'),
-      t('shop.careItem6'),
-    ],
-    [t]
-  );
   const { isInWishlist, toggleWishlist } = useWishlist();
   const [product, setProduct] = useState<ShopProduct | null>(null);
   const [loading, setLoading] = useState(true);
@@ -92,38 +42,30 @@ const ProductDetail = () => {
   const [selectedImage, setSelectedImage] = useState(0);
 
   useEffect(() => {
-    if (!id) return;
+    if (id) {
+      fetchProduct();
+    }
+  }, [id]);
 
-    let cancelled = false;
+  const fetchProduct = async () => {
+    const { data, error } = await supabase
+      .from('shop_products')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-    const load = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('shop_products')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (cancelled) return;
-
-      if (data) {
-        setProduct({
-          ...data,
-          images: (data.images as string[]) || [],
-          sizes: (data.sizes as string[]) || [],
-        });
-      } else if (error) {
-        toast.error(t('shop.toastProductNotFound'));
-        navigate('/shop');
-      }
-      setLoading(false);
-    };
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [id, navigate, t]);
+    if (data) {
+      setProduct({
+        ...data,
+        images: (data.images as string[]) || [],
+        sizes: (data.sizes as string[]) || [],
+      });
+    } else if (error) {
+      toast.error('Product not found');
+      navigate('/shop');
+    }
+    setLoading(false);
+  };
 
   const handleBuyNow = async () => {
     if (!user) {
@@ -154,7 +96,7 @@ const ProductDetail = () => {
       }
     } catch (error) {
       console.error('Checkout error:', error);
-      toast.error(t('shop.toastCheckoutFail'));
+      toast.error('Failed to start checkout. Please try again.');
     } finally {
       setPurchasing(false);
     }
@@ -162,12 +104,8 @@ const ProductDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen relative overflow-hidden bg-[#050505] flex items-center justify-center">
-        {akashaField}
-        <Loader2
-          className="relative z-10 w-9 h-9 animate-spin text-[#D4AF37] drop-shadow-[0_0_16px_rgba(212,175,55,0.45)]"
-          aria-hidden
-        />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -179,30 +117,25 @@ const ProductDetail = () => {
   const mainImage = product.images[selectedImage] || product.images[0];
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-[#050505] pb-28">
-      {akashaField}
-      <div className="relative z-10 px-4 pt-4 max-w-4xl mx-auto">
+    <div className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <div className="flex flex-col gap-1 mb-6">
-        <p className="sqi-label-text text-[#D4AF37]/60">{t('shop.sqiEyebrow')}</p>
+      <div className="bg-gradient-to-br from-pink-500/20 via-background to-purple-500/10 px-4 py-4">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate('/shop')}
-            className="rounded-full border border-white/[0.08] text-[#D4AF37] hover:bg-white/[0.06] hover:text-[#D4AF37]"
+            className="rounded-full"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="text-lg font-black tracking-[-0.04em] font-heading text-[#D4AF37] gold-glow">
-            {t('shop.productDetailsTitle')}
-          </h1>
+          <h1 className="text-lg font-semibold text-foreground">Product Details</h1>
         </div>
       </div>
 
       {/* Main Image */}
-      <div className="py-2">
-        <div className="aspect-square bg-[#050505] rounded-[24px] overflow-hidden relative border border-[#D4AF37]/25 shadow-[0_0_48px_-12px_rgba(212,175,55,0.2)]">
+      <div className="px-4 py-4">
+        <div className="aspect-square bg-gradient-to-br from-pink-500/10 to-purple-500/10 rounded-2xl overflow-hidden relative">
           {mainImage ? (
             <img
               src={mainImage}
@@ -210,22 +143,22 @@ const ProductDetail = () => {
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-white/[0.02]">
-              <Shirt className="w-24 h-24 text-[#D4AF37]/25" />
+            <div className="w-full h-full flex items-center justify-center">
+              <Shirt className="w-24 h-24 text-muted-foreground/30" />
             </div>
           )}
 
           {product.is_featured && (
-            <Badge className="absolute top-4 left-4 border border-[#D4AF37]/40 bg-[#050505]/90 text-[#D4AF37] font-black text-[10px] uppercase tracking-wider">
-              {t('shop.featured')}
+            <Badge className="absolute top-4 left-4 bg-pink-500 text-white">
+              Featured
             </Badge>
           )}
 
           <Button
             size="icon"
             variant="ghost"
-            className={`absolute top-4 right-4 bg-[#050505]/80 border border-white/[0.1] hover:bg-[#050505] rounded-full ${
-              isInWishlist(product.id) ? 'text-[#D4AF37]' : 'text-white/80'
+            className={`absolute top-4 right-4 bg-background/80 hover:bg-background rounded-full ${
+              isInWishlist(product.id) ? 'text-pink-500' : ''
             }`}
             onClick={() => toggleWishlist(product.id)}
           >
@@ -233,8 +166,8 @@ const ProductDetail = () => {
           </Button>
 
           {product.stock_quantity <= 5 && product.stock_quantity > 0 && (
-            <Badge className="absolute bottom-4 left-4 border border-[#22D3EE]/40 bg-[#22D3EE]/15 text-[#22D3EE] text-xs font-bold">
-              {t('shop.onlyLeft', { count: product.stock_quantity })}
+            <Badge className="absolute bottom-4 left-4 bg-amber-500 text-white">
+              Only {product.stock_quantity} left
             </Badge>
           )}
         </div>
@@ -246,8 +179,8 @@ const ProductDetail = () => {
               <button
                 key={idx}
                 onClick={() => setSelectedImage(idx)}
-                className={`w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-colors ${
-                  selectedImage === idx ? 'border-[#D4AF37] shadow-[0_0_16px_-4px_rgba(212,175,55,0.45)]' : 'border-white/10 opacity-80 hover:opacity-100'
+                className={`w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-colors ${
+                  selectedImage === idx ? 'border-primary' : 'border-transparent'
                 }`}
               >
                 <img src={img} alt="" className="w-full h-full object-cover" />
@@ -258,89 +191,80 @@ const ProductDetail = () => {
       </div>
 
       {/* Product Info */}
-      <div className="space-y-4 pt-2">
+      <div className="px-4 space-y-4">
         <div>
-          <Badge
-            variant="outline"
-            className="mb-2 capitalize border-[#D4AF37]/25 text-[#D4AF37]/90 bg-[#D4AF37]/5"
-          >
-            {formatProductCategory(product.category)}
+          <Badge variant="outline" className="mb-2 capitalize">
+            {product.category === 'healing-shirts' ? 'Healing Art' : product.category}
           </Badge>
-          <h2 className="text-2xl font-black tracking-[-0.04em] font-heading text-white">{product.name}</h2>
-          {product.description && <p className="sqi-body-text mt-2">{product.description}</p>}
+          <h2 className="text-2xl font-bold text-foreground">{product.name}</h2>
+          {product.description && (
+            <p className="text-muted-foreground mt-2">{product.description}</p>
+          )}
         </div>
 
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <span className="text-3xl font-black font-heading text-[#D4AF37]">€{product.price_eur}</span>
-          <Badge
-            variant="outline"
-            className="border-[#22D3EE]/35 text-[#22D3EE] bg-[#22D3EE]/10 text-xs font-bold"
-          >
-            {t('shop.freeShipping')}
+        <div className="flex items-center justify-between">
+          <span className="text-3xl font-bold text-foreground">€{product.price_eur}</span>
+          <Badge variant="outline" className="text-green-500 border-green-500/30">
+            Free Shipping
           </Badge>
         </div>
 
         {/* Buy Button */}
         <Button
-          variant="gold"
-          className="w-full h-12 text-base font-black tracking-[0.08em] uppercase"
+          className="w-full h-12 text-lg"
           onClick={handleBuyNow}
           disabled={product.stock_quantity === 0 || purchasing}
         >
           {purchasing ? (
-            t('shop.processing')
+            'Processing...'
           ) : product.stock_quantity === 0 ? (
-            t('shop.soldOut')
+            'Sold Out'
           ) : (
             <>
               <ShoppingBag className="w-5 h-5 mr-2" />
-              {t('shop.buyNowWithPrice', { price: String(product.price_eur) })}
+              Buy Now — €{product.price_eur}
             </>
           )}
         </Button>
 
         {/* Tabs for Details */}
         <Tabs defaultValue="details" className="mt-6">
-          <TabsList className="w-full grid grid-cols-3 h-auto p-1.5 gap-1 rounded-[28px] bg-white/[0.04] border border-white/[0.08] backdrop-blur-[40px]">
-            <TabsTrigger
-              value="details"
-              className="rounded-full text-xs py-2.5 text-white/60 data-[state=active]:bg-[#D4AF37]/20 data-[state=active]:text-[#D4AF37] data-[state=active]:shadow-[0_0_20px_-8px_rgba(212,175,55,0.4)]"
-            >
-              {t('shop.tabDetails')}
+          <TabsList className="w-full grid grid-cols-3">
+            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="sizing">
+              <Ruler className="w-4 h-4 mr-1" />
+              Sizing
             </TabsTrigger>
-            <TabsTrigger
-              value="sizing"
-              className="rounded-full text-xs py-2.5 text-white/60 data-[state=active]:bg-[#D4AF37]/20 data-[state=active]:text-[#D4AF37] data-[state=active]:shadow-[0_0_20px_-8px_rgba(212,175,55,0.4)]"
-            >
-              <Ruler className="w-4 h-4 mr-1 shrink-0" />
-              {t('shop.tabSizing')}
-            </TabsTrigger>
-            <TabsTrigger
-              value="care"
-              className="rounded-full text-xs py-2.5 text-white/60 data-[state=active]:bg-[#D4AF37]/20 data-[state=active]:text-[#D4AF37] data-[state=active]:shadow-[0_0_20px_-8px_rgba(212,175,55,0.4)]"
-            >
-              {t('shop.tabCare')}
-            </TabsTrigger>
+            <TabsTrigger value="care">Care</TabsTrigger>
           </TabsList>
 
           <TabsContent value="details" className="mt-4">
-            <Card className={`${detailGlassPanel} space-y-4`}>
+            <Card className="p-4 space-y-4">
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 flex items-center justify-center flex-shrink-0">
-                  <Sparkles className="w-5 h-5 text-[#D4AF37]" />
+                <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-5 h-5 text-purple-400" />
                 </div>
                 <div>
-                  <h4 className="font-black font-heading text-[#D4AF37] text-sm">{t('shop.detailSacredTitle')}</h4>
-                  <p className="sqi-body-text text-sm mt-1">{t('shop.detailSacredBody')}</p>
+                  <h4 className="font-semibold text-foreground">Sacred Energy Infused</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Each design is created with intentional healing energy by Laila, carrying sacred geometry and spiritual vibrations.
+                  </p>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <h4 className="font-black font-heading text-white text-sm tracking-tight">{t('shop.fabricQualityTitle')}</h4>
+                <h4 className="font-semibold text-foreground">Fabric & Quality</h4>
                 <ul className="space-y-2">
-                  {fabricBullets.map((item, idx) => (
-                    <li key={idx} className="flex items-center gap-2 text-sm sqi-body-text">
-                      <Check className="w-4 h-4 text-[#22D3EE] flex-shrink-0" />
+                  {[
+                    '100% Organic Cotton',
+                    'Pre-shrunk & enzyme-washed',
+                    '180 GSM midweight fabric',
+                    'Soft, breathable & comfortable',
+                    'High-quality DTG printing',
+                    'Colors stay vibrant after washing',
+                  ].map((item, idx) => (
+                    <li key={idx} className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Check className="w-4 h-4 text-green-400 flex-shrink-0" />
                       {item}
                     </li>
                   ))}
@@ -348,10 +272,10 @@ const ProductDetail = () => {
               </div>
 
               <div className="space-y-2">
-                <h4 className="font-black font-heading text-white text-sm">{t('shop.availableSizes')}</h4>
+                <h4 className="font-semibold text-foreground">Available Sizes</h4>
                 <div className="flex flex-wrap gap-2">
                   {(product.sizes.length > 0 ? product.sizes : ['XS', 'S', 'M', 'L', 'XL', 'XXL']).map((size) => (
-                    <Badge key={size} variant="outline" className="border-[#D4AF37]/25 text-[#D4AF37]/90">
+                    <Badge key={size} variant="outline">
                       {size}
                     </Badge>
                   ))}
@@ -361,56 +285,65 @@ const ProductDetail = () => {
           </TabsContent>
 
           <TabsContent value="sizing" className="mt-4">
-            <Card className={detailGlassPanel}>
-              <h4 className="font-black font-heading text-[#D4AF37] mb-4 flex items-center gap-2 text-sm">
-                <Ruler className="w-5 h-5 text-[#22D3EE]" />
-                {t('shop.sizeGuideTitle')}
+            <Card className="p-4">
+              <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Ruler className="w-5 h-5 text-primary" />
+                Size Guide (cm)
               </h4>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-white/[0.1]">
-                      <th className="text-left py-2 font-bold text-white/90">{t('shop.tableSize')}</th>
-                      <th className="text-left py-2 font-bold text-white/90">{t('shop.tableChest')}</th>
-                      <th className="text-left py-2 font-bold text-white/90">{t('shop.tableWaist')}</th>
-                      <th className="text-left py-2 font-bold text-white/90">{t('shop.tableHip')}</th>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-2 font-medium text-foreground">Size</th>
+                      <th className="text-left py-2 font-medium text-foreground">Chest</th>
+                      <th className="text-left py-2 font-medium text-foreground">Waist</th>
+                      <th className="text-left py-2 font-medium text-foreground">Hip</th>
                     </tr>
                   </thead>
                   <tbody>
                     {SIZE_GUIDE.map((row) => (
-                      <tr key={row.size} className="border-b border-white/[0.06]">
-                        <td className="py-2 font-bold text-[#D4AF37]">{row.size}</td>
-                        <td className="py-2 sqi-body-text">{row.chest}</td>
-                        <td className="py-2 sqi-body-text">{row.waist}</td>
-                        <td className="py-2 sqi-body-text">{row.hip}</td>
+                      <tr key={row.size} className="border-b border-border/50">
+                        <td className="py-2 font-medium text-foreground">{row.size}</td>
+                        <td className="py-2 text-muted-foreground">{row.chest}</td>
+                        <td className="py-2 text-muted-foreground">{row.waist}</td>
+                        <td className="py-2 text-muted-foreground">{row.hip}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-              <p className="sqi-body-text text-xs mt-4">{t('shop.sizingFootnote')}</p>
+              <p className="text-xs text-muted-foreground mt-4">
+                * Measurements in centimeters. If between sizes, we recommend sizing up for a relaxed fit.
+              </p>
             </Card>
           </TabsContent>
 
           <TabsContent value="care" className="mt-4">
-            <Card className={`${detailGlassPanel} space-y-4`}>
-              <h4 className="font-black font-heading text-white text-sm">{t('shop.careTitle')}</h4>
+            <Card className="p-4 space-y-4">
+              <h4 className="font-semibold text-foreground">Care Instructions</h4>
               <ul className="space-y-3">
-                {careItems.map((text, idx) => (
-                  <li key={idx} className="text-sm sqi-body-text">
-                    {text}
+                {[
+                  { icon: '🧺', text: 'Machine wash cold (30°C max)' },
+                  { icon: '🔄', text: 'Wash inside out to protect print' },
+                  { icon: '🚫', text: 'Do not bleach' },
+                  { icon: '🌀', text: 'Tumble dry low or hang dry' },
+                  { icon: '♨️', text: 'Iron on reverse side only' },
+                  { icon: '🧴', text: 'Do not dry clean' },
+                ].map((item, idx) => (
+                  <li key={idx} className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <span className="text-lg">{item.icon}</span>
+                    {item.text}
                   </li>
                 ))}
               </ul>
-              <div className="rounded-[20px] border border-white/[0.06] bg-white/[0.03] p-3 mt-4">
-                <p className="sqi-body-text text-xs">
-                  <strong className="text-white/90">{t('shop.careProTipLead')}</strong> {t('shop.careProTipBody')}
+              <div className="bg-muted/50 rounded-lg p-3 mt-4">
+                <p className="text-xs text-muted-foreground">
+                  <strong>Pro tip:</strong> Following these care instructions will help maintain the vibrant colors and energy of your Siddha Quantum Nexus shirt for years to come.
                 </p>
               </div>
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
       </div>
     </div>
   );

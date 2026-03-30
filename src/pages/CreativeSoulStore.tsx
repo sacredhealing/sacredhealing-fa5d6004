@@ -9,7 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useAuth } from "@/hooks/useAuth";
-import { useTranslation } from "@/hooks/useTranslation";
 import { supabase } from "@/integrations/supabase/client";
 import { adminGrantedFeatureOr } from "@/lib/adminGrantedAccess";
 import { toast } from "sonner";
@@ -143,12 +142,7 @@ const SQI_STORE_STYLES = `
 }
 `;
 
-const MEDITATION_FEATURE_KEYS = ['featHealing', 'featStyles', 'featBinaural', 'featStem', 'featVariant', 'featQuality'] as const;
-const ORACLE_FEATURE_KEYS = ['featScalar', 'featScan', 'featMaster', 'featBinaural', 'featFfmpeg', 'featStorage'] as const;
-const ORACLE_CHIP_KEYS = ['chipTulsi', 'chipKailash', 'chipBabaji', 'chipRamana', 'chipTiruv', 'chipNeem'] as const;
-
 const CreativeSoulStore = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const { isAdmin } = useAdminRole();
   const { user } = useAuth();
@@ -232,7 +226,7 @@ const CreativeSoulStore = () => {
   // Meditation purchase — unchanged
   const handleMeditationPurchase = async (plan: 'lifetime' | 'monthly' | 'single') => {
     if (!user) {
-      toast.error(t('creativeSoulStore.toastSignIn'));
+      toast.error('Please sign in to purchase');
       navigate('/auth');
       return;
     }
@@ -245,7 +239,7 @@ const CreativeSoulStore = () => {
       if (data?.url) window.location.href = data.url;
     } catch (error) {
       console.error('Checkout error:', error);
-      toast.error(t('creativeSoulStore.toastCheckoutFail'));
+      toast.error('Failed to start checkout');
       setPurchaseLoading(null);
     }
   };
@@ -253,7 +247,7 @@ const CreativeSoulStore = () => {
   // Oracle purchase
   const handleOraclePurchase = async (plan: 'lifetime' | 'monthly' | 'single') => {
     if (!user) {
-      toast.error(t('creativeSoulStore.toastSignIn'));
+      toast.error('Please sign in to purchase');
       navigate('/auth');
       return;
     }
@@ -266,13 +260,28 @@ const CreativeSoulStore = () => {
       if (data?.url) window.location.href = data.url;
     } catch (error) {
       console.error('Oracle checkout error:', error);
-      toast.error(t('creativeSoulStore.toastCheckoutFail'));
+      toast.error('Failed to start checkout');
       setPurchaseLoading(null);
     }
   };
 
-  const meditationFeatureIcons = [Waves, Music, Brain, Layers, Zap, Headphones];
-  const oracleFeatureIcons = [Sparkles, Waves, FlaskConical, Brain, Cpu, GitBranch];
+  const meditationFeatures = [
+    { icon: Waves, label: "Healing Frequencies" },
+    { icon: Music, label: "15 Meditation Styles" },
+    { icon: Brain, label: "Binaural Beats" },
+    { icon: Layers, label: "Stem Separation" },
+    { icon: Zap, label: "Multi-Variant" },
+    { icon: Headphones, label: "High-Quality" },
+  ];
+
+  const oracleFeatures = [
+    { icon: Sparkles, label: "Scalar Wave Fields" },
+    { icon: Waves, label: "Siddha Scan (Gemini AI)" },
+    { icon: FlaskConical, label: "Master Energy Signatures" },
+    { icon: Brain, label: "Binaural Synthesis" },
+    { icon: Cpu, label: "FFmpeg Alchemy Engine" },
+    { icon: GitBranch, label: "Supabase Storage" },
+  ];
 
   return (
     <>
@@ -284,18 +293,18 @@ const CreativeSoulStore = () => {
           <div className="cs-store-topbar">
             <button type="button" className="cs-store-back" onClick={() => navigate("/dashboard")}>
               <ArrowLeft className="w-3 h-3" />
-              {t('creativeSoulStore.backToNexus')}
+              Back to Nexus
             </button>
             <div className="cs-store-pill">
               <Sparkles className="w-3 h-3" />
-              <span>{t('creativeSoulStore.pillBadge')}</span>
+              <span>Creative Soul · SQI 2050</span>
             </div>
           </div>
 
           {/* Title */}
           <div className="cs-store-title-block">
-            <div className="cs-store-title">{t('creativeSoulStore.title')}</div>
-            <div className="cs-store-subtitle">{t('creativeSoulStore.subtitle')}</div>
+            <div className="cs-store-title">Creative Soul Store</div>
+            <div className="cs-store-subtitle">Bhakti-Algorithms for Creators & Healers</div>
           </div>
 
           <div className="cs-store-grid space-y-8">
@@ -310,20 +319,22 @@ const CreativeSoulStore = () => {
                   <div className="text-right space-y-1">
                     <div className="flex gap-2 justify-end">
                       <Badge variant="outline" className="bg-emerald-500/10 text-emerald-300 border-emerald-400/40 text-[10px] tracking-[0.18em] uppercase">
-                        <Check className="w-3 h-3 mr-1" /> {t('creativeSoulStore.meditation.accessReady')}
+                        <Check className="w-3 h-3 mr-1" /> Access Ready
                       </Badge>
                       <Badge variant="outline" className="bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/40 text-[10px] tracking-[0.18em] uppercase">
-                        {t('creativeSoulStore.meditation.sqiEngine')}
+                        SQI Engine
                       </Badge>
                     </div>
                     <p className="text-[9px] font-semibold tracking-[0.32em] uppercase text-white/40">
-                      {t('creativeSoulStore.meditation.eyebrow')}
+                      Neural-Sync Meditation Studio · 2050
                     </p>
                   </div>
                 </div>
-                <CardTitle className="text-xl text-white mt-5">{t('creativeSoulStore.meditation.cardTitle')}</CardTitle>
+                <CardTitle className="text-xl text-white mt-5">Creative Soul Meditation</CardTitle>
                 <CardDescription className="text-sm leading-relaxed text-white/60 mt-2">
-                  {t('creativeSoulStore.meditation.cardDesc')}
+                  Transform any audio into a Siddha-grade meditation master. Apply healing frequencies,
+                  choose from 15 meditation styles, add binaural beats, and use stem separation for
+                  professional-quality audio.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-7">
@@ -336,10 +347,8 @@ const CreativeSoulStore = () => {
                     {purchaseLoading === 'meditation-lifetime'
                       ? <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1" />
                       : <div className="text-xl font-bold text-white">€149</div>}
-                    <div className="text-[11px] text-white/55 mt-0.5">{t('creativeSoulStore.meditation.lifetime')}</div>
-                    <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">
-                      {t('creativeSoulStore.shcBonus', { amount: '1000' })}
-                    </Badge>
+                    <div className="text-[11px] text-white/55 mt-0.5">Lifetime Access</div>
+                    <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">+1000 SHC</Badge>
                   </button>
                   <button
                     onClick={() => handleMeditationPurchase('monthly')}
@@ -349,10 +358,8 @@ const CreativeSoulStore = () => {
                     {purchaseLoading === 'meditation-monthly'
                       ? <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1" />
                       : <div className="text-xl font-bold text-white">€14.99</div>}
-                    <div className="text-[11px] text-white/55 mt-0.5">{t('creativeSoulStore.meditation.perMonth')}</div>
-                    <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">
-                      {t('creativeSoulStore.shcBonus', { amount: '1000' })}
-                    </Badge>
+                    <div className="text-[11px] text-white/55 mt-0.5">/ month</div>
+                    <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">+1000 SHC</Badge>
                   </button>
                   <button
                     onClick={() => handleMeditationPurchase('single')}
@@ -362,22 +369,17 @@ const CreativeSoulStore = () => {
                     {purchaseLoading === 'meditation-single'
                       ? <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1" />
                       : <div className="text-xl font-bold text-white">€9.99</div>}
-                    <div className="text-[11px] text-white/55 mt-0.5">{t('creativeSoulStore.meditation.oneMeditation')}</div>
-                    <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">
-                      {t('creativeSoulStore.shcBonus', { amount: '1000' })}
-                    </Badge>
+                    <div className="text-[11px] text-white/55 mt-0.5">One Meditation</div>
+                    <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">+1000 SHC</Badge>
                   </button>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {MEDITATION_FEATURE_KEYS.map((key, index) => {
-                    const Icon = meditationFeatureIcons[index];
-                    return (
-                      <div key={key} className="flex items-center gap-2 text-xs text-white/65">
-                        <Icon className="w-4 h-4 text-[#D4AF37]/80 shrink-0" />
-                        <span>{t(`creativeSoulStore.meditation.${key}`)}</span>
-                      </div>
-                    );
-                  })}
+                  {meditationFeatures.map((feature, index) => (
+                    <div key={index} className="flex items-center gap-2 text-xs text-white/65">
+                      <feature.icon className="w-4 h-4 text-[#D4AF37]/80" />
+                      <span>{feature.label}</span>
+                    </div>
+                  ))}
                 </div>
                 {(isAdmin || hasMeditationAccess) && (
                   <Button
@@ -385,12 +387,12 @@ const CreativeSoulStore = () => {
                     className="w-full bg-[#D4AF37] hover:bg-[#f0d26a] text-black font-semibold tracking-[0.18em] uppercase text-[10px] admin-access-glow"
                   >
                     <Check className="w-4 h-4 mr-2" />
-                    {t('creativeSoulStore.meditation.openTool')}
+                    Open Tool (Access Granted)
                   </Button>
                 )}
                 {affiliateId && (
                   <p className="text-[10px] text-center text-white/45 tracking-[0.18em] uppercase mt-1">
-                    {t('creativeSoulStore.affiliateNote')}
+                    Affiliate field active · Your referrer earns 30% commission
                   </p>
                 )}
               </CardContent>
@@ -407,26 +409,28 @@ const CreativeSoulStore = () => {
                     <div className="flex gap-2 justify-end">
                       {isAdmin ? (
                         <Badge variant="outline" className="bg-[#D4AF37]/20 text-[#D4AF37] border-[#D4AF37]/60 text-[10px] tracking-[0.18em] uppercase">
-                          {t('creativeSoulStore.oracle.adminBadge')}
+                          ✦ Admin Access
                         </Badge>
                       ) : (hasOracleAccess ? (
                         <Badge variant="outline" className="bg-emerald-500/10 text-emerald-300 border-emerald-400/40 text-[10px] tracking-[0.18em] uppercase">
-                          <Check className="w-3 h-3 mr-1" /> {t('creativeSoulStore.oracle.accessGranted')}
+                          <Check className="w-3 h-3 mr-1" /> Access Granted
                         </Badge>
                       ) : (
                         <Badge variant="outline" className="bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/40 text-[10px] tracking-[0.18em] uppercase">
-                          {t('creativeSoulStore.oracle.sqiOracle')}
+                          SQI Oracle
                         </Badge>
                       ))}
                     </div>
                     <p className="text-[9px] font-semibold tracking-[0.32em] uppercase text-white/40">
-                      {t('creativeSoulStore.oracle.eyebrow')}
+                      Siddha Sound Alchemy Oracle · 2050
                     </p>
                   </div>
                 </div>
-                <CardTitle className="text-xl text-white mt-5">{t('creativeSoulStore.oracle.cardTitle')}</CardTitle>
+                <CardTitle className="text-xl text-white mt-5">Siddha Sound Alchemy Oracle</CardTitle>
                 <CardDescription className="text-sm leading-relaxed text-white/60 mt-2">
-                  {t('creativeSoulStore.oracle.cardDesc')}
+                  Quantum audio consecration engine. Upload any track — the Oracle performs a Siddha Scan
+                  through Gemini AI, channels living scalar wave transmissions from sacred masters, holy places,
+                  and plant devas, and alchemizes the audio into a high-frequency healing vessel.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-7">
@@ -442,10 +446,8 @@ const CreativeSoulStore = () => {
                       {purchaseLoading === 'oracle-lifetime'
                         ? <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1" />
                         : <div className="text-xl font-bold text-white">€144</div>}
-                      <div className="text-[11px] text-white/55 mt-0.5">{t('creativeSoulStore.oracle.lifetime')}</div>
-                      <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">
-                        {t('creativeSoulStore.shcBonus', { amount: '2000' })}
-                      </Badge>
+                      <div className="text-[11px] text-white/55 mt-0.5">Lifetime Access</div>
+                      <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">+2000 SHC</Badge>
                     </button>
                     <button
                       onClick={() => handleOraclePurchase('monthly')}
@@ -455,10 +457,8 @@ const CreativeSoulStore = () => {
                       {purchaseLoading === 'oracle-monthly'
                         ? <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1" />
                         : <div className="text-xl font-bold text-white">€22</div>}
-                      <div className="text-[11px] text-white/55 mt-0.5">{t('creativeSoulStore.oracle.perMonth')}</div>
-                      <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">
-                        {t('creativeSoulStore.shcBonus', { amount: '1000' })}
-                      </Badge>
+                      <div className="text-[11px] text-white/55 mt-0.5">/ month</div>
+                      <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">+1000 SHC</Badge>
                     </button>
                     <button
                       onClick={() => handleOraclePurchase('single')}
@@ -468,43 +468,35 @@ const CreativeSoulStore = () => {
                       {purchaseLoading === 'oracle-single'
                         ? <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1" />
                         : <div className="text-xl font-bold text-white">€11</div>}
-                      <div className="text-[11px] text-white/55 mt-0.5">{t('creativeSoulStore.oracle.oneReading')}</div>
-                      <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">
-                        {t('creativeSoulStore.shcBonus', { amount: '500' })}
-                      </Badge>
+                      <div className="text-[11px] text-white/55 mt-0.5">One Reading</div>
+                      <Badge className="mt-2 bg-emerald-500/15 text-emerald-300 border-emerald-500/40 text-[10px] tracking-[0.18em] uppercase">+500 SHC</Badge>
                     </button>
                   </div>
                 )}
 
                 {/* Features grid */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {ORACLE_FEATURE_KEYS.map((key, index) => {
-                    const Icon = oracleFeatureIcons[index];
-                    return (
-                      <div key={key} className="flex items-center gap-2 text-xs text-white/65">
-                        <Icon className="w-4 h-4 text-[#D4AF37]/80 shrink-0" />
-                        <span>{t(`creativeSoulStore.oracle.${key}`)}</span>
-                      </div>
-                    );
-                  })}
+                  {oracleFeatures.map((feature, index) => (
+                    <div key={index} className="flex items-center gap-2 text-xs text-white/65">
+                      <feature.icon className="w-4 h-4 text-[#D4AF37]/80" />
+                      <span>{feature.label}</span>
+                    </div>
+                  ))}
                 </div>
 
                 {/* Scalar waves teaser */}
                 <div className="rounded-2xl bg-black/40 border border-[#D4AF37]/10 p-4 space-y-2">
                   <p className="text-[9px] uppercase tracking-[0.26em] text-[#D4AF37]/60 font-bold">
-                    {t('creativeSoulStore.oracle.scalarTitle')}
+                    Scalar Wave Transmissions Included
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {ORACLE_CHIP_KEYS.map((chipKey) => (
-                      <span
-                        key={chipKey}
-                        className="text-[10px] px-2 py-1 rounded-full border border-[#D4AF37]/20 text-[#D4AF37]/70 bg-[#D4AF37]/5"
-                      >
-                        {t(`creativeSoulStore.oracle.${chipKey}`)}
+                    {["🌿 Tulsi", "🏔️ Kailash", "🔥 Babaji", "🤍 Ramana", "✨ Tiruvannamalai", "🙏 Neem Karoli Baba"].map(w => (
+                      <span key={w} className="text-[10px] px-2 py-1 rounded-full border border-[#D4AF37]/20 text-[#D4AF37]/70 bg-[#D4AF37]/5">
+                        {w}
                       </span>
                     ))}
                     <span className="text-[10px] px-2 py-1 rounded-full border border-white/10 text-white/30">
-                      {t('creativeSoulStore.moreScalar', { count: 9 })}
+                      +9 more
                     </span>
                   </div>
                 </div>
@@ -516,7 +508,7 @@ const CreativeSoulStore = () => {
                     className="w-full bg-[#D4AF37] hover:bg-[#f0d26a] text-black font-semibold tracking-[0.18em] uppercase text-[10px] admin-access-glow"
                   >
                     <Sparkles className="w-4 h-4 mr-2" />
-                    {t('creativeSoulStore.oracle.openAdmin')}
+                    Open Siddha Sound Alchemy Oracle (Admin)
                   </Button>
                 )}
 
@@ -527,13 +519,13 @@ const CreativeSoulStore = () => {
                     className="w-full bg-[#D4AF37] hover:bg-[#f0d26a] text-black font-semibold tracking-[0.18em] uppercase text-[10px]"
                   >
                     <Check className="w-4 h-4 mr-2" />
-                    {t('creativeSoulStore.oracle.openTool')}
+                    Open Siddha Sound Alchemy Oracle
                   </Button>
                 )}
 
                 {affiliateId && (
                   <p className="text-[10px] text-center text-white/45 tracking-[0.18em] uppercase mt-1">
-                    {t('creativeSoulStore.affiliateNote')}
+                    Affiliate field active · Your referrer earns 30% commission
                   </p>
                 )}
               </CardContent>
@@ -546,10 +538,11 @@ const CreativeSoulStore = () => {
             <Card className="cs-store-quote-card backdrop-blur-2xl">
               <CardContent className="py-8 px-6 text-center">
                 <p className="text-sm text-white/70 italic mb-4">
-                  {t('creativeSoulStore.quote')}
+                  "You don&apos;t need to understand technology. Begin with a feeling — the Siddha-Quantum field will handle the code."
                 </p>
                 <p className="text-[11px] text-white/55 leading-relaxed max-w-xl mx-auto">
-                  {t('creativeSoulStore.quoteFooter')}
+                  Every Creative Soul purchase opens a new protocol inside your Siddha Quantum Nexus: tools are upgraded over time,
+                  affiliates are rewarded automatically, and your field stays synced with the 2050 timeline.
                 </p>
               </CardContent>
             </Card>

@@ -75,18 +75,9 @@ export const HiddenWisdomVault: React.FC = () => {
 
   if (!isStargateMember) {
     return (
-      <Card
-        className="p-8 text-center rounded-[40px] border backdrop-blur-[40px]"
-        style={{
-          background: 'rgba(255,255,255,0.02)',
-          borderColor: 'rgba(212,175,55,0.18)',
-          boxShadow: '0 0 32px rgba(212,175,55,0.06)',
-        }}
-      >
-        <Sparkles className="h-12 w-12 mx-auto mb-4" style={{ color: 'rgba(212,175,55,0.55)' }} />
-        <p style={{ color: 'rgba(255,255,255,0.58)', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
-          Access to Hidden Wisdom Vault requires Stargate membership.
-        </p>
+      <Card className="p-8 text-center">
+        <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+        <p className="text-muted-foreground">Access to Hidden Wisdom Vault requires Stargate membership.</p>
       </Card>
     );
   }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from '@/hooks/useTranslation';
+import { useTranslation } from 'react-i18next';
 import { 
   Sparkles, 
   Video, 
@@ -62,18 +62,6 @@ interface Practitioner {
   subtitle: string | null;
   image_url: string | null;
 }
-
-const CRYPTO_WALLET = 'BAfPGN6DUAKYVwmmGkhMQxJyDv2cHEHRnfcbzy1GNy5j';
-
-const akashaField = (
-  <>
-    <div className="pointer-events-none fixed inset-0 bg-[#050505] z-0" aria-hidden />
-    <div
-      className="pointer-events-none fixed inset-0 z-0 opacity-[0.95] bg-[radial-gradient(ellipse_100%_70%_at_50%_-15%,rgba(212,175,55,0.1)_0%,transparent_55%),radial-gradient(ellipse_90%_55%_at_100%_25%,rgba(212,175,55,0.05)_0%,transparent_50%),radial-gradient(ellipse_70%_45%_at_0%_75%,rgba(34,211,238,0.035)_0%,transparent_45%)]"
-      aria-hidden
-    />
-  </>
-);
 
 const getFeatureIcon = (feature: string): React.ElementType => {
   const lower = feature.toLowerCase();
@@ -175,7 +163,7 @@ const Transformation = () => {
     
     // Check if practitioner selection is needed
     if (program?.practitioner === 'both' && !selectedPractitioner) {
-      toast.error(t('transformation.toastSelectPractitioner'));
+      toast.error('Please select a practitioner first');
       return;
     }
     
@@ -204,11 +192,11 @@ const Transformation = () => {
           window.open(data.url, '_blank');
         }
       } else {
-        toast.info(t('transformation.toastCryptoSend', { wallet: CRYPTO_WALLET }));
+        toast.info('Please send payment to: BAfPGN6DUAKYVwmmGkhMQxJyDv2cHEHRnfcbzy1GNy5j');
       }
     } catch (error) {
       console.error('Payment error:', error);
-      toast.error(t('transformation.toastPaymentFailed'));
+      toast.error('Payment failed. Please try again.');
     }
     
     setEnrolling(false);
@@ -217,25 +205,21 @@ const Transformation = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-        {akashaField}
-        <div
-          className="animate-spin rounded-full h-9 w-9 border-2 border-[#D4AF37]/30 border-t-[#D4AF37] relative z-10 shadow-[0_0_24px_rgba(212,175,55,0.35)]"
-          role="status"
-          aria-label={t('transformation.loadingAria')}
-        />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   if (!program) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden bg-[#050505]">
-        {akashaField}
-        <Card className="p-8 text-center relative z-10 max-w-md border-white/[0.08] shadow-[0_0_48px_-12px_rgba(212,175,55,0.18)]">
-          <Sparkles className="w-12 h-12 text-[#D4AF37] mx-auto mb-4 drop-shadow-[0_0_12px_rgba(212,175,55,0.4)]" />
-          <h3 className="font-black tracking-[-0.04em] text-[#D4AF37] gold-glow mb-2 font-heading">{t('transformation.emptyTitle')}</h3>
-          <p className="sqi-body-text text-sm">{t('transformation.emptyDescription')}</p>
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <Card className="p-8 text-center">
+          <Sparkles className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="font-semibold text-foreground mb-2">Program Not Available</h3>
+          <p className="text-muted-foreground text-sm">
+            The transformation program is currently being prepared.
+          </p>
         </Card>
       </div>
     );
@@ -245,64 +229,55 @@ const Transformation = () => {
   const showPractitionerSelection = program.practitioner === 'both';
 
   return (
-    <div className="min-h-screen pb-28 relative overflow-hidden bg-[#050505]">
-      {akashaField}
-
-      <div className="relative z-10 max-w-lg mx-auto">
-      {/* Hero — Prema-Pulse header */}
-      <div className="px-4 pt-8 pb-10 text-center relative">
-        <p className="sqi-label-text mb-3 text-[#D4AF37]/70">Bhakti-Algorithm · Prema-Pulse</p>
-        <Badge className="mb-4 rounded-full border border-[#D4AF37]/35 bg-white/[0.04] text-[#D4AF37] px-4 py-1.5 font-extrabold uppercase tracking-[0.28em] text-[10px] shadow-[0_0_24px_-6px_rgba(212,175,55,0.35)] backdrop-blur-[40px] hover:bg-white/[0.06]">
-          {t('transformation.badgeJourney')}
-        </Badge>
-        <h1 className="text-3xl md:text-4xl font-black tracking-[-0.05em] text-[#D4AF37] gold-glow mb-4 font-heading leading-tight">
-          {program.name}
-        </h1>
-        <p className="sqi-body-text max-w-md mx-auto mb-8 text-base">
-          {program.description}
-        </p>
-        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm">
-          <span className="flex items-center gap-2 sqi-body-text">
-            <Calendar className="w-4 h-4 text-[#D4AF37] shrink-0" />
-            {t('transformation.metaMonths', { count: currentSource.duration_months })}
-          </span>
-          <span className="flex items-center gap-2 sqi-body-text">
-            <BookOpen className="w-4 h-4 text-[#D4AF37] shrink-0" />
-            {t('transformation.metaModules', { count: program.modules.length })}
-          </span>
+    <div className="min-h-screen bg-background pb-24">
+      {/* Hero Section */}
+      <div className="bg-gradient-to-br from-amber-500/30 via-primary/20 to-purple-500/30 px-4 py-10 text-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,215,0,0.1),transparent_70%)]" />
+        <div className="relative">
+          <Badge className="bg-amber-500 text-white mb-4">Life-Changing Journey</Badge>
+          <h1 className="text-3xl font-bold text-foreground mb-3">{program.name}</h1>
+          <p className="text-muted-foreground max-w-md mx-auto mb-6">
+            {program.description}
+          </p>
+          <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Calendar className="w-4 h-4" />
+              {currentSource.duration_months} months
+            </span>
+            <span className="flex items-center gap-1">
+              <BookOpen className="w-4 h-4" />
+              {program.modules.length} modules
+            </span>
+          </div>
         </div>
       </div>
 
       {/* Variations Banner */}
       {variations.length > 0 && (
         <div className="px-4 py-4">
-          <h2 className="sqi-label-text mb-3 !text-[#D4AF37]/80 !tracking-[0.35em]">{t('transformation.choosePackage')}</h2>
+          <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">Choose Your Package</h2>
           <div className="flex gap-3 overflow-x-auto pb-2">
-            <Card
-              className={`p-4 min-w-[168px] cursor-pointer transition-all duration-300 rounded-[28px] !rounded-[28px] ${
-                !selectedVariation
-                  ? 'border-[#D4AF37] shadow-[0_0_32px_-8px_rgba(212,175,55,0.3)] bg-[#D4AF37]/5'
-                  : 'border-white/[0.08] hover:border-[#D4AF37]/35'
+            <Card 
+              className={`p-4 min-w-[160px] cursor-pointer transition-all ${
+                !selectedVariation ? 'border-amber-500 bg-amber-500/10' : 'border-border hover:border-amber-500/50'
               }`}
               onClick={() => setSelectedVariation(null)}
             >
-              <h3 className="font-black tracking-[-0.03em] text-white text-sm">{t('transformation.packageStandard')}</h3>
-              <p className="text-[#D4AF37] font-black mt-1.5 text-lg">€{program.price_eur}</p>
-              <p className="text-xs sqi-body-text mt-1">{t('transformation.metaMonths', { count: program.duration_months })}</p>
+              <h3 className="font-semibold text-foreground text-sm">Standard</h3>
+              <p className="text-amber-500 font-bold mt-1">€{program.price_eur}</p>
+              <p className="text-xs text-muted-foreground mt-1">{program.duration_months} months</p>
             </Card>
             {variations.map((v) => (
-              <Card
+              <Card 
                 key={v.id}
-                className={`p-4 min-w-[168px] cursor-pointer transition-all duration-300 rounded-[28px] !rounded-[28px] ${
-                  selectedVariation?.id === v.id
-                    ? 'border-[#D4AF37] shadow-[0_0_32px_-8px_rgba(212,175,55,0.3)] bg-[#D4AF37]/5'
-                    : 'border-white/[0.08] hover:border-[#D4AF37]/35'
+                className={`p-4 min-w-[160px] cursor-pointer transition-all ${
+                  selectedVariation?.id === v.id ? 'border-amber-500 bg-amber-500/10' : 'border-border hover:border-amber-500/50'
                 }`}
                 onClick={() => setSelectedVariation(v)}
               >
-                <h3 className="font-black tracking-[-0.03em] text-white text-sm leading-snug">{v.name}</h3>
-                <p className="text-[#D4AF37] font-black mt-1.5 text-lg">€{v.price_eur}</p>
-                <p className="text-xs sqi-body-text mt-1">{t('transformation.metaMonths', { count: v.duration_months })}</p>
+                <h3 className="font-semibold text-foreground text-sm">{v.name}</h3>
+                <p className="text-amber-500 font-bold mt-1">€{v.price_eur}</p>
+                <p className="text-xs text-muted-foreground mt-1">{v.duration_months} months</p>
               </Card>
             ))}
           </div>
@@ -312,29 +287,29 @@ const Transformation = () => {
       {/* Practitioner Selection */}
       {showPractitionerSelection && practitioners.length > 0 && (
         <div className="px-4 py-4">
-          <p className="sqi-label-text mb-3 !text-[#D4AF37]/55">{t('transformation.chooseGuide')}</p>
+          <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">Choose Your Guide</h2>
           <div className="grid grid-cols-2 gap-3">
             {practitioners.map((p) => (
-              <Card
+              <Card 
                 key={p.id}
-                className={`p-4 cursor-pointer transition-all duration-300 text-center rounded-[28px] !rounded-[28px] ${
-                  selectedPractitioner?.id === p.id
-                    ? 'border-[#D4AF37] shadow-[0_0_28px_-8px_rgba(212,175,55,0.28)] bg-[#D4AF37]/5'
-                    : 'border-white/[0.08] hover:border-[#D4AF37]/30'
+                className={`p-4 cursor-pointer transition-all text-center ${
+                  selectedPractitioner?.id === p.id ? 'border-amber-500 bg-amber-500/10' : 'border-border hover:border-amber-500/50'
                 }`}
                 onClick={() => setSelectedPractitioner(p)}
               >
-                <Avatar className="w-16 h-16 mx-auto mb-2 border-2 border-[#D4AF37]/40 shadow-[0_0_20px_-4px_rgba(212,175,55,0.35)]">
+                <Avatar className="w-16 h-16 mx-auto mb-2 border-2 border-amber-500/30">
                   {p.image_url ? (
                     <AvatarImage src={p.image_url} alt={p.name} />
                   ) : (
-                    <AvatarFallback className="bg-[#D4AF37]/15 text-[#D4AF37] font-bold">
+                    <AvatarFallback className="bg-amber-500/20 text-amber-500">
                       {p.name.charAt(0)}
                     </AvatarFallback>
                   )}
                 </Avatar>
-                <h3 className="font-black tracking-[-0.04em] text-white text-sm">{p.name}</h3>
-                {p.subtitle && <p className="text-xs sqi-body-text mt-1 leading-snug">{p.subtitle}</p>}
+                <h3 className="font-semibold text-foreground">{p.name}</h3>
+                {p.subtitle && (
+                  <p className="text-xs text-muted-foreground mt-1">{p.subtitle}</p>
+                )}
               </Card>
             ))}
           </div>
@@ -343,76 +318,60 @@ const Transformation = () => {
 
       {/* Price Card with Payment Options */}
       <div className="px-4 py-4">
-        <Card className="p-6 border-[#D4AF37]/25 shadow-[0_0_56px_-12px_rgba(212,175,55,0.2)] hover:border-[#D4AF37]/35">
-          <div className="text-center mb-2">
-            <p className="sqi-label-text !text-[#D4AF37]/75 mb-3 !tracking-[0.3em]">{t('transformation.investmentTitle')}</p>
-
+        <Card className="p-6 bg-gradient-to-br from-amber-500/10 to-purple-500/10 border-amber-500/30">
+          <div className="text-center mb-4">
+            <p className="text-sm text-muted-foreground mb-1">Investment in Your Transformation</p>
+            
+            {/* Payment Type Toggle */}
             {currentSource.installment_price_eur > 0 && (
-              <div className="flex flex-wrap gap-2 justify-center mb-5">
+              <div className="flex gap-2 justify-center mb-4">
                 <Button
-                  variant="outline"
+                  variant={paymentType === 'full' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setPaymentType('full')}
-                  className={`rounded-full border px-4 ${
-                    paymentType === 'full'
-                      ? 'bg-[#D4AF37] text-[#050505] border-[#D4AF37] hover:bg-[#D4AF37]/90 hover:text-[#050505]'
-                      : 'border-white/[0.12] bg-white/[0.04] text-white hover:border-[#D4AF37]/40'
-                  }`}
+                  className={paymentType === 'full' ? 'bg-amber-500 hover:bg-amber-600' : ''}
                 >
-                  {t('transformation.payFull')}
+                  Full Payment
                 </Button>
                 <Button
-                  variant="outline"
+                  variant={paymentType === 'installment' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setPaymentType('installment')}
-                  className={`rounded-full border px-4 ${
-                    paymentType === 'installment'
-                      ? 'bg-[#D4AF37] text-[#050505] border-[#D4AF37] hover:bg-[#D4AF37]/90 hover:text-[#050505]'
-                      : 'border-white/[0.12] bg-white/[0.04] text-white hover:border-[#D4AF37]/40'
-                  }`}
+                  className={paymentType === 'installment' ? 'bg-amber-500 hover:bg-amber-600' : ''}
                 >
-                  {t('transformation.payInstallments', { count: getInstallmentCount() })}
+                  {getInstallmentCount()} Installments
                 </Button>
               </div>
             )}
-
+            
             {paymentType === 'full' ? (
               <>
-                <div className="text-4xl font-black tracking-[-0.04em] text-gradient-gold mb-2 font-heading">
-                  €{currentSource.price_eur.toLocaleString()}
-                </div>
-                <p className="text-sm sqi-body-text mb-5">{t('transformation.oneTimeLifetime')}</p>
+                <div className="text-4xl font-bold text-foreground mb-2">€{currentSource.price_eur.toLocaleString()}</div>
+                <p className="text-sm text-muted-foreground mb-4">One-time payment • Lifetime access to materials</p>
               </>
             ) : (
               <>
-                <div className="text-4xl font-black tracking-[-0.04em] text-white mb-2 font-heading">
-                  €{currentSource.installment_price_eur.toLocaleString()}
-                  <span className="text-lg sqi-body-text font-normal">{t('transformation.perMonthShort')}</span>
+                <div className="text-4xl font-bold text-foreground mb-2">
+                  €{currentSource.installment_price_eur.toLocaleString()}<span className="text-lg">/month</span>
                 </div>
-                <p className="text-sm sqi-body-text mb-2">
-                  {t('transformation.installmentLine', {
-                    count: getInstallmentCount(),
-                    total: getTotalInstallmentPrice().toLocaleString(),
-                  })}
+                <p className="text-sm text-muted-foreground mb-2">
+                  {getInstallmentCount()} payments • Total: €{getTotalInstallmentPrice().toLocaleString()}
                 </p>
                 {getTotalInstallmentPrice() > currentSource.price_eur && (
-                  <p className="text-xs text-[#22D3EE] font-semibold mb-4 tracking-wide">
-                    {t('transformation.saveWithFull', {
-                      amount: (getTotalInstallmentPrice() - currentSource.price_eur).toLocaleString(),
-                    })}
+                  <p className="text-xs text-amber-500 mb-4">
+                    Save €{(getTotalInstallmentPrice() - currentSource.price_eur).toLocaleString()} with full payment!
                   </p>
                 )}
               </>
             )}
-
-            <Button
+            
+            <Button 
               onClick={handleEnroll}
               disabled={enrolling}
-              variant="gold"
-              className="w-full rounded-[40px] h-12 text-xs font-black tracking-[0.22em] uppercase shadow-[0_0_40px_-8px_rgba(212,175,55,0.45)]"
+              className="w-full bg-amber-500 hover:bg-amber-600 text-white"
               size="lg"
             >
-              {enrolling ? t('transformation.processing') : t('transformation.beginTransformation')}
+              {enrolling ? 'Processing...' : 'Begin Your Transformation'}
             </Button>
           </div>
         </Card>
@@ -420,19 +379,16 @@ const Transformation = () => {
 
       {/* What's Included */}
       <div className="px-4 py-6">
-        <h2 className="text-lg font-black tracking-[-0.05em] text-[#D4AF37] gold-glow mb-4 font-heading">{t('transformation.whatsIncluded')}</h2>
+        <h2 className="text-lg font-bold text-foreground mb-4">What's Included</h2>
         <div className="grid grid-cols-2 gap-3">
           {(selectedVariation?.features || program.features).map((feature, idx) => {
             const Icon = getFeatureIcon(feature);
             return (
-              <Card
-                key={idx}
-                className="p-4 flex items-start gap-3 border-white/[0.06] rounded-[28px] !rounded-[28px] shadow-[0_0_36px_-14px_rgba(212,175,55,0.12)] hover:border-[#D4AF37]/15"
-              >
-                <div className="p-2 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 shrink-0">
-                  <Icon className="w-5 h-5 text-[#D4AF37]" />
+              <Card key={idx} className="p-4 flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-amber-500/10">
+                  <Icon className="w-5 h-5 text-amber-500" />
                 </div>
-                <span className="text-sm sqi-body-text text-white/85 leading-snug">{feature}</span>
+                <span className="text-sm text-foreground leading-snug">{feature}</span>
               </Card>
             );
           })}
@@ -441,27 +397,25 @@ const Transformation = () => {
 
       {/* Modules */}
       <div className="px-4 py-6">
-        <h2 className="text-lg font-black tracking-[-0.05em] text-[#D4AF37] gold-glow mb-4 font-heading">{t('transformation.modulesHeading', { count: program.modules.length })}</h2>
+        <h2 className="text-lg font-bold text-foreground mb-4">The 3 Modules</h2>
         <Accordion type="single" collapsible className="space-y-3">
           {program.modules.map((module) => (
-            <AccordionItem
-              key={module.number}
-              value={`module-${module.number}`}
-              className="border border-white/[0.08] rounded-[28px] overflow-hidden bg-white/[0.02] backdrop-blur-[40px] data-[state=open]:border-[#D4AF37]/25"
-            >
+            <AccordionItem key={module.number} value={`module-${module.number}`} className="border rounded-lg overflow-hidden">
               <AccordionTrigger className="px-4 py-3 hover:no-underline">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full border border-[#22D3EE]/35 bg-[#22D3EE]/10 flex items-center justify-center text-[#22D3EE] font-black text-sm shadow-[0_0_20px_-6px_rgba(34,211,238,0.35)]">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-purple-500 flex items-center justify-center text-white font-bold">
                     {module.number}
                   </div>
-                  <div className="text-left min-w-0">
-                    <h3 className="font-black tracking-[-0.03em] text-white leading-snug">{module.name}</h3>
-                    <p className="text-xs sqi-body-text">{t('transformation.metaMonths', { count: module.duration_months })}</p>
+                  <div className="text-left">
+                    <h3 className="font-semibold text-foreground">{module.name}</h3>
+                    <p className="text-xs text-muted-foreground">{module.duration_months} months</p>
                   </div>
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-4 pb-4">
-                <p className="text-sm sqi-body-text pl-1 border-l border-[#D4AF37]/20 ml-2 py-1">{module.description}</p>
+                <p className="text-sm text-muted-foreground pl-13">
+                  {module.description}
+                </p>
               </AccordionContent>
             </AccordionItem>
           ))}
@@ -470,17 +424,16 @@ const Transformation = () => {
 
       {/* Daily Support Highlight */}
       <div className="px-4 py-6">
-        <Card className="p-6 border-[#D4AF37]/20 shadow-[0_0_48px_-14px_rgba(212,175,55,0.15)] rounded-[40px] !rounded-[40px]">
+        <Card className="p-6 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20">
           <div className="flex items-start gap-4">
-            <div className="p-3 rounded-full border border-[#22D3EE]/30 bg-[#22D3EE]/10 shrink-0">
-              <MessageCircle className="w-6 h-6 text-[#22D3EE]" />
+            <div className="p-3 rounded-full bg-green-500/20">
+              <MessageCircle className="w-6 h-6 text-green-500" />
             </div>
-            <div className="min-w-0">
-              <h3 className="font-black tracking-[-0.04em] text-[#D4AF37] gold-glow mb-2 text-base font-heading">{t('transformation.dailyWhatsappTitle')}</h3>
-              <p className="text-sm sqi-body-text">
-                {t('transformation.dailyWhatsappBody', {
-                  name: selectedPractitioner?.name || t('transformation.yourPractitionerFallback'),
-                })}
+            <div>
+              <h3 className="font-semibold text-foreground mb-2">Daily WhatsApp Connection</h3>
+              <p className="text-sm text-muted-foreground">
+                Stay connected with {selectedPractitioner?.name || 'your practitioner'} every day. Get guidance, share your experiences, 
+                and receive healing support whenever you need it throughout your transformation journey.
               </p>
             </div>
           </div>
@@ -489,79 +442,76 @@ const Transformation = () => {
 
       {/* Testimonial placeholder */}
       <div className="px-4 py-6">
-        <Card className="p-6 border border-dashed border-[#D4AF37]/25 bg-white/[0.02] rounded-[40px] !rounded-[40px] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+        <Card className="p-6 bg-muted/30 border-dashed">
           <div className="text-center">
-            <Users className="w-10 h-10 text-[#D4AF37] mx-auto mb-3 opacity-80" />
-            <p className="text-sm sqi-body-text italic">{t('transformation.testimonialQuote')}</p>
-            <p className="text-sm font-black tracking-[-0.02em] text-[#D4AF37] mt-4">{t('transformation.testimonialBy')}</p>
+            <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground italic">
+              "This program changed my life completely. The daily support and healing sessions 
+              helped me release years of trauma and step into my true power."
+            </p>
+            <p className="text-sm font-medium text-foreground mt-3">— Transformation Graduate</p>
           </div>
         </Card>
       </div>
 
       {/* Sticky CTA */}
-      <div className="fixed bottom-20 left-0 right-0 px-4 pb-4 z-[100] pointer-events-none">
-        <div className="max-w-lg mx-auto pointer-events-auto bg-gradient-to-t from-[#050505] via-[#050505]/96 to-transparent pt-10 pb-1">
-          <Button
-            onClick={handleEnroll}
-            disabled={enrolling}
-            variant="gold"
-            className="w-full rounded-[40px] h-12 text-xs font-black tracking-[0.18em] uppercase shadow-[0_0_48px_-8px_rgba(212,175,55,0.45)]"
-            size="lg"
-          >
-            {enrolling
-              ? t('transformation.processing')
-              : paymentType === 'full'
-                ? t('transformation.enrollNowFull', { price: currentSource.price_eur.toLocaleString() })
-                : t('transformation.enrollNowMonthly', { price: currentSource.installment_price_eur.toLocaleString() })}
-          </Button>
-        </div>
+      <div className="fixed bottom-20 left-0 right-0 px-4 pb-4 bg-gradient-to-t from-background via-background to-transparent pt-8">
+        <Button 
+          onClick={handleEnroll}
+          disabled={enrolling}
+          className="w-full bg-amber-500 hover:bg-amber-600 text-white shadow-lg"
+          size="lg"
+        >
+          {enrolling ? 'Processing...' : paymentType === 'full' 
+            ? `Enroll Now • €${currentSource.price_eur.toLocaleString()}`
+            : `Enroll Now • €${currentSource.installment_price_eur}/mo`
+          }
+        </Button>
       </div>
 
       {/* Payment Method Dialog */}
       <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-        <DialogContent className="max-w-md rounded-[40px] border border-white/[0.08] bg-white/[0.04] backdrop-blur-[40px] shadow-[0_0_56px_-8px_rgba(212,175,55,0.25)] sm:rounded-[40px]">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle className="font-black tracking-[-0.04em] text-[#D4AF37] gold-glow text-center">
-              {t('transformation.choosePaymentMethod')}
-            </DialogTitle>
+            <DialogTitle>Choose Payment Method</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div className="text-center mb-4">
-              <p className="text-sm sqi-body-text">
-                {(selectedVariation?.name || t('transformation.packageStandard')) +
-                  (selectedPractitioner ? t('transformation.withGuide', { name: selectedPractitioner.name }) : '')}
+              <p className="text-sm text-muted-foreground">
+                {selectedVariation?.name || 'Standard Package'}
+                {selectedPractitioner && ` with ${selectedPractitioner.name}`}
               </p>
-              <p className="text-2xl font-black tracking-[-0.03em] text-gradient-gold font-heading mt-2">
-                {paymentType === 'full'
+              <p className="text-2xl font-bold text-foreground">
+                {paymentType === 'full' 
                   ? `€${currentSource.price_eur.toLocaleString()}`
-                  : `€${currentSource.installment_price_eur}${t('transformation.perMonthShort')} × ${getInstallmentCount()}`}
+                  : `€${currentSource.installment_price_eur}/mo × ${getInstallmentCount()}`
+                }
               </p>
             </div>
-
-            <Button
+            
+            <Button 
               onClick={() => processPayment('card')}
               disabled={enrolling}
-              className="w-full rounded-[28px] bg-[#D4AF37] text-[#050505] hover:bg-[#D4AF37]/90 font-bold"
+              className="w-full"
               size="lg"
             >
               <CreditCard className="w-5 h-5 mr-2" />
-              {t('transformation.payWithCard')}
+              Pay with Card
             </Button>
-
-            <Button
+            
+            <Button 
               onClick={() => processPayment('crypto')}
               disabled={enrolling}
               variant="outline"
-              className="w-full rounded-[28px] border-white/[0.12] bg-white/[0.04] text-white hover:bg-white/[0.08] hover:border-[#22D3EE]/35 hover:text-[#22D3EE]"
+              className="w-full"
               size="lg"
             >
               <Wallet className="w-5 h-5 mr-2" />
-              {t('transformation.payWithCrypto')}
+              Pay with Crypto
             </Button>
           </div>
         </DialogContent>
       </Dialog>
-      </div>
     </div>
   );
 };
