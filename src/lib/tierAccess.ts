@@ -52,6 +52,7 @@ export const FEATURE_TIER = {
   virtualPilgrimage: 3,
   palmOracle: 3,
   akashicDecoder: 3,
+  templeHome: 3,
 } as const;
 
 /** Returns the correct sales page URL for a required tier rank */

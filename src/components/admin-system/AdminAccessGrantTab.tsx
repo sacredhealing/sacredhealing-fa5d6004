@@ -112,7 +112,7 @@ const MEMBERSHIP_TIERS: { value: string; label: string; summary: string }[] = [
 const TIER_LADDER = [
   { rank: 1, name: 'Prana-Flow', detail: 'Ayurveda · Vastu · Jyotish · Meditations · Mantras · Healing' },
   { rank: 2, name: 'Siddha-Quantum', detail: 'Prana + Siddha Portal · Digital Nadi · Sri Yantra · Soul Vault' },
-  { rank: 3, name: 'Akasha-Infinity', detail: 'Siddha + Quantum Apothecary · Pilgrimage · Palm Oracle · Decoder' },
+  { rank: 3, name: 'Akasha-Infinity', detail: 'Siddha + Quantum Apothecary · Pilgrimage · Palm Oracle · Decoder · Temple Home' },
 ];
 
 function logicalFeatureKey(access: GrantedAccess): string {

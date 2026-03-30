@@ -1395,6 +1395,6 @@ export default function TempleHome() {
     </div>
   );
   if (!user) return <Navigate to="/auth" replace />;
-  if (!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.virtualPilgrimage)) return <Navigate to="/akasha-infinity" replace />;
+  if (!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.templeHome)) return <Navigate to="/akasha-infinity" replace />;
   return <TempleHomeInner />;
 }
