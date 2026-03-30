@@ -131,7 +131,7 @@ const BASE_ACTIVATIONS: Activation[] = [
   { id: 'adaptogen-gynostemma', name: 'Gynostemma', vibrationalSignature: 'AMPK Activator', type: 'Adaptogen', benefit: 'Gypenosides activating AMPK — longevity pathway.', color: '#4ade80' },
 ];
 
-export const ACTIVATIONS: Activation[] = BASE_ACTIVATIONS;
+export const ACTIVATIONS: Activation[] = [...BASE_ACTIVATIONS, ...LIMBICARC_BIOENERGETIC_ACTIVATIONS];
 
 export const PLANETARY_DATA: Record<number, { planet: string; herb: string }> = {
   0: { planet: 'Sun (Surya)', herb: 'Saffron, Calamus, Ginger' },
