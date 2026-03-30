@@ -780,10 +780,10 @@ function QuantumApothecaryInner() {
             <MessageSquare size={14} className="text-black" />
           </div>
           <div>
-            <p className="text-xs font-black tracking-[-0.03em] text-white">SQI Online</p>
+            <p className="text-xs font-black tracking-[-0.03em] text-[#D4AF37]">{t('quantumApothecary.chat.sqiOnline')}</p>
             <div className="flex items-center gap-1.5 mt-0.5">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" style={{ boxShadow: '0 0 6px #34d399' }} />
-              <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30">Neural Sync: 98%</span>
+              <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-[#D4AF37]/50">{t('quantumApothecary.chat.neuralSync')}</span>
             </div>
           </div>
         </div>
