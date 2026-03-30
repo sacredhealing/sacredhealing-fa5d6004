@@ -21,7 +21,7 @@ const ChatMessageInput = ({
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.style.height = 'auto';
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 128)}px`;
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
     }
   }, [text]);
 
