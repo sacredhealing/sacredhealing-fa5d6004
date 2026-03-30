@@ -97,10 +97,10 @@ const MEMBERSHIP_TIERS: { value: string; label: string; summary: string }[] = [
     label: 'Siddha-Quantum',
     summary: 'Rank 2 — All Prana-Flow features plus Siddha Portal, Digital Nadi, Sri Yantra Shield, Soul Vault.',
   },
-  {
+   {
     value: 'akasha_infinity',
     label: 'Akasha-Infinity',
-    summary: 'Rank 3 — All Siddha-Quantum features plus Quantum Apothecary, Virtual Pilgrimage, Palm Oracle, Akashic Decoder.',
+    summary: 'Rank 3 — All Siddha-Quantum features plus Quantum Apothecary, Virtual Pilgrimage, Palm Oracle, Akashic Decoder, Temple Home.',
   },
   {
     value: 'lifetime',
