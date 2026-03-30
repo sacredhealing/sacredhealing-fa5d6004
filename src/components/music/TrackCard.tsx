@@ -92,7 +92,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
             )}
             {track.spiritual_path && (
               <span className="bg-purple-500/15 text-purple-400 px-1.5 py-0.5 rounded text-[10px] font-medium capitalize">
-                {tMusicSpiritualPath(track.spiritual_path, t)}
+                {tMusicSpiritualPath(track.spiritual_path, t as any)}
               </span>
             )}
             {track.intended_use && (
