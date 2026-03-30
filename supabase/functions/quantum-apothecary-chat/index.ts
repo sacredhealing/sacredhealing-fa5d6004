@@ -919,7 +919,7 @@ ${"═".repeat(60)}\n`;
 
     // ── Current session (last 12 messages) ──────────────────────────
     const rawMessagesForModel = rawMessages;
-    const recent         = rawMessagesForModel.slice(-12);
+    const recent         = rawMessagesForModel.slice(-24);
     const geminiMessages = recent.map((m: { role: string; content: string }, i: number) => {
       const isLastUser = i === recent.length - 1 && m.role === "user";
       const parts: { text?: string; inline_data?: { mime_type: string; data: string } }[] = [];
@@ -938,7 +938,7 @@ ${"═".repeat(60)}\n`;
       body: JSON.stringify({
         system_instruction: { parts: [{ text: systemText.trim() }] },
         contents: geminiMessages,
-        generationConfig: { temperature: 0.9, topK: 40, topP: 0.95, maxOutputTokens: 3072 },
+        generationConfig: { temperature: 0.9, topK: 40, topP: 0.95, maxOutputTokens: 8192 },
         safetySettings: [
           { category: "HARM_CATEGORY_HARASSMENT",       threshold: "BLOCK_NONE" },
           { category: "HARM_CATEGORY_HATE_SPEECH",       threshold: "BLOCK_NONE" },
