@@ -191,3 +191,6 @@ verify_jwt = false
 
 [functions.quantum-apothecary-chat]
 verify_jwt = false
+
+[functions.weekly-alignment-email]
+verify_jwt = false
