@@ -90,8 +90,11 @@ function addLocalDismissed(id: string) {
 
 export const AnnouncementPopup: React.FC = () => {
   const { user } = useAuth();
+  const { i18n } = useTranslation();
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+
+  const lang = resolveLang(i18n.language || 'en');
 
   const fetchAnnouncement = useCallback(async () => {
     const { data: announcements, error } = await supabase
@@ -104,7 +107,7 @@ export const AnnouncementPopup: React.FC = () => {
     if (error || !announcements?.length) return;
 
     const now = new Date();
-    const validAnnouncements = announcements.filter((a) => {
+    const validAnnouncements = announcements.filter((a: any) => {
       if (a.expires_at && new Date(a.expires_at) < now) return false;
       if (a.recurring === 'weekly') {
         const startDay = new Date(a.starts_at).getDay();
@@ -126,20 +129,17 @@ export const AnnouncementPopup: React.FC = () => {
       dismissals?.forEach((d) => dismissedIds.add(d.announcement_id));
     }
 
-    const unread = validAnnouncements.find((a) => !dismissedIds.has(a.id));
+    const unread = validAnnouncements.find((a: any) => !dismissedIds.has(a.id));
 
     if (unread) {
-      const row = unread as Announcement & { link_label?: string | null };
-      setAnnouncement({
-        ...row,
-        link_label: row.link_label ?? null,
-      });
+      const localized = localizeAnnouncement(unread as AnnouncementRow, lang);
+      setAnnouncement(localized);
       setIsVisible(true);
     } else {
       setAnnouncement(null);
       setIsVisible(false);
     }
-  }, [user]);
+  }, [user, lang]);
 
   useEffect(() => {
     fetchAnnouncement();
