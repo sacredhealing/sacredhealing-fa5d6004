@@ -1,199 +1,137 @@
 project_id = "ssygukfdbtehvtndandn"
 
-[functions.create-mastering-checkout]
-verify_jwt = true
-
-[functions.create-meditation-creation-checkout]
-verify_jwt = true
-
-[functions.create-meditation-audio-checkout]
-verify_jwt = true
-
-[functions.create-wealth-meditation-checkout]
-verify_jwt = true
-
-[functions.shc-transfer]
-verify_jwt = false
-
-[functions.purchase-music]
-verify_jwt = false
-
-[functions.create-healing-checkout]
-verify_jwt = false
-
-[functions.purchase-healing-audio]
-verify_jwt = false
-
-[functions.enroll-course]
-verify_jwt = false
-
-[functions.process-affiliate-commission]
-verify_jwt = false
-
-[functions.create-meditation-checkout]
-verify_jwt = false
-
-[functions.create-stargate-checkout]
-verify_jwt = false
-
-[functions.send-telegram-invite]
-verify_jwt = false
-
-[functions.create-certification-checkout]
-verify_jwt = false
-
-[functions.create-shop-checkout]
-verify_jwt = false
-
-[functions.distribute-monthly-rewards]
-verify_jwt = false
-
-[functions.create-affirmation-checkout]
-verify_jwt = false
-
-[functions.send-questionnaire-notification]
-verify_jwt = true
-
-[functions.create-transformation-checkout]
-verify_jwt = false
-
-[functions.create-music-membership-checkout]
-verify_jwt = true
-
-[functions.check-music-membership]
-verify_jwt = true
-
-[functions.create-meditation-membership-checkout]
-verify_jwt = true
-
-[functions.check-meditation-membership]
-verify_jwt = true
-
-[functions.generate-agora-token]
-verify_jwt = true
-
-[functions.create-sri-yantra-shield-checkout]
-verify_jwt = true
-
-[functions.stripe-webhook]
-verify_jwt = false
-
-[functions.fetch-shc-price]
-verify_jwt = false
-
-[functions.create-stripe-connect-account]
-verify_jwt = true
-
-[functions.check-stripe-connect-status]
-verify_jwt = true
-
-[functions.request-bank-payout]
-verify_jwt = true
-
-[functions.send-shc-p2p]
-verify_jwt = true
-
-[functions.notify-course-release]
-verify_jwt = true
-
-[functions.analyze-music-track]
-verify_jwt = true
-
-[functions.creative-soul-transcribe]
-verify_jwt = true
-
-[functions.creative-soul-ideas]
-verify_jwt = true
-
-[functions.creative-soul-image]
-verify_jwt = true
-
-[functions.creative-soul-pdf]
-verify_jwt = true
-
-[functions.creative-soul-youtube]
-verify_jwt = true
-
-[functions.creative-soul-translate]
-verify_jwt = true
-
-[functions.create-creative-tool-checkout]
-verify_jwt = true
-
-[functions.creative-soul-tool]
-verify_jwt = true
-
-[functions.convert-meditation-audio]
-verify_jwt = true
-
-[functions.get-job-status]
-verify_jwt = true
-
-[functions.worker-callback]
-verify_jwt = false
-
-[functions.stem-separation]
-verify_jwt = true
-
-[functions.audio-analysis]
-verify_jwt = true
-
-[functions.landr-mastering]
-verify_jwt = true
-
-[functions.noise-removal]
-verify_jwt = true
-
-[functions.creative-soul-create-checkout]
-verify_jwt = true
-
-[functions.process-mql-signal]
-verify_jwt = false
-
-[functions.sync-mql-trades]
-verify_jwt = true
-
-[functions.landr-master-meditation]
-verify_jwt = true
-
-[functions.dispatch-creative-soul-job]
-verify_jwt = true
-
-[functions.generate-vedic-reading]
-verify_jwt = true
-
-[functions.analyze-dosha]
-verify_jwt = true
-
-[functions.ayurveda-chat]
-verify_jwt = false
-
-[functions.vedic-guru-chat]
-verify_jwt = false
-
-[functions.translate-content]
-verify_jwt = false
-
-[functions.gemini-bridge]
-verify_jwt = false
-
-[functions.guide-chat]
-verify_jwt = true
-
-[functions.send-akashic-purchase-email]
-verify_jwt = true
-
-[functions.send-welcome-email]
-verify_jwt = false
-
-[functions.nadi-scan]
-verify_jwt = false
-
-[functions.quantum-apothecary-chat]
-verify_jwt = false
-
-[functions.weekly-alignment-email]
-verify_jwt = false
-
-[functions.process-email-queue]
-verify_jwt = true
+[functions]
+  [functions.analyze-dosha]
+    verify_jwt = true
+  [functions.analyze-music-track]
+    verify_jwt = true
+  [functions.audio-analysis]
+    verify_jwt = true
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.ayurveda-chat]
+    verify_jwt = false
+  [functions.check-meditation-membership]
+    verify_jwt = true
+  [functions.check-music-membership]
+    verify_jwt = true
+  [functions.check-stripe-connect-status]
+    verify_jwt = true
+  [functions.convert-meditation-audio]
+    verify_jwt = true
+  [functions.create-affirmation-checkout]
+    verify_jwt = false
+  [functions.create-certification-checkout]
+    verify_jwt = false
+  [functions.create-creative-tool-checkout]
+    verify_jwt = true
+  [functions.create-healing-checkout]
+    verify_jwt = false
+  [functions.create-mastering-checkout]
+    verify_jwt = true
+  [functions.create-meditation-audio-checkout]
+    verify_jwt = true
+  [functions.create-meditation-checkout]
+    verify_jwt = false
+  [functions.create-meditation-creation-checkout]
+    verify_jwt = true
+  [functions.create-meditation-membership-checkout]
+    verify_jwt = true
+  [functions.create-music-membership-checkout]
+    verify_jwt = true
+  [functions.create-shop-checkout]
+    verify_jwt = false
+  [functions.create-sri-yantra-shield-checkout]
+    verify_jwt = true
+  [functions.create-stargate-checkout]
+    verify_jwt = false
+  [functions.create-stripe-connect-account]
+    verify_jwt = true
+  [functions.create-transformation-checkout]
+    verify_jwt = false
+  [functions.create-wealth-meditation-checkout]
+    verify_jwt = true
+  [functions.creative-soul-create-checkout]
+    verify_jwt = true
+  [functions.creative-soul-ideas]
+    verify_jwt = true
+  [functions.creative-soul-image]
+    verify_jwt = true
+  [functions.creative-soul-pdf]
+    verify_jwt = true
+  [functions.creative-soul-tool]
+    verify_jwt = true
+  [functions.creative-soul-transcribe]
+    verify_jwt = true
+  [functions.creative-soul-translate]
+    verify_jwt = true
+  [functions.creative-soul-youtube]
+    verify_jwt = true
+  [functions.dispatch-creative-soul-job]
+    verify_jwt = true
+  [functions.distribute-monthly-rewards]
+    verify_jwt = false
+  [functions.enroll-course]
+    verify_jwt = false
+  [functions.fetch-shc-price]
+    verify_jwt = false
+  [functions.gemini-bridge]
+    verify_jwt = false
+  [functions.generate-agora-token]
+    verify_jwt = true
+  [functions.generate-vedic-reading]
+    verify_jwt = true
+  [functions.get-job-status]
+    verify_jwt = true
+  [functions.guide-chat]
+    verify_jwt = true
+  [functions.landr-master-meditation]
+    verify_jwt = true
+  [functions.landr-mastering]
+    verify_jwt = true
+  [functions.nadi-scan]
+    verify_jwt = false
+  [functions.noise-removal]
+    verify_jwt = true
+  [functions.notify-course-release]
+    verify_jwt = true
+  [functions.process-affiliate-commission]
+    verify_jwt = false
+  [functions.process-email-queue]
+    verify_jwt = true
+  [functions.process-mql-signal]
+    verify_jwt = false
+  [functions.purchase-healing-audio]
+    verify_jwt = false
+  [functions.purchase-music]
+    verify_jwt = false
+  [functions.quantum-apothecary-chat]
+    verify_jwt = false
+  [functions.request-bank-payout]
+    verify_jwt = true
+  [functions.send-akashic-purchase-email]
+    verify_jwt = true
+  [functions.send-questionnaire-notification]
+    verify_jwt = true
+  [functions.send-shc-p2p]
+    verify_jwt = true
+  [functions.send-telegram-invite]
+    verify_jwt = false
+  [functions.send-welcome-email]
+    verify_jwt = false
+  [functions.shc-transfer]
+    verify_jwt = false
+  [functions.stem-separation]
+    verify_jwt = true
+  [functions.stripe-webhook]
+    verify_jwt = false
+  [functions.sync-mql-trades]
+    verify_jwt = true
+  [functions.translate-content]
+    verify_jwt = false
+  [functions.vedic-guru-chat]
+    verify_jwt = false
+  [functions.weekly-alignment-email]
+    verify_jwt = false
+  [functions.worker-callback]
+    verify_jwt = false
