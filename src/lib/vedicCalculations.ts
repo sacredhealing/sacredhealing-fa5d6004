@@ -20,6 +20,8 @@ export interface DailyVedicInfluence {
   teacher: string;
 }
 
+type TFunction = (key: string, options?: Record<string, unknown> | string) => string;
+
 // Nakshatra mapping (27 Nakshatras)
 const NAKSHATRAS = [
   'Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira', 'Ardra',
@@ -241,6 +243,7 @@ export function getDominantPlanet(date: Date): string {
  * Generate daily Vedic influence based on current date and birth details
  */
 export function getDailyVedicInfluence(
+  t: TFunction,
   birthDetails?: BirthDetails,
   tier: 'basic' | 'premium' | 'master' = 'basic'
 ): DailyVedicInfluence {
@@ -261,13 +264,14 @@ export function getDailyVedicInfluence(
   const randomWisdom = wisdomList[Math.floor(Math.random() * wisdomList.length)];
 
   // Tier-based enhancements
-  let planetaryInfluence = `${planet} is prominent today, influencing your ${guidance.theme.toLowerCase()}.`;
+  const themeLower = guidance.theme.toLowerCase();
+  let planetaryInfluence = t('vedicAstrology.calc.planetaryInfluenceBase', { planet, theme: themeLower });
   
   if (tier === 'premium' || tier === 'master') {
-    planetaryInfluence += ` The planetary energies support ${guidance.do[0]?.toLowerCase() || 'your endeavors'}.`;
+    planetaryInfluence += ` ${t('vedicAstrology.calc.planetaryInfluencePremium', { action: (guidance.do[0] || t('vedicAstrology.calc.yourEndeavors')).toLowerCase() })}`;
     
     if (tier === 'master' && birthDetails) {
-      planetaryInfluence += ` Based on your birth chart, this is an auspicious time for ${guidance.theme.toLowerCase()}.`;
+      planetaryInfluence += ` ${t('vedicAstrology.calc.planetaryInfluenceMaster', { theme: themeLower })}`;
     }
   }
 
@@ -286,6 +290,7 @@ export function getDailyVedicInfluence(
  * Generate detailed daily guidance for Premium tier
  */
 export function getPremiumDailyGuidance(
+  t: TFunction,
   birthDetails?: BirthDetails,
   date: Date = new Date()
 ): {
@@ -295,25 +300,40 @@ export function getPremiumDailyGuidance(
   health: string;
   finances: string;
 } {
-  const influence = getDailyVedicInfluence(birthDetails, 'premium');
+  const influence = getDailyVedicInfluence(t, birthDetails, 'premium');
   
-  const personalized = birthDetails 
-    ? `Based on your birth chart, today's ${influence.nakshatra} energy is particularly aligned with your personal dharma.`
-    : `Today's cosmic energies support ${influence.theme.toLowerCase()}. Add your birth details for personalized guidance.`;
+  const personalized = birthDetails
+    ? t('vedicAstrology.calc.premium.personalizedWithBirth', { nakshatra: influence.nakshatra })
+    : t('vedicAstrology.calc.premium.personalizedNoBirth', { theme: influence.theme.toLowerCase() });
   
   return {
     personalizedMessage: personalized,
-    career: `Today's ${influence.nakshatra} energy supports ${influence.theme.toLowerCase()}. ${influence.do[0]} in your professional life. Focus on meaningful work that aligns with your higher purpose.`,
-    relationships: `In relationships, focus on ${influence.do[1] || influence.do[0]}. The planetary alignment encourages open communication and deep connection. Avoid ${influence.avoid[0] || 'conflict'}.`,
-    health: `For health, ${influence.do[0]?.toLowerCase() || 'maintain balance'}. Follow Ayurvedic principles aligned with today's planetary influence. Practice grounding activities and mindful breathing.`,
-    finances: `Financial matters are supported by ${influence.theme.toLowerCase()}. ${influence.do[2] || 'Plan wisely'}. This is a good time for reviewing budgets and long-term planning.`,
+    career: t('vedicAstrology.calc.premium.career', {
+      nakshatra: influence.nakshatra,
+      theme: influence.theme.toLowerCase(),
+      action: influence.do[0] || t('vedicAstrology.calc.takeAlignedAction'),
+    }),
+    relationships: t('vedicAstrology.calc.premium.relationships', {
+      action: influence.do[1] || influence.do[0] || t('vedicAstrology.calc.practiceHarmony'),
+      avoid: influence.avoid[0] || t('vedicAstrology.calc.conflict'),
+    }),
+    health: t('vedicAstrology.calc.premium.health', {
+      action: (influence.do[0] || t('vedicAstrology.calc.maintainBalance')).toLowerCase(),
+    }),
+    finances: t('vedicAstrology.calc.premium.finances', {
+      theme: influence.theme.toLowerCase(),
+      action: influence.do[2] || t('vedicAstrology.calc.planWisely'),
+    }),
   };
 }
 
 /**
  * Generate Master tier deep reading (simplified - in production use full chart calculations)
  */
-export function getMasterDeepReading(birthDetails?: BirthDetails): {
+export function getMasterDeepReading(
+  t: TFunction,
+  birthDetails?: BirthDetails
+): {
   soulPurpose: string;
   karmaPatterns: string;
   strengths: string;
@@ -325,28 +345,36 @@ export function getMasterDeepReading(birthDetails?: BirthDetails): {
   const nakshatra = calculateMoonNakshatra(today);
   const planet = getDominantPlanet(today);
   
-  const personalized = birthDetails?.name 
-    ? `${birthDetails.name}, your` 
-    : 'Your';
+  const displayName = birthDetails?.name ? birthDetails.name : '';
+  const namePrefix = displayName ? `${displayName}, your` : 'Your';
   
-  const locationInfluence = birthDetails?.place 
-    ? `The energies of ${birthDetails.place} have shaped your early karmic imprints.` 
-    : 'Your birth location holds keys to understanding your karmic geography.';
+  const locationInfluence = birthDetails?.place
+    ? t('vedicAstrology.calc.master.locationWithPlace', { place: birthDetails.place })
+    : t('vedicAstrology.calc.master.locationNoPlace');
+
+  const timingQuarter =
+    ['January–March', 'April–June', 'July–September', 'October–December'][Math.floor(today.getMonth() / 3)];
 
   return {
-    soulPurpose: `${personalized} birth chart reveals a profound dharmic path centered on service, wisdom, and spiritual evolution. Your soul chose this incarnation to master the lessons of ${nakshatra}, bringing healing and transformation to those around you. The ${planet} influence in your chart suggests a natural ability to inspire others through authentic self-expression.`,
+    soulPurpose: t('vedicAstrology.calc.master.soulPurpose', { namePrefix, nakshatra, planet }),
     
-    karmaPatterns: `Past life patterns indicate significant work in spiritual traditions and leadership roles. ${locationInfluence} Current karmic themes involve balancing material responsibilities with spiritual aspirations. The nodes of the Moon (Rahu-Ketu axis) suggest a journey from worldly attachments toward inner liberation and selfless service.`,
+    karmaPatterns: t('vedicAstrology.calc.master.karmaPatterns', { locationInfluence }),
     
-    strengths: `Your chart reveals exceptional gifts in intuitive understanding, compassionate leadership, and the ability to see beyond surface appearances. Natural talents include deep listening, creative problem-solving, and the capacity to hold space for transformation. The ${planet} energy amplifies your ability to communicate wisdom effectively.`,
+    strengths: t('vedicAstrology.calc.master.strengths', { planet }),
     
-    challenges: `Areas requiring conscious attention include patience with slower processes, releasing attachment to specific outcomes, and balancing personal needs with service to others. The shadow side of ${nakshatra} may manifest as occasional restlessness or scattered focus. Regular grounding practices are recommended.`,
+    challenges: t('vedicAstrology.calc.master.challenges', { nakshatra }),
     
-    timingPeaks: `Current planetary cycles indicate a significant period of transformation and growth through ${new Date().getFullYear() + 2}. Major life opportunities are supported in ${['January-March', 'April-June', 'July-September', 'October-December'][Math.floor(today.getMonth() / 3)]}. The ${planet} transit particularly favors new beginnings, spiritual practices, and meaningful connections.`,
+    timingPeaks: t('vedicAstrology.calc.master.timingPeaks', { year: String(new Date().getFullYear() + 2), quarter: timingQuarter, planet }),
     
     birthChartSummary: birthDetails 
-      ? `Birth Chart Analysis for ${birthDetails.name}: Born on ${birthDetails.date} at ${birthDetails.time} in ${birthDetails.place}. Your ascendant sign shapes your life approach, while the Moon sign in ${nakshatra} reveals your emotional nature. The planetary positions at your birth create a unique cosmic signature that influences your life path, relationships, and spiritual evolution.`
-      : `Add your complete birth details (date, time, and place) to receive your personalized birth chart analysis. This detailed reading will reveal your ascendant sign, Moon nakshatra, planetary positions, and the unique cosmic blueprint that guides your soul's journey.`,
+      ? t('vedicAstrology.calc.master.birthChartSummaryWithBirth', {
+          name: birthDetails.name,
+          date: birthDetails.date,
+          time: birthDetails.time,
+          place: birthDetails.place,
+          nakshatra,
+        })
+      : t('vedicAstrology.calc.master.birthChartSummaryNoBirth'),
   };
 }
 

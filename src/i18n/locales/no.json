@@ -2347,6 +2347,36 @@
     "membershipPremiumMonthly": "Premium månedlig",
     "membershipPremiumAnnual": "Premium årlig",
     "membershipLifetime": "Livstid",
+    "calc": {
+      "planetaryInfluenceBase": "{{planet}} er fremtredende i dag og påvirker din {{theme}}.",
+      "planetaryInfluencePremium": "De planetariske energiene støtter {{action}}.",
+      "planetaryInfluenceMaster": "Basert på fødselshoroskopet ditt er dette en gunstig tid for {{theme}}.",
+      "yourEndeavors": "dine bestrebelser",
+      "takeAlignedAction": "handle i samsvar",
+      "practiceHarmony": "dyrke harmoni",
+      "conflict": "konflikt",
+      "maintainBalance": "opprettholde balanse",
+      "planWisely": "Planlegg klokt",
+      "premium": {
+        "personalizedWithBirth": "Basert på fødselshoroskopet ditt er dagens {{nakshatra}}-energi spesielt i tråd med din personlige dharma.",
+        "personalizedNoBirth": "Dagens kosmiske energier støtter {{theme}}. Legg til fødselsdataene dine for personlig veiledning.",
+        "career": "Dagens {{nakshatra}}-energi støtter {{theme}}. {{action}} i yrkeslivet ditt. Fokuser på meningsfylt arbeid som er i tråd med ditt høyere formål.",
+        "relationships": "I relasjoner, fokuser på {{action}}. Den planetariske justeringen oppmuntrer åpen kommunikasjon og dyp kontakt. Unngå {{avoid}}.",
+        "health": "For helse: {{action}}. Følg ayurvediske prinsipper i tråd med dagens planetariske påvirkning. Praktiser jording og bevisst pust.",
+        "finances": "Økonomiske spørsmål støttes av {{theme}}. {{action}}. Dette er et godt tidspunkt å se over budsjett og langsiktig planlegging."
+      },
+      "master": {
+        "locationWithPlace": "Energiene i {{place}} har formet dine tidlige karmiske avtrykk.",
+        "locationNoPlace": "Fødestedet ditt bærer nøkler til å forstå din karmiske geografi.",
+        "soulPurpose": "{{namePrefix}} fødselshoroskop viser en dyp dharmisk vei sentrert rundt tjeneste, visdom og åndelig utvikling. Sjelen din valgte denne inkarnasjonen for å mestre leksjonene i {{nakshatra}} og bringe helbredelse og transformasjon til de rundt deg. {{planet}}-innflytelsen i horoskopet ditt tyder på en naturlig evne til å inspirere andre gjennom autentisk selvuttrykk.",
+        "karmaPatterns": "Mønstre fra tidligere liv indikerer betydelig arbeid i åndelige tradisjoner og lederroller. {{locationInfluence}} Nåværende karmiske temaer handler om å balansere materielle ansvar med åndelige aspirasjoner. Månens noder (Rahu–Ketu-aksen) antyder en reise fra verdslige bindinger mot indre frigjøring og uselvisk tjeneste.",
+        "strengths": "Horoskopet ditt viser sterke gaver i intuitiv forståelse, medfølende lederskap og evnen til å se forbi overflaten. Naturlige talenter inkluderer dyp lytting, kreativ problemløsning og å holde rom for transformasjon. {{planet}}-energien forsterker evnen din til å formidle visdom effektivt.",
+        "challenges": "Områder som krever bevisst oppmerksomhet inkluderer tålmodighet i langsommere prosesser, å slippe tak i spesifikke utfall og å balansere egne behov med tjeneste for andre. Skyggesiden av {{nakshatra}} kan vise seg som rastløshet eller spredt fokus. Regelmessig jording anbefales.",
+        "timingPeaks": "Nåværende planetariske sykluser indikerer en betydelig periode med transformasjon og vekst frem til {{year}}. Store livsmuligheter støttes i {{quarter}}. {{planet}}-transitten favoriserer spesielt nye begynnelser, åndelig praksis og meningsfulle forbindelser.",
+        "birthChartSummaryWithBirth": "Fødselshoroskop for {{name}}: Født {{date}} kl. {{time}} i {{place}}. Ascendenten former livstilnærmingen din, mens Månen i {{nakshatra}} viser din følelsesmessige natur. Planetposisjonene ved fødsel skaper en unik kosmisk signatur som påvirker livsveien din, relasjoner og åndelig utvikling.",
+        "birthChartSummaryNoBirth": "Legg til fullstendige fødselsdata (dato, tid og sted) for å få en personlig analyse. Den vil vise ascendent, måne‑nakshatra, planetposisjoner og den kosmiske blueprinten som veileder sjelens reise."
+      }
+    },
     "sacredHeaderClose": "Lukk ↑",
     "sacredHeaderOpen": "Fødselsdata ↓",
     "sacredHeaderLastSynced": "Sist synket: {{time}}",

@@ -2443,6 +2443,36 @@
     "membershipPremiumMonthly": "Premium mensual",
     "membershipPremiumAnnual": "Premium anual",
     "membershipLifetime": "De por vida",
+    "calc": {
+      "planetaryInfluenceBase": "{{planet}} está prominente hoy, influyendo en tu {{theme}}.",
+      "planetaryInfluencePremium": "Las energías planetarias apoyan {{action}}.",
+      "planetaryInfluenceMaster": "Según tu carta natal, este es un momento auspicioso para {{theme}}.",
+      "yourEndeavors": "tus esfuerzos",
+      "takeAlignedAction": "actuar en alineación",
+      "practiceHarmony": "practicar la armonía",
+      "conflict": "conflicto",
+      "maintainBalance": "mantener el equilibrio",
+      "planWisely": "Planifica con sabiduría",
+      "premium": {
+        "personalizedWithBirth": "Según tu carta natal, la energía de {{nakshatra}} de hoy está especialmente alineada con tu dharma personal.",
+        "personalizedNoBirth": "Las energías cósmicas de hoy apoyan {{theme}}. Añade tus datos de nacimiento para una guía personalizada.",
+        "career": "La energía de {{nakshatra}} de hoy apoya {{theme}}. {{action}} en tu vida profesional. Enfócate en un trabajo con sentido que se alinee con tu propósito superior.",
+        "relationships": "En relaciones, enfócate en {{action}}. La alineación planetaria favorece comunicación abierta y conexión profunda. Evita {{avoid}}.",
+        "health": "Para la salud, {{action}}. Sigue principios ayurvédicos alineados con la influencia planetaria de hoy. Practica actividades de enraizamiento y respiración consciente.",
+        "finances": "Los asuntos financieros están apoyados por {{theme}}. {{action}}. Es un buen momento para revisar presupuestos y planificar a largo plazo."
+      },
+      "master": {
+        "locationWithPlace": "Las energías de {{place}} han moldeado tus improntas kármicas tempranas.",
+        "locationNoPlace": "Tu lugar de nacimiento contiene claves para comprender tu geografía kármica.",
+        "soulPurpose": "{{namePrefix}} carta natal revela un profundo camino dhármico centrado en servicio, sabiduría y evolución espiritual. Tu alma eligió esta encarnación para dominar las lecciones de {{nakshatra}}, trayendo sanación y transformación a tu entorno. La influencia de {{planet}} en tu carta sugiere una habilidad natural para inspirar a otros mediante una autoexpresión auténtica.",
+        "karmaPatterns": "Patrones de vidas pasadas indican un trabajo significativo en tradiciones espirituales y roles de liderazgo. {{locationInfluence}} Los temas kármicos actuales implican equilibrar responsabilidades materiales con aspiraciones espirituales. Los nodos de la Luna (eje Rahu-Ketu) sugieren un viaje desde apegos mundanos hacia liberación interior y servicio desinteresado.",
+        "strengths": "Tu carta revela dones excepcionales de comprensión intuitiva, liderazgo compasivo y la capacidad de ver más allá de las apariencias. Talentos naturales incluyen escucha profunda, resolución creativa de problemas y sostener espacio para la transformación. La energía de {{planet}} amplifica tu capacidad de comunicar sabiduría con eficacia.",
+        "challenges": "Áreas que requieren atención consciente incluyen paciencia con procesos lentos, soltar el apego a resultados específicos y equilibrar necesidades personales con el servicio a otros. La sombra de {{nakshatra}} puede manifestarse como inquietud ocasional o enfoque disperso. Se recomiendan prácticas regulares de enraizamiento.",
+        "timingPeaks": "Los ciclos planetarios actuales indican un período significativo de transformación y crecimiento hasta {{year}}. Las principales oportunidades de vida se apoyan en {{quarter}}. El tránsito de {{planet}} favorece especialmente nuevos comienzos, prácticas espirituales y conexiones significativas.",
+        "birthChartSummaryWithBirth": "Análisis de carta natal para {{name}}: Nacido/a el {{date}} a las {{time}} en {{place}}. Tu ascendente moldea tu enfoque de vida, mientras que la Luna en {{nakshatra}} revela tu naturaleza emocional. Las posiciones planetarias al nacer crean una firma cósmica única que influye en tu camino, relaciones y evolución espiritual.",
+        "birthChartSummaryNoBirth": "Añade tus datos completos de nacimiento (fecha, hora y lugar) para recibir tu análisis personalizado. Revelará ascendente, nakshatra lunar, posiciones planetarias y el plano cósmico que guía el viaje de tu alma."
+      }
+    },
     "sacredHeaderClose": "Cerrar ↑",
     "sacredHeaderOpen": "Datos de nacimiento ↓",
     "sacredHeaderLastSynced": "Última sincronización: {{time}}",

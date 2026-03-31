@@ -81,12 +81,12 @@ export const DailyVedicInsight: React.FC<DailyVedicInsightProps> = ({ tier }) =>
     );
   }
 
-  const dailyInfluence = getDailyVedicInfluence(birthDetails || undefined, tier);
+  const dailyInfluence = getDailyVedicInfluence(t, birthDetails || undefined, tier);
   const premiumGuidance = (tier === 'premium' || tier === 'master')
-    ? getPremiumDailyGuidance(birthDetails || undefined)
+    ? getPremiumDailyGuidance(t, birthDetails || undefined)
     : null;
   const masterReading = tier === 'master'
-    ? getMasterDeepReading(birthDetails || undefined)
+    ? getMasterDeepReading(t, birthDetails || undefined)
     : null;
 
   return (
