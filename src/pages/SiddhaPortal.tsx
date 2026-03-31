@@ -79,6 +79,13 @@ export default function SiddhaPortal() {
         <button style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.95)', background: 'none', border: 'none', cursor: 'pointer' }}>{t('siddhaPortal.hairGrowthCta')}</button>
       </div>
 
+      <div onClick={() => navigate('/sovereign-hormonal-alchemy')} style={{ margin: '0 16px 16px', background: 'linear-gradient(135deg,rgba(212,175,55,0.06),rgba(34,211,238,0.04))', border: '1px solid rgba(212,175,55,0.22)', borderRadius: 20, padding: '18px 16px', cursor: 'pointer', position: 'relative' }}>
+        <span style={{ position: 'absolute', top: 10, right: 10, fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', background: 'rgba(212,175,55,0.18)', border: '1px solid rgba(212,175,55,0.32)', color: 'rgba(212,175,55,0.95)', borderRadius: 20, padding: '2px 7px' }}>NEW</span>
+        <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 8, fontWeight: 800, letterSpacing: '0.32em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.92)', marginBottom: 6 }}>Sovereign · Hormonal Alchemy</div>
+        <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.88rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5, marginBottom: 12 }}>Elite menstruation + hormonal balance module with Jyotish sync and dosha-phase protocol.</p>
+        <button style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase', color: 'rgba(34,211,238,0.9)', background: 'none', border: 'none', cursor: 'pointer' }}>Enter Module →</button>
+      </div>
+
       <div onClick={() => navigate('/akasha-neural-weaver')} style={{ margin: '0 16px 16px', background: 'linear-gradient(135deg,rgba(212,175,55,0.07),rgba(212,175,55,0.02))', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 20, padding: '18px 16px', cursor: 'pointer', position: 'relative' }}>
         <span style={{ position: 'absolute', top: 10, right: 10, fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', background: 'rgba(212,175,55,0.18)', border: '1px solid rgba(212,175,55,0.3)', color: 'rgba(212,175,55,0.8)', borderRadius: 20, padding: '2px 7px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
           <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#D4AF37', animation: 'sqLiveFlash 2s infinite', display: 'inline-block' }} />SQI
