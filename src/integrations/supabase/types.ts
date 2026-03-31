@@ -717,6 +717,9 @@ export type Database = {
       announcements: {
         Row: {
           audio_url: string | null
+          content_es: string | null
+          content_no: string | null
+          content_sv: string | null
           created_at: string
           expires_at: string | null
           id: string
@@ -727,10 +730,16 @@ export type Database = {
           recurring: string | null
           starts_at: string
           title: string
+          title_es: string | null
+          title_no: string | null
+          title_sv: string | null
           type: string
         }
         Insert: {
           audio_url?: string | null
+          content_es?: string | null
+          content_no?: string | null
+          content_sv?: string | null
           created_at?: string
           expires_at?: string | null
           id?: string
@@ -741,10 +750,16 @@ export type Database = {
           recurring?: string | null
           starts_at?: string
           title: string
+          title_es?: string | null
+          title_no?: string | null
+          title_sv?: string | null
           type?: string
         }
         Update: {
           audio_url?: string | null
+          content_es?: string | null
+          content_no?: string | null
+          content_sv?: string | null
           created_at?: string
           expires_at?: string | null
           id?: string
@@ -755,6 +770,9 @@ export type Database = {
           recurring?: string | null
           starts_at?: string
           title?: string
+          title_es?: string | null
+          title_no?: string | null
+          title_sv?: string | null
           type?: string
         }
         Relationships: []
