@@ -53,7 +53,7 @@ function getLocalized(
 }
 
 async function listAllAuthUsers(
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
 ): Promise<{ id: string; email: string | undefined }[]> {
   const out: { id: string; email: string | undefined }[] = [];
   let page = 1;
