@@ -5257,6 +5257,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_activity_log: {
+        Row: {
+          activity_data: Json | null
+          activity_type: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          activity_data?: Json | null
+          activity_type: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          activity_data?: Json | null
+          activity_type?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_balances: {
         Row: {
           balance: number
@@ -5860,6 +5884,33 @@ export type Database = {
           user_id?: string
           wallet_address?: string
           wallet_type?: string
+        }
+        Relationships: []
+      }
+      user_weekly_email_log: {
+        Row: {
+          email_sent_at: string
+          email_type: string
+          id: string
+          segment: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          email_sent_at?: string
+          email_type?: string
+          id?: string
+          segment: string
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          email_sent_at?: string
+          email_type?: string
+          id?: string
+          segment?: string
+          user_id?: string
+          week_start?: string
         }
         Relationships: []
       }
