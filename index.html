@@ -9,6 +9,9 @@
     <meta name="author" content="Siddha Quantum Nexus" />
     <meta name="theme-color" content="#8A2BE2" />
     <meta name="google-site-verification" content="googlea196464a6c9e0ab7" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
 
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
@@ -51,21 +54,5 @@
   <body class="dark" style="background: #030303; min-height: 100vh;">
     <div id="root" style="min-height: 100vh;"></div>
     <script type="module" src="/src/main.tsx"></script>
-    
-    <!-- Unregister stale service workers and clear caches to prevent serving old versions -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-          registrations.forEach(function(registration) {
-            registration.unregister();
-          });
-        });
-        if ('caches' in window) {
-          caches.keys().then(function(names) {
-            names.forEach(function(name) { caches.delete(name); });
-          });
-        }
-      }
-    </script>
   </body>
 </html>

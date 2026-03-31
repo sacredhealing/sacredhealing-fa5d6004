@@ -377,35 +377,54 @@ function AppRoutes() {
   );
 }
 
-const App = () => (
-  <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <SHCProvider>
-          <MusicPlayerProvider>
-            <GitaTransitionOverlay />
-            <AmbientAudioProvider>
-              <Toaster />
-              <Sonner />
-              <DebugBanner />
-              <ProfileLanguageSync />
-              <Suspense
-                fallback={
-                  <div className="min-h-screen flex items-center justify-center bg-[#030303]" style={{ background: "radial-gradient(ellipse at 15% 20%, rgba(30, 27, 75, 0.7) 0%, transparent 50%), #030303" }}>
-                    <Loader2 className="w-10 h-10 animate-spin text-[#00F2FE]" />
-                  </div>
-                }
-              >
-              <BrowserRouter>
-                  <AppRoutes />
-                </BrowserRouter>
-              </Suspense>
-            </AmbientAudioProvider>
-          </MusicPlayerProvider>
-        </SHCProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </ErrorBoundary>
-);
+function App() {
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      registrations.forEach((reg) => {
+        reg.addEventListener("updatefound", () => {
+          const newWorker = reg.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener("statechange", () => {
+            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+              window.location.reload();
+            }
+          });
+        });
+      });
+    });
+  }, []);
+
+  return (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <SHCProvider>
+            <MusicPlayerProvider>
+              <GitaTransitionOverlay />
+              <AmbientAudioProvider>
+                <Toaster />
+                <Sonner />
+                <DebugBanner />
+                <ProfileLanguageSync />
+                <Suspense
+                  fallback={
+                    <div className="min-h-screen flex items-center justify-center bg-[#030303]" style={{ background: "radial-gradient(ellipse at 15% 20%, rgba(30, 27, 75, 0.7) 0%, transparent 50%), #030303" }}>
+                      <Loader2 className="w-10 h-10 animate-spin text-[#00F2FE]" />
+                    </div>
+                  }
+                >
+                  <BrowserRouter>
+                    <AppRoutes />
+                  </BrowserRouter>
+                </Suspense>
+              </AmbientAudioProvider>
+            </MusicPlayerProvider>
+          </SHCProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
+  );
+}
 
 export default App;
