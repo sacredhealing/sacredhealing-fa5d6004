@@ -68,17 +68,14 @@ serve(async (req) => {
     // ── Fetch all profiles ──
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
-      .select("user_id, full_name, email, preferred_language");
+      .select("user_id, full_name, preferred_language");
     if (profilesError) throw new Error(`Profiles fetch failed: ${profilesError.message}`);
 
-    // Resolve emails from auth for profiles missing email
+    // Resolve emails from auth.users
     const profilesWithEmail = await Promise.all(
       (profiles || []).map(async (p) => {
-        let email = p.email;
-        if (!email) {
-          const { data: authUser } = await supabase.auth.admin.getUserById(p.user_id);
-          email = authUser?.user?.email || null;
-        }
+        const { data: authUser } = await supabase.auth.admin.getUserById(p.user_id);
+        const email = authUser?.user?.email || null;
         return { ...p, email, language: (p.preferred_language === "sv" ? "sv" : "en") as "sv" | "en" };
       })
     );
