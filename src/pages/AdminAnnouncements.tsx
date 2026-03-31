@@ -253,6 +253,15 @@ export default function AdminAnnouncements() {
         .single();
       if (error) throw error;
 
+      // Auto-translate title + message into sv, no, es
+      if (saved?.id) {
+        supabase.functions.invoke('translate-announcement', {
+          body: { announcement_id: saved.id, title, content: message },
+        }).then(({ error: trErr }) => {
+          if (trErr) console.error('translate-announcement:', trErr);
+        });
+      }
+
       let emailBlastFailed = false;
       if (saved?.id) {
         const { error: emailFnError } = await supabase.functions.invoke('send-announcement-email', {
