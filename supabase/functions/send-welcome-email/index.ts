@@ -396,7 +396,7 @@ const handler = async (req: Request): Promise<Response> => {
     const html = buildEmailHtml(t, displayName, "https://sacredhealing.lovable.app/dashboard");
 
     const result = await resend.emails.send({
-      from: "Sacred Healing <onboarding@resend.dev>",
+      from: Deno.env.get("EMAIL_FROM") || "Sacred Healing <onboarding@resend.dev>",
       to: [email],
       subject: t.subject,
       html,
