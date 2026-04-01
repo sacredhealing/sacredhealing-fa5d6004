@@ -90,11 +90,11 @@ function addLocalDismissed(id: string) {
 
 export const AnnouncementPopup: React.FC = () => {
   const { user } = useAuth();
-  const { i18n } = useTranslation();
+  const { profile } = useProfile();
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
-  const lang = resolveLang(i18n.language || 'en');
+  const lang = resolveLang(profile?.preferred_language || 'en');
 
   const fetchAnnouncement = useCallback(async () => {
     const { data: announcements, error } = await supabase
