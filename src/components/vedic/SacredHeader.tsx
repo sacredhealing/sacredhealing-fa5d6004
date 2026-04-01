@@ -56,7 +56,7 @@ export const SacredHeader: React.FC<SacredHeaderProps> = ({
         <div
           className="px-6 pb-5 border-t border-amber-900/20 bg-[#0d0d14] animate-in slide-in-from-top duration-300"
           role="region"
-          aria-label="Birth details"
+          aria-label={t('vedicAstrology.sacredHeaderBirthDetailsAria')}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
             <div className="text-sm text-amber-200/50 space-y-1">

@@ -404,56 +404,59 @@ const OrbitRing: React.FC<{ size?: number; speed?: number; planetColor?: string;
 
 // ── Navagraha Strip ─────────────────────────────────────────────
 const GRAHAS = [
-  { sym: '☉', name: 'Surya', color: '#FFB347' },
-  { sym: '☽', name: 'Chandra', color: '#C8E6FF' },
-  { sym: '♂', name: 'Mangala', color: '#FF6B6B' },
-  { sym: '☿', name: 'Budha', color: '#7AFFD4' },
-  { sym: '♃', name: 'Guru', color: '#FFD700' },
-  { sym: '♀', name: 'Shukra', color: '#FFB6C1' },
-  { sym: '♄', name: 'Shani', color: '#B0C4DE' },
-  { sym: 'Rā', name: 'Rahu', color: '#9B59B6' },
-  { sym: 'Ke', name: 'Ketu', color: '#E67E22' },
-];
+  { sym: '☉', key: 'surya', color: '#FFB347' },
+  { sym: '☽', key: 'chandra', color: '#C8E6FF' },
+  { sym: '♂', key: 'mangala', color: '#FF6B6B' },
+  { sym: '☿', key: 'budha', color: '#7AFFD4' },
+  { sym: '♃', key: 'guru', color: '#FFD700' },
+  { sym: '♀', key: 'shukra', color: '#FFB6C1' },
+  { sym: '♄', key: 'shani', color: '#B0C4DE' },
+  { sym: 'Rā', key: 'rahu', color: '#9B59B6' },
+  { sym: 'Ke', key: 'ketu', color: '#E67E22' },
+] as const;
 
-const NavagrahaStrip: React.FC = () => (
-  <div
-    style={{
-      display: 'flex',
-      gap: 8,
-      justifyContent: 'center',
-      flexWrap: 'wrap',
-      padding: '12px 0',
-    }}
-  >
-    {GRAHAS.map((g) => (
-      <div
-        key={g.name}
-        style={{
-          background: `rgba(${g.color === '#FFD700' ? '212,175,55' : '255,255,255'},0.03)`,
-          border: '1px solid rgba(255,255,255,0.06)',
-          borderRadius: 12,
-          padding: '6px 12px',
-          textAlign: 'center',
-          minWidth: 44,
-        }}
-      >
-        <div style={{ fontSize: 16, color: g.color, opacity: 0.85 }}>{g.sym}</div>
+const NavagrahaStrip: React.FC = () => {
+  const { t } = useTranslation();
+  return (
+    <div
+      style={{
+        display: 'flex',
+        gap: 8,
+        justifyContent: 'center',
+        flexWrap: 'wrap',
+        padding: '12px 0',
+      }}
+    >
+      {GRAHAS.map((g) => (
         <div
+          key={g.key}
           style={{
-            fontSize: 7,
-            fontWeight: 800,
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-            color: 'rgba(255,255,255,0.35)',
-            marginTop: 2,
+            background: `rgba(${g.color === '#FFD700' ? '212,175,55' : '255,255,255'},0.03)`,
+            border: '1px solid rgba(255,255,255,0.06)',
+            borderRadius: 12,
+            padding: '6px 12px',
+            textAlign: 'center',
+            minWidth: 44,
           }}
         >
-          {g.name}
+          <div style={{ fontSize: 16, color: g.color, opacity: 0.85 }}>{g.sym}</div>
+          <div
+            style={{
+              fontSize: 7,
+              fontWeight: 800,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              color: 'rgba(255,255,255,0.35)',
+              marginTop: 2,
+            }}
+          >
+            {t(`vedicAstrology.grahas.${g.key}`)}
+          </div>
         </div>
-      </div>
-    ))}
-  </div>
-);
+      ))}
+    </div>
+  );
+};
 
 // ── Tier Card ───────────────────────────────────────────────────
 interface TierCardProps {
