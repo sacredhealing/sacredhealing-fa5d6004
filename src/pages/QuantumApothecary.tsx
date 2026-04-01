@@ -826,6 +826,19 @@ function QuantumApothecaryInner() {
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <button
             type="button"
+            onClick={() => {
+              const el = chatScrollContainerRef.current;
+              if (!el) return;
+              el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+            }}
+            className="rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 p-1.5 text-[#D4AF37] transition hover:border-[#D4AF37]/40 hover:bg-[#D4AF37]/20 sm:p-2"
+            title={t('quantumApothecary.chat.scrollToBottom')}
+            aria-label={t('quantumApothecary.chat.scrollToBottom')}
+          >
+            <ChevronDown size={16} className="drop-shadow-[0_0_6px_rgba(212,175,55,0.45)]" aria-hidden />
+          </button>
+          <button
+            type="button"
             onClick={startFreshApothecaryChat}
             disabled={isTyping}
             title={t('quantumApothecary.chat.newChatTitle')}

@@ -4337,7 +4337,8 @@
       "placeholder": "Kommunicera med SQI…",
       "history": "Historik",
       "newChatTitle": "Rensa chatt och starta ny tråd",
-      "send": "Skicka meddelande"
+      "send": "Skicka meddelande",
+      "scrollToBottom": "Hoppa till senaste meddelandet"
     },
     "scan": {
       "title": "Digital Nadiskanning",

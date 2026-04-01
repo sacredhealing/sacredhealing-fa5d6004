@@ -4585,7 +4585,8 @@
       "placeholder": "Communicate with the SQI…",
       "history": "History",
       "newChatTitle": "Clear this chat and start a new thread",
-      "send": "Send message"
+      "send": "Send message",
+      "scrollToBottom": "Jump to latest message"
     },
     "scan": {
       "title": "Digital Nadi Scan",
