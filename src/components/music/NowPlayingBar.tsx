@@ -2,6 +2,58 @@ import React, { useState, useRef } from 'react';
 import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Heart, X, ChevronUp, Music, Sparkles, Leaf } from 'lucide-react';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 import { useTranslation } from '@/hooks/useTranslation';
+import { cn } from '@/lib/utils';
+
+/** Siddha-Gold breathing aura for the global music / universal-audio bar (SQI-2050) */
+const MUSIC_BAR_AURA_CSS = `
+@keyframes musicBarSiddhaBreath {
+  0%, 100% {
+    border-color: rgba(212,175,55,0.32);
+    box-shadow: 0 0 22px rgba(212,175,55,0.22), 0 0 48px rgba(212,175,55,0.08), 0 12px 40px rgba(0,0,0,0.55);
+  }
+  50% {
+    border-color: rgba(212,175,55,0.62);
+    box-shadow: 0 0 42px rgba(212,175,55,0.42), 0 0 72px rgba(212,175,55,0.14), 0 14px 44px rgba(0,0,0,0.5);
+  }
+}
+@keyframes musicPlayBtnPulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(212,175,55,0.55), 0 0 24px rgba(245,225,122,0.15); transform: scale(1); }
+  50% { box-shadow: 0 0 28px rgba(212,175,55,0.9), 0 0 44px rgba(212,175,55,0.28); transform: scale(1.06); }
+}
+@keyframes musicCyanRing {
+  0% { transform: scale(0.88); opacity: 0.85; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+.music-np-shell--live {
+  background: rgba(12, 11, 10, 0.96) !important;
+  border-color: rgba(212,175,55, 0.38) !important;
+  animation: musicBarSiddhaBreath 2.6s ease-in-out infinite;
+}
+.music-np-play--live {
+  background: linear-gradient(145deg, #F5E17A, #D4AF37, #A07C10) !important;
+  color: #050505 !important;
+  border: 1px solid rgba(212,175,55,0.45) !important;
+  position: relative;
+  animation: musicPlayBtnPulse 2s ease-in-out infinite;
+}
+.music-np-play--live::after {
+  content: '';
+  position: absolute;
+  inset: -7px;
+  border-radius: 9999px;
+  border: 2px solid rgba(34, 211, 238, 0.5);
+  pointer-events: none;
+  animation: musicCyanRing 2.2s ease-out infinite;
+}
+.music-np-progress-live {
+  box-shadow: 0 0 8px rgba(212,175,55,0.65), 0 0 16px rgba(212,175,55,0.22);
+}
+.music-np-title-live {
+  color: #D4AF37 !important;
+  text-shadow: 0 0 14px rgba(212,175,55,0.35), 0 0 28px rgba(212,175,55,0.1);
+  font-family: 'Cinzel', 'Cormorant Garamond', ui-serif, Georgia, serif;
+}
+`;
 
 const COLLAPSED_HEIGHT = 80;
 const EXPANDED_HEIGHT = 280;
@@ -127,6 +179,8 @@ export const NowPlayingBar: React.FC = () => {
   };
 
   return (
+    <>
+    <style>{MUSIC_BAR_AURA_CSS}</style>
     <div 
       ref={containerRef}
       className={`fixed left-0 right-0 z-50 transition-all duration-300 ease-out ${
@@ -138,7 +192,12 @@ export const NowPlayingBar: React.FC = () => {
         height: expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT,
       }}
     >
-      <div className="mx-2 h-full bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+      <div
+        className={cn(
+          'mx-2 h-full backdrop-blur-xl border rounded-2xl shadow-2xl overflow-hidden flex flex-col',
+          isPlaying ? 'music-np-shell--live' : 'bg-card/95 border-border',
+        )}
+      >
         {/* Drag handle area */}
         <div 
           className="flex items-center justify-center pt-2 pb-1 cursor-grab active:cursor-grabbing touch-none"
@@ -176,7 +235,7 @@ export const NowPlayingBar: React.FC = () => {
 
             {/* Track Info */}
             <div className="min-w-0 flex-1">
-              <p className="font-semibold text-sm truncate text-foreground">{displayTitle}</p>
+              <p className={cn('font-semibold text-sm truncate', isPlaying ? 'music-np-title-live' : 'text-foreground')}>{displayTitle}</p>
               <p className="text-xs text-muted-foreground truncate">{displayArtist}</p>
             </div>
 
@@ -196,10 +255,14 @@ export const NowPlayingBar: React.FC = () => {
                 </button>
               )}
               <button 
+                type="button"
                 onClick={togglePlay}
-                className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-lg"
+                className={cn(
+                  'w-10 h-10 rounded-full flex items-center justify-center shadow-lg',
+                  isPlaying ? 'music-np-play--live' : 'bg-primary text-primary-foreground',
+                )}
               >
-                {isPlaying ? <Pause size={20} /> : <Play size={20} className="ml-0.5" />}
+                {isPlaying ? <Pause size={20} className="relative z-[1]" /> : <Play size={20} className="ml-0.5" />}
               </button>
               {showQueueControls && (
                 <button onClick={nextTrack} className="p-1.5 rounded-full hover:bg-muted/50 text-foreground">
@@ -213,7 +276,10 @@ export const NowPlayingBar: React.FC = () => {
           <div className="mt-2 flex items-center gap-2">
             <span className="text-[10px] text-muted-foreground w-10 shrink-0">{formatTime(currentTime)}</span>
             <div className="flex-1 h-1 bg-muted rounded-full cursor-pointer" onClick={handleSeek}>
-              <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
+              <div
+                className={cn('h-full rounded-full transition-all', isPlaying ? 'bg-gradient-to-r from-[#D4AF37] to-[#F5E17A] music-np-progress-live' : 'bg-primary')}
+                style={{ width: `${progress}%` }}
+              />
             </div>
             <span className="text-[10px] text-muted-foreground w-10 text-right shrink-0">{formatTime(displayDuration)}</span>
           </div>
@@ -236,7 +302,7 @@ export const NowPlayingBar: React.FC = () => {
 
           {/* Track Info */}
           <div className="text-center mb-4">
-            <p className="font-bold text-lg text-foreground truncate">{displayTitle}</p>
+            <p className={cn('font-bold text-lg truncate', isPlaying ? 'music-np-title-live' : 'text-foreground')}>{displayTitle}</p>
             <p className="text-sm text-muted-foreground">{displayArtist}</p>
             {!canPlayFull && currentTrack && (
               <span className="inline-block mt-1 text-xs bg-primary/20 text-primary px-3 py-0.5 rounded-full font-medium">
@@ -251,8 +317,11 @@ export const NowPlayingBar: React.FC = () => {
           {/* Seek Bar */}
           <div className="mb-4">
             <div className="h-2 bg-muted rounded-full cursor-pointer" onClick={handleSeek}>
-              <div className="h-full bg-primary rounded-full transition-all relative" style={{ width: `${progress}%` }}>
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-primary rounded-full shadow" />
+              <div
+                className={cn('h-full rounded-full transition-all relative', isPlaying ? 'bg-gradient-to-r from-[#D4AF37] to-[#F5E17A] music-np-progress-live' : 'bg-primary')}
+                style={{ width: `${progress}%` }}
+              >
+                <div className={cn('absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full shadow', isPlaying ? 'bg-[#F5E17A]' : 'bg-primary')} />
               </div>
             </div>
             <div className="flex justify-between mt-1">
@@ -274,10 +343,14 @@ export const NowPlayingBar: React.FC = () => {
               </button>
             )}
             <button 
+              type="button"
               onClick={togglePlay}
-              className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-xl"
+              className={cn(
+                'w-16 h-16 rounded-full flex items-center justify-center shadow-xl',
+                isPlaying ? 'music-np-play--live' : 'bg-primary text-primary-foreground',
+              )}
             >
-              {isPlaying ? <Pause size={32} /> : <Play size={32} className="ml-1" />}
+              {isPlaying ? <Pause size={32} className="relative z-[1]" /> : <Play size={32} className="ml-1" />}
             </button>
             {showQueueControls && (
               <button onClick={nextTrack} className="p-3 rounded-full hover:bg-muted/50 text-foreground">
@@ -305,5 +378,6 @@ export const NowPlayingBar: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };

@@ -869,3 +869,25 @@
 .sq-ach-name { font-size: 7px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.55); text-align: center; margin-bottom: 4px; line-height: 1.35; min-height: 20px; display: flex; align-items: center; }
 .sq-ach-pts { font-family: Cormorant Garamond, serif; font-size: 0.72rem; color: rgba(212,175,55,0.6); font-weight: 600; }
 .sq-ach-pts-muted { color: rgba(255,255,255,0.3); }
+
+/* SQI 2050 — music TrackCard active playing aura */
+@keyframes tcAuraBreath {
+  0%, 100% {
+    border-color: rgba(212,175,55,0.32);
+    box-shadow: inset 0 0 28px rgba(212,175,55,0.06), 0 0 0 1px rgba(212,175,55,0.2), 0 6px 28px rgba(212,175,55,0.12);
+  }
+  50% {
+    border-color: rgba(212,175,55,0.65);
+    box-shadow: inset 0 0 40px rgba(212,175,55,0.12), 0 0 0 2px rgba(212,175,55,0.38), 0 10px 40px rgba(212,175,55,0.22);
+  }
+}
+.tc-sqi-active {
+  border: 1px solid rgba(212,175,55,0.35);
+  background: rgba(212,175,55,0.04);
+  animation: tcAuraBreath 2.8s ease-in-out infinite;
+}
+.tc-sqi-title {
+  color: #D4AF37 !important;
+  font-family: 'Cinzel', 'Cormorant Garamond', ui-serif, Georgia, serif;
+  text-shadow: 0 0 14px rgba(212,175,55,0.35);
+}

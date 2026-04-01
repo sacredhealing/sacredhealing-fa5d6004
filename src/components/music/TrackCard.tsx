@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useMusicPlayer, Track } from '@/contexts/MusicPlayerContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { tMusicGenre, tMusicMood, tMusicSpiritualPath } from '@/features/music/musicDisplayI18n';
+import { cn } from '@/lib/utils';
 
 interface Playlist {
   id: string;
@@ -32,6 +33,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
   const [showPlaylistMenu, setShowPlaylistMenu] = useState(false);
 
   const isCurrentTrack = currentTrack?.id === track.id;
+  const live = isCurrentTrack && isPlaying;
   const isLiked = likedIds.includes(track.id);
   const canPlay = hasAccess(track);
 
@@ -50,7 +52,13 @@ export const TrackCard: React.FC<TrackCardProps> = ({
   };
 
   return (
-    <div className="group bg-muted/20 hover:bg-muted/40 rounded-xl p-3 transition-colors cursor-pointer" onClick={handleNavigateToDetail}>
+    <div
+      className={cn(
+        'group rounded-xl p-3 transition-colors cursor-pointer border border-transparent',
+        live ? 'tc-sqi-active' : 'bg-muted/20 hover:bg-muted/40',
+      )}
+      onClick={handleNavigateToDetail}
+    >
       <div className="flex items-start gap-3">
         {/* Cover / Play button */}
         <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-muted shrink-0">
@@ -75,7 +83,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
 
         {/* Track info */}
         <div className="flex-1 min-w-0">
-          <p className="font-medium text-sm truncate">{track.title}</p>
+          <p className={cn('font-medium text-sm truncate', live && 'tc-sqi-title')}>{track.title}</p>
           <p className="text-xs text-muted-foreground truncate mb-1">{track.artist}</p>
           
           {/* Mood & Path badges */}

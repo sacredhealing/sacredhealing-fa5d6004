@@ -232,6 +232,24 @@ const SQI_STYLES = `
     position: relative;
   }
   .meditation-row:hover { background: rgba(212,175,55,.04); }
+  /* Golden Aura — active row (inset glow so parent overflow:hidden does not clip) */
+  @keyframes sqiMeditationRowAura {
+    0%, 100% {
+      border-color: rgba(212,175,55,.35);
+      box-shadow: inset 0 0 32px rgba(212,175,55,.08), 0 0 0 1px rgba(212,175,55,.2);
+      background: rgba(212,175,55,.035);
+    }
+    50% {
+      border-color: rgba(212,175,55,.7);
+      box-shadow: inset 0 0 48px rgba(212,175,55,.16), 0 0 0 2px rgba(212,175,55,.4);
+      background: rgba(212,175,55,.08);
+    }
+  }
+  .meditation-row.sqi-active-card {
+    border-width: 1px;
+    border-style: solid;
+    animation: sqiMeditationRowAura 3s ease-in-out infinite;
+  }
 
   /* ── Play button (match Healing /h-track h-play-btn) ── */
   .play-btn {
@@ -246,10 +264,17 @@ const SQI_STYLES = `
     box-shadow: 0 0 10px rgba(212,175,55,.15);
   }
   .play-btn:hover, .play-btn.playing {
-    background: linear-gradient(135deg, #D4AF37, #B8960C);
+    background: linear-gradient(135deg, #F5E17A, #D4AF37, #A07C10);
     color: #050505;
-    box-shadow: 0 0 20px rgba(212,175,55,.5);
+    box-shadow: 0 0 22px rgba(212,175,55,.65), 0 0 40px rgba(212,175,55,.25);
     transform: scale(1.08);
+  }
+  .play-btn.playing {
+    animation: sqiPlayBtnPulse 2s ease-in-out infinite;
+  }
+  @keyframes sqiPlayBtnPulse {
+    0%, 100% { box-shadow: 0 0 18px rgba(212,175,55,.55), 0 0 32px rgba(245,225,122,.2); }
+    50% { box-shadow: 0 0 32px rgba(212,175,55,.95), 0 0 56px rgba(212,175,55,.3); }
   }
 
   /* ── Scalar ring (Vayu-Cyan) on now-playing row ── */
@@ -260,11 +285,12 @@ const SQI_STYLES = `
   }
   .scalar-ring {
     position: absolute;
-    inset: -4px;
+    inset: -8px;
     border-radius: 50%;
-    border: 1px solid var(--vayu-cyan);
-    animation: scalarRing 2.5s ease-out infinite;
+    border: 2px solid rgba(34,211,238,.65);
+    animation: scalarRing 2.2s ease-out infinite;
     pointer-events: none;
+    box-shadow: 0 0 12px rgba(34,211,238,.35);
   }
 
   /* ── Progress bar (under playing row) ── */
@@ -280,6 +306,7 @@ const SQI_STYLES = `
     background: linear-gradient(90deg, #D4AF37, #F5E17A);
     border-radius: 3px;
     transition: width 0.5s ease;
+    box-shadow: 0 0 10px rgba(212,175,55,.7), 0 0 20px rgba(212,175,55,.25);
   }
 
   /* ── Lock overlay ── */
@@ -342,6 +369,16 @@ const SQI_STYLES = `
     from { transform: translateY(100%); opacity: 0; }
     to   { transform: translateY(0);    opacity: 1; }
   }
+  @keyframes sqiNpBarBreath {
+    0%, 100% {
+      border-color: rgba(212,175,55,.32);
+      box-shadow: 0 0 22px rgba(212,175,55,.22), 0 0 48px rgba(212,175,55,.1), 0 10px 36px rgba(0,0,0,.55);
+    }
+    50% {
+      border-color: rgba(212,175,55,.65);
+      box-shadow: 0 0 40px rgba(212,175,55,.45), 0 0 72px rgba(212,175,55,.15), 0 14px 44px rgba(0,0,0,.5);
+    }
+  }
   .now-playing-bar {
     position: fixed;
     bottom: 72px;
@@ -358,12 +395,23 @@ const SQI_STYLES = `
     animation: nowPlayingSlide .35s ease-out;
     box-shadow: 0 0 28px rgba(212,175,55,.18), 0 8px 32px rgba(0,0,0,.6);
   }
+  .now-playing-bar.np-siddha-live {
+    animation: nowPlayingSlide .35s ease-out, sqiNpBarBreath 2.6s ease-in-out infinite;
+  }
   .np-play-icon {
     width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
-    background: linear-gradient(135deg, #D4AF37, #B8960C);
+    background: linear-gradient(135deg, #F5E17A, #D4AF37, #A07C10);
     display: flex; align-items: center; justify-content: center;
     color: #050505;
     box-shadow: 0 0 14px rgba(212,175,55,.5);
+    position: relative;
+  }
+  .np-play-icon.np-pulse {
+    animation: npIconGold 2s ease-in-out infinite;
+  }
+  @keyframes npIconGold {
+    0%, 100% { box-shadow: 0 0 12px rgba(212,175,55,.55); transform: scale(1); }
+    50% { box-shadow: 0 0 24px rgba(212,175,55,.95), 0 0 40px rgba(245,225,122,.25); transform: scale(1.06); }
   }
   .np-track { flex: 1; min-width: 0; }
   .np-title {
@@ -378,8 +426,18 @@ const SQI_STYLES = `
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
   }
+  .np-title.np-cinzel-gold {
+    color: #D4AF37;
+    text-shadow: 0 0 16px rgba(212,175,55,0.4), 0 0 32px rgba(212,175,55,0.12);
+  }
   .np-bar-track { height: 2px; background: rgba(255,255,255,.08); border-radius: 2px; margin-top: 5px; }
-  .np-bar-fill  { height: 100%; background: linear-gradient(90deg, #D4AF37, #F5E17A); border-radius: 2px; transition: width .5s; }
+  .np-bar-fill  {
+    height: 100%;
+    background: linear-gradient(90deg, #D4AF37, #F5E17A);
+    border-radius: 2px;
+    transition: width .5s;
+    box-shadow: 0 0 8px rgba(212,175,55,.75), 0 0 16px rgba(212,175,55,.3);
+  }
 
   /* ── Chevron ── */
   .chevron {
@@ -494,6 +552,7 @@ const MeditationRowSQI: React.FC<{
 }> = ({ med, lang, currentAudio, isPlaying, playerProgress, hasMeditationAccess, onPlay, onLock }) => {
   const { t } = useTranslation();
   const isActive = currentAudio?.id === med.id;
+  const live = isActive && isPlaying;
   const isLocked = (med.is_premium || med.tier === 'prana_flow') && !hasMeditationAccess;
   const isFree = !med.is_premium && med.tier !== 'prana_flow';
   const hasBilingual = !!(med.audio_url && med.audio_url_sv);
@@ -501,23 +560,25 @@ const MeditationRowSQI: React.FC<{
 
   return (
     <div
-      className="meditation-row"
-      style={{
-        border: isActive
-          ? '1px solid rgba(212,175,55,.3)'
-          : '1px solid transparent',
-        background: isActive ? 'rgba(212,175,55,.04)' : undefined,
-      }}
+      className={`meditation-row${live ? ' sqi-active-card' : ''}`}
+      style={
+        live
+          ? undefined
+          : {
+              border: isActive ? '1px solid rgba(212,175,55,.3)' : '1px solid transparent',
+              background: isActive ? 'rgba(212,175,55,.04)' : undefined,
+            }
+      }
       onClick={() => isLocked ? onLock() : onPlay(med, lang)}
     >
       {/* Play btn with scalar ring when active */}
       <div style={{ position: 'relative', flexShrink: 0 }}>
-        <div className={`play-btn${isActive && isPlaying ? ' playing' : ''}`}>
-          {isActive && isPlaying
+        <div className={`play-btn${live ? ' playing' : ''}`}>
+          {live
             ? <Pause size={14} />
             : <Play size={14} style={{ marginLeft: 2 }} />}
         </div>
-        {isActive && isPlaying && <div className="scalar-ring" />}
+        {live && <div className="scalar-ring" />}
       </div>
 
       {/* Track info — title wraps like Healing /healing SessionRow; gold only while playing */}
@@ -528,11 +589,12 @@ const MeditationRowSQI: React.FC<{
             fontSize: 13,
             fontWeight: 500,
             letterSpacing: '.02em',
-            color: isActive && isPlaying ? '#D4AF37' : 'rgba(255,255,255,0.88)',
+            color: live ? '#D4AF37' : 'rgba(255,255,255,0.88)',
             lineHeight: 1.35,
             marginBottom: 3,
             wordBreak: 'break-word',
             overflowWrap: 'anywhere',
+            textShadow: live ? '0 0 18px rgba(212,175,55,0.45), 0 0 36px rgba(212,175,55,0.12)' : undefined,
           }}
         >
           {displayTitle}
@@ -549,7 +611,7 @@ const MeditationRowSQI: React.FC<{
           {hasBilingual && <span className="badge-bilingual">{t('meditations.bilingualBadge')}</span>}
         </div>
         {/* Progress bar when playing */}
-        {isActive && isPlaying && playerProgress !== undefined && (
+        {live && playerProgress !== undefined && (
           <div className="progress-track" style={{ marginTop: 8 }}>
             <div className="progress-fill" style={{ width: `${playerProgress * 100}%` }} />
           </div>
@@ -589,7 +651,7 @@ const MeditationSectionSQI: React.FC<{
   const { t } = useTranslation();
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="glass-card" style={{ marginBottom: 12, overflow: 'hidden' }}>
+    <div className="glass-card" style={{ marginBottom: 12, overflow: 'visible' }}>
       <div className="section-header" onClick={() => setOpen(o => !o)}>
         <div>
           {/* Gold micro-label above section name */}
@@ -632,12 +694,12 @@ const NowPlayingBar: React.FC<{
   audio: UniversalAudioItem; isPlaying: boolean; progress: number;
   onToggle: () => void;
 }> = ({ audio, isPlaying, progress, onToggle }) => (
-  <div className="now-playing-bar">
-    <div className="np-play-icon" onClick={onToggle} style={{ cursor: 'pointer' }}>
+  <div className={`now-playing-bar${isPlaying ? ' np-siddha-live' : ''}`}>
+    <div className={`np-play-icon${isPlaying ? ' np-pulse' : ''}`} onClick={onToggle} style={{ cursor: 'pointer' }}>
       {isPlaying ? <Pause size={14} /> : <Play size={14} style={{ marginLeft: 2 }} />}
     </div>
     <div className="np-track">
-      <div className="np-title">{audio.title}</div>
+      <div className={`np-title${isPlaying ? ' np-cinzel-gold' : ''}`}>{audio.title}</div>
       <div className="np-bar-track">
         <div className="np-bar-fill" style={{ width: `${(progress ?? 0) * 100}%` }} />
       </div>
@@ -833,7 +895,7 @@ const Meditations: React.FC = () => {
                 : t('meditations.playlistSessions', { count: selectedPlaylist.track_count })}
             </p>
           </div>
-          <div className="glass-card" style={{ overflow: 'hidden' }}>
+          <div className="glass-card" style={{ overflow: 'visible' }}>
             {playlistMeditations.length === 0 ? (
               <div style={{ textAlign: 'center', padding: 24 }}>
                 <Loader2 className="animate-spin" size={24} style={{ color: 'rgba(212,175,55,.6)' }} />

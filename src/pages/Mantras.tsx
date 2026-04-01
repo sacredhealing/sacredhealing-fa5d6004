@@ -178,13 +178,19 @@ const SQI_CSS = `
     box-shadow: 0 0 20px rgba(212,175,55,.08);
   }
   .m-mantra-item.m-gold-aura {
-    border-color: rgba(212,175,55,.5);
-    background: linear-gradient(135deg, rgba(212,175,55,.12), rgba(255,230,120,.05) 50%, rgba(212,175,55,.03));
-    animation: goldPulse 3s ease-in-out infinite;
+    border-color: rgba(212,175,55,.55);
+    background: linear-gradient(135deg, rgba(212,175,55,.16), rgba(255,230,120,.08) 50%, rgba(212,175,55,.06));
+    animation: goldPulse 2.6s ease-in-out infinite;
   }
   @keyframes goldPulse {
-    0%,100% { box-shadow: 0 0 20px rgba(212,175,55,.1); }
-    50%      { box-shadow: 0 0 40px rgba(212,175,55,.25); }
+    0%, 100% {
+      border-color: rgba(212,175,55,.45);
+      box-shadow: inset 0 0 24px rgba(212,175,55,.08), 0 0 22px rgba(212,175,55,.2), 0 0 48px rgba(212,175,55,.08);
+    }
+    50% {
+      border-color: rgba(212,175,55,.85);
+      box-shadow: inset 0 0 36px rgba(212,175,55,.14), 0 0 40px rgba(212,175,55,.42), 0 0 72px rgba(212,175,55,.15);
+    }
   }
   .m-planet-icon {
     width: 36px; height: 36px;
@@ -245,7 +251,14 @@ const SQI_CSS = `
     display: flex; align-items: center; justify-content: center; gap: 8px;
   }
   .m-btn-start:hover { box-shadow: 0 0 40px rgba(212,175,55,.6); transform: scale(1.02); }
-  .m-btn-start.m-paused { background: linear-gradient(135deg, #B8960C, #8B6E08); }
+  @keyframes mantraStartPulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(212,175,55,.55), 0 0 40px rgba(245,225,122,.12); transform: scale(1); }
+    50% { box-shadow: 0 0 36px rgba(212,175,55,.9), 0 0 56px rgba(212,175,55,.25); transform: scale(1.02); }
+  }
+  .m-btn-start.m-paused {
+    background: linear-gradient(145deg, #F5E17A, #D4AF37, #9A720E);
+    animation: mantraStartPulse 2s ease-in-out infinite;
+  }
   .m-btn-reset {
     width: 48px; height: 48px; border-radius: 50%;
     background: var(--glass); border: 1px solid var(--border);

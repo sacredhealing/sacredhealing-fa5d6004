@@ -48,8 +48,45 @@ const H_CSS = `
   .h-diff-new { padding: 12px 18px; font-size: 13px; font-weight: 700; color: rgba(255,255,255,.82); border-top: 1px solid rgba(212,175,55,.07); background: rgba(212,175,55,.03); display: flex; align-items: center; gap: 8px; }
   .h-track { display: flex; align-items: center; gap: 14px; padding: 14px 18px; background: rgba(255,255,255,.015); border: 1px solid rgba(255,255,255,.05); border-radius: 20px; cursor: pointer; transition: all .2s; }
   .h-track:hover { border-color: rgba(212,175,55,.18); background: rgba(212,175,55,.03); }
-  .h-play-btn { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; background: linear-gradient(135deg, rgba(212,175,55,.12), rgba(212,175,55,.04)); border: 1px solid rgba(212,175,55,.22); display: flex; align-items: center; justify-content: center; color: #D4AF37; transition: all .22s; }
-  .h-track:hover .h-play-btn { background: linear-gradient(135deg, #D4AF37, #B8960C); color: #050505; box-shadow: 0 0 18px rgba(212,175,55,.45); }
+  /* Golden Aura — active healing row (SQI-2050 breathing halo, inset-safe) */
+  @keyframes hRowAura {
+    0%, 100% {
+      border-color: rgba(212,175,55,.38);
+      box-shadow: inset 0 0 28px rgba(212,175,55,.1), 0 0 0 1px rgba(212,175,55,.25), 0 4px 24px rgba(212,175,55,.12);
+      background: rgba(212,175,55,.05);
+    }
+    50% {
+      border-color: rgba(212,175,55,.75);
+      box-shadow: inset 0 0 40px rgba(212,175,55,.18), 0 0 0 2px rgba(212,175,55,.45), 0 8px 40px rgba(212,175,55,.28);
+      background: rgba(212,175,55,.09);
+    }
+  }
+  .h-track.h-playing { animation: hRowAura 2.8s ease-in-out infinite; }
+  .h-play-btn { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; background: linear-gradient(135deg, rgba(212,175,55,.12), rgba(212,175,55,.04)); border: 1px solid rgba(212,175,55,.22); display: flex; align-items: center; justify-content: center; color: #D4AF37; transition: all .22s; position: relative; }
+  .h-track:hover .h-play-btn:not(.h-playing) { background: linear-gradient(135deg, #D4AF37, #B8960C); color: #050505; box-shadow: 0 0 18px rgba(212,175,55,.45); }
+  @keyframes hPlayGoldPulse {
+    0%, 100% { box-shadow: 0 0 14px rgba(212,175,55,.55), 0 0 28px rgba(245,225,122,.2); transform: scale(1); }
+    50% { box-shadow: 0 0 26px rgba(212,175,55,.95), 0 0 48px rgba(212,175,55,.35); transform: scale(1.05); }
+  }
+  @keyframes hCyanRing {
+    0% { transform: scale(.85); opacity: .85; }
+    100% { transform: scale(1.45); opacity: 0; }
+  }
+  .h-play-btn.h-playing {
+    background: linear-gradient(145deg, #F5E17A, #D4AF37, #A07C10) !important;
+    color: #050505 !important;
+    border-color: rgba(212,175,55,.65) !important;
+    animation: hPlayGoldPulse 2s ease-in-out infinite;
+  }
+  .h-play-btn.h-playing::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 2px solid rgba(34,211,238,.55);
+    pointer-events: none;
+    animation: hCyanRing 2.2s ease-out infinite;
+  }
   .h-testimonial { padding: 18px 20px; background: rgba(255,255,255,.015); border: 1px solid rgba(255,255,255,.04); border-radius: 24px; }
   .h-pricing { background: linear-gradient(135deg, rgba(139,92,246,.08), rgba(212,175,55,.05)); border: 1px solid rgba(212,175,55,.18); border-radius: var(--r40); padding: 30px 24px 24px; text-align: center; position: relative; overflow: hidden; }
   /* Decorative layer must not capture taps (otherwise tier / CTA buttons feel dead). */
@@ -1014,15 +1051,17 @@ function SessionRow({ audio, isPlaying, onTogglePlay, formatDuration, isAdmin, o
   const isLockedPremium = isPremiumTier && !hasAccess;
   const priceLabel = formatEnergyExchange(audio.price_usd);
 
+  const live = hasAccess && isPlaying;
+
   return (
-    <div className="h-track">
+    <div className={`h-track${live ? ' h-playing' : ''}`}>
       <button
         type="button"
         onClick={() => isLockedPremium && onRequestUpgrade ? onRequestUpgrade() : onTogglePlay(audio)}
-        className="h-play-btn relative"
+        className={`h-play-btn${live ? ' h-playing' : ''}`}
       >
-        {isLockedPremium && <Lock className="w-3 h-3 text-[#D4AF37] absolute -top-1 -right-1" />}
-        {hasAccess && isPlaying ? <Pause size={14} /> : <Play size={14} style={{ marginLeft: 2 }} />}
+        {isLockedPremium && <Lock className="w-3 h-3 text-[#D4AF37] absolute -top-1 -right-1 z-[1]" />}
+        {hasAccess && isPlaying ? <Pause size={14} className="relative z-[1]" /> : <Play size={14} style={{ marginLeft: 2 }} className="relative z-[1]" />}
       </button>
       <div className="flex-1 min-w-0">
         <div
@@ -1032,6 +1071,7 @@ function SessionRow({ audio, isPlaying, onTogglePlay, formatDuration, isAdmin, o
             fontWeight: 500,
             letterSpacing: '.02em',
             color: isPlaying ? '#D4AF37' : 'rgba(255,255,255,0.88)',
+            textShadow: isPlaying ? '0 0 20px rgba(212,175,55,0.45), 0 0 40px rgba(212,175,55,0.15)' : undefined,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             display: '-webkit-box',
