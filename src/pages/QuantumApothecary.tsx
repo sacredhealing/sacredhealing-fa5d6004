@@ -770,7 +770,7 @@ function QuantumApothecaryInner() {
      CHAT PANEL — Logic 100% preserved, UI upgraded to SQI-2050
      ══════════════════════════════════════════════════════ */
   const renderChatPanel = () => (
-    <div className="glass-card overflow-hidden flex flex-col" style={{ minHeight: '70vh', background: '#050505', border: 'none' }}>
+    <div className="glass-card overflow-hidden flex flex-col relative" style={{ minHeight: '70vh', background: '#050505', border: 'none' }}>
       {/* Chat Header */}
       <div className="px-3 sm:px-5 py-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
