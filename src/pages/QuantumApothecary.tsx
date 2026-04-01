@@ -14,7 +14,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Zap, Activity, MessageSquare,
   Plus, Trash2, Send, Cpu, Globe,
-  Info, X, ArrowLeft, Camera, Mic, Hand, ChevronUp,
+  Info, X, ArrowLeft, Camera, Mic, Hand, ChevronUp, ChevronDown,
 } from 'lucide-react';
 import { Activation, NadiScanResult, Message } from '@/features/quantum-apothecary/types';
 import { ACTIVATIONS, PLANETARY_DATA } from '@/features/quantum-apothecary/constants';
@@ -190,6 +190,8 @@ function QuantumApothecaryInner() {
   const [sessionsOpen, setSessionsOpen] = useState(false);
   const [loadingSessions, setLoadingSessions] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatScrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
   const chatPanelRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -768,7 +770,7 @@ function QuantumApothecaryInner() {
      CHAT PANEL — Logic 100% preserved, UI upgraded to SQI-2050
      ══════════════════════════════════════════════════════ */
   const renderChatPanel = () => (
-    <div className="glass-card overflow-hidden flex flex-col" style={{ minHeight: '70vh', background: '#050505', border: 'none' }}>
+    <div className="glass-card overflow-hidden flex flex-col relative" style={{ minHeight: '70vh', background: '#050505', border: 'none' }}>
       {/* Chat Header */}
       <div className="px-3 sm:px-5 py-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -803,7 +805,18 @@ function QuantumApothecaryInner() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar" style={{ padding: '16px', background: '#050505' }}>
+      <div className="flex-1 overflow-y-auto custom-scrollbar relative" style={{ padding: '16px', background: '#050505' }}
+        ref={(el) => {
+          // Track scroll position to show/hide scroll-to-bottom button
+          if (!el) return;
+          const handler = () => {
+            const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+            setShowScrollBottom(distFromBottom > 150);
+          };
+          el.addEventListener('scroll', handler, { passive: true });
+          (chatScrollContainerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+        }}
+      >
         <div className="flex flex-col justify-end min-h-full space-y-2">
           {messages.map((msg, i) => {
               const isLastUser = msg.role === 'user'  && !messages.slice(i + 1).some(m => m.role === 'user');
@@ -836,6 +849,20 @@ function QuantumApothecaryInner() {
           <div ref={chatEndRef} />
         </div>
       </div>
+
+      {/* Scroll to bottom FAB inside chat */}
+      {showScrollBottom && (
+        <button
+          onClick={() => {
+            chatScrollContainerRef.current?.scrollTo({ top: chatScrollContainerRef.current.scrollHeight, behavior: 'smooth' });
+          }}
+          className="absolute right-6 z-20 w-8 h-8 rounded-full border border-[#D4AF37]/30 bg-[#0a0a0a]/90 backdrop-blur-sm flex items-center justify-center text-[#D4AF37] hover:bg-[#D4AF37]/15 transition shadow-lg"
+          style={{ bottom: 90 }}
+          aria-label="Scroll to bottom"
+        >
+          <ChevronDown size={18} />
+        </button>
+      )}
 
       {/* Chat Input */}
       <div className="p-4" style={isChatFullscreen ? { paddingBottom: 'env(safe-area-inset-bottom, 16px)' } : undefined}>
