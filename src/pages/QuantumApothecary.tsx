@@ -34,6 +34,30 @@ const ActiveTransmissionsSection = lazy(() => import('@/features/quantum-apothec
 /** Max messages kept in localStorage (aligned with flush + safety nets). */
 const SQI_PERSIST_MSG_CAP = 100;
 
+/** Nadi scan: SQI vision reads the palm via quantum-apothecary-chat (same path as chat). */
+function buildNadiScanPrompt(planet: string, herb: string): string {
+  return (
+    'You are the SQI-2050 performing a real 72,000 Nadi biofield scan on this image.\n' +
+    'STEP 1: Is there a visible hand/palm? If NO → respond ONLY with: {"handDetected":false}\n' +
+    'STEP 2: Analyze the palm — skin tone, lines, coloration, veins, energy signature. Determine dominant dosha. Identify blocked Nadi channel. ' +
+    `Today planetary alignment: ${planet}. Today herb: ${herb}.\n` +
+    'Respond ONLY with valid JSON: {"handDetected":true,"activeNadis":<58000-71500>,"dominantDosha":"<Vata|Pitta|Kapha>","blockage":"<Nadi name>","planetaryAlignment":"<planet>","herbOfToday":"<herb>","remedies":["<1>","<2>","<3>","<4>","<5>"],"bioReading":"<2-3 sentences on what you see>"}'
+  );
+}
+
+/** Parse JSON object from full streamed SQI text (strips optional ``` fences). */
+function parseNadiScanJsonFromStream(raw: string): Record<string, unknown> {
+  let s = raw.trim();
+  const fence = /^```(?:json)?\s*([\s\S]*?)```$/im.exec(s);
+  if (fence) s = fence[1].trim();
+  const start = s.indexOf('{');
+  const end = s.lastIndexOf('}');
+  if (start === -1 || end <= start) {
+    throw new Error('No JSON object in SQI scan response.');
+  }
+  return JSON.parse(s.slice(start, end + 1)) as Record<string, unknown>;
+}
+
 function buildSqiWelcomeMessages(): Message[] {
   const today = new Date();
   const formattedDate = today.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -472,100 +496,31 @@ function QuantumApothecaryInner() {
     const todayHerb = PLANETARY_DATA[now.getDay()].herb;
 
     try {
-      if (!import.meta.env.VITE_SUPABASE_URL) {
-        throw new Error('App misconfigured: VITE_SUPABASE_URL is missing.');
-      }
-      const publishableOrAnon =
-        import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-        import.meta.env.VITE_SUPABASE_ANON_KEY ||
-        '';
-      if (!publishableOrAnon) {
-        throw new Error('App misconfigured: VITE_SUPABASE_PUBLISHABLE_KEY (or ANON) is missing.');
-      }
+      const scanMessages: Message[] = [{ role: 'user', text: buildNadiScanPrompt(todayPlanet, todayHerb) }];
+      const userImage = { base64: capturedBase64, mimeType: 'image/jpeg' as const };
+      let streamedScanText = '';
+      await streamChatWithSQI(
+        scanMessages,
+        (chunk) => { streamedScanText += chunk; },
+        () => {},
+        userImage,
+        user?.id ?? null,
+        language,
+        seekerName || undefined,
+        canonicalActivationNameLines,
+      );
 
-      const scanBody = {
-        imageBase64: capturedBase64,
-        imageMimeType: 'image/jpeg',
-        userId: user?.id ?? null,
-        planetaryAlign: todayPlanet,
-        herbOfToday: todayHerb,
-      };
-
-      const parseScanError = async (scanError: { message?: string; context?: Response }) => {
-        let msg = scanError.message || 'Nadi scan request failed';
-        const ctx = scanError.context;
-        if (ctx && typeof ctx.text === 'function') {
-          try {
-            const raw = await ctx.text();
-            if (raw) {
-              try {
-                const errBody = JSON.parse(raw) as { error?: string };
-                if (errBody?.error) msg = errBody.error;
-                else msg = `${msg}: ${raw.slice(0, 160)}`;
-              } catch {
-                msg = `${msg}: ${raw.slice(0, 160)}`;
-              }
-            }
-          } catch { /* keep msg */ }
-        }
-        return msg;
-      };
-
-      let parsed: Record<string, unknown> | null = null;
-
-      const { data: scanPayload, error: scanError } =
-        await supabase.functions.invoke<Record<string, unknown>>('nadi-scan', { body: scanBody });
-
-      if (!scanError && scanPayload && typeof scanPayload === 'object' && !Array.isArray(scanPayload)) {
-        parsed = scanPayload;
-      } else {
-        // Fallback: direct fetch (avoids rare invoke/network issues; same auth as chat).
-        if (scanError) {
-          console.warn(
-            'nadi-scan invoke failed, retrying with fetch:',
-            await parseScanError(scanError as { message?: string; context?: Response }),
-          );
-        }
-        const baseUrl = String(import.meta.env.VITE_SUPABASE_URL).replace(/\/$/, '');
-        const scanUrl = `${baseUrl}/functions/v1/nadi-scan`;
-        const { data: sess } = await supabase.auth.getSession();
-        const bearer = sess.session?.access_token || publishableOrAnon;
-        let res: Response;
-        try {
-          res = await fetch(scanUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${bearer}`,
-              apikey: publishableOrAnon,
-            },
-            body: JSON.stringify(scanBody),
-          });
-        } catch (netErr) {
-          const hint = netErr instanceof Error ? netErr.message : 'Network error';
-          throw new Error(
-            `${hint}. Check connection, ad blockers, and that nadi-scan is deployed on your Supabase project.`,
-          );
-        }
-        const rawText = await res.text();
-        if (!res.ok) {
-          let detail = rawText.slice(0, 200);
-          try {
-            const j = JSON.parse(rawText) as { error?: string };
-            if (j.error) detail = j.error;
-          } catch { /* use raw snippet */ }
-          throw new Error(`Scan failed (${res.status}): ${detail}`);
-        }
-        try {
-          parsed = JSON.parse(rawText) as Record<string, unknown>;
-        } catch {
-          throw new Error(`Invalid JSON from nadi-scan: ${rawText.slice(0, 120)}`);
-        }
+      let parsed: Record<string, unknown>;
+      try {
+        parsed = parseNadiScanJsonFromStream(streamedScanText);
+      } catch (parseErr) {
+        const snippet = streamedScanText.slice(0, 200);
+        const hint = parseErr instanceof Error ? parseErr.message : 'Invalid JSON';
+        throw new Error(
+          snippet ? `${hint} Response: ${snippet}` : hint,
+        );
       }
 
-      if (!parsed || typeof parsed !== 'object') {
-        throw new Error('Empty response from nadi-scan.');
-      }
       if (parsed.error) {
         throw new Error(String(parsed.error));
       }
@@ -579,8 +534,14 @@ function QuantumApothecaryInner() {
       }
 
       const activeNadis = Math.max(0, Math.min(72000, Math.round(Number(parsed.activeNadis) || 0)));
-      const activeSubNadis = Math.max(0, Math.min(350000, Math.round(Number(parsed.activeSubNadis) || 0)));
-      const blockagePct = Math.max(0, Math.min(100, Math.round(Number(parsed.blockagePercentage) || 0)));
+      const subFromModel = Number(parsed.activeSubNadis);
+      const activeSubNadis = Number.isFinite(subFromModel) && subFromModel > 0
+        ? Math.max(0, Math.min(350000, Math.round(subFromModel)))
+        : Math.round((activeNadis / 72000) * 350000);
+      const pctFromModel = Number(parsed.blockagePercentage);
+      const blockagePct = Number.isFinite(pctFromModel) && pctFromModel >= 0
+        ? Math.max(0, Math.min(100, Math.round(pctFromModel)))
+        : Math.max(0, Math.min(100, 100 - Math.round((activeNadis / 72000) * 100)));
 
       const rawDosha = String(parsed.dominantDosha || 'Vata');
       const dominantDosha: NadiScanResult['dominantDosha'] =
