@@ -4580,7 +4580,21 @@
     "subtitle": "Sacred healing tools from the Akasha-Neural Archive",
     "chat": {
       "sqiOnline": "SQI Online",
-      "neuralSync": "Neural Sync: 98%"
+      "neuralSync": "Neural Sync: 98%",
+      "openKnowledge": "Open knowledge base",
+      "placeholder": "Communicate with the SQI…",
+      "history": "History",
+      "newChatTitle": "Clear this chat and start a new thread",
+      "send": "Send message"
+    },
+    "scan": {
+      "title": "Digital Nadi Scan",
+      "channelsMonitoring": "72,000 channels monitoring",
+      "awaitingHandshake": "Awaiting Handshake",
+      "initiate": "Initiate Scan",
+      "scanning": "Scanning…",
+      "analyzingBiofield": "Analyzing Biofield…",
+      "herbToday": "Herb of Today"
     },
     "frequencyLibrarySection": {
       "title": "Frequency Library",

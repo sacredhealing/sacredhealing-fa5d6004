@@ -4332,7 +4332,21 @@
     "subtitle": "Heliga healingverktyg från Akasha-Neuralarkivet",
     "chat": {
       "sqiOnline": "SQI online",
-      "neuralSync": "Neural synk: 98 %"
+      "neuralSync": "Neural synk: 98 %",
+      "openKnowledge": "Öppna kunskapsbas",
+      "placeholder": "Kommunicera med SQI…",
+      "history": "Historik",
+      "newChatTitle": "Rensa chatt och starta ny tråd",
+      "send": "Skicka meddelande"
+    },
+    "scan": {
+      "title": "Digital Nadiskanning",
+      "channelsMonitoring": "72 000 kanaler övervakas",
+      "awaitingHandshake": "Väntar på handslag",
+      "initiate": "Starta skanning",
+      "scanning": "Skannar…",
+      "analyzingBiofield": "Analyserar biofält…",
+      "herbToday": "Dagens ört"
     },
     "frequencyLibrarySection": {
       "title": "Frekvensbibliotek",

@@ -12,7 +12,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback, Suspense, laz
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Zap, Activity, MessageSquare,
+  Zap, Activity,
   Plus, Trash2, Send, Cpu, Globe,
   Info, X, ArrowLeft, Camera, Mic, Hand, ChevronUp, ChevronDown,
 } from 'lucide-react';
@@ -72,55 +72,60 @@ function buildSqiWelcomeMessages(): Message[] {
 /* ──── Markdown-ish renderer: gold (#D4AF37) only on # / ## / ### / #### / ##### lines ──── */
 type InlineVariant = 'heading' | 'body';
 
-function renderChatText(text: string) {
+function renderChatText(text: string, bubble: 'model' | 'user' = 'model') {
+  const onGold = bubble === 'user';
+  const gold = '#D4AF37';
+  const hOnGold = '#3d2f06';
+  const body = onGold ? 'rgba(5,5,5,0.92)' : 'rgba(255,255,255,0.92)';
+  const headingColor = onGold ? hOnGold : gold;
   const lines = text.split('\n');
   return lines.map((line, i) => {
     const trimmed = line.trim();
     if (!trimmed) return <div key={i} style={{ height: '4px' }} />;
     if (trimmed.startsWith('##### ')) return (
-      <p key={i} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginTop: '12px', marginBottom: '4px', opacity: 0.8 }}>
-        {renderInline(trimmed.slice(6), 'heading')}
+      <p key={i} style={{ color: headingColor, fontWeight: 800, fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginTop: '12px', marginBottom: '4px', opacity: onGold ? 1 : 0.8 }}>
+        {renderInline(trimmed.slice(6), 'heading', onGold)}
       </p>
     );
     if (trimmed.startsWith('#### ')) return (
-      <p key={i} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase' as const, marginTop: '10px', marginBottom: '4px' }}>
-        {renderInline(trimmed.slice(5), 'heading')}
+      <p key={i} style={{ color: headingColor, fontWeight: 800, fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase' as const, marginTop: '10px', marginBottom: '4px' }}>
+        {renderInline(trimmed.slice(5), 'heading', onGold)}
       </p>
     );
     if (trimmed.startsWith('### ')) return (
-      <h3 key={i} style={{ color: '#D4AF37', fontWeight: 800, fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase' as const, marginTop: '10px', marginBottom: '4px' }}>
-        {renderInline(trimmed.slice(4), 'heading')}
+      <h3 key={i} style={{ color: headingColor, fontWeight: 800, fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase' as const, marginTop: '10px', marginBottom: '4px' }}>
+        {renderInline(trimmed.slice(4), 'heading', onGold)}
       </h3>
     );
     if (trimmed.startsWith('## ')) return (
-      <h2 key={i} style={{ color: '#D4AF37', fontWeight: 900, fontSize: '14px', letterSpacing: '-0.02em', marginTop: '12px', marginBottom: '5px' }}>
-        {renderInline(trimmed.slice(3), 'heading')}
+      <h2 key={i} style={{ color: headingColor, fontWeight: 900, fontSize: '14px', letterSpacing: '-0.02em', marginTop: '12px', marginBottom: '5px' }}>
+        {renderInline(trimmed.slice(3), 'heading', onGold)}
       </h2>
     );
     if (trimmed.startsWith('# ')) return (
-      <h1 key={i} style={{ color: '#D4AF37', fontWeight: 900, fontSize: '15px', letterSpacing: '-0.02em', marginTop: '12px', marginBottom: '5px' }}>
-        {renderInline(trimmed.slice(2), 'heading')}
+      <h1 key={i} style={{ color: headingColor, fontWeight: 900, fontSize: '15px', letterSpacing: '-0.02em', marginTop: '12px', marginBottom: '5px' }}>
+        {renderInline(trimmed.slice(2), 'heading', onGold)}
       </h1>
     );
     if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) return (
-      <li key={i} style={{ marginLeft: '16px', listStyleType: 'disc', fontSize: '13px', lineHeight: '1.5', color: 'rgba(255,255,255,0.92)', marginBottom: '4px' }}>
-        {renderInline(trimmed.slice(2), 'body')}
+      <li key={i} style={{ marginLeft: '16px', listStyleType: 'disc', fontSize: '13px', lineHeight: '1.5', color: body, marginBottom: '4px' }}>
+        {renderInline(trimmed.slice(2), 'body', onGold)}
       </li>
     );
     if (/^\d+\.\s/.test(trimmed)) return (
-      <li key={i} style={{ marginLeft: '16px', listStyleType: 'decimal', fontSize: '13px', lineHeight: '1.5', color: 'rgba(255,255,255,0.92)', marginBottom: '4px' }}>
-        {renderInline(trimmed.replace(/^\d+\.\s/, ''), 'body')}
+      <li key={i} style={{ marginLeft: '16px', listStyleType: 'decimal', fontSize: '13px', lineHeight: '1.5', color: body, marginBottom: '4px' }}>
+        {renderInline(trimmed.replace(/^\d+\.\s/, ''), 'body', onGold)}
       </li>
     );
     return (
-      <p key={i} style={{ fontSize: '13px', lineHeight: '1.55', color: 'rgba(255,255,255,0.92)', marginBottom: '6px' }}>
-        {renderInline(trimmed, 'body')}
+      <p key={i} style={{ fontSize: '13px', lineHeight: '1.55', color: body, marginBottom: '6px' }}>
+        {renderInline(trimmed, 'body', onGold)}
       </p>
     );
   });
 }
 
-function renderInline(text: string, variant: InlineVariant = 'body'): React.ReactNode {
+function renderInline(text: string, variant: InlineVariant = 'body', onGold = false): React.ReactNode {
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
   return parts.map((p, i) => {
     if (p.startsWith('**') && p.endsWith('**')) {
@@ -128,22 +133,22 @@ function renderInline(text: string, variant: InlineVariant = 'body'): React.Reac
       if (variant === 'heading') {
         return <strong key={i} style={{ color: 'inherit', fontWeight: 700 }}>{inner}</strong>;
       }
-      return <strong key={i} style={{ color: 'rgba(255,255,255,0.95)', fontWeight: 700 }}>{inner}</strong>;
+      return <strong key={i} style={{ color: onGold ? 'rgba(5,5,5,0.98)' : 'rgba(255,255,255,0.95)', fontWeight: 700 }}>{inner}</strong>;
     }
     if (p.startsWith('*') && p.endsWith('*')) {
-      return <em key={i} style={{ fontStyle: 'italic', color: variant === 'heading' ? 'inherit' : 'rgba(255,255,255,0.78)' }}>{p.slice(1, -1)}</em>;
+      return <em key={i} style={{ fontStyle: 'italic', color: variant === 'heading' ? 'inherit' : onGold ? 'rgba(5,5,5,0.75)' : 'rgba(255,255,255,0.78)' }}>{p.slice(1, -1)}</em>;
     }
     if (p.startsWith('`') && p.endsWith('`')) {
       const inner = p.slice(1, -1);
       if (variant === 'heading') {
         return (
-          <code key={i} style={{ background: 'rgba(212,175,55,0.15)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: 'inherit' }}>
+          <code key={i} style={{ background: onGold ? 'rgba(5,5,5,0.12)' : 'rgba(212,175,55,0.15)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: 'inherit' }}>
             {inner}
           </code>
         );
       }
       return (
-        <code key={i} style={{ background: 'rgba(255,255,255,0.08)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: 'rgba(255,255,255,0.82)' }}>
+        <code key={i} style={{ background: onGold ? 'rgba(5,5,5,0.1)' : 'rgba(255,255,255,0.08)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: onGold ? 'rgba(5,5,5,0.88)' : 'rgba(255,255,255,0.82)' }}>
           {inner}
         </code>
       );
@@ -731,42 +736,60 @@ function QuantumApothecaryInner() {
      CHAT PANEL — Logic 100% preserved, UI upgraded to SQI-2050
      ══════════════════════════════════════════════════════ */
   const renderChatPanel = () => (
-    <div className="glass-card overflow-hidden flex flex-col relative" style={{ minHeight: '70vh', background: '#050505', border: 'none' }}>
-      {/* Chat Header */}
-      <div className="px-3 sm:px-5 py-3 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+    <div className="glass-card relative flex min-h-[70vh] flex-col overflow-hidden">
+      {/* Chat header — matches /admin-quantum-apothecary-2045 SQI strip */}
+      <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] bg-white/[0.02] px-3 py-4 sm:px-6">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           {isChatFullscreen && (
-            <button type="button" onClick={() => setIsChatFullscreen(false)} className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition shrink-0">
+            <button type="button" onClick={() => setIsChatFullscreen(false)} className="shrink-0 rounded-full bg-white/5 p-2 transition hover:bg-white/10">
               <X size={14} className="text-white/80" />
             </button>
           )}
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl bg-gradient-to-br from-[#D4AF37] to-[#B8940A] flex items-center justify-center shadow-lg shrink-0" style={{ boxShadow: '0 0 20px rgba(212,175,55,0.3)' }}>
-            <MessageSquare size={13} className="text-black" />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#D4AF37]/30 bg-gradient-to-br from-[#D4AF37]/25 to-[#050505] shadow-[0_0_24px_rgba(212,175,55,0.2)]">
+            <Globe size={16} className="text-[#D4AF37]" aria-hidden />
           </div>
           <div className="min-w-0">
-            <p className="text-[11px] sm:text-xs font-black tracking-[-0.03em] text-[#D4AF37] truncate">{t('quantumApothecary.chat.sqiOnline')}</p>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" style={{ boxShadow: '0 0 6px #34d399' }} />
-              <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.2em] sm:tracking-[0.3em] text-[#D4AF37]/50 truncate">{t('quantumApothecary.chat.neuralSync')}</span>
+            <p className="truncate text-[8px] font-extrabold uppercase tracking-[0.35em] text-[#D4AF37] [text-shadow:0_0_12px_rgba(212,175,55,0.25)]">
+              {t('quantumApothecary.chat.sqiOnline')}
+            </p>
+            <div className="mt-1 flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-[#22D3EE] shadow-[0_0_8px_#22D3EE]" />
+              <span className="truncate text-[9px] uppercase tracking-tighter text-white/45">{t('quantumApothecary.chat.neuralSync')}</span>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <button type="button" onClick={startFreshApothecaryChat} disabled={isTyping}
-            title="Clear this chat and start a new thread"
-            className="p-1.5 sm:p-2 rounded-xl bg-white/[0.03] border border-white/[0.08] text-white/50 hover:text-[#D4AF37] hover:border-[#D4AF37]/25 transition disabled:opacity-30">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <button
+            type="button"
+            onClick={startFreshApothecaryChat}
+            disabled={isTyping}
+            title={t('quantumApothecary.chat.newChatTitle')}
+            className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-1.5 text-white/50 transition hover:border-[#D4AF37]/25 hover:text-[#D4AF37] disabled:opacity-30 sm:p-2"
+          >
             <Plus size={14} />
           </button>
-          <button type="button" onClick={() => setSessionsOpen(true)}
-            className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.25em] text-[#D4AF37] hover:bg-[#D4AF37]/20 transition whitespace-nowrap">
-            History
+          <button
+            type="button"
+            onClick={() => setSessionsOpen(true)}
+            className="whitespace-nowrap rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-2 py-1 text-[8px] font-bold uppercase tracking-[0.15em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20 sm:px-3 sm:py-1.5 sm:text-[9px] sm:tracking-[0.25em]"
+          >
+            {t('quantumApothecary.chat.history')}
           </button>
-          <Cpu size={14} className="text-[#D4AF37]/30 hidden sm:block" />
+          <button
+            type="button"
+            onClick={() => setShowKnowledge(true)}
+            className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-2 text-[#D4AF37]/70 transition hover:border-[#D4AF37]/25 hover:bg-[#D4AF37]/[0.06]"
+            title={t('quantumApothecary.chat.openKnowledge')}
+            aria-label={t('quantumApothecary.chat.openKnowledge')}
+          >
+            <Info size={14} />
+          </button>
+          <Cpu size={14} className="hidden text-[#D4AF37]/30 sm:block" aria-hidden />
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar relative" style={{ padding: '16px', background: '#050505' }}
+      <div className="custom-scrollbar relative flex-1 overflow-y-auto bg-[#050505]/60" style={{ padding: '16px' }}
         ref={(el) => {
           // Track scroll position to show/hide scroll-to-bottom button
           if (!el) return;
@@ -786,24 +809,29 @@ function QuantumApothecaryInner() {
               <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
                 ref={isLastUser ? lastUserMsgRef : isLastSqi ? lastSqiMsgRef : undefined}
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[95%] ${
-                  msg.role === 'user'
-                    ? 'rounded-2xl rounded-br-sm bg-[#D4AF37]/10 border border-[#D4AF37]/25'
-                    : 'w-full'
-                }`} style={{ padding: msg.role === 'user' ? '10px 12px' : '4px 0' }}>
-                  <div className="markdown-body">{renderChatText(msg.text)}</div>
+                <div
+                  className={`max-w-[95%] ${
+                    msg.role === 'user'
+                      ? 'rounded-[28px] rounded-tr-none border border-[#D4AF37]/35 bg-gradient-to-br from-[#F5E17A] to-[#B8960C] text-[#050505] shadow-[0_0_28px_rgba(212,175,55,0.25)]'
+                      : 'w-full rounded-[28px] rounded-tl-none border border-white/[0.08] bg-white/[0.04] p-4 text-white/65'
+                  }`}
+                  style={{ padding: msg.role === 'user' ? '12px 14px' : undefined }}
+                >
+                  <div className="markdown-body">{renderChatText(msg.text, msg.role === 'user' ? 'user' : 'model')}</div>
                 </div>
               </motion.div>
               );
             })}
           {isTyping && (
             <div className="flex justify-start">
-              <div className="rounded-2xl rounded-bl-sm p-3" style={{ background: 'transparent' }}>
-                <div className="flex gap-1">
-                  {[0, 0.15, 0.3].map((delay, i) => (
-                    <div key={i} className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full animate-bounce" style={{ animationDelay: `${delay}s`, boxShadow: '0 0 6px rgba(212,175,55,0.6)' }} />
-                  ))}
-                </div>
+              <div className="flex gap-1 rounded-[28px] rounded-tl-none border border-white/[0.08] bg-white/[0.04] p-4">
+                {[0, 0.2, 0.4].map((delay, i) => (
+                  <span
+                    key={i}
+                    className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#D4AF37]/50"
+                    style={{ animationDelay: `${delay}s`, boxShadow: '0 0 6px rgba(212,175,55,0.5)' }}
+                  />
+                ))}
               </div>
             </div>
           )}
@@ -825,8 +853,8 @@ function QuantumApothecaryInner() {
         </button>
       )}
 
-      {/* Chat Input */}
-      <div className="p-4" style={isChatFullscreen ? { paddingBottom: 'env(safe-area-inset-bottom, 16px)' } : undefined}>
+      {/* Chat input — admin lab bar */}
+      <div className="border-t border-white/[0.06] bg-white/[0.02] p-4 sm:p-6" style={isChatFullscreen ? { paddingBottom: 'env(safe-area-inset-bottom, 16px)' } : undefined}>
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
         {pendingImage && (
           <div className="flex items-center gap-2 mb-3 p-2 rounded-xl bg-[#D4AF37]/5 border border-[#D4AF37]/15">
@@ -837,29 +865,44 @@ function QuantumApothecaryInner() {
             </button>
           </div>
         )}
-        <div className="flex gap-2 items-center">
-          <button type="button" onClick={() => fileInputRef.current?.click()}
-            className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/30 transition shrink-0" title="Upload or take photo">
-            <Camera size={15} className="text-white/40 hover:text-[#D4AF37]" />
+        <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="shrink-0 rounded-2xl border border-white/[0.08] bg-white/[0.04] p-2.5 transition hover:border-[#D4AF37]/25 hover:bg-[#D4AF37]/[0.06]"
+            title="Upload or take photo"
+          >
+            <Camera size={15} className="text-[#D4AF37]/70" />
           </button>
-          <button type="button" onClick={startVoiceInput}
-            className={`p-2.5 rounded-xl border transition shrink-0 ${isRecording ? 'bg-red-500/20 border-red-500/40 text-red-400 animate-pulse' : 'bg-white/[0.03] border-white/[0.08] hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/30 text-white/40'}`}
-            title={isRecording ? 'Listening…' : 'Voice input'}>
+          <button
+            type="button"
+            onClick={startVoiceInput}
+            className={`shrink-0 rounded-2xl border p-2.5 transition ${isRecording ? 'animate-pulse border-red-500/40 bg-red-500/20 text-red-400' : 'border-white/[0.08] bg-white/[0.04] text-[#D4AF37]/70 hover:border-[#D4AF37]/25'}`}
+            title={isRecording ? 'Listening…' : 'Voice input'}
+          >
             <Mic size={15} />
           </button>
-          {isRecording && <span className="text-[10px] text-red-400 font-bold uppercase tracking-widest shrink-0">Listening…</span>}
-          <input
-            type="text" value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
-            onFocus={handleChatFocus}
-            placeholder="Communicate with the SQI..."
-            className="flex-1 min-w-0 bg-white/[0.03] border border-white/[0.08] rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-[#D4AF37]/40 transition placeholder:text-white/20 text-white/80"
-          />
-          <button onClick={() => handleSendMessage()} disabled={(!input.trim() && !pendingImage) || isTyping}
-            className="sqi-btn-primary px-4 py-2.5 shrink-0 disabled:opacity-20">
-            <Send size={15} />
-          </button>
+          {isRecording && <span className="shrink-0 text-[10px] font-bold uppercase tracking-widest text-red-400">Listening…</span>}
+          <div className="relative min-w-0 flex-1">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+              onFocus={handleChatFocus}
+              placeholder={t('quantumApothecary.chat.placeholder')}
+              className="w-full rounded-[28px] border border-white/[0.08] bg-white/[0.04] py-3.5 pl-5 pr-14 text-sm leading-[1.6] text-white placeholder:text-white/30 focus:border-[#D4AF37]/35 focus:outline-none focus:ring-1 focus:ring-[#D4AF37]/20"
+            />
+            <button
+              type="button"
+              onClick={() => handleSendMessage()}
+              disabled={(!input.trim() && !pendingImage) || isTyping}
+              className="absolute bottom-2 right-2 top-2 rounded-xl border border-[#D4AF37]/40 bg-gradient-to-b from-[#F5E17A] to-[#B8960C] px-3 text-[#050505] shadow-[0_0_16px_rgba(212,175,55,0.25)] transition-all disabled:opacity-30 sm:px-4"
+              aria-label={t('quantumApothecary.chat.send')}
+            >
+              <Send size={15} />
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -912,9 +955,9 @@ function QuantumApothecaryInner() {
             </div>
             <div>
               <h1 className="text-2xl font-black tracking-[-0.05em] text-white" style={{ textShadow: '0 0 30px rgba(212,175,55,0.2)' }}>
-                Quantum Apothecary
+                {t('quantumApothecary.title')}
               </h1>
-              <p className="text-[9px] font-bold uppercase tracking-[0.5em] text-[#D4AF37]/40 mt-0.5">Est. 2050 · Siddha-Quantum Interface</p>
+              <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.5em] text-[#D4AF37]/40">{t('quantumApothecary.subtitle')}</p>
             </div>
           </div>
           <button onClick={() => setShowKnowledge(true)}
@@ -932,26 +975,18 @@ function QuantumApothecaryInner() {
           {/* ════ LEFT COLUMN ════ */}
           <div className="space-y-5">
 
-            {/* ── Digital Nadi Scan ── */}
-            <div className="glass-card p-6 qa-card-hover" style={{ background: 'rgba(5,5,5,0.7)', border: '1px solid rgba(212,175,55,0.1)' }}>
-              {/* Decorative top bar */}
-              <div style={{ height: 2, background: 'linear-gradient(90deg,transparent,#D4AF37,transparent)', marginBottom: 20, opacity: 0.4, borderRadius: 1 }} />
-              <div className="flex justify-between items-center mb-5">
+            {/* ── Digital Nadi Scan (admin 2045 glass + header pattern) ── */}
+            <div className="glass-card p-6 sm:p-7 qa-card-hover">
+              <div className="mb-6 flex justify-between gap-3">
                 <div>
-                  <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
-                    <div style={{ width:28, height:28, background:'linear-gradient(135deg,#D4AF37,#B8940A)', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 12px rgba(212,175,55,0.3)' }}>
-                      <Activity size={14} className="text-black" />
-                    </div>
-                    <h2 className="text-sm font-black tracking-[-0.03em]">Digital Nadi Scan</h2>
-                  </div>
-                  <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-white/30">72,000 Channels Monitoring</p>
+                  <p className="text-[8px] font-extrabold uppercase tracking-[0.5em] text-[#D4AF37]/55">{t('quantumApothecary.scan.title')}</p>
+                  <p className="mt-2 text-xs leading-[1.6] text-white/60">{t('quantumApothecary.scan.channelsMonitoring')}</p>
                 </div>
-                <div style={{ textAlign:'right' }}>
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20">
-                    <div style={{ width:6, height:6, background:'#D4AF37', borderRadius:'50%', boxShadow:'0 0 6px #D4AF37', animation:'qa-pulse 2s infinite' }} />
-                    <span className="text-xs font-black text-[#D4AF37] tracking-tight">LIVE</span>
-                  </div>
-                </div>
+                <Activity
+                  className={`h-5 w-5 shrink-0 ${scanPhase === 'camera' || scanPhase === 'analyzing' ? 'animate-pulse' : ''}`}
+                  style={{ color: scanPhase === 'camera' || scanPhase === 'analyzing' ? '#22D3EE' : '#D4AF37' }}
+                  aria-hidden
+                />
               </div>
 
               {scanResult ? (
@@ -1047,10 +1082,10 @@ function QuantumApothecaryInner() {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: 0.8 }}
-                    className="rounded-2xl p-4 border border-emerald-500/25 bg-emerald-950/20"
+                    className="rounded-2xl border border-[#22D3EE]/20 bg-[#22D3EE]/[0.06] p-4"
                   >
-                    <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-emerald-400/70 mb-1.5">Herb of Today</p>
-                    <p className="text-sm font-bold text-white/90">{scanResult.herbOfToday}</p>
+                    <p className="mb-1.5 text-[8px] font-extrabold uppercase tracking-[0.5em] text-[#22D3EE]/80">{t('quantumApothecary.scan.herbToday')}</p>
+                    <p className="text-sm font-bold leading-[1.6] text-white/90">{scanResult.herbOfToday}</p>
                   </motion.div>
 
                   {/* Siddha Remedies */}
@@ -1078,11 +1113,19 @@ function QuantumApothecaryInner() {
 
                   {/* Actions */}
                   <div className="space-y-2.5 pt-2">
-                    <button type="button" onClick={applyRemedies} className="sqi-btn-primary w-full py-3 text-xs">
+                    <button
+                      type="button"
+                      onClick={applyRemedies}
+                      className="w-full rounded-[28px] border border-[#D4AF37]/35 bg-[#D4AF37]/15 py-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#D4AF37] transition-all hover:bg-[#D4AF37]/25"
+                    >
                       Apply Remedies · Scalar Lock
                     </button>
-                    <button type="button" onClick={() => runNadiScan('environment')} disabled={isScanning}
-                      className="w-full py-3 text-[10px] font-bold uppercase tracking-[0.2em] rounded-xl border border-white/10 bg-white/[0.03] text-white/50 hover:text-white/80 hover:border-white/20 transition-all disabled:opacity-35">
+                    <button
+                      type="button"
+                      onClick={() => runNadiScan('environment')}
+                      disabled={isScanning}
+                      className="w-full rounded-[28px] border border-white/[0.08] bg-white/[0.05] py-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-white/70 transition-all hover:border-[#D4AF37]/25 hover:text-[#D4AF37] disabled:opacity-35"
+                    >
                       Rescan · Rear Camera
                     </button>
                   </div>
@@ -1119,77 +1162,36 @@ function QuantumApothecaryInner() {
                       </div>
                     </div>
                   ) : (
-                    /* Sacred empty state */
-                    <div className="py-6 space-y-5">
-                      {/* Sacred geometry animation */}
-                      <div className="relative mx-auto" style={{ width: 120, height: 120 }}>
-                        {/* Outer ring */}
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-                          style={{ position: 'absolute', inset: 0, border: '1px solid rgba(212,175,55,0.2)', borderRadius: '50%' }}
-                        />
-                        {/* Middle ring */}
-                        <motion.div
-                          animate={{ rotate: -360 }}
-                          transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
-                          style={{ position: 'absolute', inset: 12, border: '1px solid rgba(212,175,55,0.15)', borderRadius: '50%' }}
-                        />
-                        {/* Inner ring */}
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
-                          style={{ position: 'absolute', inset: 24, border: '1px dashed rgba(212,175,55,0.25)', borderRadius: '50%' }}
-                        />
-                        {/* Center glow */}
-                        <motion.div
-                          animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0.8, 0.4] }}
-                          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                          style={{ position: 'absolute', inset: 40, background: 'radial-gradient(circle, rgba(212,175,55,0.4) 0%, transparent 70%)', borderRadius: '50%' }}
-                        />
-                        {/* Core dot */}
-                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 8, height: 8, background: '#D4AF37', borderRadius: '50%', boxShadow: '0 0 20px rgba(212,175,55,0.6), 0 0 40px rgba(212,175,55,0.3)' }} />
-                        {/* Orbiting dots */}
-                        {[0, 60, 120, 180, 240, 300].map((deg, i) => (
-                          <motion.div
-                            key={i}
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 12, repeat: Infinity, ease: 'linear', delay: i * 0.4 }}
-                            style={{ position: 'absolute', inset: 0, transformOrigin: 'center' }}
-                          >
-                            <div style={{ position: 'absolute', top: 0, left: '50%', transform: `translateX(-50%) rotate(${deg}deg)`, width: 4, height: 4, background: '#D4AF37', borderRadius: '50%', opacity: 0.4, boxShadow: '0 0 6px rgba(212,175,55,0.5)' }} />
-                          </motion.div>
-                        ))}
-                      </div>
-
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#D4AF37]/60">72,000 Channels Monitoring</p>
-                        <p className="text-[9px] text-white/20 mt-1">Awaiting biofield handshake · Rear camera</p>
+                    <div className="flex flex-col items-center py-4 text-center">
+                      <div className="relative mb-6 aspect-video w-full overflow-hidden rounded-[28px] border border-white/[0.06] bg-black/45">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-white/35">
+                          <Zap className="mb-2 h-8 w-8 text-[#D4AF37]/50" aria-hidden />
+                          <p className="text-[8px] font-extrabold uppercase tracking-[0.4em]">{t('quantumApothecary.scan.awaitingHandshake')}</p>
+                        </div>
                       </div>
                     </div>
                   )}
 
-                  {/* Scan button */}
-                  <button type="button" onClick={() => runNadiScan('environment')}
+                  {/* Scan button — admin 2045 gold pill */}
+                  <button
+                    type="button"
+                    onClick={() => runNadiScan('environment')}
                     disabled={scanPhase === 'camera' || scanPhase === 'analyzing'}
-                    style={{
-                      background: (scanPhase === 'camera' || scanPhase === 'analyzing') ? 'rgba(255,255,255,0.05)' : 'linear-gradient(135deg, #D4AF37, #B8940A)',
-                      boxShadow: (scanPhase === 'camera' || scanPhase === 'analyzing') ? 'none' : '0 0 20px rgba(212,175,55,0.3), 0 0 40px rgba(212,175,55,0.1)',
-                    }}
-                    className="w-full py-3.5 text-xs font-black uppercase tracking-[0.2em] rounded-xl border-0 text-black disabled:text-white/40 disabled:opacity-60 transition-all">
+                    className="w-full rounded-[40px] border border-[#D4AF37]/40 bg-gradient-to-b from-[#F5E17A] via-[#D4AF37] to-[#A07C10] px-8 py-3.5 text-xs font-black uppercase tracking-[0.2em] text-[#050505] shadow-[0_12px_40px_rgba(212,175,55,0.35)] transition-all hover:shadow-[0_16px_48px_rgba(212,175,55,0.45)] disabled:border-white/10 disabled:bg-white/[0.05] disabled:text-white/40 disabled:shadow-none disabled:opacity-60"
+                  >
                     {scanPhase === 'camera'
-                      ? 'Scanning…'
+                      ? t('quantumApothecary.scan.scanning')
                       : scanPhase === 'analyzing'
-                      ? 'Analyzing Biofield…'
-                      : '◈  Initiate Nadi Scan'}
+                        ? t('quantumApothecary.scan.analyzingBiofield')
+                        : t('quantumApothecary.scan.initiate')}
                   </button>
                 </div>
               )}
             </div>
 
             {/* ── Aetheric Mixer ── */}
-            <div className="glass-card p-6 qa-card-hover" style={{ background:'rgba(5,5,5,0.7)', border:'1px solid rgba(212,175,55,0.1)' }}>
-              <div style={{ height:2, background:'linear-gradient(90deg,transparent,#D4AF37,transparent)', marginBottom:20, opacity:0.4, borderRadius:1 }} />
+            <div className="glass-card p-6 sm:p-7 qa-card-hover">
+              <div style={{ height: 2, background: 'linear-gradient(90deg,transparent,#D4AF37,transparent)', marginBottom: 20, opacity: 0.4, borderRadius: 1 }} />
               <div className="flex justify-between items-center mb-4">
                 <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                   <div style={{ width:28, height:28, background:'rgba(212,175,55,0.12)', border:'1px solid rgba(212,175,55,0.25)', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>⚗</div>
@@ -1224,7 +1226,12 @@ function QuantumApothecaryInner() {
                   </div>
                 )}
               </div>
-              <button onClick={transmitCocktail} disabled={selectedActivations.length === 0} className="sqi-btn-primary w-full py-3.5 text-xs disabled:opacity-20">
+              <button
+                type="button"
+                onClick={transmitCocktail}
+                disabled={selectedActivations.length === 0}
+                className="w-full rounded-[40px] border border-[#D4AF37]/45 bg-gradient-to-b from-[#F5E17A] to-[#B8960C] py-4 text-xs font-black uppercase tracking-[0.28em] text-[#050505] shadow-[0_8px_32px_rgba(212,175,55,0.3)] transition-all hover:shadow-[0_12px_40px_rgba(212,175,55,0.4)] disabled:opacity-20"
+              >
                 Transmit Light-Code
               </button>
             </div>
