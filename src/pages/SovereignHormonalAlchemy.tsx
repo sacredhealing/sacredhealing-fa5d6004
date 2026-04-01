@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -13,54 +13,47 @@ import {
   Sun,
   Wind,
   Zap,
+  Calendar,
 } from 'lucide-react';
-
-type Dosha = 'Vata' | 'Kapha' | 'Pitta';
-type Phase = 'Release' | 'Nourish' | 'Transform';
-
-interface CycleData {
-  day: number;
-  dosha: Dosha;
-  phase: Phase;
-  mantra: string;
-  frequency: string;
-}
+import { useCyclePhase } from '@/hooks/useCyclePhase';
 
 export default function SovereignHormonalAlchemy() {
   const navigate = useNavigate();
-  const [cycleDay, setCycleDay] = useState<number>(1);
-  const [isWiseWomanMode, setIsWiseWomanMode] = useState<boolean>(false);
-  const [pittaSurges, setPittaSurges] = useState<number>(0);
-  const [isTransmitting, setIsTransmitting] = useState<boolean>(false);
-  const [transmissionProgress, setTransmissionProgress] = useState<number>(0);
+  const {
+    phase,
+    cycleDay,
+    daysUntilNextPhase,
+    isConfigured,
+    settings,
+    isLoading,
+    updateCycleSettings,
+    isSaving,
+  } = useCyclePhase();
 
-  const cycleInfo = useMemo((): CycleData => {
-    if (cycleDay <= 5) {
-      return {
-        day: cycleDay,
-        dosha: 'Vata',
-        phase: 'Release',
-        mantra: 'Om Somaye Namaha — I release into the cosmic void.',
-        frequency: '396Hz (Grounding)',
-      };
+  const [isWiseWomanMode, setIsWiseWomanMode] = useState(false);
+  const [pittaSurges, setPittaSurges] = useState(0);
+  const [isTransmitting, setIsTransmitting] = useState(false);
+  const [transmissionProgress, setTransmissionProgress] = useState(0);
+
+  // Setup form state
+  const [showSetup, setShowSetup] = useState(false);
+  const [formDate, setFormDate] = useState('');
+  const [formCycleLen, setFormCycleLen] = useState(28);
+  const [formBleedDays, setFormBleedDays] = useState(5);
+
+  // Show setup if not configured
+  useEffect(() => {
+    if (!isLoading && !isConfigured) setShowSetup(true);
+  }, [isLoading, isConfigured]);
+
+  // Populate form from existing settings
+  useEffect(() => {
+    if (settings) {
+      if (settings.lastPeriodDate) setFormDate(settings.lastPeriodDate);
+      setFormCycleLen(settings.cycleLength);
+      setFormBleedDays(settings.bleedDays);
     }
-    if (cycleDay <= 14) {
-      return {
-        day: cycleDay,
-        dosha: 'Kapha',
-        phase: 'Nourish',
-        mantra: 'Om Shrim Namaha — I nourish the temple of creation.',
-        frequency: '417Hz (Stimulating)',
-      };
-    }
-    return {
-      day: cycleDay,
-      dosha: 'Pitta',
-      phase: 'Transform',
-      mantra: 'Om Dum Durgaye Namaha — I transform fire into wisdom.',
-      frequency: '528Hz (Cooling)',
-    };
-  }, [cycleDay]);
+  }, [settings]);
 
   useEffect(() => {
     let interval: number | undefined;
@@ -85,16 +78,28 @@ export default function SovereignHormonalAlchemy() {
     setTransmissionProgress(0);
   };
 
+  const handleSaveSettings = () => {
+    if (!formDate) return;
+    updateCycleSettings(formDate, formCycleLen, formBleedDays);
+    setShowSetup(false);
+  };
+
+  const doshaIcon =
+    phase.dosha === 'Vata' ? <Wind className="w-4 h-4" /> :
+    phase.dosha === 'Kapha' ? <Droplets className="w-4 h-4" /> :
+    <Flame className="w-4 h-4" />;
+
   const doshaAccent =
-    cycleInfo.dosha === 'Pitta'
+    phase.dosha === 'Pitta'
       ? { boxShadow: '0 0 30px rgba(212,175,55,0.4)' }
-      : cycleInfo.dosha === 'Vata'
+      : phase.dosha === 'Vata'
         ? { filter: 'drop-shadow(0 0 10px rgba(212,175,55,0.65))' }
         : undefined;
 
   return (
     <div className="min-h-screen" style={{ background: '#050505', color: '#D4AF37', paddingBottom: 104 }}>
       <div className="max-w-6xl mx-auto px-4 md:px-8 pt-12">
+        {/* HEADER */}
         <header className="flex items-center justify-between gap-4 mb-10">
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-3">
             <button
@@ -122,9 +127,18 @@ export default function SovereignHormonalAlchemy() {
           </motion.div>
 
           <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => setShowSetup(true)}
+              className="rounded-xl border px-3 py-2 text-[10px] font-black uppercase tracking-[0.25em]"
+              style={{ borderColor: 'rgba(212,175,55,0.18)', color: 'rgba(212,175,55,0.65)', background: 'rgba(255,255,255,0.02)' }}
+            >
+              <Calendar className="w-3 h-3 inline mr-1" />
+              Cycle
+            </button>
             <div className="flex items-center gap-2">
               <span className="text-[10px] uppercase tracking-[0.35em]" style={{ color: 'rgba(212,175,55,0.45)' }}>
-                Wise Woman Mode
+                Wise Woman
               </span>
               <button
                 type="button"
@@ -145,7 +159,100 @@ export default function SovereignHormonalAlchemy() {
           </div>
         </header>
 
+        {/* SETUP MODAL */}
+        <AnimatePresence>
+          {showSetup && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4"
+              onClick={() => isConfigured && setShowSetup(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-sm rounded-3xl border p-8 space-y-6"
+                style={{ background: '#0a0a0a', borderColor: 'rgba(212,175,55,0.20)' }}
+              >
+                <h2 className="text-sm font-black uppercase tracking-[0.3em] text-center" style={{ color: 'rgba(212,175,55,0.92)' }}>
+                  Cycle Settings
+                </h2>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-widest mb-2" style={{ color: 'rgba(212,175,55,0.5)' }}>
+                      Last Period Start Date
+                    </label>
+                    <input
+                      type="date"
+                      value={formDate}
+                      onChange={(e) => setFormDate(e.target.value)}
+                      className="w-full rounded-xl border px-4 py-3 text-sm"
+                      style={{
+                        background: 'rgba(255,255,255,0.03)',
+                        borderColor: 'rgba(212,175,55,0.15)',
+                        color: '#D4AF37',
+                        colorScheme: 'dark',
+                      }}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] uppercase tracking-widest mb-2" style={{ color: 'rgba(212,175,55,0.5)' }}>
+                        Cycle Length
+                      </label>
+                      <input
+                        type="number"
+                        min={21}
+                        max={40}
+                        value={formCycleLen}
+                        onChange={(e) => setFormCycleLen(Number(e.target.value))}
+                        className="w-full rounded-xl border px-4 py-3 text-sm text-center"
+                        style={{ background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(212,175,55,0.15)', color: '#D4AF37' }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase tracking-widest mb-2" style={{ color: 'rgba(212,175,55,0.5)' }}>
+                        Bleed Days
+                      </label>
+                      <input
+                        type="number"
+                        min={2}
+                        max={10}
+                        value={formBleedDays}
+                        onChange={(e) => setFormBleedDays(Number(e.target.value))}
+                        className="w-full rounded-xl border px-4 py-3 text-sm text-center"
+                        style={{ background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(212,175,55,0.15)', color: '#D4AF37' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleSaveSettings}
+                  disabled={!formDate || isSaving}
+                  className="w-full py-3 rounded-full border text-xs font-black uppercase tracking-[0.35em] transition-all"
+                  style={{
+                    borderColor: 'rgba(212,175,55,0.55)',
+                    background: formDate ? 'rgba(212,175,55,0.85)' : 'transparent',
+                    color: formDate ? '#050505' : 'rgba(212,175,55,0.4)',
+                  }}
+                >
+                  {isSaving ? 'Saving...' : 'Save & Align'}
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* MAIN GRID */}
         <main className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* LEFT COLUMN */}
           <div className="lg:col-span-4 space-y-8">
             <section
               className="rounded-[32px] p-7 border relative overflow-hidden"
@@ -156,51 +263,69 @@ export default function SovereignHormonalAlchemy() {
               </div>
 
               <h2 className="text-xs uppercase tracking-[0.2em] mb-6 opacity-70 flex items-center gap-2">
-                <Activity className="w-3 h-3" /> Jyotish Sync
+                <Activity className="w-3 h-3" /> Cycle Phase
               </h2>
 
               <div className="space-y-6">
+                {/* Phase name + day */}
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest opacity-50 mb-1">Current Nakshatra</p>
-                  <p className="text-xl font-semibold italic" style={{ color: 'rgba(212,175,55,0.92)' }}>
-                    Rohini
+                  <p className="text-[10px] uppercase tracking-widest opacity-50 mb-1">Current Phase</p>
+                  <p className="text-xl font-semibold italic" style={{ color: phase.colorAccent }}>
+                    {phase.name}
                   </p>
                 </div>
 
+                {/* Cycle day display */}
                 <div className="flex items-end gap-4">
                   <div className="flex-1">
                     <p className="text-[10px] uppercase tracking-widest opacity-50 mb-1">Cycle Day</p>
-                    <input
-                      type="range"
-                      min={1}
-                      max={32}
-                      value={cycleDay}
-                      onChange={(e) => setCycleDay(Number(e.target.value))}
-                      className="w-full h-1 rounded-full appearance-none cursor-pointer"
-                      style={{ accentColor: '#D4AF37', background: 'rgba(212,175,55,0.10)' }}
-                    />
+                    <div className="w-full h-1 rounded-full" style={{ background: 'rgba(212,175,55,0.10)' }}>
+                      <div
+                        className="h-1 rounded-full transition-all duration-700"
+                        style={{
+                          width: `${(cycleDay / (settings?.cycleLength ?? 28)) * 100}%`,
+                          background: phase.colorAccent,
+                        }}
+                      />
+                    </div>
                   </div>
                   <span className="text-3xl font-black" style={{ color: 'rgba(212,175,55,0.9)' }}>
                     {cycleDay}
                   </span>
                 </div>
 
+                {/* Days until next phase */}
+                <p className="text-[10px] uppercase tracking-widest opacity-40">
+                  {daysUntilNextPhase} day{daysUntilNextPhase !== 1 ? 's' : ''} until next phase
+                </p>
+
+                {/* Dosha card */}
                 <div className="p-4 rounded-2xl border transition-all duration-700" style={{ borderColor: 'rgba(212,175,55,0.12)', ...doshaAccent }}>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: 'rgba(212,175,55,0.85)' }}>
-                      {cycleInfo.dosha}
+                      {phase.dosha}
                     </span>
-                    {cycleInfo.dosha === 'Vata' && <Wind className="w-4 h-4" />}
-                    {cycleInfo.dosha === 'Kapha' && <Droplets className="w-4 h-4" />}
-                    {cycleInfo.dosha === 'Pitta' && <Flame className="w-4 h-4" />}
+                    {doshaIcon}
                   </div>
                   <p className="text-2xl font-semibold italic" style={{ color: 'rgba(212,175,55,0.92)' }}>
-                    {cycleInfo.phase}
+                    {phase.label}
                   </p>
                 </div>
+
+                {!isConfigured && (
+                  <button
+                    type="button"
+                    onClick={() => setShowSetup(true)}
+                    className="w-full py-2 rounded-full border text-[10px] font-bold uppercase tracking-[0.3em]"
+                    style={{ borderColor: 'rgba(212,175,55,0.25)', color: 'rgba(212,175,55,0.7)' }}
+                  >
+                    Set Your Cycle Date
+                  </button>
+                )}
               </div>
             </section>
 
+            {/* WISE WOMAN MODE */}
             <AnimatePresence mode="wait">
               {isWiseWomanMode && (
                 <motion.section
@@ -238,9 +363,9 @@ export default function SovereignHormonalAlchemy() {
                     </div>
 
                     <div className="pt-4 border-t" style={{ borderColor: 'rgba(212,175,55,0.10)' }}>
-                      <p className="text-[10px] uppercase tracking-widest opacity-50 mb-2">Prithvi Mudra Light-Code</p>
+                      <p className="text-[10px] uppercase tracking-widest opacity-50 mb-2">{phase.mudra} Light-Code</p>
                       <div className="p-4 rounded-xl text-[11px] leading-relaxed italic opacity-80" style={{ background: 'rgba(212,175,55,0.06)' }}>
-                        Touch the tip of the ring finger to the tip of the thumb. Visualize golden roots extending from your spine into the crystalline core of Gaia.
+                        {phase.mudraInstruction}
                       </div>
                     </div>
                   </div>
@@ -249,7 +374,9 @@ export default function SovereignHormonalAlchemy() {
             </AnimatePresence>
           </div>
 
+          {/* RIGHT COLUMN */}
           <div className="lg:col-span-8 space-y-8">
+            {/* TRANSMISSION */}
             <section
               className="rounded-[40px] p-10 md:p-12 border relative overflow-hidden min-h-[380px] flex flex-col items-center justify-center text-center"
               style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(212,175,55,0.12)', backdropFilter: 'blur(12px)' }}
@@ -276,7 +403,7 @@ export default function SovereignHormonalAlchemy() {
               <h2 className="text-2xl font-black tracking-[0.25em] uppercase mb-2" style={{ color: 'rgba(212,175,55,0.92)' }}>
                 Scalar Transmission
               </h2>
-              <p className="text-[10px] uppercase tracking-[0.45em] opacity-60 mb-8">{cycleInfo.frequency}</p>
+              <p className="text-[10px] uppercase tracking-[0.45em] opacity-60 mb-8">{phase.frequency}</p>
 
               <button
                 type="button"
@@ -301,18 +428,19 @@ export default function SovereignHormonalAlchemy() {
 
               {isTransmitting && (
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 text-[11px] italic opacity-70 max-w-sm">
-                  Harmonizing Anahata-field with {cycleInfo.dosha} specific scalar waves...
+                  Harmonizing Anahata-field with {phase.dosha}-specific {phase.frequencyHz}Hz scalar waves...
                 </motion.p>
               )}
             </section>
 
+            {/* MANTRA + GUIDANCE CARDS */}
             <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="rounded-[32px] p-7 border" style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(212,175,55,0.10)', backdropFilter: 'blur(12px)' }}>
                 <h2 className="text-xs uppercase tracking-[0.2em] mb-6 opacity-70 flex items-center gap-2">
                   <Sun className="w-3 h-3" /> Daily Mantra
                 </h2>
                 <p className="text-xl font-semibold italic leading-relaxed" style={{ color: 'rgba(212,175,55,0.92)' }}>
-                  “{cycleInfo.mantra}”
+                  &ldquo;{phase.mantra}&rdquo;
                 </p>
                 <div className="mt-6 flex items-center gap-2 text-[10px] uppercase tracking-widest opacity-60">
                   <span>Anahata-Opening Frequency</span>
@@ -326,24 +454,13 @@ export default function SovereignHormonalAlchemy() {
                 </h2>
                 <ul className="space-y-4">
                   {[
-                    {
-                      label: 'Nutrition',
-                      value:
-                        cycleInfo.dosha === 'Vata'
-                          ? 'Warm, grounding soups'
-                          : cycleInfo.dosha === 'Kapha'
-                            ? 'Spicy, light greens'
-                            : 'Cooling coconut water',
-                    },
-                    {
-                      label: 'Movement',
-                      value: cycleInfo.dosha === 'Vata' ? 'Yin Yoga' : cycleInfo.dosha === 'Kapha' ? 'Sun Salutations' : 'Moonlight walks',
-                    },
-                    { label: 'Ritual', value: 'Rose water anointing' },
+                    { label: 'Nutrition', value: phase.nutrition },
+                    { label: 'Movement', value: phase.movement },
+                    { label: 'Ritual', value: phase.ritual },
                   ].map((item, i) => (
                     <li key={i} className="flex justify-between items-center border-b pb-2" style={{ borderColor: 'rgba(212,175,55,0.06)' }}>
                       <span className="text-[10px] uppercase tracking-widest opacity-60">{item.label}</span>
-                      <span className="text-xs italic" style={{ color: 'rgba(212,175,55,0.88)' }}>
+                      <span className="text-xs italic text-right max-w-[60%]" style={{ color: 'rgba(212,175,55,0.88)' }}>
                         {item.value}
                       </span>
                     </li>
@@ -358,8 +475,8 @@ export default function SovereignHormonalAlchemy() {
           style={{ borderColor: 'rgba(212,175,55,0.10)' }}
         >
           <div className="flex items-center gap-4">
-            <span>AffiliateID: SQI_2050_ELITE</span>
-            <span>Stripe Gateway: Active</span>
+            <span>Phase: {phase.name}</span>
+            <span>Day {cycleDay}</span>
           </div>
           <div className="flex items-center gap-2 text-center">
             <Info className="w-3 h-3" />
@@ -370,4 +487,3 @@ export default function SovereignHormonalAlchemy() {
     </div>
   );
 }
-
