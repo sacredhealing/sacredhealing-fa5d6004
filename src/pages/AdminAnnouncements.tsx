@@ -14,6 +14,10 @@ const GOLD = '#D4AF37';
 const CYAN = '#22D3EE';
 const BLACK = '#050505';
 
+/** Same bucket as AdminPaths / community admin — `public-media` is often missing or blocked by RLS */
+const ANNOUNCEMENT_IMAGE_BUCKET = 'community-uploads';
+const ANNOUNCEMENT_IMAGE_MAX_BYTES = 8 * 1024 * 1024;
+
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&display=swap');
 
@@ -321,20 +325,59 @@ export default function AdminAnnouncements() {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({ title: 'Invalid file', description: 'Please choose an image file.', variant: 'destructive' });
+      e.target.value = '';
+      return;
+    }
+    if (file.size > ANNOUNCEMENT_IMAGE_MAX_BYTES) {
+      toast({
+        title: 'File too large',
+        description: `Images must be under ${ANNOUNCEMENT_IMAGE_MAX_BYTES / 1024 / 1024} MB.`,
+        variant: 'destructive',
+      });
+      e.target.value = '';
+      return;
+    }
+
     setUploading(true);
     try {
-      const ext = file.name.split('.').pop();
-      const path = `announcements/${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from('public-media').upload(path, file, { upsert: true });
+      const rawExt = file.name.split('.').pop()?.toLowerCase();
+      const ext =
+        rawExt && /^[a-z0-9]{1,8}$/.test(rawExt)
+          ? rawExt
+          : file.type === 'image/png'
+            ? 'png'
+            : file.type === 'image/webp'
+              ? 'webp'
+              : file.type === 'image/gif'
+                ? 'gif'
+                : 'jpg';
+      const path = `announcements/${Date.now()}-${Math.random().toString(36).slice(2, 9)}.${ext}`;
+      const { error: upErr } = await supabase.storage.from(ANNOUNCEMENT_IMAGE_BUCKET).upload(path, file, {
+        upsert: true,
+        contentType: file.type || `image/${ext === 'jpg' ? 'jpeg' : ext}`,
+      });
       if (upErr) throw upErr;
-      const { data } = supabase.storage.from('public-media').getPublicUrl(path);
+      const { data } = supabase.storage.from(ANNOUNCEMENT_IMAGE_BUCKET).getPublicUrl(path);
       setImageUrl(data.publicUrl);
       toast({ title: '✦ Image Uploaded' });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Upload failed';
-      toast({ title: 'Upload failed', description: msg, variant: 'destructive' });
+      const msg =
+        err && typeof err === 'object' && 'message' in err && typeof (err as { message: string }).message === 'string'
+          ? (err as { message: string }).message
+          : err instanceof Error
+            ? err.message
+            : 'Upload failed';
+      toast({
+        title: 'Upload failed',
+        description: msg,
+        variant: 'destructive',
+      });
     } finally {
       setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
     }
   };
 
