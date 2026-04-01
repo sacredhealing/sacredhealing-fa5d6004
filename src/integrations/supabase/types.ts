@@ -4154,13 +4154,16 @@ export type Database = {
           birth_name: string | null
           birth_place: string | null
           birth_time: string | null
+          bleed_days: number
           created_at: string
+          cycle_length: number
           daily_goal_minutes: number
           evening_reminder_time: string
           full_name: string | null
           id: string
           last_activity_date: string | null
           last_login_date: string | null
+          last_period_date: string | null
           midday_reminder_time: string
           morning_reminder_time: string
           notification_style: string
@@ -4183,13 +4186,16 @@ export type Database = {
           birth_name?: string | null
           birth_place?: string | null
           birth_time?: string | null
+          bleed_days?: number
           created_at?: string
+          cycle_length?: number
           daily_goal_minutes?: number
           evening_reminder_time?: string
           full_name?: string | null
           id?: string
           last_activity_date?: string | null
           last_login_date?: string | null
+          last_period_date?: string | null
           midday_reminder_time?: string
           morning_reminder_time?: string
           notification_style?: string
@@ -4212,13 +4218,16 @@ export type Database = {
           birth_name?: string | null
           birth_place?: string | null
           birth_time?: string | null
+          bleed_days?: number
           created_at?: string
+          cycle_length?: number
           daily_goal_minutes?: number
           evening_reminder_time?: string
           full_name?: string | null
           id?: string
           last_activity_date?: string | null
           last_login_date?: string | null
+          last_period_date?: string | null
           midday_reminder_time?: string
           morning_reminder_time?: string
           notification_style?: string
