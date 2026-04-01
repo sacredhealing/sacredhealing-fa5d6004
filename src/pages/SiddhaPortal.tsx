@@ -154,6 +154,50 @@ export default function SiddhaPortal() {
         <button style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.55)', background: 'none', border: 'none', cursor: 'pointer' }}>{t('siddhaPortal.openPlatform')}</button>
       </div>
 
+      {isAdmin && (
+        <div
+          onClick={() => navigate('/admin-quantum-apothecary-2045')}
+          style={{
+            margin: '16px 16px 0',
+            background: 'linear-gradient(135deg,rgba(255,78,0,0.08),rgba(212,175,55,0.04))',
+            border: '1px solid rgba(255,78,0,0.28)',
+            borderRadius: 20,
+            padding: '18px 16px',
+            cursor: 'pointer',
+            position: 'relative',
+          }}
+        >
+          <span
+            style={{
+              position: 'absolute',
+              top: 10,
+              right: 10,
+              fontFamily: "'Montserrat',sans-serif",
+              fontSize: 6,
+              fontWeight: 800,
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase',
+              background: 'rgba(255,78,0,0.2)',
+              border: '1px solid rgba(255,78,0,0.4)',
+              color: 'rgba(255,165,100,0.95)',
+              borderRadius: 20,
+              padding: '2px 7px',
+            }}
+          >
+            {t('siddhaPortal.adminApothecary2045Badge')}
+          </span>
+          <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 8, fontWeight: 800, letterSpacing: '0.32em', textTransform: 'uppercase', color: 'rgba(255,140,90,0.95)', marginBottom: 6 }}>
+            {t('siddhaPortal.adminApothecary2045Title')}
+          </div>
+          <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.88rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5, marginBottom: 12 }}>
+            {t('siddhaPortal.adminApothecary2045Desc')}
+          </p>
+          <button type="button" style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase', color: 'rgba(255,140,90,0.95)', background: 'none', border: 'none', cursor: 'pointer' }}>
+            {t('siddhaPortal.adminApothecary2045Cta')}
+          </button>
+        </div>
+      )}
+
     </div>
   );
 }

@@ -143,6 +143,7 @@ const DigitalNadi = React.lazy(() => import("./pages/DigitalNadi"));
 const SoulScan = React.lazy(() => import("./pages/SoulScan"));
 const VayuProtocol = React.lazy(() => import("./pages/VayuProtocol"));
 const SiddhaPortal = React.lazy(() => import("./pages/SiddhaPortal"));
+const AdminQuantumApothecary2045 = React.lazy(() => import("./pages/AdminQuantumApothecary2045"));
 const SovereignHormonalAlchemy = React.lazy(() => import("./pages/SovereignHormonalAlchemy"));
 const SiddhaPhotonicRegeneration = React.lazy(() => import("./pages/SiddhaPhotonicRegeneration"));
 const SiddhaHairGrowth = React.lazy(() => import("./pages/SiddhaHairGrowth"));
@@ -317,6 +318,7 @@ function AppRoutes() {
                   <Route path="/soul-scan" element={<SoulScan />} />
                   <Route path="/vayu-protocol" element={<VayuProtocol />} />
                   <Route path="/siddha-portal" element={<SiddhaPortal />} />
+                  <Route path="/admin-quantum-apothecary-2045" element={<AdminQuantumApothecary2045 />} />
                   <Route path="/sovereign-hormonal-alchemy" element={<SovereignHormonalAlchemy />} />
                   <Route path="/siddha-photonic-regeneration" element={<SiddhaPhotonicRegeneration />} />
                   <Route path="/siddha-hair-growth" element={<SiddhaHairGrowth />} />
