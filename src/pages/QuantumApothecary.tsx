@@ -75,35 +75,100 @@ type InlineVariant = 'heading' | 'body';
 function renderChatText(text: string, bubble: 'model' | 'user' = 'model') {
   const onGold = bubble === 'user';
   const gold = '#D4AF37';
-  const hOnGold = '#3d2f06';
   const body = onGold ? 'rgba(5,5,5,0.92)' : 'rgba(255,255,255,0.92)';
-  const headingColor = onGold ? hOnGold : gold;
+  /** Siddha-gold glow — strong on SQI (model) bubbles; user bubbles get gold + dark rim for contrast on gradient */
+  const headingGlow = onGold
+    ? '0 1px 2px rgba(0,0,0,0.35), 0 0 14px rgba(212,175,55,0.75), 0 0 28px rgba(212,175,55,0.4)'
+    : '0 0 12px rgba(212,175,55,0.55), 0 0 26px rgba(212,175,55,0.35), 0 0 42px rgba(212,175,55,0.18)';
+  const headingGlowSoft = onGold
+    ? '0 1px 1px rgba(0,0,0,0.3), 0 0 10px rgba(212,175,55,0.6), 0 0 22px rgba(212,175,55,0.32)'
+    : '0 0 10px rgba(212,175,55,0.45), 0 0 22px rgba(212,175,55,0.22)';
+  const headingColor = gold;
   const lines = text.split('\n');
   return lines.map((line, i) => {
     const trimmed = line.trim();
     if (!trimmed) return <div key={i} style={{ height: '4px' }} />;
     if (trimmed.startsWith('##### ')) return (
-      <p key={i} style={{ color: headingColor, fontWeight: 800, fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginTop: '12px', marginBottom: '4px', opacity: onGold ? 1 : 0.8 }}>
+      <p
+        key={i}
+        style={{
+          color: headingColor,
+          fontWeight: 800,
+          fontSize: '10px',
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase' as const,
+          marginTop: '12px',
+          marginBottom: '4px',
+          opacity: onGold ? 1 : 0.92,
+          textShadow: headingGlowSoft,
+        }}
+      >
         {renderInline(trimmed.slice(6), 'heading', onGold)}
       </p>
     );
     if (trimmed.startsWith('#### ')) return (
-      <p key={i} style={{ color: headingColor, fontWeight: 800, fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase' as const, marginTop: '10px', marginBottom: '4px' }}>
+      <p
+        key={i}
+        style={{
+          color: headingColor,
+          fontWeight: 800,
+          fontSize: '11px',
+          letterSpacing: '0.06em',
+          textTransform: 'uppercase' as const,
+          marginTop: '10px',
+          marginBottom: '4px',
+          textShadow: headingGlowSoft,
+        }}
+      >
         {renderInline(trimmed.slice(5), 'heading', onGold)}
       </p>
     );
     if (trimmed.startsWith('### ')) return (
-      <h3 key={i} style={{ color: headingColor, fontWeight: 800, fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase' as const, marginTop: '10px', marginBottom: '4px' }}>
+      <h3
+        key={i}
+        style={{
+          color: headingColor,
+          fontWeight: 800,
+          fontSize: '11px',
+          letterSpacing: '0.06em',
+          textTransform: 'uppercase' as const,
+          marginTop: '10px',
+          marginBottom: '4px',
+          textShadow: headingGlowSoft,
+        }}
+      >
         {renderInline(trimmed.slice(4), 'heading', onGold)}
       </h3>
     );
     if (trimmed.startsWith('## ')) return (
-      <h2 key={i} style={{ color: headingColor, fontWeight: 900, fontSize: '14px', letterSpacing: '-0.02em', marginTop: '12px', marginBottom: '5px' }}>
+      <h2
+        key={i}
+        style={{
+          color: headingColor,
+          fontWeight: 900,
+          fontSize: '14px',
+          letterSpacing: '-0.02em',
+          marginTop: '12px',
+          marginBottom: '5px',
+          textShadow: headingGlow,
+        }}
+      >
         {renderInline(trimmed.slice(3), 'heading', onGold)}
       </h2>
     );
     if (trimmed.startsWith('# ')) return (
-      <h1 key={i} style={{ color: headingColor, fontWeight: 900, fontSize: '15px', letterSpacing: '-0.02em', marginTop: '12px', marginBottom: '5px' }}>
+      <h1
+        key={i}
+        style={{
+          color: headingColor,
+          fontWeight: 900,
+          fontSize: '15px',
+          letterSpacing: '-0.02em',
+          marginTop: '12px',
+          marginBottom: '5px',
+          textShadow: headingGlow,
+        }}
+      >
         {renderInline(trimmed.slice(2), 'heading', onGold)}
       </h1>
     );
