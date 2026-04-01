@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useTranslation } from 'react-i18next';
+import { useProfile } from '@/hooks/useProfile';
 import AnnouncementModal from '@/components/AnnouncementModal';
 
 interface AnnouncementRow {
@@ -90,11 +90,11 @@ function addLocalDismissed(id: string) {
 
 export const AnnouncementPopup: React.FC = () => {
   const { user } = useAuth();
-  const { i18n } = useTranslation();
+  const { profile } = useProfile();
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
-  const lang = resolveLang(i18n.language || 'en');
+  const lang = resolveLang(profile?.preferred_language || 'en');
 
   const fetchAnnouncement = useCallback(async () => {
     const { data: announcements, error } = await supabase
