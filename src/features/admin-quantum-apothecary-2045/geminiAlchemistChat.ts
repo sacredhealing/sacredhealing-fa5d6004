@@ -1,6 +1,6 @@
 /**
  * Admin-only Gemini SQI chat for Quantum Apothecary 2045 lab.
- * Uses VITE_GEMINI_API_KEY (same as other Gemini features in this app).
+ * Uses import.meta.env.VITE_GEMINI_API_KEY (vite.config merges VITE_GEMINI_API_KEY + GEMINI_API_KEY at build).
  */
 import { GoogleGenAI } from '@google/genai';
 import type { Message } from '@/features/quantum-apothecary/types';

@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
@@ -6,7 +6,17 @@ import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ mode }) => {
+  const fileEnv = loadEnv(mode, process.cwd(), "");
+  /** Lovable/CI often inject GEMINI_API_KEY; local dev uses VITE_GEMINI_API_KEY in .env */
+  const geminiApiKey =
+    (process.env.VITE_GEMINI_API_KEY || "").trim() ||
+    (process.env.GEMINI_API_KEY || "").trim() ||
+    (fileEnv.VITE_GEMINI_API_KEY || "").trim() ||
+    (fileEnv.GEMINI_API_KEY || "").trim() ||
+    "";
+
+  return {
   server: {
     host: "127.0.0.1",
     port: 8080,
@@ -91,4 +101,8 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-}));
+  define: {
+    "import.meta.env.VITE_GEMINI_API_KEY": JSON.stringify(geminiApiKey),
+  },
+};
+});

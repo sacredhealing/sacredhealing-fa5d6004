@@ -3495,7 +3495,7 @@
     "hairGrowthCta": "Öppna bioalkemisten →",
     "adminApothecary2045Badge": "ADMIN",
     "adminApothecary2045Title": "2045 Quantum Apothecary",
-    "adminApothecary2045Desc": "Admin-labb: direkt Gemini SQI och demo-Nadiskan (paritet med Google AI Studio). Kräver VITE_GEMINI_API_KEY.",
+    "adminApothecary2045Desc": "Admin-labb: direkt Gemini SQI och demo-Nadiskan (paritet med Google AI Studio). Live-chatt kräver VITE_GEMINI_API_KEY eller GEMINI_API_KEY i byggmiljön.",
     "adminApothecary2045Cta": "Öppna admin-labb →"
   },
   "adminQuantumApothecary2045": {
@@ -3503,7 +3503,7 @@
     "back": "← Siddha-portal",
     "title": "Quantum Apothecary",
     "subtitle": "Est. 2045 · Admin Gemini-gränssnitt",
-    "bannerNoGeminiKey": "Sätt VITE_GEMINI_API_KEY i miljön för live SQI-chatt. Skanner och mixer fungerar ändå offline.",
+    "bannerNoGeminiKey": "Sätt VITE_GEMINI_API_KEY (eller GEMINI_API_KEY i Lovable/CI) så nyckeln följer med vid build. Skanner och mixer fungerar ändå offline.",
     "knowledgeAria": "Öppna kunskapsbas",
     "digitalNadiScan": "Digital Nadiskanning",
     "channelsMonitoring": "72 000 kanaler övervakas",
@@ -3541,7 +3541,7 @@
     "transmitModel": "Initierar kvantöverföring av: {{names}}. Laddar upp aeteriska koder till din cellmatris… Frekvenserna är nu låsta till din signatur 24/7 tills de manuellt upplöses.",
     "applyRemediesModel": "Tillämpar Siddha-botemedel: {{remedies}}. Skalärvågs entanglement klart. Frekvenser låsta 24/7.",
     "transmissionError": "Överföringsfel. Kvantlänken är instabil.",
-    "errorNoKey": "Gemini API-nyckel saknas. Lägg till VITE_GEMINI_API_KEY för chatt.",
+    "errorNoKey": "Gemini API-nyckel saknas. Lägg till VITE_GEMINI_API_KEY eller GEMINI_API_KEY bland värdens hemligheter och bygg om.",
     "voiceSimulatedInput": "Jag känner en blockering i mitt hjärta-Nadi, vad ska jag göra?",
     "blockageThroat": "Hals/Vishuddhi-Nadi",
     "blockageRoot": "Rot/Muladhara-Nadi",

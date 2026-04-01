@@ -252,15 +252,6 @@ export default function AdminQuantumApothecary2045() {
         }}
       />
 
-      {!geminiKeyPresent && (
-        <div
-          className="sticky top-0 z-50 border-b border-amber-500/30 bg-amber-950/80 px-4 py-2 text-center text-[11px] text-amber-200/90 backdrop-blur-md"
-          role="status"
-        >
-          {t('adminQuantumApothecary2045.bannerNoGeminiKey')}
-        </div>
-      )}
-
       <header className="sticky top-0 z-40 flex items-center gap-3 border-b border-white/[0.06] bg-[#0a0502]/90 px-4 py-3 backdrop-blur-md">
         <button
           type="button"
@@ -525,6 +516,14 @@ export default function AdminQuantumApothecary2045() {
               </div>
               <Info className="h-4 w-4 cursor-help text-white/30" aria-hidden />
             </div>
+            {!geminiKeyPresent && (
+              <div
+                className="border-b border-amber-500/25 bg-amber-950/50 px-4 py-2.5 text-center text-[10px] leading-snug text-amber-200/95 sm:px-6"
+                role="status"
+              >
+                {t('adminQuantumApothecary2045.bannerNoGeminiKey')}
+              </div>
+            )}
             <div className="custom-scrollbar flex-1 space-y-6 overflow-y-auto p-6">
               {messages.map((msg, i) => (
                 <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
