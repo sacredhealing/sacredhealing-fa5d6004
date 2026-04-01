@@ -28,6 +28,8 @@ const glassSection =
 
 const microLabel = 'text-[8px] font-extrabold uppercase tracking-[0.5em] text-[#D4AF37]/55';
 
+const SESSION_GEMINI_STORAGE = 'admin_qa2045_gemini_session_key';
+
 export default function AdminQuantumApothecary2045() {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -53,11 +55,43 @@ export default function AdminQuantumApothecary2045() {
   const [showKnowledge, setShowKnowledge] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [heartRate, setHeartRate] = useState(60);
+  const [sessionGeminiKey, setSessionGeminiKey] = useState(() => {
+    try {
+      return (sessionStorage.getItem(SESSION_GEMINI_STORAGE) ?? '').trim();
+    } catch {
+      return '';
+    }
+  });
+  const [sessionKeyDraft, setSessionKeyDraft] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const geminiKeyPresent = Boolean((import.meta.env.VITE_GEMINI_API_KEY as string | undefined)?.trim());
+  const envGeminiKey = ((import.meta.env.VITE_GEMINI_API_KEY as string | undefined) ?? '').trim();
+  const effectiveGeminiKey = envGeminiKey || sessionGeminiKey;
+  const geminiKeyPresent = Boolean(effectiveGeminiKey);
+  const hasBuildTimeKey = Boolean(envGeminiKey);
+
+  const applySessionGeminiKey = () => {
+    const k = sessionKeyDraft.trim();
+    if (!k) return;
+    try {
+      sessionStorage.setItem(SESSION_GEMINI_STORAGE, k);
+    } catch {
+      /* quota / private mode */
+    }
+    setSessionGeminiKey(k);
+    setSessionKeyDraft('');
+  };
+
+  const clearSessionGeminiKey = () => {
+    try {
+      sessionStorage.removeItem(SESSION_GEMINI_STORAGE);
+    } catch {
+      /* ignore */
+    }
+    setSessionGeminiKey('');
+  };
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -146,7 +180,7 @@ export default function AdminQuantumApothecary2045() {
 
   const handleSendMessage = async () => {
     if (!input.trim()) return;
-    if (!geminiKeyPresent) return;
+    if (!effectiveGeminiKey) return;
 
     const userMsg: Message = { role: 'user', text: input.trim() };
     setMessages((prev) => [...prev, userMsg]);
@@ -154,7 +188,9 @@ export default function AdminQuantumApothecary2045() {
     setIsTyping(true);
 
     try {
-      const response = await chatWithAlchemist([...messages, userMsg]);
+      const response = await chatWithAlchemist([...messages, userMsg], {
+        apiKey: effectiveGeminiKey,
+      });
       setMessages((prev) => [...prev, { role: 'model', text: response }]);
     } catch (e) {
       const code = e instanceof Error ? e.message : '';
@@ -507,12 +543,47 @@ export default function AdminQuantumApothecary2045() {
               </div>
               <Info className="h-4 w-4 cursor-help text-[#D4AF37]/40" aria-hidden />
             </div>
-            {!geminiKeyPresent && (
+            {geminiKeyPresent && !hasBuildTimeKey && (
               <div
-                className="border-b border-[#D4AF37]/20 bg-[#D4AF37]/[0.06] px-4 py-2.5 text-center text-[10px] leading-[1.6] text-[#D4AF37]/90 sm:px-6"
+                className="flex flex-col gap-2 border-b border-[#22D3EE]/25 bg-[#22D3EE]/[0.06] px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6"
                 role="status"
               >
-                {t('adminQuantumApothecary2045.bannerNoGeminiKey')}
+                <p className="text-[10px] leading-[1.6] text-white/70">{t('adminQuantumApothecary2045.sessionKeyActive')}</p>
+                <button
+                  type="button"
+                  onClick={clearSessionGeminiKey}
+                  className="shrink-0 rounded-full border border-white/[0.12] bg-white/[0.05] px-3 py-1.5 text-[9px] font-extrabold uppercase tracking-[0.2em] text-[#D4AF37] hover:border-[#D4AF37]/35"
+                >
+                  {t('adminQuantumApothecary2045.sessionKeyClear')}
+                </button>
+              </div>
+            )}
+            {!geminiKeyPresent && (
+              <div
+                className="space-y-3 border-b border-[#D4AF37]/20 bg-[#D4AF37]/[0.06] px-4 py-3 sm:px-6"
+                role="status"
+              >
+                <p className="text-center text-[10px] leading-[1.6] text-[#D4AF37]/90">{t('adminQuantumApothecary2045.bannerNoGeminiKey')}</p>
+                <p className="text-center text-[10px] leading-[1.6] text-white/50">{t('adminQuantumApothecary2045.sessionKeyHelp')}</p>
+                <p className="text-center text-[9px] leading-[1.5] text-white/35">{t('adminQuantumApothecary2045.sessionKeyPwaHint')}</p>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
+                  <input
+                    type="password"
+                    autoComplete="off"
+                    value={sessionKeyDraft}
+                    onChange={(e) => setSessionKeyDraft(e.target.value)}
+                    placeholder={t('adminQuantumApothecary2045.sessionKeyPlaceholder')}
+                    className="min-w-0 flex-1 rounded-[20px] border border-white/[0.1] bg-[#050505]/80 py-3 pl-4 pr-4 text-xs text-white placeholder:text-white/25 focus:border-[#D4AF37]/35 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={applySessionGeminiKey}
+                    disabled={!sessionKeyDraft.trim()}
+                    className="rounded-[20px] border border-[#D4AF37]/40 bg-gradient-to-b from-[#F5E17A] to-[#B8960C] px-4 py-3 text-[10px] font-black uppercase tracking-[0.15em] text-[#050505] shadow-[0_0_16px_rgba(212,175,55,0.2)] disabled:opacity-40 sm:shrink-0"
+                  >
+                    {t('adminQuantumApothecary2045.sessionKeyApply')}
+                  </button>
+                </div>
               </div>
             )}
             <div className="custom-scrollbar flex-1 space-y-6 overflow-y-auto p-6">

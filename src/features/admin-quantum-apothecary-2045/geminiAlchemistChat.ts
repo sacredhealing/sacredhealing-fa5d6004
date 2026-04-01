@@ -39,9 +39,15 @@ function extractText(response: unknown): string {
   return String(part ?? '').trim();
 }
 
+export type ChatWithAlchemistOptions = {
+  /** When set (e.g. sessionStorage on mobile / alternate host), used instead of build-time VITE_GEMINI_API_KEY */
+  apiKey?: string;
+};
+
 /** @throws Error with message GEMINI_KEY_MISSING if no key */
-export async function chatWithAlchemist(messages: Message[]): Promise<string> {
-  const apiKey = (import.meta.env.VITE_GEMINI_API_KEY as string | undefined)?.trim();
+export async function chatWithAlchemist(messages: Message[], options?: ChatWithAlchemistOptions): Promise<string> {
+  const fromEnv = (import.meta.env.VITE_GEMINI_API_KEY as string | undefined)?.trim() ?? '';
+  const apiKey = (options?.apiKey?.trim() || fromEnv).trim();
   if (!apiKey) {
     throw new Error('GEMINI_KEY_MISSING');
   }
