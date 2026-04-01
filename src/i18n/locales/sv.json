@@ -1158,6 +1158,27 @@
       "midday": "Middag",
       "evening": "Kväll"
     },
+    "intentionThreshold": {
+      "title": "Vad är din intention för den här praktiken?",
+      "subtitle": "Sätt din heliga intention innan vi börjar. Ditt Prema-pulsfält linjerar med denna sankalpa.",
+      "skip": "Hoppa över nu",
+      "preparing": "Förbereder din session…",
+      "weeklyMicro": "Bhakti-algoritm · 7-dagarsfält",
+      "weeklyLine": "{{phase}} · Senaste 7 dagarna: {{count}} genomförda · Idag: {{today}} · Rytm: {{state}}"
+    },
+    "intention": {
+      "peace": "Fred",
+      "healing": "Läkning",
+      "release": "Släpp",
+      "focus": "Fokus",
+      "anxiety": "Lindra ångest"
+    },
+    "userDailyState": {
+      "calm": "Lugn",
+      "busy": "Upptagen",
+      "heavy": "Återvänder",
+      "engaged": "Fördjupar"
+    },
     "paymentSuccess": "Betalning lyckades! Adam börjar kanalisera din meditation.",
     "wealthSuccess": "Betalning lyckades! Kolla din e-post för de 108 affirmationerna.",
     "membershipSuccess": "Välkommen till meditationsmedlemskapet! Din prenumeration är nu aktiv.",

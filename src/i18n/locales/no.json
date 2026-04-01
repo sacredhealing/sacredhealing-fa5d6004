@@ -944,6 +944,27 @@
       "midday": "Middag",
       "evening": "Kveld"
     },
+    "intentionThreshold": {
+      "title": "Hva er intensjonen din for denne praksisen?",
+      "subtitle": "Sett din hellige intensjon før vi begynner. Prema-pulsfeltet ditt stemmer med denne sankalpaen.",
+      "skip": "Hopp over nå",
+      "preparing": "Forbereder økten din…",
+      "weeklyMicro": "Bhakti-algoritme · 7-dagers felt",
+      "weeklyLine": "{{phase}} · Siste 7 dager: {{count}} fullførte · I dag: {{today}} · Rytme: {{state}}"
+    },
+    "intention": {
+      "peace": "Fred",
+      "healing": "Helbredelse",
+      "release": "Slipp",
+      "focus": "Fokus",
+      "anxiety": "Ro angst"
+    },
+    "userDailyState": {
+      "calm": "Rolig",
+      "busy": "Travel",
+      "heavy": "Tilbake",
+      "engaged": "Fordyper"
+    },
     "paymentSuccess": "Betaling vellykket! Adam begynner å kanalisere meditasjonen din.",
     "wealthSuccess": "Betaling vellykket! Sjekk e-posten din for de 108 affirmasjonene.",
     "membershipSuccess": "Velkommen til meditasjonsmedlemskap! Abonnementet ditt er nå aktivt.",

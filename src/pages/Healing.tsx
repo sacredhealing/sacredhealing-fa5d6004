@@ -15,7 +15,9 @@ import { useToast } from '@/hooks/use-toast';
 import { ReviewSection } from '@/components/reviews/ReviewSection';
 import { HealingProgressCard } from '@/components/healing/HealingProgressCard';
 import { useAdminRole } from '@/hooks/useAdminRole';
-import { IntentionThreshold, IntentionType } from '@/components/meditation/IntentionThreshold';
+import { IntentionThreshold } from '@/components/meditation/IntentionThreshold';
+import { useUserDailyState } from '@/hooks/useUserDailyState';
+import { getDayPhase, type DayPhase } from '@/utils/postSessionContext';
 import { useMusicPlayer, UniversalAudioItem } from '@/contexts/MusicPlayerContext';
 import { useHealingMeditationLanguage } from '@/hooks/useHealingMeditationLanguage';
 import { HealingLanguageToggle } from '@/features/healing/HealingLanguageToggle';
@@ -410,6 +412,9 @@ const Healing: React.FC = () => {
   const { isAdmin } = useAdminRole();
   const { language, setLanguage } = useHealingMeditationLanguage();
   const { playUniversalAudio, currentAudio, isPlaying: playerIsPlaying } = useMusicPlayer();
+  const userDailyState = useUserDailyState();
+  const dayPhase: DayPhase = getDayPhase();
+  const dayPhaseLabel = t(`meditations.dayPhase.${dayPhase}`);
 
   // Determine display language
   const rawLang = (i18n.language?.split('-')[0] || 'en') as string;
@@ -640,7 +645,17 @@ const Healing: React.FC = () => {
     <>
     <div className="h-page">
       <style>{H_CSS}</style>
-      <IntentionThreshold isOpen={showThreshold} onSelectIntention={handleIntentionSelected} onClose={handleThresholdClose} />
+      <IntentionThreshold
+        isOpen={showThreshold}
+        onSelectIntention={handleIntentionSelected}
+        onClose={handleThresholdClose}
+        weeklyContext={{
+          last7DaysSessions: userDailyState.last7DaysSessions,
+          userState: userDailyState.userState,
+          todaySessions: userDailyState.todaySessions,
+          dayPhaseLabel,
+        }}
+      />
 
       {/* ══ HERO ══ */}
       <section className="h-hero">

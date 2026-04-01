@@ -308,6 +308,27 @@
       "midday": "Midday",
       "evening": "Evening"
     },
+    "intentionThreshold": {
+      "title": "What is your intention for this practice?",
+      "subtitle": "Set your sacred intention before we begin. Your Prema-Pulse field aligns with this sankalpa.",
+      "skip": "Skip for now",
+      "preparing": "Preparing your session…",
+      "weeklyMicro": "Bhakti-algorithm · 7-day field",
+      "weeklyLine": "{{phase}} · Last 7 days: {{count}} completions · Today: {{today}} · Rhythm: {{state}}"
+    },
+    "intention": {
+      "peace": "Peace",
+      "healing": "Healing",
+      "release": "Release",
+      "focus": "Focus",
+      "anxiety": "Calm anxiety"
+    },
+    "userDailyState": {
+      "calm": "Calm",
+      "busy": "Busy",
+      "heavy": "Returning",
+      "engaged": "Deepening"
+    },
     "paymentSuccess": "Payment successful! Adam will begin channeling your meditation.",
     "wealthSuccess": "Payment successful! Check your email for the 108 affirmations.",
     "membershipSuccess": "Welcome to Meditation Membership! Your subscription is now active.",

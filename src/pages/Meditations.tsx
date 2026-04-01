@@ -1187,6 +1187,12 @@ const Meditations: React.FC = () => {
           isOpen={showThreshold}
           onSelectIntention={handleIntentionSelected}
           onClose={handleThresholdClose}
+          weeklyContext={{
+            last7DaysSessions: userDailyState.last7DaysSessions,
+            userState: userDailyState.userState,
+            todaySessions: userDailyState.todaySessions,
+            dayPhaseLabel,
+          }}
         />
 
         {BackToTopFab && <BackToTopFab />}
