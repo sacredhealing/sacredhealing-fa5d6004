@@ -5,6 +5,12 @@
     "linkCopied": "Länk kopierad!",
     "copyFailed": "Kunde inte kopiera länk"
   },
+  "announcement": {
+    "badge": "✦ Ny transmission",
+    "explore": "Utforska",
+    "dismiss": "Jag förstår!",
+    "closeAria": "Stäng meddelande"
+  },
   "common": {
     "back": "Tillbaka",
     "save": "Spara",

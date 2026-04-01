@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
@@ -17,9 +18,17 @@ interface AnnouncementRow {
   title_sv?: string | null;
   title_no?: string | null;
   title_es?: string | null;
+  /** Some pipelines / edge functions use message_* for localized body */
+  message_sv?: string | null;
+  message_no?: string | null;
+  message_es?: string | null;
+  /** Others use content_* — read both */
   content_sv?: string | null;
   content_no?: string | null;
   content_es?: string | null;
+  link_label_sv?: string | null;
+  link_label_no?: string | null;
+  link_label_es?: string | null;
 }
 
 interface Announcement {
@@ -41,27 +50,44 @@ function resolveLang(raw: string): string {
   return 'en';
 }
 
+function localizedTitle(row: AnnouncementRow, lang: string): string {
+  if (lang === 'en') return row.title;
+  const k = `title_${lang}` as keyof AnnouncementRow;
+  const v = row[k];
+  if (typeof v === 'string' && v.trim()) return v;
+  return row.title;
+}
+
+function localizedBody(row: AnnouncementRow, lang: string): string {
+  const base = row.message ?? '';
+  if (lang === 'en') return base;
+  const msgK = `message_${lang}` as keyof AnnouncementRow;
+  const contentK = `content_${lang}` as keyof AnnouncementRow;
+  const m = row[msgK];
+  const c = row[contentK];
+  if (typeof m === 'string' && m.trim()) return m;
+  if (typeof c === 'string' && c.trim()) return c;
+  return base;
+}
+
+function localizedLinkLabel(row: AnnouncementRow, lang: string): string | null {
+  const base = row.link_label ?? null;
+  if (lang === 'en') return base;
+  const k = `link_label_${lang}` as keyof AnnouncementRow;
+  const v = row[k];
+  if (typeof v === 'string' && v.trim()) return v;
+  return base;
+}
+
 function localizeAnnouncement(row: AnnouncementRow, lang: string): Announcement {
-  let title = row.title;
-  let message = row.message;
-
-  if (lang !== 'en') {
-    const titleKey = `title_${lang}` as keyof AnnouncementRow;
-    const contentKey = `content_${lang}` as keyof AnnouncementRow;
-    const localTitle = row[titleKey];
-    const localContent = row[contentKey];
-    if (typeof localTitle === 'string' && localTitle.trim()) title = localTitle;
-    if (typeof localContent === 'string' && localContent.trim()) message = localContent;
-  }
-
   return {
     id: row.id,
-    title,
-    message,
+    title: localizedTitle(row, lang),
+    message: localizedBody(row, lang),
     type: row.type,
     image_url: row.image_url,
     link_url: row.link_url,
-    link_label: row.link_label ?? null,
+    link_label: localizedLinkLabel(row, lang),
     audio_url: row.audio_url,
     recurring: row.recurring,
   };
@@ -91,10 +117,12 @@ function addLocalDismissed(id: string) {
 export const AnnouncementPopup: React.FC = () => {
   const { user } = useAuth();
   const { profile } = useProfile();
+  const { i18n } = useTranslation();
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
-  const lang = resolveLang(profile?.preferred_language || 'en');
+  /** Profile language drives copy; fall back to active i18n locale so UI stays in sync */
+  const lang = resolveLang(profile?.preferred_language || i18n.language || 'en');
 
   const fetchAnnouncement = useCallback(async () => {
     const { data: announcements, error } = await supabase

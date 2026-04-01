@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { ExternalLink, X, Star } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export interface AnnouncementModalProps {
   title: string;
@@ -236,6 +237,8 @@ export default function AnnouncementModal({
   audioUrl,
   onDismiss,
 }: AnnouncementModalProps) {
+  const { t } = useTranslation();
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onDismiss();
@@ -258,7 +261,7 @@ export default function AnnouncementModal({
           <div className="sqi-topbar" />
 
           <div className="sqi-body">
-            <button type="button" className="sqi-close" onClick={onDismiss} aria-label="Close">
+            <button type="button" className="sqi-close" onClick={onDismiss} aria-label={t('announcement.closeAria')}>
               <X size={11} />
             </button>
 
@@ -266,7 +269,7 @@ export default function AnnouncementModal({
               <div className="sqi-icon-wrap">
                 <Star size={16} color="#D4AF37" fill="none" />
               </div>
-              <span className="sqi-badge">✦ NY TRANSMISSION</span>
+              <span className="sqi-badge">{t('announcement.badge')}</span>
             </div>
 
             <div id="announcement-modal-title" className="sqi-title">
@@ -295,11 +298,11 @@ export default function AnnouncementModal({
                   onClick={onDismiss}
                 >
                   <ExternalLink size={11} />
-                  {linkLabel || 'Utforska'}
+                  {linkLabel?.trim() ? linkLabel : t('announcement.explore')}
                 </a>
               ) : null}
               <button type="button" className="sqi-btn-gold" onClick={onDismiss}>
-                Jag förstår!
+                {t('announcement.dismiss')}
               </button>
             </div>
           </div>

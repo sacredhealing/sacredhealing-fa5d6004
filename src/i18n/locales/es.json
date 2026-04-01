@@ -5,6 +5,12 @@
     "linkCopied": "¡Enlace copiado!",
     "copyFailed": "Error al copiar enlace"
   },
+  "announcement": {
+    "badge": "✦ Nueva transmisión",
+    "explore": "Explorar",
+    "dismiss": "¡Entendido!",
+    "closeAria": "Cerrar anuncio"
+  },
   "common": {
     "back": "Atrás",
     "save": "Guardar",

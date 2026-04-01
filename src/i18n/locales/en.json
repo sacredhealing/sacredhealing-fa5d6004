@@ -379,6 +379,12 @@
     "linkCopied": "Link copied to clipboard!",
     "copyFailed": "Failed to copy link"
   },
+  "announcement": {
+    "badge": "✦ New transmission",
+    "explore": "Explore",
+    "dismiss": "I understand!",
+    "closeAria": "Close announcement"
+  },
   "membership": {
     "meditationMembership": "Meditation Membership",
     "musicMembership": "Music Membership",

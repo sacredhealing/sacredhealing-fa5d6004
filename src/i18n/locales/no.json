@@ -5,6 +5,12 @@
     "linkCopied": "Lenke kopiert!",
     "copyFailed": "Kunne ikke kopiere lenke"
   },
+  "announcement": {
+    "badge": "✦ Ny overføring",
+    "explore": "Utforsk",
+    "dismiss": "Jeg forstår!",
+    "closeAria": "Lukk kunngjøring"
+  },
   "common": {
     "back": "Tilbake",
     "save": "Lagre",
