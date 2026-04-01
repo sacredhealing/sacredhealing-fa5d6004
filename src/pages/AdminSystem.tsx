@@ -34,26 +34,41 @@ const AdminSystem = () => {
 
   if (isAuthLoading || isAdminLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center px-6">
+        <div className="glass-card flex items-center gap-3 px-6 py-4">
+          <div className="h-2 w-2 rounded-full bg-[#D4AF37] animate-pulse" />
+          <p className="text-white/70 text-sm">Loading…</p>
+        </div>
       </div>
     );
   }
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Access Denied</CardTitle>
-            <CardDescription>You need admin privileges to access this page.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate('/dashboard')} className="w-full">
-              Return to Dashboard
-            </Button>
-          </CardContent>
-        </Card>
+      <div
+        className="min-h-screen bg-[#050505] flex items-center justify-center px-6"
+        style={{
+          background:
+            "radial-gradient(ellipse 120% 80% at 50% 0%, rgba(212,175,55,0.08) 0%, transparent 45%), #050505",
+        }}
+      >
+        <div className="glass-card w-full max-w-md text-center">
+          <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/60">
+            Admin Gate
+          </div>
+          <h1 className="mt-3 text-[26px] leading-[1.05] font-black tracking-[-0.05em] text-[#D4AF37] [text-shadow:0_0_15px_rgba(212,175,55,0.3)]">
+            Access Denied
+          </h1>
+          <p className="mt-3 text-white/60 leading-[1.6]">
+            You need admin privileges to access this page.
+          </p>
+          <Button
+            onClick={() => navigate('/dashboard')}
+            className="mt-6 w-full rounded-[20px] bg-[#D4AF37] text-[#050505] font-black hover:opacity-90"
+          >
+            Return to Dashboard
+          </Button>
+        </div>
       </div>
     );
   }
@@ -81,27 +96,51 @@ const AdminSystem = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div
+      className="min-h-screen bg-[#050505] text-white"
+      style={{
+        background:
+          "radial-gradient(ellipse 110% 70% at 50% 0%, rgba(212,175,55,0.08) 0%, transparent 45%), radial-gradient(ellipse 90% 70% at 12% 22%, rgba(255,255,255,0.04) 0%, transparent 55%), #050505",
+      }}
+    >
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
-            <ArrowLeft className="h-5 w-5" />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/admin')}
+            className="rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:bg-white/[0.05] hover:border-[#D4AF37]/25"
+          >
+            <ArrowLeft className="h-5 w-5 text-[#D4AF37]" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">Admin System</h1>
-            <p className="text-muted-foreground">Manage projects, tasks, content, and more</p>
+            <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/60">
+              Bhakti-Algorithms Control Plane
+            </div>
+            <h1 className="mt-2 text-[30px] leading-[1.05] font-black tracking-[-0.05em] text-[#D4AF37] [text-shadow:0_0_15px_rgba(212,175,55,0.3)]">
+              Admin System
+            </h1>
+            <p className="mt-2 text-white/60 leading-[1.6]">
+              Orchestrate projects, tasks, content, and transmissions.
+            </p>
           </div>
         </div>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="flex flex-wrap gap-1 h-auto p-1">
+          <TabsList className="glass-card flex flex-wrap gap-1 h-auto p-2">
             {tabs.map((tab) => (
               <TabsTrigger
                 key={tab.id}
                 value={tab.id}
-                className="flex items-center gap-2 py-2 px-3"
+                className={[
+                  "flex items-center gap-2 py-2.5 px-3.5 rounded-[18px]",
+                  "text-[11px] font-extrabold tracking-[0.18em] uppercase",
+                  "text-white/60 hover:text-white/85",
+                  "data-[state=active]:bg-[#D4AF37]/14 data-[state=active]:border data-[state=active]:border-[#D4AF37]/28 data-[state=active]:text-[#D4AF37]",
+                  "transition-all",
+                ].join(" ")}
               >
                 <tab.icon className="h-4 w-4" />
                 <span className="hidden sm:inline">{tab.label}</span>
