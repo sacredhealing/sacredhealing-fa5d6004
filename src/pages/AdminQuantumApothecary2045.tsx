@@ -13,8 +13,11 @@ import type { Activation, ActivationType, NadiScanResult, Message } from '@/feat
 import { ACTIVATIONS, PLANETARY_DATA } from '@/features/quantum-apothecary/constants';
 import { chatWithAlchemist } from '@/features/admin-quantum-apothecary-2045/geminiAlchemistChat';
 
-const ACCENT = '#ff4e00';
-const BG = '#0a0502';
+/** SQI 2050 — Siddha-Gold primary, Vayu-Cyan Nadi pulse (UI tokens only) */
+const GOLD = '#D4AF37';
+const GOLD_RGB = '212, 175, 55';
+const BG = '#050505';
+const VAYU = '#22D3EE';
 
 type LibraryFilter = ActivationType | 'All';
 
@@ -25,6 +28,12 @@ const FILTER_ORDER: LibraryFilter[] = [
   'Essential Oil',
   'Ayurvedic Herb',
 ];
+
+/** Glass shell — matches sovereign Profile / SQI standard */
+const glassSection =
+  'rounded-[40px] border border-white/[0.05] bg-white/[0.02] backdrop-blur-[40px] [-webkit-backdrop-filter:blur(40px)] shadow-[0_0_48px_rgba(212,175,55,0.05)]';
+
+const microLabel = 'text-[8px] font-extrabold uppercase tracking-[0.5em] text-[#D4AF37]/55';
 
 export default function AdminQuantumApothecary2045() {
   const navigate = useNavigate();
@@ -83,7 +92,7 @@ export default function AdminQuantumApothecary2045() {
   if (authLoading || adminLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center text-white/50" style={{ background: BG }}>
-        <span className="text-[10px] uppercase tracking-[0.5em]">{t('adminQuantumApothecary2045.initializing')}</span>
+        <span className={microLabel}>{t('adminQuantumApothecary2045.initializing')}</span>
       </div>
     );
   }
@@ -237,30 +246,31 @@ export default function AdminQuantumApothecary2045() {
       </svg>
 
       <div
-        className="pointer-events-none fixed inset-0 -z-10 opacity-40"
+        className="pointer-events-none fixed inset-0 -z-10 opacity-50"
         style={{
-          background:
-            'radial-gradient(circle at 50% 30%, #3a1510 0%, transparent 60%), radial-gradient(circle at 10% 80%, #ff4e00 0%, transparent 50%), radial-gradient(circle at 90% 20%, #818cf8 0%, transparent 40%)',
-          filter: 'blur(80px)',
+          background: `radial-gradient(ellipse 80% 50% at 50% 20%, rgba(${GOLD_RGB},0.12) 0%, transparent 55%),
+            radial-gradient(circle at 15% 75%, rgba(34,211,238,0.06) 0%, transparent 45%),
+            radial-gradient(circle at 85% 30%, rgba(${GOLD_RGB},0.08) 0%, transparent 50%)`,
+          filter: 'blur(72px)',
           animation: `pulse-bg ${600 / Math.max(heartRate, 60)}s ease-in-out infinite`,
         }}
       />
       <div
-        className="pointer-events-none fixed inset-0 -z-10 opacity-10"
+        className="pointer-events-none fixed inset-0 -z-10 opacity-[0.12]"
         style={{
           backgroundImage: "url('https://www.transparenttextures.com/patterns/stardust.png')",
         }}
       />
 
-      <header className="sticky top-0 z-40 flex items-center gap-3 border-b border-white/[0.06] bg-[#0a0502]/90 px-4 py-3 backdrop-blur-md">
+      <header className="sticky top-0 z-40 flex items-center gap-3 border-b border-white/[0.05] bg-[#050505]/92 px-4 py-3 backdrop-blur-[40px]">
         <button
           type="button"
           onClick={() => navigate('/siddha-portal')}
-          className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/40 hover:text-white/70"
+          className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/45 hover:text-[#D4AF37]/90"
         >
           {t('adminQuantumApothecary2045.back')}
         </button>
-        <span className="rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-amber-400">
+        <span className="rounded-full border border-[#D4AF37]/35 bg-[#D4AF37]/10 px-3 py-1 text-[8px] font-black uppercase tracking-[0.35em] text-[#D4AF37] [text-shadow:0_0_12px_rgba(212,175,55,0.25)]">
           {t('siddhaPortal.adminApothecary2045Badge')}
         </span>
       </header>
@@ -268,94 +278,137 @@ export default function AdminQuantumApothecary2045() {
       <main className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-12 lg:gap-8 lg:px-6">
         <div className="flex flex-col gap-6 lg:col-span-4 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto lg:pr-2">
           <div className="mb-2 flex items-center gap-3">
-            <div className="rounded-lg border p-2 shadow-[0_0_20px_rgba(255,78,0,0.2)]" style={{ borderColor: `${ACCENT}4d`, background: `${ACCENT}1a` }}>
-              <Cpu className="h-6 w-6" style={{ color: ACCENT }} />
+            <div
+              className="rounded-2xl border p-2.5 shadow-[0_0_28px_rgba(212,175,55,0.18)]"
+              style={{ borderColor: 'rgba(212,175,55,0.35)', background: 'rgba(212,175,55,0.08)' }}
+            >
+              <Cpu className="h-6 w-6 text-[#D4AF37]" aria-hidden />
             </div>
             <div className="min-w-0 flex-1">
-              <h1 className="text-xl font-light uppercase tracking-tighter text-white" style={{ textShadow: `0 0 20px ${ACCENT}33` }}>
+              <h1
+                className="text-xl font-black uppercase tracking-[-0.05em] text-white"
+                style={{ textShadow: '0 0 24px rgba(212,175,55,0.25)' }}
+              >
                 {t('adminQuantumApothecary2045.title')}
               </h1>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-white/50">{t('adminQuantumApothecary2045.subtitle')}</p>
+              <p className={`${microLabel} mt-1 !tracking-[0.28em] text-[#D4AF37]/45`}>{t('adminQuantumApothecary2045.subtitle')}</p>
             </div>
-            <button type="button" onClick={() => setShowKnowledge(true)} className="rounded-lg border border-white/10 bg-white/5 p-2 hover:bg-white/10">
-              <Info className="h-5 w-5 text-white/60" aria-hidden />
+            <button
+              type="button"
+              onClick={() => setShowKnowledge(true)}
+              className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-2.5 transition-colors hover:border-[#D4AF37]/25 hover:bg-[#D4AF37]/[0.06]"
+            >
+              <Info className="h-5 w-5 text-[#D4AF37]/70" aria-hidden />
               <span className="sr-only">{t('adminQuantumApothecary2045.knowledgeAria')}</span>
             </button>
           </div>
 
-          <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl">
-            <div className="mb-6 flex justify-between">
+          <section className={`relative overflow-hidden p-6 sm:p-7 ${glassSection}`}>
+            <div className="mb-6 flex justify-between gap-3">
               <div>
-                <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider">{t('adminQuantumApothecary2045.digitalNadiScan')}</h2>
-                <p className="text-xs text-white/60">{t('adminQuantumApothecary2045.channelsMonitoring')}</p>
+                <p className={microLabel}>{t('adminQuantumApothecary2045.digitalNadiScan')}</p>
+                <p className="mt-2 text-xs leading-[1.6] text-white/60">{t('adminQuantumApothecary2045.channelsMonitoring')}</p>
               </div>
-              <Activity className={`h-5 w-5 ${isScanning ? 'animate-pulse text-green-400' : ''}`} style={{ color: isScanning ? undefined : ACCENT }} />
+              <Activity
+                className={`h-5 w-5 shrink-0 ${isScanning ? 'animate-pulse' : ''}`}
+                style={{ color: isScanning ? VAYU : GOLD }}
+              />
             </div>
 
             {scanResult ? (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-                <div className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-3xl border border-white/10 bg-black/40 p-4">
-                  <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-amber-500/20 via-transparent to-transparent" />
+                <div className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-[32px] border border-white/[0.06] bg-black/50 p-4 shadow-[inset_0_0_40px_rgba(212,175,55,0.06)]">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.12),transparent_65%)] opacity-40" />
                   <div className="relative flex h-full w-full items-center justify-center">
-                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: 'linear' }} className="absolute h-full w-full rounded-full border border-amber-500/10" />
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                      className="absolute h-full w-full rounded-full border border-[#D4AF37]/15"
+                    />
                     <div className="relative z-10 text-center">
-                      <p className="mb-2 text-[10px] uppercase tracking-[0.3em] text-white/40">{t('adminQuantumApothecary2045.activeNadisLabel')}</p>
-                      <p className="text-4xl font-light tracking-tighter text-amber-500">{scanResult.activeNadis}</p>
-                      <p className="text-[10px] text-white/30">/ {scanResult.totalNadis.toLocaleString()}</p>
+                      <p className={`${microLabel} mb-2 !text-white/40`}>{t('adminQuantumApothecary2045.activeNadisLabel')}</p>
+                      <p className="text-4xl font-light tracking-tighter text-[#D4AF37] [text-shadow:0_0_20px_rgba(212,175,55,0.35)]">
+                        {scanResult.activeNadis}
+                      </p>
+                      <p className="text-[10px] text-white/35">/ {scanResult.totalNadis.toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-2xl border border-white/5 bg-white/5 p-3">
-                    <p className="mb-1 text-[10px] uppercase text-white/40">{t('adminQuantumApothecary2045.dosha')}</p>
-                    <p className="text-lg font-medium">{scanResult.dominantDosha}</p>
+                  <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-3">
+                    <p className={`${microLabel} mb-2 !text-white/40`}>{t('adminQuantumApothecary2045.dosha')}</p>
+                    <p className="text-lg font-medium text-white/90">{scanResult.dominantDosha}</p>
                   </div>
-                  <div className="rounded-2xl border border-white/5 bg-white/5 p-3">
-                    <p className="mb-1 text-[10px] uppercase text-white/40">{t('adminQuantumApothecary2045.alignment')}</p>
-                    <p className="text-sm font-medium leading-tight">{scanResult.planetaryAlignment}</p>
+                  <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-3">
+                    <p className={`${microLabel} mb-2 !text-white/40`}>{t('adminQuantumApothecary2045.alignment')}</p>
+                    <p className="text-sm font-medium leading-tight text-white/75">{scanResult.planetaryAlignment}</p>
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <div className="rounded-2xl border p-4" style={{ borderColor: `${ACCENT}33`, background: `${ACCENT}0d` }}>
-                    <p className="mb-1 text-[10px] font-bold uppercase" style={{ color: ACCENT }}>{t('adminQuantumApothecary2045.siddhaRemedies')}</p>
+                  <div
+                    className="rounded-2xl border p-4"
+                    style={{ borderColor: 'rgba(212,175,55,0.22)', background: 'rgba(212,175,55,0.06)' }}
+                  >
+                    <p className={`${microLabel} mb-2 !text-[#D4AF37]`}>{t('adminQuantumApothecary2045.siddhaRemedies')}</p>
                     <div className="mt-2 flex flex-wrap gap-1">
                       {scanResult.remedies.map((r, i) => (
-                        <span key={i} className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[9px]">{r}</span>
+                        <span
+                          key={i}
+                          className="rounded-full border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-[9px] leading-[1.6] text-white/60"
+                        >
+                          {r}
+                        </span>
                       ))}
                     </div>
                   </div>
-                  <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
-                    <p className="mb-1 text-[10px] font-bold uppercase text-emerald-400">{t('adminQuantumApothecary2045.herbToday')}</p>
-                    <p className="text-sm">{scanResult.herbOfToday}</p>
+                  <div className="rounded-2xl border border-[#22D3EE]/20 bg-[#22D3EE]/[0.06] p-4">
+                    <p className={`${microLabel} mb-2 !text-[#22D3EE]`}>{t('adminQuantumApothecary2045.herbToday')}</p>
+                    <p className="text-sm leading-[1.6] text-white/65">{scanResult.herbOfToday}</p>
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button type="button" onClick={applyRemedies} className="liquid-btn flex-1 rounded-[20px] border border-emerald-500/30 bg-emerald-500/20 py-3 text-[10px] font-bold uppercase tracking-widest text-emerald-400 hover:bg-emerald-500/30">
+                  <button
+                    type="button"
+                    onClick={applyRemedies}
+                    className="liquid-btn flex-1 rounded-[28px] border border-[#D4AF37]/35 bg-[#D4AF37]/15 py-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#D4AF37] transition-all hover:bg-[#D4AF37]/25"
+                  >
                     {t('adminQuantumApothecary2045.applyRemedies')}
                   </button>
-                  <button type="button" onClick={runNadiScan} className="liquid-btn rounded-[20px] bg-white/10 px-4 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-white/20">
+                  <button
+                    type="button"
+                    onClick={runNadiScan}
+                    className="liquid-btn rounded-[28px] border border-white/[0.08] bg-white/[0.05] px-4 py-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-white/70 transition-all hover:border-[#D4AF37]/25 hover:text-[#D4AF37]"
+                  >
                     {t('adminQuantumApothecary2045.rescan')}
                   </button>
                 </div>
               </motion.div>
             ) : (
               <div className="flex flex-col items-center py-4 text-center">
-                <div className="relative mb-6 aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-black/40">
+                <div className="relative mb-6 aspect-video w-full overflow-hidden rounded-[28px] border border-white/[0.06] bg-black/45">
                   {isScanning ? (
                     <>
-                      <video ref={videoRef} autoPlay playsInline muted className="h-full w-full object-cover opacity-60 grayscale" />
+                      <video ref={videoRef} autoPlay playsInline muted className="h-full w-full object-cover opacity-55 grayscale" />
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="h-px w-full animate-[scan_2s_ease-in-out_infinite] shadow-[0_0_15px_#ff4e00]" style={{ background: ACCENT }} />
+                        <div
+                          className="h-px w-full animate-[scan_2s_ease-in-out_infinite]"
+                          style={{
+                            background: VAYU,
+                            boxShadow: `0 0 18px ${VAYU}, 0 0 32px rgba(34,211,238,0.35)`,
+                          }}
+                        />
                       </div>
                       <div className="absolute left-4 top-4 flex items-center gap-2">
-                        <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-red-500">{t('adminQuantumApothecary2045.liveBioFeed')}</span>
+                        <div className="h-2 w-2 animate-pulse rounded-full bg-[#22D3EE]" />
+                        <span className="text-[8px] font-extrabold uppercase tracking-[0.35em] text-[#22D3EE]/90">
+                          {t('adminQuantumApothecary2045.liveBioFeed')}
+                        </span>
                       </div>
                     </>
                   ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center opacity-30">
-                      <Zap className="mb-2 h-8 w-8" />
-                      <p className="text-[10px] uppercase tracking-widest">{t('adminQuantumApothecary2045.awaitingHandshake')}</p>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-white/35">
+                      <Zap className="mb-2 h-8 w-8 text-[#D4AF37]/50" aria-hidden />
+                      <p className="text-[8px] font-extrabold uppercase tracking-[0.4em]">{t('adminQuantumApothecary2045.awaitingHandshake')}</p>
                     </div>
                   )}
                 </div>
@@ -363,8 +416,7 @@ export default function AdminQuantumApothecary2045() {
                   type="button"
                   onClick={runNadiScan}
                   disabled={isScanning}
-                  className="rounded-[30px] px-8 py-3 text-xs font-bold uppercase tracking-widest text-black shadow-lg transition-all disabled:opacity-50"
-                  style={{ background: ACCENT, boxShadow: `0 10px 40px ${ACCENT}33` }}
+                  className="rounded-[40px] border border-[#D4AF37]/40 bg-gradient-to-b from-[#F5E17A] via-[#D4AF37] to-[#A07C10] px-8 py-3.5 text-xs font-black uppercase tracking-[0.2em] text-[#050505] shadow-[0_12px_40px_rgba(212,175,55,0.35)] transition-all hover:shadow-[0_16px_48px_rgba(212,175,55,0.45)] disabled:opacity-50"
                 >
                   {isScanning ? t('adminQuantumApothecary2045.scanningHr', { hr: heartRate }) : t('adminQuantumApothecary2045.initiateScan')}
                 </button>
@@ -372,16 +424,20 @@ export default function AdminQuantumApothecary2045() {
             )}
           </section>
 
-          <section className="flex min-h-[280px] flex-none flex-col rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl lg:min-h-0 lg:flex-1">
+          <section className={`flex min-h-[280px] flex-none flex-col p-6 sm:p-7 lg:min-h-0 lg:flex-1 ${glassSection}`}>
             <div className="mb-6 flex justify-between">
-              <h2 className="text-sm font-semibold uppercase tracking-wider">{t('adminQuantumApothecary2045.aethericMixer')}</h2>
-              <span className="rounded-full bg-white/10 px-2 py-1 text-[10px] text-white/60">{t('adminQuantumApothecary2045.slots', { n: selectedActivations.length })}</span>
+              <div>
+                <p className={microLabel}>{t('adminQuantumApothecary2045.aethericMixer')}</p>
+              </div>
+              <span className="rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-white/55">
+                {t('adminQuantumApothecary2045.slots', { n: selectedActivations.length })}
+              </span>
             </div>
             <div className="mb-6 flex-1 space-y-3">
               {selectedActivations.length === 0 ? (
-                <div className="flex h-full min-h-[140px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-white/5 p-8 text-center opacity-30">
-                  <Plus className="mb-2 h-8 w-8" />
-                  <p className="text-xs">{t('adminQuantumApothecary2045.mixerEmpty')}</p>
+                <div className="flex h-full min-h-[140px] flex-col items-center justify-center rounded-[28px] border border-dashed border-white/[0.08] bg-white/[0.02] p-8 text-center">
+                  <Plus className="mb-2 h-8 w-8 text-[#D4AF37]/35" aria-hidden />
+                  <p className="text-xs leading-[1.6] text-white/45">{t('adminQuantumApothecary2045.mixerEmpty')}</p>
                 </div>
               ) : (
                 <AnimatePresence>
@@ -392,16 +448,21 @@ export default function AdminQuantumApothecary2045() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 20 }}
-                      className="group flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-3"
+                      className="group flex items-center justify-between rounded-2xl border border-white/[0.06] bg-white/[0.03] p-3"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="h-2 w-2 rounded-full" style={{ backgroundColor: act.color }} />
+                        <div className="h-2 w-2 rounded-full shadow-[0_0_8px_currentColor]" style={{ backgroundColor: act.color }} />
                         <div>
-                          <p className="text-xs font-medium">{act.name}</p>
-                          <p className="text-[10px] italic text-white/50">{act.vibrationalSignature}</p>
+                          <p className="text-xs font-semibold text-white/90">{act.name}</p>
+                          <p className="text-[10px] italic leading-[1.6] text-white/50">{act.vibrationalSignature}</p>
                         </div>
                       </div>
-                      <button type="button" onClick={() => removeActivation(act.id)} className="p-2 text-white/30 opacity-0 transition-all hover:text-red-400 group-hover:opacity-100" aria-label={t('adminQuantumApothecary2045.removeActivation')}>
+                      <button
+                        type="button"
+                        onClick={() => removeActivation(act.id)}
+                        className="p-2 text-white/30 opacity-0 transition-all hover:text-red-400/90 group-hover:opacity-100"
+                        aria-label={t('adminQuantumApothecary2045.removeActivation')}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </motion.div>
@@ -409,24 +470,35 @@ export default function AdminQuantumApothecary2045() {
                 </AnimatePresence>
               )}
             </div>
-            <button type="button" onClick={transmitCocktail} disabled={selectedActivations.length === 0} className="liquid-btn w-full rounded-[30px] bg-white py-4 text-xs font-black uppercase tracking-[0.3em] text-black hover:bg-[#e0d8d0] disabled:opacity-30">
+            <button
+              type="button"
+              onClick={transmitCocktail}
+              disabled={selectedActivations.length === 0}
+              className="liquid-btn w-full rounded-[40px] border border-[#D4AF37]/45 bg-gradient-to-b from-[#F5E17A] to-[#B8960C] py-4 text-xs font-black uppercase tracking-[0.28em] text-[#050505] shadow-[0_8px_32px_rgba(212,175,55,0.3)] transition-all hover:shadow-[0_12px_40px_rgba(212,175,55,0.4)] disabled:opacity-30"
+            >
               {t('adminQuantumApothecary2045.transmitCode')}
             </button>
           </section>
 
-          <section className="flex min-h-[200px] flex-none flex-col rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl lg:min-h-0 lg:flex-1">
+          <section className={`flex min-h-[200px] flex-none flex-col p-6 sm:p-7 lg:min-h-0 lg:flex-1 ${glassSection}`}>
             <div className="mb-6 flex justify-between">
               <div className="flex items-center gap-2">
-                <Activity className="h-4 w-4 animate-pulse text-emerald-400" />
-                <h2 className="text-xs font-bold uppercase tracking-[0.2em]">{t('adminQuantumApothecary2045.activeTransmissions')}</h2>
+                <Activity className="h-4 w-4 animate-pulse text-[#D4AF37]" aria-hidden />
+                <p className="text-[8px] font-extrabold uppercase tracking-[0.35em] text-[#D4AF37]/70">
+                  {t('adminQuantumApothecary2045.activeTransmissions')}
+                </p>
               </div>
-              <span className="animate-pulse rounded-full border border-emerald-500/30 bg-emerald-500/20 px-2 py-0.5 text-[10px] text-emerald-400">{t('adminQuantumApothecary2045.live247')}</span>
+              <span className="animate-pulse rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-[#D4AF37]">
+                {t('adminQuantumApothecary2045.live247')}
+              </span>
             </div>
             <div className="custom-scrollbar flex-1 space-y-3 overflow-y-auto">
               {activeTransmissions.length === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center rounded-2xl border border-white/5 p-4 text-center opacity-20">
-                  <Zap className="mb-2 h-8 w-8" />
-                  <p className="text-[10px] uppercase tracking-widest">{t('adminQuantumApothecary2045.noActiveFrequencies')}</p>
+                <div className="flex h-full flex-col items-center justify-center rounded-[28px] border border-white/[0.05] bg-white/[0.02] p-4 text-center">
+                  <Zap className="mb-2 h-8 w-8 text-[#D4AF37]/25" aria-hidden />
+                  <p className="text-[8px] font-extrabold uppercase tracking-[0.35em] text-white/35">
+                    {t('adminQuantumApothecary2045.noActiveFrequencies')}
+                  </p>
                 </div>
               ) : (
                 <AnimatePresence>
@@ -437,19 +509,28 @@ export default function AdminQuantumApothecary2045() {
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      className="group flex items-center justify-between rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-3"
+                      className="group flex items-center justify-between rounded-2xl border border-[#D4AF37]/18 bg-[#D4AF37]/[0.05] p-3"
                     >
                       <div className="flex items-center gap-3">
                         <div className="relative">
                           <div className="h-2 w-2 rounded-full" style={{ backgroundColor: act.color }} />
-                          <div className="absolute inset-0 h-2 w-2 animate-ping rounded-full opacity-50" style={{ backgroundColor: act.color }} />
+                          <div
+                            className="absolute inset-0 h-2 w-2 animate-ping rounded-full opacity-40"
+                            style={{ backgroundColor: act.color }}
+                          />
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-emerald-400/90">{act.name}</p>
-                          <p className="text-[9px] uppercase tracking-tighter text-white/50">{t('adminQuantumApothecary2045.resonating')}</p>
+                          <p className="text-xs font-bold text-[#D4AF37]/95">{act.name}</p>
+                          <p className="text-[9px] uppercase tracking-tighter text-white/45">{t('adminQuantumApothecary2045.resonating')}</p>
                         </div>
                       </div>
-                      <button type="button" onClick={() => stopTransmission(act.id)} className="p-2 text-white/30 hover:text-red-400" title={t('adminQuantumApothecary2045.stopTransmissionTitle')} aria-label={t('adminQuantumApothecary2045.stopTransmissionTitle')}>
+                      <button
+                        type="button"
+                        onClick={() => stopTransmission(act.id)}
+                        className="p-2 text-white/35 hover:text-red-400/90"
+                        title={t('adminQuantumApothecary2045.stopTransmissionTitle')}
+                        aria-label={t('adminQuantumApothecary2045.stopTransmissionTitle')}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </motion.div>
@@ -461,11 +542,11 @@ export default function AdminQuantumApothecary2045() {
         </div>
 
         <div className="flex flex-col gap-6 lg:col-span-8 lg:max-h-[calc(100vh-8rem)] lg:grid lg:grid-rows-2 lg:overflow-hidden">
-          <section className="flex min-h-[360px] flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl sm:p-8 lg:min-h-0">
+          <section className={`flex min-h-[360px] flex-col overflow-hidden p-6 sm:p-8 lg:min-h-0 ${glassSection}`}>
             <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
               <div>
-                <h2 className="mb-1 text-xl font-light uppercase tracking-widest text-white" style={{ textShadow: `0 0 12px ${ACCENT}22` }}>{t('adminQuantumApothecary2045.frequencyLibrary')}</h2>
-                <p className="text-xs text-white/50">{t('adminQuantumApothecary2045.selectEssences')}</p>
+                <p className={microLabel}>{t('adminQuantumApothecary2045.frequencyLibrary')}</p>
+                <p className="mt-2 text-xs leading-[1.6] text-white/60">{t('adminQuantumApothecary2045.selectEssences')}</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 {FILTER_ORDER.map((type) => (
@@ -473,10 +554,11 @@ export default function AdminQuantumApothecary2045() {
                     key={type}
                     type="button"
                     onClick={() => setActiveCategory(type)}
-                    className={`cursor-pointer rounded-md border px-2.5 py-1.5 text-[9px] uppercase tracking-tighter transition-all ${
-                      activeCategory === type ? 'text-white shadow-[0_0_15px_rgba(255,78,0,0.3)]' : 'border-white/10 bg-white/5 text-white/60 hover:opacity-100'
+                    className={`cursor-pointer rounded-full border px-3 py-1.5 text-[8px] font-extrabold uppercase tracking-[0.2em] transition-all ${
+                      activeCategory === type
+                        ? 'border-[#D4AF37]/50 bg-[#D4AF37]/20 text-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.2)]'
+                        : 'border-white/[0.08] bg-white/[0.03] text-white/55 hover:border-[#D4AF37]/25'
                     }`}
-                    style={activeCategory === type ? { background: ACCENT, borderColor: ACCENT } : undefined}
                   >
                     {filterLabel(type)}
                   </button>
@@ -490,35 +572,40 @@ export default function AdminQuantumApothecary2045() {
                   type="button"
                   onClick={() => addActivation(act)}
                   disabled={selectedActivations.some((a) => a.id === act.id)}
-                  className="group relative overflow-hidden rounded-2xl border border-white/5 bg-white/5 p-3 text-left transition-all hover:border-[#ff4e00]/40 hover:bg-[#ff4e00]/5 disabled:opacity-40 sm:p-4"
+                  className="group relative overflow-hidden rounded-[28px] border border-white/[0.06] bg-white/[0.03] p-3 text-left transition-all hover:border-[#D4AF37]/28 hover:bg-[#D4AF37]/[0.04] hover:shadow-[0_0_24px_rgba(212,175,55,0.08)] disabled:opacity-40 sm:p-4"
                 >
-                  <div className="absolute left-0 top-0 h-full w-1 opacity-40 transition-opacity group-hover:opacity-100" style={{ backgroundColor: act.color }} />
-                  <h3 className="mb-1 text-xs font-bold transition-colors group-hover:text-[#ff4e00]">{act.name}</h3>
-                  <p className="line-clamp-2 text-[10px] leading-tight text-white/40">{act.benefit}</p>
+                  <div
+                    className="absolute left-0 top-0 h-full w-1 opacity-50 transition-opacity group-hover:opacity-100"
+                    style={{ backgroundColor: act.color }}
+                  />
+                  <h3 className="mb-1 text-xs font-bold text-white/90 transition-colors group-hover:text-[#D4AF37]">{act.name}</h3>
+                  <p className="line-clamp-2 text-[10px] leading-[1.6] text-white/50">{act.benefit}</p>
                 </button>
               ))}
             </div>
           </section>
 
-          <section className="relative flex min-h-[380px] flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl lg:min-h-0">
-            <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-6 py-4">
+          <section className={`relative flex min-h-[380px] flex-col overflow-hidden lg:min-h-0 ${glassSection}`}>
+            <div className="flex items-center justify-between border-b border-white/[0.06] bg-white/[0.02] px-6 py-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-[#ff4e00] to-[#78350f] shadow-lg shadow-[#ff4e00]/20">
-                  <Globe className="h-4 w-4 text-white" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[#D4AF37]/30 bg-gradient-to-br from-[#D4AF37]/25 to-[#050505] shadow-[0_0_24px_rgba(212,175,55,0.2)]">
+                  <Globe className="h-4 w-4 text-[#D4AF37]" aria-hidden />
                 </div>
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-widest" style={{ color: ACCENT }}>{t('adminQuantumApothecary2045.sqiOnline')}</p>
-                  <div className="flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-                    <span className="text-[9px] uppercase tracking-tighter text-white/50">{t('adminQuantumApothecary2045.neuralSync')}</span>
+                  <p className="text-[8px] font-extrabold uppercase tracking-[0.35em] text-[#D4AF37] [text-shadow:0_0_12px_rgba(212,175,55,0.25)]">
+                    {t('adminQuantumApothecary2045.sqiOnline')}
+                  </p>
+                  <div className="mt-1 flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#22D3EE] shadow-[0_0_8px_#22D3EE]" />
+                    <span className="text-[9px] uppercase tracking-tighter text-white/45">{t('adminQuantumApothecary2045.neuralSync')}</span>
                   </div>
                 </div>
               </div>
-              <Info className="h-4 w-4 cursor-help text-white/30" aria-hidden />
+              <Info className="h-4 w-4 cursor-help text-[#D4AF37]/40" aria-hidden />
             </div>
             {!geminiKeyPresent && (
               <div
-                className="border-b border-amber-500/25 bg-amber-950/50 px-4 py-2.5 text-center text-[10px] leading-snug text-amber-200/95 sm:px-6"
+                className="border-b border-[#D4AF37]/20 bg-[#D4AF37]/[0.06] px-4 py-2.5 text-center text-[10px] leading-[1.6] text-[#D4AF37]/90 sm:px-6"
                 role="status"
               >
                 {t('adminQuantumApothecary2045.bannerNoGeminiKey')}
@@ -528,10 +615,11 @@ export default function AdminQuantumApothecary2045() {
               {messages.map((msg, i) => (
                 <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div
-                    className={`max-w-[80%] rounded-3xl p-4 text-sm leading-relaxed ${
-                      msg.role === 'user' ? 'rounded-tr-none text-white' : 'rounded-tl-none border border-white/10 bg-white/5 text-[#e0d8d0]/90'
+                    className={`max-w-[80%] rounded-[28px] p-4 text-sm leading-[1.6] ${
+                      msg.role === 'user'
+                        ? 'rounded-tr-none border border-[#D4AF37]/35 bg-gradient-to-br from-[#F5E17A] to-[#B8960C] text-[#050505] shadow-[0_0_28px_rgba(212,175,55,0.25)]'
+                        : 'rounded-tl-none border border-white/[0.08] bg-white/[0.04] text-white/65'
                     }`}
-                    style={msg.role === 'user' ? { background: ACCENT } : undefined}
                   >
                     {msg.text}
                   </div>
@@ -539,21 +627,29 @@ export default function AdminQuantumApothecary2045() {
               ))}
               {isTyping && (
                 <div className="flex justify-start">
-                  <div className="flex gap-1 rounded-3xl rounded-tl-none border border-white/10 bg-white/5 p-4">
+                  <div className="flex gap-1 rounded-[28px] rounded-tl-none border border-white/[0.08] bg-white/[0.04] p-4">
                     {[0, 0.2, 0.4].map((d) => (
-                      <span key={d} className="h-1.5 w-1.5 animate-bounce rounded-full bg-white/30" style={{ animationDelay: `${d}s` }} />
+                      <span
+                        key={d}
+                        className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#D4AF37]/50"
+                        style={{ animationDelay: `${d}s` }}
+                      />
                     ))}
                   </div>
                 </div>
               )}
               <div ref={chatEndRef} />
             </div>
-            <div className="border-t border-white/10 bg-white/5 p-6">
+            <div className="border-t border-white/[0.06] bg-white/[0.02] p-6">
               <div className="flex gap-3">
                 <button
                   type="button"
                   onClick={toggleListening}
-                  className={`rounded-2xl border p-4 transition-all ${isListening ? 'animate-pulse border-red-500 bg-red-500/20 text-red-500' : 'border-white/10 bg-white/5 text-white/60 hover:text-white'}`}
+                  className={`rounded-2xl border p-4 transition-all ${
+                    isListening
+                      ? 'animate-pulse border-[#22D3EE]/50 bg-[#22D3EE]/15 text-[#22D3EE]'
+                      : 'border-white/[0.08] bg-white/[0.04] text-[#D4AF37]/70 hover:border-[#D4AF37]/25 hover:text-[#D4AF37]'
+                  }`}
                   title={t('adminQuantumApothecary2045.talkToAether')}
                   aria-label={t('adminQuantumApothecary2045.talkToAether')}
                 >
@@ -567,14 +663,13 @@ export default function AdminQuantumApothecary2045() {
                     onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                     placeholder={t('adminQuantumApothecary2045.chatPlaceholder')}
                     disabled={!geminiKeyPresent}
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 py-4 pl-6 pr-16 text-sm text-white placeholder:text-white/25 focus:border-[#ff4e00]/50 focus:outline-none disabled:opacity-40"
+                    className="w-full rounded-[28px] border border-white/[0.08] bg-white/[0.04] py-4 pl-6 pr-16 text-sm leading-[1.6] text-white placeholder:text-white/30 focus:border-[#D4AF37]/35 focus:outline-none focus:ring-1 focus:ring-[#D4AF37]/20 disabled:opacity-40"
                   />
                   <button
                     type="button"
                     onClick={() => void handleSendMessage()}
                     disabled={!input.trim() || isTyping || !geminiKeyPresent}
-                    className="absolute bottom-2 right-2 top-2 rounded-xl px-4 text-white transition-all disabled:opacity-30"
-                    style={{ background: ACCENT }}
+                    className="absolute bottom-2 right-2 top-2 rounded-xl border border-[#D4AF37]/40 bg-gradient-to-b from-[#F5E17A] to-[#B8960C] px-4 text-[#050505] shadow-[0_0_16px_rgba(212,175,55,0.25)] transition-all disabled:opacity-30"
                     aria-label={t('adminQuantumApothecary2045.send')}
                   >
                     <Send className="h-4 w-4" />
@@ -588,33 +683,60 @@ export default function AdminQuantumApothecary2045() {
 
       <AnimatePresence>
         {showKnowledge && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-6 backdrop-blur-md" role="dialog" aria-modal="true" aria-labelledby="qa2045-knowledge-title">
-            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="custom-scrollbar max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-[40px] border border-white/10 bg-[#1a1614] p-8 sm:p-12">
-              <div className="mb-8 flex justify-between">
-                <h2 id="qa2045-knowledge-title" className="text-2xl font-light uppercase tracking-tighter text-white">{t('adminQuantumApothecary2045.knowledgeTitle')}</h2>
-                <button type="button" onClick={() => setShowKnowledge(false)} className="rounded-full p-2 hover:bg-white/5" aria-label={t('adminQuantumApothecary2045.closeKnowledge')}>
-                  <Trash2 className="h-6 w-6 text-white/40" />
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#050505]/88 p-6 backdrop-blur-[40px]"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="qa2045-knowledge-title"
+          >
+            <motion.div
+              initial={{ scale: 0.96, y: 16 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.96, y: 16 }}
+              className={`custom-scrollbar max-h-[80vh] w-full max-w-2xl overflow-y-auto p-8 sm:p-12 ${glassSection}`}
+            >
+              <div className="mb-8 flex justify-between gap-4">
+                <h2
+                  id="qa2045-knowledge-title"
+                  className="text-2xl font-black uppercase tracking-[-0.05em] text-[#D4AF37] [text-shadow:0_0_18px_rgba(212,175,55,0.3)]"
+                >
+                  {t('adminQuantumApothecary2045.knowledgeTitle')}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setShowKnowledge(false)}
+                  className="shrink-0 rounded-full border border-white/[0.08] p-2 hover:border-[#D4AF37]/30 hover:bg-[#D4AF37]/10"
+                  aria-label={t('adminQuantumApothecary2045.closeKnowledge')}
+                >
+                  <Trash2 className="h-6 w-6 text-white/45" />
                 </button>
               </div>
-              <div className="space-y-8 text-sm leading-relaxed text-white/80">
+              <div className="space-y-8 text-sm leading-[1.6] text-white/60">
                 <section>
-                  <h3 className="mb-3 text-xs font-bold uppercase tracking-widest" style={{ color: ACCENT }}>{t('adminQuantumApothecary2045.kWhatTitle')}</h3>
+                  <h3 className={`${microLabel} mb-3 !text-[#D4AF37]`}>{t('adminQuantumApothecary2045.kWhatTitle')}</h3>
                   <p>{t('adminQuantumApothecary2045.kWhatBody')}</p>
                 </section>
                 <section>
-                  <h3 className="mb-3 text-xs font-bold uppercase tracking-widest" style={{ color: ACCENT }}>{t('adminQuantumApothecary2045.kNadiTitle')}</h3>
+                  <h3 className={`${microLabel} mb-3 !text-[#22D3EE]`}>{t('adminQuantumApothecary2045.kNadiTitle')}</h3>
                   <p>{t('adminQuantumApothecary2045.kNadiBody')}</p>
                 </section>
                 <section>
-                  <h3 className="mb-3 text-xs font-bold uppercase tracking-widest" style={{ color: ACCENT }}>{t('adminQuantumApothecary2045.k247Title')}</h3>
+                  <h3 className={`${microLabel} mb-3 !text-[#D4AF37]`}>{t('adminQuantumApothecary2045.k247Title')}</h3>
                   <p>{t('adminQuantumApothecary2045.k247Body')}</p>
                 </section>
                 <section>
-                  <h3 className="mb-3 text-xs font-bold uppercase tracking-widest" style={{ color: ACCENT }}>{t('adminQuantumApothecary2045.kWisdomTitle')}</h3>
+                  <h3 className={`${microLabel} mb-3 !text-[#D4AF37]`}>{t('adminQuantumApothecary2045.kWisdomTitle')}</h3>
                   <p>{t('adminQuantumApothecary2045.kWisdomBody')}</p>
                 </section>
               </div>
-              <button type="button" onClick={() => setShowKnowledge(false)} className="mt-12 w-full rounded-2xl py-4 text-sm font-bold uppercase tracking-widest text-white" style={{ background: ACCENT }}>
+              <button
+                type="button"
+                onClick={() => setShowKnowledge(false)}
+                className="mt-12 w-full rounded-[40px] border border-[#D4AF37]/40 bg-gradient-to-b from-[#F5E17A] to-[#B8960C] py-4 text-sm font-black uppercase tracking-[0.2em] text-[#050505] shadow-[0_0_28px_rgba(212,175,55,0.25)]"
+              >
                 {t('adminQuantumApothecary2045.returnAether')}
               </button>
             </motion.div>
@@ -624,10 +746,10 @@ export default function AdminQuantumApothecary2045() {
 
       <style>{`
         @keyframes scan { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(100px); } }
-        @keyframes pulse-bg { 0%, 100% { transform: scale(1); opacity: 0.3; } 50% { transform: scale(1.05); opacity: 0.45; } }
+        @keyframes pulse-bg { 0%, 100% { transform: scale(1); opacity: 0.35; } 50% { transform: scale(1.04); opacity: 0.5; } }
         .liquid-btn { filter: url(#goo-qa2045); }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.2); border-radius: 10px; }
       `}</style>
     </div>
   );
