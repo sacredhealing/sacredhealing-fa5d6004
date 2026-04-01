@@ -384,6 +384,22 @@ function AppRoutes() {
 function App() {
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
+
+    const checkForNewWorker = () => {
+      void navigator.serviceWorker.getRegistration().then((reg) => {
+        if (reg) void reg.update();
+      });
+    };
+
+    // PWA / mobile often never called update(); stale SW = stale Quantum Apothecary chunks.
+    const intervalId = window.setInterval(checkForNewWorker, 3 * 60 * 1000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") checkForNewWorker();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", checkForNewWorker);
+    window.addEventListener("pageshow", checkForNewWorker);
+
     navigator.serviceWorker.getRegistrations().then((registrations) => {
       registrations.forEach((reg) => {
         reg.addEventListener("updatefound", () => {
@@ -397,6 +413,15 @@ function App() {
         });
       });
     });
+
+    checkForNewWorker();
+
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", checkForNewWorker);
+      window.removeEventListener("pageshow", checkForNewWorker);
+    };
   }, []);
 
   return (

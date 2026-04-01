@@ -76,17 +76,37 @@ export default defineConfig(({ mode }) => {
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
-        // Critical: always try network first for the SPA shell (index.html)
+        // Do not precache HTML: stale index.html pins old hashed JS chunks (users never see QA updates).
+        globIgnores: ["**/index.html", "index.html"],
+        // SPA offline: still serve app shell when network fails (filled after first online visit).
+        navigateFallback: "index.html",
+        navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
           {
             urlPattern: ({ request }) => request.destination === "document",
             handler: "NetworkFirst",
             options: {
               cacheName: "html-shell",
-              networkTimeoutSeconds: 3,
+              networkTimeoutSeconds: 2,
               expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60, // 1 hour
+                maxEntries: 8,
+                maxAgeSeconds: 5 * 60, // 5 min — pick up new deploys quickly when online
+              },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
+          // Lazy chunks under /assets/: prefer network so new route bundles load after deploy
+          {
+            urlPattern: ({ sameOrigin, url }) =>
+              sameOrigin && url.pathname.startsWith("/assets/"),
+            handler: "NetworkFirst",
+            method: "GET",
+            options: {
+              cacheName: "assets-network-first",
+              networkTimeoutSeconds: 8,
+              expiration: {
+                maxEntries: 120,
+                maxAgeSeconds: 7 * 24 * 60 * 60,
               },
               cacheableResponse: { statuses: [200] },
             },
