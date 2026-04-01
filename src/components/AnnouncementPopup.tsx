@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useTranslation } from 'react-i18next';
+import { useProfile } from '@/hooks/useProfile';
 import AnnouncementModal from '@/components/AnnouncementModal';
 
 interface AnnouncementRow {
