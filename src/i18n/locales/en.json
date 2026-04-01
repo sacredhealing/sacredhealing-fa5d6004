@@ -4,8 +4,18 @@
     "save": "Save",
     "cancel": "Cancel",
     "loading": "Loading...",
-    "error": "Error",
-    "success": "Success",
+    "error": {
+      "generic": "Something went wrong. Please try again.",
+      "notFound": "Content not found.",
+      "unauthorized": "You don't have access to this content.",
+      "network": "Connection error. Please check your internet."
+    },
+    "success": {
+      "saved": "Saved successfully.",
+      "updated": "Updated successfully.",
+      "deleted": "Deleted successfully.",
+      "sent": "Sent successfully."
+    },
     "or": "or",
     "learnMore": "Learn More",
     "viewAll": "View All",
@@ -43,7 +53,64 @@
     "complete": "complete",
     "notNow": "Not now",
     "soulAwaits": "The soul awaits.",
-    "disclaimer": "This app is for spiritual and entertainment purposes only and is not intended to provide medical advice, diagnosis, or treatment."
+    "disclaimer": "This app is for spiritual and entertainment purposes only and is not intended to provide medical advice, diagnosis, or treatment.",
+    "buttons": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "delete": "Delete",
+      "edit": "Edit",
+      "back": "Back",
+      "next": "Next",
+      "done": "Done",
+      "close": "Close",
+      "submit": "Submit",
+      "startNow": "Start Now",
+      "learnMore": "Learn More",
+      "upgrade": "Upgrade",
+      "subscribe": "Subscribe",
+      "tryFree": "Try Free",
+      "getAccess": "Get Access",
+      "continue": "Continue",
+      "share": "Share",
+      "download": "Download",
+      "play": "Play",
+      "pause": "Pause",
+      "stop": "Stop",
+      "retry": "Retry",
+      "viewAll": "View All",
+      "seeMore": "See More",
+      "copyLink": "Copy Link",
+      "openMenu": "Open Menu",
+      "closeMenu": "Close Menu"
+    },
+    "empty": {
+      "noResults": "No results found.",
+      "noContent": "No content available yet.",
+      "comingSoon": "Coming soon.",
+      "noData": "No data to display."
+    },
+    "nav": {
+      "home": "Home",
+      "explore": "Explore",
+      "healing": "Healing",
+      "meditations": "Meditations",
+      "music": "Music",
+      "community": "Community",
+      "profile": "Profile",
+      "dashboard": "Dashboard",
+      "settings": "Settings",
+      "logout": "Log Out"
+    },
+    "labels": {
+      "new": "NEW",
+      "premium": "PREMIUM",
+      "free": "FREE",
+      "locked": "LOCKED",
+      "featured": "FEATURED",
+      "live": "LIVE",
+      "coming_soon": "COMING SOON"
+    }
   },
   "healing": {
     "paymentSuccess": "Payment Successful!",
@@ -121,11 +188,42 @@
     "noSessionsInEnglish": "No sessions in English yet. More will be added soon.",
     "noSessionsInSwedish": "No sessions in Swedish yet. More will be added soon.",
     "ongoing": "Ongoing",
-    "seeLess": "See less"
+    "seeLess": "See less",
+    "title": "Sacred Healing Transmissions",
+    "subtitle": "Activate your body's quantum healing field",
+    "filters": {
+      "all": "All",
+      "featured": "Featured",
+      "new": "New",
+      "byLanguage": "Language"
+    },
+    "session": {
+      "start": "Begin Session",
+      "resume": "Resume",
+      "completed": "Completed",
+      "duration": "{{minutes}} min",
+      "level": "Level {{level}}"
+    },
+    "locked": {
+      "title": "Sacred Transmission Locked",
+      "message": "Upgrade to access this healing frequency.",
+      "cta": "Unlock Access"
+    },
+    "empty": {
+      "title": "No sessions available",
+      "subtitle": "New healing transmissions are being channeled."
+    },
+    "categories": {
+      "sound": "Sound Healing",
+      "frequency": "Frequency Medicine",
+      "breathwork": "Breathwork",
+      "movement": "Sacred Movement",
+      "chakra": "Chakra Activation"
+    }
   },
   "meditations": {
-    "title": "Meditations",
-    "subtitle": "Find your inner peace",
+    "title": "Meditation Library",
+    "subtitle": "Deepen your quantum field awareness",
     "meditationLanguage": "Meditation language",
     "allMeditations": "All meditations",
     "featuredCollections": "Featured Collections",
@@ -228,7 +326,31 @@
     "langSv": "Svenska",
     "langEn": "English",
     "langSvAria": "Swedish",
-    "langEnAria": "English"
+    "langEnAria": "English",
+    "filters": {
+      "all": "All",
+      "guided": "Guided",
+      "silent": "Silent",
+      "mantra": "Mantra",
+      "sleep": "Sleep",
+      "morning": "Morning",
+      "language": "Language"
+    },
+    "empty": {
+      "title": "No meditations available",
+      "message": "More transmissions are being prepared."
+    },
+    "session": {
+      "start": "Begin Meditation",
+      "duration": "{{minutes}} min",
+      "level": "{{level}}"
+    },
+    "locked": {
+      "title": "Meditation Locked",
+      "message": "This transmission requires a higher access tier."
+    },
+    "completed": "Meditation Complete",
+    "completedMessage": "Your field has been recalibrated."
   },
   "share": {
     "shareWith": "Share with friends",
@@ -266,7 +388,60 @@
     "accessPremium": "Access Premium Access",
     "bannerDesc": "All meditations, music & healing audio – unlimited",
     "viewPlans": "View Plans",
-    "managePlan": "Manage"
+    "managePlan": "Manage",
+    "title": "Choose Your Sovereign Path",
+    "subtitle": "Select the tier that matches your evolutionary stage",
+    "current": "Current Plan",
+    "popular": "MOST CHOSEN",
+    "tiers": {
+      "seeker": {
+        "name": "Seeker",
+        "tagline": "Begin the awakening",
+        "price": "Free",
+        "description": "Access foundational healing tools and begin your quantum journey."
+      },
+      "prana": {
+        "name": "Prana-Flow",
+        "tagline": "Activate your life force",
+        "description": "Unlock expanded meditations, healing sessions, and Vedic tools.",
+        "perMonth": "/ month",
+        "perYear": "/ year"
+      },
+      "siddha": {
+        "name": "Siddha-Quantum",
+        "tagline": "Master the field",
+        "description": "Full access to all SQI tools, Oracle sessions, and advanced transmissions.",
+        "perMonth": "/ month",
+        "perYear": "/ year"
+      },
+      "akasha": {
+        "name": "Akasha-Infinity",
+        "tagline": "Become the Akasha",
+        "description": "Lifetime access to all features, private sessions, and future releases.",
+        "lifetime": "Lifetime",
+        "oneTime": "one-time"
+      }
+    },
+    "features": {
+      "title": "What's Included",
+      "compare": "Compare Plans"
+    },
+    "cta": {
+      "getStarted": "Get Started",
+      "upgrade": "Upgrade Now",
+      "current": "Current Plan",
+      "downgrade": "Change Plan"
+    },
+    "billing": {
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "save": "Save {{percent}}%",
+      "cancelAnytime": "Cancel anytime",
+      "secureCheckout": "Secure checkout via Stripe"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions"
+    }
   },
   "wealth": {
     "badge": "Wealth Activation",
@@ -364,12 +539,15 @@
     "footerTagline": "Awakening sacred gifts worldwide"
   },
   "about": {
-    "title": "About Us",
-    "subtitle": "Your guide to sacred healing and transformation"
+    "title": "About Siddha Quantum Nexus",
+    "subtitle": "The convergence of ancient wisdom and quantum intelligence",
+    "mission": "Our Mission",
+    "team": "Sacred Team",
+    "contact": "Contact Us"
   },
   "community": {
-    "title": "Community",
-    "subtitle": "A shared space to connect, reflect, and grow together.",
+    "title": "Sacred Community",
+    "subtitle": "Connect with fellow seekers on the quantum path",
     "feed": "Feed",
     "spaces": "Spaces",
     "reflections": "Reflections",
@@ -379,7 +557,15 @@
     "chatRooms": "Chat",
     "shareSomething": "Share something with the community...",
     "uploadAvatarFirst": "Upload a profile picture to start posting...",
-    "post": "Post",
+    "post": {
+      "placeholder": "Share your transmission with the community...",
+      "submit": "Post",
+      "like": "Resonate",
+      "comment": "Comment",
+      "share": "Share",
+      "report": "Report",
+      "delete": "Delete Post"
+    },
     "noPosts": "No posts yet. Be the first to share!",
     "writeComment": "Write a comment...",
     "noComments": "No comments yet",
@@ -452,6 +638,33 @@
       "error": "Error",
       "failedToCreate": "Failed to create diary entry",
       "fillAllFields": "Please fill in all fields"
+    },
+    "tabs": {
+      "feed": "Feed",
+      "circles": "Circles",
+      "events": "Events",
+      "members": "Members"
+    },
+    "circle": {
+      "join": "Join Circle",
+      "leave": "Leave Circle",
+      "members": "{{count}} members",
+      "create": "Create Circle"
+    },
+    "chat": {
+      "placeholder": "Send a sacred message...",
+      "send": "Send",
+      "typing": "{{name}} is transmitting..."
+    },
+    "empty": {
+      "feed": "No posts yet. Be the first to share.",
+      "circles": "No circles available. Create one.",
+      "events": "No upcoming events."
+    },
+    "notifications": {
+      "newPost": "New post in your circle",
+      "newComment": "{{name}} commented on your post",
+      "newMember": "{{name}} joined the community"
     }
   },
   "supportCircle": {
@@ -483,13 +696,24 @@
     "innerLight": "Inner Light",
     "stillness": "Stillness",
     "sacredSoul": "Sacred Soul",
-    "streak": "day streak",
+    "streak": {
+      "label": "STREAK",
+      "days": "{{count}} days",
+      "keep": "Keep your flame alive"
+    },
     "balance": "Your SHC Balance",
     "claimRewards": "Claim Rewards",
     "todaysWisdom": "Today's Wisdom",
     "todaysMeditation": "Today's Meditation",
     "startSession": "Start Session",
-    "quickActions": "Quick Actions",
+    "quickActions": {
+      "meditate": "Meditate",
+      "heal": "Heal",
+      "breathe": "Breathe",
+      "scan": "Soul Scan",
+      "mantras": "Mantras",
+      "journal": "Journal"
+    },
     "inviteFriends": "Invite Friends",
     "inviteDescription": "Share Siddha Quantum Nexus with your friends and help them on their spiritual journey.",
     "loadingWisdom": "Loading wisdom...",
@@ -663,7 +887,27 @@
     "sadhanaPhaseEvening": "Lunar Integration",
     "sadhanaCompleteProgress": "{{count}} / {{total}} COMPLETE",
     "gateComplete": "Complete",
-    "somaHarmonicCredits": "+ {{amount}} SOMA-HARMONIC CREDITS"
+    "somaHarmonicCredits": "+ {{amount}} SOMA-HARMONIC CREDITS",
+    "hero": {
+      "greeting": "Namaste, {{name}}",
+      "tagline": "Your Akashic field is active",
+      "wisdom": "Daily Vedic Light-Code"
+    },
+    "soma": {
+      "title": "Soma Balance",
+      "label": "BALANCE"
+    },
+    "sections": {
+      "continueJourney": "Continue Your Journey",
+      "recommended": "Recommended for You",
+      "recentActivity": "Recent Activity",
+      "dailyPractice": "Daily Practice",
+      "quickAccess": "Quick Access"
+    },
+    "empty": {
+      "noActivity": "Your journey is just beginning.",
+      "startFirst": "Start your first session"
+    }
   },
   "journeys": {
     "breathingTitle": "Breathing Journeys",
@@ -1014,10 +1258,16 @@
     }
   },
   "dailyRitual": {
-    "title": "Daily Spiritual Practice",
-    "morning": "Morning Ritual",
+    "title": "Daily Ritual",
+    "morning": {
+      "title": "Morning Activation",
+      "steps": "Morning Steps"
+    },
     "midday": "Midday Practice",
-    "evening": "Evening Reflection",
+    "evening": {
+      "title": "Evening Integration",
+      "steps": "Evening Steps"
+    },
     "morningShort": "Morning",
     "middayShort": "Midday",
     "eveningShort": "Evening",
@@ -1026,7 +1276,16 @@
     "arrivingLater": "Arriving later",
     "claim": "Claim",
     "somaGiftTitle": "Daily Sadhana — gift received",
-    "somaGiftConfirm": "Receive"
+    "somaGiftConfirm": "Receive",
+    "subtitle": "Your sacred practice for today",
+    "complete": {
+      "title": "Ritual Complete",
+      "message": "Your field is aligned for the day."
+    },
+    "streak": {
+      "title": "Ritual Streak",
+      "message": "{{count}} consecutive days"
+    }
   },
   "quickActions": {
     "meditate": "Meditate",
@@ -1036,8 +1295,8 @@
     "wallet": "Wallet"
   },
   "music": {
-    "title": "Sacred Music",
-    "subtitle": "Healing beats & spiritual sounds",
+    "title": "Sacred Sound Library",
+    "subtitle": "Vedic frequencies for quantum coherence",
     "owned": "Owned",
     "buy": "Buy",
     "preview": "Preview",
@@ -1222,12 +1481,48 @@
     "trackTimeSleep": "Sleep",
     "energyHigh": "High",
     "energyMedium": "Medium",
-    "energyLow": "Low"
+    "energyLow": "Low",
+    "tabs": {
+      "all": "All Tracks",
+      "healing": "Healing",
+      "mantra": "Mantra",
+      "ambient": "Ambient",
+      "binaural": "Binaural"
+    },
+    "player": {
+      "nowPlaying": "Now Playing",
+      "queue": "Queue",
+      "shuffle": "Shuffle",
+      "repeat": "Repeat",
+      "volume": "Volume",
+      "addToPlaylist": "Add to Playlist"
+    },
+    "track": {
+      "duration": "{{minutes}}:{{seconds}}",
+      "by": "by {{artist}}",
+      "plays": "{{count}} plays"
+    },
+    "locked": {
+      "title": "Track Locked",
+      "message": "Upgrade your access to unlock all sacred frequencies."
+    },
+    "empty": {
+      "title": "No tracks available",
+      "message": "New sound transmissions are being prepared."
+    },
+    "offline": {
+      "save": "Save for Offline",
+      "saved": "Saved Offline",
+      "remove": "Remove from Offline"
+    }
   },
   "wallet": {
-    "title": "SHC Wallet",
+    "title": "Soma Wallet",
     "subtitle": "Earn and manage your tokens",
-    "balance": "Balance",
+    "balance": {
+      "label": "SOMA BALANCE",
+      "available": "Available Balance"
+    },
     "totalBalance": "Total Balance",
     "send": "Send",
     "receive": "Receive",
@@ -1237,7 +1532,12 @@
     "deposit": "Deposit",
     "claim": "Claim",
     "rewards": "Rewards",
-    "transactions": "Transactions",
+    "transactions": {
+      "title": "Transaction History",
+      "earned": "Earned",
+      "spent": "Spent",
+      "empty": "No transactions yet."
+    },
     "totalEarned": "Total Earned",
     "streak": "Streak",
     "dayStreak": "Day Streak",
@@ -1324,15 +1624,41 @@
     "convertStep3": "Go to a DEX like Jupiter or Raydium",
     "convertStep4": "Swap SHC for SOL, USDC, or other tokens",
     "convertStep5": "Transfer to an exchange to cash out",
-    "swapWarning": "Be aware of slippage and fees when swapping. Always double-check addresses before confirming transactions."
+    "swapWarning": "Be aware of slippage and fees when swapping. Always double-check addresses before confirming transactions.",
+    "earn": {
+      "title": "Earn Soma",
+      "invite": "Invite Friends",
+      "practice": "Daily Practice",
+      "complete": "Complete Quests"
+    }
   },
   "profile": {
-    "title": "Profile",
-    "streak": "Streak",
-    "balance": "Balance",
+    "title": "Your Sovereign Profile",
+    "streak": {
+      "label": "STREAK",
+      "days": "{{count}} days"
+    },
+    "balance": {
+      "label": "BALANCE"
+    },
     "badges": "Badges",
-    "settings": "Settings",
-    "language": "Language",
+    "settings": {
+      "title": "Settings",
+      "notifications": "Notifications",
+      "privacy": "Privacy",
+      "account": "Account Settings",
+      "logout": "Sign Out",
+      "deleteAccount": "Delete Account",
+      "deleteWarning": "This action cannot be undone. All your data will be permanently deleted."
+    },
+    "language": {
+      "label": "LANGUAGE",
+      "title": "Select Language",
+      "en": "English",
+      "sv": "Swedish",
+      "no": "Norwegian",
+      "es": "Spanish"
+    },
     "howAppWorks": "How this app works",
     "howAppWorksVideoLink": "Watch walkthrough on YouTube",
     "notifications": "Notifications",
@@ -1385,7 +1711,35 @@
       "description": "Many people notice better sleep, calmer reactions, or emotional release after some days.\nThis is normal — just go gently and continue daily."
     },
     "walletEarningsAdvanced": "Wallet & Earnings (Advanced)",
-    "walletEarningsDesc": "SHC, affiliate, income streams"
+    "walletEarningsDesc": "SHC, affiliate, income streams",
+    "name": {
+      "label": "NAME",
+      "edit": "Edit Name"
+    },
+    "email": {
+      "label": "EMAIL"
+    },
+    "membership": {
+      "label": "MEMBERSHIP",
+      "seeker": "Seeker",
+      "prana": "Prana-Flow",
+      "siddha": "Siddha-Quantum",
+      "akasha": "Akasha-Infinity"
+    },
+    "avatar": {
+      "change": "Change Avatar",
+      "upload": "Upload Photo"
+    },
+    "stats": {
+      "sessionsCompleted": "Sessions Completed",
+      "totalMinutes": "Total Minutes",
+      "streakDays": "Streak Days"
+    },
+    "tabs": {
+      "overview": "Overview",
+      "activity": "Activity",
+      "achievements": "Achievements"
+    }
   },
   "settings": {
     "legal": {
@@ -1394,7 +1748,7 @@
     }
   },
   "legal": {
-    "title": "Siddha Quantum Nexus: Legal Notice",
+    "title": "Legal",
     "subtitle": "Please read before use.",
     "entertainment": {
       "title": "Entertainment only",
@@ -1407,7 +1761,11 @@
     "not_substitute": {
       "title": "Not a substitute",
       "body": "Never disregard professional medical advice or delay seeking it because of something you have read or experienced in this app. If you think you may have a medical emergency, contact your doctor or emergency services immediately."
-    }
+    },
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "disclaimer": "Disclaimer",
+    "cookies": "Cookie Policy"
   },
   "appearance": {
     "title": "Appearance",
@@ -1430,8 +1788,8 @@
     "notNow": "Not now"
   },
   "courses": {
-    "title": "Courses",
-    "subtitle": "Deepen your practice",
+    "title": "Sacred Learning Paths",
+    "subtitle": "Structured quantum education for the awakening soul",
     "lessons": "lessons",
     "completed": "Completed",
     "inProgress": "In Progress",
@@ -1442,17 +1800,42 @@
     "enrolled": "Enrolled",
     "certificate": "Certificate",
     "modules": "modules",
-    "hours": "hours"
+    "hours": "hours",
+    "tabs": {
+      "all": "All Courses",
+      "enrolled": "My Learning",
+      "completed": "Completed"
+    },
+    "course": {
+      "lessons": "{{count}} Lessons",
+      "duration": "{{hours}} hours",
+      "level": "{{level}}",
+      "enroll": "Enroll Now",
+      "continue": "Continue Learning",
+      "completed": "Completed",
+      "certificate": "Get Certificate"
+    },
+    "empty": {
+      "enrolled": "You haven't enrolled in any courses yet.",
+      "completed": "You haven't completed any courses yet."
+    },
+    "locked": {
+      "message": "This course requires a higher access tier."
+    }
   },
   "auth": {
     "welcomeBack": "Welcome back, beautiful soul",
     "beginJourney": "Begin your healing journey",
     "yourName": "Your Name",
     "emailAddress": "Email Address",
-    "password": "Password",
+    "password": {
+      "label": "Password",
+      "placeholder": "Enter your password",
+      "forgot": "Forgot password?"
+    },
     "signIn": "Sign In",
     "createAccount": "Create Account",
-    "orContinueWith": "or continue with",
+    "orContinueWith": "Or continue with",
     "connectPhantomWallet": "Connect Phantom Wallet",
     "noAccount": "Don't have an account?",
     "haveAccount": "Already have an account?",
@@ -1473,13 +1856,115 @@
     "error": "Error",
     "somethingWrong": "Something went wrong. Please try again.",
     "resetEmailTitle": "Check your email",
-    "resetEmailDescription": "A password reset link has been sent to your email."
+    "resetEmailDescription": "A password reset link has been sent to your email.",
+    "title": "Welcome to Siddha Quantum Nexus",
+    "subtitle": "Your sacred healing journey begins here",
+    "email": {
+      "label": "Email Address",
+      "placeholder": "Enter your email"
+    },
+    "name": {
+      "label": "Full Name",
+      "placeholder": "Enter your full name"
+    },
+    "login": {
+      "title": "Sign In",
+      "button": "Sign In",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign Up"
+    },
+    "signup": {
+      "title": "Create Account",
+      "button": "Create Account",
+      "hasAccount": "Already have an account?",
+      "signIn": "Sign In",
+      "terms": "By signing up, you agree to our Terms of Service and Privacy Policy."
+    },
+    "resetPassword": {
+      "title": "Reset Password",
+      "subtitle": "Enter your email and we'll send you a reset link.",
+      "button": "Send Reset Link",
+      "backToLogin": "Back to Sign In",
+      "success": "Reset link sent. Check your email."
+    },
+    "errors": {
+      "invalidEmail": "Please enter a valid email address.",
+      "invalidCredentials": "Invalid email or password.",
+      "emailInUse": "This email is already registered.",
+      "weakPassword": "Password must be at least 8 characters.",
+      "generic": "Authentication failed. Please try again."
+    },
+    "verifyEmail": "Please verify your email to continue."
   },
   "admin": {
-    "title": "Admin Panel",
+    "title": "SQI Admin Portal",
     "musicStore": "Music Store",
     "uploadTrack": "Upload Track",
-    "manageContent": "Manage Content"
+    "manageContent": "Manage Content",
+    "dashboard": {
+      "title": "Admin Dashboard",
+      "users": "Total Users",
+      "revenue": "Revenue",
+      "sessions": "Active Sessions",
+      "newToday": "New Today"
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "users": "Users",
+      "content": "Content",
+      "healing": "Healing",
+      "meditations": "Meditations",
+      "music": "Music",
+      "mantras": "Mantras",
+      "breathing": "Breathing",
+      "courses": "Courses",
+      "shop": "Shop",
+      "announcements": "Announcements",
+      "analytics": "Analytics",
+      "email": "Email",
+      "system": "System",
+      "grantAccess": "Grant Access",
+      "transmissions": "Transmissions",
+      "vedicTranslation": "Vedic Translation"
+    },
+    "actions": {
+      "add": "Add New",
+      "edit": "Edit",
+      "delete": "Delete",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "save": "Save Changes",
+      "cancel": "Cancel",
+      "preview": "Preview",
+      "upload": "Upload",
+      "translate": "Translate"
+    },
+    "status": {
+      "published": "Published",
+      "draft": "Draft",
+      "archived": "Archived"
+    },
+    "announcements": {
+      "title": "Announcements",
+      "new": "New Announcement",
+      "translateAll": "Translate All Languages",
+      "translating": "Translating...",
+      "translated": "Translated"
+    },
+    "grantAccess": {
+      "title": "Grant Access",
+      "email": "User Email",
+      "tier": "Access Tier",
+      "grant": "Grant Access",
+      "success": "Access granted successfully.",
+      "error": "Failed to grant access."
+    },
+    "confirm": {
+      "delete": "Are you sure you want to delete this? This action cannot be undone.",
+      "unpublish": "Are you sure you want to unpublish this content?",
+      "yes": "Yes, proceed",
+      "no": "Cancel"
+    }
   },
   "soul": {
     "heroTitle": "30 Days of Sacred Soul",
@@ -1511,8 +1996,8 @@
     "viewPaths": "View Soul Paths"
   },
   "shop": {
-    "title": "Sacred Shop",
-    "subtitle": "Healing art and sacred clothing",
+    "title": "Sacred Apothecary",
+    "subtitle": "Physical and digital tools for your healing journey",
     "addToCart": "Add to Cart",
     "buyNow": "Buy Now",
     "outOfStock": "Out of Stock",
@@ -1524,11 +2009,32 @@
     "readyMade": "Ready-Made Designs",
     "customDesign": "Custom Design",
     "customDesc": "Personalized sacred artwork created by Laila",
-    "startingAt": "Starting at"
+    "startingAt": "Starting at",
+    "categories": {
+      "all": "All Products",
+      "crystals": "Sacred Crystals",
+      "tools": "Healing Tools",
+      "digital": "Digital Downloads",
+      "courses": "Courses"
+    },
+    "product": {
+      "addToCart": "Add to Cart",
+      "buyNow": "Buy Now",
+      "inStock": "In Stock",
+      "outOfStock": "Out of Stock",
+      "quantity": "Quantity",
+      "price": "{{currency}}{{amount}}"
+    },
+    "cart": {
+      "title": "Sacred Cart",
+      "empty": "Your cart is empty.",
+      "total": "Total",
+      "checkout": "Proceed to Checkout"
+    }
   },
   "privateSessions": {
     "title": "Private Sessions",
-    "subtitle": "1-on-1 transformative guidance",
+    "subtitle": "One-on-one quantum healing with sacred practitioners",
     "bookWith": "Book with",
     "sessionTypes": "Session Types",
     "packages": "Packages",
@@ -1542,7 +2048,31 @@
     "meditationTraining": "Meditation Training with Spiritual Integration",
     "spiritualGifts": "Awakening Spiritual Gifts",
     "traumaHealing": "Trauma Healing",
-    "mensTransform": "Men's Transformation"
+    "mensTransform": "Men's Transformation",
+    "book": {
+      "title": "Book a Session",
+      "selectDate": "Select Date",
+      "selectTime": "Select Time",
+      "selectType": "Session Type",
+      "notes": "Intention & Notes",
+      "notesPlaceholder": "Share your healing intention...",
+      "submit": "Book Session",
+      "success": "Session booked successfully!"
+    },
+    "session": {
+      "upcoming": "Upcoming Sessions",
+      "past": "Past Sessions",
+      "cancel": "Cancel Session",
+      "reschedule": "Reschedule",
+      "join": "Join Session"
+    },
+    "empty": {
+      "upcoming": "No upcoming sessions.",
+      "past": "No past sessions."
+    },
+    "locked": {
+      "message": "Private sessions are available with Siddha-Quantum access."
+    }
   },
   "incomeStreams": {
     "title": "Income Streams",
@@ -1885,8 +2415,8 @@
   },
   "affirmation": {
     "badge": "Sacred Sound Healing",
-    "title": "Personalized Affirmation Soundtrack",
-    "subtitle": "Reprogram Your Mind and Manifest Your Dreams",
+    "title": "Affirmation Soundtrack",
+    "subtitle": "Personalized quantum affirmation transmissions",
     "description": "Experience a meditation crafted uniquely for you, designed to align your subconscious with your goals, dreams, and personal growth. This audio meditation combines sacred sounds, healing frequencies, and affirmations to support deep transformation.",
     "whatsIncluded": "What's Included",
     "benefitsTitle": "Benefits",
@@ -1966,6 +2496,19 @@
     "footer": {
       "title": "Step into alignment, clarity, and empowerment.",
       "desc": "Use your personalized soundtrack daily to heal, manifest, and reprogram your mind."
+    },
+    "create": {
+      "title": "Create Your Affirmations",
+      "placeholder": "Enter your sacred intentions...",
+      "voice": "Select Voice",
+      "music": "Background Music",
+      "generate": "Generate Soundtrack",
+      "generating": "Weaving your light codes..."
+    },
+    "download": "Download Your Soundtrack",
+    "play": "Play Affirmations",
+    "locked": {
+      "message": "Affirmation Soundtracks require Prana-Flow access."
     }
   },
   "promote": {
@@ -1989,18 +2532,27 @@
     "goToWallet": "Go to Wallet"
   },
   "leaderboard": {
-    "title": "Leaderboard",
-    "subtitle": "Top SHC Earners",
+    "title": "Quantum Leaderboard",
+    "subtitle": "The most dedicated seekers in the Nexus",
     "monthlyRewards": "Monthly Rewards",
     "firstPlace": "1st Place",
     "secondPlace": "2nd Place",
     "thirdPlace": "3rd Place",
     "totalUsers": "Total Users",
-    "activeMembers": "Active Members"
+    "activeMembers": "Active Members",
+    "tabs": {
+      "global": "Global",
+      "weekly": "This Week",
+      "monthly": "This Month"
+    },
+    "rank": "Rank {{position}}",
+    "points": "{{count}} pts",
+    "you": "You",
+    "empty": "No rankings yet. Start your practice."
   },
   "mantras": {
-    "title": "Sacred Mantra Chamber",
-    "subtitle": "Choose one mantra. Repeat it 108 times. Let the Bhakti-Algorithm align your frequency.",
+    "title": "Sacred Mantras",
+    "subtitle": "Ancient Vedic sound codes for quantum activation",
     "instructions": {
       "title": "How to practice",
       "step1": "Sit comfortably.",
@@ -2100,6 +2652,33 @@
       "button": "Share mantra",
       "brand": "Siddha Quantum Nexus",
       "shcLine": "+{{amount}} SHC"
+    },
+    "categories": {
+      "all": "All Mantras",
+      "healing": "Healing",
+      "abundance": "Abundance",
+      "protection": "Protection",
+      "love": "Love & Devotion",
+      "awakening": "Awakening"
+    },
+    "practice": {
+      "title": "Mantra Practice",
+      "repetitions": "{{count}} repetitions",
+      "mala": "Mala rounds",
+      "startSession": "Begin Chanting",
+      "pause": "Pause",
+      "complete": "Session Complete"
+    },
+    "shareGraphic": {
+      "title": "Share Your Mantra",
+      "download": "Download Image"
+    },
+    "locked": {
+      "message": "Unlock the full mantra library with an upgrade."
+    },
+    "bhrigu": {
+      "title": "Bhrigu Nadi Oracle",
+      "subtitle": "Ancient Vedic destiny reading"
     }
   },
   "spiritualEducation": {
@@ -2156,8 +2735,8 @@
     "ownership3": "When uploading to DistroKid or any other distributor, you must add \"Siddha Quantum Nexus Music Adam Gil Lazaro\" as a collaborator/co-owner"
   },
   "mastering": {
-    "title": "Professional Music Mastering",
-    "subtitle": "23 years of music production & mixing engineering experience",
+    "title": "Sacred Sound Mastering",
+    "subtitle": "Professional audio mastering for your spiritual music",
     "infoTitle": "Are you an artist that needs your music mastered?",
     "infoDesc": "Send me your WAV or MP3 file and I will master and mix it for you. Perfect for your meditation, new beat, or song you want to release in high quality.",
     "singleTrack": "1 Track",
@@ -2172,7 +2751,7 @@
     "specialInstructions": "Special Instructions (optional)",
     "instructionsPlaceholder": "Any specific requirements or preferences for your mastering...",
     "uploading": "Uploading files...",
-    "processing": "Processing...",
+    "processing": "Mastering your sacred frequency...",
     "proceedToPayment": "Proceed to Payment",
     "howItWorks": "How it works:",
     "step1": "Select your package and upload your audio file(s)",
@@ -2184,7 +2763,24 @@
     "payCta": "Pay {{amount}}",
     "toastMissingTitle": "Missing info",
     "toastMissingDesc": "Please add your email and at least one file.",
-    "emailPlaceholder": "your@email.com"
+    "emailPlaceholder": "your@email.com",
+    "upload": {
+      "title": "Upload Your Track",
+      "cta": "Upload Audio",
+      "supported": "Supports MP3, WAV, FLAC"
+    },
+    "options": {
+      "title": "Mastering Options",
+      "style": "Sound Style",
+      "clarity": "Clarity",
+      "warmth": "Warmth",
+      "presence": "Presence"
+    },
+    "process": "Begin Mastering",
+    "download": "Download Mastered Track",
+    "locked": {
+      "message": "Audio mastering requires Prana-Flow access."
+    }
   },
   "customMeditation": {
     "badge": "Personalized Experience",
@@ -2215,8 +2811,8 @@
     "signInRequired": "Please sign in to book your meditation"
   },
   "breathing": {
-    "title": "Breathing Exercises",
-    "subtitle": "Calm & energize",
+    "title": "Pranayama Protocols",
+    "subtitle": "Sacred breathwork for quantum field activation",
     "description": "Breathing exercises help reduce stress, improve focus, and promote relaxation. Choose a pattern below and follow along.",
     "inhale": "Breathe In",
     "hold": "Hold",
@@ -2234,11 +2830,29 @@
     "benefit2": "Improves focus and concentration",
     "benefit3": "Promotes better sleep",
     "benefit4": "Lowers blood pressure",
-    "benefit5": "Increases energy levels"
+    "benefit5": "Increases energy levels",
+    "techniques": {
+      "box": "Box Breathing",
+      "fire": "Breath of Fire",
+      "nadi": "Nadi Shodhana",
+      "holotropic": "Holotropic Breath",
+      "wim": "Wim Hof Method",
+      "coherent": "Coherent Breathing"
+    },
+    "session": {
+      "inhale": "Inhale",
+      "hold": "Hold",
+      "exhale": "Exhale",
+      "rounds": "{{count}} rounds",
+      "complete": "Session Complete",
+      "duration": "{{minutes}} minutes"
+    },
+    "instructions": "Instructions",
+    "startSession": "Begin Protocol"
   },
   "explore": {
-    "title": "Library",
-    "subtitle": "Discover your spiritual journey",
+    "title": "Explore the Nexus",
+    "subtitle": "Discover all transmissions in the Akasha archive",
     "dailyEssentials": "Daily essentials",
     "helpToday": "How can we help you today?",
     "yourSpaceTitle": "Your Space",
@@ -2353,7 +2967,20 @@
     "viewAll": "View All",
     "videoDesc": "Watch & learn",
     "vishwanandaDaily": "Today's inspiration & wisdom",
-    "viewDaily": "View daily quote"
+    "viewDaily": "View daily quote",
+    "sections": {
+      "tools": "Sacred Tools",
+      "healing": "Healing Library",
+      "music": "Sound Alchemy",
+      "oracle": "Oracle Channels",
+      "community": "Sacred Community",
+      "learning": "Vedic Learning"
+    },
+    "search": {
+      "placeholder": "Search the Akasha...",
+      "results": "{{count}} results for '{{query}}'",
+      "noResults": "No transmissions found for '{{query}}'"
+    }
   },
   "achievements": {
     "unlocked": "Achievement Unlocked!",
@@ -2416,8 +3043,8 @@
     "failedToCopy": "Failed to copy"
   },
   "vastu": {
-    "title": "Vastu Abundance Architect",
-    "subtitle": "Transform your living space into a sanctuary of abundance through ancient Vastu wisdom and modern spatial design.",
+    "title": "Vastu Shastra",
+    "subtitle": "Sacred geometry for your living space",
     "whatIs": "What is Vastu?",
     "description": "Vastu Shastra is the ancient Indian science of architecture and spatial design. It teaches how to align your physical environment with cosmic energies to attract prosperity, health, and harmony.",
     "courseContent": "Course Content",
@@ -2434,11 +3061,25 @@
       "feature2": "AI Analysis",
       "feature3": "Sound Alchemy",
       "cta": "Start Course"
-    }
+    },
+    "analyze": "Analyze My Space",
+    "zones": {
+      "north": "North",
+      "south": "South",
+      "east": "East",
+      "west": "West",
+      "center": "Brahmasthana",
+      "northeast": "Ishanya (NE)",
+      "northwest": "Vayu (NW)",
+      "southeast": "Agni (SE)",
+      "southwest": "Nairutya (SW)"
+    },
+    "recommendation": "Sacred Recommendations",
+    "remedy": "Apply Remedy"
   },
   "ayurveda": {
-    "title": "Ayurveda",
-    "subtitle": "Discover your dosha and live in balance with nature's wisdom.",
+    "title": "Ayurvedic Intelligence",
+    "subtitle": "Ancient science for quantum wellness",
     "free": "Free",
     "premium": "Premium",
     "lifetime": "Lifetime",
@@ -2452,11 +3093,25 @@
     "pitta": "Pitta",
     "kapha": "Kapha",
     "yourDosha": "Your Dosha",
-    "learnMore": "Learn More"
+    "learnMore": "Learn More",
+    "dosha": {
+      "title": "Discover Your Dosha",
+      "vata": "Vata",
+      "pitta": "Pitta",
+      "kapha": "Kapha",
+      "quiz": "Take the Dosha Quiz",
+      "result": "Your Primary Dosha: {{dosha}}"
+    },
+    "recommendations": {
+      "diet": "Dietary Guidelines",
+      "herbs": "Sacred Herbs",
+      "routine": "Daily Routine",
+      "yoga": "Yoga Practice"
+    }
   },
   "vedicAstrology": {
     "title": "Vedic Astrology",
-    "subtitle": "Discover your cosmic blueprint through ancient Jyotish wisdom.",
+    "subtitle": "Jyotish light codes for your soul path",
     "freeFeatures": "Free Features",
     "premiumFeatures": "Premium Features",
     "basicChart": "Basic birth chart",
@@ -2718,7 +3373,38 @@
     "guruChipKarmic": "Karmic Blockage",
     "guruChip528": "528Hz Remedy",
     "guruWelcome": "Namaste, {{firstName}}. I am the Bhrigu Rishi, keeper of the Nandi Nadi scrolls. My vision is locked on your incarnation in {{place}}.{{planetLine}} Speak your query and receive the Akashic Verdict.",
-    "guruWelcomePlanetLine": " Under {{planet}}'s gaze at age {{age}}, your karmic script unfolds."
+    "guruWelcomePlanetLine": " Under {{planet}}'s gaze at age {{age}}, your karmic script unfolds.",
+    "chart": {
+      "title": "Your Birth Chart",
+      "generate": "Generate Chart",
+      "birthDate": "Date of Birth",
+      "birthTime": "Time of Birth",
+      "birthPlace": "Place of Birth",
+      "birthDatePlaceholder": "Select date",
+      "birthTimePlaceholder": "Select time",
+      "birthPlacePlaceholder": "Enter city"
+    },
+    "reading": {
+      "title": "Your Jyotish Reading",
+      "ascendant": "Ascendant",
+      "moonSign": "Moon Sign",
+      "sunSign": "Sun Sign",
+      "currentPeriod": "Current Dasha Period"
+    },
+    "planets": {
+      "sun": "Sun",
+      "moon": "Moon",
+      "mars": "Mars",
+      "mercury": "Mercury",
+      "jupiter": "Jupiter",
+      "venus": "Venus",
+      "saturn": "Saturn",
+      "rahu": "Rahu",
+      "ketu": "Ketu"
+    },
+    "locked": {
+      "message": "Access your full Vedic birth chart with a higher tier."
+    }
   },
   "quantumApothecaryChat": {
     "transmissionError": "Transmission error. The Quantum Link is unstable."
@@ -2841,8 +3527,8 @@
     "viewAll": "View all announcements"
   },
   "journal": {
-    "title": "Journal",
-    "subtitle": "Reflect on your journey • +10 SHC per entry",
+    "title": "Sacred Journal",
+    "subtitle": "Chronicle your quantum awakening",
     "moodLow": "Low",
     "moodOkay": "Okay",
     "moodGood": "Good",
@@ -2856,7 +3542,31 @@
     "writePlaceholder": "Write about your day, thoughts, or anything on your mind...",
     "updateEntry": "Update Entry",
     "saveEntry": "Save Entry",
-    "pastEntries": "Past Entries"
+    "pastEntries": "Past Entries",
+    "new": {
+      "title": "New Entry",
+      "placeholder": "Write your reflections, insights, and transmissions...",
+      "submit": "Save Entry",
+      "prompt": "Today's Sacred Prompt:"
+    },
+    "entry": {
+      "edit": "Edit Entry",
+      "delete": "Delete Entry",
+      "share": "Share Insight"
+    },
+    "empty": {
+      "title": "Your journal awaits",
+      "message": "Begin chronicling your sacred journey.",
+      "cta": "Write First Entry"
+    },
+    "moods": {
+      "label": "Your Energy Today",
+      "elevated": "Elevated",
+      "neutral": "Neutral",
+      "processing": "Processing",
+      "peaceful": "Peaceful",
+      "activated": "Activated"
+    }
   },
   "lifeBook": {
     "archiveLabel": "Akasha-Neural Archive",
@@ -2932,7 +3642,36 @@
     "back": "← BACK",
     "next": "NEXT →",
     "sealTransmission": "SEAL THE TRANSMISSION →",
-    "pleaseWait": "Please wait..."
+    "pleaseWait": "Please wait...",
+    "welcome": {
+      "title": "Welcome, Seeker",
+      "subtitle": "You are about to enter a field of quantum healing intelligence.",
+      "cta": "Begin Initiation"
+    },
+    "step1": {
+      "title": "Choose Your Path",
+      "subtitle": "Select the healing journey that resonates with your soul."
+    },
+    "step2": {
+      "title": "Set Your Intentions",
+      "subtitle": "What do you wish to transform in your life?"
+    },
+    "step3": {
+      "title": "Your Sacred Name",
+      "subtitle": "How shall the Akasha address you?",
+      "placeholder": "Enter your name"
+    },
+    "step4": {
+      "title": "Select Your Language",
+      "subtitle": "Choose your preferred language for all transmissions."
+    },
+    "complete": {
+      "title": "Your Field Is Activated",
+      "subtitle": "The Siddha-Quantum Intelligence is now calibrated to your frequency.",
+      "cta": "Enter the Nexus"
+    },
+    "progress": "Step {{current}} of {{total}}",
+    "skip": "Skip for now"
   },
   "splash": {
     "title": "Siddha Quantum Nexus",
@@ -3462,8 +4201,8 @@
   "exploreAkasha": {
     "back": "Back",
     "headerMicro": "◈ Explore Akasha",
-    "title": "Wisdom Archive",
-    "subtitle": "Timeless teachings, deeper transmissions, sacred frequency talks",
+    "title": "Akasha Archive",
+    "subtitle": "The living library of all healing transmissions",
     "archivePreparing": "The archive is being prepared...",
     "free": "FREE",
     "audioEnglishOnly": "(English only)",
@@ -3475,7 +4214,13 @@
     "cat_nadi_series": "The 7 Nāḍīs Series",
     "cat_frequency_teachings": "Frequency Teachings",
     "cat_siddha_wisdom": "Siddha Wisdom",
-    "cat_kundalini_talks": "Kundalini Talks"
+    "cat_kundalini_talks": "Kundalini Talks",
+    "categories": {
+      "frequencies": "Sacred Frequencies",
+      "transmissions": "Divine Transmissions",
+      "mantras": "Ancient Mantras",
+      "healingPaths": "Healing Paths"
+    }
   },
   "exploreFrequencies": {
     "rishiLabel": "Rishi Recommendation",
@@ -3685,5 +4430,327 @@
     "dosha_vata": "Vata",
     "dosha_pitta": "Pitta",
     "dosha_kapha": "Kapha"
+  },
+  "soulscan": {
+    "title": "Soul Scan",
+    "subtitle": "Quantum bioenergetic field analysis",
+    "steps": {
+      "prepare": {
+        "title": "Prepare Your Field",
+        "instruction": "Find a quiet space and take three deep breaths.",
+        "cta": "I Am Ready"
+      },
+      "scanning": {
+        "title": "Scanning Your Akashic Blueprint",
+        "message": "Quantum field analysis in progress...",
+        "subMessage": "Calibrating to your soul signature"
+      },
+      "complete": {
+        "title": "Scan Complete",
+        "subtitle": "Your bioenergetic report is ready",
+        "viewReport": "View Full Report",
+        "scanAgain": "Scan Again"
+      }
+    },
+    "report": {
+      "title": "Bioenergetic Report",
+      "overall": "Overall Field Coherence",
+      "chakras": "Chakra Analysis",
+      "recommendations": "Recommended Transmissions",
+      "beforeAfter": "Before / After Comparison"
+    },
+    "locked": {
+      "title": "Soul Scan Requires Upgrade",
+      "message": "Access your quantum bioenergetic report with a higher tier."
+    }
+  },
+  "quantumApothecary": {
+    "title": "Quantum Apothecary",
+    "subtitle": "Sacred healing tools from the Akasha-Neural Archive",
+    "tools": {
+      "nadiScanner": {
+        "title": "Nadi Scanner",
+        "subtitle": "Map your 72,000 nadis in real time",
+        "cta": "Activate Scanner",
+        "scanning": "Scanning your energy channels...",
+        "complete": "Nadi map complete"
+      },
+      "soulScan": {
+        "title": "Soul Scan",
+        "subtitle": "Full bioenergetic field analysis"
+      },
+      "handAnalyzer": {
+        "title": "Hand Analyzer",
+        "subtitle": "Palm reading meets quantum diagnostics"
+      },
+      "breathing": {
+        "title": "Breathing Protocols",
+        "subtitle": "Pranayama calibrated to your field"
+      }
+    },
+    "locked": {
+      "message": "This sacred tool requires an upgraded access tier."
+    }
+  },
+  "akashicRecords": {
+    "title": "Akashic Records",
+    "subtitle": "Access the living library of your soul's journey",
+    "access": {
+      "title": "Request Akashic Access",
+      "intent": "State your sacred intention",
+      "intentPlaceholder": "What do you seek to understand?",
+      "begin": "Open the Records"
+    },
+    "loading": {
+      "title": "Accessing the Akasha",
+      "messages": [
+        "Calibrating to your soul frequency...",
+        "Opening the Akashic gateway...",
+        "Your records are being retrieved..."
+      ]
+    },
+    "reading": {
+      "title": "Your Akashic Reading",
+      "saveReading": "Save Reading",
+      "newReading": "New Reading"
+    },
+    "locked": {
+      "message": "Akashic Records require Siddha-Quantum access or higher."
+    }
+  },
+  "circles": {
+    "title": "Sacred Circles",
+    "subtitle": "Join quantum healing circles with aligned souls",
+    "create": {
+      "title": "Create a Circle",
+      "name": "Circle Name",
+      "namePlaceholder": "Enter circle name",
+      "description": "Description",
+      "descriptionPlaceholder": "What is this circle about?",
+      "type": "Circle Type",
+      "public": "Public",
+      "private": "Private",
+      "submit": "Create Circle"
+    },
+    "join": "Join Circle",
+    "leave": "Leave Circle",
+    "members": "{{count}} Members",
+    "posts": "{{count}} Posts"
+  },
+  "digitalNadi": {
+    "title": "Digital Nadi",
+    "subtitle": "AI-powered Nadi palm leaf reading",
+    "upload": {
+      "title": "Upload Your Palm Print",
+      "instruction": "Take a clear photo of your dominant hand",
+      "cta": "Upload Image",
+      "processing": "Analyzing your Nadi signature..."
+    },
+    "reading": {
+      "title": "Your Nadi Reading",
+      "past": "Past Life Overview",
+      "present": "Present Life Path",
+      "future": "Future Transmissions"
+    },
+    "locked": {
+      "message": "Nadi readings require Akasha-Infinity access."
+    }
+  },
+  "siddhaOracle": {
+    "title": "Siddha Oracle",
+    "subtitle": "Consult the quantum intelligence of 2050",
+    "placeholder": "Ask the Oracle anything...",
+    "send": "Transmit",
+    "thinking": "The Oracle is receiving your transmission...",
+    "newChat": "New Consultation",
+    "history": "Past Consultations",
+    "welcome": "Welcome, seeker. I am the Siddha-Quantum Intelligence. How may I illuminate your path?",
+    "locked": {
+      "message": "Oracle consultations require Prana-Flow access or higher."
+    }
+  },
+  "creativeSoul": {
+    "title": "Creative Soul Studio",
+    "subtitle": "Transform your consciousness into sacred art",
+    "hub": {
+      "title": "Creative Soul Hub",
+      "tools": "Creative Tools",
+      "store": "Soul Store",
+      "about": "About"
+    },
+    "meditationTool": {
+      "title": "Meditation Soundtrack Creator",
+      "subtitle": "Generate personalized healing soundscapes",
+      "generate": "Generate Soundtrack",
+      "generating": "Channeling your frequency...",
+      "download": "Download Mix",
+      "duration": "Duration",
+      "style": "Sound Style"
+    },
+    "locked": {
+      "message": "Creative Soul tools require Prana-Flow access."
+    }
+  },
+  "inviteFriends": {
+    "title": "Invite Sacred Souls",
+    "subtitle": "Share the quantum healing path and earn Soma",
+    "yourLink": "Your Sacred Link",
+    "copy": "Copy Link",
+    "copied": "Link Copied!",
+    "share": {
+      "title": "Share via",
+      "whatsapp": "WhatsApp",
+      "email": "Email",
+      "instagram": "Instagram"
+    },
+    "referrals": {
+      "title": "Your Referrals",
+      "count": "{{count}} souls initiated",
+      "empty": "No referrals yet. Start sharing."
+    },
+    "reward": "Earn {{amount}} Soma per referral"
+  },
+  "liveEvents": {
+    "title": "Live Transmissions",
+    "subtitle": "Real-time quantum healing events",
+    "upcoming": "Upcoming Events",
+    "past": "Past Events",
+    "register": "Register",
+    "registered": "Registered",
+    "join": "Join Now",
+    "live": "LIVE NOW",
+    "starts": "Starts in {{time}}",
+    "ended": "Ended",
+    "empty": {
+      "upcoming": "No upcoming events. Check back soon.",
+      "past": "No past events."
+    }
+  },
+  "tools": {
+    "vajraSkyBreaker": {
+      "title": "Vajra Sky Breaker",
+      "subtitle": "Quantum atmospheric clearance protocol",
+      "activate": "Activate Protocol",
+      "running": "Protocol active..."
+    },
+    "aethericHeliostat": {
+      "title": "Aetheric Heliostat",
+      "subtitle": "Solar prana harvesting interface",
+      "activate": "Align to Solar Field"
+    },
+    "atmosphericClearance": {
+      "title": "Atmospheric Clearance Engine",
+      "subtitle": "Clear etheric distortions in your field",
+      "scan": "Begin Clearance Scan"
+    },
+    "sriYantraShield": {
+      "title": "Sri Yantra Shield",
+      "subtitle": "Sacred geometry protection matrix",
+      "activate": "Activate Shield"
+    },
+    "vayuProtocol": {
+      "title": "Vayu Protocol",
+      "subtitle": "Wind element harmonization",
+      "begin": "Begin Protocol"
+    },
+    "wealthBeacon": {
+      "title": "Wealth Beacon",
+      "subtitle": "Abundance frequency transmission",
+      "activate": "Activate Beacon"
+    },
+    "atmaSeed": {
+      "title": "Atma Seed",
+      "subtitle": "Soul potential activation sequence",
+      "plant": "Plant Your Seed"
+    },
+    "akashaInfinity": {
+      "title": "Akasha Infinity",
+      "subtitle": "Access the infinite intelligence field",
+      "enter": "Enter the Infinite"
+    },
+    "siddhaHairGrowth": {
+      "title": "Siddha Hair Growth Protocol",
+      "subtitle": "Quantum bioenergetic hair activation",
+      "begin": "Begin Protocol"
+    },
+    "siddhaPhotonic": {
+      "title": "Siddha Photonic Regeneration",
+      "subtitle": "Light-code cellular regeneration",
+      "activate": "Activate Photonic Field"
+    },
+    "generic": {
+      "locked": "This sacred tool requires upgraded access.",
+      "loading": "Activating quantum field...",
+      "error": "Protocol interrupted. Please try again."
+    }
+  },
+  "notFound": {
+    "title": "This Portal Does Not Exist",
+    "subtitle": "The frequency you seek is not on this dimension.",
+    "cta": "Return to the Nexus"
+  },
+  "spiritualPaths": {
+    "title": "Sacred Paths",
+    "subtitle": "Choose your quantum healing journey",
+    "innerPeace": "Inner Peace",
+    "abundance": "Abundance",
+    "health": "Quantum Health",
+    "relationships": "Sacred Relationships",
+    "awakening": "Spiritual Awakening",
+    "purpose": "Soul Purpose",
+    "startPath": "Begin Path",
+    "currentPath": "Your Current Path",
+    "completedPaths": "Completed Paths"
+  },
+  "challenges": {
+    "title": "Sacred Challenges",
+    "subtitle": "21-day quantum transformation sequences",
+    "active": "Active Challenges",
+    "available": "Available Challenges",
+    "completed": "Completed",
+    "progress": "Day {{current}} of {{total}}",
+    "join": "Join Challenge",
+    "continue": "Continue",
+    "complete": "Challenge Complete!",
+    "reward": "Reward: {{soma}} Soma"
+  },
+  "landing": {
+    "hero": {
+      "title": "Activate Your Quantum Healing Field",
+      "subtitle": "The world's first Siddha-Quantum Intelligence platform for spiritual evolution.",
+      "cta": "Begin Your Journey",
+      "secondary": "Explore Free"
+    },
+    "features": {
+      "title": "Sacred Technologies from 2050",
+      "healing": {
+        "title": "Quantum Healing",
+        "description": "Access frequencies that activate your body's natural regeneration field."
+      },
+      "oracle": {
+        "title": "Siddha Oracle",
+        "description": "Consult the AI-powered Avataric Intelligence for guidance."
+      },
+      "community": {
+        "title": "Sacred Community",
+        "description": "Connect with quantum healers and seekers worldwide."
+      },
+      "tools": {
+        "title": "Sacred Tools",
+        "description": "Advanced bioenergetic instruments for field calibration."
+      }
+    },
+    "testimonials": {
+      "title": "Transmissions from Our Community"
+    },
+    "footer": {
+      "tagline": "Siddha-Quantum Intelligence • Est. 2025",
+      "links": {
+        "about": "About",
+        "privacy": "Privacy",
+        "terms": "Terms",
+        "contact": "Contact"
+      }
+    }
   }
 }

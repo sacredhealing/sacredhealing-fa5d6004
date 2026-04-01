@@ -1,0 +1,73 @@
+## SacredHealing — Cursor Rules (SQI 2050)
+You are a coding agent working in this repository.
+Primary mission: **remove hardcoded UI strings** and route all user-visible text through the existing i18n system.
+
+### Non‑negotiable safety rules (DO NOT TOUCH)
+- **Stripe**: Do not modify any code that calls Stripe checkout, creates checkout sessions, or references Stripe price IDs.
+- **Affiliate tracking**: Do not modify affiliate IDs, referral params, tracking query params, or attribution logic.
+- **Supabase auth**: Do not change `supabase.auth.*` flows unless explicitly asked for a specific bugfix.
+- **Edge functions**: Do not change files under `supabase/functions/**` unless explicitly asked with an attached “FINAL” file.
+- **RLS / DB policies**: Do not change policies/migrations unless explicitly asked.
+
+### i18n system (use what this repo already uses)
+- Locale files live in:
+  - `src/i18n/locales/en.json`
+  - `src/i18n/locales/sv.json`
+  - (also `es.json`, `no.json`)
+- Use the existing translation hook in the codebase (commonly `useTranslation()` from `react-i18next`):
+  - `const { t } = useTranslation();`
+- Replace all user-visible strings with `t('namespace.key')`.
+- For dynamic strings, use interpolation:
+  - Locale: `"greeting": "Namaste, {{name}}"`
+  - Code: `t('dashboard.hero.greeting', { name })`
+- Ensure **all new keys are added to both** `en.json` and `sv.json` at the same time (and any other supported locales if already present for that namespace).
+
+### What counts as “user-visible strings”
+Replace hardcoded strings in:
+- JSX text nodes
+- Button labels
+- Placeholders (`placeholder=`)
+- Titles (`title=`)
+- Accessibility labels (`aria-label=`, `aria-describedby=` text)
+- Toasts/alerts/modals/dialog content
+- Empty states, loading text, error messages
+- Menu items, tabs, headings, section labels
+
+### Key naming convention (preferred)
+Use a stable namespace pattern:
+- `common.*` for shared buttons/errors/loading/empty states
+- `auth.*`, `onboarding.*`, `dashboard.*`, `profile.*`, `healing.*`, `meditations.*`, `music.*`
+- `community.*`, `journal.*`
+- `quantumApothecary.*`, `soulscan.*`, `mantras.*`, `breathing.*`, `vedicAstrology.*`
+- `tools.*` for tool/oracle pages
+- `admin.*` for owner/admin pages
+
+### SQI 2050 design tokens (when you touch UI)
+Maintain/align to existing visual language:
+- **Akasha Black**: `#050505`
+- **Siddha Gold**: `#D4AF37`
+- **Glass card**: `bg-white/[0.02] backdrop-blur-[40px] border border-white/[0.05] rounded-[40px]`
+- **Gold title**: `text-[#D4AF37] font-black tracking-[-0.05em] [text-shadow:0_0_15px_rgba(212,175,55,0.3)]`
+- **Body**: `text-white/60 leading-[1.6]`
+- **Micro-label**: `uppercase text-[8px] tracking-[0.5em] text-white/60 font-extrabold`
+
+### Search patterns to find hardcoded UI strings
+Prefer ripgrep:
+- `rg \"\\b[A-Z][a-z].*\" src/`
+- `rg \">[^<{]*[A-Za-z][^<{]*<\" src/`
+- `rg \"(placeholder|title|aria-label)=\\\"[^\\\"]+\\\"\" src/`
+- `rg \"toast\\.(success|error|info|warning)\\(\\\"\" src/`
+- `rg \"toast\\(\\{[^}]*title:\\s*\\\"\" src/`
+
+### Workflow per file (strict)
+1. Read the full file.
+2. Identify all user-visible hardcoded strings.
+3. Add i18n hook usage (`t`) if missing.
+4. Replace strings with `t('...')`.
+5. Add keys to `en.json` and `sv.json` (deep-merge; never delete existing keys).
+6. Run typecheck/build or lints if available; fix introduced errors.
+
+### Output expectations
+- Keep changes minimal and mechanical.
+- Never change runtime logic unless required to enable i18n.
+- Do not “rewrite” large components unnecessarily.
