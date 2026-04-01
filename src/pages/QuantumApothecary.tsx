@@ -21,6 +21,7 @@ import { ACTIVATIONS, PLANETARY_DATA } from '@/features/quantum-apothecary/const
 import { streamChatWithSQI } from '@/features/quantum-apothecary/chatService';
 import { chatSpeechLocale } from '@/lib/chatSpeechLocale';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
@@ -249,6 +250,11 @@ function QuantumApothecaryInner() {
         setSeekerName(name);
       });
   }, [user?.id, user?.email]);
+
+  const jyotish = useJyotishProfile();
+  const jyotishContext = jyotish.isLoading
+    ? ''
+    : `Mahadasha: ${jyotish.mahadasha} | Antardasha: ${jyotish.antardasha} | Nakshatra: ${jyotish.nakshatra} | Dosha: ${jyotish.primaryDosha} | Karma Focus: ${jyotish.karmaFocus} | Active Yogas: ${jyotish.activeYogas.join(', ')} | Bhrigu Cycle: ${jyotish.bhriguCycle} | Healing Focus: ${jyotish.healingFocus} | Mantra: ${jyotish.mantraFocus}`;
 
   const [scanResult, setScanResult] = useState<NadiScanResult | null>(null);
   const [isScanning, setIsScanning] = useState(false);
@@ -578,6 +584,7 @@ function QuantumApothecaryInner() {
         language,
         seekerName || undefined,
         canonicalActivationNameLines,
+        jyotishContext || undefined,
       );
 
       let parsed: Record<string, unknown>;
@@ -726,6 +733,7 @@ function QuantumApothecaryInner() {
         language,
         seekerName || undefined,
         canonicalActivationNameLines,
+        jyotishContext || undefined,
       );
     } catch (e) {
       console.error(e);

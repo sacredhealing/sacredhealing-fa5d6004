@@ -14,8 +14,9 @@ export async function streamChatWithSQI(
   userImage?: UserImagePayload,
   userId?: string | null,
   language?: string,
-  seekerName?: string,          // ← user's real display name from profiles
+  seekerName?: string,
   canonicalActivationNames?: string,
+  jyotishContext?: string,       // ← Jyotish birth chart data for accurate life readings
 ) {
   const recent = messages.slice(-15);
   const apiMessages = recent.map(m => ({
@@ -36,6 +37,7 @@ export async function streamChatWithSQI(
     canonicalActivationNames?: string;
     localTime?: string;
     localDate?: string;
+    jyotishContext?: string;
   } = { messages: apiMessages, localTime, localDate };
 
   if (userImage?.base64 && userImage?.mimeType) body.userImage = userImage;
@@ -43,6 +45,7 @@ export async function streamChatWithSQI(
   if (language)                                  body.language = language;
   if (seekerName?.trim())                        body.seekerName = seekerName.trim();
   if (canonicalActivationNames?.trim())          body.canonicalActivationNames = canonicalActivationNames.trim();
+  if (jyotishContext?.trim())                    body.jyotishContext = jyotishContext.trim();
 
   const resp = await fetch(CHAT_URL, {
     method: 'POST',
