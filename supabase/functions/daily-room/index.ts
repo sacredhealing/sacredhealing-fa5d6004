@@ -137,6 +137,37 @@ Deno.serve(async (req) => {
             const latestRec = Array.isArray(recordings) ? recordings[0] : null;
             if (latestRec?.download_link || latestRec?.s3_key) {
               const recordingUrl = latestRec.download_link || latestRec.s3_key;
+
+              // Also archive recordings into the Stargate course (healing-chamber)
+              try {
+                const { data: stargateCourse } = await supabase
+                  .from("courses")
+                  .select("id")
+                  .ilike("title", "%Stargate%")
+                  .limit(1)
+                  .maybeSingle();
+
+                const stargateCourseId = (stargateCourse as any)?.id as string | undefined;
+                if (stargateCourseId) {
+                  const { data: existingLesson } = await supabase
+                    .from("course_lessons")
+                    .select("id")
+                    .eq("video_url", recordingUrl)
+                    .maybeSingle();
+
+                  if (!existingLesson) {
+                    await supabase.from("course_lessons").insert({
+                      title: sessionRow.title || "Live Session",
+                      video_url: recordingUrl,
+                      audio_url: null,
+                      course_id: stargateCourseId,
+                      section: "healing-chamber",
+                    });
+                  }
+                }
+              } catch (courseErr) {
+                console.error('Failed to insert recording into course_lessons:', courseErr);
+              }
               // Update the live feed post with the recording URL
               await supabase
                 .from("community_posts")

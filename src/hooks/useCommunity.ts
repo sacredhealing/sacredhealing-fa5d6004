@@ -479,11 +479,9 @@ export const usePrivateChat = (partnerId: string) => {
       sender_id: user.id,
       receiver_id: partnerId,
       content,
+      message_type: type,
+      ...(fileData || {}),
     };
-
-    if (fileData) {
-      Object.assign(messageData, fileData);
-    }
 
     const { data, error } = await supabase
       .from('private_messages')
@@ -492,14 +490,13 @@ export const usePrivateChat = (partnerId: string) => {
       .single();
 
     if (error) {
-      optimisticMessage.status = 'error';
-      setMessages(prev => prev.map(m => m.id === tempId ? optimisticMessage : m));
+      setMessages(prev => prev.filter(m => m.id !== tempId));
       return false;
     }
 
     // Replace optimistic with real message
     if (data) {
-      setMessages(prev => prev.map(m => m.id === tempId ? { ...data, status: 'sent' } : m));
+      setMessages(prev => prev.map(m => m.id === tempId ? data : m));
     }
 
     return true;

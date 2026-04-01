@@ -490,18 +490,18 @@ const CSS = `
 .c-msg-role { font-size:8px; font-weight:800; letter-spacing:.3em; text-transform:uppercase; color:rgba(212,175,55,.35); }
 
 .c-bubble {
-  background: rgba(255,255,255,.04);
+  background: #0a0a0a;
   border: 1px solid rgba(255,255,255,.07);
   border-radius: 18px 18px 18px 4px;
   padding: 10px 14px;
-  color: rgba(255,255,255,.88);
+  color: rgba(212,175,55,.9);
   font-size: 14px;
   line-height: 1.6;
   word-break: break-word;
   position: relative;
 }
 .c-bubble.mine {
-  background: linear-gradient(135deg,rgba(212,175,55,.16),rgba(212,175,55,.09));
+  background: rgba(212,175,55,.12);
   border-color: rgba(212,175,55,.22);
   border-radius: 18px 18px 4px 18px;
   box-shadow: 0 2px 14px rgba(212,175,55,.08);
@@ -532,6 +532,17 @@ const CSS = `
   padding-left: 2px;
 }
 .c-msg-time.mine { text-align: right; padding-right: 2px; padding-left: 0; }
+
+.c-msg-sent {
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgba(212,175,55,.75);
+  margin-top: 2px;
+  padding-left: 2px;
+}
+.c-msg-sent.mine { text-align: right; padding-right: 2px; padding-left: 0; }
 
 .c-reactions { display:flex; gap:4px; flex-wrap:wrap; margin-top:4px; }
 .c-reaction {
@@ -899,6 +910,9 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
                   <div className={`c-msg-time ${isMine ? "mine" : ""}`}>
                     {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
                   </div>
+                  {isMine && !(String(msg.id || "").startsWith("temp-") || msg.status === "pending") && (
+                    <div className={`c-msg-sent ${isMine ? "mine" : ""}`}>✓ Sent</div>
+                  )}
                 </div>
               </div>
             );
@@ -1623,8 +1637,8 @@ const Community = () => {
   }, [activeChannel, fetchMessages, roomIds, user, ensureRoomForChannel]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+  }, [messages, activeChannel]);
 
   const handleGoLiveForChannel = async (channelId: string, channelName: string) => {
     if (!user) return;
@@ -2261,6 +2275,9 @@ const Community = () => {
                               )}
                             </div>
                             <div className={`c-msg-time ${isMine ? "mine" : ""}`}>{formatTime(msg.created_at)}</div>
+                            {isMine && !msg.pending && (
+                              <div className={`c-msg-sent ${isMine ? "mine" : ""}`}>✓ Sent</div>
+                            )}
                           </div>
                         </div>
                       );
@@ -2409,8 +2426,6 @@ const Community = () => {
                     const result = await daily.createRoom("feed", "Live from Divine Sangha", undefined, false, "feed");
                     if (result) {
                       setLiveRoomUrl(result.room_url);
-                      setActiveChannel("divine-sangha");
-                      setMobileTab("chat");
                       const adminName = memberNameMap[user.id] || "Admin";
                       try {
                         await supabase.from("community_posts").insert({
@@ -2509,23 +2524,59 @@ const Community = () => {
                           cursor: "pointer",
                         }}
                       >
-                        🔴 JOIN LIVE SESSION
+                        {Date.now() - new Date(post.created_at).getTime() > 4 * 60 * 60 * 1000
+                          ? "📹 Watch Recording"
+                          : "🔴 JOIN LIVE SESSION"}
                       </button>
                     )}
                     {post.video_url && post.post_type !== "live" && (
-                      <video
-                        src={post.video_url}
-                        controls
-                        style={{
-                          marginTop: 10,
-                          borderRadius: 16,
-                          width: "100%",
-                          maxHeight: 260,
-                          objectFit: "cover",
-                          border: "1px solid rgba(255,255,255,.06)",
-                          background: "#000",
-                        }}
-                      />
+                      <>
+                        <video
+                          src={post.video_url}
+                          controls
+                          style={{
+                            marginTop: 10,
+                            borderRadius: 16,
+                            width: "100%",
+                            maxHeight: 260,
+                            objectFit: "cover",
+                            border: "1px solid rgba(255,255,255,.06)",
+                            background: "#000",
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              toast.info("Starting audio conversion…");
+                              const { data, error } = await supabase.functions.invoke("convert-meditation-audio", {
+                                body: { video_url: post.video_url },
+                              });
+                              if (error) throw error;
+                              if (!data?.success) throw new Error(data?.error || "Conversion failed");
+                              toast.success("Audio conversion started. It will appear when ready.");
+                            } catch (e: any) {
+                              toast.error(e?.message || "Could not start conversion.");
+                            }
+                          }}
+                          style={{
+                            marginTop: 10,
+                            width: "100%",
+                            padding: "10px 14px",
+                            borderRadius: 16,
+                            border: "1px solid rgba(212,175,55,.28)",
+                            background: "rgba(10,10,10,.9)",
+                            color: "rgba(212,175,55,.92)",
+                            fontSize: 11,
+                            fontWeight: 900,
+                            letterSpacing: "0.22em",
+                            textTransform: "uppercase",
+                            cursor: "pointer",
+                          }}
+                        >
+                          🎧 Video → Audio
+                        </button>
+                      </>
                     )}
                     {post.audio_url && (
                       <audio
