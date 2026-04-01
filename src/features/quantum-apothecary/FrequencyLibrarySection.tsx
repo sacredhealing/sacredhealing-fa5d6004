@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Check } from 'lucide-react';
 import { ACTIVATIONS } from '@/features/quantum-apothecary/constants';
 import type { Activation } from '@/features/quantum-apothecary/types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   activeCategory: string;
@@ -34,6 +35,7 @@ const CAT_COLORS: Record<string, string> = {
 export default function FrequencyLibrarySection({
   activeCategory, setActiveCategory, selectedActivations, addActivation,
 }: Props) {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
 
   const displayBenefit = (benefit: string) =>
@@ -45,21 +47,25 @@ export default function FrequencyLibrarySection({
     return matchCat && matchSearch;
   });
 
+  const catLabel = (cat: string) => (cat === 'All' ? t('quantumApothecary.frequencyLibrarySection.catAll') : cat);
+
   return (
     <div style={{
-      background: 'rgba(5,5,5,0.6)',
+      background: 'rgba(255,255,255,0.02)',
       backdropFilter: 'blur(40px)',
-      border: '1px solid rgba(212,175,55,0.12)',
-      borderRadius: 28,
+      WebkitBackdropFilter: 'blur(40px)',
+      border: '1px solid rgba(255,255,255,0.05)',
+      borderRadius: 40,
       overflow: 'hidden',
+      boxShadow: '0 0 48px rgba(212,175,55,0.05)',
     }}>
       {/* ── Header ── */}
       <div style={{ padding: '18px 20px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
           <div>
-            <h2 style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.03em', color: '#fff' }}>Frequency Library</h2>
-            <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>
-              {filtered.length} Essences Available
+            <h2 style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.05em', color: '#D4AF37', textShadow: '0 0 15px rgba(212,175,55,0.3)' }}>{t('quantumApothecary.frequencyLibrarySection.title')}</h2>
+            <p style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.45)', marginTop: 6 }}>
+              {t('quantumApothecary.frequencyLibrarySection.essencesCount', { count: filtered.length })}
             </p>
           </div>
           {/* Search */}
@@ -69,7 +75,7 @@ export default function FrequencyLibrarySection({
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search..."
+              placeholder={t('quantumApothecary.frequencyLibrarySection.searchPlaceholder')}
               style={{
                 background: 'rgba(255,255,255,0.04)',
                 border: '1px solid rgba(255,255,255,0.08)',
@@ -105,7 +111,7 @@ export default function FrequencyLibrarySection({
                   fontFamily: 'inherit',
                   boxShadow: active ? `0 0 12px ${col}25` : 'none',
                 }}>
-                {cat}
+                {catLabel(cat)}
               </button>
             );
           })}
@@ -184,7 +190,7 @@ export default function FrequencyLibrarySection({
           </AnimatePresence>
           {filtered.length === 0 && (
             <div style={{ gridColumn: 'span 2', textAlign: 'center', padding: '32px 0', color: 'rgba(255,255,255,0.2)' }}>
-              <p style={{ fontSize: 11 }}>No essences found</p>
+              <p style={{ fontSize: 11 }}>{t('quantumApothecary.frequencyLibrarySection.noResults')}</p>
             </div>
           )}
         </div>

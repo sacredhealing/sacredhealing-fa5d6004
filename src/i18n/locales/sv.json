@@ -4324,6 +4324,25 @@
   "quantumApothecary": {
     "title": "Kvantum Apoteket",
     "subtitle": "Heliga healingverktyg från Akasha-Neuralarkivet",
+    "chat": {
+      "sqiOnline": "SQI online",
+      "neuralSync": "Neural synk: 98 %"
+    },
+    "frequencyLibrarySection": {
+      "title": "Frekvensbibliotek",
+      "essencesCount": "{{count}} essenser tillgängliga",
+      "searchPlaceholder": "Sök…",
+      "noResults": "Inga essenser hittades",
+      "catAll": "Alla"
+    },
+    "activeTransmissionsSection": {
+      "title": "Aktiva transmissioner",
+      "live247": "24/7 live",
+      "noActive": "Inga aktiva frekvenser",
+      "selectHint": "Välj aktiveringar från biblioteket ovan",
+      "transmitting": "Sänder 24/7",
+      "dissolveTitle": "Upplös frekvens"
+    },
     "tools": {
       "nadiScanner": {
         "title": "Nadi-Skanner",

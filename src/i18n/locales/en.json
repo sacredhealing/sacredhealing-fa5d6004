@@ -4572,6 +4572,25 @@
   "quantumApothecary": {
     "title": "Quantum Apothecary",
     "subtitle": "Sacred healing tools from the Akasha-Neural Archive",
+    "chat": {
+      "sqiOnline": "SQI Online",
+      "neuralSync": "Neural Sync: 98%"
+    },
+    "frequencyLibrarySection": {
+      "title": "Frequency Library",
+      "essencesCount": "{{count}} Essences Available",
+      "searchPlaceholder": "Search...",
+      "noResults": "No essences found",
+      "catAll": "All"
+    },
+    "activeTransmissionsSection": {
+      "title": "Active Transmissions",
+      "live247": "24/7 Live",
+      "noActive": "No Active Frequencies",
+      "selectHint": "Select activations from the library above",
+      "transmitting": "Transmitting 24/7",
+      "dissolveTitle": "Dissolve frequency"
+    },
     "tools": {
       "nadiScanner": {
         "title": "Nadi Scanner",

@@ -2,32 +2,25 @@
  * Admin-only Quantum Apothecary 2045 lab (Gemini SQI + demo Nadi scan).
  * Linked from Siddha Portal when the user has the admin role.
  */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { Zap, Activity, Plus, Trash2, Send, Cpu, Globe, Info, Wind } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
-import type { Activation, ActivationType, NadiScanResult, Message } from '@/features/quantum-apothecary/types';
+import type { Activation, NadiScanResult, Message } from '@/features/quantum-apothecary/types';
 import { ACTIVATIONS, PLANETARY_DATA } from '@/features/quantum-apothecary/constants';
 import { chatWithAlchemist } from '@/features/admin-quantum-apothecary-2045/geminiAlchemistChat';
+
+const FrequencyLibrarySection = lazy(() => import('@/features/quantum-apothecary/FrequencyLibrarySection'));
+const ActiveTransmissionsSection = lazy(() => import('@/features/quantum-apothecary/ActiveTransmissionsSection'));
 
 /** SQI 2050 — Siddha-Gold primary, Vayu-Cyan Nadi pulse (UI tokens only) */
 const GOLD = '#D4AF37';
 const GOLD_RGB = '212, 175, 55';
 const BG = '#050505';
 const VAYU = '#22D3EE';
-
-type LibraryFilter = ActivationType | 'All';
-
-const FILTER_ORDER: LibraryFilter[] = [
-  'All',
-  'Sacred Plant',
-  'Siddha Soma',
-  'Essential Oil',
-  'Ayurvedic Herb',
-];
 
 /** Glass shell — matches sovereign Profile / SQI standard */
 const glassSection =
@@ -56,7 +49,7 @@ export default function AdminQuantumApothecary2045() {
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [activeCategory, setActiveCategory] = useState<LibraryFilter>('All');
+  const [activeCategory, setActiveCategory] = useState<string>('All');
   const [showKnowledge, setShowKnowledge] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [heartRate, setHeartRate] = useState(60);
@@ -197,10 +190,6 @@ export default function AdminQuantumApothecary2045() {
     setSelectedActivations([]);
   };
 
-  const stopTransmission = (id: string) => {
-    setActiveTransmissions(activeTransmissions.filter((tr) => tr.id !== id));
-  };
-
   const toggleListening = () => {
     setIsListening(!isListening);
     if (!isListening) {
@@ -225,13 +214,11 @@ export default function AdminQuantumApothecary2045() {
     ]);
   };
 
-  const filterLabel = (id: LibraryFilter) =>
-    id === 'All' ? t('adminQuantumApothecary2045.catAll') : id;
-
-  const filteredActs =
-    activeCategory === 'All'
-      ? ACTIVATIONS
-      : ACTIVATIONS.filter((a) => a.type === activeCategory);
+  const archiveFallback = (
+    <div className="flex min-h-[160px] items-center justify-center py-10">
+      <span className={`${microLabel} !text-white/40`}>{t('common.loading')}</span>
+    </div>
+  );
 
   return (
     <div className="min-h-screen font-sans text-white/90" style={{ background: BG }}>
@@ -480,109 +467,26 @@ export default function AdminQuantumApothecary2045() {
             </button>
           </section>
 
-          <section className={`flex min-h-[200px] flex-none flex-col p-6 sm:p-7 lg:min-h-0 lg:flex-1 ${glassSection}`}>
-            <div className="mb-6 flex justify-between">
-              <div className="flex items-center gap-2">
-                <Activity className="h-4 w-4 animate-pulse text-[#D4AF37]" aria-hidden />
-                <p className="text-[8px] font-extrabold uppercase tracking-[0.35em] text-[#D4AF37]/70">
-                  {t('adminQuantumApothecary2045.activeTransmissions')}
-                </p>
-              </div>
-              <span className="animate-pulse rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-[#D4AF37]">
-                {t('adminQuantumApothecary2045.live247')}
-              </span>
-            </div>
-            <div className="custom-scrollbar flex-1 space-y-3 overflow-y-auto">
-              {activeTransmissions.length === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center rounded-[28px] border border-white/[0.05] bg-white/[0.02] p-4 text-center">
-                  <Zap className="mb-2 h-8 w-8 text-[#D4AF37]/25" aria-hidden />
-                  <p className="text-[8px] font-extrabold uppercase tracking-[0.35em] text-white/35">
-                    {t('adminQuantumApothecary2045.noActiveFrequencies')}
-                  </p>
-                </div>
-              ) : (
-                <AnimatePresence>
-                  {activeTransmissions.map((act) => (
-                    <motion.div
-                      key={act.id}
-                      layout
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      className="group flex items-center justify-between rounded-2xl border border-[#D4AF37]/18 bg-[#D4AF37]/[0.05] p-3"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="relative">
-                          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: act.color }} />
-                          <div
-                            className="absolute inset-0 h-2 w-2 animate-ping rounded-full opacity-40"
-                            style={{ backgroundColor: act.color }}
-                          />
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-[#D4AF37]/95">{act.name}</p>
-                          <p className="text-[9px] uppercase tracking-tighter text-white/45">{t('adminQuantumApothecary2045.resonating')}</p>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => stopTransmission(act.id)}
-                        className="p-2 text-white/35 hover:text-red-400/90"
-                        title={t('adminQuantumApothecary2045.stopTransmissionTitle')}
-                        aria-label={t('adminQuantumApothecary2045.stopTransmissionTitle')}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              )}
-            </div>
+          <section className="flex min-h-[200px] flex-none flex-col overflow-hidden lg:min-h-0 lg:flex-1">
+            <Suspense fallback={archiveFallback}>
+              <ActiveTransmissionsSection
+                activeTransmissions={activeTransmissions}
+                setActiveTransmissions={setActiveTransmissions}
+              />
+            </Suspense>
           </section>
         </div>
 
         <div className="flex flex-col gap-6 lg:col-span-8 lg:max-h-[calc(100vh-8rem)] lg:grid lg:grid-rows-2 lg:overflow-hidden">
-          <section className={`flex min-h-[360px] flex-col overflow-hidden p-6 sm:p-8 lg:min-h-0 ${glassSection}`}>
-            <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-              <div>
-                <p className={microLabel}>{t('adminQuantumApothecary2045.frequencyLibrary')}</p>
-                <p className="mt-2 text-xs leading-[1.6] text-white/60">{t('adminQuantumApothecary2045.selectEssences')}</p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {FILTER_ORDER.map((type) => (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => setActiveCategory(type)}
-                    className={`cursor-pointer rounded-full border px-3 py-1.5 text-[8px] font-extrabold uppercase tracking-[0.2em] transition-all ${
-                      activeCategory === type
-                        ? 'border-[#D4AF37]/50 bg-[#D4AF37]/20 text-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.2)]'
-                        : 'border-white/[0.08] bg-white/[0.03] text-white/55 hover:border-[#D4AF37]/25'
-                    }`}
-                  >
-                    {filterLabel(type)}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="custom-scrollbar grid flex-1 grid-cols-1 gap-3 overflow-y-auto pr-2 sm:grid-cols-2 lg:grid-cols-3 sm:gap-4">
-              {filteredActs.map((act) => (
-                <button
-                  key={act.id}
-                  type="button"
-                  onClick={() => addActivation(act)}
-                  disabled={selectedActivations.some((a) => a.id === act.id)}
-                  className="group relative overflow-hidden rounded-[28px] border border-white/[0.06] bg-white/[0.03] p-3 text-left transition-all hover:border-[#D4AF37]/28 hover:bg-[#D4AF37]/[0.04] hover:shadow-[0_0_24px_rgba(212,175,55,0.08)] disabled:opacity-40 sm:p-4"
-                >
-                  <div
-                    className="absolute left-0 top-0 h-full w-1 opacity-50 transition-opacity group-hover:opacity-100"
-                    style={{ backgroundColor: act.color }}
-                  />
-                  <h3 className="mb-1 text-xs font-bold text-white/90 transition-colors group-hover:text-[#D4AF37]">{act.name}</h3>
-                  <p className="line-clamp-2 text-[10px] leading-[1.6] text-white/50">{act.benefit}</p>
-                </button>
-              ))}
-            </div>
+          <section className="flex min-h-[360px] flex-col overflow-hidden lg:min-h-0">
+            <Suspense fallback={archiveFallback}>
+              <FrequencyLibrarySection
+                activeCategory={activeCategory}
+                setActiveCategory={setActiveCategory}
+                selectedActivations={selectedActivations}
+                addActivation={addActivation}
+              />
+            </Suspense>
           </section>
 
           <section className={`relative flex min-h-[380px] flex-col overflow-hidden lg:min-h-0 ${glassSection}`}>
