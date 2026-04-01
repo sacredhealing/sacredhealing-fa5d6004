@@ -859,11 +859,11 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         <div className="stats-row">
           <div className="stat-pill">
             <span className="stat-value">{shcProfile?.streak_days || 0}</span>
-            <span className="stat-label">{t('profile.streak')}</span>
+            <span className="stat-label">{t('profile.streak.label')}</span>
           </div>
           <div className="stat-pill">
             <span className="stat-value"><AnimatedCounter value={balance?.balance ?? 0} /></span>
-            <span className="stat-label">{t('profile.balance')}</span>
+            <span className="stat-label">{t('profile.balance.label')}</span>
           </div>
           <div className="stat-pill">
             <span className="stat-value">{badges.filter(b => b.earned).length}</span>

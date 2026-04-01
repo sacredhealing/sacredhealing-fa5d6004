@@ -1363,8 +1363,13 @@
   },
   "profile": {
     "title": "Perfil",
-    "streak": "Racha",
-    "balance": "Saldo",
+    "streak": {
+      "label": "RACHA",
+      "days": "{{count}} días"
+    },
+    "balance": {
+      "label": "SALDO"
+    },
     "badges": "Insignias",
     "settings": "Configuración",
     "language": "Idioma",
