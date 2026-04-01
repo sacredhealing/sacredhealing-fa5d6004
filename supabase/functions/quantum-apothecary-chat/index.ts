@@ -267,7 +267,7 @@ async function updateLivingPortrait(userId: string, currentPortrait: string, new
     const prompt = isFirst
       ? `Build the first Seeker Portrait from this exchange. Extract: name, Dosha, health, spiritual path, life context, emotional patterns. Write in third person starting with "LIVING PORTRAIT:". Max 250 words.\n\nEXCHANGE:\n${newExchange}`
       : `Update this Seeker Portrait with NEW facts from this exchange only. Do not repeat existing info. Keep to 250-400 words. Write in third person starting with "LIVING PORTRAIT:".\n\nCURRENT PORTRAIT:\n${currentPortrait}\n\nNEW EXCHANGE:\n${newExchange}`;
-    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`, {
+    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { temperature: 0.2, maxOutputTokens: 600 } }),
     });
@@ -284,7 +284,7 @@ async function classifyAndPersistLifeBook(options: { assistantText: string; user
   const { assistantText, userId, geminiApiKey } = options;
   if (!assistantText.trim() || !userId) return;
   try {
-    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`, {
+    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ contents: [
         { role: "user", parts: [{ text: "Classify this SQI response: past_lives, healing_upgrades, future_visions, spiritual_figures, nadi_knowledge, children, general_wisdom, skip.\nRoutine greetings or short replies → skip. Return JSON only: {\"category\":\"...\",\"title\":\"...\",\"summary\":\"...\"}." }] },
@@ -334,7 +334,7 @@ Read honestly from what you see:
 - Dosha: Vata=dry/thin, Pitta=reddish/warm, Kapha=moist/full
 Today: ${planetaryAlign || ""} | ${herbOfToday || ""}
 Return ONLY: {"handDetected":true,"activeNadis":<0-72000>,"activeSubNadis":<0-350000>,"blockagePercentage":<0-100>,"dominantDosha":"<Vata|Pitta|Kapha>","primaryBlockage":"<Nadi>","planetaryAlignment":"<planet>","herbOfToday":"<herb>","remedies":["<1>","<2>","<3>","<4>","<5>"],"bioReading":"<3-4 sentences>"}`;
-      const gr = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
+      const gr = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contents: [{ role: "user", parts: [{ inline_data: { mime_type: imageMimeType || "image/jpeg", data: imageBase64 } }, { text: prompt }] }], generationConfig: { temperature: 0.1, topK: 1, topP: 0.1, maxOutputTokens: 512 } }),
       });
@@ -394,7 +394,7 @@ Return ONLY: {"handDetected":true,"activeNadis":<0-72000>,"activeSubNadis":<0-35
       return { role: m.role === "assistant" ? "model" : "user", parts };
     });
 
-    const apiUrl   = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=${GEMINI_API_KEY}&alt=sse`;
+    const apiUrl   = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?key=${GEMINI_API_KEY}&alt=sse`;
     const response = await fetch(apiUrl, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
