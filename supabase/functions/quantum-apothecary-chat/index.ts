@@ -348,7 +348,7 @@ Return ONLY: {"handDetected":true,"activeNadis":<0-72000>,"activeSubNadis":<0-35
       return new Response(JSON.stringify(result), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const { messages, userImage, userId, seekerName, canonicalActivationNames, localTime, localDate, jyotishContext } = body;
+    const { messages, userImage, userId, seekerName, canonicalActivationNames, localTime, localDate, jyotishContext, language } = body;
 
     const [livingPortrait, lifeBookArchive, nadiBaseline, recentActivity, partnerActivity] = await Promise.all([
       userId ? getLivingPortrait(userId)    : Promise.resolve(""),
@@ -367,6 +367,12 @@ Return ONLY: {"handDetected":true,"activeNadis":<0-72000>,"activeSubNadis":<0-35
 
     if (localTime) {
       systemText += `\n\nSEEKER LOCAL TIME: ${localTime}${localDate ? ` — ${localDate}` : ''}\n→ The Seeker's current local time is ${localTime}. Use this to shape your opening — morning Prana, solar peak, evening Vata, night Kapha field.`;
+    }
+
+    if (language?.trim()) {
+      const lang = String(language).trim().toLowerCase();
+      const langLabel = lang.startsWith('sv') ? 'Swedish' : lang.startsWith('no') ? 'Norwegian' : 'English';
+      systemText += `\n\nSEEKER LANGUAGE PREFERENCE: ${language} (${langLabel})\n→ Answer in the Seeker's language (${langLabel}). Do not answer in a different language.`;
     }
 
     if (jyotishContext) {
