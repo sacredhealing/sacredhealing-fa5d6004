@@ -298,6 +298,47 @@ const Dashboard: React.FC = () => {
     ? Math.round((1 - horaWatch.remainingMs / horaDurationMs) * 100)
     : 80;
 
+  const soulFieldSignal = useMemo(() => {
+    try {
+      const w = window as unknown as { __sqiLastScan?: any };
+      const fromWindow = w.__sqiLastScan;
+      if (fromWindow && typeof fromWindow === 'object') {
+        return {
+          activeNadis: Number(fromWindow.activeNadis) || 0,
+          activeSubNadis: Number(fromWindow.activeSubNadis) || 0,
+          blockagePercentage: Number(fromWindow.blockagePercentage) || 0,
+        };
+      }
+    } catch { /* ignore */ }
+    try {
+      const raw = localStorage.getItem('sqi_scan_result');
+      if (!raw) return { activeNadis: 0, activeSubNadis: 0, blockagePercentage: 0 };
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      return {
+        activeNadis: Number(parsed.activeNadis) || 0,
+        activeSubNadis: Number(parsed.activeSubNadis) || 0,
+        blockagePercentage: Number(parsed.blockagePercentage) || 0,
+      };
+    } catch {
+      return { activeNadis: 0, activeSubNadis: 0, blockagePercentage: 0 };
+    }
+  }, []);
+
+  const activeTransmissionCount = useMemo(() => {
+    try {
+      const raw = localStorage.getItem('active_resonators');
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed.length : 0;
+    } catch {
+      return 0;
+    }
+  }, []);
+
+  const kineticSurgePct = useMemo(() => {
+    const base = soulFieldSignal.activeNadis > 0 ? Math.max(0, Math.min(100, Math.round((soulFieldSignal.activeNadis / 72000) * 100))) : 0;
+    return Math.max(0, Math.min(100, Math.round(base * 0.7 + activeTransmissionCount * 10)));
+  }, [soulFieldSignal.activeNadis, activeTransmissionCount]);
+
   return (
     <div style={{ background: '#050505', minHeight: '100vh', paddingBottom: 112, maxWidth: 430, margin: '0 auto' }}>
 
@@ -551,17 +592,40 @@ const Dashboard: React.FC = () => {
             {/* Row 1: 4 stat cards — Day Streak, SHC, Presence, Min */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
               {([
-                { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C12 2 7 8 7 13a5 5 0 0010 0c0-5-5-11-5-11z" stroke="rgba(212,175,55,0.7)" strokeWidth="1.4" fill="rgba(212,175,55,0.08)"/><circle cx="12" cy="14" r="2" fill="rgba(212,175,55,0.5)"/></svg>, val: streakDays ?? 0, lbl: t('dashboard.statContinuityLoops') },
-                { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><polygon points="12,2 14.5,9 22,9 16,14 18.5,21 12,17 5.5,21 8,14 2,9 9.5,9" stroke="rgba(212,175,55,0.7)" strokeWidth="1.3" strokeLinejoin="round" fill="rgba(212,175,55,0.07)"/><circle cx="12" cy="12" r="2" fill="rgba(212,175,55,0.45)"/></svg>, val: userAchievements.length * 25, lbl: t('dashboard.statSomaResonance') },
-                { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="rgba(212,175,55,0.55)" strokeWidth="1.2" fill="none"/><circle cx="12" cy="12" r="5" stroke="rgba(212,175,55,0.35)" strokeWidth="1" fill="none"/><circle cx="12" cy="12" r="2" fill="rgba(212,175,55,0.6)"/></svg>, val: userAchievements.length, lbl: t('dashboard.statCoherencePeaks') },
-                { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="rgba(212,175,55,0.5)" strokeWidth="1.2" fill="none"/><line x1="12" y1="6" x2="12" y2="12" stroke="rgba(212,175,55,0.7)" strokeWidth="1.5" strokeLinecap="round"/><line x1="12" y1="12" x2="16" y2="14" stroke="rgba(212,175,55,0.5)" strokeWidth="1.3" strokeLinecap="round"/><circle cx="12" cy="12" r="1.5" fill="rgba(212,175,55,0.7)"/></svg>, val: successWindowPct, lbl: t('dashboard.statDepthCycles') },
-              ] as { icon: React.ReactNode; val: string | number; lbl: string }[]).map(({ icon, val, lbl }, i) => (
-                <div key={i} className="sq-stat-chip">
-                  <div style={{ marginBottom: 6 }}>{icon}</div>
-                  <div className="sq-stat-val">{val}</div>
-                  <div className="sq-stat-lbl">{lbl}</div>
+                { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C12 2 7 8 7 13a5 5 0 0010 0c0-5-5-11-5-11z" stroke="rgba(212,175,55,0.7)" strokeWidth="1.4" fill="rgba(212,175,55,0.08)"/><circle cx="12" cy="14" r="2" fill="rgba(212,175,55,0.5)"/></svg>, val: streakDays ?? 0, pct: Math.max(0, Math.min(100, Math.round(((streakDays ?? 0) / 90) * 100))), lbl: t('dashboard.statContinuityLoops') },
+                { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><polygon points="12,2 14.5,9 22,9 16,14 18.5,21 12,17 5.5,21 8,14 2,9 9.5,9" stroke="rgba(212,175,55,0.7)" strokeWidth="1.3" strokeLinejoin="round" fill="rgba(212,175,55,0.07)"/><circle cx="12" cy="12" r="2" fill="rgba(212,175,55,0.45)"/></svg>, val: userAchievements.length * 25, pct: Math.max(0, Math.min(100, userAchievements.length * 25)), lbl: t('dashboard.statSomaResonance') },
+                { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="rgba(212,175,55,0.55)" strokeWidth="1.2" fill="none"/><circle cx="12" cy="12" r="5" stroke="rgba(212,175,55,0.35)" strokeWidth="1" fill="none"/><circle cx="12" cy="12" r="2" fill="rgba(212,175,55,0.6)"/></svg>, val: userAchievements.length, pct: Math.max(0, Math.min(100, Math.round((userAchievements.length / 6) * 100))), lbl: t('dashboard.statCoherencePeaks') },
+                { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="rgba(212,175,55,0.5)" strokeWidth="1.2" fill="none"/><line x1="12" y1="6" x2="12" y2="12" stroke="rgba(212,175,55,0.7)" strokeWidth="1.5" strokeLinecap="round"/><line x1="12" y1="12" x2="16" y2="14" stroke="rgba(212,175,55,0.5)" strokeWidth="1.3" strokeLinecap="round"/><circle cx="12" cy="12" r="1.5" fill="rgba(212,175,55,0.7)"/></svg>, val: successWindowPct, pct: Math.max(0, Math.min(100, successWindowPct)), lbl: t('dashboard.statDepthCycles') },
+              ] as { icon: React.ReactNode; val: string | number; pct: number; lbl: string }[]).map(({ icon, val, pct, lbl }, i) => (
+                <div key={i} className="sq-stat-chip sq-soulstat" style={{ ['--sf' as any]: pct }}>
+                  <div className="sq-soulstat-ring" aria-hidden />
+                  <div style={{ marginBottom: 6, position: 'relative', zIndex: 2 }}>{icon}</div>
+                  <div className="sq-stat-val" style={{ position: 'relative', zIndex: 2 }}>{val}</div>
+                  <div className="sq-stat-lbl" style={{ position: 'relative', zIndex: 2 }}>{lbl}</div>
                 </div>
               ))}
+            </div>
+
+            {/* Kinetic Surge — subtle life-force pulse */}
+            <div className="sq-kinetic" style={{ ['--k' as any]: kineticSurgePct }}>
+              <div className="sq-kinetic-top">
+                <div className="sq-kinetic-lbl">{t('dashboard.achAltKineticSurge')}</div>
+                <div className="sq-kinetic-meta">
+                  {activeTransmissionCount > 0 ? `${activeTransmissionCount} · ${t('dashboard.activeTransmissions', 'Active Transmissions')}` : t('dashboard.kineticIdle', 'Field idle')}
+                </div>
+              </div>
+              <div className="sq-kinetic-track">
+                <div className="sq-kinetic-fill" />
+              </div>
+              <div className="sq-kinetic-sub">
+                {soulFieldSignal.activeNadis > 0
+                  ? t('dashboard.kineticNadiLine', {
+                      defaultValue: 'Nadi flow: {{nadis}} / 72,000 · Blockage: {{block}}%',
+                      nadis: soulFieldSignal.activeNadis.toLocaleString(),
+                      block: soulFieldSignal.blockagePercentage,
+                    })
+                  : t('dashboard.kineticNadiHint', 'Run a Nadi Scan to calibrate your Soul Field.')}
+              </div>
             </div>
             {/* Row 2: achievement badges — horizontal scroll strip (match preview) */}
             {achievements.length > 0 && (
