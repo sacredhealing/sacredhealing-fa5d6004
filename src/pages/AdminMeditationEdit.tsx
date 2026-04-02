@@ -11,7 +11,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import AudioUpload from '@/components/admin/AudioUpload';
 
-const categories = ['morning', 'sleep', 'healing', 'focus', 'nature', 'general'];
+const categories = [
+  'morning',
+  'sleep',
+  'healing',
+  'focus',
+  'nature',
+  'general',
+  'manifestation',
+  'abundance',
+  'protection',
+  'heart',
+  'breathwork',
+];
 
 const AdminMeditationEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -178,53 +190,55 @@ When you're ready, gently open your eyes, carrying this clarity and focus with y
 
   if (isFetching) {
     return (
-      <div className="min-h-screen bg-background p-6 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-[#050505] p-6 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#D4AF37]" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-screen bg-[#050505] p-6 text-white">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
           <Link to="/admin/meditations">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="rounded-2xl border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] hover:border-[#D4AF37]/25 transition">
               <ArrowLeft className="w-5 h-5" />
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Pencil className="w-5 h-5" />
+            <h1 className="text-2xl font-black tracking-[-0.05em] text-[#D4AF37] [text-shadow:0_0_15px_rgba(212,175,55,0.3)] flex items-center gap-2">
+              <Pencil className="w-5 h-5 text-[#D4AF37]" />
               Edit Meditation
             </h1>
-            <p className="text-muted-foreground">Update the details for this meditation</p>
+            <p className="text-white/55 leading-[1.6]">Vedic Light‑Codes · sovereign metadata tuning</p>
           </div>
         </div>
 
         {/* Edit Form */}
-        <Card className="p-6">
+        <Card className="p-6 bg-white/[0.02] backdrop-blur-[40px] border border-white/[0.05] rounded-[40px]">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <Label htmlFor="title">Title *</Label>
+              <Label htmlFor="title" className="text-[8px] tracking-[0.5em] uppercase text-white/60 font-extrabold">Title *</Label>
               <Input
                 id="title"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 placeholder="Morning Awakening"
                 required
+                className="mt-2 bg-white/[0.03] border-white/[0.08] text-white placeholder:text-white/30 rounded-[28px] focus-visible:ring-[#D4AF37]/20 focus-visible:border-[#D4AF37]/35"
               />
             </div>
 
             <div>
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description" className="text-[8px] tracking-[0.5em] uppercase text-white/60 font-extrabold">Description</Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="A gentle meditation to start your day..."
                 rows={3}
+                className="mt-2 bg-white/[0.03] border-white/[0.08] text-white placeholder:text-white/30 rounded-[28px] focus-visible:ring-[#D4AF37]/20 focus-visible:border-[#D4AF37]/35"
               />
             </div>
 
@@ -239,22 +253,23 @@ When you're ready, gently open your eyes, carrying this clarity and focus with y
 
             <div className="grid grid-cols-2 gap-6">
               <div>
-                <Label htmlFor="duration">Duration (minutes)</Label>
+                <Label htmlFor="duration" className="text-[8px] tracking-[0.5em] uppercase text-white/60 font-extrabold">Duration (minutes)</Label>
                 <Input
                   id="duration"
                   type="number"
                   min="1"
                   value={formData.durationMinutes}
                   onChange={(e) => setFormData({ ...formData, durationMinutes: parseInt(e.target.value) || 1 })}
+                  className="mt-2 bg-white/[0.03] border-white/[0.08] text-white rounded-[28px] focus-visible:ring-[#D4AF37]/20 focus-visible:border-[#D4AF37]/35"
                 />
               </div>
               <div>
-                <Label htmlFor="category">Category</Label>
+                <Label htmlFor="category" className="text-[8px] tracking-[0.5em] uppercase text-white/60 font-extrabold">Category</Label>
                 <select
                   id="category"
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full h-10 px-3 rounded-md bg-muted/50 border border-border text-foreground"
+                  className="mt-2 w-full h-10 px-4 rounded-[28px] bg-white/[0.03] border border-white/[0.08] text-white focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/20"
                 >
                   {categories.map((cat) => (
                     <option key={cat} value={cat}>
