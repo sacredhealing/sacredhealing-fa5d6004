@@ -426,7 +426,7 @@ const Dashboard: React.FC = () => {
           <SectionLabel label={t('dashboard.sectionSacredPortals')} delay="0.2s" />
           <div style={{ padding: '0 16px', animation: 'sqFadeUp 0.5s 0.2s ease both' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <SQTile featured onClick={() => navigate('/vedic-astrology')}>
+            <LivingPortalTile portal={PORTAL_CONFIGS.vedic} featured onClick={() => navigate('/vedic-astrology')}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                 <div style={{ fontSize: 34, flexShrink: 0, animation: 'sqIconFloat 4s ease-in-out infinite', filter: 'drop-shadow(0 0 14px rgba(212,175,55,0.5))' }}>
                   <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
@@ -451,9 +451,21 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
               <div style={{ position: 'absolute', top: 12, right: 12, width: 6, height: 6, borderRadius: '50%', background: '#D4AF37', boxShadow: '0 0 8px rgba(212,175,55,0.8)', animation: 'sqDotPulse 2.5s infinite' }} />
-            </SQTile>
+            </LivingPortalTile>
 
-            <SQTile onClick={() => hasFeatureAccess(isAdmin, tier, FEATURE_TIER.ayurveda) ? navigate('/ayurveda') : navigate('/prana-flow')}>
+            <LivingPortalTile
+              portal={PORTAL_CONFIGS.ayurveda}
+              onClick={() => hasFeatureAccess(isAdmin, tier, FEATURE_TIER.ayurveda) ? navigate('/ayurveda') : navigate('/prana-flow')}
+              doshaBorderColor={
+                (() => {
+                  const dosha = (vedicReading as unknown as { ayurvedicProfile?: { dominantDosha?: string } })?.ayurvedicProfile?.dominantDosha?.toLowerCase();
+                  if (dosha === 'vata') return '147,197,253';
+                  if (dosha === 'pitta') return '248,113,113';
+                  if (dosha === 'kapha') return '74,222,128';
+                  return undefined;
+                })()
+              }
+            >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ marginBottom: 8, display: 'block', animation: 'sqIconFloat 3s ease-in-out infinite' }}>
                 <path d="M12 20 C12 20 4 14 4 8 C4 4 8 2 12 4 C16 2 20 4 20 8 C20 14 12 20 12 20Z" stroke="rgba(212,175,55,0.7)" strokeWidth="1.4" fill="rgba(212,175,55,0.07)"/>
                 <line x1="12" y1="4" x2="12" y2="20" stroke="rgba(212,175,55,0.3)" strokeWidth="0.8"/>
@@ -467,9 +479,9 @@ const Dashboard: React.FC = () => {
                   : t('dashboard.ayurvedaBioScan')}
               </div>
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
-            </SQTile>
+            </LivingPortalTile>
 
-            <SQTile onClick={() => navigate('/music')}>
+            <LivingPortalTile portal={PORTAL_CONFIGS.soma} onClick={() => navigate('/music')}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ marginBottom: 8, display: 'block', animation: 'sqIconFloat 3s 0.3s ease-in-out infinite' }}>
                 <path d="M9 18V6l10-2v12" stroke="rgba(212,175,55,0.7)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
                 <circle cx="7" cy="18" r="2.5" stroke="rgba(212,175,55,0.6)" strokeWidth="1.2" fill="rgba(212,175,55,0.08)"/>
@@ -478,9 +490,9 @@ const Dashboard: React.FC = () => {
               <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.7)', marginBottom: 4 }}>{t('dashboard.somaAcousticSync')}</div>
               <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.42)' }}>{t('dashboard.soma528Ready')}</div>
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
-            </SQTile>
+            </LivingPortalTile>
 
-            <SQTile onClick={() => hasFeatureAccess(isAdmin, tier, FEATURE_TIER.vastu) ? navigate('/vastu') : navigate('/prana-flow')}>
+            <LivingPortalTile portal={PORTAL_CONFIGS.vastu} onClick={() => hasFeatureAccess(isAdmin, tier, FEATURE_TIER.vastu) ? navigate('/vastu') : navigate('/prana-flow')}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ marginBottom: 8, display: 'block', animation: 'sqIconFloat 3s 0.6s ease-in-out infinite' }}>
                 <rect x="3" y="10" width="18" height="12" stroke="rgba(212,175,55,0.6)" strokeWidth="1.3" fill="rgba(212,175,55,0.05)" rx="1"/>
                 <polyline points="2,10 12,2 22,10" stroke="rgba(212,175,55,0.7)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
@@ -490,9 +502,9 @@ const Dashboard: React.FC = () => {
               <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.7)', marginBottom: 4 }}>{t('dashboard.portalsVastu')}</div>
               <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.42)' }}>{t('dashboard.vastuSubtitle')}</div>
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
-            </SQTile>
+            </LivingPortalTile>
 
-            <SQTile onClick={() => navigate('/mantras')}>
+            <LivingPortalTile portal={PORTAL_CONFIGS.mantras} onClick={() => navigate('/mantras')}>
               <svg width="26" height="26" viewBox="0 0 40 40" fill="none" style={{ marginBottom: 8, display: 'block', animation: 'sqIconFloat 3s 0.9s ease-in-out infinite' }}>
                 <text x="20" y="28" fontSize="26" textAnchor="middle" fill="none" stroke="rgba(212,175,55,0.65)" strokeWidth="0.8" fontFamily="serif" fontStyle="italic">ॐ</text>
                 <text x="20" y="28" fontSize="26" textAnchor="middle" fill="rgba(212,175,55,0.45)" fontFamily="serif" fontStyle="italic">ॐ</text>
@@ -500,7 +512,7 @@ const Dashboard: React.FC = () => {
               <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.7)', marginBottom: 4 }}>{t('dashboard.portalsMantras')}</div>
               <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.42)' }}>{t('dashboard.mantrasSonicActivation')}</div>
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
-            </SQTile>
+            </LivingPortalTile>
 
             {!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal) && (
               <SQTile locked onClick={() => navigate('/siddha-quantum')}>
