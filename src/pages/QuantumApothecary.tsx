@@ -381,6 +381,69 @@ function QuantumApothecaryInner() {
     // Streaming chunk updates → do NOT scroll — user reads in place
   }, [messages]);
   useEffect(() => { localStorage.setItem('active_resonators', JSON.stringify(activeTransmissions)); }, [activeTransmissions]);
+
+  // ── Scroll-to-bottom visibility (show FAB only when not at bottom) ──
+  useEffect(() => {
+    const el = chatScrollContainerRef.current;
+    if (!el) return;
+    const handler = () => {
+      const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+      setShowScrollBottom(distFromBottom > 150);
+    };
+    handler();
+    el.addEventListener('scroll', handler, { passive: true });
+    return () => el.removeEventListener('scroll', handler as any);
+  }, [chatScrollContainerRef.current]);
+
+  const scrollChatToBottom = useCallback(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
+  // ── Bioenergetic auto-scan after each SQI response ──
+  const prevIsTypingRef = useRef(false);
+  useEffect(() => {
+    const wasTyping = prevIsTypingRef.current;
+    prevIsTypingRef.current = isTyping;
+    if (!wasTyping || isTyping) return;
+
+    const lastModel = [...messages].reverse().find((m) => m.role === 'model');
+    const text = (lastModel?.text || '').toLowerCase();
+    if (!text.trim()) return;
+
+    const pickNames = (): string[] => {
+      if (/(sleep|rest|restore)/i.test(text)) {
+        return ['Deep Sleep Harmonic', 'Neural Calm Sync', 'Melatonin', 'Phosphatidylserine', 'Magnesium'];
+      }
+      if (/(energy|vitality|depleted)/i.test(text)) {
+        return ['NMN+Resveratrol (Cellular Battery)', 'CoQ10', 'NAD+', 'Urolithin A', 'Shilajit (Primordial Grounding)'];
+      }
+      if (/(meditation|kriya|kundalini)/i.test(text)) {
+        return ['Neural Fluidity Protocol', 'Brain Power (Cognitive Super-Structure)', 'PQQ', 'Brahmi Code', 'Focus (Cognitive Fire)'];
+      }
+      if (/(heart|love|anahata|bhakti)/i.test(text)) {
+        return ['Heart-Bloom Radiance (Joy)', 'Colostrum (Original Source)', 'Ashwagandha Resonance', 'Shatavari Flow', 'Rose Heart Bloom'];
+      }
+      if (/(past life|past-life|karma|akasha)/i.test(text)) {
+        return ['Ancestral Tether Dissolve (Release)', 'Neem Bitter Truth', 'Activated Charcoal (Shadow Detox)', 'Triphala Integrity', 'Guduchi (Amrit Nectar)'];
+      }
+      return ['Glutathione (Biofield Purification)', 'D3+K2 (Structural Light)', 'Omega (Crystalline Thought)', 'Zinc (Shielding)', 'Probiotic (Microbiome Harmony)'];
+    };
+
+    const names = pickNames();
+    const toAdd = names
+      .map((n) => ACTIVATIONS.find((a) => a.name === n))
+      .filter(Boolean) as Activation[];
+    if (toAdd.length === 0) return;
+
+    setActiveTransmissions((prev) => {
+      const next = [...prev];
+      for (const act of toAdd) {
+        if (!next.some((x) => x.id === act.id)) next.push(act);
+      }
+      return next;
+    });
+  }, [isTyping, messages]);
+
   useEffect(() => {
     const focusChat = (location.state as { focusChat?: boolean } | null)?.focusChat;
     if (focusChat && chatPanelRef.current) {
@@ -835,9 +898,7 @@ function QuantumApothecaryInner() {
           <button
             type="button"
             onClick={() => {
-              const el = chatScrollContainerRef.current;
-              if (!el) return;
-              el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+              scrollChatToBottom();
             }}
             className="rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 p-1.5 text-[#D4AF37] transition hover:border-[#D4AF37]/40 hover:bg-[#D4AF37]/20 sm:p-2"
             title={t('quantumApothecary.chat.scrollToBottom')}
@@ -875,15 +936,10 @@ function QuantumApothecaryInner() {
       </div>
 
       {/* Messages */}
-      <div className="custom-scrollbar relative flex-1 overflow-y-auto bg-[#050505]/60" style={{ padding: '16px' }}
+      <div
+        className="custom-scrollbar relative flex-1 overflow-y-auto bg-[#050505]/60"
+        style={{ padding: '16px' }}
         ref={(el) => {
-          // Track scroll position to show/hide scroll-to-bottom button
-          if (!el) return;
-          const handler = () => {
-            const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-            setShowScrollBottom(distFromBottom > 150);
-          };
-          el.addEventListener('scroll', handler, { passive: true });
           (chatScrollContainerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
         }}
       >
@@ -896,7 +952,7 @@ function QuantumApothecaryInner() {
                 ref={isLastUser ? lastUserMsgRef : isLastSqi ? lastSqiMsgRef : undefined}
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div
-                  className={`max-w-[95%] ${
+                  className={`${msg.role === 'user' ? 'max-w-[80%]' : 'max-w-full w-full'} ${
                     msg.role === 'user'
                       ? 'rounded-[28px] rounded-tr-none border border-[#D4AF37]/35 bg-gradient-to-br from-[#F5E17A] to-[#B8960C] text-[#050505] shadow-[0_0_28px_rgba(212,175,55,0.25)]'
                       : 'w-full rounded-[28px] rounded-tl-none border border-white/[0.08] bg-white/[0.04] p-4 text-white/65'
@@ -928,14 +984,13 @@ function QuantumApothecaryInner() {
       {/* Scroll to bottom FAB inside chat */}
       {showScrollBottom && (
         <button
-          onClick={() => {
-            chatScrollContainerRef.current?.scrollTo({ top: chatScrollContainerRef.current.scrollHeight, behavior: 'smooth' });
-          }}
-          className="absolute right-6 z-20 w-8 h-8 rounded-full border border-[#D4AF37]/30 bg-[#0a0a0a]/90 backdrop-blur-sm flex items-center justify-center text-[#D4AF37] hover:bg-[#D4AF37]/15 transition shadow-lg"
+          onClick={scrollChatToBottom}
+          className="absolute right-6 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-[#D4AF37]/30 bg-[#0a0a0a]/90 text-[#D4AF37] shadow-[0_0_22px_rgba(212,175,55,0.22)] backdrop-blur-sm transition hover:bg-[#D4AF37]/15 hover:shadow-[0_0_28px_rgba(212,175,55,0.28)]"
           style={{ bottom: 90 }}
-          aria-label="Scroll to bottom"
+          aria-label={t('quantumApothecary.chat.scrollToBottom')}
+          title={t('quantumApothecary.chat.scrollToBottom')}
         >
-          <ChevronDown size={18} />
+          <ChevronDown size={18} className="drop-shadow-[0_0_6px_rgba(212,175,55,0.45)]" />
         </button>
       )}
 
