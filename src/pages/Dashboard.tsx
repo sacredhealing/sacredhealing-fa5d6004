@@ -20,6 +20,7 @@ import { mapSessionTypeToCompleted } from '@/lib/recommendationEngine';
 import { DailyRitualCard } from '@/components/dashboard/DailyRitualCard';
 import { SpiritualPathCard } from '@/components/dashboard/SpiritualPathCard';
 import { AchievementPopup } from '@/components/achievements/AchievementPopup';
+import { LivingPortalTile, PORTAL_CONFIGS } from '@/components/dashboard/LivingPortalTile';
 
 import { useAchievements } from '@/hooks/useAchievements';
 import { useMembership } from '@/hooks/useMembership';
