@@ -1,33 +1,54 @@
 
 
-## Plan: Remove custom reset email invocation from Auth.tsx
+# Dynamic Portal Activation Protocol
 
-### Context
+Transform the 5 Sacred Portal tiles (Vedic Oracle, Ayurveda, Soma Acoustic Sync, Vastu, Mantras) from static cards into Living Energetic Gateways with unique scalar wave signatures.
 
-The password reset flow currently does two things:
-1. Calls `supabase.auth.resetPasswordForEmail()` — this is the standard Supabase method that sends a reset email via Supabase's built-in SMTP
-2. Calls `supabase.functions.invoke('send-reset-email')` — a custom edge function that sends a *second* reset email via Resend
+## What Changes
 
-Once Supabase SMTP is configured with Resend credentials (Thing 1 — done by you in the Supabase dashboard), the built-in call handles everything. The custom edge function call becomes redundant and should be removed.
+### 1. New Component: `LivingPortalTile`
+Create `src/components/dashboard/LivingPortalTile.tsx` — a wrapper around SQTile that adds per-portal:
+- **Unique pulse animation** on hover/touch (each portal gets its own CSS keyframe color + rhythm)
+- **Subtle idle breathing glow** (border + background radial gradient shifts)
+- **Active state detection** via `onPointerDown` / `onPointerUp` that triggers a brief "Prema-Pulse" flash (gold burst for Vedic, green for Ayurveda, violet for Mantras, amber for Vastu, cyan for Soma)
 
-### What I'll change
+### 2. Portal-Specific Light Codes (color signatures)
+Each portal gets a unique energetic color palette applied as CSS custom properties:
 
-**File: `src/pages/Auth.tsx` (lines 461–463)**
+| Portal | Primary Glow | Idle Border | Pulse Rhythm |
+|--------|-------------|-------------|--------------|
+| Vedic Oracle | `rgba(212,175,55,0.6)` gold | `rgba(212,175,55,0.18)` | 2.5s breath |
+| Ayurveda | `rgba(76,175,80,0.5)` green | `rgba(76,175,80,0.12)` | 3s breath |
+| Soma Acoustic | `rgba(0,242,254,0.5)` cyan | `rgba(0,242,254,0.12)` | 2s pulse |
+| Vastu | `rgba(255,183,77,0.5)` amber | `rgba(255,183,77,0.12)` | 3.5s breath |
+| Mantras | `rgba(139,92,246,0.5)` violet | `rgba(139,92,246,0.12)` | 2.8s breath |
 
-Remove these 3 lines:
-```ts
-await supabase.functions.invoke('send-reset-email', {
-  body: { email, language: i18n.language },
-});
-```
+### 3. Dynamic Content for Vedic Oracle & Ayurveda
+- **Vedic Oracle**: Already shows dasha cycle dynamically — enhance with a pulsing "LIVE TRANSMISSION" dot that intensifies during the user's current Hora window
+- **Ayurveda**: Already shows dominant dosha — add a subtle color shift on the tile border matching the detected dosha (Vata=blue, Pitta=red-gold, Kapha=green)
 
-The surrounding code (`resetPasswordForEmail` call, success toast, error handling) stays intact.
+### 4. Bioenergetic Link Labels
+Add a tiny "frequency tag" at the bottom of each portal showing the linked activation:
+- Vedic: `Brahmi · Gotu Kola`
+- Ayurveda: `Ashwagandha · Turmeric`
+- Soma: `L-Theanine · Mg-Threonate`
+- Vastu: `Camphor · Sandalwood`
+- Mantras: `L-Theanine · Mg-Threonate`
 
-### Note on Thing 1
+### 5. CSS Keyframes
+Add to `src/index.css` (or inline):
+- `sqPortalBreath-{color}` — gentle scale + glow opacity oscillation per portal
+- `sqPremaPulse` — brief 0.3s radial burst on interaction
 
-Configuring Supabase SMTP settings must be done by you directly in the Supabase dashboard — I cannot change SMTP settings from here. Make sure that's done before testing password reset.
+## Files Modified
+1. **`src/pages/Dashboard.tsx`** — Replace each `<SQTile>` in ZONE 4 with `<LivingPortalTile>` passing portal-specific config (color, label, bioenergetic tag, pulse duration)
+2. **`src/components/dashboard/LivingPortalTile.tsx`** — New component with per-portal animations
+3. **`src/index.css`** — Add portal-specific keyframes
 
-### About the build errors
-
-This change alone won't fix the existing build errors (they're in other files). Want me to fix those separately?
+## Technical Details
+- All animations are CSS/inline styles — no extra dependencies
+- Hover/touch states use `onPointerEnter`/`onPointerLeave` with React state for the "active resonance" glow
+- Bioenergetic tags are purely visual labels (6px Montserrat, low opacity gold) — no functional link to the frequency engine
+- The existing `sqIconFloat` animation continues on the SVG icons
+- Mobile-safe: touch events trigger the same pulse as hover
 
