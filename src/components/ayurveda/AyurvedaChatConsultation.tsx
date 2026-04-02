@@ -54,7 +54,10 @@ const STYLES = `
     position: relative;
     width: 100%;
     max-width: 680px;
+    /* Robust viewport sizing across browsers (prevents off-screen panel) */
+    height: 100vh;
     height: 100dvh;
+    max-height: 100vh;
     max-height: 100dvh;
     display: flex;
     flex-direction: column;

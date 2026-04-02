@@ -4,17 +4,22 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useMembership } from '@/hooks/useMembership';
 import type { AyurvedaMembershipLevel } from '@/lib/ayurvedaTypes';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const Ayurveda = () => {
   const { user, isLoading: authLoading } = useAuth();
   const { isAdmin } = useAdminRole();
   const { isPremium, tier, loading: membershipLoading } = useMembership();
+  const { t } = useTranslation();
 
   // Wait for auth and membership to resolve before rendering
   if (authLoading || membershipLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center gap-4">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#D4AF37]" />
+        <div className="text-[8px] font-extrabold uppercase tracking-[0.6em] text-[#D4AF37]/60">
+          {t('ayurvedaPage.loadingArchive', 'Accessing Akasha-Neural Archive…')}
+        </div>
       </div>
     );
   }
