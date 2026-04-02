@@ -554,7 +554,7 @@ const AdminMusic: React.FC = () => {
   const statusCounts = getStatusCounts();
 
   return (
-    <div className="min-h-screen bg-[#050B12] text-white p-6">
+    <div className="min-h-screen bg-[#050505] text-white p-6">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
@@ -562,18 +562,20 @@ const AdminMusic: React.FC = () => {
             variant="ghost"
             size="icon"
             onClick={() => navigate('/admin')}
-            className="rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-cyan-400/30"
+            className="rounded-2xl border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] hover:border-[#D4AF37]/25 transition"
           >
             <ArrowLeft size={20} />
           </Button>
           <div>
-            <h1 className="text-3xl font-heading font-bold tracking-tight text-white">Music Manager</h1>
-            <p className="text-white/55">A clear channel for Sacred Sound uploads.</p>
+            <h1 className="text-3xl font-heading font-black tracking-[-0.05em] text-[#D4AF37] [text-shadow:0_0_15px_rgba(212,175,55,0.3)]">
+              Music Manager
+            </h1>
+            <p className="text-white/55 leading-[1.6]">Prema‑Pulse Transmissions · Upload and consecrate sacred sound.</p>
           </div>
         </div>
 
         <Tabs defaultValue="tracks" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6 bg-white/[0.03] border border-white/10 rounded-2xl p-1">
+          <TabsList className="grid w-full grid-cols-2 mb-6 bg-white/[0.02] border border-white/[0.06] rounded-[28px] p-1">
             <TabsTrigger value="tracks" className="flex items-center gap-2">
               <Music size={16} />
               Tracks
@@ -586,9 +588,9 @@ const AdminMusic: React.FC = () => {
 
           <TabsContent value="tracks">
         {/* Upload Form */}
-        <div className="rounded-[28px] p-6 mb-8 border border-cyan-400/15 bg-gradient-to-b from-cyan-500/[0.06] to-white/[0.02] backdrop-blur-[40px]">
-          <h2 className="text-xl font-heading font-semibold text-white mb-4 flex items-center gap-2">
-            <Plus size={20} />
+        <div className="bg-white/[0.02] backdrop-blur-[40px] border border-white/[0.05] rounded-[40px] p-6 mb-8">
+          <h2 className="text-xl font-heading font-black tracking-[-0.03em] text-white/90 mb-4 flex items-center gap-2">
+            <Plus size={20} className="text-[#D4AF37]" />
             Add New Track
           </h2>
           
@@ -600,7 +602,7 @@ const AdminMusic: React.FC = () => {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Healing Frequencies 432Hz"
-                  className="bg-white/[0.03] border-white/10 text-white placeholder:text-white/30 rounded-2xl focus-visible:ring-cyan-400/30"
+                  className="bg-white/[0.03] border-white/[0.08] text-white placeholder:text-white/30 rounded-[28px] focus-visible:ring-[#D4AF37]/20 focus-visible:border-[#D4AF37]/35"
                 />
               </div>
               
@@ -610,7 +612,7 @@ const AdminMusic: React.FC = () => {
                   value={artist}
                   onChange={(e) => setArtist(e.target.value)}
                   placeholder="Siddha Quantum Nexus"
-                  className="bg-white/[0.03] border-white/10 text-white placeholder:text-white/30 rounded-2xl focus-visible:ring-cyan-400/30"
+                  className="bg-white/[0.03] border-white/[0.08] text-white placeholder:text-white/30 rounded-[28px] focus-visible:ring-[#D4AF37]/20 focus-visible:border-[#D4AF37]/35"
                 />
               </div>
               
@@ -619,7 +621,7 @@ const AdminMusic: React.FC = () => {
                 <select
                   value={genre}
                   onChange={(e) => setGenre(e.target.value)}
-                  className="w-full h-10 px-3 rounded-2xl bg-white/[0.03] border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
+                  className="w-full h-10 px-4 rounded-[28px] bg-white/[0.03] border border-white/[0.08] text-white focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/20"
                 >
                   {GENRES.map(g => (
                     <option key={g} value={g}>{g.charAt(0).toUpperCase() + g.slice(1).replace('-', ' ')}</option>
@@ -632,7 +634,7 @@ const AdminMusic: React.FC = () => {
                 <select
                   value={accessTier}
                   onChange={(e) => setAccessTier(e.target.value as AccessTier)}
-                  className="w-full h-10 px-3 rounded-2xl bg-white/[0.03] border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
+                  className="w-full h-10 px-4 rounded-[28px] bg-white/[0.03] border border-white/[0.08] text-white focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/20"
                 >
                   {ACCESS_TIERS.map(t => (
                     <option key={t.value} value={t.value}>{t.label}</option>
@@ -646,7 +648,7 @@ const AdminMusic: React.FC = () => {
                   value={durationInput}
                   onChange={(e) => setDurationInput(e.target.value)}
                   placeholder="3:42"
-                  className="bg-white/[0.03] border-white/10 text-white placeholder:text-white/30 rounded-2xl focus-visible:ring-cyan-400/30"
+                  className="bg-white/[0.03] border-white/[0.08] text-white placeholder:text-white/30 rounded-[28px] focus-visible:ring-[#D4AF37]/20 focus-visible:border-[#D4AF37]/35"
                 />
               </div>
               
@@ -658,7 +660,7 @@ const AdminMusic: React.FC = () => {
                   value={priceUsd}
                   onChange={(e) => setPriceUsd(e.target.value)}
                   min="0"
-                  className="bg-white/[0.03] border-white/10 text-white placeholder:text-white/30 rounded-2xl focus-visible:ring-cyan-400/30"
+                  className="bg-white/[0.03] border-white/[0.08] text-white placeholder:text-white/30 rounded-[28px] focus-visible:ring-[#D4AF37]/20 focus-visible:border-[#D4AF37]/35"
                 />
               </div>
               
@@ -671,7 +673,7 @@ const AdminMusic: React.FC = () => {
                   min="40"
                   max="300"
                   placeholder="120"
-                  className="bg-white/[0.03] border-white/10 text-white placeholder:text-white/30 rounded-2xl focus-visible:ring-cyan-400/30"
+                  className="bg-white/[0.03] border-white/[0.08] text-white placeholder:text-white/30 rounded-[28px] focus-visible:ring-[#D4AF37]/20 focus-visible:border-[#D4AF37]/35"
                 />
               </div>
             </div>
@@ -682,14 +684,14 @@ const AdminMusic: React.FC = () => {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="A powerful healing track with 432Hz frequencies..."
-                className="bg-white/[0.03] border-white/10 text-white placeholder:text-white/30 rounded-2xl focus-visible:ring-cyan-400/30"
+                className="bg-white/[0.03] border-white/[0.08] text-white placeholder:text-white/30 rounded-[28px] focus-visible:ring-[#D4AF37]/20 focus-visible:border-[#D4AF37]/35"
               />
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs uppercase tracking-[0.25em] text-white/55 mb-2 font-semibold">Cover Image</label>
-                <label className="flex items-center justify-center gap-2 h-16 border border-dashed border-white/15 rounded-2xl cursor-pointer hover:border-cyan-400/30 hover:bg-cyan-400/[0.04] transition-colors">
+                <label className="flex items-center justify-center gap-2 h-16 border border-dashed border-white/[0.12] rounded-[28px] cursor-pointer hover:border-[#D4AF37]/25 hover:bg-[#D4AF37]/[0.06] transition-colors">
                   <input
                     type="file"
                     accept="image/*"
@@ -705,7 +707,7 @@ const AdminMusic: React.FC = () => {
               
               <div>
                 <label className="block text-xs uppercase tracking-[0.25em] text-white/55 mb-2 font-semibold">30-Second Preview (optional)</label>
-                <label className="flex items-center justify-center gap-2 h-16 border border-dashed border-white/15 rounded-2xl cursor-pointer hover:border-cyan-400/30 hover:bg-cyan-400/[0.04] transition-colors">
+                <label className="flex items-center justify-center gap-2 h-16 border border-dashed border-white/[0.12] rounded-[28px] cursor-pointer hover:border-[#D4AF37]/25 hover:bg-[#D4AF37]/[0.06] transition-colors">
                   <input
                     type="file"
                     accept="audio/*"
@@ -721,7 +723,7 @@ const AdminMusic: React.FC = () => {
               
               <div>
                 <label className="block text-xs uppercase tracking-[0.25em] text-white/55 mb-2 font-semibold">Full Track *</label>
-                <label className="flex items-center justify-center gap-2 h-16 border border-dashed border-white/15 rounded-2xl cursor-pointer hover:border-cyan-400/30 hover:bg-cyan-400/[0.04] transition-colors">
+                <label className="flex items-center justify-center gap-2 h-16 border border-dashed border-white/[0.12] rounded-[28px] cursor-pointer hover:border-[#D4AF37]/25 hover:bg-[#D4AF37]/[0.06] transition-colors">
                   <input
                     type="file"
                     accept="audio/*"
@@ -736,8 +738,8 @@ const AdminMusic: React.FC = () => {
               </div>
             </div>
             
-            <div className="rounded-2xl p-4 border border-cyan-400/15 bg-cyan-400/[0.04] flex items-start gap-2">
-              <Sparkles className="w-5 h-5 text-cyan-200 shrink-0 mt-0.5" />
+            <div className="rounded-[28px] p-4 border border-[#D4AF37]/20 bg-[#D4AF37]/[0.06] flex items-start gap-2">
+              <Sparkles className="w-5 h-5 text-[#D4AF37] shrink-0 mt-0.5" />
               <p className="text-sm text-white/60 leading-relaxed">
                 <strong className="text-white/80">Auto-Analysis:</strong> After upload, AI generates mood, spiritual path, intended use, and affirmation.
               </p>
@@ -746,7 +748,7 @@ const AdminMusic: React.FC = () => {
             <Button
               type="submit"
               disabled={isUploading}
-              className="w-full rounded-[26px] bg-cyan-400/15 hover:bg-cyan-400/20 border border-cyan-400/25 text-cyan-100"
+              className="w-full rounded-[40px] border border-[#D4AF37]/40 bg-gradient-to-b from-[#F5E17A] via-[#D4AF37] to-[#A07C10] text-[#050505] font-black uppercase tracking-[0.2em] text-[10px] shadow-[0_12px_40px_rgba(212,175,55,0.25)] hover:shadow-[0_16px_48px_rgba(212,175,55,0.35)]"
             >
               {isUploading ? (
                 <>
@@ -764,7 +766,7 @@ const AdminMusic: React.FC = () => {
         </div>
 
         {/* Filters and Bulk Actions */}
-        <div className="rounded-[24px] p-4 mb-4 border border-white/10 bg-white/[0.02] backdrop-blur-[40px]">
+        <div className="rounded-[28px] p-4 mb-4 border border-white/[0.06] bg-white/[0.02] backdrop-blur-[40px]">
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
               <Filter size={16} className="text-white/45" />
@@ -780,8 +782,8 @@ const AdminMusic: React.FC = () => {
                   onClick={() => setStatusFilter(filter.value)}
                   className={`text-xs rounded-2xl border ${
                     statusFilter === filter.value
-                      ? 'bg-cyan-400/15 border-cyan-400/25 text-cyan-100 hover:bg-cyan-400/20'
-                      : 'bg-white/[0.02] border-white/10 text-white/60 hover:bg-white/[0.04] hover:border-cyan-400/20'
+                      ? 'bg-[#D4AF37]/15 border-[#D4AF37]/30 text-[#D4AF37] hover:bg-[#D4AF37]/20'
+                      : 'bg-white/[0.02] border-white/[0.08] text-white/60 hover:bg-white/[0.04] hover:border-[#D4AF37]/20'
                   }`}
                 >
                   {filter.label}
@@ -802,7 +804,7 @@ const AdminMusic: React.FC = () => {
                 size="sm"
                 onClick={bulkAnalyze}
                 disabled={isBulkProcessing}
-                className="rounded-2xl bg-white/[0.02] border-white/10 text-white/70 hover:bg-cyan-400/[0.08] hover:border-cyan-400/20"
+                className="rounded-2xl bg-white/[0.02] border-white/[0.08] text-white/70 hover:bg-[#D4AF37]/[0.08] hover:border-[#D4AF37]/20"
               >
                 {isBulkProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Sparkles size={14} className="mr-1" />}
                 Analyze Selected
@@ -812,7 +814,7 @@ const AdminMusic: React.FC = () => {
                 size="sm"
                 onClick={bulkApprove}
                 disabled={isBulkProcessing}
-                className="rounded-2xl bg-white/[0.02] border-white/10 text-white/70 hover:bg-cyan-400/[0.08] hover:border-cyan-400/20"
+                className="rounded-2xl bg-white/[0.02] border-white/[0.08] text-white/70 hover:bg-[#D4AF37]/[0.08] hover:border-[#D4AF37]/20"
               >
                 {isBulkProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Check size={14} className="mr-1" />}
                 Approve Selected
@@ -853,7 +855,7 @@ const AdminMusic: React.FC = () => {
                 <div
                   key={track.id}
                   className={`border rounded-[22px] overflow-hidden transition-colors ${
-                    selectedTracks.has(track.id) ? 'border-cyan-400/40 bg-cyan-400/[0.04]' : 'border-white/10 bg-white/[0.02]'
+                    selectedTracks.has(track.id) ? 'border-[#D4AF37]/35 bg-[#D4AF37]/[0.04]' : 'border-white/[0.06] bg-white/[0.02]'
                   }`}
                 >
                   {editingTrack?.id === track.id ? (
