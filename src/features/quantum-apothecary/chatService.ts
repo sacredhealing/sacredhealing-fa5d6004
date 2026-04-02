@@ -25,8 +25,20 @@ export async function streamChatWithSQI(
   }));
 
   const now = new Date();
-  const localTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-  const localDate = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const localTime = now.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: timezone,
+  });
+  const localDate = now.toLocaleDateString([], {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: timezone,
+  });
 
   const body: {
     messages: typeof apiMessages;
@@ -38,7 +50,8 @@ export async function streamChatWithSQI(
     localTime?: string;
     localDate?: string;
     jyotishContext?: string;
-  } = { messages: apiMessages, localTime, localDate };
+    timezone?: string;
+  } = { messages: apiMessages, localTime, localDate, timezone };
 
   if (userImage?.base64 && userImage?.mimeType) body.userImage = userImage;
   if (userId)                                    body.userId = userId;

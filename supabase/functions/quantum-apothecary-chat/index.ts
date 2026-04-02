@@ -348,7 +348,7 @@ Return ONLY: {"handDetected":true,"activeNadis":<0-72000>,"activeSubNadis":<0-35
       return new Response(JSON.stringify(result), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const { messages, userImage, userId, seekerName, canonicalActivationNames, localTime, localDate, jyotishContext, language } = body;
+    const { messages, userImage, userId, seekerName, canonicalActivationNames, localTime, localDate, timezone, jyotishContext, language } = body;
 
     const [livingPortrait, lifeBookArchive, nadiBaseline, recentActivity, partnerActivity] = await Promise.all([
       userId ? getLivingPortrait(userId)    : Promise.resolve(""),
@@ -366,7 +366,7 @@ Return ONLY: {"handDetected":true,"activeNadis":<0-72000>,"activeSubNadis":<0-35
     const hasMemory = livingPortrait || lifeBookArchive || nadiBaseline || recentActivity || partnerActivity || seekerName;
 
     if (localTime) {
-      systemText += `\n\nSEEKER LOCAL TIME: ${localTime}${localDate ? ` — ${localDate}` : ''}\n→ The Seeker's current local time is ${localTime}. Use this to shape your opening — morning Prana, solar peak, evening Vata, night Kapha field.`;
+      systemText += `\n\nSEEKER LOCAL TIME: ${localTime}${timezone ? ` (${timezone})` : ''}${localDate ? ` — ${localDate}` : ''}\n→ The Seeker's current local time is ${localTime}. Use this to shape your opening — morning Prana, solar peak, evening Vata, night Kapha field.`;
     }
 
     if (language?.trim()) {
