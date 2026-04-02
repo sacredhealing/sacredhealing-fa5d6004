@@ -397,7 +397,7 @@ const Dashboard: React.FC = () => {
               {t('dashboard.receiveTransmission')}
             </button>
           </div>
-import { LivingPortalTile, PORTAL_CONFIGS } from '@/components/dashboard/LivingPortalTile';
+
 
           {/* ══ ZONE 3: COSMIC STRIP — links to /vedic-astrology ══ */}
           <div
