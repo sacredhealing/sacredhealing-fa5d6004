@@ -190,20 +190,20 @@ const styles = `
   }
   .hero-freq-tag {
     font-size: 10px; font-weight: 700;
-    letter-spacing: 0.3em; color: var(--cyan);
+    letter-spacing: 0.3em; color: var(--gold);
     text-transform: uppercase;
     display: flex; align-items: center; gap: 6px;
   }
   .nadi-dot {
     width: 6px; height: 6px;
     border-radius: 50%;
-    background: var(--cyan);
-    box-shadow: 0 0 8px var(--cyan);
+    background: var(--gold);
+    box-shadow: 0 0 10px rgba(212,175,55,0.55);
     animation: nadi-pulse 1.5s ease-in-out infinite;
   }
   @keyframes nadi-pulse {
-    0%,100% { transform: scale(1); box-shadow: 0 0 8px var(--cyan); }
-    50%      { transform: scale(1.5); box-shadow: 0 0 16px var(--cyan), 0 0 32px rgba(34,211,238,0.3); }
+    0%,100% { transform: scale(1); box-shadow: 0 0 10px rgba(212,175,55,0.45); }
+    50%      { transform: scale(1.5); box-shadow: 0 0 18px rgba(212,175,55,0.7), 0 0 40px rgba(212,175,55,0.22); }
   }
   .hero-play-btn {
     width: 44px; height: 44px;
@@ -476,6 +476,47 @@ const styles = `
     display: flex; align-items: center; justify-content: center;
     color: var(--gold); font-size: 12px;
     transition: transform 0.3s;
+  }
+
+  /* Browse tabs + filters inside the library (override shadcn defaults) */
+  .sqi-tab {
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.55);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+    white-space: nowrap;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  .sqi-tab:hover { background: rgba(255,255,255,0.04); border-color: rgba(212,175,55,0.16); color: rgba(212,175,55,0.85); }
+  .sqi-tab-active {
+    background: rgba(212,175,55,0.10);
+    border-color: rgba(212,175,55,0.28);
+    color: #D4AF37;
+    box-shadow: 0 0 18px rgba(212,175,55,0.10);
+  }
+  .sqi-chip {
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.55);
+    font-size: 12px;
+    font-weight: 700;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+    white-space: nowrap;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  .sqi-chip:hover { background: rgba(255,255,255,0.04); border-color: rgba(212,175,55,0.14); color: rgba(212,175,55,0.85); }
+  .sqi-chip-active {
+    background: rgba(212,175,55,0.10);
+    border-color: rgba(212,175,55,0.28);
+    color: #D4AF37;
   }
 
   .gold-divider {
@@ -1139,11 +1180,7 @@ const Music: React.FC = () => {
                         setSelectedCuratedPlaylist(null);
                       }
                     }}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
-                      activeTab === tab
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted/30 text-muted-foreground hover:bg-muted/50'
-                    }`}
+                    className={`sqi-tab ${activeTab === tab ? 'sqi-tab-active' : ''}`}
                   >
                     {tab === 'albums' && <Disc size={14} className="inline mr-1" />}
                     {tab === 'browse' && t('music.portal.tabBrowse', 'Browse')}
@@ -1353,17 +1390,13 @@ const Music: React.FC = () => {
 
                       {/* Genre Filter */}
                       <div className="mb-3">
-                        <p className="text-xs text-muted-foreground mb-2">{t('music.portal.genre', 'Genre')}</p>
+                        <p className="text-xs text-white/35 mb-2">{t('music.portal.genre', 'Genre')}</p>
                         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                           {GENRES.map((g) => (
                             <button
                               key={g}
                               onClick={() => setSelectedGenre(g)}
-                              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-                                selectedGenre === g
-                                  ? 'bg-primary text-primary-foreground'
-                                  : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-                              }`}
+                              className={`sqi-chip ${selectedGenre === g ? 'sqi-chip-active' : ''}`}
                             >
                               {tMusicGenre(g, t)}
                             </button>
@@ -1373,17 +1406,13 @@ const Music: React.FC = () => {
 
                       {/* Mood Filter */}
                       <div className="mb-3">
-                        <p className="text-xs text-muted-foreground mb-2">{t('music.portal.moodFilter', 'Mood')}</p>
+                        <p className="text-xs text-white/35 mb-2">{t('music.portal.moodFilter', 'Mood')}</p>
                         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                           {moods.map((m) => (
                             <button
                               key={m.value}
                               onClick={() => setSelectedMood(m.value)}
-                              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-                                selectedMood === m.value
-                                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                                  : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-                              }`}
+                              className={`sqi-chip ${selectedMood === m.value ? 'sqi-chip-active' : ''}`}
                             >
                               {m.label}
                             </button>
@@ -1393,17 +1422,13 @@ const Music: React.FC = () => {
 
                       {/* Spiritual Path Filter */}
                       <div className="mb-4">
-                        <p className="text-xs text-muted-foreground mb-2">{t('music.portal.spiritualPath', 'Spiritual Path')}</p>
+                        <p className="text-xs text-white/35 mb-2">{t('music.portal.spiritualPath', 'Spiritual Path')}</p>
                         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                           {spiritualPaths.map((p) => (
                             <button
                               key={p.value}
                               onClick={() => setSelectedPath(p.value)}
-                              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-                                selectedPath === p.value
-                                  ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                                  : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-                              }`}
+                              className={`sqi-chip ${selectedPath === p.value ? 'sqi-chip-active' : ''}`}
                             >
                               {p.label}
                             </button>

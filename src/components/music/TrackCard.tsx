@@ -54,42 +54,45 @@ export const TrackCard: React.FC<TrackCardProps> = ({
   return (
     <div
       className={cn(
-        'group rounded-xl p-3 transition-colors cursor-pointer border border-transparent',
-        live ? 'tc-sqi-active' : 'bg-muted/20 hover:bg-muted/40',
+        // SQI-2050 sovereign glass (visual only)
+        'group cursor-pointer rounded-[28px] border p-3 transition-colors',
+        live
+          ? 'tc-sqi-active'
+          : 'border-white/[0.06] bg-white/[0.02] hover:border-[#D4AF37]/20 hover:bg-white/[0.04]',
       )}
       onClick={handleNavigateToDetail}
     >
       <div className="flex items-start gap-3">
         {/* Cover / Play button */}
-        <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-muted shrink-0">
+        <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02]">
           {track.cover_image_url ? (
             <img src={track.cover_image_url} alt="" className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <Music2 size={20} className="text-muted-foreground" />
+              <Music2 size={20} className="text-white/30" />
             </div>
           )}
           <button 
             onClick={(e) => { e.stopPropagation(); handlePlay(); }}
-            className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
           >
             {isCurrentTrack && isPlaying ? (
-              <Pause size={22} className="text-white" />
+              <Pause size={22} className="text-[#D4AF37]" />
             ) : (
-              <Play size={22} className="text-white ml-0.5" />
+              <Play size={22} className="ml-0.5 text-[#D4AF37]" />
             )}
           </button>
         </div>
 
         {/* Track info */}
         <div className="flex-1 min-w-0">
-          <p className={cn('font-medium text-sm truncate', live && 'tc-sqi-title')}>{track.title}</p>
-          <p className="text-xs text-muted-foreground truncate mb-1">{track.artist}</p>
+          <p className={cn('truncate text-sm font-black tracking-[-0.02em] text-white/90', live && 'tc-sqi-title')}>{track.title}</p>
+          <p className="mb-1 truncate text-xs text-white/35">{track.artist}</p>
           
           {/* Mood & Path badges */}
           <div className="flex flex-wrap items-center gap-1 mb-1.5">
             {track.mood && (
-              <span className="inline-flex items-center gap-0.5 bg-amber-500/15 text-amber-400 px-1.5 py-0.5 rounded text-[10px] font-medium">
+              <span className="inline-flex items-center gap-0.5 rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-2 py-0.5 text-[10px] font-bold text-[#D4AF37]">
                 {track.mood === 'calm' && <Moon size={9} />}
                 {track.mood === 'energizing' && <Zap size={9} />}
                 {track.mood === 'healing' && <Sparkles size={9} />}
@@ -99,27 +102,27 @@ export const TrackCard: React.FC<TrackCardProps> = ({
               </span>
             )}
             {track.spiritual_path && (
-              <span className="bg-purple-500/15 text-purple-400 px-1.5 py-0.5 rounded text-[10px] font-medium capitalize">
+              <span className="rounded-full border border-white/[0.08] bg-white/[0.03] px-2 py-0.5 text-[10px] font-bold text-white/50 capitalize">
                 {tMusicSpiritualPath(track.spiritual_path, t)}
               </span>
             )}
             {track.intended_use && (
-              <span className="bg-muted/50 text-muted-foreground px-1.5 py-0.5 rounded text-[10px] capitalize">
+              <span className="rounded-full border border-white/[0.06] bg-white/[0.02] px-2 py-0.5 text-[10px] font-bold text-white/35 capitalize">
                 {track.intended_use.replace(/_/g, ' ')}
               </span>
             )}
           </div>
           
           {/* Stats row */}
-          <div className="flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-2 text-[10px] text-white/35">
             <span className="flex items-center gap-0.5">
               <Clock size={10} />
               {formatDuration(track.duration_seconds)}
             </span>
             {track.bpm && (
-              <span className="bg-muted/50 px-1.5 py-0.5 rounded">{track.bpm} BPM</span>
+              <span className="rounded-full border border-white/[0.06] bg-white/[0.02] px-2 py-0.5">{track.bpm} BPM</span>
             )}
-            <span className="bg-primary/20 text-primary px-1.5 py-0.5 rounded capitalize">
+            <span className="rounded-full border border-[#D4AF37]/18 bg-[#D4AF37]/[0.08] px-2 py-0.5 text-[#D4AF37] capitalize">
               {tMusicGenre(track.genre, t)}
             </span>
             <span className="flex items-center gap-0.5">
@@ -134,7 +137,12 @@ export const TrackCard: React.FC<TrackCardProps> = ({
           {/* Like button */}
           <button 
             onClick={(e) => { e.stopPropagation(); toggleLike(track.id); }}
-            className={`p-1.5 rounded-full hover:bg-muted/50 ${isLiked ? 'text-red-500' : 'text-muted-foreground'}`}
+            className={cn(
+              'rounded-full border p-1.5 transition',
+              isLiked
+                ? 'border-red-500/25 bg-red-500/10 text-red-400'
+                : 'border-white/[0.06] bg-white/[0.02] text-white/45 hover:border-[#D4AF37]/18 hover:text-[#D4AF37]',
+            )}
           >
             <Heart size={14} fill={isLiked ? 'currentColor' : 'none'} />
           </button>
@@ -142,21 +150,21 @@ export const TrackCard: React.FC<TrackCardProps> = ({
           {/* Share button */}
           <button 
             onClick={(e) => { e.stopPropagation(); navigate(`/music/track/${track.id}`); }}
-            className="p-1.5 rounded-full hover:bg-muted/50 text-muted-foreground"
+            className="rounded-full border border-white/[0.06] bg-white/[0.02] p-1.5 text-white/45 transition hover:border-[#D4AF37]/18 hover:text-[#D4AF37]"
           >
             <Share2 size={14} />
           </button>
 
           {/* Price / Access */}
           {canPlay || isSubscribed ? (
-            <span className="text-[10px] text-green-500 font-medium">
+            <span className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#D4AF37]/70">
               {t('music.included', 'Included')}
             </span>
           ) : (
             <Button 
               size="sm" 
               variant="outline" 
-              className="h-6 text-xs px-2"
+              className="h-6 border-[#D4AF37]/35 bg-[#D4AF37]/10 px-2 text-xs text-[#D4AF37] hover:bg-[#D4AF37]/20"
               onClick={(e) => { e.stopPropagation(); onPurchase?.(track); }}
             >
               €{track.price_usd}
@@ -168,12 +176,12 @@ export const TrackCard: React.FC<TrackCardProps> = ({
             <div className="relative">
               <button 
                 onClick={(e) => { e.stopPropagation(); setShowPlaylistMenu(!showPlaylistMenu); }}
-                className="p-1.5 rounded-full hover:bg-muted/50 text-muted-foreground"
+                className="rounded-full border border-white/[0.06] bg-white/[0.02] p-1.5 text-white/45 transition hover:border-[#D4AF37]/18 hover:text-[#D4AF37]"
               >
                 <Plus size={14} />
               </button>
               {showPlaylistMenu && (
-                <div className="absolute right-0 top-full mt-1 bg-card border border-border rounded-lg p-1 z-50 min-w-28 shadow-lg">
+                <div className="absolute right-0 top-full z-50 mt-1 min-w-28 rounded-2xl border border-white/[0.08] bg-[#050505]/95 p-1 shadow-[0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur">
                   {playlists.map(pl => (
                     <button 
                       key={pl.id} 
@@ -181,7 +189,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
                         onAddToPlaylist?.(pl.id, track.id);
                         setShowPlaylistMenu(false);
                       }}
-                      className="block w-full text-left px-2 py-1 text-xs hover:bg-muted rounded truncate"
+                      className="block w-full truncate rounded-xl px-2 py-1 text-left text-xs font-bold text-white/70 transition hover:bg-white/[0.04] hover:text-[#D4AF37]"
                     >
                       {pl.name}
                     </button>
