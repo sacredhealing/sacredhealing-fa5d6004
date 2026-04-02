@@ -201,9 +201,7 @@ async function getRecentActivity(userId: string): Promise<string> {
       const detail = d.place || d.frequency || d.track || d.intention || a.section || "";
       return `${when}: ${a.activity}${detail ? ` — ${detail}` : ""}`;
     });
-    return "SEEKER RECENT ACTIVITY:
-" + lines.join("
-");
+    return "SEEKER RECENT ACTIVITY:\n" + lines.join("\n");
   } catch { return ""; }
 }
 
