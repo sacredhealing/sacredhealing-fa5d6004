@@ -26,6 +26,7 @@ interface MusicTrack {
   cover_image_url: string | null;
   preview_url: string;
   full_audio_url: string;
+  auto_analysis_data?: any | null;
   // Analysis fields
   mood?: string | null;
   spiritual_path?: string | null;
@@ -45,6 +46,20 @@ interface MusicTrack {
 }
 
 const GENRES = ['beats', 'meditation', 'mystic', 'reggae', 'hip-hop', 'reggaeton', 'indian', 'shamanic'];
+const ACCESS_TIERS = [
+  { value: 'prana_flow', label: 'Prana Flow' },
+  { value: 'siddha_quantum', label: 'Siddha Quantum' },
+  { value: 'akashainfinity', label: 'AkashaInfinity' },
+] as const;
+
+type AccessTier = typeof ACCESS_TIERS[number]['value'];
+
+const getTrackAccessTier = (track: MusicTrack): AccessTier => {
+  const v = track?.auto_analysis_data?.access_tier as string | undefined;
+  if (v === 'prana_flow' || v === 'siddha_quantum' || v === 'akashainfinity') return v;
+  return 'prana_flow';
+};
+
 const STATUS_FILTERS = [
   { value: 'all', label: 'All Tracks' },
   { value: 'pending', label: 'Pending Analysis' },
@@ -90,6 +105,7 @@ const AdminMusic: React.FC = () => {
   const [priceUsd, setPriceUsd] = useState('2.99');
   const [bpm, setBpm] = useState('');
   const [shcReward, setShcReward] = useState('10');
+  const [accessTier, setAccessTier] = useState<AccessTier>('prana_flow');
   const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [fullFile, setFullFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
@@ -103,6 +119,7 @@ const AdminMusic: React.FC = () => {
   const [editDuration, setEditDuration] = useState('');
   const [editPrice, setEditPrice] = useState('');
   const [editBpm, setEditBpm] = useState('');
+  const [editAccessTier, setEditAccessTier] = useState<AccessTier>('prana_flow');
   const [editCoverFile, setEditCoverFile] = useState<File | null>(null);
   const [editPreviewFile, setEditPreviewFile] = useState<File | null>(null);
   const [editFullFile, setEditFullFile] = useState<File | null>(null);
@@ -319,6 +336,7 @@ const AdminMusic: React.FC = () => {
           bpm: bpm ? parseInt(bpm) : null,
           shc_reward: parseInt(shcReward),
           analysis_status: 'pending',
+          auto_analysis_data: { access_tier: accessTier },
         })
         .select()
         .single();
@@ -367,6 +385,7 @@ const AdminMusic: React.FC = () => {
       setPriceUsd('2.99');
       setBpm('');
       setShcReward('10');
+      setAccessTier('prana_flow');
       setPreviewFile(null);
       setFullFile(null);
       setCoverFile(null);
@@ -393,6 +412,7 @@ const AdminMusic: React.FC = () => {
     setEditDuration(formatDuration(track.duration_seconds));
     setEditPrice(track.price_usd.toString());
     setEditBpm(track.bpm?.toString() || '');
+    setEditAccessTier(getTrackAccessTier(track));
     setEditCoverFile(null);
   };
 
@@ -459,7 +479,11 @@ const AdminMusic: React.FC = () => {
           bpm: editBpm ? parseInt(editBpm) : null,
           cover_image_url: coverUrl,
           preview_url: previewUrl,
-          full_audio_url: fullUrl
+          full_audio_url: fullUrl,
+          auto_analysis_data: {
+            ...(editingTrack.auto_analysis_data || {}),
+            access_tier: editAccessTier,
+          },
         })
         .eq('id', editingTrack.id);
 
@@ -594,6 +618,19 @@ const AdminMusic: React.FC = () => {
                 >
                   {GENRES.map(g => (
                     <option key={g} value={g}>{g.charAt(0).toUpperCase() + g.slice(1).replace('-', ' ')}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm text-muted-foreground mb-1">Portal / Tier</label>
+                <select
+                  value={accessTier}
+                  onChange={(e) => setAccessTier(e.target.value as AccessTier)}
+                  className="w-full h-10 px-3 rounded-md bg-muted/50 border border-border text-foreground"
+                >
+                  {ACCESS_TIERS.map(t => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
                   ))}
                 </select>
               </div>
@@ -836,6 +873,15 @@ const AdminMusic: React.FC = () => {
                             <option key={g} value={g}>{g.charAt(0).toUpperCase() + g.slice(1).replace('-', ' ')}</option>
                           ))}
                         </select>
+                        <select
+                          value={editAccessTier}
+                          onChange={(e) => setEditAccessTier(e.target.value as AccessTier)}
+                          className="h-10 px-3 rounded-md bg-muted/50 border border-border text-foreground"
+                        >
+                          {ACCESS_TIERS.map(t => (
+                            <option key={t.value} value={t.value}>{t.label}</option>
+                          ))}
+                        </select>
                         <Input
                           value={editDuration}
                           onChange={(e) => setEditDuration(e.target.value)}
@@ -958,6 +1004,9 @@ const AdminMusic: React.FC = () => {
                           <span className="text-xs text-accent">
                             ${track.price_usd} • {track.purchase_count} sales
                           </span>
+                        <Badge variant="secondary" className="text-xs">
+                          {ACCESS_TIERS.find(t => t.value === getTrackAccessTier(track))?.label ?? 'Prana Flow'}
+                        </Badge>
                           {/* Analysis status badge */}
                           {track.analysis_status === 'approved' && (
                             <Badge className="bg-green-500/20 text-green-400 text-xs"><Check className="w-3 h-3 mr-1" />Approved</Badge>
