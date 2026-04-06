@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   DollarSign, TrendingUp, Users, Sparkles, ArrowRight, Coins, 
   GraduationCap, Bot, Cpu, Heart, Star, Zap, Globe, Shield,
-  Wallet,
+  Wallet, Info,
   type LucideIcon
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -65,6 +65,7 @@ const iconMap: Record<string, LucideIcon> = {
 
 const IncomeStreams: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const [streams, setStreams] = useState<IncomeStream[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -87,7 +88,18 @@ const IncomeStreams: React.FC = () => {
 
       // Ensure the Polymarket Bot stream exists even if DB row isn't created yet
       // (UI-only fallback; does not modify affiliate/Stripe logic)
-      const hasPolymarketBot = fetched.some((s) => s.internal_slug === 'polymarket-bot' || s.link === '/polymarket-bot' || s.link === '/income-streams/polymarket-bot');
+      const hasPolymarketBot = fetched.some(
+        (s) =>
+          s.internal_slug === 'polymarket-bot' ||
+          s.link === '/polymarket-bot' ||
+          s.link === '/income-streams/polymarket-bot'
+      );
+      const hasCopyTradingBot = fetched.some(
+        (s) =>
+          s.internal_slug === 'polymarket-copy-trading' ||
+          s.link === '/income-streams/polymarket-copy-trading'
+      );
+
       const polymarketFallback: IncomeStream = {
         id: 'polymarket-bot-fallback',
         title: 'Polymarket Bot',
@@ -122,7 +134,45 @@ const IncomeStreams: React.FC = () => {
         cta_button_text_no: null,
       };
 
-      setStreams(hasPolymarketBot ? fetched : [polymarketFallback, ...fetched]);
+      const copyTradingFallback: IncomeStream = {
+        id: 'polymarket-copy-trading-fallback',
+        title: 'Polymarket Copy-Trading Bot',
+        title_sv: null,
+        title_es: null,
+        title_no: null,
+        description:
+          'Sovereign VPS bot: whale CTF signals → Gamma + CLOB → fixed USDC copy trades. No Telegram, no Whop.',
+        description_sv: null,
+        description_es: null,
+        description_no: null,
+        link: '/income-streams/polymarket-copy-trading',
+        category: 'AI',
+        potential_earnings: 'ON-CHAIN EAR · POLYGON · CLOB',
+        potential_earnings_sv: null,
+        potential_earnings_es: null,
+        potential_earnings_no: null,
+        is_featured: true,
+        image_url: null,
+        order_index: -2,
+        icon_name: 'Zap',
+        badge_text: 'SQI 2050 • VPS',
+        badge_text_sv: null,
+        badge_text_es: null,
+        badge_text_no: null,
+        color_from: null,
+        color_to: null,
+        internal_slug: 'polymarket-copy-trading',
+        cta_button_text: 'Setup guide',
+        cta_button_text_sv: null,
+        cta_button_text_es: null,
+        cta_button_text_no: null,
+      };
+
+      let merged = [...fetched];
+      if (!hasCopyTradingBot) merged = [copyTradingFallback, ...merged];
+      if (!hasPolymarketBot) merged = [polymarketFallback, ...merged];
+
+      setStreams(merged);
     }
     if (error) console.error('Error fetching streams:', error);
     setIsLoading(false);
@@ -205,28 +255,37 @@ const IncomeStreams: React.FC = () => {
           streams.map((stream) => {
             const IconComponent = getIcon(stream.icon_name);
             const isPolymarket = stream.internal_slug === 'polymarket-bot';
+            const isCopyTrading = stream.internal_slug === 'polymarket-copy-trading';
             const title = isPolymarket
               ? t('incomeStreams.polymarketCard.title')
-              : getLocalizedField(stream, 'title') || stream.title;
+              : isCopyTrading
+                ? t('incomeStreams.copyBotCard.title')
+                : getLocalizedField(stream, 'title') || stream.title;
             const description = isPolymarket
               ? t('incomeStreams.polymarketCard.description')
-              : getLocalizedField(stream, 'description') || stream.description;
+              : isCopyTrading
+                ? t('incomeStreams.copyBotCard.description')
+                : getLocalizedField(stream, 'description') || stream.description;
             const badge = getLocalizedField(stream, 'badge_text') || stream.badge_text;
             const earnings = isPolymarket
               ? t('incomeStreams.polymarketCard.footerTag')
-              : getLocalizedField(stream, 'potential_earnings');
+              : isCopyTrading
+                ? t('incomeStreams.copyBotCard.footerTag')
+                : getLocalizedField(stream, 'potential_earnings');
 
             const cardContent = (
               <Card className="group glass-card gold-border w-full max-w-full cursor-pointer overflow-hidden rounded-[20px] transition-all duration-300 hover:border-[#D4AF37]/25 hover:shadow-[0_0_30px_rgba(212,175,55,0.10)]">
                 <CardContent className="w-full min-w-0 p-0">
-                  <div className="flex w-full min-w-0 flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-4">
+                  <div
+                    className={`flex w-full min-w-0 flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-4 ${isCopyTrading ? 'pr-12 sm:pr-14' : ''}`}
+                  >
                     <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center sm:gap-4">
                       {/* Icon */}
                       <div
                         className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[24px] transition-transform group-hover:scale-[1.03]"
                         style={{
                           background:
-                            isPolymarket
+                            isPolymarket || isCopyTrading
                               ? 'linear-gradient(135deg, rgba(212,175,55,0.20) 0%, rgba(34,211,238,0.10) 100%)'
                               : 'linear-gradient(135deg, rgba(212,175,55,0.14) 0%, rgba(255,255,255,0.03) 100%)',
                           border: '1px solid rgba(212,175,55,0.16)',
@@ -252,6 +311,15 @@ const IncomeStreams: React.FC = () => {
                                 className="shrink-0 rounded-full border border-[#D4AF37] bg-[#D4AF37] px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-[#050505]"
                               >
                                 {t('incomeStreams.polymarketCard.badgeSovereign')}
+                              </span>
+                            </>
+                          ) : isCopyTrading ? (
+                            <>
+                              <span className="shrink-0 rounded-full border border-[#D4AF37] bg-transparent px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-[#D4AF37]">
+                                {t('incomeStreams.copyBotCard.badgeLine')}
+                              </span>
+                              <span className="shrink-0 rounded-full border border-[#D4AF37] bg-[#D4AF37] px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-[#050505]">
+                                {t('incomeStreams.copyBotCard.badgeSovereign')}
                               </span>
                             </>
                           ) : (
@@ -290,6 +358,26 @@ const IncomeStreams: React.FC = () => {
             );
 
             if (isInternalLink(stream.link)) {
+              if (isCopyTrading) {
+                return (
+                  <div key={stream.id} className="relative w-full max-w-full min-w-0">
+                    <Link to={stream.link} className="block w-full max-w-full min-w-0">
+                      {cardContent}
+                    </Link>
+                    <button
+                      type="button"
+                      className="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-xl border border-[#D4AF37]/35 bg-[#050505]/90 text-[#D4AF37] shadow-lg backdrop-blur-md transition-colors hover:border-[#D4AF37]/60 hover:bg-[#D4AF37]/10"
+                      aria-label={t('incomeStreams.copyBotCard.infoAria')}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigate(`${stream.link}#sovereign-setup`);
+                      }}
+                    >
+                      <Info className="h-4 w-4" strokeWidth={2.5} />
+                    </button>
+                  </div>
+                );
+              }
               return (
                 <Link key={stream.id} to={stream.link} className="block w-full max-w-full min-w-0">
                   {cardContent}

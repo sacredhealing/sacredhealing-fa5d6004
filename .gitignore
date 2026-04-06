@@ -31,3 +31,9 @@ dist-ssr
 
 # Supabase CLI
 supabase/.temp/
+
+# Polymarket copy-trading bot (local Python)
+polymarket-copy-bot/.env
+polymarket-copy-bot/venv/
+polymarket-copy-bot/__pycache__/
+polymarket-copy-bot/*.pyc
