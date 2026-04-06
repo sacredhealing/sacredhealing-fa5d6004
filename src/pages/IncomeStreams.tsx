@@ -87,7 +87,7 @@ const IncomeStreams: React.FC = () => {
 
       // Ensure the Polymarket Bot stream exists even if DB row isn't created yet
       // (UI-only fallback; does not modify affiliate/Stripe logic)
-      const hasPolymarketBot = fetched.some((s) => s.internal_slug === 'polymarket-bot' || s.link === '/income-streams/polymarket-bot');
+      const hasPolymarketBot = fetched.some((s) => s.internal_slug === 'polymarket-bot' || s.link === '/polymarket-bot' || s.link === '/income-streams/polymarket-bot');
       const polymarketFallback: IncomeStream = {
         id: 'polymarket-bot-fallback',
         title: 'Polymarket Bot',
