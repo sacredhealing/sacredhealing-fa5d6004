@@ -211,7 +211,7 @@ const IncomeStreams: React.FC = () => {
             const colorTo = stream.color_to || 'primary/70';
 
             const cardContent = (
-              <Card className="glass-card gold-border overflow-hidden transition-all duration-300 hover:border-[#D4AF37]/25 hover:shadow-[0_0_30px_rgba(212,175,55,0.10)] group cursor-pointer w-full max-w-full">
+              <Card className="glass-card gold-border overflow-hidden transition-all duration-300 hover:border-[#D4AF37]/25 hover:shadow-[0_0_30px_rgba(212,175,55,0.10)] group cursor-pointer w-full max-w-full rounded-[20px]">
                 <CardContent className="p-0">
                   <div className="flex items-start sm:items-center gap-3 sm:gap-4 p-4">
                     {/* Icon */}
