@@ -94,6 +94,7 @@ const AIIncomeDetail = React.lazy(() => import("./pages/income-streams/AIIncomeD
 const EducationDetail = React.lazy(() => import("./pages/income-streams/EducationDetail"));
 const SovereignSignalOracle = React.lazy(() => import("./pages/income-streams/PolymarketBotDetail"));
 const PolymarketBot = React.lazy(() => import("./pages/PolymarketBot"));
+const PredictionMarketBot = React.lazy(() => import("./pages/PredictionMarketBot"));
 const AdminSystem = React.lazy(() => import("./pages/AdminSystem"));
 const AdminGrantAccess = React.lazy(() => import("./pages/AdminGrantAccess"));
 const AdminBreathing = React.lazy(() => import("./pages/AdminBreathing"));
@@ -278,6 +279,7 @@ function AppRoutes() {
                   <Route path="/income-streams/ai-income" element={<AIIncomeDetail />} />
                   <Route path="/income-streams/education" element={<EducationDetail />} />
                   <Route path="/polymarket-bot" element={<PolymarketBot />} />
+                  <Route path="/prediction-market-bot" element={<PredictionMarketBot />} />
                   <Route path="/income-streams/polymarket-bot" element={<SovereignSignalOracle />} />
                   <Route path="/sqi-chat" element={<Navigate to="/quantum-apothecary" replace />} />
                   <Route path="/spiritual-education" element={<SpiritualEducation />} />

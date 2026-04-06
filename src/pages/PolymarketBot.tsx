@@ -218,18 +218,27 @@ export default function PolymarketBot() {
           )}
         </div>
 
-        {/* CTA */}
-        <button
-          type="button"
-          onClick={() => navigate('/sqi-chat')}
-          className="w-full rounded-[24px] py-4 text-[11px] font-black tracking-[0.25em] uppercase text-[#050505]"
-          style={{
-            background: 'linear-gradient(135deg,#D4AF37,#F0C040,#D4AF37)',
-            boxShadow: '0 0 32px rgba(212,175,55,0.4)',
-          }}
-        >
-          {t('polymarketBot.launchCta')}
-        </button>
+        {/* CTAs */}
+        <div className="flex w-full flex-col gap-3">
+          <button
+            type="button"
+            onClick={() => navigate('/prediction-market-bot')}
+            className="w-full rounded-[24px] py-4 text-[11px] font-black tracking-[0.25em] uppercase text-[#050505]"
+            style={{
+              background: 'linear-gradient(135deg,#D4AF37,#F0C040,#D4AF37)',
+              boxShadow: '0 0 32px rgba(212,175,55,0.4)',
+            }}
+          >
+            {t('polymarketBot.openAiTerminal')}
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/sqi-chat')}
+            className="w-full rounded-[24px] border border-[#D4AF37]/35 bg-transparent py-3.5 text-[10px] font-black tracking-[0.2em] uppercase text-[#D4AF37]/90"
+          >
+            {t('polymarketBot.launchCta')}
+          </button>
+        </div>
       </div>
     </div>
   );
