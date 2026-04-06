@@ -6,10 +6,15 @@ import en from './locales/en.json';
 import sv from './locales/sv.json';
 import es from './locales/es.json';
 import no from './locales/no.json';
+import womanCodeEn from './locales/womanCode.en.json';
+import womanCodeSv from './locales/womanCode.sv.json';
 import { deepMergeLocales } from './deepMergeLocales';
 
-const enRoot = en as Record<string, unknown>;
-const svMerged = deepMergeLocales(enRoot, sv as Record<string, unknown>);
+const enRoot = deepMergeLocales(en as Record<string, unknown>, womanCodeEn as Record<string, unknown>);
+const svMerged = deepMergeLocales(
+  enRoot,
+  deepMergeLocales(sv as Record<string, unknown>, womanCodeSv as Record<string, unknown>)
+);
 const esMerged = deepMergeLocales(enRoot, es as Record<string, unknown>);
 const noMerged = deepMergeLocales(enRoot, no as Record<string, unknown>);
 
@@ -25,7 +30,7 @@ i18n
   .use(initReactI18next)
   .init({
     resources: {
-      en: { translation: en },
+      en: { translation: enRoot as typeof en },
       es: { translation: esMerged as typeof en },
       sv: { translation: svMerged as typeof en },
       no: { translation: noMerged as typeof en },

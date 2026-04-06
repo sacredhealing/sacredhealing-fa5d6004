@@ -1,0 +1,697 @@
+{
+  "womanCode": {
+    "ui": {
+      "badge": "⟁ Quantum Nexus · WomanCode Intelligence · SQI 2050",
+      "titleLine1": "Your ",
+      "titleGold": "Hormonal",
+      "titleLine2": "Knowledge graph",
+      "subtitle": "Click all — every mineral, hormone and food is a gateway to deeper biochemical knowledge.",
+      "sliderLabel": "⟁ Cycle day control — Drag to navigate",
+      "chartLabel": "⟁ Hormone profile — Click for in-depth information",
+      "careerSectionLabel": "⟁ Career & Life Sync",
+      "chakraSectionLabel": "⟁ Gland & Chakra connection",
+      "moonMilkLabelPrefix": "⟁ Vedic Moon Milk ·",
+      "modalCloseAria": "Close",
+      "mineralModalRoleToday": "Function today",
+      "mineralModalBio": "Biochemistry",
+      "hormoneLevelDay": "Level day {{day}}",
+      "vedicModalSubtitle": "Vedic Practice · {{phase}}",
+      "chakraModalSubtitle": "Chakra & Gland connection",
+      "chakraFallback": "Deep energy intelligence for this phase.",
+      "tabs": {
+        "minerals": "🌿 Minerals",
+        "career": "⚡ Career",
+        "vedic": "☽ Vedic",
+        "moonmilk": "🥛 Moon Milk"
+      },
+      "pips": [
+        "❄️ 1–5",
+        "🌱 6–13",
+        "☀️ 14–15",
+        "🍂 16–28"
+      ]
+    },
+    "phases": [
+      {
+        "name": "Menstrual phase",
+        "season": "Winter",
+        "dosha": "Vata Rising · Purging",
+        "icon": "❄️",
+        "color": "#5B8FBF",
+        "days": "1–5",
+        "minHeader": "Iron, Zinc & Cleansing",
+        "minIntro": "Estrogen and progesterone are at their lowest level. The body focuses on elimination. Iron loss is real — replace with plant-based sources + vitamin C for absorption.",
+        "minerals": [
+          {
+            "icon": "🫐",
+            "mineral": "Iron + vitamin C",
+            "food": "Beetroot + lemon",
+            "amount": "150g = 2.7mg iron",
+            "fn": "Oxygenates the blood & counteracts fatigue in case of blood loss",
+            "tags": [
+              "#iron",
+              "#oxygenation",
+              "#anemia"
+            ],
+            "bio": "Iron is central to hemoglobin — the protein in red blood cells that transports oxygen. During menstruation, you lose iron via the blood. Always combine with vitamin C (lemon juice) to convert non-heme iron (Fe³⁺) to absorbable form (Fe²⁺). Without vitamin C, only 2–3% of the iron is absorbed — with vitamin C up to 30%."
+          },
+          {
+            "icon": "🌰",
+            "mineral": "Zinc",
+            "food": "Pumpkin seeds",
+            "amount": "30g = 2.2mg zinc",
+            "fn": "Immune defense & muscle relaxation in the uterus",
+            "tags": [
+              "#zinc",
+              "#cramps",
+              "#immunity"
+            ],
+            "bio": "Zinc is a cofactor for over 300 enzymes. During menstruation, it regulates prostaglandins — the inflammatory signals that cause uterine contractions and menstrual cramps. Adequate zinc → reduced pain. Pumpkin seeds are the richest plant-based source of zinc. Lightly roast them for best bioavailability."
+          },
+          {
+            "icon": "🥬",
+            "mineral": "Folate (B9)",
+            "food": "Spinach & dark leaves",
+            "amount": "Large fist = 100µg folate",
+            "fn": "Blood cell production & nerve function",
+            "tags": [
+              "#folate",
+              "#B9",
+              "#blood cells"
+            ],
+            "bio": "Folate (B9) is essential for producing new red blood cells after menstrual blood loss. Combine with vitamin B12 (nutritional yeast) to support DNA synthesis. Avoid overheating — folate is sensitive to heat, choose lightly cooked or raw spinach."
+          },
+          {
+            "icon": "🫚",
+            "mineral": "Omega-3 (ALA)",
+            "food": "Ground flax seeds & walnuts",
+            "amount": "1 tablespoon of ground flaxseed daily",
+            "fn": "Anti-inflammatory — reduces prostaglandins & menstrual cramps",
+            "tags": [
+              "#omega3",
+              "#inflammation",
+              "#menstrual pain"
+            ],
+            "bio": "Omega-3 fatty acids compete with arachidonic acid for the same enzymes (COX and LOX) that produce prostaglandins. More omega-3 = less inflammatory prostaglandins (PGF2α) = reduced uterine contraction and period pain. The effect is noticeable after 2-3 cycles of consistent intake."
+          }
+        ],
+        "career": [
+          {
+            "t": "🔮 Reflection day",
+            "d": "The brain's analytical capacity is directed inwards. Best for journaling, evaluating the month and solitary deep work. Dopamine levels are low — don't force creativity."
+          },
+          {
+            "t": "📊 Analyze & review",
+            "d": "Go through figures, invoices, contracts. Your critical eye is sharp. However, do not decide anything important — the drop in progesterone affects risk assessment."
+          },
+          {
+            "t": "🚫 Postpone presentations",
+            "d": "Reschedule appointments for the follicular or ovulation phase. Your verbal and social energy is at an all-time low — that's biochemistry, not weakness."
+          }
+        ],
+        "vedic": [
+          {
+            "icon": "🐝",
+            "t": "Bhramari Pranayama",
+            "s": "Bumblebee breath — vibration dissolves uterine tension via the vagus nerve. 5-10 rounds."
+          },
+          {
+            "icon": "🌙",
+            "t": "Yin Yoga",
+            "s": "Apasana, Supta Baddha Konasana with bolster. No inversions — honor the Apana Vayu (downward flow)."
+          },
+          {
+            "icon": "🔴",
+            "t": "Muladhara Chakra",
+            "s": "Root Chakra. Earth reference and grounding. Fade LAM (long, slow). Rest on the floor."
+          },
+          {
+            "icon": "🔕",
+            "t": "Mouna — Silence",
+            "s": "Vedic practice: choose silence for 1 hour daily. Stimulates the vagus nerve and conserves prana for healing."
+          }
+        ],
+        "chakraText": "During menstruation, the energy is most deeply connected to the Muladhara (root chakra) and pelvic floor. The thyroid gland (Vishuddha) and adrenal glands (Manipura) need rest. Avoid high stimulation and socially demanding environments.",
+        "chakras": [
+          {
+            "n": "Muladhara",
+            "c": "#EF4444"
+          },
+          {
+            "n": "Swadhisthana",
+            "c": "#F97316"
+          }
+        ],
+        "herb": {
+          "name": "Shatavari",
+          "tl": "Rebuilding Ojas after blood loss",
+          "steps": [
+            "1 teaspoon of Shatavari powder in 240 ml of warm oat milk",
+            "1 tsp Ghi — lubricates mucous membranes and supports Apana Vayu",
+            "Simmer for 3 minutes on low heat while stirring",
+            "Cool to lukewarm — add 1 tsp raw honey (never heat honey)",
+            "Drink just before sleep during days 1–5"
+          ]
+        }
+      },
+      {
+        "name": "Follicular phase",
+        "season": "Our",
+        "dosha": "Kapha-Pitta · Build-up",
+        "icon": "🌱",
+        "color": "#5FAD72",
+        "days": "6–13",
+        "minHeader": "Vitamin E, Probiotics & Estrogen Metabolism",
+        "minIntro": "FSH rises and stimulates follicle growth. Estrogen climbs. The liver needs support to metabolize the rising estrogen — probiotics and indole-3-carbinol are the keys.",
+        "minerals": [
+          {
+            "icon": "🥑",
+            "mineral": "Vitamin E",
+            "food": "Avocado",
+            "amount": "½ avocado = 2.7mg vitamin E",
+            "fn": "Supports follicle growth & cervical mucus",
+            "tags": [
+              "#vitaminE",
+              "#fertility",
+              "#follicle"
+            ],
+            "bio": "Vitamin E is a fat-soluble antioxidant that protects the growing follicle from oxidative stress. Important for the quality of cervical mucus during ovulation. Also supports the build-up of the endometrium via the estrogen receptors. Sunflower seeds and almonds are the richest supplemental sources."
+          },
+          {
+            "icon": "🥦",
+            "mineral": "Indole-3-carbinol (I3C)",
+            "food": "Broccoli & cauliflower",
+            "amount": "100g lightly steamed = active I3C",
+            "fn": "Helps the liver metabolize estrogen efficiently",
+            "tags": [
+              "#I3C",
+              "#liver support",
+              "#estrogen"
+            ],
+            "bio": "Indole-3-carbinol (I3C) in cruciferous vegetables activates the CYP1A2 enzyme in the liver that catalyzes 'good' estrogen metabolism (2-hydroxyestrogen). More 2-OH estrogen = better hormone balance and lower cancer risk. Lightly steamed is optimal — overheating destroys I3C."
+          },
+          {
+            "icon": "🫙",
+            "mineral": "Probiotics & Fiber",
+            "food": "Kimchi & sauerkraut",
+            "amount": "2 tablespoons daily is enough",
+            "fn": "Estrobolone — hormonal control of gut bacteria",
+            "tags": [
+              "#probiotics",
+              "#estrobolom",
+              "#intestinal"
+            ],
+            "bio": "The estrobolone are the gut bacteria that control how estrogen circulates via enterohepatic circulation. Dysbiosis → beta-glucuronidase reactivates already deconjugated estrogen → estrogen dominance. Lactobacillus and Bifidobacterium in kimchi keep the balance."
+          },
+          {
+            "icon": "💚",
+            "mineral": "Magnesium",
+            "food": "Cashews",
+            "amount": "30g = 83mg magnesium",
+            "fn": "Prepares the nervous system for increased activity",
+            "tags": [
+              "#magnesium",
+              "#nervous system",
+              "#ATP"
+            ],
+            "bio": "Magnesium is a cofactor for ATP production — the body's energy currency. In the follicular phase, energy rises and the cells need more magnesium for efficient mitochondrial function. Also supports the COMT enzyme that breaks down catecholestrogen."
+          }
+        ],
+        "career": [
+          {
+            "t": "🚀 Initiate new projects",
+            "d": "Dopamine and estrogen rise. The brain is neuroplastic and wants to learn new things. It is biochemically optimal to start now — the dopamine receptors are most sensitive."
+          },
+          {
+            "t": "🎨 Creative brainstorming",
+            "d": "FSH increases cognitive flexibility. Idea generation, mind-mapping and visionary work flow naturally. Your prefrontal cortex is in top form."
+          },
+          {
+            "t": "🤝 Network carefully",
+            "d": "Start reaching out to new contacts. The energy is building — you're not at your peak yet (it's ovulation) but you're healthy, curious and engaging."
+          }
+        ],
+        "vedic": [
+          {
+            "icon": "☀️",
+            "t": "Kapalabhati",
+            "s": "Skull Shimmering Breath — clears stagnation from winter, activates solar plexus. 3 rounds of 30 breaths."
+          },
+          {
+            "icon": "🌱",
+            "t": "Surya Namaskar",
+            "s": "12 rounds of Sun Salutations — awakens Agni (digestive fire) and Shakti energy. Build up gradually."
+          },
+          {
+            "icon": "💫",
+            "t": "Swadhisthana Chakra",
+            "s": "Sacral chakra — creativity, sexual energy and flow awaken. Tone VAM. Hip openers in yoga."
+          },
+          {
+            "icon": "🕯️",
+            "t": "Trataka — Focus of light",
+            "s": "Stare at a candle for 3-5 min without blinking. Strengthens Ajna (third eye) and concentration."
+          }
+        ],
+        "chakraText": "Svadhisthana (sacral) and Manipura (solar plexus) awaken. The ovaries and adrenal glands are most active. The hormonal system is driven by the hypothalamus–pituitary–ovary axis. Support with B vitamins and light sattvic foods.",
+        "chakras": [
+          {
+            "n": "Swadhisthana",
+            "c": "#F97316"
+          },
+          {
+            "n": "Manipura",
+            "c": "#EAB308"
+          }
+        ],
+        "herb": {
+          "name": "Ashwagandha",
+          "tl": "Adrenal glands & endurance before the active phase",
+          "steps": [
+            "1 teaspoon of Ashwagandha powder in 240 ml of warm almond milk",
+            "Pinch of cardamom + ½ tsp cinnamon (blood sugar stabiliser)",
+            "1 teaspoon of Ghi for maximum absorption of the adaptogen",
+            "Simmer 3 minutes. Cool to hand warmer. Add 1 teaspoon of raw honey",
+            "Drink in the morning — supports the adrenal glands all day"
+          ]
+        }
+      },
+      {
+        "name": "Ovulation phase",
+        "season": "Summer",
+        "dosha": "Pitta Peak · Radiance",
+        "icon": "☀️",
+        "color": "#D4924A",
+        "days": "14–15",
+        "minHeader": "B vitamins, Antioxidants & LH support",
+        "minIntro": "Estrogen and LH are at an absolute peak. Testosterone rises. The liver is hard at work breaking down the estrogen spike — B vitamins, antioxidants and selenium are critical now.",
+        "minerals": [
+          {
+            "icon": "🌾",
+            "mineral": "B complex",
+            "food": "Quinoa & amaranth",
+            "amount": "100g quinoa = B1, B2, B3, B6, folate",
+            "fn": "Fuel for the LH spike & liver metabolism",
+            "tags": [
+              "#Bvitamins",
+              "#liver",
+              "#LH"
+            ],
+            "bio": "B vitamins (especially B6 and B2) are critical cofactors for the CYP450 enzymes in the liver that break down the estrogen peak at ovulation. Without enough B6 → estrogen circulates longer → pimples and mood swings. Quinoa is complete protein + complete B complex in one source."
+          },
+          {
+            "icon": "🥬",
+            "mineral": "Chlorophyll & Iron",
+            "food": "Spinach & kale",
+            "amount": "Large handful = 2mg iron + chlorophyll",
+            "fn": "Oxygenates the blood for peak physical output",
+            "tags": [
+              "#chlorophyll",
+              "#iron",
+              "#oxygenation"
+            ],
+            "bio": "Chlorophyll has a molecular structure almost identical to hemoglobin. During ovulation, when the body is most active, optimal oxygenation is crucial for fitness, mental clarity and cellular energy."
+          },
+          {
+            "icon": "🍓",
+            "mineral": "Vitamin C",
+            "food": "Raspberries & strawberries",
+            "amount": "100g = 60–80mg vitamin C",
+            "fn": "Supports ovarian function & connective tissue",
+            "tags": [
+              "#vitaminC",
+              "#collagen",
+              "#ovary"
+            ],
+            "bio": "Vitamin C is concentrated in the ovarian tissue in extremely high levels. It protects the follicle from free-radical damage during the LH spike process. In addition, cofactor for collagen synthesis — important for the fallopian tube to function optimally."
+          },
+          {
+            "icon": "🌿",
+            "mineral": "Selenium",
+            "food": "Sesame seeds & Brussels sprouts",
+            "amount": "30g sesame seeds = 8µg selenium",
+            "fn": "Thyroid function & hormonal coherence",
+            "tags": [
+              "#selenium",
+              "#thyroid gland",
+              "#hormone"
+            ],
+            "bio": "Selenium is a critical cofactor for thyroperoxidase — the enzyme that produces thyroid hormones (T3, T4). The thyroid gland is intimately connected to ovarian hormone production. Selenium deficiency → disturbed ovulation and shorter luteal phase."
+          }
+        ],
+        "career": [
+          {
+            "t": "📣 The most important meeting today",
+            "d": "LH + estrogen + testosterone at simultaneous peak. Your verbal ability, charisma and persuasiveness are chemically maximized. Book the salary interview HERE."
+          },
+          {
+            "t": "🎤 Speak in front of people",
+            "d": "Serotonin, dopamine and oxytocin are all elevated. You are magnetic. Go on camera, hold the workshop, pitch the idea."
+          },
+          {
+            "t": "🤝 Network & negotiate",
+            "d": "Optimal day for business dinners and partnerships. Testosterone gives you the courage to ask what you otherwise wouldn't dare."
+          }
+        ],
+        "vedic": [
+          {
+            "icon": "🗣️",
+            "t": "Sitali Pranayama",
+            "s": "Cooling breath — channels peak Pitta without overheating. Roll the tongue, inhale cold, out through the nose."
+          },
+          {
+            "icon": "⚔️",
+            "t": "Virabhadrasana I & II",
+            "s": "Warrior Stances — conduit for peak strength and courage. Add Ustrasana (The Camel) for heart opening."
+          },
+          {
+            "icon": "💙",
+            "t": "Vishuddha Chakra",
+            "s": "The Throat Chakra and the Thyroid Gland are maximally activated — communication, truth and radiance. Tone HIM."
+          },
+          {
+            "icon": "🌕",
+            "t": "Full moon practice",
+            "s": "If ovulation coincides with a full moon: bathe in the moonlight and set your deepest intentions."
+          }
+        ],
+        "chakraText": "Vishuddha (throat) and Anahata (heart) are wide open. The thyroid gland and the ovaries work together at their best. The testosterone peak also activates Manipura — you are brave, strong and communicative. Quantum coherence in the hormonal system.",
+        "chakras": [
+          {
+            "n": "Anahata",
+            "c": "#10B981"
+          },
+          {
+            "n": "Vishuddha",
+            "c": "#06B6D4"
+          },
+          {
+            "n": "Manipura",
+            "c": "#EAB308"
+          }
+        ],
+        "herb": {
+          "name": "Shatavari (Full Dose)",
+          "tl": "Anahata Elixir — Peak Ovulation",
+          "steps": [
+            "1.5 tsp Shatavari in 240 ml warm coconut milk",
+            "2–3 strands of saffron — Pitta-cooling and LH-supporting",
+            "1 tsp Ghi + 3 drops rose water",
+            "Simmer 5 minutes. Cool well. Add 1 teaspoon of raw honey",
+            "Drink in the middle of the day — at the peak of your energy"
+          ]
+        }
+      },
+      {
+        "name": "Luteal phase",
+        "season": "Autumn",
+        "dosha": "Vata rises · Progesterone dominates",
+        "icon": "🍂",
+        "color": "#B56057",
+        "days": "16–28",
+        "minHeader": "Magnesium, B6 & Progesterone support",
+        "minIntro": "Progesterone dominates. Blood sugar sensitivity increases dramatically. Cortisol and progesterone compete for the same receptors — stress management is now a hormonal tool.",
+        "minerals": [
+          {
+            "icon": "🍫",
+            "mineral": "Magnesium",
+            "food": "Raw cacao",
+            "amount": "2 tablespoons = 150mg magnesium",
+            "fn": "The uterus relaxes, sweet tooth decreases, sleep improves",
+            "tags": [
+              "#magnesium",
+              "#cramps",
+              "#sweetheart",
+              "#GABA"
+            ],
+            "bio": "Magnesium is antagonistic to calcium in muscle cells — it prevents too strong uterine contractions. Supports the GABA receptors (same as progesterone) → better sleep. Also lowers cortisol levels directly. Raw cocoa is the richest source — 100g contains up to 500mg of magnesium."
+          },
+          {
+            "icon": "🍠",
+            "mineral": "B6 & Beta Carotene",
+            "food": "Sweet potato",
+            "amount": "½ medium = 0.3mg B6",
+            "fn": "Progesterone production & blood sugar stabilization",
+            "tags": [
+              "#B6",
+              "#progesterone",
+              "#blood sugar"
+            ],
+            "bio": "Vitamin B6 is a direct cofactor for progesterone biosynthesis in the corpus luteum. Low B6 → lower progesterone → estrogen dominance → PMS. Beta-carotene is a precursor to Vitamin A, which is needed for the function of the corpus luteum. The complex carbohydrate stabilizes blood sugar and lowers cortisol response."
+          },
+          {
+            "icon": "🌻",
+            "mineral": "B6 & Selenium",
+            "food": "Sunflower seeds",
+            "amount": "1 tablespoon daily days 15–28",
+            "fn": "Corpus luteum progesterone production — Alisa Vitti's #1 choice",
+            "tags": [
+              "#B6",
+              "#selenium",
+              "#yellowbody",
+              "#progesterone"
+            ],
+            "bio": "Sunflower seeds are Alisa Vitti's favorite for the luteal phase. The combination of B6, selenium and vitamin E supports the corpus luteum's capacity to produce progesterone throughout the luteal phase. Eat 1 tablespoon daily on days 15–28 on salads, soup or smoothies."
+          },
+          {
+            "icon": "🫘",
+            "mineral": "Fiber & Zinc",
+            "food": "Chickpeas",
+            "amount": "100g = 5g fiber + 1.5mg zinc",
+            "fn": "Eliminates excess estrogen via the gut",
+            "tags": [
+              "#fiber",
+              "#zinc",
+              "#estrogen",
+              "#intestinal"
+            ],
+            "bio": "In the luteal phase, it is critical that estrogen that has been used up leaves the body via the intestine. Fiber binds conjugated estrogen and prevents reabsorption (enterohepatic recirculation). Lack of fiber → estrogen is reabsorbed → relative estrogen dominance despite rising progesterone → PMS."
+          }
+        ],
+        "career": [
+          {
+            "t": "📋 Detail work & implementation",
+            "d": "Progesterone shifts the brain into analytical, detail-focused mode. Perfect for budget review, contract editing and admin work."
+          },
+          {
+            "t": "🔒 Close shops",
+            "d": "Your critical eye is sharpest now. Review numbers, complete projects, submit what you worked on. It's harvest time."
+          },
+          {
+            "t": "🧘 Set boundaries (late luteal)",
+            "d": "Days 22–28: Cut back on social commitments. That's neurobiology, not introversion. Honor the need for retreat without guilt."
+          }
+        ],
+        "vedic": [
+          {
+            "icon": "🌬️",
+            "t": "Nadi Shodhana",
+            "s": "Alternate nose breathing — balances left/right brain, stabilizes Vata and mood swings. 10–15 min daily."
+          },
+          {
+            "icon": "🧘",
+            "t": "Malasana & Paschimottanasana",
+            "s": "Basic hip opener and forward fold. Activates Apana Vayu and grounds rising Vata. Hold for 2–3 min."
+          },
+          {
+            "icon": "🔴",
+            "t": "Muladhara + Ajna",
+            "s": "The root chakra (grounding) and the forehead chakra (inner wisdom) are activated in the autumn phase. Meditation mantra: So Hum."
+          },
+          {
+            "icon": "📖",
+            "t": "Svadhyaya — Self-Studies",
+            "s": "Vedic practice for the luteal: journaling, reflection, integration of the cycle that passed. What worked? What should be changed?"
+          }
+        ],
+        "chakraText": "In the luteal phase, Muladhara (root) and Ajna (forehead/intuition) are the most active. The adrenal glands are under pressure — cortisol competes with progesterone. Nadi Shodhana is the only pranayama that directly balances the HPA axis biochemically via the vagus nerve.",
+        "chakras": [
+          {
+            "n": "Muladhara",
+            "c": "#EF4444"
+          },
+          {
+            "n": "Ajna",
+            "c": "#818CF8"
+          }
+        ],
+        "herb": {
+          "name": "Ashwagandha (Critical Phase)",
+          "tl": "Cortisol Shield for Progesterone Day 15–28",
+          "steps": [
+            "1 teaspoon Ashwagandha + ½ teaspoon raw cocoa powder in 240 ml warm oat milk",
+            "Pinch of cinnamon (blood sugar stabilizing and anti-inflammatory)",
+            "1 tsp Ghi (supports progesterone's fat-soluble nature and absorption)",
+            "Simmer 3 min. Cool to hand warmer. Add 1 teaspoon of raw honey",
+            "Drink every night days 15-28 — your progesterone shield against stress"
+          ]
+        }
+      }
+    ],
+    "hormones": {
+      "prog": {
+        "label": "Progesterone",
+        "color": "#A78BFA",
+        "cls": "hp prog",
+        "title": "Progesterone — The body's natural Valium",
+        "sub": "Produced in the corpus luteum after ovulation",
+        "body": [
+          {
+            "h": "What it is",
+            "t": "Produced in the corpus luteum — the structure that forms in the ovary after the egg is released. It is the body's natural calming hormone."
+          },
+          {
+            "h": "What it does",
+            "t": "Prepares the endometrium and acts as a natural anti-anxiety agent via the GABA receptors in the brain — just like benzodiazepines, but endogenously."
+          },
+          {
+            "h": "Reaching peak",
+            "t": "Days 19–22. If it is too low relative to estrogen, estrogen dominance occurs → PMS, anxiety, sweet tooth and mood swings."
+          }
+        ],
+        "tags": [
+          "#Magnesium",
+          "#B6",
+          "#Zinc",
+          "#Ashwagandha",
+          "#Sunflower seeds"
+        ]
+      },
+      "ostr": {
+        "label": "Estrogen",
+        "color": "#F472B6",
+        "cls": "hp ostr",
+        "title": "Estrogen — The Builder & Communicator",
+        "sub": "Estradiol E2 — primary sex hormone",
+        "body": [
+          {
+            "h": "What it is",
+            "t": "Produced in the granulosa cells of the ovarian follicles. Increases strongly in the follicular phase and reaches a peak at ovulation (day 13–14)."
+          },
+          {
+            "h": "What it does",
+            "t": "Builds the endometrium, increases serotonin and dopamine, improves memory and verbal ability. Gives the skin shine and increases lubrication."
+          },
+          {
+            "h": "Peak day 13–14",
+            "t": "You are at your most charismatic and talkative. Plan important meetings and presentations HERE."
+          },
+          {
+            "h": "Estrogen dominance",
+            "t": "If the liver does not break it down efficiently → PMS, weight gain, pimples. Broccoli, fiber and probiotics are the antidotes."
+          }
+        ],
+        "tags": [
+          "#Indole3carbinol",
+          "#Fiber",
+          "#Probiotics",
+          "#Broccoli",
+          "#Kimchi"
+        ]
+      },
+      "fsh": {
+        "label": "FSH",
+        "color": "#60A5FA",
+        "cls": "hp-fsh",
+        "title": "FSH — Follicle Stimulating Hormone",
+        "sub": "The awakener of the ovaries — from the pituitary gland",
+        "body": [
+          {
+            "h": "What it is",
+            "t": "Produced in the pituitary gland (small gland under the brain) in response to GnRH from the hypothalamus. FSH is the oocyte's alarm clock."
+          },
+          {
+            "h": "What it does",
+            "t": "Stimulates 15-20 follicles in the ovaries to start growing. Only one — the dominant follicle — goes all the way to ovulation."
+          },
+          {
+            "h": "Biochemical chain",
+            "t": "Hypothalamus → GnRH → Pituitary → FSH → Ovaries → Estrogen → negative feedback back to brain."
+          }
+        ],
+        "tags": [
+          "#Zinc",
+          "#VitaminE",
+          "#Omega3"
+        ]
+      },
+      "lh": {
+        "label": "LH",
+        "color": "#34D399",
+        "cls": "hp-lh",
+        "title": "LH — Luteinizing Hormone",
+        "sub": "The spike that releases the egg — 24–36h before ovulation",
+        "body": [
+          {
+            "h": "The LH spike",
+            "t": "Occurs 24-36 hours before ovulation. Acts as a detonator command — the dominant follicle bursts and releases the egg."
+          },
+          {
+            "h": "Day 13–14",
+            "t": "LH increases by 400–800% in 12–16 hours. You feel at your peak physically, socially and sexually right now."
+          },
+          {
+            "h": "After the LH spike",
+            "t": "The empty follicle transforms into the corpus luteum (corpus luteum), which begins to produce progesterone."
+          }
+        ],
+        "tags": [
+          "#Shatavari",
+          "#Selenium",
+          "#VitaminC"
+        ]
+      },
+      "test": {
+        "label": "Testosterone",
+        "color": "#FBBF24",
+        "cls": "hp test",
+        "title": "Testosterone (in women)",
+        "sub": "Drive, libido & confidence",
+        "body": [
+          {
+            "h": "What it is",
+            "t": "Yes — women have testosterone! Produced in the ovaries and adrenal glands, but at much lower levels than in men."
+          },
+          {
+            "h": "What it does",
+            "t": "Increases libido, self-confidence, muscle strength and initiative. It's the 'I can take on the world' hormone."
+          },
+          {
+            "h": "Peak at ovulation",
+            "t": "Testosterone peaks right around day 14. That's WHY you feel your best, dare more and attract more during ovulation."
+          },
+          {
+            "h": "In luteal phase",
+            "t": "Sinks — good to focus inward, details and execution instead of new initiatives."
+          }
+        ],
+        "tags": [
+          "#Ashwagandha",
+          "#Magnesium",
+          "#B5",
+          "#Zinc"
+        ]
+      }
+    },
+    "chakras": {
+      "Muladhara": "Root Chakra (red) — connected to the pelvic floor, adrenal glands and basic security. Activate with LAM toning, standing yoga positions and walking barefoot on grass.",
+      "Svadhisthana": "Sacral chakra (orange) — the ovaries and reproductive system. Activate with fluid movement, dance, water and creative activities. Tone VAM.",
+      "Manipura": "Solar plexus (yellow) — the liver, adrenal glands and willpower. Activate with Kapalabhati, twists in yoga and castor oil massage. Tone RAM.",
+      "Anahata": "Heart chakra (green) — thymus and immune system. Activate with yoga heart opener, Bhramari breath and loving self care ritual. Tone YAM.",
+      "Vishuddha": "Throat chakra (turquoise) — the thyroid gland. Activate with chant, Sitali breathing and speaking your truth out loud. Tone HIM.",
+      "Ajna": "Forehead chakra (indigo) — pituitary gland and intuition. Activate with Trataka (light focus), Nadi Shodhana and deep meditation in darkness. Fade OVER."
+    },
+    "chartLabels": {
+      "prog": "Progesterone",
+      "ostr": "Estrogen",
+      "fsh": "FSH",
+      "lh": "LH",
+      "test": "Testosterone"
+    },
+    "navExplore": {
+      "title": "🌸 WomanCode",
+      "sub": "Hormonal knowledge graph — cycle day slider, minerals, Vedic practices, moon milk.",
+      "cta": "Open"
+    }
+  }
+}

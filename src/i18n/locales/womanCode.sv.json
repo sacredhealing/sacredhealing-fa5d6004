@@ -1,0 +1,697 @@
+{
+  "womanCode": {
+    "ui": {
+      "badge": "⟁ Quantum Nexus · WomanCode Intelligence · SQI 2050",
+      "titleLine1": "Din ",
+      "titleGold": "Hormonella",
+      "titleLine2": "Kunskapsgraf",
+      "subtitle": "Klicka på allt — varje mineral, hormon och föda är en ingång till djupare biokemisk kunskap.",
+      "sliderLabel": "⟁ Cykeldagskontroll — Dra för att navigera",
+      "chartLabel": "⟁ Hormonprofil — Klicka för djupinformation",
+      "careerSectionLabel": "⟁ Career & Life Sync",
+      "chakraSectionLabel": "⟁ Körtel & Chakrakoppling",
+      "moonMilkLabelPrefix": "⟁ Vedisk Moon Milk · ",
+      "modalCloseAria": "Stäng",
+      "mineralModalRoleToday": "Funktion idag",
+      "mineralModalBio": "Biokemi",
+      "hormoneLevelDay": "Nivå dag {{day}}",
+      "vedicModalSubtitle": "Vedisk Praxis · {{phase}}",
+      "chakraModalSubtitle": "Chakra & Körtelkoppling",
+      "chakraFallback": "Djup energiintelligens för denna fas.",
+      "tabs": {
+        "minerals": "🌿 Mineraler",
+        "career": "⚡ Career",
+        "vedic": "☽ Vedisk",
+        "moonmilk": "🥛 Moon Milk"
+      },
+      "pips": [
+        "❄️ 1–5",
+        "🌱 6–13",
+        "☀️ 14–15",
+        "🍂 16–28"
+      ]
+    },
+    "phases": [
+      {
+        "name": "Menstruationsfas",
+        "season": "Vinter",
+        "dosha": "Vata stiger · Utrensning",
+        "icon": "❄️",
+        "color": "#5B8FBF",
+        "days": "1–5",
+        "minHeader": "Järn, Zink & Utrensning",
+        "minIntro": "Östrogen och progesteron är på sin lägsta nivå. Kroppen fokuserar på eliminering. Järnförlust är reell — ersätt med växtbaserade källor + C-vitamin för absorption.",
+        "minerals": [
+          {
+            "icon": "🫐",
+            "mineral": "Järn + C-vitamin",
+            "food": "Rödbetor + citron",
+            "amount": "150g = 2.7mg järn",
+            "fn": "Syresätter blodet & motverkar trötthet vid blodförlust",
+            "tags": [
+              "#järn",
+              "#syresättning",
+              "#anemi"
+            ],
+            "bio": "Järn är centralt i hemoglobin — proteinet i röda blodkroppar som transporterar syre. Under menstruationen förlorar du järn via blodet. Kombinera alltid med C-vitamin (citronsaft) för att konvertera icke-hemjärn (Fe³⁺) till absorberbar form (Fe²⁺). Utan C-vitamin absorberas bara 2–3% av järnet — med C-vitamin upp till 30%."
+          },
+          {
+            "icon": "🌰",
+            "mineral": "Zink",
+            "food": "Pumpafrön",
+            "amount": "30g = 2.2mg zink",
+            "fn": "Immunförsvar & muskelavslappning i livmodern",
+            "tags": [
+              "#zink",
+              "#kramper",
+              "#immunitet"
+            ],
+            "bio": "Zink är kofaktor för över 300 enzymer. Under menstruation reglerar det prostaglandiner — de inflammatoriska signalerna som orsakar livmoderkontraktioner och mensvärk. Tillräckligt zink → minskad smärta. Pumpafrön är den rikaste växtbaserade zinkkällan. Rosta dem lätt för bästa biotillgänglighet."
+          },
+          {
+            "icon": "🥬",
+            "mineral": "Folat (B9)",
+            "food": "Spenat & mörka blad",
+            "amount": "Stor näve = 100µg folat",
+            "fn": "Blodcellsproduktion & nervfunktion",
+            "tags": [
+              "#folat",
+              "#B9",
+              "#blodceller"
+            ],
+            "bio": "Folat (B9) är avgörande för att producera nya röda blodkroppar efter menstruationens blodförlust. Kombinera med vitamin B12 (nutritionsjäst) för att stötta DNA-syntes. Undvik överhettning — folat är känsligt för värme, välj lättkokt eller rå spenat."
+          },
+          {
+            "icon": "🫚",
+            "mineral": "Omega-3 (ALA)",
+            "food": "Malda linfrön & valnötter",
+            "amount": "1 msk malda linfrön dagligen",
+            "fn": "Anti-inflammatorisk — minskar prostaglandiner & mensvärk",
+            "tags": [
+              "#omega3",
+              "#inflammation",
+              "#mensvärk"
+            ],
+            "bio": "Omega-3 fatty acids konkurrerar med arakidonsyra om samma enzymer (COX och LOX) som producerar prostaglandiner. Mer omega-3 = färre inflammatoriska prostaglandiner (PGF2α) = minskad livmoderkontraktion och mensvärk. Effekten märks efter 2–3 cykler av konsekvent intag."
+          }
+        ],
+        "career": [
+          {
+            "t": "🔮 Reflektionsdag",
+            "d": "Hjärnans analytiska kapacitet är riktad inåt. Bäst för journaling, utvärdering av månaden och ensamt djuparbete. Dopaminnivåerna är låga — tvinga inte kreativitet."
+          },
+          {
+            "t": "📊 Analysera & granska",
+            "d": "Gå igenom siffror, faktura, kontrakt. Din kritiska blick är skarp. Besluta dock ingenting viktigt — progesteronets fall påverkar riskbedömning."
+          },
+          {
+            "t": "🚫 Skjut upp presentationer",
+            "d": "Boka om möten till follikulär- eller ovulationsfasen. Din verbala och sociala energi är som lägst — det är biokemi, inte svaghet."
+          }
+        ],
+        "vedic": [
+          {
+            "icon": "🐝",
+            "t": "Bhramari Pranayama",
+            "s": "Humleandedräkt — vibration löser upp livmoderspänning via vagusnerven. 5–10 omgångar."
+          },
+          {
+            "icon": "🌙",
+            "t": "Yin Yoga",
+            "s": "Apasana, Supta Baddha Konasana med bolster. Inga inversioner — hedra Apana Vayu (nedåtflödet)."
+          },
+          {
+            "icon": "🔴",
+            "t": "Muladhara Chakra",
+            "s": "Rotchakrat. Jordreferens och grundning. Tona LAM (långt, långsamt). Vila på golvet."
+          },
+          {
+            "icon": "🔕",
+            "t": "Mouna — Tystnad",
+            "s": "Vedisk praxis: välj tystnad i 1 timme dagligen. Stimulerar vagusnerven och sparar prana för läkning."
+          }
+        ],
+        "chakraText": "Under menstruation är energin djupast kopplad till Muladhara (rotchakrat) och bäckenbotten. Sköldkörteln (Vishuddha) och binjurarna (Manipura) behöver vila. Undvik hög stimulans och socialt krävande miljöer.",
+        "chakras": [
+          {
+            "n": "Muladhara",
+            "c": "#EF4444"
+          },
+          {
+            "n": "Svadhisthana",
+            "c": "#F97316"
+          }
+        ],
+        "herb": {
+          "name": "Shatavari",
+          "tl": "Återuppbyggnad av Ojas efter blodförlust",
+          "steps": [
+            "1 tsk Shatavari-pulver i 240 ml varm havremjölk",
+            "1 tsk Ghi — smörjer slemhinnor och stöttar Apana Vayu",
+            "Sjud 3 minuter på låg värme under omrörning",
+            "Kyl till handhett — tillsätt 1 tsk rå honung (aldrig upphetta honung)",
+            "Drick strax innan sömn under dag 1–5"
+          ]
+        }
+      },
+      {
+        "name": "Follikulärfas",
+        "season": "Vår",
+        "dosha": "Kapha-Pitta · Uppbyggnad",
+        "icon": "🌱",
+        "color": "#5FAD72",
+        "days": "6–13",
+        "minHeader": "Vitamin E, Probiotika & Östrogenmetabolism",
+        "minIntro": "FSH stiger och stimulerar follikeltillväxt. Östrogenet klättrar. Levern behöver stöd för att metabolisera det stigande östrogenet — probiotika och indol-3-karbinol är nycklarna.",
+        "minerals": [
+          {
+            "icon": "🥑",
+            "mineral": "Vitamin E",
+            "food": "Avokado",
+            "amount": "½ avokado = 2.7mg vitamin E",
+            "fn": "Stöttar follikeltillväxt & cervikalslem",
+            "tags": [
+              "#vitaminE",
+              "#fertilitet",
+              "#follikel"
+            ],
+            "bio": "Vitamin E är en fettlöslig antioxidant som skyddar den växande follikeln från oxidativ stress. Viktigt för kvaliteten på cervikalslem vid ägglossning. Stöttar även endometriums uppbyggnad via östrogenreceptorerna. Solrosfrön och mandlar är de rikaste kompletterande källorna."
+          },
+          {
+            "icon": "🥦",
+            "mineral": "Indol-3-karbinol (I3C)",
+            "food": "Broccoli & blomkål",
+            "amount": "100g lätt ångad = aktivt I3C",
+            "fn": "Hjälper levern metabolisera östrogen effektivt",
+            "tags": [
+              "#I3C",
+              "#leverstöd",
+              "#östrogen"
+            ],
+            "bio": "Indol-3-karbinol (I3C) i korsblommiga grönsaker aktiverar CYP1A2-enzymet i levern som katalyserar 'god' östrogenmetabolism (2-hydroxyöstrogen). Mer 2-OH östrogen = bättre hormonbalans och lägre cancerrisk. Lätt ångad är optimalt — överhettning förstör I3C."
+          },
+          {
+            "icon": "🫙",
+            "mineral": "Probiotika & Fiber",
+            "food": "Kimchi & surkål",
+            "amount": "2 msk dagligen räcker",
+            "fn": "Östrobolonet — tarmbakteriernas hormonkontroll",
+            "tags": [
+              "#probiotika",
+              "#östrobolom",
+              "#tarm"
+            ],
+            "bio": "Östrobolonet är de tarmbakterier som kontrollerar hur östrogen cirkulerar via enterohepatisk cirkulation. Dysbiose → beta-glukuronidas återaktiverar redan avkonjugerat östrogen → östrogendominans. Lactobacillus och Bifidobacterium i kimchi håller balansen."
+          },
+          {
+            "icon": "💚",
+            "mineral": "Magnesium",
+            "food": "Cashewnötter",
+            "amount": "30g = 83mg magnesium",
+            "fn": "Förbereder nervsystemet för stigande aktivitet",
+            "tags": [
+              "#magnesium",
+              "#nervsystem",
+              "#ATP"
+            ],
+            "bio": "Magnesium är kofaktor för ATP-produktion — kroppens energivaluta. I follikulärfas stiger energin och cellerna behöver mer magnesium för effektiv mitokondriefunktion. Stöttar även COMT-enzymet som bryter ner katekolöstrogen."
+          }
+        ],
+        "career": [
+          {
+            "t": "🚀 Initiera nya projekt",
+            "d": "Dopamin och östrogen stiger. Hjärnan är neuroplastisk och vill lära sig nytt. Det är biokemiskt optimalt att starta nu — dopaminreceptorerna är mest känsliga."
+          },
+          {
+            "t": "🎨 Kreativt brainstorm",
+            "d": "FSH höjer kognitiv flexibilitet. Idégenerering, mind-mapping och visionärt arbete flödar naturligt. Din prefrontala cortex är i högform."
+          },
+          {
+            "t": "🤝 Nätverka varsamt",
+            "d": "Börja nå ut till nya kontakter. Energin bygger — du är inte på peak än (det är ovulation) men du är frisk, nyfiken och engagerande."
+          }
+        ],
+        "vedic": [
+          {
+            "icon": "☀️",
+            "t": "Kapalabhati",
+            "s": "Skallskimrande andedräkt — rensar stagnation från vintern, aktiverar solar plexus. 3 omgångar á 30 andetag."
+          },
+          {
+            "icon": "🌱",
+            "t": "Surya Namaskar",
+            "s": "12 runder solhälsningar — väcker Agni (matsmältningseld) och Shakti-energin. Bygg upp gradvis."
+          },
+          {
+            "icon": "💫",
+            "t": "Svadhisthana Chakra",
+            "s": "Sacralchakrat — kreativitet, sexuell energi och flöde vaknar. Tona VAM. Hip-openers i yoga."
+          },
+          {
+            "icon": "🕯️",
+            "t": "Trataka — Ljusfokus",
+            "s": "Stirra på ett stearinljus 3–5 min utan att blinka. Stärker Ajna (tredje ögat) och koncentration."
+          }
+        ],
+        "chakraText": "Svadhisthana (sacral) och Manipura (solar plexus) vaknar. Äggstockarna och binjurarna är mest aktiva. Hormonsystemet drivs av hypotalamus–hypofys–äggstock-axeln. Stöd med B-vitaminer och lätta sattviska livsmedel.",
+        "chakras": [
+          {
+            "n": "Svadhisthana",
+            "c": "#F97316"
+          },
+          {
+            "n": "Manipura",
+            "c": "#EAB308"
+          }
+        ],
+        "herb": {
+          "name": "Ashwagandha",
+          "tl": "Binjurar & uthållighet inför den aktiva fasen",
+          "steps": [
+            "1 tsk Ashwagandha-pulver i 240 ml varm mandelmjölk",
+            "Nypa kardemumma + ½ tsk kanel (blodsockerstabiliserande)",
+            "1 tsk Ghi för maximal absorption av adaptogenet",
+            "Sjud 3 minuter. Kyl till handhett. Tillsätt 1 tsk rå honung",
+            "Drick på morgonen — stöttar binjurarna hela dagen"
+          ]
+        }
+      },
+      {
+        "name": "Ovulationsfas",
+        "season": "Sommar",
+        "dosha": "Pitta Topp · Utstrålning",
+        "icon": "☀️",
+        "color": "#D4924A",
+        "days": "14–15",
+        "minHeader": "B-vitaminer, Antioxidanter & LH-stöd",
+        "minIntro": "Östrogen och LH är på absolut topp. Testosteron stiger. Levern arbetar hårt med att bryta ner östrogentoppen — B-vitaminer, antioxidanter och selen är kritiska nu.",
+        "minerals": [
+          {
+            "icon": "🌾",
+            "mineral": "B-komplex",
+            "food": "Quinoa & amarant",
+            "amount": "100g quinoa = B1,B2,B3,B6,folat",
+            "fn": "Bränsle för LH-spiken & levermetabolism",
+            "tags": [
+              "#Bvitaminer",
+              "#lever",
+              "#LH"
+            ],
+            "bio": "B-vitaminer (särskilt B6 och B2) är kritiska kofaktorer för CYP450-enzymerna i levern som bryter ner östrogen-toppen vid ovulation. Utan tillräckligt B6 → östrogen cirkulerar längre → finnar och humörsvängningar. Quinoa är komplett protein + komplett B-komplex i en källa."
+          },
+          {
+            "icon": "🥬",
+            "mineral": "Klorofyll & Järn",
+            "food": "Spenat & grönkål",
+            "amount": "Stor handfull = 2mg järn + klorofyll",
+            "fn": "Syresätter blodet för peak fysisk output",
+            "tags": [
+              "#klorofyll",
+              "#järn",
+              "#syresättning"
+            ],
+            "bio": "Klorofyll har en molekylstruktur nästan identisk med hemoglobin. Under ovulation när kroppen är som mest aktiv är optimal syresättning avgörande för kondition, mental klarhet och cellulär energi."
+          },
+          {
+            "icon": "🍓",
+            "mineral": "Vitamin C",
+            "food": "Hallon & jordgubbar",
+            "amount": "100g = 60–80mg vitamin C",
+            "fn": "Stöttar äggstockarnas funktion & bindväv",
+            "tags": [
+              "#vitaminC",
+              "#kollagen",
+              "#äggstock"
+            ],
+            "bio": "Vitamin C koncentreras i äggstockvävnaden i extremt höga nivåer. Det skyddar follikeln från fri-radikalskada under LH-spike-förloppet. Dessutom kofaktor för kollagensyntes — viktigt för äggledaren att fungera optimalt."
+          },
+          {
+            "icon": "🌿",
+            "mineral": "Selen",
+            "food": "Sesamfrön & brysselkål",
+            "amount": "30g sesamfrön = 8µg selen",
+            "fn": "Sköldkörtelfunktion & hormonell koherens",
+            "tags": [
+              "#selen",
+              "#sköldkörtel",
+              "#hormon"
+            ],
+            "bio": "Selen är kritisk kofaktor för thyreoperoxidas — enzymet som producerar sköldkörtelhormoner (T3, T4). Sköldkörteln är intimt kopplad till äggstockarnas hormonproduktion. Selenbrist → störd ägglossning och kortare lutealfas."
+          }
+        ],
+        "career": [
+          {
+            "t": "📣 Det viktigaste mötet idag",
+            "d": "LH + östrogen + testosteron på simultant topp. Din verbala förmåga, karisma och övertygningskraft är kemiskt maximerade. Boka lönesamtalet HIT."
+          },
+          {
+            "t": "🎤 Tala inför folk",
+            "d": "Serotonin, dopamin och oxytocin är alla förhöjda. Du är magnetisk. Gå on camera, håll workshopen, pitcha idén."
+          },
+          {
+            "t": "🤝 Nätverka & förhandla",
+            "d": "Optimal dag för affärsmiddagar och partnerskap. Testosteronet ger dig mod att fråga det du annars inte vågar."
+          }
+        ],
+        "vedic": [
+          {
+            "icon": "🗣️",
+            "t": "Sitali Pranayama",
+            "s": "Svalkande andedräkt — kanaliserar topp-Pitta utan övervärmning. Rulla tungan, andas in kallt, ut genom näsan."
+          },
+          {
+            "icon": "⚔️",
+            "t": "Virabhadrasana I & II",
+            "s": "Krigarpositioner — kanal för peak-styrka och mod. Lägg till Ustrasana (Kamelen) för hjärtöppning."
+          },
+          {
+            "icon": "💙",
+            "t": "Vishuddha Chakra",
+            "s": "Halschakrat och sköldkörteln aktiveras maximalt — kommunikation, sanning och utstrålning. Tona HAM."
+          },
+          {
+            "icon": "🌕",
+            "t": "Fullmånspraxis",
+            "s": "Om ovulation sammanfaller med fullmåne: bada i månljuset och sätt dina djupaste intentioner."
+          }
+        ],
+        "chakraText": "Vishuddha (hals) och Anahata (hjärta) är vidöppna. Sköldkörteln och äggstockarna samverkar på topp. Testosteron-peaken aktiverar även Manipura — du är modig, stark och kommunikativ. Kvantum-koherens i hormonsystemet.",
+        "chakras": [
+          {
+            "n": "Anahata",
+            "c": "#10B981"
+          },
+          {
+            "n": "Vishuddha",
+            "c": "#06B6D4"
+          },
+          {
+            "n": "Manipura",
+            "c": "#EAB308"
+          }
+        ],
+        "herb": {
+          "name": "Shatavari (Full Dos)",
+          "tl": "Anahata Elixir — Peak Ovulation",
+          "steps": [
+            "1.5 tsk Shatavari i 240 ml varm kokosmjölk",
+            "2–3 saffranstrådar — Pitta-svalkande och LH-stödjande",
+            "1 tsk Ghi + 3 droppar rosenvatten",
+            "Sjud 5 minuter. Kyl väl. Tillsätt 1 tsk rå honung",
+            "Drick mitt på dagen — på höjdpunkten av din energi"
+          ]
+        }
+      },
+      {
+        "name": "Lutealfas",
+        "season": "Höst",
+        "dosha": "Vata stiger · Progesteron dominerar",
+        "icon": "🍂",
+        "color": "#B56057",
+        "days": "16–28",
+        "minHeader": "Magnesium, B6 & Progesteronstöd",
+        "minIntro": "Progesteron dominerar. Blodsocker-känsligheten ökar dramatiskt. Kortisol och progesteron konkurrerar om samma receptorer — stresshantering är nu ett hormonellt verktyg.",
+        "minerals": [
+          {
+            "icon": "🍫",
+            "mineral": "Magnesium",
+            "food": "Råkakao",
+            "amount": "2 msk = 150mg magnesium",
+            "fn": "Livmodern slappnar av, sötsug minskar, sömn förbättras",
+            "tags": [
+              "#magnesium",
+              "#kramper",
+              "#sötsug",
+              "#GABA"
+            ],
+            "bio": "Magnesium är antagonist till kalcium i muskelceller — det hindrar för kraftiga livmodersammandragningar. Stöttar GABA-receptorerna (samma som progesteron) → bättre sömn. Sänker även kortisolnivåerna direkt. Råkakao är den rikaste källan — 100g innehåller upp till 500mg magnesium."
+          },
+          {
+            "icon": "🍠",
+            "mineral": "B6 & Betakaroten",
+            "food": "Sötpotatis",
+            "amount": "½ medelstor = 0.3mg B6",
+            "fn": "Progesteronproduktion & blodsockerstabilisering",
+            "tags": [
+              "#B6",
+              "#progesteron",
+              "#blodsocker"
+            ],
+            "bio": "Vitamin B6 är en direkt kofaktor för progesteronbiosyntesen i gulkroppen. Lågt B6 → lägre progesteron → östrogendominans → PMS. Betakaroten är prekursor till Vitamin A som behövs för gulkroppens funktion. Det komplexa kolhydratet stabiliserar blodsockret och sänker kortisolsvar."
+          },
+          {
+            "icon": "🌻",
+            "mineral": "B6 & Selen",
+            "food": "Solrosfrön",
+            "amount": "1 msk dagligen dag 15–28",
+            "fn": "Gulkroppens progesteronproduktion — Alisa Vittis #1 val",
+            "tags": [
+              "#B6",
+              "#selen",
+              "#gulkropp",
+              "#progesteron"
+            ],
+            "bio": "Solrosfrön är Alisa Vittis favorit för lutealfasen. Kombinationen av B6, selen och vitamin E stöttar gulkroppens (corpus luteum) kapacitet att producera progesteron under hela lutealfasen. Ät 1 msk dagligen dag 15–28 på sallader, soppa eller smoothies."
+          },
+          {
+            "icon": "🫘",
+            "mineral": "Fiber & Zink",
+            "food": "Kikärter",
+            "amount": "100g = 5g fiber + 1.5mg zink",
+            "fn": "Eliminerar överskottsöstrogen via tarmen",
+            "tags": [
+              "#fiber",
+              "#zink",
+              "#östrogen",
+              "#tarm"
+            ],
+            "bio": "I lutealfas är det kritiskt att östrogen som tjänat klart lämnar kroppen via tarmen. Fiber binder konjugerat östrogen och förhindrar återupptag (enterohepatisk recirkulation). Brist på fiber → östrogen återabsorberas → relativ östrogendominans trots stigande progesteron → PMS."
+          }
+        ],
+        "career": [
+          {
+            "t": "📋 Detaljarbete & genomförande",
+            "d": "Progesteron skiftar hjärnan till analytiskt, detalj-fokuserat läge. Perfekt för budgetgranskning, kontraktredigering och adminarbete."
+          },
+          {
+            "t": "🔒 Stäng affärer",
+            "d": "Din kritiska blick är skarpast nu. Granska siffror, färdigställ projekt, skicka in det du arbetat på. Det är skördetiden."
+          },
+          {
+            "t": "🧘 Sätt gränser (sen luteal)",
+            "d": "Dag 22–28: Dra ner på sociala åtaganden. Det är neurobiologi, inte introversion. Hedra behovet av reträtt utan skuldkänslor."
+          }
+        ],
+        "vedic": [
+          {
+            "icon": "🌬️",
+            "t": "Nadi Shodhana",
+            "s": "Växelvis näsandning — balanserar vänster/höger hjärnhalva, stabiliserar Vata och humörsvängningar. 10–15 min dagligen."
+          },
+          {
+            "icon": "🧘",
+            "t": "Malasana & Paschimottanasana",
+            "s": "Grundande höftöppnare och framåtfällning. Aktiverar Apana Vayu och jordar stigande Vata. Håll 2–3 min."
+          },
+          {
+            "icon": "🔴",
+            "t": "Muladhara + Ajna",
+            "s": "Rotchakrat (grundning) och pannchakrat (inre visdom) aktiveras i höstfasen. Meditationsmantra: So Hum."
+          },
+          {
+            "icon": "📖",
+            "t": "Svadhyaya — Självstudier",
+            "s": "Vedisk praxis för luteal: journalföring, reflektion, integration av cykeln som gick. Vad fungerade? Vad ska ändras?"
+          }
+        ],
+        "chakraText": "I lutealfas är Muladhara (rot) och Ajna (pann/intuition) de mest aktiva. Binjurarna är under press — kortisol konkurrerar med progesteron. Nadi Shodhana är den enda pranayaman som direkt balanserar HPA-axeln biokemiskt via vagusnerven.",
+        "chakras": [
+          {
+            "n": "Muladhara",
+            "c": "#EF4444"
+          },
+          {
+            "n": "Ajna",
+            "c": "#818CF8"
+          }
+        ],
+        "herb": {
+          "name": "Ashwagandha (Kritisk Fas)",
+          "tl": "Kortisol-skölden för progesteron dag 15–28",
+          "steps": [
+            "1 tsk Ashwagandha + ½ tsk råkakao-pulver i 240 ml varm havremjölk",
+            "Nypa kanel (blodsockerstabiliserande och anti-inflammatorisk)",
+            "1 tsk Ghi (stöttar progesterons fettlösliga natur och absorption)",
+            "Sjud 3 min. Kyl till handhett. Tillsätt 1 tsk rå honung",
+            "Drick varje kväll dag 15–28 — din progesteronsköld mot stress"
+          ]
+        }
+      }
+    ],
+    "hormones": {
+      "prog": {
+        "label": "Progesteron",
+        "color": "#A78BFA",
+        "cls": "hp-prog",
+        "title": "Progesteron — Kroppens naturliga Valium",
+        "sub": "Produceras i gulkroppen efter ägglossning",
+        "body": [
+          {
+            "h": "Vad det är",
+            "t": "Produceras i gulkroppen — strukturen som bildas i äggstocken efter att ägget frigjorts. Det är kroppens naturliga lugnande hormon."
+          },
+          {
+            "h": "Vad det gör",
+            "t": "Förbereder livmoderslemhinnan och fungerar som ett naturligt ångestdämpande medel via GABA-receptorerna i hjärnan — precis som bensodiazepiner, men endogent."
+          },
+          {
+            "h": "Når topp",
+            "t": "Dag 19–22. Om det är för lågt relativt östrogen uppstår östrogendominans → PMS, ångest, sötsug och humörsvängningar."
+          }
+        ],
+        "tags": [
+          "#Magnesium",
+          "#B6",
+          "#Zink",
+          "#Ashwagandha",
+          "#Solrosfrön"
+        ]
+      },
+      "ostr": {
+        "label": "Östrogen",
+        "color": "#F472B6",
+        "cls": "hp-ostr",
+        "title": "Östrogen — Byggaren & Kommunikatören",
+        "sub": "Östradiol E2 — primärt könshormon",
+        "body": [
+          {
+            "h": "Vad det är",
+            "t": "Produceras i äggstockfolliklarnas granulosaceller. Stiger kraftigt i follikulärfasen och når peak vid ägglossning (dag 13–14)."
+          },
+          {
+            "h": "Vad det gör",
+            "t": "Bygger livmoderslemhinnan, ökar serotonin och dopamin, förbättrar minne och verbal förmåga. Ger huden lyster och ökar lubrikation."
+          },
+          {
+            "h": "Peak dag 13–14",
+            "t": "Du är som mest karismatisk och talkför. Planera viktiga möten och presentationer HÄR."
+          },
+          {
+            "h": "Östrogendominans",
+            "t": "Om levern inte bryter ner det effektivt → PMS, viktuppgång, finnar. Broccoli, fiber och probiotika är motmedlen."
+          }
+        ],
+        "tags": [
+          "#Indol3karbinol",
+          "#Fiber",
+          "#Probiotika",
+          "#Broccoli",
+          "#Kimchi"
+        ]
+      },
+      "fsh": {
+        "label": "FSH",
+        "color": "#60A5FA",
+        "cls": "hp-fsh",
+        "title": "FSH — Follikelstimulerande Hormon",
+        "sub": "Väckaren av äggstockarna — från hypofysen",
+        "body": [
+          {
+            "h": "Vad det är",
+            "t": "Produceras i hypofysen (liten körtel under hjärnan) som svar på GnRH från hypotalamus. FSH är äggcellens väckarklocka."
+          },
+          {
+            "h": "Vad det gör",
+            "t": "Stimulerar 15–20 folliklar i äggstockarna att börja växa. Bara en — den dominanta follikeln — går hela vägen till ägglossning."
+          },
+          {
+            "h": "Biokemisk kedja",
+            "t": "Hypotalamus → GnRH → Hypofys → FSH → Äggstockar → Östrogen → negativ feedback tillbaka till hjärnan."
+          }
+        ],
+        "tags": [
+          "#Zink",
+          "#VitaminE",
+          "#Omega3"
+        ]
+      },
+      "lh": {
+        "label": "LH",
+        "color": "#34D399",
+        "cls": "hp-lh",
+        "title": "LH — Luteiniserande Hormon",
+        "sub": "Spiken som frigör ägget — 24–36h före ägglossning",
+        "body": [
+          {
+            "h": "LH-spiken",
+            "t": "Inträffar 24–36 timmar innan ägglossning. Fungerar som ett detonatorkommando — den dominanta follikeln brister och frigör ägget."
+          },
+          {
+            "h": "Dag 13–14",
+            "t": "LH ökar med 400–800% på 12–16 timmar. Du känner dig på topp fysiskt, socialt och sexuellt just nu."
+          },
+          {
+            "h": "Efter LH-spiken",
+            "t": "Den tomma follikeln omvandlas till corpus luteum (gulkroppen) som börjar producera progesteron."
+          }
+        ],
+        "tags": [
+          "#Shatavari",
+          "#Selen",
+          "#VitaminC"
+        ]
+      },
+      "test": {
+        "label": "Testosteron",
+        "color": "#FBBF24",
+        "cls": "hp-test",
+        "title": "Testosteron (hos kvinnor)",
+        "sub": "Drivkraft, libido & självförtroende",
+        "body": [
+          {
+            "h": "Vad det är",
+            "t": "Ja — kvinnor har testosteron! Produceras i äggstockarna och binjurarna, men i mycket lägre nivåer än hos män."
+          },
+          {
+            "h": "Vad det gör",
+            "t": "Ökar libido, självförtroende, muskelstyrka och initiativförmåga. Det är 'jag kan ta världen'-hormonen."
+          },
+          {
+            "h": "Peak vid ägglossning",
+            "t": "Testosteron når topp precis vid dag 14. Det är DÄRFÖR du känner dig snyggast, vågar mer och attraherar mer under ovulation."
+          },
+          {
+            "h": "I lutealfas",
+            "t": "Sjunker — bra att fokusera inåt, detaljer och genomförande istället för nyinitiativ."
+          }
+        ],
+        "tags": [
+          "#Ashwagandha",
+          "#Magnesium",
+          "#B5",
+          "#Zink"
+        ]
+      }
+    },
+    "chakras": {
+      "Muladhara": "Rotchakrat (röd) — kopplat till bäckenbotten, binjurarna och grundläggande trygghet. Aktivera med LAM-toning, stående yogapositioner och promenader barfota på gräs.",
+      "Svadhisthana": "Sacralchakrat (orange) — äggstockarna och reproduktionssystemet. Aktivera med flytande rörelse, dans, vatten och kreativa aktiviteter. Tona VAM.",
+      "Manipura": "Solar plexus (gul) — levern, binjurarna och viljestyrkan. Aktivera med Kapalabhati, twists i yoga och castorolja-massage. Tona RAM.",
+      "Anahata": "Hjärtchakrat (grön) — thymus och immunsystem. Aktivera med hjärtöppnare i yoga, Bhramari-andedräkt och kärleksfull självomsorgsritual. Tona YAM.",
+      "Vishuddha": "Halschakrat (turkos) — sköldkörteln. Aktivera med sång, Sitali-andning och att tala din sanning högt. Tona HAM.",
+      "Ajna": "Pannchakrat (indigo) — hypofysen och intuition. Aktivera med Trataka (ljusfokus), Nadi Shodhana och djup meditation i mörker. Tona OM."
+    },
+    "chartLabels": {
+      "prog": "Progesteron",
+      "ostr": "Östrogen",
+      "fsh": "FSH",
+      "lh": "LH",
+      "test": "Testosteron"
+    },
+    "navExplore": {
+      "title": "🌸 Hormon",
+      "sub": "Hormonell kunskapsgraf — cykeldag, mineraler, vediska metoder, moon milk.",
+      "cta": "Öppna"
+    }
+  }
+}

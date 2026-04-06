@@ -306,6 +306,51 @@ export default function Explore() {
           <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{t('converge.toolYantraSub')}</div>
           <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
         </div>
+        <div
+          onClick={() => navigate('/womancode')}
+          style={{
+            background: 'linear-gradient(135deg,rgba(244,114,182,0.08),rgba(212,175,55,0.04))',
+            border: '1px solid rgba(244,114,182,0.22)',
+            borderRadius: 18,
+            padding: '18px 15px',
+            cursor: 'pointer',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          <div style={{ position: 'absolute', top: 10, right: 10 }}>
+            <Badge label="SQI" v="muted" />
+          </div>
+          <TI>
+            <span style={{ fontSize: 18 }} aria-hidden>🌸</span>
+          </TI>
+          <div
+            style={{
+              fontFamily: "'Montserrat',sans-serif",
+              fontSize: 7.5,
+              fontWeight: 800,
+              letterSpacing: '0.38em',
+              textTransform: 'uppercase',
+              color: 'rgba(244,114,182,0.75)',
+              marginBottom: 5,
+              whiteSpace: 'pre-line',
+            }}
+          >
+            {t('womanCode.navExplore.title')}
+          </div>
+          <div
+            style={{
+              fontFamily: "'Cormorant Garamond',serif",
+              fontStyle: 'italic',
+              fontSize: '0.8rem',
+              color: 'rgba(255,255,255,0.3)',
+              lineHeight: 1.4,
+            }}
+          >
+            {t('womanCode.navExplore.sub')}
+          </div>
+          <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
+        </div>
         <div onClick={() => hasFeatureAccess(isAdmin, tier, FEATURE_TIER.palmOracle) ? navigate('/hand-analyzer') : navigate('/akasha-infinity')} style={{ gridColumn: 'span 2', background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)', borderRadius: 18, padding: '18px 16px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: 10, right: 10 }}><Badge label={t('converge.badgePremium')} /></div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
