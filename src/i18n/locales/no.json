@@ -1551,7 +1551,42 @@
       "cardStep5": "Bytt din SOL mot SHC ved å bruke token-adressen ovenfor",
       "cardTip": "Tips: Phantoms innebygde \"Kjøp\"-funksjon lar deg kjøpe krypto direkte med kortet ditt – ingen ekstern børs nødvendig!",
       "tradeOnRaydium": "Handle SHC på Raydium"
+    },
+    "polymarketCard": {
+      "title": "Polymarket-bot",
+      "description": "Sovereign HFT-terminal. Paper først. Livehandel når godkjent. Polygon + USDC.e.",
+      "footerTag": "LATENSFORDEL + MIKROARBITRASJE",
+      "badgeNew": "NYTT • SQI 2050",
+      "badgeSovereign": "SUVEREN",
+      "cta": "Åpne terminal"
     }
+  },
+  "polymarketBot": {
+    "title": "Polymarket-bot",
+    "headerBadge": "SQI 2050 • SUVEREN",
+    "statusTitle": "PAPERHANDELSMODUS",
+    "statusLine": "Livehandel venter på godkjenning. Simuleringer på Polygon + USDC.e.",
+    "statWinRate": "Vinnrate 68,4 %",
+    "statSharpe": "Sharpe 2,14",
+    "statMaxDd": "Maks DD -4,2 %",
+    "pipelineTitle": "Utføringspipeline",
+    "pipeScanTitle": "SKANN",
+    "pipeScanDesc": "Live orderbøker, spreads og latensfølsomme feeds.",
+    "pipeResearchTitle": "FORSKNING",
+    "pipeResearchDesc": "Kryssjekk narrativer, on-chain-flyt og posisjonering.",
+    "pipePredictTitle": "FORUTSI",
+    "pipePredictDesc": "Modeller rettferdig sannsynlighet mot markedspris.",
+    "pipeRiskTitle": "RISIKO",
+    "pipeRiskDesc": "Størrelse med tak for eksponering, drawdown og venue.",
+    "pipeSignalTitle": "SIGNAL",
+    "pipeSignalDesc": "Paper-fills; live utførelse krever godkjenning.",
+    "kellyTitle": "Kvart-Kelly-kalkulator",
+    "bankrollLabel": "Bankroll (USD)",
+    "winProbLabel": "Vinnersannsynlighet (%)",
+    "calculatePosition": "Beregn posisjon",
+    "recommendedPosition": "Anbefalt posisjon: {{amount}}",
+    "recommendedPositionZero": "Ingen matematisk fordel ved denne vinnersannsynligheten — anbefalt posisjon $0.",
+    "launchCta": "Start full bot →"
   },
   "badges": {
     "firstMeditation": "Første meditasjon",

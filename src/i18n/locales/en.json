@@ -2141,7 +2141,42 @@
       "cardStep5": "Swap your SOL for SHC using the token address above",
       "cardTip": "Tip: Phantom's built-in \"Buy\" feature lets you purchase crypto directly with your card—no external exchange needed!",
       "tradeOnRaydium": "Trade SHC on Raydium"
+    },
+    "polymarketCard": {
+      "title": "Polymarket Bot",
+      "description": "Sovereign HFT terminal. Paper-first. Live trading when approved. Polygon + USDC.e.",
+      "footerTag": "LATENCY EDGE + MICRO-ARBITRAGE",
+      "badgeNew": "NEW • SQI 2050",
+      "badgeSovereign": "SOVEREIGN",
+      "cta": "Open Terminal"
     }
+  },
+  "polymarketBot": {
+    "title": "Polymarket Bot",
+    "headerBadge": "SQI 2050 • SOVEREIGN",
+    "statusTitle": "PAPER TRADING MODE",
+    "statusLine": "Live trading pending approval. Currently running simulations on Polygon + USDC.e.",
+    "statWinRate": "Win Rate 68.4%",
+    "statSharpe": "Sharpe 2.14",
+    "statMaxDd": "Max DD -4.2%",
+    "pipelineTitle": "Execution pipeline",
+    "pipeScanTitle": "SCAN",
+    "pipeScanDesc": "Ingest live order books, spreads, and latency-sensitive feeds.",
+    "pipeResearchTitle": "RESEARCH",
+    "pipeResearchDesc": "Cross-check narratives, on-chain flow, and crowd positioning.",
+    "pipePredictTitle": "PREDICT",
+    "pipePredictDesc": "Estimate fair probability versus displayed market prices.",
+    "pipeRiskTitle": "RISK",
+    "pipeRiskDesc": "Size with caps on exposure, drawdown, and venue concentration.",
+    "pipeSignalTitle": "SIGNAL",
+    "pipeSignalDesc": "Emit paper fills; live execution remains approval-gated.",
+    "kellyTitle": "Quarter-Kelly calculator",
+    "bankrollLabel": "Bankroll (USD)",
+    "winProbLabel": "Win probability (%)",
+    "calculatePosition": "Calculate Position",
+    "recommendedPosition": "Recommended Position: {{amount}}",
+    "recommendedPositionZero": "No mathematical edge at this win rate — recommended position $0.",
+    "launchCta": "Launch Full Bot →"
   },
   "education": {
     "title": "Education Hub",

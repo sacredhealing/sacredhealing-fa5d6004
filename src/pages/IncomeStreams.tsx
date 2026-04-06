@@ -94,13 +94,14 @@ const IncomeStreams: React.FC = () => {
         title_sv: null,
         title_es: null,
         title_no: null,
-        description: 'Sovereign HFT terminal. Paper-first. Live when approved. Polygon + USDC.e.',
+        description:
+          'Sovereign HFT terminal. Paper-first. Live trading when approved. Polygon + USDC.e.',
         description_sv: null,
         description_es: null,
         description_no: null,
         link: '/polymarket-bot',
         category: 'AI',
-        potential_earnings: 'Latency edge + micro-arbitrage',
+        potential_earnings: 'LATENCY EDGE + MICRO-ARBITRAGE',
         potential_earnings_sv: null,
         potential_earnings_es: null,
         potential_earnings_no: null,
@@ -192,68 +193,97 @@ const IncomeStreams: React.FC = () => {
       </div>
 
       {/* Income Stream Cards Grid */}
-      <div className="px-4 grid gap-4 w-full max-w-full box-border">
+      <div className="box-border grid w-full max-w-full gap-4 px-4">
         {streams.length === 0 ? (
-          <Card className="bg-card/50">
+          <Card className="w-full max-w-full rounded-[20px] bg-card/50">
             <CardContent className="py-12 text-center">
-              <Sparkles className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <Sparkles className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
               <p className="text-muted-foreground">{t('incomeStreams.noStreams', 'No income streams available yet.')}</p>
             </CardContent>
           </Card>
         ) : (
           streams.map((stream) => {
             const IconComponent = getIcon(stream.icon_name);
-            const title = getLocalizedField(stream, 'title') || stream.title;
-            const description = getLocalizedField(stream, 'description') || stream.description;
+            const isPolymarket = stream.internal_slug === 'polymarket-bot';
+            const title = isPolymarket
+              ? t('incomeStreams.polymarketCard.title')
+              : getLocalizedField(stream, 'title') || stream.title;
+            const description = isPolymarket
+              ? t('incomeStreams.polymarketCard.description')
+              : getLocalizedField(stream, 'description') || stream.description;
             const badge = getLocalizedField(stream, 'badge_text') || stream.badge_text;
-            const earnings = getLocalizedField(stream, 'potential_earnings');
-            const colorFrom = stream.color_from || 'primary';
-            const colorTo = stream.color_to || 'primary/70';
+            const earnings = isPolymarket
+              ? t('incomeStreams.polymarketCard.footerTag')
+              : getLocalizedField(stream, 'potential_earnings');
 
             const cardContent = (
-              <Card className="glass-card gold-border overflow-hidden transition-all duration-300 hover:border-[#D4AF37]/25 hover:shadow-[0_0_30px_rgba(212,175,55,0.10)] group cursor-pointer w-full max-w-full rounded-[20px]">
-                <CardContent className="p-0">
-                  <div className="flex items-start sm:items-center gap-3 sm:gap-4 p-4">
-                    {/* Icon */}
-                    <div 
-                      className="w-14 h-14 rounded-[24px] flex items-center justify-center shrink-0 group-hover:scale-[1.03] transition-transform"
-                      style={{
-                        background: stream.internal_slug === 'polymarket-bot'
-                          ? 'linear-gradient(135deg, rgba(212,175,55,0.20) 0%, rgba(34,211,238,0.10) 100%)'
-                          : `linear-gradient(135deg, rgba(212,175,55,0.14) 0%, rgba(255,255,255,0.03) 100%)`,
-                        border: '1px solid rgba(212,175,55,0.16)'
-                      }}
-                    >
-                      <IconComponent className="w-7 h-7 text-[#D4AF37]" />
-                    </div>
-                    
-                    {/* Content */}
-                    <div className="flex-1 min-w-0 overflow-hidden">
-                      <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <h3 className="font-black tracking-[-0.02em] text-white truncate text-base">{title}</h3>
-                        {badge && (
-                          <Badge variant="secondary" className="text-[10px] shrink-0 bg-white/5 border border-white/10 text-white/70 rounded-full">
-                            {badge}
-                          </Badge>
-                        )}
-                        {stream.is_featured && (
-                          <Badge className="bg-[#D4AF37]/15 text-[#D4AF37] text-[10px] shrink-0 rounded-full border border-[#D4AF37]/20">
-                            SOVEREIGN
-                          </Badge>
+              <Card className="group glass-card gold-border w-full max-w-full cursor-pointer overflow-hidden rounded-[20px] transition-all duration-300 hover:border-[#D4AF37]/25 hover:shadow-[0_0_30px_rgba(212,175,55,0.10)]">
+                <CardContent className="w-full min-w-0 p-0">
+                  <div className="flex w-full min-w-0 flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-4">
+                    <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center sm:gap-4">
+                      {/* Icon */}
+                      <div
+                        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[24px] transition-transform group-hover:scale-[1.03]"
+                        style={{
+                          background:
+                            isPolymarket
+                              ? 'linear-gradient(135deg, rgba(212,175,55,0.20) 0%, rgba(34,211,238,0.10) 100%)'
+                              : 'linear-gradient(135deg, rgba(212,175,55,0.14) 0%, rgba(255,255,255,0.03) 100%)',
+                          border: '1px solid rgba(212,175,55,0.16)',
+                        }}
+                      >
+                        <IconComponent className="h-7 w-7 text-[#D4AF37]" />
+                      </div>
+
+                      {/* Content */}
+                      <div className="min-w-0 flex-1 overflow-hidden pr-0 sm:pr-2">
+                        <div className="mb-1 flex flex-wrap items-center gap-2">
+                          <h3 className="min-w-0 max-w-full break-words text-base font-black tracking-[-0.02em] text-white">
+                            {title}
+                          </h3>
+                          {isPolymarket ? (
+                            <>
+                              <span
+                                className="shrink-0 rounded-full border border-[#D4AF37] bg-transparent px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-[#D4AF37]"
+                              >
+                                {t('incomeStreams.polymarketCard.badgeNew')}
+                              </span>
+                              <span
+                                className="shrink-0 rounded-full border border-[#D4AF37] bg-[#D4AF37] px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-[#050505]"
+                              >
+                                {t('incomeStreams.polymarketCard.badgeSovereign')}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              {badge && (
+                                <Badge
+                                  variant="secondary"
+                                  className="shrink-0 rounded-full border border-white/10 bg-white/5 text-[10px] text-white/70"
+                                >
+                                  {badge}
+                                </Badge>
+                              )}
+                              {stream.is_featured && (
+                                <Badge className="shrink-0 rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/15 text-[10px] text-[#D4AF37]">
+                                  SOVEREIGN
+                                </Badge>
+                              )}
+                            </>
+                          )}
+                        </div>
+                        <p className="line-clamp-2 break-words text-sm leading-relaxed text-white/60">
+                          {description || t('incomeStreams.exploreOpportunity', 'Explore this opportunity')}
+                        </p>
+                        {earnings && (
+                          <p className="mt-2 max-w-full break-words text-[10px] font-extrabold tracking-[0.35em] text-[#D4AF37]/80 uppercase">
+                            {earnings}
+                          </p>
                         )}
                       </div>
-                      <p className="text-sm text-white/60 line-clamp-2 break-words leading-relaxed">
-                        {description || t('incomeStreams.exploreOpportunity', 'Explore this opportunity')}
-                      </p>
-                      {earnings && (
-                        <p className="text-[10px] font-extrabold tracking-[0.35em] uppercase text-[#D4AF37]/80 mt-2 truncate">
-                          {earnings}
-                        </p>
-                      )}
                     </div>
-                    
-                    {/* Arrow */}
-                    <ArrowRight className="w-5 h-5 text-white/30 group-hover:text-[#D4AF37] group-hover:translate-x-1 transition-all shrink-0 mt-1 sm:mt-0" />
+
+                    <ArrowRight className="hidden h-5 w-5 shrink-0 text-white/30 transition-all group-hover:translate-x-1 group-hover:text-[#D4AF37] sm:block" />
                   </div>
                 </CardContent>
               </Card>
@@ -261,14 +291,20 @@ const IncomeStreams: React.FC = () => {
 
             if (isInternalLink(stream.link)) {
               return (
-                <Link key={stream.id} to={stream.link} className="block w-full max-w-full">
+                <Link key={stream.id} to={stream.link} className="block w-full max-w-full min-w-0">
                   {cardContent}
                 </Link>
               );
             }
 
             return (
-              <a key={stream.id} href={stream.link} target="_blank" rel="noopener noreferrer" className="block w-full max-w-full">
+              <a
+                key={stream.id}
+                href={stream.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full max-w-full min-w-0"
+              >
                 {cardContent}
               </a>
             );
@@ -278,16 +314,16 @@ const IncomeStreams: React.FC = () => {
 
       {/* Bottom CTA */}
       {streams.length > 0 && (
-        <div className="px-4 mt-8">
-          <Card className="bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20">
-            <CardContent className="p-4 text-center">
-              <Sparkles className="w-8 h-8 text-primary mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground mb-3">
+        <div className="mt-8 w-full max-w-full px-4">
+          <Card className="w-full max-w-full rounded-[20px] border-primary/20 bg-gradient-to-br from-primary/10 to-accent/10">
+            <CardContent className="w-full min-w-0 p-4 text-center">
+              <Sparkles className="mx-auto mb-2 h-8 w-8 text-primary" />
+              <p className="mb-3 text-sm text-muted-foreground">
                 {t('incomeStreams.ctaText', 'Ready to start earning? Explore any stream above to get started.')}
               </p>
-              <Button variant="outline" size="sm" asChild>
-                <Link to="/income-streams/affiliate">
-                  <Users className="w-4 h-4 mr-2" />
+              <Button variant="outline" size="sm" className="w-full rounded-[20px] sm:w-auto" asChild>
+                <Link to="/income-streams/affiliate" className="w-full justify-center sm:w-auto">
+                  <Users className="mr-2 h-4 w-4 shrink-0" />
                   {t('incomeStreams.quickStart', 'Quick Start: Affiliate Program')}
                 </Link>
               </Button>

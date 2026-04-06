@@ -2071,7 +2071,42 @@
       "cardStep5": "Byt din SOL mot SHC med token-adressen ovan",
       "cardTip": "Tips: Phantoms inbyggda \"Köp\"-funktion låter dig köpa krypto direkt med ditt kort—ingen extern börs behövs!",
       "tradeOnRaydium": "Handla SHC på Raydium"
+    },
+    "polymarketCard": {
+      "title": "Polymarket-bot",
+      "description": "Sovereign HFT-terminal. Paper-first. Livehandel när det godkänts. Polygon + USDC.e.",
+      "footerTag": "LATENSKANT + MIKROARBITRAGE",
+      "badgeNew": "NYTT • SQI 2050",
+      "badgeSovereign": "SOUVERÄN",
+      "cta": "Öppna terminal"
     }
+  },
+  "polymarketBot": {
+    "title": "Polymarket-bot",
+    "headerBadge": "SQI 2050 • SOUVERÄN",
+    "statusTitle": "PAPERHANDELSLÄGE",
+    "statusLine": "Livehandel väntar på godkännande. Kör simuleringar på Polygon + USDC.e.",
+    "statWinRate": "Vinstgrad 68,4 %",
+    "statSharpe": "Sharpe 2,14",
+    "statMaxDd": "Max DD -4,2 %",
+    "pipelineTitle": "Exekveringspipeline",
+    "pipeScanTitle": "SKANNA",
+    "pipeScanDesc": "Ta in live orderböcker, spreadar och latenskänsliga flöden.",
+    "pipeResearchTitle": "FORSKNING",
+    "pipeResearchDesc": "Korsa narrativ, on-chain-flöden och folkmassans positionering.",
+    "pipePredictTitle": "FÖRUTSÄG",
+    "pipePredictDesc": "Uppskatta sannolikhet mot visade marknadspriser.",
+    "pipeRiskTitle": "RISK",
+    "pipeRiskDesc": "Storlek med tak för exponering, drawdown och venues.",
+    "pipeSignalTitle": "SIGNAL",
+    "pipeSignalDesc": "Skicka paper-fills; live-exekvering kräver godkännande.",
+    "kellyTitle": "Kvart-Kelly-kalkylator",
+    "bankrollLabel": "Bankrulle (USD)",
+    "winProbLabel": "Vinstsannolikhet (%)",
+    "calculatePosition": "Beräkna position",
+    "recommendedPosition": "Rekommenderad position: {{amount}}",
+    "recommendedPositionZero": "Ingen matematisk kant vid denna vinstsannolikhet — rekommenderad position 0 USD.",
+    "launchCta": "Starta full bot →"
   },
   "education": {
     "title": "Utbildningscenter",

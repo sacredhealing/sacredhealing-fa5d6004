@@ -1580,7 +1580,42 @@
       "cardStep5": "Intercambia tu SOL por SHC usando la dirección del token arriba",
       "cardTip": "Consejo: ¡La función \"Comprar\" integrada de Phantom te permite comprar cripto directamente con tu tarjeta—sin necesidad de intercambio externo!",
       "tradeOnRaydium": "Intercambiar SHC en Raydium"
+    },
+    "polymarketCard": {
+      "title": "Bot Polymarket",
+      "description": "Terminal HFT soberano. Paper primero. Trading en vivo cuando se apruebe. Polygon + USDC.e.",
+      "footerTag": "VENTAJA DE LATENCIA + MICROARBITRAJE",
+      "badgeNew": "NUEVO • SQI 2050",
+      "badgeSovereign": "SOBERANO",
+      "cta": "Abrir terminal"
     }
+  },
+  "polymarketBot": {
+    "title": "Bot Polymarket",
+    "headerBadge": "SQI 2050 • SOBERANO",
+    "statusTitle": "MODO PAPER TRADING",
+    "statusLine": "Trading en vivo pendiente de aprobación. Simulaciones en Polygon + USDC.e.",
+    "statWinRate": "Tasa de acierto 68,4 %",
+    "statSharpe": "Sharpe 2,14",
+    "statMaxDd": "Max DD -4,2 %",
+    "pipelineTitle": "Pipeline de ejecución",
+    "pipeScanTitle": "ESCANEAR",
+    "pipeScanDesc": "Libros en vivo, spreads y feeds sensibles a latencia.",
+    "pipeResearchTitle": "INVESTIGAR",
+    "pipeResearchDesc": "Cruza narrativas, flujo on-chain y posicionamiento.",
+    "pipePredictTitle": "PREDECIR",
+    "pipePredictDesc": "Probabilidad justa frente al precio de mercado.",
+    "pipeRiskTitle": "RIESGO",
+    "pipeRiskDesc": "Tamaño con límites de exposición, drawdown y venue.",
+    "pipeSignalTitle": "SEÑAL",
+    "pipeSignalDesc": "Fills en paper; ejecución en vivo sujeta a aprobación.",
+    "kellyTitle": "Calculadora cuarto-Kelly",
+    "bankrollLabel": "Bankroll (USD)",
+    "winProbLabel": "Probabilidad de ganar (%)",
+    "calculatePosition": "Calcular posición",
+    "recommendedPosition": "Posición recomendada: {{amount}}",
+    "recommendedPositionZero": "Sin ventaja matemática con esta probabilidad — posición $0.",
+    "launchCta": "Lanzar bot completo →"
   },
   "education": {
     "title": "Centro de Educación",
