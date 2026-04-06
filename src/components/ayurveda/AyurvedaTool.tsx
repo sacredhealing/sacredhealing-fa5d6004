@@ -994,26 +994,24 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
               )}
               {isAdmin && (
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.1 }}
+                  transition={{ delay: 0.8 }}
                   style={{
-                    marginTop: 40,
-                    padding: '20px 32px',
-                    background: `linear-gradient(135deg, rgba(212,175,55,0.08), rgba(212,175,55,0.03))`,
-                    border: `1px solid ${SQI.goldBorder}`,
+                    marginTop: 24,
+                    padding: '20px 28px',
+                    background: 'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(255,140,0,0.05))',
+                    border: `1px solid ${SQI.goldBorderStrong}`,
                     borderRadius: 24,
-                    textAlign: 'center',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 12,
-                    maxWidth: 400,
-                    marginLeft: 'auto',
-                    marginRight: 'auto',
+                    gap: 14,
+                    maxWidth: 460,
+                    margin: '24px auto 0',
+                    boxShadow: '0 0 40px rgba(212,175,55,0.12)',
                   }}
                 >
-                  <Crown style={{ color: SQI.gold, width: 20, height: 20 }} />
+                  <Crown style={{ color: SQI.gold, width: 24, height: 24, flexShrink: 0 }} />
                   <div>
                     <div
                       style={{
@@ -1022,13 +1020,16 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
                         letterSpacing: '0.5em',
                         textTransform: 'uppercase',
                         color: SQI.gold,
-                        marginBottom: 2,
+                        marginBottom: 3,
                       }}
                     >
-                      {t('ayurvedaPage.adminTitle', 'Sovereign Admin Blueprint')}
+                      {t('ayurvedaPage.adminTitle', '✦ Sovereign Admin · Full Access Active ✦')}
                     </div>
-                    <p style={{ fontSize: 13, color: SQI.white60, margin: 0 }}>
-                      {t('ayurvedaPage.adminSub', 'Full Lifetime features unlocked')}
+                    <p style={{ fontSize: 13, color: SQI.white60, margin: 0, lineHeight: 1.5 }}>
+                      {t(
+                        'ayurvedaPage.adminSub',
+                        'All features unlocked: Divine Physician · Live Doctor · Nadi Scanner · Jyotish Sync'
+                      )}
                     </p>
                   </div>
                 </motion.div>
@@ -1052,7 +1053,7 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
         return <DoshaQuiz onComplete={handleAssessmentComplete} isLoading={isLoading} />;
 
       case 'chat':
-        if (membership === ('FREE' as AyurvedaMembershipLevel)) {
+        if (!isAdmin && membership === ('FREE' as AyurvedaMembershipLevel)) {
           return (
             <UpgradeGate
               icon={<Stethoscope style={{ width: 32, height: 32 }} />}
@@ -1073,7 +1074,7 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
         return null; // Chat is handled via overlay
 
       case 'doctor':
-        if (membership !== 'LIFETIME') {
+        if (!isAdmin && membership !== 'LIFETIME') {
           return (
             <UpgradeGate
               icon={<Crown style={{ width: 32, height: 32 }} />}
@@ -1138,10 +1139,10 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({
               active={activeTab === 'chat'}
               tier="premium"
               onClick={() => {
-                if (membership === ('FREE' as AyurvedaMembershipLevel)) {
-                  setActiveTab('chat');
-                } else {
+                if (isAdmin || membership !== ('FREE' as AyurvedaMembershipLevel)) {
                   setShowChat(true);
+                } else {
+                  setActiveTab('chat');
                 }
               }}
             />

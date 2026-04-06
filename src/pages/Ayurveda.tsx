@@ -24,11 +24,19 @@ const Ayurveda = () => {
     );
   }
 
-  // Map membership tiers to Ayurveda levels - Admins get LIFETIME access
+  // Map membership tiers to Ayurveda levels — isAdmin runs first and overrides everything
   const getAyurvedaLevel = (): AyurvedaMembershipLevel => {
     if (isAdmin) return 'LIFETIME' as AyurvedaMembershipLevel;
     if (tier === 'lifetime') return 'LIFETIME' as AyurvedaMembershipLevel;
-    if (isPremium || tier?.includes('premium')) return 'PREMIUM' as AyurvedaMembershipLevel;
+    if (tier === 'akasha-infinity') return 'LIFETIME' as AyurvedaMembershipLevel;
+    if (
+      isPremium ||
+      tier?.includes('premium') ||
+      tier === 'siddha-quantum' ||
+      tier === 'prana-flow'
+    ) {
+      return 'PREMIUM' as AyurvedaMembershipLevel;
+    }
     return 'FREE' as AyurvedaMembershipLevel;
   };
 
