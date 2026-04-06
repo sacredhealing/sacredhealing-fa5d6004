@@ -87,7 +87,7 @@ const IncomeStreams: React.FC = () => {
 
       // Ensure the Polymarket Bot stream exists even if DB row isn't created yet
       // (UI-only fallback; does not modify affiliate/Stripe logic)
-      const hasPolymarketBot = fetched.some((s) => s.internal_slug === 'polymarket-bot' || s.link === '/income-streams/polymarket-bot');
+      const hasPolymarketBot = fetched.some((s) => s.internal_slug === 'polymarket-bot' || s.link === '/polymarket-bot' || s.link === '/income-streams/polymarket-bot');
       const polymarketFallback: IncomeStream = {
         id: 'polymarket-bot-fallback',
         title: 'Polymarket Bot',
@@ -98,7 +98,7 @@ const IncomeStreams: React.FC = () => {
         description_sv: null,
         description_es: null,
         description_no: null,
-        link: '/income-streams/polymarket-bot',
+        link: '/polymarket-bot',
         category: 'AI',
         potential_earnings: 'Latency edge + micro-arbitrage',
         potential_earnings_sv: null,
@@ -211,7 +211,7 @@ const IncomeStreams: React.FC = () => {
             const colorTo = stream.color_to || 'primary/70';
 
             const cardContent = (
-              <Card className="glass-card gold-border overflow-hidden transition-all duration-300 hover:border-[#D4AF37]/25 hover:shadow-[0_0_30px_rgba(212,175,55,0.10)] group cursor-pointer w-full max-w-full">
+              <Card className="glass-card gold-border overflow-hidden transition-all duration-300 hover:border-[#D4AF37]/25 hover:shadow-[0_0_30px_rgba(212,175,55,0.10)] group cursor-pointer w-full max-w-full rounded-[20px]">
                 <CardContent className="p-0">
                   <div className="flex items-start sm:items-center gap-3 sm:gap-4 p-4">
                     {/* Icon */}
