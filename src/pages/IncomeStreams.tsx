@@ -67,6 +67,7 @@ const iconMap: Record<string, LucideIcon> = {
 const IncomeStreams: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const { isAdmin } = useAdminRole();
   const [streams, setStreams] = useState<IncomeStream[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
