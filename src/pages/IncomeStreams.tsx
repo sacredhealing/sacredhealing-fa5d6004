@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { SHCBalanceCard } from '@/components/dashboard/SHCBalanceCard';
+import { useAdminRole } from '@/hooks/useAdminRole';
 interface IncomeStream {
   id: string;
   title: string;
@@ -66,6 +67,7 @@ const iconMap: Record<string, LucideIcon> = {
 const IncomeStreams: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const { isAdmin } = useAdminRole();
   const [streams, setStreams] = useState<IncomeStream[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -252,9 +254,14 @@ const IncomeStreams: React.FC = () => {
             </CardContent>
           </Card>
         ) : (
-          streams.map((stream) => {
+          streams.filter((stream) => {
+            // Polymarket cards are admin-only
+            const isPolymarketStream = stream.internal_slug === 'polymarket-bot' || stream.internal_slug === 'polymarket-copy-trading' || stream.internal_slug === 'polymarket-bot-general';
+            if (isPolymarketStream && !isAdmin) return false;
+            return true;
+          }).map((stream) => {
             const IconComponent = getIcon(stream.icon_name);
-            const isPolymarket = stream.internal_slug === 'polymarket-bot';
+            const isPolymarket = stream.internal_slug === 'polymarket-bot' || stream.internal_slug === 'polymarket-bot-general';
             const isCopyTrading = stream.internal_slug === 'polymarket-copy-trading';
             const title = isPolymarket
               ? t('incomeStreams.polymarketCard.title')
