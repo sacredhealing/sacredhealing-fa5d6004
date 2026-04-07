@@ -254,9 +254,14 @@ const IncomeStreams: React.FC = () => {
             </CardContent>
           </Card>
         ) : (
-          streams.map((stream) => {
+          streams.filter((stream) => {
+            // Polymarket cards are admin-only
+            const isPolymarketStream = stream.internal_slug === 'polymarket-bot' || stream.internal_slug === 'polymarket-copy-trading' || stream.internal_slug === 'polymarket-bot-general';
+            if (isPolymarketStream && !isAdmin) return false;
+            return true;
+          }).map((stream) => {
             const IconComponent = getIcon(stream.icon_name);
-            const isPolymarket = stream.internal_slug === 'polymarket-bot';
+            const isPolymarket = stream.internal_slug === 'polymarket-bot' || stream.internal_slug === 'polymarket-bot-general';
             const isCopyTrading = stream.internal_slug === 'polymarket-copy-trading';
             const title = isPolymarket
               ? t('incomeStreams.polymarketCard.title')
