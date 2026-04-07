@@ -1,19 +1,25 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, BookOpen, Loader2, Upload } from 'lucide-react';
+import { ArrowLeft, Plus, BookOpen, Loader2, Upload, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useScripturalBooks, type ScripturalBook } from '@/hooks/useScripturalBooks';
+import { useScripturalBooks } from '@/hooks/useScripturalBooks';
 import AudioUpload from '@/components/admin/AudioUpload';
+
+const GLASS: React.CSSProperties = {
+  background: 'rgba(255,255,255,0.02)',
+  backdropFilter: 'blur(40px)',
+  WebkitBackdropFilter: 'blur(40px)',
+  border: '1px solid rgba(255,255,255,0.05)',
+  borderRadius: 40,
+};
 
 const AdminScripturalBooks = () => {
   const navigate = useNavigate();
-  const { books, loading, createBook, refreshBooks } = useScripturalBooks();
+  const { books, loading, createBook } = useScripturalBooks();
   const [showForm, setShowForm] = useState(false);
   const [bookTitle, setBookTitle] = useState('');
   const [audioUrl, setAudioUrl] = useState('');
@@ -22,172 +28,392 @@ const AdminScripturalBooks = () => {
 
   const handleCreateBook = async () => {
     if (!bookTitle.trim() || !audioUrl.trim()) {
-      toast.error('Please provide a title and audio file');
+      toast.error('Ange titel och ljudfil');
       return;
     }
-
     setIsProcessing(true);
     try {
       const bookId = await createBook(bookTitle.trim(), audioUrl, toneFilter);
       if (bookId) {
-        toast.success('Book creation started! Processing may take a few minutes.');
+        toast.success('Bokprocessering startad! Det kan ta några minuter.');
         setShowForm(false);
         setBookTitle('');
         setAudioUrl('');
       } else {
-        toast.error('Failed to create book');
+        toast.error('Kunde inte skapa bok');
       }
     } catch (error: any) {
-      console.error('Error creating book:', error);
-      toast.error(error.message || 'Failed to create book');
+      toast.error(error.message || 'Kunde inte skapa bok');
     } finally {
       setIsProcessing(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background pb-8">
+    <div
+      style={{
+        minHeight: '100vh',
+        background: '#050505',
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        paddingBottom: 48,
+      }}
+    >
       {/* Header */}
-      <div className="bg-card border-b border-border px-4 py-4">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div>
-            <h1 className="text-xl font-bold text-foreground">Scriptural Books</h1>
-            <p className="text-sm text-muted-foreground">
-              Automated book creation from audio recordings
-            </p>
-          </div>
+      <div
+        style={{
+          background: 'rgba(255,255,255,0.02)',
+          borderBottom: '1px solid rgba(255,255,255,0.05)',
+          padding: '16px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 16,
+          backdropFilter: 'blur(20px)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 50,
+        }}
+      >
+        <button
+          onClick={() => navigate('/admin')}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'rgba(255,255,255,0.4)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
+          <ArrowLeft size={18} />
+        </button>
+        <div>
+          <p
+            style={{
+              fontSize: 8,
+              fontWeight: 800,
+              letterSpacing: '0.5em',
+              textTransform: 'uppercase',
+              color: 'rgba(212,175,55,0.6)',
+              marginBottom: 2,
+            }}
+          >
+            ADMIN
+          </p>
+          <h1
+            style={{
+              fontSize: 18,
+              fontWeight: 900,
+              letterSpacing: '-0.05em',
+              color: '#D4AF37',
+              textShadow: '0 0 15px rgba(212,175,55,0.3)',
+            }}
+          >
+            Heliga Böcker
+          </h1>
         </div>
       </div>
 
-      <div className="px-4 py-4 max-w-4xl mx-auto">
-        {/* Create Book Form */}
+      <div style={{ maxWidth: 720, margin: '0 auto', padding: '32px 24px' }}>
+
+        {/* Create form */}
         {showForm ? (
-          <Card className="p-6 mb-6">
-            <h3 className="font-semibold mb-4">Create New Book</h3>
-            <div className="space-y-4">
+          <div style={{ ...GLASS, padding: 32, marginBottom: 24, position: 'relative', overflow: 'hidden' }}>
+            {/* Gold top line */}
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 1,
+                background: 'linear-gradient(90deg, transparent, #D4AF37, transparent)',
+                opacity: 0.5,
+              }}
+            />
+            <p
+              style={{
+                fontSize: 8,
+                fontWeight: 800,
+                letterSpacing: '0.5em',
+                textTransform: 'uppercase',
+                color: 'rgba(212,175,55,0.6)',
+                marginBottom: 20,
+              }}
+            >
+              SKAPA NY BOK
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               <div>
-                <Label>Book Title *</Label>
+                <Label style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+                  Boktitel
+                </Label>
                 <Input
                   value={bookTitle}
                   onChange={(e) => setBookTitle(e.target.value)}
-                  placeholder="The Path of the Siddha"
+                  placeholder="Bhagavad Gita — Vishwananda Edition"
                   disabled={isProcessing}
+                  style={{
+                    marginTop: 8,
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: 16,
+                    color: 'white',
+                    height: 48,
+                  }}
                 />
               </div>
+
               <div>
-                <Label>Audio Recording *</Label>
-                <AudioUpload
-                  value={audioUrl}
-                  onChange={setAudioUrl}
-                  folder="scriptural-books"
-                  label="Upload Audio (1hr+ supported)"
-                />
-                <p className="text-xs text-muted-foreground mt-2">
-                  Supports long-form audio (1+ hours). The system will transcribe, detect Sanskrit verses, and structure chapters automatically.
+                <Label style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+                  Ljudinspelning
+                </Label>
+                <div style={{ marginTop: 8 }}>
+                  <AudioUpload
+                    value={audioUrl}
+                    onChange={setAudioUrl}
+                    folder="scriptural-books"
+                    label="Ladda upp ljud (1h+ stöds)"
+                  />
+                </div>
+                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', marginTop: 8 }}>
+                  Systemet transkriberar, hittar Sanskrit-verser och strukturerar kapitel automatiskt.
                 </p>
               </div>
+
               <div>
-                <Label>Tone Filter (Siddha-Flow)</Label>
-                <Select value={toneFilter} onValueChange={(value: any) => setToneFilter(value)}>
-                  <SelectTrigger className="h-12 text-base" style={{ fontSize: '1rem', minHeight: '48px' }}>
+                <Label style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+                  Ton-filter
+                </Label>
+                <Select value={toneFilter} onValueChange={(v: any) => setToneFilter(v)}>
+                  <SelectTrigger
+                    style={{
+                      marginTop: 8,
+                      background: 'rgba(255,255,255,0.03)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: 16,
+                      color: 'white',
+                      height: 48,
+                    }}
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="vishwananda">Vishwananda (Heart-Centered Love)</SelectItem>
-                    <SelectItem value="sri_yukteswar">Sri Yukteswar (Logical Wisdom)</SelectItem>
-                    <SelectItem value="robbins">Robbins (Action Energy)</SelectItem>
+                    <SelectItem value="vishwananda">Vishwananda — Hjärtcentrerad Kärlek</SelectItem>
+                    <SelectItem value="sri_yukteswar">Sri Yukteswar — Logisk Visdom</SelectItem>
+                    <SelectItem value="robbins">Robbins — Handlingsenergi</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Choose the energy filter for chapter structuring. Vishwananda: Heart-centered love | Sri Yukteswar: Logical precision | Robbins: Action-oriented transformation.
-                </p>
               </div>
-              <div className="flex gap-2">
-                <Button
+
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button
                   onClick={handleCreateBook}
                   disabled={!bookTitle.trim() || !audioUrl.trim() || isProcessing}
-                  className="flex-1"
+                  style={{
+                    flex: 1,
+                    height: 48,
+                    borderRadius: 16,
+                    border: '1px solid rgba(212,175,55,0.3)',
+                    background: 'rgba(212,175,55,0.1)',
+                    color: '#D4AF37',
+                    fontSize: 12,
+                    fontWeight: 800,
+                    letterSpacing: '0.2em',
+                    textTransform: 'uppercase',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    transition: 'all 0.2s',
+                  }}
                 >
                   {isProcessing ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Processing...
-                    </>
+                    <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Bearbetar...</>
                   ) : (
-                    <>
-                      <Upload className="h-4 w-4 mr-2" />
-                      Create Book
-                    </>
+                    <><Upload size={14} /> Skapa bok</>
                   )}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowForm(false);
-                    setBookTitle('');
-                    setAudioUrl('');
-                  }}
+                </button>
+                <button
+                  onClick={() => { setShowForm(false); setBookTitle(''); setAudioUrl(''); }}
                   disabled={isProcessing}
+                  style={{
+                    padding: '0 20px',
+                    height: 48,
+                    borderRadius: 16,
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    background: 'transparent',
+                    color: 'rgba(255,255,255,0.4)',
+                    fontSize: 13,
+                    cursor: 'pointer',
+                  }}
                 >
-                  Cancel
-                </Button>
+                  Avbryt
+                </button>
               </div>
             </div>
-          </Card>
+          </div>
         ) : (
-          <Button onClick={() => setShowForm(true)} className="w-full mb-6">
-            <Plus className="w-4 h-4 mr-2" />
-            Create New Book
-          </Button>
+          <button
+            onClick={() => setShowForm(true)}
+            style={{
+              width: '100%',
+              height: 56,
+              borderRadius: 20,
+              border: '1px dashed rgba(212,175,55,0.25)',
+              background: 'rgba(212,175,55,0.03)',
+              color: 'rgba(212,175,55,0.6)',
+              fontSize: 13,
+              fontWeight: 700,
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              marginBottom: 24,
+              transition: 'all 0.2s',
+            }}
+          >
+            <Plus size={16} />
+            Skapa ny bok
+          </button>
         )}
 
-        {/* Books List */}
+        {/* Books list */}
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}>
+            <Loader2 size={24} style={{ color: '#D4AF37', animation: 'spin 1s linear infinite' }} />
           </div>
         ) : books.length === 0 ? (
-          <Card className="p-8 text-center">
-            <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">No books yet. Create your first scriptural book!</p>
-          </Card>
+          <div
+            style={{
+              ...GLASS,
+              padding: 48,
+              textAlign: 'center',
+            }}
+          >
+            <BookOpen size={40} style={{ color: 'rgba(212,175,55,0.3)', margin: '0 auto 16px' }} />
+            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>
+              Inga böcker ännu. Skapa din första heliga bok!
+            </p>
+          </div>
         ) : (
-          <div className="space-y-4">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {books.map((book) => (
-              <Card
+              <div
                 key={book.id}
-                className="cursor-pointer hover:bg-muted/50 transition-colors"
                 onClick={() => navigate(`/admin/books/${book.id}`)}
+                style={{
+                  ...GLASS,
+                  padding: '24px 28px',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 16,
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.border = '1px solid rgba(212,175,55,0.2)';
+                  (e.currentTarget as HTMLDivElement).style.background = 'rgba(212,175,55,0.03)';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.border = '1px solid rgba(255,255,255,0.05)';
+                  (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.02)';
+                }}
               >
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg font-heading">{book.title}</CardTitle>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {book.total_chapters} chapters • {book.total_verses} verses
-                      </p>
-                    </div>
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-medium ${
+                {/* Gold top line */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 1,
+                    background: 'linear-gradient(90deg, transparent, #D4AF37, transparent)',
+                    opacity: 0.3,
+                  }}
+                />
+
+                <BookOpen size={20} style={{ color: 'rgba(212,175,55,0.5)', flexShrink: 0 }} />
+
+                <div style={{ flex: 1 }}>
+                  <p
+                    style={{
+                      fontSize: 8,
+                      fontWeight: 800,
+                      letterSpacing: '0.5em',
+                      textTransform: 'uppercase',
+                      color: 'rgba(212,175,55,0.5)',
+                      marginBottom: 4,
+                    }}
+                  >
+                    HELIG BOK
+                  </p>
+                  <h2
+                    style={{
+                      fontSize: 16,
+                      fontWeight: 900,
+                      letterSpacing: '-0.03em',
+                      color: '#D4AF37',
+                      textShadow: '0 0 10px rgba(212,175,55,0.2)',
+                      marginBottom: 4,
+                    }}
+                  >
+                    {book.title}
+                  </h2>
+                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
+                    {book.total_chapters} kapitel · {book.total_verses} verser
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span
+                    style={{
+                      padding: '4px 14px',
+                      borderRadius: 999,
+                      fontSize: 9,
+                      fontWeight: 800,
+                      letterSpacing: '0.3em',
+                      textTransform: 'uppercase',
+                      background:
                         book.status === 'completed'
-                          ? 'bg-green-500/20 text-green-400'
+                          ? 'rgba(212,175,55,0.1)'
                           : book.status === 'processing'
-                          ? 'bg-yellow-500/20 text-yellow-400'
-                          : 'bg-muted text-muted-foreground'
-                      }`}
-                    >
-                      {book.status}
-                    </span>
-                  </div>
-                </CardHeader>
-              </Card>
+                          ? 'rgba(34,211,238,0.08)'
+                          : 'rgba(255,255,255,0.04)',
+                      color:
+                        book.status === 'completed'
+                          ? '#D4AF37'
+                          : book.status === 'processing'
+                          ? '#22D3EE'
+                          : 'rgba(255,255,255,0.3)',
+                      border: `1px solid ${
+                        book.status === 'completed'
+                          ? 'rgba(212,175,55,0.25)'
+                          : book.status === 'processing'
+                          ? 'rgba(34,211,238,0.2)'
+                          : 'rgba(255,255,255,0.08)'
+                      }`,
+                    }}
+                  >
+                    {book.status === 'completed' ? 'Klar' : book.status === 'processing' ? 'Bearbetar' : book.status}
+                  </span>
+                  <ChevronRight size={16} style={{ color: 'rgba(255,255,255,0.2)' }} />
+                </div>
+              </div>
             ))}
           </div>
         )}
       </div>
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 };

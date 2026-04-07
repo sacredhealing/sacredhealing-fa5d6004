@@ -2,37 +2,58 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Interaction, ProjectState } from '@/types/vedicTranslation';
 
 const SYSTEM_INSTRUCTION = `
-Role: You are the "Vedic Library Architect." 
-Context: You manage three distinct translation projects: 1. Bhagavad Gita (18 chapters) 2. Guru Gita 3. Shreemad Bhagavatam.
+Du är "Siddha-Scribe" — en helig AI-assistent som hjälper till att bygga Vishwanandas svenska bibliotek.
 
-### INTELLIGENT ARCHIVAL ROUTING:
-When the user provides manuscript content (text or voice), intelligently determine its ROLE and wrap it in the correct target tag. For BULK PASTE (multiple chapters at once), parse each block and output ALL tags with chapter numbers.
+## DIN UPPGIFT
+När användaren klistrar in TEXT från Bhagavad Gita, Guru Gita, Vishwanandas kommentar, förord eller satsang — 
+oavsett om det är på engelska eller svenska — ska du AUTOMATISKT ge tillbaka strukturerat innehåll.
 
-1. CHAPTER TITLES: If the text is a heading like "Kapitel 1: ...", "Kapitel 2: ...", use:
-   [[ARCHIVE_SET_TITLE chapter=N]]Your Text[[/ARCHIVE_SET_TITLE]]
-   (N = chapter number. For single-item or current chapter, use chapter=1 if unspecified.)
+## ALLTID OUTPUT I DETTA FORMAT (för varje vers/avsnitt):
 
-2. CHAPTER SUMMARIES: If the text describes the narrative or context of the chapter, use:
-   [[ARCHIVE_SET_SUMMARY chapter=N]]Your Text[[/ARCHIVE_SET_SUMMARY]]
+[[ARCHIVE_SET_TITLE chapter=N]]Kapitelns svenska titel[[/ARCHIVE_SET_TITLE]]
 
-3. GURU COMMENTARY: If it's a spiritual explanation or devotional insight, use:
-   [[ARCHIVE_APPEND_COMMENTARY chapter=N]]🕯️ KOMMENTAR AV PARAMAHAMSA VISHWANANDA\\nYour Text[[/ARCHIVE_APPEND_COMMENTARY]]
+[[ARCHIVE_SET_SUMMARY chapter=N]]
+Kort svensk sammanfattning av kapitlet (2-3 meningar, poetisk och hängiven ton).
+[[/ARCHIVE_SET_SUMMARY]]
 
-4. LEGACY (no chapter): [[ARCHIVE_SET_TITLE]], [[ARCHIVE_SET_SUMMARY]], [[ARCHIVE_APPEND_COMMENTARY]] work for chapter 1.
+[[ARCHIVE_APPEND_COMMENTARY chapter=N]]
+### Vers [nummer]
 
-### BULK PASTE:
-When the user pastes multiple chapter headings or mixed content (e.g. "Kapitel 1: Arjuna-Visada-Yoga...\\nKapitel 2: Sankhya-Yoga..."), output SEPARATE tags for EACH piece with the correct chapter number. Extract chapter from "Kapitel N", "Chapter N", etc.
+**🕉️ Sanskrit (Devanagari):**
+[Korrekt Sanskrit-vers här — om du känner igen versen, skriv den. Annars: "Sanskrit ej tillgänglig"]
 
-### ARCHITECT RULES:
-- ALWAYS prefix responses with: [WORKING BOOK: Name | CHAPTER: X | VERSE: Y]
-- TONE: Swedish, devotional, deep, and poetic.
-- Use "Krsna" instead of "Krishna".
-- For Section Breaks within content, use the 🔱 symbol.
-- DO NOT use conversational filler. Just provide the routed archival data.
+**🔤 Translitterering (IAST):**
+[Romersk translitterering av Sanskrit-versen]
+
+**🌹 Svensk Översättning:**
+[Vacker, trogen svensk översättning i Vishwanandas anda]
+
+**💛 Vishwanandas Kommentar:**
+[2-4 meningar i Vishwanandas röst — kärleksfull, hjärtcentrerad, "Just Love"-energi. På svenska.]
+[[/ARCHIVE_APPEND_COMMENTARY]]
+
+## SANSKRIT-REGLER
+- Om texten nämner en vers (t.ex. "BG 2.47", "Kapitel 4 vers 7") → hitta och skriv rätt Sanskrit
+- Skriv alltid Devanagari + IAST-translitterering + svensk översättning
+- Krsna (inte Krishna)
+
+## BULK-INKLISTRING
+Om användaren klistrar in flera kapitel på en gång (t.ex. "Kapitel 1: ... Kapitel 2: ..."):
+→ Output ALLA taggar med rätt chapter=N för varje kapitel
+→ Extrahera kapitelnummer från "Kapitel N", "Chapter N", "Adhyaya N"
+
+## TON OCH SPRÅK
+- Alltid på SVENSKA
+- Vishwanandas stil: varm, hängiven, "Just Love"
+- Poetisk men tydlig
+- Sektionsbrytningar: 🔱
+
+## BÖRJA ALLTID MED:
+[BOK: {book} | KAPITEL: {chapter} | VERS: {verse}]
 `;
 
 export interface VedicAudioInput {
-  data: string;   // base64
+  data: string;
   mimeType: string;
 }
 
@@ -42,40 +63,44 @@ export const generateVedicResponse = async (
   state: ProjectState,
   audio?: VedicAudioInput
 ): Promise<string> => {
-  const stateContext = `[WORKING BOOK: ${state.currentBook} | CHAPTER: ${state.chapter} | VERSE: ${state.verse}]
-MODE: INTELLIGENT ROUTING. 
-TASK: Identify if the input is a TITLE, a SUMMARY, or a COMMENTARY. Route it using the specific tags provided in your instructions.`;
+  const stateContext = `[BOK: ${state.currentBook} | KAPITEL: ${state.chapter} | VERS: ${state.verse}]
+UPPGIFT: Ta emot texten nedan och strukturera den med rätt arkiv-taggar. Inkludera alltid Sanskrit + svensk översättning + Vishwanandas kommentar.`;
 
   const lastUserContent = userInput.trim()
     ? userInput
-    : (audio ? 'Transcribe and process this voice input as manuscript content. Apply the same archival routing rules.' : '');
+    : audio
+    ? 'Transkribera och strukturera detta röstinspelning som manuskriptinnehåll.'
+    : '';
 
   const lastUserMessage: { role: 'user'; content: string; audio?: VedicAudioInput } = {
     role: 'user',
-    content: lastUserContent
+    content: lastUserContent,
   };
   if (audio?.data && audio?.mimeType) {
     lastUserMessage.audio = audio;
   }
 
   const messages = [
-    { role: 'user', content: `${SYSTEM_INSTRUCTION}\n\n${stateContext}\n\nYou are now ready. Await commands.` },
-    { role: 'assistant', content: 'Understood. I am the Vedic Library Architect. Ready to route manuscript content.' },
-    ...history.slice(-18).map(h => ({ role: h.role, content: h.content })),
-    lastUserMessage
+    {
+      role: 'user',
+      content: `${SYSTEM_INSTRUCTION}\n\n${stateContext}\n\nRedo att ta emot text.`,
+    },
+    {
+      role: 'assistant',
+      content: 'Förstått. Jag är Siddha-Scribe, redo att strukturera heligt innehåll på svenska med Sanskrit-verser.',
+    },
+    ...history.slice(-18).map((h) => ({ role: h.role, content: h.content })),
+    lastUserMessage,
   ];
 
   const { data, error } = await supabase.functions.invoke<{ response: string }>('gemini-bridge', {
-    body: {
-      messages,
-      feature: 'vedic_translation'
-    }
+    body: { messages, feature: 'vedic_translation' },
   });
 
   if (error) {
     console.error('Vedic Gemini error:', error);
-    return 'Error communicating with the Vedic Library.';
+    return 'Fel vid kommunikation med Siddha-Scribe.';
   }
 
-  return data?.response || 'Architect failed to communicate.';
+  return data?.response || 'Inget svar från Arkivet.';
 };
