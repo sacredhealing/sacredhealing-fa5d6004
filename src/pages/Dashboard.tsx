@@ -625,7 +625,7 @@ const Dashboard: React.FC = () => {
 
           {/* ══ ZONE 7: SOUL FIELD — stats + achievements only (no separate achievements section below) ══ */}
           <SectionLabel label={t('dashboard.sectionSoulField')} delay="0.35s" />
-          <div style={{ margin: '0 16px', animation: 'sqFadeUp 0.5s 0.35s ease both' }}>
+          <div style={{ margin: '0 16px', animation: 'sqFadeUp 0.5s 0.35s ease both', overflow: 'hidden', borderRadius: '40px' }}>
             {/* Row 1: 4 stat cards — Day Streak, SHC, Presence, Min */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
               {([
@@ -635,7 +635,7 @@ const Dashboard: React.FC = () => {
                 { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="rgba(212,175,55,0.5)" strokeWidth="1.2" fill="none"/><line x1="12" y1="6" x2="12" y2="12" stroke="rgba(212,175,55,0.7)" strokeWidth="1.5" strokeLinecap="round"/><line x1="12" y1="12" x2="16" y2="14" stroke="rgba(212,175,55,0.5)" strokeWidth="1.3" strokeLinecap="round"/><circle cx="12" cy="12" r="1.5" fill="rgba(212,175,55,0.7)"/></svg>, val: successWindowPct, pct: Math.max(0, Math.min(100, successWindowPct)), lbl: t('dashboard.statDepthCycles') },
               ] as { icon: React.ReactNode; val: string | number; pct: number; lbl: string }[]).map(({ icon, val, pct, lbl }, i) => (
                 <div key={i} className="sq-stat-chip sq-soulstat" style={{ ['--sf' as any]: pct }}>
-                  <div className="sq-soulstat-ring" aria-hidden />
+                  <div className="sq-soulstat-ring" aria-hidden style={{ pointerEvents: 'none', position: 'absolute', zIndex: 0, overflow: 'hidden' }} />
                   <div style={{ marginBottom: 6, position: 'relative', zIndex: 2 }}>{icon}</div>
                   <div className="sq-stat-val" style={{ position: 'relative', zIndex: 2, animation: 'pranaPulseGlow 2.8s ease-in-out infinite' }}>{val}</div>
                   <div className="sq-stat-lbl" style={{ position: 'relative', zIndex: 2 }}>{lbl}</div>

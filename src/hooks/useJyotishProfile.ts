@@ -85,8 +85,7 @@ const KARMA_FOCUS_MAP: Record<string, string> = {
   'Ketu': 'spiritual liberation and past-life clarity',
 };
 
-// ─── Real Vimshottari Dasha Engine ───────────────────────
-// Standard Vimshottari sequence and durations (years)
+// ─── Vimshottari Dasha Engine (pure math, no AI) ──────────
 const VIMSHOTTARI_SEQUENCE = [
   { planet: 'Ketu',    years: 7  },
   { planet: 'Venus',   years: 20 },
@@ -99,104 +98,64 @@ const VIMSHOTTARI_SEQUENCE = [
   { planet: 'Mercury', years: 17 },
 ];
 
-// 27 Nakshatras and their ruling planets (Vimshottari lords)
-const NAKSHATRA_LORDS: Record<number, string> = {
-  0:  'Ketu',    // Ashwini
-  1:  'Venus',   // Bharani
-  2:  'Sun',     // Krittika
-  3:  'Moon',    // Rohini
-  4:  'Mars',    // Mrigashira
-  5:  'Rahu',    // Ardra
-  6:  'Jupiter', // Punarvasu
-  7:  'Saturn',  // Pushya
-  8:  'Mercury', // Ashlesha
-  9:  'Ketu',    // Magha
-  10: 'Venus',   // Purva Phalguni
-  11: 'Sun',     // Uttara Phalguni
-  12: 'Moon',    // Hasta
-  13: 'Mars',    // Chitra
-  14: 'Rahu',    // Swati
-  15: 'Jupiter', // Vishakha
-  16: 'Saturn',  // Anuradha
-  17: 'Mercury', // Jyeshtha
-  18: 'Ketu',    // Mula
-  19: 'Venus',   // Purva Ashadha
-  20: 'Sun',     // Uttara Ashadha
-  21: 'Moon',    // Shravana
-  22: 'Mars',    // Dhanishtha
-  23: 'Rahu',    // Shatabhisha
-  24: 'Jupiter', // Purva Bhadrapada
-  25: 'Saturn',  // Uttara Bhadrapada
-  26: 'Mercury', // Revati
+const NAKSHATRA_LORDS: Record<string, string> = {
+  'Ashwini':'Ketu','Bharani':'Venus','Krittika':'Sun',
+  'Rohini':'Moon','Mrigashira':'Mars','Ardra':'Rahu',
+  'Punarvasu':'Jupiter','Pushya':'Saturn','Ashlesha':'Mercury',
+  'Magha':'Ketu','Purva Phalguni':'Venus','Uttara Phalguni':'Sun',
+  'Hasta':'Moon','Chitra':'Mars','Swati':'Rahu',
+  'Vishakha':'Jupiter','Anuradha':'Saturn','Jyeshtha':'Mercury',
+  'Mula':'Ketu','Purva Ashadha':'Venus','Uttara Ashadha':'Sun',
+  'Shravana':'Moon','Dhanishtha':'Mars','Shatabhisha':'Rahu',
+  'Purva Bhadrapada':'Jupiter','Uttara Bhadrapada':'Saturn','Revati':'Mercury',
 };
 
-const NAKSHATRA_NAMES = [
-  'Ashwini','Bharani','Krittika','Rohini','Mrigashira','Ardra',
-  'Punarvasu','Pushya','Ashlesha','Magha','Purva Phalguni',
-  'Uttara Phalguni','Hasta','Chitra','Swati','Vishakha','Anuradha',
-  'Jyeshtha','Mula','Purva Ashadha','Uttara Ashadha','Shravana',
-  'Dhanishtha','Shatabhisha','Purva Bhadrapada','Uttara Bhadrapada','Revati'
-];
-
-function calculateVimshottariDasha(
+function calcVimshottariDasha(
   birthDateStr: string,
-  nakshatraIndex: number,
-  nakshatraProgress: number
-): { mahadasha: string; antardasha: string; dashaEndDate: string } {
+  birthNakshatra: string,
+  nakshatraProgressFraction: number = 0.5
+): { mahadasha: string; antardasha: string } {
+  if (!birthDateStr || !birthNakshatra) return { mahadasha: '', antardasha: '' };
+
   const birthDate = new Date(birthDateStr);
   const today = new Date();
+  const msPerYear = 365.25 * 24 * 3600 * 1000;
 
-  const birthLord = NAKSHATRA_LORDS[nakshatraIndex];
-  const birthLordIndex = VIMSHOTTARI_SEQUENCE.findIndex(d => d.planet === birthLord);
+  const birthLord = NAKSHATRA_LORDS[birthNakshatra];
+  if (!birthLord) return { mahadasha: '', antardasha: '' };
 
-  const birthDashaYears = VIMSHOTTARI_SEQUENCE[birthLordIndex].years;
-  const elapsedAtBirth = nakshatraProgress * birthDashaYears;
+  const startIdx = VIMSHOTTARI_SEQUENCE.findIndex(d => d.planet === birthLord);
+  if (startIdx < 0) return { mahadasha: '', antardasha: '' };
 
-  // Start cursor at birth, then rewind by elapsed portion of birth dasha
-  let cursor = new Date(birthDate);
-  cursor.setFullYear(cursor.getFullYear() - Math.floor(elapsedAtBirth));
-  cursor.setMonth(cursor.getMonth() - Math.round((elapsedAtBirth % 1) * 12));
+  const birthDashaYears = VIMSHOTTARI_SEQUENCE[startIdx].years;
+  const elapsedYearsAtBirth = nakshatraProgressFraction * birthDashaYears;
 
-  let currentMahadasha = '';
-  let currentAntardasha = '';
-  let dashaEndDate = '';
+  let cursor = birthDate.getTime() - elapsedYearsAtBirth * msPerYear;
+  const todayMs = today.getTime();
 
-  let idx = birthLordIndex;
-  for (let i = 0; i < 9 * 3; i++) {
-    const dasha = VIMSHOTTARI_SEQUENCE[idx % 9];
-    const dashaEndMs = cursor.getTime() + dasha.years * 365.25 * 24 * 3600 * 1000;
-    const dashaEnd = new Date(dashaEndMs);
+  for (let i = 0; i < 27; i++) {
+    const dasha = VIMSHOTTARI_SEQUENCE[(startIdx + i) % 9];
+    const dashaEndMs = cursor + dasha.years * msPerYear;
 
-    if (dashaEnd > today) {
-      currentMahadasha = dasha.planet;
-      dashaEndDate = dashaEnd.toISOString().split('T')[0];
-
-      let subCursor = new Date(cursor);
+    if (dashaEndMs > todayMs) {
+      let subCursor = cursor;
       for (let j = 0; j < 9; j++) {
-        const subDasha = VIMSHOTTARI_SEQUENCE[(idx + j) % 9];
-        const subYears = (dasha.years * subDasha.years) / 120;
-        const subEndMs = subCursor.getTime() + subYears * 365.25 * 24 * 3600 * 1000;
-        const subEnd = new Date(subEndMs);
-        if (subEnd > today) {
-          currentAntardasha = subDasha.planet;
-          break;
+        const sub = VIMSHOTTARI_SEQUENCE[(startIdx + i + j) % 9];
+        const subYears = (dasha.years * sub.years) / 120;
+        const subEndMs = subCursor + subYears * msPerYear;
+        if (subEndMs > todayMs) {
+          return { mahadasha: dasha.planet, antardasha: sub.planet };
         }
-        subCursor = subEnd;
+        subCursor = subEndMs;
       }
-      break;
+      return { mahadasha: dasha.planet, antardasha: '' };
     }
-
-    cursor = dashaEnd;
-    idx++;
+    cursor = dashaEndMs;
   }
 
-  return {
-    mahadasha: currentMahadasha || 'Saturn',
-    antardasha: currentAntardasha || '',
-    dashaEndDate,
-  };
+  return { mahadasha: '', antardasha: '' };
 }
-// ─── End Vimshottari Engine ───────────────────────────────
+// ─── End Engine ───────────────────────────────────────────
 
 export function useJyotishProfile(): JyotishProfile {
   const { user: authUser } = useAuth();
@@ -209,6 +168,24 @@ export function useJyotishProfile(): JyotishProfile {
   useEffect(() => {
     setIsFreshForUser(false);
     setBirthDate(null);
+  }, [authUser?.id]);
+
+  // Clear old AI-based dasha cache so new calculation takes effect
+  useEffect(() => {
+    if (!authUser?.id || typeof window === 'undefined') return;
+    const keysToCheck = Object.keys(localStorage)
+      .filter(k => k.includes(authUser.id) && k.includes('compass'));
+    keysToCheck.forEach(k => {
+      try {
+        const val = JSON.parse(localStorage.getItem(k) || '{}');
+        if (val?.reading?.personalCompass?.currentDasha) {
+          delete val.reading.personalCompass.currentDasha;
+          localStorage.setItem(k, JSON.stringify(val));
+        }
+      } catch {
+        // ignore
+      }
+    });
   }, [authUser?.id]);
 
   // Pull birth details from DB (scoped to current user) and (re)generate reading on mount.
@@ -263,21 +240,29 @@ export function useJyotishProfile(): JyotishProfile {
   const isLoading = birthDetailsLoading || readingLoading || !isFreshForUser;
 
   return useMemo(() => {
-    // Extract nakshatra from AI reading (used for Vimshottari lookup)
-    const nakshatra = reading?.todayInfluence?.nakshatra || 'Unknown';
+    const userId = authUser?.id || '';
 
-    // Map nakshatra name to index (0-26) for real Vimshottari calculation
-    const nakshatraIdx = NAKSHATRA_NAMES.findIndex(
-      n => nakshatra?.toLowerCase().includes(n.toLowerCase())
-    );
+    // Get birth data from localStorage birth cache
+    const birthCacheKey = `sh:vedic:${userId}:birth`;
+    let birthData: any = null;
+    try {
+      const birthRaw = typeof window !== 'undefined'
+        ? localStorage.getItem(birthCacheKey)
+        : null;
+      birthData = birthRaw ? JSON.parse(birthRaw) : null;
+    } catch {
+      birthData = null;
+    }
+    const birthDateStr = birthData?.birth_date || birthDate || '';
 
-    // Real Vimshottari Dasha from actual birth date + nakshatra
-    const realDasha = birthDate && nakshatraIdx >= 0
-      ? calculateVimshottariDasha(birthDate, nakshatraIdx, 0.5)
-      : null;
+    // Get nakshatra from today's influence or stored reading
+    const nakshatraRaw = reading?.todayInfluence?.nakshatra
+      || (reading as any)?.personalCompass?.moonNakshatra
+      || '';
+    const nakshatra = String(nakshatraRaw || '');
+    const nakshatraBase = nakshatra.replace(/\s*nakshatra.*/i, '').trim();
 
-    const mahadasha = realDasha?.mahadasha || '';
-    const antardasha = realDasha?.antardasha || '';
+    const { mahadasha, antardasha } = calcVimshottariDasha(birthDateStr, nakshatraBase);
 
     // Moon sign and other fields are not directly in the VedicReading type,
     // but can be derived from nakshatra or defaulted
