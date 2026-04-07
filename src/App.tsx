@@ -160,6 +160,7 @@ const SiddhaOracleAbout = React.lazy(() => import("./pages/SiddhaOracleAbout"));
 const CreativeSoulAbout = React.lazy(() => import("./pages/CreativeSoulAbout"));
 const ExploreAkasha = React.lazy(() => import("./pages/ExploreAkasha"));
 const AdminDivineTransmissions = React.lazy(() => import("./pages/AdminDivineTransmissions"));
+const SQISocialAutomation = React.lazy(() => import("./pages/SQISocialAutomation"));
 
 const PageLoader = () => (
   <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a]">
@@ -322,6 +323,7 @@ function AppRoutes() {
                   <Route path="/life-book" element={<LifeBook />} />
                   <Route path="/sri-yantra-shield" element={<SriYantraShield />} />
                   <Route path="/temple-home" element={<TempleHome />} />
+                  <Route path="/social-automation" element={<SQISocialAutomation />} />
                   <Route path="/digital-nadi" element={<DigitalNadi />} />
                   <Route path="/soul-scan" element={<SoulScan />} />
                   <Route path="/vayu-protocol" element={<VayuProtocol />} />
@@ -352,6 +354,7 @@ function AppRoutes() {
                 </Route>
                 <Route element={<AdminLayout />}>
                   <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin/social-automation" element={<SQISocialAutomation />} />
                   <Route path="/admin/grant-access" element={<AdminGrantAccess />} />
                   <Route path="/admin/meditations" element={<AdminMeditations />} />
                   <Route path="/admin/meditations/:id" element={<AdminMeditationEdit />} />

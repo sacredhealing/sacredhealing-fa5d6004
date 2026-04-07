@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Prema-Pulse Transmitter · SQI 2050</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800;900&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--gold:#D4AF37;--gold2:#F0D060;--bg:#050505;--cyan:#22D3EE;--glass:rgba(255,255,255,0.025);--gb:rgba(255,255,255,0.055)}
+html{scroll-behavior:smooth}
+body{background:var(--bg);font-family:'Plus Jakarta Sans',sans-serif;color:rgba(255,255,255,0.87);min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:rgba(212,175,55,0.3);border-radius:3px}
+#canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scanLine{0%{top:-2px;opacity:0}4%{opacity:1}95%{opacity:.7}100%{top:101%;opacity:0}}
+@keyframes goldPulse{0%,100%{box-shadow:0 0 20px rgba(212,175,55,.07)}50%{box-shadow:0 0 60px rgba(212,175,55,.2)}}
+@keyframes goldText{0%,100%{text-shadow:0 0 20px rgba(212,175,55,.2)}50%{text-shadow:0 0 50px rgba(212,175,55,.55)}}
+@keyframes blip{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.25;transform:scale(.5)}}
+@keyframes rotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes cRotate{from{transform:rotate(0deg)}to{transform:rotate(-360deg)}}
+@keyframes breathe{0%,100%{transform:scale(1);filter:drop-shadow(0 0 6px rgba(212,175,55,.4))}50%{transform:scale(1.06);filter:drop-shadow(0 0 18px rgba(212,175,55,.75))}}
+@keyframes orbit{from{transform:rotate(var(--s,0deg)) translateX(58px) rotate(calc(-1*var(--s,0deg)))}to{transform:rotate(calc(var(--s,0deg) + 360deg)) translateX(58px) rotate(calc(-1*(var(--s,0deg) + 360deg)))}}
+@keyframes shimmer{0%{background-position:-300% center}100%{background-position:300% center}}
+@keyframes connPop{0%{transform:scale(.92)}60%{transform:scale(1.04)}100%{transform:scale(1)}}
+@keyframes ping{0%{transform:scale(1);opacity:.7}100%{transform:scale(2.4);opacity:0}}
+.fu{animation:fadeUp .55s ease both}
+.d1{animation-delay:.08s}.d2{animation-delay:.18s}.d3{animation-delay:.28s}.d4{animation-delay:.4s}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:300;background:rgba(5,5,5,.95);backdrop-filter:blur(28px);border-bottom:1px solid rgba(255,255,255,.04);padding:13px 28px;display:flex;align-items:center;justify-content:space-between}
+.logo-wrap{display:flex;align-items:center;gap:10px}
+.logo-text{font-size:15px;font-weight:900;letter-spacing:-.03em;color:var(--gold)}
+.logo-sub{font-size:8px;font-weight:800;letter-spacing:.3em;color:rgba(255,255,255,.2);text-transform:uppercase;margin-top:-2px}
+.nav-r{display:flex;align-items:center;gap:10px}
+.admin-pill{display:flex;align-items:center;gap:5px;background:rgba(34,211,238,.07);border:1px solid rgba(34,211,238,.22);border-radius:20px;padding:4px 12px;font-size:9px;font-weight:800;letter-spacing:.22em;color:var(--cyan);text-transform:uppercase}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:blip 1.5s ease-in-out infinite;position:relative}
+.live-dot::after{content:'';position:absolute;inset:-3px;border-radius:50%;background:var(--cyan);opacity:.25;animation:ping 1.5s ease-out infinite}
+.av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#050505}
+
+/* LAYOUT */
+.wrap{max-width:980px;margin:0 auto;padding:36px 20px 110px;position:relative;z-index:10}
+.vbadge{display:inline-flex;align-items:center;gap:7px;border-radius:20px;padding:5px 14px;font-size:8px;font-weight:800;letter-spacing:.3em;text-transform:uppercase;margin-bottom:14px}
+.divider{display:flex;align-items:center;gap:14px;margin:40px 0 28px}
+.div-line{flex:1;height:1px;background:rgba(255,255,255,.05)}
+.div-txt{font-size:8px;font-weight:800;letter-spacing:.35em;color:rgba(255,255,255,.16);text-transform:uppercase;white-space:nowrap}
+.sec-head{text-align:center;margin-bottom:26px}
+.sec-over{font-size:8px;font-weight:800;letter-spacing:.45em;color:rgba(212,175,55,.4);text-transform:uppercase;margin-bottom:8px}
+.sec-h2{font-size:26px;font-weight:900;letter-spacing:-.035em;color:rgba(255,255,255,.9)}
+.sec-sub{font-size:12px;color:rgba(255,255,255,.26);margin-top:6px}
+
+/* STORE CARD */
+.store-card{position:relative;overflow:hidden;border-radius:26px;background:linear-gradient(135deg,rgba(212,175,55,.07) 0%,rgba(5,5,5,.98) 48%,rgba(34,211,238,.03) 100%);border:1px solid rgba(212,175,55,.3);padding:28px 26px;cursor:pointer;transition:transform .35s,box-shadow .4s;animation:goldPulse 4.5s ease-in-out infinite;margin-bottom:30px}
+.store-card:hover{transform:translateY(-4px);box-shadow:0 16px 60px rgba(212,175,55,.14)}
+.scan{position:absolute;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,.6),transparent);animation:scanLine 4s linear infinite;pointer-events:none}
+.cc{position:absolute;width:18px;height:18px;opacity:.45}
+.cc.tl{top:13px;left:13px;border-top:1.5px solid var(--gold);border-left:1.5px solid var(--gold)}
+.cc.tr{top:13px;right:13px;border-top:1.5px solid var(--gold);border-right:1.5px solid var(--gold)}
+.cc.bl{bottom:13px;left:13px;border-bottom:1.5px solid var(--gold);border-left:1.5px solid var(--gold)}
+.cc.br{bottom:13px;right:13px;border-bottom:1.5px solid var(--gold);border-right:1.5px solid var(--gold)}
+.ribbon{position:absolute;top:-1px;left:28px;background:linear-gradient(90deg,var(--gold),var(--gold2));padding:3px 16px;border-radius:0 0 10px 10px;font-size:8px;font-weight:900;letter-spacing:.3em;color:#050505}
+.card-inner{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.card-body{flex:1;min-width:190px}
+.eyebrow{font-size:8px;font-weight:800;letter-spacing:.4em;color:rgba(212,175,55,.5);text-transform:uppercase;margin-bottom:4px}
+.card-title{font-size:22px;font-weight:900;letter-spacing:-.04em;color:var(--gold);margin-bottom:6px;animation:goldText 3.5s ease-in-out infinite}
+.card-desc{font-size:12px;color:rgba(255,255,255,.42);line-height:1.6;margin-bottom:12px}
+.plat-row-card{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.card-right{display:flex;flex-direction:column;gap:10px;align-items:flex-end;flex-shrink:0}
+.pfrom{font-size:8px;font-weight:800;letter-spacing:.2em;color:rgba(255,255,255,.22);text-transform:uppercase}
+.pnum{font-size:30px;font-weight:900;color:var(--gold);letter-spacing:-.04em;line-height:1}
+.pper{font-size:11px;color:rgba(255,255,255,.28)}
+.btn-gold{background:linear-gradient(90deg,var(--gold),var(--gold2),var(--gold));background-size:300%;border:none;border-radius:14px;padding:12px 22px;font-family:inherit;font-weight:900;font-size:12px;color:#050505;cursor:pointer;letter-spacing:.04em;box-shadow:0 4px 24px rgba(212,175,55,.3);transition:all .3s;white-space:nowrap;animation:shimmer 4s linear infinite}
+.btn-gold:hover{transform:scale(1.06);box-shadow:0 8px 36px rgba(212,175,55,.5)}
+.ghost-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:10px;opacity:.18}
+.ghost-item{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:16px;height:120px;display:flex;align-items:center;justify-content:center;font-size:11px;color:rgba(255,255,255,.22)}
+
+/* PRODUCT PAGE */
+#page-product{display:none}
+.back-btn{background:none;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:8px 16px;color:rgba(255,255,255,.32);font-family:inherit;font-size:11px;cursor:pointer;margin-bottom:28px;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+.back-btn:hover{border-color:rgba(212,175,55,.3);color:rgba(255,255,255,.7)}
+
+/* HERO */
+.hero{text-align:center;margin-bottom:60px}
+.hero-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(34,211,238,.06);border:1px solid rgba(34,211,238,.25);border-radius:20px;padding:6px 16px;margin-bottom:20px;font-size:9px;font-weight:800;letter-spacing:.28em;color:var(--cyan);text-transform:uppercase}
+.hero h1{font-size:clamp(36px,7.5vw,66px);font-weight:900;letter-spacing:-.055em;color:var(--gold);line-height:.92;margin-bottom:10px;text-shadow:0 0 50px rgba(212,175,55,.3)}
+.hero-sub{font-size:14px;color:rgba(255,255,255,.3);letter-spacing:.07em;margin-bottom:32px}
+.orbit-stage{position:relative;width:140px;height:140px;margin:0 auto 36px}
+.orbit-ring{position:absolute;inset:0;border-radius:50%;border:1px dashed rgba(212,175,55,.12);animation:rotate 20s linear infinite}
+.orbit-ring2{position:absolute;inset:12px;border-radius:50%;border:1px dashed rgba(34,211,238,.08);animation:cRotate 14s linear infinite}
+.orbit-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:52px;height:52px;border-radius:14px;background:rgba(212,175,55,.07);border:1px solid rgba(212,175,55,.28);display:flex;align-items:center;justify-content:center;animation:breathe 3s ease-in-out infinite}
+.op{position:absolute;top:50%;left:50%;width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-top:-15px;margin-left:-15px}
+.op-ig{animation:orbit 10s linear infinite;--s:0deg;background:rgba(225,48,108,.12);border:1px solid rgba(225,48,108,.3)}
+.op-tt{animation:orbit 10s linear -2.5s infinite;--s:90deg;background:rgba(105,201,208,.12);border:1px solid rgba(105,201,208,.3)}
+.op-fb{animation:orbit 10s linear -5s infinite;--s:180deg;background:rgba(79,142,247,.12);border:1px solid rgba(79,142,247,.3)}
+.op-yt{animation:orbit 10s linear -7.5s infinite;--s:270deg;background:rgba(255,68,68,.12);border:1px solid rgba(255,68,68,.3)}
+.stats-row{display:flex;justify-content:center;gap:36px;flex-wrap:wrap;margin-bottom:30px}
+.stat .sv{font-size:32px;font-weight:900;color:var(--gold)}
+.stat .sl{font-size:8px;font-weight:800;letter-spacing:.3em;color:rgba(255,255,255,.2);text-transform:uppercase;margin-top:2px}
+.plat-chips{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.pchip{display:flex;align-items:center;gap:8px;border-radius:12px;padding:8px 14px;font-size:11px;font-weight:700}
+
+/* SOCIAL CONNECT */
+.connect-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(218px,1fr));gap:12px;margin-bottom:52px}
+.ccard{position:relative;background:var(--glass);border:1px solid var(--gb);border-radius:22px;padding:20px 18px;transition:all .35s;overflow:hidden}
+.ccard::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .4s;border-radius:22px;pointer-events:none}
+.ccard.ig::before{background:linear-gradient(135deg,rgba(225,48,108,.05),transparent 60%)}
+.ccard.tt::before{background:linear-gradient(135deg,rgba(105,201,208,.05),transparent 60%)}
+.ccard.fb::before{background:linear-gradient(135deg,rgba(79,142,247,.05),transparent 60%)}
+.ccard.yt::before{background:linear-gradient(135deg,rgba(255,68,68,.05),transparent 60%)}
+.ccard.linked::before{opacity:1}
+.ccard.linked{border-color:rgba(212,175,55,.2)}
+.ccard:hover{transform:translateY(-3px)}
+.ctop{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.plat-ico{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cstatus{display:flex;align-items:center;gap:5px;font-size:9px;font-weight:800;letter-spacing:.18em;text-transform:uppercase}
+.sdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sdot.on{animation:blip 1.5s ease-in-out infinite}
+.chandle{font-size:11px;color:rgba(255,255,255,.35);margin-bottom:3px;font-family:monospace}
+.cperms{margin-bottom:14px}
+.prow{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.pdot{width:5px;height:5px;border-radius:50%;background:rgba(212,175,55,.4);flex-shrink:0}
+.plbl{font-size:10px;color:rgba(255,255,255,.35)}
+.cinput{width:100%;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:8px 12px;color:rgba(255,255,255,.65);font-family:inherit;font-size:11px;outline:none;transition:border-color .2s;margin-bottom:8px}
+.cinput:focus{border-color:rgba(212,175,55,.3)}
+.cinput::placeholder{color:rgba(255,255,255,.2)}
+.cbtn{width:100%;padding:10px 0;border-radius:11px;font-family:inherit;font-weight:800;font-size:11px;letter-spacing:.06em;cursor:pointer;transition:all .3s}
+.cbtn.idle{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);color:rgba(255,255,255,.38)}
+.cbtn.idle:hover{border-color:rgba(212,175,55,.3);color:rgba(212,175,55,.8)}
+.cbtn.on{background-size:300%;animation:shimmer 3s linear infinite;border:none}
+.cbtn.ig-on{background:linear-gradient(90deg,rgba(225,48,108,.75),rgba(225,48,108,.55),rgba(225,48,108,.75));color:#fff}
+.cbtn.tt-on{background:linear-gradient(90deg,rgba(105,201,208,.75),rgba(105,201,208,.55),rgba(105,201,208,.75));color:#050505}
+.cbtn.fb-on{background:linear-gradient(90deg,rgba(79,142,247,.75),rgba(79,142,247,.55),rgba(79,142,247,.75));color:#fff}
+.cbtn.yt-on{background:linear-gradient(90deg,rgba(255,68,68,.75),rgba(255,68,68,.55),rgba(255,68,68,.75));color:#fff}
+.post-toggle{display:flex;align-items:center;gap:5px;border-radius:9px;padding:5px 10px;cursor:pointer;transition:all .2s;font-size:9px;font-weight:800;user-select:none;letter-spacing:.1em;flex-shrink:0}
+.post-toggle.off{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.22)}
+.post-toggle.on{border:1px solid currentColor}
+.targets-bar{display:none;margin-top:14px;background:rgba(212,175,55,.04);border:1px solid rgba(212,175,55,.14);border-radius:16px;padding:13px 16px}
+
+/* HOW + FEATS */
+.how-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:52px}
+.how-card{background:var(--glass);border:1px solid var(--gb);border-radius:20px;padding:22px 18px;transition:all .3s}
+.how-card:hover{border-color:rgba(212,175,55,.2);background:rgba(212,175,55,.03)}
+.how-step{font-size:8px;font-weight:800;letter-spacing:.3em;color:rgba(212,175,55,.3);text-transform:uppercase;margin-bottom:10px}
+.how-ico{width:38px;height:38px;border-radius:10px;background:rgba(212,175,55,.06);border:1px solid rgba(212,175,55,.15);display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.how-title{font-size:13px;font-weight:800;color:var(--gold);margin-bottom:6px}
+.how-desc{font-size:11px;color:rgba(255,255,255,.37);line-height:1.65}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-bottom:52px}
+.fcard{background:var(--glass);border:1px solid var(--gb);border-radius:18px;padding:16px;display:flex;align-items:flex-start;gap:12px;transition:all .3s}
+.fcard:hover{border-color:rgba(212,175,55,.2)}
+.fico{flex-shrink:0;width:36px;height:36px;border-radius:10px;background:rgba(212,175,55,.06);border:1px solid rgba(212,175,55,.15);display:flex;align-items:center;justify-content:center}
+.ft{font-size:12px;font-weight:800;color:rgba(255,255,255,.8);margin-bottom:3px}
+.fd{font-size:10px;color:rgba(255,255,255,.32);line-height:1.55}
+
+/* PRICING */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(256px,1fr));gap:14px;margin-bottom:52px}
+.tier{position:relative;background:var(--glass);border:1px solid var(--gb);border-radius:26px;padding:26px 22px;cursor:pointer;transition:all .4s}
+.tier:hover{transform:translateY(-4px)}
+.tier.sg{border-color:rgba(212,175,55,.45);box-shadow:0 0 50px rgba(212,175,55,.1);background:rgba(212,175,55,.03)}
+.tier.sc{border-color:rgba(34,211,238,.4);box-shadow:0 0 50px rgba(34,211,238,.09);background:rgba(34,211,238,.02)}
+.tier.ss{border-color:rgba(168,168,168,.35)}
+.ptag{position:absolute;top:-1px;left:50%;transform:translateX(-50%);background:linear-gradient(90deg,var(--gold),var(--gold2));padding:4px 20px;border-radius:0 0 14px 14px;font-size:8px;font-weight:900;letter-spacing:.3em;color:#050505;white-space:nowrap}
+.ticon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.tnm{font-size:15px;font-weight:900;letter-spacing:-.02em;margin-bottom:2px}
+.tsb{font-size:10px;color:rgba(255,255,255,.27);margin-bottom:18px}
+.tpr{display:flex;align-items:baseline;gap:4px;margin-bottom:3px}
+.tamt{font-size:44px;font-weight:900;letter-spacing:-.05em;line-height:1;color:rgba(255,255,255,.92)}
+.tper{font-size:13px;color:rgba(255,255,255,.27)}
+.tpts{font-size:10px;font-weight:700;letter-spacing:.07em;margin-bottom:20px}
+.tfeats{margin-bottom:20px}
+.tf{display:flex;align-items:flex-start;gap:8px;margin-bottom:7px}
+.tfb{width:13px;height:13px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.tfbi{width:4px;height:4px;border-radius:50%}
+.tf span{font-size:11px;color:rgba(255,255,255,.46);line-height:1.4}
+.tbtn{width:100%;padding:13px 0;border-radius:14px;cursor:pointer;font-family:inherit;font-weight:900;font-size:13px;letter-spacing:.06em;transition:all .3s}
+
+/* ADMIN */
+.admin-box{background:rgba(34,211,238,.02);border:1px solid rgba(34,211,238,.12);border-radius:26px;padding:26px 24px;margin-bottom:40px;position:relative;overflow:hidden}
+.admin-box::after{content:'';position:absolute;top:0;right:0;width:220px;height:220px;border-radius:50%;background:radial-gradient(ellipse,rgba(34,211,238,.04),transparent 70%);pointer-events:none}
+.arow{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.abadge{background:rgba(34,211,238,.07);border:1px solid rgba(34,211,238,.2);border-radius:14px;padding:14px 18px;text-align:center;flex-shrink:0}
+.albl{font-size:8px;font-weight:800;letter-spacing:.25em;color:var(--cyan);text-transform:uppercase}
+.anote{font-size:9px;color:rgba(255,255,255,.2);margin-top:2px}
+
+/* FINAL CTA */
+.final-cta{background:linear-gradient(135deg,rgba(212,175,55,.08),rgba(212,175,55,.02));border:1px solid rgba(212,175,55,.22);border-radius:26px;padding:40px 26px;text-align:center;animation:goldPulse 4.5s ease-in-out infinite}
+.final-cta h2{font-size:28px;font-weight:900;color:var(--gold);letter-spacing:-.04em;margin-bottom:8px}
+.final-cta p{font-size:13px;color:rgba(255,255,255,.33);max-width:400px;margin:0 auto 26px;line-height:1.75}
+.cta-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.btn-ghost{background:rgba(212,175,55,.06);border:1px solid rgba(212,175,55,.22);border-radius:14px;padding:14px 26px;font-family:inherit;font-weight:700;font-size:12px;color:var(--gold);cursor:pointer;transition:all .3s}
+.btn-ghost:hover{background:rgba(212,175,55,.13)}
+.fnote{font-size:8px;color:rgba(255,255,255,.14);margin-top:14px;letter-spacing:.22em;text-transform:uppercase}
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+
+<!-- NAV -->
+<nav>
+  <div class="logo-wrap">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+      <polygon points="14,2 26,20 2,20" stroke="#D4AF37" stroke-width="1.2" fill="none" opacity=".9"/>
+      <polygon points="14,26 2,8 26,8" stroke="#D4AF37" stroke-width="1.2" fill="none" opacity=".5"/>
+      <circle cx="14" cy="14" r="3.5" fill="#D4AF37" opacity=".85"/>
+      <circle cx="14" cy="14" r="6" stroke="#D4AF37" stroke-width=".6" fill="none" opacity=".35"/>
+    </svg>
+    <div><div class="logo-text">SACRED HEALING</div><div class="logo-sub">Siddha-Quantum Nexus</div></div>
+  </div>
+  <div class="nav-r">
+    <div class="admin-pill"><span class="live-dot"></span>Admin</div>
+    <div class="av">K</div>
+  </div>
+</nav>
+
+<!-- PAGE 1: STORE -->
+<div id="page-store" class="wrap">
+  <div class="fu" style="margin-bottom:10px">
+    <span class="vbadge" style="background:rgba(212,175,55,.06);border:1px solid rgba(212,175,55,.18);color:rgba(212,175,55,.6)">◈ VIEW 1 — STORE CARD ADDED TO CREATIVE SOUL STORE</span>
+  </div>
+  <p class="fu d1" style="font-size:12px;color:rgba(255,255,255,.27);margin-bottom:26px;line-height:1.7">This single card slots into your existing store grid alongside other products. Click View Tool to see the product page.</p>
+
+  <div class="store-card fu d1" onclick="goProduct()">
+    <div class="scan"></div>
+    <div class="cc tl"></div><div class="cc tr"></div><div class="cc bl"></div><div class="cc br"></div>
+    <div class="ribbon">NEW</div>
+    <div class="card-inner">
+      <!-- SQN Sacred Icon -->
+      <div id="sico" style="width:72px;height:72px;border-radius:18px;flex-shrink:0;background:rgba(212,175,55,.06);border:1px solid rgba(212,175,55,.25);display:flex;align-items:center;justify-content:center">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" style="animation:breathe 3s ease-in-out infinite">
+          <circle cx="20" cy="20" r="18" stroke="#D4AF37" stroke-width=".7" fill="none" opacity=".28"/>
+          <polygon points="20,4 35,30 5,30" stroke="#D4AF37" stroke-width="1.2" fill="none"/>
+          <polygon points="20,36 5,10 35,10" stroke="#D4AF37" stroke-width="1.2" fill="none" opacity=".6"/>
+          <circle cx="20" cy="20" r="4.5" fill="#D4AF37" opacity=".9"/>
+          <circle cx="20" cy="20" r="8" stroke="#D4AF37" stroke-width=".6" fill="none" opacity=".35"/>
+          <line x1="20" y1="1" x2="20" y2="5" stroke="#D4AF37" stroke-width=".8" opacity=".5"/>
+          <line x1="20" y1="35" x2="20" y2="39" stroke="#D4AF37" stroke-width=".8" opacity=".5"/>
+          <line x1="1" y1="20" x2="5" y2="20" stroke="#D4AF37" stroke-width=".8" opacity=".5"/>
+          <line x1="35" y1="20" x2="39" y2="20" stroke="#D4AF37" stroke-width=".8" opacity=".5"/>
+        </svg>
+      </div>
+      <div class="card-body">
+        <div class="eyebrow">Creator Tool · Social Media</div>
+        <div class="card-title">Prema-Pulse Transmitter</div>
+        <div class="card-desc">AI viral content engine. Upload media, speak your idea,<br>get posts for all 4 platforms instantly.</div>
+        <div class="plat-row-card">
+          <!-- SVG platform icons -->
+          <div style="width:30px;height:30px;border-radius:9px;background:rgba(225,48,108,.1);border:1px solid rgba(225,48,108,.28);display:flex;align-items:center;justify-content:center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="6" stroke="#E1306C" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="4.5" stroke="#E1306C" stroke-width="2" fill="none"/><circle cx="17.5" cy="6.5" r="1.3" fill="#E1306C"/></svg>
+          </div>
+          <div style="width:30px;height:30px;border-radius:9px;background:rgba(105,201,208,.1);border:1px solid rgba(105,201,208,.28);display:flex;align-items:center;justify-content:center">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M19 3h-3v12a4 4 0 1 1-4-4V8a7 7 0 1 0 7 7V8a9 9 0 0 0 5 1.5V6s-2.5 0-5-3z" stroke="#69C9D0" stroke-width="2" stroke-linejoin="round" fill="none"/></svg>
+          </div>
+          <div style="width:30px;height:30px;border-radius:9px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.28);display:flex;align-items:center;justify-content:center">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#4F8EF7" stroke-width="2" fill="none"/><path d="M15 8h-2a2 2 0 0 0-2 2v2H9v3h2v7h3v-7h2l.5-3H14v-2c0-.55.45-1 1-1z" stroke="#4F8EF7" stroke-width="1.6" fill="none"/></svg>
+          </div>
+          <div style="width:30px;height:30px;border-radius:9px;background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.28);display:flex;align-items:center;justify-content:center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="4" stroke="#FF4444" stroke-width="2" fill="none"/><polygon points="10,8.5 10,15.5 17,12" stroke="#FF4444" stroke-width="1.7" stroke-linejoin="round" fill="none"/></svg>
+          </div>
+          <span style="font-size:10px;color:rgba(212,175,55,.6);font-weight:700;margin-left:2px">4 platforms · 6 languages</span>
+        </div>
+      </div>
+      <div class="card-right">
+        <div><div class="pfrom">from</div><div><span class="pnum">€9</span><span class="pper">/mo</span></div></div>
+        <button class="btn-gold" onclick="goProduct();event.stopPropagation()">View Tool →</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider fu d2"><div class="div-line"></div><div class="div-txt">other store items below</div><div class="div-line"></div></div>
+  <div class="ghost-grid fu d3">
+    <div class="ghost-item">432Hz Healing Bundle</div>
+    <div class="ghost-item">Vedic Mantra Collection</div>
+    <div class="ghost-item">Ayurvedic Dosha Kit</div>
+    <div class="ghost-item">Jyotish Birth Chart</div>
+  </div>
+</div>
+
+<!-- PAGE 2: PRODUCT -->
+<div id="page-product" class="wrap">
+  <button class="back-btn" onclick="goStore()">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8 2L4 6l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    Back to Store
+  </button>
+  <div style="margin-bottom:28px">
+    <span class="vbadge" style="background:rgba(34,211,238,.05);border:1px solid rgba(34,211,238,.18);color:rgba(34,211,238,.6)">◈ VIEW 2 — FULL PREMA-PULSE PRODUCT PAGE</span>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero fu">
+    <div class="hero-badge"><span class="live-dot"></span>Admin · Full Access Active</div>
+    <div class="orbit-stage">
+      <div class="orbit-ring"></div><div class="orbit-ring2"></div>
+      <div class="orbit-center">
+        <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
+          <polygon points="20,4 35,30 5,30" stroke="#D4AF37" stroke-width="1.5" fill="none"/>
+          <polygon points="20,36 5,10 35,10" stroke="#D4AF37" stroke-width="1.5" fill="none" opacity=".6"/>
+          <circle cx="20" cy="20" r="4.5" fill="#D4AF37"/>
+        </svg>
+      </div>
+      <div class="op op-ig"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="6" stroke="#E1306C" stroke-width="2.2" fill="none"/><circle cx="12" cy="12" r="4.5" stroke="#E1306C" stroke-width="2" fill="none"/><circle cx="17.5" cy="6.5" r="1.3" fill="#E1306C"/></svg></div>
+      <div class="op op-tt"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M19 3h-3v12a4 4 0 1 1-4-4V8a7 7 0 1 0 7 7V8a9 9 0 0 0 5 1.5V6s-2.5 0-5-3z" stroke="#69C9D0" stroke-width="2.2" stroke-linejoin="round" fill="none"/></svg></div>
+      <div class="op op-fb"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#4F8EF7" stroke-width="2.2" fill="none"/><path d="M15 8h-2a2 2 0 0 0-2 2v2H9v3h2v7h3v-7h2l.5-3H14v-2c0-.55.45-1 1-1z" stroke="#4F8EF7" stroke-width="1.7" fill="none"/></svg></div>
+      <div class="op op-yt"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="4" stroke="#FF4444" stroke-width="2.2" fill="none"/><polygon points="10,8.5 10,15.5 17,12" stroke="#FF4444" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg></div>
+    </div>
+    <div style="font-size:8px;font-weight:800;letter-spacing:.5em;color:rgba(212,175,55,.38);text-transform:uppercase;margin-bottom:10px">SACRED HEALING · CREATOR TOOLS</div>
+    <h1>PREMA-PULSE<br>TRANSMITTER</h1>
+    <div class="hero-sub">AI Viral Content Engine for Spiritual Creators</div>
+    <div class="stats-row">
+      <div class="stat"><div class="sv">4</div><div class="sl">Platforms</div></div>
+      <div class="stat"><div class="sv">6</div><div class="sl">Languages</div></div>
+      <div class="stat"><div class="sv">5</div><div class="sl">AI Pillars</div></div>
+      <div class="stat"><div class="sv">∞</div><div class="sl">Posts / mo</div></div>
+    </div>
+    <div class="plat-chips">
+      <div class="pchip" style="background:rgba(225,48,108,.09);border:1px solid rgba(225,48,108,.28);color:#E1306C"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="6" stroke="#E1306C" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="4.5" stroke="#E1306C" stroke-width="2" fill="none"/><circle cx="17.5" cy="6.5" r="1.3" fill="#E1306C"/></svg>Instagram</div>
+      <div class="pchip" style="background:rgba(105,201,208,.09);border:1px solid rgba(105,201,208,.28);color:#69C9D0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M19 3h-3v12a4 4 0 1 1-4-4V8a7 7 0 1 0 7 7V8a9 9 0 0 0 5 1.5V6s-2.5 0-5-3z" stroke="#69C9D0" stroke-width="2" fill="none"/></svg>TikTok</div>
+      <div class="pchip" style="background:rgba(79,142,247,.09);border:1px solid rgba(79,142,247,.28);color:#4F8EF7"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#4F8EF7" stroke-width="2" fill="none"/><path d="M15 8h-2a2 2 0 0 0-2 2v2H9v3h2v7h3v-7h2l.5-3H14v-2c0-.55.45-1 1-1z" stroke="#4F8EF7" stroke-width="1.6" fill="none"/></svg>Facebook</div>
+      <div class="pchip" style="background:rgba(255,68,68,.09);border:1px solid rgba(255,68,68,.28);color:#FF4444"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="4" stroke="#FF4444" stroke-width="2" fill="none"/><polygon points="10,8.5 10,15.5 17,12" stroke="#FF4444" stroke-width="1.7" fill="none"/></svg>YouTube</div>
+    </div>
+  </div>
+
+  <!-- SOCIAL CONNECT PANEL -->
+  <div class="fu d1">
+    <div class="sec-head">
+      <div class="sec-over">STEP 1 · CONNECT YOUR ACCOUNTS</div>
+      <h2 class="sec-h2">Link your social channels</h2>
+      <p class="sec-sub">Connect once. SQI posts directly to all linked platforms when you hit transmit.</p>
+    </div>
+    <div class="connect-grid">
+
+      <!-- INSTAGRAM -->
+      <div class="ccard ig" id="c-ig">
+        <div class="ctop">
+          <div class="plat-ico" style="background:rgba(225,48,108,.1);border:1px solid rgba(225,48,108,.25)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="6" stroke="#E1306C" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="4.5" stroke="#E1306C" stroke-width="2" fill="none"/><circle cx="17.5" cy="6.5" r="1.5" fill="#E1306C"/></svg>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:900;color:#E1306C;letter-spacing:-.02em">Instagram</div>
+            <div class="cstatus" id="s-ig"><span class="sdot" style="background:rgba(255,255,255,.18)"></span><span style="color:rgba(255,255,255,.25)">Not connected</span></div>
+          </div>
+          <div id="tog-ig" class="post-toggle off" style="color:#E1306C" onclick="toggleTarget('ig')">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>POST
+          </div>
+        </div>
+        <div id="h-ig" class="chandle" style="display:none">@kritagya_das</div>
+        <div class="cperms" id="p-ig">
+          <div class="prow"><div class="pdot"></div><span class="plbl">Publish Reels &amp; posts</span></div>
+          <div class="prow"><div class="pdot"></div><span class="plbl">Auto captions &amp; hashtags</span></div>
+          <div class="prow"><div class="pdot"></div><span class="plbl">Schedule &amp; queue</span></div>
+        </div>
+        <input class="cinput" id="i-ig" placeholder="@instagram_handle" type="text"/>
+        <button class="cbtn idle" id="b-ig" onclick="connect('ig')">Connect Instagram</button>
+      </div>
+
+      <!-- TIKTOK -->
+      <div class="ccard tt" id="c-tt">
+        <div class="ctop">
+          <div class="plat-ico" style="background:rgba(105,201,208,.1);border:1px solid rgba(105,201,208,.25)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M19 3h-3v12a4 4 0 1 1-4-4V8a7 7 0 1 0 7 7V8a9 9 0 0 0 5 1.5V6s-2.5 0-5-3z" stroke="#69C9D0" stroke-width="2" stroke-linejoin="round" fill="none"/></svg>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:900;color:#69C9D0;letter-spacing:-.02em">TikTok</div>
+            <div class="cstatus" id="s-tt"><span class="sdot" style="background:rgba(255,255,255,.18)"></span><span style="color:rgba(255,255,255,.25)">Not connected</span></div>
+          </div>
+          <div id="tog-tt" class="post-toggle off" style="color:#69C9D0" onclick="toggleTarget('tt')">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>POST
+          </div>
+        </div>
+        <div id="h-tt" class="chandle" style="display:none">@kritagyadas</div>
+        <div class="cperms" id="p-tt">
+          <div class="prow"><div class="pdot"></div><span class="plbl">Publish videos &amp; Shorts</span></div>
+          <div class="prow"><div class="pdot"></div><span class="plbl">Auto captions &amp; trending audio</span></div>
+          <div class="prow"><div class="pdot"></div><span class="plbl">Schedule posts</span></div>
+        </div>
+        <input class="cinput" id="i-tt" placeholder="@tiktok_handle" type="text"/>
+        <button class="cbtn idle" id="b-tt" onclick="connect('tt')">Connect TikTok</button>
+      </div>
+
+      <!-- FACEBOOK -->
+      <div class="ccard fb" id="c-fb">
+        <div class="ctop">
+          <div class="plat-ico" style="background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#4F8EF7" stroke-width="2" fill="none"/><path d="M15 8h-2a2 2 0 0 0-2 2v2H9v3h2v7h3v-7h2l.5-3H14v-2c0-.55.45-1 1-1z" stroke="#4F8EF7" stroke-width="1.7" fill="none"/></svg>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:900;color:#4F8EF7;letter-spacing:-.02em">Facebook</div>
+            <div class="cstatus" id="s-fb"><span class="sdot" style="background:rgba(255,255,255,.18)"></span><span style="color:rgba(255,255,255,.25)">Not connected</span></div>
+          </div>
+          <div id="tog-fb" class="post-toggle off" style="color:#4F8EF7" onclick="toggleTarget('fb')">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>POST
+          </div>
+        </div>
+        <div id="h-fb" class="chandle" style="display:none">Sacred Healing · Page</div>
+        <div class="cperms" id="p-fb">
+          <div class="prow"><div class="pdot"></div><span class="plbl">Publish Reels &amp; page posts</span></div>
+          <div class="prow"><div class="pdot"></div><span class="plbl">Manage page content</span></div>
+          <div class="prow"><div class="pdot"></div><span class="plbl">Schedule &amp; auto-post</span></div>
+        </div>
+        <input class="cinput" id="i-fb" placeholder="Page URL or ID" type="text"/>
+        <button class="cbtn idle" id="b-fb" onclick="connect('fb')">Connect Facebook</button>
+      </div>
+
+      <!-- YOUTUBE -->
+      <div class="ccard yt" id="c-yt">
+        <div class="ctop">
+          <div class="plat-ico" style="background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.25)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="4" stroke="#FF4444" stroke-width="2" fill="none"/><polygon points="10,8.5 10,15.5 17,12" stroke="#FF4444" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:900;color:#FF4444;letter-spacing:-.02em">YouTube</div>
+            <div class="cstatus" id="s-yt"><span class="sdot" style="background:rgba(255,255,255,.18)"></span><span style="color:rgba(255,255,255,.25)">Not connected</span></div>
+          </div>
+          <div id="tog-yt" class="post-toggle off" style="color:#FF4444" onclick="toggleTarget('yt')">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>POST
+          </div>
+        </div>
+        <div id="h-yt" class="chandle" style="display:none">@kritagyadas</div>
+        <div class="cperms" id="p-yt">
+          <div class="prow"><div class="pdot"></div><span class="plbl">Upload Shorts &amp; long-form</span></div>
+          <div class="prow"><div class="pdot"></div><span class="plbl">Auto titles, tags &amp; descriptions</span></div>
+          <div class="prow"><div class="pdot"></div><span class="plbl">Schedule premieres</span></div>
+        </div>
+        <input class="cinput" id="i-yt" placeholder="@youtube_channel" type="text"/>
+        <button class="cbtn idle" id="b-yt" onclick="connect('yt')">Connect YouTube</button>
+      </div>
+    </div>
+
+    <!-- Active targets bar -->
+    <div id="tbar" class="targets-bar">
+      <div style="font-size:8px;font-weight:800;letter-spacing:.35em;color:rgba(212,175,55,.5);text-transform:uppercase;margin-bottom:8px">TRANSMITTING TO</div>
+      <div id="tlist" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="sec-head fu d2" style="margin-top:52px"><div class="sec-over">HOW IT WORKS</div><h2 class="sec-h2">4 steps. All platforms. Done.</h2></div>
+  <div class="how-grid fu d2">
+    <div class="how-card"><div class="how-step">STEP 01</div>
+      <div class="how-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="#D4AF37" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="how-title">Upload Media</div><div class="how-desc">Drop your video or image. SQI shows exact edit specs per platform — ratio, duration, style notes.</div>
+    </div>
+    <div class="how-card"><div class="how-step">STEP 02</div>
+      <div class="how-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z" stroke="#D4AF37" stroke-width="1.8"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3M8 22h8" stroke="#D4AF37" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+      <div class="how-title">Speak Your Idea</div><div class="how-desc">Tap mic and speak what the post is about. SQI transcribes live. Or just type a few words.</div>
+    </div>
+    <div class="how-card"><div class="how-step">STEP 03</div>
+      <div class="how-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2" stroke="#D4AF37" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg></div>
+      <div class="how-title">Generate Posts</div><div class="how-desc">SQI creates platform-perfect posts — viral hook, caption, hashtags, CTA, best posting time.</div>
+    </div>
+    <div class="how-card"><div class="how-step">STEP 04</div>
+      <div class="how-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z" stroke="#D4AF37" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="how-title">Transmit</div><div class="how-desc">Hit transmit. Posts publish directly to all connected platforms simultaneously.</div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <div class="sec-head fu d2"><div class="sec-over">FULL FEATURE SET</div><h2 class="sec-h2">One tool. Every platform. Every post.</h2></div>
+  <div class="feat-grid fu d3">
+    <div class="fcard"><div class="fico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z" stroke="#D4AF37" stroke-width="1.8"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3M8 22h8" stroke="#D4AF37" stroke-width="1.8" stroke-linecap="round"/></svg></div><div><div class="ft">Voice-to-Post</div><div class="fd">Speak it. SQI writes the post.</div></div></div>
+    <div class="fcard"><div class="fico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2" stroke="#D4AF37" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg></div><div><div class="ft">AI Viral Hook Engine</div><div class="fd">Scroll-stopping first line, every time.</div></div></div>
+    <div class="fcard"><div class="fico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#D4AF37" stroke-width="1.8" fill="none"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20" stroke="#D4AF37" stroke-width="1.5" fill="none"/></svg></div><div><div class="ft">6-Language Translate</div><div class="fd">Auto-translate all posts at once.</div></div></div>
+    <div class="fcard"><div class="fico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z" stroke="#D4AF37" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><div class="ft">Direct Publishing</div><div class="fd">Posts transmit to all linked accounts.</div></div></div>
+    <div class="fcard"><div class="fico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20" stroke="#D4AF37" stroke-width="1.8" fill="none" opacity="0"/><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#D4AF37" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg></div><div><div class="ft">5 Bhakti-Algorithm Pillars</div><div class="fd">Activation · Transmission · Light-Code · Story · CTA.</div></div></div>
+    <div class="fcard"><div class="fico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="#D4AF37" stroke-width="1.8" fill="none"/><path d="M16 2v4M8 2v4M3 10h18" stroke="#D4AF37" stroke-width="1.8" stroke-linecap="round"/></svg></div><div><div class="ft">Scheduling Queue</div><div class="fd">Best post times per platform.</div></div></div>
+    <div class="fcard"><div class="fico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="#D4AF37" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><div class="ft">Media Upload &amp; Edit Guide</div><div class="fd">Exact specs per platform after upload.</div></div></div>
+    <div class="fcard"><div class="fico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="#D4AF37" stroke-width="1.8" fill="none"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" stroke="#D4AF37" stroke-width="1.8" stroke-linecap="round"/></svg></div><div><div class="ft">Viral Protocol Tips</div><div class="fd">One platform-specific tip per post.</div></div></div>
+  </div>
+
+  <!-- PRICING -->
+  <div class="sec-head fu d2"><div class="sec-over">PRICING</div><h2 class="sec-h2">Choose your transmission tier</h2><p class="sec-sub">All plans include sacredhealing.lovable.app access</p></div>
+  <div class="pgrid fu d3">
+    <!-- SPARK -->
+    <div class="tier" id="t1" onclick="selT(this,'ss')">
+      <div class="ticon" style="background:rgba(168,168,168,.08);border:1px solid rgba(168,168,168,.2)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9 12,2" stroke="#A8A8A8" stroke-width="1.6" fill="none"/></svg></div>
+      <div class="tnm" style="color:#A8A8A8">Prana Spark</div><div class="tsb">Begin the Transmission</div>
+      <div class="tpr"><span class="tamt">€9</span><span class="tper">/month</span></div>
+      <div class="tpts" style="color:#A8A8A8">30 AI posts / month</div>
+      <div class="tfeats">
+        <div class="tf"><div class="tfb" style="background:rgba(168,168,168,.12);border:1px solid rgba(168,168,168,.3)"><div class="tfbi" style="background:#A8A8A8"></div></div><span>2 platforms (Instagram + TikTok)</span></div>
+        <div class="tf"><div class="tfb" style="background:rgba(168,168,168,.12);border:1px solid rgba(168,168,168,.3)"><div class="tfbi" style="background:#A8A8A8"></div></div><span>All 5 content pillars</span></div>
+        <div class="tf"><div class="tfb" style="background:rgba(168,168,168,.12);border:1px solid rgba(168,168,168,.3)"><div class="tfbi" style="background:#A8A8A8"></div></div><span>Basic viral hooks library</span></div>
+        <div class="tf"><div class="tfb" style="background:rgba(168,168,168,.12);border:1px solid rgba(168,168,168,.3)"><div class="tfbi" style="background:#A8A8A8"></div></div><span>3 languages</span></div>
+        <div class="tf"><div class="tfb" style="background:rgba(168,168,168,.12);border:1px solid rgba(168,168,168,.3)"><div class="tfbi" style="background:#A8A8A8"></div></div><span>Manual copy &amp; publish</span></div>
+      </div>
+      <button class="tbtn" style="background:rgba(168,168,168,.05);border:1px solid rgba(168,168,168,.25);color:#A8A8A8">Start Healing</button>
+    </div>
+
+    <!-- QUANTUM -->
+    <div class="tier sg" id="t2" onclick="selT(this,'sg')">
+      <div class="ptag">◈ MOST POPULAR</div>
+      <div class="ticon" style="background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.3)">
+        <svg width="24" height="24" viewBox="0 0 40 40" fill="none"><polygon points="20,4 35,30 5,30" stroke="#D4AF37" stroke-width="1.6" fill="none"/><polygon points="20,36 5,10 35,10" stroke="#D4AF37" stroke-width="1.6" fill="none" opacity=".6"/><circle cx="20" cy="20" r="4.5" fill="#D4AF37"/></svg>
+      </div>
+      <div class="tnm" style="color:#D4AF37">Siddha Quantum</div><div class="tsb">Full Bhakti-Algorithm Power</div>
+      <div class="tpr"><span class="tamt">€29</span><span class="tper">/month</span></div>
+      <div class="tpts" style="color:#D4AF37">Unlimited posts</div>
+      <div class="tfeats">
+        <div class="tf"><div class="tfb" style="background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.38)"><div class="tfbi" style="background:#D4AF37"></div></div><span>All 4 platforms simultaneously</span></div>
+        <div class="tf"><div class="tfb" style="background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.38)"><div class="tfbi" style="background:#D4AF37"></div></div><span>Direct social media publishing</span></div>
+        <div class="tf"><div class="tfb" style="background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.38)"><div class="tfbi" style="background:#D4AF37"></div></div><span>Voice mic transcription</span></div>
+        <div class="tf"><div class="tfb" style="background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.38)"><div class="tfbi" style="background:#D4AF37"></div></div><span>AI caption + viral hook engine</span></div>
+        <div class="tf"><div class="tfb" style="background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.38)"><div class="tfbi" style="background:#D4AF37"></div></div><span>6 languages + auto-translate</span></div>
+        <div class="tf"><div class="tfb" style="background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.38)"><div class="tfbi" style="background:#D4AF37"></div></div><span>Scheduling queue + best times</span></div>
+        <div class="tf"><div class="tfb" style="background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.38)"><div class="tfbi" style="background:#D4AF37"></div></div><span>Platform preview mockups</span></div>
+      </div>
+      <button class="tbtn btn-gold">Activate Now</button>
+    </div>
+
+    <!-- AKASHA -->
+    <div class="tier" id="t3" onclick="selT(this,'sc')">
+      <div class="ticon" style="background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.22)">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2" stroke="#22D3EE" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg>
+      </div>
+      <div class="tnm" style="color:#22D3EE">Akasha Infinity</div><div class="tsb">The Sovereign Creator</div>
+      <div class="tpr"><span class="tamt">€111</span><span class="tper"> once</span></div>
+      <div class="tpts" style="color:#22D3EE">Unlimited · Forever</div>
+      <div class="tfeats">
+        <div class="tf"><div class="tfb" style="background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.35)"><div class="tfbi" style="background:#22D3EE"></div></div><span>Everything in Siddha Quantum</span></div>
+        <div class="tf"><div class="tfb" style="background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.35)"><div class="tfbi" style="background:#22D3EE"></div></div><span>Lifetime — no monthly fee</span></div>
+        <div class="tf"><div class="tfb" style="background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.35)"><div class="tfbi" style="background:#22D3EE"></div></div><span>Admin dashboard access</span></div>
+        <div class="tf"><div class="tfb" style="background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.35)"><div class="tfbi" style="background:#22D3EE"></div></div><span>White-label for your brand</span></div>
+        <div class="tf"><div class="tfb" style="background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.35)"><div class="tfbi" style="background:#22D3EE"></div></div><span>Custom brand voice training</span></div>
+        <div class="tf"><div class="tfb" style="background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.35)"><div class="tfbi" style="background:#22D3EE"></div></div><span>Direct Kritagya Das support</span></div>
+        <div class="tf"><div class="tfb" style="background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.35)"><div class="tfbi" style="background:#22D3EE"></div></div><span>Early access to all new features</span></div>
+      </div>
+      <button class="tbtn" style="background:rgba(34,211,238,.07);border:1px solid rgba(34,211,238,.28);color:#22D3EE">Own It Forever</button>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div class="admin-box fu d3">
+    <div class="arow">
+      <div style="flex:1;min-width:230px">
+        <div style="font-size:8px;font-weight:800;letter-spacing:.4em;color:rgba(34,211,238,.5);text-transform:uppercase;margin-bottom:8px">ADMIN · KRITAGYA DAS &amp; LAILA</div>
+        <h3 style="font-size:18px;font-weight:900;color:#22D3EE;letter-spacing:-.03em;margin-bottom:8px">Full Admin Access — Always Free</h3>
+        <p style="font-size:12px;color:rgba(255,255,255,.35);line-height:1.75;max-width:460px">You and Karaveera Nivasini Dasi have permanent full access. Admin mode unlocks white-label settings, analytics, post performance, and management for all Sacred Healing members.</p>
+      </div>
+      <div class="abadge">
+        <div style="margin-bottom:6px"><svg width="24" height="24" viewBox="0 0 40 40" fill="none"><polygon points="20,4 35,30 5,30" stroke="#22D3EE" stroke-width="1.5" fill="none"/><polygon points="20,36 5,10 35,10" stroke="#22D3EE" stroke-width="1.5" fill="none" opacity=".5"/><circle cx="20" cy="20" r="4" fill="#22D3EE"/></svg></div>
+        <div class="albl">Akasha Infinity</div><div class="anote">Admin Override Active</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FINAL CTA -->
+  <div class="final-cta fu d4">
+    <div style="margin-bottom:14px"><svg width="44" height="44" viewBox="0 0 40 40" fill="none" style="display:block;margin:0 auto;animation:breathe 3s ease-in-out infinite"><polygon points="20,4 35,30 5,30" stroke="#D4AF37" stroke-width="1.5" fill="none"/><polygon points="20,36 5,10 35,10" stroke="#D4AF37" stroke-width="1.5" fill="none" opacity=".55"/><circle cx="20" cy="20" r="5" fill="#D4AF37" opacity=".9"/></svg></div>
+    <h2>Ready to go viral?</h2>
+    <p>Upload. Speak. Transmit. Every post is a Vedic Light-Code reaching the souls who need it.</p>
+    <div class="cta-row">
+      <button class="btn-gold" style="font-size:14px;padding:15px 34px">START FOR €9/MONTH →</button>
+      <button class="btn-ghost">LIFETIME ACCESS — €111</button>
+    </div>
+    <div class="fnote">sacredhealing.lovable.app · Siddha-Quantum Intelligence 2050</div>
+  </div>
+</div>
+
+<script>
+/* CANVAS */
+(function(){
+  const cv=document.getElementById('canvas'),ctx=cv.getContext('2d');
+  let W,H,pts=[];
+  function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight;pts=[];for(let i=0;i<28;i++)pts.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.16,vy:(Math.random()-.5)*.16,r:Math.random()*1.5+.4,a:Math.random()*.25+.05})}
+  resize();addEventListener('resize',resize);
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    // nebula glow
+    const g=ctx.createRadialGradient(W*.5,H*.22,0,W*.5,H*.22,W*.4);
+    g.addColorStop(0,'rgba(212,175,55,.028)');g.addColorStop(1,'transparent');
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(212,175,55,${p.a})`;ctx.fill()});
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* NAV */
+function goProduct(){document.getElementById('page-store').style.display='none';document.getElementById('page-product').style.display='block';window.scrollTo({top:0,behavior:'smooth'})}
+function goStore(){document.getElementById('page-product').style.display='none';document.getElementById('page-store').style.display='block';window.scrollTo({top:0,behavior:'smooth'})}
+
+/* TIER */
+function selT(el,cls){['t1','t2','t3'].forEach(id=>document.getElementById(id).classList.remove('sg','sc','ss'));el.classList.add(cls)}
+
+/* STORE ICON PULSE */
+(function(){const el=document.getElementById('sico');let b=false;setInterval(()=>{b=!b;el.style.boxShadow=b?'0 0 36px rgba(212,175,55,.55)':'0 0 8px rgba(212,175,55,.1)'},2100)})();
+
+/* SOCIAL CONNECT */
+const linked={ig:false,tt:false,fb:false,yt:false};
+const targets={ig:false,tt:false,fb:false,yt:false};
+const meta={
+  ig:{c:'#E1306C',n:'Instagram',h:'@kritagya_das',cls:'ig-on'},
+  tt:{c:'#69C9D0',n:'TikTok',h:'@kritagyadas',cls:'tt-on'},
+  fb:{c:'#4F8EF7',n:'Facebook',h:'Sacred Healing · Page',cls:'fb-on'},
+  yt:{c:'#FF4444',n:'YouTube',h:'@kritagyadas',cls:'yt-on'}
+};
+
+function connect(id){
+  const inp=document.getElementById('i-'+id);
+  const btn=document.getElementById('b-'+id);
+  if(linked[id]){
+    linked[id]=false;targets[id]=false;
+    btn.className='cbtn idle';btn.textContent='Connect '+meta[id].n;
+    document.getElementById('s-'+id).innerHTML=`<span class="sdot" style="background:rgba(255,255,255,.18)"></span><span style="color:rgba(255,255,255,.25)">Not connected</span>`;
+    document.getElementById('h-'+id).style.display='none';
+    document.getElementById('c-'+id).classList.remove('linked');
+    inp.style.display='block';
+    document.getElementById('tog-'+id).classList.replace('on','off');
+    updateBar();return;
+  }
+  const handle=inp.value.trim()||meta[id].h;
+  linked[id]=true;targets[id]=true;
+  btn.className='cbtn on '+meta[id].cls;
+  btn.innerHTML=`<span style="display:inline-flex;align-items:center;gap:6px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><polyline points="20,6 9,17 4,12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>Connected · tap to disconnect</span>`;
+  document.getElementById('s-'+id).innerHTML=`<span class="sdot on" style="background:${meta[id].c}"></span><span style="color:${meta[id].c}">Connected</span>`;
+  document.getElementById('h-'+id).textContent=handle;
+  document.getElementById('h-'+id).style.display='block';
+  document.getElementById('c-'+id).classList.add('linked');
+  inp.style.display='none';
+  document.getElementById('tog-'+id).classList.replace('off','on');
+  updateBar();
+}
+
+function toggleTarget(id){
+  if(!linked[id])return;
+  targets[id]=!targets[id];
+  const tog=document.getElementById('tog-'+id);
+  tog.classList.toggle('on',targets[id]);
+  tog.classList.toggle('off',!targets[id]);
+  updateBar();
+}
+
+function updateBar(){
+  const active=Object.keys(targets).filter(k=>targets[k]);
+  const bar=document.getElementById('tbar');
+  const list=document.getElementById('tlist');
+  if(!active.length){bar.style.display='none';return;}
+  bar.style.display='block';
+  list.innerHTML=active.map(k=>`<div style="display:inline-flex;align-items:center;gap:7px;background:rgba(212,175,55,.05);border:1px solid rgba(212,175,55,.15);border-radius:20px;padding:5px 13px"><span style="width:7px;height:7px;border-radius:50%;background:${meta[k].c};display:inline-block;animation:blip 1.5s ease-in-out infinite"></span><span style="font-size:10px;font-weight:700;color:${meta[k].c}">${meta[k].n}</span></div>`).join('');
+}
+</script>
+</body>
+</html>
