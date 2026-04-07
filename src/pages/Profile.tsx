@@ -211,7 +211,7 @@ const Profile: React.FC = () => {
     return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', resize); };
   }, []);
 
-  const dashaCycle = vedicReading?.personalCompass?.currentDasha?.period?.split(' ')[0] || 'Rahu';
+  const dashaCycle = vedicReading?.personalCompass?.currentDasha?.period?.split(' ')[0] || '';
 
   useEffect(() => {
     const loadLifeBook = async () => {

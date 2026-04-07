@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useHoraWatch } from '@/hooks/useHoraWatch';
 import { useAIVedicReading } from '@/hooks/useAIVedicReading';
+import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 import { supabase } from '@/integrations/supabase/client';
 import type { UserProfile } from '@/lib/vedicTypes';
 import { useDailyGuidance } from '@/hooks/useDailyGuidance';
@@ -105,12 +106,20 @@ const Dashboard: React.FC = () => {
   const { t, language } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const jyotish = useJyotishProfile();
 
   const { profile: userProfile } = useProfile();
   const { isPremium, tier } = useMembership();
   const { isAdmin } = useAdminRole();
   const horaWatch = useHoraWatch({ timezone: 'Europe/Stockholm' });
   const { reading: vedicReading, generateReading } = useAIVedicReading();
+
+  // Cache-bust: force fresh data on every mount
+  useEffect(() => {
+    // Clear any stale SQI greeting state from previous session
+    sessionStorage.removeItem('sqi_nexus_greeting');
+    sessionStorage.removeItem('sqi_last_message');
+  }, []);
 
   // Load Vedic reading when user has birth data so PlanetaryCycleBanner shows real cycle (not "Initializing Alignment...")
   useEffect(() => {
@@ -129,7 +138,7 @@ const Dashboard: React.FC = () => {
           birthPlace: data.birth_place,
           plan: 'compass',
         };
-        await generateReading(profile, 0, 'Europe/Stockholm', user.id);
+        await generateReading(profile, 0, 'Europe/Stockholm', user.id, { forceRefresh: true });
       }
     };
     load();
@@ -285,12 +294,20 @@ const Dashboard: React.FC = () => {
     : null;
 
   const userName = userProfile?.full_name?.split(' ')[0] || t('dashboard.defaultGreetingName');
-  const dashaCycle = vedicReading?.personalCompass?.currentDasha?.period?.split(' ')[0] || 'Rahu';
+  const currentDasha = !jyotish.isLoading && jyotish.mahadasha ? jyotish.mahadasha : null;
+  const currentAntardasha = !jyotish.isLoading && jyotish.antardasha ? jyotish.antardasha : null;
+  const dashaCycle =
+    jyotish.isLoading
+      ? null
+      : (currentDasha ||
+          (vedicReading?.personalCompass?.currentDasha?.period?.split(' ')[0] || null));
   const horaPlanet = horaWatch.calculation?.currentHora?.planet || 'Venus';
-  const heroWisdom =
-    language === 'en' && vedicReading?.todayInfluence?.wisdomQuote
-      ? vedicReading.todayInfluence.wisdomQuote
-      : t('dashboard.wisdomFallback', { dasha: dashaCycle, planet: horaPlanet });
+  const openingLine = jyotish.isLoading
+    ? 'Accessing your Akasha-Neural Archive...'
+    : currentDasha
+      ? `As you move through your ${currentDasha} cycle${currentAntardasha ? `, ${currentAntardasha} sub-period` : ''}...`
+      : 'As you step into this field of Prema-Pulse transmission...';
+  const heroWisdom = openingLine;
   const horaDurationMs = horaWatch.calculation?.currentHora?.durationMinutes
     ? horaWatch.calculation.currentHora.durationMinutes * 60 * 1000
     : 1;
@@ -448,7 +465,7 @@ const Dashboard: React.FC = () => {
           >
             <div style={{ position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.06),transparent)', animation: 'sqShimmer 4s ease-in-out infinite', pointerEvents: 'none' }} />
             {[
-              { icon: '☽', lbl: t('dashboard.cosmicStripDasha'), val: dashaCycle, sub: t('dashboard.activeCycle') },
+              { icon: '☽', lbl: t('dashboard.cosmicStripDasha'), val: dashaCycle ?? '—', sub: t('dashboard.activeCycle') },
               { icon: '⏱', lbl: t('dashboard.cosmicStripHoraNow'), val: horaPlanet, sub: horaCountdown },
               { icon: '✦', lbl: t('dashboard.cosmicStripAlignment'), val: `${successWindowPct}%`, sub: getLocalizedSuccessWindowPhrase(horaPlanet, t) },
             ].map(({ icon, lbl, val, sub }, i) => (
@@ -486,7 +503,7 @@ const Dashboard: React.FC = () => {
                   <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 8.5, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.8)', marginBottom: 6 }}>{t('dashboard.vedicOracle')}</div>
                   <p style={{ fontFamily: 'Cormorant Garamond,serif', fontStyle: 'italic', fontSize: '0.9rem', color: 'rgba(255,255,255,0.52)', lineHeight: 1.4, margin: '0 0 10px' }}>
                     {vedicReading?.personalCompass?.currentDasha
-                      ? t('dashboard.vedicTileBodyWithDasha', { dasha: dashaCycle })
+                      ? t('dashboard.vedicTileBodyWithDasha', { dasha: dashaCycle ?? '' })
                       : t('dashboard.vedicTileBodyAwait')}
                   </p>
                   <button style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase' as const, color: '#D4AF37', background: 'none', border: 'none', cursor: 'pointer' }}>{t('dashboard.openJyotish')}</button>

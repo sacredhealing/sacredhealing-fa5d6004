@@ -34,7 +34,13 @@ interface UseAIVedicReadingResult {
   reading: VedicReading | null;
   isLoading: boolean;
   error: string | null;
-  generateReading: (user: UserProfile, timeOffset?: number, timezone?: string, userId?: string | null) => Promise<void>;
+  generateReading: (
+    user: UserProfile,
+    timeOffset?: number,
+    timezone?: string,
+    userId?: string | null,
+    options?: { forceRefresh?: boolean }
+  ) => Promise<void>;
 }
 
 export function useAIVedicReading(): UseAIVedicReadingResult {
@@ -43,31 +49,46 @@ export function useAIVedicReading(): UseAIVedicReadingResult {
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const generateReading = useCallback(async (user: UserProfile, timeOffset: number = 0, timezone: string = 'Europe/Stockholm', userId?: string | null) => {
-    // Check cache first – skip API call if fresh data exists (cache is per-user)
-    const cacheKey = getCacheKey(user, timeOffset, timezone, userId);
-    const cached = loadFromCache(cacheKey);
-    if (cached) {
-      setReading(cached);
+  const generateReading = useCallback(
+    async (
+      user: UserProfile,
+      timeOffset: number = 0,
+      timezone: string = 'Europe/Stockholm',
+      userId?: string | null,
+      options?: { forceRefresh?: boolean }
+    ) => {
+      const cacheKey = getCacheKey(user, timeOffset, timezone, userId);
+
+      // Check cache first – skip API call if fresh data exists (cache is per-user)
+      if (!options?.forceRefresh) {
+        const cached = loadFromCache(cacheKey);
+        if (cached) {
+          setReading(cached);
+          setError(null);
+          return;
+        }
+      } else {
+        // Cache-bust: force fresh read on demand
+        try {
+          localStorage.removeItem(cacheKey);
+        } catch { /* ignore */ }
+      }
+
+      // Abort any previous in-flight request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
+
+      setIsLoading(true);
       setError(null);
-      return;
-    }
 
-    // Abort any previous in-flight request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    abortControllerRef.current = new AbortController();
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      console.log('Generating Vedic reading for:', user.name, 'timeOffset:', timeOffset, 'timezone:', timezone);
-      
-      const { data, error: fnError } = await supabase.functions.invoke('generate-vedic-reading', {
-        body: { user, timeOffset, timezone, userId },
-      });
+      try {
+        console.log('Generating Vedic reading for:', user.name, 'timeOffset:', timeOffset, 'timezone:', timezone);
+        
+        const { data, error: fnError } = await supabase.functions.invoke('generate-vedic-reading', {
+          body: { user, timeOffset, timezone, userId },
+        });
 
       console.log('Vedic reading response:', { data, fnError });
 
@@ -99,20 +120,22 @@ export function useAIVedicReading(): UseAIVedicReadingResult {
         throw new Error('Invalid reading data received');
       }
 
-      const vedicReading = data as VedicReading;
-      saveToCache(cacheKey, vedicReading);
-      setReading(vedicReading);
-    } catch (err) {
-      // Don't log abort errors
-      if (err instanceof Error && err.name === 'AbortError') {
-        return;
+        const vedicReading = data as VedicReading;
+        saveToCache(cacheKey, vedicReading);
+        setReading(vedicReading);
+      } catch (err) {
+        // Don't log abort errors
+        if (err instanceof Error && err.name === 'AbortError') {
+          return;
+        }
+        console.error('Failed to generate Vedic reading:', err);
+        setError(err instanceof Error ? err.message : 'Failed to generate reading');
+      } finally {
+        setIsLoading(false);
       }
-      console.error('Failed to generate Vedic reading:', err);
-      setError(err instanceof Error ? err.message : 'Failed to generate reading');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    []
+  );
 
   return {
     reading,

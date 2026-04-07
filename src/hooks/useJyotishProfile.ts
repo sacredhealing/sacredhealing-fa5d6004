@@ -1,6 +1,8 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from './useAuth';
 import { useAIVedicReading } from './useAIVedicReading';
+import { supabase } from '@/integrations/supabase/client';
+import type { UserProfile } from '@/lib/vedicTypes';
 
 export interface JyotishProfile {
   nakshatra: string;
@@ -85,12 +87,66 @@ const KARMA_FOCUS_MAP: Record<string, string> = {
 
 export function useJyotishProfile(): JyotishProfile {
   const { user: authUser } = useAuth();
-  const { reading, isLoading } = useAIVedicReading();
+  const { reading, isLoading: readingLoading, generateReading } = useAIVedicReading();
+  const [isFreshForUser, setIsFreshForUser] = useState(true);
+  const [birthDetailsLoading, setBirthDetailsLoading] = useState(false);
+
+  // Reset data when user changes to prevent stale cross-user data
+  useEffect(() => {
+    setIsFreshForUser(false);
+  }, [authUser?.id]);
+
+  // Pull birth details from DB (scoped to current user) and (re)generate reading on mount.
+  useEffect(() => {
+    if (!authUser?.id) {
+      setIsFreshForUser(true);
+      return;
+    }
+    let cancelled = false;
+
+    const run = async () => {
+      setBirthDetailsLoading(true);
+      try {
+        const { data } = await (supabase as any)
+          .from('profiles')
+          .select('birth_name, birth_date, birth_time, birth_place', { count: 'exact', head: false })
+          .eq('user_id', authUser.id)
+          .maybeSingle();
+
+        if (cancelled) return;
+
+        if (data?.birth_name && data?.birth_date && data?.birth_time && data?.birth_place) {
+          const profile: UserProfile = {
+            name: data.birth_name,
+            birthDate: data.birth_date,
+            birthTime: data.birth_time,
+            birthPlace: data.birth_place,
+            plan: 'compass',
+          };
+          await generateReading(profile, 0, 'Europe/Stockholm', authUser.id, { forceRefresh: true });
+        }
+      } catch {
+        // keep neutral fallbacks; errors handled by caller pages
+      } finally {
+        if (!cancelled) {
+          setBirthDetailsLoading(false);
+          setIsFreshForUser(true);
+        }
+      }
+    };
+
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [authUser?.id, generateReading]);
+
+  const isLoading = birthDetailsLoading || readingLoading || !isFreshForUser;
 
   return useMemo(() => {
     // Extract mahadasha planet from personalCompass.currentDasha.period (e.g. "Jupiter Mahadasha" → "Jupiter")
     const dashaperiod = reading?.personalCompass?.currentDasha?.period || '';
-    const mahadasha = dashaperiod.split(' ')[0] || 'Jupiter';
+    const mahadasha = dashaperiod.split(' ')[0] || '';
 
     // Extract nakshatra from todayInfluence
     const nakshatra = reading?.todayInfluence?.nakshatra || 'Unknown';
@@ -113,7 +169,7 @@ export function useJyotishProfile(): JyotishProfile {
       : 'Energy center balancing';
 
     // Bhrigu cycle from masterBlueprint timingPeaks or sadeSatiStatus
-    const bhriguCycle = reading?.masterBlueprint?.sadeSatiStatus || 'Rahu/Ketu';
+    const bhriguCycle = reading?.masterBlueprint?.sadeSatiStatus || '';
 
     const primaryDosha = DOSHA_MAP[moonSign] || 'Tridoshic';
 
@@ -125,7 +181,7 @@ export function useJyotishProfile(): JyotishProfile {
       moonSign,
       ascendant: 'Unknown',
       mahadasha,
-      antardasha: reading?.personalCompass?.currentDasha?.focusArea?.split(' ')[0] || 'Venus',
+      antardasha: reading?.personalCompass?.currentDasha?.focusArea?.split(' ')[0] || '',
       primaryDosha,
       doshaImbalance: `${primaryDosha} aggravation`,
       activeYogas,

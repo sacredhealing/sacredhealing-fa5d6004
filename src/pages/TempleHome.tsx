@@ -10,6 +10,7 @@ import {
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
+import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
 import TempleGateIcon from '@/components/icons/TempleGateIcon';
 
@@ -965,6 +966,16 @@ export default function TempleHome() {
   const { user, isLoading: authLoading } = useAuth();
   const { tier, loading: membershipLoading } = useMembership();
   const { isAdmin } = useAdminRole();
+
+  // Ensure Jyotish hook runs fresh (prevents stale cross-user context bleeding into Nexus messaging)
+  useJyotishProfile();
+
+  // Cache-bust: force fresh data on every mount
+  useEffect(() => {
+    sessionStorage.removeItem('sqi_nexus_greeting');
+    sessionStorage.removeItem('sqi_last_message');
+  }, []);
+
   if (authLoading || membershipLoading) return (
     <div className="flex min-h-screen items-center justify-center bg-[#050505]">
       <div className="h-8 w-8 rounded-full border-2 border-[#D4AF37]/20 border-t-[#D4AF37]/80 animate-spin" />
