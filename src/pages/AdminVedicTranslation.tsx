@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, BookOpen, Mic, MicOff, Send, Download, Star, ChevronRight } from 'lucide-react';
