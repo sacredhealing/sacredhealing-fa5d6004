@@ -45,7 +45,10 @@ export const LivingPortalTile: React.FC<LivingPortalTileProps> = ({
   const { glowColor, glowOpacity, pulseOpacity, breathDuration } = portal;
   const borderColor = doshaBorderColor || glowColor;
 
-  const breathAnim = `portalBreath ${breathDuration}s ease-in-out infinite`;
+  // Scalar wave animation selection
+  const animationName = glowColor.startsWith('212')
+    ? 'scalarPulseGold'
+    : 'scalarPulseCyan';
 
   return (
     <div
@@ -61,10 +64,11 @@ export const LivingPortalTile: React.FC<LivingPortalTileProps> = ({
           ? `rgba(${borderColor}, ${pulseOpacity})`
           : `rgba(${borderColor}, ${glowOpacity})`,
         boxShadow: isHovered
-          ? `0 0 20px rgba(${glowColor}, ${pulseOpacity * 0.5}), inset 0 0 30px rgba(${glowColor}, 0.04)`
-          : `0 0 8px rgba(${glowColor}, ${glowOpacity * 0.5})`,
-        transition: 'border-color 0.4s ease, box-shadow 0.4s ease',
-        animation: breathAnim,
+          ? `0 0 35px rgba(${glowColor},0.4), 0 0 70px rgba(${glowColor},0.12)`
+          : undefined,
+        transform: isHovered ? 'translateY(-3px) scale(1.015)' : 'none',
+        transition: 'box-shadow 0.4s ease, transform 0.3s ease, border-color 0.3s ease',
+        animation: `${animationName} ${breathDuration}s ease-in-out infinite`,
         overflow: 'hidden',
       }}
     >

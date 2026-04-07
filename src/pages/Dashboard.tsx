@@ -408,8 +408,28 @@ const Dashboard: React.FC = () => {
           </header>
 
           {/* ══ ZONE 2: SRI YANTRA HERO ══ */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '28px 20px 16px', animation: 'sqFadeUp 0.5s 0.08s ease both' }}>
-            <div style={{ position: 'relative', width: 190, height: 190, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 22 }}>
+          <div style={{ position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '28px 20px 16px', animation: 'sqFadeUp 0.5s 0.08s ease both' }}>
+            {/* Scalar ring overlays */}
+            {[
+              { size: 400, delay: '0s', opacity: 0.06 },
+              { size: 600, delay: '1.2s', opacity: 0.04 },
+              { size: 800, delay: '2.4s', opacity: 0.025 },
+            ].map((ring, i) => (
+              <div key={i} style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                width: ring.size,
+                height: ring.size,
+                borderRadius: '50%',
+                border: '1px solid rgba(212,175,55,1)',
+                opacity: ring.opacity,
+                animation: `scalarRingBreath 6s ${ring.delay} ease-in-out infinite`,
+                pointerEvents: 'none',
+                zIndex: 0,
+              }} />
+            ))}
+            <div style={{ position: 'relative', zIndex: 1, width: 190, height: 190, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 22 }}>
               {[190, 156, 124].map((s, i) => (
                 <div key={i} style={{ position: 'absolute', width: s, height: s, borderRadius: '50%', border: '1px solid rgba(212,175,55,0.1)', animation: `sqRingBreath 5s ${i * 0.7}s ease-in-out infinite` }} />
               ))}
@@ -448,11 +468,11 @@ const Dashboard: React.FC = () => {
               <div style={{ position: 'absolute', bottom: 14, right: 14, width: 8, height: 8, borderRadius: '50%', background: '#D4AF37', boxShadow: '0 0 12px rgba(212,175,55,0.9)', animation: 'sqDotPulse 2s ease-in-out infinite' }} />
             </div>
 
-            <p style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.3)', textAlign: 'center', marginBottom: 10 }}>{t('dashboard.heroTagline')}</p>
-            <p style={{ fontFamily: 'Cormorant Garamond,serif', fontStyle: 'italic', fontSize: '1.12rem', color: 'rgba(255,255,255,0.72)', lineHeight: 1.55, textAlign: 'center', marginBottom: 14, maxWidth: 300 }}>
+            <p style={{ position: 'relative', zIndex: 1, fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.3)', textAlign: 'center', marginBottom: 10 }}>{t('dashboard.heroTagline')}</p>
+            <p style={{ position: 'relative', zIndex: 1, fontFamily: 'Cormorant Garamond,serif', fontStyle: 'italic', fontSize: '1.12rem', color: 'rgba(255,255,255,0.72)', lineHeight: 1.55, textAlign: 'center', marginBottom: 14, maxWidth: 300 }}>
               {heroWisdom}
             </p>
-            <button onClick={() => navigate('/vedic-astrology')} style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 8, fontWeight: 800, letterSpacing: '0.42em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.55)', background: 'none', border: 'none', cursor: 'pointer' }}>
+            <button onClick={() => navigate('/vedic-astrology')} style={{ position: 'relative', zIndex: 1, fontFamily: 'Montserrat,sans-serif', fontSize: 8, fontWeight: 800, letterSpacing: '0.42em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.55)', background: 'none', border: 'none', cursor: 'pointer' }}>
               {t('dashboard.receiveTransmission')}
             </button>
           </div>
@@ -617,7 +637,7 @@ const Dashboard: React.FC = () => {
                 <div key={i} className="sq-stat-chip sq-soulstat" style={{ ['--sf' as any]: pct }}>
                   <div className="sq-soulstat-ring" aria-hidden />
                   <div style={{ marginBottom: 6, position: 'relative', zIndex: 2 }}>{icon}</div>
-                  <div className="sq-stat-val" style={{ position: 'relative', zIndex: 2 }}>{val}</div>
+                  <div className="sq-stat-val" style={{ position: 'relative', zIndex: 2, animation: 'pranaPulseGlow 2.8s ease-in-out infinite' }}>{val}</div>
                   <div className="sq-stat-lbl" style={{ position: 'relative', zIndex: 2 }}>{lbl}</div>
                 </div>
               ))}
