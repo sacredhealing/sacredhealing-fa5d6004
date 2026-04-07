@@ -21,6 +21,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminRole } from "@/hooks/useAdminRole";
+import { useStargateAccess } from "@/hooks/useStargateAccess";
 import { supabase } from "@/integrations/supabase/client";
 import { requestNotificationPermission } from "@/services/NotificationService";
 import { useDailyLive, DailySession } from "@/hooks/useDailyLive";
@@ -942,6 +943,7 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
 const Community = () => {
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
+  const { isStargateMember } = useStargateAccess();
   const navigate = useNavigate();
   const daily = useDailyLive();
   console.log("[Community] isAdmin:", isAdmin);
@@ -1655,7 +1657,7 @@ const Community = () => {
           video_url: result.room_url,
         } as any);
         await fetchFeedPosts();
-        await supabase.functions.invoke("notify-community", {
+        supabase.functions.invoke("notify-community", {
           body: {
             type: "live",
             triggeredBy: adminName,
@@ -1771,7 +1773,7 @@ const Community = () => {
       await fetchFeedPosts();
       toast.success("Post shared to the Sangha feed.");
       try {
-        await supabase.functions.invoke("notify-community", {
+        supabase.functions.invoke("notify-community", {
           body: {
             type: "post",
             triggeredBy: adminName,
@@ -1918,7 +1920,7 @@ const Community = () => {
         if (!lastNotified || Date.now() - parseInt(lastNotified, 10) > oneHour) {
           if (typeof localStorage !== "undefined") localStorage.setItem(lastKey, Date.now().toString());
           const ch = CHANNELS.find((c) => c.id === activeChannel);
-          await supabase.functions.invoke("notify-community", {
+          supabase.functions.invoke("notify-community", {
             body: {
               type: "message",
               triggeredBy: senderName,
@@ -2113,7 +2115,7 @@ const Community = () => {
                       onDmSent={async (content, partnerId) => {
                         const adminName = memberNameMap[user?.id || ""] || "Admin";
                         try {
-                          await supabase.functions.invoke("notify-community", {
+                          supabase.functions.invoke("notify-community", {
                             body: {
                               type: "dm",
                               triggeredBy: adminName,
@@ -2349,7 +2351,7 @@ const Community = () => {
 
                 <div className="c-section-label">PRIVATE</div>
                 {CHANNELS.filter((c) => c.access === "private").map((ch) => {
-                  const locked = !isAdmin;
+                  const locked = ch.id === "stargate" ? !isAdmin && !isStargateMember : !isAdmin;
                   return (
                     <button
                       key={ch.id}
@@ -2435,7 +2437,7 @@ const Community = () => {
                           video_url: result.room_url,
                         } as any);
                         await fetchFeedPosts();
-                        await supabase.functions.invoke("notify-community", {
+                        supabase.functions.invoke("notify-community", {
                           body: {
                             type: "live",
                             triggeredBy: adminName,

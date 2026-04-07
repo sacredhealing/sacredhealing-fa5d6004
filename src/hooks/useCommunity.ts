@@ -475,17 +475,9 @@ export const usePrivateChat = (partnerId: string) => {
 
     setMessages(prev => [...prev, optimisticMessage]);
 
-    const messageData: any = {
-      sender_id: user.id,
-      receiver_id: partnerId,
-      content,
-      message_type: type,
-      ...(fileData || {}),
-    };
-
     const { data, error } = await supabase
       .from('private_messages')
-      .insert(messageData)
+      .insert({ sender_id: user.id, receiver_id: partnerId, content })
       .select()
       .single();
 
