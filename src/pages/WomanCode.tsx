@@ -1,7 +1,6 @@
-import WomanCodeDashboard from '@/components/WomanCodeDashboard';
+import { Navigate } from 'react-router-dom';
 
-const WomanCodePage = () => {
-  return <WomanCodeDashboard />;
-};
+export default function WomanCodePage() {
+  return <Navigate to="/sovereign-hormonal-alchemy" replace />;
+}
 
-export default WomanCodePage;
