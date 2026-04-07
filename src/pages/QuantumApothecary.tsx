@@ -312,15 +312,8 @@ function QuantumApothecaryInner() {
     [],
   );
 
-  // ── ALL useEffects UNCHANGED ──
-  // ── Scroll: stay at user message, never jump to bottom ──
-  const prevMsgCountRef = useRef(0);
-  const lastUserMsgRef = useRef<HTMLDivElement>(null);
-  const lastSqiMsgRef  = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    prevMsgCountRef.current = messages.length;
-  }, []);
+  // ── Scroll: single effect, only when a new message is appended ──
+  const prevMsgCountRef = useRef(messages.length);
 
   const flushSqiLocalStorage = useCallback(() => {
     try {
@@ -360,26 +353,10 @@ function QuantumApothecaryInner() {
 
   useEffect(() => {
     const count = messages.length;
-    const last  = messages[count - 1];
-    if (!last) return;
-    if (count > prevMsgCountRef.current) {
-      // A brand-new bubble was added
-      prevMsgCountRef.current = count;
-      if (last.role === 'user') {
-        // Scroll user's own message into view at the TOP of the chat area
-        // so they can read the SQI response that appears right below it
-        setTimeout(() => {
-          lastUserMsgRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 60);
-      } else {
-        // SQI bubble just appeared — scroll so its TOP is visible
-        setTimeout(() => {
-          lastSqiMsgRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 60);
-      }
-    }
-    // Streaming chunk updates → do NOT scroll — user reads in place
-  }, [messages]);
+    if (count <= prevMsgCountRef.current) return; // streaming edits or other state changes
+    prevMsgCountRef.current = count;
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [messages.length]);
   useEffect(() => { localStorage.setItem('active_resonators', JSON.stringify(activeTransmissions)); }, [activeTransmissions]);
 
   // ── Scroll-to-bottom visibility (show FAB only when not at bottom) ──
@@ -396,7 +373,7 @@ function QuantumApothecaryInner() {
   }, [chatScrollContainerRef.current]);
 
   const scrollChatToBottom = useCallback(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, []);
 
   // ── Bioenergetic auto-scan after each SQI response ──
@@ -444,13 +421,6 @@ function QuantumApothecaryInner() {
     });
   }, [isTyping, messages]);
 
-  useEffect(() => {
-    const focusChat = (location.state as { focusChat?: boolean } | null)?.focusChat;
-    if (focusChat && chatPanelRef.current) {
-      const t = setTimeout(() => { chatPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300);
-      return () => clearTimeout(t);
-    }
-  }, [location.state]);
   useEffect(() => {
     const state = location.state as { openSessions?: boolean; focusChat?: boolean } | null;
     const openSessions = state?.openSessions ?? state?.focusChat;
@@ -945,11 +915,8 @@ function QuantumApothecaryInner() {
       >
         <div className="flex flex-col justify-end min-h-full space-y-2">
           {messages.map((msg, i) => {
-              const isLastUser = msg.role === 'user'  && !messages.slice(i + 1).some(m => m.role === 'user');
-              const isLastSqi  = msg.role === 'model' && !messages.slice(i + 1).some(m => m.role === 'model');
               return (
               <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-                ref={isLastUser ? lastUserMsgRef : isLastSqi ? lastSqiMsgRef : undefined}
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div
                   className={`${msg.role === 'user' ? 'max-w-[80%]' : 'max-w-full w-full'} ${
