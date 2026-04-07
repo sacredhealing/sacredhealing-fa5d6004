@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { SHCBalanceCard } from '@/components/dashboard/SHCBalanceCard';
+import { useAdminRole } from '@/hooks/useAdminRole';
 interface IncomeStream {
   id: string;
   title: string;
