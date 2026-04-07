@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { LotusIcon } from '@/components/icons/LotusIcon';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Mail, Lock, User, ArrowRight, Sparkles, Loader2, Gift } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Sparkles, Loader2, Gift, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { usePhantomWallet } from '@/hooks/usePhantomWallet';
@@ -29,6 +29,7 @@ const Auth: React.FC = () => {
     return '';
   });
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -431,13 +432,22 @@ const Auth: React.FC = () => {
               <label className="text-white/40 text-[8px] font-extrabold tracking-[0.35em] uppercase block ml-1" style={{ fontFamily: 'Montserrat, sans-serif' }}>
                 {t('auth.password', 'Password')}
               </label>
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="auth-input w-full rounded-[100px] px-6 py-4 h-auto text-white text-[14px] bg-white/[0.03] border border-white/10 focus:border-[#D4AF37]/50 focus:outline-none focus:ring-0 focus:shadow-[0_0_20px_rgba(212,175,55,0.1)] placeholder:text-white/30 transition-all"
-                placeholder={t('auth.passwordPlaceholder', 'Enter your password...')}
-              />
+              <div className="relative">
+                <Input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="auth-input w-full rounded-[100px] px-6 py-4 h-auto pr-14 text-white text-[14px] bg-white/[0.03] border border-white/10 focus:border-[#D4AF37]/50 focus:outline-none focus:ring-0 focus:shadow-[0_0_20px_rgba(212,175,55,0.1)] placeholder:text-white/30 transition-all"
+                  placeholder={t('auth.passwordPlaceholder', 'Enter your password...')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-5 top-1/2 -translate-y-1/2 text-white/30 hover:text-[#D4AF37] transition-colors"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
 
             {isLogin && (
