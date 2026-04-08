@@ -236,10 +236,8 @@ export function getRealDasha(
 
       return { mahadasha: maha.p, antardasha: '' };
     }
-
     cursor = mahaEnd;
   }
-
   return { mahadasha: '', antardasha: '' };
 }
 
