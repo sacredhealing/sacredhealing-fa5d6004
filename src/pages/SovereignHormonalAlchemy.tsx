@@ -680,11 +680,20 @@ function SetupScreen({ onSave }: { onSave: (date: string, len: number, bleed: nu
 export default function SovereignHormonalAlchemy() {
   const nav = useNavigate();
   const { phase, cycleDay, isConfigured, settings, isLoading, updateCycleSettings, isSaving } = useCyclePhase();
-  const { tier } = useMembership();
+  const { tier, isAdmin, adminGranted } = useMembership();
   const { todayLog, allLogs, set, toggle } = useDailyLog();
 
-  const isPrana   = ['prana-flow', 'siddha-quantum', 'akasha-infinity'].includes(tier);
-  const isSiddha  = ['siddha-quantum', 'akasha-infinity'].includes(tier);
+  // Admins and owner-granted users see all tiers; lifetime maps to full unlock (same as useMembership for admins).
+  const fullShaktiUnlock =
+    !!isAdmin ||
+    !!adminGranted ||
+    tier === 'lifetime';
+  const isPrana =
+    fullShaktiUnlock ||
+    ['prana-flow', 'siddha-quantum', 'akasha-infinity'].includes(tier);
+  const isSiddha =
+    fullShaktiUnlock ||
+    ['siddha-quantum', 'akasha-infinity'].includes(tier);
 
   const [showSettings, setShowSettings] = useState(false);
 
@@ -930,7 +939,7 @@ export default function SovereignHormonalAlchemy() {
               onClick={() => setSheet('movement')}
             />
           ) : (
-            <Locked label="Movement guidance" tier="Prana-Flow" onUpgrade={() => nav('/membership')} />
+            <Locked label="Movement guidance" tier="Prana-Flow" onUpgrade={() => nav('/prana-flow')} />
           )}
 
           {/* Food — PRANA-FLOW */}
@@ -942,7 +951,7 @@ export default function SovereignHormonalAlchemy() {
               onClick={() => setSheet('food')}
             />
           ) : (
-            <Locked label="Nutrition + Moon Milk" tier="Prana-Flow" onUpgrade={() => nav('/membership')} />
+            <Locked label="Nutrition + Moon Milk" tier="Prana-Flow" onUpgrade={() => nav('/prana-flow')} />
           )}
 
           {/* Hormones — SIDDHA */}
@@ -954,7 +963,7 @@ export default function SovereignHormonalAlchemy() {
               onClick={() => setSheet('hormones')}
             />
           ) : (
-            <Locked label="Hormone graph + biochemistry" tier="Siddha-Quantum" onUpgrade={() => nav('/membership')} />
+            <Locked label="Hormone graph + biochemistry" tier="Siddha-Quantum" onUpgrade={() => nav('/siddha-quantum')} />
           )}
 
           {/* Minerals — SIDDHA */}
@@ -966,7 +975,7 @@ export default function SovereignHormonalAlchemy() {
               onClick={() => setSheet('minerals')}
             />
           ) : (
-            <Locked label="Mineral biochemistry" tier="Siddha-Quantum" onUpgrade={() => nav('/membership')} />
+            <Locked label="Mineral biochemistry" tier="Siddha-Quantum" onUpgrade={() => nav('/siddha-quantum')} />
           )}
 
           {/* Log history — SIDDHA */}
@@ -978,7 +987,7 @@ export default function SovereignHormonalAlchemy() {
               onClick={() => setSheet('history')}
             />
           ) : (
-            <Locked label="Cycle pattern history" tier="Siddha-Quantum" onUpgrade={() => nav('/membership')} />
+            <Locked label="Cycle pattern history" tier="Siddha-Quantum" onUpgrade={() => nav('/siddha-quantum')} />
           )}
         </div>
 
