@@ -90,16 +90,25 @@ export default function Explore() {
       {/* ══ HEADER ══ */}
       <div style={{ padding: '52px 20px 0', animation: 'sqFadeUp 0.35s ease both' }}>
         <p style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.3)', marginBottom: 6 }}>{t('converge.headerMicro')}</p>
-        <h1 style={{
-          fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
-          fontSize: 'clamp(2.6rem, 8vw, 3.4rem)',
-          fontWeight: 900,
-          letterSpacing: '-0.04em',
-          color: '#D4AF37',
-          lineHeight: 1,
-          margin: 0,
-          animation: 'sqConvergePulse 6s ease-in-out infinite',
-        }}>{t('converge.title')}</h1>
+        <h1
+          style={{
+            fontFamily: "'Cinzel', serif",
+            fontSize: 'clamp(26px, 7vw, 38px)',
+            fontWeight: 600,
+            letterSpacing: '-0.02em',
+            lineHeight: 1.1,
+            margin: 0,
+            background: 'linear-gradient(135deg, #D4AF37 0%, #F5E17A 40%, #D4AF37 60%, #A07C10 100%)',
+            backgroundSize: '200% auto',
+            WebkitBackgroundClip: 'text',
+            backgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            display: 'inline-block',
+            animation: 'goldShimmer 5s linear infinite',
+          }}
+        >
+          {t('converge.title')}
+        </h1>
         <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.95rem', color: 'rgba(255,255,255,0.28)', marginTop: 7 }}>{t('converge.tagline')}</p>
       </div>
 
@@ -559,6 +568,10 @@ export default function Explore() {
       <SacredRevealGate open={sacredRevealOpen} onOpenChange={setSacredRevealOpen} />
 
       <style>{`
+        @keyframes goldShimmer {
+          0%   { background-position: -200% center; }
+          100% { background-position:  200% center; }
+        }
         @keyframes sqConvergePulse {
           0%, 100% { text-shadow: 0 0 20px rgba(212,175,55,0.15), 0 0 60px rgba(212,175,55,0.05); }
           50%       { text-shadow: 0 0 40px rgba(212,175,55,0.4),  0 0 100px rgba(212,175,55,0.15); }

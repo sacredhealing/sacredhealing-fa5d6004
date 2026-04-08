@@ -133,7 +133,25 @@ export default function ExploreAkasha() {
           <ArrowLeft size={14} /> {t('exploreAkasha.back')}
         </button>
         <p style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: gold(0.3), marginBottom: 6 }}>{t('exploreAkasha.headerMicro')}</p>
-        <h1 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '2.1rem', fontWeight: 600, color: white(0.9), lineHeight: 1.1, margin: 0 }}>{t('exploreAkasha.title')}</h1>
+        <h1
+          style={{
+            fontFamily: "'Cinzel', serif",
+            fontSize: 'clamp(26px, 7vw, 38px)',
+            fontWeight: 600,
+            letterSpacing: '-0.02em',
+            lineHeight: 1.1,
+            margin: 0,
+            background: 'linear-gradient(135deg, #D4AF37 0%, #F5E17A 40%, #D4AF37 60%, #A07C10 100%)',
+            backgroundSize: '200% auto',
+            WebkitBackgroundClip: 'text',
+            backgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            display: 'inline-block',
+            animation: 'goldShimmer 5s linear infinite',
+          }}
+        >
+          {t('exploreAkasha.title')}
+        </h1>
         <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.95rem', color: white(0.28), marginTop: 7 }}>{t('exploreAkasha.subtitle')}</p>
       </div>
 
@@ -295,6 +313,10 @@ export default function ExploreAkasha() {
       )}
 
       <style>{`
+        @keyframes goldShimmer {
+          0%   { background-position: -200% center; }
+          100% { background-position:  200% center; }
+        }
         @keyframes sqFadeUp { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:translateY(0) } }
         @keyframes spin { from { transform:rotate(0deg) } to { transform:rotate(360deg) } }
       `}</style>
