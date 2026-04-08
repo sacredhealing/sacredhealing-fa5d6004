@@ -40,7 +40,7 @@ function BottomNavInner() {
                 'flex flex-col items-center justify-center gap-0.5 py-2 rounded-lg transition-all duration-300 min-w-0 w-full overflow-hidden',
                 isActive
                   ? 'text-[#D4AF37] drop-shadow-[0_0_10px_rgba(212,175,55,0.5)]'
-                  : 'text-white/25 hover:text-[#D4AF37]/70 active:text-[#D4AF37]/70'
+                  : 'text-white/[0.45] hover:text-[#D4AF37]/70 active:text-[#D4AF37]/70'
               )
             }
           >
@@ -62,14 +62,15 @@ function BottomNavInner() {
                 <span
                   className="text-center block w-full min-w-0 px-0.5"
                   style={{
-                    fontSize: '0.55rem',
+                    fontSize: '10px',
                     lineHeight: 1.2,
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
-                    fontWeight: isActive ? 800 : 600,
-                    letterSpacing: '0.15em',
+                    fontWeight: isActive ? 900 : 700,
+                    letterSpacing: '0.12em',
                     textTransform: 'uppercase' as const,
+                    textShadow: isActive ? '0 0 8px rgba(212,175,55,0.4)' : 'none',
                   }}
                   title={item.label}
                 >
