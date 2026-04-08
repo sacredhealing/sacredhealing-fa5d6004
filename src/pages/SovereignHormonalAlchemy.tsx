@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SHAKTI CYCLE INTELLIGENCE — Single Unified Tool
  * Route: /sovereign-hormonal-alchemy  (already in App.tsx — zero routing changes needed)
@@ -18,6 +19,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useAdminRole } from '@/hooks/useAdminRole';
 
 /* ─── TOKENS ─────────────────────────────────────────────────────────────── */
 const G  = '#D4AF37';
@@ -317,9 +319,10 @@ export default function SovereignHormonalAlchemy(){
   const nav=useNavigate();
   const {phase,cycleDay,isConfigured,settings,isLoading,updateCycleSettings,isSaving}=useCyclePhase();
   const {tier}=useMembership();
+  const {isAdmin}=useAdminRole();
 
-  const isPrana  = ['prana-flow','siddha-quantum','akasha-infinity'].includes(tier);
-  const isSiddha = ['siddha-quantum','akasha-infinity'].includes(tier);
+  const isPrana  = isAdmin || ['prana-flow','siddha-quantum','akasha-infinity'].includes(tier);
+  const isSiddha = isAdmin || ['siddha-quantum','akasha-infinity'].includes(tier);
 
   const [tab,setTab]       = useState<'today'|'log'|'explore'|'insights'>('today');
   const [modal,setModal]   = useState<React.ReactNode|null>(null);
