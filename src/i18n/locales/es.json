@@ -2525,6 +2525,10 @@
   "ayurveda": {
     "title": "Ayurveda",
     "subtitle": "Descubre tu dosha y vive en equilibrio con la sabiduría de la naturaleza.",
+    "tabs": {
+      "dashboard": "Panel",
+      "divinePhysician": "Médico divino"
+    },
     "free": "Gratis",
     "premium": "Premium",
     "lifetime": "De por vida",

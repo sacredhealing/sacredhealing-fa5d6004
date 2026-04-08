@@ -2429,6 +2429,10 @@
   "ayurveda": {
     "title": "Ayurveda",
     "subtitle": "Oppdag din dosha og lev i balanse med naturens visdom.",
+    "tabs": {
+      "dashboard": "Dashbord",
+      "divinePhysician": "Guddommelig lege"
+    },
     "free": "Gratis",
     "premium": "Premium",
     "lifetime": "Livstid",

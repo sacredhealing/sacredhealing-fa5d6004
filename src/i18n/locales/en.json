@@ -3239,6 +3239,10 @@
   "ayurveda": {
     "title": "Ayurvedic Intelligence",
     "subtitle": "Ancient science for quantum wellness",
+    "tabs": {
+      "dashboard": "Dashboard",
+      "divinePhysician": "Divine Physician"
+    },
     "free": "Free",
     "premium": "Premium",
     "lifetime": "Lifetime",
