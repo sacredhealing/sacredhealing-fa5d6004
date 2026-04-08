@@ -866,8 +866,8 @@
 
 .sq-stat-chip { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 22px; padding: 12px 8px 10px; display: flex; flex-direction: column; align-items: center; transition: all 0.3s; backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); }
 .sq-stat-chip:hover { border-color: rgba(212,175,55,0.15); transform: translateY(-2px); }
-.sq-stat-val { font-family: Cormorant Garamond, serif; font-size: 1.75rem; font-weight: 600; color: rgba(255,255,255,0.88); line-height: 1; margin-bottom: 3px; }
-.sq-stat-lbl { font-size: 10px; font-weight: 800; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(212,175,55,0.4); text-align: center; }
+.sq-stat-val { font-family: Cormorant Garamond, serif; font-size: clamp(1.05rem, 3.8vw, 1.75rem); font-weight: 600; color: rgba(255,255,255,0.88); line-height: 1; margin-bottom: 3px; }
+.sq-stat-lbl { font-size: clamp(6.5px, 1.9vw, 10px); font-weight: 800; letter-spacing: clamp(0.18em, 0.55vw, 0.3em); text-transform: uppercase; color: rgba(212,175,55,0.4); text-align: center; line-height: 1.2; }
 .sq-soulstat { position: relative; overflow: hidden; }
 .sq-soulstat::before {
   content: '';
@@ -892,10 +892,10 @@
 }
 .sq-soulstat-ring {
   position: absolute;
-  top: 8px;
+  top: clamp(6px, 1.2vw, 8px);
   left: 50%;
-  width: 54px;
-  height: 54px;
+  width: clamp(42px, 11vw, 54px);
+  height: clamp(42px, 11vw, 54px);
   transform: translateX(-50%);
   border-radius: 999px;
   background:
