@@ -102,7 +102,12 @@ Respond with this exact JSON structure:
     "career": "string",
     "relationship": "string",
     "health": "string",
-    "financial": "string"
+    "financial": "string",
+    "currentDasha": {
+      "period": "string - current Mahadasha period (e.g. Saturn Mahadasha)",
+      "meaning": "string - what this period means",
+      "focusArea": "string - primary focus"
+    }
   },
   "natalChart": {
     "moonNakshatra": "BIRTH Moon nakshatra — same value as personalCompass.moonNakshatra",
