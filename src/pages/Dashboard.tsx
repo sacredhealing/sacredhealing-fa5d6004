@@ -69,7 +69,7 @@ function guidanceToSessionLike(guidance: DailyGuidance): SessionLike {
 const SectionLabel: React.FC<{ label: string; delay?: string }> = ({ label, delay = '0s' }) => (
   <div style={{
     fontFamily: 'Montserrat,sans-serif',
-    fontSize: 7,
+    fontSize: 9,
     fontWeight: 800,
     letterSpacing: '0.5em',
     textTransform: 'uppercase' as const,
