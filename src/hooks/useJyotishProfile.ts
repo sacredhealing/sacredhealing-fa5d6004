@@ -27,202 +27,334 @@ export interface JyotishProfile {
 
 // Map mahadasha planet to meditation type
 const MEDITATION_MAP: Record<string, string> = {
-  'Sun': 'Trataka (fire/candle gazing)',
-  'Moon': 'Chandra meditation (cooling pranayama)',
-  'Mars': 'Dynamic movement meditation',
-  'Mercury': 'Mantra japa meditation',
-  'Jupiter': 'Dhyana (deep silent meditation)',
-  'Venus': 'Bhakti (devotional meditation)',
-  'Saturn': 'Vipassana (mindful observation)',
-  'Rahu': 'Shadow work meditation',
-  'Ketu': 'Kundalini meditation',
+  Sun: 'Trataka (fire/candle gazing)',
+  Moon: 'Chandra meditation (cooling pranayama)',
+  Mars: 'Dynamic movement meditation',
+  Mercury: 'Mantra japa meditation',
+  Jupiter: 'Dhyana (deep silent meditation)',
+  Venus: 'Bhakti (devotional meditation)',
+  Saturn: 'Vipassana (mindful observation)',
+  Rahu: 'Shadow work meditation',
+  Ketu: 'Kundalini meditation',
 };
 
 // Map planet to music raga
 const RAGA_MAP: Record<string, string> = {
-  'Sun': 'Raga Kalyan',
-  'Moon': 'Raga Bhimpalasi',
-  'Mars': 'Raga Sarang',
-  'Mercury': 'Raga Bhairavi',
-  'Jupiter': 'Raga Yaman',
-  'Venus': 'Raga Darbari',
-  'Saturn': 'Raga Malkauns',
-  'Rahu': 'Raga Marwa',
-  'Ketu': 'Raga Todi',
+  Sun: 'Raga Kalyan',
+  Moon: 'Raga Bhimpalasi',
+  Mars: 'Raga Sarang',
+  Mercury: 'Raga Bhairavi',
+  Jupiter: 'Raga Yaman',
+  Venus: 'Raga Darbari',
+  Saturn: 'Raga Malkauns',
+  Rahu: 'Raga Marwa',
+  Ketu: 'Raga Todi',
 };
 
 // Map planet to healing frequency
 const FREQ_MAP: Record<string, string> = {
-  'Sun': '528Hz (transformation)',
-  'Moon': '432Hz (harmony)',
-  'Mars': '396Hz (liberation)',
-  'Mercury': '741Hz (expression)',
-  'Jupiter': '963Hz (divine connection)',
-  'Venus': '639Hz (relationships)',
-  'Saturn': '285Hz (grounding)',
-  'Rahu': '417Hz (change)',
-  'Ketu': '852Hz (intuition)',
+  Sun: '528Hz (transformation)',
+  Moon: '432Hz (harmony)',
+  Mars: '396Hz (liberation)',
+  Mercury: '741Hz (expression)',
+  Jupiter: '963Hz (divine connection)',
+  Venus: '639Hz (relationships)',
+  Saturn: '285Hz (grounding)',
+  Rahu: '417Hz (change)',
+  Ketu: '852Hz (intuition)',
 };
 
 // Map moon sign to dosha
 const DOSHA_MAP: Record<string, string> = {
-  'Aries': 'Pitta', 'Leo': 'Pitta', 'Sagittarius': 'Pitta',
-  'Taurus': 'Kapha', 'Virgo': 'Vata', 'Capricorn': 'Vata',
-  'Gemini': 'Vata', 'Libra': 'Vata', 'Aquarius': 'Vata',
-  'Cancer': 'Kapha', 'Scorpio': 'Pitta', 'Pisces': 'Kapha',
+  Aries: 'Pitta', Leo: 'Pitta', Sagittarius: 'Pitta',
+  Taurus: 'Kapha', Virgo: 'Vata', Capricorn: 'Vata',
+  Gemini: 'Vata', Libra: 'Vata', Aquarius: 'Vata',
+  Cancer: 'Kapha', Scorpio: 'Pitta', Pisces: 'Kapha',
 };
 
 // Per-planet karma focus for meditation guidance (used when masterBlueprint not available)
 const KARMA_FOCUS_MAP: Record<string, string> = {
-  'Sun': 'vitality, leadership and self-confidence',
-  'Moon': 'emotional balance and intuition',
-  'Mars': 'courage, boundaries and healthy action',
-  'Mercury': 'clarity, communication and learning',
-  'Jupiter': 'spiritual growth and self-mastery',
-  'Venus': 'love, harmony and self-worth',
-  'Saturn': 'discipline, patience and release of karma',
-  'Rahu': 'detachment from illusion and worldly ambition',
-  'Ketu': 'spiritual liberation and past-life clarity',
+  Sun: 'vitality, leadership and self-confidence',
+  Moon: 'emotional balance and intuition',
+  Mars: 'courage, boundaries and healthy action',
+  Mercury: 'clarity, communication and learning',
+  Jupiter: 'spiritual growth and self-mastery',
+  Venus: 'love, harmony and self-worth',
+  Saturn: 'discipline, patience and release of karma',
+  Rahu: 'detachment from illusion and worldly ambition',
+  Ketu: 'spiritual liberation and past-life clarity',
 };
 
-// ─── Vimshottari Dasha Engine (pure math, no AI) ──────────
-const VIMSHOTTARI_SEQUENCE = [
-  { planet: 'Ketu',    years: 7  },
-  { planet: 'Venus',   years: 20 },
-  { planet: 'Sun',     years: 6  },
-  { planet: 'Moon',    years: 10 },
-  { planet: 'Mars',    years: 7  },
-  { planet: 'Rahu',    years: 18 },
-  { planet: 'Jupiter', years: 16 },
-  { planet: 'Saturn',  years: 19 },
-  { planet: 'Mercury', years: 17 },
-];
-
-const NAKSHATRA_LORDS: Record<string, string> = {
-  'Ashwini':'Ketu','Bharani':'Venus','Krittika':'Sun',
-  'Rohini':'Moon','Mrigashira':'Mars','Ardra':'Rahu',
-  'Punarvasu':'Jupiter','Pushya':'Saturn','Ashlesha':'Mercury',
-  'Magha':'Ketu','Purva Phalguni':'Venus','Uttara Phalguni':'Sun',
-  'Hasta':'Moon','Chitra':'Mars','Swati':'Rahu',
-  'Vishakha':'Jupiter','Anuradha':'Saturn','Jyeshtha':'Mercury',
-  'Mula':'Ketu','Purva Ashadha':'Venus','Uttara Ashadha':'Sun',
-  'Shravana':'Moon','Dhanishtha':'Mars','Shatabhisha':'Rahu',
-  'Purva Bhadrapada':'Jupiter','Uttara Bhadrapada':'Saturn','Revati':'Mercury',
+type CachedBirthData = {
+  birth_name?: string | null;
+  birth_date?: string | null;
+  birth_time?: string | null;
+  birth_place?: string | null;
+  birth_nakshatra?: string | null;
+  nakshatra?: string | null;
 };
 
-function calcVimshottariDasha(
-  birthDateStr: string,
-  birthNakshatra: string,
-  nakshatraProgressFraction: number = 0.5
-): { mahadasha: string; antardasha: string } {
-  if (!birthDateStr || !birthNakshatra) return { mahadasha: '', antardasha: '' };
+const VIMSHOTTARI = [
+  { p: 'Ketu', y: 7 },
+  { p: 'Venus', y: 20 },
+  { p: 'Sun', y: 6 },
+  { p: 'Moon', y: 10 },
+  { p: 'Mars', y: 7 },
+  { p: 'Rahu', y: 18 },
+  { p: 'Jupiter', y: 16 },
+  { p: 'Saturn', y: 19 },
+  { p: 'Mercury', y: 17 },
+] as const;
 
-  const birthDate = new Date(birthDateStr);
-  const today = new Date();
-  const msPerYear = 365.25 * 24 * 3600 * 1000;
+const NAKSHATRA_LORD: Record<string, string> = {
+  Ashwini: 'Ketu',
+  Bharani: 'Venus',
+  Krittika: 'Sun',
+  Rohini: 'Moon',
+  Mrigashira: 'Mars',
+  Ardra: 'Rahu',
+  Punarvasu: 'Jupiter',
+  Pushya: 'Saturn',
+  Ashlesha: 'Mercury',
+  Magha: 'Ketu',
+  'Purva Phalguni': 'Venus',
+  'Uttara Phalguni': 'Sun',
+  Hasta: 'Moon',
+  Chitra: 'Mars',
+  Swati: 'Rahu',
+  Vishakha: 'Jupiter',
+  Anuradha: 'Saturn',
+  Jyeshtha: 'Mercury',
+  Mula: 'Ketu',
+  'Purva Ashadha': 'Venus',
+  'Uttara Ashadha': 'Sun',
+  Shravana: 'Moon',
+  Dhanishtha: 'Mars',
+  Shatabhisha: 'Rahu',
+  'Purva Bhadrapada': 'Jupiter',
+  'Uttara Bhadrapada': 'Saturn',
+  Revati: 'Mercury',
+};
 
-  const birthLord = NAKSHATRA_LORDS[birthNakshatra];
-  if (!birthLord) return { mahadasha: '', antardasha: '' };
+function getBirthCacheKey(userId?: string | null) {
+  return userId ? `sh:vedic:${userId}:birth` : null;
+}
 
-  const startIdx = VIMSHOTTARI_SEQUENCE.findIndex(d => d.planet === birthLord);
-  if (startIdx < 0) return { mahadasha: '', antardasha: '' };
+function parseBirthCache(raw: string | null): CachedBirthData | null {
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as CachedBirthData;
+  } catch {
+    return null;
+  }
+}
 
-  const birthDashaYears = VIMSHOTTARI_SEQUENCE[startIdx].years;
-  const elapsedYearsAtBirth = nakshatraProgressFraction * birthDashaYears;
+function normalizeNakshatraName(value: string): string {
+  const cleaned = value.replace(/\s*nakshatra.*/i, '').trim();
+  if (!cleaned) return '';
 
-  let cursor = birthDate.getTime() - elapsedYearsAtBirth * msPerYear;
-  const todayMs = today.getTime();
+  const exactMatch = Object.keys(NAKSHATRA_LORD).find(
+    (name) => name.toLowerCase() === cleaned.toLowerCase()
+  );
 
-  for (let i = 0; i < 27; i++) {
-    const dasha = VIMSHOTTARI_SEQUENCE[(startIdx + i) % 9];
-    const dashaEndMs = cursor + dasha.years * msPerYear;
+  if (exactMatch) return exactMatch;
 
-    if (dashaEndMs > todayMs) {
-      let subCursor = cursor;
-      for (let j = 0; j < 9; j++) {
-        const sub = VIMSHOTTARI_SEQUENCE[(startIdx + i + j) % 9];
-        const subYears = (dasha.years * sub.years) / 120;
-        const subEndMs = subCursor + subYears * msPerYear;
-        if (subEndMs > todayMs) {
-          return { mahadasha: dasha.planet, antardasha: sub.planet };
-        }
-        subCursor = subEndMs;
+  const containsMatch = Object.keys(NAKSHATRA_LORD).find(
+    (name) => cleaned.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(cleaned.toLowerCase())
+  );
+
+  return containsMatch || cleaned;
+}
+
+function stripCachedCurrentDasha(userId?: string | null) {
+  if (!userId || typeof window === 'undefined') return;
+
+  for (let i = 0; i < localStorage.length; i += 1) {
+    const key = localStorage.key(i);
+    if (!key || !key.startsWith(`sh:vedic:reading:${userId}:`)) continue;
+
+    try {
+      const cached = JSON.parse(localStorage.getItem(key) || '{}');
+      if (cached?.reading?.personalCompass?.currentDasha) {
+        delete cached.reading.personalCompass.currentDasha;
+        localStorage.setItem(key, JSON.stringify(cached));
       }
-      return { mahadasha: dasha.planet, antardasha: '' };
+    } catch {
+      // Ignore malformed cache entries.
     }
-    cursor = dashaEndMs;
+  }
+}
+
+export function getRealDasha(
+  birthDateStr: string,
+  moonNakshatra: string,
+  progressInNakshatra = 0.5
+): { mahadasha: string; antardasha: string } {
+  const normalizedNakshatra = normalizeNakshatraName(moonNakshatra);
+  const lord = NAKSHATRA_LORD[normalizedNakshatra];
+
+  if (!lord || !birthDateStr) {
+    return { mahadasha: '', antardasha: '' };
+  }
+
+  const MS_PER_YEAR = 365.25 * 86400 * 1000;
+  const startIdx = VIMSHOTTARI.findIndex((d) => d.p === lord);
+  if (startIdx < 0) {
+    return { mahadasha: '', antardasha: '' };
+  }
+
+  const safeProgress = Number.isFinite(progressInNakshatra)
+    ? Math.min(1, Math.max(0, progressInNakshatra))
+    : 0.5;
+
+  const elapsedAtBirth = safeProgress * VIMSHOTTARI[startIdx].y;
+  let cursor = new Date(birthDateStr).getTime() - elapsedAtBirth * MS_PER_YEAR;
+  if (Number.isNaN(cursor)) {
+    return { mahadasha: '', antardasha: '' };
+  }
+
+  const now = Date.now();
+
+  for (let i = 0; i < 27; i += 1) {
+    const maha = VIMSHOTTARI[(startIdx + i) % 9];
+    const mahaEnd = cursor + maha.y * MS_PER_YEAR;
+
+    if (mahaEnd > now) {
+      let sub = cursor;
+
+      for (let j = 0; j < 9; j += 1) {
+        const antar = VIMSHOTTARI[(startIdx + i + j) % 9];
+        const subYears = (maha.y * antar.y) / 120;
+        const subEnd = sub + subYears * MS_PER_YEAR;
+
+        if (subEnd > now) {
+          return { mahadasha: maha.p, antardasha: antar.p };
+        }
+
+        sub = subEnd;
+      }
+
+      return { mahadasha: maha.p, antardasha: '' };
+    }
+
+    cursor = mahaEnd;
   }
 
   return { mahadasha: '', antardasha: '' };
 }
-// ─── End Engine ───────────────────────────────────────────
 
 export function useJyotishProfile(): JyotishProfile {
   const { user: authUser } = useAuth();
   const { reading, isLoading: readingLoading, generateReading } = useAIVedicReading();
   const [isFreshForUser, setIsFreshForUser] = useState(true);
   const [birthDetailsLoading, setBirthDetailsLoading] = useState(false);
-  const [birthDate, setBirthDate] = useState<string | null>(null);
+  const [birthData, setBirthData] = useState<CachedBirthData | null>(null);
 
-  // Reset data when user changes to prevent stale cross-user data
+  // Reset data when user changes to prevent stale cross-user data.
   useEffect(() => {
     setIsFreshForUser(false);
-    setBirthDate(null);
+    setBirthData(null);
   }, [authUser?.id]);
 
-  // Clear old AI-based dasha cache so new calculation takes effect
+  // Strip AI currentDasha from cached readings and persist birth nakshatra if the reading exposes one.
   useEffect(() => {
-    if (!authUser?.id || typeof window === 'undefined') return;
-    const keysToCheck = Object.keys(localStorage)
-      .filter(k => k.includes(authUser.id) && k.includes('compass'));
-    keysToCheck.forEach(k => {
-      try {
-        const val = JSON.parse(localStorage.getItem(k) || '{}');
-        if (val?.reading?.personalCompass?.currentDasha) {
-          delete val.reading.personalCompass.currentDasha;
-          localStorage.setItem(k, JSON.stringify(val));
-        }
-      } catch {
-        // ignore
-      }
-    });
-  }, [authUser?.id]);
+    if (!authUser?.id) return;
 
-  // Pull birth details from DB (scoped to current user) and (re)generate reading on mount.
+    stripCachedCurrentDasha(authUser.id);
+
+    if (typeof window === 'undefined') return;
+
+    const rawReading = reading as any;
+    const derivedBirthNakshatra = normalizeNakshatraName(
+      String(
+        rawReading?.personalCompass?.moonNakshatra ||
+          rawReading?.natalChart?.moonNakshatra ||
+          rawReading?.birthNakshatra ||
+          ''
+      )
+    );
+
+    if (!derivedBirthNakshatra) return;
+
+    const birthCacheKey = getBirthCacheKey(authUser.id);
+    if (!birthCacheKey) return;
+
+    const cachedBirth = parseBirthCache(localStorage.getItem(birthCacheKey));
+    const nextBirthData: CachedBirthData = {
+      ...(cachedBirth || {}),
+      birth_nakshatra: derivedBirthNakshatra,
+    };
+
+    localStorage.setItem(birthCacheKey, JSON.stringify(nextBirthData));
+    setBirthData((prev) => ({ ...(prev || {}), birth_nakshatra: derivedBirthNakshatra }));
+  }, [authUser?.id, reading]);
+
+  // Pull birth details from the current user's profile and keep a local birth cache for deterministic dasha math.
   useEffect(() => {
     if (!authUser?.id) {
       setIsFreshForUser(true);
       return;
     }
+
     let cancelled = false;
 
     const run = async () => {
       setBirthDetailsLoading(true);
+
       try {
         const { data } = await (supabase as any)
           .from('profiles')
-          .select('birth_name, birth_date, birth_time, birth_place', { count: 'exact', head: false })
+          .select('birth_name, birth_date, birth_time, birth_place')
           .eq('user_id', authUser.id)
           .maybeSingle();
 
         if (cancelled) return;
 
-        if (data?.birth_date) {
-          setBirthDate(data.birth_date);
+        const nextBirthData: CachedBirthData | null = data
+          ? {
+              birth_name: data.birth_name ?? null,
+              birth_date: data.birth_date ?? null,
+              birth_time: data.birth_time ?? null,
+              birth_place: data.birth_place ?? null,
+            }
+          : null;
+
+        setBirthData(nextBirthData);
+
+        const birthCacheKey = getBirthCacheKey(authUser.id);
+        if (birthCacheKey && typeof window !== 'undefined') {
+          if (nextBirthData?.birth_date) {
+            const existingBirth = parseBirthCache(localStorage.getItem(birthCacheKey));
+            localStorage.setItem(
+              birthCacheKey,
+              JSON.stringify({
+                ...(existingBirth || {}),
+                ...nextBirthData,
+              })
+            );
+          } else {
+            localStorage.removeItem(birthCacheKey);
+          }
         }
 
-        if (data?.birth_name && data?.birth_date && data?.birth_time && data?.birth_place) {
+        if (
+          nextBirthData?.birth_name &&
+          nextBirthData?.birth_date &&
+          nextBirthData?.birth_time &&
+          nextBirthData?.birth_place
+        ) {
           const profile: UserProfile = {
-            name: data.birth_name,
-            birthDate: data.birth_date,
-            birthTime: data.birth_time,
-            birthPlace: data.birth_place,
+            name: nextBirthData.birth_name,
+            birthDate: nextBirthData.birth_date,
+            birthTime: nextBirthData.birth_time,
+            birthPlace: nextBirthData.birth_place,
             plan: 'compass',
           };
-          await generateReading(profile, 0, 'Europe/Stockholm', authUser.id, { forceRefresh: true });
+
+          await generateReading(profile, 0, 'Europe/Stockholm', authUser.id);
         }
       } catch {
-        // keep neutral fallbacks; errors handled by caller pages
+        // Keep neutral fallbacks; errors are handled by caller pages.
       } finally {
         if (!cancelled) {
           setBirthDetailsLoading(false);
@@ -232,6 +364,7 @@ export function useJyotishProfile(): JyotishProfile {
     };
 
     run();
+
     return () => {
       cancelled = true;
     };
@@ -240,52 +373,60 @@ export function useJyotishProfile(): JyotishProfile {
   const isLoading = birthDetailsLoading || readingLoading || !isFreshForUser;
 
   return useMemo(() => {
-    const userId = authUser?.id || '';
+    const userId = authUser?.id;
+    const birthCacheKey = getBirthCacheKey(userId);
+    const cachedBirth = birthData || (
+      birthCacheKey && typeof window !== 'undefined'
+        ? parseBirthCache(localStorage.getItem(birthCacheKey))
+        : null
+    );
 
-    // Get birth data from localStorage birth cache
-    const birthCacheKey = `sh:vedic:${userId}:birth`;
-    let birthData: any = null;
-    try {
-      const birthRaw = typeof window !== 'undefined'
-        ? localStorage.getItem(birthCacheKey)
-        : null;
-      birthData = birthRaw ? JSON.parse(birthRaw) : null;
-    } catch {
-      birthData = null;
-    }
-    const birthDateStr = birthData?.birth_date || birthDate || '';
+    // ── AUTHORITATIVE: compute from birth data, IGNORE AI text ──
+    const birthDateStr = cachedBirth?.birth_date ?? '';
+    const rawReading = reading as any;
+    const moonNakshatra = normalizeNakshatraName(
+      String(
+        cachedBirth?.birth_nakshatra ||
+          cachedBirth?.nakshatra ||
+          rawReading?.personalCompass?.moonNakshatra ||
+          rawReading?.natalChart?.moonNakshatra ||
+          rawReading?.birthNakshatra ||
+          reading?.todayInfluence?.nakshatra ||
+          ''
+      )
+    );
 
-    // Get nakshatra from today's influence or stored reading
-    const nakshatraRaw = reading?.todayInfluence?.nakshatra
-      || (reading as any)?.personalCompass?.moonNakshatra
-      || '';
-    const nakshatra = String(nakshatraRaw || '');
-    const nakshatraBase = nakshatra.replace(/\s*nakshatra.*/i, '').trim();
+    const rawMoonDegree =
+      rawReading?.natalChart?.moonDegree ??
+      rawReading?.natalChart?.moonLongitude ??
+      rawReading?.moonDegree ??
+      rawReading?.moonLongitude;
 
-    const { mahadasha, antardasha } = calcVimshottariDasha(birthDateStr, nakshatraBase);
+    const moonDeg = typeof rawMoonDegree === 'number' ? rawMoonDegree : Number(rawMoonDegree);
+    const nakshatraProgress = Number.isFinite(moonDeg)
+      ? ((((moonDeg % 13.333) + 13.333) % 13.333) / 13.333)
+      : 0.5;
+
+    const { mahadasha, antardasha } = getRealDasha(birthDateStr, moonNakshatra, nakshatraProgress);
+
+    const nakshatra = String(reading?.todayInfluence?.nakshatra || moonNakshatra || '');
 
     // Moon sign and other fields are not directly in the VedicReading type,
-    // but can be derived from nakshatra or defaulted
-    const moonSign = 'Pisces'; // default — no moonSign field in VedicReading
+    // but can be derived from nakshatra or defaulted.
+    const moonSign = 'Pisces';
 
-    // Active yogas from masterBlueprint
-    const activeYogas = (reading?.masterBlueprint?.significantYogas || []).map(y => y.name);
+    const activeYogas = (reading?.masterBlueprint?.significantYogas || []).map((y) => y.name);
 
-    // Karma focus: from masterBlueprint or planet-specific default for daily relevance
     const karmaFocus = reading?.masterBlueprint?.karmaPatterns
       ? reading.masterBlueprint.karmaPatterns.split('.')[0].trim()
-      : (KARMA_FOCUS_MAP[mahadasha] || KARMA_FOCUS_MAP['Jupiter']);
+      : (KARMA_FOCUS_MAP[mahadasha] || KARMA_FOCUS_MAP.Jupiter);
 
-    // Healing focus from masterBlueprint
     const healingFocus = reading?.masterBlueprint?.soulPurpose
       ? reading.masterBlueprint.soulPurpose.split('.')[0]
       : 'Energy center balancing';
 
-    // Bhrigu cycle from masterBlueprint timingPeaks or sadeSatiStatus
     const bhriguCycle = reading?.masterBlueprint?.sadeSatiStatus || '';
-
     const primaryDosha = DOSHA_MAP[moonSign] || 'Tridoshic';
-
     const userName = authUser?.user_metadata?.full_name || 'Sacred Soul';
     const language = (authUser?.user_metadata?.language as string) || 'en';
 
@@ -304,10 +445,10 @@ export function useJyotishProfile(): JyotishProfile {
       healingFocus,
       musicRaga: RAGA_MAP[mahadasha] || 'Raga Yaman',
       musicFrequency: FREQ_MAP[mahadasha] || '528Hz',
-      mantraFocus: `Om ${mahadasha}aya Namaha`,
+      mantraFocus: mahadasha ? `Om ${mahadasha}aya Namaha` : 'Om Gurave Namaha',
       language,
       isLoading,
       userName,
     };
-  }, [reading, isLoading, authUser, birthDate]);
+  }, [authUser, birthData, isLoading, reading]);
 }
