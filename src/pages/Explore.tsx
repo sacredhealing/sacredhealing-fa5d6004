@@ -1,691 +1,590 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, ChevronDown, ChevronUp, BookOpen } from 'lucide-react';
-import { useJyotishProfile } from '@/hooks/useJyotishProfile';
-import { getGitaVerseForCycle } from '@/lib/gitaVerses';
+import React, { useMemo, useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ParamahamsaVishwanandaDailyCard } from "@/components/dashboard/ParamahamsaVishwanandaDailyCard";
+import { GitaCard } from "@/components/dashboard/GitaCard";
+import AkashicSiddhaReading from "@/components/vedic/AkashicSiddhaReading";
+import { QuickActionFallback } from "@/features/library/QuickActionFallback";
+import { useQuickActionItems } from "@/features/library/useQuickActionItems";
+import { resolveQuickActionItem } from "@/features/library/quickActionResolver";
+import { usePresenceState } from "@/features/presence/usePresenceState";
+import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
+import { useMeditationContentLanguage } from "@/features/meditations/useContentLanguage";
+import { useMembership } from "@/hooks/useMembership";
+import { getTierRank, FEATURE_TIER, getSalesPageForRank, hasFeatureAccess } from "@/lib/tierAccess";
+import { useAuth } from "@/hooks/useAuth";
+import { useAkashicAccess } from "@/hooks/useAkashicAccess";
+import { useAdminRole } from "@/hooks/useAdminRole";
+import { getDayPhase } from "@/utils/postSessionContext";
+import SacredRevealGate from "@/components/SacredRevealGate";
+import { supabase } from "@/integrations/supabase/client";
 
-// ─── DESIGN TOKENS ────────────────────────────────────────────────────────────
-const gold  = (a: number) => `rgba(212,175,55,${a})`;
-const white = (a: number) => `rgba(255,255,255,${a})`;
-const cyan  = (a: number) => `rgba(34,211,238,${a})`;
-
-// ─── SIDDHA HEXAGON SVG (animated torus) ─────────────────────────────────────
-const SiddhaHex = () => (
-  <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
-    {/* outer ring pulse */}
-    <circle cx="26" cy="26" r="24" stroke={gold(0.15)} strokeWidth="1"
-      style={{ animation: 'sqRingPulse 3s ease-in-out infinite' }} />
-    <circle cx="26" cy="26" r="19" stroke={gold(0.25)} strokeWidth="0.8" />
-    {/* hexagon */}
-    <polygon
-      points="26,6 43,16 43,36 26,46 9,36 9,16"
-      stroke={gold(0.75)} strokeWidth="1.2" fill={gold(0.06)}
-      style={{ animation: 'sqHexBreathe 5s ease-in-out infinite' }}
-    />
-    {/* inner star */}
-    <polygon points="26,14 32,22 26,30 20,22" stroke={gold(0.5)} strokeWidth="0.8" fill="none" />
-    <circle cx="26" cy="26" r="3" fill={gold(0.9)}
-      style={{ animation: 'sqCoreDot 2.5s ease-in-out infinite' }} />
-  </svg>
-);
-
-// ─── WAVE SVG (animated breath) ───────────────────────────────────────────────
-const PranaWave = () => (
-  <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
-    <circle cx="22" cy="22" r="20" stroke={cyan(0.2)} strokeWidth="1"
-      style={{ animation: 'sqRingPulse 4s ease-in-out infinite' }} />
-    <path
-      d="M8 22 Q13 14 18 22 Q23 30 28 22 Q33 14 38 22"
-      stroke={cyan(0.85)} strokeWidth="1.8" fill="none" strokeLinecap="round"
-      style={{ animation: 'sqWaveDrift 3s ease-in-out infinite' }}
-    />
-  </svg>
-);
-
-// ─── SUB-PORTAL BUTTON ────────────────────────────────────────────────────────
-interface SubPortalProps {
-  icon: React.ReactNode;
-  label: string;
-  to: string;
-  accent?: string;
+interface ExploreVideo {
+  id: string;
+  title: string;
+  thumbnail: string;
+  url: string;
+  publishedAt: string;
+  channelTitle: string;
 }
-const SubPortal = ({ icon, label, to, accent }: SubPortalProps) => {
-  const navigate = useNavigate();
-  const ac = accent ?? gold(0.8);
-  return (
-    <button
-      onClick={() => navigate(to)}
-      style={{
-        flex: 1,
-        background: `rgba(255,255,255,0.03)`,
-        border: `1px solid ${gold(0.12)}`,
-        borderRadius: 16,
-        padding: '14px 8px',
-        cursor: 'pointer',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 8,
-        transition: 'border-color 0.2s, background 0.2s',
-      }}
-      onMouseEnter={e => {
-        (e.currentTarget as HTMLElement).style.borderColor = gold(0.35);
-        (e.currentTarget as HTMLElement).style.background = gold(0.06);
-      }}
-      onMouseLeave={e => {
-        (e.currentTarget as HTMLElement).style.borderColor = gold(0.12);
-        (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)';
-      }}
-    >
-      <span style={{ fontSize: 20, lineHeight: 1 }}>{icon}</span>
-      <span style={{
-        fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
-        fontSize: 11,
-        fontWeight: 800,
-        letterSpacing: '0.15em',
-        textTransform: 'uppercase',
-        color: ac,
-        lineHeight: 1.3,
-        textAlign: 'center',
-      }}>
-        {label}
-      </span>
-    </button>
-  );
-};
 
-// ─── BREATH PRACTICE BUTTON ───────────────────────────────────────────────────
-interface BreathBtnProps { icon: string; label: string; sub: string; to: string; }
-const BreathBtn = ({ icon, label, sub, to }: BreathBtnProps) => {
-  const navigate = useNavigate();
-  return (
-    <button
-      onClick={() => navigate(to)}
-      style={{
-        flex: 1,
-        background: 'rgba(34,211,238,0.04)',
-        border: `1px solid ${cyan(0.14)}`,
-        borderRadius: 16,
-        padding: '16px 10px',
-        cursor: 'pointer',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 6,
-        transition: 'border-color 0.2s, background 0.2s',
-      }}
-      onMouseEnter={e => {
-        (e.currentTarget as HTMLElement).style.borderColor = cyan(0.35);
-        (e.currentTarget as HTMLElement).style.background = cyan(0.08);
-      }}
-      onMouseLeave={e => {
-        (e.currentTarget as HTMLElement).style.borderColor = cyan(0.14);
-        (e.currentTarget as HTMLElement).style.background = 'rgba(34,211,238,0.04)';
-      }}
-    >
-      <span style={{ fontSize: 22 }}>{icon}</span>
-      <span style={{
-        fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
-        fontSize: 11,
-        fontWeight: 800,
-        letterSpacing: '0.15em',
-        textTransform: 'uppercase',
-        color: cyan(0.9),
-        lineHeight: 1.3,
-        textAlign: 'center',
-      }}>{label}</span>
-      <span style={{
-        fontFamily: "'Cormorant Garamond',serif",
-        fontStyle: 'italic',
-        fontSize: '0.78rem',
-        color: white(0.35),
-        lineHeight: 1.4,
-        textAlign: 'center',
-      }}>{sub}</span>
-    </button>
-  );
-};
-
-// ─── MAIN PAGE ────────────────────────────────────────────────────────────────
-const Explore = () => {
+export default function Explore() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [gitaExpanded, setGitaExpanded] = useState(false);
-  const { mahadasha } = useJyotishProfile();
-  const verse = getGitaVerseForCycle(mahadasha);
+  const dayPhase = getDayPhase();
+  const { playUniversalAudio } = useMusicPlayer();
+  const { allAudioItems } = useQuickActionItems();
+  const { language: meditationLanguage } = useMeditationContentLanguage();
+  const { isPremium, tier } = useMembership();
+  const { user } = useAuth();
+  const { hasAccess: hasAkashicAccess } = useAkashicAccess(user?.id);
+  const { isAdmin } = useAdminRole();
+  const [showFallback, setShowFallback] = useState(false);
+  const [akashicOpen, setAkashicOpen] = useState(false);
+  const [gitaOpen, setGitaOpen] = useState(false);
+  const [sacredRevealOpen, setSacredRevealOpen] = useState(false);
+  const presence = usePresenceState();
+  const userHouse = 12;
+  const onQuick = (key: "calm" | "heart" | "pause" | "sleep") => {
+    if (key === "pause") {
+      const item = resolveQuickActionItem(allAudioItems, "pause", meditationLanguage);
+      if (item) { setShowFallback(false); playUniversalAudio(item); }
+      else navigate("/breathing");
+      return;
+    }
+    const item = resolveQuickActionItem(allAudioItems, key, meditationLanguage);
+    if (!item) { setShowFallback(true); return; }
+    setShowFallback(false);
+    playUniversalAudio(item);
+  };
 
-  const categories = [
-    { titleKey: 'exploreFrequencies.catDeepFocus'   as const, freqKey: 'exploreFrequencies.catDeepFocusFreq'   as const, descKey: 'exploreFrequencies.catDeepFocusDesc'   as const, color: 'rgba(59,130,246,0.15)'  },
-    { titleKey: 'exploreFrequencies.catHeart'        as const, freqKey: 'exploreFrequencies.catHeartFreq'        as const, descKey: 'exploreFrequencies.catHeartDesc'        as const, color: 'rgba(34,197,94,0.15)'   },
-    { titleKey: 'exploreFrequencies.catAstral'       as const, freqKey: 'exploreFrequencies.catAstralFreq'       as const, descKey: 'exploreFrequencies.catAstralDesc'       as const, color: 'rgba(168,85,247,0.15)'  },
-    { titleKey: 'exploreFrequencies.catPhysical'     as const, freqKey: 'exploreFrequencies.catPhysicalFreq'     as const, descKey: 'exploreFrequencies.catPhysicalDesc'     as const, color: 'rgba(239,68,68,0.15)'   },
-  ];
+  const [exploreVideos, setExploreVideos] = useState<ExploreVideo[]>([]);
+  useEffect(() => {
+    supabase.functions.invoke('fetch-youtube-videos').then(({ data }) => {
+      if (data?.videos) setExploreVideos(data.videos.slice(0, 4));
+    });
+  }, []);
+
+  // ── inline style helpers (no className, pure inline for SQI design) ──
+  const SL = ({ label, delay = '0s' }: { label: string; delay?: string }) => (
+    <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.28)', padding: '28px 20px 11px', animation: `sqFadeUp 0.4s ${delay} ease both` }}>{label}</div>
+  );
+  const Badge = ({ label, v = 'gold' }: { label: string; v?: 'gold'|'muted'|'red'|'purple' }) => {
+    const s: Record<string, React.CSSProperties> = {
+      gold:   { background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.24)', color: 'rgba(212,175,55,0.85)' },
+      muted:  { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.42)' },
+      red:    { background: 'rgba(255,55,55,0.12)', border: '1px solid rgba(255,55,55,0.25)', color: 'rgba(255,110,110,0.85)' },
+      purple: { background: 'rgba(160,80,240,0.14)', border: '1px solid rgba(160,80,240,0.28)', color: 'rgba(190,140,255,0.8)' },
+    };
+    return <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase' as const, borderRadius: 20, padding: '2px 8px', ...s[v] }}>{label}</span>;
+  };
+  const TI = ({ children, pulse }: { children: React.ReactNode; pulse?: boolean }) => (
+    <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 11, flexShrink: 0, animation: pulse ? 'sqDotPulse 4s ease-in-out infinite' : undefined }}>{children}</div>
+  );
 
   return (
-    <div style={{ minHeight: '100vh', background: '#050505', color: 'white', padding: '0 0 104px' }}>
+    <div style={{ background: '#050505', minHeight: '100vh', paddingBottom: 104 }}>
 
-      {/* ══════════════════════════════════════════════════════════
-          CONVERGE HEADER — Akasha-Neural Architect Frequency
-      ══════════════════════════════════════════════════════════ */}
-      <div style={{ padding: '52px 20px 32px', animation: 'sqFadeUp 0.4s ease both' }}>
-        <p style={{
-          fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
-          fontSize: 10,
-          fontWeight: 800,
-          letterSpacing: '0.5em',
-          textTransform: 'uppercase',
-          color: gold(0.4),
-          marginBottom: 10,
-        }}>
-          ◈ UNIVERSAL FIELD
-        </p>
+      {/* ══ HEADER ══ */}
+      <div style={{ padding: '52px 20px 0', animation: 'sqFadeUp 0.35s ease both' }}>
+        <p style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.3)', marginBottom: 6 }}>{t('converge.headerMicro')}</p>
         <h1 style={{
           fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
-          fontSize: 'clamp(2.8rem, 8vw, 3.6rem)',
+          fontSize: 'clamp(2.6rem, 8vw, 3.4rem)',
           fontWeight: 900,
           letterSpacing: '-0.04em',
-          color: gold(0.95),
+          color: '#D4AF37',
           lineHeight: 1,
-          margin: '0 0 12px',
-          animation: 'sqConvergePulse 6s ease-in-out infinite',
-        }}>
-          Converge
-        </h1>
-        <p style={{
-          fontFamily: "'Cormorant Garamond',serif",
-          fontStyle: 'italic',
-          fontSize: '1.05rem',
-          color: white(0.45),
-          lineHeight: 1.6,
           margin: 0,
-        }}>
-          Every portal. Every tool. Every dimension.
-        </p>
+          animation: 'sqConvergePulse 6s ease-in-out infinite',
+        }}>{t('converge.title')}</h1>
+        <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.95rem', color: 'rgba(255,255,255,0.28)', marginTop: 7 }}>{t('converge.tagline')}</p>
       </div>
 
-      {/* ══════════════════════════════════════════════════════════
-          SIDDHA PORTAL — Prema-Pulse Transmission
-      ══════════════════════════════════════════════════════════ */}
-      <div style={{ padding: '0 16px 20px', animation: 'sqFadeUp 0.45s 0.05s ease both' }}>
-        <div style={{
-          background: `linear-gradient(135deg,${gold(0.07)},${gold(0.02)})`,
-          border: `1px solid ${gold(0.22)}`,
-          borderRadius: 28,
-          padding: '22px 18px 20px',
-          position: 'relative',
-          overflow: 'hidden',
-        }}>
-          {/* background glow */}
-          <div style={{
-            position: 'absolute', top: -40, right: -40,
-            width: 160, height: 160,
-            borderRadius: '50%',
-            background: gold(0.05),
-            filter: 'blur(40px)',
-            pointerEvents: 'none',
-          }} />
-
-          {/* header row */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
-            <div style={{ animation: 'sqHexOrbit 8s linear infinite', flexShrink: 0 }}>
-              <SiddhaHex />
-            </div>
-            <div style={{ flex: 1 }}>
-              <p style={{
-                fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
-                fontSize: 10,
-                fontWeight: 800,
-                letterSpacing: '0.45em',
-                textTransform: 'uppercase',
-                color: gold(0.45),
-                marginBottom: 4,
-              }}>
-                SIDDHA PORTAL
-              </p>
-              <h2 style={{
-                fontFamily: "'Cormorant Garamond',serif",
-                fontSize: '1.35rem',
-                fontWeight: 600,
-                color: white(0.9),
-                margin: 0,
-                lineHeight: 1.2,
-              }}>
-                18 Masters · Nadi Oracle · Quantum Field
-              </h2>
-            </div>
-            {/* ACTIVE badge */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 5,
-              background: gold(0.1),
-              border: `1px solid ${gold(0.3)}`,
-              borderRadius: 20,
-              padding: '5px 11px',
-              flexShrink: 0,
-            }}>
-              <span style={{
-                display: 'inline-block',
-                width: 6, height: 6,
-                borderRadius: '50%',
-                background: '#D4AF37',
-                animation: 'sqLiveFlash 2s infinite',
-              }} />
-              <span style={{
-                fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
-                fontSize: 9,
-                fontWeight: 800,
-                letterSpacing: '0.25em',
-                textTransform: 'uppercase',
-                color: gold(0.9),
-              }}>ACTIVE</span>
-            </div>
-          </div>
-
-          {/* Sub-portal buttons */}
-          <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
-            <SubPortal icon="📿" label="18 Masters"   to="/siddha-portal" />
-            <SubPortal icon="🌊" label="Nadi Oracle"  to="/digital-nadi" />
-            <SubPortal icon="🔺" label="Yantra Shield" to="/sri-yantra-shield" />
-            <SubPortal icon="⚛" label="Quantum Field" to="/siddha-portal" />
-          </div>
-
-          {/* CTA */}
-          <button
-            onClick={() => navigate('/siddha-portal')}
-            style={{
-              fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
-              fontSize: 11,
-              fontWeight: 800,
-              letterSpacing: '0.35em',
-              textTransform: 'uppercase',
-              color: gold(0.9),
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: 0,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-            }}
-          >
-            <span style={{
-              display: 'inline-block',
-              width: 24, height: 1,
-              background: `linear-gradient(90deg,${gold(0.6)},transparent)`,
-            }} />
-            ENTER THE PORTAL
-            <span style={{ animation: 'sqArrowPulse 1.5s ease-in-out infinite' }}>→</span>
-          </button>
-        </div>
-      </div>
-
-      {/* ══════════════════════════════════════════════════════════
-          PRANIC BREATHING — Life-Force Ignition
-      ══════════════════════════════════════════════════════════ */}
-      <div style={{ padding: '0 16px 20px', animation: 'sqFadeUp 0.45s 0.1s ease both' }}>
-        <div style={{
-          background: `linear-gradient(135deg,${cyan(0.06)},rgba(15,5,26,0.95))`,
-          border: `1px solid ${cyan(0.18)}`,
-          borderRadius: 28,
-          padding: '22px 18px 20px',
-          position: 'relative',
-          overflow: 'hidden',
-        }}>
-          {/* background glow */}
-          <div style={{
-            position: 'absolute', top: -40, left: -20,
-            width: 140, height: 140,
-            borderRadius: '50%',
-            background: cyan(0.04),
-            filter: 'blur(40px)',
-            pointerEvents: 'none',
-          }} />
-
-          {/* header row */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
-            <div style={{ animation: 'sqWaveBreathe 4s ease-in-out infinite', flexShrink: 0 }}>
-              <PranaWave />
+      {/* ══ SIDDHA PORTAL GATE ══ */}
+      <SL label={t('converge.secSiddhaPortal')} delay="0.04s" />
+      <div
+        onClick={() => navigate(hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal) ? '/siddha-portal' : '/siddha-quantum')}
+        style={{ margin: '0 16px', position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg,rgba(212,175,55,0.11) 0%,rgba(212,175,55,0.04) 60%,rgba(0,0,0,0) 100%)', border: '1px solid rgba(212,175,55,0.28)', borderRadius: 22, padding: '22px 18px', cursor: 'pointer', animation: 'sqFadeUp 0.5s 0.06s ease both' }}
+      >
+        <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.09),transparent)', animation: 'sqShimmer 4s ease-in-out infinite', pointerEvents: 'none' }} />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 15 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
+            <div style={{ width: 50, height: 50, borderRadius: '50%', background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><polygon points="12,2.2 21.8,19.5 2.2,19.5" stroke="rgba(212,175,55,0.9)" strokeWidth="1.3" fill="none"/><polygon points="12,21.8 2.2,4.5 21.8,4.5" stroke="rgba(212,175,55,0.72)" strokeWidth="1.1" fill="none"/><circle cx="12" cy="12" r="1.8" fill="rgba(212,175,55,0.95)"/></svg>
             </div>
             <div>
-              <p style={{
-                fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
-                fontSize: 10,
-                fontWeight: 800,
-                letterSpacing: '0.45em',
-                textTransform: 'uppercase',
-                color: cyan(0.5),
-                marginBottom: 4,
-              }}>
-                PRĀNIC BREATHING
-              </p>
-              <h2 style={{
-                fontFamily: "'Cormorant Garamond',serif",
-                fontSize: '1.35rem',
-                fontWeight: 600,
-                color: white(0.9),
-                margin: 0,
-                lineHeight: 1.2,
-              }}>
-                Ancient Siddha breath science
-              </h2>
+              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 8.5, fontWeight: 800, letterSpacing: '0.42em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.88)', marginBottom: 3 }}>{t('converge.siddhaPortalTitle')}</div>
+              <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.85rem', color: 'rgba(255,255,255,0.36)' }}>{t('converge.siddhaPortalSub')}</div>
             </div>
           </div>
+          {hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal) ? <Badge label={t('converge.badgeActive')} /> : <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6.5, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.38)' }}>{t('converge.price45mo')}</span>}
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 7, marginBottom: 16 }}>
+          {[
+            { svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="rgba(212,175,55,0.6)" strokeWidth="1.2"/><circle cx="12" cy="12" r="4.5" stroke="rgba(212,175,55,0.5)" strokeWidth="1"/><circle cx="12" cy="12" r="1.5" fill="rgba(212,175,55,0.75)"/></svg>, labelKey: 'converge.tile18Masters' as const },
+            { svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 12 Q8 6 12 12 Q16 18 20 12" stroke="rgba(212,175,55,0.7)" strokeWidth="1.3" fill="none"/><path d="M4 8 Q8 2 12 8 Q16 14 20 8" stroke="rgba(212,175,55,0.35)" strokeWidth="1" fill="none"/></svg>, labelKey: 'converge.tileNadiOracle' as const },
+            { svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><polygon points="12,3 22,21 2,21" stroke="rgba(212,175,55,0.7)" strokeWidth="1.2" fill="none"/><polygon points="12,9 19,21 5,21" stroke="rgba(212,175,55,0.38)" strokeWidth="0.9" fill="none"/><circle cx="12" cy="15" r="1.5" fill="rgba(212,175,55,0.7)"/></svg>, labelKey: 'converge.tileYantraShield' as const },
+            { svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><polygon points="13,2 4,14 11,14 11,22 20,10 13,10" stroke="rgba(212,175,55,0.8)" strokeWidth="1.3" strokeLinejoin="round" fill="rgba(212,175,55,0.12)"/></svg>, labelKey: 'converge.tileQuantumField' as const },
+          ].map(({ svg, labelKey }, i) => (
+            <div key={i} style={{ background: 'rgba(212,175,55,0.05)', border: '1px solid rgba(212,175,55,0.1)', borderRadius: 11, padding: '9px 5px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+              {svg}
+              <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 12, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.48)', textAlign: 'center', lineHeight: 1.4, whiteSpace: 'pre-line' }}>{t(labelKey)}</span>
+            </div>
+          ))}
+        </div>
+        <button onClick={(e) => { e.stopPropagation(); navigate(hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal) ? '/siddha-portal' : '/siddha-quantum'); }} style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+          {hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal) ? t('converge.siddhaEnter') : t('converge.siddhaUnlock')}
+        </button>
+      </div>
 
-          {/* Breath practice buttons */}
-          <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
-            <BreathBtn icon="🌬" label="Kumbhaka"    sub="Breath retention"  to="/breathing" />
-            <BreathBtn icon="〰" label="Nadi Shodhana" sub="Channel purification" to="/breathing" />
-            <BreathBtn icon="🔥" label="Agni Prana"  sub="Fire awakening"    to="/breathing" />
+      {/* ══ PRĀṆIC BREATHING ══ */}
+      <SL label={t('converge.secPranic')} delay="0.1s" />
+      <div
+        onClick={() => navigate('/breathing')}
+        style={{ margin: '0 16px', borderRadius: 22, overflow: 'hidden', position: 'relative', cursor: 'pointer', border: '1px solid rgba(212,175,55,0.22)', background: 'linear-gradient(160deg,rgba(10,40,80,0.8) 0%,rgba(5,15,35,0.95) 55%,rgba(212,175,55,0.06) 100%)', animation: 'sqFadeUp 0.45s 0.12s ease both' }}
+      >
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+          <svg width="100%" height="60" viewBox="0 0 400 60" preserveAspectRatio="none" style={{ opacity: 0.12 }}>
+            <path fill="rgba(212,175,55,0.4)">
+              <animate attributeName="d" dur="5s" repeatCount="indefinite" values="M0 30 Q50 10 100 30 Q150 50 200 30 Q250 10 300 30 Q350 50 400 30 L400 60 L0 60 Z;M0 30 Q50 50 100 30 Q150 10 200 30 Q250 50 300 30 Q350 10 400 30 L400 60 L0 60 Z;M0 30 Q50 10 100 30 Q150 50 200 30 Q250 10 300 30 Q350 50 400 30 L400 60 L0 60 Z"/>
+            </path>
+          </svg>
+        </div>
+        <div style={{ position: 'relative', zIndex: 1, padding: '20px 18px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+            <div style={{ width: 46, height: 46, borderRadius: '50%', background: 'rgba(30,80,160,0.25)', border: '1px solid rgba(100,160,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, animation: 'sqBreathe 5s ease-in-out infinite' }}>
+              <svg width="22" height="22" viewBox="0 0 28 28" fill="none"><path d="M4 14 Q8 6 14 14 Q20 22 24 14" stroke="rgba(120,180,255,0.85)" strokeWidth="1.8" fill="none"/><path d="M4 10 Q9 2 14 10 Q19 18 24 10" stroke="rgba(120,180,255,0.4)" strokeWidth="1.2" fill="none"/></svg>
+            </div>
+            <div>
+              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 8.5, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(140,190,255,0.82)', marginBottom: 3 }}>{t('converge.pranicTitle')}</div>
+              <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.85rem', color: 'rgba(255,255,255,0.32)' }}>{t('converge.pranicSub')}</div>
+            </div>
           </div>
-
-          {/* description */}
-          <p style={{
-            fontFamily: "'Cormorant Garamond',serif",
-            fontStyle: 'italic',
-            fontSize: '0.9rem',
-            color: white(0.4),
-            lineHeight: 1.6,
-            marginBottom: 16,
-          }}>
-            Activate life-force through Siddha breath science. Kumbhaka retention, Nadi purification, Agni awakening.
-          </p>
-
-          {/* CTA */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 16 }}>
+            {[
+              { labelKey: 'converge.pranicTileKumbhaka' as const, svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="7" stroke="rgba(120,180,255,0.7)" strokeWidth="1.3" fill="none"><animate attributeName="r" values="7;9;7" dur="4s" repeatCount="indefinite"/></circle><circle cx="12" cy="12" r="3" fill="rgba(120,180,255,0.2)" stroke="rgba(120,180,255,0.6)" strokeWidth="1"/></svg> },
+              { labelKey: 'converge.pranicTileNadi' as const,      svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12 Q8 6 12 12 Q16 18 20 12" stroke="rgba(120,180,255,0.75)" strokeWidth="1.4" fill="none"><animate attributeName="d" values="M4 12 Q8 6 12 12 Q16 18 20 12;M4 12 Q8 18 12 12 Q16 6 20 12;M4 12 Q8 6 12 12 Q16 18 20 12" dur="3.5s" repeatCount="indefinite"/></path></svg> },
+              { labelKey: 'converge.pranicTileAgni' as const,          svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  {/* Neural flame core */}
+                  <path d="M12 3 C9 7 8 9.5 8 11.5 C8 14.5 9.8 16.5 12 18 C14.2 16.5 16 14.5 16 11.5 C16 9.5 15 7 12 3 Z" stroke="rgba(212,175,55,0.8)" strokeWidth="1.3" fill="rgba(212,175,55,0.15)">
+                    <animate attributeName="d" dur="2.8s" repeatCount="indefinite"
+                      values="
+                        M12 3 C9 7 8 9.5 8 11.5 C8 14.5 9.8 16.5 12 18 C14.2 16.5 16 14.5 16 11.5 C16 9.5 15 7 12 3 Z;
+                        M12 3 C9.2 6.8 8 9.3 8.2 11.6 C8.5 14.4 10 16.4 12 17.8 C14 16.4 15.5 14.4 15.8 11.6 C16 9.3 14.8 6.8 12 3 Z;
+                        M12 3 C9 7 8 9.5 8 11.5 C8 14.5 9.8 16.5 12 18 C14.2 16.5 16 14.5 16 11.5 C16 9.5 15 7 12 3 Z" />
+                  </path>
+                  {/* Electric neural arcs */}
+                  <path d="M6 14 C8 13 9 12 10 10.8" stroke="rgba(120,180,255,0.7)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                    <animate attributeName="stroke-opacity" values="0.2;0.8;0.2" dur="1.6s" repeatCount="indefinite" />
+                  </path>
+                  <path d="M18 14 C16 13 15 12 14 10.8" stroke="rgba(120,180,255,0.7)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                    <animate attributeName="stroke-opacity" values="0.8;0.2;0.8" dur="1.6s" repeatCount="indefinite" />
+                  </path>
+                  {/* Nucleus */}
+                  <circle cx="12" cy="12" r="1.6" fill="rgba(180,210,255,0.9)">
+                    <animate attributeName="r" values="1.5;2;1.5" dur="2.2s" repeatCount="indefinite" />
+                  </circle>
+                </svg> },
+            ].map(({ svg, labelKey }, i) => (
+              <div key={i} style={{ background: 'rgba(30,80,160,0.2)', border: '1px solid rgba(100,160,255,0.15)', borderRadius: 13, padding: '11px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+                {svg}
+                <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 12, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(120,180,255,0.6)', textAlign: 'center', lineHeight: 1.4, whiteSpace: 'pre-line' }}>{t(labelKey)}</span>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.87rem', color: 'rgba(255,255,255,0.38)', lineHeight: 1.62, marginBottom: 13 }}>{t('converge.pranicBody')}</p>
           <button
-            onClick={() => navigate('/breathing')}
             style={{
-              fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
-              fontSize: 11,
+              fontFamily: "'Montserrat',sans-serif",
+              fontSize: 7.5,
               fontWeight: 800,
-              letterSpacing: '0.35em',
+              letterSpacing: '0.38em',
               textTransform: 'uppercase',
-              color: cyan(0.9),
+              color: 'rgba(140,190,255,0.8)',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
               padding: 0,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
+              animation: 'sqDotPulse 3.4s ease-in-out infinite',
             }}
           >
-            <span style={{
-              display: 'inline-block',
-              width: 24, height: 1,
-              background: `linear-gradient(90deg,${cyan(0.6)},transparent)`,
-            }} />
-            BEGIN PRACTICE
-            <span style={{ animation: 'sqArrowPulse 1.5s ease-in-out infinite' }}>→</span>
+            {t('converge.beginPractice')}
           </button>
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════════════════════
-          BHAGAVAD GITA DAILY VERSE
-      ══════════════════════════════════════════════════════════ */}
-      <div style={{ padding: '0 16px 20px', animation: 'sqFadeUp 0.45s 0.15s ease both' }}>
-        <motion.div
+      {/* ══ EXPLORE AKASHA — WISDOM ARCHIVE ══ */}
+      <SL label={t('converge.secExploreAkasha')} delay="0.15s" />
+      <div
+        onClick={() => navigate('/explore-akasha')}
+        style={{ margin: '0 16px', borderRadius: 22, overflow: 'hidden', position: 'relative', cursor: 'pointer', border: '1px solid rgba(160,80,240,0.25)', background: 'linear-gradient(160deg,rgba(50,15,90,0.7) 0%,rgba(20,5,40,0.95) 55%,rgba(212,175,55,0.06) 100%)', animation: 'sqFadeUp 0.45s 0.17s ease both' }}
+      >
+        <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(160,80,240,0.07),transparent)', animation: 'sqShimmer 5s ease-in-out infinite', pointerEvents: 'none' }} />
+        <div style={{ position: 'relative', zIndex: 1, padding: '20px 18px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+            <div style={{ width: 50, height: 50, borderRadius: '50%', background: 'rgba(160,80,240,0.15)', border: '1px solid rgba(160,80,240,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+                <circle cx="14" cy="14" r="10" stroke="rgba(190,140,255,0.7)" strokeWidth="1.2" fill="none"/>
+                <circle cx="14" cy="14" r="5.5" stroke="rgba(190,140,255,0.4)" strokeWidth="1" fill="none"/>
+                <circle cx="14" cy="14" r="2" fill="rgba(190,140,255,0.8)"/>
+                <line x1="14" y1="4" x2="14" y2="8" stroke="rgba(190,140,255,0.5)" strokeWidth="0.8"/>
+                <line x1="14" y1="20" x2="14" y2="24" stroke="rgba(190,140,255,0.5)" strokeWidth="0.8"/>
+                <line x1="4" y1="14" x2="8" y2="14" stroke="rgba(190,140,255,0.5)" strokeWidth="0.8"/>
+                <line x1="20" y1="14" x2="24" y2="14" stroke="rgba(190,140,255,0.5)" strokeWidth="0.8"/>
+              </svg>
+            </div>
+            <div>
+              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 8.5, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(190,140,255,0.85)', marginBottom: 3 }}>{t('converge.akashaCardTitle')}</div>
+              <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.85rem', color: 'rgba(255,255,255,0.36)' }}>{t('converge.akashaCardSub')}</div>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 16 }}>
+            {[
+              { labelKey: 'converge.akashaTileDivine' as const, svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2 L12 22" stroke="rgba(190,140,255,0.7)" strokeWidth="1.2"/><path d="M6 8 L12 2 L18 8" stroke="rgba(190,140,255,0.7)" strokeWidth="1.2" fill="none"/><circle cx="12" cy="14" r="3" stroke="rgba(190,140,255,0.5)" strokeWidth="1" fill="rgba(190,140,255,0.1)"/></svg> },
+              { labelKey: 'converge.akashaTileOracle' as const, svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="rgba(190,140,255,0.6)" strokeWidth="1.2" fill="none"/><circle cx="12" cy="10" r="2.5" fill="rgba(190,140,255,0.3)" stroke="rgba(190,140,255,0.7)" strokeWidth="1"/><path d="M8 18 Q12 14 16 18" stroke="rgba(190,140,255,0.5)" strokeWidth="1" fill="none"/></svg> },
+              { labelKey: 'converge.akashaTileSeries' as const, svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="2" stroke="rgba(190,140,255,0.6)" strokeWidth="1.2" fill="none"/><line x1="8" y1="8" x2="16" y2="8" stroke="rgba(190,140,255,0.4)" strokeWidth="1"/><line x1="8" y1="12" x2="16" y2="12" stroke="rgba(190,140,255,0.4)" strokeWidth="1"/><line x1="8" y1="16" x2="13" y2="16" stroke="rgba(190,140,255,0.4)" strokeWidth="1"/></svg> },
+            ].map(({ svg, labelKey }, i) => (
+              <div key={i} style={{ background: 'rgba(160,80,240,0.1)', border: '1px solid rgba(160,80,240,0.15)', borderRadius: 13, padding: '11px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+                {svg}
+                <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(190,140,255,0.6)', textAlign: 'center', lineHeight: 1.4, whiteSpace: 'pre-line' }}>{t(labelKey)}</span>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.87rem', color: 'rgba(255,255,255,0.38)', lineHeight: 1.62, marginBottom: 13 }}>{t('converge.akashaBody')}</p>
+          <button
+            style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(190,140,255,0.8)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          >
+            {t('converge.enterArchive')}
+          </button>
+        </div>
+      </div>
+
+      {/* ══ SACRED TOOLS ══ */}
+      <SL label={t('converge.secSacredTools')} delay="0.18s" />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 16px', animation: 'sqFadeUp 0.4s 0.2s ease both' }}>
+        <div onClick={() => hasFeatureAccess(isAdmin, tier, FEATURE_TIER.quantumApothecary) ? navigate('/quantum-apothecary') : navigate('/akasha-infinity')} style={{ background: 'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.22)', borderRadius: 18, padding: '18px 15px', cursor: 'pointer', position: 'relative', overflow: 'hidden', animation: 'exploreSacredHalo 3.2s ease-in-out infinite' }}>
+          <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.07),transparent)', animation: 'sqShimmer 5.5s 1.2s ease-in-out infinite', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', top: 10, right: 10 }}><Badge label="2050" /></div>
+          <TI pulse><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="13" rx="2" stroke="rgba(212,175,55,0.8)" strokeWidth="1.4"/><path d="M8 7 L8 4 C8 3.4 8.4 3 9 3 L15 3 C15.6 3 16 3.4 16 4 L16 7" stroke="rgba(212,175,55,0.55)" strokeWidth="1.2"/><circle cx="12" cy="13" r="2.5" stroke="rgba(212,175,55,0.7)" strokeWidth="1.2"/><line x1="12" y1="10.5" x2="12" y2="8.5" stroke="rgba(212,175,55,0.45)" strokeWidth="1"/></svg></TI>
+          <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.65)', marginBottom: 5, whiteSpace: 'pre-line' }}>{t('converge.toolQuantumTitle')}</div>
+          <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{t('converge.toolQuantumSub')}</div>
+          <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
+        </div>
+        <div onClick={() => hasFeatureAccess(isAdmin, tier, FEATURE_TIER.virtualPilgrimage) ? navigate('/temple-home') : navigate('/akasha-infinity')} style={{ background: 'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.22)', borderRadius: 18, padding: '18px 15px', cursor: 'pointer', position: 'relative', overflow: 'hidden', animation: 'exploreSacredHalo 3.2s ease-in-out infinite' }}>
+          <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.07),transparent)', animation: 'sqShimmer 5.5s 1.2s ease-in-out infinite', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', top: 10, right: 10 }}><Badge label="24/7" v="muted" /></div>
+          <TI><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="rgba(212,175,55,0.7)" strokeWidth="1.3"/><path d="M12 3 C12 3 8 7 8 12 C8 17 12 21 12 21" stroke="rgba(212,175,55,0.45)" strokeWidth="1.1"/><path d="M12 3 C12 3 16 7 16 12 C16 17 12 21 12 21" stroke="rgba(212,175,55,0.45)" strokeWidth="1.1"/><line x1="3.5" y1="9" x2="20.5" y2="9" stroke="rgba(212,175,55,0.3)" strokeWidth="1"/><line x1="3.5" y1="15" x2="20.5" y2="15" stroke="rgba(212,175,55,0.3)" strokeWidth="1"/></svg></TI>
+          <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.65)', marginBottom: 5, whiteSpace: 'pre-line' }}>{t('converge.toolVirtualTitle')}</div>
+          <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{t('converge.toolVirtualSub')}</div>
+          <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
+        </div>
+        <div
+          onClick={() => isAdmin ? navigate('/akashic-reading/full') : hasAkashicAccess ? navigate('/akashic-records') : setSacredRevealOpen(true)}
+          style={{ gridColumn: 'span 2', background: 'linear-gradient(135deg,rgba(80,15,140,0.22),rgba(50,8,100,0.15),rgba(0,0,0,0))', border: '1px solid rgba(130,70,220,0.28)', borderRadius: 18, padding: '20px 18px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
+        >
+          <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(130,70,220,0.08),transparent)', animation: 'sqShimmer 6s ease-in-out infinite', pointerEvents: 'none' }} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+              <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(130,70,220,0.12)', border: '1px solid rgba(130,70,220,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="3" stroke="rgba(180,120,255,0.8)" strokeWidth="1.4"/><path d="M5 20 C5 15.6 8.1 12 12 12 C15.9 12 19 15.6 19 20" stroke="rgba(180,120,255,0.55)" strokeWidth="1.4" fill="none"/><line x1="12" y1="8" x2="12" y2="12" stroke="rgba(180,120,255,0.45)" strokeWidth="1.3"/></svg>
+              </div>
+              <div>
+                <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.36em', textTransform: 'uppercase', color: 'rgba(175,130,255,0.72)', marginBottom: 3 }}>{t('converge.toolDecoderTitle')}</div>
+                <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.78rem', color: 'rgba(255,255,255,0.28)' }}>{t('converge.toolDecoderSub')}</div>
+              </div>
+            </div>
+            <Badge label={t('converge.badgeSecret')} v="purple" />
+          </div>
+          <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.87rem', color: 'rgba(255,255,255,0.33)', lineHeight: 1.6, marginBottom: 11 }}>{t('converge.toolDecoderBody')}</p>
+          <button style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.36em', textTransform: 'uppercase', color: 'rgba(175,130,255,0.58)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>{t('converge.toolDecoderCta')}</button>
+        </div>
+        <div onClick={() => hasFeatureAccess(isAdmin, tier, FEATURE_TIER.vayuProtocol) ? navigate('/vayu-protocol') : navigate('/siddha-quantum')} style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)', borderRadius: 18, padding: '18px 15px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: 10, right: 10 }}><Badge label="2060" /></div>
+          <TI><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="12" rx="9" ry="5" stroke="rgba(212,175,55,0.65)" strokeWidth="1.2" fill="none"/><ellipse cx="12" cy="12" rx="9" ry="5" stroke="rgba(212,175,55,0.28)" strokeWidth="0.9" fill="none" transform="rotate(60,12,12)"/><circle cx="12" cy="12" r="2.2" fill="rgba(212,175,55,0.15)" stroke="rgba(212,175,55,0.65)" strokeWidth="1"/></svg></TI>
+          <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.65)', marginBottom: 5, whiteSpace: 'pre-line' }}>{t('converge.toolVayuTitle')}</div>
+          <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{t('converge.toolVayuSub')}</div>
+          <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
+        </div>
+        <div onClick={() => hasFeatureAccess(isAdmin, tier, FEATURE_TIER.sriYantraShield) ? navigate('/sri-yantra-shield') : navigate('/siddha-quantum')} style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)', borderRadius: 18, padding: '18px 15px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: 10, right: 10 }}><Badge label="v2.6" /></div>
+          <TI><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ animation: 'sqBreathe 5s ease-in-out infinite' }}><polygon points="12,2.5 21.5,20 2.5,20" stroke="rgba(212,175,55,0.85)" strokeWidth="1.3" fill="none"/><polygon points="12,21.5 2.5,4 21.5,4" stroke="rgba(212,175,55,0.68)" strokeWidth="1.1" fill="none"/><polygon points="12,6.5 19,19 5,19" stroke="rgba(212,175,55,0.48)" strokeWidth="0.9" fill="none"/><circle cx="12" cy="12" r="1.5" fill="rgba(212,175,55,0.92)"/></svg></TI>
+          <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.65)', marginBottom: 5, whiteSpace: 'pre-line' }}>{t('converge.toolYantraTitle')}</div>
+          <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{t('converge.toolYantraSub')}</div>
+          <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
+        </div>
+        <div
+          onClick={() => navigate('/womancode')}
           style={{
-            borderRadius: 24,
+            background: 'linear-gradient(135deg,rgba(244,114,182,0.08),rgba(212,175,55,0.04))',
+            border: '1px solid rgba(244,114,182,0.22)',
+            borderRadius: 18,
+            padding: '18px 15px',
+            cursor: 'pointer',
+            position: 'relative',
             overflow: 'hidden',
-            border: `1px solid ${gold(0.2)}`,
-            background: 'linear-gradient(180deg,rgba(26,15,8,0.95),rgba(5,5,5,0.95))',
           }}
         >
-          <button
-            onClick={() => setGitaExpanded(!gitaExpanded)}
+          <div style={{ position: 'absolute', top: 10, right: 10 }}>
+            <Badge label="SQI" v="muted" />
+          </div>
+          <TI>
+            <span style={{ fontSize: 18 }} aria-hidden>🌸</span>
+          </TI>
+          <div
             style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '14px 18px',
-              background: 'rgba(26,15,8,0.8)',
-              borderBottom: `1px solid ${gold(0.15)}`,
-              cursor: 'pointer',
-              border: 'none',
+              fontFamily: "'Montserrat',sans-serif",
+              fontSize: 7.5,
+              fontWeight: 800,
+              letterSpacing: '0.38em',
+              textTransform: 'uppercase',
+              color: 'rgba(244,114,182,0.75)',
+              marginBottom: 5,
+              whiteSpace: 'pre-line',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <BookOpen size={15} color={gold(0.8)} />
-              <span style={{
-                fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
-                fontSize: 10,
-                fontWeight: 800,
-                letterSpacing: '0.4em',
-                textTransform: 'uppercase',
-                color: gold(0.85),
-              }}>
-                {t('exploreFrequencies.gitaHeader')}
-              </span>
+            {t('womanCode.navExplore.title')}
+          </div>
+          <div
+            style={{
+              fontFamily: "'Cormorant Garamond',serif",
+              fontStyle: 'italic',
+              fontSize: '0.8rem',
+              color: 'rgba(255,255,255,0.3)',
+              lineHeight: 1.4,
+            }}
+          >
+            {t('womanCode.navExplore.sub')}
+          </div>
+          <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
+        </div>
+        <div onClick={() => hasFeatureAccess(isAdmin, tier, FEATURE_TIER.palmOracle) ? navigate('/hand-analyzer') : navigate('/akasha-infinity')} style={{ gridColumn: 'span 2', background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)', borderRadius: 18, padding: '18px 16px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: 10, right: 10 }}><Badge label={t('converge.badgePremium')} /></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <TI><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M8 18 L8 8 C8 7.4 8.4 7 9 7 C9.6 7 10 7.4 10 8 L10 13" stroke="rgba(212,175,55,0.8)" strokeWidth="1.4"/><path d="M10 12 C10 11.4 10.4 11 11 11 C11.6 11 12 11.4 12 12 L12 13" stroke="rgba(212,175,55,0.7)" strokeWidth="1.3"/><path d="M12 12.5 C12 11.9 12.4 11.5 13 11.5 C13.6 11.5 14 11.9 14 12.5 L14 14" stroke="rgba(212,175,55,0.6)" strokeWidth="1.2"/><path d="M8 15 C6 14 5 12 5 10" stroke="rgba(212,175,55,0.35)" strokeWidth="1.1"/><path d="M8 18 C8 19 9 20 10 20 L13 20 C15 20 16 18 16 16 L16 13 C16 12.4 15.6 12 15 12 C14.4 12 14 12.4 14 13" stroke="rgba(212,175,55,0.75)" strokeWidth="1.3" fill="none"/></svg></TI>
+            <div>
+              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.65)', marginBottom: 5 }}>{t('converge.toolPalmTitle')}</div>
+              <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{t('converge.toolPalmSub')}</div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Heart size={14} color={white(0.3)} />
-              {gitaExpanded
-                ? <ChevronUp size={14} color={white(0.3)} />
-                : <ChevronDown size={14} color={white(0.3)} />
-              }
-            </div>
-          </button>
+          </div>
+          <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
+        </div>
+      </div>
 
-          {!gitaExpanded && (
-            <div style={{ padding: '16px 18px' }}>
-              <p style={{
-                fontFamily: "'Cormorant Garamond',serif",
-                fontStyle: 'italic',
-                fontSize: '1rem',
-                color: gold(0.8),
-                textAlign: 'center',
-                lineHeight: 1.6,
-                marginBottom: 8,
-              }}>
-                {verse.sanskrit}
-              </p>
-              <p style={{
-                fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
-                fontSize: 10,
-                color: white(0.35),
-                textAlign: 'center',
-                letterSpacing: '0.1em',
-              }}>
-                Tap to read · Chapter {verse.chapter}, Verse {verse.verse}
-              </p>
+      {/* ══ VEDIC & WISDOM ══ */}
+      <SL label={t('converge.secVedic')} delay="0.26s" />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 16px', animation: 'sqFadeUp 0.4s 0.28s ease both' }}>
+        <div onClick={() => navigate('/vedic-astrology')} style={{ gridColumn: 'span 2', background: 'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.22)', borderRadius: 18, padding: '20px 18px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.07),transparent)', animation: 'sqShimmer 5s ease-in-out infinite', pointerEvents: 'none' }} />
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+              <TI pulse><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><line x1="12" y1="4" x2="12" y2="20" stroke="rgba(212,175,55,0.85)" strokeWidth="1.5"/><path d="M8 5 C8 5 8 9.5 12 9.5 C16 9.5 16 5 16 5" stroke="rgba(212,175,55,0.85)" strokeWidth="1.5" fill="none"/><line x1="8" y1="5" x2="8" y2="8" stroke="rgba(212,175,55,0.58)" strokeWidth="1.3"/><line x1="16" y1="5" x2="16" y2="8" stroke="rgba(212,175,55,0.58)" strokeWidth="1.3"/></svg></TI>
+              <div>
+                <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.65)', marginBottom: 5 }}>{t('converge.vedicOracleTitle')}</div>
+                <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.78rem', color: 'rgba(255,255,255,0.28)' }}>{t('converge.vedicOracleSub')}</div>
+              </div>
             </div>
-          )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase', background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.24)', color: 'rgba(212,175,55,0.85)', borderRadius: 20, padding: '2px 8px' }}>
+              <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#D4AF37', animation: 'sqLiveFlash 1.8s ease-in-out infinite', display: 'inline-block' }} />{t('converge.badgeLive')}
+            </div>
+          </div>
+          <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.9rem', color: 'rgba(255,255,255,0.44)', lineHeight: 1.62, marginBottom: 12 }}>{t('converge.vedicSampleLine')}</p>
+          <button style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: '#D4AF37', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>{t('converge.vedicOpenReading')}</button>
+        </div>
+        {[
+          { titleKey: 'converge.wisdomAyurveda' as const, subKey: 'converge.wisdomAyurvedaSub' as const, href: '/ayurveda',       premium: true,  svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2 C12 2 4 8 4 14 C4 18.4 7.6 22 12 22 C16.4 22 20 18.4 20 14 C20 8 12 2 12 2Z" stroke="rgba(212,175,55,0.8)" strokeWidth="1.4" fill="rgba(212,175,55,0.1)"/><path d="M12 8 C12 8 8 12 8 15 C8 17.2 9.8 19 12 19" stroke="rgba(212,175,55,0.38)" strokeWidth="1.1" fill="none"/></svg> },
+          { titleKey: 'converge.wisdomVastu' as const, subKey: 'converge.wisdomVastuSub' as const, href: '/vastu',          premium: true,  svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="10" rx="1" stroke="rgba(212,175,55,0.8)" strokeWidth="1.4"/><path d="M2 11 L12 3 L22 11" stroke="rgba(212,175,55,0.8)" strokeWidth="1.4"/><rect x="9" y="15" width="6" height="6" stroke="rgba(212,175,55,0.42)" strokeWidth="1.1"/></svg> },
+          { titleKey: 'converge.wisdomMantras' as const, subKey: 'converge.wisdomMantrasSub' as const, href: '/mantras',        premium: false, svg: <svg width="16" height="16" viewBox="0 0 22 22" fill="none"><text x="3" y="17" fontSize="16" fill="rgba(212,175,55,0.85)" fontFamily="serif">ॐ</text></svg> },
+          { titleKey: 'converge.wisdomGita' as const, subKey: 'converge.wisdomGitaSub' as const, href: null,              premium: false, svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="14" height="18" rx="2" stroke="rgba(212,175,55,0.8)" strokeWidth="1.4"/><line x1="8" y1="8" x2="16" y2="8" stroke="rgba(212,175,55,0.42)" strokeWidth="1.1"/><line x1="8" y1="11" x2="16" y2="11" stroke="rgba(212,175,55,0.42)" strokeWidth="1.1"/><line x1="8" y1="14" x2="13" y2="14" stroke="rgba(212,175,55,0.42)" strokeWidth="1.1"/></svg> },
+        ].map(({ titleKey, subKey, href, premium, svg }) => (
+          <div key={titleKey} onClick={() => {
+            if (!href) { setGitaOpen(!gitaOpen); return; }
+            if (premium && !hasFeatureAccess(isAdmin, tier, FEATURE_TIER.ayurveda)) { navigate('/prana-flow'); return; }
+            navigate(href);
+          }} style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)', borderRadius: 18, padding: '16px 14px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
+            {premium && <div style={{ position: 'absolute', top: 10, right: 10 }}><Badge label={t('converge.badgePremium')} /></div>}
+            <TI>{svg}</TI>
+            <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.65)', marginBottom: 5 }}>{t(titleKey)}</div>
+            <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{t(subKey)}</div>
+            <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
+          </div>
+        ))}
+        {gitaOpen && <div style={{ gridColumn: 'span 2' }}><GitaCard /></div>}
+      </div>
 
-          <AnimatePresence>
-            {gitaExpanded && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                style={{ overflow: 'hidden' }}
-              >
-                <div style={{ padding: '20px 18px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '1.15rem', color: gold(0.9), textAlign: 'center', lineHeight: 1.6 }}>
-                    {verse.sanskrit}
-                  </p>
-                  <p style={{ fontFamily: 'monospace', fontSize: '0.72rem', color: white(0.4), textAlign: 'center', letterSpacing: '0.1em', textTransform: 'uppercase', whiteSpace: 'pre-line' }}>
-                    {verse.transliteration}
-                  </p>
-                  <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '0.95rem', color: white(0.85), textAlign: 'center', lineHeight: 1.7, maxWidth: 340, margin: '0 auto' }}>
-                    {verse.producersTranslation}
-                  </p>
-                  <p style={{
-                    fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
-                    fontSize: 9, color: gold(0.5),
-                    textAlign: 'center', letterSpacing: '0.3em', textTransform: 'uppercase',
-                  }}>
-                    {t('exploreFrequencies.gitaChapterVerse', { chapter: verse.chapter, verse: verse.verse })}
-                  </p>
-                  <div style={{ borderTop: `1px solid ${gold(0.1)}`, paddingTop: 12 }}>
-                    <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: white(0.35), textAlign: 'center' }}>
-                      {t('exploreFrequencies.rishiInsightPrefix')} {t('exploreFrequencies.rishiInsightBody', { mahadasha })}
-                    </p>
+      {/* ══ ABUNDANCE & CREATION ══ */}
+      <SL label={t('converge.secAbundance')} delay="0.32s" />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 16px', animation: 'sqFadeUp 0.4s 0.34s ease both' }}>
+        <div onClick={() => navigate('/library/abundance')} style={{ gridColumn: 'span 2', background: 'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.22)', borderRadius: 18, padding: '20px 18px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 13, marginBottom: 11 }}>
+            <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><polygon points="12,2 13.8,8 20,8 14.9,11.9 16.7,18 12,14.1 7.3,18 9.1,11.9 4,8 10.2,8" stroke="rgba(212,175,55,0.85)" strokeWidth="1.3" fill="rgba(212,175,55,0.1)"/><circle cx="12" cy="12" r="2.5" fill="rgba(212,175,55,0.18)" stroke="rgba(212,175,55,0.55)" strokeWidth="0.9"/></svg>
+            </div>
+            <div>
+              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 8, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.65)', marginBottom: 3 }}>{t('converge.abundanceTitle')}</div>
+              <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.82rem', color: 'rgba(255,255,255,0.28)' }}>{t('converge.abundanceSub')}</div>
+            </div>
+          </div>
+          <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.87rem', color: 'rgba(255,255,255,0.37)', lineHeight: 1.6, marginBottom: 11 }}>{t('converge.abundanceBody')}</p>
+          <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+            {(['converge.abundanceBadge1', 'converge.abundanceBadge2', 'converge.abundanceBadge3'] as const).map((k, i) => <Badge key={k} label={t(k)} v={i === 0 ? 'gold' : 'muted'} />)}
+          </div>
+          <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
+        </div>
+        <div onClick={() => navigate('/creative-soul/store')} style={{ background: 'linear-gradient(135deg,rgba(170,55,200,0.08),rgba(0,0,0,0))', border: '1px solid rgba(170,60,210,0.18)', borderRadius: 18, padding: '18px 15px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
+          <TI><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2 C12 2 9 8 4 10 C9 12 12 22 12 22 C12 22 15 12 20 10 C15 8 12 2 12 2Z" stroke="rgba(180,110,255,0.8)" strokeWidth="1.4" fill="rgba(160,60,220,0.1)"/></svg></TI>
+          <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.36em', textTransform: 'uppercase', color: 'rgba(175,120,255,0.62)', marginBottom: 5 }}>{t('converge.creativeSoulTitle')}</div>
+          <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{t('converge.creativeSoulSub')}</div>
+          <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(175,120,255,0.2)', fontSize: 11 }}>→</span>
+        </div>
+        <div onClick={() => navigate('/shop')} style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)', borderRadius: 18, padding: '18px 15px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
+          <TI><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 2 L2 8 L6 8 L6 20 C6 20.6 6.4 21 7 21 L17 21 C17.6 21 18 20.6 18 20 L18 8 L22 8 L18 2 L14 5 C13.3 3.8 12.7 3 12 3 C11.3 3 10.7 3.8 10 5 Z" stroke="rgba(212,175,55,0.75)" strokeWidth="1.3" fill="rgba(212,175,55,0.07)"/></svg></TI>
+          <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.65)', marginBottom: 5, whiteSpace: 'pre-line' }}>{t('converge.healingClothesTitle')}</div>
+          <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{t('converge.healingClothesSub')}</div>
+          <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
+        </div>
+      </div>
+
+      {/* ══ VIDEOS — YOUTUBE CHANNEL LIVE ══ */}
+      <SL label={t('converge.secVideos')} delay="0.38s" />
+      <div style={{ margin: '0 16px', animation: 'sqFadeUp 0.4s 0.4s ease both' }}>
+        {exploreVideos[0] && (
+          <div onClick={() => navigate('/spiritual-education')} style={{ position: 'relative', borderRadius: 20, overflow: 'hidden', cursor: 'pointer', marginBottom: 10, border: '1px solid rgba(212,175,55,0.18)' }}>
+            <div style={{ position: 'relative' }}>
+              <img src={exploreVideos[0].thumbnail} alt={exploreVideos[0].title} style={{ width: '100%', height: 155, objectFit: 'cover', display: 'block', background: '#111' }} />
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)' }}>
+                <div style={{ width: 54, height: 54, borderRadius: '50%', background: 'rgba(212,175,55,0.15)', border: '1.5px solid rgba(212,175,55,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><polygon points="8,5 19,12 8,19" fill="rgba(212,175,55,0.9)"/></svg>
+                </div>
+              </div>
+              <div style={{ position: 'absolute', top: 10, left: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><polygon points="8,5 19,12 8,19" fill="rgba(212,175,55,0.9)"/></svg>
+                </div>
+                <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6.5, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.65)' }}>{exploreVideos[0].channelTitle}</span>
+              </div>
+            </div>
+            <div style={{ padding: '13px 16px', background: 'rgba(255,255,255,0.02)' }}>
+              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 11.5, fontWeight: 800, color: 'rgba(255,255,255,0.82)', marginBottom: 4, lineHeight: 1.3 }}>{exploreVideos[0].title}</div>
+              <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.82rem', color: 'rgba(255,255,255,0.3)' }}>{t('converge.videoWatchEarn')}</div>
+            </div>
+          </div>
+        )}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 6 }}>
+          {exploreVideos.slice(1, 3).map(video => (
+            <div key={video.id} onClick={() => navigate('/spiritual-education')} style={{ borderRadius: 16, overflow: 'hidden', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <div style={{ position: 'relative' }}>
+                <img src={video.thumbnail} alt={video.title} style={{ width: '100%', height: 80, objectFit: 'cover', display: 'block', background: '#111' }} />
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.25)' }}>
+                  <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><polygon points="8,5 19,12 8,19" fill="rgba(255,255,255,0.7)"/></svg>
                   </div>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-      </div>
-
-      {/* ══════════════════════════════════════════════════════════
-          EXPLORE FREQUENCIES GRID
-      ══════════════════════════════════════════════════════════ */}
-      <div style={{ padding: '4px 16px 20px', animation: 'sqFadeUp 0.45s 0.2s ease both' }}>
-        <h2 style={{
-          fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
-          fontSize: 13,
-          fontWeight: 800,
-          letterSpacing: '0.3em',
-          textTransform: 'uppercase',
-          color: gold(0.55),
-          marginBottom: 14,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-        }}>
-          <span style={{ color: gold(0.8) }}>ॐ</span>
-          {t('exploreFrequencies.exploreFrequenciesTitle')}
-        </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          {categories.map((cat, i) => (
-            <motion.div
-              key={i}
-              whileHover={{ y: -4, scale: 1.01 }}
-              style={{
-                padding: '20px 16px',
-                borderRadius: 24,
-                background: cat.color,
-                border: `1px solid ${white(0.08)}`,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                minHeight: 160,
-                cursor: 'pointer',
-              }}
-            >
-              <div>
-                <span style={{
-                  fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
-                  fontSize: 9,
-                  fontWeight: 800,
-                  letterSpacing: '0.3em',
-                  textTransform: 'uppercase',
-                  color: gold(0.85),
-                  display: 'block',
-                  marginBottom: 6,
-                }}>{t(cat.freqKey)}</span>
-                <h3 style={{
-                  fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
-                  fontSize: 15,
-                  fontWeight: 800,
-                  color: white(0.92),
-                  lineHeight: 1.25,
-                  margin: 0,
-                }}>{t(cat.titleKey)}</h3>
               </div>
-              <p style={{
-                fontFamily: "'Cormorant Garamond',serif",
-                fontStyle: 'italic',
-                fontSize: '0.85rem',
-                color: white(0.45),
-                lineHeight: 1.5,
-                margin: 0,
-              }}>{t(cat.descKey)}</p>
-            </motion.div>
+              <div style={{ padding: '8px 10px', background: 'rgba(255,255,255,0.02)' }}>
+                <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6.5, fontWeight: 800, color: 'rgba(255,255,255,0.65)', letterSpacing: '0.1em', lineHeight: 1.35, marginBottom: 3 }}>{video.title.length > 28 ? video.title.slice(0, 28) + '…' : video.title}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none"><polygon points="12,2 15.1,8.3 22,9.3 17,14.1 18.2,21 12,17.8 5.8,21 7,14.1 2,9.3 8.9,8.3" fill="rgba(212,175,55,0.5)"/></svg>
+                  <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 5.5, fontWeight: 800, color: 'rgba(212,175,55,0.5)' }}>{t('converge.videoShcBonus')}</span>
+                </div>
+              </div>
+            </div>
           ))}
+          <div onClick={() => navigate('/spiritual-education')} style={{ borderRadius: 16, overflow: 'hidden', cursor: 'pointer', border: '1px solid rgba(212,175,55,0.18)', background: 'linear-gradient(135deg,rgba(212,175,55,0.08),rgba(0,0,0,0))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 6, padding: '14px 10px' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><polygon points="8,5 19,12 8,19" fill="rgba(212,175,55,0.7)"/><circle cx="12" cy="12" r="10" stroke="rgba(212,175,55,0.35)" strokeWidth="1.2" fill="none"/></svg>
+            <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6.5, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', textAlign: 'center' }}>{t('converge.allVideos')}</span>
+          </div>
         </div>
+        <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.75rem', color: 'rgba(255,255,255,0.22)', textAlign: 'center', marginTop: 4 }}>{t('converge.videoFooter')}</p>
       </div>
 
-      {/* ══════════════════════════════════════════════════════════
-          COMMUNITY PREVIEW
-      ══════════════════════════════════════════════════════════ */}
-      <div style={{ padding: '0 16px', animation: 'sqFadeUp 0.45s 0.25s ease both' }}>
-        <div style={{
-          padding: '22px 20px',
-          borderRadius: 24,
-          background: 'rgba(255,255,255,0.025)',
-          border: `1px dashed ${white(0.12)}`,
-          textAlign: 'center',
-        }}>
-          <p style={{
-            fontFamily: "'Cormorant Garamond',serif",
-            fontStyle: 'italic',
-            fontSize: '1rem',
-            color: white(0.55),
-            marginBottom: 14,
-            lineHeight: 1.6,
-          }}>
-            &quot;{t('exploreFrequencies.communityQuote')}&quot;
-          </p>
-          <Link
-            to="/community"
-            style={{
-              fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
-              fontSize: 11,
-              fontWeight: 800,
-              letterSpacing: '0.35em',
-              textTransform: 'uppercase',
-              color: gold(0.85),
-              textDecoration: 'none',
-            }}
-          >
-            {t('exploreFrequencies.openCommunity')} →
-          </Link>
-        </div>
+      {/* ══ DEEPEN YOUR PRACTICE ══ */}
+      <SL label={t('converge.secDeepen')} delay="0.44s" />
+      <div style={{ animation: 'sqFadeUp 0.4s 0.46s ease both' }}>
+        {([
+          { titleKey: 'converge.deepenAvataric' as const, subKey: 'converge.deepenAvataricSub' as const, href: '/courses',                 iBg: 'linear-gradient(135deg,rgba(180,60,40,.2),rgba(120,30,10,.15))',  iBd: 'rgba(200,80,50,.2)',  svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="rgba(212,175,55,.75)" strokeWidth="1.4"/><line x1="7" y1="8" x2="17" y2="8" stroke="rgba(212,175,55,.45)" strokeWidth="1.1"/><line x1="7" y1="12" x2="17" y2="12" stroke="rgba(212,175,55,.45)" strokeWidth="1.1"/><line x1="7" y1="16" x2="13" y2="16" stroke="rgba(212,175,55,.45)" strokeWidth="1.1"/></svg> },
+          { titleKey: 'converge.deepenMentorship' as const, subKey: 'converge.deepenMentorshipSub' as const, href: '/transformation',          iBg: 'linear-gradient(135deg,rgba(160,40,40,.2),rgba(100,20,10,.15))',  iBd: 'rgba(180,60,40,.2)',  svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 21 C12 21 4 16 4 9.5 C4 6.4 6.7 4 10 4 C11 4 12 4.5 12 4.5 C12 4.5 13 4 14.5 4 C17.5 4 20 6.4 20 9.5 C20 16 12 21 12 21Z" stroke="rgba(212,175,55,.75)" strokeWidth="1.4" fill="rgba(212,175,55,.07)"/></svg> },
+          { titleKey: 'converge.deepenNeural' as const, subKey: 'converge.deepenNeuralSub' as const, href: '/private-sessions',        iBg: 'linear-gradient(135deg,rgba(40,100,40,.2),rgba(10,60,20,.15))',   iBd: 'rgba(60,130,60,.2)',  svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="3.5" stroke="rgba(212,175,55,.75)" strokeWidth="1.3"/><circle cx="16.5" cy="9" r="2.5" stroke="rgba(212,175,55,.5)" strokeWidth="1.1"/><path d="M2 20 C2 16.7 5.1 14 9 14 C12.9 14 16 16.7 16 20" stroke="rgba(212,175,55,.75)" strokeWidth="1.3" fill="none"/></svg> },
+          { titleKey: 'converge.deepenAetheric' as const, subKey: 'converge.deepenAethericSub' as const, href: '/affirmation-soundtrack',  iBg: 'linear-gradient(135deg,rgba(60,80,30,.2),rgba(30,50,10,.15))',   iBd: 'rgba(80,110,40,.2)',  svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M9 18 L15 18" stroke="rgba(212,175,55,.75)" strokeWidth="1.4" strokeLinecap="round"/><line x1="12" y1="5" x2="12" y2="18" stroke="rgba(212,175,55,.6)" strokeWidth="1.2"/><path d="M7 8 Q12 5 17 8" stroke="rgba(212,175,55,.8)" strokeWidth="1.4" fill="none"/></svg> },
+          { titleKey: 'converge.deepenCert' as const, subKey: 'converge.deepenCertSub' as const, href: '/certification',           iBg: 'linear-gradient(135deg,rgba(180,140,20,.15),rgba(120,90,10,.12))', iBd: 'rgba(212,175,55,.18)', svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><polygon points="12,2 15.1,8.3 22,9.3 17,14.1 18.2,21 12,17.8 5.8,21 7,14.1 2,9.3 8.9,8.3" stroke="rgba(212,175,55,.78)" strokeWidth="1.3" fill="rgba(212,175,55,.08)"/></svg> },
+        ] as const).map(({ titleKey, subKey, href, iBg, iBd, svg }) => (
+          <div key={titleKey} onClick={() => navigate(href)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}>
+            <div style={{ width: 38, height: 38, flexShrink: 0, borderRadius: '50%', background: iBg, border: `1px solid ${iBd}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{svg}</div>
+            <div>
+              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 12.5, fontWeight: 800, color: 'rgba(255,255,255,0.82)', marginBottom: 2 }}>{t(titleKey)}</div>
+              <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)' }}>{t(subKey)}</div>
+            </div>
+            <div style={{ marginLeft: 'auto' }}><span style={{ color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span></div>
+          </div>
+        ))}
       </div>
 
-      {/* ── KEYFRAMES ── */}
+      {/* ══ CONNECT ══ */}
+      <SL label={t('converge.secConnect')} delay="0.5s" />
+      <div style={{ animation: 'sqFadeUp 0.4s 0.52s ease both' }}>
+        {([
+          { titleKey: 'converge.connectStargate' as const, subKey: 'converge.connectStargateSub' as const, href: '/stargate',       badgeKey: 'converge.badgeSwedish' as const,   bv: 'muted' as const, iBg: 'rgba(212,175,55,.08)', iBd: 'rgba(212,175,55,.18)', svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><polygon points="12,2 15.1,8.3 22,9.3 17,14.1 18.2,21 12,17.8 5.8,21 7,14.1 2,9.3 8.9,8.3" stroke="rgba(212,175,55,.8)" strokeWidth="1.3" fill="rgba(212,175,55,.1)"/></svg> },
+          { titleKey: 'converge.connectSangha' as const, subKey: 'converge.connectSanghaSub' as const, href: '/community',      badgeKey: undefined,   bv: 'gold' as const,  iBg: 'rgba(212,175,55,.07)', iBd: 'rgba(212,175,55,.12)', svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="3" stroke="rgba(212,175,55,.7)" strokeWidth="1.3"/><circle cx="16" cy="7" r="2.5" stroke="rgba(212,175,55,.48)" strokeWidth="1.1"/><path d="M2 19 C2 15.7 5.1 13 9 13 C12.9 13 16 15.7 16 19" stroke="rgba(212,175,55,.7)" strokeWidth="1.3" fill="none"/><path d="M16 13 C18.8 13 21 15 21 18" stroke="rgba(212,175,55,.38)" strokeWidth="1.1" fill="none"/></svg> },
+          { titleKey: 'converge.connectPodcast' as const, subKey: 'converge.connectPodcastSub' as const, href: '/podcast',        badgeKey: undefined,   bv: 'gold' as const,  iBg: 'rgba(212,175,55,.07)', iBd: 'rgba(212,175,55,.12)', svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="rgba(212,175,55,.62)" strokeWidth="1.3"/><circle cx="12" cy="12" r="4" stroke="rgba(212,175,55,.8)" strokeWidth="1.2"/></svg> },
+          { titleKey: 'converge.connectLeaderboard' as const, subKey: 'converge.connectLeaderboardSub' as const, href: '/leaderboard',    badgeKey: 'converge.badge5kShc' as const, bv: 'gold' as const,  iBg: 'rgba(212,175,55,.07)', iBd: 'rgba(212,175,55,.12)', svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><polygon points="12,2 15.1,8.3 22,9.3 17,14.1 18.2,21 12,17.8 5.8,21 7,14.1 2,9.3 8.9,8.3" stroke="rgba(212,175,55,.62)" strokeWidth="1.3"/><circle cx="12" cy="12" r="1.8" fill="rgba(212,175,55,.5)"/></svg> },
+          { titleKey: 'converge.connectAffiliate' as const, subKey: 'converge.connectAffiliateSub' as const, href: '/invite-friends', badgeKey: 'converge.badge30pct' as const, bv: 'gold' as const,  iBg: 'rgba(212,175,55,.07)', iBd: 'rgba(212,175,55,.12)', svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="3.5" stroke="rgba(212,175,55,.7)" strokeWidth="1.3"/><path d="M2 20 C2 16.7 5.1 14 9 14 C10.2 14 11.2 14.3 12.1 14.7" stroke="rgba(212,175,55,.7)" strokeWidth="1.3" fill="none"/><line x1="16" y1="15" x2="20" y2="19" stroke="rgba(212,175,55,.48)" strokeWidth="1.3"/><line x1="20" y1="15" x2="16" y2="19" stroke="rgba(212,175,55,.48)" strokeWidth="1.3"/><circle cx="18" cy="17" r="4" stroke="rgba(212,175,55,.3)" strokeWidth="1.1"/></svg> },
+        ] as const).map(({ titleKey, subKey, href, badgeKey, bv, iBg, iBd, svg }) => (
+          <div key={titleKey} onClick={() => navigate(href)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}>
+            <div style={{ width: 38, height: 38, flexShrink: 0, borderRadius: '50%', background: iBg, border: `1px solid ${iBd}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{svg}</div>
+            <div>
+              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 12.5, fontWeight: 800, color: 'rgba(255,255,255,0.82)', marginBottom: 2 }}>{t(titleKey)}</div>
+              <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)' }}>{t(subKey)}</div>
+            </div>
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 7 }}>
+              {badgeKey && <Badge label={t(badgeKey)} v={bv} />}
+              <span style={{ color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ══ WISDOM QUOTE ══ */}
+      <div style={{ margin: '22px 16px 0', padding: '20px 16px', borderTop: '1px solid rgba(212,175,55,0.07)', animation: 'sqFadeUp 0.4s 0.56s ease both' }}>
+        <ParamahamsaVishwanandaDailyCard />
+      </div>
+
+      {/* ══ PRESERVED MODALS — DO NOT REMOVE ══ */}
+      <Dialog open={akashicOpen} onOpenChange={setAkashicOpen}>
+        <DialogContent className="max-w-3xl bg-[#0a0a0a] border-[#D4AF37]/30 p-0 overflow-hidden">
+          <AkashicSiddhaReading userHouse={userHouse} isModal />
+        </DialogContent>
+      </Dialog>
+      <SacredRevealGate open={sacredRevealOpen} onOpenChange={setSacredRevealOpen} />
+
       <style>{`
-        @keyframes sqFadeUp {
-          from { opacity: 0; transform: translateY(14px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
         @keyframes sqConvergePulse {
           0%, 100% { text-shadow: 0 0 20px rgba(212,175,55,0.15), 0 0 60px rgba(212,175,55,0.05); }
-          50%       { text-shadow: 0 0 35px rgba(212,175,55,0.35), 0 0 90px rgba(212,175,55,0.12); }
+          50%       { text-shadow: 0 0 40px rgba(212,175,55,0.4),  0 0 100px rgba(212,175,55,0.15); }
         }
-        @keyframes sqHexBreathe {
-          0%, 100% { opacity: 0.85; transform: scale(1); }
-          50%       { opacity: 1;    transform: scale(1.06); }
+        @keyframes sqShimmer {
+          0%   { left: -110%; }
+          60%  { left: 110%; }
+          100% { left: 110%; }
         }
-        @keyframes sqHexOrbit {
-          0%   { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+        @keyframes sqFadeUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
-        @keyframes sqCoreDot {
-          0%, 100% { opacity: 0.9; r: 3; }
-          50%       { opacity: 1;   r: 4; }
+        @keyframes sqBreathe {
+          0%, 100% { transform: scale(1); opacity: 0.85; }
+          50%       { transform: scale(1.07); opacity: 1; }
         }
-        @keyframes sqRingPulse {
-          0%, 100% { opacity: 0.3; transform: scale(1); }
-          50%       { opacity: 0.7; transform: scale(1.08); }
-        }
-        @keyframes sqWaveDrift {
-          0%, 100% { transform: translateX(0); opacity: 0.85; }
-          50%       { transform: translateX(3px); opacity: 1; }
-        }
-        @keyframes sqWaveBreathe {
-          0%, 100% { transform: translateY(0); }
-          50%       { transform: translateY(-4px); }
+        @keyframes sqDotPulse {
+          0%, 100% { opacity: 0.7; }
+          50%       { opacity: 1; }
         }
         @keyframes sqLiveFlash {
           0%, 100% { opacity: 1; }
           50%       { opacity: 0.15; }
         }
-        @keyframes sqArrowPulse {
-          0%, 100% { transform: translateX(0); opacity: 0.8; }
-          50%       { transform: translateX(4px); opacity: 1; }
-        }
       `}</style>
     </div>
   );
-};
-
-export default Explore;
+}
