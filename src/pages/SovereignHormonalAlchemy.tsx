@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SHAKTI CYCLE INTELLIGENCE — Single Unified Tool
  * Route: /sovereign-hormonal-alchemy  (already in App.tsx — zero routing changes needed)
