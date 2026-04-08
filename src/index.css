@@ -864,10 +864,10 @@
 .sq-path-btn { font-size: 7.5px; font-weight: 800; letter-spacing: 0.35em; text-transform: uppercase; background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.25); color: #D4AF37; border-radius: 20px; padding: 6px 14px; cursor: pointer; transition: all 0.2s; font-family: Montserrat, sans-serif; }
 .sq-path-btn:hover { background: rgba(212,175,55,0.2); box-shadow: 0 0 16px rgba(212,175,55,0.2); }
 
-.sq-stat-chip { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 22px; padding: 12px 8px 10px; display: flex; flex-direction: column; align-items: center; transition: all 0.3s; backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); }
+.sq-stat-chip { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 22px; width: 72px; height: 72px; padding: 10px 8px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; transition: all 0.3s; backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); }
 .sq-stat-chip:hover { border-color: rgba(212,175,55,0.15); transform: translateY(-2px); }
-.sq-stat-val { font-family: Montserrat, sans-serif; font-size: 28px; font-weight: 900; color: #D4AF37; line-height: 1; margin-bottom: 3px; }
-.sq-stat-lbl { font-family: Montserrat, sans-serif; font-size: 8px; font-weight: 800; letter-spacing: 0.4em; text-transform: uppercase; color: rgba(255,255,255,0.35); text-align: center; line-height: 1.2; }
+.sq-stat-val { font-family: Montserrat, sans-serif; font-size: 22px; font-weight: 900; color: #D4AF37; line-height: 1; margin-bottom: 3px; }
+.sq-stat-lbl { font-family: Montserrat, sans-serif; font-size: 7px; font-weight: 800; letter-spacing: 0.4em; text-transform: uppercase; color: rgba(255,255,255,0.35); text-align: center; line-height: 1.2; }
 .sq-soulstat { position: relative; overflow: hidden; }
 .sq-soulstat::before {
   content: '';
@@ -894,8 +894,8 @@
   position: absolute;
   top: 8px;
   left: 50%;
-  width: 54px;
-  height: 54px;
+  width: 44px;
+  height: 44px;
   transform: translateX(-50%);
   border-radius: 999px;
   background:
