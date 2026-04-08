@@ -207,7 +207,7 @@ const SQI_CSS = `
   }
   .m-mantra-banner {
     position: relative;
-    padding: 28px 24px 22px;
+    padding: 28px 16px 22px;
     background: linear-gradient(135deg, rgba(212,175,55,.06), rgba(180,120,20,.03));
     border-bottom: 1px solid var(--border);
     overflow: hidden;
@@ -897,7 +897,7 @@ const Mantras = () => {
             </div>
           </div>
 
-          <div style={{ margin: '16px 16px 0', background: 'rgba(255,255,255,.015)', border: '1px solid rgba(255,255,255,.04)', borderRadius: 20, padding: '16px 18px' }}>
+          <div style={{ margin: '16px 16px 0', background: 'rgba(255,255,255,.015)', border: '1px solid rgba(255,255,255,.04)', borderRadius: 20, padding: '16px 16px' }}>
             <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(212,175,55,.45)', marginBottom: 10 }}>
               {t('mantras.instructions.title')}
             </div>
