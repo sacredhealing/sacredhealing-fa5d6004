@@ -69,11 +69,11 @@ function guidanceToSessionLike(guidance: DailyGuidance): SessionLike {
 const SectionLabel: React.FC<{ label: string; delay?: string }> = ({ label, delay = '0s' }) => (
   <div style={{
     fontFamily: 'Montserrat,sans-serif',
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: 800,
     letterSpacing: '0.5em',
     textTransform: 'uppercase' as const,
-    color: 'rgba(212,175,55,0.3)',
+    color: 'rgba(255,255,255,0.35)',
     padding: '0 16px',
     marginTop: 22,
     marginBottom: 10,
@@ -469,7 +469,7 @@ const Dashboard: React.FC = () => {
             </div>
 
             <p style={{ position: 'relative', zIndex: 1, fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.3)', textAlign: 'center', marginBottom: 10 }}>{t('dashboard.heroTagline')}</p>
-            <p style={{ position: 'relative', zIndex: 1, fontFamily: 'Cormorant Garamond,serif', fontStyle: 'italic', fontSize: '1.15rem', color: 'rgba(255,255,255,0.72)', lineHeight: 1.55, textAlign: 'center', marginBottom: 14, maxWidth: 300 }}>
+            <p style={{ position: 'relative', zIndex: 1, fontFamily: 'Cormorant Garamond,serif', fontStyle: 'italic', fontWeight: 400, fontSize: 17, color: 'rgba(255,255,255,0.82)', lineHeight: 1.7, letterSpacing: '0.01em', textAlign: 'center', marginBottom: 14, maxWidth: 300 }}>
               {heroWisdom}
             </p>
             <button onClick={() => navigate('/vedic-astrology')} style={{ position: 'relative', zIndex: 1, fontFamily: 'Montserrat,sans-serif', fontSize: 8, fontWeight: 800, letterSpacing: '0.42em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.55)', background: 'none', border: 'none', cursor: 'pointer' }}>
@@ -493,9 +493,9 @@ const Dashboard: React.FC = () => {
                 {i > 0 && <div style={{ width: 1, height: '70%', background: 'rgba(212,175,55,0.08)', alignSelf: 'center' }} />}
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
                   <span style={{ fontSize: 14, marginBottom: 4 }}>{icon}</span>
-                  <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 11, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.4)', marginBottom: 3 }}>{lbl}</span>
-                  <span style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '1.25rem', fontWeight: 600, color: 'rgba(255,255,255,0.88)' }}>{val}</span>
-                  <span style={{ fontSize: 8, fontWeight: 700, color: 'rgba(212,175,55,0.35)', marginTop: 2, fontVariantNumeric: 'tabular-nums' as const }}>{sub}</span>
+                  <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 8, fontWeight: 800, letterSpacing: '0.45em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.38)', marginBottom: 3 }}>{lbl}</span>
+                  <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 18, fontWeight: 700, color: '#D4AF37' }}>{val}</span>
+                  <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 10, fontWeight: 400, color: 'rgba(255,255,255,0.4)', marginTop: 2, fontVariantNumeric: 'tabular-nums' as const }}>{sub}</span>
                 </div>
               </React.Fragment>
             ))}
@@ -520,8 +520,8 @@ const Dashboard: React.FC = () => {
                     <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#D4AF37', boxShadow: '0 0 6px rgba(212,175,55,0.8)', animation: 'sqDotPulse 2s infinite' }} />
                     <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.5)' }}>{t('dashboard.vedicRealTimeTransmission')}</span>
                   </div>
-                  <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 15, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.8)', marginBottom: 6 }}>{t('dashboard.vedicOracle')}</div>
-                  <p style={{ fontFamily: 'Cormorant Garamond,serif', fontStyle: 'italic', fontSize: 13, color: 'rgba(255,255,255,0.52)', lineHeight: 1.4, margin: '0 0 10px', opacity: 0.75 }}>
+                  <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' as const, color: '#D4AF37', marginBottom: 6 }}>{t('dashboard.vedicOracle')}</div>
+                  <p style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 11, fontWeight: 400, color: 'rgba(255,255,255,0.55)', lineHeight: 1.5, margin: '0 0 10px' }}>
                     {vedicReading?.personalCompass?.currentDasha
                       ? t('dashboard.vedicTileBodyWithDasha', { dasha: dashaCycle ?? '' })
                       : t('dashboard.vedicTileBodyAwait')}
@@ -551,8 +551,8 @@ const Dashboard: React.FC = () => {
                 <line x1="8" y1="10" x2="12" y2="8" stroke="rgba(212,175,55,0.25)" strokeWidth="0.7"/>
                 <line x1="16" y1="10" x2="12" y2="8" stroke="rgba(212,175,55,0.25)" strokeWidth="0.7"/>
               </svg>
-              <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 15, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.7)', marginBottom: 4 }}>{t('dashboard.portalsAyurveda')}</div>
-              <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: 13, color: 'rgba(255,255,255,0.42)', opacity: 0.75 }}>
+              <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' as const, color: '#D4AF37', marginBottom: 4 }}>{t('dashboard.portalsAyurveda')}</div>
+              <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 11, fontWeight: 400, color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>
                 {(vedicReading as unknown as { ayurvedicProfile?: { dominantDosha?: string } })?.ayurvedicProfile?.dominantDosha
                   ? t('dashboard.ayurvedaDominance', { dosha: (vedicReading as unknown as { ayurvedicProfile: { dominantDosha: string } }).ayurvedicProfile.dominantDosha })
                   : t('dashboard.ayurvedaBioScan')}
@@ -566,8 +566,8 @@ const Dashboard: React.FC = () => {
                 <circle cx="7" cy="18" r="2.5" stroke="rgba(212,175,55,0.6)" strokeWidth="1.2" fill="rgba(212,175,55,0.08)"/>
                 <circle cx="17" cy="16" r="2.5" stroke="rgba(212,175,55,0.5)" strokeWidth="1.2" fill="rgba(212,175,55,0.06)"/>
               </svg>
-              <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 15, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.7)', marginBottom: 4 }}>{t('dashboard.somaAcousticSync')}</div>
-              <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: 13, color: 'rgba(255,255,255,0.42)', opacity: 0.75 }}>{t('dashboard.soma528Ready')}</div>
+              <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' as const, color: '#D4AF37', marginBottom: 4 }}>{t('dashboard.somaAcousticSync')}</div>
+              <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 11, fontWeight: 400, color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>{t('dashboard.soma528Ready')}</div>
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
             </LivingPortalTile>
 
@@ -578,8 +578,8 @@ const Dashboard: React.FC = () => {
                 <line x1="9" y1="22" x2="9" y2="14" stroke="rgba(212,175,55,0.3)" strokeWidth="1"/>
                 <line x1="15" y1="22" x2="15" y2="14" stroke="rgba(212,175,55,0.3)" strokeWidth="1"/>
               </svg>
-              <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 15, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.7)', marginBottom: 4 }}>{t('dashboard.portalsVastu')}</div>
-              <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: 13, color: 'rgba(255,255,255,0.42)', opacity: 0.75 }}>{t('dashboard.vastuSubtitle')}</div>
+              <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' as const, color: '#D4AF37', marginBottom: 4 }}>{t('dashboard.portalsVastu')}</div>
+              <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 11, fontWeight: 400, color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>{t('dashboard.vastuSubtitle')}</div>
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
             </LivingPortalTile>
 
@@ -588,8 +588,8 @@ const Dashboard: React.FC = () => {
                 <text x="20" y="28" fontSize="26" textAnchor="middle" fill="none" stroke="rgba(212,175,55,0.65)" strokeWidth="0.8" fontFamily="serif" fontStyle="italic">ॐ</text>
                 <text x="20" y="28" fontSize="26" textAnchor="middle" fill="rgba(212,175,55,0.45)" fontFamily="serif" fontStyle="italic">ॐ</text>
               </svg>
-              <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 15, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.7)', marginBottom: 4 }}>{t('dashboard.portalsMantras')}</div>
-              <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: 13, color: 'rgba(255,255,255,0.42)', opacity: 0.75 }}>{t('dashboard.mantrasSonicActivation')}</div>
+              <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' as const, color: '#D4AF37', marginBottom: 4 }}>{t('dashboard.portalsMantras')}</div>
+              <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 11, fontWeight: 400, color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>{t('dashboard.mantrasSonicActivation')}</div>
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
             </LivingPortalTile>
 
