@@ -469,7 +469,7 @@ const Dashboard: React.FC = () => {
             </div>
 
             <p style={{ position: 'relative', zIndex: 1, fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.3)', textAlign: 'center', marginBottom: 10 }}>{t('dashboard.heroTagline')}</p>
-            <p style={{ position: 'relative', zIndex: 1, fontFamily: 'Cormorant Garamond,serif', fontStyle: 'italic', fontSize: '1.12rem', color: 'rgba(255,255,255,0.72)', lineHeight: 1.55, textAlign: 'center', marginBottom: 14, maxWidth: 300 }}>
+            <p style={{ position: 'relative', zIndex: 1, fontFamily: 'Cormorant Garamond,serif', fontStyle: 'italic', fontSize: '1.15rem', color: 'rgba(255,255,255,0.72)', lineHeight: 1.55, textAlign: 'center', marginBottom: 14, maxWidth: 300 }}>
               {heroWisdom}
             </p>
             <button onClick={() => navigate('/vedic-astrology')} style={{ position: 'relative', zIndex: 1, fontFamily: 'Montserrat,sans-serif', fontSize: 8, fontWeight: 800, letterSpacing: '0.42em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.55)', background: 'none', border: 'none', cursor: 'pointer' }}>
