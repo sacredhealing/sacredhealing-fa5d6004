@@ -6,7 +6,7 @@ const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 function getCacheKey(user: UserProfile, timeOffset: number, timezone: string, userId?: string | null) {
   const uid = userId ?? 'anon';
-  return `sh:vedic:reading:${uid}:${user.name}:${user.birthDate}:${user.birthTime}:${user.birthPlace}:${user.plan}:${timeOffset}:${timezone}`;
+  return `sh:vedic:reading:${uid}:${user.name}:${user.birthDate}:${user.birthTime}:${user.birthPlace}:${user.plan}:1:${timeOffset}:${timezone}`;
 }
 
 function loadFromCache(key: string): VedicReading | null {

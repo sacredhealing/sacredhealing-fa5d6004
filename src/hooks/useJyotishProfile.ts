@@ -389,7 +389,6 @@ export function useJyotishProfile(): JyotishProfile {
           rawReading?.personalCompass?.moonNakshatra ||
           rawReading?.natalChart?.moonNakshatra ||
           rawReading?.birthNakshatra ||
-          reading?.todayInfluence?.nakshatra ||
           ''
       )
     );
@@ -405,9 +404,11 @@ export function useJyotishProfile(): JyotishProfile {
       ? ((((moonDeg % 13.333) + 13.333) % 13.333) / 13.333)
       : 0.5;
 
-    const { mahadasha, antardasha } = getRealDasha(birthDateStr, moonNakshatra, nakshatraProgress);
+    const { mahadasha, antardasha } = moonNakshatra && birthDateStr
+      ? getRealDasha(birthDateStr, moonNakshatra, nakshatraProgress)
+      : { mahadasha: '', antardasha: '' };
 
-    const nakshatra = String(reading?.todayInfluence?.nakshatra || moonNakshatra || '');
+    const nakshatra = String(moonNakshatra || '');
 
     // Moon sign and other fields are not directly in the VedicReading type,
     // but can be derived from nakshatra or defaulted.
