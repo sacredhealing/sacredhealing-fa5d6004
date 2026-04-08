@@ -317,9 +317,10 @@ export default function SovereignHormonalAlchemy(){
   const nav=useNavigate();
   const {phase,cycleDay,isConfigured,settings,isLoading,updateCycleSettings,isSaving}=useCyclePhase();
   const {tier}=useMembership();
+  const {isAdmin}=useAdminRole();
 
-  const isPrana  = ['prana-flow','siddha-quantum','akasha-infinity'].includes(tier);
-  const isSiddha = ['siddha-quantum','akasha-infinity'].includes(tier);
+  const isPrana  = isAdmin || ['prana-flow','siddha-quantum','akasha-infinity'].includes(tier);
+  const isSiddha = isAdmin || ['siddha-quantum','akasha-infinity'].includes(tier);
 
   const [tab,setTab]       = useState<'today'|'log'|'explore'|'insights'>('today');
   const [modal,setModal]   = useState<React.ReactNode|null>(null);
