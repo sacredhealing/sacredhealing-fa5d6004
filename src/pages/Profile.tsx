@@ -563,7 +563,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   return (
     <>
     <style dangerouslySetInnerHTML={{__html: `
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Montserrat:wght@300;400;700;800;900&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Montserrat:wght@300;400;700;800;900&display=swap');
   .profile-wrap *,:root{--gold:#D4AF37;--black:#050505}
   /* ── HERO ── */
   .hero{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;position:relative;padding:5vh 24px 0;text-align:center}
@@ -579,7 +579,23 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   /* Tier badge dot at bottom-right of avatar */
   .avatar-tier-badge{position:absolute;bottom:2px;right:2px;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;border:2px solid #050505;z-index:3;cursor:default}
   /* Name + labels */
-  .hero-name{font-family:'Cormorant Garamond',serif;font-weight:300;font-style:italic;font-size:clamp(2.6rem,6vw,4rem);letter-spacing:-0.02em;color:white;line-height:1;margin-bottom:6px;animation:fadeUp 0.8s ease both;text-shadow:0 2px 20px rgba(0,0,0,0.8)}
+  @keyframes goldShimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+  .hero-name{
+    font-family:'Cinzel',serif;
+    font-weight:600;
+    font-size:clamp(2.2rem,7vw,3.6rem);
+    letter-spacing:-0.02em;
+    line-height:1.05;
+    margin-bottom:6px;
+    animation:fadeUp 0.8s ease both;
+    background:linear-gradient(135deg,#D4AF37 0%,#F5E17A 45%,#D4AF37 65%,#A07C10 100%);
+    background-size:200% auto;
+    -webkit-background-clip:text;
+    background-clip:text;
+    -webkit-text-fill-color:transparent;
+    text-shadow:0 2px 20px rgba(0,0,0,0.55);
+    animation:fadeUp 0.8s ease both, goldShimmer 5.5s linear infinite;
+  }
   .tier-status-badge{display:inline-flex;align-items:center;gap:6px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:7px;letter-spacing:0.4em;text-transform:uppercase;margin-bottom:6px;cursor:pointer;transition:opacity 0.2s}
   .tier-status-badge:hover{opacity:0.8}
   .tier-blueprint-expand{overflow:hidden;transition:max-height 0.35s ease,opacity 0.35s ease}
@@ -593,7 +609,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   /* About the Nexus block */
   .nexus-block{max-width:480px;margin:0 auto 28px;background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.1);border-radius:20px;padding:22px 24px;backdrop-filter:blur(20px);text-align:left}
   .nexus-block-label{font-weight:800;font-size:7px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.45);margin-bottom:10px}
-  .nexus-block-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.92rem;color:rgba(255,255,255,0.38);line-height:1.85}
+  .nexus-block-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.08rem;color:rgba(255,255,255,0.58);line-height:1.85}
   .nexus-block-text strong{color:rgba(212,175,55,0.6);font-weight:600;font-style:normal}
   /* Sections */
   .section-wrap{max-width:780px;margin:0 auto;padding:32px 24px 0;text-align:center}
@@ -647,8 +663,8 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   @media(max-width:520px){.archive-grid{grid-template-columns:1fr}}
   .archive-card{background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.1);border-radius:18px;padding:20px 18px;transition:all 0.3s;cursor:pointer}
   .archive-card:hover{border-color:rgba(212,175,55,0.3);background:rgba(212,175,55,0.03);transform:translateY(-2px)}
-  .archive-title{font-weight:800;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#D4AF37;display:block;margin-bottom:2px}
-  .archive-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.75rem;color:rgba(255,255,255,0.25);display:block;line-height:1.5}
+  .archive-title{font-weight:900;font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#D4AF37;display:block;margin-bottom:2px}
+  .archive-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.82rem;color:rgba(255,255,255,0.42);display:block;line-height:1.5}
   .archive-cta{font-weight:800;font-size:8px;letter-spacing:0.4em;text-transform:uppercase;color:#D4AF37;opacity:0.7}
   .archive-card:hover .archive-cta{opacity:1}
   .abundance-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
@@ -657,12 +673,12 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   .abundance-card:hover{border-color:rgba(212,175,55,0.3);background:rgba(212,175,55,0.04);transform:translateY(-3px)}
   .abundance-icon-wrap{width:56px;height:56px;border-radius:16px;background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;transition:all 0.25s}
   .abundance-card:hover .abundance-icon-wrap{background:rgba(212,175,55,0.1);border-color:rgba(212,175,55,0.3);box-shadow:0 0 20px rgba(212,175,55,0.1)}
-  .abundance-label{font-weight:800;font-size:7.5px;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.3)}
+  .abundance-label{font-weight:900;font-size:7.5px;letter-spacing:0.3em;text-transform:uppercase;color:rgba(212,175,55,0.88)}
   .settings-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
-  .settings-btn{flex:1;min-width:120px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:100px;padding:13px 20px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:8px;letter-spacing:0.35em;text-transform:uppercase;color:rgba(255,255,255,0.3);cursor:pointer;transition:all 0.2s;text-align:center}
-  .settings-btn:hover{color:#D4AF37;border-color:rgba(212,175,55,0.2)}
-  .signout-btn{width:100%;background:transparent;border:1px solid rgba(255,255,255,0.06);border-radius:100px;padding:13px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:8px;letter-spacing:0.35em;text-transform:uppercase;color:rgba(255,255,255,0.2);cursor:pointer;transition:all 0.2s;margin-top:8px}
-  .signout-btn:hover{color:rgba(239,68,68,0.7);border-color:rgba(239,68,68,0.2)}
+  .settings-btn{flex:1;min-width:120px;background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.18);border-radius:100px;padding:13px 20px;font-family:'Montserrat',sans-serif;font-weight:900;font-size:8px;letter-spacing:0.35em;text-transform:uppercase;color:rgba(212,175,55,0.9);cursor:pointer;transition:all 0.2s;text-align:center}
+  .settings-btn:hover{border-color:rgba(212,175,55,0.35);background:rgba(212,175,55,0.05)}
+  .signout-btn{width:100%;background:#D4AF37;border:1px solid rgba(212,175,55,0.9);border-radius:100px;padding:14px 16px;font-family:'Montserrat',sans-serif;font-weight:900;font-size:9px;letter-spacing:0.35em;text-transform:uppercase;color:#050505;cursor:pointer;transition:all 0.2s;margin-top:12px;box-shadow:0 0 24px rgba(212,175,55,0.35)}
+  .signout-btn:hover{opacity:0.9;transform:translateY(-1px)}
   .lang-selector{background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.12);border-radius:24px;padding:20px 24px;backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
   /* ── KEYFRAMES ── */
   @keyframes pulseDeep{0%,100%{opacity:0.15;transform:translate(-50%,-50%) scale(1)}50%{opacity:0.28;transform:translate(-50%,-50%) scale(1.05)}}
@@ -1119,25 +1135,6 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
       <div className="section-wrap">
         <div className="section-label">{t('profilePage.sectionAkashicArchive')}</div>
         <div className="archive-grid">
-          <div className="archive-card" onClick={() => navigate('/vedic-astrology')}>
-            <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
-              <div style={{width:44,height:44,borderRadius:13,background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.18)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginBottom:14}}>
-                <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
-                  <path d="M3 14 C3 14 8 6 14 6 C20 6 25 14 25 14 C25 14 20 22 14 22 C8 22 3 14 3 14Z" fill="rgba(212,175,55,0.08)" stroke="#D4AF37" strokeWidth="1.4" strokeLinejoin="round"/>
-                  <circle cx="14" cy="14" r="4" fill="rgba(212,175,55,0.1)" stroke="#D4AF37" strokeWidth="1.4"/>
-                  <circle cx="14" cy="14" r="1.5" fill="#D4AF37"/>
-                  <line x1="14" y1="2" x2="14" y2="5" stroke="rgba(212,175,55,0.4)" strokeWidth="1" strokeLinecap="round"/>
-                  <line x1="20" y1="4" x2="18.5" y2="6.5" stroke="rgba(212,175,55,0.3)" strokeWidth="1" strokeLinecap="round"/>
-                  <line x1="8" y1="4" x2="9.5" y2="6.5" stroke="rgba(212,175,55,0.3)" strokeWidth="1" strokeLinecap="round"/>
-                </svg>
-              </div>
-              <div>
-                <span className="archive-title">{t('profilePage.archiveLifeTitle')}</span>
-                <span className="archive-sub">{t('profilePage.archiveLifeSub')}</span>
-              </div>
-            </div>
-            <span className="archive-cta">{t('profilePage.archiveCtaEnter')}</span>
-          </div>
           {hasFeatureAccess(isAdmin, tier, 3) && (
           <div className="archive-card" onClick={() => navigate('/life-book')}>
             <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
@@ -1211,9 +1208,9 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               </div>
               <div>
                 <span style={{fontWeight:800,fontSize:7,letterSpacing:'0.4em',
-                  textTransform:'uppercase',color:'rgba(255,255,255,0.2)',
+                  textTransform:'uppercase',color:'rgba(212,175,55,0.75)',
                   display:'block',marginBottom:4}}>{t('profile.language')}</span>
-                <div style={{display:'flex',alignItems:'center',gap:8,fontSize:14,fontWeight:600,color:'rgba(255,255,255,0.7)'}}>
+                <div style={{display:'flex',alignItems:'center',gap:8,fontSize:14,fontWeight:700,color:'#D4AF37'}}>
                   <span style={{fontSize:20}}>{langs[activeLangIdx].flag}</span>
                   <span>{langs[activeLangIdx].label}</span>
                 </div>
@@ -1285,18 +1282,18 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             <div>
               <span
                 style={{
-                  fontWeight: 800,
+                  fontWeight: 900,
                   fontSize: 7,
                   letterSpacing: '0.4em',
                   textTransform: 'uppercase',
-                  color: 'rgba(255,255,255,0.2)',
+                  color: 'rgba(212,175,55,0.75)',
                   display: 'block',
                   marginBottom: 4,
                 }}
               >
                 {t('profile.howAppWorks')}
               </span>
-              <span style={{ fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.75)' }}>
+              <span style={{ fontSize: 14, fontWeight: 700, color: '#D4AF37' }}>
                 {t('profile.howAppWorksVideoLink')}
               </span>
             </div>

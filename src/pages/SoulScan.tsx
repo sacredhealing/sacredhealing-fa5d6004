@@ -312,9 +312,6 @@ export default function SoulScan() {
                 <button type="button" className="ss-cta" onClick={() => navigate('/siddha-quantum')}>
                   {t('soulScan.lockUpgradeCta')}
                 </button>
-                <button type="button" className="ss-cta-ghost" style={{ marginTop: 12 }} onClick={() => navigate('/profile')}>
-                  {t('soulScan.returnToProfile')}
-                </button>
               </div>
             </div>
           ) : (
@@ -699,9 +696,6 @@ export default function SoulScan() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 40 }}>
                     <button type="button" className="ss-cta" onClick={handleReset}>
                       {t('soulScan.newResonanceScan')}
-                    </button>
-                    <button type="button" className="ss-cta-ghost" onClick={() => navigate('/profile')}>
-                      {t('soulScan.returnToProfile')}
                     </button>
                   </div>
                 </div>
