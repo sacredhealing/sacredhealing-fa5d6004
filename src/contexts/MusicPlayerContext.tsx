@@ -498,15 +498,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     // Reset music track when playing meditation/healing
     setCurrentTrack(null);
 
-    // Show Gita verse overlay for meditation (Fade & Zoom from Akasha)
-    if (audio.contentType === 'meditation') {
-      if (gitaTransitionTimeoutRef.current) clearTimeout(gitaTransitionTimeoutRef.current);
-      setShowGitaTransition(true);
-      gitaTransitionTimeoutRef.current = setTimeout(() => {
-        setShowGitaTransition(false);
-        gitaTransitionTimeoutRef.current = null;
-      }, 2800);
-    }
+    // Meditations should start immediately (no pre-play overlay gating).
     
     const audioUrl = audio.audio_url;
     audioRef.current = new Audio(audioUrl);
