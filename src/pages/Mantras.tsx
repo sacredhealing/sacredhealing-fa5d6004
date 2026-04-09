@@ -208,7 +208,7 @@ const SQI_CSS = `
   }
   .m-mantra-banner {
     position: relative;
-    padding: 28px 16px 22px;
+    padding: 28px var(--page-pad) 22px;
     background: linear-gradient(135deg, rgba(212,175,55,.06), rgba(180,120,20,.03));
     border-bottom: 1px solid var(--border);
     overflow: hidden;
@@ -225,6 +225,9 @@ const SQI_CSS = `
     letter-spacing: .04em;
     text-align: center;
     margin-bottom: 12px;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
   .m-tag {
     font-size: 9px; font-weight: 800; letter-spacing: .08em;
@@ -242,7 +245,10 @@ const SQI_CSS = `
   }
 
   .m-btn-start {
-    flex: 1; padding: 14px 0; border-radius: 100px;
+    flex: 1;
+    min-width: 0;
+    padding: 14px 10px;
+    border-radius: 100px;
     background: linear-gradient(135deg, #D4AF37, #B8960C);
     color: #050505; font-size: 13px; font-weight: 800;
     letter-spacing: .08em; text-transform: uppercase;
@@ -250,6 +256,11 @@ const SQI_CSS = `
     box-shadow: 0 0 24px rgba(212,175,55,.4);
     transition: all .25s ease;
     display: flex; align-items: center; justify-content: center; gap: 8px;
+    text-align: center;
+    white-space: normal;
+  }
+  @media (max-width: 380px) {
+    .m-btn-start { font-size: 12px; letter-spacing: .06em; }
   }
   .m-btn-start:hover { box-shadow: 0 0 40px rgba(212,175,55,.6); transform: scale(1.02); }
   @keyframes mantraStartPulse {
@@ -898,7 +909,7 @@ const Mantras = () => {
             </div>
           </div>
 
-          <div style={{ margin: '16px 16px 0', background: 'rgba(255,255,255,.015)', border: '1px solid rgba(255,255,255,.04)', borderRadius: 20, padding: '16px 16px' }}>
+          <div style={{ margin: '16px var(--page-pad) 0', background: 'rgba(255,255,255,.015)', border: '1px solid rgba(255,255,255,.04)', borderRadius: 20, padding: '16px 16px' }}>
             <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(212,175,55,.45)', marginBottom: 10 }}>
               {t('mantras.instructions.title')}
             </div>
@@ -917,7 +928,7 @@ const Mantras = () => {
           </div>
 
           {!completed ? (
-            <div style={{ padding: '24px 16px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+            <div style={{ padding: '24px var(--page-pad) 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
               <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg className="m-counter-ring" width="160" height="160" viewBox="0 0 36 36">
                   <defs>
