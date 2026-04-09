@@ -866,8 +866,8 @@
 
 .sq-stat-chip { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 22px; width: 72px; height: 72px; padding: 10px 8px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; transition: all 0.3s; backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); }
 .sq-stat-chip:hover { border-color: rgba(212,175,55,0.15); transform: translateY(-2px); }
-.sq-stat-val { font-family: Montserrat, sans-serif; font-size: 22px; font-weight: 900; color: #D4AF37; line-height: 1; margin-bottom: 3px; }
-.sq-stat-lbl { font-family: Montserrat, sans-serif; font-size: 7px; font-weight: 800; letter-spacing: 0.4em; text-transform: uppercase; color: rgba(255,255,255,0.35); text-align: center; line-height: 1.2; }
+.sq-stat-val { font-family: Montserrat, sans-serif; font-size: 19px; font-weight: 900; color: #D4AF37; line-height: 1; margin-bottom: 3px; }
+.sq-stat-lbl { font-family: Montserrat, sans-serif; font-size: 6px; font-weight: 800; letter-spacing: 0.26em; text-transform: uppercase; color: rgba(255,255,255,0.35); text-align: center; line-height: 1.15; }
 .sq-soulstat { position: relative; overflow: hidden; }
 .sq-soulstat::before {
   content: '';
