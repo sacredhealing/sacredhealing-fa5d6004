@@ -88,15 +88,26 @@ const IncomeStreams: React.FC = () => {
     if (data) {
       const fetched = data as unknown as IncomeStream[];
 
+      // Remove Automated Forex Income from /income-streams (even if present in DB)
+      const withoutForex = fetched.filter((s) => {
+        const slug = (s.internal_slug || '').toLowerCase();
+        const title = (s.title || '').toLowerCase();
+        return !(
+          slug.includes('forex') ||
+          title.includes('forex') ||
+          title.includes('automated forex')
+        );
+      });
+
       // Ensure the Polymarket Bot stream exists even if DB row isn't created yet
       // (UI-only fallback; does not modify affiliate/Stripe logic)
-      const hasPolymarketBot = fetched.some(
+      const hasPolymarketBot = withoutForex.some(
         (s) =>
           s.internal_slug === 'polymarket-bot' ||
           s.link === '/polymarket-bot' ||
           s.link === '/income-streams/polymarket-bot'
       );
-      const hasCopyTradingBot = fetched.some(
+      const hasCopyTradingBot = withoutForex.some(
         (s) =>
           s.internal_slug === 'polymarket-copy-trading' ||
           s.link === '/income-streams/polymarket-copy-trading'
@@ -170,9 +181,12 @@ const IncomeStreams: React.FC = () => {
         cta_button_text_no: null,
       };
 
-      let merged = [...fetched];
-      if (!hasCopyTradingBot) merged = [copyTradingFallback, ...merged];
-      if (!hasPolymarketBot) merged = [polymarketFallback, ...merged];
+      let merged = [...withoutForex];
+      // Polymarket bots are admin-only: only inject fallbacks for admins
+      if (isAdmin) {
+        if (!hasCopyTradingBot) merged = [copyTradingFallback, ...merged];
+        if (!hasPolymarketBot) merged = [polymarketFallback, ...merged];
+      }
 
       setStreams(merged);
     }
