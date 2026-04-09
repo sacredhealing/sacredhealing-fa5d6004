@@ -90,6 +90,15 @@ const Transformation = () => {
   const [paymentType, setPaymentType] = useState<'full' | 'installment'>('full');
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
 
+  const shellClass =
+    "min-h-screen pb-24 w-full max-w-full overflow-x-hidden bg-[#050505] text-white";
+  const glassCardClass =
+    "bg-white/[0.02] backdrop-blur-[40px] border border-white/[0.05] rounded-[40px] shadow-[0_0_35px_rgba(212,175,55,0.08)]";
+  const goldGlowClass = "text-[#D4AF37] [text-shadow:0_0_15px_rgba(212,175,55,0.3)]";
+  const microLabelClass =
+    "text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/60";
+  const bodyClass = "text-white/60 leading-[1.6]";
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -205,19 +214,19 @@ const Transformation = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className={shellClass + " flex items-center justify-center"}>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#D4AF37]"></div>
       </div>
     );
   }
 
   if (!program) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4">
-        <Card className="p-8 text-center">
-          <Sparkles className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="font-semibold text-foreground mb-2">Program Not Available</h3>
-          <p className="text-muted-foreground text-sm">
+      <div className={shellClass + " flex items-center justify-center px-4"}>
+        <Card className={`p-8 text-center ${glassCardClass}`}>
+          <Sparkles className="w-12 h-12 text-[#D4AF37]/60 mx-auto mb-4" />
+          <h3 className={`font-black tracking-[-0.03em] mb-2 ${goldGlowClass}`}>Program Not Available</h3>
+          <p className={bodyClass + " text-sm"}>
             The transformation program is currently being prepared.
           </p>
         </Card>
@@ -229,23 +238,42 @@ const Transformation = () => {
   const showPractitionerSelection = program.practitioner === 'both';
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className={shellClass}>
+      {/* SQI 2050 Akasha background */}
+      <div
+        className="pointer-events-none fixed inset-0 -z-20"
+        style={{
+          background:
+            "radial-gradient(ellipse at 20% 10%, rgba(212,175,55,0.06) 0%, transparent 55%), radial-gradient(ellipse at 80% 85%, rgba(212,175,55,0.035) 0%, transparent 55%), #050505",
+        }}
+      />
+
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-amber-500/30 via-primary/20 to-purple-500/30 px-4 py-10 text-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,215,0,0.1),transparent_70%)]" />
+      <div className="px-4 py-10 text-center relative overflow-hidden">
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(circle at 50% 40%, rgba(212,175,55,0.12), transparent 65%)",
+          }}
+        />
         <div className="relative">
-          <Badge className="bg-amber-500 text-white mb-4">Life-Changing Journey</Badge>
-          <h1 className="text-3xl font-bold text-foreground mb-3">{program.name}</h1>
-          <p className="text-muted-foreground max-w-md mx-auto mb-6">
+          <Badge className={`mb-4 ${glassCardClass} ${goldGlowClass}`}>
+            Life-Changing Journey
+          </Badge>
+          <h1 className={`text-3xl sm:text-4xl font-black tracking-[-0.05em] mb-3 ${goldGlowClass}`}>
+            {program.name}
+          </h1>
+          <p className={bodyClass + " max-w-md mx-auto mb-6"}>
             {program.description}
           </p>
-          <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
+          <div className={"flex items-center justify-center gap-4 text-sm " + bodyClass}>
             <span className="flex items-center gap-1">
-              <Calendar className="w-4 h-4" />
+              <Calendar className="w-4 h-4 text-[#D4AF37]/70" />
               {currentSource.duration_months} months
             </span>
             <span className="flex items-center gap-1">
-              <BookOpen className="w-4 h-4" />
+              <BookOpen className="w-4 h-4 text-[#D4AF37]/70" />
               {program.modules.length} modules
             </span>
           </div>
@@ -255,29 +283,29 @@ const Transformation = () => {
       {/* Variations Banner */}
       {variations.length > 0 && (
         <div className="px-4 py-4">
-          <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">Choose Your Package</h2>
+          <h2 className={`${microLabelClass} mb-3`}>Choose Your Package</h2>
           <div className="flex gap-3 overflow-x-auto pb-2">
             <Card 
-              className={`p-4 min-w-[160px] cursor-pointer transition-all ${
-                !selectedVariation ? 'border-amber-500 bg-amber-500/10' : 'border-border hover:border-amber-500/50'
+              className={`p-4 min-w-[160px] cursor-pointer transition-all ${glassCardClass} ${
+                !selectedVariation ? 'border-[#D4AF37]/50 bg-[#D4AF37]/[0.06]' : 'hover:border-[#D4AF37]/35'
               }`}
               onClick={() => setSelectedVariation(null)}
             >
-              <h3 className="font-semibold text-foreground text-sm">Standard</h3>
-              <p className="text-amber-500 font-bold mt-1">€{program.price_eur}</p>
-              <p className="text-xs text-muted-foreground mt-1">{program.duration_months} months</p>
+              <h3 className="font-semibold text-white/90 text-sm">Standard</h3>
+              <p className={`font-black tracking-[-0.03em] mt-1 ${goldGlowClass}`}>€{program.price_eur}</p>
+              <p className="text-xs text-white/45 mt-1">{program.duration_months} months</p>
             </Card>
             {variations.map((v) => (
               <Card 
                 key={v.id}
-                className={`p-4 min-w-[160px] cursor-pointer transition-all ${
-                  selectedVariation?.id === v.id ? 'border-amber-500 bg-amber-500/10' : 'border-border hover:border-amber-500/50'
+                className={`p-4 min-w-[160px] cursor-pointer transition-all ${glassCardClass} ${
+                  selectedVariation?.id === v.id ? 'border-[#D4AF37]/50 bg-[#D4AF37]/[0.06]' : 'hover:border-[#D4AF37]/35'
                 }`}
                 onClick={() => setSelectedVariation(v)}
               >
-                <h3 className="font-semibold text-foreground text-sm">{v.name}</h3>
-                <p className="text-amber-500 font-bold mt-1">€{v.price_eur}</p>
-                <p className="text-xs text-muted-foreground mt-1">{v.duration_months} months</p>
+                <h3 className="font-semibold text-white/90 text-sm">{v.name}</h3>
+                <p className={`font-black tracking-[-0.03em] mt-1 ${goldGlowClass}`}>€{v.price_eur}</p>
+                <p className="text-xs text-white/45 mt-1">{v.duration_months} months</p>
               </Card>
             ))}
           </div>
@@ -287,28 +315,28 @@ const Transformation = () => {
       {/* Practitioner Selection */}
       {showPractitionerSelection && practitioners.length > 0 && (
         <div className="px-4 py-4">
-          <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">Choose Your Guide</h2>
+          <h2 className={`${microLabelClass} mb-3`}>Choose Your Guide</h2>
           <div className="grid grid-cols-2 gap-3">
             {practitioners.map((p) => (
               <Card 
                 key={p.id}
-                className={`p-4 cursor-pointer transition-all text-center ${
-                  selectedPractitioner?.id === p.id ? 'border-amber-500 bg-amber-500/10' : 'border-border hover:border-amber-500/50'
+                className={`p-4 cursor-pointer transition-all text-center ${glassCardClass} ${
+                  selectedPractitioner?.id === p.id ? 'border-[#D4AF37]/50 bg-[#D4AF37]/[0.06]' : 'hover:border-[#D4AF37]/35'
                 }`}
                 onClick={() => setSelectedPractitioner(p)}
               >
-                <Avatar className="w-16 h-16 mx-auto mb-2 border-2 border-amber-500/30">
+                <Avatar className="w-16 h-16 mx-auto mb-2 border-2 border-[#D4AF37]/30">
                   {p.image_url ? (
                     <AvatarImage src={p.image_url} alt={p.name} />
                   ) : (
-                    <AvatarFallback className="bg-amber-500/20 text-amber-500">
+                    <AvatarFallback className="bg-[#D4AF37]/10 text-[#D4AF37]">
                       {p.name.charAt(0)}
                     </AvatarFallback>
                   )}
                 </Avatar>
-                <h3 className="font-semibold text-foreground">{p.name}</h3>
+                <h3 className="font-semibold text-white/90">{p.name}</h3>
                 {p.subtitle && (
-                  <p className="text-xs text-muted-foreground mt-1">{p.subtitle}</p>
+                  <p className="text-xs text-white/45 mt-1">{p.subtitle}</p>
                 )}
               </Card>
             ))}
@@ -318,9 +346,9 @@ const Transformation = () => {
 
       {/* Price Card with Payment Options */}
       <div className="px-4 py-4">
-        <Card className="p-6 bg-gradient-to-br from-amber-500/10 to-purple-500/10 border-amber-500/30">
+        <Card className={`p-6 ${glassCardClass} border-[#D4AF37]/25`}>
           <div className="text-center mb-4">
-            <p className="text-sm text-muted-foreground mb-1">Investment in Your Transformation</p>
+            <p className={`text-sm mb-1 ${bodyClass}`}>Investment in Your Transformation</p>
             
             {/* Payment Type Toggle */}
             {currentSource.installment_price_eur > 0 && (
@@ -329,7 +357,11 @@ const Transformation = () => {
                   variant={paymentType === 'full' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setPaymentType('full')}
-                  className={paymentType === 'full' ? 'bg-amber-500 hover:bg-amber-600' : ''}
+                  className={
+                    paymentType === 'full'
+                      ? 'bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-[#050505]'
+                      : 'border-white/[0.08] text-white/80 hover:text-white hover:border-[#D4AF37]/35'
+                  }
                 >
                   Full Payment
                 </Button>
@@ -337,7 +369,11 @@ const Transformation = () => {
                   variant={paymentType === 'installment' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setPaymentType('installment')}
-                  className={paymentType === 'installment' ? 'bg-amber-500 hover:bg-amber-600' : ''}
+                  className={
+                    paymentType === 'installment'
+                      ? 'bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-[#050505]'
+                      : 'border-white/[0.08] text-white/80 hover:text-white hover:border-[#D4AF37]/35'
+                  }
                 >
                   {getInstallmentCount()} Installments
                 </Button>
@@ -346,19 +382,22 @@ const Transformation = () => {
             
             {paymentType === 'full' ? (
               <>
-                <div className="text-4xl font-bold text-foreground mb-2">€{currentSource.price_eur.toLocaleString()}</div>
-                <p className="text-sm text-muted-foreground mb-4">One-time payment • Lifetime access to materials</p>
+                <div className={`text-4xl font-black tracking-[-0.05em] mb-2 ${goldGlowClass}`}>
+                  €{currentSource.price_eur.toLocaleString()}
+                </div>
+                <p className={`text-sm mb-4 ${bodyClass}`}>One-time payment • Lifetime access to materials</p>
               </>
             ) : (
               <>
-                <div className="text-4xl font-bold text-foreground mb-2">
-                  €{currentSource.installment_price_eur.toLocaleString()}<span className="text-lg">/month</span>
+                <div className={`text-4xl font-black tracking-[-0.05em] mb-2 ${goldGlowClass}`}>
+                  €{currentSource.installment_price_eur.toLocaleString()}
+                  <span className="text-lg text-white/45">/month</span>
                 </div>
-                <p className="text-sm text-muted-foreground mb-2">
+                <p className={`text-sm mb-2 ${bodyClass}`}>
                   {getInstallmentCount()} payments • Total: €{getTotalInstallmentPrice().toLocaleString()}
                 </p>
                 {getTotalInstallmentPrice() > currentSource.price_eur && (
-                  <p className="text-xs text-amber-500 mb-4">
+                  <p className="text-xs text-[#D4AF37]/80 mb-4">
                     Save €{(getTotalInstallmentPrice() - currentSource.price_eur).toLocaleString()} with full payment!
                   </p>
                 )}
@@ -368,7 +407,7 @@ const Transformation = () => {
             <Button 
               onClick={handleEnroll}
               disabled={enrolling}
-              className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+              className="w-full bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-[#050505] shadow-[0_0_25px_rgba(212,175,55,0.25)]"
               size="lg"
             >
               {enrolling ? 'Processing...' : 'Begin Your Transformation'}
@@ -379,16 +418,16 @@ const Transformation = () => {
 
       {/* What's Included */}
       <div className="px-4 py-6">
-        <h2 className="text-lg font-bold text-foreground mb-4">What's Included</h2>
+        <h2 className={`text-lg font-black tracking-[-0.03em] mb-4 ${goldGlowClass}`}>What's Included</h2>
         <div className="grid grid-cols-2 gap-3">
           {(selectedVariation?.features || program.features).map((feature, idx) => {
             const Icon = getFeatureIcon(feature);
             return (
-              <Card key={idx} className="p-4 flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-amber-500/10">
-                  <Icon className="w-5 h-5 text-amber-500" />
+              <Card key={idx} className={`p-4 flex items-start gap-3 ${glassCardClass}`}>
+                <div className="p-2 rounded-[14px] bg-[#D4AF37]/10 border border-[#D4AF37]/15">
+                  <Icon className="w-5 h-5 text-[#D4AF37]" />
                 </div>
-                <span className="text-sm text-foreground leading-snug">{feature}</span>
+                <span className="text-sm text-white/80 leading-snug">{feature}</span>
               </Card>
             );
           })}
@@ -397,23 +436,27 @@ const Transformation = () => {
 
       {/* Modules */}
       <div className="px-4 py-6">
-        <h2 className="text-lg font-bold text-foreground mb-4">The 3 Modules</h2>
+        <h2 className={`text-lg font-black tracking-[-0.03em] mb-4 ${goldGlowClass}`}>The 3 Modules</h2>
         <Accordion type="single" collapsible className="space-y-3">
           {program.modules.map((module) => (
-            <AccordionItem key={module.number} value={`module-${module.number}`} className="border rounded-lg overflow-hidden">
+            <AccordionItem
+              key={module.number}
+              value={`module-${module.number}`}
+              className={`overflow-hidden ${glassCardClass}`}
+            >
               <AccordionTrigger className="px-4 py-3 hover:no-underline">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-purple-500 flex items-center justify-center text-white font-bold">
+                  <div className="w-10 h-10 rounded-full bg-[#D4AF37] flex items-center justify-center text-[#050505] font-black">
                     {module.number}
                   </div>
                   <div className="text-left">
-                    <h3 className="font-semibold text-foreground">{module.name}</h3>
-                    <p className="text-xs text-muted-foreground">{module.duration_months} months</p>
+                    <h3 className="font-semibold text-white/90">{module.name}</h3>
+                    <p className="text-xs text-white/45">{module.duration_months} months</p>
                   </div>
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-4 pb-4">
-                <p className="text-sm text-muted-foreground pl-13">
+                <p className={`text-sm pl-13 ${bodyClass}`}>
                   {module.description}
                 </p>
               </AccordionContent>
@@ -424,14 +467,14 @@ const Transformation = () => {
 
       {/* Daily Support Highlight */}
       <div className="px-4 py-6">
-        <Card className="p-6 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20">
+        <Card className={`p-6 ${glassCardClass}`}>
           <div className="flex items-start gap-4">
-            <div className="p-3 rounded-full bg-green-500/20">
-              <MessageCircle className="w-6 h-6 text-green-500" />
+            <div className="p-3 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20">
+              <MessageCircle className="w-6 h-6 text-[#D4AF37]" />
             </div>
             <div>
-              <h3 className="font-semibold text-foreground mb-2">Daily WhatsApp Connection</h3>
-              <p className="text-sm text-muted-foreground">
+              <h3 className={`font-black tracking-[-0.03em] mb-2 ${goldGlowClass}`}>Daily WhatsApp Connection</h3>
+              <p className={`text-sm ${bodyClass}`}>
                 Stay connected with {selectedPractitioner?.name || 'your practitioner'} every day. Get guidance, share your experiences, 
                 and receive healing support whenever you need it throughout your transformation journey.
               </p>
@@ -442,24 +485,30 @@ const Transformation = () => {
 
       {/* Testimonial placeholder */}
       <div className="px-4 py-6">
-        <Card className="p-6 bg-muted/30 border-dashed">
+        <Card className={`p-6 ${glassCardClass}`}>
           <div className="text-center">
-            <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground italic">
+            <Users className="w-10 h-10 text-[#D4AF37]/60 mx-auto mb-3" />
+            <p className="text-sm text-white/60 italic">
               "This program changed my life completely. The daily support and healing sessions 
               helped me release years of trauma and step into my true power."
             </p>
-            <p className="text-sm font-medium text-foreground mt-3">— Transformation Graduate</p>
+            <p className="text-sm font-semibold text-white/85 mt-3">— Transformation Graduate</p>
           </div>
         </Card>
       </div>
 
       {/* Sticky CTA */}
-      <div className="fixed bottom-20 left-0 right-0 px-4 pb-4 bg-gradient-to-t from-background via-background to-transparent pt-8">
+      <div
+        className="fixed bottom-20 left-0 right-0 px-4 pb-4 pt-8"
+        style={{
+          background:
+            "linear-gradient(to top, rgba(5,5,5,0.98), rgba(5,5,5,0.92), transparent)",
+        }}
+      >
         <Button 
           onClick={handleEnroll}
           disabled={enrolling}
-          className="w-full bg-amber-500 hover:bg-amber-600 text-white shadow-lg"
+          className="w-full bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-[#050505] shadow-[0_0_25px_rgba(212,175,55,0.25)]"
           size="lg"
         >
           {enrolling ? 'Processing...' : paymentType === 'full' 
@@ -471,17 +520,17 @@ const Transformation = () => {
 
       {/* Payment Method Dialog */}
       <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-        <DialogContent>
+        <DialogContent className={glassCardClass + " text-white"}>
           <DialogHeader>
-            <DialogTitle>Choose Payment Method</DialogTitle>
+            <DialogTitle className={`font-black tracking-[-0.03em] ${goldGlowClass}`}>Choose Payment Method</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div className="text-center mb-4">
-              <p className="text-sm text-muted-foreground">
+              <p className={`text-sm ${bodyClass}`}>
                 {selectedVariation?.name || 'Standard Package'}
                 {selectedPractitioner && ` with ${selectedPractitioner.name}`}
               </p>
-              <p className="text-2xl font-bold text-foreground">
+              <p className={`text-2xl font-black tracking-[-0.05em] ${goldGlowClass}`}>
                 {paymentType === 'full' 
                   ? `€${currentSource.price_eur.toLocaleString()}`
                   : `€${currentSource.installment_price_eur}/mo × ${getInstallmentCount()}`
@@ -492,7 +541,7 @@ const Transformation = () => {
             <Button 
               onClick={() => processPayment('card')}
               disabled={enrolling}
-              className="w-full"
+              className="w-full bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-[#050505]"
               size="lg"
             >
               <CreditCard className="w-5 h-5 mr-2" />
@@ -503,7 +552,7 @@ const Transformation = () => {
               onClick={() => processPayment('crypto')}
               disabled={enrolling}
               variant="outline"
-              className="w-full"
+              className="w-full border-white/[0.10] text-white/85 hover:text-white hover:border-[#D4AF37]/35"
               size="lg"
             >
               <Wallet className="w-5 h-5 mr-2" />
