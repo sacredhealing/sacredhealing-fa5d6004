@@ -443,6 +443,9 @@
     "supporting": "stöttar"
   },
   "dashboard": {
+    "heroOpeningLoading": "Hämtar ditt Akasha-neurala arkiv...",
+    "heroOpeningWithDasha": "När du rör dig genom din {{dasha}}-cykel{{hasAntardasha, select, 1{, {{antardasha}}-subperiod} other{}}}...",
+    "heroOpeningDefault": "När du kliver in i detta fält av Prema-Pulse-överföring...",
     "greeting": "God morgon",
     "headerGreetingMorning": "God morgon",
     "headerGreetingMidday": "God eftermiddag",

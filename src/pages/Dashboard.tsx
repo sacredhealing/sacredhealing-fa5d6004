@@ -296,17 +296,18 @@ const Dashboard: React.FC = () => {
   const userName = userProfile?.full_name?.split(' ')[0] || t('dashboard.defaultGreetingName');
   const currentDasha = !jyotish.isLoading && jyotish.mahadasha ? jyotish.mahadasha : null;
   const currentAntardasha = !jyotish.isLoading && jyotish.antardasha ? jyotish.antardasha : null;
-  const dashaCycle =
-    jyotish.isLoading
-      ? null
-      : (currentDasha ||
-          (vedicReading?.personalCompass?.currentDasha?.period?.split(' ')[0] || null));
+  // Authoritative per-user Jyotish calculation (never fall back to AI text/cache).
+  const dashaCycle = jyotish.isLoading ? null : (currentDasha || null);
   const horaPlanet = horaWatch.calculation?.currentHora?.planet || 'Venus';
   const openingLine = jyotish.isLoading
-    ? 'Accessing your Akasha-Neural Archive...'
+    ? t('dashboard.heroOpeningLoading')
     : currentDasha
-      ? `As you move through your ${currentDasha} cycle${currentAntardasha ? `, ${currentAntardasha} sub-period` : ''}...`
-      : 'As you step into this field of Prema-Pulse transmission...';
+      ? t('dashboard.heroOpeningWithDasha', {
+          dasha: currentDasha,
+          antardasha: currentAntardasha ?? '',
+          hasAntardasha: currentAntardasha ? '1' : '',
+        })
+      : t('dashboard.heroOpeningDefault');
   const heroWisdom = openingLine;
   const horaDurationMs = horaWatch.calculation?.currentHora?.durationMinutes
     ? horaWatch.calculation.currentHora.durationMinutes * 60 * 1000

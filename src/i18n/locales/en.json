@@ -712,6 +712,9 @@
     "supporting": "supporting"
   },
   "dashboard": {
+    "heroOpeningLoading": "Accessing your Akasha-Neural Archive...",
+    "heroOpeningWithDasha": "As you move through your {{dasha}} cycle{{hasAntardasha, select, 1{, {{antardasha}} sub-period} other{}}}...",
+    "heroOpeningDefault": "As you step into this field of Prema-Pulse transmission...",
     "greeting": "Good morning",
     "headerGreetingMorning": "Good morning",
     "headerGreetingMidday": "Good afternoon",
