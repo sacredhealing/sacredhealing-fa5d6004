@@ -389,20 +389,6 @@ export default function SiddhaPortal() {
         delay={0.1}
       />
       <OracleCard
-        title={t('siddhaPortal.quantumApothecary') || 'Quantum Apothecary'}
-        desc={t('siddhaPortal.apothecaryDesc') || 'Siddha herbal intelligence meets quantum field medicine — receive your personalised remedy transmission.'}
-        cta={t('siddhaPortal.openPlatform') || 'Open Platform'}
-        href="/quantum-apothecary"
-        delay={0.15}
-      />
-      <OracleCard
-        title="WomanCode"
-        desc="Sacred feminine intelligence — cycle tracking, hormonal alchemy, and sovereign body wisdom."
-        cta="Enter Module"
-        href="/womancode"
-        delay={0.2}
-      />
-      <OracleCard
         title="Palm Akashic Oracle"
         desc="AI-powered palm reading — decode your karmic lines and life purpose through ancient palmistry."
         cta="Begin Reading"
