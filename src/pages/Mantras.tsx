@@ -52,6 +52,7 @@ const SQI_CSS = `
     --muted:   rgba(255,255,255,0.42);
     --cyan:    #22D3EE;
     --r40:     40px;
+    --page-pad: clamp(12px, 4.6vw, 22px);
   }
 
   .sqi-mantras {
@@ -92,7 +93,7 @@ const SQI_CSS = `
 
   .m-hero {
     position: relative;
-    padding: 52px 22px 28px;
+    padding: 52px var(--page-pad) 28px;
     overflow: hidden;
   }
   .m-hero::before {
@@ -125,7 +126,7 @@ const SQI_CSS = `
   }
 
   .m-bhrigu {
-    margin: 0 22px 16px;
+    margin: 0 var(--page-pad) 16px;
     background: linear-gradient(135deg, rgba(212,175,55,.05), rgba(139,92,246,.04));
     border: 1px solid rgba(212,175,55,.12);
     border-radius: var(--r40);
@@ -139,7 +140,7 @@ const SQI_CSS = `
     background: radial-gradient(ellipse 60% 40% at 80% 50%, rgba(212,175,55,.05), transparent 70%);
   }
 
-  .m-hora { margin: 0 22px 20px; padding: 18px 24px; }
+  .m-hora { margin: 0 var(--page-pad) 20px; padding: 18px 24px; }
   .m-hora-timer {
     font-size: 22px; font-weight: 900; letter-spacing: -.04em;
     color: var(--gold); font-variant-numeric: tabular-nums;
@@ -149,7 +150,7 @@ const SQI_CSS = `
     display: grid;
     grid-template-columns: 1fr;
     gap: 16px;
-    padding: 0 22px;
+    padding: 0 var(--page-pad);
   }
   @media (min-width: 640px) {
     .m-two-col { grid-template-columns: 164px 1fr; }
@@ -734,7 +735,7 @@ const Mantras = () => {
 
       {/* ── Celestial Match Banner ── */}
       {isCelestialMatch && dashaPlanet && (
-        <div className="m-glass" style={{ margin: '0 22px 16px', padding: '16px 20px' }}>
+        <div className="m-glass" style={{ margin: '0 var(--page-pad) 16px', padding: '16px 20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 18 }}>✨</span>
             <div>
@@ -1006,7 +1007,7 @@ const Mantras = () => {
 
       {/* ── Jyotish Recommendations ── */}
       {jyotishRecommendation && (
-        <div className="m-glass" style={{ margin: '20px 22px 0', padding: '20px 22px' }}>
+        <div className="m-glass" style={{ margin: '20px var(--page-pad) 0', padding: '20px 22px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
             <span style={{ fontSize: 15 }}>🔭</span>
             <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: '-.01em' }}>
