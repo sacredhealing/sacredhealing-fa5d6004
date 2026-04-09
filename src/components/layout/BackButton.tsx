@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 
-export const BACK_BUTTON_HIDE_PATHS = ['/', '/dashboard', '/splash', '/auth', '/community'];
+export const BACK_BUTTON_HIDE_PATHS = ['/', '/dashboard', '/splash', '/auth'];
 
 type BackButtonProps = {
   /** When "inline", renders inside a header bar (no fixed positioning). Default: "floating" */
