@@ -125,7 +125,7 @@ export default function Explore() {
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><polygon points="12,2.2 21.8,19.5 2.2,19.5" stroke="rgba(212,175,55,0.9)" strokeWidth="1.3" fill="none"/><polygon points="12,21.8 2.2,4.5 21.8,4.5" stroke="rgba(212,175,55,0.72)" strokeWidth="1.1" fill="none"/><circle cx="12" cy="12" r="1.8" fill="rgba(212,175,55,0.95)"/></svg>
             </div>
             <div>
-              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 8.5, fontWeight: 800, letterSpacing: '0.42em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.88)', marginBottom: 3 }}>{t('converge.siddhaPortalTitle')}</div>
+              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: 3 }}>{t('converge.siddhaPortalTitle')}</div>
               <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.85rem', color: 'rgba(255,255,255,0.36)' }}>{t('converge.siddhaPortalSub')}</div>
             </div>
           </div>
@@ -168,7 +168,7 @@ export default function Explore() {
               <svg width="22" height="22" viewBox="0 0 28 28" fill="none"><path d="M4 14 Q8 6 14 14 Q20 22 24 14" stroke="rgba(120,180,255,0.85)" strokeWidth="1.8" fill="none"/><path d="M4 10 Q9 2 14 10 Q19 18 24 10" stroke="rgba(120,180,255,0.4)" strokeWidth="1.2" fill="none"/></svg>
             </div>
             <div>
-              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 8.5, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(140,190,255,0.82)', marginBottom: 3 }}>{t('converge.pranicTitle')}</div>
+              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: 3 }}>{t('converge.pranicTitle')}</div>
               <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.85rem', color: 'rgba(255,255,255,0.32)' }}>{t('converge.pranicSub')}</div>
             </div>
           </div>
@@ -246,7 +246,7 @@ export default function Explore() {
               </svg>
             </div>
             <div>
-              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 8.5, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase', color: 'rgba(190,140,255,0.85)', marginBottom: 3 }}>{t('converge.akashaCardTitle')}</div>
+              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: 3 }}>{t('converge.akashaCardTitle')}</div>
               <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.85rem', color: 'rgba(255,255,255,0.36)' }}>{t('converge.akashaCardSub')}</div>
             </div>
           </div>
@@ -278,7 +278,7 @@ export default function Explore() {
           <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.07),transparent)', animation: 'sqShimmer 5.5s 1.2s ease-in-out infinite', pointerEvents: 'none' }} />
           <div style={{ position: 'absolute', top: 10, right: 10 }}><Badge label="2050" /></div>
           <TI pulse><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="13" rx="2" stroke="rgba(212,175,55,0.8)" strokeWidth="1.4"/><path d="M8 7 L8 4 C8 3.4 8.4 3 9 3 L15 3 C15.6 3 16 3.4 16 4 L16 7" stroke="rgba(212,175,55,0.55)" strokeWidth="1.2"/><circle cx="12" cy="13" r="2.5" stroke="rgba(212,175,55,0.7)" strokeWidth="1.2"/><line x1="12" y1="10.5" x2="12" y2="8.5" stroke="rgba(212,175,55,0.45)" strokeWidth="1"/></svg></TI>
-          <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.65)', marginBottom: 5, whiteSpace: 'pre-line' }}>{t('converge.toolQuantumTitle')}</div>
+          <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: 5, whiteSpace: 'pre-line' }}>{t('converge.toolQuantumTitle')}</div>
           <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{t('converge.toolQuantumSub')}</div>
           <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
         </div>
@@ -286,100 +286,13 @@ export default function Explore() {
           <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.07),transparent)', animation: 'sqShimmer 5.5s 1.2s ease-in-out infinite', pointerEvents: 'none' }} />
           <div style={{ position: 'absolute', top: 10, right: 10 }}><Badge label="24/7" v="muted" /></div>
           <TI><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="rgba(212,175,55,0.7)" strokeWidth="1.3"/><path d="M12 3 C12 3 8 7 8 12 C8 17 12 21 12 21" stroke="rgba(212,175,55,0.45)" strokeWidth="1.1"/><path d="M12 3 C12 3 16 7 16 12 C16 17 12 21 12 21" stroke="rgba(212,175,55,0.45)" strokeWidth="1.1"/><line x1="3.5" y1="9" x2="20.5" y2="9" stroke="rgba(212,175,55,0.3)" strokeWidth="1"/><line x1="3.5" y1="15" x2="20.5" y2="15" stroke="rgba(212,175,55,0.3)" strokeWidth="1"/></svg></TI>
-          <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.65)', marginBottom: 5, whiteSpace: 'pre-line' }}>{t('converge.toolVirtualTitle')}</div>
+          <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: 5, whiteSpace: 'pre-line' }}>{t('converge.toolVirtualTitle')}</div>
           <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{t('converge.toolVirtualSub')}</div>
           <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
         </div>
-        <div
-          onClick={() => isAdmin ? navigate('/akashic-reading/full') : hasAkashicAccess ? navigate('/akashic-records') : setSacredRevealOpen(true)}
-          style={{ gridColumn: 'span 2', background: 'linear-gradient(135deg,rgba(80,15,140,0.22),rgba(50,8,100,0.15),rgba(0,0,0,0))', border: '1px solid rgba(130,70,220,0.28)', borderRadius: 18, padding: '20px 18px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}
-        >
-          <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(130,70,220,0.08),transparent)', animation: 'sqShimmer 6s ease-in-out infinite', pointerEvents: 'none' }} />
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
-              <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(130,70,220,0.12)', border: '1px solid rgba(130,70,220,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="3" stroke="rgba(180,120,255,0.8)" strokeWidth="1.4"/><path d="M5 20 C5 15.6 8.1 12 12 12 C15.9 12 19 15.6 19 20" stroke="rgba(180,120,255,0.55)" strokeWidth="1.4" fill="none"/><line x1="12" y1="8" x2="12" y2="12" stroke="rgba(180,120,255,0.45)" strokeWidth="1.3"/></svg>
-              </div>
-              <div>
-                <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.36em', textTransform: 'uppercase', color: 'rgba(175,130,255,0.72)', marginBottom: 3 }}>{t('converge.toolDecoderTitle')}</div>
-                <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.78rem', color: 'rgba(255,255,255,0.28)' }}>{t('converge.toolDecoderSub')}</div>
-              </div>
-            </div>
-            <Badge label={t('converge.badgeSecret')} v="purple" />
-          </div>
-          <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.87rem', color: 'rgba(255,255,255,0.33)', lineHeight: 1.6, marginBottom: 11 }}>{t('converge.toolDecoderBody')}</p>
-          <button style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.36em', textTransform: 'uppercase', color: 'rgba(175,130,255,0.58)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>{t('converge.toolDecoderCta')}</button>
-        </div>
-        <div onClick={() => hasFeatureAccess(isAdmin, tier, FEATURE_TIER.vayuProtocol) ? navigate('/vayu-protocol') : navigate('/siddha-quantum')} style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)', borderRadius: 18, padding: '18px 15px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: 10, right: 10 }}><Badge label="2060" /></div>
-          <TI><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="12" rx="9" ry="5" stroke="rgba(212,175,55,0.65)" strokeWidth="1.2" fill="none"/><ellipse cx="12" cy="12" rx="9" ry="5" stroke="rgba(212,175,55,0.28)" strokeWidth="0.9" fill="none" transform="rotate(60,12,12)"/><circle cx="12" cy="12" r="2.2" fill="rgba(212,175,55,0.15)" stroke="rgba(212,175,55,0.65)" strokeWidth="1"/></svg></TI>
-          <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.65)', marginBottom: 5, whiteSpace: 'pre-line' }}>{t('converge.toolVayuTitle')}</div>
-          <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{t('converge.toolVayuSub')}</div>
-          <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
-        </div>
-        <div onClick={() => hasFeatureAccess(isAdmin, tier, FEATURE_TIER.sriYantraShield) ? navigate('/sri-yantra-shield') : navigate('/siddha-quantum')} style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)', borderRadius: 18, padding: '18px 15px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: 10, right: 10 }}><Badge label="v2.6" /></div>
-          <TI><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ animation: 'sqBreathe 5s ease-in-out infinite' }}><polygon points="12,2.5 21.5,20 2.5,20" stroke="rgba(212,175,55,0.85)" strokeWidth="1.3" fill="none"/><polygon points="12,21.5 2.5,4 21.5,4" stroke="rgba(212,175,55,0.68)" strokeWidth="1.1" fill="none"/><polygon points="12,6.5 19,19 5,19" stroke="rgba(212,175,55,0.48)" strokeWidth="0.9" fill="none"/><circle cx="12" cy="12" r="1.5" fill="rgba(212,175,55,0.92)"/></svg></TI>
-          <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.65)', marginBottom: 5, whiteSpace: 'pre-line' }}>{t('converge.toolYantraTitle')}</div>
-          <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{t('converge.toolYantraSub')}</div>
-          <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
-        </div>
-        <div
-          onClick={() => navigate('/womancode')}
-          style={{
-            background: 'linear-gradient(135deg,rgba(244,114,182,0.08),rgba(212,175,55,0.04))',
-            border: '1px solid rgba(244,114,182,0.22)',
-            borderRadius: 18,
-            padding: '18px 15px',
-            cursor: 'pointer',
-            position: 'relative',
-            overflow: 'hidden',
-          }}
-        >
-          <div style={{ position: 'absolute', top: 10, right: 10 }}>
-            <Badge label="SQI" v="muted" />
-          </div>
-          <TI>
-            <span style={{ fontSize: 18 }} aria-hidden>🌸</span>
-          </TI>
-          <div
-            style={{
-              fontFamily: "'Montserrat',sans-serif",
-              fontSize: 7.5,
-              fontWeight: 800,
-              letterSpacing: '0.38em',
-              textTransform: 'uppercase',
-              color: 'rgba(244,114,182,0.75)',
-              marginBottom: 5,
-              whiteSpace: 'pre-line',
-            }}
-          >
-            {t('womanCode.navExplore.title')}
-          </div>
-          <div
-            style={{
-              fontFamily: "'Cormorant Garamond',serif",
-              fontStyle: 'italic',
-              fontSize: '0.8rem',
-              color: 'rgba(255,255,255,0.3)',
-              lineHeight: 1.4,
-            }}
-          >
-            {t('womanCode.navExplore.sub')}
-          </div>
-          <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
-        </div>
-        <div onClick={() => hasFeatureAccess(isAdmin, tier, FEATURE_TIER.palmOracle) ? navigate('/hand-analyzer') : navigate('/akasha-infinity')} style={{ gridColumn: 'span 2', background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)', borderRadius: 18, padding: '18px 16px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: 10, right: 10 }}><Badge label={t('converge.badgePremium')} /></div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <TI><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M8 18 L8 8 C8 7.4 8.4 7 9 7 C9.6 7 10 7.4 10 8 L10 13" stroke="rgba(212,175,55,0.8)" strokeWidth="1.4"/><path d="M10 12 C10 11.4 10.4 11 11 11 C11.6 11 12 11.4 12 12 L12 13" stroke="rgba(212,175,55,0.7)" strokeWidth="1.3"/><path d="M12 12.5 C12 11.9 12.4 11.5 13 11.5 C13.6 11.5 14 11.9 14 12.5 L14 14" stroke="rgba(212,175,55,0.6)" strokeWidth="1.2"/><path d="M8 15 C6 14 5 12 5 10" stroke="rgba(212,175,55,0.35)" strokeWidth="1.1"/><path d="M8 18 C8 19 9 20 10 20 L13 20 C15 20 16 18 16 16 L16 13 C16 12.4 15.6 12 15 12 C14.4 12 14 12.4 14 13" stroke="rgba(212,175,55,0.75)" strokeWidth="1.3" fill="none"/></svg></TI>
-            <div>
-              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.65)', marginBottom: 5 }}>{t('converge.toolPalmTitle')}</div>
-              <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{t('converge.toolPalmSub')}</div>
-            </div>
-          </div>
-          <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
-        </div>
+      </div>
+
+      {/* ══ VEDIC & WISDOM ══ */}
       </div>
 
       {/* ══ VEDIC & WISDOM ══ */}
@@ -432,7 +345,7 @@ export default function Explore() {
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><polygon points="12,2 13.8,8 20,8 14.9,11.9 16.7,18 12,14.1 7.3,18 9.1,11.9 4,8 10.2,8" stroke="rgba(212,175,55,0.85)" strokeWidth="1.3" fill="rgba(212,175,55,0.1)"/><circle cx="12" cy="12" r="2.5" fill="rgba(212,175,55,0.18)" stroke="rgba(212,175,55,0.55)" strokeWidth="0.9"/></svg>
             </div>
             <div>
-              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 8, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.65)', marginBottom: 3 }}>{t('converge.abundanceTitle')}</div>
+              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: 3 }}>{t('converge.abundanceTitle')}</div>
               <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.82rem', color: 'rgba(255,255,255,0.28)' }}>{t('converge.abundanceSub')}</div>
             </div>
           </div>
@@ -444,13 +357,13 @@ export default function Explore() {
         </div>
         <div onClick={() => navigate('/creative-soul/store')} style={{ background: 'linear-gradient(135deg,rgba(170,55,200,0.08),rgba(0,0,0,0))', border: '1px solid rgba(170,60,210,0.18)', borderRadius: 18, padding: '18px 15px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
           <TI><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2 C12 2 9 8 4 10 C9 12 12 22 12 22 C12 22 15 12 20 10 C15 8 12 2 12 2Z" stroke="rgba(180,110,255,0.8)" strokeWidth="1.4" fill="rgba(160,60,220,0.1)"/></svg></TI>
-          <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.36em', textTransform: 'uppercase', color: 'rgba(175,120,255,0.62)', marginBottom: 5 }}>{t('converge.creativeSoulTitle')}</div>
+          <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: 5 }}>{t('converge.creativeSoulTitle')}</div>
           <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{t('converge.creativeSoulSub')}</div>
           <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(175,120,255,0.2)', fontSize: 11 }}>→</span>
         </div>
         <div onClick={() => navigate('/shop')} style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)', borderRadius: 18, padding: '18px 15px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
           <TI><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 2 L2 8 L6 8 L6 20 C6 20.6 6.4 21 7 21 L17 21 C17.6 21 18 20.6 18 20 L18 8 L22 8 L18 2 L14 5 C13.3 3.8 12.7 3 12 3 C11.3 3 10.7 3.8 10 5 Z" stroke="rgba(212,175,55,0.75)" strokeWidth="1.3" fill="rgba(212,175,55,0.07)"/></svg></TI>
-          <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.65)', marginBottom: 5, whiteSpace: 'pre-line' }}>{t('converge.healingClothesTitle')}</div>
+          <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: 5, whiteSpace: 'pre-line' }}>{t('converge.healingClothesTitle')}</div>
           <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{t('converge.healingClothesSub')}</div>
           <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
         </div>
@@ -522,7 +435,7 @@ export default function Explore() {
           <div key={titleKey} onClick={() => navigate(href)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}>
             <div style={{ width: 38, height: 38, flexShrink: 0, borderRadius: '50%', background: iBg, border: `1px solid ${iBd}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{svg}</div>
             <div>
-              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 12.5, fontWeight: 800, color: 'rgba(255,255,255,0.82)', marginBottom: 2 }}>{t(titleKey)}</div>
+              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 12.5, fontWeight: 800, color: '#D4AF37', marginBottom: 2 }}>{t(titleKey)}</div>
               <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)' }}>{t(subKey)}</div>
             </div>
             <div style={{ marginLeft: 'auto' }}><span style={{ color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span></div>
