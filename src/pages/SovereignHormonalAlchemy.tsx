@@ -382,7 +382,8 @@ function useDailyLog() {
 }
 
 // ─── CHART ─────────────────────────────────────────────────────────────────────
-declare global { interface Window { Chart: any; } }
+// @ts-ignore - Chart.js loaded via CDN
+declare const Chart: any;
 
 function HormoneChart({ day }: { day: number }) {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -710,7 +711,7 @@ export default function SovereignHormonalAlchemy() {
 
   // Secretion confirmation
   const todayDischarge: string[] = todayLog?.discharge ?? [];
-  const phaseConfirmed = todayDischarge.some(d => pd.secretionConfirms.includes(d));
+  const phaseConfirmed = todayDischarge.some((d: string) => pd.secretionConfirms.includes(d as never));
 
   function handleSetup(date: string, len: number, bleed: number) {
     updateCycleSettings(date, len, bleed);
