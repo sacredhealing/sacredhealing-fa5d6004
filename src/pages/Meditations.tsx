@@ -32,7 +32,6 @@ import CustomMeditationBooking from '@/components/meditation/CustomMeditationBoo
 import CustomMeditationCreation from '@/components/meditation/CustomMeditationCreation';
 import WealthMeditationService from '@/components/meditation/WealthMeditationService';
 import { CuratedMeditationCard } from '@/components/meditation/CuratedMeditationCard';
-import { IntentionThreshold, IntentionType } from '@/components/meditation/IntentionThreshold';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useCuratedPlaylists, CuratedPlaylist } from '@/hooks/useCuratedPlaylists';
@@ -726,9 +725,6 @@ const Meditations: React.FC = () => {
   const [meditations, setMeditations] = useState<MeditationFull[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCommission, setActiveCommission] = useState<string | null>(null);
-  const [showThreshold, setShowThreshold] = useState(false);
-  const [pendingMeditation, setPendingMeditation] = useState<MeditationFull | null>(null);
-  const [currentIntention, setCurrentIntention] = useState<IntentionType | null>(null);
   const [selectedPlaylist, setSelectedPlaylist] = useState<CuratedPlaylist | null>(null);
   const [playlistMeditations, setPlaylistMeditations] = useState<MeditationFull[]>([]);
   const pranaUpgradeLockRef = useRef(false);
@@ -818,12 +814,6 @@ const Meditations: React.FC = () => {
   const initiatePlay = (med: MeditationFull, lang: ContentLanguage) => {
     const audioUrl = lang === 'sv' && med.audio_url_sv ? med.audio_url_sv : med.audio_url;
     if (!audioUrl) return;
-    const startNow = startNowItem;
-    if (startNow && startNow.id === med.id && !currentIntention) {
-      setPendingMeditation(med);
-      setShowThreshold(true);
-      return;
-    }
     playUniversalAudio({ id: med.id, title: med.title, audio_url: audioUrl, artist: '', cover_image_url: null, duration_seconds: 0, shc_reward: 0, contentType: 'meditation' });
   };
 
@@ -846,16 +836,6 @@ const Meditations: React.FC = () => {
       );
     }
   }, [user, navigate, t]);
-
-  const handleIntentionSelected = (intention: IntentionType) => {
-    setCurrentIntention(intention);
-    setShowThreshold(false);
-    if (pendingMeditation) { initiatePlay(pendingMeditation, language); setPendingMeditation(null); }
-  };
-  const handleThresholdClose = () => {
-    setShowThreshold(false);
-    if (pendingMeditation) { initiatePlay(pendingMeditation, language); setPendingMeditation(null); }
-  };
 
   // ── Loading state ──
   if (loading) {
@@ -1181,18 +1161,6 @@ const Meditations: React.FC = () => {
           open={activeCommission === 'creation'}
           onOpenChange={o => !o && setActiveCommission(null)}
           hideTrigger
-        />
-
-        <IntentionThreshold
-          isOpen={showThreshold}
-          onSelectIntention={handleIntentionSelected}
-          onClose={handleThresholdClose}
-          weeklyContext={{
-            last7DaysSessions: userDailyState.last7DaysSessions,
-            userState: userDailyState.userState,
-            todaySessions: userDailyState.todaySessions,
-            dayPhaseLabel,
-          }}
         />
 
         {BackToTopFab && <BackToTopFab />}
