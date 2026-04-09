@@ -395,7 +395,34 @@ export default function SiddhaPortal() {
         href="/quantum-apothecary"
         delay={0.15}
       />
-
+      <OracleCard
+        title="WomanCode"
+        desc="Sacred feminine intelligence — cycle tracking, hormonal alchemy, and sovereign body wisdom."
+        cta="Enter Module"
+        href="/womancode"
+        delay={0.2}
+      />
+      <OracleCard
+        title="Palm Akashic Oracle"
+        desc="AI-powered palm reading — decode your karmic lines and life purpose through ancient palmistry."
+        cta="Begin Reading"
+        href="/hand-analyzer"
+        delay={0.25}
+      />
+      <OracleCard
+        title="Akashic Decoder"
+        desc="Access your soul's eternal record — past lives, karmic patterns, and divine purpose revealed."
+        cta="Open Decoder"
+        href="/akashic-records"
+        delay={0.3}
+      />
+      <OracleCard
+        title="Vayu Protocol"
+        desc="Pranic field calibration engine — atmospheric purification and etheric body alignment."
+        cta="Open Protocol"
+        href="/vayu-protocol"
+        delay={0.35}
+      />
 
       {/* ── KEYFRAMES ── */}
       <style>{`
