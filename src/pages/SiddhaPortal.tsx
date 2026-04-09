@@ -237,20 +237,13 @@ export default function SiddhaPortal() {
   const { tier, loading } = useMembership();
   const { isAdmin }       = useAdminRole();
 
+  // Only admin + Akasha-Infinity (rank 3) can access
   useEffect(() => {
-    if (!loading && !hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal)) {
-      navigate('/siddha-quantum');
+    if (!loading && !hasFeatureAccess(isAdmin, tier, 3)) {
+      navigate('/akasha-infinity');
     }
   }, [isAdmin, tier, loading, navigate]);
 
-  const masters = [
-    { titleKey: 'siddhaPortal.agastyaMuni',  subKey: 'siddhaPortal.agastyaDesc',     badge: 'LIVE', href: '/digital-nadi' },
-    { titleKey: 'siddhaPortal.thirumoolar',  subKey: 'siddhaPortal.thirumoolarDesc', badge: null,   href: '/breathing' },
-    { titleKey: 'siddhaPortal.nandiDevar',   subKey: 'siddhaPortal.nandiDevarDesc',  badge: null,   href: '/mantras' },
-    { titleKey: 'siddhaPortal.bogarSiddhar', subKey: 'siddhaPortal.bogarDesc',       badge: null,   href: '/quantum-apothecary' },
-    { titleKey: 'siddhaPortal.patanjali',    subKey: 'siddhaPortal.patanjaliDesc',   badge: 'NEW',  href: '/meditations' },
-    { titleKey: 'siddhaPortal.konganar',     subKey: 'siddhaPortal.konganarDesc',    badge: null,   href: '/digital-nadi' },
-  ];
 
   return (
     <div style={{ background: '#050505', minHeight: '100vh', paddingBottom: 104, maxWidth: 430, margin: '0 auto' }}>
