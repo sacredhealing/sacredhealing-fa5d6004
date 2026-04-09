@@ -289,19 +289,6 @@ export default function SiddhaPortal() {
         </svg>
       </div>
 
-      {/* ══════════════════════════════════════════════════════════
-          SECTION 1 — SIDDHA MASTERS
-      ══════════════════════════════════════════════════════════ */}
-      <div style={SECTION_TITLE}>
-        <span>📿</span>
-        <span>{t('siddhaPortal.label') || 'SIDDHA LINEAGE'}</span>
-      </div>
-      <div style={{ padding: '0 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-        {masters.map(({ titleKey, subKey, badge, href }, i) => (
-          <MasterCard key={titleKey} titleKey={titleKey} subKey={subKey} badge={badge} href={href} delay={0.05 * i} />
-        ))}
-      </div>
-
       <Divider />
 
       {/* ══════════════════════════════════════════════════════════
@@ -312,16 +299,6 @@ export default function SiddhaPortal() {
         <span>SQI 2050 — ACTIVATED TOOLS</span>
       </div>
 
-      <ToolCard
-        title="Akasha-Neural Weaver"
-        desc="Siddha-Quantum Intelligence interface. Access the Akasha-Neural Archive. Bhakti-Algorithms & Prema-Pulse Transmissions for DNA activation."
-        cta="Activate"
-        href="/akasha-neural-weaver"
-        badge="SQI" isLive
-        accentColor={gold(0.92)}
-        gradientFrom={gold(0.07)} gradientTo={gold(0.02)}
-        delay={0.05}
-      />
       <ToolCard
         title={t('siddhaPortal.photonicNodeTitle') || 'Siddha Photonic Regeneration'}
         desc={t('siddhaPortal.photonicNodeDesc') || 'High-frequency scalar interface for Central Sun entanglement and pineal radiance beaming.'}
@@ -351,16 +328,6 @@ export default function SiddhaPortal() {
         accentColor={pink(0.88)}
         gradientFrom={pink(0.07)} gradientTo={gold(0.02)}
         delay={0.2}
-      />
-      <ToolCard
-        title={t('womanCode.navExplore.title') || 'WomanCode'}
-        desc={t('womanCode.navExplore.sub') || 'Hormonal intelligence, cycle syncing, and feminine Vedic wisdom in one dashboard.'}
-        cta={t('womanCode.navExplore.cta') || 'Open Dashboard'}
-        href="/womancode"
-        badge="SQI"
-        accentColor={pink(0.78)}
-        gradientFrom={pink(0.05)} gradientTo={gold(0.02)}
-        delay={0.25}
       />
       <ToolCard
         title="Aetheric Heliostat"
@@ -436,29 +403,6 @@ export default function SiddhaPortal() {
         delay={0.15}
       />
 
-      {isAdmin && (
-        <div
-          onClick={() => navigate('/admin-quantum-apothecary-2045')}
-          style={{
-            ...CARD_BASE,
-            background: 'linear-gradient(135deg,rgba(255,78,0,0.08),rgba(212,175,55,0.04))',
-            border: '1px solid rgba(255,78,0,0.28)',
-            margin: '0 16px 12px',
-            animation: 'sqFadeUp 0.45s 0.2s ease both',
-          }}
-        >
-          <span style={BADGE('rgba(255,78,0,0.2)', 'rgba(255,78,0,0.4)', 'rgba(255,165,100,0.95)')}>
-            {t('siddhaPortal.adminApothecary2045Badge') || 'ADMIN'}
-          </span>
-          <div style={{ ...CARD_TITLE, color: 'rgba(255,140,90,0.95)' }}>
-            {t('siddhaPortal.adminApothecary2045Title') || 'Admin — Apothecary 2045'}
-          </div>
-          <p style={CARD_DESC}>{t('siddhaPortal.adminApothecary2045Desc') || 'Backend management for Quantum Apothecary sessions and content.'}</p>
-          <button style={{ ...CTA_BTN, color: 'rgba(255,140,90,0.95)' }}>
-            {t('siddhaPortal.adminApothecary2045Cta') || 'Open Admin'} →
-          </button>
-        </div>
-      )}
 
       {/* ── KEYFRAMES ── */}
       <style>{`

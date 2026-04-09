@@ -651,7 +651,7 @@ export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
           <div style={{ display:'inline-block', padding:'2px 10px', borderRadius:999, background:`${T.gg(T.indigo,0.1)}`, border:`1px solid ${T.gg(T.indigo,0.25)}`, fontSize:8, fontWeight:700, color:T.indigo, marginBottom:10 }}>
             {dosha.mentalConstitution}
           </div>
-          <p style={{ fontSize:12, lineHeight:1.7, color:T.w65 }}>{dosha.personalitySummary}</p>
+          <p style={{ fontSize:12, lineHeight:1.7, color:'rgba(255,255,255,0.65)' }}>{dosha.personalitySummary}</p>
         </motion.div>
 
         {/* Rishi's Mirror */}
