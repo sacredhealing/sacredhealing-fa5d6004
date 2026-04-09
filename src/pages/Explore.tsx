@@ -292,10 +292,7 @@ export default function Explore() {
         </div>
       </div>
 
-      {/* ══ VEDIC & WISDOM ══ */}
-      </div>
 
-      {/* ══ VEDIC & WISDOM ══ */}
       <SL label={t('converge.secVedic')} delay="0.26s" />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 16px', animation: 'sqFadeUp 0.4s 0.28s ease both' }}>
         <div onClick={() => navigate('/vedic-astrology')} style={{ gridColumn: 'span 2', background: 'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.22)', borderRadius: 18, padding: '20px 18px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
