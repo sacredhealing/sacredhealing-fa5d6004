@@ -647,7 +647,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   @media(max-width:520px){.archive-grid{grid-template-columns:1fr}}
   .archive-card{background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.1);border-radius:18px;padding:20px 18px;transition:all 0.3s;cursor:pointer}
   .archive-card:hover{border-color:rgba(212,175,55,0.3);background:rgba(212,175,55,0.03);transform:translateY(-2px)}
-  .archive-title{font-weight:800;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.55);display:block;margin-bottom:2px}
+  .archive-title{font-weight:800;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#D4AF37;display:block;margin-bottom:2px}
   .archive-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.75rem;color:rgba(255,255,255,0.25);display:block;line-height:1.5}
   .archive-cta{font-weight:800;font-size:8px;letter-spacing:0.4em;text-transform:uppercase;color:#D4AF37;opacity:0.7}
   .archive-card:hover .archive-cta{opacity:1}
@@ -1119,41 +1119,6 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
       <div className="section-wrap">
         <div className="section-label">{t('profilePage.sectionAkashicArchive')}</div>
         <div className="archive-grid">
-          {hasFeatureAccess(isAdmin, tier, 3) ? (
-          <div className="archive-card" onClick={() => navigate('/akashic-records')}>
-            <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
-              <div style={{width:44,height:44,borderRadius:13,background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.18)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginBottom:14}}>
-                <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
-                  <rect x="5" y="3" width="15" height="20" rx="2" fill="rgba(212,175,55,0.08)" stroke="#D4AF37" strokeWidth="1.4"/>
-                  <path d="M5 6 C5 4.3 3 4.3 3 6 L3 22 C3 23.7 5 23.7 5 22" fill="rgba(212,175,55,0.06)" stroke="rgba(212,175,55,0.5)" strokeWidth="1.2"/>
-                  <line x1="9" y1="9" x2="17" y2="9" stroke="#D4AF37" strokeWidth="1.2" strokeLinecap="round" opacity="0.7"/>
-                  <line x1="9" y1="12" x2="17" y2="12" stroke="#D4AF37" strokeWidth="1.2" strokeLinecap="round" opacity="0.5"/>
-                  <line x1="9" y1="15" x2="14" y2="15" stroke="#D4AF37" strokeWidth="1.2" strokeLinecap="round" opacity="0.3"/>
-                  <circle cx="21" cy="5" r="3" fill="rgba(212,175,55,0.15)" stroke="#D4AF37" strokeWidth="1"/>
-                  <circle cx="21" cy="5" r="1" fill="#D4AF37"/>
-                </svg>
-              </div>
-              <div>
-                <span className="archive-title">{t('profilePage.archiveRecordTitle')}</span>
-                <span className="archive-sub">{t('profilePage.archiveRecordSub')}</span>
-              </div>
-            </div>
-            <span className="archive-cta">{t('profilePage.archiveCtaView')}</span>
-          </div>
-          ) : (
-          <div className="archive-card" onClick={() => navigate('/akasha-infinity')} style={{ opacity: 0.9, borderColor: 'rgba(212,175,55,0.15)' }}>
-            <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
-              <div style={{width:44,height:44,borderRadius:13,background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.18)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginBottom:14,opacity:0.7}}>
-                <Lock size={18} color="rgba(212,175,55,0.5)" />
-              </div>
-              <div>
-                <span className="archive-title">{t('profilePage.archiveRecordTitle')}</span>
-                <span className="archive-sub">{t('profilePage.archiveRecordSubLocked')}</span>
-              </div>
-            </div>
-            <span className="archive-cta">{t('profilePage.archiveCtaUpgradeAkasha')}</span>
-          </div>
-          )}
           <div className="archive-card" onClick={() => navigate('/vedic-astrology')}>
             <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
               <div style={{width:44,height:44,borderRadius:13,background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.18)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginBottom:14}}>
@@ -1173,37 +1138,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             </div>
             <span className="archive-cta">{t('profilePage.archiveCtaEnter')}</span>
           </div>
-          {hasFeatureAccess(isAdmin, tier, 2) ? (
-          <div className="archive-card" onClick={() => navigate('/digital-nadi')}>
-            <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
-              <div style={{width:44,height:44,borderRadius:13,background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.18)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginBottom:14}}>
-                <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
-                  <path d="M2 14 L5 14 L7 8 L9 20 L11 11 L13 17 L15 14 L17 14" stroke="#D4AF37" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M17 14 L19 10 L21 18 L23 14 L26 14" stroke="rgba(212,175,55,0.5)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <line x1="14" y1="4" x2="14" y2="24" stroke="rgba(212,175,55,0.2)" strokeWidth="1" strokeLinecap="round" strokeDasharray="2 3"/>
-                </svg>
-              </div>
-              <div>
-                <span className="archive-title">{t('profilePage.archiveNadiTitle')}</span>
-                <span className="archive-sub">{t('profilePage.archiveNadiSub')}</span>
-              </div>
-            </div>
-            <span className="archive-cta">{t('profilePage.archiveCtaInitiate')}</span>
-          </div>
-          ) : (
-          <div className="archive-card" onClick={() => navigate('/siddha-quantum')} style={{ opacity: 0.9, borderColor: 'rgba(212,175,55,0.15)' }}>
-            <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
-              <div style={{width:44,height:44,borderRadius:13,background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.18)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginBottom:14,opacity:0.7}}>
-                <Lock size={18} color="rgba(212,175,55,0.5)" />
-              </div>
-              <div>
-                <span className="archive-title">{t('profilePage.archiveNadiTitle')}</span>
-                <span className="archive-sub">{t('profilePage.archiveNadiSubLocked')}</span>
-              </div>
-            </div>
-            <span className="archive-cta">{t('profilePage.archiveCtaUpgradeSiddha')}</span>
-          </div>
-          )}
+          {hasFeatureAccess(isAdmin, tier, 3) && (
           <div className="archive-card" onClick={() => navigate('/life-book')}>
             <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
               <div style={{width:44,height:44,borderRadius:13,background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.18)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginBottom:14}}>
@@ -1217,12 +1152,13 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                 </svg>
               </div>
               <div>
-                <span className="archive-title">{t('profilePage.archiveApothecaryTitle')}</span>
-                <span className="archive-sub">{t('profilePage.archiveApothecarySub')}</span>
+                <span className="archive-title">{t('profilePage.archiveLifeBookTitle')}</span>
+                <span className="archive-sub">{t('profilePage.archiveLifeBookSub')}</span>
               </div>
             </div>
             <span className="archive-cta">{t('profilePage.archiveCtaOpenChats')}</span>
           </div>
+          )}
         </div>
       </div>
 
