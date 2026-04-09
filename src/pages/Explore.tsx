@@ -294,23 +294,6 @@ export default function Explore() {
 
       <SL label={t('converge.secVedic')} delay="0.26s" />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 16px', animation: 'sqFadeUp 0.4s 0.28s ease both' }}>
-        <div onClick={() => navigate('/vedic-astrology')} style={{ gridColumn: 'span 2', background: 'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.22)', borderRadius: 18, padding: '20px 18px', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.07),transparent)', animation: 'sqShimmer 5s ease-in-out infinite', pointerEvents: 'none' }} />
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
-              <TI pulse><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><line x1="12" y1="4" x2="12" y2="20" stroke="rgba(212,175,55,0.85)" strokeWidth="1.5"/><path d="M8 5 C8 5 8 9.5 12 9.5 C16 9.5 16 5 16 5" stroke="rgba(212,175,55,0.85)" strokeWidth="1.5" fill="none"/><line x1="8" y1="5" x2="8" y2="8" stroke="rgba(212,175,55,0.58)" strokeWidth="1.3"/><line x1="16" y1="5" x2="16" y2="8" stroke="rgba(212,175,55,0.58)" strokeWidth="1.3"/></svg></TI>
-              <div>
-                <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.65)', marginBottom: 5 }}>{t('converge.vedicOracleTitle')}</div>
-                <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.78rem', color: 'rgba(255,255,255,0.28)' }}>{t('converge.vedicOracleSub')}</div>
-              </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase', background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.24)', color: 'rgba(212,175,55,0.85)', borderRadius: 20, padding: '2px 8px' }}>
-              <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#D4AF37', animation: 'sqLiveFlash 1.8s ease-in-out infinite', display: 'inline-block' }} />{t('converge.badgeLive')}
-            </div>
-          </div>
-          <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.9rem', color: 'rgba(255,255,255,0.44)', lineHeight: 1.62, marginBottom: 12 }}>{t('converge.vedicSampleLine')}</p>
-          <button style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: '#D4AF37', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>{t('converge.vedicOpenReading')}</button>
-        </div>
         {[
           { titleKey: 'converge.wisdomGita' as const, subKey: 'converge.wisdomGitaSub' as const, href: null,              premium: false, svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="14" height="18" rx="2" stroke="rgba(212,175,55,0.8)" strokeWidth="1.4"/><line x1="8" y1="8" x2="16" y2="8" stroke="rgba(212,175,55,0.42)" strokeWidth="1.1"/><line x1="8" y1="11" x2="16" y2="11" stroke="rgba(212,175,55,0.42)" strokeWidth="1.1"/><line x1="8" y1="14" x2="13" y2="14" stroke="rgba(212,175,55,0.42)" strokeWidth="1.1"/></svg> },
         ].map(({ titleKey, subKey, href, premium, svg }) => (
@@ -449,7 +432,7 @@ export default function Explore() {
           <div key={titleKey} onClick={() => navigate(href)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}>
             <div style={{ width: 38, height: 38, flexShrink: 0, borderRadius: '50%', background: iBg, border: `1px solid ${iBd}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{svg}</div>
             <div>
-              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 12.5, fontWeight: 800, color: 'rgba(255,255,255,0.82)', marginBottom: 2 }}>{t(titleKey)}</div>
+              <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 12.5, fontWeight: 800, color: '#D4AF37', marginBottom: 2 }}>{t(titleKey)}</div>
               <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)' }}>{t(subKey)}</div>
             </div>
             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 7 }}>
