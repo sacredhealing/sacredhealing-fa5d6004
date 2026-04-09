@@ -493,7 +493,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   ];
   const theCovenant = [
     { icon: Scale, label: t('settings.legal.title'), sublabel: t('settings.legal.subtitle'), onClick: () => navigate('/legal') },
-    { icon: Settings, label: t('profile.settings'), sublabel: t('profile.appPreferences'), onClick: () => setSettingsOpen(true) },
+    { icon: Settings, label: t('profile.settings.title'), sublabel: t('profile.appPreferences'), onClick: () => setSettingsOpen(true) },
   ];
 
   const langs = useMemo(
@@ -1209,7 +1209,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               <div>
                 <span style={{fontWeight:800,fontSize:7,letterSpacing:'0.4em',
                   textTransform:'uppercase',color:'rgba(212,175,55,0.75)',
-                  display:'block',marginBottom:4}}>{t('profile.language')}</span>
+                  display:'block',marginBottom:4}}>{t('profile.language.label')}</span>
                 <div style={{display:'flex',alignItems:'center',gap:8,fontSize:14,fontWeight:700,color:'#D4AF37'}}>
                   <span style={{fontSize:20}}>{langs[activeLangIdx].flag}</span>
                   <span>{langs[activeLangIdx].label}</span>
@@ -1306,7 +1306,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           <button type="button" className="settings-btn" onClick={() => setPrivacyOpen(true)}>{t('profile.privacy')}</button>
         </div>
         <div className="settings-row">
-          <button type="button" className="settings-btn" onClick={() => setSettingsOpen(true)}>{t('profile.settings')}</button>
+          <button type="button" className="settings-btn" onClick={() => setSettingsOpen(true)}>{t('profile.settings.title')}</button>
         </div>
         <button type="button" className="signout-btn" onClick={handleSignOut}>{t('profile.signOut')}</button>
       </div>
