@@ -1612,10 +1612,10 @@ function ScrollToTopButton() {
    ══════════════════════════════════════════════════════ */
 export default function QuantumApothecary() {
   const { user, isLoading: authLoading } = useAuth();
-  const { tier, loading: membershipLoading } = useMembership();
-  const { isAdmin } = useAdminRole();
+  const { tier, loading: membershipLoading, settled } = useMembership();
+  const { isAdmin, isLoading: adminLoading } = useAdminRole();
 
-  if (authLoading || membershipLoading) {
+  if (authLoading || membershipLoading || adminLoading || !settled) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#050505] text-white">
         <span className="text-[10px] uppercase tracking-[0.5em] text-[#D4AF37]/40">Initializing SQI…</span>
