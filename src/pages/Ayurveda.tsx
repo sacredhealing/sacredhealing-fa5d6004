@@ -7,11 +7,11 @@ import type { AyurvedaMembershipLevel } from '@/lib/ayurvedaTypes';
 
 const Ayurveda = () => {
   const { user, isLoading: authLoading } = useAuth();
-  const { isAdmin } = useAdminRole();
-  const { isPremium, tier, loading: membershipLoading } = useMembership();
+  const { isAdmin, isLoading: adminLoading } = useAdminRole();
+  const { isPremium, tier, loading: membershipLoading, settled } = useMembership();
 
   // Wait for auth and membership to resolve before rendering
-  if (authLoading || membershipLoading) {
+  if (authLoading || membershipLoading || adminLoading || !settled) {
     return (
       <div style={{
         minHeight: '100vh',
