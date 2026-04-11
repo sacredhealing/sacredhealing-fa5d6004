@@ -37,7 +37,7 @@ export default function Explore() {
   const { playUniversalAudio } = useMusicPlayer();
   const { allAudioItems } = useQuickActionItems();
   const { language: meditationLanguage } = useMeditationContentLanguage();
-  const { isPremium, tier } = useMembership();
+  const { isPremium, tier, settled } = useMembership();
   const { user } = useAuth();
   const { hasAccess: hasAkashicAccess } = useAkashicAccess(user?.id);
   const { isAdmin } = useAdminRole();
@@ -115,7 +115,7 @@ export default function Explore() {
       {/* ══ SIDDHA PORTAL GATE ══ */}
       <SL label={t('converge.secSiddhaPortal')} delay="0.04s" />
       <div
-        onClick={() => navigate(hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal) ? '/siddha-portal' : '/siddha-quantum')}
+        onClick={() => navigate('/siddha-portal')}
         style={{ margin: '0 16px', position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg,rgba(212,175,55,0.11) 0%,rgba(212,175,55,0.04) 60%,rgba(0,0,0,0) 100%)', border: '1px solid rgba(212,175,55,0.28)', borderRadius: 22, padding: '22px 18px', cursor: 'pointer', animation: 'sqFadeUp 0.5s 0.06s ease both' }}
       >
         <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.09),transparent)', animation: 'sqShimmer 4s ease-in-out infinite', pointerEvents: 'none' }} />
@@ -143,7 +143,7 @@ export default function Explore() {
             </div>
           ))}
         </div>
-        <button onClick={(e) => { e.stopPropagation(); navigate(hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal) ? '/siddha-portal' : '/siddha-quantum'); }} style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+        <button onClick={(e) => { e.stopPropagation(); navigate('/siddha-portal'); }} style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.5)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
           {hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal) ? t('converge.siddhaEnter') : t('converge.siddhaUnlock')}
         </button>
       </div>
@@ -273,7 +273,7 @@ export default function Explore() {
       {/* ══ SACRED TOOLS ══ */}
       <SL label={t('converge.secSacredTools')} delay="0.18s" />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 16px', animation: 'sqFadeUp 0.4s 0.2s ease both' }}>
-        <div onClick={() => hasFeatureAccess(isAdmin, tier, FEATURE_TIER.quantumApothecary) ? navigate('/quantum-apothecary') : navigate('/akasha-infinity')} style={{ background: 'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.22)', borderRadius: 18, padding: '18px 15px', cursor: 'pointer', position: 'relative', overflow: 'hidden', animation: 'exploreSacredHalo 3.2s ease-in-out infinite' }}>
+        <div onClick={() => navigate('/quantum-apothecary')} style={{ background: 'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.22)', borderRadius: 18, padding: '18px 15px', cursor: 'pointer', position: 'relative', overflow: 'hidden', animation: 'exploreSacredHalo 3.2s ease-in-out infinite' }}>
           <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.07),transparent)', animation: 'sqShimmer 5.5s 1.2s ease-in-out infinite', pointerEvents: 'none' }} />
           <div style={{ position: 'absolute', top: 10, right: 10 }}><Badge label="2050" /></div>
           <TI pulse><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="13" rx="2" stroke="rgba(212,175,55,0.8)" strokeWidth="1.4"/><path d="M8 7 L8 4 C8 3.4 8.4 3 9 3 L15 3 C15.6 3 16 3.4 16 4 L16 7" stroke="rgba(212,175,55,0.55)" strokeWidth="1.2"/><circle cx="12" cy="13" r="2.5" stroke="rgba(212,175,55,0.7)" strokeWidth="1.2"/><line x1="12" y1="10.5" x2="12" y2="8.5" stroke="rgba(212,175,55,0.45)" strokeWidth="1"/></svg></TI>
@@ -281,7 +281,7 @@ export default function Explore() {
           <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{t('converge.toolQuantumSub')}</div>
           <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
         </div>
-        <div onClick={() => hasFeatureAccess(isAdmin, tier, FEATURE_TIER.virtualPilgrimage) ? navigate('/temple-home') : navigate('/akasha-infinity')} style={{ background: 'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.22)', borderRadius: 18, padding: '18px 15px', cursor: 'pointer', position: 'relative', overflow: 'hidden', animation: 'exploreSacredHalo 3.2s ease-in-out infinite' }}>
+        <div onClick={() => navigate('/temple-home')} style={{ background: 'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.22)', borderRadius: 18, padding: '18px 15px', cursor: 'pointer', position: 'relative', overflow: 'hidden', animation: 'exploreSacredHalo 3.2s ease-in-out infinite' }}>
           <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.07),transparent)', animation: 'sqShimmer 5.5s 1.2s ease-in-out infinite', pointerEvents: 'none' }} />
           <div style={{ position: 'absolute', top: 10, right: 10 }}><Badge label="24/7" v="muted" /></div>
           <TI><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="rgba(212,175,55,0.7)" strokeWidth="1.3"/><path d="M12 3 C12 3 8 7 8 12 C8 17 12 21 12 21" stroke="rgba(212,175,55,0.45)" strokeWidth="1.1"/><path d="M12 3 C12 3 16 7 16 12 C16 17 12 21 12 21" stroke="rgba(212,175,55,0.45)" strokeWidth="1.1"/><line x1="3.5" y1="9" x2="20.5" y2="9" stroke="rgba(212,175,55,0.3)" strokeWidth="1"/><line x1="3.5" y1="15" x2="20.5" y2="15" stroke="rgba(212,175,55,0.3)" strokeWidth="1"/></svg></TI>
