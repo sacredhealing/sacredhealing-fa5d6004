@@ -6,11 +6,10 @@ import { Navigate } from 'react-router-dom';
 
 const Vastu = () => {
   const { user, isLoading: authLoading } = useAuth();
-  // useMembership already handles admin check and sets tier='lifetime' + isAdmin=true for admins
-  const { tier, isPremium, loading: membershipLoading, isAdmin, adminGranted } = useMembership();
+  const { tier, isPremium, loading: membershipLoading, isAdmin, adminGranted, settled } = useMembership();
 
   // Wait for auth session AND membership check to complete before any routing decisions
-  if (authLoading || membershipLoading) {
+  if (authLoading || membershipLoading || !settled) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />

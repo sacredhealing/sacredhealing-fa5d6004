@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -45,6 +45,8 @@ function saveToCache(userId: string, data: MembershipStatus) {
 
 export const useMembership = () => {
   const { user, isLoading: authLoading } = useAuth();
+  // Whether we've completed at least one fresh server check this mount
+  const [settled, setSettled] = useState(false);
 
   const getInitialStatus = (): MembershipStatus => {
     if (user) {
@@ -76,6 +78,7 @@ export const useMembership = () => {
         adminGranted: false,
         isAdmin: false,
       });
+      setSettled(true);
       return;
     }
 
@@ -103,6 +106,7 @@ export const useMembership = () => {
         };
         saveToCache(user.id, adminStatus);
         setStatus(adminStatus);
+        setSettled(true);
         return;
       }
 
@@ -111,6 +115,7 @@ export const useMembership = () => {
       if (error) {
         console.error('Error checking membership:', error);
         setStatus(prev => ({ ...prev, loading: false }));
+        setSettled(true);
         return;
       }
 
@@ -127,6 +132,8 @@ export const useMembership = () => {
     } catch (error) {
       console.error('Error checking membership:', error);
       setStatus(prev => ({ ...prev, loading: false }));
+    } finally {
+      setSettled(true);
     }
   }, [user, authLoading]);
 
@@ -157,6 +164,7 @@ export const useMembership = () => {
   return {
     ...status,
     isPremium,
+    settled,
     refresh: checkSubscription,
   };
 };
