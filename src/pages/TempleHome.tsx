@@ -965,8 +965,8 @@ function TempleHomeInner() {
 // ─── Gate + Error boundary ────────────────────────────────────────────────────
 export default function TempleHome() {
   const { user, isLoading: authLoading } = useAuth();
-  const { tier, loading: membershipLoading } = useMembership();
-  const { isAdmin } = useAdminRole();
+  const { tier, loading: membershipLoading, settled } = useMembership();
+  const { isAdmin, isLoading: adminLoading } = useAdminRole();
 
   // Ensure Jyotish hook runs fresh (prevents stale cross-user context bleeding into Nexus messaging)
   useJyotishProfile();
@@ -977,7 +977,7 @@ export default function TempleHome() {
     sessionStorage.removeItem('sqi_last_message');
   }, []);
 
-  if (authLoading || membershipLoading) return (
+  if (authLoading || membershipLoading || adminLoading || !settled) return (
     <div className="flex min-h-screen items-center justify-center bg-[#050505]">
       <div className="h-8 w-8 rounded-full border-2 border-[#D4AF37]/20 border-t-[#D4AF37]/80 animate-spin" />
     </div>

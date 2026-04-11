@@ -1187,10 +1187,10 @@ function DigitalNadiInner() {
 // ─── EXPORT with membership/admin gating (UNCHANGED) ─────────────────────────
 export default function DigitalNadi() {
   const { user, isLoading: authLoading } = useAuth();
-  const { tier, loading: membershipLoading } = useMembership();
-  const { isAdmin } = useAdminRole();
+  const { tier, loading: membershipLoading, settled } = useMembership();
+  const { isAdmin, isLoading: adminLoading } = useAdminRole();
 
-  if (authLoading || membershipLoading) {
+  if (authLoading || membershipLoading || adminLoading || !settled) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#050505] text-white">
         <span className="text-sm uppercase tracking-[0.3em] text-white/40">

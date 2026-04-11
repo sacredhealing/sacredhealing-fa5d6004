@@ -234,15 +234,15 @@ const OracleCard = ({ title, desc, cta, href, isLive, delay = 0 }: OracleCardPro
 export default function SiddhaPortal() {
   const navigate  = useNavigate();
   const { t }     = useTranslation();
-  const { tier, loading } = useMembership();
-  const { isAdmin }       = useAdminRole();
+  const { tier, loading, settled } = useMembership();
+  const { isAdmin, isLoading: adminLoading } = useAdminRole();
 
   // Only admin + Akasha-Infinity (rank 3) can access
   useEffect(() => {
-    if (!loading && !hasFeatureAccess(isAdmin, tier, 3)) {
+    if (!loading && settled && !adminLoading && !hasFeatureAccess(isAdmin, tier, 3)) {
       navigate('/akasha-infinity');
     }
-  }, [isAdmin, tier, loading, navigate]);
+  }, [isAdmin, tier, loading, settled, adminLoading, navigate]);
 
 
   return (
