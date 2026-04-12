@@ -4151,6 +4151,7 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           birth_date: string | null
+          birth_nakshatra: string | null
           birth_name: string | null
           birth_place: string | null
           birth_time: string | null
@@ -4183,6 +4184,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
+          birth_nakshatra?: string | null
           birth_name?: string | null
           birth_place?: string | null
           birth_time?: string | null
@@ -4215,6 +4217,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
+          birth_nakshatra?: string | null
           birth_name?: string | null
           birth_place?: string | null
           birth_time?: string | null
