@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from './useAuth';
 import { useAIVedicReading } from './useAIVedicReading';
+import { calculateMoonNakshatra } from '@/lib/vedicCalculations';
 import { supabase } from '@/integrations/supabase/client';
 import type { UserProfile } from '@/lib/vedicTypes';
 
