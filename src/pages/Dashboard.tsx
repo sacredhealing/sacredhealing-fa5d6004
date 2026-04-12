@@ -478,7 +478,7 @@ const Dashboard: React.FC = () => {
               {t('dashboard.receiveTransmission')}
             </button>
           </div>
-
+  const { doshaProfile } = useAyurvedaAnalysis();
 
           {/* ══ ZONE 3: COSMIC STRIP — links to /vedic-astrology ══ */}
           <div
