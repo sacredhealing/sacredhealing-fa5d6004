@@ -1,0 +1,1 @@
+UPDATE public.profiles SET birth_nakshatra = 'Pushya' WHERE user_id = 'bd0b21c9-577a-450b-bb1e-196e02c4388c' AND birth_nakshatra IS NULL;
