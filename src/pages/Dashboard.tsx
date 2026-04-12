@@ -108,7 +108,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const jyotish = useJyotishProfile();
-
+  const { doshaProfile } = useAyurvedaAnalysis();
   const { profile: userProfile } = useProfile();
   const { isPremium, tier } = useMembership();
   const { isAdmin } = useAdminRole();
