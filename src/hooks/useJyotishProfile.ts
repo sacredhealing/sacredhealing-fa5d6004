@@ -274,6 +274,15 @@ export function useJyotishProfile(): JyotishProfile {
 
     if (!derivedBirthNakshatra) return;
 
+    // Persist to profiles table if not already stored
+    if (birthData && !birthData.birth_nakshatra) {
+      (supabase as any)
+        .from('profiles')
+        .update({ birth_nakshatra: derivedBirthNakshatra })
+        .eq('user_id', authUser.id)
+        .then(() => {});
+    }
+
     const birthCacheKey = getBirthCacheKey(authUser.id);
     if (!birthCacheKey) return;
 
@@ -285,7 +294,7 @@ export function useJyotishProfile(): JyotishProfile {
 
     localStorage.setItem(birthCacheKey, JSON.stringify(nextBirthData));
     setBirthData((prev) => ({ ...(prev || {}), birth_nakshatra: derivedBirthNakshatra }));
-  }, [authUser?.id, reading]);
+  }, [authUser?.id, reading, birthData]);
 
   // Pull birth details from the current user's profile and keep a local birth cache for deterministic dasha math.
   useEffect(() => {
