@@ -555,8 +555,8 @@ const Dashboard: React.FC = () => {
               </svg>
               <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' as const, color: '#D4AF37', marginBottom: 4 }}>{t('dashboard.portalsAyurveda')}</div>
               <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 11, fontWeight: 400, color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>
-                {(vedicReading as unknown as { ayurvedicProfile?: { dominantDosha?: string } })?.ayurvedicProfile?.dominantDosha
-                  ? t('dashboard.ayurvedaDominance', { dosha: (vedicReading as unknown as { ayurvedicProfile: { dominantDosha: string } }).ayurvedicProfile.dominantDosha })
+                {(doshaProfile?.primary || jyotish.primaryDosha)
+                  ? t('dashboard.ayurvedaDominance', { dosha: doshaProfile?.primary || jyotish.primaryDosha })
                   : t('dashboard.ayurvedaBioScan')}
               </div>
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
