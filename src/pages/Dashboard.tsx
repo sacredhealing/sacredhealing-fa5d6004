@@ -539,7 +539,7 @@ const Dashboard: React.FC = () => {
               onClick={() => hasFeatureAccess(isAdmin, tier, FEATURE_TIER.ayurveda) ? navigate('/ayurveda') : navigate('/prana-flow')}
               doshaBorderColor={
                 (() => {
-                  const dosha = (vedicReading as unknown as { ayurvedicProfile?: { dominantDosha?: string } })?.ayurvedicProfile?.dominantDosha?.toLowerCase();
+                  const dosha = doshaProfile?.primary?.toLowerCase() || jyotish.primaryDosha?.toLowerCase();
                   if (dosha === 'vata') return '147,197,253';
                   if (dosha === 'pitta') return '248,113,113';
                   if (dosha === 'kapha') return '74,222,128';
