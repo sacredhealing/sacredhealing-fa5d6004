@@ -6,6 +6,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { useHoraWatch } from '@/hooks/useHoraWatch';
 import { useAIVedicReading } from '@/hooks/useAIVedicReading';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
+import { useAyurvedaAnalysis } from '@/hooks/useAyurvedaAnalysis';
 import { supabase } from '@/integrations/supabase/client';
 import type { UserProfile } from '@/lib/vedicTypes';
 import { useDailyGuidance } from '@/hooks/useDailyGuidance';
@@ -107,7 +108,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const jyotish = useJyotishProfile();
-
+  const { doshaProfile } = useAyurvedaAnalysis();
   const { profile: userProfile } = useProfile();
   const { isPremium, tier } = useMembership();
   const { isAdmin } = useAdminRole();
@@ -523,8 +524,8 @@ const Dashboard: React.FC = () => {
                   </div>
                   <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' as const, color: '#D4AF37', marginBottom: 6 }}>{t('dashboard.vedicOracle')}</div>
                   <p style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 11, fontWeight: 400, color: 'rgba(255,255,255,0.55)', lineHeight: 1.5, margin: '0 0 10px' }}>
-                    {vedicReading?.personalCompass?.currentDasha
-                      ? t('dashboard.vedicTileBodyWithDasha', { dasha: dashaCycle ?? '' })
+                    {dashaCycle
+                      ? t('dashboard.vedicTileBodyWithDasha', { dasha: dashaCycle })
                       : t('dashboard.vedicTileBodyAwait')}
                   </p>
                   <button style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase' as const, color: '#D4AF37', background: 'none', border: 'none', cursor: 'pointer' }}>{t('dashboard.openJyotish')}</button>
@@ -538,7 +539,7 @@ const Dashboard: React.FC = () => {
               onClick={() => hasFeatureAccess(isAdmin, tier, FEATURE_TIER.ayurveda) ? navigate('/ayurveda') : navigate('/prana-flow')}
               doshaBorderColor={
                 (() => {
-                  const dosha = (vedicReading as unknown as { ayurvedicProfile?: { dominantDosha?: string } })?.ayurvedicProfile?.dominantDosha?.toLowerCase();
+                  const dosha = doshaProfile?.primary?.toLowerCase() || jyotish.primaryDosha?.toLowerCase();
                   if (dosha === 'vata') return '147,197,253';
                   if (dosha === 'pitta') return '248,113,113';
                   if (dosha === 'kapha') return '74,222,128';
@@ -554,8 +555,8 @@ const Dashboard: React.FC = () => {
               </svg>
               <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' as const, color: '#D4AF37', marginBottom: 4 }}>{t('dashboard.portalsAyurveda')}</div>
               <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 11, fontWeight: 400, color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>
-                {(vedicReading as unknown as { ayurvedicProfile?: { dominantDosha?: string } })?.ayurvedicProfile?.dominantDosha
-                  ? t('dashboard.ayurvedaDominance', { dosha: (vedicReading as unknown as { ayurvedicProfile: { dominantDosha: string } }).ayurvedicProfile.dominantDosha })
+                {(doshaProfile?.primary || jyotish.primaryDosha)
+                  ? t('dashboard.ayurvedaDominance', { dosha: doshaProfile?.primary || jyotish.primaryDosha })
                   : t('dashboard.ayurvedaBioScan')}
               </div>
               <span style={{ position: 'absolute', bottom: 13, right: 13, color: 'rgba(212,175,55,0.25)', fontSize: 11 }}>→</span>
