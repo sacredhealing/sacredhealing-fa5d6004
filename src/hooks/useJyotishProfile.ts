@@ -302,7 +302,7 @@ export function useJyotishProfile(): JyotishProfile {
       try {
         const { data } = await (supabase as any)
           .from('profiles')
-          .select('birth_name, birth_date, birth_time, birth_place')
+          .select('birth_name, birth_date, birth_time, birth_place, birth_nakshatra')
           .eq('user_id', authUser.id)
           .maybeSingle();
 
@@ -314,6 +314,7 @@ export function useJyotishProfile(): JyotishProfile {
               birth_date: data.birth_date ?? null,
               birth_time: data.birth_time ?? null,
               birth_place: data.birth_place ?? null,
+              birth_nakshatra: data.birth_nakshatra ?? null,
             }
           : null;
 
