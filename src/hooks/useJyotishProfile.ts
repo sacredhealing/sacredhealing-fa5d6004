@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from './useAuth';
 import { useAIVedicReading } from './useAIVedicReading';
+import { calculateMoonNakshatra } from '@/lib/vedicCalculations';
 import { supabase } from '@/integrations/supabase/client';
 import type { UserProfile } from '@/lib/vedicTypes';
 
@@ -274,6 +275,15 @@ export function useJyotishProfile(): JyotishProfile {
 
     if (!derivedBirthNakshatra) return;
 
+    // Persist to profiles table if not already stored
+    if (birthData && !birthData.birth_nakshatra) {
+      (supabase as any)
+        .from('profiles')
+        .update({ birth_nakshatra: derivedBirthNakshatra })
+        .eq('user_id', authUser.id)
+        .then(() => {});
+    }
+
     const birthCacheKey = getBirthCacheKey(authUser.id);
     if (!birthCacheKey) return;
 
@@ -285,7 +295,7 @@ export function useJyotishProfile(): JyotishProfile {
 
     localStorage.setItem(birthCacheKey, JSON.stringify(nextBirthData));
     setBirthData((prev) => ({ ...(prev || {}), birth_nakshatra: derivedBirthNakshatra }));
-  }, [authUser?.id, reading]);
+  }, [authUser?.id, reading, birthData]);
 
   // Pull birth details from the current user's profile and keep a local birth cache for deterministic dasha math.
   useEffect(() => {
@@ -302,7 +312,7 @@ export function useJyotishProfile(): JyotishProfile {
       try {
         const { data } = await (supabase as any)
           .from('profiles')
-          .select('birth_name, birth_date, birth_time, birth_place')
+          .select('birth_name, birth_date, birth_time, birth_place, birth_nakshatra')
           .eq('user_id', authUser.id)
           .maybeSingle();
 
@@ -314,6 +324,7 @@ export function useJyotishProfile(): JyotishProfile {
               birth_date: data.birth_date ?? null,
               birth_time: data.birth_time ?? null,
               birth_place: data.birth_place ?? null,
+              birth_nakshatra: data.birth_nakshatra ?? null,
             }
           : null;
 
@@ -382,7 +393,7 @@ export function useJyotishProfile(): JyotishProfile {
     // ── AUTHORITATIVE: compute from birth data, IGNORE AI text ──
     const birthDateStr = cachedBirth?.birth_date ?? '';
     const rawReading = reading as any;
-    const moonNakshatra = normalizeNakshatraName(
+    let moonNakshatra = normalizeNakshatraName(
       String(
         cachedBirth?.birth_nakshatra ||
           cachedBirth?.nakshatra ||
@@ -392,6 +403,14 @@ export function useJyotishProfile(): JyotishProfile {
           ''
       )
     );
+
+    // Fallback: approximate nakshatra from birth date if AI didn't provide it
+    if (!moonNakshatra && birthDateStr) {
+      const birthDate = new Date(birthDateStr);
+      if (!Number.isNaN(birthDate.getTime())) {
+        moonNakshatra = calculateMoonNakshatra(birthDate);
+      }
+    }
 
     const rawMoonDegree =
       rawReading?.natalChart?.moonDegree ??
