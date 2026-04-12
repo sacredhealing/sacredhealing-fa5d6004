@@ -524,8 +524,8 @@ const Dashboard: React.FC = () => {
                   </div>
                   <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' as const, color: '#D4AF37', marginBottom: 6 }}>{t('dashboard.vedicOracle')}</div>
                   <p style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 11, fontWeight: 400, color: 'rgba(255,255,255,0.55)', lineHeight: 1.5, margin: '0 0 10px' }}>
-                    {vedicReading?.personalCompass?.currentDasha
-                      ? t('dashboard.vedicTileBodyWithDasha', { dasha: dashaCycle ?? '' })
+                    {dashaCycle
+                      ? t('dashboard.vedicTileBodyWithDasha', { dasha: dashaCycle })
                       : t('dashboard.vedicTileBodyAwait')}
                   </p>
                   <button style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase' as const, color: '#D4AF37', background: 'none', border: 'none', cursor: 'pointer' }}>{t('dashboard.openJyotish')}</button>
