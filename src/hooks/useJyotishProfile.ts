@@ -393,7 +393,7 @@ export function useJyotishProfile(): JyotishProfile {
     // ── AUTHORITATIVE: compute from birth data, IGNORE AI text ──
     const birthDateStr = cachedBirth?.birth_date ?? '';
     const rawReading = reading as any;
-    const moonNakshatra = normalizeNakshatraName(
+    let moonNakshatra = normalizeNakshatraName(
       String(
         cachedBirth?.birth_nakshatra ||
           cachedBirth?.nakshatra ||
@@ -403,6 +403,14 @@ export function useJyotishProfile(): JyotishProfile {
           ''
       )
     );
+
+    // Fallback: approximate nakshatra from birth date if AI didn't provide it
+    if (!moonNakshatra && birthDateStr) {
+      const birthDate = new Date(birthDateStr);
+      if (!Number.isNaN(birthDate.getTime())) {
+        moonNakshatra = calculateMoonNakshatra(birthDate);
+      }
+    }
 
     const rawMoonDegree =
       rawReading?.natalChart?.moonDegree ??
