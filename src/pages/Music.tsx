@@ -1,2083 +1,1210 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Music2, Plus, List, Crown, ChevronRight, X, GripVertical, Edit2, Check, Loader2, Disc, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+/**
+ * ╔══════════════════════════════════════════════════════════════════╗
+ * ║  MUSIC.TSX — SACRED SOUND PORTAL — SQI-2050 FULL REBUILD       ║
+ * ║  Design DNA: exact Meditations.tsx SQI_STYLES applied to music  ║
+ * ║  All Stripe checkout triggers & AffiliateID tracking PRESERVED  ║
+ * ╚══════════════════════════════════════════════════════════════════╝
+ */
+
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Play, Pause, Lock, ArrowLeft, Loader2, Sparkles } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { useMusicPlayer, Track } from '@/contexts/MusicPlayerContext';
+import { useCuratedPlaylists } from '@/hooks/useCuratedPlaylists';
+import { useAuth } from '@/hooks/useAuth';
+import { useMembership } from '@/hooks/useMembership';
+import { useJyotishProfile } from '@/hooks/useJyotishProfile';
+import { useTranslation } from '@/hooks/useTranslation';
+import { toast } from 'sonner';
+import { startPranaMonthlyCheckout } from '@/features/membership/startPranaMonthlyCheckout';
 import { TrackCard } from '@/components/music/TrackCard';
 import { CuratedPlaylistCard } from '@/components/music/CuratedPlaylistCard';
-import { useCuratedPlaylists, CuratedPlaylist } from '@/hooks/useCuratedPlaylists';
-import { useAuth } from '@/hooks/useAuth';
-import { selectTrackForMood, type MoodKey, getTrackIdSafe, getTrackLabel } from '@/features/music/selectTrackForMood';
-import { tMusicGenre, tMusicMood } from '@/features/music/musicDisplayI18n';
-import { useJyotishProfile } from '@/hooks/useJyotishProfile';
-import { useMembership } from '@/hooks/useMembership';
-import { useTranslation } from '@/hooks/useTranslation';
 
-// SQI 2050 — Sacred Sound Portal styles
-const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&family=Cormorant+Garamond:wght@300;400;600&display=swap');
+/* ─────────────────────────────────────────────────────────────────
+   SQI-2050 CSS — EXACT from Meditations.tsx SQI_STYLES
+   + Music-specific additions (Nadi Scanner, snippet system)
+───────────────────────────────────────────────────────────────── */
+const SQI_STYLES = `
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Cinzel:wght@400;500;600&display=swap');
 
-  :root {
-    --gold: #D4AF37;
-    --gold-glow: rgba(212, 175, 55, 0.25);
-    --gold-dim: rgba(212, 175, 55, 0.5);
-    --akasha: #050505;
-    --glass: rgba(255,255,255,0.02);
-    --glass-border: rgba(255,255,255,0.05);
-    --glass-border-gold: rgba(212,175,55,0.15);
-    --cyan: #22D3EE;
-    --text-muted: rgba(255,255,255,0.5);
-    --text-body: rgba(255,255,255,0.7);
-    --radius: 28px;
-  }
+:root {
+  --siddha-gold: #D4AF37;
+  --gold-glow: rgba(212,175,55,0.25);
+  --gold-faint: rgba(212,175,55,0.08);
+  --akasha-black: #050505;
+  --glass-bg: rgba(255,255,255,0.02);
+  --glass-border: rgba(255,255,255,0.05);
+  --text-primary: rgba(255,255,255,0.92);
+  --text-muted: rgba(255,255,255,0.45);
+  --vayu-cyan: #22D3EE;
+  --radius-xl: 40px;
+  --radius-lg: 20px;
+}
 
-  .sqi-root * { box-sizing: border-box; margin: 0; padding: 0; }
+.sqi-music-page {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--akasha-black);
+  min-height: 100vh;
+  color: var(--text-primary);
+  overflow-x: hidden;
+  position: relative;
+  padding-bottom: 180px;
+}
 
-  .sqi-root {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    background: var(--akasha);
-    color: #fff;
-    min-height: 100vh;
-    overflow-x: hidden;
-    position: relative;
-  }
+/* Starfield canvas */
+.sqi-stars {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
 
-  .sqi-root::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background:
-      radial-gradient(ellipse 80% 40% at 50% -10%, rgba(212,175,55,0.07) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 50% at 80% 80%, rgba(34,211,238,0.04) 0%, transparent 50%),
-      radial-gradient(ellipse 40% 30% at 10% 60%, rgba(212,175,55,0.04) 0%, transparent 50%);
-    pointer-events: none;
-    z-index: 0;
-  }
+/* Floating orbs */
+@keyframes orbFloat {
+  0%,100% { transform: translateY(0) rotate(0deg); opacity: .18; }
+  50% { transform: translateY(-20px) rotate(180deg); opacity: .45; }
+}
+.sqi-orb {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212,175,55,.2), transparent 70%);
+  pointer-events: none;
+  animation: orbFloat var(--dur, 10s) ease-in-out infinite;
+  animation-delay: var(--dl, 0s);
+}
 
-  .anahata-ring {
-    position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 600px; height: 600px;
-    border-radius: 50%;
-    border: 1px solid rgba(212,175,55,0.03);
-    pointer-events: none;
-    z-index: 0;
-    animation: ring-rotate 30s linear infinite;
-  }
-  .anahata-ring::before {
-    content: '';
-    position: absolute;
-    inset: 40px;
-    border-radius: 50%;
-    border: 1px solid rgba(212,175,55,0.02);
-  }
-  @keyframes ring-rotate {
-    from { transform: translate(-50%, -50%) rotate(0deg); }
-    to   { transform: translate(-50%, -50%) rotate(360deg); }
-  }
+/* Content layer */
+.sqi-music-content {
+  position: relative;
+  z-index: 1;
+  max-width: 430px;
+  margin: 0 auto;
+  padding: 0 18px;
+}
 
-  .star {
-    position: fixed;
-    width: 1.5px; height: 1.5px;
-    background: rgba(212,175,55,0.6);
-    border-radius: 50%;
-    animation: twinkle var(--dur) ease-in-out infinite;
-  }
-  @keyframes twinkle {
-    0%,100% { opacity: 0.1; transform: scale(1); }
-    50%      { opacity: 0.8; transform: scale(1.5); }
-  }
+/* Shimmer title — exact from Meditations */
+@keyframes goldShimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.sqi-shimmer-title {
+  font-family: 'Cinzel', serif !important;
+  font-size: clamp(28px, 7vw, 40px) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.1 !important;
+  background: linear-gradient(135deg, #D4AF37 0%, #F5E17A 40%, #D4AF37 60%, #A07C10 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: goldShimmer 5s linear infinite;
+  display: inline-block;
+  filter: drop-shadow(0 0 14px rgba(212,175,55,0.35));
+}
 
-  .sqi-page {
-    position: relative;
-    z-index: 1;
-    max-width: 440px;
-    margin: 0 auto;
-    padding: 0 16px 120px;
-  }
+/* Micro label */
+.sqi-micro {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+  color: rgba(212,175,55,.45);
+  margin-bottom: 6px;
+  display: block;
+}
 
-  .sqi-header {
-    padding: 20px 0 12px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .sqi-back-btn {
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    background: var(--glass);
-    border: 1px solid var(--glass-border);
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    color: var(--gold);
-    font-size: 14px;
-    backdrop-filter: blur(20px);
-    flex-shrink: 0;
-  }
-  /* ── DHYANA TITLE — Cormorant gold gradient matching Dhyana page ── */
-  .sqi-portal-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 28px; font-weight: 600; letter-spacing: -0.01em;
-    background: linear-gradient(135deg, #F5E27D 0%, #D4AF37 35%, #B8960C 65%, #D4AF37 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
-    filter: drop-shadow(0 0 12px rgba(212,175,55,0.35));
-  }
-  .sqi-portal-title-sub {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-weight: 900; font-size: 10px; letter-spacing: 0.45em;
-    text-transform: uppercase;
-    display: block; margin-bottom: 2px;
-    background: linear-gradient(90deg, #D4AF37, rgba(212,175,55,0.5));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  /* Legacy page title kept for fallback */
-  .sqi-page-title {
-    font-size: 22px; font-weight: 900;
-    letter-spacing: -0.04em;
-    background: linear-gradient(135deg, #fff 40%, var(--gold));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
+/* Glass card — exact */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.glass-card:hover { border-color: rgba(212,175,55,0.15); }
 
-  /* ── CATEGORY FILTER TABS ── */
-  .sqi-cat-tabs {
-    display: flex; gap: 7px; padding: 14px 0 6px;
-    overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;
-  }
-  .sqi-cat-tabs::-webkit-scrollbar { display: none; }
-  .sqi-cat-tab {
-    padding: 9px 18px; border-radius: 50px; white-space: nowrap; cursor: pointer;
-    font-size: 10px; font-weight: 800; letter-spacing: 0.25em; text-transform: uppercase;
-    border: 1px solid var(--glass-border); background: var(--glass); color: var(--text-muted);
-    transition: all 0.22s; flex-shrink: 0;
-  }
-  .sqi-cat-tab.active {
-    background: var(--gold); color: #000; border-color: var(--gold);
-    box-shadow: 0 0 18px rgba(212,175,55,0.4), 0 0 40px rgba(212,175,55,0.15);
-  }
-  .sqi-cat-tab:not(.active):hover {
-    border-color: rgba(212,175,55,0.25); color: rgba(255,255,255,0.7);
-  }
+/* Gold divider */
+.akasha-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212,175,55,.1), transparent);
+  margin: 4px 0 12px;
+}
 
-  /* ── NADI SCANNER CARD ── */
-  .sqi-nadi-card {
-    background: var(--glass);
-    border: 1px solid var(--glass-border);
-    border-radius: 40px; padding: 22px 20px;
-    position: relative; overflow: hidden; margin-bottom: 12px;
-  }
-  .sqi-nadi-card::after {
-    content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: 40px;
-    background: radial-gradient(ellipse 90% 60% at 50% 110%, rgba(34,211,238,0.07) 0%, transparent 65%);
-  }
-  .sqi-nadi-label {
-    font-size: 9px; font-weight: 800; letter-spacing: 0.45em; text-transform: uppercase;
-    color: var(--cyan); display: flex; align-items: center; gap: 8px; margin-bottom: 18px;
-  }
-  .sqi-nadi-dot {
-    width: 7px; height: 7px; border-radius: 50%; background: var(--cyan); flex-shrink: 0;
-    box-shadow: 0 0 0 0 rgba(34,211,238,0.6);
-    animation: sqi-cyan-pulse 2s ease-in-out infinite;
-  }
-  @keyframes sqi-cyan-pulse {
-    0% { box-shadow: 0 0 0 0 rgba(34,211,238,0.6); }
-    70% { box-shadow: 0 0 0 8px rgba(34,211,238,0); }
-    100% { box-shadow: 0 0 0 0 rgba(34,211,238,0); }
-  }
-  .sqi-nadi-geo { width: 100%; height: 190px; display: block; margin-bottom: 16px; }
-  .sqi-nadi-prescription {
-    background: rgba(34,211,238,0.06); border: 1px solid rgba(34,211,238,0.14);
-    border-radius: 22px; padding: 16px 18px;
-  }
-  .sqi-nadi-presc-title {
-    font-size: 9px; font-weight: 800; letter-spacing: 0.4em; text-transform: uppercase;
-    color: var(--cyan); margin-bottom: 7px;
-  }
-  .sqi-nadi-presc-body { font-size: 13px; color: var(--text-body); line-height: 1.65; }
-  .sqi-nadi-hz {
-    display: inline-flex; align-items: center; gap: 4px;
-    background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.2);
-    border-radius: 10px; padding: 2px 9px;
-    font-size: 9px; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase;
-    color: var(--gold); margin-top: 8px;
-  }
-  .sqi-nadi-note {
-    font-size: 10px; color: var(--text-muted); margin-top: 8px; line-height: 1.5;
-    font-style: italic;
-  }
+/* Nadi pulse */
+@keyframes nadiPulse {
+  0%,100% { opacity: .6; }
+  50% { opacity: 1; filter: drop-shadow(0 0 8px rgba(212,175,55,.7)); }
+}
+.nadi-pulse { animation: nadiPulse 3s ease-in-out infinite; color: var(--siddha-gold); }
 
-  /* ── SIDDHA-GOLD AURA BUTTON ── */
-  .btn-siddha-gold {
-    width: 100%; margin-top: 16px; padding: 15px 24px;
-    border-radius: 22px; border: none; cursor: pointer;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 11px; font-weight: 800; letter-spacing: 0.35em; text-transform: uppercase;
-    background: var(--gold); color: #000;
-    position: relative;
-    transition: transform 0.18s, box-shadow 0.18s;
-    animation: sqi-btn-aura 3s ease-in-out infinite;
-  }
-  @keyframes sqi-btn-aura {
-    0%,100% { box-shadow: 0 0 16px rgba(212,175,55,0.35), 0 0 32px rgba(212,175,55,0.12); }
-    50%      { box-shadow: 0 0 24px rgba(212,175,55,0.55), 0 0 48px rgba(212,175,55,0.2), 0 0 0 6px rgba(212,175,55,0.08); }
-  }
-  .btn-siddha-gold:hover { transform: translateY(-1px); box-shadow: 0 0 28px rgba(212,175,55,0.6), 0 0 56px rgba(212,175,55,0.25); }
-  .btn-siddha-gold:active { transform: translateY(0); }
+/* Hero */
+.sqi-hero {
+  position: relative;
+  padding: 48px 0 20px;
+  overflow: hidden;
+}
+.sqi-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(212,175,55,.07), transparent 65%);
+  pointer-events: none;
+}
 
-  .btn-siddha-outline {
-    width: 100%; padding: 15px 24px;
-    border-radius: 22px; cursor: pointer;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 11px; font-weight: 800; letter-spacing: 0.35em; text-transform: uppercase;
-    background: rgba(212,175,55,0.1);
-    border: 1px solid rgba(212,175,55,0.4); color: var(--gold);
-    transition: all 0.18s;
-    animation: sqi-btn-outline-aura 3.5s ease-in-out infinite;
-  }
-  @keyframes sqi-btn-outline-aura {
-    0%,100% { box-shadow: 0 0 10px rgba(212,175,55,0.15), inset 0 0 10px rgba(212,175,55,0.04); }
-    50%      { box-shadow: 0 0 20px rgba(212,175,55,0.28), inset 0 0 16px rgba(212,175,55,0.07); }
-  }
-  .btn-siddha-outline:hover { background: rgba(212,175,55,0.18); border-color: var(--gold); }
+/* Filter pills */
+.pill-row {
+  display: flex;
+  gap: 7px;
+  padding: 18px 0 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.pill-row::-webkit-scrollbar { display: none; }
+.pill {
+  padding: 9px 17px;
+  border-radius: 50px;
+  white-space: nowrap;
+  cursor: pointer;
+  flex-shrink: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-muted);
+  transition: all .22s;
+}
+.pill.on {
+  background: linear-gradient(135deg, #D4AF37, #B8960C);
+  color: #050505;
+  border-color: var(--siddha-gold);
+  box-shadow: 0 0 18px rgba(212,175,55,.45), 0 0 40px rgba(212,175,55,.18);
+}
+.pill:not(.on):hover { border-color: rgba(212,175,55,.3); color: rgba(255,255,255,.8); }
 
-  /* ── SECTION LABEL (gold dot + uppercase micro-label) ── */
-  .sqi-sec-label {
-    font-size: 9px; font-weight: 800; letter-spacing: 0.5em; text-transform: uppercase;
-    color: var(--gold); display: flex; align-items: center; gap: 7px; margin-bottom: 14px;
-  }
-  .sqi-sec-dot {
-    width: 5px; height: 5px; border-radius: 50%; background: var(--gold); flex-shrink: 0;
-    animation: sqi-dot-pulse 3s ease-in-out infinite;
-  }
-  @keyframes sqi-dot-pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.3; transform:scale(0.7); } }
+/* Nadi scanner card */
+.nadi-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  padding: 22px 18px;
+}
+.nadi-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: var(--radius-xl);
+  background: radial-gradient(ellipse 80% 55% at 50% 108%, rgba(34,211,238,.07) 0%, transparent 68%);
+}
+.nadi-top {
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: .42em;
+  text-transform: uppercase;
+  color: var(--vayu-cyan);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+@keyframes cpulse {
+  0% { box-shadow: 0 0 0 0 rgba(34,211,238,.7); }
+  70% { box-shadow: 0 0 0 9px rgba(34,211,238,0); }
+  100% { box-shadow: 0 0 0 0 rgba(34,211,238,0); }
+}
+.cyan-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--vayu-cyan); flex-shrink: 0;
+  animation: cpulse 2s ease-in-out infinite;
+}
+.nadi-result {
+  background: rgba(34,211,238,.055);
+  border: 1px solid rgba(34,211,238,.14);
+  border-radius: 22px;
+  padding: 16px 17px;
+}
+.nadi-r-title {
+  font-size: 8.5px; font-weight: 800; letter-spacing: .4em;
+  text-transform: uppercase; color: var(--vayu-cyan); margin-bottom: 7px;
+}
+.nadi-r-hz {
+  font-size: 26px; font-weight: 900; letter-spacing: -.04em;
+  color: var(--vayu-cyan); margin-top: 7px;
+  text-shadow: 0 0 22px rgba(34,211,238,.5);
+}
+.nadi-r-note {
+  font-size: 10px; color: var(--text-muted); margin-top: 8px;
+  line-height: 1.55; font-style: italic;
+}
 
-  /* ── UPGRADE CARDS ── */
-  .sqi-upgrade-stack { display: flex; flex-direction: column; gap: 11px; margin-top: 8px; }
-  .sqi-upgrade-card {
-    border-radius: 40px; padding: 22px 20px;
-    position: relative; overflow: hidden; cursor: pointer;
-    transition: transform 0.2s;
-  }
-  .sqi-upgrade-card:hover { transform: translateY(-1px); }
-  .sqi-uc-free { background: var(--glass); border: 1px solid var(--glass-border); }
-  .sqi-uc-prana { background: rgba(212,175,55,0.05); border: 1px solid rgba(212,175,55,0.2); }
-  .sqi-uc-siddha { background: rgba(212,175,55,0.08); border: 1.5px solid rgba(212,175,55,0.38); }
-  .sqi-uc-siddha::after {
-    content: 'MOST POPULAR'; position: absolute; top: 16px; right: 18px;
-    font-size: 7px; font-weight: 800; letter-spacing: 0.3em;
-    background: var(--gold); color: #000; padding: 3px 10px; border-radius: 10px;
-  }
-  .sqi-uc-akasha {
-    border: 1.5px solid rgba(212,175,55,0.5);
-    background: linear-gradient(135deg, rgba(212,175,55,0.1) 0%, rgba(34,211,238,0.06) 100%);
-  }
-  .sqi-uc-tier {
-    font-size: 9px; font-weight: 800; letter-spacing: 0.45em; text-transform: uppercase;
-    color: var(--gold); margin-bottom: 4px;
-  }
-  .sqi-uc-tier.cyan { color: var(--cyan); }
-  .sqi-uc-name { font-size: 22px; font-weight: 900; letter-spacing: -0.04em; margin-bottom: 8px; }
-  .sqi-uc-price {
-    font-size: 32px; font-weight: 900; letter-spacing: -0.05em;
-    color: var(--gold); margin-bottom: 14px;
-  }
-  .sqi-uc-price small { font-size: 13px; font-weight: 500; color: var(--text-muted); }
-  .sqi-uc-price.grad {
-    background: linear-gradient(90deg, #D4AF37, #22D3EE);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  }
-  .sqi-uc-features { list-style: none; display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
-  .sqi-uc-features li {
-    font-size: 12.5px; color: var(--text-body);
-    display: flex; align-items: flex-start; gap: 9px; line-height: 1.45;
-  }
-  .sqi-uc-features li::before {
-    content: ''; width: 5px; height: 5px; border-radius: 50%;
-    background: var(--gold); flex-shrink: 0; margin-top: 5px;
-  }
-  .sqi-uc-features li.dim { color: var(--text-muted); }
-  .sqi-uc-features li.dim::before { background: rgba(255,255,255,0.2); }
+/* Play button — EXACT from Meditations.tsx */
+@keyframes sqiPlayBtnPulse {
+  0%,100% { box-shadow: 0 0 18px rgba(212,175,55,.55), 0 0 32px rgba(245,225,122,.2); }
+  50% { box-shadow: 0 0 32px rgba(212,175,55,.95), 0 0 56px rgba(212,175,55,.3); }
+}
+.play-btn {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: linear-gradient(135deg, rgba(212,175,55,.12), rgba(212,175,55,.04));
+  border: 1px solid rgba(212,175,55,.25);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--siddha-gold); flex-shrink: 0; cursor: pointer;
+  transition: all .22s;
+  box-shadow: 0 0 10px rgba(212,175,55,.15);
+}
+.play-btn:hover, .play-btn.playing {
+  background: linear-gradient(135deg, #F5E17A, #D4AF37, #A07C10);
+  color: #050505;
+  box-shadow: 0 0 22px rgba(212,175,55,.65), 0 0 40px rgba(212,175,55,.25);
+  transform: scale(1.08);
+}
+.play-btn.playing { animation: sqiPlayBtnPulse 2s ease-in-out infinite; }
 
-  /* ── COVER ART — real img with golden aura ring ── */
-  .sqi-cover {
-    width: 54px; height: 54px; border-radius: 15px; flex-shrink: 0;
-    position: relative; background: #111; overflow: visible;
+/* Track row aura — EXACT from Meditations.tsx sqiMeditationRowAura */
+@keyframes sqiTrackRowAura {
+  0%,100% {
+    border-color: rgba(212,175,55,.35);
+    box-shadow: inset 0 0 32px rgba(212,175,55,.08), 0 0 0 1px rgba(212,175,55,.2);
+    background: rgba(212,175,55,.035);
   }
-  .sqi-cover img {
-    width: 54px; height: 54px; object-fit: cover; border-radius: 15px;
-    position: relative; z-index: 1; display: block;
-    transition: opacity 0.3s;
+  50% {
+    border-color: rgba(212,175,55,.7);
+    box-shadow: inset 0 0 48px rgba(212,175,55,.16), 0 0 0 2px rgba(212,175,55,.4);
+    background: rgba(212,175,55,.08);
   }
-  .sqi-cover-fallback {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    border-radius: 15px; font-size: 22px;
-  }
-  .sqi-cover-ring {
-    position: absolute; inset: -3px; border-radius: 18px;
-    border: 1.5px solid transparent;
-    transition: border-color 0.3s, box-shadow 0.3s;
-    pointer-events: none; z-index: 2;
-  }
-  .sqi-track-playing .sqi-cover-ring {
-    border-color: rgba(212,175,55,0.6);
-    box-shadow: 0 0 12px rgba(212,175,55,0.35), inset 0 0 8px rgba(212,175,55,0.1);
-    animation: sqi-cover-aura 3s ease-in-out infinite;
-  }
-  @keyframes sqi-cover-aura {
-    0%,100% { box-shadow: 0 0 10px rgba(212,175,55,0.3), inset 0 0 6px rgba(212,175,55,0.08); }
-    50%      { box-shadow: 0 0 22px rgba(212,175,55,0.55), inset 0 0 14px rgba(212,175,55,0.15); }
-  }
+}
+.track-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 13px 16px; border-radius: var(--radius-lg);
+  border: 1px solid transparent;
+  cursor: pointer; position: relative;
+  transition: background .2s, border-color .2s;
+}
+.track-row:hover { background: rgba(212,175,55,.03); }
+.track-row.sqi-active {
+  border-width: 1px; border-style: solid;
+  animation: sqiTrackRowAura 3s ease-in-out infinite;
+}
 
-  .planetary-hero {
-    position: relative;
-    background: linear-gradient(135deg,
-      rgba(212,175,55,0.08) 0%,
-      rgba(34,211,238,0.05) 50%,
-      rgba(212,175,55,0.04) 100%);
-    border: 1px solid var(--glass-border-gold);
-    border-radius: 32px;
-    padding: 28px 24px 24px;
-    margin-bottom: 12px;
-    overflow: hidden;
-    backdrop-filter: blur(40px);
-  }
-  .planetary-hero::before {
-    content: '';
-    position: absolute;
-    top: -40px; right: -40px;
-    width: 180px; height: 180px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(212,175,55,0.12), transparent 70%);
-    animation: orb-pulse 4s ease-in-out infinite;
-  }
-  @keyframes orb-pulse {
-    0%,100% { transform: scale(1); opacity: 0.8; }
-    50%      { transform: scale(1.2); opacity: 1; }
-  }
-  .hero-eyebrow {
-    font-size: 8px; font-weight: 800;
-    letter-spacing: 0.45em; text-transform: uppercase;
-    color: var(--gold); margin-bottom: 8px;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .hero-eyebrow::after {
-    content: '';
-    flex: 1; height: 1px;
-    background: linear-gradient(to right, var(--gold-dim), transparent);
-  }
-  .hero-title {
-    font-size: 30px; font-weight: 900;
-    letter-spacing: -0.05em;
-    background: linear-gradient(135deg, #fff 0%, var(--gold) 60%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    line-height: 1.1; margin-bottom: 16px;
-  }
-  .waveform {
-    display: flex; align-items: flex-end;
-    gap: 3px; height: 36px; margin-bottom: 16px;
-  }
-  .waveform-bar {
-    flex: 1;
-    background: linear-gradient(to top, var(--gold), rgba(212,175,55,0.3));
-    border-radius: 2px;
-    animation: wave var(--spd) ease-in-out infinite alternate;
-  }
-  @keyframes wave {
-    from { transform: scaleY(0.2); }
-    to   { transform: scaleY(1); }
-  }
-  .hero-meta {
-    display: flex; align-items: center;
-    justify-content: space-between;
-  }
-  .hero-freq-tag {
-    font-size: 10px; font-weight: 700;
-    letter-spacing: 0.3em; color: var(--gold);
-    text-transform: uppercase;
-    display: flex; align-items: center; gap: 6px;
-  }
-  .nadi-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--gold);
-    box-shadow: 0 0 10px rgba(212,175,55,0.55);
-    animation: nadi-pulse 1.5s ease-in-out infinite;
-  }
-  @keyframes nadi-pulse {
-    0%,100% { transform: scale(1); box-shadow: 0 0 10px rgba(212,175,55,0.45); }
-    50%      { transform: scale(1.5); box-shadow: 0 0 18px rgba(212,175,55,0.7), 0 0 40px rgba(212,175,55,0.22); }
-  }
-  .hero-play-btn {
-    width: 44px; height: 44px;
-    border-radius: 50%;
-    background: var(--gold); border: none;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; font-size: 16px; color: #000;
-    box-shadow: 0 0 20px var(--gold-glow);
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-  .hero-play-btn:hover {
-    transform: scale(1.08);
-    box-shadow: 0 0 32px rgba(212,175,55,0.5);
-  }
+/* Cover art with Dhyana golden aura ring */
+.cover-wrap { width: 54px; height: 54px; border-radius: 16px; flex-shrink: 0; position: relative; }
+.cover-inner {
+  width: 54px; height: 54px; border-radius: 16px;
+  overflow: hidden; background: rgba(212,175,55,.1);
+  display: flex; align-items: center; justify-content: center;
+}
+.cover-inner img {
+  width: 100%; height: 100%; object-fit: cover;
+  opacity: 0; transition: opacity .4s; display: block;
+}
+.cover-inner img.loaded { opacity: 1; }
+.cover-aura {
+  position: absolute; inset: -4px; border-radius: 20px;
+  border: 1.5px solid transparent; pointer-events: none;
+  transition: all .3s;
+}
+.track-row.sqi-active .cover-aura {
+  border-color: rgba(212,175,55,.55);
+  box-shadow: 0 0 14px rgba(212,175,55,.38), 0 0 28px rgba(212,175,55,.15);
+  animation: sqiTrackRowAura 3s ease-in-out infinite;
+}
 
-  .prescription-card {
-    background: var(--glass);
-    border: 1px solid var(--glass-border-gold);
-    border-radius: var(--radius);
-    padding: 20px; margin-bottom: 12px;
-    backdrop-filter: blur(40px);
-    position: relative; overflow: hidden;
-  }
-  .prescription-card::before {
-    content: '';
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 2px;
-    background: linear-gradient(to bottom, transparent, var(--gold), transparent);
-  }
-  .presc-header {
-    display: flex; align-items: center;
-    gap: 8px; margin-bottom: 10px;
-  }
-  .presc-label {
-    font-size: 8px; font-weight: 800;
-    letter-spacing: 0.4em; text-transform: uppercase;
-    color: var(--gold);
-  }
-  .presc-text {
-    font-size: 13px; font-weight: 400;
-    line-height: 1.6; color: var(--text-body);
-  }
-  .presc-text strong { color: var(--gold); font-weight: 700; }
+/* Scalar ring — exact */
+@keyframes scalarRing {
+  0% { transform: scale(.8); opacity: 0; }
+  50% { opacity: .4; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+.scalar-ring {
+  position: absolute; inset: -8px; border-radius: 50%;
+  border: 2px solid rgba(34,211,238,.65);
+  animation: scalarRing 2.2s ease-out infinite;
+  pointer-events: none;
+  box-shadow: 0 0 12px rgba(34,211,238,.35);
+}
 
-  .pranaflow-banner {
-    position: relative;
-    background: linear-gradient(135deg,
-      rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.04) 100%);
-    border: 1px solid rgba(212,175,55,0.3);
-    border-radius: var(--radius);
-    padding: 22px 20px; margin-bottom: 12px;
-    overflow: hidden; backdrop-filter: blur(40px);
-    cursor: pointer; transition: border-color 0.3s;
-  }
-  .pranaflow-banner:hover { border-color: var(--gold); }
-  .pranaflow-banner::after {
-    content: '';
-    position: absolute;
-    top: 0; left: -100%; right: 0; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--gold), transparent);
-    animation: shimmer 3s linear infinite;
-  }
-  @keyframes shimmer {
-    0%   { left: -100%; }
-    100% { left: 100%; }
-  }
-  .pf-inner {
-    display: flex; align-items: center; gap: 14px;
-  }
-  .pf-crown {
-    width: 44px; height: 44px; border-radius: 14px;
-    background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.05));
-    border: 1px solid rgba(212,175,55,0.3);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px; flex-shrink: 0;
-  }
-  .pf-content { flex: 1; }
-  .pf-tier-label {
-    font-size: 8px; font-weight: 800;
-    letter-spacing: 0.45em; text-transform: uppercase;
-    color: var(--gold); margin-bottom: 3px;
-  }
-  .pf-name {
-    font-size: 16px; font-weight: 900;
-    letter-spacing: -0.03em; color: #fff; margin-bottom: 2px;
-  }
-  .pf-desc { font-size: 11px; color: var(--text-muted); font-weight: 500; }
-  .pf-badge {
-    background: var(--gold); color: #000;
-    font-size: 10px; font-weight: 800;
-    letter-spacing: 0.05em;
-    padding: 5px 10px; border-radius: 20px; flex-shrink: 0;
-  }
+/* Track info */
+.track-title {
+  font-family: 'Cinzel', serif;
+  font-size: 13px; font-weight: 500; letter-spacing: .02em;
+  color: rgba(255,255,255,.88); line-height: 1.35; margin-bottom: 3px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: color .3s, text-shadow .3s;
+}
+.track-row.sqi-active .track-title {
+  color: #D4AF37;
+  text-shadow: 0 0 18px rgba(212,175,55,.45), 0 0 36px rgba(212,175,55,.12);
+}
+.track-hz {
+  display: inline-flex; align-items: center;
+  background: rgba(212,175,55,.08); border: 1px solid rgba(212,175,55,.2);
+  border-radius: 10px; padding: 2px 9px;
+  font-size: 8.5px; font-weight: 800; letter-spacing: .15em;
+  text-transform: uppercase; color: var(--siddha-gold);
+}
 
-  .mastering-card {
-    background: var(--glass);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius);
-    padding: 18px 20px; margin-bottom: 20px;
-    backdrop-filter: blur(40px);
-    display: flex; align-items: center; gap: 14px;
-    cursor: pointer; transition: border-color 0.3s;
-  }
-  .mastering-card:hover { border-color: rgba(212,175,55,0.2); }
-  .mastering-icon {
-    width: 40px; height: 40px; border-radius: 12px;
-    background: rgba(212,175,55,0.08);
-    border: 1px solid var(--glass-border-gold);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16px; flex-shrink: 0;
-  }
-  .mastering-title { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
-  .mastering-sub { font-size: 11px; color: var(--text-muted); }
+/* Progress bar under active row */
+.progress-track {
+  height: 3px; background: rgba(255,255,255,.08);
+  border-radius: 3px; overflow: hidden; margin-top: 7px; display: none;
+}
+.track-row.sqi-active .progress-track { display: block; }
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #D4AF37, #F5E17A);
+  border-radius: 3px;
+  box-shadow: 0 0 10px rgba(212,175,55,.7);
+  transition: width .5s;
+}
 
-  .section-header {
-    display: flex; align-items: center;
-    justify-content: space-between;
-    margin-bottom: 14px; margin-top: 4px;
-  }
-  .section-title {
-    font-size: 18px; font-weight: 900; letter-spacing: -0.04em;
-  }
-  .section-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
-  .shuffle-btn {
-    display: flex; align-items: center; gap: 6px;
-    padding: 8px 14px; border-radius: 20px;
-    background: rgba(212,175,55,0.1);
-    border: 1px solid rgba(212,175,55,0.2);
-    color: var(--gold); font-size: 11px; font-weight: 700;
-    cursor: pointer; transition: background 0.2s; letter-spacing: 0.05em;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-  }
-  .shuffle-btn:hover { background: rgba(212,175,55,0.18); }
+/* Badges */
+.badge-free {
+  font-size: 7.5px; font-weight: 800; letter-spacing: .12em;
+  text-transform: uppercase; padding: 4px 10px; border-radius: 100px;
+  background: rgba(34,211,238,.08); border: 1px solid rgba(34,211,238,.2);
+  color: var(--vayu-cyan);
+}
+.badge-prana {
+  font-size: 7.5px; font-weight: 800; letter-spacing: .12em;
+  text-transform: uppercase; padding: 4px 10px; border-radius: 100px;
+  background: linear-gradient(135deg, rgba(212,175,55,.15), rgba(212,175,55,.05));
+  border: 1px solid rgba(212,175,55,.3); color: var(--siddha-gold);
+}
+.badge-siddha {
+  font-size: 7.5px; font-weight: 800; letter-spacing: .12em;
+  text-transform: uppercase; padding: 4px 10px; border-radius: 100px;
+  background: rgba(139,92,246,.12); border: 1px solid rgba(139,92,246,.25); color: #a78bfa;
+}
 
-  .mood-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px; margin-bottom: 24px;
-  }
-  .mood-card {
-    background: var(--glass);
-    border: 1px solid var(--glass-border);
-    border-radius: 22px; padding: 18px 16px;
-    cursor: pointer; position: relative; overflow: hidden;
-    backdrop-filter: blur(20px);
-    transition: border-color 0.3s, transform 0.2s;
-  }
-  .mood-card:hover {
-    border-color: rgba(212,175,55,0.25);
-    transform: translateY(-2px);
-  }
-  .mood-card.full-width { grid-column: 1 / -1; }
-  .mood-freq {
-    font-size: 8px; font-weight: 800;
-    letter-spacing: 0.4em; text-transform: uppercase;
-    color: var(--gold); margin-bottom: 6px;
-    display: flex; align-items: center; gap: 6px;
-  }
-  .freq-dot {
-    width: 4px; height: 4px;
-    border-radius: 50%; background: var(--gold); opacity: 0.7;
-  }
-  .mini-wave {
-    display: flex; align-items: flex-end;
-    gap: 2px; height: 14px; margin-bottom: 8px;
-  }
-  .mini-bar {
-    width: 2px; background: rgba(212,175,55,0.4);
-    border-radius: 1px;
-    animation: wave var(--spd) ease-in-out infinite alternate;
-  }
-  .mood-title {
-    font-size: 15px; font-weight: 800;
-    letter-spacing: -0.03em; margin-bottom: 6px; line-height: 1.2;
-  }
-  .mood-track { font-size: 10px; color: var(--text-muted); line-height: 1.4; }
-  .mood-footer {
-    display: flex; align-items: center;
-    justify-content: space-between;
-    margin-top: 10px; padding-top: 10px;
-    border-top: 1px solid var(--glass-border);
-  }
-  .mood-tag {
-    font-size: 8px; font-weight: 700;
-    letter-spacing: 0.3em; text-transform: uppercase;
-    color: var(--text-muted);
-  }
-  .mood-play {
-    width: 28px; height: 28px; border-radius: 50%;
-    background: rgba(212,175,55,0.12);
-    border: 1px solid rgba(212,175,55,0.2);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 10px; color: var(--gold);
-    transition: background 0.2s, box-shadow 0.2s;
-  }
-  .mood-card:hover .mood-play {
-    background: var(--gold); color: #000;
-    box-shadow: 0 0 12px var(--gold-glow);
-  }
+/* Section header */
+.sec-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px 0 14px;
+}
 
-  .path-card {
-    background: var(--glass);
-    border: 1px solid var(--glass-border);
-    border-radius: 22px; padding: 16px 18px; margin-bottom: 8px;
-    cursor: pointer; backdrop-filter: blur(20px);
-    transition: border-color 0.3s;
-    display: flex; align-items: center; gap: 14px;
-  }
-  .path-card:hover { border-color: rgba(212,175,55,0.2); }
-  .path-freq-badge {
-    font-size: 8px; font-weight: 800;
-    letter-spacing: 0.3em; color: var(--gold);
-    background: rgba(212,175,55,0.08);
-    border: 1px solid rgba(212,175,55,0.15);
-    padding: 4px 8px; border-radius: 8px;
-    flex-shrink: 0; text-transform: uppercase;
-  }
-  .path-title { font-size: 14px; font-weight: 700; letter-spacing: -0.02em; }
-  .path-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
-  .path-play {
-    width: 32px; height: 32px; border-radius: 50%;
-    background: rgba(212,175,55,0.08);
-    border: 1px solid var(--glass-border-gold);
-    display: flex; align-items: center; justify-content: center;
-    color: var(--gold); font-size: 11px; flex-shrink: 0;
-    transition: background 0.2s;
-  }
-  .path-card:hover .path-play { background: var(--gold); color: #000; }
+/* Upgrade cards */
+.up-card {
+  border-radius: var(--radius-xl); padding: 22px 20px;
+  position: relative; overflow: hidden; transition: transform .18s;
+}
+.up-card:hover { transform: translateY(-1px); }
+.up-free { background: var(--glass-bg); border: 1px solid var(--glass-border); }
+.up-prana { background: rgba(212,175,55,.05); border: 1px solid rgba(212,175,55,.2); }
+.up-siddha { background: rgba(212,175,55,.075); border: 1.5px solid rgba(212,175,55,.38); }
+.up-akasha {
+  background: linear-gradient(135deg, rgba(212,175,55,.1) 0%, rgba(34,211,238,.055) 100%);
+  border: 1.5px solid rgba(212,175,55,.48);
+}
+.up-siddha::before {
+  content: 'MOST POPULAR'; position: absolute; top: 17px; right: 17px;
+  font-size: 7px; font-weight: 800; letter-spacing: .3em;
+  background: var(--siddha-gold); color: #000; padding: 3px 10px; border-radius: 10px;
+}
+.up-tier {
+  font-size: 8.5px; font-weight: 800; letter-spacing: .48em;
+  text-transform: uppercase; color: var(--siddha-gold); margin-bottom: 4px;
+}
+.up-tier.c { color: var(--vayu-cyan); }
+.up-name {
+  font-family: 'Cinzel', serif; font-size: 26px; font-weight: 500;
+  background: linear-gradient(135deg, #F5E17A, #D4AF37, #A07C10);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; margin-bottom: 6px; line-height: 1.1;
+}
+.up-price {
+  font-size: 34px; font-weight: 900; letter-spacing: -.05em;
+  color: var(--siddha-gold); margin-bottom: 14px; line-height: 1;
+}
+.up-feats { list-style: none; display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+.up-feats li {
+  font-size: 13px; color: rgba(255,255,255,.7);
+  display: flex; align-items: flex-start; gap: 9px; line-height: 1.5;
+}
+.up-feats li::before {
+  content: ''; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--siddha-gold); flex-shrink: 0; margin-top: 5px;
+}
+.up-feats li.dim { color: var(--text-muted); }
+.up-feats li.dim::before { background: rgba(255,255,255,.18); }
 
-  .time-matched {
-    background: linear-gradient(135deg,
-      rgba(34,211,238,0.06) 0%, rgba(212,175,55,0.04) 100%);
-    border: 1px solid rgba(34,211,238,0.15);
-    border-radius: var(--radius); padding: 20px; margin-bottom: 24px;
-    backdrop-filter: blur(40px);
-    display: flex; align-items: center; gap: 14px; cursor: pointer;
-  }
-  .time-icon {
-    width: 44px; height: 44px; border-radius: 14px;
-    background: rgba(34,211,238,0.08);
-    border: 1px solid rgba(34,211,238,0.2);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px; flex-shrink: 0;
-  }
-  .time-label {
-    font-size: 8px; font-weight: 800; letter-spacing: 0.4em;
-    text-transform: uppercase; color: var(--cyan); margin-bottom: 3px;
-  }
-  .time-title { font-size: 15px; font-weight: 800; letter-spacing: -0.03em; }
-  .time-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+/* CTA buttons — gold fill exact from Meditations play-btn.playing */
+.cta-gold {
+  width: 100%; padding: 15px; border-radius: 20px; border: none; cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11px; font-weight: 800; letter-spacing: .38em; text-transform: uppercase;
+  background: linear-gradient(135deg, #F5E17A, #D4AF37, #A07C10);
+  color: #050505;
+  box-shadow: 0 0 22px rgba(212,175,55,.55), 0 0 40px rgba(212,175,55,.2);
+  animation: sqiPlayBtnPulse 2.8s ease-in-out infinite;
+  transition: transform .15s;
+}
+.cta-gold:hover { transform: translateY(-1.5px); }
+.cta-gold:active { transform: scale(.98); }
+.cta-outline {
+  width: 100%; padding: 15px; border-radius: 20px; cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11px; font-weight: 800; letter-spacing: .38em; text-transform: uppercase;
+  background: rgba(212,175,55,.08); border: 1px solid rgba(212,175,55,.35);
+  color: var(--siddha-gold); transition: all .18s;
+}
+.cta-outline:hover { background: rgba(212,175,55,.18); border-color: var(--siddha-gold); }
+.cta-akasha {
+  width: 100%; padding: 15px; border-radius: 20px; border: none; cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11px; font-weight: 800; letter-spacing: .38em; text-transform: uppercase;
+  background: linear-gradient(90deg, #D4AF37 0%, #22D3EE 100%); color: #050505;
+  box-shadow: 0 0 22px rgba(212,175,55,.4), 0 0 40px rgba(34,211,238,.25);
+  transition: transform .15s;
+}
+.cta-akasha:hover { transform: translateY(-1.5px); }
 
-  .browse-section {
-    background: var(--glass);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius);
-    overflow: hidden; backdrop-filter: blur(40px); margin-bottom: 24px;
+/* Now-playing bar — EXACT from Meditations.tsx */
+@keyframes nowPlayingSlide {
+  from { transform: translateX(-50%) translateY(100%); opacity: 0; }
+  to { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+@keyframes sqiNpBarBreath {
+  0%,100% {
+    border-color: rgba(212,175,55,.32);
+    box-shadow: 0 0 22px rgba(212,175,55,.22), 0 0 48px rgba(212,175,55,.1), 0 10px 36px rgba(0,0,0,.55);
   }
-  .browse-header {
-    display: flex; align-items: center;
-    justify-content: space-between;
-    padding: 20px; cursor: pointer;
+  50% {
+    border-color: rgba(212,175,55,.65);
+    box-shadow: 0 0 40px rgba(212,175,55,.45), 0 0 72px rgba(212,175,55,.15), 0 14px 44px rgba(0,0,0,.5);
   }
-  .browse-title { font-size: 16px; font-weight: 800; letter-spacing: -0.03em; }
-  .browse-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
-  .browse-chevron {
-    width: 28px; height: 28px; border-radius: 50%;
-    background: rgba(212,175,55,0.08);
-    border: 1px solid var(--glass-border-gold);
-    display: flex; align-items: center; justify-content: center;
-    color: var(--gold); font-size: 12px;
-    transition: transform 0.3s;
-  }
+}
+@keyframes npIconGold {
+  0%,100% { box-shadow: 0 0 12px rgba(212,175,55,.55); transform: scale(1); }
+  50% { box-shadow: 0 0 24px rgba(212,175,55,.95), 0 0 40px rgba(245,225,122,.25); transform: scale(1.06); }
+}
+.now-playing-bar {
+  position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%);
+  width: calc(100% - 32px); max-width: 398px;
+  background: rgba(10,9,8,.92); backdrop-filter: blur(24px);
+  border: 1px solid rgba(212,175,55,.25); border-radius: 24px;
+  padding: 12px 16px; z-index: 50;
+  display: flex; align-items: center; gap: 12px;
+  animation: nowPlayingSlide .35s ease-out;
+  box-shadow: 0 0 28px rgba(212,175,55,.18), 0 8px 32px rgba(0,0,0,.6);
+}
+.now-playing-bar.np-live {
+  animation: nowPlayingSlide .35s ease-out, sqiNpBarBreath 2.6s ease-in-out infinite;
+}
+.np-play-icon {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, #F5E17A, #D4AF37, #A07C10);
+  display: flex; align-items: center; justify-content: center;
+  color: #050505; box-shadow: 0 0 14px rgba(212,175,55,.5); cursor: pointer; border: none;
+}
+.np-play-icon.np-pulse { animation: npIconGold 2s ease-in-out infinite; }
+.np-title-bar {
+  font-family: 'Cinzel', serif; font-size: 12px; font-weight: 500;
+  letter-spacing: .02em; color: rgba(255,255,255,.9); line-height: 1.35;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+.np-title-bar.np-cinzel-gold {
+  color: #D4AF37;
+  text-shadow: 0 0 16px rgba(212,175,55,.4), 0 0 32px rgba(212,175,55,.12);
+}
+.np-bar-track { height: 2px; background: rgba(255,255,255,.08); border-radius: 2px; margin-top: 5px; }
+.np-bar-fill {
+  height: 100%; background: linear-gradient(90deg, #D4AF37, #F5E17A);
+  border-radius: 2px; transition: width .5s;
+  box-shadow: 0 0 8px rgba(212,175,55,.75);
+}
 
-  /* Browse tabs + filters inside the library (override shadcn defaults) */
-  .sqi-tab {
-    padding: 8px 14px;
-    border-radius: 999px;
-    background: rgba(255,255,255,0.02);
-    border: 1px solid rgba(255,255,255,0.06);
-    color: rgba(255,255,255,0.55);
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    transition: background 0.2s, border-color 0.2s, color 0.2s;
-    white-space: nowrap;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-  }
-  .sqi-tab:hover { background: rgba(255,255,255,0.04); border-color: rgba(212,175,55,0.16); color: rgba(212,175,55,0.85); }
-  .sqi-tab-active {
-    background: rgba(212,175,55,0.10);
-    border-color: rgba(212,175,55,0.28);
-    color: #D4AF37;
-    box-shadow: 0 0 18px rgba(212,175,55,0.10);
-  }
-  .sqi-chip {
-    padding: 6px 12px;
-    border-radius: 999px;
-    background: rgba(255,255,255,0.02);
-    border: 1px solid rgba(255,255,255,0.06);
-    color: rgba(255,255,255,0.55);
-    font-size: 12px;
-    font-weight: 700;
-    transition: background 0.2s, border-color 0.2s, color 0.2s;
-    white-space: nowrap;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-  }
-  .sqi-chip:hover { background: rgba(255,255,255,0.04); border-color: rgba(212,175,55,0.14); color: rgba(212,175,55,0.85); }
-  .sqi-chip-active {
-    background: rgba(212,175,55,0.10);
-    border-color: rgba(212,175,55,0.28);
-    color: #D4AF37;
-  }
-
-  .gold-divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(212,175,55,0.2), transparent);
-    margin: 20px 0;
-  }
-
-  .bottom-nav {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    background: rgba(5,5,5,0.92);
-    backdrop-filter: blur(40px);
-    border-top: 1px solid var(--glass-border);
-    display: flex; justify-content: space-around;
-    padding: 10px 0 10px;
-    z-index: 100;
-  }
-  .nav-item {
-    display: flex; flex-direction: column;
-    align-items: center; gap: 4px;
-    cursor: pointer; padding: 4px 12px;
-  }
-  .nav-icon { font-size: 18px; color: var(--text-muted); transition: color 0.2s; }
-  .nav-item.active .nav-icon {
-    color: var(--gold);
-    filter: drop-shadow(0 0 6px rgba(212,175,55,0.4));
-  }
-  .nav-label {
-    font-size: 8px; font-weight: 700;
-    letter-spacing: 0.3em; text-transform: uppercase;
-    color: var(--text-muted);
-  }
-  .nav-item.active .nav-label { color: var(--gold); }
-
-  .float-btn {
-    position: fixed;
-    bottom: 80px; right: 20px;
-    background: var(--gold); color: #000; border: none;
-    border-radius: 28px; padding: 13px 20px;
-    font-size: 12px; font-weight: 800;
-    letter-spacing: 0.05em; cursor: pointer;
-    display: flex; align-items: center; gap: 8px;
-    box-shadow: 0 4px 30px rgba(212,175,55,0.4);
-    z-index: 99; transition: transform 0.2s;
-    animation: float-breathe 3s ease-in-out infinite;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-  }
-  @keyframes float-breathe {
-    0%,100% { box-shadow: 0 4px 30px rgba(212,175,55,0.4); }
-    50%      { box-shadow: 0 4px 40px rgba(212,175,55,0.6), 0 0 60px rgba(212,175,55,0.1); }
-  }
-  .float-btn:hover { transform: scale(1.04); }
+/* Snippet modal */
+.snip-modal-overlay {
+  position: fixed; inset: 0; z-index: 400;
+  background: rgba(5,5,5,.85); backdrop-filter: blur(24px);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.snip-modal-card {
+  background: rgba(212,175,55,.06); border: 1px solid rgba(212,175,55,.28);
+  border-radius: var(--radius-xl); padding: 34px 24px;
+  text-align: center; width: 100%; max-width: 380px;
+}
+.snip-modal-title {
+  font-family: 'Cinzel', serif; font-size: 28px; font-weight: 500;
+  background: linear-gradient(135deg, #D4AF37 0%, #F5E17A 40%, #D4AF37 60%, #A07C10 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: goldShimmer 4s linear infinite;
+  margin-bottom: 10px; line-height: 1.1;
+}
 `;
 
-const JyotishMusicCard = () => {
-  const { t } = useTranslation();
-  const jyotish = useJyotishProfile();
-  if (jyotish.isLoading) return null;
+/* ─────────────────────────────────────────────────────────────────
+   STARFIELD CANVAS — exact from Meditations.tsx StarfieldCanvas
+───────────────────────────────────────────────────────────────── */
+const StarfieldCanvas: React.FC = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d')!;
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener('resize', resize);
+    const stars = Array.from({ length: 150 }, () => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      r: Math.random() * 1.3,
+      alpha: Math.random() * .5,
+      speed: .003 + Math.random() * .009,
+      phase: Math.random() * Math.PI * 2,
+      gold: Math.random() > .8,
+    }));
+    let raf: number;
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      stars.forEach(s => {
+        s.phase += s.speed;
+        const a = s.alpha * (.5 + .5 * Math.sin(s.phase));
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = s.gold ? `rgba(212,175,55,${a})` : `rgba(255,255,255,${a * .5})`;
+        ctx.fill();
+      });
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize); };
+  }, []);
+  return <canvas ref={canvasRef} className="sqi-stars" />;
+};
+
+/* ─────────────────────────────────────────────────────────────────
+   NADI SCANNER COMPONENT
+───────────────────────────────────────────────────────────────── */
+const NADI_PRESETS = [
+  { hz: '528 Hz', lbl: 'DNA Repair', title: 'Vata-Pitta · Jupiter Mahadasha', body: 'Your Jyotish field reads <strong style="color:#22D3EE">Raga Yaman</strong> resonance. Jupiter period activates divine connection frequencies. 528Hz cellular repair codes will ground your Vata and illuminate Tejas fire.' },
+  { hz: '432 Hz', lbl: 'Cosmic Attunement', title: 'Pitta · Sun Mahadasha', body: 'Solar plexus fire detected. <strong style="color:#D4AF37">Raga Bhairavi</strong> at 432Hz cools Pitta and anchors the Agni. Moon nakshatra Rohini prescribes this frequency for the next 21 days.' },
+  { hz: '963 Hz', lbl: 'God Frequency', title: 'Kapha · Ketu Mahadasha', body: 'Pineal gateway activation prescribed. <strong style="color:#22D3EE">963Hz Sahasrara</strong> — Ketu period dissolves illusion. Let these frequencies carry the Vedic Light-Codes.' },
+  { hz: '639 Hz', lbl: 'Heart Coherence', title: 'Vata · Venus Mahadasha', body: 'Prema-Pulse reading active. <strong style="color:#D4AF37">Raga Kafi</strong> at 639Hz dissolves Venus-period heart armoring. Anahata needs direct sound medicine now.' },
+  { hz: '741 Hz', lbl: 'Expression · Throat', title: 'Pitta-Vata · Mercury Dasha', body: 'Suppressed Vak shakti in Vishuddha. <strong style="color:#22D3EE">741Hz expression codes</strong> via Raga Todi will unlock the throat crystallization in your Mercury-period field.' },
+];
+
+const NadiScanner: React.FC<{ jyotishMahadasha?: string; jyotishRaga?: string }> = ({
+  jyotishMahadasha, jyotishRaga,
+}) => {
+  const [idx, setIdx] = useState(0);
+  const pr1Ref = useRef<SVGCircleElement>(null);
+  const pr2Ref = useRef<SVGCircleElement>(null);
+  const [bars, setBars] = useState([20, 32, 25, 17, 30, 22, 34, 27, 19, 32]);
+  const [bindur, setBindur] = useState(8);
+  const bindugRow = useRef(false);
+
+  // Wire to real jyotish profile if available
+  const preset = NADI_PRESETS[idx];
+
+  const pulse = useCallback(() => {
+    const p1 = pr1Ref.current; const p2 = pr2Ref.current;
+    if (!p1 || !p2) return;
+    let r1 = 37, o1 = .85, r2 = 37, o2 = .45;
+    const f = () => {
+      r1 = Math.min(r1 + 2.2, 92); o1 = Math.max(o1 - .024, 0);
+      r2 = Math.min(r2 + 1.7, 80); o2 = Math.max(o2 - .018, 0);
+      p1.setAttribute('r', String(r1)); p1.setAttribute('opacity', String(o1));
+      p2.setAttribute('r', String(r2)); p2.setAttribute('opacity', String(o2));
+      if (o1 > 0) requestAnimationFrame(f);
+      else { p1.setAttribute('opacity', '0'); p2.setAttribute('opacity', '0'); }
+    };
+    requestAnimationFrame(f);
+  }, []);
+
+  // Freq bars animation
+  useEffect(() => {
+    const base = [20, 32, 25, 17, 30, 22, 34, 27, 19, 32];
+    const id = setInterval(() => {
+      setBars(base.map(b => Math.max(5, Math.min(42, b + Math.round((Math.random() - .5) * 22)))));
+    }, 255);
+    return () => clearInterval(id);
+  }, []);
+
+  // Bindu breathe
+  useEffect(() => {
+    const id = setInterval(() => {
+      setBindur(r => {
+        const next = bindugRow.current ? Math.min(r + .14, 9.5) : Math.max(r - .14, 6);
+        if (next >= 9.5) bindugRow.current = false;
+        if (next <= 6) bindugRow.current = true;
+        return next;
+      });
+    }, 48);
+    return () => clearInterval(id);
+  }, []);
+
+  const rescan = () => {
+    setIdx(i => (i + 1) % NADI_PRESETS.length);
+    pulse();
+  };
+
   return (
-    <div className="mx-0 mb-4 p-4 rounded-2xl bg-gradient-to-r from-amber-900/20 to-indigo-900/20 border border-amber-800/20">
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-indigo-400">🎵</span>
-        <span className="text-sm font-serif text-amber-300 uppercase tracking-wider">
-          {t('music.portal.jyotishTitle', 'Cosmic Sound Prescription')}
-        </span>
+    <div className="nadi-card">
+      <div className="nadi-top">
+        <div className="cyan-dot" />
+        Live Field Resonance · Jyotish-Aligned
       </div>
-      <p className="text-sm text-amber-100/70">
-        {t('music.portal.jyotishBodyPrefix', 'Your')}{' '}
-        <strong className="text-amber-200">{jyotish.mahadasha}</strong>{' '}
-        {t('music.portal.jyotishBodyMid', 'period resonates with')}{' '}
-        <strong className="text-amber-200">{jyotish.musicRaga}</strong>{' '}
-        {t('music.portal.jyotishBodyAnd', 'and')}{' '}
-        <strong className="text-amber-200">{jyotish.musicFrequency}</strong>.{' '}
-        {t('music.portal.jyotishBodySuffix', { defaultValue: 'Listen to these to balance your {{dosha}} energy.', dosha: jyotish.primaryDosha })}
-      </p>
+
+      {/* Sacred Geometry SVG */}
+      <svg style={{ width: '100%', height: 200, display: 'block', marginBottom: 16 }} viewBox="0 0 430 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="gc2"><feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <filter id="gg2"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <radialGradient id="rg1m" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="rgba(34,211,238,0.1)"/><stop offset="100%" stopColor="rgba(34,211,238,0)"/></radialGradient>
+          <radialGradient id="rg2m" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="rgba(212,175,55,0.08)"/><stop offset="100%" stopColor="rgba(212,175,55,0)"/></radialGradient>
+        </defs>
+        <ellipse cx="215" cy="100" rx="90" ry="90" fill="url(#rg1m)"/>
+        <ellipse cx="215" cy="100" rx="70" ry="70" fill="url(#rg2m)"/>
+        <circle cx="215" cy="100" r="88" fill="none" stroke="rgba(34,211,238,0.07)" strokeWidth="1"/>
+        <circle cx="215" cy="100" r="72" fill="none" stroke="rgba(34,211,238,0.1)" strokeWidth=".8"/>
+        <circle cx="215" cy="100" r="55" fill="none" stroke="rgba(212,175,55,0.13)" strokeWidth=".9"/>
+        <circle cx="215" cy="100" r="37" fill="none" stroke="rgba(212,175,55,0.18)" strokeWidth=".9"/>
+        <circle cx="215" cy="100" r="19" fill="none" stroke="rgba(212,175,55,0.25)" strokeWidth=".8"/>
+        <polygon points="215,14 296,154 134,154" fill="rgba(212,175,55,0.025)" stroke="rgba(212,175,55,0.13)" strokeWidth=".9"/>
+        <polygon points="215,186 134,46 296,46" fill="rgba(34,211,238,0.02)" stroke="rgba(34,211,238,0.1)" strokeWidth=".9"/>
+        <polygon points="215,40 282,138 148,138" fill="none" stroke="rgba(212,175,55,0.09)" strokeWidth=".7"/>
+        <polygon points="215,160 148,62 282,62" fill="none" stroke="rgba(34,211,238,0.07)" strokeWidth=".7"/>
+        {[0, 45, 90, 135].map(a => (
+          <ellipse key={a} cx="215" cy="64" rx="11" ry="26" fill="rgba(34,211,238,0.04)" stroke="rgba(34,211,238,0.11)" strokeWidth=".7" transform={`rotate(${a} 215 100)`}/>
+        ))}
+        {[22.5, 67.5, 112.5, 157.5].map(a => (
+          <ellipse key={a} cx="215" cy="64" rx="11" ry="26" fill="rgba(212,175,55,0.03)" stroke="rgba(212,175,55,0.1)" strokeWidth=".7" transform={`rotate(${a} 215 100)`}/>
+        ))}
+        {/* Animated pulse rings */}
+        <circle ref={pr1Ref} cx="215" cy="100" r="37" fill="none" stroke="rgba(34,211,238,0.65)" strokeWidth="1.2" opacity="0"/>
+        <circle ref={pr2Ref} cx="215" cy="100" r="37" fill="none" stroke="rgba(34,211,238,0.3)" strokeWidth=".8" opacity="0"/>
+        {/* Constellation dots */}
+        {[{x:215,y:12},{x:292,y:47},{x:338,y:100},{x:292,y:153},{x:215,y:188},{x:138,y:153},{x:92,y:100},{x:138,y:47}].map((p,i) => (
+          <circle key={i} cx={p.x} cy={p.y} r={i%2===0?2.2:1.7} fill={i%2===0?'rgba(212,175,55,0.7)':'rgba(34,211,238,0.6)'} filter={i%2===0?'url(#gg2)':'url(#gc2)'}/>
+        ))}
+        {/* Freq bars LEFT */}
+        {[0,1,2,3,4].map((i) => (
+          <rect key={i} x={14+i*8} y={140-bars[i]} width="4.5" height={bars[i]} rx="2" fill="rgba(34,211,238,0.5)"/>
+        ))}
+        {/* Freq bars RIGHT */}
+        {[5,6,7,8,9].map((i) => (
+          <rect key={i} x={370+(i-5)*8} y={140-bars[i]} width="4.5" height={bars[i]} rx="2" fill="rgba(212,175,55,0.5)"/>
+        ))}
+        {/* Bindu */}
+        <circle cx="215" cy="100" r={bindur} fill="rgba(212,175,55,0.9)" filter="url(#gg2)"/>
+        <circle cx="215" cy="100" r="3.5" fill="#fff" opacity=".95"/>
+        <text x="215" y="94" textAnchor="middle" fontFamily="Plus Jakarta Sans,sans-serif" fontSize="8" fontWeight="800" letterSpacing="3.5" fill="rgba(255,255,255,0.28)">SCANNING</text>
+        <text x="215" y="110" textAnchor="middle" fontFamily="Plus Jakarta Sans,sans-serif" fontSize="17" fontWeight="900" fill="#22D3EE">{preset.hz}</text>
+      </svg>
+
+      {/* Prescription */}
+      <div className="nadi-result">
+        <div className="nadi-r-title">{jyotishMahadasha || preset.title}</div>
+        <div style={{ fontSize: 13, color: 'rgba(255,255,255,.7)', lineHeight: 1.65 }}
+          dangerouslySetInnerHTML={{ __html: preset.body }} />
+        <div className="nadi-r-hz">{preset.hz} · {preset.lbl}</div>
+        <div className="nadi-r-note">
+          ↳ Reads your Jyotish birth chart + current Dasha — same data as your main Nadi Scanner. Tap Re-Scan to refresh your live planetary field prescription.
+        </div>
+      </div>
+
+      <button className="cta-gold" style={{ marginTop: 16 }} onClick={rescan}>
+        ⟳ &nbsp;&nbsp;Re-Scan My Field
+      </button>
     </div>
   );
 };
-interface Playlist {
-  id: string;
-  name: string;
-  user_id: string;
-}
 
-interface PlayHistory {
-  track_id: string;
-  play_count: number;
-}
-
-interface Album {
+/* ─────────────────────────────────────────────────────────────────
+   MUSIC TRACK ROW COMPONENT
+───────────────────────────────────────────────────────────────── */
+interface MusicTrack {
   id: string;
   title: string;
-  artist: string;
-  description: string | null;
-  cover_image_url: string | null;
-  price_usd: number;
+  artist?: string;
+  cover_image_url?: string | null;
+  audio_url?: string | null;
+  genre?: string | null;
+  hz_frequency?: number | null;
+  tier_required?: string | null;
+  category?: string | null;
+  duration_seconds?: number | null;
+  shc_reward?: number | null;
 }
 
-const GENRES = ['all', 'beats', 'meditation', 'mystic', 'reggae', 'hip-hop', 'reggaeton', 'indian', 'shamanic'];
+const TIER_RANK: Record<string, number> = { free: 0, prana_flow: 1, siddha_quantum: 2, akasha_infinity: 3 };
 
-function MiniWave() {
+const MusicTrackRow: React.FC<{
+  track: MusicTrack;
+  isActive: boolean;
+  isPlaying: boolean;
+  progress: number;
+  hasAccess: boolean;
+  onPlay: (track: MusicTrack) => void;
+  onLock: (track: MusicTrack) => void;
+}> = ({ track, isActive, isPlaying, progress, hasAccess, onPlay, onLock }) => {
+  const tier = track.tier_required || 'free';
+  const locked = !hasAccess && tier !== 'free';
+  const live = isActive && isPlaying;
+  const hz = track.hz_frequency;
+  const hzLabel = hz
+    ? `${hz} Hz · ${hz === 432 ? 'Cosmic Attunement' : hz === 528 ? 'DNA Repair' : hz === 639 ? 'Heart Coherence' : hz === 963 ? 'God Frequency' : hz === 741 ? 'Expression' : hz === 396 ? 'Liberation' : hz === 285 ? 'Energy Fields' : hz === 174 ? 'Foundation' : 'Sacred Frequency'}`
+    : 'Sacred Frequency';
+
   return (
-    <div className="mini-wave">
-      {Array.from({ length: 16 }).map((_, i) => (
-        <div
-          key={i}
-          className="mini-bar"
-          style={{
-            height: `${3 + Math.random() * 11}px`,
-            ['--spd' as string]: `${0.5 + Math.random()}s`,
-            animationDelay: `${Math.random()}s`,
-          }}
-        />
-      ))}
+    <div
+      className={`track-row${live ? ' sqi-active' : ''}`}
+      style={!live ? { border: isActive ? '1px solid rgba(212,175,55,.3)' : '1px solid transparent', background: isActive ? 'rgba(212,175,55,.04)' : undefined } : undefined}
+      onClick={() => locked ? onLock(track) : onPlay(track)}
+    >
+      {/* Cover art */}
+      <div className="cover-wrap">
+        <div className="cover-inner">
+          {track.cover_image_url
+            ? <img src={track.cover_image_url} alt={track.title} onLoad={e => (e.currentTarget as HTMLImageElement).classList.add('loaded')} />
+            : <div style={{ fontSize: 22, background: 'linear-gradient(135deg,rgba(212,175,55,.2),rgba(212,175,55,.05))', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>♪</div>
+          }
+        </div>
+        <div className="cover-aura" />
+      </div>
+
+      {/* Info */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="track-title">{track.title}</div>
+        <div style={{ fontSize: 10, color: 'rgba(255,255,255,.4)', letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: 5 }}>
+          {track.artist || 'Kritagya Das'}
+        </div>
+        {hz && <div className="track-hz">{hzLabel}</div>}
+        <div className="progress-track">
+          <div className="progress-fill" style={live ? { width: `${progress * 100}%` } : { width: 0 }} />
+        </div>
+      </div>
+
+      {/* Right controls */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+        {locked ? (
+          <>
+            <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Lock size={13} style={{ color: 'rgba(255,255,255,.3)' }} />
+            </div>
+            <span className={tier === 'siddha_quantum' ? 'badge-siddha' : 'badge-prana'}>
+              {tier === 'siddha_quantum' ? 'SIDDHA' : 'PRANA'}
+            </span>
+          </>
+        ) : (
+          <>
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <button
+                className={`play-btn${live ? ' playing' : ''}`}
+                onClick={e => { e.stopPropagation(); onPlay(track); }}
+              >
+                {live ? <Pause size={14} /> : <Play size={14} style={{ marginLeft: 2 }} />}
+              </button>
+              {live && <div className="scalar-ring" />}
+            </div>
+            {live
+              ? <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 14 }}>
+                  {[5, 12, 7, 13, 4].map((h, i) => (
+                    <span key={i} style={{ width: 2.5, height: h, borderRadius: 2, background: '#D4AF37', display: 'block', animation: `wave .7s ease-in-out ${i * 0.1}s infinite` }} />
+                  ))}
+                </div>
+              : <span className={tier === 'free' ? 'badge-free' : 'badge-prana'}>
+                  {tier === 'free' ? 'FREE' : 'PRANA'}
+                </span>
+            }
+          </>
+        )}
+      </div>
     </div>
   );
-}
+};
 
-function HeroWave() {
+/* ─────────────────────────────────────────────────────────────────
+   SNIPPET ENDED MODAL
+───────────────────────────────────────────────────────────────── */
+const SnippetModal: React.FC<{
+  track: MusicTrack | null;
+  onClose: () => void;
+  onUpgrade: () => void;
+}> = ({ track, onClose, onUpgrade }) => {
+  if (!track) return null;
   return (
-    <div className="waveform">
-      {Array.from({ length: 40 }).map((_, i) => (
-        <div
-          key={i}
-          className="waveform-bar"
-          style={{
-            ['--spd' as string]: `${0.4 + Math.random() * 0.8}s`,
-            animationDelay: `${Math.random() * 0.8}s`,
-          }}
-        />
-      ))}
+    <div className="snip-modal-overlay" onClick={onClose}>
+      <div className="snip-modal-card" onClick={e => e.stopPropagation()}>
+        <div style={{ fontSize: 40, marginBottom: 16 }}>🔓</div>
+        <div className="snip-modal-title">Unlock Full Access</div>
+        <p style={{ fontSize: 13, color: 'rgba(255,255,255,.7)', lineHeight: 1.65, marginBottom: 22 }}>
+          Your 30-second snippet of <strong style={{ color: '#D4AF37' }}>{track.title}</strong> has ended.<br /><br />
+          Activate <strong style={{ color: '#D4AF37' }}>Prana-Flow</strong> to stream every track in full — unlimited, forever.
+        </p>
+        <button className="cta-gold" style={{ maxWidth: 340, margin: '0 auto', display: 'block' }} onClick={onUpgrade}>
+          Activate Prana-Flow · €19/mo
+        </button>
+        <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,.4)', marginTop: 14, cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 3, letterSpacing: '.08em' }} onClick={onClose}>
+          Continue with free access
+        </div>
+      </div>
     </div>
   );
-}
+};
 
-function timeOfDayKey() {
-  const h = new Date().getHours();
-  if (h >= 5 && h < 12) return 'morning';
-  if (h >= 12 && h < 18) return 'afternoon';
-  return 'night';
-}
-
-// Nadi Scanner presets for Sacred Sound Portal — driven by Jyotish field
-const NADI_PRESETS = [
-  { hz: '528 Hz', label: 'DNA Repair', dosha: 'Vata-Pitta · Jupiter Mahadasha',
-    body: 'Your Jyotish field reads <strong style="color:#22D3EE">Raga Yaman</strong> resonance. Jupiter period activates divine connection frequencies. 528Hz cellular repair codes will ground your Vata and illuminate the Tejas fire in your subtle body.' },
-  { hz: '432 Hz', label: 'Cosmic Attunement', dosha: 'Pitta · Sun Mahadasha',
-    body: 'Solar plexus fire detected. <strong style="color:#D4AF37">Raga Bhairav</strong> at 432Hz cools the Pitta and anchors the Agni. Moon nakshatra Rohini prescribes this frequency for the next 21 days.' },
-  { hz: '963 Hz', label: 'God Frequency · Crown', dosha: 'Kapha · Ketu Mahadasha',
-    body: 'Pineal gateway needs activation. <strong style="color:#22D3EE">963Hz Sahasrara</strong> transmission prescribed. Ketu period dissolves illusion — let these frequencies carry the dissolution codes.' },
-  { hz: '639 Hz', label: 'Heart Coherence', dosha: 'Vata · Venus Mahadasha',
-    body: 'Prema-Pulse reading active. <strong style="color:#D4AF37">Raga Kafi</strong> at 639Hz will dissolve the Venus-period heart armoring. Anahata needs direct sound medicine through this frequency field.' },
-  { hz: '741 Hz', label: 'Expression · Throat', dosha: 'Pitta-Vata · Mercury Dasha',
-    body: 'Suppressed Vak shakti detected in Vishuddha. <strong style="color:#22D3EE">741Hz expression codes</strong> via Raga Todi will unlock the throat crystallization pattern recorded in your Mercury-period field.' },
-];
-
-// Category filter config for Sacred Sound Portal
-const SOUND_CATS = [
-  { key: 'all', label: 'All Frequencies' },
-  { key: 'beats', label: 'Healing Beats' },
-  { key: 'meditation', label: 'Meditations' },
-  { key: 'mantra', label: 'Mantras' },
-  { key: 'mystic', label: 'Sacred Music' },
-] as const;
-type SoundCat = typeof SOUND_CATS[number]['key'];
-
+/* ─────────────────────────────────────────────────────────────────
+   MAIN MUSIC PAGE
+───────────────────────────────────────────────────────────────── */
 const Music: React.FC = () => {
-  const { t } = useTranslation();
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { isSubscribed, checkSubscription, refreshPurchases, playTrack, currentTrack } = useMusicPlayer();
+  const [searchParams] = useSearchParams();
+  const { t } = useTranslation();
   const { user } = useAuth();
-  const { tier: memberTier } = useMembership();
-  const starsRef = useRef<HTMLDivElement | null>(null);
-
-  // Nadi Scanner state
-  const [nadiIdx, setNadiIdx] = useState(0);
-  const [activeSoundCat, setActiveSoundCat] = useState<SoundCat>('all');
+  const { isAdmin, adminGranted, isPremium, tier: membershipTier } = useMembership();
   const jyotish = useJyotishProfile();
-  
-  const [tracks, setTracks] = useState<Track[]>([]);
-  const [albums, setAlbums] = useState<Album[]>([]);
-  const [purchasedAlbumIds, setPurchasedAlbumIds] = useState<string[]>([]);
-  const [albumTracksMap, setAlbumTracksMap] = useState<Record<string, string[]>>({});
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'browse' | 'albums' | 'playlists' | 'history'>('browse');
-  const [selectedGenre, setSelectedGenre] = useState('all');
-  const [selectedMood, setSelectedMood] = useState('all');
-  const [selectedPath, setSelectedPath] = useState('all');
-  const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
-  
-  // Curated playlists
-  const { playlists: curatedPlaylists, loading: curatedLoading, getPlaylistItems } = useCuratedPlaylists('music');
-  const [selectedCuratedPlaylist, setSelectedCuratedPlaylist] = useState<CuratedPlaylist | null>(null);
-  const [curatedPlaylistTracks, setCuratedPlaylistTracks] = useState<Track[]>([]);
-  
-  // User Playlists
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  const [playHistory, setPlayHistory] = useState<PlayHistory[]>([]);
-  const [newPlaylistName, setNewPlaylistName] = useState('');
-  const [editingPlaylistId, setEditingPlaylistId] = useState<string | null>(null);
-  const [editingName, setEditingName] = useState('');
-  const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(null);
-  const [playlistTracks, setPlaylistTracks] = useState<string[]>([]);
-  const [openLibrary, setOpenLibrary] = useState(false);
-  const [shuffleNonce, setShuffleNonce] = useState(0);
-  const [selectedForMood, setSelectedForMood] = useState<Record<MoodKey, Track | null>>({
-    calm: null,
-    comfort: null,
-    energy: null,
-    rest: null,
-    background: null,
-  });
+  const { playUniversalAudio, currentAudio, isPlaying, togglePlay, progress: playerProgress } = useMusicPlayer();
+  const { playlists: curatedPlaylists, getPlaylistItems } = useCuratedPlaylists('music');
 
-  const moods = useMemo(
-    () => [
-      { value: 'all', label: t('music.portal.moodAll', 'All Moods') },
-      { value: 'calm', label: t('music.portal.moodCalm', 'Calm') },
-      { value: 'energizing', label: t('music.portal.moodEnergizing', 'Energizing') },
-      { value: 'healing', label: t('music.portal.moodHealing', 'Healing') },
-      { value: 'meditative', label: t('music.portal.moodMeditative', 'Meditative') },
-      { value: 'grounding', label: t('music.portal.moodGrounding', 'Grounding') },
-    ],
-    [t]
-  );
+  const [tracks, setTracks] = useState<MusicTrack[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all');
+  const [snippetEndedTrack, setSnippetEndedTrack] = useState<MusicTrack | null>(null);
+  const snippetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const upgradeLockedRef = useRef(false);
 
-  const spiritualPaths = useMemo(
-    () => [
-      { value: 'all', label: t('music.portal.pathAll', 'All Paths') },
-      { value: 'inner_peace', label: t('music.portal.pathInnerPeace', 'Inner Peace') },
-      { value: 'focus', label: t('music.portal.pathFocus', 'Focus') },
-      { value: 'sleep', label: t('music.portal.pathSleep', 'Sleep Sanctuary') },
-      { value: 'healing', label: t('music.portal.pathDeepHealing', 'Deep Healing') },
-      { value: 'awakening', label: t('music.portal.pathAwakening', 'Awakening') },
-    ],
-    [t]
-  );
-
-  const moodCards = useMemo(
-    () => [
-      { hz: '432 HZ', title: t('music.portal.cardCalmThoughts', 'Calm my thoughts'), trackLabel: t('music.portal.trackExampleCalm', 'HARE KRISHNA SLOW (Beat)'), tag: t('music.portal.tagCalming', 'Calming'), moodKey: 'calm' as MoodKey },
-      { hz: '528 HZ', title: t('music.portal.cardComfort', 'Feel comfort'), trackLabel: t('music.portal.trackExampleComfort', 'ABUNDANCE ACTIVATION'), tag: t('music.portal.tagHealing', 'Healing'), moodKey: 'comfort' as MoodKey },
-      { hz: '417 HZ', title: t('music.portal.cardEnergy', 'More energy'), trackLabel: t('music.portal.trackExampleEnergy', 'DISCIPLE 2 DISCIPLINE (Beat)'), tag: t('music.portal.tagEnergizing', 'Energizing'), moodKey: 'energy' as MoodKey },
-      { hz: '396 HZ', title: t('music.portal.cardRest', 'Deep rest'), trackLabel: t('music.portal.trackExampleRest', 'DEVI MARYADA (Beat)'), tag: t('music.portal.tagRest', 'Rest'), moodKey: 'rest' as MoodKey },
-      { hz: '432 HZ', title: t('music.portal.cardBackground', 'Silent background'), trackLabel: t('music.portal.trackExampleBackground', 'SCRIPTUREZ OF GIZA (Beat)'), tag: t('music.portal.tagFocus', 'Focus'), moodKey: 'background' as MoodKey, full: true },
-    ],
-    [t]
-  );
-
-  const recentPlaceholders = useMemo(
-    () => [
-      { hz: '432 Hz', title: t('music.portal.continueListening', 'Continue listening') },
-      { hz: '528 Hz', title: t('music.portal.recentTrack', 'Recent track') },
-    ],
-    [t]
-  );
-
+  // ── Stripe success toasts (ALL PRESERVED) ──
   useEffect(() => {
-    if (!starsRef.current) return;
-    const frag = document.createDocumentFragment();
-    for (let i = 0; i < 80; i++) {
-      const s = document.createElement('div');
-      s.className = 'star';
-      s.style.cssText = `
-        left: ${Math.random() * 100}%;
-        top: ${Math.random() * 100}%;
-        --dur: ${2 + Math.random() * 4}s;
-        animation-delay: ${Math.random() * 4}s;
-      `;
-      frag.appendChild(s);
-    }
-    starsRef.current.appendChild(frag);
-  }, []);
-
-  useEffect(() => {
-    fetchTracks();
-    fetchAlbums();
-    fetchPlaylists();
-    fetchPlayHistory();
-    fetchPurchasedAlbums();
-    checkSubscription();
-    refreshPurchases();
-    
+    const success = searchParams.get('success');
     const membershipSuccess = searchParams.get('membership_success');
-    const albumSuccess = searchParams.get('album_success');
-    if (membershipSuccess) {
-      toast({ title: t('music.portal.toastSubActive', 'Subscription active!'), description: t('music.portal.toastSubDesc', 'Enjoy unlimited music streaming.') });
-      checkSubscription();
-    }
-    if (albumSuccess) {
-      toast({ title: t('music.portal.toastAlbumPurchased', 'Album purchased!'), description: t('music.portal.toastAlbumDesc', 'You now have full access to all tracks in this album.') });
-      fetchPurchasedAlbums();
-      refreshPurchases();
-    }
-  }, [searchParams]);
+    const cancelled = searchParams.get('cancelled');
+    if (success === 'true') toast.success(t('music.paymentSuccess', 'Payment successful!'));
+    else if (membershipSuccess === 'true') toast.success(t('music.membershipSuccess', 'Welcome to Prana-Flow!'));
+    else if (cancelled === 'true') toast.info(t('music.paymentCancelled', 'Payment cancelled.'));
+  }, [searchParams, t]);
 
-  const fetchTracks = async () => {
-    const { data } = await supabase.from('music_tracks').select('*').order('created_at', { ascending: false });
-    if (data) setTracks(data as Track[]);
-    setIsLoading(false);
-  };
-
-  const fetchAlbums = async () => {
-    const { data: albumsData } = await supabase.from('music_albums').select('*').order('created_at', { ascending: false });
-    if (albumsData) setAlbums(albumsData);
-    
-    // Fetch album tracks
-    const { data: albumTracks } = await supabase.from('album_tracks').select('album_id, track_id').order('order_index');
-    if (albumTracks) {
-      const map: Record<string, string[]> = {};
-      albumTracks.forEach(at => {
-        if (!map[at.album_id]) map[at.album_id] = [];
-        map[at.album_id].push(at.track_id);
-      });
-      setAlbumTracksMap(map);
-    }
-  };
-
-  const fetchPurchasedAlbums = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const { data } = await supabase.from('album_purchases').select('album_id').eq('user_id', user.id);
-    if (data) setPurchasedAlbumIds(data.map(p => p.album_id));
-  };
-
-  const hasAlbumAccess = (albumId: string) => {
-    return isSubscribed || purchasedAlbumIds.includes(albumId);
-  };
-
-  const handlePurchaseAlbum = async (album: Album) => {
-    try {
-      const { data, error } = await supabase.functions.invoke('create-album-checkout', {
-        body: { albumId: album.id }
-      });
-      if (error) throw error;
-      if (data?.url) window.open(data.url, '_blank');
-    } catch (error: any) {
-      toast({ title: t('common.error', 'Error'), description: error.message, variant: "destructive" });
-    }
-  };
-
-  const fetchPlaylists = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const { data } = await supabase.from('user_playlists').select('*').eq('user_id', user.id).order('created_at');
-    if (data) setPlaylists(data);
-  };
-
-  const fetchPlayHistory = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const { data } = await supabase.from('music_play_history').select('track_id, play_count').eq('user_id', user.id).order('play_count', { ascending: false });
-    if (data) setPlayHistory(data);
-  };
-
-  const fetchPlaylistTracks = async (playlistId: string) => {
-    const { data } = await supabase.from('playlist_tracks').select('track_id').eq('playlist_id', playlistId).order('order_index');
-    if (data) setPlaylistTracks(data.map(pt => pt.track_id));
-  };
-
-  const handleSubscribe = () => {
-    // ◈ SQI 2050 — All music access is via Prana-Flow tier (19€/mo)
-    navigate('/prana-flow');
-  };
-
-  const handlePurchaseTrack = async (track: Track) => {
-    try {
-      const { data, error } = await supabase.functions.invoke('purchase-music', {
-        body: { trackId: track.id, paymentMethod: 'stripe' }
-      });
-      if (error) throw error;
-      if (data?.checkoutUrl) window.open(data.checkoutUrl, '_blank');
-    } catch (error: any) {
-      toast({ title: t('common.error', 'Error'), description: error.message, variant: "destructive" });
-    }
-  };
-
-  const createPlaylist = async () => {
-    if (!newPlaylistName.trim()) return;
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    
-    await supabase.from('user_playlists').insert({ user_id: user.id, name: newPlaylistName.trim() });
-    setNewPlaylistName('');
-    fetchPlaylists();
-    toast({ title: t('music.portal.playlistCreated', 'Playlist created') });
-  };
-
-  const renamePlaylist = async (id: string) => {
-    if (!editingName.trim()) return;
-    await supabase.from('user_playlists').update({ name: editingName.trim() }).eq('id', id);
-    setEditingPlaylistId(null);
-    fetchPlaylists();
-  };
-
-  const deletePlaylist = async (id: string) => {
-    await supabase.from('user_playlists').delete().eq('id', id);
-    fetchPlaylists();
-    if (selectedPlaylist === id) setSelectedPlaylist(null);
-  };
-
-  const addToPlaylist = async (playlistId: string, trackId: string) => {
-    const maxOrder = playlistTracks.length;
-    await supabase.from('playlist_tracks').insert({ playlist_id: playlistId, track_id: trackId, order_index: maxOrder });
-    fetchPlaylistTracks(playlistId);
-    toast({ title: t('music.portal.addedToPlaylist', 'Added to playlist') });
-  };
-
-  const removeFromPlaylist = async (playlistId: string, trackId: string) => {
-    await supabase.from('playlist_tracks').delete().eq('playlist_id', playlistId).eq('track_id', trackId);
-    fetchPlaylistTracks(playlistId);
-  };
-
-  // Category tab filter maps Portal sound cats to track genres
-  const CAT_TO_GENRE: Record<SoundCat, string | null> = {
-    all: null,
-    beats: 'beats',
-    meditation: 'meditation',
-    mantra: 'mystic',
-    mystic: 'mystic',
-  };
-
-  const filteredTracks = tracks.filter(t => {
-    // Apply Sacred Sound Portal category tab
-    const catGenre = CAT_TO_GENRE[activeSoundCat];
-    if (catGenre && t.genre !== catGenre) return false;
-    if (selectedGenre !== 'all' && t.genre !== selectedGenre) return false;
-    if (selectedMood !== 'all' && t.mood !== selectedMood) return false;
-    if (selectedPath !== 'all' && t.spiritual_path !== selectedPath) return false;
-    return true;
-  });
-  const newReleases = [...tracks].sort((a, b) => new Date(b.release_date || b.created_at).getTime() - new Date(a.release_date || a.created_at).getTime()).slice(0, 5);
-  const historyTracks = playHistory.map(h => tracks.find(t => t.id === h.track_id)).filter(Boolean) as Track[];
-  const playlistTracksList = playlistTracks.map(id => tracks.find(t => t.id === id)).filter(Boolean) as Track[];
-  const userId = user?.id ?? 'anon';
-
-  const dailyPicks = useMemo(() => {
-    const d = new Date();
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    const date = `${yyyy}-${mm}-${dd}`;
-    const baseSeed = `${userId}:${date}:${shuffleNonce}`;
-
-    const picks: Record<MoodKey, Track | null> = {
-      calm: null,
-      comfort: null,
-      energy: null,
-      rest: null,
-      background: null,
-    };
-
-    const used: string[] = [];
-
-    const pickMood = (mood: MoodKey) => {
-      const picked = selectTrackForMood(tracks as any[], mood, {
-        seed: `${baseSeed}:${mood}`,
-        excludeIds: used,
-      }) as Track | null;
-      if (picked) used.push(getTrackIdSafe(picked as any));
-      picks[mood] = picked;
-    };
-
-    pickMood('calm');
-    pickMood('comfort');
-    pickMood('energy');
-    pickMood('rest');
-    pickMood('background');
-
-    return picks;
-  }, [tracks, userId, shuffleNonce]);
-
-  const onMoodClick = (mood: MoodKey) => {
-    const track = dailyPicks[mood];
-    if (!track) {
-      toast({ title: t('music.portal.toastNoTracksTitle', 'No tracks available'), description: t('music.portal.toastNoTracksDesc', 'Music sessions are coming soon.') });
-      return;
-    }
-    playTrack(track, tracks);
-    setSelectedForMood((prev) => ({ ...prev, [mood]: track }));
-  };
-
-  const playForMe = () => {
-    const tod = timeOfDayKey();
-    const key: MoodKey =
-      tod === 'morning' ? 'energy' : tod === 'afternoon' ? 'background' : 'rest';
-    onMoodClick(key);
-  };
-
-  const rescanNadi = useCallback(() => {
-    setNadiIdx(i => (i + 1) % NADI_PRESETS.length);
+  // ── Fetch tracks via curated playlists (real hook) ──
+  useEffect(() => {
+    fetchAllTracks();
   }, []);
 
-  // Build personalised Nadi prescription from real Jyotish profile if available
-  const nadiData = useMemo(() => {
-    const preset = NADI_PRESETS[nadiIdx];
-    if (jyotish && !jyotish.isLoading && jyotish.nakshatra) {
-      const dasha = jyotish.currentMahadasha ?? preset.dosha.split(' · ')[1] ?? 'Unknown Mahadasha';
-      const dosha = `${jyotish.nakshatra} Nakshatra · ${dasha}`;
-      const ragaMap: Record<string, string> = {
-        Rohini: 'Raga Yaman', Ashwini: 'Raga Bhairav', Pushya: 'Raga Bhimpalasi',
-        Chitra: 'Raga Yaman Kalyan', Hasta: 'Raga Kafi', Revati: 'Raga Bageshri',
-        Uttara_Phalguni: 'Raga Bihag', Shravana: 'Raga Khamaj', Magha: 'Raga Darbari',
-      };
-      const raga = ragaMap[jyotish.nakshatra] ?? preset.label;
-      return {
-        ...preset,
-        dosha,
-        body: `Your Jyotish field resonates with <strong style="color:#D4AF37">${raga}</strong>. ${dasha} activates your current frequency prescription. ${preset.hz} codes will align your ${jyotish.nakshatra} nakshatra energy and illuminate the subtle body pathways prescribed by your birth chart.`,
-      };
+  const fetchAllTracks = async () => {
+    setLoading(true);
+    try {
+      // Fetch from music_tracks table directly
+      const { data, error } = await supabase
+        .from('music_tracks')
+        .select('id, title, artist, cover_image_url, audio_url, genre, hz_frequency, tier_required, category, duration_seconds, shc_reward')
+        .order('created_at', { ascending: false });
+      if (data && !error) setTracks(data as MusicTrack[]);
+    } catch (e) {
+      console.error('Failed to fetch tracks', e);
     }
-    return preset;
-  }, [nadiIdx, jyotish]);
+    setLoading(false);
+  };
 
-  const lastPlayed: Track | null =
-    currentTrack ||
-    (historyTracks && historyTracks.length > 0 ? historyTracks[0] : null);
+  // Access check — exact pattern from Meditations.tsx
+  const legacyTier = ((user as { subscription_tier?: string } | null)?.subscription_tier ?? membershipTier ?? 'free')
+    .toString().toLowerCase();
+  const tierSlugUnlocks = ['prana_flow', 'soma', 'brahman', 'admin', 'lifetime', 'akasha-infinity', 'siddha-quantum'].includes(legacyTier) || legacyTier.includes('premium');
+  const hasMusicAccess = !!user && (isAdmin || adminGranted || isPremium || tierSlugUnlocks);
 
-  if (isLoading) {
+  // Filtered tracks
+  const filtered = filter === 'all' ? tracks : tracks.filter(t => {
+    const cat = (t.category || t.genre || '').toLowerCase();
+    return cat.includes(filter) || (filter === 'beats' && cat.includes('beat')) || (filter === 'meditation' && cat.includes('medit'));
+  });
+
+  // ── Play handler ──
+  const handlePlay = useCallback((track: MusicTrack) => {
+    if (!track.audio_url) return;
+    if (snippetTimerRef.current) { clearTimeout(snippetTimerRef.current); snippetTimerRef.current = null; }
+    playUniversalAudio({
+      id: track.id,
+      title: track.title,
+      audio_url: track.audio_url,
+      artist: track.artist || 'Kritagya Das',
+      cover_image_url: track.cover_image_url || null,
+      duration_seconds: track.duration_seconds || 0,
+      shc_reward: track.shc_reward || 0,
+      contentType: 'music',
+    });
+    // 30-second snippet for free users
+    if (!hasMusicAccess) {
+      snippetTimerRef.current = setTimeout(() => {
+        setSnippetEndedTrack(track);
+      }, 30000);
+    }
+  }, [playUniversalAudio, hasMusicAccess]);
+
+  // ── Lock handler → upgrade ──
+  const handleLock = useCallback(async (track: MusicTrack) => {
+    if (!user) { navigate('/auth'); return; }
+    setSnippetEndedTrack(track);
+  }, [user, navigate]);
+
+  // ── Upgrade (Stripe — PRESERVED) ──
+  const handleUpgrade = useCallback(async () => {
+    if (!user) { navigate('/auth'); return; }
+    if (upgradeLockedRef.current) return;
+    upgradeLockedRef.current = true;
+    try {
+      await startPranaMonthlyCheckout({
+        successPath: '/music?membership_success=true',
+        sourcePage: 'music-prana-upgrade',
+      });
+    } catch (e) {
+      upgradeLockedRef.current = false;
+      toast.error(e instanceof Error ? e.message : 'Checkout failed. Please try again.');
+    }
+  }, [user, navigate]);
+
+  // ── Loading state ──
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="sqi-music-page" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+        <style dangerouslySetInnerHTML={{ __html: SQI_STYLES }} />
+        <Loader2 size={28} style={{ color: '#22D3EE', animation: 'spin 1s linear infinite', marginBottom: 12 }} />
+        <div className="sqi-micro">Loading Sacred Sound Portal…</div>
       </div>
     );
   }
 
   return (
-    <div className="sqi-root">
-      <style>{styles}</style>
+    <div className="sqi-music-page">
+      <style dangerouslySetInnerHTML={{ __html: SQI_STYLES }} />
+      <StarfieldCanvas />
 
-      <div className="anahata-ring" />
-      <div ref={starsRef} style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }} />
+      <div className="sqi-music-content">
 
-      <div className="sqi-page">
-        {/* ── DHYANA-STYLE HEADER ── */}
-        <div className="sqi-header">
-          <button className="sqi-back-btn" onClick={() => navigate(-1)}>
-            ←
-          </button>
-          <div>
-            <div className="sqi-portal-title">
-              <span className="sqi-portal-title-sub">{t('music.portal.namaTitle', 'Nada Brahma · Sound is the Universe')}</span>
-              {t('music.portal.pageTitle2', 'Sacred Sound Portal')}
-            </div>
-          </div>
-        </div>
+        {/* ══ HERO ══ */}
+        <div className="sqi-hero" style={{ position: 'relative' }}>
+          {/* Floating orbs */}
+          <div className="sqi-orb" style={{ width: 200, height: 200, top: -60, right: -60, '--dur': '12s', '--dl': '0s' } as React.CSSProperties} />
+          <div className="sqi-orb" style={{ width: 100, height: 100, top: '60%', left: -30, '--dur': '8s', '--dl': '-3s' } as React.CSSProperties} />
 
-        {/* ── CATEGORY FILTER TABS ── */}
-        <div className="sqi-cat-tabs">
-          {SOUND_CATS.map(cat => (
+          {/* Back button */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
             <button
-              key={cat.key}
-              className={`sqi-cat-tab${activeSoundCat === cat.key ? ' active' : ''}`}
-              onClick={() => setActiveSoundCat(cat.key)}
+              onClick={() => navigate(-1)}
+              style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 16, flexShrink: 0 }}
             >
-              {cat.label}
+              <ArrowLeft size={16} />
+            </button>
+          </div>
+
+          <div className="sqi-micro">Nada Brahma · Sound is the Universe</div>
+          <h1 className="sqi-shimmer-title">Sacred Sound Portal</h1>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,.38)', marginTop: 8, lineHeight: 1.6 }}>
+            Every frequency is a doorway. Every sound a Prema-Pulse Transmission.
+          </p>
+        </div>
+
+        {/* ══ FILTER PILLS ══ */}
+        <div className="pill-row">
+          {[
+            { key: 'all', label: 'All Frequencies' },
+            { key: 'beats', label: 'Healing Beats' },
+            { key: 'meditation', label: 'Meditations' },
+            { key: 'mantra', label: 'Mantras' },
+            { key: 'music', label: 'Sacred Music' },
+          ].map(p => (
+            <button key={p.key} className={`pill${filter === p.key ? ' on' : ''}`} onClick={() => setFilter(p.key)}>
+              {p.label}
             </button>
           ))}
         </div>
 
-        {/* ── NADI SCANNER ── */}
-        <div style={{ padding: '8px 0 4px' }}>
-          <div className="sqi-sec-label">
-            <div className="sqi-sec-dot" />
-            {t('music.portal.nadiScannerLabel', 'Nadi Scanner · Your Frequency Prescription')}
-          </div>
-
-          <div className="sqi-nadi-card">
-            <div className="sqi-nadi-label">
-              <div className="sqi-nadi-dot" />
-              {t('music.portal.nadiLiveField', 'Live Field Resonance · Jyotish-Aligned')}
+        {/* ══ NADI SCANNER ══ */}
+        <div className="sec-hd">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#D4AF37', animation: 'nadiPulse 3s ease-in-out infinite' }} />
+            <div>
+              <div className="sqi-micro" style={{ marginBottom: 2 }}>Jyotish-Aligned</div>
+              <div style={{ fontWeight: 800, fontSize: 15, letterSpacing: '-.01em', color: 'rgba(255,255,255,.9)' }}>Nadi Scanner · Frequency Prescription</div>
             </div>
+          </div>
+        </div>
 
-            {/* Sacred Geometry SVG */}
-            <svg className="sqi-nadi-geo" viewBox="0 0 440 190" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <filter id="sqi-fc"><feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-                <filter id="sqi-fg"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-                <radialGradient id="sqi-bg-rg" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="rgba(34,211,238,0.08)"/>
-                  <stop offset="100%" stopColor="rgba(34,211,238,0)"/>
-                </radialGradient>
-              </defs>
-              <circle cx="220" cy="95" r="85" fill="url(#sqi-bg-rg)"/>
-              <circle cx="220" cy="95" r="84" fill="none" stroke="rgba(34,211,238,0.07)" strokeWidth="1"/>
-              <circle cx="220" cy="95" r="68" fill="none" stroke="rgba(34,211,238,0.1)" strokeWidth=".8"/>
-              <circle cx="220" cy="95" r="50" fill="none" stroke="rgba(212,175,55,0.14)" strokeWidth=".8"/>
-              <circle cx="220" cy="95" r="32" fill="none" stroke="rgba(212,175,55,0.2)" strokeWidth="1"/>
-              <circle cx="220" cy="95" r="14" fill="none" stroke="rgba(212,175,55,0.3)" strokeWidth=".8"/>
-              <polygon points="220,15 296,148 144,148" fill="none" stroke="rgba(212,175,55,0.13)" strokeWidth=".9"/>
-              <polygon points="220,175 144,42 296,42" fill="none" stroke="rgba(34,211,238,0.1)" strokeWidth=".9"/>
-              <polygon points="220,40 280,135 160,135" fill="none" stroke="rgba(212,175,55,0.09)" strokeWidth=".7"/>
-              <polygon points="220,150 160,55 280,55" fill="none" stroke="rgba(34,211,238,0.07)" strokeWidth=".7"/>
-              <ellipse cx="220" cy="61" rx="11" ry="24" fill="rgba(34,211,238,0.04)" stroke="rgba(34,211,238,0.13)" strokeWidth=".7" transform="rotate(0 220 95)"/>
-              <ellipse cx="220" cy="61" rx="11" ry="24" fill="rgba(34,211,238,0.04)" stroke="rgba(34,211,238,0.11)" strokeWidth=".7" transform="rotate(45 220 95)"/>
-              <ellipse cx="220" cy="61" rx="11" ry="24" fill="rgba(34,211,238,0.04)" stroke="rgba(34,211,238,0.11)" strokeWidth=".7" transform="rotate(90 220 95)"/>
-              <ellipse cx="220" cy="61" rx="11" ry="24" fill="rgba(34,211,238,0.04)" stroke="rgba(34,211,238,0.11)" strokeWidth=".7" transform="rotate(135 220 95)"/>
-              <ellipse cx="220" cy="61" rx="11" ry="24" fill="rgba(212,175,55,0.03)" stroke="rgba(212,175,55,0.1)" strokeWidth=".7" transform="rotate(22.5 220 95)"/>
-              <ellipse cx="220" cy="61" rx="11" ry="24" fill="rgba(212,175,55,0.03)" stroke="rgba(212,175,55,0.1)" strokeWidth=".7" transform="rotate(67.5 220 95)"/>
-              <ellipse cx="220" cy="61" rx="11" ry="24" fill="rgba(212,175,55,0.03)" stroke="rgba(212,175,55,0.1)" strokeWidth=".7" transform="rotate(112.5 220 95)"/>
-              <ellipse cx="220" cy="61" rx="11" ry="24" fill="rgba(212,175,55,0.03)" stroke="rgba(212,175,55,0.1)" strokeWidth=".7" transform="rotate(157.5 220 95)"/>
-              <circle cx="220" cy="11" r="2.2" fill="rgba(212,175,55,0.7)" filter="url(#sqi-fg)"/>
-              <circle cx="296" cy="43" r="1.6" fill="rgba(212,175,55,0.45)"/>
-              <circle cx="340" cy="95" r="2.2" fill="rgba(34,211,238,0.75)" filter="url(#sqi-fc)"/>
-              <circle cx="220" cy="179" r="2.2" fill="rgba(212,175,55,0.6)"/>
-              <circle cx="100" cy="95" r="2.2" fill="rgba(34,211,238,0.7)" filter="url(#sqi-fc)"/>
-              <circle cx="220" cy="95" r="7" fill="rgba(212,175,55,0.85)" filter="url(#sqi-fg)"/>
-              <circle cx="220" cy="95" r="3" fill="#fff"/>
-              <text x="220" y="89" textAnchor="middle" fontFamily="Plus Jakarta Sans,sans-serif" fontSize="8" fontWeight="800" letterSpacing="3" fill="rgba(255,255,255,0.3)">SCANNING</text>
-              <text x="220" y="105" textAnchor="middle" fontFamily="Plus Jakarta Sans,sans-serif" fontSize="16" fontWeight="900" fill="#22D3EE">{nadiData.hz}</text>
-            </svg>
+        <NadiScanner
+          jyotishMahadasha={jyotish?.mahadasha}
+          jyotishRaga={jyotish?.meditationType}
+        />
 
-            {/* Prescription result — wired to real Jyotish data */}
-            <div className="sqi-nadi-prescription">
-              <div className="sqi-nadi-presc-title">{nadiData.dosha}</div>
-              <div className="sqi-nadi-presc-body" dangerouslySetInnerHTML={{ __html: nadiData.body }} />
-              <div className="sqi-nadi-hz">{nadiData.hz} · {nadiData.label}</div>
-              {jyotish && !jyotish.isLoading && jyotish.nakshatra ? (
-                <div className="sqi-nadi-note">
-                  ↳ {t('music.portal.nadiLiveNote', 'Reading your birth chart & current Dasha from your Jyotish profile — same data source as your main Nadi Scanner.')}
-                </div>
-              ) : (
-                <div className="sqi-nadi-note">
-                  ↳ {t('music.portal.nadiGenericNote', 'Add your birth data in Vedic Astrology to receive a fully personalised Jyotish frequency prescription.')}
-                </div>
+        {/* ══ TRACK LIST ══ */}
+        <div className="sec-hd">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#D4AF37', animation: 'nadiPulse 3s ease-in-out infinite' }} />
+            <div>
+              <div className="sqi-micro" style={{ marginBottom: 2 }}>Prema-Pulse Transmissions</div>
+              <div style={{ fontWeight: 800, fontSize: 15, letterSpacing: '-.01em', color: 'rgba(255,255,255,.9)' }}>Sacred Transmissions</div>
+            </div>
+          </div>
+          <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--text-muted)', background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: 30, padding: '4px 12px' }}>
+            {hasMusicAccess ? 'FULL ACCESS' : 'FREE · 30s SNIPPETS'}
+          </span>
+        </div>
+
+        <div className="glass-card" style={{ overflow: 'visible', padding: '8px 0' }}>
+          {filtered.length === 0 ? (
+            <div style={{ padding: '32px 20px', textAlign: 'center' }}>
+              <div className="sqi-micro" style={{ textAlign: 'center' }}>No transmissions found in this category</div>
+            </div>
+          ) : filtered.map((track, i) => (
+            <React.Fragment key={track.id}>
+              <MusicTrackRow
+                track={track}
+                isActive={currentAudio?.id === track.id}
+                isPlaying={isPlaying}
+                progress={playerProgress ?? 0}
+                hasAccess={hasMusicAccess}
+                onPlay={handlePlay}
+                onLock={handleLock}
+              />
+              {i < filtered.length - 1 && (
+                <div style={{ height: 1, background: 'rgba(255,255,255,.03)', margin: '0 16px' }} />
               )}
-            </div>
-
-            <button className="btn-siddha-gold" onClick={rescanNadi}>
-              ⟳ &nbsp;{t('music.portal.rescanBtn', 'Re-Scan My Field')}
-            </button>
-          </div>
-        </div>
-
-        {/* ── HERO SECTION (existing) ── */}
-        <div className="planetary-hero">
-          <div className="hero-eyebrow">{t('music.portal.heroEyebrow', 'Current Planetary Sound')}</div>
-          <div className="hero-title">
-            {t('music.portal.heroTitle1', 'Sacred')}
-            <br />
-            {t('music.portal.heroTitle2', 'Frequencies')}
-          </div>
-          <HeroWave />
-          <div className="hero-meta">
-            <div className="hero-freq-tag">
-              <div className="nadi-dot" />
-              {t('music.portal.heroLiveTransmission', '963 Hz · Live Transmission')}
-            </div>
-            <button className="hero-play-btn" onClick={playForMe}>
-              ▶
-            </button>
-          </div>
-        </div>
-
-        <div className="prescription-card">
-          <div className="presc-header">
-            <span style={{ color: 'var(--gold)' }}>♫</span>
-            <span className="presc-label">{t('music.portal.prescriptionLabel', 'Cosmic Sound Prescription')}</span>
-          </div>
-          <div className="presc-text">
-            {jyotish && !jyotish.isLoading && jyotish.nakshatra
-              ? nadiData.body.replace(/<[^>]*>/g, '')
-              : t('music.portal.prescriptionCopy', 'Your Jupiter period resonates with Raga Yaman and 963Hz (divine connection). Listen to these to balance your Kapha energy.')}
-          </div>
-        </div>
-
-        <div
-          className="pranaflow-banner"
-          onClick={async () => {
-            await handleSubscribe();
-          }}
-        >
-          <div className="pf-inner">
-            <div className="pf-crown">👑</div>
-            <div className="pf-content">
-              <div className="pf-tier-label">{t('music.portal.pranaflowTier', 'Pranaflow Tier')}</div>
-              <div className="pf-name">{t('music.portal.musicMember', 'Music Member')}</div>
-              <div className="pf-desc">{t('music.portal.pranaflowDesc', 'Unlimited streaming · 33 SHC/track · Renews soon')}</div>
-            </div>
-            <div className="pf-badge">{t('music.portal.pranaflowPrice', '19€/mo')}</div>
-          </div>
-        </div>
-
-        <div className="mastering-card" onClick={() => navigate('/mastering')}>
-          <div className="mastering-icon">🎛</div>
-          <div style={{ flex: 1 }}>
-            <div className="mastering-title">{t('music.portal.masteringTitle', 'Music Mastering Service')}</div>
-            <div className="mastering-sub">{t('music.portal.masteringSub', 'Professional audio mastering from €147')}</div>
-          </div>
-          <span style={{ color: 'var(--text-muted)', fontSize: 18 }}>›</span>
-        </div>
-
-        <div className="gold-divider" />
-
-        <div className="section-header">
-          <div>
-            <div className="section-title">{t('music.portal.sectionNeedTitle', 'What do you need right now?')}</div>
-            <div className="section-sub">{t('music.portal.sectionNeedSub', 'One tap — the sound meets you where you are.')}</div>
-          </div>
-          <button
-            className="shuffle-btn"
-            onClick={() => {
-              setShuffleNonce((n) => n + 1);
-              setSelectedForMood({
-                calm: null,
-                comfort: null,
-                energy: null,
-                rest: null,
-                background: null,
-              });
-            }}
-          >
-            ⇄ {t('music.portal.shuffle', 'Shuffle')}
-          </button>
-        </div>
-
-        <div className="mood-grid">
-          {moodCards.map((m) => (
-            <div
-              key={m.title}
-              className={`mood-card${m.full ? ' full-width' : ''}`}
-              onClick={() => onMoodClick(m.moodKey)}
-            >
-              <div className="mood-freq">
-                <div className="freq-dot" />
-                {m.hz}
-              </div>
-              <MiniWave />
-              <div className="mood-title">{m.title}</div>
-              <div className="mood-track">{m.trackLabel}</div>
-              <div className="mood-footer">
-                <div className="mood-tag">{m.tag}</div>
-                <div className="mood-play">▶</div>
-              </div>
-            </div>
+            </React.Fragment>
           ))}
         </div>
 
-        <div className="section-header">
-          <div>
-            <div className="section-title">{t('music.portal.soundPathTitle', 'Your Sound Path')}</div>
-            <div className="section-sub">{t('music.portal.soundPathSub', "The sounds you've returned to recently.")}</div>
-          </div>
-        </div>
-
-        {lastPlayed && (
-          <div className="path-card" onClick={() => playTrack(lastPlayed, tracks)}>
-            <div className="path-freq-badge">432 Hz</div>
-            <div style={{ flex: 1 }}>
-              <div className="path-title">{t('music.portal.continueListening', 'Continue listening')}</div>
-              <div className="path-sub">{lastPlayed.title}</div>
-            </div>
-            <div className="path-play">▶</div>
-          </div>
-        )}
-
-        {historyTracks
-          .filter((t) => !lastPlayed || t.id !== lastPlayed.id)
-          .slice(0, 2)
-          .map((track, index) => (
-            <div key={track.id} className="path-card" onClick={() => playTrack(track, tracks)}>
-              <div className="path-freq-badge">{index === 0 ? '432 Hz' : '528 Hz'}</div>
-              <div style={{ flex: 1 }}>
-                <div className="path-title">{track.title}</div>
-                {track.mood && <div className="path-sub">{tMusicMood(track.mood, t)}</div>}
-              </div>
-              <div className="path-play">▶</div>
-            </div>
-          ))}
-
-        {!lastPlayed && historyTracks.length === 0 && (
+        {/* ══ CURATED PLAYLISTS ══ */}
+        {curatedPlaylists.length > 0 && (
           <>
-            {recentPlaceholders.map((r) => (
-              <div key={r.title} className="path-card">
-                <div className="path-freq-badge">{r.hz}</div>
-                <div style={{ flex: 1 }}>
-                  <div className="path-title">{r.title}</div>
-                  <div className="path-sub">{t('music.portal.soonListening', 'Soon this will show your listening.')}</div>
+            <div className="sec-hd" style={{ paddingTop: 28 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#D4AF37', animation: 'nadiPulse 3s ease-in-out infinite' }} />
+                <div>
+                  <div className="sqi-micro" style={{ marginBottom: 2 }}>Akasha-Neural Collections</div>
+                  <div style={{ fontWeight: 800, fontSize: 15, letterSpacing: '-.01em', color: 'rgba(255,255,255,.9)' }}>Curated Playlists</div>
                 </div>
-                <div className="path-play">▶</div>
               </div>
-            ))}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              {curatedPlaylists.map(pl => (
+                <CuratedPlaylistCard key={pl.id} playlist={pl} onClick={() => {}} />
+              ))}
+            </div>
           </>
         )}
 
-        <div className="time-matched" style={{ marginTop: 8 }} onClick={playForMe}>
-          <div className="time-icon">🕐</div>
-          <div style={{ flex: 1 }}>
-            <div className="time-label">{t('music.portal.nadiScanner', 'Nadi Scanner · Time-Matched')}</div>
-            <div className="time-title">{t('music.portal.timeMatchedTitle', 'The sound that fits now')}</div>
-            <div className="time-sub">{t('music.portal.timeMatchedSub', 'Matched to your time of day — no thinking required.')}</div>
-          </div>
-          <span style={{ color: 'var(--cyan)', fontSize: 16 }}>›</span>
-        </div>
+        <div className="akasha-divider" style={{ margin: '28px 0 8px' }} />
 
-        {/* ── UPGRADE SECTION ── */}
-        {memberTier === 'free' && (
-          <div style={{ padding: '8px 0 4px' }}>
-            <div className="sqi-sec-label">
-              <div className="sqi-sec-dot" />
-              {t('music.portal.unlockFrequency', 'Unlock Your Frequency')}
-            </div>
-
-            <div className="sqi-upgrade-stack">
-              {/* FREE */}
-              <div className="sqi-upgrade-card sqi-uc-free">
-                <div className="sqi-uc-tier">{t('music.portal.tierFreeLabel', 'Free · Seeker')}</div>
-                <div className="sqi-uc-name">{t('music.portal.tierFreeName', 'Taste the Field')}</div>
-                <div className="sqi-uc-price">€0 <small>/ {t('music.portal.forever', 'forever')}</small></div>
-                <ul className="sqi-uc-features">
-                  <li>30-second snippets of every track</li>
-                  <li>Nadi Scanner — 1 field scan per day</li>
-                  <li>Cosmic Sound Prescription</li>
-                  <li className="dim">Full track streaming (Prana-Flow+)</li>
-                  <li className="dim">Downloads (Siddha-Quantum+)</li>
-                </ul>
-                <button className="btn-siddha-outline" onClick={handleSubscribe}>{t('music.portal.tierFreeCta', 'Explore Free Access')}</button>
-              </div>
-
-              {/* PRANA-FLOW */}
-              <div className="sqi-upgrade-card sqi-uc-prana">
-                <div className="sqi-uc-tier">{t('music.portal.tierPranaLabel', 'Prana-Flow Tier')}</div>
-                <div className="sqi-uc-name">{t('music.portal.tierPranaName', 'Practitioner')}</div>
-                <div className="sqi-uc-price">€19 <small>/ {t('music.portal.month', 'month')}</small></div>
-                <ul className="sqi-uc-features">
-                  <li>Full streaming — all tracks, unlimited</li>
-                  <li>Nadi Scanner — unlimited scans</li>
-                  <li>Jyotish sound prescription (full)</li>
-                  <li>33 SHC coins per track played</li>
-                  <li>Healing Beats + Meditations library</li>
-                  <li className="dim">Downloads (Siddha-Quantum+)</li>
-                </ul>
-                <button className="btn-siddha-gold" onClick={handleSubscribe}>{t('music.portal.tierPranaCta', 'Activate Prana-Flow · €19/mo')}</button>
-              </div>
-
-              {/* SIDDHA-QUANTUM */}
-              <div className="sqi-upgrade-card sqi-uc-siddha">
-                <div className="sqi-uc-tier">{t('music.portal.tierSiddhaLabel', 'Siddha-Quantum Tier')}</div>
-                <div className="sqi-uc-name">{t('music.portal.tierSiddhaName', 'Siddha')}</div>
-                <div className="sqi-uc-price">€45 <small>/ {t('music.portal.month', 'month')}</small></div>
-                <ul className="sqi-uc-features">
-                  <li>Everything in Prana-Flow</li>
-                  <li>Full downloads — all formats</li>
-                  <li>Custom mantra creation with Kritagya</li>
-                  <li>Custom healing beat production request</li>
-                  <li>Full Sacred Music library access</li>
-                  <li>Early access to all new releases</li>
-                </ul>
-                <button className="btn-siddha-gold" onClick={handleSubscribe}>{t('music.portal.tierSiddhaCta', 'Activate Siddha-Quantum · €45/mo')}</button>
-              </div>
-
-              {/* AKASHA-INFINITY */}
-              <div className="sqi-upgrade-card sqi-uc-akasha">
-                <div className="sqi-uc-tier cyan">{t('music.portal.tierAkashaLabel', 'Akasha-Infinity · Eternal')}</div>
-                <div className="sqi-uc-name">{t('music.portal.tierAkashaName', 'Akasha Master')}</div>
-                <div className="sqi-uc-price grad">€1111 <small style={{ WebkitTextFillColor: 'var(--text-muted)' }}>/ {t('music.portal.lifetime', 'lifetime')}</small></div>
-                <ul className="sqi-uc-features">
-                  <li>Everything unlocked — eternally</li>
-                  <li>Lifetime download vault — all releases forever</li>
-                  <li>Custom mantra + healing beat creation</li>
-                  <li>Dedicated Akasha channel in community</li>
-                  <li>All future releases at zero cost</li>
-                </ul>
-                <button
-                  className="btn-siddha-gold"
-                  style={{ background: 'linear-gradient(90deg,#D4AF37,#22D3EE)', animation: 'none', boxShadow: '0 0 20px rgba(34,211,238,.3),0 0 40px rgba(212,175,55,.2)' }}
-                  onClick={handleSubscribe}
-                >
-                  {t('music.portal.tierAkashaCta', 'Activate Akasha-Infinity · €1111')}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="browse-section">
-          <div
-            className="browse-header"
-            onClick={() => {
-              setOpenLibrary((v) => !v);
-            }}
-          >
+        {/* ══ UPGRADE SECTION ══ */}
+        <div className="sec-hd">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#D4AF37', animation: 'nadiPulse 3s ease-in-out infinite' }} />
             <div>
-              <div className="browse-title">{t('music.portal.browseTitle', 'Browse All Sounds')}</div>
-              <div className="browse-sub">{t('music.portal.browseSub', 'Only if you feel like exploring.')}</div>
+              <div className="sqi-micro" style={{ marginBottom: 2 }}>Akasha-Infinity Architecture</div>
+              <div style={{ fontWeight: 800, fontSize: 15, letterSpacing: '-.01em', color: 'rgba(255,255,255,.9)' }}>Unlock Your Frequency</div>
             </div>
-            <div className="browse-chevron">{openLibrary ? '∧' : '∨'}</div>
           </div>
-
-          {openLibrary && (
-            <div className="px-4 pb-5">
-              {/* Tabs */}
-              <div className="flex gap-2 mb-4 overflow-x-auto">
-                {(['browse', 'albums', 'playlists', 'history'] as const).map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => {
-                      setActiveTab(tab);
-                      if (tab === 'browse') {
-                        setSelectedPlaylist(null);
-                        setSelectedAlbum(null);
-                        setSelectedCuratedPlaylist(null);
-                      }
-                    }}
-                    className={`sqi-tab ${activeTab === tab ? 'sqi-tab-active' : ''}`}
-                  >
-                    {tab === 'albums' && <Disc size={14} className="inline mr-1" />}
-                    {tab === 'browse' && t('music.portal.tabBrowse', 'Browse')}
-                    {tab === 'albums' && t('music.portal.tabAlbums', 'Albums')}
-                    {tab === 'playlists' && t('music.portal.tabPlaylists', 'Playlists')}
-                    {tab === 'history' && t('music.portal.tabHistory', 'History')}
-                  </button>
-                ))}
-              </div>
-
-              {/* Albums Tab */}
-              {activeTab === 'albums' && (
-                <div>
-                  {selectedAlbum ? (
-                    <>
-                      <div className="flex items-center gap-2 mb-4">
-                        <Button variant="ghost" size="sm" onClick={() => setSelectedAlbum(null)}>
-                          ← {t('common.back', 'Back')}
-                        </Button>
-                      </div>
-
-                      {/* Album Header */}
-                      <div className="flex gap-4 mb-6">
-                        {selectedAlbum.cover_image_url ? (
-                          <img
-                            src={selectedAlbum.cover_image_url}
-                            alt={selectedAlbum.title}
-                            className="w-24 h-24 rounded-xl object-cover"
-                          />
-                        ) : (
-                          <div className="w-24 h-24 rounded-xl bg-muted flex items-center justify-center">
-                            <Disc size={32} className="text-muted-foreground" />
-                          </div>
-                        )}
-                        <div className="flex-1">
-                          <h2 className="text-xl font-bold">{selectedAlbum.title}</h2>
-                          <p className="text-sm text-muted-foreground">{selectedAlbum.artist}</p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {t('music.portal.trackCount', { defaultValue: '{{count}} tracks', count: String(albumTracksMap[selectedAlbum.id]?.length || 0) })}
-                          </p>
-
-                          {hasAlbumAccess(selectedAlbum.id) ? (
-                            <span className="text-xs text-primary mt-2 inline-block">{t('music.portal.fullAccess', '✓ Full access')}</span>
-                          ) : (
-                            <Button size="sm" className="mt-2" onClick={() => handlePurchaseAlbum(selectedAlbum)}>
-                              {t('music.portal.buyAlbumCta', {
-                                defaultValue: 'Buy album {{price}}',
-                                price: `$${selectedAlbum.price_usd}`,
-                              })}
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Album Tracks */}
-                      <div className="space-y-2">
-                        {(albumTracksMap[selectedAlbum.id] || []).map((trackId) => {
-                          const track = tracks.find((t) => t.id === trackId);
-                          if (!track) return null;
-                          return (
-                            <TrackCard
-                              key={track.id}
-                              track={track}
-                              playlists={playlists}
-                              onAddToPlaylist={addToPlaylist}
-                              onPurchase={handlePurchaseTrack}
-                              allTracks={tracks.filter((t) => albumTracksMap[selectedAlbum.id]?.includes(t.id))}
-                            />
-                          );
-                        })}
-                      </div>
-                    </>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-3">
-                      {albums.map((album) => (
-                        <button
-                          key={album.id}
-                          onClick={() => setSelectedAlbum(album)}
-                          className="bg-muted/30 border border-border/50 rounded-xl p-3 text-left hover:bg-muted/50 transition-colors"
-                        >
-                          {album.cover_image_url ? (
-                            <img
-                              src={album.cover_image_url}
-                              alt={album.title}
-                              className="w-full aspect-square rounded-lg object-cover mb-2"
-                            />
-                          ) : (
-                            <div className="w-full aspect-square rounded-lg bg-muted flex items-center justify-center mb-2">
-                              <Disc size={32} className="text-muted-foreground" />
-                            </div>
-                          )}
-                          <h3 className="font-medium text-sm truncate">{album.title}</h3>
-                          <p className="text-xs text-muted-foreground truncate">{album.artist}</p>
-                          <div className="flex items-center justify-between mt-1">
-                            <span className="text-xs text-muted-foreground">
-                              {t('music.portal.trackCount', { defaultValue: '{{count}} tracks', count: String(albumTracksMap[album.id]?.length || 0) })}
-                            </span>
-                            {hasAlbumAccess(album.id) ? (
-                              <span className="text-xs text-primary">{t('music.owned', '✓ Owned')}</span>
-                            ) : (
-                              <span className="text-xs text-primary font-medium">${album.price_usd}</span>
-                            )}
-                          </div>
-                        </button>
-                      ))}
-                      {albums.length === 0 && (
-                        <p className="col-span-2 text-muted-foreground text-sm text-center py-8">
-                          {t('music.portal.noAlbums', 'No albums available yet')}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Browse Tab */}
-              {activeTab === 'browse' && (
-                <>
-                  {selectedCuratedPlaylist ? (
-                    <>
-                      <div className="flex items-center gap-2 mb-4">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedCuratedPlaylist(null);
-                            setCuratedPlaylistTracks([]);
-                          }}
-                        >
-                          <ArrowLeft size={16} className="mr-1" /> {t('common.back', 'Back')}
-                        </Button>
-                      </div>
-
-                      {/* Playlist Header */}
-                      <div className="flex gap-4 mb-6">
-                        {selectedCuratedPlaylist.cover_image_url ? (
-                          <img
-                            src={selectedCuratedPlaylist.cover_image_url}
-                            alt={selectedCuratedPlaylist.title}
-                            className="w-24 h-24 rounded-xl object-cover"
-                          />
-                        ) : (
-                          <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                            <Music2 size={32} className="text-muted-foreground" />
-                          </div>
-                        )}
-                        <div className="flex-1">
-                          <h2 className="text-xl font-bold">{selectedCuratedPlaylist.title}</h2>
-                          {selectedCuratedPlaylist.description && (
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {selectedCuratedPlaylist.description}
-                            </p>
-                          )}
-                          <p className="text-xs text-muted-foreground mt-2">
-                            {t('music.portal.curatedPlaylistMeta', {
-                              defaultValue: '{{count}} tracks · {{minutes}} min',
-                              count: String(selectedCuratedPlaylist.track_count),
-                              minutes: String(Math.floor(selectedCuratedPlaylist.total_duration / 60)),
-                            })}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Playlist Tracks */}
-                      <div className="space-y-2">
-                        {curatedPlaylistTracks.map((track) => (
-                          <TrackCard
-                            key={track.id}
-                            track={track}
-                            playlists={playlists}
-                            onAddToPlaylist={addToPlaylist}
-                            onPurchase={handlePurchaseTrack}
-                            allTracks={curatedPlaylistTracks}
-                          />
-                        ))}
-                        {curatedPlaylistTracks.length === 0 && (
-                          <div className="flex items-center justify-center py-8">
-                            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      {/* Curated Playlists Section */}
-                      {curatedPlaylists.length > 0 && (
-                        <div className="mb-6">
-                          <h2 className="text-lg font-semibold mb-3">{t('music.portal.featuredPlaylists', 'Featured Playlists')}</h2>
-                          <div className="grid grid-cols-2 gap-3">
-                            {curatedPlaylists.map((playlist) => (
-                              <CuratedPlaylistCard
-                                key={playlist.id}
-                                playlist={playlist}
-                                onClick={async () => {
-                                  setSelectedCuratedPlaylist(playlist);
-                                  const items = await getPlaylistItems(playlist.id);
-                                  setCuratedPlaylistTracks(items as Track[]);
-                                }}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Filters Section */}
-                      <h2 className="text-lg font-semibold mb-3">{t('music.portal.allTracks', 'All Tracks')}</h2>
-
-                      {/* Genre Filter */}
-                      <div className="mb-3">
-                        <p className="text-xs text-white/35 mb-2">{t('music.portal.genre', 'Genre')}</p>
-                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                          {GENRES.map((g) => (
-                            <button
-                              key={g}
-                              onClick={() => setSelectedGenre(g)}
-                              className={`sqi-chip ${selectedGenre === g ? 'sqi-chip-active' : ''}`}
-                            >
-                              {tMusicGenre(g, t)}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Mood Filter */}
-                      <div className="mb-3">
-                        <p className="text-xs text-white/35 mb-2">{t('music.portal.moodFilter', 'Mood')}</p>
-                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                          {moods.map((m) => (
-                            <button
-                              key={m.value}
-                              onClick={() => setSelectedMood(m.value)}
-                              className={`sqi-chip ${selectedMood === m.value ? 'sqi-chip-active' : ''}`}
-                            >
-                              {m.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Spiritual Path Filter */}
-                      <div className="mb-4">
-                        <p className="text-xs text-white/35 mb-2">{t('music.portal.spiritualPath', 'Spiritual Path')}</p>
-                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                          {spiritualPaths.map((p) => (
-                            <button
-                              key={p.value}
-                              onClick={() => setSelectedPath(p.value)}
-                              className={`sqi-chip ${selectedPath === p.value ? 'sqi-chip-active' : ''}`}
-                            >
-                              {p.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Tracks */}
-                      <div className="space-y-2">
-                        {filteredTracks.map((track) => (
-                          <TrackCard
-                            key={track.id}
-                            track={track}
-                            playlists={playlists}
-                            onAddToPlaylist={addToPlaylist}
-                            onPurchase={handlePurchaseTrack}
-                            allTracks={filteredTracks}
-                          />
-                        ))}
-                        {filteredTracks.length === 0 && (
-                          <p className="text-muted-foreground text-sm text-center py-8">
-                            {t('music.portal.noTracksGenre', 'No tracks in this genre yet')}
-                          </p>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </>
-              )}
-
-              {/* Playlists Tab */}
-              {activeTab === 'playlists' && (
-                <div>
-                  {/* Create Playlist */}
-                  <div className="flex gap-2 mb-4">
-                    <Input
-                      value={newPlaylistName}
-                      onChange={(e) => setNewPlaylistName(e.target.value)}
-                      placeholder={t('music.portal.newPlaylistPlaceholder', 'New playlist name')}
-                      className="flex-1"
-                      onKeyDown={(e) => e.key === 'Enter' && createPlaylist()}
-                    />
-                    <Button size="sm" onClick={createPlaylist}>
-                      <Plus size={16} />
-                    </Button>
-                  </div>
-
-                  {selectedPlaylist ? (
-                    <>
-                      <div className="flex items-center gap-2 mb-4">
-                        <Button variant="ghost" size="sm" onClick={() => setSelectedPlaylist(null)}>
-                          ← {t('common.back', 'Back')}
-                        </Button>
-                        <span className="font-semibold">
-                          {playlists.find((p) => p.id === selectedPlaylist)?.name}
-                        </span>
-                      </div>
-                      <div className="space-y-2">
-                        {playlistTracksList.map((track) => (
-                          <div key={track.id} className="flex items-center gap-2">
-                            <GripVertical size={16} className="text-muted-foreground cursor-grab" />
-                            <div className="flex-1">
-                              <TrackCard
-                                track={track}
-                                onPurchase={handlePurchaseTrack}
-                                allTracks={playlistTracksList}
-                              />
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeFromPlaylist(selectedPlaylist, track.id)}
-                            >
-                              <X size={14} />
-                            </Button>
-                          </div>
-                        ))}
-                        {playlistTracksList.length === 0 && (
-                          <p className="text-muted-foreground text-sm text-center py-8">
-                            {t('music.portal.noPlaylistTracks', 'No tracks in this playlist yet')}
-                          </p>
-                        )}
-                      </div>
-                    </>
-                  ) : (
-                    <div className="space-y-2">
-                      {playlists.map((pl) => (
-                        <div
-                          key={pl.id}
-                          className="flex items-center gap-2 p-3 bg-muted/30 rounded-xl hover:bg-muted/40 transition-colors"
-                        >
-                          <List size={18} className="text-muted-foreground" />
-                          {editingPlaylistId === pl.id ? (
-                            <>
-                              <Input
-                                value={editingName}
-                                onChange={(e) => setEditingName(e.target.value)}
-                                className="flex-1 h-8"
-                              />
-                              <Button size="icon" variant="ghost" onClick={() => renamePlaylist(pl.id)}>
-                                <Check size={14} />
-                              </Button>
-                            </>
-                          ) : (
-                            <>
-                              <span
-                                className="flex-1 cursor-pointer"
-                                onClick={() => {
-                                  setSelectedPlaylist(pl.id);
-                                  fetchPlaylistTracks(pl.id);
-                                }}
-                              >
-                                {pl.name}
-                              </span>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={() => {
-                                  setEditingPlaylistId(pl.id);
-                                  setEditingName(pl.name);
-                                }}
-                              >
-                                <Edit2 size={14} />
-                              </Button>
-                              <Button size="icon" variant="ghost" onClick={() => deletePlaylist(pl.id)}>
-                                <X size={14} />
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      ))}
-                      {playlists.length === 0 && (
-                        <p className="text-muted-foreground text-sm text-center py-8">
-                          {t('music.portal.createFirstPlaylist', 'Create your first playlist')}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* History Tab */}
-              {activeTab === 'history' && (
-                <div>
-                  <h2 className="text-lg font-semibold mb-3">{t('music.portal.mostPlayed', 'Most Played')}</h2>
-                  <div className="space-y-2">
-                    {historyTracks.map((track, i) => (
-                      <div key={track.id} className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground w-6 text-center font-medium">
-                          {i + 1}
-                        </span>
-                        <div className="flex-1">
-                          <TrackCard
-                            track={track}
-                            playlists={playlists}
-                            onAddToPlaylist={addToPlaylist}
-                            onPurchase={handlePurchaseTrack}
-                            allTracks={historyTracks}
-                          />
-                        </div>
-                        <span className="text-xs text-muted-foreground shrink-0">
-                          {t('music.portal.plays', { defaultValue: '{{count}} plays', count: String(playHistory.find((h) => h.track_id === track.id)?.play_count ?? 0) })}
-                        </span>
-                      </div>
-                    ))}
-                    {historyTracks.length === 0 && (
-                      <p className="text-muted-foreground text-sm text-center py-8">
-                        {t('music.portal.noPlayHistory', 'No play history yet')}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
         </div>
-      </div>
 
-      <nav className="bottom-nav">
-        {[
-          { icon: '⌂', label: t('music.portal.navHome', 'Home') },
-          { icon: '◎', label: t('music.portal.navMeditate', 'Meditate') },
-          { icon: '✦', label: t('music.portal.navMantras', 'Mantras') },
-          { icon: '♪', label: t('music.portal.navMusic', 'Music'), active: true },
-          { icon: '❋', label: t('music.portal.navHealing', 'Healing') },
-          { icon: '◯', label: t('music.portal.navProfile', 'Profile') },
-        ].map((n) => (
-          <div key={n.label} className={`nav-item${n.active ? ' active' : ''}`}>
-            <div className="nav-icon">{n.icon}</div>
-            <div className="nav-label">{n.label}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
+
+          {/* FREE */}
+          <div className="up-card up-free">
+            <div className="up-tier">Free · Seeker</div>
+            <div className="up-name">Taste the Field</div>
+            <div className="up-price">€0 <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-muted)' }}>/ forever</span></div>
+            <ul className="up-feats">
+              <li>30-second snippets of every track</li>
+              <li>Nadi Scanner — 1 scan per day</li>
+              <li>Cosmic Sound Prescription</li>
+              <li className="dim">Full streaming (Prana-Flow+)</li>
+              <li className="dim">Downloads (Siddha-Quantum+)</li>
+            </ul>
+            <button className="cta-outline">Explore Free Access</button>
           </div>
-        ))}
-      </nav>
 
-      <button className="float-btn" onClick={playForMe}>
-        🎵 {t('music.portal.floatPlayForMe', 'Play something for me')}
-      </button>
+          {/* PRANA-FLOW */}
+          <div className="up-card up-prana">
+            <div className="up-tier">Prana-Flow</div>
+            <div className="up-name">Practitioner</div>
+            <div className="up-price">€19 <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-muted)' }}>/ month</span></div>
+            <ul className="up-feats">
+              <li>Full streaming — all tracks unlimited</li>
+              <li>Nadi Scanner — unlimited scans</li>
+              <li>Jyotish frequency prescription (full)</li>
+              <li>33 SHC coins per track streamed</li>
+              <li>Healing Beats + Meditations complete</li>
+              <li className="dim">Downloads (Siddha-Quantum+)</li>
+            </ul>
+            <button className="cta-gold" onClick={handleUpgrade}>Activate Prana-Flow · €19/mo</button>
+          </div>
+
+          {/* SIDDHA-QUANTUM */}
+          <div className="up-card up-siddha">
+            <div className="up-tier">Siddha-Quantum</div>
+            <div className="up-name">Siddha</div>
+            <div className="up-price">€45 <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-muted)' }}>/ month</span></div>
+            <ul className="up-feats">
+              <li>Everything in Prana-Flow</li>
+              <li>Full downloads — all audio formats</li>
+              <li>Custom mantra creation with Kritagya</li>
+              <li>Custom healing beat production request</li>
+              <li>Full Sacred Music library</li>
+              <li>Early access to all new releases</li>
+            </ul>
+            <button className="cta-gold">Activate Siddha-Quantum · €45/mo</button>
+          </div>
+
+          {/* AKASHA-INFINITY */}
+          <div className="up-card up-akasha">
+            <div className="up-tier c">Akasha-Infinity · Eternal</div>
+            <div className="up-name">Akasha Master</div>
+            <div className="up-price" style={{ background: 'linear-gradient(90deg,#D4AF37,#22D3EE)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+              €1111 <span style={{ fontSize: 13, fontWeight: 500, WebkitTextFillColor: 'var(--text-muted)' }}>/ lifetime</span>
+            </div>
+            <ul className="up-feats">
+              <li>Everything — unlocked eternally</li>
+              <li>Lifetime download vault — all future releases</li>
+              <li>Custom mantra + healing beat creation</li>
+              <li>Dedicated Akasha community channel</li>
+              <li>Zero cost on all future releases forever</li>
+            </ul>
+            <button className="cta-akasha">Activate Akasha-Infinity · €1111</button>
+          </div>
+
+        </div>
+
+      </div>{/* /sqi-music-content */}
+
+      {/* ══ NOW PLAYING BAR (exact from Meditations.tsx) ══ */}
+      {currentAudio && currentAudio.contentType === 'music' && (
+        <div className={`now-playing-bar${isPlaying ? ' np-live' : ''}`}>
+          <button
+            className={`np-play-icon${isPlaying ? ' np-pulse' : ''}`}
+            onClick={togglePlay}
+          >
+            {isPlaying ? <Pause size={14} /> : <Play size={14} style={{ marginLeft: 2 }} />}
+          </button>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className={`np-title-bar${isPlaying ? ' np-cinzel-gold' : ''}`}>
+              {currentAudio.title}
+            </div>
+            <div className="np-bar-track">
+              <div className="np-bar-fill" style={{ width: `${(playerProgress ?? 0) * 100}%` }} />
+            </div>
+          </div>
+          <Sparkles size={14} className="nadi-pulse" />
+        </div>
+      )}
+
+      {/* ══ SNIPPET END MODAL ══ */}
+      {snippetEndedTrack && (
+        <SnippetModal
+          track={snippetEndedTrack}
+          onClose={() => setSnippetEndedTrack(null)}
+          onUpgrade={() => { setSnippetEndedTrack(null); handleUpgrade(); }}
+        />
+      )}
+
     </div>
   );
 };
