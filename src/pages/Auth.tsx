@@ -430,7 +430,7 @@ const Auth: React.FC = () => {
 
             <div className="space-y-2">
               <label className="text-white/40 text-[8px] font-extrabold tracking-[0.35em] uppercase block ml-1" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                {t('auth.password', 'Password')}
+                {t('auth.password.label', 'Password')}
               </label>
               <div className="relative">
                 <Input
@@ -438,7 +438,7 @@ const Auth: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="auth-input w-full rounded-[100px] px-6 py-4 h-auto pr-14 text-white text-[14px] bg-white/[0.03] border border-white/10 focus:border-[#D4AF37]/50 focus:outline-none focus:ring-0 focus:shadow-[0_0_20px_rgba(212,175,55,0.1)] placeholder:text-white/30 transition-all"
-                  placeholder={t('auth.passwordPlaceholder', 'Enter your password...')}
+                  placeholder={t('auth.password.placeholder', 'Enter your password...')}
                 />
                 <button
                   type="button"
