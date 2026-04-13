@@ -318,6 +318,7 @@ function QuantumApothecaryInner() {
   const [loadingSessions, setLoadingSessions] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const chatScrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const chatInputRef = useRef<HTMLTextAreaElement>(null);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
   const chatPanelRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -386,18 +387,24 @@ function QuantumApothecaryInner() {
   }, [messages.length]);
   useEffect(() => { localStorage.setItem('active_resonators', JSON.stringify(activeTransmissions)); }, [activeTransmissions]);
 
-  // ── Scroll-to-bottom visibility (show FAB only when not at bottom) ──
-  useEffect(() => {
-    const el = chatScrollContainerRef.current;
+  // ── Scroll-to-bottom visibility — attach via callback ref to avoid stale ref deps ──
+  const scrollContainerCallbackRef = useCallback((el: HTMLDivElement | null) => {
+    // Detach from any previous element
+    if (chatScrollContainerRef.current) {
+      chatScrollContainerRef.current.removeEventListener('scroll', handleScrollVisibility as any);
+    }
+    (chatScrollContainerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
     if (!el) return;
-    const handler = () => {
+    const check = () => {
       const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
       setShowScrollBottom(distFromBottom > 150);
     };
-    handler();
-    el.addEventListener('scroll', handler, { passive: true });
-    return () => el.removeEventListener('scroll', handler as any);
-  }, [chatScrollContainerRef.current]);
+    check();
+    el.addEventListener('scroll', check, { passive: true });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // Placeholder so the old ref assignment sites still compile (replaced below in JSX)
+  const handleScrollVisibility = useCallback(() => {}, []);
 
   const scrollChatToBottom = useCallback(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -642,6 +649,8 @@ function QuantumApothecaryInner() {
           userId: user?.id ?? null,
           planetaryAlign: todayPlanet,
           herbOfToday: todayHerb,
+          jyotishContext: jyotishContext || undefined,
+          activeTransmissions: activeTransmissions.map(t => ({ name: t.name, title: t.name })),
         });
       } catch (parseErr) {
         const hint = parseErr instanceof Error ? parseErr.message : 'Scan failed';
@@ -676,6 +685,19 @@ function QuantumApothecaryInner() {
 
       const primaryBlockage = String(parsed.primaryBlockage ?? parsed.blockage ?? 'Heart/Anahata Nadi');
 
+      // Extract per-chakra readings from the model response
+      const rawChakras = Array.isArray(parsed.chakraReadings) ? parsed.chakraReadings : [];
+      const chakraReadings = rawChakras
+        .filter((c: unknown) => c && typeof c === 'object')
+        .map((c: Record<string, unknown>) => ({
+          chakra: String(c.chakra || ''),
+          status: (['Active', 'Stressed', 'Blocked', 'Awakening'] as const).includes(c.status as 'Active')
+            ? (c.status as 'Active' | 'Stressed' | 'Blocked' | 'Awakening')
+            : 'Stressed' as const,
+          pct: Math.max(0, Math.min(100, Math.round(Number(c.pct) || 50))),
+          note: String(c.note || ''),
+        }));
+
       const result: NadiScanResult = {
         dominantDosha,
         blockages: [primaryBlockage],
@@ -687,6 +709,7 @@ function QuantumApothecaryInner() {
         activeSubNadis,
         blockagePercentage: blockagePct,
         remedies: pickCanonicalRemedies(parsed.remedies),
+        chakraReadings: chakraReadings.length > 0 ? chakraReadings : undefined,
       };
 
       (window as unknown as { __sqiLastScan?: NadiScanResult }).__sqiLastScan = result;
@@ -705,6 +728,16 @@ function QuantumApothecaryInner() {
             ? 'Partially Blocked'
             : 'Severely Restricted';
 
+      const chakraStatusEmoji = (s: string) =>
+        s === 'Active' ? '✅' : s === 'Awakening' ? '🌟' : s === 'Stressed' ? '⚠️' : '🔴';
+
+      const chakraSection = chakraReadings.length > 0
+        ? `\n\n#### Chakra-by-Chakra Assessment\n` +
+          chakraReadings.map(c =>
+            `- **${c.chakra}** ${chakraStatusEmoji(c.status)} ${c.status} (${c.pct}%) — ${c.note}`
+          ).join('\n')
+        : '';
+
       setMessages((prev) => [...prev, {
         role: 'model',
         text:
@@ -718,8 +751,9 @@ function QuantumApothecaryInner() {
           `- Dominant Dosha: **${result.dominantDosha}**\n` +
           `- Primary Blockage: **${result.blockages[0]}** (${blockagePct}% restricted)\n` +
           `- Planetary Alignment: **${result.planetaryAlignment}**\n` +
-          `- Herb of Today: **${result.herbOfToday}**\n\n` +
-          `**Quantum Remedies prepared for your specific reading:**\n` +
+          `- Herb of Today: **${result.herbOfToday}**` +
+          chakraSection +
+          `\n\n**Quantum Remedies prepared for your specific reading:**\n` +
           `${result.remedies.map((r) => `- ${r}`).join('\n')}\n\n` +
           `Shall we transmit these light-codes into your biofield?`,
       }]);
@@ -746,6 +780,10 @@ function QuantumApothecaryInner() {
     const allMsgs = [...messages, userMsg];
     setMessages(allMsgs);
     setInput('');
+    // Reset textarea height after clearing
+    if (chatInputRef.current) {
+      chatInputRef.current.style.height = 'auto';
+    }
     const imageToSend = pendingImage ?? undefined;
     setPendingImage(null);
     setIsTyping(true);
@@ -843,6 +881,19 @@ function QuantumApothecaryInner() {
     selectedActivations.forEach(act => { if (!newT.find(t => t.id === act.id)) newT.push(act); });
     setActiveTransmissions(newT);
     setMessages(prev => [...prev, { role: 'model', text: `**Initiating Quantum Transmission:**\n\n${selectedActivations.map(a => `- ${a.name}`).join('\n')}\n\nUploading Aetheric Codes to your cellular matrix…\n\nThese frequencies are now **locked 24/7** until manually dissolved.` }]);
+    // Log to activity log so SQI knows which frequencies are running in the biofield
+    if (user?.id) {
+      supabase.from('user_activity_log').insert({
+        user_id: user.id,
+        activity_type: 'frequency_transmission',
+        activity_data: {
+          activity: 'Activated frequency transmission cocktail',
+          section: 'Quantum Apothecary',
+          frequency: selectedActivations.map(a => a.name).join(', '),
+          details: { frequency: selectedActivations.map(a => a.name).join(', '), intention: 'Scalar Wave Transmission 24/7' },
+        },
+      }).then(() => {});
+    }
     setSelectedActivations([]);
   };
 
@@ -853,6 +904,19 @@ function QuantumApothecaryInner() {
     remediesToApply.forEach(act => { if (!newT.find(t => t.id === act.id)) newT.push(act); });
     setActiveTransmissions(newT);
     setMessages(prev => [...prev, { role: 'model', text: `**Applying Siddha Remedies:**\n\n${scanResult.remedies.map(r => `- ${r}`).join('\n')}\n\nScalar Wave Entanglement complete. **Frequencies locked 24/7.**` }]);
+    // Log remedies as activated frequencies
+    if (user?.id && remediesToApply.length > 0) {
+      supabase.from('user_activity_log').insert({
+        user_id: user.id,
+        activity_type: 'frequency_transmission',
+        activity_data: {
+          activity: 'Applied Nadi scan remedies as active transmissions',
+          section: 'Quantum Apothecary',
+          frequency: remediesToApply.map(a => a.name).join(', '),
+          details: { frequency: remediesToApply.map(a => a.name).join(', '), intention: 'Nadi Scan Remedy Transmission' },
+        },
+      }).then(() => {});
+    }
   };
 
   /* ══════════════════════════════════════════════════════
@@ -926,9 +990,7 @@ function QuantumApothecaryInner() {
       <div
         className="custom-scrollbar relative flex-1 overflow-y-auto bg-[#050505]/60"
         style={{ padding: '16px' }}
-        ref={(el) => {
-          (chatScrollContainerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
-        }}
+        ref={scrollContainerCallbackRef}
       >
         <div className="flex flex-col justify-end min-h-full space-y-2">
           {messages.map((msg, i) => {
@@ -1009,20 +1071,33 @@ function QuantumApothecaryInner() {
           </button>
           {isRecording && <span className="shrink-0 text-[10px] font-bold uppercase tracking-widest text-red-400">Listening…</span>}
           <div className="relative min-w-0 flex-1">
-            <input
-              type="text"
+            <textarea
+              ref={chatInputRef}
+              rows={1}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+              onChange={(e) => {
+                setInput(e.target.value);
+                // Auto-expand: reset to 1 row then grow to fit content (max ~6 rows)
+                const el = e.target;
+                el.style.height = 'auto';
+                el.style.height = `${Math.min(el.scrollHeight, 144)}px`;
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
               onFocus={handleChatFocus}
               placeholder={t('quantumApothecary.chat.placeholder')}
-              className="w-full rounded-[28px] border border-white/[0.08] bg-white/[0.04] py-3.5 pl-5 pr-14 text-sm leading-[1.6] text-white placeholder:text-white/30 focus:border-[#D4AF37]/35 focus:outline-none focus:ring-1 focus:ring-[#D4AF37]/20"
+              style={{ resize: 'none', overflowY: 'hidden' }}
+              className="w-full rounded-[24px] border border-white/[0.08] bg-white/[0.04] py-3.5 pl-5 pr-14 text-sm leading-[1.6] text-white placeholder:text-white/30 focus:border-[#D4AF37]/35 focus:outline-none focus:ring-1 focus:ring-[#D4AF37]/20"
             />
             <button
               type="button"
               onClick={() => handleSendMessage()}
               disabled={(!input.trim() && !pendingImage) || isTyping}
-              className="absolute bottom-2 right-2 top-2 rounded-xl border border-[#D4AF37]/40 bg-gradient-to-b from-[#F5E17A] to-[#B8960C] px-3 text-[#050505] shadow-[0_0_16px_rgba(212,175,55,0.25)] transition-all disabled:opacity-30 sm:px-4"
+              className="absolute bottom-2 right-2 rounded-xl border border-[#D4AF37]/40 bg-gradient-to-b from-[#F5E17A] to-[#B8960C] px-3 py-2 text-[#050505] shadow-[0_0_16px_rgba(212,175,55,0.25)] transition-all disabled:opacity-30 sm:px-4"
               aria-label={t('quantumApothecary.chat.send')}
             >
               <Send size={15} />
@@ -1212,6 +1287,43 @@ function QuantumApothecaryInner() {
                     <p className="mb-1.5 text-[8px] font-extrabold uppercase tracking-[0.5em] text-[#22D3EE]/80">{t('quantumApothecary.scan.herbToday')}</p>
                     <p className="text-sm font-bold leading-[1.6] text-white/90">{scanResult.herbOfToday}</p>
                   </motion.div>
+
+                  {/* Chakra Readings */}
+                  {scanResult.chakraReadings && scanResult.chakraReadings.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: 0.85 }}
+                      className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]"
+                    >
+                      <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-white/30 mb-3">Chakra Biofield Scan</p>
+                      <div className="space-y-2">
+                        {scanResult.chakraReadings.map((c, i) => {
+                          const statusColor = c.status === 'Active' ? '#34D399' : c.status === 'Awakening' ? '#D4AF37' : c.status === 'Stressed' ? '#F59E0B' : '#EF4444';
+                          return (
+                            <motion.div
+                              key={c.chakra}
+                              initial={{ opacity: 0, x: -8 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ duration: 0.3, delay: 0.9 + i * 0.06 }}
+                              className="flex items-start gap-2.5"
+                            >
+                              <div className="mt-1 shrink-0 flex flex-col items-center gap-0.5 w-10">
+                                <div className="h-1 w-full rounded-full bg-white/[0.06] overflow-hidden">
+                                  <div className="h-full rounded-full transition-all" style={{ width: `${c.pct}%`, background: statusColor }} />
+                                </div>
+                                <span className="text-[7px] font-bold tabular-nums" style={{ color: statusColor }}>{c.pct}%</span>
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[9px] font-extrabold uppercase tracking-widest" style={{ color: statusColor }}>{c.chakra}</p>
+                                <p className="text-[10px] text-white/50 leading-[1.4] mt-0.5">{c.note}</p>
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
 
                   {/* Siddha Remedies */}
                   <motion.div

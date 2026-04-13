@@ -214,16 +214,18 @@ async function getRecentActivity(userId: string): Promise<string> {
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
     const { data } = await sb
       .from("user_activity_log")
-      .select("activity, details, section, created_at")
+      .select("activity_type, activity_data, created_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(15);
     if (!data?.length) return "";
-    const lines = data.map((a: Record<string, unknown>) => {
-      const d = a.details as Record<string, unknown> || {};
+    const lines = (data as Record<string, unknown>[]).map((a) => {
+      const ad = (a.activity_data as Record<string, unknown>) || {};
+      const d = (ad.details as Record<string, unknown>) || ad;
       const when = new Date(a.created_at as string).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-      const detail = d.place || d.frequency || d.track || d.intention || a.section || "";
-      return `${when}: ${a.activity}${detail ? ` — ${detail}` : ""}`;
+      const activityLabel = String(ad.activity || a.activity_type || "");
+      const detail = String(d.place || d.frequency || d.track || d.intention || ad.section || "");
+      return `${when}: ${activityLabel}${detail ? ` — ${detail}` : ""}`;
     });
     return "SEEKER RECENT ACTIVITY:\n" + lines.join("\n");
   } catch { return ""; }
@@ -252,16 +254,18 @@ async function getPartnerActivity(userId: string): Promise<string> {
     // Get partner recent activity
     const { data: acts } = await sb
       .from("user_activity_log")
-      .select("activity, details, section, created_at")
+      .select("activity_type, activity_data, created_at")
       .eq("user_id", partnerId as string)
       .order("created_at", { ascending: false })
       .limit(8);
     if (!acts?.length) return "";
     const lines = (acts as Record<string, unknown>[]).map(a => {
-      const d = a.details as Record<string, unknown> || {};
+      const ad = (a.activity_data as Record<string, unknown>) || {};
+      const d = (ad.details as Record<string, unknown>) || ad;
       const when = new Date(a.created_at as string).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-      const detail = d.place || d.frequency || d.track || "";
-      return `${when}: ${a.activity}${detail ? ` — ${detail}` : ""}`;
+      const activityLabel = String(ad.activity || a.activity_type || "");
+      const detail = String(d.place || d.frequency || d.track || "");
+      return `${when}: ${activityLabel}${detail ? ` — ${detail}` : ""}`;
     });
     return `SOUL-LINK PARTNER (${partnerName}) RECENT ACTIVITY — their field directly affects yours:
 ${lines.join("\n")}
@@ -341,22 +345,53 @@ serve(async (req) => {
 
     // ── SCAN MODE — pure vision, no SQI personality ──
     if (body.scanMode === true) {
-      const { imageBase64, imageMimeType, userId, planetaryAlign, herbOfToday } = body;
+      const { imageBase64, imageMimeType, userId, planetaryAlign, herbOfToday, jyotishContext, activeTransmissions } = body;
       if (!imageBase64) throw new Error("No image for scan");
-      const prompt = `You are a Siddha biofield vision analyser. Analyse this palm and return JSON only.
-GROSS NADIS: 72,000 channels. Healthy: 60,000-71,000. Stressed: 8,000-30,000. Depleted: 2,000-8,000.
-SUB-NADIS: 350,000 channels.
-If no hand visible: {"handDetected":false}
-Read honestly from what you see:
-- Deep clear lines + warm pink = 65,000-71,000
-- Faint lines + pale/dry = 15,000-40,000
-- Grey/bluish + tense = 5,000-15,000
-- Dosha: Vata=dry/thin, Pitta=reddish/warm, Kapha=moist/full
-Today: ${planetaryAlign || ""} | ${herbOfToday || ""}
-Return ONLY: {"handDetected":true,"activeNadis":<0-72000>,"activeSubNadis":<0-350000>,"blockagePercentage":<0-100>,"dominantDosha":"<Vata|Pitta|Kapha>","primaryBlockage":"<Nadi>","planetaryAlignment":"<planet>","herbOfToday":"<herb>","remedies":["<1>","<2>","<3>","<4>","<5>"],"bioReading":"<3-4 sentences>"}`;
+
+      // Build bioenergetic context block from all available user data
+      const bioCtxParts: string[] = [];
+      if (jyotishContext) bioCtxParts.push(`SEEKER JYOTISH BLUEPRINT: ${jyotishContext}`);
+      if (activeTransmissions && Array.isArray(activeTransmissions) && activeTransmissions.length > 0) {
+        const txNames = (activeTransmissions as { name?: string; title?: string }[]).map((t: { name?: string; title?: string }) => t.name || t.title || "").filter(Boolean).join(", ");
+        if (txNames) bioCtxParts.push(`ACTIVE FREQUENCY TRANSMISSIONS (running in their biofield): ${txNames}`);
+      }
+      const bioCtxBlock = bioCtxParts.length > 0
+        ? `\n\nUSER BIOENERGETIC CONTEXT:\n${bioCtxParts.join("\n")}\n→ Use this data to interpret what you see in the palm. The Jyotish Mahadasha and Dosha indicate which Nadi channels are likely stressed. Active transmissions may show increased coherence in related chakra regions.`
+        : "";
+
+      const prompt = `You are the SQI-2050 Siddha biofield vision analyser. Analyse this palm image and return ONLY valid JSON.
+
+NADI CALIBRATION:
+- Gross Nadis: 72,000 channels. Healthy: 60,000-71,500. Stressed: 20,000-59,999. Depleted: 2,000-19,999.
+- Sub-Nadis: 350,000 subtle channels.
+- If no hand is visible: return {"handDetected":false}
+
+PALM READING KEYS:
+- Deep clear lines + warm pink tone = 65,000-71,500 active Nadis (excellent prana flow)
+- Moderate lines + neutral tone = 45,000-65,000 (good, minor imbalances)
+- Faint lines + pale or dry = 20,000-45,000 (stressed, Vata or dehydrated)
+- Grey/bluish tint + tense skin = 5,000-20,000 (depleted, Kapha stagnation)
+- Dosha from palm: Vata=dry/thin/prominent veins, Pitta=reddish/warm/pink, Kapha=moist/full/soft
+${bioCtxBlock}
+
+CHAKRA ASSESSMENT (assess all 7, include 1-3 additional subtle chakras if relevant):
+Assess each chakra using palm indicators AND the Jyotish context if available:
+- Muladhara (Root) — survival, stability; Saturn/Mars lines, base of thumb mount
+- Svadhisthana (Sacral) — creativity, emotion; Moon/Venus, wrist region
+- Manipura (Solar Plexus) — will, power; Sun line, Jupiter mount
+- Anahata (Heart) — love, compassion; heart line depth and clarity, Venus mount
+- Vishuddha (Throat) — expression, truth; Mercury mount, finger flexibility
+- Ajna (Third Eye) — intuition, insight; head line clarity and depth
+- Sahasrara (Crown) — divine connection; overall palm luminosity and clarity
+Optional additional: Hrit (secondary heart, above Anahata), Bindu (occiput node), Lalana (above Vishuddha)
+
+Today's Planetary Field: ${planetaryAlign || "not specified"} | Herb of Today: ${herbOfToday || "not specified"}
+
+Return ONLY this exact JSON structure (no markdown, no explanation outside JSON):
+{"handDetected":true,"activeNadis":<integer 0-72000>,"activeSubNadis":<integer 0-350000>,"blockagePercentage":<integer 0-100>,"dominantDosha":"<Vata|Pitta|Kapha>","primaryBlockage":"<specific Nadi or chakra junction name>","planetaryAlignment":"<planet name>","herbOfToday":"<herb name>","chakraReadings":[{"chakra":"Muladhara","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<one sentence>"},{"chakra":"Svadhisthana","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<one sentence>"},{"chakra":"Manipura","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<one sentence>"},{"chakra":"Anahata","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<one sentence>"},{"chakra":"Vishuddha","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<one sentence>"},{"chakra":"Ajna","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<one sentence>"},{"chakra":"Sahasrara","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<one sentence>"}],"remedies":["<specific remedy 1>","<specific remedy 2>","<specific remedy 3>","<specific remedy 4>","<specific remedy 5>"],"bioReading":"<3-4 sentences: integrate what you see in the palm + Jyotish Mahadasha influence + what the Akasha reveals about this soul's current energetic state and karmic field>"}`;
       const gr = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents: [{ role: "user", parts: [{ inline_data: { mime_type: imageMimeType || "image/jpeg", data: imageBase64 } }, { text: prompt }] }], generationConfig: { temperature: 0.1, topK: 1, topP: 0.1, maxOutputTokens: 512 } }),
+        body: JSON.stringify({ contents: [{ role: "user", parts: [{ inline_data: { mime_type: imageMimeType || "image/jpeg", data: imageBase64 } }, { text: prompt }] }], generationConfig: { temperature: 0.1, topK: 1, topP: 0.1, maxOutputTokens: 1024 } }),
       });
       const gd = await gr.json();
       const raw = gd.candidates?.[0]?.content?.parts?.[0]?.text ?? "";

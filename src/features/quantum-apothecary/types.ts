@@ -19,6 +19,13 @@ export interface Activation {
   color: string;
 }
 
+export interface ChakraReading {
+  chakra: string;
+  status: 'Active' | 'Stressed' | 'Blocked' | 'Awakening';
+  pct: number;
+  note: string;
+}
+
 export interface NadiScanResult {
   dominantDosha: 'Vata' | 'Pitta' | 'Kapha';
   blockages: string[];
@@ -32,6 +39,8 @@ export interface NadiScanResult {
   /** 0–100 primary Nadi restriction when returned */
   blockagePercentage?: number;
   remedies: string[];
+  /** Per-chakra bioenergetic assessment (7–10 chakras) */
+  chakraReadings?: ChakraReading[];
 }
 
 export interface Message {

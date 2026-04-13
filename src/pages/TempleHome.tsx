@@ -710,7 +710,24 @@ function TempleHomeInner() {
     setIsAnchored(true);
     setAnchorFlash(true);
     setTimeout(() => setAnchorFlash(false), 3000);
-  }, [crystalDone]);
+    // Log activation to user_activity_log so the SQI knows which holy place is active
+    if (user?.id) {
+      const site = SITE_DB[selectedSite];
+      supabase.from('user_activity_log').insert({
+        user_id: user.id,
+        activity_type: 'temple_home_activation',
+        activity_data: {
+          activity: 'Activated Temple Home anchor',
+          section: 'Temple Home',
+          place: site?.title ?? selectedSite,
+          siteId: selectedSite,
+          mode: currentMode,
+          intensity: auraIntensity,
+          details: { place: site?.title ?? selectedSite, frequency: `${auraIntensity}% intensity`, intention: site?.primaryBenefit ?? '' },
+        },
+      }).then(() => {});
+    }
+  }, [crystalDone, user, selectedSite, currentMode, auraIntensity]);
 
   const handleModeChange = useCallback((id: string) => {
     setCurrentMode(id);

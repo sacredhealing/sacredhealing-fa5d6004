@@ -10,6 +10,8 @@ export async function scanNadiFromPalm(options: {
   userId?: string | null;
   planetaryAlign?: string;
   herbOfToday?: string;
+  jyotishContext?: string;
+  activeTransmissions?: { name?: string; title?: string }[];
 }): Promise<Record<string, unknown>> {
   const resp = await fetch(CHAT_URL, {
     method: 'POST',
@@ -24,6 +26,8 @@ export async function scanNadiFromPalm(options: {
       userId: options.userId ?? null,
       planetaryAlign: options.planetaryAlign ?? '',
       herbOfToday: options.herbOfToday ?? '',
+      jyotishContext: options.jyotishContext ?? '',
+      activeTransmissions: options.activeTransmissions ?? [],
     }),
   });
   if (!resp.ok) throw new Error(`Scan failed: ${resp.status}`);
