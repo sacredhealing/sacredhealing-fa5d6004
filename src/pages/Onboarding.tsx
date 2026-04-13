@@ -164,7 +164,7 @@ const Onboarding: React.FC = () => {
         </div>
       )}
 
-      <div className="relative z-10 flex-1 flex flex-col items-center overflow-auto px-6 pt-8 pb-32">
+      <div className="relative z-10 flex-1 flex flex-col items-center overflow-auto px-6 pt-8 pb-28 min-h-0">
         <div className="onb-step w-full max-w-[500px] mx-auto">
 
           {currentStep === 1 && (
@@ -236,7 +236,7 @@ const Onboarding: React.FC = () => {
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-20 flex justify-center px-6 py-6 bg-gradient-to-t from-[#050505] via-[#050505]/95 to-transparent pt-8">
+      <div className="fixed bottom-0 left-0 right-0 z-20 flex justify-center px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-gradient-to-t from-[#050505] via-[#050505]/95 to-transparent pt-6">
         <div className="w-full max-w-[500px] flex items-center justify-between gap-4">
           <Button
             variant="ghost"

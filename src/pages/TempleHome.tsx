@@ -209,34 +209,38 @@ function OnboardingScreen({ onComplete }: { onComplete: () => void }) {
   ];
   const p = pages[page];
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: 'rgba(5,5,5,0.98)', backdropFilter: 'blur(40px)' }}>
-      <div className="flex justify-end p-4">
-        <button onClick={() => { saveOnboardingDone(); onComplete(); }} className="text-[9px] text-white/25 hover:text-white/50 tracking-[0.3em] uppercase">Skip intro →</button>
+    <div
+      className="fixed inset-0 z-50 flex flex-col min-h-0"
+      style={{ background: 'rgba(5,5,5,0.98)', backdropFilter: 'blur(40px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+    >
+      <div className="flex shrink-0 justify-end p-4">
+        <button type="button" onClick={() => { saveOnboardingDone(); onComplete(); }} className="text-[9px] text-white/25 hover:text-white/50 tracking-[0.3em] uppercase">Skip intro →</button>
       </div>
-      <div className="flex-1 flex flex-col justify-center px-6 pb-8">
-        <AnimatePresence mode="wait">
-          <motion.div key={page} initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -24 }} transition={{ duration: 0.35 }} className="space-y-5 text-center max-w-sm mx-auto">
-            <div className="text-5xl">{p.icon}</div>
-            <div>
-              <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-[#D4AF37]/50 mb-2">{p.subtitle}</div>
-              <h2 className="text-2xl font-black tracking-tight text-[#D4AF37]" style={{ textShadow: '0 0 20px rgba(212,175,55,0.3)' }}>{p.title}</h2>
+      {/* Single stack: copy + dots + CTA — centered as one unit (avoids huge gap between text and bottom controls) */}
+      <div className="flex-1 flex min-h-0 flex-col justify-center px-6 pb-4">
+        <div className="flex flex-col gap-5 w-full max-w-sm mx-auto min-h-0 min-w-0 max-h-[min(100%,calc(100vh-8rem))] overflow-y-auto overscroll-contain">
+            <AnimatePresence mode="wait">
+              <motion.div key={page} initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -24 }} transition={{ duration: 0.35 }} className="space-y-5 text-center max-w-sm mx-auto">
+                <div className="text-5xl">{p.icon}</div>
+                <div>
+                  <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-[#D4AF37]/50 mb-2">{p.subtitle}</div>
+                  <h2 className="text-2xl font-black tracking-tight text-[#D4AF37]" style={{ textShadow: '0 0 20px rgba(212,175,55,0.3)' }}>{p.title}</h2>
+                </div>
+                <p className="text-[14px] text-white/70 leading-relaxed">{p.body}</p>
+                <div className="rounded-2xl p-4 text-left" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  <p className="text-[12px] text-white/40 leading-relaxed italic">{p.detail}</p>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+            <div className="flex justify-center gap-2 shrink-0 pt-1">
+              {pages.map((_, i) => (<div key={i} className="h-1.5 rounded-full transition-all duration-300" style={{ width: i === page ? '20px' : '6px', background: i === page ? '#D4AF37' : 'rgba(255,255,255,0.15)' }} />))}
             </div>
-            <p className="text-[14px] text-white/70 leading-relaxed">{p.body}</p>
-            <div className="rounded-2xl p-4 text-left" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-              <p className="text-[12px] text-white/40 leading-relaxed italic">{p.detail}</p>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-      </div>
-      <div className="px-6 pb-10 space-y-4">
-        <div className="flex justify-center gap-2">
-          {pages.map((_, i) => (<div key={i} className="h-1.5 rounded-full transition-all duration-300" style={{ width: i === page ? '20px' : '6px', background: i === page ? '#D4AF37' : 'rgba(255,255,255,0.15)' }} />))}
+            {page < pages.length - 1 ? (
+              <button type="button" onClick={() => setPage(page + 1)} className="w-full shrink-0 py-4 rounded-[20px] font-extrabold text-[11px] tracking-[0.3em] uppercase text-black" style={{ background: 'linear-gradient(135deg,#D4AF37,#F0C040,#D4AF37)', boxShadow: '0 0 30px rgba(212,175,55,0.3)' }}>Continue →</button>
+            ) : (
+              <button type="button" onClick={() => { saveOnboardingDone(); onComplete(); }} className="w-full shrink-0 py-4 rounded-[20px] font-extrabold text-[11px] tracking-[0.3em] uppercase text-black" style={{ background: 'linear-gradient(135deg,#4ADE80,#22C55E)', boxShadow: '0 0 30px rgba(74,222,128,0.3)' }}>Enter Temple Home</button>
+            )}
         </div>
-        {page < pages.length - 1 ? (
-          <button onClick={() => setPage(page + 1)} className="w-full py-4 rounded-[20px] font-extrabold text-[11px] tracking-[0.3em] uppercase text-black" style={{ background: 'linear-gradient(135deg,#D4AF37,#F0C040,#D4AF37)', boxShadow: '0 0 30px rgba(212,175,55,0.3)' }}>Continue →</button>
-        ) : (
-          <button onClick={() => { saveOnboardingDone(); onComplete(); }} className="w-full py-4 rounded-[20px] font-extrabold text-[11px] tracking-[0.3em] uppercase text-black" style={{ background: 'linear-gradient(135deg,#4ADE80,#22C55E)', boxShadow: '0 0 30px rgba(74,222,128,0.3)' }}>Enter Temple Home</button>
-        )}
       </div>
     </div>
   );
