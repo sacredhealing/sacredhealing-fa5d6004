@@ -14,7 +14,7 @@ export function useMembershipTier(): MembershipTier {
     // Akasha-Infinity / lifetime
     if (v.includes("akasha") || v.includes("life")) return "lifetime";
     // Siddha-Quantum
-    if (v.includes("siddha")) return "lifetime"; // siddha maps to lifetime tier type for feature access
+    if (v.includes("siddha")) return "annual"; // siddha-quantum maps to rank 2
     // Prana-Flow / premium
     if (v.includes("prana") || v.includes("premium") || v.includes("annual") || v.includes("year") || v.includes("month")) return "monthly";
     return "free";
