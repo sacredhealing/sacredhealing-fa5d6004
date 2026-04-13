@@ -8,11 +8,16 @@ const corsHeaders = {
 interface GeminiBridgeRequest {
   prompt: string;
   context?: string;
-  model?: string; // 'flash', 'flash-lite', 'pro'
-  feature?: string; // 'vedic_reading', 'guru_chat', 'ayurveda', 'translation', 'dosha', 'music'
+  model?: string;   // 'flash', 'flash-lite', 'pro' — all map to 2.5-flash now
+  feature?: string; // 'vedic_reading', 'guru_chat', 'ayurveda', 'translation', 'dosha', 'music', 'vedic_translation'
   stream?: boolean;
   messages?: Array<{ role: string; content: string; audio?: { data: string; mimeType: string } }>;
 }
+
+// Model routing — gemini-2.5-flash is the primary model.
+// gemini-2.0-flash is the fallback only (rate-limit safety net).
+const PRIMARY_MODEL  = "gemini-2.5-flash";
+const FALLBACK_MODEL = "gemini-2.0-flash";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -25,37 +30,24 @@ serve(async (req) => {
       console.error("GEMINI_API_KEY not configured");
       return new Response(
         JSON.stringify({ error: "Gemini API key not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
     const body: GeminiBridgeRequest = await req.json();
-    const { prompt, context, model = "flash", feature, stream = false, messages } = body;
+    const { prompt, context, feature, stream = false, messages } = body;
 
     if (!prompt && !messages?.length) {
       return new Response(
         JSON.stringify({ error: "Prompt or messages required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    // Model selection based on feature or explicit model choice
-    // flash-lite for translations (cheapest), flash for most, pro for premium features
-    let geminiModel = "gemini-2.0-flash";
-    
-    // All features now use gemini-2.0-flash which is reliable
-    // Pro models have availability issues, so we default to flash for stability
-    if (model === "flash-lite" || feature === "translation") {
-      geminiModel = "gemini-2.0-flash"; // flash-lite also unreliable, use flash
-    }
-
-    console.log(`Using model: ${geminiModel} for feature: ${feature || 'general'}`);
-
     // Build the content parts
-    let contents: any[] = [];
-    
+    let contents: unknown[] = [];
+
     if (messages && messages.length > 0) {
-      // Chat mode - convert messages format (supports optional audio on user messages)
       contents = messages.map(msg => {
         const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
         if (msg.content) parts.push({ text: msg.content });
@@ -64,88 +56,102 @@ serve(async (req) => {
         }
         return {
           role: msg.role === "assistant" ? "model" : msg.role,
-          parts: parts.length ? parts : [{ text: "" }]
+          parts: parts.length ? parts : [{ text: "" }],
         };
       });
     } else {
-      // Single prompt mode
       const fullPrompt = context ? `${context}\n\n${prompt}` : prompt;
       contents = [{ role: "user", parts: [{ text: fullPrompt }] }];
     }
 
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:${stream ? 'streamGenerateContent' : 'generateContent'}?key=${GEMINI_API_KEY}`;
+    const requestBody = {
+      contents,
+      generationConfig: {
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 8192,
+      },
+      safetySettings: [
+        { category: "HARM_CATEGORY_HARASSMENT",        threshold: "BLOCK_NONE" },
+        { category: "HARM_CATEGORY_HATE_SPEECH",       threshold: "BLOCK_NONE" },
+        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
+      ],
+    };
 
-    const geminiResponse = await fetch(apiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents,
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 8192,
-        },
-        safetySettings: [
-          { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
-        ],
-      }),
-    });
+    // Try PRIMARY → FALLBACK
+    let geminiResponse: Response | null = null;
+    let usedModel = PRIMARY_MODEL;
 
-    if (!geminiResponse.ok) {
-      const errorText = await geminiResponse.text();
-      console.error("Gemini API error:", geminiResponse.status, errorText);
-      
-      if (geminiResponse.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+    for (const model of [PRIMARY_MODEL, FALLBACK_MODEL]) {
+      usedModel = model;
+      const endpoint = stream ? "streamGenerateContent" : "generateContent";
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:${endpoint}?key=${GEMINI_API_KEY}`;
+
+      console.log(`gemini-bridge: trying ${model} for feature:${feature || 'general'}`);
+
+      try {
+        geminiResponse = await fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestBody),
+        });
+
+        if (geminiResponse.ok) break;
+
+        if (geminiResponse.status === 429) {
+          const retryMsg = await geminiResponse.text();
+          console.warn(`gemini-bridge: ${model} rate-limited, trying fallback. Detail: ${retryMsg}`);
+          geminiResponse = null;
+          await new Promise(r => setTimeout(r, 1500));
+          continue;
+        }
+
+        const errText = await geminiResponse.text();
+        console.error(`gemini-bridge: ${model} error (${geminiResponse.status}): ${errText}`);
+        geminiResponse = null;
+
+      } catch (fetchErr) {
+        console.error(`gemini-bridge: fetch error on ${model}:`, fetchErr);
+        geminiResponse = null;
       }
-      
+    }
+
+    if (!geminiResponse || !geminiResponse.ok) {
       return new Response(
-        JSON.stringify({ error: "Failed to generate response from Gemini" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "AI service temporarily unavailable. Please try again in a moment." }),
+        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
     if (stream) {
-      // Return streaming response
       return new Response(geminiResponse.body, {
         headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
       });
     }
 
     const data = await geminiResponse.json();
-    
-    // Extract text from Gemini response
-    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    
+    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+
     if (!responseText) {
-      console.error("No response text from Gemini:", JSON.stringify(data));
+      console.error(`gemini-bridge: empty response from ${usedModel}:`, JSON.stringify(data));
       return new Response(
         JSON.stringify({ error: "No response generated" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
     return new Response(
-      JSON.stringify({ 
-        response: responseText,
-        model: geminiModel,
-        feature: feature || 'general'
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ response: responseText, model: usedModel, feature: feature || "general" }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
 
   } catch (error) {
-    console.error("Gemini bridge error:", error);
+    console.error("gemini-bridge: unhandled error:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 });
