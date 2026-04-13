@@ -4664,5 +4664,1147 @@
       "upcoming": "Inga kommande evenemang. Kolla tillbaka snart.",
       "past": "Inga tidigare evenemang."
     }
+  },
+  "womanCode": {
+    "ui": {
+      "badge": "Suverän Hormonal Alkemi",
+      "titleLine1": "Din Cykel är ",
+      "titleGold": "Helig Intelligens",
+      "titleLine2": "— Lev i harmoni med hennes rytmer",
+      "subtitle": "WomanCode + Vedisk Visdom + Ayurvedisk Näring. Förstå biokemi för varje dag — vad du ska äta, hur du ska röra dig, och hur du ska leva ditt liv.",
+      "sliderLabel": "Aktuell dag i cykeln",
+      "chartLabel": "⟁ Levande Hormonkarta",
+      "careerSectionLabel": "⟁ Karriär & Livsynk",
+      "chakraSectionLabel": "⟁ Chakraaktivering",
+      "moonMilkLabelPrefix": "Vedisk Måntonik — ",
+      "modalCloseAria": "Stäng detaljpanel",
+      "mineralModalRoleToday": "Roll i din kropp idag",
+      "mineralModalBio": "Biokemisk Fördjupning",
+      "hormoneLevelDay": "Nivå dag {{day}}",
+      "vedicModalSubtitle": "Vedisk Visdom — {{phase}}-fasen",
+      "chakraModalSubtitle": "Chakraöverföring",
+      "chakraFallback": "Detta energicenter stödjer din hormonella och praniska balans.",
+      "tabs": {
+        "minerals": "⚗ Mineraler",
+        "career": "✦ Livsynk",
+        "vedic": "☽ Vedisk",
+        "moonmilk": "✦ Måntonik",
+        "photo": "📷 Matscan"
+      },
+      "photoTab": {
+        "badge": "AI Näringsanalys",
+        "title": "Fotografera din Måltid",
+        "subtitle": "Vår AI läser hela mineral- och vitaminprofilen i din mat och visar hur den stödjer din nuvarande hormonella fas.",
+        "uploadBtn": "Ladda upp matfoto",
+        "cameraBtn": "Ta foto",
+        "analyzeBtn": "Analysera måltid",
+        "analyzing": "Läser din måltid…",
+        "phaseContext": "Analyserad för din {{phase}}-fas (Dag {{day}})",
+        "noImage": "Lägg till ett foto av din måltid för att börja analysen.",
+        "errorTitle": "Analys misslyckades",
+        "errorBody": "Försök igen med en tydligare bild."
+      },
+      "pips": [
+        "Menstruation",
+        "Follikulär",
+        "Ägglossning",
+        "Luteal"
+      ],
+      "modeBadges": {
+        "cycle": "🌙 Cykel",
+        "pregnancy": "🌸 Graviditet",
+        "menopause": "🔥 Klimakterium"
+      }
+    },
+    "phases": [
+      {
+        "name": "Menstruationsfasen",
+        "season": "Vinter",
+        "dosha": "Vata — Släpp & Återhämta",
+        "icon": "🌑",
+        "color": "#A78BFA",
+        "days": "Days 1–5",
+        "minHeader": "Mineraler & WomanCode-livsmedel",
+        "minIntro": "Din kropp är i ett högt elimineringsstillstånd. Östrogen och progesteron är på sin lägsta nivå. Fokusera på järn för att fylla på blod, zink för immunresiliens och värmande plantbaserad mat.",
+        "minerals": [
+          {
+            "icon": "🌿",
+            "mineral": "Iron + Vitamin C",
+            "food": "Beets & Spinach",
+            "amount": "100g beets + 80g spinach",
+            "fn": "Replenishes iron lost through menstrual blood and boosts haemoglobin synthesis.",
+            "tags": [
+              "#iron",
+              "#bloodbuilding",
+              "#antiinflammatory"
+            ],
+            "bio": "During menstruation your body loses 20–80ml of blood. Iron from dark leafy greens (non-haem iron) is best absorbed with Vitamin C from lemon juice. Beets contain boron that supports oestrogen metabolism and natural nitrates that improve circulation, reducing fatigue."
+          },
+          {
+            "icon": "🌰",
+            "mineral": "Zinc",
+            "food": "Pumpkin Seeds",
+            "amount": "30g (a small handful)",
+            "fn": "Strengthens immune defences and reduces uterine cramping by modulating prostaglandin levels.",
+            "tags": [
+              "#zinc",
+              "#anticramp",
+              "#immune"
+            ],
+            "bio": "Zinc is a co-factor for over 300 enzymes. During menstruation, prostaglandins cause cramping — zinc helps modulate their production. Pumpkin seeds deliver ~2.2mg zinc per 30g alongside magnesium for muscle relaxation."
+          },
+          {
+            "icon": "🫙",
+            "mineral": "Iodine",
+            "food": "Kelp / Wakame",
+            "amount": "5g dried seaweed",
+            "fn": "Supports thyroid function when energy is at its lowest during this phase.",
+            "tags": [
+              "#iodine",
+              "#thyroid",
+              "#energy"
+            ],
+            "bio": "The thyroid gland is deeply connected to menstrual regularity. Iodine from sea vegetables fuels T3/T4 thyroid hormone production. Wakame also contains fucoidan, an anti-inflammatory compound that eases pelvic congestion."
+          },
+          {
+            "icon": "🍫",
+            "mineral": "Magnesium",
+            "food": "Raw Cacao",
+            "amount": "10g raw cacao powder",
+            "fn": "Relaxes the uterine muscle, reduces headaches, and lifts the dopamine dip that occurs as oestrogen drops.",
+            "tags": [
+              "#magnesium",
+              "#dopamine",
+              "#anticramp"
+            ],
+            "bio": "Raw cacao contains ~250mg magnesium per 100g — one of the richest plant sources. Magnesium activates GABA receptors for calm, relaxes smooth muscle in the uterus, and triggers release of serotonin precursors. Always use raw (not processed) cacao to preserve these compounds."
+          },
+          {
+            "icon": "🌾",
+            "mineral": "B-vitamins + Zinc",
+            "food": "Buckwheat & Wild Rice",
+            "amount": "80g cooked",
+            "fn": "Provides slow-release energy and zinc that supports immune function and hormone clearance.",
+            "tags": [
+              "#Bvitamins",
+              "#slowenergy",
+              "#zinc"
+            ],
+            "bio": "Unlike refined grains, buckwheat is a complete protein containing all 8 essential amino acids and rutin — a bioflavonoid that strengthens capillary walls and reduces heavy menstrual bleeding. Wild rice adds B-complex vitamins for adrenal support."
+          },
+          {
+            "icon": "🫐",
+            "mineral": "Antioxidants",
+            "food": "Dark Berries",
+            "amount": "100g mixed berries",
+            "fn": "Reduce the oxidative inflammation that worsens cramping and fatigue during menstruation.",
+            "tags": [
+              "#antioxidants",
+              "#antiinflammatory",
+              "#vitaminC"
+            ],
+            "bio": "Blackberries and blueberries contain anthocyanins — pigments that neutralise free radicals generated during uterine contractions. Their Vitamin C content enhances iron absorption from plant foods by up to 3x when eaten together."
+          }
+        ],
+        "career": [
+          {
+            "t": "Retreat & Reflect",
+            "d": "Your prefrontal cortex is in a high-insight mode. Review the past month, analyse what worked, and journal your deepest knowings. Avoid high-stakes external meetings."
+          },
+          {
+            "t": "Solo Deep Work Only",
+            "d": "Social energy is low by design. Schedule solo creative work, reading, or strategic planning. Your brain is wired for internal wisdom right now, not performance."
+          },
+          {
+            "t": "No New Commitments",
+            "d": "Declining or postponing decisions today is biologically intelligent. Your hormonal state makes it harder to access enthusiasm — save big yeses for your follicular phase."
+          }
+        ],
+        "vedic": [
+          {
+            "icon": "🕉",
+            "t": "Apana Vayu Sadhana",
+            "s": "Practices that support the downward-flowing energy. Sit in Malasana (squat) and breathe deeply into the lower belly. No inversions — allow the body to release fully downward."
+          },
+          {
+            "icon": "🌬",
+            "t": "Bhramari Pranayama",
+            "s": "Humming bee breath. Inhale deeply, then exhale while making a continuous hum. The vibration soothes the vagus nerve and directly reduces menstrual pain. Practice 7 rounds."
+          },
+          {
+            "icon": "🌿",
+            "t": "Shatavari Moon Milk",
+            "s": "Shatavari (Asparagus racemosus) is the supreme rasayana for the female reproductive system. Its phytoestrogens nourish the uterine lining and ease the transition into menstruation."
+          },
+          {
+            "icon": "🔮",
+            "t": "Chakra: Muladhara (Root)",
+            "s": "The root chakra governs the physical body and elimination. During menstruation, ground here: walk barefoot, sit with hands on lower belly, visualise a red light pulsing at the base of your spine."
+          }
+        ],
+        "chakraText": "Muladhara (Root Chakra) is primary during menstruation. It governs your physical foundations, safety, and the release of what no longer serves. Ground through earth, stillness and red-spectrum foods like beets.",
+        "chakras": [
+          {
+            "n": "Muladhara",
+            "c": "#E53E3E"
+          },
+          {
+            "n": "Svadhisthana",
+            "c": "#ED8936"
+          }
+        ],
+        "herb": {
+          "name": "Shatavari & Cacao Moon Elixir",
+          "tl": "Warming, iron-rich, deeply nourishing tonic for the winter phase of your cycle",
+          "steps": [
+            "Warm 250ml oat or almond milk — do not boil.",
+            "Whisk in 1 tsp Shatavari powder and 1 tsp raw cacao.",
+            "Add a pinch of cardamom and cinnamon for warming Agni.",
+            "Remove from heat, add 1 tsp raw honey (never heat honey above 40°C).",
+            "Sip slowly before bed. Feel the uterine muscles soften."
+          ]
+        }
+      },
+      {
+        "name": "Follikulärfasen",
+        "season": "Vår",
+        "dosha": "Kapha → Pitta — Kreativt Uppvaknande",
+        "icon": "🌱",
+        "color": "#60A5FA",
+        "days": "Days 6–13",
+        "minHeader": "Vårens Mineraler — Bränsle till Follikeln",
+        "minIntro": "FSH stiger och kallar den dominanta follikeln. Östrogenet börjar klättra. Din lever måste metabolisera detta stigande östrogen effektivt.",
+        "minerals": [
+          {
+            "icon": "🥦",
+            "mineral": "Indol-3-Carbinol",
+            "food": "Broccoli & Cauliflower",
+            "amount": "100g lightly steamed",
+            "fn": "Activates liver Phase 1 and Phase 2 oestrogen detox pathways, preventing oestrogen dominance.",
+            "tags": [
+              "#DIM",
+              "#liverdetox",
+              "#oestrogenbalance"
+            ],
+            "bio": "Cruciferous vegetables contain glucosinolates that convert to DIM (Diindolylmethane) and I3C on chewing. These compounds direct oestrogen metabolism down the protective 2-OH pathway rather than the inflammatory 16-OH pathway. Daily consumption during the follicular phase measurably reduces PMS."
+          },
+          {
+            "icon": "🥑",
+            "mineral": "Vitamin E",
+            "food": "Avocado",
+            "amount": "½ avocado daily",
+            "fn": "Supports the growing follicle's membrane integrity and the moisture of cervical mucus.",
+            "tags": [
+              "#VitaminE",
+              "#follicle",
+              "#fertilemucus"
+            ],
+            "bio": "Vitamin E is a fat-soluble antioxidant concentrated in follicular fluid. It protects the developing egg from oxidative damage. Avocado also provides oleic acid, a monounsaturated fat that enhances absorption of fat-soluble vitamins A, D, E and K. Ghee can be drizzled over avocado for enhanced absorption."
+          },
+          {
+            "icon": "🫙",
+            "mineral": "Probiotics & Prebiotics",
+            "food": "Sauerkraut / Kimchi",
+            "amount": "2 tbsp with meals",
+            "fn": "The oestrobolome (gut bacteria) controls how well your body recycles or excretes oestrogen.",
+            "tags": [
+              "#probiotics",
+              "#oestrobolome",
+              "#guthormonalaxis"
+            ],
+            "bio": "Beta-glucuronidase is an enzyme produced by dysbiotic gut bacteria that reactivates oestrogen that should have been excreted, causing oestrogen overload. Fermented vegetables containing Lactobacillus strains suppress this enzyme and keep oestrogen clearance efficient."
+          },
+          {
+            "icon": "🌰",
+            "mineral": "Magnesium + B-vitamins",
+            "food": "Cashew Nuts",
+            "amount": "30g",
+            "fn": "Supports adrenal glands as energy begins to rise and prepares the nervous system for higher activity.",
+            "tags": [
+              "#magnesium",
+              "#adrenal",
+              "#Bvitamins"
+            ],
+            "bio": "Cashews provide 73mg magnesium per 30g, B1 (thiamine), B6, and copper — all cofactors for dopamine and serotonin synthesis. As oestrogen rises through the follicular phase, these neurotransmitters rise with it, and adequate B-vitamin intake ensures the body builds them efficiently."
+          },
+          {
+            "icon": "🌾",
+            "mineral": "B-complex + Fibre",
+            "food": "Oats & Barley",
+            "amount": "60g dry oats",
+            "fn": "Beta-glucan fibre binds excess oestrogen in the gut and escorts it out of the body.",
+            "tags": [
+              "#betaGlucan",
+              "#oestrogenclearing",
+              "#steadyenergy"
+            ],
+            "bio": "Oat beta-glucan is a soluble fibre that forms a gel in the intestine, binding bile acids (which carry used oestrogen). This prevents oestrogen reabsorption and its elimination via stool. Starting the day with oats during the follicular phase is one of the single most effective hormonal hacks."
+          },
+          {
+            "icon": "🫘",
+            "mineral": "Iron + Folate",
+            "food": "Red Lentils",
+            "amount": "100g cooked",
+            "fn": "Folate supports rapid cell division in the growing follicle; iron replenishes reserves after menstruation.",
+            "tags": [
+              "#folate",
+              "#iron",
+              "#celldivision"
+            ],
+            "bio": "The follicle undergoes rapid cell proliferation requiring folate (B9) as a methyl donor for DNA synthesis. Red lentils provide 179mcg folate per 100g cooked — nearly half the daily requirement — along with 3.3mg iron. Always combine with Vitamin C-rich foods to maximise non-haem iron absorption."
+          }
+        ],
+        "career": [
+          {
+            "t": "Launch New Projects",
+            "d": "Rising oestrogen increases dopamine sensitivity — new ideas feel exciting and achievable. This is your most creative window. Brainstorm, pitch, and begin."
+          },
+          {
+            "t": "Schedule Difficult Conversations",
+            "d": "Your verbal fluency and emotional regulation are improving daily. Use this window for conversations that need both clarity and compassion."
+          },
+          {
+            "t": "Learn New Skills",
+            "d": "Neuroplasticity is elevated by rising oestrogen. Your brain forms new connections more easily now. Begin that course, read that book, or practice that technique."
+          }
+        ],
+        "vedic": [
+          {
+            "icon": "☀",
+            "t": "Surya Namaskar (12 rounds)",
+            "s": "Sun salutations awaken Prana Shakti after the stillness of menstruation. Flow through 12 rounds at a pace that builds warmth — this mirrors the building phase of the follicle."
+          },
+          {
+            "icon": "🔥",
+            "t": "Kapalabhati Pranayama",
+            "s": "Skull-shining breath: sharp nasal exhales (1-2 per second) for 60 repetitions, then 3 natural breaths. This clears the Kapha heaviness of the post-menstrual body and sharpens mental focus."
+          },
+          {
+            "icon": "🌿",
+            "t": "Ashwagandha — Adrenal Tonic",
+            "s": "Ashwagandha (Withania somnifera) is an adaptogen that fortifies the adrenal glands as the body ramps up hormonal activity. It prevents the follicular rise from becoming adrenal depletion."
+          },
+          {
+            "icon": "💧",
+            "t": "Chakra: Svadhisthana (Sacral)",
+            "s": "The sacral chakra — seat of creativity, pleasure, and fluid movement — is the power centre of the follicular phase. Activate it with hip-opening yoga, orange foods, and creative expression."
+          }
+        ],
+        "chakraText": "Svadhisthana (Sacral Chakra) governs creativity, sexuality, and fluid joy. As oestrogen rises and the follicle grows, channel this energy into art, dance, and new beginnings.",
+        "chakras": [
+          {
+            "n": "Svadhisthana",
+            "c": "#ED8936"
+          },
+          {
+            "n": "Manipura",
+            "c": "#ECC94B"
+          }
+        ],
+        "herb": {
+          "name": "Ashwagandha Spring Tonic",
+          "tl": "Energising, adrenal-nourishing elixir for the creative spring of your cycle",
+          "steps": [
+            "Warm 250ml oat milk with a pinch of turmeric and black pepper.",
+            "Whisk in 1 tsp Ashwagandha root powder and ½ tsp cinnamon.",
+            "Add 1 tsp Ghee for bioavailability of the adaptogens.",
+            "Sweeten with a few drops of raw honey once cooled slightly.",
+            "Drink in the morning to set an expansive, creative tone for the day."
+          ]
+        }
+      },
+      {
+        "name": "Ovulationsfasen",
+        "season": "Sommar",
+        "dosha": "Pitta — Maximal Kraft",
+        "icon": "🌕",
+        "color": "#F472B6",
+        "days": "Days 14–15",
+        "minHeader": "Toppens Mineraler — Stöd Ägglossningen",
+        "minIntro": "LH spikar och utlöser ägglossning. Östrogen och testosteron når sin topp. Din kommunikation, magnetism och fysiska styrka är på maximum.",
+        "minerals": [
+          {
+            "icon": "🌿",
+            "mineral": "Chlorophyll & Iron",
+            "food": "Spinach & Kale",
+            "amount": "120g leafy greens",
+            "fn": "Chlorophyll oxygenates the blood for peak physical radiance and supports liver detoxification of peak oestrogen.",
+            "tags": [
+              "#chlorophyll",
+              "#iron",
+              "#oxygenation"
+            ],
+            "bio": "Chlorophyll is structurally almost identical to haemoglobin — it contains magnesium where haemoglobin contains iron. Studies show it increases red blood cell production and supports the liver's Phase 2 detox pathway, which is critical when oestrogen is at its monthly peak during ovulation."
+          },
+          {
+            "icon": "🌾",
+            "mineral": "B-complex",
+            "food": "Quinoa & Amaranth",
+            "amount": "80g cooked",
+            "fn": "Complete plant proteins fuel peak physical and mental performance; B-complex supports oestrogen metabolism.",
+            "tags": [
+              "#Bcomplex",
+              "#completeprotein",
+              "#peakenergy"
+            ],
+            "bio": "Quinoa contains all nine essential amino acids including lysine. Amaranth adds squalene, a plant compound that mimics some of oestrogen's anti-inflammatory properties in tissues. Together they provide the building blocks for the neurotransmitters driving your ovulatory peak."
+          },
+          {
+            "icon": "🍓",
+            "mineral": "Vitamin C + Bioflavonoids",
+            "food": "Raspberries & Strawberries",
+            "amount": "120g mixed berries",
+            "fn": "Support the formation of the corpus luteum (the structure left after the egg is released) and collagen for tissue repair.",
+            "tags": [
+              "#VitaminC",
+              "#corpusLuteum",
+              "#collagen"
+            ],
+            "bio": "After the egg is released, the follicle transforms into the corpus luteum — the main progesterone factory for the next 12-14 days. Vitamin C is concentrated in the corpus luteum at levels 20x higher than in blood. Adequate intake ensures this structure forms robustly and produces sufficient progesterone."
+          },
+          {
+            "icon": "🌰",
+            "mineral": "Calcium + Zinc",
+            "food": "Sesame Seeds (Tahini)",
+            "amount": "2 tbsp tahini",
+            "fn": "Sesame seeds are the highest plant source of calcium and provide zinc for hormonal signalling at ovulation.",
+            "tags": [
+              "#calcium",
+              "#zinc",
+              "#hormoneSignalling"
+            ],
+            "bio": "Calcium is involved in the LH surge itself — the signal that triggers the egg's release. Sesame seeds provide 88mg calcium per 2 tbsp. Zinc is simultaneously critical for egg quality and healthy ovulation; zinc levels in the follicular fluid directly predict ovulation quality."
+          },
+          {
+            "icon": "🥜",
+            "mineral": "Potassium",
+            "food": "Pistachio Nuts",
+            "amount": "30g",
+            "fn": "Balances fluid retention that can accompany the oestrogen peak and supports heart health during physical exertion.",
+            "tags": [
+              "#potassium",
+              "#hydration",
+              "#heart"
+            ],
+            "bio": "High oestrogen can cause mild fluid retention by activating aldosterone. Potassium counteracts this by increasing kidney sodium excretion. Pistachios provide 291mg potassium per 30g and are one of the lowest-calorie, highest-protein nuts available."
+          },
+          {
+            "icon": "🍯",
+            "mineral": "Enzymes + Antioxidants",
+            "food": "Raw Honey",
+            "amount": "1 tsp",
+            "fn": "(Vedic exception) Raw honey provides rapid glycolytic fuel for the energy-demanding ovulatory process and acts as a prebiotic.",
+            "tags": [
+              "#enzymes",
+              "#prebiotic",
+              "#Vedic"
+            ],
+            "bio": "Unheated raw honey contains over 200 bioactive compounds including amylase, invertase, glucose oxidase, and catalase. It acts as a prebiotic for Bifidobacterium and supports oestrogen metabolism through its antioxidant flavonoids. Only raw, unheated honey retains these properties."
+          }
+        ],
+        "career": [
+          {
+            "t": "Lead, Pitch & Negotiate",
+            "d": "Your testosterone peak makes you persuasive, confident, and charismatic. Schedule salary negotiations, client pitches, or important presentations today."
+          },
+          {
+            "t": "High-Visibility Activities",
+            "d": "Your magnetism is at its biological apex. Lead a meeting, give a talk, or go on a date. Others are neurologically drawn to your energy right now."
+          },
+          {
+            "t": "Collaborate Generously",
+            "d": "Oxytocin is high. Your empathy and desire to connect are at their peak — use this to build alliances, mentor others, and strengthen relationships."
+          }
+        ],
+        "vedic": [
+          {
+            "icon": "⚡",
+            "t": "Warrior Sequence (Virabhadrasana)",
+            "s": "Warrior I, II, and III — channel the Pitta fire of peak oestrogen into physical strength and clarity of purpose. Hold each pose for 8 full breaths."
+          },
+          {
+            "icon": "💗",
+            "t": "Ustrasana (Camel Pose)",
+            "s": "Heart-opening posture that channels the ovulatory surge outward — toward connection, creativity, and expression. Hold for 5 breaths, feeling the chest expand fully."
+          },
+          {
+            "icon": "❄",
+            "t": "Sitali / Sitkari Pranayama",
+            "s": "Cooling breath for the Pitta peak. Roll the tongue (Sitali) or show the teeth (Sitkari) and inhale through the mouth. Exhale through the nose. 8 rounds to maintain cool clarity."
+          },
+          {
+            "icon": "💙",
+            "t": "Chakra: Vishuddha (Throat)",
+            "s": "The throat chakra governs authentic expression, truth, and communication — exactly what peaks at ovulation. Hum, sing, or speak your truth. Wear blue. Eat blueberries."
+          }
+        ],
+        "chakraText": "Vishuddha (Throat Chakra) reaches its zenith at ovulation. Your voice carries maximum influence now. Use it to speak truth, inspire others, and express your deepest creative visions.",
+        "chakras": [
+          {
+            "n": "Vishuddha",
+            "c": "#4299E1"
+          },
+          {
+            "n": "Anahata",
+            "c": "#48BB78"
+          }
+        ],
+        "herb": {
+          "name": "Shatavari Rose Elixir",
+          "tl": "Cooling, lubricating, oestrogen-supportive tonic for your peak ovulatory radiance",
+          "steps": [
+            "Blend 250ml rose water (or cold oat milk) with 1 tsp Shatavari powder.",
+            "Add 1 tbsp of blended sesame seeds (tahini-style) for calcium and zinc.",
+            "Add ½ tsp raw cacao for iron and magnesium.",
+            "Sweeten with a small drizzle of raw honey.",
+            "Serve chilled or at room temperature — Sitali in a glass."
+          ]
+        }
+      },
+      {
+        "name": "Lutealfasen",
+        "season": "Höst",
+        "dosha": "Vata → Pitta — Grunda & Slutför",
+        "icon": "🍂",
+        "color": "#F6AD55",
+        "days": "Days 16–28",
+        "minHeader": "Höstens Mineraler — Skydda Progesteronet",
+        "minIntro": "Progesteronet dominerar nu — kroppens naturliga Valium. Om progesteronet är otillräckligt i förhållande till östrogen uppstår PMS.",
+        "minerals": [
+          {
+            "icon": "🍠",
+            "mineral": "Vitamin A + Fibre",
+            "food": "Sweet Potato & Pumpkin",
+            "amount": "150g baked",
+            "fn": "Beta-carotene converts to Vitamin A for progesterone synthesis; slow carbohydrates stabilise blood sugar under rising insulin sensitivity.",
+            "tags": [
+              "#VitaminA",
+              "#betaCarotene",
+              "#bloodsugar"
+            ],
+            "bio": "Progesterone is synthesised from cholesterol, and Vitamin A is a required cofactor in this pathway. The slow-digesting complex carbohydrates in sweet potato prevent the blood sugar spikes that elevate cortisol — cortisol directly competes with progesterone for its receptor, suppressing progesterone's calming effects."
+          },
+          {
+            "icon": "🍫",
+            "mineral": "Magnesium + Anandamide",
+            "food": "Raw Cacao Nibs",
+            "amount": "15g nibs or 1 tbsp powder",
+            "fn": "Magnesium is the most depleted mineral in the luteal phase; it prevents PMS, cramping, headaches, and chocolate cravings.",
+            "tags": [
+              "#magnesium",
+              "#PMS",
+              "#anandamide"
+            ],
+            "bio": "Chocolate cravings before menstruation are your body's intelligent signal for magnesium. Raw cacao contains anandamide — the bliss molecule — and phenylethylamine (PEA) which boost serotonin. It also contains theobromine, a mild stimulant gentler than caffeine that does not spike cortisol."
+          },
+          {
+            "icon": "🌻",
+            "mineral": "B6 + Vitamin E + Selenium",
+            "food": "Sunflower Seeds",
+            "amount": "30g",
+            "fn": "Vitamin B6 is the primary cofactor for progesterone production and suppresses the prolactin that causes breast tenderness.",
+            "tags": [
+              "#B6",
+              "#progesterone",
+              "#selenium"
+            ],
+            "bio": "Vitamin B6 (pyridoxine) activates progesterone receptor binding and is required for the enzyme that converts B6 to pyridoxal-5-phosphate — the active form. Selenium in sunflower seeds supports the conversion of T4 to active T3 thyroid hormone, which falls during the luteal phase and contributes to low mood."
+          },
+          {
+            "icon": "🫘",
+            "mineral": "Fibre + Phytoestrogens",
+            "food": "Chickpeas & Lentils",
+            "amount": "100g cooked",
+            "fn": "High-fibre legumes bind excess oestrogen in the gut and eliminate it — preventing the oestrogen/progesterone imbalance that drives PMS.",
+            "tags": [
+              "#fibre",
+              "#oestrogenBinding",
+              "#PMS"
+            ],
+            "bio": "The Luteal phase is when oestrogen dominance causes the most damage. Chickpea fibre acts as a prebiotic and binds conjugated oestrogens in the gut, preventing their reabsorption. Chickpeas also contain tryptophan — an amino acid that the serotonin-depleted luteal-phase brain desperately needs."
+          },
+          {
+            "icon": "🌰",
+            "mineral": "Omega-3 (ALA) + Vitamin E",
+            "food": "Walnuts",
+            "amount": "30g (7 walnuts)",
+            "fn": "ALA omega-3 reduces the arachidonic acid-derived prostaglandins responsible for menstrual cramping and breast tenderness.",
+            "tags": [
+              "#omega3",
+              "#antiinflammatory",
+              "#prostaglandins"
+            ],
+            "bio": "Prostaglandins are hormone-like compounds that cause uterine contractions. They are synthesised from arachidonic acid (found in animal products). Plant-based omega-3 (ALA from walnuts) competes with arachidonic acid and shifts prostaglandin production toward less inflammatory variants, directly reducing PMS severity."
+          },
+          {
+            "icon": "🌿",
+            "mineral": "Adaptogens + Healthy Fats",
+            "food": "Ashwagandha in Ghee",
+            "amount": "½ tsp in warm tonic",
+            "fn": "Ashwagandha lowers cortisol in the high-stress luteal phase; Ghee provides the cholesterol backbone for progesterone synthesis.",
+            "tags": [
+              "#adaptogen",
+              "#cortisol",
+              "#progesterone",
+              "#Vedic"
+            ],
+            "bio": "Cortisol and progesterone are synthesised from the same precursor (pregnenolone). Under chronic stress, the body steals pregnenolone to make cortisol instead of progesterone — the 'progesterone steal'. Ashwagandha reduces cortisol by 27% (clinically validated) and directly prevents this steal, protecting progesterone levels in the luteal phase."
+          }
+        ],
+        "career": [
+          {
+            "t": "Detail Work & Administration",
+            "d": "Your brain is chemically optimised for precision, editing, and completing tasks. Audit your finances, edit documents, close open loops."
+          },
+          {
+            "t": "Avoid New Commitments",
+            "d": "Progesterone makes the brain more cautious. This is not a flaw — it is biological wisdom. Evaluate rather than initiate."
+          },
+          {
+            "t": "Set Boundaries Clearly",
+            "d": "Your tolerance for nonsense drops as progesterone rises. Use this to create clear, firm boundaries in your work and relationships. Your body is enforcing self-care."
+          }
+        ],
+        "vedic": [
+          {
+            "icon": "🌍",
+            "t": "Malasana & Paschimottanasana",
+            "s": "Deep squat (Malasana) grounds Vata energy. Seated forward fold (Paschimottanasana) calms the nervous system. Hold each for 10 breaths. Feel the earth support you."
+          },
+          {
+            "icon": "🌬",
+            "t": "Nadi Shodhana Pranayama",
+            "s": "Alternate nostril breathing: close the right nostril, inhale left; close left, exhale right; inhale right; close right, exhale left. This is one round. Practise 10 rounds morning and evening to balance the nervous system and reduce PMS."
+          },
+          {
+            "icon": "🌿",
+            "t": "Ashwagandha — The Cortisol Shield",
+            "s": "The most important herb of the luteal phase. It prevents the progesterone steal by reducing cortisol production in the adrenal glands. Take as a tonic in warm oat milk with Ghee every evening."
+          },
+          {
+            "icon": "🧡",
+            "t": "Chakra: Manipura (Solar Plexus)",
+            "s": "The solar plexus chakra governs completion, willpower, and personal authority — the energy needed to complete tasks and uphold boundaries in the luteal phase. Activate with core yoga, golden foods, and sunlight."
+          }
+        ],
+        "chakraText": "Manipura (Solar Plexus Chakra) powers the luteal phase's call to complete what was started, set boundaries, and distil wisdom. Feed it with yellow and orange foods, sunlight, and core strengthening.",
+        "chakras": [
+          {
+            "n": "Manipura",
+            "c": "#ECC94B"
+          },
+          {
+            "n": "Ajna",
+            "c": "#9F7AEA"
+          }
+        ],
+        "herb": {
+          "name": "Ashwagandha Moon Milk",
+          "tl": "Grounding, cortisol-reducing, progesterone-protective evening tonic",
+          "steps": [
+            "Warm 250ml oat or almond milk gently — do not boil.",
+            "Stir in 1 tsp Ashwagandha powder and ½ tsp turmeric.",
+            "Add 1 tsp Ghee — essential for absorbing the adaptogen and providing the progesterone precursor.",
+            "Add a pinch of nutmeg (promotes deep, restorative sleep).",
+            "Cool to 40°C then add 1 tsp raw honey. Sip 30 minutes before bed."
+          ]
+        }
+      }
+    ],
+    "hormones": {
+      "prog": {
+        "label": "Progesterone",
+        "color": "#A78BFA",
+        "cls": "prog",
+        "title": "Progesterone — The Calm Hormone",
+        "sub": "Produced by the corpus luteum after ovulation",
+        "body": [
+          {
+            "h": "Primary Function",
+            "t": "Prepares the uterine lining for potential implantation and maintains pregnancy. Outside of reproduction, progesterone acts as the body's natural anti-anxiety hormone by activating GABA receptors in the brain."
+          },
+          {
+            "h": "Luteal Phase Role",
+            "t": "Progesterone rises sharply after ovulation, reaching its peak around day 21. This is why the luteal phase can feel calm and inward. If progesterone falls too low relative to oestrogen, PMS symptoms (anxiety, bloating, insomnia) appear."
+          },
+          {
+            "h": "Nutrition Support",
+            "t": "Vitamin B6 (sunflower seeds), Vitamin A (sweet potato), Zinc (pumpkin seeds), and Magnesium (raw cacao) are all required cofactors for progesterone synthesis and receptor binding."
+          }
+        ],
+        "tags": [
+          "#calming",
+          "#GABA",
+          "#lutealPhase",
+          "#antiPMS"
+        ]
+      },
+      "ostr": {
+        "label": "Oestrogen",
+        "color": "#F472B6",
+        "cls": "ostr",
+        "title": "Oestrogen — The Radiance Hormone",
+        "sub": "Primary female sex hormone — produced by the ovaries",
+        "body": [
+          {
+            "h": "Primary Function",
+            "t": "Drives the development of female secondary sexual characteristics and regulates the menstrual cycle. In the brain, oestrogen increases serotonin sensitivity, making you feel optimistic, verbal, and social."
+          },
+          {
+            "h": "Follicular Peak",
+            "t": "Oestrogen rises steadily from day 6, reaching its first peak just before ovulation on day 13-14. This is when you feel your most vibrant, creative, and attractive."
+          },
+          {
+            "h": "Liver Metabolism",
+            "t": "The liver must efficiently process used oestrogen. Poor liver function causes oestrogen dominance. Support it with cruciferous vegetables (DIM), fibre (oat beta-glucan), and fermented foods."
+          }
+        ],
+        "tags": [
+          "#radiance",
+          "#serotonin",
+          "#ovulation",
+          "#liverDetox"
+        ]
+      },
+      "fsh": {
+        "label": "FSH",
+        "color": "#60A5FA",
+        "cls": "fsh",
+        "title": "FSH — Follicle Stimulating Hormone",
+        "sub": "Released by the pituitary gland to recruit the next egg",
+        "body": [
+          {
+            "h": "Primary Function",
+            "t": "FSH is secreted by the pituitary gland and stimulates the ovarian follicles to grow and produce oestrogen. One dominant follicle will be selected and mature into the egg released at ovulation."
+          },
+          {
+            "h": "Cycle Dynamics",
+            "t": "FSH rises in the early follicular phase, peaks just before ovulation, then falls. In perimenopause and menopause, FSH rises dramatically as the ovaries become less responsive — a key diagnostic marker."
+          },
+          {
+            "h": "Support",
+            "t": "Adequate micronutrients — especially zinc and Vitamin D — support healthy FSH signalling and follicular development."
+          }
+        ],
+        "tags": [
+          "#pituitary",
+          "#follicle",
+          "#eggQuality"
+        ]
+      },
+      "lh": {
+        "label": "LH Surge",
+        "color": "#34D399",
+        "cls": "lh",
+        "title": "LH — Luteinising Hormone (The Ovulation Signal)",
+        "sub": "The hormonal trigger for egg release",
+        "body": [
+          {
+            "h": "The Surge",
+            "t": "LH surges sharply around day 13-14, triggering the release of the egg from the dominant follicle within 24-36 hours. This is the hormonal event that ovulation predictor kits (OPKs) detect."
+          },
+          {
+            "h": "Corpus Luteum Formation",
+            "t": "After the egg is released, LH signals the empty follicle to transform into the corpus luteum — the temporary endocrine gland that produces progesterone for the rest of the cycle."
+          },
+          {
+            "h": "Support",
+            "t": "Vitamin C (raspberries, strawberries) is concentrated 20x in the corpus luteum. Zinc (sesame seeds) is directly required for healthy ovulation and LH receptor function."
+          }
+        ],
+        "tags": [
+          "#ovulationSignal",
+          "#corpusLuteum",
+          "#LHsurge"
+        ]
+      },
+      "test": {
+        "label": "Testosterone",
+        "color": "#FBBF24",
+        "cls": "test",
+        "title": "Testosterone — Drive & Magnetism",
+        "sub": "Yes — women produce testosterone too, and it matters",
+        "body": [
+          {
+            "h": "Female Testosterone",
+            "t": "Women produce testosterone in the ovaries and adrenal glands at about 1/10th the male level. It peaks at ovulation and is responsible for libido, confidence, competitive drive, and physical strength."
+          },
+          {
+            "h": "Ovulatory Peak",
+            "t": "The testosterone peak at ovulation contributes to the feeling of being most attractive, confident, and high-energy during this phase. It is the hormone behind charisma and sexual magnetism."
+          },
+          {
+            "h": "Excess & Balance",
+            "t": "Excess testosterone (as in PCOS) causes acne, hair thinning, and irregular cycles. It is balanced by adequate progesterone, zinc (pumpkin seeds), and reducing refined sugars."
+          }
+        ],
+        "tags": [
+          "#libido",
+          "#drive",
+          "#confidence",
+          "#PCOS"
+        ]
+      }
+    },
+    "chakras": {
+      "Muladhara": "The root chakra (Muladhara) sits at the base of the spine and governs physical safety, grounding, and the elimination function of the body. During menstruation, when the body is releasing, this chakra requires the most attention. Practices: walking barefoot, red foods (beets, pomegranate), Apanasana yoga pose, chanting LAM.",
+      "Svadhisthana": "The sacral chakra (Svadhisthana) governs creativity, sexuality, fluid movement, and pleasure. It is the hormonal centre of the female body — directly linked to the reproductive organs. During the follicular phase, it activates as oestrogen rises. Practices: hip circles, orange foods, creative art, chanting VAM.",
+      "Manipura": "The solar plexus chakra (Manipura) governs personal power, willpower, digestion of food AND experience, and completion. It is strongest in the luteal phase when the task is to complete, distil, and implement. Practices: core yoga, yellow foods (turmeric, pumpkin), sunlight, chanting RAM.",
+      "Ajna": "The third eye chakra (Ajna) governs intuition, inner vision, and the ability to see patterns. It activates strongly in the late luteal phase — the premenstrual window — when women often receive downloads, clear dreams, and deep knowing. Practices: meditation, Nadi Shodhana breath, indigo foods.",
+      "Vishuddha": "The throat chakra (Vishuddha) governs authentic expression, communication, and creative voice. At ovulation, when oestrogen and testosterone peak, this chakra reaches its most powerful state. Practices: singing, chanting, speaking truth, blue foods (blueberries, spirulina).",
+      "Anahata": "The heart chakra (Anahata) governs love, compassion, and connection. It is most open at ovulation when oxytocin rises and the desire to connect is at its peak. Practices: heart-opening yoga, green foods (spinach, kale, avocado), breathwork, chanting YAM."
+    },
+    "chartLabels": {
+      "prog": "Progesteron",
+      "ostr": "Östrogen",
+      "fsh": "FSH",
+      "lh": "LH-topp",
+      "test": "Testosteron"
+    },
+    "pregnancy": {
+      "badge": "Helig Graviditetsmodus",
+      "intro": "Ditt hormonlandskap har förändrats djupt. Progesteron produceras nu av moderkakan och förblir kontinuerligt högt för att upprätthålla din graviditet.",
+      "trimesters": [
+        {
+          "name": "Första Trimestern",
+          "weeks": "Weeks 1–13",
+          "icon": "🌱",
+          "color": "#68D391",
+          "hormones": "hCG rises sharply to sustain the corpus luteum. Progesterone and oestrogen climb. hCG causes nausea — this is a sign of a strong pregnancy, not illness.",
+          "minerals": [
+            {
+              "icon": "🫘",
+              "mineral": "Folate (B9)",
+              "food": "Red Lentils & Spinach",
+              "amount": "200g lentils + 100g spinach",
+              "fn": "Critical for neural tube formation in the first 28 days. Prevents spina bifida and anencephaly.",
+              "tags": [
+                "#folate",
+                "#neuralTube",
+                "#essential"
+              ],
+              "bio": "The neural tube closes by day 28 of pregnancy — often before a woman knows she is pregnant. Folate (as methylfolate) is the primary cofactor for DNA methylation and cell division at this critical window. Red lentils provide 180mcg per 100g."
+            },
+            {
+              "icon": "🌰",
+              "mineral": "Zinc",
+              "food": "Pumpkin Seeds & Hemp Seeds",
+              "amount": "30g pumpkin + 2 tbsp hemp",
+              "fn": "Zinc is required for cell division in the rapidly growing embryo and for DNA replication.",
+              "tags": [
+                "#zinc",
+                "#embryo",
+                "#cellDivision"
+              ],
+              "bio": "Zinc deficiency in the first trimester is associated with neural tube defects and early miscarriage. Pumpkin seeds provide 2.2mg zinc per 30g. Hemp seeds add omega-3 ALA for fetal brain development and additional zinc."
+            },
+            {
+              "icon": "🫙",
+              "mineral": "Iodine",
+              "food": "Kelp Flakes",
+              "amount": "2g (½ tsp kelp flakes)",
+              "fn": "Iodine is required for fetal thyroid hormone synthesis, which governs neurological development.",
+              "tags": [
+                "#iodine",
+                "#thyroid",
+                "#brain"
+              ],
+              "bio": "The fetal thyroid does not begin functioning until week 12. Before then, the baby is entirely dependent on the mother's iodine. Iodine deficiency is the world's leading preventable cause of intellectual disability. Sea vegetables are the richest plant source."
+            },
+            {
+              "icon": "🍋",
+              "mineral": "Vitamin B6",
+              "food": "Banana & Sunflower Seeds",
+              "amount": "1 banana + 15g seeds",
+              "fn": "B6 directly reduces nausea and vomiting of pregnancy (NVP) — clinically validated.",
+              "tags": [
+                "#B6",
+                "#nausea",
+                "#morningsickness"
+              ],
+              "bio": "Vitamin B6 at 10-25mg three times daily is the first-line clinical recommendation for pregnancy nausea. It works by modulating serotonin signalling in the vomiting centre of the brainstem. Bananas provide 0.4mg B6 each."
+            }
+          ],
+          "vedic": "Gentle Yin Yoga only. No strong inversions, twists, or heat. Bhramari pranayama to soothe the nervous system. Recite the Gayatri Mantra for the baby. Avoid Ashwagandha in the first trimester.",
+          "herb": "Shatavari in oat milk with Ghee — the supreme herb for pregnancy support. Take 1 tsp twice daily."
+        },
+        {
+          "name": "Andra Trimestern",
+          "weeks": "Weeks 14–26",
+          "icon": "🌸",
+          "color": "#F6AD55",
+          "hormones": "Placenta is fully formed and takes over hormone production. hCG falls, nausea often resolves. Progesterone and oestrogen continue rising. The golden trimester of energy and wellbeing.",
+          "minerals": [
+            {
+              "icon": "🥬",
+              "mineral": "Iron + B12 (plant sources)",
+              "food": "Lentils, Tempeh & Nori",
+              "amount": "150g lentils + nori sheets",
+              "fn": "Blood volume increases 50% in pregnancy — iron requirements double. B12 from plant sources supports the nervous system.",
+              "tags": [
+                "#iron",
+                "#bloodVolume",
+                "#B12"
+              ],
+              "bio": "Plasma volume expands by up to 50% by mid-pregnancy, diluting haemoglobin. Nori seaweed is one of the few reliable plant sources of B12 (as cyanocobalamin). Supplement B12 separately if not eating fortified foods."
+            },
+            {
+              "icon": "🌿",
+              "mineral": "Calcium + Vitamin D",
+              "food": "Sesame Seeds, Almonds & Sunlight",
+              "amount": "3 tbsp tahini + 30g almonds + 20 min sun",
+              "fn": "Fetal bone mineralisation begins in earnest in the second trimester, requiring calcium from the mother's stores.",
+              "tags": [
+                "#calcium",
+                "#bones",
+                "#VitaminD"
+              ],
+              "bio": "If dietary calcium is insufficient, the baby draws it from the mother's bones. Tahini provides 64mg calcium per tbsp. Supplement Vitamin D3 (as vegan D3 from lichen) if sunlight is limited."
+            },
+            {
+              "icon": "🫐",
+              "mineral": "DHA (plant-based)",
+              "food": "Algae Oil + Walnuts + Flaxseeds",
+              "amount": "1 tbsp ground flax + 7 walnuts",
+              "fn": "DHA is the primary structural fat of the fetal brain — 70% of the brain is built during pregnancy.",
+              "tags": [
+                "#DHA",
+                "#brain",
+                "#omega3"
+              ],
+              "bio": "DHA (docosahexaenoic acid) is critical for fetal brain cortex development and retinal formation. The body converts ALA from flaxseeds/walnuts to DHA inefficiently. A direct algae-derived DHA supplement is recommended for plant-based women during pregnancy."
+            }
+          ],
+          "vedic": "Prenatal yoga with focus on hip openers and pelvic floor. Nadi Shodhana pranayama 10 rounds daily to oxygenate the placenta. Sing to your baby — research confirms babies recognise mother's voice from 18 weeks.",
+          "herb": "Shatavari and Ashwagandha (safe from week 14) in evening moon milk with Ghee and Honey. Add Tulsi (Holy Basil) for adaptogenic stress support."
+        },
+        {
+          "name": "Tredje Trimestern",
+          "weeks": "Weeks 27–40",
+          "icon": "🌕",
+          "color": "#A78BFA",
+          "hormones": "Relaxin softens ligaments and cervix. Progesterone remains high until labour triggers its fall. Oxytocin will rise at birth. The body prepares for the most powerful hormonal event in human experience.",
+          "minerals": [
+            {
+              "icon": "🌰",
+              "mineral": "Magnesium",
+              "food": "Raw Cacao & Dark Leafy Greens",
+              "amount": "15g cacao + 150g greens",
+              "fn": "Prevents gestational hypertension and pre-eclampsia; supports sleep and reduces leg cramping.",
+              "tags": [
+                "#magnesium",
+                "#preeclampsia",
+                "#sleep"
+              ],
+              "bio": "Magnesium deficiency is associated with gestational hypertension. It regulates calcium channels in smooth muscle — when insufficient, vessels constrict and blood pressure rises. Magnesium supplementation from week 20 reduces pre-eclampsia risk."
+            },
+            {
+              "icon": "🌿",
+              "mineral": "Vitamin K2",
+              "food": "Natto, Sauerkraut & Ghee",
+              "amount": "2 tbsp fermented veg + 1 tsp Ghee",
+              "fn": "K2 ensures calcium is deposited in fetal bones rather than soft tissues; supports maternal vascular health.",
+              "tags": [
+                "#VitaminK2",
+                "#boneDensity",
+                "#vascular"
+              ],
+              "bio": "Vitamin K2 (menaquinone) activates osteocalcin and matrix-Gla protein — proteins that direct calcium into bones rather than arteries. Fermented plant foods and Ghee are the primary natural K2 sources compatible with the plant-based protocol."
+            },
+            {
+              "icon": "🫘",
+              "mineral": "Protein + Iron",
+              "food": "Chickpeas, Lentils & Pumpkin Seeds",
+              "amount": "150g legumes + 30g seeds",
+              "fn": "Protein requirements are highest in the third trimester for fetal organ and tissue growth.",
+              "tags": [
+                "#protein",
+                "#growth",
+                "#iron"
+              ],
+              "bio": "In the third trimester, 500mg of fetal iron is stored in the liver as reserve for the first 6 months of postnatal life. Daily intake of 27mg iron is recommended, achieved through lentils (3.3mg per 100g), chickpeas (2.9mg per 100g), and pumpkin seeds (4.2mg per 30g)."
+            }
+          ],
+          "vedic": "Gentle walking, swimming, and supported poses only. Sitali pranayama to reduce overheating. Listen to Garbha Sanskar mantras — a Vedic tradition of playing sacred sound to the baby in utero. Birth preparation: Om Mani Padme Hum visualisation, perineal massage with Ghee.",
+          "herb": "Shatavari at higher dose (2 tsp) for colostrum preparation. Red raspberry leaf tea (from week 36) tones the uterus for labour."
+        }
+      ]
+    },
+    "menopause": {
+      "badge": "Heligt Klimakteriemodus",
+      "intro": "Klimakteriet är inte en brist — det är en initiering. I den vediska traditionen är detta övergången från Shakti (skapande kraft) till Jnana (visdomskraft).",
+      "stages": [
+        {
+          "name": "Perimenopaus",
+          "icon": "🌅",
+          "color": "#F6AD55",
+          "desc": "Typically begins 2-10 years before the final period. Irregular cycles, erratic hormone fluctuations, and the first signs of hormonal transition. FSH begins to rise as the ovaries become less responsive.",
+          "symptoms": [
+            "Irregular periods",
+            "Hot flashes",
+            "Night sweats",
+            "Sleep disruption",
+            "Mood swings",
+            "Brain fog"
+          ],
+          "minerals": [
+            {
+              "icon": "🌰",
+              "mineral": "Magnesium + B6",
+              "food": "Pumpkin Seeds & Raw Cacao",
+              "amount": "30g seeds + 10g cacao daily",
+              "fn": "Stabilises mood swings and supports sleep quality as progesterone becomes erratic.",
+              "tags": [
+                "#magnesium",
+                "#moodStabiliser",
+                "#sleep"
+              ],
+              "bio": "During perimenopause, progesterone falls before oestrogen, creating relative oestrogen dominance. Magnesium directly supports GABA (the calming neurotransmitter) that progesterone was previously maintaining. B6 is required for serotonin synthesis — critical as mood regulation chemistry shifts."
+            },
+            {
+              "icon": "🌿",
+              "mineral": "Phytoestrogens (Lignans)",
+              "food": "Ground Flaxseeds",
+              "amount": "2 tbsp ground flaxseed daily",
+              "fn": "Plant lignans bind oestrogen receptors gently, reducing the severity of hot flashes and protecting bone density.",
+              "tags": [
+                "#phytoestrogens",
+                "#lignans",
+                "#hotFlash"
+              ],
+              "bio": "Flaxseeds are the richest dietary source of lignans — polyphenols converted by gut bacteria to enterolignans which bind oestrogen receptors with 1/1000th the potency of endogenous oestrogen. This gentle binding reduces hot flash frequency by 30-40% in clinical trials."
+            },
+            {
+              "icon": "🦴",
+              "mineral": "Calcium + Vitamin D + K2",
+              "food": "Sesame Tahini, Almonds & Sunlight",
+              "amount": "4 tbsp tahini + 30g almonds + 20 min sun",
+              "fn": "Bone density loss accelerates dramatically in the 2 years around menopause. Plant calcium with K2 and D3 is essential.",
+              "tags": [
+                "#calcium",
+                "#bone",
+                "#osteoporosis"
+              ],
+              "bio": "Women can lose 10-20% of their bone density in the 5 years around menopause due to oestrogen's role in osteoblast (bone-building) activity. Calcium intake should reach 1200mg/day. Supplemental plant-based Vitamin D3 (2000 IU) and K2 (MK-7, 180mcg) are strongly recommended."
+            }
+          ],
+          "vedic": "Ashwagandha and Shatavari together are the primary menopausal herbs in Ayurveda. Shatavari's phytoestrogens gently support declining oestrogen; Ashwagandha protects adrenal function as the adrenals become the primary oestrogen factory after menopause.",
+          "herb": "Ashwagandha + Shatavari Evening Tonic: 1 tsp each in warm oat milk with Ghee and raw Honey. This combination has been used in Ayurveda for thousands of years as the primary menopausal rasayana."
+        },
+        {
+          "name": "Menopaus",
+          "icon": "🌙",
+          "color": "#A78BFA",
+          "desc": "Defined as 12 consecutive months without a period. The ovaries cease regular hormone production. The adrenal glands become the primary source of oestrogen (as oestrone). This transition is complete.",
+          "symptoms": [
+            "No periods",
+            "Hot flashes peak",
+            "Vaginal dryness",
+            "Sleep changes",
+            "Libido shifts",
+            "Skin changes"
+          ],
+          "minerals": [
+            {
+              "icon": "🌻",
+              "mineral": "Boron + Silicon",
+              "food": "Prunes, Raisins & Avocado",
+              "amount": "5-6 prunes + ½ avocado daily",
+              "fn": "Boron mimics the role of oestrogen in bone metabolism and reduces urinary excretion of calcium and magnesium.",
+              "tags": [
+                "#boron",
+                "#bone",
+                "#mineralRetention"
+              ],
+              "bio": "Boron is a trace mineral that activates the enzyme responsible for converting vitamin D to its active form (calcitriol) and mimics some oestrogen activity in bone. Studies show 3mg daily reduces urinary calcium loss by 44%, recycling calcium that would otherwise be excreted."
+            },
+            {
+              "icon": "🌿",
+              "mineral": "Omega-3 + Vitamin E",
+              "food": "Walnuts, Flaxseeds & Avocado",
+              "amount": "30g walnuts + 1 tbsp flax + ½ avocado",
+              "fn": "Reduce cardiovascular risk (which rises post-menopause) and alleviate vaginal dryness through systemic anti-inflammatory action.",
+              "tags": [
+                "#omega3",
+                "#heart",
+                "#dryness"
+              ],
+              "bio": "Post-menopausal women face a 3x increase in cardiovascular risk as oestrogen's protective effect on arterial walls disappears. Plant omega-3 (ALA) and Vitamin E reduce arterial inflammation, LDL oxidation, and platelet aggregation. They also support the mucous membrane moisture that reduces vaginal dryness."
+            },
+            {
+              "icon": "🍫",
+              "mineral": "Magnesium — GABA Support",
+              "food": "Raw Cacao + Dark Leafy Greens",
+              "amount": "15g cacao + 200g greens",
+              "fn": "The single most important mineral for sleep quality, cortisol regulation, and mood stability in menopause.",
+              "tags": [
+                "#magnesium",
+                "#sleep",
+                "#cortisol"
+              ],
+              "bio": "As oestrogen and progesterone both decline, GABA activity in the brain falls. Magnesium is the most powerful natural GABA agonist available from food. It also regulates cortisol pulse — the primary cause of night sweats and disrupted sleep architecture in menopause."
+            }
+          ],
+          "vedic": "You have crossed the threshold. In Vedic cosmology, the menopausal woman becomes a Dakini — a wisdom holder. Kundalini practices, deep pranayama, and mantra initiation are the Vedic prescriptions for this phase.",
+          "herb": "Shatavari + Brahmi (Bacopa monnieri) combination for adrenal and cognitive support. Brahmi enhances memory and neuroplasticity as oestrogen's neuroprotective effect declines."
+        },
+        {
+          "name": "Postmenopaus",
+          "icon": "⭐",
+          "color": "#D4AF37",
+          "desc": "The liberation phase. Adrenal oestrogen (oestrone) becomes the dominant hormone. Many women report their greatest creative and spiritual awakening in this phase. In Jyotish (Vedic astrology), this corresponds to the Saturn return of wisdom.",
+          "symptoms": [
+            "Stable energy",
+            "Reduced bleeding concerns",
+            "New vitality possible",
+            "Spiritual clarity",
+            "Bone & heart monitoring needed"
+          ],
+          "minerals": [
+            {
+              "icon": "🌟",
+              "mineral": "Complete Bone Protocol",
+              "food": "Tahini + Almonds + Nettle Tea + Sunlight",
+              "amount": "Daily protocol",
+              "fn": "Long-term bone density maintenance through calcium, K2, D3, boron, and weight-bearing movement.",
+              "tags": [
+                "#bone",
+                "#longterm",
+                "#prevention"
+              ],
+              "bio": "Post-menopausal bone loss continues at 1-2% per year without intervention. A complete bone protocol includes: calcium 1200mg/day (tahini, almonds, sesame), Vitamin D3 2000IU (supplement), K2-MK7 180mcg (natto/supplement), boron 3mg (prunes), and weight-bearing yoga 3x/week. Nettle tea provides silica for bone matrix collagen."
+            },
+            {
+              "icon": "💛",
+              "mineral": "Adrenal Oestrogen Support",
+              "food": "Ashwagandha + Maca Root",
+              "amount": "1 tsp each in morning tonic",
+              "fn": "The adrenal glands become the primary oestrogen source post-menopause — they must be nourished.",
+              "tags": [
+                "#adrenal",
+                "#adaptogen",
+                "#oestrone"
+              ],
+              "bio": "Post-menopause, the ovaries cease oestrogen production but the adrenal glands continue to produce oestrone via aromatisation in adipose tissue. Women with well-nourished adrenals experience significantly fewer post-menopausal symptoms. Ashwagandha reduces cortisol by 27%; Maca directly stimulates adrenal oestrogen production."
+            },
+            {
+              "icon": "🫀",
+              "mineral": "Cardiovascular Protection",
+              "food": "Pomegranate, Turmeric & Walnuts",
+              "amount": "Daily rainbow of phytonutrients",
+              "fn": "Without oestrogen's arterial protection, plant antioxidants become the primary cardiovascular shield.",
+              "tags": [
+                "#heart",
+                "#antioxidants",
+                "#antiinflammatory"
+              ],
+              "bio": "Pomegranate contains punicalagins — the most potent plant antioxidants known — that reduce arterial plaque formation. Turmeric's curcumin reduces inflammatory markers (CRP, IL-6) that drive post-menopausal cardiovascular disease. Walnuts provide ALA omega-3 and ellagic acid that together reduce LDL oxidation and blood pressure."
+            }
+          ],
+          "vedic": "This is the Jnana (wisdom) phase of Shakti. Deep pranayama, Trataka (candle gazing), and Yoga Nidra (yogic sleep) are the prescribed practices. The post-menopausal woman is a Guru — one whose spiritual transmission is free from the cycles of the moon.",
+          "herb": "The Rasayana (rejuvenation) protocol: Shatavari + Ashwagandha + Brahmi + Amla (Indian Gooseberry, the highest Vitamin C plant on Earth). This combination was prescribed by Charaka (the father of Ayurveda) specifically for post-menopausal vitality."
+        }
+      ]
+    }
   }
 }

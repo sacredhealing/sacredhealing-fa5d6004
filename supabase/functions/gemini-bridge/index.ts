@@ -8,14 +8,14 @@ const corsHeaders = {
 interface GeminiBridgeRequest {
   prompt: string;
   context?: string;
-  model?: string;   // 'flash', 'flash-lite', 'pro' — all map to 2.5-flash now
-  feature?: string; // 'vedic_reading', 'guru_chat', 'ayurveda', 'translation', 'dosha', 'music', 'vedic_translation'
+  model?: string;
+  feature?: string;
   stream?: boolean;
   messages?: Array<{ role: string; content: string; audio?: { data: string; mimeType: string } }>;
+  imageBase64?: string;
+  imageMimeType?: string;
 }
 
-// Model routing — gemini-2.5-flash is the primary model.
-// gemini-2.0-flash is the fallback only (rate-limit safety net).
 const PRIMARY_MODEL  = "gemini-2.5-flash";
 const FALLBACK_MODEL = "gemini-2.0-flash";
 
@@ -27,24 +27,16 @@ serve(async (req) => {
   try {
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     if (!GEMINI_API_KEY) {
-      console.error("GEMINI_API_KEY not configured");
-      return new Response(
-        JSON.stringify({ error: "Gemini API key not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+      return new Response(JSON.stringify({ error: "Gemini API key not configured" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const body: GeminiBridgeRequest = await req.json();
-    const { prompt, context, feature, stream = false, messages } = body;
+    const { prompt, context, feature, stream = false, messages, imageBase64, imageMimeType } = body;
 
     if (!prompt && !messages?.length) {
-      return new Response(
-        JSON.stringify({ error: "Prompt or messages required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+      return new Response(JSON.stringify({ error: "Prompt or messages required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Build the content parts
     let contents: unknown[] = [];
 
     if (messages && messages.length > 0) {
@@ -54,24 +46,20 @@ serve(async (req) => {
         if (msg.audio?.data && msg.audio?.mimeType) {
           parts.push({ inlineData: { mimeType: msg.audio.mimeType, data: msg.audio.data } });
         }
-        return {
-          role: msg.role === "assistant" ? "model" : msg.role,
-          parts: parts.length ? parts : [{ text: "" }],
-        };
+        return { role: msg.role === "assistant" ? "model" : msg.role, parts: parts.length ? parts : [{ text: "" }] };
       });
     } else {
       const fullPrompt = context ? `${context}\n\n${prompt}` : prompt;
-      contents = [{ role: "user", parts: [{ text: fullPrompt }] }];
+      const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [{ text: fullPrompt }];
+      if (imageBase64 && imageMimeType) {
+        parts.push({ inlineData: { mimeType: imageMimeType, data: imageBase64 } });
+      }
+      contents = [{ role: "user", parts }];
     }
 
     const requestBody = {
       contents,
-      generationConfig: {
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 8192,
-      },
+      generationConfig: { temperature: 0.7, topK: 40, topP: 0.95, maxOutputTokens: 8192 },
       safetySettings: [
         { category: "HARM_CATEGORY_HARASSMENT",        threshold: "BLOCK_NONE" },
         { category: "HARM_CATEGORY_HATE_SPEECH",       threshold: "BLOCK_NONE" },
@@ -80,7 +68,6 @@ serve(async (req) => {
       ],
     };
 
-    // Try PRIMARY → FALLBACK
     let geminiResponse: Response | null = null;
     let usedModel = PRIMARY_MODEL;
 
@@ -88,30 +75,20 @@ serve(async (req) => {
       usedModel = model;
       const endpoint = stream ? "streamGenerateContent" : "generateContent";
       const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:${endpoint}?key=${GEMINI_API_KEY}`;
-
-      console.log(`gemini-bridge: trying ${model} for feature:${feature || 'general'}`);
+      console.log(`gemini-bridge: trying ${model} for feature:${feature || "general"}`);
 
       try {
-        geminiResponse = await fetch(apiUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(requestBody),
-        });
-
+        geminiResponse = await fetch(apiUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(requestBody) });
         if (geminiResponse.ok) break;
-
         if (geminiResponse.status === 429) {
-          const retryMsg = await geminiResponse.text();
-          console.warn(`gemini-bridge: ${model} rate-limited, trying fallback. Detail: ${retryMsg}`);
+          console.warn(`gemini-bridge: ${model} rate-limited, trying fallback.`);
           geminiResponse = null;
           await new Promise(r => setTimeout(r, 1500));
           continue;
         }
-
         const errText = await geminiResponse.text();
         console.error(`gemini-bridge: ${model} error (${geminiResponse.status}): ${errText}`);
         geminiResponse = null;
-
       } catch (fetchErr) {
         console.error(`gemini-bridge: fetch error on ${model}:`, fetchErr);
         geminiResponse = null;
@@ -119,16 +96,11 @@ serve(async (req) => {
     }
 
     if (!geminiResponse || !geminiResponse.ok) {
-      return new Response(
-        JSON.stringify({ error: "AI service temporarily unavailable. Please try again in a moment." }),
-        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+      return new Response(JSON.stringify({ error: "AI service temporarily unavailable. Please try again in a moment." }), { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     if (stream) {
-      return new Response(geminiResponse.body, {
-        headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
-      });
+      return new Response(geminiResponse.body, { headers: { ...corsHeaders, "Content-Type": "text/event-stream" } });
     }
 
     const data = await geminiResponse.json();
@@ -136,22 +108,17 @@ serve(async (req) => {
 
     if (!responseText) {
       console.error(`gemini-bridge: empty response from ${usedModel}:`, JSON.stringify(data));
-      return new Response(
-        JSON.stringify({ error: "No response generated" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+      return new Response(JSON.stringify({ error: "No response generated" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // Return both 'response' (legacy) and 'text' (new) so all consumers work
     return new Response(
-      JSON.stringify({ response: responseText, model: usedModel, feature: feature || "general" }),
+      JSON.stringify({ response: responseText, text: responseText, model: usedModel, feature: feature || "general" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
 
   } catch (error) {
     console.error("gemini-bridge: unhandled error:", error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
