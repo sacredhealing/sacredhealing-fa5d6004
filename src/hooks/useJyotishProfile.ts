@@ -256,12 +256,13 @@ export function useJyotishProfile(): JyotishProfile {
   }, [authUser?.id]);
 
   // Strip AI currentDasha from cached readings and persist birth nakshatra if the reading exposes one.
+  // Guard with isFreshForUser to avoid writing a previous user's nakshatra to the current user's profile.
   useEffect(() => {
     if (!authUser?.id) return;
 
     stripCachedCurrentDasha(authUser.id);
 
-    if (typeof window === 'undefined') return;
+    if (!isFreshForUser || typeof window === 'undefined') return;
 
     const rawReading = reading as any;
     const derivedBirthNakshatra = normalizeNakshatraName(
@@ -295,7 +296,7 @@ export function useJyotishProfile(): JyotishProfile {
 
     localStorage.setItem(birthCacheKey, JSON.stringify(nextBirthData));
     setBirthData((prev) => ({ ...(prev || {}), birth_nakshatra: derivedBirthNakshatra }));
-  }, [authUser?.id, reading, birthData]);
+  }, [authUser?.id, isFreshForUser, reading, birthData]);
 
   // Pull birth details from the current user's profile and keep a local birth cache for deterministic dasha math.
   useEffect(() => {
@@ -392,7 +393,8 @@ export function useJyotishProfile(): JyotishProfile {
 
     // ── AUTHORITATIVE: compute from birth data, IGNORE AI text ──
     const birthDateStr = cachedBirth?.birth_date ?? '';
-    const rawReading = reading as any;
+    // Only use the AI reading if it belongs to the current user (isFreshForUser guards against stale cross-user data).
+    const rawReading = isFreshForUser ? (reading as any) : null;
     let moonNakshatra = normalizeNakshatraName(
       String(
         cachedBirth?.birth_nakshatra ||
@@ -468,5 +470,5 @@ export function useJyotishProfile(): JyotishProfile {
       isLoading,
       userName,
     };
-  }, [authUser, birthData, isLoading, reading]);
+  }, [authUser, birthData, isFreshForUser, isLoading, reading]);
 }
