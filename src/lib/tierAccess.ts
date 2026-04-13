@@ -15,7 +15,9 @@
 
 export function getTierRank(tier: string | undefined | null): number {
   const t = (tier || '').toLowerCase();
+  // Rank 3 — Akasha-Infinity, lifetime, Temple Home / virtual pilgrimage equivalents
   if (t.includes('life') || t.includes('akasha')) return 3;
+  if (t.includes('temple_home') || t.includes('temple-home') || t.includes('templehome')) return 3;
   if (t.includes('siddha')) return 2;
   if (
     t.includes('prana') ||
@@ -49,7 +51,9 @@ export const FEATURE_TIER = {
 
   // Akasha-Infinity (rank 3)
   quantumApothecary: 3,
+  /** Virtual Pilgrimage + Temple Home — same tier gate */
   virtualPilgrimage: 3,
+  templeHome: 3,
   palmOracle: 3,
   akashicDecoder: 3,
 } as const;
@@ -69,4 +73,21 @@ export function hasFeatureAccess(
 ): boolean {
   if (isAdmin) return true;
   return getTierRank(tier) >= requiredRank;
+}
+
+/**
+ * Akasha-Infinity–level entitlements (Temple Home, virtual pilgrimage, etc.).
+ * Belt-and-suspenders with getTierRank for slug variants from Stripe / profiles.
+ */
+export function isAkashaInfinityTier(tier: string | undefined | null): boolean {
+  const t = (tier || '').toLowerCase();
+  if (!t) return false;
+  if (getTierRank(tier) >= 3) return true;
+  return (
+    t.includes('akasha') ||
+    t.includes('lifetime') ||
+    t.includes('temple_home') ||
+    t.includes('temple-home') ||
+    t.includes('templehome')
+  );
 }

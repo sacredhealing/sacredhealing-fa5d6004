@@ -12,7 +12,7 @@ import { useAdminRole } from '@/hooks/useAdminRole';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
-import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
+import { hasFeatureAccess, FEATURE_TIER, isAkashaInfinityTier } from '@/lib/tierAccess';
 import TempleGateIcon from '@/components/icons/TempleGateIcon';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
@@ -951,6 +951,11 @@ export default function TempleHome() {
     </div>
   );
   if (!user) return <Navigate to="/auth" replace />;
-  if (!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.virtualPilgrimage)) return <Navigate to="/akasha-infinity" replace />;
+  const isAkasha = isAkashaInfinityTier(tier);
+  const canEnterTemple =
+    isAdmin ||
+    isAkasha ||
+    hasFeatureAccess(isAdmin, tier, FEATURE_TIER.templeHome);
+  if (!canEnterTemple) return <Navigate to="/akasha-infinity" replace />;
   return <TempleHomeInner />;
 }
