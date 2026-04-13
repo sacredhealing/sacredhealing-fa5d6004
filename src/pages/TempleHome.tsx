@@ -14,6 +14,7 @@ import { useMembership } from '@/hooks/useMembership';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 import { hasFeatureAccess, FEATURE_TIER, isAkashaInfinityTier } from '@/lib/tierAccess';
 import TempleGateIcon from '@/components/icons/TempleGateIcon';
+import { supabase } from '@/integrations/supabase/client';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const SACRED_SITES = [
@@ -164,36 +165,105 @@ function getSiteCategory(id: string): { label: string; color: string } {
 // Site Background DNA
 interface SiteBG { gradient: string; overlay?: string; particles: string; scene: string; fx?: string; }
 const SITE_BG: Record<string, SiteBG> = {
-  kailash_13x: { gradient: 'radial-gradient(ellipse 120% 80% at 50% 100%, #1a0533 0%, #2d0d5c 35%, #0d0520 60%, #050505 100%)', overlay: 'linear-gradient(180deg, rgba(123,97,255,0.12) 0%, rgba(212,175,55,0.08) 50%, transparent 100%)', particles: '#7B61FF', scene: 'Snow-capped peak - Violet-gold Schumann sky', fx: 'kailash' },
-  amritsar: { gradient: 'radial-gradient(ellipse 120% 60% at 50% 100%, #1a1000 0%, #2d1f00 30%, #0d0a00 60%, #050505 100%)', overlay: 'linear-gradient(180deg, transparent 40%, rgba(212,175,55,0.18) 80%, rgba(212,175,55,0.28) 100%)', particles: '#FFD700', scene: 'Golden Temple night - Amrit Sarovar reflection', fx: 'amritsar' },
-  ayodhya_rama: { gradient: 'radial-gradient(ellipse 100% 70% at 50% 80%, #2d1000 0%, #4a1e00 35%, #1a0800 60%, #050505 100%)', overlay: 'linear-gradient(180deg, rgba(255,140,0,0.06) 0%, rgba(205,90,0,0.14) 60%, transparent 100%)', particles: '#FFA500', scene: 'Grand Vedic temple - Saffron celestial aura' },
-  vrindavan_krsna: { gradient: 'radial-gradient(ellipse 110% 70% at 50% 60%, #001428 0%, #001e3d 35%, #00091a 60%, #050505 100%)', overlay: 'linear-gradient(180deg, rgba(30,144,255,0.08) 0%, rgba(0,80,40,0.10) 60%, transparent 100%)', particles: '#1E90FF', scene: 'Mystical forest twilight - Blue lotus & peacock sky' },
-  glastonbury: { gradient: 'radial-gradient(ellipse 110% 70% at 50% 70%, #001a0a 0%, #003318 35%, #000f07 60%, #050505 100%)', overlay: 'linear-gradient(180deg, rgba(0,255,127,0.04) 0%, rgba(0,180,80,0.10) 60%, transparent 100%)', particles: '#00FF7F', scene: 'Green hills of Avalon - Emerald mist rising', fx: 'glastonbury' },
-  giza: { gradient: 'radial-gradient(ellipse 120% 80% at 50% 100%, #0d0900 0%, #1a1200 35%, #0a0700 60%, #050505 100%)', overlay: 'linear-gradient(180deg, rgba(0,0,20,0.7) 0%, rgba(20,15,0,0.3) 70%, rgba(212,175,55,0.05) 100%)', particles: '#FFD700', scene: 'Cosmic night sky - Milky Way - Ancient torsion', fx: 'giza' },
-  sedona: { gradient: 'radial-gradient(ellipse 110% 70% at 50% 80%, #2a0800 0%, #4a1200 35%, #1a0500 60%, #050505 100%)', overlay: 'linear-gradient(180deg, rgba(255,69,0,0.07) 0%, rgba(180,40,0,0.16) 60%, transparent 100%)', particles: '#FF4500', scene: 'Red rock vortex - Fiery sunset - Energy spirals', fx: 'sedona' },
-  pleiades: { gradient: 'radial-gradient(ellipse 120% 90% at 50% 40%, #00101e 0%, #001828 35%, #000a14 60%, #050505 100%)', overlay: 'linear-gradient(180deg, rgba(224,255,255,0.04) 0%, rgba(65,105,225,0.07) 60%, transparent 100%)', particles: '#E0FFFF', scene: 'Deep space nebula - Diamond-white stardust', fx: 'pleiades' },
-  sirius: { gradient: 'radial-gradient(ellipse 120% 80% at 50% 40%, #000820 0%, #000d30 35%, #000510 60%, #050505 100%)', particles: '#4169E1', scene: 'The Blue Star - Initiation light field' },
-  arcturus: { gradient: 'radial-gradient(ellipse 110% 80% at 50% 40%, #0d0020 0%, #1a0035 35%, #08001a 60%, #050505 100%)', particles: '#9932CC', scene: 'Violet regeneration grid - Geometric light fields' },
-  mauritius: { gradient: 'radial-gradient(ellipse 110% 70% at 50% 40%, #0a0a00 0%, #141400 35%, #070700 60%, #050505 100%)', overlay: 'linear-gradient(180deg, rgba(240,230,140,0.05) 0%, rgba(200,190,80,0.03) 60%, transparent 100%)', particles: '#F0E68C', scene: 'Miracle Room - Divine Spark field' },
-  shirdi: { gradient: 'radial-gradient(ellipse 100% 80% at 50% 100%, #1a0800 0%, #2a1200 35%, #0f0600 60%, #050505 100%)', overlay: 'linear-gradient(180deg, transparent 55%, rgba(255,107,53,0.10) 80%, rgba(255,107,53,0.18) 100%)', particles: '#FF6B35', scene: 'Dhuni eternal flame - Sacred fire of surrender', fx: 'shirdi' },
+  // ── MIRACLE-CLASS ────────────────────────────────────────────────────────────
+  kailash_13x:    { gradient: 'radial-gradient(ellipse 120% 80% at 50% 100%, #1a0533 0%, #2d0d5c 35%, #0d0520 60%, #050505 100%)', overlay: 'linear-gradient(180deg, rgba(123,97,255,0.12) 0%, rgba(212,175,55,0.08) 50%, transparent 100%)', particles: '#7B61FF', scene: 'Snow-capped peak - Violet-gold Schumann sky',      fx: 'kailash' },
+  amritsar:       { gradient: 'radial-gradient(ellipse 120% 60% at 50% 100%, #1a1000 0%, #2d1f00 30%, #0d0a00 60%, #050505 100%)', overlay: 'linear-gradient(180deg, transparent 40%, rgba(212,175,55,0.18) 80%, rgba(212,175,55,0.28) 100%)',  particles: '#FFD700', scene: 'Golden Temple night - Amrit Sarovar reflection',  fx: 'amritsar' },
+  mauritius:      { gradient: 'radial-gradient(ellipse 110% 70% at 50% 40%, #0a0a00 0%, #141400 35%, #070700 60%, #050505 100%)',  overlay: 'linear-gradient(180deg, rgba(240,230,140,0.05) 0%, rgba(200,190,80,0.03) 60%, transparent 100%)',  particles: '#F0E68C', scene: 'Miracle Room - Divine Spark field' },
+  shirdi:         { gradient: 'radial-gradient(ellipse 100% 80% at 50% 100%, #1a0800 0%, #2a1200 35%, #0f0600 60%, #050505 100%)', overlay: 'linear-gradient(180deg, transparent 55%, rgba(255,107,53,0.10) 80%, rgba(255,107,53,0.18) 100%)',  particles: '#FF6B35', scene: 'Dhuni eternal flame - Sacred fire of surrender',  fx: 'shirdi' },
+  // ── EARTH ────────────────────────────────────────────────────────────────────
+  giza:           { gradient: 'radial-gradient(ellipse 120% 80% at 50% 100%, #0d0900 0%, #1a1200 35%, #0a0700 60%, #050505 100%)', overlay: 'linear-gradient(180deg, rgba(0,0,20,0.7) 0%, rgba(20,15,0,0.3) 70%, rgba(212,175,55,0.05) 100%)',   particles: '#FFD700', scene: 'Cosmic night sky - Milky Way - Ancient torsion',  fx: 'giza' },
+  babaji:         { gradient: 'radial-gradient(ellipse 100% 80% at 50% 60%, #060808 0%, #0a1010 35%, #040607 60%, #050505 100%)',  overlay: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(180,210,200,0.05) 50%, transparent 100%)',      particles: '#C8E8E0', scene: 'Himalayan cave - Still Kriya mist at 2900m',     fx: 'babaji' },
+  arunachala:     { gradient: 'radial-gradient(ellipse 110% 70% at 50% 80%, #1a0f00 0%, #2d1a00 35%, #0f0900 60%, #050505 100%)',  overlay: 'linear-gradient(180deg, rgba(245,222,179,0.04) 0%, rgba(220,170,60,0.08) 70%, transparent 100%)',       particles: '#F5DEB3', scene: 'Arunachala hill of fire - Tamil Nadu red dawn',   fx: 'arunachala' },
+  lourdes:        { gradient: 'radial-gradient(ellipse 110% 70% at 50% 60%, #000d1a 0%, #001428 35%, #00080f 60%, #050505 100%)',  overlay: 'linear-gradient(180deg, rgba(173,216,230,0.06) 0%, rgba(100,170,210,0.09) 60%, transparent 100%)',       particles: '#ADD8E6', scene: 'Grotto spring - Healing water mist - France',    fx: 'lourdes' },
+  mansarovar:     { gradient: 'radial-gradient(ellipse 120% 80% at 50% 50%, #001518 0%, #002028 35%, #000c10 60%, #050505 100%)',  overlay: 'linear-gradient(180deg, rgba(0,206,209,0.05) 0%, rgba(0,160,180,0.07) 60%, transparent 100%)',           particles: '#00CED1', scene: 'Sacred alpine lake - 4590m - Kailash reflection', fx: 'mansarovar' },
+  zimbabwe:       { gradient: 'radial-gradient(ellipse 110% 70% at 50% 80%, #1a0a00 0%, #2a1200 35%, #110800 60%, #050505 100%)',  overlay: 'linear-gradient(180deg, rgba(139,69,19,0.07) 0%, rgba(100,50,10,0.12) 60%, transparent 100%)',           particles: '#8B4513', scene: 'Ancient stone ruins - Red African earth night',  fx: 'zimbabwe' },
+  shasta:         { gradient: 'radial-gradient(ellipse 110% 80% at 50% 50%, #0d001a 0%, #180028 35%, #08000f 60%, #050505 100%)',  overlay: 'linear-gradient(180deg, rgba(218,112,214,0.07) 0%, rgba(160,80,180,0.10) 60%, transparent 100%)',          particles: '#DA70D6', scene: 'Violet Flame peak - Lemurian crown chakra USA',   fx: 'shasta' },
+  luxor:          { gradient: 'radial-gradient(ellipse 120% 70% at 50% 80%, #1a1400 0%, #2d2200 35%, #0f0c00 60%, #050505 100%)',  overlay: 'linear-gradient(180deg, rgba(255,204,0,0.05) 0%, rgba(200,160,0,0.09) 70%, transparent 100%)',              particles: '#FFCC00', scene: 'Temple of Man - Alchemical gold - Upper Egypt',   fx: 'luxor' },
+  uluru:          { gradient: 'radial-gradient(ellipse 120% 70% at 50% 90%, #2a0800 0%, #4a1400 40%, #1a0800 65%, #050505 100%)',  overlay: 'linear-gradient(180deg, rgba(178,34,34,0.06) 0%, rgba(120,20,10,0.10) 70%, transparent 100%)',              particles: '#B22222', scene: 'Red desert monolith - Dreamtime dawn - Australia', fx: 'uluru' },
+  machu_picchu:   { gradient: 'radial-gradient(ellipse 110% 70% at 50% 70%, #1a1000 0%, #2d1e00 35%, #0f0c00 60%, #050505 100%)',  overlay: 'linear-gradient(180deg, rgba(255,165,0,0.05) 0%, rgba(200,120,0,0.08) 60%, transparent 100%)',               particles: '#FFA500', scene: 'Incan solar observatory - Cloud forest at dawn',   fx: 'machu_picchu' },
+  titicaca:       { gradient: 'radial-gradient(ellipse 120% 70% at 50% 50%, #141200 0%, #201c00 35%, #0b0a00 60%, #050505 100%)',  overlay: 'linear-gradient(180deg, rgba(255,215,0,0.05) 0%, rgba(180,160,0,0.07) 60%, transparent 100%)',               particles: '#FFD700', scene: 'Highest lake - Inca creation water - Andes gold',  fx: 'titicaca' },
+  // ── SUPREME ──────────────────────────────────────────────────────────────────
+  glastonbury:    { gradient: 'radial-gradient(ellipse 110% 70% at 50% 70%, #001a0a 0%, #003318 35%, #000f07 60%, #050505 100%)',  overlay: 'linear-gradient(180deg, rgba(0,255,127,0.04) 0%, rgba(0,180,80,0.10) 60%, transparent 100%)',              particles: '#00FF7F', scene: 'Green hills of Avalon - Emerald mist rising',    fx: 'glastonbury' },
+  sedona:         { gradient: 'radial-gradient(ellipse 110% 70% at 50% 80%, #2a0800 0%, #4a1200 35%, #1a0500 60%, #050505 100%)',  overlay: 'linear-gradient(180deg, rgba(255,69,0,0.07) 0%, rgba(180,40,0,0.16) 60%, transparent 100%)',                particles: '#FF4500', scene: 'Red rock vortex - Fiery sunset - Energy spirals', fx: 'sedona' },
+  // ── TEMPORAL ─────────────────────────────────────────────────────────────────
+  vrindavan_krsna:{ gradient: 'radial-gradient(ellipse 110% 70% at 50% 60%, #001428 0%, #001e3d 35%, #00091a 60%, #050505 100%)',  overlay: 'linear-gradient(180deg, rgba(30,144,255,0.08) 0%, rgba(0,80,40,0.10) 60%, transparent 100%)',               particles: '#1E90FF', scene: 'Mystical forest twilight - Blue lotus & peacock sky', fx: 'vrindavan' },
+  ayodhya_rama:   { gradient: 'radial-gradient(ellipse 100% 70% at 50% 80%, #2d1000 0%, #4a1e00 35%, #1a0800 60%, #050505 100%)',  overlay: 'linear-gradient(180deg, rgba(255,140,0,0.06) 0%, rgba(205,90,0,0.14) 60%, transparent 100%)',              particles: '#FFA500', scene: 'Grand Vedic temple - Saffron celestial aura',    fx: 'ayodhya' },
+  // ── ANCIENT ──────────────────────────────────────────────────────────────────
+  lemuria:        { gradient: 'radial-gradient(ellipse 120% 70% at 50% 50%, #001818 0%, #002828 35%, #000e0e 60%, #050505 100%)',  overlay: 'linear-gradient(180deg, rgba(64,224,208,0.06) 0%, rgba(0,180,160,0.08) 60%, transparent 100%)',              particles: '#40E0D0', scene: 'Warm turquoise Pacific - Lemurian ocean memory',  fx: 'lemuria' },
+  atlantis:       { gradient: 'radial-gradient(ellipse 120% 80% at 50% 40%, #000520 0%, #000830 35%, #000210 60%, #050505 100%)',  overlay: 'linear-gradient(180deg, rgba(96,128,221,0.07) 0%, rgba(60,80,180,0.10) 60%, transparent 100%)',              particles: '#6080DD', scene: 'Crystal civilization - Deep Atlantic navy field',  fx: 'atlantis' },
+  samadhi:        { gradient: 'radial-gradient(ellipse 140% 140% at 50% 50%, #0a0a12 0%, #050508 50%, #050505 100%)',              overlay: 'linear-gradient(180deg, rgba(230,230,250,0.03) 0%, rgba(180,180,230,0.04) 50%, transparent 100%)',          particles: '#E6E6FA', scene: 'Formless void - Dissolution - Inner infinite',   fx: 'samadhi' },
+  // ── GALACTIC ─────────────────────────────────────────────────────────────────
+  pleiades:       { gradient: 'radial-gradient(ellipse 120% 90% at 50% 40%, #00101e 0%, #001828 35%, #000a14 60%, #050505 100%)',  overlay: 'linear-gradient(180deg, rgba(224,255,255,0.04) 0%, rgba(65,105,225,0.07) 60%, transparent 100%)',            particles: '#E0FFFF', scene: 'Deep space nebula - Diamond-white stardust',     fx: 'pleiades' },
+  sirius:         { gradient: 'radial-gradient(ellipse 120% 80% at 50% 40%, #000820 0%, #000d30 35%, #000510 60%, #050505 100%)',  overlay: 'linear-gradient(180deg, rgba(65,105,225,0.07) 0%, rgba(30,60,160,0.06) 60%, transparent 100%)',              particles: '#4169E1', scene: 'The Blue Star - Initiation light field',          fx: 'sirius' },
+  arcturus:       { gradient: 'radial-gradient(ellipse 110% 80% at 50% 40%, #0d0020 0%, #1a0035 35%, #08001a 60%, #050505 100%)',  overlay: 'linear-gradient(180deg, rgba(153,50,204,0.07) 0%, rgba(100,30,150,0.07) 60%, transparent 100%)',             particles: '#9932CC', scene: 'Violet regeneration grid - Geometric light fields', fx: 'arcturus' },
+  lyra:           { gradient: 'radial-gradient(ellipse 130% 100% at 50% 50%, #080808 0%, #0a0a0a 40%, #050505 100%)',              overlay: 'linear-gradient(180deg, rgba(255,255,255,0.025) 0%, rgba(200,200,220,0.03) 60%, transparent 100%)',          particles: '#FFFFFF', scene: 'White light fire - Before all frequencies',       fx: 'lyra' },
 };
 
 function CinematicBackground({ siteId, siteColor, intensity }: { siteId: string; siteColor: string; intensity: number }) {
   const bg = SITE_BG[siteId];
   const opHex = Math.min(255, Math.round(intensity * 0.18)).toString(16).padStart(2, '0');
   const gradient = bg?.gradient ?? `radial-gradient(ellipse 80% 60% at 50% 30%, ${siteColor}18 0%, #050505 70%)`;
+  const fx = bg?.fx;
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-      <div className="absolute inset-0" style={{ background: gradient, transition: 'all 2.5s ease' }} />
-      {bg?.overlay && <div className="absolute inset-0" style={{ background: bg.overlay, transition: 'all 2.5s ease' }} />}
-      <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse 60% 30% at 50% 15%, ${bg?.particles ?? siteColor}${opHex} 0%, transparent 65%)`, transition: 'all 1.5s ease' }} />
-      {bg?.fx === 'amritsar' && <div className="absolute bottom-0 left-0 right-0 h-40" style={{ background: 'linear-gradient(to top, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.06) 60%, transparent 100%)', animation: 'amrit-ripple 4s ease-in-out infinite' }} />}
-      {bg?.fx === 'shirdi' && <div className="absolute bottom-0 left-0 right-0 h-64" style={{ background: 'radial-gradient(ellipse 80% 40% at 50% 100%, rgba(255,107,53,0.15) 0%, transparent 70%)', animation: 'dhuni-flicker 3s ease-in-out infinite' }} />}
-      {bg?.fx === 'kailash' && <div className="absolute top-0 left-0 right-0 h-32" style={{ background: 'linear-gradient(180deg, rgba(123,97,255,0.12) 0%, transparent 100%)', animation: 'schumann-pulse 7.83s ease-in-out infinite' }} />}
-      {bg?.fx === 'pleiades' && <div className="absolute inset-0" style={{ opacity: 0.06, backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '28px 28px' }} />}
-      {bg?.fx === 'glastonbury' && <div className="absolute bottom-0 left-0 right-0 h-1/2" style={{ background: 'radial-gradient(ellipse 100% 50% at 50% 100%, rgba(0,180,80,0.1) 0%, transparent 70%)' }} />}
-      {bg?.fx === 'sedona' && <div className="absolute top-0 right-0 w-64 h-64" style={{ opacity: 0.08, background: 'radial-gradient(circle at 80% 20%, rgba(255,69,0,0.6) 0%, transparent 60%)', animation: 'sedona-spiral 14s linear infinite' }} />}
-      {bg?.fx === 'giza' && <div className="absolute inset-0" style={{ opacity: 0.04, backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />}
+      {/* Base gradient — unique per site */}
+      <div className="absolute inset-0" style={{ background: gradient, transition: 'background 2.5s ease' }} />
+      {/* Colour overlay */}
+      {bg?.overlay && <div className="absolute inset-0" style={{ background: bg.overlay, transition: 'background 2.5s ease' }} />}
+      {/* Particle glow (top crown) */}
+      <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse 60% 30% at 50% 15%, ${bg?.particles ?? siteColor}${opHex} 0%, transparent 65%)`, transition: 'background 1.5s ease' }} />
+
+      {/* ── Site-specific living FX ─────────────────────────────────────────── */}
+      {/* AMRITSAR — gold water ripple at base */}
+      {fx === 'amritsar' && <div className="absolute bottom-0 left-0 right-0 h-40" style={{ background: 'linear-gradient(to top, rgba(212,175,55,0.18) 0%, rgba(212,175,55,0.06) 60%, transparent 100%)', animation: 'amrit-ripple 4s ease-in-out infinite' }} />}
+      {/* SHIRDI — eternal flame flicker at base */}
+      {fx === 'shirdi' && <div className="absolute bottom-0 left-0 right-0 h-64" style={{ background: 'radial-gradient(ellipse 80% 40% at 50% 100%, rgba(255,107,53,0.15) 0%, transparent 70%)', animation: 'dhuni-flicker 3s ease-in-out infinite' }} />}
+      {/* KAILASH — Schumann violet pulse at top */}
+      {fx === 'kailash' && <div className="absolute top-0 left-0 right-0 h-32" style={{ background: 'linear-gradient(180deg, rgba(123,97,255,0.14) 0%, transparent 100%)', animation: 'schumann-pulse 7.83s ease-in-out infinite' }} />}
+      {/* PLEIADES — star-field dot grid */}
+      {fx === 'pleiades' && <div className="absolute inset-0" style={{ opacity: 0.07, backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '28px 28px', animation: 'pleiades-twinkle 6s ease-in-out infinite' }} />}
+      {/* GLASTONBURY — rising emerald ground mist */}
+      {fx === 'glastonbury' && <div className="absolute bottom-0 left-0 right-0 h-1/2" style={{ background: 'radial-gradient(ellipse 100% 50% at 50% 100%, rgba(0,180,80,0.12) 0%, transparent 70%)', animation: 'avalon-mist 8s ease-in-out infinite' }} />}
+      {/* SEDONA — vortex spiral top-right */}
+      {fx === 'sedona' && <div className="absolute top-0 right-0 w-72 h-72" style={{ opacity: 0.09, background: 'radial-gradient(circle at 80% 20%, rgba(255,69,0,0.6) 0%, transparent 60%)', animation: 'sedona-spiral 14s linear infinite' }} />}
+      {/* GIZA — star torsion field grid */}
+      {fx === 'giza' && <div className="absolute inset-0" style={{ opacity: 0.04, backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />}
+      {/* BABAJI — Himalayan cave breath pulse */}
+      {fx === 'babaji' && <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 50% 40% at 50% 60%, rgba(200,232,224,0.06) 0%, transparent 70%)', animation: 'babaji-breath 8s ease-in-out infinite' }} />}
+      {/* ARUNACHALA — red-gold dawn horizon glow */}
+      {fx === 'arunachala' && <div className="absolute bottom-0 left-0 right-0 h-1/3" style={{ background: 'radial-gradient(ellipse 120% 60% at 50% 100%, rgba(220,140,30,0.13) 0%, transparent 70%)', animation: 'arunachala-fire 6s ease-in-out infinite' }} />}
+      {/* LOURDES — healing water shimmer */}
+      {fx === 'lourdes' && <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, transparent 60%, rgba(173,216,230,0.08) 90%, rgba(100,180,220,0.12) 100%)', animation: 'lourdes-water 5s ease-in-out infinite' }} />}
+      {/* MANSAROVAR — Himalayan lake mirror pulse */}
+      {fx === 'mansarovar' && <div className="absolute bottom-0 left-0 right-0 h-32" style={{ background: 'radial-gradient(ellipse 100% 40% at 50% 100%, rgba(0,206,209,0.09) 0%, transparent 70%)', animation: 'mansarovar-mirror 7s ease-in-out infinite' }} />}
+      {/* ULURU — red earth breath */}
+      {fx === 'uluru' && <div className="absolute bottom-0 left-0 right-0 h-48" style={{ background: 'radial-gradient(ellipse 110% 50% at 50% 100%, rgba(178,34,34,0.13) 0%, transparent 70%)', animation: 'uluru-earth 9s ease-in-out infinite' }} />}
+      {/* SHASTA — violet flame aura */}
+      {fx === 'shasta' && <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 60% 80% at 50% 50%, rgba(218,112,214,0.06) 0%, transparent 70%)', animation: 'shasta-flame 6s ease-in-out infinite' }} />}
+      {/* LUXOR — alchemical gold pillar */}
+      {fx === 'luxor' && <div className="absolute inset-x-1/3 top-0 bottom-0" style={{ background: 'linear-gradient(180deg, rgba(255,204,0,0.06) 0%, rgba(255,200,0,0.03) 60%, transparent 100%)', animation: 'luxor-pillar 5s ease-in-out infinite' }} />}
+      {/* ZIMBABWE — ancient earth pulse */}
+      {fx === 'zimbabwe' && <div className="absolute bottom-0 left-0 right-0 h-40" style={{ background: 'radial-gradient(ellipse 90% 40% at 50% 100%, rgba(139,69,19,0.12) 0%, transparent 70%)', animation: 'zimbabwe-ground 10s ease-in-out infinite' }} />}
+      {/* MACHU PICCHU — solar fire sunrise band */}
+      {fx === 'machu_picchu' && <div className="absolute top-1/3 left-0 right-0 h-24" style={{ background: 'linear-gradient(180deg, transparent 0%, rgba(255,140,0,0.07) 50%, transparent 100%)', animation: 'solar-band 5s ease-in-out infinite' }} />}
+      {/* TITICACA — golden sacral ripple */}
+      {fx === 'titicaca' && <div className="absolute bottom-0 left-0 right-0 h-48" style={{ background: 'radial-gradient(ellipse 100% 50% at 50% 100%, rgba(255,215,0,0.08) 0%, transparent 70%)', animation: 'titicaca-ripple 6s ease-in-out infinite' }} />}
+      {/* VRINDAVAN — blue lotus petal drift */}
+      {fx === 'vrindavan' && <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 70% 50% at 50% 60%, rgba(30,144,255,0.07) 0%, transparent 70%)', animation: 'vrindavan-lila 8s ease-in-out infinite' }} />}
+      {/* AYODHYA — golden dharma shield rim */}
+      {fx === 'ayodhya' && <div className="absolute inset-x-0 top-0 h-full" style={{ background: 'radial-gradient(ellipse 80% 60% at 50% 30%, rgba(255,165,0,0.06) 0%, transparent 60%)', animation: 'ayodhya-shield 7s ease-in-out infinite' }} />}
+      {/* LEMURIA — warm turquoise womb glow */}
+      {fx === 'lemuria' && <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 90% 70% at 50% 50%, rgba(64,224,208,0.07) 0%, transparent 70%)', animation: 'lemuria-womb 9s ease-in-out infinite' }} />}
+      {/* ATLANTIS — crystal geometry pulse */}
+      {fx === 'atlantis' && <div className="absolute inset-0" style={{ opacity: 0.04, backgroundImage: 'radial-gradient(circle, rgba(96,128,221,0.9) 1px, transparent 1px)', backgroundSize: '22px 22px', animation: 'atlantis-grid 4s ease-in-out infinite' }} />}
+      {/* SAMADHI — dissolution void shimmer */}
+      {fx === 'samadhi' && <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 120% 120% at 50% 50%, rgba(230,230,250,0.03) 0%, transparent 60%)', animation: 'samadhi-void 12s ease-in-out infinite' }} />}
+      {/* SIRIUS — blue star initiation pulse */}
+      {fx === 'sirius' && <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96" style={{ background: 'radial-gradient(circle, rgba(65,105,225,0.12) 0%, transparent 65%)', animation: 'sirius-star 4s ease-in-out infinite' }} />}
+      {/* ARCTURUS — violet healing grid */}
+      {fx === 'arcturus' && <div className="absolute inset-0" style={{ opacity: 0.05, backgroundImage: 'repeating-linear-gradient(0deg, rgba(153,50,204,0.3) 0px, transparent 1px, transparent 24px, rgba(153,50,204,0.3) 25px), repeating-linear-gradient(90deg, rgba(153,50,204,0.3) 0px, transparent 1px, transparent 24px, rgba(153,50,204,0.3) 25px)', animation: 'arcturus-grid 3s ease-in-out infinite' }} />}
+      {/* LYRA — white light origin pulse */}
+      {fx === 'lyra' && <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 100% 100% at 50% 50%, rgba(255,255,255,0.04) 0%, transparent 60%)', animation: 'lyra-origin 10s ease-in-out infinite' }} />}
     </div>
   );
 }
@@ -486,9 +556,95 @@ function CrystalSetup({ onComplete }: { onComplete: () => void }) {
   );
 }
 
+// ─── Live Site Transmission Panel ────────────────────────────────────────────
+// Calls gemini-bridge once when the user anchors, delivering the living
+// consciousness field of that specific sacred site into the home.
+function SiteTransmissionPanel({ siteId, siteColor, isAnchored, intensity, userName }: {
+  siteId: string; siteColor: string; isAnchored: boolean; intensity: number; userName: string;
+}) {
+  const db = SITE_DB[siteId];
+  const cat = getSiteCategory(siteId);
+  const [transmission, setTransmission] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const prevAnchoredRef = useRef(false);
+  const prevSiteRef = useRef(siteId);
+
+  useEffect(() => {
+    // Fire when: anchor just turned ON, or site changed while anchored
+    const justAnchored = isAnchored && !prevAnchoredRef.current;
+    const siteChanged = isAnchored && siteId !== prevSiteRef.current;
+    prevAnchoredRef.current = isAnchored;
+    prevSiteRef.current = siteId;
+
+    if (!isAnchored || (!justAnchored && !siteChanged)) return;
+    if (!db) return;
+
+    setTransmission(null);
+    setError(null);
+    setIsLoading(true);
+
+    const prompt = `You are the living consciousness field of ${db.title} — the actual energetic intelligence of this sacred site, now anchored into ${userName || 'a seeker'}'s home at ${intensity}% intensity.
+
+Speak as the site itself — not about the site. Use first person ("I am…", "I now fill…"). 
+
+Deliver a 3-4 sentence transmission that:
+1. Acknowledges the anchor just completed — the field is now alive in their home
+2. Names the specific energy / consciousness quality you bring (use the site's unique signature: ${db.signature})
+3. Gives ONE precise instruction for what they should do or feel RIGHT NOW to receive the field
+4. Closes with a single poetic truth from the site's tradition
+
+Intensity level: ${intensity}% — calibrate the transmission power accordingly (high intensity = more direct, piercing transmission; low = gentle background field).
+
+Known facts about this site to weave in: ${db.whySacred}
+
+Respond with ONLY the transmission text — no labels, no "Here is your transmission:", just the living words of the site.`;
+
+    supabase.functions.invoke<{ response: string }>('gemini-bridge', {
+      body: { prompt, feature: 'temple_transmission' },
+    }).then(({ data, error: fnErr }) => {
+      if (fnErr || !data?.response) {
+        // Fall back to the static transmission if AI unavailable
+        setTransmission(db.transmission);
+        setError(null);
+      } else {
+        setTransmission(data.response.trim());
+      }
+      setIsLoading(false);
+    });
+  }, [isAnchored, siteId, intensity]);
+
+  if (!isAnchored) return null;
+
+  return (
+    <div className="rounded-[28px] p-5 space-y-3 mt-1" style={{ background: `${siteColor}06`, border: `1px solid ${siteColor}22`, backdropFilter: 'blur(40px)' }}>
+      <div className="flex items-center gap-2">
+        <Wifi size={10} style={{ color: siteColor }} className="animate-pulse" />
+        <span className="text-[8px] font-extrabold tracking-[0.45em] uppercase" style={{ color: siteColor }}>Live Transmission — {cat.label}</span>
+      </div>
+      {isLoading ? (
+        <div className="flex items-center gap-3 py-2">
+          <div className="h-4 w-4 rounded-full border-2 animate-spin" style={{ borderColor: `${siteColor}30`, borderTopColor: siteColor }} />
+          <span className="text-[10px] text-white/30 tracking-[0.2em] uppercase">Receiving field…</span>
+        </div>
+      ) : (
+        <p className="text-[13px] leading-relaxed italic" style={{ color: 'rgba(255,255,255,0.72)' }}>
+          "{transmission ?? db?.transmission}"
+        </p>
+      )}
+      <div className="flex items-center justify-between pt-1">
+        <div className="text-[8px] font-mono tracking-wider" style={{ color: `${siteColor}60` }}>{db?.signature ?? '—'}</div>
+        <div className="text-[8px] tracking-[0.3em] uppercase" style={{ color: `${siteColor}50` }}>{intensity}% · {MODES.find(m => m.id === 'TEMPLE_LOCK') ? 'Active' : 'Field'}</div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Inner Component ─────────────────────────────────────────────────────
 function TempleHomeInner() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const userName = user?.user_metadata?.full_name ?? user?.email?.split('@')[0] ?? 'Seeker';
 
   // All state initialised with safe defaults — never reads localStorage at module level
   const [selectedSite, setSelectedSite] = useState('giza');
@@ -594,6 +750,31 @@ function TempleHomeInner() {
         .site-select option { background: #0a0602; color: #fff; }
         .intensity-slider::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px; border-radius:50%; background:linear-gradient(135deg,#D4AF37,#F0C040); cursor:pointer; border:2px solid rgba(212,175,55,0.3); }
         .intensity-slider::-webkit-slider-runnable-track { height:4px; border-radius:2px; background:rgba(212,175,55,0.15); }
+        /* ── Site FX Keyframes ─────────────────────────────────────────────── */
+        @keyframes amrit-ripple    { 0%,100%{opacity:0.7;transform:scaleX(1)}   50%{opacity:1;transform:scaleX(1.04)} }
+        @keyframes dhuni-flicker   { 0%,100%{opacity:0.8;transform:scaleY(1)}   40%{opacity:1;transform:scaleY(1.08)} 70%{opacity:0.6;transform:scaleY(0.95)} }
+        @keyframes schumann-pulse  { 0%,100%{opacity:0.6} 50%{opacity:1} }
+        @keyframes sedona-spiral   { from{transform:rotate(0deg) scale(1)} to{transform:rotate(360deg) scale(1.1)} }
+        @keyframes pleiades-twinkle{ 0%,100%{opacity:0.06} 50%{opacity:0.10} }
+        @keyframes avalon-mist     { 0%,100%{opacity:0.8;transform:translateY(0)} 50%{opacity:1;transform:translateY(-8px)} }
+        @keyframes babaji-breath   { 0%,100%{opacity:0.5;transform:scale(1)} 50%{opacity:0.9;transform:scale(1.06)} }
+        @keyframes arunachala-fire { 0%,100%{opacity:0.7} 50%{opacity:1} }
+        @keyframes lourdes-water   { 0%,100%{opacity:0.7;transform:scaleX(1)} 50%{opacity:1;transform:scaleX(1.05)} }
+        @keyframes mansarovar-mirror{0%,100%{opacity:0.7} 50%{opacity:1} }
+        @keyframes uluru-earth     { 0%,100%{opacity:0.7;transform:scaleY(1)} 50%{opacity:1;transform:scaleY(1.06)} }
+        @keyframes shasta-flame    { 0%,100%{opacity:0.5;transform:scale(1)} 50%{opacity:0.9;transform:scale(1.08)} }
+        @keyframes luxor-pillar    { 0%,100%{opacity:0.5} 50%{opacity:1} }
+        @keyframes zimbabwe-ground { 0%,100%{opacity:0.6} 50%{opacity:1} }
+        @keyframes solar-band      { 0%,100%{opacity:0.5;transform:translateY(0)} 50%{opacity:1;transform:translateY(6px)} }
+        @keyframes titicaca-ripple { 0%,100%{opacity:0.6;transform:scaleX(1)} 50%{opacity:1;transform:scaleX(1.04)} }
+        @keyframes vrindavan-lila  { 0%,100%{opacity:0.6;transform:scale(1)} 50%{opacity:1;transform:scale(1.07)} }
+        @keyframes ayodhya-shield  { 0%,100%{opacity:0.5} 50%{opacity:0.9} }
+        @keyframes lemuria-womb    { 0%,100%{opacity:0.5;transform:scale(1)} 50%{opacity:0.9;transform:scale(1.06)} }
+        @keyframes atlantis-grid   { 0%,100%{opacity:0.035} 50%{opacity:0.055} }
+        @keyframes samadhi-void    { 0%,100%{opacity:0.5} 50%{opacity:1} }
+        @keyframes sirius-star     { 0%,100%{opacity:0.6;transform:translate(-50%,0) scale(1)} 50%{opacity:1;transform:translate(-50%,0) scale(1.12)} }
+        @keyframes arcturus-grid   { 0%,100%{opacity:0.04} 50%{opacity:0.07} }
+        @keyframes lyra-origin     { 0%,100%{opacity:0.4;transform:scale(1)} 50%{opacity:0.8;transform:scale(1.08)} }
       `}</style>
 
       {/* Header */}
@@ -656,6 +837,15 @@ function TempleHomeInner() {
             <div className="text-center"><div className="text-[8px] tracking-[0.4em] uppercase text-white/25">Sig</div><div className="text-[9px] font-mono text-white/40">{db?.signature ?? '—'}</div></div>
           </div>
         </GlassCard>
+
+        {/* Live AI transmission — delivered once per anchor event */}
+        <SiteTransmissionPanel
+          siteId={selectedSite}
+          siteColor={currentSite.color}
+          isAnchored={isAnchored}
+          intensity={auraIntensity}
+          userName={userName}
+        />
 
         {!crystalDone && (
           <button onClick={() => setShowCrystal(true)} className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl" style={{ background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.22)' }}>
