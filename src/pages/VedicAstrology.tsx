@@ -1,7 +1,7 @@
 // SQI-2050 | SIDDHA CHAMBER OF JYOTISH
 // Bhakti-Algorithm v7.2 | Vedic Light-Code Architecture
 
-import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,13 +30,43 @@ import type { MembershipTier, UserProfile } from '@/lib/vedicTypes';
 import { useTranslation } from '@/hooks/useTranslation';
 import { vedicLocaleTag } from '@/lib/vedicLocale';
 
-// ── Tier mapping (unchanged) ────────────────────────────────────
-const mapToAITier = (dbTier: 'basic' | 'premium' | 'master'): MembershipTier => {
+// ── Tier mapping: DB enum + plan slugs → AI dashboard plan tier ──
+const mapToAITier = (dbTier: string): MembershipTier => {
   switch (dbTier) {
-    case 'basic':   return 'free';
-    case 'premium': return 'compass';
-    case 'master':  return 'premium';
-    default:        return 'free';
+    case 'basic':
+      return 'free';
+    case 'premium':
+      return 'compass';
+    case 'master':
+      return 'premium';
+    case 'prana-flow':
+    case 'premium-monthly':
+    case 'premium-annual':
+      return 'compass';
+    case 'siddha-quantum':
+    case 'akasha-infinity':
+    case 'lifetime':
+      return 'premium';
+    default:
+      return 'free';
+  }
+};
+
+/** Resolves chamber tier when hook has not yet returned a level (never null after load). */
+const resolveFallbackTier = (membershipTier: string): 'basic' | 'premium' | 'master' => {
+  switch (membershipTier) {
+    case 'prana-flow':
+    case 'premium-monthly':
+    case 'premium-annual':
+    case 'compass':
+      return 'premium';
+    case 'siddha-quantum':
+    case 'akasha-infinity':
+    case 'lifetime':
+    case 'master':
+      return 'master';
+    default:
+      return 'basic';
   }
 };
 
@@ -781,17 +811,42 @@ const VedicAstrology: React.FC = () => {
     fetchBirthDetails();
   }, [user]);
 
+  const getHighestRef = useRef(getHighestAccessLevel);
+  getHighestRef.current = getHighestAccessLevel;
+
   useEffect(() => {
+    if (isLoading) return;
+
     const urlTier = (searchParams.get('tier') as 'basic' | 'premium' | 'master' | null) || null;
-    const preferredTier = urlTier && hasAccess(urlTier) ? urlTier : getHighestAccessLevel();
-    if (preferredTier) setActiveTier(preferredTier);
-  }, [getHighestAccessLevel, hasAccess, searchParams]);
+
+    if (urlTier && hasAccess(urlTier)) {
+      setActiveTier(urlTier);
+      return;
+    }
+
+    const fromHook = getHighestRef.current();
+    if (fromHook) {
+      setActiveTier(fromHook);
+    } else {
+      setActiveTier(resolveFallbackTier(membershipTier));
+    }
+  }, [isLoading, membershipTier, hasAccess, searchParams]);
 
   const isPaid = membershipTier !== 'free';
 
   useEffect(() => {
+    if (isLoading) return;
     if (!isPaid && useAIMode) setUseAIMode(false);
-  }, [isPaid, useAIMode, setUseAIMode]);
+  }, [isLoading, isPaid, useAIMode, setUseAIMode]);
+
+  useEffect(() => {
+    if (!isLoading && isPaid && !useAIMode) {
+      const cached = localStorage.getItem(`sh:vedic:${userKey}:aiMode`);
+      if (cached === null) {
+        setUseAIMode(true);
+      }
+    }
+  }, [isLoading, isPaid, useAIMode, userKey, setUseAIMode]);
 
   const handleModeSwitch = (toAi: boolean) => {
     if (toAi && !isPaid) {
@@ -801,20 +856,22 @@ const VedicAstrology: React.FC = () => {
     setUseAIMode(toAi);
   };
 
-  const userProfile: UserProfile | null =
-    hasBirthDetails && activeTier
-      ? {
-          name: birthDetails?.birth_name || '',
-          birthDate: birthDetails?.birth_date || '',
-          birthTime: birthDetails?.birth_time || '',
-          birthPlace: birthDetails?.birth_place || '',
-          plan: mapToAITier(activeTier),
-        }
-      : null;
+  const userProfile: UserProfile | null = hasBirthDetails
+    ? {
+        name: birthDetails?.birth_name || '',
+        birthDate: birthDetails?.birth_date || '',
+        birthTime: birthDetails?.birth_time || '',
+        birthPlace: birthDetails?.birth_place || '',
+        plan: mapToAITier(membershipTier),
+      }
+    : null;
 
   const membershipMap = useMemo(
     () => ({
       free: t('vedicAstrology.membershipFree'),
+      'prana-flow': t('vedicAstrology.membershipPranaFlow'),
+      'siddha-quantum': t('vedicAstrology.membershipSiddhaQuantum'),
+      'akasha-infinity': t('vedicAstrology.membershipAkashaInfinity'),
       'premium-monthly': t('vedicAstrology.membershipPremiumMonthly'),
       'premium-annual': t('vedicAstrology.membershipPremiumAnnual'),
       lifetime: t('vedicAstrology.membershipLifetime'),
@@ -850,6 +907,8 @@ const VedicAstrology: React.FC = () => {
       </div>
     );
   }
+
+  const safeActiveTier = activeTier ?? 'basic';
 
   return (
     <>
@@ -1170,7 +1229,7 @@ const VedicAstrology: React.FC = () => {
             )}
           </motion.div>
 
-          {hasBirthDetails && activeTier && (
+          {hasBirthDetails && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -1241,10 +1300,10 @@ const VedicAstrology: React.FC = () => {
             </DialogContent>
           </Dialog>
 
-          {activeTier && (
+          {hasBirthDetails && (
             <AnimatePresence mode="wait">
               <motion.div
-                key={`${activeTier}-${useAIMode}`}
+                key={`${safeActiveTier}-${useAIMode}`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
@@ -1328,7 +1387,7 @@ const VedicAstrology: React.FC = () => {
                       </div>
                     </div>
                     <div className="glass-card" style={{ padding: '28px' }}>
-                      <DailyVedicInsight tier={activeTier} />
+                      <DailyVedicInsight tier={safeActiveTier} />
                     </div>
 
                     {!isPaid && (

@@ -3350,6 +3350,9 @@
     "membershipPremiumMonthly": "Premium Monthly",
     "membershipPremiumAnnual": "Premium Annual",
     "membershipLifetime": "Lifetime",
+    "membershipPranaFlow": "Prana Flow",
+    "membershipSiddhaQuantum": "Siddha-Quantum",
+    "membershipAkashaInfinity": "Akasha-Infinity",
     "calc": {
       "planetaryInfluenceBase": "{{planet}} is prominent today, influencing your {{theme}}.",
       "planetaryInfluencePremium": "The planetary energies support {{action}}.",
