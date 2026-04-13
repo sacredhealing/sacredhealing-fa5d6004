@@ -487,6 +487,7 @@ function TempleHomeInner() {
   const navigate = useNavigate();
   const { isAdmin, isLoading: adminLoading } = useAdminRole();
   const { isLoading: authLoading } = useAuth();
+  const { tier, loading: membershipLoading, settled } = useMembership();
 
   // All state initialised with safe defaults — never reads localStorage at module level
   const [selectedSite, setSelectedSite] = useState('giza');
@@ -560,13 +561,15 @@ function TempleHomeInner() {
     if (m) setAuraIntensity(Math.round(m.intensity * 100));
   }, []);
 
-  if (authLoading || adminLoading) return (
+  if (authLoading || adminLoading || membershipLoading || !settled) return (
     <div className="min-h-screen bg-[#050505] flex items-center justify-center">
       <div className="h-10 w-10 rounded-full border-2 border-[#D4AF37]/30 border-t-[#D4AF37] animate-spin" />
     </div>
   );
 
-  if (!isAdmin) return (
+  const hasAccess = hasFeatureAccess(isAdmin, tier, FEATURE_TIER.virtualPilgrimage);
+
+  if (!hasAccess) return (
     <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center p-8 relative overflow-hidden">
       <div className="fixed inset-0 z-0" style={{ background: 'radial-gradient(ellipse 80% 60% at 50% 30%, rgba(212,175,55,0.08) 0%, #050505 70%)' }} />
       <div className="relative z-10 flex flex-col items-center gap-6 max-w-sm text-center">

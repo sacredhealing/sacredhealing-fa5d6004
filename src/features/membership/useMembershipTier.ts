@@ -10,10 +10,13 @@ export function useMembershipTier(): MembershipTier {
   return useMemo(() => {
     if (loading) return "free";
 
-    const v = (rawTier ?? "").toString().toLowerCase();
-    if (v.includes("life")) return "lifetime";
-    if (v.includes("annual") || v.includes("year") || v === "premium-annual") return "annual";
-    if (v.includes("month") || v === "premium-monthly") return "monthly";
+    const v = (rawTier ?? "").toString().toLowerCase().replace(/[\s_-]+/g, '');
+    // Akasha-Infinity / lifetime
+    if (v.includes("akasha") || v.includes("life")) return "lifetime";
+    // Siddha-Quantum
+    if (v.includes("siddha")) return "annual"; // siddha-quantum maps to rank 2
+    // Prana-Flow / premium
+    if (v.includes("prana") || v.includes("premium") || v.includes("annual") || v.includes("year") || v.includes("month")) return "monthly";
     return "free";
   }, [rawTier, loading]);
 }

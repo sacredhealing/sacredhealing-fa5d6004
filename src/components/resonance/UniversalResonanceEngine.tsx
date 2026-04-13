@@ -59,9 +59,10 @@ const ROOMS = [
   { name: 'Garden', distance: 25 },
 ];
 
-function getAccess(email?: string | null): AccessState {
+function getAccess(email?: string | null, hasTierAccess?: boolean): AccessState {
   const isAdmin = !!email && ADMIN_EMAILS.includes(email);
-  return { isAdmin, hasPremium: isAdmin || false, hasTempleLicense: isAdmin || false };
+  const fullAccess = isAdmin || !!hasTierAccess;
+  return { isAdmin: fullAccess, hasPremium: fullAccess, hasTempleLicense: fullAccess };
 }
 
 function roomSaturation(distance: number, intensity: number) {
@@ -75,8 +76,8 @@ function useResonance() {
   return c;
 }
 
-export function ResonanceProvider({ children, userEmail }: { children: ReactNode; userEmail?: string | null }) {
-  const access = getAccess(userEmail);
+export function ResonanceProvider({ children, userEmail, hasTierAccess }: { children: ReactNode; userEmail?: string | null; hasTierAccess?: boolean }) {
+  const access = getAccess(userEmail, hasTierAccess);
   const [selectedSite, setSelectedSite] = useState<SacredSite>(SACRED_SITES[0]);
   const [auraIntensity, setAuraIntensity] = useState(25);
   const [currentMode, setCurrentMode] = useState<ModeId>('INTEGRATION');
