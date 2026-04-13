@@ -8,9 +8,9 @@ import { clobTradingService } from './polymarket/clobTrading';
 
 // Polygon Mainnet Addresses (pre-validated checksums)
 export const POLYGON_ADDRESSES = {
-  USDC_E: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', // Bridged USDC.e
+  USDC_E: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359', // Native USDC (what the wallet holds)
   USDC_NATIVE: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359', // Native USDC
-  CTF_EXCHANGE: '0x4bFb41d9539d67a68D6FB09be3c29aE0dC14dc3a', // CTF Exchange
+  CTF_EXCHANGE: '0xC5d563A36AE78145C45a50134d48A1215220f80a', // NEG_RISK_CTF_EXCHANGE — required for native USDC markets
   NEG_RISK_CTF_EXCHANGE: '0xC5d563A36AE78145C45a50134d48A1215220f80a',
   CONDITIONAL_TOKENS: '0x4D97DCd97eC945f40cF65F87097ACe5EA0476045',
 };
