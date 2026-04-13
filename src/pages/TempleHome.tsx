@@ -487,6 +487,7 @@ function TempleHomeInner() {
   const navigate = useNavigate();
   const { isAdmin, isLoading: adminLoading } = useAdminRole();
   const { isLoading: authLoading } = useAuth();
+  const { tier, loading: membershipLoading, settled } = useMembership();
 
   // All state initialised with safe defaults — never reads localStorage at module level
   const [selectedSite, setSelectedSite] = useState('giza');
