@@ -76,7 +76,7 @@ Only recommend trading if confidence > 70 and there's clear mispricing.`;
         tokenId: outcomeData.tokenId,
         confidence: analysis.confidence,
         reason: analysis.reason,
-        suggestedSize: Math.min(50, market.liquidity * 0.001), // Max $50 or 0.1% of liquidity
+        suggestedSize: Math.min(5, market.liquidity * 0.001), // Max $5 or 0.1% of liquidity
         currentPrice: outcomeData.price,
         targetPrice: analysis.targetPrice,
       };
