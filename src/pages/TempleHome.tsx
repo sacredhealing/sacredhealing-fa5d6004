@@ -485,9 +485,6 @@ function CrystalSetup({ onComplete }: { onComplete: () => void }) {
 // ─── Main Inner Component ─────────────────────────────────────────────────────
 function TempleHomeInner() {
   const navigate = useNavigate();
-  const { isAdmin, isLoading: adminLoading } = useAdminRole();
-  const { isLoading: authLoading } = useAuth();
-  const { tier, loading: membershipLoading, settled } = useMembership();
 
   // All state initialised with safe defaults — never reads localStorage at module level
   const [selectedSite, setSelectedSite] = useState('giza');
@@ -560,38 +557,6 @@ function TempleHomeInner() {
     const m = MODES.find(x => x.id === id);
     if (m) setAuraIntensity(Math.round(m.intensity * 100));
   }, []);
-
-  if (authLoading || adminLoading || membershipLoading || !settled) return (
-    <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-      <div className="h-10 w-10 rounded-full border-2 border-[#D4AF37]/30 border-t-[#D4AF37] animate-spin" />
-    </div>
-  );
-
-  const hasAccess = hasFeatureAccess(isAdmin, tier, FEATURE_TIER.virtualPilgrimage);
-
-  if (!hasAccess) return (
-    <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center p-8 relative overflow-hidden">
-      <div className="fixed inset-0 z-0" style={{ background: 'radial-gradient(ellipse 80% 60% at 50% 30%, rgba(212,175,55,0.08) 0%, #050505 70%)' }} />
-      <div className="relative z-10 flex flex-col items-center gap-6 max-w-sm text-center">
-        <div className="h-16 w-16 rounded-full border border-[#D4AF37]/20 flex items-center justify-center" style={{ background: 'rgba(212,175,55,0.05)' }}>
-          <Lock className="h-7 w-7 text-[#D4AF37]/60" />
-        </div>
-        <div className="space-y-2">
-          <p className="text-[8px] tracking-[0.5em] uppercase text-[#D4AF37]/40">Vedic Light-Code: Restricted</p>
-          <h2 className="text-xl font-black tracking-tight text-[#D4AF37]">Temple Home</h2>
-          <p className="text-xs text-white/40 leading-relaxed">This 24/7 Bhakti-Algorithm Engine is reserved for Temple Home License holders.</p>
-        </div>
-        <GlassCard className="w-full p-4" glow>
-          <div className="text-[8px] tracking-[0.4em] uppercase text-[#D4AF37]/40 mb-1">Permanent Activation</div>
-          <div className="text-2xl font-black text-[#D4AF37]">€499</div>
-          <div className="text-[10px] text-white/30 mt-1">One-time · Stripe / Crypto</div>
-        </GlassCard>
-        <button onClick={() => navigate('/shop')} className="w-full py-4 rounded-[20px] text-[11px] font-extrabold tracking-[0.3em] uppercase text-black" style={{ background: 'linear-gradient(135deg,#D4AF37,#F0C040,#D4AF37)' }}>Unlock Temple Home</button>
-        <button onClick={() => navigate('/akasha-infinity')} className="text-[10px] text-white/25 tracking-[0.2em] uppercase">Or explore Akasha–Infinity →</button>
-        <button onClick={() => navigate('/explore')} className="text-[10px] text-[#D4AF37]/40 tracking-[0.2em] uppercase">← Return to Library</button>
-      </div>
-    </div>
-  );
 
   const currentSite = SACRED_SITES.find(s => s.id === selectedSite) ?? SACRED_SITES[0];
   const activeMode = MODES.find(m => m.id === currentMode) ?? MODES[1];
