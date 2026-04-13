@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useEffect } from 'react';
 import { useMembership } from '@/hooks/useMembership';
 import { useAdminRole } from '@/hooks/useAdminRole';
@@ -189,7 +189,7 @@ const ToolCard = ({
       )}
       <div style={{ ...CARD_TITLE, color: accent }}>{title}</div>
       <p style={CARD_DESC}>{desc}</p>
-      <button style={{ ...CTA_BTN, color: accent }}>{cta} →</button>
+      <button type="button" style={{ ...CTA_BTN, color: accent }}>{cta}</button>
     </div>
   );
 };
@@ -206,6 +206,7 @@ interface OracleCardProps {
 
 const OracleCard = ({ title, desc, cta, href, isLive, delay = 0 }: OracleCardProps) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   return (
     <div
       onClick={() => navigate(href)}
@@ -220,12 +221,12 @@ const OracleCard = ({ title, desc, cta, href, isLive, delay = 0 }: OracleCardPro
         {isLive && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <div style={{ ...LIVE_DOT, marginRight: 0 }} />
-            <span style={{ ...LABEL_STYLE, fontSize: 8, color: gold(0.5) }}>LIVE</span>
+            <span style={{ ...LABEL_STYLE, fontSize: 8, color: gold(0.5) }}>{t('siddhaPortal.badgeLive')}</span>
           </div>
         )}
       </div>
       <p style={CARD_DESC}>{desc}</p>
-      <button style={CTA_BTN}>{cta} →</button>
+      <button type="button" style={CTA_BTN}>{cta}</button>
     </div>
   );
 };
@@ -237,10 +238,10 @@ export default function SiddhaPortal() {
   const { tier, loading, settled } = useMembership();
   const { isAdmin, isLoading: adminLoading } = useAdminRole();
 
-  // Only admin + Akasha-Infinity (rank 3) can access
+  // Siddha-Quantum (rank 2) and above — align with FEATURE_TIER.siddhaPortal
   useEffect(() => {
-    if (!loading && settled && !adminLoading && !hasFeatureAccess(isAdmin, tier, 3)) {
-      navigate('/akasha-infinity');
+    if (!loading && settled && !adminLoading && !hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal)) {
+      navigate('/siddha-quantum');
     }
   }, [isAdmin, tier, loading, settled, adminLoading, navigate]);
 
@@ -289,75 +290,80 @@ export default function SiddhaPortal() {
       ══════════════════════════════════════════════════════════ */}
       <div style={SECTION_TITLE}>
         <span>⚛</span>
-        <span>SQI 2050 — ACTIVATED TOOLS</span>
+        <span>{t('siddhaPortal.sectionTools')}</span>
       </div>
 
       <ToolCard
-        title={t('siddhaPortal.photonicNodeTitle') || 'Siddha Photonic Regeneration'}
-        desc={t('siddhaPortal.photonicNodeDesc') || 'High-frequency scalar interface for Central Sun entanglement and pineal radiance beaming.'}
-        cta={t('siddhaPortal.photonicNodeCta') || 'Open Node'}
+        title={t('siddhaPortal.photonicNodeTitle')}
+        desc={t('siddhaPortal.photonicNodeDesc')}
+        cta={t('siddhaPortal.photonicNodeCta')}
         href="/siddha-photonic-regeneration"
-        badge="SQI"
+        badge={t('siddhaPortal.badgeSqi')}
         accentColor={cyan(0.9)}
         gradientFrom={cyan(0.06)} gradientTo={gold(0.02)}
         delay={0.1}
       />
       <ToolCard
-        title={t('siddhaPortal.hairGrowthTitle') || 'Siddha Hair Growth Protocol'}
-        desc={t('siddhaPortal.hairGrowthDesc') || 'Vedic light-code activation for follicular regeneration and scalp pranic field restoration.'}
-        cta={t('siddhaPortal.hairGrowthCta') || 'Enter Protocol'}
+        title={t('siddhaPortal.hairGrowthTitle')}
+        desc={t('siddhaPortal.hairGrowthDesc')}
+        cta={t('siddhaPortal.hairGrowthCta')}
         href="/siddha-hair-growth"
-        badge="SQI"
+        badge={t('siddhaPortal.badgeSqi')}
         accentColor={gold(0.92)}
         gradientFrom="rgba(180,83,9,0.08)" gradientTo={gold(0.03)}
         delay={0.15}
       />
       <ToolCard
-        title="Shakti Cycle Intelligence"
-        desc="Cycle tracking + hormonal phase protocol with secretion confirmation, dosha sync, and tiered guidance."
-        cta="Enter Module"
-        href="/sovereign-hormonal-alchemy"
-        badge="NEW"
+        title={t('siddhaPortal.shaktiTitle')}
+        desc={t('siddhaPortal.shaktiDesc')}
+        cta={t('siddhaPortal.shaktiCta')}
+        href={
+          hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal)
+            ? '/sovereign-hormonal-alchemy'
+            : '/siddha-quantum'
+        }
+        badge={t('siddhaPortal.badgeNew')}
         accentColor={pink(0.88)}
         gradientFrom={pink(0.07)} gradientTo={gold(0.02)}
         delay={0.2}
       />
       <ToolCard
-        title="Aetheric Heliostat"
-        desc="High-frequency scalar interface for Central Sun entanglement and pineal radiance beaming."
-        cta="Open Heliostat"
+        title={t('siddhaPortal.aethericTitle')}
+        desc={t('siddhaPortal.aethericDesc')}
+        cta={t('siddhaPortal.aethericCta')}
         href="/aetheric-heliostat"
-        badge="SQI"
+        badge={t('siddhaPortal.badgeSqi')}
         accentColor={amber(0.88)}
         gradientFrom={amber(0.06)} gradientTo={gold(0.02)}
         delay={0.3}
       />
       <ToolCard
-        title="Atmospheric Clearance Engine"
-        desc="Industrial-spiritual vacuum for mental obstructions, metallic density, and aetheric fog."
-        cta="Open Engine"
+        title={t('siddhaPortal.atmosphericTitle')}
+        desc={t('siddhaPortal.atmosphericDesc')}
+        cta={t('siddhaPortal.atmosphericCta')}
         href="/atmospheric-clearance-engine"
-        badge="SQI"
+        badge={t('siddhaPortal.badgeSqi')}
         accentColor={green(0.88)}
         gradientFrom={green(0.06)} gradientTo={gold(0.02)}
         delay={0.35}
       />
       <ToolCard
-        title="Wealth Beacon 2050"
-        desc="Hyper-dimensional sanctuary: Vedic light-codes, sacred geometry, and abundance resonance through the Akasha-Neural field."
-        cta="Open Beacon"
+        title={t('siddhaPortal.wealthBeaconTitle')}
+        desc={t('siddhaPortal.wealthBeaconDesc')}
+        cta={t('siddhaPortal.wealthBeaconCta')}
         href="/wealth-beacon"
-        badge="SQI" isLive
+        badge={t('siddhaPortal.badgeSqi')}
+        isLive
         accentColor={gold(0.92)}
         gradientFrom={gold(0.1)} gradientTo="rgba(157,80,187,0.06)"
         delay={0.4}
       />
       <ToolCard
-        title="Vajra-Sky-Breaker"
-        desc="Siddha-Quantum radionic broadcast station for scalar wave entanglement and atmospheric purification."
-        cta="Open Vajra"
+        title={t('siddhaPortal.vajraTitle')}
+        desc={t('siddhaPortal.vajraDesc')}
+        cta={t('siddhaPortal.vajraCta')}
         href="/vajra-sky-breaker"
-        badge="SQI"
+        badge={t('siddhaPortal.badgeSqi')}
         accentColor={cyan(0.9)}
         gradientFrom={cyan(0.06)} gradientTo={gold(0.02)}
         delay={0.45}
@@ -370,42 +376,42 @@ export default function SiddhaPortal() {
       ══════════════════════════════════════════════════════════ */}
       <div style={SECTION_TITLE}>
         <span>🔱</span>
-        <span>SACRED ORACLES & PROTECTION</span>
+        <span>{t('siddhaPortal.sectionOracles')}</span>
       </div>
 
       <OracleCard
-        title={t('siddhaPortal.digitalNadi') || 'Digital Nadi Oracle'}
-        desc={t('siddhaPortal.nadiDesc') || 'AI-powered Nadi astrology reading — ancient palm-leaf wisdom decoded through quantum algorithms.'}
-        cta={t('siddhaPortal.beginScan') || 'Begin Scan'}
+        title={t('siddhaPortal.digitalNadiOracleTitle')}
+        desc={t('siddhaPortal.nadiDesc')}
+        cta={t('siddhaPortal.beginScan')}
         href="/digital-nadi"
         isLive
         delay={0.05}
       />
       <OracleCard
-        title={t('siddhaPortal.sriYantraShield') || 'Sri Yantra Shield'}
-        desc={t('siddhaPortal.sriYantraDesc') || 'Sacred geometric protection field — activate the eternal yantra for energetic sovereignty.'}
-        cta={t('siddhaPortal.activateShield') || 'Activate Shield'}
+        title={t('siddhaPortal.sriYantraShield')}
+        desc={t('siddhaPortal.sriYantraDesc')}
+        cta={t('siddhaPortal.activateShield')}
         href="/sri-yantra-shield"
         delay={0.1}
       />
       <OracleCard
-        title="Palm Akashic Oracle"
-        desc="AI-powered palm reading — decode your karmic lines and life purpose through ancient palmistry."
-        cta="Begin Reading"
+        title={t('siddhaPortal.palmOracleTitle')}
+        desc={t('siddhaPortal.palmOracleDesc')}
+        cta={t('siddhaPortal.palmOracleCta')}
         href="/hand-analyzer"
         delay={0.25}
       />
       <OracleCard
-        title="Akashic Decoder"
-        desc="Access your soul's eternal record — past lives, karmic patterns, and divine purpose revealed."
-        cta="Open Decoder"
+        title={t('siddhaPortal.akashicDecoderTitle')}
+        desc={t('siddhaPortal.akashicDecoderDesc')}
+        cta={t('siddhaPortal.akashicDecoderCta')}
         href="/akashic-records"
         delay={0.3}
       />
       <OracleCard
-        title="Vayu Protocol"
-        desc="Pranic field calibration engine — atmospheric purification and etheric body alignment."
-        cta="Open Protocol"
+        title={t('siddhaPortal.vayuTitle')}
+        desc={t('siddhaPortal.vayuDesc')}
+        cta={t('siddhaPortal.vayuCta')}
         href="/vayu-protocol"
         delay={0.35}
       />
