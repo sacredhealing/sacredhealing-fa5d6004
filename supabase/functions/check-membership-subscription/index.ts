@@ -58,6 +58,67 @@ function tierSlugRank(slug: string): number {
   return 0;
 }
 
+function membershipTableSlugForTier(slug: string): string {
+  const s = slug.toLowerCase();
+  if (s.includes("akasha") || s.includes("life")) return "lifetime";
+  if (s.includes("siddha")) return "siddha-quantum-monthly";
+  if (s.includes("annual") || s.includes("year")) return "premium-annual";
+  if (s.includes("premium") || s.includes("prana") || s.includes("month")) return "premium-monthly";
+  return "free";
+}
+
+async function syncGrantedMembershipRecord(
+  supabaseClient: any,
+  userId: string,
+  tierSlug: string,
+  grantedAt: string | null,
+  expiresAt: string | null,
+) {
+  const membershipSlug = membershipTableSlugForTier(tierSlug);
+  if (membershipSlug === "free") return;
+
+  const { data: tierRow, error: tierError } = await supabaseClient
+    .from("membership_tiers")
+    .select("id")
+    .eq("slug", membershipSlug)
+    .maybeSingle();
+
+  if (tierError || !tierRow?.id) {
+    logStep("Unable to resolve membership tier for admin grant", {
+      userId,
+      tierSlug,
+      membershipSlug,
+      error: tierError?.message,
+    });
+    return;
+  }
+
+  const { error: upsertError } = await supabaseClient
+    .from("user_memberships")
+    .upsert(
+      {
+        user_id: userId,
+        tier_id: tierRow.id,
+        status: "active",
+        starts_at: grantedAt ?? new Date().toISOString(),
+        expires_at: expiresAt,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" },
+    );
+
+  if (upsertError) {
+    logStep("Error syncing admin-granted membership", {
+      userId,
+      membershipSlug,
+      error: upsertError.message,
+    });
+    return;
+  }
+
+  logStep("Synced admin-granted membership", { userId, membershipSlug });
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -131,6 +192,14 @@ serve(async (req) => {
         }
       }
       logStep("Admin-granted access found", { tier: bestSlug, expiresAt: best.expires_at, rows: adminRows.length });
+
+      await syncGrantedMembershipRecord(
+        supabaseClient,
+        user.id,
+        bestSlug,
+        best.granted_at ?? null,
+        best.expires_at ?? null,
+      );
 
       return new Response(
         JSON.stringify({
