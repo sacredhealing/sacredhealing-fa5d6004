@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Music2, Plus, List, Crown, ChevronRight, X, GripVertical, Edit2, Check, Loader2, Disc, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,11 +13,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { selectTrackForMood, type MoodKey, getTrackIdSafe, getTrackLabel } from '@/features/music/selectTrackForMood';
 import { tMusicGenre, tMusicMood } from '@/features/music/musicDisplayI18n';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
+import { useMembership } from '@/hooks/useMembership';
 import { useTranslation } from '@/hooks/useTranslation';
 
 // SQI 2050 — Sacred Sound Portal styles
 const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&family=Cormorant+Garamond:wght@300;400;600&display=swap');
 
   :root {
     --gold: #D4AF37;
@@ -117,12 +118,220 @@ const styles = `
     backdrop-filter: blur(20px);
     flex-shrink: 0;
   }
+  /* ── DHYANA TITLE — Cormorant gold gradient matching Dhyana page ── */
+  .sqi-portal-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px; font-weight: 600; letter-spacing: -0.01em;
+    background: linear-gradient(135deg, #F5E27D 0%, #D4AF37 35%, #B8960C 65%, #D4AF37 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 12px rgba(212,175,55,0.35));
+  }
+  .sqi-portal-title-sub {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 900; font-size: 10px; letter-spacing: 0.45em;
+    text-transform: uppercase;
+    display: block; margin-bottom: 2px;
+    background: linear-gradient(90deg, #D4AF37, rgba(212,175,55,0.5));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  /* Legacy page title kept for fallback */
   .sqi-page-title {
     font-size: 22px; font-weight: 900;
     letter-spacing: -0.04em;
     background: linear-gradient(135deg, #fff 40%, var(--gold));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+  }
+
+  /* ── CATEGORY FILTER TABS ── */
+  .sqi-cat-tabs {
+    display: flex; gap: 7px; padding: 14px 0 6px;
+    overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;
+  }
+  .sqi-cat-tabs::-webkit-scrollbar { display: none; }
+  .sqi-cat-tab {
+    padding: 9px 18px; border-radius: 50px; white-space: nowrap; cursor: pointer;
+    font-size: 10px; font-weight: 800; letter-spacing: 0.25em; text-transform: uppercase;
+    border: 1px solid var(--glass-border); background: var(--glass); color: var(--text-muted);
+    transition: all 0.22s; flex-shrink: 0;
+  }
+  .sqi-cat-tab.active {
+    background: var(--gold); color: #000; border-color: var(--gold);
+    box-shadow: 0 0 18px rgba(212,175,55,0.4), 0 0 40px rgba(212,175,55,0.15);
+  }
+  .sqi-cat-tab:not(.active):hover {
+    border-color: rgba(212,175,55,0.25); color: rgba(255,255,255,0.7);
+  }
+
+  /* ── NADI SCANNER CARD ── */
+  .sqi-nadi-card {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 40px; padding: 22px 20px;
+    position: relative; overflow: hidden; margin-bottom: 12px;
+  }
+  .sqi-nadi-card::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: 40px;
+    background: radial-gradient(ellipse 90% 60% at 50% 110%, rgba(34,211,238,0.07) 0%, transparent 65%);
+  }
+  .sqi-nadi-label {
+    font-size: 9px; font-weight: 800; letter-spacing: 0.45em; text-transform: uppercase;
+    color: var(--cyan); display: flex; align-items: center; gap: 8px; margin-bottom: 18px;
+  }
+  .sqi-nadi-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--cyan); flex-shrink: 0;
+    box-shadow: 0 0 0 0 rgba(34,211,238,0.6);
+    animation: sqi-cyan-pulse 2s ease-in-out infinite;
+  }
+  @keyframes sqi-cyan-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(34,211,238,0.6); }
+    70% { box-shadow: 0 0 0 8px rgba(34,211,238,0); }
+    100% { box-shadow: 0 0 0 0 rgba(34,211,238,0); }
+  }
+  .sqi-nadi-geo { width: 100%; height: 190px; display: block; margin-bottom: 16px; }
+  .sqi-nadi-prescription {
+    background: rgba(34,211,238,0.06); border: 1px solid rgba(34,211,238,0.14);
+    border-radius: 22px; padding: 16px 18px;
+  }
+  .sqi-nadi-presc-title {
+    font-size: 9px; font-weight: 800; letter-spacing: 0.4em; text-transform: uppercase;
+    color: var(--cyan); margin-bottom: 7px;
+  }
+  .sqi-nadi-presc-body { font-size: 13px; color: var(--text-body); line-height: 1.65; }
+  .sqi-nadi-hz {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.2);
+    border-radius: 10px; padding: 2px 9px;
+    font-size: 9px; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--gold); margin-top: 8px;
+  }
+  .sqi-nadi-note {
+    font-size: 10px; color: var(--text-muted); margin-top: 8px; line-height: 1.5;
+    font-style: italic;
+  }
+
+  /* ── SIDDHA-GOLD AURA BUTTON ── */
+  .btn-siddha-gold {
+    width: 100%; margin-top: 16px; padding: 15px 24px;
+    border-radius: 22px; border: none; cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px; font-weight: 800; letter-spacing: 0.35em; text-transform: uppercase;
+    background: var(--gold); color: #000;
+    position: relative;
+    transition: transform 0.18s, box-shadow 0.18s;
+    animation: sqi-btn-aura 3s ease-in-out infinite;
+  }
+  @keyframes sqi-btn-aura {
+    0%,100% { box-shadow: 0 0 16px rgba(212,175,55,0.35), 0 0 32px rgba(212,175,55,0.12); }
+    50%      { box-shadow: 0 0 24px rgba(212,175,55,0.55), 0 0 48px rgba(212,175,55,0.2), 0 0 0 6px rgba(212,175,55,0.08); }
+  }
+  .btn-siddha-gold:hover { transform: translateY(-1px); box-shadow: 0 0 28px rgba(212,175,55,0.6), 0 0 56px rgba(212,175,55,0.25); }
+  .btn-siddha-gold:active { transform: translateY(0); }
+
+  .btn-siddha-outline {
+    width: 100%; padding: 15px 24px;
+    border-radius: 22px; cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px; font-weight: 800; letter-spacing: 0.35em; text-transform: uppercase;
+    background: rgba(212,175,55,0.1);
+    border: 1px solid rgba(212,175,55,0.4); color: var(--gold);
+    transition: all 0.18s;
+    animation: sqi-btn-outline-aura 3.5s ease-in-out infinite;
+  }
+  @keyframes sqi-btn-outline-aura {
+    0%,100% { box-shadow: 0 0 10px rgba(212,175,55,0.15), inset 0 0 10px rgba(212,175,55,0.04); }
+    50%      { box-shadow: 0 0 20px rgba(212,175,55,0.28), inset 0 0 16px rgba(212,175,55,0.07); }
+  }
+  .btn-siddha-outline:hover { background: rgba(212,175,55,0.18); border-color: var(--gold); }
+
+  /* ── SECTION LABEL (gold dot + uppercase micro-label) ── */
+  .sqi-sec-label {
+    font-size: 9px; font-weight: 800; letter-spacing: 0.5em; text-transform: uppercase;
+    color: var(--gold); display: flex; align-items: center; gap: 7px; margin-bottom: 14px;
+  }
+  .sqi-sec-dot {
+    width: 5px; height: 5px; border-radius: 50%; background: var(--gold); flex-shrink: 0;
+    animation: sqi-dot-pulse 3s ease-in-out infinite;
+  }
+  @keyframes sqi-dot-pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.3; transform:scale(0.7); } }
+
+  /* ── UPGRADE CARDS ── */
+  .sqi-upgrade-stack { display: flex; flex-direction: column; gap: 11px; margin-top: 8px; }
+  .sqi-upgrade-card {
+    border-radius: 40px; padding: 22px 20px;
+    position: relative; overflow: hidden; cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .sqi-upgrade-card:hover { transform: translateY(-1px); }
+  .sqi-uc-free { background: var(--glass); border: 1px solid var(--glass-border); }
+  .sqi-uc-prana { background: rgba(212,175,55,0.05); border: 1px solid rgba(212,175,55,0.2); }
+  .sqi-uc-siddha { background: rgba(212,175,55,0.08); border: 1.5px solid rgba(212,175,55,0.38); }
+  .sqi-uc-siddha::after {
+    content: 'MOST POPULAR'; position: absolute; top: 16px; right: 18px;
+    font-size: 7px; font-weight: 800; letter-spacing: 0.3em;
+    background: var(--gold); color: #000; padding: 3px 10px; border-radius: 10px;
+  }
+  .sqi-uc-akasha {
+    border: 1.5px solid rgba(212,175,55,0.5);
+    background: linear-gradient(135deg, rgba(212,175,55,0.1) 0%, rgba(34,211,238,0.06) 100%);
+  }
+  .sqi-uc-tier {
+    font-size: 9px; font-weight: 800; letter-spacing: 0.45em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 4px;
+  }
+  .sqi-uc-tier.cyan { color: var(--cyan); }
+  .sqi-uc-name { font-size: 22px; font-weight: 900; letter-spacing: -0.04em; margin-bottom: 8px; }
+  .sqi-uc-price {
+    font-size: 32px; font-weight: 900; letter-spacing: -0.05em;
+    color: var(--gold); margin-bottom: 14px;
+  }
+  .sqi-uc-price small { font-size: 13px; font-weight: 500; color: var(--text-muted); }
+  .sqi-uc-price.grad {
+    background: linear-gradient(90deg, #D4AF37, #22D3EE);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .sqi-uc-features { list-style: none; display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+  .sqi-uc-features li {
+    font-size: 12.5px; color: var(--text-body);
+    display: flex; align-items: flex-start; gap: 9px; line-height: 1.45;
+  }
+  .sqi-uc-features li::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--gold); flex-shrink: 0; margin-top: 5px;
+  }
+  .sqi-uc-features li.dim { color: var(--text-muted); }
+  .sqi-uc-features li.dim::before { background: rgba(255,255,255,0.2); }
+
+  /* ── COVER ART — real img with golden aura ring ── */
+  .sqi-cover {
+    width: 54px; height: 54px; border-radius: 15px; flex-shrink: 0;
+    position: relative; background: #111; overflow: visible;
+  }
+  .sqi-cover img {
+    width: 54px; height: 54px; object-fit: cover; border-radius: 15px;
+    position: relative; z-index: 1; display: block;
+    transition: opacity 0.3s;
+  }
+  .sqi-cover-fallback {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    border-radius: 15px; font-size: 22px;
+  }
+  .sqi-cover-ring {
+    position: absolute; inset: -3px; border-radius: 18px;
+    border: 1.5px solid transparent;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    pointer-events: none; z-index: 2;
+  }
+  .sqi-track-playing .sqi-cover-ring {
+    border-color: rgba(212,175,55,0.6);
+    box-shadow: 0 0 12px rgba(212,175,55,0.35), inset 0 0 8px rgba(212,175,55,0.1);
+    animation: sqi-cover-aura 3s ease-in-out infinite;
+  }
+  @keyframes sqi-cover-aura {
+    0%,100% { box-shadow: 0 0 10px rgba(212,175,55,0.3), inset 0 0 6px rgba(212,175,55,0.08); }
+    50%      { box-shadow: 0 0 22px rgba(212,175,55,0.55), inset 0 0 14px rgba(212,175,55,0.15); }
   }
 
   .planetary-hero {
@@ -660,6 +869,30 @@ function timeOfDayKey() {
   return 'night';
 }
 
+// Nadi Scanner presets for Sacred Sound Portal — driven by Jyotish field
+const NADI_PRESETS = [
+  { hz: '528 Hz', label: 'DNA Repair', dosha: 'Vata-Pitta · Jupiter Mahadasha',
+    body: 'Your Jyotish field reads <strong style="color:#22D3EE">Raga Yaman</strong> resonance. Jupiter period activates divine connection frequencies. 528Hz cellular repair codes will ground your Vata and illuminate the Tejas fire in your subtle body.' },
+  { hz: '432 Hz', label: 'Cosmic Attunement', dosha: 'Pitta · Sun Mahadasha',
+    body: 'Solar plexus fire detected. <strong style="color:#D4AF37">Raga Bhairav</strong> at 432Hz cools the Pitta and anchors the Agni. Moon nakshatra Rohini prescribes this frequency for the next 21 days.' },
+  { hz: '963 Hz', label: 'God Frequency · Crown', dosha: 'Kapha · Ketu Mahadasha',
+    body: 'Pineal gateway needs activation. <strong style="color:#22D3EE">963Hz Sahasrara</strong> transmission prescribed. Ketu period dissolves illusion — let these frequencies carry the dissolution codes.' },
+  { hz: '639 Hz', label: 'Heart Coherence', dosha: 'Vata · Venus Mahadasha',
+    body: 'Prema-Pulse reading active. <strong style="color:#D4AF37">Raga Kafi</strong> at 639Hz will dissolve the Venus-period heart armoring. Anahata needs direct sound medicine through this frequency field.' },
+  { hz: '741 Hz', label: 'Expression · Throat', dosha: 'Pitta-Vata · Mercury Dasha',
+    body: 'Suppressed Vak shakti detected in Vishuddha. <strong style="color:#22D3EE">741Hz expression codes</strong> via Raga Todi will unlock the throat crystallization pattern recorded in your Mercury-period field.' },
+];
+
+// Category filter config for Sacred Sound Portal
+const SOUND_CATS = [
+  { key: 'all', label: 'All Frequencies' },
+  { key: 'beats', label: 'Healing Beats' },
+  { key: 'meditation', label: 'Meditations' },
+  { key: 'mantra', label: 'Mantras' },
+  { key: 'mystic', label: 'Sacred Music' },
+] as const;
+type SoundCat = typeof SOUND_CATS[number]['key'];
+
 const Music: React.FC = () => {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
@@ -667,7 +900,13 @@ const Music: React.FC = () => {
   const { toast } = useToast();
   const { isSubscribed, checkSubscription, refreshPurchases, playTrack, currentTrack } = useMusicPlayer();
   const { user } = useAuth();
+  const { tier: memberTier } = useMembership();
   const starsRef = useRef<HTMLDivElement | null>(null);
+
+  // Nadi Scanner state
+  const [nadiIdx, setNadiIdx] = useState(0);
+  const [activeSoundCat, setActiveSoundCat] = useState<SoundCat>('all');
+  const jyotish = useJyotishProfile();
   
   const [tracks, setTracks] = useState<Track[]>([]);
   const [albums, setAlbums] = useState<Album[]>([]);
@@ -902,7 +1141,19 @@ const Music: React.FC = () => {
     fetchPlaylistTracks(playlistId);
   };
 
+  // Category tab filter maps Portal sound cats to track genres
+  const CAT_TO_GENRE: Record<SoundCat, string | null> = {
+    all: null,
+    beats: 'beats',
+    meditation: 'meditation',
+    mantra: 'mystic',
+    mystic: 'mystic',
+  };
+
   const filteredTracks = tracks.filter(t => {
+    // Apply Sacred Sound Portal category tab
+    const catGenre = CAT_TO_GENRE[activeSoundCat];
+    if (catGenre && t.genre !== catGenre) return false;
     if (selectedGenre !== 'all' && t.genre !== selectedGenre) return false;
     if (selectedMood !== 'all' && t.mood !== selectedMood) return false;
     if (selectedPath !== 'all' && t.spiritual_path !== selectedPath) return false;
@@ -966,6 +1217,31 @@ const Music: React.FC = () => {
     onMoodClick(key);
   };
 
+  const rescanNadi = useCallback(() => {
+    setNadiIdx(i => (i + 1) % NADI_PRESETS.length);
+  }, []);
+
+  // Build personalised Nadi prescription from real Jyotish profile if available
+  const nadiData = useMemo(() => {
+    const preset = NADI_PRESETS[nadiIdx];
+    if (jyotish && !jyotish.isLoading && jyotish.nakshatra) {
+      const dasha = jyotish.currentMahadasha ?? preset.dosha.split(' · ')[1] ?? 'Unknown Mahadasha';
+      const dosha = `${jyotish.nakshatra} Nakshatra · ${dasha}`;
+      const ragaMap: Record<string, string> = {
+        Rohini: 'Raga Yaman', Ashwini: 'Raga Bhairav', Pushya: 'Raga Bhimpalasi',
+        Chitra: 'Raga Yaman Kalyan', Hasta: 'Raga Kafi', Revati: 'Raga Bageshri',
+        Uttara_Phalguni: 'Raga Bihag', Shravana: 'Raga Khamaj', Magha: 'Raga Darbari',
+      };
+      const raga = ragaMap[jyotish.nakshatra] ?? preset.label;
+      return {
+        ...preset,
+        dosha,
+        body: `Your Jyotish field resonates with <strong style="color:#D4AF37">${raga}</strong>. ${dasha} activates your current frequency prescription. ${preset.hz} codes will align your ${jyotish.nakshatra} nakshatra energy and illuminate the subtle body pathways prescribed by your birth chart.`,
+      };
+    }
+    return preset;
+  }, [nadiIdx, jyotish]);
+
   const lastPlayed: Track | null =
     currentTrack ||
     (historyTracks && historyTracks.length > 0 ? historyTracks[0] : null);
@@ -986,13 +1262,107 @@ const Music: React.FC = () => {
       <div ref={starsRef} style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }} />
 
       <div className="sqi-page">
+        {/* ── DHYANA-STYLE HEADER ── */}
         <div className="sqi-header">
           <button className="sqi-back-btn" onClick={() => navigate(-1)}>
             ←
           </button>
-          <div className="sqi-page-title">{t('music.portal.pageTitle', '♪ Sacred Sound Portal')}</div>
+          <div>
+            <div className="sqi-portal-title">
+              <span className="sqi-portal-title-sub">{t('music.portal.namaTitle', 'Nada Brahma · Sound is the Universe')}</span>
+              {t('music.portal.pageTitle2', 'Sacred Sound Portal')}
+            </div>
+          </div>
         </div>
 
+        {/* ── CATEGORY FILTER TABS ── */}
+        <div className="sqi-cat-tabs">
+          {SOUND_CATS.map(cat => (
+            <button
+              key={cat.key}
+              className={`sqi-cat-tab${activeSoundCat === cat.key ? ' active' : ''}`}
+              onClick={() => setActiveSoundCat(cat.key)}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+
+        {/* ── NADI SCANNER ── */}
+        <div style={{ padding: '8px 0 4px' }}>
+          <div className="sqi-sec-label">
+            <div className="sqi-sec-dot" />
+            {t('music.portal.nadiScannerLabel', 'Nadi Scanner · Your Frequency Prescription')}
+          </div>
+
+          <div className="sqi-nadi-card">
+            <div className="sqi-nadi-label">
+              <div className="sqi-nadi-dot" />
+              {t('music.portal.nadiLiveField', 'Live Field Resonance · Jyotish-Aligned')}
+            </div>
+
+            {/* Sacred Geometry SVG */}
+            <svg className="sqi-nadi-geo" viewBox="0 0 440 190" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <filter id="sqi-fc"><feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                <filter id="sqi-fg"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                <radialGradient id="sqi-bg-rg" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="rgba(34,211,238,0.08)"/>
+                  <stop offset="100%" stopColor="rgba(34,211,238,0)"/>
+                </radialGradient>
+              </defs>
+              <circle cx="220" cy="95" r="85" fill="url(#sqi-bg-rg)"/>
+              <circle cx="220" cy="95" r="84" fill="none" stroke="rgba(34,211,238,0.07)" strokeWidth="1"/>
+              <circle cx="220" cy="95" r="68" fill="none" stroke="rgba(34,211,238,0.1)" strokeWidth=".8"/>
+              <circle cx="220" cy="95" r="50" fill="none" stroke="rgba(212,175,55,0.14)" strokeWidth=".8"/>
+              <circle cx="220" cy="95" r="32" fill="none" stroke="rgba(212,175,55,0.2)" strokeWidth="1"/>
+              <circle cx="220" cy="95" r="14" fill="none" stroke="rgba(212,175,55,0.3)" strokeWidth=".8"/>
+              <polygon points="220,15 296,148 144,148" fill="none" stroke="rgba(212,175,55,0.13)" strokeWidth=".9"/>
+              <polygon points="220,175 144,42 296,42" fill="none" stroke="rgba(34,211,238,0.1)" strokeWidth=".9"/>
+              <polygon points="220,40 280,135 160,135" fill="none" stroke="rgba(212,175,55,0.09)" strokeWidth=".7"/>
+              <polygon points="220,150 160,55 280,55" fill="none" stroke="rgba(34,211,238,0.07)" strokeWidth=".7"/>
+              <ellipse cx="220" cy="61" rx="11" ry="24" fill="rgba(34,211,238,0.04)" stroke="rgba(34,211,238,0.13)" strokeWidth=".7" transform="rotate(0 220 95)"/>
+              <ellipse cx="220" cy="61" rx="11" ry="24" fill="rgba(34,211,238,0.04)" stroke="rgba(34,211,238,0.11)" strokeWidth=".7" transform="rotate(45 220 95)"/>
+              <ellipse cx="220" cy="61" rx="11" ry="24" fill="rgba(34,211,238,0.04)" stroke="rgba(34,211,238,0.11)" strokeWidth=".7" transform="rotate(90 220 95)"/>
+              <ellipse cx="220" cy="61" rx="11" ry="24" fill="rgba(34,211,238,0.04)" stroke="rgba(34,211,238,0.11)" strokeWidth=".7" transform="rotate(135 220 95)"/>
+              <ellipse cx="220" cy="61" rx="11" ry="24" fill="rgba(212,175,55,0.03)" stroke="rgba(212,175,55,0.1)" strokeWidth=".7" transform="rotate(22.5 220 95)"/>
+              <ellipse cx="220" cy="61" rx="11" ry="24" fill="rgba(212,175,55,0.03)" stroke="rgba(212,175,55,0.1)" strokeWidth=".7" transform="rotate(67.5 220 95)"/>
+              <ellipse cx="220" cy="61" rx="11" ry="24" fill="rgba(212,175,55,0.03)" stroke="rgba(212,175,55,0.1)" strokeWidth=".7" transform="rotate(112.5 220 95)"/>
+              <ellipse cx="220" cy="61" rx="11" ry="24" fill="rgba(212,175,55,0.03)" stroke="rgba(212,175,55,0.1)" strokeWidth=".7" transform="rotate(157.5 220 95)"/>
+              <circle cx="220" cy="11" r="2.2" fill="rgba(212,175,55,0.7)" filter="url(#sqi-fg)"/>
+              <circle cx="296" cy="43" r="1.6" fill="rgba(212,175,55,0.45)"/>
+              <circle cx="340" cy="95" r="2.2" fill="rgba(34,211,238,0.75)" filter="url(#sqi-fc)"/>
+              <circle cx="220" cy="179" r="2.2" fill="rgba(212,175,55,0.6)"/>
+              <circle cx="100" cy="95" r="2.2" fill="rgba(34,211,238,0.7)" filter="url(#sqi-fc)"/>
+              <circle cx="220" cy="95" r="7" fill="rgba(212,175,55,0.85)" filter="url(#sqi-fg)"/>
+              <circle cx="220" cy="95" r="3" fill="#fff"/>
+              <text x="220" y="89" textAnchor="middle" fontFamily="Plus Jakarta Sans,sans-serif" fontSize="8" fontWeight="800" letterSpacing="3" fill="rgba(255,255,255,0.3)">SCANNING</text>
+              <text x="220" y="105" textAnchor="middle" fontFamily="Plus Jakarta Sans,sans-serif" fontSize="16" fontWeight="900" fill="#22D3EE">{nadiData.hz}</text>
+            </svg>
+
+            {/* Prescription result — wired to real Jyotish data */}
+            <div className="sqi-nadi-prescription">
+              <div className="sqi-nadi-presc-title">{nadiData.dosha}</div>
+              <div className="sqi-nadi-presc-body" dangerouslySetInnerHTML={{ __html: nadiData.body }} />
+              <div className="sqi-nadi-hz">{nadiData.hz} · {nadiData.label}</div>
+              {jyotish && !jyotish.isLoading && jyotish.nakshatra ? (
+                <div className="sqi-nadi-note">
+                  ↳ {t('music.portal.nadiLiveNote', 'Reading your birth chart & current Dasha from your Jyotish profile — same data source as your main Nadi Scanner.')}
+                </div>
+              ) : (
+                <div className="sqi-nadi-note">
+                  ↳ {t('music.portal.nadiGenericNote', 'Add your birth data in Vedic Astrology to receive a fully personalised Jyotish frequency prescription.')}
+                </div>
+              )}
+            </div>
+
+            <button className="btn-siddha-gold" onClick={rescanNadi}>
+              ⟳ &nbsp;{t('music.portal.rescanBtn', 'Re-Scan My Field')}
+            </button>
+          </div>
+        </div>
+
+        {/* ── HERO SECTION (existing) ── */}
         <div className="planetary-hero">
           <div className="hero-eyebrow">{t('music.portal.heroEyebrow', 'Current Planetary Sound')}</div>
           <div className="hero-title">
@@ -1018,7 +1388,9 @@ const Music: React.FC = () => {
             <span className="presc-label">{t('music.portal.prescriptionLabel', 'Cosmic Sound Prescription')}</span>
           </div>
           <div className="presc-text">
-            {t('music.portal.prescriptionCopy', 'Your Jupiter period resonates with Raga Yaman and 963Hz (divine connection). Listen to these to balance your Kapha energy.')}
+            {jyotish && !jyotish.isLoading && jyotish.nakshatra
+              ? nadiData.body.replace(/<[^>]*>/g, '')
+              : t('music.portal.prescriptionCopy', 'Your Jupiter period resonates with Raga Yaman and 963Hz (divine connection). Listen to these to balance your Kapha energy.')}
           </div>
         </div>
 
@@ -1150,6 +1522,86 @@ const Music: React.FC = () => {
           </div>
           <span style={{ color: 'var(--cyan)', fontSize: 16 }}>›</span>
         </div>
+
+        {/* ── UPGRADE SECTION ── */}
+        {memberTier === 'free' && (
+          <div style={{ padding: '8px 0 4px' }}>
+            <div className="sqi-sec-label">
+              <div className="sqi-sec-dot" />
+              {t('music.portal.unlockFrequency', 'Unlock Your Frequency')}
+            </div>
+
+            <div className="sqi-upgrade-stack">
+              {/* FREE */}
+              <div className="sqi-upgrade-card sqi-uc-free">
+                <div className="sqi-uc-tier">{t('music.portal.tierFreeLabel', 'Free · Seeker')}</div>
+                <div className="sqi-uc-name">{t('music.portal.tierFreeName', 'Taste the Field')}</div>
+                <div className="sqi-uc-price">€0 <small>/ {t('music.portal.forever', 'forever')}</small></div>
+                <ul className="sqi-uc-features">
+                  <li>30-second snippets of every track</li>
+                  <li>Nadi Scanner — 1 field scan per day</li>
+                  <li>Cosmic Sound Prescription</li>
+                  <li className="dim">Full track streaming (Prana-Flow+)</li>
+                  <li className="dim">Downloads (Siddha-Quantum+)</li>
+                </ul>
+                <button className="btn-siddha-outline" onClick={handleSubscribe}>{t('music.portal.tierFreeCta', 'Explore Free Access')}</button>
+              </div>
+
+              {/* PRANA-FLOW */}
+              <div className="sqi-upgrade-card sqi-uc-prana">
+                <div className="sqi-uc-tier">{t('music.portal.tierPranaLabel', 'Prana-Flow Tier')}</div>
+                <div className="sqi-uc-name">{t('music.portal.tierPranaName', 'Practitioner')}</div>
+                <div className="sqi-uc-price">€19 <small>/ {t('music.portal.month', 'month')}</small></div>
+                <ul className="sqi-uc-features">
+                  <li>Full streaming — all tracks, unlimited</li>
+                  <li>Nadi Scanner — unlimited scans</li>
+                  <li>Jyotish sound prescription (full)</li>
+                  <li>33 SHC coins per track played</li>
+                  <li>Healing Beats + Meditations library</li>
+                  <li className="dim">Downloads (Siddha-Quantum+)</li>
+                </ul>
+                <button className="btn-siddha-gold" onClick={handleSubscribe}>{t('music.portal.tierPranaCta', 'Activate Prana-Flow · €19/mo')}</button>
+              </div>
+
+              {/* SIDDHA-QUANTUM */}
+              <div className="sqi-upgrade-card sqi-uc-siddha">
+                <div className="sqi-uc-tier">{t('music.portal.tierSiddhaLabel', 'Siddha-Quantum Tier')}</div>
+                <div className="sqi-uc-name">{t('music.portal.tierSiddhaName', 'Siddha')}</div>
+                <div className="sqi-uc-price">€45 <small>/ {t('music.portal.month', 'month')}</small></div>
+                <ul className="sqi-uc-features">
+                  <li>Everything in Prana-Flow</li>
+                  <li>Full downloads — all formats</li>
+                  <li>Custom mantra creation with Kritagya</li>
+                  <li>Custom healing beat production request</li>
+                  <li>Full Sacred Music library access</li>
+                  <li>Early access to all new releases</li>
+                </ul>
+                <button className="btn-siddha-gold" onClick={handleSubscribe}>{t('music.portal.tierSiddhaCta', 'Activate Siddha-Quantum · €45/mo')}</button>
+              </div>
+
+              {/* AKASHA-INFINITY */}
+              <div className="sqi-upgrade-card sqi-uc-akasha">
+                <div className="sqi-uc-tier cyan">{t('music.portal.tierAkashaLabel', 'Akasha-Infinity · Eternal')}</div>
+                <div className="sqi-uc-name">{t('music.portal.tierAkashaName', 'Akasha Master')}</div>
+                <div className="sqi-uc-price grad">€1111 <small style={{ WebkitTextFillColor: 'var(--text-muted)' }}>/ {t('music.portal.lifetime', 'lifetime')}</small></div>
+                <ul className="sqi-uc-features">
+                  <li>Everything unlocked — eternally</li>
+                  <li>Lifetime download vault — all releases forever</li>
+                  <li>Custom mantra + healing beat creation</li>
+                  <li>Dedicated Akasha channel in community</li>
+                  <li>All future releases at zero cost</li>
+                </ul>
+                <button
+                  className="btn-siddha-gold"
+                  style={{ background: 'linear-gradient(90deg,#D4AF37,#22D3EE)', animation: 'none', boxShadow: '0 0 20px rgba(34,211,238,.3),0 0 40px rgba(212,175,55,.2)' }}
+                  onClick={handleSubscribe}
+                >
+                  {t('music.portal.tierAkashaCta', 'Activate Akasha-Infinity · €1111')}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="browse-section">
           <div
