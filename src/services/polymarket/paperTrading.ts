@@ -640,6 +640,22 @@ export class PaperTradingService {
     return !error;
   }
 
+  // Full reset: restore balance to €1000, clear fees, cap max trade size to $5
+  async resetToDefaults(): Promise<boolean> {
+    if (!this.userId) return false;
+
+    const { error } = await supabase
+      .from('polymarket_bot_settings')
+      .update({
+        paper_balance: 1000,
+        total_fees_paid: 0,
+        max_trade_size: 5,
+      })
+      .eq('user_id', this.userId);
+
+    return !error;
+  }
+
   // Load/save bot settings
   async loadSettings(): Promise<BotSettings | null> {
     if (!this.userId) return null;
@@ -654,7 +670,7 @@ export class PaperTradingService {
       // Create default settings
       const defaultSettings: BotSettings = {
         is_paper_mode: true,
-        max_trade_size: 50,
+        max_trade_size: 5,
         daily_loss_limit: 500,
         strategies_enabled: {
           whale_mirror: true,

@@ -345,11 +345,27 @@ const PolymarketBotDetailInner: React.FC = () => {
           });
         if (user?.id) {
           paperTradingService.setUserId(user.id);
-          paperTradingService.loadSettings().then((s) => {
+          paperTradingService.loadSettings().then(async (s) => {
             if (s) {
               setIsPaperMode(s.is_paper_mode);
               paperTradingService.setMode(s.is_paper_mode);
               addLog(`Mode: ${s.is_paper_mode ? '📝 PAPER TRADING' : '💰 LIVE TRADING'}`, 'info');
+
+              // Auto-reset: if balance is depleted (<$10) or max_trade_size is too large (>$5),
+              // restore defaults so trades can execute immediately.
+              const needsReset =
+                (s.paper_balance ?? 1000) < 10 || (s.max_trade_size ?? 50) > 5;
+              if (needsReset) {
+                const ok = await paperTradingService.resetToDefaults();
+                if (ok) {
+                  setPaperBalance(1000);
+                  setTotalFeesPaid(0);
+                  addLog('⚡ Auto-reset: balance restored to €1000, max trade size set to $5', 'success');
+                }
+              } else {
+                setPaperBalance(s.paper_balance ?? 1000);
+                setTotalFeesPaid(s.total_fees_paid ?? 0);
+              }
             }
           }).catch((err: unknown) => console.error('[PolymarketBot] loadSettings:', err));
           (async () => {
