@@ -73,6 +73,19 @@ const DOSHA_MAP: Record<string, string> = {
   Cancer: 'Kapha', Scorpio: 'Pitta', Pisces: 'Kapha',
 };
 
+// Each nakshatra spans a known rashi (moon sign)
+const NAKSHATRA_TO_MOON_SIGN: Record<string, string> = {
+  Ashwini: 'Aries',         Bharani: 'Aries',           Krittika: 'Aries',
+  Rohini: 'Taurus',         Mrigashira: 'Taurus',        Ardra: 'Gemini',
+  Punarvasu: 'Gemini',      Pushya: 'Cancer',            Ashlesha: 'Cancer',
+  Magha: 'Leo',             'Purva Phalguni': 'Leo',     'Uttara Phalguni': 'Leo',
+  Hasta: 'Virgo',           Chitra: 'Virgo',             Swati: 'Libra',
+  Vishakha: 'Libra',        Anuradha: 'Scorpio',         Jyeshtha: 'Scorpio',
+  Mula: 'Sagittarius',      'Purva Ashadha': 'Sagittarius', 'Uttara Ashadha': 'Sagittarius',
+  Shravana: 'Capricorn',    Dhanishtha: 'Capricorn',     Shatabhisha: 'Aquarius',
+  'Purva Bhadrapada': 'Aquarius', 'Uttara Bhadrapada': 'Pisces', Revati: 'Pisces',
+};
+
 // Per-planet karma focus for meditation guidance (used when masterBlueprint not available)
 const KARMA_FOCUS_MAP: Record<string, string> = {
   Sun: 'vitality, leadership and self-confidence',
@@ -431,9 +444,8 @@ export function useJyotishProfile(): JyotishProfile {
 
     const nakshatra = String(moonNakshatra || '');
 
-    // Moon sign and other fields are not directly in the VedicReading type,
-    // but can be derived from nakshatra or defaulted.
-    const moonSign = 'Pisces';
+    // Derive moon sign from nakshatra using the classical Vedic nakshatra→rashi table.
+    const moonSign = NAKSHATRA_TO_MOON_SIGN[nakshatra] || 'Unknown';
 
     const activeYogas = (reading?.masterBlueprint?.significantYogas || []).map((y) => y.name);
 
@@ -446,7 +458,8 @@ export function useJyotishProfile(): JyotishProfile {
       : 'Energy center balancing';
 
     const bhriguCycle = reading?.masterBlueprint?.sadeSatiStatus || '';
-    const primaryDosha = DOSHA_MAP[moonSign] || 'Tridoshic';
+    // Use the moon sign derived from nakshatra; fall back to Tridoshic only if moon sign is unknown.
+    const primaryDosha = (moonSign !== 'Unknown' ? DOSHA_MAP[moonSign] : null) || 'Tridoshic';
     const userName = authUser?.user_metadata?.full_name || 'Sacred Soul';
     const language = (authUser?.user_metadata?.language as string) || 'en';
 

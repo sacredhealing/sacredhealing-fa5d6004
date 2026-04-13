@@ -18,10 +18,11 @@ import {
 } from 'lucide-react';
 import { Activation, NadiScanResult, Message } from '@/features/quantum-apothecary/types';
 import { ACTIVATIONS, PLANETARY_DATA } from '@/features/quantum-apothecary/constants';
-import { streamChatWithSQI } from '@/features/quantum-apothecary/chatService';
+import { streamChatWithSQI, scanNadiFromPalm } from '@/features/quantum-apothecary/chatService';
 import { chatSpeechLocale } from '@/lib/chatSpeechLocale';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
+import { useAyurvedaAnalysis } from '@/hooks/useAyurvedaAnalysis';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
@@ -252,9 +253,35 @@ function QuantumApothecaryInner() {
   }, [user?.id, user?.email]);
 
   const jyotish = useJyotishProfile();
+  const { doshaProfile } = useAyurvedaAnalysis();
+
+  // Build the full Seeker context: Jyotish birth chart + Ayurveda Prakriti from their saved profile.
   const jyotishContext = jyotish.isLoading
     ? ''
-    : `Mahadasha: ${jyotish.mahadasha} | Antardasha: ${jyotish.antardasha} | Nakshatra: ${jyotish.nakshatra} | Dosha: ${jyotish.primaryDosha} | Karma Focus: ${jyotish.karmaFocus} | Active Yogas: ${jyotish.activeYogas.join(', ')} | Bhrigu Cycle: ${jyotish.bhriguCycle} | Healing Focus: ${jyotish.healingFocus} | Mantra: ${jyotish.mantraFocus}`;
+    : (() => {
+        const parts: string[] = [
+          `Mahadasha: ${jyotish.mahadasha}`,
+          `Antardasha: ${jyotish.antardasha}`,
+          `Nakshatra: ${jyotish.nakshatra}`,
+          `Moon Sign: ${jyotish.moonSign}`,
+          `Jyotish Dosha (from birth chart): ${jyotish.primaryDosha}`,
+          `Karma Focus: ${jyotish.karmaFocus}`,
+          `Active Yogas: ${jyotish.activeYogas.join(', ') || 'None resolved yet'}`,
+          `Bhrigu Cycle: ${jyotish.bhriguCycle || 'Not determined'}`,
+          `Healing Focus: ${jyotish.healingFocus}`,
+          `Prescribed Raga: ${jyotish.musicRaga}`,
+          `Prescribed Frequency: ${jyotish.musicFrequency}`,
+          `Mantra: ${jyotish.mantraFocus}`,
+        ];
+        // Append Ayurveda Prakriti from the user's saved assessment (independent of birth chart dosha)
+        if (doshaProfile) {
+          parts.push(`Ayurveda Prakriti (assessed): Primary=${doshaProfile.primary}, Secondary=${doshaProfile.secondary || 'None'}`);
+          if (doshaProfile.characteristics?.length) {
+            parts.push(`Prakriti Characteristics: ${doshaProfile.characteristics.slice(0, 5).join(', ')}`);
+          }
+        }
+        return parts.join(' | ');
+      })();
 
   const [scanResult, setScanResult] = useState<NadiScanResult | null>(null);
   const [isScanning, setIsScanning] = useState(false);
@@ -605,30 +632,20 @@ function QuantumApothecaryInner() {
     const todayHerb = PLANETARY_DATA[now.getDay()].herb;
 
     try {
-      const scanMessages: Message[] = [{ role: 'user', text: buildNadiScanPrompt(todayPlanet, todayHerb) }];
-      const userImage = { base64: capturedBase64, mimeType: 'image/jpeg' as const };
-      let streamedScanText = '';
-      await streamChatWithSQI(
-        scanMessages,
-        (chunk) => { streamedScanText += chunk; },
-        () => {},
-        userImage,
-        user?.id ?? null,
-        language,
-        seekerName || undefined,
-        canonicalActivationNameLines,
-        jyotishContext || undefined,
-      );
-
+      // Use the dedicated scanMode path — pure image-based analysis, no chat personality,
+      // no risk of user self-diagnosis being accepted. Returns JSON directly.
       let parsed: Record<string, unknown>;
       try {
-        parsed = parseNadiScanJsonFromStream(streamedScanText);
+        parsed = await scanNadiFromPalm({
+          imageBase64: capturedBase64,
+          imageMimeType: 'image/jpeg',
+          userId: user?.id ?? null,
+          planetaryAlign: todayPlanet,
+          herbOfToday: todayHerb,
+        });
       } catch (parseErr) {
-        const snippet = streamedScanText.slice(0, 200);
-        const hint = parseErr instanceof Error ? parseErr.message : 'Invalid JSON';
-        throw new Error(
-          snippet ? `${hint} Response: ${snippet}` : hint,
-        );
+        const hint = parseErr instanceof Error ? parseErr.message : 'Scan failed';
+        throw new Error(hint);
       }
 
       if (parsed.error) {
