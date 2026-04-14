@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from './useAuth';
 import { useAIVedicReading } from './useAIVedicReading';
+import { useEphemerisData } from './useEphemerisData';
 import { calculateMoonNakshatra } from '@/lib/vedicCalculations';
 import { supabase } from '@/integrations/supabase/client';
 import type { UserProfile } from '@/lib/vedicTypes';
@@ -258,6 +259,7 @@ export function getRealDasha(
 export function useJyotishProfile(): JyotishProfile {
   const { user: authUser } = useAuth();
   const { reading, isLoading: readingLoading, generateReading } = useAIVedicReading();
+  const { ephemeris, loading: ephemerisLoading } = useEphemerisData();
   const [isFreshForUser, setIsFreshForUser] = useState(true);
   const [birthDetailsLoading, setBirthDetailsLoading] = useState(false);
   const [birthData, setBirthData] = useState<CachedBirthData | null>(null);
