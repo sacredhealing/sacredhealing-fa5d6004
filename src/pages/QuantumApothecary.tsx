@@ -260,9 +260,10 @@ function QuantumApothecaryInner() {
     ? ''
     : (() => {
         const parts: string[] = [
-          `Mahadasha: ${jyotish.mahadasha}`,
+          `[JYOTISH EPHEMERIS — SWISS EPHEMERIS / LAHIRI AYANAMSHA]`,
+          `Mahadasha: ${jyotish.mahadasha}${jyotish.mahaEnd ? ` (ends ${jyotish.mahaEnd})` : ''}`,
           `Antardasha: ${jyotish.antardasha}`,
-          `Nakshatra: ${jyotish.nakshatra}`,
+          `Moon Birth Nakshatra: ${jyotish.nakshatra}`,
           `Moon Sign: ${jyotish.moonSign}`,
           `Jyotish Dosha (from birth chart): ${jyotish.primaryDosha}`,
           `Karma Focus: ${jyotish.karmaFocus}`,
@@ -272,6 +273,7 @@ function QuantumApothecaryInner() {
           `Prescribed Raga: ${jyotish.musicRaga}`,
           `Prescribed Frequency: ${jyotish.musicFrequency}`,
           `Mantra: ${jyotish.mantraFocus}`,
+          `Source: Astronomically confirmed, not AI estimate`,
         ];
         // Append Ayurveda Prakriti from the user's saved assessment (independent of birth chart dosha)
         if (doshaProfile) {
