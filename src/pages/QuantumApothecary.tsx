@@ -30,6 +30,7 @@ import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import NadiScanner from '@/components/NadiScanner';
+import { useSQIFieldContext } from '@/hooks/useSQIFieldContext';
 
 const FrequencyLibrarySection = lazy(() => import('@/features/quantum-apothecary/FrequencyLibrarySection'));
 const ActiveTransmissionsSection = lazy(() => import('@/features/quantum-apothecary/ActiveTransmissionsSection'));
@@ -255,6 +256,7 @@ function QuantumApothecaryInner() {
 
   const jyotish = useJyotishProfile();
   const { doshaProfile } = useAyurvedaAnalysis();
+  const sqiField = useSQIFieldContext();
 
   // Build the full Seeker context: Jyotish birth chart + Ayurveda Prakriti from their saved profile.
   const jyotishContext = jyotish.isLoading
@@ -840,10 +842,12 @@ function QuantumApothecaryInner() {
       } catch (err) { console.error('Failed to persist SQI session', err); }
     };
     try {
-      // Prepend live biometric Nadi scan result to jyotishContext if available
-      const enrichedJyotishContext = liveScanContext
-        ? `${liveScanContext}\n\n${jyotishContext || ''}`
-        : jyotishContext || undefined;
+      // Build enriched context: live biometric scan + SQI field (temple/photonic/ayurveda) + birth chart
+      const fieldParts: string[] = [];
+      if (liveScanContext) fieldParts.push(liveScanContext);
+      if (sqiField.compiledContext) fieldParts.push(sqiField.compiledContext);
+      if (jyotishContext) fieldParts.push(jyotishContext);
+      const enrichedJyotishContext = fieldParts.length > 0 ? fieldParts.join('\n\n') : undefined;
 
       await streamChatWithSQI(
         allMsgs,
@@ -1218,7 +1222,7 @@ function QuantumApothecaryInner() {
                   primaryDosha: jyotish?.primaryDosha,
                 }}
                 onScanComplete={(reading) => {
-                  // Build structured scan context for SQI
+                  // Build structured live scan context for this session
                   const ctx = [
                     '[LIVE BIOMETRIC NADI SCAN — rPPG]',
                     `Active Nadi: ${reading.activatedNadi}`,
@@ -1234,6 +1238,17 @@ function QuantumApothecaryInner() {
                     `Scan Confidence: ${Math.round(reading.rawVitals.confidence * 100)}%`,
                   ].join('\n');
                   setLiveScanContext(ctx);
+                  // Persist scan to nadi_scan_results table (gracefully skipped if migration pending)
+                  sqiField.updateNadi({
+                    activatedNadi: reading.activatedNadi,
+                    heartRate: reading.rawVitals.heart_rate,
+                    hrvRmssd: reading.rawVitals.hrv_rmssd ?? 0,
+                    respiratoryRate: reading.rawVitals.respiratory_rate,
+                    vagalTone: reading.vagalTone,
+                    pranaCoherence: reading.activeNadis,
+                    autonomicBalance: reading.autonomicBalance,
+                    scannedAt: new Date().toISOString(),
+                  });
                 }}
               />
             </div>
@@ -1636,6 +1651,32 @@ function QuantumApothecaryInner() {
             }>
               <FrequencyLibrarySection activeCategory={activeCategory} setActiveCategory={setActiveCategory} selectedActivations={selectedActivations} addActivation={addActivation} />
             </Suspense>
+
+            {/* ── Active Field Context Pills ── */}
+            {!sqiField.loading && (sqiField.nadi || sqiField.ayurveda || sqiField.photonic?.lightCodeActive || sqiField.temple?.activeSite) && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingLeft: 2, paddingRight: 2, marginBottom: 4 }}>
+                {sqiField.nadi?.activatedNadi && (
+                  <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.8)', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 30, padding: '4px 10px' }}>
+                    ⊕ {sqiField.nadi.activatedNadi} Nadi · {sqiField.nadi.heartRate} BPM
+                  </span>
+                )}
+                {sqiField.ayurveda?.prakriti && (
+                  <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.8)', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 30, padding: '4px 10px' }}>
+                    ⟁ {sqiField.ayurveda.prakriti}
+                  </span>
+                )}
+                {sqiField.photonic?.lightCodeActive && (
+                  <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(34,211,238,0.8)', background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: 30, padding: '4px 10px' }}>
+                    ≋ {sqiField.photonic.frequency}Hz · {sqiField.photonic.activeProtocol}
+                  </span>
+                )}
+                {sqiField.temple?.activeSite && (
+                  <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.8)', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 30, padding: '4px 10px' }}>
+                    ◈ {sqiField.temple.activeSite} · {sqiField.temple.intensity}%
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* ── Chat Panel ── */}
             <div ref={chatPanelRef}>
