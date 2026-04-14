@@ -44,6 +44,7 @@ import { getPlanetEmoji } from '@/lib/vedicTypes';
 import { audioEngine } from '@/lib/audioEngine';
 import { getPalmScanResult } from '@/lib/palmScanStore';
 import BhriguCard from '@/components/BhriguCard';
+import { startPranaMonthlyCheckout } from '@/features/membership/startPranaMonthlyCheckout';
 
 /* ─────────────────────────────────────────────────────
    INLINE SQI-2050 STYLES v8.0
@@ -288,12 +289,44 @@ const SQI_CSS = `
     background: linear-gradient(135deg, rgba(212,175,55,.14), rgba(255,230,120,.06) 50%, rgba(212,175,55,.05));
   }
 
-  /* premium badge on card */
+  /* premium indicator dot (for unlocked premium cards) */
   .m-card-premium-dot {
     position: absolute; top: 8px; right: 8px;
     width: 7px; height: 7px; border-radius: 50%;
     background: #D4AF37;
     box-shadow: 0 0 6px rgba(212,175,55,.7);
+  }
+
+  /* locked card overlay — blurs content, shows upgrade CTA */
+  .m-card-lock-overlay {
+    position: absolute; inset: 0;
+    background: rgba(5,5,5,.72);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    border-radius: 22px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 6px; padding: 10px;
+    text-align: center;
+  }
+  .m-card-lock-icon {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: rgba(212,175,55,.12);
+    border: 1px solid rgba(212,175,55,.3);
+    display: flex; align-items: center; justify-content: center;
+    color: #D4AF37;
+  }
+  .m-card-lock-label {
+    font-size: 8px; font-weight: 800; letter-spacing: .16em;
+    text-transform: uppercase; color: #D4AF37;
+    line-height: 1.3;
+  }
+  @keyframes lockPulse {
+    0%,100% { box-shadow: 0 0 16px rgba(212,175,55,.15); border-color: rgba(212,175,55,.25); }
+    50%      { box-shadow: 0 0 28px rgba(212,175,55,.35); border-color: rgba(212,175,55,.5); }
+  }
+  .m-card.m-card-locked {
+    animation: lockPulse 3s ease-in-out infinite;
   }
 
   .m-card-planet-icon {
@@ -572,6 +605,7 @@ const Mantras = () => {
   const playerRef = useRef<HTMLDivElement | null>(null);
   const currentMantraIdRef = useRef<string | null>(null);
   const mantraPlaybackCleanupRef = useRef<(() => void) | null>(null);
+  const upgradeLockedRef = useRef(false);
 
   const clearMantraPlaybackListeners = () => {
     mantraPlaybackCleanupRef.current?.();
@@ -583,6 +617,15 @@ const Mantras = () => {
     const rounded = Math.round(minutes);
     return rounded === 1 ? t('mantras.durationMin') : t('mantras.durationMins', { count: rounded });
   };
+
+  // Stripe success toasts (PRESERVED)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('membership_success') === 'true') {
+      toast.success('Welcome to Prana-Flow! All mantras unlocked. 🕉');
+      window.history.replaceState({}, '', '/mantras');
+    }
+  }, []);
 
   const reps = MANTRA_REPETITIONS;
   const currentMantra = selectedMantraId ? mantras.find((m) => m.id === selectedMantraId) : null;
@@ -789,10 +832,23 @@ const Mantras = () => {
     if (currentMantra?.audio_url) { setIsPlaying(true); playNextRep(currentMantra); }
   };
 
+  const handleUpgradeCheckout = useCallback(async () => {
+    if (!user) { navigate('/auth'); return; }
+    if (upgradeLockedRef.current) return;
+    upgradeLockedRef.current = true;
+    try {
+      await startPranaMonthlyCheckout({ successPath: '/mantras?membership_success=true', sourcePage: 'mantras-upgrade' });
+    } catch (e) {
+      upgradeLockedRef.current = false;
+      toast.error(e instanceof Error ? e.message : 'Checkout failed.');
+    }
+  }, [user, navigate]);
+
   const handleMantraSelect = useCallback((m: MantraItem, locked: boolean) => {
     if (locked) {
       if (!user) { navigate('/auth'); return; }
-      toast.info(t('mantras.upgradeHint', 'Upgrade your membership to unlock this mantra.'));
+      // Show upgrade checkout (Stripe — PRESERVED)
+      void handleUpgradeCheckout();
       return;
     }
     setSelectedMantraId(m.id);
@@ -801,7 +857,7 @@ const Mantras = () => {
     setIsPlaying(false); currentMantraIdRef.current = null; setCount(0); setCompleted(false);
     setTimeout(() => playerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 80);
     if ('vibrate' in navigator) navigator.vibrate(10);
-  }, [user, navigate, t]);
+  }, [user, navigate, handleUpgradeCheckout]);
 
   const CIRC = 97;
   const progressOffset = CIRC - (CIRC * (count / reps) * 0.97);
@@ -997,10 +1053,15 @@ const Mantras = () => {
                           <div className="m-card-premium-dot" title="Members only" />
                         )}
 
-                        {/* lock overlay for locked mantras */}
+                        {/* lock overlay — full card teaser with upgrade CTA */}
                         {cardLocked && (
-                          <div className="m-lock-overlay">
-                            <Lock size={10} />
+                          <div className="m-card-lock-overlay">
+                            <div className="m-card-lock-icon">
+                              <Lock size={12} />
+                            </div>
+                            <div className="m-card-lock-label">
+                              Prana-Flow+<br />Tap to Unlock
+                            </div>
                           </div>
                         )}
 
