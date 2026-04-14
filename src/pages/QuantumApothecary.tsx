@@ -1137,7 +1137,10 @@ function QuantumApothecaryInner() {
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
-                  handleSendMessage();
+                  e.stopPropagation();
+                  if (!isTyping && (input.trim() || pendingImage)) {
+                    handleSendMessage();
+                  }
                 }
               }}
               onFocus={handleChatFocus}
@@ -1197,7 +1200,7 @@ function QuantumApothecaryInner() {
         {/* ── Header ── */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <button onClick={() => navigate('/explore')}
+            <button type="button" onClick={() => navigate('/explore')}
               className="p-2.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/30 transition">
               <ArrowLeft size={16} className="text-white/60" />
             </button>
@@ -1212,7 +1215,7 @@ function QuantumApothecaryInner() {
               <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.5em] text-[#D4AF37]/40">{t('quantumApothecary.subtitle')}</p>
             </div>
           </div>
-          <button onClick={() => setShowKnowledge(true)}
+          <button type="button" onClick={() => setShowKnowledge(true)}
             className="p-2.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/30 transition">
             <Info size={15} className="text-[#D4AF37]/60" />
           </button>
@@ -1608,7 +1611,7 @@ function QuantumApothecaryInner() {
                           <div className="w-2 h-2 rounded-full" style={{ background: act.color, boxShadow: `0 0 6px ${act.color}` }} />
                           <span className="text-xs font-bold text-white/80">{act.name}</span>
                         </div>
-                        <button onClick={() => setSelectedActivations(s => s.filter(a => a.id !== act.id))}
+                        <button type="button" onClick={() => setSelectedActivations(s => s.filter(a => a.id !== act.id))}
                           className="p-1 opacity-0 group-hover:opacity-100 hover:text-red-400 transition text-white/30">
                           <Trash2 size={12} />
                         </button>
@@ -1717,7 +1720,7 @@ function QuantumApothecaryInner() {
                   <h2 className="text-lg font-black tracking-[-0.05em]">Siddha-Quantum Intelligence</h2>
                   <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-[#D4AF37]/50 mt-1">Akasha-Neural Archive · 2050</p>
                 </div>
-                <button onClick={() => setShowKnowledge(false)} className="p-2 hover:bg-white/5 rounded-xl transition">
+                <button type="button" onClick={() => setShowKnowledge(false)} className="p-2 hover:bg-white/5 rounded-xl transition">
                   <X size={15} className="text-white/40" />
                 </button>
               </div>
@@ -1732,7 +1735,7 @@ function QuantumApothecaryInner() {
                   <p className="text-xs text-white/50 leading-relaxed">{s.d}</p>
                 </div>
               ))}
-              <button onClick={() => setShowKnowledge(false)} className="sqi-btn-primary w-full py-3.5 text-xs">
+              <button type="button" onClick={() => setShowKnowledge(false)} className="sqi-btn-primary w-full py-3.5 text-xs">
                 Return to Aether
               </button>
             </motion.div>
@@ -1759,7 +1762,7 @@ function QuantumApothecaryInner() {
                     {user ? 'Tap to reopen a past transmission.' : 'Sign in to save sessions.'}
                   </p>
                 </div>
-                <button onClick={() => setSessionsOpen(false)} className="p-2 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] transition">
+                <button type="button" onClick={() => setSessionsOpen(false)} className="p-2 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] transition">
                   <X size={14} className="text-white/40" />
                 </button>
               </div>
