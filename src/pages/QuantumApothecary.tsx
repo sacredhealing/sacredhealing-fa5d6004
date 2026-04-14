@@ -29,6 +29,7 @@ import { useMembership } from '@/hooks/useMembership';
 import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import NadiScanner from '@/components/NadiScanner';
 
 const FrequencyLibrarySection = lazy(() => import('@/features/quantum-apothecary/FrequencyLibrarySection'));
 const ActiveTransmissionsSection = lazy(() => import('@/features/quantum-apothecary/ActiveTransmissionsSection'));
@@ -287,6 +288,8 @@ function QuantumApothecaryInner() {
 
   const [scanResult, setScanResult] = useState<NadiScanResult | null>(null);
   const [isScanning, setIsScanning] = useState(false);
+  // Live biometric scan context — prepended to jyotishContext before next SQI message
+  const [liveScanContext, setLiveScanContext] = useState<string | null>(null);
   const [selectedActivations, setSelectedActivations] = useState<Activation[]>([]);
   const [activeTransmissions, setActiveTransmissions] = useState<Activation[]>(() => {
     try { return JSON.parse(localStorage.getItem('active_resonators') || '[]'); }
@@ -837,6 +840,11 @@ function QuantumApothecaryInner() {
       } catch (err) { console.error('Failed to persist SQI session', err); }
     };
     try {
+      // Prepend live biometric Nadi scan result to jyotishContext if available
+      const enrichedJyotishContext = liveScanContext
+        ? `${liveScanContext}\n\n${jyotishContext || ''}`
+        : jyotishContext || undefined;
+
       await streamChatWithSQI(
         allMsgs,
         upsert,
@@ -846,7 +854,7 @@ function QuantumApothecaryInner() {
         language,
         seekerName || undefined,
         canonicalActivationNameLines,
-        jyotishContext || undefined,
+        enrichedJyotishContext,
       );
     } catch (e) {
       console.error(e);
@@ -1200,7 +1208,38 @@ function QuantumApothecaryInner() {
           {/* ════ LEFT COLUMN ════ */}
           <div className="space-y-5">
 
-            {/* ── Digital Nadi Scan (admin 2045 glass + header pattern) ── */}
+            {/* ── Biometric Nadi Scanner — rPPG real vitals ── */}
+            <div className="glass-card p-4 sm:p-5 qa-card-hover">
+              <NadiScanner
+                userName={seekerName || 'Seeker'}
+                jyotishContext={{
+                  mahadasha: jyotish?.mahadasha,
+                  nakshatra: jyotish?.nakshatra,
+                  primaryDosha: jyotish?.primaryDosha,
+                }}
+                onScanComplete={(reading) => {
+                  // Build structured scan context for SQI
+                  const ctx = [
+                    '[LIVE BIOMETRIC NADI SCAN — rPPG]',
+                    `Active Nadi: ${reading.activatedNadi}`,
+                    `Prana Coherence: ${reading.activeNadis.toLocaleString()} / 72,000 nadis active`,
+                    `Heart Rate: ${reading.rawVitals.heart_rate} BPM`,
+                    `HRV RMSSD: ${reading.rawVitals.hrv_rmssd ?? 'not measured'} ms`,
+                    `HRV LF/HF: ${reading.rawVitals.hrv_lfhf ?? 'not measured'}`,
+                    `Respiratory Rate: ${reading.rawVitals.respiratory_rate} RPM`,
+                    `Vagal Tone: ${reading.vagalTone}`,
+                    `Autonomic State: ${reading.autonomicBalance}`,
+                    `Chakra Field: ${reading.chakraState}`,
+                    `Blockage Location: ${reading.blockageLocation}`,
+                    `Scan Confidence: ${Math.round(reading.rawVitals.confidence * 100)}%`,
+                  ].join('\n');
+                  setLiveScanContext(ctx);
+                }}
+              />
+            </div>
+
+            {/* ── Old scan result display (palm AI scan) — keep below biometric scanner ── */}
+            {scanResult && (
             <div className="glass-card p-6 sm:p-7 qa-card-hover">
               <div className="mb-6 flex justify-between gap-3">
                 <div>
@@ -1208,8 +1247,8 @@ function QuantumApothecaryInner() {
                   <p className="mt-2 text-xs leading-[1.6] text-white/60">{t('quantumApothecary.scan.channelsMonitoring')}</p>
                 </div>
                 <Activity
-                  className={`h-5 w-5 shrink-0 ${scanPhase === 'camera' || scanPhase === 'analyzing' ? 'animate-pulse' : ''}`}
-                  style={{ color: scanPhase === 'camera' || scanPhase === 'analyzing' ? '#22D3EE' : '#D4AF37' }}
+                  className="h-5 w-5 shrink-0"
+                  style={{ color: '#D4AF37' }}
                   aria-hidden
                 />
               </div>
@@ -1509,6 +1548,7 @@ function QuantumApothecaryInner() {
                 </div>
               )}
             </div>
+            )}
 
             {/* ── Aetheric Mixer ── */}
             <div className="glass-card p-6 sm:p-7 qa-card-hover">

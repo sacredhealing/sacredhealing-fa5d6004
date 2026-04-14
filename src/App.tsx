@@ -143,6 +143,7 @@ const LifeBook = React.lazy(() => import("./pages/LifeBook"));
 const SriYantraShield = React.lazy(() => import("./pages/SriYantraShield"));
 const TempleHome = React.lazy(() => import("./pages/TempleHome"));
 const DigitalNadi = React.lazy(() => import("./pages/DigitalNadi"));
+const NadiScannerPage = React.lazy(() => import("./pages/NadiScannerPage"));
 const SoulScan = React.lazy(() => import("./pages/SoulScan"));
 const VayuProtocol = React.lazy(() => import("./pages/VayuProtocol"));
 const SiddhaPortal = React.lazy(() => import("./pages/SiddhaPortal"));
@@ -325,6 +326,7 @@ function AppRoutes() {
                   <Route path="/temple-home" element={<TempleHome />} />
                   <Route path="/social-automation" element={<SQISocialAutomation />} />
                   <Route path="/digital-nadi" element={<DigitalNadi />} />
+                  <Route path="/nadi-scanner" element={<NadiScannerPage />} />
                   <Route path="/soul-scan" element={<SoulScan />} />
                   <Route path="/vayu-protocol" element={<VayuProtocol />} />
                   <Route path="/siddha-portal" element={<SiddhaPortal />} />
