@@ -2633,6 +2633,54 @@ export type Database = {
         }
         Relationships: []
       }
+      jyotish_profiles: {
+        Row: {
+          birth_date: string | null
+          birth_place: string | null
+          birth_time: string | null
+          created_at: string
+          dasha_data: Json | null
+          ephemeris_confirmed: boolean | null
+          ephemeris_data: Json | null
+          id: string
+          moon_longitude: number | null
+          moon_nakshatra: string | null
+          nakshatra_progress: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          birth_date?: string | null
+          birth_place?: string | null
+          birth_time?: string | null
+          created_at?: string
+          dasha_data?: Json | null
+          ephemeris_confirmed?: boolean | null
+          ephemeris_data?: Json | null
+          id?: string
+          moon_longitude?: number | null
+          moon_nakshatra?: string | null
+          nakshatra_progress?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          birth_date?: string | null
+          birth_place?: string | null
+          birth_time?: string | null
+          created_at?: string
+          dasha_data?: Json | null
+          ephemeris_confirmed?: boolean | null
+          ephemeris_data?: Json | null
+          id?: string
+          moon_longitude?: number | null
+          moon_nakshatra?: string | null
+          nakshatra_progress?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       lesson_progress: {
         Row: {
           completed: boolean

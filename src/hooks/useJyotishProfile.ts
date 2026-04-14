@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from './useAuth';
 import { useAIVedicReading } from './useAIVedicReading';
+import { useEphemerisData } from './useEphemerisData';
 import { calculateMoonNakshatra } from '@/lib/vedicCalculations';
 import { supabase } from '@/integrations/supabase/client';
 import type { UserProfile } from '@/lib/vedicTypes';
@@ -24,6 +25,8 @@ export interface JyotishProfile {
   language: string;
   isLoading: boolean;
   userName: string;
+  dashaTree: any[];
+  mahaEnd: string | null;
 }
 
 // Map mahadasha planet to meditation type
@@ -258,6 +261,7 @@ export function getRealDasha(
 export function useJyotishProfile(): JyotishProfile {
   const { user: authUser } = useAuth();
   const { reading, isLoading: readingLoading, generateReading } = useAIVedicReading();
+  const { ephemeris, loading: ephemerisLoading } = useEphemerisData();
   const [isFreshForUser, setIsFreshForUser] = useState(true);
   const [birthDetailsLoading, setBirthDetailsLoading] = useState(false);
   const [birthData, setBirthData] = useState<CachedBirthData | null>(null);
@@ -393,9 +397,58 @@ export function useJyotishProfile(): JyotishProfile {
     };
   }, [authUser?.id, generateReading]);
 
-  const isLoading = birthDetailsLoading || readingLoading || !isFreshForUser;
+  const isLoading = birthDetailsLoading || readingLoading || ephemerisLoading || !isFreshForUser;
 
   return useMemo(() => {
+    // ── PRIORITY 1: Use confirmed ephemeris data if available ──
+    if (ephemeris?.moon_nakshatra) {
+      const nakshatra = ephemeris.moon_nakshatra;
+      const moonSign = NAKSHATRA_TO_MOON_SIGN[nakshatra] || 'Unknown';
+
+      // Extract dasha from ephemeris dasha_data
+      const dashaData = ephemeris.dasha_data;
+      const activeMaha = dashaData?.activeMaha;
+      const activeAntar = dashaData?.activeAntar;
+      const mahadasha = activeMaha?.planet || '';
+      const antardasha = activeAntar?.planet || '';
+
+      const activeYogas = (reading?.masterBlueprint?.significantYogas || []).map((y) => y.name);
+      const karmaFocus = reading?.masterBlueprint?.karmaPatterns
+        ? reading.masterBlueprint.karmaPatterns.split('.')[0].trim()
+        : (KARMA_FOCUS_MAP[mahadasha] || KARMA_FOCUS_MAP.Jupiter);
+      const healingFocus = reading?.masterBlueprint?.soulPurpose
+        ? reading.masterBlueprint.soulPurpose.split('.')[0]
+        : 'Energy center balancing';
+      const bhriguCycle = reading?.masterBlueprint?.sadeSatiStatus || '';
+      const primaryDosha = (moonSign !== 'Unknown' ? DOSHA_MAP[moonSign] : null) || 'Tridoshic';
+      const userName = authUser?.user_metadata?.full_name || 'Sacred Soul';
+      const language = (authUser?.user_metadata?.language as string) || 'en';
+
+      return {
+        nakshatra,
+        moonSign,
+        ascendant: 'Unknown',
+        mahadasha,
+        antardasha,
+        primaryDosha,
+        doshaImbalance: `${primaryDosha} aggravation`,
+        activeYogas,
+        bhriguCycle,
+        karmaFocus,
+        meditationType: MEDITATION_MAP[mahadasha] || 'Dhyana (deep meditation)',
+        healingFocus,
+        musicRaga: RAGA_MAP[mahadasha] || 'Raga Yaman',
+        musicFrequency: FREQ_MAP[mahadasha] || '528Hz',
+        mantraFocus: mahadasha ? `Om ${mahadasha}aya Namaha` : 'Om Gurave Namaha',
+        language,
+        isLoading,
+        userName,
+        dashaTree: dashaData?.dashaTree ?? [],
+        mahaEnd: activeMaha?.end ?? null,
+      };
+    }
+
+    // ── PRIORITY 2: Fallback to client-side calculation (legacy) ──
     const userId = authUser?.id;
     const birthCacheKey = getBirthCacheKey(userId);
     const cachedBirth = birthData || (
@@ -404,9 +457,7 @@ export function useJyotishProfile(): JyotishProfile {
         : null
     );
 
-    // ── AUTHORITATIVE: compute from birth data, IGNORE AI text ──
     const birthDateStr = cachedBirth?.birth_date ?? '';
-    // Only use the AI reading if it belongs to the current user (isFreshForUser guards against stale cross-user data).
     const rawReading = isFreshForUser ? (reading as any) : null;
     let moonNakshatra = normalizeNakshatraName(
       String(
@@ -419,7 +470,6 @@ export function useJyotishProfile(): JyotishProfile {
       )
     );
 
-    // Fallback: approximate nakshatra from birth date if AI didn't provide it
     if (!moonNakshatra && birthDateStr) {
       const birthDate = new Date(birthDateStr);
       if (!Number.isNaN(birthDate.getTime())) {
@@ -443,22 +493,15 @@ export function useJyotishProfile(): JyotishProfile {
       : { mahadasha: '', antardasha: '' };
 
     const nakshatra = String(moonNakshatra || '');
-
-    // Derive moon sign from nakshatra using the classical Vedic nakshatra→rashi table.
     const moonSign = NAKSHATRA_TO_MOON_SIGN[nakshatra] || 'Unknown';
-
     const activeYogas = (reading?.masterBlueprint?.significantYogas || []).map((y) => y.name);
-
     const karmaFocus = reading?.masterBlueprint?.karmaPatterns
       ? reading.masterBlueprint.karmaPatterns.split('.')[0].trim()
       : (KARMA_FOCUS_MAP[mahadasha] || KARMA_FOCUS_MAP.Jupiter);
-
     const healingFocus = reading?.masterBlueprint?.soulPurpose
       ? reading.masterBlueprint.soulPurpose.split('.')[0]
       : 'Energy center balancing';
-
     const bhriguCycle = reading?.masterBlueprint?.sadeSatiStatus || '';
-    // Use the moon sign derived from nakshatra; fall back to Tridoshic only if moon sign is unknown.
     const primaryDosha = (moonSign !== 'Unknown' ? DOSHA_MAP[moonSign] : null) || 'Tridoshic';
     const userName = authUser?.user_metadata?.full_name || 'Sacred Soul';
     const language = (authUser?.user_metadata?.language as string) || 'en';
@@ -482,6 +525,8 @@ export function useJyotishProfile(): JyotishProfile {
       language,
       isLoading,
       userName,
+      dashaTree: [] as any[],
+      mahaEnd: null as string | null,
     };
-  }, [authUser, birthData, isFreshForUser, isLoading, reading]);
+  }, [authUser, birthData, ephemeris, isFreshForUser, isLoading, reading]);
 }
