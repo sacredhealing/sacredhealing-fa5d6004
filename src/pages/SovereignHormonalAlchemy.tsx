@@ -1,6 +1,5 @@
-import WomanCodeDashboard from '@/components/WomanCodeDashboard';
+import QuantumNexusHormone from '@/components/QuantumNexusHormone';
 
 export default function SovereignHormonalAlchemy() {
-  return <WomanCodeDashboard />;
+  return <QuantumNexusHormone />;
 }
-
