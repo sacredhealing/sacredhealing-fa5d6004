@@ -732,7 +732,8 @@ interface MusicTrack {
   title: string;
   artist?: string;
   cover_image_url?: string | null;
-  audio_url?: string | null;
+  preview_url?: string | null;
+  full_audio_url?: string | null;
   genre?: string | null;
   hz_frequency?: number | null;
   tier_required?: string | null;
@@ -898,9 +899,9 @@ const Music: React.FC = () => {
       // Fetch from music_tracks table directly
       const { data, error } = await supabase
         .from('music_tracks')
-        .select('id, title, artist, cover_image_url, audio_url, genre, hz_frequency, tier_required, category, duration_seconds, shc_reward')
+        .select('id, title, artist, cover_image_url, preview_url, full_audio_url, genre, tier_required, category, duration_seconds, shc_reward')
         .order('created_at', { ascending: false });
-      if (data && !error) setTracks(data as MusicTrack[]);
+      if (data && !error) setTracks(data as unknown as MusicTrack[]);
     } catch (e) {
       console.error('Failed to fetch tracks', e);
     }
@@ -921,12 +922,14 @@ const Music: React.FC = () => {
 
   // ── Play handler ──
   const handlePlay = useCallback((track: MusicTrack) => {
-    if (!track.audio_url) return;
+    // Full access users get full_audio_url; free users get preview_url (30s snippet)
+    const audioSrc = hasMusicAccess ? (track.full_audio_url || track.preview_url) : track.preview_url;
+    if (!audioSrc) return;
     if (snippetTimerRef.current) { clearTimeout(snippetTimerRef.current); snippetTimerRef.current = null; }
     playUniversalAudio({
       id: track.id,
       title: track.title,
-      audio_url: track.audio_url,
+      audio_url: audioSrc,
       artist: track.artist || 'Kritagya Das',
       cover_image_url: track.cover_image_url || null,
       duration_seconds: track.duration_seconds || 0,
