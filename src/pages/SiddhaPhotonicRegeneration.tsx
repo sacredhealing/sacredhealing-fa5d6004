@@ -95,10 +95,10 @@ function clearFromLocalStorage(userId: string) {
   try { localStorage.removeItem(lsKey(userId)); } catch {}
 }
 
-/* Supabase sync — stores into profiles.user_profile JSON column */
+/* Supabase sync — stores into profiles.user_profile JSON column + photonic_sessions table */
 async function syncToSupabase(userId: string, session: PhotonicSession) {
   try {
-    // We merge into user_profile so we don't overwrite other fields
+    // Merge into user_profile (legacy storage)
     const { data: existing } = await supabase
       .from('profiles')
       .select('user_profile')
@@ -112,6 +112,20 @@ async function syncToSupabase(userId: string, session: PhotonicSession) {
       .from('profiles')
       .upsert({ user_id: userId, user_profile: updated, dosha_profile: (existing as any)?.dosha_profile || {} })
       .eq('user_id', userId);
+
+    // Also save to dedicated photonic_sessions table (SQI field context — migration may be pending)
+    try {
+      await supabase.from('photonic_sessions').insert({
+        user_id: userId,
+        active_protocol: 'Biophotonic Nadi Entanglement',
+        light_code_active: session.isEntangled,
+        frequency: 369,
+        cellular_target: 'Mitochondrial activation — Nadi harmonic entrainment',
+        session_duration: 0,
+        photon_density: 'High',
+        created_at: new Date(session.entangledAt).toISOString(),
+      });
+    } catch { /* photonic_sessions table may not exist yet — silently skip */ }
   } catch (e) {
     // Silent fail — localStorage keeps things alive offline
     console.warn('Photonic session Supabase sync failed (offline?):', e);

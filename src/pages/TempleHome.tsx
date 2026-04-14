@@ -726,6 +726,16 @@ function TempleHomeInner() {
           details: { place: site?.title ?? selectedSite, frequency: `${auraIntensity}% intensity`, intention: site?.primaryBenefit ?? '' },
         },
       }).then(() => {});
+
+      // Also upsert to temple_home_sessions (SQI unified field context — migration may be pending)
+      supabase.from('temple_home_sessions').upsert({
+        user_id: user.id,
+        active_site: site?.title ?? selectedSite,
+        site_essence: site?.primaryBenefit ?? '',
+        intensity: auraIntensity,
+        crystal_grid_active: crystalDone,
+        anchored_since: new Date().toISOString(),
+      }, { onConflict: 'user_id' }).then(() => {}).catch(() => {});
     }
   }, [crystalDone, user, selectedSite, currentMode, auraIntensity]);
 

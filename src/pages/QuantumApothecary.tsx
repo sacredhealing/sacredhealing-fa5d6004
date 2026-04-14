@@ -842,12 +842,26 @@ function QuantumApothecaryInner() {
       } catch (err) { console.error('Failed to persist SQI session', err); }
     };
     try {
-      // Build enriched context: live biometric scan + SQI field (temple/photonic/ayurveda) + birth chart
-      const fieldParts: string[] = [];
+      // Build enriched context: live datetime + biometric scan + SQI field + birth chart
+      const _now = new Date();
+      const _tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const liveDateTime = _now.toLocaleString('en-GB', {
+        timeZone: _tz,
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      });
+      const liveContext = `LIVE SYSTEM TIME: ${liveDateTime} (${_tz}). This is the CONFIRMED real current time. Use ONLY this. Do NOT calculate or guess the date/time/day yourself.`;
+
+      const fieldParts: string[] = [liveContext];
       if (liveScanContext) fieldParts.push(liveScanContext);
       if (sqiField.compiledContext) fieldParts.push(sqiField.compiledContext);
       if (jyotishContext) fieldParts.push(jyotishContext);
-      const enrichedJyotishContext = fieldParts.length > 0 ? fieldParts.join('\n\n') : undefined;
+      const enrichedJyotishContext = fieldParts.join('\n\n');
 
       await streamChatWithSQI(
         allMsgs,
@@ -1034,16 +1048,18 @@ function QuantumApothecaryInner() {
               return (
               <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div
-                  className={`${msg.role === 'user' ? 'max-w-[80%]' : 'max-w-full w-full'} ${
-                    msg.role === 'user'
-                      ? 'rounded-[28px] rounded-tr-none border border-[#D4AF37]/35 bg-gradient-to-br from-[#F5E17A] to-[#B8960C] text-[#050505] shadow-[0_0_28px_rgba(212,175,55,0.25)]'
-                      : 'w-full rounded-[28px] rounded-tl-none border border-white/[0.08] bg-white/[0.04] p-4 text-white/65'
-                  }`}
-                  style={{ padding: msg.role === 'user' ? '12px 14px' : undefined }}
-                >
-                  <div className="markdown-body">{renderChatText(msg.text, msg.role === 'user' ? 'user' : 'model')}</div>
-                </div>
+                {msg.role === 'user' ? (
+                  <div className="ml-auto max-w-[80%] px-5 py-3 rounded-[20px] bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-white/90 text-sm leading-relaxed">
+                    <div className="markdown-body">{renderChatText(msg.text, 'user')}</div>
+                  </div>
+                ) : (
+                  <div className="w-full">
+                    <p className="text-[8px] font-extrabold tracking-[0.3em] uppercase text-[#D4AF37]/70 mb-2">SQI · AKASHA ARCHIVE</p>
+                    <div className="glass-card p-5 rounded-[20px] border border-white/[0.05] bg-white/[0.02] text-white/85 text-sm leading-[1.8] font-light">
+                      <div className="markdown-body">{renderChatText(msg.text, 'model')}</div>
+                    </div>
+                  </div>
+                )}
               </motion.div>
               );
             })}
@@ -1107,17 +1123,16 @@ function QuantumApothecaryInner() {
             <Mic size={15} />
           </button>
           {isRecording && <span className="shrink-0 text-[10px] font-bold uppercase tracking-widest text-red-400">Listening…</span>}
-          <div className="relative min-w-0 flex-1">
+          <div className="flex items-end gap-3 flex-1 p-4 bg-white/[0.02] border border-white/[0.05] rounded-[24px] backdrop-blur-xl">
             <textarea
               ref={chatInputRef}
               rows={1}
               value={input}
               onChange={(e) => {
                 setInput(e.target.value);
-                // Auto-expand: reset to 1 row then grow to fit content (max ~6 rows)
                 const el = e.target;
                 el.style.height = 'auto';
-                el.style.height = `${Math.min(el.scrollHeight, 144)}px`;
+                el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -1126,15 +1141,15 @@ function QuantumApothecaryInner() {
                 }
               }}
               onFocus={handleChatFocus}
-              placeholder={t('quantumApothecary.chat.placeholder')}
+              placeholder="Ask the Akasha-Archive..."
               style={{ resize: 'none', overflowY: 'hidden' }}
-              className="w-full rounded-[24px] border border-white/[0.08] bg-white/[0.04] py-3.5 pl-5 pr-14 text-sm leading-[1.6] text-white placeholder:text-white/30 focus:border-[#D4AF37]/35 focus:outline-none focus:ring-1 focus:ring-[#D4AF37]/20"
+              className="w-full bg-transparent border-none outline-none text-white/90 placeholder:text-white/30 text-sm font-normal leading-relaxed min-h-[28px] max-h-[160px] focus:outline-none"
             />
             <button
               type="button"
               onClick={() => handleSendMessage()}
               disabled={(!input.trim() && !pendingImage) || isTyping}
-              className="absolute bottom-2 right-2 rounded-xl border border-[#D4AF37]/40 bg-gradient-to-b from-[#F5E17A] to-[#B8960C] px-3 py-2 text-[#050505] shadow-[0_0_16px_rgba(212,175,55,0.25)] transition-all disabled:opacity-30 sm:px-4"
+              className="flex-shrink-0 w-11 h-11 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] hover:bg-[#D4AF37]/20 hover:border-[#D4AF37]/60 transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label={t('quantumApothecary.chat.send')}
             >
               <Send size={15} />

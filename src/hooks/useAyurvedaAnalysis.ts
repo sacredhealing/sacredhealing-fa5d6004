@@ -69,15 +69,25 @@ export function useAyurvedaAnalysis(): UseAyurvedaAnalysisResult {
         .eq('user_id', user.id)
         .maybeSingle();
 
+      // Shared payload — includes explicit SQI field columns (added by migration)
+      // gracefully ignored by Supabase if columns don't exist yet
+      const sharedPayload: Record<string, unknown> = {
+        user_profile: userProf as unknown as Json,
+        dosha_profile: doshaProf as unknown as Json,
+        updated_at: new Date().toISOString(),
+        // SQI unified field context columns
+        prakriti: doshaProf.primary ?? null,
+        vata_percent: Math.round(doshaProf.vata ?? 0),
+        pitta_percent: Math.round(doshaProf.pitta ?? 0),
+        kapha_percent: Math.round(doshaProf.kapha ?? 0),
+        dominant_dosha: doshaProf.primary ?? null,
+      };
+
       if (existing) {
         // Update existing
         const { error: updateError } = await supabase
           .from('ayurveda_profiles')
-          .update({
-            user_profile: userProf as unknown as Json,
-            dosha_profile: doshaProf as unknown as Json,
-            updated_at: new Date().toISOString(),
-          })
+          .update(sharedPayload)
           .eq('user_id', user.id);
 
         if (updateError) {
@@ -87,11 +97,7 @@ export function useAyurvedaAnalysis(): UseAyurvedaAnalysisResult {
         // Insert new
         const { error: insertError } = await supabase
           .from('ayurveda_profiles')
-          .insert({
-            user_id: user.id,
-            user_profile: userProf as unknown as Json,
-            dosha_profile: doshaProf as unknown as Json,
-          });
+          .insert({ user_id: user.id, ...sharedPayload });
 
         if (insertError) {
           console.error('Error saving Prakriti:', insertError);
