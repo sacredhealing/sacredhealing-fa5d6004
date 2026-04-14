@@ -200,8 +200,7 @@ const PolymarketBotDetailInner: React.FC = () => {
   const [importInput, setImportInput] = useState('');
   const [inputError, setInputError] = useState<string | null>(null);
   const [polBal, setPolBal] = useState<string>('0.0000');
-  const [usdcEBal, setUsdcEBal] = useState<string>('0.00');
-  const [usdcNBal, setUsdcNBal] = useState<string>('0.00');
+  const [usdcBal, setUsdcBal] = useState<string>('0.00');
   const [allowance, setAllowance] = useState<bigint>(0n);
   const [trading] = useState(() => new PolymarketTrading());
   const [markets, setMarkets] = useState<PolymarketMarket[]>([]);
@@ -298,27 +297,18 @@ const PolymarketBotDetailInner: React.FC = () => {
         }
         await new Promise((r) => setTimeout(r, 200));
         try {
+          // Native USDC (0x3c499c...) — the only USDC Polymarket supports on Polygon
           const c = new ethers.Contract(POLYGON_ADDRESSES.USDC_NATIVE, ERC20_ABI, provider);
-          const r = await c.balanceOf(activeAddr);
-          const v = parseFloat(ethers.formatUnits(r, 6)).toFixed(2);
-          setUsdcNBal(v);
-          addLog(`Native USDC: $${v}`, 'debug');
-        } catch {
-          addLog('Failed to fetch Native USDC', 'warn');
-        }
-        await new Promise((r) => setTimeout(r, 200));
-        try {
-          const c = new ethers.Contract(POLYGON_ADDRESSES.USDC_E, ERC20_ABI, provider);
-          const [rE, rA] = await Promise.all([
+          const [rBal, rAllowance] = await Promise.all([
             c.balanceOf(activeAddr),
             c.allowance(activeAddr, POLYGON_ADDRESSES.CTF_EXCHANGE),
           ]);
-          const v = parseFloat(ethers.formatUnits(rE, 6)).toFixed(2);
-          setUsdcEBal(v);
-          setAllowance(rA);
-          addLog(`Bridged USDC.e: $${v} | Allowance: ${rA > 0n ? 'Approved' : 'Pending'}`, 'debug');
+          const v = parseFloat(ethers.formatUnits(rBal, 6)).toFixed(2);
+          setUsdcBal(v);
+          setAllowance(rAllowance);
+          addLog(`Native USDC: $${v} | CTF Allowance: ${rAllowance > 0n ? 'Approved ✓' : 'Needs approval'}`, 'debug');
         } catch {
-          addLog('Failed to fetch USDC.e balance', 'warn');
+          addLog('Failed to fetch USDC balance', 'warn');
         }
         setLastSync(new Date().toLocaleTimeString());
         addLog(`Synced: ${activeAddr.slice(0, 10)}...${activeAddr.slice(-6)}`, 'success');
@@ -414,7 +404,7 @@ const PolymarketBotDetailInner: React.FC = () => {
       return false;
     }
     if (allowance === 0n) {
-      addLog('Cannot trade: USDC.e not approved', 'error');
+      addLog('Cannot trade: USDC not approved for CTF Exchange', 'error');
       return false;
     }
     const result = await trading.executeTrade(signal);
@@ -489,7 +479,7 @@ const PolymarketBotDetailInner: React.FC = () => {
         volatilityScalperService.stopScalping();
       };
     }
-  }, [isRunning, address, allowance, usdcEBal, trading, addLog]);
+  }, [isRunning, address, allowance, usdcBal, trading, addLog]);
 
   const handleImport = () => {
     let key = importInput.trim();
@@ -511,7 +501,7 @@ const PolymarketBotDetailInner: React.FC = () => {
   const handleApprove = async () => {
     if (!privateKey) return;
     setIsApproving(true);
-    addLog('Initiating USDC.e approval transaction...', 'info');
+    addLog('Initiating USDC approval for CTF Exchange...', 'info');
     try {
       for (const rpc of RPC_POOL) {
         try {
@@ -564,11 +554,11 @@ const PolymarketBotDetailInner: React.FC = () => {
     if (!isRunning) {
       if (!isPaperMode) {
         if (allowance === 0n) {
-          toast.error('Approve USDC.e first to enable live trading');
+          toast.error('Approve USDC for CTF Exchange first — click Approve button');
           return;
         }
-        if (parseFloat(usdcEBal) < 5) {
-          toast.error('Minimum $5 USDC.e required for live trading');
+        if (parseFloat(usdcBal) < 5) {
+          toast.error(`Minimum $5 USDC required for live trading (balance: $${usdcBal})`);
           return;
         }
       }
@@ -694,13 +684,13 @@ const PolymarketBotDetailInner: React.FC = () => {
                 <div className="lbl" style={{ marginBottom: 4 }}>POL Gas</div>
                 <div style={{ fontFamily: 'monospace', fontWeight: 900, fontSize: 14, color: parseFloat(polBal) > 0.01 ? GREEN : RED }}>{polBal}</div>
               </div>
-              <div className="gc gc-c" style={{ padding: '12px', textAlign: 'center', borderRadius: 16 }}>
-                <div className="lbl" style={{ marginBottom: 4, color: CYAN }}>USDC</div>
-                <div style={{ fontFamily: 'monospace', fontWeight: 900, fontSize: 14, color: CYAN }}>${usdcNBal}</div>
+              <div className="gc" style={{ padding: '12px', textAlign: 'center', borderRadius: 16, borderColor: parseFloat(usdcBal) >= 5 ? 'rgba(212,175,55,0.22)' : parseFloat(usdcBal) > 0 ? 'rgba(245,158,11,0.22)' : 'rgba(255,255,255,0.06)' }}>
+                <div className="lbl" style={{ marginBottom: 4, color: parseFloat(usdcBal) >= 5 ? G : AMBER }}>USDC</div>
+                <div style={{ fontFamily: 'monospace', fontWeight: 900, fontSize: 14, color: parseFloat(usdcBal) >= 5 ? G : parseFloat(usdcBal) > 0 ? AMBER : 'rgba(255,255,255,0.25)' }}>${usdcBal}</div>
               </div>
-              <div className="gc" style={{ padding: '12px', textAlign: 'center', borderRadius: 16, borderColor: parseFloat(usdcEBal) > 0 ? 'rgba(212,175,55,0.22)' : 'rgba(255,255,255,0.06)' }}>
-                <div className="lbl" style={{ marginBottom: 4 }}>USDC.e</div>
-                <div style={{ fontFamily: 'monospace', fontWeight: 900, fontSize: 14, color: parseFloat(usdcEBal) > 0 ? G : 'rgba(255,255,255,0.25)' }}>${usdcEBal}</div>
+              <div className="gc" style={{ padding: '12px', textAlign: 'center', borderRadius: 16, borderColor: allowance > 0n ? 'rgba(52,211,153,0.2)' : 'rgba(255,255,255,0.06)' }}>
+                <div className="lbl" style={{ marginBottom: 4, color: allowance > 0n ? '#34D399' : 'rgba(255,255,255,0.4)' }}>CTF Approval</div>
+                <div style={{ fontFamily: 'monospace', fontWeight: 900, fontSize: 12, color: allowance > 0n ? '#34D399' : RED }}>{allowance > 0n ? '✓ Ready' : 'Needed'}</div>
               </div>
             </div>
 
@@ -734,29 +724,29 @@ const PolymarketBotDetailInner: React.FC = () => {
               <button type="button" className="btn btn-ghost" onClick={clearVault}><Trash2 size={14} /></button>
             </div>
 
-            {parseFloat(usdcEBal) > 0 && allowance === 0n && (
+            {parseFloat(usdcBal) > 0 && allowance === 0n && (
               <div className="gc gc-a" style={{ marginBottom: 12, padding: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <AlertCircle size={18} color={AMBER} />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 800, fontSize: 13, color: '#fff', marginBottom: 2 }}>CTF Exchange Approval Required</div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>Approve USDC.e to trade on Polymarket</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>Approve USDC (native) for Polymarket CTF Exchange — one-time transaction</div>
                   </div>
                   <button type="button" className="btn btn-g" style={{ width: 'auto', padding: '8px 14px' }} onClick={handleApprove} disabled={isApproving || parseFloat(polBal) < 0.01}>
                     {isApproving ? 'Signing...' : 'Approve'}
                   </button>
                 </div>
-                {parseFloat(polBal) < 0.01 && <div style={{ fontSize: 11, color: RED, marginTop: 8 }}>⚠ Need POL for gas fees</div>}
+                {parseFloat(polBal) < 0.01 && <div style={{ fontSize: 11, color: RED, marginTop: 8 }}>⚠ Need POL for gas fees to sign the approval</div>}
               </div>
             )}
 
-            {parseFloat(usdcEBal) === 0 && parseFloat(usdcNBal) === 0 && (
+            {parseFloat(usdcBal) === 0 && (
               <div className="gc" style={{ marginBottom: 12, padding: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <DollarSign size={18} color="rgba(255,255,255,0.25)" />
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: 13, color: '#fff', marginBottom: 2 }}>No Trading Funds</div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>Deposit USDC.e to start live trading. Paper mode works without funds.</div>
+                    <div style={{ fontWeight: 800, fontSize: 13, color: '#fff', marginBottom: 2 }}>No USDC Balance Detected</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>Deposit native USDC (not USDC.e) to this wallet on Polygon. Paper mode works without funds.</div>
                   </div>
                 </div>
               </div>
@@ -832,7 +822,7 @@ const PolymarketBotDetailInner: React.FC = () => {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div>
                     <div style={{ fontWeight: 800, fontSize: 14, color: '#fff', marginBottom: 4 }}>{isPaperMode ? '📝 Paper Trading' : '💰 Live Trading'}</div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>{isPaperMode ? 'Simulated — no real money at risk' : 'Real trades with your USDC.e balance'}</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>{isPaperMode ? 'Simulated — no real money at risk' : `Real trades · USDC balance: $${usdcBal}`}</div>
                   </div>
                   <button type="button" className={`btn ${isPaperMode ? 'btn-g' : 'btn-r'}`} style={{ width: 'auto', padding: '8px 14px' }} onClick={toggleTradingMode} disabled={isRunning}>
                     {isPaperMode ? 'Go Live' : 'Go Paper'}
@@ -858,11 +848,11 @@ const PolymarketBotDetailInner: React.FC = () => {
                   </span>
                 </div>
 
-                {parseFloat(usdcNBal) > 0.01 && parseFloat(usdcEBal) < 5 && (
+                {parseFloat(usdcBal) >= 5 && allowance === 0n && (
                   <div className="gc gc-a" style={{ marginBottom: 14, padding: 12 }}>
-                    <div style={{ fontSize: 11, fontWeight: 800, color: AMBER, marginBottom: 8 }}>Swap USDC → USDC.e for trading</div>
-                    <button type="button" className="btn btn-ghost" style={{ fontSize: 10 }} onClick={() => window.open(`https://app.uniswap.org/#/swap?inputCurrency=${POLYGON_ADDRESSES.USDC_NATIVE}&outputCurrency=${POLYGON_ADDRESSES.USDC_E}&chain=polygon`, '_blank')}>
-                      <ExternalLink size={12} /> Swap on Uniswap
+                    <div style={{ fontSize: 11, fontWeight: 800, color: AMBER, marginBottom: 8 }}>⚡ USDC found — one approval needed to unlock live trading</div>
+                    <button type="button" className="btn btn-g" style={{ fontSize: 10, width: 'auto', padding: '6px 12px' }} onClick={handleApprove} disabled={isApproving || parseFloat(polBal) < 0.01}>
+                      {isApproving ? 'Signing...' : 'Approve USDC for CTF Exchange'}
                     </button>
                   </div>
                 )}
