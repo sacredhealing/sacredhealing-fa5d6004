@@ -20,6 +20,7 @@ import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import AudioUpload from '@/components/admin/AudioUpload';
+import ImageUpload from '@/components/admin/ImageUpload';
 
 /* ── inline styles ── */
 const CSS = `
@@ -472,11 +473,14 @@ const AdminMantras = () => {
                   />
                 </div>
 
-                {/* Cover Image URL */}
-                <div>
-                  <div className="am-kicker" style={{ marginBottom: 6 }}>Cover Image URL</div>
-                  <Input className="am-input h-11" value={formData.cover_image_url} onChange={(e) => setFormData({ ...formData, cover_image_url: e.target.value })} placeholder="https://..." />
-                </div>
+                {/* Cover Image — upload or paste URL */}
+                <ImageUpload
+                  value={formData.cover_image_url}
+                  onChange={(url) => setFormData({ ...formData, cover_image_url: url })}
+                  folder="mantra-covers"
+                  label="Cover Image"
+                  aspectRatio="16/9"
+                />
 
                 {/* Duration + SHC */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
