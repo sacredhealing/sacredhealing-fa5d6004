@@ -358,22 +358,59 @@ export default function NadiScanner({ userName = "Seeker", jyotishContext, onSca
     };
   }, []);
 
+  // Stable ref for capture interval so it survives re-renders
+  const captureIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   // ── Start Scan ─────────────────────────────────────────────────
-  const startScan = useCallback(async () => {
+  // e is optional — handles both button onClick and direct calls
+  const startScan = useCallback(async (e?: React.MouseEvent) => {
+    // CRITICAL: prevent any parent form submission / page reload
+    e?.preventDefault();
+    e?.stopPropagation();
+
     setPhase("requesting");
     setErrorMsg("");
     framesRef.current = [];
 
+    // Clear any lingering intervals from previous scan
+    if (captureIntervalRef.current) clearInterval(captureIntervalRef.current);
+    if (timerRef.current) clearInterval(timerRef.current);
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 320, height: 240, frameRate: 30, facingMode: "user" },
-        audio: false,
-      });
+      // ── Front camera — explicit with fallback ──────────────────
+      // Try exact front camera first, fall back to ideal if device
+      // doesn't support exact constraint (common on some Android)
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { exact: "user" }, // FRONT camera, exact
+            width: { ideal: 320 },
+            height: { ideal: 240 },
+            frameRate: { ideal: 30 },
+          },
+          audio: false,
+        });
+      } catch {
+        // Fallback — ideal (not exact) in case exact fails on device
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: "user", // FRONT camera, ideal
+            width: { ideal: 320 },
+            height: { ideal: 240 },
+          },
+          audio: false,
+        });
+      }
+
       streamRef.current = stream;
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        await videoRef.current.play();
+        // Prevent video element from causing any navigation
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play().catch(() => {});
+        };
         setStreamActive(true);
       }
 
@@ -381,8 +418,8 @@ export default function NadiScanner({ userName = "Seeker", jyotishContext, onSca
       setCountdown(scanDuration);
       setScanProgress(0);
 
-      // Capture frames at ~15fps for 30 seconds
-      const captureInterval = setInterval(() => {
+      // ── Capture frames at ~15fps ───────────────────────────────
+      captureIntervalRef.current = setInterval(() => {
         if (!videoRef.current || !canvasRef.current) return;
         const ctx = canvasRef.current.getContext("2d");
         if (!ctx) return;
@@ -390,7 +427,7 @@ export default function NadiScanner({ userName = "Seeker", jyotishContext, onSca
         framesRef.current.push(ctx.getImageData(0, 0, 80, 60));
       }, 67); // ~15fps
 
-      // Countdown
+      // ── Countdown ─────────────────────────────────────────────
       let elapsed = 0;
       timerRef.current = setInterval(() => {
         elapsed += 1;
@@ -398,17 +435,20 @@ export default function NadiScanner({ userName = "Seeker", jyotishContext, onSca
         setScanProgress((elapsed / scanDuration) * 100);
 
         if (elapsed >= scanDuration) {
+          // Stop everything cleanly
           clearInterval(timerRef.current!);
-          clearInterval(captureInterval);
+          clearInterval(captureIntervalRef.current!);
+          captureIntervalRef.current = null;
+          timerRef.current = null;
           stopStream();
           setPhase("processing");
 
-          // Process after brief delay for UX
+          // Process after brief UX delay — setTimeout does NOT
+          // cause a page reload, it's purely async
           setTimeout(() => {
             const vitals = processFrames(framesRef.current);
             const nadiReading = translateToNadi(vitals);
 
-            // Cross-reference with Jyotish if available
             if (jyotishContext?.mahadasha) {
               const dashaBoosts: Record<string, keyof typeof NADI_COLORS> = {
                 Sun: "Pingala", Mars: "Pingala", Ketu: "Pingala",
@@ -416,8 +456,8 @@ export default function NadiScanner({ userName = "Seeker", jyotishContext, onSca
                 Jupiter: "Sushumna", Mercury: "Sushumna",
                 Saturn: "Blocked", Rahu: "Blocked",
               };
-              // Informational only — doesn't override biometric result
-              (nadiReading as any).jyotishInfluence = dashaBoosts[jyotishContext.mahadasha] ?? "Sushumna";
+              (nadiReading as any).jyotishInfluence =
+                dashaBoosts[jyotishContext.mahadasha] ?? "Sushumna";
             }
 
             setReading(nadiReading);
@@ -428,7 +468,16 @@ export default function NadiScanner({ userName = "Seeker", jyotishContext, onSca
       }, 1000);
 
     } catch (err: any) {
-      setErrorMsg(err.message?.includes("Permission") ? "Camera access denied. Allow camera to proceed." : "Camera unavailable on this device.");
+      const msg = err?.message ?? "";
+      if (msg.includes("Permission") || msg.includes("NotAllowed")) {
+        setErrorMsg("Camera access denied. Tap Allow when your browser asks.");
+      } else if (msg.includes("NotFound") || msg.includes("DevicesNotFound")) {
+        setErrorMsg("No camera found on this device.");
+      } else if (msg.includes("NotReadable") || msg.includes("TrackStart")) {
+        setErrorMsg("Camera is in use by another app. Close it and try again.");
+      } else {
+        setErrorMsg("Camera unavailable. Check browser permissions.");
+      }
       setPhase("error");
     }
   }, [processFrames, stopStream, jyotishContext, onScanComplete]);
@@ -556,7 +605,9 @@ export default function NadiScanner({ userName = "Seeker", jyotishContext, onSca
             No data stored. Camera access required.
           </p>
 
-          <button onClick={startScan}
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); startScan(e); }}
             className="w-full py-4 rounded-[20px] text-sm font-black tracking-[0.15em] uppercase transition-all duration-500 scan-ring"
             style={{
               background: "linear-gradient(135deg, rgba(212,175,55,0.15), rgba(212,175,55,0.05))",
@@ -839,7 +890,9 @@ export default function NadiScanner({ userName = "Seeker", jyotishContext, onSca
                 <span className="text-[9px] text-white/30 font-normal ml-1">· rPPG signal quality</span>
               </p>
             </div>
-            <button onClick={reset}
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); reset(); }}
               className="px-5 py-2.5 rounded-full text-[10px] font-black tracking-[0.2em] uppercase transition-all duration-300"
               style={{
                 background: "rgba(212,175,55,0.08)",
@@ -866,7 +919,9 @@ export default function NadiScanner({ userName = "Seeker", jyotishContext, onSca
             Scan Interrupted
           </p>
           <p className="text-sm text-white/50 mb-6">{errorMsg}</p>
-          <button onClick={reset}
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); reset(); }}
             className="px-6 py-3 rounded-full text-[10px] font-black tracking-[0.2em] uppercase"
             style={{
               background: "rgba(212,175,55,0.08)",
