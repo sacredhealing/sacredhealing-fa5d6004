@@ -183,33 +183,145 @@ const CSS = `
   }
 `;
 
+/* ─────────────────────────────────────────────────────────────────
+   SQI-2050 Sacred SVG Icon System
+   Each icon is a tiny inline SVG — crisp at any size, no emoji pixelation
+───────────────────────────────────────────────────────────────── */
+const SvgIcons: Record<string, (color: string, size?: number) => React.ReactElement> = {
+  /** Navagraha / Planetary — 9-pointed star (celestial body symbol) */
+  planet: (c, s = 20) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="3.5" fill={c} opacity=".9"/>
+      <ellipse cx="12" cy="12" rx="10" ry="4" stroke={c} strokeWidth="1.2" fill="none" transform="rotate(-25 12 12)" opacity=".7"/>
+      <circle cx="12" cy="12" r="7.5" stroke={c} strokeWidth=".7" fill="none" strokeDasharray="2 3" opacity=".4"/>
+      <circle cx="12" cy="2.5" r="1.2" fill={c} opacity=".6"/>
+      <circle cx="20.5" cy="7" r="1" fill={c} opacity=".5"/>
+      <circle cx="20.5" cy="17" r="1" fill={c} opacity=".5"/>
+      <circle cx="12" cy="21.5" r="1.2" fill={c} opacity=".6"/>
+      <circle cx="3.5" cy="17" r="1" fill={c} opacity=".5"/>
+      <circle cx="3.5" cy="7" r="1" fill={c} opacity=".5"/>
+    </svg>
+  ),
+  /** Deity — Om / Aum glyph rendered as sacred geometry */
+  deity: (c, s = 20) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M5 10.5C5 8.5 6.5 7 8.5 7C10.5 7 12 8.5 12 10.5C12 12.5 10 14 8 15.5C10 15.5 14 15.5 16 13C17.5 11 16.5 8.5 15 8C17 7.5 19 9 19 11.5C19 14 17 16.5 14 17.5L13 19.5C12.5 20.5 11.5 20.5 11 19.5" stroke={c} strokeWidth="1.3" strokeLinecap="round" fill="none" opacity=".9"/>
+      <path d="M12 4.5C12 4.5 13.5 3.5 15 4.5" stroke={c} strokeWidth="1.2" strokeLinecap="round" opacity=".7"/>
+      <circle cx="12.5" cy="3.2" r="1" fill={c} opacity=".8"/>
+    </svg>
+  ),
+  /** Intention — Lotus with 8 petals (Ashtadala Padma) */
+  intention: (c, s = 20) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="2.8" fill={c} opacity=".85"/>
+      {[0,45,90,135,180,225,270,315].map((deg, i) => {
+        const rad = (deg * Math.PI) / 180;
+        const x = 12 + 5.5 * Math.sin(rad);
+        const y = 12 - 5.5 * Math.cos(rad);
+        return <ellipse key={i} cx={x} cy={y} rx="2" ry="3.5" fill={c} opacity=".45" transform={`rotate(${deg} ${x} ${y})`} />;
+      })}
+      <circle cx="12" cy="12" r="4.2" stroke={c} strokeWidth=".6" fill="none" opacity=".35"/>
+    </svg>
+  ),
+  /** Karma / Healing — Sri Yantra triangle (downward + upward) */
+  karma: (c, s = 20) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="12,3 22,20 2,20" stroke={c} strokeWidth="1.1" fill="none" opacity=".7"/>
+      <polygon points="12,21 2,4 22,4" stroke={c} strokeWidth="1.1" fill="none" opacity=".7"/>
+      <circle cx="12" cy="12" r="2.5" fill={c} opacity=".85"/>
+      <circle cx="12" cy="12" r="6" stroke={c} strokeWidth=".6" fill="none" opacity=".3"/>
+    </svg>
+  ),
+  /** Wealth — Shri Yantra bindu with 6-pointed star (Lakshmi) */
+  wealth: (c, s = 20) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="12,2 14.8,9.2 22.4,9.2 16.8,14 18.9,21.5 12,17.3 5.1,21.5 7.2,14 1.6,9.2 9.2,9.2" stroke={c} strokeWidth="1" fill={c} fillOpacity=".12" opacity=".9"/>
+      <circle cx="12" cy="12" r="3" fill={c} opacity=".8"/>
+    </svg>
+  ),
+  /** Health — Caduceus / DNA helix (Vedic medicine) */
+  health: (c, s = 20) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 3V21" stroke={c} strokeWidth="1.4" strokeLinecap="round"/>
+      <path d="M7 6C10 8 14 8 17 6" stroke={c} strokeWidth="1.1" strokeLinecap="round" fill="none" opacity=".75"/>
+      <path d="M17 10C14 12 10 12 7 10" stroke={c} strokeWidth="1.1" strokeLinecap="round" fill="none" opacity=".75"/>
+      <path d="M7 14C10 16 14 16 17 14" stroke={c} strokeWidth="1.1" strokeLinecap="round" fill="none" opacity=".75"/>
+      <path d="M17 18C14 20 10 20 7 18" stroke={c} strokeWidth="1.1" strokeLinecap="round" fill="none" opacity=".75"/>
+      <circle cx="12" cy="3" r="1.5" fill={c}/>
+    </svg>
+  ),
+  /** Peace — Hamsa eye (palm of Fatima, eye of protection) */
+  peace: (c, s = 20) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 4C8 4 4 8 4 12C4 16 8 20 12 20C16 20 20 16 20 12C20 8 16 4 12 4Z" stroke={c} strokeWidth="1" fill={c} fillOpacity=".08"/>
+      <path d="M4 12C4 12 7 8 12 8C17 8 20 12 20 12C20 12 17 16 12 16C7 16 4 12 4 12Z" stroke={c} strokeWidth="1.1" fill="none" opacity=".7"/>
+      <circle cx="12" cy="12" r="2.5" fill={c} opacity=".9"/>
+      <circle cx="12" cy="12" r="1" fill={c} opacity=".4"/>
+      <path d="M10.5 6C10.5 6 11 3.5 12 2.5C13 3.5 13.5 6 13.5 6" stroke={c} strokeWidth=".9" strokeLinecap="round" fill="none" opacity=".5"/>
+    </svg>
+  ),
+  /** Protection — Yantra shield with Kavacha geometry */
+  protection: (c, s = 20) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2L20 6V13C20 17.4 16.4 21.2 12 22C7.6 21.2 4 17.4 4 13V6L12 2Z" stroke={c} strokeWidth="1.2" fill={c} fillOpacity=".08" opacity=".9"/>
+      <path d="M12 5L17 7.5V12.5C17 15.2 14.8 17.7 12 18.5C9.2 17.7 7 15.2 7 12.5V7.5L12 5Z" stroke={c} strokeWidth=".7" fill="none" opacity=".45"/>
+      <path d="M9 12L11 14L15 10" stroke={c} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" opacity=".85"/>
+    </svg>
+  ),
+  /** Spiritual — Merkaba / Star Tetrahedron (light body) */
+  spiritual: (c, s = 20) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="12,2 22,19 2,19" stroke={c} strokeWidth="1.1" fill={c} fillOpacity=".1" opacity=".8"/>
+      <polygon points="12,22 2,5 22,5" stroke={c} strokeWidth="1.1" fill={c} fillOpacity=".1" opacity=".8"/>
+      <circle cx="12" cy="12" r="2.5" fill={c} opacity=".9"/>
+      <line x1="12" y1="2" x2="12" y2="22" stroke={c} strokeWidth=".5" opacity=".25"/>
+      <line x1="2" y1="12" x2="22" y2="12" stroke={c} strokeWidth=".5" opacity=".25"/>
+    </svg>
+  ),
+  /** General — Tao / Infinity / Akasha symbol */
+  general: (c, s = 20) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 12C12 12 8 7 5.5 7C3 7 2 9 2 12C2 15 3 17 5.5 17C8 17 12 12 12 12Z" stroke={c} strokeWidth="1.2" fill="none" opacity=".75"/>
+      <path d="M12 12C12 12 16 17 18.5 17C21 17 22 15 22 12C22 9 21 7 18.5 7C16 7 12 12 12 12Z" stroke={c} strokeWidth="1.2" fill="none" opacity=".75"/>
+      <circle cx="5.5" cy="12" r="1.5" fill={c} opacity=".5"/>
+      <circle cx="18.5" cy="12" r="1.5" fill={c} opacity=".5"/>
+    </svg>
+  ),
+};
+
+/** Render a sacred SVG icon or fall back to text symbol */
+const CatIcon: React.FC<{ cat: string; color: string; size?: number }> = ({ cat, color, size = 20 }) => {
+  const fn = SvgIcons[cat];
+  return fn ? fn(color, size) : <span style={{ fontSize: size * 0.75, lineHeight: 1 }}>✦</span>;
+};
+
 /* ── Category metadata ── */
-const CAT_META: Record<string, { label: string; emoji: string; color: string; pillBg: string; pillColor: string; borderColor: string }> = {
-  planet:     { label: 'Planetary',       emoji: '🪐', color: '#D4AF37',              pillBg: 'rgba(212,175,55,.12)',  pillColor: '#D4AF37',             borderColor: 'rgba(212,175,55,.3)' },
-  deity:      { label: 'Deity',           emoji: '🕉️', color: '#F5E17A',              pillBg: 'rgba(245,225,122,.1)',  pillColor: '#F5E17A',             borderColor: 'rgba(245,225,122,.25)' },
-  intention:  { label: 'Intention',       emoji: '✨', color: 'rgba(34,211,238,.9)',   pillBg: 'rgba(34,211,238,.09)', pillColor: 'rgba(34,211,238,.9)',  borderColor: 'rgba(34,211,238,.25)' },
-  karma:      { label: 'Karma & Healing', emoji: '🌀', color: 'rgba(167,139,250,.9)', pillBg: 'rgba(167,139,250,.09)',pillColor: 'rgba(167,139,250,.9)', borderColor: 'rgba(167,139,250,.25)' },
-  wealth:     { label: 'Wealth',          emoji: '💰', color: '#F5E17A',              pillBg: 'rgba(245,225,122,.1)',  pillColor: '#F5E17A',             borderColor: 'rgba(245,225,122,.28)' },
-  health:     { label: 'Health',          emoji: '🌿', color: 'rgba(52,211,153,.9)',  pillBg: 'rgba(52,211,153,.09)', pillColor: 'rgba(52,211,153,.9)', borderColor: 'rgba(52,211,153,.25)' },
-  peace:      { label: 'Peace',           emoji: '🕊️', color: 'rgba(147,197,253,.9)',pillBg: 'rgba(147,197,253,.09)',pillColor: 'rgba(147,197,253,.9)',borderColor: 'rgba(147,197,253,.25)' },
-  protection: { label: 'Protection',      emoji: '🛡️', color: 'rgba(251,146,60,.9)', pillBg: 'rgba(251,146,60,.09)', pillColor: 'rgba(251,146,60,.9)', borderColor: 'rgba(251,146,60,.25)' },
-  spiritual:  { label: 'Spiritual',       emoji: '🔮', color: '#D4AF37',              pillBg: 'rgba(212,175,55,.1)',   pillColor: '#D4AF37',             borderColor: 'rgba(212,175,55,.22)' },
-  general:    { label: 'General',         emoji: '☯️', color: 'rgba(255,255,255,.55)',pillBg: 'rgba(255,255,255,.04)',pillColor: 'rgba(255,255,255,.55)',borderColor: 'rgba(255,255,255,.08)' },
+const CAT_META: Record<string, { label: string; color: string; pillBg: string; pillColor: string; borderColor: string }> = {
+  planet:     { label: 'Planetary',       color: '#D4AF37',              pillBg: 'rgba(212,175,55,.12)',  pillColor: '#D4AF37',             borderColor: 'rgba(212,175,55,.3)' },
+  deity:      { label: 'Deity',           color: '#F5E17A',              pillBg: 'rgba(245,225,122,.1)',  pillColor: '#F5E17A',             borderColor: 'rgba(245,225,122,.25)' },
+  intention:  { label: 'Intention',       color: 'rgba(34,211,238,.9)',   pillBg: 'rgba(34,211,238,.09)', pillColor: 'rgba(34,211,238,.9)',  borderColor: 'rgba(34,211,238,.25)' },
+  karma:      { label: 'Karma & Healing', color: 'rgba(167,139,250,.9)', pillBg: 'rgba(167,139,250,.09)',pillColor: 'rgba(167,139,250,.9)', borderColor: 'rgba(167,139,250,.25)' },
+  wealth:     { label: 'Wealth',          color: '#F5E17A',              pillBg: 'rgba(245,225,122,.1)',  pillColor: '#F5E17A',             borderColor: 'rgba(245,225,122,.28)' },
+  health:     { label: 'Health',          color: 'rgba(52,211,153,.9)',  pillBg: 'rgba(52,211,153,.09)', pillColor: 'rgba(52,211,153,.9)', borderColor: 'rgba(52,211,153,.25)' },
+  peace:      { label: 'Peace',           color: 'rgba(147,197,253,.9)',pillBg: 'rgba(147,197,253,.09)',pillColor: 'rgba(147,197,253,.9)',borderColor: 'rgba(147,197,253,.25)' },
+  protection: { label: 'Protection',      color: 'rgba(251,146,60,.9)', pillBg: 'rgba(251,146,60,.09)', pillColor: 'rgba(251,146,60,.9)', borderColor: 'rgba(251,146,60,.25)' },
+  spiritual:  { label: 'Spiritual',       color: '#D4AF37',              pillBg: 'rgba(212,175,55,.1)',   pillColor: '#D4AF37',             borderColor: 'rgba(212,175,55,.22)' },
+  general:    { label: 'General',         color: 'rgba(255,255,255,.55)',pillBg: 'rgba(255,255,255,.04)',pillColor: 'rgba(255,255,255,.55)',borderColor: 'rgba(255,255,255,.08)' },
 };
 
 const CAT_ORDER = ['planet', 'deity', 'wealth', 'health', 'karma', 'intention', 'protection', 'peace', 'spiritual', 'general'];
 
 const ADMIN_MANTRA_CATEGORIES = [
-  { id: 'planet',     label: '🪐 Planets' },
-  { id: 'deity',      label: '🕉️ Deity' },
-  { id: 'intention',  label: '✨ Intention' },
-  { id: 'karma',      label: '🌀 Karma & Healing' },
-  { id: 'wealth',     label: '💰 Wealth & Abundance' },
-  { id: 'health',     label: '🌿 Health & Vitality' },
-  { id: 'peace',      label: '🕊️ Peace & Calm' },
-  { id: 'protection', label: '🛡️ Protection & Power' },
-  { id: 'spiritual',  label: '🔮 Spiritual Growth' },
-  { id: 'general',    label: '☯️ General' },
+  { id: 'planet',     label: 'Planets' },
+  { id: 'deity',      label: 'Deity' },
+  { id: 'intention',  label: 'Intention' },
+  { id: 'karma',      label: 'Karma & Healing' },
+  { id: 'wealth',     label: 'Wealth & Abundance' },
+  { id: 'health',     label: 'Health & Vitality' },
+  { id: 'peace',      label: 'Peace & Calm' },
+  { id: 'protection', label: 'Protection & Power' },
+  { id: 'spiritual',  label: 'Spiritual Growth' },
+  { id: 'general',    label: 'General' },
 ] as const;
 
 const PLANET_TYPES = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'] as const;
@@ -555,7 +667,7 @@ const AdminMantras = () => {
                   style={{ borderBottomColor: meta.borderColor }}
                   onClick={() => toggleCat(cat)}
                 >
-                  <span style={{ fontSize: 16 }}>{meta.emoji}</span>
+                  <CatIcon cat={cat} color={meta.color} size={18} />
                   <span className="am-cat-label" style={{ color: meta.color }}>{meta.label}</span>
                   <span className="am-cat-count">{group.length} mantra{group.length !== 1 ? 's' : ''}</span>
                   {isCollapsed ? <ChevronRight size={13} style={{ color: 'rgba(255,255,255,.3)' }} /> : <ChevronDown size={13} style={{ color: 'rgba(255,255,255,.3)' }} />}
@@ -577,7 +689,7 @@ const AdminMantras = () => {
                             <img src={mantra.cover_image_url} alt={mantra.title} className="am-card-cover" />
                           ) : (
                             <div className="am-card-cover-placeholder" style={{ background: `linear-gradient(135deg,${meta.borderColor}40,rgba(0,0,0,.5))` }}>
-                              <span>{meta.emoji}</span>
+                              <CatIcon cat={cat} color={meta.color} size={36} />
                             </div>
                           )}
 
@@ -586,8 +698,9 @@ const AdminMantras = () => {
                             <div className="am-card-title">{mantra.title}</div>
                             <div className="am-card-meta">
                               {/* category pill */}
-                              <span className="am-pill" style={{ background: meta.pillBg, border: `1px solid ${meta.borderColor}`, color: meta.pillColor }}>
-                                {pSym || meta.emoji} {planet ?? meta.label}
+                              <span className="am-pill" style={{ background: meta.pillBg, border: `1px solid ${meta.borderColor}`, color: meta.pillColor, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                {pSym ? <span style={{ fontSize: 11 }}>{pSym}</span> : <CatIcon cat={cat} color={meta.pillColor} size={11} />}
+                                {planet ?? meta.label}
                               </span>
                               {/* tier pill */}
                               {mantra.is_premium ? (
@@ -646,7 +759,7 @@ const AdminMantras = () => {
 
           {!loading && mantras.length === 0 && (
             <div style={{ textAlign: 'center', padding: '60px 0' }}>
-              <div style={{ fontSize: 36, marginBottom: 12 }}>🕉</div>
+              <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}>{SvgIcons.deity('#D4AF37', 48)}</div>
               <div style={{ fontSize: 14, color: 'rgba(255,255,255,.35)' }}>No mantras yet — add the first one above</div>
             </div>
           )}

@@ -46,12 +46,12 @@ const ImageUpload = ({
       const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('songs')
+        .from('community-uploads')
         .upload(fileName, file, { cacheControl: '3600', upsert: false, contentType: file.type });
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage.from('songs').getPublicUrl(fileName);
+      const { data: { publicUrl } } = supabase.storage.from('community-uploads').getPublicUrl(fileName);
       onChange(publicUrl);
       toast.success('Image uploaded');
     } catch (err: any) {
