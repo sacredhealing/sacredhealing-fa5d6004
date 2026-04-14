@@ -288,14 +288,13 @@ const SQI_CSS = `
     background: linear-gradient(135deg, rgba(212,175,55,.14), rgba(255,230,120,.06) 50%, rgba(212,175,55,.05));
   }
 
-  /* tier border accents */
-  .m-card.tier-free   { border-color: rgba(240,230,200,.12); }
-  .m-card.tier-prana  { border-color: rgba(34,211,238,.14); }
-  .m-card.tier-siddha { border-color: rgba(212,175,55,.2); }
-  .m-card.tier-akasha { border-color: rgba(245,225,122,.28); }
-  .m-card.tier-prana:hover  { border-color: rgba(34,211,238,.3); }
-  .m-card.tier-siddha:hover { border-color: rgba(212,175,55,.4); }
-  .m-card.tier-akasha:hover { border-color: rgba(245,225,122,.5); }
+  /* premium badge on card */
+  .m-card-premium-dot {
+    position: absolute; top: 8px; right: 8px;
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #D4AF37;
+    box-shadow: 0 0 6px rgba(212,175,55,.7);
+  }
 
   .m-card-planet-icon {
     width: 32px; height: 32px; border-radius: 10px;
@@ -528,26 +527,29 @@ const SriYantraBg = () => (
   </svg>
 );
 
-/* ─── Tier helpers ─── */
-type TierKey = 'free' | 'prana' | 'siddha' | 'akasha';
+/* ─── Category helpers — maps to DB `category` column ─── */
+type CatKey = 'planet' | 'deity' | 'intention' | 'karma' | 'wealth' | 'health' | 'peace' | 'protection' | 'spiritual' | 'general';
 
-function getMantraTier(m: MantraItem, userRank: number): TierKey {
-  if (!m.is_premium) return 'free';
-  // Distribute premium mantras across visual tiers by planet energy
-  const p = m.planet_type ? normalizePlanetName(m.planet_type) : null;
-  if (p === 'Saturn' || p === 'Rahu' || p === 'Ketu') return 'akasha';
-  if (p === 'Jupiter' || p === 'Sun') return 'siddha';
-  return 'prana';
-}
-
-const TIER_META: Record<TierKey, { label: string; emoji: string; color: string; borderClass: string; pillBg: string; pillColor: string; lockRank: number }> = {
-  free:   { label: 'Free Mantras',           emoji: '🌿', color: 'rgba(240,230,200,.55)', borderClass: 'tier-free',   pillBg: 'rgba(240,230,200,.07)', pillColor: 'rgba(240,230,200,.55)', lockRank: 0 },
-  prana:  { label: 'Prana-Flow Mantras',     emoji: '💧', color: 'rgba(34,211,238,.7)',   borderClass: 'tier-prana',  pillBg: 'rgba(34,211,238,.08)',  pillColor: 'rgba(34,211,238,.8)',  lockRank: 1 },
-  siddha: { label: 'Siddha-Quantum Mantras', emoji: '⚡', color: '#D4AF37',               borderClass: 'tier-siddha', pillBg: 'rgba(212,175,55,.1)',   pillColor: '#D4AF37',              lockRank: 2 },
-  akasha: { label: 'Akasha-Infinity Mantras',emoji: '♾️', color: '#F5E17A',               borderClass: 'tier-akasha', pillBg: 'rgba(245,225,122,.12)', pillColor: '#F5E17A',              lockRank: 3 },
+const CAT_META: Record<CatKey, { label: string; emoji: string; color: string; pillBg: string; pillColor: string; borderColor: string }> = {
+  planet:     { label: 'Planetary Mantras',      emoji: '🪐', color: '#D4AF37',             pillBg: 'rgba(212,175,55,.1)',   pillColor: '#D4AF37',            borderColor: 'rgba(212,175,55,.25)' },
+  deity:      { label: 'Deity & Ishta Devata',   emoji: '🕉️', color: '#F5E17A',             pillBg: 'rgba(245,225,122,.1)', pillColor: '#F5E17A',            borderColor: 'rgba(245,225,122,.2)' },
+  intention:  { label: 'Intention & Affirmation',emoji: '✨', color: 'rgba(34,211,238,.9)', pillBg: 'rgba(34,211,238,.08)', pillColor: 'rgba(34,211,238,.85)', borderColor: 'rgba(34,211,238,.2)' },
+  karma:      { label: 'Karma & Deep Healing',   emoji: '🌀', color: 'rgba(167,139,250,.9)',pillBg: 'rgba(167,139,250,.08)',pillColor: 'rgba(167,139,250,.85)',borderColor: 'rgba(167,139,250,.2)' },
+  wealth:     { label: 'Wealth & Abundance',     emoji: '💰', color: '#F5E17A',             pillBg: 'rgba(245,225,122,.1)', pillColor: '#F5E17A',            borderColor: 'rgba(245,225,122,.22)' },
+  health:     { label: 'Health & Vitality',      emoji: '🌿', color: 'rgba(52,211,153,.9)', pillBg: 'rgba(52,211,153,.08)', pillColor: 'rgba(52,211,153,.85)', borderColor: 'rgba(52,211,153,.2)' },
+  peace:      { label: 'Peace & Calm',           emoji: '🕊️', color: 'rgba(147,197,253,.9)',pillBg: 'rgba(147,197,253,.08)',pillColor: 'rgba(147,197,253,.85)',borderColor: 'rgba(147,197,253,.2)' },
+  protection: { label: 'Protection & Power',     emoji: '🛡️', color: 'rgba(251,146,60,.9)', pillBg: 'rgba(251,146,60,.08)', pillColor: 'rgba(251,146,60,.85)', borderColor: 'rgba(251,146,60,.2)' },
+  spiritual:  { label: 'Spiritual Growth',       emoji: '🔮', color: '#D4AF37',             pillBg: 'rgba(212,175,55,.1)',  pillColor: '#D4AF37',             borderColor: 'rgba(212,175,55,.2)' },
+  general:    { label: 'Sacred Mantras',         emoji: '☯️', color: 'rgba(255,255,255,.6)',pillBg: 'rgba(255,255,255,.04)',pillColor: 'rgba(255,255,255,.6)', borderColor: 'rgba(255,255,255,.08)' },
 };
 
-const TIER_ORDER: TierKey[] = ['free', 'prana', 'siddha', 'akasha'];
+const CAT_ORDER: CatKey[] = ['planet', 'deity', 'wealth', 'health', 'karma', 'intention', 'protection', 'peace', 'spiritual', 'general'];
+
+function getMantraCategory(m: MantraItem): CatKey {
+  const cat = (m.category as string | null | undefined)?.toLowerCase() ?? 'general';
+  if (cat in CAT_META) return cat as CatKey;
+  return 'general';
+}
 
 /* ─── Main component ─── */
 const Mantras = () => {
@@ -565,7 +567,7 @@ const Mantras = () => {
   const [count, setCount] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [completed, setCompleted] = useState(false);
-  const [collapsedTiers, setCollapsedTiers] = useState<Set<TierKey>>(new Set());
+  const [collapsedCats, setCollapsedCats] = useState<Set<CatKey>>(new Set());
 
   const playerRef = useRef<HTMLDivElement | null>(null);
   const currentMantraIdRef = useRef<string | null>(null);
@@ -818,15 +820,18 @@ const Mantras = () => {
     }
   }, [currentHoraPlanet, mantras, handleMantraSelect]);
 
-  /* ── Group mantras by tier ── */
-  const tieredMantras = useMemo(() => {
-    const groups: Record<TierKey, MantraItem[]> = { free: [], prana: [], siddha: [], akasha: [] };
+  /* ── Group mantras by DB category ── */
+  const categorisedMantras = useMemo(() => {
+    const groups: Record<CatKey, MantraItem[]> = {
+      planet: [], deity: [], intention: [], karma: [],
+      wealth: [], health: [], peace: [], protection: [], spiritual: [], general: [],
+    };
     mantras.forEach((m) => {
-      const tk = getMantraTier(m, userRank);
-      groups[tk].push(m);
+      const ck = getMantraCategory(m);
+      groups[ck].push(m);
     });
     return groups;
-  }, [mantras, userRank]);
+  }, [mantras]);
 
   if (loading) {
     return (
@@ -940,26 +945,28 @@ const Mantras = () => {
           </span>
         </div>
 
-        {/* ════ MANTRA GRID BY TIER ════ */}
-        {TIER_ORDER.map((tk) => {
-          const group = tieredMantras[tk];
+        {/* ════ MANTRA GRID BY CATEGORY ════ */}
+        {CAT_ORDER.map((ck) => {
+          const group = categorisedMantras[ck];
           if (group.length === 0) return null;
-          const meta = TIER_META[tk];
-          const isCollapsed = collapsedTiers.has(tk);
-          const tierLocked = userRank < meta.lockRank && !isAdmin;
+          const meta = CAT_META[ck];
+          const isCollapsed = collapsedCats.has(ck);
 
           return (
-            <div key={tk} className="m-tier-section">
-              {/* tier header */}
-              <div className="m-tier-header" onClick={() => setCollapsedTiers((prev) => {
-                const next = new Set(prev);
-                next.has(tk) ? next.delete(tk) : next.add(tk);
-                return next;
-              })}>
-                <span style={{ fontSize: 14 }}>{meta.emoji}</span>
+            <div key={ck} className="m-tier-section">
+              {/* category header — Dhyana playlist style */}
+              <div
+                className="m-tier-header"
+                style={{ borderBottom: `1px solid ${meta.borderColor}` }}
+                onClick={() => setCollapsedCats((prev) => {
+                  const next = new Set(prev);
+                  next.has(ck) ? next.delete(ck) : next.add(ck);
+                  return next;
+                })}
+              >
+                <span style={{ fontSize: 16 }}>{meta.emoji}</span>
                 <span className="m-tier-label" style={{ color: meta.color }}>{meta.label}</span>
-                {tierLocked && <Lock size={10} style={{ color: 'rgba(255,255,255,.3)', marginLeft: 4 }} />}
-                <span className="m-tier-count">{group.length} mantras · {isCollapsed ? '▸' : '▾'}</span>
+                <span className="m-tier-count">{group.length} {group.length === 1 ? 'mantra' : 'mantras'} · {isCollapsed ? '▸' : '▾'}</span>
               </div>
 
               {!isCollapsed && (
@@ -970,7 +977,7 @@ const Mantras = () => {
                     const isAura = shouldGlowGold(m);
                     const pSym = mp ? PLANET_SYMBOLS[mp] ?? '' : '';
                     const pct = getSuccessPercent(mp);
-                    const cardLocked = tierLocked;
+                    const cardLocked = (m.is_premium && userRank < 1) && !isAdmin;
 
                     return (
                       <button
@@ -978,23 +985,31 @@ const Mantras = () => {
                         type="button"
                         className={[
                           'm-card',
-                          meta.borderClass,
                           isSel ? 'm-card-selected' : '',
                           isAura && !isSel ? 'm-card-aura' : '',
                           cardLocked ? 'm-card-locked' : '',
                         ].filter(Boolean).join(' ')}
+                        style={{ borderColor: isSel ? 'rgba(212,175,55,.45)' : meta.borderColor }}
                         onClick={() => handleMantraSelect(m, cardLocked)}
                       >
-                        {/* lock overlay for premium tiers */}
+                        {/* premium indicator dot */}
+                        {m.is_premium && !cardLocked && (
+                          <div className="m-card-premium-dot" title="Members only" />
+                        )}
+
+                        {/* lock overlay for locked mantras */}
                         {cardLocked && (
                           <div className="m-lock-overlay">
                             <Lock size={10} />
                           </div>
                         )}
 
-                        {/* planet icon */}
-                        <div className="m-card-planet-icon" style={{ background: `rgba(212,175,55,.09)`, border: `1px solid rgba(212,175,55,.2)` }}>
-                          <span>{pSym || '✦'}</span>
+                        {/* icon: planet symbol or category emoji */}
+                        <div
+                          className="m-card-planet-icon"
+                          style={{ background: `${meta.borderColor}55`, border: `1px solid ${meta.borderColor}` }}
+                        >
+                          <span>{pSym || meta.emoji}</span>
                         </div>
 
                         {/* title */}
@@ -1003,8 +1018,13 @@ const Mantras = () => {
                         {/* meta pills */}
                         <div className="m-card-meta">
                           {mp && (
-                            <span className="m-pill" style={{ background: meta.pillBg, border: `1px solid ${meta.color}33`, color: meta.color }}>
+                            <span className="m-pill" style={{ background: meta.pillBg, border: `1px solid ${meta.borderColor}`, color: meta.pillColor }}>
                               {pSym} {mp}
+                            </span>
+                          )}
+                          {!mp && (
+                            <span className="m-pill" style={{ background: meta.pillBg, border: `1px solid ${meta.borderColor}`, color: meta.pillColor }}>
+                              {meta.label.split(' ')[0]}
                             </span>
                           )}
                           <span className="m-pill" style={{ background: 'rgba(212,175,55,.06)', border: '1px solid rgba(212,175,55,.15)', color: 'rgba(212,175,55,.55)' }}>

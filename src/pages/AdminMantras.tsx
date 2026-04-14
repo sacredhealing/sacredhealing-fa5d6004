@@ -1,11 +1,16 @@
 /**
- * SQI-2050 Admin — Nada-Vault (visual layer synced with /mantras sovereign aesthetic).
- * Functional logic: unchanged (Supabase RPC, payloads, AudioUpload, toggles).
+ * ╔══════════════════════════════════════════════════════════════════╗
+ * ║  ADMIN MANTRAS — SQI-2050 Dhyana Playlist Design                 ║
+ * ║  • Category-grouped cards (planet/wealth/health/etc)             ║
+ * ║  • Cover image + colored category pills                          ║
+ * ║  • Proper Free / Premium tier labelling                          ║
+ * ║  • All functional logic preserved (RPC, AudioUpload, toggles)    ║
+ * ╚══════════════════════════════════════════════════════════════════╝
  */
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Music, Trash2, Edit, Save, X, Lock, Unlock } from 'lucide-react';
+import { ArrowLeft, Plus, Music, Trash2, Edit, Save, X, Lock, Unlock, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,111 +21,202 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import AudioUpload from '@/components/admin/AudioUpload';
 
-const ADMIN_MANTRA_SQI_CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap');
-  .sqi-admin-mantras {
+/* ── inline styles ── */
+const CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&family=Cinzel:wght@500;600&display=swap');
+
+  .am-root {
     font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
     background: #050505;
-    color: rgba(255, 255, 255, 0.92);
+    color: rgba(255,255,255,0.92);
     min-height: 100vh;
   }
-  .sqi-admin-mantras .am-glass {
-    background: rgba(255, 255, 255, 0.02);
+  .am-glass {
+    background: rgba(255,255,255,0.02);
     backdrop-filter: blur(40px);
     -webkit-backdrop-filter: blur(40px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255,255,255,0.05);
     border-radius: 40px;
-    box-shadow: 0 0 40px rgba(212, 175, 55, 0.04);
   }
-  .sqi-admin-mantras .am-glass:hover {
-    border-color: rgba(212, 175, 55, 0.12);
+  .am-glass-sm {
+    background: rgba(255,255,255,0.02);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 20px;
   }
-  .sqi-admin-mantras .am-gold-glow {
-    color: #D4AF37;
-    text-shadow: 0 0 15px rgba(212, 175, 55, 0.35);
+  .am-header {
+    background: rgba(255,255,255,0.02);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(24px);
   }
-  .sqi-admin-mantras .am-kicker {
-    font-size: 8px;
-    font-weight: 800;
-    letter-spacing: 0.5em;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.45);
+  .am-kicker {
+    font-size: 8px; font-weight: 800; letter-spacing: 0.5em;
+    text-transform: uppercase; color: rgba(255,255,255,0.4);
   }
-  .sqi-admin-mantras .am-h1 {
-    font-weight: 900;
-    letter-spacing: -0.05em;
-    color: #D4AF37;
+  .am-h1 {
+    font-family: 'Cinzel', serif;
+    font-weight: 600; letter-spacing: -0.02em;
+    color: #D4AF37; text-shadow: 0 0 20px rgba(212,175,55,0.3);
     line-height: 1.1;
   }
-  .sqi-admin-mantras .am-body {
-    font-weight: 400;
-    line-height: 1.6;
-    color: rgba(255, 255, 255, 0.6);
+  @keyframes mShimmer {
+    0%   { background-position: -200% center; }
+    100% { background-position:  200% center; }
   }
-  .sqi-admin-mantras .am-input,
-  .sqi-admin-mantras .am-select {
+  .am-shimmer {
+    background: linear-gradient(135deg,#D4AF37 0%,#F5E17A 45%,#D4AF37 65%,#A07C10 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: mShimmer 5s linear infinite;
+  }
+  .am-input, .am-select {
     border-radius: 40px !important;
-    background: rgba(255, 255, 255, 0.03) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    color: rgba(255, 255, 255, 0.88) !important;
+    background: rgba(255,255,255,0.03) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    color: rgba(255,255,255,0.88) !important;
+    font-family: inherit !important;
   }
-  .sqi-admin-mantras .am-input:focus-visible,
-  .sqi-admin-mantras .am-select:focus-visible {
-    border-color: rgba(212, 175, 55, 0.35) !important;
-    box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.2);
+  .am-input:focus-visible, .am-select:focus-visible {
+    border-color: rgba(212,175,55,0.35) !important;
+    box-shadow: 0 0 0 1px rgba(212,175,55,0.2) !important;
+    outline: none !important;
   }
-  .sqi-admin-mantras .am-textarea {
-    border-radius: 24px !important;
-    min-height: 100px;
-    background: rgba(255, 255, 255, 0.03) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    color: rgba(255, 255, 255, 0.88) !important;
+  .am-textarea {
+    border-radius: 20px !important; min-height: 90px;
+    background: rgba(255,255,255,0.03) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    color: rgba(255,255,255,0.88) !important;
+    font-family: inherit !important;
   }
-  .sqi-admin-mantras .am-btn-primary {
+  .am-btn-gold {
     border-radius: 40px;
-    background: linear-gradient(135deg, rgba(212, 175, 55, 0.95), rgba(160, 124, 16, 0.95));
-    color: #050505;
-    font-weight: 800;
-    letter-spacing: 0.02em;
-    box-shadow: 0 0 24px rgba(212, 175, 55, 0.25);
+    background: linear-gradient(135deg,rgba(212,175,55,0.95),rgba(160,124,16,0.95));
+    color: #050505; font-weight: 800; letter-spacing: 0.04em;
+    border: none; cursor: pointer; font-family: inherit;
+    box-shadow: 0 0 24px rgba(212,175,55,0.25);
+    transition: all .2s;
+    display: inline-flex; align-items: center; gap: 7px;
   }
-  .sqi-admin-mantras .am-btn-primary:hover {
-    box-shadow: 0 0 32px rgba(212, 175, 55, 0.4);
+  .am-btn-gold:hover { box-shadow: 0 0 36px rgba(212,175,55,0.45); transform: scale(1.01); }
+
+  /* ── Category section headers ── */
+  .am-cat-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 0 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    margin-bottom: 12px; cursor: pointer;
   }
-  .sqi-admin-mantras .am-icon-tile {
-    width: 48px;
-    height: 48px;
-    border-radius: 16px;
-    background: linear-gradient(145deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.04));
-    border: 1px solid rgba(212, 175, 55, 0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  .am-cat-label {
+    font-size: 8px; font-weight: 800; letter-spacing: 0.5em;
+    text-transform: uppercase;
+  }
+  .am-cat-count {
+    font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.25);
+    margin-left: auto;
+  }
+
+  /* ── Mantra card (Dhyana playlist style) ── */
+  .am-card {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all .22s ease;
+    position: relative;
+  }
+  .am-card:hover { border-color: rgba(212,175,55,0.18); }
+  .am-card-cover {
+    width: 100%; aspect-ratio: 16/9;
+    object-fit: cover; display: block;
+    background: linear-gradient(135deg,rgba(212,175,55,0.08),rgba(0,0,0,0.4));
+  }
+  .am-card-cover-placeholder {
+    width: 100%; aspect-ratio: 16/9;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+  }
+  .am-card-body { padding: 12px 14px 12px; }
+  .am-card-title {
+    font-size: 13px; font-weight: 800; letter-spacing: -0.02em;
+    color: rgba(255,255,255,0.92); margin-bottom: 6px;
+    display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .am-card-meta {
+    display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px;
+  }
+  .am-pill {
+    font-size: 8px; font-weight: 800; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 3px 8px; border-radius: 100px;
+  }
+  .am-card-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px 10px; border-top: 1px solid rgba(255,255,255,0.04);
+  }
+  .am-inactive { opacity: 0.4; }
+
+  /* ── Form card ── */
+  .am-form-card {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 32px; padding: 24px;
+    margin-bottom: 24px;
+  }
+  .am-radio-row {
+    display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px;
+  }
+  .am-radio-option {
+    display: flex; align-items: center; gap: 6px;
+    cursor: pointer; font-size: 13px; color: rgba(255,255,255,0.8);
+    padding: 8px 16px; border-radius: 100px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.02);
+    transition: all .15s;
+  }
+  .am-radio-option.active {
+    border-color: rgba(212,175,55,0.4);
+    background: rgba(212,175,55,0.07);
     color: #D4AF37;
-    box-shadow: 0 0 20px rgba(212, 175, 55, 0.12);
-  }
-  .sqi-admin-mantras .am-header-bar {
-    background: rgba(255, 255, 255, 0.02);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
   }
 `;
 
+/* ── Category metadata ── */
+const CAT_META: Record<string, { label: string; emoji: string; color: string; pillBg: string; pillColor: string; borderColor: string }> = {
+  planet:     { label: 'Planetary',       emoji: '🪐', color: '#D4AF37',              pillBg: 'rgba(212,175,55,.12)',  pillColor: '#D4AF37',             borderColor: 'rgba(212,175,55,.3)' },
+  deity:      { label: 'Deity',           emoji: '🕉️', color: '#F5E17A',              pillBg: 'rgba(245,225,122,.1)',  pillColor: '#F5E17A',             borderColor: 'rgba(245,225,122,.25)' },
+  intention:  { label: 'Intention',       emoji: '✨', color: 'rgba(34,211,238,.9)',   pillBg: 'rgba(34,211,238,.09)', pillColor: 'rgba(34,211,238,.9)',  borderColor: 'rgba(34,211,238,.25)' },
+  karma:      { label: 'Karma & Healing', emoji: '🌀', color: 'rgba(167,139,250,.9)', pillBg: 'rgba(167,139,250,.09)',pillColor: 'rgba(167,139,250,.9)', borderColor: 'rgba(167,139,250,.25)' },
+  wealth:     { label: 'Wealth',          emoji: '💰', color: '#F5E17A',              pillBg: 'rgba(245,225,122,.1)',  pillColor: '#F5E17A',             borderColor: 'rgba(245,225,122,.28)' },
+  health:     { label: 'Health',          emoji: '🌿', color: 'rgba(52,211,153,.9)',  pillBg: 'rgba(52,211,153,.09)', pillColor: 'rgba(52,211,153,.9)', borderColor: 'rgba(52,211,153,.25)' },
+  peace:      { label: 'Peace',           emoji: '🕊️', color: 'rgba(147,197,253,.9)',pillBg: 'rgba(147,197,253,.09)',pillColor: 'rgba(147,197,253,.9)',borderColor: 'rgba(147,197,253,.25)' },
+  protection: { label: 'Protection',      emoji: '🛡️', color: 'rgba(251,146,60,.9)', pillBg: 'rgba(251,146,60,.09)', pillColor: 'rgba(251,146,60,.9)', borderColor: 'rgba(251,146,60,.25)' },
+  spiritual:  { label: 'Spiritual',       emoji: '🔮', color: '#D4AF37',              pillBg: 'rgba(212,175,55,.1)',   pillColor: '#D4AF37',             borderColor: 'rgba(212,175,55,.22)' },
+  general:    { label: 'General',         emoji: '☯️', color: 'rgba(255,255,255,.55)',pillBg: 'rgba(255,255,255,.04)',pillColor: 'rgba(255,255,255,.55)',borderColor: 'rgba(255,255,255,.08)' },
+};
+
+const CAT_ORDER = ['planet', 'deity', 'wealth', 'health', 'karma', 'intention', 'protection', 'peace', 'spiritual', 'general'];
+
 const ADMIN_MANTRA_CATEGORIES = [
-  { id: 'planet', label: 'Planets' },
-  { id: 'deity', label: 'Deity' },
-  { id: 'intention', label: 'Intention' },
-  { id: 'karma', label: 'Karma & Healing' },
-  { id: 'wealth', label: 'Wealth & Abundance' },
-  { id: 'health', label: 'Health & Vitality' },
-  { id: 'peace', label: 'Peace & Calm' },
-  { id: 'protection', label: 'Protection & Power' },
-  { id: 'spiritual', label: 'Spiritual Growth' },
-  { id: 'general', label: 'General' },
+  { id: 'planet',     label: '🪐 Planets' },
+  { id: 'deity',      label: '🕉️ Deity' },
+  { id: 'intention',  label: '✨ Intention' },
+  { id: 'karma',      label: '🌀 Karma & Healing' },
+  { id: 'wealth',     label: '💰 Wealth & Abundance' },
+  { id: 'health',     label: '🌿 Health & Vitality' },
+  { id: 'peace',      label: '🕊️ Peace & Calm' },
+  { id: 'protection', label: '🛡️ Protection & Power' },
+  { id: 'spiritual',  label: '🔮 Spiritual Growth' },
+  { id: 'general',    label: '☯️ General' },
 ] as const;
 
 const PLANET_TYPES = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'] as const;
+
+const PLANET_SYMBOLS: Record<string, string> = {
+  Sun: '☉', Moon: '☽', Mars: '♂', Mercury: '☿', Jupiter: '♃',
+  Venus: '♀', Saturn: '♄', Rahu: '☊', Ketu: '☋',
+};
 
 interface Mantra {
   id: string;
@@ -142,6 +238,7 @@ const AdminMantras = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [collapsedCats, setCollapsedCats] = useState<Set<string>>(new Set());
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -155,34 +252,19 @@ const AdminMantras = () => {
   const [category, setCategory] = useState('general');
   const [planetType, setPlanetType] = useState('');
 
-  useEffect(() => {
-    fetchMantras();
-  }, []);
+  useEffect(() => { fetchMantras(); }, []);
 
   const fetchMantras = async () => {
-    // Fetch using explicit column selection to bypass schema cache
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('mantras' as any)
       .select('id, title, description, audio_url, cover_image_url, duration_seconds, shc_reward, is_active, is_premium, category, planet_type, created_at')
       .order('created_at', { ascending: false });
-
-    if (data) {
-      setMantras(data as unknown as Mantra[]);
-    }
+    if (data) setMantras(data as unknown as Mantra[]);
     setLoading(false);
   };
 
   const resetForm = () => {
-    setFormData({
-      title: '',
-      description: '',
-      audio_url: '',
-      cover_image_url: '',
-      duration_seconds: 180,
-      shc_reward: 111,
-      is_active: true,
-      is_premium: false,
-    });
+    setFormData({ title: '', description: '', audio_url: '', cover_image_url: '', duration_seconds: 180, shc_reward: 111, is_active: true, is_premium: false });
     setCategory('general');
     setPlanetType('');
     setEditingId(null);
@@ -204,18 +286,18 @@ const AdminMantras = () => {
     setPlanetType((mantra as any).planet_type || '');
     setEditingId(mantra.id);
     setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const buildMantraPayload = () => {
+  const buildPayload = () => {
     const shc = Number(formData.shc_reward);
-    const durationSeconds = Number.isFinite(formData.duration_seconds) && formData.duration_seconds > 0
-      ? formData.duration_seconds : 180;
+    const dur = Number.isFinite(formData.duration_seconds) && formData.duration_seconds > 0 ? formData.duration_seconds : 180;
     return {
       title: formData.title.trim(),
       description: formData.description?.trim() || null,
       audio_url: formData.audio_url.trim(),
       cover_image_url: formData.cover_image_url?.trim() || null,
-      duration_seconds: durationSeconds,
+      duration_seconds: dur,
       shc_reward: Number.isFinite(shc) && shc >= 0 ? shc : 111,
       is_active: Boolean(formData.is_active),
       category: category || 'general',
@@ -226,172 +308,161 @@ const AdminMantras = () => {
 
   const handleSave = async () => {
     if (!formData.title?.trim() || !formData.audio_url?.trim()) {
-      toast.error('Please fill in required fields');
+      toast.error('Title and Audio URL are required');
       return;
     }
-
-    const payload = buildMantraPayload();
-
+    const payload = buildPayload();
     if (editingId) {
-      const { data, error } = await supabase
-        .rpc('update_mantra_admin' as any, { data: { ...payload, id: editingId } });
-
-      if (error) {
-        console.error('Mantra update error:', error);
-        toast.error(error.message || 'Failed to update mantra');
-      } else if (data && typeof data === 'object' && 'success' in data && !data.success) {
-        toast.error((data as any).error || 'Failed to update mantra');
-      } else {
-        toast.success('Mantra updated');
-        resetForm();
-        fetchMantras();
-      }
+      const { data, error } = await supabase.rpc('update_mantra_admin' as any, { data: { ...payload, id: editingId } });
+      if (error) { toast.error(error.message || 'Failed to update'); return; }
+      if (data && typeof data === 'object' && 'success' in data && !(data as any).success) { toast.error((data as any).error || 'Failed to update'); return; }
+      toast.success('Mantra updated ✦');
     } else {
-      const { data, error } = await supabase
-        .rpc('insert_mantra_admin' as any, { data: payload });
-
-      if (error) {
-        console.error('Mantra insert error:', error);
-        toast.error(error.message || 'Failed to add mantra');
-      } else if (data && typeof data === 'object' && 'success' in data && !data.success) {
-        toast.error((data as any).error || 'Failed to add mantra');
-      } else {
-        toast.success('Mantra added successfully!');
-        resetForm();
-        fetchMantras();
-      }
+      const { data, error } = await supabase.rpc('insert_mantra_admin' as any, { data: payload });
+      if (error) { toast.error(error.message || 'Failed to add'); return; }
+      if (data && typeof data === 'object' && 'success' in data && !(data as any).success) { toast.error((data as any).error || 'Failed to add'); return; }
+      toast.success('Mantra added ✦');
     }
+    resetForm();
+    fetchMantras();
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this mantra?')) return;
-    const { error } = await supabase
-      .from('mantras' as any)
-      .delete()
-      .eq('id', id);
-    if (error) {
-      toast.error('Failed to delete mantra');
-    } else {
-      toast.success('Mantra deleted');
-      fetchMantras();
-    }
+    if (!confirm('Delete this mantra?')) return;
+    const { error } = await supabase.from('mantras' as any).delete().eq('id', id);
+    if (error) { toast.error('Failed to delete'); return; }
+    toast.success('Mantra deleted');
+    fetchMantras();
   };
 
   const toggleActive = async (id: string, isActive: boolean) => {
-    await supabase
-      .rpc('update_mantra_admin' as any, { data: { id, is_active: !isActive } });
+    await supabase.rpc('update_mantra_admin' as any, { data: { id, is_active: !isActive } });
     fetchMantras();
+  };
+
+  const toggleCat = (cat: string) => {
+    setCollapsedCats((prev) => {
+      const next = new Set(prev);
+      next.has(cat) ? next.delete(cat) : next.add(cat);
+      return next;
+    });
+  };
+
+  /* group by category */
+  const grouped: Record<string, Mantra[]> = {};
+  mantras.forEach((m) => {
+    const cat = (m as any).category || 'general';
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(m);
+  });
+
+  const fmtDur = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = (secs % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
   };
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: ADMIN_MANTRA_SQI_CSS }} />
-      <div className="sqi-admin-mantras pb-28">
-        <div className="am-header-bar px-4 py-5">
-          <div className="max-w-2xl mx-auto flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <div className="am-root pb-28">
+
+        {/* ── header ── */}
+        <div className="am-header px-4 py-5">
+          <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button
               onClick={() => navigate('/admin')}
-              className="rounded-full text-white/70 hover:text-[#D4AF37] hover:bg-white/5 shrink-0"
+              style={{ background: 'none', border: '1px solid rgba(255,255,255,.06)', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'rgba(255,255,255,.5)', flexShrink: 0 }}
             >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div className="min-w-0 flex-1">
-              <p className="am-kicker mb-1">NADA · ADMIN VAULT</p>
-              <h1 className="am-h1 text-xl sm:text-2xl truncate">Manage Mantras</h1>
-              <p className="am-body text-sm mt-1">
-                <span className="text-[#22D3EE]/90 font-semibold tabular-nums">{mantras.length}</span>{' '}
-                Bhakti-Algorithms indexed
-              </p>
+              <ArrowLeft size={16} />
+            </button>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="am-kicker" style={{ marginBottom: 4 }}>NADA · ADMIN VAULT</div>
+              <h1 className="am-h1" style={{ fontSize: 'clamp(20px, 5vw, 26px)', marginBottom: 2 }}>Manage Mantras</h1>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,.4)' }}>
+                <span style={{ color: '#22D3EE', fontWeight: 700 }}>{mantras.length}</span> Bhakti-Algorithms indexed
+              </div>
             </div>
+            {!showForm && (
+              <button
+                className="am-btn-gold"
+                style={{ padding: '10px 18px', fontSize: 12, flexShrink: 0 }}
+                onClick={() => setShowForm(true)}
+              >
+                <Plus size={14} /> Add Mantra
+              </button>
+            )}
           </div>
         </div>
 
-        <div className="px-4 py-6 max-w-2xl mx-auto">
-          {!showForm && (
-            <Button
-              onClick={() => setShowForm(true)}
-              className="w-full mb-6 am-btn-primary h-12 border-0"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add New Mantra
-            </Button>
-          )}
+        <div style={{ maxWidth: 720, margin: '0 auto', padding: '24px 16px 0' }}>
 
+          {/* ── ADD / EDIT FORM ── */}
           {showForm && (
-            <Card className="p-5 sm:p-6 mb-6 am-glass border-0 shadow-none bg-transparent">
-              <div className="flex justify-between items-start mb-6 gap-2">
+            <div className="am-form-card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
                 <div>
-                  <p className="am-kicker mb-2">PREMA-PULSE FORM</p>
-                  <h3 className="am-h1 text-lg sm:text-xl">
-                    {editingId ? 'Edit Mantra' : 'Add Mantra'}
+                  <div className="am-kicker" style={{ marginBottom: 4 }}>PREMA-PULSE FORM</div>
+                  <h3 className="am-shimmer" style={{ fontSize: 20, fontWeight: 900, letterSpacing: '-.03em' }}>
+                    {editingId ? 'Edit Mantra' : 'New Mantra'}
                   </h3>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
+                <button
                   onClick={resetForm}
-                  className="rounded-full shrink-0 text-white/60 hover:text-white hover:bg-white/10"
+                  style={{ background: 'none', border: '1px solid rgba(255,255,255,.07)', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'rgba(255,255,255,.5)' }}
                 >
-                  <X className="w-4 h-4" />
-                </Button>
+                  <X size={14} />
+                </button>
               </div>
 
-              <div className="space-y-5">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                {/* Title */}
                 <div>
-                  <Label className="am-kicker block mb-2">Title *</Label>
-                  <Input
-                    className="am-input h-11"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="Om Namah Shivaya"
-                  />
+                  <div className="am-kicker" style={{ marginBottom: 6 }}>Title *</div>
+                  <Input className="am-input h-11" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} placeholder="Om Namah Shivaya" />
                 </div>
 
+                {/* Category */}
                 <div>
-                  <Label className="am-kicker block mb-2">Category</Label>
+                  <div className="am-kicker" style={{ marginBottom: 6 }}>Category</div>
                   <select
                     value={category}
-                    onChange={(e) => {
-                      setCategory(e.target.value);
-                      if (e.target.value !== 'planet') setPlanetType('');
-                    }}
-                    className="am-select flex h-11 w-full min-w-0 max-w-full px-4 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37]/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]"
+                    onChange={(e) => { setCategory(e.target.value); if (e.target.value !== 'planet') setPlanetType(''); }}
+                    className="am-select"
+                    style={{ height: 44, width: '100%', padding: '0 16px', fontSize: 14 }}
                   >
                     {ADMIN_MANTRA_CATEGORIES.map((c) => (
-                      <option key={c.id} value={c.id}>{c.label}</option>
+                      <option key={c.id} value={c.id} style={{ background: '#0a0a0a' }}>{c.label}</option>
                     ))}
                   </select>
                 </div>
 
+                {/* Planet (only when planet category) */}
                 {category === 'planet' && (
                   <div>
-                    <Label className="am-kicker block mb-2">Planet Type</Label>
+                    <div className="am-kicker" style={{ marginBottom: 6 }}>Planet Type</div>
                     <select
                       value={planetType}
                       onChange={(e) => setPlanetType(e.target.value)}
-                      className="am-select flex h-11 w-full min-w-0 max-w-full px-4 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37]/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505]"
+                      className="am-select"
+                      style={{ height: 44, width: '100%', padding: '0 16px', fontSize: 14 }}
                     >
-                      <option value="">Select planet...</option>
+                      <option value="" style={{ background: '#0a0a0a' }}>Select planet…</option>
                       {PLANET_TYPES.map((p) => (
-                        <option key={p} value={p}>{p}</option>
+                        <option key={p} value={p} style={{ background: '#0a0a0a' }}>{PLANET_SYMBOLS[p]} {p}</option>
                       ))}
                     </select>
                   </div>
                 )}
 
+                {/* Description */}
                 <div>
-                  <Label className="am-kicker block mb-2">Description</Label>
-                  <Textarea
-                    className="am-textarea"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="A powerful mantra for..."
-                  />
+                  <div className="am-kicker" style={{ marginBottom: 6 }}>Description</div>
+                  <Textarea className="am-textarea" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="A powerful mantra for…" />
                 </div>
 
-                <div className="am-glass p-4 border border-white/[0.06]">
+                {/* Audio Upload */}
+                <div style={{ background: 'rgba(255,255,255,.015)', border: '1px solid rgba(255,255,255,.06)', borderRadius: 20, padding: 16 }}>
                   <AudioUpload
                     key={editingId ?? 'create'}
                     value={formData.audio_url}
@@ -401,148 +472,180 @@ const AdminMantras = () => {
                   />
                 </div>
 
+                {/* Cover Image URL */}
                 <div>
-                  <Label className="am-kicker block mb-2">Cover Image URL</Label>
-                  <Input
-                    className="am-input h-11"
-                    value={formData.cover_image_url}
-                    onChange={(e) => setFormData({ ...formData, cover_image_url: e.target.value })}
-                    placeholder="https://..."
-                  />
+                  <div className="am-kicker" style={{ marginBottom: 6 }}>Cover Image URL</div>
+                  <Input className="am-input h-11" value={formData.cover_image_url} onChange={(e) => setFormData({ ...formData, cover_image_url: e.target.value })} placeholder="https://..." />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Duration + SHC */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <div>
-                    <Label className="am-kicker block mb-2">Duration (minutes)</Label>
+                    <div className="am-kicker" style={{ marginBottom: 6 }}>Duration (minutes)</div>
                     <Input
-                      className="am-input h-11"
-                      type="number"
-                      min={0.5}
-                      step={0.5}
-                      placeholder="Duration in minutes"
+                      className="am-input h-11" type="number" min={0.5} step={0.5}
+                      placeholder="e.g. 3"
                       value={formData.duration_seconds / 60}
-                      onChange={(e) => {
-                        const seconds = parseFloat(e.target.value) * 60;
-                        setFormData({ ...formData, duration_seconds: Number.isFinite(seconds) ? seconds : 180 });
-                      }}
+                      onChange={(e) => { const s = parseFloat(e.target.value) * 60; setFormData({ ...formData, duration_seconds: Number.isFinite(s) ? s : 180 }); }}
                     />
                   </div>
                   <div>
-                    <Label className="am-kicker block mb-2">SHC Reward</Label>
-                    <Input
-                      className="am-input h-11"
-                      type="number"
-                      value={formData.shc_reward}
-                      onChange={(e) => setFormData({ ...formData, shc_reward: parseInt(e.target.value) || 111 })}
-                    />
+                    <div className="am-kicker" style={{ marginBottom: 6 }}>SHC Reward</div>
+                    <Input className="am-input h-11" type="number" value={formData.shc_reward} onChange={(e) => setFormData({ ...formData, shc_reward: parseInt(e.target.value) || 111 })} />
                   </div>
                 </div>
 
-                <div className="am-glass p-4">
-                  <Label className="am-kicker block mb-3">Access (membership)</Label>
-                  <div className="flex flex-wrap gap-6 mt-1">
-                    <label className="flex items-center gap-2 cursor-pointer am-body text-sm">
-                      <input
-                        type="radio"
-                        name="access"
-                        checked={!formData.is_premium}
-                        onChange={() => setFormData({ ...formData, is_premium: false })}
-                        className="rounded-full border-white/20 accent-[#D4AF37]"
-                      />
-                      <Unlock className="w-4 h-4 text-white/50" />
-                      <span className="text-white/85">Free</span>
+                {/* Access tier */}
+                <div style={{ background: 'rgba(255,255,255,.015)', border: '1px solid rgba(255,255,255,.06)', borderRadius: 20, padding: 16 }}>
+                  <div className="am-kicker" style={{ marginBottom: 10 }}>Access Level</div>
+                  <div className="am-radio-row">
+                    <label className={`am-radio-option${!formData.is_premium ? ' active' : ''}`}>
+                      <input type="radio" name="access" checked={!formData.is_premium} onChange={() => setFormData({ ...formData, is_premium: false })} style={{ accentColor: '#D4AF37' }} />
+                      <Unlock size={13} />
+                      <span>Free</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer am-body text-sm">
-                      <input
-                        type="radio"
-                        name="access"
-                        checked={formData.is_premium}
-                        onChange={() => setFormData({ ...formData, is_premium: true })}
-                        className="rounded-full border-white/20 accent-[#D4AF37]"
-                      />
-                      <Lock className="w-4 h-4 text-[#D4AF37]" />
-                      <span className="text-[#D4AF37]/95">Premium</span>
+                    <label className={`am-radio-option${formData.is_premium ? ' active' : ''}`}>
+                      <input type="radio" name="access" checked={formData.is_premium} onChange={() => setFormData({ ...formData, is_premium: true })} style={{ accentColor: '#D4AF37' }} />
+                      <Lock size={13} />
+                      <span style={{ color: formData.is_premium ? '#D4AF37' : undefined }}>Members Only</span>
                     </label>
                   </div>
-                  <p className="text-xs am-body mt-3">
-                    Premium mantras are only available to app members.
+                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,.35)', marginTop: 10, lineHeight: 1.5 }}>
+                    Free mantras are accessible to all users. Members-only mantras require an active Prana-Flow+ subscription.
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3 py-1">
-                  <Switch
-                    checked={formData.is_active}
-                    onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                    className="data-[state=checked]:bg-[#D4AF37]"
-                  />
-                  <Label className="am-body text-sm text-white/80 cursor-pointer">Active</Label>
+                {/* Active toggle */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <Switch checked={formData.is_active} onCheckedChange={(c) => setFormData({ ...formData, is_active: c })} className="data-[state=checked]:bg-[#D4AF37]" />
+                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,.7)' }}>Active (visible to users)</span>
                 </div>
 
-                <Button onClick={handleSave} className="w-full am-btn-primary h-12 border-0">
-                  <Save className="w-4 h-4 mr-2" />
-                  {editingId ? 'Update' : 'Save'} Mantra
-                </Button>
+                {/* Save */}
+                <button className="am-btn-gold" style={{ width: '100%', height: 48, fontSize: 13, justifyContent: 'center' }} onClick={handleSave}>
+                  <Save size={15} />
+                  {editingId ? 'Update Mantra' : 'Save Mantra'}
+                </button>
               </div>
-            </Card>
+            </div>
           )}
 
-          <div className="space-y-4">
-            {loading && (
-              <p className="am-body text-center text-sm py-8">Loading Vedic Light-Codes…</p>
-            )}
-            {!loading && mantras.map((mantra) => (
-              <Card
-                key={mantra.id}
-                className={`p-4 sm:p-5 am-glass border-0 shadow-none bg-transparent transition-opacity ${!mantra.is_active ? 'opacity-[0.45]' : ''}`}
-              >
-                <div className="flex items-center gap-3 sm:gap-4">
-                  <div className="am-icon-tile shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl">
-                    <Music className="w-5 h-5 sm:w-6 sm:h-6" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="font-black tracking-tight text-white/95 truncate text-[15px] sm:text-base am-gold-glow">
-                        {mantra.title}
-                      </h4>
-                      {mantra.is_premium && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/25">
-                          <Lock className="w-3 h-3" />
-                          Premium
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs sm:text-sm am-body mt-1">
-                      {Math.floor(mantra.duration_seconds / 60)}:{(mantra.duration_seconds % 60).toString().padStart(2, '0')} • {mantra.shc_reward} SHC
-                      {(mantra as any).category && (
-                        <span className="ml-2 text-white/45">
-                          • {ADMIN_MANTRA_CATEGORIES.find(c => c.id === (mantra as any).category)?.label}
-                          {(mantra as any).planet_type && <span> ({(mantra as any).planet_type})</span>}
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                  <div className="flex gap-1 shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEdit(mantra)}
-                      className="rounded-full text-white/55 hover:text-[#D4AF37] hover:bg-white/5"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(mantra.id)}
-                      className="rounded-full text-red-400/90 hover:text-red-300 hover:bg-red-500/10"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
+          {/* ── MANTRAS GROUPED BY CATEGORY ── */}
+          {loading && (
+            <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(255,255,255,.35)', fontSize: 13 }}>
+              Loading Vedic Light-Codes…
+            </div>
+          )}
+
+          {!loading && CAT_ORDER.map((cat) => {
+            const group = grouped[cat];
+            if (!group || group.length === 0) return null;
+            const meta = CAT_META[cat] ?? CAT_META.general;
+            const isCollapsed = collapsedCats.has(cat);
+
+            return (
+              <div key={cat} style={{ marginBottom: 28 }}>
+                {/* Category header */}
+                <div
+                  className="am-cat-header"
+                  style={{ borderBottomColor: meta.borderColor }}
+                  onClick={() => toggleCat(cat)}
+                >
+                  <span style={{ fontSize: 16 }}>{meta.emoji}</span>
+                  <span className="am-cat-label" style={{ color: meta.color }}>{meta.label}</span>
+                  <span className="am-cat-count">{group.length} mantra{group.length !== 1 ? 's' : ''}</span>
+                  {isCollapsed ? <ChevronRight size={13} style={{ color: 'rgba(255,255,255,.3)' }} /> : <ChevronDown size={13} style={{ color: 'rgba(255,255,255,.3)' }} />}
                 </div>
-              </Card>
-            ))}
-          </div>
+
+                {!isCollapsed && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+                    {group.map((mantra) => {
+                      const planet = (mantra as any).planet_type as string | null;
+                      const pSym = planet ? PLANET_SYMBOLS[planet] ?? '' : '';
+                      return (
+                        <div
+                          key={mantra.id}
+                          className={`am-card${!mantra.is_active ? ' am-inactive' : ''}`}
+                          style={{ borderColor: meta.borderColor }}
+                        >
+                          {/* cover image */}
+                          {mantra.cover_image_url ? (
+                            <img src={mantra.cover_image_url} alt={mantra.title} className="am-card-cover" />
+                          ) : (
+                            <div className="am-card-cover-placeholder" style={{ background: `linear-gradient(135deg,${meta.borderColor}40,rgba(0,0,0,.5))` }}>
+                              <span>{meta.emoji}</span>
+                            </div>
+                          )}
+
+                          {/* body */}
+                          <div className="am-card-body">
+                            <div className="am-card-title">{mantra.title}</div>
+                            <div className="am-card-meta">
+                              {/* category pill */}
+                              <span className="am-pill" style={{ background: meta.pillBg, border: `1px solid ${meta.borderColor}`, color: meta.pillColor }}>
+                                {pSym || meta.emoji} {planet ?? meta.label}
+                              </span>
+                              {/* tier pill */}
+                              {mantra.is_premium ? (
+                                <span className="am-pill" style={{ background: 'rgba(212,175,55,.1)', border: '1px solid rgba(212,175,55,.3)', color: '#D4AF37' }}>
+                                  <Lock size={8} style={{ display: 'inline', marginRight: 3 }} />Members
+                                </span>
+                              ) : (
+                                <span className="am-pill" style={{ background: 'rgba(52,211,153,.07)', border: '1px solid rgba(52,211,153,.2)', color: 'rgba(52,211,153,.8)' }}>
+                                  Free
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,.35)', display: 'flex', gap: 8 }}>
+                              <span>{fmtDur(mantra.duration_seconds)}</span>
+                              <span>·</span>
+                              <span>{mantra.shc_reward} SHC</span>
+                              {!mantra.is_active && <span style={{ color: 'rgba(251,146,60,.7)' }}>· Inactive</span>}
+                            </div>
+                          </div>
+
+                          {/* footer actions */}
+                          <div className="am-card-footer">
+                            <button
+                              onClick={() => toggleActive(mantra.id, mantra.is_active)}
+                              style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', padding: '4px 10px', borderRadius: 100, border: `1px solid ${mantra.is_active ? 'rgba(52,211,153,.25)' : 'rgba(255,255,255,.1)'}`, background: mantra.is_active ? 'rgba(52,211,153,.08)' : 'rgba(255,255,255,.03)', color: mantra.is_active ? 'rgba(52,211,153,.8)' : 'rgba(255,255,255,.35)', cursor: 'pointer', fontFamily: 'inherit' }}
+                            >
+                              {mantra.is_active ? 'Active' : 'Inactive'}
+                            </button>
+                            <div style={{ display: 'flex', gap: 4 }}>
+                              <button
+                                onClick={() => handleEdit(mantra)}
+                                style={{ width: 30, height: 30, borderRadius: '50%', border: '1px solid rgba(255,255,255,.07)', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,.45)', transition: 'all .15s' }}
+                                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#D4AF37'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(212,175,55,.3)'; }}
+                                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,.45)'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,.07)'; }}
+                              >
+                                <Edit size={12} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(mantra.id)}
+                                style={{ width: 30, height: 30, borderRadius: '50%', border: '1px solid rgba(239,68,68,.15)', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(239,68,68,.7)', transition: 'all .15s' }}
+                                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,.08)'; }}
+                                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; }}
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {!loading && mantras.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '60px 0' }}>
+              <div style={{ fontSize: 36, marginBottom: 12 }}>🕉</div>
+              <div style={{ fontSize: 14, color: 'rgba(255,255,255,.35)' }}>No mantras yet — add the first one above</div>
+            </div>
+          )}
         </div>
       </div>
     </>
