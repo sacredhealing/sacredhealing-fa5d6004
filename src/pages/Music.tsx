@@ -3,10 +3,10 @@
  * ║  SACRED SOUND PORTAL — AUTOMATIC 30-SECOND PREVIEW SYSTEM        ║
  * ║                                                                    ║
  * ║  HOW THE AUTO-30s WORKS:                                          ║
- * ║  • Free users: plays audio_url BUT stops at 30s via timeupdate    ║
+ * ║  • Free users: plays full_audio_url BUT stops at 30s via timeupdate║
  * ║  • NO preview_url uploads needed — clips automatically            ║
  * ║  • If preview_url exists: uses it (faster load, less bandwidth)   ║
- * ║  • Prana-Flow+: full audio_url, no timer                          ║
+ * ║  • Prana-Flow+: full full_audio_url, no timer                     ║
  * ║  • Cover images: auto-loaded from cover_image_url (Supabase)      ║
  * ║                                                                    ║
  * ║  Stripe + AffiliateID tracking PRESERVED                          ║
@@ -373,34 +373,44 @@ const NadiScanner: React.FC<{ mahadasha?: string; raga?: string }> = ({ mahadash
 };
 
 /* ─────────────────────────────────────────────────────────────────
-   MUSIC TRACK TYPE
+   MUSIC TRACK TYPE — matches actual music_tracks DB schema
 ───────────────────────────────────────────────────────────────── */
 interface MusicTrack {
-  id: string; title: string; artist?: string | null;
+  id: string;
+  title: string;
+  artist: string;
   cover_image_url?: string | null;
-  audio_url?: string | null;      // full track
-  preview_url?: string | null;    // 30s clip if manually uploaded
-  genre?: string | null; category?: string | null;
-  hz_frequency?: number | null; tier_required?: string | null;
-  duration_seconds?: number | null; bpm?: number | null;
+  full_audio_url: string;   // the real column name in DB
+  preview_url: string;      // 30s preview (required in DB)
+  genre: string;
+  spiritual_path?: string | null;
+  frequency_band?: string | null;  // e.g. "528hz", "432hz"
+  price_usd: number;               // 0 = free, >0 = paid
+  duration_seconds: number;
+  bpm?: number | null;
+  mood?: string | null;
+  energy_level?: string | null;
 }
 
-const HZ_LABELS: Record<number, string> = {
-  174: '174 Hz · Foundation', 285: '285 Hz · Energy Fields', 396: '396 Hz · Root Liberation',
-  417: '417 Hz · Change', 432: '432 Hz · Cosmic Tune', 444: '444 Hz · Angelic Gate',
-  528: '528 Hz · DNA Repair', 639: '639 Hz · Heart Coherence', 741: '741 Hz · Expression',
-  852: '852 Hz · Intuition', 963: '963 Hz · God Frequency',
+// Parse frequency_band like "528hz" → display label
+const HZ_BAND_LABELS: Record<string, string> = {
+  '174hz': '174 Hz · Foundation', '285hz': '285 Hz · Energy Fields',
+  '396hz': '396 Hz · Root Liberation', '417hz': '417 Hz · Change',
+  '432hz': '432 Hz · Cosmic Tune', '444hz': '444 Hz · Angelic Gate',
+  '528hz': '528 Hz · DNA Repair', '639hz': '639 Hz · Heart Coherence',
+  '741hz': '741 Hz · Expression', '852hz': '852 Hz · Intuition',
+  '963hz': '963 Hz · God Frequency',
 };
 
-const TIER_RANK: Record<string, number> = {
-  free: 0, 'prana flow': 1, prana_flow: 1, 'prana-flow': 1,
-  'siddha quantum': 2, siddha_quantum: 2, 'siddha-quantum': 2,
-  'akasha infinity': 3, akasha_infinity: 3, 'akasha-infinity': 3,
-};
+function getHzLabel(band?: string | null): string | null {
+  if (!band) return null;
+  const key = band.toLowerCase().replace(/\s/g, '');
+  return HZ_BAND_LABELS[key] ?? band;
+}
 
-function getTierRank(tier?: string | null): number {
-  if (!tier) return 0;
-  return TIER_RANK[tier.toLowerCase()] ?? 0;
+// free (price_usd === 0) = rank 0; paid = rank 1 (needs Prana-Flow+)
+function getTierRank(price_usd: number): number {
+  return price_usd === 0 ? 0 : 1;
 }
 
 /* ─────────────────────────────────────────────────────────────────
@@ -408,9 +418,9 @@ function getTierRank(tier?: string | null): number {
    ─────────────────────────────────────────────────────────────────
    How it works:
    1. When free user plays → uses preview_url if available (30s clip)
-   2. If NO preview_url → loads audio_url but programmatically stops at 30s
+   2. If NO preview_url → loads full_audio_url but programmatically stops at 30s
       via HTML5 Audio timeupdate event: when currentTime >= 30, pause + fire callback
-   3. Prana-Flow+ → plays full audio_url with no time limit
+   3. Prana-Flow+ → plays full_audio_url with no time limit
    4. A countdown (30→0) is shown in the UI so user sees the preview ending
 ───────────────────────────────────────────────────────────────── */
 const PREVIEW_SECONDS = 30;
@@ -449,15 +459,15 @@ function useAutoPreview(onSnippetEnd: (track: MusicTrack) => void) {
     currentTrackRef.current = track;
 
     // Choose URL:
-    // - Full access → audio_url (full track, no limit)
-    // - Free user with preview_url → use preview_url (pre-cut 30s clip, more efficient)
-    // - Free user WITHOUT preview_url → use audio_url but stop at 30s via timeupdate
+    // - Full access → full_audio_url (full track, no limit)
+    // - Free user with preview_url → use preview_url (pre-cut 30s clip)
+    // - Free user WITHOUT preview_url → use full_audio_url but stop at 30s via timeupdate
     let url: string | null = null;
     if (hasFullAccess) {
-      url = track.audio_url || null;
+      url = track.full_audio_url || null;
     } else {
-      // Prefer preview_url (manual 30s clip) → fallback to auto-truncating audio_url
-      url = track.preview_url || track.audio_url || null;
+      // Prefer preview_url (manual 30s clip) → fallback to auto-truncating full_audio_url
+      url = track.preview_url || track.full_audio_url || null;
     }
 
     if (!url) {
@@ -477,7 +487,7 @@ function useAutoPreview(onSnippetEnd: (track: MusicTrack) => void) {
       const ct = audio.currentTime;
       setState(s => ({ ...s, currentTime: ct }));
 
-      // Auto-stop at 30s for free users (only when using full audio_url without preview_url)
+      // Auto-stop at 30s for free users (only when using full_audio_url without preview_url)
       if (!hasFullAccess && !track.preview_url && ct >= PREVIEW_SECONDS) {
         audio.pause();
         setState(s => ({ ...s, isPlaying: false }));
@@ -533,11 +543,10 @@ const TrackRow: React.FC<{
   onPlay: (t: MusicTrack) => void;
   onLock: (t: MusicTrack) => void;
 }> = ({ track, isActive, isPlaying, progress, secondsLeft, userTierRank, onPlay, onLock }) => {
-  const trackTierRank = getTierRank(track.tier_required);
+  const trackTierRank = getTierRank(track.price_usd);
   const locked = userTierRank < trackTierRank;
   const live = isActive && isPlaying;
-  const hz = track.hz_frequency;
-  const hzLabel = hz ? (HZ_LABELS[hz] ?? `${hz} Hz · Sacred Frequency`) : null;
+  const hzLabel = getHzLabel(track.frequency_band);
   const hasFullAccess = userTierRank >= trackTierRank;
   const showCountdown = isActive && !hasFullAccess && secondsLeft > 0 && secondsLeft <= PREVIEW_SECONDS;
 
@@ -574,7 +583,7 @@ const TrackRow: React.FC<{
       <div style={{ flex: 1, minWidth: 0 }}>
         <div className="track-title">{track.title}</div>
         <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,.4)', letterSpacing: '.14em', textTransform: 'uppercase', marginBottom: 4 }}>
-          {track.genre || track.category || 'Sacred Sound'}{track.bpm ? ` · ${track.bpm} BPM` : ''}
+          {track.spiritual_path || track.genre || 'Sacred Sound'}{track.bpm ? ` · ${track.bpm} BPM` : ''}
         </div>
         {hzLabel && <div className="hz-badge">{hzLabel}</div>}
         <div className="prog-track">
@@ -719,14 +728,14 @@ const Music: React.FC = () => {
     else if (c === 'true') toast.info(t('music.paymentCancelled', 'Payment cancelled.'));
   }, [searchParams, t]);
 
-  // ── Fetch ALL tracks — NO status filter ──
+  // ── Fetch ALL tracks using real DB column names ──
   useEffect(() => {
     (async () => {
       setLoading(true);
       try {
         const { data, error } = await supabase
           .from('music_tracks')
-          .select('id,title,artist,cover_image_url,audio_url,preview_url,genre,category,hz_frequency,tier_required,duration_seconds,bpm')
+          .select('id,title,artist,cover_image_url,full_audio_url,preview_url,genre,spiritual_path,frequency_band,price_usd,duration_seconds,bpm,mood,energy_level')
           .order('created_at', { ascending: false });
         if (data && !error) setTracks(data as MusicTrack[]);
         else if (error) console.error('music_tracks fetch error:', error);
@@ -735,7 +744,7 @@ const Music: React.FC = () => {
     })();
   }, []);
 
-  // ── User tier rank ──
+  // ── User tier rank: admin/paid = full access; free = 30s preview only ──
   const userTierRank = useMemo(() => {
     if (!user) return 0;
     if (isAdmin || adminGranted) return 3;
@@ -773,7 +782,7 @@ const Music: React.FC = () => {
   const { beats, meditations, songs } = useMemo(() => {
     const beats: MusicTrack[] = [], meditations: MusicTrack[] = [], songs: MusicTrack[] = [];
     tracks.forEach(t => {
-      const g = (t.genre || t.category || '').toLowerCase();
+      const g = (t.genre || t.spiritual_path || '').toLowerCase();
       const isMed = g.includes('meditat') || g.includes('deep_healing') || g.includes('healing') || g.includes('sleep') || g.includes('sanctuary');
       const isBeat = g.includes('beat') || g.includes('reggaeton') || g.includes('hip hop') || g.includes('mystic') || g.includes('indian') || (t.title || '').includes('(Beat)');
       if (isMed) meditations.push(t);
@@ -795,7 +804,7 @@ const Music: React.FC = () => {
   const handlePlay = useCallback((track: MusicTrack) => {
     // If same track → toggle pause/play
     if (previewState.trackId === track.id) { togglePause(); return; }
-    const trackTierRank = getTierRank(track.tier_required);
+    const trackTierRank = getTierRank(track.price_usd);
     const hasFullAccess = userTierRank >= trackTierRank;
     playPreview(track, hasFullAccess);
   }, [previewState.trackId, userTierRank, playPreview, togglePause]);
