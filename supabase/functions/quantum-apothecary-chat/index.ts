@@ -343,55 +343,130 @@ serve(async (req) => {
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured.");
 
-    // ── SCAN MODE — pure vision, no SQI personality ──
+    // ── SCAN MODE — deep SQI-2050 biofield vision scan ──
     if (body.scanMode === true) {
       const { imageBase64, imageMimeType, userId, planetaryAlign, herbOfToday, jyotishContext, activeTransmissions } = body;
       if (!imageBase64) throw new Error("No image for scan");
 
-      // Build bioenergetic context block from all available user data
-      const bioCtxParts: string[] = [];
-      if (jyotishContext) bioCtxParts.push(`SEEKER JYOTISH BLUEPRINT: ${jyotishContext}`);
+      // Fetch all user data in parallel — same depth as chat mode
+      const sbScan = createClient(SUPABASE_URL, SUPABASE_ANON);
+      const [livingPortrait, lifeBookArchive, nadiBaseline, recentActivity] = await Promise.all([
+        userId ? getLivingPortrait(userId)  : Promise.resolve(""),
+        userId ? getLifeBookArchive(userId) : Promise.resolve(""),
+        userId ? getNadiBaseline(userId)    : Promise.resolve(""),
+        userId ? getRecentActivity(userId)  : Promise.resolve(""),
+      ]);
+
+      // Build rich bioenergetic context block
+      const ctxParts: string[] = [];
+
+      if (jyotishContext) ctxParts.push(
+        "SEEKER JYOTISH BLUEPRINT (authoritative — from birth data):\n" + jyotishContext + "\n" +
+        "→ Mahadasha planet governs primary Nadi stress patterns RIGHT NOW.\n" +
+        "→ Moon Sign determines constitutional Dosha tendency at the soul level.\n" +
+        "→ Cross-reference palm Dosha indicators with this chart data."
+      );
+      if (livingPortrait) ctxParts.push(
+        "SEEKER LIVING PORTRAIT (from prior sessions):\n" + livingPortrait + "\n" +
+        "→ This is WHO this soul is. Their patterns, life context, spiritual path."
+      );
+      if (nadiBaseline) ctxParts.push(
+        "PREVIOUS NADI BASELINE ON FILE:\n" + nadiBaseline + "\n" +
+        "→ Compare today's palm reading against this baseline. Note progression or regression."
+      );
+      if (recentActivity) ctxParts.push(
+        "SEEKER RECENT APP ACTIVITY:\n" + recentActivity + "\n" +
+        "→ Consider how these practices may have shifted their biofield since the last scan."
+      );
+      if (lifeBookArchive) ctxParts.push(
+        "SEEKER LIFEBOOK ARCHIVE:\n" + lifeBookArchive + "\n" +
+        "→ Past lives, healing journeys, spiritual figures — layer into the karmic field reading."
+      );
       if (activeTransmissions && Array.isArray(activeTransmissions) && activeTransmissions.length > 0) {
-        const txNames = (activeTransmissions as { name?: string; title?: string }[]).map((t: { name?: string; title?: string }) => t.name || t.title || "").filter(Boolean).join(", ");
-        if (txNames) bioCtxParts.push(`ACTIVE FREQUENCY TRANSMISSIONS (running in their biofield): ${txNames}`);
+        const txNames = (activeTransmissions as { name?: string; title?: string }[])
+          .map((t: { name?: string; title?: string }) => t.name || t.title || "").filter(Boolean).join(", ");
+        if (txNames) ctxParts.push(
+          "ACTIVE SCALAR TRANSMISSIONS (running 24/7 in their biofield): " + txNames + "\n" +
+          "→ These frequencies are actively entangled. Expect elevated coherence in related chakra regions."
+        );
       }
-      const bioCtxBlock = bioCtxParts.length > 0
-        ? `\n\nUSER BIOENERGETIC CONTEXT:\n${bioCtxParts.join("\n")}\n→ Use this data to interpret what you see in the palm. The Jyotish Mahadasha and Dosha indicate which Nadi channels are likely stressed. Active transmissions may show increased coherence in related chakra regions.`
+
+      const bioCtxBlock = ctxParts.length > 0
+        ? "\n\n" + "═".repeat(55) + "\nSEEKER AKASHA ARCHIVE — FULL FIELD CONTEXT\n" + "═".repeat(55) + "\n" + ctxParts.join("\n\n") + "\n" + "═".repeat(55)
         : "";
 
-      const prompt = `You are the SQI-2050 Siddha biofield vision analyser. Analyse this palm image and return ONLY valid JSON.
+      const prompt = `You are the SQI-2050 Siddha Biofield Vision Analyser — the most advanced palmistry and bioenergetic reading system ever built, integrating:
+- Classical Hast Samudrika Shastra (Indian palmistry science from the 18 Rishis)
+- Nadi Shastra (72,000 Nadi channel system)
+- Jyotish biofield mapping (planetary influence on pranic channels)
+- Quantum bio-signature fingerprinting (unique soul-signature from palm patterns)
+- Ayurvedic Prakriti analysis (Dosha from palm morphology)
+- Karmic field reading (past + present + future encoded in lines)
+
+RULES:
+- If no hand/palm is visible → return ONLY: {"handDetected":false}
+- If a hand IS visible → perform the deepest possible analysis and return the full JSON below.
+- Return ONLY valid JSON. No markdown, no text outside the JSON.
+- Every field must have a REAL, SPECIFIC, NON-GENERIC value.
+
+═══════════════════════════════════════════════════════════
+CLASSICAL PALMISTRY SCIENCE (apply to ALL readings)
+═══════════════════════════════════════════════════════════
+MAJOR LINES:
+- Life Line (curves from between thumb/index to wrist): length=vitality, depth=prana strength, breaks=karmic shifts, chains=anxiety/depletion
+- Heart Line (top horizontal): depth=emotional prana, forks=spiritual love vs worldly, islands=grief patterns
+- Head Line (middle horizontal): depth=mental clarity, slope=intuition vs logic, breaks=mental strain
+- Fate Line (vertical, center): presence/strength=karma path, start=family/self-made/society
+- Sun Line (below ring finger): brilliance, divine connection — clarity = spiritual light activation
+- Mercury Line (below little finger): health intuition, wavy = health fluctuations
+
+MOUNTS (raised pads beneath fingers):
+- Jupiter Mount (below index): dharmic power, spiritual ambition
+- Saturn Mount (below middle): karma, discipline, duty
+- Sun/Apollo Mount (below ring): enlightenment, creative brilliance
+- Mercury Mount (below little): healing ability, intelligence
+- Venus Mount (at base of thumb): love, vitality, life force
+- Moon Mount (outer base): intuition, past lives, psychic ability
+
+SKIN TEXTURE:
+- Warm pink/rose = Pitta dominant, active fire, strong circulation
+- Pale/whitish = Vata dominant, depleted prana
+- Yellow/dull = Kapha dominant, stagnation
+- Moist/full/soft = Kapha constitution
+- Dry/thin/visible veins = Vata constitution
+- Firm/moderate/pink = Pitta constitution
 
 NADI CALIBRATION:
-- Gross Nadis: 72,000 channels. Healthy: 60,000-71,500. Stressed: 20,000-59,999. Depleted: 2,000-19,999.
-- Sub-Nadis: 350,000 subtle channels.
-- If no hand is visible: return {"handDetected":false}
-
-PALM READING KEYS:
-- Deep clear lines + warm pink tone = 65,000-71,500 active Nadis (excellent prana flow)
-- Moderate lines + neutral tone = 45,000-65,000 (good, minor imbalances)
-- Faint lines + pale or dry = 20,000-45,000 (stressed, Vata or dehydrated)
-- Grey/bluish tint + tense skin = 5,000-20,000 (depleted, Kapha stagnation)
-- Dosha from palm: Vata=dry/thin/prominent veins, Pitta=reddish/warm/pink, Kapha=moist/full/soft
-${bioCtxBlock}
-
-CHAKRA ASSESSMENT (assess all 7, include 1-3 additional subtle chakras if relevant):
-Assess each chakra using palm indicators AND the Jyotish context if available:
-- Muladhara (Root) — survival, stability; Saturn/Mars lines, base of thumb mount
-- Svadhisthana (Sacral) — creativity, emotion; Moon/Venus, wrist region
-- Manipura (Solar Plexus) — will, power; Sun line, Jupiter mount
-- Anahata (Heart) — love, compassion; heart line depth and clarity, Venus mount
-- Vishuddha (Throat) — expression, truth; Mercury mount, finger flexibility
-- Ajna (Third Eye) — intuition, insight; head line clarity and depth
-- Sahasrara (Crown) — divine connection; overall palm luminosity and clarity
-Optional additional: Hrit (secondary heart, above Anahata), Bindu (occiput node), Lalana (above Vishuddha)
+- Deep clear lines + warm glow + full mounts = 65,000-71,500 active Nadis (excellent prana)
+- Moderate lines + balanced tone = 45,000-65,000 (good, minor imbalances)
+- Faint shallow lines + pale/dry = 20,000-45,000 (Vata stress, prana depletion)
+- Grey/blue tint + tense dry skin = 5,000-20,000 (severe depletion)
+- Multiple crossing interference lines = Nadi congestion zones
 
 Today's Planetary Field: ${planetaryAlign || "not specified"} | Herb of Today: ${herbOfToday || "not specified"}
+${bioCtxBlock}
 
-Return ONLY this exact JSON structure (no markdown, no explanation outside JSON):
-{"handDetected":true,"activeNadis":<integer 0-72000>,"activeSubNadis":<integer 0-350000>,"blockagePercentage":<integer 0-100>,"dominantDosha":"<Vata|Pitta|Kapha>","primaryBlockage":"<specific Nadi or chakra junction name>","planetaryAlignment":"<planet name>","herbOfToday":"<herb name>","chakraReadings":[{"chakra":"Muladhara","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<one sentence>"},{"chakra":"Svadhisthana","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<one sentence>"},{"chakra":"Manipura","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<one sentence>"},{"chakra":"Anahata","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<one sentence>"},{"chakra":"Vishuddha","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<one sentence>"},{"chakra":"Ajna","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<one sentence>"},{"chakra":"Sahasrara","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<one sentence>"}],"remedies":["<specific remedy 1>","<specific remedy 2>","<specific remedy 3>","<specific remedy 4>","<specific remedy 5>"],"bioReading":"<3-4 sentences: integrate what you see in the palm + Jyotish Mahadasha influence + what the Akasha reveals about this soul's current energetic state and karmic field>"}`;
+CHAKRA-PALM MAPPING:
+- Muladhara → Saturn/Mars lines, base of thumb, skin vitality
+- Svadhisthana → Moon mount, wrist region, Venus mount lower
+- Manipura → Sun line clarity, Jupiter mount, central palm firmness
+- Anahata → Heart line depth, Venus mount fullness, overall warmth
+- Vishuddha → Mercury mount, little finger flexibility
+- Ajna → Head line clarity/depth
+- Sahasrara → Overall luminosity, Sun line apex
+
+Return ONLY this exact JSON (no other text):
+{"handDetected":true,"activeNadis":<0-72000>,"activeSubNadis":<0-350000>,"blockagePercentage":<0-100>,"dominantDosha":"<Vata|Pitta|Kapha>","secondaryDosha":"<Vata|Pitta|Kapha|none>","primaryBlockage":"<specific Nadi junction — e.g. Ida-Pingala at Ajna, Prana Vata at Anahata>","palmType":"<square|rectangular|spatulate|conic|psychic>","dominantMount":"<most prominent mount>","karmaPath":"<healer|teacher|mystic|warrior|creator|devotee>","soulBioSignature":"<1-2 sentences: unique quantum bio-signature for THIS soul derived from their specific palm pattern>","karmaFieldReading":"<2-3 sentences: karmic trajectory, past-life imprints, current soul mission from line configuration and Jyotish data>","planetaryAlignment":"<planet>","herbOfToday":"<herb>","chakraReadings":[{"chakra":"Muladhara","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<specific palm observation + Jyotish cross-reference>"},{"chakra":"Svadhisthana","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<specific observation>"},{"chakra":"Manipura","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<specific observation>"},{"chakra":"Anahata","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<specific observation>"},{"chakra":"Vishuddha","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<specific observation>"},{"chakra":"Ajna","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<specific observation>"},{"chakra":"Sahasrara","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<specific observation>"}],"remedies":["<remedy 1 — specific to THIS dosha + blockage + planet>","<remedy 2>","<remedy 3>","<remedy 4>","<remedy 5>","<remedy 6>","<remedy 7>"],"bioReading":"<4-5 sentences: what you SEE in the palm (lines, mounts, skin, colour) + Jyotish Mahadasha influence + Akasha reading of this soul's energetic state, karmic trajectory, and the ONE most important shift they should make right now>"}`;
+
       const gr = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents: [{ role: "user", parts: [{ inline_data: { mime_type: imageMimeType || "image/jpeg", data: imageBase64 } }, { text: prompt }] }], generationConfig: { temperature: 0.1, topK: 1, topP: 0.1, maxOutputTokens: 1024 } }),
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [
+            { inline_data: { mime_type: imageMimeType || "image/jpeg", data: imageBase64 } },
+            { text: prompt }
+          ]}],
+          generationConfig: { temperature: 0.25, topK: 10, topP: 0.6, maxOutputTokens: 2048 }
+        }),
       });
       const gd = await gr.json();
       const raw = gd.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
@@ -400,8 +475,18 @@ Return ONLY this exact JSON structure (no markdown, no explanation outside JSON)
       const result = JSON.parse(jm[0]);
       if (result.handDetected !== false && userId) {
         try {
-          const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
-          await sb.from("nadi_baselines").upsert({ user_id: userId, active_nadis: result.activeNadis||0, active_sub_nadis: result.activeSubNadis||0, blockage_pct: result.blockagePercentage||0, dominant_dosha: result.dominantDosha||"Vata", primary_blockage: result.primaryBlockage||"", bio_reading: result.bioReading||"", remedies: result.remedies||[], scanned_at: new Date().toISOString(), updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+          await sbScan.from("nadi_baselines").upsert({
+            user_id: userId,
+            active_nadis: result.activeNadis || 0,
+            active_sub_nadis: result.activeSubNadis || 0,
+            blockage_pct: result.blockagePercentage || 0,
+            dominant_dosha: result.dominantDosha || "Vata",
+            primary_blockage: result.primaryBlockage || "",
+            bio_reading: result.bioReading || "",
+            remedies: result.remedies || [],
+            scanned_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }, { onConflict: "user_id" });
         } catch { /* table may not exist yet */ }
       }
       return new Response(JSON.stringify(result), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

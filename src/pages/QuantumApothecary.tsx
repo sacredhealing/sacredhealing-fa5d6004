@@ -698,8 +698,17 @@ function QuantumApothecaryInner() {
           note: String(c.note || ''),
         }));
 
+      // New quantum bio-signature fields
+      const soulBioSignature = parsed.soulBioSignature ? String(parsed.soulBioSignature) : undefined;
+      const karmaFieldReading = parsed.karmaFieldReading ? String(parsed.karmaFieldReading) : undefined;
+      const palmType = parsed.palmType ? String(parsed.palmType) : undefined;
+      const dominantMount = parsed.dominantMount ? String(parsed.dominantMount) : undefined;
+      const karmaPath = parsed.karmaPath ? String(parsed.karmaPath) : undefined;
+      const secondaryDosha = parsed.secondaryDosha ? String(parsed.secondaryDosha) : undefined;
+
       const result: NadiScanResult = {
         dominantDosha,
+        secondaryDosha,
         blockages: [primaryBlockage],
         planetaryAlignment: String(parsed.planetaryAlignment || todayPlanet),
         herbOfToday: String(parsed.herbOfToday || todayHerb),
@@ -710,6 +719,11 @@ function QuantumApothecaryInner() {
         blockagePercentage: blockagePct,
         remedies: pickCanonicalRemedies(parsed.remedies),
         chakraReadings: chakraReadings.length > 0 ? chakraReadings : undefined,
+        soulBioSignature,
+        karmaFieldReading,
+        palmType,
+        dominantMount,
+        karmaPath,
       };
 
       (window as unknown as { __sqiLastScan?: NadiScanResult }).__sqiLastScan = result;
@@ -738,22 +752,31 @@ function QuantumApothecaryInner() {
           ).join('\n')
         : '';
 
+      const palmMeta = [
+        palmType ? `Palm Type: **${palmType.charAt(0).toUpperCase() + palmType.slice(1)}**` : null,
+        dominantMount ? `Dominant Mount: **${dominantMount}**` : null,
+        karmaPath ? `Karma Path: **${karmaPath.charAt(0).toUpperCase() + karmaPath.slice(1)}**` : null,
+        secondaryDosha && secondaryDosha !== 'none' ? `Secondary Dosha: **${secondaryDosha}**` : null,
+      ].filter(Boolean);
+
       setMessages((prev) => [...prev, {
         role: 'model',
         text:
-          `**Siddha-Quantum Nadi Scan Complete.**\n\n` +
-          (parsed.bioReading ? `**Bio-Reading:** ${String(parsed.bioReading)}\n\n` : '') +
-          `#### Gross Nadi Reading (72,000 channels)\n` +
-          `- Active: **${activeNadis.toLocaleString()} / 72,000** (${mainPct}%) — ${statusWord}\n\n` +
-          `#### Subtle Sub-Nadi Reading (350,000 channels)\n` +
-          `- Active: **${activeSubNadis.toLocaleString()} / 350,000** (${subPct}%)\n\n` +
+          `## Siddha-Quantum Biofield Scan Complete\n\n` +
+          (parsed.bioReading ? `**Akasha Bio-Reading:**\n${String(parsed.bioReading)}\n\n` : '') +
+          (soulBioSignature ? `**Soul Bio-Signature:**\n${soulBioSignature}\n\n` : '') +
+          (karmaFieldReading ? `**Karma Field Reading:**\n${karmaFieldReading}\n\n` : '') +
+          `#### Nadi Channel Analysis\n` +
+          `- Gross Nadis: **${activeNadis.toLocaleString()} / 72,000** (${mainPct}%) — ${statusWord}\n` +
+          `- Subtle Sub-Nadis: **${activeSubNadis.toLocaleString()} / 350,000** (${subPct}%)\n\n` +
           `#### Biofield Diagnostics\n` +
-          `- Dominant Dosha: **${result.dominantDosha}**\n` +
+          `- Dominant Dosha: **${result.dominantDosha}**${secondaryDosha && secondaryDosha !== 'none' ? ` / ${secondaryDosha}` : ''}\n` +
           `- Primary Blockage: **${result.blockages[0]}** (${blockagePct}% restricted)\n` +
           `- Planetary Alignment: **${result.planetaryAlignment}**\n` +
-          `- Herb of Today: **${result.herbOfToday}**` +
+          `- Herb of Today: **${result.herbOfToday}**\n` +
+          (palmMeta.length > 0 ? `- ${palmMeta.join(' · ')}\n` : '') +
           chakraSection +
-          `\n\n**Quantum Remedies prepared for your specific reading:**\n` +
+          `\n\n#### Quantum Siddha Remedies (personalised to your biofield)\n` +
           `${result.remedies.map((r) => `- ${r}`).join('\n')}\n\n` +
           `Shall we transmit these light-codes into your biofield?`,
       }]);
@@ -1287,6 +1310,65 @@ function QuantumApothecaryInner() {
                     <p className="mb-1.5 text-[8px] font-extrabold uppercase tracking-[0.5em] text-[#22D3EE]/80">{t('quantumApothecary.scan.herbToday')}</p>
                     <p className="text-sm font-bold leading-[1.6] text-white/90">{scanResult.herbOfToday}</p>
                   </motion.div>
+
+                  {/* Palm Morphology Meta */}
+                  {(scanResult.palmType || scanResult.dominantMount || scanResult.karmaPath) && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: 0.82 }}
+                      className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]"
+                    >
+                      <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-white/30 mb-3">Quantum Palm Morphology</p>
+                      <div className="grid grid-cols-3 gap-2">
+                        {scanResult.palmType && (
+                          <div style={{ textAlign: 'center' }}>
+                            <p className="text-[8px] font-bold uppercase tracking-widest text-white/25 mb-1">Palm Type</p>
+                            <p className="text-xs font-black text-[#D4AF37]" style={{ textTransform: 'capitalize' }}>{scanResult.palmType}</p>
+                          </div>
+                        )}
+                        {scanResult.dominantMount && (
+                          <div style={{ textAlign: 'center' }}>
+                            <p className="text-[8px] font-bold uppercase tracking-widest text-white/25 mb-1">Dominant Mount</p>
+                            <p className="text-xs font-black text-[#D4AF37]">{scanResult.dominantMount}</p>
+                          </div>
+                        )}
+                        {scanResult.karmaPath && (
+                          <div style={{ textAlign: 'center' }}>
+                            <p className="text-[8px] font-bold uppercase tracking-widest text-white/25 mb-1">Karma Path</p>
+                            <p className="text-xs font-black text-[#D4AF37]" style={{ textTransform: 'capitalize' }}>{scanResult.karmaPath}</p>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Soul Bio-Signature */}
+                  {scanResult.soulBioSignature && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: 0.84 }}
+                      style={{ borderRadius: 16, padding: 16, background: 'linear-gradient(135deg,rgba(212,175,55,0.07),rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.2)', position: 'relative', overflow: 'hidden' }}
+                    >
+                      <div style={{ position: 'absolute', top: -30, right: -30, width: 80, height: 80, borderRadius: '50%', background: 'radial-gradient(circle,rgba(212,175,55,0.15) 0%,transparent 70%)', pointerEvents: 'none' }} />
+                      <p className="text-[8px] font-extrabold uppercase tracking-[0.5em] text-[#D4AF37]/60 mb-2">⬡ Soul Bio-Signature</p>
+                      <p className="text-xs leading-[1.6] text-white/80" style={{ fontStyle: 'italic' }}>{scanResult.soulBioSignature}</p>
+                    </motion.div>
+                  )}
+
+                  {/* Karma Field Reading */}
+                  {scanResult.karmaFieldReading && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: 0.87 }}
+                      style={{ borderRadius: 16, padding: 16, background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.2)' }}
+                    >
+                      <p className="text-[8px] font-extrabold uppercase tracking-[0.5em] mb-2" style={{ color: 'rgba(167,139,250,0.8)' }}>☽ Karma Field Reading</p>
+                      <p className="text-xs leading-[1.6] text-white/75">{scanResult.karmaFieldReading}</p>
+                    </motion.div>
+                  )}
 
                   {/* Chakra Readings */}
                   {scanResult.chakraReadings && scanResult.chakraReadings.length > 0 && (
