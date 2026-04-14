@@ -1,0 +1,61 @@
+# Sacred Healing — SQI 2050 Cursor Rules
+# Place this file at: .cursor/rules/sqi.mdc
+# (or paste into Cursor Settings → Rules for AI)
+
+## PROJECT IDENTITY
+This is the Sacred Healing app (sacredhealing.lovable.app).
+Repo: sacredhealing/sacredhealing-fa5d6004
+Supabase project: ssygukfdbtehvtndandn
+Working directory: /Volumes/CREATION/SACREDHEALING APP + MEMECOIN BOT/sacredhealing-main
+Stack: React, TypeScript, Vite, Tailwind, Supabase, Stripe
+
+## NEVER TOUCH — ABSOLUTE RULES
+- NEVER modify Stripe checkout logic
+- NEVER modify AffiliateID tracking
+- NEVER modify payment tier access gates
+- NEVER modify the Polymarket bot logic (src/pages/PolymarketBotDetail.tsx)
+- NEVER empty or overwrite a file that has working logic — always read first, then edit
+
+## DESIGN SYSTEM — ALWAYS APPLY
+Primary color: Siddha-Gold #D4AF37
+Background: Akasha-Black #050505
+Accent: Vayu-Cyan #22D3EE
+Font: Plus Jakarta Sans, weight 900 for titles, 800 for labels, 400 for body
+Glass cards: background rgba(255,255,255,0.02), backdrop-filter blur(40px), border 1px solid rgba(255,255,255,0.05), border-radius 40px
+Gold glow: text-shadow 0 0 15px rgba(212,175,55,0.3)
+Labels: 8px, font-weight 800, letter-spacing 0.4em, uppercase
+Titles: font-weight 900, letter-spacing -0.05em
+
+## SUPABASE PATTERNS
+Always use: import { supabase } from "@/integrations/supabase/client"
+Always use: import { useAuth } from "@/hooks/useAuth"
+User ID: const { user } = useAuth() → user.id
+RLS is enabled on all tables — always filter by user_id
+
+## DEPLOYMENT
+Lovable Pro is out of credits — deploy via GitHub web editor or Cursor git push only
+After ANY change: git add . && git commit -m "fix: [description]" && git push origin main
+
+## KEY FILES
+- src/hooks/useJyotishProfile.ts — Jyotish + Dasha engine (Swiss Ephemeris)
+- src/hooks/useSQIFieldContext.ts — Unified field context for Apothecary
+- src/components/NadiScanner.tsx — biometric rPPG scanner
+- supabase/functions/jyotish-ephemeris/index.ts — ephemeris edge function
+- supabase/functions/quantum-apothecary-chat/index.ts — Brighu AI edge function
+- supabase/functions/vedic-guru-chat/index.ts — Jyotish reading edge function
+
+## WHEN MAKING ANY CHANGE
+1. Read the target file first
+2. Make the minimum change needed
+3. Never overwrite working logic
+4. Always git push after confirming it works
+5. Test on sacredhealing.lovable.app after push
+
+## TIERS
+Free → Prana-Flow (€19/mo) → Siddha-Quantum (€45/mo) → Akasha-Infinity (€1111 lifetime)
+Access columns in profiles table: prana_flow_access, siddha_quantum_access, akasha_infinity_access
+
+## AI MODELS IN USE
+Quantum Apothecary (Brighu): Gemini 2.5 Flash via quantum-apothecary-chat edge function
+Jyotish readings: Gemini 2.5 Flash via vedic-guru-chat edge function
+Ephemeris: VedAstro API (Swiss Ephemeris / Lahiri) via jyotish-ephemeris edge function
