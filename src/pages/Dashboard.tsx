@@ -301,15 +301,41 @@ const Dashboard: React.FC = () => {
   const dashaCycle = jyotish.isLoading ? null : (currentDasha || null);
   const horaPlanet = horaWatch.calculation?.currentHora?.planet || 'Venus';
   const openingLine = jyotish.isLoading
-    ? t('dashboard.heroOpeningLoading')
+    ? 'Accessing your Akasha-Neural Archive...'
     : currentDasha
-      ? t('dashboard.heroOpeningWithDasha', {
-          dasha: currentDasha,
-          antardasha: currentAntardasha ?? '',
-          hasAntardasha: currentAntardasha ? '1' : '',
-        })
-      : t('dashboard.heroOpeningDefault');
+      ? `As you move through your ${currentDasha} cycle${currentAntardasha ? `, ${currentAntardasha} sub-period` : ''}...`
+      : 'As you step into this field of Prema-Pulse transmission...';
   const heroWisdom = openingLine;
+
+  const scanResult = (() => {
+    try {
+      const raw = localStorage.getItem('sqi_scan_result');
+      return raw ? (JSON.parse(raw) as Record<string, unknown>) : null;
+    } catch {
+      return null;
+    }
+  })();
+
+  const activatedNadis =
+    Number(
+      scanResult?.activatedNadis ??
+        scanResult?.activeNadis ??
+        scanResult?.nadisActive ??
+        0,
+    ) || 0;
+  const rawBlock =
+    scanResult?.blockagePercent ??
+    scanResult?.blockagePercentage ??
+    (typeof scanResult?.blockage === 'number' ? scanResult.blockage : undefined);
+  const blockagePct = (() => {
+    if (rawBlock == null || rawBlock === '') return 65;
+    const n = Number(rawBlock);
+    return Number.isFinite(n) ? n : 65;
+  })();
+  const nadiStatusLine =
+    activatedNadis > 0
+      ? `Nadi flow: ${activatedNadis.toLocaleString()} / 72,000 · Blockage: ${blockagePct}%`
+      : 'Run a Nadi Scan to calibrate your Soul Field.';
   const horaDurationMs = horaWatch.calculation?.currentHora?.durationMinutes
     ? horaWatch.calculation.currentHora.durationMinutes * 60 * 1000
     : 1;
@@ -656,15 +682,7 @@ const Dashboard: React.FC = () => {
               <div className="sq-kinetic-track">
                 <div className="sq-kinetic-fill" />
               </div>
-              <div className="sq-kinetic-sub">
-                {soulFieldSignal.activeNadis > 0
-                  ? t('dashboard.kineticNadiLine', {
-                      defaultValue: 'Nadi flow: {{nadis}} / 72,000 · Blockage: {{block}}%',
-                      nadis: soulFieldSignal.activeNadis.toLocaleString(),
-                      block: soulFieldSignal.blockagePercentage,
-                    })
-                  : t('dashboard.kineticNadiHint', 'Run a Nadi Scan to calibrate your Soul Field.')}
-              </div>
+              <div className="sq-kinetic-sub">{nadiStatusLine}</div>
             </div>
             {/* Row 2: achievement badges — horizontal scroll strip (match preview) */}
             {achievements.length > 0 && (
