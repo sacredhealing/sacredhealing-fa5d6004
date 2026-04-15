@@ -2893,6 +2893,67 @@ const Community = () => {
           ) : null}
         </div>
       </div>
+
+      {/* Go Live Naming Dialog */}
+      {showGoLiveDialog && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 9999,
+          background: "rgba(0,0,0,.75)", backdropFilter: "blur(8px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <div style={{
+            background: "#0a0a0a", border: "1px solid rgba(212,175,55,.3)",
+            borderRadius: 20, padding: 28, width: "90%", maxWidth: 400,
+          }}>
+            <h3 style={{ color: "#D4AF37", fontWeight: 900, fontSize: 16, marginBottom: 4 }}>
+              🔴 Name Your Live Session
+            </h3>
+            <p style={{ color: "rgba(255,255,255,.5)", fontSize: 12, marginBottom: 16 }}>
+              Going live in {goLiveChannelName}. Give it a title so members know what it's about.
+            </p>
+            <input
+              autoFocus
+              placeholder="e.g. Evening Meditation Circle"
+              value={goLiveTitle}
+              onChange={(e) => setGoLiveTitle(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") confirmGoLive(); }}
+              style={{
+                width: "100%", padding: "12px 16px", borderRadius: 12,
+                background: "rgba(255,255,255,.05)", border: "1px solid rgba(212,175,55,.2)",
+                color: "#fff", fontSize: 14, outline: "none",
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+              }}
+            />
+            <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
+              <button
+                onClick={() => setShowGoLiveDialog(false)}
+                style={{
+                  flex: 1, padding: "10px 0", borderRadius: 12,
+                  background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)",
+                  color: "rgba(255,255,255,.6)", fontSize: 12, fontWeight: 700,
+                  cursor: "pointer", textTransform: "uppercase", letterSpacing: ".1em",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmGoLive}
+                disabled={daily.isCreating}
+                style={{
+                  flex: 1, padding: "10px 0", borderRadius: 12,
+                  background: "linear-gradient(135deg, rgba(212,175,55,.3), rgba(212,175,55,.6))",
+                  border: "none", color: "#050505", fontSize: 12, fontWeight: 900,
+                  cursor: daily.isCreating ? "wait" : "pointer",
+                  textTransform: "uppercase", letterSpacing: ".1em",
+                  opacity: daily.isCreating ? 0.5 : 1,
+                }}
+              >
+                {daily.isCreating ? "Starting..." : "🔴 Go Live"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
