@@ -97,7 +97,7 @@ export function useAyurvedaAnalysis(): UseAyurvedaAnalysisResult {
         // Insert new
         const { error: insertError } = await supabase
           .from('ayurveda_profiles')
-          .insert({ user_id: user.id, ...sharedPayload });
+          .insert({ user_id: user.id, ...sharedPayload } as any);
 
         if (insertError) {
           console.error('Error saving Prakriti:', insertError);
