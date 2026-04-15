@@ -1094,7 +1094,7 @@ function QuantumApothecaryInner() {
 
       {/* Messages */}
       <div
-        className="custom-scrollbar relative flex-1 overflow-y-auto bg-[#050505]/60 p-4 sm:p-5 space-y-4 scrollbar-thin scrollbar-thumb-white/10"
+        className="qa-sqi-chat custom-scrollbar relative flex-1 overflow-y-auto bg-[#050505]/60 px-2 py-4 sm:px-4 md:px-5 space-y-4 scrollbar-thin scrollbar-thumb-white/10"
         ref={scrollContainerCallbackRef}
       >
         <div
@@ -1121,22 +1121,22 @@ function QuantumApothecaryInner() {
           {messages.map((msg, i) => {
               return (
               <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                className={`flex w-full min-w-0 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 {msg.role === 'user' ? (
                   <div
-                    className="ml-auto max-w-[80%] break-words rounded-[20px] px-4 py-3 text-sm leading-relaxed text-white/95"
+                    className="ml-auto w-full max-w-[min(100%,36rem)] break-words rounded-[20px] px-3 py-3 sm:px-4 text-sm leading-relaxed text-white/95"
                     style={{
                       background: 'linear-gradient(135deg, rgba(212,175,55,0.18), rgba(212,175,55,0.08))',
                       border: '1px solid rgba(212,175,55,0.25)',
                     }}
                   >
-                    <div className="markdown-body">{renderChatText(msg.text, 'user')}</div>
+                    <div className="markdown-body w-full min-w-0 text-left">{renderChatText(msg.text, 'user')}</div>
                   </div>
                 ) : (
-                  <div className="w-full max-w-[92%]">
+                  <div className="w-full min-w-0 max-w-full">
                     <p className="mb-2 text-[8px] font-extrabold uppercase tracking-[0.3em] text-[#D4AF37]/70">SQI · AKASHA ARCHIVE</p>
-                    <div className="glass-card rounded-[20px] border border-white/[0.05] bg-white/[0.02] p-5 text-sm font-light leading-[1.8] text-white/85">
-                      <div className="markdown-body">{renderChatText(msg.text, 'model')}</div>
+                    <div className="glass-card w-full min-w-0 rounded-[20px] border border-white/[0.05] bg-white/[0.02] px-3 py-4 text-sm font-light leading-[1.75] text-white/85 sm:px-5 sm:py-5">
+                      <div className="markdown-body w-full min-w-0 max-w-none text-left [overflow-wrap:anywhere]">{renderChatText(msg.text, 'model')}</div>
                     </div>
                   </div>
                 )}
@@ -1958,6 +1958,12 @@ SQI — read my complete field and give me a deep Akashic transmission based on 
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800;900&display=swap');
 
         * { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+        /* SQI chat: use full panel width (no artificial narrow column) */
+        .qa-sqi-chat .markdown-body {
+          width: 100%;
+          max-width: none;
+        }
 
         /* ── SQI-2050 Glassmorphism Standard ── */
         .glass-card {

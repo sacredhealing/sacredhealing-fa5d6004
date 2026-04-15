@@ -586,14 +586,14 @@ export default function AdminQuantumApothecary2045() {
                 </div>
               </div>
             )}
-            <div className="custom-scrollbar flex-1 space-y-6 overflow-y-auto p-6">
+            <div className="custom-scrollbar flex-1 space-y-6 overflow-y-auto px-3 py-4 sm:px-5 sm:py-6">
               {messages.map((msg, i) => (
-                <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`flex w-full min-w-0 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div
-                    className={`max-w-[80%] rounded-[28px] p-4 text-sm leading-[1.6] ${
+                    className={`min-w-0 rounded-[28px] p-3 text-sm leading-[1.65] sm:p-4 [overflow-wrap:anywhere] ${
                       msg.role === 'user'
-                        ? 'rounded-tr-none border border-[#D4AF37]/35 bg-gradient-to-br from-[#F5E17A] to-[#B8960C] text-[#050505] shadow-[0_0_28px_rgba(212,175,55,0.25)]'
-                        : 'rounded-tl-none border border-white/[0.08] bg-white/[0.04] text-white/65'
+                        ? 'ml-auto w-full max-w-[min(100%,36rem)] rounded-tr-none border border-[#D4AF37]/35 bg-gradient-to-br from-[#F5E17A] to-[#B8960C] text-[#050505] shadow-[0_0_28px_rgba(212,175,55,0.25)]'
+                        : 'w-full max-w-full rounded-tl-none border border-white/[0.08] bg-white/[0.04] text-white/65'
                     }`}
                   >
                     {msg.text}
