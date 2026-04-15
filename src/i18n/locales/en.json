@@ -4807,7 +4807,18 @@
       "initiate": "Initiate Scan",
       "scanning": "Scanning…",
       "analyzingBiofield": "Analyzing Biofield…",
-      "herbToday": "Herb of Today"
+      "analyzingBiofieldShort": "Analyzing…",
+      "herbToday": "Herb of Today",
+      "nadiMirrorHint": "Mirror view · face visible · good light on skin",
+      "frontCameraLive": "Front camera · you should see yourself",
+      "rearCameraLive": "Rear camera · point at your palm",
+      "palmFaceFrontLine1": "Hold palm toward the lens",
+      "palmFaceFrontLine2": "Keep your face in frame (light on skin)",
+      "rearAimPalmLine1": "Aim camera at your palm",
+      "rearAimPalmLine2": "Fill the frame clearly",
+      "initiateRearShort": "Use rear camera instead (palm only)",
+      "rescanFrontCamera": "Rescan · front camera (see yourself)",
+      "rescanRearCamera": "Rescan · rear camera"
     },
     "frequencyLibrarySection": {
       "title": "Frequency Library",

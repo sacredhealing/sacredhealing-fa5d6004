@@ -593,7 +593,7 @@ function QuantumApothecaryInner() {
   const runNadiScan = async (overrideFacing?: 'user' | 'environment') => {
     if (isScanning) return;
     const facing = overrideFacing ?? nadiScanFacing;
-    if (overrideFacing) setNadiScanFacing(overrideFacing);
+    setNadiScanFacing(facing);
 
     setScanError(null);
     setScanPhase('camera');
@@ -1400,8 +1400,7 @@ SQI — read my complete field and give me a deep Akashic transmission based on 
               />
             </div>
 
-            {/* ── Old scan result display (palm AI scan) — keep below biometric scanner ── */}
-            {scanResult && (
+            {/* ── Palm AI scan (Digital Nadi): show initiate when no result; show readings after scan ── */}
             <div className="glass-card p-6 sm:p-7 qa-card-hover">
               <div className="mb-6 flex justify-between gap-3">
                 <div>
@@ -1642,14 +1641,22 @@ SQI — read my complete field and give me a deep Akashic transmission based on 
                     >
                       Apply Remedies · Scalar Lock
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => runNadiScan('environment')}
-                      disabled={isScanning}
-                      className="w-full rounded-[28px] border border-white/[0.08] bg-white/[0.05] py-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-white/70 transition-all hover:border-[#D4AF37]/25 hover:text-[#D4AF37] disabled:opacity-35"
-                    >
-                      Rescan · Rear Camera
-                    </button>
+                  <button
+                    type="button"
+                    onClick={() => runNadiScan('user')}
+                    disabled={isScanning}
+                    className="w-full rounded-[28px] border border-white/[0.08] bg-white/[0.05] py-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-white/70 transition-all hover:border-[#D4AF37]/25 hover:text-[#D4AF37] disabled:opacity-35"
+                  >
+                    {t('quantumApothecary.scan.rescanFrontCamera')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => runNadiScan('environment')}
+                    disabled={isScanning}
+                    className="w-full rounded-[28px] border border-white/[0.08] bg-white/[0.05] py-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-white/70 transition-all hover:border-[#D4AF37]/25 hover:text-[#D4AF37] disabled:opacity-35"
+                  >
+                    {t('quantumApothecary.scan.rescanRearCamera')}
+                  </button>
                   </div>
                 </div>
               ) : (
@@ -1664,22 +1671,37 @@ SQI — read my complete field and give me a deep Akashic transmission based on 
                   {/* Camera live feed */}
                   {(scanPhase === 'camera' || scanPhase === 'analyzing') ? (
                     <div className="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center">
-                      <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover absolute inset-0" />
+                      <video
+                        ref={videoRef}
+                        autoPlay
+                        muted
+                        playsInline
+                        className={`w-full h-full object-cover absolute inset-0 ${nadiScanFacing === 'user' ? '-scale-x-100' : ''}`}
+                        style={nadiScanFacing === 'user' ? { objectPosition: 'center 30%' } : undefined}
+                      />
                       <div className="absolute inset-0 flex flex-col items-center justify-between p-6 pointer-events-none">
                         <div className="flex items-center gap-2 bg-black/70 rounded-full px-4 py-2 mt-[env(safe-area-inset-top)]">
                           <div className="w-2 h-2 rounded-full bg-[#D4AF37] animate-ping" style={{ boxShadow: '0 0 6px rgba(212,175,55,0.8)' }} />
                           <span className="text-xs font-bold uppercase tracking-[0.3em] text-[#D4AF37]">
-                            {scanPhase === 'camera' ? 'Rear cam · frame your palm…' : 'Reading your biofield…'}
+                            {scanPhase === 'camera'
+                              ? (nadiScanFacing === 'user'
+                                ? t('quantumApothecary.scan.frontCameraLive')
+                                : t('quantumApothecary.scan.rearCameraLive'))
+                              : t('quantumApothecary.scan.analyzingBiofield')}
                           </span>
                         </div>
-                        <div className="border-2 border-dashed border-[#D4AF37]/50 rounded-2xl w-48 h-32 flex items-center justify-center">
-                          <span className="text-sm font-bold text-[#D4AF37]/60 uppercase tracking-widest text-center leading-relaxed">
-                            {scanPhase === 'camera' ? <>Aim camera<br />at palm</> : <>Analyzing<br/>biofield…</>}
+                        <div className="border-2 border-dashed border-[#D4AF37]/50 rounded-2xl w-48 h-32 flex items-center justify-center px-2">
+                          <span className="text-[11px] font-bold text-[#D4AF37]/70 uppercase tracking-widest text-center leading-relaxed">
+                            {scanPhase === 'camera'
+                              ? (nadiScanFacing === 'user'
+                                ? <>{t('quantumApothecary.scan.palmFaceFrontLine1')}<br />{t('quantumApothecary.scan.palmFaceFrontLine2')}</>
+                                : <>{t('quantumApothecary.scan.rearAimPalmLine1')}<br />{t('quantumApothecary.scan.rearAimPalmLine2')}</>)
+                              : <>{t('quantumApothecary.scan.analyzingBiofieldShort')}</>}
                           </span>
                         </div>
                         <div className="flex items-center gap-2 bg-black/70 rounded-full px-4 py-2 mb-[env(safe-area-inset-bottom)]">
                           <Activity size={14} className="text-[#D4AF37]" />
-                          <span className="text-sm font-black text-[#D4AF37]">Scanning…</span>
+                          <span className="text-sm font-black text-[#D4AF37]">{t('quantumApothecary.scan.scanning')}</span>
                         </div>
                       </div>
                     </div>
@@ -1697,7 +1719,7 @@ SQI — read my complete field and give me a deep Akashic transmission based on 
                   {/* Scan button — admin 2045 gold pill */}
                   <button
                     type="button"
-                    onClick={() => runNadiScan('environment')}
+                    onClick={() => runNadiScan('user')}
                     disabled={scanPhase === 'camera' || scanPhase === 'analyzing'}
                     className="w-full rounded-[40px] border border-[#D4AF37]/40 bg-gradient-to-b from-[#F5E17A] via-[#D4AF37] to-[#A07C10] px-8 py-3.5 text-xs font-black uppercase tracking-[0.2em] text-[#050505] shadow-[0_12px_40px_rgba(212,175,55,0.35)] transition-all hover:shadow-[0_16px_48px_rgba(212,175,55,0.45)] disabled:border-white/10 disabled:bg-white/[0.05] disabled:text-white/40 disabled:shadow-none disabled:opacity-60"
                   >
@@ -1707,10 +1729,19 @@ SQI — read my complete field and give me a deep Akashic transmission based on 
                         ? t('quantumApothecary.scan.analyzingBiofield')
                         : t('quantumApothecary.scan.initiate')}
                   </button>
+                  {scanPhase === 'idle' && (
+                    <button
+                      type="button"
+                      onClick={() => runNadiScan('environment')}
+                      disabled={isScanning}
+                      className="mt-2 w-full rounded-2xl border border-white/[0.08] bg-transparent py-2.5 text-[10px] font-bold uppercase tracking-[0.15em] text-white/45 transition hover:border-[#D4AF37]/30 hover:text-[#D4AF37]/80 disabled:opacity-40"
+                    >
+                      {t('quantumApothecary.scan.initiateRearShort')}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
-            )}
 
             {/* ── Aetheric Mixer ── */}
             <div className="glass-card p-6 sm:p-7 qa-card-hover">

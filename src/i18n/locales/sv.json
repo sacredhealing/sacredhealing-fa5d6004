@@ -4559,7 +4559,18 @@
       "initiate": "Starta skanning",
       "scanning": "Skannar…",
       "analyzingBiofield": "Analyserar biofält…",
-      "herbToday": "Dagens ört"
+      "analyzingBiofieldShort": "Analyserar…",
+      "herbToday": "Dagens ört",
+      "nadiMirrorHint": "Spegelvy · ansikte synligt · bra ljus på huden",
+      "frontCameraLive": "Främre kamera · du ska se dig själv",
+      "rearCameraLive": "Bakre kamera · rikta mot handflatan",
+      "palmFaceFrontLine1": "Håll handflatan mot linsen",
+      "palmFaceFrontLine2": "Håll ansiktet i bild (ljus på huden)",
+      "rearAimPalmLine1": "Rikta kameran mot handflatan",
+      "rearAimPalmLine2": "Fyll ramen tydligt",
+      "initiateRearShort": "Använd bakre kamera (endast hand)",
+      "rescanFrontCamera": "Skanna om · främre kamera (se dig själv)",
+      "rescanRearCamera": "Skanna om · bakre kamera"
     },
     "frequencyLibrarySection": {
       "title": "Frekvensbibliotek",

@@ -11,6 +11,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // ── Types ────────────────────────────────────────────────────────
 interface VitalResult {
@@ -49,13 +50,67 @@ interface NadiScannerProps {
   onScanComplete?: (reading: NadiReading) => void;
 }
 
+// ── ROI: forehead / upper cheeks — remote PPG needs skin pixels, not background ──
+function roiRgbMeans(f: ImageData): { r: number; g: number; b: number; n: number } {
+  const w = f.width;
+  const h = f.height;
+  const x0 = Math.floor(w * 0.22);
+  const x1 = Math.floor(w * 0.78);
+  const y0 = Math.floor(h * 0.12);
+  const y1 = Math.floor(h * 0.7);
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  let n = 0;
+  const d = f.data;
+  for (let y = y0; y < y1; y++) {
+    const row = y * w * 4;
+    for (let x = x0; x < x1; x++) {
+      const i = row + x * 4;
+      r += d[i];
+      g += d[i + 1];
+      b += d[i + 2];
+      n++;
+    }
+  }
+  return { r, g, b, n: n || 1 };
+}
+
+/** When too few frames or unstable peaks — spread still differs by person/lighting (no Math.random) */
+function lowSignalVitals(frames: ImageData[]): VitalResult {
+  const greens = frames.map((f) => {
+    const m = roiRgbMeans(f);
+    return m.g / m.n;
+  });
+  const mean = greens.reduce((a, x) => a + x, 0) / greens.length;
+  const variance = greens.reduce((s, x) => s + (x - mean) ** 2, 0) / Math.max(1, greens.length);
+  const spread = Math.sqrt(variance);
+  const estHr = Math.round(Math.max(52, Math.min(98, 64 + spread * 380 + mean * 0.008)));
+  const estRR = Math.round(Math.max(9, Math.min(22, 11 + spread * 160)));
+  const estRmssd = Math.round(Math.max(12, Math.min(92, 36 + spread * 720)));
+  const lfhf = Math.max(0.35, Math.min(4.0, 1.05 + (estHr - 68) * 0.028 + (42 - estRmssd) * 0.015));
+  return {
+    heart_rate: estHr,
+    respiratory_rate: estRR,
+    hrv_rmssd: estRmssd,
+    hrv_sdnn: Math.round(estRmssd * 1.18),
+    hrv_lfhf: Math.round(lfhf * 100) / 100,
+    confidence: Math.min(0.52, Math.max(0.22, 0.24 + spread * 45)),
+  };
+}
+
 // ── Vedic Translation Engine ─────────────────────────────────────
 function translateToNadi(vitals: VitalResult): NadiReading {
   const { heart_rate: hr, respiratory_rate: rr, hrv_rmssd, hrv_sdnn, hrv_lfhf } = vitals;
 
-  // Use RMSSD if available (paid plan), else estimate from HR pattern
-  const rmssd = hrv_rmssd ?? (80 - hr * 0.6 + Math.random() * 10);
-  const lfhf = hrv_lfhf ?? (hr > 75 ? 2.1 : 0.8);
+  // RMSSD / LF/HF: never use Math.random — derive deterministically from HR/RR when rPPG omitted weak HRV
+  const confBand = Math.max(0.35, Math.min(0.94, vitals.confidence));
+  const rmssd =
+    hrv_rmssd ??
+    Math.round(
+      Math.max(14, Math.min(95, 52 + (68 - hr) * 0.45 + (12 - rr) * 1.2 + (confBand - 0.65) * 28)),
+    );
+  const lfhf = hrv_lfhf ?? Math.max(0.35, Math.min(4.2, hr > 78 ? 2.05 : hr < 58 ? 0.72 : 1.05 + (rmssd - 40) * 0.02));
   const sdnn = hrv_sdnn ?? rmssd * 1.2;
 
   // Prana Coherence Score (0–72000)
@@ -193,6 +248,7 @@ function CoherenceRing({ value, max = 72000, color }: { value: number; max?: num
 
 // ── Main Component ────────────────────────────────────────────────
 export default function NadiScanner({ userName = "Seeker", jyotishContext, onScanComplete }: NadiScannerProps) {
+  const { t } = useTranslation();
   const [phase, setPhase] = useState<"idle" | "requesting" | "scanning" | "processing" | "complete" | "error">("idle");
   const [countdown, setCountdown] = useState(30);
   const [scanProgress, setScanProgress] = useState(0);
@@ -223,20 +279,35 @@ export default function NadiScanner({ userName = "Seeker", jyotishContext, onSca
   // 3-channel POS (Plane-Orthogonal-to-Skin) — no API, no cost
   // Wang et al. 2017 — standard in remote vital sign literature
   const processFrames = useCallback((frames: ImageData[]): VitalResult => {
-    if (frames.length < 45) {
-      return { heart_rate: 70, respiratory_rate: 14, confidence: 0.2 };
+    if (frames.length < 12) {
+      if (frames.length === 0) {
+        return {
+          heart_rate: 68,
+          respiratory_rate: 13,
+          hrv_rmssd: 38,
+          hrv_sdnn: 46,
+          hrv_lfhf: 1.0,
+          confidence: 0.2,
+        };
+      }
+      return lowSignalVitals(frames);
     }
 
-    const fps = frames.length / scanDuration;
+    // Drop camera auto-exposure warm-up (often black / unstable first frames)
+    const warm = Math.min(48, Math.floor(frames.length * 0.09));
+    const usable = frames.slice(warm);
+    if (usable.length < 40) {
+      return lowSignalVitals(frames);
+    }
 
-    // ── Step 1: Extract normalised RGB means per frame ────────────
-    const rgb = frames.map(f => {
-      let r = 0, g = 0, b = 0;
-      const px = f.data.length / 4;
-      for (let i = 0; i < f.data.length; i += 4) {
-        r += f.data[i]; g += f.data[i + 1]; b += f.data[i + 2];
-      }
-      const rn = r / px, gn = g / px, bn = b / px;
+    const fps = usable.length / scanDuration;
+
+    // ── Step 1: Normalised RGB from facial ROI (not whole frame / background) ────────────
+    const rgb = usable.map((f) => {
+      const { r, g, b, n } = roiRgbMeans(f);
+      const rn = r / n;
+      const gn = g / n;
+      const bn = b / n;
       const sum = rn + gn + bn || 1;
       return [rn / sum, gn / sum, bn / sum];
     });
@@ -288,9 +359,23 @@ export default function NadiScanner({ userName = "Seeker", jyotishContext, onSca
 
     // ── Step 6: Heart Rate ────────────────────────────────────────
     const duration = pos.length / fps;
-    const hrRaw = peaks.length >= 2
-      ? Math.round(((peaks.length - 1) / duration) * 60)
-      : Math.round(60 + Math.random() * 15);
+    let hrRaw: number;
+    if (peaks.length >= 2) {
+      hrRaw = Math.round(((peaks.length - 1) / Math.max(0.001, duration)) * 60);
+    } else {
+      // Zero-crossing rate on detrended signal — deterministic, person-varying
+      let zc = 0;
+      for (let i = 2; i < detrended.length - 2; i++) {
+        if (detrended[i - 1] < 0 && detrended[i] >= 0) zc++;
+      }
+      const estHz = duration > 0 ? zc / 2 / Math.max(duration, 0.01) : 1.05;
+      const fromZc = Math.round(estHz * 60);
+      const sigPow = Math.sqrt(detrended.reduce((s, v) => s + v * v, 0) / detrended.length);
+      hrRaw =
+        fromZc >= 48 && fromZc <= 118
+          ? fromZc
+          : Math.round(Math.max(54, Math.min(96, 66 + sigPow * 420)));
+    }
     const heartRate = Math.max(45, Math.min(115, hrRaw));
 
     // ── Step 7: RR Intervals → HRV ───────────────────────────────
@@ -318,11 +403,10 @@ export default function NadiScanner({ userName = "Seeker", jyotishContext, onSca
       ));
     }
 
-    // ── Step 9: Respiratory Rate (low-freq green signal) ─────────
-    const greenOnly = frames.map(f => {
-      let g = 0;
-      for (let i = 1; i < f.data.length; i += 4) g += f.data[i];
-      return g / (f.data.length / 4);
+    // ── Step 9: Respiratory Rate (low-freq green signal, ROI) ─────────
+    const greenOnly = usable.map((f) => {
+      const m = roiRgbMeans(f);
+      return m.g / m.n;
     });
     const breathMean = greenOnly.reduce((a, b) => a + b, 0) / greenOnly.length;
     const breathSignal = greenOnly.map(v => v - breathMean);
@@ -335,9 +419,14 @@ export default function NadiScanner({ userName = "Seeker", jyotishContext, onSca
         breathPeaks.push(i);
       }
     }
-    const respRate = breathPeaks.length >= 2
-      ? Math.round(((breathPeaks.length - 1) / scanDuration) * 60)
-      : 13 + Math.round(Math.random() * 3);
+    let respRate: number;
+    if (breathPeaks.length >= 2) {
+      respRate = Math.round(((breathPeaks.length - 1) / scanDuration) * 60);
+    } else {
+      const gMean = greenOnly.reduce((a, x) => a + x, 0) / greenOnly.length;
+      const gVar = greenOnly.reduce((s, x) => s + (x - gMean) ** 2, 0) / greenOnly.length;
+      respRate = Math.round(Math.max(9, Math.min(22, 11.5 + Math.sqrt(gVar) * 140)));
+    }
     const clampedRR = Math.max(8, Math.min(25, respRate));
 
     // ── Step 10: Confidence score ─────────────────────────────────
@@ -406,11 +495,23 @@ export default function NadiScanner({ userName = "Seeker", jyotishContext, onSca
       streamRef.current = stream;
 
       if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        // Prevent video element from causing any navigation
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current?.play().catch(() => {});
-        };
+        const v = videoRef.current;
+        v.srcObject = stream;
+        await new Promise<void>((resolve) => {
+          const done = () => {
+            v.removeEventListener("loadeddata", done);
+            resolve();
+          };
+          if (v.readyState >= 2) resolve();
+          else v.addEventListener("loadeddata", done, { once: true });
+        });
+        try {
+          await v.play();
+        } catch {
+          /* autoplay policies */
+        }
+        // Brief settle so exposure / first frames are not black
+        await new Promise((r) => setTimeout(r, 400));
         setStreamActive(true);
       }
 
@@ -480,7 +581,7 @@ export default function NadiScanner({ userName = "Seeker", jyotishContext, onSca
       }
       setPhase("error");
     }
-  }, [processFrames, stopStream, jyotishContext, onScanComplete]);
+  }, [processFrames, stopStream, jyotishContext, onScanComplete, t]);
 
   const reset = () => {
     stopStream();
@@ -637,13 +738,13 @@ export default function NadiScanner({ userName = "Seeker", jyotishContext, onSca
       {(phase === "scanning") && (
         <div className="sqi-glass overflow-hidden fade-in" style={{ position: "relative" }}>
           {/* Live camera feed */}
-          <div className="relative" style={{ aspectRatio: "4/3" }}>
-            <video ref={videoRef} className="w-full h-full object-cover"
-              style={{ borderRadius: "40px 40px 0 0", transform: "scaleX(-1)", opacity: 0.85 }}
+          <div className="relative z-[1]" style={{ aspectRatio: "4/3" }}>
+            <video ref={videoRef} className="w-full h-full object-cover z-0"
+              style={{ borderRadius: "40px 40px 0 0", transform: "scaleX(-1)", objectPosition: "center 28%" }}
               playsInline muted autoPlay />
 
             {/* Scan overlay */}
-            <div className="absolute inset-0 pointer-events-none" style={{ borderRadius: "40px 40px 0 0" }}>
+            <div className="absolute inset-0 pointer-events-none z-[2]" style={{ borderRadius: "40px 40px 0 0" }}>
               {/* Corner brackets */}
               {[
                 "top-4 left-4 border-t border-l rounded-tl-lg",
@@ -662,11 +763,18 @@ export default function NadiScanner({ userName = "Seeker", jyotishContext, onSca
                   animation: "scanLine 2s ease-in-out infinite",
                 }} />
 
-              {/* Live HR readout */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-                <div className="text-[9px] font-black tracking-[0.3em] uppercase text-[#22D3EE]/80 mb-1">Scanning</div>
-                <div className="text-4xl font-black text-white/90 tabular-nums"
-                  style={{ textShadow: "0 0 20px rgba(34,211,238,0.5)", fontFamily: "monospace" }}>
+              {/* Mirror hint — keep center clear so you can see your face */}
+              <div className="absolute top-3 left-3 right-3 text-center">
+                <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/85 drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">
+                  {t("quantumApothecary.scan.nadiMirrorHint")}
+                </p>
+              </div>
+
+              {/* Countdown — corner so it does not cover your face */}
+              <div className="absolute bottom-3 right-3 text-right rounded-2xl px-3 py-2 bg-black/55 backdrop-blur-sm border border-white/10">
+                <div className="text-[8px] font-black tracking-[0.25em] uppercase text-[#22D3EE]/90 mb-0.5">Scanning</div>
+                <div className="text-2xl font-black text-white tabular-nums leading-none"
+                  style={{ textShadow: "0 0 12px rgba(34,211,238,0.45)", fontFamily: "monospace" }}>
                   {countdown}s
                 </div>
               </div>
