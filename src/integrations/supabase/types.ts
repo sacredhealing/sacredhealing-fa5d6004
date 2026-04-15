@@ -815,28 +815,55 @@ export type Database = {
       }
       ayurveda_profiles: {
         Row: {
+          agni_strength: string | null
           created_at: string
+          dominant_dosha: string | null
           dosha_profile: Json
           id: string
+          imbalances: Json | null
+          kapha_percent: number | null
+          oja_level: string | null
+          pitta_percent: number | null
+          prakriti: string | null
+          recommended_herbs: Json | null
           updated_at: string
           user_id: string
           user_profile: Json
+          vata_percent: number | null
         }
         Insert: {
+          agni_strength?: string | null
           created_at?: string
+          dominant_dosha?: string | null
           dosha_profile: Json
           id?: string
+          imbalances?: Json | null
+          kapha_percent?: number | null
+          oja_level?: string | null
+          pitta_percent?: number | null
+          prakriti?: string | null
+          recommended_herbs?: Json | null
           updated_at?: string
           user_id: string
           user_profile: Json
+          vata_percent?: number | null
         }
         Update: {
+          agni_strength?: string | null
           created_at?: string
+          dominant_dosha?: string | null
           dosha_profile?: Json
           id?: string
+          imbalances?: Json | null
+          kapha_percent?: number | null
+          oja_level?: string | null
+          pitta_percent?: number | null
+          prakriti?: string | null
+          recommended_herbs?: Json | null
           updated_at?: string
           user_id?: string
           user_profile?: Json
+          vata_percent?: number | null
         }
         Relationships: []
       }
@@ -3781,6 +3808,63 @@ export type Database = {
         }
         Relationships: []
       }
+      nadi_scan_results: {
+        Row: {
+          activated_nadi: string | null
+          autonomic_balance: string | null
+          blockage_location: string | null
+          chakra_state: string | null
+          confidence: number | null
+          created_at: string | null
+          heart_rate: number | null
+          hrv_lfhf: number | null
+          hrv_rmssd: number | null
+          hrv_sdnn: number | null
+          id: string
+          prana_coherence: number | null
+          prescription: Json | null
+          respiratory_rate: number | null
+          user_id: string
+          vagal_tone: string | null
+        }
+        Insert: {
+          activated_nadi?: string | null
+          autonomic_balance?: string | null
+          blockage_location?: string | null
+          chakra_state?: string | null
+          confidence?: number | null
+          created_at?: string | null
+          heart_rate?: number | null
+          hrv_lfhf?: number | null
+          hrv_rmssd?: number | null
+          hrv_sdnn?: number | null
+          id?: string
+          prana_coherence?: number | null
+          prescription?: Json | null
+          respiratory_rate?: number | null
+          user_id: string
+          vagal_tone?: string | null
+        }
+        Update: {
+          activated_nadi?: string | null
+          autonomic_balance?: string | null
+          blockage_location?: string | null
+          chakra_state?: string | null
+          confidence?: number | null
+          created_at?: string | null
+          heart_rate?: number | null
+          hrv_lfhf?: number | null
+          hrv_rmssd?: number | null
+          hrv_sdnn?: number | null
+          id?: string
+          prana_coherence?: number | null
+          prescription?: Json | null
+          respiratory_rate?: number | null
+          user_id?: string
+          vagal_tone?: string | null
+        }
+        Relationships: []
+      }
       path_days: {
         Row: {
           affirmation: string | null
@@ -3844,6 +3928,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      photonic_sessions: {
+        Row: {
+          active_protocol: string | null
+          cellular_target: string | null
+          created_at: string | null
+          frequency: number | null
+          id: string
+          light_code_active: boolean | null
+          photon_density: string | null
+          session_duration: number | null
+          user_id: string
+        }
+        Insert: {
+          active_protocol?: string | null
+          cellular_target?: string | null
+          created_at?: string | null
+          frequency?: number | null
+          id?: string
+          light_code_active?: boolean | null
+          photon_density?: string | null
+          session_duration?: number | null
+          user_id: string
+        }
+        Update: {
+          active_protocol?: string | null
+          cellular_target?: string | null
+          created_at?: string | null
+          frequency?: number | null
+          id?: string
+          light_code_active?: boolean | null
+          photon_density?: string | null
+          session_duration?: number | null
+          user_id?: string
+        }
+        Relationships: []
       }
       playlist_tracks: {
         Row: {
@@ -5198,6 +5318,39 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reason?: string
+        }
+        Relationships: []
+      }
+      temple_home_sessions: {
+        Row: {
+          active_site: string | null
+          anchored_since: string | null
+          created_at: string | null
+          crystal_grid_active: boolean | null
+          id: string
+          intensity: number | null
+          site_essence: string | null
+          user_id: string
+        }
+        Insert: {
+          active_site?: string | null
+          anchored_since?: string | null
+          created_at?: string | null
+          crystal_grid_active?: boolean | null
+          id?: string
+          intensity?: number | null
+          site_essence?: string | null
+          user_id: string
+        }
+        Update: {
+          active_site?: string | null
+          anchored_since?: string | null
+          created_at?: string | null
+          crystal_grid_active?: boolean | null
+          id?: string
+          intensity?: number | null
+          site_essence?: string | null
+          user_id?: string
         }
         Relationships: []
       }
