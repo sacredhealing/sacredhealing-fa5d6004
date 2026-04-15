@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # Deploy daily-room Edge Function to your Supabase project (replaces Lovable deploy).
-# Prereq: add SUPABASE_ACCESS_TOKEN to .env (Dashboard → Account → Access Tokens)
+#
+# If you cannot open supabase.com (e.g. project only via Lovable): use GitHub Actions instead —
+# copy scripts/github-actions-deploy-daily-room.yml to .github/workflows/, add repo secrets
+# SUPABASE_ACCESS_TOKEN + SUPABASE_PROJECT_REF, or ask Lovable support for a deploy token.
+#
+# Prereq for this script: add SUPABASE_ACCESS_TOKEN to .env (Dashboard → Account → Access Tokens)
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
