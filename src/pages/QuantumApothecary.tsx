@@ -168,17 +168,17 @@ function renderChatText(text: string, bubble: 'model' | 'user' = 'model') {
       </h1>
     );
     if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) return (
-      <li key={i} style={{ marginLeft: '16px', listStyleType: 'disc', fontSize: '13px', lineHeight: '1.5', color: body, marginBottom: '4px' }}>
+      <li key={i} style={{ marginLeft: '16px', listStyleType: 'disc', fontSize: '13px', lineHeight: '1.5', color: body, marginBottom: '4px', width: 'calc(100% - 16px)', maxWidth: '100%', paddingRight: '4px' }}>
         {renderInline(trimmed.slice(2), 'body', onGold)}
       </li>
     );
     if (/^\d+\.\s/.test(trimmed)) return (
-      <li key={i} style={{ marginLeft: '16px', listStyleType: 'decimal', fontSize: '13px', lineHeight: '1.5', color: body, marginBottom: '4px' }}>
+      <li key={i} style={{ marginLeft: '16px', listStyleType: 'decimal', fontSize: '13px', lineHeight: '1.5', color: body, marginBottom: '4px', width: 'calc(100% - 16px)', maxWidth: '100%', paddingRight: '4px' }}>
         {renderInline(trimmed.replace(/^\d+\.\s/, ''), 'body', onGold)}
       </li>
     );
     return (
-      <p key={i} style={{ fontSize: '13px', lineHeight: '1.55', color: body, marginBottom: '6px' }}>
+      <p key={i} style={{ fontSize: '13px', lineHeight: '1.55', color: body, marginBottom: '6px', width: '100%', maxWidth: '100%' }}>
         {renderInline(trimmed, 'body', onGold)}
       </p>
     );
@@ -1094,7 +1094,7 @@ function QuantumApothecaryInner() {
 
       {/* Messages */}
       <div
-        className="qa-sqi-chat custom-scrollbar relative flex-1 overflow-y-auto bg-[#050505]/60 px-2 py-4 sm:px-4 md:px-5 space-y-4 scrollbar-thin scrollbar-thumb-white/10"
+        className="qa-sqi-chat custom-scrollbar relative flex-1 overflow-y-auto bg-[#050505]/60 px-2.5 py-4 sm:px-4 md:px-5 space-y-4 scrollbar-thin scrollbar-thumb-white/10"
         ref={scrollContainerCallbackRef}
       >
         <div
@@ -1121,7 +1121,7 @@ function QuantumApothecaryInner() {
           {messages.map((msg, i) => {
               return (
               <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-                className={`flex w-full min-w-0 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                className={`flex w-full min-w-0 items-stretch self-stretch ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 {msg.role === 'user' ? (
                   <div
                     className="ml-auto w-full max-w-[min(100%,36rem)] break-words rounded-[20px] px-3 py-3 sm:px-4 text-sm leading-relaxed text-white/95"
@@ -1133,10 +1133,10 @@ function QuantumApothecaryInner() {
                     <div className="markdown-body w-full min-w-0 text-left">{renderChatText(msg.text, 'user')}</div>
                   </div>
                 ) : (
-                  <div className="w-full min-w-0 max-w-full">
+                  <div className="w-full min-w-0 max-w-full flex-1 self-stretch">
                     <p className="mb-2 text-[8px] font-extrabold uppercase tracking-[0.3em] text-[#D4AF37]/70">SQI · AKASHA ARCHIVE</p>
-                    <div className="glass-card w-full min-w-0 rounded-[20px] border border-white/[0.05] bg-white/[0.02] px-3 py-4 text-sm font-light leading-[1.75] text-white/85 sm:px-5 sm:py-5">
-                      <div className="markdown-body w-full min-w-0 max-w-none text-left [overflow-wrap:anywhere]">{renderChatText(msg.text, 'model')}</div>
+                    <div className="glass-card w-full min-w-0 max-w-full rounded-[20px] border border-white/[0.05] bg-white/[0.02] px-2.5 py-4 text-sm font-light leading-[1.75] text-white/85 sm:px-4 sm:py-5">
+                      <div className="markdown-body w-full min-w-0 max-w-full text-left break-words">{renderChatText(msg.text, 'model')}</div>
                     </div>
                   </div>
                 )}
@@ -1308,7 +1308,7 @@ function QuantumApothecaryInner() {
       </svg>
 
       {/* ── Main Content ── */}
-      <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 py-6">
+      <div className="relative z-10 max-w-7xl mx-auto px-2 sm:px-6 py-6">
 
         {/* ── Header ── */}
         <div className="flex items-center justify-between mb-8">
@@ -1810,9 +1810,14 @@ SQI — read my complete field and give me a deep Akashic transmission based on 
             </Suspense>
           </div>
 
-          {/* ════ RIGHT COLUMN ════ */}
-          <div className="space-y-5">
+          {/* ════ RIGHT COLUMN — chat first on mobile for readable full-width thread ════ */}
+          <div className="flex flex-col gap-5">
+            {/* ── Chat Panel (first on small screens) ── */}
+            <div ref={chatPanelRef} className="order-1 w-full min-w-0 lg:order-2">
+              {renderChatPanel()}
+            </div>
 
+            <div className="order-2 w-full min-w-0 flex flex-col gap-5 lg:order-1">
             {/* ── Frequency Library ── */}
             <Suspense fallback={
               <div className="glass-card p-6">
@@ -1855,10 +1860,6 @@ SQI — read my complete field and give me a deep Akashic transmission based on 
                 )}
               </div>
             )}
-
-            {/* ── Chat Panel ── */}
-            <div ref={chatPanelRef}>
-              {renderChatPanel()}
             </div>
           </div>
         </div>
@@ -1959,10 +1960,20 @@ SQI — read my complete field and give me a deep Akashic transmission based on 
 
         * { font-family: 'Plus Jakarta Sans', sans-serif; }
 
-        /* SQI chat: use full panel width (no artificial narrow column) */
+        /* SQI chat: full panel width — avoid shrink-to-content + harsh word breaks */
         .qa-sqi-chat .markdown-body {
           width: 100%;
-          max-width: none;
+          max-width: 100%;
+          min-width: 0;
+          word-break: normal;
+          overflow-wrap: break-word;
+        }
+        .qa-sqi-chat .markdown-body p,
+        .qa-sqi-chat .markdown-body li,
+        .qa-sqi-chat .markdown-body h1,
+        .qa-sqi-chat .markdown-body h2,
+        .qa-sqi-chat .markdown-body h3 {
+          max-width: 100%;
         }
 
         /* ── SQI-2050 Glassmorphism Standard ── */
