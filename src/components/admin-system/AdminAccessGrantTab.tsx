@@ -197,7 +197,8 @@ const AdminAccessGrantTab = () => {
           ? (accessId?.trim() ? accessId : null)
           : null;
 
-      const { error } = await supabase.from('admin_granted_access').insert({
+      // Use upsert to handle duplicate grants gracefully
+      const { error } = await supabase.from('admin_granted_access').upsert({
         user_id: selectedUser.user_id,
         access_type: dbAccessType,
         access_id: accessIdValue ?? (allowedTypes.has(accessType) ? null : accessType),
@@ -205,7 +206,8 @@ const AdminAccessGrantTab = () => {
         granted_by: user.id,
         notes: notes || null,
         is_active: true,
-      });
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,access_type,access_id' });
 
       if (error) throw error;
 
