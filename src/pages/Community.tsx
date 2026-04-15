@@ -1335,6 +1335,13 @@ const Community = () => {
     };
 
     Promise.all([loadMembers(), loadRooms()]);
+
+    // Get real total user count
+    const loadTotalUsers = async () => {
+      const { count, error } = await supabase.from("profiles").select("id", { count: "exact", head: true });
+      if (!error && count != null) setTotalUserCount(count);
+    };
+    loadTotalUsers();
   }, [user?.id]);
 
   // Track who's online via Realtime presence (community channel)
