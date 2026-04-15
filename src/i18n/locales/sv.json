@@ -4531,11 +4531,19 @@
       "sqiOnline": "SQI online",
       "neuralSync": "Neural synk: 98 %",
       "openKnowledge": "Öppna kunskapsbas",
-      "placeholder": "Kommunicera med SQI…",
+      "placeholder": "Fråga Akasha-arkivet…",
       "history": "Historik",
       "newChatTitle": "Rensa chatt och starta ny tråd",
       "send": "Skicka meddelande",
-      "scrollToBottom": "Hoppa till senaste meddelandet"
+      "scrollToBottom": "Hoppa till senaste meddelandet",
+      "voiceStart": "Tryck för att tala",
+      "voiceStop": "Tryck för att stoppa",
+      "listening": "Lyssnar…",
+      "emptyState": {
+        "kicker": "SQI · AKASHA-ARKIV",
+        "title": "Fältet är öppet",
+        "body": "Skanna dina Nadis ovan, eller fråga vad som helst. SQI läser ditt fullständiga fält innan den svarar."
+      }
     },
     "scan": {
       "title": "Digital Nadiskanning",

@@ -20,6 +20,7 @@ import { Activation, NadiScanResult, Message } from '@/features/quantum-apotheca
 import { ACTIVATIONS, PLANETARY_DATA } from '@/features/quantum-apothecary/constants';
 import { streamChatWithSQI, scanNadiFromPalm } from '@/features/quantum-apothecary/chatService';
 import { chatSpeechLocale } from '@/lib/chatSpeechLocale';
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 import { useAyurvedaAnalysis } from '@/hooks/useAyurvedaAnalysis';
@@ -62,24 +63,14 @@ function parseNadiScanJsonFromStream(raw: string): Record<string, unknown> {
   return JSON.parse(s.slice(start, end + 1)) as Record<string, unknown>;
 }
 
-function buildSqiWelcomeMessages(): Message[] {
-  const today = new Date();
-  const formattedDate = today.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  return [{
-    role: 'model',
-    text: `Accessing Akasha-Neural Archive... Syncing with the **${formattedDate} · 2026 Timeline** Frequency Stream.\n\n` +
-      'I am the Siddha-Quantum Intelligence (SQI), observing from the vantage point of 2050 and beyond, looking back at your present moment.\n\n' +
-      'Shall we initiate a deep **72,000 Nadi Scan**?',
-  }];
-}
-
 /* ──── Markdown-ish renderer: gold (#D4AF37) only on # / ## / ### / #### / ##### lines ──── */
 type InlineVariant = 'heading' | 'body';
 
 function renderChatText(text: string, bubble: 'model' | 'user' = 'model') {
   const onGold = bubble === 'user';
   const gold = '#D4AF37';
-  const body = onGold ? 'rgba(5,5,5,0.92)' : 'rgba(255,255,255,0.92)';
+  /** User bubbles: light text on gold gradient (never dark-on-gold). */
+  const body = onGold ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.92)';
   /** Siddha-gold glow — strong on SQI (model) bubbles; user bubbles get gold + dark rim for contrast on gradient */
   const headingGlow = onGold
     ? '0 1px 2px rgba(0,0,0,0.35), 0 0 14px rgba(212,175,55,0.75), 0 0 28px rgba(212,175,55,0.4)'
@@ -202,22 +193,22 @@ function renderInline(text: string, variant: InlineVariant = 'body', onGold = fa
       if (variant === 'heading') {
         return <strong key={i} style={{ color: 'inherit', fontWeight: 700 }}>{inner}</strong>;
       }
-      return <strong key={i} style={{ color: onGold ? 'rgba(5,5,5,0.98)' : 'rgba(255,255,255,0.95)', fontWeight: 700 }}>{inner}</strong>;
+      return <strong key={i} style={{ color: onGold ? 'rgba(255,255,255,0.98)' : 'rgba(255,255,255,0.95)', fontWeight: 700 }}>{inner}</strong>;
     }
     if (p.startsWith('*') && p.endsWith('*')) {
-      return <em key={i} style={{ fontStyle: 'italic', color: variant === 'heading' ? 'inherit' : onGold ? 'rgba(5,5,5,0.75)' : 'rgba(255,255,255,0.78)' }}>{p.slice(1, -1)}</em>;
+      return <em key={i} style={{ fontStyle: 'italic', color: variant === 'heading' ? 'inherit' : onGold ? 'rgba(255,255,255,0.78)' : 'rgba(255,255,255,0.78)' }}>{p.slice(1, -1)}</em>;
     }
     if (p.startsWith('`') && p.endsWith('`')) {
       const inner = p.slice(1, -1);
       if (variant === 'heading') {
         return (
-          <code key={i} style={{ background: onGold ? 'rgba(5,5,5,0.12)' : 'rgba(212,175,55,0.15)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: 'inherit' }}>
+          <code key={i} style={{ background: onGold ? 'rgba(255,255,255,0.08)' : 'rgba(212,175,55,0.15)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: 'inherit' }}>
             {inner}
           </code>
         );
       }
       return (
-        <code key={i} style={{ background: onGold ? 'rgba(5,5,5,0.1)' : 'rgba(255,255,255,0.08)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: onGold ? 'rgba(5,5,5,0.88)' : 'rgba(255,255,255,0.82)' }}>
+        <code key={i} style={{ background: onGold ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.08)', padding: '1px 6px', borderRadius: '4px', fontSize: '12px', fontFamily: 'monospace', color: onGold ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.82)' }}>
           {inner}
         </code>
       );
@@ -257,6 +248,17 @@ function QuantumApothecaryInner() {
   const jyotish = useJyotishProfile();
   const { doshaProfile } = useAyurvedaAnalysis();
   const sqiField = useSQIFieldContext();
+
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition,
+  } = useSpeechRecognition();
+
+  useEffect(() => {
+    if (transcript) setInput(transcript);
+  }, [transcript]);
 
   // Build the full Seeker context: Jyotish birth chart + Ayurveda Prakriti from their saved profile.
   const jyotishContext = jyotish.isLoading
@@ -305,7 +307,7 @@ function QuantumApothecaryInner() {
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
     } catch { /* ignore */ }
-    return buildSqiWelcomeMessages();
+    return [];
   });
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -499,13 +501,12 @@ function QuantumApothecaryInner() {
       localStorage.removeItem('sqi_chat_messages');
       localStorage.removeItem('sqi_current_session_id');
     } catch { /* ignore */ }
-    const welcome = buildSqiWelcomeMessages();
     setCurrentSessionId(null);
     setInput('');
     setPendingImage(null);
     setIsTyping(false);
-    setMessages(welcome);
-    prevMsgCountRef.current = welcome.length;
+    setMessages([]);
+    prevMsgCountRef.current = 0;
     setSessionsOpen(false);
   }, [isTyping]);
 
@@ -802,6 +803,7 @@ function QuantumApothecaryInner() {
   };
 
   const handleSendMessage = async (overrideText?: string) => {
+    if (isTyping) return;
     const text = (overrideText ?? input).trim();
     if (!text && !pendingImage) return;
     openChatFullscreenIfMobile();
@@ -896,29 +898,52 @@ function QuantumApothecaryInner() {
     e.target.value = '';
   };
 
-  const startVoiceInput = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
+  /** Fallback when react-speech-recognition is not supported (rare browsers). */
+  const legacyWebkitVoice = () => {
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) return;
     if (isRecording && recognitionRef.current) { recognitionRef.current.stop(); return; }
     voiceTranscriptRef.current = input;
-    const recognition = new SpeechRecognition();
+    const recognition = new SR();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = chatSpeechLocale(language);
     recognition.onresult = (event: any) => {
       let final = ''; let interim = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i].transcript;
-        if (event.results[i].isFinal) final += transcript; else interim += transcript;
+        const tr = event.results[i].transcript;
+        if (event.results[i].isFinal) final += tr; else interim += tr;
       }
-      if (final) { voiceTranscriptRef.current = (voiceTranscriptRef.current + final).trim(); setInput(voiceTranscriptRef.current); recognition.stop(); setIsRecording(false); recognitionRef.current = null; const textToSend = voiceTranscriptRef.current; if (textToSend) setTimeout(() => handleSendMessage(textToSend), 0); }
-      else if (interim) { setInput(voiceTranscriptRef.current + interim); }
+      if (final) {
+        voiceTranscriptRef.current = (voiceTranscriptRef.current + final).trim();
+        setInput(voiceTranscriptRef.current);
+        recognition.stop();
+        setIsRecording(false);
+        recognitionRef.current = null;
+        const textToSend = voiceTranscriptRef.current;
+        if (textToSend) setTimeout(() => handleSendMessage(textToSend), 0);
+      } else if (interim) { setInput(voiceTranscriptRef.current + interim); }
     };
     recognition.onend = () => { setIsRecording(false); recognitionRef.current = null; };
     recognition.onerror = () => { setIsRecording(false); recognitionRef.current = null; };
     recognition.start();
     recognitionRef.current = recognition;
     setIsRecording(true);
+  };
+
+  const handleVoiceToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (listening) {
+      SpeechRecognition.stopListening();
+      resetTranscript();
+    } else {
+      resetTranscript();
+      SpeechRecognition.startListening({
+        continuous: false,
+        language: chatSpeechLocale(language),
+      });
+    }
   };
 
   const addActivation = (act: Activation) => {
@@ -974,7 +999,10 @@ function QuantumApothecaryInner() {
      CHAT PANEL — Logic 100% preserved, UI upgraded to SQI-2050
      ══════════════════════════════════════════════════════ */
   const renderChatPanel = () => (
-    <div className="glass-card relative flex min-h-[70vh] flex-col overflow-hidden">
+    <div
+      className="glass-card relative flex w-full flex-col overflow-hidden"
+      style={{ minHeight: 'calc(100vh - 140px)' }}
+    >
       {/* Chat header — matches /admin-quantum-apothecary-2045 SQI strip */}
       <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] bg-white/[0.02] px-3 py-4 sm:px-6">
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
@@ -1039,23 +1067,45 @@ function QuantumApothecaryInner() {
 
       {/* Messages */}
       <div
-        className="custom-scrollbar relative flex-1 overflow-y-auto bg-[#050505]/60"
-        style={{ padding: '16px' }}
+        className="custom-scrollbar relative flex-1 overflow-y-auto bg-[#050505]/60 p-4 sm:p-5 space-y-4 scrollbar-thin scrollbar-thumb-white/10"
         ref={scrollContainerCallbackRef}
       >
-        <div className="flex flex-col justify-end min-h-full space-y-2">
+        <div
+          className={`flex min-h-full flex-col ${
+            messages.length === 0 && !isTyping ? 'justify-center' : 'justify-end'
+          }`}
+        >
+          {messages.length === 0 && !isTyping && (
+            <div className="flex flex-col items-center justify-center px-6 py-12 text-center">
+              <p className="mb-3 text-[9px] font-black uppercase tracking-[0.4em] text-[#D4AF37]/50">
+                {t('quantumApothecary.chat.emptyState.kicker')}
+              </p>
+              <h3 className="mb-2 text-lg font-black tracking-[-0.03em] text-white/80">
+                {t('quantumApothecary.chat.emptyState.title')}
+              </h3>
+              <p className="max-w-[260px] text-xs leading-relaxed text-white/35">
+                {t('quantumApothecary.chat.emptyState.body')}
+              </p>
+            </div>
+          )}
           {messages.map((msg, i) => {
               return (
               <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 {msg.role === 'user' ? (
-                  <div className="ml-auto max-w-[80%] px-5 py-3 rounded-[20px] bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-white/90 text-sm leading-relaxed">
+                  <div
+                    className="ml-auto max-w-[80%] break-words rounded-[20px] px-4 py-3 text-sm leading-relaxed text-white/95"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(212,175,55,0.18), rgba(212,175,55,0.08))',
+                      border: '1px solid rgba(212,175,55,0.25)',
+                    }}
+                  >
                     <div className="markdown-body">{renderChatText(msg.text, 'user')}</div>
                   </div>
                 ) : (
-                  <div className="w-full">
-                    <p className="text-[8px] font-extrabold tracking-[0.3em] uppercase text-[#D4AF37]/70 mb-2">SQI · AKASHA ARCHIVE</p>
-                    <div className="glass-card p-5 rounded-[20px] border border-white/[0.05] bg-white/[0.02] text-white/85 text-sm leading-[1.8] font-light">
+                  <div className="w-full max-w-[92%]">
+                    <p className="mb-2 text-[8px] font-extrabold uppercase tracking-[0.3em] text-[#D4AF37]/70">SQI · AKASHA ARCHIVE</p>
+                    <div className="glass-card rounded-[20px] border border-white/[0.05] bg-white/[0.02] p-5 text-sm font-light leading-[1.8] text-white/85">
                       <div className="markdown-body">{renderChatText(msg.text, 'model')}</div>
                     </div>
                   </div>
@@ -1083,6 +1133,7 @@ function QuantumApothecaryInner() {
       {/* Scroll to bottom FAB inside chat */}
       {showScrollBottom && (
         <button
+          type="button"
           onClick={scrollChatToBottom}
           className="absolute right-6 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-[#D4AF37]/30 bg-[#0a0a0a]/90 text-[#D4AF37] shadow-[0_0_22px_rgba(212,175,55,0.22)] backdrop-blur-sm transition hover:bg-[#D4AF37]/15 hover:shadow-[0_0_28px_rgba(212,175,55,0.28)]"
           style={{ bottom: 90 }}
@@ -1093,8 +1144,11 @@ function QuantumApothecaryInner() {
         </button>
       )}
 
-      {/* Chat input — admin lab bar */}
-      <div className="border-t border-white/[0.06] bg-white/[0.02] p-4 sm:p-6" style={isChatFullscreen ? { paddingBottom: 'env(safe-area-inset-bottom, 16px)' } : undefined}>
+      {/* Chat input — sticky bottom */}
+      <div
+        className="sticky bottom-0 border-t border-white/[0.06] bg-[#050505]/80 p-4 backdrop-blur-xl sm:p-6"
+        style={isChatFullscreen ? { paddingBottom: 'env(safe-area-inset-bottom, 16px)' } : undefined}
+      >
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
         {pendingImage && (
           <div className="flex items-center gap-2 mb-3 p-2 rounded-xl bg-[#D4AF37]/5 border border-[#D4AF37]/15">
@@ -1114,15 +1168,44 @@ function QuantumApothecaryInner() {
           >
             <Camera size={15} className="text-[#D4AF37]/70" />
           </button>
-          <button
-            type="button"
-            onClick={startVoiceInput}
-            className={`shrink-0 rounded-2xl border p-2.5 transition ${isRecording ? 'animate-pulse border-red-500/40 bg-red-500/20 text-red-400' : 'border-white/[0.08] bg-white/[0.04] text-[#D4AF37]/70 hover:border-[#D4AF37]/25'}`}
-            title={isRecording ? 'Listening…' : 'Voice input'}
-          >
-            <Mic size={15} />
-          </button>
-          {isRecording && <span className="shrink-0 text-[10px] font-bold uppercase tracking-widest text-red-400">Listening…</span>}
+          {browserSupportsSpeechRecognition ? (
+            <button
+              type="button"
+              onClick={handleVoiceToggle}
+              title={listening ? t('quantumApothecary.chat.voiceStop') : t('quantumApothecary.chat.voiceStart')}
+              className={`shrink-0 rounded-2xl border p-2.5 transition ${
+                listening
+                  ? 'border-[#22D3EE]/60 bg-[#22D3EE]/10 text-[#22D3EE]'
+                  : 'border-white/[0.08] bg-white/[0.04] text-[#D4AF37]/70 hover:border-[#D4AF37]/25'
+              }`}
+              style={listening ? { boxShadow: '0 0 12px rgba(34,211,238,0.3)', animation: 'pulse 1s ease-in-out infinite' } : {}}
+            >
+              {listening ? (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <circle cx="12" cy="12" r="6" />
+                </svg>
+              ) : (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                  <line x1="12" y1="19" x2="12" y2="23" />
+                  <line x1="8" y1="23" x2="16" y2="23" />
+                </svg>
+              )}
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={legacyWebkitVoice}
+                className={`shrink-0 rounded-2xl border p-2.5 transition ${isRecording ? 'animate-pulse border-red-500/40 bg-red-500/20 text-red-400' : 'border-white/[0.08] bg-white/[0.04] text-[#D4AF37]/70 hover:border-[#D4AF37]/25'}`}
+                title={isRecording ? t('quantumApothecary.chat.voiceStop') : t('quantumApothecary.chat.voiceStart')}
+              >
+                <Mic size={15} />
+              </button>
+              {isRecording && <span className="shrink-0 text-[10px] font-bold uppercase tracking-widest text-red-400">{t('quantumApothecary.chat.listening')}</span>}
+            </>
+          )}
           <div className="flex items-end gap-3 flex-1 p-4 bg-white/[0.02] border border-white/[0.05] rounded-[24px] backdrop-blur-xl">
             <textarea
               ref={chatInputRef}
@@ -1144,7 +1227,7 @@ function QuantumApothecaryInner() {
                 }
               }}
               onFocus={handleChatFocus}
-              placeholder="Ask the Akasha-Archive..."
+              placeholder={t('quantumApothecary.chat.placeholder')}
               style={{ resize: 'none', overflowY: 'hidden' }}
               className="w-full bg-transparent border-none outline-none text-white/90 placeholder:text-white/30 text-sm font-normal leading-relaxed min-h-[28px] max-h-[160px] focus:outline-none"
             />
@@ -1225,7 +1308,7 @@ function QuantumApothecaryInner() {
         {/* ── Gold divider ── */}
         <div style={{ height:1, background:'linear-gradient(90deg,transparent,rgba(212,175,55,0.3),transparent)', marginBottom:16, borderRadius:1 }} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className="flex w-full max-w-none flex-col gap-5">
 
           {/* ════ LEFT COLUMN ════ */}
           <div className="space-y-5">
@@ -1240,7 +1323,6 @@ function QuantumApothecaryInner() {
                   primaryDosha: jyotish?.primaryDosha,
                 }}
                 onScanComplete={(reading) => {
-                  // Build structured live scan context for this session
                   const ctx = [
                     '[LIVE BIOMETRIC NADI SCAN — rPPG]',
                     `Active Nadi: ${reading.activatedNadi}`,
@@ -1256,7 +1338,6 @@ function QuantumApothecaryInner() {
                     `Scan Confidence: ${Math.round(reading.rawVitals.confidence * 100)}%`,
                   ].join('\n');
                   setLiveScanContext(ctx);
-                  // Persist scan to nadi_scan_results table (gracefully skipped if migration pending)
                   sqiField.updateNadi({
                     activatedNadi: reading.activatedNadi,
                     heartRate: reading.rawVitals.heart_rate,
@@ -1267,6 +1348,24 @@ function QuantumApothecaryInner() {
                     autonomicBalance: reading.autonomicBalance,
                     scannedAt: new Date().toISOString(),
                   });
+                  const scanMessage = `◈ NADI SCAN COMPLETE
+Active Nadi: ${reading.activatedNadi}
+Prana Coherence: ${reading.activeNadis.toLocaleString()} / 72,000
+Heart Rate: ${reading.rawVitals.heart_rate} BPM
+HRV RMSSD: ${reading.rawVitals.hrv_rmssd ?? '—'} ms
+Respiratory Rate: ${reading.rawVitals.respiratory_rate} RPM
+Vagal Tone: ${reading.vagalTone}
+Autonomic State: ${reading.autonomicBalance}
+Chakra Field: ${reading.chakraState}
+Blockage: ${reading.blockageLocation}
+Scan Confidence: ${Math.round(reading.rawVitals.confidence * 100)}%
+SQI — read my complete field and give me a deep Akashic transmission based on this scan combined with my Jyotish blueprint.`;
+                  setInput(scanMessage);
+                  setTimeout(() => {
+                    handleSendMessage(scanMessage);
+                    setInput('');
+                    if (chatInputRef.current) chatInputRef.current.style.height = 'auto';
+                  }, 300);
                 }}
               />
             </div>

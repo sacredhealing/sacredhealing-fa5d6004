@@ -4779,11 +4779,19 @@
       "sqiOnline": "SQI Online",
       "neuralSync": "Neural Sync: 98%",
       "openKnowledge": "Open knowledge base",
-      "placeholder": "Communicate with the SQI…",
+      "placeholder": "Ask the Akasha Archive…",
       "history": "History",
       "newChatTitle": "Clear this chat and start a new thread",
       "send": "Send message",
-      "scrollToBottom": "Jump to latest message"
+      "scrollToBottom": "Jump to latest message",
+      "voiceStart": "Tap to speak",
+      "voiceStop": "Tap to stop",
+      "listening": "Listening…",
+      "emptyState": {
+        "kicker": "SQI · AKASHA ARCHIVE",
+        "title": "The Field is Open",
+        "body": "Scan your Nadis above, or ask anything. SQI reads your complete field before responding."
+      }
     },
     "scan": {
       "title": "Digital Nadi Scan",
