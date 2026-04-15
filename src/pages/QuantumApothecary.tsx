@@ -24,10 +24,7 @@ import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognitio
 import { useTranslation } from '@/hooks/useTranslation';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 import { useAyurvedaAnalysis } from '@/hooks/useAyurvedaAnalysis';
-import { useAdminRole } from '@/hooks/useAdminRole';
 import { useAuth } from '@/hooks/useAuth';
-import { useMembership } from '@/hooks/useMembership';
-import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import NadiScanner, { type NadiReading } from '@/components/NadiScanner';
@@ -1523,15 +1520,15 @@ function ScrollToTopButton() {
 }
 
 /* ══════════════════════════════════════════════════════
-   OUTER WRAPPER — 100% IDENTICAL TO ORIGINAL
-   Auth, membership, tier-access logic UNTOUCHED
+   OUTER WRAPPER — auth shell only
+   Tier access is enforced by QuantumApothecaryGate on the /quantum-apothecary route.
+   Do not gate on membership loading here: periodic membership refetches were setting
+   loading=true and unmounting the whole page (felt like endless reload).
    ══════════════════════════════════════════════════════ */
 export default function QuantumApothecary() {
   const { user, isLoading: authLoading } = useAuth();
-  const { tier, loading: membershipLoading, settled } = useMembership();
-  const { isAdmin, isLoading: adminLoading } = useAdminRole();
 
-  if (authLoading || membershipLoading || adminLoading || !settled) {
+  if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#050505] text-white">
         <span className="text-[10px] uppercase tracking-[0.5em] text-[#D4AF37]/40">Initializing SQI…</span>
@@ -1540,9 +1537,6 @@ export default function QuantumApothecary() {
   }
 
   if (!user) return <Navigate to="/auth" replace />;
-  if (!hasFeatureAccess(isAdmin, tier, FEATURE_TIER.quantumApothecary)) {
-    return <Navigate to="/akasha-infinity" replace />;
-  }
 
   return <QuantumApothecaryInner />;
 }
