@@ -2012,7 +2012,7 @@ const Community = () => {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "10px 14px 0", gap: 10 }}>
           <div className="c-banner" style={{ flex: 1, margin: 0 }}>
             <span className="c-pulse" />
-            {onlineCount} SOUL{onlineCount === 1 ? "" : "S"} CURRENTLY IN SACRED COMMUNITY
+            {totalUserCount} SOUL{totalUserCount === 1 ? "" : "S"} IN SACRED COMMUNITY
           </div>
           <div style={{ position: "relative", flexShrink: 0 }}>
             <button
