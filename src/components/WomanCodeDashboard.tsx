@@ -1005,7 +1005,6 @@ export default function WomanCodeDashboard() {
                   <span style={s.label}>{bundle.ui?.movementSectionLabel}</span>
                   <p style={s.bodySm}>{bundle.ui?.movementIntro}</p>
                   <p style={{fontSize:11,color:'rgba(255,255,255,0.65)',lineHeight:1.7,marginTop:10}}>{movementPhaseData.movement}</p>
-                  <p style={{fontSize:10,color:'rgba(255,255,255,0.45)',marginTop:10,lineHeight:1.6}}>{movementPhaseData.pranayama?.icon} <strong>{movementPhaseData.pranayama?.name}</strong> — {movementPhaseData.pranayama?.desc}</p>
                 </div>
                 {movementFromBundle.length>0&&(
                   <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill, minmax(175px, 1fr))',gap:10,marginBottom:12}}>
