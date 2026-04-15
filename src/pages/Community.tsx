@@ -1653,17 +1653,19 @@ const Community = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
   }, [messages, activeChannel]);
 
-  const handleGoLiveForChannel = async (channelId: string, channelName: string) => {
+  const handleGoLiveForChannel = async (channelId: string, channelName: string, customTitle?: string) => {
     if (!user) return;
     setShowGoLiveOptions(false);
-    const result = await daily.createRoom(channelId, `Live in ${channelName}`, undefined, false, "channel");
+    setShowGoLiveDialog(false);
+    const meetingTitle = customTitle?.trim() || `Live in ${channelName}`;
+    const result = await daily.createRoom(channelId, meetingTitle, undefined, false, "channel");
     if (result) {
       setLiveRoomUrl(result.room_url);
       const adminName = memberNameMap[user.id] || "Admin";
       try {
         await supabase.from("community_posts").insert({
           user_id: user.id,
-          content: `🔴 Live now in ${channelName}`,
+          content: `🔴 ${meetingTitle}`,
           post_type: "live",
           video_url: result.room_url,
         } as any);
@@ -1674,7 +1676,7 @@ const Community = () => {
             triggeredBy: adminName,
             channelId,
             channelName,
-            title: `🔴 ${adminName} is LIVE in ${channelName}`,
+            title: `🔴 ${adminName} is LIVE — ${meetingTitle}`,
             body: "A live session just started. Tap to join now.",
             link: "/community",
           },
@@ -1687,7 +1689,17 @@ const Community = () => {
 
   const handleGoLive = async () => {
     if (!activeChannel || !currentChannel) return;
-    await handleGoLiveForChannel(activeChannel, currentChannel.name);
+    // Show naming dialog instead of immediately going live
+    setGoLiveChannelId(activeChannel);
+    setGoLiveChannelName(currentChannel.name);
+    setGoLiveTitle("");
+    setShowGoLiveDialog(true);
+  };
+
+  const confirmGoLive = async () => {
+    if (!goLiveChannelId) return;
+    await handleGoLiveForChannel(goLiveChannelId, goLiveChannelName, goLiveTitle);
+    setShowGoLiveDialog(false);
   };
 
   const handleDmVideoCall = async () => {
