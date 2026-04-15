@@ -50,8 +50,8 @@ export class VolatilityScalperService {
       ladderDepth: 3, // 3 orders on each side
       orderSizeUSDC: 5, // $5 per ladder order
       targetProfitPercent: 0.005, // 0.5% profit target
-      maxExposure: 25, // $25 max per market
-      volatilityThreshold: 0.02, // 2% price swing to trigger
+      maxExposure: 10, // $10 max per market
+      volatilityThreshold: 0.05, // 5% price swing to trigger
       scanIntervalMs: 1000, // Check every second
       ...config,
     };

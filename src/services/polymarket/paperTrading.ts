@@ -298,9 +298,6 @@ export class PaperTradingService {
       const adjustedSignal = { ...signal, currentPrice: executionPrice };
       await this.updatePosition(adjustedSignal, shares);
 
-      // Update daily P&L
-      await this.updateDailyPnL(0, 1, false);
-
       console.log('[PaperTrading] Realistic paper trade executed:', {
         midPrice: signal.currentPrice,
         executionPrice,

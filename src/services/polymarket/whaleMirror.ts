@@ -51,8 +51,8 @@ export class WhaleMirrorService {
   constructor(config: Partial<MirrorConfig> = {}) {
     this.config = {
       enabled: true,
-      maxMirrorSize: 50, // $50 max per mirror
-      mirrorPercentage: 0.05, // Mirror 5% of whale trades
+      maxMirrorSize: 5, // $5 max per mirror
+      mirrorPercentage: 0.01, // Mirror 1% of whale trades
       delayMs: 100, // 100ms delay for safety
       whitelistedWhales: Object.values(WHALE_TARGETS),
       ...config,
