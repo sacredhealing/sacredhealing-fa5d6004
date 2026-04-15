@@ -6,6 +6,7 @@ import { useCyclePhase, calculateCycle } from '@/hooks/useCyclePhase';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 import { useAyurvedaAnalysis } from '@/hooks/useAyurvedaAnalysis';
 import { useAuth } from '@/hooks/useAuth';
+import { ALL_PHASES } from '@/lib/cycle-phases';
 
 /* ─── Hormone curves ─────────────────────────────────────────────────────────── */
 const HORMONE_CURVES = {
@@ -16,7 +17,45 @@ const HORMONE_CURVES = {
   test: [20,20,22,24,26,30,36,44,52,60,68,76,82,88,78,68,58,50,44,40,38,36,34,32,30,28,24,20],
 } as const;
 type HormoneKey = keyof typeof HORMONE_CURVES;
+/** Chart shows Estrogen, Progesterone & LH only (Sovereign Hormonal Alchemy map). */
+const CHART_HORMONE_ORDER: HormoneKey[] = ['ostr','prog','lh'];
 const HORMONE_ORDER: HormoneKey[] = ['prog','ostr','fsh','lh','test'];
+
+const DAILY_LOG_STORAGE_KEY = 'sovereign_hormonal_daily_logs_v1';
+const OVULATION_MAP_DAY = 14;
+const OVULATION_SECRETIONS = new Set(['egg_white', 'watery']);
+
+type DailyLogEntry = { date: string; bleeding?: string; secretion?: string; note?: string };
+
+function readDailyLogs(): DailyLogEntry[] {
+  try {
+    const raw = localStorage.getItem(DAILY_LOG_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeDailyLogs(logs: DailyLogEntry[]) {
+  try {
+    localStorage.setItem(DAILY_LOG_STORAGE_KEY, JSON.stringify(logs));
+  } catch { /* ignore */ }
+}
+
+function todayIsoDate() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function isMovementVedicCard(v: { t: string; s: string }) {
+  const blob = `${v.t} ${v.s}`;
+  return /\b(asana|pose|poses|yoga|warrior|malasana|ustrasana|camel|virabhadrasana|sequence|namaskar|vinyasa|sun salutation|surya)\b/i.test(blob);
+}
 
 /* ─── Types ──────────────────────────────────────────────────────────────────── */
 type WcMineral = { icon:string; mineral:string; food:string; amount:string; fn:string; tags:string[]; bio:string };
@@ -34,12 +73,24 @@ type WcMenopauseStage = { name:string; icon:string; color:string; desc:string; s
 type WomanCodeBundle = {
   ui: {
     badge:string; titleLine1:string; titleGold:string; titleLine2:string; subtitle:string;
-    sliderLabel:string; chartLabel:string; careerSectionLabel:string; chakraSectionLabel:string;
+    biologicalHeadline?:string; cycleHeroSubtitle?:string;
+    sliderLabel:string; chartLabel:string; chartThreeSeriesNote?:string; chartClickHint?:string;
+    careerSectionLabel:string; chakraSectionLabel:string;
     moonMilkLabelPrefix:string; modalCloseAria:string; mineralModalRoleToday:string;
     mineralModalBio:string; hormoneLevelDay:string; vedicModalSubtitle:string;
     chakraModalSubtitle:string; chakraFallback:string;
-    tabs:{minerals:string;career:string;vedic:string;moonmilk:string;photo:string};
-    photoTab:{badge:string;title:string;subtitle:string;uploadBtn:string;cameraBtn:string;analyzeBtn:string;analyzing:string;phaseContext:string;noImage:string;errorTitle:string;errorBody:string};
+    hubTitle?:string; hubSubtitle?:string; bleedingLabel?:string; secretionLabel?:string; dailyNoteLabel?:string; dailyNotePlaceholder?:string;
+    bleedingNone?:string; bleedingSpotting?:string; bleedingLight?:string; bleedingModerate?:string; bleedingHeavy?:string;
+    secretionUnset?:string; secretionDry?:string; secretionSticky?:string; secretionCreamy?:string; secretionEggWhite?:string; secretionWatery?:string;
+    saveDailyLog?:string; ovulationConfirmed?:string; viewCycleHistory?:string;
+    phaseNavTitle?:string; phaseNavHint?:string; pillarsLabel?:string;
+    nutritionSubMinerals?:string; nutritionSubMoon?:string; nutritionSubPhoto?:string;
+    vedicPillarHint?:string;
+    movementSectionLabel?:string; movementIntro?:string; movementActivitiesLabel?:string;
+    historySectionTitle?:string; historyTrendLabel?:string; historyEmpty?:string; historyTrendMagnesium?:string; historyTrendGeneric?:string;
+    glandSummaryTitle?:string; glandSummaryIntro?:string;
+    tabs:{minerals:string;career:string;vedic:string;moonmilk:string;photo:string;nutrition?:string;movement?:string};
+    photoTab:{badge:string;title:string;subtitle:string;uploadBtn:string;cameraBtn:string;analyzeBtn:string;analyzing:string;phaseContext:string;noImage:string;errorTitle:string;errorBody:string;resultLabel?:string};
     pips:string[];
     modeBadges:{cycle:string;pregnancy:string;menopause:string};
   };
@@ -114,11 +165,9 @@ function HormoneChart({currentDay,chartDatasetLabels}:{currentDay:number;chartDa
       if(!ctx||!window.Chart) return;
       if(chartRef.current) chartRef.current.destroy();
       chartRef.current=new window.Chart(ctx,{type:'line',data:{labels:Array.from({length:28},(_,i)=>i+1),datasets:[
-        {label:chartDatasetLabels[0],data:[...HORMONE_CURVES.prog],borderColor:'#A78BFA',borderWidth:2,fill:false,tension:0.4,pointRadius:0},
-        {label:chartDatasetLabels[1],data:[...HORMONE_CURVES.ostr],borderColor:'#F472B6',borderWidth:2,fill:false,tension:0.4,pointRadius:0},
-        {label:chartDatasetLabels[2],data:[...HORMONE_CURVES.fsh], borderColor:'#60A5FA',borderWidth:1.5,fill:false,tension:0.4,pointRadius:0,borderDash:[5,4]},
-        {label:chartDatasetLabels[3],data:[...HORMONE_CURVES.lh],  borderColor:'#34D399',borderWidth:2,fill:false,tension:0.4,pointRadius:0},
-        {label:chartDatasetLabels[4],data:[...HORMONE_CURVES.test],borderColor:'#FBBF24',borderWidth:1.5,fill:false,tension:0.4,pointRadius:0,borderDash:[3,3]},
+        {label:chartDatasetLabels[0],data:[...HORMONE_CURVES.ostr],borderColor:'#F472B6',borderWidth:2,fill:false,tension:0.4,pointRadius:0},
+        {label:chartDatasetLabels[1],data:[...HORMONE_CURVES.prog],borderColor:'#A78BFA',borderWidth:2,fill:false,tension:0.4,pointRadius:0},
+        {label:chartDatasetLabels[2],data:[...HORMONE_CURVES.lh],  borderColor:'#34D399',borderWidth:2,fill:false,tension:0.4,pointRadius:0},
       ]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:200},plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'rgba(255,255,255,0.3)',font:{size:9},maxTicksLimit:8},border:{color:'transparent'}},y:{display:false,min:0,max:110}}}});
     };
     if(window.Chart){buildChart();}else{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js';s.onload=buildChart;document.head.appendChild(s);}
@@ -126,12 +175,11 @@ function HormoneChart({currentDay,chartDatasetLabels}:{currentDay:number;chartDa
   },[chartDatasetLabels]);
   useEffect(()=>{
     if(!chartRef.current) return;
-    const colors=['#A78BFA','#F472B6','#60A5FA','#34D399','#FBBF24'];
     const ds=chartRef.current.data.datasets;
-    ds.forEach((d:any,i:number)=>{const r=Array(28).fill(0);r[currentDay-1]=5;d.pointRadius=r;d.pointBackgroundColor=colors[i];d.pointBorderColor='#050505';d.pointBorderWidth=2;});
+    ds.forEach((d:any)=>{const r=Array(28).fill(0);r[currentDay-1]=6;d.pointRadius=r;d.pointBackgroundColor='#D4AF37';d.pointBorderColor='#050505';d.pointBorderWidth=2;});
     chartRef.current.update('none');
   },[currentDay]);
-  return <div style={{position:'relative',width:'100%',height:'140px'}}><canvas ref={canvasRef} style={{width:'100%',height:'140px'}}/></div>;
+  return <div style={{position:'relative',width:'100%',height:'140px'}}><canvas ref={canvasRef} style={{width:'100%',height:'140px',cursor:'pointer'}}/></div>;
 }
 
 /* ─── Modal ──────────────────────────────────────────────────────────────────── */
@@ -139,8 +187,8 @@ function Modal({content,onClose,closeLabel}:{content:React.ReactNode;onClose:()=
   useEffect(()=>{const h=(e:KeyboardEvent)=>{if(e.key==='Escape') onClose();};document.addEventListener('keydown',h);return()=>document.removeEventListener('keydown',h);},[onClose]);
   return (
     <div role="presentation" onClick={(e)=>{if(e.target===e.currentTarget) onClose();}}
-      style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.82)',backdropFilter:'blur(10px)',WebkitBackdropFilter:'blur(10px)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',padding:'20px'}}>
-      <div style={{background:'#0D0D14',border:'1px solid rgba(255,255,255,0.08)',borderRadius:'28px',padding:'28px 24px',maxWidth:'440px',width:'100%',maxHeight:'80vh',overflowY:'auto',position:'relative'}}>
+      style={{position:'fixed',inset:0,background:'rgba(5,5,5,0.45)',backdropFilter:'blur(24px)',WebkitBackdropFilter:'blur(24px)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',padding:'20px'}}>
+      <div style={{background:'rgba(255,255,255,0.04)',backdropFilter:'blur(40px)',WebkitBackdropFilter:'blur(40px)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:'40px',padding:'28px 24px',maxWidth:'440px',width:'100%',maxHeight:'80vh',overflowY:'auto',position:'relative',boxShadow:'0 25px 80px rgba(0,0,0,0.45)'}}>
         <button type="button" onClick={onClose} aria-label={closeLabel}
           style={{position:'absolute',top:14,right:14,background:'rgba(255,255,255,0.1)',border:'none',color:'#fff',width:30,height:30,borderRadius:'50%',cursor:'pointer',fontSize:14,display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
         {content}
@@ -401,7 +449,7 @@ function FoodPhotoScanner({phase,day,ui,gold}:{phase:WcPhase|null;day:number;ui:
       </div>
       {loading&&<div style={{textAlign:'center',padding:'28px 20px',color:'rgba(255,255,255,0.5)',fontSize:12}}><div style={{fontSize:32,marginBottom:10}}>🔮</div>{pt.analyzing}</div>}
       {error&&<div style={{background:'rgba(255,80,80,0.08)',border:'1px solid rgba(255,80,80,0.2)',borderRadius:20,padding:18}}><div style={{fontSize:12,fontWeight:800,color:'#FC8181',marginBottom:4}}>{pt.errorTitle}</div><div style={{fontSize:11,color:'rgba(255,255,255,0.5)'}}>{error}</div></div>}
-      {result&&<div style={{background:'rgba(255,255,255,0.025)',border:'1px solid rgba(212,175,55,0.2)',borderRadius:24,padding:22}}><div style={{fontSize:'7px',fontWeight:800,letterSpacing:'0.4em',textTransform:'uppercase',color:gold,marginBottom:14}}>AI Analysis Result</div><div style={{fontSize:12,color:'rgba(255,255,255,0.78)',lineHeight:1.8,whiteSpace:'pre-wrap'}}>{result}</div></div>}
+      {result&&<div style={{background:'rgba(255,255,255,0.025)',border:'1px solid rgba(212,175,55,0.2)',borderRadius:24,padding:22}}><div style={{fontSize:'7px',fontWeight:800,letterSpacing:'0.4em',textTransform:'uppercase',color:gold,marginBottom:14}}>{pt.resultLabel}</div><div style={{fontSize:12,color:'rgba(255,255,255,0.78)',lineHeight:1.8,whiteSpace:'pre-wrap'}}>{result}</div></div>}
     </div>
   );
 }
@@ -506,9 +554,15 @@ export default function WomanCodeDashboard() {
   // Day slider — initialised from live cycle day, but user can still drag it
   const [day,setDay]=useState(14);
   const [userAdjusted,setUserAdjusted]=useState(false);
-  const [tab,setTab]=useState<'minerals'|'career'|'vedic'|'moonmilk'|'photo'>('minerals');
+  const [tab,setTab]=useState<'nutrition'|'career'|'vedic'|'movement'>('nutrition');
+  const [nutritionSub,setNutritionSub]=useState<'minerals'|'moonmilk'|'photo'>('minerals');
   const [modal,setModal]=useState<React.ReactNode>(null);
   const [showSetup,setShowSetup]=useState(false);
+  const [dailyLogs,setDailyLogs]=useState<DailyLogEntry[]>([]);
+  const [bleeding,setBleeding]=useState('');
+  const [secretion,setSecretion]=useState('');
+  const [dailyNote,setDailyNote]=useState('');
+  const historySectionRef=useRef<HTMLDivElement>(null);
 
   // Sync slider to live cycle day when data loads (only if user hasn't manually adjusted)
   useEffect(()=>{
@@ -522,10 +576,47 @@ export default function WomanCodeDashboard() {
     if(!cycleLoading&&!isConfigured) setShowSetup(true);
   },[cycleLoading,isConfigured]);
 
+  useEffect(()=>{
+    const logs=readDailyLogs();
+    setDailyLogs(logs);
+    const t=todayIsoDate();
+    const L=logs.find(l=>l.date===t);
+    if(L){setBleeding(L.bleeding||'');setSecretion(L.secretion||'');setDailyNote(L.note||'');}
+    else{setBleeding('');setSecretion('');setDailyNote('');}
+  },[]);
+
   const phaseIdx=getPhaseIndex(day);
   const phase=bundle.phases?.[phaseIdx];
 
-  const chartDatasetLabels=useMemo(()=>HORMONE_ORDER.map(k=>bundle.chartLabels?.[k]??k),[bundle.chartLabels]);
+  const chartDatasetLabels=useMemo(()=>CHART_HORMONE_ORDER.map(k=>bundle.chartLabels?.[k]??k),[bundle.chartLabels]);
+
+  const todaysLog=useMemo(()=>dailyLogs.find(l=>l.date===todayIsoDate()),[dailyLogs]);
+  const secretionOverride=!!(todaysLog?.secretion&&OVULATION_SECRETIONS.has(todaysLog.secretion));
+
+  const mapDay=useMemo(()=>{
+    if(secretionOverride) return Math.min(Math.max(OVULATION_MAP_DAY,1),28);
+    const base=userAdjusted?day:Math.min(Math.max(liveCycleDay||14,1),28);
+    return base;
+  },[secretionOverride,userAdjusted,day,liveCycleDay]);
+
+  const movementPhaseData=ALL_PHASES[phaseIdx]||ALL_PHASES[0];
+  const vedicInnerCards=phase?.vedic?.filter((v)=>!isMovementVedicCard(v))??[];
+  const movementFromBundle=phase?.vedic?.filter((v)=>isMovementVedicCard(v))??[];
+
+  const trendInsight=useMemo(()=>{
+    const ui=bundle.ui as Record<string,string|undefined>|undefined;
+    if(dailyLogs.length<2) return null;
+    let late=0;
+    for(const log of dailyLogs){
+      if(!settings?.lastPeriodDate||!log.note) continue;
+      try{
+        const cd=calculateCycle(settings.lastPeriodDate,settings.cycleLength??28,settings.bleedDays??5,new Date(log.date+'T12:00:00')).cycleDay;
+        if(cd>=21&&cd<=28&&/magnesium|moon|tired|pms|cramp|heavy|mood/i.test(log.note)) late++;
+      }catch{/* ignore */}
+    }
+    if(late>=2) return ui?.historyTrendMagnesium;
+    return ui?.historyTrendGeneric;
+  },[dailyLogs,settings,bundle.ui]);
 
   const s={
     gold:'#D4AF37',
@@ -556,14 +647,14 @@ export default function WomanCodeDashboard() {
 
   const openHormone=(key:HormoneKey)=>{
     const h=bundle.hormones?.[key]; if(!h) return;
-    const val=Math.round(HORMONE_CURVES[key][day-1]);
+    const val=Math.round(HORMONE_CURVES[key][mapDay-1]);
     openModal(
       <div>
         <div style={{fontSize:22,fontWeight:900,color:h.color,letterSpacing:'-0.03em',marginBottom:4}}>{h.label}</div>
         <div style={{fontSize:'8px',fontWeight:800,letterSpacing:'0.4em',textTransform:'uppercase',color:'rgba(255,255,255,0.35)',marginBottom:16}}>{h.sub}</div>
         <div style={{marginBottom:16}}>
           <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}>
-            <span style={{fontSize:10,fontWeight:700,color:h.color}}>{interpolate(bundle.ui?.hormoneLevelDay??'',{day})}</span>
+            <span style={{fontSize:10,fontWeight:700,color:h.color}}>{interpolate(bundle.ui?.hormoneLevelDay??'',{day:mapDay})}</span>
             <span style={{fontSize:10,fontWeight:700,color:h.color}}>{val}%</span>
           </div>
           <div style={{height:7,borderRadius:7,background:'rgba(255,255,255,0.1)',overflow:'hidden'}}>
@@ -594,12 +685,43 @@ export default function WomanCodeDashboard() {
     </div>
   );
 
+  const openGlandSummary=()=>{
+    const ui=bundle.ui;
+    openModal(
+      <div>
+        <div style={{fontSize:'9px',fontWeight:800,letterSpacing:'0.45em',textTransform:'uppercase',color:s.gold,marginBottom:12}}>{ui?.glandSummaryTitle}</div>
+        <p style={{fontSize:11,color:'rgba(255,255,255,0.55)',lineHeight:1.7,marginBottom:18}}>{interpolate(ui?.glandSummaryIntro??'',{day:mapDay})}</p>
+        {CHART_HORMONE_ORDER.map((key)=>{
+          const h=bundle.hormones?.[key]; if(!h) return null;
+          const val=Math.round(HORMONE_CURVES[key][mapDay-1]);
+          return (
+            <div key={key} style={{marginBottom:14}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline'}}>
+                <span style={{fontSize:13,fontWeight:800,color:h.color}}>{h.label}</span>
+                <span style={{fontSize:11,color:'rgba(255,255,255,0.45)'}}>{val}%</span>
+              </div>
+              <p style={{fontSize:11,color:'rgba(255,255,255,0.55)',marginTop:6,lineHeight:1.6}}>{h.sub}</p>
+            </div>
+          );
+        })}
+        {secretionOverride&&<p style={{fontSize:10,color:'rgba(212,175,55,0.9)',marginTop:14,lineHeight:1.6}}>{ui?.ovulationConfirmed}</p>}
+      </div>
+    );
+  };
+
+  const saveTodayLog=useCallback(()=>{
+    const t=todayIsoDate();
+    const entry:DailyLogEntry={date:t,bleeding:bleeding||undefined,secretion:secretion||undefined,note:dailyNote||undefined};
+    const next=[...dailyLogs.filter(l=>l.date!==t),entry];
+    writeDailyLogs(next);
+    setDailyLogs(readDailyLogs());
+  },[bleeding,secretion,dailyNote,dailyLogs]);
+
   const TABS=useMemo(()=>[
-    {id:'minerals' as const,label:bundle.ui?.tabs?.minerals??'Minerals'},
+    {id:'nutrition' as const,label:bundle.ui?.tabs?.nutrition??bundle.ui?.tabs?.minerals??'Nutrition'},
     {id:'career' as const,  label:bundle.ui?.tabs?.career??'Life Sync'},
     {id:'vedic' as const,   label:bundle.ui?.tabs?.vedic??'Vedic'},
-    {id:'moonmilk' as const,label:bundle.ui?.tabs?.moonmilk??'Moon Tonic'},
-    {id:'photo' as const,   label:bundle.ui?.tabs?.photo??'Food Scan'},
+    {id:'movement' as const,label:bundle.ui?.tabs?.movement??'Movement'},
   ],[bundle.ui?.tabs]);
 
   const pipLabels=bundle.ui?.pips??[];
@@ -614,9 +736,15 @@ export default function WomanCodeDashboard() {
           {bundle.ui?.badge}
         </div>
         <h1 style={{fontSize:'clamp(22px,5vw,36px)',fontWeight:900,letterSpacing:'-0.04em',lineHeight:1.05,marginBottom:10}}>
-          {bundle.ui?.titleLine1}<span style={{color:s.gold}}>{bundle.ui?.titleGold}</span><br/>{bundle.ui?.titleLine2}
+          {mode==='cycle'?(
+            <span style={{color:'#fff',textShadow:'0 0 15px rgba(212,175,55,0.25)'}}>{bundle.ui?.biologicalHeadline}</span>
+          ):(
+            <>{bundle.ui?.titleLine1}<span style={{color:s.gold}}>{bundle.ui?.titleGold}</span><br/>{bundle.ui?.titleLine2}</>
+          )}
         </h1>
-        <p style={{fontSize:12,color:'rgba(255,255,255,0.55)',maxWidth:440,margin:'0 auto',lineHeight:1.7}}>{bundle.ui?.subtitle}</p>
+        <p style={{fontSize:12,color:'rgba(255,255,255,0.55)',maxWidth:520,margin:'0 auto',lineHeight:1.7}}>
+          {mode==='cycle'?(bundle.ui?.cycleHeroSubtitle??bundle.ui?.subtitle):bundle.ui?.subtitle}
+        </p>
       </div>
 
       {/* ── Mode Selector ── */}
@@ -660,15 +788,86 @@ export default function WomanCodeDashboard() {
               </div>
             )}
 
-            {/* Birth data + Jyotish banner */}
-            <BirthDataPanel gold={s.gold} jyotish={jyotish} hasBirthData={hasBirthData}/>
-            {(jyotish?.nakshatra||doshaProfile?.primary)&&(
-              <JyotishDoshaBanner jyotish={jyotish} doshaProfile={doshaProfile} phase={phase} gold={s.gold}/>
-            )}
-
-            {/* Day slider */}
+            {/* ── Biological intelligence map (Estrogen / Progesterone / LH) ── */}
             <div style={s.glass}>
-              <span style={s.label}>{bundle.ui?.sliderLabel}</span>
+              <span style={s.label}>{bundle.ui?.chartLabel}</span>
+              {bundle.ui?.chartThreeSeriesNote&&(
+                <p style={{fontSize:10,color:'rgba(255,255,255,0.42)',marginBottom:12,lineHeight:1.65}}>{bundle.ui.chartThreeSeriesNote}</p>
+              )}
+              <div role="button" tabIndex={0}
+                onClick={openGlandSummary}
+                onKeyDown={(e)=>{if(e.key==='Enter'||e.key===' ') openGlandSummary();}}
+                style={{cursor:'pointer',borderRadius:20,padding:8,marginBottom:4,border:'1px solid rgba(212,175,55,0.15)',background:'rgba(212,175,55,0.04)'}}>
+                <HormoneChart currentDay={mapDay} chartDatasetLabels={chartDatasetLabels}/>
+              </div>
+              <p style={{fontSize:9,color:'rgba(255,255,255,0.38)',textAlign:'center',letterSpacing:'0.08em',marginTop:4}}>{bundle.ui?.chartClickHint}</p>
+              <div style={{display:'flex',flexWrap:'wrap',gap:8,marginTop:12}}>
+                {CHART_HORMONE_ORDER.map((key)=>{
+                  const h=bundle.hormones?.[key]; if(!h) return null;
+                  return (
+                    <button key={key} type="button" onClick={()=>openHormone(key)}
+                      style={{padding:'7px 14px',borderRadius:40,fontSize:10,fontWeight:700,letterSpacing:'0.05em',cursor:'pointer',background:`${h.color}18`,color:h.color,border:`1px solid ${h.color}44`,fontFamily:'inherit',transition:'transform 0.2s'}}
+                      onMouseEnter={e=>{e.currentTarget.style.transform='scale(1.05)';}}
+                      onMouseLeave={e=>{e.currentTarget.style.transform='scale(1)';}}>
+                      {h.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* ── Daily interaction hub ── */}
+            <div style={{...s.glass,border:'1px solid rgba(212,175,55,0.12)'}}>
+              <span style={s.label}>{bundle.ui?.hubTitle}</span>
+              <p style={{...s.bodySm,marginBottom:16}}>{bundle.ui?.hubSubtitle}</p>
+              <div style={{display:'flex',flexDirection:'column',gap:12}}>
+                <div>
+                  <label style={{fontSize:'8px',fontWeight:800,letterSpacing:'0.35em',textTransform:'uppercase',color:'rgba(255,255,255,0.45)',display:'block',marginBottom:6}}>{bundle.ui?.bleedingLabel}</label>
+                  <select value={bleeding} onChange={e=>setBleeding(e.target.value)}
+                    style={{width:'100%',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:12,padding:'10px 14px',color:'#fff',fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box',cursor:'pointer'}}>
+                    <option value="">{bundle.ui?.bleedingNone}</option>
+                    <option value="spotting">{bundle.ui?.bleedingSpotting}</option>
+                    <option value="light">{bundle.ui?.bleedingLight}</option>
+                    <option value="moderate">{bundle.ui?.bleedingModerate}</option>
+                    <option value="heavy">{bundle.ui?.bleedingHeavy}</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{fontSize:'8px',fontWeight:800,letterSpacing:'0.35em',textTransform:'uppercase',color:'rgba(255,255,255,0.45)',display:'block',marginBottom:6}}>{bundle.ui?.secretionLabel}</label>
+                  <select value={secretion} onChange={e=>setSecretion(e.target.value)}
+                    style={{width:'100%',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:12,padding:'10px 14px',color:'#fff',fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box',cursor:'pointer'}}>
+                    <option value="">{bundle.ui?.secretionUnset}</option>
+                    <option value="dry">{bundle.ui?.secretionDry}</option>
+                    <option value="sticky">{bundle.ui?.secretionSticky}</option>
+                    <option value="creamy">{bundle.ui?.secretionCreamy}</option>
+                    <option value="egg_white">{bundle.ui?.secretionEggWhite}</option>
+                    <option value="watery">{bundle.ui?.secretionWatery}</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{fontSize:'8px',fontWeight:800,letterSpacing:'0.35em',textTransform:'uppercase',color:'rgba(255,255,255,0.45)',display:'block',marginBottom:6}}>{bundle.ui?.dailyNoteLabel}</label>
+                  <textarea value={dailyNote} onChange={e=>setDailyNote(e.target.value)} rows={3} placeholder={bundle.ui?.dailyNotePlaceholder}
+                    style={{width:'100%',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:12,padding:'10px 14px',color:'#fff',fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box',resize:'vertical'}}/>
+                </div>
+                <button type="button" onClick={saveTodayLog}
+                  style={{padding:'12px 24px',borderRadius:40,fontSize:'10px',fontWeight:800,letterSpacing:'0.2em',textTransform:'uppercase',cursor:'pointer',background:s.gold,color:'#050505',border:'none',fontFamily:'inherit'}}>
+                  {bundle.ui?.saveDailyLog}
+                </button>
+                {secretionOverride&&(
+                  <p style={{fontSize:11,color:'rgba(212,175,55,0.9)',lineHeight:1.65,margin:0}}>{bundle.ui?.ovulationConfirmed}</p>
+                )}
+              </div>
+              <button type="button" onClick={()=>historySectionRef.current?.scrollIntoView({behavior:'smooth',block:'start'})}
+                style={{display:'block',width:'100%',marginTop:16,padding:'12px 16px',borderRadius:40,fontSize:'9px',fontWeight:800,letterSpacing:'0.15em',textTransform:'uppercase',cursor:'pointer',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.1)',color:'rgba(255,255,255,0.75)',fontFamily:'inherit'}}>
+                {bundle.ui?.viewCycleHistory}
+              </button>
+            </div>
+
+            {/* ── Phase navigation (explore cycle day for pillar content) ── */}
+            <div style={s.glass}>
+              <span style={s.label}>{bundle.ui?.phaseNavTitle}</span>
+              <p style={{fontSize:10,color:'rgba(255,255,255,0.4)',marginBottom:12,lineHeight:1.6}}>{bundle.ui?.phaseNavHint}</p>
+              <span style={{...s.label,marginBottom:8}}>{bundle.ui?.sliderLabel}</span>
               <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:14}}>
                 <div style={{fontSize:52,fontWeight:900,letterSpacing:'-0.05em',color:s.gold,lineHeight:1,minWidth:72}}>{day}</div>
                 <div style={{flex:1}}>
@@ -704,26 +903,9 @@ export default function WomanCodeDashboard() {
               </div>
             </div>
 
-            {/* Hormone chart */}
-            <div style={s.glass}>
-              <span style={s.label}>{bundle.ui?.chartLabel}</span>
-              <HormoneChart currentDay={day} chartDatasetLabels={chartDatasetLabels}/>
-              <div style={{display:'flex',flexWrap:'wrap',gap:8,marginTop:12}}>
-                {HORMONE_ORDER.map(key=>{
-                  const h=bundle.hormones?.[key]; if(!h) return null;
-                  return (
-                    <button key={key} type="button" onClick={()=>openHormone(key)}
-                      style={{padding:'7px 14px',borderRadius:40,fontSize:10,fontWeight:700,letterSpacing:'0.05em',cursor:'pointer',background:`${h.color}18`,color:h.color,border:`1px solid ${h.color}44`,fontFamily:'inherit',transition:'transform 0.2s'}}
-                      onMouseEnter={e=>{e.currentTarget.style.transform='scale(1.05)';}}
-                      onMouseLeave={e=>{e.currentTarget.style.transform='scale(1)';}}>
-                      {h.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            <div style={{fontSize:'7px',fontWeight:800,letterSpacing:'0.5em',textTransform:'uppercase',color:'rgba(255,255,255,0.35)',marginBottom:10,textAlign:'center'}}>{bundle.ui?.pillarsLabel}</div>
 
-            {/* Tabs */}
+            {/* Tabs — four pillars */}
             <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:14}}>
               {TABS.map(tb=>(
                 <button key={tb.id} type="button" onClick={()=>setTab(tb.id)}
@@ -733,13 +915,43 @@ export default function WomanCodeDashboard() {
               ))}
             </div>
 
-            {tab==='minerals'&&phase&&(
+            {tab==='nutrition'&&phase&&(
               <div>
-                <div style={{...s.glassSm,marginBottom:12}}>
-                  <span style={s.label}>⟁ {phase.minHeader}</span>
-                  <p style={s.bodySm}>{phase.minIntro}</p>
+                <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:12}}>
+                  {(['minerals','moonmilk','photo'] as const).map((sub)=>(
+                    <button key={sub} type="button" onClick={()=>setNutritionSub(sub)}
+                      style={{flex:1,minWidth:90,padding:'10px 8px',border:nutritionSub===sub?'1px solid rgba(212,175,55,0.45)':'1px solid rgba(255,255,255,0.08)',borderRadius:40,background:nutritionSub===sub?'rgba(212,175,55,0.1)':'transparent',color:nutritionSub===sub?s.gold:'rgba(255,255,255,0.5)',fontFamily:'inherit',fontSize:'8px',fontWeight:800,letterSpacing:'0.12em',textTransform:'uppercase',cursor:'pointer'}}>
+                      {sub==='minerals'&&(bundle.ui?.nutritionSubMinerals??bundle.ui?.tabs?.minerals)}
+                      {sub==='moonmilk'&&(bundle.ui?.nutritionSubMoon??bundle.ui?.tabs?.moonmilk)}
+                      {sub==='photo'&&(bundle.ui?.nutritionSubPhoto??bundle.ui?.tabs?.photo)}
+                    </button>
+                  ))}
                 </div>
-                <MineralGrid minerals={phase.minerals} onOpen={openMineral} s={s}/>
+                {nutritionSub==='minerals'&&(
+                  <>
+                    <div style={{...s.glassSm,marginBottom:12}}>
+                      <span style={s.label}>⟁ {phase.minHeader}</span>
+                      <p style={s.bodySm}>{phase.minIntro}</p>
+                    </div>
+                    <MineralGrid minerals={phase.minerals} onOpen={openMineral} s={s}/>
+                  </>
+                )}
+                {nutritionSub==='moonmilk'&&(
+                  <div style={{background:'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.02))',border:'1px solid rgba(212,175,55,0.25)',borderRadius:28,padding:24}}>
+                    <div style={{fontSize:'7px',fontWeight:800,letterSpacing:'0.5em',textTransform:'uppercase',color:s.gold,marginBottom:14}}>{bundle.ui?.moonMilkLabelPrefix}{phase.name}</div>
+                    <div style={{fontSize:22,fontWeight:900,letterSpacing:'-0.03em',color:s.gold,marginBottom:4}}>{phase.herb.name}</div>
+                    <div style={{fontSize:11,color:'rgba(255,255,255,0.6)',marginBottom:20}}>{phase.herb.tl}</div>
+                    {phase.herb.steps.map((step,i)=>(
+                      <div key={i} style={{display:'flex',gap:12,marginBottom:10,alignItems:'flex-start'}}>
+                        <div style={{width:22,height:22,borderRadius:'50%',background:'rgba(212,175,55,0.12)',border:'1px solid rgba(212,175,55,0.3)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'9px',fontWeight:800,color:s.gold,flexShrink:0}}>{i+1}</div>
+                        <div style={{fontSize:11,color:'rgba(255,255,255,0.65)',lineHeight:1.65,paddingTop:3}}>{step}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {nutritionSub==='photo'&&(
+                  <FoodPhotoScanner phase={phase} day={day} ui={bundle.ui} gold={s.gold}/>
+                )}
               </div>
             )}
             {tab==='career'&&phase&&(
@@ -758,8 +970,9 @@ export default function WomanCodeDashboard() {
             )}
             {tab==='vedic'&&phase&&(
               <div>
+                <p style={{fontSize:10,color:'rgba(255,255,255,0.42)',marginBottom:12,lineHeight:1.6}}>{bundle.ui?.vedicPillarHint}</p>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill, minmax(175px, 1fr))',gap:10,marginBottom:12}}>
-                  {phase.vedic.map((v,i)=>(
+                  {(vedicInnerCards.length?vedicInnerCards:phase.vedic).map((v,i)=>(
                     <div key={i} role="button" tabIndex={0} onClick={()=>openVedic(v)} onKeyDown={(e)=>{if(e.key==='Enter'||e.key===' ') openVedic(v);}}
                       style={{background:'rgba(255,255,255,0.025)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:22,padding:18,cursor:'pointer',transition:'all 0.2s'}}
                       onMouseEnter={e=>{e.currentTarget.style.borderColor='rgba(212,175,55,0.4)';e.currentTarget.style.transform='translateY(-2px)';}}
@@ -786,21 +999,76 @@ export default function WomanCodeDashboard() {
                 </div>
               </div>
             )}
-            {tab==='moonmilk'&&phase&&(
-              <div style={{background:'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.02))',border:'1px solid rgba(212,175,55,0.25)',borderRadius:28,padding:24}}>
-                <div style={{fontSize:'7px',fontWeight:800,letterSpacing:'0.5em',textTransform:'uppercase',color:s.gold,marginBottom:14}}>{bundle.ui?.moonMilkLabelPrefix}{phase.name}</div>
-                <div style={{fontSize:22,fontWeight:900,letterSpacing:'-0.03em',color:s.gold,marginBottom:4}}>{phase.herb.name}</div>
-                <div style={{fontSize:11,color:'rgba(255,255,255,0.6)',marginBottom:20}}>{phase.herb.tl}</div>
-                {phase.herb.steps.map((step,i)=>(
-                  <div key={i} style={{display:'flex',gap:12,marginBottom:10,alignItems:'flex-start'}}>
-                    <div style={{width:22,height:22,borderRadius:'50%',background:'rgba(212,175,55,0.12)',border:'1px solid rgba(212,175,55,0.3)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'9px',fontWeight:800,color:s.gold,flexShrink:0}}>{i+1}</div>
-                    <div style={{fontSize:11,color:'rgba(255,255,255,0.65)',lineHeight:1.65,paddingTop:3}}>{step}</div>
+            {tab==='movement'&&phase&&(
+              <div>
+                <div style={{...s.glassSm,marginBottom:12}}>
+                  <span style={s.label}>{bundle.ui?.movementSectionLabel}</span>
+                  <p style={s.bodySm}>{bundle.ui?.movementIntro}</p>
+                  <p style={{fontSize:11,color:'rgba(255,255,255,0.65)',lineHeight:1.7,marginTop:10}}>{movementPhaseData.movement}</p>
+                  <p style={{fontSize:10,color:'rgba(255,255,255,0.45)',marginTop:10,lineHeight:1.6}}>{movementPhaseData.pranayama?.icon} <strong>{movementPhaseData.pranayama?.name}</strong> — {movementPhaseData.pranayama?.desc}</p>
+                </div>
+                {movementFromBundle.length>0&&(
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill, minmax(175px, 1fr))',gap:10,marginBottom:12}}>
+                    {movementFromBundle.map((v,i)=>(
+                      <div key={i} role="button" tabIndex={0} onClick={()=>openVedic(v)} onKeyDown={(e)=>{if(e.key==='Enter'||e.key===' ') openVedic(v);}}
+                        style={{background:'rgba(255,255,255,0.025)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:22,padding:18,cursor:'pointer',transition:'all 0.2s'}}
+                        onMouseEnter={e=>{e.currentTarget.style.borderColor='rgba(212,175,55,0.4)';e.currentTarget.style.transform='translateY(-2px)';}}
+                        onMouseLeave={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.07)';e.currentTarget.style.transform='translateY(0)';}}>
+                        <div style={{fontSize:26,marginBottom:10}}>{v.icon}</div>
+                        <div style={{fontSize:12,fontWeight:800,color:'#fff',marginBottom:4}}>{v.t}</div>
+                        <div style={{fontSize:10,color:'rgba(255,255,255,0.55)',lineHeight:1.55}}>{v.s}</div>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
+                <div style={s.glass}>
+                  <span style={s.label}>{bundle.ui?.movementActivitiesLabel}</span>
+                  {movementPhaseData.activities.map((act,i)=>(
+                    <div key={i} style={{display:'flex',gap:12,padding:'12px 0',borderBottom:i<movementPhaseData.activities.length-1?'1px solid rgba(255,255,255,0.08)':'none'}}>
+                      <div style={{fontSize:22}}>{act.icon}</div>
+                      <div>
+                        <div style={{fontSize:12,fontWeight:800,color:'#fff',marginBottom:4}}>{act.title}</div>
+                        <div style={{fontSize:10,color:'rgba(255,255,255,0.5)',marginBottom:6}}>{act.intensity}</div>
+                        <div style={{fontSize:11,color:'rgba(255,255,255,0.6)',lineHeight:1.6}}>{act.sub}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
-            {tab==='photo'&&(
-              <FoodPhotoScanner phase={phase} day={day} ui={bundle.ui} gold={s.gold}/>
+
+            {/* ── History + soul blueprint (base of page) ── */}
+            <div ref={historySectionRef} style={{...s.glass,border:'1px solid rgba(167,139,250,0.15)'}}>
+              <span style={s.label}>{bundle.ui?.historySectionTitle}</span>
+              {trendInsight&&(
+                <div style={{background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.15)',borderRadius:16,padding:14,marginBottom:14}}>
+                  <div style={{fontSize:'8px',fontWeight:800,letterSpacing:'0.3em',textTransform:'uppercase',color:s.gold,marginBottom:8}}>{bundle.ui?.historyTrendLabel}</div>
+                  <p style={{fontSize:11,color:'rgba(255,255,255,0.65)',lineHeight:1.7,margin:0}}>{trendInsight}</p>
+                </div>
+              )}
+              {dailyLogs.length===0?(
+                <p style={{fontSize:11,color:'rgba(255,255,255,0.45)',lineHeight:1.65}}>{bundle.ui?.historyEmpty}</p>
+              ):(
+                <div style={{display:'flex',flexDirection:'column',gap:10,maxHeight:280,overflowY:'auto'}}>
+                  {[...dailyLogs].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,21).map((log)=>(
+                    <div key={log.date} style={{fontSize:10,color:'rgba(255,255,255,0.55)',padding:'10px 12px',background:'rgba(255,255,255,0.03)',borderRadius:12,border:'1px solid rgba(255,255,255,0.06)'}}>
+                      <div style={{fontWeight:800,color:s.gold,marginBottom:4}}>{log.date}</div>
+                      {(log.bleeding||log.secretion)&&(
+                        <div style={{marginBottom:4}}>
+                          {log.bleeding&&<span style={{marginRight:8}}>{bundle.ui?.bleedingLabel}: {log.bleeding}</span>}
+                          {log.secretion&&<span>{bundle.ui?.secretionLabel}: {log.secretion}</span>}
+                        </div>
+                      )}
+                      {log.note&&<div style={{whiteSpace:'pre-wrap',lineHeight:1.5}}>{log.note}</div>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <BirthDataPanel gold={s.gold} jyotish={jyotish} hasBirthData={hasBirthData}/>
+            {(jyotish?.nakshatra||doshaProfile?.primary)&&(
+              <JyotishDoshaBanner jyotish={jyotish} doshaProfile={doshaProfile} phase={phase} gold={s.gold}/>
             )}
           </>
         )}
