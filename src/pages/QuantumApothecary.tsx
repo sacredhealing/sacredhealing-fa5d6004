@@ -190,6 +190,74 @@ function renderInline(text: string, variant: InlineVariant = 'body', onGold = fa
   });
 }
 
+/** SQI (assistant) plain-text renderer — ◈ section headers in gold, · bullets, word wrap for streaming */
+function renderSQIContent(content: string) {
+  return content.split('\n').map((line, i) => {
+    const trimmed = line.trim();
+
+    if (trimmed.startsWith('◈')) {
+      return (
+        <p
+          key={i}
+          style={{
+            color: '#D4AF37',
+            fontWeight: 800,
+            fontSize: '13px',
+            letterSpacing: '0.03em',
+            marginTop: i > 0 ? '14px' : '0',
+            marginBottom: '4px',
+            wordBreak: 'break-word',
+            overflowWrap: 'anywhere',
+          }}
+        >
+          {trimmed}
+        </p>
+      );
+    }
+
+    if (trimmed.startsWith('·')) {
+      return (
+        <p
+          key={i}
+          style={{
+            color: 'rgba(255,255,255,0.75)',
+            fontSize: '14px',
+            lineHeight: '1.7',
+            paddingLeft: '8px',
+            marginBottom: '3px',
+            wordBreak: 'break-word',
+            overflowWrap: 'anywhere',
+          }}
+        >
+          {trimmed}
+        </p>
+      );
+    }
+
+    if (trimmed === '') {
+      return <div key={i} style={{ height: '6px' }} />;
+    }
+
+    return (
+      <p
+        key={i}
+        style={{
+          color: 'rgba(255,255,255,0.82)',
+          fontSize: '14px',
+          lineHeight: '1.8',
+          marginBottom: '2px',
+          wordBreak: 'break-word',
+          overflowWrap: 'anywhere',
+          whiteSpace: 'pre-wrap',
+          maxWidth: '100%',
+        }}
+      >
+        {trimmed}
+      </p>
+    );
+  });
+}
+
 function languageToBcp47(languageCode: string): string {
   const l = (languageCode || 'en').split('-')[0]?.toLowerCase() || 'en';
   if (l === 'sv') return 'sv-SE';
@@ -895,7 +963,13 @@ function QuantumApothecaryInner() {
 
       {/* Messages */}
       <div
-        className="qa-sqi-chat custom-scrollbar relative flex-1 overflow-y-auto px-3 py-4 space-y-3 custom-scrollbar"
+        className="qa-sqi-chat custom-scrollbar relative flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-3"
+        style={{
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          wordBreak: 'break-word',
+          overflowWrap: 'anywhere',
+        }}
         ref={scrollContainerCallbackRef}
       >
         <div
@@ -951,10 +1025,13 @@ function QuantumApothecaryInner() {
                       style={{
                         background: 'rgba(255,255,255,0.03)',
                         border: '1px solid rgba(255,255,255,0.06)',
+                        overflow: 'visible',
                       }}
                     >
-                      <div className="markdown-body text-[14px] leading-[1.75] text-white/85 whitespace-pre-wrap break-words w-full min-w-0 text-left">
-                        {renderChatText(msg.text, 'model')}
+                      <div className="sqi-message w-full min-w-0">
+                        <div className="text-[14px] leading-[1.8] text-white/85 break-words [overflow-wrap:anywhere] w-full min-w-0">
+                          {renderSQIContent(msg.text)}
+                        </div>
                       </div>
                     </div>
                     {ts && (
@@ -1505,6 +1582,19 @@ SQI — integrate this scan with my natal chart; cite each chart fact once; use 
         .qa-sqi-chat .markdown-body h1,
         .qa-sqi-chat .markdown-body h2,
         .qa-sqi-chat .markdown-body h3 {
+          max-width: 100%;
+        }
+
+        .sqi-message strong,
+        .sqi-message b {
+          color: #D4AF37;
+          font-weight: 800;
+        }
+        .sqi-message p {
+          margin-bottom: 10px;
+          word-break: break-word;
+          overflow-wrap: anywhere;
+          white-space: pre-wrap;
           max-width: 100%;
         }
 
