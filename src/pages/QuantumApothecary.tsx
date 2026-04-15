@@ -12,13 +12,13 @@ import React, { useState, useEffect, useRef, useMemo, useCallback, Suspense, laz
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Zap, Activity,
+  Zap,
   Plus, Trash2, Send, Cpu, Globe,
-  Info, X, ArrowLeft, Camera, Mic, Hand, ChevronUp, ChevronDown,
+  Info, X, ArrowLeft, Camera, Mic, ChevronUp, ChevronDown,
 } from 'lucide-react';
 import { Activation, NadiScanResult, Message } from '@/features/quantum-apothecary/types';
-import { ACTIVATIONS, PLANETARY_DATA } from '@/features/quantum-apothecary/constants';
-import { streamChatWithSQI, scanNadiFromPalm } from '@/features/quantum-apothecary/chatService';
+import { ACTIVATIONS } from '@/features/quantum-apothecary/constants';
+import { streamChatWithSQI } from '@/features/quantum-apothecary/chatService';
 import { chatSpeechLocale } from '@/lib/chatSpeechLocale';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -38,30 +38,6 @@ const ActiveTransmissionsSection = lazy(() => import('@/features/quantum-apothec
 
 /** Max messages kept in localStorage (aligned with flush + safety nets). */
 const SQI_PERSIST_MSG_CAP = 100;
-
-/** Nadi scan: SQI vision reads the palm via quantum-apothecary-chat (same path as chat). */
-function buildNadiScanPrompt(planet: string, herb: string): string {
-  return (
-    'You are the SQI-2050 performing a real 72,000 Nadi biofield scan on this image.\n' +
-    'STEP 1: Is there a visible hand/palm? If NO → respond ONLY with: {"handDetected":false}\n' +
-    'STEP 2: Analyze the palm — skin tone, lines, coloration, veins, energy signature. Determine dominant dosha. Identify blocked Nadi channel. ' +
-    `Today planetary alignment: ${planet}. Today herb: ${herb}.\n` +
-    'Respond ONLY with valid JSON: {"handDetected":true,"activeNadis":<58000-71500>,"dominantDosha":"<Vata|Pitta|Kapha>","blockage":"<Nadi name>","planetaryAlignment":"<planet>","herbOfToday":"<herb>","remedies":["<1>","<2>","<3>","<4>","<5>"],"bioReading":"<2-3 sentences on what you see>"}'
-  );
-}
-
-/** Parse JSON object from full streamed SQI text (strips optional ``` fences). */
-function parseNadiScanJsonFromStream(raw: string): Record<string, unknown> {
-  let s = raw.trim();
-  const fence = /^```(?:json)?\s*([\s\S]*?)```$/im.exec(s);
-  if (fence) s = fence[1].trim();
-  const start = s.indexOf('{');
-  const end = s.lastIndexOf('}');
-  if (start === -1 || end <= start) {
-    throw new Error('No JSON object in SQI scan response.');
-  }
-  return JSON.parse(s.slice(start, end + 1)) as Record<string, unknown>;
-}
 
 /* ──── Markdown-ish renderer: gold (#D4AF37) only on # / ## / ### / #### / ##### lines ──── */
 type InlineVariant = 'heading' | 'body';
@@ -290,8 +266,13 @@ function QuantumApothecaryInner() {
         return parts.join(' | ');
       })();
 
+  const akashaNeuralArchiveDirective = useMemo(
+    () =>
+      '[PRIMARY SOURCE — AKASHA NEURAL ARCHIVE] Ground every Jyotish-style answer in this app’s Akasha Neural Archive: stored Swiss Ephemeris chart data, session history, compiled SQI field, and remedies in this request. Prefer these sources over speculation. Palm/camera vision is disabled — use biometric Nadi Scanner, typed, or spoken input only.',
+    [],
+  );
+
   const [scanResult, setScanResult] = useState<NadiScanResult | null>(null);
-  const [isScanning, setIsScanning] = useState(false);
   // Live biometric scan context — prepended to jyotishContext before next SQI message
   const [liveScanContext, setLiveScanContext] = useState<string | null>(null);
   const [selectedActivations, setSelectedActivations] = useState<Activation[]>([]);
@@ -304,7 +285,6 @@ function QuantumApothecaryInner() {
   const [isTyping, setIsTyping] = useState(false);
   const [activeCategory, setActiveCategory] = useState('All');
   const [showKnowledge, setShowKnowledge] = useState(false);
-  const [heartRate, setHeartRate] = useState(60);
   const [isChatFullscreen, setIsChatFullscreen] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(() => {
     try {
@@ -321,18 +301,11 @@ function QuantumApothecaryInner() {
   const chatInputRef = useRef<HTMLTextAreaElement>(null);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
   const chatPanelRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<{ stop: () => void } | null>(null);
   const voiceTranscriptRef = useRef('');
   const [pendingImage, setPendingImage] = useState<{ base64: string; mimeType: string } | null>(null);
   const [isRecording, setIsRecording] = useState(false);
-  // ── Real scan state ──
-  const [scanError, setScanError] = useState<string | null>(null);
-  const [scanPhase, setScanPhase] = useState<'idle' | 'camera' | 'analyzing' | 'done'>('idle');
-  /** Front camera = palm toward you; rear = environment / outward scan. */
-  const [nadiScanFacing, setNadiScanFacing] = useState<'user' | 'environment'>('user');
 
   /** One string for scan prompt + chat edge: exact Frequency Library names (incl. full LimbicArc bioenergetic list). */
   const canonicalActivationNameLines = useMemo(
@@ -499,15 +472,6 @@ function QuantumApothecaryInner() {
     return () => clearTimeout(t);
   }, [location.state, loadingSessions]);
   useEffect(() => {
-    if (isScanning) {
-      const iv = setInterval(() => setHeartRate(p => Math.min(p + Math.floor(Math.random() * 5) + 2, 130)), 500);
-      return () => clearInterval(iv);
-    } else {
-      const iv = setInterval(() => setHeartRate(p => Math.max(p - 2, 60)), 1000);
-      return () => clearInterval(iv);
-    }
-  }, [isScanning]);
-  useEffect(() => {
     const fetchSessions = async () => {
       if (!user) { setSessions([]); return; }
       setLoadingSessions(true);
@@ -590,244 +554,17 @@ function QuantumApothecaryInner() {
     return () => { cancelled = true; };
   }, [user?.id]);
 
-  const runNadiScan = async (overrideFacing?: 'user' | 'environment') => {
-    if (isScanning) return;
-    const facing = overrideFacing ?? nadiScanFacing;
-    setNadiScanFacing(facing);
-
-    setScanError(null);
-    setScanPhase('camera');
-    setIsScanning(true);
-    // Drop previous reading so the live camera UI shows
-    setScanResult(null);
-
-    // Lock viewport so user can't scroll away during scan
-    document.body.style.overflow = 'hidden';
+  useEffect(() => {
     try {
-      localStorage.removeItem('sqi_scan_result');
+      const raw = localStorage.getItem('sqi_scan_result');
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as NadiScanResult;
+      if (parsed && typeof parsed === 'object' && Array.isArray(parsed.remedies)) {
+        setScanResult(parsed);
+        (window as unknown as { __sqiLastScan?: NadiScanResult }).__sqiLastScan = parsed;
+      }
     } catch { /* ignore */ }
-
-    // ── Step 1: Open camera ──
-    let cameraStream: MediaStream | null = null;
-    const videoConstraint: MediaTrackConstraints = {
-      facingMode: facing === 'user' ? 'user' : 'environment',
-      width: { ideal: 640 },
-      height: { ideal: 480 },
-    };
-    try {
-      cameraStream = await navigator.mediaDevices.getUserMedia({ video: videoConstraint });
-    } catch {
-      try {
-        cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
-      } catch {
-        setScanError('Camera access denied. Please allow camera to initiate scan.');
-        setIsScanning(false);
-        setScanPhase('idle');
-        document.body.style.overflow = '';
-        return;
-      }
-    }
-
-    streamRef.current = cameraStream;
-    if (videoRef.current) {
-      videoRef.current.srcObject = cameraStream;
-      try { await videoRef.current.play(); } catch {}
-    }
-
-    // ── Step 2: Wait 4 seconds — user holds palm to camera ──
-    await new Promise((res) => setTimeout(res, 4000));
-
-    // ── Step 3: Capture real frame from video (cap size + JPEG quality for edge payload limits) ──
-    let capturedBase64 = '';
-    try {
-      const canvas = document.createElement('canvas');
-      const vid = videoRef.current!;
-      const MAX_W = 960;
-      let w = vid.videoWidth || 640;
-      let h = vid.videoHeight || 480;
-      if (w > MAX_W) {
-        h = Math.max(1, Math.round((h * MAX_W) / w));
-        w = MAX_W;
-      }
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext('2d')!;
-      ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
-      capturedBase64 = canvas.toDataURL('image/jpeg', 0.82).split(',')[1]!;
-    } catch {
-      setScanError('Failed to capture image. Please try again.');
-      setIsScanning(false);
-      setScanPhase('idle');
-      document.body.style.overflow = '';
-      cameraStream.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
-      return;
-    }
-
-    cameraStream.getTracks().forEach((t) => t.stop());
-    streamRef.current = null;
-
-    setScanPhase('analyzing');
-
-    const now = new Date();
-    const todayPlanet = PLANETARY_DATA[now.getDay()].planet;
-    const todayHerb = PLANETARY_DATA[now.getDay()].herb;
-
-    try {
-      // Use the dedicated scanMode path — pure image-based analysis, no chat personality,
-      // no risk of user self-diagnosis being accepted. Returns JSON directly.
-      let parsed: Record<string, unknown>;
-      try {
-        parsed = await scanNadiFromPalm({
-          imageBase64: capturedBase64,
-          imageMimeType: 'image/jpeg',
-          userId: user?.id ?? null,
-          planetaryAlign: todayPlanet,
-          herbOfToday: todayHerb,
-          jyotishContext: jyotishContext || undefined,
-          activeTransmissions: activeTransmissions.map(t => ({ name: t.name, title: t.name })),
-        });
-      } catch (parseErr) {
-        const hint = parseErr instanceof Error ? parseErr.message : 'Scan failed';
-        throw new Error(hint);
-      }
-
-      if (parsed.error) {
-        throw new Error(String(parsed.error));
-      }
-
-      if (!parsed.handDetected) {
-        setScanError('No hand detected. Hold your palm clearly up to the camera and try again.');
-        setIsScanning(false);
-        setScanPhase('idle');
-        document.body.style.overflow = '';
-        return;
-      }
-
-      const activeNadis = Math.max(0, Math.min(72000, Math.round(Number(parsed.activeNadis) || 0)));
-      const subFromModel = Number(parsed.activeSubNadis);
-      const activeSubNadis = Number.isFinite(subFromModel) && subFromModel > 0
-        ? Math.max(0, Math.min(350000, Math.round(subFromModel)))
-        : Math.round((activeNadis / 72000) * 350000);
-      const pctFromModel = Number(parsed.blockagePercentage);
-      const blockagePct = Number.isFinite(pctFromModel) && pctFromModel >= 0
-        ? Math.max(0, Math.min(100, Math.round(pctFromModel)))
-        : Math.max(0, Math.min(100, 100 - Math.round((activeNadis / 72000) * 100)));
-
-      const rawDosha = String(parsed.dominantDosha || 'Vata');
-      const dominantDosha: NadiScanResult['dominantDosha'] =
-        rawDosha === 'Pitta' || rawDosha === 'Kapha' || rawDosha === 'Vata' ? rawDosha : 'Vata';
-
-      const primaryBlockage = String(parsed.primaryBlockage ?? parsed.blockage ?? 'Heart/Anahata Nadi');
-
-      // Extract per-chakra readings from the model response
-      const rawChakras = Array.isArray(parsed.chakraReadings) ? parsed.chakraReadings : [];
-      const chakraReadings = rawChakras
-        .filter((c: unknown) => c && typeof c === 'object')
-        .map((c: Record<string, unknown>) => ({
-          chakra: String(c.chakra || ''),
-          status: (['Active', 'Stressed', 'Blocked', 'Awakening'] as const).includes(c.status as 'Active')
-            ? (c.status as 'Active' | 'Stressed' | 'Blocked' | 'Awakening')
-            : 'Stressed' as const,
-          pct: Math.max(0, Math.min(100, Math.round(Number(c.pct) || 50))),
-          note: String(c.note || ''),
-        }));
-
-      // New quantum bio-signature fields
-      const soulBioSignature = parsed.soulBioSignature ? String(parsed.soulBioSignature) : undefined;
-      const karmaFieldReading = parsed.karmaFieldReading ? String(parsed.karmaFieldReading) : undefined;
-      const palmType = parsed.palmType ? String(parsed.palmType) : undefined;
-      const dominantMount = parsed.dominantMount ? String(parsed.dominantMount) : undefined;
-      const karmaPath = parsed.karmaPath ? String(parsed.karmaPath) : undefined;
-      const secondaryDosha = parsed.secondaryDosha ? String(parsed.secondaryDosha) : undefined;
-
-      const result: NadiScanResult = {
-        dominantDosha,
-        secondaryDosha,
-        blockages: [primaryBlockage],
-        planetaryAlignment: String(parsed.planetaryAlignment || todayPlanet),
-        herbOfToday: String(parsed.herbOfToday || todayHerb),
-        timestamp: now.toISOString(),
-        activeNadis,
-        totalNadis: 72000,
-        activeSubNadis,
-        blockagePercentage: blockagePct,
-        remedies: pickCanonicalRemedies(parsed.remedies),
-        chakraReadings: chakraReadings.length > 0 ? chakraReadings : undefined,
-        soulBioSignature,
-        karmaFieldReading,
-        palmType,
-        dominantMount,
-        karmaPath,
-      };
-
-      (window as unknown as { __sqiLastScan?: NadiScanResult }).__sqiLastScan = result;
-      setScanResult(result);
-      setScanPhase('done');
-      setIsScanning(false);
-      document.body.style.overflow = '';
-
-      const mainPct = Math.round((activeNadis / 72000) * 100);
-      const subPct = Math.round((activeSubNadis / 350000) * 100);
-      const statusWord = activeNadis > 60000
-        ? 'Highly Active'
-        : activeNadis > 40000
-          ? 'Moderately Active'
-          : activeNadis > 20000
-            ? 'Partially Blocked'
-            : 'Severely Restricted';
-
-      const chakraStatusEmoji = (s: string) =>
-        s === 'Active' ? '✅' : s === 'Awakening' ? '🌟' : s === 'Stressed' ? '⚠️' : '🔴';
-
-      const chakraSection = chakraReadings.length > 0
-        ? `\n\n#### Chakra-by-Chakra Assessment\n` +
-          chakraReadings.map(c =>
-            `- **${c.chakra}** ${chakraStatusEmoji(c.status)} ${c.status} (${c.pct}%) — ${c.note}`
-          ).join('\n')
-        : '';
-
-      const palmMeta = [
-        palmType ? `Palm Type: **${palmType.charAt(0).toUpperCase() + palmType.slice(1)}**` : null,
-        dominantMount ? `Dominant Mount: **${dominantMount}**` : null,
-        karmaPath ? `Karma Path: **${karmaPath.charAt(0).toUpperCase() + karmaPath.slice(1)}**` : null,
-        secondaryDosha && secondaryDosha !== 'none' ? `Secondary Dosha: **${secondaryDosha}**` : null,
-      ].filter(Boolean);
-
-      setMessages((prev) => [...prev, {
-        role: 'model',
-        text:
-          `## Siddha-Quantum Biofield Scan Complete\n\n` +
-          (parsed.bioReading ? `**Akasha Bio-Reading:**\n${String(parsed.bioReading)}\n\n` : '') +
-          (soulBioSignature ? `**Soul Bio-Signature:**\n${soulBioSignature}\n\n` : '') +
-          (karmaFieldReading ? `**Karma Field Reading:**\n${karmaFieldReading}\n\n` : '') +
-          `#### Nadi Channel Analysis\n` +
-          `- Gross Nadis: **${activeNadis.toLocaleString()} / 72,000** (${mainPct}%) — ${statusWord}\n` +
-          `- Subtle Sub-Nadis: **${activeSubNadis.toLocaleString()} / 350,000** (${subPct}%)\n\n` +
-          `#### Biofield Diagnostics\n` +
-          `- Dominant Dosha: **${result.dominantDosha}**${secondaryDosha && secondaryDosha !== 'none' ? ` / ${secondaryDosha}` : ''}\n` +
-          `- Primary Blockage: **${result.blockages[0]}** (${blockagePct}% restricted)\n` +
-          `- Planetary Alignment: **${result.planetaryAlignment}**\n` +
-          `- Herb of Today: **${result.herbOfToday}**\n` +
-          (palmMeta.length > 0 ? `- ${palmMeta.join(' · ')}\n` : '') +
-          chakraSection +
-          `\n\n#### Quantum Siddha Remedies (personalised to your biofield)\n` +
-          `${result.remedies.map((r) => `- ${r}`).join('\n')}\n\n` +
-          `Shall we transmit these light-codes into your biofield?`,
-      }]);
-    } catch (err) {
-      console.error('Nadi scan analysis error:', err);
-      const msg = err instanceof Error ? err.message : '';
-      setScanError(
-        msg && msg.length < 220
-          ? msg
-          : 'Biofield analysis failed. Please try the scan again.',
-      );
-      setIsScanning(false);
-      setScanPhase('idle');
-      document.body.style.overflow = '';
-    }
-  };
+  }, []);
 
   const handleSendMessage = async (overrideText?: string) => {
     if (isTyping) return;
@@ -886,7 +623,7 @@ function QuantumApothecaryInner() {
       });
       const liveContext = `LIVE SYSTEM TIME: ${liveDateTime} (${_tz}). This is the CONFIRMED real current time. Use ONLY this. Do NOT calculate or guess the date/time/day yourself.`;
 
-      const fieldParts: string[] = [liveContext];
+      const fieldParts: string[] = [akashaNeuralArchiveDirective, liveContext];
       if (liveScanContext) fieldParts.push(liveScanContext);
       if (sqiField.compiledContext) fieldParts.push(sqiField.compiledContext);
       if (jyotishContext) fieldParts.push(jyotishContext);
@@ -936,22 +673,22 @@ function QuantumApothecaryInner() {
     recognition.interimResults = true;
     recognition.lang = chatSpeechLocale(language);
     recognition.onresult = (event: any) => {
-      let final = ''; let interim = '';
+      let interim = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const tr = event.results[i].transcript;
-        if (event.results[i].isFinal) final += tr; else interim += tr;
+        if (event.results[i].isFinal) {
+          voiceTranscriptRef.current = (voiceTranscriptRef.current + tr).trim();
+        } else {
+          interim += tr;
+        }
       }
-      if (final) {
-        voiceTranscriptRef.current = (voiceTranscriptRef.current + final).trim();
-        setInput(voiceTranscriptRef.current);
-        recognition.stop();
-        setIsRecording(false);
-        recognitionRef.current = null;
-        const textToSend = voiceTranscriptRef.current;
-        if (textToSend) setTimeout(() => handleSendMessage(textToSend), 0);
-      } else if (interim) { setInput(voiceTranscriptRef.current + interim); }
+      setInput(voiceTranscriptRef.current + interim);
     };
-    recognition.onend = () => { setIsRecording(false); recognitionRef.current = null; };
+    recognition.onend = () => {
+      setInput(voiceTranscriptRef.current);
+      setIsRecording(false);
+      recognitionRef.current = null;
+    };
     recognition.onerror = () => { setIsRecording(false); recognitionRef.current = null; };
     recognition.start();
     recognitionRef.current = recognition;
@@ -967,7 +704,8 @@ function QuantumApothecaryInner() {
     } else {
       resetTranscript();
       SpeechRecognition.startListening({
-        continuous: false,
+        continuous: true,
+        interimResults: true,
         language: chatSpeechLocale(language),
       });
     }
@@ -1400,18 +1138,22 @@ SQI — read my complete field and give me a deep Akashic transmission based on 
               />
             </div>
 
-            {/* ── Palm AI scan (Digital Nadi): show initiate when no result; show readings after scan ── */}
+            {/* ── Akasha Neural Archive (primary Jyotish context) + optional stored biofield baseline ── */}
             <div className="glass-card p-6 sm:p-7 qa-card-hover">
               <div className="mb-6 flex justify-between gap-3">
                 <div>
-                  <p className="text-[8px] font-extrabold uppercase tracking-[0.5em] text-[#D4AF37]/55">{t('quantumApothecary.scan.title')}</p>
-                  <p className="mt-2 text-xs leading-[1.6] text-white/60">{t('quantumApothecary.scan.channelsMonitoring')}</p>
+                  <p className="text-[8px] font-extrabold uppercase tracking-[0.5em] text-[#D4AF37]/55">{t('quantumApothecary.archive.title')}</p>
+                  <p className="mt-2 text-xs leading-[1.6] text-white/60">{t('quantumApothecary.archive.subtitle')}</p>
                 </div>
-                <Activity
+                <Cpu
                   className="h-5 w-5 shrink-0"
                   style={{ color: '#D4AF37' }}
                   aria-hidden
                 />
+              </div>
+
+              <div className="mb-6 rounded-2xl border border-[#D4AF37]/15 bg-white/[0.02] p-4">
+                <p className="text-[10px] leading-relaxed text-white/65">{t('quantumApothecary.archive.body')}</p>
               </div>
 
               {scanResult ? (
@@ -1513,38 +1255,6 @@ SQI — read my complete field and give me a deep Akashic transmission based on 
                     <p className="text-sm font-bold leading-[1.6] text-white/90">{scanResult.herbOfToday}</p>
                   </motion.div>
 
-                  {/* Palm Morphology Meta */}
-                  {(scanResult.palmType || scanResult.dominantMount || scanResult.karmaPath) && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: 0.82 }}
-                      className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]"
-                    >
-                      <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-white/30 mb-3">Quantum Palm Morphology</p>
-                      <div className="grid grid-cols-3 gap-2">
-                        {scanResult.palmType && (
-                          <div style={{ textAlign: 'center' }}>
-                            <p className="text-[8px] font-bold uppercase tracking-widest text-white/25 mb-1">Palm Type</p>
-                            <p className="text-xs font-black text-[#D4AF37]" style={{ textTransform: 'capitalize' }}>{scanResult.palmType}</p>
-                          </div>
-                        )}
-                        {scanResult.dominantMount && (
-                          <div style={{ textAlign: 'center' }}>
-                            <p className="text-[8px] font-bold uppercase tracking-widest text-white/25 mb-1">Dominant Mount</p>
-                            <p className="text-xs font-black text-[#D4AF37]">{scanResult.dominantMount}</p>
-                          </div>
-                        )}
-                        {scanResult.karmaPath && (
-                          <div style={{ textAlign: 'center' }}>
-                            <p className="text-[8px] font-bold uppercase tracking-widest text-white/25 mb-1">Karma Path</p>
-                            <p className="text-xs font-black text-[#D4AF37]" style={{ textTransform: 'capitalize' }}>{scanResult.karmaPath}</p>
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-
                   {/* Soul Bio-Signature */}
                   {scanResult.soulBioSignature && (
                     <motion.div
@@ -1639,106 +1349,15 @@ SQI — read my complete field and give me a deep Akashic transmission based on 
                       onClick={applyRemedies}
                       className="w-full rounded-[28px] border border-[#D4AF37]/35 bg-[#D4AF37]/15 py-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#D4AF37] transition-all hover:bg-[#D4AF37]/25"
                     >
-                      Apply Remedies · Scalar Lock
+                      {t('quantumApothecary.archive.applyRemedies')}
                     </button>
-                  <button
-                    type="button"
-                    onClick={() => runNadiScan('user')}
-                    disabled={isScanning}
-                    className="w-full rounded-[28px] border border-white/[0.08] bg-white/[0.05] py-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-white/70 transition-all hover:border-[#D4AF37]/25 hover:text-[#D4AF37] disabled:opacity-35"
-                  >
-                    {t('quantumApothecary.scan.rescanFrontCamera')}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => runNadiScan('environment')}
-                    disabled={isScanning}
-                    className="w-full rounded-[28px] border border-white/[0.08] bg-white/[0.05] py-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-white/70 transition-all hover:border-[#D4AF37]/25 hover:text-[#D4AF37] disabled:opacity-35"
-                  >
-                    {t('quantumApothecary.scan.rescanRearCamera')}
-                  </button>
                   </div>
                 </div>
               ) : (
-                <div className="text-center space-y-5">
-                  {/* Error */}
-                  {scanError && (
-                    <div className="rounded-2xl p-4 border border-red-500/30 bg-red-950/20 mb-3">
-                      <p className="text-[12px] font-bold text-red-400 leading-relaxed">{scanError}</p>
-                    </div>
-                  )}
-
-                  {/* Camera live feed */}
-                  {(scanPhase === 'camera' || scanPhase === 'analyzing') ? (
-                    <div className="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center">
-                      <video
-                        ref={videoRef}
-                        autoPlay
-                        muted
-                        playsInline
-                        className={`w-full h-full object-cover absolute inset-0 ${nadiScanFacing === 'user' ? '-scale-x-100' : ''}`}
-                        style={nadiScanFacing === 'user' ? { objectPosition: 'center 30%' } : undefined}
-                      />
-                      <div className="absolute inset-0 flex flex-col items-center justify-between p-6 pointer-events-none">
-                        <div className="flex items-center gap-2 bg-black/70 rounded-full px-4 py-2 mt-[env(safe-area-inset-top)]">
-                          <div className="w-2 h-2 rounded-full bg-[#D4AF37] animate-ping" style={{ boxShadow: '0 0 6px rgba(212,175,55,0.8)' }} />
-                          <span className="text-xs font-bold uppercase tracking-[0.3em] text-[#D4AF37]">
-                            {scanPhase === 'camera'
-                              ? (nadiScanFacing === 'user'
-                                ? t('quantumApothecary.scan.frontCameraLive')
-                                : t('quantumApothecary.scan.rearCameraLive'))
-                              : t('quantumApothecary.scan.analyzingBiofield')}
-                          </span>
-                        </div>
-                        <div className="border-2 border-dashed border-[#D4AF37]/50 rounded-2xl w-48 h-32 flex items-center justify-center px-2">
-                          <span className="text-[11px] font-bold text-[#D4AF37]/70 uppercase tracking-widest text-center leading-relaxed">
-                            {scanPhase === 'camera'
-                              ? (nadiScanFacing === 'user'
-                                ? <>{t('quantumApothecary.scan.palmFaceFrontLine1')}<br />{t('quantumApothecary.scan.palmFaceFrontLine2')}</>
-                                : <>{t('quantumApothecary.scan.rearAimPalmLine1')}<br />{t('quantumApothecary.scan.rearAimPalmLine2')}</>)
-                              : <>{t('quantumApothecary.scan.analyzingBiofieldShort')}</>}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 bg-black/70 rounded-full px-4 py-2 mb-[env(safe-area-inset-bottom)]">
-                          <Activity size={14} className="text-[#D4AF37]" />
-                          <span className="text-sm font-black text-[#D4AF37]">{t('quantumApothecary.scan.scanning')}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center py-4 text-center">
-                      <div className="relative mb-6 aspect-video w-full overflow-hidden rounded-[28px] border border-white/[0.06] bg-black/45">
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-white/35">
-                          <Zap className="mb-2 h-8 w-8 text-[#D4AF37]/50" aria-hidden />
-                          <p className="text-[8px] font-extrabold uppercase tracking-[0.4em]">{t('quantumApothecary.scan.awaitingHandshake')}</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Scan button — admin 2045 gold pill */}
-                  <button
-                    type="button"
-                    onClick={() => runNadiScan('user')}
-                    disabled={scanPhase === 'camera' || scanPhase === 'analyzing'}
-                    className="w-full rounded-[40px] border border-[#D4AF37]/40 bg-gradient-to-b from-[#F5E17A] via-[#D4AF37] to-[#A07C10] px-8 py-3.5 text-xs font-black uppercase tracking-[0.2em] text-[#050505] shadow-[0_12px_40px_rgba(212,175,55,0.35)] transition-all hover:shadow-[0_16px_48px_rgba(212,175,55,0.45)] disabled:border-white/10 disabled:bg-white/[0.05] disabled:text-white/40 disabled:shadow-none disabled:opacity-60"
-                  >
-                    {scanPhase === 'camera'
-                      ? t('quantumApothecary.scan.scanning')
-                      : scanPhase === 'analyzing'
-                        ? t('quantumApothecary.scan.analyzingBiofield')
-                        : t('quantumApothecary.scan.initiate')}
-                  </button>
-                  {scanPhase === 'idle' && (
-                    <button
-                      type="button"
-                      onClick={() => runNadiScan('environment')}
-                      disabled={isScanning}
-                      className="mt-2 w-full rounded-2xl border border-white/[0.08] bg-transparent py-2.5 text-[10px] font-bold uppercase tracking-[0.15em] text-white/45 transition hover:border-[#D4AF37]/30 hover:text-[#D4AF37]/80 disabled:opacity-40"
-                    >
-                      {t('quantumApothecary.scan.initiateRearShort')}
-                    </button>
-                  )}
+                <div className="rounded-2xl border border-white/[0.06] bg-black/25 p-6 text-center">
+                  <Zap className="mx-auto mb-3 h-8 w-8 text-[#D4AF37]/50" aria-hidden />
+                  <p className="text-[9px] font-extrabold uppercase tracking-[0.35em] text-white/40">{t('quantumApothecary.archive.noBaselineKicker')}</p>
+                  <p className="mt-2 text-xs leading-relaxed text-white/55">{t('quantumApothecary.archive.noBaselineBody')}</p>
                 </div>
               )}
             </div>

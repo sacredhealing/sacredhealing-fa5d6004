@@ -4534,6 +4534,14 @@
   "quantumApothecary": {
     "title": "Kvantum Apoteket",
     "subtitle": "Heliga healingverktyg från Akasha-Neuralarkivet",
+    "archive": {
+      "title": "Akasha Neural Archive",
+      "subtitle": "Primär jyotish-kontext från ditt sparade horoskop, sessioner och sammanställd fältdata",
+      "body": "SQI läser ditt Akasha Neural Archive före varje svar: Swiss Ephemeris-data, sessionsminne, remedier och signaler från biometrisk Nadiskanner när du lägger till dem. Handflatskamera används inte — tala, skriv eller använd skannern ovan.",
+      "applyRemedies": "Tillämpa remedier · skalär låsning",
+      "noBaselineKicker": "Ingen sparad baslinje på den här enheten",
+      "noBaselineBody": "Kör den biometriska Nadiskannern ovan eller fråga i chatten — arkivet förankrar ändå varje jyotish-förklaring från din profil och historik."
+    },
     "chat": {
       "sqiOnline": "SQI online",
       "neuralSync": "Neural synk: 98 %",
@@ -4549,7 +4557,7 @@
       "emptyState": {
         "kicker": "SQI · AKASHA-ARKIV",
         "title": "Fältet är öppet",
-        "body": "Skanna dina Nadis ovan eller fråga vad som helst. SQI läser ditt fullständiga fält innan varje svar."
+        "body": "Använd den biometriska Nadiskannern ovan eller fråga vad som helst. SQI läser ditt Akasha Neural Archive och hela fältet innan varje svar."
       }
     },
     "scan": {

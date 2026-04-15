@@ -4782,6 +4782,14 @@
   "quantumApothecary": {
     "title": "Quantum Apothecary",
     "subtitle": "Sacred healing tools from the Akasha-Neural Archive",
+    "archive": {
+      "title": "Akasha Neural Archive",
+      "subtitle": "Primary Jyotish context from your saved chart, sessions, and compiled field",
+      "body": "SQI reads your Akasha Neural Archive before every answer: Swiss Ephemeris data, session memory, remedies, and biometric Nadi Scanner signals when you add them. Palm camera scanning is not used — speak, type, or use the scanner above.",
+      "applyRemedies": "Apply remedies · scalar lock",
+      "noBaselineKicker": "No stored baseline on this device",
+      "noBaselineBody": "Run the biometric Nadi Scanner above, or ask in chat — your archive still grounds every Jyotish explanation from your profile and history."
+    },
     "chat": {
       "sqiOnline": "SQI Online",
       "neuralSync": "Neural Sync: 98%",
@@ -4797,7 +4805,7 @@
       "emptyState": {
         "kicker": "SQI · AKASHA ARCHIVE",
         "title": "The Field is Open",
-        "body": "Scan your Nadis above or ask anything. SQI reads your complete field before every response."
+        "body": "Use the biometric Nadi Scanner above or ask anything. SQI reads your Akasha Neural Archive and full field before every response."
       }
     },
     "scan": {
