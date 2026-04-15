@@ -822,27 +822,45 @@ export default function WomanCodeDashboard() {
               <p style={{...s.bodySm,marginBottom:16}}>{bundle.ui?.hubSubtitle}</p>
               <div style={{display:'flex',flexDirection:'column',gap:12}}>
                 <div>
-                  <label style={{fontSize:'8px',fontWeight:800,letterSpacing:'0.35em',textTransform:'uppercase',color:'rgba(255,255,255,0.45)',display:'block',marginBottom:6}}>{bundle.ui?.bleedingLabel}</label>
-                  <select value={bleeding} onChange={e=>setBleeding(e.target.value)}
-                    style={{width:'100%',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:12,padding:'10px 14px',color:'#fff',fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box',cursor:'pointer'}}>
-                    <option value="">{bundle.ui?.bleedingNone}</option>
-                    <option value="spotting">{bundle.ui?.bleedingSpotting}</option>
-                    <option value="light">{bundle.ui?.bleedingLight}</option>
-                    <option value="moderate">{bundle.ui?.bleedingModerate}</option>
-                    <option value="heavy">{bundle.ui?.bleedingHeavy}</option>
-                  </select>
+                  <label style={{fontSize:'8px',fontWeight:800,letterSpacing:'0.35em',textTransform:'uppercase',color:'rgba(255,255,255,0.45)',display:'block',marginBottom:8}}>{bundle.ui?.bleedingLabel}</label>
+                  <div role="group" aria-label={bundle.ui?.bleedingLabel} style={{display:'flex',flexWrap:'wrap',gap:8}}>
+                    {([
+                      {v:'',t:bundle.ui?.bleedingNone},
+                      {v:'spotting',t:bundle.ui?.bleedingSpotting},
+                      {v:'light',t:bundle.ui?.bleedingLight},
+                      {v:'moderate',t:bundle.ui?.bleedingModerate},
+                      {v:'heavy',t:bundle.ui?.bleedingHeavy},
+                    ] as const).map(({v,t})=>{
+                      const on=bleeding===v;
+                      return (
+                        <button key={v||'__none'} type="button" aria-pressed={on} onClick={()=>setBleeding(v)}
+                          style={{padding:'8px 14px',borderRadius:40,fontSize:10,fontWeight:700,letterSpacing:'0.06em',cursor:'pointer',fontFamily:'inherit',border:on?`1px solid ${s.gold}`:'1px solid rgba(255,255,255,0.12)',background:on?'rgba(212,175,55,0.14)':'rgba(255,255,255,0.04)',color:on?s.gold:'rgba(255,255,255,0.78)',transition:'all 0.2s'}}>
+                          {t}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
                 <div>
-                  <label style={{fontSize:'8px',fontWeight:800,letterSpacing:'0.35em',textTransform:'uppercase',color:'rgba(255,255,255,0.45)',display:'block',marginBottom:6}}>{bundle.ui?.secretionLabel}</label>
-                  <select value={secretion} onChange={e=>setSecretion(e.target.value)}
-                    style={{width:'100%',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:12,padding:'10px 14px',color:'#fff',fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box',cursor:'pointer'}}>
-                    <option value="">{bundle.ui?.secretionUnset}</option>
-                    <option value="dry">{bundle.ui?.secretionDry}</option>
-                    <option value="sticky">{bundle.ui?.secretionSticky}</option>
-                    <option value="creamy">{bundle.ui?.secretionCreamy}</option>
-                    <option value="egg_white">{bundle.ui?.secretionEggWhite}</option>
-                    <option value="watery">{bundle.ui?.secretionWatery}</option>
-                  </select>
+                  <label style={{fontSize:'8px',fontWeight:800,letterSpacing:'0.35em',textTransform:'uppercase',color:'rgba(255,255,255,0.45)',display:'block',marginBottom:8}}>{bundle.ui?.secretionLabel}</label>
+                  <div role="group" aria-label={bundle.ui?.secretionLabel} style={{display:'flex',flexWrap:'wrap',gap:8}}>
+                    {([
+                      {v:'',t:bundle.ui?.secretionUnset},
+                      {v:'dry',t:bundle.ui?.secretionDry},
+                      {v:'sticky',t:bundle.ui?.secretionSticky},
+                      {v:'creamy',t:bundle.ui?.secretionCreamy},
+                      {v:'egg_white',t:bundle.ui?.secretionEggWhite},
+                      {v:'watery',t:bundle.ui?.secretionWatery},
+                    ] as const).map(({v,t})=>{
+                      const on=secretion===v;
+                      return (
+                        <button key={v||'__none'} type="button" aria-pressed={on} onClick={()=>setSecretion(v)}
+                          style={{padding:'8px 14px',borderRadius:40,fontSize:10,fontWeight:700,letterSpacing:'0.06em',cursor:'pointer',fontFamily:'inherit',border:on?`1px solid ${s.gold}`:'1px solid rgba(255,255,255,0.12)',background:on?'rgba(212,175,55,0.14)':'rgba(255,255,255,0.04)',color:on?s.gold:'rgba(255,255,255,0.78)',transition:'all 0.2s'}}>
+                          {t}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
                 <div>
                   <label style={{fontSize:'8px',fontWeight:800,letterSpacing:'0.35em',textTransform:'uppercase',color:'rgba(255,255,255,0.45)',display:'block',marginBottom:6}}>{bundle.ui?.dailyNoteLabel}</label>
