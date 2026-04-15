@@ -959,7 +959,11 @@ const Community = () => {
   const [liveRoomUrl, setLiveRoomUrl] = useState<string | null>(null);
   const [viewerSessions, setViewerSessions] = useState<DailySession[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [onlineCount] = useState(() => Math.floor(Math.random() * 20) + 5);
+  const [totalUserCount, setTotalUserCount] = useState(0);
+  const [goLiveTitle, setGoLiveTitle] = useState("");
+  const [showGoLiveDialog, setShowGoLiveDialog] = useState(false);
+  const [goLiveChannelId, setGoLiveChannelId] = useState<string | null>(null);
+  const [goLiveChannelName, setGoLiveChannelName] = useState("");
   const [members, setMembers] = useState<Member[]>([]);
   const [memberSearch, setMemberSearch] = useState("");
   const [feedPosts, setFeedPosts] = useState<FeedPost[]>([]);
