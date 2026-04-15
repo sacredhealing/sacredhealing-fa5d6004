@@ -57,4 +57,6 @@ export interface NadiScanResult {
 export interface Message {
   role: 'user' | 'model';
   text: string;
+  /** Unix ms when the message was created (client); optional for legacy persisted threads */
+  timestamp?: number;
 }

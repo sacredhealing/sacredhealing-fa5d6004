@@ -4827,7 +4827,10 @@
       "rearAimPalmLine2": "Fill the frame clearly",
       "initiateRearShort": "Use rear camera instead (palm only)",
       "rescanFrontCamera": "Rescan · front camera (see yourself)",
-      "rescanRearCamera": "Rescan · rear camera"
+      "rescanRearCamera": "Rescan · rear camera",
+      "signalTooWeak": "Signal too weak — please scan in brighter light, hold phone 25-30cm from your face, and keep still.",
+      "lightingGuideTitle": "For best results:",
+      "lightingGuideTips": "· Face the light source (window or lamp)\n· Hold phone 25-30cm from your face\n· Keep still for 30 seconds\n· Remove glasses if possible"
     },
     "frequencyLibrarySection": {
       "title": "Frequency Library",

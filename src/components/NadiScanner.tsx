@@ -6,6 +6,7 @@
 // ═══════════════════════════════════════════════════════════
 import { useState, useRef, useCallback, useEffect, type MouseEvent } from 'react';
 import { FaceMesh } from '@mediapipe/face_mesh';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const SCAN_DURATION = 30;
 const FACE_MESH_VER = '0.4.1633559619';
@@ -251,6 +252,7 @@ export default function NadiScanner({
   jyotishContext,
   onScanComplete,
 }: NadiScannerProps) {
+  const { t } = useTranslation();
   const [phase, setPhase] = useState<Phase>('idle');
   const [countdown, setCountdown] = useState(SCAN_DURATION);
   const [progress, setProgress] = useState(0);
@@ -654,6 +656,11 @@ export default function NadiScanner({
               };
 
               const finalSig = translateBioToVedic(rawBio);
+              if (finalSig.confidence < 0.72) {
+                setErrorMsg(t('quantumApothecary.scan.signalTooWeak'));
+                setPhase('error');
+                return;
+              }
               setSignature(finalSig);
               setPhase('complete');
               onScanComplete?.(bioSignatureToNadiReading(finalSig));
@@ -933,6 +940,36 @@ export default function NadiScanner({
           <p style={{ fontSize: 11, color: 'rgba(255,255,255,.35)', marginTop: 12 }}>
             {activeLayers.length === 0 ? 'Requesting permissions...' : 'Loading models...'}
           </p>
+          <div
+            style={{
+              marginTop: 16,
+              padding: '10px 14px',
+              borderRadius: 16,
+              background: 'rgba(212,175,55,0.06)',
+              border: '1px solid rgba(212,175,55,0.2)',
+            }}
+          >
+            <p
+              style={{
+                fontSize: 10,
+                color: 'rgba(212,175,55,0.8)',
+                fontWeight: 700,
+                marginBottom: 4,
+              }}
+            >
+              {t('quantumApothecary.scan.lightingGuideTitle')}
+            </p>
+            <p
+              style={{
+                fontSize: 10,
+                color: 'rgba(255,255,255,0.5)',
+                lineHeight: 1.6,
+                whiteSpace: 'pre-line',
+              }}
+            >
+              {t('quantumApothecary.scan.lightingGuideTips')}
+            </p>
+          </div>
         </div>
       )}
 

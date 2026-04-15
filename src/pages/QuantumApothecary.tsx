@@ -20,7 +20,7 @@ import { Activation, Message } from '@/features/quantum-apothecary/types';
 import { ACTIVATIONS } from '@/features/quantum-apothecary/constants';
 import { streamChatWithSQI } from '@/features/quantum-apothecary/chatService';
 import { chatSpeechLocale } from '@/lib/chatSpeechLocale';
-import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
+import { useSpeechRecognition } from 'react-speech-recognition';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 import { useAyurvedaAnalysis } from '@/hooks/useAyurvedaAnalysis';
@@ -277,16 +277,11 @@ function QuantumApothecaryInner() {
 
   const appLocale = useMemo(() => languageToBcp47(language), [language]);
 
-  const {
-    transcript,
-    listening,
-    resetTranscript,
-    browserSupportsSpeechRecognition,
-  } = useSpeechRecognition();
+  const { browserSupportsSpeechRecognition } = useSpeechRecognition();
 
-  useEffect(() => {
-    if (transcript) setInput(transcript);
-  }, [transcript]);
+  const [isMicListening, setIsMicListening] = useState(false);
+  const micListeningRef = useRef(false);
+  const nativeSpeechRef = useRef<{ stop: () => void; start: () => void; onend: (() => void) | null } | null>(null);
 
   // Compact natal + assessed prakriti — one pass each; avoids triple-repeating the same Moon line in the model.
   const jyotishContext = jyotish.isLoading
@@ -326,9 +321,26 @@ function QuantumApothecaryInner() {
   // Live biometric scan context — prepended to jyotishContext before next SQI message
   const [liveScanContext, setLiveScanContext] = useState<string | null>(null);
 
-  const compiledFieldForChat = useMemo(
+  /** Debounce: only recompute when underlying field data changes, not on every parent render. */
+  const stableCompiledContext = useMemo(
     () => stripDuplicateBiometricBlock(sqiField.compiledContext, !!liveScanContext?.trim()),
-    [sqiField.compiledContext, liveScanContext],
+    [
+      liveScanContext,
+      sqiField.nadi?.activatedNadi,
+      sqiField.nadi?.heartRate,
+      sqiField.nadi?.hrvRmssd,
+      sqiField.nadi?.respiratoryRate,
+      sqiField.nadi?.pranaCoherence,
+      sqiField.nadi?.vagalTone,
+      sqiField.nadi?.autonomicBalance,
+      sqiField.nadi?.scannedAt,
+      sqiField.ayurveda?.prakriti,
+      sqiField.photonic?.activeProtocol,
+      sqiField.photonic?.frequency,
+      sqiField.photonic?.lightCodeActive,
+      sqiField.temple?.activeSite,
+      sqiField.temple?.intensity,
+    ],
   );
 
   /** Legacy baseline card removed — drop stale local nadi snapshot so Dashboard does not resurrect fake counts. */
@@ -367,7 +379,7 @@ function QuantumApothecaryInner() {
   const [showScrollBottom, setShowScrollBottom] = useState(false);
   const chatPanelRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const recognitionRef = useRef<{ stop: () => void } | null>(null);
+  const legacyRecognitionRef = useRef<{ stop: () => void } | null>(null);
   const voiceTranscriptRef = useRef('');
   const [pendingImage, setPendingImage] = useState<{ base64: string; mimeType: string } | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -569,7 +581,7 @@ function QuantumApothecaryInner() {
     if (!text && !pendingImage) return;
     openChatFullscreenIfMobile();
     const displayText = text || (pendingImage ? '[Image attached]' : '');
-    const userMsg: Message = { role: 'user', text: displayText };
+    const userMsg: Message = { role: 'user', text: displayText, timestamp: Date.now() };
     const allMsgs = [...messages, userMsg];
     setMessages(allMsgs);
     setInput('');
@@ -588,7 +600,7 @@ function QuantumApothecaryInner() {
         if (last?.role === 'model' && prev.length === allMsgs.length + 1) {
           return prev.map((m, i) => i === prev.length - 1 ? { ...m, text: assistantSoFar } : m);
         }
-        return [...prev, { role: 'model', text: assistantSoFar }];
+        return [...prev, { role: 'model', text: assistantSoFar, timestamp: Date.now() }];
       });
     };
     const persistMessages = async (finalMessages: Message[]) => {
@@ -622,14 +634,20 @@ function QuantumApothecaryInner() {
 
       const fieldParts: string[] = [sqiSourceDirective, answerRulesDirective, liveContext];
       if (liveScanContext) fieldParts.push(liveScanContext);
-      if (compiledFieldForChat) fieldParts.push(compiledFieldForChat);
+      if (stableCompiledContext) fieldParts.push(stableCompiledContext);
       if (jyotishContext) fieldParts.push(jyotishContext);
       const enrichedJyotishContext = fieldParts.join('\n\n');
 
       await streamChatWithSQI(
         allMsgs,
         upsert,
-        async () => { setIsTyping(false); await persistMessages([...allMsgs, { role: 'model', text: assistantSoFar }]); },
+        async () => {
+          setIsTyping(false);
+          await persistMessages([
+            ...allMsgs,
+            { role: 'model', text: assistantSoFar, timestamp: Date.now() },
+          ]);
+        },
         imageToSend,
         user?.id ?? null,
         language,
@@ -640,7 +658,7 @@ function QuantumApothecaryInner() {
       );
     } catch (e) {
       console.error(e);
-      setMessages(prev => [...prev, { role: 'model', text: t('quantumApothecary.chat.transmissionError') }]);
+      setMessages(prev => [...prev, { role: 'model', text: t('quantumApothecary.chat.transmissionError'), timestamp: Date.now() }]);
       setIsTyping(false);
     }
   };
@@ -664,7 +682,10 @@ function QuantumApothecaryInner() {
   const legacyWebkitVoice = () => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) return;
-    if (isRecording && recognitionRef.current) { recognitionRef.current.stop(); return; }
+    if (isRecording && legacyRecognitionRef.current) {
+      legacyRecognitionRef.current.stop();
+      return;
+    }
     voiceTranscriptRef.current = input;
     const recognition = new SR();
     recognition.continuous = true;
@@ -685,29 +706,95 @@ function QuantumApothecaryInner() {
     recognition.onend = () => {
       setInput(voiceTranscriptRef.current);
       setIsRecording(false);
-      recognitionRef.current = null;
+      legacyRecognitionRef.current = null;
     };
-    recognition.onerror = () => { setIsRecording(false); recognitionRef.current = null; };
+    recognition.onerror = () => {
+      setIsRecording(false);
+      legacyRecognitionRef.current = null;
+    };
     recognition.start();
-    recognitionRef.current = recognition;
+    legacyRecognitionRef.current = recognition;
     setIsRecording(true);
   };
 
-  const handleVoiceToggle = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (listening) {
-      SpeechRecognition.stopListening();
-      resetTranscript();
-    } else {
-      resetTranscript();
-      SpeechRecognition.startListening({
-        continuous: true,
-        interimResults: true,
-        language: chatSpeechLocale(language),
-      });
-    }
-  };
+  const handleVoiceToggle = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (isMicListening) {
+        micListeningRef.current = false;
+        if (nativeSpeechRef.current) {
+          try {
+            nativeSpeechRef.current.stop();
+          } catch {
+            /* ignore */
+          }
+          nativeSpeechRef.current = null;
+        }
+        setIsMicListening(false);
+        return;
+      }
+
+      const SpeechRecognitionCtor =
+        (window as unknown as { SpeechRecognition?: new () => any }).SpeechRecognition ||
+        (window as unknown as { webkitSpeechRecognition?: new () => any }).webkitSpeechRecognition;
+      if (!SpeechRecognitionCtor) return;
+
+      const recognition = new SpeechRecognitionCtor();
+      recognition.lang = chatSpeechLocale(language) || 'en-US';
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
+      nativeSpeechRef.current = recognition;
+      micListeningRef.current = true;
+
+      recognition.onresult = (event: any) => {
+        const transcript = Array.from(event.results as any[])
+          .map((r: any) => r[0]?.transcript ?? '')
+          .join('');
+        setInput(transcript);
+      };
+
+      recognition.onend = () => {
+        if (micListeningRef.current && nativeSpeechRef.current) {
+          setTimeout(() => {
+            try {
+              nativeSpeechRef.current?.start();
+            } catch {
+              /* ignore */
+            }
+          }, 100);
+        } else {
+          setIsMicListening(false);
+        }
+      };
+
+      recognition.onerror = (ev: any) => {
+        if (ev.error === 'no-speech') {
+          setTimeout(() => {
+            try {
+              nativeSpeechRef.current?.start();
+            } catch {
+              /* ignore */
+            }
+          }, 200);
+        } else {
+          micListeningRef.current = false;
+          setIsMicListening(false);
+        }
+      };
+
+      try {
+        recognition.start();
+        setIsMicListening(true);
+      } catch {
+        micListeningRef.current = false;
+        setIsMicListening(false);
+      }
+    },
+    [isMicListening, language],
+  );
 
   const addActivation = (act: Activation) => {
     if (selectedActivations.length >= 5 || selectedActivations.find(a => a.id === act.id)) return;
@@ -719,7 +806,7 @@ function QuantumApothecaryInner() {
     const newT = [...activeTransmissions];
     selectedActivations.forEach(act => { if (!newT.find(t => t.id === act.id)) newT.push(act); });
     setActiveTransmissions(newT);
-    setMessages(prev => [...prev, { role: 'model', text: `**Initiating Quantum Transmission:**\n\n${selectedActivations.map(a => `- ${a.name}`).join('\n')}\n\nUploading Aetheric Codes to your cellular matrix…\n\nThese frequencies are now **locked 24/7** until manually dissolved.` }]);
+    setMessages(prev => [...prev, { role: 'model', text: `**Initiating Quantum Transmission:**\n\n${selectedActivations.map(a => `- ${a.name}`).join('\n')}\n\nUploading Aetheric Codes to your cellular matrix…\n\nThese frequencies are now **locked 24/7** until manually dissolved.`, timestamp: Date.now() }]);
     // Log to activity log so SQI knows which frequencies are running in the biofield
     if (user?.id) {
       supabase.from('user_activity_log').insert({
@@ -808,7 +895,7 @@ function QuantumApothecaryInner() {
 
       {/* Messages */}
       <div
-        className="qa-sqi-chat custom-scrollbar relative flex-1 overflow-y-auto bg-[#050505]/60 px-2.5 py-4 sm:px-4 md:px-5 space-y-4 scrollbar-thin scrollbar-thumb-white/10"
+        className="qa-sqi-chat custom-scrollbar relative flex-1 overflow-y-auto px-3 py-4 space-y-3 custom-scrollbar"
         ref={scrollContainerCallbackRef}
       >
         <div
@@ -833,26 +920,47 @@ function QuantumApothecaryInner() {
             </div>
           )}
           {messages.map((msg, i) => {
+              const ts =
+                typeof msg.timestamp === 'number'
+                  ? new Date(msg.timestamp).toLocaleTimeString(appLocale, { hour: '2-digit', minute: '2-digit' })
+                  : null;
               return (
               <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-                className={`flex w-full min-w-0 items-stretch self-stretch ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                className={`flex w-full min-w-0 flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                 {msg.role === 'user' ? (
-                  <div
-                    className="ml-auto w-full max-w-[min(100%,36rem)] break-words rounded-[20px] px-3 py-3 sm:px-4 text-sm leading-relaxed text-white/95"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(212,175,55,0.18), rgba(212,175,55,0.08))',
-                      border: '1px solid rgba(212,175,55,0.25)',
-                    }}
-                  >
-                    <div className="markdown-body w-full min-w-0 text-left">{renderChatText(msg.text, 'user')}</div>
-                  </div>
-                ) : (
-                  <div className="w-full min-w-0 max-w-full flex-1 self-stretch">
-                    <p className="mb-2 text-[8px] font-extrabold uppercase tracking-[0.3em] text-[#D4AF37]/70">SQI · AKASHA ARCHIVE</p>
-                    <div className="glass-card w-full min-w-0 max-w-full rounded-[20px] border border-white/[0.05] bg-white/[0.02] px-2.5 py-4 text-sm font-light leading-[1.75] text-white/85 sm:px-4 sm:py-5">
-                      <div className="markdown-body w-full min-w-0 max-w-full text-left break-words">{renderChatText(msg.text, 'model')}</div>
+                  <>
+                    <div
+                      className="ml-auto max-w-[78%] rounded-[20px] px-4 py-3"
+                      style={{
+                        background: 'linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08))',
+                        border: '1px solid rgba(212,175,55,0.25)',
+                      }}
+                    >
+                      <div className="markdown-body text-[14px] leading-[1.75] text-white/95 whitespace-pre-wrap break-words w-full min-w-0 text-left">
+                        {renderChatText(msg.text, 'user')}
+                      </div>
                     </div>
-                  </div>
+                    {ts && (
+                      <p className="text-[10px] text-white/25 mt-1 text-right max-w-[78%]">{ts}</p>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div
+                      className="w-full max-w-[88%] rounded-[20px] px-4 py-3"
+                      style={{
+                        background: 'rgba(255,255,255,0.03)',
+                        border: '1px solid rgba(255,255,255,0.06)',
+                      }}
+                    >
+                      <div className="markdown-body text-[14px] leading-[1.75] text-white/85 whitespace-pre-wrap break-words w-full min-w-0 text-left">
+                        {renderChatText(msg.text, 'model')}
+                      </div>
+                    </div>
+                    {ts && (
+                      <p className="text-[10px] text-white/25 mt-1 text-right w-full max-w-[88%]">{ts}</p>
+                    )}
+                  </>
                 )}
               </motion.div>
               );
@@ -916,15 +1024,15 @@ function QuantumApothecaryInner() {
             <button
               type="button"
               onClick={handleVoiceToggle}
-              title={listening ? t('quantumApothecary.chat.voiceStop') : t('quantumApothecary.chat.voiceStart')}
+              title={isMicListening ? t('quantumApothecary.chat.voiceStop') : t('quantumApothecary.chat.voiceStart')}
               className={`shrink-0 rounded-2xl border p-2.5 transition ${
-                listening
+                isMicListening
                   ? 'border-[#22D3EE]/60 bg-[#22D3EE]/10 text-[#22D3EE]'
                   : 'border-white/[0.08] bg-white/[0.04] text-[#D4AF37]/70 hover:border-[#D4AF37]/25'
               }`}
-              style={listening ? { boxShadow: '0 0 12px rgba(34,211,238,0.3)', animation: 'pulse 1s ease-in-out infinite' } : {}}
+              style={isMicListening ? { boxShadow: '0 0 12px rgba(34,211,238,0.3)', animation: 'pulse 1s ease-in-out infinite' } : {}}
             >
-              {listening ? (
+              {isMicListening ? (
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                   <circle cx="12" cy="12" r="6" />
                 </svg>
