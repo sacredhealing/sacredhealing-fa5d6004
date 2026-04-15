@@ -1697,8 +1697,39 @@ const Community = () => {
   };
 
   const confirmGoLive = async () => {
-    if (!goLiveChannelId) return;
-    await handleGoLiveForChannel(goLiveChannelId, goLiveChannelName, goLiveTitle);
+    if (!goLiveChannelId || !user) return;
+    if (goLiveChannelId === "feed") {
+      // Feed go-live uses the same flow but with source=feed
+      setShowGoLiveDialog(false);
+      const meetingTitle = goLiveTitle.trim() || "Live from Divine Sangha";
+      const result = await daily.createRoom("feed", meetingTitle, undefined, false, "feed");
+      if (result) {
+        setLiveRoomUrl(result.room_url);
+        const adminName = memberNameMap[user.id] || "Admin";
+        try {
+          await supabase.from("community_posts").insert({
+            user_id: user.id,
+            content: `🔴 ${meetingTitle}`,
+            post_type: "live",
+            video_url: result.room_url,
+          } as any);
+          await fetchFeedPosts();
+          supabase.functions.invoke("notify-community", {
+            body: {
+              type: "live",
+              triggeredBy: adminName,
+              title: `🔴 ${adminName} is LIVE — ${meetingTitle}`,
+              body: "A live transmission has started.",
+              link: "/community",
+            },
+          });
+        } catch (err) {
+          console.error("Failed to create live feed post:", err);
+        }
+      }
+    } else {
+      await handleGoLiveForChannel(goLiveChannelId, goLiveChannelName, goLiveTitle);
+    }
     setShowGoLiveDialog(false);
   };
 
