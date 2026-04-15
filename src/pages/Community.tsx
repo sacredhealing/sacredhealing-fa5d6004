@@ -2448,34 +2448,11 @@ const Community = () => {
                   </button>
                 </div>
                 <button
-                  onClick={async () => {
-                    if (!user) return;
-                    setShowGoLiveOptions(false);
-                    const result = await daily.createRoom("feed", "Live from Divine Sangha", undefined, false, "feed");
-                    if (result) {
-                      setLiveRoomUrl(result.room_url);
-                      const adminName = memberNameMap[user.id] || "Admin";
-                      try {
-                        await supabase.from("community_posts").insert({
-                          user_id: user.id,
-                          content: "🔴 Live now in Divine Sangha",
-                          post_type: "live",
-                          video_url: result.room_url,
-                        } as any);
-                        await fetchFeedPosts();
-                        supabase.functions.invoke("notify-community", {
-                          body: {
-                            type: "live",
-                            triggeredBy: adminName,
-                            title: `🔴 ${adminName} is LIVE`,
-                            body: "A live transmission has started on the Sacred Feed.",
-                            link: "/community",
-                          },
-                        });
-                      } catch (err) {
-                        console.error("Failed to create live feed post:", err);
-                      }
-                    }
+                  onClick={() => {
+                    setGoLiveChannelId("feed");
+                    setGoLiveChannelName("Divine Sangha");
+                    setGoLiveTitle("");
+                    setShowGoLiveDialog(true);
                   }}
                   disabled={daily.isCreating}
                   style={{
