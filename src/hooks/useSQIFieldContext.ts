@@ -190,7 +190,7 @@ export function useSQIFieldContext(): SQIFieldContextResult {
   const updateNadi = useCallback(async (data: SQINadiField) => {
     if (!user?.id) return;
     try {
-      await supabase.from('nadi_scan_results').insert({
+      await (supabase as any).from('nadi_scan_results').insert({
         user_id: user.id,
         activated_nadi: data.activatedNadi,
         heart_rate: data.heartRate,
