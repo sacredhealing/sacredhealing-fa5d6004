@@ -299,16 +299,7 @@ function QuantumApothecaryInner() {
     try { return JSON.parse(localStorage.getItem('active_resonators') || '[]'); }
     catch { return []; }
   });
-  const [messages, setMessages] = useState<Message[]>(() => {
-    try {
-      const saved = localStorage.getItem('sqi_chat_messages');
-      if (saved) {
-        const parsed = JSON.parse(saved) as Message[];
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch { /* ignore */ }
-    return [];
-  });
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [activeCategory, setActiveCategory] = useState('All');
@@ -348,6 +339,42 @@ function QuantumApothecaryInner() {
     () => ACTIVATIONS.map((a) => a.name).join('\n'),
     [],
   );
+
+  /** Hydrate chat from localStorage once; drop legacy model welcome with embedded calendar date. */
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('sqi_chat_messages');
+      if (!saved) return;
+      const parsed = JSON.parse(saved) as Message[];
+      if (!Array.isArray(parsed) || parsed.length === 0) return;
+      const isStaleDatedWelcome = (text: string) => {
+        const s = text.toLowerCase();
+        return (
+          (s.includes('accessing akasha-neural archive') || s.includes('accessing akasha')) &&
+          (s.includes('syncing with the') || s.includes('syncing with')) &&
+          /\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/.test(s)
+        );
+      };
+      const filtered = parsed.filter((m) => {
+        if (m.role !== 'model') return true;
+        return !isStaleDatedWelcome(m.text || '');
+      });
+      if (filtered.length !== parsed.length) {
+        try {
+          if (filtered.length > 0) {
+            localStorage.setItem('sqi_chat_messages', JSON.stringify(filtered.slice(-SQI_PERSIST_MSG_CAP)));
+          } else {
+            localStorage.removeItem('sqi_chat_messages');
+          }
+        } catch {
+          /* ignore */
+        }
+      }
+      setMessages(filtered);
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   // ── Scroll: single effect, only when a new message is appended ──
   const prevMsgCountRef = useRef(messages.length);
@@ -1076,14 +1103,17 @@ function QuantumApothecaryInner() {
           }`}
         >
           {messages.length === 0 && !isTyping && (
-            <div className="flex flex-col items-center justify-center px-6 py-12 text-center">
-              <p className="mb-3 text-[9px] font-black uppercase tracking-[0.4em] text-[#D4AF37]/50">
+            <div className="flex min-h-[300px] flex-1 flex-col items-center justify-center px-6 py-16 text-center">
+              <p className="mb-3 text-[9px] font-black uppercase tracking-[0.4em] text-[#D4AF37]/40">
                 {t('quantumApothecary.chat.emptyState.kicker')}
               </p>
-              <h3 className="mb-2 text-lg font-black tracking-[-0.03em] text-white/80">
+              <div className="mb-4 text-3xl opacity-30" aria-hidden>
+                ⊕
+              </div>
+              <h3 className="mb-2 text-base font-black tracking-[-0.03em] text-white/60">
                 {t('quantumApothecary.chat.emptyState.title')}
               </h3>
-              <p className="max-w-[260px] text-xs leading-relaxed text-white/35">
+              <p className="max-w-[240px] text-xs leading-relaxed text-white/25">
                 {t('quantumApothecary.chat.emptyState.body')}
               </p>
             </div>
