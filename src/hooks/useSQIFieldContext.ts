@@ -89,7 +89,7 @@ export function useSQIFieldContext(): SQIFieldContextResult {
     (async () => {
       // Run all 4 queries in parallel — gracefully degrade if table doesn't exist yet
       const [nadiRes, ayurRes, photoRes, templeRes] = await Promise.allSettled([
-        supabase
+        (supabase as any)
           .from('nadi_scan_results')
           .select('*')
           .eq('user_id', user.id)
@@ -101,7 +101,7 @@ export function useSQIFieldContext(): SQIFieldContextResult {
           .select('*')
           .eq('user_id', user.id)
           .single(),
-        supabase
+        (supabase as any)
           .from('photonic_sessions')
           .select('*')
           .eq('user_id', user.id)
@@ -109,7 +109,7 @@ export function useSQIFieldContext(): SQIFieldContextResult {
           .order('created_at', { ascending: false })
           .limit(1)
           .single(),
-        supabase
+        (supabase as any)
           .from('temple_home_sessions')
           .select('*')
           .eq('user_id', user.id)
