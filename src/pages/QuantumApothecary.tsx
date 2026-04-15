@@ -1092,7 +1092,7 @@ function QuantumApothecaryInner() {
                 }}
                 onScanComplete={(reading) => {
                   const ctx = [
-                    '[LIVE BIOMETRIC NADI SCAN — rPPG]',
+                    '[LIVE BIOMETRIC NADI SCAN — MULTI-LAYER: rPPG + Face Mesh + Voice + Motion]',
                     `Active Nadi: ${reading.activatedNadi}`,
                     `Prana Coherence: ${reading.activeNadis.toLocaleString()} / 72,000 nadis active`,
                     `Heart Rate: ${reading.rawVitals.heart_rate} BPM`,
