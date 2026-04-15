@@ -244,6 +244,13 @@
       "admin": "Admin",
       "started": "Startet"
     },
+    "goLive": {
+      "signIn": "Logg inn for å fortsette",
+      "roomCreated": "Live-rom opprettet!",
+      "createFailed": "Kunne ikke starte live. Prøv igjen eller kontakt support hvis det fortsetter.",
+      "sessionEnded": "Live-økten ble avsluttet",
+      "endFailed": "Kunne ikke avslutte live-økten"
+    },
     "diary": {
       "fromTheSpace": "Fra rommet",
       "today": "I dag",

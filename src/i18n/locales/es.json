@@ -451,6 +451,13 @@
       "admin": "Administrador",
       "started": "Comenzó"
     },
+    "goLive": {
+      "signIn": "Inicia sesión para continuar",
+      "roomCreated": "¡Sala en vivo creada!",
+      "createFailed": "No se pudo iniciar el directo. Inténtalo de nuevo o contacta con soporte si continúa.",
+      "sessionEnded": "Sesión en vivo finalizada",
+      "endFailed": "No se pudo finalizar la sesión en vivo"
+    },
     "diary": {
       "fromTheSpace": "Desde el Espacio",
       "today": "Hoy",

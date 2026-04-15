@@ -375,6 +375,13 @@
       "admin": "Admin",
       "started": "Startade"
     },
+    "goLive": {
+      "signIn": "Logga in för att fortsätta",
+      "roomCreated": "Live-rummet skapades!",
+      "createFailed": "Kunde inte starta live. Försök igen eller kontakta support om det fortsätter.",
+      "sessionEnded": "Livesessionen avslutades",
+      "endFailed": "Kunde inte avsluta livesessionen"
+    },
     "diary": {
       "fromTheSpace": "Från utrymmet",
       "today": "Idag",

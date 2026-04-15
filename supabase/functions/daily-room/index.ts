@@ -12,11 +12,25 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const dailyKey = Deno.env.get("DAILY_API_KEY")!;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const dailyKey = Deno.env.get("DAILY_API_KEY");
+    if (!supabaseUrl || !supabaseKey) {
+      return new Response(
+        JSON.stringify({ error: "Server misconfigured: missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY" }),
+        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    if (!dailyKey?.trim()) {
+      return new Response(
+        JSON.stringify({
+          error:
+            "Live video is not configured: set DAILY_API_KEY in Supabase Edge Function secrets (Daily.co API key).",
+        }),
+        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
-    // Auth check
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "No auth" }), {
@@ -38,12 +52,17 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { action, channel_id, title, description, session_id, allow_non_admin, source } = body;
 
-    // Admin check (DM video calls set allow_non_admin=true)
     if (!allow_non_admin) {
-      const { data: isAdmin } = await supabase.rpc("has_role", {
+      const { data: isAdmin, error: roleErr } = await supabase.rpc("has_role", {
         _user_id: user.id,
         _role: "admin",
       });
+      if (roleErr) {
+        return new Response(
+          JSON.stringify({ error: "Role check failed", details: roleErr.message }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
       if (!isAdmin) {
         return new Response(JSON.stringify({ error: "Admin only" }), {
           status: 403,
@@ -53,37 +72,58 @@ Deno.serve(async (req) => {
     }
 
     if (action === "create") {
-      // Create Daily.co room
       const effectiveChannelId = source === "feed" ? "feed" : (channel_id || "divine-sangha");
-      const roomRes = await fetch("https://api.daily.co/v1/rooms", {
+      const recordingMode = Deno.env.get("DAILY_RECORDING")?.trim() || "off";
+      const validRecording = ["off", "local", "cloud"].includes(recordingMode) ? recordingMode : "off";
+
+      const roomPayload = {
+        properties: {
+          enable_chat: true,
+          enable_screenshare: true,
+          enable_recording: validRecording,
+          exp: Math.floor(Date.now() / 1000) + 3600 * 4,
+          metadata: { source: source || "channel", channel_id: effectiveChannelId },
+        },
+      };
+
+      let roomRes = await fetch("https://api.daily.co/v1/rooms", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${dailyKey}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          properties: {
-            enable_chat: true,
-            enable_screenshare: true,
-            enable_recording: "cloud",
-            exp: Math.floor(Date.now() / 1000) + 3600 * 4, // 4 hours
-            // Metadata for recording webhook: source + channel_id
-            metadata: JSON.stringify({ source: source || "channel", channel_id: effectiveChannelId }),
-          },
-        }),
+        body: JSON.stringify(roomPayload),
       });
+
+      if (!roomRes.ok && validRecording === "cloud") {
+        const retryPayload = {
+          ...roomPayload,
+          properties: { ...roomPayload.properties, enable_recording: "off" },
+        };
+        roomRes = await fetch("https://api.daily.co/v1/rooms", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${dailyKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(retryPayload),
+        });
+      }
 
       if (!roomRes.ok) {
         const errText = await roomRes.text();
-        return new Response(JSON.stringify({ error: "Daily.co error", details: errText }), {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return new Response(
+          JSON.stringify({
+            error: "Daily.co could not create a room",
+            details: errText,
+            hint: "Set DAILY_API_KEY in Supabase Edge secrets. Use DAILY_RECORDING=off if cloud recording is not enabled on your Daily plan.",
+          }),
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
       }
 
       const room = await roomRes.json();
 
-      // Save to DB: source='feed' -> channel_id='feed'; source='channel' -> channel_id from request (for recordings context)
       const { data: session, error: dbError } = await supabase
         .from("community_live_sessions")
         .insert({
@@ -111,25 +151,22 @@ Deno.serve(async (req) => {
     }
 
     if (action === "end") {
-      // Fetch session to get room_name before ending
       const { data: sessionRow } = await supabase
         .from("community_live_sessions")
         .select("room_name, channel_id, title")
         .eq("id", session_id)
         .single();
 
-      // End session in DB
       await supabase
         .from("community_live_sessions")
         .update({ status: "ended", ended_at: new Date().toISOString() })
         .eq("id", session_id);
 
-      // Try to fetch recording from Daily.co and update the feed post
       if (sessionRow?.room_name) {
         try {
           const recRes = await fetch(
             `https://api.daily.co/v1/rooms/${sessionRow.room_name}/recordings`,
-            { headers: { Authorization: `Bearer ${dailyKey}` } }
+            { headers: { Authorization: `Bearer ${dailyKey}` } },
           );
           if (recRes.ok) {
             const recData = await recRes.json();
@@ -138,7 +175,6 @@ Deno.serve(async (req) => {
             if (latestRec?.download_link || latestRec?.s3_key) {
               const recordingUrl = latestRec.download_link || latestRec.s3_key;
 
-              // Also archive recordings into the Stargate course (healing-chamber)
               try {
                 const { data: stargateCourse } = await supabase
                   .from("courses")
@@ -147,7 +183,7 @@ Deno.serve(async (req) => {
                   .limit(1)
                   .maybeSingle();
 
-                const stargateCourseId = (stargateCourse as any)?.id as string | undefined;
+                const stargateCourseId = (stargateCourse as { id?: string })?.id as string | undefined;
                 if (stargateCourseId) {
                   const { data: existingLesson } = await supabase
                     .from("course_lessons")
@@ -166,9 +202,8 @@ Deno.serve(async (req) => {
                   }
                 }
               } catch (courseErr) {
-                console.error('Failed to insert recording into course_lessons:', courseErr);
+                console.error("Failed to insert recording into course_lessons:", courseErr);
               }
-              // Update the live feed post with the recording URL
               await supabase
                 .from("community_posts")
                 .update({

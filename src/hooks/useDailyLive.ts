@@ -1,7 +1,24 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+
+type DailyRoomFnPayload = {
+  error?: string;
+  details?: string;
+  hint?: string;
+  session?: DailySession;
+  room_url?: string;
+  success?: boolean;
+};
+
+function formatDailyRoomError(data: unknown, fallback: string): string {
+  const d = data as DailyRoomFnPayload | null | undefined;
+  if (!d?.error) return fallback;
+  const parts = [d.error, d.details, d.hint].filter(Boolean);
+  return parts.length ? parts.join(' — ') : fallback;
+}
 
 export interface DailySession {
   id: string;
@@ -17,41 +34,79 @@ export interface DailySession {
 }
 
 export function useDailyLive() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [isCreating, setIsCreating] = useState(false);
   const [activeSession, setActiveSession] = useState<DailySession | null>(null);
 
   const createRoom = useCallback(async (channelId: string, title: string, description?: string, allowNonAdmin = false, source: 'channel' | 'feed' = 'channel') => {
-    if (!user) { toast.error('Please sign in'); return null; }
+    if (!user) {
+      toast.error(t('community.goLive.signIn'));
+      return null;
+    }
+    const { data: authData } = await supabase.auth.getSession();
+    const token = authData.session?.access_token;
+    if (!token) {
+      toast.error(t('community.goLive.signIn'));
+      return null;
+    }
     setIsCreating(true);
     try {
       const { data, error } = await supabase.functions.invoke('daily-room', {
-        body: { action: 'create', channel_id: source === 'feed' ? 'feed' : channelId, title, description, allow_non_admin: allowNonAdmin, source },
+        body: {
+          action: 'create',
+          channel_id: source === 'feed' ? 'feed' : channelId,
+          title,
+          description,
+          allow_non_admin: allowNonAdmin,
+          source,
+        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      setActiveSession(data.session);
-      toast.success('Live room created!');
-      return data as { session: DailySession; room_url: string };
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to create room');
+      const payload = data as DailyRoomFnPayload | null;
+      if (error || payload?.error) {
+        toast.error(formatDailyRoomError(payload, error?.message || t('community.goLive.createFailed')));
+        return null;
+      }
+      if (!payload?.session) {
+        toast.error(t('community.goLive.createFailed'));
+        return null;
+      }
+      setActiveSession(payload.session);
+      toast.success(t('community.goLive.roomCreated'));
+      return { session: payload.session, room_url: payload.room_url as string };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : t('community.goLive.createFailed');
+      toast.error(msg);
       return null;
     } finally {
       setIsCreating(false);
     }
-  }, [user]);
+  }, [user, t]);
 
   const endSession = useCallback(async (sessionId: string) => {
     try {
-      await supabase.functions.invoke('daily-room', {
+      const { data: authData } = await supabase.auth.getSession();
+      const token = authData.session?.access_token;
+      if (!token) {
+        toast.error(t('community.goLive.signIn'));
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke('daily-room', {
         body: { action: 'end', session_id: sessionId },
+        headers: { Authorization: `Bearer ${token}` },
       });
+      const payload = data as DailyRoomFnPayload | null;
+      if (error || payload?.error) {
+        toast.error(formatDailyRoomError(payload, error?.message || t('community.goLive.endFailed')));
+        return;
+      }
       setActiveSession(null);
-      toast.success('Live session ended');
+      toast.success(t('community.goLive.sessionEnded'));
     } catch {
-      toast.error('Failed to end session');
+      toast.error(t('community.goLive.endFailed'));
     }
-  }, []);
+  }, [t]);
 
   const fetchActiveSessions = useCallback(async (channelId?: string) => {
     let query = supabase

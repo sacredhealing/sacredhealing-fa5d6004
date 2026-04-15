@@ -644,6 +644,13 @@
       "admin": "Admin",
       "started": "Started"
     },
+    "goLive": {
+      "signIn": "Please sign in",
+      "roomCreated": "Live room created!",
+      "createFailed": "Could not start live. Try again or contact support if this continues.",
+      "sessionEnded": "Live session ended",
+      "endFailed": "Could not end the live session"
+    },
     "diary": {
       "fromTheSpace": "From the Space",
       "today": "Today",
