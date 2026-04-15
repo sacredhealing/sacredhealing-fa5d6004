@@ -39,6 +39,12 @@ const SQI_PERSIST_MSG_CAP = 100;
 /* ──── Markdown-ish renderer: gold (#D4AF37) only on # / ## / ### / #### / ##### lines ──── */
 type InlineVariant = 'heading' | 'body';
 
+/** Optional SQI assistant styling for **bold** (gold body / light-on-gold on ◈ lines). */
+type RenderInlineOpts = {
+  sqiGoldBold?: boolean;
+  diamondLine?: boolean;
+};
+
 function renderChatText(text: string, bubble: 'model' | 'user' = 'model') {
   const onGold = bubble === 'user';
   const gold = '#D4AF37';
@@ -158,11 +164,30 @@ function renderChatText(text: string, bubble: 'model' | 'user' = 'model') {
   });
 }
 
-function renderInline(text: string, variant: InlineVariant = 'body', onGold = false): React.ReactNode {
+function renderInline(
+  text: string,
+  variant: InlineVariant = 'body',
+  onGold = false,
+  opts?: RenderInlineOpts,
+): React.ReactNode {
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
   return parts.map((p, i) => {
     if (p.startsWith('**') && p.endsWith('**')) {
       const inner = p.slice(2, -2);
+      if (opts?.diamondLine) {
+        return (
+          <strong key={i} style={{ color: 'rgba(255,255,255,0.96)', fontWeight: 800, textShadow: '0 0 14px rgba(0,0,0,0.25)' }}>
+            {inner}
+          </strong>
+        );
+      }
+      if (opts?.sqiGoldBold && variant === 'body') {
+        return (
+          <strong key={i} style={{ color: '#D4AF37', fontWeight: 800 }}>
+            {inner}
+          </strong>
+        );
+      }
       if (variant === 'heading') {
         return <strong key={i} style={{ color: 'inherit', fontWeight: 700 }}>{inner}</strong>;
       }
@@ -190,10 +215,15 @@ function renderInline(text: string, variant: InlineVariant = 'body', onGold = fa
   });
 }
 
-/** SQI (assistant) plain-text renderer — ◈ section headers in gold, · bullets, word wrap for streaming */
+/** SQI (assistant): ◈ gold headers, · / markdown lists, **bold** (Siddha gold), generous vertical rhythm */
 function renderSQIContent(content: string) {
+  const gapAfterSection = 18;
   return content.split('\n').map((line, i) => {
     const trimmed = line.trim();
+
+    if (trimmed === '') {
+      return <div key={i} style={{ height: '12px' }} aria-hidden />;
+    }
 
     if (trimmed.startsWith('◈')) {
       return (
@@ -204,13 +234,14 @@ function renderSQIContent(content: string) {
             fontWeight: 800,
             fontSize: '13px',
             letterSpacing: '0.03em',
-            marginTop: i > 0 ? '14px' : '0',
-            marginBottom: '4px',
+            marginTop: i > 0 ? `${gapAfterSection}px` : '0',
+            marginBottom: '10px',
             wordBreak: 'break-word',
             overflowWrap: 'anywhere',
+            lineHeight: 1.45,
           }}
         >
-          {trimmed}
+          {renderInline(trimmed, 'heading', false, { diamondLine: true })}
         </p>
       );
     }
@@ -220,39 +251,79 @@ function renderSQIContent(content: string) {
         <p
           key={i}
           style={{
-            color: 'rgba(255,255,255,0.75)',
+            color: 'rgba(255,255,255,0.78)',
             fontSize: '14px',
-            lineHeight: '1.7',
-            paddingLeft: '8px',
-            marginBottom: '3px',
+            lineHeight: 1.75,
+            paddingLeft: '10px',
+            marginBottom: '8px',
+            marginTop: '2px',
             wordBreak: 'break-word',
             overflowWrap: 'anywhere',
           }}
         >
-          {trimmed}
+          {renderInline(trimmed, 'body', false, { sqiGoldBold: true })}
         </p>
       );
     }
 
-    if (trimmed === '') {
-      return <div key={i} style={{ height: '6px' }} />;
+    if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+      return (
+        <li
+          key={i}
+          style={{
+            marginLeft: '18px',
+            listStyleType: 'disc',
+            fontSize: '14px',
+            lineHeight: 1.75,
+            color: 'rgba(255,255,255,0.82)',
+            marginBottom: '10px',
+            width: 'calc(100% - 18px)',
+            maxWidth: '100%',
+            paddingRight: '4px',
+          }}
+        >
+          {renderInline(trimmed.slice(2), 'body', false, { sqiGoldBold: true })}
+        </li>
+      );
+    }
+
+    if (/^\d+\.\s/.test(trimmed)) {
+      return (
+        <li
+          key={i}
+          style={{
+            marginLeft: '18px',
+            listStyleType: 'decimal',
+            fontSize: '14px',
+            lineHeight: 1.75,
+            color: 'rgba(255,255,255,0.82)',
+            marginBottom: '10px',
+            width: 'calc(100% - 18px)',
+            maxWidth: '100%',
+            paddingRight: '4px',
+          }}
+        >
+          {renderInline(trimmed.replace(/^\d+\.\s/, ''), 'body', false, { sqiGoldBold: true })}
+        </li>
+      );
     }
 
     return (
       <p
         key={i}
         style={{
-          color: 'rgba(255,255,255,0.82)',
+          color: 'rgba(255,255,255,0.84)',
           fontSize: '14px',
-          lineHeight: '1.8',
-          marginBottom: '2px',
+          lineHeight: 1.85,
+          marginBottom: '12px',
+          marginTop: '0',
           wordBreak: 'break-word',
           overflowWrap: 'anywhere',
           whiteSpace: 'pre-wrap',
           maxWidth: '100%',
         }}
       >
-        {trimmed}
+        {renderInline(trimmed, 'body', false, { sqiGoldBold: true })}
       </p>
     );
   });
@@ -1590,8 +1661,9 @@ SQI — integrate this scan with my natal chart; cite each chart fact once; use 
           color: #D4AF37;
           font-weight: 800;
         }
-        .sqi-message p {
-          margin-bottom: 10px;
+        .sqi-message p,
+        .sqi-message li {
+          margin-bottom: 12px;
           word-break: break-word;
           overflow-wrap: anywhere;
           white-space: pre-wrap;
