@@ -1,0 +1,33 @@
+# Copy this file to: .github/workflows/deploy-supabase-daily-room.yml
+# (Git PATs without "workflow" scope cannot push under .github/ — add via GitHub UI or a token with workflow scope.)
+#
+# Repo → Settings → Secrets → Actions:
+#   SUPABASE_ACCESS_TOKEN — https://supabase.com/dashboard/account/tokens
+#     (Supabase user must be able to deploy to this project; if Lovable owns it, ask them for CI access.)
+#   SUPABASE_PROJECT_REF — e.g. "abcdxyz" from https://abcdxyz.supabase.co
+
+name: Deploy Supabase daily-room
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/functions/daily-room/**"
+      - ".github/workflows/deploy-supabase-daily-room.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ secrets.SUPABASE_ACCESS_TOKEN != '' && secrets.SUPABASE_PROJECT_REF != '' }}
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy daily-room
+        run: supabase functions deploy daily-room --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}"
