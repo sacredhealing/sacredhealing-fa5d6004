@@ -10,7 +10,7 @@
  * ✅ Feed is ADMIN ONLY - regular members only see Chat
  * ✅ Clicking a channel OPENS a full chat window
  * ✅ Chat window has a BACK ARROW to return to channel list
- * ✅ Go Live button visible for admins inside every channel
+ * ✅ Go Live: admins (all channels) + Stargate members (Stargate channel); DM video for both chat participants
  * ✅ Members panel opens a DM chat (not a black window)
  * ✅ Mobile: shows channel list first, not Feed
  * ✅ All channels start EMPTY (no dummy messages)
@@ -841,7 +841,7 @@ function DMChatView({ partnerId, onBack, isAdmin, onVideoCall, dmVideoUrl, onEnd
           <div className="c-chat-name">{partnerProfile?.full_name || "Direct Message"}</div>
           <div className="c-chat-sub">Private 1-on-1 chat</div>
         </div>
-        {isAdmin && (dmVideoUrl ? (
+        {(dmVideoUrl ? (
           <button
             className="c-video-call-btn"
             onClick={onEndVideoCall}
@@ -1658,7 +1658,9 @@ const Community = () => {
     setShowGoLiveOptions(false);
     setShowGoLiveDialog(false);
     const meetingTitle = customTitle?.trim() || `Live in ${channelName}`;
-    const result = await daily.createRoom(channelId, meetingTitle, undefined, false, "channel");
+    // Edge function: non-admin may only create DM or Stargate rooms; Stargate is verified server-side.
+    const allowNonAdmin = channelId === "stargate" && isStargateMember && !isAdmin;
+    const result = await daily.createRoom(channelId, meetingTitle, undefined, allowNonAdmin, "channel");
     if (result) {
       setLiveRoomUrl(result.room_url);
       const adminName = memberNameMap[user.id] || "Admin";
@@ -2203,8 +2205,8 @@ const Community = () => {
                     <div className="c-chat-name">{currentChannel.name}</div>
                     <div className="c-chat-sub">{currentChannel.description}</div>
                   </div>
-                  {/* DM: 1o1 video call button (admin only) */}
-                  {isDmChannel(activeChannel) && isAdmin && !dmVideoUrl && (
+                  {/* DM: 1o1 video — both participants can start a Daily room */}
+                  {isDmChannel(activeChannel) && !dmVideoUrl && (
                     <button
                       className="c-video-call-btn"
                       onClick={handleDmVideoCall}
@@ -2213,7 +2215,7 @@ const Community = () => {
                       {daily.isCreating ? "⏳" : "📹"} VIDEO CALL
                     </button>
                   )}
-                  {isDmChannel(activeChannel) && isAdmin && dmVideoUrl && (
+                  {isDmChannel(activeChannel) && dmVideoUrl && (
                     <button
                       className="c-video-call-btn"
                       onClick={() => setDmVideoUrl(null)}
@@ -2222,8 +2224,8 @@ const Community = () => {
                       ⬛ END CALL
                     </button>
                   )}
-                  {/* Group: Go Live button (admin only) */}
-                  {!isDmChannel(activeChannel) && isAdmin && !liveRoomUrl && (
+                  {/* Group: Go Live — admins any channel; Stargate members may go live in Stargate */}
+                  {!isDmChannel(activeChannel) && (isAdmin || (activeChannel === "stargate" && isStargateMember)) && !liveRoomUrl && (
                     <button
                       className={`c-golive-header-btn ${daily.isCreating ? "c-golive-active" : ""}`}
                       onClick={handleGoLive}
@@ -2232,7 +2234,7 @@ const Community = () => {
                       {daily.isCreating ? "⏳ CREATING..." : "🔴 GO LIVE"}
                     </button>
                   )}
-                  {!isDmChannel(activeChannel) && isAdmin && liveRoomUrl && (
+                  {!isDmChannel(activeChannel) && liveRoomUrl && (isAdmin || daily.activeSession?.host_user_id === user?.id) && (
                     <button
                       className="c-golive-header-btn c-golive-active"
                       onClick={handleEndLive}

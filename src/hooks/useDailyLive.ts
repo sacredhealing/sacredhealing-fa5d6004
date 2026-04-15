@@ -20,6 +20,26 @@ function formatDailyRoomError(data: unknown, fallback: string): string {
   return parts.length ? parts.join(' — ') : fallback;
 }
 
+/** Supabase may return a non-2xx with the JSON body only on `error.context` (not in `data`). */
+async function mergeFunctionErrorPayload(
+  data: unknown,
+  error: unknown,
+): Promise<DailyRoomFnPayload | null> {
+  const direct = data as DailyRoomFnPayload | null;
+  if (direct?.error || direct?.session) return direct;
+
+  const err = error as { context?: { json?: () => Promise<unknown> } } | null;
+  if (err?.context && typeof err.context.json === 'function') {
+    try {
+      const j = (await err.context.json()) as DailyRoomFnPayload;
+      return j?.error || j?.session ? j : direct ?? null;
+    } catch {
+      return direct ?? null;
+    }
+  }
+  return direct ?? null;
+}
+
 export interface DailySession {
   id: string;
   channel_id: string;
@@ -63,7 +83,7 @@ export function useDailyLive() {
         },
         headers: { Authorization: `Bearer ${token}` },
       });
-      const payload = data as DailyRoomFnPayload | null;
+      const payload = await mergeFunctionErrorPayload(data, error);
       if (error || payload?.error) {
         toast.error(formatDailyRoomError(payload, error?.message || t('community.goLive.createFailed')));
         return null;
@@ -96,7 +116,7 @@ export function useDailyLive() {
         body: { action: 'end', session_id: sessionId },
         headers: { Authorization: `Bearer ${token}` },
       });
-      const payload = data as DailyRoomFnPayload | null;
+      const payload = await mergeFunctionErrorPayload(data, error);
       if (error || payload?.error) {
         toast.error(formatDailyRoomError(payload, error?.message || t('community.goLive.endFailed')));
         return;
