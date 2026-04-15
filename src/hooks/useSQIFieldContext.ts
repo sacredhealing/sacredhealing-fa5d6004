@@ -232,9 +232,9 @@ function buildCompiledContext({
       ? new Date(nadi.scannedAt).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false })
       : 'recently';
     parts.push(
-      `[BIOMETRIC NADI FIELD — rPPG scan ${scannedDate}]`,
+      `[BIOMETRIC NADI FIELD — latest rPPG snapshot ${scannedDate}]`,
       `Active Nadi: ${nadi.activatedNadi}`,
-      `Prana Coherence: ${nadi.pranaCoherence.toLocaleString()} / 72,000 nadis active`,
+      `Prana coherence index: ${nadi.pranaCoherence} (field metric; not a literal nadi census)`,
       `Heart Rate: ${nadi.heartRate} BPM`,
       `HRV RMSSD: ${nadi.hrvRmssd} ms`,
       `Vagal Tone: ${nadi.vagalTone}`,

@@ -16,7 +16,7 @@ import {
   Plus, Trash2, Send, Cpu, Globe,
   Info, X, ArrowLeft, Camera, Mic, ChevronUp, ChevronDown,
 } from 'lucide-react';
-import { Activation, NadiScanResult, Message } from '@/features/quantum-apothecary/types';
+import { Activation, Message } from '@/features/quantum-apothecary/types';
 import { ACTIVATIONS } from '@/features/quantum-apothecary/constants';
 import { streamChatWithSQI } from '@/features/quantum-apothecary/chatService';
 import { chatSpeechLocale } from '@/lib/chatSpeechLocale';
@@ -30,7 +30,7 @@ import { useMembership } from '@/hooks/useMembership';
 import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import NadiScanner from '@/components/NadiScanner';
+import NadiScanner, { type NadiReading } from '@/components/NadiScanner';
 import { useSQIFieldContext } from '@/hooks/useSQIFieldContext';
 
 const FrequencyLibrarySection = lazy(() => import('@/features/quantum-apothecary/FrequencyLibrarySection'));
@@ -193,6 +193,59 @@ function renderInline(text: string, variant: InlineVariant = 'body', onGold = fa
   });
 }
 
+function languageToBcp47(languageCode: string): string {
+  const l = (languageCode || 'en').split('-')[0]?.toLowerCase() || 'en';
+  if (l === 'sv') return 'sv-SE';
+  if (l === 'es') return 'es-ES';
+  if (l === 'no' || l === 'nb' || l === 'nn') return 'nb-NO';
+  return 'en-GB';
+}
+
+/** When a live scan block is present, omit the duplicate [BIOMETRIC NADI FIELD] from compiled DB snapshot. */
+function stripDuplicateBiometricBlock(compiled: string | undefined, hasLiveScan: boolean): string {
+  if (!compiled?.trim()) return '';
+  if (!hasLiveScan) return compiled;
+  const segments = compiled.split(/\n(?=\[)/);
+  return segments.filter((s) => !s.trimStart().startsWith('[BIOMETRIC NADI FIELD')).join('\n').trim();
+}
+
+function resolveActivationsByExactNames(preferred: string[]): Activation[] {
+  const out: Activation[] = [];
+  const seen = new Set<string>();
+  for (const name of preferred) {
+    const a = ACTIVATIONS.find((x) => x.name === name);
+    if (a && !seen.has(a.id)) {
+      seen.add(a.id);
+      out.push(a);
+    }
+  }
+  for (const a of ACTIVATIONS) {
+    if (out.length >= 5) break;
+    if (a.type === 'Bioenergetic' && !seen.has(a.id)) {
+      seen.add(a.id);
+      out.push(a);
+    }
+  }
+  for (const a of ACTIVATIONS) {
+    if (out.length >= 5) break;
+    if (!seen.has(a.id)) {
+      seen.add(a.id);
+      out.push(a);
+    }
+  }
+  return out.slice(0, 5);
+}
+
+function pickFiveActivationsForNadiReading(reading: NadiReading): Activation[] {
+  const map: Record<NadiReading['activatedNadi'], string[]> = {
+    Blocked: ['Ancestral Tether Dissolve', 'Neem Bitter Truth', 'Activated Charcoal', 'Triphala Integrity', 'The Amrit Nectar (Guduchi)'],
+    Ida: ['Deep Sleep Harmonic', 'Neural Calm Sync', 'Melatonin', 'Heart-Bloom Radiance', 'Shatavari Flow'],
+    Pingala: ['NMN + Resveratrol Cellular Battery', 'CoQ10', 'NAD+', 'Urolithin A', 'Shilajit'],
+    Sushumna: ['Neural Fluidity Protocol', 'Biofield Purification', 'Structural Light Integrity', 'Crystalline Thought Flow', 'Zinc'],
+  };
+  return resolveActivationsByExactNames(map[reading.activatedNadi]);
+}
+
 /* ════════════════════════════════════════════════════════════════════
    ALL LOGIC BELOW IS 100% IDENTICAL TO ORIGINAL — ZERO CHANGES
    Only className values have been updated for SQI-2050 aesthetic
@@ -225,6 +278,8 @@ function QuantumApothecaryInner() {
   const { doshaProfile } = useAyurvedaAnalysis();
   const sqiField = useSQIFieldContext();
 
+  const appLocale = useMemo(() => languageToBcp47(language), [language]);
+
   const {
     transcript,
     listening,
@@ -236,45 +291,58 @@ function QuantumApothecaryInner() {
     if (transcript) setInput(transcript);
   }, [transcript]);
 
-  // Build the full Seeker context: Jyotish birth chart + Ayurveda Prakriti from their saved profile.
+  // Compact natal + assessed prakriti — one pass each; avoids triple-repeating the same Moon line in the model.
   const jyotishContext = jyotish.isLoading
     ? ''
     : (() => {
-        const parts: string[] = [
-          `[JYOTISH EPHEMERIS — SWISS EPHEMERIS / LAHIRI AYANAMSHA]`,
-          `Mahadasha: ${jyotish.mahadasha}${jyotish.mahaEnd ? ` (ends ${jyotish.mahaEnd})` : ''}`,
-          `Antardasha: ${jyotish.antardasha}`,
-          `Moon Birth Nakshatra: ${jyotish.nakshatra}`,
-          `Moon Sign: ${jyotish.moonSign}`,
-          `Jyotish Dosha (from birth chart): ${jyotish.primaryDosha}`,
-          `Karma Focus: ${jyotish.karmaFocus}`,
-          `Active Yogas: ${jyotish.activeYogas.join(', ') || 'None resolved yet'}`,
-          `Bhrigu Cycle: ${jyotish.bhriguCycle || 'Not determined'}`,
-          `Healing Focus: ${jyotish.healingFocus}`,
-          `Prescribed Raga: ${jyotish.musicRaga}`,
-          `Prescribed Frequency: ${jyotish.musicFrequency}`,
-          `Mantra: ${jyotish.mantraFocus}`,
-          `Source: Astronomically confirmed, not AI estimate`,
+        const lines: string[] = [
+          `[NATAL CHART — Swiss Ephemeris / Lahiri — cite each line once, no duplicate paragraphs]`,
+          `Birth Moon nakshatra: ${jyotish.nakshatra} · Birth Moon rashi: ${jyotish.moonSign} · Lagna: ${jyotish.ascendant}`,
+          `Dasha: ${jyotish.mahadasha}${jyotish.mahaEnd ? ` (until ${jyotish.mahaEnd})` : ''} · Antara: ${jyotish.antardasha}`,
+          `Chart dosha emphasis: ${jyotish.primaryDosha} · Karma theme: ${jyotish.karmaFocus}`,
+          `Yogas: ${jyotish.activeYogas.join(', ') || '—'} · Bhrigu: ${jyotish.bhriguCycle || '—'}`,
+          `Healing line: ${jyotish.healingFocus} · Raga ${jyotish.musicRaga} · Tone ${jyotish.musicFrequency} · Mantra: ${jyotish.mantraFocus}`,
         ];
-        // Append Ayurveda Prakriti from the user's saved assessment (independent of birth chart dosha)
         if (doshaProfile) {
-          parts.push(`Ayurveda Prakriti (assessed): Primary=${doshaProfile.primary}, Secondary=${doshaProfile.secondary || 'None'}`);
-          if (doshaProfile.characteristics?.length) {
-            parts.push(`Prakriti Characteristics: ${doshaProfile.characteristics.slice(0, 5).join(', ')}`);
-          }
+          lines.push(
+            `Ayurveda Prakriti (assessed): ${doshaProfile.primary}${doshaProfile.secondary ? ` / ${doshaProfile.secondary}` : ''}` +
+              (doshaProfile.characteristics?.length
+                ? ` · Traits: ${doshaProfile.characteristics.slice(0, 5).join(', ')}`
+                : ''),
+          );
         }
-        return parts.join(' | ');
+        return lines.join('\n');
       })();
 
-  const akashaNeuralArchiveDirective = useMemo(
+  const sqiSourceDirective = useMemo(
     () =>
-      '[PRIMARY SOURCE — AKASHA NEURAL ARCHIVE] Ground every Jyotish-style answer in this app’s Akasha Neural Archive: stored Swiss Ephemeris chart data, session history, compiled SQI field, and remedies in this request. Prefer these sources over speculation. Palm/camera vision is disabled — use biometric Nadi Scanner, typed, or spoken input only.',
+      '[SQI SOURCES] Use the seeker’s saved chart (below), live biometric block when present, compiled field (Ayurveda / photonic / temple), and this chat. Do not invent palm-camera analysis.',
     [],
   );
 
-  const [scanResult, setScanResult] = useState<NadiScanResult | null>(null);
+  const answerRulesDirective = useMemo(
+    () =>
+      '[ANSWER RULES] Use ONLY the LIVE SYSTEM TIME line for date/time — do not guess the day. Natal Moon rashi and nakshatra are birth data, not daily transits. Open naturally; do not ritualistically repeat the same Moon sign or dasha in multiple sections.',
+    [],
+  );
+
   // Live biometric scan context — prepended to jyotishContext before next SQI message
   const [liveScanContext, setLiveScanContext] = useState<string | null>(null);
+
+  const compiledFieldForChat = useMemo(
+    () => stripDuplicateBiometricBlock(sqiField.compiledContext, !!liveScanContext?.trim()),
+    [sqiField.compiledContext, liveScanContext],
+  );
+
+  /** Legacy baseline card removed — drop stale local nadi snapshot so Dashboard does not resurrect fake counts. */
+  useEffect(() => {
+    try {
+      localStorage.removeItem('sqi_scan_result');
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
   const [selectedActivations, setSelectedActivations] = useState<Activation[]>([]);
   const [activeTransmissions, setActiveTransmissions] = useState<Activation[]>(() => {
     try { return JSON.parse(localStorage.getItem('active_resonators') || '[]'); }
@@ -357,14 +425,11 @@ function QuantumApothecaryInner() {
       if (messages.length > 0) {
         localStorage.setItem('sqi_chat_messages', JSON.stringify(messages.slice(-SQI_PERSIST_MSG_CAP)));
       }
-      if (scanResult) {
-        localStorage.setItem('sqi_scan_result', JSON.stringify(scanResult));
-      }
       if (currentSessionId) {
         localStorage.setItem('sqi_current_session_id', currentSessionId);
       }
     } catch { /* ignore quota / private mode */ }
-  }, [messages, scanResult, currentSessionId]);
+  }, [messages, currentSessionId]);
 
   useEffect(() => {
     flushSqiLocalStorage();
@@ -432,21 +497,21 @@ function QuantumApothecaryInner() {
 
     const pickNames = (): string[] => {
       if (/(sleep|rest|restore)/i.test(text)) {
-        return ['Deep Sleep Harmonic', 'Neural Calm Sync', 'Melatonin', 'Phosphatidylserine', 'Magnesium'];
+        return ['Deep Sleep Harmonic', 'Neural Calm Sync', 'Melatonin', 'Phosphatidylserine', 'Magnesium (Ionic)'];
       }
       if (/(energy|vitality|depleted)/i.test(text)) {
-        return ['NMN+Resveratrol (Cellular Battery)', 'CoQ10', 'NAD+', 'Urolithin A', 'Shilajit (Primordial Grounding)'];
+        return ['NMN + Resveratrol Cellular Battery', 'CoQ10', 'NAD+', 'Urolithin A', 'Primordial Earth Grounding'];
       }
       if (/(meditation|kriya|kundalini)/i.test(text)) {
-        return ['Neural Fluidity Protocol', 'Brain Power (Cognitive Super-Structure)', 'PQQ', 'Brahmi Code', 'Focus (Cognitive Fire)'];
+        return ['Neural Fluidity Protocol', 'Cognitive Super-Structure', 'Brahmi Code', 'Single-Point Focus', 'Gotu Kola Synapse'];
       }
       if (/(heart|love|anahata|bhakti)/i.test(text)) {
-        return ['Heart-Bloom Radiance (Joy)', 'Colostrum (Original Source)', 'Ashwagandha Resonance', 'Shatavari Flow', 'Rose Heart Bloom'];
+        return ['Heart-Bloom Radiance', 'Original Source Nourishment', 'Ashwagandha Resonance', 'Shatavari Flow', 'Rose Heart Bloom'];
       }
       if (/(past life|past-life|karma|akasha)/i.test(text)) {
-        return ['Ancestral Tether Dissolve (Release)', 'Neem Bitter Truth', 'Activated Charcoal (Shadow Detox)', 'Triphala Integrity', 'Guduchi (Amrit Nectar)'];
+        return ['Ancestral Tether Dissolve', 'Neem Bitter Truth', 'Activated Charcoal', 'Triphala Integrity', 'The Amrit Nectar (Guduchi)'];
       }
-      return ['Glutathione (Biofield Purification)', 'D3+K2 (Structural Light)', 'Omega (Crystalline Thought)', 'Zinc (Shielding)', 'Probiotic (Microbiome Harmony)'];
+      return ['Biofield Purification', 'Structural Light Integrity', 'Crystalline Thought Flow', 'Zinc', 'Microbiome Harmony'];
     };
 
     const names = pickNames();
@@ -501,71 +566,6 @@ function QuantumApothecaryInner() {
     setSessionsOpen(false);
   }, [isTyping]);
 
-  const pickCanonicalRemedies = (raw: unknown): string[] => {
-    const valid = new Set(ACTIVATIONS.map((a) => a.name));
-    const out: string[] = [];
-    if (Array.isArray(raw)) {
-      for (const item of raw) {
-        const s = String(item).trim();
-        if (valid.has(s) && !out.includes(s)) out.push(s);
-      }
-    }
-    const pool = ACTIVATIONS.map((a) => a.name).filter((n) => !out.includes(n));
-    while (out.length < 5 && pool.length > 0) {
-      out.push(pool.shift()!);
-    }
-    return out.slice(0, 5);
-  };
-
-  // Restore last baseline from DB when this device has no local scan yet
-  useEffect(() => {
-    if (!user?.id) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        if (localStorage.getItem('sqi_scan_result')) return;
-        const { data, error } = await supabase
-          .from('nadi_baselines')
-          .select('*')
-          .eq('user_id', user.id)
-          .maybeSingle();
-        if (cancelled || error || !data) return;
-        const row = data as Record<string, unknown>;
-        const rawDosha = String(row.dominant_dosha || 'Vata');
-        const dominantDosha: NadiScanResult['dominantDosha'] =
-          rawDosha === 'Pitta' || rawDosha === 'Kapha' || rawDosha === 'Vata' ? rawDosha : 'Vata';
-        const remedies = pickCanonicalRemedies(row.remedies);
-        const result: NadiScanResult = {
-          dominantDosha,
-          blockages: [String(row.primary_blockage || 'Heart/Anahata Nadi')],
-          planetaryAlignment: String(row.planetary_align || ''),
-          herbOfToday: String(row.herb_of_today || ''),
-          timestamp: String(row.scanned_at || new Date().toISOString()),
-          activeNadis: Number(row.active_nadis) || 0,
-          totalNadis: 72000,
-          activeSubNadis: Number(row.active_sub_nadis) || 0,
-          blockagePercentage: Number(row.blockage_pct) || 0,
-          remedies,
-        };
-        setScanResult(result);
-        (window as unknown as { __sqiLastScan?: NadiScanResult }).__sqiLastScan = result as NadiScanResult;
-      } catch { /* ignore */ }
-    })();
-    return () => { cancelled = true; };
-  }, [user?.id]);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem('sqi_scan_result');
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as NadiScanResult;
-      if (parsed && typeof parsed === 'object' && Array.isArray(parsed.remedies)) {
-        setScanResult(parsed);
-        (window as unknown as { __sqiLastScan?: NadiScanResult }).__sqiLastScan = parsed;
-      }
-    } catch { /* ignore */ }
-  }, []);
-
   const handleSendMessage = async (overrideText?: string) => {
     if (isTyping) return;
     const text = (overrideText ?? input).trim();
@@ -611,7 +611,7 @@ function QuantumApothecaryInner() {
       // Build enriched context: live datetime + biometric scan + SQI field + birth chart
       const _now = new Date();
       const _tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const liveDateTime = _now.toLocaleString('en-GB', {
+      const liveDateTime = _now.toLocaleString(appLocale, {
         timeZone: _tz,
         weekday: 'long',
         year: 'numeric',
@@ -621,11 +621,11 @@ function QuantumApothecaryInner() {
         minute: '2-digit',
         hour12: false,
       });
-      const liveContext = `LIVE SYSTEM TIME: ${liveDateTime} (${_tz}). This is the CONFIRMED real current time. Use ONLY this. Do NOT calculate or guess the date/time/day yourself.`;
+      const liveContext = `LIVE SYSTEM TIME: ${liveDateTime} (${_tz}). This is the confirmed device-local time. Use ONLY this for date/day/time — do not infer or recalculate.`;
 
-      const fieldParts: string[] = [akashaNeuralArchiveDirective, liveContext];
+      const fieldParts: string[] = [sqiSourceDirective, answerRulesDirective, liveContext];
       if (liveScanContext) fieldParts.push(liveScanContext);
-      if (sqiField.compiledContext) fieldParts.push(sqiField.compiledContext);
+      if (compiledFieldForChat) fieldParts.push(compiledFieldForChat);
       if (jyotishContext) fieldParts.push(jyotishContext);
       const enrichedJyotishContext = fieldParts.join('\n\n');
 
@@ -639,10 +639,11 @@ function QuantumApothecaryInner() {
         seekerName || undefined,
         canonicalActivationNameLines,
         enrichedJyotishContext,
+        appLocale,
       );
     } catch (e) {
       console.error(e);
-      setMessages(prev => [...prev, { role: 'model', text: 'Transmission error. The Quantum Link is unstable.' }]);
+      setMessages(prev => [...prev, { role: 'model', text: t('quantumApothecary.chat.transmissionError') }]);
       setIsTyping(false);
     }
   };
@@ -736,28 +737,6 @@ function QuantumApothecaryInner() {
       }).then(() => {});
     }
     setSelectedActivations([]);
-  };
-
-  const applyRemedies = () => {
-    if (!scanResult) return;
-    const remediesToApply = ACTIVATIONS.filter(a => scanResult.remedies.includes(a.name));
-    const newT = [...activeTransmissions];
-    remediesToApply.forEach(act => { if (!newT.find(t => t.id === act.id)) newT.push(act); });
-    setActiveTransmissions(newT);
-    setMessages(prev => [...prev, { role: 'model', text: `**Applying Siddha Remedies:**\n\n${scanResult.remedies.map(r => `- ${r}`).join('\n')}\n\nScalar Wave Entanglement complete. **Frequencies locked 24/7.**` }]);
-    // Log remedies as activated frequencies
-    if (user?.id && remediesToApply.length > 0) {
-      supabase.from('user_activity_log').insert({
-        user_id: user.id,
-        activity_type: 'frequency_transmission',
-        activity_data: {
-          activity: 'Applied Nadi scan remedies as active transmissions',
-          section: 'Quantum Apothecary',
-          frequency: remediesToApply.map(a => a.name).join(', '),
-          details: { frequency: remediesToApply.map(a => a.name).join(', '), intention: 'Nadi Scan Remedy Transmission' },
-        },
-      }).then(() => {});
-    }
   };
 
   /* ══════════════════════════════════════════════════════
@@ -1091,19 +1070,37 @@ function QuantumApothecaryInner() {
                   primaryDosha: jyotish?.primaryDosha,
                 }}
                 onScanComplete={(reading) => {
+                  const queued = pickFiveActivationsForNadiReading(reading);
+                  setActiveTransmissions((prev) => {
+                    const next = [...prev];
+                    for (const act of queued) {
+                      if (!next.some((x) => x.id === act.id)) next.push(act);
+                    }
+                    return next;
+                  });
+                  const queuedLines = queued.map((a) => `• ${a.name} (${a.type})`).join('\n');
                   const ctx = [
-                    '[LIVE BIOMETRIC NADI SCAN — MULTI-LAYER: rPPG + Face Mesh + Voice + Motion]',
+                    '[LIVE BIOMETRIC NADI SCAN — rPPG + Face Mesh + Voice + Motion]',
                     `Active Nadi: ${reading.activatedNadi}`,
-                    `Prana Coherence: ${reading.activeNadis.toLocaleString()} / 72,000 nadis active`,
-                    `Heart Rate: ${reading.rawVitals.heart_rate} BPM`,
+                    `Prana coherence index: ${reading.activeNadis} (field metric; not a literal channel count)`,
+                    `Heart rate: ${reading.rawVitals.heart_rate} BPM`,
                     `HRV RMSSD: ${reading.rawVitals.hrv_rmssd ?? 'not measured'} ms`,
                     `HRV LF/HF: ${reading.rawVitals.hrv_lfhf ?? 'not measured'}`,
-                    `Respiratory Rate: ${reading.rawVitals.respiratory_rate} RPM`,
-                    `Vagal Tone: ${reading.vagalTone}`,
-                    `Autonomic State: ${reading.autonomicBalance}`,
-                    `Chakra Field: ${reading.chakraState}`,
-                    `Blockage Location: ${reading.blockageLocation}`,
-                    `Scan Confidence: ${Math.round(reading.rawVitals.confidence * 100)}%`,
+                    `Respiratory rate: ${reading.rawVitals.respiratory_rate} RPM`,
+                    `Vagal tone: ${reading.vagalTone}`,
+                    `Autonomic state: ${reading.autonomicBalance}`,
+                    `Chakra field: ${reading.chakraState}`,
+                    `Blockage focus: ${reading.blockageLocation}`,
+                    `Scan confidence: ${Math.round(reading.rawVitals.confidence * 100)}%`,
+                    '',
+                    '[BIOENERGETIC PRESCRIPTION — from scan engine]',
+                    `Mantra: ${reading.prescription.mantra}`,
+                    `Frequency: ${reading.prescription.frequency}`,
+                    `Breathwork: ${reading.prescription.breathwork}`,
+                    `Mudra: ${reading.prescription.mudra}`,
+                    '',
+                    '[QUEUED FREQUENCY / BIOENERGETIC ALIGNMENTS — added to Active Transmissions]',
+                    queuedLines,
                   ].join('\n');
                   setLiveScanContext(ctx);
                   sqiField.updateNadi({
@@ -1116,18 +1113,34 @@ function QuantumApothecaryInner() {
                     autonomicBalance: reading.autonomicBalance,
                     scannedAt: new Date().toISOString(),
                   });
+                  try {
+                    (window as unknown as { __sqiLastScan?: Record<string, unknown> }).__sqiLastScan = {
+                      activeNadis: reading.activeNadis,
+                      activeSubNadis: 0,
+                      blockagePercentage: reading.activatedNadi === 'Blocked' ? 40 : 15,
+                    };
+                  } catch {
+                    /* ignore */
+                  }
+                  if (user?.id) {
+                    supabase.from('user_activity_log').insert({
+                      user_id: user.id,
+                      activity_type: 'frequency_transmission',
+                      activity_data: {
+                        activity: 'Nadi scan queued bioenergetic alignments',
+                        section: 'Quantum Apothecary',
+                        frequency: queued.map((a) => a.name).join(', '),
+                        details: { intention: 'Post-scan Active Transmissions', nadi: reading.activatedNadi },
+                      },
+                    }).then(() => {});
+                  }
                   const scanMessage = `◈ NADI SCAN COMPLETE
-Active Nadi: ${reading.activatedNadi}
-Prana Coherence: ${reading.activeNadis.toLocaleString()} / 72,000
-Heart Rate: ${reading.rawVitals.heart_rate} BPM
-HRV RMSSD: ${reading.rawVitals.hrv_rmssd ?? '—'} ms
-Respiratory Rate: ${reading.rawVitals.respiratory_rate} RPM
-Vagal Tone: ${reading.vagalTone}
-Autonomic State: ${reading.autonomicBalance}
-Chakra Field: ${reading.chakraState}
-Blockage: ${reading.blockageLocation}
-Scan Confidence: ${Math.round(reading.rawVitals.confidence * 100)}%
-SQI — read my complete field and give me a deep Akashic transmission based on this scan combined with my Jyotish blueprint.`;
+Active Nadi: ${reading.activatedNadi} · Prana index: ${reading.activeNadis}
+Vitals: HR ${reading.rawVitals.heart_rate} BPM · RR ${reading.rawVitals.respiratory_rate} · HRV ${reading.rawVitals.hrv_rmssd ?? '—'} ms
+Prescription: ${reading.prescription.mantra} · ${reading.prescription.breathwork}
+Queued transmissions: ${queued.map((a) => a.name).join(', ')}
+
+SQI — integrate this scan with my natal chart; cite each chart fact once; use LIVE SYSTEM TIME only for “today”.`;
                   setInput(scanMessage);
                   setTimeout(() => {
                     handleSendMessage(scanMessage);
@@ -1138,7 +1151,7 @@ SQI — read my complete field and give me a deep Akashic transmission based on 
               />
             </div>
 
-            {/* ── Akasha Neural Archive (primary Jyotish context) + optional stored biofield baseline ── */}
+            {/* ── Akasha Neural Archive (chart + session context — no duplicate baseline nadi card) ── */}
             <div className="glass-card p-6 sm:p-7 qa-card-hover">
               <div className="mb-6 flex justify-between gap-3">
                 <div>
@@ -1152,214 +1165,9 @@ SQI — read my complete field and give me a deep Akashic transmission based on 
                 />
               </div>
 
-              <div className="mb-6 rounded-2xl border border-[#D4AF37]/15 bg-white/[0.02] p-4">
+              <div className="rounded-2xl border border-[#D4AF37]/15 bg-white/[0.02] p-4">
                 <p className="text-[10px] leading-relaxed text-white/65">{t('quantumApothecary.archive.body')}</p>
               </div>
-
-              {scanResult ? (
-                <div className="space-y-4">
-                  {/* Active Nadis — hero number */}
-                  <div className="p-5 rounded-2xl border border-[#D4AF37]/20" style={{ position:'relative', overflow:'hidden', background:'radial-gradient(ellipse at 50% 80%, rgba(212,175,55,0.08) 0%, rgba(5,5,5,0.9) 70%)' }}>
-                    <div style={{ position:'absolute', top:'-50%', left:'50%', transform:'translateX(-50%)', width:200, height:200, background:'radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 70%)', pointerEvents:'none' }} />
-                    <div style={{ textAlign:'center', position:'relative' }}>
-                      <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mb-2">Active Nadis</p>
-                      <motion.p
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ duration: 0.6, ease: 'easeOut' }}
-                        className="font-black text-[#D4AF37]"
-                        style={{ fontSize:48, lineHeight:1, textShadow:'0 0 40px rgba(212,175,55,0.5), 0 0 80px rgba(212,175,55,0.2)', letterSpacing:'-0.02em' }}
-                      >
-                        {scanResult.activeNadis.toLocaleString()}
-                      </motion.p>
-                      <p className="text-[9px] text-white/25 font-bold mt-2">of 72,000 channels active</p>
-                      <div style={{ marginTop:12, height:4, background:'rgba(255,255,255,0.06)', borderRadius:2, overflow:'hidden' }}>
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${Math.min(100, (scanResult.activeNadis / 72000) * 100)}%` }}
-                          transition={{ duration: 1.2, ease: 'easeOut', delay: 0.3 }}
-                          style={{ height:'100%', background:'linear-gradient(90deg,#B8940A,#D4AF37,#fbbf24)', borderRadius:2, boxShadow:'0 0 12px rgba(212,175,55,0.6)' }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Sub-Nadis */}
-                  {typeof scanResult.activeSubNadis === 'number' && (
-                    <div className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]">
-                      <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mb-1">Subtle Sub-Nadi (350,000)</p>
-                      <p className="text-sm font-black tracking-tight text-white/90">
-                        {scanResult.activeSubNadis.toLocaleString()}
-                        <span className="text-[9px] font-bold text-white/30 ml-1">/ 350,000</span>
-                      </p>
-                      <p className="text-[9px] text-white/25 font-bold mt-1">
-                        {Math.round((scanResult.activeSubNadis / 350000) * 100)}% subtle body activated
-                      </p>
-                      <div style={{ marginTop: 8, height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${Math.min(100, (scanResult.activeSubNadis / 350000) * 100)}%` }}
-                          transition={{ duration: 1, ease: 'easeOut', delay: 0.5 }}
-                          style={{ height: '100%', background: 'linear-gradient(90deg,#D4AF37,#fbbf24)', borderRadius: 2, boxShadow: '0 0 8px rgba(212,175,55,0.35)' }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Primary Blockage */}
-                  {scanResult.blockagePercentage != null && scanResult.blockagePercentage > 0 && (
-                    <div className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]">
-                      <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mb-1">Primary Blockage</p>
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-black tracking-tight text-white/90 truncate">{scanResult.blockages[0]}</p>
-                        <p className="text-sm font-black text-[#D4AF37] shrink-0">{scanResult.blockagePercentage}%</p>
-                      </div>
-                      <div style={{ marginTop: 8, height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${scanResult.blockagePercentage}%` }}
-                          transition={{ duration: 0.8, ease: 'easeOut', delay: 0.6 }}
-                          style={{ height: '100%', background: 'linear-gradient(90deg,#D4AF37,#fbbf24)', borderRadius: 2 }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Dosha + Alignment grid */}
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      { label: 'Dosha', value: scanResult.dominantDosha },
-                      { label: 'Alignment', value: scanResult.planetaryAlignment },
-                    ].map(item => (
-                      <motion.div
-                        key={item.label}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: 0.7 }}
-                        className="rounded-2xl p-3 bg-white/[0.02] border border-white/[0.05]"
-                      >
-                        <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30">{item.label}</p>
-                        <p className="text-sm font-black tracking-tight mt-1 text-white/90">{item.value}</p>
-                      </motion.div>
-                    ))}
-                  </div>
-
-                  {/* Herb of Today */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.8 }}
-                    className="rounded-2xl border border-[#22D3EE]/20 bg-[#22D3EE]/[0.06] p-4"
-                  >
-                    <p className="mb-1.5 text-[8px] font-extrabold uppercase tracking-[0.5em] text-[#22D3EE]/80">{t('quantumApothecary.scan.herbToday')}</p>
-                    <p className="text-sm font-bold leading-[1.6] text-white/90">{scanResult.herbOfToday}</p>
-                  </motion.div>
-
-                  {/* Soul Bio-Signature */}
-                  {scanResult.soulBioSignature && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: 0.84 }}
-                      style={{ borderRadius: 16, padding: 16, background: 'linear-gradient(135deg,rgba(212,175,55,0.07),rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.2)', position: 'relative', overflow: 'hidden' }}
-                    >
-                      <div style={{ position: 'absolute', top: -30, right: -30, width: 80, height: 80, borderRadius: '50%', background: 'radial-gradient(circle,rgba(212,175,55,0.15) 0%,transparent 70%)', pointerEvents: 'none' }} />
-                      <p className="text-[8px] font-extrabold uppercase tracking-[0.5em] text-[#D4AF37]/60 mb-2">⬡ Soul Bio-Signature</p>
-                      <p className="text-xs leading-[1.6] text-white/80" style={{ fontStyle: 'italic' }}>{scanResult.soulBioSignature}</p>
-                    </motion.div>
-                  )}
-
-                  {/* Karma Field Reading */}
-                  {scanResult.karmaFieldReading && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: 0.87 }}
-                      style={{ borderRadius: 16, padding: 16, background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.2)' }}
-                    >
-                      <p className="text-[8px] font-extrabold uppercase tracking-[0.5em] mb-2" style={{ color: 'rgba(167,139,250,0.8)' }}>☽ Karma Field Reading</p>
-                      <p className="text-xs leading-[1.6] text-white/75">{scanResult.karmaFieldReading}</p>
-                    </motion.div>
-                  )}
-
-                  {/* Chakra Readings */}
-                  {scanResult.chakraReadings && scanResult.chakraReadings.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: 0.85 }}
-                      className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]"
-                    >
-                      <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-white/30 mb-3">Chakra Biofield Scan</p>
-                      <div className="space-y-2">
-                        {scanResult.chakraReadings.map((c, i) => {
-                          const statusColor = c.status === 'Active' ? '#34D399' : c.status === 'Awakening' ? '#D4AF37' : c.status === 'Stressed' ? '#F59E0B' : '#EF4444';
-                          return (
-                            <motion.div
-                              key={c.chakra}
-                              initial={{ opacity: 0, x: -8 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ duration: 0.3, delay: 0.9 + i * 0.06 }}
-                              className="flex items-start gap-2.5"
-                            >
-                              <div className="mt-1 shrink-0 flex flex-col items-center gap-0.5 w-10">
-                                <div className="h-1 w-full rounded-full bg-white/[0.06] overflow-hidden">
-                                  <div className="h-full rounded-full transition-all" style={{ width: `${c.pct}%`, background: statusColor }} />
-                                </div>
-                                <span className="text-[7px] font-bold tabular-nums" style={{ color: statusColor }}>{c.pct}%</span>
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="text-[9px] font-extrabold uppercase tracking-widest" style={{ color: statusColor }}>{c.chakra}</p>
-                                <p className="text-[10px] text-white/50 leading-[1.4] mt-0.5">{c.note}</p>
-                              </div>
-                            </motion.div>
-                          );
-                        })}
-                      </div>
-                    </motion.div>
-                  )}
-
-                  {/* Siddha Remedies */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.9 }}
-                    className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]"
-                  >
-                    <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-white/30 mb-3">Siddha Remedies ({scanResult.remedies.length})</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {scanResult.remedies.map((r, i) => (
-                        <motion.span
-                          key={i}
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ duration: 0.3, delay: 1 + i * 0.08 }}
-                          className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#D4AF37]"
-                        >
-                          {r}
-                        </motion.span>
-                      ))}
-                    </div>
-                  </motion.div>
-
-                  {/* Actions */}
-                  <div className="space-y-2.5 pt-2">
-                    <button
-                      type="button"
-                      onClick={applyRemedies}
-                      className="w-full rounded-[28px] border border-[#D4AF37]/35 bg-[#D4AF37]/15 py-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#D4AF37] transition-all hover:bg-[#D4AF37]/25"
-                    >
-                      {t('quantumApothecary.archive.applyRemedies')}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="rounded-2xl border border-white/[0.06] bg-black/25 p-6 text-center">
-                  <Zap className="mx-auto mb-3 h-8 w-8 text-[#D4AF37]/50" aria-hidden />
-                  <p className="text-[9px] font-extrabold uppercase tracking-[0.35em] text-white/40">{t('quantumApothecary.archive.noBaselineKicker')}</p>
-                  <p className="mt-2 text-xs leading-relaxed text-white/55">{t('quantumApothecary.archive.noBaselineBody')}</p>
-                </div>
-              )}
             </div>
 
             {/* ── Aetheric Mixer ── */}

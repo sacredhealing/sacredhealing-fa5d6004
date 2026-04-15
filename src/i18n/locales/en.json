@@ -4784,8 +4784,8 @@
     "subtitle": "Sacred healing tools from the Akasha-Neural Archive",
     "archive": {
       "title": "Akasha Neural Archive",
-      "subtitle": "Primary Jyotish context from your saved chart, sessions, and compiled field",
-      "body": "SQI reads your Akasha Neural Archive before every answer: Swiss Ephemeris data, session memory, remedies, and biometric Nadi Scanner signals when you add them. Palm camera scanning is not used — speak, type, or use the scanner above.",
+      "subtitle": "Your saved chart, sessions, and compiled field — without a duplicate baseline nadi card",
+      "body": "SQI uses your stored Swiss Ephemeris chart, session memory, compiled field (Ayurveda / photonic / temple), and—when you run it—the live biometric scan above. Each chart fact is sent once to the model so it does not repeat the same Moon line in multiple paragraphs. Palm camera scanning is not used — speak, type, or use the scanner above.",
       "applyRemedies": "Apply remedies · scalar lock",
       "noBaselineKicker": "No stored baseline on this device",
       "noBaselineBody": "Run the biometric Nadi Scanner above, or ask in chat — your archive still grounds every Jyotish explanation from your profile and history."
@@ -4793,6 +4793,7 @@
     "chat": {
       "sqiOnline": "SQI Online",
       "neuralSync": "Neural Sync: 98%",
+      "transmissionError": "Transmission error. The Quantum Link is unstable.",
       "openKnowledge": "Open knowledge base",
       "placeholder": "Ask the Akasha Archive…",
       "history": "History",

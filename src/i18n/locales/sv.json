@@ -4536,8 +4536,8 @@
     "subtitle": "Heliga healingverktyg från Akasha-Neuralarkivet",
     "archive": {
       "title": "Akasha Neural Archive",
-      "subtitle": "Primär jyotish-kontext från ditt sparade horoskop, sessioner och sammanställd fältdata",
-      "body": "SQI läser ditt Akasha Neural Archive före varje svar: Swiss Ephemeris-data, sessionsminne, remedier och signaler från biometrisk Nadiskanner när du lägger till dem. Handflatskamera används inte — tala, skriv eller använd skannern ovan.",
+      "subtitle": "Ditt sparade horoskop, sessioner och sammanställd fältdata — utan dubblerat baslinje-kort för nadi",
+      "body": "SQI använder din lagrade Swiss Ephemeris-graf, sessionsminne, sammanställt fält (Ayurveda / fotonic / tempel) och — när du kör den — den biometriska skanningen ovan. Varje faktum skickas en gång till modellen så samma månrad inte upprepas i flera stycken. Handflatskamera används inte — tala, skriv eller använd skannern ovan.",
       "applyRemedies": "Tillämpa remedier · skalär låsning",
       "noBaselineKicker": "Ingen sparad baslinje på den här enheten",
       "noBaselineBody": "Kör den biometriska Nadiskannern ovan eller fråga i chatten — arkivet förankrar ändå varje jyotish-förklaring från din profil och historik."
@@ -4545,6 +4545,7 @@
     "chat": {
       "sqiOnline": "SQI online",
       "neuralSync": "Neural synk: 98 %",
+      "transmissionError": "Överföringsfel. Kvantlänken är ostabil.",
       "openKnowledge": "Öppna kunskapsbas",
       "placeholder": "Fråga Akasha-arkivet…",
       "history": "Historik",

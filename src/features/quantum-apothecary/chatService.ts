@@ -49,6 +49,8 @@ export async function streamChatWithSQI(
   seekerName?: string,
   canonicalActivationNames?: string,
   jyotishContext?: string,       // ← Jyotish birth chart data for accurate life readings
+  /** BCP 47 locale for localTime/localDate (must match client “LIVE SYSTEM TIME” line). */
+  localeTag?: string,
 ) {
   const recent = messages.slice(-15);
   const apiMessages = recent.map(m => ({
@@ -58,13 +60,14 @@ export async function streamChatWithSQI(
 
   const now = new Date();
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const localTime = now.toLocaleTimeString([], {
+  const loc = localeTag?.trim() || 'en-GB';
+  const localTime = now.toLocaleTimeString(loc, {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
     timeZone: timezone,
   });
-  const localDate = now.toLocaleDateString([], {
+  const localDate = now.toLocaleDateString(loc, {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
