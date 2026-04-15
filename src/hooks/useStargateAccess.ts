@@ -4,21 +4,24 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
 
 /**
- * True if user can access Stargate Community: 
+ * True if user can access Stargate Community:
  * - Admin (always has access)
  * - Has active Stargate subscription (NOT regular premium)
  * - Was manually added to stargate_community_members by admin
+ * - Has active admin_granted_access row: program + access_id stargate, or access_type stargate
  */
 export const useStargateAccess = () => {
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
   const [isManualAdd, setIsManualAdd] = useState(false);
+  const [hasAdminGrant, setHasAdminGrant] = useState(false);
   const [hasStargateSubscription, setHasStargateSubscription] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const check = useCallback(async () => {
     if (!user) {
       setIsManualAdd(false);
+      setHasAdminGrant(false);
       setHasStargateSubscription(false);
       setLoading(false);
       return;
@@ -37,6 +40,30 @@ export const useStargateAccess = () => {
     }
     
     setIsManualAdd(!!manualMember);
+
+    // Admin Access Grant tab stores Stargate as program + access_id "stargate"
+    let granted = false;
+    try {
+      const { data: progRow } = await supabase
+        .from('admin_granted_access')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .eq('access_type', 'program')
+        .eq('access_id', 'stargate')
+        .maybeSingle();
+      const { data: typeRow } = await supabase
+        .from('admin_granted_access')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .eq('access_type', 'stargate')
+        .maybeSingle();
+      granted = !!(progRow || typeRow);
+    } catch (e) {
+      console.warn('Error checking admin Stargate grant:', e);
+    }
+    setHasAdminGrant(granted);
 
     // Check for active Stargate subscription via Edge Function
     try {
@@ -67,9 +94,10 @@ export const useStargateAccess = () => {
     check();
   }, [check]);
 
-  // Access granted if: admin OR has Stargate subscription OR manually added
+  // Access granted if: admin OR subscription OR manual table OR admin_granted_access Stargate row
   // NOTE: Regular premium members (tier !== 'stargate') do NOT get access
-  const isStargateMember = isAdmin || hasStargateSubscription || isManualAdd;
+  const isStargateMember =
+    isAdmin || hasStargateSubscription || isManualAdd || hasAdminGrant;
 
   return { isStargateMember, loading };
 };

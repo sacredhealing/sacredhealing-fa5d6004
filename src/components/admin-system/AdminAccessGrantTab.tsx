@@ -228,6 +228,18 @@ const AdminAccessGrantTab = () => {
         }
       }
 
+      if (accessType === 'stargate') {
+        const { error: sgError } = await (supabase as any)
+          .from('stargate_community_members')
+          .upsert({ user_id: selectedUser.user_id }, { onConflict: 'user_id' });
+        if (sgError && !String(sgError.message || '').includes('does not exist')) {
+          console.warn('admin_granted_access saved but stargate_community_members upsert failed:', sgError);
+          toast.warning(
+            `Stargate access is saved in grants. Community mirror failed: ${sgError.message}. User should still get access via admin grant.`
+          );
+        }
+      }
+
       toast.success(`Access granted to ${selectedUser.full_name || 'user'}. They should see it within seconds (membership refetches automatically).`);
       setSelectedUser(null);
       setAccessId('');
