@@ -959,7 +959,11 @@ const Community = () => {
   const [liveRoomUrl, setLiveRoomUrl] = useState<string | null>(null);
   const [viewerSessions, setViewerSessions] = useState<DailySession[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [onlineCount] = useState(() => Math.floor(Math.random() * 20) + 5);
+  const [totalUserCount, setTotalUserCount] = useState(0);
+  const [goLiveTitle, setGoLiveTitle] = useState("");
+  const [showGoLiveDialog, setShowGoLiveDialog] = useState(false);
+  const [goLiveChannelId, setGoLiveChannelId] = useState<string | null>(null);
+  const [goLiveChannelName, setGoLiveChannelName] = useState("");
   const [members, setMembers] = useState<Member[]>([]);
   const [memberSearch, setMemberSearch] = useState("");
   const [feedPosts, setFeedPosts] = useState<FeedPost[]>([]);
@@ -1331,6 +1335,13 @@ const Community = () => {
     };
 
     Promise.all([loadMembers(), loadRooms()]);
+
+    // Get real total user count
+    const loadTotalUsers = async () => {
+      const { count, error } = await supabase.from("profiles").select("id", { count: "exact", head: true });
+      if (!error && count != null) setTotalUserCount(count);
+    };
+    loadTotalUsers();
   }, [user?.id]);
 
   // Track who's online via Realtime presence (community channel)
@@ -1642,17 +1653,19 @@ const Community = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
   }, [messages, activeChannel]);
 
-  const handleGoLiveForChannel = async (channelId: string, channelName: string) => {
+  const handleGoLiveForChannel = async (channelId: string, channelName: string, customTitle?: string) => {
     if (!user) return;
     setShowGoLiveOptions(false);
-    const result = await daily.createRoom(channelId, `Live in ${channelName}`, undefined, false, "channel");
+    setShowGoLiveDialog(false);
+    const meetingTitle = customTitle?.trim() || `Live in ${channelName}`;
+    const result = await daily.createRoom(channelId, meetingTitle, undefined, false, "channel");
     if (result) {
       setLiveRoomUrl(result.room_url);
       const adminName = memberNameMap[user.id] || "Admin";
       try {
         await supabase.from("community_posts").insert({
           user_id: user.id,
-          content: `🔴 Live now in ${channelName}`,
+          content: `🔴 ${meetingTitle}`,
           post_type: "live",
           video_url: result.room_url,
         } as any);
@@ -1663,7 +1676,7 @@ const Community = () => {
             triggeredBy: adminName,
             channelId,
             channelName,
-            title: `🔴 ${adminName} is LIVE in ${channelName}`,
+            title: `🔴 ${adminName} is LIVE — ${meetingTitle}`,
             body: "A live session just started. Tap to join now.",
             link: "/community",
           },
@@ -1676,7 +1689,48 @@ const Community = () => {
 
   const handleGoLive = async () => {
     if (!activeChannel || !currentChannel) return;
-    await handleGoLiveForChannel(activeChannel, currentChannel.name);
+    // Show naming dialog instead of immediately going live
+    setGoLiveChannelId(activeChannel);
+    setGoLiveChannelName(currentChannel.name);
+    setGoLiveTitle("");
+    setShowGoLiveDialog(true);
+  };
+
+  const confirmGoLive = async () => {
+    if (!goLiveChannelId || !user) return;
+    if (goLiveChannelId === "feed") {
+      // Feed go-live uses the same flow but with source=feed
+      setShowGoLiveDialog(false);
+      const meetingTitle = goLiveTitle.trim() || "Live from Divine Sangha";
+      const result = await daily.createRoom("feed", meetingTitle, undefined, false, "feed");
+      if (result) {
+        setLiveRoomUrl(result.room_url);
+        const adminName = memberNameMap[user.id] || "Admin";
+        try {
+          await supabase.from("community_posts").insert({
+            user_id: user.id,
+            content: `🔴 ${meetingTitle}`,
+            post_type: "live",
+            video_url: result.room_url,
+          } as any);
+          await fetchFeedPosts();
+          supabase.functions.invoke("notify-community", {
+            body: {
+              type: "live",
+              triggeredBy: adminName,
+              title: `🔴 ${adminName} is LIVE — ${meetingTitle}`,
+              body: "A live transmission has started.",
+              link: "/community",
+            },
+          });
+        } catch (err) {
+          console.error("Failed to create live feed post:", err);
+        }
+      }
+    } else {
+      await handleGoLiveForChannel(goLiveChannelId, goLiveChannelName, goLiveTitle);
+    }
+    setShowGoLiveDialog(false);
   };
 
   const handleDmVideoCall = async () => {
@@ -1989,7 +2043,7 @@ const Community = () => {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "10px 14px 0", gap: 10 }}>
           <div className="c-banner" style={{ flex: 1, margin: 0 }}>
             <span className="c-pulse" />
-            {onlineCount} SOUL{onlineCount === 1 ? "" : "S"} CURRENTLY IN SACRED COMMUNITY
+            {totalUserCount} SOUL{totalUserCount === 1 ? "" : "S"} IN SACRED COMMUNITY
           </div>
           <div style={{ position: "relative", flexShrink: 0 }}>
             <button
@@ -2314,6 +2368,7 @@ const Community = () => {
                     <div className="c-ch-info">
                       <div className="c-ch-name">{ch.name}</div>
                       <div className="c-ch-desc">{ch.description}</div>
+                      <div style={{ fontSize: 10, color: "rgba(212,175,55,.5)", marginTop: 2 }}>{totalUserCount} members</div>
                     </div>
                     <div className="c-ch-arrow">›</div>
                   </button>
@@ -2343,6 +2398,7 @@ const Community = () => {
                       <div className="c-ch-info">
                         <div className="c-ch-name">{ch.name}</div>
                         <div className="c-ch-desc">{ch.description}</div>
+                        <div style={{ fontSize: 10, color: "rgba(212,175,55,.5)", marginTop: 2 }}>{members.filter(m => getTierRank(m.subscription_tier) >= 2).length + (isAdmin ? 1 : 0)} members</div>
                       </div>
                       {hasAccess ? <div className="c-ch-arrow">›</div> : <span className="c-lock-badge">🔒</span>}
                     </button>
@@ -2364,6 +2420,7 @@ const Community = () => {
                       <div className="c-ch-info">
                         <div className="c-ch-name">{ch.name}</div>
                         <div className="c-ch-desc">{ch.description}</div>
+                        <div style={{ fontSize: 10, color: "rgba(212,175,55,.5)", marginTop: 2 }}>{ch.id === "stargate" ? "Stargate members" : "Invite only"}</div>
                       </div>
                       {locked ? <span className="c-lock-badge">🔒</span> : <div className="c-ch-arrow">›</div>}
                     </button>
@@ -2422,34 +2479,11 @@ const Community = () => {
                   </button>
                 </div>
                 <button
-                  onClick={async () => {
-                    if (!user) return;
-                    setShowGoLiveOptions(false);
-                    const result = await daily.createRoom("feed", "Live from Divine Sangha", undefined, false, "feed");
-                    if (result) {
-                      setLiveRoomUrl(result.room_url);
-                      const adminName = memberNameMap[user.id] || "Admin";
-                      try {
-                        await supabase.from("community_posts").insert({
-                          user_id: user.id,
-                          content: "🔴 Live now in Divine Sangha",
-                          post_type: "live",
-                          video_url: result.room_url,
-                        } as any);
-                        await fetchFeedPosts();
-                        supabase.functions.invoke("notify-community", {
-                          body: {
-                            type: "live",
-                            triggeredBy: adminName,
-                            title: `🔴 ${adminName} is LIVE`,
-                            body: "A live transmission has started on the Sacred Feed.",
-                            link: "/community",
-                          },
-                        });
-                      } catch (err) {
-                        console.error("Failed to create live feed post:", err);
-                      }
-                    }
+                  onClick={() => {
+                    setGoLiveChannelId("feed");
+                    setGoLiveChannelName("Divine Sangha");
+                    setGoLiveTitle("");
+                    setShowGoLiveDialog(true);
                   }}
                   disabled={daily.isCreating}
                   style={{
@@ -2867,6 +2901,67 @@ const Community = () => {
           ) : null}
         </div>
       </div>
+
+      {/* Go Live Naming Dialog */}
+      {showGoLiveDialog && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 9999,
+          background: "rgba(0,0,0,.75)", backdropFilter: "blur(8px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <div style={{
+            background: "#0a0a0a", border: "1px solid rgba(212,175,55,.3)",
+            borderRadius: 20, padding: 28, width: "90%", maxWidth: 400,
+          }}>
+            <h3 style={{ color: "#D4AF37", fontWeight: 900, fontSize: 16, marginBottom: 4 }}>
+              🔴 Name Your Live Session
+            </h3>
+            <p style={{ color: "rgba(255,255,255,.5)", fontSize: 12, marginBottom: 16 }}>
+              Going live in {goLiveChannelName}. Give it a title so members know what it's about.
+            </p>
+            <input
+              autoFocus
+              placeholder="e.g. Evening Meditation Circle"
+              value={goLiveTitle}
+              onChange={(e) => setGoLiveTitle(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") confirmGoLive(); }}
+              style={{
+                width: "100%", padding: "12px 16px", borderRadius: 12,
+                background: "rgba(255,255,255,.05)", border: "1px solid rgba(212,175,55,.2)",
+                color: "#fff", fontSize: 14, outline: "none",
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+              }}
+            />
+            <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
+              <button
+                onClick={() => setShowGoLiveDialog(false)}
+                style={{
+                  flex: 1, padding: "10px 0", borderRadius: 12,
+                  background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)",
+                  color: "rgba(255,255,255,.6)", fontSize: 12, fontWeight: 700,
+                  cursor: "pointer", textTransform: "uppercase", letterSpacing: ".1em",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmGoLive}
+                disabled={daily.isCreating}
+                style={{
+                  flex: 1, padding: "10px 0", borderRadius: 12,
+                  background: "linear-gradient(135deg, rgba(212,175,55,.3), rgba(212,175,55,.6))",
+                  border: "none", color: "#050505", fontSize: 12, fontWeight: 900,
+                  cursor: daily.isCreating ? "wait" : "pointer",
+                  textTransform: "uppercase", letterSpacing: ".1em",
+                  opacity: daily.isCreating ? 0.5 : 1,
+                }}
+              >
+                {daily.isCreating ? "Starting..." : "🔴 Go Live"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
