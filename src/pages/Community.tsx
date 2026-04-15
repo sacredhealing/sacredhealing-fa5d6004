@@ -2367,6 +2367,7 @@ const Community = () => {
                       <div className="c-ch-info">
                         <div className="c-ch-name">{ch.name}</div>
                         <div className="c-ch-desc">{ch.description}</div>
+                        <div style={{ fontSize: 10, color: "rgba(212,175,55,.5)", marginTop: 2 }}>{members.filter(m => getTierRank(m.subscription_tier) >= 2).length + (isAdmin ? 1 : 0)} members</div>
                       </div>
                       {hasAccess ? <div className="c-ch-arrow">›</div> : <span className="c-lock-badge">🔒</span>}
                     </button>
