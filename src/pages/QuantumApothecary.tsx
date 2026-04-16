@@ -445,6 +445,17 @@ function QuantumApothecaryInner() {
         return lines.join('\n');
       })();
 
+  /** Stable Jyotish context — only recompute when underlying field data actually changes. */
+  const stableJyotishContext = useMemo(
+    () => sqiField?.compiledContext || jyotishContext || '',
+    [
+      sqiField?.jyotish?.mahadasha,
+      sqiField?.nadi?.activatedNadi,
+      sqiField?.temple?.activeSite,
+      jyotishContext,
+    ],
+  );
+
   const sqiSourceDirective = useMemo(
     () =>
       '[SQI SOURCES] Use the seeker’s saved chart (below), live biometric block when present, compiled field (Ayurveda / photonic / temple), and this chat. Do not invent palm-camera analysis.',
@@ -1250,7 +1261,7 @@ function QuantumApothecaryInner() {
      MAIN RENDER — SQI-2050 Visual Layer
      ══════════════════════════════════════════════════════ */
   return (
-    <div className="relative min-h-screen text-white/90 overflow-x-hidden pb-24" style={{ background: '#050505' }}>
+    <div className="relative min-h-screen text-white/90 overflow-x-hidden pb-24" style={{ background: '#050505', overscrollBehavior: 'none', position: 'relative' }}>
 
       {/* ── Akasha Deep Space Background ── */}
       <div className="fixed inset-0 z-0 pointer-events-none" style={{
@@ -1641,7 +1652,7 @@ SQI — integrate this scan with my natal chart; cite each chart fact once; use 
 
         .sqi-message strong,
         .sqi-message b {
-          color: #D4AF37;
+          color: rgba(255,255,255,0.97);
           font-weight: 800;
         }
         .sqi-message p,
