@@ -36,6 +36,8 @@ const ActiveTransmissionsSection = lazy(() => import('@/features/quantum-apothec
 
 /** Max messages kept in localStorage (aligned with flush + safety nets). */
 const SQI_PERSIST_MSG_CAP = 100;
+/** Persists Camera vs Voice scanner tab across soft navigations / remounts within the session. */
+const QA_VOICE_TAB_KEY = 'qa_apothecary_voice_tab';
 
 /* ──── Markdown-ish renderer: gold (#D4AF37) only on # / ## / ### / #### / ##### lines ──── */
 type InlineVariant = 'heading' | 'body';
@@ -620,7 +622,21 @@ function QuantumApothecaryInner() {
   const [pendingImage, setPendingImage] = useState<{ base64: string; mimeType: string } | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [voiceResult, setVoiceResult] = useState<VoiceBiofieldResult | null>(null);
-  const [showVoiceScan, setShowVoiceScan] = useState(false);
+  const [showVoiceScan, setShowVoiceScan] = useState(() => {
+    try {
+      return typeof sessionStorage !== 'undefined' && sessionStorage.getItem(QA_VOICE_TAB_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(QA_VOICE_TAB_KEY, showVoiceScan ? '1' : '0');
+    } catch {
+      /* ignore */
+    }
+  }, [showVoiceScan]);
 
   const voiceContextBlock = useMemo(
     () => (voiceResult ? buildVoiceFieldContext(voiceResult) : ''),
@@ -911,6 +927,65 @@ function QuantumApothecaryInner() {
       setIsTyping(false);
     }
   };
+
+  const handleVoiceBiofieldComplete = useCallback(
+    (result: VoiceBiofieldResult) => {
+      setVoiceResult(result);
+      const queued = pickTenActivationsForVoiceResult(result);
+      setActiveTransmissions((prev) => {
+        const next = [...prev];
+        for (const act of queued) {
+          if (!next.some((x) => x.id === act.id)) next.push(act);
+        }
+        return next;
+      });
+      const queuedLines = queued.map((a) => `• ${a.name} (${a.type})`).join('\n');
+      const ctx = [
+        '[LIVE VOICE BIOFIELD SCAN — microphone spectrum; educational only, not a medical diagnosis]',
+        `Overall coherence: ${result.overallCoherence}/100`,
+        `Nadi read: ${result.nadiReading}`,
+        `Dominant dosha (voice): ${result.dominantDosha}`,
+        `Priority areas: ${result.priorityAreas.map((i) => `${i.name} (${i.score}/100)`).join('; ')}`,
+        `Strengths: ${result.topStrengths.map((i) => i.name).join(', ')}`,
+        `Emotional field: ${result.emotionalField}`,
+        `Organ support: ${result.organField}`,
+        '',
+        '[QUEUED FREQUENCY / BIOENERGETIC ALIGNMENTS — added to Active Transmissions (10)]',
+        queuedLines,
+      ].join('\n');
+      setLiveScanContext(ctx);
+      if (user?.id) {
+        supabase.from('user_activity_log').insert({
+          user_id: user.id,
+          activity_type: 'frequency_transmission',
+          activity_data: {
+            activity: 'Voice biofield scan queued bioenergetic alignments',
+            section: 'Quantum Apothecary',
+            frequency: queued.map((a) => a.name).join(', '),
+            details: { intention: 'Post-voice-scan Active Transmissions', nadi: result.nadiReading },
+          },
+        }).then(() => {});
+      }
+      const msg = [
+        'VOICE BIOFIELD SCAN COMPLETE:',
+        `Overall Coherence: ${result.overallCoherence}/100`,
+        `Nadi: ${result.nadiReading}`,
+        `Dominant Dosha: ${result.dominantDosha}`,
+        `Priority Areas: ${result.priorityAreas.map((i) => `${i.name} (${i.score}/100)`).join(', ')}`,
+        `Strengths: ${result.topStrengths.map((i) => i.name).join(', ')}`,
+        `Emotional Field: ${result.emotionalField}`,
+        `Organ Support Needed: ${result.organField}`,
+        '',
+        t('quantumApothecary.voiceBiofield.sqiFollowUp'),
+      ].join('\n');
+      setTimeout(() => {
+        handleSendMessage(msg, { voiceSnapshot: result });
+        setInput('');
+        if (chatInputRef.current) chatInputRef.current.style.height = 'auto';
+      }, 300);
+    },
+    [user?.id, t, handleSendMessage],
+  );
 
   const handleChatFocus = () => { openChatFullscreenIfMobile(); };
 
@@ -1568,61 +1643,7 @@ SQI — integrate this scan with my natal chart; cite each chart fact once; use 
                     nakshatra: jyotish?.nakshatra,
                     primaryDosha: jyotish?.primaryDosha,
                   }}
-                  onScanComplete={(result) => {
-                    setVoiceResult(result);
-                    const queued = pickTenActivationsForVoiceResult(result);
-                    setActiveTransmissions((prev) => {
-                      const next = [...prev];
-                      for (const act of queued) {
-                        if (!next.some((x) => x.id === act.id)) next.push(act);
-                      }
-                      return next;
-                    });
-                    const queuedLines = queued.map((a) => `• ${a.name} (${a.type})`).join('\n');
-                    const ctx = [
-                      '[LIVE VOICE BIOFIELD SCAN — microphone spectrum; educational only, not a medical diagnosis]',
-                      `Overall coherence: ${result.overallCoherence}/100`,
-                      `Nadi read: ${result.nadiReading}`,
-                      `Dominant dosha (voice): ${result.dominantDosha}`,
-                      `Priority areas: ${result.priorityAreas.map((i) => `${i.name} (${i.score}/100)`).join('; ')}`,
-                      `Strengths: ${result.topStrengths.map((i) => i.name).join(', ')}`,
-                      `Emotional field: ${result.emotionalField}`,
-                      `Organ support: ${result.organField}`,
-                      '',
-                      '[QUEUED FREQUENCY / BIOENERGETIC ALIGNMENTS — added to Active Transmissions (10)]',
-                      queuedLines,
-                    ].join('\n');
-                    setLiveScanContext(ctx);
-                    if (user?.id) {
-                      supabase.from('user_activity_log').insert({
-                        user_id: user.id,
-                        activity_type: 'frequency_transmission',
-                        activity_data: {
-                          activity: 'Voice biofield scan queued bioenergetic alignments',
-                          section: 'Quantum Apothecary',
-                          frequency: queued.map((a) => a.name).join(', '),
-                          details: { intention: 'Post-voice-scan Active Transmissions', nadi: result.nadiReading },
-                        },
-                      }).then(() => {});
-                    }
-                    const msg = [
-                      'VOICE BIOFIELD SCAN COMPLETE:',
-                      `Overall Coherence: ${result.overallCoherence}/100`,
-                      `Nadi: ${result.nadiReading}`,
-                      `Dominant Dosha: ${result.dominantDosha}`,
-                      `Priority Areas: ${result.priorityAreas.map((i) => `${i.name} (${i.score}/100)`).join(', ')}`,
-                      `Strengths: ${result.topStrengths.map((i) => i.name).join(', ')}`,
-                      `Emotional Field: ${result.emotionalField}`,
-                      `Organ Support Needed: ${result.organField}`,
-                      '',
-                      t('quantumApothecary.voiceBiofield.sqiFollowUp'),
-                    ].join('\n');
-                    setTimeout(() => {
-                      handleSendMessage(msg, { voiceSnapshot: result });
-                      setInput('');
-                      if (chatInputRef.current) chatInputRef.current.style.height = 'auto';
-                    }, 300);
-                  }}
+                  onScanComplete={handleVoiceBiofieldComplete}
                 />
               )}
             </div>

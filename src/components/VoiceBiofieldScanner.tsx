@@ -1,5 +1,7 @@
 // Voice-only biofield scan — spectral + amplitude features from the microphone.
 // No camera, no rPPG, no FaceMesh.
+// Timing uses wall-clock (Date.now) so background tabs / timer throttling cannot
+// burst-complete or leave the countdown stuck; completion runs at most once.
 import { useState, useRef, useCallback, useEffect, type MouseEvent } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -114,15 +116,18 @@ export default function VoiceBiofieldScanner({
   onScanComplete,
 }: VoiceBiofieldScannerProps) {
   const { t } = useTranslation();
-  const [phase, setPhase] = useState<'idle' | 'scanning' | 'complete' | 'error'>('idle');
+  const [phase, setPhase] = useState<'idle' | 'scanning' | 'done' | 'error'>('idle');
   const [secondsLeft, setSecondsLeft] = useState(SCAN_SECONDS);
   const [errorMsg, setErrorMsg] = useState('');
+  const [lastResult, setLastResult] = useState<VoiceBiofieldResult | null>(null);
 
   const audioCtxRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const rafRef = useRef<number | null>(null);
   const timerRef = useRef<number | null>(null);
+  const scanStartMsRef = useRef(0);
+  const completionSentRef = useRef(false);
   const samplesRef = useRef<{ rmsSeries: number[]; centroidSeries: number[]; zcrSeries: number[] }>({
     rmsSeries: [],
     centroidSeries: [],
@@ -188,9 +193,11 @@ export default function VoiceBiofieldScanner({
     async (e?: MouseEvent) => {
       e?.preventDefault();
       setErrorMsg('');
+      completionSentRef.current = false;
       samplesRef.current = { rmsSeries: [], centroidSeries: [], zcrSeries: [] };
       setPhase('scanning');
       setSecondsLeft(SCAN_SECONDS);
+      scanStartMsRef.current = Date.now();
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -217,18 +224,30 @@ export default function VoiceBiofieldScanner({
         };
         loop();
 
-        let elapsed = 0;
         timerRef.current = window.setInterval(() => {
-          elapsed++;
-          setSecondsLeft(SCAN_SECONDS - elapsed);
-          if (elapsed >= SCAN_SECONDS) {
+          if (completionSentRef.current) return;
+
+          const elapsedSec = (Date.now() - scanStartMsRef.current) / 1000;
+          const remaining = SCAN_SECONDS - elapsedSec;
+
+          if (elapsedSec >= SCAN_SECONDS) {
+            completionSentRef.current = true;
+            if (timerRef.current != null) {
+              clearInterval(timerRef.current);
+              timerRef.current = null;
+            }
             cleanup();
             const result = analyzeVoiceBuffer(samplesRef.current);
-            setPhase('complete');
+            setLastResult(result);
+            setPhase('done');
             onScanComplete?.(result);
-            window.setTimeout(() => setPhase('idle'), 1200);
+            return;
           }
-        }, 1000);
+
+          // Never flash "0s" — show 1 until the wall clock passes the window
+          const display = Math.max(1, Math.ceil(remaining));
+          setSecondsLeft(display);
+        }, 400);
       } catch (err: unknown) {
         cleanup();
         const msg = err instanceof Error ? err.message : '';
@@ -247,11 +266,22 @@ export default function VoiceBiofieldScanner({
     (e?: MouseEvent) => {
       e?.preventDefault();
       cleanup();
+      completionSentRef.current = false;
       setPhase('idle');
       setSecondsLeft(SCAN_SECONDS);
       setErrorMsg('');
     },
     [cleanup],
+  );
+
+  const newScan = useCallback(
+    (e?: MouseEvent) => {
+      e?.preventDefault();
+      setLastResult(null);
+      setPhase('idle');
+      setSecondsLeft(SCAN_SECONDS);
+    },
+    [],
   );
 
   return (
@@ -356,7 +386,7 @@ export default function VoiceBiofieldScanner({
         </div>
       )}
 
-      {phase === 'complete' && (
+      {phase === 'done' && lastResult && (
         <div
           className="sqi-glass p-6 text-center"
           style={{
@@ -365,9 +395,40 @@ export default function VoiceBiofieldScanner({
             borderRadius: 40,
           }}
         >
-          <p style={{ fontSize: 11, color: 'rgba(34,211,238,.85)', fontWeight: 800 }}>
-            {t('quantumApothecary.voiceBiofield.complete')}
+          <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.25em', color: 'rgba(34,211,238,.75)', marginBottom: 10 }}>
+            {t('quantumApothecary.voiceBiofield.doneTitle')}
           </p>
+          <p style={{ fontSize: 20, fontWeight: 900, color: '#22D3EE', marginBottom: 6 }}>
+            {t('quantumApothecary.voiceBiofield.coherenceLine', { n: lastResult.overallCoherence })}
+          </p>
+          <p style={{ fontSize: 11, color: 'rgba(255,255,255,.65)', lineHeight: 1.5, marginBottom: 8 }}>
+            {lastResult.nadiReading}
+          </p>
+          <p style={{ fontSize: 10, color: 'rgba(255,255,255,.45)', lineHeight: 1.5, marginBottom: 16 }}>
+            {lastResult.dominantDosha}
+          </p>
+          <p style={{ fontSize: 10, color: 'rgba(255,255,255,.35)', marginBottom: 14 }}>
+            {t('quantumApothecary.voiceBiofield.doneHint')}
+          </p>
+          <button
+            type="button"
+            onClick={newScan}
+            style={{
+              width: '100%',
+              padding: '12px',
+              borderRadius: 20,
+              fontSize: 10,
+              fontWeight: 800,
+              letterSpacing: '.2em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+              background: 'rgba(34,211,238,.08)',
+              border: '1px solid rgba(34,211,238,.35)',
+              color: '#22D3EE',
+            }}
+          >
+            {t('quantumApothecary.voiceBiofield.scanAgain')}
+          </button>
         </div>
       )}
 
