@@ -1092,7 +1092,7 @@ function QuantumApothecaryInner() {
                 ) : (
                   <>
                     <div
-                      className="w-full max-w-[92%] rounded-[20px] px-4 py-3"
+                      className="w-full max-w-[96%] mx-auto rounded-[20px] px-5 py-4"
                       style={{
                         background: 'rgba(255,255,255,0.03)',
                         border: '1px solid rgba(255,255,255,0.06)',
@@ -1106,7 +1106,7 @@ function QuantumApothecaryInner() {
                       </div>
                     </div>
                     {ts && (
-                      <p className="text-[10px] text-white/25 mt-1 text-right w-full max-w-[92%]">{ts}</p>
+                      <p className="text-[10px] text-white/25 mt-1 text-right w-full max-w-[96%] mx-auto">{ts}</p>
                     )}
                   </>
                 )}
