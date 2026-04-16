@@ -4584,7 +4584,23 @@
       "lightingGuideTitle": "För bästa resultat:",
       "lightingGuideTips": "· Vänd dig mot ljuskällan (fönster eller lampa)\n· Håll telefonen 25–30 cm från ansiktet\n· Var stilla i 30 sekunder\n· Ta av glasögon om möjligt",
       "faceLockedHoldStill": "◈ Ansikte låst — håll stilla",
-      "moveFaceIntoOval": "Flytta ansiktet in i ovalen"
+      "moveFaceIntoOval": "Flytta ansiktet in i ovalen",
+      "cameraMode": "◎ Kameraskanning",
+      "voiceMode": "🎙 Röstskanning"
+    },
+    "voiceBiofield": {
+      "badge": "SQI · RÖSTBIOFÄLT",
+      "title": "Röst-biofältsskanner",
+      "subtitle": "Spektral röstanalys · ingen kamera",
+      "chartDosha": "Dosha-hint från horoskop: {{dosha}}",
+      "cta": "🎙 Starta röst-biofältsskanning",
+      "scanning": "Skannar röstfält",
+      "hint": "Tala naturligt, nynna eller tonera — fältet läser spektrum och stabilitet.",
+      "complete": "Röstsignatur fångad — skickar till SQI…",
+      "back": "← Tillbaka",
+      "micRequired": "Mikrofonåtkomst krävs. Tryck Tillåt.",
+      "scanFailed": "Röstskanning misslyckades. Försök igen i tystare miljö.",
+      "sqiFollowUp": "SQI — integrera detta röst-biofält med mitt horoskop och frekvensbiblioteket: lista 10 exakta biblioteksnamn som bäst matchar skanningen och min fråga, med en rad vardera om varför."
     },
     "frequencyLibrarySection": {
       "title": "Frekvensbibliotek",

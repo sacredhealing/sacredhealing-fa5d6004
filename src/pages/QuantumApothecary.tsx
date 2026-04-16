@@ -28,6 +28,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import NadiScanner, { type NadiReading } from '@/components/NadiScanner';
+import VoiceBiofieldScanner, { type VoiceBiofieldResult } from '@/components/VoiceBiofieldScanner';
 import { useSQIFieldContext } from '@/hooks/useSQIFieldContext';
 
 const FrequencyLibrarySection = lazy(() => import('@/features/quantum-apothecary/FrequencyLibrarySection'));
@@ -382,6 +383,90 @@ function pickFiveActivationsForNadiReading(reading: NadiReading): Activation[] {
   return resolveActivationsByExactNames(map[reading.activatedNadi]);
 }
 
+function buildVoiceFieldContext(v: VoiceBiofieldResult): string {
+  return [
+    'VOICE BIOFIELD SCAN (latest):',
+    `- Overall Coherence: ${v.overallCoherence}/100`,
+    `- Nadi: ${v.nadiReading}`,
+    `- Dosha from voice: ${v.dominantDosha}`,
+    `- Priority areas: ${v.priorityAreas.map((i) => i.name).join(', ')}`,
+    `- Strengths: ${v.topStrengths.map((i) => i.name).join(', ')}`,
+    `- Emotional field: ${v.emotionalField}`,
+    `- Organ support: ${v.organField}`,
+  ].join('\n');
+}
+
+function resolveActivationsByExactNamesUpTo(preferred: string[], max: number): Activation[] {
+  const out: Activation[] = [];
+  const seen = new Set<string>();
+  for (const name of preferred) {
+    const a = ACTIVATIONS.find((x) => x.name === name);
+    if (a && !seen.has(a.id)) {
+      seen.add(a.id);
+      out.push(a);
+    }
+    if (out.length >= max) return out.slice(0, max);
+  }
+  for (const a of ACTIVATIONS) {
+    if (out.length >= max) break;
+    if (a.type === 'Bioenergetic' && !seen.has(a.id)) {
+      seen.add(a.id);
+      out.push(a);
+    }
+  }
+  for (const a of ACTIVATIONS) {
+    if (out.length >= max) break;
+    if (!seen.has(a.id)) {
+      seen.add(a.id);
+      out.push(a);
+    }
+  }
+  return out.slice(0, max);
+}
+
+function pickTenActivationsForVoiceResult(result: VoiceBiofieldResult): Activation[] {
+  const preferred: string[] = [];
+  const nr = result.nadiReading.toLowerCase();
+  if (nr.includes('ida')) {
+    preferred.push('Deep Sleep Harmonic', 'Neural Calm Sync', 'Melatonin', 'Heart-Bloom Radiance', 'Shatavari Flow');
+  } else if (nr.includes('pingala')) {
+    preferred.push('NMN + Resveratrol Cellular Battery', 'CoQ10', 'NAD+', 'Urolithin A', 'Shilajit');
+  } else if (nr.includes('sushumna')) {
+    preferred.push('Neural Fluidity Protocol', 'Biofield Purification', 'Structural Light Integrity', 'Crystalline Thought Flow', 'Zinc');
+  } else if (nr.includes('block')) {
+    preferred.push('Ancestral Tether Dissolve', 'Neem Bitter Truth', 'Activated Charcoal', 'Triphala Integrity', 'The Amrit Nectar (Guduchi)');
+  } else {
+    preferred.push('Biofield Purification', 'Neural Fluidity Protocol', 'Structural Light Integrity', 'Crystalline Thought Flow', 'Zinc');
+  }
+
+  const dd = result.dominantDosha.toLowerCase();
+  if (dd.includes('vata')) {
+    preferred.push('Brahmi Code', 'Ashwagandha Resonance', 'Magnesium (Ionic)');
+  } else if (dd.includes('pitta')) {
+    preferred.push('Neural Calm Sync', 'Turmeric Radiance', 'Rose Heart Bloom');
+  } else if (dd.includes('kapha')) {
+    preferred.push('Metabolic Fire Ignition', 'Chlorophyll Light Activation', 'Turmeric Radiance');
+  }
+
+  const org = result.organField.toLowerCase();
+  if (/(liver|hepatic|bile|metabolic)/i.test(org)) preferred.push('Liver Alchemist Protocol');
+  if (/(nerve|colon|nerve sheath)/i.test(org)) preferred.push('Ashwagandha Resonance');
+  if (/(lung|lymph)/i.test(org)) preferred.push('Microbiome Harmony');
+
+  for (const p of result.priorityAreas) {
+    const ln = p.name.toLowerCase();
+    if (/(liver|hepatic|bile)/i.test(ln)) preferred.push('Liver Alchemist Protocol');
+    if (/(heart|cardiac|circulation)/i.test(ln)) preferred.push('Heart-Bloom Radiance');
+    if (/(nervous|brain|mental|nerve)/i.test(ln)) preferred.push('Neural Fluidity Protocol');
+    if (/(immune|lymph)/i.test(ln)) preferred.push('Elderberry Immune Fortress');
+    if (/(gut|digest|microbiome)/i.test(ln)) preferred.push('Microbiome Harmony');
+    if (/(sleep|rest)/i.test(ln)) preferred.push('Deep Sleep Harmonic');
+    if (/(stress|cortisol|adrenal|tremor)/i.test(ln)) preferred.push('Ashwagandha Resonance');
+  }
+
+  return resolveActivationsByExactNamesUpTo(preferred, 10);
+}
+
 /* ════════════════════════════════════════════════════════════════════
    ALL LOGIC BELOW IS 100% IDENTICAL TO ORIGINAL — ZERO CHANGES
    Only className values have been updated for SQI-2050 aesthetic
@@ -458,7 +543,8 @@ function QuantumApothecaryInner() {
 
   const sqiSourceDirective = useMemo(
     () =>
-      '[SQI SOURCES] Use the seeker’s saved chart (below), live biometric block when present, compiled field (Ayurveda / photonic / temple), and this chat. Do not invent palm-camera analysis.',
+      '[SQI SOURCES] Use the seeker’s saved chart (below), live biometric block when present, compiled field (Ayurveda / photonic / temple), and this chat. Do not invent palm-camera analysis.\n' +
+      '[FREQUENCY LIBRARY] The canonical Frequency Library names are provided separately (canonicalActivationNames). For every substantive answer, map the seeker’s topic to concrete entries from that list — use exact names. When suggesting remedies, protocols, or “what to run,” include 3–10 relevant library names per topic when appropriate.',
     [],
   );
 
@@ -533,6 +619,13 @@ function QuantumApothecaryInner() {
   const voiceTranscriptRef = useRef('');
   const [pendingImage, setPendingImage] = useState<{ base64: string; mimeType: string } | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [voiceResult, setVoiceResult] = useState<VoiceBiofieldResult | null>(null);
+  const [showVoiceScan, setShowVoiceScan] = useState(false);
+
+  const voiceContextBlock = useMemo(
+    () => (voiceResult ? buildVoiceFieldContext(voiceResult) : ''),
+    [voiceResult],
+  );
 
   /** One string for scan prompt + chat edge: exact Frequency Library names (incl. full LimbicArc bioenergetic list). */
   const canonicalActivationNameLines = useMemo(
@@ -725,7 +818,10 @@ function QuantumApothecaryInner() {
     setSessionsOpen(false);
   }, [isTyping]);
 
-  const handleSendMessage = async (overrideText?: string) => {
+  const handleSendMessage = async (
+    overrideText?: string,
+    opts?: { voiceSnapshot?: VoiceBiofieldResult },
+  ) => {
     if (isTyping) return;
     const text = (overrideText ?? input).trim();
     if (!text && !pendingImage) return;
@@ -782,7 +878,10 @@ function QuantumApothecaryInner() {
       });
       const liveContext = `LIVE SYSTEM TIME: ${liveDateTime} (${_tz}). This is the confirmed device-local time. Use ONLY this for date/day/time — do not infer or recalculate.`;
 
+      const voiceBlock =
+        opts?.voiceSnapshot != null ? buildVoiceFieldContext(opts.voiceSnapshot) : voiceContextBlock;
       const fieldParts: string[] = [sqiSourceDirective, answerRulesDirective, liveContext];
+      if (voiceBlock) fieldParts.push(voiceBlock);
       if (liveScanContext) fieldParts.push(liveScanContext);
       if (stableCompiledContext) fieldParts.push(stableCompiledContext);
       if (stableJyotishContext) fieldParts.push(stableJyotishContext);
@@ -1324,8 +1423,55 @@ function QuantumApothecaryInner() {
           {/* ════ LEFT COLUMN ════ */}
           <div className="space-y-5">
 
-            {/* ── Biometric Nadi Scanner — rPPG real vitals ── */}
+            {/* ── Biometric Nadi Scanner — rPPG real vitals · Voice biofield (mic only) ── */}
             <div className="glass-card p-4 sm:p-5 qa-card-hover">
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 8,
+                  marginBottom: 16,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setShowVoiceScan(false)}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    borderRadius: 20,
+                    fontSize: 9,
+                    fontWeight: 800,
+                    letterSpacing: '.2em',
+                    textTransform: 'uppercase',
+                    cursor: 'pointer',
+                    background: !showVoiceScan ? 'rgba(212,175,55,.15)' : 'rgba(255,255,255,.02)',
+                    border: !showVoiceScan ? '1px solid rgba(212,175,55,.4)' : '1px solid rgba(255,255,255,.06)',
+                    color: !showVoiceScan ? '#D4AF37' : 'rgba(255,255,255,.4)',
+                  }}
+                >
+                  {t('quantumApothecary.scan.cameraMode')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowVoiceScan(true)}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    borderRadius: 20,
+                    fontSize: 9,
+                    fontWeight: 800,
+                    letterSpacing: '.2em',
+                    textTransform: 'uppercase',
+                    cursor: 'pointer',
+                    background: showVoiceScan ? 'rgba(34,211,238,.12)' : 'rgba(255,255,255,.02)',
+                    border: showVoiceScan ? '1px solid rgba(34,211,238,.4)' : '1px solid rgba(255,255,255,.06)',
+                    color: showVoiceScan ? '#22D3EE' : 'rgba(255,255,255,.4)',
+                  }}
+                >
+                  {t('quantumApothecary.scan.voiceMode')}
+                </button>
+              </div>
+              {!showVoiceScan && (
               <NadiScanner
                 userName={seekerName || 'Seeker'}
                 jyotishContext={{
@@ -1413,6 +1559,72 @@ SQI — integrate this scan with my natal chart; cite each chart fact once; use 
                   }, 300);
                 }}
               />
+              )}
+              {showVoiceScan && (
+                <VoiceBiofieldScanner
+                  userName={seekerName || 'Seeker'}
+                  jyotishContext={{
+                    mahadasha: jyotish?.mahadasha,
+                    nakshatra: jyotish?.nakshatra,
+                    primaryDosha: jyotish?.primaryDosha,
+                  }}
+                  onScanComplete={(result) => {
+                    setVoiceResult(result);
+                    const queued = pickTenActivationsForVoiceResult(result);
+                    setActiveTransmissions((prev) => {
+                      const next = [...prev];
+                      for (const act of queued) {
+                        if (!next.some((x) => x.id === act.id)) next.push(act);
+                      }
+                      return next;
+                    });
+                    const queuedLines = queued.map((a) => `• ${a.name} (${a.type})`).join('\n');
+                    const ctx = [
+                      '[LIVE VOICE BIOFIELD SCAN — microphone spectrum; educational only, not a medical diagnosis]',
+                      `Overall coherence: ${result.overallCoherence}/100`,
+                      `Nadi read: ${result.nadiReading}`,
+                      `Dominant dosha (voice): ${result.dominantDosha}`,
+                      `Priority areas: ${result.priorityAreas.map((i) => `${i.name} (${i.score}/100)`).join('; ')}`,
+                      `Strengths: ${result.topStrengths.map((i) => i.name).join(', ')}`,
+                      `Emotional field: ${result.emotionalField}`,
+                      `Organ support: ${result.organField}`,
+                      '',
+                      '[QUEUED FREQUENCY / BIOENERGETIC ALIGNMENTS — added to Active Transmissions (10)]',
+                      queuedLines,
+                    ].join('\n');
+                    setLiveScanContext(ctx);
+                    if (user?.id) {
+                      supabase.from('user_activity_log').insert({
+                        user_id: user.id,
+                        activity_type: 'frequency_transmission',
+                        activity_data: {
+                          activity: 'Voice biofield scan queued bioenergetic alignments',
+                          section: 'Quantum Apothecary',
+                          frequency: queued.map((a) => a.name).join(', '),
+                          details: { intention: 'Post-voice-scan Active Transmissions', nadi: result.nadiReading },
+                        },
+                      }).then(() => {});
+                    }
+                    const msg = [
+                      'VOICE BIOFIELD SCAN COMPLETE:',
+                      `Overall Coherence: ${result.overallCoherence}/100`,
+                      `Nadi: ${result.nadiReading}`,
+                      `Dominant Dosha: ${result.dominantDosha}`,
+                      `Priority Areas: ${result.priorityAreas.map((i) => `${i.name} (${i.score}/100)`).join(', ')}`,
+                      `Strengths: ${result.topStrengths.map((i) => i.name).join(', ')}`,
+                      `Emotional Field: ${result.emotionalField}`,
+                      `Organ Support Needed: ${result.organField}`,
+                      '',
+                      t('quantumApothecary.voiceBiofield.sqiFollowUp'),
+                    ].join('\n');
+                    setTimeout(() => {
+                      handleSendMessage(msg, { voiceSnapshot: result });
+                      setInput('');
+                      if (chatInputRef.current) chatInputRef.current.style.height = 'auto';
+                    }, 300);
+                  }}
+                />
+              )}
             </div>
 
             {/* Akasha Neural Archive banner removed — context is loaded automatically */}

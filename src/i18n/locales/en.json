@@ -4832,7 +4832,23 @@
       "lightingGuideTitle": "For best results:",
       "lightingGuideTips": "· Face the light source (window or lamp)\n· Hold phone 25-30cm from your face\n· Keep still for 30 seconds\n· Remove glasses if possible",
       "faceLockedHoldStill": "◈ Face locked — hold still",
-      "moveFaceIntoOval": "Move face into the oval"
+      "moveFaceIntoOval": "Move face into the oval",
+      "cameraMode": "◎ Camera Scan",
+      "voiceMode": "🎙 Voice Scan"
+    },
+    "voiceBiofield": {
+      "badge": "SQI · VOICE BIOFIELD",
+      "title": "Voice Biofield Scanner",
+      "subtitle": "Spectral voice analysis · no camera",
+      "chartDosha": "Chart dosha hint: {{dosha}}",
+      "cta": "🎙 Begin voice biofield scan",
+      "scanning": "Scanning voice field",
+      "hint": "Speak naturally, hum, or tone — the field reads spectrum and stability.",
+      "complete": "Voice signature captured — sending to SQI…",
+      "back": "← Back",
+      "micRequired": "Microphone access required. Please tap Allow.",
+      "scanFailed": "Voice scan failed. Try again in a quiet space.",
+      "sqiFollowUp": "SQI — integrate this voice biofield with my chart and the Frequency Library: list 10 exact library names that best match this scan and my question, with one line each on why."
     },
     "frequencyLibrarySection": {
       "title": "Frequency Library",
