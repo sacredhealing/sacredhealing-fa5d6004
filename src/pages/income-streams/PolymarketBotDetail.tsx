@@ -7,6 +7,7 @@ import {
   Activity, Target, BarChart3
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { PnLCard } from '@/components/polymarket/PnLCard';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -82,17 +83,26 @@ const CSS = `
      letter-spacing:.2em;text-transform:uppercase;background:transparent;
      color:rgba(255,255,255,0.3);transition:all .2s;}
 .tab.on{background:rgba(212,175,55,0.14);color:${G};border-bottom:1px solid ${G};}
-.term{background:rgba(0,0,0,0.65);border:1px solid rgba(255,255,255,0.07);border-radius:16px;
-      padding:16px;height:280px;overflow-y:auto;font-family:'Courier New',monospace;font-size:11px;}
-.term::-webkit-scrollbar{width:3px;}
-.term::-webkit-scrollbar-thumb{background:rgba(212,175,55,0.3);border-radius:2px;}
-.li{color:rgba(255,255,255,0.7);}
-.ls{color:${GREEN};}
-.le{color:${RED};}
-.lw{color:${AMBER};}
-.lt{color:${CYAN};}
-.ld{color:rgba(255,255,255,0.28);}
-.ltime{color:rgba(255,255,255,0.22);margin-right:10px;}
+.term{background:rgba(0,0,0,0.82);border:1px solid rgba(212,175,55,0.18);border-radius:16px;
+      padding:12px 10px;height:min(52vh,380px);min-height:300px;overflow-y:auto;font-family:'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif;font-size:13px;line-height:1.45;}
+.term::-webkit-scrollbar{width:6px;}
+.term::-webkit-scrollbar-thumb{background:rgba(212,175,55,0.35);border-radius:3px;}
+.term-line{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;margin-bottom:4px;border-radius:12px;border-left:3px solid transparent;background:rgba(255,255,255,0.045);}
+.term-line--info{border-left-color:rgba(212,175,55,0.55);}
+.term-line--success{border-left-color:rgba(46,204,113,0.7);}
+.term-line--error{border-left-color:rgba(255,71,87,0.75);}
+.term-line--warn{border-left-color:rgba(245,158,11,0.75);}
+.term-line--trade{border-left-color:rgba(34,211,238,0.75);}
+.term-line--debug{border-left-color:rgba(255,255,255,0.2);}
+.li{color:rgba(255,255,255,0.92);font-weight:500;}
+.ls{color:${GREEN};font-weight:600;}
+.le{color:#ff8a95;font-weight:600;}
+.lw{color:${AMBER};font-weight:600;}
+.lt{color:#7ee8fb;font-weight:600;}
+.ld{color:rgba(255,255,255,0.62);font-weight:500;}
+.ltime{flex-shrink:0;min-width:76px;font-family:'Courier New',monospace;font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.02em;padding-top:2px;}
+.lmsg{flex:1;min-width:0;word-break:break-word;}
+.term-hint{font-size:11px;line-height:1.5;color:rgba(255,255,255,0.52);margin-bottom:12px;padding:10px 12px;border-radius:12px;background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.12);}
 .inp{width:100%;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.08);
      border-radius:14px;padding:12px 16px;color:#fff;font-family:'Courier New',monospace;
      font-size:12px;outline:none;transition:border-color .2s;}
@@ -187,6 +197,18 @@ function logLineClass(type: LogEntry['type']): string {
   return m[type] ?? 'li';
 }
 
+function termLineClass(type: LogEntry['type']): string {
+  const m: Record<LogEntry['type'], string> = {
+    info: 'term-line--info',
+    success: 'term-line--success',
+    error: 'term-line--error',
+    warn: 'term-line--warn',
+    trade: 'term-line--trade',
+    debug: 'term-line--debug',
+  };
+  return `term-line ${m[type] ?? 'term-line--info'}`;
+}
+
 const ERC20_ABI = [
   'function balanceOf(address account) view returns (uint256)',
   'function allowance(address owner, address spender) view returns (uint256)',
@@ -196,6 +218,7 @@ const ERC20_ABI = [
 const PolymarketBotDetailInner: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   const [privateKey, setPrivateKey] = useState<string | null>(() => readStoredPrivateKey());
   const [address, setAddress] = useState<string>('');
@@ -220,7 +243,7 @@ const PolymarketBotDetailInner: React.FC = () => {
   const [lastSync, setLastSync] = useState<string>('Never');
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [activeTab, setActiveTab] = useState('dashboard');
-  const logEndRef = useRef<HTMLDivElement>(null);
+  const termScrollRef = useRef<HTMLDivElement>(null);
   const scanIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pnlRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -232,6 +255,11 @@ const PolymarketBotDetailInner: React.FC = () => {
       time: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
     }, ...prev].slice(0, 100));
   }, []);
+
+  useEffect(() => {
+    const el = termScrollRef.current;
+    if (el && logs.length > 0) el.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [logs]);
 
   const refreshPnL = useCallback(async () => {
     if (!user?.id) return;
@@ -442,7 +470,6 @@ const PolymarketBotDetailInner: React.FC = () => {
         try {
           const fm = await polymarketService.fetchMarkets(50);
           setMarkets(fm);
-          addLog(`Scanned ${fm.length} markets`, 'debug');
           latencyArbitrageService.onLatencySignal(async (s, e) => {
             addLog(`⚡ LATENCY ARB: ${e.headline?.slice(0, 40)}...`, 'trade');
             setActiveSignals((p) => [...p.slice(-4), s]);
@@ -456,6 +483,10 @@ const PolymarketBotDetailInner: React.FC = () => {
           });
           volatilityScalperService.startScalping(fm);
           const opps = await polymarketService.findOpportunities(20000);
+          addLog(
+            t('polymarketBotDetail.logScanSummary', { markets: fm.length, aiPool: opps.length }),
+            'info'
+          );
           if (opps.length > 0) {
             addLog(`Found ${opps.length} potential opportunities`, 'info');
             for (const m of opps.slice(0, 3)) {
@@ -481,7 +512,7 @@ const PolymarketBotDetailInner: React.FC = () => {
         volatilityScalperService.stopScalping();
       };
     }
-  }, [isRunning, address, allowance, usdcBal, trading, addLog]);
+  }, [isRunning, address, allowance, usdcBal, trading, addLog, t]);
 
   const handleImport = () => {
     let key = importInput.trim();
@@ -628,8 +659,8 @@ const PolymarketBotDetailInner: React.FC = () => {
               <button type="button" className="btn btn-g" onClick={handleImport}>
                 <Wallet size={14} /> Connect & Initialize Engine
               </button>
-              <div style={{ textAlign: 'center', marginTop: 12, fontSize: 10, color: 'rgba(255,255,255,0.28)' }}>
-                🔒 Session-only in this tab; key clears when you close the tab.
+              <div style={{ textAlign: 'center', marginTop: 12, fontSize: 11, lineHeight: 1.45, color: 'rgba(255,255,255,0.45)' }}>
+                🔒 {t('polymarketBotDetail.keyStorageHint')}
               </div>
             </div>
 
@@ -768,25 +799,25 @@ const PolymarketBotDetailInner: React.FC = () => {
                   <span className={`dot ${isRunning ? 'dot-g' : 'dot-a'}`} />
                   <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.25em', color: isRunning ? GREEN : 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Execution Feed</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>
-                  <Clock size={11} /> {lastSync}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>
+                  <Clock size={12} /> Last sync {lastSync}
                 </div>
               </div>
-              <div className="term">
+              <p className="term-hint">{t('polymarketBotDetail.executionFeedHint')}</p>
+              <div className="term" ref={termScrollRef}>
                 {logs.length === 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'rgba(255,255,255,0.25)' }}>
-                    <Activity size={26} style={{ marginBottom: 10, opacity: 0.4 }} />
-                    <div>Awaiting Mainnet Activity...</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 220, padding: 20, textAlign: 'center', color: 'rgba(255,255,255,0.45)', fontSize: 13, lineHeight: 1.5 }}>
+                    <Activity size={28} style={{ marginBottom: 12, opacity: 0.5, color: G }} />
+                    <div>{t('polymarketBotDetail.feedEmpty')}</div>
                   </div>
                 ) : (
                   logs.map((log) => (
-                    <div key={log.id} style={{ display: 'flex', gap: 6, marginBottom: 4 }}>
-                      <span className="ltime">[{log.time}]</span>
-                      <span className={logLineClass(log.type)}>{log.msg}</span>
+                    <div key={log.id} className={termLineClass(log.type)}>
+                      <span className="ltime">{log.time}</span>
+                      <span className={`lmsg ${logLineClass(log.type)}`}>{log.msg}</span>
                     </div>
                   ))
                 )}
-                <div ref={logEndRef} />
               </div>
             </div>
           )}

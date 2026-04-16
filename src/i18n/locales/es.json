@@ -1670,6 +1670,12 @@
     "launchCta": "Lanzar bot completo →",
     "openAiTerminal": "Terminal IA de predicción →"
   },
+  "polymarketBotDetail": {
+    "keyStorageHint": "La clave se guarda en este navegador hasta que desconectes o borres los datos del sitio.",
+    "executionFeedHint": "Verde = sync OK · Dorado = estado · Cian = señal/operación · Ámbar = aviso. Las operaciones solo aparecen cuando una estrategia ve ventaja — los silencios son normales.",
+    "feedEmpty": "Sin actividad aún — inicia el motor o pulsa actualizar para sincronizar.",
+    "logScanSummary": "Escaneo · {{markets}} mercados · {{aiPool}} oportunidades IA (alta liquidez + cuotas mal precio). Las operaciones aparecen si whale mirror, latencia, scalper o IA disparan — siguiente paso ~15s."
+  },
   "predictionMarketBot": {
     "headerTitle": "Bot de mercados predictivos",
     "headerSub": "SQI · Pipeline Gemini",

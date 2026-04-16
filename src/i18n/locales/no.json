@@ -1641,6 +1641,12 @@
     "launchCta": "Start full bot →",
     "openAiTerminal": "AI prediction terminal →"
   },
+  "polymarketBotDetail": {
+    "keyStorageHint": "Nøkkelen lagres i denne nettleseren til du kobler fra eller sletter nettstedsdata.",
+    "executionFeedHint": "Grønn = sync OK · Gull = status · Cyan = signal/handelslinje · Amber = advarsel. Handler logges bare når en strategi finner en kant — stille perioder er normale.",
+    "feedEmpty": "Ingen aktivitet ennå — start motoren eller trykk oppdater for å synkronisere.",
+    "logScanSummary": "Skann · {{markets}} markeder · {{aiPool}} AI-muligheter (høy likviditet + feilprising). Fyll vises når whale mirror, latency, scalper eller AI utløses — neste runde ~15s."
+  },
   "predictionMarketBot": {
     "headerTitle": "Prediction market-bot",
     "headerSub": "SQI · Gemini-pipeline",

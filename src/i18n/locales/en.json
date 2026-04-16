@@ -2257,6 +2257,12 @@
     "launchCta": "Launch Full Bot →",
     "openAiTerminal": "AI prediction terminal →"
   },
+  "polymarketBotDetail": {
+    "keyStorageHint": "Key stays in this browser until you disconnect or clear site data.",
+    "executionFeedHint": "Green = sync OK · Gold = status · Cyan = signal/trade line · Amber = warning. Trades only log when a strategy finds an edge — quiet periods are normal.",
+    "feedEmpty": "No activity yet — start the engine or tap refresh to sync.",
+    "logScanSummary": "Scan · {{markets}} markets · {{aiPool}} AI opportunities (needs high liquidity + mispriced odds). Fills appear when whale mirror, latency, scalper, or AI fires — next pass ~15s."
+  },
   "predictionMarketBot": {
     "headerTitle": "Prediction market bot",
     "headerSub": "SQI · Gemini pipeline",
