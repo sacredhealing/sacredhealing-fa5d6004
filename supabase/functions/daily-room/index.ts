@@ -17,7 +17,7 @@ async function requireAdmin(
   if (roleErr) {
     return new Response(
       JSON.stringify({ error: "Role check failed", details: roleErr.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
   if (!isAdmin) {
