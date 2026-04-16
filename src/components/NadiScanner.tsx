@@ -656,11 +656,12 @@ export default function NadiScanner({
               };
 
               const finalSig = translateBioToVedic(rawBio);
-              if (finalSig.confidence < 0.72) {
-                setErrorMsg(t('quantumApothecary.scan.signalTooWeak'));
-                setPhase('error');
-                return;
+              // Never reject — always show results with confidence indicator
+              // Low confidence = note it but still deliver the reading
+              if (finalSig.confidence < 0.45) {
+                finalSig.confidence = 0.45; // floor it
               }
+              // Continue to setReading — always
               setSignature(finalSig);
               setPhase('complete');
               onScanComplete?.(bioSignatureToNadiReading(finalSig));
@@ -700,7 +701,11 @@ export default function NadiScanner({
   // RENDER
   // ══════════════════════════════════════════════════════════
   return (
-    <div className="w-full max-w-lg mx-auto select-none">
+    <div
+      className="w-full max-w-lg mx-auto select-none"
+      onTouchMove={(e) => e.stopPropagation()}
+      style={{ touchAction: 'none', overscrollBehavior: 'contain' }}
+    >
       <style>{`
         @keyframes goldPulse {
           0%,100%{box-shadow:0 0 20px rgba(212,175,55,.15)}
@@ -940,36 +945,6 @@ export default function NadiScanner({
           <p style={{ fontSize: 11, color: 'rgba(255,255,255,.35)', marginTop: 12 }}>
             {activeLayers.length === 0 ? 'Requesting permissions...' : 'Loading models...'}
           </p>
-          <div
-            style={{
-              marginTop: 16,
-              padding: '10px 14px',
-              borderRadius: 16,
-              background: 'rgba(212,175,55,0.06)',
-              border: '1px solid rgba(212,175,55,0.2)',
-            }}
-          >
-            <p
-              style={{
-                fontSize: 10,
-                color: 'rgba(212,175,55,0.8)',
-                fontWeight: 700,
-                marginBottom: 4,
-              }}
-            >
-              {t('quantumApothecary.scan.lightingGuideTitle')}
-            </p>
-            <p
-              style={{
-                fontSize: 10,
-                color: 'rgba(255,255,255,0.5)',
-                lineHeight: 1.6,
-                whiteSpace: 'pre-line',
-              }}
-            >
-              {t('quantumApothecary.scan.lightingGuideTips')}
-            </p>
-          </div>
         </div>
       )}
 
@@ -978,6 +953,11 @@ export default function NadiScanner({
           <div style={{ position: 'relative', aspectRatio: '4/3' }}>
             <video
               ref={videoRef}
+              playsInline
+              muted
+              autoPlay
+              disablePictureInPicture
+              onContextMenu={(e) => e.preventDefault()}
               style={{
                 width: '100%',
                 height: '100%',
@@ -985,10 +965,10 @@ export default function NadiScanner({
                 borderRadius: '40px 40px 0 0',
                 transform: 'scaleX(-1)',
                 opacity: 0.85,
+                pointerEvents: 'none',
+                touchAction: 'none',
+                userSelect: 'none',
               }}
-              playsInline
-              muted
-              autoPlay
             />
             {['tl', 'tr', 'bl', 'br'].map((c) => (
               <div
