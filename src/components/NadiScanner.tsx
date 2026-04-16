@@ -265,8 +265,8 @@ export default function NadiScanner({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const captureRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timerRef = useRef<number | null>(null);
+  const captureRef = useRef<number | null>(null);
   const faceMeshRef = useRef<FaceMesh | null>(null);
   const voiceStopRef = useRef<(() => void) | null>(null);
 
