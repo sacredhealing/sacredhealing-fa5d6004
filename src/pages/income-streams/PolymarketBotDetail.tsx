@@ -148,13 +148,14 @@ const PKEY_STORAGE_KEY = 'polymarket_bot_pkey';
 
 function readStoredPrivateKey(): string | null {
   try {
-    const session = sessionStorage.getItem(PKEY_STORAGE_KEY);
-    if (session) return session;
-    const legacy = localStorage.getItem(PKEY_STORAGE_KEY);
-    if (legacy) {
-      sessionStorage.setItem(PKEY_STORAGE_KEY, legacy);
-      localStorage.removeItem(PKEY_STORAGE_KEY);
-      return legacy;
+    const persisted = localStorage.getItem(PKEY_STORAGE_KEY);
+    if (persisted) return persisted;
+    // One-time migration: older builds kept the key only in sessionStorage (lost on tab close).
+    const sessionOnly = sessionStorage.getItem(PKEY_STORAGE_KEY);
+    if (sessionOnly) {
+      localStorage.setItem(PKEY_STORAGE_KEY, sessionOnly);
+      sessionStorage.removeItem(PKEY_STORAGE_KEY);
+      return sessionOnly;
     }
   } catch { /* storage blocked */ }
   return null;
@@ -162,7 +163,8 @@ function readStoredPrivateKey(): string | null {
 
 function setStoredPrivateKey(key: string) {
   try {
-    sessionStorage.setItem(PKEY_STORAGE_KEY, key);
+    localStorage.setItem(PKEY_STORAGE_KEY, key);
+    sessionStorage.removeItem(PKEY_STORAGE_KEY);
   } catch { /* storage blocked */ }
 }
 
