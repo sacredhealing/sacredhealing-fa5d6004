@@ -342,6 +342,15 @@ function languageToBcp47(languageCode: string): string {
   return 'en-GB';
 }
 
+/** Morning / midday / evening / night from local clock — for SQI tone (matches Nexus-style live time). */
+function getLocalDayPhaseLabel(d: Date): 'morning' | 'midday' | 'evening' | 'night' {
+  const h = d.getHours();
+  if (h >= 22 || h < 5) return 'night';
+  if (h < 12) return 'morning';
+  if (h < 17) return 'midday';
+  return 'evening';
+}
+
 /** When a live scan block is present, omit the duplicate [BIOMETRIC NADI FIELD] from compiled DB snapshot. */
 function stripDuplicateBiometricBlock(compiled: string | undefined, hasLiveScan: boolean): string {
   if (!compiled?.trim()) return '';
@@ -640,6 +649,21 @@ function QuantumApothecaryInner() {
     }
   }, [showVoiceScan]);
 
+  /** Live HH:MM in chat header — same pattern as Home Nexus dashboard (ticks every 30s). */
+  const [liveChatClock, setLiveChatClock] = useState(() => {
+    const n = new Date();
+    return `${String(n.getHours()).padStart(2, '0')}:${String(n.getMinutes()).padStart(2, '0')}`;
+  });
+  useEffect(() => {
+    const tick = () => {
+      const n = new Date();
+      setLiveChatClock(`${String(n.getHours()).padStart(2, '0')}:${String(n.getMinutes()).padStart(2, '0')}`);
+    };
+    tick();
+    const id = window.setInterval(tick, 30000);
+    return () => window.clearInterval(id);
+  }, []);
+
   const voiceContextBlock = useMemo(
     () => (voiceResult ? buildVoiceFieldContext(voiceResult) : ''),
     [voiceResult],
@@ -894,7 +918,9 @@ function QuantumApothecaryInner() {
         minute: '2-digit',
         hour12: false,
       });
-      const liveContext = `LIVE SYSTEM TIME: ${liveDateTime} (${_tz}). This is the confirmed device-local time. Use ONLY this for date/day/time — do not infer or recalculate.`;
+      const dayPhase = getLocalDayPhaseLabel(_now);
+      const liveContext = `LIVE SYSTEM TIME: ${liveDateTime} (${_tz}). This is the confirmed device-local time. Use ONLY this for date/day/time — do not infer or recalculate.
+LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday / evening / night (device-local clock).`;
 
       const voiceBlock =
         opts?.voiceSnapshot != null ? buildVoiceFieldContext(opts.voiceSnapshot) : voiceContextBlock;
@@ -1184,6 +1210,13 @@ function QuantumApothecaryInner() {
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <span
+            className="select-none font-[Montserrat,sans-serif] text-[9px] font-extrabold tracking-[0.28em] text-[#D4AF37]/50 tabular-nums"
+            aria-label={t('quantumApothecary.chat.liveClockAria')}
+            title={t('quantumApothecary.chat.liveClockAria')}
+          >
+            {liveChatClock}
+          </span>
           <button
             type="button"
             onClick={() => {

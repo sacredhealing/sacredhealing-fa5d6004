@@ -4800,6 +4800,7 @@
       "newChatTitle": "Clear this chat and start a new thread",
       "send": "Send message",
       "scrollToBottom": "Jump to latest message",
+      "liveClockAria": "Local time — updates every minute",
       "voiceStart": "Tap to speak",
       "voiceStop": "Tap to stop",
       "listening": "Listening…",
