@@ -1100,7 +1100,7 @@ function QuantumApothecaryInner() {
                       }}
                     >
                       <div className="sqi-message w-full min-w-0">
-                        <div className="text-[15px] leading-[1.8] text-white/85 break-words [overflow-wrap:anywhere] w-full min-w-0" style={{ maxWidth: '100%', wordBreak: 'break-word' }}>
+                        <div className="text-[15px] leading-[1.75] text-white/85 break-words [overflow-wrap:anywhere] w-full min-w-0" style={{ maxWidth: '100%', wordBreak: 'break-word' }}>
                           {renderSQIContent(msg.text)}
                         </div>
                       </div>
