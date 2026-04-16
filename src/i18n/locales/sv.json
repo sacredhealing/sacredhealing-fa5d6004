@@ -4582,7 +4582,9 @@
       "rescanRearCamera": "Skanna om · bakre kamera",
       "signalTooWeak": "Signalen är för svag — skanna i starkare ljus, håll telefonen 25–30 cm från ansiktet och var stilla.",
       "lightingGuideTitle": "För bästa resultat:",
-      "lightingGuideTips": "· Vänd dig mot ljuskällan (fönster eller lampa)\n· Håll telefonen 25–30 cm från ansiktet\n· Var stilla i 30 sekunder\n· Ta av glasögon om möjligt"
+      "lightingGuideTips": "· Vänd dig mot ljuskällan (fönster eller lampa)\n· Håll telefonen 25–30 cm från ansiktet\n· Var stilla i 30 sekunder\n· Ta av glasögon om möjligt",
+      "faceLockedHoldStill": "◈ Ansikte låst — håll stilla",
+      "moveFaceIntoOval": "Flytta ansiktet in i ovalen"
     },
     "frequencyLibrarySection": {
       "title": "Frekvensbibliotek",

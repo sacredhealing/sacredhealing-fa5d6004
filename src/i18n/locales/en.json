@@ -4830,7 +4830,9 @@
       "rescanRearCamera": "Rescan · rear camera",
       "signalTooWeak": "Signal too weak — please scan in brighter light, hold phone 25-30cm from your face, and keep still.",
       "lightingGuideTitle": "For best results:",
-      "lightingGuideTips": "· Face the light source (window or lamp)\n· Hold phone 25-30cm from your face\n· Keep still for 30 seconds\n· Remove glasses if possible"
+      "lightingGuideTips": "· Face the light source (window or lamp)\n· Hold phone 25-30cm from your face\n· Keep still for 30 seconds\n· Remove glasses if possible",
+      "faceLockedHoldStill": "◈ Face locked — hold still",
+      "moveFaceIntoOval": "Move face into the oval"
     },
     "frequencyLibrarySection": {
       "title": "Frequency Library",

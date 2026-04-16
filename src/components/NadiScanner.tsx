@@ -661,7 +661,6 @@ export default function NadiScanner({
               if (finalSig.confidence < 0.45) {
                 finalSig.confidence = 0.45; // floor it
               }
-              // Continue to setReading — always
               setSignature(finalSig);
               setPhase('complete');
               onScanComplete?.(bioSignatureToNadiReading(finalSig));
@@ -964,12 +963,46 @@ export default function NadiScanner({
                 objectFit: 'cover',
                 borderRadius: '40px 40px 0 0',
                 transform: 'scaleX(-1)',
-                opacity: 0.85,
+                opacity: 0.9,
                 pointerEvents: 'none',
                 touchAction: 'none',
                 userSelect: 'none',
               }}
             />
+            <div
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -60%)',
+                width: '140px',
+                height: '180px',
+                borderRadius: '50% 50% 45% 45%',
+                border: faceDetected
+                  ? '2px solid rgba(212,175,55,0.8)'
+                  : '2px dashed rgba(255,255,255,0.3)',
+                pointerEvents: 'none',
+                transition: 'border-color 0.3s',
+                zIndex: 2,
+              }}
+            />
+            <p
+              style={{
+                position: 'absolute',
+                bottom: '70px',
+                left: 0,
+                right: 0,
+                textAlign: 'center',
+                fontSize: '11px',
+                fontWeight: 700,
+                color: faceDetected ? 'rgba(212,175,55,0.8)' : 'rgba(255,255,255,0.5)',
+                pointerEvents: 'none',
+                padding: '0 12px',
+                zIndex: 4,
+              }}
+            >
+              {faceDetected ? t('quantumApothecary.scan.faceLockedHoldStill') : t('quantumApothecary.scan.moveFaceIntoOval')}
+            </p>
             {['tl', 'tr', 'bl', 'br'].map((c) => (
               <div
                 key={c}
@@ -1006,26 +1039,8 @@ export default function NadiScanner({
                 top: 16,
                 left: '50%',
                 transform: 'translateX(-50%)',
-                fontSize: 8,
-                fontWeight: 800,
-                letterSpacing: '.25em',
-                textTransform: 'uppercase',
-                padding: '3px 12px',
-                borderRadius: 20,
-                background: faceDetected ? 'rgba(34,211,238,.15)' : 'rgba(239,68,68,.15)',
-                border: faceDetected ? '1px solid rgba(34,211,238,.4)' : '1px solid rgba(239,68,68,.4)',
-                color: faceDetected ? 'rgba(34,211,238,.9)' : 'rgba(239,68,68,.9)',
-              }}
-            >
-              {faceDetected ? '◈ Face Locked' : 'Move closer'}
-            </div>
-            <div
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%,-50%)',
                 textAlign: 'center',
+                zIndex: 5,
               }}
             >
               <p
