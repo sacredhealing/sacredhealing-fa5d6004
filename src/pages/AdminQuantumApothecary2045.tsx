@@ -521,6 +521,7 @@ export default function AdminQuantumApothecary2045() {
                 setActiveCategory={setActiveCategory}
                 selectedActivations={selectedActivations}
                 addActivation={addActivation}
+                maxSlots={5}
               />
             </Suspense>
           </section>

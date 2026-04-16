@@ -4854,6 +4854,11 @@
       "scanFailed": "Voice scan failed. Try again in a quiet space.",
       "sqiFollowUp": "SQI — integrate this voice biofield with my chart and the Frequency Library: list 10 exact library names that best match this scan and my question, with one line each on why."
     },
+    "mixer": {
+      "title": "Aetheric Mixer",
+      "slotsProgress": "{{current}}/{{max}} slots",
+      "selectFromLibrary": "Select activations from the library"
+    },
     "frequencyLibrarySection": {
       "title": "Frequency Library",
       "essencesCount": "{{count}} Essences Available",

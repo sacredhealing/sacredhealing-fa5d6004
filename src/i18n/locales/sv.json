@@ -4606,6 +4606,11 @@
       "scanFailed": "Röstskanning misslyckades. Försök igen i tystare miljö.",
       "sqiFollowUp": "SQI — integrera detta röst-biofält med mitt horoskop och frekvensbiblioteket: lista 10 exakta biblioteksnamn som bäst matchar skanningen och min fråga, med en rad vardera om varför."
     },
+    "mixer": {
+      "title": "Aetherisk mixer",
+      "slotsProgress": "{{current}}/{{max}} platser",
+      "selectFromLibrary": "Välj aktiveringar från biblioteket"
+    },
     "frequencyLibrarySection": {
       "title": "Frekvensbibliotek",
       "essencesCount": "{{count}} essenser tillgängliga",

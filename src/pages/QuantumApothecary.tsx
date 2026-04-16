@@ -38,6 +38,8 @@ const ActiveTransmissionsSection = lazy(() => import('@/features/quantum-apothec
 const SQI_PERSIST_MSG_CAP = 100;
 /** Persists Camera vs Voice scanner tab across soft navigations / remounts within the session. */
 const QA_VOICE_TAB_KEY = 'qa_apothecary_voice_tab';
+/** Max frequencies selectable in the Aetheric Mixer before transmit (must match slot indicators + library cap). */
+const AETHERIC_MIXER_MAX_SLOTS = 10;
 
 /* ──── Markdown-ish renderer: gold (#D4AF37) only on # / ## / ### / #### / ##### lines ──── */
 type InlineVariant = 'heading' | 'body';
@@ -1121,7 +1123,12 @@ function QuantumApothecaryInner() {
   );
 
   const addActivation = (act: Activation) => {
-    if (selectedActivations.length >= 5 || selectedActivations.find(a => a.id === act.id)) return;
+    if (
+      selectedActivations.length >= AETHERIC_MIXER_MAX_SLOTS ||
+      selectedActivations.find((a) => a.id === act.id)
+    ) {
+      return;
+    }
     setSelectedActivations([...selectedActivations, act]);
   };
 
@@ -1656,19 +1663,37 @@ SQI — integrate this scan with my natal chart; cite each chart fact once; use 
               <div className="flex justify-between items-center mb-4">
                 <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                   <div style={{ width:28, height:28, background:'rgba(212,175,55,0.12)', border:'1px solid rgba(212,175,55,0.25)', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>⚗</div>
-                  <h2 className="text-sm font-black tracking-[-0.03em]">Aetheric Mixer</h2>
+                  <h2 className="text-sm font-black tracking-[-0.03em]">{t('quantumApothecary.mixer.title')}</h2>
                 </div>
-                <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                  {[0,1,2,3,4].map(i => (
-                    <div key={i} style={{ width:8, height:8, borderRadius:'50%', background: i < selectedActivations.length ? '#D4AF37' : 'rgba(255,255,255,0.08)', boxShadow: i < selectedActivations.length ? '0 0 6px #D4AF37' : 'none', transition:'all 0.3s' }} />
-                  ))}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                  <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]/50">
+                    {t('quantumApothecary.mixer.slotsProgress', {
+                      current: selectedActivations.length,
+                      max: AETHERIC_MIXER_MAX_SLOTS,
+                    })}
+                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: 200 }}>
+                    {Array.from({ length: AETHERIC_MIXER_MAX_SLOTS }, (_, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          width: 7,
+                          height: 7,
+                          borderRadius: '50%',
+                          background: i < selectedActivations.length ? '#D4AF37' : 'rgba(255,255,255,0.08)',
+                          boxShadow: i < selectedActivations.length ? '0 0 6px #D4AF37' : 'none',
+                          transition: 'all 0.3s',
+                        }}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
               <div className="min-h-[64px] rounded-2xl bg-white/[0.02] border border-dashed border-[#D4AF37]/15 p-3 mb-4">
                 {selectedActivations.length === 0 ? (
                   <div className="flex items-center gap-2 justify-center text-white/20 py-2">
                     <Plus size={14} className="text-[#D4AF37]/30" />
-                    <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Select activations from the library</span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{t('quantumApothecary.mixer.selectFromLibrary')}</span>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -1739,7 +1764,13 @@ SQI — integrate this scan with my natal chart; cite each chart fact once; use 
                 </div>
               </div>
             }>
-              <FrequencyLibrarySection activeCategory={activeCategory} setActiveCategory={setActiveCategory} selectedActivations={selectedActivations} addActivation={addActivation} />
+              <FrequencyLibrarySection
+                activeCategory={activeCategory}
+                setActiveCategory={setActiveCategory}
+                selectedActivations={selectedActivations}
+                addActivation={addActivation}
+                maxSlots={AETHERIC_MIXER_MAX_SLOTS}
+              />
             </Suspense>
 
             {/* ── Active Field Context Pills ── */}

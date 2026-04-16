@@ -15,6 +15,8 @@ interface Props {
   setActiveCategory: (value: string) => void;
   selectedActivations: Activation[];
   addActivation: (act: Activation) => void;
+  /** Max items in Aetheric Mixer; when reached, further frequencies cannot be added until one is removed. */
+  maxSlots?: number;
 }
 
 const CATEGORIES = ['All', 'Sacred Plant', 'Siddha Soma', 'Bioenergetic', 'Essential Oil', 'Ayurvedic Herb', 'Mineral', 'Mushroom', 'Adaptogen', 'avataric', 'plant_deva'];
@@ -33,10 +35,15 @@ const CAT_COLORS: Record<string, string> = {
 };
 
 export default function FrequencyLibrarySection({
-  activeCategory, setActiveCategory, selectedActivations, addActivation,
+  activeCategory,
+  setActiveCategory,
+  selectedActivations,
+  addActivation,
+  maxSlots = 10,
 }: Props) {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
+  const mixerFull = selectedActivations.length >= maxSlots;
 
   const displayBenefit = (benefit: string) =>
     benefit.replace(/\bLimbicArc\b/g, '').replace(/\s{2,}/g, ' ').trim();
@@ -124,6 +131,7 @@ export default function FrequencyLibrarySection({
           <AnimatePresence>
             {filtered.map((act, i) => {
               const isSelected = !!selectedActivations.find(a => a.id === act.id);
+              const cannotAdd = mixerFull && !isSelected;
               return (
                 <motion.button
                   key={act.id}
@@ -132,7 +140,7 @@ export default function FrequencyLibrarySection({
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.15, delay: Math.min(i * 0.02, 0.3) }}
                   onClick={() => addActivation(act)}
-                  disabled={isSelected}
+                  disabled={isSelected || cannotAdd}
                   style={{
                     position: 'relative',
                     background: isSelected ? `${act.color}10` : 'rgba(255,255,255,0.02)',
@@ -140,19 +148,20 @@ export default function FrequencyLibrarySection({
                     borderRadius: 16,
                     padding: '12px 12px 10px',
                     textAlign: 'left',
-                    cursor: isSelected ? 'default' : 'pointer',
+                    cursor: isSelected || cannotAdd ? 'default' : 'pointer',
+                    opacity: cannotAdd ? 0.42 : 1,
                     overflow: 'hidden',
                     transition: 'all 0.2s',
                     fontFamily: 'inherit',
                   }}
                   onMouseEnter={e => {
-                    if (!isSelected) {
+                    if (!isSelected && !cannotAdd) {
                       (e.currentTarget as HTMLElement).style.borderColor = `${act.color}50`;
                       (e.currentTarget as HTMLElement).style.background = `${act.color}08`;
                     }
                   }}
                   onMouseLeave={e => {
-                    if (!isSelected) {
+                    if (!isSelected && !cannotAdd) {
                       (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.05)';
                       (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.02)';
                     }
