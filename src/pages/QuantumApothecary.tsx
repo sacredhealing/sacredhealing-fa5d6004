@@ -252,7 +252,7 @@ function renderSQIContent(content: string) {
           key={i}
           style={{
             color: 'rgba(255,255,255,0.78)',
-            fontSize: '14px',
+            fontSize: '15px',
             lineHeight: 1.75,
             paddingLeft: '10px',
             marginBottom: '8px',
@@ -273,7 +273,7 @@ function renderSQIContent(content: string) {
           style={{
             marginLeft: '18px',
             listStyleType: 'disc',
-            fontSize: '14px',
+            fontSize: '15px',
             lineHeight: 1.75,
             color: 'rgba(255,255,255,0.82)',
             marginBottom: '10px',
@@ -294,7 +294,7 @@ function renderSQIContent(content: string) {
           style={{
             marginLeft: '18px',
             listStyleType: 'decimal',
-            fontSize: '14px',
+            fontSize: '15px',
             lineHeight: 1.75,
             color: 'rgba(255,255,255,0.82)',
             marginBottom: '10px',
@@ -313,7 +313,7 @@ function renderSQIContent(content: string) {
         key={i}
         style={{
           color: 'rgba(255,255,255,0.84)',
-          fontSize: '14px',
+          fontSize: '15px',
           lineHeight: 1.85,
           marginBottom: '12px',
           marginTop: '0',
@@ -968,7 +968,7 @@ function QuantumApothecaryInner() {
   const renderChatPanel = () => (
     <div
       className="glass-card relative flex w-full flex-col overflow-hidden"
-      style={{ minHeight: 'calc(100vh - 140px)' }}
+      style={{ minHeight: 'calc(100vh - 120px)', maxWidth: '100%' }}
     >
       {/* Chat header — matches /admin-quantum-apothecary-2045 SQI strip */}
       <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] bg-white/[0.02] px-3 py-4 sm:px-6">
@@ -1075,24 +1075,24 @@ function QuantumApothecaryInner() {
                 {msg.role === 'user' ? (
                   <>
                     <div
-                      className="ml-auto max-w-[78%] rounded-[20px] px-4 py-3"
+                      className="ml-auto max-w-[82%] rounded-[20px] px-4 py-3"
                       style={{
                         background: 'linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08))',
                         border: '1px solid rgba(212,175,55,0.25)',
                       }}
                     >
-                      <div className="markdown-body text-[14px] leading-[1.75] text-white/95 whitespace-pre-wrap break-words w-full min-w-0 text-left">
+                      <div className="markdown-body text-[15px] leading-[1.8] text-white/95 whitespace-pre-wrap break-words w-full min-w-0 text-left" style={{ maxWidth: '100%', wordBreak: 'break-word' }}>
                         {renderChatText(msg.text, 'user')}
                       </div>
                     </div>
                     {ts && (
-                      <p className="text-[10px] text-white/25 mt-1 text-right max-w-[78%]">{ts}</p>
+                      <p className="text-[10px] text-white/25 mt-1 text-right max-w-[82%]">{ts}</p>
                     )}
                   </>
                 ) : (
                   <>
                     <div
-                      className="w-full max-w-[88%] rounded-[20px] px-4 py-3"
+                      className="w-full max-w-[92%] rounded-[20px] px-4 py-3"
                       style={{
                         background: 'rgba(255,255,255,0.03)',
                         border: '1px solid rgba(255,255,255,0.06)',
@@ -1100,13 +1100,13 @@ function QuantumApothecaryInner() {
                       }}
                     >
                       <div className="sqi-message w-full min-w-0">
-                        <div className="text-[14px] leading-[1.8] text-white/85 break-words [overflow-wrap:anywhere] w-full min-w-0">
+                        <div className="text-[15px] leading-[1.8] text-white/85 break-words [overflow-wrap:anywhere] w-full min-w-0" style={{ maxWidth: '100%', wordBreak: 'break-word' }}>
                           {renderSQIContent(msg.text)}
                         </div>
                       </div>
                     </div>
                     {ts && (
-                      <p className="text-[10px] text-white/25 mt-1 text-right w-full max-w-[88%]">{ts}</p>
+                      <p className="text-[10px] text-white/25 mt-1 text-right w-full max-w-[92%]">{ts}</p>
                     )}
                   </>
                 )}
@@ -1404,24 +1404,7 @@ SQI — integrate this scan with my natal chart; cite each chart fact once; use 
               />
             </div>
 
-            {/* ── Akasha Neural Archive (chart + session context — no duplicate baseline nadi card) ── */}
-            <div className="glass-card p-6 sm:p-7 qa-card-hover">
-              <div className="mb-6 flex justify-between gap-3">
-                <div>
-                  <p className="text-[8px] font-extrabold uppercase tracking-[0.5em] text-[#D4AF37]/55">{t('quantumApothecary.archive.title')}</p>
-                  <p className="mt-2 text-xs leading-[1.6] text-white/60">{t('quantumApothecary.archive.subtitle')}</p>
-                </div>
-                <Cpu
-                  className="h-5 w-5 shrink-0"
-                  style={{ color: '#D4AF37' }}
-                  aria-hidden
-                />
-              </div>
-
-              <div className="rounded-2xl border border-[#D4AF37]/15 bg-white/[0.02] p-4">
-                <p className="text-[10px] leading-relaxed text-white/65">{t('quantumApothecary.archive.body')}</p>
-              </div>
-            </div>
+            {/* Akasha Neural Archive banner removed — context is loaded automatically */}
 
             {/* ── Aetheric Mixer ── */}
             <div className="glass-card p-6 sm:p-7 qa-card-hover">
