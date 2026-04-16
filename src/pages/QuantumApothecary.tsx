@@ -183,7 +183,7 @@ function renderInline(
       }
       if (opts?.sqiGoldBold && variant === 'body') {
         return (
-          <strong key={i} style={{ color: '#D4AF37', fontWeight: 800 }}>
+          <strong key={i} style={{ color: 'rgba(255,255,255,0.97)', fontWeight: 700 }}>
             {inner}
           </strong>
         );
@@ -191,7 +191,7 @@ function renderInline(
       if (variant === 'heading') {
         return <strong key={i} style={{ color: 'inherit', fontWeight: 700 }}>{inner}</strong>;
       }
-      return <strong key={i} style={{ color: onGold ? 'rgba(255,255,255,0.98)' : 'rgba(255,255,255,0.95)', fontWeight: 700 }}>{inner}</strong>;
+      return <strong key={i} style={{ color: onGold ? 'rgba(255,255,255,0.98)' : 'rgba(255,255,255,0.97)', fontWeight: 700 }}>{inner}</strong>;
     }
     if (p.startsWith('*') && p.endsWith('*')) {
       return <em key={i} style={{ fontStyle: 'italic', color: variant === 'heading' ? 'inherit' : onGold ? 'rgba(255,255,255,0.78)' : 'rgba(255,255,255,0.78)' }}>{p.slice(1, -1)}</em>;
