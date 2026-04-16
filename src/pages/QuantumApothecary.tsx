@@ -147,17 +147,17 @@ function renderChatText(text: string, bubble: 'model' | 'user' = 'model') {
       </h1>
     );
     if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) return (
-      <li key={i} style={{ marginLeft: '16px', listStyleType: 'disc', fontSize: '13px', lineHeight: '1.5', color: body, marginBottom: '4px', width: 'calc(100% - 16px)', maxWidth: '100%', paddingRight: '4px' }}>
+      <li key={i} style={{ marginLeft: '16px', listStyleType: 'disc', fontSize: '15px', lineHeight: '1.75', color: body, marginBottom: '4px', width: 'calc(100% - 16px)', maxWidth: '100%', paddingRight: '4px' }}>
         {renderInline(trimmed.slice(2), 'body', onGold)}
       </li>
     );
     if (/^\d+\.\s/.test(trimmed)) return (
-      <li key={i} style={{ marginLeft: '16px', listStyleType: 'decimal', fontSize: '13px', lineHeight: '1.5', color: body, marginBottom: '4px', width: 'calc(100% - 16px)', maxWidth: '100%', paddingRight: '4px' }}>
+      <li key={i} style={{ marginLeft: '16px', listStyleType: 'decimal', fontSize: '15px', lineHeight: '1.75', color: body, marginBottom: '4px', width: 'calc(100% - 16px)', maxWidth: '100%', paddingRight: '4px' }}>
         {renderInline(trimmed.replace(/^\d+\.\s/, ''), 'body', onGold)}
       </li>
     );
     return (
-      <p key={i} style={{ fontSize: '13px', lineHeight: '1.55', color: body, marginBottom: '6px', width: '100%', maxWidth: '100%' }}>
+      <p key={i} style={{ fontSize: '15px', lineHeight: '1.75', color: body, marginBottom: '6px', width: '100%', maxWidth: '100%' }}>
         {renderInline(trimmed, 'body', onGold)}
       </p>
     );
@@ -183,7 +183,7 @@ function renderInline(
       }
       if (opts?.sqiGoldBold && variant === 'body') {
         return (
-          <strong key={i} style={{ color: '#D4AF37', fontWeight: 800 }}>
+          <strong key={i} style={{ color: 'rgba(255,255,255,0.97)', fontWeight: 700 }}>
             {inner}
           </strong>
         );
@@ -191,7 +191,7 @@ function renderInline(
       if (variant === 'heading') {
         return <strong key={i} style={{ color: 'inherit', fontWeight: 700 }}>{inner}</strong>;
       }
-      return <strong key={i} style={{ color: onGold ? 'rgba(255,255,255,0.98)' : 'rgba(255,255,255,0.95)', fontWeight: 700 }}>{inner}</strong>;
+      return <strong key={i} style={{ color: onGold ? 'rgba(255,255,255,0.98)' : 'rgba(255,255,255,0.97)', fontWeight: 700 }}>{inner}</strong>;
     }
     if (p.startsWith('*') && p.endsWith('*')) {
       return <em key={i} style={{ fontStyle: 'italic', color: variant === 'heading' ? 'inherit' : onGold ? 'rgba(255,255,255,0.78)' : 'rgba(255,255,255,0.78)' }}>{p.slice(1, -1)}</em>;
@@ -1075,24 +1075,24 @@ function QuantumApothecaryInner() {
                 {msg.role === 'user' ? (
                   <>
                     <div
-                      className="ml-auto max-w-[82%] rounded-[20px] px-4 py-3"
+                      className="ml-auto max-w-[85%] rounded-[20px] px-5 py-4"
                       style={{
                         background: 'linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08))',
                         border: '1px solid rgba(212,175,55,0.25)',
                       }}
                     >
-                      <div className="markdown-body text-[15px] leading-[1.8] text-white/95 whitespace-pre-wrap break-words w-full min-w-0 text-left" style={{ maxWidth: '100%', wordBreak: 'break-word' }}>
+                      <div className="markdown-body text-[15px] leading-[1.75] text-white/95 whitespace-pre-wrap break-words w-full min-w-0 text-left" style={{ maxWidth: '100%', wordBreak: 'break-word' }}>
                         {renderChatText(msg.text, 'user')}
                       </div>
                     </div>
                     {ts && (
-                      <p className="text-[10px] text-white/25 mt-1 text-right max-w-[82%]">{ts}</p>
+                      <p className="text-[10px] text-white/25 mt-1 text-right max-w-[85%]">{ts}</p>
                     )}
                   </>
                 ) : (
                   <>
                     <div
-                      className="w-full max-w-[92%] rounded-[20px] px-4 py-3"
+                      className="w-full max-w-[96%] mx-auto rounded-[20px] px-5 py-4"
                       style={{
                         background: 'rgba(255,255,255,0.03)',
                         border: '1px solid rgba(255,255,255,0.06)',
@@ -1100,13 +1100,13 @@ function QuantumApothecaryInner() {
                       }}
                     >
                       <div className="sqi-message w-full min-w-0">
-                        <div className="text-[15px] leading-[1.8] text-white/85 break-words [overflow-wrap:anywhere] w-full min-w-0" style={{ maxWidth: '100%', wordBreak: 'break-word' }}>
+                        <div className="text-[15px] leading-[1.75] text-white/85 break-words [overflow-wrap:anywhere] w-full min-w-0" style={{ maxWidth: '100%', wordBreak: 'break-word' }}>
                           {renderSQIContent(msg.text)}
                         </div>
                       </div>
                     </div>
                     {ts && (
-                      <p className="text-[10px] text-white/25 mt-1 text-right w-full max-w-[92%]">{ts}</p>
+                      <p className="text-[10px] text-white/25 mt-1 text-right w-full max-w-[96%] mx-auto">{ts}</p>
                     )}
                   </>
                 )}
