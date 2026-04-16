@@ -64,7 +64,7 @@ async function assertNonAdminCreateAllowed(
         JSON.stringify({
           error: "Server misconfigured: SUPABASE_ANON_KEY is required for Stargate live video",
         }),
-        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
     const ok = await verifyStargateMembership(supabaseUrl, authHeader, anonKey);
@@ -74,7 +74,7 @@ async function assertNonAdminCreateAllowed(
           error: "Stargate membership required",
           details: "Only Stargate members can start a live session in this channel.",
         }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
     return null;
@@ -85,7 +85,7 @@ async function assertNonAdminCreateAllowed(
       details:
         "Without admin privileges, live video is only available for direct messages or the Stargate channel.",
     }),
-    { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
   );
 }
 
@@ -120,7 +120,7 @@ async function assertCanEndSession(
       error: "Forbidden",
       details: "Only the host or an admin can end this live session.",
     }),
-    { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
   );
 }
 
@@ -138,7 +138,7 @@ Deno.serve(async (req) => {
     if (!supabaseUrl || !supabaseKey) {
       return new Response(
         JSON.stringify({ error: "Server misconfigured: missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY" }),
-        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
     if (!dailyKey?.trim()) {
@@ -147,7 +147,7 @@ Deno.serve(async (req) => {
           error:
             "Live video is not configured: set DAILY_API_KEY in Supabase Edge Function secrets (Daily.co API key).",
         }),
-        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -244,7 +244,7 @@ Deno.serve(async (req) => {
             details: errText,
             hint: "Set DAILY_API_KEY in Supabase Edge secrets. Use DAILY_RECORDING=off if cloud recording is not enabled on your Daily plan.",
           }),
-          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
 
@@ -257,7 +257,7 @@ Deno.serve(async (req) => {
             error: "Daily.co response missing room URL",
             details: JSON.stringify(room),
           }),
-          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
 
