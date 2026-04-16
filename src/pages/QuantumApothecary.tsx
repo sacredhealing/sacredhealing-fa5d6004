@@ -968,7 +968,7 @@ function QuantumApothecaryInner() {
   const renderChatPanel = () => (
     <div
       className="glass-card relative flex w-full flex-col overflow-hidden"
-      style={{ minHeight: 'calc(100vh - 140px)' }}
+      style={{ minHeight: 'calc(100vh - 120px)', maxWidth: '100%' }}
     >
       {/* Chat header — matches /admin-quantum-apothecary-2045 SQI strip */}
       <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] bg-white/[0.02] px-3 py-4 sm:px-6">
