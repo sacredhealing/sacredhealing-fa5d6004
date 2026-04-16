@@ -785,7 +785,7 @@ function QuantumApothecaryInner() {
       const fieldParts: string[] = [sqiSourceDirective, answerRulesDirective, liveContext];
       if (liveScanContext) fieldParts.push(liveScanContext);
       if (stableCompiledContext) fieldParts.push(stableCompiledContext);
-      if (jyotishContext) fieldParts.push(jyotishContext);
+      if (stableJyotishContext) fieldParts.push(stableJyotishContext);
       const enrichedJyotishContext = fieldParts.join('\n\n');
 
       await streamChatWithSQI(
