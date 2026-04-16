@@ -156,6 +156,17 @@ const RPC_POOL = getRpcPool();
 
 const PKEY_STORAGE_KEY = 'polymarket_bot_pkey';
 
+/** Risk per trade: 1% of current balance (paper or live USDC), for small-account testing. */
+const TRADE_RISK_FRACTION = 0.01;
+
+function positionSizeFromBalance(balance: number): number {
+  if (!Number.isFinite(balance) || balance <= 0) return 0;
+  const raw = balance * TRADE_RISK_FRACTION;
+  const rounded = Math.round(raw * 100) / 100;
+  if (rounded <= 0) return 0;
+  return Math.min(rounded, balance);
+}
+
 function readStoredPrivateKey(): string | null {
   try {
     const persisted = localStorage.getItem(PKEY_STORAGE_KEY);
@@ -423,11 +434,36 @@ const PolymarketBotDetailInner: React.FC = () => {
   }, [address, performDeepSync]);
 
   const executeTradeWithMode = async (signal: TradeSignal, strategy?: string): Promise<boolean> => {
+    let balance = 0;
     if (isPaperMode) {
-      const result = await paperTradingService.executePaperTrade(signal, strategy);
+      const st = await paperTradingService.loadSettings();
+      balance = st?.paper_balance ?? paperBalance;
+    } else {
+      balance = parseFloat(usdcBal) || 0;
+    }
+
+    const sizeUsd = positionSizeFromBalance(balance);
+    if (sizeUsd <= 0) {
+      addLog(t('polymarketBotDetail.tradeSkippedLowBalance'), 'warn');
+      return false;
+    }
+
+    const sizedSignal: TradeSignal = { ...signal, suggestedSize: sizeUsd };
+
+    if (isPaperMode) {
+      const result = await paperTradingService.executePaperTrade(sizedSignal, strategy);
       if (result.success) {
-        addLog(`📝 PAPER: ${signal.direction} ${signal.outcome} $${signal.suggestedSize.toFixed(2)}`, 'success');
+        addLog(
+          t('polymarketBotDetail.paperTradeDone', {
+            direction: sizedSignal.direction,
+            outcome: sizedSignal.outcome,
+            size: sizedSignal.suggestedSize.toFixed(2),
+            balance: balance.toFixed(2),
+          }),
+          'success'
+        );
         setTotalTrades((p) => p + 1);
+        void refreshPnL();
         return true;
       }
       addLog(`📝 PAPER FAILED: ${result.error}`, 'error');
@@ -437,10 +473,20 @@ const PolymarketBotDetailInner: React.FC = () => {
       addLog('Cannot trade: USDC not approved for CTF Exchange', 'error');
       return false;
     }
-    const result = await trading.executeTrade(signal);
+    const result = await trading.executeTrade(sizedSignal);
     if (result.success) {
-      addLog(`💰 LIVE: ${signal.direction} ${signal.outcome} tx: ${result.txHash}`, 'success');
+      addLog(
+        t('polymarketBotDetail.liveTradeDone', {
+          direction: sizedSignal.direction,
+          outcome: sizedSignal.outcome,
+          size: sizedSignal.suggestedSize.toFixed(2),
+          balance: balance.toFixed(2),
+          tx: result.txHash ?? '',
+        }),
+        'success'
+      );
       setTotalTrades((p) => p + 1);
+      void refreshPnL();
       return true;
     }
     addLog(`💰 LIVE FAILED: ${result.error}`, 'error');

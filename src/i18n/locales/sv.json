@@ -2189,9 +2189,12 @@
   },
   "polymarketBotDetail": {
     "keyStorageHint": "Nyckeln sparas i den här webbläsaren tills du kopplar bort eller rensar webbplatsdata.",
-    "executionFeedHint": "Grönt = sync OK · Guld = status · Cyan = signal/handelsrad · Bärnsten = varning. Affärer loggas bara när en strategi hittar en kant — tysta perioder är normalt.",
+    "executionFeedHint": "Grönt = sync OK · Guld = status · Cyan = signal/handelsrad · Bärnsten = varning. Affärer loggas bara när en strategi hittar en kant — tysta perioder är normalt. Varje affär storleksätts till 1 % av ditt saldo (paper eller live USDC).",
     "feedEmpty": "Ingen aktivitet än — starta motorn eller tryck uppdatera för att synka.",
-    "logScanSummary": "Skanning · {{markets}} marknader · {{aiPool}} AI-möjligheter (kräver hög likviditet + felprisade odds). Affärer visas när whale mirror, latency, scalper eller AI triggas — nästa pass ~15s."
+    "logScanSummary": "Skanning · {{markets}} marknader · {{aiPool}} AI-möjligheter (kräver hög likviditet + felprisade odds). Affärer visas när whale mirror, latency, scalper eller AI triggas — nästa pass ~15s.",
+    "tradeSkippedLowBalance": "Hoppades över: saldot är för lågt för en 1 %-position.",
+    "paperTradeDone": "📝 PAPER: {{direction}} {{outcome}} — ${{size}} (1 % av €{{balance}})",
+    "liveTradeDone": "💰 LIVE: {{direction}} {{outcome}} — ${{size}} (1 % av ${{balance}}) · tx {{tx}}"
   },
   "predictionMarketBot": {
     "headerTitle": "Prediction market-bot",

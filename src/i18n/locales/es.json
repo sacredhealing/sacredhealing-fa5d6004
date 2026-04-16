@@ -1672,9 +1672,12 @@
   },
   "polymarketBotDetail": {
     "keyStorageHint": "La clave se guarda en este navegador hasta que desconectes o borres los datos del sitio.",
-    "executionFeedHint": "Verde = sync OK · Dorado = estado · Cian = señal/operación · Ámbar = aviso. Las operaciones solo aparecen cuando una estrategia ve ventaja — los silencios son normales.",
+    "executionFeedHint": "Verde = sync OK · Dorado = estado · Cian = señal/operación · Ámbar = aviso. Las operaciones solo aparecen cuando una estrategia ve ventaja — los silencios son normales. Cada operación usa el 1 % de tu saldo actual (paper o USDC en vivo).",
     "feedEmpty": "Sin actividad aún — inicia el motor o pulsa actualizar para sincronizar.",
-    "logScanSummary": "Escaneo · {{markets}} mercados · {{aiPool}} oportunidades IA (alta liquidez + cuotas mal precio). Las operaciones aparecen si whale mirror, latencia, scalper o IA disparan — siguiente paso ~15s."
+    "logScanSummary": "Escaneo · {{markets}} mercados · {{aiPool}} oportunidades IA (alta liquidez + cuotas mal precio). Las operaciones aparecen si whale mirror, latencia, scalper o IA disparan — siguiente paso ~15s.",
+    "tradeSkippedLowBalance": "Omitido: saldo demasiado bajo para una posición del 1 %.",
+    "paperTradeDone": "📝 PAPER: {{direction}} {{outcome}} — ${{size}} (1 % de €{{balance}})",
+    "liveTradeDone": "💰 LIVE: {{direction}} {{outcome}} — ${{size}} (1 % de ${{balance}}) · tx {{tx}}"
   },
   "predictionMarketBot": {
     "headerTitle": "Bot de mercados predictivos",

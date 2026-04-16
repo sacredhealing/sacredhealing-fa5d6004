@@ -1643,9 +1643,12 @@
   },
   "polymarketBotDetail": {
     "keyStorageHint": "Nøkkelen lagres i denne nettleseren til du kobler fra eller sletter nettstedsdata.",
-    "executionFeedHint": "Grønn = sync OK · Gull = status · Cyan = signal/handelslinje · Amber = advarsel. Handler logges bare når en strategi finner en kant — stille perioder er normale.",
+    "executionFeedHint": "Grønn = sync OK · Gull = status · Cyan = signal/handelslinje · Amber = advarsel. Handler logges bare når en strategi finner en kant — stille perioder er normale. Hver handel størrelsessettes til 1 % av saldoen (paper eller live USDC).",
     "feedEmpty": "Ingen aktivitet ennå — start motoren eller trykk oppdater for å synkronisere.",
-    "logScanSummary": "Skann · {{markets}} markeder · {{aiPool}} AI-muligheter (høy likviditet + feilprising). Fyll vises når whale mirror, latency, scalper eller AI utløses — neste runde ~15s."
+    "logScanSummary": "Skann · {{markets}} markeder · {{aiPool}} AI-muligheter (høy likviditet + feilprising). Fyll vises når whale mirror, latency, scalper eller AI utløses — neste runde ~15s.",
+    "tradeSkippedLowBalance": "Hoppet over: saldoen er for lav for en 1 %-posisjon.",
+    "paperTradeDone": "📝 PAPER: {{direction}} {{outcome}} — ${{size}} (1 % av €{{balance}})",
+    "liveTradeDone": "💰 LIVE: {{direction}} {{outcome}} — ${{size}} (1 % av ${{balance}}) · tx {{tx}}"
   },
   "predictionMarketBot": {
     "headerTitle": "Prediction market-bot",
