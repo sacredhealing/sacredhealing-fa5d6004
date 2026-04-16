@@ -252,7 +252,7 @@ function renderSQIContent(content: string) {
           key={i}
           style={{
             color: 'rgba(255,255,255,0.78)',
-            fontSize: '14px',
+            fontSize: '15px',
             lineHeight: 1.75,
             paddingLeft: '10px',
             marginBottom: '8px',
@@ -273,7 +273,7 @@ function renderSQIContent(content: string) {
           style={{
             marginLeft: '18px',
             listStyleType: 'disc',
-            fontSize: '14px',
+            fontSize: '15px',
             lineHeight: 1.75,
             color: 'rgba(255,255,255,0.82)',
             marginBottom: '10px',
@@ -294,7 +294,7 @@ function renderSQIContent(content: string) {
           style={{
             marginLeft: '18px',
             listStyleType: 'decimal',
-            fontSize: '14px',
+            fontSize: '15px',
             lineHeight: 1.75,
             color: 'rgba(255,255,255,0.82)',
             marginBottom: '10px',
@@ -313,7 +313,7 @@ function renderSQIContent(content: string) {
         key={i}
         style={{
           color: 'rgba(255,255,255,0.84)',
-          fontSize: '14px',
+          fontSize: '15px',
           lineHeight: 1.85,
           marginBottom: '12px',
           marginTop: '0',
