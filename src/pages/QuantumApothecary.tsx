@@ -147,17 +147,17 @@ function renderChatText(text: string, bubble: 'model' | 'user' = 'model') {
       </h1>
     );
     if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) return (
-      <li key={i} style={{ marginLeft: '16px', listStyleType: 'disc', fontSize: '13px', lineHeight: '1.5', color: body, marginBottom: '4px', width: 'calc(100% - 16px)', maxWidth: '100%', paddingRight: '4px' }}>
+      <li key={i} style={{ marginLeft: '16px', listStyleType: 'disc', fontSize: '15px', lineHeight: '1.75', color: body, marginBottom: '4px', width: 'calc(100% - 16px)', maxWidth: '100%', paddingRight: '4px' }}>
         {renderInline(trimmed.slice(2), 'body', onGold)}
       </li>
     );
     if (/^\d+\.\s/.test(trimmed)) return (
-      <li key={i} style={{ marginLeft: '16px', listStyleType: 'decimal', fontSize: '13px', lineHeight: '1.5', color: body, marginBottom: '4px', width: 'calc(100% - 16px)', maxWidth: '100%', paddingRight: '4px' }}>
+      <li key={i} style={{ marginLeft: '16px', listStyleType: 'decimal', fontSize: '15px', lineHeight: '1.75', color: body, marginBottom: '4px', width: 'calc(100% - 16px)', maxWidth: '100%', paddingRight: '4px' }}>
         {renderInline(trimmed.replace(/^\d+\.\s/, ''), 'body', onGold)}
       </li>
     );
     return (
-      <p key={i} style={{ fontSize: '13px', lineHeight: '1.55', color: body, marginBottom: '6px', width: '100%', maxWidth: '100%' }}>
+      <p key={i} style={{ fontSize: '15px', lineHeight: '1.75', color: body, marginBottom: '6px', width: '100%', maxWidth: '100%' }}>
         {renderInline(trimmed, 'body', onGold)}
       </p>
     );
