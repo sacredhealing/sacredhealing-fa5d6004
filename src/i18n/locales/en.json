@@ -2264,7 +2264,20 @@
     "logScanSummary": "Scan · {{markets}} markets · {{aiPool}} AI opportunities (needs high liquidity + mispriced odds). Fills appear when whale mirror, latency, scalper, or AI fires — next pass ~15s.",
     "tradeSkippedLowBalance": "Skipped: balance too low for a 1% position.",
     "paperTradeDone": "📝 PAPER: {{direction}} {{outcome}} — ${{size}} (1% of €{{balance}})",
-    "liveTradeDone": "💰 LIVE: {{direction}} {{outcome}} — ${{size}} (1% of ${{balance}}) · tx {{tx}}"
+    "liveTradeDone": "💰 LIVE: {{direction}} {{outcome}} — ${{size}} (1% of ${{balance}}) · tx {{tx}}",
+    "paperBalanceTitle": "Paper starting balance",
+    "paperBalanceHint": "Set your simulated bankroll (e.g. 10 to test with €10). Each trade uses 1% of this balance. Stop the engine before changing it.",
+    "paperBalancePlaceholder": "e.g. 10 or 1000",
+    "applyPaperBalance": "Apply",
+    "paperBalanceCurrent": "Current balance",
+    "paperBalanceSaved": "Paper balance updated",
+    "paperBalanceSaveFailed": "Could not save paper balance",
+    "paperBalanceSavedLog": "Paper balance set to €{{amount}}",
+    "paperBalanceInvalid": "Enter a number ≥ 0.01 (e.g. 10)",
+    "paperBalanceStopEngine": "Stop the engine to change paper balance",
+    "paperBalanceNeedAuth": "Sign in to save paper settings",
+    "paperBalanceResetToast": "Paper balance reset to €1000",
+    "paperBalanceResetLog": "Paper balance reset to €{{amount}}"
   },
   "predictionMarketBot": {
     "headerTitle": "Prediction market bot",

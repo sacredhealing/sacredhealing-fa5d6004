@@ -244,6 +244,9 @@ const PolymarketBotDetailInner: React.FC = () => {
   const [totalTrades, setTotalTrades] = useState(0);
   const [isPaperMode, setIsPaperMode] = useState(true);
   const [paperBalance, setPaperBalance] = useState(1000);
+  /** Baseline for P&L % display — updated when settings load or user applies a new paper bankroll */
+  const [paperBaseline, setPaperBaseline] = useState(1000);
+  const [paperBalanceDraft, setPaperBalanceDraft] = useState('1000');
   const [totalFeesPaid, setTotalFeesPaid] = useState(0);
   const [pnlSummary, setPnlSummary] = useState({ totalPnL: 0, todayPnL: 0, totalTrades: 0, winRate: 0, unrealizedPnL: 0 });
   const [livePnlSummary, setLivePnlSummary] = useState({ totalPnL: 0, todayPnL: 0, totalTrades: 0, winRate: 0, unrealizedPnL: 0 });
@@ -255,6 +258,7 @@ const PolymarketBotDetailInner: React.FC = () => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [activeTab, setActiveTab] = useState('dashboard');
   const termScrollRef = useRef<HTMLDivElement>(null);
+  const prevActiveTabRef = useRef(activeTab);
   const scanIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pnlRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -271,6 +275,13 @@ const PolymarketBotDetailInner: React.FC = () => {
     const el = termScrollRef.current;
     if (el && logs.length > 0) el.scrollTo({ top: 0, behavior: 'smooth' });
   }, [logs]);
+
+  useEffect(() => {
+    if (activeTab === 'settings' && prevActiveTabRef.current !== 'settings' && isPaperMode) {
+      setPaperBalanceDraft(paperBalance.toFixed(2));
+    }
+    prevActiveTabRef.current = activeTab;
+  }, [activeTab, isPaperMode, paperBalance]);
 
   const refreshPnL = useCallback(async () => {
     if (!user?.id) return;
@@ -296,14 +307,50 @@ const PolymarketBotDetailInner: React.FC = () => {
     }
   }, [user?.id]);
 
+  const handleApplyPaperBalance = useCallback(async () => {
+    const raw = paperBalanceDraft.replace(',', '.').trim();
+    const v = parseFloat(raw);
+    if (!Number.isFinite(v) || v < 0.01) {
+      toast.error(t('polymarketBotDetail.paperBalanceInvalid'));
+      return;
+    }
+    if (isRunning) {
+      toast.error(t('polymarketBotDetail.paperBalanceStopEngine'));
+      return;
+    }
+    if (!user?.id) {
+      toast.error(t('polymarketBotDetail.paperBalanceNeedAuth'));
+      return;
+    }
+    const cur = await paperTradingService.loadSettings();
+    if (!cur) {
+      toast.error(t('polymarketBotDetail.paperBalanceSaveFailed'));
+      return;
+    }
+    const ok = await paperTradingService.saveSettings({ ...cur, paper_balance: v });
+    if (ok) {
+      setPaperBalance(v);
+      setPaperBaseline(v);
+      addLog(t('polymarketBotDetail.paperBalanceSavedLog', { amount: v.toFixed(2) }), 'success');
+      toast.success(t('polymarketBotDetail.paperBalanceSaved'));
+      void refreshPnL();
+    } else {
+      toast.error(t('polymarketBotDetail.paperBalanceSaveFailed'));
+    }
+  }, [paperBalanceDraft, isRunning, user?.id, t, addLog, refreshPnL]);
+
   const handleResetPaperBalance = useCallback(async () => {
     const success = await paperTradingService.resetPaperBalance(1000);
     if (success) {
       setPaperBalance(1000);
+      setPaperBaseline(1000);
+      setPaperBalanceDraft('1000.00');
       setTotalFeesPaid(0);
-      addLog('Paper balance reset to €1000', 'success');
+      addLog(t('polymarketBotDetail.paperBalanceResetLog', { amount: '1000.00' }), 'success');
+      toast.success(t('polymarketBotDetail.paperBalanceResetToast'));
+      void refreshPnL();
     }
-  }, [addLog]);
+  }, [addLog, t, refreshPnL]);
 
   useEffect(() => {
     if (isRunning) {
@@ -382,21 +429,15 @@ const PolymarketBotDetailInner: React.FC = () => {
               paperTradingService.setMode(s.is_paper_mode);
               addLog(`Mode: ${s.is_paper_mode ? '📝 PAPER TRADING' : '💰 LIVE TRADING'}`, 'info');
 
-              // Auto-reset: if balance is depleted (<$10) or max_trade_size is too large (>$5),
-              // restore defaults so trades can execute immediately.
-              const needsReset =
-                (s.paper_balance ?? 1000) < 10 || (s.max_trade_size ?? 50) > 5;
-              if (needsReset) {
-                const ok = await paperTradingService.resetToDefaults();
-                if (ok) {
-                  setPaperBalance(1000);
-                  setTotalFeesPaid(0);
-                  addLog('⚡ Auto-reset: balance restored to €1000, max trade size set to $5', 'success');
-                }
-              } else {
-                setPaperBalance(s.paper_balance ?? 1000);
-                setTotalFeesPaid(s.total_fees_paid ?? 0);
+              // Legacy guard: cap oversized max_trade_size from old DB rows (sizing is now 1% of balance in UI).
+              if ((s.max_trade_size ?? 50) > 5) {
+                await paperTradingService.saveSettings({ max_trade_size: 5 });
               }
+              const pb = s.paper_balance ?? 1000;
+              setPaperBalance(pb);
+              setPaperBaseline(pb);
+              setPaperBalanceDraft(pb.toFixed(2));
+              setTotalFeesPaid(s.total_fees_paid ?? 0);
             }
           }).catch((err: unknown) => console.error('[PolymarketBot] loadSettings:', err));
           (async () => {
@@ -780,7 +821,7 @@ const PolymarketBotDetailInner: React.FC = () => {
                 todayPnL={isPaperMode ? pnlSummary.todayPnL : livePnlSummary.todayPnL}
                 totalTrades={isPaperMode ? pnlSummary.totalTrades : livePnlSummary.totalTrades}
                 winRate={isPaperMode ? pnlSummary.winRate : livePnlSummary.winRate}
-                startingBalance={1000}
+                startingBalance={paperBaseline}
                 currentBalance={isPaperMode ? paperBalance : undefined}
                 totalFees={isPaperMode ? totalFeesPaid : undefined}
                 onResetBalance={isPaperMode ? handleResetPaperBalance : undefined}
@@ -908,9 +949,41 @@ const PolymarketBotDetailInner: React.FC = () => {
                   </button>
                 </div>
                 {isPaperMode && (
-                  <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                    <span style={{ color: 'rgba(255,255,255,0.5)' }}>Paper Balance</span>
-                    <span style={{ fontWeight: 900, color: AMBER }}>$1,000.00</span>
+                  <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                    <div className="lbl" style={{ marginBottom: 8 }}>{t('polymarketBotDetail.paperBalanceTitle')}</div>
+                    <p className="body" style={{ fontSize: 11, marginBottom: 12, lineHeight: 1.5 }}>
+                      {t('polymarketBotDetail.paperBalanceHint')}
+                    </p>
+                    <div className="g2" style={{ marginBottom: 12 }}>
+                      <input
+                        className="inp"
+                        type="text"
+                        inputMode="decimal"
+                        autoComplete="off"
+                        aria-label={t('polymarketBotDetail.paperBalanceTitle')}
+                        placeholder={t('polymarketBotDetail.paperBalancePlaceholder')}
+                        value={paperBalanceDraft}
+                        onChange={(e) => setPaperBalanceDraft(e.target.value)}
+                        disabled={isRunning}
+                        style={{ marginBottom: 0 }}
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-g"
+                        style={{ padding: '12px 14px' }}
+                        onClick={handleApplyPaperBalance}
+                        disabled={isRunning}
+                      >
+                        {t('polymarketBotDetail.applyPaperBalance')}
+                      </button>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+                      <span style={{ color: 'rgba(255,255,255,0.5)' }}>{t('polymarketBotDetail.paperBalanceCurrent')}</span>
+                      <span style={{ fontWeight: 900, color: AMBER }}>€{paperBalance.toFixed(2)}</span>
+                    </div>
+                    {isRunning && (
+                      <p style={{ marginTop: 10, fontSize: 10, color: AMBER }}>{t('polymarketBotDetail.paperBalanceStopEngine')}</p>
+                    )}
                   </div>
                 )}
               </div>

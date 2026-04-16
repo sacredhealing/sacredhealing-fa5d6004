@@ -1677,7 +1677,20 @@
     "logScanSummary": "Escaneo · {{markets}} mercados · {{aiPool}} oportunidades IA (alta liquidez + cuotas mal precio). Las operaciones aparecen si whale mirror, latencia, scalper o IA disparan — siguiente paso ~15s.",
     "tradeSkippedLowBalance": "Omitido: saldo demasiado bajo para una posición del 1 %.",
     "paperTradeDone": "📝 PAPER: {{direction}} {{outcome}} — ${{size}} (1 % de €{{balance}})",
-    "liveTradeDone": "💰 LIVE: {{direction}} {{outcome}} — ${{size}} (1 % de ${{balance}}) · tx {{tx}}"
+    "liveTradeDone": "💰 LIVE: {{direction}} {{outcome}} — ${{size}} (1 % de ${{balance}}) · tx {{tx}}",
+    "paperBalanceTitle": "Capital inicial paper",
+    "paperBalanceHint": "Define tu bankroll simulada (p. ej. 10 para probar con 10 €). Cada operación usa el 1 % del saldo. Detén el motor antes de cambiar.",
+    "paperBalancePlaceholder": "p. ej. 10 o 1000",
+    "applyPaperBalance": "Aplicar",
+    "paperBalanceCurrent": "Saldo actual",
+    "paperBalanceSaved": "Saldo paper actualizado",
+    "paperBalanceSaveFailed": "No se pudo guardar el saldo paper",
+    "paperBalanceSavedLog": "Saldo paper fijado en €{{amount}}",
+    "paperBalanceInvalid": "Introduce un número ≥ 0,01 (p. ej. 10)",
+    "paperBalanceStopEngine": "Detén el motor para cambiar el saldo paper",
+    "paperBalanceNeedAuth": "Inicia sesión para guardar ajustes paper",
+    "paperBalanceResetToast": "Saldo paper restablecido a €1000",
+    "paperBalanceResetLog": "Saldo paper restablecido a €{{amount}}"
   },
   "predictionMarketBot": {
     "headerTitle": "Bot de mercados predictivos",

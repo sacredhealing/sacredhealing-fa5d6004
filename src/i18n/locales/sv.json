@@ -2194,7 +2194,20 @@
     "logScanSummary": "Skanning · {{markets}} marknader · {{aiPool}} AI-möjligheter (kräver hög likviditet + felprisade odds). Affärer visas när whale mirror, latency, scalper eller AI triggas — nästa pass ~15s.",
     "tradeSkippedLowBalance": "Hoppades över: saldot är för lågt för en 1 %-position.",
     "paperTradeDone": "📝 PAPER: {{direction}} {{outcome}} — ${{size}} (1 % av €{{balance}})",
-    "liveTradeDone": "💰 LIVE: {{direction}} {{outcome}} — ${{size}} (1 % av ${{balance}}) · tx {{tx}}"
+    "liveTradeDone": "💰 LIVE: {{direction}} {{outcome}} — ${{size}} (1 % av ${{balance}}) · tx {{tx}}",
+    "paperBalanceTitle": "Paper startkapital",
+    "paperBalanceHint": "Sätt din simulerade bankrulle (t.ex. 10 för att testa med 10 €). Varje affär använder 1 % av saldot. Stoppa motorn innan du ändrar.",
+    "paperBalancePlaceholder": "t.ex. 10 eller 1000",
+    "applyPaperBalance": "Spara",
+    "paperBalanceCurrent": "Aktuellt saldo",
+    "paperBalanceSaved": "Paper-saldo uppdaterat",
+    "paperBalanceSaveFailed": "Kunde inte spara paper-saldo",
+    "paperBalanceSavedLog": "Paper-saldo satt till €{{amount}}",
+    "paperBalanceInvalid": "Ange ett tal ≥ 0,01 (t.ex. 10)",
+    "paperBalanceStopEngine": "Stoppa motorn för att ändra paper-saldo",
+    "paperBalanceNeedAuth": "Logga in för att spara paper-inställningar",
+    "paperBalanceResetToast": "Paper-saldo återställt till €1000",
+    "paperBalanceResetLog": "Paper-saldo återställt till €{{amount}}"
   },
   "predictionMarketBot": {
     "headerTitle": "Prediction market-bot",
