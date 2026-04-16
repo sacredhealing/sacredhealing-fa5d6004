@@ -1075,18 +1075,18 @@ function QuantumApothecaryInner() {
                 {msg.role === 'user' ? (
                   <>
                     <div
-                      className="ml-auto max-w-[82%] rounded-[20px] px-4 py-3"
+                      className="ml-auto max-w-[85%] rounded-[20px] px-5 py-4"
                       style={{
                         background: 'linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08))',
                         border: '1px solid rgba(212,175,55,0.25)',
                       }}
                     >
-                      <div className="markdown-body text-[15px] leading-[1.8] text-white/95 whitespace-pre-wrap break-words w-full min-w-0 text-left" style={{ maxWidth: '100%', wordBreak: 'break-word' }}>
+                      <div className="markdown-body text-[15px] leading-[1.75] text-white/95 whitespace-pre-wrap break-words w-full min-w-0 text-left" style={{ maxWidth: '100%', wordBreak: 'break-word' }}>
                         {renderChatText(msg.text, 'user')}
                       </div>
                     </div>
                     {ts && (
-                      <p className="text-[10px] text-white/25 mt-1 text-right max-w-[82%]">{ts}</p>
+                      <p className="text-[10px] text-white/25 mt-1 text-right max-w-[85%]">{ts}</p>
                     )}
                   </>
                 ) : (
