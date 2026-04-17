@@ -274,7 +274,7 @@ export default function PredictionMarketBot() {
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <button
             type="button"
-            onClick={() => navigate('/polymarket-bot')}
+            onClick={() => navigate('/income-streams/polymarket-bot')}
             className="shrink-0 rounded-xl border border-white/[0.08] p-2 hover:bg-white/[0.04]"
             aria-label={t('common.back', 'Back')}
           >

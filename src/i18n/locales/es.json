@@ -1609,6 +1609,12 @@
     "kicker": "Flujo de ingresos · Abundancia",
     "title": "Bot copy-trading Polymarket",
     "lead": "Bot Python modular en polymarket-copy-bot/. Ejecútalo en local o VPS US-East. Solo copia BUY con tope 2 % de deslizamiento y USDC configurable.",
+    "heroKicker": "Empieza aquí",
+    "heroTitle": "Abre primero la terminal de trading",
+    "heroBody": "La pantalla Sovereign HFT es donde arrancas el motor, conectas claves y operas paper o live. El copy-bot Python más abajo es una ruta VPS aparte para copiar ballenas.",
+    "ctaStartHft": "Abrir terminal Sovereign HFT",
+    "ctaVpsSetup": "Instalación Python en VPS (bajar)",
+    "ctaOverviewKelly": "Solo resumen y calculadora Kelly",
     "archTitle": "Arquitectura",
     "archPath": "Carpeta: polymarket-copy-bot/",
     "modMain": "main.py — Entrada, control de deslizamiento, orquestación",
@@ -1638,7 +1644,6 @@
     "whalesHint": "Edita WHALE_WALLETS en listener.py.",
     "vpsTitle": "VPS",
     "vpsBody": "us-east-1 recomendado. Ej.: nohup python main.py > bot.log 2>&1 &",
-    "ctaAppHub": "Hub Polymarket en la app",
     "ctaAi": "Terminal IA predicción",
     "disclaimer": "No es asesoramiento financiero."
   },
@@ -1668,7 +1673,10 @@
     "recommendedPosition": "Posición recomendada: {{amount}}",
     "recommendedPositionZero": "Sin ventaja matemática con esta probabilidad — posición $0.",
     "launchCta": "Lanzar bot completo →",
-    "openAiTerminal": "Terminal IA de predicción →"
+    "openHftTerminal": "Abrir terminal Sovereign HFT",
+    "openAiTerminal": "Terminal IA de predicción →",
+    "bankrollPlaceholder": "10000",
+    "winProbPlaceholder": "68,4"
   },
   "polymarketBotDetail": {
     "keyStorageHint": "La clave se guarda en este navegador hasta que desconectes o borres los datos del sitio.",

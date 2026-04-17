@@ -99,6 +99,7 @@ function getActiveNavTo(pathname: string): string | null {
         '/journal',
         '/income-streams',
         '/polymarket-bot',
+        '/income-streams/polymarket-bot',
         '/prediction-market-bot',
         '/siddha-quantum',
         '/prana-flow',

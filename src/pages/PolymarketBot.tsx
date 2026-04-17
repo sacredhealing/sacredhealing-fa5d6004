@@ -184,7 +184,7 @@ export default function PolymarketBot() {
               value={bankroll}
               onChange={(e) => setBankroll(e.target.value)}
               className="w-full rounded-2xl border border-white/[0.08] bg-black/40 px-4 py-3 text-white outline-none focus:border-[#D4AF37]/40"
-              placeholder="10000"
+              placeholder={t('polymarketBot.bankrollPlaceholder')}
             />
           </label>
           <label className="mb-4 block">
@@ -199,7 +199,7 @@ export default function PolymarketBot() {
               value={winProb}
               onChange={(e) => setWinProb(e.target.value)}
               className="w-full rounded-2xl border border-white/[0.08] bg-black/40 px-4 py-3 text-white outline-none focus:border-[#D4AF37]/40"
-              placeholder="68.4"
+              placeholder={t('polymarketBot.winProbPlaceholder')}
             />
           </label>
           <button
@@ -222,19 +222,26 @@ export default function PolymarketBot() {
         <div className="flex w-full flex-col gap-3">
           <button
             type="button"
-            onClick={() => navigate('/prediction-market-bot')}
+            onClick={() => navigate('/income-streams/polymarket-bot')}
             className="w-full rounded-[24px] py-4 text-[11px] font-black tracking-[0.25em] uppercase text-[#050505]"
             style={{
               background: 'linear-gradient(135deg,#D4AF37,#F0C040,#D4AF37)',
               boxShadow: '0 0 32px rgba(212,175,55,0.4)',
             }}
           >
+            {t('polymarketBot.openHftTerminal')}
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/prediction-market-bot')}
+            className="w-full rounded-[24px] border border-[#D4AF37]/35 bg-transparent py-3.5 text-[10px] font-black tracking-[0.2em] uppercase text-[#D4AF37]/90"
+          >
             {t('polymarketBot.openAiTerminal')}
           </button>
           <button
             type="button"
             onClick={() => navigate('/sqi-chat')}
-            className="w-full rounded-[24px] border border-[#D4AF37]/35 bg-transparent py-3.5 text-[10px] font-black tracking-[0.2em] uppercase text-[#D4AF37]/90"
+            className="w-full rounded-[24px] border border-white/[0.08] bg-transparent py-3.5 text-[10px] font-black tracking-[0.2em] uppercase text-white/55"
           >
             {t('polymarketBot.launchCta')}
           </button>

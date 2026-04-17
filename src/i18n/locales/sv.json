@@ -2126,6 +2126,12 @@
     "kicker": "Inkomstström · Överflöd",
     "title": "Polymarket copy-trading-bot",
     "lead": "Modulär Python-bot i repot under polymarket-copy-bot/. Kör lokalt eller på VPS i US-East. Kopierar endast BUY med 2 % glidningsgräns och konfigurerbar USDC-storlek.",
+    "heroKicker": "Börja här",
+    "heroTitle": "Öppna tradingterminalen först",
+    "heroBody": "Sovereign HFT-skärmen är där du startar motorn, kopplar nycklar och kör paper eller live. Python copy-bot nedan är en separat VPS-väg för val-speglings.",
+    "ctaStartHft": "Öppna Sovereign HFT-terminal",
+    "ctaVpsSetup": "VPS Python-installation (hoppa ned)",
+    "ctaOverviewKelly": "Endast översikt & Kelly",
     "archTitle": "Arkitektur",
     "archPath": "Mapp: polymarket-copy-bot/",
     "modMain": "main.py — Start, glidningsfilter, kopplar listener → matcher → executor",
@@ -2155,7 +2161,6 @@
     "whalesHint": "Redigera WHALE_WALLETS i listener.py.",
     "vpsTitle": "VPS",
     "vpsBody": "Kör nära us-east-1 för lägst latens. Exempel: nohup python main.py > bot.log 2>&1 &",
-    "ctaAppHub": "Polymarket-hubben i appen",
     "ctaAi": "AI prediction-terminal",
     "disclaimer": "Inte finansiell rådgivning. Du ansvarar för nycklar och risk."
   },
@@ -2185,7 +2190,10 @@
     "recommendedPosition": "Rekommenderad position: {{amount}}",
     "recommendedPositionZero": "Ingen matematisk kant vid denna vinstsannolikhet — rekommenderad position 0 USD.",
     "launchCta": "Starta full bot →",
-    "openAiTerminal": "AI prediction terminal →"
+    "openHftTerminal": "Öppna Sovereign HFT-terminal",
+    "openAiTerminal": "AI prediction terminal →",
+    "bankrollPlaceholder": "10000",
+    "winProbPlaceholder": "68,4"
   },
   "polymarketBotDetail": {
     "keyStorageHint": "Nyckeln sparas i den här webbläsaren tills du kopplar bort eller rensar webbplatsdata.",

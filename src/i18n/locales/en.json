@@ -2196,6 +2196,12 @@
     "kicker": "Income stream · Abundance",
     "title": "Polymarket Copy-Trading Bot",
     "lead": "Modular Python bot in this repository under polymarket-copy-bot/. Run it on your own machine or a US-East VPS for lowest latency. Copies BUY flow only with a 2% slippage guard and configurable USDC size.",
+    "heroKicker": "Start here",
+    "heroTitle": "Open the trading terminal first",
+    "heroBody": "The Sovereign HFT screen is where you start the engine, connect keys, and run paper or live. The Python copy-bot section below is only for running whale mirroring on your own VPS.",
+    "ctaStartHft": "Open Sovereign HFT terminal",
+    "ctaVpsSetup": "VPS Python setup (jump down)",
+    "ctaOverviewKelly": "Overview & Kelly calculator only",
     "archTitle": "Architecture",
     "archPath": "Repository folder: polymarket-copy-bot/",
     "modMain": "main.py — Entry point, slippage guard, wires listener → matcher → executor",
@@ -2225,7 +2231,6 @@
     "whalesHint": "Edit WHALE_WALLETS in listener.py to add or remove addresses.",
     "vpsTitle": "VPS deployment",
     "vpsBody": "For production, run in N. Virginia (us-east-1) or nearby — closest hop to Polymarket infrastructure. Example: nohup python main.py > bot.log 2>&1 &",
-    "ctaAppHub": "Polymarket hub in app",
     "ctaAi": "AI prediction terminal",
     "disclaimer": "Not financial advice. You are responsible for keys, compliance, and capital at risk."
   },
@@ -2255,7 +2260,10 @@
     "recommendedPosition": "Recommended Position: {{amount}}",
     "recommendedPositionZero": "No mathematical edge at this win rate — recommended position $0.",
     "launchCta": "Launch Full Bot →",
-    "openAiTerminal": "AI prediction terminal →"
+    "openHftTerminal": "Open Sovereign HFT terminal",
+    "openAiTerminal": "AI prediction terminal →",
+    "bankrollPlaceholder": "10000",
+    "winProbPlaceholder": "68.4"
   },
   "polymarketBotDetail": {
     "keyStorageHint": "Key stays in this browser until you disconnect or clear site data.",

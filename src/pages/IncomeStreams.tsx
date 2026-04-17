@@ -124,7 +124,7 @@ const IncomeStreams: React.FC = () => {
         description_sv: null,
         description_es: null,
         description_no: null,
-        link: '/polymarket-bot',
+        link: '/income-streams/polymarket-bot',
         category: 'AI',
         potential_earnings: 'LATENCY EDGE + MICRO-ARBITRAGE',
         potential_earnings_sv: null,

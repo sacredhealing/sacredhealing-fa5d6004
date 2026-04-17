@@ -87,6 +87,42 @@ export default function PolymarketCopyTradingInfo() {
 
         <p className="mb-6 text-sm leading-relaxed text-white/60">{t('polymarketCopyBot.lead')}</p>
 
+        <div className={`${glass} mb-6 p-5`}>
+          <p
+            className="mb-2 text-[8px] font-extrabold tracking-[0.5em] text-white/60 uppercase"
+          >
+            {t('polymarketCopyBot.heroKicker')}
+          </p>
+          <h2 className="mb-2 text-sm font-black tracking-tight text-white/90">
+            {t('polymarketCopyBot.heroTitle')}
+          </h2>
+          <p className="mb-4 text-sm leading-relaxed text-white/55">{t('polymarketCopyBot.heroBody')}</p>
+          <div className="flex flex-col gap-3">
+            <Link
+              to="/income-streams/polymarket-bot"
+              className="block w-full rounded-[24px] py-4 text-center text-[11px] font-black tracking-[0.2em] text-[#050505] uppercase"
+              style={{
+                background: 'linear-gradient(135deg,#D4AF37,#F0C040,#D4AF37)',
+                boxShadow: '0 0 28px rgba(212,175,55,0.35)',
+              }}
+            >
+              {t('polymarketCopyBot.ctaStartHft')}
+            </Link>
+            <Link
+              to={{ pathname: '/income-streams/polymarket-copy-trading', hash: 'sovereign-setup' }}
+              className="block w-full rounded-[24px] border border-[#D4AF37]/35 py-3.5 text-center text-[10px] font-black tracking-[0.2em] text-[#D4AF37] uppercase"
+            >
+              {t('polymarketCopyBot.ctaVpsSetup')}
+            </Link>
+            <Link
+              to="/polymarket-bot"
+              className="block text-center text-[10px] font-bold tracking-wider text-white/45 uppercase underline-offset-4 hover:text-white/70"
+            >
+              {t('polymarketCopyBot.ctaOverviewKelly')}
+            </Link>
+          </div>
+        </div>
+
         <div className={`${glass} mb-4 p-5`}>
           <h2 className="mb-3 flex items-center gap-2 text-xs font-black tracking-wide text-[#D4AF37] uppercase">
             <Terminal className="h-4 w-4" />
@@ -169,20 +205,26 @@ export default function PolymarketCopyTradingInfo() {
 
         <div className="mb-4 flex flex-col gap-3">
           <Link
-            to="/polymarket-bot"
+            to="/income-streams/polymarket-bot"
             className="block w-full rounded-[24px] py-4 text-center text-[11px] font-black tracking-[0.2em] text-[#050505] uppercase"
             style={{
               background: 'linear-gradient(135deg,#D4AF37,#F0C040,#D4AF37)',
               boxShadow: '0 0 28px rgba(212,175,55,0.35)',
             }}
           >
-            {t('polymarketCopyBot.ctaAppHub')}
+            {t('polymarketCopyBot.ctaStartHft')}
           </Link>
           <Link
             to="/prediction-market-bot"
             className="block w-full rounded-[24px] border border-[#D4AF37]/35 py-3.5 text-center text-[10px] font-black tracking-[0.2em] text-[#D4AF37] uppercase"
           >
             {t('polymarketCopyBot.ctaAi')}
+          </Link>
+          <Link
+            to="/polymarket-bot"
+            className="block w-full rounded-[24px] border border-white/[0.08] py-3 text-center text-[10px] font-black tracking-[0.2em] text-white/55 uppercase"
+          >
+            {t('polymarketCopyBot.ctaOverviewKelly')}
           </Link>
         </div>
 
