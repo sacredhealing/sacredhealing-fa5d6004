@@ -79,10 +79,10 @@ export class PaperTradingService {
 
   // Get current paper balance
   async getPaperBalance(): Promise<number> {
-    if (!this.userId) return 1000;
+    if (!this.userId) return 10;
     
     const settings = await this.loadSettings();
-    return settings?.paper_balance ?? 1000;
+    return settings?.paper_balance ?? 10;
   }
 
   // Calculate realistic execution price with slippage
@@ -189,14 +189,18 @@ export class PaperTradingService {
         return { success: false, error: 'Failed to load trading settings' };
       }
 
-      const currentBalance = settings.paper_balance ?? 1000;
+      const currentBalance = settings.paper_balance ?? 10;
+
+      // Dynamic 5% risk — scales with balance, min €0.50, max €50
+      const dynamicSize = Math.min(50, Math.max(0.5, parseFloat((currentBalance * 0.05).toFixed(2))));
+      const tradeSignal: TradeSignal = { ...signal, suggestedSize: dynamicSize };
 
       // Check if we have enough balance for buy orders
-      if (signal.direction === 'buy' && signal.suggestedSize > currentBalance) {
-        console.log('[PaperTrading] Insufficient balance:', currentBalance, 'needed:', signal.suggestedSize);
+      if (tradeSignal.direction === 'buy' && tradeSignal.suggestedSize > currentBalance) {
+        console.log('[PaperTrading] Insufficient balance:', currentBalance, 'needed:', tradeSignal.suggestedSize);
         return { 
           success: false, 
-          error: `Insufficient paper balance: €${currentBalance.toFixed(2)} available, €${signal.suggestedSize.toFixed(2)} needed` 
+          error: `Insufficient paper balance: €${currentBalance.toFixed(2)} available, €${tradeSignal.suggestedSize.toFixed(2)} needed` 
         };
       }
 
@@ -210,14 +214,14 @@ export class PaperTradingService {
           .from('polymarket_trades')
           .insert({
             user_id: this.userId,
-            market_id: signal.marketId,
-            market_question: signal.reason,
-            outcome: signal.outcome,
-            token_id: signal.tokenId,
-            direction: signal.direction,
+            market_id: tradeSignal.marketId,
+            market_question: tradeSignal.reason,
+            outcome: tradeSignal.outcome,
+            token_id: tradeSignal.tokenId,
+            direction: tradeSignal.direction,
             shares: 0,
-            entry_price: signal.currentPrice,
-            amount_usdc: signal.suggestedSize,
+            entry_price: tradeSignal.currentPrice,
+            amount_usdc: tradeSignal.suggestedSize,
             tx_hash: `paper-failed-${Date.now()}`,
             strategy: strategy || 'manual',
             is_paper: true,
@@ -229,20 +233,20 @@ export class PaperTradingService {
 
       // Calculate realistic execution price with slippage
       const { executionPrice, slippage } = await this.calculateExecutionPrice(
-        signal.tokenId,
-        signal.suggestedSize,
-        signal.direction,
-        signal.currentPrice
+        tradeSignal.tokenId,
+        tradeSignal.suggestedSize,
+        tradeSignal.direction,
+        tradeSignal.currentPrice
       );
 
       // Calculate trading fee
-      const feeAmount = signal.suggestedSize * TAKER_FEE_RATE;
-      const totalCost = signal.direction === 'buy' 
-        ? signal.suggestedSize + feeAmount 
+      const feeAmount = tradeSignal.suggestedSize * TAKER_FEE_RATE;
+      const totalCost = tradeSignal.direction === 'buy' 
+        ? tradeSignal.suggestedSize + feeAmount 
         : feeAmount; // For sells, fee is deducted from proceeds
 
       // Double-check balance after fees for buys
-      if (signal.direction === 'buy' && totalCost > currentBalance) {
+      if (tradeSignal.direction === 'buy' && totalCost > currentBalance) {
         return { 
           success: false, 
           error: `Insufficient balance after fees: €${currentBalance.toFixed(2)} available, €${totalCost.toFixed(2)} needed (includes €${feeAmount.toFixed(4)} fee)` 
@@ -250,7 +254,7 @@ export class PaperTradingService {
       }
 
       // Calculate shares received (using realistic execution price, not mid-price)
-      const shares = signal.suggestedSize / executionPrice;
+      const shares = tradeSignal.suggestedSize / executionPrice;
       
       // Generate fake tx hash for paper trades
       const fakeTxHash = `paper-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -260,14 +264,14 @@ export class PaperTradingService {
         .from('polymarket_trades')
         .insert({
           user_id: this.userId,
-          market_id: signal.marketId,
-          market_question: signal.reason,
-          outcome: signal.outcome,
-          token_id: signal.tokenId,
-          direction: signal.direction,
+          market_id: tradeSignal.marketId,
+          market_question: tradeSignal.reason,
+          outcome: tradeSignal.outcome,
+          token_id: tradeSignal.tokenId,
+          direction: tradeSignal.direction,
           shares,
           entry_price: executionPrice, // Use realistic execution price
-          amount_usdc: signal.suggestedSize,
+          amount_usdc: tradeSignal.suggestedSize,
           tx_hash: fakeTxHash,
           strategy: strategy || 'manual',
           is_paper: true,
@@ -282,7 +286,7 @@ export class PaperTradingService {
       }
 
       // Update balance
-      const newBalance = signal.direction === 'buy'
+      const newBalance = tradeSignal.direction === 'buy'
         ? currentBalance - totalCost
         : currentBalance + (shares * executionPrice) - feeAmount;
 
@@ -295,11 +299,11 @@ export class PaperTradingService {
         .eq('user_id', this.userId);
 
       // Update or create position (using realistic execution price)
-      const adjustedSignal = { ...signal, currentPrice: executionPrice };
+      const adjustedSignal = { ...tradeSignal, currentPrice: executionPrice };
       await this.updatePosition(adjustedSignal, shares);
 
       console.log('[PaperTrading] Realistic paper trade executed:', {
-        midPrice: signal.currentPrice,
+        midPrice: tradeSignal.currentPrice,
         executionPrice,
         slippage: `${(slippage * 100).toFixed(3)}%`,
         fee: feeAmount,
@@ -623,7 +627,7 @@ export class PaperTradingService {
   }
 
   // Reset paper trading balance
-  async resetPaperBalance(amount: number = 1000): Promise<boolean> {
+  async resetPaperBalance(amount: number = 10): Promise<boolean> {
     if (!this.userId) return false;
 
     const { error } = await supabase
@@ -637,14 +641,14 @@ export class PaperTradingService {
     return !error;
   }
 
-  // Full reset: restore balance to €1000, clear fees, cap max trade size to $5
+  // Full reset: restore balance to €10, clear fees, cap max trade size to $5
   async resetToDefaults(): Promise<boolean> {
     if (!this.userId) return false;
 
     const { error } = await supabase
       .from('polymarket_bot_settings')
       .update({
-        paper_balance: 1000,
+        paper_balance: 10,
         total_fees_paid: 0,
         max_trade_size: 5,
       })
@@ -676,7 +680,7 @@ export class PaperTradingService {
           ai_signal: true,
         },
         admin_profit_split: 0.1111,
-        paper_balance: 1000,
+        paper_balance: 10,
         total_fees_paid: 0,
       };
 
@@ -696,7 +700,7 @@ export class PaperTradingService {
       daily_loss_limit: data.daily_loss_limit,
       strategies_enabled: data.strategies_enabled as BotSettings['strategies_enabled'],
       admin_profit_split: data.admin_profit_split,
-      paper_balance: data.paper_balance ?? 1000,
+      paper_balance: data.paper_balance ?? 10,
       total_fees_paid: data.total_fees_paid ?? 0,
     };
   }

@@ -156,15 +156,16 @@ const RPC_POOL = getRpcPool();
 
 const PKEY_STORAGE_KEY = 'polymarket_bot_pkey';
 
-/** Risk per trade: 1% of current balance (paper or live USDC), for small-account testing. */
-const TRADE_RISK_FRACTION = 0.01;
+/** Risk per live trade: 5% of balance, min €0.50, max €50 (paper sizing is enforced in paperTrading.executePaperTrade). */
+const TRADE_RISK_FRACTION = 0.05;
+const MIN_LIVE_TRADE_USD = 0.5;
+const MAX_LIVE_TRADE_USD = 50;
 
 function positionSizeFromBalance(balance: number): number {
   if (!Number.isFinite(balance) || balance <= 0) return 0;
-  const raw = balance * TRADE_RISK_FRACTION;
-  const rounded = Math.round(raw * 100) / 100;
-  if (rounded <= 0) return 0;
-  return Math.min(rounded, balance);
+  const raw = Math.min(MAX_LIVE_TRADE_USD, Math.max(MIN_LIVE_TRADE_USD, parseFloat((balance * TRADE_RISK_FRACTION).toFixed(2))));
+  if (raw <= 0) return 0;
+  return Math.min(raw, balance);
 }
 
 function readStoredPrivateKey(): string | null {
@@ -243,10 +244,10 @@ const PolymarketBotDetailInner: React.FC = () => {
   const [activeSignals, setActiveSignals] = useState<TradeSignal[]>([]);
   const [totalTrades, setTotalTrades] = useState(0);
   const [isPaperMode, setIsPaperMode] = useState(true);
-  const [paperBalance, setPaperBalance] = useState(1000);
+  const [paperBalance, setPaperBalance] = useState(10);
   /** Baseline for P&L % display — updated when settings load or user applies a new paper bankroll */
-  const [paperBaseline, setPaperBaseline] = useState(1000);
-  const [paperBalanceDraft, setPaperBalanceDraft] = useState('1000');
+  const [paperBaseline, setPaperBaseline] = useState(10);
+  const [paperBalanceDraft, setPaperBalanceDraft] = useState('10');
   const [totalFeesPaid, setTotalFeesPaid] = useState(0);
   const [pnlSummary, setPnlSummary] = useState({ totalPnL: 0, todayPnL: 0, totalTrades: 0, winRate: 0, unrealizedPnL: 0 });
   const [livePnlSummary, setLivePnlSummary] = useState({ totalPnL: 0, todayPnL: 0, totalTrades: 0, winRate: 0, unrealizedPnL: 0 });
@@ -299,7 +300,7 @@ const PolymarketBotDetailInner: React.FC = () => {
       setLivePnlSummary(liveSummary);
       setTotalTrades(paperSummary.totalTrades + liveSummary.totalTrades);
       if (settings) {
-        setPaperBalance(settings.paper_balance ?? 1000);
+        setPaperBalance(settings.paper_balance ?? 10);
         setTotalFeesPaid(settings.total_fees_paid ?? 0);
       }
     } catch (e) {
@@ -340,13 +341,13 @@ const PolymarketBotDetailInner: React.FC = () => {
   }, [paperBalanceDraft, isRunning, user?.id, t, addLog, refreshPnL]);
 
   const handleResetPaperBalance = useCallback(async () => {
-    const success = await paperTradingService.resetPaperBalance(1000);
+    const success = await paperTradingService.resetPaperBalance(10);
     if (success) {
-      setPaperBalance(1000);
-      setPaperBaseline(1000);
-      setPaperBalanceDraft('1000.00');
+      setPaperBalance(10);
+      setPaperBaseline(10);
+      setPaperBalanceDraft('10.00');
       setTotalFeesPaid(0);
-      addLog(t('polymarketBotDetail.paperBalanceResetLog', { amount: '1000.00' }), 'success');
+      addLog(t('polymarketBotDetail.paperBalanceResetLog', { amount: '10.00' }), 'success');
       toast.success(t('polymarketBotDetail.paperBalanceResetToast'));
       void refreshPnL();
     }
@@ -429,11 +430,11 @@ const PolymarketBotDetailInner: React.FC = () => {
               paperTradingService.setMode(s.is_paper_mode);
               addLog(`Mode: ${s.is_paper_mode ? '📝 PAPER TRADING' : '💰 LIVE TRADING'}`, 'info');
 
-              // Legacy guard: cap oversized max_trade_size from old DB rows (sizing is now 1% of balance in UI).
+              // Legacy guard: cap oversized max_trade_size from old DB rows (live sizing: 5% of balance in UI; paper: service).
               if ((s.max_trade_size ?? 50) > 5) {
                 await paperTradingService.saveSettings({ max_trade_size: 5 });
               }
-              const pb = s.paper_balance ?? 1000;
+              const pb = s.paper_balance ?? 10;
               setPaperBalance(pb);
               setPaperBaseline(pb);
               setPaperBalanceDraft(pb.toFixed(2));
