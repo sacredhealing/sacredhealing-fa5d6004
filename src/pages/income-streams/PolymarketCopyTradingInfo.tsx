@@ -82,6 +82,17 @@ export default function PolymarketCopyTradingInfo() {
             >
               {t('polymarketCopyBot.title')}
             </h1>
+            <div
+              style={{
+                fontSize: 9,
+                color: 'rgba(255,255,255,0.4)',
+                letterSpacing: '0.3em',
+                textTransform: 'uppercase',
+                marginTop: 4,
+              }}
+            >
+              {t('polymarketCopyBot.headerSubtitleLine')}
+            </div>
           </div>
         </div>
 

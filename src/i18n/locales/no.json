@@ -1567,10 +1567,31 @@
       "badgeSovereign": "SUVEREN",
       "cta": "Åpne terminal"
     },
+    "hftCard": {
+      "title": "Polymarket HFT-bot",
+      "description": "Live HFT-motor. Hvalspeil + latensarbitrasje + volatilitetsscalper. Koble lommebok, start motor, handle.",
+      "footerTag": "HVALSPEIL · LATENSARB · VOL-SCALPER",
+      "badgeNew": "HFT · LIVE",
+      "badgeSovereign": "SUVEREN"
+    },
+    "strategyGuideCard": {
+      "title": "Polymarket strategiguide",
+      "description": "Kelly-kalkulator + 5-trinns guide. Lær strategien før du handler.",
+      "footerTag": "LÆRE · KELLY · 5-TRINNS PIPELINE",
+      "badgeLine": "GUIDE",
+      "badgeSovereign": "OPPLÆRING"
+    },
+    "aiPredictionCard": {
+      "title": "AI prediction-motor",
+      "description": "Gemini AI analyserer 50 live-markeder hvert 90. sekund. Kelly-størrelse. Signaler med tillit, kant % og begrunnelse. Ingen koding.",
+      "footerTag": "GEMINI · KELLY · LIVE-SIGNALER",
+      "badgeLine": "AI · GEMINI",
+      "badgeSovereign": "SIGNALER"
+    },
     "copyBotCard": {
       "title": "Polymarket copy-trading-bot",
-      "description": "Sovereign VPS-bot: Polygon CTF, Gamma + CLOB, faste USDC-ordrer. Uten Telegram eller Whop.",
-      "footerTag": "ON-CHAIN ØRE · POLYGON · CLOB",
+      "description": "VPS-bot speiler hval-lommebøker on-chain via Polygon. Ren copy trading — ingen signalforsinkelse.",
+      "footerTag": "ON-CHAIN HVALKOPI · POLYGON CTF",
       "badgeLine": "SQI 2050 • VPS",
       "badgeSovereign": "SUVEREN",
       "infoAria": "Åpne oppsettsguide"
@@ -1578,6 +1599,7 @@
   },
   "polymarketCopyBot": {
     "kicker": "Inntektsstrøm · Overflod",
+    "headerSubtitleLine": "On-chain hvalkopi · Polygon CTF · Ingen signalforsinkelse",
     "title": "Polymarket copy-trading-bot",
     "lead": "Python-modul i polymarket-copy-bot/. Kjør lokalt eller på US-East VPS. Kopierer kun BUY med 2 % glidning og konfigurerbar USDC.",
     "heroKicker": "Start her",
@@ -1619,13 +1641,13 @@
     "disclaimer": "Ikke finansielle råd."
   },
   "polymarketBot": {
-    "title": "Polymarket-bot",
-    "headerBadge": "SQI 2050 • SUVEREN",
-    "statusTitle": "PAPERHANDELSMODUS",
-    "statusLine": "Livehandel venter på godkjenning. Simuleringer på Polygon + USDC.e.",
-    "statWinRate": "Vinnrate 68,4 %",
-    "statSharpe": "Sharpe 2,14",
-    "statMaxDd": "Maks DD -4,2 %",
+    "title": "Strategiguide og Kelly-kalkulator",
+    "headerBadge": "LÆR STRATEGIEN · FØR DU HANDLER",
+    "statusTitle": "📊 Strategiopplæring",
+    "statusLine": "Mestre 5-trinns-pipelinen topp-Polymarket-handlere bruker: skann → forsk → forutsi → risiko → signal. Bruk Kelly-kalkulatoren under for riktig posisjonsstørrelse.",
+    "statWinRate": "Vinnrate: 65–75 % (feilprising-strategi)",
+    "statSharpe": "Sharpe: 1,8+ (backtest 6 mnd)",
+    "statMaxDd": "Maks DD: −12 % (med Kelly-størrelse)",
     "pipelineTitle": "Utføringspipeline",
     "pipeScanTitle": "SKANN",
     "pipeScanDesc": "Live orderbøker, spreads og latensfølsomme feeds.",
@@ -1650,6 +1672,7 @@
     "winProbPlaceholder": "68,4"
   },
   "polymarketBotDetail": {
+    "hftPageTitle": "Polymarket HFT-bot",
     "keyStorageHint": "Nøkkelen lagres i denne nettleseren til du kobler fra eller sletter nettstedsdata.",
     "executionFeedHint": "Grønn = sync OK · Gull = status · Cyan = signal/handelslinje · Amber = advarsel. Handler logges bare når en strategi finner en kant — stille perioder er normale. Paper bruker 5 % av saldo (min 0,50 €, maks 50 €) i tjenesten; live samme regel i appen.",
     "feedEmpty": "Ingen aktivitet ennå — start motoren eller trykk oppdater for å synkronisere.",
@@ -1686,7 +1709,8 @@
     "resetPaperDataButton": "Tilbakestill paperdata",
     "resetPaperDataWarning": "Dette sletter all paper-handelshistorikk",
     "resetPaperDataSuccess": "Paper tilbakestilt — saldo gjenopprettet til €10",
-    "resetPaperDataFailed": "Kunne ikke tilbakestille paperdata"
+    "resetPaperDataFailed": "Kunne ikke tilbakestille paperdata",
+    "hftBannerSubtitle": "Hvalspeil + latensarb + volatilitetsscalper · Livemotor"
   },
   "predictionMarketBot": {
     "headerTitle": "Prediction market-bot",
@@ -1735,6 +1759,7 @@
     "toastErrorTitle": "Analyse feilet",
     "toastErrorDesc": "Tjenesten returnerte ikke resultat.",
     "engineTitle": "AI prediction-motor",
+    "headerSubtitleLine": "Gemini AI · 50 markeder · Hvert 90. s · Auto-Kelly-størrelse",
     "engineSub": "Gemini · Kelly · CLOB",
     "engineStatusScanning": "Skanner",
     "engineStatusRunning": "Kjører",

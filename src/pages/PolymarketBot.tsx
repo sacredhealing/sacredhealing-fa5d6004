@@ -117,7 +117,10 @@ export default function PolymarketBot() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-60" />
               <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-500" />
             </span>
-            <span className="text-[10px] font-extrabold tracking-[0.35em] text-amber-400/90 uppercase">
+            <span
+              className="text-[10px] font-extrabold uppercase"
+              style={{ letterSpacing: '0.4em', color: '#F59E0B' }}
+            >
               {t('polymarketBot.statusTitle')}
             </span>
           </div>

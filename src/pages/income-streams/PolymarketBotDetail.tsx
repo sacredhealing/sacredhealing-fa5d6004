@@ -783,8 +783,8 @@ const PolymarketBotDetailInner: React.FC = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 6 }}>
                 <div style={{ width: 50, height: 50, borderRadius: 15, background: `linear-gradient(135deg,${G},rgba(212,175,55,0.3))`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, boxShadow: '0 0 22px rgba(212,175,55,0.4)' }}>⟁</div>
                 <div>
-                  <div style={{ fontSize: 21, fontWeight: 900, letterSpacing: '-0.03em', color: '#fff' }}>Polymarket HFT Bot</div>
-                  <div className="subtitle">AI-Powered Prediction Market Trading</div>
+                  <div style={{ fontSize: 21, fontWeight: 900, letterSpacing: '-0.03em', color: '#fff' }}>{t('polymarketBotDetail.hftPageTitle')}</div>
+                  <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.3em', textTransform: 'uppercase', marginTop: 4 }}>{t('polymarketBotDetail.hftBannerSubtitle')}</div>
                 </div>
               </div>
             </div>
@@ -866,7 +866,8 @@ const PolymarketBotDetailInner: React.FC = () => {
                   <TrendingUp size={20} color={isRunning ? GREEN : G} className={isRunning ? 'running' : ''} />
                 </div>
                 <div>
-                  <div style={{ fontWeight: 900, fontSize: 18, letterSpacing: '-0.02em', color: '#fff' }}>Polymarket HFT Bot</div>
+                  <div style={{ fontWeight: 900, fontSize: 18, letterSpacing: '-0.02em', color: '#fff' }}>{t('polymarketBotDetail.hftPageTitle')}</div>
+                  <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.3em', textTransform: 'uppercase', marginTop: 4 }}>{t('polymarketBotDetail.hftBannerSubtitle')}</div>
                   <div className="mono">{address.slice(0, 8)}...{address.slice(-6)}</div>
                 </div>
               </div>

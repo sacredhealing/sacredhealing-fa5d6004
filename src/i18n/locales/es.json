@@ -1596,10 +1596,31 @@
       "badgeSovereign": "SOBERANO",
       "cta": "Abrir terminal"
     },
+    "hftCard": {
+      "title": "Bot HFT Polymarket",
+      "description": "Motor HFT en vivo. Espejo de ballenas + arbitraje de latencia + scalper de volatilidad. Conecta cartera, arranca motor, opera.",
+      "footerTag": "ESPEJO BALLENAS · ARB LATENCIA · SCALPER VOL",
+      "badgeNew": "HFT · EN VIVO",
+      "badgeSovereign": "SOBERANO"
+    },
+    "strategyGuideCard": {
+      "title": "Guía de estrategia Polymarket",
+      "description": "Calculadora Kelly + guía en 5 pasos. Aprende la estrategia antes de operar.",
+      "footerTag": "APRENDER · KELLY · PIPELINE 5 PASOS",
+      "badgeLine": "GUÍA",
+      "badgeSovereign": "EDUCACIÓN"
+    },
+    "aiPredictionCard": {
+      "title": "Motor de predicción IA",
+      "description": "Gemini IA analiza 50 mercados en vivo cada 90 s. Tamaño Kelly. Señales con confianza, ventaja % y razonamiento. Sin código.",
+      "footerTag": "GEMINI · KELLY · SEÑALES EN VIVO",
+      "badgeLine": "IA · GEMINI",
+      "badgeSovereign": "SEÑALES"
+    },
     "copyBotCard": {
       "title": "Bot copy-trading Polymarket",
-      "description": "Bot VPS soberano: señales CTF en Polygon, Gamma + CLOB, órdenes USDC fijas. Sin Telegram ni Whop.",
-      "footerTag": "OREJA ON-CHAIN · POLYGON · CLOB",
+      "description": "Bot VPS replica carteras ballena on-chain vía Polygon. Copy puro — sin retraso de señal.",
+      "footerTag": "COPIA BALLENA ON-CHAIN · POLYGON CTF",
       "badgeLine": "SQI 2050 • VPS",
       "badgeSovereign": "SOBERANO",
       "infoAria": "Abrir guía de instalación"
@@ -1607,6 +1628,7 @@
   },
   "polymarketCopyBot": {
     "kicker": "Flujo de ingresos · Abundancia",
+    "headerSubtitleLine": "Copia on-chain de ballenas · Polygon CTF · Sin retraso de señal",
     "title": "Bot copy-trading Polymarket",
     "lead": "Bot Python modular en polymarket-copy-bot/. Ejecútalo en local o VPS US-East. Solo copia BUY con tope 2 % de deslizamiento y USDC configurable.",
     "heroKicker": "Empieza aquí",
@@ -1648,13 +1670,13 @@
     "disclaimer": "No es asesoramiento financiero."
   },
   "polymarketBot": {
-    "title": "Bot Polymarket",
-    "headerBadge": "SQI 2050 • SOBERANO",
-    "statusTitle": "MODO PAPER TRADING",
-    "statusLine": "Trading en vivo pendiente de aprobación. Simulaciones en Polygon + USDC.e.",
-    "statWinRate": "Tasa de acierto 68,4 %",
-    "statSharpe": "Sharpe 2,14",
-    "statMaxDd": "Max DD -4,2 %",
+    "title": "Guía de estrategia y calculadora Kelly",
+    "headerBadge": "APRENDE LA ESTRATEGIA · ANTES DE OPERAR",
+    "statusTitle": "📊 Educación en estrategia",
+    "statusLine": "Domina el pipeline de 5 pasos de los mejores traders de Polymarket: escanear → investigar → predecir → riesgo → señal. Usa la calculadora Kelly abajo para dimensionar bien.",
+    "statWinRate": "Acierto: 65–75 % (estrategia de mala valoración)",
+    "statSharpe": "Sharpe: 1,8+ (backtest 6 meses)",
+    "statMaxDd": "Max DD: −12 % (con tamaño Kelly)",
     "pipelineTitle": "Pipeline de ejecución",
     "pipeScanTitle": "ESCANEAR",
     "pipeScanDesc": "Libros en vivo, spreads y feeds sensibles a latencia.",
@@ -1679,6 +1701,7 @@
     "winProbPlaceholder": "68,4"
   },
   "polymarketBotDetail": {
+    "hftPageTitle": "Bot HFT Polymarket",
     "keyStorageHint": "La clave se guarda en este navegador hasta que desconectes o borres los datos del sitio.",
     "executionFeedHint": "Verde = sync OK · Dorado = estado · Cian = señal/operación · Ámbar = aviso. Las operaciones solo aparecen cuando una estrategia ve ventaja — los silencios son normales. Paper usa el 5 % del saldo (mín. 0,50 €, máx. 50 €) en el servicio; en vivo la misma regla en la app.",
     "feedEmpty": "Sin actividad aún — inicia el motor o pulsa actualizar para sincronizar.",
@@ -1715,7 +1738,8 @@
     "resetPaperDataButton": "Restablecer datos paper",
     "resetPaperDataWarning": "Esto borra todo el historial de trading paper",
     "resetPaperDataSuccess": "Paper restablecido — saldo restaurado a €10",
-    "resetPaperDataFailed": "No se pudo restablecer los datos paper"
+    "resetPaperDataFailed": "No se pudo restablecer los datos paper",
+    "hftBannerSubtitle": "Espejo ballenas + arb latencia + scalper volatilidad · Motor en vivo"
   },
   "predictionMarketBot": {
     "headerTitle": "Bot de mercados predictivos",
@@ -1764,6 +1788,7 @@
     "toastErrorTitle": "Análisis fallido",
     "toastErrorDesc": "El servicio no devolvió resultado.",
     "engineTitle": "Motor de predicción IA",
+    "headerSubtitleLine": "Gemini IA · 50 mercados · Cada 90 s · Tamaño Kelly auto",
     "engineSub": "Gemini · Kelly · CLOB",
     "engineStatusScanning": "Escaneando",
     "engineStatusRunning": "En ejecución",

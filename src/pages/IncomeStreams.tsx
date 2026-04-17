@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { 
   DollarSign, TrendingUp, Users, Sparkles, ArrowRight, Coins, 
   GraduationCap, Bot, Cpu, Heart, Star, Zap, Globe, Shield,
-  Wallet, Info,
+  Wallet, Info, Brain,
   type LucideIcon
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -62,6 +62,7 @@ const iconMap: Record<string, LucideIcon> = {
   Globe,
   Shield,
   DollarSign,
+  Brain,
 };
 
 const IncomeStreams: React.FC = () => {
@@ -104,7 +105,6 @@ const IncomeStreams: React.FC = () => {
       const hasPolymarketBot = withoutForex.some(
         (s) =>
           s.internal_slug === 'polymarket-bot' ||
-          s.link === '/polymarket-bot' ||
           s.link === '/income-streams/polymarket-bot'
       );
       const hasCopyTradingBot = withoutForex.some(
@@ -112,27 +112,32 @@ const IncomeStreams: React.FC = () => {
           s.internal_slug === 'polymarket-copy-trading' ||
           s.link === '/income-streams/polymarket-copy-trading'
       );
+      const hasAIBot = withoutForex.some(
+        (s) =>
+          s.internal_slug === 'prediction-market-bot' ||
+          s.link === '/prediction-market-bot'
+      );
 
       const polymarketFallback: IncomeStream = {
         id: 'polymarket-bot-fallback',
-        title: 'Polymarket Bot',
+        title: 'Polymarket HFT Bot',
         title_sv: null,
         title_es: null,
         title_no: null,
         description:
-          'Sovereign HFT terminal. Paper-first. Live trading when approved. Polygon + USDC.e.',
+          'Live HFT engine. Whale mirror + latency arb + volatility scalper. Connect wallet, start engine, trade.',
         description_sv: null,
         description_es: null,
         description_no: null,
         link: '/income-streams/polymarket-bot',
         category: 'AI',
-        potential_earnings: 'LATENCY EDGE + MICRO-ARBITRAGE',
+        potential_earnings: 'WHALE MIRROR · LATENCY ARB · VOL SCALPER',
         potential_earnings_sv: null,
         potential_earnings_es: null,
         potential_earnings_no: null,
         is_featured: true,
         image_url: null,
-        order_index: -1,
+        order_index: -3,
         icon_name: 'Bot',
         badge_text: 'NEW • SQI 2050',
         badge_text_sv: null,
@@ -154,13 +159,13 @@ const IncomeStreams: React.FC = () => {
         title_es: null,
         title_no: null,
         description:
-          'Sovereign VPS bot: whale CTF signals → Gamma + CLOB → fixed USDC copy trades. No Telegram, no Whop.',
+          'VPS bot mirrors whale wallets on-chain via Polygon. Pure copy-trading — no signal lag.',
         description_sv: null,
         description_es: null,
         description_no: null,
         link: '/income-streams/polymarket-copy-trading',
         category: 'AI',
-        potential_earnings: 'ON-CHAIN EAR · POLYGON · CLOB',
+        potential_earnings: 'ON-CHAIN WHALE COPY · POLYGON CTF',
         potential_earnings_sv: null,
         potential_earnings_es: null,
         potential_earnings_no: null,
@@ -181,9 +186,44 @@ const IncomeStreams: React.FC = () => {
         cta_button_text_no: null,
       };
 
+      const aiBotFallback: IncomeStream = {
+        id: 'prediction-market-bot-fallback',
+        title: 'AI Prediction Engine',
+        title_sv: null,
+        title_es: null,
+        title_no: null,
+        description:
+          'Gemini AI analyses 50 live markets every 90s. Kelly sizing. Signals with confidence score, edge %, and reasoning. No coding needed.',
+        description_sv: null,
+        description_es: null,
+        description_no: null,
+        link: '/prediction-market-bot',
+        category: 'AI',
+        potential_earnings: 'GEMINI · KELLY CRITERION · LIVE SIGNALS',
+        potential_earnings_sv: null,
+        potential_earnings_es: null,
+        potential_earnings_no: null,
+        is_featured: true,
+        image_url: null,
+        order_index: -1,
+        icon_name: 'Brain',
+        badge_text: 'AI · GEMINI',
+        badge_text_sv: null,
+        badge_text_es: null,
+        badge_text_no: null,
+        color_from: null,
+        color_to: null,
+        internal_slug: 'prediction-market-bot',
+        cta_button_text: 'Open AI Engine',
+        cta_button_text_sv: null,
+        cta_button_text_es: null,
+        cta_button_text_no: null,
+      };
+
       let merged = [...withoutForex];
       // Polymarket bots are admin-only: only inject fallbacks for admins
       if (isAdmin) {
+        if (!hasAIBot) merged = [aiBotFallback, ...merged];
         if (!hasCopyTradingBot) merged = [copyTradingFallback, ...merged];
         if (!hasPolymarketBot) merged = [polymarketFallback, ...merged];
       }
@@ -270,29 +310,47 @@ const IncomeStreams: React.FC = () => {
         ) : (
           streams.filter((stream) => {
             // Polymarket cards are admin-only
-            const isPolymarketStream = stream.internal_slug === 'polymarket-bot' || stream.internal_slug === 'polymarket-copy-trading' || stream.internal_slug === 'polymarket-bot-general';
+            const isPolymarketStream =
+              stream.internal_slug === 'polymarket-bot' ||
+              stream.internal_slug === 'polymarket-copy-trading' ||
+              stream.internal_slug === 'polymarket-bot-general' ||
+              stream.internal_slug === 'prediction-market-bot';
             if (isPolymarketStream && !isAdmin) return false;
             return true;
           }).map((stream) => {
             const IconComponent = getIcon(stream.icon_name);
-            const isPolymarket = stream.internal_slug === 'polymarket-bot' || stream.internal_slug === 'polymarket-bot-general';
+            const isPolymarket = stream.internal_slug === 'polymarket-bot';
+            const isGeneralBot = stream.internal_slug === 'polymarket-bot-general';
             const isCopyTrading = stream.internal_slug === 'polymarket-copy-trading';
+            const isAIBot = stream.internal_slug === 'prediction-market-bot';
             const title = isPolymarket
-              ? t('incomeStreams.polymarketCard.title')
+              ? t('incomeStreams.hftCard.title')
               : isCopyTrading
                 ? t('incomeStreams.copyBotCard.title')
-                : getLocalizedField(stream, 'title') || stream.title;
+                : isAIBot
+                  ? t('incomeStreams.aiPredictionCard.title')
+                  : isGeneralBot
+                    ? t('incomeStreams.strategyGuideCard.title')
+                    : getLocalizedField(stream, 'title') || stream.title;
             const description = isPolymarket
-              ? t('incomeStreams.polymarketCard.description')
+              ? t('incomeStreams.hftCard.description')
               : isCopyTrading
                 ? t('incomeStreams.copyBotCard.description')
-                : getLocalizedField(stream, 'description') || stream.description;
+                : isAIBot
+                  ? t('incomeStreams.aiPredictionCard.description')
+                  : isGeneralBot
+                    ? t('incomeStreams.strategyGuideCard.description')
+                    : getLocalizedField(stream, 'description') || stream.description;
             const badge = getLocalizedField(stream, 'badge_text') || stream.badge_text;
             const earnings = isPolymarket
-              ? t('incomeStreams.polymarketCard.footerTag')
+              ? t('incomeStreams.hftCard.footerTag')
               : isCopyTrading
                 ? t('incomeStreams.copyBotCard.footerTag')
-                : getLocalizedField(stream, 'potential_earnings');
+                : isAIBot
+                  ? t('incomeStreams.aiPredictionCard.footerTag')
+                  : isGeneralBot
+                    ? t('incomeStreams.strategyGuideCard.footerTag')
+                    : getLocalizedField(stream, 'potential_earnings');
 
             const cardContent = (
               <Card className="group glass-card gold-border w-full max-w-full cursor-pointer overflow-hidden rounded-[20px] transition-all duration-300 hover:border-[#D4AF37]/25 hover:shadow-[0_0_30px_rgba(212,175,55,0.10)]">
@@ -306,7 +364,9 @@ const IncomeStreams: React.FC = () => {
                         className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[24px] transition-transform group-hover:scale-[1.03]"
                         style={{
                           background:
-                            isPolymarket || isCopyTrading
+                            isAIBot
+                              ? 'linear-gradient(135deg, rgba(34,211,238,0.18) 0%, rgba(212,175,55,0.12) 100%)'
+                              : isPolymarket || isCopyTrading || isGeneralBot
                               ? 'linear-gradient(135deg, rgba(212,175,55,0.20) 0%, rgba(34,211,238,0.10) 100%)'
                               : 'linear-gradient(135deg, rgba(212,175,55,0.14) 0%, rgba(255,255,255,0.03) 100%)',
                           border: '1px solid rgba(212,175,55,0.16)',
@@ -326,12 +386,30 @@ const IncomeStreams: React.FC = () => {
                               <span
                                 className="shrink-0 rounded-full border border-[#D4AF37] bg-transparent px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-[#D4AF37]"
                               >
-                                {t('incomeStreams.polymarketCard.badgeNew')}
+                                {t('incomeStreams.hftCard.badgeNew')}
                               </span>
                               <span
                                 className="shrink-0 rounded-full border border-[#D4AF37] bg-[#D4AF37] px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-[#050505]"
                               >
-                                {t('incomeStreams.polymarketCard.badgeSovereign')}
+                                {t('incomeStreams.hftCard.badgeSovereign')}
+                              </span>
+                            </>
+                          ) : isGeneralBot ? (
+                            <>
+                              <span className="shrink-0 rounded-full border border-[#D4AF37] bg-transparent px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-[#D4AF37]">
+                                {t('incomeStreams.strategyGuideCard.badgeLine')}
+                              </span>
+                              <span className="shrink-0 rounded-full border border-[#D4AF37] bg-[#D4AF37] px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-[#050505]">
+                                {t('incomeStreams.strategyGuideCard.badgeSovereign')}
+                              </span>
+                            </>
+                          ) : isAIBot ? (
+                            <>
+                              <span className="shrink-0 rounded-full border border-[#22D3EE] bg-transparent px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-[#22D3EE]">
+                                {t('incomeStreams.aiPredictionCard.badgeLine')}
+                              </span>
+                              <span className="shrink-0 rounded-full border border-[#D4AF37] bg-[#D4AF37] px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-[#050505]">
+                                {t('incomeStreams.aiPredictionCard.badgeSovereign')}
                               </span>
                             </>
                           ) : isCopyTrading ? (

@@ -364,6 +364,17 @@ export default function PredictionMarketBot() {
                   </div>
                   <div
                     style={{
+                      fontSize: 9,
+                      color: 'rgba(255,255,255,0.4)',
+                      letterSpacing: '0.3em',
+                      textTransform: 'uppercase',
+                      marginTop: 4,
+                    }}
+                  >
+                    {t('predictionMarketBot.headerSubtitleLine')}
+                  </div>
+                  <div
+                    style={{
                       fontSize: 8,
                       fontWeight: 700,
                       letterSpacing: '0.35em',

@@ -2113,10 +2113,31 @@
       "badgeSovereign": "SOUVERÄN",
       "cta": "Öppna terminal"
     },
+    "hftCard": {
+      "title": "Polymarket HFT-bot",
+      "description": "Live HFT-motor. Valspegling + latensarbitrage + volatilitetsscalper. Anslut plånbok, starta motor, handla.",
+      "footerTag": "VALSPEGLING · LATENSARB · VOL-SCALPER",
+      "badgeNew": "HFT · LIVE",
+      "badgeSovereign": "SOUVERÄN"
+    },
+    "strategyGuideCard": {
+      "title": "Polymarket strategiguide",
+      "description": "Kelly-kalkylator + guide i 5 steg. Lär dig strategin innan du handlar.",
+      "footerTag": "LÄRA · KELLY · 5-STEGSPIPELINE",
+      "badgeLine": "GUIDE",
+      "badgeSovereign": "UTBILDNING"
+    },
+    "aiPredictionCard": {
+      "title": "AI prediction-motor",
+      "description": "Gemini AI analyserar 50 livemarknader var 90:e sekund. Kelly-storlek. Signaler med konfidens, kant % och resonemang. Ingen kod behövs.",
+      "footerTag": "GEMINI · KELLY · LIVE-SIGNALER",
+      "badgeLine": "AI · GEMINI",
+      "badgeSovereign": "SIGNALER"
+    },
     "copyBotCard": {
       "title": "Polymarket copy-trading-bot",
-      "description": "Sovereign VPS-bot: val-signal från Polygon CTF, Gamma + CLOB, fast USDC-kopiering. Ingen Telegram, ingen Whop.",
-      "footerTag": "ON-CHAIN ÖRA · POLYGON · CLOB",
+      "description": "VPS-bot speglar val-plånböcker on-chain via Polygon. Ren copy trading — ingen signalfördröjning.",
+      "footerTag": "ON-CHAIN VALKopia · POLYGON CTF",
       "badgeLine": "SQI 2050 • VPS",
       "badgeSovereign": "SOUVERÄN",
       "infoAria": "Öppna installationsguide"
@@ -2124,6 +2145,7 @@
   },
   "polymarketCopyBot": {
     "kicker": "Inkomstström · Överflöd",
+    "headerSubtitleLine": "On-chain valkopia · Polygon CTF · Ingen signalfördröjning",
     "title": "Polymarket copy-trading-bot",
     "lead": "Modulär Python-bot i repot under polymarket-copy-bot/. Kör lokalt eller på VPS i US-East. Kopierar endast BUY med 2 % glidningsgräns och konfigurerbar USDC-storlek.",
     "heroKicker": "Börja här",
@@ -2165,13 +2187,13 @@
     "disclaimer": "Inte finansiell rådgivning. Du ansvarar för nycklar och risk."
   },
   "polymarketBot": {
-    "title": "Polymarket-bot",
-    "headerBadge": "SQI 2050 • SOUVERÄN",
-    "statusTitle": "PAPERHANDELSLÄGE",
-    "statusLine": "Livehandel väntar på godkännande. Kör simuleringar på Polygon + USDC.e.",
-    "statWinRate": "Vinstgrad 68,4 %",
-    "statSharpe": "Sharpe 2,14",
-    "statMaxDd": "Max DD -4,2 %",
+    "title": "Strategiguide & Kelly-kalkylator",
+    "headerBadge": "LÄR DIG STRATEGIN · INNAN DU HANDLAR",
+    "statusTitle": "📊 Strategiutbildning",
+    "statusLine": "Behärska 5-stegspipelinen som topp-Polymarket-handlare använder: skanna → forska → förutsäg → risk → signal. Använd Kelly-kalkylatorn nedan för korrekt positionsstorlek.",
+    "statWinRate": "Vinstgrad: 65–75 % (mispricing-strategi)",
+    "statSharpe": "Sharpe: 1,8+ (backtest 6 mån)",
+    "statMaxDd": "Max DD: −12 % (med Kelly-storlek)",
     "pipelineTitle": "Exekveringspipeline",
     "pipeScanTitle": "SKANNA",
     "pipeScanDesc": "Ta in live orderböcker, spreadar och latenskänsliga flöden.",
@@ -2196,6 +2218,7 @@
     "winProbPlaceholder": "68,4"
   },
   "polymarketBotDetail": {
+    "hftPageTitle": "Polymarket HFT-bot",
     "keyStorageHint": "Nyckeln sparas i den här webbläsaren tills du kopplar bort eller rensar webbplatsdata.",
     "executionFeedHint": "Grönt = sync OK · Guld = status · Cyan = signal/handelsrad · Bärnsten = varning. Affärer loggas bara när en strategi hittar en kant — tysta perioder är normalt. Paper använder 5 % av saldo (min 0,50 €, max 50 €) i tjänsten; live samma regel i appen.",
     "feedEmpty": "Ingen aktivitet än — starta motorn eller tryck uppdatera för att synka.",
@@ -2232,7 +2255,8 @@
     "resetPaperDataButton": "Återställ paperdata",
     "resetPaperDataWarning": "Detta rensar all paper-handelshistorik",
     "resetPaperDataSuccess": "Paper återställt — saldo satt till €10",
-    "resetPaperDataFailed": "Kunde inte återställa paperdata"
+    "resetPaperDataFailed": "Kunde inte återställa paperdata",
+    "hftBannerSubtitle": "Valspegling + latensarb + volatilitetsscalper · Livemotor"
   },
   "predictionMarketBot": {
     "headerTitle": "Prediction market-bot",
@@ -2281,6 +2305,7 @@
     "toastErrorTitle": "Analys misslyckades",
     "toastErrorDesc": "Prediction-tjänsten returnerade inget resultat.",
     "engineTitle": "AI prediction-motor",
+    "headerSubtitleLine": "Gemini AI · 50 marknader · Var 90 s · Auto-Kelly-storlek",
     "engineSub": "Gemini · Kelly · CLOB",
     "engineStatusScanning": "Skannar",
     "engineStatusRunning": "Kör",

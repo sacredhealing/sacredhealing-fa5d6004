@@ -2183,10 +2183,31 @@
       "badgeSovereign": "SOVEREIGN",
       "cta": "Open Terminal"
     },
+    "hftCard": {
+      "title": "Polymarket HFT Bot",
+      "description": "Live HFT engine. Whale mirror + latency arb + volatility scalper. Connect wallet, start engine, trade.",
+      "footerTag": "WHALE MIRROR · LATENCY ARB · VOL SCALPER",
+      "badgeNew": "HFT · LIVE",
+      "badgeSovereign": "SOVEREIGN"
+    },
+    "strategyGuideCard": {
+      "title": "Polymarket Strategy Guide",
+      "description": "Kelly Criterion calculator + 5-step pipeline guide. Learn the strategy before you trade.",
+      "footerTag": "LEARN · KELLY · 5-STEP PIPELINE",
+      "badgeLine": "GUIDE",
+      "badgeSovereign": "EDUCATION"
+    },
+    "aiPredictionCard": {
+      "title": "AI Prediction Engine",
+      "description": "Gemini AI analyses 50 live markets every 90s. Kelly sizing. Signals with confidence score, edge %, and reasoning. No coding needed.",
+      "footerTag": "GEMINI · KELLY CRITERION · LIVE SIGNALS",
+      "badgeLine": "AI · GEMINI",
+      "badgeSovereign": "SIGNALS"
+    },
     "copyBotCard": {
       "title": "Polymarket Copy-Trading Bot",
-      "description": "Sovereign VPS bot: Polygon whale CTF signals, Gamma + CLOB match, fixed USDC copy orders. Pure infrastructure — no Telegram, no Whop.",
-      "footerTag": "ON-CHAIN EAR · POLYGON · CLOB",
+      "description": "VPS bot mirrors whale wallets on-chain via Polygon. Pure copy-trading — no signal lag.",
+      "footerTag": "ON-CHAIN WHALE COPY · POLYGON CTF",
       "badgeLine": "SQI 2050 • VPS",
       "badgeSovereign": "SOVEREIGN",
       "infoAria": "Open setup guide"
@@ -2194,6 +2215,7 @@
   },
   "polymarketCopyBot": {
     "kicker": "Income stream · Abundance",
+    "headerSubtitleLine": "On-Chain Whale Copy · Polygon CTF · No Signal Lag",
     "title": "Polymarket Copy-Trading Bot",
     "lead": "Modular Python bot in this repository under polymarket-copy-bot/. Run it on your own machine or a US-East VPS for lowest latency. Copies BUY flow only with a 2% slippage guard and configurable USDC size.",
     "heroKicker": "Start here",
@@ -2235,13 +2257,13 @@
     "disclaimer": "Not financial advice. You are responsible for keys, compliance, and capital at risk."
   },
   "polymarketBot": {
-    "title": "Polymarket Bot",
-    "headerBadge": "SQI 2050 • SOVEREIGN",
-    "statusTitle": "PAPER TRADING MODE",
-    "statusLine": "Live trading pending approval. Currently running simulations on Polygon + USDC.e.",
-    "statWinRate": "Win Rate 68.4%",
-    "statSharpe": "Sharpe 2.14",
-    "statMaxDd": "Max DD -4.2%",
+    "title": "Strategy Guide & Kelly Calculator",
+    "headerBadge": "LEARN THE STRATEGY · BEFORE YOU TRADE",
+    "statusTitle": "📊 Strategy Education",
+    "statusLine": "Master the 5-step pipeline used by top Polymarket traders: scan → research → predict → risk → signal. Use the Kelly Calculator below to size your positions correctly.",
+    "statWinRate": "Win rate: 65–75% (mispricing strategy)",
+    "statSharpe": "Sharpe: 1.8+ (backtested 6mo)",
+    "statMaxDd": "Max DD: −12% (with Kelly sizing)",
     "pipelineTitle": "Execution pipeline",
     "pipeScanTitle": "SCAN",
     "pipeScanDesc": "Ingest live order books, spreads, and latency-sensitive feeds.",
@@ -2266,6 +2288,7 @@
     "winProbPlaceholder": "68.4"
   },
   "polymarketBotDetail": {
+    "hftPageTitle": "Polymarket HFT Bot",
     "keyStorageHint": "Key stays in this browser until you disconnect or clear site data.",
     "executionFeedHint": "Green = sync OK · Gold = status · Cyan = signal/trade line · Amber = warning. Trades only log when a strategy finds an edge — quiet periods are normal. Paper fills use 5% of balance (min €0.50, max €50) server-side; live uses the same rule in-app.",
     "feedEmpty": "No activity yet — start the engine or tap refresh to sync.",
@@ -2302,7 +2325,8 @@
     "resetPaperDataButton": "Reset Paper Data",
     "resetPaperDataWarning": "This resets all paper trading history",
     "resetPaperDataSuccess": "Paper trading reset — balance restored to €10",
-    "resetPaperDataFailed": "Could not reset paper data"
+    "resetPaperDataFailed": "Could not reset paper data",
+    "hftBannerSubtitle": "Whale Mirror + Latency Arb + Volatility Scalper · Live Engine"
   },
   "predictionMarketBot": {
     "headerTitle": "Prediction market bot",
@@ -2351,6 +2375,7 @@
     "toastErrorTitle": "Analysis failed",
     "toastErrorDesc": "The prediction service did not return a result.",
     "engineTitle": "AI Prediction Engine",
+    "headerSubtitleLine": "Gemini AI · 50 Markets · Every 90s · Auto-Kelly Sizing",
     "engineSub": "Gemini · Kelly · CLOB",
     "engineStatusScanning": "Scanning",
     "engineStatusRunning": "Running",
