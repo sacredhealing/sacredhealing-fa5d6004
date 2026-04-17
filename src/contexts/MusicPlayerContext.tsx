@@ -499,16 +499,64 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setCurrentTrack(null);
 
     // Meditations should start immediately (no pre-play overlay gating).
-    
+
     const audioUrl = audio.audio_url;
-    audioRef.current = new Audio(audioUrl);
-    audioRef.current.volume = volume;
+    const el = new Audio();
+    // Mobile resilience — keep playback alive when tab backgrounded / device locks
+    el.preload = 'auto';
+    el.crossOrigin = 'anonymous';
+    (el as HTMLAudioElement & { playsInline?: boolean }).playsInline = true;
+    el.setAttribute('playsinline', '');
+    el.setAttribute('webkit-playsinline', '');
+    el.src = audioUrl;
+    el.volume = volume;
+    audioRef.current = el;
     playStartTimeRef.current = Date.now();
-    
+
     audioRef.current.onloadedmetadata = () => {
       if (audioRef.current) setDuration(audioRef.current.duration);
     };
-    
+
+    // Sync UI when the OS / browser pauses or resumes the stream
+    audioRef.current.onpause = () => {
+      // Do not flip to paused if the audio actually finished (onended will run)
+      if (audioRef.current && !audioRef.current.ended) {
+        setIsPlaying(false);
+      }
+    };
+    audioRef.current.onplay = () => setIsPlaying(true);
+    audioRef.current.onplaying = () => setIsPlaying(true);
+
+    // Recover from transient stalls / network interruptions on long meditations
+    audioRef.current.onstalled = () => {
+      console.warn('[meditation audio] stalled — attempting to resume');
+      void audioRef.current?.play().catch(() => {});
+    };
+    audioRef.current.onwaiting = () => {
+      // Buffering — keep state as playing, do not flip
+    };
+    audioRef.current.onerror = () => {
+      const err = audioRef.current?.error;
+      console.error('[meditation audio] error', err);
+      // One automatic retry from the last known position
+      const resumeAt = audioRef.current?.currentTime ?? 0;
+      try {
+        if (audioRef.current) {
+          audioRef.current.load();
+          audioRef.current.currentTime = resumeAt;
+          void audioRef.current.play().catch(() => {
+            setIsPlaying(false);
+            toast({
+              title: 'Playback interrupted',
+              description: 'Tap play to resume your meditation.',
+            });
+          });
+        }
+      } catch {
+        setIsPlaying(false);
+      }
+    };
+
     audioRef.current.ontimeupdate = () => {
       if (!audioRef.current) return;
       const time = audioRef.current.currentTime;
