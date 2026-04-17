@@ -499,16 +499,64 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setCurrentTrack(null);
 
     // Meditations should start immediately (no pre-play overlay gating).
-    
+
     const audioUrl = audio.audio_url;
-    audioRef.current = new Audio(audioUrl);
-    audioRef.current.volume = volume;
+    const el = new Audio();
+    // Mobile resilience — keep playback alive when tab backgrounded / device locks
+    el.preload = 'auto';
+    el.crossOrigin = 'anonymous';
+    (el as HTMLAudioElement & { playsInline?: boolean }).playsInline = true;
+    el.setAttribute('playsinline', '');
+    el.setAttribute('webkit-playsinline', '');
+    el.src = audioUrl;
+    el.volume = volume;
+    audioRef.current = el;
     playStartTimeRef.current = Date.now();
-    
+
     audioRef.current.onloadedmetadata = () => {
       if (audioRef.current) setDuration(audioRef.current.duration);
     };
-    
+
+    // Sync UI when the OS / browser pauses or resumes the stream
+    audioRef.current.onpause = () => {
+      // Do not flip to paused if the audio actually finished (onended will run)
+      if (audioRef.current && !audioRef.current.ended) {
+        setIsPlaying(false);
+      }
+    };
+    audioRef.current.onplay = () => setIsPlaying(true);
+    audioRef.current.onplaying = () => setIsPlaying(true);
+
+    // Recover from transient stalls / network interruptions on long meditations
+    audioRef.current.onstalled = () => {
+      console.warn('[meditation audio] stalled — attempting to resume');
+      void audioRef.current?.play().catch(() => {});
+    };
+    audioRef.current.onwaiting = () => {
+      // Buffering — keep state as playing, do not flip
+    };
+    audioRef.current.onerror = () => {
+      const err = audioRef.current?.error;
+      console.error('[meditation audio] error', err);
+      // One automatic retry from the last known position
+      const resumeAt = audioRef.current?.currentTime ?? 0;
+      try {
+        if (audioRef.current) {
+          audioRef.current.load();
+          audioRef.current.currentTime = resumeAt;
+          void audioRef.current.play().catch(() => {
+            setIsPlaying(false);
+            toast({
+              title: 'Playback interrupted',
+              description: 'Tap play to resume your meditation.',
+            });
+          });
+        }
+      } catch {
+        setIsPlaying(false);
+      }
+    };
+
     audioRef.current.ontimeupdate = () => {
       if (!audioRef.current) return;
       const time = audioRef.current.currentTime;
@@ -602,12 +650,37 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       (navigateTo as any)('/integrate', { state: ctx });
     };
     
-    audioRef.current.play();
+    void audioRef.current.play().catch((err) => {
+      console.error('[meditation audio] initial play() failed', err);
+      setIsPlaying(false);
+    });
     setCurrentAudio(audio);
     setAudioContentType(audio.contentType);
     setProgress(0);
     setCurrentTime(0);
     setIsPlaying(true);
+
+    // MediaSession — keeps audio alive when the screen locks / tab is backgrounded
+    // and exposes lock-screen controls so iOS/Android won't suspend the stream.
+    if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+      try {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: audio.title,
+          artist: audio.artist || 'Sacred Healing',
+          artwork: audio.cover_image_url
+            ? [{ src: audio.cover_image_url, sizes: '512x512', type: 'image/png' }]
+            : [],
+        });
+        navigator.mediaSession.setActionHandler('play', () => {
+          void audioRef.current?.play().catch(() => {});
+        });
+        navigator.mediaSession.setActionHandler('pause', () => {
+          audioRef.current?.pause();
+        });
+      } catch {
+        // Non-fatal — older browsers
+      }
+    }
 
     // DEV-only: ?devForceEnd=1 simulates session end after 4s for testing Library flip
     if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
