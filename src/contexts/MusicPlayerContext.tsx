@@ -650,12 +650,37 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       (navigateTo as any)('/integrate', { state: ctx });
     };
     
-    audioRef.current.play();
+    void audioRef.current.play().catch((err) => {
+      console.error('[meditation audio] initial play() failed', err);
+      setIsPlaying(false);
+    });
     setCurrentAudio(audio);
     setAudioContentType(audio.contentType);
     setProgress(0);
     setCurrentTime(0);
     setIsPlaying(true);
+
+    // MediaSession — keeps audio alive when the screen locks / tab is backgrounded
+    // and exposes lock-screen controls so iOS/Android won't suspend the stream.
+    if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+      try {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: audio.title,
+          artist: audio.artist || 'Sacred Healing',
+          artwork: audio.cover_image_url
+            ? [{ src: audio.cover_image_url, sizes: '512x512', type: 'image/png' }]
+            : [],
+        });
+        navigator.mediaSession.setActionHandler('play', () => {
+          void audioRef.current?.play().catch(() => {});
+        });
+        navigator.mediaSession.setActionHandler('pause', () => {
+          audioRef.current?.pause();
+        });
+      } catch {
+        // Non-fatal — older browsers
+      }
+    }
 
     // DEV-only: ?devForceEnd=1 simulates session end after 4s for testing Library flip
     if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
