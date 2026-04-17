@@ -2228,7 +2228,11 @@
     "pnlLiveTotalCaption": "Total P&L (efter avgifter & glidning)",
     "pnlToday": "Idag",
     "pnlTodayPercent": "Idag %",
-    "pnlTrades": "Affärer"
+    "pnlTrades": "Affärer",
+    "resetPaperDataButton": "Återställ paperdata",
+    "resetPaperDataWarning": "Detta rensar all paper-handelshistorik",
+    "resetPaperDataSuccess": "Paper återställt — saldo satt till €10",
+    "resetPaperDataFailed": "Kunde inte återställa paperdata"
   },
   "predictionMarketBot": {
     "headerTitle": "Prediction market-bot",

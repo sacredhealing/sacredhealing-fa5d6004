@@ -1682,7 +1682,11 @@
     "pnlLiveTotalCaption": "Total P&L (etter gebyrer og glidning)",
     "pnlToday": "I dag",
     "pnlTodayPercent": "I dag %",
-    "pnlTrades": "Handler"
+    "pnlTrades": "Handler",
+    "resetPaperDataButton": "Tilbakestill paperdata",
+    "resetPaperDataWarning": "Dette sletter all paper-handelshistorikk",
+    "resetPaperDataSuccess": "Paper tilbakestilt — saldo gjenopprettet til €10",
+    "resetPaperDataFailed": "Kunne ikke tilbakestille paperdata"
   },
   "predictionMarketBot": {
     "headerTitle": "Prediction market-bot",

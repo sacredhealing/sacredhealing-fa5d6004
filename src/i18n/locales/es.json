@@ -1711,7 +1711,11 @@
     "pnlLiveTotalCaption": "P&L total (tras comisiones y deslizamiento)",
     "pnlToday": "Hoy",
     "pnlTodayPercent": "Hoy %",
-    "pnlTrades": "Operaciones"
+    "pnlTrades": "Operaciones",
+    "resetPaperDataButton": "Restablecer datos paper",
+    "resetPaperDataWarning": "Esto borra todo el historial de trading paper",
+    "resetPaperDataSuccess": "Paper restablecido — saldo restaurado a €10",
+    "resetPaperDataFailed": "No se pudo restablecer los datos paper"
   },
   "predictionMarketBot": {
     "headerTitle": "Bot de mercados predictivos",

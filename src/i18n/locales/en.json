@@ -2298,7 +2298,11 @@
     "pnlLiveTotalCaption": "Total P&L (after fees & slippage)",
     "pnlToday": "Today",
     "pnlTodayPercent": "Today %",
-    "pnlTrades": "Trades"
+    "pnlTrades": "Trades",
+    "resetPaperDataButton": "Reset Paper Data",
+    "resetPaperDataWarning": "This resets all paper trading history",
+    "resetPaperDataSuccess": "Paper trading reset — balance restored to €10",
+    "resetPaperDataFailed": "Could not reset paper data"
   },
   "predictionMarketBot": {
     "headerTitle": "Prediction market bot",

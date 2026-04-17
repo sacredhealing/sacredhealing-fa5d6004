@@ -9,6 +9,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { PnLCard } from '@/components/polymarket/PnLCard';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { POLYGON_ADDRESSES, PolymarketTrading } from '@/services/polymarketTrading';
@@ -268,6 +269,7 @@ const PolymarketBotDetailInner: React.FC = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
+  const [isResettingPaperData, setIsResettingPaperData] = useState(false);
   const [lastSync, setLastSync] = useState<string>('Never');
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -369,6 +371,66 @@ const PolymarketBotDetailInner: React.FC = () => {
       void refreshPnL();
     }
   }, [addLog, t, refreshPnL]);
+
+  const handleResetPaperData = useCallback(async () => {
+    if (!user?.id) {
+      toast.error(t('polymarketBotDetail.paperBalanceNeedAuth'));
+      return;
+    }
+    if (isRunning) {
+      toast.error(t('polymarketBotDetail.paperBalanceStopEngine'));
+      return;
+    }
+    const uid = user.id;
+    setIsResettingPaperData(true);
+    try {
+      const { error: e1 } = await supabase
+        .from('polymarket_trades')
+        .delete()
+        .eq('is_paper', true)
+        .eq('user_id', uid);
+      if (e1) throw e1;
+      const { error: e2 } = await supabase
+        .from('polymarket_positions')
+        .delete()
+        .eq('is_paper', true)
+        .eq('user_id', uid);
+      if (e2) throw e2;
+      const { error: e3 } = await supabase
+        .from('polymarket_pnl_daily')
+        .delete()
+        .eq('is_paper', true)
+        .eq('user_id', uid);
+      if (e3) throw e3;
+      const { error: e4 } = await supabase
+        .from('polymarket_bot_settings')
+        .update({ paper_balance: 10, total_fees_paid: 0 })
+        .eq('user_id', uid);
+      if (e4) throw e4;
+
+      paperTradingService.setPaperDisplayStake(10);
+      if (typeof localStorage !== 'undefined') {
+        const rm: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k?.startsWith(`pm_paper_day_equity_v1_${uid}_`)) rm.push(k);
+        }
+        rm.forEach((k) => localStorage.removeItem(k));
+      }
+      setPaperBalance(10);
+      setPaperBaseline(10);
+      setPaperBalanceDraft('10.00');
+      setTotalFeesPaid(0);
+      addLog(t('polymarketBotDetail.paperBalanceResetLog', { amount: '10.00' }), 'success');
+      toast.success(t('polymarketBotDetail.resetPaperDataSuccess'));
+      void refreshPnL();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : t('polymarketBotDetail.resetPaperDataFailed');
+      toast.error(msg);
+    } finally {
+      setIsResettingPaperData(false);
+    }
+  }, [user?.id, isRunning, t, addLog, refreshPnL]);
 
   useEffect(() => {
     if (isRunning) {
@@ -1000,6 +1062,36 @@ const PolymarketBotDetailInner: React.FC = () => {
                     {isRunning && (
                       <p style={{ marginTop: 10, fontSize: 10, color: AMBER }}>{t('polymarketBotDetail.paperBalanceStopEngine')}</p>
                     )}
+                    <div
+                      style={{
+                        marginTop: 16,
+                        paddingTop: 16,
+                        borderTop: '1px solid rgba(255,255,255,0.07)',
+                      }}
+                    >
+                      <p style={{ fontSize: 11, color: 'rgba(255,100,100,0.85)', marginBottom: 10, lineHeight: 1.5 }}>
+                        {t('polymarketBotDetail.resetPaperDataWarning')}
+                      </p>
+                      <button
+                        type="button"
+                        className="btn"
+                        disabled={isRunning || isResettingPaperData}
+                        onClick={() => void handleResetPaperData()}
+                        style={{
+                          width: '100%',
+                          padding: '12px 14px',
+                          background: 'transparent',
+                          border: `1px solid ${RED}`,
+                          color: RED,
+                          fontWeight: 800,
+                          fontSize: 11,
+                          letterSpacing: '0.06em',
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        {isResettingPaperData ? t('common.loading') : t('polymarketBotDetail.resetPaperDataButton')}
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
