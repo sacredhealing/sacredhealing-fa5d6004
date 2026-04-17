@@ -61,12 +61,121 @@ const SLIPPAGE_SIZE_FACTOR = 0.0001; // Additional slippage per $100 traded
 const ORDER_FAILURE_RATE = 0.03; // 3% chance of order rejection
 const PROXY_URL = 'https://asia-southeast1-stockgpt-438008.cloudfunctions.net/polymarketProxy';
 
+export type PnLSummary = {
+  totalPnL: number;
+  todayPnL: number;
+  totalTrades: number;
+  winRate: number;
+  unrealizedPnL: number;
+  /** Paper only: cash + open positions at mark (after price refresh) */
+  paperEquity?: number;
+  /** Paper only: starting stake used for total P&L and % (localStorage + Apply/Reset) */
+  paperStakeBaseline?: number;
+};
+
+const paperStakeLsKey = (userId: string) => `pm_paper_stake_v1_${userId}`;
+const paperDayEquityLsKey = (userId: string, ymd: string) =>
+  `pm_paper_day_equity_v1_${userId}_${ymd}`;
+
 export class PaperTradingService {
   private userId: string | null = null;
   private isPaperMode = true;
 
   setUserId(userId: string): void {
     this.userId = userId;
+  }
+
+  /** Starting bankroll for paper P&L % (call when user applies a new paper balance). */
+  setPaperDisplayStake(amount: number): void {
+    if (!this.userId || typeof localStorage === 'undefined') return;
+    localStorage.setItem(paperStakeLsKey(this.userId), String(amount));
+  }
+
+  private getPaperDisplayStake(): number | null {
+    if (!this.userId || typeof localStorage === 'undefined') return null;
+    const raw = localStorage.getItem(paperStakeLsKey(this.userId));
+    if (raw === null) return null;
+    const n = parseFloat(raw);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  private clearPaperPnLLocalStorage(): void {
+    if (!this.userId || typeof localStorage === 'undefined') return;
+    const uid = this.userId;
+    const rm: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k) continue;
+      if (k === paperStakeLsKey(uid) || k.startsWith(`pm_paper_day_equity_v1_${uid}_`)) {
+        rm.push(k);
+      }
+    }
+    rm.forEach((k) => localStorage.removeItem(k));
+  }
+
+  private utcDateKey(): string {
+    return new Date().toISOString().split('T')[0];
+  }
+
+  /** Legacy total P&L (realized daily rows + unrealized); used once to seed stake so upgrades do not jump P&L. */
+  private async computeLegacyPaperPnLTotal(): Promise<number> {
+    if (!this.userId) return 0;
+
+    const { data: dailyData } = await supabase
+      .from('polymarket_pnl_daily')
+      .select('realized_pnl')
+      .eq('user_id', this.userId)
+      .eq('is_paper', true);
+
+    const realized =
+      dailyData?.reduce((s, d) => s + (Number(d.realized_pnl) || 0), 0) || 0;
+
+    const { data: positions } = await supabase
+      .from('polymarket_positions')
+      .select('unrealized_pnl')
+      .eq('user_id', this.userId)
+      .eq('is_paper', true);
+
+    const unrealized =
+      positions?.reduce((s, p) => s + (Number(p.unrealized_pnl) || 0), 0) || 0;
+
+    return realized + unrealized;
+  }
+
+  private async computePaperPortfolioEquity(cash: number): Promise<{
+    equity: number;
+    positions: PaperPosition[];
+  }> {
+    const positions = await this.getPositions(true);
+    const positionsValue = positions.reduce((s, p) => {
+      const px = Number(p.current_price) || Number(p.avg_entry_price) || 0;
+      const sh = Number(p.total_shares) || 0;
+      return s + sh * px;
+    }, 0);
+    return { equity: cash + positionsValue, positions };
+  }
+
+  private async getPaperWinRateAndTradeCount(): Promise<{ totalTrades: number; winRate: number }> {
+    if (!this.userId) return { totalTrades: 0, winRate: 0 };
+
+    const { count: totalTrades } = await supabase
+      .from('polymarket_trades')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', this.userId)
+      .eq('is_paper', true);
+
+    const { data: closed } = await supabase
+      .from('polymarket_trades')
+      .select('pnl')
+      .eq('user_id', this.userId)
+      .eq('is_paper', true)
+      .eq('status', 'closed');
+
+    const closedRows = closed ?? [];
+    const wins = closedRows.filter((r) => Number(r.pnl) > 0).length;
+    const winRate = closedRows.length > 0 ? (wins / closedRows.length) * 100 : 0;
+
+    return { totalTrades: totalTrades ?? 0, winRate };
   }
 
   setMode(isPaper: boolean): void {
@@ -509,37 +618,71 @@ export class PaperTradingService {
   }
 
   // Get P&L summary including unrealized P&L from open positions
-  async getPnLSummary(isPaper = true): Promise<{
-    totalPnL: number;
-    todayPnL: number;
-    totalTrades: number;
-    winRate: number;
-    unrealizedPnL: number;
-  }> {
+  async getPnLSummary(isPaper = true): Promise<PnLSummary> {
     if (!this.userId) {
       return { totalPnL: 0, todayPnL: 0, totalTrades: 0, winRate: 0, unrealizedPnL: 0 };
     }
 
-    // Get realized P&L from daily summary
+    // ── Paper: mark-to-market portfolio vs a stable stake (fixes stale pnl_daily + cash-only baseline bugs)
+    if (isPaper) {
+      const settings = await this.loadSettings();
+      const cash = settings?.paper_balance ?? 10;
+      const { equity, positions } = await this.computePaperPortfolioEquity(cash);
+      const unrealizedPnL =
+        positions.reduce((sum, p) => sum + (Number(p.unrealized_pnl) || 0), 0) || 0;
+
+      let stake = this.getPaperDisplayStake();
+      if (stake === null) {
+        const legacyTotal = await this.computeLegacyPaperPnLTotal();
+        let computed = equity - legacyTotal;
+        if (!Number.isFinite(computed) || computed < 0) computed = equity;
+        stake = computed;
+        this.setPaperDisplayStake(stake);
+      }
+
+      const dayKey = this.utcDateKey();
+      const dayLs = paperDayEquityLsKey(this.userId, dayKey);
+      let dayStartEquity = parseFloat(
+        typeof localStorage !== 'undefined' ? localStorage.getItem(dayLs) || '' : ''
+      );
+      if (!Number.isFinite(dayStartEquity)) {
+        dayStartEquity = equity;
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem(dayLs, String(equity));
+        }
+      }
+
+      const { totalTrades, winRate } = await this.getPaperWinRateAndTradeCount();
+
+      return {
+        totalPnL: equity - stake,
+        todayPnL: equity - dayStartEquity,
+        totalTrades,
+        winRate,
+        unrealizedPnL,
+        paperEquity: equity,
+        paperStakeBaseline: stake,
+      };
+    }
+
+    // ── Live: realized (daily) + unrealized (open positions)
     const { data: dailyData, error: dailyError } = await supabase
       .from('polymarket_pnl_daily')
       .select('*')
       .eq('user_id', this.userId)
-      .eq('is_paper', isPaper);
+      .eq('is_paper', false);
 
-    // Get unrealized P&L from open positions
-    const { data: positions, error: posError } = await supabase
+    const { data: positions } = await supabase
       .from('polymarket_positions')
       .select('unrealized_pnl')
       .eq('user_id', this.userId)
-      .eq('is_paper', isPaper);
+      .eq('is_paper', false);
 
-    // Get total trade count from trades table
     const { count: tradeCount } = await supabase
       .from('polymarket_trades')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', this.userId)
-      .eq('is_paper', isPaper);
+      .eq('is_paper', false);
 
     const unrealizedPnL = positions?.reduce((sum, p) => sum + (Number(p.unrealized_pnl) || 0), 0) || 0;
 
@@ -548,13 +691,13 @@ export class PaperTradingService {
     }
 
     const today = new Date().toISOString().split('T')[0];
-    const todayData = dailyData.find(d => d.date === today);
-    
+    const todayData = dailyData.find((d) => d.date === today);
+
     const realizedPnL = dailyData.reduce((sum, d) => sum + (d.realized_pnl || 0), 0);
-    const totalTrades = tradeCount || dailyData.reduce((sum, d) => sum + (d.total_trades || 0), 0);
+    const totalTrades =
+      tradeCount || dailyData.reduce((sum, d) => sum + (d.total_trades || 0), 0);
     const winningTrades = dailyData.reduce((sum, d) => sum + (d.winning_trades || 0), 0);
 
-    // Total P&L = realized + unrealized
     const totalPnL = realizedPnL + unrealizedPnL;
 
     return {
@@ -630,6 +773,26 @@ export class PaperTradingService {
   async resetPaperBalance(amount: number = 10): Promise<boolean> {
     if (!this.userId) return false;
 
+    this.clearPaperPnLLocalStorage();
+
+    await supabase
+      .from('polymarket_positions')
+      .delete()
+      .eq('user_id', this.userId)
+      .eq('is_paper', true);
+
+    await supabase
+      .from('polymarket_trades')
+      .delete()
+      .eq('user_id', this.userId)
+      .eq('is_paper', true);
+
+    await supabase
+      .from('polymarket_pnl_daily')
+      .delete()
+      .eq('user_id', this.userId)
+      .eq('is_paper', true);
+
     const { error } = await supabase
       .from('polymarket_bot_settings')
       .update({
@@ -637,6 +800,8 @@ export class PaperTradingService {
         total_fees_paid: 0,
       })
       .eq('user_id', this.userId);
+
+    this.setPaperDisplayStake(amount);
 
     return !error;
   }

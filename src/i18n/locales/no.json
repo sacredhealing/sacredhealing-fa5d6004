@@ -1669,7 +1669,20 @@
     "paperBalanceStopEngine": "Stopp motoren for å endre paper-saldo",
     "paperBalanceNeedAuth": "Logg inn for å lagre paper-innstillinger",
     "paperBalanceResetToast": "Paper-saldo tilbakestilt til €10",
-    "paperBalanceResetLog": "Paper-saldo tilbakestilt til €{{amount}}"
+    "paperBalanceResetLog": "Paper-saldo tilbakestilt til €{{amount}}",
+    "pnlBadgePaper": "📝 PAPERHANDEL",
+    "pnlBadgeLive": "💰 LIVEHANDEL",
+    "pnlWinRateShort": "{{pct}} % treff",
+    "pnlPaperResetTitle": "Tilbakestill paper til €10 — sletter handler og PnL-historikk",
+    "pnlPaperPortfolio": "portefølje (mark-to-market)",
+    "pnlPaperAvailable": "tilgjengelig",
+    "pnlPaperFees": "€{{amount}} gebyrer",
+    "pnlPaperCashLine": "Kontanter €{{amount}}",
+    "pnlPaperTotalCaption": "Total P&L mot innsats — kontanter pluss åpne posisjoner",
+    "pnlLiveTotalCaption": "Total P&L (etter gebyrer og glidning)",
+    "pnlToday": "I dag",
+    "pnlTodayPercent": "I dag %",
+    "pnlTrades": "Handler"
   },
   "predictionMarketBot": {
     "headerTitle": "Prediction market-bot",

@@ -2215,7 +2215,20 @@
     "paperBalanceStopEngine": "Stoppa motorn för att ändra paper-saldo",
     "paperBalanceNeedAuth": "Logga in för att spara paper-inställningar",
     "paperBalanceResetToast": "Paper-saldo återställt till €10",
-    "paperBalanceResetLog": "Paper-saldo återställt till €{{amount}}"
+    "paperBalanceResetLog": "Paper-saldo återställt till €{{amount}}",
+    "pnlBadgePaper": "📝 PAPERHANDEL",
+    "pnlBadgeLive": "💰 LIVEHANDEL",
+    "pnlWinRateShort": "{{pct}} % vinster",
+    "pnlPaperResetTitle": "Återställ paper till €10 — rensar affärer och PnL-historik",
+    "pnlPaperPortfolio": "portfölj (mark-to-market)",
+    "pnlPaperAvailable": "tillgängligt",
+    "pnlPaperFees": "€{{amount}} avgifter",
+    "pnlPaperCashLine": "Kontanter €{{amount}}",
+    "pnlPaperTotalCaption": "Total P&L mot din insats — kontanter plus öppna positioner",
+    "pnlLiveTotalCaption": "Total P&L (efter avgifter & glidning)",
+    "pnlToday": "Idag",
+    "pnlTodayPercent": "Idag %",
+    "pnlTrades": "Affärer"
   },
   "predictionMarketBot": {
     "headerTitle": "Prediction market-bot",

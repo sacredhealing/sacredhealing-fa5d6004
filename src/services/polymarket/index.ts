@@ -11,7 +11,7 @@ export { volatilityScalperService, VolatilityScalperService } from './volatility
 export { clobTradingService, ClobTradingService } from './clobTrading';
 
 export { paperTradingService, PaperTradingService } from './paperTrading';
-export type { PaperTrade, PaperPosition, BotSettings } from './paperTrading';
+export type { PaperTrade, PaperPosition, BotSettings, PnLSummary } from './paperTrading';
 
 // Strategy names for UI
 export const STRATEGY_NAMES = {

@@ -19,7 +19,8 @@ import {
   latencyArbitrageService,
   volatilityScalperService,
   paperTradingService,
-  STRATEGY_NAMES
+  STRATEGY_NAMES,
+  type PnLSummary,
 } from '@/services/polymarket';
 import type { LogEntry, TradeSignal, PolymarketMarket } from '@/types/polymarket';
 
@@ -249,8 +250,20 @@ const PolymarketBotDetailInner: React.FC = () => {
   const [paperBaseline, setPaperBaseline] = useState(10);
   const [paperBalanceDraft, setPaperBalanceDraft] = useState('10');
   const [totalFeesPaid, setTotalFeesPaid] = useState(0);
-  const [pnlSummary, setPnlSummary] = useState({ totalPnL: 0, todayPnL: 0, totalTrades: 0, winRate: 0, unrealizedPnL: 0 });
-  const [livePnlSummary, setLivePnlSummary] = useState({ totalPnL: 0, todayPnL: 0, totalTrades: 0, winRate: 0, unrealizedPnL: 0 });
+  const [pnlSummary, setPnlSummary] = useState<PnLSummary>({
+    totalPnL: 0,
+    todayPnL: 0,
+    totalTrades: 0,
+    winRate: 0,
+    unrealizedPnL: 0,
+  });
+  const [livePnlSummary, setLivePnlSummary] = useState<PnLSummary>({
+    totalPnL: 0,
+    todayPnL: 0,
+    totalTrades: 0,
+    winRate: 0,
+    unrealizedPnL: 0,
+  });
   const [isSyncing, setIsSyncing] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
@@ -303,6 +316,9 @@ const PolymarketBotDetailInner: React.FC = () => {
         setPaperBalance(settings.paper_balance ?? 10);
         setTotalFeesPaid(settings.total_fees_paid ?? 0);
       }
+      if (paperSummary.paperStakeBaseline != null) {
+        setPaperBaseline(paperSummary.paperStakeBaseline);
+      }
     } catch (e) {
       console.error('[PolymarketBot] refreshPnL:', e);
     }
@@ -330,6 +346,7 @@ const PolymarketBotDetailInner: React.FC = () => {
     }
     const ok = await paperTradingService.saveSettings({ ...cur, paper_balance: v });
     if (ok) {
+      paperTradingService.setPaperDisplayStake(v);
       setPaperBalance(v);
       setPaperBaseline(v);
       addLog(t('polymarketBotDetail.paperBalanceSavedLog', { amount: v.toFixed(2) }), 'success');
@@ -365,6 +382,16 @@ const PolymarketBotDetailInner: React.FC = () => {
       if (pnlRefreshRef.current) clearInterval(pnlRefreshRef.current);
     };
   }, [isRunning, refreshPnL]);
+
+  /** Keep paper marks fresh while engine is stopped (PnL interval only runs when running). */
+  useEffect(() => {
+    if (!user?.id || !privateKey) return;
+    if (isRunning) return;
+    const id = window.setInterval(() => {
+      void refreshPnL();
+    }, 12000);
+    return () => window.clearInterval(id);
+  }, [user?.id, privateKey, isRunning, refreshPnL]);
 
   const performDeepSync = useCallback(async (forcedAddr?: string) => {
     const activeAddr = forcedAddr || address;
@@ -436,24 +463,11 @@ const PolymarketBotDetailInner: React.FC = () => {
               }
               const pb = s.paper_balance ?? 10;
               setPaperBalance(pb);
-              setPaperBaseline(pb);
               setPaperBalanceDraft(pb.toFixed(2));
               setTotalFeesPaid(s.total_fees_paid ?? 0);
             }
           }).catch((err: unknown) => console.error('[PolymarketBot] loadSettings:', err));
-          (async () => {
-            try {
-              const [ps, ls] = await Promise.all([
-                paperTradingService.getPnLSummary(true),
-                paperTradingService.getPnLSummary(false),
-              ]);
-              setPnlSummary(ps);
-              setLivePnlSummary(ls);
-              setTotalTrades(ps.totalTrades + ls.totalTrades);
-            } catch (err) {
-              console.error('[PolymarketBot] loadPnL:', err);
-            }
-          })();
+          void refreshPnL();
         }
         performDeepSync(wallet.address).catch((err: unknown) =>
           console.error('[PolymarketBot] performDeepSync:', err)
@@ -466,7 +480,7 @@ const PolymarketBotDetailInner: React.FC = () => {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- init only when key/user changes; avoid re-init on sync fn identity
-  }, [privateKey, trading, user?.id]);
+  }, [privateKey, trading, user?.id, refreshPnL]);
 
   useEffect(() => {
     if (address) {
@@ -824,6 +838,7 @@ const PolymarketBotDetailInner: React.FC = () => {
                 winRate={isPaperMode ? pnlSummary.winRate : livePnlSummary.winRate}
                 startingBalance={paperBaseline}
                 currentBalance={isPaperMode ? paperBalance : undefined}
+                paperEquity={isPaperMode ? pnlSummary.paperEquity : undefined}
                 totalFees={isPaperMode ? totalFeesPaid : undefined}
                 onResetBalance={isPaperMode ? handleResetPaperBalance : undefined}
               />

@@ -1698,7 +1698,20 @@
     "paperBalanceStopEngine": "Detén el motor para cambiar el saldo paper",
     "paperBalanceNeedAuth": "Inicia sesión para guardar ajustes paper",
     "paperBalanceResetToast": "Saldo paper restablecido a €10",
-    "paperBalanceResetLog": "Saldo paper restablecido a €{{amount}}"
+    "paperBalanceResetLog": "Saldo paper restablecido a €{{amount}}",
+    "pnlBadgePaper": "📝 PAPER TRADING",
+    "pnlBadgeLive": "💰 LIVE TRADING",
+    "pnlWinRateShort": "{{pct}} % aciertos",
+    "pnlPaperResetTitle": "Restablecer paper a €10 — borra operaciones e historial de PnL",
+    "pnlPaperPortfolio": "cartera (mark-to-market)",
+    "pnlPaperAvailable": "disponible",
+    "pnlPaperFees": "€{{amount}} comisiones",
+    "pnlPaperCashLine": "Efectivo €{{amount}}",
+    "pnlPaperTotalCaption": "P&L total vs tu capital — efectivo más posiciones abiertas",
+    "pnlLiveTotalCaption": "P&L total (tras comisiones y deslizamiento)",
+    "pnlToday": "Hoy",
+    "pnlTodayPercent": "Hoy %",
+    "pnlTrades": "Operaciones"
   },
   "predictionMarketBot": {
     "headerTitle": "Bot de mercados predictivos",
