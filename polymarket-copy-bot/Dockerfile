@@ -1,18 +1,17 @@
-# Railway / VPS: Polyclaw bot (SQI-2050)
-# Set service root to polymarket-copy-bot. Override PAPER_MODE in Railway Variables.
+# Railway Service 2: Copy bot (Bot 2) + Polyclaw loop (Bot 3) in main.py
+# Optional: polyclaw_bot.py kept for standalone runs.
+# Root: polymarket-copy-bot. Set PAPER_MODE, Polymarket API keys, WALLET_PRIVATE_KEY, POLYGON_RPC_URL.
 
 FROM python:3.11-slim
 
 WORKDIR /app
 
 ENV PYTHONUNBUFFERED=1
-# Default to paper until you set PAPER_MODE=false in Railway
 ENV PAPER_MODE=true
 
-COPY polyclaw_requirements.txt .
-RUN pip install --no-cache-dir -r polyclaw_requirements.txt
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-COPY polyclaw_bot.py .
-COPY logger.py .
+COPY main.py listener.py matcher.py executor.py logger.py polyclaw_bot.py ./
 
-CMD ["python", "-u", "polyclaw_bot.py"]
+CMD ["python", "-u", "main.py"]

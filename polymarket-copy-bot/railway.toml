@@ -1,5 +1,5 @@
-# Railway: set the service **Root Directory** to `polymarket-copy-bot`.
-# Variables: add PAPER_MODE=true (default also set in Dockerfile).
+# Railway Service 2: root `polymarket-copy-bot` — combined copy + Polyclaw (main.py).
+# Variables: POLYGON_RPC_URL, POLY_*, WALLET_PRIVATE_KEY, PAPER_MODE=true, RISK_PCT, etc.
 
 [build]
 builder = "DOCKERFILE"
