@@ -4960,8 +4960,16 @@
       "title": "Frequency Library",
       "essencesCount": "{{count}} Essences Available",
       "searchPlaceholder": "Search...",
+      "searchExtendedPlaceholder": "Search 572+ activations…",
       "noResults": "No essences found",
       "catAll": "All"
+    },
+    "scanMatched": {
+      "title": "Scan-matched activations",
+      "addAll": "Add all",
+      "add": "Add",
+      "bioFieldTitle": "Bioenergetic alignments for your field",
+      "fullListKicker": "More matches"
     },
     "activeTransmissionsSection": {
       "title": "Active Transmissions",

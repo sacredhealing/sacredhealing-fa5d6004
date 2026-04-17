@@ -4712,8 +4712,16 @@
       "title": "Frekvensbibliotek",
       "essencesCount": "{{count}} essenser tillgängliga",
       "searchPlaceholder": "Sök…",
+      "searchExtendedPlaceholder": "Sök bland 572+ aktiveringar…",
       "noResults": "Inga essenser hittades",
       "catAll": "Alla"
+    },
+    "scanMatched": {
+      "title": "Skanning-matchade aktiveringar",
+      "addAll": "Lägg till alla",
+      "add": "Lägg till",
+      "bioFieldTitle": "Bioenergetiska anpassningar för ditt fält",
+      "fullListKicker": "Fler träffar"
     },
     "activeTransmissionsSection": {
       "title": "Aktiva transmissioner",

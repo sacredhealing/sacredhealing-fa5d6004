@@ -17,7 +17,7 @@ import {
   Info, X, ArrowLeft, Camera, Mic, ChevronUp, ChevronDown,
 } from 'lucide-react';
 import { Activation, Message } from '@/features/quantum-apothecary/types';
-import { ACTIVATIONS } from '@/features/quantum-apothecary/constants';
+import { ALL_ACTIVATIONS, matchScanToActivations } from '@/features/quantum-apothecary/constants';
 import { streamChatWithSQI } from '@/features/quantum-apothecary/chatService';
 import { chatSpeechLocale } from '@/lib/chatSpeechLocale';
 import { useSpeechRecognition } from 'react-speech-recognition';
@@ -363,20 +363,20 @@ function resolveActivationsByExactNames(preferred: string[]): Activation[] {
   const out: Activation[] = [];
   const seen = new Set<string>();
   for (const name of preferred) {
-    const a = ACTIVATIONS.find((x) => x.name === name);
+    const a = ALL_ACTIVATIONS.find((x) => x.name === name);
     if (a && !seen.has(a.id)) {
       seen.add(a.id);
       out.push(a);
     }
   }
-  for (const a of ACTIVATIONS) {
+  for (const a of ALL_ACTIVATIONS) {
     if (out.length >= 5) break;
     if (a.type === 'Bioenergetic' && !seen.has(a.id)) {
       seen.add(a.id);
       out.push(a);
     }
   }
-  for (const a of ACTIVATIONS) {
+  for (const a of ALL_ACTIVATIONS) {
     if (out.length >= 5) break;
     if (!seen.has(a.id)) {
       seen.add(a.id);
@@ -413,21 +413,21 @@ function resolveActivationsByExactNamesUpTo(preferred: string[], max: number): A
   const out: Activation[] = [];
   const seen = new Set<string>();
   for (const name of preferred) {
-    const a = ACTIVATIONS.find((x) => x.name === name);
+    const a = ALL_ACTIVATIONS.find((x) => x.name === name);
     if (a && !seen.has(a.id)) {
       seen.add(a.id);
       out.push(a);
     }
     if (out.length >= max) return out.slice(0, max);
   }
-  for (const a of ACTIVATIONS) {
+  for (const a of ALL_ACTIVATIONS) {
     if (out.length >= max) break;
     if (a.type === 'Bioenergetic' && !seen.has(a.id)) {
       seen.add(a.id);
       out.push(a);
     }
   }
-  for (const a of ACTIVATIONS) {
+  for (const a of ALL_ACTIVATIONS) {
     if (out.length >= max) break;
     if (!seen.has(a.id)) {
       seen.add(a.id);
@@ -623,6 +623,8 @@ function QuantumApothecaryInner() {
   const [sessionsOpen, setSessionsOpen] = useState(false);
   const [loadingSessions, setLoadingSessions] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const streamAccumRef = useRef('');
+  const streamingMsgIdRef = useRef('');
   const chatScrollContainerRef = useRef<HTMLDivElement | null>(null);
   const chatInputRef = useRef<HTMLTextAreaElement>(null);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
@@ -633,6 +635,8 @@ function QuantumApothecaryInner() {
   const [pendingImage, setPendingImage] = useState<{ base64: string; mimeType: string } | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [voiceResult, setVoiceResult] = useState<VoiceBiofieldResult | null>(null);
+  const [scanRecommendedActivations, setScanRecommendedActivations] = useState<Activation[]>([]);
+  const [showActivationSuggestions, setShowActivationSuggestions] = useState(false);
   const [showVoiceScan, setShowVoiceScan] = useState(() => {
     try {
       return typeof sessionStorage !== 'undefined' && sessionStorage.getItem(QA_VOICE_TAB_KEY) === '1';
@@ -671,7 +675,7 @@ function QuantumApothecaryInner() {
 
   /** One string for scan prompt + chat edge: exact Frequency Library names (incl. full LimbicArc bioenergetic list). */
   const canonicalActivationNameLines = useMemo(
-    () => ACTIVATIONS.map((a) => a.name).join('\n'),
+    () => ALL_ACTIVATIONS.map((a) => a.name).join('\n'),
     [],
   );
 
@@ -810,8 +814,22 @@ function QuantumApothecaryInner() {
 
     const names = pickNames();
     const toAdd = names
-      .map((n) => ACTIVATIONS.find((a) => a.name === n))
+      .map((n) => ALL_ACTIVATIONS.find((a) => a.name === n))
       .filter(Boolean) as Activation[];
+
+    const sacredMentioned = ALL_ACTIVATIONS.filter((a) => {
+      const sn = (a.sacredName || '').toLowerCase();
+      const first = sn.split(/\s+/)[0] || '';
+      return (
+        (a.name && text.includes(a.name.toLowerCase())) ||
+        (first.length > 2 && text.includes(first))
+      );
+    }).slice(0, 8);
+    if (sacredMentioned.length > 0) {
+      setScanRecommendedActivations(sacredMentioned);
+      setShowActivationSuggestions(true);
+    }
+
     if (toAdd.length === 0) return;
 
     setActiveTransmissions((prev) => {
@@ -880,15 +898,18 @@ function QuantumApothecaryInner() {
     const imageToSend = pendingImage ?? undefined;
     setPendingImage(null);
     setIsTyping(true);
-    let assistantSoFar = '';
+    const streamMsgId = `sqi-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    streamingMsgIdRef.current = streamMsgId;
+    streamAccumRef.current = '';
     const upsert = (chunk: string) => {
-      assistantSoFar += chunk;
-      setMessages(prev => {
-        const last = prev[prev.length - 1];
-        if (last?.role === 'model' && prev.length === allMsgs.length + 1) {
-          return prev.map((m, i) => i === prev.length - 1 ? { ...m, text: assistantSoFar } : m);
+      streamAccumRef.current += chunk;
+      const acc = streamAccumRef.current;
+      setMessages((prev) => {
+        const idx = prev.findIndex((m) => m.id === streamMsgId);
+        if (idx >= 0) {
+          return prev.map((m, i) => (i === idx ? { ...m, text: acc } : m));
         }
-        return [...prev, { role: 'model', text: assistantSoFar, timestamp: Date.now() }];
+        return [...prev, { role: 'model', text: acc, timestamp: Date.now(), id: streamMsgId }];
       });
     };
     const persistMessages = async (finalMessages: Message[]) => {
@@ -936,9 +957,10 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         upsert,
         async () => {
           setIsTyping(false);
+          const finalText = streamAccumRef.current;
           await persistMessages([
             ...allMsgs,
-            { role: 'model', text: assistantSoFar, timestamp: Date.now() },
+            { role: 'model', text: finalText, timestamp: Date.now() },
           ]);
         },
         imageToSend,
@@ -959,6 +981,29 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
   const handleVoiceBiofieldComplete = useCallback(
     (result: VoiceBiofieldResult) => {
       setVoiceResult(result);
+      const doshaKey = String(result.dominantDosha || 'Vata').split(/[\s(/]/)[0] || 'Vata';
+      const voiceMatched = matchScanToActivations(
+        {
+          dominantDosha: doshaKey,
+          activatedNadi: result.nadiReading,
+          priorityChakra: result.priorityAreas[0]?.name || 'Anahata',
+          emotionalField: result.emotionalField,
+          organField: result.organField,
+        },
+        10,
+      );
+      setScanRecommendedActivations((prev) => {
+        const combined = [...prev, ...voiceMatched];
+        const seen = new Set<string>();
+        return combined
+          .filter((a) => {
+            if (seen.has(a.id)) return false;
+            seen.add(a.id);
+            return true;
+          })
+          .slice(0, 10);
+      });
+      setShowActivationSuggestions(true);
       const queued = pickTenActivationsForVoiceResult(result);
       setActiveTransmissions((prev) => {
         const next = [...prev];
@@ -1295,7 +1340,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                   ? new Date(msg.timestamp).toLocaleTimeString(appLocale, { hour: '2-digit', minute: '2-digit' })
                   : null;
               return (
-              <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+              <motion.div key={msg.id ?? `qa-msg-${i}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
                 className={`flex w-full min-w-0 flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                 {msg.role === 'user' ? (
                   <>
@@ -1628,6 +1673,20 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                     queuedLines,
                   ].join('\n');
                   setLiveScanContext(ctx);
+                  const doshaHint =
+                    String(jyotish?.primaryDosha || 'Vata').split(/[\s(/]/)[0] || 'Vata';
+                  const cameraMatched = matchScanToActivations(
+                    {
+                      dominantDosha: doshaHint,
+                      activatedNadi: reading.activatedNadi,
+                      priorityChakra: reading.chakraState,
+                      heartRate: reading.rawVitals.heart_rate,
+                      hrv: reading.rawVitals.hrv_rmssd ?? undefined,
+                    },
+                    10,
+                  );
+                  setScanRecommendedActivations(cameraMatched);
+                  setShowActivationSuggestions(true);
                   sqiField.updateNadi({
                     activatedNadi: reading.activatedNadi,
                     heartRate: reading.rawVitals.heart_rate,
@@ -1687,6 +1746,181 @@ SQI — integrate this scan with my natal chart; cite each chart fact once; use 
                 />
               )}
             </div>
+
+            {showActivationSuggestions && scanRecommendedActivations.length > 0 && (
+              <div
+                className="glass-card qa-card-hover"
+                style={{
+                  padding: 16,
+                  borderRadius: 20,
+                  marginTop: 0,
+                  background: 'rgba(212,175,55,0.04)',
+                  border: '1px solid rgba(212,175,55,0.18)',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: 12,
+                    gap: 8,
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <p
+                    style={{
+                      fontSize: 9,
+                      fontWeight: 800,
+                      letterSpacing: '.3em',
+                      textTransform: 'uppercase',
+                      color: 'rgba(212,175,55,0.6)',
+                      margin: 0,
+                    }}
+                  >
+                    {t('quantumApothecary.scanMatched.title')}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      scanRecommendedActivations.forEach((a) => addActivation(a));
+                      setScanRecommendedActivations([]);
+                      setShowActivationSuggestions(false);
+                    }}
+                    style={{
+                      padding: '5px 14px',
+                      borderRadius: 20,
+                      fontSize: 9,
+                      fontWeight: 800,
+                      letterSpacing: '.15em',
+                      textTransform: 'uppercase',
+                      cursor: 'pointer',
+                      background: 'rgba(212,175,55,0.12)',
+                      border: '1px solid rgba(212,175,55,0.35)',
+                      color: '#D4AF37',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    {t('quantumApothecary.scanMatched.addAll')}
+                  </button>
+                </div>
+                <p
+                  style={{
+                    fontSize: 9,
+                    fontWeight: 800,
+                    letterSpacing: '.28em',
+                    textTransform: 'uppercase',
+                    color: 'rgba(212,175,55,0.55)',
+                    margin: '0 0 10px',
+                  }}
+                >
+                  {t('quantumApothecary.scanMatched.bioFieldTitle')}
+                </p>
+                {scanRecommendedActivations.slice(0, 3).map((act) => (
+                  <div
+                    key={`bio-pick-${act.id}`}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      padding: '8px 0',
+                      borderBottom: '1px solid rgba(255,255,255,0.04)',
+                    }}
+                  >
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 700,
+                          color: 'rgba(255,255,255,0.8)',
+                          margin: 0,
+                        }}
+                      >
+                        {act.sacredName || act.name}
+                      </p>
+                      <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', margin: '4px 0 0' }}>
+                        {act.benefit}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => addActivation(act)}
+                      style={{
+                        padding: '6px 14px',
+                        borderRadius: 20,
+                        fontSize: 9,
+                        fontWeight: 800,
+                        letterSpacing: '.15em',
+                        textTransform: 'uppercase',
+                        cursor: 'pointer',
+                        flexShrink: 0,
+                        background: 'rgba(212,175,55,0.1)',
+                        border: '1px solid rgba(212,175,55,0.3)',
+                        color: '#D4AF37',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      {t('quantumApothecary.scanMatched.add')}
+                    </button>
+                  </div>
+                ))}
+                {scanRecommendedActivations.length > 3 && (
+                  <p
+                    style={{
+                      fontSize: 8,
+                      fontWeight: 800,
+                      letterSpacing: '.25em',
+                      textTransform: 'uppercase',
+                      color: 'rgba(212,175,55,0.45)',
+                      margin: '14px 0 8px',
+                    }}
+                  >
+                    {t('quantumApothecary.scanMatched.fullListKicker')}
+                  </p>
+                )}
+                {scanRecommendedActivations.slice(3).map((act) => (
+                  <div
+                    key={act.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: '7px 0',
+                      borderBottom: '1px solid rgba(255,255,255,.04)',
+                    }}
+                  >
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,.8)', margin: 0 }}>
+                        {act.sacredName || act.name}
+                      </p>
+                      <p style={{ fontSize: 9, color: 'rgba(255,255,255,.3)', margin: '4px 0 0' }}>
+                        {(act.category || act.type) + ' · ' + (act.vibrationalSignature || '')}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => addActivation(act)}
+                      style={{
+                        padding: '5px 12px',
+                        borderRadius: 20,
+                        fontSize: 8,
+                        fontWeight: 800,
+                        letterSpacing: '.15em',
+                        textTransform: 'uppercase',
+                        cursor: 'pointer',
+                        flexShrink: 0,
+                        background: 'rgba(212,175,55,0.08)',
+                        border: '1px solid rgba(212,175,55,0.25)',
+                        color: '#D4AF37',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      {t('quantumApothecary.scanMatched.add')}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Akasha Neural Archive banner removed — context is loaded automatically */}
 

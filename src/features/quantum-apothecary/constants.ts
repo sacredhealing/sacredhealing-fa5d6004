@@ -1,5 +1,13 @@
 import { Activation } from './types';
 import { LIMBICARC_BIOENERGETIC_ACTIVATIONS } from './limbicarcActivations';
+import {
+  BIOENERGETIC_LIBRARY,
+  BIOENERGETIC_CATEGORIES,
+  matchActivationsToScan,
+  getActivationsByCategory,
+  searchActivations,
+  type BioenergticActivation,
+} from './bioenergetic-library';
 // ╔══════════════════════════════════════════════════════════════════╗
 // ║  FULL CONSTANTS — All Cymbiotika + All LimbicArc               ║
 // ║  Siddha Soma: 30 items (all Cymbiotika products)               ║
@@ -132,6 +140,46 @@ const BASE_ACTIVATIONS: Activation[] = [
 ];
 
 export const ACTIVATIONS: Activation[] = [...BASE_ACTIVATIONS, ...LIMBICARC_BIOENERGETIC_ACTIVATIONS];
+
+export function mapBioLibraryToActivation(bio: BioenergticActivation): Activation {
+  return {
+    id: bio.id,
+    name: bio.name,
+    vibrationalSignature: bio.sacredName,
+    type: 'Bioenergetic',
+    benefit: [...bio.keywords, bio.chakra].filter(Boolean).join(' · '),
+    color: '#60a5fa',
+    category: bio.category,
+    sacredName: bio.sacredName,
+  };
+}
+
+const _bioAsActivations = BIOENERGETIC_LIBRARY.map(mapBioLibraryToActivation);
+const _existingActivationIds = new Set(ACTIVATIONS.map((a) => a.id));
+
+/** Full Frequency Library: Cymbiotika + LimbicArc + complete bioenergetic ingredient list (deduped by id). */
+export const ALL_ACTIVATIONS: Activation[] = [
+  ...ACTIVATIONS,
+  ..._bioAsActivations.filter((a) => !_existingActivationIds.has(a.id)),
+];
+
+export {
+  BIOENERGETIC_CATEGORIES,
+  matchActivationsToScan,
+  getActivationsByCategory,
+  searchActivations,
+};
+
+export function matchScanToActivations(
+  scanData: Parameters<typeof matchActivationsToScan>[0],
+  maxResults = 10,
+): Activation[] {
+  return matchActivationsToScan(scanData, maxResults).map(mapBioLibraryToActivation);
+}
+
+export function searchBioLibraryAsActivations(query: string): Activation[] {
+  return searchActivations(query).map(mapBioLibraryToActivation);
+}
 
 export const PLANETARY_DATA: Record<number, { planet: string; herb: string }> = {
   0: { planet: 'Sun (Surya)', herb: 'Saffron, Calamus, Ginger' },

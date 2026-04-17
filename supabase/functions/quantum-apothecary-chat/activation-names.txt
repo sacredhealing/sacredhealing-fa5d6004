@@ -1677,3 +1677,575 @@ Zinc Gluconate
 Zinc Orotate
 Zinc Picolinate
 Ziziphus
+#1 Root Chakra (Mouladhara)(Adhara)
+#10 Chakra (Earth Chakra)
+#11 Chakra (Supernatural Chakra)
+#12 Chakra (Auric Chakra)
+#2 Sacral Chakra (Svadhisthana)
+#3 Solar Plexus Chakra (Manipura Chakra)
+#4 Heart Chakra (Anahata)
+#5 Throat Chakra (Vishudda)
+#6 Third Eye Chakra (Ajna)
+#7 Crown Chakra (Sahasrara)
+#8 Chakra (Soul Star Chakra)
+#9 Chakra (Seat of the Soul)
+10LM
+12C
+12K
+12LM
+12X
+18C
+18LM
+1LM
+20K
+24C
+24X
+30C
+30K
+30LM
+30X
+3C
+3K
+3LM
+3X
+4G Radiation
+5-HTP (5-Hydroxytrytophan)
+50LM
+5G Radiation
+60C
+60K
+60X
+6C
+6K
+6LM
+6X
+Abuta (Velvetleaf)
+Acai Berry
+Acerola
+Acetyl-L-Carnitine
+Acetylcholine
+Acetylcholinesterase (AChE)
+Achyranthes Aspera (Apamarg)
+Aconitum napellus (Aconite)
+Acorus calamus (Calamus)
+Activated Charcoal
+Adenosine Triphosphate (ATP)
+Adhatoda vasica (Malabar Nut)
+Adrenalinum Homaccord
+Aframomum melegueta (Grains of Paradise)
+African Cherry (Prunus Africana)
+Agrimony (Bach Flower Remedy)
+AHK-Cu (Copper Complex)
+Ajwain (Carom Seeds)
+Akkermansia muciniphila
+Alchemilla vulgaris (Lady's mantle)
+Alfalfa (Lucerne)
+Alginate Seaweed Extract
+Alkaline Phosphatase
+Allspice
+Almond
+Aloe Vera
+Aloe Vera Stem Cells
+Alpha Linolenic Acid (ALA; Omega-3)
+Alpha Lipoic Acid
+Alpha-Galactosidase
+Alpha-Klotho
+Alternaria
+Amar Bel (Giant Dodder)
+Amla (Indian gooseberry)
+AMP-activated protein kinase (AMPK)
+Amylase
+Amylase I
+Amylase II
+Anantamul (Tylophora asthmatica)
+Andrographis paniculata
+Angelica
+Anise (Essential Oil)
+Anthocyanin
+Aphanizomenon flos-aquae
+Apigenin
+Apis Mellifica (Honey Bee)
+Apocynin
+Apple
+Apple Pectin
+Apricot Kernel Oil
+Aqua Digital Phone
+Aquilaria (agarwood)
+Arachidonic acid (Omega-6)
+Argemone (Prickly poppies)
+Argentum Nitricum (Silver Nitrate)
+Arginine Alpha-ketoglutarate
+Arnica
+Arsenicum album (Arsenic)
+Artemisia annua (Sweet Wormwood)
+Artemisia dracunculus (Tarragon)
+Artichoke
+Ashitaba
+Ashwagandha
+Ashwagandha Stem Cells
+Asparagus
+Aspen (Bach Flower Remedy)
+Astaxanthin
+Astragalus
+Astragalus Stem Cells
+Atlas Cedar (Essential Oil)
+Aureobasidium Pullulans
+Autumn Crocus (Colchicum autumnale)
+Avocado
+Babesia Microti nosode
+Bacillus Coagulans
+Bacillus Subtilis
+Bacopa
+Baicalein
+Bakuchi Seed
+Bakuchiol
+Balsam Fir (Essential Oil)
+Banaba Leaf
+Barberry
+Barley Grass
+Basil (Essential Oil)
+Bay Laurel (Essential Oil)
+BDNF (Brain-Derived Neurotrophic Factor)
+Bee Pollen
+Beech (Bach Flower Remedy)
+Beef
+Beetroot
+Belladonna (Deadly Nightshade)
+Benfotiamine
+Bentonite Clay
+Berberine
+Beta Carotene
+Beta Glucan
+Beta-Alanine
+Beta-estradiol
+Beta-hydroxybutyrate Calcium
+Beta-hydroxybutyrate Magnesium
+Beta-hydroxybutyrate Sodium
+Beta-Sitosterol
+Betaine
+Bifidobacterium animalis
+Bifidobacterium Bifidum
+Bifidobacterium breve
+Bifidobacterium infantis
+Bifidobacterium lactis Bl-04
+Bifidobacterium Longum
+Bilberry
+Bioactive Carbon
+Birch (Essential Oil)
+Bitter Melon
+Black Cohosh
+Black Cumin (Nigella sativa)
+Black Currant
+Black Pepper (Essential Oil)
+Black Spruce (Essential Oil)
+Black Tourmaline
+Bladderwrack
+Blessed Thistle
+Bloodroot
+Blue Berry Stem Cells
+Blue Cypress (Essential Oil)
+Blue Tansy (Essential Oil)
+Blue Yarrow (Essential Oil)
+Blueberry
+Boldo
+Bone Broth
+Borage
+Boron
+Boswellia (Frankincense)
+Boswellia Stem Cells
+BPC-157
+Brewer's Yeast
+Broadband Emission
+Bromelain
+Bryonia (Wild Hops)
+Burdock Root
+Burdock Root Stem Cells
+Butcher's Broom
+Butterbur
+Butyric Acid (Butyrate)
+C60 (Buckminsterfullerene)
+Caffeine
+Caladium Seguinum
+Calc Fluor (Calcium Fluoride)
+Calc Sulph (Calcium Sulphurica)
+Calcarea Phosphorica
+Calcitonin
+Calcium
+Calcium Carbonate
+Calendula officinalis
+Camphor Oil
+Camu Camu
+Candida albicans
+Cantharis (Spanish Fly)
+Capsicum (Pepper)
+Caralluma fimbriata
+Cardamom (Essential Oil)
+Cascara sagrada
+Cassia (Essential Oil)
+Castor Oil
+Cat's Claw
+Catalase
+Cayenne
+Cedarwood (Essential Oil)
+Celandine
+Celery Seed Extract
+Cell Phone Radiation
+Cell Tower Radiation
+Cellulase
+Centaury (Bach Flower Remedy)
+Cerato (Bach Flower Remedy)
+Cetyl Myristoleate (CMO)
+Chamomile (German) Essential Oil
+Chamomile Extract
+Chamomile Stem Cells
+Chanca Piedra
+Chaparral
+Chasteberry (Vitex)
+Cherry Plum (Bach Flower Remedy)
+Chestnut Bud (Bach Flower Remedy)
+Chia Seed
+Chicory (Bach Flower Remedy)
+Chicory Root
+Chinese Motherwort
+Chlorella
+Chlorine dioxide
+Chlorophyll
+Chocolate (Dark)
+Choline
+Chondroitin
+Chromium
+CJC 1295
+CLA (Conjugated Linoleic Acid)
+Clary Sage (Essential Oil)
+Clematis (Bach Flower Remedy)
+Clinoptilolite (Zeolite)
+Clove (Essential Oil)
+Co-Q10 (Ubiquinol)
+Cobalt
+Coconut Oil
+Coleus Forskohlii
+Collagen
+Colloidal Silver
+Colostrum
+Comfrey
+Copaiba (Essential Oil)
+Copper
+Copper (Colloidal)
+Copper Gluconate
+Coptis (Chinese Goldthread)
+Cordyceps Sinensis
+Coriander (Essential Oil)
+Corn Silk
+Cortisol
+Corydalis
+Crab Apple (Bach Flower Remedy)
+Creatine Monohydrate
+Crocin
+Curcumin
+Cyclodextrin
+Cypress (Essential Oil)
+D-Mannose
+D-Ribose
+Damiana
+Dandelion
+Dandelion Leaf
+Dandelion Stem Cells
+Datura Stramonium
+Davana (Essential Oil)
+Devil's Claw
+DHA (Docosahexaenoic Acid)
+DHEA (Dehydroepiandrosterone)
+Diindolylmethane (DIM)
+Dill (Essential Oil)
+DMAE (Dimethylaminoethanol)
+DMSO (Dimethyl sulfoxide)
+Dragon's Blood (Croton lechleri)
+Echinacea
+Elderberry
+Elderflower
+Eleuthero (Siberian Ginseng)
+Elm (Bach Flower Remedy)
+EMF Radiation
+Enzymes (Digestive Blend)
+EPA (Eicosapentaenoic Acid)
+Ergothioneine
+Erythritol
+Eucalyptus (Essential Oil)
+Eugenol
+Evening Primrose Oil
+Eyebright (Euphrasia)
+Fennel (Essential Oil)
+Fenugreek
+Fermented Foods Blend
+Feverfew
+Fiber (Prebiotic Blend)
+Fisetin
+Fish Oil (Omega-3)
+Flaxseed
+Folate (B9)
+Fo-Ti (He Shou Wu)
+Frankincense (Essential Oil)
+Fulvic Acid
+GABA (Gamma-Aminobutyric Acid)
+Garcinia Cambogia
+Garlic
+Garlic (Essential Oil)
+Genistein
+Gentian (Bach Flower Remedy)
+Geranium (Essential Oil)
+Ginger
+Ginger (Essential Oil)
+Ginkgo Biloba
+Glucosamine
+Glutamine
+Glutathione
+Glycine
+Gorse (Bach Flower Remedy)
+Gotu Kola (Centella asiatica)
+Grape Seed Extract
+Grapefruit (Essential Oil)
+Green Tea (EGCG)
+Guarana
+Gymnema Sylvestre
+Heather (Bach Flower Remedy)
+Holy (Tulsi) Basil
+Holly (Bach Flower Remedy)
+Homeopathic Nosodes (General)
+Honeybee Venom (Apitherapy)
+Honeysuckle (Bach Flower Remedy)
+Hops (Humulus lupulus)
+Horehound
+Hornbeam (Bach Flower Remedy)
+Horse Chestnut
+Horsetail (Equisetum)
+Human Growth Hormone (HGH)
+Humic Acid
+Huperzine A
+Hyaluronic Acid
+Hydrochloric Acid (HCl)
+Hydrogen Peroxide
+Hydroxycitric Acid (HCA)
+IGF-1 (Insulin-like Growth Factor)
+Impatiens (Bach Flower Remedy)
+Indole-3-Carbinol (I3C)
+Inositol
+Insulin
+Iodine
+IP6 (Inositol Hexaphosphate)
+Ipriflavone
+Irish Moss
+Iron (Ferrous)
+Ivy (Hedera helix)
+Jatoba (Brazilian Grape Tree)
+Jasmine (Essential Oil)
+Juglans regia (Walnut)
+Juniper Berry (Essential Oil)
+Kava Kava
+Kelp
+Keto Blend
+Lactase
+Lactobacillus acidophilus
+Lactobacillus bulgaricus
+Lactobacillus casei
+Lactobacillus GG
+Lactobacillus helveticus
+Lactobacillus paracasei
+Lactobacillus plantarum
+Lactobacillus reuteri
+Lactobacillus rhamnosus
+Lactobacillus salivarius
+Larch (Bach Flower Remedy)
+L-Arginine
+L-Carnitine
+Lavender (Essential Oil)
+L-Citrulline
+L-Cysteine
+Lemon (Essential Oil)
+Lemongrass (Essential Oil)
+L-Glutathione
+Licorice Root
+Lime (Essential Oil)
+Lion's Mane (Hericium erinaceus)
+Lipase
+Lithium Orotate
+Liver Extract
+L-Leucine
+L-Lysine
+L-Methionine
+L-Phenylalanine
+L-Proline
+L-Taurine
+L-Theanine
+L-Tryptophan
+L-Tyrosine
+Luteolin
+Lutein
+Lycopene
+Maca Root
+Magnesium
+Magnesium L-Threonate
+Magnesium Malate
+Magnesium Taurate
+Manuka Honey
+Marshmallow Root
+Melatonin
+Methylene Blue
+MGO (Manuka Oligomers)
+Milk Thistle (Silymarin)
+Mimosa pudica
+Mistletoe (Viscum album)
+Molybdenum
+Morinda citrifolia (Noni)
+Moringa
+MSM (Methylsulfonylmethane)
+Mucuna pruriens (Velvet Bean)
+Mullein
+Myrrh (Essential Oil)
+N-Acetyl Cysteine (NAC)
+NAD+
+Neem
+Nettle (Urtica dioica)
+Niacinamide (B3)
+NMN (Nicotinamide Mononucleotide)
+Nutmeg (Essential Oil)
+Oak (Bach Flower Remedy)
+Olive (Bach Flower Remedy)
+Olive Leaf
+Omega-3 (Fish Oil)
+Omega-6
+Omega-7
+Omega-9
+Orange (Essential Oil)
+Oregano (Essential Oil)
+Oregano Extract
+Ornithine
+Ox Bile
+Oyster
+Oyster Mushroom
+P5P (Pyridoxal-5-Phosphate B6)
+PABA (Para-Aminobenzoic Acid)
+Palmitoylethanolamide (PEA)
+Papain
+Papaya
+Passionflower
+Pau d'Arco
+Peppermint (Essential Oil)
+Perilla Seed Oil
+Phosphatidylcholine
+Phosphatidylserine
+Pine Bark Extract (Pycnogenol)
+Pine (Essential Oil)
+Pineal Gland Support
+Plasmalogens
+Policosanol
+Pomegranate
+Potassium
+PQQ (Pyrroloquinoline Quinone)
+Pregnenolone
+Prickly Pear (Opuntia)
+Probiotics (General Blend)
+Progesterone
+Propolis
+Protease
+Proteolytic Enzyme Blend
+Pterostilbene
+Purple Corn
+Pygeum
+Quercetin
+Quinoa
+R-Alpha Lipoic Acid
+Rapamycin (mTOR inhibitor)
+Raspberry Ketones
+Reishi (Ganoderma lucidum)
+Resveratrol
+Rhodiola
+Ribose (D-Ribose)
+RNA (Ribonucleic Acid)
+Rock Rose (Bach Flower Remedy)
+Rock Water (Bach Flower Remedy)
+Rose (Essential Oil)
+Rosemary (Essential Oil)
+Royal Jelly
+Ruta Graveolens
+S-Adenosyl Methionine (SAMe)
+Saccharomyces Boulardii
+Sage (Essential Oil)
+Sarsaparilla
+Saw Palmetto
+Schisandra
+Scleranthus (Bach Flower Remedy)
+Sea Buckthorn
+Selenium
+Senna
+Sepia
+Serrapeptase
+Shilajit
+Silica (Silicon Dioxide)
+Slippery Elm
+Somatotropin (HGH)
+Spearmint (Essential Oil)
+Spermidine
+Spikenard (Essential Oil)
+Spirulina
+Star of Bethlehem (Bach Flower Remedy)
+Stevia
+Stinging Nettle
+Streptococcus thermophilus
+Sulforaphane
+Suma Root
+Super Oxide Dismutase (SOD)
+Sweet Chestnut (Bach Flower Remedy)
+Tamarind
+Tansy
+Taurine
+TB-500 (Thymosin Beta-4)
+Tea Tree (Essential Oil)
+Telomerase
+Testosterone
+Thiamine (B1)
+Thyme (Essential Oil)
+Thymosin Alpha-1
+Thymus Gland Extract
+Tinospora cordifolia (Guduchi)
+Trace Minerals
+Trans-Resveratrol
+Tributyrin
+Triphala
+Turmeric
+Uridine
+Urolithin A
+Valerian
+Vanadium
+Vervain (Bach Flower Remedy)
+Vine (Bach Flower Remedy)
+Vinpocetine
+Vitamin A (Retinol)
+Vitamin B1 (Thiamine)
+Vitamin B12 (Methylcobalamin)
+Vitamin B2 (Riboflavin)
+Vitamin B3 (Niacin)
+Vitamin B5 (Pantothenic Acid)
+Vitamin B6 (Pyridoxine)
+Vitamin B7 (Biotin)
+Vitamin B9 (Folate)
+Vitamin C (Ascorbic Acid)
+Vitamin D3
+Vitamin E (Tocopherol)
+Vitamin K2 (MK-7)
+Walnut (Bach Flower Remedy)
+Water Violet (Bach Flower Remedy)
+White Chestnut (Bach Flower Remedy)
+Wild Oat (Bach Flower Remedy)
+Wild Rose (Bach Flower Remedy)
+Wild Yam
+Willow (Bach Flower Remedy)
+Witch Hazel
+Wormwood (Artemisia absinthium)
+Xylitol
+Yarrow (Essential Oil)
+Yellow Dock
+Yerba Mate
+Ylang Ylang (Essential Oil)
+Zeaxanthin
+Zinc
+Zinc Carnosine

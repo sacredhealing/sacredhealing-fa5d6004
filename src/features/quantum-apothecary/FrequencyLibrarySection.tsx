@@ -3,10 +3,14 @@
 // ║  → src/features/quantum-apothecary/FrequencyLibrarySection.tsx ║
 // ║  RULES: Zero logic changes. UI only.                           ║
 // ╚══════════════════════════════════════════════════════════════════╝
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Check } from 'lucide-react';
-import { ACTIVATIONS } from '@/features/quantum-apothecary/constants';
+import {
+  ALL_ACTIVATIONS,
+  BIOENERGETIC_CATEGORIES,
+  searchBioLibraryAsActivations,
+} from '@/features/quantum-apothecary/constants';
 import type { Activation } from '@/features/quantum-apothecary/types';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -19,7 +23,22 @@ interface Props {
   maxSlots?: number;
 }
 
-const CATEGORIES = ['All', 'Sacred Plant', 'Siddha Soma', 'Bioenergetic', 'Essential Oil', 'Ayurvedic Herb', 'Mineral', 'Mushroom', 'Adaptogen', 'avataric', 'plant_deva'];
+const BASE_CATEGORIES = [
+  'All',
+  'Sacred Plant',
+  'Siddha Soma',
+  'Bioenergetic',
+  'Essential Oil',
+  'Ayurvedic Herb',
+  'Mineral',
+  'Mushroom',
+  'Adaptogen',
+  'avataric',
+  'plant_deva',
+] as const;
+
+const BASE_CAT_SET = new Set<string>([...BASE_CATEGORIES]);
+const CATEGORY_TABS: string[] = [...BASE_CATEGORIES, ...BIOENERGETIC_CATEGORIES.filter((c) => !BASE_CAT_SET.has(c))];
 
 const CAT_COLORS: Record<string, string> = {
   'Sacred Plant':   '#4ade80',
@@ -48,11 +67,37 @@ export default function FrequencyLibrarySection({
   const displayBenefit = (benefit: string) =>
     benefit.replace(/\bLimbicArc\b/g, '').replace(/\s{2,}/g, ' ').trim();
 
-  const filtered = ACTIVATIONS.filter(act => {
-    const matchCat = activeCategory === 'All' || act.type === activeCategory;
-    const matchSearch = !search || act.name.toLowerCase().includes(search.toLowerCase()) || act.benefit.toLowerCase().includes(search.toLowerCase());
-    return matchCat && matchSearch;
-  });
+  const q = search.trim().toLowerCase();
+  const filtered = useMemo(() => {
+    if (q) {
+      const seen = new Set<string>();
+      const out: Activation[] = [];
+      for (const a of ALL_ACTIVATIONS) {
+        const hay =
+          `${a.name} ${a.benefit} ${a.vibrationalSignature} ${a.category ?? ''} ${a.sacredName ?? ''}`.toLowerCase();
+        if (hay.includes(q) && !seen.has(a.id)) {
+          seen.add(a.id);
+          out.push(a);
+        }
+      }
+      for (const a of searchBioLibraryAsActivations(search.trim())) {
+        if (!seen.has(a.id)) {
+          seen.add(a.id);
+          out.push(a);
+        }
+      }
+      return out;
+    }
+    return ALL_ACTIVATIONS.filter((act) => {
+      if (activeCategory === 'All') return true;
+      const cat = activeCategory;
+      return (
+        act.type === cat ||
+        act.category === cat ||
+        act.category?.toUpperCase() === cat.toUpperCase()
+      );
+    });
+  }, [q, search, activeCategory]);
 
   const catLabel = (cat: string) => (cat === 'All' ? t('quantumApothecary.frequencyLibrarySection.catAll') : cat);
 
@@ -68,39 +113,39 @@ export default function FrequencyLibrarySection({
     }}>
       {/* ── Header ── */}
       <div style={{ padding: '18px 20px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <div>
-            <h2 style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.05em', color: '#D4AF37', textShadow: '0 0 15px rgba(212,175,55,0.3)' }}>{t('quantumApothecary.frequencyLibrarySection.title')}</h2>
-            <p style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.45)', marginTop: 6 }}>
-              {t('quantumApothecary.frequencyLibrarySection.essencesCount', { count: filtered.length })}
-            </p>
-          </div>
-          {/* Search */}
-          <div style={{ position: 'relative' }}>
-            <Search size={12} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.25)', pointerEvents: 'none' }} />
-            <input
-              type="text"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder={t('quantumApothecary.frequencyLibrarySection.searchPlaceholder')}
-              style={{
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: 10,
-                padding: '6px 10px 6px 28px',
-                fontSize: 11,
-                color: 'rgba(255,255,255,0.8)',
-                outline: 'none',
-                width: 130,
-                fontFamily: 'inherit',
-              }}
-            />
-          </div>
+        <div style={{ marginBottom: 12 }}>
+          <h2 style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.05em', color: '#D4AF37', textShadow: '0 0 15px rgba(212,175,55,0.3)' }}>{t('quantumApothecary.frequencyLibrarySection.title')}</h2>
+          <p style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.45)', marginTop: 6 }}>
+            {t('quantumApothecary.frequencyLibrarySection.essencesCount', { count: filtered.length })}
+          </p>
+        </div>
+
+        <div style={{ position: 'relative', width: '100%', marginBottom: 12 }}>
+          <Search size={12} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.25)', pointerEvents: 'none' }} />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t('quantumApothecary.frequencyLibrarySection.searchExtendedPlaceholder')}
+            aria-label={t('quantumApothecary.frequencyLibrarySection.searchExtendedPlaceholder')}
+            style={{
+              width: '100%',
+              padding: '10px 16px 10px 36px',
+              borderRadius: 20,
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              color: 'rgba(255,255,255,0.8)',
+              fontSize: 12,
+              outline: 'none',
+              fontFamily: 'inherit',
+              boxSizing: 'border-box',
+            }}
+          />
         </div>
 
         {/* ── Category Tabs — horizontal scroll ── */}
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 14, scrollbarWidth: 'none' }}>
-          {CATEGORIES.map(cat => {
+          {CATEGORY_TABS.map(cat => {
             const active = activeCategory === cat;
             const col = CAT_COLORS[cat] || '#D4AF37';
             return (
@@ -126,7 +171,7 @@ export default function FrequencyLibrarySection({
       </div>
 
       {/* ── Grid ── */}
-      <div style={{ padding: '12px 16px 16px', maxHeight: 340, overflowY: 'auto', scrollbarWidth: 'thin' }}>
+      <div style={{ padding: '12px 16px 16px', maxHeight: 420, overflowY: 'auto', scrollbarWidth: 'thin' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
           <AnimatePresence>
             {filtered.map((act, i) => {
@@ -190,7 +235,7 @@ export default function FrequencyLibrarySection({
                   {/* Type badge */}
                   <div style={{ marginTop: 7, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                     <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase', color: act.color, opacity: 0.7 }}>
-                      {act.type}
+                      {act.category && act.type === 'Bioenergetic' ? act.category : act.type}
                     </span>
                   </div>
                 </motion.button>

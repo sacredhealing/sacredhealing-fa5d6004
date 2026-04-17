@@ -17,6 +17,9 @@ export interface Activation {
   type: ActivationType;
   benefit: string;
   color: string;
+  /** LimbicArc / bio-library row category (e.g. Herb, Vitamin) when type is Bioenergetic */
+  category?: string;
+  sacredName?: string;
 }
 
 export interface ChakraReading {
@@ -59,4 +62,6 @@ export interface Message {
   text: string;
   /** Unix ms when the message was created (client); optional for legacy persisted threads */
   timestamp?: number;
+  /** Stable id for the in-flight assistant message while streaming */
+  id?: string;
 }
