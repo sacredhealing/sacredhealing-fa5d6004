@@ -297,10 +297,7 @@ Deno.serve(async (req) => {
           enable_screenshare: true,
           enable_recording: enableRecording,
           exp: Math.floor(Date.now() / 1000) + 3600 * 4,
-          metadata: {
-            source: typeof source === "string" ? source : "channel",
-            channel_id: effectiveChannelId,
-          },
+
         },
       };
 
