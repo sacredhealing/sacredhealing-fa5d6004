@@ -196,8 +196,9 @@ Deno.serve(async (req) => {
         if (denied) return denied;
       }
 
-      const recordingMode = Deno.env.get("DAILY_RECORDING")?.trim() || "off";
-      const validRecording = ["off", "local", "cloud"].includes(recordingMode) ? recordingMode : "off";
+      const recordingMode = Deno.env.get("DAILY_RECORDING")?.trim() || "";
+      const validModes = ["cloud", "cloud-audio-only", "local", "raw-tracks"];
+      const enableRecording = validModes.includes(recordingMode) ? recordingMode : null;
 
       const roomSlug = `sh${crypto.randomUUID().replace(/-/g, "").slice(0, 22)}`;
 
@@ -206,7 +207,7 @@ Deno.serve(async (req) => {
         properties: {
           enable_chat: true,
           enable_screenshare: true,
-          enable_recording: validRecording,
+          ...(enableRecording ? { enable_recording: enableRecording } : {}),
           exp: Math.floor(Date.now() / 1000) + 3600 * 4,
           metadata: { source: source || "channel", channel_id: effectiveChannelId },
         },
@@ -221,10 +222,12 @@ Deno.serve(async (req) => {
         body: JSON.stringify(roomPayload),
       });
 
-      if (!roomRes.ok && validRecording === "cloud") {
+      if (!roomRes.ok && enableRecording === "cloud") {
+        const props = { ...(roomPayload.properties as Record<string, unknown>) };
+        delete props.enable_recording;
         const retryPayload = {
           ...roomPayload,
-          properties: { ...(roomPayload.properties as object), enable_recording: "off" },
+          properties: props,
         };
         roomRes = await fetch("https://api.daily.co/v1/rooms", {
           method: "POST",
@@ -242,7 +245,7 @@ Deno.serve(async (req) => {
           JSON.stringify({
             error: "Daily.co could not create a room",
             details: errText,
-            hint: "Set DAILY_API_KEY in Supabase Edge secrets. Use DAILY_RECORDING=off if cloud recording is not enabled on your Daily plan.",
+            hint: "Set DAILY_API_KEY in Supabase Edge secrets. Omit DAILY_RECORDING to disable recording, or set cloud | cloud-audio-only | local | raw-tracks per Daily.co docs.",
           }),
           { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
