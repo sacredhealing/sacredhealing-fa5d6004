@@ -17,7 +17,12 @@ import {
   Info, X, ArrowLeft, Camera, Mic, ChevronUp, ChevronDown,
 } from 'lucide-react';
 import { Activation, Message } from '@/features/quantum-apothecary/types';
-import { ALL_ACTIVATIONS, matchScanToActivations } from '@/features/quantum-apothecary/constants';
+import {
+  ALL_ACTIVATIONS,
+  matchScanToActivations,
+  matchActivationsToScan,
+  mapBioLibraryToActivation,
+} from '@/features/quantum-apothecary/constants';
 import { streamChatWithSQI } from '@/features/quantum-apothecary/chatService';
 import { chatSpeechLocale } from '@/lib/chatSpeechLocale';
 import { useSpeechRecognition } from 'react-speech-recognition';
@@ -40,6 +45,16 @@ const SQI_PERSIST_MSG_CAP = 100;
 const QA_VOICE_TAB_KEY = 'qa_apothecary_voice_tab';
 /** Max frequencies selectable in the Aetheric Mixer before transmit (must match slot indicators + library cap). */
 const AETHERIC_MIXER_MAX_SLOTS = 10;
+
+/** Map voice scan nadi string to the enum expected by matchActivationsToScan (strict equality). */
+function coerceVoiceNadiToEnum(s: string): 'Ida' | 'Pingala' | 'Sushumna' | 'Blocked' {
+  const t = (s || '').trim();
+  if (t.startsWith('Pingala')) return 'Pingala';
+  if (t.startsWith('Ida')) return 'Ida';
+  if (t.startsWith('Blocked')) return 'Blocked';
+  if (t.startsWith('Sushumna')) return 'Sushumna';
+  return 'Sushumna';
+}
 
 /* ──── Markdown-ish renderer: gold (#D4AF37) only on # / ## / ### / #### / ##### lines ──── */
 type InlineVariant = 'heading' | 'body';
@@ -602,6 +617,7 @@ function QuantumApothecaryInner() {
   }, []);
 
   const [selectedActivations, setSelectedActivations] = useState<Activation[]>([]);
+  const selectedActivationsRef = useRef<Activation[]>([]);
   const [activeTransmissions, setActiveTransmissions] = useState<Activation[]>(() => {
     try { return JSON.parse(localStorage.getItem('active_resonators') || '[]'); }
     catch { return []; }
@@ -978,6 +994,55 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
     }
   };
 
+  const normalizeActivationForMixer = useCallback((act: Activation): Activation => {
+    const name = act.name?.trim() || '';
+    const id =
+      act.id && String(act.id).trim()
+        ? String(act.id).trim()
+        : `bio_${name.replace(/\s+/g, '_').toLowerCase()}`;
+    const sacredName = act.sacredName || (name ? `${name} Transmission` : 'Transmission');
+    const chakra = (act as Activation & { chakra?: string }).chakra;
+    const benefit =
+      act.benefit ||
+      [act.category, chakra].filter(Boolean).join(' · ');
+    return {
+      ...act,
+      id,
+      name: name || id,
+      sacredName,
+      benefit: benefit || act.vibrationalSignature || sacredName,
+      vibrationalSignature: act.vibrationalSignature || sacredName,
+      type: act.type ?? 'Bioenergetic',
+      color: act.color || '#60a5fa',
+    };
+  }, []);
+
+  const addActivation = useCallback(
+    (act: Activation) => {
+      const normalized = normalizeActivationForMixer(act);
+      const current = selectedActivationsRef.current;
+      const isDuplicate = current.some(
+        (a) =>
+          a.id === normalized.id ||
+          (normalized.name &&
+            a.name?.toLowerCase() === normalized.name.toLowerCase()),
+      );
+      if (isDuplicate || current.length >= AETHERIC_MIXER_MAX_SLOTS) return;
+      const next = [...current, normalized];
+      selectedActivationsRef.current = next;
+      setSelectedActivations(next);
+    },
+    [normalizeActivationForMixer],
+  );
+
+  const removeActivation = useCallback((actId: string) => {
+    const next = selectedActivationsRef.current.filter(
+      (a) => a.id !== actId && a.name !== actId,
+    );
+    selectedActivationsRef.current = next;
+    setSelectedActivations(next);
+  }, []);
+
   const handleVoiceBiofieldComplete = useCallback(
     (result: VoiceBiofieldResult) => {
       setVoiceResult(result);
@@ -1004,6 +1069,20 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
           .slice(0, 10);
       });
       setShowActivationSuggestions(true);
+      const mixerNadi = coerceVoiceNadiToEnum(result.nadiReading);
+      const mixerDosha = String(result.dominantDosha || 'Vata').split(/[\s(/]/)[0] || 'Vata';
+      matchActivationsToScan(
+        {
+          dominantDosha: mixerDosha,
+          activatedNadi: mixerNadi,
+          priorityChakra: result.priorityAreas[0]?.name || 'Anahata',
+          emotionalField: result.emotionalField,
+          organField: result.organField,
+        },
+        5,
+      )
+        .map(mapBioLibraryToActivation)
+        .forEach((a) => addActivation(a));
       const queued = pickTenActivationsForVoiceResult(result);
       setActiveTransmissions((prev) => {
         const next = [...prev];
@@ -1057,7 +1136,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         if (chatInputRef.current) chatInputRef.current.style.height = 'auto';
       }, 300);
     },
-    [user?.id, t, handleSendMessage],
+    [user?.id, t, handleSendMessage, addActivation],
   );
 
   const handleChatFocus = () => { openChatFullscreenIfMobile(); };
@@ -1193,22 +1272,22 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
     [isMicListening, language],
   );
 
-  const addActivation = (act: Activation) => {
-    if (
-      selectedActivations.length >= AETHERIC_MIXER_MAX_SLOTS ||
-      selectedActivations.find((a) => a.id === act.id)
-    ) {
-      return;
-    }
-    setSelectedActivations([...selectedActivations, act]);
-  };
-
   const transmitCocktail = () => {
-    if (selectedActivations.length === 0) return;
+    const mix = selectedActivationsRef.current;
+    if (mix.length === 0) return;
     const newT = [...activeTransmissions];
-    selectedActivations.forEach(act => { if (!newT.find(t => t.id === act.id)) newT.push(act); });
+    mix.forEach((act) => {
+      if (!newT.find((t) => t.id === act.id)) newT.push(act);
+    });
     setActiveTransmissions(newT);
-    setMessages(prev => [...prev, { role: 'model', text: `**Initiating Quantum Transmission:**\n\n${selectedActivations.map(a => `- ${a.name}`).join('\n')}\n\nUploading Aetheric Codes to your cellular matrix…\n\nThese frequencies are now **locked 24/7** until manually dissolved.`, timestamp: Date.now() }]);
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: 'model',
+        text: `**Initiating Quantum Transmission:**\n\n${mix.map((a) => `- ${a.name}`).join('\n')}\n\nUploading Aetheric Codes to your cellular matrix…\n\nThese frequencies are now **locked 24/7** until manually dissolved.`,
+        timestamp: Date.now(),
+      },
+    ]);
     // Log to activity log so SQI knows which frequencies are running in the biofield
     if (user?.id) {
       supabase.from('user_activity_log').insert({
@@ -1217,11 +1296,12 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         activity_data: {
           activity: 'Activated frequency transmission cocktail',
           section: 'Quantum Apothecary',
-          frequency: selectedActivations.map(a => a.name).join(', '),
-          details: { frequency: selectedActivations.map(a => a.name).join(', '), intention: 'Scalar Wave Transmission 24/7' },
+          frequency: mix.map((a) => a.name).join(', '),
+          details: { frequency: mix.map((a) => a.name).join(', '), intention: 'Scalar Wave Transmission 24/7' },
         },
       }).then(() => {});
     }
+    selectedActivationsRef.current = [];
     setSelectedActivations([]);
   };
 
@@ -1686,6 +1766,18 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                     10,
                   );
                   setScanRecommendedActivations(cameraMatched);
+                  matchActivationsToScan(
+                    {
+                      dominantDosha: doshaHint,
+                      activatedNadi: reading.activatedNadi,
+                      priorityChakra: reading.chakraState,
+                      heartRate: reading.rawVitals.heart_rate,
+                      hrv: reading.rawVitals.hrv_rmssd ?? undefined,
+                    },
+                    5,
+                  )
+                    .map(mapBioLibraryToActivation)
+                    .forEach((a) => addActivation(a));
                   setShowActivationSuggestions(true);
                   sqiField.updateNadi({
                     activatedNadi: reading.activatedNadi,
@@ -1970,7 +2062,7 @@ SQI — integrate this scan with my natal chart; cite each chart fact once; use 
                           <div className="w-2 h-2 rounded-full" style={{ background: act.color, boxShadow: `0 0 6px ${act.color}` }} />
                           <span className="text-xs font-bold text-white/80">{act.name}</span>
                         </div>
-                        <button type="button" onClick={() => setSelectedActivations(s => s.filter(a => a.id !== act.id))}
+                        <button type="button" onClick={() => removeActivation(act.id)}
                           className="p-1 opacity-0 group-hover:opacity-100 hover:text-red-400 transition text-white/30">
                           <Trash2 size={12} />
                         </button>

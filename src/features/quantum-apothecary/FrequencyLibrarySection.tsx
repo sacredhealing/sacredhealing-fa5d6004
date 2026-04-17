@@ -175,7 +175,13 @@ export default function FrequencyLibrarySection({
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
           <AnimatePresence>
             {filtered.map((act, i) => {
-              const isSelected = !!selectedActivations.find(a => a.id === act.id);
+              const isSelected = selectedActivations.some(
+                (a) =>
+                  a.id === act.id ||
+                  (!!a.name &&
+                    !!act.name &&
+                    a.name.toLowerCase() === act.name.toLowerCase()),
+              );
               const cannotAdd = mixerFull && !isSelected;
               return (
                 <motion.button
