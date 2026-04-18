@@ -2332,7 +2332,13 @@
     "resetPaperDataWarning": "This resets all paper trading history",
     "resetPaperDataSuccess": "Paper trading reset — balance restored to €10",
     "resetPaperDataFailed": "Could not reset paper data",
-    "hftBannerSubtitle": "Whale Mirror + Latency Arb + Volatility Scalper · Live Engine"
+    "hftBannerSubtitle": "Whale Mirror + Latency Arb + Volatility Scalper · Live Engine",
+    "paperSessionWalletLine": "Paper session · logged in (no wallet imported)",
+    "paperSessionOnChainRow": "On-chain balances appear after you import a wallet. Paper mode runs without one.",
+    "liveModeNeedsWallet": "Import a wallet in Settings to use live trading.",
+    "paperSessionWalletBlurb": "You are in paper mode without a connected wallet. Import a key below only if you want live USDC trading on Polygon.",
+    "gateSignInForPaperHint": "Sign in to run the full paper engine without importing a private key.",
+    "gateOrImportWallet": "Or import a Polygon wallet key below for live trading."
   },
   "predictionMarketBot": {
     "headerTitle": "Prediction market bot",

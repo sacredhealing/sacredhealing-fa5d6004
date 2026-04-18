@@ -278,6 +278,9 @@ const PolymarketBotDetailInner: React.FC = () => {
   const scanIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pnlRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  /** Signed-in users can run the full paper HFT engine without importing a Polygon key. */
+  const isPaperOnlySession = Boolean(user?.id && !privateKey);
+
   const addLog = useCallback((msg: string, type: LogEntry['type'] = 'info') => {
     setLogs((prev) => [{
       id: Math.random().toString(36),
@@ -325,6 +328,34 @@ const PolymarketBotDetailInner: React.FC = () => {
       console.error('[PolymarketBot] refreshPnL:', e);
     }
   }, [user?.id]);
+
+  /** Load paper settings when logged in but no wallet key — unlocks the main terminal for paper-only users. */
+  useEffect(() => {
+    if (privateKey || !user?.id) return;
+    paperTradingService.setUserId(user.id);
+    paperTradingService.setMode(true);
+    setIsPaperMode(true);
+    paperTradingService
+      .loadSettings()
+      .then(async (s) => {
+        if (s) {
+          if (!s.is_paper_mode) {
+            await paperTradingService.saveSettings({ is_paper_mode: true });
+          }
+          paperTradingService.setMode(true);
+          setIsPaperMode(true);
+          if ((s.max_trade_size ?? 50) > 5) {
+            await paperTradingService.saveSettings({ max_trade_size: 5 });
+          }
+          const pb = s.paper_balance ?? 10;
+          setPaperBalance(pb);
+          setPaperBalanceDraft(pb.toFixed(2));
+          setTotalFeesPaid(s.total_fees_paid ?? 0);
+        }
+      })
+      .catch((err: unknown) => console.error('[PolymarketBot] loadSettings (paper-only):', err));
+    void refreshPnL();
+  }, [privateKey, user?.id, refreshPnL]);
 
   const handleApplyPaperBalance = useCallback(async () => {
     const raw = paperBalanceDraft.replace(',', '.').trim();
@@ -460,13 +491,13 @@ const PolymarketBotDetailInner: React.FC = () => {
 
   /** Keep paper marks fresh while engine is stopped (PnL interval only runs when running). */
   useEffect(() => {
-    if (!user?.id || !privateKey) return;
+    if (!user?.id) return;
     if (isRunning) return;
     const id = window.setInterval(() => {
       void refreshPnL();
     }, 12000);
     return () => window.clearInterval(id);
-  }, [user?.id, privateKey, isRunning, refreshPnL]);
+  }, [user?.id, isRunning, refreshPnL]);
 
   const performDeepSync = useCallback(async (forcedAddr?: string) => {
     const activeAddr = forcedAddr || address;
@@ -625,7 +656,7 @@ const PolymarketBotDetailInner: React.FC = () => {
   };
 
   useEffect(() => {
-    if (isRunning && address) {
+    if (isRunning && (address || isPaperOnlySession)) {
       addLog('🚀 Starting Siddha Quantum Nexus HFT Engine...', 'info');
       addLog(`[1] ${STRATEGY_NAMES.WHALE_MIRROR} - Monitoring 0x8dxd`, 'info');
       addLog(`[2] ${STRATEGY_NAMES.LATENCY_ARB} - Gemini 3 Flash active`, 'info');
@@ -689,7 +720,8 @@ const PolymarketBotDetailInner: React.FC = () => {
         volatilityScalperService.stopScalping();
       };
     }
-  }, [isRunning, address, allowance, usdcBal, trading, addLog, t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- executeTradeWithMode is intentionally stable enough per tick; expanding deps restarts the engine loop too often
+  }, [isRunning, address, allowance, usdcBal, trading, addLog, t, isPaperOnlySession, privateKey]);
 
   const handleImport = () => {
     let key = importInput.trim();
@@ -752,12 +784,16 @@ const PolymarketBotDetailInner: React.FC = () => {
   };
 
   const toggleTradingMode = async () => {
-    const n = !isPaperMode;
-    setIsPaperMode(n);
-    paperTradingService.setMode(n);
-    await paperTradingService.saveSettings({ is_paper_mode: n });
-    addLog(`Switched to ${n ? '📝 PAPER TRADING' : '💰 LIVE TRADING'} mode`, 'info');
-    toast.success(`${n ? 'Paper' : 'Live'} trading mode enabled`);
+    const nextPaper = !isPaperMode;
+    if (!nextPaper && !privateKey) {
+      toast.error(t('polymarketBotDetail.liveModeNeedsWallet'));
+      return;
+    }
+    setIsPaperMode(nextPaper);
+    paperTradingService.setMode(nextPaper);
+    await paperTradingService.saveSettings({ is_paper_mode: nextPaper });
+    addLog(`Switched to ${nextPaper ? '📝 PAPER TRADING' : '💰 LIVE TRADING'} mode`, 'info');
+    toast.success(`${nextPaper ? 'Paper' : 'Live'} trading mode enabled`);
   };
 
   const toggleBot = () => {
@@ -782,7 +818,7 @@ const PolymarketBotDetailInner: React.FC = () => {
     }
   };
 
-  if (!privateKey) {
+  if (!privateKey && !user?.id) {
     return (
       <>
         <style>{CSS}</style>
@@ -800,6 +836,15 @@ const PolymarketBotDetailInner: React.FC = () => {
                   <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.3em', textTransform: 'uppercase', marginTop: 4 }}>{t('polymarketBotDetail.hftBannerSubtitle')}</div>
                 </div>
               </div>
+              <p className="body" style={{ fontSize: 12, marginBottom: 12, lineHeight: 1.55, color: 'rgba(255,255,255,0.55)' }}>
+                {t('polymarketBotDetail.gateSignInForPaperHint')}
+              </p>
+              <button type="button" className="btn btn-g" style={{ width: '100%', marginBottom: 16 }} onClick={() => navigate('/auth')}>
+                {t('auth.signIn')}
+              </button>
+              <p className="body" style={{ fontSize: 11, marginBottom: 0, lineHeight: 1.5, color: 'rgba(255,255,255,0.45)' }}>
+                {t('polymarketBotDetail.gateOrImportWallet')}
+              </p>
             </div>
 
             <div className="gc gc-g" style={{ marginBottom: 16, textAlign: 'center' }}>
@@ -881,7 +926,11 @@ const PolymarketBotDetailInner: React.FC = () => {
                 <div>
                   <div style={{ fontWeight: 900, fontSize: 18, letterSpacing: '-0.02em', color: '#fff' }}>{t('polymarketBotDetail.hftPageTitle')}</div>
                   <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.3em', textTransform: 'uppercase', marginTop: 4 }}>{t('polymarketBotDetail.hftBannerSubtitle')}</div>
-                  <div className="mono">{address.slice(0, 8)}...{address.slice(-6)}</div>
+                  <div className="mono">
+                    {isPaperOnlySession
+                      ? t('polymarketBotDetail.paperSessionWalletLine')
+                      : `${address.slice(0, 8)}...${address.slice(-6)}`}
+                  </div>
                 </div>
               </div>
               <span className={`p ${isRunning ? 'p-gr' : 'p-a'}`}>
@@ -890,20 +939,28 @@ const PolymarketBotDetailInner: React.FC = () => {
               </span>
             </div>
 
-            <div className="g3" style={{ marginBottom: 12 }}>
-              <div className={`gc ${parseFloat(polBal) > 0.01 ? 'gc-gr' : 'gc-r'}`} style={{ padding: '12px', textAlign: 'center', borderRadius: 16 }}>
-                <div className="lbl" style={{ marginBottom: 4 }}>POL Gas</div>
-                <div style={{ fontFamily: 'monospace', fontWeight: 900, fontSize: 14, color: parseFloat(polBal) > 0.01 ? GREEN : RED }}>{polBal}</div>
+            {isPaperOnlySession ? (
+              <div className="gc gc-a" style={{ marginBottom: 12, padding: 14 }}>
+                <div className="body" style={{ fontSize: 12, margin: 0, lineHeight: 1.55 }}>
+                  {t('polymarketBotDetail.paperSessionOnChainRow')}
+                </div>
               </div>
-              <div className="gc" style={{ padding: '12px', textAlign: 'center', borderRadius: 16, borderColor: parseFloat(usdcBal) >= 5 ? 'rgba(212,175,55,0.22)' : parseFloat(usdcBal) > 0 ? 'rgba(245,158,11,0.22)' : 'rgba(255,255,255,0.06)' }}>
-                <div className="lbl" style={{ marginBottom: 4, color: parseFloat(usdcBal) >= 5 ? G : AMBER }}>USDC</div>
-                <div style={{ fontFamily: 'monospace', fontWeight: 900, fontSize: 14, color: parseFloat(usdcBal) >= 5 ? G : parseFloat(usdcBal) > 0 ? AMBER : 'rgba(255,255,255,0.25)' }}>${usdcBal}</div>
+            ) : (
+              <div className="g3" style={{ marginBottom: 12 }}>
+                <div className={`gc ${parseFloat(polBal) > 0.01 ? 'gc-gr' : 'gc-r'}`} style={{ padding: '12px', textAlign: 'center', borderRadius: 16 }}>
+                  <div className="lbl" style={{ marginBottom: 4 }}>POL Gas</div>
+                  <div style={{ fontFamily: 'monospace', fontWeight: 900, fontSize: 14, color: parseFloat(polBal) > 0.01 ? GREEN : RED }}>{polBal}</div>
+                </div>
+                <div className="gc" style={{ padding: '12px', textAlign: 'center', borderRadius: 16, borderColor: parseFloat(usdcBal) >= 5 ? 'rgba(212,175,55,0.22)' : parseFloat(usdcBal) > 0 ? 'rgba(245,158,11,0.22)' : 'rgba(255,255,255,0.06)' }}>
+                  <div className="lbl" style={{ marginBottom: 4, color: parseFloat(usdcBal) >= 5 ? G : AMBER }}>USDC</div>
+                  <div style={{ fontFamily: 'monospace', fontWeight: 900, fontSize: 14, color: parseFloat(usdcBal) >= 5 ? G : parseFloat(usdcBal) > 0 ? AMBER : 'rgba(255,255,255,0.25)' }}>${usdcBal}</div>
+                </div>
+                <div className="gc" style={{ padding: '12px', textAlign: 'center', borderRadius: 16, borderColor: allowance > 0n ? 'rgba(52,211,153,0.2)' : 'rgba(255,255,255,0.06)' }}>
+                  <div className="lbl" style={{ marginBottom: 4, color: allowance > 0n ? '#34D399' : 'rgba(255,255,255,0.4)' }}>CTF Approval</div>
+                  <div style={{ fontFamily: 'monospace', fontWeight: 900, fontSize: 12, color: allowance > 0n ? '#34D399' : RED }}>{allowance > 0n ? '✓ Ready' : 'Needed'}</div>
+                </div>
               </div>
-              <div className="gc" style={{ padding: '12px', textAlign: 'center', borderRadius: 16, borderColor: allowance > 0n ? 'rgba(52,211,153,0.2)' : 'rgba(255,255,255,0.06)' }}>
-                <div className="lbl" style={{ marginBottom: 4, color: allowance > 0n ? '#34D399' : 'rgba(255,255,255,0.4)' }}>CTF Approval</div>
-                <div style={{ fontFamily: 'monospace', fontWeight: 900, fontSize: 12, color: allowance > 0n ? '#34D399' : RED }}>{allowance > 0n ? '✓ Ready' : 'Needed'}</div>
-              </div>
-            </div>
+            )}
 
             <div style={{ marginBottom: 12 }}>
               <PnLCard
@@ -930,13 +987,15 @@ const PolymarketBotDetailInner: React.FC = () => {
               <button type="button" className={`btn ${isRunning ? 'btn-r' : 'btn-gr'}`} style={{ flex: 1 }} onClick={toggleBot} disabled={isApproving}>
                 {isRunning ? <><Square size={13} /> Stop Engine</> : <><Play size={13} /> Start Engine</>}
               </button>
-              <button type="button" className="btn btn-ghost" onClick={() => performDeepSync()} disabled={isSyncing}>
+              <button type="button" className="btn btn-ghost" onClick={() => performDeepSync()} disabled={isSyncing || isPaperOnlySession} title={isPaperOnlySession ? t('polymarketBotDetail.paperSessionOnChainRow') : undefined}>
                 <RefreshCw size={14} className={isSyncing ? 'spinning' : ''} />
               </button>
-              <button type="button" className="btn btn-ghost" onClick={clearVault}><Trash2 size={14} /></button>
+              {!isPaperOnlySession && (
+                <button type="button" className="btn btn-ghost" onClick={clearVault}><Trash2 size={14} /></button>
+              )}
             </div>
 
-            {parseFloat(usdcBal) > 0 && allowance === 0n && (
+            {!isPaperOnlySession && parseFloat(usdcBal) > 0 && allowance === 0n && (
               <div className="gc gc-a" style={{ marginBottom: 12, padding: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <AlertCircle size={18} color={AMBER} />
@@ -952,7 +1011,7 @@ const PolymarketBotDetailInner: React.FC = () => {
               </div>
             )}
 
-            {parseFloat(usdcBal) === 0 && (
+            {!isPaperOnlySession && parseFloat(usdcBal) === 0 && (
               <div className="gc" style={{ marginBottom: 12, padding: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <DollarSign size={18} color="rgba(255,255,255,0.25)" />
@@ -1036,7 +1095,14 @@ const PolymarketBotDetailInner: React.FC = () => {
                     <div style={{ fontWeight: 800, fontSize: 14, color: '#fff', marginBottom: 4 }}>{isPaperMode ? '📝 Paper Trading' : '💰 Live Trading'}</div>
                     <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>{isPaperMode ? 'Simulated — no real money at risk' : `Real trades · USDC balance: $${usdcBal}`}</div>
                   </div>
-                  <button type="button" className={`btn ${isPaperMode ? 'btn-g' : 'btn-r'}`} style={{ width: 'auto', padding: '8px 14px' }} onClick={toggleTradingMode} disabled={isRunning}>
+                  <button
+                    type="button"
+                    className={`btn ${isPaperMode ? 'btn-g' : 'btn-r'}`}
+                    style={{ width: 'auto', padding: '8px 14px' }}
+                    onClick={() => void toggleTradingMode()}
+                    disabled={isRunning || (isPaperMode && isPaperOnlySession)}
+                    title={isPaperMode && isPaperOnlySession ? t('polymarketBotDetail.liveModeNeedsWallet') : undefined}
+                  >
                     {isPaperMode ? 'Go Live' : 'Go Paper'}
                   </button>
                 </div>
@@ -1131,29 +1197,51 @@ const PolymarketBotDetailInner: React.FC = () => {
                 )}
               </div>
 
-              <div className="gc">
-                <div style={{ marginBottom: 14 }}>
-                  <div className="lbl" style={{ marginBottom: 6 }}>Connected Wallet</div>
-                  <div style={{ fontFamily: 'monospace', fontSize: 10, color: G, wordBreak: 'break-all' }}>{address}</div>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)' }}>CTF Exchange</span>
-                  <span className={`p ${allowance > 0n ? 'p-gr' : 'p-r'}`}>
-                    {allowance > 0n ? <><CheckCircle size={10} /> Approved</> : <><AlertCircle size={10} /> Pending</>}
-                  </span>
-                </div>
-
-                {parseFloat(usdcBal) >= 5 && allowance === 0n && (
-                  <div className="gc gc-a" style={{ marginBottom: 14, padding: 12 }}>
-                    <div style={{ fontSize: 11, fontWeight: 800, color: AMBER, marginBottom: 8 }}>⚡ USDC found — one approval needed to unlock live trading</div>
-                    <button type="button" className="btn btn-g" style={{ fontSize: 10, width: 'auto', padding: '6px 12px' }} onClick={handleApprove} disabled={isApproving || parseFloat(polBal) < 0.01}>
-                      {isApproving ? 'Signing...' : 'Approve USDC for CTF Exchange'}
-                    </button>
+              {isPaperOnlySession ? (
+                <div className="gc gc-g">
+                  <p className="body" style={{ fontSize: 12, marginBottom: 14, lineHeight: 1.55 }}>
+                    {t('polymarketBotDetail.paperSessionWalletBlurb')}
+                  </p>
+                  <div className="lbl" style={{ marginBottom: 8 }}>Polygon private key (live only)</div>
+                  <input className="inp" type="password" placeholder="0x... (64-character hex key)" value={importInput} onChange={(e) => setImportInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleImport()} style={{ marginBottom: inputError ? 8 : 14 }} />
+                  {inputError && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: RED, fontSize: 11, marginBottom: 12 }}>
+                      <AlertCircle size={12} />
+                      {inputError}
+                    </div>
+                  )}
+                  <button type="button" className="btn btn-g" onClick={handleImport}>
+                    <Wallet size={14} /> Connect &amp; unlock live trading
+                  </button>
+                  <div style={{ textAlign: 'center', marginTop: 12, fontSize: 10, lineHeight: 1.45, color: 'rgba(255,255,255,0.45)' }}>
+                    🔒 {t('polymarketBotDetail.keyStorageHint')}
                   </div>
-                )}
+                </div>
+              ) : (
+                <div className="gc">
+                  <div style={{ marginBottom: 14 }}>
+                    <div className="lbl" style={{ marginBottom: 6 }}>Connected Wallet</div>
+                    <div style={{ fontFamily: 'monospace', fontSize: 10, color: G, wordBreak: 'break-all' }}>{address}</div>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                    <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)' }}>CTF Exchange</span>
+                    <span className={`p ${allowance > 0n ? 'p-gr' : 'p-r'}`}>
+                      {allowance > 0n ? <><CheckCircle size={10} /> Approved</> : <><AlertCircle size={10} /> Pending</>}
+                    </span>
+                  </div>
 
-                <button type="button" className="btn btn-r" onClick={clearVault}><Trash2 size={13} /> Disconnect Wallet</button>
-              </div>
+                  {parseFloat(usdcBal) >= 5 && allowance === 0n && (
+                    <div className="gc gc-a" style={{ marginBottom: 14, padding: 12 }}>
+                      <div style={{ fontSize: 11, fontWeight: 800, color: AMBER, marginBottom: 8 }}>⚡ USDC found — one approval needed to unlock live trading</div>
+                      <button type="button" className="btn btn-g" style={{ fontSize: 10, width: 'auto', padding: '6px 12px' }} onClick={handleApprove} disabled={isApproving || parseFloat(polBal) < 0.01}>
+                        {isApproving ? 'Signing...' : 'Approve USDC for CTF Exchange'}
+                      </button>
+                    </div>
+                  )}
+
+                  <button type="button" className="btn btn-r" onClick={clearVault}><Trash2 size={13} /> Disconnect Wallet</button>
+                </div>
+              )}
             </div>
           )}
         </div>

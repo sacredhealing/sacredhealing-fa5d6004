@@ -2262,7 +2262,13 @@
     "resetPaperDataWarning": "Detta rensar all paper-handelshistorik",
     "resetPaperDataSuccess": "Paper återställt — saldo satt till €10",
     "resetPaperDataFailed": "Kunde inte återställa paperdata",
-    "hftBannerSubtitle": "Valspegling + latensarb + volatilitetsscalper · Livemotor"
+    "hftBannerSubtitle": "Valspegling + latensarb + volatilitetsscalper · Livemotor",
+    "paperSessionWalletLine": "Paper-session · inloggad (ingen plånbok importerad)",
+    "paperSessionOnChainRow": "On-chain-saldon visas när du importerar en plånbok. Paper körs utan.",
+    "liveModeNeedsWallet": "Importera en plånbok under Inställningar för livehandel.",
+    "paperSessionWalletBlurb": "Du är i paper-läge utan ansluten plånbok. Importera en nyckel nedan bara om du vill handla live med USDC på Polygon.",
+    "gateSignInForPaperHint": "Logga in för att köra hela paper-motorn utan att importera en privat nyckel.",
+    "gateOrImportWallet": "Eller importera en Polygon-plånboksnyckel nedan för livehandel."
   },
   "predictionMarketBot": {
     "headerTitle": "Prediction market-bot",
