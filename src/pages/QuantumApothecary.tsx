@@ -231,7 +231,45 @@ function renderInline(
         </code>
       );
     }
+    // Plain text segment — auto-bold sacred terms (frequency names, masters, transmission types)
+    if (opts?.sqiGoldBold && variant === 'body' && p) {
+      return <React.Fragment key={i}>{autoBoldSacredTerms(p)}</React.Fragment>;
+    }
     return p;
+  });
+}
+
+/** Auto-bold sacred / frequency / master terms in plain SQI body text. */
+const SACRED_TERMS_REGEX = (() => {
+  const terms = [
+    'Prema-Pulse Transmission(?:s)?', 'Prema-Pulse', 'Vedic Light-Code(?:s)?', 'Vedic Light Code(?:s)?',
+    'Scalar Wave(?:s)?', 'Scalar Beam', 'Scalar Transmission', 'Soma-Nada', 'Akasha-Neural',
+    'Akasha Field', 'Anahata', 'Sushumna', 'Ida', 'Pingala', 'Kundalini', 'Bhakti-Algorithm(?:s)?',
+    'DNA Light-Code(?:s)?', 'DNA Repair', 'Karmic Extraction', 'Aetheric Heliostat', 'Surya-Chakra',
+    '\\d{2,4}\\s?Hz',
+    'Vishwananda', 'Mahavatar Babaji', 'Babaji', 'Sri Aurobindo', 'Paramahansa Yogananda',
+    'Ramana Maharshi', 'Adi Shankara', 'Patanjali', 'Bhagavan', 'Krishna', 'Shiva', 'Lakshmi',
+    'Saraswati', 'Durga', 'Ganesha', 'Hanuman', 'Lalita Tripura Sundari',
+    'Metabolic Fire Ignition', 'Liver Alchemist Protocol', 'Solar Immune Radiance',
+    'NMN \\+ Resveratrol[^—\\n.]*', 'Structural Light Integrity', 'Heart-Bloom Radiance',
+    'Neural Calm Sync', 'Deep Sleep Harmonic', 'Shatavari Flow', 'The Amrit Nectar',
+    'Triphala Integrity', 'Ancestral Tether Dissolve', 'Neem Bitter Truth',
+  ];
+  return new RegExp(`(${terms.join('|')})`, 'g');
+})();
+
+function autoBoldSacredTerms(text: string): React.ReactNode {
+  const parts = text.split(SACRED_TERMS_REGEX);
+  if (parts.length === 1) return text;
+  return parts.map((part, i) => {
+    if (i % 2 === 1) {
+      return (
+        <strong key={i} style={{ color: 'rgba(255,255,255,0.97)', fontWeight: 700 }}>
+          {part}
+        </strong>
+      );
+    }
+    return part;
   });
 }
 
