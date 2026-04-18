@@ -2,31 +2,20 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  ArrowLeft,
-  Brain,
-  Search,
-  RefreshCw,
-  Zap,
-  Target,
-  Shield,
-  BarChart3,
-  ChevronDown,
-  ChevronUp,
-  Play,
-  Square,
-  ExternalLink,
+  ArrowLeft, Brain, TrendingUp, Search, RefreshCw,
+  Zap, Target, Shield, BarChart3, ChevronDown, ChevronUp,
+  Play, Square, ExternalLink
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { polymarketService } from '@/services/polymarketService';
 
 // ─── SQI 2050 tokens ──────────────────────────────────────────────────────────
-const G = '#D4AF37';
-const CYAN = '#22D3EE';
+const G     = '#D4AF37';
+const CYAN  = '#22D3EE';
 const GREEN = '#2ECC71';
-const RED = '#FF4757';
-const BG = '#050505';
+const RED   = '#FF4757';
+const BG    = '#050505';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Market {
@@ -58,36 +47,50 @@ interface Signal {
 function calcKelly(balance: number, winProb: number, currentPrice: number): number {
   if (winProb <= 0 || currentPrice <= 0 || currentPrice >= 1) return 0;
   const winPayout = (1 - currentPrice) / currentPrice;
-  const loseProb = 1 - winProb;
+  const loseProb  = 1 - winProb;
   const fullKelly = (winProb * winPayout - loseProb) / winPayout;
   if (fullKelly <= 0) return 0;
   const quarterKelly = fullKelly * 0.25;
-  return Math.min(50, Math.max(0.5, parseFloat((balance * quarterKelly).toFixed(2))));
+  return Math.min(50, Math.max(0.50, parseFloat((balance * quarterKelly).toFixed(2))));
 }
 
-// ─── Fetch markets via shared polymarket-proxy (polymarketService) ────────────
-async function fetchMarketsMapped(limit = 50): Promise<Market[]> {
-  const fetched = await polymarketService.fetchMarkets(limit);
-  return fetched.map((m) => ({
-    id: m.id,
-    question: m.question,
-    liquidity: m.liquidity,
-    volume: m.volume,
-    endDate: m.endDate,
-    slug: m.slug || '',
-    outcomes: m.outcomes.map((o) => ({
-      name: o.name,
-      price: o.price,
-      tokenId: o.tokenId,
-    })),
-  }));
+// ─── Fetch markets from Polymarket via proxy ─────────────────────────────────
+async function fetchMarkets(limit = 50): Promise<Market[]> {
+  try {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const res = await fetch(
+      `${supabaseUrl}/functions/v1/polymarket-proxy?endpoint=markets&params=${encodeURIComponent(`limit=${limit}&active=true&closed=false`)}`
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.map((m: any) => {
+      const names    = JSON.parse(m.outcomes || '["Yes","No"]');
+      const prices   = JSON.parse(m.outcomePrices || '[0.5,0.5]');
+      const tokenIds = JSON.parse(m.clobTokenIds || '["",""]');
+      return {
+        id:        m.id,
+        question:  m.question,
+        liquidity: parseFloat(m.liquidity) || 0,
+        volume:    parseFloat(m.volume) || 0,
+        endDate:   m.endDate,
+        slug:      m.slug || '',
+        outcomes:  names.map((name: string, i: number) => ({
+          name,
+          price:   parseFloat(prices[i]) || 0.5,
+          tokenId: tokenIds[i] || '',
+        })),
+      };
+    });
+  } catch {
+    return [];
+  }
 }
 
-// ─── Analyse market with Gemini (gemini-bridge edge function) ────────────────
+// ─── Analyse market with Gemini ───────────────────────────────────────────────
 async function analyseMarket(market: Market, balance: number): Promise<Signal | null> {
   try {
-    const yes = market.outcomes.find((o) => o.name.toLowerCase() === 'yes');
-    const no = market.outcomes.find((o) => o.name.toLowerCase() === 'no');
+    const yes = market.outcomes.find(o => o.name.toLowerCase() === 'yes');
+    const no  = market.outcomes.find(o => o.name.toLowerCase() === 'no');
     if (!yes || !no) return null;
 
     const prompt = `You are a professional prediction market analyst.
@@ -129,26 +132,26 @@ Only recommend trading if confidence >= 65 and edge > 4%.`;
     const analysis = JSON.parse(jsonMatch[0]);
     if (!analysis.shouldTrade || analysis.confidence < 65) return null;
 
-    const tradeOutcome = analysis.recommendation === 'BUY_YES' ? yes : no;
-    const currentPrice = tradeOutcome.price;
-    const targetPrice = Math.min(0.95, analysis.trueProb);
-    const kellySize = calcKelly(balance, analysis.trueProb, currentPrice);
+    const tradeOutcome  = analysis.recommendation === 'BUY_YES' ? yes : no;
+    const currentPrice  = tradeOutcome.price;
+    const targetPrice   = Math.min(0.95, analysis.trueProb);
+    const kellySize     = calcKelly(balance, analysis.trueProb, currentPrice);
 
-    if (kellySize < 0.5) return null;
+    if (kellySize < 0.50) return null;
 
     return {
-      id: `${market.id}-${Date.now()}`,
+      id:           `${market.id}-${Date.now()}`,
       market,
       recommendation: analysis.recommendation,
-      outcome: analysis.recommendation === 'BUY_YES' ? 'YES' : 'NO',
+      outcome:        analysis.recommendation === 'BUY_YES' ? 'YES' : 'NO',
       currentPrice,
       targetPrice,
-      confidence: analysis.confidence,
+      confidence:     analysis.confidence,
       kellySize,
-      reasoning: analysis.reasoning,
-      edge: analysis.edge,
-      strategy: analysis.strategy,
-      timestamp: new Date(),
+      reasoning:      analysis.reasoning,
+      edge:           analysis.edge,
+      strategy:       analysis.strategy,
+      timestamp:      new Date(),
     };
   } catch {
     return null;
@@ -157,35 +160,33 @@ Only recommend trading if confidence >= 65 and edge > 4%.`;
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function PredictionMarketBot() {
-  const navigate = useNavigate();
-  const { t } = useTranslation();
-  const { user } = useAuth();
+  const navigate  = useNavigate();
+  const { t }     = useTranslation();
+  const { user }  = useAuth();
 
-  const [markets, setMarkets] = useState<Market[]>([]);
-  const [signals, setSignals] = useState<Signal[]>([]);
-  const [isScanning, setIsScanning] = useState(false);
-  const [isRunning, setIsRunning] = useState(false);
-  const [balance, setBalance] = useState(10);
-  const [scanCount, setScanCount] = useState(0);
-  const [lastScan, setLastScan] = useState<Date | null>(null);
-  const [expandedSig, setExpandedSig] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | 'high' | 'medium'>('all');
+  const [markets,      setMarkets]      = useState<Market[]>([]);
+  const [signals,      setSignals]      = useState<Signal[]>([]);
+  const [isScanning,   setIsScanning]   = useState(false);
+  const [isRunning,    setIsRunning]    = useState(false);
+  const [balance,      setBalance]      = useState(10);
+  const [scanCount,    setScanCount]    = useState(0);
+  const [lastScan,     setLastScan]     = useState<Date | null>(null);
+  const [expandedSig,  setExpandedSig]  = useState<string | null>(null);
+  const [filter,       setFilter]       = useState<'all' | 'high' | 'medium'>('all');
   const [stats, setStats] = useState({ total: 0, highConf: 0, avgEdge: 0 });
 
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // ─── Load paper balance from Supabase polymarket_bot_settings ────────────────
+  // ─── Load balance from Supabase ──────────────────────────────────────────
   useEffect(() => {
     if (!user?.id) return;
-    void supabase
+    supabase
       .from('polymarket_bot_settings')
       .select('paper_balance')
       .eq('user_id', user.id)
-      .maybeSingle()
+      .single()
       .then(({ data }) => {
-        if (data?.paper_balance != null) {
-          setBalance(parseFloat(String(data.paper_balance)));
-        }
+        if (data?.paper_balance) setBalance(parseFloat(data.paper_balance));
       });
   }, [user?.id]);
 
@@ -193,11 +194,12 @@ export default function PredictionMarketBot() {
   const runScan = useCallback(async () => {
     setIsScanning(true);
     try {
-      const fetched = await fetchMarketsMapped(50);
+      const fetched = await fetchMarkets(50);
       setMarkets(fetched);
 
+      // Pick top 5 markets by volume for AI analysis (to save Gemini credits)
       const topMarkets = fetched
-        .filter((m) => m.liquidity > 10000)
+        .filter(m => m.liquidity > 10000)
         .sort((a, b) => b.volume - a.volume)
         .slice(0, 5);
 
@@ -205,67 +207,54 @@ export default function PredictionMarketBot() {
       for (const market of topMarkets) {
         const signal = await analyseMarket(market, balance);
         if (signal) newSignals.push(signal);
-        await new Promise((r) => setTimeout(r, 300));
+        await new Promise(r => setTimeout(r, 300)); // avoid rate limiting
       }
 
       if (newSignals.length > 0) {
-        setSignals((prev) => {
+        setSignals(prev => {
           const combined = [...newSignals, ...prev].slice(0, 20);
-          const highConf = combined.filter((s) => s.confidence >= 80).length;
-          const avgEdge =
-            combined.reduce((sum, s) => sum + Math.abs(s.targetPrice - s.currentPrice), 0) /
-            combined.length;
-          setStats({
-            total: combined.length,
-            highConf,
-            avgEdge: parseFloat((avgEdge * 100).toFixed(1)),
-          });
+          // Update stats
+          const highConf = combined.filter(s => s.confidence >= 80).length;
+          const avgEdge  = combined.reduce((sum, s) => sum + Math.abs(s.targetPrice - s.currentPrice), 0) / combined.length;
+          setStats({ total: combined.length, highConf, avgEdge: parseFloat((avgEdge * 100).toFixed(1)) });
           return combined;
         });
-        toast.success(
-          t('predictionMarketBot.engineToastSignals', { count: newSignals.length })
-        );
+        toast.success(`${newSignals.length} new signal${newSignals.length > 1 ? 's' : ''} found`);
       }
 
-      setScanCount((c) => c + 1);
+      setScanCount(c => c + 1);
       setLastScan(new Date());
-    } catch {
-      toast.error(t('predictionMarketBot.engineToastScanFailed'));
+    } catch (e) {
+      toast.error('Scan failed');
     } finally {
       setIsScanning(false);
     }
-  }, [balance, t]);
+  }, [balance]);
 
   // ─── Toggle engine ────────────────────────────────────────────────────────
   const toggleEngine = () => {
     if (isRunning) {
       if (intervalRef.current) clearInterval(intervalRef.current);
-      intervalRef.current = null;
       setIsRunning(false);
-      toast.info(t('predictionMarketBot.engineToastStopped'));
+      toast.info('AI Engine stopped');
     } else {
       setIsRunning(true);
-      void runScan();
-      intervalRef.current = setInterval(() => {
-        void runScan();
-      }, 90000);
-      toast.success(t('predictionMarketBot.engineToastStarted'));
+      runScan();
+      intervalRef.current = setInterval(runScan, 90000); // scan every 90s
+      toast.success('AI Engine started — scanning every 90s');
     }
   };
 
-  useEffect(
-    () => () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    },
-    []
-  );
+  useEffect(() => () => { if (intervalRef.current) clearInterval(intervalRef.current); }, []);
 
-  const filteredSignals = signals.filter((s) => {
-    if (filter === 'high') return s.confidence >= 80;
+  // ─── Filtered signals ─────────────────────────────────────────────────────
+  const filteredSignals = signals.filter(s => {
+    if (filter === 'high')   return s.confidence >= 80;
     if (filter === 'medium') return s.confidence >= 65 && s.confidence < 80;
     return true;
   });
 
+  // ─── Styles ───────────────────────────────────────────────────────────────
   const css = `
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap');
     .pmb-root{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:${BG};color:#fff;padding-bottom:100px;}
@@ -300,10 +289,10 @@ export default function PredictionMarketBot() {
   `;
 
   const strategyColor: Record<string, string> = {
-    arbitrage: CYAN,
-    news_edge: G,
+    arbitrage:  CYAN,
+    news_edge:  G,
     mispricing: GREEN,
-    momentum: '#A855F7',
+    momentum:   '#A855F7',
   };
 
   return (
@@ -312,303 +301,140 @@ export default function PredictionMarketBot() {
       <div className="pmb-root">
         <div className="pmb-bg" />
         <div className="pmb-z">
+
+          {/* Header */}
           <div style={{ paddingTop: 20, paddingBottom: 16 }}>
             <button
-              type="button"
               className="btn-ghost"
               style={{ width: 'auto', marginBottom: 16 }}
-              onClick={() => navigate('/income-streams/polymarket-bot')}
-              aria-label={t('common.back')}
+              onClick={() => navigate('/polymarket-bot')}
             >
               <ArrowLeft size={13} style={{ display: 'inline', marginRight: 6 }} />
-              {t('common.back')}
+              Back
             </button>
 
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: 16,
-              }}
-            >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div
-                  style={{
-                    width: 46,
-                    height: 46,
-                    borderRadius: 14,
-                    background: isRunning ? 'rgba(34,211,238,0.1)' : 'rgba(212,175,55,0.1)',
-                    border: `1px solid ${isRunning ? 'rgba(34,211,238,0.25)' : 'rgba(212,175,55,0.22)'}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Brain
-                    size={20}
-                    color={isRunning ? CYAN : G}
-                    className={isRunning ? 'pulse' : ''}
-                  />
+                <div style={{
+                  width: 46, height: 46, borderRadius: 14,
+                  background: isRunning ? 'rgba(34,211,238,0.1)' : 'rgba(212,175,55,0.1)',
+                  border: `1px solid ${isRunning ? 'rgba(34,211,238,0.25)' : 'rgba(212,175,55,0.22)'}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Brain size={20} color={isRunning ? CYAN : G} className={isRunning ? 'pulse' : ''} />
                 </div>
                 <div>
-                  <div
-                    style={{
-                      fontWeight: 900,
-                      fontSize: 17,
-                      letterSpacing: '-0.02em',
-                      color: '#fff',
-                    }}
-                  >
-                    {t('predictionMarketBot.engineTitle')}
+                  <div style={{ fontWeight: 900, fontSize: 17, letterSpacing: '-0.02em', color: '#fff' }}>
+                    AI Prediction Engine
                   </div>
-                  <div
-                    style={{
-                      fontSize: 9,
-                      color: 'rgba(255,255,255,0.4)',
-                      letterSpacing: '0.3em',
-                      textTransform: 'uppercase',
-                      marginTop: 4,
-                    }}
-                  >
-                    {t('predictionMarketBot.headerSubtitleLine')}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 8,
-                      fontWeight: 700,
-                      letterSpacing: '0.35em',
-                      color: G,
-                      textTransform: 'uppercase',
-                      marginTop: 2,
-                    }}
-                  >
-                    {t('predictionMarketBot.engineSub')}
+                  <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.35em', color: G, textTransform: 'uppercase', marginTop: 2 }}>
+                    Gemini · Kelly · CLOB
                   </div>
                 </div>
               </div>
               <span className={`pill ${isRunning ? 'pill-c' : 'pill-g'}`}>
                 <span className={isRunning ? 'dot-g' : 'dot-a'} style={{ marginRight: 4 }} />
-                {isRunning
-                  ? isScanning
-                    ? t('predictionMarketBot.engineStatusScanning')
-                    : t('predictionMarketBot.engineStatusRunning')
-                  : t('predictionMarketBot.engineStatusStopped')}
+                {isRunning ? (isScanning ? 'Scanning' : 'Running') : 'Stopped'}
               </span>
             </div>
 
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr 1fr',
-                gap: 8,
-                marginBottom: 14,
-              }}
-            >
+            {/* Stats row */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 14 }}>
               <div className="sb">
-                <div className="lbl" style={{ marginBottom: 4 }}>
-                  {t('predictionMarketBot.engineStatMarkets')}
-                </div>
-                <div style={{ fontWeight: 900, fontSize: 18, color: '#fff' }}>
-                  {markets.length}
-                </div>
+                <div className="lbl" style={{ marginBottom: 4 }}>Markets</div>
+                <div style={{ fontWeight: 900, fontSize: 18, color: '#fff' }}>{markets.length}</div>
               </div>
               <div className="sb">
-                <div className="lbl" style={{ marginBottom: 4 }}>
-                  {t('predictionMarketBot.engineStatSignals')}
-                </div>
+                <div className="lbl" style={{ marginBottom: 4 }}>Signals</div>
                 <div style={{ fontWeight: 900, fontSize: 18, color: G }}>{stats.total}</div>
               </div>
               <div className="sb">
-                <div className="lbl" style={{ marginBottom: 4 }}>
-                  {t('predictionMarketBot.engineStatHighConf')}
-                </div>
-                <div style={{ fontWeight: 900, fontSize: 18, color: GREEN }}>
-                  {stats.highConf}
-                </div>
+                <div className="lbl" style={{ marginBottom: 4 }}>High Conf</div>
+                <div style={{ fontWeight: 900, fontSize: 18, color: GREEN }}>{stats.highConf}</div>
               </div>
             </div>
 
+            {/* Balance + scan info */}
             <div className="gc gc-g" style={{ marginBottom: 14 }}>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: 10,
-                }}
-              >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                 <div>
-                  <div className="lbl" style={{ marginBottom: 4 }}>
-                    {t('predictionMarketBot.enginePaperBalance')}
-                  </div>
-                  <div style={{ fontWeight: 900, fontSize: 22, color: G }}>
-                    €{balance.toFixed(2)}
-                  </div>
+                  <div className="lbl" style={{ marginBottom: 4 }}>Paper Balance</div>
+                  <div style={{ fontWeight: 900, fontSize: 22, color: G }}>€{balance.toFixed(2)}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div className="lbl" style={{ marginBottom: 4 }}>
-                    {t('predictionMarketBot.engineKellyFive')}
-                  </div>
-                  <div style={{ fontWeight: 900, fontSize: 22, color: CYAN }}>
-                    €{(balance * 0.05).toFixed(2)}
-                  </div>
+                  <div className="lbl" style={{ marginBottom: 4 }}>5% Kelly</div>
+                  <div style={{ fontWeight: 900, fontSize: 22, color: CYAN }}>€{(balance * 0.05).toFixed(2)}</div>
                 </div>
               </div>
               {lastScan && (
                 <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>
-                  {t('predictionMarketBot.engineLastScan', {
-                    time: lastScan.toLocaleTimeString(),
-                    scanCount,
-                  })}
+                  Last scan: {lastScan.toLocaleTimeString()} · Scan #{scanCount} · Next in ~90s
                 </div>
               )}
             </div>
 
+            {/* Controls */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
               <button
-                type="button"
                 className={isRunning ? 'btn-r' : 'btn-g'}
                 style={{ flex: 1 }}
                 onClick={toggleEngine}
                 disabled={isScanning}
               >
-                {isRunning ? (
-                  <>
-                    <Square size={13} style={{ display: 'inline', marginRight: 6 }} />
-                    {t('predictionMarketBot.engineStop')}
-                  </>
-                ) : (
-                  <>
-                    <Play size={13} style={{ display: 'inline', marginRight: 6 }} />
-                    {t('predictionMarketBot.engineStart')}
-                  </>
-                )}
+                {isRunning
+                  ? <><Square size={13} style={{ display: 'inline', marginRight: 6 }} />Stop AI Engine</>
+                  : <><Play size={13} style={{ display: 'inline', marginRight: 6 }} />Start AI Engine</>
+                }
               </button>
               <button
-                type="button"
                 className="btn-ghost"
-                onClick={() => void runScan()}
+                onClick={runScan}
                 disabled={isScanning}
                 style={{ opacity: isScanning ? 0.5 : 1 }}
-                aria-label={t('predictionMarketBot.engineRefreshScan')}
               >
                 <RefreshCw size={14} className={isScanning ? 'spin' : ''} />
               </button>
             </div>
           </div>
 
+          {/* How it works */}
           <div className="gc" style={{ marginBottom: 14 }}>
-            <div className="lbl" style={{ marginBottom: 12 }}>
-              {t('predictionMarketBot.engineHowTitle')}
-            </div>
-            {(
-              [
-                {
-                  icon: <Search size={14} />,
-                  color: CYAN,
-                  label: t('predictionMarketBot.engineStep1Label'),
-                  desc: t('predictionMarketBot.engineStep1Desc'),
-                },
-                {
-                  icon: <Brain size={14} />,
-                  color: G,
-                  label: t('predictionMarketBot.engineStep2Label'),
-                  desc: t('predictionMarketBot.engineStep2Desc'),
-                },
-                {
-                  icon: <Target size={14} />,
-                  color: GREEN,
-                  label: t('predictionMarketBot.engineStep3Label'),
-                  desc: t('predictionMarketBot.engineStep3Desc'),
-                },
-                {
-                  icon: <Shield size={14} />,
-                  color: '#A855F7',
-                  label: t('predictionMarketBot.engineStep4Label'),
-                  desc: t('predictionMarketBot.engineStep4Desc'),
-                },
-                {
-                  icon: <Zap size={14} />,
-                  color: RED,
-                  label: t('predictionMarketBot.engineStep5Label'),
-                  desc: t('predictionMarketBot.engineStep5Desc'),
-                },
-              ] as const
-            ).map((step, i) => (
-              <div
-                key={step.label}
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: 10,
-                  marginBottom: i < 4 ? 10 : 0,
-                }}
-              >
-                <div
-                  style={{
-                    width: 30,
-                    height: 30,
-                    borderRadius: 9,
-                    flexShrink: 0,
-                    background: `${step.color}15`,
-                    border: `1px solid ${step.color}33`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: step.color,
-                  }}
-                >
+            <div className="lbl" style={{ marginBottom: 12 }}>How the AI Engine Works</div>
+            {[
+              { icon: <Search size={14} />, color: CYAN,  label: '1. Scan', desc: 'Fetches 50 active markets filtered by liquidity >$10k' },
+              { icon: <Brain size={14} />, color: G,      label: '2. Analyse', desc: 'Gemini AI estimates true probability vs market price' },
+              { icon: <Target size={14} />, color: GREEN, label: '3. Edge', desc: 'Only signals with >4% edge and 65%+ confidence pass' },
+              { icon: <Shield size={14} />, color: '#A855F7', label: '4. Kelly', desc: 'Position sized at quarter-Kelly — max 5% of balance' },
+              { icon: <Zap size={14} />,   color: RED,    label: '5. Signal', desc: 'Displayed with reasoning, target price, and trade size' },
+            ].map((step, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: i < 4 ? 10 : 0 }}>
+                <div style={{
+                  width: 30, height: 30, borderRadius: 9, flexShrink: 0,
+                  background: step.color + '15', border: `1px solid ${step.color}33`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: step.color,
+                }}>
                   {step.icon}
                 </div>
                 <div>
-                  <div
-                    style={{
-                      fontWeight: 800,
-                      fontSize: 11,
-                      color: step.color,
-                      marginBottom: 2,
-                    }}
-                  >
-                    {step.label}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 11,
-                      color: 'rgba(255,255,255,0.5)',
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    {step.desc}
-                  </div>
+                  <div style={{ fontWeight: 800, fontSize: 11, color: step.color, marginBottom: 2 }}>{step.label}</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>{step.desc}</div>
                 </div>
               </div>
             ))}
           </div>
 
+          {/* Signals */}
           <div>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: 12,
-              }}
-            >
-              <div className="lbl">{t('predictionMarketBot.engineSignalsTitle')}</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div className="lbl">AI Signals</div>
               <div style={{ display: 'flex', gap: 6 }}>
-                {(['all', 'high', 'medium'] as const).map((f) => (
+                {(['all', 'high', 'medium'] as const).map(f => (
                   <button
                     key={f}
-                    type="button"
                     className={`filter-btn ${filter === f ? 'active' : ''}`}
                     onClick={() => setFilter(f)}
                   >
-                    {f === 'all'
-                      ? t('predictionMarketBot.engineFilterAll')
-                      : f === 'high'
-                        ? t('predictionMarketBot.engineFilterHigh')
-                        : t('predictionMarketBot.engineFilterMedium')}
+                    {f === 'all' ? 'All' : f === 'high' ? '80%+' : '65-80%'}
                   </button>
                 ))}
               </div>
@@ -616,216 +442,115 @@ export default function PredictionMarketBot() {
 
             {filteredSignals.length === 0 ? (
               <div className="gc" style={{ textAlign: 'center', padding: 40 }}>
-                <BarChart3
-                  size={32}
-                  style={{ margin: '0 auto 12px', color: 'rgba(255,255,255,0.2)' }}
-                />
-                <div style={{ color: 'rgba(255,255,255,0.4)', marginBottom: 6 }}>
-                  {t('predictionMarketBot.engineNoSignals')}
-                </div>
+                <BarChart3 size={32} style={{ margin: '0 auto 12px', color: 'rgba(255,255,255,0.2)' }} />
+                <div style={{ color: 'rgba(255,255,255,0.4)', marginBottom: 6 }}>No signals yet</div>
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>
-                  {t('predictionMarketBot.engineNoSignalsHint')}
+                  Press Start AI Engine to begin scanning
                 </div>
               </div>
-            ) : (
-              filteredSignals.map((sig) => (
-                <div
-                  key={sig.id}
-                  role="button"
-                  tabIndex={0}
-                  className={`gc ${sig.confidence >= 80 ? 'gc-gr' : ''}`}
-                  style={{ marginBottom: 10, cursor: 'pointer' }}
-                  onClick={() => setExpandedSig(expandedSig === sig.id ? null : sig.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setExpandedSig(expandedSig === sig.id ? null : sig.id);
+            ) : filteredSignals.map(sig => (
+              <div
+                key={sig.id}
+                className={`gc ${sig.confidence >= 80 ? 'gc-gr' : ''}`}
+                style={{ marginBottom: 10, cursor: 'pointer' }}
+                onClick={() => setExpandedSig(expandedSig === sig.id ? null : sig.id)}
+              >
+                {/* Signal header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                  <div style={{ flex: 1, marginRight: 12 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#fff', lineHeight: 1.4, marginBottom: 6 }}>
+                      {sig.market.question}
+                    </div>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' as const }}>
+                      <span className={`pill ${sig.outcome === 'YES' ? 'pill-gr' : 'pill-r'}`}>
+                        BUY {sig.outcome}
+                      </span>
+                      <span className="pill pill-g">
+                        {sig.strategy.replace('_', ' ')}
+                      </span>
+                      <span style={{
+                        ...{ padding: '2px 8px', borderRadius: 50, fontSize: '7px', fontWeight: 800, letterSpacing: '.2em', textTransform: 'uppercase' as const },
+                        background: `${strategyColor[sig.strategy] || G}15`,
+                        color: strategyColor[sig.strategy] || G,
+                        border: `1px solid ${strategyColor[sig.strategy] || G}33`,
+                      }}>
+                        {sig.confidence}% conf
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <div style={{ fontWeight: 900, fontSize: 18, color: G }}>€{sig.kellySize.toFixed(2)}</div>
+                    <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>Kelly size</div>
+                    {expandedSig === sig.id
+                      ? <ChevronUp size={14} color="rgba(255,255,255,0.3)" style={{ marginTop: 4 }} />
+                      : <ChevronDown size={14} color="rgba(255,255,255,0.3)" style={{ marginTop: 4 }} />
                     }
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      marginBottom: 10,
-                    }}
-                  >
-                    <div style={{ flex: 1, marginRight: 12 }}>
-                      <div
-                        style={{
-                          fontSize: 11,
-                          fontWeight: 700,
-                          color: '#fff',
-                          lineHeight: 1.4,
-                          marginBottom: 6,
-                        }}
-                      >
-                        {sig.market.question}
-                      </div>
-                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        <span className={`pill ${sig.outcome === 'YES' ? 'pill-gr' : 'pill-r'}`}>
-                          {t('predictionMarketBot.engineBuyOutcome', { outcome: sig.outcome })}
-                        </span>
-                        <span className="pill pill-g">
-                          {sig.strategy.replace('_', ' ')}
-                        </span>
-                        <span
-                          style={{
-                            padding: '2px 8px',
-                            borderRadius: 50,
-                            fontSize: '7px',
-                            fontWeight: 800,
-                            letterSpacing: '.2em',
-                            textTransform: 'uppercase',
-                            background: `${strategyColor[sig.strategy] || G}15`,
-                            color: strategyColor[sig.strategy] || G,
-                            border: `1px solid ${strategyColor[sig.strategy] || G}33`,
-                          }}
-                        >
-                          {t('predictionMarketBot.engineConfPct', {
-                            pct: sig.confidence,
-                          })}
-                        </span>
-                      </div>
-                    </div>
-                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div style={{ fontWeight: 900, fontSize: 18, color: G }}>
-                        €{sig.kellySize.toFixed(2)}
-                      </div>
-                      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>
-                        {t('predictionMarketBot.engineKellySize')}
-                      </div>
-                      {expandedSig === sig.id ? (
-                        <ChevronUp
-                          size={14}
-                          color="rgba(255,255,255,0.3)"
-                          style={{ marginTop: 4 }}
-                        />
-                      ) : (
-                        <ChevronDown
-                          size={14}
-                          color="rgba(255,255,255,0.3)"
-                          style={{ marginTop: 4 }}
-                        />
-                      )}
+                  </div>
+                </div>
+
+                {/* Price bar */}
+                <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                  <div className="sb" style={{ flex: 1 }}>
+                    <div className="lbl" style={{ marginBottom: 3 }}>Entry Price</div>
+                    <div style={{ fontWeight: 900, fontSize: 14, color: '#fff' }}>
+                      {(sig.currentPrice * 100).toFixed(1)}%
                     </div>
                   </div>
-
-                  <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                    <div className="sb" style={{ flex: 1 }}>
-                      <div className="lbl" style={{ marginBottom: 3 }}>
-                        {t('predictionMarketBot.engineEntryPrice')}
-                      </div>
-                      <div style={{ fontWeight: 900, fontSize: 14, color: '#fff' }}>
-                        {(sig.currentPrice * 100).toFixed(1)}%
-                      </div>
-                    </div>
-                    <div className="sb" style={{ flex: 1 }}>
-                      <div className="lbl" style={{ marginBottom: 3 }}>
-                        {t('predictionMarketBot.engineTarget')}
-                      </div>
-                      <div style={{ fontWeight: 900, fontSize: 14, color: GREEN }}>
-                        {(sig.targetPrice * 100).toFixed(1)}%
-                      </div>
-                    </div>
-                    <div className="sb" style={{ flex: 1 }}>
-                      <div className="lbl" style={{ marginBottom: 3 }}>
-                        {t('predictionMarketBot.engineEdge')}
-                      </div>
-                      <div style={{ fontWeight: 900, fontSize: 14, color: CYAN }}>
-                        +{((sig.targetPrice - sig.currentPrice) * 100).toFixed(1)}%
-                      </div>
+                  <div className="sb" style={{ flex: 1 }}>
+                    <div className="lbl" style={{ marginBottom: 3 }}>Target</div>
+                    <div style={{ fontWeight: 900, fontSize: 14, color: GREEN }}>
+                      {(sig.targetPrice * 100).toFixed(1)}%
                     </div>
                   </div>
+                  <div className="sb" style={{ flex: 1 }}>
+                    <div className="lbl" style={{ marginBottom: 3 }}>Edge</div>
+                    <div style={{ fontWeight: 900, fontSize: 14, color: CYAN }}>
+                      +{((sig.targetPrice - sig.currentPrice) * 100).toFixed(1)}%
+                    </div>
+                  </div>
+                </div>
 
-                  {expandedSig === sig.id && (
-                    <div
+                {/* Expanded detail */}
+                {expandedSig === sig.id && (
+                  <div style={{ paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                    <div style={{ marginBottom: 8 }}>
+                      <div className="lbl" style={{ marginBottom: 4 }}>AI Reasoning</div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>
+                        {sig.reasoning}
+                      </div>
+                    </div>
+                    <div style={{ marginBottom: 10 }}>
+                      <div className="lbl" style={{ marginBottom: 4 }}>Edge Explanation</div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>
+                        {sig.edge}
+                      </div>
+                    </div>
+                    <div style={{ marginBottom: 10 }}>
+                      <div className="lbl" style={{ marginBottom: 4 }}>Market Details</div>
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', lineHeight: 1.8 }}>
+                        Liquidity: ${sig.market.liquidity.toLocaleString()}<br />
+                        Volume: ${sig.market.volume.toLocaleString()}<br />
+                        Ends: {new Date(sig.market.endDate).toLocaleDateString()}<br />
+                        Signal at: {sig.timestamp.toLocaleTimeString()}
+                      </div>
+                    </div>
+                    <a
+                      href={`https://polymarket.com/market/${sig.market.slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       style={{
-                        paddingTop: 10,
-                        borderTop: '1px solid rgba(255,255,255,0.07)',
+                        display: 'flex', alignItems: 'center', gap: 6,
+                        fontSize: 9, fontWeight: 800, color: G,
+                        letterSpacing: '.2em', textTransform: 'uppercase',
+                        textDecoration: 'none',
                       }}
                     >
-                      <div style={{ marginBottom: 8 }}>
-                        <div className="lbl" style={{ marginBottom: 4 }}>
-                          {t('predictionMarketBot.engineAiReasoning')}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 11,
-                            color: 'rgba(255,255,255,0.6)',
-                            lineHeight: 1.6,
-                          }}
-                        >
-                          {sig.reasoning}
-                        </div>
-                      </div>
-                      <div style={{ marginBottom: 10 }}>
-                        <div className="lbl" style={{ marginBottom: 4 }}>
-                          {t('predictionMarketBot.engineEdgeExplain')}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 11,
-                            color: 'rgba(255,255,255,0.6)',
-                            lineHeight: 1.6,
-                          }}
-                        >
-                          {sig.edge}
-                        </div>
-                      </div>
-                      <div style={{ marginBottom: 10 }}>
-                        <div className="lbl" style={{ marginBottom: 4 }}>
-                          {t('predictionMarketBot.engineMarketDetails')}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 10,
-                            color: 'rgba(255,255,255,0.4)',
-                            lineHeight: 1.8,
-                          }}
-                        >
-                          {t('predictionMarketBot.engineMarketLiquidity', {
-                            amount: sig.market.liquidity.toLocaleString(),
-                          })}
-                          <br />
-                          {t('predictionMarketBot.engineMarketVolume', {
-                            amount: sig.market.volume.toLocaleString(),
-                          })}
-                          <br />
-                          {t('predictionMarketBot.engineMarketEnds', {
-                            date: new Date(sig.market.endDate).toLocaleDateString(),
-                          })}
-                          <br />
-                          {t('predictionMarketBot.engineSignalAt', {
-                            time: sig.timestamp.toLocaleTimeString(),
-                          })}
-                        </div>
-                      </div>
-                      <a
-                        href={`https://polymarket.com/market/${sig.market.slug}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 6,
-                          fontSize: 9,
-                          fontWeight: 800,
-                          color: G,
-                          letterSpacing: '.2em',
-                          textTransform: 'uppercase',
-                          textDecoration: 'none',
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <ExternalLink size={12} /> {t('predictionMarketBot.engineViewPolymarket')}
-                      </a>
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
+                      <ExternalLink size={12} /> View on Polymarket
+                    </a>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </div>

@@ -68,7 +68,7 @@ const iconMap: Record<string, LucideIcon> = {
 const IncomeStreams: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { isAdmin } = useAdminRole();
+  const { isAdmin, isLoading: isAdminLoading } = useAdminRole();
   const [streams, setStreams] = useState<IncomeStream[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -77,7 +77,7 @@ const IncomeStreams: React.FC = () => {
 
   useEffect(() => {
     fetchStreams();
-  }, [currentLang]); // Re-fetch when language changes to ensure fresh render
+  }, [currentLang, isAdmin]); // Re-fetch when language or admin role resolves
 
   const fetchStreams = async () => {
     const { data, error } = await supabase
@@ -256,7 +256,7 @@ const IncomeStreams: React.FC = () => {
     return link.startsWith('/');
   };
 
-  if (isLoading) {
+  if (isLoading || isAdminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
