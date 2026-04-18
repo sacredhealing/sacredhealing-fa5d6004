@@ -453,46 +453,34 @@ function resolveActivationsByExactNamesUpTo(preferred: string[], max: number): A
 }
 
 function pickTenActivationsForVoiceResult(result: VoiceBiofieldResult): Activation[] {
-  const preferred: string[] = [];
-  const nr = result.nadiReading.toLowerCase();
-  if (nr.includes('ida')) {
-    preferred.push('Deep Sleep Harmonic', 'Neural Calm Sync', 'Melatonin', 'Heart-Bloom Radiance', 'Shatavari Flow');
-  } else if (nr.includes('pingala')) {
-    preferred.push('NMN + Resveratrol Cellular Battery', 'CoQ10', 'NAD+', 'Urolithin A', 'Shilajit');
-  } else if (nr.includes('sushumna')) {
-    preferred.push('Neural Fluidity Protocol', 'Biofield Purification', 'Structural Light Integrity', 'Crystalline Thought Flow', 'Zinc');
-  } else if (nr.includes('block')) {
-    preferred.push('Ancestral Tether Dissolve', 'Neem Bitter Truth', 'Activated Charcoal', 'Triphala Integrity', 'The Amrit Nectar (Guduchi)');
-  } else {
-    preferred.push('Biofield Purification', 'Neural Fluidity Protocol', 'Structural Light Integrity', 'Crystalline Thought Flow', 'Zinc');
+  // Use the FULL bioenergetic library (1,357+ frequencies) — voice-driven scoring
+  // across dosha, nadi, chakra, emotional & organ fields. Same engine as LimbicArc.
+  const doshaKey = String(result.dominantDosha || 'Vata').split(/[\s(/]/)[0] || 'Vata';
+  const nadiKey: 'Ida' | 'Pingala' | 'Sushumna' | 'Blocked' = coerceVoiceNadiToEnum(result.nadiReading);
+  const chakraKey = result.priorityAreas[0]?.name || 'Anahata';
+
+  const matched = matchActivationsToScan(
+    {
+      dominantDosha: doshaKey,
+      activatedNadi: nadiKey,
+      priorityChakra: chakraKey,
+      emotionalField: result.emotionalField,
+      organField: result.organField,
+    },
+    10,
+  ).map(mapBioLibraryToActivation);
+
+  // Dedup by id and cap at 10
+  const seen = new Set<string>();
+  const out: Activation[] = [];
+  for (const a of matched) {
+    if (!seen.has(a.id)) {
+      seen.add(a.id);
+      out.push(a);
+    }
+    if (out.length >= 10) break;
   }
-
-  const dd = result.dominantDosha.toLowerCase();
-  if (dd.includes('vata')) {
-    preferred.push('Brahmi Code', 'Ashwagandha Resonance', 'Magnesium (Ionic)');
-  } else if (dd.includes('pitta')) {
-    preferred.push('Neural Calm Sync', 'Turmeric Radiance', 'Rose Heart Bloom');
-  } else if (dd.includes('kapha')) {
-    preferred.push('Metabolic Fire Ignition', 'Chlorophyll Light Activation', 'Turmeric Radiance');
-  }
-
-  const org = result.organField.toLowerCase();
-  if (/(liver|hepatic|bile|metabolic)/i.test(org)) preferred.push('Liver Alchemist Protocol');
-  if (/(nerve|colon|nerve sheath)/i.test(org)) preferred.push('Ashwagandha Resonance');
-  if (/(lung|lymph)/i.test(org)) preferred.push('Microbiome Harmony');
-
-  for (const p of result.priorityAreas) {
-    const ln = p.name.toLowerCase();
-    if (/(liver|hepatic|bile)/i.test(ln)) preferred.push('Liver Alchemist Protocol');
-    if (/(heart|cardiac|circulation)/i.test(ln)) preferred.push('Heart-Bloom Radiance');
-    if (/(nervous|brain|mental|nerve)/i.test(ln)) preferred.push('Neural Fluidity Protocol');
-    if (/(immune|lymph)/i.test(ln)) preferred.push('Elderberry Immune Fortress');
-    if (/(gut|digest|microbiome)/i.test(ln)) preferred.push('Microbiome Harmony');
-    if (/(sleep|rest)/i.test(ln)) preferred.push('Deep Sleep Harmonic');
-    if (/(stress|cortisol|adrenal|tremor)/i.test(ln)) preferred.push('Ashwagandha Resonance');
-  }
-
-  return resolveActivationsByExactNamesUpTo(preferred, 10);
+  return out;
 }
 
 /* ════════════════════════════════════════════════════════════════════
