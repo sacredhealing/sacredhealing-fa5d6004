@@ -1716,7 +1716,13 @@
     "resetPaperDataWarning": "Dette sletter all paper-handelshistorikk",
     "resetPaperDataSuccess": "Paper tilbakestilt — saldo gjenopprettet til €10",
     "resetPaperDataFailed": "Kunne ikke tilbakestille paperdata",
-    "hftBannerSubtitle": "Hvalspeil + latensarb + volatilitetsscalper · Livemotor"
+    "hftBannerSubtitle": "Hvalspeil + latensarb + volatilitetsscalper · Livemotor",
+    "paperSessionWalletLine": "Paper-økt · innlogget (ingen lommebok importert)",
+    "paperSessionOnChainRow": "On-chain-saldo vises etter at du importerer en lommebok. Paper kjører uten.",
+    "liveModeNeedsWallet": "Importer en lommebok under Innstillinger for livehandel.",
+    "paperSessionWalletBlurb": "Du er i paper-modus uten tilkoblet lommebok. Importer en nøkkel nedenfor bare hvis du vil handle live med USDC på Polygon.",
+    "gateSignInForPaperHint": "Logg inn for å kjøre hele paper-motoren uten å importere en privat nøkkel.",
+    "gateOrImportWallet": "Eller importer en Polygon-lommeboknøkkel nedenfor for livehandel."
   },
   "predictionMarketBot": {
     "headerTitle": "Prediction market-bot",

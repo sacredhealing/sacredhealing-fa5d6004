@@ -1745,7 +1745,13 @@
     "resetPaperDataWarning": "Esto borra todo el historial de trading paper",
     "resetPaperDataSuccess": "Paper restablecido — saldo restaurado a €10",
     "resetPaperDataFailed": "No se pudo restablecer los datos paper",
-    "hftBannerSubtitle": "Espejo ballenas + arb latencia + scalper volatilidad · Motor en vivo"
+    "hftBannerSubtitle": "Espejo ballenas + arb latencia + scalper volatilidad · Motor en vivo",
+    "paperSessionWalletLine": "Sesión paper · sesión iniciada (sin cartera importada)",
+    "paperSessionOnChainRow": "Los saldos on-chain aparecen al importar una cartera. El modo paper funciona sin ella.",
+    "liveModeNeedsWallet": "Importa una cartera en Ajustes para operar en vivo.",
+    "paperSessionWalletBlurb": "Estás en modo paper sin cartera conectada. Importa una clave abajo solo si quieres operar en vivo con USDC en Polygon.",
+    "gateSignInForPaperHint": "Inicia sesión para usar el motor paper completo sin importar una clave privada.",
+    "gateOrImportWallet": "O importa una clave de cartera Polygon abajo para operar en vivo."
   },
   "predictionMarketBot": {
     "headerTitle": "Bot de mercados predictivos",
