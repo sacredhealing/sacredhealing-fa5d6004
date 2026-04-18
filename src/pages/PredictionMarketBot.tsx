@@ -186,7 +186,7 @@ export default function PredictionMarketBot() {
       .eq('user_id', user.id)
       .single()
       .then(({ data }) => {
-        if (data?.paper_balance) setBalance(parseFloat(data.paper_balance));
+        if (data?.paper_balance) setBalance(parseFloat(String(data.paper_balance)));
       });
   }, [user?.id]);
 
