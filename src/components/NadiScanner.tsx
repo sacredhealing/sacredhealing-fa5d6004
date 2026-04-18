@@ -7,6 +7,7 @@
 import { useState, useRef, useCallback, useEffect, type MouseEvent } from 'react';
 import { FaceMesh } from '@mediapipe/face_mesh';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAuth } from '@/hooks/useAuth';
 
 const SCAN_DURATION = 30;
 const FACE_MESH_VER = '0.4.1633559619';
@@ -62,8 +63,101 @@ interface BioSignature {
   confidence: number;
 }
 
+type PranaCoherenceConfidence = 'HIGH' | 'MODERATE' | 'LOW' | 'INVALID';
+
+function calculatePranaCoherence(bio: Partial<BioSignature>): {
+  value: number;
+  confidence: PranaCoherenceConfidence;
+  source: string;
+} {
+  const hr = bio.heartRate ?? 0;
+  const hrv = bio.hrvRmssd ?? 0;
+  const skinFlux = bio.skinFluxCoherence ?? 0;
+  const blink = bio.blinkRate ?? 0;
+  const stability = bio.headStability ?? 0;
+  const browT = bio.browTension ?? 0.5;
+  const jawT = bio.jawTension ?? 0.5;
+
+  const hasRealHR = hr > 45 && hr < 120;
+  const hasRealHRV = hrv > 5 && hrv < 120;
+  const hasRealFace = stability > 0 && browT !== 0.5;
+  const hasRealFlux = skinFlux > 0.35;
+
+  if (!hasRealHR && !hasRealHRV && !hasRealFace) {
+    return { value: 0, confidence: 'INVALID', source: 'no signal' };
+  }
+
+  let hrvScore = 0;
+  if (hasRealHRV) {
+    if (hrv >= 80) hrvScore = 1.0;
+    else if (hrv >= 60) hrvScore = 0.85;
+    else if (hrv >= 45) hrvScore = 0.7;
+    else if (hrv >= 30) hrvScore = 0.55;
+    else if (hrv >= 20) hrvScore = 0.38;
+    else if (hrv >= 12) hrvScore = 0.22;
+    else hrvScore = 0.08;
+  }
+
+  let hrScore = 0;
+  if (hasRealHR) {
+    if (hr <= 55) hrScore = 0.95;
+    else if (hr <= 62) hrScore = 0.82;
+    else if (hr <= 70) hrScore = 0.68;
+    else if (hr <= 78) hrScore = 0.52;
+    else if (hr <= 88) hrScore = 0.35;
+    else hrScore = 0.18;
+  }
+
+  const faceScore = hasRealFace
+    ? Math.max(0, stability * 0.5 + (1 - browT) * 0.3 + (1 - jawT) * 0.2)
+    : 0.5;
+
+  let blinkScore = 0.5;
+  if (blink > 0) {
+    const blinkDiff = Math.abs(blink - 15);
+    blinkScore = Math.max(0.1, 1 - blinkDiff / 20);
+  }
+
+  const fluxScore = hasRealFlux ? Math.min(1, skinFlux) : 0.3;
+
+  const weights = hasRealHRV
+    ? { hrv: 0.45, hr: 0.2, face: 0.2, blink: 0.08, flux: 0.07 }
+    : { hrv: 0.0, hr: 0.35, face: 0.35, blink: 0.15, flux: 0.15 };
+
+  const composite =
+    hrvScore * weights.hrv +
+    hrScore * weights.hr +
+    faceScore * weights.face +
+    blinkScore * weights.blink +
+    fluxScore * weights.flux;
+
+  const value = Math.round(8000 + composite * 60000);
+
+  const confidence: PranaCoherenceConfidence =
+    hasRealHRV && hasRealFace
+      ? 'HIGH'
+      : hasRealHR && hasRealFace
+        ? 'MODERATE'
+        : hasRealHRV || hasRealHR || hasRealFace
+          ? 'LOW'
+          : 'INVALID';
+
+  const source = [
+    hasRealHRV ? `HRV:${Math.round(hrv)}ms` : null,
+    hasRealHR ? `HR:${hr}bpm` : null,
+    hasRealFace ? `Face:${Math.round(stability * 100)}%` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
+  return { value, confidence, source };
+}
+
 // ── Vedic Translation ────────────────────────────────────────
-function translateBioToVedic(bio: Partial<BioSignature>): BioSignature {
+function translateBioToVedic(
+  bio: Partial<BioSignature>,
+  nadiCalc: { value: number; confidence: PranaCoherenceConfidence; source: string },
+): BioSignature {
   const hr = bio.heartRate ?? 70;
   const hrv = bio.hrvRmssd ?? 30;
   const blink = bio.blinkRate ?? 15;
@@ -116,15 +210,13 @@ function translateBioToVedic(bio: Partial<BioSignature>): BioSignature {
       .filter(Boolean)
       .join('-') || 'Balanced';
 
-  const hrvScore = Math.min(1, hrv / 60);
-  const tensionScore = 1 - (brow + jaw) / 2;
-  const stabilityScore = stability;
-  const coherenceRaw = hrvScore * 0.4 + tensionScore * 0.3 + stabilityScore * 0.3;
-  const pranaCoherence = Math.round(18000 + coherenceRaw * 54000);
+  const pranaCoherence = nadiCalc.value;
 
+  const nadiConfWeight =
+    nadiCalc.confidence === 'HIGH' ? 0.92 : nadiCalc.confidence === 'MODERATE' ? 0.78 : 0.58;
   const confidence = Math.min(
     0.97,
-    (bio.skinFluxCoherence ?? 0.5) * 0.4 + stability * 0.3 + 0.3,
+    nadiConfWeight * 0.55 + (bio.skinFluxCoherence ?? 0.5) * 0.25 + stability * 0.2,
   );
 
   return {
@@ -253,11 +345,16 @@ export default function NadiScanner({
   onScanComplete,
 }: NadiScannerProps) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [phase, setPhase] = useState<Phase>('idle');
   const [countdown, setCountdown] = useState(SCAN_DURATION);
   const [progress, setProgress] = useState(0);
   const [activeLayers, setActiveLayers] = useState<string[]>([]);
   const [signature, setSignature] = useState<BioSignature | null>(null);
+  const [nadiResultMeta, setNadiResultMeta] = useState<{
+    confidence: PranaCoherenceConfidence;
+    source: string;
+  } | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [faceDetected, setFaceDetected] = useState(false);
 
@@ -655,12 +752,53 @@ export default function NadiScanner({
                 restlessness: handTremor,
               };
 
-              const finalSig = translateBioToVedic(rawBio);
-              // Never reject — always show results with confidence indicator
-              // Low confidence = note it but still deliver the reading
-              if (finalSig.confidence < 0.45) {
-                finalSig.confidence = 0.45; // floor it
+              const nadiResult = calculatePranaCoherence(rawBio);
+              if (nadiResult.confidence === 'INVALID') {
+                setErrorMsg(
+                  'Signal too weak for Nadi reading. Face bright light, hold still, phone 25cm from face.',
+                );
+                setPhase('error');
+                return;
               }
+
+              const finalSig = translateBioToVedic(rawBio, nadiResult);
+              if (finalSig.confidence < 0.45) {
+                finalSig.confidence = 0.45;
+              }
+
+              const uid = user?.id || 'guest';
+              const NADI_HISTORY_KEY = `nadi-history-${uid}`;
+              const pranaCoherence = finalSig.pranaCoherence;
+              try {
+                const existing = JSON.parse(localStorage.getItem(NADI_HISTORY_KEY) || '[]') as {
+                  date: string;
+                  nadi: number;
+                  hr?: number;
+                  hrv?: number;
+                  nadi_state?: string;
+                  confidence?: string;
+                }[];
+                const entry = {
+                  date: new Date().toISOString(),
+                  nadi: pranaCoherence,
+                  hr: rawBio.heartRate,
+                  hrv: rawBio.hrvRmssd,
+                  nadi_state: finalSig.activatedNadi,
+                  confidence: nadiResult.confidence,
+                };
+                const updated = [...existing.slice(-29), entry];
+                localStorage.setItem(NADI_HISTORY_KEY, JSON.stringify(updated));
+              } catch {
+                /* ignore */
+              }
+
+              try {
+                localStorage.setItem(`qa-last-nadi-prana-${uid}`, String(pranaCoherence));
+              } catch {
+                /* ignore */
+              }
+
+              setNadiResultMeta({ confidence: nadiResult.confidence, source: nadiResult.source });
               setSignature(finalSig);
               setPhase('complete');
               onScanComplete?.(bioSignatureToNadiReading(finalSig));
@@ -680,7 +818,7 @@ export default function NadiScanner({
         setPhase('error');
       }
     },
-    [processRPPG, initFaceMesh, initVoiceAnalysis, handleMotion, cleanupMedia, onScanComplete],
+    [processRPPG, initFaceMesh, initVoiceAnalysis, handleMotion, cleanupMedia, onScanComplete, user?.id],
   );
 
   const reset = useCallback(
@@ -689,6 +827,7 @@ export default function NadiScanner({
       cleanupMedia();
       setPhase('idle');
       setSignature(null);
+      setNadiResultMeta(null);
       setProgress(0);
       setCountdown(SCAN_DURATION);
       setFaceDetected(false);
@@ -1194,7 +1333,7 @@ export default function NadiScanner({
         </div>
       )}
 
-      {phase === 'complete' && signature && (() => {
+      {phase === 'complete' && signature && nadiResultMeta && (() => {
         const p = PRESCRIPTIONS[signature.activatedNadi];
         const colorMap = {
           Ida: '#22D3EE',
@@ -1204,6 +1343,29 @@ export default function NadiScanner({
         } as const;
         const nadiColor = colorMap[signature.activatedNadi];
         const circumference = 2 * Math.PI * 54;
+        const uid = user?.id || 'guest';
+        const NADI_HISTORY_KEY = `nadi-history-${uid}`;
+        const nadiHistory = (() => {
+          try {
+            return JSON.parse(localStorage.getItem(NADI_HISTORY_KEY) || '[]') as { nadi: number }[];
+          } catch {
+            return [];
+          }
+        })();
+        const lastScan = nadiHistory[nadiHistory.length - 2];
+        const pranaCoherence = signature.pranaCoherence;
+        const nadiChange = lastScan ? pranaCoherence - lastScan.nadi : null;
+        const preActivation = (() => {
+          try {
+            const stored = localStorage.getItem(`pre-activation-nadi-${uid}`);
+            if (!stored) return null;
+            const parsed = JSON.parse(stored) as { nadi: number; time: string; activations?: string[] };
+            const age = Date.now() - new Date(parsed.time).getTime();
+            return age < 86400000 ? parsed : null;
+          } catch {
+            return null;
+          }
+        })();
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, animation: 'fadeUp .6s ease' }}>
             <div className="sqi-glass" style={{ padding: 24, border: `1px solid ${nadiColor}22` }}>
@@ -1271,25 +1433,104 @@ export default function NadiScanner({
                       flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
+                      padding: '0 4px',
                     }}
                   >
-                    <p style={{ fontSize: 18, fontWeight: 900, color: nadiColor, fontFamily: 'monospace' }}>
-                      {(signature.pranaCoherence / 1000).toFixed(1)}k
-                    </p>
-                    <p
-                      style={{
-                        fontSize: 7,
-                        fontWeight: 800,
-                        letterSpacing: '.2em',
-                        color: 'rgba(255,255,255,.35)',
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      / 72k
-                    </p>
+                    <div style={{ textAlign: 'center' }}>
+                      <p
+                        style={{
+                          fontSize: 18,
+                          fontWeight: 900,
+                          color: nadiColor,
+                          fontFamily: 'monospace',
+                          margin: 0,
+                          lineHeight: 1.15,
+                        }}
+                      >
+                        {signature.pranaCoherence.toLocaleString()}
+                        <span style={{ fontSize: 10, opacity: 0.5 }}> / 72,000</span>
+                      </p>
+                      <p
+                        style={{
+                          fontSize: 8,
+                          fontWeight: 800,
+                          letterSpacing: '.2em',
+                          textTransform: 'uppercase',
+                          color:
+                            nadiResultMeta.confidence === 'HIGH'
+                              ? 'rgba(34,211,238,.7)'
+                              : nadiResultMeta.confidence === 'MODERATE'
+                                ? 'rgba(212,175,55,.6)'
+                                : 'rgba(239,68,68,.6)',
+                          marginTop: 2,
+                        }}
+                      >
+                        {nadiResultMeta.confidence} SIGNAL
+                      </p>
+                      <p style={{ fontSize: 9, color: 'rgba(255,255,255,.3)', marginTop: 1, marginBottom: 0 }}>
+                        {nadiResultMeta.source}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
+
+              {nadiChange !== null && (
+                <p
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: nadiChange > 0 ? 'rgba(34,211,238,.8)' : 'rgba(239,68,68,.7)',
+                    marginTop: 4,
+                    marginBottom: 0,
+                  }}
+                >
+                  {nadiChange > 0 ? '↑' : '↓'} {Math.abs(nadiChange).toLocaleString()} since last scan
+                  {nadiChange > 2000 ? ' — field opening' : nadiChange < -2000 ? ' — field needs support' : ' — stable'}
+                </p>
+              )}
+
+              {preActivation && pranaCoherence !== preActivation.nadi && (
+                <div
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: 16,
+                    marginTop: 10,
+                    background: 'rgba(212,175,55,.04)',
+                    border: '1px solid rgba(212,175,55,.15)',
+                  }}
+                >
+                  <p
+                    style={{
+                      fontSize: 9,
+                      fontWeight: 800,
+                      letterSpacing: '.25em',
+                      textTransform: 'uppercase',
+                      color: 'rgba(212,175,55,.6)',
+                      marginBottom: 4,
+                    }}
+                  >
+                    ◈ ACTIVATION EFFECT
+                  </p>
+                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,.7)' }}>
+                    Before activation: {preActivation.nadi.toLocaleString()}
+                  </p>
+                  <p
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 800,
+                      color:
+                        pranaCoherence > preActivation.nadi ? 'rgba(34,211,238,.9)' : 'rgba(239,68,68,.8)',
+                    }}
+                  >
+                    After: {pranaCoherence.toLocaleString()} ({pranaCoherence > preActivation.nadi ? '+' : ''}
+                    {(pranaCoherence - preActivation.nadi).toLocaleString()})
+                  </p>
+                  <p style={{ fontSize: 9, color: 'rgba(255,255,255,.3)', marginTop: 3 }}>
+                    {preActivation.activations?.slice(0, 3).join(' · ')}
+                  </p>
+                </div>
+              )}
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 16 }}>
                 {[

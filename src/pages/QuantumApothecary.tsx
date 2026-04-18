@@ -1384,6 +1384,23 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
   const transmitCocktail = () => {
     const mix = selectedActivationsRef.current;
     if (mix.length === 0) return;
+    const txUid = user?.id || 'guest';
+    try {
+      const rawPrana = localStorage.getItem(`qa-last-nadi-prana-${txUid}`);
+      const pranaVal = rawPrana ? parseInt(rawPrana, 10) : 0;
+      if (pranaVal > 0) {
+        localStorage.setItem(
+          `pre-activation-nadi-${txUid}`,
+          JSON.stringify({
+            nadi: pranaVal,
+            time: new Date().toISOString(),
+            activations: mix.map((a) => a.name),
+          }),
+        );
+      }
+    } catch {
+      /* ignore */
+    }
     const newT = [...activeTransmissions];
     mix.forEach((act) => {
       if (!newT.find((t) => t.id === act.id)) newT.push(act);
