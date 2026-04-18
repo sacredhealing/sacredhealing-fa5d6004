@@ -8,7 +8,7 @@
 // ║  i18n language passed to SQI chat + voice recognition.            ║
 // ╚══════════════════════════════════════════════════════════════════╝
 
-import React, { useState, useEffect, useRef, useMemo, useCallback, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -642,6 +642,8 @@ function QuantumApothecaryInner() {
     ],
   );
 
+  const TRANSMISSIONS_KEY = `sqi-transmissions-${user?.id || 'guest'}`;
+
   /** Legacy baseline card removed — drop stale local nadi snapshot so Dashboard does not resurrect fake counts. */
   useEffect(() => {
     try {
@@ -654,9 +656,72 @@ function QuantumApothecaryInner() {
   const [selectedActivations, setSelectedActivations] = useState<Activation[]>([]);
   const selectedActivationsRef = useRef<Activation[]>([]);
   const [activeTransmissions, setActiveTransmissions] = useState<Activation[]>(() => {
-    try { return JSON.parse(localStorage.getItem('active_resonators') || '[]'); }
-    catch { return []; }
+    try {
+      const uid = user?.id || 'guest';
+      const key = `sqi-transmissions-${uid}`;
+      let saved = localStorage.getItem(key);
+      if (!saved) saved = localStorage.getItem('active_resonators');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
+
+  const skipNextTxHydrate = useRef(true);
+  useLayoutEffect(() => {
+    if (skipNextTxHydrate.current) {
+      skipNextTxHydrate.current = false;
+      return;
+    }
+    const key = `sqi-transmissions-${user?.id || 'guest'}`;
+    try {
+      let raw = localStorage.getItem(key);
+      if (!raw) raw = localStorage.getItem('active_resonators');
+      setActiveTransmissions(raw ? JSON.parse(raw) : []);
+    } catch {
+      setActiveTransmissions([]);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(TRANSMISSIONS_KEY, JSON.stringify(activeTransmissions));
+    } catch {
+      /* ignore */
+    }
+  }, [activeTransmissions, TRANSMISSIONS_KEY]);
+
+  useEffect(() => {
+    if (!user?.id || activeTransmissions.length === 0) return;
+    supabase
+      .from('user_activity_log')
+      .insert({
+        user_id: user.id,
+        activity_type: 'active_transmissions',
+        activity_data: {
+          transmissions: activeTransmissions.map((t) => t.name || t.sacredName),
+          count: activeTransmissions.length,
+          timestamp: new Date().toISOString(),
+        },
+      })
+      .then(() => {})
+      .catch(() => {});
+  }, [activeTransmissions, user?.id]);
+
+  const activeTransmissionContext = useMemo(
+    () =>
+      activeTransmissions.length > 0
+        ? `\nACTIVE SCALAR TRANSMISSIONS (running 24/7 in biofield):\n` +
+          activeTransmissions.map((t) => `· ${t.sacredName || t.name}`).join('\n') +
+          `\n→ These ${activeTransmissions.length} frequencies are permanently` +
+          ` entangled. Reference them when reading the Seeker's field.\n`
+        : '',
+    [activeTransmissions],
+  );
+
+  const dissolveTransmission = useCallback((id: string) => {
+    setActiveTransmissions((prev) => prev.filter((t) => t.id !== id && t.name !== id));
+  }, []);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -808,7 +873,6 @@ function QuantumApothecaryInner() {
     prevMsgCountRef.current = count;
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages.length]);
-  useEffect(() => { localStorage.setItem('active_resonators', JSON.stringify(activeTransmissions)); }, [activeTransmissions]);
 
   // ── Scroll-to-bottom visibility — attach via callback ref to avoid stale ref deps ──
   const scrollContainerCallbackRef = useCallback((el: HTMLDivElement | null) => {
@@ -1001,6 +1065,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
       if (liveScanContext) fieldParts.push(liveScanContext);
       if (stableCompiledContext) fieldParts.push(stableCompiledContext);
       if (stableJyotishContext) fieldParts.push(stableJyotishContext);
+      if (activeTransmissionContext) fieldParts.push(activeTransmissionContext);
       const enrichedJyotishContext = fieldParts.join('\n\n');
 
       await streamChatWithSQI(
@@ -2153,7 +2218,11 @@ SQI — integrate this scan with my natal chart; cite each chart fact once; use 
                 </div>
               </div>
             }>
-              <ActiveTransmissionsSection activeTransmissions={activeTransmissions} setActiveTransmissions={setActiveTransmissions} />
+              <ActiveTransmissionsSection
+                activeTransmissions={activeTransmissions}
+                setActiveTransmissions={setActiveTransmissions}
+                onDissolveTransmission={dissolveTransmission}
+              />
             </Suspense>
           </div>
 

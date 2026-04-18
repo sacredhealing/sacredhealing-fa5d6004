@@ -11,9 +11,15 @@ import { useTranslation } from '@/hooks/useTranslation';
 interface Props {
   activeTransmissions: Activation[];
   setActiveTransmissions: React.Dispatch<React.SetStateAction<Activation[]>>;
+  /** When set, dissolve removes by id or matching name (state + localStorage via parent effects). */
+  onDissolveTransmission?: (id: string) => void;
 }
 
-export default function ActiveTransmissionsSection({ activeTransmissions, setActiveTransmissions }: Props) {
+export default function ActiveTransmissionsSection({
+  activeTransmissions,
+  setActiveTransmissions,
+  onDissolveTransmission,
+}: Props) {
   const { t } = useTranslation();
   return (
     <div style={{
@@ -77,7 +83,12 @@ export default function ActiveTransmissionsSection({ activeTransmissions, setAct
 
                   {/* Dissolve */}
                   <button
-                    onClick={() => setActiveTransmissions(t => t.filter(x => x.id !== act.id))}
+                    type="button"
+                    onClick={() =>
+                      onDissolveTransmission
+                        ? onDissolveTransmission(act.id)
+                        : setActiveTransmissions((t) => t.filter((x) => x.id !== act.id && x.name !== act.id))
+                    }
                     style={{
                       width: 24, height: 24, borderRadius: '50%',
                       background: 'rgba(255,255,255,0.04)',
