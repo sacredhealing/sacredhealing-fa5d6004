@@ -267,6 +267,15 @@ function renderSQIContent(content: string) {
     }
 
     if (trimmed.startsWith('·')) {
+      // Auto-bold the frequency / remedy name (text before em-dash or hyphen-dash)
+      // so transmission list names are easier to read. Skip if already contains **.
+      let lineForRender = trimmed;
+      if (!lineForRender.includes('**')) {
+        const dashMatch = lineForRender.match(/^(·\s*)(.+?)(\s+[—–-]\s+)(.+)$/);
+        if (dashMatch) {
+          lineForRender = `${dashMatch[1]}**${dashMatch[2].trim()}**${dashMatch[3]}${dashMatch[4]}`;
+        }
+      }
       return (
         <p
           key={i}
@@ -281,7 +290,7 @@ function renderSQIContent(content: string) {
             overflowWrap: 'anywhere',
           }}
         >
-          {renderInline(trimmed, 'body', false, { sqiGoldBold: true })}
+          {renderInline(lineForRender, 'body', false, { sqiGoldBold: true })}
         </p>
       );
     }
