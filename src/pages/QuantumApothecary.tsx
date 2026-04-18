@@ -1726,7 +1726,19 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                   primaryDosha: jyotish?.primaryDosha,
                 }}
                 onScanComplete={(reading) => {
-                  const queued = pickFiveActivationsForNadiReading(reading);
+                  // Use the FULL bioenergetic library (1,357+ frequencies) — same engine as voice scan & LimbicArc
+                  const doshaForQueue =
+                    String(jyotish?.primaryDosha || 'Vata').split(/[\s(/]/)[0] || 'Vata';
+                  const queued = matchActivationsToScan(
+                    {
+                      dominantDosha: doshaForQueue,
+                      activatedNadi: reading.activatedNadi,
+                      priorityChakra: reading.chakraState,
+                      heartRate: reading.rawVitals.heart_rate,
+                      hrv: reading.rawVitals.hrv_rmssd ?? undefined,
+                    },
+                    10,
+                  ).map(mapBioLibraryToActivation);
                   setActiveTransmissions((prev) => {
                     const next = [...prev];
                     for (const act of queued) {
