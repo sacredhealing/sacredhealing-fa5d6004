@@ -237,6 +237,27 @@ export default function VoiceBiofieldScanner({
               timerRef.current = null;
             }
             cleanup();
+
+            // ── VOICE-ACTIVITY GATE ──
+            // Verify real voice was captured. Silence/ambient noise must not
+            // produce a "scan". Threshold tuned so quiet rooms fail but
+            // a normal speaking voice (even soft) passes.
+            const rms = samplesRef.current.rmsSeries;
+            const VOICE_RMS_THRESHOLD = 0.012; // ~ -38 dBFS, well above ambient
+            const MIN_VOICED_FRAMES = 8;       // need sustained voice, not a single click
+            const voicedFrames = rms.filter((v) => v >= VOICE_RMS_THRESHOLD).length;
+            const peakRms = rms.length ? Math.max(...rms) : 0;
+
+            if (voicedFrames < MIN_VOICED_FRAMES || peakRms < VOICE_RMS_THRESHOLD * 1.5) {
+              setErrorMsg(
+                t('quantumApothecary.voiceBiofield.noVoiceDetected', {
+                  defaultValue: 'No voice detected. Please speak clearly into the microphone and try again.',
+                }),
+              );
+              setPhase('error');
+              return;
+            }
+
             const result = analyzeVoiceBuffer(samplesRef.current);
             setLastResult(result);
             setPhase('done');
