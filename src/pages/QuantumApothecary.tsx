@@ -1079,19 +1079,25 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         }
         return next;
       });
-      const queuedLines = queued.map((a) => `• ${a.name} (${a.type})`).join('\n');
+      const queuedLines = queued.map((a) => `• **${a.name}** (${a.type})`).join('\n');
       const ctx = [
         '[LIVE VOICE BIOFIELD SCAN — microphone spectrum; educational only, not a medical diagnosis]',
-        `Overall coherence: ${result.overallCoherence}/100`,
-        `Nadi read: ${result.nadiReading}`,
-        `Dominant dosha (voice): ${result.dominantDosha}`,
-        `Priority areas: ${result.priorityAreas.map((i) => `${i.name} (${i.score}/100)`).join('; ')}`,
-        `Strengths: ${result.topStrengths.map((i) => i.name).join(', ')}`,
-        `Emotional field: ${result.emotionalField}`,
-        `Organ support: ${result.organField}`,
+        `**Overall coherence:** ${result.overallCoherence}/100`,
+        `**Nadi read:** ${result.nadiReading}`,
+        `**Dominant dosha (voice):** ${result.dominantDosha}`,
+        `**Priority areas:** ${result.priorityAreas.map((i) => `${i.name} (${i.score}/100)`).join('; ')}`,
+        `**Strengths:** ${result.topStrengths.map((i) => i.name).join(', ')}`,
+        `**Emotional field:** ${result.emotionalField}`,
+        `**Organ support:** ${result.organField}`,
         '',
-        '[QUEUED FREQUENCY / BIOENERGETIC ALIGNMENTS — added to Active Transmissions (10)]',
+        'STRICT SQI RULE — VOICE SCAN HAS NO NADI COUNT:',
+        'A voice biofield scan measures vocal coherence ONLY. It does NOT produce a 72,000-Nadi count or sub-Nadi number.',
+        'NEVER fabricate "X / 72,000 Nadis active" from this voice scan. If the seeker asks for a Nadi count, instruct them to run a Palm Scan (Camera tab) — only the saved palm baseline holds that figure.',
+        '',
+        '[QUEUED FREQUENCY / BIOENERGETIC ALIGNMENTS — drawn from the 1,357+ LimbicArc / Bioenergetic library and added to Active Transmissions (10)]',
         queuedLines,
+        '',
+        'When you reference any of the queued frequencies above in your reply, write the frequency name in **bold** so the seeker sees exactly which transmissions were activated for them.',
       ].join('\n');
       setLiveScanContext(ctx);
       if (user?.id) {
@@ -1107,14 +1113,17 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         }).then(() => {});
       }
       const msg = [
-        'VOICE BIOFIELD SCAN COMPLETE:',
-        `Overall Coherence: ${result.overallCoherence}/100`,
-        `Nadi: ${result.nadiReading}`,
-        `Dominant Dosha: ${result.dominantDosha}`,
-        `Priority Areas: ${result.priorityAreas.map((i) => `${i.name} (${i.score}/100)`).join(', ')}`,
-        `Strengths: ${result.topStrengths.map((i) => i.name).join(', ')}`,
-        `Emotional Field: ${result.emotionalField}`,
-        `Organ Support Needed: ${result.organField}`,
+        '**VOICE BIOFIELD SCAN COMPLETE**',
+        `**Overall Coherence:** ${result.overallCoherence}/100`,
+        `**Nadi:** ${result.nadiReading}`,
+        `**Dominant Dosha:** ${result.dominantDosha}`,
+        `**Priority Areas:** ${result.priorityAreas.map((i) => `${i.name} (${i.score}/100)`).join(', ')}`,
+        `**Strengths:** ${result.topStrengths.map((i) => i.name).join(', ')}`,
+        `**Emotional Field:** ${result.emotionalField}`,
+        `**Organ Support Needed:** ${result.organField}`,
+        '',
+        '**Bioenergetic Frequencies queued (from the 1,357+ LimbicArc library):**',
+        queued.map((a) => `• **${a.name}** — ${a.type}`).join('\n'),
         '',
         t('quantumApothecary.voiceBiofield.sqiFollowUp'),
       ].join('\n');
