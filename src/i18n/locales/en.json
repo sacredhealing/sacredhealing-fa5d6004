@@ -383,7 +383,13 @@
     "badge": "✦ New transmission",
     "explore": "Explore",
     "dismiss": "I understand!",
-    "closeAria": "Close announcement"
+    "closeAria": "Close announcement",
+    "bannerTranslating": "translating…",
+    "bannerDismissAria": "Dismiss announcement",
+    "bannerJustNow": "Just now",
+    "bannerMinutesAgo": "{{count}}m ago",
+    "bannerHoursAgo": "{{count}}h ago",
+    "bannerToday": "Today"
   },
   "membership": {
     "meditationMembership": "Meditation Membership",

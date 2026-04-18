@@ -9,7 +9,13 @@
     "badge": "✦ Nueva transmisión",
     "explore": "Explorar",
     "dismiss": "¡Entendido!",
-    "closeAria": "Cerrar anuncio"
+    "closeAria": "Cerrar anuncio",
+    "bannerTranslating": "traduciendo…",
+    "bannerDismissAria": "Cerrar anuncio",
+    "bannerJustNow": "Ahora mismo",
+    "bannerMinutesAgo": "Hace {{count}} min",
+    "bannerHoursAgo": "Hace {{count}} h",
+    "bannerToday": "Hoy"
   },
   "common": {
     "back": "Atrás",

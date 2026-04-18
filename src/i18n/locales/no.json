@@ -9,7 +9,13 @@
     "badge": "✦ Ny overføring",
     "explore": "Utforsk",
     "dismiss": "Jeg forstår!",
-    "closeAria": "Lukk kunngjøring"
+    "closeAria": "Lukk kunngjøring",
+    "bannerTranslating": "oversetter…",
+    "bannerDismissAria": "Lukk kunngjøring",
+    "bannerJustNow": "Akkurat nå",
+    "bannerMinutesAgo": "{{count}} min siden",
+    "bannerHoursAgo": "{{count}} t siden",
+    "bannerToday": "I dag"
   },
   "common": {
     "back": "Tilbake",

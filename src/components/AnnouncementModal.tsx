@@ -284,7 +284,17 @@ export default function AnnouncementModal({
               </div>
             ) : null}
 
-            {audioUrl ? <audio className="sqi-audio" controls src={audioUrl} /> : null}
+            {audioUrl ? (
+              <audio
+                className="sqi-audio"
+                controls
+                src={audioUrl}
+                preload="auto"
+                playsInline
+                webkit-playsinline="true"
+                x-webkit-airplay="allow"
+              />
+            ) : null}
 
             <div className="sqi-divider" />
 

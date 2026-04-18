@@ -4,7 +4,7 @@ import { STORAGE_KEY_RETURN_FROM_SESSION } from '@/hooks/useDashboardAutostart';
 import { AnimatePresence, motion } from 'framer-motion';
 import { BottomNav } from './BottomNav';
 import { BackButton, BACK_BUTTON_HIDE_PATHS } from './BackButton';
-import { AnnouncementPopup } from '@/components/AnnouncementPopup';
+import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
 import { NowPlayingBar } from '@/components/music/NowPlayingBar';
 
@@ -136,12 +136,16 @@ export const AppLayout: React.FC = () => {
           transition={pageTransition}
           className={`relative overflow-x-hidden w-full max-w-none ${showBackButton && !isVastuRoute ? 'pt-14' : ''} ${isVastuRoute ? 'min-w-full h-[100svh] min-h-0 overflow-hidden pb-0' : location.pathname === '/community' ? 'min-w-full h-[calc(100vh-64px)] min-h-[280px] overflow-hidden pb-0' : location.pathname === '/digital-nadi' || location.pathname === '/atmospheric-clearance-engine' || location.pathname === '/wealth-beacon' ? 'pb-[10.5rem]' : 'pb-28'}`}
         >
+          {!isVastuRoute ? (
+            <div className="w-full max-w-full px-4 pt-2 box-border">
+              <AnnouncementBanner />
+            </div>
+          ) : null}
           <Outlet />
         </motion.main>
       </AnimatePresence>
       <NowPlayingBar />
       {!isVastuRoute && <BottomNav />}
-      <AnnouncementPopup />
       <PWAInstallPrompt />
     </div>
   );

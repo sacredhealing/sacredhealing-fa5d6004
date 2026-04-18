@@ -9,7 +9,13 @@
     "badge": "✦ Ny transmission",
     "explore": "Utforska",
     "dismiss": "Jag förstår!",
-    "closeAria": "Stäng meddelande"
+    "closeAria": "Stäng meddelande",
+    "bannerTranslating": "översätter…",
+    "bannerDismissAria": "Stäng meddelande",
+    "bannerJustNow": "Just nu",
+    "bannerMinutesAgo": "{{count}} min sedan",
+    "bannerHoursAgo": "{{count}} tim sedan",
+    "bannerToday": "Idag"
   },
   "common": {
     "back": "Tillbaka",
