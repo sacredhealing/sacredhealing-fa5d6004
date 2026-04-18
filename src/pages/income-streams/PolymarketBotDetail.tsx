@@ -432,6 +432,19 @@ const PolymarketBotDetailInner: React.FC = () => {
     }
   }, [user?.id, isRunning, t, addLog, refreshPnL]);
 
+  const handleResetPaperDataHardReload = useCallback(async () => {
+    if (!user?.id) return;
+    await supabase.from('polymarket_trades').delete().eq('is_paper', true).eq('user_id', user.id);
+    await supabase.from('polymarket_positions').delete().eq('is_paper', true).eq('user_id', user.id);
+    await supabase.from('polymarket_pnl_daily').delete().eq('is_paper', true).eq('user_id', user.id);
+    await supabase
+      .from('polymarket_bot_settings')
+      .update({ paper_balance: 10, total_fees_paid: 0 })
+      .eq('user_id', user.id);
+    toast.success('Paper trading reset — balance restored to €10');
+    window.location.reload();
+  }, [user?.id]);
+
   useEffect(() => {
     if (isRunning) {
       refreshPnL();
@@ -1060,6 +1073,27 @@ const PolymarketBotDetailInner: React.FC = () => {
                       <span style={{ color: 'rgba(255,255,255,0.5)' }}>{t('polymarketBotDetail.paperBalanceCurrent')}</span>
                       <span style={{ fontWeight: 900, color: AMBER }}>€{paperBalance.toFixed(2)}</span>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => void handleResetPaperDataHardReload()}
+                      style={{
+                        marginTop: 8,
+                        width: '100%',
+                        padding: '10px',
+                        borderRadius: 14,
+                        border: '1px solid rgba(255,71,87,0.3)',
+                        background: 'rgba(255,71,87,0.08)',
+                        color: '#FF4757',
+                        fontSize: 9,
+                        fontWeight: 800,
+                        letterSpacing: '0.3em',
+                        textTransform: 'uppercase',
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      ⚠ Reset Paper Data to €10
+                    </button>
                     {isRunning && (
                       <p style={{ marginTop: 10, fontSize: 10, color: AMBER }}>{t('polymarketBotDetail.paperBalanceStopEngine')}</p>
                     )}
