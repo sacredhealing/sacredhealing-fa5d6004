@@ -3,7 +3,7 @@
 // ║  → src/features/quantum-apothecary/FrequencyLibrarySection.tsx ║
 // ║  RULES: Zero logic changes. UI only.                           ║
 // ╚══════════════════════════════════════════════════════════════════╝
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Check } from 'lucide-react';
 import {
@@ -62,7 +62,11 @@ export default function FrequencyLibrarySection({
 }: Props) {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
+  const [libPage, setLibPage] = useState(0);
+  const LIB_PAGE_SIZE = 30;
   const mixerFull = selectedActivations.length >= maxSlots;
+
+  useEffect(() => { setLibPage(0); }, [activeCategory, search]);
 
   const displayBenefit = (benefit: string) =>
     benefit.replace(/\bLimbicArc\b/g, '').replace(/\s{2,}/g, ' ').trim();
