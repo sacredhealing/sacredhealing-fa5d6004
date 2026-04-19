@@ -3,7 +3,7 @@
 // ║  → src/features/quantum-apothecary/FrequencyLibrarySection.tsx ║
 // ║  RULES: Zero logic changes. UI only.                           ║
 // ╚══════════════════════════════════════════════════════════════════╝
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Check } from 'lucide-react';
 import {
@@ -62,7 +62,11 @@ export default function FrequencyLibrarySection({
 }: Props) {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
+  const [libPage, setLibPage] = useState(0);
+  const LIB_PAGE_SIZE = 30;
   const mixerFull = selectedActivations.length >= maxSlots;
+
+  useEffect(() => { setLibPage(0); }, [activeCategory, search]);
 
   const displayBenefit = (benefit: string) =>
     benefit.replace(/\bLimbicArc\b/g, '').replace(/\s{2,}/g, ' ').trim();
@@ -98,6 +102,12 @@ export default function FrequencyLibrarySection({
       );
     });
   }, [q, search, activeCategory]);
+
+  const paginated = useMemo(
+    () => filtered.slice(0, (libPage + 1) * LIB_PAGE_SIZE),
+    [filtered, libPage],
+  );
+  const remaining = filtered.length - paginated.length;
 
   const catLabel = (cat: string) => (cat === 'All' ? t('quantumApothecary.frequencyLibrarySection.catAll') : cat);
 
@@ -174,7 +184,7 @@ export default function FrequencyLibrarySection({
       <div style={{ padding: '12px 16px 16px', maxHeight: 420, overflowY: 'auto', scrollbarWidth: 'thin' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
           <AnimatePresence>
-            {filtered.map((act, i) => {
+            {paginated.map((act, i) => {
               const isSelected = selectedActivations.some(
                 (a) =>
                   a.id === act.id ||
@@ -184,67 +194,15 @@ export default function FrequencyLibrarySection({
               );
               const cannotAdd = mixerFull && !isSelected;
               return (
-                <motion.button
+                <ActivationItem
                   key={act.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.15, delay: Math.min(i * 0.02, 0.3) }}
-                  onClick={() => addActivation(act)}
-                  disabled={isSelected || cannotAdd}
-                  style={{
-                    position: 'relative',
-                    background: isSelected ? `${act.color}10` : 'rgba(255,255,255,0.02)',
-                    border: isSelected ? `1px solid ${act.color}40` : '1px solid rgba(255,255,255,0.05)',
-                    borderRadius: 16,
-                    padding: '12px 12px 10px',
-                    textAlign: 'left',
-                    cursor: isSelected || cannotAdd ? 'default' : 'pointer',
-                    opacity: cannotAdd ? 0.42 : 1,
-                    overflow: 'hidden',
-                    transition: 'all 0.2s',
-                    fontFamily: 'inherit',
-                  }}
-                  onMouseEnter={e => {
-                    if (!isSelected && !cannotAdd) {
-                      (e.currentTarget as HTMLElement).style.borderColor = `${act.color}50`;
-                      (e.currentTarget as HTMLElement).style.background = `${act.color}08`;
-                    }
-                  }}
-                  onMouseLeave={e => {
-                    if (!isSelected && !cannotAdd) {
-                      (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.05)';
-                      (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.02)';
-                    }
-                  }}
-                >
-                  {/* Color glow */}
-                  <div style={{ position: 'absolute', top: -8, right: -8, width: 40, height: 40, background: act.color, borderRadius: '50%', opacity: 0.08, filter: 'blur(12px)', pointerEvents: 'none' }} />
-
-                  {/* Color dot + name row */}
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6, marginBottom: 5 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, flex: 1, minWidth: 0 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: act.color, flexShrink: 0, boxShadow: `0 0 6px ${act.color}80` }} />
-                      <p style={{ fontSize: 11, fontWeight: 800, color: '#fff', lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                        {act.name}
-                      </p>
-                    </div>
-                    {isSelected && (
-                      <Check size={12} style={{ color: act.color, flexShrink: 0, marginTop: 1 }} />
-                    )}
-                  </div>
-
-                  <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.38)', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                    {displayBenefit(act.benefit)}
-                  </p>
-
-                  {/* Type badge */}
-                  <div style={{ marginTop: 7, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                    <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase', color: act.color, opacity: 0.7 }}>
-                      {act.category && act.type === 'Bioenergetic' ? act.category : act.type}
-                    </span>
-                  </div>
-                </motion.button>
+                  act={act}
+                  index={i}
+                  isSelected={isSelected}
+                  cannotAdd={cannotAdd}
+                  onAdd={addActivation}
+                  benefit={displayBenefit(act.benefit)}
+                />
               );
             })}
           </AnimatePresence>
@@ -254,7 +212,101 @@ export default function FrequencyLibrarySection({
             </div>
           )}
         </div>
+        {remaining > 0 && (
+          <button
+            type="button"
+            onClick={() => setLibPage((p) => p + 1)}
+            style={{
+              width: '100%',
+              padding: '10px',
+              marginTop: 8,
+              borderRadius: 16,
+              fontSize: 9,
+              fontWeight: 800,
+              letterSpacing: '.2em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+              background: 'rgba(255,255,255,.02)',
+              border: '1px solid rgba(255,255,255,.06)',
+              color: 'rgba(255,255,255,.4)',
+              fontFamily: 'inherit',
+            }}
+          >
+            Load more ({remaining} remaining)
+          </button>
+        )}
       </div>
     </div>
   );
 }
+
+// ── Memoized item: prevents all visible items re-rendering on parent updates ──
+interface ActivationItemProps {
+  act: Activation;
+  index: number;
+  isSelected: boolean;
+  cannotAdd: boolean;
+  onAdd: (act: Activation) => void;
+  benefit: string;
+}
+
+const ActivationItem = memo(function ActivationItem({
+  act, index, isSelected, cannotAdd, onAdd, benefit,
+}: ActivationItemProps) {
+  return (
+    <motion.button
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.15, delay: Math.min(index * 0.02, 0.3) }}
+      onClick={() => onAdd(act)}
+      disabled={isSelected || cannotAdd}
+      style={{
+        position: 'relative',
+        background: isSelected ? `${act.color}10` : 'rgba(255,255,255,0.02)',
+        border: isSelected ? `1px solid ${act.color}40` : '1px solid rgba(255,255,255,0.05)',
+        borderRadius: 16,
+        padding: '12px 12px 10px',
+        textAlign: 'left',
+        cursor: isSelected || cannotAdd ? 'default' : 'pointer',
+        opacity: cannotAdd ? 0.42 : 1,
+        overflow: 'hidden',
+        transition: 'all 0.2s',
+        fontFamily: 'inherit',
+      }}
+      onMouseEnter={(e) => {
+        if (!isSelected && !cannotAdd) {
+          (e.currentTarget as HTMLElement).style.borderColor = `${act.color}50`;
+          (e.currentTarget as HTMLElement).style.background = `${act.color}08`;
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isSelected && !cannotAdd) {
+          (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.05)';
+          (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.02)';
+        }
+      }}
+    >
+      <div style={{ position: 'absolute', top: -8, right: -8, width: 40, height: 40, background: act.color, borderRadius: '50%', opacity: 0.08, filter: 'blur(12px)', pointerEvents: 'none' }} />
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6, marginBottom: 5 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, flex: 1, minWidth: 0 }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: act.color, flexShrink: 0, boxShadow: `0 0 6px ${act.color}80` }} />
+          <p style={{ fontSize: 11, fontWeight: 800, color: '#fff', lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+            {act.name}
+          </p>
+        </div>
+        {isSelected && (
+          <Check size={12} style={{ color: act.color, flexShrink: 0, marginTop: 1 }} />
+        )}
+      </div>
+      <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.38)', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+        {benefit}
+      </p>
+      <div style={{ marginTop: 7, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+        <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase', color: act.color, opacity: 0.7 }}>
+          {act.category && act.type === 'Bioenergetic' ? act.category : act.type}
+        </span>
+      </div>
+    </motion.button>
+  );
+});

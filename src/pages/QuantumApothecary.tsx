@@ -32,12 +32,20 @@ import { useAyurvedaAnalysis } from '@/hooks/useAyurvedaAnalysis';
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import NadiScanner, { type NadiReading } from '@/components/NadiScanner';
-import VoiceBiofieldScanner, { type VoiceBiofieldResult } from '@/components/VoiceBiofieldScanner';
+import type { NadiReading } from '@/components/NadiScanner';
+import type { VoiceBiofieldResult } from '@/components/VoiceBiofieldScanner';
 import { useSQIFieldContext } from '@/hooks/useSQIFieldContext';
 
+const NadiScanner = lazy(() => import('@/components/NadiScanner'));
+const VoiceBiofieldScanner = lazy(() => import('@/components/VoiceBiofieldScanner'));
 const FrequencyLibrarySection = lazy(() => import('@/features/quantum-apothecary/FrequencyLibrarySection'));
 const ActiveTransmissionsSection = lazy(() => import('@/features/quantum-apothecary/ActiveTransmissionsSection'));
+
+const ScannerSuspenseFallback = (
+  <div style={{ padding: 40, textAlign: 'center', color: 'rgba(212,175,55,0.5)', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 800 }}>
+    Loading scanner…
+  </div>
+);
 
 /** Max messages kept in localStorage (aligned with flush + safety nets). */
 const SQI_PERSIST_MSG_CAP = 100;
@@ -1540,7 +1548,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
               </p>
             </div>
           )}
-          {messages.map((msg, i) => {
+          {messages.slice(-20).map((msg, i) => {
               const ts =
                 typeof msg.timestamp === 'number'
                   ? new Date(msg.timestamp).toLocaleTimeString(appLocale, { hour: '2-digit', minute: '2-digit' })
@@ -1838,6 +1846,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                 </button>
               </div>
               {!showVoiceScan && (
+              <Suspense fallback={ScannerSuspenseFallback}>
               <NadiScanner
                 userName={seekerName || 'Seeker'}
                 jyotishContext={{
@@ -1963,8 +1972,10 @@ SQI — integrate this scan with my natal chart; cite each chart fact once; use 
                   }, 300);
                 }}
               />
+              </Suspense>
               )}
               {showVoiceScan && (
+                <Suspense fallback={ScannerSuspenseFallback}>
                 <VoiceBiofieldScanner
                   userName={seekerName || 'Seeker'}
                   jyotishContext={{
@@ -1974,6 +1985,7 @@ SQI — integrate this scan with my natal chart; cite each chart fact once; use 
                   }}
                   onScanComplete={handleVoiceBiofieldComplete}
                 />
+                </Suspense>
               )}
             </div>
 
