@@ -1608,6 +1608,13 @@
       "footerTag": "SOLANA · JUPITER · PHANTOM",
       "badgeLine": "ADMIN · LAB",
       "badgeSovereign": "FOMO"
+    },
+    "sqiSovereignBotCard": {
+      "title": "SQI Sovereign-bot (admin)",
+      "description": "BTC paper-terminal: Gemini-feed, TA-stack, moduser, valgfri Claude-orakel. Kun admin.",
+      "footerTag": "BTC · TA · PAPER",
+      "badgeLine": "ADMIN · LAB",
+      "badgeSovereign": "SQI"
     }
   },
   "polymarketCopyBot": {

@@ -101,6 +101,7 @@ function getActiveNavTo(pathname: string): string | null {
         '/polymarket-bot',
         '/income-streams/polymarket-bot',
         '/income-streams/fomo-copy-bot',
+        '/income-streams/sqi-sovereign-bot',
         '/prediction-market-bot',
         '/siddha-quantum',
         '/prana-flow',

@@ -2224,6 +2224,13 @@
       "footerTag": "SOLANA · JUPITER · PHANTOM",
       "badgeLine": "ADMIN · LAB",
       "badgeSovereign": "FOMO"
+    },
+    "sqiSovereignBotCard": {
+      "title": "SQI Sovereign Bot (Admin)",
+      "description": "BTC paper terminal: Gemini feed, TA stack, trading modes, optional Claude oracle. For admins only.",
+      "footerTag": "BTC · TA · PAPER",
+      "badgeLine": "ADMIN · LAB",
+      "badgeSovereign": "SQI"
     }
   },
   "polymarketCopyBot": {

@@ -95,6 +95,7 @@ const EducationDetail = React.lazy(() => import("./pages/income-streams/Educatio
 const SovereignSignalOracle = React.lazy(() => import("./pages/income-streams/PolymarketBotDetail"));
 const PolymarketCopyTradingInfo = React.lazy(() => import("./pages/income-streams/PolymarketCopyTradingInfo"));
 const FomoCopyBot = React.lazy(() => import("./pages/income-streams/FomoCopyBot"));
+const SQISovereignBot = React.lazy(() => import("./pages/income-streams/SQISovereignBot"));
 const PredictionMarketBot = React.lazy(() => import("./pages/PredictionMarketBot"));
 const AdminSystem = React.lazy(() => import("./pages/AdminSystem"));
 const AdminGrantAccess = React.lazy(() => import("./pages/AdminGrantAccess"));
@@ -286,6 +287,7 @@ function AppRoutes() {
                   <Route path="/income-streams/polymarket-bot" element={<SovereignSignalOracle />} />
                   <Route path="/income-streams/polymarket-copy-trading" element={<PolymarketCopyTradingInfo />} />
                   <Route path="/income-streams/fomo-copy-bot" element={<FomoCopyBot />} />
+                  <Route path="/income-streams/sqi-sovereign-bot" element={<SQISovereignBot />} />
                   <Route path="/sqi-chat" element={<Navigate to="/quantum-apothecary" replace />} />
                   <Route path="/spiritual-education" element={<SpiritualEducation />} />
                   <Route path="/community" element={<Community />} />
