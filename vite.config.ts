@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => {
     },
   },
   optimizeDeps: {
-    include: ["ethers"],
+    include: ["ethers", "@solana/web3.js", "buffer"],
   },
   build: {
     commonjsOptions: {
@@ -119,6 +119,7 @@ export default defineConfig(({ mode }) => {
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      buffer: path.resolve(__dirname, "node_modules/buffer"),
     },
   },
   define: {

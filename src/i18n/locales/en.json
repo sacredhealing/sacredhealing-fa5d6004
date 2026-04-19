@@ -2217,6 +2217,13 @@
       "badgeLine": "SQI 2050 • VPS",
       "badgeSovereign": "SOVEREIGN",
       "infoAria": "Open setup guide"
+    },
+    "fomoCopyBotCard": {
+      "title": "FOMO Copy Bot (Admin)",
+      "description": "Solana lab: mirror wallets, paper or live Jupiter swaps, Pump.fun / Raydium signals. For owners only.",
+      "footerTag": "SOLANA · JUPITER · PHANTOM",
+      "badgeLine": "ADMIN · LAB",
+      "badgeSovereign": "FOMO"
     }
   },
   "polymarketCopyBot": {

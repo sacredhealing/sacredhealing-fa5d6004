@@ -2147,6 +2147,13 @@
       "badgeLine": "SQI 2050 • VPS",
       "badgeSovereign": "SOUVERÄN",
       "infoAria": "Öppna installationsguide"
+    },
+    "fomoCopyBotCard": {
+      "title": "FOMO copy-bot (admin)",
+      "description": "Solana-labb: spegla plånböcker, paper eller live Jupiter-byten, Pump.fun / Raydium-signaler. Endast ägare.",
+      "footerTag": "SOLANA · JUPITER · PHANTOM",
+      "badgeLine": "ADMIN · LABB",
+      "badgeSovereign": "FOMO"
     }
   },
   "polymarketCopyBot": {

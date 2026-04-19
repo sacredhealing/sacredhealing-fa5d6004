@@ -117,6 +117,11 @@ const IncomeStreams: React.FC = () => {
           s.internal_slug === 'prediction-market-bot' ||
           s.link === '/prediction-market-bot'
       );
+      const hasFomoBot = withoutForex.some(
+        (s) =>
+          s.internal_slug === 'fomo-copy-bot' ||
+          s.link === '/income-streams/fomo-copy-bot'
+      );
 
       const polymarketFallback: IncomeStream = {
         id: 'polymarket-bot-fallback',
@@ -220,9 +225,44 @@ const IncomeStreams: React.FC = () => {
         cta_button_text_no: null,
       };
 
+      const fomoCopyBotFallback: IncomeStream = {
+        id: 'fomo-copy-bot-fallback',
+        title: 'FOMO Copy Bot (Admin)',
+        title_sv: null,
+        title_es: null,
+        title_no: null,
+        description:
+          'Solana lab: mirror wallets, paper or live Jupiter swaps, Pump.fun / Raydium signals. Admin only.',
+        description_sv: null,
+        description_es: null,
+        description_no: null,
+        link: '/income-streams/fomo-copy-bot',
+        category: 'AI',
+        potential_earnings: 'SOLANA · JUPITER · PHANTOM',
+        potential_earnings_sv: null,
+        potential_earnings_es: null,
+        potential_earnings_no: null,
+        is_featured: true,
+        image_url: null,
+        order_index: -4,
+        icon_name: 'Cpu',
+        badge_text: 'ADMIN · LAB',
+        badge_text_sv: null,
+        badge_text_es: null,
+        badge_text_no: null,
+        color_from: null,
+        color_to: null,
+        internal_slug: 'fomo-copy-bot',
+        cta_button_text: 'Open FOMO bot',
+        cta_button_text_sv: null,
+        cta_button_text_es: null,
+        cta_button_text_no: null,
+      };
+
       let merged = [...withoutForex];
       // Polymarket bots are admin-only: only inject fallbacks for admins
       if (isAdmin) {
+        if (!hasFomoBot) merged = [fomoCopyBotFallback, ...merged];
         if (!hasAIBot) merged = [aiBotFallback, ...merged];
         if (!hasCopyTradingBot) merged = [copyTradingFallback, ...merged];
         if (!hasPolymarketBot) merged = [polymarketFallback, ...merged];
@@ -309,12 +349,13 @@ const IncomeStreams: React.FC = () => {
           </Card>
         ) : (
           streams.filter((stream) => {
-            // Polymarket cards are admin-only
+            // Polymarket + FOMO lab cards are admin-only
             const isPolymarketStream =
               stream.internal_slug === 'polymarket-bot' ||
               stream.internal_slug === 'polymarket-copy-trading' ||
               stream.internal_slug === 'polymarket-bot-general' ||
-              stream.internal_slug === 'prediction-market-bot';
+              stream.internal_slug === 'prediction-market-bot' ||
+              stream.internal_slug === 'fomo-copy-bot';
             if (isPolymarketStream && !isAdmin) return false;
             return true;
           }).map((stream) => {
@@ -323,34 +364,41 @@ const IncomeStreams: React.FC = () => {
             const isGeneralBot = stream.internal_slug === 'polymarket-bot-general';
             const isCopyTrading = stream.internal_slug === 'polymarket-copy-trading';
             const isAIBot = stream.internal_slug === 'prediction-market-bot';
+            const isFomo = stream.internal_slug === 'fomo-copy-bot';
             const title = isPolymarket
               ? t('incomeStreams.hftCard.title')
               : isCopyTrading
                 ? t('incomeStreams.copyBotCard.title')
-                : isAIBot
-                  ? t('incomeStreams.aiPredictionCard.title')
-                  : isGeneralBot
-                    ? t('incomeStreams.strategyGuideCard.title')
-                    : getLocalizedField(stream, 'title') || stream.title;
+                : isFomo
+                  ? t('incomeStreams.fomoCopyBotCard.title')
+                  : isAIBot
+                    ? t('incomeStreams.aiPredictionCard.title')
+                    : isGeneralBot
+                      ? t('incomeStreams.strategyGuideCard.title')
+                      : getLocalizedField(stream, 'title') || stream.title;
             const description = isPolymarket
               ? t('incomeStreams.hftCard.description')
               : isCopyTrading
                 ? t('incomeStreams.copyBotCard.description')
-                : isAIBot
-                  ? t('incomeStreams.aiPredictionCard.description')
-                  : isGeneralBot
-                    ? t('incomeStreams.strategyGuideCard.description')
-                    : getLocalizedField(stream, 'description') || stream.description;
+                : isFomo
+                  ? t('incomeStreams.fomoCopyBotCard.description')
+                  : isAIBot
+                    ? t('incomeStreams.aiPredictionCard.description')
+                    : isGeneralBot
+                      ? t('incomeStreams.strategyGuideCard.description')
+                      : getLocalizedField(stream, 'description') || stream.description;
             const badge = getLocalizedField(stream, 'badge_text') || stream.badge_text;
             const earnings = isPolymarket
               ? t('incomeStreams.hftCard.footerTag')
               : isCopyTrading
                 ? t('incomeStreams.copyBotCard.footerTag')
-                : isAIBot
-                  ? t('incomeStreams.aiPredictionCard.footerTag')
-                  : isGeneralBot
-                    ? t('incomeStreams.strategyGuideCard.footerTag')
-                    : getLocalizedField(stream, 'potential_earnings');
+                : isFomo
+                  ? t('incomeStreams.fomoCopyBotCard.footerTag')
+                  : isAIBot
+                    ? t('incomeStreams.aiPredictionCard.footerTag')
+                    : isGeneralBot
+                      ? t('incomeStreams.strategyGuideCard.footerTag')
+                      : getLocalizedField(stream, 'potential_earnings');
 
             const cardContent = (
               <Card className="group glass-card gold-border w-full max-w-full cursor-pointer overflow-hidden rounded-[20px] transition-all duration-300 hover:border-[#D4AF37]/25 hover:shadow-[0_0_30px_rgba(212,175,55,0.10)]">
@@ -364,7 +412,7 @@ const IncomeStreams: React.FC = () => {
                         className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[24px] transition-transform group-hover:scale-[1.03]"
                         style={{
                           background:
-                            isAIBot
+                            isAIBot || isFomo
                               ? 'linear-gradient(135deg, rgba(34,211,238,0.18) 0%, rgba(212,175,55,0.12) 100%)'
                               : isPolymarket || isCopyTrading || isGeneralBot
                               ? 'linear-gradient(135deg, rgba(212,175,55,0.20) 0%, rgba(34,211,238,0.10) 100%)'
@@ -401,6 +449,15 @@ const IncomeStreams: React.FC = () => {
                               </span>
                               <span className="shrink-0 rounded-full border border-[#D4AF37] bg-[#D4AF37] px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-[#050505]">
                                 {t('incomeStreams.strategyGuideCard.badgeSovereign')}
+                              </span>
+                            </>
+                          ) : isFomo ? (
+                            <>
+                              <span className="shrink-0 rounded-full border border-[#22D3EE] bg-transparent px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-[#22D3EE]">
+                                {t('incomeStreams.fomoCopyBotCard.badgeLine')}
+                              </span>
+                              <span className="shrink-0 rounded-full border border-[#D4AF37] bg-[#D4AF37] px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-[#050505]">
+                                {t('incomeStreams.fomoCopyBotCard.badgeSovereign')}
                               </span>
                             </>
                           ) : isAIBot ? (

@@ -1630,6 +1630,13 @@
       "badgeLine": "SQI 2050 • VPS",
       "badgeSovereign": "SOBERANO",
       "infoAria": "Abrir guía de instalación"
+    },
+    "fomoCopyBotCard": {
+      "title": "Bot copy FOMO (admin)",
+      "description": "Laboratorio Solana: espejo de carteras, paper o swaps Jupiter en vivo, señales Pump.fun / Raydium. Solo propietarios.",
+      "footerTag": "SOLANA · JUPITER · PHANTOM",
+      "badgeLine": "ADMIN · LAB",
+      "badgeSovereign": "FOMO"
     }
   },
   "polymarketCopyBot": {
