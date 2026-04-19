@@ -75,7 +75,7 @@ export default function PolymarketCopyTradingInfo() {
   useEffect(() => {
     if (!user?.id) return;
     supabase.from('polymarket_bot_settings').select('paper_balance').eq('user_id', user.id).single()
-      .then(({ data }) => { if (data?.paper_balance) setBalance(parseFloat(data.paper_balance)); });
+      .then(({ data }) => { if (data?.paper_balance != null) setBalance(Number(data.paper_balance)); });
   }, [user?.id]);
 
   const tradeSize = useCallback(() => Math.min(50, Math.max(0.50, parseFloat((balance * 0.05).toFixed(2)))), [balance]);

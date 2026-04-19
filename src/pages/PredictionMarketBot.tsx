@@ -110,7 +110,7 @@ export default function PredictionMarketBot() {
 
   useEffect(() => {
     if (!user?.id) return;
-    supabase.from('polymarket_bot_settings').select('paper_balance').eq('user_id', user.id).single().then(({ data }) => { if (data?.paper_balance) setBalance(parseFloat(data.paper_balance)); });
+    supabase.from('polymarket_bot_settings').select('paper_balance').eq('user_id', user.id).single().then(({ data }) => { if (data?.paper_balance != null) setBalance(Number(data.paper_balance)); });
   }, [user?.id]);
 
   const runScan = useCallback(async () => {
