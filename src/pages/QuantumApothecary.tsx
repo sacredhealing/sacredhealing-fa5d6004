@@ -1972,8 +1972,10 @@ SQI — integrate this scan with my natal chart; cite each chart fact once; use 
                   }, 300);
                 }}
               />
+              </Suspense>
               )}
               {showVoiceScan && (
+                <Suspense fallback={ScannerSuspenseFallback}>
                 <VoiceBiofieldScanner
                   userName={seekerName || 'Seeker'}
                   jyotishContext={{
@@ -1983,6 +1985,7 @@ SQI — integrate this scan with my natal chart; cite each chart fact once; use 
                   }}
                   onScanComplete={handleVoiceBiofieldComplete}
                 />
+                </Suspense>
               )}
             </div>
 
