@@ -12,15 +12,8 @@ import { useAdminRole } from '@/hooks/useAdminRole';
 //  Risk Engine: 5% per trade | Jupiter Swap Executor
 // ═══════════════════════════════════════════════════════════
 
-declare global {
-  interface Window {
-    solana?: {
-      isPhantom?: boolean;
-      connect: () => Promise<{ publicKey: { toString: () => string } }>;
-      signTransaction: (tx: Transaction) => Promise<Transaction>;
-    };
-  }
-}
+// Window.solana is declared in src/hooks/usePhantomWallet.ts
+
 
 const COLORS = {
   gold: '#D4AF37',
@@ -114,7 +107,7 @@ async function executeJupiterSwap(
 
   const txBuf = Buffer.from(swapTransaction as string, 'base64');
   const tx = Transaction.from(txBuf);
-  const signed = await window.solana.signTransaction(tx);
+  const signed = await (window.solana as any).signTransaction(tx);
 
   const sendRes = await fetch(HELIUS_RPC, {
     method: 'POST',
@@ -135,7 +128,12 @@ async function executeJupiterSwap(
 
 // ── WebSocket Monitor ─────────────────────────────────────
 class WalletMonitor {
-  constructor(walletAddress, onTrade) {
+  wallet: string;
+  onTrade: (trade: any) => void;
+  ws: WebSocket | null;
+  subId: number | null;
+
+  constructor(walletAddress: string, onTrade: (trade: any) => void) {
     this.wallet = walletAddress;
     this.onTrade = onTrade;
     this.ws = null;
@@ -145,7 +143,7 @@ class WalletMonitor {
   connect() {
     this.ws = new WebSocket(HELIUS_WS);
     this.ws.onopen = () => {
-      this.ws.send(JSON.stringify({
+      this.ws!.send(JSON.stringify({
         jsonrpc: "2.0", id: 1,
         method: "logsSubscribe",
         params: [{ mentions: [this.wallet] }, { commitment: "processed" }],
@@ -163,7 +161,7 @@ class WalletMonitor {
     this.ws.onclose = () => setTimeout(() => this.connect(), 3000); // auto-reconnect
   }
 
-  _parseLogs(logs, sig) {
+  _parseLogs(logs: string[], sig: string) {
     const isPump   = logs.some(l => l.includes(PUMP_FUN_PROGRAM));
     const isRaydium= logs.some(l => l.includes(RAYDIUM_AMM));
     if (!isPump && !isRaydium) return;
@@ -190,13 +188,17 @@ class WalletMonitor {
 //  PAPER TRADE ENGINE
 // ─────────────────────────────────────────────────────────
 class PaperEngine {
+  portfolio: number;
+  positions: Record<string, number>;
+  trades: any[];
+
   constructor(startingSOL = 0.1) {
     this.portfolio = startingSOL;
     this.positions = {};
     this.trades = [];
   }
 
-  execute(trade, riskPct = 0.05) {
+  execute(trade: any, riskPct = 0.05) {
     const riskSOL = this.portfolio * riskPct;
     if (trade.action === "BUY") {
       const token = trade.mint || `TOKEN_${trade.sig?.slice(0, 6)}`;
@@ -325,7 +327,7 @@ function FomoCopyBotInner() {
   }, [trackedWallets, mode, riskPct, walletAddress, solBalance]);
 
   const stopMonitoring = useCallback(() => {
-    Object.values(monitorsRef.current).forEach(m => m.disconnect());
+    Object.values(monitorsRef.current).forEach((m: any) => m.disconnect());
     monitorsRef.current = {};
     setIsMonitoring(false);
     setStatus("⏹ STOPPED");
@@ -810,7 +812,7 @@ function FomoCopyBotInner() {
 }
 
 // ── Sub-components ─────────────────────────────────────────
-function TradeRow({ trade, showPnL }) {
+function TradeRow({ trade, showPnL }: { trade: any; showPnL?: boolean }) {
   return (
     <div style={{
       display: "flex", alignItems: "center", gap: 12,
@@ -847,7 +849,7 @@ function TradeRow({ trade, showPnL }) {
   );
 }
 
-function SettingRow({ label, value, hint, children }) {
+function SettingRow({ label, value, hint, children }: { label: string; value: string; hint?: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 20, paddingBottom: 20,
       borderBottom: `1px solid ${COLORS.glassBorder}` }}>
