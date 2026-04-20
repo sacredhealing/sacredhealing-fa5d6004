@@ -1,15 +1,12 @@
 {
-  "name": "sacredhealing-railway-worker",
-  "private": true,
-  "type": "module",
-  "engines": {
-    "node": ">=18"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.49.1"
-  },
+  "name": "sqi-sovereign-bot-worker",
+  "version": "1.0.0",
+  "description": "SQI Sovereign BTC Bot — 24/7 Railway worker",
+  "main": "worker.js",
   "scripts": {
-    "start": "node sqi-bot-worker.js",
-    "worker": "node sqi-bot-worker.js"
+    "start": "node worker.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

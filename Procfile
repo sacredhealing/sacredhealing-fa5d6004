@@ -1,1 +1,1 @@
-worker: node railway-worker/sqi-bot-worker.js
+worker: node railway-worker/worker.js

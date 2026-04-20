@@ -1,1 +1,1 @@
-worker: node sqi-bot-worker.js
+worker: node worker.js
