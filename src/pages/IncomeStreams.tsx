@@ -65,6 +65,51 @@ const iconMap: Record<string, LucideIcon> = {
   Brain,
 };
 
+const STREAM_ACCENT: Record<string, { color: string; glow: string; bg: string; border: string }> = {
+  'prediction-market-bot': {
+    color: '#D4AF37',
+    glow: '0 0 24px rgba(212,175,55,0.2)',
+    bg: 'rgba(212,175,55,0.06)',
+    border: 'rgba(212,175,55,0.4)',
+  },
+  'fomo-copy-bot': {
+    color: '#10B981',
+    glow: '0 0 24px rgba(16,185,129,0.2)',
+    bg: 'rgba(16,185,129,0.06)',
+    border: 'rgba(16,185,129,0.4)',
+  },
+  'polymarket-bot': {
+    color: '#22D3EE',
+    glow: '0 0 24px rgba(34,211,238,0.2)',
+    bg: 'rgba(34,211,238,0.06)',
+    border: 'rgba(34,211,238,0.4)',
+  },
+  'polymarket-strategy': {
+    color: '#8B5CF6',
+    glow: '0 0 24px rgba(139,92,246,0.2)',
+    bg: 'rgba(139,92,246,0.06)',
+    border: 'rgba(139,92,246,0.4)',
+  },
+  'polymarket-hft-bot': {
+    color: '#F43F5E',
+    glow: '0 0 24px rgba(244,63,94,0.2)',
+    bg: 'rgba(244,63,94,0.06)',
+    border: 'rgba(244,63,94,0.4)',
+  },
+  affiliate: {
+    color: '#F59E0B',
+    glow: '0 0 24px rgba(245,158,11,0.2)',
+    bg: 'rgba(245,158,11,0.06)',
+    border: 'rgba(245,158,11,0.4)',
+  },
+};
+const DEFAULT_ACCENT = {
+  color: '#D4AF37',
+  glow: '0 0 24px rgba(212,175,55,0.2)',
+  bg: 'rgba(212,175,55,0.06)',
+  border: 'rgba(212,175,55,0.35)',
+};
+
 const IncomeStreams: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -106,11 +151,6 @@ const IncomeStreams: React.FC = () => {
         (s) =>
           s.internal_slug === 'polymarket-bot' ||
           s.link === '/income-streams/polymarket-bot'
-      );
-      const hasCopyTradingBot = withoutForex.some(
-        (s) =>
-          s.internal_slug === 'polymarket-copy-trading' ||
-          s.link === '/income-streams/polymarket-copy-trading'
       );
       const hasAIBot = withoutForex.some(
         (s) =>
@@ -157,40 +197,6 @@ const IncomeStreams: React.FC = () => {
         color_to: null,
         internal_slug: 'polymarket-bot',
         cta_button_text: 'Open Terminal',
-        cta_button_text_sv: null,
-        cta_button_text_es: null,
-        cta_button_text_no: null,
-      };
-
-      const copyTradingFallback: IncomeStream = {
-        id: 'polymarket-copy-trading-fallback',
-        title: 'Polymarket Copy-Trading Bot',
-        title_sv: null,
-        title_es: null,
-        title_no: null,
-        description:
-          'VPS bot mirrors whale wallets on-chain via Polygon. Pure copy-trading — no signal lag.',
-        description_sv: null,
-        description_es: null,
-        description_no: null,
-        link: '/income-streams/polymarket-copy-trading',
-        category: 'AI',
-        potential_earnings: 'ON-CHAIN WHALE COPY · POLYGON CTF',
-        potential_earnings_sv: null,
-        potential_earnings_es: null,
-        potential_earnings_no: null,
-        is_featured: true,
-        image_url: null,
-        order_index: -2,
-        icon_name: 'Zap',
-        badge_text: 'SQI 2050 • VPS',
-        badge_text_sv: null,
-        badge_text_es: null,
-        badge_text_no: null,
-        color_from: null,
-        color_to: null,
-        internal_slug: 'polymarket-copy-trading',
-        cta_button_text: 'Setup guide',
         cta_button_text_sv: null,
         cta_button_text_es: null,
         cta_button_text_no: null,
@@ -304,7 +310,6 @@ const IncomeStreams: React.FC = () => {
         if (!hasSqiSovereignBot) merged = [sqiSovereignBotFallback, ...merged];
         if (!hasFomoBot) merged = [fomoCopyBotFallback, ...merged];
         if (!hasAIBot) merged = [aiBotFallback, ...merged];
-        if (!hasCopyTradingBot) merged = [copyTradingFallback, ...merged];
         if (!hasPolymarketBot) merged = [polymarketFallback, ...merged];
       }
 
@@ -399,7 +404,10 @@ const IncomeStreams: React.FC = () => {
               stream.internal_slug === 'sqi-sovereign-bot';
             if (isPolymarketStream && !isAdmin) return false;
             return true;
-          }).map((stream) => {
+          })
+          .filter((s) => s.internal_slug !== 'polymarket-copy-trading')
+          .map((stream) => {
+            const accent = STREAM_ACCENT[stream.internal_slug ?? ''] ?? DEFAULT_ACCENT;
             const IconComponent = getIcon(stream.icon_name);
             const isPolymarket = stream.internal_slug === 'polymarket-bot';
             const isGeneralBot = stream.internal_slug === 'polymarket-bot-general';
@@ -449,7 +457,10 @@ const IncomeStreams: React.FC = () => {
                         : getLocalizedField(stream, 'potential_earnings');
 
             const cardContent = (
-              <Card className="group glass-card gold-border w-full max-w-full cursor-pointer overflow-hidden rounded-[20px] transition-all duration-300 hover:border-[#D4AF37]/25 hover:shadow-[0_0_30px_rgba(212,175,55,0.10)]">
+              <Card
+                className="group glass-card w-full max-w-full cursor-pointer overflow-hidden rounded-[20px] border border-solid transition-all duration-300 hover:border-[#D4AF37]/25 hover:shadow-[0_0_30px_rgba(212,175,55,0.10)]"
+                style={{ background: accent.bg, borderColor: accent.border, boxShadow: accent.glow }}
+              >
                 <CardContent className="w-full min-w-0 p-0">
                   <div
                     className={`flex w-full min-w-0 flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-4 ${isCopyTrading ? 'pr-12 sm:pr-14' : ''}`}
@@ -457,18 +468,10 @@ const IncomeStreams: React.FC = () => {
                     <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center sm:gap-4">
                       {/* Icon */}
                       <div
-                        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[24px] transition-transform group-hover:scale-[1.03]"
-                        style={{
-                          background:
-                            isAIBot || isFomo || isSqiSovereign
-                              ? 'linear-gradient(135deg, rgba(34,211,238,0.18) 0%, rgba(212,175,55,0.12) 100%)'
-                              : isPolymarket || isCopyTrading || isGeneralBot
-                              ? 'linear-gradient(135deg, rgba(212,175,55,0.20) 0%, rgba(34,211,238,0.10) 100%)'
-                              : 'linear-gradient(135deg, rgba(212,175,55,0.14) 0%, rgba(255,255,255,0.03) 100%)',
-                          border: '1px solid rgba(212,175,55,0.16)',
-                        }}
+                        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[24px] border border-solid transition-transform group-hover:scale-[1.03]"
+                        style={{ color: accent.color, borderColor: accent.border }}
                       >
-                        <IconComponent className="h-7 w-7 text-[#D4AF37]" />
+                        <IconComponent className="h-7 w-7" />
                       </div>
 
                       {/* Content */}
