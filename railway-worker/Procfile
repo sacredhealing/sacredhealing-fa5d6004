@@ -1,0 +1,1 @@
+worker: node sqi-bot-worker.js

@@ -1,0 +1,15 @@
+{
+  "name": "sacredhealing-railway-worker",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1"
+  },
+  "scripts": {
+    "start": "node sqi-bot-worker.js",
+    "worker": "node sqi-bot-worker.js"
+  }
+}

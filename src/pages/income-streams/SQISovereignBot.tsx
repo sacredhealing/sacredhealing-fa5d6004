@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { useAdminRole } from '@/hooks/useAdminRole';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 // ── Color DNA ──────────────────────────────────────────────────
 const GOLD = "#D4AF37";
@@ -135,12 +137,16 @@ const SIG_COLOR: Record<string, string> = { BUY: GREEN, SELL: RED, HOLD: GOLD, S
 function SQISovereignBotInner() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { user } = useAuth();
   // ── UI State
   const [tab,        setTab]       = useState("dashboard");
   const [mode,       setMode]      = useState("scalp");
   const [signal,     setSignal]    = useState("SCANNING");
   const [loading,    setLoading]   = useState(true);
   const [botRunning, setBotRunning] = useState(false);
+  const [tradeLog, setTradeLog] = useState<Record<string, unknown>[]>([]);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [portfolioValue, setPortfolioValue] = useState(START_BALANCE);
 
   // ── Market Data
   const [currentPrice, setCurrentPrice] = useState(0);
@@ -160,7 +166,12 @@ function SQISovereignBotInner() {
   const [dispBal,   setDispBal]   = useState(START_BALANCE);
   const [dispBtc,   setDispBtc]   = useState(0);
   const [dispStats, setDispStats] = useState({ wins: 0, losses: 0, total: 0 });
-  const [trades,    setTrades]    = useState([]);
+
+  const openDbTradeIdRef = useRef<string | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
+  const botRunningRef = useRef(false);
+  const portfolioValueRef = useRef(START_BALANCE);
+  const lastPriceRef = useRef(0);
 
   // ── AI Oracle
   const [aiText,    setAiText]    = useState("");
@@ -168,6 +179,100 @@ function SQISovereignBotInner() {
 
   const botRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const priceRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const loadTrades = useCallback(async () => {
+    if (!user?.id) return;
+    const { data, error } = await supabase
+      .from('bot_trades')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(200);
+    if (error) {
+      console.error('[SQI] loadTrades', error);
+      return;
+    }
+    const rows = (data ?? []) as Record<string, unknown>[];
+    setTradeLog(rows);
+    let sumClosed = 0;
+    for (const r of rows) {
+      if (r.status === 'closed' && r.pnl_usd != null) {
+        sumClosed += Number(r.pnl_usd);
+      }
+    }
+    const pv = START_BALANCE + sumClosed;
+    setPortfolioValue(pv);
+    portfolioValueRef.current = pv;
+    if (!botRunningRef.current) {
+      balRef.current = pv;
+      setDispBal(pv);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    void loadTrades();
+  }, [loadTrades]);
+
+  useEffect(() => {
+    sessionIdRef.current = sessionId;
+  }, [sessionId]);
+
+  useEffect(() => {
+    botRunningRef.current = botRunning;
+  }, [botRunning]);
+
+  useEffect(() => {
+    portfolioValueRef.current = portfolioValue;
+  }, [portfolioValue]);
+
+  useEffect(() => {
+    lastPriceRef.current = currentPrice;
+  }, [currentPrice]);
+
+  const handleBotToggle = async () => {
+    if (!user?.id) {
+      console.warn('[SQI] Sign in to persist trades');
+      return;
+    }
+    if (botRunning) {
+      setBotRunning(false);
+      const sid = sessionIdRef.current;
+      if (sid) {
+        const equity = balRef.current + btcRef.current * lastPriceRef.current;
+        await supabase
+          .from('bot_sessions')
+          .update({
+            ended_at: new Date().toISOString(),
+            trades_count: statsRef.current.total,
+            wins: statsRef.current.wins,
+            losses: statsRef.current.losses,
+            final_portfolio_value: equity,
+          })
+          .eq('id', sid);
+      }
+      sessionIdRef.current = null;
+      setSessionId(null);
+      openDbTradeIdRef.current = null;
+      await loadTrades();
+      return;
+    }
+    balRef.current = portfolioValueRef.current;
+    setDispBal(balRef.current);
+    const { data, error } = await supabase
+      .from('bot_sessions')
+      .insert({ user_id: user.id, seed_balance: START_BALANCE })
+      .select('id')
+      .single();
+    if (error) {
+      console.error('[SQI] bot_sessions insert', error);
+      return;
+    }
+    const sid = (data?.id as string) ?? null;
+    setSessionId(sid);
+    sessionIdRef.current = sid;
+    setBotRunning(true);
+    setSignal('SCANNING');
+  };
 
   // ── Fetch from Gemini → CoinGecko fallback ─────────────────
   const fetchPrice = useCallback(async () => {
@@ -265,27 +370,65 @@ function SQISovereignBotInner() {
         btcRef.current  = btcBought;
         entryRef.current = price;
         statsRef.current.total++;
-        setTrades((p) => [{ id: Date.now(), type: "BUY", price, btc: btcBought, usd: amount, fee, pnl: null, time: now, mode }, ...p.slice(0, 99)]);
         setDispBal(balRef.current);
         setDispBtc(btcRef.current);
+        if (user?.id && sessionIdRef.current) {
+          const sizeUsd = portfolioValueRef.current * 0.92;
+          const { data: ins, error: insErr } = await supabase
+            .from('bot_trades')
+            .insert({
+              user_id: user.id,
+              session_id: sessionIdRef.current,
+              action: 'BUY',
+              entry_price: price,
+              size_usd: sizeUsd,
+              status: 'open',
+              strategy: mode,
+              seed_balance: START_BALANCE,
+              btc_amount: btcBought,
+              fee_usd: fee,
+            })
+            .select('id')
+            .single();
+          if (insErr) console.error('[SQI] bot_trades BUY', insErr);
+          else openDbTradeIdRef.current = (ins?.id as string) ?? null;
+          await loadTrades();
+        }
       } else if (sig === "SELL" && held > 0) {
         const value = held * price;
         const fee   = value * 0.001;
         const pnl   = value - held * entry;
+        const notional = held * entry;
+        const pnlPct = notional > 0 ? (pnl / notional) * 100 : 0;
         balRef.current = bal + value - fee;
         btcRef.current = 0;
         entryRef.current = 0;
         pnl > 0 ? statsRef.current.wins++ : statsRef.current.losses++;
         statsRef.current.total++;
-        setTrades((p) => [{ id: Date.now(), type: "SELL", price, btc: held, usd: value, fee, pnl, time: now, mode }, ...p.slice(0, 99)]);
         setDispBal(balRef.current);
         setDispBtc(0);
         setDispStats({ ...statsRef.current });
+        const oid = openDbTradeIdRef.current;
+        if (user?.id && oid) {
+          const { error: upErr } = await supabase
+            .from('bot_trades')
+            .update({
+              exit_price: price,
+              pnl_usd: pnl,
+              pnl_pct: pnlPct,
+              status: 'closed',
+              closed_at: new Date().toISOString(),
+            })
+            .eq('id', oid);
+          if (upErr) console.error('[SQI] bot_trades SELL', upErr);
+          openDbTradeIdRef.current = null;
+          await loadTrades();
+        }
       }
     }, 15000);
 
     return () => clearInterval(botRef.current);
-  }, [botRunning, mode, fetchPrice]);
+  }, [botRunning, mode, fetchPrice, user?.id, loadTrades]);
 
   // ── AI Oracle (Claude-in-Claude) ────────────────────────────
   const invokeOracle = async () => {
@@ -323,7 +466,7 @@ MACD: ${val.toFixed(2)}
 Bollinger Upper: $${Math.round(upper).toLocaleString()}
 Bollinger Lower: $${Math.round(lower).toLocaleString()}
 Active Strategy: ${mode.toUpperCase()}
-Recent prices (last 10): ${prices.slice(-10).map((p) => Math.round(p)).join(", ")}
+Recent prices (last 10): ${pricesRef.current.slice(-10).map((p) => Math.round(p)).join(", ")}
 
 Deliver a 3-4 sentence oracle reading using sacred language: "Akashic price field", "quantum momentum", "Vedic wave pattern", "Bhakti-Algorithm signal", "Prema-Pulse". End with a clear BUY / SELL / HOLD recommendation and why. Be specific about price levels.`
           }],
@@ -439,7 +582,8 @@ Deliver a 3-4 sentence oracle reading using sacred language: "Akashic price fiel
 
           {/* Activate */}
           <button
-            onClick={() => { setBotRunning((r) => !r); if (!botRunning) setSignal("SCANNING"); }}
+            type="button"
+            onClick={() => void handleBotToggle()}
             style={{
               padding: "12px 24px", borderRadius: 40, cursor: "pointer",
               fontFamily: "inherit", fontWeight: 900, fontSize: 10, letterSpacing: "0.25em",
@@ -837,53 +981,70 @@ Deliver a 3-4 sentence oracle reading using sacred language: "Akashic price fiel
           <div style={{ ...glass, padding: 24, borderRadius: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <div style={{ fontSize: 7, letterSpacing: "0.3em", color: "rgba(255,255,255,0.28)", fontWeight: 800, textTransform: "uppercase" }}>
-                SOVEREIGN TRADE LEDGER  ·  {trades.length} EXECUTIONS
+                SOVEREIGN TRADE LEDGER  ·  {tradeLog.length} EXECUTIONS
               </div>
-              {trades.length > 0 && (
+              {tradeLog.length > 0 && (
                 <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", fontWeight: 700 }}>
-                  Total P&L: <span style={{ color: trades.reduce((a, tr) => a + (tr.pnl || 0), 0) >= 0 ? GREEN : RED, fontWeight: 900 }}>
-                    ${trades.reduce((a, tr) => a + (tr.pnl || 0), 0).toFixed(4)}
+                  Total P&L: <span style={{ color: tradeLog.reduce((a, tr) => a + (tr.status === 'closed' && tr.pnl_usd != null ? Number(tr.pnl_usd) : 0), 0) >= 0 ? GREEN : RED, fontWeight: 900 }}>
+                    ${tradeLog.reduce((a, tr) => a + (tr.status === 'closed' && tr.pnl_usd != null ? Number(tr.pnl_usd) : 0), 0).toFixed(4)}
                   </span>
                 </div>
               )}
             </div>
 
-            {trades.length === 0 ? (
+            {tradeLog.length === 0 ? (
               <div style={{ textAlign: "center", padding: "50px 0", color: "rgba(255,255,255,0.15)", fontSize: 12 }}>
                 <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.3 }}>⬡</div>
                 Activate the bot to begin quantum trade execution...
               </div>
             ) : (
               <div style={{ maxHeight: 500, overflowY: "auto" }}>
-                {trades.map((trade) => (
-                  <div key={trade.id} style={{ display: "flex", alignItems: "center", padding: "12px 4px", borderBottom: "1px solid rgba(255,255,255,0.035)", gap: 14, flexWrap: "wrap" }}>
+                {tradeLog.map((trade) => {
+                  const id = String(trade.id ?? '');
+                  const action = String(trade.action ?? '');
+                  const status = String(trade.status ?? '');
+                  const entryPrice = Number(trade.entry_price ?? 0);
+                  const exitPrice = trade.exit_price != null ? Number(trade.exit_price) : null;
+                  const btcAmt = trade.btc_amount != null ? Number(trade.btc_amount) : null;
+                  const sizeUsd = Number(trade.size_usd ?? 0);
+                  const feeUsd = trade.fee_usd != null ? Number(trade.fee_usd) : 0;
+                  const pnlUsd = trade.pnl_usd != null ? Number(trade.pnl_usd) : null;
+                  const strat = String(trade.strategy ?? '');
+                  const created = trade.created_at ? new Date(String(trade.created_at)).toLocaleString() : '—';
+                  const isBuyOpen = action === 'BUY' && status === 'open';
+                  return (
+                  <div key={id} style={{ display: "flex", alignItems: "center", padding: "12px 4px", borderBottom: "1px solid rgba(255,255,255,0.035)", gap: 14, flexWrap: "wrap" }}>
                     <div style={{
                       padding: "4px 12px", borderRadius: 40, fontSize: 8, fontWeight: 800, letterSpacing: "0.2em",
-                      background: trade.type === "BUY" ? "rgba(0,255,136,0.1)" : "rgba(255,68,68,0.1)",
-                      color: trade.type === "BUY" ? GREEN : RED,
-                      border: `1px solid ${trade.type === "BUY" ? "rgba(0,255,136,0.25)" : "rgba(255,68,68,0.25)"}`,
+                      background: isBuyOpen ? "rgba(0,255,136,0.1)" : "rgba(255,68,68,0.1)",
+                      color: isBuyOpen ? GREEN : RED,
+                      border: `1px solid ${isBuyOpen ? "rgba(0,255,136,0.25)" : "rgba(255,68,68,0.25)"}`,
                       minWidth: 48, textAlign: "center",
-                    }}>{trade.type}</div>
+                    }}>{isBuyOpen ? 'BUY' : 'CLOSED'}</div>
                     <div style={{ flex: 1, minWidth: 100 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>${Math.round(trade.price).toLocaleString()}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>
+                        ${Math.round(entryPrice).toLocaleString()}
+                        {exitPrice != null ? ` → $${Math.round(exitPrice).toLocaleString()}` : ''}
+                      </div>
                       <div style={{ fontSize: 8, color: "rgba(255,255,255,0.25)", marginTop: 2, letterSpacing: "0.08em" }}>
-                        {typeof trade.btc === "number" ? trade.btc.toFixed(6) : trade.btc} BTC  ·  {trade.time}  ·  {trade.mode.toUpperCase()}
+                        {btcAmt != null ? btcAmt.toFixed(6) : '—'} BTC  ·  {created}  ·  {strat.toUpperCase()}
                       </div>
                     </div>
                     <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: GOLD }}>${trade.usd.toFixed(2)}</div>
-                      <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", marginTop: 2 }}>fee ${trade.fee.toFixed(4)}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: GOLD }}>${sizeUsd.toFixed(2)}</div>
+                      <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", marginTop: 2 }}>fee ${feeUsd.toFixed(4)}</div>
                     </div>
-                    {trade.pnl !== null && trade.pnl !== undefined && (
+                    {pnlUsd !== null && !Number.isNaN(pnlUsd) && (
                       <div style={{ textAlign: "right", minWidth: 70 }}>
-                        <div style={{ fontSize: 12, fontWeight: 900, color: trade.pnl >= 0 ? GREEN : RED }}>
-                          {trade.pnl >= 0 ? "+" : ""}${trade.pnl.toFixed(4)}
+                        <div style={{ fontSize: 12, fontWeight: 900, color: pnlUsd >= 0 ? GREEN : RED }}>
+                          {pnlUsd >= 0 ? "+" : ""}${pnlUsd.toFixed(4)}
                         </div>
                         <div style={{ fontSize: 7, color: "rgba(255,255,255,0.2)", marginTop: 2 }}>P&L</div>
                       </div>
                     )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
