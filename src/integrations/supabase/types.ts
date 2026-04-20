@@ -909,6 +909,102 @@ export type Database = {
         }
         Relationships: []
       }
+      bot_sessions: {
+        Row: {
+          bot_type: string | null
+          ended_at: string | null
+          final_pnl_usd: number
+          final_portfolio_usd: number | null
+          id: string
+          losses: number
+          seed_usd: number
+          started_at: string
+          strategy: string | null
+          trades_count: number
+          user_id: string
+          wins: number
+        }
+        Insert: {
+          bot_type?: string | null
+          ended_at?: string | null
+          final_pnl_usd?: number
+          final_portfolio_usd?: number | null
+          id?: string
+          losses?: number
+          seed_usd?: number
+          started_at?: string
+          strategy?: string | null
+          trades_count?: number
+          user_id: string
+          wins?: number
+        }
+        Update: {
+          bot_type?: string | null
+          ended_at?: string | null
+          final_pnl_usd?: number
+          final_portfolio_usd?: number | null
+          id?: string
+          losses?: number
+          seed_usd?: number
+          started_at?: string
+          strategy?: string | null
+          trades_count?: number
+          user_id?: string
+          wins?: number
+        }
+        Relationships: []
+      }
+      bot_trades: {
+        Row: {
+          action: string | null
+          bot_type: string
+          closed_at: string | null
+          created_at: string
+          entry_price: number | null
+          exit_price: number | null
+          id: string
+          pnl_pct: number
+          pnl_usd: number
+          seed_balance: number | null
+          size_usd: number | null
+          status: string
+          strategy: string | null
+          user_id: string
+        }
+        Insert: {
+          action?: string | null
+          bot_type?: string
+          closed_at?: string | null
+          created_at?: string
+          entry_price?: number | null
+          exit_price?: number | null
+          id?: string
+          pnl_pct?: number
+          pnl_usd?: number
+          seed_balance?: number | null
+          size_usd?: number | null
+          status?: string
+          strategy?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string | null
+          bot_type?: string
+          closed_at?: string | null
+          created_at?: string
+          entry_price?: number | null
+          exit_price?: number | null
+          id?: string
+          pnl_pct?: number
+          pnl_usd?: number
+          seed_balance?: number | null
+          size_usd?: number | null
+          status?: string
+          strategy?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       breathing_patterns: {
         Row: {
           audio_url: string | null
