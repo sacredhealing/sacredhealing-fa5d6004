@@ -1,12 +1,7 @@
 {
   "name": "sqi-sovereign-bot-worker",
   "version": "1.0.0",
-  "description": "SQI Sovereign BTC Bot — 24/7 Railway worker",
   "main": "worker.js",
-  "scripts": {
-    "start": "node worker.js"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  }
+  "scripts": { "start": "node worker.js" },
+  "engines": { "node": ">=18.0.0" }
 }
