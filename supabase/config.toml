@@ -137,3 +137,7 @@ project_id = "ssygukfdbtehvtndandn"
     verify_jwt = false
   [functions.worker-callback]
     verify_jwt = false
+  [functions.daily-recording-webhook]
+    verify_jwt = false
+  [functions.get-recording-url]
+    verify_jwt = true

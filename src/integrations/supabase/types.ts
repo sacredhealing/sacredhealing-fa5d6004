@@ -1124,6 +1124,80 @@ export type Database = {
           },
         ]
       }
+      call_recordings: {
+        Row: {
+          call_type: string
+          channel_id: string | null
+          created_at: string
+          description: string | null
+          duration_seconds: number | null
+          ended_at: string | null
+          error_message: string | null
+          host_user_id: string
+          id: string
+          partner_user_id: string | null
+          room_name: string
+          session_id: string | null
+          stargate_category: string | null
+          started_at: string
+          status: string
+          storage_path: string | null
+          title: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          call_type: string
+          channel_id?: string | null
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          ended_at?: string | null
+          error_message?: string | null
+          host_user_id: string
+          id?: string
+          partner_user_id?: string | null
+          room_name: string
+          session_id?: string | null
+          stargate_category?: string | null
+          started_at?: string
+          status?: string
+          storage_path?: string | null
+          title?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          call_type?: string
+          channel_id?: string | null
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          ended_at?: string | null
+          error_message?: string | null
+          host_user_id?: string
+          id?: string
+          partner_user_id?: string | null
+          room_name?: string
+          session_id?: string | null
+          stargate_category?: string | null
+          started_at?: string
+          status?: string
+          storage_path?: string | null
+          title?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_recordings_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "community_live_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       challenge_participants: {
         Row: {
           challenge_id: string
@@ -5320,6 +5394,27 @@ export type Database = {
           id?: string
           memory_profile?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      stargate_community_members: {
+        Row: {
+          added_at: string
+          added_by: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          added_by?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          added_by?: string | null
+          id?: string
           user_id?: string
         }
         Relationships: []

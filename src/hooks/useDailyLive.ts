@@ -59,7 +59,14 @@ export function useDailyLive() {
   const [isCreating, setIsCreating] = useState(false);
   const [activeSession, setActiveSession] = useState<DailySession | null>(null);
 
-  const createRoom = useCallback(async (channelId: string, title: string, description?: string, allowNonAdmin = false, source: 'channel' | 'feed' = 'channel') => {
+  const createRoom = useCallback(async (
+    channelId: string,
+    title: string,
+    description?: string,
+    allowNonAdmin = false,
+    source: 'channel' | 'feed' = 'channel',
+    extras?: { stargate_category?: 'healing-chamber' | 'bhagavad-gita' | 'other'; partner_user_id?: string }
+  ) => {
     if (!user) {
       toast.error(t('community.goLive.signIn'));
       return null;
@@ -80,6 +87,8 @@ export function useDailyLive() {
           description,
           allow_non_admin: allowNonAdmin,
           source,
+          stargate_category: extras?.stargate_category,
+          partner_user_id: extras?.partner_user_id,
         },
         headers: { Authorization: `Bearer ${token}` },
       });
