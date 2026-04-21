@@ -366,6 +366,34 @@ Deno.serve(async (req) => {
         return respond({ ok: false, error: "Failed to save live session", details: insertError.message });
       }
 
+      // Create a pending recording row so we have something to attach the
+      // Daily webhook to once the cloud recording finishes processing.
+      try {
+        const isDm = effectiveChannelId.startsWith("dm-");
+        const isStargate = effectiveChannelId === "stargate";
+        const callType = isDm ? "dm" : isStargate ? "stargate" : (source === "feed" ? "feed" : "channel");
+        const stargateCat = isStargate
+          ? (typeof stargate_category === "string" && ["healing-chamber", "bhagavad-gita", "other"].includes(stargate_category)
+              ? stargate_category
+              : "other")
+          : null;
+
+        await supabase.from("call_recordings").insert({
+          session_id: session.id,
+          room_name: room.name ?? roomSlug,
+          call_type: callType,
+          stargate_category: stargateCat,
+          host_user_id: user.id,
+          partner_user_id: typeof partner_user_id === "string" ? partner_user_id : null,
+          channel_id: effectiveChannelId,
+          title: (typeof title === "string" && title.trim()) || "Call Recording",
+          description: typeof description === "string" ? description : null,
+          status: "pending",
+        });
+      } catch (e) {
+        console.warn("[daily-room] failed to create call_recordings row:", e);
+      }
+
       return respond({ ok: true, success: true, session, room_url: room.url });
     }
 
