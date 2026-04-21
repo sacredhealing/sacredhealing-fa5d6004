@@ -961,6 +961,7 @@ const Community = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [totalUserCount, setTotalUserCount] = useState(0);
   const [goLiveTitle, setGoLiveTitle] = useState("");
+  const [goLiveStargateCategory, setGoLiveStargateCategory] = useState<'healing-chamber' | 'bhagavad-gita' | 'other'>('healing-chamber');
   const [showGoLiveDialog, setShowGoLiveDialog] = useState(false);
   const [goLiveChannelId, setGoLiveChannelId] = useState<string | null>(null);
   const [goLiveChannelName, setGoLiveChannelName] = useState("");
@@ -1658,9 +1659,11 @@ const Community = () => {
     setShowGoLiveOptions(false);
     setShowGoLiveDialog(false);
     const meetingTitle = customTitle?.trim() || `Live in ${channelName}`;
-    // Edge function: non-admin may only create DM or Stargate rooms; Stargate is verified server-side.
     const allowNonAdmin = channelId === "stargate" && isStargateMember && !isAdmin;
-    const result = await daily.createRoom(channelId, meetingTitle, undefined, allowNonAdmin, "channel");
+    const extras = channelId === "stargate"
+      ? { stargate_category: goLiveStargateCategory }
+      : undefined;
+    const result = await daily.createRoom(channelId, meetingTitle, undefined, allowNonAdmin, "channel", extras);
     if (result) {
       setLiveRoomUrl(result.room_url);
       const adminName = memberNameMap[user.id] || "Admin";
@@ -1743,7 +1746,9 @@ const Community = () => {
       activeChannel,
       `Video call with ${partnerName}`,
       "1-on-1 video call",
-      true
+      true,
+      "channel",
+      partnerId ? { partner_user_id: partnerId } : undefined,
     );
     if (result) {
       setDmVideoUrl(result.room_url);
@@ -2934,6 +2939,30 @@ const Community = () => {
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
               }}
             />
+            {goLiveChannelId === "stargate" && (
+              <div style={{ marginTop: 12 }}>
+                <label style={{ display: "block", color: "rgba(255,255,255,.55)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 6 }}>
+                  Stargate Category
+                </label>
+                <select
+                  value={goLiveStargateCategory}
+                  onChange={(e) => setGoLiveStargateCategory(e.target.value as any)}
+                  style={{
+                    width: "100%", padding: "12px 16px", borderRadius: 12,
+                    background: "rgba(255,255,255,.05)", border: "1px solid rgba(212,175,55,.2)",
+                    color: "#fff", fontSize: 14, outline: "none",
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  }}
+                >
+                  <option value="healing-chamber" style={{ background: "#0a0a0a" }}>🌿 Healing Chamber</option>
+                  <option value="bhagavad-gita" style={{ background: "#0a0a0a" }}>📖 Bhagavad Gita Class</option>
+                  <option value="other" style={{ background: "#0a0a0a" }}>✨ Other</option>
+                </select>
+                <p style={{ color: "rgba(255,255,255,.4)", fontSize: 10, marginTop: 6 }}>
+                  Recording will be saved into this folder of the Stargate course.
+                </p>
+              </div>
+            )}
             <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
               <button
                 onClick={() => setShowGoLiveDialog(false)}
