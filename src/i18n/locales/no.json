@@ -2123,6 +2123,18 @@
       "button": "Del mantra",
       "brand": "Siddha Quantum Nexus",
       "shcLine": "+{{amount}} SHC"
+    },
+    "categorySections": {
+      "planet": { "title": "Planetariske mantraer", "subtitle": "Navagraha-botemidler og tidslinje-tilpasset lydmedisin." },
+      "deity": { "title": "Guddom og Ishta Devata", "subtitle": "Guddommelige navn og hengivne strømmer for daglig tilflukt." },
+      "intention": { "title": "Intensjon og affirmasjon", "subtitle": "Sankalpa og affirmasjoner for det indre feltet." },
+      "karma": { "title": "Karma og dyp healing", "subtitle": "Slipp mønstre og gjenopprett dybde i den subtile kroppen." },
+      "wealth": { "title": "Velstand og overflod", "subtitle": "Lakshmi-strømmer og velstands-frekvenser." },
+      "health": { "title": "Helse og vitalitet", "subtitle": "Vitalitet, helbredende toner og kroppslig balanse." },
+      "peace": { "title": "Fred og ro", "subtitle": "Mykne sinnet og roe nervesystemet." },
+      "protection": { "title": "Beskyttelse og kraft", "subtitle": "Grenser, skjold og suveren styrke." },
+      "spiritual": { "title": "Åndelig vekst", "subtitle": "Oppvåkning, linjering og oppoverstrøm." },
+      "general": { "title": "Hellige mantraer", "subtitle": "Grunnleggende stavelser og tidløse lydkoder." }
     }
   },
   "spiritualEducation": {

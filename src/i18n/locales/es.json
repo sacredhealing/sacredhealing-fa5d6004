@@ -2382,6 +2382,18 @@
       "button": "Compartir mantra",
       "brand": "Siddha Quantum Nexus",
       "shcLine": "+{{amount}} SHC"
+    },
+    "categorySections": {
+      "planet": { "title": "Mantras planetarios", "subtitle": "Remedios Navagraha y medicina sónica alineada al tiempo." },
+      "deity": { "title": "Deidad e Ishta Devata", "subtitle": "Nombres divinos y corrientes devocionales diarias." },
+      "intention": { "title": "Intención y afirmación", "subtitle": "Sankalpa y afirmaciones para el campo interior." },
+      "karma": { "title": "Karma y sanación profunda", "subtitle": "Soltar patrones y restaurar profundidad en el cuerpo sutil." },
+      "wealth": { "title": "Riqueza y abundancia", "subtitle": "Corrientes Lakshmi y frecuencias de prosperidad." },
+      "health": { "title": "Salud y vitalidad", "subtitle": "Vitalidad, tonos sanadores y equilibrio corporal." },
+      "peace": { "title": "Paz y calma", "subtitle": "Suavizar la mente y calmar el sistema nervioso." },
+      "protection": { "title": "Protección y poder", "subtitle": "Límites, escudos y fuerza soberana." },
+      "spiritual": { "title": "Crecimiento espiritual", "subtitle": "Despertar, alineación y corriente ascendente." },
+      "general": { "title": "Mantras sagrados", "subtitle": "Sílabas fundacionales y códigos de sonido atemporales." }
     }
   },
   "spiritualEducation": {

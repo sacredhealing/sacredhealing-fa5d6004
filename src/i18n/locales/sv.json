@@ -2930,6 +2930,48 @@
       "love": "Kärlek & Hängivenhet",
       "awakening": "Uppvaknande"
     },
+    "categorySections": {
+      "planet": {
+        "title": "Planetmantran",
+        "subtitle": "Navagraha-botemedel och tidslinje-anpassad ljudmedicin."
+      },
+      "deity": {
+        "title": "Gudom & Ishta Devata",
+        "subtitle": "Gudomliga namn och hängivna strömmar för daglig tillflykt."
+      },
+      "intention": {
+        "title": "Intention & affirmation",
+        "subtitle": "Sankalpa och affirmation för det inre fältet."
+      },
+      "karma": {
+        "title": "Karma & djup healing",
+        "subtitle": "Släpp mönster och återställ djupet i den subtila kroppen."
+      },
+      "wealth": {
+        "title": "Wealth & abundance",
+        "subtitle": "Lakshmi-strömmar och välstånds-frekvenser."
+      },
+      "health": {
+        "title": "Hälsa & vitalitet",
+        "subtitle": "Vitalitet, helande toner och kroppslig balans."
+      },
+      "peace": {
+        "title": "Fred & lugn",
+        "subtitle": "Mjukna sinnet och lugna nervsystemet."
+      },
+      "protection": {
+        "title": "Skydd & kraft",
+        "subtitle": "Gränser, sköldar och suverän styrka."
+      },
+      "spiritual": {
+        "title": "Andlig tillväxt",
+        "subtitle": "Uppvaknande, linjering och uppåtriktad ström."
+      },
+      "general": {
+        "title": "Heliga mantran",
+        "subtitle": "Grundläggande stavelser och tidlösa ljudkoder."
+      }
+    },
     "practice": {
       "title": "Mantrapraktik",
       "repetitions": "{{count}} repetitioner",

@@ -221,23 +221,60 @@ const SQI_CSS = `
     background: radial-gradient(ellipse 60% 40% at 80% 50%, rgba(212,175,55,.05), transparent 70%);
   }
 
-  /* ── Tier section headers ── */
-  .m-tier-section { margin: 0 var(--page-pad) 4px; }
-  .m-tier-header {
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 0 6px;
-    border-bottom: 1px solid rgba(255,255,255,.04);
-    margin-bottom: 10px;
+  /* ── Category accordions (match Meditations MeditationSectionSQI) ── */
+  .m-cat-card {
+    background: var(--glass);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid var(--border);
+    border-radius: var(--r40);
+    margin: 0 var(--page-pad) 12px;
+    overflow: visible;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  .m-cat-card:hover { border-color: rgba(212,175,55,0.15); }
+  .m-cat-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 24px;
     cursor: pointer;
+    border-radius: var(--r40);
+    transition: background .2s;
   }
-  .m-tier-label {
-    font-size: 8px; font-weight: 800; letter-spacing: .5em;
+  .m-cat-header:hover { background: rgba(255,255,255,.02); }
+  .m-cat-micro {
+    font-size: 8px; font-weight: 800; letter-spacing: 0.5em;
     text-transform: uppercase;
+    color: rgba(212,175,55,.45);
+    margin-bottom: 4px;
   }
-  .m-tier-count {
-    font-size: 9px; font-weight: 700; color: rgba(255,255,255,.25);
-    margin-left: auto;
+  .m-cat-title {
+    font-weight: 800; font-size: 15px; letter-spacing: -0.01em;
+    color: rgba(255,255,255,0.9);
   }
+  .m-cat-sub {
+    font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 2px;
+  }
+  .m-cat-chevron {
+    width: 24px; height: 24px;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted);
+    font-size: 12px;
+    transition: transform .3s ease, border-color .3s, color .3s;
+    flex-shrink: 0;
+  }
+  .m-cat-chevron.open {
+    transform: rotate(180deg);
+    border-color: rgba(212,175,55,.3);
+    color: var(--gold);
+  }
+  .m-cat-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(212,175,55,.1), transparent);
+    margin: 4px 0 12px;
+  }
+  .m-cat-grid-wrap { padding: 0 20px 12px; }
 
   /* ── Mantra grid ── */
   .m-mantra-grid {
@@ -1009,23 +1046,29 @@ const Mantras = () => {
           const isCollapsed = collapsedCats.has(ck);
 
           return (
-            <div key={ck} className="m-tier-section">
-              {/* category header — Dhyana playlist style */}
+            <div key={ck} className="m-cat-card">
               <div
-                className="m-tier-header"
-                style={{ borderBottom: `1px solid ${meta.borderColor}` }}
+                className="m-cat-header"
                 onClick={() => setCollapsedCats((prev) => {
                   const next = new Set(prev);
                   next.has(ck) ? next.delete(ck) : next.add(ck);
                   return next;
                 })}
               >
-                <span style={{ fontSize: 16 }}>{meta.emoji}</span>
-                <span className="m-tier-label" style={{ color: meta.color }}>{meta.label}</span>
-                <span className="m-tier-count">{group.length} {group.length === 1 ? 'mantra' : 'mantras'} · {isCollapsed ? '▸' : '▾'}</span>
+                <div>
+                  <div className="m-cat-micro">{t('meditations.sectionMicroLabel')}</div>
+                  <div className="m-cat-title">{t(`mantras.categorySections.${ck}.title`, { defaultValue: meta.label })}</div>
+                  <div className="m-cat-sub">{t(`mantras.categorySections.${ck}.subtitle`)}</div>
+                </div>
+                <div className={`m-cat-chevron${!isCollapsed ? ' open' : ''}`} aria-hidden>
+                  {!isCollapsed ? '▲' : '▼'}
+                </div>
               </div>
 
               {!isCollapsed && (
+                <>
+                  <div className="m-cat-divider" style={{ marginLeft: 20, marginRight: 20 }} />
+                  <div className="m-cat-grid-wrap">
                 <div className="m-mantra-grid">
                   {group.map((m) => {
                     const mp = m.planet_type ? normalizePlanetName(m.planet_type) : null;
@@ -1099,6 +1142,8 @@ const Mantras = () => {
                     );
                   })}
                 </div>
+                  </div>
+                </>
               )}
             </div>
           );

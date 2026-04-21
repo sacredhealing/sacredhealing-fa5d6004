@@ -3000,6 +3000,48 @@
       "love": "Love & Devotion",
       "awakening": "Awakening"
     },
+    "categorySections": {
+      "planet": {
+        "title": "Planetary Mantras",
+        "subtitle": "Navagraha remedies and timeline-aligned sound medicine."
+      },
+      "deity": {
+        "title": "Deity & Ishta Devata",
+        "subtitle": "Divine names and devotional currents for daily refuge."
+      },
+      "intention": {
+        "title": "Intention & Affirmation",
+        "subtitle": "Sankalpa and affirmation paths to shape the inner field."
+      },
+      "karma": {
+        "title": "Karma & Deep Healing",
+        "subtitle": "Release patterns and restore depth in the subtle body."
+      },
+      "wealth": {
+        "title": "Wealth & Abundance",
+        "subtitle": "Lakshmi currents and prosperity-aligned frequencies."
+      },
+      "health": {
+        "title": "Health & Vitality",
+        "subtitle": "Vitality, healing tones, and embodied balance."
+      },
+      "peace": {
+        "title": "Peace & Calm",
+        "subtitle": "Soften the mind and settle the nervous system."
+      },
+      "protection": {
+        "title": "Protection & Power",
+        "subtitle": "Boundaries, shields, and sovereign strength."
+      },
+      "spiritual": {
+        "title": "Spiritual Growth",
+        "subtitle": "Awakening, alignment, and upward current."
+      },
+      "general": {
+        "title": "Sacred Mantras",
+        "subtitle": "Foundational syllables and timeless sound codes."
+      }
+    },
     "practice": {
       "title": "Mantra Practice",
       "repetitions": "{{count}} repetitions",
