@@ -27,6 +27,7 @@ import KoshaReport from '@/components/profile/KoshaReport';
 import HandScanner from '@/components/scanner/HandScanner';
 import { supabase } from '@/integrations/supabase/client';
 import { getTierRank, hasFeatureAccess } from '@/lib/tierAccess';
+import RecordingsList from '@/components/recordings/RecordingsList';
 
 type LifeBookCategory =
   | 'children'
@@ -1105,6 +1106,12 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           </div>
           )}
         </div>
+      </div>
+
+      {/* ── MY RECORDINGS ── */}
+      <div className="section-wrap">
+        <div className="section-label">My Recordings</div>
+        <RecordingsList callType="dm" emptyText="No 1-on-1 call recordings yet. They'll appear here automatically after your sessions." />
       </div>
 
       {/* ── ABUNDANCE & LINEAGE ── */}
