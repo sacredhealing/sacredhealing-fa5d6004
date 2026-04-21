@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
 import { Flame, Flower2, Star, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, Scale, LayoutDashboard, Megaphone, Crown, Pencil, Banknote, Lock, FileText, BookOpen, Hand, Globe, ChevronDown, Play } from 'lucide-react';
@@ -163,53 +163,6 @@ const Profile: React.FC = () => {
     });
     navigate('/');
   };
-
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    let animId: number;
-    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-    resize();
-    window.addEventListener('resize', resize);
-    class Particle {
-      x=0; y=0; size=0; speedX=0; speedY=0; life=0; maxLife=0; growing=true; color='212,175,55';
-      constructor() { this.reset(); }
-      reset() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
-        this.size = Math.random() * 1.5 + 0.3;
-        this.speedX = (Math.random() - 0.5) * 0.3;
-        this.speedY = (Math.random() - 0.5) * 0.3;
-        this.life = Math.random();
-        this.maxLife = Math.random() * 0.005 + 0.001;
-        this.growing = true;
-        const c = ['212,175,55','255,255,255','34,211,238'];
-        this.color = c[Math.floor(Math.random()*3)];
-      }
-      update() {
-        this.x += this.speedX; this.y += this.speedY;
-        if (this.growing) { this.life += this.maxLife; if (this.life>=1) this.growing=false; }
-        else { this.life -= this.maxLife; if (this.life<=0) this.reset(); }
-        if (this.x<0||this.x>canvas.width||this.y<0||this.y>canvas.height) this.reset();
-      }
-      draw() {
-        ctx.save(); ctx.globalAlpha = this.life*0.6;
-        ctx.fillStyle = `rgba(${this.color},1)`;
-        ctx.beginPath(); ctx.arc(this.x,this.y,this.size,0,Math.PI*2); ctx.fill(); ctx.restore();
-      }
-    }
-    const particles = Array.from({ length: 200 }, () => new Particle());
-    const animate = () => {
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      particles.forEach(p => { p.update(); p.draw(); });
-      animId = requestAnimationFrame(animate);
-    };
-    animate();
-    return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', resize); };
-  }, []);
 
   const dashaCycle = vedicReading?.personalCompass?.currentDasha?.period?.split(' ')[0] || '';
 
@@ -694,17 +647,12 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   @keyframes bounce{0%,100%{transform:rotate(45deg) translateY(0)}50%{transform:rotate(45deg) translateY(6px)}}
   @keyframes scanPulse{0%,100%{transform:scale(1);opacity:0.5}50%{transform:scale(1.12);opacity:1}}
   @keyframes siddhiSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-  @keyframes stardustMove{from{background-position:0 0}to{background-position:1000px 1000px}}
   @keyframes syRotate{from{transform:translate(-50%,-50%) rotate(0deg) scale(1)}50%{transform:translate(-50%,-50%) rotate(180deg) scale(1.05)}to{transform:translate(-50%,-50%) rotate(360deg) scale(1)}}
 `}} />
 
-    <div className="profile-wrap" lang={uiLangBase} style={{minHeight:'100vh',background:'#050505',overflowX:'hidden',fontFamily:'Montserrat,sans-serif',paddingBottom:'120px',position:'relative'}}>
+    <div className="profile-wrap" lang={uiLangBase} style={{ background: '#050505', minHeight: '100vh', overflowX: 'hidden', fontFamily: 'Montserrat,sans-serif', paddingBottom: '120px', position: 'relative' }}>
 
-      <div style={{position:'fixed',inset:0,backgroundImage:"url('https://www.transparenttextures.com/patterns/stardust.png')",opacity:0.25,pointerEvents:'none',zIndex:0,animation:'stardustMove 180s linear infinite'}} />
-
-      <canvas ref={canvasRef} style={{position:'fixed',top:0,left:0,width:'100%',height:'100%',pointerEvents:'none',zIndex:0}} />
-
-      <div style={{position:'relative',zIndex:1}}>
+      <div style={{ position: 'relative', zIndex: 1 }}>
 
       {/* ── HERO ── */}
       <section className="hero">
