@@ -266,7 +266,7 @@ Deno.serve(async (req) => {
       return respond({ ok: false, error: "Invalid JSON body" });
     }
 
-    const { action, channel_id, title, description, session_id, source } = body as Record<string, unknown>;
+    const { action, channel_id, title, description, session_id, source, stargate_category, partner_user_id } = body as Record<string, unknown>;
 
     if (action === "create") {
       const effectiveChannelId = source === "feed"
@@ -287,9 +287,10 @@ Deno.serve(async (req) => {
         return respond(permission);
       }
 
-      const recordingMode = Deno.env.get("DAILY_RECORDING")?.trim() || "";
+      // Always cloud-record so we can save to user profile / Stargate course
+      const recordingMode = Deno.env.get("DAILY_RECORDING")?.trim() || "cloud";
       const validModes = ["cloud", "cloud-audio-only", "local", "raw-tracks"];
-      const enableRecording = validModes.includes(recordingMode) ? recordingMode : null;
+      const enableRecording = validModes.includes(recordingMode) ? recordingMode : "cloud";
       const roomSlug = `sh${crypto.randomUUID().replace(/-/g, "").slice(0, 22)}`;
 
       const basePayload = {
