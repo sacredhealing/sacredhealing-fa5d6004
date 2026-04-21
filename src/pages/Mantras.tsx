@@ -27,7 +27,23 @@ import { useAdminRole } from '@/hooks/useAdminRole';
 import { getTierRank } from '@/lib/tierAccess';
 import { useSHCBalance } from '@/hooks/useSHCBalance';
 import { toast } from 'sonner';
-import { Play, Pause, RotateCcw, Sparkles, Lock } from 'lucide-react';
+import {
+  Play,
+  Pause,
+  RotateCcw,
+  Sparkles,
+  Lock,
+  Orbit,
+  Sun,
+  Infinity,
+  Coins,
+  Leaf,
+  Wind,
+  Shield,
+  Gem,
+  CircleDot,
+  type LucideIcon,
+} from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   getMantras, type MantraItem, MANTRA_REPETITIONS
@@ -241,6 +257,27 @@ const SQI_CSS = `
     transition: background .2s;
   }
   .m-cat-header:hover { background: rgba(255,255,255,.02); }
+  .m-cat-header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+    flex: 1;
+  }
+  .m-cat-siddha-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(212, 175, 55, 0.06);
+    border: 1px solid rgba(212, 175, 55, 0.22);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 0 24px rgba(212, 175, 55, 0.08);
+  }
   .m-cat-micro {
     font-size: 8px; font-weight: 800; letter-spacing: 0.5em;
     text-transform: uppercase;
@@ -367,9 +404,14 @@ const SQI_CSS = `
   }
 
   .m-card-planet-icon {
-    width: 32px; height: 32px; border-radius: 10px;
+    width: 36px; height: 36px; border-radius: 12px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 15px; flex-shrink: 0;
+    flex-shrink: 0;
+  }
+  .m-card-planet-glyph {
+    font-size: 17px;
+    font-weight: 650;
+    line-height: 1;
   }
   .m-card-title {
     font-size: 12px; font-weight: 700; letter-spacing: -.01em;
@@ -600,17 +642,31 @@ const SriYantraBg = () => (
 /* ─── Category helpers — maps to DB `category` column ─── */
 type CatKey = 'planet' | 'deity' | 'intention' | 'karma' | 'wealth' | 'health' | 'peace' | 'protection' | 'spiritual' | 'general';
 
-const CAT_META: Record<CatKey, { label: string; emoji: string; color: string; pillBg: string; pillColor: string; borderColor: string }> = {
-  planet:     { label: 'Planetary Mantras',      emoji: '🪐', color: '#D4AF37',             pillBg: 'rgba(212,175,55,.1)',   pillColor: '#D4AF37',            borderColor: 'rgba(212,175,55,.25)' },
-  deity:      { label: 'Deity & Ishta Devata',   emoji: '🕉️', color: '#F5E17A',             pillBg: 'rgba(245,225,122,.1)', pillColor: '#F5E17A',            borderColor: 'rgba(245,225,122,.2)' },
-  intention:  { label: 'Intention & Affirmation',emoji: '✨', color: 'rgba(34,211,238,.9)', pillBg: 'rgba(34,211,238,.08)', pillColor: 'rgba(34,211,238,.85)', borderColor: 'rgba(34,211,238,.2)' },
-  karma:      { label: 'Karma & Deep Healing',   emoji: '🌀', color: 'rgba(167,139,250,.9)',pillBg: 'rgba(167,139,250,.08)',pillColor: 'rgba(167,139,250,.85)',borderColor: 'rgba(167,139,250,.2)' },
-  wealth:     { label: 'Wealth & Abundance',     emoji: '💰', color: '#F5E17A',             pillBg: 'rgba(245,225,122,.1)', pillColor: '#F5E17A',            borderColor: 'rgba(245,225,122,.22)' },
-  health:     { label: 'Health & Vitality',      emoji: '🌿', color: 'rgba(52,211,153,.9)', pillBg: 'rgba(52,211,153,.08)', pillColor: 'rgba(52,211,153,.85)', borderColor: 'rgba(52,211,153,.2)' },
-  peace:      { label: 'Peace & Calm',           emoji: '🕊️', color: 'rgba(147,197,253,.9)',pillBg: 'rgba(147,197,253,.08)',pillColor: 'rgba(147,197,253,.85)',borderColor: 'rgba(147,197,253,.2)' },
-  protection: { label: 'Protection & Power',     emoji: '🛡️', color: 'rgba(251,146,60,.9)', pillBg: 'rgba(251,146,60,.08)', pillColor: 'rgba(251,146,60,.85)', borderColor: 'rgba(251,146,60,.2)' },
-  spiritual:  { label: 'Spiritual Growth',       emoji: '🔮', color: '#D4AF37',             pillBg: 'rgba(212,175,55,.1)',  pillColor: '#D4AF37',             borderColor: 'rgba(212,175,55,.2)' },
-  general:    { label: 'Sacred Mantras',         emoji: '☯️', color: 'rgba(255,255,255,.6)',pillBg: 'rgba(255,255,255,.04)',pillColor: 'rgba(255,255,255,.6)', borderColor: 'rgba(255,255,255,.08)' },
+const CAT_META: Record<CatKey, { label: string; color: string; pillBg: string; pillColor: string; borderColor: string }> = {
+  planet:     { label: 'Planetary Mantras',       color: '#D4AF37',             pillBg: 'rgba(212,175,55,.1)',   pillColor: '#D4AF37',            borderColor: 'rgba(212,175,55,.25)' },
+  deity:      { label: 'Deity & Ishta Devata',    color: '#F5E17A',             pillBg: 'rgba(245,225,122,.1)', pillColor: '#F5E17A',            borderColor: 'rgba(245,225,122,.2)' },
+  intention:  { label: 'Intention & Affirmation', color: 'rgba(34,211,238,.9)', pillBg: 'rgba(34,211,238,.08)', pillColor: 'rgba(34,211,238,.85)', borderColor: 'rgba(34,211,238,.2)' },
+  karma:      { label: 'Karma & Deep Healing',    color: 'rgba(167,139,250,.9)',pillBg: 'rgba(167,139,250,.08)',pillColor: 'rgba(167,139,250,.85)',borderColor: 'rgba(167,139,250,.2)' },
+  wealth:     { label: 'Wealth & Abundance',      color: '#F5E17A',             pillBg: 'rgba(245,225,122,.1)', pillColor: '#F5E17A',            borderColor: 'rgba(245,225,122,.22)' },
+  health:     { label: 'Health & Vitality',       color: 'rgba(52,211,153,.9)', pillBg: 'rgba(52,211,153,.08)', pillColor: 'rgba(52,211,153,.85)', borderColor: 'rgba(52,211,153,.2)' },
+  peace:      { label: 'Peace & Calm',            color: 'rgba(147,197,253,.9)',pillBg: 'rgba(147,197,253,.08)',pillColor: 'rgba(147,197,253,.85)',borderColor: 'rgba(147,197,253,.2)' },
+  protection: { label: 'Protection & Power',    color: 'rgba(251,146,60,.9)', pillBg: 'rgba(251,146,60,.08)', pillColor: 'rgba(251,146,60,.85)', borderColor: 'rgba(251,146,60,.2)' },
+  spiritual:  { label: 'Spiritual Growth',        color: '#D4AF37',             pillBg: 'rgba(212,175,55,.1)',  pillColor: '#D4AF37',             borderColor: 'rgba(212,175,55,.2)' },
+  general:    { label: 'Sacred Mantras',          color: 'rgba(255,255,255,.6)',pillBg: 'rgba(255,255,255,.04)',pillColor: 'rgba(255,255,255,.6)', borderColor: 'rgba(255,255,255,.08)' },
+};
+
+/** Crisp vector icons per category (replaces soft emoji in cards / headers). */
+const CAT_ICONS: Record<CatKey, LucideIcon> = {
+  planet: Orbit,
+  deity: Sun,
+  intention: Sparkles,
+  karma: Infinity,
+  wealth: Coins,
+  health: Leaf,
+  peace: Wind,
+  protection: Shield,
+  spiritual: Gem,
+  general: CircleDot,
 };
 
 const CAT_ORDER: CatKey[] = ['planet', 'deity', 'wealth', 'health', 'karma', 'intention', 'protection', 'peace', 'spiritual', 'general'];
@@ -1043,6 +1099,7 @@ const Mantras = () => {
           const group = categorisedMantras[ck];
           if (group.length === 0) return null;
           const meta = CAT_META[ck];
+          const CatSectionIcon = CAT_ICONS[ck];
           const isCollapsed = collapsedCats.has(ck);
 
           return (
@@ -1055,10 +1112,19 @@ const Mantras = () => {
                   return next;
                 })}
               >
-                <div>
-                  <div className="m-cat-micro">{t('meditations.sectionMicroLabel')}</div>
-                  <div className="m-cat-title">{t(`mantras.categorySections.${ck}.title`, { defaultValue: meta.label })}</div>
-                  <div className="m-cat-sub">{t(`mantras.categorySections.${ck}.subtitle`)}</div>
+                <div className="m-cat-header-left">
+                  <div
+                    className="m-cat-siddha-icon"
+                    style={{ borderColor: meta.borderColor, color: meta.color }}
+                    aria-hidden
+                  >
+                    <CatSectionIcon size={24} strokeWidth={1.65} />
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div className="m-cat-micro">{t('meditations.sectionMicroLabel')}</div>
+                    <div className="m-cat-title">{t(`mantras.categorySections.${ck}.title`, { defaultValue: meta.label })}</div>
+                    <div className="m-cat-sub">{t(`mantras.categorySections.${ck}.subtitle`)}</div>
+                  </div>
                 </div>
                 <div className={`m-cat-chevron${!isCollapsed ? ' open' : ''}`} aria-hidden>
                   {!isCollapsed ? '▲' : '▼'}
@@ -1075,6 +1141,7 @@ const Mantras = () => {
                     const isSel = selectedMantraId === m.id;
                     const isAura = shouldGlowGold(m);
                     const pSym = mp ? PLANET_SYMBOLS[mp] ?? '' : '';
+                    const CardCatIcon = CAT_ICONS[ck];
                     const pct = getSuccessPercent(mp);
                     const cardLocked = (m.is_premium && userRank < 1) && !isAdmin;
 
@@ -1108,12 +1175,16 @@ const Mantras = () => {
                           </div>
                         )}
 
-                        {/* icon: planet symbol or category emoji */}
+                        {/* icon: planet glyph when set, else crisp category vector */}
                         <div
                           className="m-card-planet-icon"
                           style={{ background: `${meta.borderColor}55`, border: `1px solid ${meta.borderColor}` }}
                         >
-                          <span>{pSym || meta.emoji}</span>
+                          {pSym ? (
+                            <span className="m-card-planet-glyph" style={{ color: meta.pillColor }}>{pSym}</span>
+                          ) : (
+                            <CardCatIcon size={19} strokeWidth={1.65} color={meta.pillColor} aria-hidden />
+                          )}
                         </div>
 
                         {/* title */}
