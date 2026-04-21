@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { HiddenWisdomVault } from '@/components/stargate/HiddenWisdomVault';
+import RecordingsList from '@/components/recordings/RecordingsList';
 
 const StargateMembership = () => {
   const navigate = useNavigate();
@@ -288,13 +289,23 @@ const StargateMembership = () => {
         <div className="px-4 py-8">
           <div className="max-w-4xl mx-auto">
             <Tabs defaultValue="membership" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="membership">Medlemskap</TabsTrigger>
+                <TabsTrigger value="healing">Healing Chamber</TabsTrigger>
+                <TabsTrigger value="gita">Bhagavad Gita</TabsTrigger>
                 <TabsTrigger value="wisdom">
                   <BookOpen className="w-4 h-4 mr-2" />
-                  Hidden Wisdom Vault
+                  Wisdom
                 </TabsTrigger>
               </TabsList>
+              <TabsContent value="healing" className="mt-6">
+                <h3 className="text-xl font-semibold mb-4 text-foreground">Healing Chamber Sessions</h3>
+                <RecordingsList callType="stargate" stargateCategory="healing-chamber" emptyText="No Healing Chamber recordings yet. They'll appear after each live session." />
+              </TabsContent>
+              <TabsContent value="gita" className="mt-6">
+                <h3 className="text-xl font-semibold mb-4 text-foreground">Bhagavad Gita Class Sessions</h3>
+                <RecordingsList callType="stargate" stargateCategory="bhagavad-gita" emptyText="No Bhagavad Gita class recordings yet. They'll appear after each live session." />
+              </TabsContent>
               <TabsContent value="membership" className="mt-6">
                 {/* CTA Section */}
                 <Card className="max-w-2xl mx-auto p-8 bg-gradient-to-br from-purple-900/30 via-background to-amber-900/20 border-amber-500/30 text-center">
