@@ -1674,6 +1674,8 @@ const Community = () => {
     const result = await daily.createRoom(channelId, meetingTitle, undefined, allowNonAdmin, "channel", extras);
     if (result) {
       setLiveRoomUrl(result.room_url);
+      setLiveRoomName(result.session?.room_name || null);
+      setLiveSessionId(result.session?.id || null);
       // Live stays in this channel / DM only — do not post to Sangha feed or notify all members.
     }
   };
