@@ -187,6 +187,7 @@ const SiddhaSoundAlchemyOracle = () => {
     try { binOscLRef.current?.stop(); } catch {}
     try { binOscRRef.current?.stop(); } catch {}
     binOscLRef.current = null; binOscRRef.current = null;
+    binGainLRef.current = null; binGainRRef.current = null;
     setBinauralOn(false);
   }, []);
 
