@@ -255,6 +255,7 @@
       "roomCreated": "Live-rom opprettet!",
       "createFailed": "Kunne ikke starte live. Prøv igjen eller kontakt support hvis det fortsetter.",
       "sessionEnded": "Live-økten ble avsluttet",
+      "sessionEndedPrivate": "Økten er avsluttet. Live blir bare i denne chatten — ingenting ble lagt til i Sangha-feeden.",
       "endFailed": "Kunne ikke avslutte live-økten"
     },
     "diary": {

@@ -10,7 +10,8 @@
  * ✅ Feed is ADMIN ONLY - regular members only see Chat
  * ✅ Clicking a channel OPENS a full chat window
  * ✅ Chat window has a BACK ARROW to return to channel list
- * ✅ Go Live: admins (all channels) + Stargate members (Stargate channel); DM video for both chat participants
+ * ✅ Go Live: admins (all channels) + Stargate members (Stargate channel); DM video for both chat participants.
+ *    Live is scoped to that DM or group chat only — no Sangha feed posts or global notifications.
  * ✅ Members panel opens a DM chat (not a black window)
  * ✅ Mobile: shows channel list first, not Feed
  * ✅ All channels start EMPTY (no dummy messages)
@@ -1120,6 +1121,7 @@ const Community = () => {
     const { data, error } = await supabase
       .from("community_posts")
       .select("id, user_id, content, created_at, image_url, audio_url, video_url, pdf_url, post_type, likes_count, comments_count")
+      .not("post_type", "eq", "live")
       .order("created_at", { ascending: false })
       .limit(30);
     if (error) {
@@ -1128,7 +1130,9 @@ const Community = () => {
       setFeedLoading(false);
       return;
     }
-    const posts = (data as (FeedPost & { likes_count?: number; comments_count?: number })[]) || [];
+    const posts = ((data as (FeedPost & { likes_count?: number; comments_count?: number })[]) || []).filter(
+      (p) => p.post_type !== "live"
+    );
     const withLiked: FeedPost[] = posts.map((p) => ({
       ...p,
       likes_count: p.likes_count ?? 0,
@@ -1666,29 +1670,7 @@ const Community = () => {
     const result = await daily.createRoom(channelId, meetingTitle, undefined, allowNonAdmin, "channel", extras);
     if (result) {
       setLiveRoomUrl(result.room_url);
-      const adminName = memberNameMap[user.id] || "Admin";
-      try {
-        await supabase.from("community_posts").insert({
-          user_id: user.id,
-          content: `🔴 ${meetingTitle}`,
-          post_type: "live",
-          video_url: result.room_url,
-        } as any);
-        await fetchFeedPosts();
-        supabase.functions.invoke("notify-community", {
-          body: {
-            type: "live",
-            triggeredBy: adminName,
-            channelId,
-            channelName,
-            title: `🔴 ${adminName} is LIVE — ${meetingTitle}`,
-            body: "A live session just started. Tap to join now.",
-            link: "/community",
-          },
-        });
-      } catch (err) {
-        console.error("Failed to create live feed post:", err);
-      }
+      // Live stays in this channel / DM only — do not post to Sangha feed or notify all members.
     }
   };
 
@@ -1704,37 +1686,10 @@ const Community = () => {
   const confirmGoLive = async () => {
     if (!goLiveChannelId || !user) return;
     if (goLiveChannelId === "feed") {
-      // Feed go-live uses the same flow but with source=feed
       setShowGoLiveDialog(false);
-      const meetingTitle = goLiveTitle.trim() || "Live from Divine Sangha";
-      const result = await daily.createRoom("feed", meetingTitle, undefined, false, "feed");
-      if (result) {
-        setLiveRoomUrl(result.room_url);
-        const adminName = memberNameMap[user.id] || "Admin";
-        try {
-          await supabase.from("community_posts").insert({
-            user_id: user.id,
-            content: `🔴 ${meetingTitle}`,
-            post_type: "live",
-            video_url: result.room_url,
-          } as any);
-          await fetchFeedPosts();
-          supabase.functions.invoke("notify-community", {
-            body: {
-              type: "live",
-              triggeredBy: adminName,
-              title: `🔴 ${adminName} is LIVE — ${meetingTitle}`,
-              body: "A live transmission has started.",
-              link: "/community",
-            },
-          });
-        } catch (err) {
-          console.error("Failed to create live feed post:", err);
-        }
-      }
-    } else {
-      await handleGoLiveForChannel(goLiveChannelId, goLiveChannelName, goLiveTitle);
+      return;
     }
+    await handleGoLiveForChannel(goLiveChannelId, goLiveChannelName, goLiveTitle);
     setShowGoLiveDialog(false);
   };
 
@@ -1767,7 +1722,6 @@ const Community = () => {
       await daily.endSession(daily.activeSession.id);
       setLiveRoomUrl(null);
       await fetchFeedPosts();
-      toast.success("Session ended. Recording will appear in feed when processed.");
     }
   };
 
@@ -2485,31 +2439,6 @@ const Community = () => {
                     {feedLoading ? "Posting..." : "Post"}
                   </button>
                 </div>
-                <button
-                  onClick={() => {
-                    setGoLiveChannelId("feed");
-                    setGoLiveChannelName("Divine Sangha");
-                    setGoLiveTitle("");
-                    setShowGoLiveDialog(true);
-                  }}
-                  disabled={daily.isCreating}
-                  style={{
-                    marginTop: 10,
-                    padding: "6px 12px",
-                    borderRadius: 999,
-                    border: "1px solid rgba(212,175,55,.35)",
-                    background: "rgba(5,5,5,.9)",
-                    color: "#D4AF37",
-                    fontSize: 10,
-                    fontWeight: 700,
-                    letterSpacing: "0.18em",
-                    textTransform: "uppercase",
-                    cursor: daily.isCreating ? "default" : "pointer",
-                    opacity: daily.isCreating ? 0.5 : 1,
-                  }}
-                >
-                  {daily.isCreating ? "⏳ Creating Live..." : "🔴 Go Live via Divine Sangha"}
-                </button>
               </div>
               )}
 

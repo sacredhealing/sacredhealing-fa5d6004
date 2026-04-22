@@ -462,6 +462,7 @@
       "roomCreated": "¡Sala en vivo creada!",
       "createFailed": "No se pudo iniciar el directo. Inténtalo de nuevo o contacta con soporte si continúa.",
       "sessionEnded": "Sesión en vivo finalizada",
+      "sessionEndedPrivate": "Sesión finalizada. El directo permanece solo en este chat — no se publicó en el feed de la Sangha.",
       "endFailed": "No se pudo finalizar la sesión en vivo"
     },
     "diary": {

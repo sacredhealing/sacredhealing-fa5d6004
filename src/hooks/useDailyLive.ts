@@ -131,7 +131,7 @@ export function useDailyLive() {
         return;
       }
       setActiveSession(null);
-      toast.success(t('community.goLive.sessionEnded'));
+      toast.success(t('community.goLive.sessionEndedPrivate'));
     } catch {
       toast.error(t('community.goLive.endFailed'));
     }

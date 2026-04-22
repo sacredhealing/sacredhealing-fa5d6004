@@ -386,6 +386,7 @@
       "roomCreated": "Live-rummet skapades!",
       "createFailed": "Kunde inte starta live. Försök igen eller kontakta support om det fortsätter.",
       "sessionEnded": "Livesessionen avslutades",
+      "sessionEndedPrivate": "Sessionen avslutades. Live finns bara i den här chatten — inget lades till i Sangha-flödet.",
       "endFailed": "Kunde inte avsluta livesessionen"
     },
     "diary": {

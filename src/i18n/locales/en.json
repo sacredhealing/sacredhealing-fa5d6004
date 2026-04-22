@@ -655,6 +655,7 @@
       "roomCreated": "Live room created!",
       "createFailed": "Could not start live. Try again or contact support if this continues.",
       "sessionEnded": "Live session ended",
+      "sessionEndedPrivate": "Session ended. Live stays in this chat only — nothing was added to the Sangha feed.",
       "endFailed": "Could not end the live session"
     },
     "diary": {
