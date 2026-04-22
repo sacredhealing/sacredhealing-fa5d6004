@@ -5,6 +5,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import AnnouncementModal from '@/components/AnnouncementModal';
 
+/** Show at most one announcement; hide after dismiss or 24h from created_at (whichever applies). */
+const VISIBILITY_TTL_MS = 24 * 60 * 60 * 1000;
+const LEGACY_BANNER_DISMISSED_KEY = 'sq_dismissed_ann_v2';
+
 interface AnnouncementRow {
   id: string;
   title: string;
@@ -15,14 +19,15 @@ interface AnnouncementRow {
   link_label?: string | null;
   audio_url: string | null;
   recurring: string | null;
+  starts_at?: string | null;
+  expires_at?: string | null;
+  created_at?: string | null;
   title_sv?: string | null;
   title_no?: string | null;
   title_es?: string | null;
-  /** Some pipelines / edge functions use message_* for localized body */
   message_sv?: string | null;
   message_no?: string | null;
   message_es?: string | null;
-  /** Others use content_* — read both */
   content_sv?: string | null;
   content_no?: string | null;
   content_es?: string | null;
@@ -43,7 +48,8 @@ interface Announcement {
   recurring: string | null;
 }
 
-function resolveLang(raw: string): string {
+function resolveLang(raw: string | undefined | null): string {
+  if (!raw) return 'en';
   const code = raw.toLowerCase().split('-')[0];
   if (['en', 'sv', 'no', 'es'].includes(code)) return code;
   if (code === 'nb' || code === 'nn') return 'no';
@@ -93,62 +99,102 @@ function localizeAnnouncement(row: AnnouncementRow, lang: string): Announcement 
   };
 }
 
-function getLocalDismissed(): Set<string> {
+/** Merged dismiss set: legacy banner key + popup key + optional prune of very old ids */
+function getLocalDismissedIdSet(): Set<string> {
+  const out = new Set<string>();
   try {
-    const dismissed = JSON.parse(localStorage.getItem('dismissed_announcements') || '[]');
-    return new Set(dismissed);
+    const a = JSON.parse(localStorage.getItem('dismissed_announcements') || '[]');
+    if (Array.isArray(a)) a.forEach((id: string) => out.add(id));
   } catch {
-    return new Set();
+    /* ignore */
   }
+  try {
+    const b = JSON.parse(localStorage.getItem(LEGACY_BANNER_DISMISSED_KEY) || '[]');
+    if (Array.isArray(b)) b.forEach((id: string) => out.add(id));
+  } catch {
+    /* ignore */
+  }
+  return out;
 }
 
 function addLocalDismissed(id: string) {
   try {
     const dismissed = JSON.parse(localStorage.getItem('dismissed_announcements') || '[]');
-    if (!dismissed.includes(id)) {
-      dismissed.push(id);
-      localStorage.setItem('dismissed_announcements', JSON.stringify(dismissed));
+    const list = Array.isArray(dismissed) ? dismissed : [];
+    if (!list.includes(id)) {
+      list.push(id);
+      const trimmed = list.slice(-40);
+      localStorage.setItem('dismissed_announcements', JSON.stringify(trimmed));
     }
   } catch {
-    // ignore
+    /* ignore */
   }
 }
 
 export const AnnouncementPopup: React.FC = () => {
   const { user } = useAuth();
-  const { profile } = useProfile();
+  const { profile, isLoading: profileLoading } = useProfile();
   const { i18n } = useTranslation();
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
-  /** Profile language drives copy; fall back to active i18n locale so UI stays in sync */
-  const lang = resolveLang(profile?.preferred_language || i18n.language || 'en');
+  /**
+   * Logged-in: profile.preferred_language first (DB), then UI locale.
+   * Guest: UI locale only.
+   */
+  const lang = resolveLang(user?.id ? profile?.preferred_language || i18n.language : i18n.language);
 
   const fetchAnnouncement = useCallback(async () => {
-    const { data: announcements, error } = await supabase
+    if (user?.id && profileLoading) {
+      return;
+    }
+
+    const now = new Date();
+    const cutoffIso = new Date(now.getTime() - VISIBILITY_TTL_MS).toISOString();
+
+    const { data: row, error } = await supabase
       .from('announcements')
       .select('*')
       .eq('is_active', true)
-      .lte('starts_at', new Date().toISOString())
-      .order('created_at', { ascending: false });
+      .lte('starts_at', now.toISOString())
+      .gte('created_at', cutoffIso)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    if (error || !announcements?.length) return;
+    if (error || !row) {
+      setAnnouncement(null);
+      setIsVisible(false);
+      return;
+    }
 
-    const now = new Date();
-    const validAnnouncements = announcements.filter((a: any) => {
-      if (a.expires_at && new Date(a.expires_at) < now) return false;
-      if (a.recurring === 'weekly') {
-        const startDay = new Date(a.starts_at).getDay();
-        return startDay === now.getDay();
+    const ann = row as AnnouncementRow;
+
+    if (ann.expires_at && new Date(ann.expires_at) < now) {
+      setAnnouncement(null);
+      setIsVisible(false);
+      return;
+    }
+
+    if (ann.recurring === 'weekly' && ann.starts_at) {
+      const startDay = new Date(ann.starts_at).getDay();
+      if (startDay !== now.getDay()) {
+        setAnnouncement(null);
+        setIsVisible(false);
+        return;
       }
-      return true;
-    });
+    }
 
-    if (!validAnnouncements.length) return;
+    const createdAt = ann.created_at ? new Date(ann.created_at).getTime() : 0;
+    if (createdAt && now.getTime() - createdAt > VISIBILITY_TTL_MS) {
+      setAnnouncement(null);
+      setIsVisible(false);
+      return;
+    }
 
-    const dismissedIds = getLocalDismissed();
+    const dismissedIds = getLocalDismissedIdSet();
 
-    if (user) {
+    if (user?.id) {
       const { data: dismissals } = await supabase
         .from('announcement_dismissals')
         .select('announcement_id')
@@ -157,20 +203,34 @@ export const AnnouncementPopup: React.FC = () => {
       dismissals?.forEach((d) => dismissedIds.add(d.announcement_id));
     }
 
-    const unread = validAnnouncements.find((a: any) => !dismissedIds.has(a.id));
-
-    if (unread) {
-      const localized = localizeAnnouncement(unread as AnnouncementRow, lang);
-      setAnnouncement(localized);
-      setIsVisible(true);
-    } else {
+    if (dismissedIds.has(ann.id)) {
       setAnnouncement(null);
       setIsVisible(false);
+      return;
     }
-  }, [user, lang]);
+
+    const localized = localizeAnnouncement(ann, lang);
+    setAnnouncement(localized);
+    setIsVisible(true);
+  }, [user?.id, profileLoading, lang]);
 
   useEffect(() => {
-    fetchAnnouncement();
+    void fetchAnnouncement();
+  }, [fetchAnnouncement]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('announcement-popup-realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'announcements' }, () => {
+        void fetchAnnouncement();
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'announcements' }, () => {
+        void fetchAnnouncement();
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [fetchAnnouncement]);
 
   const handleDismiss = async () => {
