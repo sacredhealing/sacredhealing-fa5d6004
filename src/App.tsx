@@ -402,6 +402,14 @@ function App() {
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
 
+    const host = window.location.hostname;
+    const swPollingDisabled =
+      host.includes("id-preview--") ||
+      host.includes("lovableproject.com") ||
+      host.endsWith(".lovable.app") ||
+      host === "lovable.app";
+    if (swPollingDisabled) return;
+
     const checkForNewWorker = () => {
       void navigator.serviceWorker.getRegistration().then((reg) => {
         if (reg) void reg.update();
@@ -409,7 +417,8 @@ function App() {
     };
 
     // PWA / mobile often never called update(); stale SW = stale Quantum Apothecary chunks.
-    const intervalId = window.setInterval(checkForNewWorker, 3 * 60 * 1000);
+    // 15 min: frequent polling + reload-on-update caused visible loops on long sessions.
+    const intervalId = window.setInterval(checkForNewWorker, 15 * 60 * 1000);
     const onVisible = () => {
       if (document.visibilityState === "visible") checkForNewWorker();
     };
@@ -417,19 +426,7 @@ function App() {
     window.addEventListener("focus", checkForNewWorker);
     window.addEventListener("pageshow", checkForNewWorker);
 
-    navigator.serviceWorker.getRegistrations().then((registrations) => {
-      registrations.forEach((reg) => {
-        reg.addEventListener("updatefound", () => {
-          const newWorker = reg.installing;
-          if (!newWorker) return;
-          newWorker.addEventListener("statechange", () => {
-            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-              window.location.reload();
-            }
-          });
-        });
-      });
-    });
+    // Reload is handled once in main.tsx (debounced controllerchange) — avoid duplicate handlers.
 
     checkForNewWorker();
 
