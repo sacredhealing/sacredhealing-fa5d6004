@@ -356,12 +356,16 @@ Format with bold headings and bullet points. Keep each section 2-3 sentences. Be
   /* ── cleanup ── */
   useEffect(() => {
     return () => {
-      cancelAnimationFrame(animRef.current);
+      try { cancelAnimationFrame(animRef.current); } catch {}
       try { sourceRef.current?.stop(); } catch {}
       try { solOscRef.current?.stop(); } catch {}
       try { binOscLRef.current?.stop(); } catch {}
       try { binOscRRef.current?.stop(); } catch {}
-      audioCtxRef.current?.close();
+      try {
+        const ctx = audioCtxRef.current;
+        if (ctx && ctx.state !== "closed") ctx.close().catch(() => {});
+      } catch {}
+      audioCtxRef.current = null;
     };
   }, []);
 
