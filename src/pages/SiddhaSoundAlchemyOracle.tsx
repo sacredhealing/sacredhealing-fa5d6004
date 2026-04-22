@@ -358,7 +358,7 @@ Format with bold headings and bullet points. Keep each section 2-3 sentences. Be
   /* ── gates ── */
   if (adminLoading || accessLoading) {
     return (
-      <div className="min-h-screen bg-[#050505] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#050505] text-white/[0.92] flex items-center justify-center">
         <Loader2 className="w-6 h-6 animate-spin text-[#D4AF37]" />
       </div>
     );
@@ -369,15 +369,15 @@ Format with bold headings and bullet points. Keep each section 2-3 sentences. Be
 
   if (!canAccess) {
     return (
-      <div className="min-h-screen bg-[#050505] text-white flex flex-col">
+      <div className="min-h-screen bg-[#050505] text-white/[0.92] flex flex-col">
         <div className="max-w-4xl mx-auto px-6 py-10 w-full">
-          <button type="button" onClick={handleBack} className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-white/60 hover:text-[#D4AF37] mb-8">
+          <button type="button" onClick={handleBack} className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-white/45 hover:text-[#D4AF37] mb-8">
             <ArrowLeft className="w-4 h-4" /> Back to Creative Soul Store
           </button>
           <div className="rounded-3xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 px-6 py-10 text-center">
             <Sparkles className="w-8 h-8 text-[#D4AF37] mx-auto mb-4" />
             <p className="text-sm font-semibold tracking-[0.18em] uppercase text-[#D4AF37] mb-2">Access Required</p>
-            <p className="text-sm text-white/70 mb-6 max-w-md mx-auto">The Siddha Sound Alchemy Oracle requires a purchase or admin access. Visit the Creative Soul Store to unlock this sacred tool.</p>
+            <p className="text-sm text-white/[0.92] leading-[1.6] mb-6 max-w-md mx-auto">The Siddha Sound Alchemy Oracle requires a purchase or admin access. Visit the Creative Soul Store to unlock this sacred tool.</p>
             <button onClick={handleBack} className="px-6 py-2 rounded-full bg-[#D4AF37] text-black text-xs font-bold uppercase tracking-wider hover:bg-[#f0d26a] transition-colors">
               Open Store
             </button>
@@ -389,7 +389,7 @@ Format with bold headings and bullet points. Keep each section 2-3 sentences. Be
 
   /* ── MAIN UI ── */
   return (
-    <div className="min-h-screen bg-[#050505] text-white relative overflow-hidden">
+    <div className="min-h-screen bg-[#050505] text-white/[0.92] relative overflow-hidden">
       {/* ambient glows */}
       <div className="pointer-events-none absolute inset-0 opacity-60">
         <div className="absolute -top-40 -left-40 w-80 h-80 rounded-full bg-[#3a1510] blur-[120px]" />
@@ -399,7 +399,7 @@ Format with bold headings and bullet points. Keep each section 2-3 sentences. Be
       <div className="relative max-w-6xl mx-auto px-4 py-6 space-y-6">
         {/* header */}
         <div className="flex items-center gap-3">
-          <button type="button" onClick={handleBack} className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-white/60 hover:text-[#D4AF37]">
+          <button type="button" onClick={handleBack} className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-white/45 hover:text-[#D4AF37]">
             <ArrowLeft className="w-4 h-4" /> Back
           </button>
           <div className="ml-auto inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/40 bg-black/60 px-3 py-1 text-[10px] font-bold tracking-[0.26em] uppercase text-[#D4AF37]">
@@ -417,7 +417,7 @@ Format with bold headings and bullet points. Keep each section 2-3 sentences. Be
               <Waves className="w-4 h-4 text-[#D4AF37]" />
               <div>
                 <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Scalar Wave Transmissions</span>
-                <span className="ml-3 text-[9px] text-white/40 uppercase tracking-wider">
+                <span className="ml-3 text-[9px] text-white/45 uppercase tracking-wider">
                   {activeScalars.length > 0 ? `${activeScalars.length} active` : "none active"}
                 </span>
               </div>
@@ -432,12 +432,12 @@ Format with bold headings and bullet points. Keep each section 2-3 sentences. Be
                 </div>
               )}
             </div>
-            <span className="text-white/40 text-xs">{scalarExpanded ? "▲" : "▼"}</span>
+            <span className="text-white/55 text-xs">{scalarExpanded ? "▲" : "▼"}</span>
           </button>
 
           {scalarExpanded && (
             <div className="border-t border-[#D4AF37]/10 px-5 pb-5 pt-4 space-y-4">
-              <p className="text-[10px] text-white/40 leading-relaxed max-w-2xl">
+              <p className="text-[11px] text-white/[0.65] leading-[1.6] max-w-2xl">
                 Not frequencies — living consciousness fields. Select up to 3. The audio becomes a carrier vessel consecrated by the spirit of the master, place, or plant deva. All invocations are woven into the Gemini analysis and imprinted into the exported file.
               </p>
 
@@ -446,11 +446,11 @@ Format with bold headings and bullet points. Keep each section 2-3 sentences. Be
                 {(Object.keys(CAT_LABELS) as ScalarCategory[]).map(tab => (
                   <button key={tab} onClick={() => setScalarTab(tab)}
                     className={`px-3 py-1.5 rounded-xl text-[9px] uppercase tracking-wider border transition-all
-                      ${scalarTab === tab ? "bg-[#D4AF37]/15 border-[#D4AF37]/50 text-[#D4AF37]" : "bg-white/5 border-white/10 text-white/50 hover:text-white/80"}`}>
+                      ${scalarTab === tab ? "bg-[#D4AF37]/15 border-[#D4AF37]/50 text-[#D4AF37]" : "bg-white/5 border-white/10 text-white/45 hover:text-white/[0.92]"}`}>
                     {CAT_LABELS[tab]}
                   </button>
                 ))}
-                <span className="ml-auto text-[9px] text-white/30 self-center">{activeScalars.length}/3 selected</span>
+                <span className="ml-auto text-[9px] text-white/45 self-center">{activeScalars.length}/3 selected</span>
               </div>
 
               {/* wave options */}
@@ -462,15 +462,15 @@ Format with bold headings and bullet points. Keep each section 2-3 sentences. Be
                     <button key={wave.id} onClick={() => !maxed && toggleScalar(wave)} disabled={maxed}
                       className={`text-left p-3 rounded-xl border transition-all
                         ${active  ? "border-[#D4AF37]/60 bg-[#D4AF37]/10 text-[#D4AF37]" :
-                          maxed   ? "border-white/5 text-white/25 cursor-not-allowed" :
-                                    "border-white/5 text-white/60 hover:border-white/20 hover:text-white/80"}`}
+                          maxed   ? "border-white/5 text-white/35 cursor-not-allowed" :
+                                    "border-white/5 text-white/[0.92] hover:border-white/20 hover:text-white"}`}
                       style={active ? { boxShadow: "0 0 18px rgba(212,175,55,0.15)" } : {}}>
                       <div className="flex items-start gap-2">
                         <span className="text-base leading-none mt-0.5">{wave.icon}</span>
                         <div className="min-w-0">
                           <div className="text-[11px] font-bold truncate">{wave.name}</div>
-                          <div className="text-[9px] mt-0.5 opacity-60 truncate">{wave.field}</div>
-                          <div className="text-[9px] mt-1 opacity-40 line-clamp-2 leading-relaxed">{wave.nature}</div>
+                          <div className={`text-[9px] mt-0.5 truncate ${active ? "text-[#D4AF37]/80" : "text-white/55"}`}>{wave.field}</div>
+                          <div className={`text-[9px] mt-1 line-clamp-2 leading-[1.6] ${active ? "text-[#D4AF37]/70" : "text-white/45"}`}>{wave.nature}</div>
                         </div>
                         {active && <Sparkles size={10} className="shrink-0 mt-0.5" />}
                       </div>
@@ -487,8 +487,8 @@ Format with bold headings and bullet points. Keep each section 2-3 sentences. Be
           <div onClick={() => fileInputRef.current?.click()}
             className="cursor-pointer border-2 border-dashed border-[#D4AF37]/30 hover:border-[#D4AF37]/60 rounded-3xl p-16 text-center transition-colors bg-black/40 backdrop-blur-xl">
             <Upload className="w-10 h-10 mx-auto mb-4 text-[#D4AF37]/60" />
-            <p className="text-sm text-white/60 uppercase tracking-[0.18em]">Drop or click to upload audio</p>
-            <p className="text-xs text-white/40 mt-2">WAV, MP3, FLAC, OGG — any format</p>
+            <p className="text-sm text-white/[0.92] uppercase tracking-[0.18em]">Drop or click to upload audio</p>
+            <p className="text-xs text-white/45 mt-2 leading-[1.6]">WAV, MP3, FLAC, OGG — any format</p>
             <input ref={fileInputRef} type="file" accept="audio/*" className="hidden"
               onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); }} />
           </div>
@@ -503,20 +503,20 @@ Format with bold headings and bullet points. Keep each section 2-3 sentences. Be
                   ) : (
                     <button onClick={pause} className="p-2 rounded-full bg-[#D4AF37] text-black hover:bg-[#f0d26a]"><Pause className="w-5 h-5" /></button>
                   )}
-                  <button onClick={stop} className="p-2 rounded-full border border-white/20 text-white/60 hover:text-white"><Square className="w-5 h-5" /></button>
+                  <button onClick={stop} className="p-2 rounded-full border border-white/20 text-white/45 hover:text-white/[0.92]"><Square className="w-5 h-5" /></button>
                 </div>
                 <div className="flex-1">
                   <div className="h-2 rounded-full bg-white/10 overflow-hidden">
                     <div className="h-full bg-gradient-to-r from-[#D4AF37] to-[#f0d26a] transition-all"
                       style={{ width: duration ? `${(currentTime/duration)*100}%` : "0%" }} />
                   </div>
-                  <div className="flex justify-between mt-1 text-[10px] text-white/40">
+                  <div className="flex justify-between mt-1 text-[10px] text-white/45">
                     <span>{fmt(currentTime)}</span><span>{fmt(duration)}</span>
                   </div>
                 </div>
-                <p className="text-xs text-white/50 truncate max-w-[200px]">{file.name}</p>
+                <p className="text-xs text-white/[0.92] truncate max-w-[200px]">{file.name}</p>
                 <button onClick={() => { stop(); stopSolfeggio(); stopBinaural(); setFile(null); bufferRef.current = null; setAnalysisText(""); setActiveScalars([]); }}
-                  className="text-[10px] uppercase tracking-wider text-white/40 hover:text-red-400">Replace</button>
+                  className="text-[10px] uppercase tracking-wider text-white/45 hover:text-red-400">Replace</button>
               </div>
             </div>
 
@@ -527,22 +527,22 @@ Format with bold headings and bullet points. Keep each section 2-3 sentences. Be
                 <div className="flex items-center justify-between">
                   <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Healing Hz Overlay</h3>
                   <button onClick={solfeggioOn ? stopSolfeggio : startSolfeggio}
-                    className={`text-[10px] uppercase tracking-wider px-3 py-1 rounded-full border transition-colors ${solfeggioOn ? "border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/10" : "border-white/20 text-white/50 hover:text-white"}`}>
+                    className={`text-[10px] uppercase tracking-wider px-3 py-1 rounded-full border transition-colors ${solfeggioOn ? "border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/10" : "border-white/20 text-white/45 hover:text-white/[0.92]"}`}>
                     {solfeggioOn ? "ON" : "OFF"}
                   </button>
                 </div>
                 <div className="grid grid-cols-2 gap-1.5">
                   {SOLFEGGIO_PRESETS.map(p => (
                     <button key={p.hz} onClick={() => { setSolfeggioHz(p.hz); if (!solfeggioOn) startSolfeggio(); }}
-                      className={`text-left text-[10px] rounded-lg px-2 py-1.5 border transition-colors ${solfeggioHz === p.hz ? "border-[#D4AF37]/50 bg-[#D4AF37]/10 text-[#D4AF37]" : "border-white/5 text-white/50 hover:text-white/80 hover:border-white/20"}`}>
+                      className={`text-left text-[10px] rounded-lg px-2 py-1.5 border transition-colors ${solfeggioHz === p.hz ? "border-[#D4AF37]/50 bg-[#D4AF37]/10 text-[#D4AF37]" : "border-white/5 text-white/45 hover:text-white/[0.92] hover:border-white/20"}`}>
                       {p.label}
                     </button>
                   ))}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Volume2 className="w-3 h-3 text-white/40" />
+                  <Volume2 className="w-3 h-3 text-white/45" />
                   <input type="range" min="0" max="0.5" step="0.01" value={solfeggioVol} onChange={e => setSolfeggioVol(Number(e.target.value))} className="flex-1 accent-[#D4AF37]" />
-                  <span className="text-[10px] text-white/40 w-8 text-right">{Math.round(solfeggioVol*100)}%</span>
+                  <span className="text-[10px] text-white/[0.92] w-8 text-right">{Math.round(solfeggioVol*100)}%</span>
                 </div>
               </div>
 
@@ -551,22 +551,22 @@ Format with bold headings and bullet points. Keep each section 2-3 sentences. Be
                 <div className="flex items-center justify-between">
                   <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Binaural Beat</h3>
                   <button onClick={binauralOn ? stopBinaural : startBinaural}
-                    className={`text-[10px] uppercase tracking-wider px-3 py-1 rounded-full border transition-colors ${binauralOn ? "border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/10" : "border-white/20 text-white/50 hover:text-white"}`}>
+                    className={`text-[10px] uppercase tracking-wider px-3 py-1 rounded-full border transition-colors ${binauralOn ? "border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/10" : "border-white/20 text-white/45 hover:text-white/[0.92]"}`}>
                     {binauralOn ? "ON" : "OFF"}
                   </button>
                 </div>
                 <div className="space-y-1.5">
                   {BINAURAL_PRESETS.map(p => (
                     <button key={p.beat} onClick={() => { setBinauralBeat(p.beat); if (!binauralOn) startBinaural(); }}
-                      className={`w-full text-left text-[10px] rounded-lg px-2 py-1.5 border transition-colors ${binauralBeat === p.beat ? "border-[#D4AF37]/50 bg-[#D4AF37]/10 text-[#D4AF37]" : "border-white/5 text-white/50 hover:text-white/80 hover:border-white/20"}`}>
+                      className={`w-full text-left text-[10px] rounded-lg px-2 py-1.5 border transition-colors ${binauralBeat === p.beat ? "border-[#D4AF37]/50 bg-[#D4AF37]/10 text-[#D4AF37]" : "border-white/5 text-white/45 hover:text-white/[0.92] hover:border-white/20"}`}>
                       {p.label}
                     </button>
                   ))}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Volume2 className="w-3 h-3 text-white/40" />
+                  <Volume2 className="w-3 h-3 text-white/45" />
                   <input type="range" min="0" max="0.5" step="0.01" value={binauralVol} onChange={e => setBinauralVol(Number(e.target.value))} className="flex-1 accent-[#D4AF37]" />
-                  <span className="text-[10px] text-white/40 w-8 text-right">{Math.round(binauralVol*100)}%</span>
+                  <span className="text-[10px] text-white/[0.92] w-8 text-right">{Math.round(binauralVol*100)}%</span>
                 </div>
               </div>
 
@@ -576,16 +576,16 @@ Format with bold headings and bullet points. Keep each section 2-3 sentences. Be
                 <div className="space-y-1.5">
                   {EQ_PRESETS.map(p => (
                     <button key={p.name} onClick={() => setEqPreset(p)}
-                      className={`w-full text-left text-[10px] rounded-lg px-2 py-1.5 border transition-colors ${eqPreset?.name === p.name ? "border-[#D4AF37]/50 bg-[#D4AF37]/10 text-[#D4AF37]" : "border-white/5 text-white/50 hover:text-white/80 hover:border-white/20"}`}>
+                      className={`w-full text-left text-[10px] rounded-lg px-2 py-1.5 border transition-colors ${eqPreset?.name === p.name ? "border-[#D4AF37]/50 bg-[#D4AF37]/10 text-[#D4AF37]" : "border-white/5 text-white/45 hover:text-white/[0.92] hover:border-white/20"}`}>
                       {p.name}
-                      <span className="ml-2 text-white/30">L{p.low>0?"+":""}{p.low} M{p.mid>0?"+":""}{p.mid} H{p.high>0?"+":""}{p.high}</span>
+                      <span className="ml-2 text-white/45">L{p.low>0?"+":""}{p.low} M{p.mid>0?"+":""}{p.mid} H{p.high>0?"+":""}{p.high}</span>
                     </button>
                   ))}
                 </div>
                 <div className="pt-2 space-y-2">
                   {/* Initiate Siddha Scan (was: AI Oracle Scan) */}
                   <button onClick={analyzeTrack} disabled={isAnalyzing}
-                    className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] uppercase tracking-[0.18em] text-white/70 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 transition-colors disabled:opacity-50">
+                    className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] uppercase tracking-[0.18em] text-white/[0.92] hover:text-[#D4AF37] hover:border-[#D4AF37]/30 transition-colors disabled:opacity-50">
                     {isAnalyzing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
                     {isAnalyzing
                       ? activeScalars.length > 0 ? `Channeling through ${activeScalars[0].name}…` : "Scanning…"
@@ -609,14 +609,14 @@ Format with bold headings and bullet points. Keep each section 2-3 sentences. Be
                 {activeScalars.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-4">
                     {activeScalars.map(w => (
-                      <span key={w.id} className="text-[9px] px-2 py-0.5 rounded-full border border-[#D4AF37]/30 text-[#D4AF37]/60"
+                      <span key={w.id} className="text-[9px] px-2 py-0.5 rounded-full border border-[#D4AF37]/30 text-[#D4AF37]"
                         style={{ background: "rgba(212,175,55,0.05)" }}>
                         {w.icon} {w.name} — <em>{w.field}</em>
                       </span>
                     ))}
                   </div>
                 )}
-                <div className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap prose prose-invert prose-sm max-w-none"
+                <div className="text-sm text-white/[0.92] leading-[1.6] whitespace-pre-wrap prose prose-invert prose-sm max-w-none prose-p:text-white/[0.92] prose-strong:text-white"
                   dangerouslySetInnerHTML={{ __html: analysisText.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") }} />
               </div>
             )}
