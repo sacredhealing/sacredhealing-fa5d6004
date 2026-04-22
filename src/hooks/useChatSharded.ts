@@ -145,7 +145,7 @@ export const useChatSharded = (roomId: string | null) => {
           user_id: user.id,
           content: content.trim(),
           message_type: messageType
-        });
+        } as any);
 
       if (error) {
         console.error('Error sending message:', error);

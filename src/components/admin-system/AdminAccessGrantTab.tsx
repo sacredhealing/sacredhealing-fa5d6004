@@ -221,7 +221,7 @@ const AdminAccessGrantTab = () => {
               user_id: selectedUser.user_id,
               has_access: true,
               updated_at: new Date().toISOString(),
-            },
+            } as any,
             { onConflict: 'user_id' }
           );
         if (sriError) {

@@ -87,7 +87,7 @@ export function useAyurvedaAnalysis(): UseAyurvedaAnalysisResult {
         // Update existing
         const { error: updateError } = await supabase
           .from('ayurveda_profiles')
-          .update(sharedPayload)
+          .update(sharedPayload as any)
           .eq('user_id', user.id);
 
         if (updateError) {

@@ -247,7 +247,7 @@ function SQISovereignBotInner() {
             wins: statsRef.current.wins,
             losses: statsRef.current.losses,
             final_portfolio_value: equity,
-          })
+          } as any)
           .eq('id', sid);
       }
       sessionIdRef.current = null;
@@ -260,7 +260,7 @@ function SQISovereignBotInner() {
     setDispBal(balRef.current);
     const { data, error } = await supabase
       .from('bot_sessions')
-      .insert({ user_id: user.id, seed_balance: START_BALANCE })
+      .insert({ user_id: user.id, seed_balance: START_BALANCE } as any)
       .select('id')
       .single();
     if (error) {
@@ -387,7 +387,7 @@ function SQISovereignBotInner() {
               seed_balance: START_BALANCE,
               btc_amount: btcBought,
               fee_usd: fee,
-            })
+            } as any)
             .select('id')
             .single();
           if (insErr) console.error('[SQI] bot_trades BUY', insErr);

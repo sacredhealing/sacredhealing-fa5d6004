@@ -68,7 +68,7 @@ const GuideChat = () => {
 // Helper functions to avoid TypeScript deep instantiation
 async function fetchAdminIds(): Promise<Set<string>> {
   // @ts-ignore - Supabase types cause deep instantiation
-  const result = await supabase.from('profiles').select('user_id').eq('is_admin', true);
+  const result = await supabase.from('user_roles').select('user_id').eq('role', 'admin');
   return new Set((result.data || []).map((p: any) => p.user_id));
 }
 
@@ -256,16 +256,20 @@ const GuideChatView = ({ partnerId, onBack }: { partnerId: string | null; onBack
         }
       } else {
         // User - fetch first admin as the guide
-        // @ts-ignore - Supabase types cause deep instantiation
-        const { data } = await supabase
-          .from('profiles')
-          .select('user_id, full_name, avatar_url')
-          .eq('is_admin', true)
-          .limit(1)
-          .single();
+        const adminIds = await fetchAdminIds();
+        const firstAdminId = Array.from(adminIds)[0];
+        if (firstAdminId) {
+          // @ts-ignore - Supabase types cause deep instantiation
+          const { data } = await supabase
+            .from('profiles')
+            .select('user_id, full_name, avatar_url')
+            .eq('user_id', firstAdminId)
+            .limit(1)
+            .single();
 
-        if (data) {
-          setGuideProfile(data as any);
+          if (data) {
+            setGuideProfile(data as any);
+          }
         }
       }
     };

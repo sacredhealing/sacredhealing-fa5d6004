@@ -401,7 +401,7 @@ const MusicProjectsSection = () => {
     const newValue = !project[field];
     const { error } = await supabase
       .from('admin_projects')
-      .update({ [field]: newValue })
+      .update({ [field]: newValue } as any)
       .eq('id', projectId);
 
     if (error) {
