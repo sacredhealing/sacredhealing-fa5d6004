@@ -1729,6 +1729,8 @@ const Community = () => {
     if (daily.activeSession) {
       await daily.endSession(daily.activeSession.id);
       setLiveRoomUrl(null);
+      setLiveRoomName(null);
+      setLiveSessionId(null);
       await fetchFeedPosts();
     }
   };
