@@ -1713,6 +1713,8 @@ const Community = () => {
     );
     if (result) {
       setDmVideoUrl(result.room_url);
+      setDmVideoRoomName(result.session?.room_name || null);
+      setDmVideoSessionId(result.session?.id || null);
       if (partnerId) {
         await supabase.from("private_messages").insert({
           sender_id: user.id,
