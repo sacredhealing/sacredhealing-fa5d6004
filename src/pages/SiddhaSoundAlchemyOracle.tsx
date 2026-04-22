@@ -203,7 +203,9 @@ const SiddhaSoundAlchemyOracle = () => {
     oscR.connect(gR).connect(merger, 0, 1);
     merger.connect(ctx.destination);
     oscL.start(); oscR.start();
-    binOscLRef.current = oscL; binOscRRef.current = oscR; binGainRef.current = gL;
+    binOscLRef.current = oscL; binOscRRef.current = oscR;
+    binGainLRef.current = gL; binGainRRef.current = gR;
+    binGainRef.current = gL;
     setBinauralOn(true);
   }, [ensureCtx, binauralBeat, binauralVol, stopBinaural]);
 
