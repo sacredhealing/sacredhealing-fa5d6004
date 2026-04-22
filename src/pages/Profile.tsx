@@ -531,7 +531,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   /* Sovereign Halo ring around avatar */
   .avatar-halo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:116px;height:116px;border-radius:50%;z-index:2;pointer-events:none}
   /* Tier badge dot at bottom-right of avatar */
-  .avatar-tier-badge{position:absolute;bottom:2px;right:2px;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;border:2px solid #050505;z-index:3;cursor:default}
+  .avatar-tier-badge{position:absolute;bottom:2px;right:2px;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;border:2px solid #050505;z-index:3;cursor:default}
   /* Name + labels */
   @keyframes goldShimmer{0%{background-position:-200% center}100%{background-position:200% center}}
   .hero-name{
@@ -550,24 +550,24 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
     text-shadow:0 2px 20px rgba(0,0,0,0.55);
     animation:fadeUp 0.8s ease both, goldShimmer 5.5s linear infinite;
   }
-  .tier-status-badge{display:inline-flex;align-items:center;gap:6px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:7px;letter-spacing:0.4em;text-transform:uppercase;margin-bottom:6px;cursor:pointer;transition:opacity 0.2s}
+  .tier-status-badge{display:inline-flex;align-items:center;gap:8px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:12px;letter-spacing:0.32em;text-transform:uppercase;margin-bottom:6px;cursor:pointer;transition:opacity 0.2s}
   .tier-status-badge:hover{opacity:0.8}
   .tier-blueprint-expand{overflow:hidden;transition:max-height 0.35s ease,opacity 0.35s ease}
-  .soul-label{font-family:'Montserrat',sans-serif;font-weight:800;font-size:clamp(5.5px,1.8vw,8px);letter-spacing:clamp(0.15em,0.4vw,0.5em);text-transform:uppercase;color:rgba(212,175,55,0.8);margin-bottom:14px;white-space:nowrap;text-shadow:0 1px 12px rgba(0,0,0,0.9)}
+  .soul-label{font-family:'Montserrat',sans-serif;font-weight:800;font-size:clamp(11px,2.4vw,14px);letter-spacing:clamp(0.12em,0.35vw,0.35em);text-transform:uppercase;color:rgba(212,175,55,0.8);margin-bottom:14px;white-space:nowrap;text-shadow:0 1px 12px rgba(0,0,0,0.9)}
   .soul-label span{color:rgba(255,255,255,0.25);margin:0 8px}
   /* Stats */
   .stats-row{display:flex;gap:12px;flex-wrap:nowrap;justify-content:center;margin-bottom:20px;animation:fadeUp 1.1s ease both;width:100%;max-width:400px;margin-left:auto;margin-right:auto}
   .stat-pill{background:rgba(5,5,5,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:100px;padding:12px 20px;text-align:center;flex:1 1 0;min-width:0;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
-  .stat-value{font-weight:800;font-size:20px;color:#D4AF37;letter-spacing:-0.02em;display:block}
-  .stat-label{font-weight:800;font-size:7px;letter-spacing:0.45em;text-transform:uppercase;color:rgba(255,255,255,0.35);display:block;margin-top:2px}
+  .stat-value{font-weight:800;font-size:26px;color:#D4AF37;letter-spacing:-0.02em;display:block}
+  .stat-label{font-weight:800;font-size:12px;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.35);display:block;margin-top:2px}
   /* About the Nexus block */
   .nexus-block{max-width:480px;margin:0 auto 28px;background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.1);border-radius:20px;padding:22px 24px;backdrop-filter:blur(20px);text-align:left}
-  .nexus-block-label{font-weight:800;font-size:7px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.45);margin-bottom:10px}
-  .nexus-block-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.08rem;color:rgba(255,255,255,0.58);line-height:1.85}
+  .nexus-block-label{font-weight:800;font-size:12px;letter-spacing:0.35em;text-transform:uppercase;color:rgba(212,175,55,0.45);margin-bottom:10px}
+  .nexus-block-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.2rem;color:rgba(255,255,255,0.58);line-height:1.85}
   .nexus-block-text strong{color:rgba(212,175,55,0.6);font-weight:600;font-style:normal}
   /* Sections */
   .section-wrap{max-width:780px;margin:0 auto;padding:32px 24px 0;text-align:center}
-  .section-label{font-family:'Montserrat',sans-serif;font-weight:800;font-size:8px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.5);margin-bottom:32px;display:flex;align-items:center;gap:12px;justify-content:center}
+  .section-label{font-family:'Montserrat',sans-serif;font-weight:800;font-size:13px;letter-spacing:0.38em;text-transform:uppercase;color:rgba(212,175,55,0.5);margin-bottom:32px;display:flex;align-items:center;gap:12px;justify-content:center}
   .section-label::after{content:'';flex:1;height:1px;background:linear-gradient(to right,rgba(212,175,55,0.2),transparent)}
   .glass-card{background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.12);border-radius:24px;padding:32px;backdrop-filter:blur(20px);margin-bottom:16px}
   .tier-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
@@ -576,17 +576,17 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   .tier-card:hover{border-color:rgba(212,175,55,0.25);transform:translateY(-2px)}
   .tier-card.active-tier{border-color:rgba(212,175,55,0.3);background:rgba(212,175,55,0.03)}
   .tier-card.featured{grid-column:1/-1;border-color:rgba(212,175,55,0.25);background:rgba(212,175,55,0.04)}
-  .tier-badge{display:inline-block;font-weight:800;font-size:7px;letter-spacing:0.4em;text-transform:uppercase;color:#050505;background:#D4AF37;padding:4px 12px;border-radius:100px;margin-bottom:10px}
-  .tier-name{font-weight:800;font-size:15px;letter-spacing:0.2em;color:#D4AF37;display:block;margin-bottom:4px}
-  .tier-sub{font-weight:400;font-size:8px;letter-spacing:0.4em;text-transform:uppercase;color:rgba(255,255,255,0.25)}
-  .tier-price{font-family:'Cormorant Garamond',serif;font-weight:300;font-style:italic;font-size:2.2rem;color:white;margin:16px 0 12px;letter-spacing:-0.02em}
+  .tier-badge{display:inline-block;font-weight:800;font-size:11px;letter-spacing:0.32em;text-transform:uppercase;color:#050505;background:#D4AF37;padding:5px 14px;border-radius:100px;margin-bottom:10px}
+  .tier-name{font-weight:800;font-size:18px;letter-spacing:0.2em;color:#D4AF37;display:block;margin-bottom:4px}
+  .tier-sub{font-weight:400;font-size:12px;letter-spacing:0.32em;text-transform:uppercase;color:rgba(255,255,255,0.25)}
+  .tier-price{font-family:'Cormorant Garamond',serif;font-weight:300;font-style:italic;font-size:2.35rem;color:white;margin:16px 0 12px;letter-spacing:-0.02em}
   .tier-price small{font-size:0.45em;color:rgba(255,255,255,0.3);font-style:normal;letter-spacing:0.1em}
   .tier-features{list-style:none;margin-bottom:20px}
-  .tier-features li{font-size:12px;color:rgba(255,255,255,0.45);padding:5px 0;display:flex;align-items:center;gap:10px;line-height:1.5}
-  .tier-features li::before{content:'◈';color:#D4AF37;font-size:8px;flex-shrink:0}
-  .gold-btn{display:block;width:100%;max-width:280px;margin:0 auto;background:#D4AF37;color:#050505;border:none;border-radius:100px;padding:13px 24px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:9px;letter-spacing:0.4em;text-transform:uppercase;cursor:pointer;transition:opacity 0.2s,transform 0.2s;text-align:center}
+  .tier-features li{font-size:15px;color:rgba(255,255,255,0.45);padding:6px 0;display:flex;align-items:center;gap:10px;line-height:1.55}
+  .tier-features li::before{content:'◈';color:#D4AF37;font-size:11px;flex-shrink:0}
+  .gold-btn{display:block;width:100%;max-width:280px;margin:0 auto;background:#D4AF37;color:#050505;border:none;border-radius:100px;padding:14px 26px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:12px;letter-spacing:0.28em;text-transform:uppercase;cursor:pointer;transition:opacity 0.2s,transform 0.2s;text-align:center}
   .gold-btn:hover{opacity:0.85;transform:translateY(-1px)}
-  .ghost-btn{display:block;width:100%;max-width:280px;margin:0 auto;background:transparent;color:rgba(212,175,55,0.6);border:1px solid rgba(212,175,55,0.2);border-radius:100px;padding:12px 24px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:9px;letter-spacing:0.4em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;text-align:center}
+  .ghost-btn{display:block;width:100%;max-width:280px;margin:0 auto;background:transparent;color:rgba(212,175,55,0.6);border:1px solid rgba(212,175,55,0.2);border-radius:100px;padding:13px 26px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:12px;letter-spacing:0.28em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;text-align:center}
   .siddha-quantum-card{position:relative;overflow:visible!important;border-color:rgba(212,175,55,0.35)!important;background:rgba(212,175,55,0.04)!important}
   .sq-aura{position:absolute;inset:0;border-radius:24px;pointer-events:none;z-index:0}
   .sq-aura-1{border:1px solid rgba(212,175,55,0.5);animation:sqPulse 2.5s ease-in-out infinite}
@@ -603,13 +603,13 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   .siddhi-icon-wrap{width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
   .siddhi-icon-wrap.earned{background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.25);box-shadow:0 0 20px rgba(212,175,55,0.1)}
   .siddhi-icon-wrap.locked{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06)}
-  .siddhi-name{font-weight:700;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;display:block;margin-bottom:10px}
+  .siddhi-name{font-weight:700;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;display:block;margin-bottom:10px}
   .siddhi-card.earned .siddhi-name{color:#D4AF37}
   .siddhi-card.locked .siddhi-name{color:rgba(255,255,255,0.2)}
   .siddhi-bar-bg{height:3px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden}
   .siddhi-bar-fill{height:100%;background:#D4AF37;border-radius:3px}
   .vault-idle{text-align:center;padding:20px 0}
-  .vault-idle p{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.05rem;color:rgba(255,255,255,0.35);line-height:1.8;margin-bottom:28px;max-width:460px;margin-left:auto;margin-right:auto}
+  .vault-idle p{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.18rem;color:rgba(255,255,255,0.35);line-height:1.8;margin-bottom:28px;max-width:460px;margin-left:auto;margin-right:auto}
   .vault-scan-ring{width:80px;height:80px;border-radius:50%;border:1px solid rgba(212,175,55,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 28px;animation:scanPulse 3s ease-in-out infinite;position:relative}
   .vault-scan-ring::before{content:'';position:absolute;inset:-8px;border-radius:50%;border:1px solid rgba(212,175,55,0.1)}
   .vault-scan-ring span{font-size:28px}
@@ -617,9 +617,9 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   @media(max-width:520px){.archive-grid{grid-template-columns:1fr}}
   .archive-card{background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.1);border-radius:18px;padding:20px 18px;transition:all 0.3s;cursor:pointer}
   .archive-card:hover{border-color:rgba(212,175,55,0.3);background:rgba(212,175,55,0.03);transform:translateY(-2px)}
-  .archive-title{font-weight:900;font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#D4AF37;display:block;margin-bottom:2px}
-  .archive-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.82rem;color:rgba(255,255,255,0.42);display:block;line-height:1.5}
-  .archive-cta{font-weight:800;font-size:8px;letter-spacing:0.4em;text-transform:uppercase;color:#D4AF37;opacity:0.7}
+  .archive-title{font-weight:900;font-size:14px;letter-spacing:0.2em;text-transform:uppercase;color:#D4AF37;display:block;margin-bottom:2px}
+  .archive-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1rem;color:rgba(255,255,255,0.42);display:block;line-height:1.5}
+  .archive-cta{font-weight:800;font-size:12px;letter-spacing:0.3em;text-transform:uppercase;color:#D4AF37;opacity:0.7}
   .archive-card:hover .archive-cta{opacity:1}
   .abundance-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
   @media(min-width:520px){.abundance-grid{grid-template-columns:repeat(4,1fr)}}
@@ -627,11 +627,11 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   .abundance-card:hover{border-color:rgba(212,175,55,0.3);background:rgba(212,175,55,0.04);transform:translateY(-3px)}
   .abundance-icon-wrap{width:56px;height:56px;border-radius:16px;background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;transition:all 0.25s}
   .abundance-card:hover .abundance-icon-wrap{background:rgba(212,175,55,0.1);border-color:rgba(212,175,55,0.3);box-shadow:0 0 20px rgba(212,175,55,0.1)}
-  .abundance-label{font-weight:900;font-size:7.5px;letter-spacing:0.3em;text-transform:uppercase;color:rgba(212,175,55,0.88)}
+  .abundance-label{font-weight:900;font-size:12px;letter-spacing:0.22em;text-transform:uppercase;color:rgba(212,175,55,0.88)}
   .settings-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
-  .settings-btn{flex:1;min-width:120px;background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.18);border-radius:100px;padding:13px 20px;font-family:'Montserrat',sans-serif;font-weight:900;font-size:8px;letter-spacing:0.35em;text-transform:uppercase;color:rgba(212,175,55,0.9);cursor:pointer;transition:all 0.2s;text-align:center}
+  .settings-btn{flex:1;min-width:128px;background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.18);border-radius:100px;padding:14px 22px;font-family:'Montserrat',sans-serif;font-weight:900;font-size:12px;letter-spacing:0.26em;text-transform:uppercase;color:rgba(212,175,55,0.9);cursor:pointer;transition:all 0.2s;text-align:center}
   .settings-btn:hover{border-color:rgba(212,175,55,0.35);background:rgba(212,175,55,0.05)}
-  .signout-btn{width:100%;background:#D4AF37;border:1px solid rgba(212,175,55,0.9);border-radius:100px;padding:14px 16px;font-family:'Montserrat',sans-serif;font-weight:900;font-size:9px;letter-spacing:0.35em;text-transform:uppercase;color:#050505;cursor:pointer;transition:all 0.2s;margin-top:12px;box-shadow:0 0 24px rgba(212,175,55,0.35)}
+  .signout-btn{width:100%;background:#D4AF37;border:1px solid rgba(212,175,55,0.9);border-radius:100px;padding:15px 18px;font-family:'Montserrat',sans-serif;font-weight:900;font-size:13px;letter-spacing:0.28em;text-transform:uppercase;color:#050505;cursor:pointer;transition:all 0.2s;margin-top:12px;box-shadow:0 0 24px rgba(212,175,55,0.35)}
   .signout-btn:hover{opacity:0.9;transform:translateY(-1px)}
   .lang-selector{background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.12);border-radius:24px;padding:20px 24px;backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
   /* ── KEYFRAMES ── */
@@ -721,7 +721,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                 : '0 0 40px rgba(212,175,55,0.15)',
             }}>
               <AvatarImage src={profile?.avatar_url || undefined} />
-              <AvatarFallback style={{background:'rgba(212,175,55,0.08)',color:'white',fontSize:36}}>
+              <AvatarFallback style={{background:'rgba(212,175,55,0.08)',color:'white',fontSize:40}}>
                 {userName?.charAt(0) || '🧘'}
               </AvatarFallback>
             </Avatar>
@@ -766,9 +766,9 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               onClick={() => setBlueprintOpen(o => !o)}
               style={{color: haloConfig?.color || '#D4AF37'}}
             >
-              <span style={{fontSize:8}}>{haloConfig?.badge}</span>
+              <span style={{fontSize:11}}>{haloConfig?.badge}</span>
               <span>{t('profilePage.tierPrefix')} {tierBlueprintLine}</span>
-              <span style={{fontSize:8,opacity:0.6,transform:blueprintOpen?'rotate(180deg)':'none',display:'inline-block',transition:'transform 0.3s'}}>▾</span>
+              <span style={{fontSize:11,opacity:0.6,transform:blueprintOpen?'rotate(180deg)':'none',display:'inline-block',transition:'transform 0.3s'}}>▾</span>
             </button>
             <div
               className="tier-blueprint-expand"
@@ -810,7 +810,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                 <button
                   type="button"
                   onClick={() => navigate(userRank===1?'/prana-flow':userRank===2?'/siddha-quantum':'/akasha-infinity')}
-                  style={{marginTop:12,display:'block',width:'100%',background:'transparent',color:haloConfig?.color||'#D4AF37',border:`1px solid ${haloConfig?.color||'#D4AF37'}44`,borderRadius:100,padding:'9px 16px',fontFamily:'Montserrat,sans-serif',fontWeight:800,fontSize:8,letterSpacing:'0.35em',textTransform:'uppercase',cursor:'pointer'}}
+                  style={{marginTop:12,display:'block',width:'100%',background:'transparent',color:haloConfig?.color||'#D4AF37',border:`1px solid ${haloConfig?.color||'#D4AF37'}44`,borderRadius:100,padding:'11px 18px',fontFamily:'Montserrat,sans-serif',fontWeight:800,fontSize:12,letterSpacing:'0.28em',textTransform:'uppercase',cursor:'pointer'}}
                 >
                   {t('profilePage.openPortal')}
                 </button>
@@ -875,8 +875,8 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                 border: `1px solid ${userRank === 0 ? 'rgba(212,175,55,0.25)' : 'rgba(255,255,255,0.08)'}`,
                 borderRadius:100, padding:'12px 24px',
                 fontFamily:'Montserrat,sans-serif',
-                fontWeight:800, fontSize:9,
-                letterSpacing:'0.4em', textTransform:'uppercase',
+                fontWeight:800, fontSize:12,
+                letterSpacing:'0.28em', textTransform:'uppercase',
                 cursor:'pointer', transition:'all 0.2s'
               }}
             >
@@ -912,7 +912,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                   : '1px solid rgba(255,255,255,0.1)',
                 borderRadius: 100, padding: '13px 20px',
                 fontFamily: 'Montserrat,sans-serif', fontWeight: 800,
-                fontSize: 9, letterSpacing: '0.38em', textTransform: 'uppercase',
+                fontSize: 12, letterSpacing: '0.28em', textTransform: 'uppercase',
                 cursor: 'pointer', transition: 'all 0.2s'
               }}
             >
@@ -927,7 +927,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             <div style={{position:'relative',zIndex:1}}>
               <div className="tier-badge sq-badge">{t('profilePage.tierSqBadge')}</div>
               <div className="tier-header">
-                <span className="tier-name" style={{fontSize:18,textShadow:'0 0 20px rgba(212,175,55,0.6)'}}>{t('profilePage.tierSiddhaName')}</span>
+                <span className="tier-name" style={{fontSize:21,textShadow:'0 0 20px rgba(212,175,55,0.6)'}}>{t('profilePage.tierSiddhaName')}</span>
                 <div className="tier-sub">{t('profilePage.tierSiddhaSub')}</div>
               </div>
               <div className="tier-price" style={{textShadow:'0 0 30px rgba(212,175,55,0.3)'}}>45€ <small>{t('profilePage.tierPerMo')}</small></div>
@@ -946,7 +946,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                   color:'#D4AF37', border:'1px solid rgba(212,175,55,0.4)',
                   borderRadius:100, padding:'14px 24px',
                   fontFamily:'Montserrat,sans-serif', fontWeight:800,
-                  fontSize:9, letterSpacing:'0.4em', textTransform:'uppercase',
+                  fontSize:12, letterSpacing:'0.28em', textTransform:'uppercase',
                   cursor:'pointer', transition:'all 0.2s',
                   boxShadow:'0 0 24px rgba(212,175,55,0.2)'
                 }}
@@ -962,19 +962,19 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         <div className="glass-card" style={{borderColor:'rgba(212,175,55,0.2)'}}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:16}}>
             <div>
-              <div style={{fontWeight:800,fontSize:8,letterSpacing:'0.4em',color:'rgba(212,175,55,0.5)',textTransform:'uppercase',marginBottom:8}}>{t('profilePage.tierAkashaCardLabel')}</div>
-              <div style={{fontWeight:800,fontSize:17,letterSpacing:'0.2em',color:'#D4AF37'}}>{t('profilePage.tierAkashaInfinityName')}</div>
-              <div style={{fontSize:8,letterSpacing:'0.35em',color:'rgba(255,255,255,0.2)',textTransform:'uppercase',marginTop:4}}>{t('profilePage.tierAkashaLifetimeSub')}</div>
+              <div style={{fontWeight:800,fontSize:12,letterSpacing:'0.32em',color:'rgba(212,175,55,0.5)',textTransform:'uppercase',marginBottom:8}}>{t('profilePage.tierAkashaCardLabel')}</div>
+              <div style={{fontWeight:800,fontSize:19,letterSpacing:'0.2em',color:'#D4AF37'}}>{t('profilePage.tierAkashaInfinityName')}</div>
+              <div style={{fontSize:12,letterSpacing:'0.28em',color:'rgba(255,255,255,0.2)',textTransform:'uppercase',marginTop:4}}>{t('profilePage.tierAkashaLifetimeSub')}</div>
               {userRank >= 3 && (
                 <span style={{
                   display:'inline-block',
-                  fontWeight:800, fontSize:6.5, letterSpacing:'0.4em', textTransform:'uppercase',
-                  color:'#050505', background:'#D4AF37', borderRadius:100, padding:'3px 9px',
+                  fontWeight:800, fontSize:11, letterSpacing:'0.3em', textTransform:'uppercase',
+                  color:'#050505', background:'#D4AF37', borderRadius:100, padding:'4px 11px',
                   marginTop:6
                 }}>{t('profilePage.tierAkashaActiveEternal')}</span>
               )}
             </div>
-            <div style={{fontFamily:"'Cormorant Garamond',serif",fontWeight:300,fontStyle:'italic',fontSize:'2.8rem',color:'white'}}>€1111</div>
+            <div style={{fontFamily:"'Cormorant Garamond',serif",fontWeight:300,fontStyle:'italic',fontSize:'3rem',color:'white'}}>€1111</div>
           </div>
           <ul className="tier-features" style={{margin:'20px 0',display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))'}}>
             <li>{t('profilePage.tierAkashaF1')}</li><li>{t('profilePage.tierAkashaF2')}</li>
@@ -996,8 +996,8 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               padding: '15px 24px',
               fontFamily: 'Montserrat, sans-serif',
               fontWeight: 800,
-              fontSize: 9,
-              letterSpacing: '0.4em',
+              fontSize: 12,
+              letterSpacing: '0.28em',
               textTransform: 'uppercase' as const,
               cursor: 'pointer',
               transition: 'all 0.2s',
@@ -1060,11 +1060,11 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                   {soulVaultEntries.slice(0, 4).map((entry) => (
                     <div key={entry.id} className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-lg p-3">
                       <div className="flex items-center justify-between gap-2 mb-1">
-                        <p className="text-xs font-semibold text-white/90">{soulVaultActivityLabel(entry.activity)}</p>
-                        <span className="text-[10px] text-white/40">{new Date(entry.created_at).toLocaleDateString(dateLocale)}</span>
+                        <p className="text-sm font-semibold text-white/90">{soulVaultActivityLabel(entry.activity)}</p>
+                        <span className="text-sm text-white/40">{new Date(entry.created_at).toLocaleDateString(dateLocale)}</span>
                       </div>
-                      {entry.duration_minutes && <p className="text-[10px] text-cyan-200/80 mb-1">{t('profilePage.soulVaultPracticeWindow', { n: entry.duration_minutes })}</p>}
-                      <p className="text-[11px] leading-relaxed text-white/75 line-clamp-3">{entry.report}</p>
+                      {entry.duration_minutes && <p className="text-sm text-cyan-200/80 mb-1">{t('profilePage.soulVaultPracticeWindow', { n: entry.duration_minutes })}</p>}
+                      <p className="text-base leading-relaxed text-white/75 line-clamp-3">{entry.report}</p>
                     </div>
                   ))}
                 </div>
@@ -1111,7 +1111,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
       {/* ── MY RECORDINGS ── */}
       <div className="section-wrap">
         <div className="section-label">My Recordings</div>
-        <RecordingsList callType="dm" emptyText="No 1-on-1 call recordings yet. They'll appear here automatically after your sessions." />
+        <RecordingsList callType="dm" largeText emptyText="No 1-on-1 call recordings yet. They'll appear here automatically after your sessions." />
       </div>
 
       {/* ── ABUNDANCE & LINEAGE ── */}
@@ -1162,11 +1162,11 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                 </svg>
               </div>
               <div>
-                <span style={{fontWeight:800,fontSize:7,letterSpacing:'0.4em',
+                <span style={{fontWeight:800,fontSize:12,letterSpacing:'0.32em',
                   textTransform:'uppercase',color:'rgba(212,175,55,0.75)',
                   display:'block',marginBottom:4}}>{t('profile.language.label')}</span>
-                <div style={{display:'flex',alignItems:'center',gap:8,fontSize:14,fontWeight:700,color:'#D4AF37'}}>
-                  <span style={{fontSize:20}}>{langs[activeLangIdx].flag}</span>
+                <div style={{display:'flex',alignItems:'center',gap:8,fontSize:16,fontWeight:700,color:'#D4AF37'}}>
+                  <span style={{fontSize:22}}>{langs[activeLangIdx].flag}</span>
                   <span>{langs[activeLangIdx].label}</span>
                 </div>
               </div>
@@ -1187,14 +1187,14 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                   if (user) await updatePreferredLanguage(l.code);
                 }}
                   style={{display:'flex',alignItems:'center',gap:12,padding:'14px 20px',
-                    fontSize:14,fontWeight: i===activeLangIdx ? 700 : 500,
+                    fontSize:16,fontWeight: i===activeLangIdx ? 700 : 500,
                     color: i===activeLangIdx ? '#D4AF37' : 'rgba(255,255,255,0.5)',
                     cursor:'pointer',
                     borderBottom: i < langs.length-1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
                     background: i===activeLangIdx ? 'rgba(212,175,55,0.05)' : 'transparent'}}>
                   <span style={{fontSize:22}}>{l.flag}</span>
                   {l.label}
-                  {i===activeLangIdx && <span style={{marginLeft:'auto',color:'#D4AF37',fontSize:12}}>✓</span>}
+                  {i===activeLangIdx && <span style={{marginLeft:'auto',color:'#D4AF37',fontSize:14}}>✓</span>}
                 </div>
               ))}
             </div>
@@ -1238,8 +1238,8 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               <span
                 style={{
                   fontWeight: 900,
-                  fontSize: 7,
-                  letterSpacing: '0.4em',
+                  fontSize: 12,
+                  letterSpacing: '0.32em',
                   textTransform: 'uppercase',
                   color: 'rgba(212,175,55,0.75)',
                   display: 'block',
@@ -1248,7 +1248,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
               >
                 {t('profile.howAppWorks')}
               </span>
-              <span style={{ fontSize: 14, fontWeight: 700, color: '#D4AF37' }}>
+              <span style={{ fontSize: 17, fontWeight: 700, color: '#D4AF37' }}>
                 {t('profile.howAppWorksVideoLink')}
               </span>
             </div>
@@ -1273,7 +1273,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 backdrop-blur-md bg-black/40">
           <div className="w-full max-w-xl bg-[#030712] rounded-[40px] border border-cyan-500/20 p-10 shadow-[0_0_50px_rgba(6,182,212,0.1)]">
             <div className="text-right mb-4">
-              <button type="button" onClick={handleCloseScanner} className="text-white/40 text-xs hover:text-white">{t('profilePage.scannerClose')}</button>
+              <button type="button" onClick={handleCloseScanner} className="text-white/40 text-base hover:text-white">{t('profilePage.scannerClose')}</button>
             </div>
             {scanPhase === 'scanning' && (
               <HandScanner onComplete={() => setScanPhase('question')} />
@@ -1281,34 +1281,34 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             {scanPhase === 'question' && (
               <>
                 <div className="text-center mb-10">
-                  <p className="text-cyan-400/60 text-[10px] font-black tracking-[0.4em] uppercase mb-4">{t('profilePage.scannerCaptureLabel')}</p>
-                  <h3 className="text-white text-xl font-bold mb-2">{t('profilePage.scannerPracticeQuestion')}</h3>
-                  <p className="text-white/40 text-[10px]">{t('profilePage.scannerPracticeHint')}</p>
+                  <p className="text-cyan-400/60 text-sm font-black tracking-[0.32em] uppercase mb-4">{t('profilePage.scannerCaptureLabel')}</p>
+                  <h3 className="text-white text-2xl font-bold mb-2">{t('profilePage.scannerPracticeQuestion')}</h3>
+                  <p className="text-white/40 text-sm">{t('profilePage.scannerPracticeHint')}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-3 mb-8">
                   {practiceProtocols.map((p) => (
                     <button key={p.id} type="button" onClick={() => setSelectedPracticeId(p.id)}
-                      className={`py-4 px-6 rounded-2xl bg-white/[0.03] border text-[10px] font-bold transition-all flex items-center justify-center gap-2 ${selectedPracticeId === p.id ? 'border-[#D4AF37]/50 text-white' : 'border-white/5 text-white/60 hover:border-[#D4AF37]/40 hover:text-white'}`}>
+                      className={`py-4 px-6 rounded-2xl bg-white/[0.03] border text-sm font-bold transition-all flex items-center justify-center gap-2 ${selectedPracticeId === p.id ? 'border-[#D4AF37]/50 text-white' : 'border-white/5 text-white/60 hover:border-[#D4AF37]/40 hover:text-white'}`}>
                       <span>{p.icon}</span>
                       {p.label}
                     </button>
                   ))}
                 </div>
                 <div className="mb-8">
-                  <label className="text-white/40 text-[8px] uppercase tracking-widest block mb-2 px-2">{t('profilePage.scannerDurationLabel')}</label>
+                  <label className="text-white/40 text-xs uppercase tracking-widest block mb-2 px-2">{t('profilePage.scannerDurationLabel')}</label>
                   <input type="number" value={practiceDuration} onChange={(e) => setPracticeDuration(e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-xl py-4 px-6 text-white text-sm focus:border-cyan-500/50 outline-none" />
+                    className="w-full bg-black/40 border border-white/10 rounded-xl py-4 px-6 text-white text-base focus:border-cyan-500/50 outline-none" />
                 </div>
                 <button type="button" disabled={!selectedPracticeId} onClick={handleGenerateSoulReport}
-                  className="w-full py-5 rounded-2xl bg-[#D4AF37] text-[#050505] text-[11px] font-black uppercase tracking-[0.2em] shadow-[0_0_28px_rgba(212,175,55,0.45),0_0_60px_rgba(212,175,55,0.15)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity">
+                  className="w-full py-5 rounded-2xl bg-[#D4AF37] text-[#050505] text-sm font-black uppercase tracking-[0.2em] shadow-[0_0_28px_rgba(212,175,55,0.45),0_0_60px_rgba(212,175,55,0.15)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity">
                   {t('profilePage.scannerGenerate')}
                 </button>
               </>
             )}
             {scanPhase === 'saving' && (
               <div className="space-y-4 pt-6 pb-4 text-center">
-                <p className="text-[11px] uppercase tracking-[0.25em] text-cyan-200/80">{t('profilePage.scannerCommitting')}</p>
-                <p className="text-xs text-muted-foreground">{t('profilePage.scannerCommittingDesc')}</p>
+                <p className="text-sm uppercase tracking-[0.25em] text-cyan-200/80">{t('profilePage.scannerCommitting')}</p>
+                <p className="text-sm text-muted-foreground">{t('profilePage.scannerCommittingDesc')}</p>
               </div>
             )}
             {scanPhase === 'done' && (

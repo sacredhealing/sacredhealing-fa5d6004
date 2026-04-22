@@ -27,12 +27,15 @@ interface RecordingsListProps {
   callType: 'dm' | 'stargate';
   stargateCategory?: 'healing-chamber' | 'bhagavad-gita' | 'other';
   emptyText?: string;
+  /** Larger type for accessibility (e.g. profile page) */
+  largeText?: boolean;
 }
 
 export const RecordingsList: React.FC<RecordingsListProps> = ({
   callType,
   stargateCategory,
   emptyText,
+  largeText,
 }) => {
   const [recordings, setRecordings] = useState<CallRecording[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,10 +86,16 @@ export const RecordingsList: React.FC<RecordingsListProps> = ({
     }
   };
 
+  const emptyBodyCls = largeText ? 'text-base text-muted-foreground' : 'text-sm text-muted-foreground';
+  const titleCls = largeText ? 'font-semibold text-base text-foreground truncate' : 'font-semibold text-sm text-foreground truncate';
+  const metaCls = largeText ? 'flex items-center gap-2 text-sm text-muted-foreground mt-0.5' : 'flex items-center gap-2 text-xs text-muted-foreground mt-0.5';
+  const badgeCls = largeText ? 'ml-1 text-xs py-0 px-1.5' : 'ml-1 text-[10px] py-0 px-1.5';
+  const playBtnSize = largeText ? 'default' : 'sm';
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+        <Loader2 className={`${largeText ? 'w-6 h-6' : 'w-5 h-5'} animate-spin text-muted-foreground`} />
       </div>
     );
   }
@@ -94,8 +103,8 @@ export const RecordingsList: React.FC<RecordingsListProps> = ({
   if (recordings.length === 0) {
     return (
       <Card className="p-6 text-center">
-        <Video className="w-10 h-10 text-muted-foreground mx-auto mb-3 opacity-40" />
-        <p className="text-sm text-muted-foreground">
+        <Video className={`${largeText ? 'w-12 h-12' : 'w-10 h-10'} text-muted-foreground mx-auto mb-3 opacity-40`} />
+        <p className={emptyBodyCls}>
           {emptyText || 'No recordings yet. They will appear here automatically after each call.'}
         </p>
       </Card>
@@ -113,30 +122,30 @@ export const RecordingsList: React.FC<RecordingsListProps> = ({
             ? `${Math.round(rec.duration_seconds / 60)} min`
             : null;
           return (
-            <Card key={rec.id} className="p-4 flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
-                <Video className="w-5 h-5 text-primary" />
+            <Card key={rec.id} className={`${largeText ? 'p-5' : 'p-4'} flex items-center gap-3`}>
+              <div className={`${largeText ? 'w-14 h-14' : 'w-12 h-12'} rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0`}>
+                <Video className={`${largeText ? 'w-6 h-6' : 'w-5 h-5'} text-primary`} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm text-foreground truncate">{rec.title}</p>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                <p className={titleCls}>{rec.title}</p>
+                <div className={metaCls}>
                   <span>{date}</span>
                   {duration && (
                     <>
                       <span>•</span>
-                      <Clock className="w-3 h-3" />
+                      <Clock className={largeText ? 'w-4 h-4' : 'w-3 h-3'} />
                       <span>{duration}</span>
                     </>
                   )}
                   {rec.status !== 'ready' && (
-                    <Badge variant="secondary" className="ml-1 text-[10px] py-0 px-1.5">
+                    <Badge variant="secondary" className={badgeCls}>
                       {rec.status}
                     </Badge>
                   )}
                 </div>
               </div>
               <Button
-                size="sm"
+                size={playBtnSize}
                 variant={rec.status === 'ready' ? 'default' : 'secondary'}
                 disabled={rec.status !== 'ready' || openingId === rec.id}
                 onClick={() => playRecording(rec)}

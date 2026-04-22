@@ -70,14 +70,14 @@ const HandScanner: React.FC<HandScannerProps> = ({ onComplete }) => {
             isScanning ? 'border-[#D4AF37] animate-spin' : 'border-white/20'
           }`}
         />
-        <p className="mt-4 text-[#D4AF37] text-[10px] font-black tracking-[0.4em] uppercase">
+        <p className="mt-4 text-[#D4AF37] text-sm font-black tracking-[0.32em] uppercase">
           {isScanning ? t('profilePage.handScannerMappingNadi') : t('profilePage.handScannerPlaceHands')}
         </p>
       </div>
 
       {/* 3. Progress Bar */}
       <div className="absolute bottom-8 left-8 right-8">
-        <div className="flex justify-between text-[8px] text-white/40 mb-2 uppercase tracking-widest">
+        <div className="flex justify-between text-xs text-white/40 mb-2 uppercase tracking-widest">
           <span>{t('profilePage.handScannerAlignment')}</span>
           <span>
             {t('profilePage.handScannerChannelsLabel', {
@@ -95,7 +95,7 @@ const HandScanner: React.FC<HandScannerProps> = ({ onComplete }) => {
 
       {/* Camera fallback message */}
       {cameraDenied && !isScanning && (
-        <p className="absolute top-4 left-4 right-4 text-[9px] text-white/50 text-center">
+        <p className="absolute top-4 left-4 right-4 text-sm text-white/50 text-center px-2">
           {t('profilePage.handScannerCameraDenied')}
         </p>
       )}
@@ -105,7 +105,7 @@ const HandScanner: React.FC<HandScannerProps> = ({ onComplete }) => {
         <button
           type="button"
           onClick={() => setIsScanning(true)}
-          className="absolute inset-0 m-auto w-32 h-32 rounded-full bg-[#D4AF37]/10 backdrop-blur-md border border-[#D4AF37]/50 text-[#D4AF37] text-xs font-black uppercase hover:bg-[#D4AF37]/20 transition-colors"
+          className="absolute inset-0 m-auto w-36 h-36 rounded-full bg-[#D4AF37]/10 backdrop-blur-md border border-[#D4AF37]/50 text-[#D4AF37] text-sm font-black uppercase hover:bg-[#D4AF37]/20 transition-colors px-2"
         >
           {t('profilePage.handScannerBegin')}
         </button>

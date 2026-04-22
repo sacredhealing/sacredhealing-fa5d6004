@@ -41,18 +41,18 @@ const KoshaReport: React.FC<KoshaReportProps> = ({ sessionData, onSave }) => {
   return (
     <div className="w-full bg-[#050505] rounded-[40px] border border-[#D4AF37]/20 p-8 backdrop-blur-3xl">
       <div className="text-center mb-8">
-        <h3 className="text-[#D4AF37] text-xl font-black tracking-tighter uppercase italic">{t('koshaReport.title')}</h3>
-        <p className="text-white/20 text-[8px] font-black tracking-[0.4em] uppercase mt-1">{t('koshaReport.subtitle')}</p>
+        <h3 className="text-[#D4AF37] text-2xl font-black tracking-tighter uppercase italic">{t('koshaReport.title')}</h3>
+        <p className="text-white/20 text-sm font-black tracking-[0.32em] uppercase mt-1">{t('koshaReport.subtitle')}</p>
       </div>
 
       <div className="space-y-4">
         {koshas.map((k, i) => (
           <div key={i} className="group p-5 rounded-3xl bg-white/[0.02] border border-white/5 hover:border-[#D4AF37]/30 transition-all">
             <div className="flex justify-between items-center mb-1">
-              <span className="text-[#D4AF37] text-[10px] font-black tracking-widest italic">{k.name}</span>
-              <span className="text-white/20 text-[7px] uppercase font-mono">{k.layer}</span>
+              <span className="text-[#D4AF37] text-sm font-black tracking-widest italic">{k.name}</span>
+              <span className="text-white/20 text-xs uppercase font-mono">{k.layer}</span>
             </div>
-            <p className="text-white text-xs font-bold">{k.result}</p>
+            <p className="text-white text-base font-bold leading-relaxed">{k.result}</p>
           </div>
         ))}
       </div>
@@ -60,7 +60,7 @@ const KoshaReport: React.FC<KoshaReportProps> = ({ sessionData, onSave }) => {
       <button
         type="button"
         onClick={onSave}
-        className="w-full mt-8 py-4 rounded-2xl bg-white/[0.05] border border-white/10 text-white/40 text-[9px] font-black uppercase tracking-widest hover:text-white transition-all"
+        className="w-full mt-8 py-4 rounded-2xl bg-white/[0.05] border border-white/10 text-white/40 text-sm font-black uppercase tracking-widest hover:text-white transition-all"
       >
         {t('koshaReport.saveButton')}
       </button>
