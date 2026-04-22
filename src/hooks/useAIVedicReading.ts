@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { VedicReading, UserProfile } from '@/lib/vedicTypes';
+import { sanitizeVedicReading } from '@/lib/sanitizeVedicReading';
 
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
@@ -18,7 +19,12 @@ function loadFromCache(key: string): VedicReading | null {
       localStorage.removeItem(key);
       return null;
     }
-    return reading as VedicReading;
+    const sanitized = sanitizeVedicReading(reading);
+    if (!sanitized) {
+      localStorage.removeItem(key);
+      return null;
+    }
+    return sanitized;
   } catch {
     return null;
   }
@@ -115,14 +121,12 @@ export function useAIVedicReading(): UseAIVedicReadingResult {
         throw new Error(data.error);
       }
 
-      // Validate that we got actual reading data
-      if (!data || !data.todayInfluence) {
+      const vedicReading = sanitizeVedicReading(data);
+      if (!vedicReading) {
         throw new Error('Invalid reading data received');
       }
-
-        const vedicReading = data as VedicReading;
-        saveToCache(cacheKey, vedicReading);
-        setReading(vedicReading);
+      saveToCache(cacheKey, vedicReading);
+      setReading(vedicReading);
       } catch (err) {
         // Don't log abort errors
         if (err instanceof Error && err.name === 'AbortError') {

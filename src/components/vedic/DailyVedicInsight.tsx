@@ -8,12 +8,33 @@ import { TempleSection } from './TempleSection';
 import { useTranslation } from '@/hooks/useTranslation';
 import { vedicLocaleTag } from '@/lib/vedicLocale';
 
+/** Split on sentence boundaries without RegExp lookbehind (older Safari compatibility). */
+function splitIntoParagraphs(text: string): string[] {
+  const t = text.trim();
+  if (!t) return [];
+  const out: string[] = [];
+  let start = 0;
+  for (let i = 0; i < t.length; i++) {
+    const ch = t[i];
+    if (ch === '.' || ch === '!' || ch === '?') {
+      const next = t[i + 1];
+      if (next === undefined || /\s/.test(next)) {
+        const seg = t.slice(start, i + 1).trim();
+        if (seg) out.push(seg);
+        start = i + 1;
+        while (start < t.length && /\s/.test(t[start])) start++;
+        i = start - 1;
+      }
+    }
+  }
+  const tail = t.slice(start).trim();
+  if (tail) out.push(tail);
+  return out.length ? out : [text];
+}
+
 /** Splits long text into paragraphs - Siddha temple body text */
 const VedicParagraphs: React.FC<{ text: string; className?: string }> = ({ text, className = '' }) => {
-  const paragraphs = text
-    .split(/(?<=[.!?])\s+/)
-    .map((p) => p.trim())
-    .filter(Boolean);
+  const paragraphs = splitIntoParagraphs(text);
   if (paragraphs.length <= 1) {
     return <p className={`text-sm text-amber-100/60 leading-relaxed text-left font-serif ${className}`}>{text}</p>;
   }

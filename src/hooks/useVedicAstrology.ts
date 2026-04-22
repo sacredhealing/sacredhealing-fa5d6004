@@ -42,6 +42,9 @@ export const useVedicAstrology = () => {
       const formattedTiers: VedicAstrologyTier[] = (data || []).map(tier => ({
         ...tier,
         features: (tier.features as any) || [],
+        membership_required: Array.isArray(tier.membership_required)
+          ? tier.membership_required
+          : [],
       }));
 
       setTiers(formattedTiers);
