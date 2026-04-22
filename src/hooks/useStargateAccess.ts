@@ -12,18 +12,19 @@ import { useAdminRole } from '@/hooks/useAdminRole';
  */
 export const useStargateAccess = () => {
   const { user } = useAuth();
-  const { isAdmin } = useAdminRole();
+  const { isAdmin, isLoading: adminLoading } = useAdminRole();
   const [isManualAdd, setIsManualAdd] = useState(false);
   const [hasAdminGrant, setHasAdminGrant] = useState(false);
   const [hasStargateSubscription, setHasStargateSubscription] = useState(false);
-  const [loading, setLoading] = useState(true);
+  /** Stargate DB / subscription checks only (excludes admin role RPC). */
+  const [checksLoading, setChecksLoading] = useState(true);
 
   const check = useCallback(async () => {
     if (!user) {
       setIsManualAdd(false);
       setHasAdminGrant(false);
       setHasStargateSubscription(false);
-      setLoading(false);
+      setChecksLoading(false);
       return;
     }
 
@@ -87,7 +88,7 @@ export const useStargateAccess = () => {
       setHasStargateSubscription(false);
     }
 
-    setLoading(false);
+    setChecksLoading(false);
   }, [user]);
 
   useEffect(() => {
@@ -98,6 +99,9 @@ export const useStargateAccess = () => {
   // NOTE: Regular premium members (tier !== 'stargate') do NOT get access
   const isStargateMember =
     isAdmin || hasStargateSubscription || isManualAdd || hasAdminGrant;
+
+  /** True until Stargate checks AND admin RPC finish — avoids showing "locked" while has_role is still loading. */
+  const loading = checksLoading || (!!user && adminLoading);
 
   return { isStargateMember, loading };
 };

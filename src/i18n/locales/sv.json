@@ -2653,7 +2653,10 @@
     "biweeklyZoom": "Varannan vecka Zoom-sessioner",
     "telegramGroup": "Privat Telegram-grupp",
     "dailyInspiration": "Daglig inspiration och stöd",
-    "integrationWeek": "Månatlig integrationsvecka"
+    "integrationWeek": "Månatlig integrationsvecka",
+    "adminFullAccessBadge": "Admin · full tillgång",
+    "adminFullAccessHint": "Du har kostnadsfri tillgång till alla Stargate-ytor, inklusive Hidden Wisdom Vault.",
+    "adminCheckoutSkipped": "Admins har full Stargate-tillgång — ingen betalning behövs."
   },
   "certification": {
     "title": "Utövarcertifiering",

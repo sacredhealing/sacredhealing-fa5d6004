@@ -7,15 +7,20 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useAdminRole } from '@/hooks/useAdminRole';
+import { useTranslation } from '@/hooks/useTranslation';
 import { toast } from 'sonner';
 import { HiddenWisdomVault } from '@/components/stargate/HiddenWisdomVault';
 import RecordingsList from '@/components/recordings/RecordingsList';
 
 const StargateMembership = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user } = useAuth();
+  const { isAdmin, isLoading: adminLoading } = useAdminRole();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
+  const [memberTab, setMemberTab] = useState<'membership' | 'healing' | 'gita' | 'wisdom'>('membership');
 
   const [telegramLink, setTelegramLink] = useState<string | null>(null);
 
@@ -50,9 +55,19 @@ const StargateMembership = () => {
     }
   }, [searchParams, user]);
 
+  useEffect(() => {
+    if (user && isAdmin && !adminLoading) {
+      setMemberTab('wisdom');
+    }
+  }, [user, isAdmin, adminLoading]);
+
   const handleSubscribe = async () => {
     if (!user) {
       navigate('/auth');
+      return;
+    }
+    if (isAdmin) {
+      toast.info(t('stargate.adminCheckoutSkipped'));
       return;
     }
 
@@ -143,6 +158,12 @@ const StargateMembership = () => {
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTMwIDBjMTYuNTY5IDAgMzAgMTMuNDMxIDMwIDMwIDAgMTYuNTY5LTEzLjQzMSAzMC0zMCAzMEMxMy40MzEgNjAgMCA0Ni41NjkgMCAzMCAwIDEzLjQzMSAxMy40MzEgMCAzMCAwem0wIDEwYy0xMS4wNDYgMC0yMCA4Ljk1NC0yMCAyMHM4Ljk1NCAyMCAyMCAyMCAyMC04Ljk1NCAyMC0yMC04Ljk1NC0yMC0yMC0yMHoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-50"></div>
         
         <div className="relative z-10">
+          {user && isAdmin && !adminLoading && (
+            <div className="max-w-xl mx-auto mb-4 rounded-2xl border border-[#D4AF37]/35 bg-[#D4AF37]/10 px-4 py-3 text-sm text-foreground/90">
+              <p className="font-semibold text-[#D4AF37]">{t('stargate.adminFullAccessBadge')}</p>
+              <p className="text-muted-foreground mt-1 text-xs leading-relaxed">{t('stargate.adminFullAccessHint')}</p>
+            </div>
+          )}
           <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 mb-4">
             Andligt Medlemskap
           </Badge>
@@ -161,7 +182,7 @@ const StargateMembership = () => {
 
           <Button 
             onClick={handleSubscribe}
-            disabled={loading}
+            disabled={loading || (isAdmin && !!user)}
             size="lg"
             className="bg-gradient-to-r from-purple-600 to-amber-500 hover:from-purple-700 hover:to-amber-600 text-white px-8"
           >
@@ -169,6 +190,11 @@ const StargateMembership = () => {
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Laddar...
+              </>
+            ) : isAdmin && user ? (
+              <>
+                <Sparkles className="w-4 h-4 mr-2" />
+                {t('stargate.adminFullAccessBadge')}
               </>
             ) : (
               <>
@@ -288,7 +314,11 @@ const StargateMembership = () => {
       {user && (
         <div className="px-4 py-8">
           <div className="max-w-4xl mx-auto">
-            <Tabs defaultValue="membership" className="w-full">
+            <Tabs
+              value={memberTab}
+              onValueChange={(v) => setMemberTab(v as 'membership' | 'healing' | 'gita' | 'wisdom')}
+              className="w-full"
+            >
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="membership">Medlemskap</TabsTrigger>
                 <TabsTrigger value="healing">Healing Chamber</TabsTrigger>
@@ -323,7 +353,7 @@ const StargateMembership = () => {
                   
                   <Button 
                     onClick={handleSubscribe}
-                    disabled={loading}
+                    disabled={loading || (isAdmin && !!user)}
                     size="lg"
                     className="bg-gradient-to-r from-purple-600 to-amber-500 hover:from-purple-700 hover:to-amber-600 text-white px-8"
                   >
@@ -331,6 +361,11 @@ const StargateMembership = () => {
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         Laddar...
+                      </>
+                    ) : isAdmin && user ? (
+                      <>
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        {t('stargate.adminFullAccessBadge')}
                       </>
                     ) : (
                       <>

@@ -2136,7 +2136,10 @@
     "biweeklyZoom": "Sesiones Zoom quincenales",
     "telegramGroup": "Grupo privado de Telegram",
     "dailyInspiration": "Inspiración y apoyo diario",
-    "integrationWeek": "Semana de integración mensual"
+    "integrationWeek": "Semana de integración mensual",
+    "adminFullAccessBadge": "Admin · acceso completo",
+    "adminFullAccessHint": "Tienes acceso de cortesía a todas las áreas de Stargate, incluida la Hidden Wisdom Vault.",
+    "adminCheckoutSkipped": "Los administradores tienen acceso completo a Stargate; no necesitas pagar."
   },
   "certification": {
     "title": "Certificación de Practicante",

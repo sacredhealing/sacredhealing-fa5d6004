@@ -39,7 +39,7 @@ const ANGELIC_SPHERE_NAMES: Record<number, string> = {
 };
 
 export const HiddenWisdomVault: React.FC = () => {
-  const { isStargateMember } = useStargateAccess();
+  const { isStargateMember, loading: accessLoading } = useStargateAccess();
   const [wisdom, setWisdom] = useState<HiddenWisdom[]>([]);
   const [spheres, setSpheres] = useState<AngelicSphere[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,6 +72,14 @@ export const HiddenWisdomVault: React.FC = () => {
 
     fetchWisdom();
   }, [isStargateMember]);
+
+  if (accessLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!isStargateMember) {
     return (

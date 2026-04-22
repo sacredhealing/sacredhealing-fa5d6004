@@ -1877,7 +1877,10 @@
     "biweeklyZoom": "Bi-ukentlige Zoom-økter",
     "telegramGroup": "Privat Telegram-gruppe",
     "dailyInspiration": "Daglig inspirasjon og støtte",
-    "integrationWeek": "Månedlig integrasjonsuke"
+    "integrationWeek": "Månedlig integrasjonsuke",
+    "adminFullAccessBadge": "Admin · full tilgang",
+    "adminFullAccessHint": "Du har gratis tilgang til alle Stargate-områder, inkludert Hidden Wisdom Vault.",
+    "adminCheckoutSkipped": "Administratorer har full Stargate-tilgang — ingen betaling nødvendig."
   },
   "certification": {
     "title": "Utøversertifisering",
