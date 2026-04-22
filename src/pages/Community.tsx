@@ -982,6 +982,8 @@ const Community = () => {
   const [likingPostId, setLikingPostId] = useState<string | null>(null);
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const [dmVideoUrl, setDmVideoUrl] = useState<string | null>(null);
+  const [dmVideoRoomName, setDmVideoRoomName] = useState<string | null>(null);
+  const [dmVideoSessionId, setDmVideoSessionId] = useState<string | null>(null);
   const [dismissedLiveChannels, setDismissedLiveChannels] = useState<Set<string>>(new Set());
   const [profilesMap, setProfilesMap] = useState<Record<string, { full_name: string | null; avatar_url?: string | null }>>({});
   const [notifications, setNotifications] = useState<Array<{ id: string; type: string; title: string; body: string; channel_id: string | null; link: string | null; is_read: boolean; created_at: string }>>([]);
