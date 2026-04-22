@@ -404,8 +404,16 @@ Format with bold headings and bullet points. Keep each section 2-3 sentences. Be
   }
 
   /* ── MAIN UI ── */
+  const ORACLE_CSS = `
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800;900&family=Cinzel:wght@400;700&display=swap');
+    .sso-root{font-family:'Montserrat',sans-serif;color:rgba(255,255,255,.92)}
+    .sso-title{font-family:'Cinzel',serif;font-weight:700;color:#D4AF37;text-shadow:0 0 40px rgba(212,175,55,.4);letter-spacing:0.08em}
+    .sso-eyebrow{font-family:'Montserrat',sans-serif;font-weight:800;letter-spacing:0.5em;text-transform:uppercase}
+    .sso-section-title{font-family:'Montserrat',sans-serif;font-weight:800;text-transform:uppercase;letter-spacing:0.3em;color:#D4AF37}
+  `;
   return (
-    <div className="min-h-screen bg-[#050505] text-white/[0.92] relative overflow-hidden">
+    <div className="sso-root min-h-screen bg-[#050505] relative overflow-hidden">
+      <style dangerouslySetInnerHTML={{ __html: ORACLE_CSS }} />
       {/* ambient glows */}
       <div className="pointer-events-none absolute inset-0 opacity-60">
         <div className="absolute -top-40 -left-40 w-80 h-80 rounded-full bg-[#3a1510] blur-[120px]" />
@@ -415,11 +423,21 @@ Format with bold headings and bullet points. Keep each section 2-3 sentences. Be
       <div className="relative max-w-6xl mx-auto px-4 py-6 space-y-6">
         {/* header */}
         <div className="flex items-center gap-3">
-          <button type="button" onClick={handleBack} className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-white/45 hover:text-[#D4AF37]">
+          <button type="button" onClick={handleBack} className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] text-white/55 hover:text-[#D4AF37] transition-colors">
             <ArrowLeft className="w-4 h-4" /> Back
           </button>
-          <div className="ml-auto inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/40 bg-black/60 px-3 py-1 text-[10px] font-bold tracking-[0.26em] uppercase text-[#D4AF37]">
+          <div className="ml-auto inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/40 bg-black/60 px-3 py-1.5 text-[10px] font-extrabold tracking-[0.26em] uppercase text-[#D4AF37]">
             <Zap className="w-3 h-3" /> Siddha Sound Alchemy Oracle
+          </div>
+        </div>
+
+        {/* TITLE HERO — matches meditation tool */}
+        <div className="py-4 text-center">
+          <div className="sso-title" style={{ fontSize: 'clamp(24px,4vw,38px)', marginBottom: 8 }}>
+            Siddha Sound Alchemy Oracle
+          </div>
+          <div className="sso-eyebrow text-[9px] text-white/40">
+            SQI 2050 · Vibrational Reading · Scalar Wave Imprint
           </div>
         </div>
 
