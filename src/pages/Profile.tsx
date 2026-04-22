@@ -561,10 +561,10 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   .stat-value{font-weight:800;font-size:26px;color:#D4AF37;letter-spacing:-0.02em;display:block}
   .stat-label{font-weight:800;font-size:12px;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.35);display:block;margin-top:2px}
   /* About the Nexus block */
-  .nexus-block{max-width:480px;margin:0 auto 28px;background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.1);border-radius:20px;padding:22px 24px;backdrop-filter:blur(20px);text-align:left}
-  .nexus-block-label{font-weight:800;font-size:12px;letter-spacing:0.35em;text-transform:uppercase;color:rgba(212,175,55,0.45);margin-bottom:10px}
-  .nexus-block-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.2rem;color:rgba(255,255,255,0.58);line-height:1.85}
-  .nexus-block-text strong{color:rgba(212,175,55,0.6);font-weight:600;font-style:normal}
+  .nexus-block{max-width:520px;margin:0 auto 28px;background:rgba(255,255,255,0.04);border:1px solid rgba(212,175,55,0.22);border-radius:20px;padding:24px 26px;backdrop-filter:blur(20px);text-align:left}
+  .nexus-block-label{font-weight:800;font-size:14px;letter-spacing:0.32em;text-transform:uppercase;color:#D4AF37;margin-bottom:12px}
+  .nexus-block-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.35rem;color:rgba(255,255,255,0.92);line-height:1.85}
+  .nexus-block-text strong{color:#F5E17A;font-weight:700;font-style:normal;background:none;background-image:none;-webkit-background-clip:border-box;background-clip:border-box;-webkit-text-fill-color:#F5E17A;animation:none;text-shadow:none}
   /* Sections */
   .section-wrap{max-width:780px;margin:0 auto;padding:32px 24px 0;text-align:center}
   .section-label{font-family:'Montserrat',sans-serif;font-weight:800;font-size:13px;letter-spacing:0.38em;text-transform:uppercase;color:rgba(212,175,55,0.5);margin-bottom:32px;display:flex;align-items:center;gap:12px;justify-content:center}
