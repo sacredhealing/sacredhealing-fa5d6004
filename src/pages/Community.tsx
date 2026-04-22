@@ -2242,6 +2242,15 @@ const Community = () => {
                 {/* DM Video call iframe */}
                 {isDmChannel(activeChannel) && dmVideoUrl && (
                   <div className="c-live-frame">
+                    {dmVideoRoomName && (
+                      <div style={{ padding: "8px 8px 0" }}>
+                        <CallRecorderBar
+                          roomName={dmVideoRoomName}
+                          sessionId={dmVideoSessionId}
+                          autoStart
+                        />
+                      </div>
+                    )}
                     <iframe
                       src={dmVideoUrl}
                       allow="camera;microphone;fullscreen;display-capture"
@@ -2252,6 +2261,15 @@ const Community = () => {
                 {/* Group Live Room iframe (admin broadcasting or viewer joined) */}
                 {!isDmChannel(activeChannel) && liveRoomUrl && (
                   <div className="c-live-frame">
+                    {liveRoomName && (
+                      <div style={{ padding: "8px 8px 0" }}>
+                        <CallRecorderBar
+                          roomName={liveRoomName}
+                          sessionId={liveSessionId}
+                          autoStart
+                        />
+                      </div>
+                    )}
                     <iframe
                       src={liveRoomUrl}
                       allow="camera;microphone;fullscreen;display-capture"
