@@ -55,8 +55,10 @@ export default defineConfig(({ mode }) => {
     react(), 
     tailwindcss(),
     VitePWA({
-      registerType: "autoUpdate",
-      injectRegister: "auto",
+      // prompt + manual register in main.tsx (no auto-inject): avoids reload loops on Lovable
+      // and never full-page reloads when a new SW is waiting.
+      registerType: "prompt",
+      injectRegister: null,
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "masked-icon.svg"],
       manifest: {
         name: "Siddha Quantum Nexus",
@@ -74,8 +76,9 @@ export default defineConfig(({ mode }) => {
       },
       workbox: {
         cleanupOutdatedCaches: true,
-        clientsClaim: true,
-        skipWaiting: true,
+        // Do not take over mid-session (was causing constant reloads with autoUpdate + reg.update polling).
+        clientsClaim: false,
+        skipWaiting: false,
         // Do not precache HTML: stale index.html pins old hashed JS chunks (users never see QA updates).
         globIgnores: ["**/index.html", "index.html"],
         // SPA offline: still serve app shell when network fails (filled after first online visit).

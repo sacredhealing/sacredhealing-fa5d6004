@@ -399,45 +399,6 @@ function AppRoutes() {
 }
 
 function App() {
-  useEffect(() => {
-    if (!("serviceWorker" in navigator)) return;
-
-    const host = window.location.hostname;
-    const swPollingDisabled =
-      host.includes("id-preview--") ||
-      host.includes("lovableproject.com") ||
-      host.endsWith(".lovable.app") ||
-      host === "lovable.app";
-    if (swPollingDisabled) return;
-
-    const checkForNewWorker = () => {
-      void navigator.serviceWorker.getRegistration().then((reg) => {
-        if (reg) void reg.update();
-      });
-    };
-
-    // PWA / mobile often never called update(); stale SW = stale Quantum Apothecary chunks.
-    // 15 min: frequent polling + reload-on-update caused visible loops on long sessions.
-    const intervalId = window.setInterval(checkForNewWorker, 15 * 60 * 1000);
-    const onVisible = () => {
-      if (document.visibilityState === "visible") checkForNewWorker();
-    };
-    document.addEventListener("visibilitychange", onVisible);
-    window.addEventListener("focus", checkForNewWorker);
-    window.addEventListener("pageshow", checkForNewWorker);
-
-    // Reload is handled once in main.tsx (debounced controllerchange) — avoid duplicate handlers.
-
-    checkForNewWorker();
-
-    return () => {
-      window.clearInterval(intervalId);
-      document.removeEventListener("visibilitychange", onVisible);
-      window.removeEventListener("focus", checkForNewWorker);
-      window.removeEventListener("pageshow", checkForNewWorker);
-    };
-  }, []);
-
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
