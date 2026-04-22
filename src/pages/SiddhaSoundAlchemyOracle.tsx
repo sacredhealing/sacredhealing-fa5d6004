@@ -557,62 +557,62 @@ Format with bold headings and bullet points. Keep each section 2-3 sentences. Be
             {/* ── CONTROLS GRID ── */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               {/* solfeggio */}
-              <div className="rounded-2xl border border-white/10 bg-black/50 backdrop-blur-xl p-4 space-y-3">
+              <div className="rounded-2xl border border-white/10 bg-black/50 backdrop-blur-xl p-5 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Healing Hz Overlay</h3>
+                  <h3 className="sso-section-title text-[12px]">Healing Hz Overlay</h3>
                   <button onClick={solfeggioOn ? stopSolfeggio : startSolfeggio}
-                    className={`text-[10px] uppercase tracking-wider px-3 py-1 rounded-full border transition-colors ${solfeggioOn ? "border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/10" : "border-white/20 text-white/45 hover:text-white/[0.92]"}`}>
+                    className={`text-[11px] font-extrabold uppercase tracking-[0.2em] px-3 py-1 rounded-full border transition-colors ${solfeggioOn ? "border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/10" : "border-white/30 text-white/70 hover:text-white"}`}>
                     {solfeggioOn ? "ON" : "OFF"}
                   </button>
                 </div>
                 <div className="grid grid-cols-2 gap-1.5">
                   {SOLFEGGIO_PRESETS.map(p => (
                     <button key={p.hz} onClick={() => { setSolfeggioHz(p.hz); if (!solfeggioOn) startSolfeggio(); }}
-                      className={`text-left text-[10px] rounded-lg px-2 py-1.5 border transition-colors ${solfeggioHz === p.hz ? "border-[#D4AF37]/50 bg-[#D4AF37]/10 text-[#D4AF37]" : "border-white/5 text-white/45 hover:text-white/[0.92] hover:border-white/20"}`}>
+                      className={`text-left text-xs font-medium rounded-lg px-2.5 py-2 border transition-colors ${solfeggioHz === p.hz ? "border-[#D4AF37]/60 bg-[#D4AF37]/15 text-[#D4AF37]" : "border-white/10 text-white/75 hover:text-white hover:border-white/30 hover:bg-white/5"}`}>
                       {p.label}
                     </button>
                   ))}
                 </div>
-                <div className="flex items-center gap-2">
-                  <Volume2 className="w-3 h-3 text-white/45" />
+                <div className="flex items-center gap-2 pt-1">
+                  <Volume2 className="w-4 h-4 text-[#D4AF37]/70" />
                   <input type="range" min="0" max="0.5" step="0.01" value={solfeggioVol} onChange={e => setSolfeggioVol(Number(e.target.value))} className="flex-1 accent-[#D4AF37]" />
-                  <span className="text-[10px] text-white/[0.92] w-8 text-right">{Math.round(solfeggioVol*100)}%</span>
+                  <span className="text-xs font-extrabold text-white/90 w-10 text-right tabular-nums">{Math.round(solfeggioVol*100)}%</span>
                 </div>
               </div>
 
               {/* binaural */}
-              <div className="rounded-2xl border border-white/10 bg-black/50 backdrop-blur-xl p-4 space-y-3">
+              <div className="rounded-2xl border border-white/10 bg-black/50 backdrop-blur-xl p-5 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Binaural Beat</h3>
+                  <h3 className="sso-section-title text-[12px]">Binaural Beat</h3>
                   <button onClick={binauralOn ? stopBinaural : startBinaural}
-                    className={`text-[10px] uppercase tracking-wider px-3 py-1 rounded-full border transition-colors ${binauralOn ? "border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/10" : "border-white/20 text-white/45 hover:text-white/[0.92]"}`}>
+                    className={`text-[11px] font-extrabold uppercase tracking-[0.2em] px-3 py-1 rounded-full border transition-colors ${binauralOn ? "border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/10" : "border-white/30 text-white/70 hover:text-white"}`}>
                     {binauralOn ? "ON" : "OFF"}
                   </button>
                 </div>
                 <div className="space-y-1.5">
                   {BINAURAL_PRESETS.map(p => (
                     <button key={p.beat} onClick={() => { setBinauralBeat(p.beat); if (!binauralOn) startBinaural(); }}
-                      className={`w-full text-left text-[10px] rounded-lg px-2 py-1.5 border transition-colors ${binauralBeat === p.beat ? "border-[#D4AF37]/50 bg-[#D4AF37]/10 text-[#D4AF37]" : "border-white/5 text-white/45 hover:text-white/[0.92] hover:border-white/20"}`}>
+                      className={`w-full text-left text-xs font-medium rounded-lg px-2.5 py-2 border transition-colors ${binauralBeat === p.beat ? "border-[#D4AF37]/60 bg-[#D4AF37]/15 text-[#D4AF37]" : "border-white/10 text-white/75 hover:text-white hover:border-white/30 hover:bg-white/5"}`}>
                       {p.label}
                     </button>
                   ))}
                 </div>
-                <div className="flex items-center gap-2">
-                  <Volume2 className="w-3 h-3 text-white/45" />
+                <div className="flex items-center gap-2 pt-1">
+                  <Volume2 className="w-4 h-4 text-[#D4AF37]/70" />
                   <input type="range" min="0" max="0.5" step="0.01" value={binauralVol} onChange={e => setBinauralVol(Number(e.target.value))} className="flex-1 accent-[#D4AF37]" />
-                  <span className="text-[10px] text-white/[0.92] w-8 text-right">{Math.round(binauralVol*100)}%</span>
+                  <span className="text-xs font-extrabold text-white/90 w-10 text-right tabular-nums">{Math.round(binauralVol*100)}%</span>
                 </div>
               </div>
 
               {/* EQ + actions */}
-              <div className="rounded-2xl border border-white/10 bg-black/50 backdrop-blur-xl p-4 space-y-3">
-                <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Tonal Balance</h3>
+              <div className="rounded-2xl border border-white/10 bg-black/50 backdrop-blur-xl p-5 space-y-4">
+                <h3 className="sso-section-title text-[12px]">Tonal Balance</h3>
                 <div className="space-y-1.5">
                   {EQ_PRESETS.map(p => (
                     <button key={p.name} onClick={() => setEqPreset(p)}
-                      className={`w-full text-left text-[10px] rounded-lg px-2 py-1.5 border transition-colors ${eqPreset?.name === p.name ? "border-[#D4AF37]/50 bg-[#D4AF37]/10 text-[#D4AF37]" : "border-white/5 text-white/45 hover:text-white/[0.92] hover:border-white/20"}`}>
+                      className={`w-full text-left text-xs font-medium rounded-lg px-2.5 py-2 border transition-colors ${eqPreset?.name === p.name ? "border-[#D4AF37]/60 bg-[#D4AF37]/15 text-[#D4AF37]" : "border-white/10 text-white/75 hover:text-white hover:border-white/30 hover:bg-white/5"}`}>
                       {p.name}
-                      <span className="ml-2 text-white/45">L{p.low>0?"+":""}{p.low} M{p.mid>0?"+":""}{p.mid} H{p.high>0?"+":""}{p.high}</span>
+                      <span className="ml-2 text-[10px] font-bold text-white/50">L{p.low>0?"+":""}{p.low} M{p.mid>0?"+":""}{p.mid} H{p.high>0?"+":""}{p.high}</span>
                     </button>
                   ))}
                 </div>
