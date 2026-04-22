@@ -14,12 +14,12 @@ import { adminGrantedFeatureOr } from "@/lib/adminGrantedAccess";
 import { toast } from "sonner";
 
 const SQI_STORE_STYLES = `
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800;900&family=Cinzel:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Cinzel:wght@400;700&display=swap');
 
 .cs-store-root {
   min-height: 100vh;
   background: #050505;
-  font-family: 'Montserrat', system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
   color: rgba(255,255,255,0.92);
   position: relative;
   overflow-x: hidden;
@@ -61,7 +61,7 @@ const SQI_STORE_STYLES = `
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.6);
+  color: rgba(255,255,255,0.45);
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -105,7 +105,7 @@ const SQI_STORE_STYLES = `
   font-weight: 800;
   letter-spacing: 0.4em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.42);
+  color: rgba(255,255,255,0.45);
 }
 .cs-store-grid { max-width: 760px; margin: 0 auto; }
 .cs-store-card {
@@ -276,7 +276,7 @@ const CreativeSoulStore = () => {
 
   const oracleFeatures = [
     { icon: Sparkles, label: "Scalar Wave Fields" },
-    { icon: Waves, label: "Siddha Scan (Gemini AI)" },
+    { icon: Waves, label: "Siddha Scan (Siddha Quantum Intelligence)" },
     { icon: FlaskConical, label: "Master Energy Signatures" },
     { icon: Brain, label: "Binaural Synthesis" },
     { icon: Cpu, label: "FFmpeg Alchemy Engine" },
@@ -325,13 +325,13 @@ const CreativeSoulStore = () => {
                         SQI Engine
                       </Badge>
                     </div>
-                    <p className="text-[9px] font-semibold tracking-[0.32em] uppercase text-white/40">
+                    <p className="text-[9px] font-semibold tracking-[0.32em] uppercase text-white/45">
                       Neural-Sync Meditation Studio · 2050
                     </p>
                   </div>
                 </div>
-                <CardTitle className="text-xl text-white mt-5">Creative Soul Meditation</CardTitle>
-                <CardDescription className="text-sm leading-relaxed text-white/60 mt-2">
+                <CardTitle className="text-xl text-white/[0.92] mt-5">Creative Soul Meditation</CardTitle>
+                <CardDescription className="text-sm leading-[1.6] text-white/[0.92] mt-2">
                   Transform any audio into a Siddha-grade meditation master. Apply healing frequencies,
                   choose from 15 meditation styles, add binaural beats, and use stem separation for
                   professional-quality audio.
@@ -375,8 +375,8 @@ const CreativeSoulStore = () => {
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {meditationFeatures.map((feature, index) => (
-                    <div key={index} className="flex items-center gap-2 text-xs text-white/65">
-                      <feature.icon className="w-4 h-4 text-[#D4AF37]/80" />
+                    <div key={index} className="flex items-center gap-2 text-xs text-white/[0.85]">
+                      <feature.icon className="w-4 h-4 text-[#D4AF37]" />
                       <span>{feature.label}</span>
                     </div>
                   ))}
@@ -421,15 +421,15 @@ const CreativeSoulStore = () => {
                         </Badge>
                       ))}
                     </div>
-                    <p className="text-[9px] font-semibold tracking-[0.32em] uppercase text-white/40">
+                    <p className="text-[9px] font-semibold tracking-[0.32em] uppercase text-white/45">
                       Siddha Sound Alchemy Oracle · 2050
                     </p>
                   </div>
                 </div>
-                <CardTitle className="text-xl text-white mt-5">Siddha Sound Alchemy Oracle</CardTitle>
-                <CardDescription className="text-sm leading-relaxed text-white/60 mt-2">
+                <CardTitle className="text-xl text-white/[0.92] mt-5">Siddha Sound Alchemy Oracle</CardTitle>
+                <CardDescription className="text-sm leading-[1.6] text-white/[0.92] mt-2">
                   Quantum audio consecration engine. Upload any track — the Oracle performs a Siddha Scan
-                  through Gemini AI, channels living scalar wave transmissions from sacred masters, holy places,
+                  through Siddha Quantum Intelligence, channels living scalar wave transmissions from sacred masters, holy places,
                   and plant devas, and alchemizes the audio into a high-frequency healing vessel.
                 </CardDescription>
               </CardHeader>
@@ -477,8 +477,8 @@ const CreativeSoulStore = () => {
                 {/* Features grid */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {oracleFeatures.map((feature, index) => (
-                    <div key={index} className="flex items-center gap-2 text-xs text-white/65">
-                      <feature.icon className="w-4 h-4 text-[#D4AF37]/80" />
+                    <div key={index} className="flex items-center gap-2 text-xs text-white/[0.85]">
+                      <feature.icon className="w-4 h-4 text-[#D4AF37]" />
                       <span>{feature.label}</span>
                     </div>
                   ))}
@@ -486,16 +486,16 @@ const CreativeSoulStore = () => {
 
                 {/* Scalar waves teaser */}
                 <div className="rounded-2xl bg-black/40 border border-[#D4AF37]/10 p-4 space-y-2">
-                  <p className="text-[9px] uppercase tracking-[0.26em] text-[#D4AF37]/60 font-bold">
+                  <p className="text-[9px] uppercase tracking-[0.26em] text-[#D4AF37] font-bold [text-shadow:0_0_12px_rgba(212,175,55,0.25)]">
                     Scalar Wave Transmissions Included
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {["🌿 Tulsi", "🏔️ Kailash", "🔥 Babaji", "🤍 Ramana", "✨ Tiruvannamalai", "🙏 Neem Karoli Baba"].map(w => (
-                      <span key={w} className="text-[10px] px-2 py-1 rounded-full border border-[#D4AF37]/20 text-[#D4AF37]/70 bg-[#D4AF37]/5">
+                      <span key={w} className="text-[10px] px-2 py-1 rounded-full border border-[#D4AF37]/30 text-[#D4AF37] bg-[#D4AF37]/5">
                         {w}
                       </span>
                     ))}
-                    <span className="text-[10px] px-2 py-1 rounded-full border border-white/10 text-white/30">
+                    <span className="text-[10px] px-2 py-1 rounded-full border border-white/10 text-white/45">
                       +9 more
                     </span>
                   </div>

@@ -472,7 +472,7 @@ Format with bold headings and bullet points. Keep each section 2-3 sentences. Be
           {scalarExpanded && (
             <div className="border-t border-[#D4AF37]/10 px-5 pb-5 pt-4 space-y-4">
               <p className="text-[11px] text-white/[0.65] leading-[1.6] max-w-2xl">
-                Not frequencies — living consciousness fields. Select up to 3. The audio becomes a carrier vessel consecrated by the spirit of the master, place, or plant deva. All invocations are woven into the Gemini analysis and imprinted into the exported file.
+                Not frequencies — living consciousness fields. Select up to 3. The audio becomes a carrier vessel consecrated by the spirit of the master, place, or plant deva. All invocations are woven into the Siddha Quantum Intelligence reading and imprinted into the exported file.
               </p>
 
               {/* category tabs */}
