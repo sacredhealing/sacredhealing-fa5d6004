@@ -38,6 +38,9 @@ const EQ_PRESETS = [
   { name: "Sacred Depth",    low: 5,  mid: -2, high: -1 },
 ];
 
+/** -5 dB vs music bed for healing Hz + binaural layers (linear amplitude = 10^(dB/20)). */
+const HZ_AND_BINAURAL_DB_ATTEN_LINEAR = Math.pow(10, -5 / 20);
+
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 const SiddhaSoundAlchemyOracle = () => {
@@ -159,14 +162,16 @@ const SiddhaSoundAlchemyOracle = () => {
     const ctx = ensureCtx();
     stopSolfeggio();
     const osc = ctx.createOscillator(); osc.type = "sine"; osc.frequency.value = solfeggioHz;
-    const g = ctx.createGain(); g.gain.value = solfeggioVol;
+    const g = ctx.createGain(); g.gain.value = solfeggioVol * HZ_AND_BINAURAL_DB_ATTEN_LINEAR;
     osc.connect(g).connect(ctx.destination); osc.start();
     solOscRef.current = osc; solGainRef.current = g;
     setSolfeggioOn(true);
   }, [ensureCtx, solfeggioHz, solfeggioVol, stopSolfeggio]);
 
   useEffect(() => { if (solOscRef.current) solOscRef.current.frequency.value = solfeggioHz; }, [solfeggioHz]);
-  useEffect(() => { if (solGainRef.current) solGainRef.current.gain.value = solfeggioVol; }, [solfeggioVol]);
+  useEffect(() => {
+    if (solGainRef.current) solGainRef.current.gain.value = solfeggioVol * HZ_AND_BINAURAL_DB_ATTEN_LINEAR;
+  }, [solfeggioVol]);
 
   /* ── binaural ── */
   const stopBinaural = useCallback(() => {
@@ -183,8 +188,8 @@ const SiddhaSoundAlchemyOracle = () => {
     const merger = ctx.createChannelMerger(2);
     const oscL = ctx.createOscillator(); oscL.frequency.value = carrier;
     const oscR = ctx.createOscillator(); oscR.frequency.value = carrier + binauralBeat;
-    const gL = ctx.createGain(); gL.gain.value = binauralVol;
-    const gR = ctx.createGain(); gR.gain.value = binauralVol;
+    const gL = ctx.createGain(); gL.gain.value = binauralVol * HZ_AND_BINAURAL_DB_ATTEN_LINEAR;
+    const gR = ctx.createGain(); gR.gain.value = binauralVol * HZ_AND_BINAURAL_DB_ATTEN_LINEAR;
     oscL.connect(gL).connect(merger, 0, 0);
     oscR.connect(gR).connect(merger, 0, 1);
     merger.connect(ctx.destination);
@@ -297,15 +302,15 @@ Format with bold headings and bullet points. Keep each section 2-3 sentences. Be
 
       if (solfeggioOn) {
         const osc = offCtx.createOscillator(); osc.type = "sine"; osc.frequency.value = solfeggioHz;
-        const g = offCtx.createGain(); g.gain.value = solfeggioVol;
+        const g = offCtx.createGain(); g.gain.value = solfeggioVol * HZ_AND_BINAURAL_DB_ATTEN_LINEAR;
         osc.connect(g).connect(offCtx.destination); osc.start();
       }
       if (binauralOn) {
         const merger = offCtx.createChannelMerger(2);
         const oL = offCtx.createOscillator(); oL.frequency.value = 200;
         const oR = offCtx.createOscillator(); oR.frequency.value = 200 + binauralBeat;
-        const gL = offCtx.createGain(); gL.gain.value = binauralVol;
-        const gR = offCtx.createGain(); gR.gain.value = binauralVol;
+        const gL = offCtx.createGain(); gL.gain.value = binauralVol * HZ_AND_BINAURAL_DB_ATTEN_LINEAR;
+        const gR = offCtx.createGain(); gR.gain.value = binauralVol * HZ_AND_BINAURAL_DB_ATTEN_LINEAR;
         oL.connect(gL).connect(merger, 0, 0);
         oR.connect(gR).connect(merger, 0, 1);
         merger.connect(offCtx.destination);
