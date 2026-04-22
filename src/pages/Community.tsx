@@ -958,6 +958,8 @@ const Community = () => {
   const [loadingStuck, setLoadingStuck] = useState(false);
   const [showGoLiveOptions, setShowGoLiveOptions] = useState(false);
   const [liveRoomUrl, setLiveRoomUrl] = useState<string | null>(null);
+  const [liveRoomName, setLiveRoomName] = useState<string | null>(null);
+  const [liveSessionId, setLiveSessionId] = useState<string | null>(null);
   const [viewerSessions, setViewerSessions] = useState<DailySession[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [totalUserCount, setTotalUserCount] = useState(0);
