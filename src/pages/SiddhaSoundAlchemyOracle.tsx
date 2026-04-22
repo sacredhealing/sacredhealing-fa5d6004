@@ -173,6 +173,15 @@ const SiddhaSoundAlchemyOracle = () => {
     if (solGainRef.current) solGainRef.current.gain.value = solfeggioVol * HZ_AND_BINAURAL_DB_ATTEN_LINEAR;
   }, [solfeggioVol]);
 
+  /* ── live binaural volume — follows slider in real time ── */
+  const binGainLRef = useRef<GainNode | null>(null);
+  const binGainRRef = useRef<GainNode | null>(null);
+  useEffect(() => {
+    const v = binauralVol * HZ_AND_BINAURAL_DB_ATTEN_LINEAR;
+    if (binGainLRef.current) binGainLRef.current.gain.value = v;
+    if (binGainRRef.current) binGainRRef.current.gain.value = v;
+  }, [binauralVol]);
+
   /* ── binaural ── */
   const stopBinaural = useCallback(() => {
     try { binOscLRef.current?.stop(); } catch {}
