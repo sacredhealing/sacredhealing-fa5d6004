@@ -30,6 +30,7 @@ import { usePrivateChat } from "@/hooks/useCommunity";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { getTierRank } from "@/lib/tierAccess";
+import CallRecorderBar from "@/components/community/CallRecorderBar";
 
 // ─────────────────────────────────────────────
 // CHANNEL CONFIG
