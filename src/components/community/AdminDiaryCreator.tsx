@@ -45,7 +45,7 @@ const AdminDiaryCreator = ({ onDiaryCreated }: AdminDiaryCreatorProps) => {
           post_type: 'diary',
           diary_type: diaryType,
           diary_title: title.trim(),
-        })
+        } as any)
         .select()
         .single();
 
