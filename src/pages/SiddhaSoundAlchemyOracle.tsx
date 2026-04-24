@@ -38,8 +38,8 @@ const EQ_PRESETS = [
   { name: "Sacred Depth",    low: 5,  mid: -2, high: -1 },
 ];
 
-/** -5 dB vs music bed for healing Hz + binaural layers (linear amplitude = 10^(dB/20)). */
-const HZ_AND_BINAURAL_DB_ATTEN_LINEAR = Math.pow(10, -5 / 20);
+/** -10 dB vs music bed for healing Hz + binaural layers (linear amplitude = 10^(dB/20)). */
+const HZ_AND_BINAURAL_DB_ATTEN_LINEAR = Math.pow(10, -10 / 20);
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
