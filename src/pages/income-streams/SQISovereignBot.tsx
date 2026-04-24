@@ -948,41 +948,60 @@ function SQISovereignBotInner() {
         <div style={{ animation: "fadeIn 0.3s ease" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <div style={{ fontSize: 7, letterSpacing: "0.3em", color: "rgba(255,255,255,0.28)", fontWeight: 800, textTransform: "uppercase" }}>
-              SOVEREIGN WHALE TRACKER  ·  COPY SIGNAL ENGINE
+              SOVEREIGN WHALE TRACKER  ·  LIVE BINANCE FEED
             </div>
-            <button onClick={() => setWhales(genWhales(currentPrice))} style={{
+            <button onClick={() => void fetchRealWhaleData()} disabled={whaleLoading} style={{
               padding: "8px 16px", borderRadius: 40, background: GOLD_DIM, border: `1px solid rgba(212,175,55,0.3)`,
-              color: GOLD, fontFamily: "inherit", fontWeight: 800, fontSize: 8, letterSpacing: "0.18em", cursor: "pointer", textTransform: "uppercase",
-            }}>↻  REFRESH SIGNALS</button>
+              color: GOLD, fontFamily: "inherit", fontWeight: 800, fontSize: 8, letterSpacing: "0.18em",
+              cursor: whaleLoading ? "default" : "pointer", textTransform: "uppercase", opacity: whaleLoading ? 0.5 : 1,
+            }}>{whaleLoading ? "⟳  SCANNING..." : "↻  REFRESH SIGNALS"}</button>
           </div>
 
-          {whales.map((w) => {
-            const sigCol = SIG_COLOR[w.signal] || "rgba(255,255,255,0.3)";
-            const tierCol = w.tier === "OMEGA" ? GOLD : w.tier === "ALPHA" ? CYAN : "rgba(255,255,255,0.4)";
+          {whaleLoading && whaleSignals.length === 0 && (
+            <div style={{ ...glass, padding: "40px 22px", borderRadius: 18, textAlign: "center" }}>
+              <Loader2 size={24} style={{ color: GOLD, animation: "spin 1s linear infinite", marginBottom: 10 }} />
+              <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: "0.25em", fontWeight: 800 }}>SYNCING BINANCE WHALE STREAM</div>
+            </div>
+          )}
+
+          {!whaleLoading && whaleSignals.length === 0 && (
+            <div style={{ ...glass, padding: "40px 22px", borderRadius: 18, textAlign: "center" }}>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", letterSpacing: "0.2em", fontWeight: 800 }}>
+                NO WHALE ACTIVITY DETECTED  ·  REFRESH TO SCAN AGAIN
+              </div>
+            </div>
+          )}
+
+          {whaleSignals.map((w) => {
+            const sig = String(w.signal ?? "—");
+            const tier = String(w.tier ?? "PRO");
+            const sigCol = SIG_COLOR[sig] || "rgba(255,255,255,0.3)";
+            const tierCol = tier === "OMEGA" ? GOLD : tier === "ALPHA" ? CYAN : tier === "LIVE" ? GREEN : "rgba(255,255,255,0.4)";
+            const name = String(w.name ?? "");
             return (
-              <div key={w.id} style={{ ...glass, padding: "18px 22px", marginBottom: 10, borderRadius: 18, display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
+              <div key={String(w.id)} style={{ ...glass, padding: "18px 22px", marginBottom: 10, borderRadius: 18, display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
                 <div style={{ width: 42, height: 42, borderRadius: "50%", background: GOLD_DIM, border: `1px solid rgba(212,175,55,0.3)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, color: GOLD, fontSize: 14, flexShrink: 0 }}>
-                  {w.name[0]}
+                  {name[0] ?? "?"}
                 </div>
-                <div style={{ flex: 1, minWidth: 120 }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>{w.name}</div>
-                  <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>{w.handle}</div>
+                <div style={{ flex: 1, minWidth: 140 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>{name}</div>
+                  <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>{String(w.handle ?? "")}</div>
                 </div>
                 {[
-                  { l: "WIN RATE", v: `${w.winRate}%`,    col: GOLD },
-                  { l: "ALL-TIME", v: w.roi,              col: GREEN },
-                  { l: "SIGNAL",   v: w.signal || "—",   col: sigCol, pulse: w.signal === "BUY" || w.signal === "SELL" },
-                  { l: "CONF.",    v: w.confidence || "—", col: "#fff" },
-                  { l: "TARGET",   v: w.target ? `$${Math.round(w.target).toLocaleString()}` : "—", col: GREEN },
-                  { l: "STOP",     v: w.stop   ? `$${Math.round(w.stop).toLocaleString()}`   : "—", col: RED   },
+                  { l: "VALUE",  v: String(w.usdValue ?? "—"), col: GOLD },
+                  { l: "TIME",   v: String(w.timeAgo ?? "—"),  col: "rgba(255,255,255,0.6)" },
+                  { l: "SIGNAL", v: sig, col: sigCol, pulse: sig === "BUY" || sig === "SELL" },
+                  { l: "CONF.",  v: w.confidence != null ? `${w.confidence}%` : "—", col: "#fff" },
+                  { l: "TARGET", v: w.target ? `$${Math.round(Number(w.target)).toLocaleString()}` : "—", col: GREEN },
+                  { l: "STOP",   v: w.stop   ? `$${Math.round(Number(w.stop)).toLocaleString()}`   : "—", col: RED   },
                 ].map(({ l, v, col, pulse }) => (
-                  <div key={l} style={{ textAlign: "center", minWidth: 52 }}>
+                  <div key={l} style={{ textAlign: "center", minWidth: 56 }}>
                     <div style={{ fontSize: 6.5, letterSpacing: "0.22em", color: "rgba(255,255,255,0.25)", fontWeight: 800, marginBottom: 4, textTransform: "uppercase" }}>{l}</div>
                     <div style={{ fontSize: 13, fontWeight: 900, color: col, animation: pulse ? "pulse 1.5s infinite" : "none" }}>{v}</div>
                   </div>
                 ))}
                 <div style={{ padding: "5px 12px", borderRadius: 40, fontSize: 7, fontWeight: 800, letterSpacing: "0.2em", background: `${tierCol}18`, color: tierCol, border: `1px solid ${tierCol}40` }}>
-                  {w.tier}
+                  {tier}
                 </div>
               </div>
             );
