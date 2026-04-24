@@ -1,0 +1,2 @@
+ALTER TABLE public.bot_sessions
+ADD COLUMN IF NOT EXISTS seed_balance NUMERIC NOT NULL DEFAULT 0;
