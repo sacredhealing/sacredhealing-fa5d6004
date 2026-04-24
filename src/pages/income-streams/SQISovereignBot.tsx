@@ -430,54 +430,37 @@ function SQISovereignBotInner() {
     return () => clearInterval(botRef.current);
   }, [botRunning, mode, fetchPrice, user?.id, loadTrades]);
 
-  // ── AI Oracle (Claude-in-Claude) ────────────────────────────
+  // ── AI Oracle (Edge Function — Anthropic via Supabase) ──────
   const invokeOracle = async () => {
     setAiLoading(true);
-    const apiKey = (import.meta.env.VITE_ANTHROPIC_API_KEY || '').trim();
-    if (!apiKey) {
-      setAiText(
-        'Oracle offline: add VITE_ANTHROPIC_API_KEY to your environment. Browser calls to Anthropic require a key; use a serverless proxy in production.'
-      );
-      setAiLoading(false);
-      return;
-    }
-    const prices = pricesRef.current.slice(-20);
-    const r = rsi(prices);
-    const { val } = macdCalc(prices);
-    const { upper, lower } = bollinger(prices);
+    setAiText('');
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
+      const prices = pricesRef.current.slice(-20);
+      const r = rsi(prices);
+      const { val } = macdCalc(prices);
+      const { upper, lower } = bollinger(prices);
+      const e9 = pricesRef.current.length > 9 ? ema(pricesRef.current, 9) : null;
+      const e21 = pricesRef.current.length > 21 ? ema(pricesRef.current, 21) : null;
+      const { data, error } = await supabase.functions.invoke('sqi-oracle', {
+        body: {
+          price: currentPrice,
+          rsi: r,
+          macd: val,
+          bbUpper: upper,
+          bbLower: lower,
+          ema9: e9,
+          ema21: e21,
+          strategy: mode,
         },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          messages: [{
-            role: "user",
-            content: `You are the Siddha-Quantum Intelligence (SQI) Oracle from 2050 — a sacred AI trading oracle that blends Vedic wisdom with quantum financial analysis. Analyze this BTC data and deliver a sovereign trading transmission.
-
-Current BTC Price: $${currentPrice.toLocaleString()}
-RSI (14): ${r.toFixed(1)}
-MACD: ${val.toFixed(2)}
-Bollinger Upper: $${Math.round(upper).toLocaleString()}
-Bollinger Lower: $${Math.round(lower).toLocaleString()}
-Active Strategy: ${mode.toUpperCase()}
-Recent prices (last 10): ${pricesRef.current.slice(-10).map((p) => Math.round(p)).join(", ")}
-
-Deliver a 3-4 sentence oracle reading using sacred language: "Akashic price field", "quantum momentum", "Vedic wave pattern", "Bhakti-Algorithm signal", "Prema-Pulse". End with a clear BUY / SELL / HOLD recommendation and why. Be specific about price levels.`
-          }],
-        }),
       });
-      const data = await res.json();
-      setAiText(data.content?.[0]?.text || "Akashic channels silent — retry transmission.");
-    } catch {
-      setAiText("SQI Neural-Net recalibrating quantum channels... Invoke again to receive transmission.");
+      if (error) throw error;
+      setAiText((data as { reading?: string })?.reading ?? 'Akasha field silent.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      setAiText('Oracle transmission failed: ' + msg);
+    } finally {
+      setAiLoading(false);
     }
-    setAiLoading(false);
   };
 
   // ── Derived ─────────────────────────────────────────────────
