@@ -1420,7 +1420,15 @@
     "title": "Adminpanel",
     "musicStore": "Musikkbutikk",
     "uploadTrack": "Last opp spor",
-    "manageContent": "Administrer innhold"
+    "manageContent": "Administrer innhold",
+    "music": {
+      "accessTier": {
+        "free": "Gratis",
+        "pranaFlow": "Prana Flow",
+        "siddhaQuantum": "Siddha Quantum",
+        "akashaInfinity": "AkashaInfinity"
+      }
+    }
   },
   "soul": {
     "heroTitle": "30 Dager med Hellig Sjel",

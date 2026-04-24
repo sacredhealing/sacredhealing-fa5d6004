@@ -28,6 +28,7 @@ import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 import { useTranslation } from '@/hooks/useTranslation';
 import { toast } from 'sonner';
 import { startPranaMonthlyCheckout } from '@/features/membership/startPranaMonthlyCheckout';
+import { getMusicTrackRequiredRank, getUserMusicAccessRank } from '@/lib/tierAccess';
 
 /* ─────────────────────────────────────────────────────────────────
    SQI-2050 STYLES
@@ -130,6 +131,7 @@ const SQI_STYLES = `
 .badge-free { font-size:7.5px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; padding:4px 10px; border-radius:100px; background:rgba(34,211,238,.08); border:1px solid rgba(34,211,238,.2); color:var(--cyan); }
 .badge-prana { font-size:7.5px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; padding:4px 10px; border-radius:100px; background:linear-gradient(135deg,rgba(212,175,55,.15),rgba(212,175,55,.05)); border:1px solid rgba(212,175,55,.3); color:var(--gold); }
 .badge-siddha { font-size:7.5px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; padding:4px 10px; border-radius:100px; background:rgba(139,92,246,.12); border:1px solid rgba(139,92,246,.25); color:#a78bfa; }
+.badge-akasha { font-size:7.5px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; padding:4px 10px; border-radius:100px; background:rgba(212,175,55,.1); border:1px solid rgba(212,175,55,.35); color:#e8d089; }
 
 @keyframes wave { 0%,100%{transform:scaleY(1)} 50%{transform:scaleY(.22)} }
 .wv { display:flex; align-items:flex-end; gap:2.5px; height:14px; }
@@ -390,6 +392,7 @@ interface MusicTrack {
   bpm?: number | null;
   mood?: string | null;
   energy_level?: string | null;
+  auto_analysis_data?: { access_tier?: string } | null;
 }
 
 // Parse frequency_band like "528hz" → display label
@@ -408,9 +411,11 @@ function getHzLabel(band?: string | null): string | null {
   return HZ_BAND_LABELS[key] ?? band;
 }
 
-// free (price_usd === 0) = rank 0; paid = rank 1 (needs Prana-Flow+)
-function getTierRank(price_usd: number): number {
-  return price_usd === 0 ? 0 : 1;
+function musicTrackTierBadge(rank: number): { cls: string; text: string } {
+  if (rank <= 0) return { cls: 'badge-free', text: 'FREE' };
+  if (rank === 1) return { cls: 'badge-prana', text: 'PRANA' };
+  if (rank === 2) return { cls: 'badge-siddha', text: 'SIDDHA' };
+  return { cls: 'badge-akasha', text: 'AKASHA' };
 }
 
 /* ─────────────────────────────────────────────────────────────────
@@ -543,7 +548,8 @@ const TrackRow: React.FC<{
   onPlay: (t: MusicTrack) => void;
   onLock: (t: MusicTrack) => void;
 }> = ({ track, isActive, isPlaying, progress, secondsLeft, userTierRank, onPlay, onLock }) => {
-  const trackTierRank = getTierRank(track.price_usd);
+  const trackTierRank = getMusicTrackRequiredRank(track);
+  const tierBadge = musicTrackTierBadge(trackTierRank);
   const locked = userTierRank < trackTierRank;
   const live = isActive && isPlaying;
   const hzLabel = getHzLabel(track.frequency_band);
@@ -603,8 +609,8 @@ const TrackRow: React.FC<{
             <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Lock size={13} style={{ color: 'rgba(255,255,255,.3)' }} />
             </div>
-            <span className={trackTierRank >= 2 ? 'badge-siddha' : 'badge-prana'}>
-              {trackTierRank >= 2 ? 'SIDDHA' : 'PRANA'}
+            <span className={tierBadge.cls}>
+              {tierBadge.text}
             </span>
           </>
         ) : (
@@ -621,8 +627,8 @@ const TrackRow: React.FC<{
             {live
               ? <div className="wv"><span /><span /><span /><span /><span /></div>
               : <>
-                  <span className={trackTierRank === 0 ? 'badge-free' : 'badge-prana'}>
-                    {trackTierRank === 0 ? 'FREE' : 'PRANA'}
+                  <span className={tierBadge.cls}>
+                    {tierBadge.text}
                   </span>
                   <span style={{ fontSize: 7.5, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--muted)' }}>
                     {hasFullAccess ? 'FULL' : '30s'}
@@ -735,7 +741,7 @@ const Music: React.FC = () => {
       try {
         const { data, error } = await supabase
           .from('music_tracks')
-          .select('id,title,artist,cover_image_url,full_audio_url,preview_url,genre,spiritual_path,frequency_band,price_usd,duration_seconds,bpm,mood,energy_level')
+          .select('id,title,artist,cover_image_url,full_audio_url,preview_url,genre,spiritual_path,frequency_band,price_usd,duration_seconds,bpm,mood,energy_level,auto_analysis_data')
           .order('created_at', { ascending: false });
         if (data && !error) setTracks(data as MusicTrack[]);
         else if (error) console.error('music_tracks fetch error:', error);
@@ -744,16 +750,11 @@ const Music: React.FC = () => {
     })();
   }, []);
 
-  // ── User tier rank: admin/paid = full access; free = 30s preview only ──
-  const userTierRank = useMemo(() => {
-    if (!user) return 0;
-    if (isAdmin || adminGranted) return 3;
-    const tier = (membershipTier || '').toLowerCase();
-    if (tier.includes('akasha') || tier.includes('infinity') || tier.includes('lifetime')) return 3;
-    if (tier.includes('siddha') || tier.includes('quantum')) return 2;
-    if (tier.includes('prana') || isPremium) return 1;
-    return 0;
-  }, [user, isAdmin, adminGranted, isPremium, membershipTier]);
+  // ── User tier rank vs. per-track required rank (admin Portal tier + legacy price_usd) ──
+  const userTierRank = useMemo(
+    () => getUserMusicAccessRank({ user, isAdmin, adminGranted, isPremium, membershipTier }),
+    [user, isAdmin, adminGranted, isPremium, membershipTier]
+  );
 
   // ── Auto-preview hook ──
   const { state: previewState, play: playPreview, togglePause, stop: stopPreview } = useAutoPreview(
@@ -804,7 +805,7 @@ const Music: React.FC = () => {
   const handlePlay = useCallback((track: MusicTrack) => {
     // If same track → toggle pause/play
     if (previewState.trackId === track.id) { togglePause(); return; }
-    const trackTierRank = getTierRank(track.price_usd);
+    const trackTierRank = getMusicTrackRequiredRank(track);
     const hasFullAccess = userTierRank >= trackTierRank;
     playPreview(track, hasFullAccess);
   }, [previewState.trackId, userTierRank, playPreview, togglePause]);

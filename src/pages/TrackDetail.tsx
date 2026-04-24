@@ -15,7 +15,7 @@ const TrackDetail: React.FC = () => {
   const { t } = useTranslation();
   const { trackId } = useParams<{ trackId: string }>();
   const navigate = useNavigate();
-  const { currentTrack, isPlaying, playTrack, hasAccess, likedIds, toggleLike, isSubscribed } = useMusicPlayer();
+  const { currentTrack, isPlaying, playTrack, hasAccess, likedIds, toggleLike } = useMusicPlayer();
   
   const [track, setTrack] = useState<Track | null>(null);
   const [relatedTracks, setRelatedTracks] = useState<Track[]>([]);
@@ -219,7 +219,7 @@ const TrackDetail: React.FC = () => {
         </div>
 
         {/* Price/Access */}
-        {!canPlay && !isSubscribed && (
+        {!canPlay && (
           <Card className="bg-muted/30 border-border/50 p-4 text-center">
             <p className="text-sm text-muted-foreground mb-2">
               {t('music.trackDetail.purchasePrompt', 'Purchase this track for')}

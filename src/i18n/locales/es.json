@@ -1522,7 +1522,15 @@
     "title": "Panel de Admin",
     "musicStore": "Tienda de Música",
     "uploadTrack": "Subir Pista",
-    "manageContent": "Gestionar Contenido"
+    "manageContent": "Gestionar Contenido",
+    "music": {
+      "accessTier": {
+        "free": "Gratis",
+        "pranaFlow": "Prana Flow",
+        "siddhaQuantum": "Siddha Quantum",
+        "akashaInfinity": "AkashaInfinity"
+      }
+    }
   },
   "shop": {
     "title": "Tienda Sagrada",

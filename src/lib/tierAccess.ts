@@ -30,6 +30,53 @@ export function getTierRank(tier: string | undefined | null): number {
   return 0;
 }
 
+/**
+ * Maps `music_tracks.auto_analysis_data.access_tier` (admin Portal tier) to the same
+ * numeric ranks as membership (`getUserMusicAccessRank`).
+ */
+export function getMusicTrackAccessTierRankFromStoredValue(v: string | undefined | null): number | null {
+  if (v == null || v === '') return null;
+  const n = v.toLowerCase();
+  if (n === 'free') return 0;
+  if (n === 'prana_flow') return 1;
+  if (n === 'siddha_quantum') return 2;
+  if (n === 'akashainfinity' || n === 'akasha_infinity' || n === 'akasha-infinity') return 3;
+  return null;
+}
+
+/**
+ * Required membership rank to stream the full track (Sacred Sound Portal + global player).
+ * Uses admin `access_tier` when set; otherwise legacy: `price_usd === 0` → free, else Prana+.
+ */
+export function getMusicTrackRequiredRank(track: {
+  price_usd?: number;
+  auto_analysis_data?: { access_tier?: string } | null;
+}): number {
+  const stored = getMusicTrackAccessTierRankFromStoredValue(
+    track.auto_analysis_data?.access_tier as string | undefined
+  );
+  if (stored !== null) return stored;
+  const p = track.price_usd ?? 0;
+  return p === 0 ? 0 : 1;
+}
+
+/** User rank for music track gating (aligned with `Music.tsx` / membership). */
+export function getUserMusicAccessRank(params: {
+  user: { id: string } | null | undefined;
+  isAdmin?: boolean;
+  adminGranted?: boolean;
+  isPremium?: boolean;
+  membershipTier: string | undefined | null;
+}): number {
+  if (!params.user) return 0;
+  if (params.isAdmin || params.adminGranted) return 3;
+  const tier = (params.membershipTier || '').toLowerCase();
+  if (tier.includes('akasha') || tier.includes('infinity') || tier.includes('lifetime')) return 3;
+  if (tier.includes('siddha') || tier.includes('quantum')) return 2;
+  if (tier.includes('prana') || params.isPremium) return 1;
+  return 0;
+}
+
 /** Minimum tier rank required for each feature */
 export const FEATURE_TIER = {
   // Prana-Flow (rank 1)

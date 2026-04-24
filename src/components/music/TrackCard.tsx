@@ -29,7 +29,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { currentTrack, isPlaying, playTrack, hasAccess, likedIds, toggleLike, isSubscribed } = useMusicPlayer();
+  const { currentTrack, isPlaying, playTrack, hasAccess, likedIds, toggleLike } = useMusicPlayer();
   const [showPlaylistMenu, setShowPlaylistMenu] = useState(false);
 
   const isCurrentTrack = currentTrack?.id === track.id;
@@ -156,7 +156,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
           </button>
 
           {/* Price / Access */}
-          {canPlay || isSubscribed ? (
+          {canPlay ? (
             <span className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#D4AF37]/70">
               {t('music.included', 'Included')}
             </span>

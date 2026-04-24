@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, Plus, Trash2, Music, Loader2, ArrowLeft, Edit2, X, Image, Check, Disc, Sparkles, AlertCircle, Clock, RefreshCw, Filter, CheckSquare, Square, Eye } from 'lucide-react';
 import AlbumManager from '@/components/admin/AlbumManager';
@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface MusicTrack {
   id: string;
@@ -46,17 +47,32 @@ interface MusicTrack {
 }
 
 const GENRES = ['beats', 'meditation', 'mystic', 'reggae', 'hip-hop', 'reggaeton', 'indian', 'shamanic'];
-const ACCESS_TIERS = [
-  { value: 'prana_flow', label: 'Prana Flow' },
-  { value: 'siddha_quantum', label: 'Siddha Quantum' },
-  { value: 'akashainfinity', label: 'AkashaInfinity' },
-] as const;
+const ACCESS_TIER_VALUES = ['free', 'prana_flow', 'siddha_quantum', 'akashainfinity'] as const;
+type AccessTier = (typeof ACCESS_TIER_VALUES)[number];
 
-type AccessTier = typeof ACCESS_TIERS[number]['value'];
+const ACCESS_TIER_LABEL_KEYS: Record<AccessTier, string> = {
+  free: 'admin.music.accessTier.free',
+  prana_flow: 'admin.music.accessTier.pranaFlow',
+  siddha_quantum: 'admin.music.accessTier.siddhaQuantum',
+  akashainfinity: 'admin.music.accessTier.akashaInfinity',
+};
+
+const ACCESS_TIER_LABEL_FALLBACKS: Record<AccessTier, string> = {
+  free: 'Free',
+  prana_flow: 'Prana Flow',
+  siddha_quantum: 'Siddha Quantum',
+  akashainfinity: 'AkashaInfinity',
+};
 
 const getTrackAccessTier = (track: MusicTrack): AccessTier => {
   const v = track?.auto_analysis_data?.access_tier as string | undefined;
-  if (v === 'prana_flow' || v === 'siddha_quantum' || v === 'akashainfinity') return v;
+  if (
+    v === 'free' ||
+    v === 'prana_flow' ||
+    v === 'siddha_quantum' ||
+    v === 'akashainfinity'
+  )
+    return v;
   return 'prana_flow';
 };
 
@@ -86,6 +102,15 @@ const formatDuration = (seconds: number): string => {
 const AdminMusic: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
+  const accessTierOptions = useMemo(
+    () =>
+      ACCESS_TIER_VALUES.map((value) => ({
+        value,
+        label: t(ACCESS_TIER_LABEL_KEYS[value], ACCESS_TIER_LABEL_FALLBACKS[value]),
+      })),
+    [t]
+  );
   const [tracks, setTracks] = useState<MusicTrack[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -636,8 +661,8 @@ const AdminMusic: React.FC = () => {
                   onChange={(e) => setAccessTier(e.target.value as AccessTier)}
                   className="w-full h-10 px-4 rounded-[28px] bg-white/[0.03] border border-white/[0.08] text-white focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/20"
                 >
-                  {ACCESS_TIERS.map(t => (
-                    <option key={t.value} value={t.value}>{t.label}</option>
+                  {accessTierOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
               </div>
@@ -895,8 +920,8 @@ const AdminMusic: React.FC = () => {
                           onChange={(e) => setEditAccessTier(e.target.value as AccessTier)}
                           className="h-10 px-3 rounded-md bg-muted/50 border border-border text-foreground"
                         >
-                          {ACCESS_TIERS.map(t => (
-                            <option key={t.value} value={t.value}>{t.label}</option>
+                          {accessTierOptions.map((opt) => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
                           ))}
                         </select>
                         <Input
@@ -1022,7 +1047,8 @@ const AdminMusic: React.FC = () => {
                             ${track.price_usd} • {track.purchase_count} sales
                           </span>
                         <Badge variant="secondary" className="text-xs">
-                          {ACCESS_TIERS.find(t => t.value === getTrackAccessTier(track))?.label ?? 'Prana Flow'}
+                          {accessTierOptions.find((opt) => opt.value === getTrackAccessTier(track))?.label
+                            ?? t('admin.music.accessTier.pranaFlow', 'Prana Flow')}
                         </Badge>
                           {/* Analysis status badge */}
                           {track.analysis_status === 'approved' && (

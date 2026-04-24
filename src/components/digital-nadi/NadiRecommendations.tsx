@@ -278,7 +278,7 @@ async function fetchMusicTracks(
   try {
     const { data, error } = await supabase
       .from('music_tracks')
-      .select('id, title, artist, description, cover_image_url, duration_seconds, full_audio_url, preview_url, shc_reward, genre, bpm, mood, energy_level, best_time_of_day, spiritual_path, price_usd, play_count, release_date, created_at, affirmation, creator_notes, spiritual_description, auto_generated_description, auto_generated_affirmation, analysis_status, intended_use, rhythm_type, vocal_type, frequency_band')
+      .select('id, title, artist, description, cover_image_url, duration_seconds, full_audio_url, preview_url, shc_reward, genre, bpm, mood, energy_level, best_time_of_day, spiritual_path, price_usd, play_count, release_date, created_at, affirmation, creator_notes, spiritual_description, auto_generated_description, auto_generated_affirmation, analysis_status, intended_use, rhythm_type, vocal_type, frequency_band, auto_analysis_data')
       .limit(limit * 4);
 
     if (error || !data) return [];

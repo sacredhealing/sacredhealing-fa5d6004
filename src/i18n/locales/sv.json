@@ -1846,7 +1846,15 @@
     "title": "Adminpanel",
     "musicStore": "Musikbutik",
     "uploadTrack": "Ladda upp spår",
-    "manageContent": "Hantera innehåll"
+    "manageContent": "Hantera innehåll",
+    "music": {
+      "accessTier": {
+        "free": "Gratis",
+        "pranaFlow": "Prana Flow",
+        "siddhaQuantum": "Siddha Quantum",
+        "akashaInfinity": "AkashaInfinity"
+      }
+    }
   },
   "soul": {
     "heroTitle": "30 Dagar av Helig Själ",

@@ -5,6 +5,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useSHC } from '@/contexts/SHCContext';
 import { navigateTo } from '@/utils/navigation';
 import { getDayPhase, getSessionDepth } from '@/utils/postSessionContext';
+import { useAuth } from '@/hooks/useAuth';
+import { useMembership } from '@/hooks/useMembership';
+import { getMusicTrackRequiredRank, getUserMusicAccessRank } from '@/lib/tierAccess';
 
 const SH_LAST_SESSION_KEY = 'sh_last_session';
 const SH_LAST_SESSION_UPDATED = 'sh_last_session_updated';
@@ -54,6 +57,7 @@ export interface Track {
   auto_generated_description: string | null;
   auto_generated_affirmation: string | null;
   analysis_status: string | null;
+  auto_analysis_data?: Record<string, unknown> | null;
 }
 
 // Universal audio item that works for music, meditation, and healing
@@ -117,6 +121,8 @@ export const useMusicPlayer = () => {
 export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { toast } = useToast();
   const { addOptimisticBalance } = useSHC();
+  const { user } = useAuth();
+  const { isAdmin, adminGranted, isPremium, tier: membershipTier } = useMembership();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
@@ -144,6 +150,19 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const currentAudioRef = useRef<UniversalAudioItem | null>(null);
 
   const PREVIEW_LIMIT = 30;
+
+  const userMusicRank = useMemo(
+    () => getUserMusicAccessRank({ user, isAdmin, adminGranted, isPremium, membershipTier }),
+    [user, isAdmin, adminGranted, isPremium, membershipTier]
+  );
+
+  const trackHasFullPlayAccess = useCallback(
+    (track: Track) =>
+      purchasedIds.includes(track.id) ||
+      purchasedAlbumTrackIds.includes(track.id) ||
+      userMusicRank >= getMusicTrackRequiredRank(track),
+    [purchasedIds, purchasedAlbumTrackIds, userMusicRank]
+  );
 
   const meditationSrc = useMemo(() => {
     if (!currentAudio?.audio_url) return null;
@@ -283,9 +302,10 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     medPlayerRef.current.setVolume(volume);
   }, [meditationSrc, volume, audioContentType]);
 
-  const hasAccess = useCallback((track: Track) => {
-    return isSubscribed || purchasedIds.includes(track.id) || purchasedAlbumTrackIds.includes(track.id);
-  }, [isSubscribed, purchasedIds, purchasedAlbumTrackIds]);
+  const hasAccess = useCallback(
+    (track: Track) => trackHasFullPlayAccess(track),
+    [trackHasFullPlayAccess]
+  );
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -369,7 +389,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, []);
 
   const playTrack = useCallback(async (track: Track, newQueue?: Track[]) => {
-    const canPlayFull = isSubscribed || purchasedIds.includes(track.id) || purchasedAlbumTrackIds.includes(track.id);
+    const canPlayFull = trackHasFullPlayAccess(track);
     
     if (currentTrack?.id === track.id && audioRef.current) {
       if (isPlaying) {
@@ -519,7 +539,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     await supabase.from('music_tracks').update({
       play_count: track.play_count + 1
     }).eq('id', track.id);
-  }, [currentTrack, isPlaying, volume, isSubscribed, purchasedIds, purchasedAlbumTrackIds, isLoop, isShuffle, queue, currentQueueIndex, addOptimisticBalance, toast, currentAudio]);
+  }, [currentTrack, isPlaying, volume, trackHasFullPlayAccess, isLoop, isShuffle, queue, currentQueueIndex, addOptimisticBalance, toast, currentAudio]);
 
   const togglePlay = useCallback(() => {
     if (currentAudio && (audioContentType === 'meditation' || audioContentType === 'healing')) {

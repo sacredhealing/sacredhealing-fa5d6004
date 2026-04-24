@@ -1972,6 +1972,14 @@
     "musicStore": "Music Store",
     "uploadTrack": "Upload Track",
     "manageContent": "Manage Content",
+    "music": {
+      "accessTier": {
+        "free": "Free",
+        "pranaFlow": "Prana Flow",
+        "siddhaQuantum": "Siddha Quantum",
+        "akashaInfinity": "AkashaInfinity"
+      }
+    },
     "dashboard": {
       "title": "Admin Dashboard",
       "users": "Total Users",
