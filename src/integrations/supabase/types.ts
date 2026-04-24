@@ -1056,6 +1056,123 @@ export type Database = {
         }
         Relationships: []
       }
+      btc_bot_state: {
+        Row: {
+          btc_balance: number
+          created_at: string
+          current_price: number | null
+          daily_pnl: number
+          has_position: boolean
+          id: string
+          is_halted: boolean
+          losses: number
+          paper_mode: boolean
+          strategy: string
+          total_trades: number
+          updated_at: string
+          usd_balance: number
+          user_id: string
+          win_rate: number
+          wins: number
+        }
+        Insert: {
+          btc_balance?: number
+          created_at?: string
+          current_price?: number | null
+          daily_pnl?: number
+          has_position?: boolean
+          id?: string
+          is_halted?: boolean
+          losses?: number
+          paper_mode?: boolean
+          strategy: string
+          total_trades?: number
+          updated_at?: string
+          usd_balance?: number
+          user_id: string
+          win_rate?: number
+          wins?: number
+        }
+        Update: {
+          btc_balance?: number
+          created_at?: string
+          current_price?: number | null
+          daily_pnl?: number
+          has_position?: boolean
+          id?: string
+          is_halted?: boolean
+          losses?: number
+          paper_mode?: boolean
+          strategy?: string
+          total_trades?: number
+          updated_at?: string
+          usd_balance?: number
+          user_id?: string
+          win_rate?: number
+          wins?: number
+        }
+        Relationships: []
+      }
+      btc_trades: {
+        Row: {
+          btc_amount: number
+          closed_at: string | null
+          created_at: string
+          duration_ms: number | null
+          entry_price: number
+          exit_price: number | null
+          exit_reason: string | null
+          gemini_order_id: string | null
+          id: string
+          opened_at: string
+          paper_mode: boolean
+          pnl: number | null
+          pnl_pct: number | null
+          side: string
+          strategy: string
+          usd_size: number
+          user_id: string
+        }
+        Insert: {
+          btc_amount: number
+          closed_at?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          entry_price: number
+          exit_price?: number | null
+          exit_reason?: string | null
+          gemini_order_id?: string | null
+          id?: string
+          opened_at?: string
+          paper_mode?: boolean
+          pnl?: number | null
+          pnl_pct?: number | null
+          side: string
+          strategy: string
+          usd_size: number
+          user_id: string
+        }
+        Update: {
+          btc_amount?: number
+          closed_at?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          entry_price?: number
+          exit_price?: number | null
+          exit_reason?: string | null
+          gemini_order_id?: string | null
+          id?: string
+          opened_at?: string
+          paper_mode?: boolean
+          pnl?: number | null
+          pnl_pct?: number | null
+          side?: string
+          strategy?: string
+          usd_size?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       bundle_purchases: {
         Row: {
           bundle_id: string
