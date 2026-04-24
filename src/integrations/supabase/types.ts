@@ -917,6 +917,7 @@ export type Database = {
           final_portfolio_usd: number | null
           id: string
           losses: number
+          seed_balance: number
           seed_usd: number
           started_at: string
           strategy: string | null
@@ -931,6 +932,7 @@ export type Database = {
           final_portfolio_usd?: number | null
           id?: string
           losses?: number
+          seed_balance?: number
           seed_usd?: number
           started_at?: string
           strategy?: string | null
@@ -945,6 +947,7 @@ export type Database = {
           final_portfolio_usd?: number | null
           id?: string
           losses?: number
+          seed_balance?: number
           seed_usd?: number
           started_at?: string
           strategy?: string | null
