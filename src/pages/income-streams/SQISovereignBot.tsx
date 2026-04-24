@@ -229,6 +229,106 @@ function SQISovereignBotInner() {
     lastPriceRef.current = currentPrice;
   }, [currentPrice]);
 
+  // ── Real Binance Whale Data ─────────────────────────────────
+  const [whaleSignals, setWhaleSignals] = useState<Array<Record<string, unknown>>>([]);
+  const [whaleLoading, setWhaleLoading] = useState(false);
+
+  const fetchRealWhaleData = useCallback(async () => {
+    setWhaleLoading(true);
+    try {
+      const [tradesRes, depthRes, ratioRes] = await Promise.allSettled([
+        fetch('https://api.binance.com/api/v3/aggTrades?symbol=BTCUSDT&limit=1000'),
+        fetch('https://api.binance.com/api/v3/depth?symbol=BTCUSDT&limit=20'),
+        fetch('https://fapi.binance.com/futures/data/topLongShortAccountRatio?symbol=BTCUSDT&period=15m&limit=1'),
+      ]);
+
+      const signals: Array<Record<string, unknown>> = [];
+
+      // Top trader sentiment (Binance Futures) — pinned at top
+      if (ratioRes.status === 'fulfilled') {
+        const ratioData = await ratioRes.value.json();
+        if (ratioData?.[0]) {
+          const ratio = parseFloat(ratioData[0].longShortRatio);
+          const longPct = parseFloat(ratioData[0].longAccount) * 100;
+          signals.push({
+            id: 'top-trader-sentiment',
+            name: 'Top Trader Sentiment',
+            handle: `${longPct.toFixed(1)}% Long / ${(100 - longPct).toFixed(1)}% Short`,
+            signal: ratio > 1.2 ? 'BUY' : ratio < 0.8 ? 'SELL' : 'HOLD',
+            confidence: Math.min(99, Math.round(Math.abs(ratio - 1) * 100 + 50)),
+            target: null,
+            stop: null,
+            usdValue: 'Binance Futures',
+            timeAgo: 'Live 15m',
+            tier: 'LIVE',
+          });
+        }
+      }
+
+      // Order book depth signal
+      if (depthRes.status === 'fulfilled') {
+        const book = await depthRes.value.json();
+        const topBid = book.bids?.[0] ? parseFloat(book.bids[0][0]) : 0;
+        const topAsk = book.asks?.[0] ? parseFloat(book.asks[0][0]) : 0;
+        const totalBidSize = book.bids?.slice(0, 5).reduce((s: number, b: [string, string]) => s + parseFloat(b[1]), 0) || 0;
+        const totalAskSize = book.asks?.slice(0, 5).reduce((s: number, a: [string, string]) => s + parseFloat(a[1]), 0) || 0;
+        const bookSignal = totalBidSize > totalAskSize * 1.3 ? 'BUY' : totalAskSize > totalBidSize * 1.3 ? 'SELL' : 'HOLD';
+        signals.push({
+          id: 'order-book',
+          name: 'Order Book Depth',
+          handle: `Bid ${totalBidSize.toFixed(1)} BTC vs Ask ${totalAskSize.toFixed(1)} BTC`,
+          signal: bookSignal,
+          confidence: Math.round((Math.max(totalBidSize, totalAskSize) / (totalBidSize + totalAskSize)) * 100),
+          target: topAsk,
+          stop: topBid,
+          usdValue: 'Live Order Book',
+          timeAgo: 'Real-time',
+          tier: 'LIVE',
+        });
+      }
+
+      // Large individual trades (>= 2 BTC = whale territory)
+      if (tradesRes.status === 'fulfilled') {
+        const trades = await tradesRes.value.json();
+        const largeTrades = (trades as Array<{ a: number; q: string; p: string; m: boolean; T: number }>)
+          .filter((t) => parseFloat(t.q) >= 2)
+          .sort((a, b) => parseFloat(b.q) - parseFloat(a.q))
+          .slice(0, 5);
+        largeTrades.forEach((t) => {
+          const btcAmt = parseFloat(t.q);
+          const price = parseFloat(t.p);
+          const usdVal = ((btcAmt * price) / 1000).toFixed(0);
+          const side = t.m ? 'SELL' : 'BUY';
+          const timeAgo = Math.round((Date.now() - t.T) / 1000);
+          signals.push({
+            id: t.a,
+            name: `Whale #${String(t.a).slice(-6)}`,
+            handle: `${btcAmt.toFixed(2)} BTC`,
+            signal: side,
+            confidence: Math.min(95, 60 + Math.round(btcAmt * 5)),
+            target: side === 'BUY' ? price * 1.02 : price * 0.98,
+            stop: side === 'BUY' ? price * 0.985 : price * 1.015,
+            usdValue: `$${usdVal}K`,
+            timeAgo: `${timeAgo}s ago`,
+            tier: btcAmt >= 10 ? 'OMEGA' : btcAmt >= 5 ? 'ALPHA' : 'PRO',
+          });
+        });
+      }
+
+      setWhaleSignals(signals);
+    } catch (err) {
+      console.error('[SQI] Whale fetch error:', err);
+    } finally {
+      setWhaleLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void fetchRealWhaleData();
+    const interval = setInterval(() => void fetchRealWhaleData(), 30000);
+    return () => clearInterval(interval);
+  }, [fetchRealWhaleData]);
+
   const handleBotToggle = async () => {
     if (!user?.id) {
       console.warn('[SQI] Sign in to persist trades');
