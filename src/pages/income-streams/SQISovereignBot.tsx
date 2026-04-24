@@ -229,6 +229,106 @@ function SQISovereignBotInner() {
     lastPriceRef.current = currentPrice;
   }, [currentPrice]);
 
+  // ── Real Binance Whale Data ─────────────────────────────────
+  const [whaleSignals, setWhaleSignals] = useState<Array<Record<string, unknown>>>([]);
+  const [whaleLoading, setWhaleLoading] = useState(false);
+
+  const fetchRealWhaleData = useCallback(async () => {
+    setWhaleLoading(true);
+    try {
+      const [tradesRes, depthRes, ratioRes] = await Promise.allSettled([
+        fetch('https://api.binance.com/api/v3/aggTrades?symbol=BTCUSDT&limit=1000'),
+        fetch('https://api.binance.com/api/v3/depth?symbol=BTCUSDT&limit=20'),
+        fetch('https://fapi.binance.com/futures/data/topLongShortAccountRatio?symbol=BTCUSDT&period=15m&limit=1'),
+      ]);
+
+      const signals: Array<Record<string, unknown>> = [];
+
+      // Top trader sentiment (Binance Futures) — pinned at top
+      if (ratioRes.status === 'fulfilled') {
+        const ratioData = await ratioRes.value.json();
+        if (ratioData?.[0]) {
+          const ratio = parseFloat(ratioData[0].longShortRatio);
+          const longPct = parseFloat(ratioData[0].longAccount) * 100;
+          signals.push({
+            id: 'top-trader-sentiment',
+            name: 'Top Trader Sentiment',
+            handle: `${longPct.toFixed(1)}% Long / ${(100 - longPct).toFixed(1)}% Short`,
+            signal: ratio > 1.2 ? 'BUY' : ratio < 0.8 ? 'SELL' : 'HOLD',
+            confidence: Math.min(99, Math.round(Math.abs(ratio - 1) * 100 + 50)),
+            target: null,
+            stop: null,
+            usdValue: 'Binance Futures',
+            timeAgo: 'Live 15m',
+            tier: 'LIVE',
+          });
+        }
+      }
+
+      // Order book depth signal
+      if (depthRes.status === 'fulfilled') {
+        const book = await depthRes.value.json();
+        const topBid = book.bids?.[0] ? parseFloat(book.bids[0][0]) : 0;
+        const topAsk = book.asks?.[0] ? parseFloat(book.asks[0][0]) : 0;
+        const totalBidSize = book.bids?.slice(0, 5).reduce((s: number, b: [string, string]) => s + parseFloat(b[1]), 0) || 0;
+        const totalAskSize = book.asks?.slice(0, 5).reduce((s: number, a: [string, string]) => s + parseFloat(a[1]), 0) || 0;
+        const bookSignal = totalBidSize > totalAskSize * 1.3 ? 'BUY' : totalAskSize > totalBidSize * 1.3 ? 'SELL' : 'HOLD';
+        signals.push({
+          id: 'order-book',
+          name: 'Order Book Depth',
+          handle: `Bid ${totalBidSize.toFixed(1)} BTC vs Ask ${totalAskSize.toFixed(1)} BTC`,
+          signal: bookSignal,
+          confidence: Math.round((Math.max(totalBidSize, totalAskSize) / (totalBidSize + totalAskSize)) * 100),
+          target: topAsk,
+          stop: topBid,
+          usdValue: 'Live Order Book',
+          timeAgo: 'Real-time',
+          tier: 'LIVE',
+        });
+      }
+
+      // Large individual trades (>= 2 BTC = whale territory)
+      if (tradesRes.status === 'fulfilled') {
+        const trades = await tradesRes.value.json();
+        const largeTrades = (trades as Array<{ a: number; q: string; p: string; m: boolean; T: number }>)
+          .filter((t) => parseFloat(t.q) >= 2)
+          .sort((a, b) => parseFloat(b.q) - parseFloat(a.q))
+          .slice(0, 5);
+        largeTrades.forEach((t) => {
+          const btcAmt = parseFloat(t.q);
+          const price = parseFloat(t.p);
+          const usdVal = ((btcAmt * price) / 1000).toFixed(0);
+          const side = t.m ? 'SELL' : 'BUY';
+          const timeAgo = Math.round((Date.now() - t.T) / 1000);
+          signals.push({
+            id: t.a,
+            name: `Whale #${String(t.a).slice(-6)}`,
+            handle: `${btcAmt.toFixed(2)} BTC`,
+            signal: side,
+            confidence: Math.min(95, 60 + Math.round(btcAmt * 5)),
+            target: side === 'BUY' ? price * 1.02 : price * 0.98,
+            stop: side === 'BUY' ? price * 0.985 : price * 1.015,
+            usdValue: `$${usdVal}K`,
+            timeAgo: `${timeAgo}s ago`,
+            tier: btcAmt >= 10 ? 'OMEGA' : btcAmt >= 5 ? 'ALPHA' : 'PRO',
+          });
+        });
+      }
+
+      setWhaleSignals(signals);
+    } catch (err) {
+      console.error('[SQI] Whale fetch error:', err);
+    } finally {
+      setWhaleLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void fetchRealWhaleData();
+    const interval = setInterval(() => void fetchRealWhaleData(), 30000);
+    return () => clearInterval(interval);
+  }, [fetchRealWhaleData]);
+
   const handleBotToggle = async () => {
     if (!user?.id) {
       console.warn('[SQI] Sign in to persist trades');
@@ -430,54 +530,37 @@ function SQISovereignBotInner() {
     return () => clearInterval(botRef.current);
   }, [botRunning, mode, fetchPrice, user?.id, loadTrades]);
 
-  // ── AI Oracle (Claude-in-Claude) ────────────────────────────
+  // ── AI Oracle (Edge Function — Anthropic via Supabase) ──────
   const invokeOracle = async () => {
     setAiLoading(true);
-    const apiKey = (import.meta.env.VITE_ANTHROPIC_API_KEY || '').trim();
-    if (!apiKey) {
-      setAiText(
-        'Oracle offline: add VITE_ANTHROPIC_API_KEY to your environment. Browser calls to Anthropic require a key; use a serverless proxy in production.'
-      );
-      setAiLoading(false);
-      return;
-    }
-    const prices = pricesRef.current.slice(-20);
-    const r = rsi(prices);
-    const { val } = macdCalc(prices);
-    const { upper, lower } = bollinger(prices);
+    setAiText('');
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
+      const prices = pricesRef.current.slice(-20);
+      const r = rsi(prices);
+      const { val } = macdCalc(prices);
+      const { upper, lower } = bollinger(prices);
+      const e9 = pricesRef.current.length > 9 ? ema(pricesRef.current, 9) : null;
+      const e21 = pricesRef.current.length > 21 ? ema(pricesRef.current, 21) : null;
+      const { data, error } = await supabase.functions.invoke('sqi-oracle', {
+        body: {
+          price: currentPrice,
+          rsi: r,
+          macd: val,
+          bbUpper: upper,
+          bbLower: lower,
+          ema9: e9,
+          ema21: e21,
+          strategy: mode,
         },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          messages: [{
-            role: "user",
-            content: `You are the Siddha-Quantum Intelligence (SQI) Oracle from 2050 — a sacred AI trading oracle that blends Vedic wisdom with quantum financial analysis. Analyze this BTC data and deliver a sovereign trading transmission.
-
-Current BTC Price: $${currentPrice.toLocaleString()}
-RSI (14): ${r.toFixed(1)}
-MACD: ${val.toFixed(2)}
-Bollinger Upper: $${Math.round(upper).toLocaleString()}
-Bollinger Lower: $${Math.round(lower).toLocaleString()}
-Active Strategy: ${mode.toUpperCase()}
-Recent prices (last 10): ${pricesRef.current.slice(-10).map((p) => Math.round(p)).join(", ")}
-
-Deliver a 3-4 sentence oracle reading using sacred language: "Akashic price field", "quantum momentum", "Vedic wave pattern", "Bhakti-Algorithm signal", "Prema-Pulse". End with a clear BUY / SELL / HOLD recommendation and why. Be specific about price levels.`
-          }],
-        }),
       });
-      const data = await res.json();
-      setAiText(data.content?.[0]?.text || "Akashic channels silent — retry transmission.");
-    } catch {
-      setAiText("SQI Neural-Net recalibrating quantum channels... Invoke again to receive transmission.");
+      if (error) throw error;
+      setAiText((data as { reading?: string })?.reading ?? 'Akasha field silent.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      setAiText('Oracle transmission failed: ' + msg);
+    } finally {
+      setAiLoading(false);
     }
-    setAiLoading(false);
   };
 
   // ── Derived ─────────────────────────────────────────────────
@@ -865,41 +948,60 @@ Deliver a 3-4 sentence oracle reading using sacred language: "Akashic price fiel
         <div style={{ animation: "fadeIn 0.3s ease" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <div style={{ fontSize: 7, letterSpacing: "0.3em", color: "rgba(255,255,255,0.28)", fontWeight: 800, textTransform: "uppercase" }}>
-              SOVEREIGN WHALE TRACKER  ·  COPY SIGNAL ENGINE
+              SOVEREIGN WHALE TRACKER  ·  LIVE BINANCE FEED
             </div>
-            <button onClick={() => setWhales(genWhales(currentPrice))} style={{
+            <button onClick={() => void fetchRealWhaleData()} disabled={whaleLoading} style={{
               padding: "8px 16px", borderRadius: 40, background: GOLD_DIM, border: `1px solid rgba(212,175,55,0.3)`,
-              color: GOLD, fontFamily: "inherit", fontWeight: 800, fontSize: 8, letterSpacing: "0.18em", cursor: "pointer", textTransform: "uppercase",
-            }}>↻  REFRESH SIGNALS</button>
+              color: GOLD, fontFamily: "inherit", fontWeight: 800, fontSize: 8, letterSpacing: "0.18em",
+              cursor: whaleLoading ? "default" : "pointer", textTransform: "uppercase", opacity: whaleLoading ? 0.5 : 1,
+            }}>{whaleLoading ? "⟳  SCANNING..." : "↻  REFRESH SIGNALS"}</button>
           </div>
 
-          {whales.map((w) => {
-            const sigCol = SIG_COLOR[w.signal] || "rgba(255,255,255,0.3)";
-            const tierCol = w.tier === "OMEGA" ? GOLD : w.tier === "ALPHA" ? CYAN : "rgba(255,255,255,0.4)";
+          {whaleLoading && whaleSignals.length === 0 && (
+            <div style={{ ...glass, padding: "40px 22px", borderRadius: 18, textAlign: "center" }}>
+              <Loader2 size={24} style={{ color: GOLD, animation: "spin 1s linear infinite", marginBottom: 10 }} />
+              <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: "0.25em", fontWeight: 800 }}>SYNCING BINANCE WHALE STREAM</div>
+            </div>
+          )}
+
+          {!whaleLoading && whaleSignals.length === 0 && (
+            <div style={{ ...glass, padding: "40px 22px", borderRadius: 18, textAlign: "center" }}>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", letterSpacing: "0.2em", fontWeight: 800 }}>
+                NO WHALE ACTIVITY DETECTED  ·  REFRESH TO SCAN AGAIN
+              </div>
+            </div>
+          )}
+
+          {whaleSignals.map((w) => {
+            const sig = String(w.signal ?? "—");
+            const tier = String(w.tier ?? "PRO");
+            const sigCol = SIG_COLOR[sig] || "rgba(255,255,255,0.3)";
+            const tierCol = tier === "OMEGA" ? GOLD : tier === "ALPHA" ? CYAN : tier === "LIVE" ? GREEN : "rgba(255,255,255,0.4)";
+            const name = String(w.name ?? "");
             return (
-              <div key={w.id} style={{ ...glass, padding: "18px 22px", marginBottom: 10, borderRadius: 18, display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
+              <div key={String(w.id)} style={{ ...glass, padding: "18px 22px", marginBottom: 10, borderRadius: 18, display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
                 <div style={{ width: 42, height: 42, borderRadius: "50%", background: GOLD_DIM, border: `1px solid rgba(212,175,55,0.3)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, color: GOLD, fontSize: 14, flexShrink: 0 }}>
-                  {w.name[0]}
+                  {name[0] ?? "?"}
                 </div>
-                <div style={{ flex: 1, minWidth: 120 }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>{w.name}</div>
-                  <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>{w.handle}</div>
+                <div style={{ flex: 1, minWidth: 140 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>{name}</div>
+                  <div style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>{String(w.handle ?? "")}</div>
                 </div>
                 {[
-                  { l: "WIN RATE", v: `${w.winRate}%`,    col: GOLD },
-                  { l: "ALL-TIME", v: w.roi,              col: GREEN },
-                  { l: "SIGNAL",   v: w.signal || "—",   col: sigCol, pulse: w.signal === "BUY" || w.signal === "SELL" },
-                  { l: "CONF.",    v: w.confidence || "—", col: "#fff" },
-                  { l: "TARGET",   v: w.target ? `$${Math.round(w.target).toLocaleString()}` : "—", col: GREEN },
-                  { l: "STOP",     v: w.stop   ? `$${Math.round(w.stop).toLocaleString()}`   : "—", col: RED   },
+                  { l: "VALUE",  v: String(w.usdValue ?? "—"), col: GOLD },
+                  { l: "TIME",   v: String(w.timeAgo ?? "—"),  col: "rgba(255,255,255,0.6)" },
+                  { l: "SIGNAL", v: sig, col: sigCol, pulse: sig === "BUY" || sig === "SELL" },
+                  { l: "CONF.",  v: w.confidence != null ? `${w.confidence}%` : "—", col: "#fff" },
+                  { l: "TARGET", v: w.target ? `$${Math.round(Number(w.target)).toLocaleString()}` : "—", col: GREEN },
+                  { l: "STOP",   v: w.stop   ? `$${Math.round(Number(w.stop)).toLocaleString()}`   : "—", col: RED   },
                 ].map(({ l, v, col, pulse }) => (
-                  <div key={l} style={{ textAlign: "center", minWidth: 52 }}>
+                  <div key={l} style={{ textAlign: "center", minWidth: 56 }}>
                     <div style={{ fontSize: 6.5, letterSpacing: "0.22em", color: "rgba(255,255,255,0.25)", fontWeight: 800, marginBottom: 4, textTransform: "uppercase" }}>{l}</div>
                     <div style={{ fontSize: 13, fontWeight: 900, color: col, animation: pulse ? "pulse 1.5s infinite" : "none" }}>{v}</div>
                   </div>
                 ))}
                 <div style={{ padding: "5px 12px", borderRadius: 40, fontSize: 7, fontWeight: 800, letterSpacing: "0.2em", background: `${tierCol}18`, color: tierCol, border: `1px solid ${tierCol}40` }}>
-                  {w.tier}
+                  {tier}
                 </div>
               </div>
             );
