@@ -313,8 +313,8 @@ async function fetchMusicTracks(
       energy_level: t.energy_level,
       best_time_of_day: t.best_time_of_day,
       spiritual_path: t.spiritual_path,
-      _rawTrack: t as unknown as Record<string, unknown>,
-    })) as NadiTrack[];
+      _rawTrack: t as unknown as NadiTrack['_rawTrack'],
+    }));
   } catch {
     return [];
   }
