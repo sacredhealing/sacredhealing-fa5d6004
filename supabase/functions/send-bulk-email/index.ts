@@ -91,7 +91,7 @@ const handler = async (req: Request): Promise<Response> => {
             .replace(/{{email}}/g, subscriber.email);
 
           await resend.emails.send({
-            from: "Sacred Healing <onboarding@resend.dev>",
+            from: "Sacred Healing <noreply@mail.siddhaquantumnexus.com>",
             to: [subscriber.email],
             subject: subject,
             html: personalizedHtml,
