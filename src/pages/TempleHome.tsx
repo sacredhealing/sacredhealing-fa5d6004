@@ -15,6 +15,9 @@ import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 import { hasFeatureAccess, FEATURE_TIER, isAkashaInfinityTier } from '@/lib/tierAccess';
 import TempleGateIcon from '@/components/icons/TempleGateIcon';
 import { supabase } from '@/integrations/supabase/client';
+import { useTempleBroadcast } from '@/hooks/useTempleBroadcast';
+import { useOfflineAnchorSync, queueAnchorSync } from '@/hooks/useOfflineAnchorSync';
+import { useDailyAnchorReminder } from '@/hooks/useDailyAnchorReminder';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const SACRED_SITES = [
