@@ -690,6 +690,14 @@ function TempleHomeInner() {
     return () => clearTimeout(t);
   }, [selectedSite, auraIntensity]);
 
+  // ─── Always-on broadcast: silent carrier + offline resync + daily reminder ──
+  useTempleBroadcast({ active: isAnchored, siteId: selectedSite, intensity: auraIntensity });
+  useOfflineAnchorSync();
+  useDailyAnchorReminder({
+    active: isAnchored,
+    siteName: SITE_DB[selectedSite]?.title ?? selectedSite,
+  });
+
   useEffect(() => {
     const isHighVoltage = selectedSite === 'mauritius' || selectedSite === 'kailash_13x';
     if (isHighVoltage && auraIntensity >= 60) {
