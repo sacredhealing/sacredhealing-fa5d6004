@@ -1,298 +1,1348 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Brain, RefreshCw, Play, Square, BarChart3, ChevronDown, ChevronUp, ExternalLink, Target, Zap, Shield, Search } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { toast } from 'sonner';
+// src/pages/PredictionMarketBot.tsx
+// SQI 2050 — AI Prediction Engine (Polymarket)
+// Paper + Live trading | Gemini-powered | Kelly-sized
+// IMPORTANT: Stripe checkout & AffiliateID logic untouched (handled at parent /income-streams route)
 
-const G = '#D4AF37'; const CYAN = '#22D3EE'; const GREEN = '#2ECC71'; const RED = '#FF4757'; const AMBER = '#F59E0B'; const BLACK = '#050505';
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
+import { toast } from "sonner";
+import {
+  ArrowLeft, Activity, TrendingUp, TrendingDown, Brain, Zap,
+  Target, AlertTriangle, Power, RefreshCw, Settings as SettingsIcon,
+  ChevronRight, Sparkles, Shield, BarChart3,
+} from "lucide-react";
 
-const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap');
-.pmb{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:${BLACK};color:#fff;padding-bottom:100px;}
-.pmb *{box-sizing:border-box;}
-.pmb-bg{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 20% 10%,rgba(212,175,55,0.06) 0%,transparent 55%),radial-gradient(ellipse at 80% 90%,rgba(34,211,238,0.04) 0%,transparent 55%);}
-.pmb-z{position:relative;z-index:1;padding:0 18px;}
-.gc{background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);border-radius:22px;padding:16px;}
-.gc-g{border-color:rgba(212,175,55,0.22);box-shadow:0 0 24px rgba(212,175,55,0.07);}
-.gc-gr{border-color:rgba(46,204,113,0.2);background:rgba(46,204,113,0.06);}
-.lbl{font-size:7px;font-weight:800;letter-spacing:.5em;text-transform:uppercase;color:rgba(255,255,255,0.3);}
-.pill{display:inline-flex;align-items:center;gap:3px;padding:2px 9px;border-radius:50px;font-size:7px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;}
-.pill-g{background:rgba(212,175,55,0.12);color:${G};border:1px solid rgba(212,175,55,0.25);}
-.pill-gr{background:rgba(46,204,113,0.12);color:${GREEN};border:1px solid rgba(46,204,113,0.25);}
-.pill-r{background:rgba(255,71,87,0.12);color:${RED};border:1px solid rgba(255,71,87,0.25);}
-.pill-c{background:rgba(34,211,238,0.1);color:${CYAN};border:1px solid rgba(34,211,238,0.25);}
-.pill-a{background:rgba(245,158,11,0.1);color:${AMBER};border:1px solid rgba(245,158,11,0.25);}
-.sb{background:rgba(255,255,255,0.05);border-radius:12px;padding:10px 12px;}
-.btn-g{background:linear-gradient(135deg,${G},#f0c040);color:${BLACK};border:none;border-radius:16px;padding:13px 18px;font-weight:900;font-size:10px;letter-spacing:.3em;text-transform:uppercase;cursor:pointer;width:100%;box-shadow:0 0 24px rgba(212,175,55,0.35);transition:all .25s;display:flex;align-items:center;justify-content:center;gap:7px;}
-.btn-r{background:linear-gradient(135deg,${RED},#c0392b);color:#fff;border:none;border-radius:16px;padding:13px 18px;font-weight:900;font-size:10px;letter-spacing:.3em;text-transform:uppercase;cursor:pointer;width:100%;box-shadow:0 0 24px rgba(255,71,87,0.3);transition:all .25s;display:flex;align-items:center;justify-content:center;gap:7px;}
-.btn-ghost{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:13px;padding:9px 14px;font-size:9px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;gap:6px;}
-.filter-btn{background:transparent;border:1px solid rgba(255,255,255,0.08);border-radius:50px;padding:5px 12px;font-size:8px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;color:rgba(255,255,255,0.35);transition:all .2s;font-family:inherit;}
-.filter-btn.on{background:rgba(212,175,55,0.12);color:${G};border-color:rgba(212,175,55,0.3);}
-@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-.spin{animation:spin 1s linear infinite;}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.pulse{animation:pulse 2s ease-in-out infinite;}
-`;
+// ─── DESIGN TOKENS (SQI 2050) ─────────────────────────────────
+const GOLD = "#D4AF37";
+const BLACK = "#050505";
+const CYAN = "#22D3EE";
+const GREEN = "#10B981";
+const RED = "#EF4444";
 
-interface Market { id: string; question: string; outcomes: { name: string; price: number; tokenId: string }[]; liquidity: number; volume: number; endDate: string; slug: string; }
-interface Signal { id: string; market: Market; outcome: string; currentPrice: number; targetPrice: number; confidence: number; kellySize: number; reasoning: string; edge: string; strategy: string; timestamp: Date; }
+// ─── TYPES ────────────────────────────────────────────────────
+type Mode = "paper" | "live";
 
-function calcKelly(balance: number, winProb: number, price: number): number {
-  if (winProb <= 0 || price <= 0 || price >= 1) return 0;
-  const payout = (1 - price) / price;
-  const k = (winProb * payout - (1 - winProb)) / payout;
-  if (k <= 0) return 0;
-  return Math.min(50, Math.max(0.50, parseFloat((balance * k * 0.25).toFixed(2))));
+interface BotSession {
+  id: string;
+  user_id: string;
+  bot_type: "prediction_engine";
+  mode: Mode;
+  status: "running" | "paused" | "stopped";
+  starting_balance: number;
+  current_balance: number;
+  kelly_fraction: number;
+  min_edge_pct: number;
+  max_position_pct: number;
+  created_at: string;
+  updated_at: string;
 }
 
-async function fetchMarkets(): Promise<Market[]> {
-  try {
-    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/polymarket-proxy?endpoint=markets&params=${encodeURIComponent('limit=50&active=true&closed=false')}`;
-    const r = await fetch(url);
-    if (!r.ok) return [];
-    const data = await r.json();
-    return data.map((m: any) => {
-      const names = JSON.parse(m.outcomes || '["Yes","No"]');
-      const prices = JSON.parse(m.outcomePrices || '[0.5,0.5]');
-      const tokens = JSON.parse(m.clobTokenIds || '["",""]');
-      return { id: m.id, question: m.question, liquidity: parseFloat(m.liquidity) || 0, volume: parseFloat(m.volume) || 0, endDate: m.endDate, slug: m.slug || '', outcomes: names.map((n: string, i: number) => ({ name: n, price: parseFloat(prices[i]) || 0.5, tokenId: tokens[i] || '' })) };
-    });
-  } catch { return []; }
+interface BotTrade {
+  id: string;
+  session_id: string;
+  market_question: string;
+  market_id: string;
+  side: "YES" | "NO";
+  price: number;          // 0.00–1.00
+  ai_probability: number; // 0.00–1.00
+  edge_pct: number;
+  size_usd: number;
+  status: "pending" | "open" | "settled" | "cancelled";
+  pnl_usd: number | null;
+  created_at: string;
+  settled_at: string | null;
+  reasoning: string | null;
 }
 
-async function analyseMarket(market: Market, balance: number): Promise<Signal | null> {
-  try {
-    const yes = market.outcomes.find(o => o.name.toLowerCase() === 'yes');
-    const no = market.outcomes.find(o => o.name.toLowerCase() === 'no');
-    if (!yes || !no) return null;
-    const prompt = `You are a professional prediction market analyst. Analyse this market and find if there is a trading edge.
-
-Market: "${market.question}"
-YES price: ${(yes.price * 100).toFixed(1)}% | NO price: ${(no.price * 100).toFixed(1)}%
-Liquidity: $${market.liquidity.toLocaleString()} | Volume: $${market.volume.toLocaleString()}
-End Date: ${market.endDate}
-
-Give your analysis as JSON only, no other text:
-{"shouldTrade":true/false,"recommendation":"BUY_YES"/"BUY_NO"/"AVOID","trueProb":0.0-1.0,"confidence":50-95,"reasoning":"1-2 sentences","edge":"brief edge description","strategy":"arbitrage"/"news_edge"/"mispricing"/"momentum"}
-
-Only recommend if confidence >= 65 and edge > 4%. Be conservative.`;
-    const { data, error } = await supabase.functions.invoke('gemini-bridge', { body: { prompt, model: 'gemini-2.0-flash', type: 'market-analysis' } });
-    if (error || !data?.response) return null;
-    const match = data.response.match(/\{[\s\S]*\}/);
-    if (!match) return null;
-    const a = JSON.parse(match[0]);
-    if (!a.shouldTrade || a.confidence < 65) return null;
-    const outcome = a.recommendation === 'BUY_YES' ? yes : no;
-    const size = calcKelly(balance, a.trueProb, outcome.price);
-    if (size < 0.50) return null;
-    return { id: `${market.id}-${Date.now()}`, market, outcome: a.recommendation === 'BUY_YES' ? 'YES' : 'NO', currentPrice: outcome.price, targetPrice: Math.min(0.95, a.trueProb), confidence: a.confidence, kellySize: size, reasoning: a.reasoning, edge: a.edge, strategy: a.strategy, timestamp: new Date() };
-  } catch { return null; }
+interface MarketCandidate {
+  id: string;
+  question: string;
+  current_price: number;   // YES price 0–1
+  volume_24h: number;
+  ai_probability: number;
+  edge_pct: number;
+  recommended_side: "YES" | "NO";
+  recommended_size: number;
+  reasoning: string;
 }
 
+// ─── KELLY MATH ───────────────────────────────────────────────
+/**
+ * Fractional Kelly for binary prediction markets.
+ * f* = (bp - q) / b ; clamped to [0, max_position_pct]
+ * @param p AI probability (0-1)
+ * @param marketPrice Current YES price (0-1)
+ * @param kellyFraction 0.10–1.0 (we default 0.25 = quarter Kelly for safety)
+ * @param maxPositionPct Hard cap on bankroll % per trade
+ */
+function kellySize(
+  p: number,
+  marketPrice: number,
+  kellyFraction: number,
+  maxPositionPct: number
+): { fraction: number; side: "YES" | "NO"; edge: number } {
+  // Decide side based on AI vs market
+  const yesEdge = p - marketPrice;
+  const noEdge = (1 - p) - (1 - marketPrice);
+  const side: "YES" | "NO" = yesEdge > noEdge ? "YES" : "NO";
+  const probWin = side === "YES" ? p : 1 - p;
+  const cost = side === "YES" ? marketPrice : 1 - marketPrice;
+  const edge = side === "YES" ? yesEdge : noEdge;
+
+  if (cost <= 0 || cost >= 1 || edge <= 0) {
+    return { fraction: 0, side, edge };
+  }
+
+  // Decimal odds b = (1/cost) - 1 ; payoff per $1 risked
+  const b = 1 / cost - 1;
+  const q = 1 - probWin;
+  const fullKelly = (b * probWin - q) / b;
+  const sized = Math.max(0, fullKelly) * kellyFraction;
+  return {
+    fraction: Math.min(sized, maxPositionPct),
+    side,
+    edge,
+  };
+}
+
+// ─── REALISTIC PROJECTION MODEL ───────────────────────────────
+// Three scenarios based on win-rate × avg edge × trades/day × Kelly
+// These are PROJECTIONS, not guarantees. Variance is significant.
+interface ProjectionInputs {
+  startingBalance: number;
+  kellyFraction: number;
+}
+function buildProjections({ startingBalance, kellyFraction }: ProjectionInputs) {
+  const scenarios = [
+    {
+      key: "conservative" as const,
+      label: "Conservative",
+      tagline: "Minimal edge survives fees",
+      winRate: 0.51,
+      avgEdge: 0.015,
+      tradesPerDay: 2,
+      feeDrag: 0.02,
+      color: "rgba(255,255,255,0.7)",
+    },
+    {
+      key: "base" as const,
+      label: "Base Case",
+      tagline: "Realistic AI edge in liquid markets",
+      winRate: 0.54,
+      avgEdge: 0.030,
+      tradesPerDay: 4,
+      feeDrag: 0.02,
+      color: GOLD,
+    },
+    {
+      key: "optimistic" as const,
+      label: "Optimistic",
+      tagline: "Strong AI edge, illiquid niches",
+      winRate: 0.58,
+      avgEdge: 0.060,
+      tradesPerDay: 6,
+      feeDrag: 0.02,
+      color: CYAN,
+    },
+  ];
+
+  return scenarios.map((s) => {
+    // Per-trade EV = (winRate × edge) - feeDrag, applied to Kelly fraction
+    const evPerTrade = (s.winRate * s.avgEdge) - s.feeDrag * 0.5; // half-spread approx
+    const dailyReturn = evPerTrade * kellyFraction * s.tradesPerDay;
+    const day = startingBalance * dailyReturn;
+    const week = startingBalance * (Math.pow(1 + dailyReturn, 7) - 1);
+    const month = startingBalance * (Math.pow(1 + dailyReturn, 30) - 1);
+    return {
+      ...s,
+      dailyReturnPct: dailyReturn * 100,
+      day,
+      week,
+      month,
+    };
+  });
+}
+
+// ─── COMPONENT ────────────────────────────────────────────────
 export default function PredictionMarketBot() {
-  const navigate = useNavigate();
   const { user } = useAuth();
-  const [markets, setMarkets] = useState<Market[]>([]);
-  const [signals, setSignals] = useState<Signal[]>([]);
-  const [isScanning, setIsScanning] = useState(false);
-  const [isRunning, setIsRunning] = useState(false);
-  const [balance, setBalance] = useState(10);
-  const [scanCount, setScanCount] = useState(0);
-  const [lastScan, setLastScan] = useState<Date | null>(null);
-  const [expanded, setExpanded] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | 'high' | 'medium'>('all');
-  const [stats, setStats] = useState({ total: 0, highConf: 0, avgEdge: 0 });
-  const [logs, setLogs] = useState<string[]>([]);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const navigate = useNavigate();
 
-  const addLog = (msg: string) => setLogs(p => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...p].slice(0, 30));
+  // Core state
+  const [session, setSession] = useState<BotSession | null>(null);
+  const [trades, setTrades] = useState<BotTrade[]>([]);
+  const [candidates, setCandidates] = useState<MarketCandidate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [scanning, setScanning] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
+  // Settings (persisted in session)
+  const [mode, setMode] = useState<Mode>("paper");
+  const [kellyFraction, setKellyFraction] = useState(0.25); // quarter-Kelly default
+  const [minEdge, setMinEdge] = useState(0.03);             // 3% min edge
+  const [maxPosition, setMaxPosition] = useState(0.05);     // 5% max per trade
+  const [startingBalance] = useState(10);                    // €10 default
+
+  // ─── INITIAL LOAD ────────────────────────────────────────────
   useEffect(() => {
-    if (!user?.id) return;
-    supabase.from('polymarket_bot_settings').select('paper_balance').eq('user_id', user.id).single().then(({ data }) => { if (data?.paper_balance != null) setBalance(Number(data.paper_balance)); });
-  }, [user?.id]);
+    if (!user) return;
+    loadOrCreateSession();
+  }, [user]);
 
-  const runScan = useCallback(async () => {
-    setIsScanning(true);
-    addLog('Fetching 50 markets...');
+  const loadOrCreateSession = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
     try {
-      const fetched = await fetchMarkets();
-      setMarkets(fetched);
-      addLog(`Fetched ${fetched.length} markets. Sending top 5 to Gemini...`);
-      const top = fetched.filter(m => m.liquidity > 10000).sort((a, b) => b.volume - a.volume).slice(0, 5);
-      const newSigs: Signal[] = [];
-      for (const m of top) {
-        addLog(`Analysing: ${m.question.slice(0, 50)}...`);
-        const sig = await analyseMarket(m, balance);
-        if (sig) { newSigs.push(sig); addLog(`✓ Signal found: ${sig.outcome} @ ${(sig.currentPrice * 100).toFixed(1)}% conf:${sig.confidence}%`); }
-        else addLog(`No edge found.`);
-        await new Promise(r => setTimeout(r, 400));
-      }
-      if (newSigs.length > 0) {
-        setSignals(p => {
-          const combined = [...newSigs, ...p].slice(0, 20);
-          setStats({ total: combined.length, highConf: combined.filter(s => s.confidence >= 80).length, avgEdge: parseFloat((combined.reduce((s, x) => s + Math.abs(x.targetPrice - x.currentPrice), 0) / combined.length * 100).toFixed(1)) });
-          return combined;
-        });
-        toast.success(`${newSigs.length} new signal${newSigs.length > 1 ? 's' : ''} found`);
-      } else {
-        addLog('No signals this cycle — market well-priced.');
-      }
-      setScanCount(c => c + 1);
-      setLastScan(new Date());
-    } catch { toast.error('Scan failed'); }
-    finally { setIsScanning(false); }
-  }, [balance]);
+      // Load existing session for this bot
+      const { data: existing, error } = await supabase
+        .from("bot_sessions")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("bot_type", "prediction_engine")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-  const toggle = () => {
-    if (isRunning) {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      setIsRunning(false);
-      addLog('AI Engine stopped.');
-      toast.info('AI Engine stopped');
-    } else {
-      setIsRunning(true);
-      addLog('AI Engine started — scanning every 90s.');
-      toast.success('AI Engine started');
-      runScan();
-      intervalRef.current = setInterval(runScan, 90000);
+      if (error) throw error;
+
+      if (existing) {
+        setSession(existing as BotSession);
+        setMode(existing.mode);
+        setKellyFraction(existing.kelly_fraction || 0.25);
+        setMinEdge(existing.min_edge_pct || 0.03);
+        setMaxPosition(existing.max_position_pct || 0.05);
+        await loadTrades(existing.id);
+      } else {
+        // Create fresh paper-mode session at €10
+        const { data: created, error: createErr } = await supabase
+          .from("bot_sessions")
+          .insert({
+            user_id: user.id,
+            bot_type: "prediction_engine",
+            mode: "paper",
+            status: "paused",
+            starting_balance: 10,
+            current_balance: 10,
+            kelly_fraction: 0.25,
+            min_edge_pct: 0.03,
+            max_position_pct: 0.05,
+          })
+          .select()
+          .single();
+        if (createErr) throw createErr;
+        setSession(created as BotSession);
+      }
+    } catch (e: any) {
+      console.error("loadOrCreateSession", e);
+      toast.error("Failed to load bot session", { description: e.message });
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  const loadTrades = async (sessionId: string) => {
+    const { data, error } = await supabase
+      .from("bot_trades")
+      .select("*")
+      .eq("session_id", sessionId)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (!error && data) setTrades(data as BotTrade[]);
+  };
+
+  // ─── REALTIME SUBSCRIPTION ───────────────────────────────────
+  useEffect(() => {
+    if (!session) return;
+    const channel = supabase
+      .channel(`bot_trades:${session.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "bot_trades",
+          filter: `session_id=eq.${session.id}`,
+        },
+        () => loadTrades(session.id)
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "bot_sessions",
+          filter: `id=eq.${session.id}`,
+        },
+        (payload) => setSession(payload.new as BotSession)
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [session?.id]);
+
+  // ─── BOT CONTROL ─────────────────────────────────────────────
+  const persistSettings = async (updates: Partial<BotSession>) => {
+    if (!session) return;
+    const { data, error } = await supabase
+      .from("bot_sessions")
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq("id", session.id)
+      .select()
+      .single();
+    if (!error && data) setSession(data as BotSession);
+  };
+
+  const toggleBot = async () => {
+    if (!session) return;
+    const next = session.status === "running" ? "paused" : "running";
+    await persistSettings({ status: next });
+    toast.success(next === "running" ? "Engine activated" : "Engine paused");
+  };
+
+  const switchMode = async (next: Mode) => {
+    if (!session) return;
+    if (next === "live" && session.current_balance < 10) {
+      toast.error("Live mode requires minimum $10 balance");
+      return;
+    }
+    if (next === "live") {
+      const confirmed = window.confirm(
+        "LIVE MODE: Real money will be risked. Polymarket trades execute on Polygon mainnet via the Railway worker. Continue?"
+      );
+      if (!confirmed) return;
+    }
+    setMode(next);
+    await persistSettings({ mode: next });
+    toast.success(`Switched to ${next.toUpperCase()} mode`);
+  };
+
+  // ─── SCAN MARKETS (Gemini via edge function) ────────────────
+  const scanMarkets = useCallback(async () => {
+    if (!session) return;
+    setScanning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        "prediction-engine-scan",
+        {
+          body: {
+            session_id: session.id,
+            mode: session.mode,
+            kelly_fraction: session.kelly_fraction,
+            min_edge_pct: session.min_edge_pct,
+            max_position_pct: session.max_position_pct,
+            current_balance: session.current_balance,
+          },
+        }
+      );
+      if (error) throw error;
+      setCandidates(data?.candidates ?? []);
+      if ((data?.candidates ?? []).length === 0) {
+        toast("No edge found this scan", {
+          description: "Engine waits for a higher-quality signal.",
+        });
+      } else {
+        toast.success(`${data.candidates.length} candidate(s) identified`);
+      }
+    } catch (e: any) {
+      console.error("scanMarkets", e);
+      toast.error("Scan failed", { description: e.message });
+    } finally {
+      setScanning(false);
+    }
+  }, [session]);
+
+  // Auto-scan loop when running (every 90s)
+  const scanRef = useRef(scanMarkets);
+  scanRef.current = scanMarkets;
+  useEffect(() => {
+    if (session?.status !== "running") return;
+    scanRef.current();
+    const id = setInterval(() => scanRef.current(), 90_000);
+    return () => clearInterval(id);
+  }, [session?.status]);
+
+  // ─── EXECUTE TRADE (paper or live signal) ───────────────────
+  const executeTrade = async (c: MarketCandidate) => {
+    if (!session) return;
+    try {
+      const sizeUsd = Math.min(
+        c.recommended_size,
+        session.current_balance * session.max_position_pct
+      );
+      if (sizeUsd < 0.5) {
+        toast.error("Size below minimum trade ($0.50)");
+        return;
+      }
+      const tradePayload = {
+        session_id: session.id,
+        market_question: c.question,
+        market_id: c.id,
+        side: c.recommended_side,
+        price: c.current_price,
+        ai_probability: c.ai_probability,
+        edge_pct: c.edge_pct,
+        size_usd: sizeUsd,
+        status: "pending",
+        reasoning: c.reasoning,
+      };
+
+      const { data: trade, error } = await supabase
+        .from("bot_trades")
+        .insert(tradePayload)
+        .select()
+        .single();
+      if (error) throw error;
+
+      if (mode === "live") {
+        // Push to bot_trade_signals → Railway worker picks up
+        const { error: sigErr } = await supabase
+          .from("bot_trade_signals")
+          .insert({
+            user_id: user!.id,
+            session_id: session.id,
+            trade_id: trade.id,
+            bot_type: "prediction_engine",
+            payload: tradePayload,
+            status: "queued",
+          });
+        if (sigErr) throw sigErr;
+        toast.success("Trade signal queued for live execution");
+      } else {
+        // Paper mode: deduct size, mark as open
+        await supabase
+          .from("bot_trades")
+          .update({ status: "open" })
+          .eq("id", trade.id);
+        await persistSettings({
+          current_balance: session.current_balance - sizeUsd,
+        });
+        toast.success(`Paper trade opened: ${c.recommended_side} ${c.question.slice(0, 40)}…`);
+      }
+
+      setCandidates((prev) => prev.filter((x) => x.id !== c.id));
+    } catch (e: any) {
+      console.error("executeTrade", e);
+      toast.error("Trade failed", { description: e.message });
     }
   };
 
-  useEffect(() => () => { if (intervalRef.current) clearInterval(intervalRef.current); }, []);
+  // ─── DERIVED ANALYTICS ───────────────────────────────────────
+  const stats = useMemo(() => {
+    const settled = trades.filter((t) => t.status === "settled");
+    const wins = settled.filter((t) => (t.pnl_usd ?? 0) > 0).length;
+    const totalPnl = settled.reduce((sum, t) => sum + (t.pnl_usd ?? 0), 0);
+    const open = trades.filter((t) => t.status === "open" || t.status === "pending");
+    const today = trades.filter(
+      (t) =>
+        new Date(t.created_at).toDateString() === new Date().toDateString()
+    );
+    const todayPnl = today
+      .filter((t) => t.status === "settled")
+      .reduce((sum, t) => sum + (t.pnl_usd ?? 0), 0);
+    return {
+      winRate: settled.length > 0 ? (wins / settled.length) * 100 : 0,
+      totalPnl,
+      todayPnl,
+      openCount: open.length,
+      settledCount: settled.length,
+    };
+  }, [trades]);
 
-  const filtered = signals.filter(s => filter === 'high' ? s.confidence >= 80 : filter === 'medium' ? s.confidence >= 65 && s.confidence < 80 : true);
-  const stratColor: Record<string, string> = { arbitrage: CYAN, news_edge: G, mispricing: GREEN, momentum: '#A855F7' };
+  const projections = useMemo(
+    () =>
+      buildProjections({
+        startingBalance: session?.starting_balance ?? 10,
+        kellyFraction,
+      }),
+    [session?.starting_balance, kellyFraction]
+  );
+
+  // ─── RENDER ──────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: BLACK }}
+      >
+        <div className="flex flex-col items-center gap-4">
+          <div
+            className="w-12 h-12 rounded-full border-2 animate-spin"
+            style={{
+              borderColor: `${GOLD}33`,
+              borderTopColor: GOLD,
+            }}
+          />
+          <p
+            style={{
+              color: GOLD,
+              fontSize: 9,
+              fontWeight: 800,
+              letterSpacing: "0.5em",
+              textTransform: "uppercase",
+            }}
+          >
+            Initializing Engine
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <>
-      <style>{CSS}</style>
-      <div className="pmb">
-        <div className="pmb-bg" />
-        <div className="pmb-z">
-          <div style={{ paddingTop: 22, paddingBottom: 16 }}>
-            <button className="btn-ghost" style={{ marginBottom: 16, width: 'auto' }} onClick={() => navigate('/income-streams')}>
-              <ArrowLeft size={13} /> Back
+    <div className="min-h-screen pb-24" style={{ background: BLACK, color: "#fff" }}>
+      {/* ─── HEADER ─── */}
+      <div className="sticky top-0 z-40 backdrop-blur-xl"
+        style={{ background: "rgba(5,5,5,0.85)", borderBottom: `1px solid ${GOLD}22` }}
+      >
+        <div className="max-w-5xl mx-auto px-5 py-4 flex items-center justify-between">
+          <button
+            onClick={() => navigate("/income-streams")}
+            className="flex items-center gap-2 opacity-70 hover:opacity-100 transition"
+          >
+            <ArrowLeft size={18} />
+            <span style={{ fontSize: 11, letterSpacing: "0.2em", fontWeight: 800 }}>
+              INCOME STREAMS
+            </span>
+          </button>
+          <button
+            onClick={() => setShowSettings((v) => !v)}
+            className="p-2 rounded-full transition"
+            style={{ border: `1px solid ${GOLD}33` }}
+          >
+            <SettingsIcon size={18} style={{ color: GOLD }} />
+          </button>
+        </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-5 pt-8 space-y-6">
+        {/* ─── HERO ─── */}
+        <div className="text-center space-y-3 pt-4">
+          <div
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full"
+            style={{
+              background: "rgba(255,255,255,0.02)",
+              border: `1px solid ${GOLD}33`,
+              backdropFilter: "blur(40px)",
+            }}
+          >
+            <Brain size={12} style={{ color: GOLD }} />
+            <span
+              style={{
+                fontSize: 8,
+                letterSpacing: "0.5em",
+                fontWeight: 800,
+                color: GOLD,
+                textTransform: "uppercase",
+              }}
+            >
+              AI Prediction Engine
+            </span>
+          </div>
+          <h1
+            style={{
+              fontSize: 38,
+              fontWeight: 900,
+              letterSpacing: "-0.05em",
+              lineHeight: 1.05,
+              background: `linear-gradient(135deg, ${GOLD}, #fff)`,
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            Polymarket Edge
+            <br />Detection
+          </h1>
+          <p
+            style={{
+              fontSize: 13,
+              color: "rgba(255,255,255,0.6)",
+              fontWeight: 400,
+              lineHeight: 1.6,
+              maxWidth: 480,
+              margin: "0 auto",
+            }}
+          >
+            Gemini scans liquid markets every 90 seconds. Trades open only when AI probability beats market price by your minimum edge threshold.
+          </p>
+        </div>
+
+        {/* ─── MODE + STATUS ROW ─── */}
+        <div
+          className="rounded-[40px] p-6 flex items-center justify-between gap-4"
+          style={{
+            background: "rgba(255,255,255,0.02)",
+            border: `1px solid rgba(255,255,255,0.05)`,
+            backdropFilter: "blur(40px)",
+          }}
+        >
+          <div className="flex-1">
+            <div
+              style={{
+                fontSize: 8,
+                letterSpacing: "0.5em",
+                fontWeight: 800,
+                color: "rgba(255,255,255,0.5)",
+                textTransform: "uppercase",
+              }}
+            >
+              Status
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{
+                  background: session?.status === "running" ? GREEN : "#666",
+                  boxShadow:
+                    session?.status === "running"
+                      ? `0 0 12px ${GREEN}`
+                      : "none",
+                  animation:
+                    session?.status === "running" ? "pulse 2s infinite" : "none",
+                }}
+              />
+              <span
+                style={{
+                  fontSize: 18,
+                  fontWeight: 900,
+                  letterSpacing: "-0.03em",
+                  color: session?.status === "running" ? GREEN : "#aaa",
+                }}
+              >
+                {session?.status === "running" ? "ACTIVE" : "PAUSED"}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <div
+                style={{
+                  fontSize: 8,
+                  letterSpacing: "0.5em",
+                  fontWeight: 800,
+                  color: "rgba(255,255,255,0.5)",
+                  textTransform: "uppercase",
+                }}
+              >
+                Mode
+              </div>
+              <div className="flex items-center gap-2 mt-2">
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 800,
+                    color: mode === "paper" ? GOLD : "rgba(255,255,255,0.4)",
+                    letterSpacing: "0.2em",
+                  }}
+                >
+                  PAPER
+                </span>
+                <Switch
+                  checked={mode === "live"}
+                  onCheckedChange={(v) => switchMode(v ? "live" : "paper")}
+                />
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 800,
+                    color: mode === "live" ? RED : "rgba(255,255,255,0.4)",
+                    letterSpacing: "0.2em",
+                  }}
+                >
+                  LIVE
+                </span>
+              </div>
+            </div>
+
+            <button
+              onClick={toggleBot}
+              className="rounded-full p-4 transition"
+              style={{
+                background:
+                  session?.status === "running"
+                    ? `linear-gradient(135deg, ${RED}, #B91C1C)`
+                    : `linear-gradient(135deg, ${GOLD}, #B8860B)`,
+                boxShadow:
+                  session?.status === "running"
+                    ? `0 0 24px ${RED}66`
+                    : `0 0 24px ${GOLD}66`,
+              }}
+            >
+              <Power size={20} color={BLACK} strokeWidth={3} />
             </button>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 46, height: 46, borderRadius: 14, background: isRunning ? 'rgba(34,211,238,0.1)' : 'rgba(212,175,55,0.1)', border: `1px solid ${isRunning ? 'rgba(34,211,238,0.25)' : 'rgba(212,175,55,0.22)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Brain size={20} color={isRunning ? CYAN : G} className={isRunning ? 'pulse' : ''} />
-                </div>
-                <div>
-                  <div style={{ fontWeight: 900, fontSize: 18, letterSpacing: '-0.02em' }}>AI Prediction Engine</div>
-                  <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.35em', color: CYAN, textTransform: 'uppercase', marginTop: 2 }}>Gemini · Kelly · 50 Markets · 90s Scans</div>
-                </div>
-              </div>
-              <span className={`pill ${isRunning ? 'pill-c' : 'pill-a'}`}>{isRunning ? (isScanning ? '⟳ Scanning' : '● Running') : '○ Stopped'}</span>
-            </div>
-
-            {/* Stats */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 12 }}>
-              <div className="sb"><div className="lbl" style={{ marginBottom: 4 }}>Markets</div><div style={{ fontWeight: 900, fontSize: 18 }}>{markets.length}</div></div>
-              <div className="sb"><div className="lbl" style={{ marginBottom: 4 }}>Signals</div><div style={{ fontWeight: 900, fontSize: 18, color: G }}>{stats.total}</div></div>
-              <div className="sb"><div className="lbl" style={{ marginBottom: 4 }}>High Conf</div><div style={{ fontWeight: 900, fontSize: 18, color: GREEN }}>{stats.highConf}</div></div>
-            </div>
-
-            {/* Balance + Kelly */}
-            <div className="gc gc-g" style={{ marginBottom: 12 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <div><div className="lbl" style={{ marginBottom: 3 }}>Paper Balance</div><div style={{ fontWeight: 900, fontSize: 22, color: G }}>€{balance.toFixed(2)}</div></div>
-                <div style={{ textAlign: 'right' }}><div className="lbl" style={{ marginBottom: 3 }}>Quarter-Kelly Size</div><div style={{ fontWeight: 900, fontSize: 22, color: CYAN }}>€{(balance * 0.05 * 0.25).toFixed(2)}</div></div>
-              </div>
-              {lastScan && <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>Last scan: {lastScan.toLocaleTimeString()} · Scan #{scanCount} · Next in ~90s</div>}
-            </div>
-
-            {/* Controls */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-              <button className={isRunning ? 'btn-r' : 'btn-g'} style={{ flex: 1 }} onClick={toggle} disabled={isScanning}>
-                {isRunning ? <><Square size={13} />Stop AI Engine</> : <><Play size={13} />Start AI Engine</>}
-              </button>
-              <button className="btn-ghost" onClick={runScan} disabled={isScanning}>
-                <RefreshCw size={14} className={isScanning ? 'spin' : ''} />
-              </button>
-            </div>
-
-            {/* How it works */}
-            <div className="gc" style={{ marginBottom: 12 }}>
-              <div className="lbl" style={{ marginBottom: 12 }}>How It Works</div>
-              {[
-                { icon: <Search size={13} />, c: CYAN, l: '1. Scan', d: 'Fetches 50 active markets filtered by >$10k liquidity' },
-                { icon: <Brain size={13} />, c: G, l: '2. Gemini AI', d: 'Estimates true probability vs market price using reasoning' },
-                { icon: <Target size={13} />, c: GREEN, l: '3. Edge Filter', d: 'Only signals with >4% edge and 65%+ confidence pass' },
-                { icon: <Shield size={13} />, c: '#A855F7', l: '4. Kelly Size', d: 'Quarter-Kelly sizing — never risks more than ~1.25% per trade' },
-                { icon: <Zap size={13} />, c: RED, l: '5. Signal', d: 'Shows reasoning, entry price, target, edge % and market link' },
-              ].map((s, i) => (
-                <div key={i} style={{ display: 'flex', gap: 10, marginBottom: i < 4 ? 10 : 0 }}>
-                  <div style={{ width: 30, height: 30, borderRadius: 9, flexShrink: 0, background: s.c + '15', border: `1px solid ${s.c}33`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.c }}>{s.icon}</div>
-                  <div><div style={{ fontWeight: 800, fontSize: 11, color: s.c, marginBottom: 2 }}>{s.l}</div><div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>{s.d}</div></div>
-                </div>
-              ))}
-            </div>
-
-            {/* Live log */}
-            {logs.length > 0 && (
-              <div className="gc" style={{ marginBottom: 12, background: 'rgba(0,0,0,0.5)' }}>
-                <div className="lbl" style={{ marginBottom: 8 }}>Live Feed</div>
-                {logs.slice(0, 8).map((l, i) => <div key={i} style={{ fontFamily: 'monospace', fontSize: 10, color: l.includes('✓') ? GREEN : 'rgba(255,255,255,0.5)', marginBottom: 3 }}>{l}</div>)}
-              </div>
-            )}
           </div>
+        </div>
 
-          {/* Signals */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <div className="lbl">AI Signals ({filtered.length})</div>
-            <div style={{ display: 'flex', gap: 5 }}>
-              {(['all', 'high', 'medium'] as const).map(f => <button key={f} type="button" className={`filter-btn ${filter === f ? 'on' : ''}`} onClick={() => setFilter(f)}>{f === 'all' ? 'All' : f === 'high' ? '80%+' : '65–80%'}</button>)}
-            </div>
-          </div>
-
-          {filtered.length === 0 ? (
-            <div className="gc" style={{ textAlign: 'center', padding: 40 }}>
-              <BarChart3 size={32} style={{ margin: '0 auto 12px', color: 'rgba(255,255,255,0.2)' }} />
-              <div style={{ color: 'rgba(255,255,255,0.4)', marginBottom: 6 }}>No signals yet</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>Press Start AI Engine to begin scanning</div>
-            </div>
-          ) : filtered.map(sig => (
-            <div key={sig.id} className={`gc ${sig.confidence >= 80 ? 'gc-gr' : ''}`} style={{ marginBottom: 10, cursor: 'pointer' }} onClick={() => setExpanded(expanded === sig.id ? null : sig.id)}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-                <div style={{ flex: 1, marginRight: 12 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, lineHeight: 1.4, marginBottom: 6 }}>{sig.market.question}</div>
-                  <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' as const }}>
-                    <span className={`pill ${sig.outcome === 'YES' ? 'pill-gr' : 'pill-r'}`}>BUY {sig.outcome}</span>
-                    <span className="pill pill-g">{sig.strategy.replace('_', ' ')}</span>
-                    <span style={{ padding: '2px 9px', borderRadius: 50, fontSize: '7px', fontWeight: 800, letterSpacing: '.2em', textTransform: 'uppercase' as const, background: `${stratColor[sig.strategy] || G}15`, color: stratColor[sig.strategy] || G, border: `1px solid ${stratColor[sig.strategy] || G}33` }}>{sig.confidence}% conf</span>
-                  </div>
-                </div>
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontWeight: 900, fontSize: 18, color: G }}>€{sig.kellySize.toFixed(2)}</div>
-                  <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>Kelly size</div>
-                  {expanded === sig.id ? <ChevronUp size={13} color="rgba(255,255,255,0.3)" style={{ marginTop: 3 }} /> : <ChevronDown size={13} color="rgba(255,255,255,0.3)" style={{ marginTop: 3 }} />}
-                </div>
+        {/* ─── STAT CHIPS ─── */}
+        <div className="grid grid-cols-4 gap-3">
+          {[
+            {
+              label: "BALANCE",
+              value: `$${session?.current_balance.toFixed(2) ?? "0.00"}`,
+              color: GOLD,
+            },
+            {
+              label: "TODAY",
+              value: `${stats.todayPnl >= 0 ? "+" : ""}$${stats.todayPnl.toFixed(2)}`,
+              color: stats.todayPnl >= 0 ? GREEN : RED,
+            },
+            {
+              label: "WIN RATE",
+              value: `${stats.winRate.toFixed(0)}%`,
+              color: "#fff",
+            },
+            {
+              label: "OPEN",
+              value: `${stats.openCount}`,
+              color: CYAN,
+            },
+          ].map((s) => (
+            <div
+              key={s.label}
+              className="rounded-[24px] p-3 text-center"
+              style={{
+                background: "rgba(255,255,255,0.02)",
+                border: "1px solid rgba(255,255,255,0.05)",
+                backdropFilter: "blur(40px)",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 7,
+                  letterSpacing: "0.5em",
+                  fontWeight: 800,
+                  color: "rgba(255,255,255,0.5)",
+                  textTransform: "uppercase",
+                  marginBottom: 6,
+                }}
+              >
+                {s.label}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 7, marginBottom: expanded === sig.id ? 10 : 0 }}>
-                <div className="sb"><div className="lbl" style={{ marginBottom: 3 }}>Entry</div><div style={{ fontWeight: 900, fontSize: 13 }}>{(sig.currentPrice * 100).toFixed(1)}%</div></div>
-                <div className="sb"><div className="lbl" style={{ marginBottom: 3 }}>Target</div><div style={{ fontWeight: 900, fontSize: 13, color: GREEN }}>{(sig.targetPrice * 100).toFixed(1)}%</div></div>
-                <div className="sb"><div className="lbl" style={{ marginBottom: 3 }}>Edge</div><div style={{ fontWeight: 900, fontSize: 13, color: CYAN }}>+{((sig.targetPrice - sig.currentPrice) * 100).toFixed(1)}%</div></div>
+              <div
+                style={{
+                  fontSize: 22,
+                  fontWeight: 900,
+                  letterSpacing: "-0.04em",
+                  color: s.color,
+                  textShadow: s.color === GOLD ? `0 0 12px ${GOLD}33` : "none",
+                }}
+              >
+                {s.value}
               </div>
-              {expanded === sig.id && (
-                <div style={{ paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-                  <div style={{ marginBottom: 8 }}><div className="lbl" style={{ marginBottom: 4 }}>AI Reasoning</div><div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>{sig.reasoning}</div></div>
-                  <div style={{ marginBottom: 10 }}><div className="lbl" style={{ marginBottom: 4 }}>Edge</div><div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>{sig.edge}</div></div>
-                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginBottom: 10, lineHeight: 1.8 }}>
-                    Liquidity: ${sig.market.liquidity.toLocaleString()} · Volume: ${sig.market.volume.toLocaleString()}<br />
-                    Ends: {new Date(sig.market.endDate).toLocaleDateString()} · Found: {sig.timestamp.toLocaleTimeString()}
-                  </div>
-                  <a href={`https://polymarket.com/market/${sig.market.slug}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 9, fontWeight: 800, color: G, letterSpacing: '.2em', textTransform: 'uppercase', textDecoration: 'none' }}>
-                    <ExternalLink size={11} /> View on Polymarket
-                  </a>
-                </div>
-              )}
             </div>
           ))}
         </div>
+
+        {/* ─── PROJECTIONS PANEL ─── */}
+        <div
+          className="rounded-[40px] p-6"
+          style={{
+            background: "rgba(255,255,255,0.02)",
+            border: "1px solid rgba(255,255,255,0.05)",
+            backdropFilter: "blur(40px)",
+          }}
+        >
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <div
+                style={{
+                  fontSize: 8,
+                  letterSpacing: "0.5em",
+                  fontWeight: 800,
+                  color: GOLD,
+                  textTransform: "uppercase",
+                }}
+              >
+                Modeled Projections
+              </div>
+              <div
+                style={{
+                  fontSize: 18,
+                  fontWeight: 900,
+                  letterSpacing: "-0.03em",
+                  marginTop: 4,
+                }}
+              >
+                ${session?.starting_balance.toFixed(0)} starting bankroll
+              </div>
+            </div>
+            <BarChart3 size={20} style={{ color: GOLD, opacity: 0.6 }} />
+          </div>
+
+          <div className="space-y-3">
+            {projections.map((p) => (
+              <div
+                key={p.key}
+                className="rounded-2xl p-4"
+                style={{
+                  background: "rgba(255,255,255,0.02)",
+                  border: `1px solid ${p.color}22`,
+                }}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <div
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 900,
+                        letterSpacing: "-0.03em",
+                        color: p.color,
+                      }}
+                    >
+                      {p.label}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 10,
+                        color: "rgba(255,255,255,0.5)",
+                        marginTop: 2,
+                      }}
+                    >
+                      {p.tagline}
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 800,
+                      color: p.color,
+                      letterSpacing: "0.1em",
+                    }}
+                  >
+                    {p.dailyReturnPct >= 0 ? "+" : ""}
+                    {p.dailyReturnPct.toFixed(2)}%/day
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { label: "1D", value: p.day },
+                    { label: "1W", value: p.week },
+                    { label: "1M", value: p.month },
+                  ].map((t) => (
+                    <div key={t.label} className="text-center">
+                      <div
+                        style={{
+                          fontSize: 7,
+                          letterSpacing: "0.4em",
+                          fontWeight: 800,
+                          color: "rgba(255,255,255,0.4)",
+                        }}
+                      >
+                        {t.label}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 14,
+                          fontWeight: 900,
+                          letterSpacing: "-0.03em",
+                          color: t.value >= 0 ? p.color : RED,
+                          marginTop: 2,
+                        }}
+                      >
+                        {t.value >= 0 ? "+" : ""}${t.value.toFixed(2)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* HONEST DISCLAIMER */}
+          <div
+            className="mt-5 p-4 rounded-2xl flex gap-3"
+            style={{
+              background: "rgba(239,68,68,0.05)",
+              border: "1px solid rgba(239,68,68,0.2)",
+            }}
+          >
+            <AlertTriangle size={16} style={{ color: RED, flexShrink: 0, marginTop: 2 }} />
+            <p
+              style={{
+                fontSize: 11,
+                lineHeight: 1.6,
+                color: "rgba(255,255,255,0.7)",
+              }}
+            >
+              <strong style={{ color: RED }}>Projections, not promises.</strong>{" "}
+              Real returns depend on market efficiency, AI accuracy, fees, slippage, and variance. Drawdowns of 20–40% from peak are normal even for profitable bots. Most retail prediction-market traders lose money. Never deposit funds you can't afford to lose. Run paper mode for 2+ weeks before going live.
+            </p>
+          </div>
+        </div>
+
+        {/* ─── ACTIVE CANDIDATES ─── */}
+        <div
+          className="rounded-[40px] p-6"
+          style={{
+            background: "rgba(255,255,255,0.02)",
+            border: "1px solid rgba(255,255,255,0.05)",
+            backdropFilter: "blur(40px)",
+          }}
+        >
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <div
+                style={{
+                  fontSize: 8,
+                  letterSpacing: "0.5em",
+                  fontWeight: 800,
+                  color: GOLD,
+                  textTransform: "uppercase",
+                }}
+              >
+                Live Candidates
+              </div>
+              <div
+                style={{
+                  fontSize: 18,
+                  fontWeight: 900,
+                  letterSpacing: "-0.03em",
+                  marginTop: 4,
+                }}
+              >
+                {candidates.length} edge{candidates.length === 1 ? "" : "s"} detected
+              </div>
+            </div>
+            <Button
+              onClick={scanMarkets}
+              disabled={scanning}
+              style={{
+                background: `linear-gradient(135deg, ${GOLD}, #B8860B)`,
+                color: BLACK,
+                fontWeight: 800,
+                letterSpacing: "0.1em",
+                fontSize: 11,
+                borderRadius: 999,
+                padding: "0 16px",
+                height: 36,
+              }}
+            >
+              {scanning ? (
+                <RefreshCw size={14} className="animate-spin mr-2" />
+              ) : (
+                <Zap size={14} className="mr-2" />
+              )}
+              SCAN
+            </Button>
+          </div>
+
+          {candidates.length === 0 ? (
+            <div className="py-12 text-center">
+              <Sparkles
+                size={32}
+                style={{ color: GOLD, opacity: 0.3, margin: "0 auto" }}
+              />
+              <p
+                style={{
+                  fontSize: 12,
+                  color: "rgba(255,255,255,0.5)",
+                  marginTop: 12,
+                }}
+              >
+                {session?.status === "running"
+                  ? "Engine scanning… edges appear here when found."
+                  : "Activate engine to begin scanning."}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {candidates.map((c) => (
+                <div
+                  key={c.id}
+                  className="rounded-2xl p-4"
+                  style={{
+                    background: "rgba(255,255,255,0.02)",
+                    border: `1px solid ${GOLD}22`,
+                  }}
+                >
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex-1">
+                      <div
+                        style={{
+                          fontSize: 14,
+                          fontWeight: 700,
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        {c.question}
+                      </div>
+                      {c.reasoning && (
+                        <div
+                          style={{
+                            fontSize: 11,
+                            color: "rgba(255,255,255,0.5)",
+                            marginTop: 6,
+                            lineHeight: 1.5,
+                          }}
+                        >
+                          {c.reasoning}
+                        </div>
+                      )}
+                    </div>
+                    <div
+                      className="px-2 py-1 rounded-md text-center flex-shrink-0"
+                      style={{
+                        background:
+                          c.recommended_side === "YES"
+                            ? `${GREEN}22`
+                            : `${RED}22`,
+                        border: `1px solid ${c.recommended_side === "YES" ? GREEN : RED}`,
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 7,
+                          fontWeight: 800,
+                          letterSpacing: "0.4em",
+                          color:
+                            c.recommended_side === "YES" ? GREEN : RED,
+                        }}
+                      >
+                        {c.recommended_side}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                    {[
+                      {
+                        label: "MKT",
+                        value: `${(c.current_price * 100).toFixed(0)}¢`,
+                      },
+                      {
+                        label: "AI",
+                        value: `${(c.ai_probability * 100).toFixed(0)}%`,
+                      },
+                      {
+                        label: "EDGE",
+                        value: `+${(c.edge_pct * 100).toFixed(1)}%`,
+                      },
+                    ].map((m, i) => (
+                      <div key={i}>
+                        <div
+                          style={{
+                            fontSize: 7,
+                            letterSpacing: "0.4em",
+                            fontWeight: 800,
+                            color: "rgba(255,255,255,0.4)",
+                          }}
+                        >
+                          {m.label}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 14,
+                            fontWeight: 900,
+                            color: i === 2 ? GOLD : "#fff",
+                            marginTop: 2,
+                          }}
+                        >
+                          {m.value}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <Button
+                    onClick={() => executeTrade(c)}
+                    className="w-full"
+                    style={{
+                      background: GOLD,
+                      color: BLACK,
+                      fontWeight: 800,
+                      letterSpacing: "0.1em",
+                      fontSize: 11,
+                      borderRadius: 999,
+                      height: 36,
+                    }}
+                  >
+                    OPEN ${c.recommended_size.toFixed(2)} {mode === "live" ? "LIVE" : "PAPER"}
+                    <ChevronRight size={14} className="ml-1" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ─── RECENT TRADES ─── */}
+        <div
+          className="rounded-[40px] p-6"
+          style={{
+            background: "rgba(255,255,255,0.02)",
+            border: "1px solid rgba(255,255,255,0.05)",
+            backdropFilter: "blur(40px)",
+          }}
+        >
+          <div className="mb-5">
+            <div
+              style={{
+                fontSize: 8,
+                letterSpacing: "0.5em",
+                fontWeight: 800,
+                color: GOLD,
+                textTransform: "uppercase",
+              }}
+            >
+              Trade Log
+            </div>
+            <div
+              style={{
+                fontSize: 18,
+                fontWeight: 900,
+                letterSpacing: "-0.03em",
+                marginTop: 4,
+              }}
+            >
+              {trades.length} record{trades.length === 1 ? "" : "s"}
+            </div>
+          </div>
+
+          {trades.length === 0 ? (
+            <div className="py-8 text-center">
+              <Activity
+                size={28}
+                style={{ color: GOLD, opacity: 0.3, margin: "0 auto" }}
+              />
+              <p
+                style={{
+                  fontSize: 11,
+                  color: "rgba(255,255,255,0.4)",
+                  marginTop: 10,
+                }}
+              >
+                No trades yet
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {trades.slice(0, 10).map((t) => (
+                <div
+                  key={t.id}
+                  className="flex items-center justify-between p-3 rounded-xl"
+                  style={{
+                    background: "rgba(255,255,255,0.02)",
+                    border: "1px solid rgba(255,255,255,0.04)",
+                  }}
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    {(t.pnl_usd ?? 0) >= 0 ? (
+                      <TrendingUp size={14} style={{ color: GREEN }} />
+                    ) : (
+                      <TrendingDown size={14} style={{ color: RED }} />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 600,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {t.market_question}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 9,
+                          color: "rgba(255,255,255,0.4)",
+                          letterSpacing: "0.1em",
+                          marginTop: 2,
+                        }}
+                      >
+                        {t.side} · ${t.size_usd.toFixed(2)} · {t.status.toUpperCase()}
+                      </div>
+                    </div>
+                  </div>
+                  {t.pnl_usd != null && (
+                    <div
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 900,
+                        letterSpacing: "-0.03em",
+                        color: t.pnl_usd >= 0 ? GREEN : RED,
+                      }}
+                    >
+                      {t.pnl_usd >= 0 ? "+" : ""}${t.pnl_usd.toFixed(2)}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </>
+
+      {/* ─── SETTINGS DRAWER ─── */}
+      {showSettings && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center"
+          style={{ background: "rgba(0,0,0,0.7)" }}
+          onClick={() => setShowSettings(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-xl rounded-t-[40px] p-6 space-y-6"
+            style={{
+              background: BLACK,
+              border: `1px solid ${GOLD}33`,
+              maxHeight: "85vh",
+              overflowY: "auto",
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <h3
+                style={{
+                  fontSize: 22,
+                  fontWeight: 900,
+                  letterSpacing: "-0.04em",
+                  color: GOLD,
+                }}
+              >
+                Risk Parameters
+              </h3>
+              <button onClick={() => setShowSettings(false)}>
+                <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 24 }}>×</span>
+              </button>
+            </div>
+
+            {[
+              {
+                label: "Kelly Fraction",
+                value: kellyFraction,
+                min: 0.1,
+                max: 1,
+                step: 0.05,
+                onChange: setKellyFraction,
+                hint:
+                  "Fraction of full Kelly. 0.25 = quarter-Kelly (recommended). Lower = safer.",
+                display: `${(kellyFraction * 100).toFixed(0)}%`,
+              },
+              {
+                label: "Min Edge Threshold",
+                value: minEdge,
+                min: 0.01,
+                max: 0.15,
+                step: 0.005,
+                onChange: setMinEdge,
+                hint:
+                  "Minimum AI edge over market price required to enter a trade.",
+                display: `${(minEdge * 100).toFixed(1)}%`,
+              },
+              {
+                label: "Max Position Size",
+                value: maxPosition,
+                min: 0.01,
+                max: 0.2,
+                step: 0.01,
+                onChange: setMaxPosition,
+                hint: "Hard cap on bankroll fraction per trade.",
+                display: `${(maxPosition * 100).toFixed(0)}%`,
+              },
+            ].map((p) => (
+              <div key={p.label}>
+                <div className="flex justify-between mb-2">
+                  <div
+                    style={{
+                      fontSize: 8,
+                      letterSpacing: "0.5em",
+                      fontWeight: 800,
+                      color: "rgba(255,255,255,0.6)",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {p.label}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 900,
+                      color: GOLD,
+                      letterSpacing: "-0.02em",
+                    }}
+                  >
+                    {p.display}
+                  </div>
+                </div>
+                <Slider
+                  value={[p.value]}
+                  min={p.min}
+                  max={p.max}
+                  step={p.step}
+                  onValueChange={(v) => p.onChange(v[0])}
+                />
+                <p
+                  style={{
+                    fontSize: 10,
+                    color: "rgba(255,255,255,0.4)",
+                    marginTop: 6,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {p.hint}
+                </p>
+              </div>
+            ))}
+
+            <Button
+              className="w-full"
+              onClick={async () => {
+                await persistSettings({
+                  kelly_fraction: kellyFraction,
+                  min_edge_pct: minEdge,
+                  max_position_pct: maxPosition,
+                });
+                toast.success("Parameters saved");
+                setShowSettings(false);
+              }}
+              style={{
+                background: GOLD,
+                color: BLACK,
+                fontWeight: 800,
+                letterSpacing: "0.1em",
+                borderRadius: 999,
+                height: 48,
+              }}
+            >
+              SAVE PARAMETERS
+            </Button>
+
+            <div
+              className="p-4 rounded-2xl flex gap-3"
+              style={{
+                background: "rgba(34,211,238,0.05)",
+                border: "1px solid rgba(34,211,238,0.2)",
+              }}
+            >
+              <Shield size={16} style={{ color: CYAN, flexShrink: 0, marginTop: 2 }} />
+              <p
+                style={{
+                  fontSize: 11,
+                  lineHeight: 1.6,
+                  color: "rgba(255,255,255,0.7)",
+                }}
+              >
+                Quarter-Kelly with 3% min edge and 5% max position is the
+                recommended starting profile for $10 bankrolls. Increase only after 100+ paper trades show consistent positive edge.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+      `}</style>
+    </div>
   );
 }
