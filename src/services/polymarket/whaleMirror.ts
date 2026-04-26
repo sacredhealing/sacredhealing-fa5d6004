@@ -1,24 +1,14 @@
 // Whale Mirror Trading Strategy
-// Monitors and mirrors trades from top-tier Polymarket whales like 0x8dxd
+// Watches the NEG_RISK CTF Exchange for fills from whitelisted whale wallets.
 
 import { ethers } from 'ethers';
-import type { TradeSignal } from '@/types/polymarket';
+import type { TradeSignal, PolymarketMarket } from '@/types/polymarket';
 
-// Target whale wallets to monitor
 export const WHALE_TARGETS = {
-  // 0x8dxd - High-frequency trader with ~98% win rate
-  // Profile: polymarket.com/profile/0x63ce342161250d705dc0b16df89036c8e5f9ba9a
   '0x8dxd': '0x63ce342161250d705dc0b16df89036c8e5f9ba9a',
 };
 
-// Polymarket CTF contract events
-const CTF_EXCHANGE_ABI = [
-  'event OrderFilled(bytes32 indexed orderHash, address indexed maker, address indexed taker, uint256 makerAssetId, uint256 takerAssetId, uint256 makerAmountFilled, uint256 takerAmountFilled)',
-  'event TakerAssetFilled(bytes32 indexed orderHash, address indexed maker, address indexed taker, uint256 makerAssetId, uint256 takerAssetId, uint256 makerAmountFilled, uint256 takerAmountFilled)',
-];
-
-// Polygon block time is ~2 seconds
-const MEMPOOL_SCAN_INTERVAL = 500; // 500ms for near-atomic execution
+const NEG_RISK_CTF_EXCHANGE = '0xC5d563A36AE78145C45a50134d48A1215220f80a';
 
 export interface WhaleTransaction {
   whaleAddress: string;
@@ -34,9 +24,9 @@ export interface WhaleTransaction {
 
 export interface MirrorConfig {
   enabled: boolean;
-  maxMirrorSize: number; // Max USDC to mirror per trade
-  mirrorPercentage: number; // % of whale trade to mirror (0.1 = 10%)
-  delayMs: number; // Delay before mirroring (for safety)
+  maxMirrorSize: number;
+  mirrorPercentage: number;
+  delayMs: number;
   whitelistedWhales: string[];
 }
 
@@ -48,12 +38,17 @@ export class WhaleMirrorService {
   private pendingTxs: Map<string, WhaleTransaction> = new Map();
   private onSignalCallback: ((signal: TradeSignal, whale: WhaleTransaction) => void) | null = null;
 
+  private tokenIndex: Map<
+    string,
+    { marketId: string; outcomeName: string; price: number }
+  > = new Map();
+
   constructor(config: Partial<MirrorConfig> = {}) {
     this.config = {
       enabled: true,
-      maxMirrorSize: 5, // $5 max per mirror
-      mirrorPercentage: 0.01, // Mirror 1% of whale trades
-      delayMs: 100, // 100ms delay for safety
+      maxMirrorSize: 5,
+      mirrorPercentage: 0.01,
+      delayMs: 100,
       whitelistedWhales: Object.values(WHALE_TARGETS),
       ...config,
     };
@@ -62,31 +57,52 @@ export class WhaleMirrorService {
   async initialize(privateKey: string, rpcUrl: string): Promise<void> {
     this.provider = new ethers.JsonRpcProvider(rpcUrl, undefined, { staticNetwork: true });
     this.wallet = new ethers.Wallet(privateKey, this.provider);
-    console.log('[WhaleMirror] Initialized with wallet:', this.wallet.address);
+    console.log('[WhaleMirror] Initialized (live) with wallet:', this.wallet.address);
   }
 
-  // Set callback for when a mirror signal is detected
+  initializeReadOnly(rpcUrl: string): void {
+    this.provider = new ethers.JsonRpcProvider(rpcUrl, undefined, { staticNetwork: true });
+    this.wallet = null;
+    console.log('[WhaleMirror] Initialized (read-only / paper)');
+  }
+
   onMirrorSignal(callback: (signal: TradeSignal, whale: WhaleTransaction) => void): void {
     this.onSignalCallback = callback;
   }
 
-  // Start monitoring mempool for whale transactions
+  updateMarketIndex(markets: PolymarketMarket[]): void {
+    this.tokenIndex.clear();
+    for (const m of markets) {
+      for (const o of m.outcomes) {
+        if (o.tokenId) {
+          this.tokenIndex.set(o.tokenId, {
+            marketId: m.id,
+            outcomeName: o.name,
+            price: o.price,
+          });
+        }
+      }
+    }
+  }
+
   async startMonitoring(): Promise<void> {
     if (!this.provider || this.isMonitoring) return;
-    
+
     this.isMonitoring = true;
-    console.log('[WhaleMirror] Starting mempool monitoring...');
+    console.log('[WhaleMirror] Starting mempool + block monitoring...');
 
-    // Subscribe to pending transactions (mempool)
-    this.provider.on('pending', async (txHash: string) => {
-      try {
-        await this.processPendingTx(txHash);
-      } catch (err) {
-        // Silently ignore - many pending txs will fail to fetch
-      }
-    });
+    try {
+      this.provider.on('pending', async (txHash: string) => {
+        try {
+          await this.processPendingTx(txHash);
+        } catch {
+          /* many pending txs fail to fetch */
+        }
+      });
+    } catch {
+      console.warn('[WhaleMirror] Pending tx subscription unavailable on this RPC');
+    }
 
-    // Also listen for confirmed blocks to catch what we missed
     this.provider.on('block', async (blockNumber: number) => {
       try {
         await this.processBlock(blockNumber);
@@ -96,27 +112,25 @@ export class WhaleMirrorService {
     });
   }
 
-  // Process a pending transaction from mempool
+  private isWhaleSender(addr: string | null | undefined): boolean {
+    if (!addr) return false;
+    const lower = addr.toLowerCase();
+    return this.config.whitelistedWhales.some((w) => w.toLowerCase() === lower);
+  }
+
+  private isExchangeTarget(addr: string | null | undefined): boolean {
+    if (!addr) return false;
+    return addr.toLowerCase() === NEG_RISK_CTF_EXCHANGE.toLowerCase();
+  }
+
   private async processPendingTx(txHash: string): Promise<void> {
     if (!this.provider) return;
-
     const tx = await this.provider.getTransaction(txHash);
     if (!tx) return;
+    if (!this.isWhaleSender(tx.from)) return;
+    if (!this.isExchangeTarget(tx.to)) return;
 
-    // Check if transaction is from a whale
-    const isWhale = this.config.whitelistedWhales.some(
-      whale => whale.toLowerCase() === tx.from?.toLowerCase()
-    );
-
-    if (!isWhale) return;
-
-    // Check if it's a Polymarket trade (CTF Exchange interaction)
-    const CTF_EXCHANGE = '0x4bFb41d9539d67a68D6FB09be3c29aE0dC14dc3a';
-    if (tx.to?.toLowerCase() !== CTF_EXCHANGE.toLowerCase()) return;
-
-    console.log('[WhaleMirror] Detected whale transaction:', txHash);
-
-    // Parse the transaction data
+    console.log('[WhaleMirror] Detected whale tx:', txHash);
     const whaleTx = await this.parseWhaleTrade(tx);
     if (whaleTx) {
       this.pendingTxs.set(txHash, whaleTx);
@@ -124,33 +138,28 @@ export class WhaleMirrorService {
     }
   }
 
-  // Process a confirmed block for whale transactions we might have missed
   private async processBlock(blockNumber: number): Promise<void> {
     if (!this.provider) return;
-
     const block = await this.provider.getBlock(blockNumber, true);
     if (!block || !block.prefetchedTransactions) return;
 
     for (const tx of block.prefetchedTransactions) {
-      const isWhale = this.config.whitelistedWhales.some(
-        whale => whale.toLowerCase() === tx.from?.toLowerCase()
-      );
+      if (!this.isWhaleSender(tx.from)) continue;
+      if (!this.isExchangeTarget(tx.to)) continue;
+      if (this.pendingTxs.has(tx.hash)) continue;
 
-      if (isWhale && tx.to?.toLowerCase() === '0x4bFb41d9539d67a68D6FB09be3c29aE0dC14dc3a'.toLowerCase()) {
-        const whaleTx = await this.parseWhaleTrade(tx);
-        if (whaleTx && !this.pendingTxs.has(tx.hash)) {
-          console.log('[WhaleMirror] Found whale trade in block:', blockNumber);
-          await this.executeMirror(whaleTx);
-        }
+      const whaleTx = await this.parseWhaleTrade(tx);
+      if (whaleTx) {
+        console.log('[WhaleMirror] Found whale trade in block:', blockNumber);
+        await this.executeMirror(whaleTx);
       }
     }
   }
 
-  // Parse a whale trade transaction
-  private async parseWhaleTrade(tx: ethers.TransactionResponse): Promise<WhaleTransaction | null> {
+  private async parseWhaleTrade(
+    tx: ethers.TransactionResponse
+  ): Promise<WhaleTransaction | null> {
     try {
-      // Decode the transaction input data
-      // This is a simplified version - full implementation needs CTF ABI decoding
       const iface = new ethers.Interface([
         'function fillOrder((uint256 salt, address maker, address signer, address taker, uint256 tokenId, uint256 makerAmount, uint256 takerAmount, uint256 expiration, uint256 nonce, uint256 feeRateBps, uint8 side, uint8 signatureType) order, bytes signature, uint256 fillAmount)',
       ]);
@@ -161,57 +170,79 @@ export class WhaleMirrorService {
       const order = decoded.args[0];
       const fillAmount = decoded.args[2];
 
+      const tokenIdStr = order.tokenId.toString();
+      const indexed = this.tokenIndex.get(tokenIdStr);
+
+      const direction: 'buy' | 'sell' = order.side === 0 ? 'buy' : 'sell';
+
+      const makerN = Number(order.makerAmount);
+      const takerN = Number(order.takerAmount);
+      let price = 0;
+      if (direction === 'buy' && takerN > 0) {
+        price = makerN / takerN;
+      } else if (direction === 'sell' && makerN > 0) {
+        price = takerN / makerN;
+      }
+
       return {
         whaleAddress: tx.from,
         txHash: tx.hash,
-        marketId: '', // Need to map tokenId to market
-        tokenId: order.tokenId.toString(),
-        direction: order.side === 0 ? 'buy' : 'sell',
+        marketId: indexed?.marketId || '',
+        tokenId: tokenIdStr,
+        direction,
         amount: BigInt(fillAmount),
-        price: Number(order.takerAmount) / Number(order.makerAmount),
+        price: price > 0 && price < 1 ? price : indexed?.price ?? 0.5,
         blockNumber: tx.blockNumber || 0,
         timestamp: Date.now(),
       };
-    } catch (err) {
-      // Transaction might not be a fillOrder call
+    } catch {
       return null;
     }
   }
 
-  // Execute a mirror trade
   private async executeMirror(whaleTx: WhaleTransaction): Promise<void> {
     if (!this.config.enabled || !this.onSignalCallback) return;
 
-    // Calculate mirror size
+    if (!whaleTx.marketId || !whaleTx.tokenId) {
+      console.log('[WhaleMirror] Skipping unresolved whale tx (no marketId)');
+      return;
+    }
+
     const whaleAmountUSDC = Number(whaleTx.amount) / 1e6;
     const mirrorAmount = Math.min(
       whaleAmountUSDC * this.config.mirrorPercentage,
       this.config.maxMirrorSize
     );
 
-    if (mirrorAmount < 1) return; // Skip tiny trades
+    if (mirrorAmount < 0.5) return;
 
-    // Add configured delay
-    await new Promise(r => setTimeout(r, this.config.delayMs));
+    if (this.config.delayMs > 0) {
+      await new Promise((r) => setTimeout(r, this.config.delayMs));
+    }
 
-    // Create trade signal
+    const indexed = this.tokenIndex.get(whaleTx.tokenId);
+    const outcomeName = indexed?.outcomeName || (whaleTx.direction === 'buy' ? 'Yes' : 'No');
+    const currentPrice = indexed?.price ?? whaleTx.price;
+
     const signal: TradeSignal = {
       marketId: whaleTx.marketId,
       direction: whaleTx.direction,
-      outcome: whaleTx.direction === 'buy' ? 'Yes' : 'No',
+      outcome: outcomeName,
       tokenId: whaleTx.tokenId,
-      confidence: 95, // High confidence for whale mirror
-      reason: `Mirroring whale ${whaleTx.whaleAddress.slice(0, 8)}... trade`,
+      confidence: 95,
+      reason: `Mirror whale ${whaleTx.whaleAddress.slice(0, 8)}…`,
       suggestedSize: mirrorAmount,
-      currentPrice: whaleTx.price,
-      targetPrice: whaleTx.direction === 'buy' ? whaleTx.price * 1.05 : whaleTx.price * 0.95,
+      currentPrice,
+      targetPrice:
+        whaleTx.direction === 'buy'
+          ? Math.min(currentPrice * 1.05, 0.95)
+          : Math.max(currentPrice * 0.95, 0.05),
     };
 
-    console.log('[WhaleMirror] Generating mirror signal:', signal);
+    console.log('[WhaleMirror] Mirror signal:', signal);
     this.onSignalCallback(signal, whaleTx);
   }
 
-  // Stop monitoring
   stopMonitoring(): void {
     if (this.provider) {
       this.provider.removeAllListeners();
@@ -220,17 +251,14 @@ export class WhaleMirrorService {
     console.log('[WhaleMirror] Monitoring stopped');
   }
 
-  // Update configuration
   updateConfig(newConfig: Partial<MirrorConfig>): void {
     this.config = { ...this.config, ...newConfig };
   }
 
-  // Get current config
   getConfig(): MirrorConfig {
     return this.config;
   }
 
-  // Check if monitoring is active
   isActive(): boolean {
     return this.isMonitoring;
   }

@@ -59,7 +59,7 @@ const TAKER_FEE_RATE = 0.0005; // 0.05% taker fee
 const SLIPPAGE_BASE = 0.001; // 0.1% base slippage
 const SLIPPAGE_SIZE_FACTOR = 0.0001; // Additional slippage per $100 traded
 const ORDER_FAILURE_RATE = 0.03; // 3% chance of order rejection
-const PROXY_URL = 'https://asia-southeast1-stockgpt-438008.cloudfunctions.net/polymarketProxy';
+const PROXY_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/polymarket-proxy`;
 
 export type PnLSummary = {
   totalPnL: number;
@@ -204,7 +204,7 @@ export class PaperTradingService {
     try {
       // Fetch order book for realistic pricing
       const response = await fetch(
-        `${PROXY_URL}?endpoint=book&params=token_id=${tokenId}`
+        `${PROXY_URL}?endpoint=book&params=${encodeURIComponent(`token_id=${tokenId}`)}`
       );
       
       if (!response.ok) {
@@ -493,6 +493,112 @@ export class PaperTradingService {
     }
   }
 
+  /** Persist a successful CLOB fill so LIVE P&L / positions stay in sync with the chain. */
+  async recordLiveTrade(
+    signal: TradeSignal,
+    executionPrice: number,
+    orderId: string,
+    strategy?: string
+  ): Promise<void> {
+    if (!this.userId) return;
+
+    const shares = signal.suggestedSize / executionPrice;
+
+    const { error: tradeError } = await supabase
+      .from('polymarket_trades')
+      .insert({
+        user_id: this.userId,
+        market_id: signal.marketId,
+        market_question: signal.reason,
+        outcome: signal.outcome,
+        token_id: signal.tokenId,
+        direction: signal.direction,
+        shares,
+        entry_price: executionPrice,
+        amount_usdc: signal.suggestedSize,
+        tx_hash: orderId,
+        strategy: strategy || 'manual',
+        is_paper: false,
+        status: 'open',
+      });
+    if (tradeError) {
+      console.error('[PaperTrading] recordLiveTrade insert error:', tradeError);
+      return;
+    }
+
+    const { data: existing } = await supabase
+      .from('polymarket_positions')
+      .select('*')
+      .eq('user_id', this.userId)
+      .eq('token_id', signal.tokenId)
+      .eq('is_paper', false)
+      .maybeSingle();
+
+    if (existing) {
+      const totalShares =
+        signal.direction === 'buy'
+          ? existing.total_shares + shares
+          : existing.total_shares - shares;
+
+      const avgPrice =
+        signal.direction === 'buy'
+          ? (existing.avg_entry_price * existing.total_shares + executionPrice * shares) / totalShares
+          : existing.avg_entry_price;
+
+      if (totalShares <= 0) {
+        await supabase.from('polymarket_positions').delete().eq('id', existing.id);
+      } else {
+        await supabase
+          .from('polymarket_positions')
+          .update({
+            total_shares: totalShares,
+            avg_entry_price: avgPrice,
+            current_price: executionPrice,
+            unrealized_pnl: (executionPrice - avgPrice) * totalShares,
+          })
+          .eq('id', existing.id);
+      }
+    } else if (signal.direction === 'buy') {
+      await supabase.from('polymarket_positions').insert({
+        user_id: this.userId,
+        market_id: signal.marketId,
+        market_question: signal.reason,
+        outcome: signal.outcome,
+        token_id: signal.tokenId,
+        total_shares: shares,
+        avg_entry_price: executionPrice,
+        current_price: executionPrice,
+        unrealized_pnl: 0,
+        is_paper: false,
+      });
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const { data: dailyRow } = await supabase
+      .from('polymarket_pnl_daily')
+      .select('*')
+      .eq('user_id', this.userId)
+      .eq('date', today)
+      .eq('is_paper', false)
+      .maybeSingle();
+
+    if (dailyRow) {
+      await supabase
+        .from('polymarket_pnl_daily')
+        .update({ total_trades: (dailyRow.total_trades || 0) + 1 })
+        .eq('id', dailyRow.id);
+    } else {
+      await supabase.from('polymarket_pnl_daily').insert({
+        user_id: this.userId,
+        date: today,
+        realized_pnl: 0,
+        total_trades: 1,
+        winning_trades: 0,
+        is_paper: false,
+      });
+    }
+  }
+
   // Update daily P&L record
   private async updateDailyPnL(pnl: number, trades: number, isWin: boolean): Promise<void> {
     if (!this.userId) return;
@@ -585,7 +691,7 @@ export class PaperTradingService {
       try {
         // Fetch current market price via proxy
         const response = await fetch(
-          `https://asia-southeast1-stockgpt-438008.cloudfunctions.net/polymarketProxy?endpoint=book&params=token_id=${position.token_id}`
+          `${PROXY_URL}?endpoint=book&params=${encodeURIComponent(`token_id=${position.token_id}`)}`
         );
         
         if (!response.ok) continue;

@@ -49,6 +49,7 @@ export interface TradeResult {
   txHash?: string;
   sharesReceived?: bigint;
   amountSpent?: number;
+  executionPrice?: number;
   error?: string;
 }
 

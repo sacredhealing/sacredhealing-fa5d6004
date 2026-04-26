@@ -596,10 +596,23 @@ const PolymarketBotDetailInner: React.FC = () => {
   }, [address, performDeepSync]);
 
   const executeTradeWithMode = async (signal: TradeSignal, strategy?: string): Promise<boolean> => {
+    const settingsRow = await paperTradingService.loadSettings();
+    const lossLimit = settingsRow?.daily_loss_limit ?? 0;
+    if (lossLimit > 0 && user?.id) {
+      const pnl = await paperTradingService.getPnLSummary(isPaperMode);
+      if (pnl.todayPnL <= -lossLimit) {
+        setIsRunning(false);
+        addLog(
+          t('polymarketBotDetail.dailyLossLimitReached', { limit: lossLimit.toFixed(2) }),
+          'error'
+        );
+        return false;
+      }
+    }
+
     let balance = 0;
     if (isPaperMode) {
-      const st = await paperTradingService.loadSettings();
-      balance = st?.paper_balance ?? paperBalance;
+      balance = settingsRow?.paper_balance ?? paperBalance;
     } else {
       balance = parseFloat(usdcBal) || 0;
     }
@@ -628,14 +641,14 @@ const PolymarketBotDetailInner: React.FC = () => {
         void refreshPnL();
         return true;
       }
-      addLog(`📝 PAPER FAILED: ${result.error}`, 'error');
+      addLog(t('polymarketBotDetail.paperTradeFailed', { error: result.error ?? '' }), 'error');
       return false;
     }
     if (allowance === 0n) {
-      addLog('Cannot trade: USDC not approved for CTF Exchange', 'error');
+      addLog(t('polymarketBotDetail.usdcNotApproved'), 'error');
       return false;
     }
-    const result = await trading.executeTrade(sizedSignal);
+    const result = await trading.executeTrade(sizedSignal, strategy, user?.id);
     if (result.success) {
       addLog(
         t('polymarketBotDetail.liveTradeDone', {
@@ -651,7 +664,7 @@ const PolymarketBotDetailInner: React.FC = () => {
       void refreshPnL();
       return true;
     }
-    addLog(`💰 LIVE FAILED: ${result.error}`, 'error');
+    addLog(t('polymarketBotDetail.liveTradeFailed', { error: result.error ?? '' }), 'error');
     return false;
   };
 
@@ -664,20 +677,23 @@ const PolymarketBotDetailInner: React.FC = () => {
       const init = async () => {
         if (privateKey) {
           await whaleMirrorService.initialize(privateKey, RPC_POOL[0]);
-          whaleMirrorService.onMirrorSignal(async (s, w) => {
-            addLog(`🐋 WHALE MIRROR: ${w.whaleAddress.slice(0, 10)}... ${s.direction} ${s.outcome}`, 'trade');
-            setActiveSignals((p) => [...p.slice(-4), s]);
-            await executeTradeWithMode(s, 'whale_mirror');
-          });
-          whaleMirrorService.startMonitoring();
+        } else {
+          whaleMirrorService.initializeReadOnly(RPC_POOL[0]);
         }
+        whaleMirrorService.onMirrorSignal(async (s, w) => {
+          addLog(`🐋 WHALE MIRROR: ${w.whaleAddress.slice(0, 10)}... ${s.direction} ${s.outcome}`, 'trade');
+          setActiveSignals((p) => [...p.slice(-4), s]);
+          await executeTradeWithMode(s, 'whale_mirror');
+        });
+        await whaleMirrorService.startMonitoring();
       };
-      init();
+      void init();
       const scan = async () => {
         setIsScanning(true);
         try {
           const fm = await polymarketService.fetchMarkets(50);
           setMarkets(fm);
+          whaleMirrorService.updateMarketIndex(fm);
           latencyArbitrageService.onLatencySignal(async (s, e) => {
             addLog(`⚡ LATENCY ARB: ${e.headline?.slice(0, 40)}...`, 'trade');
             setActiveSignals((p) => [...p.slice(-4), s]);

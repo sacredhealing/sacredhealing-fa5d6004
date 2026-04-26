@@ -134,9 +134,8 @@ export class LatencyArbitrageService {
         reason: `[LATENCY] ${event.headline}`,
         suggestedSize: tradeSize,
         currentPrice,
-        targetPrice: isBullish
-          ? Math.min(currentPrice * 1.1, 0.95)
-          : Math.min((1 - currentPrice) * 1.1, 0.95),
+        // Bullish YES move → buy YES; bearish YES move → buy NO. Target is +10% on the traded outcome.
+        targetPrice: Math.min(currentPrice * 1.1, 0.95),
       };
 
       console.log('[LatencyArb] Real price-movement signal:', signal);

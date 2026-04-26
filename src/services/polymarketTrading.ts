@@ -179,8 +179,12 @@ export class PolymarketTrading {
     }
   }
 
-  // Execute a market order via CLOB
-  async executeTrade(signal: TradeSignal): Promise<TradeResult> {
+  // Execute a market order via CLOB. Optional strategy + userId persist live fills to Supabase.
+  async executeTrade(
+    signal: TradeSignal,
+    strategy?: string,
+    userId?: string
+  ): Promise<TradeResult> {
     if (!this.wallet || !this.provider) {
       return { success: false, error: 'Wallet not initialized' };
     }
@@ -193,23 +197,38 @@ export class PolymarketTrading {
     try {
       console.log('[Trading] Executing trade via CLOB:', signal);
 
-      // Execute via CLOB trading service
       const result = await clobTradingService.executeMarketOrder(signal);
 
       if (result.success) {
-        // Track position
+        const executionPrice = result.executionPrice ?? signal.currentPrice;
+
         const position: Position = {
           marketId: signal.marketId,
           marketQuestion: signal.reason,
           outcome: signal.outcome,
           tokenId: signal.tokenId,
-          shares: BigInt(Math.floor(signal.suggestedSize / signal.currentPrice * 1e6)),
-          avgEntryPrice: signal.currentPrice,
-          currentPrice: signal.currentPrice,
+          shares: BigInt(Math.floor((signal.suggestedSize / executionPrice) * 1e6)),
+          avgEntryPrice: executionPrice,
+          currentPrice: executionPrice,
           unrealizedPnL: 0,
           entryTime: new Date(),
         };
         this.positions.push(position);
+
+        if (userId && result.txHash) {
+          try {
+            const { paperTradingService } = await import('./polymarket/paperTrading');
+            paperTradingService.setUserId(userId);
+            await paperTradingService.recordLiveTrade(
+              signal,
+              executionPrice,
+              result.txHash,
+              strategy
+            );
+          } catch (recordErr) {
+            console.error('[Trading] recordLiveTrade failed:', recordErr);
+          }
+        }
       }
 
       return result;
