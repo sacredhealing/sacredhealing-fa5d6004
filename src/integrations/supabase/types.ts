@@ -912,63 +912,135 @@ export type Database = {
       bot_sessions: {
         Row: {
           bot_type: string | null
+          created_at: string
+          current_balance: number
           ended_at: string | null
           final_pnl_usd: number
           final_portfolio_usd: number | null
           id: string
+          kelly_fraction: number
           losses: number
+          max_position_pct: number
+          min_edge_pct: number
+          mode: string
           seed_balance: number
           seed_usd: number
           started_at: string
+          starting_balance: number
+          status: string
           strategy: string | null
           trades_count: number
+          updated_at: string
           user_id: string
           wins: number
         }
         Insert: {
           bot_type?: string | null
+          created_at?: string
+          current_balance?: number
           ended_at?: string | null
           final_pnl_usd?: number
           final_portfolio_usd?: number | null
           id?: string
+          kelly_fraction?: number
           losses?: number
+          max_position_pct?: number
+          min_edge_pct?: number
+          mode?: string
           seed_balance?: number
           seed_usd?: number
           started_at?: string
+          starting_balance?: number
+          status?: string
           strategy?: string | null
           trades_count?: number
+          updated_at?: string
           user_id: string
           wins?: number
         }
         Update: {
           bot_type?: string | null
+          created_at?: string
+          current_balance?: number
           ended_at?: string | null
           final_pnl_usd?: number
           final_portfolio_usd?: number | null
           id?: string
+          kelly_fraction?: number
           losses?: number
+          max_position_pct?: number
+          min_edge_pct?: number
+          mode?: string
           seed_balance?: number
           seed_usd?: number
           started_at?: string
+          starting_balance?: number
+          status?: string
           strategy?: string | null
           trades_count?: number
+          updated_at?: string
           user_id?: string
           wins?: number
+        }
+        Relationships: []
+      }
+      bot_trade_signals: {
+        Row: {
+          bot_type: string
+          created_at: string
+          id: string
+          payload: Json
+          session_id: string
+          status: string
+          trade_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bot_type: string
+          created_at?: string
+          id?: string
+          payload: Json
+          session_id: string
+          status?: string
+          trade_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bot_type?: string
+          created_at?: string
+          id?: string
+          payload?: Json
+          session_id?: string
+          status?: string
+          trade_id?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
       bot_trades: {
         Row: {
           action: string | null
+          ai_probability: number | null
           bot_type: string
           closed_at: string | null
           created_at: string
+          edge_pct: number | null
           entry_price: number | null
           exit_price: number | null
           id: string
+          market_id: string | null
+          market_question: string | null
           pnl_pct: number
           pnl_usd: number
+          price: number | null
+          reasoning: string | null
           seed_balance: number | null
+          session_id: string | null
+          settled_at: string | null
+          side: string | null
           size_usd: number | null
           status: string
           strategy: string | null
@@ -976,15 +1048,24 @@ export type Database = {
         }
         Insert: {
           action?: string | null
+          ai_probability?: number | null
           bot_type?: string
           closed_at?: string | null
           created_at?: string
+          edge_pct?: number | null
           entry_price?: number | null
           exit_price?: number | null
           id?: string
+          market_id?: string | null
+          market_question?: string | null
           pnl_pct?: number
           pnl_usd?: number
+          price?: number | null
+          reasoning?: string | null
           seed_balance?: number | null
+          session_id?: string | null
+          settled_at?: string | null
+          side?: string | null
           size_usd?: number | null
           status?: string
           strategy?: string | null
@@ -992,15 +1073,24 @@ export type Database = {
         }
         Update: {
           action?: string | null
+          ai_probability?: number | null
           bot_type?: string
           closed_at?: string | null
           created_at?: string
+          edge_pct?: number | null
           entry_price?: number | null
           exit_price?: number | null
           id?: string
+          market_id?: string | null
+          market_question?: string | null
           pnl_pct?: number
           pnl_usd?: number
+          price?: number | null
+          reasoning?: string | null
           seed_balance?: number | null
+          session_id?: string | null
+          settled_at?: string | null
+          side?: string | null
           size_usd?: number | null
           status?: string
           strategy?: string | null
