@@ -15,6 +15,9 @@ import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 import { hasFeatureAccess, FEATURE_TIER, isAkashaInfinityTier } from '@/lib/tierAccess';
 import TempleGateIcon from '@/components/icons/TempleGateIcon';
 import { supabase } from '@/integrations/supabase/client';
+import { useTempleBroadcast } from '@/hooks/useTempleBroadcast';
+import { useOfflineAnchorSync, queueAnchorSync } from '@/hooks/useOfflineAnchorSync';
+import { useDailyAnchorReminder } from '@/hooks/useDailyAnchorReminder';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const SACRED_SITES = [
@@ -687,6 +690,14 @@ function TempleHomeInner() {
     return () => clearTimeout(t);
   }, [selectedSite, auraIntensity]);
 
+  // ─── Always-on broadcast: silent carrier + offline resync + daily reminder ──
+  useTempleBroadcast({ active: isAnchored, siteId: selectedSite, intensity: auraIntensity });
+  useOfflineAnchorSync();
+  useDailyAnchorReminder({
+    active: isAnchored,
+    siteName: SITE_DB[selectedSite]?.title ?? selectedSite,
+  });
+
   useEffect(() => {
     const isHighVoltage = selectedSite === 'mauritius' || selectedSite === 'kailash_13x';
     if (isHighVoltage && auraIntensity >= 60) {
@@ -728,14 +739,21 @@ function TempleHomeInner() {
       }).then(() => {});
 
       // Also upsert to temple_home_sessions (SQI unified field context — migration may be pending)
-      supabase.from('temple_home_sessions').upsert({
+      const sessionPayload = {
         user_id: user.id,
         active_site: site?.title ?? selectedSite,
         site_essence: site?.primaryBenefit ?? '',
         intensity: auraIntensity,
         crystal_grid_active: crystalDone,
         anchored_since: new Date().toISOString(),
-      }, { onConflict: 'user_id' }).then(() => {}).catch(() => {});
+      };
+      // Queue first so we never lose the intention if offline / network dies mid-call.
+      queueAnchorSync(sessionPayload);
+      supabase
+        .from('temple_home_sessions')
+        .upsert(sessionPayload, { onConflict: 'user_id' })
+        .then(({ error }) => { if (!error) queueAnchorSync(null); })
+        .catch(() => { /* will retry on next 'online' event */ });
     }
   }, [crystalDone, user, selectedSite, currentMode, auraIntensity]);
 
