@@ -78,6 +78,12 @@ const STREAM_ACCENT: Record<string, { color: string; glow: string; bg: string; b
     bg: 'rgba(16,185,129,0.06)',
     border: 'rgba(16,185,129,0.4)',
   },
+  'whale-intelligence': {
+    color: '#F59E0B',
+    glow: '0 0 24px rgba(245,158,11,0.2)',
+    bg: 'rgba(245,158,11,0.06)',
+    border: 'rgba(245,158,11,0.4)',
+  },
   'polymarket-bot': {
     color: '#22D3EE',
     glow: '0 0 24px rgba(34,211,238,0.2)',
@@ -166,6 +172,11 @@ const IncomeStreams: React.FC = () => {
         (s) =>
           s.internal_slug === 'sqi-sovereign-bot' ||
           s.link === '/income-streams/sqi-sovereign-bot'
+      );
+      const hasWhaleIntelligence = withoutForex.some(
+        (s) =>
+          s.internal_slug === 'whale-intelligence' ||
+          s.link === '/income-streams/whale-intelligence'
       );
 
       const polymarketFallback: IncomeStream = {
@@ -270,6 +281,40 @@ const IncomeStreams: React.FC = () => {
         cta_button_text_no: null,
       };
 
+      const whaleIntelligenceFallback: IncomeStream = {
+        id: 'whale-intelligence-fallback',
+        title: 'Sovereign Whale Nexus (Admin)',
+        title_sv: null,
+        title_es: null,
+        title_no: null,
+        description:
+          'Live Binance whale tape, futures positioning, order-book skew, and institutional HODL radar. Admin only.',
+        description_sv: null,
+        description_es: null,
+        description_no: null,
+        link: '/income-streams/whale-intelligence',
+        category: 'AI',
+        potential_earnings: 'BTC · BINANCE · SIGNALS',
+        potential_earnings_sv: null,
+        potential_earnings_es: null,
+        potential_earnings_no: null,
+        is_featured: true,
+        image_url: null,
+        order_index: -4.5,
+        icon_name: 'TrendingUp',
+        badge_text: 'ADMIN · INTEL',
+        badge_text_sv: null,
+        badge_text_es: null,
+        badge_text_no: null,
+        color_from: null,
+        color_to: null,
+        internal_slug: 'whale-intelligence',
+        cta_button_text: 'Open whale nexus',
+        cta_button_text_sv: null,
+        cta_button_text_es: null,
+        cta_button_text_no: null,
+      };
+
       const fomoCopyBotFallback: IncomeStream = {
         id: 'fomo-copy-bot-fallback',
         title: 'FOMO Copy Bot (Admin)',
@@ -308,6 +353,7 @@ const IncomeStreams: React.FC = () => {
       // Polymarket bots are admin-only: only inject fallbacks for admins
       if (isAdmin) {
         if (!hasSqiSovereignBot) merged = [sqiSovereignBotFallback, ...merged];
+        if (!hasWhaleIntelligence) merged = [whaleIntelligenceFallback, ...merged];
         if (!hasFomoBot) merged = [fomoCopyBotFallback, ...merged];
         if (!hasAIBot) merged = [aiBotFallback, ...merged];
         if (!hasPolymarketBot) merged = [polymarketFallback, ...merged];
@@ -401,6 +447,7 @@ const IncomeStreams: React.FC = () => {
               stream.internal_slug === 'polymarket-bot-general' ||
               stream.internal_slug === 'prediction-market-bot' ||
               stream.internal_slug === 'fomo-copy-bot' ||
+              stream.internal_slug === 'whale-intelligence' ||
               stream.internal_slug === 'sqi-sovereign-bot';
             if (isPolymarketStream && !isAdmin) return false;
             return true;
@@ -414,6 +461,7 @@ const IncomeStreams: React.FC = () => {
             const isCopyTrading = stream.internal_slug === 'polymarket-copy-trading';
             const isAIBot = stream.internal_slug === 'prediction-market-bot';
             const isFomo = stream.internal_slug === 'fomo-copy-bot';
+            const isWhaleIntel = stream.internal_slug === 'whale-intelligence';
             const isSqiSovereign = stream.internal_slug === 'sqi-sovereign-bot';
             const title = isPolymarket
               ? t('incomeStreams.hftCard.title')
@@ -421,26 +469,30 @@ const IncomeStreams: React.FC = () => {
                 ? t('incomeStreams.copyBotCard.title')
                 : isSqiSovereign
                   ? t('incomeStreams.sqiSovereignBotCard.title')
-                  : isFomo
-                    ? t('incomeStreams.fomoCopyBotCard.title')
-                    : isAIBot
-                      ? t('incomeStreams.aiPredictionCard.title')
-                      : isGeneralBot
-                        ? t('incomeStreams.strategyGuideCard.title')
-                        : getLocalizedField(stream, 'title') || stream.title;
+                  : isWhaleIntel
+                    ? t('incomeStreams.whaleIntelligenceCard.title')
+                    : isFomo
+                      ? t('incomeStreams.fomoCopyBotCard.title')
+                      : isAIBot
+                        ? t('incomeStreams.aiPredictionCard.title')
+                        : isGeneralBot
+                          ? t('incomeStreams.strategyGuideCard.title')
+                          : getLocalizedField(stream, 'title') || stream.title;
             const description = isPolymarket
               ? t('incomeStreams.hftCard.description')
               : isCopyTrading
                 ? t('incomeStreams.copyBotCard.description')
                 : isSqiSovereign
                   ? t('incomeStreams.sqiSovereignBotCard.description')
-                  : isFomo
-                    ? t('incomeStreams.fomoCopyBotCard.description')
-                    : isAIBot
-                      ? t('incomeStreams.aiPredictionCard.description')
-                      : isGeneralBot
-                        ? t('incomeStreams.strategyGuideCard.description')
-                        : getLocalizedField(stream, 'description') || stream.description;
+                  : isWhaleIntel
+                    ? t('incomeStreams.whaleIntelligenceCard.description')
+                    : isFomo
+                      ? t('incomeStreams.fomoCopyBotCard.description')
+                      : isAIBot
+                        ? t('incomeStreams.aiPredictionCard.description')
+                        : isGeneralBot
+                          ? t('incomeStreams.strategyGuideCard.description')
+                          : getLocalizedField(stream, 'description') || stream.description;
             const badge = getLocalizedField(stream, 'badge_text') || stream.badge_text;
             const earnings = isPolymarket
               ? t('incomeStreams.hftCard.footerTag')
@@ -448,13 +500,15 @@ const IncomeStreams: React.FC = () => {
                 ? t('incomeStreams.copyBotCard.footerTag')
                 : isSqiSovereign
                   ? t('incomeStreams.sqiSovereignBotCard.footerTag')
-                  : isFomo
-                    ? t('incomeStreams.fomoCopyBotCard.footerTag')
-                    : isAIBot
-                      ? t('incomeStreams.aiPredictionCard.footerTag')
-                      : isGeneralBot
-                        ? t('incomeStreams.strategyGuideCard.footerTag')
-                        : getLocalizedField(stream, 'potential_earnings');
+                  : isWhaleIntel
+                    ? t('incomeStreams.whaleIntelligenceCard.footerTag')
+                    : isFomo
+                      ? t('incomeStreams.fomoCopyBotCard.footerTag')
+                      : isAIBot
+                        ? t('incomeStreams.aiPredictionCard.footerTag')
+                        : isGeneralBot
+                          ? t('incomeStreams.strategyGuideCard.footerTag')
+                          : getLocalizedField(stream, 'potential_earnings');
 
             const cardContent = (
               <Card
@@ -509,6 +563,15 @@ const IncomeStreams: React.FC = () => {
                               </span>
                               <span className="shrink-0 rounded-full border border-[#D4AF37] bg-[#D4AF37] px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-[#050505]">
                                 {t('incomeStreams.sqiSovereignBotCard.badgeSovereign')}
+                              </span>
+                            </>
+                          ) : isWhaleIntel ? (
+                            <>
+                              <span className="shrink-0 rounded-full border border-[#F59E0B] bg-transparent px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-[#F59E0B]">
+                                {t('incomeStreams.whaleIntelligenceCard.badgeLine')}
+                              </span>
+                              <span className="shrink-0 rounded-full border border-[#D4AF37] bg-[#D4AF37] px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-[#050505]">
+                                {t('incomeStreams.whaleIntelligenceCard.badgeSovereign')}
                               </span>
                             </>
                           ) : isFomo ? (

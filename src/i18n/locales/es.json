@@ -1647,6 +1647,13 @@
       "badgeLine": "ADMIN · LAB",
       "badgeSovereign": "FOMO"
     },
+    "whaleIntelligenceCard": {
+      "title": "Sovereign Whale Nexus (admin)",
+      "description": "Cinta de ballenas Binance en vivo, posicionamiento de futuros, sesgo del libro y radar institucional HODL. Solo administradores.",
+      "footerTag": "BTC · BINANCE · SEÑALES",
+      "badgeLine": "ADMIN · INTEL",
+      "badgeSovereign": "BALLENA"
+    },
     "sqiSovereignBotCard": {
       "title": "Bot SQI Sovereign (admin)",
       "description": "Terminal paper BTC: feed Gemini, pila TA, modos, oráculo Claude opcional. Solo administradores.",

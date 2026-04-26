@@ -1618,6 +1618,13 @@
       "badgeLine": "ADMIN · LAB",
       "badgeSovereign": "FOMO"
     },
+    "whaleIntelligenceCard": {
+      "title": "Sovereign Whale Nexus (admin)",
+      "description": "Live Binance hval-bånd, futures-posisjonering, orderbok-skjevhet og institusjonell HODL-radar. Kun admin.",
+      "footerTag": "BTC · BINANCE · SIGNALER",
+      "badgeLine": "ADMIN · INTEL",
+      "badgeSovereign": "HVAL"
+    },
     "sqiSovereignBotCard": {
       "title": "SQI Sovereign-bot (admin)",
       "description": "BTC paper-terminal: Gemini-feed, TA-stack, moduser, valgfri Claude-orakel. Kun admin.",
