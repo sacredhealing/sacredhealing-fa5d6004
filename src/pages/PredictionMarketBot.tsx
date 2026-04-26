@@ -380,6 +380,7 @@ export default function PredictionMarketBot() {
         return;
       }
       const tradePayload = {
+        user_id: user!.id,
         session_id: session.id,
         market_question: c.question,
         market_id: c.id,
@@ -390,11 +391,12 @@ export default function PredictionMarketBot() {
         size_usd: sizeUsd,
         status: "pending",
         reasoning: c.reasoning,
+        bot_type: "prediction_engine",
       };
 
       const { data: trade, error } = await supabase
         .from("bot_trades")
-        .insert(tradePayload)
+        .insert([tradePayload])
         .select()
         .single();
       if (error) throw error;
