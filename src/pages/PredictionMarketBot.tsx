@@ -211,8 +211,8 @@ export default function PredictionMarketBot() {
       if (error) throw error;
 
       if (existing) {
-        setSession(existing as BotSession);
-        setMode(existing.mode);
+        setSession(existing as unknown as BotSession);
+        setMode((existing.mode as Mode) ?? "paper");
         setKellyFraction(existing.kelly_fraction || 0.25);
         setMinEdge(existing.min_edge_pct || 0.03);
         setMaxPosition(existing.max_position_pct || 0.05);
