@@ -1,7 +1,17 @@
 {
-  "name": "sqi-sovereign-bot-worker",
+  "name": "shiesty-railway-worker",
   "version": "1.0.0",
-  "main": "worker.js",
-  "scripts": { "start": "node worker.js" },
-  "engines": { "node": ">=18.0.0" }
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@polymarket/clob-client": "^4.13.0",
+    "@supabase/supabase-js": "^2.45.0",
+    "ethers": "^6.13.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
 }
