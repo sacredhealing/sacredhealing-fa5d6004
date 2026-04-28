@@ -99,8 +99,33 @@ export function useAIVedicReading(): UseAIVedicReadingResult {
       console.log('Vedic reading response:', { data, fnError });
 
       if (fnError) {
-        // Check for specific error types
         const errorMessage = fnError.message || 'Failed to generate reading';
+        // Transient edge runtime degradation — retry once after short delay
+        const isTransient =
+          errorMessage.includes('503') ||
+          errorMessage.includes('SERVICE_DEGRADED') ||
+          errorMessage.includes('temporarily unavailable') ||
+          errorMessage.includes('non-2xx');
+
+        if (isTransient) {
+          console.warn('Vedic reading transient error, retrying once...', errorMessage);
+          await new Promise(r => setTimeout(r, 1500));
+          const retry = await supabase.functions.invoke('generate-vedic-reading', {
+            body: { user, timeOffset, timezone, userId },
+          });
+          if (!retry.error && retry.data && !retry.data.error) {
+            const retryReading = sanitizeVedicReading(retry.data);
+            if (retryReading) {
+              saveToCache(cacheKey, retryReading);
+              setReading(retryReading);
+              return;
+            }
+          }
+          // Still failing — set soft error, don't crash UI
+          setError('Cosmic transmission temporarily unavailable. Please try again in a moment.');
+          return;
+        }
+
         if (errorMessage.includes('402') || errorMessage.includes('Usage limit')) {
           throw new Error('AI usage limit reached. Please try again later or contact support.');
         }
