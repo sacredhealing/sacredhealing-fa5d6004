@@ -9,8 +9,8 @@
   "launch_handler": {
     "client_mode": "navigate-existing"
   },
-  "background_color": "#0D0D1A",
-  "theme_color": "#8A2BE2",
+  "background_color": "#050505",
+  "theme_color": "#050505",
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "en",
@@ -19,7 +19,7 @@
   "icons": [
     {
       "src": "/icon-master.png",
-      "sizes": "1024x1024",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
@@ -37,7 +37,7 @@
     },
     {
       "src": "/icon-master.png",
-      "sizes": "1024x1024",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     },
@@ -159,19 +159,19 @@
       "name": "Meditate",
       "short_name": "Meditate",
       "url": "/meditations",
-      "icons": [{ "src": "/icon-master.png", "sizes": "1024x1024", "type": "image/png" }]
+      "icons": [{ "src": "/icon-master.png", "sizes": "512x512", "type": "image/png" }]
     },
     {
       "name": "Healing Audio",
       "short_name": "Healing",
       "url": "/healing",
-      "icons": [{ "src": "/icon-master.png", "sizes": "1024x1024", "type": "image/png" }]
+      "icons": [{ "src": "/icon-master.png", "sizes": "512x512", "type": "image/png" }]
     },
     {
       "name": "Breathing",
       "short_name": "Breathe",
       "url": "/breathing",
-      "icons": [{ "src": "/icon-master.png", "sizes": "1024x1024", "type": "image/png" }]
+      "icons": [{ "src": "/icon-master.png", "sizes": "512x512", "type": "image/png" }]
     }
   ],
   "related_applications": [],
