@@ -6851,6 +6851,7 @@ export type Database = {
         Returns: boolean
       }
       insert_mantra_admin: { Args: { data: Json }; Returns: Json }
+      is_codex_admin: { Args: { uid: string }; Returns: boolean }
       is_room_member: { Args: { _room_id: string }; Returns: boolean }
       move_to_dlq: {
         Args: {
