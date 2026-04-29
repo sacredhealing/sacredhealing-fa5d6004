@@ -87,8 +87,6 @@ const LiveEvents = React.lazy(() => import("./pages/LiveEvents"));
 const Challenges = React.lazy(() => import("./pages/Challenges"));
 const AIIncomeEngine = React.lazy(() => import("./pages/AIIncomeEngine"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
-const AkashicCodex = React.lazy(() => import("./pages/AkashicCodex"));
-const LivingPortraitCodex = React.lazy(() => import("./pages/LivingPortraitCodex"));
 const AffiliateDetail = React.lazy(() => import("./pages/income-streams/AffiliateDetail"));
 const SHCCoinDetail = React.lazy(() => import("./pages/income-streams/SHCCoinDetail"));
 const CopyTradingDetail = React.lazy(() => import("./pages/income-streams/CopyTradingDetail"));
