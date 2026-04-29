@@ -7,8 +7,7 @@ import { navigateTo } from '@/utils/navigation';
 import { getDayPhase, getSessionDepth } from '@/utils/postSessionContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
-import { useConversionUpgrade, UPGRADE_MODAL_STORAGE_KEY } from '@/components/conversion/ConversionSystem';
-import { useMembershipTier } from '@/features/membership/useMembershipTier';
+import { useUpgradeModal } from '@/components/UpgradeModal';
 import { getMusicTrackRequiredRank, getUserMusicAccessRank } from '@/lib/tierAccess';
 
 const SH_LAST_SESSION_KEY = 'sh_last_session';
@@ -125,8 +124,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const { addOptimisticBalance } = useSHC();
   const { user } = useAuth();
   const { isAdmin, adminGranted, isPremium, tier: membershipTier } = useMembership();
-  const membershipTierResolved = useMembershipTier();
-  const { showUpgrade } = useConversionUpgrade();
+  const { triggerUpgradeModal, UpgradeModalComponent } = useUpgradeModal();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
@@ -264,19 +262,11 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       item: { id: audio.id, title: audio.title, contentType: audio.contentType },
     };
 
-    let modalAlreadyDismissed = false;
-    try {
-      modalAlreadyDismissed = localStorage.getItem(UPGRADE_MODAL_STORAGE_KEY) === 'true';
-    } catch {
-      modalAlreadyDismissed = false;
-    }
-    if (membershipTierResolved === 'free' && !modalAlreadyDismissed) {
-      showUpgrade(audio.contentType === 'meditation' ? 'meditation' : 'audio');
-    }
+    triggerUpgradeModal(audio.contentType === 'meditation' ? 'meditation' : 'audio');
 
     await new Promise((r) => setTimeout(r, 1200));
     (navigateTo as (path: string, opts?: unknown) => void)('/integrate', { state: ctx });
-  }, [addOptimisticBalance, toast, membershipTierResolved, showUpgrade]);
+  }, [addOptimisticBalance, toast, triggerUpgradeModal]);
 
   const medPlayer = useAudioPlayer(meditationSrc, meditationMeta, handleMeditationEnded);
 
@@ -746,6 +736,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       showGitaTransition,
     }}>
       {children}
+      <UpgradeModalComponent />
     </MusicPlayerContext.Provider>
   );
 };
