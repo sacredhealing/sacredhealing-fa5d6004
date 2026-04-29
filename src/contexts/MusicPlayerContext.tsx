@@ -125,6 +125,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const { addOptimisticBalance } = useSHC();
   const { user } = useAuth();
   const { isAdmin, adminGranted, isPremium, tier: membershipTier } = useMembership();
+  const { showUpgrade } = useConversionUpgrade();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
@@ -262,13 +263,13 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       item: { id: audio.id, title: audio.title, contentType: audio.contentType },
     };
 
-    if (membershipTierResolved === 'free') {
+    if (membershipTier === 'free') {
       showUpgrade(audio.contentType === 'meditation' ? 'meditation' : 'audio');
     }
 
     await new Promise((r) => setTimeout(r, 1200));
     (navigateTo as (path: string, opts?: unknown) => void)('/integrate', { state: ctx });
-  }, [addOptimisticBalance, toast, membershipTierResolved, showUpgrade]);
+  }, [addOptimisticBalance, toast, membershipTier, showUpgrade]);
 
   const medPlayer = useAudioPlayer(meditationSrc, meditationMeta, handleMeditationEnded);
 

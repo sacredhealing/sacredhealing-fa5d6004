@@ -189,7 +189,7 @@ export function UpgradeModal({ isOpen, onClose, trigger = "meditation" }: Upgrad
   const tierBundles = useMemo(() => {
     const keys = tierOrder;
     return keys.map((key) => {
-      const bundle = t(`conversion.tiers.${key}`, { returnObjects: true }) as {
+      const bundle = t(`conversion.tiers.${key}`, { returnObjects: true }) as unknown as {
         label: string;
         price: string;
         tagline?: string;
@@ -464,7 +464,7 @@ export function LockedContentCard({
   if (adminLoading || isAdmin || unlocked) return <>{children}</>;
 
   const meta = TIER_ROUTES[tier];
-  const tierBundle = t(`conversion.tiers.${tier}`, { returnObjects: true }) as {
+  const tierBundle = t(`conversion.tiers.${tier}`, { returnObjects: true }) as unknown as {
     label: string;
     price: string;
   };
