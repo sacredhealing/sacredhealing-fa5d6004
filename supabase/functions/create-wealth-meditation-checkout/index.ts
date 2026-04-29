@@ -152,7 +152,7 @@ const sendAffirmationsEmail = async (email: string, bookingId: string) => {
   
   try {
     const { error } = await resend.emails.send({
-      from: "Sacred Healing <onboarding@resend.dev>",
+      from: "Kritagya Das <noreply@siddhaquantumnexus.com>",
       to: [email],
       subject: "✨ Your 108 Wealth Affirmations - Record & Transform Your Life",
       html: `

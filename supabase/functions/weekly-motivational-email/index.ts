@@ -211,7 +211,7 @@ serve(async (req) => {
 
         // Send email
         await resend.emails.send({
-          from: "Sacred Healing <onboarding@resend.dev>",
+          from: "Kritagya Das <noreply@siddhaquantumnexus.com>",
           to: [userSegment.email],
           subject: emailContent.subject,
           html: emailContent.html,

@@ -92,7 +92,7 @@ serve(async (req) => {
 
   const resend = new Resend(resendKey);
   const from =
-    Deno.env.get("RESEND_FROM") || "Sacred Healing <onboarding@resend.dev>";
+    Deno.env.get("RESEND_FROM") || "Kritagya Das <noreply@siddhaquantumnexus.com>";
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";

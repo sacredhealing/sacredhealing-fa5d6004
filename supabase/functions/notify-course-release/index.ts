@@ -92,7 +92,7 @@ const handler = async (req: Request): Promise<Response> => {
             const personalizedName = subscriber.name || "Sacred Soul";
 
             await resend.emails.send({
-              from: "Sacred Healing <onboarding@resend.dev>",
+              from: "Kritagya Das <noreply@siddhaquantumnexus.com>",
               to: [subscriber.email],
               subject: `🎓 New Course Released: ${courseTitle}`,
               html: `

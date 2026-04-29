@@ -40,7 +40,7 @@ serve(async (req) => {
 
     // Send notification to admin
     const adminEmailResponse = await resend.emails.send({
-      from: "Sacred Healing <onboarding@resend.dev>",
+      from: "Kritagya Das <noreply@siddhaquantumnexus.com>",
       to: ["sacredhealingvibe@gmail.com"],
       subject: `New Affirmation Questionnaire - ${packageName}`,
       html: `
@@ -69,7 +69,7 @@ serve(async (req) => {
 
     // Send confirmation to user
     const userEmailResponse = await resend.emails.send({
-      from: "Sacred Healing <onboarding@resend.dev>",
+      from: "Kritagya Das <noreply@siddhaquantumnexus.com>",
       to: [userEmail],
       subject: `Your ${packageName} - Questionnaire Received`,
       html: `
