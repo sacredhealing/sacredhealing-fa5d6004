@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS public.transmission_blocks (
   routing_override text CHECK (routing_override IN ('auto','force_akasha','force_portrait')) DEFAULT 'auto',
   topic_primary text,                       -- e.g. 'Human History'
   topic_sub text,                           -- e.g. 'Pre-Vedic Civilizations'
-  embedding vector(768),                    -- gemini text-embedding-004 dim
+  embedding vector(3072),                   -- gemini-embedding-001 default dim
   classified_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now()
 );
@@ -42,7 +42,7 @@ CREATE INDEX IF NOT EXISTS idx_transmission_source_type ON public.transmission_b
 CREATE INDEX IF NOT EXISTS idx_transmission_created     ON public.transmission_blocks(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_transmission_source_msg  ON public.transmission_blocks(source_message_id);
 CREATE INDEX IF NOT EXISTS idx_transmission_embedding   ON public.transmission_blocks
-  USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+  USING hnsw (embedding vector_cosine_ops);
 
 -- ----------------------------------------------------------------------------
 -- 2. CODEX CHAPTERS — Living, woven chapters with vibrational images
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS public.codex_chapters (
   image_generation_count integer DEFAULT 0,
 
   -- Semantic + structural
-  embedding vector(768),
+  embedding vector(3072),
   order_index integer DEFAULT 0,
   depth integer DEFAULT 0,
   version integer DEFAULT 1,
@@ -91,7 +91,7 @@ CREATE INDEX IF NOT EXISTS idx_chapter_user_type   ON public.codex_chapters(user
 CREATE INDEX IF NOT EXISTS idx_chapter_parent      ON public.codex_chapters(parent_id);
 CREATE INDEX IF NOT EXISTS idx_chapter_order       ON public.codex_chapters(user_id, codex_type, order_index);
 CREATE INDEX IF NOT EXISTS idx_chapter_embedding   ON public.codex_chapters
-  USING ivfflat (embedding vector_cosine_ops) WITH (lists = 50);
+  USING hnsw (embedding vector_cosine_ops);
 
 -- ----------------------------------------------------------------------------
 -- 3. CHAPTER FRAGMENTS — Lineage of every transmission woven into a chapter

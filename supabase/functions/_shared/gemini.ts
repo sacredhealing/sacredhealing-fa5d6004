@@ -10,11 +10,11 @@ if (!GEMINI_API_KEY) {
   console.warn("[codex/gemini] GEMINI_API_KEY missing — calls will fail");
 }
 
-// ---- Embeddings (text-embedding-004, 768 dims) -------------
+// ---- Embeddings (gemini-embedding-001, 3072 dims default) -------------
 export async function embedText(text: string): Promise<number[]> {
-  const url = `${GEMINI_API_BASE}/models/text-embedding-004:embedContent?key=${GEMINI_API_KEY}`;
+  const url = `${GEMINI_API_BASE}/models/gemini-embedding-001:embedContent?key=${GEMINI_API_KEY}`;
   const body = {
-    model: "models/text-embedding-004",
+    model: "models/gemini-embedding-001",
     content: { parts: [{ text: text.slice(0, 8000) }] },
   };
   const res = await fetch(url, {
