@@ -56,7 +56,7 @@ serve(async (req) => {
     if (!resendApiKey) throw new Error("RESEND_API_KEY not configured");
     const resend = new Resend(resendApiKey);
 
-    const fromEmail = Deno.env.get("FROM_EMAIL") || "SQI <onboarding@resend.dev>";
+    const fromEmail = Deno.env.get("FROM_EMAIL") || "Kritagya Das <noreply@siddhaquantumnexus.com>";
     const appUrl = Deno.env.get("APP_URL") || "https://sacredhealing.lovable.app";
 
     const supabase = createClient(

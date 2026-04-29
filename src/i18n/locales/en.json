@@ -6574,5 +6574,97 @@
         }
       ]
     }
+  },
+  "conversion": {
+    "banner": {
+      "headline": "76 members are inside the Nexus — you haven't unlocked it yet",
+      "subline": "Full Jyotish · Ayurveda · Siddha Portal · Healing Transmissions from €19/mo",
+      "unlock": "🔱 UNLOCK",
+      "dismissAria": "Dismiss upgrade banner"
+    },
+    "modal": {
+      "microLabel": "SQI 2050 · NEXUS TRANSMISSION",
+      "choosePath": "CHOOSE YOUR PATH",
+      "checkoutNote": "Secure checkout via Stripe · Cancel anytime (monthly tiers)",
+      "ctaUnlock": "{{emoji}} UNLOCK {{tierUpper}} — {{price}}",
+      "moreCount": "+{{count}} more",
+      "closeAria": "Close",
+      "triggers": {
+        "meditation": {
+          "title": "You just felt a fraction of what's inside",
+          "sub": "That meditation was from the free tier. The full Nexus goes infinitely deeper."
+        },
+        "audio": {
+          "title": "That transmission was just the beginning",
+          "sub": "The full healing audio library — frequencies, mantras, scalar transmissions — unlocks now."
+        },
+        "ayurveda": {
+          "title": "Your Prakriti scan is complete",
+          "sub": "Unlock the full AI Ayurvedic consultation, personalized protocols and Siddha healing prescriptions."
+        },
+        "jyotish": {
+          "title": "Your birth chart is mapped",
+          "sub": "Unlock the full Vedic AI reading, Mahadasha analysis, and real-time Jyotish guidance."
+        }
+      }
+    },
+    "tiers": {
+      "free": {
+        "label": "Atma-Seed",
+        "includes": [
+          "Free Meditations & Mantras",
+          "Free Healing Audios",
+          "Community Chat & Live",
+          "Basic Ayurveda & Jyotish"
+        ]
+      },
+      "prana": {
+        "label": "Prana-Flow",
+        "price": "€19/mo",
+        "tagline": "Activate Your Sacred Practice",
+        "includes": [
+          "Full Vedic Jyotish + AI Chat",
+          "Full Ayurvedic Scan + AI Chat",
+          "Vastu Guide for Home",
+          "All Healing Music (unlimited)",
+          "Full Meditation & Mantra Library",
+          "Nadi Scanner (unlimited scans)"
+        ]
+      },
+      "siddha": {
+        "label": "Siddha-Quantum",
+        "price": "€45/mo",
+        "tagline": "Enter the Universal Field",
+        "includes": [
+          "Everything in Prana-Flow",
+          "Full Siddha Portal Access (all tools)",
+          "Digital Nadi Scanner (Bio-Sync)",
+          "Sri Yantra Universal Shield",
+          "Full Healing Transmissions",
+          "Stargate Access",
+          "Sacred Music Downloads"
+        ]
+      },
+      "akasha": {
+        "label": "Akasha-Infinity",
+        "price": "€1111 lifetime",
+        "tagline": "Eternal Soul Activation",
+        "includes": [
+          "Everything in Siddha-Quantum",
+          "Akashic Decoder",
+          "Quantum Apothecary (€888 value)",
+          "Virtual Pilgrimage (€888 value)",
+          "Hand Analyzer / Palm Reading",
+          "Temple Home",
+          "All future modules — forever"
+        ]
+      }
+    },
+    "locked": {
+      "requiredBadge": "{{tierUpper}} REQUIRED",
+      "lockedTitle": "{{feature}} is locked",
+      "unlockPrompt": "Unlock with {{tier}} — {{price}}",
+      "unlockCta": "{{emoji}} UNLOCK NOW"
+    }
   }
 }

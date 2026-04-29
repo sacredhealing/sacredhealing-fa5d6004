@@ -6167,5 +6167,97 @@
         }
       ]
     }
+  },
+  "conversion": {
+    "banner": {
+      "headline": "76 medlemmar är i Nexus — du har inte låst upp det ännu",
+      "subline": "Full Jyotish · Ayurveda · Siddha-portalen · Helande överföringar från €19/mån",
+      "unlock": "🔱 LÅS UPP",
+      "dismissAria": "Stäng uppgraderingsbanner"
+    },
+    "modal": {
+      "microLabel": "SQI 2050 · NEXUS-ÖVERFÖRING",
+      "choosePath": "VÄLJ DIN VÄG",
+      "checkoutNote": "Säker betalning via Stripe · Avsluta när som helst (månadsprenumerationer)",
+      "ctaUnlock": "{{emoji}} LÅS UPP {{tierUpper}} — {{price}}",
+      "moreCount": "+{{count}} till",
+      "closeAria": "Stäng",
+      "triggers": {
+        "meditation": {
+          "title": "Du kände bara en bråkdel av vad som finns inuti",
+          "sub": "Den meditationen var från gratislager. Hela Nexus går oändligt djupare."
+        },
+        "audio": {
+          "title": "Den överföringen var bara början",
+          "sub": "Hela biblioteket med helande ljud — frekvenser, mantran, skalära överföringar — låses upp nu."
+        },
+        "ayurveda": {
+          "title": "Din Prakriti-scan är klar",
+          "sub": "Lås upp full AI-ayurvedisk konsultation, personliga protokoll och Siddha-recept."
+        },
+        "jyotish": {
+          "title": "Ditt födelsehoroskop är kartlagt",
+          "sub": "Lås upp full vedisk AI-läsning, Mahadasha-analys och vägledning i realtid."
+        }
+      }
+    },
+    "tiers": {
+      "free": {
+        "label": "Atma-Seed",
+        "includes": [
+          "Gratis meditationer och mantran",
+          "Gratis helande ljud",
+          "Gemenskap och live",
+          "Grundläggande Ayurveda och Jyotish"
+        ]
+      },
+      "prana": {
+        "label": "Prana-Flow",
+        "price": "€19/mån",
+        "tagline": "Aktivera din heliga praktik",
+        "includes": [
+          "Full vedisk Jyotish + AI-chatt",
+          "Full ayurvedisk scan + AI-chatt",
+          "Vastu-guide för hemmet",
+          "All helandemusik (obegränsat)",
+          "Full meditation– och mantrabibliotek",
+          "Nadi-scanner (obegränsat)"
+        ]
+      },
+      "siddha": {
+        "label": "Siddha-Quantum",
+        "price": "€45/mån",
+        "tagline": "Stig in i det universella fältet",
+        "includes": [
+          "Allt i Prana-Flow",
+          "Full Siddha-portal (alla verktyg)",
+          "Digital Nadi-scanner (Bio-Sync)",
+          "Sri Yantra Universal Shield",
+          "Fulla helande överföringar",
+          "Stargate-åtkomst",
+          "Helig musik som nedladdning"
+        ]
+      },
+      "akasha": {
+        "label": "Akasha-Infinity",
+        "price": "€1111 livstid",
+        "tagline": "Evig själaktivering",
+        "includes": [
+          "Allt i Siddha-Quantum",
+          "Akashisk avkodare",
+          "Quantum Apothecary (€888 värde)",
+          "Virtuell pilgrimsfärd (€888 värde)",
+          "Handanalys / palm-läsning",
+          "Temple Home",
+          "Alla framtida moduler — för alltid"
+        ]
+      }
+    },
+    "locked": {
+      "requiredBadge": "{{tierUpper}} KRÄVS",
+      "lockedTitle": "{{feature}} är låst",
+      "unlockPrompt": "Lås upp med {{tier}} — {{price}}",
+      "unlockCta": "{{emoji}} LÅS UPP NU"
+    }
   }
 }

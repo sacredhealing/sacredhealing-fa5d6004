@@ -2407,16 +2407,46 @@
       "shcLine": "+{{amount}} SHC"
     },
     "categorySections": {
-      "planet": { "title": "Mantras planetarios", "subtitle": "Remedios Navagraha y medicina sónica alineada al tiempo." },
-      "deity": { "title": "Deidad e Ishta Devata", "subtitle": "Nombres divinos y corrientes devocionales diarias." },
-      "intention": { "title": "Intención y afirmación", "subtitle": "Sankalpa y afirmaciones para el campo interior." },
-      "karma": { "title": "Karma y sanación profunda", "subtitle": "Soltar patrones y restaurar profundidad en el cuerpo sutil." },
-      "wealth": { "title": "Riqueza y abundancia", "subtitle": "Corrientes Lakshmi y frecuencias de prosperidad." },
-      "health": { "title": "Salud y vitalidad", "subtitle": "Vitalidad, tonos sanadores y equilibrio corporal." },
-      "peace": { "title": "Paz y calma", "subtitle": "Suavizar la mente y calmar el sistema nervioso." },
-      "protection": { "title": "Protección y poder", "subtitle": "Límites, escudos y fuerza soberana." },
-      "spiritual": { "title": "Crecimiento espiritual", "subtitle": "Despertar, alineación y corriente ascendente." },
-      "general": { "title": "Mantras sagrados", "subtitle": "Sílabas fundacionales y códigos de sonido atemporales." }
+      "planet": {
+        "title": "Mantras planetarios",
+        "subtitle": "Remedios Navagraha y medicina sónica alineada al tiempo."
+      },
+      "deity": {
+        "title": "Deidad e Ishta Devata",
+        "subtitle": "Nombres divinos y corrientes devocionales diarias."
+      },
+      "intention": {
+        "title": "Intención y afirmación",
+        "subtitle": "Sankalpa y afirmaciones para el campo interior."
+      },
+      "karma": {
+        "title": "Karma y sanación profunda",
+        "subtitle": "Soltar patrones y restaurar profundidad en el cuerpo sutil."
+      },
+      "wealth": {
+        "title": "Riqueza y abundancia",
+        "subtitle": "Corrientes Lakshmi y frecuencias de prosperidad."
+      },
+      "health": {
+        "title": "Salud y vitalidad",
+        "subtitle": "Vitalidad, tonos sanadores y equilibrio corporal."
+      },
+      "peace": {
+        "title": "Paz y calma",
+        "subtitle": "Suavizar la mente y calmar el sistema nervioso."
+      },
+      "protection": {
+        "title": "Protección y poder",
+        "subtitle": "Límites, escudos y fuerza soberana."
+      },
+      "spiritual": {
+        "title": "Crecimiento espiritual",
+        "subtitle": "Despertar, alineación y corriente ascendente."
+      },
+      "general": {
+        "title": "Mantras sagrados",
+        "subtitle": "Sílabas fundacionales y códigos de sonido atemporales."
+      }
     }
   },
   "spiritualEducation": {
@@ -3990,5 +4020,97 @@
     "dosha_vata": "Vata",
     "dosha_pitta": "Pitta",
     "dosha_kapha": "Kapha"
+  },
+  "conversion": {
+    "banner": {
+      "headline": "76 miembros están en el Nexus — tú aún no lo has desbloqueado",
+      "subline": "Jyotish completo · Ayurveda · Portal Siddha · Transmisiones de sanación desde €19/mes",
+      "unlock": "🔱 DESBLOQUEAR",
+      "dismissAria": "Cerrar banner de mejora"
+    },
+    "modal": {
+      "microLabel": "SQI 2050 · TRANSMISIÓN NEXUS",
+      "choosePath": "ELIGE TU CAMINO",
+      "checkoutNote": "Pago seguro con Stripe · Cancela cuando quieras (planes mensuales)",
+      "ctaUnlock": "{{emoji}} DESBLOQUEAR {{tierUpper}} — {{price}}",
+      "moreCount": "+{{count}} más",
+      "closeAria": "Cerrar",
+      "triggers": {
+        "meditation": {
+          "title": "Solo sentiste una fracción de lo que hay dentro",
+          "sub": "Esa meditación era del nivel gratuito. El Nexus completo va infinitamente más profundo."
+        },
+        "audio": {
+          "title": "Esa transmisión fue solo el comienzo",
+          "sub": "La biblioteca completa de audio sanador — frecuencias, mantras, transmisiones escalares — se desbloquea ahora."
+        },
+        "ayurveda": {
+          "title": "Tu escaneo Prakriti está completo",
+          "sub": "Desbloquea la consulta ayurvédica completa con IA, protocolos personalizados y recetas Siddha."
+        },
+        "jyotish": {
+          "title": "Tu carta natal está trazada",
+          "sub": "Desbloquea la lectura védica completa con IA, análisis Mahadasha y guía Jyotish en tiempo real."
+        }
+      }
+    },
+    "tiers": {
+      "free": {
+        "label": "Atma-Seed",
+        "includes": [
+          "Free Meditations & Mantras",
+          "Free Healing Audios",
+          "Community Chat & Live",
+          "Basic Ayurveda & Jyotish"
+        ]
+      },
+      "prana": {
+        "label": "Prana-Flow",
+        "price": "€19/mo",
+        "tagline": "Activate Your Sacred Practice",
+        "includes": [
+          "Full Vedic Jyotish + AI Chat",
+          "Full Ayurvedic Scan + AI Chat",
+          "Vastu Guide for Home",
+          "All Healing Music (unlimited)",
+          "Full Meditation & Mantra Library",
+          "Nadi Scanner (unlimited scans)"
+        ]
+      },
+      "siddha": {
+        "label": "Siddha-Quantum",
+        "price": "€45/mo",
+        "tagline": "Enter the Universal Field",
+        "includes": [
+          "Everything in Prana-Flow",
+          "Full Siddha Portal Access (all tools)",
+          "Digital Nadi Scanner (Bio-Sync)",
+          "Sri Yantra Universal Shield",
+          "Full Healing Transmissions",
+          "Stargate Access",
+          "Sacred Music Downloads"
+        ]
+      },
+      "akasha": {
+        "label": "Akasha-Infinity",
+        "price": "€1111 lifetime",
+        "tagline": "Eternal Soul Activation",
+        "includes": [
+          "Everything in Siddha-Quantum",
+          "Akashic Decoder",
+          "Quantum Apothecary (€888 value)",
+          "Virtual Pilgrimage (€888 value)",
+          "Hand Analyzer / Palm Reading",
+          "Temple Home",
+          "All future modules — forever"
+        ]
+      }
+    },
+    "locked": {
+      "requiredBadge": "{{tierUpper}} REQUERIDO",
+      "lockedTitle": "{{feature}} está bloqueado",
+      "unlockPrompt": "Desbloquea con {{tier}} — {{price}}",
+      "unlockCta": "{{emoji}} DESBLOQUEAR AHORA"
+    }
   }
 }

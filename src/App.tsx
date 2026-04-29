@@ -8,6 +8,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { SHCProvider } from "@/contexts/SHCContext";
 import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
+import { ConversionProvider } from "@/components/conversion/ConversionSystem";
 import { GitaTransitionOverlay } from "@/components/dashboard/GitaTransitionOverlay";
 import { AmbientAudioProvider } from "@/contexts/AmbientAudioContext";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
@@ -406,26 +407,28 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <SHCProvider>
-            <MusicPlayerProvider>
-              <GitaTransitionOverlay />
-              <AmbientAudioProvider>
-                <Toaster />
-                <Sonner />
-                <DebugBanner />
-                <ProfileLanguageSync />
-                <Suspense
-                  fallback={
-                    <div className="min-h-screen flex items-center justify-center bg-[#030303]" style={{ background: "radial-gradient(ellipse at 15% 20%, rgba(30, 27, 75, 0.7) 0%, transparent 50%), #030303" }}>
-                      <Loader2 className="w-10 h-10 animate-spin text-[#00F2FE]" />
-                    </div>
-                  }
-                >
-                  <BrowserRouter>
-                    <AppRoutes />
-                  </BrowserRouter>
-                </Suspense>
-              </AmbientAudioProvider>
-            </MusicPlayerProvider>
+            <BrowserRouter>
+              <ConversionProvider>
+                <MusicPlayerProvider>
+                  <GitaTransitionOverlay />
+                  <AmbientAudioProvider>
+                    <Toaster />
+                    <Sonner />
+                    <DebugBanner />
+                    <ProfileLanguageSync />
+                    <Suspense
+                      fallback={
+                        <div className="min-h-screen flex items-center justify-center bg-[#030303]" style={{ background: "radial-gradient(ellipse at 15% 20%, rgba(30, 27, 75, 0.7) 0%, transparent 50%), #030303" }}>
+                          <Loader2 className="w-10 h-10 animate-spin text-[#00F2FE]" />
+                        </div>
+                      }
+                    >
+                      <AppRoutes />
+                    </Suspense>
+                  </AmbientAudioProvider>
+                </MusicPlayerProvider>
+              </ConversionProvider>
+            </BrowserRouter>
           </SHCProvider>
         </TooltipProvider>
       </QueryClientProvider>

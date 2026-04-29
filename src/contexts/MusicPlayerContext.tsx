@@ -7,6 +7,8 @@ import { navigateTo } from '@/utils/navigation';
 import { getDayPhase, getSessionDepth } from '@/utils/postSessionContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
+import { useConversionUpgrade } from '@/components/conversion/ConversionSystem';
+import { useMembershipTier } from '@/features/membership/useMembershipTier';
 import { getMusicTrackRequiredRank, getUserMusicAccessRank } from '@/lib/tierAccess';
 
 const SH_LAST_SESSION_KEY = 'sh_last_session';
@@ -259,9 +261,14 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       completed: true,
       item: { id: audio.id, title: audio.title, contentType: audio.contentType },
     };
+
+    if (membershipTierResolved === 'free') {
+      showUpgrade(audio.contentType === 'meditation' ? 'meditation' : 'audio');
+    }
+
     await new Promise((r) => setTimeout(r, 1200));
     (navigateTo as (path: string, opts?: unknown) => void)('/integrate', { state: ctx });
-  }, [addOptimisticBalance, toast]);
+  }, [addOptimisticBalance, toast, membershipTierResolved, showUpgrade]);
 
   const medPlayer = useAudioPlayer(meditationSrc, meditationMeta, handleMeditationEnded);
 

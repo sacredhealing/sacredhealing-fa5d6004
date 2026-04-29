@@ -2148,16 +2148,46 @@
       "shcLine": "+{{amount}} SHC"
     },
     "categorySections": {
-      "planet": { "title": "Planetariske mantraer", "subtitle": "Navagraha-botemidler og tidslinje-tilpasset lydmedisin." },
-      "deity": { "title": "Guddom og Ishta Devata", "subtitle": "Guddommelige navn og hengivne strømmer for daglig tilflukt." },
-      "intention": { "title": "Intensjon og affirmasjon", "subtitle": "Sankalpa og affirmasjoner for det indre feltet." },
-      "karma": { "title": "Karma og dyp healing", "subtitle": "Slipp mønstre og gjenopprett dybde i den subtile kroppen." },
-      "wealth": { "title": "Velstand og overflod", "subtitle": "Lakshmi-strømmer og velstands-frekvenser." },
-      "health": { "title": "Helse og vitalitet", "subtitle": "Vitalitet, helbredende toner og kroppslig balanse." },
-      "peace": { "title": "Fred og ro", "subtitle": "Mykne sinnet og roe nervesystemet." },
-      "protection": { "title": "Beskyttelse og kraft", "subtitle": "Grenser, skjold og suveren styrke." },
-      "spiritual": { "title": "Åndelig vekst", "subtitle": "Oppvåkning, linjering og oppoverstrøm." },
-      "general": { "title": "Hellige mantraer", "subtitle": "Grunnleggende stavelser og tidløse lydkoder." }
+      "planet": {
+        "title": "Planetariske mantraer",
+        "subtitle": "Navagraha-botemidler og tidslinje-tilpasset lydmedisin."
+      },
+      "deity": {
+        "title": "Guddom og Ishta Devata",
+        "subtitle": "Guddommelige navn og hengivne strømmer for daglig tilflukt."
+      },
+      "intention": {
+        "title": "Intensjon og affirmasjon",
+        "subtitle": "Sankalpa og affirmasjoner for det indre feltet."
+      },
+      "karma": {
+        "title": "Karma og dyp healing",
+        "subtitle": "Slipp mønstre og gjenopprett dybde i den subtile kroppen."
+      },
+      "wealth": {
+        "title": "Velstand og overflod",
+        "subtitle": "Lakshmi-strømmer og velstands-frekvenser."
+      },
+      "health": {
+        "title": "Helse og vitalitet",
+        "subtitle": "Vitalitet, helbredende toner og kroppslig balanse."
+      },
+      "peace": {
+        "title": "Fred og ro",
+        "subtitle": "Mykne sinnet og roe nervesystemet."
+      },
+      "protection": {
+        "title": "Beskyttelse og kraft",
+        "subtitle": "Grenser, skjold og suveren styrke."
+      },
+      "spiritual": {
+        "title": "Åndelig vekst",
+        "subtitle": "Oppvåkning, linjering og oppoverstrøm."
+      },
+      "general": {
+        "title": "Hellige mantraer",
+        "subtitle": "Grunnleggende stavelser og tidløse lydkoder."
+      }
     }
   },
   "spiritualEducation": {
@@ -3894,5 +3924,97 @@
     "dosha_vata": "Vata",
     "dosha_pitta": "Pitta",
     "dosha_kapha": "Kapha"
+  },
+  "conversion": {
+    "banner": {
+      "headline": "76 medlemmer er i Nexus — du har ikke låst opp ennå",
+      "subline": "Full Jyotish · Ayurveda · Siddha-portalen · Helbredende overføringer fra €19/mnd",
+      "unlock": "🔱 LÅS OPP",
+      "dismissAria": "Lukk oppgraderingsbanner"
+    },
+    "modal": {
+      "microLabel": "SQI 2050 · NEXUS-OVERFØRING",
+      "choosePath": "VELG DIN STI",
+      "checkoutNote": "Sikker betaling via Stripe · Avslutt når som helst (månedlige planer)",
+      "ctaUnlock": "{{emoji}} LÅS OPP {{tierUpper}} — {{price}}",
+      "moreCount": "+{{count}} til",
+      "closeAria": "Lukk",
+      "triggers": {
+        "meditation": {
+          "title": "Du kjente bare en brøkdel av det som finnes inni",
+          "sub": "Den meditasjonen var fra gratisnivået. Hele Nexus går uendelig dypere."
+        },
+        "audio": {
+          "title": "Den overføringen var bare begynnelsen",
+          "sub": "Hele biblioteket med helbredende lyd — frekvenser, mantra, skalære overføringer — låses opp nå."
+        },
+        "ayurveda": {
+          "title": "Prakriti-skanningen din er fullført",
+          "sub": "Lås opp full AI-ayurvedisk konsultasjon, personlige protokoller og Siddha-resepter."
+        },
+        "jyotish": {
+          "title": "Fødselskartet ditt er kartlagt",
+          "sub": "Lås opp full vedisk AI-lesning, Mahadasha-analyse og sanntids Jyotish-veiledning."
+        }
+      }
+    },
+    "tiers": {
+      "free": {
+        "label": "Atma-Seed",
+        "includes": [
+          "Free Meditations & Mantras",
+          "Free Healing Audios",
+          "Community Chat & Live",
+          "Basic Ayurveda & Jyotish"
+        ]
+      },
+      "prana": {
+        "label": "Prana-Flow",
+        "price": "€19/mo",
+        "tagline": "Activate Your Sacred Practice",
+        "includes": [
+          "Full Vedic Jyotish + AI Chat",
+          "Full Ayurvedic Scan + AI Chat",
+          "Vastu Guide for Home",
+          "All Healing Music (unlimited)",
+          "Full Meditation & Mantra Library",
+          "Nadi Scanner (unlimited scans)"
+        ]
+      },
+      "siddha": {
+        "label": "Siddha-Quantum",
+        "price": "€45/mo",
+        "tagline": "Enter the Universal Field",
+        "includes": [
+          "Everything in Prana-Flow",
+          "Full Siddha Portal Access (all tools)",
+          "Digital Nadi Scanner (Bio-Sync)",
+          "Sri Yantra Universal Shield",
+          "Full Healing Transmissions",
+          "Stargate Access",
+          "Sacred Music Downloads"
+        ]
+      },
+      "akasha": {
+        "label": "Akasha-Infinity",
+        "price": "€1111 lifetime",
+        "tagline": "Eternal Soul Activation",
+        "includes": [
+          "Everything in Siddha-Quantum",
+          "Akashic Decoder",
+          "Quantum Apothecary (€888 value)",
+          "Virtual Pilgrimage (€888 value)",
+          "Hand Analyzer / Palm Reading",
+          "Temple Home",
+          "All future modules — forever"
+        ]
+      }
+    },
+    "locked": {
+      "requiredBadge": "{{tierUpper}} PÅKREVD",
+      "lockedTitle": "{{feature}} er låst",
+      "unlockPrompt": "Lås opp med {{tier}} — {{price}}",
+      "unlockCta": "{{emoji}} LÅS OPP NÅ"
+    }
   }
 }
