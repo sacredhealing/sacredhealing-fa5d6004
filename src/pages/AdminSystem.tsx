@@ -114,7 +114,7 @@ const AdminSystem = () => {
           >
             <ArrowLeft className="h-5 w-5 text-[#D4AF37]" />
           </Button>
-          <div>
+          <div className="flex-1">
             <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-white/60">
               Bhakti-Algorithms Control Plane
             </div>
@@ -124,6 +124,27 @@ const AdminSystem = () => {
             <p className="mt-2 text-white/60 leading-[1.6]">
               Orchestrate projects, tasks, content, and transmissions.
             </p>
+          </div>
+          {/* Akashic Codex glyphs — admin-only entry to the living book */}
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => navigate('/akashic-codex')}
+              title="Akashic Codex"
+              aria-label="Open Akashic Codex"
+              className="rounded-2xl px-3 py-2 bg-white/[0.02] border border-[#D4AF37]/25 hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/55 transition-all"
+              style={{ color: '#D4AF37', fontSize: 22, fontWeight: 900, lineHeight: 1, textShadow: '0 0 12px rgba(212,175,55,0.45)' }}
+            >
+              ⟁
+            </button>
+            <button
+              onClick={() => navigate('/living-portrait-codex')}
+              title="Living Portrait Codex"
+              aria-label="Open Living Portrait Codex"
+              className="rounded-2xl px-3 py-2 bg-white/[0.02] border border-[#D4AF37]/25 hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/55 transition-all"
+              style={{ color: '#D4AF37', fontSize: 22, fontWeight: 900, lineHeight: 1, textShadow: '0 0 12px rgba(212,175,55,0.45)' }}
+            >
+              ✦
+            </button>
           </div>
         </div>
 
