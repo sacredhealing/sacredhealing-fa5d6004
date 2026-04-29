@@ -7,7 +7,7 @@ import { navigateTo } from '@/utils/navigation';
 import { getDayPhase, getSessionDepth } from '@/utils/postSessionContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
-import { useConversionUpgrade } from '@/components/conversion/ConversionSystem';
+import { useConversionUpgrade, UPGRADE_MODAL_STORAGE_KEY } from '@/components/conversion/ConversionSystem';
 import { useMembershipTier } from '@/features/membership/useMembershipTier';
 import { getMusicTrackRequiredRank, getUserMusicAccessRank } from '@/lib/tierAccess';
 
@@ -125,6 +125,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const { addOptimisticBalance } = useSHC();
   const { user } = useAuth();
   const { isAdmin, adminGranted, isPremium, tier: membershipTier } = useMembership();
+  const membershipTierResolved = useMembershipTier();
   const { showUpgrade } = useConversionUpgrade();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
@@ -263,13 +264,19 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       item: { id: audio.id, title: audio.title, contentType: audio.contentType },
     };
 
-    if (membershipTier === 'free') {
+    let modalAlreadyDismissed = false;
+    try {
+      modalAlreadyDismissed = localStorage.getItem(UPGRADE_MODAL_STORAGE_KEY) === 'true';
+    } catch {
+      modalAlreadyDismissed = false;
+    }
+    if (membershipTierResolved === 'free' && !modalAlreadyDismissed) {
       showUpgrade(audio.contentType === 'meditation' ? 'meditation' : 'audio');
     }
 
     await new Promise((r) => setTimeout(r, 1200));
     (navigateTo as (path: string, opts?: unknown) => void)('/integrate', { state: ctx });
-  }, [addOptimisticBalance, toast, membershipTier, showUpgrade]);
+  }, [addOptimisticBalance, toast, membershipTierResolved, showUpgrade]);
 
   const medPlayer = useAudioPlayer(meditationSrc, meditationMeta, handleMeditationEnded);
 

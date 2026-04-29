@@ -20,6 +20,9 @@ const GOLD = "#D4AF37";
 const BLACK = "#050505";
 const CYAN = "#22D3EE";
 
+/** Persisted when modal dismissed — post-session upgrade shows once per browser */
+export const UPGRADE_MODAL_STORAGE_KEY = "sqn_upgrade_modal_shown";
+
 export type PaidTierKey = "prana" | "siddha" | "akasha";
 export type UpgradeTrigger = "meditation" | "audio" | "ayurveda" | "jyotish";
 
@@ -67,6 +70,11 @@ export function ConversionProvider({ children }: { children: React.ReactNode }) 
 
   const hideUpgrade = useCallback(() => {
     setModal((m) => ({ ...m, isOpen: false }));
+    try {
+      localStorage.setItem(UPGRADE_MODAL_STORAGE_KEY, "true");
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   const value = useMemo(() => ({ showUpgrade, hideUpgrade }), [showUpgrade, hideUpgrade]);
@@ -205,6 +213,7 @@ export function UpgradeModal({ isOpen, onClose, trigger = "meditation" }: Upgrad
         color: routes.color,
         emoji: routes.emoji,
         path: routes.path,
+        recommended: key === "siddha",
       };
     });
   }, [t, tierOrder]);
@@ -236,206 +245,256 @@ export function UpgradeModal({ isOpen, onClose, trigger = "meditation" }: Upgrad
   const msg = triggerMessages[trigger] ?? triggerMessages.meditation;
   const selected = tierBundles.find((x) => x.key === selectedTier) ?? tierBundles[1];
 
+  const usePostSessionHero = trigger === "meditation" || trigger === "audio";
+  const microLine = usePostSessionHero
+    ? t("conversion.modal.sheet.microLabel")
+    : t("conversion.modal.microLabel");
+  const titleLine = usePostSessionHero ? t("conversion.modal.sheet.title") : msg.title;
+  const subLine = usePostSessionHero ? t("conversion.modal.sheet.subtitle") : msg.sub;
+
   return (
     <div
+      role="presentation"
       style={{
         position: "fixed",
         inset: 0,
         zIndex: 1000,
-        background: "rgba(0,0,0,0.85)",
-        backdropFilter: "blur(8px)",
+        background: "rgba(0,0,0,0.82)",
+        backdropFilter: "blur(6px)",
+        WebkitBackdropFilter: "blur(6px)",
         display: "flex",
-        alignItems: "center",
+        alignItems: "flex-end",
         justifyContent: "center",
-        padding: 16,
+        padding: 0,
       }}
       onClick={onClose}
-      role="presentation"
     >
       <div
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
+        aria-labelledby="codex-upgrade-title"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
         style={{
-          maxWidth: 560,
+          position: "relative",
           width: "100%",
-          background: `linear-gradient(135deg, rgba(15,10,5,0.99), rgba(5,5,5,0.99))`,
-          border: `1px solid rgba(212,175,55,0.2)`,
-          borderRadius: 28,
-          overflow: "hidden",
-          boxShadow: `0 0 60px rgba(212,175,55,0.1)`,
+          maxWidth: 540,
+          background: "linear-gradient(180deg, #0d0a02 0%, #050505 100%)",
+          border: "1px solid rgba(212,175,55,0.18)",
+          borderRadius: "24px 24px 0 0",
+          padding: "20px 20px 40px",
+          boxShadow: "0 -8px 40px rgba(0,0,0,0.6)",
+          maxHeight: "90vh",
+          overflowY: "auto",
         }}
       >
         <div
           style={{
-            background: `linear-gradient(135deg, rgba(212,175,55,0.08), rgba(34,211,238,0.04))`,
-            padding: "20px 24px",
-            borderBottom: "1px solid rgba(255,255,255,0.05)",
-            position: "relative",
+            width: 36,
+            height: 4,
+            borderRadius: 2,
+            background: "rgba(255,255,255,0.12)",
+            margin: "0 auto 20px",
+          }}
+        />
+
+        <button
+          type="button"
+          aria-label={t("conversion.modal.closeAria")}
+          onClick={onClose}
+          style={{
+            position: "absolute",
+            top: 16,
+            right: 16,
+            background: "none",
+            border: "none",
+            color: "rgba(255,255,255,0.25)",
+            fontSize: 22,
+            cursor: "pointer",
+            lineHeight: 1,
           }}
         >
-          <button
-            type="button"
-            aria-label={t("conversion.modal.closeAria")}
-            onClick={onClose}
+          ×
+        </button>
+
+        <div style={{ textAlign: "center", marginBottom: 20 }}>
+          <div
+            aria-hidden
             style={{
-              position: "absolute",
-              top: 16,
-              right: 16,
-              background: "none",
-              border: "none",
-              color: "rgba(255,255,255,0.3)",
-              fontSize: 20,
-              cursor: "pointer",
+              fontSize: 28,
+              marginBottom: 10,
+              filter: "drop-shadow(0 0 12px rgba(212,175,55,0.4))",
             }}
           >
-            ×
-          </button>
+            🔱
+          </div>
           <div
             style={{
-              fontSize: 8,
+              fontSize: 9,
               letterSpacing: "0.5em",
               color: GOLD,
               fontWeight: 800,
               marginBottom: 6,
             }}
           >
-            {t("conversion.modal.microLabel")}
+            {microLine}
           </div>
-          <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: "-0.03em", color: "white" }}>
-            {msg.title}
-          </div>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 4, lineHeight: 1.6 }}>
-            {msg.sub}
-          </div>
-        </div>
-
-        <div style={{ padding: "20px 24px" }}>
-          <div
+          <h2
+            id="codex-upgrade-title"
             style={{
-              fontSize: 8,
-              letterSpacing: "0.4em",
-              color: "rgba(255,255,255,0.3)",
-              fontWeight: 800,
-              marginBottom: 12,
+              fontSize: 20,
+              fontWeight: 900,
+              letterSpacing: "-0.03em",
+              color: "white",
+              margin: "0 0 8px",
             }}
           >
-            {t("conversion.modal.choosePath")}
-          </div>
+            {titleLine}
+          </h2>
+          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6, margin: 0 }}>
+            {subLine}
+          </p>
+        </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {tierBundles.map((tb) => {
-              const isSelected = selectedTier === tb.key;
-              const rgb = hexToRgb(tb.color);
-              return (
-                <button
-                  key={tb.key}
-                  type="button"
-                  onClick={() => setSelectedTier(tb.key)}
-                  style={{
-                    padding: "14px 16px",
-                    borderRadius: 16,
-                    border: `1px solid ${isSelected ? tb.color : "rgba(255,255,255,0.06)"}`,
-                    background: isSelected ? `rgba(${rgb},0.08)` : "rgba(255,255,255,0.02)",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    transition: "all 0.2s",
-                    boxShadow: isSelected ? `0 0 20px rgba(${rgb},0.1)` : "none",
-                  }}
-                >
-                  <div
+        <div
+          style={{
+            fontSize: 8,
+            letterSpacing: "0.4em",
+            color: "rgba(255,255,255,0.3)",
+            fontWeight: 800,
+            marginBottom: 12,
+          }}
+        >
+          {t("conversion.modal.choosePath")}
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
+          {tierBundles.map((tb) => {
+            const isSelected = selectedTier === tb.key;
+            const rgb = hexToRgb(tb.color);
+            return (
+              <button
+                key={tb.key}
+                type="button"
+                onClick={() => setSelectedTier(tb.key)}
+                style={{
+                  padding: "14px 16px",
+                  borderRadius: 16,
+                  border: `1.5px solid ${isSelected ? tb.color : "rgba(255,255,255,0.07)"}`,
+                  background: isSelected ? `rgba(${rgb},0.12)` : "rgba(255,255,255,0.02)",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  position: "relative",
+                  transition: "all 0.15s",
+                }}
+              >
+                {tb.recommended ? (
+                  <span
                     style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginBottom: isSelected ? 10 : 0,
+                      position: "absolute",
+                      top: -10,
+                      right: 12,
+                      background: GOLD,
+                      color: BLACK,
+                      fontSize: 9,
+                      fontWeight: 900,
+                      padding: "3px 10px",
+                      borderRadius: 20,
+                      letterSpacing: "0.05em",
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontSize: 16 }}>{tb.emoji}</span>
-                      <span
-                        style={{
-                          fontSize: 13,
-                          fontWeight: 800,
-                          color: isSelected ? tb.color : "rgba(255,255,255,0.7)",
-                        }}
-                      >
-                        {tb.label}
-                      </span>
-                    </div>
+                    {t("conversion.modal.sheet.mostPopular")}
+                  </span>
+                ) : null}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: isSelected ? 10 : 0,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 18 }}>{tb.emoji}</span>
                     <span
                       style={{
-                        fontSize: 12,
-                        fontWeight: 700,
-                        color: isSelected ? tb.color : "rgba(255,255,255,0.3)",
+                        fontSize: 13,
+                        fontWeight: 800,
+                        color: isSelected ? tb.color : "rgba(255,255,255,0.75)",
                       }}
                     >
-                      {tb.price}
+                      {tb.label}
                     </span>
                   </div>
+                  <span
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: isSelected ? tb.color : "rgba(255,255,255,0.3)",
+                    }}
+                  >
+                    {tb.price}
+                  </span>
+                </div>
 
-                  {isSelected && (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                      {tb.includes.slice(0, 4).map((item: string, i: number) => (
-                        <span
-                          key={`${tb.key}-${i}`}
-                          style={{
-                            fontSize: 9,
-                            color: tb.color,
-                            background: `rgba(${rgb},0.08)`,
-                            padding: "3px 8px",
-                            borderRadius: 6,
-                            border: `1px solid rgba(${rgb},0.2)`,
-                          }}
-                        >
-                          ✓ {item}
-                        </span>
-                      ))}
-                      {tb.includes.length > 4 && (
-                        <span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", padding: "3px 8px" }}>
-                          {t("conversion.modal.moreCount", { count: tb.includes.length - 4 })}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              navigate(selected.path);
-              onClose();
-            }}
-            style={{
-              width: "100%",
-              marginTop: 16,
-              padding: "15px",
-              borderRadius: 20,
-              background: `linear-gradient(135deg, ${selected.color}, ${selected.color}88)`,
-              border: "none",
-              color: BLACK,
-              fontSize: 14,
-              fontWeight: 900,
-              letterSpacing: "0.06em",
-              cursor: "pointer",
-              boxShadow: `0 8px 32px rgba(${hexToRgb(selected.color)},0.3)`,
-            }}
-          >
-            {t("conversion.modal.ctaUnlock", {
-              emoji: selected.emoji,
-              tierUpper: selected.label.toUpperCase(),
-              price: selected.price,
-            })}
-          </button>
-
-          <div style={{ textAlign: "center", marginTop: 10, fontSize: 10, color: "rgba(255,255,255,0.2)" }}>
-            {t("conversion.modal.checkoutNote")}
-          </div>
+                {isSelected ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    {tb.includes.map((item, i) => (
+                      <div key={`${tb.key}-f-${i}`} style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                        <span style={{ color: tb.color, fontSize: 10, flexShrink: 0 }}>✓</span>
+                        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.55)" }}>{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </button>
+            );
+          })}
         </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            navigate(selected.path);
+            onClose();
+          }}
+          style={{
+            width: "100%",
+            padding: "15px",
+            borderRadius: 20,
+            background: `linear-gradient(135deg, ${selected.color}, ${selected.color}99)`,
+            border: "none",
+            color: BLACK,
+            fontSize: 14,
+            fontWeight: 900,
+            letterSpacing: "0.05em",
+            cursor: "pointer",
+            marginBottom: 12,
+            boxShadow: `0 6px 24px ${selected.color}40`,
+          }}
+        >
+          {t("conversion.modal.ctaUnlock", {
+            emoji: selected.emoji,
+            tierUpper: selected.label.toUpperCase(),
+            price: selected.price,
+          })}
+        </button>
+
+        <button
+          type="button"
+          onClick={onClose}
+          style={{
+            width: "100%",
+            padding: "10px",
+            background: "none",
+            border: "none",
+            color: "rgba(255,255,255,0.22)",
+            fontSize: 12,
+            cursor: "pointer",
+          }}
+        >
+          {t("conversion.modal.sheet.continueFree")}
+        </button>
       </div>
     </div>
   );
