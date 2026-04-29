@@ -87,6 +87,8 @@ const LiveEvents = React.lazy(() => import("./pages/LiveEvents"));
 const Challenges = React.lazy(() => import("./pages/Challenges"));
 const AIIncomeEngine = React.lazy(() => import("./pages/AIIncomeEngine"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
+const AkashicCodex = React.lazy(() => import("./pages/AkashicCodex"));
+const LivingPortraitCodex = React.lazy(() => import("./pages/LivingPortraitCodex"));
 const AffiliateDetail = React.lazy(() => import("./pages/income-streams/AffiliateDetail"));
 const SHCCoinDetail = React.lazy(() => import("./pages/income-streams/SHCCoinDetail"));
 const CopyTradingDetail = React.lazy(() => import("./pages/income-streams/CopyTradingDetail"));
@@ -399,6 +401,8 @@ function AppRoutes() {
                   <Route path="/admin/books/:id" element={<AdminScripturalBookView />} />
                 </Route>
               </Route>
+                <Route path="/akashic-codex" element={<AkashicCodex />} />
+                <Route path="/living-portrait-codex" element={<LivingPortraitCodex />} />
                 <Route path="*" element={<NotFound />} />
     </Routes>
     </Suspense>
