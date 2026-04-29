@@ -3,7 +3,7 @@
 // Adjust the supabase import path to your existing client.
 // ============================================================
 
-import { supabase } from "@/integrations/supabase/client"; // adjust path to your client
+import { supabase as supabaseTyped } from "@/integrations/supabase/client";
 import type {
   CodexChapter,
   CodexChapterVersion,
@@ -13,16 +13,21 @@ import type {
   TransmissionBlock,
 } from "./types";
 
+// Codex tables aren't yet in the generated Supabase types; cast to `any`
+// to bypass deep type instantiation. Runtime behavior is unchanged.
+const supabase = supabaseTyped as any;
+
 // ---- Admin gate ------------------------------------------------
 export async function isAdmin(): Promise<boolean> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return false;
-  const { data } = await supabase
-    .from("profiles")
-    .select("is_admin")
-    .eq("id", user.id)
-    .maybeSingle();
-  return Boolean(data?.is_admin);
+  const { data, error } = await supabase
+    .rpc("has_role", { _user_id: user.id, _role: "admin" });
+  if (error) {
+    console.error("[codex] isAdmin RPC failed:", error);
+    return false;
+  }
+  return data === true;
 }
 
 // ---- Chapters --------------------------------------------------
