@@ -125,6 +125,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const { addOptimisticBalance } = useSHC();
   const { user } = useAuth();
   const { isAdmin, adminGranted, isPremium, tier: membershipTier } = useMembership();
+  const { showUpgrade } = useConversionUpgrade();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
