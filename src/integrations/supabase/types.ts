@@ -1603,6 +1603,250 @@ export type Database = {
         }
         Relationships: []
       }
+      codex_chapter_versions: {
+        Row: {
+          chapter_id: string
+          created_at: string
+          id: string
+          prose_snapshot: string
+          trigger_event: string | null
+          version: number
+        }
+        Insert: {
+          chapter_id: string
+          created_at?: string
+          id?: string
+          prose_snapshot: string
+          trigger_event?: string | null
+          version: number
+        }
+        Update: {
+          chapter_id?: string
+          created_at?: string
+          id?: string
+          prose_snapshot?: string
+          trigger_event?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "codex_chapter_versions_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "codex_chapters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      codex_chapters: {
+        Row: {
+          child_count: number | null
+          closing_reflection: string | null
+          cluster_strength: number | null
+          codex_type: string
+          created_at: string
+          depth: number | null
+          embedding: string | null
+          id: string
+          image_generated_at: string | null
+          image_generation_count: number | null
+          image_prompt: string | null
+          image_storage_path: string | null
+          image_url: string | null
+          is_auto_generated: boolean | null
+          opening_hook: string | null
+          order_index: number | null
+          parent_id: string | null
+          prose_woven: string | null
+          slug: string
+          title: string
+          updated_at: string
+          user_id: string
+          version: number | null
+        }
+        Insert: {
+          child_count?: number | null
+          closing_reflection?: string | null
+          cluster_strength?: number | null
+          codex_type: string
+          created_at?: string
+          depth?: number | null
+          embedding?: string | null
+          id?: string
+          image_generated_at?: string | null
+          image_generation_count?: number | null
+          image_prompt?: string | null
+          image_storage_path?: string | null
+          image_url?: string | null
+          is_auto_generated?: boolean | null
+          opening_hook?: string | null
+          order_index?: number | null
+          parent_id?: string | null
+          prose_woven?: string | null
+          slug: string
+          title: string
+          updated_at?: string
+          user_id: string
+          version?: number | null
+        }
+        Update: {
+          child_count?: number | null
+          closing_reflection?: string | null
+          cluster_strength?: number | null
+          codex_type?: string
+          created_at?: string
+          depth?: number | null
+          embedding?: string | null
+          id?: string
+          image_generated_at?: string | null
+          image_generation_count?: number | null
+          image_prompt?: string | null
+          image_storage_path?: string | null
+          image_url?: string | null
+          is_auto_generated?: boolean | null
+          opening_hook?: string | null
+          order_index?: number | null
+          parent_id?: string | null
+          prose_woven?: string | null
+          slug?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "codex_chapters_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "codex_chapters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      codex_cross_refs: {
+        Row: {
+          created_at: string
+          from_chapter_id: string
+          id: string
+          strength: number | null
+          theme: string | null
+          to_chapter_id: string
+        }
+        Insert: {
+          created_at?: string
+          from_chapter_id: string
+          id?: string
+          strength?: number | null
+          theme?: string | null
+          to_chapter_id: string
+        }
+        Update: {
+          created_at?: string
+          from_chapter_id?: string
+          id?: string
+          strength?: number | null
+          theme?: string | null
+          to_chapter_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "codex_cross_refs_from_chapter_id_fkey"
+            columns: ["from_chapter_id"]
+            isOneToOne: false
+            referencedRelation: "codex_chapters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "codex_cross_refs_to_chapter_id_fkey"
+            columns: ["to_chapter_id"]
+            isOneToOne: false
+            referencedRelation: "codex_chapters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      codex_fragments: {
+        Row: {
+          chapter_id: string
+          created_at: string
+          id: string
+          paragraph_anchor: string | null
+          position: number
+          transmission_id: string
+        }
+        Insert: {
+          chapter_id: string
+          created_at?: string
+          id?: string
+          paragraph_anchor?: string | null
+          position: number
+          transmission_id: string
+        }
+        Update: {
+          chapter_id?: string
+          created_at?: string
+          id?: string
+          paragraph_anchor?: string | null
+          position?: number
+          transmission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "codex_fragments_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "codex_chapters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "codex_fragments_transmission_id_fkey"
+            columns: ["transmission_id"]
+            isOneToOne: false
+            referencedRelation: "transmission_blocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      codex_settings: {
+        Row: {
+          auto_image_generation: boolean | null
+          auto_merge_enabled: boolean | null
+          auto_merge_threshold: number | null
+          bestseller_intensity: string | null
+          created_at: string
+          last_backfill_at: string | null
+          last_curator_run_at: string | null
+          narrator_voice: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_image_generation?: boolean | null
+          auto_merge_enabled?: boolean | null
+          auto_merge_threshold?: number | null
+          bestseller_intensity?: string | null
+          created_at?: string
+          last_backfill_at?: string | null
+          last_curator_run_at?: string | null
+          narrator_voice?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_image_generation?: boolean | null
+          auto_merge_enabled?: boolean | null
+          auto_merge_threshold?: number | null
+          bestseller_intensity?: string | null
+          created_at?: string
+          last_backfill_at?: string | null
+          last_curator_run_at?: string | null
+          narrator_voice?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       coin_awards: {
         Row: {
           coins: number
@@ -5940,6 +6184,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      transmission_blocks: {
+        Row: {
+          classified_at: string | null
+          codex_target: string
+          created_at: string
+          embedding: string | null
+          id: string
+          original_date: string | null
+          raw_content: string
+          routing_override: string | null
+          source_chat_id: string | null
+          source_message_id: string | null
+          source_metadata: Json | null
+          source_type: string
+          topic_primary: string | null
+          topic_sub: string | null
+          user_id: string
+          user_prompt: string | null
+        }
+        Insert: {
+          classified_at?: string | null
+          codex_target: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          original_date?: string | null
+          raw_content: string
+          routing_override?: string | null
+          source_chat_id?: string | null
+          source_message_id?: string | null
+          source_metadata?: Json | null
+          source_type?: string
+          topic_primary?: string | null
+          topic_sub?: string | null
+          user_id: string
+          user_prompt?: string | null
+        }
+        Update: {
+          classified_at?: string | null
+          codex_target?: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          original_date?: string | null
+          raw_content?: string
+          routing_override?: string | null
+          source_chat_id?: string | null
+          source_message_id?: string | null
+          source_metadata?: Json | null
+          source_type?: string
+          topic_primary?: string | null
+          topic_sub?: string | null
+          user_id?: string
+          user_prompt?: string | null
+        }
+        Relationships: []
       }
       user_achievements: {
         Row: {
