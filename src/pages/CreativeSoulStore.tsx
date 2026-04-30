@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { adminGrantedFeatureOr } from "@/lib/adminGrantedAccess";
 import { toast } from "sonner";
+import { SocialAutomationBanner } from "@/components/SocialAutomationBanner";
 
 const SQI_STORE_STYLES = `
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Cinzel:wght@400;700&display=swap');
@@ -306,6 +307,8 @@ const CreativeSoulStore = () => {
             <div className="cs-store-title">Creative Soul Store</div>
             <div className="cs-store-subtitle">Bhakti-Algorithms for Creators & Healers</div>
           </div>
+
+          <SocialAutomationBanner />
 
           <div className="cs-store-grid space-y-8">
 
