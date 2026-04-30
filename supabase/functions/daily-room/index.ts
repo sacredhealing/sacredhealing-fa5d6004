@@ -287,10 +287,28 @@ Deno.serve(async (req) => {
         return respond(permission);
       }
 
-      // Always cloud-record so we can save to user profile / Stargate course
+      // Decide whether this session should be cloud-recorded.
+      // Rules requested by product:
+      //   - Stargate "Bhagavad Gita" and "Healing Chamber"  → record (saves to Stargate course content)
+      //   - Stargate "other" (e.g. Monday mantra)           → DO NOT record / DO NOT save
+      //   - DMs (1-on-1)                                    → record (saves to attendee's profile)
+      //   - Other channel sessions / feed                   → record (legacy behavior preserved)
+      const isDmChannel = effectiveChannelId.startsWith("dm-");
+      const isStargateChannel = effectiveChannelId === "stargate";
+      const requestedStargateCat = isStargateChannel
+        ? (typeof stargate_category === "string" && ["healing-chamber", "bhagavad-gita", "other"].includes(stargate_category)
+            ? stargate_category
+            : "other")
+        : null;
+      const isStargateRecordable = isStargateChannel &&
+        (requestedStargateCat === "bhagavad-gita" || requestedStargateCat === "healing-chamber");
+      const shouldRecord = isDmChannel || isStargateRecordable || (!isStargateChannel);
+
       const recordingMode = Deno.env.get("DAILY_RECORDING")?.trim() || "cloud";
       const validModes = ["cloud", "cloud-audio-only", "local", "raw-tracks"];
-      const enableRecording = validModes.includes(recordingMode) ? recordingMode : "cloud";
+      const enableRecording = shouldRecord
+        ? (validModes.includes(recordingMode) ? recordingMode : "cloud")
+        : null;
       const roomSlug = `sh${crypto.randomUUID().replace(/-/g, "").slice(0, 22)}`;
 
       const basePayload = {
@@ -366,32 +384,33 @@ Deno.serve(async (req) => {
         return respond({ ok: false, error: "Failed to save live session", details: insertError.message });
       }
 
-      // Create a pending recording row so we have something to attach the
-      // Daily webhook to once the cloud recording finishes processing.
-      try {
-        const isDm = effectiveChannelId.startsWith("dm-");
-        const isStargate = effectiveChannelId === "stargate";
-        const callType = isDm ? "dm" : isStargate ? "stargate" : (source === "feed" ? "feed" : "channel");
-        const stargateCat = isStargate
-          ? (typeof stargate_category === "string" && ["healing-chamber", "bhagavad-gita", "other"].includes(stargate_category)
-              ? stargate_category
-              : "other")
-          : null;
+      // Create a pending recording row only when this session is recordable.
+      // Stargate "other" (e.g. Monday mantra) is intentionally skipped.
+      if (shouldRecord) {
+        try {
+          const callType = isDmChannel
+            ? "dm"
+            : isStargateChannel
+              ? "stargate"
+              : (source === "feed" ? "feed" : "channel");
 
-        await supabase.from("call_recordings").insert({
-          session_id: session.id,
-          room_name: room.name ?? roomSlug,
-          call_type: callType,
-          stargate_category: stargateCat,
-          host_user_id: user.id,
-          partner_user_id: typeof partner_user_id === "string" ? partner_user_id : null,
-          channel_id: effectiveChannelId,
-          title: (typeof title === "string" && title.trim()) || "Call Recording",
-          description: typeof description === "string" ? description : null,
-          status: "pending",
-        });
-      } catch (e) {
-        console.warn("[daily-room] failed to create call_recordings row:", e);
+          await supabase.from("call_recordings").insert({
+            session_id: session.id,
+            room_name: room.name ?? roomSlug,
+            call_type: callType,
+            stargate_category: requestedStargateCat,
+            host_user_id: user.id,
+            partner_user_id: typeof partner_user_id === "string" ? partner_user_id : null,
+            channel_id: effectiveChannelId,
+            title: (typeof title === "string" && title.trim()) || "Call Recording",
+            description: typeof description === "string" ? description : null,
+            status: "pending",
+          });
+        } catch (e) {
+          console.warn("[daily-room] failed to create call_recordings row:", e);
+        }
+      } else {
+        console.log("[daily-room] recording skipped for session", session.id, "channel", effectiveChannelId, "category", requestedStargateCat);
       }
 
       return respond({ ok: true, success: true, session, room_url: room.url });
