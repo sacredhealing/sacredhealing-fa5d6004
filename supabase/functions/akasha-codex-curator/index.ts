@@ -323,6 +323,17 @@ async function createChapter(
   const slug = `${baseSlug}-${Date.now().toString(36).slice(-4)}`;
   const proseWoven = `<t>${content}</t>`;
 
+  // Compute next order_index (max + 1) within int32 range
+  const { data: maxRow } = await db
+    .from("codex_chapters")
+    .select("order_index")
+    .eq("user_id", userId)
+    .eq("codex_type", codexType)
+    .order("order_index", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const nextOrder = ((maxRow?.order_index ?? 0) as number) + 1;
+
   const { data: ch, error } = await db
     .from("codex_chapters")
     .insert({
@@ -334,7 +345,7 @@ async function createChapter(
       prose_woven: proseWoven,
       closing_reflection: opener.closing_reflection,
       embedding,
-      order_index: Date.now(), // newest gets highest; can be re-ordered later
+      order_index: nextOrder,
       version: 1,
       is_auto_generated: true,
     })
