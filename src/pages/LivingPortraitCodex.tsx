@@ -16,6 +16,7 @@ export default function LivingPortraitCodex() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   async function refresh() {
     const rows = await listChapters("portrait");
@@ -49,109 +50,193 @@ export default function LivingPortraitCodex() {
     return numberFor(chapters, active.id);
   }, [chapters, active]);
 
+  const sidebarContent = (
+    <>
+      <PasteTransmissionPanel codexType="portrait" onChanneled={refresh} />
+
+      <input
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search the Portrait…"
+        style={searchStyle}
+      />
+
+      <ChapterTree
+        chapters={filtered}
+        activeId={activeId}
+        onSelect={(id) => {
+          setActiveId(id);
+          setDrawerOpen(false);
+        }}
+      />
+
+      <div className="flex flex-col gap-2 mt-2">
+        <ExportButton
+          codexType="portrait"
+          meta={{
+            title: "The Living Portrait",
+            subtitle: "Sovereign Soul-Record · SQI 2050",
+          }}
+        />
+        <button
+          onClick={async () => {
+            setBusy("cluster");
+            try {
+              await runClustering("portrait");
+              await refresh();
+            } finally {
+              setBusy(null);
+            }
+          }}
+          style={smallBtn}
+        >
+          {busy === "cluster" ? "Clustering…" : "Run Auto-Merge Now"}
+        </button>
+        <button
+          onClick={async () => {
+            if (
+              !confirm(
+                "Backfill all historical Apothecary transmissions into the Codex? This may take several minutes."
+              )
+            )
+              return;
+            setBusy("backfill");
+            try {
+              await runBackfill();
+              await refresh();
+            } finally {
+              setBusy(null);
+            }
+          }}
+          style={smallBtn}
+        >
+          {busy === "backfill" ? "Backfilling…" : "Backfill From Apothecary"}
+        </button>
+      </div>
+    </>
+  );
+
+  const readerContent = active ? (
+    <ChapterReader
+      chapter={active}
+      number={activeNumber}
+      onJumpTo={(id) => {
+        setActiveId(id);
+        setDrawerOpen(false);
+      }}
+    />
+  ) : (
+    <div
+      style={{
+        padding: 60,
+        textAlign: "center",
+        color: "rgba(255,255,255,0.4)",
+        fontStyle: "italic",
+      }}
+    >
+      {chapters.length
+        ? "Select a chapter from the soul-lineage."
+        : "No portrait chapters yet. Channel a transmission or run the backfill."}
+    </div>
+  );
+
   return (
     <CodexLayout
       codexType="portrait"
       title="The Living Portrait"
       subtitle="The sovereign soul-record. Activations, blueprints, and Vedic Light-Codes addressed to you across lifetimes."
     >
-      <div className="grid gap-6" style={{ gridTemplateColumns: "300px 1fr" }}>
-        <aside className="flex flex-col gap-4 sticky top-6 self-start">
-          <PasteTransmissionPanel codexType="portrait" onChanneled={refresh} />
-
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search the Portrait…"
-            style={{
-              width: "100%",
-              padding: "11px 16px",
-              borderRadius: 22,
-              background: "rgba(0,0,0,0.4)",
-              border: "1px solid rgba(255,255,255,0.06)",
-              color: "rgba(255,255,255,0.85)",
-              fontSize: 12,
-              outline: "none",
-            }}
-          />
-
-          <ChapterTree
-            chapters={filtered}
-            activeId={activeId}
-            onSelect={setActiveId}
-          />
-
-          <div className="flex flex-col gap-2 mt-2">
-            <ExportButton
-              codexType="portrait"
-              meta={{
-                title: "The Living Portrait",
-                subtitle: "Sovereign Soul-Record · SQI 2050",
-              }}
-            />
-            <button
-              onClick={async () => {
-                setBusy("cluster");
-                try {
-                  await runClustering("portrait");
-                  await refresh();
-                } finally {
-                  setBusy(null);
-                }
-              }}
-              style={smallBtn}
-            >
-              {busy === "cluster" ? "Clustering…" : "Run Auto-Merge Now"}
-            </button>
-            <button
-              onClick={async () => {
-                if (
-                  !confirm(
-                    "Backfill all historical Apothecary transmissions into the Codex? This may take several minutes."
-                  )
-                )
-                  return;
-                setBusy("backfill");
-                try {
-                  await runBackfill();
-                  await refresh();
-                } finally {
-                  setBusy(null);
-                }
-              }}
-              style={smallBtn}
-            >
-              {busy === "backfill" ? "Backfilling…" : "Backfill From Apothecary"}
-            </button>
-          </div>
-        </aside>
-
-        <div>
-          {active ? (
-            <ChapterReader
-              chapter={active}
-              number={activeNumber}
-              onJumpTo={setActiveId}
-            />
-          ) : (
+      {/* Mobile: floating "Open Codex" button + drawer + full-width reader */}
+      <div className="lg:hidden">
+        <button onClick={() => setDrawerOpen(true)} style={fabStyle}>
+          📖 Open Codex
+        </button>
+        {drawerOpen && (
+          <div onClick={() => setDrawerOpen(false)} style={drawerOverlayStyle}>
             <div
-              style={{
-                padding: 60,
-                textAlign: "center",
-                color: "rgba(255,255,255,0.4)",
-                fontStyle: "italic",
-              }}
+              onClick={(e) => e.stopPropagation()}
+              style={drawerPanelStyle}
+              className="flex flex-col gap-4"
             >
-              {chapters.length
-                ? "Select a chapter from the soul-lineage."
-                : "No portrait chapters yet. Channel a transmission or run the backfill."}
+              <button onClick={() => setDrawerOpen(false)} style={drawerCloseStyle}>
+                Close ✕
+              </button>
+              {sidebarContent}
             </div>
-          )}
-        </div>
+          </div>
+        )}
+        {readerContent}
+      </div>
+
+      {/* Desktop: original two-column */}
+      <div className="hidden lg:grid gap-6" style={{ gridTemplateColumns: "300px 1fr" }}>
+        <aside className="flex flex-col gap-4 sticky top-6 self-start">
+          {sidebarContent}
+        </aside>
+        <div>{readerContent}</div>
       </div>
     </CodexLayout>
   );
 }
+
+const searchStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "11px 16px",
+  borderRadius: 22,
+  background: "rgba(0,0,0,0.4)",
+  border: "1px solid rgba(255,255,255,0.06)",
+  color: "rgba(255,255,255,0.85)",
+  fontSize: 12,
+  outline: "none",
+};
+
+const fabStyle: React.CSSProperties = {
+  position: "fixed",
+  bottom: 24,
+  right: 24,
+  zIndex: 50,
+  padding: "14px 22px",
+  borderRadius: 999,
+  background: "#D4AF37",
+  color: "#050505",
+  border: "none",
+  fontWeight: 900,
+  fontSize: 10,
+  letterSpacing: "0.4em",
+  textTransform: "uppercase",
+  boxShadow: "0 0 30px rgba(212,175,55,0.5)",
+  cursor: "pointer",
+};
+
+const drawerOverlayStyle: React.CSSProperties = {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(0,0,0,0.7)",
+  zIndex: 60,
+  display: "flex",
+  justifyContent: "flex-start",
+};
+
+const drawerPanelStyle: React.CSSProperties = {
+  width: "min(90vw, 360px)",
+  height: "100vh",
+  overflowY: "auto",
+  background: "#050505",
+  padding: 20,
+  borderRight: "1px solid rgba(212,175,55,0.2)",
+};
+
+const drawerCloseStyle: React.CSSProperties = {
+  alignSelf: "flex-end",
+  background: "none",
+  border: "none",
+  color: "#D4AF37",
+  fontWeight: 800,
+  fontSize: 11,
+  letterSpacing: "0.4em",
+  textTransform: "uppercase",
+  cursor: "pointer",
+};
 
 const smallBtn: React.CSSProperties = {
   padding: "10px 14px",
