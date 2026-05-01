@@ -441,7 +441,7 @@ async function createChapter(
   embedding: number[],
   cls: ClassifierResult,
   transmissionId: string
-): Promise<string> {
+): Promise<{ id: string; title: string }> {
   const opener = await generateJson<OpenerResult>(
     OPENER_PROMPT,
     `Topic primary: ${cls.topic_primary}\nTopic sub: ${cls.topic_sub}\n\nVerbatim transmission:\n<t>${content}</t>`,
