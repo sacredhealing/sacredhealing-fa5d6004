@@ -1089,14 +1089,12 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
           // Fire-and-forget: weave this transmission into the Akashic Codex.
           // Non-blocking; the curator self-gates to admins via RLS.
           if (user?.id && finalText?.trim()) {
-            supabase.functions.invoke('akasha-codex-curator', {
-              body: {
-                source_type: 'apothecary',
-                raw_content: finalText,
-                user_prompt: userMsg.text,
-                source_chat_id: currentSessionId ?? null,
-              },
-            }).catch((err) => console.warn('[codex] curator hook failed (non-fatal):', err));
+            void curateAndNotify({
+              source_type: 'apothecary',
+              raw_content: finalText,
+              user_prompt: userMsg.text,
+              source_chat_id: currentSessionId ?? null,
+            });
           }
         },
         imageToSend,
