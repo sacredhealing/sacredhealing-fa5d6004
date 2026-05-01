@@ -8,6 +8,7 @@ import { ChapterTree } from "@/components/codex/ChapterTree";
 import { ChapterReader } from "@/components/codex/ChapterReader";
 import { PasteTransmissionPanel } from "@/components/codex/PasteTransmissionPanel";
 import { ExportButton } from "@/components/codex/ExportButton";
+import { BookSettings, getBookMeta } from "@/components/codex/BookSettings";
 import { listChapters, runBackfill, runClustering } from "@/lib/codex/api";
 import type { CodexChapter } from "@/lib/codex/types";
 
@@ -17,6 +18,7 @@ export default function AkashicCodex() {
   const [search, setSearch] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [readingMode, setReadingMode] = useState(false); // mobile only
+  const [bookMeta, setBookMetaState] = useState(() => getBookMeta("akasha"));
 
   async function refresh() {
     const rows = await listChapters("akasha");
@@ -71,7 +73,8 @@ export default function AkashicCodex() {
       />
 
       <div className="flex flex-col gap-2 mt-2">
-        <ExportButton codexType="akasha" meta={{ title: "The Akashic Codex" }} />
+        <ExportButton codexType="akasha" meta={bookMeta} />
+        <BookSettings codexType="akasha" onSaved={() => setBookMetaState(getBookMeta("akasha"))} />
         <button
           onClick={async () => {
             setBusy("cluster");
@@ -134,8 +137,8 @@ export default function AkashicCodex() {
   return (
     <CodexLayout
       codexType="akasha"
-      title="The Akashic Codex"
-      subtitle="Channelled from the Akasha-Neural Archive of 2050 into the present moment."
+      title={bookMeta.title}
+      subtitle={bookMeta.subtitle}
     >
       {/* DESKTOP: original two-column layout */}
       <div className="hidden lg:grid gap-6" style={{ gridTemplateColumns: "300px 1fr" }}>

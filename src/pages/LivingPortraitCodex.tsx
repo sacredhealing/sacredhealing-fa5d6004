@@ -8,6 +8,7 @@ import { ChapterTree } from "@/components/codex/ChapterTree";
 import { ChapterReader } from "@/components/codex/ChapterReader";
 import { PasteTransmissionPanel } from "@/components/codex/PasteTransmissionPanel";
 import { ExportButton } from "@/components/codex/ExportButton";
+import { BookSettings, getBookMeta } from "@/components/codex/BookSettings";
 import { listChapters, runBackfill, runClustering } from "@/lib/codex/api";
 import type { CodexChapter } from "@/lib/codex/types";
 
@@ -17,6 +18,7 @@ export default function LivingPortraitCodex() {
   const [search, setSearch] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [readingMode, setReadingMode] = useState(false); // mobile only
+  const [bookMeta, setBookMetaState] = useState(() => getBookMeta("portrait"));
 
   async function refresh() {
     const rows = await listChapters("portrait");
@@ -71,13 +73,8 @@ export default function LivingPortraitCodex() {
       />
 
       <div className="flex flex-col gap-2 mt-2">
-        <ExportButton
-          codexType="portrait"
-          meta={{
-            title: "The Living Portrait",
-            subtitle: "Sovereign Soul-Record · SQI 2050",
-          }}
-        />
+        <ExportButton codexType="portrait" meta={bookMeta} />
+        <BookSettings codexType="portrait" onSaved={() => setBookMetaState(getBookMeta("portrait"))} />
         <button
           onClick={async () => {
             setBusy("cluster");
@@ -140,8 +137,8 @@ export default function LivingPortraitCodex() {
   return (
     <CodexLayout
       codexType="portrait"
-      title="The Living Portrait"
-      subtitle="The sovereign soul-record. Activations, blueprints, and Vedic Light-Codes addressed to you across lifetimes."
+      title={bookMeta.title}
+      subtitle={bookMeta.subtitle}
     >
       {/* DESKTOP: original two-column layout */}
       <div className="hidden lg:grid gap-6" style={{ gridTemplateColumns: "300px 1fr" }}>
