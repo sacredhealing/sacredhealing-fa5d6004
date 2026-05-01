@@ -3,7 +3,13 @@
 // ============================================================
 
 import { useEffect, useState } from "react";
-import { getChapterVersions, listCrossRefs, listChapterTransmitters } from "@/lib/codex/api";
+import {
+  getChapterVersions,
+  listCrossRefs,
+  listChapterTransmitters,
+  deleteChapter,
+  deleteTransmissionsByChapter,
+} from "@/lib/codex/api";
 import type { CodexChapter, CodexChapterVersion } from "@/lib/codex/types";
 import { VersionScrubber } from "./VersionScrubber";
 
@@ -11,9 +17,10 @@ interface Props {
   chapter: CodexChapter;
   number: string;
   onJumpTo: (chapterId: string) => void;
+  onDeleted?: () => void;
 }
 
-export function ChapterReader({ chapter, number, onJumpTo }: Props) {
+export function ChapterReader({ chapter, number, onJumpTo, onDeleted }: Props) {
   const [versions, setVersions] = useState<CodexChapterVersion[]>([]);
   const [activeVersion, setActiveVersion] = useState<CodexChapterVersion | null>(null);
   const [crossRefs, setCrossRefs] = useState<Array<{
