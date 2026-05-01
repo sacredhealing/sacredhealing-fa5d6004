@@ -105,6 +105,26 @@ function TreeNode({ node, number, activeId, onSelect }: NodeProps) {
           }}
         >
           {node.title}
+          {isRecentlyUpdated(node) && (
+            <span
+              style={{
+                display: "inline-block",
+                marginLeft: 8,
+                padding: "2px 7px",
+                borderRadius: 999,
+                background: "#D4AF37",
+                color: "#050505",
+                fontWeight: 900,
+                fontSize: 7,
+                letterSpacing: "0.25em",
+                textTransform: "uppercase",
+                verticalAlign: "middle",
+                boxShadow: "0 0 10px rgba(212,175,55,0.55)",
+              }}
+            >
+              New
+            </span>
+          )}
           {isParent && (
             <span
               style={{
