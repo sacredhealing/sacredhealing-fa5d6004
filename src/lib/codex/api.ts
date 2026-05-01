@@ -244,6 +244,28 @@ export function buildTree(rows: CodexChapter[]): CodexChapter[] {
   return roots;
 }
 
+export async function deleteChapter(chapterId: string): Promise<void> {
+  await supabase.from("codex_fragments").delete().eq("chapter_id", chapterId);
+  await supabase.from("codex_chapter_versions").delete().eq("chapter_id", chapterId);
+  await supabase
+    .from("codex_cross_refs")
+    .delete()
+    .or(`from_chapter_id.eq.${chapterId},to_chapter_id.eq.${chapterId}`);
+  const { error } = await supabase.from("codex_chapters").delete().eq("id", chapterId);
+  if (error) throw error;
+}
+
+export async function deleteTransmissionsByChapter(chapterId: string): Promise<void> {
+  const { data: frags } = await supabase
+    .from("codex_fragments")
+    .select("transmission_id")
+    .eq("chapter_id", chapterId);
+  const ids = (frags ?? []).map((f: any) => f.transmission_id).filter(Boolean);
+  if (ids.length) {
+    await supabase.from("transmission_blocks").delete().in("id", ids);
+  }
+}
+
 export async function listChapterTransmitters(chapterId: string): Promise<string[]> {
   const fragments = await listChapterFragments(chapterId);
   const set = new Set<string>();
