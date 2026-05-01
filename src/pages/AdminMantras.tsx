@@ -343,7 +343,15 @@ interface Mantra {
   category?: string | null;
   planet_type?: string | null;
   is_premium?: boolean;
+  required_tier?: number;
 }
+
+const TIER_OPTIONS: { value: number; label: string; short: string }[] = [
+  { value: 0, label: 'Free',             short: 'Free' },
+  { value: 1, label: 'Prana-Flow',       short: 'Prana' },
+  { value: 2, label: 'Siddha-Quantum',   short: 'Siddha' },
+  { value: 3, label: 'Akasha-Infinity',  short: 'Akasha' },
+];
 
 const AdminMantras = () => {
   const navigate = useNavigate();
@@ -361,6 +369,7 @@ const AdminMantras = () => {
     shc_reward: 111,
     is_active: true,
     is_premium: false,
+    required_tier: 0,
   });
   const [category, setCategory] = useState('general');
   const [planetType, setPlanetType] = useState('');
@@ -370,14 +379,14 @@ const AdminMantras = () => {
   const fetchMantras = async () => {
     const { data } = await supabase
       .from('mantras' as any)
-      .select('id, title, description, audio_url, cover_image_url, duration_seconds, shc_reward, is_active, is_premium, category, planet_type, created_at')
+      .select('id, title, description, audio_url, cover_image_url, duration_seconds, shc_reward, is_active, is_premium, required_tier, category, planet_type, created_at')
       .order('created_at', { ascending: false });
     if (data) setMantras(data as unknown as Mantra[]);
     setLoading(false);
   };
 
   const resetForm = () => {
-    setFormData({ title: '', description: '', audio_url: '', cover_image_url: '', duration_seconds: 180, shc_reward: 111, is_active: true, is_premium: false });
+    setFormData({ title: '', description: '', audio_url: '', cover_image_url: '', duration_seconds: 180, shc_reward: 111, is_active: true, is_premium: false, required_tier: 0 });
     setCategory('general');
     setPlanetType('');
     setEditingId(null);
@@ -385,6 +394,7 @@ const AdminMantras = () => {
   };
 
   const handleEdit = (mantra: Mantra) => {
+    const tier = (mantra.required_tier ?? (mantra.is_premium ? 1 : 0)) as number;
     setFormData({
       title: mantra.title,
       description: mantra.description || '',
@@ -393,7 +403,8 @@ const AdminMantras = () => {
       duration_seconds: mantra.duration_seconds ?? 180,
       shc_reward: mantra.shc_reward,
       is_active: mantra.is_active,
-      is_premium: mantra.is_premium ?? false,
+      is_premium: tier > 0,
+      required_tier: tier,
     });
     setCategory((mantra as any).category || 'general');
     setPlanetType((mantra as any).planet_type || '');
@@ -405,6 +416,7 @@ const AdminMantras = () => {
   const buildPayload = () => {
     const shc = Number(formData.shc_reward);
     const dur = Number.isFinite(formData.duration_seconds) && formData.duration_seconds > 0 ? formData.duration_seconds : 180;
+    const tier = Number.isFinite(formData.required_tier) ? formData.required_tier : 0;
     return {
       title: formData.title.trim(),
       description: formData.description?.trim() || null,
@@ -415,7 +427,8 @@ const AdminMantras = () => {
       is_active: Boolean(formData.is_active),
       category: category || 'general',
       planet_type: category === 'planet' && planetType?.trim() ? planetType.trim() : null,
-      is_premium: Boolean(formData.is_premium),
+      is_premium: tier > 0,
+      required_tier: tier,
     };
   };
 
