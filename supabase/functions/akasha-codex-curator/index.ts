@@ -316,7 +316,8 @@ async function createChapter(
 ): Promise<string> {
   const opener = await generateJson<OpenerResult>(
     OPENER_PROMPT,
-    `Topic primary: ${cls.topic_primary}\nTopic sub: ${cls.topic_sub}\n\nVerbatim transmission:\n<t>${content}</t>`
+    `Topic primary: ${cls.topic_primary}\nTopic sub: ${cls.topic_sub}\n\nVerbatim transmission:\n<t>${content}</t>`,
+    { temperature: 0.4, maxOutputTokens: 32768 }
   );
 
   const baseSlug = slugify(opener.title || cls.topic_sub || cls.topic_primary || "untitled");
@@ -411,7 +412,10 @@ async function weaveExisting(
     content,
   ].join("\n");
 
-  const woven = await generateJson<WeaverResult>(WEAVER_PROMPT, userPrompt);
+  const woven = await generateJson<WeaverResult>(WEAVER_PROMPT, userPrompt, {
+    temperature: 0.4,
+    maxOutputTokens: 32768,
+  });
 
   // Verify integrity — ensure new content appears verbatim inside the new prose
   const newProse = woven.prose_woven.includes(content)

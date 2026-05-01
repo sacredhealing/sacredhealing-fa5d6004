@@ -42,7 +42,7 @@ export async function generateJson<T = unknown>(
     contents: [{ role: "user", parts: [{ text: userPrompt }] }],
     generationConfig: {
       temperature: opts.temperature ?? 0.4,
-      maxOutputTokens: opts.maxOutputTokens ?? 8192,
+      maxOutputTokens: opts.maxOutputTokens ?? 32768,
       responseMimeType: "application/json",
     },
   };
@@ -55,9 +55,47 @@ export async function generateJson<T = unknown>(
     throw new Error(`generateJson failed: ${res.status} ${await res.text()}`);
   }
   const data = await res.json();
+  const finishReason = data.candidates?.[0]?.finishReason;
   const raw = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
   const cleaned = raw.replace(/```json|```/g, "").trim();
-  return JSON.parse(cleaned) as T;
+  try {
+    return JSON.parse(cleaned) as T;
+  } catch (firstErr) {
+    if (finishReason === "MAX_TOKENS" || /Unterminated/.test(String(firstErr))) {
+      console.warn(`[gemini] response truncated (finishReason=${finishReason}), attempting repair`);
+      const repaired = repairTruncatedJson(cleaned);
+      try {
+        return JSON.parse(repaired) as T;
+      } catch {
+        throw new Error(`generateJson: response truncated by Gemini and could not be repaired. finishReason=${finishReason}, length=${cleaned.length}`);
+      }
+    }
+    throw firstErr;
+  }
+}
+
+// Best-effort repair for truncated JSON: close any open strings and brackets.
+function repairTruncatedJson(s: string): string {
+  let out = s.trimEnd();
+  out = out.replace(/,\s*$/, "");
+  const quoteCount = (out.match(/(?<!\\)"/g) ?? []).length;
+  if (quoteCount % 2 === 1) out += '"';
+  const stack: string[] = [];
+  let inString = false, escape = false;
+  for (const ch of out) {
+    if (escape) { escape = false; continue; }
+    if (ch === "\\") { escape = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === "{" || ch === "[") stack.push(ch);
+    else if (ch === "}" && stack[stack.length - 1] === "{") stack.pop();
+    else if (ch === "]" && stack[stack.length - 1] === "[") stack.pop();
+  }
+  while (stack.length) {
+    const open = stack.pop();
+    out += open === "{" ? "}" : "]";
+  }
+  return out;
 }
 
 // ---- Plain text generation (Gemini 2.5 Flash) --------------
