@@ -9,6 +9,7 @@ import { ChapterReader } from "@/components/codex/ChapterReader";
 import { PasteTransmissionPanel } from "@/components/codex/PasteTransmissionPanel";
 import { ExportButton } from "@/components/codex/ExportButton";
 import { BookSettings, getBookMeta } from "@/components/codex/BookSettings";
+import { PageCount } from "@/components/codex/PageCount";
 import { listChapters, runBackfill, runClustering } from "@/lib/codex/api";
 import type { CodexChapter } from "@/lib/codex/types";
 
@@ -62,6 +63,8 @@ export default function AkashicCodex() {
         placeholder="Search the Codex…"
         style={searchStyle}
       />
+
+      <PageCount chapters={chapters} />
 
       <ChapterTree
         chapters={filtered}
@@ -118,6 +121,7 @@ export default function AkashicCodex() {
       chapter={active}
       number={activeNumber}
       onJumpTo={(id) => setActiveId(id)}
+      onDeleted={() => { setActiveId(null); refresh(); }}
     />
   ) : (
     <div
