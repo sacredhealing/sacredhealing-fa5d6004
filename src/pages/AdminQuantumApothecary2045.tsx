@@ -12,6 +12,7 @@ import { useAdminRole } from '@/hooks/useAdminRole';
 import type { Activation, NadiScanResult, Message } from '@/features/quantum-apothecary/types';
 import { ACTIVATIONS, PLANETARY_DATA } from '@/features/quantum-apothecary/constants';
 import { chatWithAlchemist } from '@/features/admin-quantum-apothecary-2045/geminiAlchemistChat';
+import { supabase } from '@/integrations/supabase/client';
 
 const FrequencyLibrarySection = lazy(() => import('@/features/quantum-apothecary/FrequencyLibrarySection'));
 const ActiveTransmissionsSection = lazy(() => import('@/features/quantum-apothecary/ActiveTransmissionsSection'));
@@ -192,6 +193,20 @@ export default function AdminQuantumApothecary2045() {
         apiKey: effectiveGeminiKey,
       });
       setMessages((prev) => [...prev, { role: 'model', text: response }]);
+
+      // Fire-and-forget: weave this transmission into the Akashic / Portrait Codex.
+      // Classifier auto-routes Akasha (universal teaching) vs Portrait (personal soul-record).
+      if (user?.id && response?.trim()) {
+        supabase.functions
+          .invoke('akasha-codex-curator', {
+            body: {
+              source_type: 'apothecary',
+              raw_content: response,
+              user_prompt: userMsg.text,
+            },
+          })
+          .catch((err) => console.warn('[codex] curator hook failed (non-fatal):', err));
+      }
     } catch (e) {
       const code = e instanceof Error ? e.message : '';
       const fallback =
