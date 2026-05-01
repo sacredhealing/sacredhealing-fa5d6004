@@ -503,7 +503,7 @@ async function createChapter(
     console.warn(`[curator] image generation failed for ${ch.id}:`, e);
   }
 
-  return ch.id as string;
+  return { id: ch.id as string, title: opener.title };
 }
 
 // ---- Existing chapter weaving ------------------------------
