@@ -3,7 +3,7 @@
 // ============================================================
 
 import { useEffect, useState } from "react";
-import { getChapterVersions, listCrossRefs } from "@/lib/codex/api";
+import { getChapterVersions, listCrossRefs, listChapterTransmitters } from "@/lib/codex/api";
 import type { CodexChapter, CodexChapterVersion } from "@/lib/codex/types";
 import { VersionScrubber } from "./VersionScrubber";
 

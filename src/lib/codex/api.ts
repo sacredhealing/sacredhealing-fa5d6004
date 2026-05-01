@@ -243,3 +243,14 @@ export function buildTree(rows: CodexChapter[]): CodexChapter[] {
   sortRec(roots);
   return roots;
 }
+
+export async function listChapterTransmitters(chapterId: string): Promise<string[]> {
+  const fragments = await listChapterFragments(chapterId);
+  const set = new Set<string>();
+  for (const f of fragments) {
+    const meta = (f.transmission_blocks?.source_metadata ?? {}) as Record<string, unknown>;
+    const t = (meta.transmitter as string) || "";
+    if (t) set.add(t);
+  }
+  return Array.from(set);
+}
