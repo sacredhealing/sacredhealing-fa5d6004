@@ -16,7 +16,7 @@ export default function AkashicCodex() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [readingMode, setReadingMode] = useState(false); // mobile only
 
   async function refresh() {
     const rows = await listChapters("akasha");
@@ -45,14 +45,13 @@ export default function AkashicCodex() {
     );
   }, [chapters, search]);
 
-  // Determine hierarchical numbering for the active chapter
-  const activeNumber = useMemo(() => {
-    if (!active) return "";
-    return numberFor(chapters, active.id);
-  }, [chapters, active]);
+  const activeNumber = useMemo(
+    () => (active ? numberFor(chapters, active.id) : ""),
+    [chapters, active]
+  );
 
-  const sidebarContent = (
-    <>
+  const sidebar = (
+    <aside className="flex flex-col gap-4 lg:sticky lg:top-6 lg:self-start">
       <PasteTransmissionPanel codexType="akasha" onChanneled={refresh} />
 
       <input
@@ -67,7 +66,7 @@ export default function AkashicCodex() {
         activeId={activeId}
         onSelect={(id) => {
           setActiveId(id);
-          setDrawerOpen(false);
+          setReadingMode(true);
         }}
       />
 
@@ -89,7 +88,12 @@ export default function AkashicCodex() {
         </button>
         <button
           onClick={async () => {
-            if (!confirm("Backfill all historical Apothecary transmissions into the Codex? This may take several minutes.")) return;
+            if (
+              !confirm(
+                "Backfill all historical Apothecary transmissions into the Codex? This may take several minutes."
+              )
+            )
+              return;
             setBusy("backfill");
             try {
               await runBackfill();
@@ -103,17 +107,14 @@ export default function AkashicCodex() {
           {busy === "backfill" ? "Backfilling…" : "Backfill From Apothecary"}
         </button>
       </div>
-    </>
+    </aside>
   );
 
-  const readerContent = active ? (
+  const reader = active ? (
     <ChapterReader
       chapter={active}
       number={activeNumber}
-      onJumpTo={(id) => {
-        setActiveId(id);
-        setDrawerOpen(false);
-      }}
+      onJumpTo={(id) => setActiveId(id)}
     />
   ) : (
     <div
@@ -136,37 +137,37 @@ export default function AkashicCodex() {
       title="The Akashic Codex"
       subtitle="Channelled from the Akasha-Neural Archive of 2050 into the present moment."
     >
-      {/* Mobile: floating "Open Codex" button + drawer + full-width reader */}
-      <div className="lg:hidden">
-        <button
-          onClick={() => setDrawerOpen(true)}
-          style={fabStyle}
-        >
-          📖 Open Codex
-        </button>
-        {drawerOpen && (
-          <div onClick={() => setDrawerOpen(false)} style={drawerOverlayStyle}>
-            <div
-              onClick={(e) => e.stopPropagation()}
-              style={drawerPanelStyle}
-              className="flex flex-col gap-4"
-            >
-              <button onClick={() => setDrawerOpen(false)} style={drawerCloseStyle}>
-                Close ✕
-              </button>
-              {sidebarContent}
-            </div>
-          </div>
-        )}
-        {readerContent}
+      {/* DESKTOP: original two-column layout */}
+      <div className="hidden lg:grid gap-6" style={{ gridTemplateColumns: "300px 1fr" }}>
+        {sidebar}
+        <div>{reader}</div>
       </div>
 
-      {/* Desktop: original two-column */}
-      <div className="hidden lg:grid gap-6" style={{ gridTemplateColumns: "300px 1fr" }}>
-        <aside className="flex flex-col gap-4 sticky top-6 self-start">
-          {sidebarContent}
-        </aside>
-        <div>{readerContent}</div>
+      {/* MOBILE: toggles between library (sidebar) and full-screen reader */}
+      <div className="lg:hidden">
+        {!readingMode ? (
+          <>
+            {sidebar}
+            {active && (
+              <button
+                onClick={() => setReadingMode(true)}
+                style={openBookBtn}
+              >
+                📖 Open Book
+              </button>
+            )}
+          </>
+        ) : (
+          <>
+            <button
+              onClick={() => setReadingMode(false)}
+              style={backBtn}
+            >
+              ← Library
+            </button>
+            {reader}
+          </>
+        )}
       </div>
     </CodexLayout>
   );
@@ -183,54 +184,6 @@ const searchStyle: React.CSSProperties = {
   outline: "none",
 };
 
-const fabStyle: React.CSSProperties = {
-  position: "fixed",
-  bottom: 24,
-  right: 24,
-  zIndex: 50,
-  padding: "14px 22px",
-  borderRadius: 999,
-  background: "#D4AF37",
-  color: "#050505",
-  border: "none",
-  fontWeight: 900,
-  fontSize: 10,
-  letterSpacing: "0.4em",
-  textTransform: "uppercase",
-  boxShadow: "0 0 30px rgba(212,175,55,0.5)",
-  cursor: "pointer",
-};
-
-const drawerOverlayStyle: React.CSSProperties = {
-  position: "fixed",
-  inset: 0,
-  background: "rgba(0,0,0,0.7)",
-  zIndex: 60,
-  display: "flex",
-  justifyContent: "flex-start",
-};
-
-const drawerPanelStyle: React.CSSProperties = {
-  width: "min(90vw, 360px)",
-  height: "100vh",
-  overflowY: "auto",
-  background: "#050505",
-  padding: 20,
-  borderRight: "1px solid rgba(212,175,55,0.2)",
-};
-
-const drawerCloseStyle: React.CSSProperties = {
-  alignSelf: "flex-end",
-  background: "none",
-  border: "none",
-  color: "#D4AF37",
-  fontWeight: 800,
-  fontSize: 11,
-  letterSpacing: "0.4em",
-  textTransform: "uppercase",
-  cursor: "pointer",
-};
-
 const smallBtn: React.CSSProperties = {
   padding: "10px 14px",
   borderRadius: 999,
@@ -244,9 +197,38 @@ const smallBtn: React.CSSProperties = {
   cursor: "pointer",
 };
 
-// ----------------------------------------------------------------
-// Resolve "01.2" hierarchical chapter number for the active id.
-// ----------------------------------------------------------------
+const openBookBtn: React.CSSProperties = {
+  position: "fixed",
+  bottom: 24,
+  right: 24,
+  zIndex: 50,
+  padding: "14px 24px",
+  borderRadius: 999,
+  background: "#D4AF37",
+  color: "#050505",
+  border: "none",
+  fontWeight: 900,
+  fontSize: 10,
+  letterSpacing: "0.4em",
+  textTransform: "uppercase",
+  boxShadow: "0 0 30px rgba(212,175,55,0.5)",
+  cursor: "pointer",
+};
+
+const backBtn: React.CSSProperties = {
+  marginBottom: 16,
+  padding: "10px 18px",
+  borderRadius: 999,
+  background: "rgba(255,255,255,0.02)",
+  border: "1px solid rgba(212,175,55,0.3)",
+  color: "#D4AF37",
+  fontWeight: 800,
+  fontSize: 9,
+  letterSpacing: "0.4em",
+  textTransform: "uppercase",
+  cursor: "pointer",
+};
+
 function numberFor(chapters: CodexChapter[], id: string): string {
   const byParent = new Map<string | null, CodexChapter[]>();
   for (const c of chapters) {
