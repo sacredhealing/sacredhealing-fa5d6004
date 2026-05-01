@@ -94,7 +94,7 @@ const CourseDetail: React.FC = () => {
   const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
   const [activeVideoTitle, setActiveVideoTitle] = useState<string>('');
   const [activeVideoLessonId, setActiveVideoLessonId] = useState<string | null>(null);
-  const [hasStargateMembership, setHasStargateMembership] = useState(false);
+  const { isStargateMember, loading: stargateLoading } = useStargateAccess();
   const [courseLevelMaterials, setCourseLevelMaterials] = useState<LessonMaterial[]>([]);
 
   useEffect(() => {
