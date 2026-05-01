@@ -206,6 +206,7 @@ async function processOne(
 
   const transmissionIds: string[] = [];
   const chapterIds: string[] = [];
+  const chapters: Array<{ codex: "akasha" | "portrait"; chapterId: string; action: string; title: string }> = [];
 
   // 4. For each target codex, route + weave
   for (const t of targets) {
@@ -240,7 +241,7 @@ async function processOne(
     if (tbErr) throw tbErr;
     transmissionIds.push(tb.id);
 
-    const chapterId = await weaveIntoChapter(
+    const woven = await weaveIntoChapter(
       db,
       userId,
       t.codex,
@@ -249,13 +250,14 @@ async function processOne(
       classification,
       tb.id
     );
-    chapterIds.push(chapterId);
+    chapterIds.push(woven.chapterId);
+    chapters.push({ codex: t.codex, ...woven });
 
     // Cross-references for the new/updated chapter
-    await detectCrossRefs(db, userId, t.codex, chapterId, sliceEmbedding);
+    await detectCrossRefs(db, userId, t.codex, woven.chapterId, sliceEmbedding);
   }
 
-  return { transmissionIds, chapterIds, classification };
+  return { transmissionIds, chapterIds, chapters, classification };
 }
 
 // ============================================================
@@ -303,7 +305,7 @@ async function weaveIntoChapter(
   embedding: number[],
   cls: ClassifierResult,
   transmissionId: string
-): Promise<string> {
+): Promise<{ chapterId: string; action: "created" | "merged_exact" | "merged_embedding" | "merged_alias"; title: string }> {
   const subjectKey = normalizeSubjectKey(
     cls.chapter_subject || cls.topic_sub || cls.topic_primary || "untitled"
   );
@@ -311,14 +313,16 @@ async function weaveIntoChapter(
   // 1. Try exact match on normalized subject_key
   const { data: exactMatches } = await db
     .from("codex_chapters")
-    .select("id")
+    .select("id, title")
     .eq("user_id", userId)
     .eq("codex_type", codexType)
     .eq("subject_key", subjectKey)
     .limit(1);
 
   if (exactMatches && exactMatches.length > 0) {
-    return await weaveExisting(db, userId, codexType, exactMatches[0].id as string, content, embedding, cls, transmissionId);
+    const m = exactMatches[0] as { id: string; title: string };
+    await weaveExisting(db, userId, codexType, m.id, content, embedding, cls, transmissionId);
+    return { chapterId: m.id, action: "merged_exact", title: m.title };
   }
 
   // 2. No exact match — gather all chapters in this codex with embeddings + subject_key
@@ -343,7 +347,8 @@ async function weaveIntoChapter(
     // Hard auto-merge: very high semantic similarity = same chapter, no Gemini needed
     if (scored[0] && (scored[0].sim as number) >= 0.88) {
       console.log(`[curator] embedding auto-merge: "${cls.chapter_subject}" → ${scored[0].id} (sim=${(scored[0].sim as number).toFixed(3)})`);
-      return await weaveExisting(db, userId, codexType, scored[0].id as string, content, embedding, cls, transmissionId);
+      await weaveExisting(db, userId, codexType, scored[0].id as string, content, embedding, cls, transmissionId);
+      return { chapterId: scored[0].id as string, action: "merged_embedding", title: scored[0].title as string };
     }
 
     // 2b. Soft candidates: top 8 by similarity, plus all chapters with subject_key — let Gemini decide
@@ -362,13 +367,16 @@ async function weaveIntoChapter(
         candidates
       );
       if (aliasMatchId) {
-        return await weaveExisting(db, userId, codexType, aliasMatchId, content, embedding, cls, transmissionId);
+        const matched = candidates.find((c) => c.id === aliasMatchId);
+        await weaveExisting(db, userId, codexType, aliasMatchId, content, embedding, cls, transmissionId);
+        return { chapterId: aliasMatchId, action: "merged_alias", title: matched?.title ?? "Untitled" };
       }
     }
   }
 
   // 3. Genuinely new subject — create a new chapter
-  return await createChapter(db, userId, codexType, content, embedding, cls, transmissionId);
+  const created = await createChapter(db, userId, codexType, content, embedding, cls, transmissionId);
+  return { chapterId: created.id, action: "created", title: created.title };
 }
 
 async function findAliasMatch(
@@ -433,7 +441,7 @@ async function createChapter(
   embedding: number[],
   cls: ClassifierResult,
   transmissionId: string
-): Promise<string> {
+): Promise<{ id: string; title: string }> {
   const opener = await generateJson<OpenerResult>(
     OPENER_PROMPT,
     `Topic primary: ${cls.topic_primary}\nTopic sub: ${cls.topic_sub}\n\nVerbatim transmission:\n<t>${content}</t>`,
@@ -495,7 +503,7 @@ async function createChapter(
     console.warn(`[curator] image generation failed for ${ch.id}:`, e);
   }
 
-  return ch.id as string;
+  return { id: ch.id as string, title: opener.title };
 }
 
 // ---- Existing chapter weaving ------------------------------
