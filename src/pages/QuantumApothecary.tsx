@@ -32,7 +32,6 @@ import { useAyurvedaAnalysis } from '@/hooks/useAyurvedaAnalysis';
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { curateAndNotify } from '@/lib/codex/curatorToast';
 import type { NadiReading } from '@/components/NadiScanner';
 import type { VoiceBiofieldResult } from '@/components/VoiceBiofieldScanner';
 import { useSQIFieldContext } from '@/hooks/useSQIFieldContext';
@@ -1090,12 +1089,14 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
           // Fire-and-forget: weave this transmission into the Akashic Codex.
           // Non-blocking; the curator self-gates to admins via RLS.
           if (user?.id && finalText?.trim()) {
-            void curateAndNotify({
-              source_type: 'apothecary',
-              raw_content: finalText,
-              user_prompt: userMsg.text,
-              source_chat_id: currentSessionId ?? null,
-            });
+            supabase.functions.invoke('akasha-codex-curator', {
+              body: {
+                source_type: 'apothecary',
+                raw_content: finalText,
+                user_prompt: userMsg.text,
+                source_chat_id: currentSessionId ?? null,
+              },
+            }).catch((err) => console.warn('[codex] curator hook failed (non-fatal):', err));
           }
         },
         imageToSend,
