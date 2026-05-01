@@ -11,6 +11,7 @@ import { ReviewSection } from '@/components/reviews/ReviewSection';
 import WealthCourseUpsell from '@/components/courses/WealthCourseUpsell';
 import { useTranslation } from 'react-i18next';
 import { useMembership } from '@/hooks/useMembership';
+import { useStargateAccess } from '@/hooks/useStargateAccess';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 
 // Swedish Wealth Course ID
