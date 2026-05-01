@@ -58,6 +58,14 @@ export default function AkashicCodex() {
     <aside className="flex flex-col gap-4 lg:sticky lg:top-6 lg:self-start">
       <PasteTransmissionPanel codexType="akasha" onChanneled={refresh} />
 
+      <RecentlyUpdated
+        chapters={chapters}
+        onSelect={(id) => {
+          setActiveId(id);
+          setReadingMode(true);
+        }}
+      />
+
       <input
         value={search}
         onChange={(e) => setSearch(e.target.value)}
