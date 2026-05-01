@@ -35,8 +35,7 @@ export async function generateJson<T = unknown>(
   userPrompt: string,
   opts: { temperature?: number; maxOutputTokens?: number } = {}
 ): Promise<T> {
-  const url =
-    `${GEMINI_API_BASE}/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+  const url = `${GEMINI_API_BASE}/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
   const body = {
     systemInstruction: { parts: [{ text: systemPrompt }] },
     contents: [{ role: "user", parts: [{ text: userPrompt }] }],
@@ -57,21 +56,72 @@ export async function generateJson<T = unknown>(
   const data = await res.json();
   const finishReason = data.candidates?.[0]?.finishReason;
   const raw = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-  const cleaned = raw.replace(/```json|```/g, "").trim();
+
+  // Aggressive cleanup before parsing
+  const cleaned = sanitizeJsonResponse(raw);
   try {
     return JSON.parse(cleaned) as T;
   } catch (firstErr) {
-    if (finishReason === "MAX_TOKENS" || /Unterminated/.test(String(firstErr))) {
-      console.warn(`[gemini] response truncated (finishReason=${finishReason}), attempting repair`);
-      const repaired = repairTruncatedJson(cleaned);
-      try {
-        return JSON.parse(repaired) as T;
-      } catch {
-        throw new Error(`generateJson: response truncated by Gemini and could not be repaired. finishReason=${finishReason}, length=${cleaned.length}`);
-      }
+    console.warn(`[gemini] first parse failed (${String(firstErr).slice(0, 120)}). Length=${cleaned.length}, finishReason=${finishReason}. Attempting repair.`);
+    // Try escape-fix first (control chars inside strings)
+    try {
+      return JSON.parse(escapeControlChars(cleaned)) as T;
+    } catch {}
+    // Then try truncation repair
+    try {
+      return JSON.parse(repairTruncatedJson(cleaned)) as T;
+    } catch {}
+    // Then try both combined
+    try {
+      return JSON.parse(repairTruncatedJson(escapeControlChars(cleaned))) as T;
+    } catch (finalErr) {
+      console.error(`[gemini] unrecoverable JSON. Raw start: ${cleaned.slice(0, 200).replace(/[\x00-\x1f]/g, (c) => `\\x${c.charCodeAt(0).toString(16).padStart(2, "0")}`)}`);
+      throw new Error(`generateJson: response could not be parsed even after repair. finishReason=${finishReason}, length=${cleaned.length}, firstErr=${String(firstErr).slice(0, 200)}`);
     }
-    throw firstErr;
   }
+}
+
+// Strip BOMs, leading/trailing whitespace, code-fence markers, and any text outside the outermost JSON object/array.
+function sanitizeJsonResponse(s: string): string {
+  let out = s;
+  // Remove UTF-8 BOM
+  if (out.charCodeAt(0) === 0xfeff) out = out.slice(1);
+  // Strip code fences
+  out = out.replace(/```json/gi, "").replace(/```/g, "");
+  // Trim outer whitespace and any leading/trailing control characters
+  out = out.replace(/^[\s\x00-\x1f]+/, "").replace(/[\s\x00-\x1f]+$/, "");
+  // If there's any prose before the JSON, slice from the first { or [
+  const firstObj = out.indexOf("{");
+  const firstArr = out.indexOf("[");
+  const start = (firstObj === -1) ? firstArr : (firstArr === -1 ? firstObj : Math.min(firstObj, firstArr));
+  if (start > 0) out = out.slice(start);
+  return out.trim();
+}
+
+// Escape unescaped control characters that appear INSIDE string literals.
+// Gemini sometimes emits raw \n / \t / \r inside JSON string values, which is invalid JSON.
+function escapeControlChars(s: string): string {
+  let out = "";
+  let inString = false;
+  let escape = false;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    const code = s.charCodeAt(i);
+    if (escape) { out += ch; escape = false; continue; }
+    if (ch === "\\") { out += ch; escape = true; continue; }
+    if (ch === '"') { inString = !inString; out += ch; continue; }
+    if (inString && code < 0x20) {
+      if (ch === "\n") out += "\\n";
+      else if (ch === "\r") out += "\\r";
+      else if (ch === "\t") out += "\\t";
+      else if (ch === "\b") out += "\\b";
+      else if (ch === "\f") out += "\\f";
+      else out += "\\u" + code.toString(16).padStart(4, "0");
+      continue;
+    }
+    out += ch;
+  }
+  return out;
 }
 
 // Best-effort repair for truncated JSON: close any open strings and brackets.
