@@ -271,6 +271,42 @@ export function ChapterReader({ chapter, number, onJumpTo, onDeleted }: Props) {
         </div>
       )}
 
+      {/* Delete chapter */}
+      <div style={{ marginTop: 56, display: "flex", justifyContent: "flex-end" }}>
+        <button
+          onClick={async () => {
+            const purge = confirm(
+              "Delete this chapter?\n\nOK = Delete chapter only (transmissions stay in archive — can be re-channelled)\nCancel = abort"
+            );
+            if (!purge) return;
+            const alsoPurge = confirm(
+              "Also delete the underlying verbatim transmissions from the archive?\n\nOK = Permanently delete the verbatim text too\nCancel = Keep transmissions in the archive (recommended)"
+            );
+            try {
+              if (alsoPurge) await deleteTransmissionsByChapter(chapter.id);
+              await deleteChapter(chapter.id);
+              onDeleted?.();
+            } catch (e: any) {
+              alert("Delete failed: " + (e?.message ?? String(e)));
+            }
+          }}
+          style={{
+            padding: "10px 18px",
+            borderRadius: 999,
+            background: "rgba(0,0,0,0.4)",
+            border: "1px solid rgba(255,80,80,0.25)",
+            color: "rgba(255,120,120,0.85)",
+            fontWeight: 800,
+            fontSize: 9,
+            letterSpacing: "0.4em",
+            textTransform: "uppercase",
+            cursor: "pointer",
+          }}
+        >
+          Delete Chapter
+        </button>
+      </div>
+
       {/* Drop cap CSS */}
       <style>{`
         .codex-prose p.dropcap::first-letter {
