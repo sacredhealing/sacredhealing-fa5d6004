@@ -722,15 +722,22 @@ const AdminMantras = () => {
                                 {planet ?? meta.label}
                               </span>
                               {/* tier pill */}
-                              {mantra.is_premium ? (
-                                <span className="am-pill" style={{ background: 'rgba(212,175,55,.1)', border: '1px solid rgba(212,175,55,.3)', color: '#D4AF37' }}>
-                                  <Lock size={8} style={{ display: 'inline', marginRight: 3 }} />Members
-                                </span>
-                              ) : (
-                                <span className="am-pill" style={{ background: 'rgba(52,211,153,.07)', border: '1px solid rgba(52,211,153,.2)', color: 'rgba(52,211,153,.8)' }}>
-                                  Free
-                                </span>
-                              )}
+                              {(() => {
+                                const t = (mantra.required_tier ?? (mantra.is_premium ? 1 : 0)) as number;
+                                const tierMeta = TIER_OPTIONS.find((o) => o.value === t) ?? TIER_OPTIONS[0];
+                                if (t === 0) {
+                                  return (
+                                    <span className="am-pill" style={{ background: 'rgba(52,211,153,.07)', border: '1px solid rgba(52,211,153,.2)', color: 'rgba(52,211,153,.8)' }}>
+                                      Free
+                                    </span>
+                                  );
+                                }
+                                return (
+                                  <span className="am-pill" style={{ background: 'rgba(212,175,55,.1)', border: '1px solid rgba(212,175,55,.3)', color: '#D4AF37' }}>
+                                    <Lock size={8} style={{ display: 'inline', marginRight: 3 }} />{tierMeta.short}
+                                  </span>
+                                );
+                              })()}
                             </div>
                             <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,.35)', display: 'flex', gap: 8 }}>
                               <span>{fmtDur(mantra.duration_seconds)}</span>
