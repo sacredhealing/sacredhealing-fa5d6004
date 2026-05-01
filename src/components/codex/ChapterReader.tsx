@@ -21,10 +21,12 @@ export function ChapterReader({ chapter, number, onJumpTo }: Props) {
     strength: number | null;
     codex_chapters?: { id: string; title: string };
   }>>([]);
+  const [transmitters, setTransmitters] = useState<string[]>([]);
 
   useEffect(() => {
     getChapterVersions(chapter.id).then(setVersions);
     listCrossRefs(chapter.id).then((rs) => setCrossRefs(rs as typeof crossRefs));
+    listChapterTransmitters(chapter.id).then(setTransmitters);
     setActiveVersion(null);
   }, [chapter.id]);
 
