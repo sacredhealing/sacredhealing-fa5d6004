@@ -379,8 +379,8 @@ const CourseDetail: React.FC = () => {
     });
   };
 
-  // Show loading while checking admin status or fetching course
-  if (isAdminLoading || isLoading) {
+  // Show loading while checking admin/stargate status or fetching course
+  if (isAdminLoading || isLoading || (!!user && stargateLoading)) {
     return (
       <div className="min-h-screen px-4 pt-6 pb-24 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
