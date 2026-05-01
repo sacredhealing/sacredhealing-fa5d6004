@@ -5,6 +5,7 @@
 import { useMemo } from "react";
 import type { CodexChapter } from "@/lib/codex/types";
 import { buildTree } from "@/lib/codex/api";
+import { isRecentlyUpdated } from "./RecentlyUpdated";
 
 interface Props {
   chapters: CodexChapter[];
