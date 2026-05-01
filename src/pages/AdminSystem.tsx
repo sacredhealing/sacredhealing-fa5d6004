@@ -124,6 +124,7 @@ const AdminSystem = () => {
             <p className="mt-2 text-white/60 leading-[1.6]">
               Orchestrate projects, tasks, content, and transmissions.
             </p>
+          </div>
         </div>
 
         {/* Tabs */}
