@@ -108,40 +108,9 @@ const CourseDetail: React.FC = () => {
   useEffect(() => {
     if (user && id && !isAdminLoading) {
       fetchEnrollment();
-      checkStargateMembership();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, id, isAdminLoading]);
-
-  const checkStargateMembership = async () => {
-    if (!user) return;
-    try {
-      // Check if user has premium membership (which includes Stargate)
-      // Stargate members have premium tier access
-      // Also check if user has any active premium subscription
-      const { data: membershipData } = await supabase
-        .from('user_memberships')
-        .select('*, membership_tiers!inner(slug, name)')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .or('current_period_end.is.null,current_period_end.gt.now()');
-      
-      // Check if user has premium tier (premium-monthly, premium-annual, lifetime, or Stargate)
-      const hasPremiumAccess = membershipData && membershipData.length > 0 && 
-        membershipData.some(m => {
-          const tierSlug = m.membership_tiers?.slug || '';
-          return tierSlug.includes('premium') || tierSlug === 'lifetime';
-        });
-      
-      // Stargate membership grants full course access
-      // Premium members (including Stargate) get access
-      setHasStargateMembership(hasPremiumAccess || isPremium || membershipTier !== 'free');
-    } catch (error) {
-      console.error('Error checking Stargate membership:', error);
-      // Default to false if check fails
-      setHasStargateMembership(false);
-    }
-  };
 
   useEffect(() => {
     if (course && !isAdminLoading && (enrollment || isAdmin || hasStargateMembership || isPremium)) {
