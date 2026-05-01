@@ -10,6 +10,7 @@ import { PasteTransmissionPanel } from "@/components/codex/PasteTransmissionPane
 import { ExportButton } from "@/components/codex/ExportButton";
 import { BookSettings, getBookMeta } from "@/components/codex/BookSettings";
 import { PageCount } from "@/components/codex/PageCount";
+import { RecentlyUpdated } from "@/components/codex/RecentlyUpdated";
 import { listChapters, runBackfill, runClustering } from "@/lib/codex/api";
 import type { CodexChapter } from "@/lib/codex/types";
 
