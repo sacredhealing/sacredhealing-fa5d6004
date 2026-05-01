@@ -343,7 +343,15 @@ interface Mantra {
   category?: string | null;
   planet_type?: string | null;
   is_premium?: boolean;
+  required_tier?: number;
 }
+
+const TIER_OPTIONS: { value: number; label: string; short: string }[] = [
+  { value: 0, label: 'Free',             short: 'Free' },
+  { value: 1, label: 'Prana-Flow',       short: 'Prana' },
+  { value: 2, label: 'Siddha-Quantum',   short: 'Siddha' },
+  { value: 3, label: 'Akasha-Infinity',  short: 'Akasha' },
+];
 
 const AdminMantras = () => {
   const navigate = useNavigate();
@@ -361,6 +369,7 @@ const AdminMantras = () => {
     shc_reward: 111,
     is_active: true,
     is_premium: false,
+    required_tier: 0,
   });
   const [category, setCategory] = useState('general');
   const [planetType, setPlanetType] = useState('');
@@ -370,14 +379,14 @@ const AdminMantras = () => {
   const fetchMantras = async () => {
     const { data } = await supabase
       .from('mantras' as any)
-      .select('id, title, description, audio_url, cover_image_url, duration_seconds, shc_reward, is_active, is_premium, category, planet_type, created_at')
+      .select('id, title, description, audio_url, cover_image_url, duration_seconds, shc_reward, is_active, is_premium, required_tier, category, planet_type, created_at')
       .order('created_at', { ascending: false });
     if (data) setMantras(data as unknown as Mantra[]);
     setLoading(false);
   };
 
   const resetForm = () => {
-    setFormData({ title: '', description: '', audio_url: '', cover_image_url: '', duration_seconds: 180, shc_reward: 111, is_active: true, is_premium: false });
+    setFormData({ title: '', description: '', audio_url: '', cover_image_url: '', duration_seconds: 180, shc_reward: 111, is_active: true, is_premium: false, required_tier: 0 });
     setCategory('general');
     setPlanetType('');
     setEditingId(null);
@@ -385,6 +394,7 @@ const AdminMantras = () => {
   };
 
   const handleEdit = (mantra: Mantra) => {
+    const tier = (mantra.required_tier ?? (mantra.is_premium ? 1 : 0)) as number;
     setFormData({
       title: mantra.title,
       description: mantra.description || '',
@@ -393,7 +403,8 @@ const AdminMantras = () => {
       duration_seconds: mantra.duration_seconds ?? 180,
       shc_reward: mantra.shc_reward,
       is_active: mantra.is_active,
-      is_premium: mantra.is_premium ?? false,
+      is_premium: tier > 0,
+      required_tier: tier,
     });
     setCategory((mantra as any).category || 'general');
     setPlanetType((mantra as any).planet_type || '');
@@ -405,6 +416,7 @@ const AdminMantras = () => {
   const buildPayload = () => {
     const shc = Number(formData.shc_reward);
     const dur = Number.isFinite(formData.duration_seconds) && formData.duration_seconds > 0 ? formData.duration_seconds : 180;
+    const tier = Number.isFinite(formData.required_tier) ? formData.required_tier : 0;
     return {
       title: formData.title.trim(),
       description: formData.description?.trim() || null,
@@ -415,7 +427,8 @@ const AdminMantras = () => {
       is_active: Boolean(formData.is_active),
       category: category || 'general',
       planet_type: category === 'planet' && planetType?.trim() ? planetType.trim() : null,
-      is_premium: Boolean(formData.is_premium),
+      is_premium: tier > 0,
+      required_tier: tier,
     };
   };
 
@@ -613,21 +626,27 @@ const AdminMantras = () => {
 
                 {/* Access tier */}
                 <div style={{ background: 'rgba(255,255,255,.015)', border: '1px solid rgba(255,255,255,.06)', borderRadius: 20, padding: 16 }}>
-                  <div className="am-kicker" style={{ marginBottom: 10 }}>Access Level</div>
+                  <div className="am-kicker" style={{ marginBottom: 10 }}>Access Tier</div>
                   <div className="am-radio-row">
-                    <label className={`am-radio-option${!formData.is_premium ? ' active' : ''}`}>
-                      <input type="radio" name="access" checked={!formData.is_premium} onChange={() => setFormData({ ...formData, is_premium: false })} style={{ accentColor: '#D4AF37' }} />
-                      <Unlock size={13} />
-                      <span>Free</span>
-                    </label>
-                    <label className={`am-radio-option${formData.is_premium ? ' active' : ''}`}>
-                      <input type="radio" name="access" checked={formData.is_premium} onChange={() => setFormData({ ...formData, is_premium: true })} style={{ accentColor: '#D4AF37' }} />
-                      <Lock size={13} />
-                      <span style={{ color: formData.is_premium ? '#D4AF37' : undefined }}>Members Only</span>
-                    </label>
+                    {TIER_OPTIONS.map((opt) => {
+                      const active = formData.required_tier === opt.value;
+                      return (
+                        <label key={opt.value} className={`am-radio-option${active ? ' active' : ''}`}>
+                          <input
+                            type="radio"
+                            name="access"
+                            checked={active}
+                            onChange={() => setFormData({ ...formData, required_tier: opt.value, is_premium: opt.value > 0 })}
+                            style={{ accentColor: '#D4AF37' }}
+                          />
+                          {opt.value === 0 ? <Unlock size={13} /> : <Lock size={13} />}
+                          <span style={{ color: active ? '#D4AF37' : undefined }}>{opt.label}</span>
+                        </label>
+                      );
+                    })}
                   </div>
                   <p style={{ fontSize: 11, color: 'rgba(255,255,255,.35)', marginTop: 10, lineHeight: 1.5 }}>
-                    Free mantras are accessible to all users. Members-only mantras require an active Prana-Flow+ subscription.
+                    Free is open to everyone. Prana-Flow unlocks at Rank 1 (€19), Siddha-Quantum at Rank 2 (€45), Akasha-Infinity at Rank 3 (€1111).
                   </p>
                 </div>
 
@@ -703,15 +722,22 @@ const AdminMantras = () => {
                                 {planet ?? meta.label}
                               </span>
                               {/* tier pill */}
-                              {mantra.is_premium ? (
-                                <span className="am-pill" style={{ background: 'rgba(212,175,55,.1)', border: '1px solid rgba(212,175,55,.3)', color: '#D4AF37' }}>
-                                  <Lock size={8} style={{ display: 'inline', marginRight: 3 }} />Members
-                                </span>
-                              ) : (
-                                <span className="am-pill" style={{ background: 'rgba(52,211,153,.07)', border: '1px solid rgba(52,211,153,.2)', color: 'rgba(52,211,153,.8)' }}>
-                                  Free
-                                </span>
-                              )}
+                              {(() => {
+                                const t = (mantra.required_tier ?? (mantra.is_premium ? 1 : 0)) as number;
+                                const tierMeta = TIER_OPTIONS.find((o) => o.value === t) ?? TIER_OPTIONS[0];
+                                if (t === 0) {
+                                  return (
+                                    <span className="am-pill" style={{ background: 'rgba(52,211,153,.07)', border: '1px solid rgba(52,211,153,.2)', color: 'rgba(52,211,153,.8)' }}>
+                                      Free
+                                    </span>
+                                  );
+                                }
+                                return (
+                                  <span className="am-pill" style={{ background: 'rgba(212,175,55,.1)', border: '1px solid rgba(212,175,55,.3)', color: '#D4AF37' }}>
+                                    <Lock size={8} style={{ display: 'inline', marginRight: 3 }} />{tierMeta.short}
+                                  </span>
+                                );
+                              })()}
                             </div>
                             <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,.35)', display: 'flex', gap: 8 }}>
                               <span>{fmtDur(mantra.duration_seconds)}</span>

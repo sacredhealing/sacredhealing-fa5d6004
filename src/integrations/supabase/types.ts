@@ -3653,6 +3653,7 @@ export type Database = {
           is_premium: boolean
           planet_type: string | null
           play_count: number
+          required_tier: number
           shc_reward: number
           title: string
           updated_at: string | null
@@ -3669,6 +3670,7 @@ export type Database = {
           is_premium?: boolean
           planet_type?: string | null
           play_count?: number
+          required_tier?: number
           shc_reward?: number
           title: string
           updated_at?: string | null
@@ -3685,6 +3687,7 @@ export type Database = {
           is_premium?: boolean
           planet_type?: string | null
           play_count?: number
+          required_tier?: number
           shc_reward?: number
           title?: string
           updated_at?: string | null

@@ -1143,7 +1143,12 @@ const Mantras = () => {
                     const pSym = mp ? PLANET_SYMBOLS[mp] ?? '' : '';
                     const CardCatIcon = CAT_ICONS[ck];
                     const pct = getSuccessPercent(mp);
-                    const cardLocked = (m.is_premium && userRank < 1) && !isAdmin;
+                    const requiredTier = (m.required_tier ?? (m.is_premium ? 1 : 0)) as number;
+                    const cardLocked = (requiredTier > userRank) && !isAdmin;
+                    const tierLabel = requiredTier >= 3 ? 'Akasha-Infinity'
+                      : requiredTier === 2 ? 'Siddha-Quantum'
+                      : requiredTier === 1 ? 'Prana-Flow+'
+                      : '';
 
                     return (
                       <button
@@ -1159,8 +1164,8 @@ const Mantras = () => {
                         onClick={() => handleMantraSelect(m, cardLocked)}
                       >
                         {/* premium indicator dot */}
-                        {m.is_premium && !cardLocked && (
-                          <div className="m-card-premium-dot" title="Members only" />
+                        {requiredTier > 0 && !cardLocked && (
+                          <div className="m-card-premium-dot" title={tierLabel} />
                         )}
 
                         {/* lock overlay — full card teaser with upgrade CTA */}
@@ -1170,7 +1175,7 @@ const Mantras = () => {
                               <Lock size={12} />
                             </div>
                             <div className="m-card-lock-label">
-                              Prana-Flow+<br />Tap to Unlock
+                              {tierLabel}<br />Tap to Unlock
                             </div>
                           </div>
                         )}

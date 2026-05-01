@@ -14,6 +14,8 @@ export interface MantraItem {
   category?: string | null;
   planet_type?: string | null;
   is_premium?: boolean;
+  /** 0=Free, 1=Prana-Flow, 2=Siddha-Quantum, 3=Akasha-Infinity */
+  required_tier?: number;
   repetitionsFixed: 108;
 }
 
@@ -51,11 +53,13 @@ export async function getMantras(options?: { userRank?: number; isAdmin?: boolea
         ? Math.max(1, Math.ceil(Number(rawSeconds) / 60))
         : 3;
 
+      const requiredTier = Number((row as any).required_tier ?? ((row as any).is_premium ? 1 : 0));
       return {
         ...row,
         category: (row as any).category || 'general',
         planet_type: (row as any).planet_type || null,
         is_premium: (row as any).is_premium || false,
+        required_tier: Number.isFinite(requiredTier) ? requiredTier : 0,
         duration_minutes,
         repetitionsFixed: 108 as const,
       };
