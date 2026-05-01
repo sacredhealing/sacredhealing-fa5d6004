@@ -16,6 +16,7 @@ export default function LivingPortraitCodex() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   async function refresh() {
     const rows = await listChapters("portrait");
