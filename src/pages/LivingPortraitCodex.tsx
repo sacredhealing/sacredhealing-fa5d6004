@@ -10,6 +10,7 @@ import { PasteTransmissionPanel } from "@/components/codex/PasteTransmissionPane
 import { ExportButton } from "@/components/codex/ExportButton";
 import { BookSettings, getBookMeta } from "@/components/codex/BookSettings";
 import { PageCount } from "@/components/codex/PageCount";
+import { RecentlyUpdated } from "@/components/codex/RecentlyUpdated";
 import { listChapters, runBackfill, runClustering } from "@/lib/codex/api";
 import type { CodexChapter } from "@/lib/codex/types";
 
@@ -56,6 +57,14 @@ export default function LivingPortraitCodex() {
   const sidebar = (
     <aside className="flex flex-col gap-4 lg:sticky lg:top-6 lg:self-start">
       <PasteTransmissionPanel codexType="portrait" onChanneled={refresh} />
+
+      <RecentlyUpdated
+        chapters={chapters}
+        onSelect={(id) => {
+          setActiveId(id);
+          setReadingMode(true);
+        }}
+      />
 
       <input
         value={search}

@@ -40,8 +40,63 @@ export function ChapterReader({ chapter, number, onJumpTo, onDeleted }: Props) {
   const proseSource = activeVersion?.prose_snapshot ?? chapter.prose_woven ?? "";
   const paragraphs = proseToParagraphs(proseSource);
 
+  const updatedMs = new Date(chapter.updated_at).getTime();
+  const createdMs = new Date(chapter.created_at).getTime();
+  const isRecent = Date.now() - updatedMs < 24 * 60 * 60 * 1000;
+  const wasJustWoven = isRecent && updatedMs - createdMs > 5_000; // updated after creation
+  const isBrandNew = isRecent && !wasJustWoven;
+
   return (
     <article className="relative max-w-3xl mx-auto">
+      {isRecent && (
+        <div
+          style={{
+            marginBottom: 18,
+            padding: "12px 16px",
+            borderRadius: 18,
+            background:
+              "linear-gradient(135deg, rgba(212,175,55,0.14), rgba(212,175,55,0.04))",
+            border: "1px solid rgba(212,175,55,0.45)",
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            boxShadow: "0 0 24px rgba(212,175,55,0.15)",
+          }}
+        >
+          <span
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              background: "#D4AF37",
+              boxShadow: "0 0 10px #D4AF37",
+              flexShrink: 0,
+              animation: "codexPulseDot 1.6s ease-in-out infinite",
+            }}
+          />
+          <span
+            style={{
+              fontWeight: 800,
+              fontSize: 10,
+              letterSpacing: "0.3em",
+              textTransform: "uppercase",
+              color: "#D4AF37",
+            }}
+          >
+            {isBrandNew ? "New Chapter Woven" : "New Transmission Woven Into This Chapter"}
+            <span style={{ opacity: 0.7, marginLeft: 10, letterSpacing: "0.2em" }}>
+              · {timeAgoShort(chapter.updated_at)}
+            </span>
+          </span>
+          <style>{`
+            @keyframes codexPulseDot {
+              0%, 100% { opacity: 1; transform: scale(1); }
+              50% { opacity: 0.4; transform: scale(0.6); }
+            }
+          `}</style>
+        </div>
+      )}
+
       {/* Chapter numeral */}
       <div
         style={{
@@ -334,4 +389,15 @@ function proseToParagraphs(prose: string): string[] {
     .split(/\n{2,}/)
     .map((p) => p.trim())
     .filter(Boolean);
+}
+
+function timeAgoShort(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  return `${d}d ago`;
 }
