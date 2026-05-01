@@ -321,21 +321,49 @@ async function weaveIntoChapter(
     return await weaveExisting(db, userId, codexType, exactMatches[0].id as string, content, embedding, cls, transmissionId);
   }
 
-  // 2. No exact match — ask Gemini if the new subject is an alias of any existing chapter
+  // 2. No exact match — gather all chapters in this codex with embeddings + subject_key
   const { data: existing } = await db
     .from("codex_chapters")
-    .select("id, title, subject_key")
+    .select("id, title, subject_key, embedding")
     .eq("user_id", userId)
-    .eq("codex_type", codexType)
-    .not("subject_key", "is", null);
+    .eq("codex_type", codexType);
 
   if (existing && existing.length > 0) {
-    const aliasMatchId = await findAliasMatch(
-      cls.chapter_subject || subjectKey,
-      existing as Array<{ id: string; title: string; subject_key: string }>
-    );
-    if (aliasMatchId) {
-      return await weaveExisting(db, userId, codexType, aliasMatchId, content, embedding, cls, transmissionId);
+    // 2a. Embedding similarity sweep — find candidates whose vector resembles this transmission
+    const scored = existing
+      .map((c) => {
+        if (!c.embedding) return { ...c, sim: 0 };
+        const emb = Array.isArray(c.embedding)
+          ? (c.embedding as number[])
+          : JSON.parse(c.embedding as unknown as string);
+        return { ...c, sim: cosineSim(embedding, emb as number[]) };
+      })
+      .sort((a, b) => (b.sim as number) - (a.sim as number));
+
+    // Hard auto-merge: very high semantic similarity = same chapter, no Gemini needed
+    if (scored[0] && (scored[0].sim as number) >= 0.88) {
+      console.log(`[curator] embedding auto-merge: "${cls.chapter_subject}" → ${scored[0].id} (sim=${(scored[0].sim as number).toFixed(3)})`);
+      return await weaveExisting(db, userId, codexType, scored[0].id as string, content, embedding, cls, transmissionId);
+    }
+
+    // 2b. Soft candidates: top 8 by similarity, plus all chapters with subject_key — let Gemini decide
+    const topByEmb = scored.slice(0, 8).filter((c) => (c.sim as number) >= 0.55);
+    const withKey = existing.filter((c) => c.subject_key);
+    const candidateMap = new Map<string, { id: string; title: string; subject_key: string | null }>();
+    for (const c of [...topByEmb, ...withKey]) {
+      candidateMap.set(c.id as string, { id: c.id as string, title: c.title as string, subject_key: c.subject_key as string | null });
+    }
+    const candidates = Array.from(candidateMap.values());
+
+    if (candidates.length > 0) {
+      const aliasMatchId = await findAliasMatch(
+        cls.chapter_subject || subjectKey,
+        content,
+        candidates
+      );
+      if (aliasMatchId) {
+        return await weaveExisting(db, userId, codexType, aliasMatchId, content, embedding, cls, transmissionId);
+      }
     }
   }
 
@@ -345,22 +373,38 @@ async function weaveIntoChapter(
 
 async function findAliasMatch(
   newSubject: string,
-  existing: Array<{ id: string; title: string; subject_key: string }>
+  newContent: string,
+  existing: Array<{ id: string; title: string; subject_key: string | null }>
 ): Promise<string | null> {
   if (!existing.length) return null;
   const list = existing
-    .map((c, i) => `${i}. id="${c.id}" title="${c.title}" key="${c.subject_key}"`)
+    .map((c, i) => `${i}. id="${c.id}" title="${c.title}" key="${c.subject_key ?? ""}"`)
     .join("\n");
+  const excerpt = newContent.replace(/<\/?t>/g, "").slice(0, 1200);
   const prompt = `New chapter subject candidate: "${newSubject}"
+
+First 1200 chars of the new transmission (use this to identify the TRUE underlying subject — the candidate label may be a vague descriptive phrase):
+"""
+${excerpt}
+"""
 
 Existing chapters in this Codex:
 ${list}
 
-Question: Is the new subject the SAME CONCEPT as any existing chapter, just under a different spelling, transliteration, or framing? Examples of same concept: "Bible" = "Bibel" = "Holy Bible". "Babaji" = "Mahavatar Babaji" = "Babaji Maharaj". "Gayatri Mantra" = "Gāyatrī Mantra" = "Gayatri-Mantra". "Surya" = "Sun God" = "Surya Deva".
+Question: Does the new transmission belong inside one of these existing chapters because it is about the SAME core entity (same scripture, same deity, same mantra, same person, same technique, same place)?
 
-Different concepts even if related: "Surya" vs "Gayatri Mantra" (different — Surya is the deity, Gayatri Mantra is a sacred verse). "Bob Marley" vs "Tupac" (different musicians).
+Match aggressively when the underlying subject is the same, even if framings differ:
+- Two transmissions about the Bhagavad Gita = SAME chapter, even if one frames it as "DNA recoding" and the other as "quantum interpretation".
+- Two transmissions about Babaji = SAME chapter, even with different spellings.
+- Two transmissions about Kriya Yoga = SAME chapter, even if one focuses on technique and the other on lineage.
+- "Bible" = "Bibel" = "Holy Bible". "Gayatri Mantra" = "Gāyatrī Mantra".
 
-If the new subject IS the same concept as an existing chapter, return its id. Otherwise return null.
+Do NOT match merely related concepts:
+- "Surya" vs "Gayatri Mantra" (different — deity vs verse).
+- "Bob Marley" vs "Tupac" (different musicians).
+- "Bhagavad Gita" vs "Upanishads" (different scriptures).
+
+If the new transmission belongs in an existing chapter, return its id. Otherwise return null.
 
 Return ONLY JSON: { "match_id": string | null, "reasoning": string }`;
 
