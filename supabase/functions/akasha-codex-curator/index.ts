@@ -40,8 +40,10 @@ interface CuratorInput {
 
 interface ClassifierResult {
   target: "akasha" | "portrait" | "split" | "excluded";
+  chapter_subject: string;
   topic_primary: string;
   topic_sub: string;
+  transmitter: string;
   akasha_excerpt: string | null;
   portrait_excerpt: string | null;
   reasoning: string;
@@ -62,6 +64,15 @@ interface OpenerResult {
 
 const slugify = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
+
+function normalizeSubjectKey(s: string): string {
+  return (s || "")
+    .toLowerCase()
+    .replace(/^(the |a |an )/i, "")
+    .replace(/[^a-z0-9 ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 // ============================================================
 // Main handler
@@ -154,7 +165,11 @@ async function processOne(
       source_type: sourceType,
       source_message_id: input.source_message_id,
       source_chat_id: input.source_chat_id,
-      source_metadata: input.source_metadata ?? {},
+      source_metadata: {
+        ...(input.source_metadata ?? {}),
+        transmitter: classification.transmitter,
+        chapter_subject: classification.chapter_subject,
+      },
       user_prompt: input.user_prompt,
       raw_content: content,
       original_date: input.original_date,
@@ -199,7 +214,11 @@ async function processOne(
         source_type: sourceType,
         source_message_id: input.source_message_id,
         source_chat_id: input.source_chat_id,
-        source_metadata: input.source_metadata ?? {},
+        source_metadata: {
+          ...(input.source_metadata ?? {}),
+          transmitter: classification.transmitter,
+          chapter_subject: classification.chapter_subject,
+        },
         user_prompt: input.user_prompt,
         raw_content: t.slice,
         original_date: input.original_date,
@@ -245,8 +264,10 @@ async function forcedClassify(content: string, target: "akasha" | "portrait"): P
     );
     return {
       target,
+      chapter_subject: r.topic_sub || r.topic_primary || "Untitled",
       topic_primary: r.topic_primary || "Untitled",
       topic_sub: r.topic_sub || "",
+      transmitter: "SQI 2050",
       akasha_excerpt: null,
       portrait_excerpt: null,
       reasoning: "manual override",
@@ -254,8 +275,10 @@ async function forcedClassify(content: string, target: "akasha" | "portrait"): P
   } catch {
     return {
       target,
+      chapter_subject: "Untitled",
       topic_primary: "Untitled",
       topic_sub: "",
+      transmitter: "SQI 2050",
       akasha_excerpt: null,
       portrait_excerpt: null,
       reasoning: "manual override (topic extraction failed)",
@@ -275,31 +298,21 @@ async function weaveIntoChapter(
   cls: ClassifierResult,
   transmissionId: string
 ): Promise<string> {
-  // Match against existing chapters by embedding (cosine similarity ≥ 0.75)
-  const { data: candidates } = await db
+  const subjectKey = normalizeSubjectKey(
+    cls.chapter_subject || cls.topic_sub || cls.topic_primary || "untitled"
+  );
+
+  // Subject-strict match: same subject_key → same chapter. No similarity matching.
+  const { data: matches } = await db
     .from("codex_chapters")
-    .select("id, title, slug, prose_woven, opening_hook, closing_reflection, embedding, version, prose_woven, child_count, depth")
+    .select("id")
     .eq("user_id", userId)
-    .eq("codex_type", codexType);
+    .eq("codex_type", codexType)
+    .eq("subject_key", subjectKey)
+    .limit(1);
 
-  let bestId: string | null = null;
-  let bestSim = 0;
-  for (const c of candidates ?? []) {
-    if (!c.embedding) continue;
-    const emb = Array.isArray(c.embedding)
-      ? c.embedding
-      : JSON.parse(c.embedding as unknown as string);
-    const s = cosineSim(embedding, emb);
-    if (s > bestSim) {
-      bestSim = s;
-      bestId = c.id as string;
-    }
-  }
-
-  const SIM_THRESHOLD = 0.75;
-
-  if (bestId && bestSim >= SIM_THRESHOLD) {
-    return await weaveExisting(db, userId, codexType, bestId, content, embedding, cls, transmissionId);
+  if (matches && matches.length > 0) {
+    return await weaveExisting(db, userId, codexType, matches[0].id as string, content, embedding, cls, transmissionId);
   }
   return await createChapter(db, userId, codexType, content, embedding, cls, transmissionId);
 }
@@ -342,6 +355,7 @@ async function createChapter(
       codex_type: codexType,
       title: opener.title,
       slug,
+      subject_key: normalizeSubjectKey(cls.chapter_subject || cls.topic_sub || opener.title),
       opening_hook: opener.opening_hook,
       prose_woven: proseWoven,
       closing_reflection: opener.closing_reflection,

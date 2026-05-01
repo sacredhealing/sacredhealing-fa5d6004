@@ -1659,6 +1659,7 @@ export type Database = {
           parent_id: string | null
           prose_woven: string | null
           slug: string
+          subject_key: string | null
           title: string
           updated_at: string
           user_id: string
@@ -1684,6 +1685,7 @@ export type Database = {
           parent_id?: string | null
           prose_woven?: string | null
           slug: string
+          subject_key?: string | null
           title: string
           updated_at?: string
           user_id: string
@@ -1709,6 +1711,7 @@ export type Database = {
           parent_id?: string | null
           prose_woven?: string | null
           slug?: string
+          subject_key?: string | null
           title?: string
           updated_at?: string
           user_id?: string
