@@ -40,8 +40,10 @@ interface CuratorInput {
 
 interface ClassifierResult {
   target: "akasha" | "portrait" | "split" | "excluded";
+  chapter_subject: string;
   topic_primary: string;
   topic_sub: string;
+  transmitter: string;
   akasha_excerpt: string | null;
   portrait_excerpt: string | null;
   reasoning: string;
@@ -62,6 +64,15 @@ interface OpenerResult {
 
 const slugify = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
+
+function normalizeSubjectKey(s: string): string {
+  return (s || "")
+    .toLowerCase()
+    .replace(/^(the |a |an )/i, "")
+    .replace(/[^a-z0-9 ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 // ============================================================
 // Main handler
