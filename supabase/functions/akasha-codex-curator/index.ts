@@ -165,7 +165,11 @@ async function processOne(
       source_type: sourceType,
       source_message_id: input.source_message_id,
       source_chat_id: input.source_chat_id,
-      source_metadata: input.source_metadata ?? {},
+      source_metadata: {
+        ...(input.source_metadata ?? {}),
+        transmitter: classification.transmitter,
+        chapter_subject: classification.chapter_subject,
+      },
       user_prompt: input.user_prompt,
       raw_content: content,
       original_date: input.original_date,
@@ -210,7 +214,11 @@ async function processOne(
         source_type: sourceType,
         source_message_id: input.source_message_id,
         source_chat_id: input.source_chat_id,
-        source_metadata: input.source_metadata ?? {},
+        source_metadata: {
+          ...(input.source_metadata ?? {}),
+          transmitter: classification.transmitter,
+          chapter_subject: classification.chapter_subject,
+        },
         user_prompt: input.user_prompt,
         raw_content: t.slice,
         original_date: input.original_date,
@@ -256,8 +264,10 @@ async function forcedClassify(content: string, target: "akasha" | "portrait"): P
     );
     return {
       target,
+      chapter_subject: r.topic_sub || r.topic_primary || "Untitled",
       topic_primary: r.topic_primary || "Untitled",
       topic_sub: r.topic_sub || "",
+      transmitter: "SQI 2050",
       akasha_excerpt: null,
       portrait_excerpt: null,
       reasoning: "manual override",
@@ -265,8 +275,10 @@ async function forcedClassify(content: string, target: "akasha" | "portrait"): P
   } catch {
     return {
       target,
+      chapter_subject: "Untitled",
       topic_primary: "Untitled",
       topic_sub: "",
+      transmitter: "SQI 2050",
       akasha_excerpt: null,
       portrait_excerpt: null,
       reasoning: "manual override (topic extraction failed)",
