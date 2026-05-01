@@ -206,6 +206,7 @@ async function processOne(
 
   const transmissionIds: string[] = [];
   const chapterIds: string[] = [];
+  const chapters: Array<{ codex: "akasha" | "portrait"; chapterId: string; action: string; title: string }> = [];
 
   // 4. For each target codex, route + weave
   for (const t of targets) {
