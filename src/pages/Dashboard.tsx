@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
@@ -748,6 +748,35 @@ const Dashboard: React.FC = () => {
             </div>
           )}
         </>
+      )}
+      {isAdmin && (
+        <div
+          className="glass-card mt-12 mx-auto max-w-md flex items-center justify-center gap-10 py-6 px-8"
+          style={{
+            background: "rgba(255,255,255,0.02)",
+            backdropFilter: "blur(40px)",
+            border: "1px solid rgba(212,175,55,0.18)",
+            borderRadius: 40,
+          }}
+        >
+          <Link
+            to="/akashic-codex"
+            className="flex flex-col items-center gap-2 group"
+            style={{ color: "#D4AF37" }}
+          >
+            <span style={{ fontSize: 32, fontWeight: 900, textShadow: "0 0 18px rgba(212,175,55,0.45)" }}>⟁</span>
+            <span style={{ fontWeight: 800, fontSize: 8, letterSpacing: "0.5em", textTransform: "uppercase", opacity: 0.75 }}>Akashic</span>
+          </Link>
+          <div style={{ width: 1, height: 36, background: "rgba(212,175,55,0.2)" }} />
+          <Link
+            to="/living-portrait-codex"
+            className="flex flex-col items-center gap-2 group"
+            style={{ color: "#D4AF37" }}
+          >
+            <span style={{ fontSize: 32, fontWeight: 900, textShadow: "0 0 18px rgba(212,175,55,0.45)" }}>✦</span>
+            <span style={{ fontWeight: 800, fontSize: 8, letterSpacing: "0.5em", textTransform: "uppercase", opacity: 0.75 }}>Portrait</span>
+          </Link>
+        </div>
       )}
     </div>
   );
