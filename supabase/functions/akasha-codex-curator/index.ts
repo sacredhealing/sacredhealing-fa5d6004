@@ -240,7 +240,7 @@ async function processOne(
     if (tbErr) throw tbErr;
     transmissionIds.push(tb.id);
 
-    const chapterId = await weaveIntoChapter(
+    const woven = await weaveIntoChapter(
       db,
       userId,
       t.codex,
@@ -249,13 +249,14 @@ async function processOne(
       classification,
       tb.id
     );
-    chapterIds.push(chapterId);
+    chapterIds.push(woven.chapterId);
+    chapters.push({ codex: t.codex, ...woven });
 
     // Cross-references for the new/updated chapter
-    await detectCrossRefs(db, userId, t.codex, chapterId, sliceEmbedding);
+    await detectCrossRefs(db, userId, t.codex, woven.chapterId, sliceEmbedding);
   }
 
-  return { transmissionIds, chapterIds, classification };
+  return { transmissionIds, chapterIds, chapters, classification };
 }
 
 // ============================================================
