@@ -51,6 +51,44 @@ export function ChapterReader({ chapter, number, onJumpTo }: Props) {
         {number}
       </div>
 
+      {/* Transmitter byline */}
+      {transmitters.length > 0 && (
+        <div style={{ marginBottom: 14 }}>
+          <div
+            style={{
+              fontWeight: 800,
+              fontSize: 8,
+              letterSpacing: "0.5em",
+              textTransform: "uppercase",
+              color: "#D4AF37",
+              opacity: 0.7,
+              marginBottom: 8,
+            }}
+          >
+            Channelled Through
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {transmitters.map((t) => (
+              <span
+                key={t}
+                style={{
+                  padding: "4px 12px",
+                  borderRadius: 999,
+                  background: "rgba(212,175,55,0.08)",
+                  border: "1px solid rgba(212,175,55,0.3)",
+                  color: "#D4AF37",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: "0.05em",
+                }}
+              >
+                {t}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Title */}
       <h2
         style={{
