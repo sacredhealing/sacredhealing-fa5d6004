@@ -28,6 +28,13 @@ export function PasteTransmissionPanel({ codexType, onChanneled }: Props) {
       setStatus("Need at least 20 characters of transmission text.");
       return;
     }
+
+    if (!bulk && content.length > 15000) {
+      setStatus(
+        `This transmission is very long (${content.length} characters). The classifier works best on focused 200–3000 word blocks. Consider splitting into multiple pastes using --- separators (Bulk mode), or proceed and the curator will weave the full text into one chapter.`
+      );
+    }
+
     setBusy(true);
     setStatus("Channeling into the Codex…");
     try {
@@ -41,20 +48,47 @@ export function PasteTransmissionPanel({ codexType, onChanneled }: Props) {
         source_type: "manual_paste",
         source_metadata: title ? { paste_title: title } : {},
       };
+
+      let response: any;
       if (bulk) {
-        const r = await channelBulkPaste(codexType, content, meta);
-        setStatus(`Channeled ${r.processed} transmissions. Sigils rendering…`);
+        response = await channelBulkPaste(codexType, content, meta);
       } else {
-        await channelTransmission(codexType, meta);
-        setStatus("Channeled. The chapter is being woven and the sigil rendered.");
+        response = await channelTransmission(codexType, meta);
       }
-      setContent("");
-      setTitle("");
-      setOriginalDate("");
-      onChanneled();
-      setTimeout(() => setOpen(false), 1500);
-    } catch (e) {
-      setStatus(`Error: ${String(e)}`);
+
+      const results =
+        response?.results ??
+        response?.data?.results ??
+        (response && typeof response === "object" && "ok" in response ? [response] : []);
+      const ok = results.filter((r: any) => r.ok && !r.excluded);
+      const excluded = results.filter((r: any) => r.excluded);
+      const failed = results.filter((r: any) => r.ok === false);
+
+      if (failed.length > 0) {
+        setStatus(
+          `Curator failed: ${failed[0].error ?? "unknown error"}. Check edge function logs.`
+        );
+      } else if (excluded.length > 0 && ok.length === 0) {
+        setStatus(
+          `Classifier marked this as low-signal and skipped chapter creation. Reason: "${excluded[0].reason ?? "unspecified"}". Try forcing routing to Akashic or Portrait, or paste a richer block.`
+        );
+      } else if (ok.length > 0 || (results.length === 0 && response)) {
+        const count = ok.length || 1;
+        setStatus(
+          `Channeled. ${count} chapter${count > 1 ? "s" : ""} woven. Refresh in 20s for the sigil.`
+        );
+        setContent("");
+        setTitle("");
+        setOriginalDate("");
+        onChanneled();
+        setTimeout(() => setOpen(false), 2500);
+      } else {
+        setStatus(
+          "No response received. Check Supabase edge function logs for akasha-codex-curator."
+        );
+      }
+    } catch (e: any) {
+      setStatus(`Error: ${e?.message ?? String(e)}`);
     } finally {
       setBusy(false);
     }
