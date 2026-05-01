@@ -66,11 +66,17 @@ const slugify = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
 
 function normalizeSubjectKey(s: string): string {
-  return (s || "")
+  if (!s) return "";
+  return s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")           // strip diacritics
     .toLowerCase()
-    .replace(/^(the |a |an )/i, "")
-    .replace(/[^a-z0-9 ]/g, "")
-    .replace(/\s+/g, " ")
+    .replace(/\bakasha\b|\bportrait\b|\bcodex\b|\bchapter\b/g, "")  // remove pollution
+    .replace(/\b\d+\b/g, "")                   // remove standalone numbers
+    .replace(/^(the |a |an |on |about |teaching )+/g, "")
+    .replace(/[-_]/g, " ")                     // hyphens to spaces
+    .replace(/[^a-z0-9 ]/g, "")                // strip everything non-alphanumeric
+    .replace(/\s+/g, " ")                      // collapse whitespace
     .trim();
 }
 
@@ -302,8 +308,8 @@ async function weaveIntoChapter(
     cls.chapter_subject || cls.topic_sub || cls.topic_primary || "untitled"
   );
 
-  // Subject-strict match: same subject_key → same chapter. No similarity matching.
-  const { data: matches } = await db
+  // 1. Try exact match on normalized subject_key
+  const { data: exactMatches } = await db
     .from("codex_chapters")
     .select("id")
     .eq("user_id", userId)
@@ -311,10 +317,67 @@ async function weaveIntoChapter(
     .eq("subject_key", subjectKey)
     .limit(1);
 
-  if (matches && matches.length > 0) {
-    return await weaveExisting(db, userId, codexType, matches[0].id as string, content, embedding, cls, transmissionId);
+  if (exactMatches && exactMatches.length > 0) {
+    return await weaveExisting(db, userId, codexType, exactMatches[0].id as string, content, embedding, cls, transmissionId);
   }
+
+  // 2. No exact match — ask Gemini if the new subject is an alias of any existing chapter
+  const { data: existing } = await db
+    .from("codex_chapters")
+    .select("id, title, subject_key")
+    .eq("user_id", userId)
+    .eq("codex_type", codexType)
+    .not("subject_key", "is", null);
+
+  if (existing && existing.length > 0) {
+    const aliasMatchId = await findAliasMatch(
+      cls.chapter_subject || subjectKey,
+      existing as Array<{ id: string; title: string; subject_key: string }>
+    );
+    if (aliasMatchId) {
+      return await weaveExisting(db, userId, codexType, aliasMatchId, content, embedding, cls, transmissionId);
+    }
+  }
+
+  // 3. Genuinely new subject — create a new chapter
   return await createChapter(db, userId, codexType, content, embedding, cls, transmissionId);
+}
+
+async function findAliasMatch(
+  newSubject: string,
+  existing: Array<{ id: string; title: string; subject_key: string }>
+): Promise<string | null> {
+  if (!existing.length) return null;
+  const list = existing
+    .map((c, i) => `${i}. id="${c.id}" title="${c.title}" key="${c.subject_key}"`)
+    .join("\n");
+  const prompt = `New chapter subject candidate: "${newSubject}"
+
+Existing chapters in this Codex:
+${list}
+
+Question: Is the new subject the SAME CONCEPT as any existing chapter, just under a different spelling, transliteration, or framing? Examples of same concept: "Bible" = "Bibel" = "Holy Bible". "Babaji" = "Mahavatar Babaji" = "Babaji Maharaj". "Gayatri Mantra" = "Gāyatrī Mantra" = "Gayatri-Mantra". "Surya" = "Sun God" = "Surya Deva".
+
+Different concepts even if related: "Surya" vs "Gayatri Mantra" (different — Surya is the deity, Gayatri Mantra is a sacred verse). "Bob Marley" vs "Tupac" (different musicians).
+
+If the new subject IS the same concept as an existing chapter, return its id. Otherwise return null.
+
+Return ONLY JSON: { "match_id": string | null, "reasoning": string }`;
+
+  try {
+    const result = await generateJson<{ match_id: string | null; reasoning: string }>(
+      "You are a careful semantic matcher. Only match when the underlying concept is identical, not merely related. When uncertain, return null.",
+      prompt,
+      { temperature: 0.1, maxOutputTokens: 1024 }
+    );
+    if (result.match_id && existing.find((c) => c.id === result.match_id)) {
+      console.log(`[curator] alias match: "${newSubject}" → ${result.match_id} (${result.reasoning})`);
+      return result.match_id;
+    }
+  } catch (e) {
+    console.warn("[curator] alias match check failed:", e);
+  }
+  return null;
 }
 
 // ---- New chapter creation ----------------------------------

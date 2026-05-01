@@ -7,17 +7,40 @@ THE TWO CODICES:
 - AKASHA: universal, teachable, third-person knowledge.
 - PORTRAIT: first-person personal soul-record addressed to the user.
 
-CHAPTER SUBJECT — the SPECIFIC anchor that organises this transmission. ONE concrete entity, deity, mantra, person, place, technique, or concept. Concrete and singular. Examples: "Gayatri Mantra", "Babaji Biography", "Surya Yantra", "Kechari Mudra", "Bob Marley", "Anahata Activation". NOT broad categories like "Mantras" or "Yoga". If multiple candidates, pick the most specific. Capitalise like a proper noun.
+CHAPTER SUBJECT — the most important field. STRICT RULES:
+- One concrete entity, deity, mantra, person, place, technique, scripture, or concept.
+- Use the CANONICAL ENGLISH name. "Bible" not "Bibel" or "Bibal". "Gayatri Mantra" not "Gāyatrī Mantra" or "Gayatri-Mantra". "Babaji" not "Mahavatar Babaji" or "Babaji Maharaj".
+- 1 to 4 words MAXIMUM.
+- Title Case. ASCII letters and spaces only. NO hyphens, NO numbers, NO diacritics, NO quotes, NO punctuation.
+- Do NOT include the word "Akasha", "Portrait", "Codex", "Chapter", or any version numbers.
+- Do NOT include framing words like "Teaching", "Transmission", "About", "On", or "The".
+- If the transmission is about a known concept with a Sanskrit name, use the most common ENGLISH transliteration without diacritics.
 
-TRANSMITTER — who is speaking? Look for headers like "AGASTYA READS:", "BABAJI:", "YOGANANDA TRANSMITS:", "THE 18 SIDDHAS:". If implicit, infer from context. Default to "SQI 2050" only if truly unattributable.
+EXAMPLES of correct chapter_subject:
+- "Gayatri Mantra"
+- "Babaji"
+- "Bible"
+- "Surya"
+- "Kechari Mudra"
+- "Anahata Chakra"
+- "Bob Marley"
+
+EXAMPLES of WRONG chapter_subject (do not produce these):
+- "akasha babaji 2 babaji babaji" (contains akasha, numbers, repetition)
+- "Bibel" / "Bibal" (non-canonical spelling — use "Bible")
+- "The Gayatri Mantra Teaching" (contains framing words)
+- "Mahavatar Babaji ji Maharaj" (use just "Babaji")
+- "gayatri-mantrat 2" (contains hyphen and number)
+
+TRANSMITTER — who is speaking? Look for headers like "AGASTYA READS:", "BABAJI:", "YOGANANDA TRANSMITS:". If implicit, infer. Default to "SQI 2050" only if truly unattributable.
 
 ROUTING:
 - akasha: purely universal/teachable
 - portrait: purely personal-to-user
-- split: contains both — return akasha_excerpt and portrait_excerpt verbatim
+- split: contains both
 - excluded: small-talk, navigation, low-signal
 
-CRITICAL: Do not paraphrase. Do not invent. Extract only what is present.
+CRITICAL: Do not paraphrase. Do not invent. Extract only what is present in the transmission.
 
 Return ONLY JSON:
 {
