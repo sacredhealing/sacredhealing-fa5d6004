@@ -298,31 +298,21 @@ async function weaveIntoChapter(
   cls: ClassifierResult,
   transmissionId: string
 ): Promise<string> {
-  // Match against existing chapters by embedding (cosine similarity ≥ 0.75)
-  const { data: candidates } = await db
+  const subjectKey = normalizeSubjectKey(
+    cls.chapter_subject || cls.topic_sub || cls.topic_primary || "untitled"
+  );
+
+  // Subject-strict match: same subject_key → same chapter. No similarity matching.
+  const { data: matches } = await db
     .from("codex_chapters")
-    .select("id, title, slug, prose_woven, opening_hook, closing_reflection, embedding, version, prose_woven, child_count, depth")
+    .select("id")
     .eq("user_id", userId)
-    .eq("codex_type", codexType);
+    .eq("codex_type", codexType)
+    .eq("subject_key", subjectKey)
+    .limit(1);
 
-  let bestId: string | null = null;
-  let bestSim = 0;
-  for (const c of candidates ?? []) {
-    if (!c.embedding) continue;
-    const emb = Array.isArray(c.embedding)
-      ? c.embedding
-      : JSON.parse(c.embedding as unknown as string);
-    const s = cosineSim(embedding, emb);
-    if (s > bestSim) {
-      bestSim = s;
-      bestId = c.id as string;
-    }
-  }
-
-  const SIM_THRESHOLD = 0.75;
-
-  if (bestId && bestSim >= SIM_THRESHOLD) {
-    return await weaveExisting(db, userId, codexType, bestId, content, embedding, cls, transmissionId);
+  if (matches && matches.length > 0) {
+    return await weaveExisting(db, userId, codexType, matches[0].id as string, content, embedding, cls, transmissionId);
   }
   return await createChapter(db, userId, codexType, content, embedding, cls, transmissionId);
 }
@@ -365,6 +355,7 @@ async function createChapter(
       codex_type: codexType,
       title: opener.title,
       slug,
+      subject_key: normalizeSubjectKey(cls.chapter_subject || cls.topic_sub || opener.title),
       opening_hook: opener.opening_hook,
       prose_woven: proseWoven,
       closing_reflection: opener.closing_reflection,
