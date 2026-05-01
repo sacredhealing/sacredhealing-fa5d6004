@@ -626,21 +626,27 @@ const AdminMantras = () => {
 
                 {/* Access tier */}
                 <div style={{ background: 'rgba(255,255,255,.015)', border: '1px solid rgba(255,255,255,.06)', borderRadius: 20, padding: 16 }}>
-                  <div className="am-kicker" style={{ marginBottom: 10 }}>Access Level</div>
+                  <div className="am-kicker" style={{ marginBottom: 10 }}>Access Tier</div>
                   <div className="am-radio-row">
-                    <label className={`am-radio-option${!formData.is_premium ? ' active' : ''}`}>
-                      <input type="radio" name="access" checked={!formData.is_premium} onChange={() => setFormData({ ...formData, is_premium: false })} style={{ accentColor: '#D4AF37' }} />
-                      <Unlock size={13} />
-                      <span>Free</span>
-                    </label>
-                    <label className={`am-radio-option${formData.is_premium ? ' active' : ''}`}>
-                      <input type="radio" name="access" checked={formData.is_premium} onChange={() => setFormData({ ...formData, is_premium: true })} style={{ accentColor: '#D4AF37' }} />
-                      <Lock size={13} />
-                      <span style={{ color: formData.is_premium ? '#D4AF37' : undefined }}>Members Only</span>
-                    </label>
+                    {TIER_OPTIONS.map((opt) => {
+                      const active = formData.required_tier === opt.value;
+                      return (
+                        <label key={opt.value} className={`am-radio-option${active ? ' active' : ''}`}>
+                          <input
+                            type="radio"
+                            name="access"
+                            checked={active}
+                            onChange={() => setFormData({ ...formData, required_tier: opt.value, is_premium: opt.value > 0 })}
+                            style={{ accentColor: '#D4AF37' }}
+                          />
+                          {opt.value === 0 ? <Unlock size={13} /> : <Lock size={13} />}
+                          <span style={{ color: active ? '#D4AF37' : undefined }}>{opt.label}</span>
+                        </label>
+                      );
+                    })}
                   </div>
                   <p style={{ fontSize: 11, color: 'rgba(255,255,255,.35)', marginTop: 10, lineHeight: 1.5 }}>
-                    Free mantras are accessible to all users. Members-only mantras require an active Prana-Flow+ subscription.
+                    Free is open to everyone. Prana-Flow unlocks at Rank 1 (€19), Siddha-Quantum at Rank 2 (€45), Akasha-Infinity at Rank 3 (€1111).
                   </p>
                 </div>
 
