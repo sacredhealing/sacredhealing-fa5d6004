@@ -15,6 +15,7 @@ import { chatWithAlchemist } from '@/features/admin-quantum-apothecary-2045/gemi
 import { supabase } from '@/integrations/supabase/client';
 import { StudentSelector } from '@/components/codex/StudentSelector';
 import { getActiveStudentId } from '@/lib/codex/students';
+import { curateTransmission } from '@/lib/codex/curatorClient';
 
 const FrequencyLibrarySection = lazy(() => import('@/features/quantum-apothecary/FrequencyLibrarySection'));
 const ActiveTransmissionsSection = lazy(() => import('@/features/quantum-apothecary/ActiveTransmissionsSection'));
