@@ -607,6 +607,9 @@ export default function AdminQuantumApothecary2045() {
                 </div>
               </div>
             )}
+            <div className="px-3 pt-3 sm:px-5 sm:pt-4">
+              <StudentSelector />
+            </div>
             <div className="custom-scrollbar flex-1 space-y-6 overflow-y-auto px-3 py-4 sm:px-5 sm:py-6">
               {messages.map((msg, i) => (
                 <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`flex w-full min-w-0 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
