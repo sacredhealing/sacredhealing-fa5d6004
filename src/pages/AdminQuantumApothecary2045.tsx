@@ -13,6 +13,8 @@ import type { Activation, NadiScanResult, Message } from '@/features/quantum-apo
 import { ACTIVATIONS, PLANETARY_DATA } from '@/features/quantum-apothecary/constants';
 import { chatWithAlchemist } from '@/features/admin-quantum-apothecary-2045/geminiAlchemistChat';
 import { supabase } from '@/integrations/supabase/client';
+import { StudentSelector } from '@/components/codex/StudentSelector';
+import { getActiveStudentId } from '@/lib/codex/students';
 
 const FrequencyLibrarySection = lazy(() => import('@/features/quantum-apothecary/FrequencyLibrarySection'));
 const ActiveTransmissionsSection = lazy(() => import('@/features/quantum-apothecary/ActiveTransmissionsSection'));
@@ -194,15 +196,18 @@ export default function AdminQuantumApothecary2045() {
       });
       setMessages((prev) => [...prev, { role: 'model', text: response }]);
 
-      // Fire-and-forget: weave this transmission into the Akashic / Portrait Codex.
-      // Classifier auto-routes Akasha (universal teaching) vs Portrait (personal soul-record).
+      // Fire-and-forget: weave this transmission into the right Codex.
+      // - If an active student is selected → routes to that student's chapter (Student Codex).
+      // - Otherwise the classifier auto-routes Akasha (universal) vs Portrait (personal-to-Adam).
       if (user?.id && response?.trim()) {
+        const activeStudentId = getActiveStudentId();
         supabase.functions
           .invoke('akasha-codex-curator', {
             body: {
               source_type: 'apothecary',
               raw_content: response,
               user_prompt: userMsg.text,
+              ...(activeStudentId ? { student_id: activeStudentId } : {}),
             },
           })
           .catch((err) => console.warn('[codex] curator hook failed (non-fatal):', err));
@@ -602,6 +607,9 @@ export default function AdminQuantumApothecary2045() {
                 </div>
               </div>
             )}
+            <div className="px-3 pt-3 sm:px-5 sm:pt-4">
+              <StudentSelector />
+            </div>
             <div className="custom-scrollbar flex-1 space-y-6 overflow-y-auto px-3 py-4 sm:px-5 sm:py-6">
               {messages.map((msg, i) => (
                 <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`flex w-full min-w-0 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>

@@ -9,7 +9,7 @@ import { isAdmin } from "@/lib/codex/api";
 import type { CodexType } from "@/lib/codex/types";
 
 interface Props {
-  codexType: CodexType;
+  codexType: CodexType | "student";
   title: string;
   subtitle: string;
   children: React.ReactNode;
@@ -133,6 +133,8 @@ export function CodexLayout({ codexType, title, subtitle, children }: Props) {
           >
             {codexType === "akasha"
               ? "Akashic-Neural Archive · 2050"
+              : codexType === "student"
+              ? "Student Soul-Record · Sovereign"
               : "Soul-Record · Sovereign"}
           </div>
           <h1
