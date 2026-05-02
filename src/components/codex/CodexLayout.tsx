@@ -9,7 +9,7 @@ import { isAdmin } from "@/lib/codex/api";
 import type { CodexType } from "@/lib/codex/types";
 
 interface Props {
-  codexType: CodexType;
+  codexType: CodexType | "student";
   title: string;
   subtitle: string;
   children: React.ReactNode;
