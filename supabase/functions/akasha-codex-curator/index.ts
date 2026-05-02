@@ -67,6 +67,22 @@ interface OpenerResult {
 const slugify = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
 
+// Strip inline biofield/scan readouts that should NEVER appear in the codex.
+// e.g. "Gross Nadis: 61,432 / 72,000 — Sushumna full."
+function stripBiofieldNoise(s: string): string {
+  if (!s) return s;
+  let out = s;
+  // Gross / Sub Nadis with counts
+  out = out.replace(/[\s.;,—-]*\b(Gross|Sub[- ]?)?Nadis?\s*:?\s*[\d,]+\s*\/\s*[\d,]+[^.\n]*\.?/gi, "");
+  // Sushumna/Pingala/Ida "full" or with metrics
+  out = out.replace(/[\s.;,—-]*\b(Sushumna|Pingala|Ida)\b[^.\n]*\b(full|balanced|burning|flammar|brinner|aktiv|active)\b\.?/gi, "");
+  // HRV / Prana index lines
+  out = out.replace(/[\s.;,—-]*\b(HRV|Prana[- ]?index|Blockage)\b\s*[:=]?\s*[\d.,]+[^.\n]*\.?/gi, "");
+  // Active nadi counts inline
+  out = out.replace(/\b\d{1,3}(,\d{3})+\s*\/\s*\d{1,3}(,\d{3})+\b/g, "");
+  return out.replace(/[ \t]+/g, " ").replace(/\s+\./g, ".").replace(/\n{3,}/g, "\n\n").trim();
+}
+
 function normalizeSubjectKey(s: string): string {
   if (!s) return "";
   return s
@@ -145,7 +161,7 @@ async function processOne(
   input: CuratorInput
 ) {
   const sourceType = input.source_type ?? "manual_paste";
-  const content = (input.raw_content ?? "").trim();
+  const content = stripBiofieldNoise((input.raw_content ?? "").trim());
   if (content.length < 20) {
     return { skipped: "content too short" };
   }

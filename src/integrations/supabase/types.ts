@@ -7240,6 +7240,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      strip_biofield_noise: { Args: { t: string }; Returns: string }
       subscribe_to_newsletter: {
         Args: { email_input: string; name_input?: string }
         Returns: Json
