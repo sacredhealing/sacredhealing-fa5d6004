@@ -95,7 +95,10 @@ export async function curateTransmission(
   const toastId = silent ? undefined : toast.loading('Saving to your Codex…');
 
   const doInvoke = () =>
-    supabase.functions.invoke<CuratorEnvelope>('akasha-codex-curator', { body: payload });
+    supabase.functions.invoke('akasha-codex-curator', { body: payload }) as Promise<{
+      data: CuratorEnvelope | null;
+      error: unknown;
+    }>;
 
   try {
     const { data, error } = await doInvoke();
