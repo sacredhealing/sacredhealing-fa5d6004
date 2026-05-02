@@ -37,6 +37,7 @@ import type { VoiceBiofieldResult } from '@/components/VoiceBiofieldScanner';
 import { useSQIFieldContext } from '@/hooks/useSQIFieldContext';
 import { StudentSelector } from '@/components/codex/StudentSelector';
 import { getActiveStudentId } from '@/lib/codex/students';
+import { curateTransmission } from '@/lib/codex/curatorClient';
 
 const NadiScanner = lazy(() => import('@/components/NadiScanner'));
 const VoiceBiofieldScanner = lazy(() => import('@/components/VoiceBiofieldScanner'));
