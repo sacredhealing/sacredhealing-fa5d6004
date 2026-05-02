@@ -1088,19 +1088,18 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
             ...allMsgs,
             { role: 'model', text: finalText, timestamp: Date.now() },
           ]);
-          // Fire-and-forget: weave this transmission into the Akashic Codex.
-          // Non-blocking; the curator self-gates to admins via RLS.
+          // Weave this transmission into the Akashic Codex.
+          // Awaited via curateTransmission so the user always sees a toast confirming
+          // which book/chapter received it (or why it was excluded / failed).
           if (user?.id && finalText?.trim()) {
             const activeStudentId = getActiveStudentId();
-            supabase.functions.invoke('akasha-codex-curator', {
-              body: {
-                source_type: 'apothecary',
-                raw_content: finalText,
-                user_prompt: userMsg.text,
-                source_chat_id: currentSessionId ?? null,
-                ...(activeStudentId ? { student_id: activeStudentId } : {}),
-              },
-            }).catch((err) => console.warn('[codex] curator hook failed (non-fatal):', err));
+            void curateTransmission({
+              source_type: 'apothecary',
+              raw_content: finalText,
+              user_prompt: userMsg.text,
+              source_chat_id: currentSessionId ?? null,
+              ...(activeStudentId ? { student_id: activeStudentId } : {}),
+            });
           }
         },
         imageToSend,
