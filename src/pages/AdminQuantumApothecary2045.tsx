@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { StudentSelector } from '@/components/codex/StudentSelector';
 import { getActiveStudentId } from '@/lib/codex/students';
 import { curateTransmission } from '@/lib/codex/curatorClient';
+import { syncPendingTransmissionsOnce } from '@/lib/codex/codexSync';
 
 const FrequencyLibrarySection = lazy(() => import('@/features/quantum-apothecary/FrequencyLibrarySection'));
 const ActiveTransmissionsSection = lazy(() => import('@/features/quantum-apothecary/ActiveTransmissionsSection'));
@@ -39,6 +40,12 @@ export default function AdminQuantumApothecary2045() {
   const { t } = useTranslation();
   const { user, isLoading: authLoading } = useAuth();
   const { isAdmin, isLoading: adminLoading } = useAdminRole();
+
+  // Sweep any unsynced SQI replies (from any surface) on mount.
+  useEffect(() => {
+    if (user?.id) void syncPendingTransmissionsOnce(user.id);
+  }, [user?.id]);
+
 
   const [scanResult, setScanResult] = useState<NadiScanResult | null>(null);
   const [isScanning, setIsScanning] = useState(false);
