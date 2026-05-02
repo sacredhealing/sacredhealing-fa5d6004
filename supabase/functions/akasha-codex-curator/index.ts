@@ -32,10 +32,12 @@ interface CuratorInput {
   user_prompt?: string;
   source_message_id?: string;
   source_chat_id?: string;
-  routing_override?: "auto" | "force_akasha" | "force_portrait";
+  routing_override?: "auto" | "force_akasha" | "force_portrait" | "force_student";
   original_date?: string;
   source_metadata?: Record<string, unknown>;
   user_id?: string; // only honored when called with service role
+  /** When provided, transmission routes into THIS student's chapter in the student codex. Bypasses akasha/portrait classification. */
+  student_id?: string;
 }
 
 interface ClassifierResult {
