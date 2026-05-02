@@ -72,6 +72,11 @@ const slugify = (s: string) =>
 function stripBiofieldNoise(s: string): string {
   if (!s) return s;
   let out = s;
+  // "Mangosteen Transmitting 24/7", "Lion's Mane (Bioenergetic) Transmitting 24/7" etc.
+  // Remove the substance name + "Transmitting 24/7" repeating list noise.
+  out = out.replace(/(?:[A-Z][\w'’`+\-.()]*(?:\s+[A-Z0-9][\w'’`+\-.()]*){0,5}\s+Transmitting\s+24\s*\/\s*7\s*\.?\s*)+/g, "");
+  // "SQI Online Neural Sync: 98%" / "History Ok" footer-style noise
+  out = out.replace(/\bSQI Online Neural Sync\s*:?\s*\d+\s*%\s*(History\s*Ok)?/gi, "");
   // Gross / Sub Nadis with counts
   out = out.replace(/[\s.;,—-]*\b(Gross|Sub[- ]?)?Nadis?\s*:?\s*[\d,]+\s*\/\s*[\d,]+[^.\n]*\.?/gi, "");
   // Sushumna/Pingala/Ida "full" or with metrics
