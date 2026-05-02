@@ -64,4 +64,13 @@ export interface Message {
   timestamp?: number;
   /** Stable id for the in-flight assistant message while streaming */
   id?: string;
+  /**
+   * Codex backfill flag — set to `true` when an assistant message is persisted
+   * and cleared once the curator has accepted it (saved or excluded). The boot-time
+   * sweeper finds messages with this flag still set and replays them, so a Codex
+   * save can never be silently lost (e.g. tab closed mid-stream, network blip).
+   */
+  needs_codex_sync?: boolean;
+  /** Optional student id this assistant reply was routed to (for backfill replay). */
+  codex_student_id?: string | null;
 }
