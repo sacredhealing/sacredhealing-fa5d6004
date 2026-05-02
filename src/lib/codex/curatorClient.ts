@@ -10,7 +10,11 @@
  * PasteTransmissionPanel, etc.) so behaviour stays consistent.
  */
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as supabaseTyped } from '@/integrations/supabase/client';
+
+// Cast to any — the generated Database types choke on deeply-nested codex tables
+// (TS2589). All queries here are well-known reads against codex_chapters / students.
+const supabase = supabaseTyped as any;
 
 type CodexType = 'akasha' | 'portrait';
 
