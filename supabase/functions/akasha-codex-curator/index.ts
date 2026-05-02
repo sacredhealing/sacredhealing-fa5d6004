@@ -153,6 +153,13 @@ async function processOne(
   // 1. Embed once — used for classification routing & chapter matching
   const embedding = await embedText(content);
 
+  // 1b. STUDENT ROUTING — if a student_id is supplied, the transmission belongs to that
+  // student's evolving chapter inside the student codex. Skip akasha/portrait classification entirely.
+  if (input.student_id) {
+    const out = await processForStudent(db, userId, input, content, embedding);
+    return out;
+  }
+
   // 2. Classify with Gemini Flash (or honor override)
   let classification: ClassifierResult;
   if (input.routing_override === "force_akasha") {
