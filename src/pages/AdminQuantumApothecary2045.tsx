@@ -196,21 +196,16 @@ export default function AdminQuantumApothecary2045() {
       });
       setMessages((prev) => [...prev, { role: 'model', text: response }]);
 
-      // Fire-and-forget: weave this transmission into the right Codex.
-      // - If an active student is selected → routes to that student's chapter (Student Codex).
-      // - Otherwise the classifier auto-routes Akasha (universal) vs Portrait (personal-to-Adam).
+      // Weave this transmission into the right Codex with a visible toast so the
+      // user always knows where it landed (Akasha / Portrait / Student / excluded / failed).
       if (user?.id && response?.trim()) {
         const activeStudentId = getActiveStudentId();
-        supabase.functions
-          .invoke('akasha-codex-curator', {
-            body: {
-              source_type: 'apothecary',
-              raw_content: response,
-              user_prompt: userMsg.text,
-              ...(activeStudentId ? { student_id: activeStudentId } : {}),
-            },
-          })
-          .catch((err) => console.warn('[codex] curator hook failed (non-fatal):', err));
+        void curateTransmission({
+          source_type: 'apothecary',
+          raw_content: response,
+          user_prompt: userMsg.text,
+          ...(activeStudentId ? { student_id: activeStudentId } : {}),
+        });
       }
     } catch (e) {
       const code = e instanceof Error ? e.message : '';
