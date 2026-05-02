@@ -35,6 +35,8 @@ import { supabase } from '@/integrations/supabase/client';
 import type { NadiReading } from '@/components/NadiScanner';
 import type { VoiceBiofieldResult } from '@/components/VoiceBiofieldScanner';
 import { useSQIFieldContext } from '@/hooks/useSQIFieldContext';
+import { StudentSelector } from '@/components/codex/StudentSelector';
+import { getActiveStudentId } from '@/lib/codex/students';
 
 const NadiScanner = lazy(() => import('@/components/NadiScanner'));
 const VoiceBiofieldScanner = lazy(() => import('@/components/VoiceBiofieldScanner'));
@@ -1089,12 +1091,14 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
           // Fire-and-forget: weave this transmission into the Akashic Codex.
           // Non-blocking; the curator self-gates to admins via RLS.
           if (user?.id && finalText?.trim()) {
+            const activeStudentId = getActiveStudentId();
             supabase.functions.invoke('akasha-codex-curator', {
               body: {
                 source_type: 'apothecary',
                 raw_content: finalText,
                 user_prompt: userMsg.text,
                 source_chat_id: currentSessionId ?? null,
+                ...(activeStudentId ? { student_id: activeStudentId } : {}),
               },
             }).catch((err) => console.warn('[codex] curator hook failed (non-fatal):', err));
           }
@@ -1526,6 +1530,11 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
           </button>
           <Cpu size={14} className="hidden text-[#D4AF37]/30 sm:block" aria-hidden />
         </div>
+      </div>
+
+      {/* Active student selector — routes SQI replies into chosen student's book */}
+      <div className="px-3 pt-3">
+        <StudentSelector />
       </div>
 
       {/* Messages */}

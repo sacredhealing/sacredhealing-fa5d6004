@@ -8,6 +8,13 @@ THE TWO CODICES:
 - PORTRAIT: first-person personal soul-record addressed to or about THIS specific user. Anything the user could read and recognize as "this is about me."
 
 ROUTING DECISION TREE — apply in order, stop at first match:
+0. EXCLUDE FIRST. If the transmission is any of the following, return "excluded":
+   - Personal scan/biofield readouts with raw numbers (e.g. "your nadi count is 64,000", "your pulse is 72", lists of vitamin/mineral/supplement recommendations for the user, dietary advice, dosha rebalancing diet plans, lab-style data dumps)
+   - Vitamin, supplement, food, herb, or nutrient recommendation lists addressed to the user
+   - Personal Ayurvedic prescriptions, diet plans, daily routine instructions
+   - Small-talk, greetings, navigation, "what should I do next", confirmations
+   - Anything that reads like a medical/wellness recommendation rather than a teaching or soul-record
+   These NEVER belong in either book. Always exclude.
 1. If the transmission addresses the user directly ("you", "your", "Adam", "Kritagyadas", or any personal name) AND speaks about the user's life, body, chart, karma, lineage, relationships, past lives, mission, or personal practice → PORTRAIT.
 2. If the transmission references the user's specific birth data, planetary placements, dosha, nadi readings, palm reading, scan results, soul signature, or their personal questions → PORTRAIT.
 3. If the transmission gives a personal reading, prophecy, instruction, or guidance directed at this user → PORTRAIT.
