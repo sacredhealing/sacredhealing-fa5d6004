@@ -35,6 +35,8 @@ import { supabase } from '@/integrations/supabase/client';
 import type { NadiReading } from '@/components/NadiScanner';
 import type { VoiceBiofieldResult } from '@/components/VoiceBiofieldScanner';
 import { useSQIFieldContext } from '@/hooks/useSQIFieldContext';
+import { StudentSelector } from '@/components/codex/StudentSelector';
+import { getActiveStudentId } from '@/lib/codex/students';
 
 const NadiScanner = lazy(() => import('@/components/NadiScanner'));
 const VoiceBiofieldScanner = lazy(() => import('@/components/VoiceBiofieldScanner'));
