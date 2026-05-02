@@ -553,6 +553,12 @@ function QuantumApothecaryInner() {
   const { user } = useAuth();
   const { t, language } = useTranslation();
 
+  // On mount, sweep any SQI replies that were never accepted by the curator
+  // (tab closed mid-stream, network blip, etc.) and replay them silently.
+  useEffect(() => {
+    if (user?.id) void syncPendingTransmissionsOnce(user.id);
+  }, [user?.id]);
+
   const [seekerName, setSeekerName] = useState('');
   useEffect(() => {
     if (!user?.id) {
