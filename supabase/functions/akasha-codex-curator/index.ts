@@ -711,3 +711,172 @@ async function detectCrossRefs(
     }
   }
 }
+
+// ============================================================
+// STUDENT pipeline — one chapter per student, all sessions append
+// ============================================================
+async function processForStudent(
+  db: ReturnType<typeof createClient>,
+  practitionerId: string,
+  input: CuratorInput,
+  content: string,
+  embedding: number[],
+) {
+  const studentId = input.student_id!;
+  // Verify the student exists AND belongs to this practitioner.
+  const { data: student, error: stuErr } = await db
+    .from("students")
+    .select("id, name, practitioner_id")
+    .eq("id", studentId)
+    .maybeSingle();
+  if (stuErr) throw stuErr;
+  if (!student) throw new Error("student not found");
+  if (student.practitioner_id !== practitionerId) {
+    throw new Error("student does not belong to this practitioner");
+  }
+
+  const sourceType = input.source_type ?? "manual_paste";
+
+  // Insert the transmission block scoped to the student.
+  const { data: tb, error: tbErr } = await db
+    .from("transmission_blocks")
+    .insert({
+      user_id: practitionerId,
+      student_id: studentId,
+      source_type: sourceType,
+      source_message_id: input.source_message_id,
+      source_chat_id: input.source_chat_id,
+      source_metadata: {
+        ...(input.source_metadata ?? {}),
+        student_name: student.name,
+      },
+      user_prompt: input.user_prompt,
+      raw_content: content,
+      original_date: input.original_date,
+      codex_target: "student",
+      routing_override: input.routing_override ?? "auto",
+      topic_primary: student.name,
+      topic_sub: "session",
+      embedding,
+      classified_at: new Date().toISOString(),
+    })
+    .select("id")
+    .single();
+  if (tbErr) throw tbErr;
+
+  // Find OR create the student's chapter (one chapter per student).
+  const { data: existing } = await db
+    .from("codex_chapters")
+    .select("id, title, opening_hook, prose_woven, closing_reflection, version")
+    .eq("user_id", practitionerId)
+    .eq("codex_type", "student")
+    .eq("student_id", studentId)
+    .limit(1)
+    .maybeSingle();
+
+  const cls: ClassifierResult = {
+    target: "portrait",
+    chapter_subject: student.name,
+    topic_primary: student.name,
+    topic_sub: "session",
+    transmitter: "SQI 2050",
+    akasha_excerpt: null,
+    portrait_excerpt: null,
+    reasoning: "student session",
+  };
+
+  let chapterId: string;
+  if (existing) {
+    chapterId = await weaveExisting(
+      db,
+      practitionerId,
+      "student" as "akasha" | "portrait",
+      existing.id as string,
+      content,
+      embedding,
+      cls,
+      tb.id,
+    );
+  } else {
+    chapterId = await createStudentChapter(db, practitionerId, studentId, student.name, content, embedding, tb.id);
+  }
+
+  return { transmissionIds: [tb.id], chapterIds: [chapterId], classification: cls };
+}
+
+async function createStudentChapter(
+  db: ReturnType<typeof createClient>,
+  practitionerId: string,
+  studentId: string,
+  studentName: string,
+  content: string,
+  embedding: number[],
+  transmissionId: string,
+): Promise<string> {
+  const opener = await generateJson<OpenerResult>(
+    OPENER_PROMPT,
+    `Topic primary: ${studentName}\nTopic sub: living portrait of this seeker\n\nVerbatim transmission:\n<t>${content}</t>`,
+    { temperature: 0.4, maxOutputTokens: 32768 },
+  ).catch(() => ({
+    title: `${studentName} — Living Portrait`,
+    opening_hook: `The unfolding record of ${studentName}'s journey.`,
+    closing_reflection: "The portrait continues to weave.",
+  }));
+
+  const baseSlug = slugify(`${studentName}-portrait`);
+  const slug = `${baseSlug}-${Date.now().toString(36).slice(-4)}`;
+  const proseWoven = `<t>${content}</t>`;
+
+  const { data: maxRow } = await db
+    .from("codex_chapters")
+    .select("order_index")
+    .eq("user_id", practitionerId)
+    .eq("codex_type", "student")
+    .order("order_index", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const nextOrder = ((maxRow?.order_index ?? 0) as number) + 1;
+
+  const { data: ch, error } = await db
+    .from("codex_chapters")
+    .insert({
+      user_id: practitionerId,
+      codex_type: "student",
+      student_id: studentId,
+      title: opener.title || `${studentName} — Living Portrait`,
+      slug,
+      subject_key: studentId,
+      opening_hook: opener.opening_hook,
+      prose_woven: proseWoven,
+      closing_reflection: opener.closing_reflection,
+      embedding,
+      order_index: nextOrder,
+      version: 1,
+      is_auto_generated: true,
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+
+  await db.from("codex_fragments").insert({
+    chapter_id: ch.id,
+    transmission_id: transmissionId,
+    position: 0,
+  });
+
+  await db.from("codex_chapter_versions").insert({
+    chapter_id: ch.id,
+    version: 1,
+    prose_snapshot: proseWoven,
+    trigger_event: "new_transmission",
+  });
+
+  // Image (best-effort)
+  try {
+    await generateChapterImage(db, ch.id, opener.title, studentName, "living portrait", opener.opening_hook, proseWoven);
+  } catch (e) {
+    console.warn(`[curator] image gen failed for student chapter ${ch.id}:`, e);
+  }
+
+  return ch.id as string;
+}
