@@ -1532,6 +1532,11 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         </div>
       </div>
 
+      {/* Active student selector — routes SQI replies into chosen student's book */}
+      <div className="px-3 pt-3">
+        <StudentSelector />
+      </div>
+
       {/* Messages */}
       <div
         className="qa-sqi-chat custom-scrollbar relative flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-3"
