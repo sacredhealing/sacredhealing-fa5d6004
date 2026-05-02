@@ -1659,6 +1659,7 @@ export type Database = {
           parent_id: string | null
           prose_woven: string | null
           slug: string
+          student_id: string | null
           subject_key: string | null
           title: string
           updated_at: string
@@ -1685,6 +1686,7 @@ export type Database = {
           parent_id?: string | null
           prose_woven?: string | null
           slug: string
+          student_id?: string | null
           subject_key?: string | null
           title: string
           updated_at?: string
@@ -1711,6 +1713,7 @@ export type Database = {
           parent_id?: string | null
           prose_woven?: string | null
           slug?: string
+          student_id?: string | null
           subject_key?: string | null
           title?: string
           updated_at?: string
@@ -1723,6 +1726,13 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "codex_chapters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "codex_chapters_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
             referencedColumns: ["id"]
           },
         ]
@@ -5912,6 +5922,48 @@ export type Database = {
         }
         Relationships: []
       }
+      students: {
+        Row: {
+          archived: boolean
+          avatar_url: string | null
+          birth_date: string | null
+          birth_place: string | null
+          birth_time: string | null
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          practitioner_id: string
+          updated_at: string
+        }
+        Insert: {
+          archived?: boolean
+          avatar_url?: string | null
+          birth_date?: string | null
+          birth_place?: string | null
+          birth_time?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          practitioner_id: string
+          updated_at?: string
+        }
+        Update: {
+          archived?: boolean
+          avatar_url?: string | null
+          birth_date?: string | null
+          birth_place?: string | null
+          birth_time?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          practitioner_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       support_requests: {
         Row: {
           category: string
@@ -6205,6 +6257,7 @@ export type Database = {
           source_message_id: string | null
           source_metadata: Json | null
           source_type: string
+          student_id: string | null
           topic_primary: string | null
           topic_sub: string | null
           user_id: string
@@ -6223,6 +6276,7 @@ export type Database = {
           source_message_id?: string | null
           source_metadata?: Json | null
           source_type?: string
+          student_id?: string | null
           topic_primary?: string | null
           topic_sub?: string | null
           user_id: string
@@ -6241,12 +6295,21 @@ export type Database = {
           source_message_id?: string | null
           source_metadata?: Json | null
           source_type?: string
+          student_id?: string | null
           topic_primary?: string | null
           topic_sub?: string | null
           user_id?: string
           user_prompt?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "transmission_blocks_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_achievements: {
         Row: {
