@@ -20,6 +20,7 @@ import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 import { AuthOnlyRoute } from "./components/layout/AuthOnlyRoute";
 import { DebugBanner } from "./components/DebugBanner";
 import { ProfileLanguageSync } from "./components/ProfileLanguageSync";
+import { CodexBackfillSentinel } from "./components/CodexBackfillSentinel";
 import { useAuth } from "@/hooks/useAuth";
 import "@/lib/performance"; // Initialize performance monitoring
 
@@ -426,6 +427,7 @@ function App() {
                     <Sonner />
                     <DebugBanner />
                     <ProfileLanguageSync />
+                    <CodexBackfillSentinel />
                     <Suspense
                       fallback={
                         <div className="min-h-screen flex items-center justify-center bg-[#030303]" style={{ background: "radial-gradient(ellipse at 15% 20%, rgba(30, 27, 75, 0.7) 0%, transparent 50%), #030303" }}>

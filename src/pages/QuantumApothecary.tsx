@@ -38,6 +38,7 @@ import { useSQIFieldContext } from '@/hooks/useSQIFieldContext';
 import { StudentSelector } from '@/components/codex/StudentSelector';
 import { getActiveStudentId } from '@/lib/codex/students';
 import { curateTransmission } from '@/lib/codex/curatorClient';
+import { syncPendingTransmissionsOnce } from '@/lib/codex/codexSync';
 
 const NadiScanner = lazy(() => import('@/components/NadiScanner'));
 const VoiceBiofieldScanner = lazy(() => import('@/components/VoiceBiofieldScanner'));
@@ -551,6 +552,12 @@ function QuantumApothecaryInner() {
   const location = useLocation();
   const { user } = useAuth();
   const { t, language } = useTranslation();
+
+  // On mount, sweep any SQI replies that were never accepted by the curator
+  // (tab closed mid-stream, network blip, etc.) and replay them silently.
+  useEffect(() => {
+    if (user?.id) void syncPendingTransmissionsOnce(user.id);
+  }, [user?.id]);
 
   const [seekerName, setSeekerName] = useState('');
   useEffect(() => {
@@ -1085,21 +1092,56 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         async () => {
           setIsTyping(false);
           const finalText = streamAccumRef.current;
-          await persistMessages([
-            ...allMsgs,
-            { role: 'model', text: finalText, timestamp: Date.now() },
-          ]);
+          const activeStudentId = getActiveStudentId();
+          // Persist the assistant reply with a `needs_codex_sync` flag so that even if
+          // the curator call below is lost (page unmount, network blip, etc.) the boot-time
+          // sweeper will replay it. The flag is cleared once the curator confirms.
+          const assistantMsg: Message = {
+            role: 'model',
+            text: finalText,
+            timestamp: Date.now(),
+            id: streamMsgId,
+            needs_codex_sync: !!(user?.id && finalText?.trim()),
+            codex_student_id: activeStudentId ?? null,
+          };
+          const persistedMessages = [...allMsgs, assistantMsg];
+          await persistMessages(persistedMessages);
           // Weave this transmission into the Akashic Codex.
-          // Awaited via curateTransmission so the user always sees a toast confirming
-          // which book/chapter received it (or why it was excluded / failed).
           if (user?.id && finalText?.trim()) {
-            const activeStudentId = getActiveStudentId();
+            const sessionIdAtSend = currentSessionId;
             void curateTransmission({
               source_type: 'apothecary',
               raw_content: finalText,
               user_prompt: userMsg.text,
-              source_chat_id: currentSessionId ?? null,
+              source_chat_id: sessionIdAtSend ?? null,
               ...(activeStudentId ? { student_id: activeStudentId } : {}),
+            }).then(async (results) => {
+              const r = results?.[0];
+              if (!r || (!r.ok && !r.excluded)) return;
+              // Curator confirmed — clear the sync flag so the sweeper skips it.
+              try {
+                const sid = sessionIdAtSend ?? currentSessionId;
+                if (!sid) return;
+                const { data: row } = await supabase
+                  .from('sqi_sessions')
+                  .select('messages')
+                  .eq('id', sid)
+                  .maybeSingle();
+                const msgs = (row?.messages as Message[] | undefined) ?? [];
+                let mutated = false;
+                const next = msgs.map((m) => {
+                  if (m.id === streamMsgId && m.needs_codex_sync) {
+                    mutated = true;
+                    return { ...m, needs_codex_sync: false };
+                  }
+                  return m;
+                });
+                if (mutated) {
+                  await supabase.from('sqi_sessions').update({ messages: next }).eq('id', sid);
+                }
+              } catch (e) {
+                console.warn('[codex-sync] failed to clear flag after curator success', e);
+              }
             });
           }
         },
