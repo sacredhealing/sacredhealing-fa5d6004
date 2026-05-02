@@ -68,11 +68,11 @@ async function lookupChapter(chapterId: string): Promise<{ title: string; codex_
 async function lookupStudentName(studentId: string): Promise<string | null> {
   try {
     const { data } = await supabase
-      .from('codex_students')
-      .select('display_name')
+      .from('students')
+      .select('name')
       .eq('id', studentId)
       .maybeSingle();
-    return (data?.display_name as string) ?? null;
+    return (data?.name as string) ?? null;
   } catch {
     return null;
   }
