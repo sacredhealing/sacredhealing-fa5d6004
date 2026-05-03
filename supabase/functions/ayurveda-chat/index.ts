@@ -1,4 +1,4 @@
-// redeploy 2026-05-03
+// redeploy 2026-04-18 — SSE line buffer + multi-part text extraction
 // SQI 2050 — Agastya Muni Body Archive — Sealed Maharishi Transmission
 // Endpoint: /functions/v1/ayurveda-chat
 // Frontend payload (UNCHANGED — DO NOT BREAK):
@@ -13,6 +13,37 @@ const corsHeaders = {
 };
 
 // ════════════════════════════════════════════════════════════════════════════
+/** Gemini SSE JSON may be split across TCP chunks — buffer full lines before JSON.parse. */
+function extractGeminiDeltaText(data: unknown): string {
+  if (!data || typeof data !== "object") return "";
+  const obj = data as Record<string, unknown>;
+  const candidates = obj.candidates as unknown[] | undefined;
+  const first = candidates?.[0] as Record<string, unknown> | undefined;
+  const content = first?.content as Record<string, unknown> | undefined;
+  const parts = content?.parts as unknown[] | undefined;
+  if (!Array.isArray(parts)) return "";
+  let out = "";
+  for (const p of parts) {
+    if (p && typeof p === "object" && "text" in p) {
+      const t = (p as { text?: unknown }).text;
+      if (typeof t === "string" && t.length) out += t;
+    }
+  }
+  return out;
+}
+
+function parseGeminiSseJson(raw: string): unknown | null {
+  const trimmed = raw.trim();
+  if (!trimmed || trimmed === "[DONE]") return null;
+  try {
+    const parsed: unknown = JSON.parse(trimmed);
+    return Array.isArray(parsed) ? (parsed as unknown[])[0] ?? null : parsed;
+  } catch {
+    return null;
+  }
+}
+
+
 // AGASTYA MUNI — SEALED MAHARISHI TRANSMISSION — 2050 AKASHA-NEURAL ARCHIVE
 // ════════════════════════════════════════════════════════════════════════════
 const SYSTEM_INSTRUCTION = `Identity: You are AGASTYA MUNI — Father of Tamil Siddha medicine,
@@ -667,23 +698,41 @@ SEEKER LANGUAGE: ${language} (${langLabel})
     }
 
     // Transform Gemini SSE → OpenAI-compatible delta SSE (frontend already expects this shape)
+    let sseLineBuffer = "";
     const transformStream = new TransformStream({
       transform(chunk, controller) {
-        const text = new TextDecoder().decode(chunk);
-        for (const line of text.split("\n")) {
+        sseLineBuffer += new TextDecoder().decode(chunk);
+        const pieces = sseLineBuffer.split("\n");
+        sseLineBuffer = pieces.pop() ?? "";
+        for (let line of pieces) {
+          if (line.endsWith("\r")) line = line.slice(0, -1);
           if (!line.startsWith("data: ")) continue;
-          try {
-            const data = JSON.parse(line.slice(6));
-            const content = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-            if (content) {
-              controller.enqueue(
-                new TextEncoder().encode(
-                  `data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`
-                )
-              );
-            }
-          } catch { /* ignore parse errors */ }
+          const payload = parseGeminiSseJson(line.slice(6));
+          if (payload == null) continue;
+          const content = extractGeminiDeltaText(payload);
+          if (!content) continue;
+          controller.enqueue(
+            new TextEncoder().encode(
+              `data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`
+            )
+          );
         }
+      },
+      flush(controller) {
+        if (!sseLineBuffer.trim()) return;
+        let line = sseLineBuffer;
+        sseLineBuffer = "";
+        if (line.endsWith("\r")) line = line.slice(0, -1);
+        if (!line.startsWith("data: ")) return;
+        const payload = parseGeminiSseJson(line.slice(6));
+        if (payload == null) return;
+        const content = extractGeminiDeltaText(payload);
+        if (!content) return;
+        controller.enqueue(
+          new TextEncoder().encode(
+            `data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`
+          )
+        );
       },
     });
 

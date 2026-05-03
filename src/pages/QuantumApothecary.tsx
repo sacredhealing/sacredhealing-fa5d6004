@@ -1503,7 +1503,13 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
   const renderChatPanel = () => (
     <div
       className="glass-card relative flex w-full flex-col overflow-hidden"
-      style={{ minHeight: 'calc(100vh - 120px)', maxWidth: '100%' }}
+      style={{
+        /* Cap height so flex-1 + min-h-0 + overflow-y-auto on .qa-sqi-chat can scroll (Android flex quirk). */
+        height: 'calc(100dvh - 11rem)',
+        maxHeight: 'calc(100dvh - 11rem)',
+        minHeight: 'min(520px, calc(100dvh - 11rem))',
+        maxWidth: '100%',
+      }}
     >
       {/* Chat header — matches /admin-quantum-apothecary-2045 SQI strip */}
       <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] bg-white/[0.02] px-3 py-4 sm:px-6">
