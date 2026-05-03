@@ -242,7 +242,7 @@ const JyotishVidya: React.FC = () => {
                   >
                     {t(`jyotishVidya.tiers.${rowKey}.label`)}
                   </span>
-                  {isLocked && tierKey !== 'free' && (
+                  {isLocked && (tierKey as string) !== 'free' && (
                     <Lock size={9} className="ml-auto shrink-0 text-white/25" aria-hidden />
                   )}
                 </div>
