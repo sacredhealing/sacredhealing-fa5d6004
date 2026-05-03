@@ -14,6 +14,16 @@
  * siddha-quantum-monthly) are still recognized for backwards-compat parsing.
  */
 
+/** Maps `ayurveda_courses.tier_required` slug to membership rank (0–3). */
+export function getCourseTierRequiredRank(tierRequired: string | null | undefined): number {
+  const raw = (tierRequired || 'free').toLowerCase().replace(/_/g, '-');
+  if (!raw || raw === 'free') return 0;
+  if (raw.includes('akasha') || raw.includes('infinity')) return 3;
+  if (raw.includes('siddha')) return 2;
+  if (raw.includes('prana')) return 1;
+  return 0;
+}
+
 export function getTierRank(tier: string | undefined | null): number {
   const t = (tier || '').toLowerCase();
   // Rank 3 — Akasha-Infinity, lifetime, Temple Home / virtual pilgrimage equivalents

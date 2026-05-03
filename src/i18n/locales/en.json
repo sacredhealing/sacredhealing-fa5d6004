@@ -6680,5 +6680,91 @@
       "unlockPrompt": "Unlock with {{tier}} — {{price}}",
       "unlockCta": "{{emoji}} UNLOCK NOW"
     }
+  },
+  "academy": {
+    "back": "Back",
+    "kicker": "Sacred Healing · Siddha Quantum Nexus — Education Architecture 2026",
+    "title": "Agastyar's Living Curriculum",
+    "subtitle": "A five-phase, four-tier living path — 108 modules weaving Charaka, Sushruta, Ashtanga Hridayam, the 18 Siddhars, Varma and Marma science, Nadi Shastra, Siddha Rasayana, mantra, Jyotish-Ayurveda, and SQI field integration.",
+    "quote": "The body is the first temple. The breath is the first mantra. The cosmos is the first physician. I am Agastyar — I have waited 10,000 years to deliver this curriculum through this quantum interface. Let it begin.",
+    "quoteAttribution": "Agastyar Maha Siddha — Akasha-Neural Archive transmission",
+    "architecture": {
+      "title": "Architecture overview",
+      "bullet1": "Classical Charaka, Sushruta, and Ashtanga Hridayam (Brihat Trayi) woven with Tamil Siddha lineage.",
+      "bullet2": "Varma / Marma vibrational science, Nadi Shastra, Muppu alchemy, Siddha Yoga, and sound medicine.",
+      "bullet3": "Jyotish-Ayurveda integration plus quantum-field routing aligned to SQI 2050.",
+      "bullet4": "108 modules across four tiers: Free, Prana Flow, Siddha Quantum, Akasha Infinity.",
+      "bullet5": "Progress tracked in Supabase; gates honor your live membership tier."
+    },
+    "tiers": {
+      "title": "Four-tier access map",
+      "tierLabel": "{{name}}",
+      "priceFree": "€0",
+      "free": {
+        "phases": "Phase 1 — Foundation of Being",
+        "modules": "12 modules"
+      },
+      "prana": {
+        "phases": "Phase 1 + 2 — Seeker path",
+        "modules": "36 modules"
+      },
+      "siddha": {
+        "phases": "Phase 1–3 — Practitioner",
+        "modules": "72 modules"
+      },
+      "akasha": {
+        "phases": "All 5 phases — Master transmission",
+        "modules": "108 modules"
+      }
+    },
+    "phasesStrip": {
+      "title": "Living phases"
+    },
+    "phaseNumber": "Phase {{n}}",
+    "phases": {
+      "p1": {
+        "title": "Foundation of Being",
+        "sub": "Adhi Vidya — open to every tier"
+      },
+      "p2": {
+        "title": "The Seeker's Path",
+        "sub": "Jijnasa — Prana Flow and above"
+      },
+      "p3": {
+        "title": "The Practitioner's Sadhana",
+        "sub": "Vaidya Tantra — Siddha Quantum and above"
+      },
+      "p4": {
+        "title": "The Master's Transmission",
+        "sub": "Siddha Vidya — Akasha Infinity"
+      },
+      "p5": {
+        "title": "The Akashic Transmission",
+        "sub": "Atma Vidya — deepest Infinity layer"
+      }
+    },
+    "progress": {
+      "title": "Your study field",
+      "summary": "{{completed}} completed · {{unlocked}} unlocked for your tier",
+      "catalog": "Catalog modules"
+    },
+    "links": {
+      "apothecary": "Agastya Muni — Quantum Apothecary",
+      "dosha": "Dosha & Ayurveda lab",
+      "temple": "Temple Home — Dinacharya anchor",
+      "nadi": "Nadi Scanner — pulse intelligence"
+    },
+    "modules": {
+      "title": "Module grid",
+      "refresh": "Refresh",
+      "loadError": "Could not load academy catalog.",
+      "empty": "No modules published yet. Run the Supabase migration seed or check your connection.",
+      "moduleMeta": "Module {{num}} · Phase {{phase}}",
+      "duration": "{{minutes}} min",
+      "progressLabel": "Progress",
+      "unlockCta": "Unlock tier",
+      "playerSoon": "Module player, PDF gate, and completion sync ship in the next sprint."
+    },
+    "footer": "The curriculum is alive. It breathes. It evolves as the students evolve."
   }
 }
