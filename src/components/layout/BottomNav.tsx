@@ -59,7 +59,7 @@ function getActiveNavTo(pathname: string): string | null {
     },
     {
       to: '/agastyar-academy',
-      patterns: ['/agastyar-academy'],
+      patterns: ['/agastyar-academy', '/agastyar-academy/module'],
     },
     {
       to: '/explore',

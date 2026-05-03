@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -12,8 +12,7 @@ import {
   Leaf,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useAyurvedaProgress, type AyurvedaCourseRow } from '@/hooks/useAyurvedaProgress';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useMembership } from '@/hooks/useMembership';
 import {
@@ -22,24 +21,6 @@ import {
   hasFeatureAccess,
   FEATURE_TIER,
 } from '@/lib/tierAccess';
-
-export interface AyurvedaCourseRow {
-  id: string;
-  module_number: number;
-  phase: number;
-  title: string;
-  description: string | null;
-  tier_required: string | null;
-  duration_minutes: number | null;
-  content_type: string | null;
-  content_url: string | null;
-}
-
-interface ProgressRow {
-  module_id: string;
-  completed: boolean;
-  progress_percent: number | null;
-}
 
 function tierLabelKey(tierSlug: string): string {
   const s = (tierSlug || 'free').toLowerCase();
@@ -60,60 +41,12 @@ function tierPriceKey(tierSlug: string): string | null {
 const AgastyarAcademy: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { isAdmin } = useAdminRole();
   const { tier, loading: membershipLoading, settled } = useMembership();
 
-  const [courses, setCourses] = useState<AyurvedaCourseRow[]>([]);
-  const [progressByModuleId, setProgressByModuleId] = useState<Record<string, ProgressRow>>({});
-  const [loadingData, setLoadingData] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
-
-  const loadCatalog = useCallback(async () => {
-    setLoadingData(true);
-    setLoadError(null);
-    try {
-      const { data: courseRows, error: cErr } = await supabase
-        .from('ayurveda_courses')
-        .select(
-          'id, module_number, phase, title, description, tier_required, duration_minutes, content_type, content_url',
-        )
-        .order('module_number', { ascending: true });
-      if (cErr) throw cErr;
-      setCourses((courseRows || []) as AyurvedaCourseRow[]);
-
-      if (user?.id) {
-        const { data: progRows, error: pErr } = await supabase
-          .from('user_course_progress')
-          .select('module_id, completed, progress_percent')
-          .eq('user_id', user.id);
-        if (pErr) throw pErr;
-        const map: Record<string, ProgressRow> = {};
-        (progRows || []).forEach((row: ProgressRow & { module_id: string }) => {
-          map[row.module_id] = {
-            module_id: row.module_id,
-            completed: row.completed,
-            progress_percent: row.progress_percent,
-          };
-        });
-        setProgressByModuleId(map);
-      } else {
-        setProgressByModuleId({});
-      }
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e);
-      setLoadError(msg);
-      setCourses([]);
-    } finally {
-      setLoadingData(false);
-    }
-  }, [user?.id]);
-
-  useEffect(() => {
-    if (!membershipLoading && settled) {
-      void loadCatalog();
-    }
-  }, [loadCatalog, membershipLoading, settled]);
+  const membershipReady = !membershipLoading && settled;
+  const { courses, progressByModuleId, loading: loadingData, error: loadError, refresh } =
+    useAyurvedaProgress(membershipReady);
 
   const phases = useMemo(
     () => [
@@ -357,7 +290,7 @@ const AgastyarAcademy: React.FC = () => {
             </h2>
             <button
               type="button"
-              onClick={() => void loadCatalog()}
+              onClick={() => void refresh()}
               className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/40 underline-offset-4 hover:text-[#D4AF37] hover:underline"
             >
               {t('academy.modules.refresh')}
@@ -461,7 +394,12 @@ const AgastyarAcademy: React.FC = () => {
                         <ExternalLink size={14} aria-hidden />
                       </button>
                     ) : (
-                      <p className="text-[10px] leading-relaxed text-white/35">{t('academy.modules.playerSoon')}</p>
+                      <Link
+                        to={`/agastyar-academy/module/${c.id}`}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 py-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20"
+                      >
+                        {t('academy.modules.openModule')}
+                      </Link>
                     )}
                   </div>
                 );

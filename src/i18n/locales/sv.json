@@ -6356,7 +6356,29 @@
       "duration": "{{minutes}} min",
       "progressLabel": "Framsteg",
       "unlockCta": "Lås upp nivå",
-      "playerSoon": "Modulspelare, PDF-grind och synkad completion kommer i nästa sprint."
+      "openModule": "Öppna modul"
+    },
+    "modulePlayer": {
+      "backHub": "Tillbaka till akademin",
+      "notFound": "Modulen hittades inte.",
+      "lockedBody": "Din nuvarande nivå omfattar inte denna modul ännu. Uppgradera för att låsa upp hela vägen.",
+      "unlock": "Visa uppgradering",
+      "noMedia": "Media för denna modul visas när den publiceras (video-URL, PDF eller ljud).",
+      "openContent": "Öppna lektion",
+      "pdfSection": "Läsning",
+      "downloadPdf": "Öppna PDF",
+      "audioSection": "Ljudtransmission",
+      "notesLabel": "Sadhana-anteckningar",
+      "notesPlaceholder": "Reflektioner, recept eller påminnelser — sparas till din profil.",
+      "saving": "Sparar…",
+      "markComplete": "Markera som klar",
+      "alreadyComplete": "Klar",
+      "completedBadge": "Klar",
+      "nextModule": "Nästa modul",
+      "endOfReleased": "Du är vid den senast släppta modulen i katalogen.",
+      "toastComplete": "Modul markerad som klar.",
+      "toastCompleteError": "Kunde inte spara slutförande.",
+      "toastNotesError": "Kunde inte spara anteckningar."
     },
     "footer": "Curriculum är levande. Det andas. Det utvecklas när eleverna utvecklas."
   }

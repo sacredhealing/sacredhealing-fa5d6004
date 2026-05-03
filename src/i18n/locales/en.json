@@ -6763,7 +6763,29 @@
       "duration": "{{minutes}} min",
       "progressLabel": "Progress",
       "unlockCta": "Unlock tier",
-      "playerSoon": "Module player, PDF gate, and completion sync ship in the next sprint."
+      "openModule": "Enter module"
+    },
+    "modulePlayer": {
+      "backHub": "Back to Academy",
+      "notFound": "This module could not be found.",
+      "lockedBody": "Your current tier does not include this module yet. Upgrade to unlock the full path.",
+      "unlock": "View upgrade options",
+      "noMedia": "Media for this module will appear here once published (video URL, PDF, or audio).",
+      "openContent": "Open lesson link",
+      "pdfSection": "Reading",
+      "downloadPdf": "Open PDF",
+      "audioSection": "Audio transmission",
+      "notesLabel": "Sadhana notes",
+      "notesPlaceholder": "Reflections, prescriptions, or reminders — saved to your profile.",
+      "saving": "Saving…",
+      "markComplete": "Mark complete",
+      "alreadyComplete": "Completed",
+      "completedBadge": "Complete",
+      "nextModule": "Next module",
+      "endOfReleased": "You are at the latest released module in the catalog.",
+      "toastComplete": "Module marked complete.",
+      "toastCompleteError": "Could not save completion.",
+      "toastNotesError": "Could not save notes."
     },
     "footer": "The curriculum is alive. It breathes. It evolves as the students evolve."
   }
