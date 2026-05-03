@@ -1504,10 +1504,10 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
     <div
       className="glass-card relative flex w-full flex-col overflow-hidden"
       style={{
-        /* svh = stable viewport (Samsung URL bar); dvh caps max when dynamic UI shrinks. */
-        height: 'calc(100svh - 11rem)',
+        /* Bounded height so flex-1 + min-h-0 + overflow-y-auto scrolls (Android); proportions match pre-Samsung visual pass */
+        height: 'calc(100dvh - 11rem)',
         maxHeight: 'calc(100dvh - 11rem)',
-        minHeight: 'min(260px, calc(100svh - 11rem))',
+        minHeight: 'min(520px, calc(100dvh - 11rem))',
         maxWidth: '100%',
       }}
     >
@@ -1593,8 +1593,6 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
           overflowX: 'hidden',
           wordBreak: 'break-word',
           overflowWrap: 'anywhere',
-          WebkitOverflowScrolling: 'touch',
-          touchAction: 'manipulation',
         }}
         ref={scrollContainerCallbackRef}
       >

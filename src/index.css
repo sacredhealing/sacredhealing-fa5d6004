@@ -1061,13 +1061,9 @@ html, body, #root {
   overscroll-behavior-y: contain;
 }
 
-/* Quantum Apothecary SQI chat — Samsung Chrome / Internet: pan-y on nested
-   overflow regions often drops momentum; manipulation + compositor layer restores scroll. */
+/* Quantum Apothecary SQI chat — Samsung: prefer manipulation over pan-y for nested overflow */
 .qa-sqi-chat {
   -webkit-overflow-scrolling: touch;
   touch-action: manipulation;
   overscroll-behavior-y: contain;
-  transform: translateZ(0);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
 }
