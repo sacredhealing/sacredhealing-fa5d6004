@@ -12,13 +12,22 @@ interface MembershipStatus {
 }
 
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+// Bump this version whenever tier slugs / canonical mapping change so old cached
+// values (e.g. "siddha-quantum-monthly", "premium-monthly", "lifetime") are discarded.
+const CACHE_VERSION = 'v3';
 
 function getCacheKey(userId: string) {
-  return `sh:membership:${userId}`;
+  return `sh:membership:${CACHE_VERSION}:${userId}`;
 }
 
 function loadFromCache(userId: string): MembershipStatus | null {
   try {
+    // Clean up any older cache versions so paid users never see stale "free".
+    Object.keys(localStorage).forEach((k) => {
+      if (k.startsWith('sh:membership:') && !k.startsWith(`sh:membership:${CACHE_VERSION}:`)) {
+        localStorage.removeItem(k);
+      }
+    });
     const raw = localStorage.getItem(getCacheKey(userId));
     if (!raw) return null;
     const { data, expiresAt } = JSON.parse(raw);
