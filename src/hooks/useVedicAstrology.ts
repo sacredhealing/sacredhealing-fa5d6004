@@ -80,16 +80,27 @@ export const useVedicAstrology = () => {
     // Admins have access to all tiers
     if (isAdmin) return true;
 
-    // Check membership-based eligibility FIRST (no database dependency)
-    const membershipEligibility: Record<string, string[]> = {
-      'free': ['basic'],
-      'premium-monthly': ['basic', 'premium'],
-      'premium-annual': ['basic', 'premium'],
-      'lifetime': ['basic', 'premium', 'master'],
-    };
+    // Check membership-based eligibility FIRST (no database dependency).
+    // Uses substring matching so every Stripe / admin slug variant is honored
+    // (premium-monthly, prana-flow, prana-monthly, siddha-quantum, siddha-quantum-monthly,
+    // akasha-infinity, akasha_infinity, lifetime, etc.).
+    const t = (membershipTier || '').toLowerCase();
+    let rank = 0; // 0=free, 1=Prana-Flow, 2=Siddha-Quantum, 3=Akasha-Infinity/Lifetime
+    if (t.includes('akasha') || t.includes('life')) rank = 3;
+    else if (t.includes('siddha')) rank = 2;
+    else if (
+      t.includes('prana') ||
+      t.includes('premium') ||
+      t.includes('month') ||
+      t.includes('annual') ||
+      t.includes('year')
+    ) rank = 1;
 
-    const eligibleTiers = membershipEligibility[membershipTier || 'free'] || [];
-    if (eligibleTiers.includes(tierLevel)) return true;
+    // Vedic tier mapping: basic = rank 1+, premium = rank 2+, master = rank 3
+    // Vedic tier mapping: basic = free+, premium = Prana-Flow+, master = Akasha-Infinity
+    if (tierLevel === 'basic') return true;
+    if (tierLevel === 'premium' && rank >= 1) return true;
+    if (tierLevel === 'master' && rank >= 3) return true;
 
     // Then check explicit access grants from database
     const access = userAccess.find(a => a.tier_level === tierLevel);
