@@ -97,8 +97,9 @@ export const useVedicAstrology = () => {
     ) rank = 1;
 
     // Vedic tier mapping: basic = rank 1+, premium = rank 2+, master = rank 3
-    if (tierLevel === 'basic' && rank >= 1) return true;
-    if (tierLevel === 'premium' && rank >= 2) return true;
+    // Vedic tier mapping: basic = free+, premium = Prana-Flow+, master = Akasha-Infinity
+    if (tierLevel === 'basic') return true;
+    if (tierLevel === 'premium' && rank >= 1) return true;
     if (tierLevel === 'master' && rank >= 3) return true;
 
     // Then check explicit access grants from database
