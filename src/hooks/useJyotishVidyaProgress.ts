@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as supabaseTyped } from '@/integrations/supabase/client';
+const supabase = supabaseTyped as unknown as { from: (t: string) => any };
 import { useAuth } from '@/hooks/useAuth';
 
 export interface JyotishModuleRow {
