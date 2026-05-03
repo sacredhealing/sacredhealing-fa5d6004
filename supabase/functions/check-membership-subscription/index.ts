@@ -258,18 +258,29 @@ serve(async (req) => {
 
     if (subscriptions.data.length > 0) {
       hasActiveSub = true;
-      const subscription = subscriptions.data[0];
-      subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-      
-      // Get the product ID to determine tier
-      const productId = subscription.items.data[0].price.product as string;
-      tierSlug = PRODUCT_TO_TIER[productId] || 'premium-monthly';
-      
-      logStep("Active subscription found", { 
-        subscriptionId: subscription.id, 
-        productId,
+      // Pick the highest-rank subscription if multiple exist
+      let chosen = subscriptions.data[0];
+      let chosenSlug = 'premium-monthly';
+      let chosenRank = -1;
+      for (const sub of subscriptions.data) {
+        const priceId = sub.items.data[0].price.id as string;
+        const productId = sub.items.data[0].price.product as string;
+        const slug = PRICE_TO_TIER[priceId] || PRODUCT_TO_TIER[productId] || 'premium-monthly';
+        const rank = tierSlugRank(slug);
+        if (rank > chosenRank) {
+          chosenRank = rank;
+          chosen = sub;
+          chosenSlug = slug;
+        }
+      }
+      tierSlug = chosenSlug;
+      subscriptionEnd = new Date(chosen.current_period_end * 1000).toISOString();
+      logStep("Active subscription found", {
+        subscriptionId: chosen.id,
+        priceId: chosen.items.data[0].price.id,
+        productId: chosen.items.data[0].price.product,
         tierSlug,
-        endDate: subscriptionEnd 
+        endDate: subscriptionEnd
       });
     } else {
       // Check for one-time purchases (lifetime)
