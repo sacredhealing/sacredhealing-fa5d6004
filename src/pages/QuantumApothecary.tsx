@@ -1504,10 +1504,10 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
     <div
       className="glass-card relative flex w-full flex-col overflow-hidden"
       style={{
-        /* Cap height so flex-1 + min-h-0 + overflow-y-auto on .qa-sqi-chat can scroll (Android flex quirk). */
-        height: 'calc(100dvh - 11rem)',
+        /* svh = stable viewport (Samsung URL bar); dvh caps max when dynamic UI shrinks. */
+        height: 'calc(100svh - 11rem)',
         maxHeight: 'calc(100dvh - 11rem)',
-        minHeight: 'min(520px, calc(100dvh - 11rem))',
+        minHeight: 'min(260px, calc(100svh - 11rem))',
         maxWidth: '100%',
       }}
     >
@@ -1593,6 +1593,8 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
           overflowX: 'hidden',
           wordBreak: 'break-word',
           overflowWrap: 'anywhere',
+          WebkitOverflowScrolling: 'touch',
+          touchAction: 'manipulation',
         }}
         ref={scrollContainerCallbackRef}
       >
@@ -1697,9 +1699,9 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         </button>
       )}
 
-      {/* Chat input — sticky bottom */}
+      {/* Composer: flex sibling (not sticky) — sticky inside overflow-hidden flex confuses Samsung/WebKit touch routing */}
       <div
-        className="sticky bottom-0 border-t border-white/[0.06] bg-[#050505]/80 p-4 backdrop-blur-xl sm:p-6"
+        className="shrink-0 border-t border-white/[0.06] bg-[#050505]/80 p-4 backdrop-blur-xl sm:p-6"
         style={isChatFullscreen ? { paddingBottom: 'env(safe-area-inset-bottom, 16px)' } : undefined}
       >
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
@@ -1803,7 +1805,10 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
      MAIN RENDER — SQI-2050 Visual Layer
      ══════════════════════════════════════════════════════ */
   return (
-    <div className="relative min-h-screen text-white/90 overflow-x-hidden pb-24" style={{ background: '#050505', overscrollBehavior: 'none', position: 'relative' }}>
+    <div
+      className="relative min-h-screen text-white/90 overflow-x-hidden pb-24"
+      style={{ background: '#050505', position: 'relative', overscrollBehaviorX: 'none' }}
+    >
 
       {/* ── Akasha Deep Space Background ── */}
       <div className="fixed inset-0 z-0 pointer-events-none" style={{
@@ -2325,9 +2330,9 @@ SQI — integrate this scan with my natal chart; cite each chart fact once; use 
           </div>
 
           {/* ════ RIGHT COLUMN — chat first on mobile for readable full-width thread ════ */}
-          <div className="flex flex-col gap-5">
+          <div className="flex min-h-0 flex-col gap-5">
             {/* ── Chat Panel (first on small screens) ── */}
-            <div ref={chatPanelRef} className="order-1 w-full min-w-0 lg:order-2">
+            <div ref={chatPanelRef} className="order-1 min-h-0 w-full min-w-0 lg:order-2">
               {renderChatPanel()}
             </div>
 

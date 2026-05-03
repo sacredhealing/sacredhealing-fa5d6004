@@ -1054,10 +1054,20 @@ html, body, #root {
 /* Avoid touch-action on html/body: nested overflow-y regions often stop receiving
    vertical pans when the root claims pan-y (Chrome / Samsung Internet quirk). */
 .overflow-y-auto,
-.qa-sqi-chat,
 .custom-scrollbar,
 .sqi-msgs {
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
   overscroll-behavior-y: contain;
+}
+
+/* Quantum Apothecary SQI chat — Samsung Chrome / Internet: pan-y on nested
+   overflow regions often drops momentum; manipulation + compositor layer restores scroll. */
+.qa-sqi-chat {
+  -webkit-overflow-scrolling: touch;
+  touch-action: manipulation;
+  overscroll-behavior-y: contain;
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
