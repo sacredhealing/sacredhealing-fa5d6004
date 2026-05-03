@@ -16,7 +16,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useMembership } from '@/hooks/useMembership';
-import { useAyurvedaProgress, type AyurvedaCourseRow } from '@/hooks/useAyurvedaProgress';
+import {
+  AYURVEDA_COURSE_SELECT,
+  useAyurvedaProgress,
+  type AyurvedaCourseRow,
+} from '@/hooks/useAyurvedaProgress';
 import {
   getCourseTierRequiredRank,
   getSalesPageForRank,
@@ -86,9 +90,7 @@ const AgastyarModule: React.FC = () => {
     try {
       const { data: row, error: e1 } = await supabase
         .from('ayurveda_courses')
-        .select(
-          'id, module_number, phase, title, description, tier_required, duration_minutes, content_type, content_url, pdf_url, audio_url',
-        )
+        .select(AYURVEDA_COURSE_SELECT)
         .eq('id', id)
         .maybeSingle();
       if (e1) throw e1;
@@ -277,6 +279,9 @@ const AgastyarModule: React.FC = () => {
           <h1 className="mt-2 text-2xl font-black tracking-[-0.04em] text-[#D4AF37] [text-shadow:0_0_14px_rgba(212,175,55,0.22)] sm:text-3xl">
             {module.title}
           </h1>
+          {module.subtitle && (
+            <p className="mt-2 text-sm font-semibold leading-snug text-white/70">{module.subtitle}</p>
+          )}
           {module.description && (
             <p className="mt-4 text-sm leading-relaxed text-white/55">{module.description}</p>
           )}

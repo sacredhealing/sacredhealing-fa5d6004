@@ -7,6 +7,7 @@ export interface AyurvedaCourseRow {
   module_number: number;
   phase: number;
   title: string;
+  subtitle?: string | null;
   description: string | null;
   tier_required: string | null;
   duration_minutes: number | null;
@@ -14,6 +15,9 @@ export interface AyurvedaCourseRow {
   content_url: string | null;
   pdf_url?: string | null;
   audio_url?: string | null;
+  thumbnail_url?: string | null;
+  tags?: string[] | null;
+  is_published?: boolean | null;
 }
 
 export interface ProgressSnapshot {
@@ -23,8 +27,9 @@ export interface ProgressSnapshot {
   notes: string | null;
 }
 
-const COURSE_SELECT =
-  'id, module_number, phase, title, description, tier_required, duration_minutes, content_type, content_url, pdf_url, audio_url';
+/** Columns aligned with `public.ayurveda_courses` + academy migrations */
+export const AYURVEDA_COURSE_SELECT =
+  'id, module_number, phase, title, subtitle, description, tier_required, duration_minutes, content_type, content_url, pdf_url, audio_url, thumbnail_url, tags, is_published';
 
 export function useAyurvedaProgress(enabled = true) {
   const { user } = useAuth();
@@ -40,7 +45,7 @@ export function useAyurvedaProgress(enabled = true) {
     try {
       const { data: courseRows, error: cErr } = await supabase
         .from('ayurveda_courses')
-        .select(COURSE_SELECT)
+        .select(AYURVEDA_COURSE_SELECT)
         .order('module_number', { ascending: true });
       if (cErr) throw cErr;
       setCourses((courseRows || []) as AyurvedaCourseRow[]);
@@ -111,6 +116,7 @@ export function useAyurvedaProgress(enabled = true) {
         completed,
         notes,
         completed_at: completed ? now : null,
+        last_accessed_at: now,
       };
 
       const { error: upErr } = await supabase.from('user_course_progress').upsert(row, {

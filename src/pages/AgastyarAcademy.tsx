@@ -344,6 +344,11 @@ const AgastyarAcademy: React.FC = () => {
                         <h3 className="mt-1 text-base font-black leading-snug tracking-tight text-white/90">
                           {c.title}
                         </h3>
+                        {c.subtitle && (
+                          <p className="mt-1 text-[11px] font-semibold leading-snug text-white/55">
+                            {c.subtitle}
+                          </p>
+                        )}
                       </div>
                       {!allowed && (
                         <Lock className="mt-1 h-5 w-5 shrink-0 text-[#D4AF37]/45" aria-hidden />
