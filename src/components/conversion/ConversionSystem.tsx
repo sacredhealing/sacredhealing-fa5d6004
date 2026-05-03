@@ -47,12 +47,9 @@ const REQUIRED_MEMBERSHIP: Record<PaidTierKey, MembershipTier> = {
 };
 
 export function ConversionProvider({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      {children}
-      <StickyUpgradeBanner />
-    </>
-  );
+  // Sticky upgrade banner removed per request — it was showing for paid members and
+  // the "76 members are inside the Nexus" copy was popping up on every app open.
+  return <>{children}</>;
 }
 
 export function StickyUpgradeBanner() {
