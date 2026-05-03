@@ -354,6 +354,86 @@ export default function SiddhaPortal() {
         </div>
       </div>
 
+      {/* ── JYOTISH VIDYA HERO ── */}
+      <div style={{ position: 'relative', margin: '20px 16px 8px' }}>
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            inset: -14,
+            borderRadius: 32,
+            background: `radial-gradient(60% 60% at 30% 40%, ${cyan(0.32)}, transparent 70%), radial-gradient(60% 60% at 75% 65%, ${gold(0.32)}, transparent 70%)`,
+            filter: 'blur(22px)',
+            animation: 'sqGlowPulse 4s ease-in-out infinite',
+            pointerEvents: 'none',
+            zIndex: 0,
+          }}
+        />
+        <div
+          onClick={() => navigate('/jyotish-vidya')}
+          style={{
+            position: 'relative',
+            zIndex: 1,
+            background: `linear-gradient(135deg, rgba(0,242,254,0.10), rgba(212,175,55,0.05) 60%, rgba(5,5,5,0.6))`,
+            border: `1px solid ${cyan(0.45)}`,
+            borderRadius: 24,
+            padding: '22px 20px 20px',
+            cursor: 'pointer',
+            boxShadow: `0 0 40px ${cyan(0.22)}, 0 0 80px ${gold(0.12)}, inset 0 0 30px rgba(0,242,254,0.06)`,
+          }}
+        >
+          <div style={{ ...LABEL_STYLE, fontSize: 9, color: cyan(0.8), marginBottom: 10 }}>
+            ✦ Vidya · 32 Modules · Bhrigu Oracle
+          </div>
+          <h2 style={{
+            fontFamily: "'Cormorant Garamond',serif",
+            fontSize: '1.85rem',
+            fontWeight: 600,
+            color: white(0.96),
+            lineHeight: 1.1,
+            margin: 0,
+            textShadow: `0 0 18px ${cyan(0.35)}`,
+          }}>
+            Sovereign Jyotish Vidya
+          </h2>
+          <p style={{ ...CARD_DESC, marginTop: 8, marginBottom: 14, color: white(0.62) }}>
+            The full 32-module path of Vedic astrology — from the 9 Grahas to Bhrigu Nadi mastery.
+          </p>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
+            {[
+              { label: 'Free 1–6', color: white(0.55) },
+              { label: 'Prana 7–14', color: green(0.85) },
+              { label: 'Siddha 15–22', color: cyan(0.9) },
+              { label: 'Akasha 23–32', color: gold(0.95) },
+            ].map((t) => (
+              <div key={t.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: t.color, boxShadow: `0 0 8px ${t.color}` }} />
+                <span style={{ ...LABEL_STYLE, fontSize: 8, color: t.color, letterSpacing: '0.25em' }}>{t.label}</span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '10px 18px',
+            borderRadius: 999,
+            background: `linear-gradient(135deg, ${cyan(0.22)}, ${cyan(0.06)})`,
+            border: `1px solid ${cyan(0.5)}`,
+            color: cyan(0.98),
+            fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+            fontSize: 10,
+            fontWeight: 800,
+            letterSpacing: '0.3em',
+            textTransform: 'uppercase',
+          }}>
+            Enter Vidya →
+          </div>
+        </div>
+      </div>
+
       {/* ── SRI YANTRA ── */}
       <div style={{ display: 'flex', justifyContent: 'center', padding: '28px 0 20px' }}>
         <svg width="72" height="72" viewBox="0 0 24 24" fill="none" style={{ animation: 'sqBreathe 7s ease-in-out infinite', opacity: 0.75 }}>
