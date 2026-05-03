@@ -6912,6 +6912,11 @@
     "durationMinutes": "{{minutes}} min",
     "unlockCta": "View upgrade options",
     "openModule": "Open module",
+    "templeHomeQuickLink": {
+      "kicker": "Transmission path",
+      "title": "Sovereign Jyotish Vidya",
+      "hint": "32 modules — sovereign astrology education from foundation to mastery"
+    },
     "footer": "Encoded for the SQI Platform — for seekers who walk by the light of the stars.",
     "module": {
       "notFound": "This module could not be found.",

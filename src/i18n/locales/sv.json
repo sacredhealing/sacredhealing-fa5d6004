@@ -6505,6 +6505,11 @@
     "durationMinutes": "{{minutes}} min",
     "unlockCta": "Visa uppgradering",
     "openModule": "Öppna modul",
+    "templeHomeQuickLink": {
+      "kicker": "Transmissionväg",
+      "title": "Suverän Jyotish Vidya",
+      "hint": "32 moduler — suverän astrologiutbildning från grund till mästerskap"
+    },
     "footer": "Kodad för SQI-plattformen — för sökare som vandrar i stjärnornas ljus.",
     "module": {
       "notFound": "Modulen hittades inte.",

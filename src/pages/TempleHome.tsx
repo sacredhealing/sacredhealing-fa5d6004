@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useTempleBroadcast } from '@/hooks/useTempleBroadcast';
 import { useOfflineAnchorSync, queueAnchorSync } from '@/hooks/useOfflineAnchorSync';
 import { useDailyAnchorReminder } from '@/hooks/useDailyAnchorReminder';
+import { useTranslation } from 'react-i18next';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const SACRED_SITES = [
@@ -645,6 +646,7 @@ Respond with ONLY the transmission text — no labels, no "Here is your transmis
 
 // ─── Main Inner Component ─────────────────────────────────────────────────────
 function TempleHomeInner() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const userName = user?.user_metadata?.full_name ?? user?.email?.split('@')[0] ?? 'Seeker';
@@ -977,6 +979,30 @@ function TempleHomeInner() {
               })}
             </div>
           </GlassCard>
+
+          <button
+            type="button"
+            onClick={() => navigate('/jyotish-vidya')}
+            className="w-full flex items-center justify-between gap-3 px-5 py-3.5 rounded-2xl"
+            style={{ background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)' }}
+          >
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <div
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+                style={{ background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.25)' }}
+              >
+                <Star size={16} className="text-[#D4AF37]/90" aria-hidden />
+              </div>
+              <div className="min-w-0">
+                <div className="text-[8px] font-extrabold tracking-[0.4em] uppercase text-[#D4AF37]/60 mb-0.5">
+                  {t('jyotishVidya.templeHomeQuickLink.kicker')}
+                </div>
+                <div className="truncate text-sm font-bold text-white/85">{t('jyotishVidya.templeHomeQuickLink.title')}</div>
+                <div className="truncate text-[10px] text-white/35">{t('jyotishVidya.templeHomeQuickLink.hint')}</div>
+              </div>
+            </div>
+            <ChevronRight size={14} className="shrink-0 text-[#D4AF37]/45" aria-hidden />
+          </button>
 
           <button onClick={() => navigate('/akasha-infinity')} className="w-full flex items-center justify-between px-5 py-3.5 rounded-2xl" style={{ background: 'rgba(139,92,246,0.05)', border: '1px solid rgba(139,92,246,0.15)' }}>
             <div><div className="text-[8px] font-extrabold tracking-[0.4em] uppercase text-purple-400/60 mb-0.5">Connected System</div><div className="text-sm font-bold text-white/60">Akasha–Infinity</div></div>
