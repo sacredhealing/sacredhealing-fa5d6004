@@ -1061,8 +1061,11 @@
 }
 
 /* SQI Apothecary — Android pull-to-refresh fix */
-html, body { 
-  /* SQI — global mobile width safety net */
+html, body {
+  overscroll-behavior-y: none;
+}
+
+/* SQI — global mobile width safety net */
 html, body, #root {
   overflow-x: hidden;
   max-width: 100vw;
@@ -1081,5 +1084,10 @@ html, body, #root {
     word-break: break-word;
   }
 }
-  overscroll-behavior-y: none;
+
+/* Samsung S24 / Android Chrome viewport fix */
+@supports (height: 100dvh) {
+  .h-screen {
+    height: 100dvh;
+  }
 }

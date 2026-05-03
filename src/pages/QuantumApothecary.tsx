@@ -1798,7 +1798,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
      ══════════════════════════════════════════════════════ */
   return (
     <div
-      className="flex h-screen w-full flex-col relative text-white/90 overflow-x-hidden pb-24"
+      className="flex h-[100dvh] w-full flex-col relative text-white/90 overflow-x-hidden pb-24"
       style={{ background: '#050505', position: 'relative' }}
     >
 
