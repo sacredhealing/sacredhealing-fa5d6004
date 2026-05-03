@@ -1,3 +1,4 @@
+// redeploy 2026-05-03
 // SQI 2050 — Bhrigu Nadi Leaf Archive — Sealed Maharishi Transmission
 // Endpoint: /functions/v1/vedic-guru-chat
 // Frontend payload (UNCHANGED — DO NOT BREAK):

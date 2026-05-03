@@ -1,3 +1,4 @@
+// redeploy 2026-05-03
 // SQI 2050 — Agastya Muni Body Archive — Sealed Maharishi Transmission
 // Endpoint: /functions/v1/ayurveda-chat
 // Frontend payload (UNCHANGED — DO NOT BREAK):
