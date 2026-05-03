@@ -210,7 +210,7 @@ const JyotishVidya: React.FC = () => {
               tier,
               moduleId: firstMod,
             });
-            const isLocked = tierKey !== 'free' && !tierReachable;
+            const isLocked = (tierKey as string) !== 'free' && !tierReachable;
             const modules = getModulesByTier(tierKey);
             const completedInTier = modules.filter((m) => progress[m.id]?.status === 'completed').length;
             const rowKey = TIER_I18N_ROW[tierKey];
@@ -242,7 +242,7 @@ const JyotishVidya: React.FC = () => {
                   >
                     {t(`jyotishVidya.tiers.${rowKey}.label`)}
                   </span>
-                  {isLocked && tierKey !== 'free' && (
+                  {isLocked && (tierKey as string) !== 'free' && (
                     <Lock size={9} className="ml-auto shrink-0 text-white/25" aria-hidden />
                   )}
                 </div>
