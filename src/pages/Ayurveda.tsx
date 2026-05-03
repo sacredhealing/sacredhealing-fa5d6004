@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useMembership } from '@/hooks/useMembership';
 import type { AyurvedaMembershipLevel } from '@/lib/ayurvedaTypes';
+import { getTierRank } from '@/lib/tierAccess';
 
 const Ayurveda = () => {
   const { user, isLoading: authLoading } = useAuth();

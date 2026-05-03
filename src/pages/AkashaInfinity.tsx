@@ -14,7 +14,7 @@ const AkashaInfinity: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  const isLifetime = tier === 'lifetime';
+  const isLifetime = tier === 'akasha-infinity' || tier === 'lifetime';
 
   useEffect(() => {
     const ref = searchParams.get('ref');
