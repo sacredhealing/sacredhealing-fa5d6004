@@ -9,7 +9,7 @@
 // ╚══════════════════════════════════════════════════════════════════╝
 
 import React, { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback, Suspense, lazy } from 'react';
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Zap,
@@ -1502,8 +1502,8 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
      ══════════════════════════════════════════════════════ */
   const renderChatPanel = () => (
     <div
-      className="glass-card relative flex min-h-0 w-full flex-1 flex-col overflow-hidden"
-      style={{ maxWidth: '100%' }}
+      className="glass-card relative flex w-full flex-col overflow-hidden"
+      style={{ minHeight: 'calc(100vh - 120px)', maxWidth: '100%' }}
     >
       {/* Chat header — matches /admin-quantum-apothecary-2045 SQI strip */}
       <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] bg-white/[0.02] px-3 py-4 sm:px-6">
@@ -1587,8 +1587,6 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
           overflowX: 'hidden',
           wordBreak: 'break-word',
           overflowWrap: 'anywhere',
-          WebkitOverflowScrolling: 'touch',
-          touchAction: 'pan-y',
         }}
         ref={scrollContainerCallbackRef}
       >
@@ -1799,10 +1797,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
      MAIN RENDER — SQI-2050 Visual Layer
      ══════════════════════════════════════════════════════ */
   return (
-    <div
-      className="flex h-[100dvh] w-full flex-col relative text-white/90 overflow-x-hidden pb-24"
-      style={{ background: '#050505', position: 'relative' }}
-    >
+    <div className="relative min-h-screen text-white/90 overflow-x-hidden pb-24" style={{ background: '#050505', overscrollBehavior: 'none', position: 'relative' }}>
 
       {/* ── Akasha Deep Space Background ── */}
       <div className="fixed inset-0 z-0 pointer-events-none" style={{
@@ -1830,9 +1825,8 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
       </svg>
 
       {/* ── Main Content ── */}
-      <div className="relative z-10 flex h-screen w-full max-w-[430px] flex-col mx-auto overflow-x-hidden px-2 sm:px-6 py-6">
+      <div className="relative z-10 max-w-7xl mx-auto px-2 sm:px-6 py-6">
 
-        <div className="shrink-0">
         {/* ── Header ── */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
@@ -1861,9 +1855,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         {/* ── Gold divider ── */}
         <div style={{ height:1, background:'linear-gradient(90deg,transparent,rgba(212,175,55,0.3),transparent)', marginBottom:16, borderRadius:1 }} />
 
-        </div>
-
-        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto w-full max-w-none" style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
+        <div className="flex w-full max-w-none flex-col gap-5">
 
           {/* ════ LEFT COLUMN ════ */}
           <div className="space-y-5">
@@ -2327,9 +2319,9 @@ SQI — integrate this scan with my natal chart; cite each chart fact once; use 
           </div>
 
           {/* ════ RIGHT COLUMN — chat first on mobile for readable full-width thread ════ */}
-          <div className="flex min-h-0 flex-1 flex-col gap-5">
+          <div className="flex flex-col gap-5">
             {/* ── Chat Panel (first on small screens) ── */}
-            <div ref={chatPanelRef} className="order-1 flex min-h-0 flex-1 flex-col w-full min-w-0 lg:order-2">
+            <div ref={chatPanelRef} className="order-1 w-full min-w-0 lg:order-2">
               {renderChatPanel()}
             </div>
 
@@ -2622,7 +2614,6 @@ function ScrollToTopButton() {
   if (!show) return null;
   return (
     <button
-      type="button"
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       className="fixed bottom-24 right-4 z-50 w-10 h-10 rounded-full border border-[#D4AF37]/30 bg-[#0a0a0a]/80 backdrop-blur-sm flex items-center justify-center text-[#D4AF37] hover:bg-[#D4AF37]/10 transition shadow-lg"
       aria-label="Scroll to top"
