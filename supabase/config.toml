@@ -11,6 +11,8 @@ project_id = "ssygukfdbtehvtndandn"
     verify_jwt = false
   [functions.ayurveda-chat]
     verify_jwt = false
+  [functions.bhrigu-oracle]
+    verify_jwt = true
   [functions.check-meditation-membership]
     verify_jwt = true
   [functions.check-music-membership]
