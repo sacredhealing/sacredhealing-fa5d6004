@@ -12,11 +12,21 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CHECK-MEMBERSHIP-SUBSCRIPTION] ${step}${detailsStr}`);
 };
 
-// Map Stripe product IDs to tier slugs
+// Map Stripe price IDs to tier slugs (most reliable — matches src/config/tierCheckout.ts)
+const PRICE_TO_TIER: Record<string, string> = {
+  'price_1T8o3YAPsnbrivP056UJqOP7': 'premium-monthly',   // Prana-Flow €19/mo
+  'price_1T8o3jAPsnbrivP0uZKR33EY': 'siddha-quantum',    // Siddha-Quantum €45/mo
+  'price_1T8o3kAPsnbrivP0m8bOzl3M': 'akasha-infinity',   // Akasha-Infinity €1111
+};
+
+// Map Stripe product IDs to tier slugs (fallback)
 const PRODUCT_TO_TIER: Record<string, string> = {
   'prod_TjLbPzCXMYBGOj': 'premium-monthly',
   'prod_TjLb4I9DVWijtL': 'premium-annual',
   'prod_TjLb4aw139HcPU': 'lifetime',
+  'prod_U727beGFLeQZUc': 'premium-monthly',   // Prana-Flow
+  'prod_U7271mhrwFlfTX': 'siddha-quantum',    // Siddha-Quantum
+  'prod_U727siddhaInfinity': 'akasha-infinity',
 };
 
 // Map admin-granted tier column values → canonical tier slugs (must match getTierRank() in app)
