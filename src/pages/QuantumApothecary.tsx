@@ -17,7 +17,7 @@ import {
   Info, X, ArrowLeft, Camera, Mic, ChevronUp, ChevronDown,
 } from 'lucide-react';
 import { Activation, Message } from '@/features/quantum-apothecary/types';
-import 
+import {
   ALL_ACTIVATIONS,
   matchScanToActivations,
   matchActivationsToScan,
