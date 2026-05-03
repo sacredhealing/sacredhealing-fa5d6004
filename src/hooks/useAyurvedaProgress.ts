@@ -20,16 +20,41 @@ export interface AyurvedaCourseRow {
   is_published?: boolean | null;
 }
 
+/** Alias for consumers mirroring the Downloads hook name */
+export type AyurvedaModule = AyurvedaCourseRow;
+
 export interface ProgressSnapshot {
   module_id: string;
   completed: boolean;
   progress_percent: number | null;
   notes: string | null;
+  bookmarked?: boolean | null;
+  last_accessed_at?: string | null;
+}
+
+export interface AyurvedaStats {
+  totalModules: number;
+  completedModules: number;
+  currentPhase: number;
+  completionPercent: number;
+  bookmarkedModules: number;
+  totalMinutesLearned: number;
 }
 
 /** Columns aligned with `public.ayurveda_courses` + academy migrations */
 export const AYURVEDA_COURSE_SELECT =
   'id, module_number, phase, title, subtitle, description, tier_required, duration_minutes, content_type, content_url, pdf_url, audio_url, thumbnail_url, tags, is_published';
+
+const PROGRESS_SELECT =
+  'module_id, completed, progress_percent, notes, bookmarked, last_accessed_at';
+
+type ProgressRowDb = {
+  completed?: boolean;
+  progress_percent?: number | null;
+  notes?: string | null;
+  bookmarked?: boolean | null;
+  completed_at?: string | null;
+};
 
 export function useAyurvedaProgress(enabled = true) {
   const { user } = useAuth();
@@ -53,7 +78,7 @@ export function useAyurvedaProgress(enabled = true) {
       if (user?.id) {
         const { data: progRows, error: pErr } = await supabase
           .from('user_course_progress')
-          .select('module_id, completed, progress_percent, notes')
+          .select(PROGRESS_SELECT)
           .eq('user_id', user.id);
         if (pErr) throw pErr;
         const map: Record<string, ProgressSnapshot> = {};
@@ -90,14 +115,16 @@ export function useAyurvedaProgress(enabled = true) {
 
       const { data: existing } = await supabase
         .from('user_course_progress')
-        .select('completed, progress_percent, notes')
+        .select('completed, progress_percent, notes, bookmarked')
         .eq('user_id', user.id)
         .eq('module_id', params.moduleId)
         .maybeSingle();
 
-      const prevCompleted = existing?.completed ?? false;
-      const prevPct = existing?.progress_percent ?? 0;
-      const prevNotes = existing?.notes ?? null;
+      const prev = existing as ProgressRowDb | null;
+      const prevCompleted = prev?.completed ?? false;
+      const prevPct = prev?.progress_percent ?? 0;
+      const prevNotes = prev?.notes ?? null;
+      const prevBookmarked = prev?.bookmarked ?? false;
 
       const completed =
         params.completed !== undefined ? params.completed : prevCompleted;
@@ -115,6 +142,7 @@ export function useAyurvedaProgress(enabled = true) {
         progress_percent,
         completed,
         notes,
+        bookmarked: prevBookmarked,
         completed_at: completed ? now : null,
         last_accessed_at: now,
       };
@@ -124,13 +152,15 @@ export function useAyurvedaProgress(enabled = true) {
       });
       if (upErr) throw upErr;
 
-      setProgressByModuleId((prev) => ({
-        ...prev,
+      setProgressByModuleId((prevMap) => ({
+        ...prevMap,
         [params.moduleId]: {
           module_id: params.moduleId,
           completed,
           progress_percent,
           notes,
+          bookmarked: prevBookmarked,
+          last_accessed_at: now,
         },
       }));
     },
@@ -144,20 +174,120 @@ export function useAyurvedaProgress(enabled = true) {
     [upsertProgress],
   );
 
+  const updateProgress = useCallback(
+    async (moduleId: string, percent: number) => {
+      await upsertProgress({ moduleId, progress_percent: percent });
+    },
+    [upsertProgress],
+  );
+
+  const toggleBookmark = useCallback(
+    async (moduleId: string) => {
+      if (!user?.id) return;
+
+      const { data: existing } = await supabase
+        .from('user_course_progress')
+        .select('completed, progress_percent, notes, bookmarked, completed_at')
+        .eq('user_id', user.id)
+        .eq('module_id', moduleId)
+        .maybeSingle();
+
+      const prev = existing as ProgressRowDb | null;
+      const nextBookmark = !(prev?.bookmarked ?? false);
+      const completed = prev?.completed ?? false;
+      const progress_percent = prev?.progress_percent ?? 0;
+      const notes = prev?.notes ?? null;
+      const now = new Date().toISOString();
+      const completed_at = completed ? (prev?.completed_at ?? now) : null;
+
+      const row = {
+        user_id: user.id,
+        module_id: moduleId,
+        completed,
+        progress_percent,
+        notes,
+        bookmarked: nextBookmark,
+        completed_at,
+        last_accessed_at: now,
+      };
+
+      const { error: upErr } = await supabase.from('user_course_progress').upsert(row, {
+        onConflict: 'user_id,module_id',
+      });
+      if (upErr) throw upErr;
+
+      setProgressByModuleId((prevMap) => ({
+        ...prevMap,
+        [moduleId]: {
+          module_id: moduleId,
+          completed,
+          progress_percent,
+          notes,
+          bookmarked: nextBookmark,
+          last_accessed_at: now,
+        },
+      }));
+    },
+    [user?.id],
+  );
+
+  const getPhaseModules = useCallback(
+    (phase: number) => courses.filter((c) => c.phase === phase),
+    [courses],
+  );
+
   const completedCount = useMemo(
     () =>
       Object.values(progressByModuleId).filter((p) => p.completed).length,
     [progressByModuleId],
   );
 
+  const stats = useMemo((): AyurvedaStats => {
+    const completedModules = completedCount;
+    const bookmarkedModules = Object.values(progressByModuleId).filter((p) => p.bookmarked).length;
+
+    const completedIds = new Set(
+      Object.entries(progressByModuleId)
+        .filter(([, p]) => p.completed)
+        .map(([id]) => id),
+    );
+
+    let currentPhase = 1;
+    courses.forEach((c) => {
+      if (completedIds.has(c.id) && c.phase > currentPhase) currentPhase = c.phase;
+    });
+
+    const totalMinutesLearned = courses
+      .filter((m) => progressByModuleId[m.id]?.completed)
+      .reduce((acc, m) => acc + (m.duration_minutes ?? 0), 0);
+
+    return {
+      totalModules: courses.length,
+      completedModules,
+      currentPhase,
+      completionPercent:
+        courses.length > 0 ? Math.round((completedModules / courses.length) * 100) : 0,
+      bookmarkedModules,
+      totalMinutesLearned,
+    };
+  }, [courses, completedCount, progressByModuleId]);
+
   return {
     courses,
+    /** Downloads-style alias */
+    modules: courses,
     progressByModuleId,
+    /** Downloads-style: progress keyed by module_id */
+    progress: progressByModuleId,
     loading,
     error,
     refresh,
     upsertProgress,
     markComplete,
+    updateProgress,
+    toggleBookmark,
     completedCount,
+    stats,
+    getPhaseModules,
   };
 }
