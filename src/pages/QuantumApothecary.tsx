@@ -9,7 +9,7 @@
 // ╚══════════════════════════════════════════════════════════════════╝
 
 import React, { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback, Suspense, lazy } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Zap,
@@ -17,7 +17,7 @@ import {
   Info, X, ArrowLeft, Camera, Mic, ChevronUp, ChevronDown,
 } from 'lucide-react';
 import { Activation, Message } from '@/features/quantum-apothecary/types';
-import {
+import 
   ALL_ACTIVATIONS,
   matchScanToActivations,
   matchActivationsToScan,
@@ -1587,6 +1587,8 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
           overflowX: 'hidden',
           wordBreak: 'break-word',
           overflowWrap: 'anywhere',
+          WebkitOverflowScrolling: 'touch',
+          touchAction: 'pan-y',
         }}
         ref={scrollContainerCallbackRef}
       >
@@ -1828,7 +1830,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
       </svg>
 
       {/* ── Main Content ── */}
-      <div className="relative z-10 flex h-screen w-full max-w-[430px] flex-col mx-auto overflow-hidden px-2 sm:px-6 py-6">
+      <div className="relative z-10 flex h-screen w-full max-w-[430px] flex-col mx-auto overflow-x-hidden px-2 sm:px-6 py-6">
 
         <div className="shrink-0">
         {/* ── Header ── */}
@@ -1861,7 +1863,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
 
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto w-full max-w-none">
+        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto w-full max-w-none" style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
 
           {/* ════ LEFT COLUMN ════ */}
           <div className="space-y-5">
