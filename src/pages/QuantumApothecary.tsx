@@ -1502,8 +1502,8 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
      ══════════════════════════════════════════════════════ */
   const renderChatPanel = () => (
     <div
-      className="glass-card relative flex w-full flex-col overflow-hidden"
-      style={{ minHeight: 'calc(100vh - 120px)', maxWidth: '100%' }}
+      className="glass-card relative flex min-h-0 w-full flex-1 flex-col overflow-hidden"
+      style={{ maxWidth: '100%' }}
     >
       {/* Chat header — matches /admin-quantum-apothecary-2045 SQI strip */}
       <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] bg-white/[0.02] px-3 py-4 sm:px-6">
@@ -1798,7 +1798,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
      ══════════════════════════════════════════════════════ */
   return (
     <div
-      className="h-screen flex flex-col relative text-white/90 overflow-x-hidden pb-24"
+      className="flex h-screen w-full flex-col relative text-white/90 overflow-x-hidden pb-24"
       style={{ background: '#050505', position: 'relative' }}
     >
 
@@ -1828,8 +1828,9 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
       </svg>
 
       {/* ── Main Content ── */}
-      <div className="relative z-10 max-w-7xl mx-auto px-2 sm:px-6 py-6">
+      <div className="relative z-10 flex h-screen w-full max-w-[430px] flex-col mx-auto overflow-hidden px-2 sm:px-6 py-6">
 
+        <div className="shrink-0">
         {/* ── Header ── */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
@@ -1858,7 +1859,9 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         {/* ── Gold divider ── */}
         <div style={{ height:1, background:'linear-gradient(90deg,transparent,rgba(212,175,55,0.3),transparent)', marginBottom:16, borderRadius:1 }} />
 
-        <div className="flex w-full max-w-none flex-col gap-5">
+        </div>
+
+        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto w-full max-w-none">
 
           {/* ════ LEFT COLUMN ════ */}
           <div className="space-y-5">
@@ -2322,9 +2325,9 @@ SQI — integrate this scan with my natal chart; cite each chart fact once; use 
           </div>
 
           {/* ════ RIGHT COLUMN — chat first on mobile for readable full-width thread ════ */}
-          <div className="flex flex-col gap-5">
+          <div className="flex min-h-0 flex-1 flex-col gap-5">
             {/* ── Chat Panel (first on small screens) ── */}
-            <div ref={chatPanelRef} className="order-1 w-full min-w-0 lg:order-2">
+            <div ref={chatPanelRef} className="order-1 flex min-h-0 flex-1 flex-col w-full min-w-0 lg:order-2">
               {renderChatPanel()}
             </div>
 
