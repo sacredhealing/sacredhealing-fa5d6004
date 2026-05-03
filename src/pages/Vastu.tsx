@@ -3,6 +3,7 @@ import { VastuTool } from '@/components/vastu/VastuTool';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
 import { Navigate } from 'react-router-dom';
+import { getTierRank } from '@/lib/tierAccess';
 
 const Vastu = () => {
   const { user, isLoading: authLoading } = useAuth();
@@ -22,10 +23,8 @@ const Vastu = () => {
     return <Navigate to="/auth" replace />;
   }
 
-  // Admins and lifetime/premium members have access
-  const isLifetime = tier === 'lifetime';
-  const isPremiumRecurring = !!tier && tier.includes('premium');
-  const hasAccess = isAdmin || adminGranted || isLifetime || isPremiumRecurring || isPremium;
+  // Admins and Prana-Flow+ members have access (rank ≥ 1)
+  const hasAccess = isAdmin || adminGranted || isPremium || getTierRank(tier) >= 1;
 
   if (!hasAccess) {
     return <Navigate to="/membership" replace />;
