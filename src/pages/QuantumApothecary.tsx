@@ -766,7 +766,7 @@ function QuantumApothecaryInner() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const legacyRecognitionRef = useRef<{ stop: () => void } | null>(null);
   const voiceTranscriptRef = useRef('');
-  /** Page scroll root — Samsung/Android uses 100dvh + overscroll contain (see .apothecary-scroll CSS). */
+  /** Page scroll root — matches [data-apothecary-scroll] in index.css (scroll-to-top FAB). */
   const apothecaryScrollRootRef = useRef<HTMLDivElement>(null);
   const [pendingImage, setPendingImage] = useState<{ base64: string; mimeType: string } | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -849,20 +849,6 @@ function QuantumApothecaryInner() {
     } catch {
       /* ignore */
     }
-  }, []);
-
-  useEffect(() => {
-    const setVh = () => {
-      const vh = (window.visualViewport?.height ?? window.innerHeight) * 0.01;
-      document.documentElement.style.setProperty('--vh', `${vh}px`);
-    };
-    setVh();
-    window.visualViewport?.addEventListener('resize', setVh);
-    window.addEventListener('resize', setVh);
-    return () => {
-      window.visualViewport?.removeEventListener('resize', setVh);
-      window.removeEventListener('resize', setVh);
-    };
   }, []);
 
   // ── Scroll: single effect, only when a new message is appended ──
@@ -1815,8 +1801,8 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
   return (
     <div
       ref={apothecaryScrollRootRef}
-      className="apothecary-scroll relative text-white/90 overflow-x-hidden pb-24"
       data-apothecary-scroll
+      className="flex flex-col relative text-white/90 overflow-x-hidden pb-24"
       style={{ background: '#050505', position: 'relative' }}
     >
 
@@ -2532,38 +2518,6 @@ SQI — integrate this scan with my natal chart; cite each chart fact once; use 
           -webkit-backdrop-filter: blur(40px);
           border: 1px solid rgba(255, 255, 255, 0.05);
           border-radius: 40px;
-        }
-
-        /* SQI Apothecary — Samsung S24 / Android scroll fix */
-        /* Dynamic viewport height — collapses-bar safe */
-        .apothecary-scroll,
-        [data-apothecary-scroll] {
-          height: 100dvh;
-          max-height: 100dvh;
-          overflow-x: hidden;
-          overflow-y: auto;
-          overscroll-behavior: contain;
-          -webkit-overflow-scrolling: touch;
-          transform: translateZ(0);
-          contain: layout paint;
-        }
-        @supports not (height: 100dvh) {
-          .apothecary-scroll,
-          [data-apothecary-scroll] {
-            height: calc(var(--vh, 1vh) * 100);
-            max-height: calc(var(--vh, 1vh) * 100);
-          }
-        }
-        html, body {
-          overscroll-behavior-y: none;
-        }
-        /* Soften backdrop-filter on Android — Samsung Internet blur is heavier than iOS */
-        @media (max-width: 900px) {
-          .glass-card,
-          [class*="glass"] {
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-          }
         }
 
         /* ── Siddha-Gold Primary Button ── */

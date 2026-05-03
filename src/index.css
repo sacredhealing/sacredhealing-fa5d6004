@@ -1060,13 +1060,14 @@
   }
 }
 
-.apothecary-scroll,
+/* SQI Apothecary — mobile Chrome scroll fix */
 [data-apothecary-scroll] {
-  transform: translateZ(0);
-  will-change: transform;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  contain: layout paint;
 }
-
-html, body { overscroll-behavior-y: none; }
+html, body {
+  overscroll-behavior-y: none;
+}
