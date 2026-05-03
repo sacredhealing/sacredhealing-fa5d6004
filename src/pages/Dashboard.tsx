@@ -206,15 +206,15 @@ const Dashboard: React.FC = () => {
   }, [horaWatch.remainingMs, t]);
 
   // Smart upgrade banner logic based on tier
-  const showUpgradeBanner = tier !== 'lifetime';
+  const showUpgradeBanner = !(tier === 'akasha-infinity' || tier === 'lifetime');
   const upgradePath =
-    tier === 'free'            ? '/prana-flow' :
-    tier === 'prana-monthly'   ? '/siddha-quantum' :
-                                 '/akasha-infinity';
+    tier === 'free'           ? '/prana-flow' :
+    tier === 'prana-flow'     ? '/siddha-quantum' :
+                                '/akasha-infinity';
   const upgradeLabel =
-    tier === 'free'            ? t('dashboard.upgradeBannerFree') :
-    tier === 'prana-monthly'   ? t('dashboard.upgradeBannerPranaMonthly') :
-                                 t('dashboard.upgradeBannerDefault');
+    tier === 'free'           ? t('dashboard.upgradeBannerFree') :
+    tier === 'prana-flow'     ? t('dashboard.upgradeBannerPranaMonthly') :
+                                t('dashboard.upgradeBannerDefault');
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -737,7 +737,7 @@ const Dashboard: React.FC = () => {
                 </span>
                 <span style={{ color: 'rgba(212,175,55,0.45)', fontSize: 14 }}>→</span>
               </div>
-              {tier === 'prana-monthly' && (
+              {tier === 'prana-flow' && (
                 <p style={{ margin: '8px 0 0', fontFamily: 'Cormorant Garamond,serif', fontStyle: 'italic', fontSize: '0.78rem', color: 'rgba(212,175,55,0.3)' }}>
                   {t('dashboard.upgradeOrAkashaPrefix')}{' '}
                   <button type="button" onClick={(e) => { e.stopPropagation(); navigate('/akasha-infinity'); }} style={{ color: 'rgba(212,175,55,0.45)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: 'inherit', fontFamily: 'inherit', fontStyle: 'inherit' }}>
