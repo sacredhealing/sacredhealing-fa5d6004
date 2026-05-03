@@ -813,6 +813,66 @@ export type Database = {
         }
         Relationships: []
       }
+      ayurveda_courses: {
+        Row: {
+          audio_url: string | null
+          content_type: string | null
+          content_url: string | null
+          created_at: string
+          description: string | null
+          duration_minutes: number | null
+          id: string
+          is_published: boolean
+          module_number: number
+          pdf_url: string | null
+          phase: number
+          subtitle: string | null
+          tags: string[]
+          thumbnail_url: string | null
+          tier_required: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          audio_url?: string | null
+          content_type?: string | null
+          content_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_published?: boolean
+          module_number: number
+          pdf_url?: string | null
+          phase: number
+          subtitle?: string | null
+          tags?: string[]
+          thumbnail_url?: string | null
+          tier_required?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          audio_url?: string | null
+          content_type?: string | null
+          content_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_published?: boolean
+          module_number?: number
+          pdf_url?: string | null
+          phase?: number
+          subtitle?: string | null
+          tags?: string[]
+          thumbnail_url?: string | null
+          tier_required?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ayurveda_profiles: {
         Row: {
           agni_strength: string | null
@@ -2740,6 +2800,57 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      dosha_assessments: {
+        Row: {
+          assessed_at: string
+          id: string
+          kapha_score: number
+          pitta_score: number
+          prakriti: string | null
+          raw_answers: Json
+          user_id: string
+          vata_score: number
+          vikriti: string | null
+        }
+        Insert: {
+          assessed_at?: string
+          id?: string
+          kapha_score?: number
+          pitta_score?: number
+          prakriti?: string | null
+          raw_answers?: Json
+          user_id: string
+          vata_score?: number
+          vikriti?: string | null
+        }
+        Update: {
+          assessed_at?: string
+          id?: string
+          kapha_score?: number
+          pitta_score?: number
+          prakriti?: string | null
+          raw_answers?: Json
+          user_id?: string
+          vata_score?: number
+          vikriti?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dosha_assessments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dosha_assessments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       email_send_log: {
         Row: {
@@ -6484,6 +6595,67 @@ export type Database = {
         }
         Relationships: []
       }
+      user_course_progress: {
+        Row: {
+          bookmarked: boolean
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          id: string
+          last_accessed_at: string
+          module_id: string
+          notes: string | null
+          progress_percent: number
+          user_id: string
+        }
+        Insert: {
+          bookmarked?: boolean
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          last_accessed_at?: string
+          module_id: string
+          notes?: string | null
+          progress_percent?: number
+          user_id: string
+        }
+        Update: {
+          bookmarked?: boolean
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          last_accessed_at?: string
+          module_id?: string
+          notes?: string | null
+          progress_percent?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_course_progress_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "ayurveda_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_course_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_course_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_daily_activities: {
         Row: {
           activity_date: string
@@ -7221,6 +7393,7 @@ export type Database = {
         Returns: boolean
       }
       insert_mantra_admin: { Args: { data: Json }; Returns: Json }
+      is_admin_v3: { Args: never; Returns: boolean }
       is_codex_admin: { Args: { uid: string }; Returns: boolean }
       is_room_member: { Args: { _room_id: string }; Returns: boolean }
       move_to_dlq: {
