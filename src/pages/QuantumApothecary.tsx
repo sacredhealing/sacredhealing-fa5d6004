@@ -759,7 +759,6 @@ function QuantumApothecaryInner() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const streamAccumRef = useRef('');
   const streamingMsgIdRef = useRef('');
-  const chatScrollContainerRef = useRef<HTMLDivElement | null>(null);
   const chatInputRef = useRef<HTMLTextAreaElement>(null);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
   const chatPanelRef = useRef<HTMLDivElement>(null);
@@ -892,24 +891,20 @@ function QuantumApothecaryInner() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages.length]);
 
-  // ── Scroll-to-bottom visibility — attach via callback ref to avoid stale ref deps ──
-  const scrollContainerCallbackRef = useCallback((el: HTMLDivElement | null) => {
-    // Detach from any previous element
-    if (chatScrollContainerRef.current) {
-      chatScrollContainerRef.current.removeEventListener('scroll', handleScrollVisibility as any);
-    }
-    (chatScrollContainerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
-    if (!el) return;
-    const check = () => {
-      const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-      setShowScrollBottom(distFromBottom > 150);
-    };
-    check();
-    el.addEventListener('scroll', check, { passive: true });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  // Placeholder so the old ref assignment sites still compile (replaced below in JSX)
-  const handleScrollVisibility = useCallback(() => {}, []);
+  // Scroll-to-bottom FAB: inner scroll was removed (document scroll); use viewport intersection on sentinel.
+  useEffect(() => {
+    const end = chatEndRef.current;
+    if (!end) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        setShowScrollBottom(!entry?.isIntersecting);
+      },
+      { root: null, threshold: 0, rootMargin: '0px 0px 120px 0px' },
+    );
+    io.observe(end);
+    return () => io.disconnect();
+  }, [messages.length, isTyping]);
 
   const scrollChatToBottom = useCallback(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -1502,12 +1497,9 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
      ══════════════════════════════════════════════════════ */
   const renderChatPanel = () => (
     <div
-      className="glass-card relative flex w-full flex-col overflow-hidden"
+      className="glass-card relative flex w-full flex-col overflow-visible"
       style={{
-        /* Bounded height so flex-1 + min-h-0 + overflow-y-auto scrolls (Android); proportions match pre-Samsung visual pass */
-        height: 'calc(100dvh - 11rem)',
-        maxHeight: 'calc(100dvh - 11rem)',
-        minHeight: 'min(520px, calc(100dvh - 11rem))',
+        minHeight: 'calc(100vh - 120px)',
         maxWidth: '100%',
       }}
     >
@@ -1585,16 +1577,14 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         <StudentSelector />
       </div>
 
-      {/* Messages */}
+      {/* Messages — grow with thread; page/document scrolls (pre–Samsung inner-scroll behavior) */}
       <div
-        className="qa-sqi-chat custom-scrollbar relative flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-3"
+        className="qa-sqi-chat relative flex flex-1 flex-col px-3 py-4 space-y-3"
         style={{
-          overflowY: 'auto',
           overflowX: 'hidden',
           wordBreak: 'break-word',
           overflowWrap: 'anywhere',
         }}
-        ref={scrollContainerCallbackRef}
       >
         <div
           className={`flex min-h-full flex-col ${
@@ -1697,9 +1687,9 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         </button>
       )}
 
-      {/* Composer: flex sibling (not sticky) — sticky inside overflow-hidden flex confuses Samsung/WebKit touch routing */}
+      {/* Composer — sticky at viewport bottom while the page scrolls the full thread */}
       <div
-        className="shrink-0 border-t border-white/[0.06] bg-[#050505]/80 p-4 backdrop-blur-xl sm:p-6"
+        className="sticky bottom-0 z-10 shrink-0 border-t border-white/[0.06] bg-[#050505]/80 p-4 backdrop-blur-xl sm:p-6"
         style={isChatFullscreen ? { paddingBottom: 'env(safe-area-inset-bottom, 16px)' } : undefined}
       >
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
@@ -2328,9 +2318,9 @@ SQI — integrate this scan with my natal chart; cite each chart fact once; use 
           </div>
 
           {/* ════ RIGHT COLUMN — chat first on mobile for readable full-width thread ════ */}
-          <div className="flex min-h-0 flex-col gap-5">
+          <div className="flex flex-col gap-5">
             {/* ── Chat Panel (first on small screens) ── */}
-            <div ref={chatPanelRef} className="order-1 min-h-0 w-full min-w-0 lg:order-2">
+            <div ref={chatPanelRef} className="order-1 w-full min-w-0 lg:order-2">
               {renderChatPanel()}
             </div>
 

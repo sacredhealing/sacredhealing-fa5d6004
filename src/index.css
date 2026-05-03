@@ -1060,10 +1060,3 @@ html, body, #root {
   touch-action: pan-y;
   overscroll-behavior-y: contain;
 }
-
-/* Quantum Apothecary SQI chat — Samsung: prefer manipulation over pan-y for nested overflow */
-.qa-sqi-chat {
-  -webkit-overflow-scrolling: touch;
-  touch-action: manipulation;
-  overscroll-behavior-y: contain;
-}
