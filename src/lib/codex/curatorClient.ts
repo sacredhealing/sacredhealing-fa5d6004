@@ -128,10 +128,8 @@ export async function curateTransmission(
     }
 
     if (r.excluded) {
-      toast.message('Skipped Codex (excluded)', {
-        id: toastId,
-        description: r.reason || 'Classifier marked this transmission as low-signal or non-teaching.',
-      });
+      // Silently dismiss — do not surface excluded curator results in the UI.
+      toast.dismiss(toastId);
       return results;
     }
 
