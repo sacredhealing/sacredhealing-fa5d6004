@@ -510,6 +510,10 @@ export default function SiddhaPortal() {
           0%, 100% { opacity: 1; }
           50%       { opacity: 0.2; }
         }
+        @keyframes sqGlowPulse {
+          0%, 100% { opacity: 0.55; transform: scale(1); }
+          50%      { opacity: 1;    transform: scale(1.04); }
+        }
       `}</style>
     </div>
   );
