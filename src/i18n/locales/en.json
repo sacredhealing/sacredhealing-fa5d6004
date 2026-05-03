@@ -6917,6 +6917,26 @@
       "title": "Sovereign Jyotish Vidya",
       "hint": "32 modules — sovereign astrology education from foundation to mastery"
     },
+    "catalog": {
+      "heroEyebrow": "Akasha-Neural Archive · Bhrigu Transmission 2050",
+      "heroTitleLine1": "Sovereign Jyotish",
+      "heroTitleAccent": "Vidya Architecture",
+      "heroBody": "From the first breath of humanity to the quantum horizon — 32 modules transmitted by Maharishi Bhrigu himself, from the Satya Yuga to the present day. Pure ancient source. No AI. Only the Siddhas.",
+      "yourProgress": "Your Progress",
+      "progressFraction": "{{completed}} / {{total}}",
+      "tierCompleted": "{{completed}}/{{total}} completed",
+      "curriculumHeading": "Curriculum Transmission",
+      "markProgressHeading": "Mark Progress",
+      "btnInProgress": "▶ In Progress",
+      "btnMarkComplete": "✓ Mark Complete",
+      "completeBadge": "✓ Complete",
+      "unlockLine": "Unlock with {{tier}} — {{price}}",
+      "upgradeShort": "Upgrade",
+      "guestEyebrow": "Begin Your Transmission",
+      "guestTitle": "Sign in to track your Jyotish journey",
+      "guestBody": "Free modules open immediately. Your progress is preserved across sessions.",
+      "guestCta": "Enter the Vidya Portal"
+    },
     "footer": "Encoded for the SQI Platform — for seekers who walk by the light of the stars.",
     "module": {
       "notFound": "This module could not be found.",

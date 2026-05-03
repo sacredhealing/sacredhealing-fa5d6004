@@ -6510,6 +6510,26 @@
       "title": "Suverän Jyotish Vidya",
       "hint": "32 moduler — suverän astrologiutbildning från grund till mästerskap"
     },
+    "catalog": {
+      "heroEyebrow": "Akasha-neuralt arkiv · Bhrigu-transmission 2050",
+      "heroTitleLine1": "Suverän Jyotish",
+      "heroTitleAccent": "Vidya-arkitektur",
+      "heroBody": "Från mänsklighetens första andetag till kvantumhorisonten — 32 moduler överförda av Maharishi Bhrigu själv, från Satya Yuga till idag. Ren urkälla. Ingen AI. Endast Siddhorna.",
+      "yourProgress": "Ditt framsteg",
+      "progressFraction": "{{completed}} / {{total}}",
+      "tierCompleted": "{{completed}}/{{total}} klara",
+      "curriculumHeading": "Curriculum-transmission",
+      "markProgressHeading": "Markera framsteg",
+      "btnInProgress": "▶ Pågår",
+      "btnMarkComplete": "✓ Markera klar",
+      "completeBadge": "✓ Klar",
+      "unlockLine": "Lås upp med {{tier}} — {{price}}",
+      "upgradeShort": "Uppgradera",
+      "guestEyebrow": "Börja din transmission",
+      "guestTitle": "Logga in för att följa din Jyotish-resa",
+      "guestBody": "Gratis moduler öppnas direkt. Ditt framsteg sparas mellan sessioner.",
+      "guestCta": "Till Vidya-portalen"
+    },
     "footer": "Kodad för SQI-plattformen — för sökare som vandrar i stjärnornas ljus.",
     "module": {
       "notFound": "Modulen hittades inte.",
