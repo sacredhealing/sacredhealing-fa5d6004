@@ -24,6 +24,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useStargateAccess } from "@/hooks/useStargateAccess";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchPublicAggregateDashboardStats } from "@/lib/dashboardAggregateStats";
 import { requestNotificationPermission } from "@/services/NotificationService";
 import { useDailyLive, DailySession } from "@/hooks/useDailyLive";
 import { usePrivateChat } from "@/hooks/useCommunity";
@@ -1346,8 +1347,13 @@ const Community = () => {
 
     Promise.all([loadMembers(), loadRooms()]);
 
-    // Get real total user count
+    // Get real total user count (RPC avoids RLS-only-visible subset counts)
     const loadTotalUsers = async () => {
+      const agg = await fetchPublicAggregateDashboardStats();
+      if (agg != null) {
+        setTotalUserCount(agg.total_profiles);
+        return;
+      }
       const { count, error } = await supabase.from("profiles").select("id", { count: "exact", head: true });
       if (!error && count != null) setTotalUserCount(count);
     };

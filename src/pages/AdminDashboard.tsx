@@ -32,6 +32,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchPublicAggregateDashboardStats } from '@/lib/dashboardAggregateStats';
 
 const ADMIN_DASH_SQI_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap');
@@ -398,6 +399,16 @@ const AdminDashboard: React.FC = () => {
 
   useEffect(() => {
     const fetchStats = async () => {
+      const agg = await fetchPublicAggregateDashboardStats();
+      if (agg) {
+        setStats({
+          members: agg.total_profiles,
+          activeThisMonth: agg.active_this_month,
+          totalSHC: Number(agg.total_shc_distributed) || 0,
+        });
+        return;
+      }
+
       const { count: memberCount } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true });

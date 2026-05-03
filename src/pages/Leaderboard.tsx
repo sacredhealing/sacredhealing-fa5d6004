@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Trophy, Medal, Crown, Users, Sparkles, TrendingUp, Calendar, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchPublicAggregateDashboardStats } from '@/lib/dashboardAggregateStats';
 
 interface LeaderboardEntry {
   user_id: string;
@@ -120,6 +121,16 @@ const Leaderboard: React.FC = () => {
   };
 
   const fetchStats = async () => {
+    const agg = await fetchPublicAggregateDashboardStats();
+    if (agg) {
+      setStats({
+        totalMembers: agg.total_profiles,
+        activeThisMonth: agg.active_this_month,
+        totalSHCDistributed: Number(agg.total_shc_distributed) || 0,
+      });
+      return;
+    }
+
     // Get total members
     const { count: memberCount } = await supabase
       .from('profiles')
