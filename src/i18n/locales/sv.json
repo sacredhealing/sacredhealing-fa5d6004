@@ -3359,7 +3359,13 @@
     "pitta": "Pitta",
     "kapha": "Kapha",
     "yourDosha": "Din dosha",
-    "learnMore": "Läs mer"
+    "learnMore": "Läs mer",
+    "liveDoctorBanner": {
+      "kicker": "✦ Live Nadi-transmission · Livstid ∞ ✦",
+      "title": "Live Doctor · AI Vaidya",
+      "body": "{{name}}, öppna den levande ljudkammaren för realtidsscalarläkning med AI Vaidya.",
+      "cta": "Öppna Live Doctor"
+    }
   },
   "vedicAstrology": {
     "title": "Vedisk Astrologi",

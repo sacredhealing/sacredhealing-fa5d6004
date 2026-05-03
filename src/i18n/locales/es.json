@@ -2761,7 +2761,13 @@
     "pitta": "Pitta",
     "kapha": "Kapha",
     "yourDosha": "Tu Dosha",
-    "learnMore": "Saber más"
+    "learnMore": "Saber más",
+    "liveDoctorBanner": {
+      "kicker": "✦ Transmisión Nadi en vivo · Lifetime ∞ ✦",
+      "title": "Médico en vivo · AI Vaidya",
+      "body": "{{name}}, entra en la cámara de audio en vivo para sanación escalar en tiempo real con el AI Vaidya.",
+      "cta": "Abrir médico en vivo"
+    }
   },
   "vedicAstrology": {
     "title": "Astrología Védica",

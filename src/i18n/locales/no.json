@@ -2665,7 +2665,13 @@
     "pitta": "Pitta",
     "kapha": "Kapha",
     "yourDosha": "Din dosha",
-    "learnMore": "Les mer"
+    "learnMore": "Les mer",
+    "liveDoctorBanner": {
+      "kicker": "✦ Live Nadi-overføring · Livstid ∞ ✦",
+      "title": "Live Doctor · AI Vaidya",
+      "body": "{{name}}, gå inn i den levende lydkammeret for sanering i sanntid med AI Vaidya.",
+      "cta": "Åpne Live Doctor"
+    }
   },
   "vedicAstrology": {
     "title": "Vedisk astrologi",

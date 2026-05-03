@@ -3,9 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sun, Brain, Heart, Leaf, Sparkles, RotateCcw, Moon,
   Zap, RefreshCw, Wind, Flame, Droplets, Star, Eye,
-  Activity, Shield, Clock, ChevronDown, ChevronRight
+  Activity, Shield, Clock, ChevronDown, ChevronRight, Mic,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { AyurvedaUserProfile, DoshaProfile } from '@/lib/ayurvedaTypes';
 import { getDoshaEmoji } from '@/lib/ayurvedaTypes';
 
@@ -175,6 +176,104 @@ const AgastyaConsultCard: React.FC<{
             <span style={{ fontSize:16 }}>🔱</span>
             Open Divine Physician
             <ChevronRight style={{ width:14, height:14 }} />
+          </motion.div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// ── LIVE DOCTOR CARD (replaces removed top-nav tab) ───────────────────────────
+const LiveDoctorConsultCard: React.FC<{
+  userName: string;
+  onOpenLiveDoctor: () => void;
+}> = ({ userName, onOpenLiveDoctor }) => {
+  const { t } = useTranslation();
+  const first = userName.split(' ')[0] || userName;
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.14 }}
+      style={{
+        background: `linear-gradient(135deg,${T.gg(T.gold, 0.1)},${T.gg(T.gold2, 0.05)},rgba(5,5,5,0.2))`,
+        backdropFilter: 'blur(40px)',
+        WebkitBackdropFilter: 'blur(40px)',
+        border: `1.5px solid ${T.gg(T.gold, 0.42)}`,
+        borderRadius: T.r40,
+        padding: '28px 24px',
+        boxShadow: `0 0 60px ${T.gg(T.gold, 0.14)}, 0 0 120px ${T.gg(T.gold, 0.05)}`,
+        position: 'relative',
+        overflow: 'hidden',
+        cursor: 'pointer',
+      }}
+      onClick={onOpenLiveDoctor}
+      whileHover={{ scale: 1.01, boxShadow: `0 0 80px ${T.gg(T.gold, 0.22)}, 0 0 160px ${T.gg(T.gold, 0.08)}` }}
+      whileTap={{ scale: 0.99 }}
+    >
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg,transparent,${T.gold},${T.gold2},${T.gold},transparent)` }} />
+      <motion.div
+        style={{ position: 'absolute', top: 0, bottom: 0, width: 80, background: `linear-gradient(90deg,transparent,${T.gg(T.gold, 0.14)},transparent)`, left: '-80px' }}
+        animate={{ left: ['−80px', '110%'] }}
+        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', repeatDelay: 4 }}
+      />
+
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+        <motion.div
+          animate={{ boxShadow: [`0 0 20px ${T.gg(T.gold, 0.25)}`, `0 0 36px ${T.gg(T.gold, 0.45)}`, `0 0 20px ${T.gg(T.gold, 0.25)}`] }}
+          transition={{ duration: 3.2, repeat: Infinity }}
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: '50%',
+            background: `radial-gradient(circle,${T.gg(T.gold, 0.28)},${T.gg(T.gold, 0.06)})`,
+            border: `2px solid ${T.gg(T.gold, 0.55)}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            color: T.gold,
+          }}
+        >
+          <Mic style={{ width: 26, height: 26 }} strokeWidth={1.35} />
+        </motion.div>
+
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.45em', textTransform: 'uppercase', color: T.gold, opacity: 0.82 }}>
+              {t('ayurveda.liveDoctorBanner.kicker')}
+            </div>
+            <span style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.28em', textTransform: 'uppercase', padding: '2px 6px', borderRadius: 4, color: T.gold, background: `${T.gg(T.gold, 0.18)}` }}>∞</span>
+          </div>
+          <h3 style={{ fontSize: 20, fontWeight: 900, letterSpacing: '-0.04em', color: T.w90, marginBottom: 6, fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic' }}>
+            {t('ayurveda.liveDoctorBanner.title')}
+          </h3>
+          <p style={{ fontSize: 13, lineHeight: 1.65, color: T.w70, marginBottom: 14 }}>
+            {t('ayurveda.liveDoctorBanner.body', { name: first })}
+          </p>
+
+          <motion.div
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.98 }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '11px 24px',
+              borderRadius: 999,
+              background: `linear-gradient(135deg,${T.gg(T.gold, 0.35)},${T.gg(T.gold3, 0.22)})`,
+              color: T.bg,
+              fontSize: 13,
+              fontWeight: 900,
+              letterSpacing: '-0.02em',
+              fontFamily: "'Plus Jakarta Sans',sans-serif",
+              cursor: 'pointer',
+              border: `1px solid ${T.gg(T.gold, 0.45)}`,
+            }}
+          >
+            <Mic style={{ width: 15, height: 15 }} strokeWidth={2} />
+            {t('ayurveda.liveDoctorBanner.cta')}
+            <ChevronRight style={{ width: 14, height: 14 }} />
           </motion.div>
         </div>
       </div>
@@ -550,11 +649,12 @@ interface DoshaDashboardProps {
   onFetchGuidance: () => void;
   isPremium?: boolean;
   onOpenChat?: () => void;
+  onOpenLiveDoctor?: () => void;
 }
 
 export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
   profile, dosha, dailyGuidance, isLoadingGuidance,
-  onRestart, onFetchGuidance, isPremium = false, onOpenChat,
+  onRestart, onFetchGuidance, isPremium = false, onOpenChat, onOpenLiveDoctor,
 }) => {
   const [syncing, setSyncing] = useState(false);
   const primary = dosha.primary?.toLowerCase() || 'vata';
@@ -637,6 +737,10 @@ export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
 
       {/* ── AGASTYA CONSULT CTA — MOST PROMINENT ── */}
       <AgastyaConsultCard dosha={dosha.primary} onOpenChat={onOpenChat || (() => {})} userName={profile.name} />
+
+      {onOpenLiveDoctor ? (
+        <LiveDoctorConsultCard userName={profile.name} onOpenLiveDoctor={onOpenLiveDoctor} />
+      ) : null}
 
       {/* ── PERSONALITY + RISHI'S MIRROR ── */}
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>

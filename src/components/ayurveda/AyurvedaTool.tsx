@@ -1,11 +1,12 @@
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Crown, Mic, Stethoscope, Leaf, Sparkles } from 'lucide-react';
+import { Crown, Leaf, Sparkles } from 'lucide-react';
 import { DoshaQuiz } from './DoshaQuiz';
 import { DoshaDashboard } from './DoshaDashboard';
 import { AyurvedaChatConsultation } from './AyurvedaChatConsultation';
 import { AyurvedaLiveDoctor } from './AyurvedaLiveDoctor';
 import { useAyurvedaAnalysis } from '@/hooks/useAyurvedaAnalysis';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { AyurvedaUserProfile, AyurvedaMembershipLevel } from '@/lib/ayurvedaTypes';
 
 const GLOBAL_CSS = `
@@ -50,6 +51,7 @@ const Gate=({icon,title,desc,tierLabel,onBack}:{icon:string;title:string;desc:st
 interface AyurvedaToolProps { membershipLevel?: AyurvedaMembershipLevel; isAdmin?: boolean; }
 
 export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({ membershipLevel = 'FREE' as AyurvedaMembershipLevel, isAdmin = false }) => {
+  const { t } = useTranslation();
   const effectiveMembership = isAdmin ? 'LIFETIME' as AyurvedaMembershipLevel : membershipLevel;
   const [membership, setMembership] = useState<AyurvedaMembershipLevel>(effectiveMembership);
   const [activeTab, setActiveTab] = useState<'home'|'assessment'|'doctor'|'chat'>('home');
@@ -66,24 +68,7 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({ membershipLevel = 'F
 
   if (isLoadingSaved) return (<div className="sqi-root" style={{minHeight:'60vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:20}}><SriYantra size={80}/><div className="sqi-label" style={{animation:'sqiBreathe 2s ease-in-out infinite'}}>Accessing Akasha Archive…</div></div>);
 
-  const NavTabs = () => (
-    <div style={{display:'flex',justifyContent:'center',gap:8,padding:'20px 14px 8px',flexWrap:'wrap'}}>
-      {([{id:'home' as const,icon:<Leaf style={{width:14,height:14}}/>,label:'Dashboard'},{id:'chat' as const,icon:<Stethoscope style={{width:14,height:14}}/>,label:'Divine Physician',tier:'◈',tcolor:'#22D3EE'},{id:'doctor' as const,icon:<Mic style={{width:14,height:14}}/>,label:'Live Doctor',tier:'∞',tcolor:'#D4AF37'}] as const).map(tab=>(
-        <motion.button key={tab.id} whileTap={{scale:0.97}}
-          onClick={()=>{
-            if(tab.id==='chat'){
-              // ★ ADMIN or PREMIUM: direct to chat overlay — no gate
-              (isAdmin || membership!==('FREE' as AyurvedaMembershipLevel)) ? setShowChat(true) : setActiveTab('chat');
-            } else { setActiveTab(tab.id); }
-          }}
-          style={{display:'flex',alignItems:'center',gap:7,padding:'9px 22px',borderRadius:999,border:`1px solid ${activeTab===tab.id?'rgba(212,175,55,0.55)':'rgba(255,255,255,0.06)'}`,background:activeTab===tab.id?'linear-gradient(135deg,rgba(212,175,55,0.15),rgba(212,175,55,0.04))':'transparent',color:activeTab===tab.id?'#D4AF37':'rgba(255,255,255,0.4)',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:13,fontWeight:activeTab===tab.id?800:600,cursor:'pointer',transition:'all 0.22s',backdropFilter:'blur(16px)',boxShadow:activeTab===tab.id?'0 0 20px rgba(212,175,55,0.14)':'none'}}
-        >
-          {tab.icon}{tab.label}
-          {'tier' in tab && tab.tier && <span style={{fontSize:7,fontWeight:800,letterSpacing:'0.3em',textTransform:'uppercase',padding:'2px 5px',borderRadius:4,color:tab.tcolor,background:`${tab.tcolor}18`}}>{tab.tier}</span>}
-        </motion.button>
-      ))}
-    </div>
-  );
+  const openLiveDoctorTab = () => { setActiveTab('doctor'); };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -147,7 +132,7 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({ membershipLevel = 'F
             <ParticleField/>
             <div style={{position:'relative',zIndex:1}}>
               <Ticker/>
-              <DoshaDashboard profile={userProfile!} dosha={doshaProfile} dailyGuidance={dailyGuidance} isLoadingGuidance={isLoadingGuidance} onRestart={handleRestart} onFetchGuidance={handleFetchGuidance} isPremium={isAdmin || membership !== 'FREE'} onOpenChat={()=>{(isAdmin||membership!==('FREE' as AyurvedaMembershipLevel))?setShowChat(true):setActiveTab('chat')}}/>
+              <DoshaDashboard profile={userProfile!} dosha={doshaProfile} dailyGuidance={dailyGuidance} isLoadingGuidance={isLoadingGuidance} onRestart={handleRestart} onFetchGuidance={handleFetchGuidance} isPremium={isAdmin || membership !== 'FREE'} onOpenChat={()=>{(isAdmin||membership!==('FREE' as AyurvedaMembershipLevel))?setShowChat(true):setActiveTab('chat')}} onOpenLiveDoctor={openLiveDoctorTab}/>
             </div>
           </div>
         );
@@ -168,7 +153,34 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({ membershipLevel = 'F
         if (!isAdmin && membership !== 'LIFETIME') {
           return <Gate icon="🔱" title="Live Nadi Audio Transmission" tierLabel="Lifetime Sanctuary" desc="Real-time scalar audio healing sessions with the AI Vaidya. Exclusive to Lifetime Sovereigns." onBack={()=>setActiveTab('home')}/>;
         }
-        return <AyurvedaLiveDoctor profile={userProfile} dosha={doshaProfile}/>;
+        return (
+          <div style={{ position: 'relative' }}>
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setActiveTab('home')}
+              style={{
+                marginBottom: 14,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 18px',
+                borderRadius: 999,
+                border: '1px solid rgba(212,175,55,0.28)',
+                background: 'rgba(212,175,55,0.08)',
+                color: '#D4AF37',
+                fontFamily: "'Plus Jakarta Sans',sans-serif",
+                fontSize: 12,
+                fontWeight: 800,
+                letterSpacing: '0.06em',
+                cursor: 'pointer',
+              }}
+            >
+              ← {t('ayurveda.tabs.dashboard')}
+            </motion.button>
+            <AyurvedaLiveDoctor profile={userProfile} dosha={doshaProfile}/>
+          </div>
+        );
 
       default: return null;
     }
@@ -176,7 +188,6 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({ membershipLevel = 'F
 
   return (
     <div className="sqi-root" style={{width:'100%',minHeight:'100vh',background:'#050505',color:'rgba(255,255,255,0.85)',position:'relative'}}>
-      {doshaProfile && <motion.div initial={{opacity:0,y:-16}} animate={{opacity:1,y:0}}><NavTabs/></motion.div>}
       <div style={{padding:'0 14px 80px'}}>{renderContent()}</div>
       <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:1.4}} style={{padding:'28px 20px 44px',textAlign:'center',borderTop:'1px solid rgba(255,255,255,0.04)',position:'relative',zIndex:1}}>
         <div style={{display:'flex',justifyContent:'center',alignItems:'center',gap:18,marginBottom:14}}>

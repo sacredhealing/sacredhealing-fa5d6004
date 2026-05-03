@@ -3515,6 +3515,12 @@
       "herbs": "Sacred Herbs",
       "routine": "Daily Routine",
       "yoga": "Yoga Practice"
+    },
+    "liveDoctorBanner": {
+      "kicker": "✦ Live Nadi Transmission · Lifetime ∞ ✦",
+      "title": "Live Doctor · AI Vaidya",
+      "body": "{{name}}, enter the live audio chamber for real-time scalar healing with the AI Vaidya.",
+      "cta": "Open Live Doctor"
     }
   },
   "vedicAstrology": {
