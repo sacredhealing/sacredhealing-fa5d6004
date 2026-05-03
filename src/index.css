@@ -1043,3 +1043,30 @@
   50%  { opacity: 1; }
   100% { opacity: 0.4; }
 }
+
+/* SQI Apothecary — perf patch */
+.glass-card,
+[class*="glass"] {
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+}
+
+@media (max-width: 768px), (prefers-reduced-motion: reduce) {
+  .glass-card,
+  [class*="glass"] {
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    background: rgba(255, 255, 255, 0.04);
+  }
+}
+
+.apothecary-scroll,
+[data-apothecary-scroll] {
+  transform: translateZ(0);
+  will-change: transform;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  contain: layout paint;
+}
+
+html, body { overscroll-behavior-y: none; }
