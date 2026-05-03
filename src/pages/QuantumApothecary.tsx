@@ -766,6 +766,8 @@ function QuantumApothecaryInner() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const legacyRecognitionRef = useRef<{ stop: () => void } | null>(null);
   const voiceTranscriptRef = useRef('');
+  /** Page scroll root — Samsung/Android uses 100dvh + overscroll contain (see .apothecary-scroll CSS). */
+  const apothecaryScrollRootRef = useRef<HTMLDivElement>(null);
   const [pendingImage, setPendingImage] = useState<{ base64: string; mimeType: string } | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [voiceResult, setVoiceResult] = useState<VoiceBiofieldResult | null>(null);
@@ -1797,7 +1799,12 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
      MAIN RENDER — SQI-2050 Visual Layer
      ══════════════════════════════════════════════════════ */
   return (
-    <div className="relative min-h-screen text-white/90 overflow-x-hidden pb-24" style={{ background: '#050505', overscrollBehavior: 'none', position: 'relative' }}>
+    <div
+      ref={apothecaryScrollRootRef}
+      className="apothecary-scroll relative text-white/90 overflow-x-hidden pb-24"
+      data-apothecary-scroll
+      style={{ background: '#050505', position: 'relative' }}
+    >
 
       {/* ── Akasha Deep Space Background ── */}
       <div className="fixed inset-0 z-0 pointer-events-none" style={{
@@ -2513,6 +2520,38 @@ SQI — integrate this scan with my natal chart; cite each chart fact once; use 
           border-radius: 40px;
         }
 
+        /* SQI Apothecary — Samsung S24 / Android scroll fix */
+        /* Dynamic viewport height — collapses-bar safe */
+        .apothecary-scroll,
+        [data-apothecary-scroll] {
+          height: 100dvh;
+          max-height: 100dvh;
+          overflow-x: hidden;
+          overflow-y: auto;
+          overscroll-behavior: contain;
+          -webkit-overflow-scrolling: touch;
+          transform: translateZ(0);
+          contain: layout paint;
+        }
+        @supports not (height: 100dvh) {
+          .apothecary-scroll,
+          [data-apothecary-scroll] {
+            height: calc(var(--vh, 1vh) * 100);
+            max-height: calc(var(--vh, 1vh) * 100);
+          }
+        }
+        html, body {
+          overscroll-behavior-y: none;
+        }
+        /* Soften backdrop-filter on Android — Samsung Internet blur is heavier than iOS */
+        @media (max-width: 900px) {
+          .glass-card,
+          [class*="glass"] {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+          }
+        }
+
         /* ── Siddha-Gold Primary Button ── */
         .sqi-btn-primary {
           background: linear-gradient(135deg, #D4AF37 0%, #B8940A 100%);
@@ -2598,23 +2637,26 @@ SQI — integrate this scan with my natal chart; cite each chart fact once; use 
       `}</style>
 
       {/* Scroll-to-top FAB */}
-      <ScrollToTopButton />
+      <ScrollToTopButton scrollRootRef={apothecaryScrollRootRef} />
     </div>
   );
 }
 
-function ScrollToTopButton() {
+function ScrollToTopButton({ scrollRootRef }: { scrollRootRef: React.RefObject<HTMLDivElement | null> }) {
   const [show, setShow] = useState(false);
   useEffect(() => {
-    const onScroll = () => setShow(window.scrollY > 600);
+    const el = scrollRootRef.current;
+    if (!el) return;
+    const onScroll = () => setShow(el.scrollTop > 600);
     onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, [scrollRootRef]);
   if (!show) return null;
   return (
     <button
-      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      type="button"
+      onClick={() => scrollRootRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
       className="fixed bottom-24 right-4 z-50 w-10 h-10 rounded-full border border-[#D4AF37]/30 bg-[#0a0a0a]/80 backdrop-blur-sm flex items-center justify-center text-[#D4AF37] hover:bg-[#D4AF37]/10 transition shadow-lg"
       aria-label="Scroll to top"
     >
