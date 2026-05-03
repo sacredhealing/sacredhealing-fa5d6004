@@ -1060,14 +1060,7 @@
   }
 }
 
-/* SQI Apothecary — mobile Chrome scroll fix */
-[data-apothecary-scroll] {
-  height: 100dvh;
-  max-height: 100dvh;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-}
+/* SQI Apothecary — Android pull-to-refresh fix */
 html, body {
   overscroll-behavior-y: none;
 }
