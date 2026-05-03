@@ -98,7 +98,7 @@ export const useMembership = () => {
       if (isAdminData === true) {
         const adminStatus: MembershipStatus = {
           subscribed: true,
-          tier: 'lifetime',
+          tier: 'akasha-infinity',
           subscriptionEnd: null,
           loading: false,
           adminGranted: true,
