@@ -12,11 +12,21 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CHECK-MEMBERSHIP-SUBSCRIPTION] ${step}${detailsStr}`);
 };
 
-// Map Stripe product IDs to tier slugs
+// Map Stripe price IDs to tier slugs (most reliable — matches src/config/tierCheckout.ts)
+const PRICE_TO_TIER: Record<string, string> = {
+  'price_1T8o3YAPsnbrivP056UJqOP7': 'premium-monthly',   // Prana-Flow €19/mo
+  'price_1T8o3jAPsnbrivP0uZKR33EY': 'siddha-quantum',    // Siddha-Quantum €45/mo
+  'price_1T8o3kAPsnbrivP0m8bOzl3M': 'akasha-infinity',   // Akasha-Infinity €1111
+};
+
+// Map Stripe product IDs to tier slugs (fallback)
 const PRODUCT_TO_TIER: Record<string, string> = {
   'prod_TjLbPzCXMYBGOj': 'premium-monthly',
   'prod_TjLb4I9DVWijtL': 'premium-annual',
   'prod_TjLb4aw139HcPU': 'lifetime',
+  'prod_U727beGFLeQZUc': 'premium-monthly',   // Prana-Flow
+  'prod_U7271mhrwFlfTX': 'siddha-quantum',    // Siddha-Quantum
+  'prod_U727siddhaInfinity': 'akasha-infinity',
 };
 
 // Map admin-granted tier column values → canonical tier slugs (must match getTierRank() in app)
@@ -248,18 +258,29 @@ serve(async (req) => {
 
     if (subscriptions.data.length > 0) {
       hasActiveSub = true;
-      const subscription = subscriptions.data[0];
-      subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-      
-      // Get the product ID to determine tier
-      const productId = subscription.items.data[0].price.product as string;
-      tierSlug = PRODUCT_TO_TIER[productId] || 'premium-monthly';
-      
-      logStep("Active subscription found", { 
-        subscriptionId: subscription.id, 
-        productId,
+      // Pick the highest-rank subscription if multiple exist
+      let chosen = subscriptions.data[0];
+      let chosenSlug = 'premium-monthly';
+      let chosenRank = -1;
+      for (const sub of subscriptions.data) {
+        const priceId = sub.items.data[0].price.id as string;
+        const productId = sub.items.data[0].price.product as string;
+        const slug = PRICE_TO_TIER[priceId] || PRODUCT_TO_TIER[productId] || 'premium-monthly';
+        const rank = tierSlugRank(slug);
+        if (rank > chosenRank) {
+          chosenRank = rank;
+          chosen = sub;
+          chosenSlug = slug;
+        }
+      }
+      tierSlug = chosenSlug;
+      subscriptionEnd = new Date(chosen.current_period_end * 1000).toISOString();
+      logStep("Active subscription found", {
+        subscriptionId: chosen.id,
+        priceId: chosen.items.data[0].price.id,
+        productId: chosen.items.data[0].price.product,
         tierSlug,
-        endDate: subscriptionEnd 
+        endDate: subscriptionEnd
       });
     } else {
       // Check for one-time purchases (lifetime)
@@ -299,12 +320,13 @@ serve(async (req) => {
 
     // Update user_memberships table
     if (hasActiveSub) {
-      // Get tier ID from membership_tiers
+      // Get tier ID from membership_tiers (use the membership-table slug variant)
+      const membershipTableSlug = membershipTableSlugForTier(tierSlug);
       const { data: tierData } = await supabaseClient
         .from('membership_tiers')
         .select('id')
-        .eq('slug', tierSlug)
-        .single();
+        .eq('slug', membershipTableSlug)
+        .maybeSingle();
 
       if (tierData) {
         // Upsert membership record
