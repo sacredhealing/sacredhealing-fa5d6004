@@ -6537,7 +6537,11 @@
       "toastNotesError": "Kunde inte spara anteckningar.",
       "signInToSave": "Logga in för att spara slutförande.",
       "navPrevious": "Föregående",
-      "navNext": "Nästa modul"
+      "navNext": "Nästa modul",
+      "topicsHeading": "Transmissionens ämnen",
+      "secretBadge": "Siddhatransmission",
+      "formatLabel": "Format",
+      "sourceLabel": "Källor"
     }
   }
 }

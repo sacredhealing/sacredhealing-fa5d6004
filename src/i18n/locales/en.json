@@ -6944,7 +6944,11 @@
       "toastNotesError": "Could not save notes.",
       "signInToSave": "Sign in to record completion.",
       "navPrevious": "Previous",
-      "navNext": "Next module"
+      "navNext": "Next module",
+      "topicsHeading": "Transmission topics",
+      "secretBadge": "Siddha transmission",
+      "formatLabel": "Format",
+      "sourceLabel": "Sources"
     }
   }
 }

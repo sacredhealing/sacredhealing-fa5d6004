@@ -29,6 +29,7 @@ import {
   getCourseTierRequiredRank,
   getSalesPageForRank,
 } from '@/lib/tierAccess';
+import { getModuleById } from '@/lib/jyotishModules';
 
 function isYoutubeUrl(url: string): boolean {
   return /youtube\.com\/watch|youtu\.be\//i.test(url);
@@ -83,6 +84,8 @@ const JyotishVidyaModule: React.FC = () => {
     () => [...modules].sort((a, b) => a.sort_order - b.sort_order),
     [modules],
   );
+
+  const catalogModule = useMemo(() => (module ? getModuleById(module.id) : undefined), [module]);
 
   const allowed = useMemo(() => {
     if (!module) return false;
@@ -316,8 +319,47 @@ const JyotishVidyaModule: React.FC = () => {
         <div className="mb-8">
           <h1 className="text-2xl font-black tracking-tight text-[#D4AF37] sm:text-3xl">{module.title}</h1>
           <p className="mt-2 text-sm leading-relaxed text-white/55">{module.subtitle}</p>
-          {module.description?.trim() && (
-            <p className="mt-4 text-sm leading-relaxed text-white/45">{module.description}</p>
+          {catalogModule?.isSecret && (
+            <p className="mt-3 inline-flex rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-3 py-1 text-[9px] font-extrabold uppercase tracking-[0.2em] text-[#D4AF37]/90">
+              {t('jyotishVidya.module.secretBadge')}
+            </p>
+          )}
+          {(module.description?.trim() || catalogModule?.description) && (
+            <p className="mt-4 text-sm leading-relaxed text-white/45">
+              {module.description?.trim() || catalogModule?.description}
+            </p>
+          )}
+          {(catalogModule?.duration || catalogModule?.sourceText) && (
+            <div className="mt-4 space-y-1 text-[11px] leading-relaxed text-white/40">
+              {catalogModule.duration && (
+                <p>
+                  <span className="font-extrabold uppercase tracking-[0.15em] text-white/30">
+                    {t('jyotishVidya.module.formatLabel')}{' '}
+                  </span>
+                  {catalogModule.duration}
+                </p>
+              )}
+              {catalogModule.sourceText && (
+                <p>
+                  <span className="font-extrabold uppercase tracking-[0.15em] text-white/30">
+                    {t('jyotishVidya.module.sourceLabel')}{' '}
+                  </span>
+                  {catalogModule.sourceText}
+                </p>
+              )}
+            </div>
+          )}
+          {catalogModule?.topics && catalogModule.topics.length > 0 && (
+            <div className="mt-8 rounded-[28px] border border-white/[0.06] bg-white/[0.02] p-6 backdrop-blur-[40px]">
+              <h2 className="mb-4 text-[10px] font-extrabold uppercase tracking-[0.35em] text-[#D4AF37]/75">
+                {t('jyotishVidya.module.topicsHeading')}
+              </h2>
+              <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-white/55">
+                {catalogModule.topics.map((topic, idx) => (
+                  <li key={`${module.id}-topic-${idx}`}>{topic}</li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
 
