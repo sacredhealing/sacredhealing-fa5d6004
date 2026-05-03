@@ -6342,6 +6342,7 @@
       "catalog": "Moduler i katalogen"
     },
     "links": {
+      "jyotishVidya": "Suverän Jyotish Vidya",
       "apothecary": "Agastya Muni — Quantum Apothecary",
       "dosha": "Dosha och Ayurveda-labb",
       "temple": "Temple Home — Dinacharya-förankring",
@@ -6460,5 +6461,78 @@
       "toastNotesError": "Kunde inte spara anteckningar."
     },
     "footer": "Curriculum är levande. Det andas. Det utvecklas när eleverna utvecklas."
+  },
+  "jyotishVidya": {
+    "back": "Tillbaka",
+    "kicker": "Helig kunskapsöverföring — Siddha Quantum Intelligence",
+    "title": "Suverän Jyotish Vidya",
+    "subtitle": "Trettiotvå transmissioner från Ākāsha Free-grunden till Akasha Infinity — klassiska Parāśara- och Jaimini-linjer, Nadi-fält och Siddha-remedier, i SQI-plattformens takt.",
+    "guestBanner": "Gäster kan öppna modul 1–3 som förhandsvisning. Skapa konto för att låsa upp hela gratisnivån (modul 1–6) och synka framsteg.",
+    "loginCta": "Logga in",
+    "loginToUnlock": "Logga in för att låsa upp",
+    "statsCompleted": "Moduler klara",
+    "statsProgress": "Vägframsteg",
+    "statsMinutes": "Studieminuter",
+    "tierMapTitle": "Fyrnivå-karta",
+    "tiers": {
+      "i": {
+        "label": "Nivå I",
+        "price": "Gratis — Ākāsha Free",
+        "modules": "6 moduler — Grund · Vaknande"
+      },
+      "ii": {
+        "label": "Nivå II",
+        "price": "€19/mån — Prāna-Flow",
+        "modules": "14 moduler totalt — Utövare · Att se"
+      },
+      "iii": {
+        "label": "Nivå III",
+        "price": "€45/mån — Siddha Quantum",
+        "modules": "22 moduler totalt — Avancerat · Mästerskap"
+      },
+      "iv": {
+        "label": "Nivå IV",
+        "price": "€1111 livstid — Akasha Infinity",
+        "modules": "32 moduler totalt — Siddha-hemligheter · Befrielse"
+      }
+    },
+    "modulesTitle": "Transmissionsmoduler",
+    "refresh": "Uppdatera katalog",
+    "loadError": "Kunde inte ladda Jyotish Vidya-katalogen.",
+    "emptyCatalog": "Inga moduler publicerade ännu. Kör Supabase-migreringen eller kontrollera anslutningen.",
+    "moduleMeta": "Modul {{num}}",
+    "previewBadge": "Förhandsvisning",
+    "durationMinutes": "{{minutes}} min",
+    "unlockCta": "Visa uppgradering",
+    "openModule": "Öppna modul",
+    "footer": "Kodad för SQI-plattformen — för sökare som vandrar i stjärnornas ljus.",
+    "module": {
+      "notFound": "Modulen hittades inte.",
+      "backHub": "Tillbaka till Jyotish Vidya",
+      "stickyHub": "Jyotish Vidya",
+      "stickyMeta": "Modul {{num}}",
+      "lockedKicker": "Transmission låst",
+      "lockedDetail": "Modul {{num}} kräver {{tier}} eller högre på ditt konto.",
+      "lockedBody": "Uppgradera medlemskapsnivån för att ta emot denna transmission.",
+      "unlockCta": "Visa uppgradering",
+      "noMedia": "Media för modulen visas när den publiceras (video-URL, PDF eller ljud).",
+      "openContent": "Öppna lektion",
+      "pdfSection": "Läsningsmaterial",
+      "downloadPdf": "Öppna PDF",
+      "audioSection": "Ljudtransmission",
+      "videoTitle": "{{title}} — video",
+      "notesLabel": "Sadhana-anteckningar",
+      "notesPlaceholder": "Reflektioner, diagram eller påminnelser — sparas när du är inloggad.",
+      "guestNotes": "Logga in för att spara anteckningar",
+      "saving": "Sparar…",
+      "markComplete": "Markera som klar",
+      "alreadyComplete": "Klar",
+      "toastComplete": "Modul markerad som klar.",
+      "toastCompleteError": "Kunde inte spara slutförande.",
+      "toastNotesError": "Kunde inte spara anteckningar.",
+      "signInToSave": "Logga in för att spara slutförande.",
+      "navPrevious": "Föregående",
+      "navNext": "Nästa modul"
+    }
   }
 }

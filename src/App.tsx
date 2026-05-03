@@ -138,6 +138,8 @@ const VedicAstrology = React.lazy(() => import("./pages/VedicAstrology"));
 const Ayurveda = React.lazy(() => import("./pages/Ayurveda"));
 const AgastyarAcademy = React.lazy(() => import("./pages/AgastyarAcademy"));
 const AgastyarModule = React.lazy(() => import("./pages/AgastyarModule"));
+const JyotishVidya = React.lazy(() => import("./pages/JyotishVidya"));
+const JyotishVidyaModule = React.lazy(() => import("./pages/JyotishVidyaModule"));
 const Vastu = React.lazy(() => import("./pages/Vastu"));
 const PromptLibrary = React.lazy(() => import("./pages/PromptLibrary"));
 const HandAnalyzer = React.lazy(() => import("./pages/HandAnalyzer"));
@@ -338,6 +340,8 @@ function AppRoutes() {
                   <Route path="/ayurveda" element={<Ayurveda />} />
                   <Route path="/agastyar-academy" element={<AgastyarAcademy />} />
                   <Route path="/agastyar-academy/module/:id" element={<AgastyarModule />} />
+                  <Route path="/jyotish-vidya" element={<JyotishVidya />} />
+                  <Route path="/jyotish-vidya/module/:id" element={<JyotishVidyaModule />} />
                   <Route path="/vastu" element={<Vastu />} />
                   <Route path="/quantum-apothecary" element={<QuantumApothecaryGate />} />
                   <Route path="/life-book" element={<LifeBook />} />

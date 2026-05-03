@@ -72,6 +72,8 @@ function getActiveNavTo(pathname: string): string | null {
         '/paths',
         '/siddha-portal',
         '/vedic-astrology',
+        '/jyotish-vidya',
+        '/jyotish-vidya/module',
         '/ayurveda',
         '/vastu',
         '/quantum-apothecary',

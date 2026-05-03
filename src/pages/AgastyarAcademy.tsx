@@ -18,6 +18,7 @@ import {
   Radio,
   Search,
   Sparkles,
+  Star,
   Sprout,
   Stethoscope,
   TrendingUp,
@@ -380,6 +381,13 @@ const AgastyarAcademy: React.FC = () => {
             {t('academy.hub.quickLinks')}
           </h2>
           <div className="flex flex-wrap gap-3">
+            <Link
+              to="/jyotish-vidya"
+              className="inline-flex items-center gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-white/70 hover:border-[#D4AF37]/25 hover:text-[#D4AF37]"
+            >
+              <Star size={16} aria-hidden />
+              {t('academy.links.jyotishVidya')}
+            </Link>
             <Link
               to="/quantum-apothecary"
               className="inline-flex items-center gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#D4AF37]"

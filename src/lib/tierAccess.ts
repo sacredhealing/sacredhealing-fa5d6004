@@ -14,6 +14,32 @@
  * siddha-quantum-monthly) are still recognized for backwards-compat parsing.
  */
 
+/** Highest Sovereign Jyotish Vidya module id (1–32) unlocked by membership rank (0–3). */
+export function getJyotishMaxModuleIdForTierRank(rank: number): number {
+  if (rank >= 3) return 32;
+  if (rank >= 2) return 22;
+  if (rank >= 1) return 14;
+  return 6;
+}
+
+/**
+ * Jyotish Vidya access: guests may preview modules 1–3 without login.
+ * Logged-in free tier unlocks modules 1–6; paid tiers extend per curriculum map.
+ */
+export function canAccessJyotishModule(params: {
+  isAdmin: boolean;
+  userId: string | undefined;
+  tier: string | undefined | null;
+  moduleId: number;
+}): boolean {
+  if (params.isAdmin) return true;
+  const mid = Math.floor(params.moduleId);
+  if (!params.userId) return mid >= 1 && mid <= 3;
+  const rank = getTierRank(params.tier);
+  const maxId = getJyotishMaxModuleIdForTierRank(rank);
+  return mid >= 1 && mid <= maxId;
+}
+
 /** Maps `ayurveda_courses.tier_required` slug to membership rank (0–3). */
 export function getCourseTierRequiredRank(tierRequired: string | null | undefined): number {
   const raw = (tierRequired || 'free').toLowerCase().replace(/_/g, '-');

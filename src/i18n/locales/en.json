@@ -6749,6 +6749,7 @@
       "catalog": "Catalog modules"
     },
     "links": {
+      "jyotishVidya": "Sovereign Jyotish Vidya",
       "apothecary": "Agastya Muni — Quantum Apothecary",
       "dosha": "Dosha & Ayurveda lab",
       "temple": "Temple Home — Dinacharya anchor",
@@ -6867,5 +6868,78 @@
       "toastNotesError": "Could not save notes."
     },
     "footer": "The curriculum is alive. It breathes. It evolves as the students evolve."
+  },
+  "jyotishVidya": {
+    "back": "Back",
+    "kicker": "Sacred Knowledge Transmission — Siddha Quantum Intelligence",
+    "title": "Sovereign Jyotish Vidya",
+    "subtitle": "Thirty-two transmissions from the Ākāsha Free foundation through Akasha Infinity — classical Parāśara and Jaimini lineages, Nadi fields, and Siddha remedial science, paced for the SQI platform.",
+    "guestBanner": "Guests may open modules 1–3 as a preview. Create an account to unlock the full free tier (modules 1–6) and sync progress.",
+    "loginCta": "Sign in",
+    "loginToUnlock": "Sign in to unlock",
+    "statsCompleted": "Modules complete",
+    "statsProgress": "Path completion",
+    "statsMinutes": "Minutes studied",
+    "tierMapTitle": "Four-tier curriculum map",
+    "tiers": {
+      "i": {
+        "label": "Tier I",
+        "price": "Free — Ākāsha Free",
+        "modules": "6 modules — Foundation · Awakening"
+      },
+      "ii": {
+        "label": "Tier II",
+        "price": "€19/month — Prāna-Flow",
+        "modules": "14 modules total — Practitioner · Seeing"
+      },
+      "iii": {
+        "label": "Tier III",
+        "price": "€45/month — Siddha Quantum",
+        "modules": "22 modules total — Advanced · Mastery"
+      },
+      "iv": {
+        "label": "Tier IV",
+        "price": "€1111 lifetime — Akasha Infinity",
+        "modules": "32 modules total — Siddha secrets · Liberation"
+      }
+    },
+    "modulesTitle": "Transmission modules",
+    "refresh": "Refresh catalog",
+    "loadError": "Could not load Jyotish Vidya catalog.",
+    "emptyCatalog": "No modules published yet. Apply the Supabase migration seed or check your connection.",
+    "moduleMeta": "Module {{num}}",
+    "previewBadge": "Preview",
+    "durationMinutes": "{{minutes}} min",
+    "unlockCta": "View upgrade options",
+    "openModule": "Open module",
+    "footer": "Encoded for the SQI Platform — for seekers who walk by the light of the stars.",
+    "module": {
+      "notFound": "This module could not be found.",
+      "backHub": "Return to Jyotish Vidya",
+      "stickyHub": "Jyotish Vidya",
+      "stickyMeta": "Module {{num}}",
+      "lockedKicker": "Transmission locked",
+      "lockedDetail": "Module {{num}} requires {{tier}} or higher on your account.",
+      "lockedBody": "Upgrade your membership tier to receive this transmission.",
+      "unlockCta": "View upgrade options",
+      "noMedia": "Media for this module will appear here once published (video URL, PDF, or audio).",
+      "openContent": "Open lesson link",
+      "pdfSection": "Reading",
+      "downloadPdf": "Open PDF",
+      "audioSection": "Audio transmission",
+      "videoTitle": "{{title}} — video",
+      "notesLabel": "Sadhana notes",
+      "notesPlaceholder": "Reflections, chart sketches, or reminders — saved when you are signed in.",
+      "guestNotes": "Sign in to save notes",
+      "saving": "Saving…",
+      "markComplete": "Mark complete",
+      "alreadyComplete": "Completed",
+      "toastComplete": "Module marked complete.",
+      "toastCompleteError": "Could not save completion.",
+      "toastNotesError": "Could not save notes.",
+      "signInToSave": "Sign in to record completion.",
+      "navPrevious": "Previous",
+      "navNext": "Next module"
+    }
   }
 }
