@@ -1,73 +1,31 @@
-## Why the Bhagavad Gita transmission was lost
+## Goal
+Add a prominent, glowing "Agastyar Academy" hero card at the top of the Siddha Portal page (`/siddha-portal`) that routes to the existing Academy at `/agastyar-academy`.
 
-I traced your session in the database. The conversation (`5cdc09e5...`) ran fine and the Bhagavad Gita reply IS stored in `sqi_sessions.messages` at 17:41 — but there is **no corresponding `transmission_blocks` row** for it. Every other reply from today (Dalai Lama, Matsya, Great Deluge, Samadhi, etc.) made it to the Codex. Only the Bhagavad Gita one is missing.
+## Placement
+In `src/pages/SiddhaPortal.tsx`, insert the new card immediately after the header/subtitle block and before the Sri Yantra divider — so it sits at the very top of the scroll content.
 
-Root cause: the curator is invoked from inside `streamChatWithSQI`'s `onDone` callback as a fire-and-forget `void` call. If the page unmounts, the network drops, the `onDone` callback throws, or the stream ends right as you navigate away, that single chance to save is lost forever — and the rest of the app never finds out. There is currently no retry, no audit, no backfill.
+## Visual design (matches Sanctuary theme)
+- Full-width card (inside the 430px container, with 16px side margin)
+- Background: layered gradient using Alchemical Gold (#D4AF37) + Glowing Turquoise (#00F2FE) at low opacity over Midnight Black
+- 1px gold border, 24px radius (consistent with existing `CARD_BASE`)
+- **Glowing light effect**: outer `box-shadow` halo in gold + cyan, plus an animated pulsing aura behind the card using a new `@keyframes sqGlowPulse` (opacity + blur breathing, 4s loop). No layout-shifting entrance animations (per memory rule).
+- Small "ACADEMY • 108 MODULES" gold uppercase kicker
+- Title "Agastyar Academy" in Cormorant Garamond serif
+- Italic subtitle: "The complete path of Ayurvedic mastery — from Atma-Seed to Akasha-Infinity."
+- CTA button "Enter Academy →" in gold
+- Tiny tier-strip row at bottom showing 4 dots (Free / Prana / Siddha / Akasha) so users see it spans every tier
 
-## What we'll build
+## Access logic
+- The card itself is visible to anyone who can already reach `/siddha-portal` (admin + Rank 2+, enforced by existing `FEATURE_TIER.siddhaPortal` gate at top of the page — no change).
+- Navigation target `/agastyar-academy` is unchanged. The Academy page already enforces per-module `tier_required` via `getCourseTierRequiredRank`, so:
+  - Admin → full access (bypass via `isAdmin` in `hasFeatureAccess`)
+  - Free (rank 0) → Phase 1 (modules 1–12)
+  - Prana-Flow (rank 1) → + Phase 2
+  - Siddha-Quantum (rank 2) → + Phase 3
+  - Akasha-Infinity (rank 3) → + Phases 4–5
+- No changes to `tierAccess.ts` or DB needed — tier connections already exist correctly.
 
-A two-layer safety net so the same message is impossible to lose:
+## Files to change
+- `src/pages/SiddhaPortal.tsx` — add `AcademyHeroCard` component + `sqGlowPulse` keyframe in the existing `<style>` block.
 
-```text
-SQI reply finishes
-   │
-   ├─► (existing) curator called immediately + toast
-   │
-   └─► (new) AFTER persistMessages succeeds, also enqueue an "unsynced" marker
-                  on the assistant message (e.g. needs_codex_sync: true)
-                            │
-                            ▼
-        Self-healing sweeper runs:
-          • on app boot
-          • whenever QuantumApothecary mounts
-          • after every successful curate
-        It finds every model message in sqi_sessions where
-        needs_codex_sync = true (or no matching transmission_block exists)
-        and replays it through the curator. Cleared on success.
-```
-
-This means: even if the toast never fires, the next time you open the SQI page (or any other tab in the app), the missing transmission is replayed automatically and lands in the right book.
-
-## Plan
-
-### 1. Mark every assistant reply as "pending sync" at write-time
-- In `QuantumApothecary.tsx` and `AdminQuantumApothecary2045.tsx`, when saving the final assistant message via `persistMessages`, attach a small flag on that message object: `needs_codex_sync: true`, `sqi_msg_id: <stable id>`.
-- The curator client will clear that flag on the message after a successful (non-excluded) save.
-
-### 2. New self-healing sweeper: `src/lib/codex/codexSync.ts`
-- Function `syncPendingTransmissions(userId)`:
-  - Loads recent `sqi_sessions` for this user (last N days, configurable).
-  - For each session, walks `messages` and finds model messages where `needs_codex_sync === true`.
-  - For each, calls `curateTransmission` (silent mode, no toast) with the original `user_prompt` (the prior user message in the array) and `source_chat_id = session.id`.
-  - On success: updates the message in-place (`needs_codex_sync = false`) and writes the session back.
-  - On exclusion: also clears the flag (excluded is a valid terminal state).
-  - On failure: leaves the flag set so the next sweep retries.
-- Runs:
-  - Once on `App` mount (after auth resolves) — catches anything missed across sessions.
-  - On `QuantumApothecary` and `AdminQuantumApothecary2045` mount.
-  - After every successful `curateTransmission` call (cheap because flag-driven).
-
-### 3. One-shot backfill for the Bhagavad Gita message you just lost
-- Trigger `syncPendingTransmissions` for your user the first time the new code loads. Because the missed Bhagavad Gita reply is still sitting in `sqi_sessions.messages`, the sweeper will pick it up and route it into the Akashic Codex automatically — no manual paste needed.
-
-### 4. Curator-side guards (small but important)
-- In `curateTransmission`, when the function-invoke promise rejects (network drop, 5xx), keep the message marked unsynced so the sweeper retries.
-- Add a tiny console log when curator is skipped because `finalText` is empty, so we'd see this kind of miss in console next time.
-
-### 5. Visibility
-- Toast already exists for the live path — unchanged.
-- For the silent backfill path, no toast (would be noisy at boot). A single dev-only `console.info("[codex] backfilled N transmissions")` only.
-
-## Files to touch
-
-- **New** `src/lib/codex/codexSync.ts` — sweeper logic (sessions read + curator replay + flag clearing).
-- `src/lib/codex/curatorClient.ts` — accept `onSuccess` / `onFailure` callbacks; expose a `silent` already exists; add a small "needs retry" return.
-- `src/pages/QuantumApothecary.tsx` — mark message with `needs_codex_sync` before persisting; run sweeper on mount.
-- `src/pages/AdminQuantumApothecary2045.tsx` — same two changes.
-- `src/App.tsx` — invoke `syncPendingTransmissions(user.id)` once after auth resolves.
-
-No database migrations required — the flag lives inside the existing `sqi_sessions.messages` JSON column. No edge-function changes needed; `akasha-codex-curator` already does the right thing once it receives a payload.
-
-## Outcome
-- The Bhagavad Gita transmission you mentioned will appear in the Akashic Codex automatically the first time you open the app after this ships.
-- Any future missed reply (page closed mid-stream, network blip, onDone throw, etc.) will self-heal on the next app open instead of being lost.
+No new routes, no DB migration, no i18n keys required (using inline strings consistent with the rest of the page).

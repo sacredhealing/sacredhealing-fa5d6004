@@ -274,6 +274,86 @@ export default function SiddhaPortal() {
         </p>
       </div>
 
+      {/* ── AGASTYAR ACADEMY HERO ── */}
+      <div style={{ position: 'relative', margin: '24px 16px 8px' }}>
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            inset: -14,
+            borderRadius: 32,
+            background: `radial-gradient(60% 60% at 30% 40%, ${gold(0.35)}, transparent 70%), radial-gradient(60% 60% at 75% 65%, ${cyan(0.28)}, transparent 70%)`,
+            filter: 'blur(22px)',
+            animation: 'sqGlowPulse 4s ease-in-out infinite',
+            pointerEvents: 'none',
+            zIndex: 0,
+          }}
+        />
+        <div
+          onClick={() => navigate('/agastyar-academy')}
+          style={{
+            position: 'relative',
+            zIndex: 1,
+            background: `linear-gradient(135deg, rgba(212,175,55,0.10), rgba(0,242,254,0.05) 60%, rgba(5,5,5,0.6))`,
+            border: `1px solid ${gold(0.45)}`,
+            borderRadius: 24,
+            padding: '22px 20px 20px',
+            cursor: 'pointer',
+            boxShadow: `0 0 40px ${gold(0.25)}, 0 0 80px ${cyan(0.12)}, inset 0 0 30px rgba(212,175,55,0.06)`,
+          }}
+        >
+          <div style={{ ...LABEL_STYLE, fontSize: 9, color: gold(0.7), marginBottom: 10 }}>
+            ⚜ Academy · 108 Modules
+          </div>
+          <h2 style={{
+            fontFamily: "'Cormorant Garamond',serif",
+            fontSize: '1.85rem',
+            fontWeight: 600,
+            color: white(0.96),
+            lineHeight: 1.1,
+            margin: 0,
+            textShadow: `0 0 18px ${gold(0.35)}`,
+          }}>
+            Agastyar Academy
+          </h2>
+          <p style={{ ...CARD_DESC, marginTop: 8, marginBottom: 14, color: white(0.62) }}>
+            The complete path of Ayurvedic mastery — from Atma-Seed to Akasha-Infinity.
+          </p>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
+            {[
+              { label: 'Free', color: white(0.55) },
+              { label: 'Prana', color: green(0.85) },
+              { label: 'Siddha', color: cyan(0.9) },
+              { label: 'Akasha', color: gold(0.95) },
+            ].map((t) => (
+              <div key={t.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: t.color, boxShadow: `0 0 8px ${t.color}` }} />
+                <span style={{ ...LABEL_STYLE, fontSize: 8, color: t.color, letterSpacing: '0.25em' }}>{t.label}</span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '10px 18px',
+            borderRadius: 999,
+            background: `linear-gradient(135deg, ${gold(0.25)}, ${gold(0.08)})`,
+            border: `1px solid ${gold(0.5)}`,
+            color: gold(0.98),
+            fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+            fontSize: 10,
+            fontWeight: 800,
+            letterSpacing: '0.3em',
+            textTransform: 'uppercase',
+          }}>
+            Enter Academy →
+          </div>
+        </div>
+      </div>
+
       {/* ── SRI YANTRA ── */}
       <div style={{ display: 'flex', justifyContent: 'center', padding: '28px 0 20px' }}>
         <svg width="72" height="72" viewBox="0 0 24 24" fill="none" style={{ animation: 'sqBreathe 7s ease-in-out infinite', opacity: 0.75 }}>
@@ -429,6 +509,10 @@ export default function SiddhaPortal() {
         @keyframes sqLiveFlash {
           0%, 100% { opacity: 1; }
           50%       { opacity: 0.2; }
+        }
+        @keyframes sqGlowPulse {
+          0%, 100% { opacity: 0.55; transform: scale(1); }
+          50%      { opacity: 1;    transform: scale(1.04); }
         }
       `}</style>
     </div>
