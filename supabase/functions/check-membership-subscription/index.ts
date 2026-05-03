@@ -12,43 +12,55 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CHECK-MEMBERSHIP-SUBSCRIPTION] ${step}${detailsStr}`);
 };
 
-// Map Stripe price IDs to tier slugs (most reliable — matches src/config/tierCheckout.ts)
+// Canonical tier slugs (only 4): free, prana-flow, siddha-quantum, akasha-infinity
+// Map Stripe price IDs → canonical tier slug
 const PRICE_TO_TIER: Record<string, string> = {
-  'price_1T8o3YAPsnbrivP056UJqOP7': 'premium-monthly',   // Prana-Flow €19/mo
+  'price_1T8o3YAPsnbrivP056UJqOP7': 'prana-flow',        // Prana-Flow €19/mo
   'price_1T8o3jAPsnbrivP0uZKR33EY': 'siddha-quantum',    // Siddha-Quantum €45/mo
   'price_1T8o3kAPsnbrivP0m8bOzl3M': 'akasha-infinity',   // Akasha-Infinity €1111
 };
 
-// Map Stripe product IDs to tier slugs (fallback)
+// Map Stripe product IDs → canonical tier slug (fallback)
 const PRODUCT_TO_TIER: Record<string, string> = {
-  'prod_TjLbPzCXMYBGOj': 'premium-monthly',
-  'prod_TjLb4I9DVWijtL': 'premium-annual',
-  'prod_TjLb4aw139HcPU': 'lifetime',
-  'prod_U727beGFLeQZUc': 'premium-monthly',   // Prana-Flow
-  'prod_U7271mhrwFlfTX': 'siddha-quantum',    // Siddha-Quantum
-  'prod_U727siddhaInfinity': 'akasha-infinity',
+  'prod_U727beGFLeQZUc': 'prana-flow',
+  'prod_U7271mhrwFlfTX': 'siddha-quantum',
+  'prod_U727Z2qQU76qiE': 'akasha-infinity',
+  // Legacy products → map to nearest canonical equivalent
+  'prod_TjLbPzCXMYBGOj': 'prana-flow',
+  'prod_TjLb4I9DVWijtL': 'prana-flow',
+  'prod_TjLb4aw139HcPU': 'akasha-infinity',
 };
 
-// Map admin-granted tier column values → canonical tier slugs (must match getTierRank() in app)
+// Map admin-granted tier column values → canonical tier slugs
 const ADMIN_TIER_MAP: Record<string, string> = {
-  premium_monthly: "premium-monthly",
-  premium_annual: "premium-annual",
-  prana_flow_monthly: "premium-monthly",
-  prana_flow_annual: "premium-annual",
-  siddha_quantum: "siddha-quantum",
+  // Canonical
+  "prana-flow": "prana-flow",
   "siddha-quantum": "siddha-quantum",
-  lifetime: "lifetime",
+  "akasha-infinity": "akasha-infinity",
+  // Legacy aliases (backwards compatibility)
+  prana_flow: "prana-flow",
+  prana_monthly: "prana-flow",
+  "prana-monthly": "prana-flow",
+  premium_monthly: "prana-flow",
+  premium_annual: "prana-flow",
+  prana_flow_monthly: "prana-flow",
+  prana_flow_annual: "prana-flow",
+  siddha_quantum: "siddha-quantum",
+  "siddha-quantum-monthly": "siddha-quantum",
+  siddha_quantum_monthly: "siddha-quantum",
+  lifetime: "akasha-infinity",
   akasha_infinity: "akasha-infinity",
   akasha_infinity_lifetime: "akasha-infinity",
-  "akasha-infinity": "akasha-infinity",
 };
 
 function slugFromAdminTier(raw: string | null): string {
-  if (!raw) return "premium-monthly";
+  if (!raw) return "prana-flow";
   const k = raw.trim();
   if (ADMIN_TIER_MAP[k]) return ADMIN_TIER_MAP[k];
   const underscored = k.replace(/-/g, "_");
   if (ADMIN_TIER_MAP[underscored]) return ADMIN_TIER_MAP[underscored];
+  const dashed = k.replace(/_/g, "-");
+  if (ADMIN_TIER_MAP[dashed]) return ADMIN_TIER_MAP[dashed];
   return k;
 }
 
@@ -58,8 +70,8 @@ function tierSlugRank(slug: string): number {
   if (s.includes("akasha") || s.includes("life")) return 3;
   if (s.includes("siddha")) return 2;
   if (
-    s.includes("premium") ||
     s.includes("prana") ||
+    s.includes("premium") ||
     s.includes("month") ||
     s.includes("annual") ||
     s.includes("year")
@@ -68,12 +80,12 @@ function tierSlugRank(slug: string): number {
   return 0;
 }
 
+/** Membership-table slug used to look up a row in `membership_tiers` */
 function membershipTableSlugForTier(slug: string): string {
   const s = slug.toLowerCase();
-  if (s.includes("akasha") || s.includes("life")) return "lifetime";
-  if (s.includes("siddha")) return "siddha-quantum-monthly";
-  if (s.includes("annual") || s.includes("year")) return "premium-annual";
-  if (s.includes("premium") || s.includes("prana") || s.includes("month")) return "premium-monthly";
+  if (s.includes("akasha") || s.includes("life")) return "akasha-infinity";
+  if (s.includes("siddha")) return "siddha-quantum";
+  if (s.includes("prana") || s.includes("premium") || s.includes("month") || s.includes("annual") || s.includes("year")) return "prana-flow";
   return "free";
 }
 
@@ -163,10 +175,10 @@ serve(async (req) => {
       .rpc('has_role', { _user_id: user.id, _role: 'admin' });
     
     if (isAdminData === true) {
-      logStep("Admin user detected - granting full lifetime access");
+      logStep("Admin user detected - granting Akasha-Infinity access");
       return new Response(JSON.stringify({
         subscribed: true,
-        tier: 'lifetime',
+        tier: 'akasha-infinity',
         subscription_end: null,
         admin_granted: true,
         is_admin: true
@@ -260,12 +272,12 @@ serve(async (req) => {
       hasActiveSub = true;
       // Pick the highest-rank subscription if multiple exist
       let chosen = subscriptions.data[0];
-      let chosenSlug = 'premium-monthly';
+      let chosenSlug = 'prana-flow';
       let chosenRank = -1;
       for (const sub of subscriptions.data) {
         const priceId = sub.items.data[0].price.id as string;
         const productId = sub.items.data[0].price.product as string;
-        const slug = PRICE_TO_TIER[priceId] || PRODUCT_TO_TIER[productId] || 'premium-monthly';
+        const slug = PRICE_TO_TIER[priceId] || PRODUCT_TO_TIER[productId] || 'prana-flow';
         const rank = tierSlugRank(slug);
         if (rank > chosenRank) {
           chosenRank = rank;
@@ -289,17 +301,20 @@ serve(async (req) => {
         limit: 100,
       });
 
+      const isInfinityMeta = (m: any) => {
+        const v = (m?.tier_slug || '').toString().toLowerCase();
+        return v === 'akasha-infinity' || v === 'lifetime' || v === 'akasha_infinity';
+      };
       for (const pi of paymentIntents.data) {
-        if (pi.status === 'succeeded' && pi.metadata?.tier_slug === 'lifetime') {
+        if (pi.status === 'succeeded' && isInfinityMeta(pi.metadata)) {
           hasActiveSub = true;
-          tierSlug = 'lifetime';
-          subscriptionEnd = null; // Lifetime has no end
-          logStep("Lifetime purchase found", { paymentIntentId: pi.id });
+          tierSlug = 'akasha-infinity';
+          subscriptionEnd = null;
+          logStep("Akasha-Infinity purchase found", { paymentIntentId: pi.id });
           break;
         }
       }
 
-      // Also check checkout sessions for lifetime purchases
       if (!hasActiveSub) {
         const sessions = await stripe.checkout.sessions.list({
           customer: customerId,
@@ -307,11 +322,11 @@ serve(async (req) => {
         });
 
         for (const session of sessions.data) {
-          if (session.payment_status === 'paid' && session.metadata?.tier_slug === 'lifetime') {
+          if (session.payment_status === 'paid' && isInfinityMeta(session.metadata)) {
             hasActiveSub = true;
-            tierSlug = 'lifetime';
+            tierSlug = 'akasha-infinity';
             subscriptionEnd = null;
-            logStep("Lifetime checkout session found", { sessionId: session.id });
+            logStep("Akasha-Infinity checkout session found", { sessionId: session.id });
             break;
           }
         }

@@ -1,16 +1,17 @@
 /**
  * Tier Access Utility
  *
- * Maps raw membership tier strings to a numeric rank for access control.
- *
  * Canonical slugs (Stripe + admin grant + edge function):
- *   premium-monthly, premium-annual, siddha-quantum, lifetime, akasha-infinity, free
+ *   free, prana-flow, siddha-quantum, akasha-infinity
  *
  * Tier hierarchy:
  *   0 = Free (Atma-Seed)
  *   1 = Prana-Flow (€19/mo)
  *   2 = Siddha-Quantum (€45/mo)
- *   3 = Akasha-Infinity (lifetime / €1111)
+ *   3 = Akasha-Infinity (€1111 lifetime)
+ *
+ * Legacy aliases (premium-monthly, premium-annual, lifetime, prana-monthly,
+ * siddha-quantum-monthly) are still recognized for backwards-compat parsing.
  */
 
 export function getTierRank(tier: string | undefined | null): number {
@@ -38,8 +39,8 @@ export function getMusicTrackAccessTierRankFromStoredValue(v: string | undefined
   if (v == null || v === '') return null;
   const n = v.toLowerCase();
   if (n === 'free') return 0;
-  if (n === 'prana_flow') return 1;
-  if (n === 'siddha_quantum') return 2;
+  if (n === 'prana_flow' || n === 'prana-flow') return 1;
+  if (n === 'siddha_quantum' || n === 'siddha-quantum') return 2;
   if (n === 'akashainfinity' || n === 'akasha_infinity' || n === 'akasha-infinity') return 3;
   return null;
 }

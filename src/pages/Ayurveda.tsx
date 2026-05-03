@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useMembership } from '@/hooks/useMembership';
 import type { AyurvedaMembershipLevel } from '@/lib/ayurvedaTypes';
+import { getTierRank } from '@/lib/tierAccess';
 
 const Ayurveda = () => {
   const { user, isLoading: authLoading } = useAuth();
@@ -39,27 +40,10 @@ const Ayurveda = () => {
   // Admin check runs FIRST — overrides everything else
   // Admin always gets LIFETIME regardless of their subscription status
   const getAyurvedaLevel = (): AyurvedaMembershipLevel => {
-    // ADMIN: full sovereign access — no gates, no restrictions
     if (isAdmin) return 'LIFETIME' as AyurvedaMembershipLevel;
-
-    // LIFETIME tiers (all slug variants)
-    if (
-      tier === 'lifetime' ||
-      tier === 'akasha-infinity' ||
-      tier === 'akasha_infinity'
-    ) return 'LIFETIME' as AyurvedaMembershipLevel;
-
-    // PREMIUM tiers (all slug variants)
-    if (
-      isPremium ||
-      tier?.includes('premium') ||
-      tier === 'siddha-quantum' ||
-      tier === 'siddha_quantum' ||
-      tier === 'prana-flow' ||
-      tier === 'prana_flow'
-    ) return 'PREMIUM' as AyurvedaMembershipLevel;
-
-    // Default: free tier
+    const rank = getTierRank(tier);
+    if (rank >= 3) return 'LIFETIME' as AyurvedaMembershipLevel;
+    if (rank >= 1 || isPremium) return 'PREMIUM' as AyurvedaMembershipLevel;
     return 'FREE' as AyurvedaMembershipLevel;
   };
 

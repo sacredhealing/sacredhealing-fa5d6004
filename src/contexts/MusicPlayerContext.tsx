@@ -356,10 +356,9 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         .eq('status', 'active');
 
       const paidTiers = [
-        'prana-monthly', 'prana-flow',
-        'premium-monthly', 'premium-annual',
-        'siddha-quantum', 'siddha-quantum-monthly',
-        'lifetime', 'akasha-infinity',
+        'prana-flow',
+        'siddha-quantum',
+        'akasha-infinity',
         'music-monthly', 'music-yearly',
         'meditation-monthly', 'meditation-yearly',
       ];

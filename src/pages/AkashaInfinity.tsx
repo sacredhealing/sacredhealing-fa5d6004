@@ -14,7 +14,7 @@ const AkashaInfinity: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  const isLifetime = tier === 'lifetime';
+  const isLifetime = tier === 'akasha-infinity' || tier === 'lifetime';
 
   useEffect(() => {
     const ref = searchParams.get('ref');
@@ -114,7 +114,7 @@ const AkashaInfinity: React.FC = () => {
       const { data: tierData, error: tierError } = await supabase
         .from('membership_tiers')
         .select('stripe_price_id')
-        .eq('slug', 'lifetime')
+        .eq('slug', 'akasha-infinity')
         .single();
 
       if (tierError || !tierData?.stripe_price_id) {
@@ -125,7 +125,7 @@ const AkashaInfinity: React.FC = () => {
       const { data, error } = await supabase.functions.invoke('create-membership-checkout', {
         body: {
           priceId: tierData.stripe_price_id,
-          tierSlug: 'lifetime',
+          tierSlug: 'akasha-infinity',
           affiliate_id: affiliateRef,
           successPath: '/akasha-infinity',
           metadata: {

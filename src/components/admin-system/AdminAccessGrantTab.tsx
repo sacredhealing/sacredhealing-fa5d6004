@@ -83,29 +83,19 @@ const ACCESS_TYPES: { value: string; label: string; icon: React.ComponentType<{ 
  */
 const MEMBERSHIP_TIERS: { value: string; label: string; summary: string }[] = [
   {
-    value: 'premium_monthly',
-    label: 'Prana-Flow · Monthly',
+    value: 'prana-flow',
+    label: 'Prana-Flow',
     summary: 'Rank 1 — Ayurveda, Vastu, full Jyotish, full meditations, mantras, healing library.',
   },
   {
-    value: 'premium_annual',
-    label: 'Prana-Flow · Annual',
-    summary: 'Rank 1 — Same entitlements as monthly (annual billing equivalent).',
-  },
-  {
-    value: 'siddha_quantum',
+    value: 'siddha-quantum',
     label: 'Siddha-Quantum',
     summary: 'Rank 2 — All Prana-Flow features plus Siddha Portal, Digital Nadi, Sri Yantra Shield, Soul Vault.',
   },
   {
-    value: 'akasha_infinity',
+    value: 'akasha-infinity',
     label: 'Akasha-Infinity',
     summary: 'Rank 3 — All Siddha-Quantum features plus Quantum Apothecary, Virtual Pilgrimage, Palm Oracle, Akashic Decoder.',
-  },
-  {
-    value: 'lifetime',
-    label: 'Akasha-Infinity (legacy: lifetime slug)',
-    summary: 'Rank 3 — Same as Akasha-Infinity; matches Stripe lifetime slug.',
   },
 ];
 
@@ -139,7 +129,7 @@ const AdminAccessGrantTab = () => {
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
   const [accessType, setAccessType] = useState<string>('membership');
   const [accessId, setAccessId] = useState<string>('');
-  const [tier, setTier] = useState<string>('premium_monthly');
+  const [tier, setTier] = useState<string>('prana-flow');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
