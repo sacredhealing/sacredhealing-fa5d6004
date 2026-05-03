@@ -3408,6 +3408,102 @@ export type Database = {
         }
         Relationships: []
       }
+      jyotish_modules: {
+        Row: {
+          audio_url: string | null
+          content_url: string | null
+          created_at: string
+          description: string | null
+          duration_minutes: number | null
+          id: number
+          is_published: boolean
+          pdf_url: string | null
+          quiz_questions: Json | null
+          sort_order: number
+          subtitle: string
+          tier_required: string
+          title: string
+          topics: Json
+        }
+        Insert: {
+          audio_url?: string | null
+          content_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id: number
+          is_published?: boolean
+          pdf_url?: string | null
+          quiz_questions?: Json | null
+          sort_order: number
+          subtitle: string
+          tier_required?: string
+          title: string
+          topics?: Json
+        }
+        Update: {
+          audio_url?: string | null
+          content_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: number
+          is_published?: boolean
+          pdf_url?: string | null
+          quiz_questions?: Json | null
+          sort_order?: number
+          subtitle?: string
+          tier_required?: string
+          title?: string
+          topics?: Json
+        }
+        Relationships: []
+      }
+      jyotish_oracle_queries: {
+        Row: {
+          chart_context: Json
+          created_at: string
+          id: string
+          module_id: number | null
+          query: string
+          response: string | null
+          user_id: string
+        }
+        Insert: {
+          chart_context?: Json
+          created_at?: string
+          id?: string
+          module_id?: number | null
+          query: string
+          response?: string | null
+          user_id: string
+        }
+        Update: {
+          chart_context?: Json
+          created_at?: string
+          id?: string
+          module_id?: number | null
+          query?: string
+          response?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jyotish_oracle_queries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jyotish_oracle_queries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jyotish_profiles: {
         Row: {
           birth_date: string | null
@@ -3455,6 +3551,119 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      jyotish_progress: {
+        Row: {
+          completed_at: string | null
+          completion_percentage: number
+          created_at: string
+          id: string
+          last_accessed_at: string | null
+          module_id: number
+          notes: string | null
+          quiz_score: number | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completion_percentage?: number
+          created_at?: string
+          id?: string
+          last_accessed_at?: string | null
+          module_id: number
+          notes?: string | null
+          quiz_score?: number | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          completion_percentage?: number
+          created_at?: string
+          id?: string
+          last_accessed_at?: string | null
+          module_id?: number
+          notes?: string | null
+          quiz_score?: number | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jyotish_progress_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "jyotish_modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jyotish_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jyotish_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jyotish_queries: {
+        Row: {
+          chart_data: Json
+          created_at: string
+          id: string
+          module_id: number | null
+          query: string
+          response: string | null
+          user_id: string
+        }
+        Insert: {
+          chart_data?: Json
+          created_at?: string
+          id?: string
+          module_id?: number | null
+          query: string
+          response?: string | null
+          user_id: string
+        }
+        Update: {
+          chart_data?: Json
+          created_at?: string
+          id?: string
+          module_id?: number | null
+          query?: string
+          response?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jyotish_queries_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "jyotish_modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jyotish_queries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jyotish_queries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lesson_progress: {
         Row: {
