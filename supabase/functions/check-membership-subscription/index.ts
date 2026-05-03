@@ -320,12 +320,13 @@ serve(async (req) => {
 
     // Update user_memberships table
     if (hasActiveSub) {
-      // Get tier ID from membership_tiers
+      // Get tier ID from membership_tiers (use the membership-table slug variant)
+      const membershipTableSlug = membershipTableSlugForTier(tierSlug);
       const { data: tierData } = await supabaseClient
         .from('membership_tiers')
         .select('id')
-        .eq('slug', tierSlug)
-        .single();
+        .eq('slug', membershipTableSlug)
+        .maybeSingle();
 
       if (tierData) {
         // Upsert membership record
