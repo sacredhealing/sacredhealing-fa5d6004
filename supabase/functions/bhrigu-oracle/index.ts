@@ -163,15 +163,15 @@ serve(async (req: Request) => {
     const geminiData = await geminiRes.json();
     const response = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? 'The Nadi field is silent at this moment. Please try again.';
 
-    // Log the query (public.jyotish_queries)
-    const { error: logErr } = await supabase.from('jyotish_queries').insert({
+    // Log the query (public.jyotish_oracle_queries — see migration 20260503231500)
+    const { error: logErr } = await supabase.from('jyotish_oracle_queries').insert({
       user_id: user.id,
       module_id: moduleIdNorm,
       query,
       response,
-      chart_data: chartData,
+      chart_context: chartData,
     });
-    if (logErr) console.error('jyotish_queries insert:', logErr);
+    if (logErr) console.error('jyotish_oracle_queries insert:', logErr);
 
     return new Response(JSON.stringify({ response }), {
       headers: { ...CORS, 'Content-Type': 'application/json' },
