@@ -58,12 +58,12 @@ class RateLimiter {
 
   private async logThreat(type: string, meta: Record<string, unknown>) {
     try {
-      await supabase.from('security_events').insert({
+      await supabase.from('security_events').insert([{
         event_type: type,
-        metadata: meta,
+        metadata: meta as never,
         severity: 'HIGH',
         created_at: new Date().toISOString(),
-      });
+      }]);
     } catch {
       // Silently fail — never block UX for logging
     }
