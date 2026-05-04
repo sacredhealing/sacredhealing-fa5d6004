@@ -111,6 +111,8 @@ project_id = "ssygukfdbtehvtndandn"
     verify_jwt = false
   [functions.quantum-apothecary-chat]
     verify_jwt = false
+  [functions.quantum-apothecary]
+    verify_jwt = false
   [functions.request-bank-payout]
     verify_jwt = true
   [functions.send-akashic-purchase-email]
