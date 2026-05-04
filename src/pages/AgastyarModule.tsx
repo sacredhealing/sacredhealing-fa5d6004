@@ -35,6 +35,8 @@ import {
   getSalesPageForRank,
   hasFeatureAccess,
 } from '@/lib/tierAccess';
+import AgastyarModuleContent from '@/components/AgastyarModuleContent';
+import { getModuleContent } from '@/data/moduleContent';
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -98,6 +100,11 @@ const AgastyarModule: React.FC = () => {
   const sortedCourses = useMemo(
     () => [...courses].sort((a, b) => a.module_number - b.module_number),
     [courses],
+  );
+
+  const richModuleContent = useMemo(
+    () => (module ? getModuleContent(module.module_number) : null),
+    [module],
   );
 
   const allowed = useMemo(() => {
@@ -463,6 +470,15 @@ const AgastyarModule: React.FC = () => {
             )}
           </div>
         </header>
+
+        {richModuleContent && (
+          <section
+            className="mb-8"
+            aria-label={t('academy.moduleContent.richTeachingAria')}
+          >
+            <AgastyarModuleContent content={richModuleContent} />
+          </section>
+        )}
 
         <section className="glass-card mb-8 overflow-hidden rounded-[28px] border border-white/[0.06] bg-white/[0.02] backdrop-blur-[40px]">
           <div

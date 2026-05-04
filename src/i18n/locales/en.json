@@ -6867,6 +6867,24 @@
       "toastCompleteError": "Could not save completion.",
       "toastNotesError": "Could not save notes."
     },
+    "moduleContent": {
+      "richTeachingAria": "Written transmission",
+      "doshaColTrait": "Trait",
+      "doshaColVata": "Vata",
+      "doshaColPitta": "Pitta",
+      "doshaColKapha": "Kapha",
+      "livingPractice": "Living practice",
+      "herbMonograph": "Herb monograph",
+      "knowledgeCheck": "Knowledge check {{n}}",
+      "revealAnswer": "Reveal answer",
+      "quizCorrect": "Correct — the Siddha wisdom is taking root.",
+      "quizIncorrect": "Not quite — review the teaching above; the correct answer is highlighted.",
+      "secretTeaching": "Agastyar secret teaching",
+      "introSpeaks": "⟡ Agastyar speaks",
+      "closingTransmission": "Agastyar closing transmission",
+      "keyTakeaways": "Key takeaways",
+      "dailyPracticeHeading": "⟡ Your daily practice from this module"
+    },
     "footer": "The curriculum is alive. It breathes. It evolves as the students evolve."
   },
   "jyotishVidya": {

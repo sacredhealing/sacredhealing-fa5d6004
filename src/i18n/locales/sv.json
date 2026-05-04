@@ -6460,6 +6460,24 @@
       "toastCompleteError": "Kunde inte spara slutförande.",
       "toastNotesError": "Kunde inte spara anteckningar."
     },
+    "moduleContent": {
+      "richTeachingAria": "Skriftlig transmission",
+      "doshaColTrait": "Egenskap",
+      "doshaColVata": "Vata",
+      "doshaColPitta": "Pitta",
+      "doshaColKapha": "Kapha",
+      "livingPractice": "Levande praktik",
+      "herbMonograph": "Örtmonografi",
+      "knowledgeCheck": "Kunskapskoll {{n}}",
+      "revealAnswer": "Visa svar",
+      "quizCorrect": "Rätt — Siddha-visdomen rotar sig.",
+      "quizIncorrect": "Inte riktigt — läs igen ovan; rätt svar är markerat.",
+      "secretTeaching": "Agastyars hemliga lära",
+      "introSpeaks": "⟡ Agastyar talar",
+      "closingTransmission": "Agastyars avslutande transmission",
+      "keyTakeaways": "Nyckelpunkter",
+      "dailyPracticeHeading": "⟡ Daglig praktik från denna modul"
+    },
     "footer": "Curriculum är levande. Det andas. Det utvecklas när eleverna utvecklas."
   },
   "jyotishVidya": {
