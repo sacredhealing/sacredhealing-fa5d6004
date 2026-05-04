@@ -16,7 +16,6 @@ import {
   Music,
   Play,
   Users,
-  Video,
   Zap,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -358,16 +357,11 @@ const AgastyarModule: React.FC = () => {
   const primaryAudioShown =
     Boolean(!ytEmbed && !showVideoTag && ctLower === 'audio' && (audioUrl || contentUrl));
 
-  const PlaceholderIcon =
-    ctLower === 'audio'
-      ? Music
-      : ctLower === 'pdf'
-        ? FileText
-        : ctLower === 'live'
-          ? Users
-          : ctLower === 'interactive'
-            ? Zap
-            : Video;
+  const hasPrimaryMedia =
+    Boolean(ytEmbed) ||
+    showVideoTag ||
+    primaryAudioShown ||
+    Boolean(contentUrl);
 
   return (
     <div className="min-h-screen pb-28 text-white/90" style={{ background: '#050505' }}>
@@ -481,62 +475,52 @@ const AgastyarModule: React.FC = () => {
         )}
 
         <section className="glass-card mb-8 overflow-hidden rounded-[28px] border border-white/[0.06] bg-white/[0.02] backdrop-blur-[40px]">
-          <div
-            className={`relative flex items-center justify-center overflow-hidden bg-black/40 ${
-              ctLower === 'audio' ? 'min-h-[140px]' : 'aspect-video min-h-[200px]'
-            }`}
-          >
+          {hasPrimaryMedia && (
             <div
-              className="pointer-events-none absolute inset-0"
-              style={{
-                background:
-                  'radial-gradient(ellipse at center, rgba(212,175,55,0.06) 0%, transparent 72%)',
-              }}
-            />
-            {ytEmbed ? (
-              <iframe
-                title={module.title}
-                src={ytEmbed}
-                className="relative z-[1] h-full min-h-[220px] w-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
+              className={`relative flex items-center justify-center overflow-hidden bg-black/40 ${
+                ctLower === 'audio' ? 'min-h-[140px]' : 'aspect-video min-h-[200px]'
+              }`}
+            >
+              <div
+                className="pointer-events-none absolute inset-0"
+                style={{
+                  background:
+                    'radial-gradient(ellipse at center, rgba(212,175,55,0.06) 0%, transparent 72%)',
+                }}
               />
-            ) : showVideoTag ? (
-              <video controls playsInline className="relative z-[1] max-h-[70vh] w-full" src={contentUrl}>
-                <track kind="captions" />
-              </video>
-            ) : primaryAudioShown ? (
-              <div className="relative z-[1] w-full px-6 py-8 sm:px-10">
-                <audio controls className="w-full accent-[#D4AF37]" src={audioUrl || contentUrl}>
+              {ytEmbed ? (
+                <iframe
+                  title={module.title}
+                  src={ytEmbed}
+                  className="relative z-[1] h-full min-h-[220px] w-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : showVideoTag ? (
+                <video controls playsInline className="relative z-[1] max-h-[70vh] w-full" src={contentUrl}>
                   <track kind="captions" />
-                </audio>
-              </div>
-            ) : contentUrl ? (
-              <div className="relative z-[1] p-6 text-center">
-                <a
-                  href={contentUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-5 py-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#D4AF37]"
-                >
-                  {t('academy.modulePlayer.openContent')}
-                  <ExternalLink size={14} aria-hidden />
-                </a>
-              </div>
-            ) : (
-              <div className="relative z-[1] px-6 py-12 text-center">
-                <PlaceholderIcon className="mx-auto mb-4 h-12 w-12 text-[#D4AF37]/35" aria-hidden />
-                <p className="mb-2 text-[8px] font-extrabold uppercase tracking-[0.45em] text-[#D4AF37]/85">
-                  {contentTypeLabel(module.content_type)}
-                </p>
-                <p className="text-sm text-white/40">
-                  {ctLower === 'live'
-                    ? t('academy.modulePlayer.placeholderLive')
-                    : t('academy.modulePlayer.placeholderPreparing')}
-                </p>
-              </div>
-            )}
-          </div>
+                </video>
+              ) : primaryAudioShown ? (
+                <div className="relative z-[1] w-full px-6 py-8 sm:px-10">
+                  <audio controls className="w-full accent-[#D4AF37]" src={audioUrl || contentUrl}>
+                    <track kind="captions" />
+                  </audio>
+                </div>
+              ) : (
+                <div className="relative z-[1] p-6 text-center">
+                  <a
+                    href={contentUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-5 py-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#D4AF37]"
+                  >
+                    {t('academy.modulePlayer.openContent')}
+                    <ExternalLink size={14} aria-hidden />
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
 
           {pdfUrl && (
             <div className="flex flex-col gap-3 border-t border-white/[0.05] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
