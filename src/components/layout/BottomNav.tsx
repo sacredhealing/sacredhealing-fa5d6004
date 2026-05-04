@@ -65,6 +65,7 @@ function getActiveNavTo(pathname: string): string | null {
         '/jyotish-vidya',
         '/jyotish-vidya/module',
         '/ayurveda',
+        '/agastyar-academy',
         '/vastu',
         '/quantum-apothecary',
         '/life-book',

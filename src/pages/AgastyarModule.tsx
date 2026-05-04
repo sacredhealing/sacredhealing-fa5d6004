@@ -36,7 +36,7 @@ import {
   hasFeatureAccess,
 } from '@/lib/tierAccess';
 import AgastyarModuleContent from '@/components/AgastyarModuleContent';
-import { getModuleContent } from '@/data/moduleContent';
+import { getAllModuleContent as getModuleContent } from '@/data/moduleContentIndex';
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
