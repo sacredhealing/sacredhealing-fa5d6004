@@ -430,25 +430,25 @@ function App() {
             <BrowserRouter>
               <SecurityProvider>
                 <ConversionProvider>
-                <MusicPlayerProvider>
-                  <GitaTransitionOverlay />
-                  <AmbientAudioProvider>
-                    <Toaster />
-                    <Sonner />
-                    <DebugBanner />
-                    <ProfileLanguageSync />
-                    <CodexBackfillSentinel />
-                    <Suspense
-                      fallback={
-                        <div className="min-h-screen flex items-center justify-center bg-[#030303]" style={{ background: "radial-gradient(ellipse at 15% 20%, rgba(30, 27, 75, 0.7) 0%, transparent 50%), #030303" }}>
-                          <Loader2 className="w-10 h-10 animate-spin text-[#00F2FE]" />
-                        </div>
-                      }
-                    >
-                      <AppRoutes />
-                    </Suspense>
-                  </AmbientAudioProvider>
-                </MusicPlayerProvider>
+                  <MusicPlayerProvider>
+                    <GitaTransitionOverlay />
+                    <AmbientAudioProvider>
+                      <Toaster />
+                      <Sonner />
+                      <DebugBanner />
+                      <ProfileLanguageSync />
+                      <CodexBackfillSentinel />
+                      <Suspense
+                        fallback={
+                          <div className="min-h-screen flex items-center justify-center bg-[#030303]" style={{ background: "radial-gradient(ellipse at 15% 20%, rgba(30, 27, 75, 0.7) 0%, transparent 50%), #030303" }}>
+                            <Loader2 className="w-10 h-10 animate-spin text-[#00F2FE]" />
+                          </div>
+                        }
+                      >
+                        <AppRoutes />
+                      </Suspense>
+                    </AmbientAudioProvider>
+                  </MusicPlayerProvider>
                 </ConversionProvider>
               </SecurityProvider>
             </BrowserRouter>
