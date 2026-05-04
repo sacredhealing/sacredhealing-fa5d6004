@@ -927,6 +927,42 @@ export type Database = {
         }
         Relationships: []
       }
+      blocked_users: {
+        Row: {
+          blocked_at: string
+          blocked_by: string | null
+          email: string | null
+          expires_at: string | null
+          id: string
+          ip_address: unknown
+          is_active: boolean | null
+          reason: string
+          user_id: string | null
+        }
+        Insert: {
+          blocked_at?: string
+          blocked_by?: string | null
+          email?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: unknown
+          is_active?: boolean | null
+          reason: string
+          user_id?: string | null
+        }
+        Update: {
+          blocked_at?: string
+          blocked_by?: string | null
+          email?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: unknown
+          is_active?: boolean | null
+          reason?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       bot_entitlements: {
         Row: {
           bot_type: string
@@ -5436,6 +5472,24 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_events: {
+        Row: {
+          created_at: string
+          id: string
+          identifier: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          identifier: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          identifier?: string
+        }
+        Relationships: []
+      }
       referral_signups: {
         Row: {
           created_at: string
@@ -5615,6 +5669,39 @@ export type Database = {
           title?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      security_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          ip_address: unknown
+          metadata: Json | null
+          severity: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          ip_address?: unknown
+          metadata?: Json | null
+          severity: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          ip_address?: unknown
+          metadata?: Json | null
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -7583,8 +7670,19 @@ export type Database = {
         }
         Relationships: []
       }
+      security_dashboard: {
+        Row: {
+          count: number | null
+          event_type: string | null
+          first_seen: string | null
+          last_seen: string | null
+          severity: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      cleanup_rate_limit_events: { Args: never; Returns: undefined }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -7605,6 +7703,7 @@ export type Database = {
       is_admin_v3: { Args: never; Returns: boolean }
       is_codex_admin: { Args: { uid: string }; Returns: boolean }
       is_room_member: { Args: { _room_id: string }; Returns: boolean }
+      is_user_blocked: { Args: { check_user_id: string }; Returns: boolean }
       move_to_dlq: {
         Args: {
           dlq_name: string
