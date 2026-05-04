@@ -201,7 +201,8 @@ export function SecurityProvider({ children }: SecurityProviderProps) {
       <input
         type="text"
         name="sqi_guard"
-        style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none', tabIndex: -1 }}
+        style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none' }}
+        tabIndex={-1}
         aria-hidden="true"
         autoComplete="off"
       />
