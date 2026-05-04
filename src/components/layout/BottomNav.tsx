@@ -52,10 +52,6 @@ function getActiveNavTo(pathname: string): string | null {
       patterns: ['/mantras', '/mantra-ritual'],
     },
     {
-      to: '/agastyar-academy',
-      patterns: ['/agastyar-academy', '/agastyar-academy/module'],
-    },
-    {
       to: '/explore',
       patterns: [
         '/explore',
