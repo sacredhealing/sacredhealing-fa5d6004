@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link, matchPath, useLocation } from 'react-router-dom';
-import { GraduationCap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import MerkabaIcon from '@/components/icons/MerkabaIcon';
 import ThirdEyeIcon from '@/components/icons/ThirdEyeIcon';
@@ -9,17 +8,12 @@ import PalmLeafIcon from '@/components/icons/PalmLeafIcon';
 import StarPentagramIcon from '@/components/icons/StarPentagramIcon';
 import AtmaIcon from '@/components/icons/AtmaIcon';
 
-function AcademyNavIcon({ className }: { className?: string }) {
-  return <GraduationCap className={className} aria-hidden />;
-}
-
 /** SQI tab names — fixed English; not driven by i18n so profile language never changes this bar. */
 const NAV_ITEMS = [
   { to: '/dashboard', icon: MerkabaIcon, label: 'Nexus' },
   { to: '/meditations', icon: ThirdEyeIcon, label: 'Dhyana' },
   { to: '/mantras', icon: MalaBeadsIcon, label: 'Nada' },
   { to: '/explore', icon: PalmLeafIcon, label: 'Akasha' },
-  { to: '/agastyar-academy', icon: AcademyNavIcon, label: 'Academy' },
   { to: '/healing', icon: StarPentagramIcon, label: 'Soma' },
   { to: '/profile', icon: AtmaIcon, label: 'Avatar' },
 ] as const;
