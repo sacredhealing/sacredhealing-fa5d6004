@@ -148,7 +148,7 @@ function BottomNavInner() {
       aria-label="Main navigation"
     >
       <div
-        className="grid grid-cols-7 w-full px-0 py-1 gap-0"
+        className="grid grid-cols-6 w-full px-0 py-1 gap-0"
         style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}
       >
         {NAV_ITEMS.map((item) => {
