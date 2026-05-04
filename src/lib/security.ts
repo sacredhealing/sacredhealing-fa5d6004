@@ -58,12 +58,12 @@ class RateLimiter {
 
   private async logThreat(type: string, meta: Record<string, unknown>) {
     try {
-      await supabase.from('security_events').insert({
+      await supabase.from('security_events').insert([{
         event_type: type,
-        metadata: meta,
+        metadata: meta as never,
         severity: 'HIGH',
         created_at: new Date().toISOString(),
-      });
+      }]);
     } catch {
       // Silently fail — never block UX for logging
     }
@@ -208,14 +208,14 @@ export async function logSecurityEvent(
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    await supabase.from('security_events').insert({
+    await supabase.from('security_events').insert([{
       event_type: eventType,
       user_id: user?.id ?? null,
-      metadata,
+      metadata: metadata as never,
       severity,
       user_agent: navigator.userAgent,
       created_at: new Date().toISOString(),
-    });
+    }]);
   } catch {
     // Never let logging break the app
   }
