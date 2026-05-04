@@ -6988,5 +6988,14 @@
       "formatLabel": "Format",
       "sourceLabel": "Sources"
     }
+  },
+  "securityShield": {
+    "threatBanner": "Threat: {{level}}",
+    "eventCount": "{{count}} events",
+    "levels": {
+      "WATCH": "Watch",
+      "ALERT": "Alert",
+      "CRITICAL": "Critical"
+    }
   }
 }

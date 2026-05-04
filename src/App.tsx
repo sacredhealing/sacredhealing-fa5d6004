@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { SHCProvider } from "@/contexts/SHCContext";
+import { SecurityProvider } from "@/contexts/SecurityProvider";
 import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
 import { ConversionProvider } from "@/components/conversion/ConversionSystem";
 import { GitaTransitionOverlay } from "@/components/dashboard/GitaTransitionOverlay";
@@ -427,7 +428,8 @@ function App() {
         <TooltipProvider>
           <SHCProvider>
             <BrowserRouter>
-              <ConversionProvider>
+              <SecurityProvider>
+                <ConversionProvider>
                 <MusicPlayerProvider>
                   <GitaTransitionOverlay />
                   <AmbientAudioProvider>
@@ -447,7 +449,8 @@ function App() {
                     </Suspense>
                   </AmbientAudioProvider>
                 </MusicPlayerProvider>
-              </ConversionProvider>
+                </ConversionProvider>
+              </SecurityProvider>
             </BrowserRouter>
           </SHCProvider>
         </TooltipProvider>

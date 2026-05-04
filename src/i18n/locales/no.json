@@ -4030,5 +4030,14 @@
       "unlockPrompt": "Lås opp med {{tier}} — {{price}}",
       "unlockCta": "{{emoji}} LÅS OPP NÅ"
     }
+  },
+  "securityShield": {
+    "threatBanner": "Trussel: {{level}}",
+    "eventCount": "{{count}} hendelser",
+    "levels": {
+      "WATCH": "Overvåking",
+      "ALERT": "Varsel",
+      "CRITICAL": "Kritisk"
+    }
   }
 }

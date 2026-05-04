@@ -4126,5 +4126,14 @@
       "unlockPrompt": "Desbloquea con {{tier}} — {{price}}",
       "unlockCta": "{{emoji}} DESBLOQUEAR AHORA"
     }
+  },
+  "securityShield": {
+    "threatBanner": "Amenaza: {{level}}",
+    "eventCount": "{{count}} eventos",
+    "levels": {
+      "WATCH": "Vigilancia",
+      "ALERT": "Alerta",
+      "CRITICAL": "Crítico"
+    }
   }
 }

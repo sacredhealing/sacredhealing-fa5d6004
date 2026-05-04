@@ -6581,5 +6581,14 @@
       "formatLabel": "Format",
       "sourceLabel": "Källor"
     }
+  },
+  "securityShield": {
+    "threatBanner": "Hotnivå: {{level}}",
+    "eventCount": "{{count}} händelser",
+    "levels": {
+      "WATCH": "Bevakning",
+      "ALERT": "Varning",
+      "CRITICAL": "Kritiskt"
+    }
   }
 }
