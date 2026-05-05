@@ -89,24 +89,27 @@ const AffiliateLanding: React.FC = () => {
 
     const tloc = i18n.getFixedT(langParam);
 
-    supabase
-      .from('affiliate_profiles')
-      .select('affiliate_code, profiles(full_name)')
-      .eq('affiliate_code', code)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          const row = data as {
-            affiliate_code: string;
-            profiles: { full_name: string | null } | null;
-          };
-          setAffiliate({
-            display_name:
-              row.profiles?.full_name || tloc('affiliateLanding.defaultPartnerName'),
-            affiliate_code: row.affiliate_code,
-          });
-        }
+    (async () => {
+      const { data: ap } = await supabase
+        .from('affiliate_profiles')
+        .select('affiliate_code, user_id')
+        .eq('affiliate_code', code)
+        .maybeSingle();
+      if (!ap) return;
+      let fullName: string | null = null;
+      if (ap.user_id) {
+        const { data: prof } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('user_id', ap.user_id)
+          .maybeSingle();
+        fullName = prof?.full_name ?? null;
+      }
+      setAffiliate({
+        display_name: fullName || tloc('affiliateLanding.defaultPartnerName'),
+        affiliate_code: ap.affiliate_code,
       });
+    })();
   }, [code, langParam, i18n]);
 
   useEffect(() => {
