@@ -1,3 +1,5 @@
+// Drop-in chat bubble + gold copy button — one tap, no selection bar on Android.
+
 import { useCopyMessage } from '@/hooks/useCopyMessage';
 import { useTranslation } from '@/hooks/useTranslation';
 
