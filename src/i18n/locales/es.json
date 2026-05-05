@@ -4130,6 +4130,20 @@
       "unlockCta": "{{emoji}} DESBLOQUEAR AHORA"
     }
   },
+  "jyotishModuleViewer": {
+    "allModules": "Todos los módulos",
+    "moduleEyebrow": "Módulo {{num}} · {{duration}}",
+    "curriculumTransmission": "Transmisión del currículo",
+    "keyTerms": "Términos clave",
+    "sadhanaPractice": "Práctica de sādhana",
+    "closingTransmission": "Transmisión de cierre",
+    "knowledgeAssessment": "Evaluación de conocimientos",
+    "quizCorrect": "✓ Correcto — ",
+    "quizReveal": "○ La respuesta correcta: ",
+    "scoreSummary": "{{correct}}/{{total}} · {{percent}}%",
+    "markComplete": "Marcar como completado",
+    "navModule": "Módulo {{num}}"
+  },
   "securityShield": {
     "threatBanner": "Amenaza: {{level}}",
     "eventCount": "{{count}} eventos",

@@ -4034,6 +4034,20 @@
       "unlockCta": "{{emoji}} LÅS OPP NÅ"
     }
   },
+  "jyotishModuleViewer": {
+    "allModules": "Alle moduler",
+    "moduleEyebrow": "Modul {{num}} · {{duration}}",
+    "curriculumTransmission": "Læreplanoverføring",
+    "keyTerms": "Nøkkelbegreper",
+    "sadhanaPractice": "Sādhanapraksis",
+    "closingTransmission": "Avsluttende transmisjon",
+    "knowledgeAssessment": "Kunnskapsvurdering",
+    "quizCorrect": "✓ Riktig — ",
+    "quizReveal": "○ Riktig svar: ",
+    "scoreSummary": "{{correct}}/{{total}} · {{percent}}%",
+    "markComplete": "Merk som fullført",
+    "navModule": "Modul {{num}}"
+  },
   "securityShield": {
     "threatBanner": "Trussel: {{level}}",
     "eventCount": "{{count}} hendelser",

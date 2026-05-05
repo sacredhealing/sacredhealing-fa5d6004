@@ -6992,6 +6992,20 @@
       "sourceLabel": "Sources"
     }
   },
+  "jyotishModuleViewer": {
+    "allModules": "All modules",
+    "moduleEyebrow": "Module {{num}} · {{duration}}",
+    "curriculumTransmission": "Curriculum transmission",
+    "keyTerms": "Key terms",
+    "sadhanaPractice": "Sādhana practice",
+    "closingTransmission": "Closing transmission",
+    "knowledgeAssessment": "Knowledge assessment",
+    "quizCorrect": "✓ Correct — ",
+    "quizReveal": "○ The correct answer: ",
+    "scoreSummary": "{{correct}}/{{total}} · {{percent}}%",
+    "markComplete": "Mark as complete",
+    "navModule": "Module {{num}}"
+  },
   "securityShield": {
     "threatBanner": "Threat: {{level}}",
     "eventCount": "{{count}} events",

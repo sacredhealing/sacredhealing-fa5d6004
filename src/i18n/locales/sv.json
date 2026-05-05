@@ -6585,6 +6585,20 @@
       "sourceLabel": "Källor"
     }
   },
+  "jyotishModuleViewer": {
+    "allModules": "Alla moduler",
+    "moduleEyebrow": "Modul {{num}} · {{duration}}",
+    "curriculumTransmission": "Läroplansöverföring",
+    "keyTerms": "Nyckeltermer",
+    "sadhanaPractice": "Sādhanapraktik",
+    "closingTransmission": "Avslutande transmission",
+    "knowledgeAssessment": "Kunskapsbedömning",
+    "quizCorrect": "✓ Rätt — ",
+    "quizReveal": "○ Rätt svar: ",
+    "scoreSummary": "{{correct}}/{{total}} · {{percent}}%",
+    "markComplete": "Markera som klar",
+    "navModule": "Modul {{num}}"
+  },
   "securityShield": {
     "threatBanner": "Hotnivå: {{level}}",
     "eventCount": "{{count}} händelser",
