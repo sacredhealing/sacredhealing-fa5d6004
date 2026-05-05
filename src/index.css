@@ -1060,3 +1060,10 @@ html, body, #root {
   touch-action: pan-y;
   overscroll-behavior-y: contain;
 }
+
+/* Disable native text selection on AI chat bubbles to prevent Android Google search bar */
+.chat-message {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
