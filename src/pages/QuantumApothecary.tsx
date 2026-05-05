@@ -27,6 +27,7 @@ import { streamChatWithSQI } from '@/features/quantum-apothecary/chatService';
 import { chatSpeechLocale } from '@/lib/chatSpeechLocale';
 import { useSpeechRecognition } from 'react-speech-recognition';
 import { useTranslation } from '@/hooks/useTranslation';
+import { CopyMessageButton } from '@/components/chat/CopyMessageButton';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 import { useAyurvedaAnalysis } from '@/hooks/useAyurvedaAnalysis';
 import { useAuth } from '@/hooks/useAuth';
