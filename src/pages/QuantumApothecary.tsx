@@ -1623,6 +1623,9 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                       style={{
                         background: 'linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08))',
                         border: '1px solid rgba(212,175,55,0.25)',
+                        WebkitUserSelect: 'none',
+                        userSelect: 'none',
+                        WebkitTouchCallout: 'none',
                       }}
                     >
                       <div className="markdown-body text-[15px] leading-[1.75] text-white/95 whitespace-pre-wrap break-words w-full min-w-0 text-left" style={{ maxWidth: '100%', wordBreak: 'break-word' }}>
@@ -1641,6 +1644,9 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                         background: 'rgba(255,255,255,0.03)',
                         border: '1px solid rgba(255,255,255,0.06)',
                         overflow: 'visible',
+                        WebkitUserSelect: 'none',
+                        userSelect: 'none',
+                        WebkitTouchCallout: 'none',
                       }}
                     >
                       <div className="sqi-message w-full min-w-0">
@@ -1649,6 +1655,9 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                         </div>
                       </div>
                     </div>
+                    {msg.text && (
+                      <CopyMessageButton content={msg.text} id={msg.id ?? `qa-msg-${i}`} />
+                    )}
                     {ts && (
                       <p className="text-[10px] text-white/25 mt-1 text-right w-full max-w-[96%] mx-auto">{ts}</p>
                     )}
