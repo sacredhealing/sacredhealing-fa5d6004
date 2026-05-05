@@ -106,3 +106,8 @@ create policy affiliate_commissions_select_own on public.affiliate_commissions f
 drop policy if exists affiliate_payout_crud_own on public.affiliate_payout_requests;
 create policy affiliate_payout_crud_own on public.affiliate_payout_requests for all
   using (auth.uid() = affiliate_user_id) with check (auth.uid() = affiliate_user_id);
+
+-- Optional: enables PostgREST embed affiliate_profiles → profiles(full_name) on landing page.
+-- alter table public.affiliate_profiles
+--   add constraint affiliate_profiles_profile_id_fkey
+--   foreign key (user_id) references public.profiles (id) on delete cascade;
