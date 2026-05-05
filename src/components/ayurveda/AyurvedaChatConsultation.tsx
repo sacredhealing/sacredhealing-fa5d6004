@@ -713,6 +713,9 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
                   </div>
                   {msg.content}
                 </div>
+                {msg.role === 'assistant' && msg.content && (
+                  <CopyMessageButton content={msg.content} id={`ayurveda-msg-${index}`} />
+                )}
               </motion.div>
             ))}
 
