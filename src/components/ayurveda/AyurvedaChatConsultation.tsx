@@ -5,6 +5,7 @@ import { Send, X, Sparkles, Loader2, Leaf, Flame, Moon, Heart } from 'lucide-rea
 import { toast } from 'sonner';
 import type { AyurvedaUserProfile, DoshaProfile } from '@/lib/ayurvedaTypes';
 import { useTranslation } from '@/hooks/useTranslation';
+import { CopyMessageButton } from '@/components/chat/CopyMessageButton';
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ayurveda-chat`;
 
