@@ -27,7 +27,6 @@ import { streamChatWithSQI } from '@/features/quantum-apothecary/chatService';
 import { chatSpeechLocale } from '@/lib/chatSpeechLocale';
 import { useSpeechRecognition } from 'react-speech-recognition';
 import { useTranslation } from '@/hooks/useTranslation';
-import { CopyMessageButton } from '@/components/chat/CopyMessageButton';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 import { useAyurvedaAnalysis } from '@/hooks/useAyurvedaAnalysis';
 import { useAuth } from '@/hooks/useAuth';
@@ -744,6 +743,12 @@ function QuantumApothecaryInner() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [copiedMsgIdx, setCopiedMsgIdx] = useState<number | null>(null);
+  const handleCopyMsg = (text: string, idx: number) => {
+    navigator.clipboard?.writeText(text).catch(() => {});
+    setCopiedMsgIdx(idx);
+    setTimeout(() => setCopiedMsgIdx((c) => (c === idx ? null : c)), 2000);
+  };
   const [activeCategory, setActiveCategory] = useState('All');
   const [showKnowledge, setShowKnowledge] = useState(false);
   const [isChatFullscreen, setIsChatFullscreen] = useState(false);
@@ -1623,9 +1628,6 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                       style={{
                         background: 'linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08))',
                         border: '1px solid rgba(212,175,55,0.25)',
-                        WebkitUserSelect: 'none',
-                        userSelect: 'none',
-                        WebkitTouchCallout: 'none',
                       }}
                     >
                       <div className="markdown-body text-[15px] leading-[1.75] text-white/95 whitespace-pre-wrap break-words w-full min-w-0 text-left" style={{ maxWidth: '100%', wordBreak: 'break-word' }}>
@@ -1639,13 +1641,13 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                 ) : (
                   <>
                     <div
-                      className="w-full max-w-[96%] mx-auto rounded-[20px] px-5 py-4"
+                      className="chat-message w-full max-w-[96%] mx-auto rounded-[20px] px-5 py-4"
                       style={{
                         background: 'rgba(255,255,255,0.03)',
                         border: '1px solid rgba(255,255,255,0.06)',
                         overflow: 'visible',
-                        WebkitUserSelect: 'none',
                         userSelect: 'none',
+                        WebkitUserSelect: 'none',
                         WebkitTouchCallout: 'none',
                       }}
                     >
@@ -1655,9 +1657,20 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                         </div>
                       </div>
                     </div>
-                    {msg.text && (
-                      <CopyMessageButton content={msg.text} id={msg.id ?? `qa-msg-${i}`} />
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleCopyMsg(msg.text, i)}
+                      aria-label="Copy message"
+                      className="mt-1 px-2 py-1 text-[10px] font-bold uppercase tracking-widest"
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: copiedMsgIdx === i ? '#22c55e' : '#D4AF37',
+                      }}
+                    >
+                      {copiedMsgIdx === i ? '✓ Copied' : 'Copy'}
+                    </button>
                     {ts && (
                       <p className="text-[10px] text-white/25 mt-1 text-right w-full max-w-[96%] mx-auto">{ts}</p>
                     )}
