@@ -90,6 +90,7 @@ const Challenges = React.lazy(() => import("./pages/Challenges"));
 const AIIncomeEngine = React.lazy(() => import("./pages/AIIncomeEngine"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 const AffiliateDetail = React.lazy(() => import("./pages/income-streams/AffiliateDetail"));
+const AffiliateDashboard = React.lazy(() => import("./pages/AffiliateDashboard"));
 const SHCCoinDetail = React.lazy(() => import("./pages/income-streams/SHCCoinDetail"));
 const CopyTradingDetail = React.lazy(() => import("./pages/income-streams/CopyTradingDetail"));
 const BitcoinMiningDetail = React.lazy(() => import("./pages/income-streams/BitcoinMiningDetail"));
@@ -289,6 +290,7 @@ function AppRoutes() {
                   <Route path="/library/abundance" element={<LibraryAbundance />} />
                   <Route path="/income-streams" element={<IncomeStreams />} />
                   <Route path="/income-streams/affiliate" element={<AffiliateDetail />} />
+                  <Route path="/affiliate/dashboard" element={<AffiliateDashboard />} />
                   <Route path="/income-streams/shc-coin" element={<SHCCoinDetail />} />
                   <Route path="/income-streams/copy-trading" element={<CopyTradingDetail />} />
                   <Route path="/income-streams/bitcoin-mining" element={<BitcoinMiningDetail />} />
