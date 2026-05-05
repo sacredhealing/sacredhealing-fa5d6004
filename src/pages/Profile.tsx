@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
-import { Flame, Flower2, Star, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, Scale, LayoutDashboard, Megaphone, Crown, Pencil, Banknote, Lock, FileText, BookOpen, Hand, Globe, ChevronDown, Play } from 'lucide-react';
+import { Flame, Flower2, Star, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, Scale, LayoutDashboard, Megaphone, Crown, Pencil, Banknote, Lock, FileText, BookOpen, Hand, Globe, ChevronDown, Play, Share2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
@@ -442,6 +442,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   const abundanceLineage = [
     { icon: Banknote, label: t('profile.walletEarningsAdvanced'), sublabel: t('profile.walletEarningsDesc'), onClick: () => navigate('/income-streams') },
     { icon: Megaphone, label: t('profile.promoteEarn'), sublabel: t('profile.promoteEarnDesc'), onClick: () => navigate('/income-streams/affiliate') },
+    { icon: Share2, label: t('profile.sovereignAbundanceNetwork'), sublabel: t('profile.sovereignAbundanceNetworkDesc'), onClick: () => navigate('/affiliate/dashboard') },
     { icon: Wallet, label: t('wallet.connectWallet'), sublabel: walletAddress ? `${walletAddress.slice(0,4)}...${walletAddress.slice(-4)}` : t('profile.web3Wallet'), onClick: connectWallet },
     ...(isAdmin ? [{ icon: LayoutDashboard, label: t('admin.title'), sublabel: t('admin.manageContent'), onClick: () => navigate('/admin') }] : []),
   ];
@@ -1125,6 +1126,10 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
           <div className="abundance-card" onClick={() => navigate('/income-streams/affiliate')}>
             <div className="abundance-icon-wrap"><Megaphone size={22} color="#D4AF37" /></div>
             <span className="abundance-label">{t('profilePage.abundancePromote')}</span>
+          </div>
+          <div className="abundance-card" onClick={() => navigate('/affiliate/dashboard')}>
+            <div className="abundance-icon-wrap"><Share2 size={22} color="#D4AF37" /></div>
+            <span className="abundance-label">{t('profilePage.abundanceSovereignCard')}</span>
           </div>
           <div className="abundance-card" onClick={connectWallet}>
             <div className="abundance-icon-wrap"><Moon size={22} color="#D4AF37" /></div>

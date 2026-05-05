@@ -131,9 +131,9 @@ const AffiliateDashboard: React.FC = () => {
   };
 
   const buildLink = (platform: Platform, lang: LangCode) =>
-    `${baseUrl}/affiliate/${profile?.affiliate_code}?platform=${platform}&lang=${lang}`;
+    `${baseUrl}/affiliate/r/${profile?.affiliate_code}?platform=${platform}&lang=${lang}`;
 
-  const mainLink = profile ? `${baseUrl}/affiliate/${profile.affiliate_code}` : '';
+  const mainLink = profile ? `${baseUrl}/affiliate/r/${profile.affiliate_code}` : '';
 
   const requestPayout = async () => {
     if (!user || !profile || !payoutAmount || Number(payoutAmount) <= 0) return;

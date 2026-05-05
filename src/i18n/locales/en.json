@@ -1810,7 +1810,9 @@
       "overview": "Overview",
       "activity": "Activity",
       "achievements": "Achievements"
-    }
+    },
+    "sovereignAbundanceNetwork": "✦ Sovereign Abundance Network",
+    "sovereignAbundanceNetworkDesc": "Quantum dividends, links & payouts"
   },
   "settings": {
     "legal": {
@@ -4442,7 +4444,8 @@
     "toastDeepFieldSaved": "Deep-Field Resonance saved",
     "toastDeepFieldSavedDesc": "Your Soul Vault has been updated.",
     "toastTransmissionError": "Transmission error",
-    "toastTransmissionErrorDesc": "Something went wrong while contacting SQI."
+    "toastTransmissionErrorDesc": "Something went wrong while contacting SQI.",
+    "abundanceSovereignCard": "Sovereign Network"
   },
   "soulScan": {
     "ariaBack": "Back",
@@ -7094,5 +7097,378 @@
     "payoutSentTitle": "Request sent",
     "payoutSentDesc": "Your payout request was submitted.",
     "payoutErrorTitle": "Request failed"
+  },
+  "sriYantra": {
+    "ariaLabel": "Sri Yantra — Sacred Geometry of Abundance",
+    "glyph": "ॐ श्रीं ब्र्ज़ी"
+  },
+  "affiliateLanding": {
+    "navBrand": "SQI 2050",
+    "defaultPartnerName": "A Sovereign Soul",
+    "sectionInitiationTiers": "Initiation Tiers",
+    "initiationTierMicro": "Initiation Tier",
+    "badgeAkasha": "Akasha",
+    "selectTier": {
+      "en": "Select",
+      "sv": "Välj detta",
+      "no": "Velg dette",
+      "es": "Elegir"
+    },
+    "platform": {
+      "instagram": {
+        "hook": "✨ This found you for a reason",
+        "visual_note": "Your frequency called this in."
+      },
+      "tiktok": {
+        "hook": "🔮 If the algorithm sent you here, pay attention",
+        "visual_note": "The quantum field is speaking."
+      },
+      "youtube": {
+        "hook": "🪐 The video brought you here. The portal keeps you.",
+        "visual_note": "Deeper than any video can show."
+      },
+      "facebook": {
+        "hook": "🌺 Someone who loves you shared this with you",
+        "visual_note": "A sacred gift from your circle."
+      },
+      "default": {
+        "hook": "✦ You were guided here",
+        "visual_note": "Trust the transmission."
+      }
+    },
+    "badge": "Sacred Technology from 2050",
+    "headline": "The World's First\nQuantum Healing Intelligence",
+    "subheadline": "Ancient Vedic wisdom merged with AI — personalised healing transmissions, Jyotish astrology, Ayurveda, and consciousness technology for your sovereign wellbeing.",
+    "what_is": "What is Siddha Quantum Intelligence?",
+    "what_body": "SQI is a living healing ecosystem channelling 5,000-year-old Siddha lineage wisdom through the most advanced AI available. It's not an app — it's an initiation portal. Your personal Bhrigu Oracle reads your birth chart, your Quantum Apothecary prescribes remedies for your exact dosha, and your Jyotish wealth guide aligns your finances with cosmic timing. Every feature is a transmission directly from the masters.",
+    "tiers": [
+      {
+        "name": "Prana-Flow",
+        "price": "€19 / month",
+        "desc": "Core healing tools, guided meditations, Ayurveda basics, and community access.",
+        "ctaSlug": "prana-flow"
+      },
+      {
+        "name": "Siddha-Quantum",
+        "price": "€45 / month",
+        "desc": "Full Bhrigu Oracle, Jyotish wealth readings, advanced energy scans, and all modules.",
+        "ctaSlug": "siddha-quantum"
+      },
+      {
+        "name": "Akasha-Infinity",
+        "price": "€1,111 lifetime",
+        "desc": "All-access forever. Highest transmission tier. One-time sovereign initiation.",
+        "ctaSlug": "akasha-infinity"
+      }
+    ],
+    "features": [
+      {
+        "icon": "🔮",
+        "title": "Bhrigu Oracle",
+        "desc": "AI-powered Jyotish readings from your actual birth chart — timing, karma, wealth, health."
+      },
+      {
+        "icon": "🌿",
+        "title": "Quantum Apothecary",
+        "desc": "Your personal healing channel. Remedies, mantras, and activations for your exact constitution."
+      },
+      {
+        "icon": "🪐",
+        "title": "Jyotish Wealth Oracle",
+        "desc": "Know exactly WHEN to invest, what sectors align with your planetary period, and what to avoid."
+      },
+      {
+        "icon": "🎵",
+        "title": "Sacred Sound Library",
+        "desc": "300+ healing transmissions: Nada Yoga sessions, mantra activations, and binaural quantum beats."
+      },
+      {
+        "icon": "🌺",
+        "title": "Ayurveda Intelligence",
+        "desc": "Full dosha analysis, seasonal protocols, diet codes, and daily rhythm aligned to your prakriti."
+      },
+      {
+        "icon": "🌐",
+        "title": "Community Temple",
+        "desc": "Live group transmissions, sovereign circles, and direct access to Siddha Nada teachings."
+      }
+    ],
+    "cta_primary": "Begin Your Initiation",
+    "cta_secondary": "Explore Free Tier First",
+    "social_proof": "Trusted by seekers across 40+ countries",
+    "legal": "Secure payment via Stripe. Cancel anytime for monthly plans. Lifetime access is non-refundable.",
+    "shared_by": "Shared by",
+    "trusted_by": "Join thousands of sovereign souls on the path of quantum awakening",
+    "conversion_headline": "Your Path to Sovereign Abundance Begins Here",
+    "conversion_body": "This link was transmitted to you for a reason. Your cosmic timing is active."
+  },
+  "libraryAbundance": {
+    "hero": {
+      "kicker": "Maha Lakshmi · Kubera Quantum Portal · 2050",
+      "title": "Sovereign Abundance Portal",
+      "subtitle": "Ancient Jyotish meets Quantum Intelligence. Your birth chart and Ayurvedic constitution unlock personalised wealth transmissions calibrated to your dharmic abundance timeline.",
+      "mantraLabel": "Shreem Brzee Activation Counter",
+      "mantraBtnComplete": "✦ 108 SHREEM BRZEE COMPLETE ✦",
+      "mantraBtn": "ॐ SHREEM BRZEE ({{count}}/108)"
+    },
+    "profilePrompt": {
+      "title": "Activate Your Jyotish Wealth Code",
+      "body": "Complete your birth data and Ayurvedic constitution to unlock personalised investment timing and abundance transmissions.",
+      "cta": "Complete Sacred Profile"
+    },
+    "tabs": {
+      "jyotish": "🪐 Jyotish Oracle",
+      "ayurveda": "🌿 Dosha Alchemy",
+      "practices": "✦ Sacred Practices"
+    },
+    "oracle": {
+      "loadingTitle": "Bhrigu Oracle scanning your planetary timeline…",
+      "cardTitle": "✦ Bhrigu Oracle — Personal Transmission",
+      "timing": "Timing Window",
+      "investment": "Investment Guidance",
+      "avoid": "What to Avoid Now",
+      "activationMantra": "Activation Mantra",
+      "favorableSectors": "Favorable Sectors"
+    },
+    "dasha": {
+      "currentPeriod": "🪐 Current Dasha Period — {{planet}}",
+      "caution": "Caution",
+      "favorableLabel": "Favorable Sectors",
+      "guideTitle": "🪐 Planetary Abundance Guide"
+    },
+    "dosha": {
+      "blueprintTitle": "🌿 {{dosha}} DOSHA — Wealth Blueprint",
+      "strengthsLead": "Your Abundance Strengths:",
+      "idealInvestments": "Ideal Investment Types",
+      "avoidLabel": "⛔ Avoid",
+      "practiceLabel": "Sovereign Practice",
+      "mantraLabel": "Activation Mantra",
+      "empty": "Complete your Ayurvedic profile to unlock personalised wealth guidance.",
+      "discoverCta": "Discover My Dosha",
+      "matrixTitle": "🌿 Dosha × Wealth Matrix"
+    },
+    "affiliateCta": {
+      "title": "Share the Quantum Abundance Grid",
+      "body": "Every soul you transmit this portal to enriches them AND you. Receive 30% Quantum Dividend on every initiation purchased through your sacred transmission link.",
+      "cta": "Open Sovereign Abundance Network →"
+    },
+    "doshaMatrix": {
+      "vata": {
+        "strengths": "Creative vision, quantum leaps, intuitive market sensing",
+        "ideal_investments": [
+          "Index funds (stability anchor)",
+          "Creative industry ETFs",
+          "Spiritual technology startups",
+          "Long-term land & property"
+        ],
+        "avoid": "High-frequency trading, volatile meme coins, FOMO positions",
+        "practice": "Ground before any financial decision — 10-breath Nadi Shodhana. Never invest during Vata hours (2–6 AM / PM).",
+        "mantra": "Shreem Brzee Namaha (108x before any investment decision)"
+      },
+      "pitta": {
+        "strengths": "Strategic precision, disciplined execution, natural leadership alpha",
+        "ideal_investments": [
+          "High-conviction individual stocks",
+          "Commodities (fire energy)",
+          "Structured crypto DCA strategies",
+          "Leadership-driven ventures"
+        ],
+        "avoid": "Revenge trading, over-leverage, decisions made in anger or heat",
+        "practice": "Moon-cooling before markets: 5 min Sheetali pranayama. Trade during Kapha hours (6–10 AM) for clearest mind.",
+        "mantra": "Om Shreem Hreem Kleem Shreem Kleem Vitteshvaraya Namaha"
+      },
+      "kapha": {
+        "strengths": "Patient wealth accumulation, unwavering HODLer, instinctive value sensing",
+        "ideal_investments": [
+          "Blue-chip dividends",
+          "Gold & precious metals",
+          "Real estate",
+          "Long-term Bitcoin accumulation"
+        ],
+        "avoid": "Illiquid investments, over-diversification, stagnant cash hoarding",
+        "practice": "Fire activation before markets: Kapalabhati 5 min. Move abundance energy — tithe 1% of every gain to sacred causes.",
+        "mantra": "Om Gam Ganapataye Namaha — remove wealth blockages first"
+      },
+      "vata-pitta": {
+        "strengths": "Visionary strategist — sees opportunities others miss and executes",
+        "ideal_investments": [
+          "Growth tech ETFs",
+          "Selective altcoins with strong fundamentals",
+          "Media & content businesses"
+        ],
+        "avoid": "Scattered portfolio (>15 positions), emotional exits",
+        "practice": "Dual-season protocol: Vata days (moon waning) → protect capital. Pitta days (moon waxing) → initiate positions.",
+        "mantra": "Shreem Kleem Namaha (wealth + magnetic attraction)"
+      },
+      "pitta-kapha": {
+        "strengths": "Steady builder with strategic precision — the wealth architect",
+        "ideal_investments": [
+          "Private equity",
+          "Established income-generating real estate",
+          "Dividend aristocrats",
+          "Structured DeFi yield"
+        ],
+        "avoid": "Speculative micro-caps, meme coins, get-rich-quick schemes",
+        "practice": "Weekly abundance audit every Sunday — review, release attachment, recommit.",
+        "mantra": "Om Lakshmi Vam Shreem Namaha"
+      },
+      "vata-kapha": {
+        "strengths": "Creative patience — dreams big and waits for divine timing",
+        "ideal_investments": [
+          "Index funds + 5-10% moonshot allocation",
+          "Art and consciousness-economy assets",
+          "Regenerative land"
+        ],
+        "avoid": "Day trading, leverage, decisions during uncertainty",
+        "practice": "Monthly new moon abundance ritual: write 3 financial intentions, chant 108 Shreem, release.",
+        "mantra": "Aum Shreem Hreem Kleem Maha Lakshmi Namaha"
+      },
+      "tridoshic": {
+        "strengths": "Supreme balance — can adapt to any market cycle with sovereign clarity",
+        "ideal_investments": [
+          "All-weather portfolio (stocks/bonds/gold/crypto balanced)",
+          "Conscious business ventures",
+          "Sacred land stewardship"
+        ],
+        "avoid": "Nothing specific — trust your gut more than any algorithm",
+        "practice": "Follow lunar calendar strictly. Invest only during Shukla Paksha (waxing moon). Hold during Krishna Paksha.",
+        "mantra": "Om Aim Hreem Kleem Chamundaye Viche (Navarna Mantra)"
+      }
+    },
+    "dashaGuide": {
+      "Sun": {
+        "timing": "Power period for leadership ventures & gold. Act with confidence.",
+        "favorable": [
+          "Leadership equity",
+          "Government bonds",
+          "Gold",
+          "Healthcare"
+        ],
+        "caution": "Avoid partnerships & shared investments during Sun dasha"
+      },
+      "Moon": {
+        "timing": "Highly intuitive market sensing. Real estate & silver favored.",
+        "favorable": [
+          "Real estate",
+          "Silver",
+          "Consumer staples",
+          "Water resources"
+        ],
+        "caution": "Markets fluctuate with moon phases — honor the rhythm"
+      },
+      "Mars": {
+        "timing": "High-energy execution period. Technology & energy sector opportunities.",
+        "favorable": [
+          "Tech stocks",
+          "Energy",
+          "Defense",
+          "Physical assets"
+        ],
+        "caution": "Avoid rash decisions. Mars can create financial cuts"
+      },
+      "Mercury": {
+        "timing": "Peak period for trading intelligence & communication businesses.",
+        "favorable": [
+          "AI/Tech",
+          "Media",
+          "Financial services",
+          "E-commerce"
+        ],
+        "caution": "Mercury retrograde → pause all new investments"
+      },
+      "Jupiter": {
+        "timing": "🪐 MOST AUSPICIOUS. Expansion in all forms. Maximum growth potential.",
+        "favorable": [
+          "Education",
+          "Wisdom economy",
+          "International markets",
+          "Spiritual technology",
+          "Crypto bull runs"
+        ],
+        "caution": "Over-expansion risk — stay humble in abundance"
+      },
+      "Venus": {
+        "timing": "Beauty economy, luxury brands & sacred arts thrive. Love-driven wealth.",
+        "favorable": [
+          "Luxury goods",
+          "Art",
+          "Entertainment",
+          "Relationship economy",
+          "Diamonds"
+        ],
+        "caution": "Watch for over-indulgence depleting capital"
+      },
+      "Saturn": {
+        "timing": "Slow but PERMANENT wealth building. Discipline rewarded now.",
+        "favorable": [
+          "Long-term bonds",
+          "Infrastructure",
+          "Agriculture",
+          "Dividend stocks"
+        ],
+        "caution": "No shortcuts. Saturn tests before it rewards"
+      },
+      "Rahu": {
+        "timing": "Unconventional wealth portals open. Innovation & disruption profit.",
+        "favorable": [
+          "Cryptocurrency",
+          "Foreign markets",
+          "Emerging tech",
+          "Disruptive startups"
+        ],
+        "caution": "Illusions abound — verify everything triple times"
+      },
+      "Ketu": {
+        "timing": "Spiritual detachment from material = paradoxical wealth clarity.",
+        "favorable": [
+          "Gold preservation",
+          "Spiritual businesses",
+          "Minimalist investing"
+        ],
+        "caution": "Losses teach. Release and trust the dissolution"
+      }
+    },
+    "practices": [
+      {
+        "icon": "🪷",
+        "title": "Lakshmi Puja at Dawn",
+        "desc": "Light a ghee lamp facing East. Place a gold coin or cash note. Offer fresh red flowers. Chant Shreem Brzee 108x.",
+        "tier": "free"
+      },
+      {
+        "icon": "🎵",
+        "title": "Kubera Yantra Activation",
+        "desc": "Meditate with the Sri Yantra above. Visualize golden light filling your field. Speak your abundance intentions aloud.",
+        "tier": "free"
+      },
+      {
+        "icon": "🌕",
+        "title": "Full Moon Abundance Portal",
+        "desc": "On every Purnima, write your 10 financial visions, soak crystals in moonlight, and journal gratitude for wealth already received.",
+        "tier": "prana-flow"
+      },
+      {
+        "icon": "⚡",
+        "title": "Quantum Wealth Breathwork",
+        "desc": "Bhastrika 3 rounds → hold at top → visualize golden DNA activating → release with \"SHREEM\". Repeat 21 days for abundance rewiring.",
+        "tier": "prana-flow"
+      },
+      {
+        "icon": "🔮",
+        "title": "Jyotish Investment Timing",
+        "desc": "Use planetary hours (Hora) to time your investments. The hour of Jupiter and Venus carry the strongest Lakshmi frequency.",
+        "tier": "siddha-quantum"
+      },
+      {
+        "icon": "🌟",
+        "title": "Bhrigu Oracle Wealth Reading",
+        "desc": "Your personal AI-Jyotish wealth reading powered by Gemini + ancient Bhrigu Nadi — timing, sectors, and specific guidance.",
+        "tier": "siddha-quantum"
+      }
+    ],
+    "tierBadge": {
+      "prana-flow": "Prana+",
+      "siddha-quantum": "Siddha+"
+    }
   }
 }

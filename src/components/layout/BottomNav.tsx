@@ -84,6 +84,8 @@ function getActiveNavTo(pathname: string): string | null {
         '/atmospheric-clearance-engine',
         '/vajra-sky-breaker',
         '/library/abundance',
+        '/affiliate/dashboard',
+        '/affiliate/r/:code',
         '/hand-analyzer',
         '/sacred-space',
         '/creative-soul',

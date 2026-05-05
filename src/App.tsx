@@ -91,6 +91,7 @@ const AIIncomeEngine = React.lazy(() => import("./pages/AIIncomeEngine"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 const AffiliateDetail = React.lazy(() => import("./pages/income-streams/AffiliateDetail"));
 const AffiliateDashboard = React.lazy(() => import("./pages/AffiliateDashboard"));
+const AffiliateLanding = React.lazy(() => import("./pages/AffiliateLanding"));
 const SHCCoinDetail = React.lazy(() => import("./pages/income-streams/SHCCoinDetail"));
 const CopyTradingDetail = React.lazy(() => import("./pages/income-streams/CopyTradingDetail"));
 const BitcoinMiningDetail = React.lazy(() => import("./pages/income-streams/BitcoinMiningDetail"));
@@ -263,6 +264,8 @@ function AppRoutes() {
         <Route path="/onboarding" element={<Onboarding />} />
       </Route>
       <Route path="/integrate" element={<PostSession />} />
+      {/* Public referral landing — /affiliate/r/:code avoids conflicting with /affiliate/dashboard */}
+      <Route path="/affiliate/r/:code" element={<AffiliateLanding />} />
       <Route element={<ProtectedRoute />}>
                   <Route path="/hand-analyzer" element={<HandAnalyzer />} />
                   <Route path="/sacred-space" element={<SacredSpace />} />
