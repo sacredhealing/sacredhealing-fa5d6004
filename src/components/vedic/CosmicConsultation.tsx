@@ -113,6 +113,7 @@ function playChime() {
 }
 
 export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, onUpgrade }) => {
+  const { copiedIdx, copy } = useChatCopy();
   const { user: authUser } = useAuth();
   const navigate = useNavigate();
   const { t, language: userLanguage } = useTranslation();
