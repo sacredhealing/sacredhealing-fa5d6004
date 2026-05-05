@@ -344,6 +344,51 @@ export type Database = {
         }
         Relationships: []
       }
+      affiliate_commissions: {
+        Row: {
+          affiliate_user_id: string | null
+          commission_amount: number
+          commission_rate: number
+          created_at: string
+          currency: string
+          gross_amount: number
+          id: string
+          referred_user_id: string | null
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          affiliate_user_id?: string | null
+          commission_amount?: number
+          commission_rate?: number
+          created_at?: string
+          currency?: string
+          gross_amount?: number
+          id?: string
+          referred_user_id?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          affiliate_user_id?: string | null
+          commission_amount?: number
+          commission_rate?: number
+          created_at?: string
+          currency?: string
+          gross_amount?: number
+          id?: string
+          referred_user_id?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       affiliate_earnings: {
         Row: {
           affiliate_user_id: string
@@ -449,6 +494,42 @@ export type Database = {
         }
         Relationships: []
       }
+      affiliate_payout_requests: {
+        Row: {
+          admin_notes: string | null
+          affiliate_user_id: string | null
+          amount: number
+          bank_details: Json | null
+          created_at: string
+          currency: string
+          id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          affiliate_user_id?: string | null
+          amount: number
+          bank_details?: Json | null
+          created_at?: string
+          currency?: string
+          id?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          affiliate_user_id?: string | null
+          amount?: number
+          bank_details?: Json | null
+          created_at?: string
+          currency?: string
+          id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       affiliate_payouts: {
         Row: {
           amount_eur: number
@@ -488,6 +569,45 @@ export type Database = {
           tx_signature?: string | null
           user_id?: string
           wallet_address?: string | null
+        }
+        Relationships: []
+      }
+      affiliate_profiles: {
+        Row: {
+          affiliate_code: string
+          created_at: string
+          currency: string
+          id: string
+          paid_out: number
+          pending_balance: number
+          stripe_connect_id: string | null
+          total_earnings: number
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          affiliate_code: string
+          created_at?: string
+          currency?: string
+          id?: string
+          paid_out?: number
+          pending_balance?: number
+          stripe_connect_id?: string | null
+          total_earnings?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          affiliate_code?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          paid_out?: number
+          pending_balance?: number
+          stripe_connect_id?: string | null
+          total_earnings?: number
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -7643,6 +7763,20 @@ export type Database = {
       }
     }
     Views: {
+      admin_affiliate_overview: {
+        Row: {
+          affiliate_code: string | null
+          created_at: string | null
+          currency: string | null
+          full_name: string | null
+          paid_out: number | null
+          pending_balance: number | null
+          total_conversions: number | null
+          total_earnings: number | null
+          total_gross_revenue: number | null
+        }
+        Relationships: []
+      }
       public_profiles: {
         Row: {
           avatar_url: string | null
@@ -7692,6 +7826,7 @@ export type Database = {
         Returns: number
       }
       generate_referral_code: { Args: never; Returns: string }
+      generate_sqi_affiliate_code: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
