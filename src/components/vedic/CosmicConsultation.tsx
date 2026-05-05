@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { UserProfile } from '@/lib/vedicTypes';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
+import { CopyMessageButton } from '@/components/chat/CopyMessageButton';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
