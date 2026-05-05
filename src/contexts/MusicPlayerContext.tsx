@@ -9,6 +9,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
 import { useUpgradeModal } from '@/components/UpgradeModal';
 import { getMusicTrackRequiredRank, getUserMusicAccessRank } from '@/lib/tierAccess';
+import { safePlay } from '@/utils/safeAudioPlay';
+import { AudioErrorBoundary } from '@/components/AudioErrorBoundary';
 
 const SH_LAST_SESSION_KEY = 'sh_last_session';
 const SH_LAST_SESSION_UPDATED = 'sh_last_session_updated';
@@ -400,8 +402,10 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         audioRef.current.pause();
         setIsPlaying(false);
       } else {
-        audioRef.current.play();
-        setIsPlaying(true);
+        void (async () => {
+          const ok = await safePlay(audioRef.current!);
+          setIsPlaying(ok);
+        })();
       }
       return;
     }
@@ -444,7 +448,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     audioRef.current.onended = async () => {
       if (isLoop && audioRef.current) {
         audioRef.current.currentTime = 0;
-        audioRef.current.play();
+        await safePlay(audioRef.current);
         return;
       }
       
@@ -517,12 +521,17 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
     };
     
-    audioRef.current.play();
     setCurrentTrack(track);
     setProgress(0);
     setCurrentTime(0);
-    setIsPlaying(true);
-    
+
+    const started = await safePlay(audioRef.current);
+    setIsPlaying(started);
+
+    if (!started) {
+      return;
+    }
+
     if (newQueue) {
       setQueue(newQueue);
       setCurrentQueueIndex(newQueue.findIndex(t => t.id === track.id) || 0);
@@ -558,8 +567,10 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
-      void audioRef.current.play().catch(() => setIsPlaying(false));
-      setIsPlaying(true);
+      void (async () => {
+        const ok = await safePlay(audioRef.current!);
+        setIsPlaying(ok);
+      })();
     }
   }, [isPlaying, currentTrack, currentAudio, audioContentType]);
 
@@ -734,7 +745,9 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       stopTrack,
       showGitaTransition,
     }}>
-      {children}
+      <AudioErrorBoundary>
+        {children}
+      </AudioErrorBoundary>
       <UpgradeModalComponent />
     </MusicPlayerContext.Provider>
   );

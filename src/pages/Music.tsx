@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
+import { safePlay } from '@/utils/safeAudioPlay';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
@@ -510,9 +511,14 @@ function useAutoPreview(onSnippetEnd: (track: MusicTrack) => void) {
       }
     };
 
-    audio.play()
-      .then(() => setState(s => ({ ...s, trackId: track.id, isPlaying: true, hasFullAccess })))
-      .catch(e => { console.error('Audio play failed:', e); stopAudio(); });
+    void (async () => {
+      const ok = await safePlay(audio);
+      if (ok) {
+        setState((s) => ({ ...s, trackId: track.id, isPlaying: true, hasFullAccess }));
+      } else {
+        stopAudio();
+      }
+    })();
 
   }, [stopAudio, onSnippetEnd]);
 
@@ -520,7 +526,10 @@ function useAutoPreview(onSnippetEnd: (track: MusicTrack) => void) {
     const audio = audioRef.current;
     if (!audio) return;
     if (audio.paused) {
-      audio.play().then(() => setState(s => ({ ...s, isPlaying: true }))).catch(console.error);
+      void (async () => {
+        const ok = await safePlay(audio);
+        if (ok) setState((s) => ({ ...s, isPlaying: true }));
+      })();
     } else {
       audio.pause();
       setState(s => ({ ...s, isPlaying: false }));

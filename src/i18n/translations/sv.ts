@@ -94,5 +94,19 @@ export const sv = {
         "Du kan dela ett ord om din dag — eller bara läsa andras.",
     },
   },
+
+  audioErrorBoundary: {
+    title: "Ljudtransmission pausad",
+    body: "Din enhet behöver ett ögonblick för att synka. Tryck för att återansluta frekvensen.",
+    reconnect: "↺ Återanslut",
+  },
+
+  audioPlayer: {
+    tap_to_start: "Tryck på spela för att starta ljudet.",
+    load_failed: "Ljudet kunde inte laddas",
+    default_title: "Sacred Healing Meditation",
+    default_artist: "Sacred Healing",
+    default_album: "Siddha-Quantum Intelligence",
+  },
 } as const;
 

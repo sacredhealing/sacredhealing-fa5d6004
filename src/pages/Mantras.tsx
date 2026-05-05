@@ -23,6 +23,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
+import { safePlay } from '@/utils/safeAudioPlay';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { getTierRank } from '@/lib/tierAccess';
 import { useSHCBalance } from '@/hooks/useSHCBalance';
@@ -885,7 +886,7 @@ const Mantras = () => {
               return reps;
             }
             const cur = audioEngine.getCurrent();
-            if (cur) { cur.currentTime = 0; void cur.play().catch(() => {}); }
+            if (cur) { cur.currentTime = 0; void safePlay(cur); }
             return next;
           });
         };

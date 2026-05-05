@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { safePlay } from '@/utils/safeAudioPlay';
 
 export interface AmbientSound {
   id: string;
@@ -88,14 +89,15 @@ export const AmbientAudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
     audioRef.current.loop = true; // Ambient sounds loop
     audioRef.current.volume = volume;
     
-    audioRef.current.play()
-      .then(() => {
+    void (async () => {
+      const el = audioRef.current;
+      if (!el) return;
+      const ok = await safePlay(el);
+      if (ok) {
         setCurrentSound(sound);
         setIsPlaying(true);
-      })
-      .catch((error) => {
-        console.error('Error playing ambient sound:', error);
-      });
+      }
+    })();
   }, [volume]);
 
   const stopSound = useCallback(() => {
@@ -114,8 +116,12 @@ export const AmbientAudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
-      audioRef.current.play();
-      setIsPlaying(true);
+      void (async () => {
+        const el = audioRef.current;
+        if (!el) return;
+        const ok = await safePlay(el);
+        setIsPlaying(ok);
+      })();
     }
   }, [isPlaying]);
 

@@ -4135,5 +4135,17 @@
       "ALERT": "Alerta",
       "CRITICAL": "Crítico"
     }
+  },
+  "audioErrorBoundary": {
+    "title": "Transmisión de audio en pausa",
+    "body": "Tu dispositivo necesita un momento para alinearse. Toca para reconectar la frecuencia.",
+    "reconnect": "↺ Reconectar"
+  },
+  "audioPlayer": {
+    "tap_to_start": "Toca reproducir para iniciar el audio.",
+    "load_failed": "No se pudo cargar el audio",
+    "default_title": "Sacred Healing Meditation",
+    "default_artist": "Sacred Healing",
+    "default_album": "Siddha-Quantum Intelligence"
   }
 }

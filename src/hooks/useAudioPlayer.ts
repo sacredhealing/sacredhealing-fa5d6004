@@ -11,6 +11,8 @@
 //   3. visibilitychange  → resumes AudioContext immediately when user returns to tab.
 
 import { useRef, useState, useEffect, useCallback } from 'react';
+import { useT } from '@/i18n/useT';
+import { safePlay, safeSetMediaSession, safeSetMediaSessionHandlers } from '@/utils/safeAudioPlay';
 
 export interface AudioTrackMeta {
   title: string;
@@ -40,6 +42,7 @@ export function useAudioPlayer(
   meta?: AudioTrackMeta,
   onEnded?: () => void | Promise<void>
 ): UseAudioPlayerReturn {
+  const { t } = useT();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -58,53 +61,55 @@ export function useAudioPlayer(
   });
 
   const registerMediaSession = useCallback(() => {
-    if (!('mediaSession' in navigator)) return;
-
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title: meta?.title ?? 'Sacred Healing Meditation',
-      artist: meta?.artist ?? 'Sacred Healing',
-      album: meta?.album ?? 'Siddha-Quantum Intelligence',
+    safeSetMediaSession({
+      title: meta?.title ?? t('audioPlayer.default_title'),
+      artist: meta?.artist ?? t('audioPlayer.default_artist'),
+      album: meta?.album ?? t('audioPlayer.default_album'),
       artwork: meta?.artwork
         ? [{ src: meta.artwork, sizes: '512x512', type: 'image/jpeg' }]
         : [{ src: '/favicon.ico', sizes: '96x96', type: 'image/png' }],
     });
 
-    navigator.mediaSession.setActionHandler('play', () => {
-      audioRef.current?.play().catch(() => {});
-      setState((prev) => ({ ...prev, isPlaying: true }));
-      isPlayingRef.current = true;
+    safeSetMediaSessionHandlers({
+      play: () => {
+        void (async () => {
+          const a = audioRef.current;
+          if (!a) return;
+          const ok = await safePlay(a);
+          if (ok) {
+            setState((prev) => ({ ...prev, isPlaying: true }));
+            isPlayingRef.current = true;
+          }
+        })();
+      },
+      pause: () => {
+        audioRef.current?.pause();
+        setState((prev) => ({ ...prev, isPlaying: false }));
+        isPlayingRef.current = false;
+      },
+      seekto: (details) => {
+        if (audioRef.current && details?.seekTime != null) {
+          audioRef.current.currentTime = details.seekTime;
+        }
+      },
+      seekforward: (details) => {
+        if (audioRef.current) {
+          audioRef.current.currentTime = Math.min(
+            audioRef.current.currentTime + (details?.seekOffset ?? 10),
+            audioRef.current.duration,
+          );
+        }
+      },
+      seekbackward: (details) => {
+        if (audioRef.current) {
+          audioRef.current.currentTime = Math.max(
+            audioRef.current.currentTime - (details?.seekOffset ?? 10),
+            0,
+          );
+        }
+      },
     });
-
-    navigator.mediaSession.setActionHandler('pause', () => {
-      audioRef.current?.pause();
-      setState((prev) => ({ ...prev, isPlaying: false }));
-      isPlayingRef.current = false;
-    });
-
-    navigator.mediaSession.setActionHandler('seekto', (details) => {
-      if (audioRef.current && details.seekTime != null) {
-        audioRef.current.currentTime = details.seekTime;
-      }
-    });
-
-    navigator.mediaSession.setActionHandler('seekforward', (details) => {
-      if (audioRef.current) {
-        audioRef.current.currentTime = Math.min(
-          audioRef.current.currentTime + (details.seekOffset ?? 10),
-          audioRef.current.duration
-        );
-      }
-    });
-
-    navigator.mediaSession.setActionHandler('seekbackward', (details) => {
-      if (audioRef.current) {
-        audioRef.current.currentTime = Math.max(
-          audioRef.current.currentTime - (details.seekOffset ?? 10),
-          0
-        );
-      }
-    });
-  }, [meta?.title, meta?.artist, meta?.album, meta?.artwork]);
+  }, [meta?.title, meta?.artist, meta?.album, meta?.artwork, t]);
 
   const startHeartbeat = useCallback(() => {
     stopHeartbeat();
@@ -163,7 +168,7 @@ export function useAudioPlayer(
 
       const audio = audioRef.current;
       if (audio && isPlayingRef.current && audio.paused && !audio.ended) {
-        audio.play().catch(() => {});
+        void safePlay(audio);
       }
     };
 
@@ -257,7 +262,7 @@ export function useAudioPlayer(
       void onEndedRef.current?.();
     };
     const onError = () => {
-      const err = audio.error?.message || 'Audio failed to load';
+      const err = audio.error?.message || t('audioPlayer.load_failed');
       setState((prev) => ({ ...prev, isPlaying: false, isLoading: false, error: err }));
       isPlayingRef.current = false;
     };
@@ -270,7 +275,7 @@ export function useAudioPlayer(
       if (isPlayingRef.current && audio.paused) {
         setTimeout(() => {
           if (isPlayingRef.current && audio.paused) {
-            audio.play().catch(() => {});
+            void safePlay(audio);
           }
         }, 800);
       }
@@ -310,24 +315,25 @@ export function useAudioPlayer(
     const ctx = audioCtxRef.current;
     if (ctx?.state === 'suspended') await ctx.resume().catch(() => {});
 
-    try {
-      await audio.play();
-      isPlayingRef.current = true;
-      setState((prev) => ({ ...prev, isPlaying: true, error: null }));
-
-      registerMediaSession();
-      if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
-
-      await requestWakeLock();
-      startHeartbeat();
-    } catch {
+    const ok = await safePlay(audio);
+    if (!ok) {
       setState((prev) => ({
         ...prev,
         isPlaying: false,
-        error: 'Tap play to start audio.',
+        error: t('audioPlayer.tap_to_start'),
       }));
+      return;
     }
-  }, [registerMediaSession, requestWakeLock, startHeartbeat]);
+
+    isPlayingRef.current = true;
+    setState((prev) => ({ ...prev, isPlaying: true, error: null }));
+
+    registerMediaSession();
+    if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+
+    await requestWakeLock();
+    startHeartbeat();
+  }, [registerMediaSession, requestWakeLock, startHeartbeat, t]);
 
   const pause = useCallback(() => {
     audioRef.current?.pause();
