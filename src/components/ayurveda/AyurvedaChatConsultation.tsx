@@ -162,6 +162,9 @@ const STYLES = `
     gap: 14px;
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--sqi-chat-gold) / 0.15) transparent;
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
   }
   .sqi-msgs::-webkit-scrollbar {
     width: 6px;
@@ -281,6 +284,9 @@ const STYLES = `
     font-size: 13px;
     line-height: 1.7;
     white-space: pre-wrap;
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
   }
   .sqi-bubble.user {
     color: hsl(30 45% 94%);

@@ -2512,6 +2512,13 @@ SQI — integrate this scan with my natal chart; cite each chart fact once; use 
           max-width: 100%;
         }
 
+        /* Transcript must be selectable/copyable (mobile WebKit + inherited UI guards). */
+        .qa-sqi-chat {
+          -webkit-user-select: text;
+          user-select: text;
+          -webkit-touch-callout: default;
+        }
+
         .sqi-message strong,
         .sqi-message b {
           color: rgba(255,255,255,0.97);
