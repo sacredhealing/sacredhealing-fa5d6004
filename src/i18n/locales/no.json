@@ -4512,5 +4512,10 @@
       "prana-flow": "Prana+",
       "siddha-quantum": "Siddha+"
     }
+  },
+  "chatBubble": {
+    "copy": "Kopier",
+    "copied": "Kopiert",
+    "copyAria": "Kopier melding til utklippstavlen"
   }
 }

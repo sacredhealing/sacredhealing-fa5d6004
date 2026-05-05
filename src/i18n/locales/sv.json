@@ -7063,5 +7063,10 @@
       "prana-flow": "Prana+",
       "siddha-quantum": "Siddha+"
     }
+  },
+  "chatBubble": {
+    "copy": "Kopiera",
+    "copied": "Kopierad",
+    "copyAria": "Kopiera meddelande till urklipp"
   }
 }
