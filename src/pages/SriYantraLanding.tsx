@@ -77,7 +77,7 @@ export default function SriYantraLanding() {
         }}
       >
         <div className="mb-6 h-40 w-40 rounded-full border border-white/20 bg-white/5 flex items-center justify-center shadow-[0_0_40px_rgba(212,175,55,0.4)]">
-          <SriYantra isActive={false} />
+          <SriYantra />
         </div>
         <h1 className="text-3xl md:text-4xl font-bold tracking-[0.3em] mb-2 text-center">
           v2026.SUPREME

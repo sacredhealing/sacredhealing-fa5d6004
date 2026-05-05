@@ -318,7 +318,7 @@ export default function SriYantraShield() {
         {/* Central Visualization */}
         <div className="flex-1 flex flex-col items-center justify-center w-full max-w-2xl relative">
           <div className="w-full aspect-square max-w-[400px] relative">
-            <SriYantra isActive={isActive} />
+            <SriYantra />
 
             {/* HUD Overlays */}
             <AnimatePresence>
