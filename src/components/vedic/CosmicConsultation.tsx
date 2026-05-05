@@ -18,6 +18,16 @@ interface CosmicConsultationProps {
   onUpgrade?: () => void;
 }
 
+const useChatCopy = () => {
+  const [copiedIdx, setCopiedIdx] = React.useState<number | null>(null);
+  const copy = (text: string, idx: number) => {
+    navigator.clipboard?.writeText(text).catch(() => {});
+    setCopiedIdx(idx);
+    setTimeout(() => setCopiedIdx((c) => (c === idx ? null : c)), 2000);
+  };
+  return { copiedIdx, copy };
+};
+
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/vedic-guru-chat`;
 
 // Bhrigu Nandi Nadi age-planet map (use actual emoji characters for display)

@@ -468,6 +468,12 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+  const handleCopy = (text: string, idx: number) => {
+    navigator.clipboard?.writeText(text).catch(() => {});
+    setCopiedIdx(idx);
+    setTimeout(() => setCopiedIdx((c) => (c === idx ? null : c)), 2000);
+  };
   const msgsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -692,7 +698,10 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
                 animate={{ opacity: 1, y: 0 }}
                 className={`sqi-msg-row ${msg.role === 'user' ? 'user' : 'ai'}`}
               >
-                <div className={`sqi-bubble ${msg.role === 'user' ? 'user' : 'ai'}`}>
+                <div
+                  className={`sqi-bubble chat-message ${msg.role === 'user' ? 'user' : 'ai'}`}
+                  style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
+                >
                   <div
                     className="sqi-role"
                     style={{
@@ -709,6 +718,28 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
                   </div>
                   {msg.content}
                 </div>
+                {msg.role === 'assistant' && (
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(msg.content, index)}
+                    aria-label="Copy message"
+                    style={{
+                      marginTop: 6,
+                      background: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: copiedIdx === index ? '#22c55e' : '#D4AF37',
+                      fontSize: 10,
+                      fontWeight: 800,
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                      padding: '4px 8px',
+                      alignSelf: 'flex-start',
+                    }}
+                  >
+                    {copiedIdx === index ? '✓ Copied' : 'Copy'}
+                  </button>
+                )}
               </motion.div>
             ))}
 
