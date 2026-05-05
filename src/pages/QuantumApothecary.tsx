@@ -743,6 +743,12 @@ function QuantumApothecaryInner() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [copiedMsgIdx, setCopiedMsgIdx] = useState<number | null>(null);
+  const handleCopyMsg = (text: string, idx: number) => {
+    navigator.clipboard?.writeText(text).catch(() => {});
+    setCopiedMsgIdx(idx);
+    setTimeout(() => setCopiedMsgIdx((c) => (c === idx ? null : c)), 2000);
+  };
   const [activeCategory, setActiveCategory] = useState('All');
   const [showKnowledge, setShowKnowledge] = useState(false);
   const [isChatFullscreen, setIsChatFullscreen] = useState(false);
@@ -1635,11 +1641,14 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                 ) : (
                   <>
                     <div
-                      className="w-full max-w-[96%] mx-auto rounded-[20px] px-5 py-4"
+                      className="chat-message w-full max-w-[96%] mx-auto rounded-[20px] px-5 py-4"
                       style={{
                         background: 'rgba(255,255,255,0.03)',
                         border: '1px solid rgba(255,255,255,0.06)',
                         overflow: 'visible',
+                        userSelect: 'none',
+                        WebkitUserSelect: 'none',
+                        WebkitTouchCallout: 'none',
                       }}
                     >
                       <div className="sqi-message w-full min-w-0">
@@ -1648,6 +1657,20 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                         </div>
                       </div>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyMsg(msg.text, i)}
+                      aria-label="Copy message"
+                      className="mt-1 px-2 py-1 text-[10px] font-bold uppercase tracking-widest"
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: copiedMsgIdx === i ? '#22c55e' : '#D4AF37',
+                      }}
+                    >
+                      {copiedMsgIdx === i ? '✓ Copied' : 'Copy'}
+                    </button>
                     {ts && (
                       <p className="text-[10px] text-white/25 mt-1 text-right w-full max-w-[96%] mx-auto">{ts}</p>
                     )}
