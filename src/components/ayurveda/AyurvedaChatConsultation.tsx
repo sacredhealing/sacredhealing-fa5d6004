@@ -282,6 +282,9 @@ const STYLES = `
     font-size: 13px;
     line-height: 1.7;
     white-space: pre-wrap;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
   }
   .sqi-bubble.user {
     color: hsl(30 45% 94%);
