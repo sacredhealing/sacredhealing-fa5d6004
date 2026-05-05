@@ -549,7 +549,7 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
                 )}
                 {/* Palm Leaf styled card for assistant */}
                 <div
-                  className={`p-4 md:p-6 rounded-[2.2rem] relative overflow-hidden ${
+                  className={`chat-message p-4 md:p-6 rounded-[2.2rem] relative overflow-hidden ${
                     msg.role === 'user'
                       ? 'bg-amber-900/30 border border-amber-700/20 text-amber-100 ml-auto rounded-tr-none shadow-xl'
                       : 'rounded-tl-none border border-amber-500/20 shadow-2xl'
@@ -559,7 +559,8 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
                       linear-gradient(135deg, rgba(120,80,20,0.15), rgba(60,40,10,0.2)),
                       url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23C8AA64' fill-opacity='0.04'%3E%3Cpath d='M20 0L0 20h40z'/%3E%3C/g%3E%3C/svg%3E")
                     `,
-                  } : undefined}
+                    userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none',
+                  } : { userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
                 >
                   {msg.role === 'assistant' && (
                     <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[repeating-linear-gradient(45deg,transparent,transparent_8px,rgba(200,170,100,0.5)_8px,rgba(200,170,100,0.5)_9px)]" />
@@ -574,6 +575,19 @@ export const CosmicConsultation: React.FC<CosmicConsultationProps> = ({ user, on
                 {/* Action row for assistant messages */}
                 {msg.role === 'assistant' && msg.content && (
                   <div className="flex items-center gap-2 mt-3 pl-2 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => copy(msg.content, i)}
+                      aria-label="Copy message"
+                      className="rounded-2xl text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 border"
+                      style={{
+                        color: copiedIdx === i ? '#22c55e' : '#D4AF37',
+                        borderColor: copiedIdx === i ? 'rgba(34,197,94,0.4)' : 'rgba(212,175,55,0.4)',
+                        background: 'transparent',
+                      }}
+                    >
+                      {copiedIdx === i ? '✓ Copied' : 'Copy'}
+                    </button>
                     {/* Prominent Listen button */}
                     <Button
                       variant="outline"
