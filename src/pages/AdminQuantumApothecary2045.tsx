@@ -208,22 +208,35 @@ export default function AdminQuantumApothecary2045() {
     window.setTimeout(() => {
       const now = new Date();
       const day = now.getDay();
-      const doshas: NadiScanResult['dominantDosha'][] = ['Vata', 'Pitta', 'Kapha'];
-      const nadis = [
-        t('adminQuantumApothecary2045.blockageThroat'),
-        t('adminQuantumApothecary2045.blockageRoot'),
-        t('adminQuantumApothecary2045.blockageHeart'),
-        t('adminQuantumApothecary2045.blockageThirdEye'),
-        t('adminQuantumApothecary2045.blockageSolar'),
+
+      // Map day-of-week to Ayurvedic Dosha dominance (deterministic, not random)
+      const DAY_DOSHA: NadiScanResult['dominantDosha'][] = [
+        'Pitta', 'Kapha', 'Pitta', 'Vata', 'Kapha', 'Vata', 'Vata',
       ];
-      const shuffled = [...ACTIVATIONS].sort(() => 0.5 - Math.random());
-      const selectedRemedies = shuffled.slice(0, 5).map((a) => a.name);
+      const dominantDosha = DAY_DOSHA[day] ?? 'Vata';
+
+      const DOSHA_NADI: Record<string, string> = {
+        Vata: 'Sushumna',
+        Pitta: 'Pingala',
+        Kapha: 'Ida',
+      };
+      const primaryNadi = DOSHA_NADI[dominantDosha] ?? 'Sushumna';
+
+      const DOSHA_CHAKRA: Record<string, string> = {
+        Vata: 'Muladhara',
+        Pitta: 'Manipura',
+        Kapha: 'Anahata',
+      };
+      const priorityChakra = DOSHA_CHAKRA[dominantDosha];
+
+      const herbToday = PLANETARY_DATA[day].herb;
+      const selectedRemedies = [herbToday];
 
       const result: NadiScanResult = {
-        dominantDosha: doshas[Math.floor(Math.random() * doshas.length)],
-        blockages: [nadis[Math.floor(Math.random() * nadis.length)]!],
+        dominantDosha,
+        blockages: [primaryNadi],
         planetaryAlignment: PLANETARY_DATA[day].planet,
-        herbOfToday: PLANETARY_DATA[day].herb,
+        herbOfToday: herbToday,
         timestamp: now.toISOString(),
         activeNadis: Math.floor(Math.random() * 10000) + 60000,
         totalNadis: 72000,
@@ -235,15 +248,10 @@ export default function AdminQuantumApothecary2045() {
       streamRef.current?.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
 
-      const blockageBlob = (result.blockages ?? []).join(' ').toLowerCase();
-      let priorityChakra: string | undefined;
-      if (blockageBlob.includes('heart') || blockageBlob.includes('anahata')) priorityChakra = 'Anahata';
-      else if (blockageBlob.includes('root') || blockageBlob.includes('muladhara')) priorityChakra = 'Muladhara';
-
       const matchedBio = matchActivationsToScan(
         {
           dominantDosha: result.dominantDosha,
-          activatedNadi: result.blockages?.length ? 'Blocked' : 'Sushumna',
+          activatedNadi: result.blockages?.[0] ?? 'Sushumna',
           priorityChakra,
           lowCoherenceItems: result.remedies ?? [],
         },
@@ -294,9 +302,18 @@ export default function AdminQuantumApothecary2045() {
 
       if (response) {
         const lower = response.toLowerCase();
-        const chatMatched = ALL_ACTIVATIONS.filter(
-          (act) => act.name && lower.includes(act.name.toLowerCase().slice(0, 8)),
-        ).slice(0, 3);
+        // Match on full name (≥5 chars), vibrationalSignature, and benefit prefix — SQI prose still hits
+        const chatMatched = ALL_ACTIVATIONS.filter((act) => {
+          if (!act.name) return false;
+          const nameLower = act.name.toLowerCase();
+          if (nameLower.length < 5) return false;
+          if (lower.includes(nameLower)) return true;
+          const sig = (act.vibrationalSignature ?? '').toLowerCase();
+          if (sig.length >= 5 && lower.includes(sig)) return true;
+          const ben = (act.benefit ?? '').toLowerCase().slice(0, 20);
+          if (ben.length >= 5 && lower.includes(ben)) return true;
+          return false;
+        }).slice(0, 3);
 
         if (chatMatched.length > 0) {
           setActiveTransmissions((prev) => {
