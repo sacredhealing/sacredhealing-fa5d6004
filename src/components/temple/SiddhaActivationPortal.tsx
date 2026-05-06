@@ -639,7 +639,7 @@ export default function SiddhaActivationPortal({ embedded = false }: SiddhaActiv
 
     const ua = typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 100) : '';
 
-    const { data, error: err } = await supabase
+    const { data, error: err } = await (supabase as any)
       .from('temple_activations')
       .insert({
       user_id:         user.id,
