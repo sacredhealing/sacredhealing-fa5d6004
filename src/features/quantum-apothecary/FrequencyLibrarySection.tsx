@@ -25,6 +25,7 @@ interface Props {
 
 const BASE_CATEGORIES = [
   'All',
+  'Wellness',
   'Sacred Plant',
   'Siddha Soma',
   'Bioenergetic',
@@ -41,6 +42,7 @@ const BASE_CAT_SET = new Set<string>([...BASE_CATEGORIES]);
 const CATEGORY_TABS: string[] = [...BASE_CATEGORIES, ...BIOENERGETIC_CATEGORIES.filter((c) => !BASE_CAT_SET.has(c))];
 
 const CAT_COLORS: Record<string, string> = {
+  'Wellness':       '#22d3ee',
   'Sacred Plant':   '#4ade80',
   'Siddha Soma':    '#D4AF37',
   'Bioenergetic':   '#60a5fa',

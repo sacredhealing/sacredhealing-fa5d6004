@@ -1,4 +1,5 @@
 export type ActivationType =
+  | 'Wellness'
   | 'Sacred Plant'
   | 'Siddha Soma'
   | 'Bioenergetic'
