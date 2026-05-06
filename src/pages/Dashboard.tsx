@@ -23,6 +23,7 @@ import { DailyRitualCard } from '@/components/dashboard/DailyRitualCard';
 import { SpiritualPathCard } from '@/components/dashboard/SpiritualPathCard';
 import { AchievementPopup } from '@/components/achievements/AchievementPopup';
 import { LivingPortalTile, PORTAL_CONFIGS } from '@/components/dashboard/LivingPortalTile';
+import UserChatHistory from '@/components/UserChatHistory';
 
 import { useAchievements } from '@/hooks/useAchievements';
 import { useMembership } from '@/hooks/useMembership';
@@ -778,6 +779,7 @@ const Dashboard: React.FC = () => {
           </Link>
         </div>
       )}
+      {user && <UserChatHistory />}
     </div>
   );
 };

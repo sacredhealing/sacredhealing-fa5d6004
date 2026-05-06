@@ -10,7 +10,7 @@
 
 import React, { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import {
   Zap,
   Plus, Trash2, Send, Cpu, Globe,
@@ -39,6 +39,7 @@ import { StudentSelector } from '@/components/codex/StudentSelector';
 import { getActiveStudentId } from '@/lib/codex/students';
 import { curateTransmission } from '@/lib/codex/curatorClient';
 import { syncPendingTransmissionsOnce } from '@/lib/codex/codexSync';
+import UserChatHistory from '@/components/UserChatHistory';
 
 const NadiScanner = lazy(() => import('@/components/NadiScanner'));
 const VoiceBiofieldScanner = lazy(() => import('@/components/VoiceBiofieldScanner'));
@@ -542,6 +543,58 @@ function pickTenActivationsForVoiceResult(result: VoiceBiofieldResult): Activati
   return out;
 }
 
+function mapSqiMessagesToUserChatArchive(
+  msgs: Message[],
+): { role: 'user' | 'assistant'; content: string; timestamp: string }[] {
+  return msgs.map((m) => ({
+    role: m.role === 'model' ? ('assistant' as const) : ('user' as const),
+    content: typeof m.text === 'string' ? m.text : '',
+    timestamp: new Date(typeof m.timestamp === 'number' ? m.timestamp : Date.now()).toISOString(),
+  }));
+}
+
+function mapUserChatArchiveToSqiMessages(raw: unknown): Message[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((entry: Record<string, unknown>, i: number) => {
+    const r = entry?.role;
+    const role = r === 'assistant' || r === 'model' ? ('model' as const) : ('user' as const);
+    const text =
+      typeof entry?.content === 'string'
+        ? entry.content
+        : typeof entry?.text === 'string'
+          ? entry.text
+          : '';
+    const ts = entry?.timestamp ? new Date(String(entry.timestamp)).getTime() : Date.now() + i;
+    return { role, text, timestamp: ts };
+  });
+}
+
+async function syncApothecaryUserChatArchive(
+  uid: string,
+  sessionUuid: string,
+  title: string,
+  finalMessages: Message[],
+) {
+  const archiveMsgs = mapSqiMessagesToUserChatArchive(finalMessages);
+  const safeTitle = (title || 'SQI Session').slice(0, 200);
+  try {
+    const { error } = await supabase.from('user_chat_sessions').upsert(
+      {
+        id: sessionUuid,
+        user_id: uid,
+        chat_type: 'apothecary',
+        session_title: safeTitle,
+        messages: archiveMsgs as unknown as never,
+        message_count: archiveMsgs.length,
+      },
+      { onConflict: 'id' },
+    );
+    if (error) console.warn('[user_chat_sessions]', error.message);
+  } catch (e) {
+    console.warn('[user_chat_sessions]', e);
+  }
+}
+
 /* ════════════════════════════════════════════════════════════════════
    ALL LOGIC BELOW IS 100% IDENTICAL TO ORIGINAL — ZERO CHANGES
    Only className values have been updated for SQI-2050 aesthetic
@@ -550,6 +603,8 @@ function pickTenActivationsForVoiceResult(result: VoiceBiofieldResult): Activati
 function QuantumApothecaryInner() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const resumeSessionParam = searchParams.get('session');
   const { user } = useAuth();
   const { t, language } = useTranslation();
 
@@ -993,6 +1048,53 @@ function QuantumApothecaryInner() {
     fetchSessions();
   }, [user]);
 
+  useEffect(() => {
+    if (!user?.id || !resumeSessionParam) return;
+    let cancelled = false;
+    void (async () => {
+      const { data: sqiRow } = await supabase
+        .from('sqi_sessions')
+        .select('messages')
+        .eq('id', resumeSessionParam)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      if (sqiRow?.messages && Array.isArray(sqiRow.messages)) {
+        const loaded = sqiRow.messages as Message[];
+        setCurrentSessionId(resumeSessionParam);
+        setMessages(loaded);
+        prevMsgCountRef.current = loaded.length;
+        try {
+          localStorage.setItem('sqi_chat_messages', JSON.stringify(loaded.slice(-SQI_PERSIST_MSG_CAP)));
+          localStorage.setItem('sqi_current_session_id', resumeSessionParam);
+        } catch {
+          /* ignore */
+        }
+        return;
+      }
+      const { data: arch } = await supabase
+        .from('user_chat_sessions')
+        .select('messages, chat_type')
+        .eq('id', resumeSessionParam)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (cancelled || !arch || arch.chat_type !== 'apothecary' || !Array.isArray(arch.messages)) return;
+      const mapped = mapUserChatArchiveToSqiMessages(arch.messages);
+      setCurrentSessionId(resumeSessionParam);
+      setMessages(mapped);
+      prevMsgCountRef.current = mapped.length;
+      try {
+        localStorage.setItem('sqi_chat_messages', JSON.stringify(mapped.slice(-SQI_PERSIST_MSG_CAP)));
+        localStorage.setItem('sqi_current_session_id', resumeSessionParam);
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, resumeSessionParam]);
+
   // ── ALL HANDLERS UNCHANGED ──
   const openChatFullscreenIfMobile = () => { return; };
 
@@ -1052,12 +1154,40 @@ function QuantumApothecaryInner() {
         const payload = { user_id: user.id, title: (currentSessionId ? undefined : userMsg.text.slice(0, 80) || 'SQI Session') ?? 'SQI Session', messages: finalMessages };
         if (!currentSessionId) {
           const { data, error } = await supabase.from('sqi_sessions').insert(payload).select('id, title, updated_at').single();
-          if (!error && data) { setCurrentSessionId(data.id); setSessions(prev => { const without = prev.filter(s => s.id !== data.id); return [data, ...without]; }); }
+          if (!error && data) {
+            setCurrentSessionId(data.id);
+            setSessions((prev) => {
+              const without = prev.filter((s) => s.id !== data.id);
+              return [data, ...without];
+            });
+            const archiveTitle =
+              (typeof data.title === 'string' && data.title.trim() ? data.title : payload.title) || 'SQI Session';
+            void syncApothecaryUserChatArchive(user.id, data.id, archiveTitle, finalMessages);
+          }
         } else {
-          const { data, error } = await supabase.from('sqi_sessions').update({ title: payload.title ?? undefined, messages: finalMessages, updated_at: new Date().toISOString() }).eq('id', currentSessionId).select('id, title, updated_at').single();
-          if (!error && data) { setSessions(prev => { const without = prev.filter(s => s.id !== data.id); return [data, ...without]; }); }
+          const { data, error } = await supabase
+            .from('sqi_sessions')
+            .update({
+              title: payload.title ?? undefined,
+              messages: finalMessages,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', currentSessionId)
+            .select('id, title, updated_at')
+            .single();
+          if (!error && data) {
+            setSessions((prev) => {
+              const without = prev.filter((s) => s.id !== data.id);
+              return [data, ...without];
+            });
+            const archiveTitle =
+              (typeof data.title === 'string' && data.title.trim() ? data.title : payload.title) || 'SQI Session';
+            void syncApothecaryUserChatArchive(user.id, currentSessionId, archiveTitle, finalMessages);
+          }
         }
-      } catch (err) { console.error('Failed to persist SQI session', err); }
+      } catch (err) {
+        console.error('Failed to persist SQI session', err);
+      }
     };
     try {
       // Build enriched context: live datetime + biometric scan + SQI field + birth chart
@@ -2625,6 +2755,8 @@ SQI — integrate this scan with my natal chart; cite each chart fact once; use 
   .qa-btn-shine { position:relative; overflow:hidden; }
   .qa-btn-shine::after { content:''; position:absolute; inset:0; background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.15) 50%,transparent 60%); background-size:200% 100%; animation:qa-shimmer 3s infinite; }
       `}</style>
+
+      <UserChatHistory filterChatType="apothecary" />
 
       {/* Scroll-to-top FAB */}
       <ScrollToTopButton />
