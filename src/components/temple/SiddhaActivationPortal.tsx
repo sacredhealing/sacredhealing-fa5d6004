@@ -1,5 +1,5 @@
-// SiddhaActivationPortal.tsx — SQI 2050 · Babaji + 18 Siddhas scalar ceremony
-// Persists to localStorage (`sqi_temple_activation`) + merges `siddha_activation` on `temple_home_sessions`.
+// SiddhaActivationPortal.tsx — SQI 2050 · Babaji + 18 Siddhas · server-side temple_activations + Railway pulse
+// Mirrors summary into `temple_home_sessions.siddha_activation` for unified SQI field context.
 
 import { useState, useEffect, useCallback, type CSSProperties } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -116,18 +116,6 @@ function generateLockCode(placeId: string) {
   return `SQI-${placeId.slice(0, 4).toUpperCase()}-B18-${Date.now().toString(36).toUpperCase()}`;
 }
 
-function loadLocalActivation(): TempleActivation | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const o = JSON.parse(raw) as TempleActivation;
-    if (!o?.place_id || !o?.activated_at || !o.is_active) return null;
-    return o;
-  } catch {
-    return null;
-  }
-}
-
 function saveLocalActivation(a: TempleActivation | null) {
   try {
     if (!a || !a.is_active) localStorage.removeItem(STORAGE_KEY);
@@ -137,11 +125,18 @@ function saveLocalActivation(a: TempleActivation | null) {
   }
 }
 
-function parseRemoteActivation(raw: unknown): TempleActivation | null {
-  if (!raw || typeof raw !== 'object') return null;
-  const o = raw as Record<string, unknown>;
-  if (!o.place_id || !o.activated_at || !o.is_active) return null;
-  return o as unknown as TempleActivation;
+function normalizeTempleActivationRow(data: Record<string, unknown>): TempleActivation {
+  return {
+    id: String(data.id),
+    place_id: String(data.place_id),
+    place_name: String(data.place_name ?? ''),
+    activated_at: String(data.activated_at ?? ''),
+    is_active: data.is_active === true,
+    lock_code: String(data.lock_code ?? ''),
+    last_pulse_at: String(data.last_pulse_at ?? ''),
+    pulse_count: Number(data.pulse_count ?? 0),
+    scalar_intensity: Number(data.scalar_intensity ?? 100),
+  };
 }
 
 async function mergePersistSiddhaActivation(userId: string, activation: TempleActivation | null) {
@@ -209,24 +204,25 @@ function ScalarRings({ active }: { active: boolean }) {
   );
 }
 
-/** Continuous uptime as HH:MM:SS (hours may exceed 24). */
+/** Continuous uptime: days + clock (matches Live Field display). */
 function useUptime(at: string | null) {
-  const [hms, setHms] = useState({ h: 0, m: 0, s: 0 });
+  const [u, setU] = useState({ d: 0, h: 0, m: 0, s: 0 });
   useEffect(() => {
     if (!at) return;
     const tick = () => {
       const diff = Date.now() - new Date(at).getTime();
-      const totalSec = Math.max(0, Math.floor(diff / 1000));
-      const h = Math.floor(totalSec / 3600);
-      const m = Math.floor((totalSec % 3600) / 60);
-      const s = totalSec % 60;
-      setHms({ h, m, s });
+      setU({
+        d: Math.floor(diff / 86400000),
+        h: Math.floor((diff % 86400000) / 3600000),
+        m: Math.floor((diff % 3600000) / 60000),
+        s: Math.floor((diff % 60000) / 1000),
+      });
     };
     tick();
     const t = setInterval(tick, 1000);
     return () => clearInterval(t);
   }, [at]);
-  return hms;
+  return u;
 }
 
 function PlaceCard({
@@ -325,7 +321,7 @@ function PhaseMessage({ phase }: { phase: string }) {
   const [idx, setIdx] = useState(0);
   const sets: Record<string, string[]> = {
     scanning: ['🔱 Mahavatar Babaji — opening scalar conduit...', '⟁ 18 Siddha nodes — calibrating consciousness frequencies...', '◈ Reading Akashic GPS signature of holy place...', '✦ Quantum-entangling your physical space to the source...'],
-    locking: ['🌀 Babaji weaving Vedic Light-Codes into your space-fabric...', '⚡ Writing lock state to secure storage + temple_home_sessions...', '🕉️ 18 Siddhas sealing the etheric boundary 24/7...', '✨ Device-independent — persists across sign-in...'],
+    locking: ['🌀 Babaji weaving Vedic Light-Codes into your space-fabric...', '⚡ Scalar lock writing to Supabase server — device-independent...', '🕉️ 18 Siddhas sealing the etheric boundary 24/7...', '✨ Railway cron armed — field runs while you sleep...'],
   };
   const lines = sets[phase] || [];
   useEffect(() => {
@@ -342,7 +338,7 @@ function PhaseMessage({ phase }: { phase: string }) {
 }
 
 const CATEGORIES = [{ id: 'all', label: 'ALL 23' }, { id: 'india', label: 'INDIA · 12' }, { id: 'world', label: 'WORLD · 11' }] as const;
-const TABS = [{ id: 'places', label: 'PLACES' }, { id: 'siddhas', label: 'SIDDHAS' }, { id: 'live', label: 'TRANSMISSION' }] as const;
+const TABS = [{ id: 'places', label: '23 PLACES' }, { id: 'siddhas', label: '18 SIDDHAS' }, { id: 'live', label: 'LIVE FIELD' }] as const;
 
 export interface SiddhaActivationPortalProps {
   /** When true, renders as an inline Temple Home section (no full-viewport shell). */
@@ -364,34 +360,36 @@ export default function SiddhaActivationPortal({ embedded = false }: SiddhaActiv
   const filteredPlaces = HOLY_PLACES.filter((p) => (catFilter === 'all' ? true : p.category === catFilter));
 
   useEffect(() => {
-    const local = loadLocalActivation();
-    if (local) {
-      setActivation(local);
-      setSelectedId(local.place_id);
-      setPhase('locked');
-    }
-
     if (!user?.id) {
+      setActivation(null);
+      setSelectedId(null);
+      setPhase('idle');
       setLoading(false);
       return;
     }
 
     let cancelled = false;
     void (async () => {
-      const { data } = await supabase.from('temple_home_sessions').select('siddha_activation').eq('user_id', user.id).maybeSingle();
+      const { data, error: fetchErr } = await supabase
+        .from('temple_activations')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .maybeSingle();
 
       if (cancelled) return;
 
-      const remote = parseRemoteActivation(data?.siddha_activation);
-      if (remote?.is_active) {
-        const localAt = local?.activated_at ? new Date(local.activated_at).getTime() : 0;
-        const remoteAt = new Date(remote.activated_at).getTime();
-        if (!local || remoteAt >= localAt) {
-          setActivation(remote);
-          setSelectedId(remote.place_id);
-          setPhase('locked');
-          saveLocalActivation(remote);
-        }
+      if (!fetchErr && data) {
+        const row = normalizeTempleActivationRow(data as Record<string, unknown>);
+        setActivation(row);
+        setSelectedId(row.place_id);
+        setPhase('locked');
+        saveLocalActivation(row);
+      } else {
+        setActivation(null);
+        setSelectedId(null);
+        setPhase('idle');
+        saveLocalActivation(null);
       }
       setLoading(false);
     })();
@@ -401,8 +399,45 @@ export default function SiddhaActivationPortal({ embedded = false }: SiddhaActiv
     };
   }, [user?.id]);
 
+  useEffect(() => {
+    if (!user?.id || !activation?.id) return;
+    const uid = user.id;
+    const aid = activation.id;
+    const ch = supabase
+      .channel('temple_pulse')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'temple_activations',
+          filter: `user_id=eq.${uid}`,
+        },
+        (payload) => {
+          const row = payload.new as Record<string, unknown>;
+          if (!row?.id || String(row.id) !== aid) return;
+          if (row.is_active === false) {
+            saveLocalActivation(null);
+            setActivation(null);
+            setSelectedId(null);
+            setPhase('idle');
+            void mergePersistSiddhaActivation(uid, null);
+            return;
+          }
+          const next = normalizeTempleActivationRow(row);
+          setActivation(next);
+          saveLocalActivation(next);
+          void mergePersistSiddhaActivation(uid, next);
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(ch);
+    };
+  }, [user?.id, activation?.id]);
+
   const activate = useCallback(async () => {
-    if (!selectedId || phase !== 'idle') return;
+    if (!selectedId || !user?.id || phase !== 'idle') return;
     const place = HOLY_PLACES.find((p) => p.id === selectedId);
     if (!place) return;
 
@@ -412,46 +447,78 @@ export default function SiddhaActivationPortal({ embedded = false }: SiddhaActiv
     setPhase('locking');
     await new Promise((r) => setTimeout(r, 3000));
 
-    const lockCode = generateLockCode(place.id);
-    const now = new Date().toISOString();
-    const next: TempleActivation = {
-      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `siddha-${Date.now()}`,
-      place_id: place.id,
-      place_name: place.name,
-      activated_at: now,
-      is_active: true,
-      lock_code: lockCode,
-      last_pulse_at: now,
-      pulse_count: 1,
-      scalar_intensity: 100,
-    };
+    await supabase
+      .from('temple_activations')
+      .update({ is_active: false, deactivated_at: new Date().toISOString() })
+      .eq('user_id', user.id)
+      .eq('is_active', true);
 
-    saveLocalActivation(next);
+    const lockCode = generateLockCode(place.id);
+    const activeSiddhas = place.siddhas
+      .map((id) => {
+        const s = SIDDHAS.find((x) => x.id === id);
+        return s ? { id: s.id, name: s.name, freqHz: s.freqHz } : null;
+      })
+      .filter(Boolean);
+
+    const ua = typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 100) : '';
+
+    const { data, error: insertErr } = await supabase
+      .from('temple_activations')
+      .insert({
+        user_id: user.id,
+        place_id: place.id,
+        place_name: place.name,
+        place_location: `${place.location}, ${place.country}`,
+        place_frequency: place.frequency,
+        is_active: true,
+        lock_code: lockCode,
+        last_pulse_at: new Date().toISOString(),
+        pulse_count: 1,
+        scalar_intensity: 100,
+        siddha_field: activeSiddhas,
+        activated_device: ua,
+        user_agent: ua,
+      })
+      .select()
+      .single();
+
+    if (insertErr || !data) {
+      setError('Lock failed — please try again.');
+      setPhase('idle');
+      return;
+    }
+
+    const next = normalizeTempleActivationRow(data as Record<string, unknown>);
     setActivation(next);
     setPhase('locked');
+    saveLocalActivation(next);
 
-    if (user?.id) {
-      try {
-        await mergePersistSiddhaActivation(user.id, next);
-      } catch {
-        setError('Saved on device — cloud sync failed. Retry when online.');
-      }
+    try {
+      await mergePersistSiddhaActivation(user.id, next);
+    } catch {
+      setError('Lock saved on server — Temple Home sync delayed. Retry when online.');
     }
   }, [selectedId, user?.id, phase]);
 
   const deactivate = useCallback(async () => {
+    if (!user?.id || !activation) return;
+    await supabase
+      .from('temple_activations')
+      .update({ is_active: false, deactivated_at: new Date().toISOString() })
+      .eq('id', activation.id);
+
     saveLocalActivation(null);
     setActivation(null);
     setSelectedId(null);
     setPhase('idle');
-    if (user?.id) {
-      try {
-        await mergePersistSiddhaActivation(user.id, null);
-      } catch {
-        /* local cleared */
-      }
+
+    try {
+      await mergePersistSiddhaActivation(user.id, null);
+    } catch {
+      /* cleared server-side row; session mirror may lag */
     }
-  }, [user?.id]);
+  }, [user?.id, activation]);
 
   if (loading && !embedded) {
     return (
@@ -516,7 +583,8 @@ export default function SiddhaActivationPortal({ embedded = false }: SiddhaActiv
           </div>
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.38)', lineHeight: 1.65, maxWidth: 310, margin: '0 auto 20px' }}>
             Babaji + 18 Siddhas anchor the consciousness of <em>any sacred place on Earth</em> into your home —{' '}
-            <strong style={{ color: 'rgba(212,175,55,0.75)' }}>local lock + optional cloud sync via temple_home_sessions.</strong>
+            <strong style={{ color: 'rgba(212,175,55,0.75)' }}>24/7 on the server, even when your device is off.</strong>{' '}
+            Temple Home also mirrors state for the unified SQI field.
           </div>
           <ScalarRings active={phase === 'locked'} />
           <div style={{ marginTop: 16, display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -531,7 +599,7 @@ export default function SiddhaActivationPortal({ embedded = false }: SiddhaActiv
             {phase === 'locked' && (
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.18)', borderRadius: 100, padding: '5px 14px' }}>
                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22D3EE', animation: 'liveDot 1.5s ease-in-out infinite' }} />
-                <span style={{ color: '#22D3EE', fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase' }}>Scalar Sync</span>
+                <span style={{ color: '#22D3EE', fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase' }}>Railway Cron Active</span>
               </div>
             )}
           </div>
@@ -612,11 +680,17 @@ export default function SiddhaActivationPortal({ embedded = false }: SiddhaActiv
                 <div style={{ background: 'rgba(255,60,60,0.07)', border: '1px solid rgba(255,60,60,0.18)', borderRadius: 12, padding: '12px 16px', color: 'rgba(255,100,100,0.75)', fontSize: 11 }}>{error}</div>
               )}
 
+              {!user?.id && phase === 'idle' && (
+                <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, textAlign: 'center', lineHeight: 1.5 }}>
+                  Sign in to write your scalar lock to Supabase — browsing the 23 places works while logged out.
+                </div>
+              )}
+
               {phase !== 'locked' ? (
                 <button
                   type="button"
                   onClick={() => void activate()}
-                  disabled={!selectedId || phase !== 'idle'}
+                  disabled={!selectedId || !user?.id || phase !== 'idle'}
                   style={{
                     width: '100%',
                     padding: '18px',
@@ -634,12 +708,12 @@ export default function SiddhaActivationPortal({ embedded = false }: SiddhaActiv
                     animation: selectedId && phase === 'idle' ? 'ctaGlow 2s infinite' : 'none',
                   }}
                 >
-                  {phase === 'scanning' ? '🔱 Scanning Akasha...' : phase === 'locking' ? '⚡ Sealing Lock...' : '🔱 Activate Scalar Lock — 24/7'}
+                  {phase === 'scanning' ? '🔱 Scanning Akasha...' : phase === 'locking' ? '⚡ Writing to Server...' : '🔱 Activate Scalar Lock — 24/7'}
                 </button>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <div style={{ textAlign: 'center', padding: '14px', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 16, color: '#D4AF37', fontSize: 11, fontWeight: 700 }}>
-                    🔱 Field is LOCKED — persisted ({STORAGE_KEY})
+                    🔱 Field is LOCKED — running 24/7 on the server ({STORAGE_KEY} cache)
                   </div>
                   <button
                     type="button"
@@ -673,7 +747,7 @@ export default function SiddhaActivationPortal({ embedded = false }: SiddhaActiv
                 <div style={{ color: '#D4AF37', fontSize: 20, fontWeight: 900, letterSpacing: '-0.04em', animation: 'headerAura 3s ease-in-out infinite' }}>Mahavatar Babaji</div>
                 <div style={{ color: 'rgba(255,255,255,0.28)', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.6em', textTransform: 'uppercase', margin: '6px 0 10px' }}>SUPREME SCALAR ANCHOR · DEATHLESS · KRIYA MASTER</div>
                 <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, lineHeight: 1.65, maxWidth: 280, margin: '0 auto' }}>
-                  The immortal Siddha whose physical body has existed for thousands of years. He forms the central scalar node — anchoring all 18 Siddhas and all holy places into one transmission field.
+                  The immortal Siddha whose physical body has existed for thousands of years. He forms the central scalar node — anchoring all 18 Siddhas and all 23 holy places into a single continuous transmission field, running from the server, independent of any device.
                 </div>
                 <div style={{ marginTop: 12, color: '#D4AF37', fontSize: 10, fontStyle: 'italic', opacity: 0.55 }}>&quot;Om Kriya Babaji Nama Aum&quot; · ∞ Hz</div>
               </div>
@@ -699,7 +773,6 @@ export default function SiddhaActivationPortal({ embedded = false }: SiddhaActiv
                       <div style={{ fontSize: 15, marginBottom: 3 }}>⟁</div>
                       <div style={{ color: isGuardian ? s.color : 'rgba(255,255,255,0.72)', fontSize: 10, fontWeight: 700, lineHeight: 1.25 }}>{s.name}</div>
                       <div style={{ color: 'rgba(255,255,255,0.28)', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.25em', textTransform: 'uppercase', marginTop: 2 }}>{s.frequency}</div>
-                      <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 8, marginTop: 4 }}>{s.tamil}</div>
                       {isGuardian && <div style={{ marginTop: 4, color: 'rgba(255,255,255,0.38)', fontSize: 7, lineHeight: 1.4 }}>{s.domain}</div>}
                     </div>
                   );
@@ -721,17 +794,20 @@ export default function SiddhaActivationPortal({ embedded = false }: SiddhaActiv
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                       <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22D3EE', animation: 'liveDot 2s ease-in-out infinite' }} />
                       <span style={{ color: '#22D3EE', fontSize: 8, fontWeight: 800, letterSpacing: '0.55em', textTransform: 'uppercase' }}>LIVE TRANSMISSION</span>
-                      <span style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.22)', fontSize: 7.5 }}>Lock survives refresh</span>
+                      <span style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.22)', fontSize: 7.5 }}>Device OFF = Still running</span>
                     </div>
 
                     <div style={{ textAlign: 'center', marginBottom: 20 }}>
-                      <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: 8, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', marginBottom: 6 }}>UPTIME (HH:MM:SS)</div>
+                      <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: 8, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', marginBottom: 6 }}>CONTINUOUS UPTIME</div>
                       <div style={{ color: '#D4AF37', fontSize: 34, fontWeight: 900, letterSpacing: '-0.04em', fontFamily: 'monospace' }}>
+                        {String(uptime.d).padStart(2, '0')}
+                        <span style={{ color: 'rgba(212,175,55,0.4)', fontSize: 14 }}>d </span>
                         {String(uptime.h).padStart(2, '0')}
-                        <span style={{ color: 'rgba(212,175,55,0.4)', fontSize: 14 }}>:</span>
+                        <span style={{ color: 'rgba(212,175,55,0.4)', fontSize: 14 }}>h </span>
                         {String(uptime.m).padStart(2, '0')}
-                        <span style={{ color: 'rgba(212,175,55,0.4)', fontSize: 14 }}>:</span>
+                        <span style={{ color: 'rgba(212,175,55,0.4)', fontSize: 14 }}>m </span>
                         {String(uptime.s).padStart(2, '0')}
+                        <span style={{ color: 'rgba(212,175,55,0.4)', fontSize: 14 }}>s</span>
                       </div>
                     </div>
 
@@ -739,9 +815,9 @@ export default function SiddhaActivationPortal({ embedded = false }: SiddhaActiv
                       {[
                         { label: 'ACTIVE PLACE', value: activatedPlace.name, color: '#D4AF37' },
                         { label: 'SCALAR INTENSITY', value: `${activation.scalar_intensity}%`, color: 'rgba(255,255,255,0.85)' },
-                        { label: 'PULSE COUNT', value: String(activation.pulse_count), color: 'rgba(255,255,255,0.85)' },
+                        { label: 'SERVER PULSES', value: String(activation.pulse_count), color: 'rgba(255,255,255,0.85)' },
                         { label: 'BABAJI ANCHOR', value: '🔱 SEALED', color: '#D4AF37' },
-                        { label: 'SIDDHA NODES', value: `${activatedPlace.siddhas.length} linked · 18/18 grid ✓`, color: '#22D3EE' },
+                        { label: 'SIDDHA NODES', value: `${activatedPlace.siddhas.length} / 18 ✓`, color: '#22D3EE' },
                         { label: 'PLACE FREQUENCY', value: `${activatedPlace.frequency} Hz`, color: 'rgba(255,255,255,0.85)' },
                       ].map(({ label, value, color }) => (
                         <div key={label} style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 12, padding: '12px 14px' }}>
@@ -761,7 +837,7 @@ export default function SiddhaActivationPortal({ embedded = false }: SiddhaActiv
 
                   <div style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 14, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.45em', textTransform: 'uppercase', marginBottom: 4 }}>LAST PULSE</div>
+                      <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.45em', textTransform: 'uppercase', marginBottom: 4 }}>LAST SERVER PULSE</div>
                       <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, fontFamily: 'monospace' }}>{new Date(activation.last_pulse_at).toLocaleString()}</div>
                     </div>
                     <div style={{ color: '#22D3EE', fontSize: 18 }}>⚡</div>
@@ -788,15 +864,15 @@ export default function SiddhaActivationPortal({ embedded = false }: SiddhaActiv
                   })}
 
                   <div style={{ background: 'rgba(212,175,55,0.04)', border: '1px solid rgba(212,175,55,0.12)', borderRadius: 18, padding: '18px 18px' }}>
-                    <div style={{ color: '#D4AF37', fontSize: 10, fontWeight: 800, letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: 12 }}>✦ ACTIVATION INSTRUCTIONS</div>
+                    <div style={{ color: '#D4AF37', fontSize: 10, fontWeight: 800, letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: 12 }}>✦ HOW THE 24/7 FIELD WORKS</div>
                     {[
-                      'The lock is stored on this device (`sqi_temple_activation`) and merged into `temple_home_sessions.siddha_activation` when signed in.',
-                      'Cross-device: open Temple Home on another device while logged in — the newer activation timestamp wins.',
-                      'Scalar intensity is symbolic — treat your space as continuously coupled to the chosen place.',
-                      'Face the traditional direction of the site during meditation when possible.',
-                      'Light a ghee lamp or candle — fire bridges the scalar intention into physical space.',
-                      'Chant the guardian Siddha mantras to tune your field to the transmission.',
-                      'Release the lock anytime — cloud row clears `siddha_activation` without deleting other Temple Home fields when merged safely.',
+                      'The activation is stored in our server — not your device. It never turns off.',
+                      'Every hour, the Railway cron worker pulses all active fields, updating the Babaji anchor.',
+                      'Scalar intensity grows over time — field gets stronger the longer it runs.',
+                      'Face the direction of your chosen place during meditation to amplify reception.',
+                      'Light a ghee lamp or candle — fire bridges the scalar field into physical space.',
+                      'Chanting the Siddha mantras tunes your personal frequency to the transmission.',
+                      'Switch places anytime — old lock releases, new one activates instantly.',
                     ].map((text, i) => (
                       <div key={i} style={{ display: 'flex', gap: 10, marginBottom: 9, alignItems: 'flex-start' }}>
                         <span style={{ color: '#D4AF37', flexShrink: 0 }}>◈</span>
@@ -811,7 +887,7 @@ export default function SiddhaActivationPortal({ embedded = false }: SiddhaActiv
                   <div style={{ color: 'rgba(255,255,255,0.28)', fontSize: 11, lineHeight: 1.7 }}>
                     No active scalar field.
                     <br />
-                    Select a holy place and run the activation ceremony.
+                    Select one of the 23 holy places and activate the Babaji lock to begin your 24/7 server-side transmission.
                   </div>
                 </div>
               )}

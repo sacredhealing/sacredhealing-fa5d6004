@@ -2,7 +2,7 @@
   "name": "sacredhealing-scalar-pulse-worker",
   "version": "1.0.0",
   "private": true,
-  "description": "Hourly scalar pulse for temple_activations + temple_home_sessions.siddha_activation (Railway)",
+  "description": "Hourly scalar pulse for temple_activations (Railway cron — SQI 2050)",
   "main": "scalar-pulse-worker.js",
   "scripts": {
     "start": "node scalar-pulse-worker.js",
@@ -12,7 +12,6 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.0",
-    "node-cron": "^3.0.3"
+    "@supabase/supabase-js": "^2.39.0"
   }
 }
