@@ -198,11 +198,10 @@ export default function AdminQuantumApothecary2045() {
     if (!transmissionsLoaded) return;
     setIsScanning(true);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
-      if (videoRef.current) videoRef.current.srcObject = stream;
     } catch {
-      /* camera optional for demo path */
+      /* mic optional for demo path */
     }
 
     window.setTimeout(() => {
@@ -282,7 +281,7 @@ export default function AdminQuantumApothecary2045() {
         remedies: result.remedies.join(', '),
       });
       setMessages((prev) => [...prev, { role: 'model', text: scanMsg }]);
-    }, 5000);
+    }, 10000);
   };
 
   const handleSendMessage = async () => {
@@ -559,33 +558,52 @@ export default function AdminQuantumApothecary2045() {
               </motion.div>
             ) : (
               <div className="flex flex-col items-center py-4 text-center">
-                <div className="relative mb-6 aspect-video w-full overflow-hidden rounded-[28px] border border-white/[0.06] bg-black/45">
-                  {isScanning ? (
-                    <>
-                      <video ref={videoRef} autoPlay playsInline muted className="h-full w-full object-cover opacity-55 grayscale" />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div
-                          className="h-px w-full animate-[scan_2s_ease-in-out_infinite]"
-                          style={{
-                            background: VAYU,
-                            boxShadow: `0 0 18px ${VAYU}, 0 0 32px rgba(34,211,238,0.35)`,
-                          }}
-                        />
+                <video ref={videoRef} className="hidden" autoPlay playsInline muted />
+
+                {isScanning ? (
+                  <div className="relative mb-6 flex w-full flex-col items-center justify-center gap-4 overflow-hidden rounded-[28px] border border-white/[0.06] bg-black/45 py-10">
+                    <div className="relative flex items-center justify-center">
+                      <div className="absolute h-24 w-24 animate-ping rounded-full bg-[#22D3EE]/10" />
+                      <div
+                        className="absolute h-16 w-16 animate-ping rounded-full bg-[#22D3EE]/15"
+                        style={{ animationDelay: '0.3s' }}
+                      />
+                      <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-[#22D3EE]/40 bg-[#22D3EE]/20">
+                        <svg
+                          width="28"
+                          height="28"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="#22D3EE"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden
+                        >
+                          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                          <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                          <line x1="12" y1="19" x2="12" y2="23" />
+                          <line x1="8" y1="23" x2="16" y2="23" />
+                        </svg>
                       </div>
-                      <div className="absolute left-4 top-4 flex items-center gap-2">
-                        <div className="h-2 w-2 animate-pulse rounded-full bg-[#22D3EE]" />
-                        <span className="text-[8px] font-extrabold uppercase tracking-[0.35em] text-[#22D3EE]/90">
-                          {t('adminQuantumApothecary2045.liveBioFeed')}
-                        </span>
-                      </div>
-                    </>
-                  ) : (
+                    </div>
+                    <div
+                      className="h-px w-16 animate-[scan_2s_ease-in-out_infinite] bg-[#22D3EE]/30"
+                      style={{
+                        background: VAYU,
+                        boxShadow: `0 0 18px ${VAYU}, 0 0 32px rgba(34,211,238,0.35)`,
+                      }}
+                    />
+                    <p className={`${microLabel} !text-[#22D3EE]`}>{t('adminQuantumApothecary2045.liveBioFeed')}</p>
+                  </div>
+                ) : (
+                  <div className="relative mb-6 aspect-video w-full overflow-hidden rounded-[28px] border border-white/[0.06] bg-black/45">
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-white/35">
                       <Zap className="mb-2 h-8 w-8 text-[#D4AF37]/50" aria-hidden />
                       <p className="text-[8px] font-extrabold uppercase tracking-[0.4em]">{t('adminQuantumApothecary2045.awaitingHandshake')}</p>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={runNadiScan}
