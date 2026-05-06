@@ -66,7 +66,7 @@ export default function EmailManager() {
   }, [activeTab]);
 
   async function loadContentEntries() {
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from('content_changelog')
       .select('*')
       .order('created_at', { ascending: false })
@@ -76,7 +76,7 @@ export default function EmailManager() {
 
   async function loadLogs() {
     setLoadingLogs(true);
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from('email_logs')
       .select('*')
       .order('sent_at', { ascending: false })
@@ -93,7 +93,7 @@ export default function EmailManager() {
     setAnnouncing(true);
     setAnnounceMsg('');
 
-    const { error } = await supabase.from('content_changelog').insert({
+    const { error } = await (supabase as any).from('content_changelog').insert({
       content_type: contentType,
       content_title: contentTitle.trim(),
       content_description: contentDescription.trim() || null,

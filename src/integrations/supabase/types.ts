@@ -6951,6 +6951,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_chat_sessions: {
+        Row: {
+          chat_type: string
+          context_summary: string | null
+          created_at: string | null
+          id: string
+          last_message_at: string | null
+          message_count: number | null
+          messages: Json
+          session_title: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          chat_type: string
+          context_summary?: string | null
+          created_at?: string | null
+          id?: string
+          last_message_at?: string | null
+          message_count?: number | null
+          messages?: Json
+          session_title?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          chat_type?: string
+          context_summary?: string | null
+          created_at?: string | null
+          id?: string
+          last_message_at?: string | null
+          message_count?: number | null
+          messages?: Json
+          session_title?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_cohorts: {
         Row: {
           churned_at: string | null
