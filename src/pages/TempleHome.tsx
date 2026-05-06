@@ -40,20 +40,6 @@ const SACRED_SITES = [
   { id: 'titicaca', name: 'Lake Titicaca', focus: 'Creative Rebirth & M/F Balance', reach: 45, color: '#FFD700' },
   { id: 'amritsar', name: 'Golden Temple (Amritsar)', focus: 'Selfless Service & Abundance', reach: 80, color: '#FFD700' },
   { id: 'mauritius', name: "Paramahamsa's Miracle Room", focus: 'Quantum Shifts & Instant Healing', reach: 90, color: '#F0E68C' },
-  { id: 'varanasi', name: 'Varanasi · Kashi', focus: 'Liberation & Akashic Access', reach: 55, color: '#FF8C00' },
-  { id: 'chidambaram', name: 'Chidambaram · Nataraja', focus: 'Cosmic Dance & Space Element', reach: 45, color: '#9B59B6' },
-  { id: 'palani', name: 'Palani Hills · Murugan', focus: 'Soma Alchemy & Physical Longevity', reach: 40, color: '#E74C3C' },
-  { id: 'rishikesh', name: 'Rishikesh · Haridwar', focus: 'Pranic Purification & Kriya Source', reach: 35, color: '#27AE60' },
-  { id: 'potigai', name: 'Potigai Hills · Agastya', focus: 'Vedic Wisdom & Siddha Medicine', reach: 50, color: '#2ECC71' },
-  { id: 'rameswaram', name: 'Rameswaram · Ramanathaswamy', focus: 'Karmic Clearing & Dharma Bridge', reach: 40, color: '#3498DB' },
-  { id: 'badrinath', name: 'Badrinath · Badri Vishal', focus: 'Celestial Gateway & Vishnu Field', reach: 55, color: '#1ABC9C' },
-  { id: 'kataragama', name: 'Kataragama', focus: 'Agni Shakti & Devotion Vortex', reach: 40, color: '#FF6B35' },
-  { id: 'stonehenge', name: 'Stonehenge', focus: 'Earth Grid & Druidic Sound Tech', reach: 35, color: '#C0C0C0' },
-  { id: 'jerusalem', name: 'Jerusalem · Temple Mount', focus: 'Three-Tradition Convergence Field', reach: 60, color: '#F39C12' },
-  { id: 'teotihuacan', name: 'Teotihuacan · City of Gods', focus: 'Star-Gate Initiation & Capacitor', reach: 45, color: '#F1C40F' },
-  { id: 'angkor', name: 'Angkor Wat', focus: 'Mount Meru Consciousness & Vishnu Field', reach: 50, color: '#E91E63' },
-  { id: 'borobudur', name: 'Borobudur', focus: 'Mandala Dharma & Living Buddha Field', reach: 45, color: '#22D3EE' },
-  { id: 'easter_island', name: 'Easter Island · Rapa Nui', focus: 'Ancestor Transmission & Ley Endpoint', reach: 40, color: '#8E44AD' },
   { id: 'shirdi', name: 'Shirdi Sai Baba Samadhi', focus: 'Total Surrender — Shraddha / Saburi', reach: 85, color: '#FF6B35' },
   { id: 'vrindavan_krsna', name: 'Ancient Vrindavan', focus: 'Premananda — Supreme Bliss', reach: 75, color: '#1E90FF' },
   { id: 'ayodhya_rama', name: 'Ancient Ayodhya', focus: 'Dharma & Spiritual Fortress', reach: 75, color: '#FFA500' },
@@ -1013,34 +999,6 @@ function TempleHomeInner() {
             </div>
           </GlassCard>
 
-          <button
-            type="button"
-            onClick={() => navigate('/jyotish-vidya')}
-            className="w-full flex items-center justify-between gap-3 px-5 py-3.5 rounded-2xl"
-            style={{ background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)' }}
-          >
-            <div className="flex min-w-0 flex-1 items-center gap-3">
-              <div
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
-                style={{ background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.25)' }}
-              >
-                <Star size={16} className="text-[#D4AF37]/90" aria-hidden />
-              </div>
-              <div className="min-w-0">
-                <div className="text-[8px] font-extrabold tracking-[0.4em] uppercase text-[#D4AF37]/60 mb-0.5">
-                  {t('jyotishVidya.templeHomeQuickLink.kicker')}
-                </div>
-                <div className="truncate text-sm font-bold text-white/85">{t('jyotishVidya.templeHomeQuickLink.title')}</div>
-                <div className="truncate text-[10px] text-white/35">{t('jyotishVidya.templeHomeQuickLink.hint')}</div>
-              </div>
-            </div>
-            <ChevronRight size={14} className="shrink-0 text-[#D4AF37]/45" aria-hidden />
-          </button>
-
-          <button onClick={() => navigate('/akasha-infinity')} className="w-full flex items-center justify-between px-5 py-3.5 rounded-2xl" style={{ background: 'rgba(139,92,246,0.05)', border: '1px solid rgba(139,92,246,0.15)' }}>
-            <div><div className="text-[8px] font-extrabold tracking-[0.4em] uppercase text-purple-400/60 mb-0.5">Connected System</div><div className="text-sm font-bold text-white/60">Akasha–Infinity</div></div>
-            <div className="flex items-center gap-2"><span className="text-[10px] text-purple-400/50">1111€ · All portals →</span><ChevronRight size={14} className="text-purple-400/40" /></div>
-          </button>
         </>)}
 
         {/* HEALING TAB */}
