@@ -74,14 +74,14 @@ const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <video src={videoUrl!} controls autoPlay className="w-full max-h-[80vh] bg-black" />
+          <video src={videoUrl!} controls playsInline className="w-full max-h-[80vh] bg-black" />
         </DialogContent>
       </Dialog>
     );
   }
 
   // Build proper YouTube embed URL with origin parameters
-  const embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&origin=${window.location.origin}`;
+  const embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=0&origin=${window.location.origin}`;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -99,7 +99,7 @@ const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
             src={embedUrl}
             title={title}
             frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
             className="absolute top-0 left-0 w-full h-full"
           />

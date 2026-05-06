@@ -87,7 +87,7 @@ const LiveRecordings = () => {
             <video
               src={selectedRecording.video_url}
               controls
-              autoPlay
+              playsInline
               className="w-full rounded-t-lg aspect-video"
               poster={selectedRecording.image_url || undefined}
             />

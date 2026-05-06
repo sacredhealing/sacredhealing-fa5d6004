@@ -4,6 +4,9 @@
 // our Supabase Storage `call-recordings` bucket, then mark the matching
 // `call_recordings` row as ready.
 //
+// Stargate Bhagavad Gita / Healing Chamber recordings also attach to the
+// Stargate Membership course lesson slots (see STARGATE_COURSE_ID).
+//
 // Daily webhook docs: https://docs.daily.co/reference/rest-api/webhooks
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -13,11 +16,60 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-webhook-signature",
 };
 
+/** Stargate Membership course — Bhagavad Gita + Healing Chamber lesson videos */
+const STARGATE_COURSE_ID = "3e6d68be-eda8-4f0a-8727-be1837d468b9";
+const SG_RECORDING_PREFIX = "sg-recording:";
+
 function ok(payload: unknown, status = 200) {
   return new Response(JSON.stringify(payload), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+async function attachStargateRecordingToCourse(
+  supabase: ReturnType<typeof createClient>,
+  recordingId: string,
+  category: string,
+) {
+  if (category !== "bhagavad-gita" && category !== "healing-chamber") return;
+
+  const { data: lessons, error } = await supabase
+    .from("lessons")
+    .select("id, title, order_index")
+    .eq("course_id", STARGATE_COURSE_ID)
+    .order("order_index", { ascending: true });
+
+  if (error || !lessons?.length) {
+    console.warn("[daily-recording-webhook] lessons lookup failed:", error?.message);
+    return;
+  }
+
+  let lesson: { id: string } | undefined;
+  if (category === "bhagavad-gita") {
+    lesson = lessons.find((l) => /bhagavad|gita/i.test(l.title || ""));
+    if (!lesson) lesson = lessons[0];
+  } else {
+    lesson = lessons.find((l) =>
+      /healing/i.test(l.title || "") && /chamber/i.test(l.title || "")
+    );
+    if (!lesson) lesson = lessons.find((l) => /healing|chamber/i.test(l.title || ""));
+    if (!lesson) lesson = lessons[lessons.length - 1];
+  }
+
+  if (!lesson?.id) return;
+
+  const marker = `${SG_RECORDING_PREFIX}${recordingId}`;
+  const { error: upErr } = await supabase
+    .from("lessons")
+    .update({ content_url: marker, content_type: "video" })
+    .eq("id", lesson.id);
+
+  if (upErr) {
+    console.error("[daily-recording-webhook] lesson update err:", upErr);
+  } else {
+    console.log("[daily-recording-webhook] attached recording to lesson", lesson.id, category);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -45,19 +97,16 @@ Deno.serve(async (req) => {
 
     console.log("[daily-recording-webhook] received:", JSON.stringify(body));
 
-    // Daily payload shape:
-    // { type: "recording.ready-to-download", payload: { recording_id, room_name, duration, ... } }
-    const eventType = (body as any).type as string | undefined;
-    const payload = (body as any).payload || body;
-    const roomName: string | undefined = payload?.room_name;
-    const recordingId: string | undefined = payload?.recording_id;
-    const duration: number | undefined = payload?.duration;
+    const eventType = (body as Record<string, unknown>).type as string | undefined;
+    const payload = ((body as Record<string, unknown>).payload || body) as Record<string, unknown>;
+    const roomName = payload?.room_name as string | undefined;
+    const recordingId = payload?.recording_id as string | undefined;
+    const duration = payload?.duration as number | undefined;
 
     if (!roomName) {
       return ok({ error: "missing room_name" }, 400);
     }
 
-    // Only act on ready/finished events
     const acceptedTypes = [
       "recording.ready-to-download",
       "recording.finished",
@@ -67,10 +116,9 @@ Deno.serve(async (req) => {
       return ok({ ok: true, ignored: eventType });
     }
 
-    // Find matching recording row
     const { data: rec, error: recErr } = await supabase
       .from("call_recordings")
-      .select("id, host_user_id, status")
+      .select("id, host_user_id, status, stargate_category, call_type")
       .eq("room_name", roomName)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -86,13 +134,11 @@ Deno.serve(async (req) => {
       return ok({ ok: true, note: "no row found" });
     }
 
-    // Mark processing
     await supabase
       .from("call_recordings")
       .update({ status: "processing", duration_seconds: duration ?? null })
       .eq("id", rec.id);
 
-    // 1. Get download link from Daily
     let downloadUrl: string | null = null;
     try {
       const linkRes = await fetch(
@@ -107,7 +153,6 @@ Deno.serve(async (req) => {
       console.error("[daily-recording-webhook] access-link err:", e);
     }
 
-    // Fallback: list recordings for the room and grab newest
     if (!downloadUrl) {
       try {
         const listRes = await fetch(
@@ -145,7 +190,6 @@ Deno.serve(async (req) => {
       return ok({ error: "no download link" }, 500);
     }
 
-    // 2. Stream from Daily into Supabase Storage
     const fileRes = await fetch(downloadUrl);
     if (!fileRes.ok || !fileRes.body) {
       await supabase
@@ -180,13 +224,12 @@ Deno.serve(async (req) => {
       return ok({ error: uploadErr.message }, 500);
     }
 
-    // 3. Mark ready (the public-facing video_url is generated as a signed URL on demand)
     const { error: updateErr } = await supabase
       .from("call_recordings")
       .update({
         status: "ready",
         storage_path: storagePath,
-        video_url: storagePath, // store path; client requests signed URL
+        video_url: storagePath,
         duration_seconds: duration ?? null,
         ended_at: new Date().toISOString(),
       })
@@ -195,6 +238,14 @@ Deno.serve(async (req) => {
     if (updateErr) {
       console.error("[daily-recording-webhook] final update err:", updateErr);
       return ok({ error: updateErr.message }, 500);
+    }
+
+    if (rec.call_type === "stargate" && rec.stargate_category) {
+      await attachStargateRecordingToCourse(
+        supabase,
+        rec.id,
+        rec.stargate_category as string,
+      );
     }
 
     return ok({ ok: true, id: rec.id, storage_path: storagePath });

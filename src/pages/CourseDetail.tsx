@@ -17,6 +17,9 @@ import { useMusicPlayer } from '@/contexts/MusicPlayerContext';
 // Swedish Wealth Course ID
 const WEALTH_COURSE_ID = 'f6b3a3e2-c78e-4234-8cf4-cc059655e118';
 
+/** Lesson content_url marker written by daily-recording-webhook for Stargate Zoom recordings */
+const SG_RECORDING_PREFIX = 'sg-recording:';
+
 const languages: Record<string, { name: string; flag: string }> = {
   en: { name: 'English', flag: '🇬🇧' },
   sv: { name: 'Swedish', flag: '🇸🇪' },
@@ -96,6 +99,9 @@ const CourseDetail: React.FC = () => {
   const [activeVideoLessonId, setActiveVideoLessonId] = useState<string | null>(null);
   const { isStargateMember: hasStargateMembership, loading: stargateLoading } = useStargateAccess();
   const [courseLevelMaterials, setCourseLevelMaterials] = useState<LessonMaterial[]>([]);
+  /** Resolved signed URL for Stargate Daily recordings (`sg-recording:{uuid}` in lesson.content_url) */
+  const [stargateRecordingVideoUrl, setStargateRecordingVideoUrl] = useState<string | null>(null);
+  const [stargateRecordingLoading, setStargateRecordingLoading] = useState(false);
 
   useEffect(() => {
     // Wait for admin loading to complete before fetching course
@@ -128,6 +134,45 @@ const CourseDetail: React.FC = () => {
     setActiveVideoTitle(first.title);
     setActiveVideoUrl(getVideoUrlForLesson(first));
   }, [isAdmin, enrollment, hasStargateMembership, isPremium, lessons, activeVideoLessonId]);
+
+  useEffect(() => {
+    if (!activeVideoUrl?.startsWith(SG_RECORDING_PREFIX)) {
+      setStargateRecordingVideoUrl(null);
+      setStargateRecordingLoading(false);
+      return;
+    }
+    const recordingId = activeVideoUrl.slice(SG_RECORDING_PREFIX.length).trim();
+    if (!recordingId) {
+      setStargateRecordingVideoUrl(null);
+      return;
+    }
+
+    let cancelled = false;
+    setStargateRecordingLoading(true);
+    setStargateRecordingVideoUrl(null);
+
+    void (async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (!session?.access_token) return;
+        const { data, error } = await supabase.functions.invoke('get-recording-url', {
+          body: { recording_id: recordingId },
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        if (!cancelled && !error && data?.url) {
+          setStargateRecordingVideoUrl(data.url as string);
+        }
+      } finally {
+        if (!cancelled) setStargateRecordingLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeVideoUrl]);
 
   const fetchCourse = async () => {
     if (!id) return;
@@ -351,7 +396,7 @@ const CourseDetail: React.FC = () => {
   const toYouTubeEmbedUrl = (url: string | null): string | null => {
     const id = extractYouTubeId(url);
     if (!id) return null;
-    return `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1&origin=${window.location.origin}`;
+    return `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1&autoplay=0&mute=0&origin=${window.location.origin}`;
   };
 
   // Get video URL for main player: lesson content_url (video/audio) OR first YouTube material (by type or URL). Video → main player only.
@@ -607,6 +652,35 @@ const CourseDetail: React.FC = () => {
                 {/* Large video/audio player */}
                 <div className="relative w-full rounded-lg overflow-hidden bg-muted/30" style={{ paddingBottom: '56.25%' }}>
                   {(() => {
+                    if (activeVideoUrl?.startsWith(SG_RECORDING_PREFIX)) {
+                      if (stargateRecordingLoading) {
+                        return (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-muted/20">
+                            <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                            <p className="text-sm text-muted-foreground text-center px-4">Loading session recording…</p>
+                          </div>
+                        );
+                      }
+                      if (stargateRecordingVideoUrl) {
+                        return (
+                          <video
+                            src={stargateRecordingVideoUrl}
+                            controls
+                            playsInline
+                            className="absolute top-0 left-0 w-full h-full bg-black object-contain"
+                            title={activeVideoTitle}
+                          />
+                        );
+                      }
+                      return (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center p-8">
+                          <Video className="w-16 h-16 text-muted-foreground/50 mb-4" />
+                          <p className="text-muted-foreground text-center font-medium mb-1">Recording unavailable</p>
+                          <p className="text-muted-foreground/70 text-center text-sm">Sign in with access and try again, or the file may still be processing.</p>
+                        </div>
+                      );
+                    }
+
                     const embedUrl = toYouTubeEmbedUrl(activeVideoUrl);
                     if (embedUrl) {
                       return (
@@ -616,7 +690,7 @@ const CourseDetail: React.FC = () => {
                           src={embedUrl}
                           title={activeVideoTitle}
                           frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                          allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                           allowFullScreen
                           className="absolute top-0 left-0 w-full h-full"
                         />

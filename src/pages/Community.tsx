@@ -986,6 +986,9 @@ const Community = () => {
   const [dmVideoUrl, setDmVideoUrl] = useState<string | null>(null);
   const [dmVideoRoomName, setDmVideoRoomName] = useState<string | null>(null);
   const [dmVideoSessionId, setDmVideoSessionId] = useState<string | null>(null);
+  /** Bumping these keys remounts Daily prebuilt iframes (subscriber-side track/subscribe glitches after network blips). */
+  const [dmDailyIframeNonce, setDmDailyIframeNonce] = useState(0);
+  const [liveDailyIframeNonce, setLiveDailyIframeNonce] = useState(0);
   const [dismissedLiveChannels, setDismissedLiveChannels] = useState<Set<string>>(new Set());
   const [profilesMap, setProfilesMap] = useState<Record<string, { full_name: string | null; avatar_url?: string | null }>>({});
   const [notifications, setNotifications] = useState<Array<{ id: string; type: string; title: string; body: string; channel_id: string | null; link: string | null; is_read: boolean; created_at: string }>>([]);
@@ -1033,6 +1036,16 @@ const Community = () => {
     const t = setTimeout(() => setLoadingStuck(true), 2000);
     return () => clearTimeout(t);
   }, [loading]);
+
+  // Daily is embedded via iframe (no callObject). Remount on browser reconnect to recover stuck remote tracks.
+  useEffect(() => {
+    const onOnline = () => {
+      if (dmVideoUrl) setDmDailyIframeNonce((n) => n + 1);
+      if (liveRoomUrl) setLiveDailyIframeNonce((n) => n + 1);
+    };
+    window.addEventListener("online", onOnline);
+    return () => window.removeEventListener("online", onOnline);
+  }, [dmVideoUrl, liveRoomUrl]);
 
   // Fetch messages for active channel (group rooms + DMs)
   const fetchMessages = useCallback(
@@ -2192,13 +2205,23 @@ const Community = () => {
                     </button>
                   )}
                   {isDmChannel(activeChannel) && dmVideoUrl && (
-                    <button
-                      className="c-video-call-btn"
-                      onClick={() => setDmVideoUrl(null)}
-                      style={{ borderColor: "rgba(255,59,48,.4)", color: "#ff6b61" }}
-                    >
-                      ⬛ END CALL
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        className="c-video-call-btn"
+                        onClick={() => setDmDailyIframeNonce((n) => n + 1)}
+                        title="Reload Daily iframe if a participant freezes or drops"
+                      >
+                        ⟳ RECONNECT
+                      </button>
+                      <button
+                        className="c-video-call-btn"
+                        onClick={() => setDmVideoUrl(null)}
+                        style={{ borderColor: "rgba(255,59,48,.4)", color: "#ff6b61" }}
+                      >
+                        ⬛ END CALL
+                      </button>
+                    </>
                   )}
                   {/* Group: Go Live — admins any channel; Stargate members may go live in Stargate */}
                   {!isDmChannel(activeChannel) && (isAdmin || (activeChannel === "stargate" && isStargateMember)) && !liveRoomUrl && (
@@ -2208,6 +2231,16 @@ const Community = () => {
                       disabled={daily.isCreating}
                     >
                       {daily.isCreating ? "⏳ CREATING..." : "🔴 GO LIVE"}
+                    </button>
+                  )}
+                  {!isDmChannel(activeChannel) && liveRoomUrl && (
+                    <button
+                      type="button"
+                      className="c-golive-header-btn"
+                      onClick={() => setLiveDailyIframeNonce((n) => n + 1)}
+                      title="Reload Daily iframe if remote video/audio is stuck"
+                    >
+                      ⟳ RECONNECT
                     </button>
                   )}
                   {!isDmChannel(activeChannel) && liveRoomUrl && (isAdmin || daily.activeSession?.host_user_id === user?.id) && (
@@ -2258,6 +2291,7 @@ const Community = () => {
                       </div>
                     )}
                     <iframe
+                      key={`dm-daily-${dmDailyIframeNonce}`}
                       src={dmVideoUrl}
                       allow="camera;microphone;fullscreen;display-capture"
                     />
@@ -2277,6 +2311,7 @@ const Community = () => {
                       </div>
                     )}
                     <iframe
+                      key={`live-daily-${liveDailyIframeNonce}`}
                       src={liveRoomUrl}
                       allow="camera;microphone;fullscreen;display-capture"
                     />
