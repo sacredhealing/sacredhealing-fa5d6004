@@ -18,7 +18,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useTempleBroadcast } from '@/hooks/useTempleBroadcast';
 import { useOfflineAnchorSync, queueAnchorSync } from '@/hooks/useOfflineAnchorSync';
 import { useDailyAnchorReminder } from '@/hooks/useDailyAnchorReminder';
-import { useTranslation } from 'react-i18next';
 import SiddhaActivationPortal from '@/components/temple/SiddhaActivationPortal';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
@@ -647,7 +646,6 @@ Respond with ONLY the transmission text — no labels, no "Here is your transmis
 
 // ─── Main Inner Component ─────────────────────────────────────────────────────
 function TempleHomeInner() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const userName = user?.user_metadata?.full_name ?? user?.email?.split('@')[0] ?? 'Seeker';
@@ -674,7 +672,8 @@ function TempleHomeInner() {
   // Load persisted state AFTER first render — safe hydration pattern
   useEffect(() => {
     const saved = loadAnchorSafe();
-    setSelectedSite(saved.siteId);
+    const validIds = new Set(SACRED_SITES.map(s => s.id));
+    setSelectedSite(validIds.has(saved.siteId) ? saved.siteId : 'giza');
     setAuraIntensity(saved.intensity);
     setCurrentMode(saved.mode);
     setIsAnchored(saved.anchored);
@@ -929,11 +928,11 @@ function TempleHomeInner() {
               className="w-full flex items-center justify-between gap-2 text-left"
             >
               <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-[#D4AF37]/50 flex items-center gap-1.5">
-                <Compass size={9} />Sacred Site — 26-Portal Registry
+                <Compass size={9} />Sacred Site — {SACRED_SITES.length}-Portal Registry
               </div>
               <ChevronRight
                 size={14}
-                className={`text-[#D4AF37]/40 shrink-0 transition-transform duration-200 ${registryOpen ? 'rotate-90' : ''}`}
+                className={`text-[#D4AF37]/40 shrink-0 transition-transform duration-200 ${registryOpen ? 'rotate-180' : 'rotate-0'}`}
                 aria-hidden
               />
             </button>
