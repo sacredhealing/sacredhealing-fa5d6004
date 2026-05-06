@@ -361,7 +361,7 @@ async function mergePersistSiddhaActivation(userId: string, activation: TempleAc
     row.anchored_since = activation.activated_at;
   }
 
-  await supabase.from('temple_home_sessions').upsert(row, { onConflict: 'user_id' });
+  await (supabase as any).from('temple_home_sessions').upsert(row, { onConflict: 'user_id' });
 }
 
 function useUptime(at: string | null) {
@@ -639,7 +639,7 @@ export default function SiddhaActivationPortal({ embedded = false }: SiddhaActiv
 
     const ua = typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 100) : '';
 
-    const { data, error: err } = await supabase
+    const { data, error: err } = await (supabase as any)
       .from('temple_activations')
       .insert({
       user_id:         user.id,

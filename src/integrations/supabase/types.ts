@@ -6551,6 +6551,81 @@ export type Database = {
         }
         Relationships: []
       }
+      temple_activations: {
+        Row: {
+          activated_at: string
+          activated_device: string | null
+          created_at: string
+          deactivated_at: string | null
+          home_label: string | null
+          home_lat: number | null
+          home_lng: number | null
+          id: string
+          is_active: boolean
+          last_pulse_at: string
+          lock_code: string
+          place_frequency: number | null
+          place_id: string
+          place_location: string | null
+          place_name: string
+          pulse_count: number
+          scalar_intensity: number
+          scalar_vector: Json | null
+          siddha_field: Json | null
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          activated_at?: string
+          activated_device?: string | null
+          created_at?: string
+          deactivated_at?: string | null
+          home_label?: string | null
+          home_lat?: number | null
+          home_lng?: number | null
+          id?: string
+          is_active?: boolean
+          last_pulse_at?: string
+          lock_code: string
+          place_frequency?: number | null
+          place_id: string
+          place_location?: string | null
+          place_name: string
+          pulse_count?: number
+          scalar_intensity?: number
+          scalar_vector?: Json | null
+          siddha_field?: Json | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          activated_at?: string
+          activated_device?: string | null
+          created_at?: string
+          deactivated_at?: string | null
+          home_label?: string | null
+          home_lat?: number | null
+          home_lng?: number | null
+          id?: string
+          is_active?: boolean
+          last_pulse_at?: string
+          lock_code?: string
+          place_frequency?: number | null
+          place_id?: string
+          place_location?: string | null
+          place_name?: string
+          pulse_count?: number
+          scalar_intensity?: number
+          scalar_vector?: Json | null
+          siddha_field?: Json | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       temple_home_sessions: {
         Row: {
           active_site: string | null
