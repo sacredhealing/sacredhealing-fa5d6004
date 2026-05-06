@@ -10,7 +10,8 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import type { Activation, NadiScanResult, Message } from '@/features/quantum-apothecary/types';
-import { ACTIVATIONS, PLANETARY_DATA } from '@/features/quantum-apothecary/constants';
+import { matchActivationsToScan } from '@/features/quantum-apothecary/bioenergetic-library';
+import { ACTIVATIONS, PLANETARY_DATA, mapBioLibraryToActivation, ALL_ACTIVATIONS } from '@/features/quantum-apothecary/constants';
 import { chatWithAlchemist } from '@/features/admin-quantum-apothecary-2045/geminiAlchemistChat';
 import { supabase } from '@/integrations/supabase/client';
 import { StudentSelector } from '@/components/codex/StudentSelector';
@@ -50,13 +51,8 @@ export default function AdminQuantumApothecary2045() {
   const [scanResult, setScanResult] = useState<NadiScanResult | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [selectedActivations, setSelectedActivations] = useState<Activation[]>([]);
-  const [activeTransmissions, setActiveTransmissions] = useState<Activation[]>(() => {
-    try {
-      const saved = localStorage.getItem('admin_qa2045_resonators');
-      if (saved) return JSON.parse(saved) as Activation[];
-    } catch { /* ignore */ }
-    return [];
-  });
+  const [activeTransmissions, setActiveTransmissions] = useState<Activation[]>([]);
+  const [transmissionsLoaded, setTransmissionsLoaded] = useState(false);
   const [messages, setMessages] = useState<Message[]>(() => [
     { role: 'model', text: t('adminQuantumApothecary2045.welcomeModel') },
   ]);
@@ -108,11 +104,72 @@ export default function AdminQuantumApothecary2045() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Load active transmissions from Supabase on mount — migrate legacy localStorage once
   useEffect(() => {
-    try {
-      localStorage.setItem('admin_qa2045_resonators', JSON.stringify(activeTransmissions));
-    } catch { /* ignore */ }
-  }, [activeTransmissions]);
+    if (!user?.id || transmissionsLoaded) return;
+    const load = async () => {
+      try {
+        const { data } = await supabase
+          .from('user_active_transmissions')
+          .select('activations')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (data?.activations && Array.isArray(data.activations) && data.activations.length > 0) {
+          setActiveTransmissions(data.activations as Activation[]);
+        } else {
+          try {
+            const saved = localStorage.getItem('admin_qa2045_resonators');
+            if (saved) {
+              const parsed = JSON.parse(saved) as Activation[];
+              if (parsed.length > 0) {
+                setActiveTransmissions(parsed);
+                await supabase.from('user_active_transmissions').upsert(
+                  {
+                    user_id: user.id,
+                    activations: parsed as unknown as Record<string, unknown>[],
+                    updated_at: new Date().toISOString(),
+                  },
+                  { onConflict: 'user_id' },
+                );
+              }
+            }
+          } catch {
+            /* ignore corrupt localStorage */
+          }
+        }
+      } catch (e) {
+        console.error('[Transmissions] Load error:', e);
+      }
+      setTransmissionsLoaded(true);
+    };
+    void load();
+  }, [user?.id, transmissionsLoaded]);
+
+  // Sync to Supabase + localStorage cache whenever stack changes (after initial load)
+  useEffect(() => {
+    if (!user?.id || !transmissionsLoaded) return;
+    const sync = async () => {
+      try {
+        await supabase.from('user_active_transmissions').upsert(
+          {
+            user_id: user.id,
+            activations: activeTransmissions as unknown as Record<string, unknown>[],
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id' },
+        );
+        try {
+          localStorage.setItem('admin_qa2045_resonators', JSON.stringify(activeTransmissions));
+        } catch {
+          /* quota / private mode */
+        }
+      } catch (e) {
+        console.error('[Transmissions] Sync error:', e);
+      }
+    };
+    void sync();
+  }, [activeTransmissions, user?.id, transmissionsLoaded]);
 
   useEffect(() => {
     if (isScanning) {
@@ -138,6 +195,7 @@ export default function AdminQuantumApothecary2045() {
   if (!isAdmin) return <Navigate to="/siddha-portal" replace />;
 
   const runNadiScan = async () => {
+    if (!transmissionsLoaded) return;
     setIsScanning(true);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
@@ -177,6 +235,36 @@ export default function AdminQuantumApothecary2045() {
       streamRef.current?.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
 
+      const blockageBlob = (result.blockages ?? []).join(' ').toLowerCase();
+      let priorityChakra: string | undefined;
+      if (blockageBlob.includes('heart') || blockageBlob.includes('anahata')) priorityChakra = 'Anahata';
+      else if (blockageBlob.includes('root') || blockageBlob.includes('muladhara')) priorityChakra = 'Muladhara';
+
+      const matchedBio = matchActivationsToScan(
+        {
+          dominantDosha: result.dominantDosha,
+          activatedNadi: result.blockages?.length ? 'Blocked' : 'Sushumna',
+          priorityChakra,
+          lowCoherenceItems: result.remedies ?? [],
+        },
+        8,
+      );
+      const matched = matchedBio.map(mapBioLibraryToActivation);
+      if (matched.length > 0) {
+        setActiveTransmissions((prev) => {
+          const existingIds = new Set(prev.map((a) => a.id));
+          const newOnes = matched
+            .filter((m) => !existingIds.has(m.id))
+            .map((m) => ({
+              ...m,
+              activatedAt: new Date().toISOString(),
+              source: 'nadi_scan' as const,
+              expiresAt: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000).toISOString(),
+            }));
+          return [...prev, ...newOnes];
+        });
+      }
+
       const scanMsg = t('adminQuantumApothecary2045.scanCompleteModel', {
         active: result.activeNadis,
         total: result.totalNadis,
@@ -203,6 +291,28 @@ export default function AdminQuantumApothecary2045() {
         apiKey: effectiveGeminiKey,
       });
       setMessages((prev) => [...prev, { role: 'model', text: response }]);
+
+      if (response) {
+        const lower = response.toLowerCase();
+        const chatMatched = ALL_ACTIVATIONS.filter(
+          (act) => act.name && lower.includes(act.name.toLowerCase().slice(0, 8)),
+        ).slice(0, 3);
+
+        if (chatMatched.length > 0) {
+          setActiveTransmissions((prev) => {
+            const existingIds = new Set(prev.map((a) => a.id));
+            const newOnes = chatMatched
+              .filter((m) => !existingIds.has(m.id))
+              .map((m) => ({
+                ...m,
+                activatedAt: new Date().toISOString(),
+                source: 'apothecary_chat' as const,
+                expiresAt: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000).toISOString(),
+              }));
+            return [...prev, ...newOnes];
+          });
+        }
+      }
 
       // Weave this transmission into the right Codex with a visible toast so the
       // user always knows where it landed (Akasha / Portrait / Student / excluded / failed).
@@ -423,7 +533,8 @@ export default function AdminQuantumApothecary2045() {
                   <button
                     type="button"
                     onClick={runNadiScan}
-                    className="liquid-btn rounded-[28px] border border-white/[0.08] bg-white/[0.05] px-4 py-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-white/70 transition-all hover:border-[#D4AF37]/25 hover:text-[#D4AF37]"
+                    disabled={isScanning || !transmissionsLoaded}
+                    className="liquid-btn rounded-[28px] border border-white/[0.08] bg-white/[0.05] px-4 py-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-white/70 transition-all hover:border-[#D4AF37]/25 hover:text-[#D4AF37] disabled:opacity-40"
                   >
                     {t('adminQuantumApothecary2045.rescan')}
                   </button>
@@ -461,7 +572,7 @@ export default function AdminQuantumApothecary2045() {
                 <button
                   type="button"
                   onClick={runNadiScan}
-                  disabled={isScanning}
+                  disabled={isScanning || !transmissionsLoaded}
                   className="rounded-[40px] border border-[#D4AF37]/40 bg-gradient-to-b from-[#F5E17A] via-[#D4AF37] to-[#A07C10] px-8 py-3.5 text-xs font-black uppercase tracking-[0.2em] text-[#050505] shadow-[0_12px_40px_rgba(212,175,55,0.35)] transition-all hover:shadow-[0_16px_48px_rgba(212,175,55,0.45)] disabled:opacity-50"
                 >
                   {isScanning ? t('adminQuantumApothecary2045.scanningHr', { hr: heartRate }) : t('adminQuantumApothecary2045.initiateScan')}

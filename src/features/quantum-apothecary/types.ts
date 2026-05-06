@@ -20,6 +20,12 @@ export interface Activation {
   /** LimbicArc / bio-library row category (e.g. Herb, Vitamin) when type is Bioenergetic */
   category?: string;
   sacredName?: string;
+  /** ISO timestamp when this activation was added to the active stack */
+  activatedAt?: string;
+  /** Provenance for UX / analytics */
+  source?: 'manual' | 'nadi_scan' | 'apothecary_chat';
+  /** ISO timestamp — default ~8 days from activation in admin flows */
+  expiresAt?: string;
 }
 
 export interface ChakraReading {
