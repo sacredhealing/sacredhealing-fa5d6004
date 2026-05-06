@@ -129,6 +129,7 @@ const AdminVedicTranslation = React.lazy(() => import("./pages/AdminVedicTransla
 const AdminScripturalBooks = React.lazy(() => import("./pages/AdminScripturalBooks"));
 const AdminScripturalBookView = React.lazy(() => import("./pages/AdminScripturalBookView"));
 const PostSession = React.lazy(() => import("./pages/PostSession"));
+const SovereignSharePreview = React.lazy(() => import("./pages/SovereignSharePreview"));
 const CreativeSoulSales = React.lazy(() => import("./pages/CreativeSoulSales"));
 const CreativeSoulTool = React.lazy(() => import("./pages/CreativeSoulTool"));
 const CreativeSoulLanding = React.lazy(() => import("./pages/CreativeSoulLanding"));
@@ -264,6 +265,7 @@ function AppRoutes() {
         <Route path="/onboarding" element={<Onboarding />} />
       </Route>
       <Route path="/integrate" element={<PostSession />} />
+      <Route path="/sovereign-share-preview" element={<SovereignSharePreview />} />
       {/* Public referral landing — /affiliate/r/:code avoids conflicting with /affiliate/dashboard */}
       <Route path="/affiliate/r/:code" element={<AffiliateLanding />} />
       <Route element={<ProtectedRoute />}>
