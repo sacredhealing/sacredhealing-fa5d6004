@@ -1,3 +1,4 @@
+// v2
 /**
  * Quantum Apothecary 2045 — SQI Sovereign Interface
  * Redesigned: clear sections, voice scan, Wellness first, explanations
