@@ -361,7 +361,7 @@ async function mergePersistSiddhaActivation(userId: string, activation: TempleAc
     row.anchored_since = activation.activated_at;
   }
 
-  await supabase.from('temple_home_sessions').upsert(row, { onConflict: 'user_id' });
+  await (supabase as any).from('temple_home_sessions').upsert(row, { onConflict: 'user_id' });
 }
 
 function useUptime(at: string | null) {
