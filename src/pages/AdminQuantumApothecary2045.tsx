@@ -5,12 +5,12 @@
  */
 
 import React, {
-  useState, useEffect, useRef, useMemo, useCallback,
+  useState, useEffect, useRef, useCallback,
   Suspense, lazy,
 } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { Zap, Activity, Plus, Trash2, Send, Globe, Info, Wind, X, ChevronDown } from 'lucide-react';
+import { Zap, Activity, Send, Globe, Info, Wind, X, ChevronDown } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminRole } from '@/hooks/useAdminRole';
@@ -21,7 +21,6 @@ import {
 } from '@/features/quantum-apothecary/constants';
 import { chatWithAlchemist } from '@/features/admin-quantum-apothecary-2045/geminiAlchemistChat';
 import { supabase } from '@/integrations/supabase/client';
-import { StudentSelector } from '@/components/codex/StudentSelector';
 import { getActiveStudentId } from '@/lib/codex/students';
 import { curateTransmission } from '@/lib/codex/curatorClient';
 import { syncPendingTransmissionsOnce } from '@/lib/codex/codexSync';
