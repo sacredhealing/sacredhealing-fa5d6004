@@ -19,6 +19,7 @@ import { useTempleBroadcast } from '@/hooks/useTempleBroadcast';
 import { useOfflineAnchorSync, queueAnchorSync } from '@/hooks/useOfflineAnchorSync';
 import { useDailyAnchorReminder } from '@/hooks/useDailyAnchorReminder';
 import { useTranslation } from 'react-i18next';
+import SiddhaActivationPortal from '@/components/temple/SiddhaActivationPortal';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const SACRED_SITES = [
@@ -893,6 +894,8 @@ function TempleHomeInner() {
           intensity={auraIntensity}
           userName={userName}
         />
+
+        <SiddhaActivationPortal embedded />
 
         {!crystalDone && (
           <button onClick={() => setShowCrystal(true)} className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl" style={{ background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.22)' }}>
