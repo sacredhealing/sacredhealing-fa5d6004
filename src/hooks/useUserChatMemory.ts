@@ -69,7 +69,7 @@ export function useUserChatMemory({
       .limit(20);
 
     if (!error && data) {
-      setPastSessions(data.map((s) => ({ ...s, messages: [] })));
+      setPastSessions(data.map((s) => ({ ...s, chat_type: s.chat_type as ChatType, messages: [] })));
     }
   }, [user, chatType]);
 
