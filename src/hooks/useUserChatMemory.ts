@@ -110,7 +110,7 @@ export function useUserChatMemory({
           .maybeSingle();
         if (data) {
           setSessionId(data.id);
-          setMessages(data.messages as ChatMessage[]);
+          setMessages(data.messages as unknown as ChatMessage[]);
         }
       }
       setIsLoading(false);
