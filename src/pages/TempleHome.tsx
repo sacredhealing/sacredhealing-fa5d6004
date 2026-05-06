@@ -679,6 +679,7 @@ function TempleHomeInner() {
   const [presetFlash, setPresetFlash] = useState<string | null>(null);
   const [showHydration, setShowHydration] = useState(false);
   const [selectedRxId, setSelectedRxId] = useState<string | null>(null);
+  const [registryOpen, setRegistryOpen] = useState(false);
   const [crystalDone, setCrystalDone] = useState(false);
   const [showCrystal, setShowCrystal] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -936,13 +937,28 @@ function TempleHomeInner() {
           </GlassCard>
 
           <GlassCard className="p-4">
-            <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-[#D4AF37]/50 flex items-center gap-1.5 mb-3"><Compass size={9} />Sacred Site — 26-Portal Registry</div>
-            <div className="relative">
-              <select value={selectedSite} onChange={e => setSelectedSite(e.target.value)} className="site-select w-full rounded-2xl py-3 pl-4 pr-10 text-sm text-white/80 appearance-none focus:outline-none" style={{ background: 'rgba(212,175,55,0.03)', border: '1px solid rgba(212,175,55,0.15)' }}>
-                {CATS.map(c => (<optgroup key={c} label={`── ${c} ──`}>{SACRED_SITES.filter(s => getSiteCategory(s.id).label === c).map(s => (<option key={s.id} value={s.id}>{s.name} — {s.focus}</option>))}</optgroup>))}
-              </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"><ChevronRight size={14} className="text-[#D4AF37]/40 rotate-90" /></div>
-            </div>
+            <button
+              type="button"
+              onClick={() => setRegistryOpen(v => !v)}
+              className="w-full flex items-center justify-between gap-2 text-left"
+            >
+              <div className="text-[8px] font-extrabold tracking-[0.5em] uppercase text-[#D4AF37]/50 flex items-center gap-1.5">
+                <Compass size={9} />Sacred Site — 26-Portal Registry
+              </div>
+              <ChevronRight
+                size={14}
+                className={`text-[#D4AF37]/40 shrink-0 transition-transform duration-200 ${registryOpen ? 'rotate-90' : ''}`}
+                aria-hidden
+              />
+            </button>
+            {registryOpen && (
+              <div className="relative mt-3">
+                <select value={selectedSite} onChange={e => setSelectedSite(e.target.value)} className="site-select w-full rounded-2xl py-3 pl-4 pr-10 text-sm text-white/80 appearance-none focus:outline-none" style={{ background: 'rgba(212,175,55,0.03)', border: '1px solid rgba(212,175,55,0.15)' }}>
+                  {CATS.map(c => (<optgroup key={c} label={`── ${c} ──`}>{SACRED_SITES.filter(s => getSiteCategory(s.id).label === c).map(s => (<option key={s.id} value={s.id}>{s.name} — {s.focus}</option>))}</optgroup>))}
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"><ChevronRight size={14} className="text-[#D4AF37]/40 rotate-90" /></div>
+              </div>
+            )}
           </GlassCard>
 
           <GlassCard className="p-4">
