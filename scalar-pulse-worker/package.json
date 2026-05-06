@@ -2,7 +2,7 @@
   "name": "sacredhealing-scalar-pulse-worker",
   "version": "1.0.0",
   "private": true,
-  "description": "Hourly scalar pulse for temple_activations (Railway cron — SQI 2050)",
+  "description": "Hourly scalar pulse for temple_activations (SQI 2050 scalar-bridge intensity, Railway cron)",
   "main": "scalar-pulse-worker.js",
   "scripts": {
     "start": "node scalar-pulse-worker.js",
