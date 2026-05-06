@@ -40,6 +40,7 @@ const ADMIN_SECTIONS = [
   { icon: "🔮", label: "Private Sessions",     desc: "Session types, packages, and Calendly links",    path: "/admin/private-sessions"  },
   { icon: "🌀", label: "Transformation",       desc: "Program details, variations, and pricing",       path: "/admin/transformation"    },
   { icon: "📧", label: "Email List",           desc: "Manage subscribers and send bulk emails",         path: "/admin/email-list"        },
+  { icon: "📬", label: "Email Automation",     desc: "Digest, Lakshmi Friday, welcome & logs",          path: "/admin/email-automation" },
   { icon: "⚙️", label: "Admin System",         desc: "Projects, tasks, content, events & more",        path: "/admin/system"            },
   { icon: "🌬️", label: "Breathing Exercises",  desc: "Manage breathing patterns and exercises",        path: "/admin/breathing"         },
 ];

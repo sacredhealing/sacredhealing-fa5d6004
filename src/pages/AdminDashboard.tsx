@@ -19,6 +19,7 @@ import {
   Crown,
   Trophy,
   Mail,
+  SendHorizontal,
   FolderKanban,
   Wind,
   AudioLines,
@@ -327,6 +328,13 @@ const adminSections = [
     icon: Mail,
     href: '/admin/email-list',
     color: 'text-cyan-500',
+  },
+  {
+    title: 'Email Automation',
+    description: 'Weekly digest, Lakshmi Friday, welcome flows & send logs',
+    icon: SendHorizontal,
+    href: '/admin/email-automation',
+    color: 'text-amber-400',
   },
   {
     title: 'Admin System',

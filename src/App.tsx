@@ -74,6 +74,7 @@ const AdminShop = React.lazy(() => import("./pages/AdminShop"));
 const AdminPrivateSessions = React.lazy(() => import("./pages/AdminPrivateSessions"));
 const AdminTransformation = React.lazy(() => import("./pages/AdminTransformation"));
 const AdminEmailList = React.lazy(() => import("./pages/AdminEmailList"));
+const AdminEmailAutomation = React.lazy(() => import("./pages/AdminEmailAutomation"));
 const AdminSendEmail = React.lazy(() => import("./pages/AdminSendEmail"));
 const StargateMembership = React.lazy(() => import("./pages/StargateMembership"));
 const PractitionerCertification = React.lazy(() => import("./pages/PractitionerCertification"));
@@ -404,6 +405,7 @@ function AppRoutes() {
                   <Route path="/admin/private-sessions" element={<AdminPrivateSessions />} />
                   <Route path="/admin/transformation" element={<AdminTransformation />} />
                   <Route path="/admin/email-list" element={<AdminEmailList />} />
+                  <Route path="/admin/email-automation" element={<AdminEmailAutomation />} />
                   <Route path="/admin/send-email" element={<AdminSendEmail />} />
                   <Route path="/admin/system" element={<AdminSystem />} />
                   <Route path="/admin/breathing" element={<AdminBreathing />} />
