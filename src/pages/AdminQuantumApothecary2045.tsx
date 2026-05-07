@@ -150,7 +150,7 @@ export default function AdminQuantumApothecary2045() {
     if (!user?.id || transmissionsLoaded) return;
     const load = async () => {
       try {
-        const { data } = await supabase.from('user_active_transmissions')
+        const { data } = await (supabase as any).from('user_active_transmissions')
           .select('activations').eq('user_id', user.id).maybeSingle();
         if (data?.activations && Array.isArray(data.activations) && data.activations.length > 0) {
           setActiveTransmissions(data.activations as Activation[]);
@@ -161,7 +161,7 @@ export default function AdminQuantumApothecary2045() {
               const parsed = JSON.parse(saved) as Activation[];
               if (parsed.length > 0) {
                 setActiveTransmissions(parsed);
-                await supabase.from('user_active_transmissions').upsert(
+                await (supabase as any).from('user_active_transmissions').upsert(
                   { user_id: user.id, activations: parsed as unknown as Record<string, unknown>[], updated_at: new Date().toISOString() },
                   { onConflict: 'user_id' }
                 );
@@ -180,7 +180,7 @@ export default function AdminQuantumApothecary2045() {
     if (!user?.id || !transmissionsLoaded) return;
     const sync = async () => {
       try {
-        await supabase.from('user_active_transmissions').upsert(
+        await (supabase as any).from('user_active_transmissions').upsert(
           { user_id: user.id, activations: activeTransmissions as unknown as Record<string, unknown>[], updated_at: new Date().toISOString() },
           { onConflict: 'user_id' }
         );
