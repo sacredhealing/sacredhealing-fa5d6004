@@ -1,4 +1,4 @@
-// v3 — clean build + resonance percentages
+// v4 — force CDN chunk refresh
 /**
  * Quantum Apothecary 2045 — SQI Sovereign Interface
  */
