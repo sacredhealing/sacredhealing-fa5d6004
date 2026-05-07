@@ -689,6 +689,66 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_response_cache: {
+        Row: {
+          cache_key: string
+          created_at: string | null
+          expires_at: string | null
+          function_name: string
+          hit_count: number | null
+          id: string
+          query_hash: string
+          response_text: string
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string | null
+          expires_at?: string | null
+          function_name: string
+          hit_count?: number | null
+          id?: string
+          query_hash: string
+          response_text: string
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string | null
+          expires_at?: string | null
+          function_name?: string
+          hit_count?: number | null
+          id?: string
+          query_hash?: string
+          response_text?: string
+        }
+        Relationships: []
+      }
+      ai_usage_limits: {
+        Row: {
+          call_count: number | null
+          created_at: string | null
+          date: string | null
+          function_name: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          call_count?: number | null
+          created_at?: string | null
+          date?: string | null
+          function_name: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          call_count?: number | null
+          created_at?: string | null
+          date?: string | null
+          function_name?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       album_purchases: {
         Row: {
           album_id: string
