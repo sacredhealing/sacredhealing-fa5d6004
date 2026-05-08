@@ -832,13 +832,7 @@ function QuantumApothecaryInner() {
   const [voiceResult, setVoiceResult] = useState<VoiceBiofieldResult | null>(null);
   const [scanRecommendedActivations, setScanRecommendedActivations] = useState<Activation[]>([]);
   const [showActivationSuggestions, setShowActivationSuggestions] = useState(false);
-  const [showVoiceScan, setShowVoiceScan] = useState(() => {
-    try {
-      return typeof sessionStorage !== 'undefined' && sessionStorage.getItem(QA_VOICE_TAB_KEY) === '1';
-    } catch {
-      return false;
-    }
-  });
+  const [showVoiceScan, setShowVoiceScan] = useState(true);
 
   useEffect(() => {
     try {
