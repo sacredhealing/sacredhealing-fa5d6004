@@ -10,7 +10,7 @@
 
 import React, { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams, Link, Navigate } from 'react-router-dom';
 import {
   Zap,
   Plus, Send, Cpu, Globe,
@@ -38,7 +38,6 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 import { useAyurvedaAnalysis } from '@/hooks/useAyurvedaAnalysis';
 import { useAuth } from '@/hooks/useAuth';
-import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import type { NadiReading } from '@/components/NadiScanner';
 import type { VoiceBiofieldResult } from '@/components/VoiceBiofieldScanner';
@@ -816,12 +815,29 @@ function QuantumApothecaryInner() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [copiedMsgIdx, setCopiedMsgIdx] = useState<number | null>(null);
-  const handleCopyMsg = (text: string, idx: number) => {
+  const [copiedMsgKey, setCopiedMsgKey] = useState<string | null>(null);
+  const handleCopyMsg = (text: string, key: string) => {
     navigator.clipboard?.writeText(text).catch(() => {});
-    setCopiedMsgIdx(idx);
-    setTimeout(() => setCopiedMsgIdx((c) => (c === idx ? null : c)), 2000);
+    setCopiedMsgKey(key);
+    setTimeout(() => setCopiedMsgKey((c) => (c === key ? null : c)), 2000);
   };
+
+  const [portraitLinkStudentId, setPortraitLinkStudentId] = useState<string | null>(() =>
+    getActiveStudentId(),
+  );
+  useEffect(() => {
+    const sync = () => setPortraitLinkStudentId(getActiveStudentId());
+    window.addEventListener('sqi:active-student-changed', sync);
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'sqi_active_student_id') sync();
+    };
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener('sqi:active-student-changed', sync);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, []);
+
   const [activeCategory, setActiveCategory] = useState('Wellness');
   const [libraryUnlocked, setLibraryUnlocked] = useState(() => {
     try {
@@ -868,9 +884,33 @@ function QuantumApothecaryInner() {
       return null;
     }
   });
+
+  const handleSaveAIMessageToCodex = useCallback(
+    (assistantMsg: Message, globalIndex: number) => {
+      if (!user?.id || !(assistantMsg.text || '').trim()) return;
+      let userPrompt: string | undefined;
+      for (let j = globalIndex - 1; j >= 0; j--) {
+        if (messages[j]?.role === 'user') {
+          userPrompt = messages[j].text;
+          break;
+        }
+      }
+      const activeStudentId = getActiveStudentId();
+      void curateTransmission({
+        source_type: 'apothecary',
+        raw_content: assistantMsg.text,
+        user_prompt: userPrompt,
+        source_chat_id: currentSessionId ?? null,
+        ...(activeStudentId ? { student_id: activeStudentId } : {}),
+      });
+    },
+    [user?.id, messages, currentSessionId],
+  );
+
   const [sessions, setSessions] = useState<{ id: string; title: string | null; updated_at: string | null }[]>([]);
   const [sessionsOpen, setSessionsOpen] = useState(false);
   const [loadingSessions, setLoadingSessions] = useState(false);
+  const chatTopRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const streamAccumRef = useRef('');
   const streamingMsgIdRef = useRef('');
@@ -1015,6 +1055,10 @@ function QuantumApothecaryInner() {
 
   const scrollChatToBottom = useCallback(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, []);
+
+  const scrollChatToTop = useCallback(() => {
+    chatTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
 
   // ── Bioenergetic auto-scan after each SQI response ──
@@ -1731,7 +1775,23 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
             </div>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+          {portraitLinkStudentId ? (
+            <Link
+              to={`/akasha-portrait/${portraitLinkStudentId}`}
+              className="whitespace-nowrap rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-2 py-1 text-[8px] font-bold uppercase tracking-[0.15em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20 sm:px-3 sm:py-1.5 sm:text-[9px] sm:tracking-[0.2em]"
+            >
+              Akasha Portrait
+            </Link>
+          ) : (
+            <span
+              className="cursor-not-allowed whitespace-nowrap rounded-xl border border-white/[0.06] bg-white/[0.02] px-2 py-1 text-[8px] font-bold uppercase tracking-[0.15em] text-white/25 sm:px-3 sm:py-1.5 sm:text-[9px]"
+              title="Select an active student first"
+              aria-disabled={true}
+            >
+              Akasha Portrait
+            </span>
+          )}
           <span
             className="select-none font-[Montserrat,sans-serif] text-[9px] font-extrabold tracking-[0.28em] text-[#D4AF37]/50 tabular-nums"
             aria-label={t('quantumApothecary.chat.liveClockAria')}
@@ -1739,6 +1799,17 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
           >
             {liveChatClock}
           </span>
+          <button
+            type="button"
+            onClick={() => {
+              scrollChatToTop();
+            }}
+            className="rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 p-1.5 text-[#D4AF37] transition hover:border-[#D4AF37]/40 hover:bg-[#D4AF37]/20 sm:p-2"
+            title="Scroll to top of thread"
+            aria-label="Scroll to top of thread"
+          >
+            <ChevronUp size={16} className="drop-shadow-[0_0_6px_rgba(212,175,55,0.45)]" aria-hidden />
+          </button>
           <button
             type="button"
             onClick={() => {
@@ -1793,6 +1864,27 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
           overflowWrap: 'anywhere',
         }}
       >
+        <div ref={chatTopRef} className="h-px w-full shrink-0 scroll-mt-32" aria-hidden />
+        <div className="flex justify-center gap-3 pb-1">
+          <button
+            type="button"
+            onClick={scrollChatToTop}
+            className="rounded-full border border-[#D4AF37]/30 bg-[#0a0a0a]/80 p-2 text-[#D4AF37] shadow-[0_0_14px_rgba(212,175,55,0.15)] backdrop-blur-sm transition hover:bg-[#D4AF37]/15"
+            aria-label="Scroll to top of thread"
+            title="Scroll to top"
+          >
+            <ChevronUp size={18} className="drop-shadow-[0_0_6px_rgba(212,175,55,0.45)]" aria-hidden />
+          </button>
+          <button
+            type="button"
+            onClick={scrollChatToBottom}
+            className="rounded-full border border-[#D4AF37]/30 bg-[#0a0a0a]/80 p-2 text-[#D4AF37] shadow-[0_0_14px_rgba(212,175,55,0.15)] backdrop-blur-sm transition hover:bg-[#D4AF37]/15"
+            aria-label={t('quantumApothecary.chat.scrollToBottom')}
+            title={t('quantumApothecary.chat.scrollToBottom')}
+          >
+            <ChevronDown size={18} className="drop-shadow-[0_0_6px_rgba(212,175,55,0.45)]" aria-hidden />
+          </button>
+        </div>
         <div
           className={`flex min-h-full flex-col ${
             messages.length === 0 && !isTyping ? 'justify-center' : 'justify-end'
@@ -1834,12 +1926,18 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
             </div>
           )}
           {messages.slice(-20).map((msg, i) => {
-              const ts =
+              const visStart = Math.max(0, messages.length - 20);
+              const globalIndex = visStart + i;
+              const msgKey = msg.id ?? `qa-msg-${globalIndex}-${msg.timestamp ?? 'na'}-${msg.role}`;
+              const tsLabel =
                 typeof msg.timestamp === 'number'
-                  ? new Date(msg.timestamp).toLocaleTimeString(appLocale, { hour: '2-digit', minute: '2-digit' })
-                  : null;
+                  ? new Date(msg.timestamp).toLocaleString(appLocale, {
+                      dateStyle: 'short',
+                      timeStyle: 'medium',
+                    })
+                  : '—';
               return (
-              <motion.div key={msg.id ?? `qa-msg-${i}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+              <motion.div key={msgKey} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
                 className={`flex w-full min-w-0 flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                 {msg.role === 'user' ? (
                   <>
@@ -1850,16 +1948,39 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                         border: '1px solid rgba(212,175,55,0.25)',
                       }}
                     >
-                      <div className="markdown-body text-[15px] leading-[1.75] text-white/95 whitespace-pre-wrap break-words w-full min-w-0 text-left" style={{ maxWidth: '100%', wordBreak: 'break-word' }}>
+                      <div className="markdown-body text-[14px] leading-[1.75] text-white/95 whitespace-pre-wrap break-words w-full min-w-0 text-left" style={{ maxWidth: '100%', wordBreak: 'break-word' }}>
                         {renderChatText(msg.text, 'user')}
                       </div>
                     </div>
-                    {ts && (
-                      <p className="text-[10px] text-white/25 mt-1 text-right max-w-[85%]">{ts}</p>
-                    )}
+                    <div className="mt-1 flex max-w-[85%] flex-wrap items-center justify-end gap-x-3 gap-y-1">
+                      <p className="text-[10px] tabular-nums text-white/35">{tsLabel}</p>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyMsg(msg.text, msgKey)}
+                        aria-label="Copy message"
+                        className="text-[10px] font-bold uppercase tracking-widest"
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: copiedMsgKey === msgKey ? '#22c55e' : '#D4AF37',
+                        }}
+                      >
+                        {copiedMsgKey === msgKey ? '✓ Copied' : 'Copy'}
+                      </button>
+                    </div>
                   </>
                 ) : (
                   <>
+                    <div className="mx-auto mb-1 flex w-full max-w-[96%] flex-wrap items-center justify-between gap-2">
+                      <span
+                        className="rounded-md border border-[#D4AF37]/35 bg-[#D4AF37]/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.2em] text-[#D4AF37]"
+                        style={{ boxShadow: '0 0 12px rgba(212,175,55,0.12)' }}
+                      >
+                        Master
+                      </span>
+                      <p className="text-[10px] tabular-nums text-white/35">{tsLabel}</p>
+                    </div>
                     <div
                       className="chat-message w-full max-w-[96%] mx-auto rounded-[20px] px-5 py-4"
                       style={{
@@ -1872,46 +1993,88 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                       }}
                     >
                       <div className="sqi-message w-full min-w-0">
-                        <div className="text-[15px] leading-[1.75] text-white/85 break-words [overflow-wrap:anywhere] w-full min-w-0" style={{ maxWidth: '100%', wordBreak: 'break-word' }}>
+                        <div className="text-[14px] leading-[1.75] text-white/85 break-words [overflow-wrap:anywhere] w-full min-w-0" style={{ maxWidth: '100%', wordBreak: 'break-word' }}>
                           {renderSQIContent(msg.text)}
                         </div>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyMsg(msg.text, i)}
-                      aria-label="Copy message"
-                      className="mt-1 px-2 py-1 text-[10px] font-bold uppercase tracking-widest"
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: copiedMsgIdx === i ? '#22c55e' : '#D4AF37',
-                      }}
-                    >
-                      {copiedMsgIdx === i ? '✓ Copied' : 'Copy'}
-                    </button>
-                    {ts && (
-                      <p className="text-[10px] text-white/25 mt-1 text-right w-full max-w-[96%] mx-auto">{ts}</p>
-                    )}
+                    <div className="mx-auto mt-1 flex w-full max-w-[96%] flex-wrap items-center gap-x-3 gap-y-1">
+                      <button
+                        type="button"
+                        onClick={() => handleCopyMsg(msg.text, msgKey)}
+                        aria-label="Copy message"
+                        className="text-[10px] font-bold uppercase tracking-widest"
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: copiedMsgKey === msgKey ? '#22c55e' : '#D4AF37',
+                        }}
+                      >
+                        {copiedMsgKey === msgKey ? '✓ Copied' : 'Copy'}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!user?.id}
+                        onClick={() => handleSaveAIMessageToCodex(msg, globalIndex)}
+                        title={user?.id ? 'Save this transmission to the Codex' : 'Sign in to save to Codex'}
+                        className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37]/90 transition enabled:hover:text-[#D4AF37] disabled:cursor-not-allowed disabled:opacity-35"
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          cursor: user?.id ? 'pointer' : 'not-allowed',
+                        }}
+                      >
+                        Save to Codex
+                      </button>
+                    </div>
                   </>
                 )}
               </motion.div>
               );
             })}
           {isTyping && (
-            <div className="flex justify-start">
-              <div className="flex gap-1 rounded-[28px] rounded-tl-none border border-white/[0.08] bg-white/[0.04] p-4">
-                {[0, 0.2, 0.4].map((delay, i) => (
+            <div className="flex justify-start px-1">
+              <div
+                className="flex items-center gap-1.5 rounded-[28px] rounded-tl-none border border-white/[0.08] bg-white/[0.04] px-5 py-4"
+                role="status"
+                aria-live="polite"
+                aria-label="Akasha is composing"
+              >
+                {[0, 1, 2].map((i) => (
                   <span
                     key={i}
-                    className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#D4AF37]/50"
-                    style={{ animationDelay: `${delay}s`, boxShadow: '0 0 6px rgba(212,175,55,0.5)' }}
+                    className="h-2 w-2 animate-bounce rounded-full bg-[#D4AF37]/70"
+                    style={{
+                      animationDelay: `${i * 0.18}s`,
+                      animationDuration: '0.65s',
+                      boxShadow: '0 0 8px rgba(212,175,55,0.55)',
+                    }}
                   />
                 ))}
               </div>
             </div>
           )}
+          <div className="flex justify-center gap-3 pt-3">
+            <button
+              type="button"
+              onClick={scrollChatToTop}
+              className="rounded-full border border-[#D4AF37]/30 bg-[#0a0a0a]/80 p-2 text-[#D4AF37] shadow-[0_0_14px_rgba(212,175,55,0.15)] backdrop-blur-sm transition hover:bg-[#D4AF37]/15"
+              aria-label="Scroll to top of thread"
+              title="Scroll to top"
+            >
+              <ChevronUp size={18} className="drop-shadow-[0_0_6px_rgba(212,175,55,0.45)]" aria-hidden />
+            </button>
+            <button
+              type="button"
+              onClick={scrollChatToBottom}
+              className="rounded-full border border-[#D4AF37]/30 bg-[#0a0a0a]/80 p-2 text-[#D4AF37] shadow-[0_0_14px_rgba(212,175,55,0.15)] backdrop-blur-sm transition hover:bg-[#D4AF37]/15"
+              aria-label={t('quantumApothecary.chat.scrollToBottom')}
+              title={t('quantumApothecary.chat.scrollToBottom')}
+            >
+              <ChevronDown size={18} className="drop-shadow-[0_0_6px_rgba(212,175,55,0.45)]" aria-hidden />
+            </button>
+          </div>
           <div ref={chatEndRef} />
         </div>
       </div>

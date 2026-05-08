@@ -346,6 +346,7 @@ function AppRoutes() {
                   <Route path="/living-portrait-codex" element={<LivingPortraitCodex />} />
                   <Route path="/students" element={<Students />} />
                   <Route path="/student-codex/:studentId" element={<StudentCodex />} />
+                  <Route path="/akasha-portrait/:studentId" element={<StudentCodex />} />
                   <Route path="/ayurveda" element={<Ayurveda />} />
                   <Route path="/agastyar-academy" element={<AgastyarAcademy />} />
                   <Route path="/agastyar-academy/module/:id" element={<AgastyarModule />} />
