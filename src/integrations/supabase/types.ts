@@ -62,6 +62,42 @@ export type Database = {
         }
         Relationships: []
       }
+      active_transmissions: {
+        Row: {
+          id: string
+          is_playing: boolean | null
+          playback_position: number | null
+          transmission_id: string | null
+          transmission_title: string | null
+          transmission_type: string | null
+          transmission_url: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          is_playing?: boolean | null
+          playback_position?: number | null
+          transmission_id?: string | null
+          transmission_title?: string | null
+          transmission_type?: string | null
+          transmission_url?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          is_playing?: boolean | null
+          playback_position?: number | null
+          transmission_id?: string | null
+          transmission_title?: string | null
+          transmission_type?: string | null
+          transmission_url?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_content: {
         Row: {
           content_type: string
