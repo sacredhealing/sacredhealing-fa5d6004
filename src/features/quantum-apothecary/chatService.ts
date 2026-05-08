@@ -1,6 +1,8 @@
 import type { Message } from './types';
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/quantum-apothecary-chat`;
+
+const CHAT_URL = "https://fjdzhrdpioxdeyyfogep.supabase.co/functions/v1/quantum-apothecary-chat";
+
 
 // Dedicated palm scan — uses the edge function's scanMode path which does independent
 // image-based analysis without the SQI chat personality (no user self-diagnosis risk).
@@ -34,10 +36,12 @@ export async function scanNadiFromPalm(options: {
   return resp.json();
 }
 
+
 export interface UserImagePayload {
   base64: string;
   mimeType: string;
 }
+
 
 export async function streamChatWithSQI(
   messages: Message[],
@@ -58,6 +62,7 @@ export async function streamChatWithSQI(
     content: m.text,
   }));
 
+
   const now = new Date();
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const loc = localeTag?.trim() || 'en-GB';
@@ -68,95 +73,3 @@ export async function streamChatWithSQI(
     timeZone: timezone,
   });
   const localDate = now.toLocaleDateString(loc, {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    timeZone: timezone,
-  });
-
-  const body: {
-    messages: typeof apiMessages;
-    userImage?: UserImagePayload;
-    userId?: string | null;
-    language?: string;
-    seekerName?: string;
-    canonicalActivationNames?: string;
-    localTime?: string;
-    localDate?: string;
-    jyotishContext?: string;
-    timezone?: string;
-  } = { messages: apiMessages, localTime, localDate, timezone };
-
-  if (userImage?.base64 && userImage?.mimeType) body.userImage = userImage;
-  if (userId)                                    body.userId = userId;
-  if (language)                                  body.language = language;
-  if (seekerName?.trim())                        body.seekerName = seekerName.trim();
-  if (canonicalActivationNames?.trim())          body.canonicalActivationNames = canonicalActivationNames.trim();
-  if (jyotishContext?.trim())                    body.jyotishContext = jyotishContext.trim();
-
-  const resp = await fetch(CHAT_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!resp.ok || !resp.body) {
-    if (resp.status === 429) throw new Error('Rate limited — please try again shortly.');
-    if (resp.status === 402) throw new Error('Credits exhausted — please top up.');
-    throw new Error('Failed to start stream');
-  }
-
-  const reader = resp.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
-  let streamDone = false;
-
-  while (!streamDone) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop() ?? '';
-
-    for (const line of lines) {
-      const trimmed = line.replace(/\r$/, '').trim();
-      if (!trimmed || trimmed.startsWith(':')) continue;
-      if (!trimmed.startsWith('data: ')) continue;
-      const jsonStr = trimmed.slice(6).trim();
-      if (jsonStr === '[DONE]') {
-        streamDone = true;
-        break;
-      }
-      try {
-        const parsed = JSON.parse(jsonStr);
-        const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-        if (content) onDelta(content);
-      } catch {
-        /* incomplete JSON across chunks — wait for more */
-      }
-    }
-  }
-
-  if (buffer.trim()) {
-    const trimmed = buffer.replace(/\r$/, '').trim();
-    if (trimmed.startsWith('data: ')) {
-      const jsonStr = trimmed.slice(6).trim();
-      if (jsonStr !== '[DONE]') {
-        try {
-          const parsed = JSON.parse(jsonStr);
-          const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-          if (content) onDelta(content);
-        } catch {
-          /* ignore trailing garbage */
-        }
-      }
-    }
-  }
-
-  onDone();
-}
