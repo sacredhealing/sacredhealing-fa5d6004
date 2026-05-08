@@ -2013,20 +2013,6 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                       >
                         {copiedMsgKey === msgKey ? '✓ Copied' : 'Copy'}
                       </button>
-                      <button
-                        type="button"
-                        disabled={!user?.id}
-                        onClick={() => handleSaveAIMessageToCodex(msg, globalIndex)}
-                        title={user?.id ? 'Save this transmission to the Codex' : 'Sign in to save to Codex'}
-                        className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37]/90 transition enabled:hover:text-[#D4AF37] disabled:cursor-not-allowed disabled:opacity-35"
-                        style={{
-                          background: 'transparent',
-                          border: 'none',
-                          cursor: user?.id ? 'pointer' : 'not-allowed',
-                        }}
-                      >
-                        Save to Codex
-                      </button>
                     </div>
                   </>
                 )}
