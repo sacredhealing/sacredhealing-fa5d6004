@@ -78,6 +78,81 @@ export interface UniversalAudioItem {
   originalData?: any;
 }
 
+/** Persisted row shape for `active_transmissions` (cross-device resume). */
+export interface ActiveTransmissionRowInput {
+  transmission_id: string;
+  transmission_title: string;
+  transmission_url: string;
+  transmission_type: string;
+  is_playing: boolean;
+  playback_position: number;
+  metadata: Record<string, unknown>;
+}
+
+interface ActiveTransmissionDbRow {
+  transmission_id: string | null;
+  transmission_title: string | null;
+  transmission_url: string | null;
+  transmission_type: string | null;
+  playback_position: number | null;
+  metadata: Record<string, unknown> | null;
+}
+
+function trackFromActiveTransmissionRow(data: ActiveTransmissionDbRow): Track {
+  const meta = (data.metadata || {}) as Partial<Track> & Record<string, unknown>;
+  const url = data.transmission_url || '';
+  return {
+    id: data.transmission_id || '',
+    title: data.transmission_title || 'Transmission',
+    artist: typeof meta.artist === 'string' ? meta.artist : '',
+    description: null,
+    genre: typeof meta.genre === 'string' ? meta.genre : 'General',
+    duration_seconds: typeof meta.duration_seconds === 'number' ? meta.duration_seconds : 0,
+    preview_url: url,
+    full_audio_url: url,
+    cover_image_url: typeof meta.cover_image_url === 'string' ? meta.cover_image_url : null,
+    price_usd: 0,
+    shc_reward: typeof meta.shc_reward === 'number' ? meta.shc_reward : 0,
+    play_count: 0,
+    bpm: null,
+    release_date: null,
+    created_at: new Date().toISOString(),
+    mood: null,
+    spiritual_path: null,
+    intended_use: null,
+    affirmation: null,
+    creator_notes: null,
+    energy_level: null,
+    rhythm_type: null,
+    vocal_type: null,
+    frequency_band: null,
+    best_time_of_day: null,
+    spiritual_description: null,
+    auto_generated_description: null,
+    auto_generated_affirmation: null,
+    analysis_status: null,
+  };
+}
+
+function universalFromActiveTransmissionRow(data: ActiveTransmissionDbRow): UniversalAudioItem {
+  const meta = (data.metadata || {}) as Record<string, unknown>;
+  const url = data.transmission_url || '';
+  const ct =
+    (meta.contentType as AudioContentType | undefined) ||
+    (data.transmission_type === 'healing' ? 'healing' : 'meditation');
+  return {
+    id: data.transmission_id || '',
+    title: data.transmission_title || '',
+    artist: typeof meta.artist === 'string' ? meta.artist : '',
+    audio_url: url,
+    preview_url: typeof meta.preview_url === 'string' ? meta.preview_url : null,
+    cover_image_url: typeof meta.cover_image_url === 'string' ? meta.cover_image_url : null,
+    duration_seconds: typeof meta.duration_seconds === 'number' ? meta.duration_seconds : 0,
+    shc_reward: typeof meta.shc_reward === 'number' ? meta.shc_reward : 0,
+    contentType: ct,
+  };
+}
+
 interface MusicPlayerContextType {
   currentTrack: Track | null;
   currentAudio: UniversalAudioItem | null;
@@ -94,8 +169,15 @@ interface MusicPlayerContextType {
   likedIds: string[];
   isSubscribed: boolean;
   
-  playTrack: (track: Track, queue?: Track[]) => void;
-  playUniversalAudio: (audio: UniversalAudioItem) => void;
+  playTrack: (
+    track: Track,
+    queue?: Track[],
+    opts?: { resumePositionSec?: number; autoPlay?: boolean }
+  ) => void | Promise<void>;
+  playUniversalAudio: (
+    audio: UniversalAudioItem,
+    opts?: { resumePositionSec?: number; autoPlay?: boolean }
+  ) => void | Promise<void>;
   togglePlay: () => void;
   seekTo: (percent: number) => void;
   setVolume: (vol: number) => void;
@@ -150,7 +232,12 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const playStartTimeRef = useRef<number>(0);
   const completedThresholdForIdRef = useRef<string | null>(null);
   const devForceEndTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingMeditationPlayRef = useRef(false);
+  const pendingMeditationMountRef = useRef(false);
+  const pendingMeditationShouldPlayRef = useRef(true);
+  const pendingMeditationResumeSecRef = useRef(0);
+  const persistTxTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const skipPersistTxRef = useRef(false);
+  const transmissionRestoreDoneForUserRef = useRef<string | null>(null);
   const currentAudioRef = useRef<UniversalAudioItem | null>(null);
 
   const PREVIEW_LIMIT = 30;
@@ -167,6 +254,49 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       userMusicRank >= getMusicTrackRequiredRank(track),
     [purchasedIds, purchasedAlbumTrackIds, userMusicRank]
   );
+
+  const persistActiveTransmissionRow = useCallback(
+    async (row: ActiveTransmissionRowInput | null) => {
+      const uid = user?.id;
+      if (!uid) return;
+      if (!row) {
+        await supabase.from('active_transmissions').delete().eq('user_id', uid);
+        return;
+      }
+      await supabase.from('active_transmissions').upsert(
+        {
+          user_id: uid,
+          transmission_id: row.transmission_id,
+          transmission_title: row.transmission_title,
+          transmission_url: row.transmission_url,
+          transmission_type: row.transmission_type,
+          is_playing: row.is_playing,
+          playback_position: row.playback_position,
+          metadata: row.metadata,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id' }
+      );
+    },
+    [user?.id]
+  );
+
+  const schedulePersistTransmission = useCallback(
+    (row: ActiveTransmissionRowInput | null) => {
+      if (skipPersistTxRef.current || !user?.id) return;
+      if (!row) return;
+      if (persistTxTimerRef.current) clearTimeout(persistTxTimerRef.current);
+      persistTxTimerRef.current = setTimeout(() => {
+        persistTxTimerRef.current = null;
+        void persistActiveTransmissionRow(row);
+      }, 1500);
+    },
+    [persistActiveTransmissionRow, user?.id]
+  );
+
+  useEffect(() => () => {
+    if (persistTxTimerRef.current) clearTimeout(persistTxTimerRef.current);
+  }, []);
 
   const meditationSrc = useMemo(() => {
     if (!currentAudio?.audio_url) return null;
@@ -276,9 +406,35 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   medPlayerRef.current = medPlayer;
 
   useEffect(() => {
-    if (!pendingMeditationPlayRef.current || !meditationSrc) return;
-    pendingMeditationPlayRef.current = false;
-    void medPlayerRef.current.play().catch(() => setIsPlaying(false));
+    if (!pendingMeditationMountRef.current || !meditationSrc) return;
+    pendingMeditationMountRef.current = false;
+    const shouldPlay = pendingMeditationShouldPlayRef.current;
+    const resumeSec = pendingMeditationResumeSecRef.current;
+    pendingMeditationResumeSecRef.current = 0;
+
+    const run = async () => {
+      const m = medPlayerRef.current;
+      if (resumeSec > 0) {
+        let tries = 0;
+        while (tries < 50) {
+          const d = m.duration;
+          if (d > 0 && isFinite(d)) {
+            m.seek(Math.min(resumeSec, Math.max(0, d - 0.25)));
+            break;
+          }
+          await new Promise((r) => setTimeout(r, 50));
+          tries += 1;
+        }
+      }
+      if (shouldPlay) {
+        await m.play().catch(() => setIsPlaying(false));
+      } else {
+        m.pause();
+        setIsPlaying(false);
+      }
+    };
+
+    void run();
   }, [meditationSrc]);
 
   useEffect(() => {
@@ -394,10 +550,19 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     loadLikedTracks();
   }, []);
 
-  const playTrack = useCallback(async (track: Track, newQueue?: Track[]) => {
+  const playTrack = useCallback(async (
+    track: Track,
+    newQueue?: Track[],
+    opts?: { resumePositionSec?: number; autoPlay?: boolean }
+  ) => {
+    const resumePositionSec = opts?.resumePositionSec ?? 0;
+    const autoPlay = opts?.autoPlay !== false;
+    const skipCounts = resumePositionSec > 0;
+    const restoringSameTrack = resumePositionSec > 0;
+
     const canPlayFull = trackHasFullPlayAccess(track);
-    
-    if (currentTrack?.id === track.id && audioRef.current) {
+
+    if (currentTrack?.id === track.id && audioRef.current && !restoringSameTrack) {
       if (isPlaying) {
         audioRef.current.pause();
         setIsPlaying(false);
@@ -419,21 +584,20 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       audioRef.current.pause();
       audioRef.current = null;
     }
-    
+
     const audioUrl = canPlayFull ? track.full_audio_url : track.preview_url;
-    audioRef.current = new Audio(audioUrl);
-    audioRef.current.volume = volume;
-    
-    audioRef.current.onloadedmetadata = () => {
-      if (audioRef.current) setDuration(audioRef.current.duration);
-    };
-    
-    audioRef.current.ontimeupdate = () => {
+    const audio = new Audio(audioUrl);
+    audio.volume = volume;
+
+    audio.ontimeupdate = () => {
       if (!audioRef.current) return;
       const time = audioRef.current.currentTime;
       setCurrentTime(time);
-      setProgress((time / audioRef.current.duration) * 100);
-      
+      const dur = audioRef.current.duration;
+      if (dur > 0 && isFinite(dur)) {
+        setProgress((time / dur) * 100);
+      }
+
       if (!canPlayFull && time >= PREVIEW_LIMIT) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
@@ -441,27 +605,24 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         toast({ title: "Preview ended", description: "Subscribe or purchase for full track." });
       }
     };
-    
-    // Track start time for duration validation
+
     const playStartTime = Date.now();
-    
-    audioRef.current.onended = async () => {
+
+    audio.onended = async () => {
       if (isLoop && audioRef.current) {
         audioRef.current.currentTime = 0;
         await safePlay(audioRef.current);
         return;
       }
-      
+
       setIsPlaying(false);
-      
-      // Validate and award SHC only for full track plays with anti-farming
+
       if (canPlayFull) {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           const durationListened = Math.floor((Date.now() - playStartTime) / 1000);
-          const minDuration = Math.floor(track.duration_seconds * 0.8); // 80% minimum
-          
-          // Check if user completed this track in the last 24 hours
+          const minDuration = Math.floor(track.duration_seconds * 0.8);
+
           const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
           const { data: recentCompletion } = await supabase
             .from('music_completions')
@@ -470,33 +631,30 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
             .eq('track_id', track.id)
             .gte('completed_at', twentyFourHoursAgo)
             .limit(1);
-          
+
           if (recentCompletion && recentCompletion.length > 0) {
             toast({ title: "Already completed today", description: "Earn rewards again after 24 hours." });
           } else if (durationListened >= minDuration) {
-            // Record completion
             await supabase.from('music_completions').insert({
               user_id: user.id,
               track_id: track.id,
               duration_listened: durationListened,
               shc_earned: track.shc_reward
             });
-            
-            // Update balance
+
             const { data: balanceData } = await supabase
               .from('user_balances')
               .select('balance, total_earned')
               .eq('user_id', user.id)
               .maybeSingle();
-            
+
             if (balanceData) {
               await supabase.from('user_balances').update({
                 balance: balanceData.balance + track.shc_reward,
                 total_earned: balanceData.total_earned + track.shc_reward
               }).eq('user_id', user.id);
             }
-            
-            // Record transaction
+
             await supabase.from('shc_transactions').insert({
               user_id: user.id,
               type: 'earned',
@@ -504,7 +662,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
               description: `Music completed: ${track.title}`,
               status: 'completed'
             });
-            
+
             addOptimisticBalance(track.shc_reward);
             toast({ title: `+${track.shc_reward} SHC earned!`, description: `Completed "${track.title}"` });
           } else {
@@ -512,23 +670,66 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
           }
         }
       }
-      
-      // Auto-play next
+
       if (queue.length > 0 && currentQueueIndex < queue.length - 1) {
         const nextIndex = isShuffle ? Math.floor(Math.random() * queue.length) : currentQueueIndex + 1;
         setCurrentQueueIndex(nextIndex);
         playTrack(queue[nextIndex]);
       }
     };
-    
+
+    audioRef.current = audio;
+
+    await new Promise<void>((resolve) => {
+      const el = audioRef.current;
+      if (!el) {
+        resolve();
+        return;
+      }
+      const applyMeta = () => {
+        const a = audioRef.current;
+        if (!a) return;
+        const dur = a.duration;
+        setDuration(dur);
+        if (!isFinite(dur) || dur <= 0) return;
+        const maxSeek = canPlayFull ? dur : Math.min(dur, PREVIEW_LIMIT);
+        if (resumePositionSec > 0) {
+          const seekTo = Math.min(resumePositionSec, Math.max(0, maxSeek - 0.05));
+          a.currentTime = seekTo;
+          setCurrentTime(seekTo);
+          setProgress((seekTo / dur) * 100);
+        }
+      };
+      if (el.readyState >= 1) {
+        applyMeta();
+        resolve();
+      } else {
+        el.addEventListener(
+          'loadedmetadata',
+          () => {
+            applyMeta();
+            resolve();
+          },
+          { once: true }
+        );
+      }
+    });
+
     setCurrentTrack(track);
-    setProgress(0);
-    setCurrentTime(0);
+    if (!(resumePositionSec > 0)) {
+      setProgress(0);
+      setCurrentTime(0);
+    }
 
-    const started = await safePlay(audioRef.current);
-    setIsPlaying(started);
+    const started = autoPlay ? await safePlay(audio) : false;
+    if (!autoPlay) {
+      audio.pause();
+      setIsPlaying(false);
+    } else {
+      setIsPlaying(started);
+    }
 
-    if (!started) {
+    if (autoPlay && !started) {
       return;
     }
 
@@ -536,22 +737,22 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       setQueue(newQueue);
       setCurrentQueueIndex(newQueue.findIndex(t => t.id === track.id) || 0);
     }
-    
-    // Update play history and increment global play count
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      await supabase.from('music_play_history').upsert({
-        user_id: user.id,
-        track_id: track.id,
-        play_count: 1,
-        last_played_at: new Date().toISOString()
-      }, { onConflict: 'user_id,track_id' });
+
+    if (!skipCounts) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from('music_play_history').upsert({
+          user_id: user.id,
+          track_id: track.id,
+          play_count: 1,
+          last_played_at: new Date().toISOString()
+        }, { onConflict: 'user_id,track_id' });
+      }
+
+      await supabase.from('music_tracks').update({
+        play_count: track.play_count + 1
+      }).eq('id', track.id);
     }
-    
-    // Increment global play count
-    await supabase.from('music_tracks').update({
-      play_count: track.play_count + 1
-    }).eq('id', track.id);
   }, [currentTrack, isPlaying, volume, trackHasFullPlayAccess, isLoop, isShuffle, queue, currentQueueIndex, addOptimisticBalance, toast, currentAudio]);
 
   const togglePlay = useCallback(() => {
@@ -655,6 +856,11 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       clearTimeout(devForceEndTimeoutRef.current);
       devForceEndTimeoutRef.current = null;
     }
+    if (persistTxTimerRef.current) {
+      clearTimeout(persistTxTimerRef.current);
+      persistTxTimerRef.current = null;
+    }
+    void persistActiveTransmissionRow(null);
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
@@ -667,15 +873,22 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setProgress(0);
     setCurrentTime(0);
     setDuration(0);
-  }, []);
+  }, [persistActiveTransmissionRow]);
 
   // Universal audio player for meditation and healing (useAudioPlayer: MediaSession + heartbeat + WakeLock)
-  const playUniversalAudio = useCallback(async (audio: UniversalAudioItem) => {
+  const playUniversalAudio = useCallback(async (
+    audio: UniversalAudioItem,
+    opts?: { resumePositionSec?: number; autoPlay?: boolean }
+  ) => {
     if (audio.contentType !== 'meditation' && audio.contentType !== 'healing') {
       return;
     }
 
-    if (currentAudio?.id === audio.id) {
+    const resumeSec = opts?.resumePositionSec ?? 0;
+    const autoPlay = opts?.autoPlay !== false;
+    const resumeSame = resumeSec > 0;
+
+    if (currentAudio?.id === audio.id && !resumeSame) {
       const m = medPlayerRef.current;
       if (m.isPlaying) m.pause();
       else void m.play().catch(() => setIsPlaying(false));
@@ -694,7 +907,9 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     setCurrentTrack(null);
 
-    pendingMeditationPlayRef.current = true;
+    pendingMeditationMountRef.current = true;
+    pendingMeditationShouldPlayRef.current = autoPlay;
+    pendingMeditationResumeSecRef.current = resumeSec;
     playStartTimeRef.current = Date.now();
     setCurrentAudio(audio);
     setAudioContentType(audio.contentType);
@@ -711,6 +926,129 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
     }
   }, [currentAudio]);
+
+  useEffect(() => {
+    if (!user?.id) {
+      transmissionRestoreDoneForUserRef.current = null;
+      return;
+    }
+    if (transmissionRestoreDoneForUserRef.current === user.id) return;
+
+    let cancelled = false;
+
+    void (async () => {
+      const { data } = await supabase
+        .from('active_transmissions')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (cancelled) return;
+
+      if (!data?.transmission_url || !data.transmission_id) {
+        transmissionRestoreDoneForUserRef.current = user.id;
+        return;
+      }
+
+      if (cancelled) return;
+
+      const meta = (data.metadata || {}) as Record<string, unknown>;
+      const mode = meta.mode as string | undefined;
+      const txRow = data as ActiveTransmissionDbRow;
+      const resume = Number(data.playback_position) || 0;
+      const isUniversal =
+        mode === 'universal' ||
+        data.transmission_type === 'meditation' ||
+        data.transmission_type === 'healing';
+
+      skipPersistTxRef.current = true;
+      try {
+        if (cancelled) return;
+        if (isUniversal) {
+          await playUniversalAudio(universalFromActiveTransmissionRow(txRow), {
+            resumePositionSec: resume,
+            autoPlay: false,
+          });
+        } else {
+          await playTrack(trackFromActiveTransmissionRow(txRow), undefined, {
+            resumePositionSec: resume,
+            autoPlay: false,
+          });
+        }
+        if (!cancelled) transmissionRestoreDoneForUserRef.current = user.id;
+      } finally {
+        queueMicrotask(() => {
+          skipPersistTxRef.current = false;
+        });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, playTrack, playUniversalAudio]);
+
+  useEffect(() => {
+    if (skipPersistTxRef.current) return;
+    if (!user?.id) return;
+
+    let row: ActiveTransmissionRowInput | null = null;
+
+    if (currentTrack) {
+      const url = trackHasFullPlayAccess(currentTrack)
+        ? currentTrack.full_audio_url
+        : currentTrack.preview_url;
+      row = {
+        transmission_id: currentTrack.id,
+        transmission_title: currentTrack.title,
+        transmission_url: url,
+        transmission_type: 'music',
+        is_playing: isPlaying,
+        playback_position: currentTime,
+        metadata: {
+          mode: 'music',
+          artist: currentTrack.artist,
+          cover_image_url: currentTrack.cover_image_url,
+          duration_seconds: currentTrack.duration_seconds,
+          shc_reward: currentTrack.shc_reward,
+          genre: currentTrack.genre,
+        },
+      };
+    } else if (
+      currentAudio &&
+      (audioContentType === 'meditation' || audioContentType === 'healing')
+    ) {
+      row = {
+        transmission_id: currentAudio.id,
+        transmission_title: currentAudio.title,
+        transmission_url: currentAudio.audio_url,
+        transmission_type: audioContentType,
+        is_playing: isPlaying,
+        playback_position: currentTime,
+        metadata: {
+          mode: 'universal',
+          contentType: audioContentType,
+          artist: currentAudio.artist,
+          cover_image_url: currentAudio.cover_image_url,
+          duration_seconds: currentAudio.duration_seconds,
+          shc_reward: currentAudio.shc_reward,
+          preview_url: currentAudio.preview_url,
+        },
+      };
+    }
+
+    if (!row) return;
+    schedulePersistTransmission(row);
+  }, [
+    user?.id,
+    currentTrack,
+    currentAudio,
+    audioContentType,
+    isPlaying,
+    currentTime,
+    schedulePersistTransmission,
+    trackHasFullPlayAccess,
+  ]);
 
   return (
     <MusicPlayerContext.Provider value={{
