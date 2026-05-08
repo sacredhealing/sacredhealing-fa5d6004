@@ -159,6 +159,7 @@ import { QuantumApothecaryGate } from "@/pages/QuantumApothecaryLanding";
 const LifeBook = React.lazy(() => import("./pages/LifeBook"));
 const SriYantraShield = React.lazy(() => import("./pages/SriYantraShield"));
 const TempleHome = React.lazy(() => import("./pages/TempleHome"));
+const VirtualPilgrimage = React.lazy(() => import("./pages/VirtualPilgrimage"));
 const DigitalNadi = React.lazy(() => import("./pages/DigitalNadi"));
 const NadiScannerPage = React.lazy(() => import("./pages/NadiScannerPage"));
 const SoulScan = React.lazy(() => import("./pages/SoulScan"));
@@ -357,6 +358,7 @@ function AppRoutes() {
                   <Route path="/life-book" element={<LifeBook />} />
                   <Route path="/sri-yantra-shield" element={<SriYantraShield />} />
                   <Route path="/temple-home" element={<TempleHome />} />
+                  <Route path="/virtual-pilgrimage" element={<VirtualPilgrimage />} />
                   <Route path="/social-automation" element={<SQISocialAutomation />} />
                   <Route path="/digital-nadi" element={<DigitalNadi />} />
                   <Route path="/nadi-scanner" element={<NadiScannerPage />} />
