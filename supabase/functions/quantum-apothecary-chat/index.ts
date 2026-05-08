@@ -1,10 +1,12 @@
 /**
  * quantum-apothecary-chat — SQI streaming chat + palm scan entrypoint.
  *
- * Contract MUST match:
- *   - src/features/quantum-apothecary/chatService.ts (SSE data: {choices:[{delta:{content}}]})
+ * Uses the Lovable AI Gateway (OpenAI-compatible) so we are not bound to a
+ * single Gemini API key / free-tier quota. Streaming is a direct passthrough
+ * since the gateway already emits the SSE shape the frontend expects:
+ *   data: {choices:[{delta:{content}}]}
  *
- * Secrets: GEMINI_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+ * Secrets: LOVABLE_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
  */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -15,10 +17,11 @@ const corsHeaders: Record<string, string> = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") ?? "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-const GEMINI_MODEL = "gemini-2.5-flash";
+const AI_MODEL = "google/gemini-2.5-flash";
+const AI_GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
 function isAkashaInfinity(tier: string | null): boolean {
   if (!tier) return false;
@@ -33,96 +36,13 @@ function isAkashaInfinity(tier: string | null): boolean {
   );
 }
 
-function sseLine(obj: unknown): Uint8Array {
-  const enc = new TextEncoder();
-  return enc.encode(`data: ${JSON.stringify(obj)}\n\n`);
-}
-
-function sseDone(): Uint8Array {
-  const enc = new TextEncoder();
-  return enc.encode("data: [DONE]\n\n");
-}
-
-function aggregateGeminiText(obj: Record<string, unknown>): string {
-  const cand = obj?.candidates as Record<string, unknown>[] | undefined;
-  const content = cand?.[0]?.content as Record<string, unknown> | undefined;
-  const parts = content?.parts as { text?: string }[] | undefined;
-  if (!parts?.length) return "";
-  return parts.map((p) => (typeof p.text === "string" ? p.text : "")).join("");
-}
-
-function geminiStreamToOpenAiSSE(geminiBody: ReadableStream<Uint8Array> | null): ReadableStream<Uint8Array> {
-  const reader = geminiBody?.getReader();
-  if (!reader) {
-    return new ReadableStream({
-      start(c) {
-        c.enqueue(sseDone());
-        c.close();
-      },
-    });
-  }
-
-  let buf = "";
-  let prevGeminiFull = "";
-
-  return new ReadableStream({
-    async pull(controller) {
-      try {
-        const { done, value } = await reader.read();
-        if (done) {
-          controller.enqueue(sseDone());
-          controller.close();
-          return;
-        }
-        buf += new TextDecoder().decode(value, { stream: true });
-        const lines = buf.split("\n");
-        buf = lines.pop() ?? "";
-        for (const raw of lines) {
-          const line = raw.replace(/\r$/, "").trim();
-          if (!line.startsWith("data:")) continue;
-          const payload = line.slice(5).trim();
-          if (payload === "[DONE]") continue;
-          try {
-            const obj = JSON.parse(payload) as Record<string, unknown>;
-            const full = aggregateGeminiText(obj);
-            if (!full) continue;
-            let delta = "";
-            if (full.startsWith(prevGeminiFull)) {
-              delta = full.slice(prevGeminiFull.length);
-              prevGeminiFull = full;
-            } else {
-              delta = full;
-              prevGeminiFull += full;
-            }
-            if (delta) controller.enqueue(sseLine({ choices: [{ delta: { content: delta } }] }));
-          } catch {
-            /* incomplete */
-          }
-        }
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        controller.enqueue(
-          sseLine({
-            choices: [{ delta: { content: `\n\n[Transmission error: ${msg}]` } }],
-          }),
-        );
-        controller.enqueue(sseDone());
-        controller.close();
-      }
-    },
-    cancel() {
-      reader.cancel().catch(() => {});
-    },
-  });
-}
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  if (!GEMINI_API_KEY) {
-    return new Response(JSON.stringify({ error: "GEMINI_API_KEY not configured on edge function" }), {
+  if (!LOVABLE_API_KEY) {
+    return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured on edge function" }), {
       status: 503,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -133,6 +53,7 @@ serve(async (req) => {
   try {
     const body = await req.json();
 
+    // ─── PALM SCAN PATH ──────────────────────────────────────────────────────
     if (body.scanMode === true) {
       const userId = body.userId as string | null | undefined;
       let tier = "free";
@@ -160,38 +81,46 @@ serve(async (req) => {
         });
       }
 
+      const cleanB64 = imageBase64.replace(/^data:[^;]+;base64,/, "");
+      const dataUrl = `data:${imageMimeType};base64,${cleanB64}`;
       const scanPrompt =
         `You are a Siddha palm/Nadi field analyst for Sacred Healing Collective. Analyse the palm image for observable cues only — state uncertainty plainly.
 Respond as compact JSON with keys: primaryObservation (string), nadiGuess ("Ida"|"Pingala"|"Sushumna"|"Unclear"), stressBands (string), ritualRecommendation (string), disclaimer (string).`;
 
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [
-              {
-                role: "user",
-                parts: [
-                  { text: scanPrompt },
-                  {
-                    inline_data: {
-                      mime_type: imageMimeType,
-                      data: imageBase64.replace(/^data:[^;]+;base64,/, ""),
-                    },
-                  },
-                ],
-              },
-            ],
-            generationConfig: { maxOutputTokens: 1024, temperature: 0.35 },
-          }),
+      const scanResp = await fetch(AI_GATEWAY_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
         },
-      );
-      const gemData = await res.json();
-      const text =
-        (gemData as { candidates?: { content?: { parts?: { text?: string }[] } }[] }).candidates?.[0]?.content
-          ?.parts?.[0]?.text ?? "";
+        body: JSON.stringify({
+          model: AI_MODEL,
+          messages: [
+            {
+              role: "user",
+              content: [
+                { type: "text", text: scanPrompt },
+                { type: "image_url", image_url: { url: dataUrl } },
+              ],
+            },
+          ],
+        }),
+      });
+
+      if (!scanResp.ok) {
+        const errText = await scanResp.text();
+        const status = scanResp.status === 429 || scanResp.status === 402 ? scanResp.status : 502;
+        return new Response(
+          JSON.stringify({
+            error: scanResp.status === 429 ? "rate_limited" : scanResp.status === 402 ? "payment_required" : "ai_gateway_error",
+            detail: errText.slice(0, 500),
+          }),
+          { status, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      const scanData = await scanResp.json();
+      const text = scanData?.choices?.[0]?.message?.content ?? "";
       try {
         const parsed = JSON.parse(text.replace(/^```json?\s*/i, "").replace(/```\s*$/, ""));
         return new Response(JSON.stringify(parsed), {
@@ -204,6 +133,7 @@ Respond as compact JSON with keys: primaryObservation (string), nadiGuess ("Ida"
       }
     }
 
+    // ─── CHAT PATH ───────────────────────────────────────────────────────────
     const messages = body.messages as { role?: string; content?: string }[] | undefined;
     if (!messages?.length) {
       return new Response(JSON.stringify({ error: "No messages", hint: "Expected { messages: [...] }" }), {
@@ -254,54 +184,64 @@ Respond as compact JSON with keys: primaryObservation (string), nadiGuess ("Ida"
         : "",
     ].filter(Boolean);
 
-    const contents = messages.map((m, idx) => {
-      const role = m.role === "assistant" ? "model" : "user";
+    // Build OpenAI-style messages. Attach image (if present) to the last user message.
+    const aiMessages: Array<{ role: string; content: unknown }> = [
+      { role: "system", content: systemParts.join("\n\n") },
+    ];
+    messages.forEach((m, idx) => {
+      const role = m.role === "assistant" ? "assistant" : "user";
       const text = (m.content ?? "").trim();
       const isLastUser = role === "user" && idx === messages.length - 1;
       if (isLastUser && userImage?.base64 && userImage?.mimeType) {
-        const b64 = userImage.base64.replace(/^data:[^;]+;base64,/, "");
-        return {
+        const cleanB64 = userImage.base64.replace(/^data:[^;]+;base64,/, "");
+        aiMessages.push({
           role: "user",
-          parts: [{ text: text || "[Image attached]" }, { inline_data: { mime_type: userImage.mimeType, data: b64 } }],
-        };
+          content: [
+            { type: "text", text: text || "[Image attached]" },
+            { type: "image_url", image_url: { url: `data:${userImage.mimeType};base64,${cleanB64}` } },
+          ],
+        });
+      } else {
+        aiMessages.push({ role, content: text });
       }
-      return { role, parts: [{ text }] };
     });
 
-    const geminiReq = {
-      systemInstruction: { parts: [{ text: systemParts.join("\n\n") }] },
-      contents,
-      generationConfig: {
-        maxOutputTokens: 8192,
-        temperature: 0.85,
-      },
-    };
-
-    const geminiUrl =
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:streamGenerateContent?key=${GEMINI_API_KEY}`;
-
-    const geminiResp = await fetch(geminiUrl, {
+    const aiResp = await fetch(AI_GATEWAY_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(geminiReq),
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: AI_MODEL,
+        messages: aiMessages,
+        stream: true,
+      }),
     });
 
-    if (!geminiResp.ok) {
-      const errText = await geminiResp.text();
-      console.error("[quantum-apothecary-chat] Gemini error", geminiResp.status, errText.slice(0, 500));
+    if (!aiResp.ok || !aiResp.body) {
+      const errText = await aiResp.text().catch(() => "");
+      console.error("[quantum-apothecary-chat] AI gateway error", aiResp.status, errText.slice(0, 500));
+      if (aiResp.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "rate_limited", message: "Rate limits exceeded, please try again shortly." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      if (aiResp.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "payment_required", message: "AI credits exhausted. Please top up Lovable AI workspace." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
       return new Response(
-        JSON.stringify({
-          error: "gemini_upstream_error",
-          status: geminiResp.status,
-          detail: errText.slice(0, 800),
-        }),
+        JSON.stringify({ error: "ai_gateway_error", status: aiResp.status, detail: errText.slice(0, 800) }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    const out = geminiStreamToOpenAiSSE(geminiResp.body);
-
-    return new Response(out, {
+    // Lovable AI Gateway already streams in OpenAI SSE format — pass through directly.
+    return new Response(aiResp.body, {
       headers: {
         ...corsHeaders,
         "Content-Type": "text/event-stream; charset=utf-8",
