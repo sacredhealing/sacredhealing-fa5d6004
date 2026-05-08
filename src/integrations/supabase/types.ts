@@ -957,6 +957,33 @@ export type Database = {
         }
         Relationships: []
       }
+      apothecary_chat_messages: {
+        Row: {
+          chat_context: string
+          content: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          chat_context?: string
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          chat_context?: string
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       artists: {
         Row: {
           avatar_url: string | null
