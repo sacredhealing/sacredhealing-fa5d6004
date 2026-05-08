@@ -804,7 +804,8 @@ function QuantumApothecaryInner() {
     setCopiedMsgIdx(idx);
     setTimeout(() => setCopiedMsgIdx((c) => (c === idx ? null : c)), 2000);
   };
-  const [activeCategory, setActiveCategory] = useState('All');
+  const [activeCategory, setActiveCategory] = useState('Wellness');
+  const [resonanceMatches, setResonanceMatches] = useState<Array<Activation & { pct: number }>>([]);
   const [showKnowledge, setShowKnowledge] = useState(false);
   const [isChatFullscreen, setIsChatFullscreen] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(() => {
