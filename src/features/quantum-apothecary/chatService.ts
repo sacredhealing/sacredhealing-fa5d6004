@@ -1,11 +1,13 @@
 import type { Message } from './types';
 
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/quantum-apothecary-chat`;
 
-const CHAT_URL = "https://fjdzhrdpioxdeyyfogep.supabase.co/functions/v1/quantum-apothecary-chat";
+export interface UserImagePayload {
+  base64: string;
+  mimeType: string;
+}
 
-
-// Dedicated palm scan — uses the edge function's scanMode path which does independent
-// image-based analysis without the SQI chat personality (no user self-diagnosis risk).
+// Dedicated palm scan — uses the edge function's scanMode path.
 export async function scanNadiFromPalm(options: {
   imageBase64: string;
   imageMimeType: string;
@@ -36,13 +38,6 @@ export async function scanNadiFromPalm(options: {
   return resp.json();
 }
 
-
-export interface UserImagePayload {
-  base64: string;
-  mimeType: string;
-}
-
-
 export async function streamChatWithSQI(
   messages: Message[],
   onDelta: (chunk: string) => void,
@@ -52,8 +47,7 @@ export async function streamChatWithSQI(
   language?: string,
   seekerName?: string,
   canonicalActivationNames?: string,
-  jyotishContext?: string,       // ← Jyotish birth chart data for accurate life readings
-  /** BCP 47 locale for localTime/localDate (must match client “LIVE SYSTEM TIME” line). */
+  jyotishContext?: string,
   localeTag?: string,
 ) {
   const recent = messages.slice(-15);
@@ -61,7 +55,6 @@ export async function streamChatWithSQI(
     role: m.role === 'model' ? 'assistant' : 'user',
     content: m.text,
   }));
-
 
   const now = new Date();
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -73,3 +66,67 @@ export async function streamChatWithSQI(
     timeZone: timezone,
   });
   const localDate = now.toLocaleDateString(loc, {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: timezone,
+  });
+
+  const resp = await fetch(CHAT_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+    },
+    body: JSON.stringify({
+      messages: apiMessages,
+      userId: userId ?? null,
+      language: language ?? 'English',
+      seekerName: seekerName ?? '',
+      canonicalActivationNames: canonicalActivationNames ?? '',
+      jyotishContext: jyotishContext ?? '',
+      localTime,
+      localDate,
+      timezone,
+      userImage: userImage ?? null,
+    }),
+  });
+
+  if (!resp.ok || !resp.body) {
+    const errText = await resp.text().catch(() => '');
+    throw new Error(`SQI transmission failed (${resp.status}): ${errText.slice(0, 200)}`);
+  }
+
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let done = false;
+
+  while (!done) {
+    const { done: rDone, value } = await reader.read();
+    if (rDone) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    let idx: number;
+    while ((idx = buffer.indexOf('\n')) !== -1) {
+      let line = buffer.slice(0, idx);
+      buffer = buffer.slice(idx + 1);
+      if (line.endsWith('\r')) line = line.slice(0, -1);
+      if (!line || line.startsWith(':')) continue;
+      if (!line.startsWith('data: ')) continue;
+      const json = line.slice(6).trim();
+      if (json === '[DONE]') { done = true; break; }
+      try {
+        const parsed = JSON.parse(json);
+        const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+        if (content) onDelta(content);
+      } catch {
+        buffer = line + '\n' + buffer;
+        break;
+      }
+    }
+  }
+
+  onDone();
+}
