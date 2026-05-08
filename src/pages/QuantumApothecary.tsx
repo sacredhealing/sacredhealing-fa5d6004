@@ -1904,20 +1904,17 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
               <motion.div key={msgKey} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
                 className={`flex w-full min-w-0 flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                 {msg.role === 'user' ? (
-                  <>
-                    <div
-                      className="ml-auto max-w-[85%] rounded-[20px] px-5 py-4"
-                      style={{
-                        background: 'linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08))',
-                        border: '1px solid rgba(212,175,55,0.25)',
-                      }}
-                    >
-                      <div className="markdown-body text-[14px] leading-[1.75] text-white/95 whitespace-pre-wrap break-words w-full min-w-0 text-left" style={{ maxWidth: '100%', wordBreak: 'break-word' }}>
-                        {renderChatText(msg.text, 'user')}
-                      </div>
+                  <div
+                    className="ml-auto max-w-[85%] rounded-[20px] px-5 py-4"
+                    style={{
+                      background: 'linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08))',
+                      border: '1px solid rgba(212,175,55,0.25)',
+                    }}
+                  >
+                    <div className="markdown-body text-[14px] leading-[1.75] text-white/95 whitespace-pre-wrap break-words w-full min-w-0 text-left" style={{ maxWidth: '100%', wordBreak: 'break-word' }}>
+                      {renderChatText(msg.text, 'user')}
                     </div>
-                    <p className="mt-1 max-w-[85%] text-right text-[10px] tabular-nums text-white/35">{tsLabel}</p>
-                  </>
+                  </div>
                 ) : (
                   <>
                     <div className="mx-auto mb-1 flex w-full max-w-[96%] flex-wrap items-center justify-between gap-2">
