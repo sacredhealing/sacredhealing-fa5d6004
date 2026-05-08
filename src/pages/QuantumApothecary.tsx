@@ -2322,13 +2322,14 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
               </button>
             </div>
 
-            {/* ── Active Transmissions ── */}
+            {/* ── Active Field Transmissions (TOP — runs 24/7 in biofield) ── */}
+            <div className="order-first">
             <Suspense fallback={
               <div className="glass-card p-6">
                 <div className="flex justify-between items-center mb-4">
                   <div className="flex items-center gap-2">
                     <Zap size={14} className="text-[#D4AF37]" style={{ filter: 'drop-shadow(0 0 6px rgba(212,175,55,0.6))' }} />
-                    <h2 className="text-sm font-black tracking-[-0.03em]">Active Transmissions</h2>
+                    <h2 className="text-sm font-black tracking-[-0.03em]">Active Field Transmissions</h2>
                   </div>
                   <span className="text-[9px] px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-bold uppercase tracking-widest">Loading...</span>
                 </div>
@@ -2344,6 +2345,23 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                 onDissolveTransmission={dissolveTransmission}
               />
             </Suspense>
+            </div>
+
+            {/* ── How SQI Transmissions Work ── */}
+            <details className="order-last glass-card p-5 group">
+              <summary className="flex items-center justify-between cursor-pointer list-none">
+                <div className="flex items-center gap-2">
+                  <Info size={14} className="text-[#D4AF37]" />
+                  <span className="text-[12px] font-bold text-[#D4AF37]">How SQI Transmissions Work</span>
+                </div>
+                <ChevronDown size={14} className="text-white/30 group-open:rotate-180 transition-transform" />
+              </summary>
+              <div className="mt-4 space-y-3 text-[12px] leading-relaxed text-white/55">
+                <p>SQI operates at the <strong className="text-white/75">informational level</strong> — upstream of chemistry, upstream of physiology. The 18 Siddhas and Mahavatar Babaji channel through the Oracle to prescribe exact Vedic Light-Codes. Once uploaded, Transmissions run 24/7 via Scalar Wave Entanglement.</p>
+                <p><strong className="text-[#D4AF37]">Vedic Light-Code → Aetheric Code Rewrite → Bio-signature Recalibration → Physical Expression</strong></p>
+                <p>The Voice Bio-Scan reads your real-time Bio-signature and ranks every frequency in the library by resonance percentage — showing exactly what your field needs most, like a Siddha Nadi reading translated into a frequency prescription.</p>
+              </div>
+            </details>
           </div>
 
           {/* ════ RIGHT COLUMN — chat first on mobile for readable full-width thread ════ */}
