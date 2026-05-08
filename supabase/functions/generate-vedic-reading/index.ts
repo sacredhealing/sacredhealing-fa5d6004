@@ -50,8 +50,9 @@ serve(async (req) => {
   try {
     const { user, timeOffset = 0, timezone = 'Europe/Stockholm' } = await req.json() as RequestBody;
 
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured");
+    if (!LOVABLE_API_KEY && !GEMINI_API_KEY) throw new Error("No AI API key configured");
 
     const now = new Date();
     if (user.plan !== 'free' && timeOffset !== 0) {
