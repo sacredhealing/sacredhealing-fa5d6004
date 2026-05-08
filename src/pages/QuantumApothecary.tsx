@@ -1741,6 +1741,25 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
               <p className="max-w-[240px] text-xs leading-relaxed text-white/25">
                 {t('quantumApothecary.chat.emptyState.body')}
               </p>
+              <div className="mt-6 flex w-full max-w-sm flex-col gap-2">
+                {[
+                  'What transmissions do I need for stress and anxiety?',
+                  'I feel things happening in my field — what is activating?',
+                  'Which Siddha Master should I work with today?',
+                ].map((q) => (
+                  <button
+                    key={q}
+                    type="button"
+                    onClick={() => {
+                      setInput(q);
+                      setTimeout(() => handleSendMessage(q), 100);
+                    }}
+                    className="rounded-[14px] border border-white/[0.06] bg-white/[0.02] px-3 py-2 text-left text-[11px] text-white/55 transition-all hover:border-[#D4AF37]/30 hover:text-white/80"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
           {messages.slice(-20).map((msg, i) => {
