@@ -40,7 +40,15 @@ function formatTimeInTimezone(date: Date, timezone: string): { dateStr: string; 
 // Only current, supported models — EOL models removed entirely.
 // 2.5-flash is the primary (superior reasoning for astro calculations).
 // 2.0-flash is the fallback (stable, fast, widely available).
-const MODEL_CHAIN = ['gemini-2.5-flash', 'gemini-2.0-flash'] as const;
+// Try Lovable AI Gateway first (higher rate limits, auto-provisioned key),
+// then fall back to direct Gemini API if gateway is unavailable.
+const MODEL_CHAIN = [
+  { provider: 'lovable', model: 'google/gemini-2.5-flash' },
+  { provider: 'lovable', model: 'google/gemini-2.5-flash-lite' },
+  { provider: 'lovable', model: 'google/gemini-3-flash-preview' },
+  { provider: 'gemini',  model: 'gemini-2.5-flash' },
+  { provider: 'gemini',  model: 'gemini-2.0-flash' },
+] as const;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
