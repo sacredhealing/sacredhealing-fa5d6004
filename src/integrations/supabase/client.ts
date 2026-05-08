@@ -2,16 +2,23 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = "https://fjdzhrdpioxdeyyfogep.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_H4AI2ZzqOL1Y7o6qRMr8ew_5-4pih8F";
+const SUPABASE_URL =
+  import.meta.env.VITE_SUPABASE_URL ||
+  '';
+
+/** Prefer publishable key name; Lovable may expose the anon JWT as SUPABASE_ANON_KEY (bridged in vite.config). */
+const SUPABASE_PUBLISHABLE_KEY =
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  '';
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-      auth: {
-              storage: localStorage,
-              persistSession: true,
-              autoRefreshToken: true,
-      }
+  auth: {
+    storage: localStorage,
+    persistSession: true,
+    autoRefreshToken: true,
+  },
 });

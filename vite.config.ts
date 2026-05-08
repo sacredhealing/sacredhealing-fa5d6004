@@ -16,6 +16,23 @@ export default defineConfig(({ mode }) => {
     (fileEnv.GEMINI_API_KEY || "").trim() ||
     "";
 
+  /** Lovable Cloud Secrets often use SUPABASE_URL / SUPABASE_ANON_KEY without VITE_ — expose as client env */
+  const supabaseUrlForClient =
+    (fileEnv.VITE_SUPABASE_URL || "").trim() ||
+    (process.env.VITE_SUPABASE_URL || "").trim() ||
+    (fileEnv.SUPABASE_URL || "").trim() ||
+    (process.env.SUPABASE_URL || "").trim() ||
+    "";
+
+  const supabasePublishableForClient =
+    (fileEnv.VITE_SUPABASE_PUBLISHABLE_KEY || "").trim() ||
+    (process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "").trim() ||
+    (fileEnv.VITE_SUPABASE_ANON_KEY || "").trim() ||
+    (process.env.VITE_SUPABASE_ANON_KEY || "").trim() ||
+    (fileEnv.SUPABASE_ANON_KEY || "").trim() ||
+    (process.env.SUPABASE_ANON_KEY || "").trim() ||
+    "";
+
   return {
   server: {
     host: "127.0.0.1",
@@ -127,6 +144,16 @@ export default defineConfig(({ mode }) => {
   },
   define: {
     "import.meta.env.VITE_GEMINI_API_KEY": JSON.stringify(geminiApiKey),
+    ...(supabaseUrlForClient
+      ? { "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(supabaseUrlForClient) }
+      : {}),
+    ...(supabasePublishableForClient
+      ? {
+          "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(
+            supabasePublishableForClient,
+          ),
+        }
+      : {}),
   },
 };
 });
