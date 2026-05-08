@@ -1,6 +1,13 @@
 /**
  * Virtual Pilgrimage — home GPS, scalar vector, Supabase persistence.
- * Pair with Railway hourly scalar-pulse-worker (virtual_pilgrimage_activations).
+ * Railway: scalar-pulse-worker pulses `virtual_pilgrimage_activations` hourly.
+ *
+ * Handles:
+ * 1. GPS → localStorage + `profiles.pilgrimage_home_*` (filtered by `user_id`, not `id`)
+ * 2. `computeScalarVector` from home ↔ site coordinates + site Hz
+ * 3. `activateSite` → inserts active row; clears any prior active row for this user first
+ * 4. Loads active pilgrimage on mount so UI restores after reload / device off
+ * 5. `releaseLock`, `updateStrength`, `markPracticeComplete` (+ local `practiceLog` state)
  */
 
 import { useState, useEffect, useCallback } from 'react';
