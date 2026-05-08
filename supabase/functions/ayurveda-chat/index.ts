@@ -14,7 +14,7 @@ const corsHeaders = {
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY') ?? '';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-const GEMINI_MODEL = 'gemini-2.5-flash-preview-04-17';
+const GEMINI_MODEL = 'gemini-2.5-flash';
 
 const DAILY_LIMITS: Record<string, number> = {
   'akasha-infinity': 99999,
