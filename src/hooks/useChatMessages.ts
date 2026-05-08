@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 /** Per-user sync turns for Apothecary / Ayurveda (not community `chat_messages`, which uses room_id). */
-const TABLE = 'user_sync_chat_messages' as const;
+const TABLE = 'apothecary_chat_messages' as const;
 
 export interface ChatMessage {
   id?: string;
