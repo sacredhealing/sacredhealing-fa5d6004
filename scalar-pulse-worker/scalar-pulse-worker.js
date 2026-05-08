@@ -1,4 +1,6 @@
-// scalar-pulse-worker.js — SQI 2050 (scalar bridge intensity)
+// scalar-pulse-worker.js — SQI 2050
+// - Virtual pilgrimage 40-day locks (GPS scalar rows)
+// - Temple scalar bridges (intensity / pulse_count)
 // Railway cron: 0 * * * *
 // ENV: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 
@@ -32,8 +34,62 @@ function vectorLooksOk(row) {
   return typeof v.distanceKm === 'number';
 }
 
+/** Hourly pulse + 40-day completion for virtual pilgrimages (GPS scalar locks). */
+async function pulseVirtualPilgrimages() {
+  const { data, error } = await supabase
+    .from('virtual_pilgrimage_activations')
+    .select('id,user_id,site_id,activated_at,pulse_count')
+    .eq('is_active', true);
+
+  if (error) {
+    if (error.code === '42P01' || /does not exist/i.test(error.message || '')) {
+      console.log('◈ virtual_pilgrimage_activations — table not found, skip (migrate first).');
+      return;
+    }
+    throw error;
+  }
+
+  if (!data?.length) {
+    console.log('◈ No active virtual pilgrimage locks.');
+    return;
+  }
+
+  const now = new Date().toISOString();
+  console.log(`◈ Pulsing ${data.length} virtual pilgrimage(s)...`);
+
+  for (const p of data) {
+    const activatedAt = new Date(p.activated_at);
+    const daysSince = Math.floor((Date.now() - activatedAt.getTime()) / (1000 * 60 * 60 * 24));
+    const autoComplete = daysSince >= 40;
+    const nextPulse = Number(p.pulse_count ?? 0) + 1;
+
+    const patch = {
+      last_pulse_at: now,
+      pulse_count: nextPulse,
+      days_active: daysSince,
+    };
+    if (autoComplete) {
+      patch.is_active = false;
+      patch.completed_at = now;
+    }
+
+    const { error: e } = await supabase.from('virtual_pilgrimage_activations').update(patch).eq('id', p.id);
+
+    if (e) {
+      console.error(`  ✗ pilgrimage ${p.site_id}:`, e.message);
+      continue;
+    }
+    console.log(
+      `  ✓ pilgrimage [${p.site_id}] user=${String(p.user_id).slice(0, 8)}… day ${daysSince}/40${autoComplete ? ' → COMPLETE' : ''}`,
+    );
+  }
+}
+
 async function run() {
   console.log('🔱 SQI Scalar Pulse —', new Date().toISOString());
+
+  await pulseVirtualPilgrimages();
+
   const { data, error } = await supabase
     .from('temple_activations')
     .select(
