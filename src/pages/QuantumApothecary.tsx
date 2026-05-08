@@ -2010,7 +2010,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         <div className="flex w-full max-w-none flex-col gap-5">
 
           {/* ════ LEFT COLUMN ════ */}
-          <div className="space-y-5">
+          <div className="flex flex-col gap-5">
 
             {/* ── Biometric Nadi Scanner — rPPG real vitals · Voice biofield (mic only) ── */}
             <div className="glass-card p-4 sm:p-5 qa-card-hover">
