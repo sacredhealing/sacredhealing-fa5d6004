@@ -1726,20 +1726,16 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
       toast('⟁ Run a Voice Biofield Scan first', { icon: '🎙' });
       return;
     }
-    const enriched = resonanceMatches.map((row) => normalizeActivationForMixer(row));
+    // ⟁ Enrich all 33 voice-matched rows
+    const top33Enriched = resonanceMatches.map((row) => normalizeActivationForMixer(row));
+    const top33Ids = new Set(top33Enriched.map((e) => e.id ?? e.name));
     setActiveTransmissions((prev) => {
-      const existingIds = new Set(prev.map((t) => t.id ?? t.name));
-      const toAdd = enriched.filter((e) => !existingIds.has(e.id ?? e.name));
-      const alreadyActive = enriched.length - toAdd.length;
-      if (toAdd.length === 0) {
-        toast.success(`⟁ All ${enriched.length} transmissions already active in your field`);
-        return prev;
-      }
-      toast.success(
-        `⟁ ${toAdd.length} activated${alreadyActive > 0 ? ` · ${alreadyActive} already running` : ''}`,
-      );
-      return [...prev, ...toAdd];
+      // Keep any existing transmissions that are NOT in the current top 33
+      const kept = prev.filter((t) => !top33Ids.has(t.id ?? t.name));
+      // Force-add all 33 from this voice scan
+      return [...kept, ...top33Enriched];
     });
+    toast.success(`⟁ All ${resonanceMatches.length} voice-matched transmissions activated to your biofield`);
   }, [resonanceMatches, normalizeActivationForMixer]);
   const renderChatPanel = () => (
     <div
