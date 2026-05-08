@@ -871,6 +871,20 @@ function QuantumApothecaryInner() {
     Array<Activation & { pct: number; rowCategory?: string }>
   >([]);
 
+  // ⟁ RESTORE Top 33 from last voice scan on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('sqi_top33_matches');
+      const ts = parseInt(localStorage.getItem('sqi_top33_ts') || '0', 10);
+      // Only restore if scan was within last 24 hours
+      if (saved && Date.now() - ts < 24 * 60 * 60 * 1000) {
+        setResonanceMatches(JSON.parse(saved));
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
   useEffect(() => {
     try {
       if (localStorage.getItem(LS_LIBRARY_UNLOCKED) !== '1') return;
@@ -1423,8 +1437,16 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         localStorage.setItem(LS_SCAN_SNAPSHOT, JSON.stringify(payload));
         setLibraryUnlocked(true);
         setScanCooldownUntilMs(Date.now() + 24 * 60 * 60 * 1000);
-        setResonanceMatches(buildTop33Rankings(payload));
+        const top33 = buildTop33Rankings(payload);
+        setResonanceMatches(top33);
         setShowAllTop33(false);
+        // ⟁ PERSIST — so list survives login/reload
+        try {
+          localStorage.setItem('sqi_top33_matches', JSON.stringify(top33));
+          localStorage.setItem('sqi_top33_ts', Date.now().toString());
+        } catch {
+          /* ignore */
+        }
       } catch {
         /* ignore */
       }
@@ -1701,26 +1723,21 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
 
   const activateAllTop33ToField = useCallback(() => {
     if (resonanceMatches.length === 0) {
-      toast.info('⟁ Run a Voice Biofield Scan first to generate your Top 33');
+      toast('⟁ Run a Voice Biofield Scan first', { icon: '🎙' });
       return;
     }
-    const enriched = resonanceMatches.map((row) =>
-      enrichTransmission(normalizeActivationForMixer(row), 'voice_scan'),
-    );
+    const enriched = resonanceMatches.map((row) => normalizeActivationForMixer(row));
     setActiveTransmissions((prev) => {
-      const toAdd = enriched.filter(
-        (e) =>
-          !prev.some(
-            (t) =>
-              t.id === e.id ||
-              (!!t.name && !!e.name && t.name.toLowerCase() === e.name.toLowerCase()),
-          ),
-      );
+      const existingIds = new Set(prev.map((t) => t.id ?? t.name));
+      const toAdd = enriched.filter((e) => !existingIds.has(e.id ?? e.name));
+      const alreadyActive = enriched.length - toAdd.length;
       if (toAdd.length === 0) {
-        toast.success(`⟁ All ${resonanceMatches.length} voice-matched transmissions already active in your field`);
+        toast.success(`⟁ All ${enriched.length} transmissions already active in your field`);
         return prev;
       }
-      toast.success(`⟁ ${toAdd.length} Siddha transmissions activated to your biofield`);
+      toast.success(
+        `⟁ ${toAdd.length} activated${alreadyActive > 0 ? ` · ${alreadyActive} already running` : ''}`,
+      );
       return [...prev, ...toAdd];
     });
   }, [resonanceMatches, normalizeActivationForMixer]);
@@ -2258,48 +2275,150 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
 
                   {resonanceMatches.length > 0 && (
                     <div className="mt-4 rounded-[28px] border border-white/[0.06] bg-white/[0.02] p-4">
+                      {/* ── HEADER ── */}
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-[13px] font-black uppercase tracking-[0.12em] text-[#D4AF37]/75">
-                          Top 33 — full library match
-                        </p>
-                        <button
-                          type="button"
-                          onClick={activateAllTop33ToField}
-                          className="rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-4 py-2 text-[13px] font-black uppercase tracking-[0.08em] text-[#D4AF37]"
-                        >
-                          Activate All 33 to Field
-                        </button>
-                      </div>
-                      <div className="space-y-2">
-                        {(showAllTop33 ? resonanceMatches : resonanceMatches.slice(0, 10)).map((m, i) => (
-                          <div key={`res-${m.id}-${i}`} className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
-                            <span
-                              className="w-10 flex-shrink-0 text-right text-[13px] font-black tabular-nums"
-                              style={{ color: i === 0 ? '#D4AF37' : i < 3 ? 'rgba(212,175,55,0.75)' : 'rgba(255,255,255,0.5)' }}
+                        <div>
+                          <p className="text-[11px] font-black uppercase tracking-[0.15em] text-[#D4AF37]/75">
+                            Top 33 — Full Library Match
+                          </p>
+                          <p className="mt-0.5 text-[10px] text-white/35">
+                            {resonanceMatches.filter((r) =>
+                              activeTransmissions.some((t) => t.id === r.id || t.name === r.name),
+                            ).length}{' '}
+                            / {resonanceMatches.length} active in your field
+                          </p>
+                        </div>
+                        {/* ── ACTIVATE BUTTON ── */}
+                        {(() => {
+                          const activeCount = resonanceMatches.filter((r) =>
+                            activeTransmissions.some((t) => t.id === r.id || t.name === r.name),
+                          ).length;
+                          const allActive = activeCount === resonanceMatches.length;
+                          return (
+                            <button
+                              type="button"
+                              onClick={activateAllTop33ToField}
+                              className="rounded-full px-4 py-2 text-[11px] font-black uppercase tracking-[0.12em] transition-all duration-300"
+                              style={{
+                                background: allActive
+                                  ? 'rgba(212,175,55,0.08)'
+                                  : 'rgba(212,175,55,0.15)',
+                                border: allActive
+                                  ? '1px solid rgba(212,175,55,0.25)'
+                                  : '1px solid rgba(212,175,55,0.5)',
+                                color: allActive ? 'rgba(212,175,55,0.5)' : '#D4AF37',
+                                boxShadow: allActive ? 'none' : '0 0 18px rgba(212,175,55,0.2)',
+                              }}
                             >
-                              {m.pct}%
-                            </span>
-                            <div className="h-2 min-w-[80px] flex-1 overflow-hidden rounded-full bg-white/[0.06]">
-                              <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: `${m.pct}%` }}
-                                transition={{ delay: i * 0.04, duration: 0.65 }}
-                                className="h-full rounded-full"
-                                style={{ background: i === 0 ? '#D4AF37' : i < 3 ? 'rgba(212,175,55,0.55)' : '#D4AF37' }}
-                              />
-                            </div>
-                            <span className="min-w-0 flex-1 text-[13px] font-bold text-white/80">{m.name}</span>
-                            <span className="text-[13px] text-white/45">{m.rowCategory || m.type}</span>
-                          </div>
-                        ))}
+                              {allActive
+                                ? '⟁ All Active'
+                                : `⟁ Activate ${resonanceMatches.length - activeCount} to Field`}
+                            </button>
+                          );
+                        })()}
                       </div>
+                      {/* ── ROW LIST ── */}
+                      <div className="space-y-1.5">
+                        {(showAllTop33 ? resonanceMatches : resonanceMatches.slice(0, 10)).map((row, idx) => {
+                          const isActive = activeTransmissions.some(
+                            (t) => t.id === row.id || t.name === row.name,
+                          );
+                          return (
+                            <div
+                              key={row.id ?? row.name ?? idx}
+                              className="flex items-center gap-3 rounded-[16px] px-3 py-2.5 transition-all duration-300"
+                              style={{
+                                background: isActive
+                                  ? 'rgba(212,175,55,0.06)'
+                                  : 'rgba(255,255,255,0.02)',
+                                border: isActive
+                                  ? '1px solid rgba(212,175,55,0.2)'
+                                  : '1px solid rgba(255,255,255,0.04)',
+                              }}
+                            >
+                              {/* Pct bar */}
+                              <div className="flex w-10 shrink-0 flex-col items-center gap-0.5">
+                                <span
+                                  className="text-[12px] font-black"
+                                  style={{ color: isActive ? '#D4AF37' : 'rgba(255,255,255,0.5)' }}
+                                >
+                                  {row.pct}%
+                                </span>
+                                <div className="h-[3px] w-10 overflow-hidden rounded-full bg-white/10">
+                                  <div
+                                    className="h-full rounded-full transition-all duration-700"
+                                    style={{
+                                      width: `${row.pct}%`,
+                                      background: isActive
+                                        ? '#D4AF37'
+                                        : 'rgba(255,255,255,0.25)',
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                              {/* Name + category */}
+                              <div className="flex min-w-0 flex-1 flex-col">
+                                <span
+                                  className="truncate text-[12px] font-bold leading-tight"
+                                  style={{ color: isActive ? '#D4AF37' : 'rgba(255,255,255,0.85)' }}
+                                >
+                                  {row.name}
+                                </span>
+                                {row.rowCategory && (
+                                  <span className="text-[9px] font-semibold uppercase tracking-[0.12em] text-white/30">
+                                    {row.rowCategory}
+                                  </span>
+                                )}
+                              </div>
+                              {/* Active badge OR tap-to-activate */}
+                              {isActive ? (
+                                <span
+                                  className="shrink-0 rounded-full px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.15em]"
+                                  style={{
+                                    background: 'rgba(212,175,55,0.12)',
+                                    color: '#D4AF37',
+                                    border: '1px solid rgba(212,175,55,0.25)',
+                                  }}
+                                >
+                                  ACTIVE
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const enriched = normalizeActivationForMixer(row);
+                                    setActiveTransmissions((prev) =>
+                                      prev.some((t) => t.id === enriched.id || t.name === enriched.name)
+                                        ? prev
+                                        : [...prev, enriched],
+                                    );
+                                    toast.success(`⟁ ${row.name} activated`);
+                                  }}
+                                  className="shrink-0 rounded-full px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.15em] transition-all"
+                                  style={{
+                                    background: 'transparent',
+                                    color: 'rgba(255,255,255,0.3)',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                  }}
+                                >
+                                  + Add
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {/* ── SHOW MORE TOGGLE ── */}
                       {resonanceMatches.length > 10 && (
                         <button
                           type="button"
-                          onClick={() => setShowAllTop33((v) => !v)}
-                          className="mt-3 w-full rounded-2xl border border-white/[0.08] py-3 text-[13px] font-bold text-[#D4AF37]/85"
+                          onClick={() => setShowAllTop33((prev) => !prev)}
+                          className="mt-3 w-full rounded-[14px] py-2 text-[10px] font-black uppercase tracking-[0.15em] text-white/30 transition-all hover:text-white/60"
+                          style={{ border: '1px solid rgba(255,255,255,0.06)' }}
                         >
-                          {showAllTop33 ? 'Show first 10' : 'Show all 33'}
+                          {showAllTop33
+                            ? '↑ Show First 10'
+                            : `↓ Show All ${resonanceMatches.length}`}
                         </button>
                       )}
                     </div>
