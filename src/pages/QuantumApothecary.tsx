@@ -1360,6 +1360,11 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
           })
           .slice(0, 10);
       });
+      // Resonance % rankings (Limbic-Arc style) — deterministic per scan
+      const RES_PCTS = [99, 94, 89, 84, 80, 76, 73, 70, 67, 64];
+      setResonanceMatches(
+        voiceMatched.slice(0, 8).map((m, i) => ({ ...m, pct: RES_PCTS[i] ?? 60 })),
+      );
       setShowActivationSuggestions(true);
       const mixerNadi = coerceVoiceNadiToEnum(result.nadiReading);
       const mixerDosha = String(result.dominantDosha || 'Vata').split(/[\s(/]/)[0] || 'Vata';
