@@ -47,6 +47,7 @@ import { getActiveStudentId } from '@/lib/codex/students';
 import { curateTransmission } from '@/lib/codex/curatorClient';
 import { syncPendingTransmissionsOnce } from '@/lib/codex/codexSync';
 import UserChatHistory from '@/components/UserChatHistory';
+import { useChatMessages } from '@/hooks/useChatMessages';
 import { toast } from 'sonner';
 
 const NadiScanner = lazy(() => import('@/components/NadiScanner'));
@@ -615,6 +616,12 @@ function QuantumApothecaryInner() {
   const resumeSessionParam = searchParams.get('session');
   const { user } = useAuth();
   const { t, language } = useTranslation();
+  const {
+    messages: syncChatRows,
+    loading: syncChatLoading,
+    saveMessage: persistSyncChatTurn,
+    clearMessages: clearSyncChatMessages,
+  } = useChatMessages('apothecary');
 
   // On mount, sweep any SQI replies that were never accepted by the curator
   // (tab closed mid-stream, network blip, etc.) and replay them silently.
@@ -959,55 +966,35 @@ function QuantumApothecaryInner() {
     [],
   );
 
-  /** Hydrate chat from localStorage once; drop legacy model welcome with embedded calendar date. */
+  /** Hydrate thread from Supabase sync table once (cross-device); skip when resuming a History session from URL. */
+  const syncHydratedOnceRef = useRef(false);
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('sqi_chat_messages');
-      if (!saved) return;
-      const parsed = JSON.parse(saved) as Message[];
-      if (!Array.isArray(parsed) || parsed.length === 0) return;
-      const isStaleDatedWelcome = (text: string) => {
-        const s = text.toLowerCase();
-        return (
-          (s.includes('accessing akasha-neural archive') || s.includes('accessing akasha')) &&
-          (s.includes('syncing with the') || s.includes('syncing with')) &&
-          /\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/.test(s)
-        );
-      };
-      const filtered = parsed.filter((m) => {
-        if (m.role !== 'model') return true;
-        return !isStaleDatedWelcome(m.text || '');
-      });
-      if (filtered.length !== parsed.length) {
-        try {
-          if (filtered.length > 0) {
-            localStorage.setItem('sqi_chat_messages', JSON.stringify(filtered.slice(-SQI_PERSIST_MSG_CAP)));
-          } else {
-            localStorage.removeItem('sqi_chat_messages');
-          }
-        } catch {
-          /* ignore */
-        }
-      }
-      setMessages(filtered);
-    } catch {
-      /* ignore */
-    }
-  }, []);
+    if (syncChatLoading) return;
+    if (resumeSessionParam) return;
+    if (syncHydratedOnceRef.current) return;
+    syncHydratedOnceRef.current = true;
+    if (!syncChatRows.length) return;
+    setMessages(
+      syncChatRows.map((cm) => ({
+        role: cm.role === 'assistant' ? 'model' : 'user',
+        text: cm.content,
+        timestamp: cm.created_at ? new Date(cm.created_at).getTime() : Date.now(),
+        id: cm.id,
+      })),
+    );
+    prevMsgCountRef.current = syncChatRows.length;
+  }, [syncChatLoading, resumeSessionParam, syncChatRows]);
 
   // ── Scroll: single effect, only when a new message is appended ──
   const prevMsgCountRef = useRef(messages.length);
 
   const flushSqiLocalStorage = useCallback(() => {
     try {
-      if (messages.length > 0) {
-        localStorage.setItem('sqi_chat_messages', JSON.stringify(messages.slice(-SQI_PERSIST_MSG_CAP)));
-      }
       if (currentSessionId) {
         localStorage.setItem('sqi_current_session_id', currentSessionId);
       }
     } catch { /* ignore quota / private mode */ }
-  }, [messages, currentSessionId]);
+  }, [currentSessionId]);
 
   useEffect(() => {
     flushSqiLocalStorage();
@@ -1150,7 +1137,6 @@ function QuantumApothecaryInner() {
         setMessages(loaded);
         prevMsgCountRef.current = loaded.length;
         try {
-          localStorage.setItem('sqi_chat_messages', JSON.stringify(loaded.slice(-SQI_PERSIST_MSG_CAP)));
           localStorage.setItem('sqi_current_session_id', resumeSessionParam);
         } catch {
           /* ignore */
@@ -1169,7 +1155,6 @@ function QuantumApothecaryInner() {
       setMessages(mapped);
       prevMsgCountRef.current = mapped.length;
       try {
-        localStorage.setItem('sqi_chat_messages', JSON.stringify(mapped.slice(-SQI_PERSIST_MSG_CAP)));
         localStorage.setItem('sqi_current_session_id', resumeSessionParam);
       } catch {
         /* ignore */
@@ -1187,9 +1172,10 @@ function QuantumApothecaryInner() {
     if (isTyping) return;
     if (!window.confirm('Start a new SQI chat? This clears the current thread on this device. Saved sessions remain under History.')) return;
     try {
-      localStorage.removeItem('sqi_chat_messages');
       localStorage.removeItem('sqi_current_session_id');
     } catch { /* ignore */ }
+    void clearSyncChatMessages();
+    syncHydratedOnceRef.current = false;
     setCurrentSessionId(null);
     setInput('');
     setPendingImage(null);
@@ -1197,7 +1183,7 @@ function QuantumApothecaryInner() {
     setMessages([]);
     prevMsgCountRef.current = 0;
     setSessionsOpen(false);
-  }, [isTyping]);
+  }, [isTyping, clearSyncChatMessages]);
 
   const handleSendMessage = async (
     overrideText?: string,
@@ -1211,6 +1197,7 @@ function QuantumApothecaryInner() {
     const userMsg: Message = { role: 'user', text: displayText, timestamp: Date.now() };
     const allMsgs = [...messages, userMsg];
     setMessages(allMsgs);
+    void persistSyncChatTurn({ role: 'user', content: displayText });
     setInput('');
     // Reset textarea height after clearing
     if (chatInputRef.current) {
@@ -1322,6 +1309,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
           };
           const persistedMessages = [...allMsgs, assistantMsg];
           await persistMessages(persistedMessages);
+          void persistSyncChatTurn({ role: 'assistant', content: finalText });
           // Weave this transmission into the Akashic Codex.
           if (user?.id && finalText?.trim()) {
             const sessionIdAtSend = currentSessionId;

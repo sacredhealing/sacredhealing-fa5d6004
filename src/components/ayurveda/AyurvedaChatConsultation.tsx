@@ -1,17 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, X, Sparkles, Loader2, Leaf, Flame, Moon, Heart } from 'lucide-react';
 import { toast } from 'sonner';
 import type { AyurvedaUserProfile, DoshaProfile } from '@/lib/ayurvedaTypes';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useChatMessages, type ChatMessage } from '@/hooks/useChatMessages';
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ayurveda-chat`;
-
-interface ChatMessage {
-  role: 'user' | 'assistant';
-  content: string;
-}
 
 interface AyurvedaChatConsultationProps {
   profile: AyurvedaUserProfile | null;
@@ -471,7 +467,14 @@ const NadiPulse = () => {
 
 export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> = ({ profile, dosha, onClose }) => {
   const { t, language } = useTranslation();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const { messages: persistedMsgs, loading: chatHistoryLoading, saveMessage } = useChatMessages('ayurveda');
+  const [streamingAssistant, setStreamingAssistant] = useState<string | null>(null);
+  const displayMessages = useMemo((): ChatMessage[] => {
+    if (streamingAssistant !== null) {
+      return [...persistedMsgs, { role: 'assistant', content: streamingAssistant }];
+    }
+    return persistedMsgs;
+  }, [persistedMsgs, streamingAssistant]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
@@ -501,16 +504,23 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
     if (msgsRef.current) {
       msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [displayMessages]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isLoading || chatHistoryLoading) return;
 
-    const userMsg: ChatMessage = { role: 'user', content: input };
-    setMessages((prev) => [...prev, userMsg]);
+    const trimmed = input.trim();
+    const userMsg: ChatMessage = { role: 'user', content: trimmed };
+    const apiMessages = [...persistedMsgs, userMsg].map((m) => ({
+      role: m.role === 'assistant' ? 'assistant' : 'user',
+      content: m.content,
+    }));
+
+    await saveMessage(userMsg);
     setInput('');
     setIsLoading(true);
+    setStreamingAssistant('');
 
     let assistantContent = '';
 
@@ -519,10 +529,7 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [...messages, userMsg].map((m) => ({
-            role: m.role === 'assistant' ? 'assistant' : 'user',
-            content: m.content,
-          })),
+          messages: apiMessages,
           profile,
           dosha,
           language,
@@ -534,14 +541,13 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
         else if (response.status === 402) toast.error(t('ayurvedaChat.usageLimit', 'Usage limits reached.'));
         else toast.error(t('ayurvedaChat.connectFail', 'Failed to connect. Please try again.'));
         setIsLoading(false);
+        setStreamingAssistant(null);
         return;
       }
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let textBuffer = '';
-
-      setMessages((prev) => [...prev, { role: 'assistant', content: '' }]);
 
       while (true) {
         const { done, value } = await reader.read();
@@ -565,11 +571,7 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
             const content = parsed.choices?.[0]?.delta?.content as string | undefined;
             if (content) {
               assistantContent += content;
-              setMessages((prev) => {
-                const next = [...prev];
-                next[next.length - 1] = { role: 'assistant', content: assistantContent };
-                return next;
-              });
+              setStreamingAssistant(assistantContent);
             }
           } catch {
             textBuffer = `${line}\n${textBuffer}`;
@@ -577,17 +579,20 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
           }
         }
       }
+
+      if (assistantContent.trim()) {
+        await saveMessage({ role: 'assistant', content: assistantContent });
+      }
     } catch (err) {
       console.error(err);
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: t('ayurvedaChat.connectionInterrupted', 'Forgive me, dear seeker — my Akasha channel is briefly interrupted. Please try again.'),
-        },
-      ]);
+      const errContent = t(
+        'ayurvedaChat.connectionInterrupted',
+        'Forgive me, dear seeker — my Akasha channel is briefly interrupted. Please try again.',
+      );
+      await saveMessage({ role: 'assistant', content: errContent });
     } finally {
       setIsLoading(false);
+      setStreamingAssistant(null);
     }
   };
 
@@ -662,7 +667,20 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
           </div>
 
           <div className="sqi-msgs" ref={msgsRef}>
-            {messages.length === 0 && (
+            {chatHistoryLoading && persistedMsgs.length === 0 && (
+              <div className="sqi-welcome">
+                <Loader2
+                  style={{
+                    width: 28,
+                    height: 28,
+                    margin: '0 auto 12px',
+                    color: 'hsl(42 68% 54%)',
+                    animation: 'sqiSpin 1s linear infinite',
+                  }}
+                />
+              </div>
+            )}
+            {!chatHistoryLoading && displayMessages.length === 0 && (
               <div className="sqi-welcome">
                 <div className="sqi-welcome-emoji">🔱</div>
                 <div className="sqi-welcome-title">{t('ayurvedaChat.namasteTitle', 'Namaste, Dear Seeker')}</div>
@@ -697,9 +715,9 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
               </div>
             )}
 
-            {messages.map((msg, index) => (
+            {displayMessages.map((msg, index) => (
               <motion.div
-                key={index}
+                key={msg.id ?? `msg-${index}-${msg.role}`}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={`sqi-msg-row ${msg.role === 'user' ? 'user' : 'ai'}`}
@@ -749,7 +767,7 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
               </motion.div>
             ))}
 
-            {isLoading && messages[messages.length - 1]?.role !== 'assistant' && <NadiPulse />}
+            {isLoading && displayMessages[displayMessages.length - 1]?.role !== 'assistant' && <NadiPulse />}
           </div>
 
           <form className="sqi-input-bar" onSubmit={handleSend}>
@@ -758,9 +776,9 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={t('ayurvedaChat.inputPlaceholder', 'Ask Agastya Muni about your healing path...')}
-              disabled={isLoading}
+              disabled={isLoading || chatHistoryLoading}
             />
-            <button type="submit" className="sqi-send" disabled={isLoading || !input.trim()}>
+            <button type="submit" className="sqi-send" disabled={isLoading || chatHistoryLoading || !input.trim()}>
               {isLoading ? (
                 <Loader2
                   style={{
