@@ -1916,23 +1916,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                         {renderChatText(msg.text, 'user')}
                       </div>
                     </div>
-                    <div className="mt-1 flex max-w-[85%] flex-wrap items-center justify-end gap-x-3 gap-y-1">
-                      <p className="text-[10px] tabular-nums text-white/35">{tsLabel}</p>
-                      <button
-                        type="button"
-                        onClick={() => handleCopyMsg(msg.text, msgKey)}
-                        aria-label="Copy message"
-                        className="text-[10px] font-bold uppercase tracking-widest"
-                        style={{
-                          background: 'transparent',
-                          border: 'none',
-                          cursor: 'pointer',
-                          color: copiedMsgKey === msgKey ? '#22c55e' : '#D4AF37',
-                        }}
-                      >
-                        {copiedMsgKey === msgKey ? '✓ Copied' : 'Copy'}
-                      </button>
-                    </div>
+                    <p className="mt-1 max-w-[85%] text-right text-[10px] tabular-nums text-white/35">{tsLabel}</p>
                   </>
                 ) : (
                   <>
