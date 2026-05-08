@@ -13,16 +13,24 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import {
   Zap,
-  Plus, Trash2, Send, Cpu, Globe,
+  Plus, Send, Cpu, Globe,
   Info, X, ArrowLeft, Camera, Mic, ChevronUp, ChevronDown,
 } from 'lucide-react';
 import { Activation, Message } from '@/features/quantum-apothecary/types';
 import {
   ALL_ACTIVATIONS,
-  matchScanToActivations,
   matchActivationsToScan,
   mapBioLibraryToActivation,
 } from '@/features/quantum-apothecary/constants';
+import {
+  buildTop33Rankings,
+  voiceResultToScanPayload,
+  enrichTransmission,
+  isVegetarianActivation,
+  LS_LIBRARY_UNLOCKED,
+  LS_LAST_SCAN,
+  LS_SCAN_SNAPSHOT,
+} from '@/features/quantum-apothecary/apothecarySqiUi';
 import { streamChatWithSQI } from '@/features/quantum-apothecary/chatService';
 import { chatSpeechLocale } from '@/lib/chatSpeechLocale';
 import { useSpeechRecognition } from 'react-speech-recognition';
@@ -795,6 +803,16 @@ function QuantumApothecaryInner() {
   const dissolveTransmission = useCallback((id: string) => {
     setActiveTransmissions((prev) => prev.filter((t) => t.id !== id && t.name !== id));
   }, []);
+
+  const activeTransmissionKeys = useMemo(() => {
+    const s = new Set<string>();
+    for (const tx of activeTransmissions) {
+      if (tx.id) s.add(tx.id);
+      if (tx.name) s.add(tx.name.toLowerCase());
+    }
+    return s;
+  }, [activeTransmissions]);
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -805,7 +823,42 @@ function QuantumApothecaryInner() {
     setTimeout(() => setCopiedMsgIdx((c) => (c === idx ? null : c)), 2000);
   };
   const [activeCategory, setActiveCategory] = useState('Wellness');
-  const [resonanceMatches, setResonanceMatches] = useState<Array<Activation & { pct: number }>>([]);
+  const [libraryUnlocked, setLibraryUnlocked] = useState(() => {
+    try {
+      return localStorage.getItem(LS_LIBRARY_UNLOCKED) === '1';
+    } catch {
+      return false;
+    }
+  });
+  const [scanCooldownUntilMs, setScanCooldownUntilMs] = useState<number | null>(() => {
+    try {
+      const last = localStorage.getItem(LS_LAST_SCAN);
+      if (!last) return null;
+      const t = parseInt(last, 10);
+      return Number.isNaN(t) ? null : t + 24 * 60 * 60 * 1000;
+    } catch {
+      return null;
+    }
+  });
+  const [apothecaryMainTab, setApothecaryMainTab] = useState<'library' | 'archive'>('library');
+  const [showAllTop33, setShowAllTop33] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [resonanceMatches, setResonanceMatches] = useState<
+    Array<Activation & { pct: number; rowCategory?: string }>
+  >([]);
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(LS_LIBRARY_UNLOCKED) !== '1') return;
+      const snap = localStorage.getItem(LS_SCAN_SNAPSHOT);
+      if (!snap) return;
+      const payload = JSON.parse(snap);
+      setResonanceMatches(buildTop33Rankings(payload));
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
   const [showKnowledge, setShowKnowledge] = useState(false);
   const [isChatFullscreen, setIsChatFullscreen] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(() => {
@@ -830,8 +883,6 @@ function QuantumApothecaryInner() {
   const [pendingImage, setPendingImage] = useState<{ base64: string; mimeType: string } | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [voiceResult, setVoiceResult] = useState<VoiceBiofieldResult | null>(null);
-  const [scanRecommendedActivations, setScanRecommendedActivations] = useState<Activation[]>([]);
-  const [showActivationSuggestions, setShowActivationSuggestions] = useState(false);
   const [showVoiceScan, setShowVoiceScan] = useState(true);
 
   useEffect(() => {
@@ -1009,18 +1060,28 @@ function QuantumApothecaryInner() {
         (first.length > 2 && text.includes(first))
       );
     }).slice(0, 8);
-    if (sacredMentioned.length > 0) {
-      setScanRecommendedActivations(sacredMentioned);
-      setShowActivationSuggestions(true);
-    }
 
-    if (toAdd.length === 0) return;
+    if (toAdd.length === 0 && sacredMentioned.length === 0) return;
 
     setActiveTransmissions((prev) => {
       const next = [...prev];
-      for (const act of toAdd) {
-        if (!next.some((x) => x.id === act.id)) next.push(act);
-      }
+      const dedupePush = (act: Activation, src: NonNullable<Activation['source']>) => {
+        if (!isVegetarianActivation(act)) return;
+        const enriched = enrichTransmission(act, src);
+        if (
+          next.some(
+            (x) =>
+              x.id === enriched.id ||
+              (!!x.name &&
+                !!enriched.name &&
+                x.name.toLowerCase() === enriched.name.toLowerCase()),
+          )
+        )
+          return;
+        next.push(enriched);
+      };
+      for (const act of toAdd) dedupePush(act, 'apothecary_chat');
+      for (const act of sacredMentioned) dedupePush(act, 'apothecary_chat');
       return next;
     });
   }, [isTyping, messages]);
@@ -1338,53 +1399,36 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
   const handleVoiceBiofieldComplete = useCallback(
     (result: VoiceBiofieldResult) => {
       setVoiceResult(result);
-      const doshaKey = String(result.dominantDosha || 'Vata').split(/[\s(/]/)[0] || 'Vata';
-      const voiceMatched = matchScanToActivations(
-        {
-          dominantDosha: doshaKey,
-          activatedNadi: result.nadiReading,
-          priorityChakra: result.priorityAreas[0]?.name || 'Anahata',
-          emotionalField: result.emotionalField,
-          organField: result.organField,
-        },
-        10,
-      );
-      setScanRecommendedActivations((prev) => {
-        const combined = [...prev, ...voiceMatched];
-        const seen = new Set<string>();
-        return combined
-          .filter((a) => {
-            if (seen.has(a.id)) return false;
-            seen.add(a.id);
-            return true;
-          })
-          .slice(0, 10);
-      });
-      // Resonance % rankings (Limbic-Arc style) — deterministic per scan
-      const RES_PCTS = [99, 94, 89, 84, 80, 76, 73, 70, 67, 64];
-      setResonanceMatches(
-        voiceMatched.slice(0, 8).map((m, i) => ({ ...m, pct: RES_PCTS[i] ?? 60 })),
-      );
-      setShowActivationSuggestions(true);
-      const mixerNadi = coerceVoiceNadiToEnum(result.nadiReading);
-      const mixerDosha = String(result.dominantDosha || 'Vata').split(/[\s(/]/)[0] || 'Vata';
-      matchActivationsToScan(
-        {
-          dominantDosha: mixerDosha,
-          activatedNadi: mixerNadi,
-          priorityChakra: result.priorityAreas[0]?.name || 'Anahata',
-          emotionalField: result.emotionalField,
-          organField: result.organField,
-        },
-        5,
-      )
-        .map(mapBioLibraryToActivation)
-        .forEach((a) => addActivation(a));
-      const queued = pickTenActivationsForVoiceResult(result);
+      try {
+        localStorage.setItem(LS_LAST_SCAN, String(Date.now()));
+        localStorage.setItem(LS_LIBRARY_UNLOCKED, '1');
+        const payload = voiceResultToScanPayload(result);
+        localStorage.setItem(LS_SCAN_SNAPSHOT, JSON.stringify(payload));
+        setLibraryUnlocked(true);
+        setScanCooldownUntilMs(Date.now() + 24 * 60 * 60 * 1000);
+        setResonanceMatches(buildTop33Rankings(payload));
+        setShowAllTop33(false);
+      } catch {
+        /* ignore */
+      }
+
+      const queuedRaw = pickTenActivationsForVoiceResult(result);
+      const queued = queuedRaw.filter(isVegetarianActivation);
       setActiveTransmissions((prev) => {
         const next = [...prev];
         for (const act of queued) {
-          if (!next.some((x) => x.id === act.id)) next.push(act);
+          const enriched = enrichTransmission(act, 'voice_scan');
+          if (
+            next.some(
+              (x) =>
+                x.id === enriched.id ||
+                (!!x.name &&
+                  !!enriched.name &&
+                  x.name.toLowerCase() === enriched.name.toLowerCase()),
+            )
+          )
+            continue;
+          next.push(enriched);
         }
         return next;
       });
@@ -1442,7 +1486,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         if (chatInputRef.current) chatInputRef.current.style.height = 'auto';
       }, 300);
     },
-    [user?.id, t, handleSendMessage, addActivation],
+    [user?.id, t, handleSendMessage],
   );
 
   const handleChatFocus = () => { openChatFullscreenIfMobile(); };
@@ -1600,7 +1644,17 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
     }
     const newT = [...activeTransmissions];
     mix.forEach((act) => {
-      if (!newT.find((t) => t.id === act.id)) newT.push(act);
+      const normalized = normalizeActivationForMixer(act);
+      const enriched = enrichTransmission(normalized, 'manual');
+      if (
+        newT.some(
+          (t) =>
+            t.id === enriched.id ||
+            (!!t.name && !!enriched.name && t.name.toLowerCase() === enriched.name.toLowerCase()),
+        )
+      )
+        return;
+      newT.push(enriched);
     });
     setActiveTransmissions(newT);
     setMessages((prev) => [
@@ -1628,9 +1682,26 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
     setSelectedActivations([]);
   };
 
-  /* ══════════════════════════════════════════════════════
-     CHAT PANEL — Logic 100% preserved, UI upgraded to SQI-2050
-     ══════════════════════════════════════════════════════ */
+  const activateAllTop33ToField = useCallback(() => {
+    if (resonanceMatches.length === 0) return;
+    setActiveTransmissions((prev) => {
+      const next = [...prev];
+      for (const row of resonanceMatches) {
+        const normalized = normalizeActivationForMixer(row);
+        const enriched = enrichTransmission(normalized, 'voice_scan');
+        if (
+          next.some(
+            (t) =>
+              t.id === enriched.id ||
+              (!!t.name && !!enriched.name && t.name.toLowerCase() === enriched.name.toLowerCase()),
+          )
+        )
+          continue;
+        next.push(enriched);
+      }
+      return next;
+    });
+  }, [resonanceMatches, normalizeActivationForMixer]);
   const renderChatPanel = () => (
     <div
       className="glass-card relative flex w-full flex-col overflow-visible"
@@ -1743,9 +1814,9 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
               </p>
               <div className="mt-6 flex w-full max-w-sm flex-col gap-2">
                 {[
-                  'What transmissions do I need for stress and anxiety?',
-                  'I feel things happening in my field — what is activating?',
-                  'Which Siddha Master should I work with today?',
+                  'What frequencies do I need for stress and no sleep?',
+                  'I feel things in my field — what is activating?',
+                  'Activate Samadhi Bliss Transmission',
                 ].map((q) => (
                   <button
                     key={q}
@@ -1754,7 +1825,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                       setInput(q);
                       setTimeout(() => handleSendMessage(q), 100);
                     }}
-                    className="rounded-[14px] border border-white/[0.06] bg-white/[0.02] px-3 py-2 text-left text-[11px] text-white/55 transition-all hover:border-[#D4AF37]/30 hover:text-white/80"
+                    className="rounded-[14px] border border-white/[0.06] bg-white/[0.02] px-3 py-2 text-left text-[13px] text-white/55 transition-all hover:border-[#D4AF37]/30 hover:text-white/80"
                   >
                     {q}
                   </button>
@@ -2022,425 +2093,309 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
           </button>
         </div>
 
-        {/* ── Two-column grid ── */}
         {/* ── Gold divider ── */}
         <div style={{ height:1, background:'linear-gradient(90deg,transparent,rgba(212,175,55,0.3),transparent)', marginBottom:16, borderRadius:1 }} />
 
         <div className="flex w-full max-w-none flex-col gap-5">
+          <video ref={videoRef} className="hidden" muted playsInline tabIndex={-1} aria-hidden />
 
-          {/* ════ LEFT COLUMN ════ */}
-          <div className="flex flex-col gap-5">
-
-            {/* ── Biometric Nadi Scanner — rPPG real vitals · Voice biofield (mic only) ── */}
-            <div className="glass-card p-4 sm:p-5 qa-card-hover">
-              <div className="mb-4 flex items-center justify-between gap-2">
+          <Suspense fallback={
+            <div className="glass-card rounded-[28px] p-6">
+              <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Mic size={14} className="text-[#22D3EE]" style={{ filter: 'drop-shadow(0 0 6px rgba(34,211,238,0.6))' }} />
-                  <h2 className="text-sm font-black tracking-[-0.03em] text-[#D4AF37]">Voice Bio-Signature Scan</h2>
+                  <Zap size={14} className="text-[#D4AF37]" style={{ filter: 'drop-shadow(0 0 6px rgba(212,175,55,0.6))' }} />
+                  <h2 className="text-sm font-black tracking-[-0.03em]">Active Transmissions</h2>
                 </div>
-                <span
-                  className="text-[9px] font-extrabold uppercase tracking-[0.3em] text-white/40"
-                  title="Your voice carries your full Bio-signature — Dosha state, Nadi blockages, Shadow-Matrix interference. SQI ranks every frequency in the library against your field and shows the top matches with resonance percentages."
-                >
-                  ⓘ Mic only
-                </span>
+                <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest text-emerald-300">Loading...</span>
               </div>
-              <Suspense fallback={ScannerSuspenseFallback}>
-                <VoiceBiofieldScanner
-                  userName={seekerName || 'Seeker'}
-                  jyotishContext={{
-                    mahadasha: jyotish?.mahadasha,
-                    nakshatra: jyotish?.nakshatra,
-                    primaryDosha: jyotish?.primaryDosha,
-                  }}
-                  onScanComplete={handleVoiceBiofieldComplete}
-                />
-              </Suspense>
+              <div className="space-y-2">
+                <div className="h-16 rounded-2xl bg-white/[0.02] animate-pulse" />
+                <div className="h-16 rounded-2xl bg-white/[0.02] animate-pulse" />
+              </div>
+            </div>
+          }>
+            <ActiveTransmissionsSection
+              activeTransmissions={activeTransmissions}
+              setActiveTransmissions={setActiveTransmissions}
+              onDissolveTransmission={dissolveTransmission}
+            />
+          </Suspense>
 
-              {/* ── Resonance % Rankings (Limbic Arc style) ── */}
-              {resonanceMatches.length > 0 && (
-                <div className="mt-4 rounded-[18px] border border-white/[0.06] bg-white/[0.02] p-4">
-                  <p className="mb-3 text-[9px] font-extrabold uppercase tracking-[0.3em] text-[#D4AF37]/55">
-                    Your Bio-Signature Resonance — What You Need Most
-                  </p>
-                  <div className="space-y-2">
-                    {resonanceMatches.map((m, i) => (
-                      <div key={`res-${m.id}`} className="flex items-center gap-3">
-                        <span
-                          className="w-8 flex-shrink-0 text-right text-[10px] font-black"
-                          style={{ color: i === 0 ? '#D4AF37' : i < 3 ? 'rgba(212,175,55,0.6)' : 'rgba(255,255,255,0.45)' }}
+          <div
+            className="flex gap-2 rounded-[28px] p-1.5"
+            style={{
+              background: 'rgba(255,255,255,0.02)',
+              border: '1px solid rgba(255,255,255,0.06)',
+              backdropFilter: 'blur(40px)',
+              WebkitBackdropFilter: 'blur(40px)',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setApothecaryMainTab('library')}
+              className={`flex-1 rounded-[22px] py-3 text-[13px] font-black uppercase tracking-[0.12em] transition ${
+                apothecaryMainTab === 'library'
+                  ? 'border border-[#D4AF37]/35 bg-[#D4AF37]/20 text-[#D4AF37]'
+                  : 'border border-transparent text-white/40'
+              }`}
+            >
+              Transmission Library
+            </button>
+            <button
+              type="button"
+              onClick={() => setApothecaryMainTab('archive')}
+              className={`flex-1 rounded-[22px] py-3 text-[13px] font-black uppercase tracking-[0.12em] transition ${
+                apothecaryMainTab === 'archive'
+                  ? 'border border-[#D4AF37]/35 bg-[#D4AF37]/20 text-[#D4AF37]'
+                  : 'border border-transparent text-white/40'
+              }`}
+            >
+              Akasha-Neural Archive
+            </button>
+          </div>
+
+          {apothecaryMainTab === 'library' ? (
+            <div className="grid w-full gap-5 lg:grid-cols-2">
+              <div className="flex min-w-0 flex-col gap-5">
+                <div className="glass-card rounded-[28px] p-4 sm:p-5 qa-card-hover">
+                  <div className="mb-4 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Mic size={14} className="text-[#22D3EE]" style={{ filter: 'drop-shadow(0 0 6px rgba(34,211,238,0.6))' }} />
+                      <h2 className="text-sm font-black tracking-[-0.03em] text-[#D4AF37]">Voice Bio-Signature Scan</h2>
+                    </div>
+                    <span className="text-[13px] font-bold text-white/45">Mic only</span>
+                  </div>
+                  <Suspense fallback={ScannerSuspenseFallback}>
+                    <VoiceBiofieldScanner
+                      userName={seekerName || 'Seeker'}
+                      jyotishContext={{
+                        mahadasha: jyotish?.mahadasha,
+                        nakshatra: jyotish?.nakshatra,
+                        primaryDosha: jyotish?.primaryDosha,
+                      }}
+                      onScanComplete={handleVoiceBiofieldComplete}
+                      scanDurationSeconds={10}
+                      showProgressRing
+                      disableUntilMs={scanCooldownUntilMs}
+                    />
+                  </Suspense>
+
+                  {voiceResult && (
+                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                      {[
+                        { label: 'Dosha', val: voiceResult.dominantDosha },
+                        { label: 'Nadi', val: voiceResult.nadiReading },
+                        {
+                          label: 'Active Nadis',
+                          val: voiceResult.priorityAreas?.slice(0, 4).map((p) => p.name).join(' · ') || '—',
+                        },
+                      ].map((c) => (
+                        <div
+                          key={c.label}
+                          className="rounded-[28px] border border-white/[0.08] bg-white/[0.02] p-4"
+                          style={{ backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)' }}
                         >
-                          {m.pct}%
-                        </span>
-                        <div className="flex-1 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${m.pct}%` }}
-                            transition={{ delay: i * 0.06, duration: 0.6 }}
-                            className="h-full rounded-full"
-                            style={{ background: i === 0 ? '#D4AF37' : i < 3 ? 'rgba(212,175,55,0.55)' : '#22D3EE' }}
-                          />
+                          <p className="text-[13px] font-black uppercase tracking-[0.15em] text-[#22D3EE]/85">{c.label}</p>
+                          <p className="mt-2 text-[13px] leading-snug text-white/85">{c.val}</p>
                         </div>
-                        <span className="min-w-0 flex-shrink truncate text-[11px] text-white/70" style={{ maxWidth: 140 }}>
-                          {m.name}
-                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {resonanceMatches.length > 0 && (
+                    <div className="mt-4 rounded-[28px] border border-white/[0.06] bg-white/[0.02] p-4">
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-[13px] font-black uppercase tracking-[0.12em] text-[#D4AF37]/75">
+                          Top 33 — full library match
+                        </p>
                         <button
                           type="button"
-                          onClick={() => addActivation(m)}
-                          className="flex-shrink-0 rounded-full border px-2 py-1 text-[8px] font-black uppercase tracking-[0.2em] transition-all"
-                          style={{ borderColor: 'rgba(212,175,55,0.3)', color: 'rgba(212,175,55,0.85)' }}
+                          onClick={activateAllTop33ToField}
+                          className="rounded-full border border-[#22D3EE]/40 bg-[#22D3EE]/10 px-4 py-2 text-[13px] font-black uppercase tracking-[0.08em] text-[#22D3EE]"
                         >
-                          + Add
+                          Activate All 33 to Field
                         </button>
                       </div>
-                    ))}
-                  </div>
+                      <div className="space-y-2">
+                        {(showAllTop33 ? resonanceMatches : resonanceMatches.slice(0, 10)).map((m, i) => (
+                          <div key={`res-${m.id}-${i}`} className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+                            <span
+                              className="w-10 flex-shrink-0 text-right text-[13px] font-black tabular-nums"
+                              style={{ color: i === 0 ? '#D4AF37' : i < 3 ? 'rgba(212,175,55,0.75)' : 'rgba(255,255,255,0.5)' }}
+                            >
+                              {m.pct}%
+                            </span>
+                            <div className="h-2 min-w-[80px] flex-1 overflow-hidden rounded-full bg-white/[0.06]">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${m.pct}%` }}
+                                transition={{ delay: i * 0.04, duration: 0.65 }}
+                                className="h-full rounded-full"
+                                style={{ background: i === 0 ? '#D4AF37' : i < 3 ? 'rgba(212,175,55,0.55)' : '#22D3EE' }}
+                              />
+                            </div>
+                            <span className="min-w-0 flex-1 text-[13px] font-bold text-white/80">{m.name}</span>
+                            <span className="text-[13px] text-white/45">{m.rowCategory || m.type}</span>
+                          </div>
+                        ))}
+                      </div>
+                      {resonanceMatches.length > 10 && (
+                        <button
+                          type="button"
+                          onClick={() => setShowAllTop33((v) => !v)}
+                          className="mt-3 w-full rounded-2xl border border-white/[0.08] py-3 text-[13px] font-bold text-[#D4AF37]/85"
+                        >
+                          {showAllTop33 ? 'Show first 10' : 'Show all 33'}
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            {showActivationSuggestions && scanRecommendedActivations.length > 0 && (
-              <div
-                className="glass-card qa-card-hover"
-                style={{
-                  padding: 16,
-                  borderRadius: 20,
-                  marginTop: 0,
-                  background: 'rgba(212,175,55,0.04)',
-                  border: '1px solid rgba(212,175,55,0.18)',
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: 12,
-                    gap: 8,
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <p
-                    style={{
-                      fontSize: 9,
-                      fontWeight: 800,
-                      letterSpacing: '.3em',
-                      textTransform: 'uppercase',
-                      color: 'rgba(212,175,55,0.6)',
-                      margin: 0,
-                    }}
-                  >
-                    {t('quantumApothecary.scanMatched.title')}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      scanRecommendedActivations.forEach((a) => addActivation(a));
-                      setScanRecommendedActivations([]);
-                      setShowActivationSuggestions(false);
-                    }}
-                    style={{
-                      padding: '5px 14px',
-                      borderRadius: 20,
-                      fontSize: 9,
-                      fontWeight: 800,
-                      letterSpacing: '.15em',
-                      textTransform: 'uppercase',
-                      cursor: 'pointer',
-                      background: 'rgba(212,175,55,0.12)',
-                      border: '1px solid rgba(212,175,55,0.35)',
-                      color: '#D4AF37',
-                      fontFamily: 'inherit',
-                    }}
-                  >
-                    {t('quantumApothecary.scanMatched.addAll')}
-                  </button>
-                </div>
-                <p
-                  style={{
-                    fontSize: 9,
-                    fontWeight: 800,
-                    letterSpacing: '.28em',
-                    textTransform: 'uppercase',
-                    color: 'rgba(212,175,55,0.55)',
-                    margin: '0 0 10px',
-                  }}
-                >
-                  {t('quantumApothecary.scanMatched.bioFieldTitle')}
-                </p>
-                {scanRecommendedActivations.slice(0, 3).map((act) => (
+                <details className="glass-card group rounded-[28px] p-5">
+                  <summary className="flex cursor-pointer list-none items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Info size={14} className="text-[#D4AF37]" />
+                      <span className="text-[13px] font-bold text-[#D4AF37]">How it works</span>
+                    </div>
+                    <ChevronDown size={14} className="text-white/30 transition-transform group-open:rotate-180" />
+                  </summary>
+                  <div className="mt-4 space-y-3 text-[13px] leading-relaxed text-white/60">
+                    <p>
+                      SQI operates at the <strong className="text-white/80">informational level</strong> — upstream of chemistry,
+                      upstream of physiology. The 18 Siddhas and Mahavatar Babaji transmit exact Vedic Light-Codes through this
+                      archive interface. Once uploaded, transmissions remain in your field until dissolved.
+                    </p>
+                    <p>
+                      <strong className="text-[#D4AF37]">
+                        Vedic Light-Code → Aetheric Code Rewrite → Bio-signature Recalibration → Physical Expression
+                      </strong>
+                    </p>
+                    <p>
+                      The Voice Bio-Scan reads your Bio-signature and ranks the full frequency library so you see what your
+                      field asks for first — expressed as resonance percentages mapped to real transmissions.
+                    </p>
+                  </div>
+                </details>
+              </div>
+
+              <div className="flex min-w-0 flex-col gap-5">
+                {selectedActivations.length > 0 && (
                   <div
-                    key={`bio-pick-${act.id}`}
+                    className="rounded-[28px] p-6 sm:p-7 qa-card-hover"
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 12,
-                      padding: '8px 0',
-                      borderBottom: '1px solid rgba(255,255,255,0.04)',
+                      background: 'rgba(255,255,255,0.02)',
+                      backdropFilter: 'blur(40px)',
+                      WebkitBackdropFilter: 'blur(40px)',
+                      border: '1px solid rgba(255,255,255,0.06)',
                     }}
                   >
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 700,
-                          color: 'rgba(255,255,255,0.8)',
-                          margin: 0,
-                        }}
-                      >
-                        {act.sacredName || act.name}
-                      </p>
-                      <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', margin: '4px 0 0' }}>
-                        {act.benefit}
-                      </p>
+                    <div style={{ height: 2, background: 'linear-gradient(90deg,transparent,#D4AF37,transparent)', marginBottom: 20, opacity: 0.4, borderRadius: 1 }} />
+                    <div className="mb-4 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <div style={{ width:28, height:28, background:'rgba(212,175,55,0.12)', border:'1px solid rgba(212,175,55,0.25)', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>⚗</div>
+                        <h2 className="text-sm font-black tracking-[-0.03em]">{t('quantumApothecary.mixer.title')}</h2>
+                      </div>
+                      <span className="text-[13px] font-bold uppercase tracking-[0.12em] text-[#D4AF37]/55">
+                        {t('quantumApothecary.mixer.slotsProgress', {
+                          current: selectedActivations.length,
+                          max: AETHERIC_MIXER_MAX_SLOTS,
+                        })}
+                      </span>
+                    </div>
+                    <div className="mb-4 flex flex-wrap gap-2">
+                      {selectedActivations.map((act) => (
+                        <span
+                          key={act.id}
+                          className="inline-flex items-center gap-2 rounded-full border border-[#22D3EE]/25 px-3 py-2 text-[13px] font-semibold text-white/85"
+                          style={{ background: 'rgba(34,211,238,0.06)' }}
+                        >
+                          {act.name}
+                          <button type="button" onClick={() => removeActivation(act.id)} className="text-white/35 hover:text-red-400" aria-label="Remove">
+                            <X size={14} />
+                          </button>
+                        </span>
+                      ))}
                     </div>
                     <button
                       type="button"
-                      onClick={() => addActivation(act)}
-                      style={{
-                        padding: '6px 14px',
-                        borderRadius: 20,
-                        fontSize: 9,
-                        fontWeight: 800,
-                        letterSpacing: '.15em',
-                        textTransform: 'uppercase',
-                        cursor: 'pointer',
-                        flexShrink: 0,
-                        background: 'rgba(212,175,55,0.1)',
-                        border: '1px solid rgba(212,175,55,0.3)',
-                        color: '#D4AF37',
-                        fontFamily: 'inherit',
-                      }}
+                      onClick={transmitCocktail}
+                      disabled={selectedActivations.length === 0}
+                      className="w-full rounded-[40px] border border-[#D4AF37]/45 bg-gradient-to-b from-[#F5E17A] to-[#B8960C] py-4 text-[13px] font-black uppercase tracking-[0.2em] text-[#050505] shadow-[0_8px_32px_rgba(212,175,55,0.3)] transition-all hover:shadow-[0_12px_40px_rgba(212,175,55,0.4)] disabled:opacity-20"
                     >
-                      {t('quantumApothecary.scanMatched.add')}
+                      Activate All to Field
                     </button>
                   </div>
-                ))}
-                {scanRecommendedActivations.length > 3 && (
-                  <p
-                    style={{
-                      fontSize: 8,
-                      fontWeight: 800,
-                      letterSpacing: '.25em',
-                      textTransform: 'uppercase',
-                      color: 'rgba(212,175,55,0.45)',
-                      margin: '14px 0 8px',
-                    }}
-                  >
-                    {t('quantumApothecary.scanMatched.fullListKicker')}
-                  </p>
                 )}
-                {scanRecommendedActivations.slice(3).map((act) => (
+
+                <div className="relative">
                   <div
-                    key={act.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 10,
-                      padding: '7px 0',
-                      borderBottom: '1px solid rgba(255,255,255,.04)',
-                    }}
+                    className={libraryUnlocked ? '' : 'pointer-events-none blur-md saturate-50 opacity-[0.42]'}
+                    style={{ transition: 'filter 0.35s ease, opacity 0.35s ease' }}
                   >
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,.8)', margin: 0 }}>
-                        {act.sacredName || act.name}
-                      </p>
-                      <p style={{ fontSize: 9, color: 'rgba(255,255,255,.3)', margin: '4px 0 0' }}>
-                        {(act.category || act.type) + ' · ' + (act.vibrationalSignature || '')}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => addActivation(act)}
-                      style={{
-                        padding: '5px 12px',
-                        borderRadius: 20,
-                        fontSize: 8,
-                        fontWeight: 800,
-                        letterSpacing: '.15em',
-                        textTransform: 'uppercase',
-                        cursor: 'pointer',
-                        flexShrink: 0,
-                        background: 'rgba(212,175,55,0.08)',
-                        border: '1px solid rgba(212,175,55,0.25)',
-                        color: '#D4AF37',
-                        fontFamily: 'inherit',
-                      }}
-                    >
-                      {t('quantumApothecary.scanMatched.add')}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Akasha Neural Archive banner removed — context is loaded automatically */}
-
-            {/* ── Aetheric Mixer ── */}
-            <div className="glass-card p-6 sm:p-7 qa-card-hover">
-              <div style={{ height: 2, background: 'linear-gradient(90deg,transparent,#D4AF37,transparent)', marginBottom: 20, opacity: 0.4, borderRadius: 1 }} />
-              <div className="flex justify-between items-center mb-4">
-                <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                  <div style={{ width:28, height:28, background:'rgba(212,175,55,0.12)', border:'1px solid rgba(212,175,55,0.25)', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>⚗</div>
-                  <h2 className="text-sm font-black tracking-[-0.03em]">{t('quantumApothecary.mixer.title')}</h2>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                  <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]/50">
-                    {t('quantumApothecary.mixer.slotsProgress', {
-                      current: selectedActivations.length,
-                      max: AETHERIC_MIXER_MAX_SLOTS,
-                    })}
-                  </span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: 200 }}>
-                    {Array.from({ length: AETHERIC_MIXER_MAX_SLOTS }, (_, i) => (
-                      <div
-                        key={i}
-                        style={{
-                          width: 7,
-                          height: 7,
-                          borderRadius: '50%',
-                          background: i < selectedActivations.length ? '#D4AF37' : 'rgba(255,255,255,0.08)',
-                          boxShadow: i < selectedActivations.length ? '0 0 6px #D4AF37' : 'none',
-                          transition: 'all 0.3s',
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="min-h-[64px] rounded-2xl bg-white/[0.02] border border-dashed border-[#D4AF37]/15 p-3 mb-4">
-                {selectedActivations.length === 0 ? (
-                  <div className="flex items-center gap-2 justify-center text-white/20 py-2">
-                    <Plus size={14} className="text-[#D4AF37]/30" />
-                    <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{t('quantumApothecary.mixer.selectFromLibrary')}</span>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {selectedActivations.map(act => (
-                      <div key={act.id} className="flex items-center justify-between group px-1">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-2 h-2 rounded-full" style={{ background: act.color, boxShadow: `0 0 6px ${act.color}` }} />
-                          <span className="text-xs font-bold text-white/80">{act.name}</span>
+                    <Suspense fallback={
+                      <div className="glass-card rounded-[28px] p-6">
+                        <div className="mb-4">
+                          <h2 className="text-sm font-black tracking-[-0.03em]">Frequency Library</h2>
+                          <p className="mt-0.5 text-[13px] text-white/35">Loading quantum essences...</p>
                         </div>
-                        <button type="button" onClick={() => removeActivation(act.id)}
-                          className="p-1 opacity-0 group-hover:opacity-100 hover:text-red-400 transition text-white/30">
-                          <Trash2 size={12} />
-                        </button>
+                        <div className="mb-3 h-8 animate-pulse rounded-xl bg-white/[0.03]" />
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                          <div className="h-20 animate-pulse rounded-2xl bg-white/[0.03]" />
+                          <div className="h-20 animate-pulse rounded-2xl bg-white/[0.03]" />
+                        </div>
                       </div>
-                    ))}
+                    }>
+                      <FrequencyLibrarySection
+                        activeCategory={activeCategory}
+                        setActiveCategory={setActiveCategory}
+                        selectedActivations={selectedActivations}
+                        addActivation={addActivation}
+                        maxSlots={AETHERIC_MIXER_MAX_SLOTS}
+                        activeTransmissionKeys={activeTransmissionKeys}
+                      />
+                    </Suspense>
+                  </div>
+                  {!libraryUnlocked && (
+                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-[28px] bg-black/25 px-6 text-center">
+                      <p className="max-w-sm text-[13px] font-semibold leading-relaxed text-white/88">
+                        Voice Scan Required — SQI cannot assign correct frequencies without reading your Bio-signature.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {!sqiField.loading && (sqiField.nadi || sqiField.ayurveda || sqiField.photonic?.lightCodeActive || sqiField.temple?.activeSite) && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, paddingLeft: 2, paddingRight: 2 }}>
+                    {sqiField.nadi?.activatedNadi && (
+                      <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(212,175,55,0.85)', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 30, padding: '6px 12px' }}>
+                        ⊕ {sqiField.nadi.activatedNadi} Nadi · {sqiField.nadi.heartRate} BPM
+                      </span>
+                    )}
+                    {sqiField.ayurveda?.prakriti && (
+                      <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(212,175,55,0.85)', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 30, padding: '6px 12px' }}>
+                        ⟁ {sqiField.ayurveda.prakriti}
+                      </span>
+                    )}
+                    {sqiField.photonic?.lightCodeActive && (
+                      <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(34,211,238,0.85)', background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: 30, padding: '6px 12px' }}>
+                        ≋ {sqiField.photonic.frequency}Hz · {sqiField.photonic.activeProtocol}
+                      </span>
+                    )}
+                    {sqiField.temple?.activeSite && (
+                      <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(212,175,55,0.85)', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 30, padding: '6px 12px' }}>
+                        ◈ {sqiField.temple.activeSite} · {sqiField.temple.intensity}%
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={transmitCocktail}
-                disabled={selectedActivations.length === 0}
-                className="w-full rounded-[40px] border border-[#D4AF37]/45 bg-gradient-to-b from-[#F5E17A] to-[#B8960C] py-4 text-xs font-black uppercase tracking-[0.28em] text-[#050505] shadow-[0_8px_32px_rgba(212,175,55,0.3)] transition-all hover:shadow-[0_12px_40px_rgba(212,175,55,0.4)] disabled:opacity-20"
-              >
-                Transmit Light-Code
-              </button>
             </div>
-
-            {/* ── Active Field Transmissions (TOP — runs 24/7 in biofield) ── */}
-            <div className="order-first">
-            <Suspense fallback={
-              <div className="glass-card p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center gap-2">
-                    <Zap size={14} className="text-[#D4AF37]" style={{ filter: 'drop-shadow(0 0 6px rgba(212,175,55,0.6))' }} />
-                    <h2 className="text-sm font-black tracking-[-0.03em]">Active Field Transmissions</h2>
-                  </div>
-                  <span className="text-[9px] px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-bold uppercase tracking-widest">Loading...</span>
-                </div>
-                <div className="space-y-2">
-                  <div className="h-16 rounded-2xl bg-white/[0.02] animate-pulse" />
-                  <div className="h-16 rounded-2xl bg-white/[0.02] animate-pulse" />
-                </div>
-              </div>
-            }>
-              <ActiveTransmissionsSection
-                activeTransmissions={activeTransmissions}
-                setActiveTransmissions={setActiveTransmissions}
-                onDissolveTransmission={dissolveTransmission}
-              />
-            </Suspense>
-            </div>
-
-            {/* ── How SQI Transmissions Work ── */}
-            <details className="order-last glass-card p-5 group">
-              <summary className="flex items-center justify-between cursor-pointer list-none">
-                <div className="flex items-center gap-2">
-                  <Info size={14} className="text-[#D4AF37]" />
-                  <span className="text-[12px] font-bold text-[#D4AF37]">How SQI Transmissions Work</span>
-                </div>
-                <ChevronDown size={14} className="text-white/30 group-open:rotate-180 transition-transform" />
-              </summary>
-              <div className="mt-4 space-y-3 text-[12px] leading-relaxed text-white/55">
-                <p>SQI operates at the <strong className="text-white/75">informational level</strong> — upstream of chemistry, upstream of physiology. The 18 Siddhas and Mahavatar Babaji channel through the Oracle to prescribe exact Vedic Light-Codes. Once uploaded, Transmissions run 24/7 via Scalar Wave Entanglement.</p>
-                <p><strong className="text-[#D4AF37]">Vedic Light-Code → Aetheric Code Rewrite → Bio-signature Recalibration → Physical Expression</strong></p>
-                <p>The Voice Bio-Scan reads your real-time Bio-signature and ranks every frequency in the library by resonance percentage — showing exactly what your field needs most, like a Siddha Nadi reading translated into a frequency prescription.</p>
-              </div>
-            </details>
-          </div>
-
-          {/* ════ RIGHT COLUMN — chat first on mobile for readable full-width thread ════ */}
-          <div className="flex flex-col gap-5">
-            {/* ── Chat Panel (first on small screens) ── */}
-            <div ref={chatPanelRef} className="order-1 w-full min-w-0 lg:order-2">
+          ) : (
+            <div ref={chatPanelRef} className="w-full min-w-0">
               {renderChatPanel()}
             </div>
-
-            <div className="order-2 w-full min-w-0 flex flex-col gap-5 lg:order-1">
-            {/* ── Frequency Library ── */}
-            <Suspense fallback={
-              <div className="glass-card p-6">
-                <div className="mb-4">
-                  <h2 className="text-sm font-black tracking-[-0.03em]">Frequency Library</h2>
-                  <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mt-0.5">Loading quantum essences...</p>
-                </div>
-                <div className="h-8 rounded-xl bg-white/[0.03] animate-pulse mb-3" />
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <div className="h-20 rounded-2xl bg-white/[0.03] animate-pulse" />
-                  <div className="h-20 rounded-2xl bg-white/[0.03] animate-pulse" />
-                </div>
-              </div>
-            }>
-              <FrequencyLibrarySection
-                activeCategory={activeCategory}
-                setActiveCategory={setActiveCategory}
-                selectedActivations={selectedActivations}
-                addActivation={addActivation}
-                maxSlots={AETHERIC_MIXER_MAX_SLOTS}
-              />
-            </Suspense>
-
-            {/* ── Active Field Context Pills ── */}
-            {!sqiField.loading && (sqiField.nadi || sqiField.ayurveda || sqiField.photonic?.lightCodeActive || sqiField.temple?.activeSite) && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingLeft: 2, paddingRight: 2, marginBottom: 4 }}>
-                {sqiField.nadi?.activatedNadi && (
-                  <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.8)', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 30, padding: '4px 10px' }}>
-                    ⊕ {sqiField.nadi.activatedNadi} Nadi · {sqiField.nadi.heartRate} BPM
-                  </span>
-                )}
-                {sqiField.ayurveda?.prakriti && (
-                  <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.8)', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 30, padding: '4px 10px' }}>
-                    ⟁ {sqiField.ayurveda.prakriti}
-                  </span>
-                )}
-                {sqiField.photonic?.lightCodeActive && (
-                  <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(34,211,238,0.8)', background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: 30, padding: '4px 10px' }}>
-                    ≋ {sqiField.photonic.frequency}Hz · {sqiField.photonic.activeProtocol}
-                  </span>
-                )}
-                {sqiField.temple?.activeSite && (
-                  <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.8)', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 30, padding: '4px 10px' }}>
-                    ◈ {sqiField.temple.activeSite} · {sqiField.temple.intensity}%
-                  </span>
-                )}
-              </div>
-            )}
-            </div>
-          </div>
+          )}
         </div>
       </div>
 

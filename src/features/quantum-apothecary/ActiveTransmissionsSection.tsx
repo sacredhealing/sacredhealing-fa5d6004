@@ -6,6 +6,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, ShieldCheck, X } from 'lucide-react';
 import type { Activation } from '@/features/quantum-apothecary/types';
+import { daysRemaining, formatSourceLabel } from '@/features/quantum-apothecary/apothecarySqiUi';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
@@ -77,8 +78,15 @@ export default function ActiveTransmissionsSection({
 
                   {/* Info */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 12, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{act.name}</p>
-                    <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: act.color, opacity: 0.7, marginTop: 1 }}>{t('quantumApothecary.activeTransmissionsSection.transmitting')}</p>
+                    <p style={{ fontSize: 13, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{act.name}</p>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.42)', marginTop: 4 }}>
+                      {(act.category && act.type === 'Bioenergetic' ? act.category : act.type) || '—'}
+                      {' · '}
+                      {daysRemaining(act.expiresAt) != null ? `${daysRemaining(act.expiresAt)}d left` : 'active'}
+                      {' · '}
+                      {formatSourceLabel(act.source)}
+                    </p>
+                    <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: act.color, opacity: 0.7, marginTop: 2 }}>{t('quantumApothecary.activeTransmissionsSection.transmitting')}</p>
                   </div>
 
                   {/* Dissolve */}

@@ -34,6 +34,12 @@ interface VoiceBiofieldScannerProps {
     primaryDosha?: string;
   };
   onScanComplete?: (result: VoiceBiofieldResult) => void;
+  /** Wall-clock scan capture duration (default 22). Quantum Apothecary passes 10. */
+  scanDurationSeconds?: number;
+  /** Optional radial countdown ring during scanning */
+  showProgressRing?: boolean;
+  /** When set and Date.now() < disableUntilMs, idle state shows cooldown instead of CTA */
+  disableUntilMs?: number | null;
 }
 
 function analyzeVoiceBuffer(samples: {
@@ -114,10 +120,16 @@ export default function VoiceBiofieldScanner({
   userName: _userName = 'Seeker',
   jyotishContext,
   onScanComplete,
+  scanDurationSeconds,
+  showProgressRing = false,
+  disableUntilMs = null,
 }: VoiceBiofieldScannerProps) {
   const { t } = useTranslation();
+  const scanDur = scanDurationSeconds ?? SCAN_SECONDS;
+  const scanDurRef = useRef(scanDur);
+  scanDurRef.current = scanDur;
   const [phase, setPhase] = useState<'idle' | 'scanning' | 'done' | 'error'>('idle');
-  const [secondsLeft, setSecondsLeft] = useState(SCAN_SECONDS);
+  const [secondsLeft, setSecondsLeft] = useState(scanDur);
   const [errorMsg, setErrorMsg] = useState('');
   const [lastResult, setLastResult] = useState<VoiceBiofieldResult | null>(null);
 
@@ -151,6 +163,21 @@ export default function VoiceBiofieldScanner({
   }, []);
 
   useEffect(() => () => cleanup(), [cleanup]);
+
+  const [, cooldownBump] = useState(0);
+  useEffect(() => {
+    if (disableUntilMs == null || Date.now() >= disableUntilMs) return;
+    const id = window.setInterval(() => cooldownBump((x) => x + 1), 60000);
+    return () => clearInterval(id);
+  }, [disableUntilMs]);
+
+  const cooldownActive = disableUntilMs != null && Date.now() < disableUntilMs;
+  const cooldownRemainMs = cooldownActive ? Math.max(0, disableUntilMs - Date.now()) : 0;
+  const cooldownHours = Math.floor(cooldownRemainMs / 3600000);
+  const cooldownMins = Math.max(
+    0,
+    Math.ceil((cooldownRemainMs % 3600000) / 60000),
+  );
 
   const tickAnalysis = useCallback(() => {
     const analyser = analyserRef.current;
@@ -196,7 +223,7 @@ export default function VoiceBiofieldScanner({
       completionSentRef.current = false;
       samplesRef.current = { rmsSeries: [], centroidSeries: [], zcrSeries: [] };
       setPhase('scanning');
-      setSecondsLeft(SCAN_SECONDS);
+      setSecondsLeft(scanDurRef.current);
       scanStartMsRef.current = Date.now();
 
       try {
@@ -228,9 +255,10 @@ export default function VoiceBiofieldScanner({
           if (completionSentRef.current) return;
 
           const elapsedSec = (Date.now() - scanStartMsRef.current) / 1000;
-          const remaining = SCAN_SECONDS - elapsedSec;
+          const dur = scanDurRef.current;
+          const remaining = dur - elapsedSec;
 
-          if (elapsedSec >= SCAN_SECONDS) {
+          if (elapsedSec >= dur) {
             completionSentRef.current = true;
             if (timerRef.current != null) {
               clearInterval(timerRef.current);
@@ -289,7 +317,7 @@ export default function VoiceBiofieldScanner({
       cleanup();
       completionSentRef.current = false;
       setPhase('idle');
-      setSecondsLeft(SCAN_SECONDS);
+      setSecondsLeft(scanDurRef.current);
       setErrorMsg('');
     },
     [cleanup],
@@ -300,7 +328,7 @@ export default function VoiceBiofieldScanner({
       e?.preventDefault();
       setLastResult(null);
       setPhase('idle');
-      setSecondsLeft(SCAN_SECONDS);
+      setSecondsLeft(scanDurRef.current);
     },
     [],
   );
@@ -362,9 +390,23 @@ export default function VoiceBiofieldScanner({
               {t('quantumApothecary.voiceBiofield.chartDosha', { dosha: jyotishContext.primaryDosha })}
             </p>
           )}
+          {cooldownActive && (
+            <p
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                color: 'rgba(34,211,238,.85)',
+                marginBottom: 18,
+                lineHeight: 1.55,
+              }}
+            >
+              Next scan available in {cooldownHours}h {cooldownMins}m
+            </p>
+          )}
           <button
             type="button"
             onClick={startScan}
+            disabled={cooldownActive}
             style={{
               width: '100%',
               padding: '16px',
@@ -376,7 +418,8 @@ export default function VoiceBiofieldScanner({
               background: 'linear-gradient(135deg,rgba(34,211,238,.12),rgba(34,211,238,.04))',
               border: '1px solid rgba(34,211,238,.35)',
               color: '#22D3EE',
-              cursor: 'pointer',
+              cursor: cooldownActive ? 'not-allowed' : 'pointer',
+              opacity: cooldownActive ? 0.38 : 1,
               transition: 'all .3s',
             }}
           >
@@ -398,9 +441,55 @@ export default function VoiceBiofieldScanner({
           <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.35em', color: 'rgba(34,211,238,.75)', marginBottom: 12 }}>
             {t('quantumApothecary.voiceBiofield.scanning')}
           </p>
-          <p style={{ fontSize: 44, fontWeight: 900, color: 'rgba(255,255,255,.9)', fontFamily: 'monospace' }}>
-            {secondsLeft}s
-          </p>
+          {showProgressRing ? (
+            <div style={{ margin: '0 auto 16px', width: 140, height: 140, position: 'relative' }}>
+              <svg width={140} height={140} style={{ transform: 'rotate(-90deg)' }}>
+                <circle cx={70} cy={70} r={54} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={8} />
+                <circle
+                  cx={70}
+                  cy={70}
+                  r={54}
+                  fill="none"
+                  stroke="#22D3EE"
+                  strokeWidth={8}
+                  strokeLinecap="round"
+                  strokeDasharray={`${2 * Math.PI * 54}`}
+                  strokeDashoffset={
+                    2 *
+                    Math.PI *
+                    54 *
+                    (1 -
+                      Math.min(
+                        1,
+                        (scanDurRef.current - secondsLeft) / scanDurRef.current,
+                      ))
+                  }
+                  style={{
+                    filter: 'drop-shadow(0 0 10px rgba(34,211,238,0.55))',
+                    transition: 'stroke-dashoffset 0.35s linear',
+                  }}
+                />
+              </svg>
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  pointerEvents: 'none',
+                }}
+              >
+                <span style={{ fontSize: 34, fontWeight: 900, color: 'rgba(255,255,255,.92)', fontFamily: 'monospace' }}>
+                  {secondsLeft}s
+                </span>
+              </div>
+            </div>
+          ) : (
+            <p style={{ fontSize: 44, fontWeight: 900, color: 'rgba(255,255,255,.9)', fontFamily: 'monospace' }}>
+              {secondsLeft}s
+            </p>
+          )}
           <p style={{ fontSize: 11, color: 'rgba(255,255,255,.45)', marginTop: 12, lineHeight: 1.6 }}>
             {t('quantumApothecary.voiceBiofield.hint')}
           </p>
