@@ -182,62 +182,83 @@ Include exactly 4 upcoming horas after the current one in upcomingHoras.`;
 
     let response: Response | null = null;
     let lastError = "";
+    let usedProvider: 'lovable' | 'gemini' = 'gemini';
 
-    for (const model of MODEL_CHAIN) {
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+    for (const { provider, model } of MODEL_CHAIN) {
+      if (provider === 'lovable' && !LOVABLE_API_KEY) continue;
+      if (provider === 'gemini' && !GEMINI_API_KEY) continue;
 
-      const requestBody: Record<string, unknown> = {
-        contents: [{ role: "user", parts: [{ text: systemPrompt + "\n\n" + userPrompt }] }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 6000,
-          // Structured JSON output — disable safety truncation
-          responseMimeType: "application/json",
-        },
-        safetySettings: [
-          { category: "HARM_CATEGORY_HARASSMENT",        threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_HATE_SPEECH",       threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
-        ],
-      };
+      let apiUrl: string;
+      let headers: Record<string, string>;
+      let requestBody: Record<string, unknown>;
 
-      // gemini-2.5-flash supports thinking — give it budget for astro calculations
-      if (model === 'gemini-2.5-flash') {
-        (requestBody.generationConfig as Record<string, unknown>).thinkingConfig = {
-          thinkingBudget: 1024,
+      if (provider === 'lovable') {
+        apiUrl = "https://ai.gateway.lovable.dev/v1/chat/completions";
+        headers = {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
         };
+        requestBody = {
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+          response_format: { type: "json_object" },
+          temperature: 0.7,
+        };
+      } else {
+        apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+        headers = { "Content-Type": "application/json" };
+        requestBody = {
+          contents: [{ role: "user", parts: [{ text: systemPrompt + "\n\n" + userPrompt }] }],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 6000,
+            responseMimeType: "application/json",
+          },
+          safetySettings: [
+            { category: "HARM_CATEGORY_HARASSMENT",        threshold: "BLOCK_NONE" },
+            { category: "HARM_CATEGORY_HATE_SPEECH",       threshold: "BLOCK_NONE" },
+            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
+          ],
+        };
+        if (model === 'gemini-2.5-flash') {
+          (requestBody.generationConfig as Record<string, unknown>).thinkingConfig = { thinkingBudget: 1024 };
+        }
       }
 
       try {
         response = await fetch(apiUrl, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify(requestBody),
         });
 
         if (response.ok) {
-          console.log(`generate-vedic-reading: success with ${model}`);
+          usedProvider = provider;
+          console.log(`generate-vedic-reading: success with ${provider}/${model}`);
           break;
         }
 
-        if (response.status === 429) {
+        if (response.status === 429 || response.status === 402) {
           await response.text();
           response = null;
-          lastError = `${model}: rate limit`;
-          await new Promise(r => setTimeout(r, 2000));
+          lastError = `${provider}/${model}: ${response === null ? 'rate limit' : 'payment'}`;
+          await new Promise(r => setTimeout(r, 1000));
           continue;
         }
 
         const errorText = await response.text();
-        console.error(`generate-vedic-reading: ${model} failed (${response.status}):`, errorText);
-        lastError = `${model}: ${errorText}`;
+        console.error(`generate-vedic-reading: ${provider}/${model} failed (${response.status}):`, errorText);
+        lastError = `${provider}/${model}: ${errorText.slice(0, 200)}`;
         response = null;
       } catch (fetchError) {
-        lastError = `${model}: ${fetchError instanceof Error ? fetchError.message : "fetch failed"}`;
-        console.error(`generate-vedic-reading fetch error (${model}):`, lastError);
+        lastError = `${provider}/${model}: ${fetchError instanceof Error ? fetchError.message : "fetch failed"}`;
+        console.error(`generate-vedic-reading fetch error (${provider}/${model}):`, lastError);
         response = null;
       }
     }
@@ -251,12 +272,12 @@ Include exactly 4 upcoming horas after the current one in upcomingHoras.`;
     }
 
     const data = await response.json();
-    const content = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    const content = usedProvider === 'lovable'
+      ? (data.choices?.[0]?.message?.content ?? "")
+      : (data.candidates?.[0]?.content?.parts?.[0]?.text ?? "");
 
     let reading;
     try {
-      // Strip optional markdown fences (gemini-2.0-flash sometimes adds them
-      // despite responseMimeType: "application/json")
       let clean = content.trim();
       if (clean.startsWith("```json")) clean = clean.slice(7);
       if (clean.startsWith("```"))     clean = clean.slice(3);
