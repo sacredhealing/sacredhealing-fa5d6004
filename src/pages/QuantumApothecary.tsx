@@ -47,6 +47,7 @@ import { getActiveStudentId } from '@/lib/codex/students';
 import { curateTransmission } from '@/lib/codex/curatorClient';
 import { syncPendingTransmissionsOnce } from '@/lib/codex/codexSync';
 import UserChatHistory from '@/components/UserChatHistory';
+import { toast } from 'sonner';
 
 const NadiScanner = lazy(() => import('@/components/NadiScanner'));
 const VoiceBiofieldScanner = lazy(() => import('@/components/VoiceBiofieldScanner'));
@@ -1711,23 +1712,28 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
   };
 
   const activateAllTop33ToField = useCallback(() => {
-    if (resonanceMatches.length === 0) return;
+    if (resonanceMatches.length === 0) {
+      toast.info('⟁ Run a Voice Biofield Scan first to generate your Top 33');
+      return;
+    }
+    const enriched = resonanceMatches.map((row) =>
+      enrichTransmission(normalizeActivationForMixer(row), 'voice_scan'),
+    );
     setActiveTransmissions((prev) => {
-      const next = [...prev];
-      for (const row of resonanceMatches) {
-        const normalized = normalizeActivationForMixer(row);
-        const enriched = enrichTransmission(normalized, 'voice_scan');
-        if (
-          next.some(
+      const toAdd = enriched.filter(
+        (e) =>
+          !prev.some(
             (t) =>
-              t.id === enriched.id ||
-              (!!t.name && !!enriched.name && t.name.toLowerCase() === enriched.name.toLowerCase()),
-          )
-        )
-          continue;
-        next.push(enriched);
+              t.id === e.id ||
+              (!!t.name && !!e.name && t.name.toLowerCase() === e.name.toLowerCase()),
+          ),
+      );
+      if (toAdd.length === 0) {
+        toast.success(`⟁ All ${resonanceMatches.length} voice-matched transmissions already active in your field`);
+        return prev;
       }
-      return next;
+      toast.success(`⟁ ${toAdd.length} Siddha transmissions activated to your biofield`);
+      return [...prev, ...toAdd];
     });
   }, [resonanceMatches, normalizeActivationForMixer]);
   const renderChatPanel = () => (
@@ -2255,7 +2261,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                           className="rounded-[28px] border border-white/[0.08] bg-white/[0.02] p-4"
                           style={{ backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)' }}
                         >
-                          <p className="text-[13px] font-black uppercase tracking-[0.15em] text-[#22D3EE]/85">{c.label}</p>
+                          <p className="text-[13px] font-black uppercase tracking-[0.15em] text-white/85">{c.label}</p>
                           <p className="mt-2 text-[13px] leading-snug text-white/85">{c.val}</p>
                         </div>
                       ))}
@@ -2271,7 +2277,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                         <button
                           type="button"
                           onClick={activateAllTop33ToField}
-                          className="rounded-full border border-[#22D3EE]/40 bg-[#22D3EE]/10 px-4 py-2 text-[13px] font-black uppercase tracking-[0.08em] text-[#22D3EE]"
+                          className="rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-4 py-2 text-[13px] font-black uppercase tracking-[0.08em] text-[#D4AF37]"
                         >
                           Activate All 33 to Field
                         </button>
@@ -2291,7 +2297,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                                 animate={{ width: `${m.pct}%` }}
                                 transition={{ delay: i * 0.04, duration: 0.65 }}
                                 className="h-full rounded-full"
-                                style={{ background: i === 0 ? '#D4AF37' : i < 3 ? 'rgba(212,175,55,0.55)' : '#22D3EE' }}
+                                style={{ background: i === 0 ? '#D4AF37' : i < 3 ? 'rgba(212,175,55,0.55)' : '#D4AF37' }}
                               />
                             </div>
                             <span className="min-w-0 flex-1 text-[13px] font-bold text-white/80">{m.name}</span>
