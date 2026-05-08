@@ -915,7 +915,6 @@ function QuantumApothecaryInner() {
   const streamAccumRef = useRef('');
   const streamingMsgIdRef = useRef('');
   const chatInputRef = useRef<HTMLTextAreaElement>(null);
-  const [showScrollBottom, setShowScrollBottom] = useState(false);
   const chatPanelRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const legacyRecognitionRef = useRef<{ stop: () => void } | null>(null);
@@ -1037,21 +1036,6 @@ function QuantumApothecaryInner() {
     prevMsgCountRef.current = count;
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages.length]);
-
-  // Scroll-to-bottom FAB: inner scroll was removed (document scroll); use viewport intersection on sentinel.
-  useEffect(() => {
-    const end = chatEndRef.current;
-    if (!end) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        setShowScrollBottom(!entry?.isIntersecting);
-      },
-      { root: null, threshold: 0, rootMargin: '0px 0px 120px 0px' },
-    );
-    io.observe(end);
-    return () => io.disconnect();
-  }, [messages.length, isTyping]);
 
   const scrollChatToBottom = useCallback(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -1865,26 +1849,6 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         }}
       >
         <div ref={chatTopRef} className="h-px w-full shrink-0 scroll-mt-32" aria-hidden />
-        <div className="flex justify-center gap-3 pb-1">
-          <button
-            type="button"
-            onClick={scrollChatToTop}
-            className="rounded-full border border-[#D4AF37]/30 bg-[#0a0a0a]/80 p-2 text-[#D4AF37] shadow-[0_0_14px_rgba(212,175,55,0.15)] backdrop-blur-sm transition hover:bg-[#D4AF37]/15"
-            aria-label="Scroll to top of thread"
-            title="Scroll to top"
-          >
-            <ChevronUp size={18} className="drop-shadow-[0_0_6px_rgba(212,175,55,0.45)]" aria-hidden />
-          </button>
-          <button
-            type="button"
-            onClick={scrollChatToBottom}
-            className="rounded-full border border-[#D4AF37]/30 bg-[#0a0a0a]/80 p-2 text-[#D4AF37] shadow-[0_0_14px_rgba(212,175,55,0.15)] backdrop-blur-sm transition hover:bg-[#D4AF37]/15"
-            aria-label={t('quantumApothecary.chat.scrollToBottom')}
-            title={t('quantumApothecary.chat.scrollToBottom')}
-          >
-            <ChevronDown size={18} className="drop-shadow-[0_0_6px_rgba(212,175,55,0.45)]" aria-hidden />
-          </button>
-        </div>
         <div
           className={`flex min-h-full flex-col ${
             messages.length === 0 && !isTyping ? 'justify-center' : 'justify-end'
@@ -2041,43 +2005,9 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
               </div>
             </div>
           )}
-          <div className="flex justify-center gap-3 pt-3">
-            <button
-              type="button"
-              onClick={scrollChatToTop}
-              className="rounded-full border border-[#D4AF37]/30 bg-[#0a0a0a]/80 p-2 text-[#D4AF37] shadow-[0_0_14px_rgba(212,175,55,0.15)] backdrop-blur-sm transition hover:bg-[#D4AF37]/15"
-              aria-label="Scroll to top of thread"
-              title="Scroll to top"
-            >
-              <ChevronUp size={18} className="drop-shadow-[0_0_6px_rgba(212,175,55,0.45)]" aria-hidden />
-            </button>
-            <button
-              type="button"
-              onClick={scrollChatToBottom}
-              className="rounded-full border border-[#D4AF37]/30 bg-[#0a0a0a]/80 p-2 text-[#D4AF37] shadow-[0_0_14px_rgba(212,175,55,0.15)] backdrop-blur-sm transition hover:bg-[#D4AF37]/15"
-              aria-label={t('quantumApothecary.chat.scrollToBottom')}
-              title={t('quantumApothecary.chat.scrollToBottom')}
-            >
-              <ChevronDown size={18} className="drop-shadow-[0_0_6px_rgba(212,175,55,0.45)]" aria-hidden />
-            </button>
-          </div>
           <div ref={chatEndRef} />
         </div>
       </div>
-
-      {/* Scroll to bottom FAB inside chat */}
-      {showScrollBottom && (
-        <button
-          type="button"
-          onClick={scrollChatToBottom}
-          className="absolute right-6 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-[#D4AF37]/30 bg-[#0a0a0a]/90 text-[#D4AF37] shadow-[0_0_22px_rgba(212,175,55,0.22)] backdrop-blur-sm transition hover:bg-[#D4AF37]/15 hover:shadow-[0_0_28px_rgba(212,175,55,0.28)]"
-          style={{ bottom: 90 }}
-          aria-label={t('quantumApothecary.chat.scrollToBottom')}
-          title={t('quantumApothecary.chat.scrollToBottom')}
-        >
-          <ChevronDown size={18} className="drop-shadow-[0_0_6px_rgba(212,175,55,0.45)]" />
-        </button>
-      )}
 
       {/* Composer — sticky at viewport bottom while the page scrolls the full thread */}
       <div
