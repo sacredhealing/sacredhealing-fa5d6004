@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { useSHC } from '@/contexts/SHCContext';
 import { navigateTo } from '@/utils/navigation';
@@ -272,7 +273,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
           transmission_type: row.transmission_type,
           is_playing: row.is_playing,
           playback_position: row.playback_position,
-          metadata: row.metadata,
+          metadata: row.metadata as Json,
           updated_at: new Date().toISOString(),
         },
         { onConflict: 'user_id' }

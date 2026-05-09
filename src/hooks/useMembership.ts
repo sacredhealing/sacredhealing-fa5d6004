@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { getTierRank } from '@/lib/tierAccess';
 
 
 interface MembershipStatus {
@@ -62,6 +63,15 @@ export const useMembership = () => {
   const { user, isLoading: authLoading } = useAuth();
   // Whether we've completed at least one fresh server check this mount
   const [settled, setSettled] = useState(false);
+  const [status, setStatus] = useState<MembershipStatus>(() => ({
+    subscribed: false,
+    tier: 'free',
+    subscriptionEnd: null,
+    loading: true,
+    adminGranted: false,
+    isAdmin: false,
+  }));
+  const mountedRef = useRef(true);
 
 
   const getInitialStatus = (): MembershipStatus => {
@@ -71,3 +81,89 @@ export const useMembership = () => {
     }
     return {
       subscribed: false,
+      tier: 'free',
+      subscriptionEnd: null,
+      loading: false,
+      adminGranted: false,
+      isAdmin: false,
+    };
+  };
+
+  const refresh = useCallback(async () => {
+    if (!user) {
+      setStatus({
+        subscribed: false,
+        tier: 'free',
+        subscriptionEnd: null,
+        loading: authLoading,
+        adminGranted: false,
+        isAdmin: false,
+      });
+      setSettled(!authLoading);
+      return;
+    }
+
+    const initial = getInitialStatus();
+    setStatus({ ...initial, loading: true });
+    setSettled(false);
+
+    try {
+      const [{ data: isAdmin }, { data: grant }, { data, error }] = await Promise.all([
+        supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' }),
+        supabase
+          .from('admin_granted_access')
+          .select('tier, access_id')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .eq('access_type', 'membership')
+          .order('granted_at', { ascending: false })
+          .limit(5),
+        supabase.functions.invoke('check-membership-subscription'),
+      ]);
+
+      const grantRows = Array.isArray(grant) ? grant : [];
+      const grantTier = grantRows
+        .map((row: any) => row.tier || row.access_id || 'free')
+        .sort((a: string, b: string) => getTierRank(b) - getTierRank(a))[0];
+
+      const cloudTier = !error && data?.tier ? String(data.tier) : 'free';
+      const bestTier = [cloudTier, grantTier || 'free'].sort((a, b) => getTierRank(b) - getTierRank(a))[0];
+      const next: MembershipStatus = {
+        subscribed: Boolean(data?.subscribed) || !!grantTier || isAdmin === true,
+        tier: isAdmin === true ? 'akasha-infinity' : bestTier,
+        subscriptionEnd: data?.subscription_end ?? data?.subscriptionEnd ?? null,
+        loading: false,
+        adminGranted: !!grantTier,
+        isAdmin: isAdmin === true,
+      };
+
+      if (!mountedRef.current) return;
+      saveToCache(user.id, next);
+      setStatus(next);
+    } catch (err) {
+      console.warn('Membership check failed:', err);
+      if (!mountedRef.current) return;
+      setStatus({ ...initial, loading: false });
+    } finally {
+      if (mountedRef.current) setSettled(true);
+    }
+  }, [authLoading, user]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    void refresh();
+    return () => {
+      mountedRef.current = false;
+    };
+  }, [refresh]);
+
+  const tierRank = getTierRank(status.tier);
+
+  return {
+    ...status,
+    loading: authLoading || status.loading,
+    settled,
+    isPremium: tierRank > 0 || status.isAdmin || status.adminGranted,
+    refresh,
+  };
+};

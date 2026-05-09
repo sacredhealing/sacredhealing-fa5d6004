@@ -44,6 +44,10 @@ export interface PilgrimageActivation {
   practiceLog: string[];
 }
 
+function ensureNoDbError(error: { message?: string } | null | undefined, fallback: string) {
+  if (error) throw new Error(error.message || fallback);
+}
+
 const SCHUMANN = [7.83, 14.3, 20.8, 27.3, 33.8];
 const DIRS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
 
@@ -277,32 +281,44 @@ export function useVirtualPilgrimage() {
   );
 
   const updateStrength = useCallback(async (strength: number) => {
-    if (!activation?.id) return;
-    await supabase.from('virtual_pilgrimage_activations').update({ strength }).eq('id', activation.id);
+    if (!activation?.id || !user?.id) return;
+    const { error } = await supabase
+      .from('virtual_pilgrimage_activations')
+      .update({ strength })
+      .eq('id', activation.id)
+      .eq('user_id', user.id);
+    ensureNoDbError(error, 'Could not update pilgrimage strength');
     setActivation((prev) => (prev ? { ...prev, strength } : null));
-  }, [activation]);
+  }, [activation, user?.id]);
 
   const markPracticeComplete = useCallback(async () => {
-    if (!activation?.id) return;
+    if (!activation?.id || !user?.id) return;
     const today = new Date().toISOString().split('T')[0];
     if (activation.practiceLog.includes(today)) return;
     const log = [...activation.practiceLog, today];
-    await supabase.from('virtual_pilgrimage_activations').update({ practice_log: log }).eq('id', activation.id);
+    const { error } = await supabase
+      .from('virtual_pilgrimage_activations')
+      .update({ practice_log: log })
+      .eq('id', activation.id)
+      .eq('user_id', user.id);
+    ensureNoDbError(error, 'Could not update pilgrimage practice');
     setActivation((prev) => (prev ? { ...prev, practiceLog: log } : null));
-  }, [activation]);
+  }, [activation, user?.id]);
 
   const releaseLock = useCallback(async () => {
-    if (!activation?.id) return;
-    await supabase
+    if (!activation?.id || !user?.id) return;
+    const { error } = await supabase
       .from('virtual_pilgrimage_activations')
       .update({
         is_active: false,
         released_early: true,
         completed_at: new Date().toISOString(),
       })
-      .eq('id', activation.id);
+      .eq('id', activation.id)
+      .eq('user_id', user.id);
+    ensureNoDbError(error, 'Could not release pilgrimage lock');
     setActivation(null);
-  }, [activation]);
+  }, [activation, user?.id]);
 
   return {
     home,
