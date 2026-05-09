@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
+
 interface MembershipStatus {
   subscribed: boolean;
   tier: string;
@@ -11,14 +12,17 @@ interface MembershipStatus {
   isAdmin?: boolean;
 }
 
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+const CACHE_TTL_MS = 60 * 60 * 1000; // 60 minutes — cost optimisation (was 5 min)
 // Bump this version whenever tier slugs / canonical mapping change so old cached
 // values (e.g. "siddha-quantum-monthly", "premium-monthly", "lifetime") are discarded.
 const CACHE_VERSION = 'v3';
 
+
 function getCacheKey(userId: string) {
   return `sh:membership:${CACHE_VERSION}:${userId}`;
 }
+
 
 function loadFromCache(userId: string): MembershipStatus | null {
   try {
@@ -41,6 +45,7 @@ function loadFromCache(userId: string): MembershipStatus | null {
   }
 }
 
+
 function saveToCache(userId: string, data: MembershipStatus) {
   try {
     localStorage.setItem(
@@ -52,10 +57,12 @@ function saveToCache(userId: string, data: MembershipStatus) {
   }
 }
 
+
 export const useMembership = () => {
   const { user, isLoading: authLoading } = useAuth();
   // Whether we've completed at least one fresh server check this mount
   const [settled, setSettled] = useState(false);
+
 
   const getInitialStatus = (): MembershipStatus => {
     if (user) {
@@ -64,116 +71,3 @@ export const useMembership = () => {
     }
     return {
       subscribed: false,
-      tier: 'free',
-      subscriptionEnd: null,
-      loading: true,
-      adminGranted: false,
-      isAdmin: false,
-    };
-  };
-
-  const [status, setStatus] = useState<MembershipStatus>(getInitialStatus);
-
-  const checkSubscription = useCallback(async () => {
-    // Stay loading while auth is still resolving
-    if (authLoading) return;
-
-    if (!user) {
-      setStatus({
-        subscribed: false,
-        tier: 'free',
-        subscriptionEnd: null,
-        loading: false,
-        adminGranted: false,
-        isAdmin: false,
-      });
-      setSettled(true);
-      return;
-    }
-
-    // Show cached tier immediately (no flash) but always refetch so admin grants apply right away.
-    const cached = loadFromCache(user.id);
-    if (cached) {
-      setStatus({ ...cached, loading: false });
-    } else {
-      setStatus(prev => ({ ...prev, loading: true }));
-    }
-
-    try {
-      // First check if user is admin - admins get full access
-      const { data: isAdminData } = await supabase
-        .rpc('has_role', { _user_id: user.id, _role: 'admin' });
-      
-      if (isAdminData === true) {
-        const adminStatus: MembershipStatus = {
-          subscribed: true,
-          tier: 'akasha-infinity',
-          subscriptionEnd: null,
-          loading: false,
-          adminGranted: true,
-          isAdmin: true,
-        };
-        saveToCache(user.id, adminStatus);
-        setStatus(adminStatus);
-        setSettled(true);
-        return;
-      }
-
-      const { data, error } = await supabase.functions.invoke('check-membership-subscription');
-      
-      if (error) {
-        console.error('Error checking membership:', error);
-        setStatus(prev => ({ ...prev, loading: false }));
-        setSettled(true);
-        return;
-      }
-
-      const newStatus: MembershipStatus = {
-        subscribed: data.subscribed,
-        tier: data.tier || 'free',
-        subscriptionEnd: data.subscription_end,
-        loading: false,
-        adminGranted: data.admin_granted || false,
-        isAdmin: false,
-      };
-      saveToCache(user.id, newStatus);
-      setStatus(newStatus);
-    } catch (error) {
-      console.error('Error checking membership:', error);
-      setStatus(prev => ({ ...prev, loading: false }));
-    } finally {
-      setSettled(true);
-    }
-  }, [user, authLoading]);
-
-  useEffect(() => {
-    checkSubscription();
-  }, [checkSubscription]);
-
-  // Refresh subscription status periodically (every 60 seconds)
-  useEffect(() => {
-    if (!user || authLoading) return;
-
-    const interval = setInterval(checkSubscription, 60000);
-    return () => clearInterval(interval);
-  }, [user, authLoading, checkSubscription]);
-
-  // When the user returns to the tab, refetch so admin grants show up without waiting on cache TTL.
-  useEffect(() => {
-    if (!user || authLoading) return;
-    const onVis = () => {
-      if (document.visibilityState === 'visible') void checkSubscription();
-    };
-    document.addEventListener('visibilitychange', onVis);
-    return () => document.removeEventListener('visibilitychange', onVis);
-  }, [user, authLoading, checkSubscription]);
-
-  const isPremium = status.isAdmin || (status.tier !== 'free' && status.subscribed);
-
-  return {
-    ...status,
-    isPremium,
-    settled,
-    refresh: checkSubscription,
-  };
-};
