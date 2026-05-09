@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import type { Json } from '@/integrations/supabase/types';
 
 export interface Transmission {
   id: string;
@@ -67,7 +68,7 @@ export function useActiveTransmission() {
           transmission_type: transmission.type ?? 'audio',
           is_playing: playing,
           playback_position: pos,
-          metadata: transmission.metadata ?? {},
+          metadata: (transmission.metadata ?? {}) as Json,
           updated_at: new Date().toISOString(),
         },
         { onConflict: 'user_id' }
