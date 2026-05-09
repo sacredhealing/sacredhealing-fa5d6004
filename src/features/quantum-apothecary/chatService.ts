@@ -49,6 +49,10 @@ export async function streamChatWithSQI(
   canonicalActivationNames?: string,
   jyotishContext?: string,
   localeTag?: string,
+  /** Voice Top 33 / active-field intelligence — edge may merge into system prompt */
+  biofieldContext?: string,
+  /** Comma-separated names currently in the seeker's field */
+  activeTransmissionNames?: string,
 ) {
   const recent = messages.slice(-15);
   const apiMessages = recent.map(m => ({
@@ -86,6 +90,8 @@ export async function streamChatWithSQI(
       seekerName: seekerName ?? '',
       canonicalActivationNames: canonicalActivationNames ?? '',
       jyotishContext: jyotishContext ?? '',
+      biofieldContext: biofieldContext ?? '',
+      activeTransmissionNames: activeTransmissionNames ?? '',
       localTime,
       localDate,
       timezone,

@@ -78,6 +78,14 @@ function coerceVoiceNadiToEnum(s: string): 'Ida' | 'Pingala' | 'Sushumna' | 'Blo
   return 'Sushumna';
 }
 
+/** Align Top 33 rows with mixer field rows (ids differ after enrich — names win). */
+function fieldTransmissionMatchesRow(tx: Activation, row: Activation): boolean {
+  if (tx.id && row.id && tx.id === row.id) return true;
+  const a = (tx.name || '').trim().toLowerCase();
+  const b = (row.name || '').trim().toLowerCase();
+  return !!a && !!b && a === b;
+}
+
 /* ──── Markdown-ish renderer: gold (#D4AF37) only on # / ## / ### / #### / ##### lines ──── */
 type InlineVariant = 'heading' | 'body';
 
@@ -481,15 +489,18 @@ function pickFiveActivationsForNadiReading(reading: NadiReading): Activation[] {
 }
 
 function buildVoiceFieldContext(v: VoiceBiofieldResult): string {
+  const h = extractVoiceScoringHints(v);
   return [
     'VOICE BIOFIELD SCAN (latest):',
     `- Overall Coherence: ${v.overallCoherence}/100`,
     `- Nadi: ${v.nadiReading}`,
     `- Dosha from voice: ${v.dominantDosha}`,
-    `- Priority areas: ${v.priorityAreas.map((i) => i.name).join(', ')}`,
+    `- Priority areas: ${v.priorityAreas.map((i) => `${i.name} (${i.score}%)`).join(', ')}`,
     `- Strengths: ${v.topStrengths.map((i) => i.name).join(', ')}`,
     `- Emotional field: ${v.emotionalField}`,
-    `- Organ support: ${v.organField}`,
+    `- Organ / tissue emphasis: ${v.organField}`,
+    `- Scoring hints (chakra keywords detected): ${h.chakraHits.join(', ') || '—'}`,
+    `- Scoring hints (organ/tissue keywords detected): ${h.organHits.join(', ') || '—'}`,
   ].join('\n');
 }
 
@@ -521,14 +532,141 @@ function resolveActivationsByExactNamesUpTo(preferred: string[], max: number): A
   return out.slice(0, max);
 }
 
+function extractVoiceScoringHints(result: VoiceBiofieldResult) {
+  const emotionalTone = (result.emotionalField || '').toLowerCase();
+  const organBlob = (result.organField || '').toLowerCase();
+  const priorityNames = (result.priorityAreas || []).map((p) => p.name.toLowerCase());
+  const haystack = `${emotionalTone} ${organBlob} ${priorityNames.join(' ')}`;
+
+  const chakraLexicon = [
+    'muladhara',
+    'svadhisthana',
+    'manipura',
+    'anahata',
+    'vishuddha',
+    'ajna',
+    'sahasrara',
+    'root',
+    'sacral',
+    'solar plexus',
+    'heart',
+    'throat',
+    'third eye',
+    'crown',
+  ];
+  const chakraHits = chakraLexicon.filter((c) => haystack.includes(c));
+
+  const organSeeds = [
+    'liver',
+    'colon',
+    'lung',
+    'lymph',
+    'nerve',
+    'blood',
+    'kidney',
+    'heart',
+    'stomach',
+    'thyroid',
+    'brain',
+  ];
+  const organHits = organSeeds.filter((o) => organBlob.includes(o));
+
+  const emotionWords = emotionalTone
+    .split(/\s+/)
+    .map((w) => w.replace(/[^a-z]/g, ''))
+    .filter((w) => w.length > 5);
+
+  const nadiHints: string[] = [];
+  const nr = (result.nadiReading || '').toLowerCase();
+  if (nr.includes('pingala')) nadiHints.push('pingala');
+  if (nr.includes('ida')) nadiHints.push('ida');
+  if (nr.includes('sushumna')) nadiHints.push('sushumna');
+  if (nr.includes('blocked')) nadiHints.push('blocked');
+
+  return {
+    emotionalTone,
+    emotionWords,
+    priorityNames,
+    chakraHits,
+    organHits,
+    nadiHints,
+  };
+}
+
 function pickTenActivationsForVoiceResult(result: VoiceBiofieldResult): Activation[] {
-  // Use the FULL bioenergetic library (1,357+ frequencies) — voice-driven scoring
-  // across dosha, nadi, chakra, emotional & organ fields. Same engine as LimbicArc.
   const doshaKey = String(result.dominantDosha || 'Vata').split(/[\s(/]/)[0] || 'Vata';
+  const dk = doshaKey.toLowerCase();
+
+  const hints = extractVoiceScoringHints(result);
+
+  const scored = ALL_ACTIVATIONS.map((activation) => {
+    const nameLower = activation.name.toLowerCase();
+    const catLower = (activation.category || '').toLowerCase();
+    const sigLower = `${activation.benefit || ''} ${activation.vibrationalSignature || ''}`.toLowerCase();
+    const blobLower = `${nameLower} ${catLower} ${sigLower}`;
+
+    let score = 0;
+
+    if (blobLower.includes(dk)) score += 40;
+
+    for (const chakra of hints.chakraHits) {
+      if (nameLower.includes(chakra) || sigLower.includes(chakra)) {
+        score += 25;
+        break;
+      }
+    }
+
+    for (const organ of hints.organHits) {
+      if (nameLower.includes(organ) || sigLower.includes(organ)) {
+        score += 20;
+        break;
+      }
+    }
+
+    if (hints.emotionalTone.length > 5) {
+      if (nameLower.includes(hints.emotionalTone) || sigLower.includes(hints.emotionalTone)) {
+        score += 15;
+      }
+    }
+    for (const ew of hints.emotionWords) {
+      if (ew.length > 5 && (nameLower.includes(ew) || sigLower.includes(ew))) {
+        score += 15;
+        break;
+      }
+    }
+
+    for (const pName of hints.priorityNames) {
+      if (pName.length > 3 && (nameLower.includes(pName) || pName.includes(nameLower))) {
+        score += 30;
+        break;
+      }
+    }
+
+    for (const n of hints.nadiHints) {
+      if (nameLower.includes(n) || sigLower.includes(n)) {
+        score += 15;
+        break;
+      }
+    }
+
+    return { activation, score };
+  });
+
+  const ranked = scored.filter((s) => s.score > 0).sort((a, b) => b.score - a.score);
+
+  const out: Activation[] = [];
+  const seen = new Set<string>();
+  for (const row of ranked) {
+    if (!seen.has(row.activation.id)) {
+      seen.add(row.activation.id);
+      out.push(row.activation);
+    }
+    if (out.length >= 10) return out;
+  }
+
   const nadiKey: 'Ida' | 'Pingala' | 'Sushumna' | 'Blocked' = coerceVoiceNadiToEnum(result.nadiReading);
   const chakraKey = result.priorityAreas[0]?.name || 'Anahata';
-
-  const matched = matchActivationsToScan(
+  const fallback = matchActivationsToScan(
     {
       dominantDosha: doshaKey,
       activatedNadi: nadiKey,
@@ -536,20 +674,18 @@ function pickTenActivationsForVoiceResult(result: VoiceBiofieldResult): Activati
       emotionalField: result.emotionalField,
       organField: result.organField,
     },
-    10,
+    12,
   ).map(mapBioLibraryToActivation);
 
-  // Dedup by id and cap at 10
-  const seen = new Set<string>();
-  const out: Activation[] = [];
-  for (const a of matched) {
+  for (const a of fallback) {
     if (!seen.has(a.id)) {
       seen.add(a.id);
       out.push(a);
     }
     if (out.length >= 10) break;
   }
-  return out;
+
+  return out.slice(0, 10);
 }
 
 function mapSqiMessagesToUserChatArchive(
@@ -980,6 +1116,42 @@ function QuantumApothecaryInner() {
     [],
   );
 
+  const activeTransmissionNamesCsv = useMemo(
+    () =>
+      activeTransmissions
+        .map((t) => t.name)
+        .filter(Boolean)
+        .join(', '),
+    [activeTransmissions],
+  );
+
+  /** Prefix reminds model what's live in-field; body stays full canonical list for exact naming */
+  const canonicalActivationPayload = useMemo(
+    () =>
+      [
+        activeTransmissionNamesCsv
+          ? `CURRENTLY_ACTIVE_TRANSMISSION_NAMES (prefer not to duplicate unless seeker asks): ${activeTransmissionNamesCsv}`
+          : '',
+        canonicalActivationNameLines,
+      ]
+        .filter(Boolean)
+        .join('\n'),
+    [activeTransmissionNamesCsv, canonicalActivationNameLines],
+  );
+
+  const sqiTop33ChatBlock = useMemo(() => {
+    if (!resonanceMatches.length) return '';
+    const lines = resonanceMatches.slice(0, 33).map(
+      (r, i) =>
+        `${i + 1}. ${r.name} — ${r.pct}% (${r.rowCategory || r.category || 'biofield match'})`,
+    );
+    return [
+      `TOP ${Math.min(33, resonanceMatches.length)} BIOFIELD MATCHES (ranked — cite EXACT names):`,
+      ...lines,
+      'Prioritize these exact spellings when recommending LimbicArc / Frequency Library transmissions.',
+    ].join('\n');
+  }, [resonanceMatches]);
+
   /** Hydrate thread from Supabase sync table once (cross-device); skip when resuming a History session from URL. */
   const syncHydratedOnceRef = useRef(false);
   useEffect(() => {
@@ -1120,7 +1292,17 @@ function QuantumApothecaryInner() {
       setResonanceMatches((prev) => {
         const existingNames = new Set(prev.map((m) => m.name));
         const newMatches = matched.filter((m) => !existingNames.has(m.name));
-        return newMatches.length > 0 ? [...prev, ...newMatches] : prev;
+        if (newMatches.length === 0) return prev;
+        const next = [...prev, ...newMatches];
+        queueMicrotask(() => {
+          try {
+            localStorage.setItem('sqi_top33_matches', JSON.stringify(next));
+            localStorage.setItem('sqi_top33_ts', Date.now().toString());
+          } catch {
+            /* ignore */
+          }
+        });
+        return next;
       });
     },
     [normalizeActivationForMixer],
@@ -1303,10 +1485,10 @@ function QuantumApothecaryInner() {
       const liveContext = `LIVE SYSTEM TIME: ${liveDateTime} (${_tz}). This is the confirmed device-local time. Use ONLY this for date/day/time — do not infer or recalculate.
 LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday / evening / night (device-local clock).`;
 
-      const voiceBlock =
+      const voiceScanBlock =
         opts?.voiceSnapshot != null ? buildVoiceFieldContext(opts.voiceSnapshot) : voiceContextBlock;
       const fieldParts: string[] = [sqiSourceDirective, answerRulesDirective, liveContext];
-      if (voiceBlock) fieldParts.push(voiceBlock);
+      if (voiceScanBlock) fieldParts.push(voiceScanBlock);
       if (liveScanContext) fieldParts.push(liveScanContext);
       if (stableCompiledContext) fieldParts.push(stableCompiledContext);
       if (stableJyotishContext) fieldParts.push(stableJyotishContext);
@@ -1378,9 +1560,11 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         user?.id ?? null,
         language,
         seekerName || undefined,
-        canonicalActivationNameLines,
+        canonicalActivationPayload,
         enrichedJyotishContext,
         appLocale,
+        sqiTop33ChatBlock,
+        activeTransmissionNamesCsv,
       );
     } catch (e) {
       console.error(e);
@@ -1942,14 +2126,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                             (a) => a.name && tlower.includes(a.name.toLowerCase()),
                           );
                           const activeOnes = mentioned.filter((a) =>
-                            activeTransmissions.some(
-                              (t) =>
-                                t.name === a.name ||
-                                t.id === a.id ||
-                                (!!t.name &&
-                                  !!a.name &&
-                                  t.name.toLowerCase() === a.name.toLowerCase()),
-                            ),
+                            activeTransmissions.some((t) => fieldTransmissionMatchesRow(t, a)),
                           );
                           if (activeOnes.length === 0) return null;
                           return (
@@ -2301,7 +2478,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                           </p>
                           <p className="mt-0.5 text-[10px] text-white/35">
                             {resonanceMatches.filter((r) =>
-                              activeTransmissions.some((t) => t.id === r.id || t.name === r.name),
+                              activeTransmissions.some((t) => fieldTransmissionMatchesRow(t, r)),
                             ).length}{' '}
                             / {resonanceMatches.length} active in your field
                           </p>
@@ -2309,7 +2486,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                         {/* ── ACTIVATE BUTTON ── */}
                         {(() => {
                           const activeCount = resonanceMatches.filter((r) =>
-                            activeTransmissions.some((t) => t.id === r.id || t.name === r.name),
+                            activeTransmissions.some((t) => fieldTransmissionMatchesRow(t, r)),
                           ).length;
                           const allActive = activeCount === resonanceMatches.length;
                           return (
@@ -2338,8 +2515,8 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                       {/* ── ROW LIST ── */}
                       <div className="space-y-1.5">
                         {(showAllTop33 ? resonanceMatches : resonanceMatches.slice(0, 10)).map((row, idx) => {
-                          const isActive = activeTransmissions.some(
-                            (t) => t.id === row.id || t.name === row.name,
+                          const isActive = activeTransmissions.some((t) =>
+                            fieldTransmissionMatchesRow(t, row),
                           );
                           return (
                             <div
