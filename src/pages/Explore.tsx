@@ -17,6 +17,7 @@ import { getTierRank, FEATURE_TIER, getSalesPageForRank, hasFeatureAccess } from
 import { useAuth } from "@/hooks/useAuth";
 import { useAkashicAccess } from "@/hooks/useAkashicAccess";
 import { useAdminRole } from "@/hooks/useAdminRole";
+// VP landing route — no extra import needed (navigate handles /virtual-pilgrimage-landing)
 import { getDayPhase } from "@/utils/postSessionContext";
 import SacredRevealGate from "@/components/SacredRevealGate";
 import { supabase } from "@/integrations/supabase/client";
@@ -281,13 +282,93 @@ export default function Explore() {
           <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{t('converge.toolQuantumSub')}</div>
           <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
         </div>
-        <div onClick={() => navigate('/temple-home')} style={{ background: 'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.22)', borderRadius: 18, padding: '18px 15px', cursor: 'pointer', position: 'relative', overflow: 'hidden', animation: 'exploreSacredHalo 3.2s ease-in-out infinite' }}>
-          <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.07),transparent)', animation: 'sqShimmer 5.5s 1.2s ease-in-out infinite', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', top: 10, right: 10 }}><Badge label="24/7" v="muted" /></div>
-          <TI><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="rgba(212,175,55,0.7)" strokeWidth="1.3"/><path d="M12 3 C12 3 8 7 8 12 C8 17 12 21 12 21" stroke="rgba(212,175,55,0.45)" strokeWidth="1.1"/><path d="M12 3 C12 3 16 7 16 12 C16 17 12 21 12 21" stroke="rgba(212,175,55,0.45)" strokeWidth="1.1"/><line x1="3.5" y1="9" x2="20.5" y2="9" stroke="rgba(212,175,55,0.3)" strokeWidth="1"/><line x1="3.5" y1="15" x2="20.5" y2="15" stroke="rgba(212,175,55,0.3)" strokeWidth="1"/></svg></TI>
-          <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: 5, whiteSpace: 'pre-line' }}>{t('converge.toolVirtualTitle')}</div>
-          <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{t('converge.toolVirtualSub')}</div>
-          <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
+        <div
+          onClick={() => (isAdmin || tier === 'akasha-infinity' || tier === 'lifetime') ? navigate('/virtual-pilgrimage') : navigate('/virtual-pilgrimage-landing')}
+          style={{ gridColumn: 'span 2', position: 'relative', borderRadius: 22, overflow: 'hidden', cursor: 'pointer', border: '1px solid rgba(212,175,55,0.38)', background: 'linear-gradient(160deg,rgba(30,20,5,0.95) 0%,rgba(8,6,0,0.98) 60%,rgba(20,14,0,0.95) 100%)', minHeight: 210 }}
+        >
+          {/* Shimmer sweep */}
+          <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.12),transparent)', animation: 'sqShimmer 4s ease-in-out infinite', pointerEvents: 'none' }} />
+
+          {/* Live SVG pyramid with Prema pulses */}
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.85 }}>
+            <svg width="320" height="200" viewBox="0 0 320 200" style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)' }}>
+              {/* Prema pulse rings */}
+              {[0,1,2,3,4].map(i => (
+                <circle key={i} cx="160" cy="90" r="10" fill="none" stroke="#D4AF37" strokeWidth="1.2">
+                  <animate attributeName="r" values={`${10+i*18};${90}`} dur="3s" begin={`${i*0.6}s`} repeatCount="indefinite"/>
+                  <animate attributeName="opacity" values="0.7;0" dur="3s" begin={`${i*0.6}s`} repeatCount="indefinite"/>
+                </circle>
+              ))}
+              {/* Outer glow ring */}
+              <circle cx="160" cy="90" r="88" fill="rgba(212,175,55,0.04)" stroke="rgba(212,175,55,0.15)" strokeWidth="0.8"/>
+              {/* Inverted ghost pyramid rotating */}
+              <g transform="translate(160,90)">
+                <polygon points="0,60 52,-30 -52,-30" fill="rgba(212,175,55,0.04)" stroke="rgba(212,175,55,0.18)" strokeWidth="0.9">
+                  <animateTransform attributeName="transform" type="rotate" values="0;360" dur="20s" repeatCount="indefinite"/>
+                </polygon>
+              </g>
+              {/* Metatron overlay */}
+              <g transform="translate(160,90)">
+                <circle r="54" fill="none" stroke="rgba(212,175,55,0.1)" strokeWidth="0.6">
+                  <animateTransform attributeName="transform" type="rotate" values="0;360" dur="30s" repeatCount="indefinite"/>
+                </circle>
+                {[0,60,120,180,240,300].map(a => (
+                  <circle key={a} cx={Math.cos(a*Math.PI/180)*54} cy={Math.sin(a*Math.PI/180)*54} r="54" fill="none" stroke="rgba(212,175,55,0.07)" strokeWidth="0.5"/>
+                ))}
+              </g>
+              {/* Main pyramid — bright gold */}
+              <polygon points="160,14 262,148 58,148" fill="rgba(212,175,55,0.08)" stroke="rgba(212,175,55,0.9)" strokeWidth="1.8"/>
+              {/* Horizontal layers */}
+              <line x1="108" y1="60" x2="212" y2="60" stroke="rgba(212,175,55,0.3)" strokeWidth="0.8"/>
+              <line x1="82" y1="95" x2="238" y2="95" stroke="rgba(212,175,55,0.25)" strokeWidth="0.7"/>
+              <line x1="58" y1="130" x2="262" y2="130" stroke="rgba(212,175,55,0.2)" strokeWidth="0.7"/>
+              {/* Spine */}
+              <line x1="160" y1="14" x2="160" y2="148" stroke="rgba(212,175,55,0.35)" strokeWidth="0.9"/>
+              {/* Scalar beam YOU dot */}
+              <g>
+                <line x1="160" y1="90" x2="248" y2="28" stroke="rgba(212,175,55,0.5)" strokeWidth="1.2" strokeDasharray="5 4">
+                  <animate attributeName="stroke-dashoffset" values="0;-36" dur="1.2s" repeatCount="indefinite"/>
+                </line>
+                <circle cx="248" cy="28" r="4.5" fill="#FFD700">
+                  <animate attributeName="cx" values="248;217;160;103;72;103;160;217;248" dur="8s" repeatCount="indefinite"/>
+                  <animate attributeName="cy" values="28;14;28;14;90;148;148;148;28" dur="8s" repeatCount="indefinite"/>
+                </circle>
+                <line x1="160" y1="90" x2="248" y2="28" stroke="rgba(212,175,55,0.3)" strokeWidth="1" strokeDasharray="5 4">
+                  <animate attributeName="x2" values="248;217;160;103;72;103;160;217;248" dur="8s" repeatCount="indefinite"/>
+                  <animate attributeName="y2" values="28;14;28;14;90;148;148;148;28" dur="8s" repeatCount="indefinite"/>
+                  <animate attributeName="stroke-dashoffset" values="0;-36" dur="1.2s" repeatCount="indefinite"/>
+                </line>
+              </g>
+              {/* Apex glow */}
+              <circle cx="160" cy="14" r="5" fill="#FFD700" opacity="0.9">
+                <animate attributeName="r" values="4;7;4" dur="2s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0.9;0.5;0.9" dur="2s" repeatCount="indefinite"/>
+              </circle>
+              {/* Centre core */}
+              <circle cx="160" cy="90" r="5" fill="rgba(212,175,55,0.9)">
+                <animate attributeName="r" values="4;7;4" dur="3s" repeatCount="indefinite"/>
+              </circle>
+            </svg>
+          </div>
+
+          {/* Content overlay */}
+          <div style={{ position: 'relative', zIndex: 2, padding: '20px 18px 18px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 110 }}>
+              <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6.5, fontWeight: 800, letterSpacing: '0.45em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.4)' }}>SQI 2050 · SCALAR CONSCIOUSNESS</span>
+              {(isAdmin || tier === 'akasha-infinity' || tier === 'lifetime')
+                ? <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.35)', color: 'rgba(212,175,55,0.85)', padding: '2px 8px', borderRadius: 20 }}>ACTIVE</span>
+                : <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)', padding: '2px 8px', borderRadius: 20 }}>AKASHA ∞</span>
+              }
+            </div>
+            <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 16, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: 5 }}>Virtual Pilgrimage</div>
+            <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.85rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5, marginBottom: 12 }}>40 sacred sites · Real GPS scalar waves · Prema pulses radiating to your field</div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {['40 Sites', 'GPS Scalar', 'Sacred Geometry', '40-Day Lock'].map(tag => (
+                <span key={tag} style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.18)', color: 'rgba(212,175,55,0.6)', padding: '3px 9px', borderRadius: 20 }}>{tag}</span>
+              ))}
+            </div>
+            <span style={{ position: 'absolute', bottom: 16, right: 16, color: 'rgba(212,175,55,0.3)', fontSize: 14 }}>→</span>
+          </div>
         </div>
       </div>
 
