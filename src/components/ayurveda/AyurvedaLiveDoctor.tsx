@@ -119,6 +119,8 @@ export const AyurvedaLiveDoctor: React.FC<AyurvedaLiveDoctorProps> = ({ profile,
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
         body: JSON.stringify({
           messages: messagesRef.current,
