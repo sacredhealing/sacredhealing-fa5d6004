@@ -332,8 +332,12 @@ export default function VirtualPilgrimage() {
 
   // ── Strength change ───────────────────────────────────────────────────────
   function handleStrength(v:number){
+    const previous = strength;
     setStrengthLocal(v);
-    updateStrength(v);
+    updateStrength(v).catch((e) => {
+      setStrengthLocal(previous);
+      toast.error(e instanceof Error ? e.message : 'Could not update strength');
+    });
     if(toneOn) setToneVol(v/100*0.18);
   }
 
@@ -374,14 +378,24 @@ export default function VirtualPilgrimage() {
 
   // ── Mark practice ────────────────────────────────────────────────────────
   async function handleMarkDay(){
-    await markPracticeComplete();
+    try {
+      await markPracticeComplete();
+      toast.success('Practice marked complete');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not update practice');
+    }
   }
 
   // ── Release lock ──────────────────────────────────────────────────────────
   async function handleRelease(){
-    stopToneEngine(); setToneOn(false);
-    await releaseLock();
-    setChangeWarn(false);
+    try {
+      stopToneEngine(); setToneOn(false);
+      await releaseLock();
+      setChangeWarn(false);
+      toast.success('Pilgrimage lock released');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not release pilgrimage lock');
+    }
   }
 
   // ── Styles ────────────────────────────────────────────────────────────────
