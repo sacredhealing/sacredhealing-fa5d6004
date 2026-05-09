@@ -1047,74 +1047,84 @@ function QuantumApothecaryInner() {
     chatTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
 
-  // ── Bioenergetic auto-scan after each SQI response ──
-  const prevIsTypingRef = useRef(false);
-  useEffect(() => {
-    const wasTyping = prevIsTypingRef.current;
-    prevIsTypingRef.current = isTyping;
-    if (!wasTyping || isTyping) return;
-
-    const lastModel = [...messages].reverse().find((m) => m.role === 'model');
-    const text = (lastModel?.text || '').toLowerCase();
-    if (!text.trim()) return;
-
-    const pickNames = (): string[] => {
-      if (/(sleep|rest|restore)/i.test(text)) {
-        return ['Deep Sleep Harmonic', 'Neural Calm Sync', 'Melatonin', 'Phosphatidylserine', 'Magnesium (Ionic)'];
-      }
-      if (/(energy|vitality|depleted)/i.test(text)) {
-        return ['NMN + Resveratrol Cellular Battery', 'CoQ10', 'NAD+', 'Urolithin A', 'Primordial Earth Grounding'];
-      }
-      if (/(meditation|kriya|kundalini)/i.test(text)) {
-        return ['Neural Fluidity Protocol', 'Cognitive Super-Structure', 'Brahmi Code', 'Single-Point Focus', 'Gotu Kola Synapse'];
-      }
-      if (/(heart|love|anahata|bhakti)/i.test(text)) {
-        return ['Heart-Bloom Radiance', 'Original Source Nourishment', 'Ashwagandha Resonance', 'Shatavari Flow', 'Rose Heart Bloom'];
-      }
-      if (/(past life|past-life|karma|akasha)/i.test(text)) {
-        return ['Ancestral Tether Dissolve', 'Neem Bitter Truth', 'Activated Charcoal', 'Triphala Integrity', 'The Amrit Nectar (Guduchi)'];
-      }
-      return ['Biofield Purification', 'Structural Light Integrity', 'Crystalline Thought Flow', 'Zinc', 'Microbiome Harmony'];
+  const normalizeActivationForMixer = useCallback((act: Activation): Activation => {
+    const name = act.name?.trim() || '';
+    const id =
+      act.id && String(act.id).trim()
+        ? String(act.id).trim()
+        : `bio_${name.replace(/\s+/g, '_').toLowerCase()}`;
+    const sacredName = act.sacredName || (name ? `${name} Transmission` : 'Transmission');
+    const chakra = (act as Activation & { chakra?: string }).chakra;
+    const benefit =
+      act.benefit ||
+      [act.category, chakra].filter(Boolean).join(' · ');
+    return {
+      ...act,
+      id,
+      name: name || id,
+      sacredName,
+      benefit: benefit || act.vibrationalSignature || sacredName,
+      vibrationalSignature: act.vibrationalSignature || sacredName,
+      type: act.type ?? 'Bioenergetic',
+      color: act.color || '#60a5fa',
     };
+  }, []);
 
-    const names = pickNames();
-    const toAdd = names
-      .map((n) => ALL_ACTIVATIONS.find((a) => a.name === n))
-      .filter(Boolean) as Activation[];
+  const autoActivateFromSQIResponse = useCallback(
+    (responseText: string) => {
+      if (!responseText || ALL_ACTIVATIONS.length === 0) return;
 
-    const sacredMentioned = ALL_ACTIVATIONS.filter((a) => {
-      const sn = (a.sacredName || '').toLowerCase();
-      const first = sn.split(/\s+/)[0] || '';
-      return (
-        (a.name && text.includes(a.name.toLowerCase())) ||
-        (first.length > 2 && text.includes(first))
+      const lowerText = responseText.toLowerCase();
+      const byNameLen = [...ALL_ACTIVATIONS].sort(
+        (a, b) => (b.name?.length || 0) - (a.name?.length || 0),
       );
-    }).slice(0, 8);
+      const matched: Array<Activation & { pct: number; rowCategory?: string }> = [];
 
-    if (toAdd.length === 0 && sacredMentioned.length === 0) return;
+      for (const activation of byNameLen) {
+        const lowerName = (activation.name || '').toLowerCase();
+        if (!lowerName.trim()) continue;
+        if (lowerText.includes(lowerName)) {
+          matched.push({
+            ...activation,
+            pct: 100,
+            rowCategory: activation.category ?? '',
+          });
+        }
+      }
 
-    setActiveTransmissions((prev) => {
-      const next = [...prev];
-      const dedupePush = (act: Activation, src: NonNullable<Activation['source']>) => {
-        if (!isVegetarianActivation(act)) return;
-        const enriched = enrichTransmission(act, src);
-        if (
-          next.some(
-            (x) =>
-              x.id === enriched.id ||
-              (!!x.name &&
-                !!enriched.name &&
-                x.name.toLowerCase() === enriched.name.toLowerCase()),
-          )
-        )
-          return;
-        next.push(enriched);
-      };
-      for (const act of toAdd) dedupePush(act, 'apothecary_chat');
-      for (const act of sacredMentioned) dedupePush(act, 'apothecary_chat');
-      return next;
-    });
-  }, [isTyping, messages]);
+      if (matched.length === 0) return;
+
+      const enriched = matched
+        .filter((m) => isVegetarianActivation(m))
+        .map((m) => enrichTransmission(normalizeActivationForMixer(m), 'apothecary_chat'));
+
+      if (enriched.length === 0) return;
+
+      let addedForToast: typeof enriched = [];
+      setActiveTransmissions((prev) => {
+        const existingIds = new Set(prev.map((t) => t.id ?? t.name));
+        const toAdd = enriched.filter((e) => !existingIds.has(e.id ?? e.name));
+        addedForToast = toAdd;
+        if (toAdd.length === 0) return prev;
+        return [...prev, ...toAdd];
+      });
+
+      if (addedForToast.length > 0) {
+        toast.success(
+          `⟁ ${addedForToast.length} SQI transmission${addedForToast.length > 1 ? 's' : ''} activated to your field:\n` +
+            addedForToast.map((t) => `· ${t.name}`).join('\n'),
+          { duration: 5000 },
+        );
+      }
+
+      setResonanceMatches((prev) => {
+        const existingNames = new Set(prev.map((m) => m.name));
+        const newMatches = matched.filter((m) => !existingNames.has(m.name));
+        return newMatches.length > 0 ? [...prev, ...newMatches] : prev;
+      });
+    },
+    [normalizeActivationForMixer],
+  );
 
   useEffect(() => {
     const state = location.state as { openSessions?: boolean; focusChat?: boolean } | null;
@@ -1324,6 +1334,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
           const persistedMessages = [...allMsgs, assistantMsg];
           await persistMessages(persistedMessages);
           void persistSyncChatTurn({ role: 'assistant', content: finalText });
+          setTimeout(() => autoActivateFromSQIResponse(finalText), 100);
           // Weave this transmission into the Akashic Codex.
           if (user?.id && finalText?.trim()) {
             const sessionIdAtSend = currentSessionId;
@@ -1377,29 +1388,6 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
       setIsTyping(false);
     }
   };
-
-  const normalizeActivationForMixer = useCallback((act: Activation): Activation => {
-    const name = act.name?.trim() || '';
-    const id =
-      act.id && String(act.id).trim()
-        ? String(act.id).trim()
-        : `bio_${name.replace(/\s+/g, '_').toLowerCase()}`;
-    const sacredName = act.sacredName || (name ? `${name} Transmission` : 'Transmission');
-    const chakra = (act as Activation & { chakra?: string }).chakra;
-    const benefit =
-      act.benefit ||
-      [act.category, chakra].filter(Boolean).join(' · ');
-    return {
-      ...act,
-      id,
-      name: name || id,
-      sacredName,
-      benefit: benefit || act.vibrationalSignature || sacredName,
-      vibrationalSignature: act.vibrationalSignature || sacredName,
-      type: act.type ?? 'Bioenergetic',
-      color: act.color || '#60a5fa',
-    };
-  }, []);
 
   const addActivation = useCallback(
     (act: Activation) => {
@@ -1948,6 +1936,40 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                         <div className="text-[14px] leading-[1.75] text-white/85 break-words [overflow-wrap:anywhere] w-full min-w-0" style={{ maxWidth: '100%', wordBreak: 'break-word' }}>
                           {renderSQIContent(msg.text)}
                         </div>
+                        {(() => {
+                          const tlower = (msg.text || '').toLowerCase();
+                          const mentioned = ALL_ACTIVATIONS.filter(
+                            (a) => a.name && tlower.includes(a.name.toLowerCase()),
+                          );
+                          const activeOnes = mentioned.filter((a) =>
+                            activeTransmissions.some(
+                              (t) =>
+                                t.name === a.name ||
+                                t.id === a.id ||
+                                (!!t.name &&
+                                  !!a.name &&
+                                  t.name.toLowerCase() === a.name.toLowerCase()),
+                            ),
+                          );
+                          if (activeOnes.length === 0) return null;
+                          return (
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                              {activeOnes.map((a) => (
+                                <span
+                                  key={a.id ?? a.name}
+                                  className="rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.12em]"
+                                  style={{
+                                    background: 'rgba(212,175,55,0.1)',
+                                    border: '1px solid rgba(212,175,55,0.25)',
+                                    color: '#D4AF37',
+                                  }}
+                                >
+                                  ⟁ {a.name}
+                                </span>
+                              ))}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                     <div className="mx-auto mt-1 flex w-full max-w-[96%] flex-wrap items-center gap-x-3 gap-y-1">
