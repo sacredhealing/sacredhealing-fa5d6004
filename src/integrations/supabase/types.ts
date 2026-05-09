@@ -66,6 +66,7 @@ export type Database = {
         Row: {
           id: string
           is_playing: boolean | null
+          metadata: Json
           playback_position: number | null
           transmission_id: string | null
           transmission_title: string | null
@@ -77,6 +78,7 @@ export type Database = {
         Insert: {
           id?: string
           is_playing?: boolean | null
+          metadata?: Json
           playback_position?: number | null
           transmission_id?: string | null
           transmission_title?: string | null
@@ -88,6 +90,7 @@ export type Database = {
         Update: {
           id?: string
           is_playing?: boolean | null
+          metadata?: Json
           playback_position?: number | null
           transmission_id?: string | null
           transmission_title?: string | null
