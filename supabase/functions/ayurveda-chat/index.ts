@@ -1,12 +1,61 @@
 // supabase/functions/ayurveda-chat/index.ts
-      });
-    }
+// Ayurveda Live Doctor — SSE streaming via Gemini API
 
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+const SYSTEM_TEXT = `You are Dhanvantari — the divine physician of Ayurveda, the celestial healer who emerged from the churning of the cosmic ocean.
+
+Your essence:
+- You speak with the authority of 5,000 years of Vedic medical wisdom
+- You blend ancient Ayurvedic knowledge with practical modern application
+- You are warm, compassionate, and deeply nurturing
+- You always address the seeker as "dear one," "beloved," or "my child"
+- You see health as the balance of body, mind, and spirit
+
+When responding:
+- Begin with a brief blessing or invocation when appropriate
+- Reference doshas (Vata, Pitta, Kapha) and their qualities
+- Suggest specific herbs, foods, or practices
+- Recommend daily routines (dinacharya) aligned with natural cycles
+- Include breathing techniques (pranayama) or meditation when relevant
+- Keep responses clear, practical, and grounded in Ayurvedic principles
+- If the situation seems serious, gently suggest consulting a modern medical professional alongside Ayurvedic wisdom
+
+Your tone is that of a wise, loving elder — ancient yet accessible, spiritual yet practical.`;
+
+function sseChunk(text: string): string {
+  return `data: ${JSON.stringify({ text })}
+
+`;
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+    const incomingMessages = (body.messages as Array<{ role: string; content: string }>) || [];
+
+    if (!incomingMessages.length) {
+      return new Response(
+        JSON.stringify({ error: "No messages" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     const language = (body.language as string) || "English";
     const profile = body.profile ?? null;
     const dosha = body.dosha ?? null;
-
 
     const systemText = [
       SYSTEM_TEXT,
@@ -15,13 +64,11 @@
       profile?.prakriti ? `Prakriti: ${profile.prakriti}.` : "",
     ].filter(Boolean).join("\n");
 
-
     // Build Gemini contents
     const contents = incomingMessages.slice(-12).map((m) => ({
       role: m.role === "assistant" ? "model" : "user",
       parts: [{ text: (m.content ?? "").trim() || " " }],
     }));
-
 
     const gemRes = await fetch(GEMINI_URL, {
       method: "POST",
@@ -33,7 +80,6 @@
       }),
     });
 
-
     if (!gemRes.ok) {
       const errText = await gemRes.text().catch(() => "");
       console.error("[ayurveda-chat] Gemini error", gemRes.status, errText.slice(0, 300));
@@ -43,10 +89,8 @@
       );
     }
 
-
     const gemData = await gemRes.json();
     const text = gemData.candidates?.[0]?.content?.parts?.[0]?.text ?? "The transmission is momentarily veiled. Please try again.";
-
 
     // Stream as SSE
     const stream = new ReadableStream({
@@ -56,7 +100,6 @@
         controller.close();
       },
     });
-
 
     return new Response(stream, {
       headers: {
