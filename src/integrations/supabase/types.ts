@@ -62,6 +62,42 @@ export type Database = {
         }
         Relationships: []
       }
+      active_transmissions: {
+        Row: {
+          id: string
+          is_playing: boolean | null
+          playback_position: number | null
+          transmission_id: string | null
+          transmission_title: string | null
+          transmission_type: string | null
+          transmission_url: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          is_playing?: boolean | null
+          playback_position?: number | null
+          transmission_id?: string | null
+          transmission_title?: string | null
+          transmission_type?: string | null
+          transmission_url?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          is_playing?: boolean | null
+          playback_position?: number | null
+          transmission_id?: string | null
+          transmission_title?: string | null
+          transmission_type?: string | null
+          transmission_url?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_content: {
         Row: {
           content_type: string
@@ -5540,6 +5576,9 @@ export type Database = {
           morning_reminder_time: string
           notification_style: string
           onboarding_completed: boolean
+          pilgrimage_home_label: string | null
+          pilgrimage_home_lat: number | null
+          pilgrimage_home_lng: number | null
           preferred_language: string | null
           preferred_practice_duration: number
           referral_code: string | null
@@ -5573,6 +5612,9 @@ export type Database = {
           morning_reminder_time?: string
           notification_style?: string
           onboarding_completed?: boolean
+          pilgrimage_home_label?: string | null
+          pilgrimage_home_lat?: number | null
+          pilgrimage_home_lng?: number | null
           preferred_language?: string | null
           preferred_practice_duration?: number
           referral_code?: string | null
@@ -5606,6 +5648,9 @@ export type Database = {
           morning_reminder_time?: string
           notification_style?: string
           onboarding_completed?: boolean
+          pilgrimage_home_label?: string | null
+          pilgrimage_home_lat?: number | null
+          pilgrimage_home_lng?: number | null
           preferred_language?: string | null
           preferred_practice_duration?: number
           referral_code?: string | null
@@ -7879,6 +7924,84 @@ export type Database = {
           video_id?: string
           video_title?: string | null
           watched_at?: string
+        }
+        Relationships: []
+      }
+      virtual_pilgrimage_activations: {
+        Row: {
+          activated_at: string | null
+          bearing_deg: number
+          binaural_hz: number
+          carrier_hz: number
+          completed_at: string | null
+          created_at: string | null
+          days_active: number | null
+          distance_km: number
+          home_label: string | null
+          home_lat: number
+          home_lng: number
+          id: string
+          is_active: boolean | null
+          last_pulse_at: string | null
+          practice_log: string[] | null
+          pulse_count: number | null
+          released_early: boolean | null
+          schumann_lock_hz: number
+          site_id: string
+          site_name: string
+          strength: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          activated_at?: string | null
+          bearing_deg: number
+          binaural_hz: number
+          carrier_hz: number
+          completed_at?: string | null
+          created_at?: string | null
+          days_active?: number | null
+          distance_km: number
+          home_label?: string | null
+          home_lat: number
+          home_lng: number
+          id?: string
+          is_active?: boolean | null
+          last_pulse_at?: string | null
+          practice_log?: string[] | null
+          pulse_count?: number | null
+          released_early?: boolean | null
+          schumann_lock_hz: number
+          site_id: string
+          site_name: string
+          strength?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          activated_at?: string | null
+          bearing_deg?: number
+          binaural_hz?: number
+          carrier_hz?: number
+          completed_at?: string | null
+          created_at?: string | null
+          days_active?: number | null
+          distance_km?: number
+          home_label?: string | null
+          home_lat?: number
+          home_lng?: number
+          id?: string
+          is_active?: boolean | null
+          last_pulse_at?: string | null
+          practice_log?: string[] | null
+          pulse_count?: number | null
+          released_early?: boolean | null
+          schumann_lock_hz?: number
+          site_id?: string
+          site_name?: string
+          strength?: number | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
