@@ -120,6 +120,7 @@ const ExplorePage = React.lazy(() => import("./pages/ExplorePage"));
 const Onboarding = React.lazy(() => import("./pages/Onboarding"));
 const SpiritualPaths = React.lazy(() => import("./pages/SpiritualPaths"));
 const PathDetail = React.lazy(() => import("./pages/PathDetail"));
+const InnerPeacePath = React.lazy(() => import("./pages/InnerPeacePath"));
 const DailyRitual = React.lazy(() => import("./pages/DailyRitual"));
 const Journal = React.lazy(() => import("./pages/Journal"));
 const MeditationJournal = React.lazy(() => import("./pages/MeditationJournal"));
@@ -334,6 +335,7 @@ function AppRoutes() {
                   <Route path="/challenges" element={<Challenges />} />
                   <Route path="/ai-income" element={<AIIncomeEngine />} />
                   <Route path="/paths" element={<SpiritualPaths />} />
+                  <Route path="/paths/inner-peace" element={<InnerPeacePath />} />
                   <Route path="/paths/:slug" element={<PathDetail />} />
                   <Route path="/ritual" element={<DailyRitual />} />
                   <Route path="/journal" element={<Journal />} />
