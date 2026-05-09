@@ -71,3 +71,42 @@ export function useAIVedicReading(): UseAIVedicReadingResult {
       options?: { forceRefresh?: boolean }
     ) => {
       const cacheKey = getCacheKey(user, timeOffset, timezone, userId);
+      const cached = options?.forceRefresh ? null : loadFromCache(cacheKey);
+      if (cached) {
+        setReading(cached);
+        setError(null);
+        return;
+      }
+
+      abortControllerRef.current?.abort();
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const { data, error: fnError } = await supabase.functions.invoke('generate-vedic-reading', {
+          body: { user, timeOffset, timezone },
+        });
+
+        if (controller.signal.aborted) return;
+        if (fnError) throw fnError;
+
+        const sanitized = sanitizeVedicReading(data);
+        if (!sanitized) throw new Error('The Vedic reading response was incomplete. Please try again.');
+
+        saveToCache(cacheKey, sanitized);
+        setReading(sanitized);
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          setError(err instanceof Error ? err.message : 'Failed to generate Vedic reading');
+        }
+      } finally {
+        if (!controller.signal.aborted) setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  return { reading, isLoading, error, generateReading };
+}
