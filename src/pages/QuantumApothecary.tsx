@@ -2072,13 +2072,6 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
               const visStart = Math.max(0, messages.length - 20);
               const globalIndex = visStart + i;
               const msgKey = msg.id ?? `qa-msg-${globalIndex}-${msg.timestamp ?? 'na'}-${msg.role}`;
-              const tsLabel =
-                typeof msg.timestamp === 'number'
-                  ? new Date(msg.timestamp).toLocaleString(appLocale, {
-                      dateStyle: 'short',
-                      timeStyle: 'medium',
-                    })
-                  : '—';
               return (
               <motion.div key={msgKey} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
                 className={`flex w-full min-w-0 flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
@@ -2096,15 +2089,6 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                   </div>
                 ) : (
                   <>
-                    <div className="mx-auto mb-1 flex w-full max-w-[96%] flex-wrap items-center justify-between gap-2">
-                      <span
-                        className="rounded-md border border-[#D4AF37]/35 bg-[#D4AF37]/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.2em] text-[#D4AF37]"
-                        style={{ boxShadow: '0 0 12px rgba(212,175,55,0.12)' }}
-                      >
-                        Master
-                      </span>
-                      <p className="text-[10px] tabular-nums text-white/35">{tsLabel}</p>
-                    </div>
                     <div
                       className="chat-message w-full max-w-[96%] mx-auto rounded-[20px] px-5 py-4"
                       style={{
