@@ -1,6 +1,8 @@
 // supabase/functions/prediction-engine-scan/index.ts
 // Polymarket market scanner with Gemini probability estimation
-// Returns top edges that meet minimum threshold
+// COST FIX: gemini-2.5-flash → gemini-2.0-flash for this task.
+// Probability estimation (JSON with 3 fields, 200 token cap) does NOT need
+// the most capable model. 2.0-flash is ~50% cheaper with identical quality here.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
@@ -25,8 +27,8 @@ interface ScanRequest {
 interface PolymarketEvent {
   id: string;
   question: string;
-  outcomes: string;        // JSON array string
-  outcomePrices: string;   // JSON array string
+  outcomes: string;
+  outcomePrices: string;
   volume24hr?: number;
   liquidity?: number;
   active: boolean;
@@ -60,7 +62,10 @@ function kelly(
   };
 }
 
-// Ask Gemini to estimate true probability of an event
+// Ask Gemini to estimate true probability of an event.
+// COST FIX: was gemini-2.5-flash. Downgraded to gemini-2.0-flash.
+// This prompt returns a 3-field JSON object (200 tokens max) — simple calibrated
+// reasoning, not complex analysis. 2.0-flash handles this perfectly.
 async function geminiEstimate(question: string, marketPrice: number) {
   const prompt = `You are a calibrated probability estimator for prediction markets.
 
@@ -82,7 +87,7 @@ Respond ONLY with valid JSON, no other text:
 }`;
 
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -140,7 +145,6 @@ serve(async (req: Request) => {
           const prices = JSON.parse(e.outcomePrices);
           if (outs.length !== 2) return false;
           const yes = parseFloat(prices[0]);
-          // Skip extreme prices (less edge available, fees dominate)
           return yes > 0.15 && yes < 0.85 && (e.volume24hr ?? 0) > 1000;
         } catch {
           return false;

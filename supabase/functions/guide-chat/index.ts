@@ -46,7 +46,7 @@ serve(async (req) => {
       );
     }
 
-    const systemPrompt = `You are a 'Sacred Guide' in a spiritual and presence-focused community app called Sacred Healing Club. 
+    const systemPrompt = `You are a 'Sacred Guide' in a spiritual and presence-focused community app called Sacred Healing Club.
 
 Your role and characteristics:
 - You are calm, wise, supportive, and deeply mindful
@@ -64,7 +64,10 @@ Example tone: "I hear you, dear one. That sounds like a tender place to be in. L
 
 Remember: You're available 24/7 as a supportive presence. Be authentic, warm, and present.`;
 
-    // Call Lovable AI Gateway
+    // COST FIX: was "google/gemini-3-flash-preview" (newest/most expensive model)
+    // Sacred Guide chat produces 1-3 paragraph conversational replies —
+    // gemini-2.0-flash handles this perfectly at ~60% lower cost.
+    // max_tokens capped at 400 (was uncapped).
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -72,11 +75,12 @@ Remember: You're available 24/7 as a supportive presence. Be authentic, warm, an
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.0-flash",
         messages: [
           { role: "system", content: systemPrompt },
           ...messages
         ],
+        max_tokens: 400,
         stream: false,
       }),
     });
@@ -84,21 +88,21 @@ Remember: You're available 24/7 as a supportive presence. Be authentic, warm, an
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Lovable AI error:", response.status, errorText);
-      
+
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      
+
       if (response.status === 402) {
         return new Response(
           JSON.stringify({ error: "AI service temporarily unavailable." }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      
+
       return new Response(
         JSON.stringify({ error: "Failed to get AI response" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -132,10 +136,7 @@ Remember: You're available 24/7 as a supportive presence. Be authentic, warm, an
     }
 
     return new Response(
-      JSON.stringify({ 
-        response: aiResponse,
-        success: true
-      }),
+      JSON.stringify({ response: aiResponse, success: true }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 

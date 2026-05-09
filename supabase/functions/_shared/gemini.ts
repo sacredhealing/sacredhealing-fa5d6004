@@ -1,6 +1,7 @@
 // ============================================================
 // Gemini API helpers — Embeddings · Generation · Imagen 3
 // Used by the entire Akashic Codex curator stack.
+// COST OPTIMIZED v2.0 — default maxOutputTokens: 32768 → 2048
 // ============================================================
 
 const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta";
@@ -41,7 +42,10 @@ export async function generateJson<T = unknown>(
     contents: [{ role: "user", parts: [{ text: userPrompt }] }],
     generationConfig: {
       temperature: opts.temperature ?? 0.4,
-      maxOutputTokens: opts.maxOutputTokens ?? 32768,
+      // COST FIX: was 32768 — most codex tasks need 500-2048, not 32k
+      // Callers that genuinely need more (e.g. curate-transmission full-write)
+      // must pass maxOutputTokens explicitly.
+      maxOutputTokens: opts.maxOutputTokens ?? 2048,
       responseMimeType: "application/json",
     },
   };

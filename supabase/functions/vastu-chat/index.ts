@@ -112,13 +112,11 @@ serve(async (req) => {
           const data = b64.includes(',') ? b64.split(',')[1] : b64;
           return { inlineData: { mimeType: 'image/jpeg', data } };
         });
-        // Prepend image parts to existing text
         lastMsg.parts = [...imageParts, ...lastMsg.parts];
       }
     }
 
-    // Use gemini-2.0-flash (supports vision and streaming)
-    const modelName = images && images.length > 0 ? 'gemini-2.0-flash' : 'gemini-2.0-flash';
+    const modelName = 'gemini-2.0-flash';
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`;
 
     const response = await fetch(apiUrl, {
@@ -130,7 +128,9 @@ serve(async (req) => {
           temperature: images && images.length > 0 ? 0.2 : 0.7,
           topK: 40,
           topP: 0.95,
-          maxOutputTokens: 4096,
+          // COST FIX: was 4096 — Vastu chat responses fit in 2048.
+          // Full module prescriptions with remedies: ~800-1200 tokens.
+          maxOutputTokens: 2048,
         },
         safetySettings: [
           { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },

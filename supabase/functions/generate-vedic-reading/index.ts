@@ -216,7 +216,7 @@ Include exactly 4 upcoming horas after the current one in upcomingHoras.`;
             temperature: 0.7,
             topK: 40,
             topP: 0.95,
-            maxOutputTokens: 6000,
+            maxOutputTokens: 4096,
             responseMimeType: "application/json",
           },
           safetySettings: [

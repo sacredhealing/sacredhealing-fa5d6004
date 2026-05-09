@@ -5,7 +5,7 @@
  *  1. Glowing 12-pointed star icon in the Soma/Nada section
  *  2. Click → HRAUM prompt input modal
  *  3. HRAUM activation → vertical Scalar Beam (Gold #D4AF37) pulsing top→head
- *  4. Gemini live Solar Tracking when VITE_GEMINI_API_KEY is set; otherwise simulated metrics
+ *  4. Pure math solar tracking (no Gemini) — refreshed every 90s when scalar beam active
  *  5. Permanent Background Activation overlay (persists for the browser session)
  *
  * UNCHANGED: All affiliate tracking, Stripe checkout triggers, feature gating,
@@ -24,8 +24,6 @@ import { Sun, Radio, Activity, Lock, Unlock, Cpu, Zap } from "lucide-react";
 import { useMembership } from "@/hooks/useMembership";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { hasFeatureAccess, FEATURE_TIER } from "@/lib/tierAccess";
-import { GoogleGenAI } from "@google/genai";
-
 /* ─── Types ─────────────────────────────────────────────────────── */
 type InterfaceState = "STANDBY" | "INITIALIZING" | "ACTIVE" | "ERROR";
 interface LogEntry {
@@ -739,22 +737,12 @@ export default function AethericHeliostat() {
     }
   };
 
-  // ─── Solar Tracking: Gemini when VITE_GEMINI_API_KEY exists ─────
-  const fetchSolarTracking = useCallback(async () => {
+  // ─── Solar Tracking: client-side astronomy → SolarData (zero API cost) ─────
+  const fetchSolarTracking = useCallback(() => {
     setSolarLoading(true);
     const now = new Date();
-    const prompt = `You are the SQI-2050 Aetheric Heliostat Solar Tracking system connected to the Akasha-Neural Archive.
-Generate real-time solar tracking metrics for ${now.toISOString()} in JSON only (no markdown, no preamble):
-{
-  "alcyoneAlignment": <number 85-100>,
-  "pranaFlux": <number 1.0-2.5>,
-  "solarRadiance": <number 525-535>,
-  "causalDensity": <number 0.001-0.005>,
-  "pinealActivation": <number 75-99>,
-  "nadiCoherence": <number 80-99>,
-  "label": "<one poetic sentence about current solar-cosmic transmission>"
-}
-Use numeric values only for pranaFlux (GW) and solarRadiance (Hz).`;
+    const lat = 20.5937;
+    const lng = 78.9629;
 
     const finish = (data: SolarData, log: boolean) => {
       setSolarData(data);
@@ -764,32 +752,78 @@ Use numeric values only for pranaFlux (GW) and solarRadiance (Hz).`;
     };
 
     try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
-      if (!apiKey) {
-        finish(FALLBACK_SOLAR, false);
-        return;
-      }
-      const ai = new GoogleGenAI({ apiKey });
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-      });
-      const raw =
-        (response as { text?: string }).text ??
-        response.candidates?.[0]?.content?.parts?.find((p: { text?: string }) => p.text)?.text ??
-        "";
-      const clean = String(raw).replace(/```json|```/g, "").trim();
-      const parsed = JSON.parse(clean) as SolarData;
-      if (
-        typeof parsed.alcyoneAlignment === "number" &&
-        typeof parsed.pranaFlux === "number" &&
-        typeof parsed.solarRadiance === "number" &&
-        typeof parsed.label === "string"
-      ) {
-        finish(parsed, true);
-      } else {
-        finish(FALLBACK_SOLAR, false);
-      }
+      const JD = now.getTime() / 86400000 + 2440587.5;
+      const n = JD - 2451545.0;
+      const L = (280.46 + 0.9856474 * n) % 360;
+      const g = ((357.528 + 0.9856003 * n) % 360) * (Math.PI / 180);
+      const lambdaRad =
+        (L + 1.915 * Math.sin(g) + 0.02 * Math.sin(2 * g)) * (Math.PI / 180);
+      const epsilon = 23.439 * (Math.PI / 180);
+      const sinDec = Math.sin(epsilon) * Math.sin(lambdaRad);
+      const dec = Math.asin(sinDec);
+      const UT = now.getUTCHours() + now.getUTCMinutes() / 60 + now.getUTCSeconds() / 3600;
+      const GMST = ((6.697375 + 0.0657098242 * n + UT) % 24 + 24) % 24;
+      const LMST = ((GMST + lng / 15) % 24 + 24) % 24;
+      const RA_hours =
+        (Math.atan2(Math.cos(epsilon) * Math.sin(lambdaRad), Math.cos(lambdaRad)) *
+          (180 / Math.PI)) /
+        15;
+      const HA = ((LMST - ((RA_hours + 24) % 24)) * 15) * (Math.PI / 180);
+      const latRad = lat * (Math.PI / 180);
+      const sinAlt = Math.sin(latRad) * Math.sin(dec) + Math.cos(latRad) * Math.cos(dec) * Math.cos(HA);
+      const altitude = Math.asin(Math.max(-1, Math.min(1, sinAlt))) * (180 / Math.PI);
+
+      const sunLongDeg = ((lambdaRad * (180 / Math.PI)) % 360 + 360) % 360;
+      const nakshatraNames = [
+        "Ashwini",
+        "Bharani",
+        "Krittika",
+        "Rohini",
+        "Mrigashira",
+        "Ardra",
+        "Punarvasu",
+        "Pushya",
+        "Ashlesha",
+        "Magha",
+        "Purva Phalguni",
+        "Uttara Phalguni",
+        "Hasta",
+        "Chitra",
+        "Swati",
+        "Vishakha",
+        "Anuradha",
+        "Jyeshta",
+        "Mula",
+        "Purva Ashadha",
+        "Uttara Ashadha",
+        "Shravana",
+        "Dhanishta",
+        "Shatabhisha",
+        "Purva Bhadrapada",
+        "Uttara Bhadrapada",
+        "Revati",
+      ];
+      const nakshatraIndex = Math.min(26, Math.floor((sunLongDeg / 360) * 27));
+      const nak = nakshatraNames[nakshatraIndex] ?? "Ashwini";
+
+      const altClamped = Math.max(0, Math.min(90, altitude));
+      const alt01 = altClamped / 90;
+      const fluxWave = 0.5 + 0.5 * Math.sin(JD * Math.PI * 2);
+
+      const data: SolarData = {
+        alcyoneAlignment: 85 + alt01 * 15,
+        pranaFlux: 1.0 + alt01 * 1.5,
+        solarRadiance: 525 + Math.min(10, alt01 * 6 + fluxWave * 4),
+        causalDensity: 0.001 + 0.003 * (0.5 + 0.5 * Math.cos(n * Math.PI * 2)),
+        pinealActivation: 75 + alt01 * 24,
+        nadiCoherence: 80 + alt01 * 19,
+        label:
+          altitude > 0
+            ? `${nak} pada — Central Sun altitude ${altitude.toFixed(1)}°; scalar channel ${altitude > 45 ? "peak" : "building"}.`
+            : `${nak} pada — Sun below horizon; night-phase causal sheath thinning.`,
+      };
+
+      finish(data, true);
     } catch {
       finish(FALLBACK_SOLAR, false);
     } finally {

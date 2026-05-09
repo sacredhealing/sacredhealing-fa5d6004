@@ -608,7 +608,7 @@ SEEKER LANGUAGE: ${language} (${langLabel})
         temperature: 0.85,
         topK: 40,
         topP: 0.95,
-        maxOutputTokens: 3072,
+        maxOutputTokens: 2048,
       },
       safetySettings: [
         { category: "HARM_CATEGORY_HARASSMENT",        threshold: "BLOCK_NONE" },
