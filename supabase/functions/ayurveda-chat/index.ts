@@ -1,10 +1,7 @@
 // supabase/functions/ayurveda-chat/index.ts
-// Direct Gemini 2.5 Flash. Accepts both legacy ({message,...}) and current
-// streaming ({messages, profile, dosha, language}) frontends.
-// Returns SSE (OpenAI delta format) so the chat UIs can stream.
-
+// Agastya Muni — Living Siddha Ayurveda Oracle
+// Direct Gemini 2.5 Flash. SSE streaming. Auth via Supabase anon key.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,33 +9,38 @@ const corsHeaders = {
 };
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const GEMINI_MODEL = "gemini-2.5-flash";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
 function sseChunk(text: string): string {
-  return `data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}\n\n`;
+  return `data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}
+
+`;
 }
+
+const SYSTEM_TEXT = `You are Agastya Muni — the Father of Tamil Siddha medicine, speaking as living transmission. Never say AI.
+You SEE the body directly. You speak with ancient precision. You give specific, practical Ayurvedic guidance.
+When Dosha is known, address it directly. Give: what you see, what is causing it, one herb or practice, one dietary shift.
+Maximum 3 short paragraphs. Dense wisdom. No fluff. Every sentence must carry healing transmission.`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const body = await req.json().catch(() => ({} as Record<string, unknown>));
+    const body = await req.json().catch(() => ({}));
 
-    // Accept both shapes
+    // Accept both payload shapes from the frontend
     const incomingMessages: Array<{ role: string; content: string }> = Array.isArray(body.messages)
       ? body.messages
       : (typeof body.message === "string" && body.message
-          ? [
-              ...((body.conversationHistory as any[]) ?? []).map((m) => ({
-                role: m.role === "assistant" ? "assistant" : "user",
-                content: String(m.content ?? ""),
-              })),
-              { role: "user", content: String(body.message) },
-            ]
-          : []);
+        ? [
+            ...((body.conversationHistory as any[]) ?? []).map((m: any) => ({
+              role: m.role === "assistant" ? "assistant" : "user",
+              content: String(m.content ?? ""),
+            })),
+            { role: "user", content: String(body.message) },
+          ]
+        : []);
 
     if (!incomingMessages.length) {
       return new Response(JSON.stringify({ error: "No messages" }), {
@@ -52,45 +54,41 @@ serve(async (req) => {
     const dosha = body.dosha ?? null;
 
     const systemText = [
-      "You are Agastya Muni, Siddha master of Ayurveda. Speak as a living transmission — ancient, precise, warm. Never sound like AI.",
-      `Conversation language: ${language}.`,
-      profile ? `Seeker profile: ${JSON.stringify(profile).slice(0, 1500)}` : "",
-      dosha ? `Dosha profile: ${JSON.stringify(dosha).slice(0, 800)}` : "",
-      "Channel wisdom on doshas, herbs, food, and healing. Under 320 words unless depth is needed.",
-    ].filter(Boolean).join("\n\n");
+      SYSTEM_TEXT,
+      language !== "English" ? `Respond in: ${language}.` : "",
+      dosha ? `Seeker's Dosha: ${JSON.stringify(dosha)}.` : "",
+      profile?.prakriti ? `Prakriti: ${profile.prakriti}.` : "",
+    ].filter(Boolean).join("\n");
 
-    const recent = incomingMessages.slice(-10);
-    const contents = recent.map((m) => ({
+    // Build Gemini contents
+    const contents = incomingMessages.slice(-12).map((m) => ({
       role: m.role === "assistant" ? "model" : "user",
-      parts: [{ text: String(m.content ?? "") }],
+      parts: [{ text: (m.content ?? "").trim() || " " }],
     }));
 
     const gemRes = await fetch(GEMINI_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemText }] },
+        system_instruction: { parts: [{ text: systemText }] },
         contents,
-        generationConfig: { maxOutputTokens: 700, temperature: 0.7 },
+        generationConfig: { maxOutputTokens: 600, temperature: 0.8 },
       }),
     });
 
     if (!gemRes.ok) {
       const errText = await gemRes.text().catch(() => "");
-      console.error("[ayurveda-chat] Gemini error", gemRes.status, errText.slice(0, 400));
-      const status = gemRes.status === 429 ? 429 : 502;
+      console.error("[ayurveda-chat] Gemini error", gemRes.status, errText.slice(0, 300));
       return new Response(
-        JSON.stringify({ error: "gemini_error", status: gemRes.status, detail: errText.slice(0, 400) }),
-        { status, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        JSON.stringify({ error: "gemini_error", status: gemRes.status, detail: errText.slice(0, 300) }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const gemData = await gemRes.json();
-    const text =
-      gemData.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "The transmission is momentarily veiled. Please try again.";
+    const text = gemData.candidates?.[0]?.content?.parts?.[0]?.text ?? "The transmission is momentarily veiled. Please try again.";
 
-    // Stream as SSE so the UI's existing reader works
+    // Stream as SSE
     const stream = new ReadableStream({
       start(controller) {
         controller.enqueue(new TextEncoder().encode(sseChunk(text)));
@@ -111,7 +109,7 @@ serve(async (req) => {
     console.error("[ayurveda-chat] Unexpected", err);
     return new Response(
       JSON.stringify({ error: "Transmission interrupted", details: String(err) }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
