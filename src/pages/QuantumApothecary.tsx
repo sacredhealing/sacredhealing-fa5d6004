@@ -1206,13 +1206,18 @@ function QuantumApothecaryInner() {
 
   useEffect(() => {
     const count = messages.length;
-    if (count <= prevMsgCountRef.current) return; // streaming edits or other state changes
+    if (count <= prevMsgCountRef.current) return;
     prevMsgCountRef.current = count;
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    const timer = setTimeout(() => {
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 80);
+    return () => clearTimeout(timer);
   }, [messages.length]);
 
   const scrollChatToBottom = useCallback(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    requestAnimationFrame(() => {
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
   }, []);
 
   const scrollChatToTop = useCallback(() => {
