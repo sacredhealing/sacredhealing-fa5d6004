@@ -127,7 +127,7 @@ const LifeBookNexusBlock: React.FC<{ userId: string }> = ({ userId }) => {
           .select('chapter_type, content, updated_at')
           .eq('user_id', userId)
           .order('updated_at', { ascending: false });
-        if (data?.length) setChapters(data as { chapter_type: string; content: { title: string; summary?: string }[] }[]);
+        if (data?.length) setChapters(data as unknown as { chapter_type: string; content: { title: string; summary?: string }[] }[]);
       } catch { /* silent */ }
       setLoading(false);
     };
