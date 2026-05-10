@@ -104,6 +104,100 @@ const SQTile: React.FC<{
   </div>
 );
 
+// ── LifeBook Nexus Block — shown for ALL users at bottom of Nexus ──
+const LIFEBOOK_LABELS: Record<string, string> = {
+  past_lives: 'Past Lives',
+  healing_upgrades: 'Healing',
+  future_visions: 'Future',
+  spiritual_figures: 'Masters',
+  nadi_knowledge: 'Nadi',
+  children: 'Lineage',
+  general_wisdom: 'Wisdom',
+};
+
+const LifeBookNexusBlock: React.FC<{ userId: string }> = ({ userId }) => {
+  const [chapters, setChapters] = React.useState<{ chapter_type: string; content: { title: string; summary?: string }[] }[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const load = async () => {
+      try {
+        const { data } = await supabase
+          .from('life_book_chapters')
+          .select('chapter_type, content, updated_at')
+          .eq('user_id', userId)
+          .order('updated_at', { ascending: false });
+        if (data?.length) setChapters(data as { chapter_type: string; content: { title: string; summary?: string }[] }[]);
+      } catch { /* silent */ }
+      setLoading(false);
+    };
+    load();
+  }, [userId]);
+
+  if (loading || chapters.length === 0) return null;
+
+  return (
+    <div
+      style={{
+        margin: '28px 16px 0',
+        background: 'rgba(255,255,255,0.02)',
+        backdropFilter: 'blur(40px)',
+        border: '1px solid rgba(212,175,55,0.12)',
+        borderRadius: 28,
+        padding: '18px 16px 20px',
+        animation: 'sqFadeUp 0.5s 0.45s ease both',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <div>
+          <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7.5, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.5)', marginBottom: 3 }}>
+            Akasha Archive
+          </div>
+          <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '1rem', fontWeight: 600, color: 'rgba(255,255,255,0.82)' }}>
+            Your LifeBook
+          </div>
+        </div>
+        <Link
+          to="/life-book"
+          style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.5)', textDecoration: 'none' }}
+        >
+          Open →
+        </Link>
+      </div>
+
+      <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 8 }}>
+        {chapters.map((ch) => {
+          const entries = Array.isArray(ch.content) ? ch.content : [];
+          const latest = entries[entries.length - 1];
+          return (
+            <Link key={ch.chapter_type} to="/life-book" style={{ textDecoration: 'none' }}>
+              <div style={{
+                background: 'rgba(212,175,55,0.06)',
+                border: '1px solid rgba(212,175,55,0.15)',
+                borderRadius: 16,
+                padding: '8px 12px',
+                minWidth: 90,
+              }}>
+                <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 800, letterSpacing: '0.4em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.5)', marginBottom: 4 }}>
+                  {LIFEBOOK_LABELS[ch.chapter_type] ?? ch.chapter_type}
+                </div>
+                {latest?.title && (
+                  <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '0.72rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.4 }}>
+                    {latest.title.slice(0, 40)}{latest.title.length > 40 ? '…' : ''}
+                  </div>
+                )}
+                <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 7, fontWeight: 700, color: 'rgba(212,175,55,0.3)', marginTop: 4 }}>
+                  {entries.length} {entries.length === 1 ? 'entry' : 'entries'}
+                </div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 const Dashboard: React.FC = () => {
   const { t, language } = useTranslation();
   const navigate = useNavigate();
