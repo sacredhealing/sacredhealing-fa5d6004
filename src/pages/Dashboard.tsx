@@ -873,6 +873,7 @@ const Dashboard: React.FC = () => {
           </Link>
         </div>
       )}
+      {user && <LifeBookNexusBlock userId={user.id} />}
       {user && <UserChatHistory />}
     </div>
   );
