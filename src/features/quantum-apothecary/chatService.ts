@@ -2,9 +2,164 @@ import type { Message } from './types';
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/quantum-apothecary-chat`;
 
+function supabaseAnonHeader(): string {
+  return (
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
+    import.meta.env.VITE_SUPABASE_ANON_KEY ??
+    ''
+  );
+}
+
 export interface UserImagePayload {
   base64: string;
   mimeType: string;
+}
+
+export interface StreamSQIParams {
+  messages: Array<{ role: string; content: string }>;
+  userId?: string | null;
+  seekerName?: string;
+  language?: string;
+  jyotishContext?: string;
+  biofieldContext?: string;
+  canonicalActivationNames?: string;
+  activeTransmissionNames?: string;
+  localTime?: string;
+  localDate?: string;
+  timezone?: string;
+  userImage?: UserImagePayload | null;
+  onChunk?: (chunk: string, fullText: string) => void;
+  onComplete?: (fullText: string) => void;
+  onError?: (error: string) => void;
+}
+
+/** Streams SQI from quantum-apothecary-chat — resilient SSE parsing, no fetch timeout (mobile-friendly). */
+export async function streamSQIResponse({
+  messages,
+  userId,
+  seekerName,
+  language,
+  jyotishContext,
+  biofieldContext,
+  canonicalActivationNames,
+  activeTransmissionNames,
+  localTime,
+  localDate,
+  timezone,
+  userImage,
+  onChunk,
+  onComplete,
+  onError,
+}: StreamSQIParams): Promise<void> {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseKey = supabaseAnonHeader();
+
+  const controller = new AbortController();
+
+  let response: Response;
+  try {
+    response = await fetch(`${supabaseUrl}/functions/v1/quantum-apothecary-chat`, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${supabaseKey}`,
+      },
+      body: JSON.stringify({
+        messages,
+        userId,
+        seekerName,
+        language,
+        jyotishContext,
+        biofieldContext,
+        canonicalActivationNames,
+        activeTransmissionNames,
+        localTime,
+        localDate,
+        timezone,
+        userImage: userImage ?? null,
+      }),
+    });
+  } catch (err) {
+    onError?.(String(err));
+    return;
+  }
+
+  if (!response.ok) {
+    onError?.(`HTTP ${response.status}`);
+    return;
+  }
+
+  const reader = response.body?.getReader();
+  if (!reader) {
+    onError?.('No stream body');
+    return;
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let fullText = '';
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const jsonStr = line.slice(6).trim();
+        if (!jsonStr || jsonStr === '[DONE]') continue;
+
+        try {
+          const parsed = JSON.parse(jsonStr);
+          const chunk =
+            parsed?.choices?.[0]?.delta?.content ??
+            parsed?.candidates?.[0]?.content?.parts?.[0]?.text ??
+            '';
+          if (chunk) {
+            fullText += chunk;
+            onChunk?.(chunk, fullText);
+          }
+        } catch {
+          /* malformed chunk — skip, do not abort */
+        }
+      }
+    }
+
+    if (buffer.startsWith('data: ')) {
+      const jsonStr = buffer.slice(6).trim();
+      if (jsonStr && jsonStr !== '[DONE]') {
+        try {
+          const parsed = JSON.parse(jsonStr);
+          const chunk =
+            parsed?.choices?.[0]?.delta?.content ??
+            parsed?.candidates?.[0]?.content?.parts?.[0]?.text ??
+            '';
+          if (chunk) {
+            fullText += chunk;
+            onChunk?.(chunk, fullText);
+          }
+        } catch {
+          /* ignore trailing parse errors */
+        }
+      }
+    }
+
+    onComplete?.(fullText);
+  } catch (err) {
+    if (fullText.length > 0) {
+      onComplete?.(fullText);
+    } else {
+      onError?.(String(err));
+    }
+  } finally {
+    reader.cancel().catch(() => {});
+  }
 }
 
 // Dedicated palm scan — uses the edge function's scanMode path.
@@ -21,7 +176,7 @@ export async function scanNadiFromPalm(options: {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      Authorization: `Bearer ${supabaseAnonHeader()}`,
     },
     body: JSON.stringify({
       scanMode: true,
@@ -49,13 +204,11 @@ export async function streamChatWithSQI(
   canonicalActivationNames?: string,
   jyotishContext?: string,
   localeTag?: string,
-  /** Voice Top 33 / active-field intelligence — edge may merge into system prompt */
   biofieldContext?: string,
-  /** Comma-separated names currently in the seeker's field */
   activeTransmissionNames?: string,
 ) {
   const recent = messages.slice(-15);
-  const apiMessages = recent.map(m => ({
+  const apiMessages = recent.map((m) => ({
     role: m.role === 'model' ? 'assistant' : 'user',
     content: m.text,
   }));
@@ -77,62 +230,33 @@ export async function streamChatWithSQI(
     timeZone: timezone,
   });
 
-  const resp = await fetch(CHAT_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+  let completed = false;
+  let fatal: string | undefined;
+
+  await streamSQIResponse({
+    messages: apiMessages,
+    userId: userId ?? null,
+    seekerName: seekerName ?? '',
+    language: language ?? 'English',
+    canonicalActivationNames: canonicalActivationNames ?? '',
+    jyotishContext: jyotishContext ?? '',
+    biofieldContext: biofieldContext ?? '',
+    activeTransmissionNames: activeTransmissionNames ?? '',
+    localTime,
+    localDate,
+    timezone,
+    userImage: userImage ?? null,
+    onChunk: (chunk) => onDelta(chunk),
+    onComplete: () => {
+      completed = true;
+      onDone();
     },
-    body: JSON.stringify({
-      messages: apiMessages,
-      userId: userId ?? null,
-      language: language ?? 'English',
-      seekerName: seekerName ?? '',
-      canonicalActivationNames: canonicalActivationNames ?? '',
-      jyotishContext: jyotishContext ?? '',
-      biofieldContext: biofieldContext ?? '',
-      activeTransmissionNames: activeTransmissionNames ?? '',
-      localTime,
-      localDate,
-      timezone,
-      userImage: userImage ?? null,
-    }),
+    onError: (msg) => {
+      fatal = msg;
+    },
   });
 
-  if (!resp.ok || !resp.body) {
-    const errText = await resp.text().catch(() => '');
-    throw new Error(`SQI transmission failed (${resp.status}): ${errText.slice(0, 200)}`);
+  if (!completed) {
+    throw new Error(fatal || 'SQI transmission failed');
   }
-
-  const reader = resp.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
-  let done = false;
-
-  while (!done) {
-    const { done: rDone, value } = await reader.read();
-    if (rDone) break;
-    buffer += decoder.decode(value, { stream: true });
-
-    let idx: number;
-    while ((idx = buffer.indexOf('\n')) !== -1) {
-      let line = buffer.slice(0, idx);
-      buffer = buffer.slice(idx + 1);
-      if (line.endsWith('\r')) line = line.slice(0, -1);
-      if (!line || line.startsWith(':')) continue;
-      if (!line.startsWith('data: ')) continue;
-      const json = line.slice(6).trim();
-      if (json === '[DONE]') { done = true; break; }
-      try {
-        const parsed = JSON.parse(json);
-        const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-        if (content) onDelta(content);
-      } catch {
-        buffer = line + '\n' + buffer;
-        break;
-      }
-    }
-  }
-
-  onDone();
 }
