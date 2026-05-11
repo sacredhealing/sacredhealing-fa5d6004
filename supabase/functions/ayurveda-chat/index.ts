@@ -32,9 +32,8 @@ When responding:
 Your tone is that of a wise, loving elder — ancient yet accessible, spiritual yet practical.`;
 
 function sseChunk(text: string): string {
-  return `data: ${JSON.stringify({ text })}
-
-`;
+  // Clients parse OpenAI-style SSE: choices[0].delta.content
+  return `data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}\n\n`;
 }
 
 serve(async (req) => {
@@ -92,11 +91,15 @@ serve(async (req) => {
     const gemData = await gemRes.json();
     const text = gemData.candidates?.[0]?.content?.parts?.[0]?.text ?? "The transmission is momentarily veiled. Please try again.";
 
-    // Stream as SSE
+    // Stream as SSE — split into small chunks so the UI streams progressively
     const stream = new ReadableStream({
       start(controller) {
-        controller.enqueue(new TextEncoder().encode(sseChunk(text)));
-        controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
+        const enc = new TextEncoder();
+        const CHUNK = 60;
+        for (let i = 0; i < text.length; i += CHUNK) {
+          controller.enqueue(enc.encode(sseChunk(text.slice(i, i + CHUNK))));
+        }
+        controller.enqueue(enc.encode("data: [DONE]\n\n"));
         controller.close();
       },
     });
