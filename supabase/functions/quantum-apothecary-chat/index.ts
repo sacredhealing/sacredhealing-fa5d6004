@@ -596,7 +596,9 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
 
     // Active 21-day field
     if (activeFieldContext?.trim()) {
-      systemText += `\n\nACTIVE IN 21-DAY SOVEREIGN FIELD (already running via Scalar Wave Entanglement):\n${activeFieldContext.slice(0, 500)}\n→ NEVER re-prescribe these. Speak to what they are currently doing in the field when relevant.`;
+      systemText += `\n\nACTIVE IN 21-DAY SOVEREIGN FIELD (already running via Scalar Wave Entanglement) — these are the ONLY transmissions/rooms/fields you may name in this response:\n${activeFieldContext.slice(0, 800)}\n→ NEVER re-prescribe these. Speak to what they are currently doing in the field when relevant. Do NOT name any transmission, room, cave, or field that is not in this list.`;
+    } else {
+      systemText += `\n\nACTIVE FIELD STATUS: NONE. The Seeker has NO transmissions, rooms, caves, chambers, or scalar fields currently running. Do NOT mention any named transmission/room/field in this response. Speak only from the live Nadi scan and Archive context.`;
     }
 
     // Seeker archive
