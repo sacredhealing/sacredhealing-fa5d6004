@@ -1160,15 +1160,24 @@ function QuantumApothecaryInner() {
     if (syncHydratedOnceRef.current) return;
     syncHydratedOnceRef.current = true;
     if (!syncChatRows.length) return;
+    // ⟁ Only hydrate today's messages — yesterday's session must not reappear.
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const todayMs = startOfToday.getTime();
+    const todaysRows = syncChatRows.filter((cm) => {
+      if (!cm.created_at) return false;
+      return new Date(cm.created_at).getTime() >= todayMs;
+    });
+    if (!todaysRows.length) return;
     setMessages(
-      syncChatRows.map((cm) => ({
+      todaysRows.map((cm) => ({
         role: cm.role === 'assistant' ? 'model' : 'user',
         text: cm.content,
         timestamp: cm.created_at ? new Date(cm.created_at).getTime() : Date.now(),
         id: cm.id,
       })),
     );
-    prevMsgCountRef.current = syncChatRows.length;
+    prevMsgCountRef.current = todaysRows.length;
   }, [syncChatLoading, resumeSessionParam, syncChatRows]);
 
   // ── Scroll: single effect, only when a new message is appended ──
@@ -1208,11 +1217,25 @@ function QuantumApothecaryInner() {
     const count = messages.length;
     if (count <= prevMsgCountRef.current) return;
     prevMsgCountRef.current = count;
+    const last = messages[count - 1];
+    // ⟁ When the seeker sends a new message, anchor THEIR question at the top
+    // of the chat viewport so they can read SQI's reply without manually scrolling.
+    // For streaming AI replies (which arrive token-by-token), do not auto-scroll —
+    // keep the seeker's question stable in view.
+    if (last?.role !== 'user') return;
     const timer = setTimeout(() => {
-      chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      const userMsgId = last.id ?? `qa-msg-${count - 1}-${last.timestamp ?? 'na'}-user`;
+      const node = chatPanelRef.current?.querySelector(
+        `[data-qa-msg-key="${CSS.escape(userMsgId)}"]`,
+      ) as HTMLElement | null;
+      if (node) {
+        node.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
     }, 80);
     return () => clearTimeout(timer);
-  }, [messages.length]);
+  }, [messages]);
 
   const scrollChatToBottom = useCallback(() => {
     requestAnimationFrame(() => {
@@ -1294,21 +1317,9 @@ function QuantumApothecaryInner() {
         );
       }
 
-      setResonanceMatches((prev) => {
-        const existingNames = new Set(prev.map((m) => m.name));
-        const newMatches = matched.filter((m) => !existingNames.has(m.name));
-        if (newMatches.length === 0) return prev;
-        const next = [...prev, ...newMatches];
-        queueMicrotask(() => {
-          try {
-            localStorage.setItem('sqi_top33_matches', JSON.stringify(next));
-            localStorage.setItem('sqi_top33_ts', Date.now().toString());
-          } catch {
-            /* ignore */
-          }
-        });
-        return next;
-      });
+      // ⟁ Top 33 panel is owned exclusively by the voice biofield scan.
+      // SQI text mentions activate transmissions silently (above) but must NOT
+      // append to the Top 33 list — that prevented "5 new entries appearing per reply".
     },
     [normalizeActivationForMixer],
   );
@@ -1681,28 +1692,15 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
           },
         }).then(() => {});
       }
-      const msg = [
-        '**VOICE BIOFIELD SCAN COMPLETE**',
-        `**Overall Coherence:** ${result.overallCoherence}/100`,
-        `**Nadi:** ${result.nadiReading}`,
-        `**Dominant Dosha:** ${result.dominantDosha}`,
-        `**Priority Areas:** ${result.priorityAreas.map((i) => `${i.name} (${i.score}/100)`).join(', ')}`,
-        `**Strengths:** ${result.topStrengths.map((i) => i.name).join(', ')}`,
-        `**Emotional Field:** ${result.emotionalField}`,
-        `**Organ Support Needed:** ${result.organField}`,
-        '',
-        '**Bioenergetic Frequencies queued (from the 1,357+ LimbicArc library):**',
-        queued.map((a) => `• **${a.name}** — ${a.type}`).join('\n'),
-        '',
-        t('quantumApothecary.voiceBiofield.sqiFollowUp'),
-      ].join('\n');
-      setTimeout(() => {
-        handleSendMessage(msg, { voiceSnapshot: result });
-        setInput('');
-        if (chatInputRef.current) chatInputRef.current.style.height = 'auto';
-      }, 300);
+      // ⟁ Voice scan completes silently. Frequencies queue into Active Transmissions
+      // and the Top 33 panel — no chat message is injected. Seeker can ask SQI about
+      // the scan whenever they wish; liveScanContext above feeds it into the next reply.
+      toast.success(
+        `⟁ Voice biofield scan complete — ${queued.length} frequencies queued to your field`,
+        { duration: 4000 },
+      );
     },
-    [user?.id, t, handleSendMessage],
+    [user?.id],
   );
 
   const handleChatFocus = () => { openChatFullscreenIfMobile(); };
@@ -2078,7 +2076,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
               const globalIndex = visStart + i;
               const msgKey = msg.id ?? `qa-msg-${globalIndex}-${msg.timestamp ?? 'na'}-${msg.role}`;
               return (
-              <motion.div key={msgKey} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+              <motion.div key={msgKey} data-qa-msg-key={msgKey} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
                 className={`flex w-full min-w-0 flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                 {msg.role === 'user' ? (
                   <div
