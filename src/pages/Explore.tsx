@@ -89,8 +89,13 @@ export default function Explore() {
   return (
     <div style={{ background: '#050505', minHeight: '100vh', paddingBottom: 104 }}>
 
+      {/* ══ SQI QUANTUM APOTHECARY BANNER — full width, edge-to-edge ══ */}
+      <div style={{ marginBottom: 16 }}>
+        <SQIApothecaryBanner />
+      </div>
+
       {/* ══ HEADER ══ */}
-      <div style={{ padding: '52px 20px 0', animation: 'sqFadeUp 0.35s ease both' }}>
+      <div style={{ padding: '24px 20px 0', animation: 'sqFadeUp 0.35s ease both' }}>
         <p style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.3)', marginBottom: 6 }}>{t('converge.headerMicro')}</p>
         <h1
           style={{
