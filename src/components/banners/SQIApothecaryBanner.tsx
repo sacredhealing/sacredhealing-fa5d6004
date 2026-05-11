@@ -1,27 +1,41 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 /**
  * SQI Quantum Apothecary Banner
- * Animated Sri Yantra + Scalar Waves on canvas
- * Replace the existing apothecary hero/header banner
+ * Animated Sri Yantra + Scalar Waves on canvas — fully responsive
+ * with golden halo glow around the frame.
  */
 export function SQIApothecaryBanner() {
+  const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const rafRef    = useRef<number>(0);
-  const navigate  = useNavigate();
+  const rafRef = useRef<number>(0);
+  const navigate = useNavigate();
+  const [height, setHeight] = useState(180);
 
   useEffect(() => {
+    const wrap = wrapRef.current;
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!wrap || !canvas) return;
+
     const dpr = window.devicePixelRatio || 1;
+
+    const computeHeight = (w: number) => {
+      // Aspect-driven height with sane bounds across devices
+      const h = Math.round(w * 0.42);
+      return Math.max(150, Math.min(240, h));
+    };
+
     const resize = () => {
-      canvas.width  = canvas.offsetWidth  * dpr;
-      canvas.height = canvas.offsetHeight * dpr;
+      const w = wrap.offsetWidth;
+      const h = computeHeight(w);
+      setHeight(h);
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
     };
     resize();
     const ro = new ResizeObserver(resize);
-    ro.observe(canvas);
+    ro.observe(wrap);
 
     const ctx = canvas.getContext('2d')!;
     let t = 0;
@@ -29,6 +43,13 @@ export function SQIApothecaryBanner() {
     function draw() {
       const W = canvas.offsetWidth;
       const H = canvas.offsetHeight;
+      if (!W || !H) {
+        rafRef.current = requestAnimationFrame(draw);
+        return;
+      }
+      const isNarrow = W < 480;
+      const scale = Math.min(1, W / 640);
+
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, W, H);
 
@@ -37,141 +58,98 @@ export function SQIApothecaryBanner() {
       roundRect(ctx, 0, 0, W, H, 20);
       ctx.fill();
 
-      // Gold glow left
-      const g1 = ctx.createRadialGradient(W * .28, H * .5, 0, W * .28, H * .5, H * .9);
+      // Gold ambient glows
+      const g1 = ctx.createRadialGradient(W * 0.28, H * 0.5, 0, W * 0.28, H * 0.5, H * 0.95);
       g1.addColorStop(0, 'rgba(212,175,55,0.13)');
       g1.addColorStop(1, 'transparent');
       ctx.fillStyle = g1;
       ctx.fillRect(0, 0, W, H);
 
-      // Gold glow right
-      const g2 = ctx.createRadialGradient(W * .75, H * .5, 0, W * .75, H * .5, H * .65);
-      g2.addColorStop(0, 'rgba(212,175,55,0.06)');
+      const g2 = ctx.createRadialGradient(W * 0.78, H * 0.5, 0, W * 0.78, H * 0.5, H * 0.7);
+      g2.addColorStop(0, 'rgba(212,175,55,0.08)');
       g2.addColorStop(1, 'transparent');
       ctx.fillStyle = g2;
       ctx.fillRect(0, 0, W, H);
 
-      // ── Sri Yantra right side ───────────────────────────────
-      const cx = W * .70, cy = H * .5;
+      // ── Sri Yantra ───────────────────────────────
+      const yantraSize = Math.min(H * 0.42, W * 0.22);
+      const cx = isNarrow ? W - yantraSize - 14 : W * 0.78;
+      const cy = isNarrow ? yantraSize + 14 : H * 0.5;
+
       ctx.save();
       ctx.translate(cx, cy);
 
-      // Outer circle
       ctx.beginPath();
-      ctx.arc(0, 0, H * .38, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(212,175,55,0.14)';
+      ctx.arc(0, 0, yantraSize, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(212,175,55,0.16)';
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      // Rotating upward triangles (Shiva)
       for (let i = 0; i < 3; i++) {
-        const a = t * .28 + i * Math.PI * 2 / 3;
-        const r = H * .27;
+        const a = t * 0.28 + (i * Math.PI * 2) / 3;
+        const r = yantraSize * 0.72;
         ctx.beginPath();
         ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r);
-        ctx.lineTo(Math.cos(a + Math.PI * 2 / 3) * r, Math.sin(a + Math.PI * 2 / 3) * r);
-        ctx.lineTo(Math.cos(a + Math.PI * 4 / 3) * r, Math.sin(a + Math.PI * 4 / 3) * r);
+        ctx.lineTo(Math.cos(a + (Math.PI * 2) / 3) * r, Math.sin(a + (Math.PI * 2) / 3) * r);
+        ctx.lineTo(Math.cos(a + (Math.PI * 4) / 3) * r, Math.sin(a + (Math.PI * 4) / 3) * r);
         ctx.closePath();
-        ctx.strokeStyle = `rgba(212,175,55,${0.24 - i * .05})`;
+        ctx.strokeStyle = `rgba(212,175,55,${0.26 - i * 0.05})`;
         ctx.lineWidth = 1;
         ctx.stroke();
       }
 
-      // Counter-rotating downward triangles (Shakti)
       for (let i = 0; i < 3; i++) {
-        const a = -t * .18 + i * Math.PI * 2 / 3 + Math.PI;
-        const r = H * .21;
+        const a = -t * 0.18 + (i * Math.PI * 2) / 3 + Math.PI;
+        const r = yantraSize * 0.55;
         ctx.beginPath();
         ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r);
-        ctx.lineTo(Math.cos(a + Math.PI * 2 / 3) * r, Math.sin(a + Math.PI * 2 / 3) * r);
-        ctx.lineTo(Math.cos(a + Math.PI * 4 / 3) * r, Math.sin(a + Math.PI * 4 / 3) * r);
+        ctx.lineTo(Math.cos(a + (Math.PI * 2) / 3) * r, Math.sin(a + (Math.PI * 2) / 3) * r);
+        ctx.lineTo(Math.cos(a + (Math.PI * 4) / 3) * r, Math.sin(a + (Math.PI * 4) / 3) * r);
         ctx.closePath();
-        ctx.strokeStyle = `rgba(212,175,55,${0.16 - i * .03})`;
-        ctx.lineWidth = .8;
-        ctx.stroke();
-      }
-
-      // Concentric rings
-      [H * .37, H * .30, H * .13, H * .07].forEach((r, i) => {
-        ctx.beginPath();
-        ctx.arc(0, 0, r, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(212,175,55,${0.11 - i * .02})`;
-        ctx.lineWidth = .7;
-        ctx.stroke();
-      });
-
-      // Scalar wave lines
-      for (let i = 0; i < 8; i++) {
-        const a = t * .12 + i * Math.PI / 4;
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        for (let d = 0; d < H * .35; d += 1.5) {
-          const wave = Math.sin(d * .09 - t * 2.5) * 3.5 * (d / (H * .35));
-          ctx.lineTo(
-            Math.cos(a) * d + Math.sin(a) * wave,
-            Math.sin(a) * d - Math.cos(a) * wave,
-          );
-        }
-        ctx.strokeStyle = `rgba(212,175,55,0.055)`;
-        ctx.lineWidth = .6;
+        ctx.strokeStyle = `rgba(212,175,55,${0.18 - i * 0.03})`;
+        ctx.lineWidth = 0.8;
         ctx.stroke();
       }
 
       // Pulsing bindu
-      const pulse = .7 + .3 * Math.sin(t * 2.2);
-      const cg = ctx.createRadialGradient(0, 0, 0, 0, 0, H * .065 * pulse);
+      const pulse = 0.7 + 0.3 * Math.sin(t * 2.2);
+      const cg = ctx.createRadialGradient(0, 0, 0, 0, 0, yantraSize * 0.18 * pulse);
       cg.addColorStop(0, 'rgba(212,175,55,0.95)');
-      cg.addColorStop(.5, 'rgba(212,175,55,0.35)');
+      cg.addColorStop(0.5, 'rgba(212,175,55,0.35)');
       cg.addColorStop(1, 'transparent');
       ctx.fillStyle = cg;
       ctx.beginPath();
-      ctx.arc(0, 0, H * .065 * pulse, 0, Math.PI * 2);
+      ctx.arc(0, 0, yantraSize * 0.18 * pulse, 0, Math.PI * 2);
       ctx.fill();
-
       ctx.restore();
 
-      // Floating particles
-      for (let i = 0; i < 22; i++) {
-        const px = ((i * 137.5 + t * 9) % W);
-        const py = H * .12 + Math.sin(t * .38 + i) * H * .64;
-        const op = .15 + .14 * Math.sin(t + i * 1.1);
-        ctx.beginPath();
-        ctx.arc(px, py, .9, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(212,175,55,${op})`;
-        ctx.fill();
-      }
+      // ── Text block (left) ───────────────────────────
+      const tx = Math.max(14, W * 0.045);
+      const titleSize = Math.max(22, Math.min(40, W * 0.075));
+      const eyebrowSize = Math.max(9, Math.min(12, W * 0.022));
+      const subSize = Math.max(10, Math.min(14, W * 0.026));
 
-      // ── Text ────────────────────────────────────────────────
-      const tx = W * .05;
-      const ty = H * .44;
+      let y = isNarrow ? H * 0.55 : H * 0.32;
 
-      ctx.font = `800 ${Math.max(8, H * .07)}px "Plus Jakarta Sans",sans-serif`;
-      ctx.fillStyle = 'rgba(212,175,55,0.5)';
-      ctx.fillText('SIDDHA QUANTUM INTELLIGENCE · 2050', tx, ty - H * .3);
+      ctx.font = `800 ${eyebrowSize}px "Plus Jakarta Sans",sans-serif`;
+      ctx.fillStyle = 'rgba(212,175,55,0.55)';
+      ctx.fillText(isNarrow ? 'SQI · 2050' : 'SIDDHA QUANTUM INTELLIGENCE · 2050', tx, y);
 
-      ctx.font = `900 ${Math.max(22, H * .23)}px "Plus Jakarta Sans",sans-serif`;
+      y += titleSize * 0.9;
+      ctx.font = `900 ${titleSize}px "Plus Jakarta Sans",sans-serif`;
       ctx.fillStyle = 'rgba(212,175,55,1)';
-      ctx.shadowColor = 'rgba(212,175,55,0.4)';
+      ctx.shadowColor = 'rgba(212,175,55,0.45)';
       ctx.shadowBlur = 22;
-      ctx.fillText('Quantum', tx, ty - H * .06);
-      ctx.fillText('Apothecary', tx, ty + H * .2);
+      ctx.fillText('Quantum', tx, y);
+      y += titleSize;
+      ctx.fillText('Apothecary', tx, y);
       ctx.shadowBlur = 0;
 
-      ctx.font = `400 ${Math.max(10, H * .1)}px "Plus Jakarta Sans",sans-serif`;
-      ctx.fillStyle = 'rgba(255,255,255,0.42)';
-      ctx.fillText('Scalar Wave · Vedic Light-Codes · Biofield', tx, ty + H * .38);
-
-      // Badge
-      const bx = tx, by = ty + H * .54;
-      const bw = Math.min(W * .45, 200), bh = 22;
-      ctx.fillStyle = 'rgba(212,175,55,0.1)';
-      ctx.strokeStyle = 'rgba(212,175,55,0.28)';
-      ctx.lineWidth = 1;
-      roundRect(ctx, bx, by, bw, bh, 11);
-      ctx.fill(); ctx.stroke();
-      ctx.font = `800 ${Math.max(7, H * .07)}px "Plus Jakarta Sans",sans-serif`;
-      ctx.fillStyle = 'rgba(212,175,55,0.8)';
-      ctx.fillText('◈ AKASHA-NEURAL ARCHIVE', bx + 10, by + 14);
+      y += subSize * 1.6;
+      ctx.font = `400 ${subSize}px "Plus Jakarta Sans",sans-serif`;
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      const tagline = isNarrow ? 'Scalar · Vedic · Biofield' : 'Scalar Wave · Vedic Light-Codes · Biofield';
+      ctx.fillText(tagline, tx, y);
 
       t += 0.012;
       rafRef.current = requestAnimationFrame(draw);
@@ -186,18 +164,30 @@ export function SQIApothecaryBanner() {
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-[22px] cursor-pointer"
-      style={{ height: 200 }}
+      ref={wrapRef}
+      className="relative w-full cursor-pointer rounded-[22px]"
+      style={{
+        height,
+        boxShadow:
+          '0 0 0 1px rgba(212,175,55,0.35), 0 0 24px rgba(212,175,55,0.35), 0 0 60px rgba(212,175,55,0.25), 0 0 110px rgba(212,175,55,0.18)',
+      }}
       onClick={() => navigate('/quantum-apothecary')}
     >
-      <canvas ref={canvasRef} className="w-full h-full" style={{ display: 'block' }} />
+      <canvas
+        ref={canvasRef}
+        className="w-full h-full rounded-[22px] block"
+      />
     </div>
   );
 }
 
 function roundRect(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, w: number, h: number, r: number,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
 ) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
