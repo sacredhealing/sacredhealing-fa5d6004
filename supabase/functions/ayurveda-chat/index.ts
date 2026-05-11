@@ -32,9 +32,8 @@ When responding:
 Your tone is that of a wise, loving elder — ancient yet accessible, spiritual yet practical.`;
 
 function sseChunk(text: string): string {
-  return `data: ${JSON.stringify({ text })}
-
-`;
+  // Clients parse OpenAI-style SSE: choices[0].delta.content
+  return `data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}\n\n`;
 }
 
 serve(async (req) => {
