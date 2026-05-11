@@ -1160,15 +1160,24 @@ function QuantumApothecaryInner() {
     if (syncHydratedOnceRef.current) return;
     syncHydratedOnceRef.current = true;
     if (!syncChatRows.length) return;
+    // ⟁ Only hydrate today's messages — yesterday's session must not reappear.
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const todayMs = startOfToday.getTime();
+    const todaysRows = syncChatRows.filter((cm) => {
+      if (!cm.created_at) return false;
+      return new Date(cm.created_at).getTime() >= todayMs;
+    });
+    if (!todaysRows.length) return;
     setMessages(
-      syncChatRows.map((cm) => ({
+      todaysRows.map((cm) => ({
         role: cm.role === 'assistant' ? 'model' : 'user',
         text: cm.content,
         timestamp: cm.created_at ? new Date(cm.created_at).getTime() : Date.now(),
         id: cm.id,
       })),
     );
-    prevMsgCountRef.current = syncChatRows.length;
+    prevMsgCountRef.current = todaysRows.length;
   }, [syncChatLoading, resumeSessionParam, syncChatRows]);
 
   // ── Scroll: single effect, only when a new message is appended ──
