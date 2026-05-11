@@ -908,12 +908,44 @@ function QuantumApothecaryInner() {
   }, [user?.id]);
 
   useEffect(() => {
+    if (!user?.id) return;
+    const load = async () => {
+      try {
+        const { data } = await supabase
+          .from('user_active_transmissions')
+          .select('activations')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (data?.activations && Array.isArray(data.activations) && data.activations.length > 0) {
+          skipNextTxHydrate.current = true;
+          setActiveTransmissions(data.activations as Activation[]);
+        }
+      } catch {
+        /* ignore */
+      }
+    };
+    void load();
+  }, [user?.id]);
+
+  useEffect(() => {
     try {
       localStorage.setItem(TRANSMISSIONS_KEY, JSON.stringify(activeTransmissions));
     } catch {
       /* ignore */
     }
   }, [activeTransmissions, TRANSMISSIONS_KEY]);
+
+  useEffect(() => {
+    if (!user?.id || activeTransmissions.length === 0) return;
+    void supabase.from('user_active_transmissions').upsert(
+      {
+        user_id: user.id,
+        activations: activeTransmissions as unknown as Record<string, unknown>[],
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id' },
+    );
+  }, [activeTransmissions, user?.id]);
 
   useEffect(() => {
     if (!user?.id || activeTransmissions.length === 0) return;
@@ -1871,30 +1903,40 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
   };
 
   const activateAllTop33ToField = useCallback(() => {
-    if (resonanceMatches.length === 0) {
-      toast('â Run a Voice Biofield Scan first', { icon: 'ð' });
+    const rankings = resonanceMatches;
+    if (!rankings || rankings.length === 0) {
+      toast('⟁ Run a Voice Biofield Scan first', { icon: '🎙' });
       return;
     }
-    // â Enrich all 33 voice-matched rows
-    const top33Enriched = resonanceMatches.map((row) => normalizeActivationForMixer(row));
-    const top33Ids = new Set(top33Enriched.map((e) => e.id ?? e.name));
-    setActiveTransmissions((prev) => {
-      // Keep any existing transmissions that are NOT in the current top 33
-      const kept = prev.filter((t) => !top33Ids.has(t.id ?? t.name));
-      // Force-add all 33 from this voice scan
-      return [...kept, ...top33Enriched];
-    // Persist to localStorage so Transmissions page sees the new Top 33
+
+    const now = new Date().toISOString();
+    const newTransmissions = rankings
+      .filter((r) => !activeTransmissions.some((a) => a.id === r.id))
+      .map((r) => enrichTransmission(r, 'nadi_scan'));
+
+    if (newTransmissions.length === 0) return;
+
+    const updated = [...activeTransmissions, ...newTransmissions];
+    setActiveTransmissions(updated);
+
+    if (user?.id) {
+      void supabase.from('user_active_transmissions').upsert(
+        {
+          user_id: user.id,
+          activations: updated as unknown as Record<string, unknown>[],
+          updated_at: now,
+        },
+        { onConflict: 'user_id' },
+      );
+    }
     try {
-      const _now = Date.now();
-      const _fieldEntries = top33Enriched.map((e) => ({ name: e.name, activatedAt: _now, expiresAt: _now + 21 * 24 * 60 * 60 * 1000, source: 'voice_scan' }));
-      const _existing: Array<{source?: string}> = JSON.parse(localStorage.getItem('sqi_active_field') || '[]');
-      const _nonVoice = _existing.filter((e) => e.source !== 'voice_scan');
-      localStorage.setItem('sqi_active_field', JSON.stringify([..._nonVoice, ..._fieldEntries]));
-      window.dispatchEvent(new Event('sqiFieldUpdated'));
-    } catch { /* ignore */ }
-    });
-    toast.success(`â All ${resonanceMatches.length} voice-matched transmissions activated to your biofield`);
-  }, [resonanceMatches, normalizeActivationForMixer]);
+      localStorage.setItem(`sqi-transmissions-${user?.id || 'guest'}`, JSON.stringify(updated));
+    } catch {
+      /* quota */
+    }
+
+    toast.success(`◈ ${newTransmissions.length} Transmissions activated to your field`);
+  }, [resonanceMatches, activeTransmissions, user?.id, enrichTransmission]);
   const renderChatPanel = () => (
     <div
       className="glass-card relative flex w-full flex-col overflow-visible"
