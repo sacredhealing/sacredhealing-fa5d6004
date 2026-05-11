@@ -1217,11 +1217,25 @@ function QuantumApothecaryInner() {
     const count = messages.length;
     if (count <= prevMsgCountRef.current) return;
     prevMsgCountRef.current = count;
+    const last = messages[count - 1];
+    // ⟁ When the seeker sends a new message, anchor THEIR question at the top
+    // of the chat viewport so they can read SQI's reply without manually scrolling.
+    // For streaming AI replies (which arrive token-by-token), do not auto-scroll —
+    // keep the seeker's question stable in view.
+    if (last?.role !== 'user') return;
     const timer = setTimeout(() => {
-      chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      const userMsgId = last.id ?? `qa-msg-${count - 1}-${last.timestamp ?? 'na'}-user`;
+      const node = chatPanelRef.current?.querySelector(
+        `[data-qa-msg-key="${CSS.escape(userMsgId)}"]`,
+      ) as HTMLElement | null;
+      if (node) {
+        node.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
     }, 80);
     return () => clearTimeout(timer);
-  }, [messages.length]);
+  }, [messages]);
 
   const scrollChatToBottom = useCallback(() => {
     requestAnimationFrame(() => {
