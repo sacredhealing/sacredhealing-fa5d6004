@@ -617,8 +617,10 @@ export function matchActivationsToScan(scanData: {
   const nadi = scanData.activatedNadi || 'Sushumna';
   const chakra = scanData.priorityChakra || 'Anahata';
 
-  const scored = BIOENERGETIC_LIBRARY.map(item => {
-    let score = Math.random() * 5; // small base variation
+  const scored = BIOENERGETIC_LIBRARY.map((item, idx) => {
+    // Deterministic small variation by index — keeps Top 33 stable across re-mounts
+    // (was Math.random() — caused 3-5 new entries to appear each page open).
+    let score = (idx % 13) * 0.1;
 
     // Dosha match
     if (item.dosha.includes(dosha)) score += 30;
