@@ -1700,7 +1700,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         { duration: 4000 },
       );
     },
-    [user?.id, t, handleSendMessage],
+    [user?.id],
   );
 
   const handleChatFocus = () => { openChatFullscreenIfMobile(); };
