@@ -143,6 +143,7 @@ const ExplorePage = () => {
         </Link>
       </div>
     </div>
+  </div>
   );
 };
 
