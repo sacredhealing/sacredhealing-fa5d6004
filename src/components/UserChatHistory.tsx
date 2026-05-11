@@ -100,7 +100,7 @@ export default function UserChatHistory({ filterChatType, onSessionSelect }: Pro
             boxShadow: open ? '0 0 24px rgba(212,175,55,0.25)' : 'none',
           }}
         >
-          <span style={{ fontSize: '18px' }}>◈</span>
+          <span style={{ fontSize: '18px', color: '#D4AF37' }}>◈</span>
           <span
             style={{
               fontSize: '9px',
@@ -231,7 +231,7 @@ export default function UserChatHistory({ filterChatType, onSessionSelect }: Pro
                   color: 'rgba(255,255,255,0.3)',
                 }}
               >
-                <div style={{ fontSize: '22px', marginBottom: '8px' }}>◈</div>
+                <div style={{ fontSize: '22px', marginBottom: '8px', color: '#D4AF37' }}>◈</div>
                 <p style={{ fontSize: '11px', letterSpacing: '0.2em' }}>SCANNING ARCHIVE…</p>
               </div>
             ) : filtered.length === 0 ? (

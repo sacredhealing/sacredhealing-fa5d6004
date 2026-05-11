@@ -226,7 +226,7 @@ function renderInline(
       const inner = p.slice(2, -2);
       if (opts?.diamondLine) {
         return (
-          <strong key={i} style={{ color: 'rgba(255,255,255,0.96)', fontWeight: 800, textShadow: '0 0 14px rgba(0,0,0,0.25)' }}>
+          <strong key={i} style={{ color: '#D4AF37', fontWeight: 800, textShadow: '0 0 14px rgba(212,175,55,0.35)' }}>
             {inner}
           </strong>
         );
@@ -303,6 +303,13 @@ function autoBoldSacredTerms(text: string): React.ReactNode {
   });
 }
 
+/** Master-line prefix in SQI replies (e.g. ◈ Babaji · …). Handles U+25C8 and legacy UTF-8 mis-decoding in older templates. */
+function lineStartsWithSqiMasterDiamond(trimmed: string): boolean {
+  const cp = trimmed.codePointAt(0);
+  if (cp === 0x25c8 || cp === 0x2756 || cp === 0x2726) return true;
+  return trimmed.startsWith('\u00e2\u0097\u0088');
+}
+
 /** SQI (assistant): â gold headers, Â· / markdown lists, **bold** (Siddha gold), generous vertical rhythm */
 function renderSQIContent(content: string) {
   const gapAfterSection = 18;
@@ -313,10 +320,11 @@ function renderSQIContent(content: string) {
       return <div key={i} style={{ height: '6px' }} aria-hidden />;
     }
 
-    if (trimmed.startsWith('â')) {
+    if (lineStartsWithSqiMasterDiamond(trimmed)) {
       return (
         <p
           key={i}
+          className="sqi-diamond-heading text-[#D4AF37]"
           style={{
             color: '#D4AF37',
             fontWeight: 800,
@@ -2901,6 +2909,11 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
         .sqi-message b {
           color: rgba(255,255,255,0.97);
           font-weight: 800;
+        }
+        .sqi-message .sqi-diamond-heading,
+        .sqi-message .sqi-diamond-heading strong,
+        .sqi-message .sqi-diamond-heading b {
+          color: #D4AF37;
         }
         .sqi-message p,
         .sqi-message li {
