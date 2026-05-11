@@ -1021,17 +1021,10 @@ function QuantumApothecaryInner() {
     }
   }, []);
 
-  useEffect(() => {
-    try {
-      if (localStorage.getItem(LS_LIBRARY_UNLOCKED) !== '1') return;
-      const snap = localStorage.getItem(LS_SCAN_SNAPSHOT);
-      if (!snap) return;
-      const payload = JSON.parse(snap);
-      setResonanceMatches(buildTop33Rankings(payload));
-    } catch {
-      /* ignore */
-    }
-  }, []);
+  // ⟁ Top 33 is owned exclusively by the LAST voice scan (restored above from sqi_top33_matches).
+  // The previous effect that rebuilt the Top 33 from LS_SCAN_SNAPSHOT on mount was REMOVED —
+  // it caused 3-5 new entries to appear each page open because matchActivationsToScan re-ranked.
+
 
   const [showKnowledge, setShowKnowledge] = useState(false);
   const [isChatFullscreen, setIsChatFullscreen] = useState(false);
