@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, ChevronDown, ChevronUp, BookOpen } from 'lucide-react';
 import { useJyotishProfile } from '@/hooks/useJyotishProfile';
 import { getGitaVerseForCycle } from '@/lib/gitaVerses';
+import { SQIApothecaryBanner } from '@/components/banners/SQIApothecaryBanner';
 
 const ExplorePage = () => {
   const { t } = useTranslation();
@@ -20,25 +21,14 @@ const ExplorePage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0f051a] text-white p-6 pb-24">
-      {/* 3RD EYE HERO BANNER */}
-      <div className="relative h-64 rounded-3xl overflow-hidden mb-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#1a0b2e] via-[#D4AF37]/20 to-[#0f051a]" />
-        <div className="absolute inset-0 flex flex-col justify-center p-8">
-          <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[#D4AF37] text-xs uppercase tracking-widest mb-2">
-            Rishi Recommendation
-          </motion.span>
-          <h1 className="text-3xl font-bold mb-2">Venus Sound Bath</h1>
-          <p className="text-white/60 max-w-[250px]">Today&apos;s alignment favors abundance and creative flow.</p>
-          <Link
-            to="/healing"
-            className="mt-6 bg-white text-black px-6 py-2 rounded-full w-fit font-bold text-sm inline-block"
-          >
-            Play Now
-          </Link>
-        </div>
+    <div className="min-h-screen bg-[#0f051a] text-white pb-24">
+      {/* SQI QUANTUM APOTHECARY BANNER — full width, edge-to-edge */}
+      <div className="px-0 pt-0">
+        <SQIApothecaryBanner />
       </div>
 
+      {/* Content body — padded */}
+      <div className="px-6 pt-6">
       {/* BHAGAVAD GITA DAILY VERSE */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
@@ -153,6 +143,7 @@ const ExplorePage = () => {
         </Link>
       </div>
     </div>
+  </div>
   );
 };
 
