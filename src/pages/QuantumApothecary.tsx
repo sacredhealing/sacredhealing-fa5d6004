@@ -1317,21 +1317,9 @@ function QuantumApothecaryInner() {
         );
       }
 
-      setResonanceMatches((prev) => {
-        const existingNames = new Set(prev.map((m) => m.name));
-        const newMatches = matched.filter((m) => !existingNames.has(m.name));
-        if (newMatches.length === 0) return prev;
-        const next = [...prev, ...newMatches];
-        queueMicrotask(() => {
-          try {
-            localStorage.setItem('sqi_top33_matches', JSON.stringify(next));
-            localStorage.setItem('sqi_top33_ts', Date.now().toString());
-          } catch {
-            /* ignore */
-          }
-        });
-        return next;
-      });
+      // ⟁ Top 33 panel is owned exclusively by the voice biofield scan.
+      // SQI text mentions activate transmissions silently (above) but must NOT
+      // append to the Top 33 list — that prevented "5 new entries appearing per reply".
     },
     [normalizeActivationForMixer],
   );
