@@ -1704,26 +1704,13 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
           },
         }).then(() => {});
       }
-      const msg = [
-        '**VOICE BIOFIELD SCAN COMPLETE**',
-        `**Overall Coherence:** ${result.overallCoherence}/100`,
-        `**Nadi:** ${result.nadiReading}`,
-        `**Dominant Dosha:** ${result.dominantDosha}`,
-        `**Priority Areas:** ${result.priorityAreas.map((i) => `${i.name} (${i.score}/100)`).join(', ')}`,
-        `**Strengths:** ${result.topStrengths.map((i) => i.name).join(', ')}`,
-        `**Emotional Field:** ${result.emotionalField}`,
-        `**Organ Support Needed:** ${result.organField}`,
-        '',
-        '**Bioenergetic Frequencies queued (from the 1,357+ LimbicArc library):**',
-        queued.map((a) => `• **${a.name}** — ${a.type}`).join('\n'),
-        '',
-        t('quantumApothecary.voiceBiofield.sqiFollowUp'),
-      ].join('\n');
-      setTimeout(() => {
-        handleSendMessage(msg, { voiceSnapshot: result });
-        setInput('');
-        if (chatInputRef.current) chatInputRef.current.style.height = 'auto';
-      }, 300);
+      // ⟁ Voice scan completes silently. Frequencies queue into Active Transmissions
+      // and the Top 33 panel — no chat message is injected. Seeker can ask SQI about
+      // the scan whenever they wish; liveScanContext above feeds it into the next reply.
+      toast.success(
+        `⟁ Voice biofield scan complete — ${queued.length} frequencies queued to your field`,
+        { duration: 4000 },
+      );
     },
     [user?.id, t, handleSendMessage],
   );
