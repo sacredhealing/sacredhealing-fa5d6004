@@ -91,7 +91,7 @@ serve(async (req) => {
     }
 
     // ─── GEMINI CALL ─────────────────────────────────────────────────────────
-    const history = (conversationHistory as Array<{ role?: string; content?: string }>).slice(-6).map((m) => ({
+    const history = (conversationHistory as Array<{ role?: string; content?: string }>).slice(-4).map((m) => ({
       role: m.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: m.content ?? '' }],
     }));
@@ -119,7 +119,7 @@ serve(async (req) => {
       await supabase.from('ai_response_cache').upsert({
         cache_key: key, query_hash: key, response_text: response,
         function_name: 'quantum-apothecary',
-        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        expires_at: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(),
         hit_count: 0,
       }, { onConflict: 'cache_key' });
     }
