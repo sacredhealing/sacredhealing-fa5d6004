@@ -2101,7 +2101,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
               const globalIndex = visStart + i;
               const msgKey = msg.id ?? `qa-msg-${globalIndex}-${msg.timestamp ?? 'na'}-${msg.role}`;
               return (
-              <motion.div key={msgKey} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+              <motion.div key={msgKey} data-qa-msg-key={msgKey} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
                 className={`flex w-full min-w-0 flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                 {msg.role === 'user' ? (
                   <div
