@@ -1866,10 +1866,6 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
     });
     setActiveTransmissions(newT);
     // Activation is silent — no chat message injected
-          details: { frequency: mix.map((a) => a.name).join(', '), intention: 'Scalar Wave Transmission 24/7' },
-        },
-      }).then(() => {});
-    }
     selectedActivationsRef.current = [];
     setSelectedActivations([]);
   };
