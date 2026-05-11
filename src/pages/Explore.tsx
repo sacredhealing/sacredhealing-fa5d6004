@@ -21,6 +21,7 @@ import { useAdminRole } from "@/hooks/useAdminRole";
 import { getDayPhase } from "@/utils/postSessionContext";
 import SacredRevealGate from "@/components/SacredRevealGate";
 import { supabase } from "@/integrations/supabase/client";
+import { SQIApothecaryBanner } from '@/components/banners/SQIApothecaryBanner';
 
 interface ExploreVideo {
   id: string;
@@ -274,14 +275,7 @@ export default function Explore() {
       {/* ══ SACRED TOOLS ══ */}
       <SL label={t('converge.secSacredTools')} delay="0.18s" />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 16px', animation: 'sqFadeUp 0.4s 0.2s ease both' }}>
-        <div onClick={() => navigate('/quantum-apothecary')} style={{ background: 'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.22)', borderRadius: 18, padding: '18px 15px', cursor: 'pointer', position: 'relative', overflow: 'hidden', animation: 'exploreSacredHalo 3.2s ease-in-out infinite' }}>
-          <div style={{ position: 'absolute', top: 0, left: '-110%', width: '55%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.07),transparent)', animation: 'sqShimmer 5.5s 1.2s ease-in-out infinite', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', top: 10, right: 10 }}><Badge label="2050" /></div>
-          <TI pulse><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="13" rx="2" stroke="rgba(212,175,55,0.8)" strokeWidth="1.4"/><path d="M8 7 L8 4 C8 3.4 8.4 3 9 3 L15 3 C15.6 3 16 3.4 16 4 L16 7" stroke="rgba(212,175,55,0.55)" strokeWidth="1.2"/><circle cx="12" cy="13" r="2.5" stroke="rgba(212,175,55,0.7)" strokeWidth="1.2"/><line x1="12" y1="10.5" x2="12" y2="8.5" stroke="rgba(212,175,55,0.45)" strokeWidth="1"/></svg></TI>
-          <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#D4AF37', marginBottom: 5, whiteSpace: 'pre-line' }}>{t('converge.toolQuantumTitle')}</div>
-          <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{t('converge.toolQuantumSub')}</div>
-          <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
-        </div>
+        <SQIApothecaryBanner />
         <div
           onClick={() => (isAdmin || tier === 'akasha-infinity' || tier === 'lifetime') ? navigate('/virtual-pilgrimage') : navigate('/virtual-pilgrimage-landing')}
           style={{ gridColumn: 'span 2', position: 'relative', borderRadius: 22, overflow: 'hidden', cursor: 'pointer', border: '1px solid rgba(212,175,55,0.38)', background: 'linear-gradient(160deg,rgba(30,20,5,0.95) 0%,rgba(8,6,0,0.98) 60%,rgba(20,14,0,0.95) 100%)', minHeight: 210 }}
