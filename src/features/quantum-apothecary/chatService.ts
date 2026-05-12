@@ -255,6 +255,7 @@ export async function streamChatWithSQI(
   localeTag?: string,
   biofieldContext?: string,
   activeTransmissionNames?: string,
+  studentContext?: string,
 ) {
   const recent = messages.slice(-15);
   let apiMessages = recent.map((m) => ({
