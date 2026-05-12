@@ -66,13 +66,17 @@ export default function Explore() {
         </p>
         <h1 style={{
           fontFamily: "'Cinzel', serif",
-          fontSize: 'clamp(28px, 8vw, 42px)',
-          fontWeight: 700,
-          letterSpacing: '-0.01em',
+          fontSize: 'clamp(26px, 7vw, 40px)',
+          fontWeight: 600,
+          letterSpacing: '0.04em',
           lineHeight: 1.1,
           margin: 0,
-          color: '#D4AF37',
-          animation: 'titleGlow 4s ease-in-out infinite',
+          background: 'linear-gradient(135deg, #D4AF37 0%, #F5E17A 40%, #D4AF37 60%, #A07C10 100%)',
+          backgroundSize: '200% auto',
+          WebkitBackgroundClip: 'text',
+          backgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          animation: 'hShimmer 5s linear infinite',
         }}>
           {t('converge.title')}
         </h1>
@@ -181,10 +185,15 @@ export default function Explore() {
           <div style={{
             fontFamily: "'Cinzel', serif",
             fontSize: 'clamp(24px, 6.5vw, 32px)',
-            fontWeight: 700,
-            letterSpacing: '0.14em',
-            color: '#D4AF37',
-            animation: 'titleGlow 3.5s ease-in-out infinite',
+            fontWeight: 600,
+            letterSpacing: '0.04em',
+            lineHeight: 1.1,
+            background: 'linear-gradient(135deg, #D4AF37 0%, #F5E17A 40%, #D4AF37 60%, #A07C10 100%)',
+            backgroundSize: '200% auto',
+            WebkitBackgroundClip: 'text',
+            backgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            animation: 'hShimmer 5s linear infinite',
           }}>
             SIDDHA PORTAL
           </div>
@@ -342,14 +351,17 @@ export default function Explore() {
             <div style={{
               fontFamily: "'Cinzel', serif",
               fontSize: 'clamp(22px, 6vw, 28px)',
-              fontWeight: 700,
-              letterSpacing: '0.05em',
-              color: '#D4AF37',
-              textShadow: '0 0 20px rgba(212,175,55,0.4)',
-              marginBottom: 12,
+              fontWeight: 600,
+              letterSpacing: '0.04em',
               lineHeight: 1.2,
-              animation: 'titleGlow 3.5s ease-in-out infinite',
+              marginBottom: 12,
               maxWidth: '65%',
+              background: 'linear-gradient(135deg, #D4AF37 0%, #F5E17A 40%, #D4AF37 60%, #A07C10 100%)',
+              backgroundSize: '200% auto',
+              WebkitBackgroundClip: 'text',
+              backgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              animation: 'hShimmer 5s linear infinite',
             }}>
               QUANTUM<br/>APOTHECARY
             </div>
@@ -577,9 +589,9 @@ export default function Explore() {
       <SacredRevealGate open={sacredRevealOpen} onOpenChange={setSacredRevealOpen} />
 
       <style>{`
-        @keyframes titleGlow {
-          0%,100% { text-shadow: 0 0 20px rgba(212,175,55,0.3), 0 0 40px rgba(212,175,55,0.1); }
-          50% { text-shadow: 0 0 50px rgba(212,175,55,0.8), 0 0 90px rgba(212,175,55,0.3); }
+        @keyframes hShimmer {
+          0% { background-position: -200% center; }
+          100% { background-position: 200% center; }
         }
         @keyframes rimPulse {
           0%,100% { box-shadow: 0 0 12px rgba(212,175,55,0.06); }
