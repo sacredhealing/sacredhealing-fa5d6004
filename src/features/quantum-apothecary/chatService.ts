@@ -290,7 +290,7 @@ export async function streamChatWithSQI(
     seekerName: seekerName ?? '',
     language: language ?? 'English',
     canonicalActivationNames: canonicalActivationNames ?? '',
-    jyotishContext: jyotishContext ?? '',
+    jyotishContext: [studentContext?.trim(), jyotishContext].filter(Boolean).join('\n\n'),
     biofieldContext: biofieldContext ?? '',
     activeTransmissionNames: activeTransmissionNames ?? '',
     localTime,
