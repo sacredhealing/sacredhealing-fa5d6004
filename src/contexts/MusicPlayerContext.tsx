@@ -1084,9 +1084,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       stopTrack,
       showGitaTransition,
     }}>
-      <AudioErrorBoundary>
-        {children}
-      </AudioErrorBoundary>
+      {children}
       <UpgradeModalComponent />
     </MusicPlayerContext.Provider>
   );
