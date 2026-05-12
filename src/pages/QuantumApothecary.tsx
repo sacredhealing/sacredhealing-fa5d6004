@@ -1,6 +1,6 @@
 // @ts-nocheck
 // ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-// â  SQI-2050 REDESIGN â VISUAL LAYER ONLY                         â
+// â  SQI-2050 REDESIGN — VISUAL LAYER ONLY                         â
 // â  All logic, hooks, Stripe triggers, AffiliateID tracking        â
 // â  and function signatures are UNTOUCHED.                         â
 // â  Only className strings and CSS have been upgraded.             â
@@ -57,7 +57,7 @@ const ActiveTransmissionsSection = lazy(() => import('@/features/quantum-apothec
 
 const ScannerSuspenseFallback = (
   <div style={{ padding: 40, textAlign: 'center', color: 'rgba(212,175,55,0.5)', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 800 }}>
-    Loading scannerâ¦
+    Loading scanner…
   </div>
 );
 
@@ -78,7 +78,7 @@ function coerceVoiceNadiToEnum(s: string): 'Ida' | 'Pingala' | 'Sushumna' | 'Blo
   return 'Sushumna';
 }
 
-/** Align Top 33 rows with mixer field rows (ids differ after enrich â names win). */
+/** Align Top 33 rows with mixer field rows (ids differ after enrich — names win). */
 function fieldTransmissionMatchesRow(tx: Activation, row: Activation): boolean {
   if (tx.id && row.id && tx.id === row.id) return true;
   const a = (tx.name || '').trim().toLowerCase();
@@ -89,7 +89,7 @@ function fieldTransmissionMatchesRow(tx: Activation, row: Activation): boolean {
 /* ââââ Markdown-ish renderer: gold (#D4AF37) only on # / ## / ### / #### / ##### lines ââââ */
 type InlineVariant = 'heading' | 'body';
 
-/** Optional SQI assistant styling for **bold** (gold body / light-on-gold on â lines). */
+/** Optional SQI assistant styling for **bold** (gold body / light-on-gold on ◈ lines). */
 type RenderInlineOpts = {
   sqiGoldBold?: boolean;
   diamondLine?: boolean;
@@ -100,7 +100,7 @@ function renderChatText(text: string, bubble: 'model' | 'user' = 'model') {
   const gold = '#D4AF37';
   /** User bubbles: light text on gold gradient (never dark-on-gold). */
   const body = onGold ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.92)';
-  /** Siddha-gold glow â strong on SQI (model) bubbles; user bubbles get gold + dark rim for contrast on gradient */
+  /** Siddha-gold glow — strong on SQI (model) bubbles; user bubbles get gold + dark rim for contrast on gradient */
   const headingGlow = onGold
     ? '0 1px 2px rgba(0,0,0,0.35), 0 0 14px rgba(212,175,55,0.75), 0 0 28px rgba(212,175,55,0.4)'
     : '0 0 12px rgba(212,175,55,0.55), 0 0 26px rgba(212,175,55,0.35), 0 0 42px rgba(212,175,55,0.18)';
@@ -261,7 +261,7 @@ function renderInline(
         </code>
       );
     }
-    // Plain text segment â auto-bold sacred terms (frequency names, masters, transmission types)
+    // Plain text segment — auto-bold sacred terms (frequency names, masters, transmission types)
     if (opts?.sqiGoldBold && variant === 'body' && p) {
       return <React.Fragment key={i}>{autoBoldSacredTerms(p)}</React.Fragment>;
     }
@@ -281,7 +281,7 @@ const SACRED_TERMS_REGEX = (() => {
     'Ramana Maharshi', 'Adi Shankara', 'Patanjali', 'Bhagavan', 'Krishna', 'Shiva', 'Lakshmi',
     'Saraswati', 'Durga', 'Ganesha', 'Hanuman', 'Lalita Tripura Sundari',
     'Metabolic Fire Ignition', 'Liver Alchemist Protocol', 'Solar Immune Radiance',
-    'NMN \\+ Resveratrol[^â\\n.]*', 'Structural Light Integrity', 'Heart-Bloom Radiance',
+    'NMN \\+ Resveratrol[^—\\n.]*', 'Structural Light Integrity', 'Heart-Bloom Radiance',
     'Neural Calm Sync', 'Deep Sleep Harmonic', 'Shatavari Flow', 'The Amrit Nectar',
     'Triphala Integrity', 'Ancestral Tether Dissolve', 'Neem Bitter Truth',
   ];
@@ -310,7 +310,7 @@ function lineStartsWithSqiMasterDiamond(trimmed: string): boolean {
   return trimmed.startsWith('\u00e2\u0097\u0088');
 }
 
-/** SQI (assistant): â gold headers, Â· / markdown lists, **bold** (Siddha gold), generous vertical rhythm */
+/** SQI (assistant): ◈ gold headers, · / markdown lists, **bold** (Siddha gold), generous vertical rhythm */
 function renderSQIContent(content: string) {
   const gapAfterSection = 18;
   return content.split('\n').map((line, i) => {
@@ -342,12 +342,12 @@ function renderSQIContent(content: string) {
       );
     }
 
-    if (trimmed.startsWith('Â·')) {
+    if (trimmed.startsWith('·')) {
       // Auto-bold the frequency / remedy name (text before em-dash or hyphen-dash)
       // so transmission list names are easier to read. Skip if already contains **.
       let lineForRender = trimmed;
       if (!lineForRender.includes('**')) {
-        const dashMatch = lineForRender.match(/^(Â·\s*)(.+?)(\s+[ââ-]\s+)(.+)$/);
+        const dashMatch = lineForRender.match(/^(·\s*)(.+?)(\s+[—–-]\s+)(.+)$/);
         if (dashMatch) {
           lineForRender = `${dashMatch[1]}**${dashMatch[2].trim()}**${dashMatch[3]}${dashMatch[4]}`;
         }
@@ -442,7 +442,7 @@ function languageToBcp47(languageCode: string): string {
   return 'en-GB';
 }
 
-/** Morning / midday / evening / night from local clock â for SQI tone (matches Nexus-style live time). */
+/** Morning / midday / evening / night from local clock — for SQI tone (matches Nexus-style live time). */
 function getLocalDayPhaseLabel(d: Date): 'morning' | 'midday' | 'evening' | 'night' {
   const h = d.getHours();
   if (h >= 22 || h < 5) return 'night';
@@ -507,8 +507,8 @@ function buildVoiceFieldContext(v: VoiceBiofieldResult): string {
     `- Strengths: ${v.topStrengths.map((i) => i.name).join(', ')}`,
     `- Emotional field: ${v.emotionalField}`,
     `- Organ / tissue emphasis: ${v.organField}`,
-    `- Scoring hints (chakra keywords detected): ${h.chakraHits.join(', ') || 'â'}`,
-    `- Scoring hints (organ/tissue keywords detected): ${h.organHits.join(', ') || 'â'}`,
+    `- Scoring hints (chakra keywords detected): ${h.chakraHits.join(', ') || '—'}`,
+    `- Scoring hints (organ/tissue keywords detected): ${h.organHits.join(', ') || '—'}`,
   ].join('\n');
 }
 
@@ -749,7 +749,7 @@ async function syncApothecaryUserChatArchive(
 }
 
 /* ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-   ALL LOGIC BELOW IS 100% IDENTICAL TO ORIGINAL â ZERO CHANGES
+   ALL LOGIC BELOW IS 100% IDENTICAL TO ORIGINAL — ZERO CHANGES
    Only className values have been updated for SQI-2050 aesthetic
    ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ */
 
@@ -802,30 +802,30 @@ function QuantumApothecaryInner() {
   const micListeningRef = useRef(false);
   const nativeSpeechRef = useRef<{ stop: () => void; start: () => void; onend: (() => void) | null } | null>(null);
 
-  // Compact natal + assessed prakriti â one pass each; avoids triple-repeating the same Moon line in the model.
+  // Compact natal + assessed prakriti — one pass each; avoids triple-repeating the same Moon line in the model.
   const jyotishContext = jyotish.isLoading
     ? ''
     : (() => {
         const lines: string[] = [
-          `[NATAL CHART â Swiss Ephemeris / Lahiri â cite each line once, no duplicate paragraphs]`,
-          `Birth Moon nakshatra: ${jyotish.nakshatra} Â· Birth Moon rashi: ${jyotish.moonSign} Â· Lagna: ${jyotish.ascendant}`,
-          `Dasha: ${jyotish.mahadasha}${jyotish.mahaEnd ? ` (until ${jyotish.mahaEnd})` : ''} Â· Antara: ${jyotish.antardasha}`,
-          `Chart dosha emphasis: ${jyotish.primaryDosha} Â· Karma theme: ${jyotish.karmaFocus}`,
-          `Yogas: ${jyotish.activeYogas.join(', ') || 'â'} Â· Bhrigu: ${jyotish.bhriguCycle || 'â'}`,
-          `Healing line: ${jyotish.healingFocus} Â· Raga ${jyotish.musicRaga} Â· Tone ${jyotish.musicFrequency} Â· Mantra: ${jyotish.mantraFocus}`,
+          `[NATAL CHART — Swiss Ephemeris / Lahiri — cite each line once, no duplicate paragraphs]`,
+          `Birth Moon nakshatra: ${jyotish.nakshatra} · Birth Moon rashi: ${jyotish.moonSign} · Lagna: ${jyotish.ascendant}`,
+          `Dasha: ${jyotish.mahadasha}${jyotish.mahaEnd ? ` (until ${jyotish.mahaEnd})` : ''} · Antara: ${jyotish.antardasha}`,
+          `Chart dosha emphasis: ${jyotish.primaryDosha} · Karma theme: ${jyotish.karmaFocus}`,
+          `Yogas: ${jyotish.activeYogas.join(', ') || '—'} · Bhrigu: ${jyotish.bhriguCycle || '—'}`,
+          `Healing line: ${jyotish.healingFocus} · Raga ${jyotish.musicRaga} · Tone ${jyotish.musicFrequency} · Mantra: ${jyotish.mantraFocus}`,
         ];
         if (doshaProfile) {
           lines.push(
             `Ayurveda Prakriti (assessed): ${doshaProfile.primary}${doshaProfile.secondary ? ` / ${doshaProfile.secondary}` : ''}` +
               (doshaProfile.characteristics?.length
-                ? ` Â· Traits: ${doshaProfile.characteristics.slice(0, 5).join(', ')}`
+                ? ` · Traits: ${doshaProfile.characteristics.slice(0, 5).join(', ')}`
                 : ''),
           );
         }
         return lines.join('\n');
       })();
 
-  /** Stable Jyotish context â only recompute when underlying field data actually changes. */
+  /** Stable Jyotish context — only recompute when underlying field data actually changes. */
   const stableJyotishContext = useMemo(
     () => sqiField?.compiledContext || jyotishContext || '',
     [
@@ -838,18 +838,18 @@ function QuantumApothecaryInner() {
 
   const sqiSourceDirective = useMemo(
     () =>
-      '[SQI SOURCES] Use the seekerâs saved chart (below), live biometric block when present, compiled field (Ayurveda / photonic / temple), and this chat. Do not invent palm-camera analysis.\n' +
-      '[FREQUENCY LIBRARY] The canonical Frequency Library names are provided separately (canonicalActivationNames). For every substantive answer, map the seekerâs topic to concrete entries from that list â use exact names. When suggesting remedies, protocols, or âwhat to run,â include 3â10 relevant library names per topic when appropriate.',
+      '[SQI SOURCES] Use the seeker’s saved chart (below), live biometric block when present, compiled field (Ayurveda / photonic / temple), and this chat. Do not invent palm-camera analysis.\n' +
+      '[FREQUENCY LIBRARY] The canonical Frequency Library names are provided separately (canonicalActivationNames). For every substantive answer, map the seeker’s topic to concrete entries from that list — use exact names. When suggesting remedies, protocols, or “what to run,” include 3–10 relevant library names per topic when appropriate.',
     [],
   );
 
   const answerRulesDirective = useMemo(
     () =>
-      '[ANSWER RULES] Use ONLY the LIVE SYSTEM TIME line for date/time â do not guess the day. Natal Moon rashi and nakshatra are birth data, not daily transits. Open naturally; do not ritualistically repeat the same Moon sign or dasha in multiple sections.',
+      '[ANSWER RULES] Use ONLY the LIVE SYSTEM TIME line for date/time — do not guess the day. Natal Moon rashi and nakshatra are birth data, not daily transits. Open naturally; do not ritualistically repeat the same Moon sign or dasha in multiple sections.',
     [],
   );
 
-  // Live biometric scan context â prepended to jyotishContext before next SQI message
+  // Live biometric scan context — prepended to jyotishContext before next SQI message
   const [liveScanContext, setLiveScanContext] = useState<string | null>(null);
 
   /** Debounce: only recompute when underlying field data changes, not on every parent render. */
@@ -876,7 +876,7 @@ function QuantumApothecaryInner() {
 
   const TRANSMISSIONS_KEY = `sqi-transmissions-${user?.id || 'guest'}`;
 
-  /** Legacy baseline card removed â drop stale local nadi snapshot so Dashboard does not resurrect fake counts. */
+  /** Legacy baseline card removed — drop stale local nadi snapshot so Dashboard does not resurrect fake counts. */
   useEffect(() => {
     try {
       localStorage.removeItem('sqi_scan_result');
@@ -976,8 +976,8 @@ function QuantumApothecaryInner() {
     () =>
       activeTransmissions.length > 0
         ? `\nACTIVE SCALAR TRANSMISSIONS (running 24/7 in biofield):\n` +
-          activeTransmissions.map((t) => `Â· ${t.sacredName || t.name}`).join('\n') +
-          `\nâ These ${activeTransmissions.length} frequencies are permanently` +
+          activeTransmissions.map((t) => `· ${t.sacredName || t.name}`).join('\n') +
+          `\n→ These ${activeTransmissions.length} frequencies are permanently` +
           ` entangled. Reference them when reading the Seeker's field.\n`
         : '',
     [activeTransmissions],
@@ -1046,7 +1046,7 @@ function QuantumApothecaryInner() {
     Array<Activation & { pct: number; rowCategory?: string }>
   >([]);
 
-  // â RESTORE Top 33 from last voice scan on mount
+  // ⟁ RESTORE Top 33 from last voice scan on mount
   useEffect(() => {
     try {
       const saved = localStorage.getItem('sqi_top33_matches');
@@ -1060,8 +1060,8 @@ function QuantumApothecaryInner() {
     }
   }, []);
 
-  // â Top 33 is owned exclusively by the LAST voice scan (restored above from sqi_top33_matches).
-  // The previous effect that rebuilt the Top 33 from LS_SCAN_SNAPSHOT on mount was REMOVED â
+  // ⟁ Top 33 is owned exclusively by the LAST voice scan (restored above from sqi_top33_matches).
+  // The previous effect that rebuilt the Top 33 from LS_SCAN_SNAPSHOT on mount was REMOVED —
   // it caused 3-5 new entries to appear each page open because matchActivationsToScan re-ranked.
 
 
@@ -1122,7 +1122,7 @@ function QuantumApothecaryInner() {
     }
   }, [showVoiceScan]);
 
-  /** Live HH:MM in chat header â same pattern as Home Nexus dashboard (ticks every 30s). */
+  /** Live HH:MM in chat header — same pattern as Home Nexus dashboard (ticks every 30s). */
   const [liveChatClock, setLiveChatClock] = useState(() => {
     const n = new Date();
     return `${String(n.getHours()).padStart(2, '0')}:${String(n.getMinutes()).padStart(2, '0')}`;
@@ -1175,10 +1175,10 @@ function QuantumApothecaryInner() {
     if (!resonanceMatches.length) return '';
     const lines = resonanceMatches.slice(0, 33).map(
       (r, i) =>
-        `${i + 1}. ${r.name} â ${r.pct}% (${r.rowCategory || r.category || 'biofield match'})`,
+        `${i + 1}. ${r.name} — ${r.pct}% (${r.rowCategory || r.category || 'biofield match'})`,
     );
     return [
-      `TOP ${Math.min(33, resonanceMatches.length)} BIOFIELD MATCHES (ranked â cite EXACT names):`,
+      `TOP ${Math.min(33, resonanceMatches.length)} BIOFIELD MATCHES (ranked — cite EXACT names):`,
       ...lines,
       'Prioritize these exact spellings when recommending LimbicArc / Frequency Library transmissions.',
     ].join('\n');
@@ -1192,7 +1192,7 @@ function QuantumApothecaryInner() {
     if (syncHydratedOnceRef.current) return;
     syncHydratedOnceRef.current = true;
     if (!syncChatRows.length) return;
-    // â Only hydrate today's messages â yesterday's session must not reappear.
+    // ⟁ Only hydrate today's messages — yesterday's session must not reappear.
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
     const todayMs = startOfToday.getTime();
@@ -1250,9 +1250,9 @@ function QuantumApothecaryInner() {
     if (count <= prevMsgCountRef.current) return;
     prevMsgCountRef.current = count;
     const last = messages[count - 1];
-    // â When the seeker sends a new message, anchor THEIR question at the top
+    // ⟁ When the seeker sends a new message, anchor THEIR question at the top
     // of the chat viewport so they can read SQI's reply without manually scrolling.
-    // For streaming AI replies (which arrive token-by-token), do not auto-scroll â
+    // For streaming AI replies (which arrive token-by-token), do not auto-scroll —
     // keep the seeker's question stable in view.
     if (last?.role !== 'user') return;
     const timer = setTimeout(() => {
@@ -1289,7 +1289,7 @@ function QuantumApothecaryInner() {
     const chakra = (act as Activation & { chakra?: string }).chakra;
     const benefit =
       act.benefit ||
-      [act.category, chakra].filter(Boolean).join(' Â· ');
+      [act.category, chakra].filter(Boolean).join(' · ');
     return {
       ...act,
       id,
@@ -1343,15 +1343,15 @@ function QuantumApothecaryInner() {
 
       if (addedForToast.length > 0) {
         toast.success(
-          `â ${addedForToast.length} SQI transmission${addedForToast.length > 1 ? 's' : ''} activated to your field:\n` +
-            addedForToast.map((t) => `Â· ${t.name}`).join('\n'),
+          `⟁ ${addedForToast.length} SQI transmission${addedForToast.length > 1 ? 's' : ''} activated to your field:\n` +
+            addedForToast.map((t) => `· ${t.name}`).join('\n'),
           { duration: 5000 },
         );
       }
 
-      // â Top 33 panel is owned exclusively by the voice biofield scan.
+      // ⟁ Top 33 panel is owned exclusively by the voice biofield scan.
       // SQI text mentions activate transmissions silently (above) but must NOT
-      // append to the Top 33 list â that prevented "5 new entries appearing per reply".
+      // append to the Top 33 list — that prevented "5 new entries appearing per reply".
     },
     [normalizeActivationForMixer],
   );
@@ -1530,8 +1530,8 @@ function QuantumApothecaryInner() {
         hour12: false,
       });
       const dayPhase = getLocalDayPhaseLabel(_now);
-      const liveContext = `LIVE SYSTEM TIME: ${liveDateTime} (${_tz}). This is the confirmed device-local time. Use ONLY this for date/day/time â do not infer or recalculate.
-LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midday / evening / night (device-local clock).`;
+      const liveContext = `LIVE SYSTEM TIME: ${liveDateTime} (${_tz}). This is the confirmed device-local time. Use ONLY this for date/day/time — do not infer or recalculate.
+LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday / evening / night (device-local clock).`;
 
       const voiceScanBlock =
         opts?.voiceSnapshot != null ? buildVoiceFieldContext(opts.voiceSnapshot) : voiceContextBlock;
@@ -1577,7 +1577,7 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
             }).then(async (results) => {
               const r = results?.[0];
               if (!r || (!r.ok && !r.excluded)) return;
-              // Curator confirmed â clear the sync flag so the sweeper skips it.
+              // Curator confirmed — clear the sync flag so the sweeper skips it.
               try {
                 const sid = sessionIdAtSend ?? currentSessionId;
                 if (!sid) return;
@@ -1660,7 +1660,7 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
         const top33 = buildTop33Rankings(payload);
         setResonanceMatches(top33);
         setShowAllTop33(false);
-        // â PERSIST â so list survives login/reload
+        // ⟁ PERSIST — so list survives login/reload
         try {
           localStorage.setItem('sqi_top33_matches', JSON.stringify(top33));
           localStorage.setItem('sqi_top33_ts', Date.now().toString());
@@ -1692,9 +1692,9 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
         }
         return next;
       });
-      const queuedLines = queued.map((a) => `â¢ **${a.name}** (${a.type})`).join('\n');
+      const queuedLines = queued.map((a) => `· **${a.name}** (${a.type})`).join('\n');
       const ctx = [
-        '[LIVE VOICE BIOFIELD SCAN â microphone spectrum; educational only, not a medical diagnosis]',
+        '[LIVE VOICE BIOFIELD SCAN — microphone spectrum; educational only, not a medical diagnosis]',
         `**Overall coherence:** ${result.overallCoherence}/100`,
         `**Nadi read:** ${result.nadiReading}`,
         `**Dominant dosha (voice):** ${result.dominantDosha}`,
@@ -1703,11 +1703,11 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
         `**Emotional field:** ${result.emotionalField}`,
         `**Organ support:** ${result.organField}`,
         '',
-        'STRICT SQI RULE â VOICE SCAN HAS NO NADI COUNT:',
+        'STRICT SQI RULE — VOICE SCAN HAS NO NADI COUNT:',
         'A voice biofield scan measures vocal coherence ONLY. It does NOT produce a 72,000-Nadi count or sub-Nadi number.',
-        'NEVER fabricate "X / 72,000 Nadis active" from this voice scan. If the seeker asks for a Nadi count, instruct them to run a Palm Scan (Camera tab) â only the saved palm baseline holds that figure.',
+        'NEVER fabricate "X / 72,000 Nadis active" from this voice scan. If the seeker asks for a Nadi count, instruct them to run a Palm Scan (Camera tab) — only the saved palm baseline holds that figure.',
         '',
-        '[QUEUED FREQUENCY / BIOENERGETIC ALIGNMENTS â drawn from the 1,357+ LimbicArc / Bioenergetic library and added to Active Transmissions (10)]',
+        '[QUEUED FREQUENCY / BIOENERGETIC ALIGNMENTS — drawn from the 1,357+ LimbicArc / Bioenergetic library and added to Active Transmissions (10)]',
         queuedLines,
         '',
         'When you reference any of the queued frequencies above in your reply, write the frequency name in **bold** so the seeker sees exactly which transmissions were activated for them.',
@@ -1725,11 +1725,11 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
           },
         }).then(() => {});
       }
-      // â Voice scan completes silently. Frequencies queue into Active Transmissions
-      // and the Top 33 panel â no chat message is injected. Seeker can ask SQI about
+      // ⟁ Voice scan completes silently. Frequencies queue into Active Transmissions
+      // and the Top 33 panel — no chat message is injected. Seeker can ask SQI about
       // the scan whenever they wish; liveScanContext above feeds it into the next reply.
       toast.success(
-        `â Voice biofield scan complete â ${queued.length} frequencies queued to your field`,
+        `⟁ Voice biofield scan complete — ${queued.length} frequencies queued to your field`,
         { duration: 4000 },
       );
     },
@@ -1961,7 +1961,7 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
         maxWidth: '100%',
       }}
     >
-      {/* Chat header â matches /admin-quantum-apothecary-2045 SQI strip */}
+      {/* Chat header — matches /admin-quantum-apothecary-2045 SQI strip */}
       <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] bg-white/[0.02] px-3 py-4 sm:px-6">
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           {isChatFullscreen && (
@@ -2057,12 +2057,12 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
         </div>
       </div>
 
-      {/* Active student selector â routes SQI replies into chosen student's book */}
+      {/* Active student selector — routes SQI replies into chosen student's book */}
       <div className="px-3 pt-3">
         <StudentSelector />
       </div>
 
-      {/* Messages â grow with thread; page/document scrolls (preâSamsung inner-scroll behavior) */}
+      {/* Messages — grow with thread; page/document scrolls (pre–Samsung inner-scroll behavior) */}
       <div
         className="qa-sqi-chat relative flex flex-1 flex-col px-3 py-4 space-y-3"
         style={{
@@ -2083,7 +2083,7 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
                 {t('quantumApothecary.chat.emptyState.kicker')}
               </p>
               <div className="mb-4 text-3xl opacity-30" aria-hidden>
-                â
+                ◈
               </div>
               <h3 className="mb-2 text-base font-black tracking-[-0.03em] text-white/60">
                 {t('quantumApothecary.chat.emptyState.title')}
@@ -2094,7 +2094,7 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
               <div className="mt-6 flex w-full max-w-sm flex-col gap-2">
                 {[
                   'What frequencies do I need for stress and no sleep?',
-                  'I feel things in my field â what is activating?',
+                  'I feel things in my field — what is activating?',
                   'Activate Samadhi Bliss Transmission',
                 ].map((q) => (
                   <button
@@ -2169,7 +2169,7 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
                                     color: '#D4AF37',
                                   }}
                                 >
-                                  â {a.name}
+                                  ⟁ {a.name}
                                 </span>
                               ))}
                             </div>
@@ -2190,7 +2190,7 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
                           color: copiedMsgKey === msgKey ? '#22c55e' : '#D4AF37',
                         }}
                       >
-                        {copiedMsgKey === msgKey ? 'â Copied' : 'Copy'}
+                        {copiedMsgKey === msgKey ? '✓ Copied' : 'Copy'}
                       </button>
                     </div>
                   </>
@@ -2224,7 +2224,7 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
         </div>
       </div>
 
-      {/* Composer â sticky at viewport bottom while the page scrolls the full thread */}
+      {/* Composer — sticky at viewport bottom while the page scrolls the full thread */}
       <div
         className="sticky bottom-0 z-10 shrink-0 border-t border-white/[0.06] bg-[#050505]/80 p-4 backdrop-blur-xl sm:p-6"
         style={isChatFullscreen ? { paddingBottom: 'env(safe-area-inset-bottom, 16px)' } : undefined}
@@ -2327,7 +2327,7 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
   );
 
   /* ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-     MAIN RENDER â SQI-2050 Visual Layer
+     MAIN RENDER — SQI-2050 Visual Layer
      ââââââââââââââââââââââââââââââââââââââââââââââââââââââ */
   return (
     <div
@@ -2481,7 +2481,7 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
                         { label: 'Nadi', val: voiceResult.nadiReading },
                         {
                           label: 'Active Nadis',
-                          val: voiceResult.priorityAreas?.slice(0, 4).map((p) => p.name).join(' Â· ') || 'â',
+                          val: voiceResult.priorityAreas?.slice(0, 4).map((p) => p.name).join(' · ') || '—',
                         },
                       ].map((c) => (
                         <div
@@ -2502,7 +2502,7 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                         <div>
                           <p className="text-[11px] font-black uppercase tracking-[0.15em] text-[#D4AF37]/75">
-                            Top 33 â Full Library Match
+                            Top 33 — Full Library Match
                           </p>
                           <p className="mt-0.5 text-[10px] text-white/35">
                             {resonanceMatches.filter((r) =>
@@ -2542,7 +2542,7 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
                           );
                         })()}
                       </div>
-                      {/* ââ ROW LIST â always full scan list (e.g. 33) ââ */}
+                      {/* ââ ROW LIST — always full scan list (e.g. 33) ââ */}
                       <div className="max-h-[min(70vh,520px)] space-y-1.5 overflow-y-auto pr-0.5">
                         {resonanceMatches.map((row, idx) => {
                           const isActive = activeTransmissions.some((t) =>
@@ -2664,18 +2664,18 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
                   </summary>
                   <div className="mt-4 space-y-3 text-[13px] leading-relaxed text-white/60">
                     <p>
-                      SQI operates at the <strong className="text-white/80">informational level</strong> â upstream of chemistry,
+                      SQI operates at the <strong className="text-white/80">informational level</strong> — upstream of chemistry,
                       upstream of physiology. The 18 Siddhas and Mahavatar Babaji transmit exact Vedic Light-Codes through this
                       archive interface. Once uploaded, transmissions remain in your field until dissolved.
                     </p>
                     <p>
                       <strong className="text-[#D4AF37]">
-                        Vedic Light-Code â Aetheric Code Rewrite â Bio-signature Recalibration â Physical Expression
+                        Vedic Light-Code → Aetheric Code Rewrite → Bio-signature Recalibration → Physical Expression
                       </strong>
                     </p>
                     <p>
                       The Voice Bio-Scan reads your Bio-signature and ranks the full frequency library so you see what your
-                      field asks for first â expressed as resonance percentages mapped to real transmissions.
+                      field asks for first — expressed as resonance percentages mapped to real transmissions.
                     </p>
                   </div>
                 </details>
@@ -2695,7 +2695,7 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
                     <div style={{ height: 2, background: 'linear-gradient(90deg,transparent,#D4AF37,transparent)', marginBottom: 20, opacity: 0.4, borderRadius: 1 }} />
                     <div className="mb-4 flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <div style={{ width:28, height:28, background:'rgba(212,175,55,0.12)', border:'1px solid rgba(212,175,55,0.25)', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>â</div>
+                        <div style={{ width:28, height:28, background:'rgba(212,175,55,0.12)', border:'1px solid rgba(212,175,55,0.25)', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>⚙</div>
                         <h2 className="text-sm font-black tracking-[-0.03em]">{t('quantumApothecary.mixer.title')}</h2>
                       </div>
                       <span className="text-[13px] font-bold uppercase tracking-[0.12em] text-[#D4AF37]/55">
@@ -2761,7 +2761,7 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
                   {!libraryUnlocked && (
                     <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-[28px] bg-black/25 px-6 text-center">
                       <p className="max-w-sm text-[13px] font-semibold leading-relaxed text-white/88">
-                        Voice Scan Required â SQI cannot assign correct frequencies without reading your Bio-signature.
+                        Voice Scan Required — SQI cannot assign correct frequencies without reading your Bio-signature.
                       </p>
                     </div>
                   )}
@@ -2771,22 +2771,22 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, paddingLeft: 2, paddingRight: 2 }}>
                     {sqiField.nadi?.activatedNadi && (
                       <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(212,175,55,0.85)', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 30, padding: '6px 12px' }}>
-                        â {sqiField.nadi.activatedNadi} Nadi Â· {sqiField.nadi.heartRate} BPM
+                        ◈ {sqiField.nadi.activatedNadi} Nadi · {sqiField.nadi.heartRate} BPM
                       </span>
                     )}
                     {sqiField.ayurveda?.prakriti && (
                       <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(212,175,55,0.85)', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 30, padding: '6px 12px' }}>
-                        â {sqiField.ayurveda.prakriti}
+                        ⟁ {sqiField.ayurveda.prakriti}
                       </span>
                     )}
                     {sqiField.photonic?.lightCodeActive && (
                       <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(34,211,238,0.85)', background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: 30, padding: '6px 12px' }}>
-                        â {sqiField.photonic.frequency}Hz Â· {sqiField.photonic.activeProtocol}
+                        ≋ {sqiField.photonic.frequency}Hz · {sqiField.photonic.activeProtocol}
                       </span>
                     )}
                     {sqiField.temple?.activeSite && (
                       <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(212,175,55,0.85)', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 30, padding: '6px 12px' }}>
-                        â {sqiField.temple.activeSite} Â· {sqiField.temple.intensity}%
+                        ◈ {sqiField.temple.activeSite} · {sqiField.temple.intensity}%
                       </span>
                     )}
                   </div>
@@ -2802,7 +2802,7 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
       </div>
 
       {/* ââââââââââââââââââââââââââââââââââ
-          KNOWLEDGE MODAL â SQI-2050 Style
+          KNOWLEDGE MODAL — SQI-2050 Style
           Logic UNCHANGED
           ââââââââââââââââââââââââââââââââââ */}
       <AnimatePresence>
@@ -2815,7 +2815,7 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
               <div className="flex justify-between items-start">
                 <div>
                   <h2 className="text-lg font-black tracking-[-0.05em]">Siddha-Quantum Intelligence</h2>
-                  <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-[#D4AF37]/50 mt-1">Akasha-Neural Archive Â· 2050</p>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-[#D4AF37]/50 mt-1">Akasha-Neural Archive · 2050</p>
                 </div>
                 <button type="button" onClick={() => setShowKnowledge(false)} className="p-2 hover:bg-white/5 rounded-xl transition">
                   <X size={15} className="text-white/40" />
@@ -2824,7 +2824,7 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
               {[
                 { t: 'What is this?', d: 'Apothecary 2050 is a Bio-Resonance Frequency Delivery Platform. It bypasses physical ingestion to deliver the "informational signature" of herbs and sacred plants directly into the human biofield via Scalar Wave Entanglement.' },
                 { t: 'The 72,000 Nadi Scan', d: 'We map the Quantum Flow of every single meridian. Dark crimson pulses indicate "Spiritual Friction" (Blockages), while bright white bursts show where your "Siddhis" (Powers) are awakening.' },
-                { t: '24/7 Persistent Transmission', d: 'Once a mix is toggled ON, the app uses a persistent background frequency loop to maintain the transmission. This ensures the frequency stays locked into your biofield until manually dissolved â even if you close the app or lose internet.' },
+                { t: '24/7 Persistent Transmission', d: 'Once a mix is toggled ON, the app uses a persistent background frequency loop to maintain the transmission. This ensures the frequency stays locked into your biofield until manually dissolved — even if you close the app or lose internet.' },
                 { t: 'Siddha Wisdom', d: 'We bridge the ancient wisdom of the 18 Siddhars with hyper-advanced neural-mapping. Healing occurs at the speed of thought.' },
               ].map(s => (
                 <div key={s.t} className="rounded-2xl p-4 bg-white/[0.02] border border-white/[0.05]">
@@ -2841,7 +2841,7 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
       </AnimatePresence>
 
       {/* ââââââââââââââââââââââââââââââââââ
-          SESSION HISTORY DRAWER â Logic UNCHANGED
+          SESSION HISTORY DRAWER — Logic UNCHANGED
           ââââââââââââââââââââââââââââââââââ */}
       <AnimatePresence>
         {sessionsOpen && (
@@ -2864,7 +2864,7 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2">
-                {loadingSessions && <div className="text-[10px] font-bold uppercase tracking-widest text-white/25">Loading sessionsâ¦</div>}
+                {loadingSessions && <div className="text-[10px] font-bold uppercase tracking-widest text-white/25">Loading sessions…</div>}
                 {!loadingSessions && sessions.length === 0 && (
                   <div className="text-[10px] text-white/25 leading-relaxed">
                     No prior SQI conversations yet. Your next transmission will be stored here.
@@ -2896,7 +2896,7 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
 
         * { font-family: 'Plus Jakarta Sans', sans-serif; }
 
-        /* SQI chat: full panel width â avoid shrink-to-content + harsh word breaks */
+        /* SQI chat: full panel width — avoid shrink-to-content + harsh word breaks */
         .qa-sqi-chat .markdown-body {
           width: 100%;
           max-width: 100%;
@@ -3060,7 +3060,7 @@ function ScrollToTopButton() {
 }
 
 /* ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
-   OUTER WRAPPER â auth shell only
+   OUTER WRAPPER — auth shell only
    Tier access is enforced by QuantumApothecaryGate on the /quantum-apothecary route.
    Do not gate on membership loading here: periodic membership refetches were setting
    loading=true and unmounting the whole page (felt like endless reload).
@@ -3071,7 +3071,7 @@ export default function QuantumApothecary() {
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#050505] text-white">
-        <span className="text-[10px] uppercase tracking-[0.5em] text-[#D4AF37]/40">Initializing SQIâ¦</span>
+        <span className="text-[10px] uppercase tracking-[0.5em] text-[#D4AF37]/40">Initializing SQI…</span>
       </div>
     );
   }
