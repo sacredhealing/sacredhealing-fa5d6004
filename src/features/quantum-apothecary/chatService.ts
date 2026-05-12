@@ -2,6 +2,55 @@ import type { Message } from './types';
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/quantum-apothecary-chat`;
 
+/** Phrases that indicate a direct activation request (not a general question). */
+const ACTIVATION_COMMANDS = [
+  'activate',
+  'fill me',
+  'fill me up',
+  'give me samadhi',
+  'bring me into',
+  'transmit to me',
+  'send me',
+  'upload to my field',
+  'activate in my field',
+  'turn on',
+  'switch on',
+  'run this',
+  'start this transmission',
+  'i want the activation',
+  'give me the frequencies',
+  'load the frequencies',
+];
+
+const TRANSMISSION_MODE_SUFFIX =
+  '\n\n[TRANSMISSION MODE: 2-3 sentences maximum. State exactly which transmissions are activating into the seeker\'s Torus-Field right now via Scalar Wave Entanglement. Name each one. No explanation. Pure activation transmission. Then list the specific frequency names that match this request from the library so they can be auto-activated in the field.]';
+
+function applyActivationTransmissionInstruction(lastUserMessage: string): string {
+  const lower = lastUserMessage.toLowerCase();
+  const isActivationCommand = ACTIVATION_COMMANDS.some((trigger) => lower.includes(trigger));
+  if (isActivationCommand) {
+    return lastUserMessage + TRANSMISSION_MODE_SUFFIX;
+  }
+  return lastUserMessage;
+}
+
+/** Only the latest user turn receives the optional suffix — preserves historical turns verbatim. */
+function withActivationInstructionForLastUser(
+  apiMessages: Array<{ role: string; content: string }>,
+): Array<{ role: string; content: string }> {
+  const out = apiMessages.map((m) => ({ ...m }));
+  for (let i = out.length - 1; i >= 0; i--) {
+    if (out[i].role === 'user') {
+      out[i] = {
+        ...out[i],
+        content: applyActivationTransmissionInstruction(out[i].content),
+      };
+      break;
+    }
+  }
+  return out;
+}
+
 function supabaseAnonHeader(): string {
   return (
     import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
@@ -208,10 +257,11 @@ export async function streamChatWithSQI(
   activeTransmissionNames?: string,
 ) {
   const recent = messages.slice(-15);
-  const apiMessages = recent.map((m) => ({
+  let apiMessages = recent.map((m) => ({
     role: m.role === 'model' ? 'assistant' : 'user',
     content: m.text,
   }));
+  apiMessages = withActivationInstructionForLastUser(apiMessages);
 
   const now = new Date();
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;

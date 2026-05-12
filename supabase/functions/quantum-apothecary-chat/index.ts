@@ -420,7 +420,7 @@ async function updateLivingPortrait(userId: string, currentPortrait: string, new
       : `Update this Seeker Portrait with NEW confirmed facts from this session only. Do not repeat existing info. Only add what is clearly about the Seeker themselves — not third parties they mention. Keep 250-400 words. Start "LIVING PORTRAIT:".\n\nCURRENT:\n${currentPortrait}\n\nNEW EXCHANGE:\n${newExchange}`;
     const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`, {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { temperature: 0.2, maxOutputTokens: 500 } }),
+      body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { temperature: 0.2, maxOutputTokens: 1200 } }),
     });
     if (!resp.ok) return;
     const data = await resp.json();
@@ -447,7 +447,7 @@ async function classifyAndPersistLifeBook(options: { assistantText: string; user
           { role: "user", parts: [{ text: `Classify this SQI transmission into ONE LifeBook category. Return ONLY JSON: {"category":"...","title":"...","summary":"..."}\n\nCategories: past_lives, healing_upgrades, future_visions, spiritual_figures, nadi_knowledge, children, general_wisdom, skip\n\nRules:\n- skip: short reply, greeting, activation list only, content about third parties not the Seeker\n- past_lives: specific past life readings with century/location/role\n- healing_upgrades: specific healing diagnoses or protocols prescribed\n- future_visions: predictions, destiny readings, future timelines\n- spiritual_figures: master transmissions received, initiations\n- nadi_knowledge: Nadi readings, chakra diagnoses, biofield states\n- children: only if about the Seeker's OWN confirmed children\n- general_wisdom: Jyotish soul blueprint readings, dharma guidance\n\nNever store third-party information as if it belongs to the Seeker.\nReturn ONLY the JSON object.` }] },
           { role: "user", parts: [{ text: assistantText.slice(0, 800) }] },
         ],
-        generationConfig: { temperature: 0.1, maxOutputTokens: 150 }
+        generationConfig: { temperature: 0.1, maxOutputTokens: 1200 }
       }),
     });
     if (!resp.ok) return;
@@ -515,7 +515,7 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ role: "user", parts: [{ inline_data: { mime_type: imageMimeType || "image/jpeg", data: imageBase64 } }, { text: prompt }] }],
-          generationConfig: { temperature: 0.25, topK: 10, topP: 0.6, maxOutputTokens: 1024 },
+          generationConfig: { temperature: 0.25, topK: 10, topP: 0.6, maxOutputTokens: 1200 },
         }),
       });
       const gd = await gr.json();
@@ -661,7 +661,7 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
         body: JSON.stringify({
           system_instruction: { parts: [{ text: systemText.trim() }] },
           contents: geminiMessages,
-          generationConfig: { temperature: 0.78, topK: 45, topP: 0.95, maxOutputTokens: 2000 },
+          generationConfig: { temperature: 0.78, topK: 45, topP: 0.95, maxOutputTokens: 1200 },
           safetySettings: [
             { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
             { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
