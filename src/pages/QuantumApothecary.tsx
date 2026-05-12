@@ -1588,6 +1588,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
       const voiceScanBlock =
         opts?.voiceSnapshot != null ? buildVoiceFieldContext(opts.voiceSnapshot) : voiceContextBlock;
       const fieldParts: string[] = [sqiSourceDirective, answerRulesDirective, liveContext];
+      if (studentContext) fieldParts.unshift(studentContext);
       if (voiceScanBlock) fieldParts.push(voiceScanBlock);
       if (liveScanContext) fieldParts.push(liveScanContext);
       if (stableCompiledContext) fieldParts.push(stableCompiledContext);
