@@ -1041,7 +1041,6 @@ function QuantumApothecaryInner() {
     }
   });
   const [apothecaryMainTab, setApothecaryMainTab] = useState<'library' | 'archive'>('library');
-  const [showAllTop33, setShowAllTop33] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [resonanceMatches, setResonanceMatches] = useState<
     Array<Activation & { pct: number; rowCategory?: string }>
@@ -1919,10 +1918,13 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
 
     const now = new Date().toISOString();
     const newTransmissions = rankings
-      .filter((r) => !activeTransmissions.some((a) => a.id === r.id))
-      .map((r) => enrichTransmission(r, 'nadi_scan'));
+      .filter((r) => !activeTransmissions.some((a) => fieldTransmissionMatchesRow(a, r)))
+      .map((r) => enrichTransmission(normalizeActivationForMixer(r), 'nadi_scan'));
 
-    if (newTransmissions.length === 0) return;
+    if (newTransmissions.length === 0) {
+      toast.message('All scan matches are already in your field');
+      return;
+    }
 
     const updated = [...activeTransmissions, ...newTransmissions];
     setActiveTransmissions(updated);
@@ -1944,7 +1946,13 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
     }
 
     toast.success(`◈ ${newTransmissions.length} Transmissions activated to your field`);
-  }, [resonanceMatches, activeTransmissions, user?.id, enrichTransmission]);
+  }, [
+    resonanceMatches,
+    activeTransmissions,
+    user?.id,
+    enrichTransmission,
+    normalizeActivationForMixer,
+  ]);
   const renderChatPanel = () => (
     <div
       className="glass-card relative flex w-full flex-col overflow-visible"
@@ -2500,41 +2508,43 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
                             {resonanceMatches.filter((r) =>
                               activeTransmissions.some((t) => fieldTransmissionMatchesRow(t, r)),
                             ).length}{' '}
-                            / {resonanceMatches.length} active in your field
+                            / {resonanceMatches.length} from scan already active in field
                           </p>
                         </div>
                         {/* ââ ACTIVATE BUTTON ââ */}
                         {(() => {
-                          const activeCount = resonanceMatches.filter((r) =>
+                          const activeFromScanCount = resonanceMatches.filter((r) =>
                             activeTransmissions.some((t) => fieldTransmissionMatchesRow(t, r)),
                           ).length;
-                          const allActive = activeCount === resonanceMatches.length;
+                          const newCount = resonanceMatches.length - activeFromScanCount;
+                          const noneNew = newCount === 0;
                           return (
                             <button
                               type="button"
                               onClick={activateAllTop33ToField}
-                              className="rounded-full px-4 py-2 text-[11px] font-black uppercase tracking-[0.12em] transition-all duration-300"
+                              disabled={noneNew}
+                              className="rounded-full px-4 py-2 text-[11px] font-black uppercase tracking-[0.12em] transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50"
                               style={{
-                                background: allActive
+                                background: noneNew
                                   ? 'rgba(212,175,55,0.08)'
                                   : 'rgba(212,175,55,0.15)',
-                                border: allActive
+                                border: noneNew
                                   ? '1px solid rgba(212,175,55,0.25)'
                                   : '1px solid rgba(212,175,55,0.5)',
-                                color: allActive ? 'rgba(212,175,55,0.5)' : '#D4AF37',
-                                boxShadow: allActive ? 'none' : '0 0 18px rgba(212,175,55,0.2)',
+                                color: noneNew ? 'rgba(212,175,55,0.5)' : '#D4AF37',
+                                boxShadow: noneNew ? 'none' : '0 0 18px rgba(212,175,55,0.2)',
                               }}
                             >
-                              {allActive
-                                ? 'â All Active'
-                                : `â Activate ${resonanceMatches.length - activeCount} to Field`}
+                              {noneNew
+                                ? '⟁ All scan rows active'
+                                : `⟁ Activate All New (${newCount})`}
                             </button>
                           );
                         })()}
                       </div>
-                      {/* ââ ROW LIST ââ */}
-                      <div className="space-y-1.5">
-                        {(showAllTop33 ? resonanceMatches : resonanceMatches.slice(0, 10)).map((row, idx) => {
+                      {/* ââ ROW LIST â always full scan list (e.g. 33) ââ */}
+                      <div className="max-h-[min(70vh,520px)] space-y-1.5 overflow-y-auto pr-0.5">
+                        {resonanceMatches.map((row, idx) => {
                           const isActive = activeTransmissions.some((t) =>
                             fieldTransmissionMatchesRow(t, row),
                           );
@@ -2544,18 +2554,23 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
                               className="flex items-center gap-3 rounded-[16px] px-3 py-2.5 transition-all duration-300"
                               style={{
                                 background: isActive
-                                  ? 'rgba(212,175,55,0.06)'
+                                  ? 'rgba(255,255,255,0.03)'
                                   : 'rgba(255,255,255,0.02)',
                                 border: isActive
-                                  ? '1px solid rgba(212,175,55,0.2)'
+                                  ? '1px solid rgba(255,255,255,0.07)'
                                   : '1px solid rgba(255,255,255,0.04)',
+                                opacity: isActive ? 0.72 : 1,
                               }}
                             >
                               {/* Pct bar */}
                               <div className="flex w-10 shrink-0 flex-col items-center gap-0.5">
                                 <span
                                   className="text-[12px] font-black"
-                                  style={{ color: isActive ? '#D4AF37' : 'rgba(255,255,255,0.5)' }}
+                                  style={{
+                                    color: isActive
+                                      ? 'rgba(255,255,255,0.38)'
+                                      : 'rgba(255,255,255,0.5)',
+                                  }}
                                 >
                                   {row.pct}%
                                 </span>
@@ -2565,7 +2580,7 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
                                     style={{
                                       width: `${row.pct}%`,
                                       background: isActive
-                                        ? '#D4AF37'
+                                        ? 'rgba(255,255,255,0.22)'
                                         : 'rgba(255,255,255,0.25)',
                                     }}
                                   />
@@ -2575,45 +2590,57 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
                               <div className="flex min-w-0 flex-1 flex-col">
                                 <span
                                   className="truncate text-[12px] font-bold leading-tight"
-                                  style={{ color: isActive ? '#D4AF37' : 'rgba(255,255,255,0.85)' }}
+                                  style={{
+                                    color: isActive
+                                      ? 'rgba(255,255,255,0.42)'
+                                      : 'rgba(255,255,255,0.85)',
+                                  }}
                                 >
                                   {row.name}
                                 </span>
                                 {row.rowCategory && (
-                                  <span className="text-[9px] font-semibold uppercase tracking-[0.12em] text-white/30">
+                                  <span
+                                    className="text-[9px] font-semibold uppercase tracking-[0.12em]"
+                                    style={{
+                                      color: isActive ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.3)',
+                                    }}
+                                  >
                                     {row.rowCategory}
                                   </span>
                                 )}
                               </div>
-                              {/* Active badge OR tap-to-activate */}
                               {isActive ? (
                                 <span
-                                  className="shrink-0 rounded-full px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.15em]"
+                                  className="flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-black tabular-nums"
                                   style={{
-                                    background: 'rgba(212,175,55,0.12)',
-                                    color: '#D4AF37',
-                                    border: '1px solid rgba(212,175,55,0.25)',
+                                    color: 'rgba(255,255,255,0.45)',
+                                    border: '1px solid rgba(255,255,255,0.08)',
                                   }}
+                                  aria-label="Already active in field"
                                 >
-                                  ACTIVE
+                                  <span className="text-[13px] leading-none text-[#D4AF37]/70">✓</span>
+                                  <span className="text-[8px] uppercase tracking-[0.12em]">In field</span>
                                 </span>
                               ) : (
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    const enriched = normalizeActivationForMixer(row);
-                                    setActiveTransmissions((prev) =>
-                                      prev.some((t) => t.id === enriched.id || t.name === enriched.name)
-                                        ? prev
-                                        : [...prev, enriched],
-                                    );
-                                    toast.success(`â ${row.name} activated`);
+                                    setActiveTransmissions((prev) => {
+                                      if (prev.some((t) => fieldTransmissionMatchesRow(t, row))) {
+                                        return prev;
+                                      }
+                                      return [
+                                        ...prev,
+                                        enrichTransmission(normalizeActivationForMixer(row), 'nadi_scan'),
+                                      ];
+                                    });
+                                    toast.success(`⟁ ${row.name} activated`);
                                   }}
-                                  className="shrink-0 rounded-full px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.15em] transition-all"
+                                  className="shrink-0 rounded-full px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.15em] transition-all hover:border-[#D4AF37]/35 hover:text-[#D4AF37]/80"
                                   style={{
                                     background: 'transparent',
-                                    color: 'rgba(255,255,255,0.3)',
-                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    color: 'rgba(255,255,255,0.35)',
+                                    border: '1px solid rgba(255,255,255,0.12)',
                                   }}
                                 >
                                   + Add
@@ -2623,19 +2650,6 @@ LOCAL DAY PHASE: ${dayPhase} â align tone and greetings with morning / midd
                           );
                         })}
                       </div>
-                      {/* ââ SHOW MORE TOGGLE ââ */}
-                      {resonanceMatches.length > 10 && (
-                        <button
-                          type="button"
-                          onClick={() => setShowAllTop33((prev) => !prev)}
-                          className="mt-3 w-full rounded-[14px] py-2 text-[10px] font-black uppercase tracking-[0.15em] text-white/30 transition-all hover:text-white/60"
-                          style={{ border: '1px solid rgba(255,255,255,0.06)' }}
-                        >
-                          {showAllTop33
-                            ? 'â Show First 10'
-                            : `â Show All ${resonanceMatches.length}`}
-                        </button>
-                      )}
                     </div>
                   )}
                 </div>
