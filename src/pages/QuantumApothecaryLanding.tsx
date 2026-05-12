@@ -34,6 +34,7 @@ import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
 
 // Lazy load the real app — only loads for users who have access
 import { lazy, Suspense } from 'react';
+import ErrorBoundary from '@/components/ErrorBoundary';
 const QuantumApothecaryApp = lazy(() => import('./QuantumApothecary'));
 
 // ══════════════════════════════════════════════════════════════════
@@ -75,13 +76,23 @@ export function QuantumApothecaryGate() {
 
   if (hasAccess) {
     return (
-      <Suspense fallback={
-        <div style={{ minHeight: '100vh', background: '#050505', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <p style={{ color: 'rgba(212,175,55,0.4)', fontSize: 10, letterSpacing: '0.4em', textTransform: 'uppercase', fontFamily: 'sans-serif' }}>Loading Quantum Apothecary…</p>
-        </div>
-      }>
-        <QuantumApothecaryApp />
-      </Suspense>
+      <ErrorBoundary
+        fallbackRender={(error, _info, reset) => (
+          <div style={{ minHeight: '100vh', background: '#050505', padding: 24, color: '#D4AF37', fontFamily: 'sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, textAlign: 'center' }}>
+            <p style={{ fontSize: 11, letterSpacing: '0.4em', textTransform: 'uppercase', opacity: 0.7 }}>Quantum Apothecary — transmission interrupted</p>
+            <pre style={{ fontSize: 12, color: '#f87171', maxWidth: 600, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{error.message}</pre>
+            <button onClick={reset} style={{ padding: '10px 24px', borderRadius: 100, background: '#D4AF37', color: '#000', fontWeight: 700, fontSize: 12, letterSpacing: '0.2em', textTransform: 'uppercase', border: 'none', cursor: 'pointer' }}>Retry</button>
+          </div>
+        )}
+      >
+        <Suspense fallback={
+          <div style={{ minHeight: '100vh', background: '#050505', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <p style={{ color: 'rgba(212,175,55,0.4)', fontSize: 10, letterSpacing: '0.4em', textTransform: 'uppercase', fontFamily: 'sans-serif' }}>Loading Quantum Apothecary…</p>
+          </div>
+        }>
+          <QuantumApothecaryApp />
+        </Suspense>
+      </ErrorBoundary>
     );
   }
 
