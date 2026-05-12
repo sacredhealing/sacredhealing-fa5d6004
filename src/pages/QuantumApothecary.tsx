@@ -1027,6 +1027,7 @@ function QuantumApothecaryInner() {
   // and inject as context so SQI reads every question as being about THIS student.
   const [activeStudent, setActiveStudent] = useState<Student | null>(null);
   const [activeStudentTxCount, setActiveStudentTxCount] = useState<number>(0);
+  const [activeCategory, setActiveCategory] = useState<string>('Wellness');
   useEffect(() => {
     let cancelled = false;
     const sid = portraitLinkStudentId;
