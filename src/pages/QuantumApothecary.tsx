@@ -1666,6 +1666,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         appLocale,
         sqiTop33ChatBlock,
         activeTransmissionNamesCsv,
+        studentContext,
       );
     } catch (e) {
       console.error(e);
