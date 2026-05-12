@@ -34,6 +34,7 @@ import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
 
 // Lazy load the real app — only loads for users who have access
 import { lazy, Suspense } from 'react';
+import ErrorBoundary from '@/components/ErrorBoundary';
 const QuantumApothecaryApp = lazy(() => import('./QuantumApothecary'));
 
 // ══════════════════════════════════════════════════════════════════
