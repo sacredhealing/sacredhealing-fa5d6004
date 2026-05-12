@@ -255,6 +255,7 @@ export async function streamChatWithSQI(
   localeTag?: string,
   biofieldContext?: string,
   activeTransmissionNames?: string,
+  studentContext?: string,
 ) {
   const recent = messages.slice(-15);
   let apiMessages = recent.map((m) => ({
@@ -289,7 +290,7 @@ export async function streamChatWithSQI(
     seekerName: seekerName ?? '',
     language: language ?? 'English',
     canonicalActivationNames: canonicalActivationNames ?? '',
-    jyotishContext: jyotishContext ?? '',
+    jyotishContext: [studentContext?.trim(), jyotishContext].filter(Boolean).join('\n\n'),
     biofieldContext: biofieldContext ?? '',
     activeTransmissionNames: activeTransmissionNames ?? '',
     localTime,

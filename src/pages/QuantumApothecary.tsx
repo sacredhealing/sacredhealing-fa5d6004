@@ -43,7 +43,7 @@ import type { NadiReading } from '@/components/NadiScanner';
 import type { VoiceBiofieldResult } from '@/components/VoiceBiofieldScanner';
 import { useSQIFieldContext } from '@/hooks/useSQIFieldContext';
 import { StudentSelector } from '@/components/codex/StudentSelector';
-import { getActiveStudentId } from '@/lib/codex/students';
+import { getActiveStudentId, getStudent, type Student } from '@/lib/codex/students';
 import { curateTransmission } from '@/lib/codex/curatorClient';
 import { syncPendingTransmissionsOnce } from '@/lib/codex/codexSync';
 import UserChatHistory from '@/components/UserChatHistory';
@@ -1022,7 +1022,59 @@ function QuantumApothecaryInner() {
     };
   }, []);
 
-  const [activeCategory, setActiveCategory] = useState('Wellness');
+  // ─── ACTIVE STUDENT SOUL RECORD ─────────────────────────────────────────────
+  // When a student is selected, fetch their birth data + transmission count
+  // and inject as context so SQI reads every question as being about THIS student.
+  const [activeStudent, setActiveStudent] = useState<Student | null>(null);
+  const [activeStudentTxCount, setActiveStudentTxCount] = useState<number>(0);
+  useEffect(() => {
+    let cancelled = false;
+    const sid = portraitLinkStudentId;
+    if (!sid) {
+      setActiveStudent(null);
+      setActiveStudentTxCount(0);
+      return;
+    }
+    (async () => {
+      try {
+        const [s, txRes] = await Promise.all([
+          getStudent(sid),
+          supabase
+            .from('transmission_blocks')
+            .select('id', { count: 'exact', head: true })
+            .eq('student_id', sid),
+        ]);
+        if (cancelled) return;
+        setActiveStudent(s);
+        setActiveStudentTxCount(txRes.count ?? 0);
+      } catch (e) {
+        if (!cancelled) {
+          console.warn('[apothecary] failed to load active student record', e);
+          setActiveStudent(null);
+          setActiveStudentTxCount(0);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [portraitLinkStudentId]);
+
+  const studentContext = useMemo(() => {
+    if (!activeStudent) return '';
+    return [
+      '[ACTIVE STUDENT SOUL RECORD]',
+      `Name: ${activeStudent.name}`,
+      `Date of Birth: ${activeStudent.birth_date ?? 'unknown'}`,
+      `Birth Place: ${activeStudent.birth_place ?? 'unknown'}`,
+      `Birth Time: ${activeStudent.birth_time ?? 'unknown'}`,
+      activeStudent.notes ? `Notes: ${activeStudent.notes}` : null,
+      `Active Transmissions: ${activeStudentTxCount}`,
+      'Read ALL questions in this session as being about this student — not about the practitioner/admin.',
+    ]
+      .filter(Boolean)
+      .join('\n');
+  }, [activeStudent, activeStudentTxCount]);
   const [libraryUnlocked, setLibraryUnlocked] = useState(() => {
     try {
       return localStorage.getItem(LS_LIBRARY_UNLOCKED) === '1';
@@ -1536,6 +1588,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
       const voiceScanBlock =
         opts?.voiceSnapshot != null ? buildVoiceFieldContext(opts.voiceSnapshot) : voiceContextBlock;
       const fieldParts: string[] = [sqiSourceDirective, answerRulesDirective, liveContext];
+      if (studentContext) fieldParts.unshift(studentContext);
       if (voiceScanBlock) fieldParts.push(voiceScanBlock);
       if (liveScanContext) fieldParts.push(liveScanContext);
       if (stableCompiledContext) fieldParts.push(stableCompiledContext);
@@ -1613,6 +1666,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         appLocale,
         sqiTop33ChatBlock,
         activeTransmissionNamesCsv,
+        studentContext,
       );
     } catch (e) {
       console.error(e);
