@@ -75,9 +75,9 @@ export default function Explore() {
   );
   const Badge = ({ label, v = 'gold' }: { label: string; v?: 'gold'|'muted'|'red'|'purple' }) => {
     const s: Record<string, React.CSSProperties> = {
-      gold:   { background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.24)', color: 'rgba(212,175,55,0.85)' },
-      muted:  { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.42)' },
-      red:    { background: 'rgba(255,55,55,0.12)', border: '1px solid rgba(255,55,55,0.25)', color: 'rgba(255,110,110,0.85)' },
+      gold: { background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.24)', color: 'rgba(212,175,55,0.85)' },
+      muted: { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.42)' },
+      red: { background: 'rgba(255,55,55,0.12)', border: '1px solid rgba(255,55,55,0.25)', color: 'rgba(255,110,110,0.85)' },
       purple: { background: 'rgba(160,80,240,0.14)', border: '1px solid rgba(160,80,240,0.28)', color: 'rgba(190,140,255,0.8)' },
     };
     return <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: "'Montserrat',sans-serif", fontSize: 6, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase' as const, borderRadius: 20, padding: '2px 8px', ...s[v] }}>{label}</span>;
@@ -88,11 +88,6 @@ export default function Explore() {
 
   return (
     <div style={{ background: '#050505', minHeight: '100vh', paddingBottom: 104 }}>
-
-      {/* ══ SQI QUANTUM APOTHECARY BANNER — full width, edge-to-edge ══ */}
-      <div style={{ marginBottom: 16 }}>
-        <SQIApothecaryBanner />
-      </div>
 
       {/* ══ HEADER ══ */}
       <div style={{ padding: '24px 20px 0', animation: 'sqFadeUp 0.35s ease both' }}>
@@ -155,6 +150,11 @@ export default function Explore() {
         </button>
       </div>
 
+      {/* ══ SQI QUANTUM APOTHECARY BANNER — under Siddha Portal, full width ══ */}
+      <div style={{ margin: '16px 0 0' }}>
+        <SQIApothecaryBanner />
+      </div>
+
       {/* ══ PRĀṆIC BREATHING ══ */}
       <SL label={t('converge.secPranic')} delay="0.1s" />
       <div
@@ -181,28 +181,8 @@ export default function Explore() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 16 }}>
             {[
               { labelKey: 'converge.pranicTileKumbhaka' as const, svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="7" stroke="rgba(120,180,255,0.7)" strokeWidth="1.3" fill="none"><animate attributeName="r" values="7;9;7" dur="4s" repeatCount="indefinite"/></circle><circle cx="12" cy="12" r="3" fill="rgba(120,180,255,0.2)" stroke="rgba(120,180,255,0.6)" strokeWidth="1"/></svg> },
-              { labelKey: 'converge.pranicTileNadi' as const,      svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12 Q8 6 12 12 Q16 18 20 12" stroke="rgba(120,180,255,0.75)" strokeWidth="1.4" fill="none"><animate attributeName="d" values="M4 12 Q8 6 12 12 Q16 18 20 12;M4 12 Q8 18 12 12 Q16 6 20 12;M4 12 Q8 6 12 12 Q16 18 20 12" dur="3.5s" repeatCount="indefinite"/></path></svg> },
-              { labelKey: 'converge.pranicTileAgni' as const,          svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  {/* Neural flame core */}
-                  <path d="M12 3 C9 7 8 9.5 8 11.5 C8 14.5 9.8 16.5 12 18 C14.2 16.5 16 14.5 16 11.5 C16 9.5 15 7 12 3 Z" stroke="rgba(212,175,55,0.8)" strokeWidth="1.3" fill="rgba(212,175,55,0.15)">
-                    <animate attributeName="d" dur="2.8s" repeatCount="indefinite"
-                      values="
-                        M12 3 C9 7 8 9.5 8 11.5 C8 14.5 9.8 16.5 12 18 C14.2 16.5 16 14.5 16 11.5 C16 9.5 15 7 12 3 Z;
-                        M12 3 C9.2 6.8 8 9.3 8.2 11.6 C8.5 14.4 10 16.4 12 17.8 C14 16.4 15.5 14.4 15.8 11.6 C16 9.3 14.8 6.8 12 3 Z;
-                        M12 3 C9 7 8 9.5 8 11.5 C8 14.5 9.8 16.5 12 18 C14.2 16.5 16 14.5 16 11.5 C16 9.5 15 7 12 3 Z" />
-                  </path>
-                  {/* Electric neural arcs */}
-                  <path d="M6 14 C8 13 9 12 10 10.8" stroke="rgba(120,180,255,0.7)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                    <animate attributeName="stroke-opacity" values="0.2;0.8;0.2" dur="1.6s" repeatCount="indefinite" />
-                  </path>
-                  <path d="M18 14 C16 13 15 12 14 10.8" stroke="rgba(120,180,255,0.7)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                    <animate attributeName="stroke-opacity" values="0.8;0.2;0.8" dur="1.6s" repeatCount="indefinite" />
-                  </path>
-                  {/* Nucleus */}
-                  <circle cx="12" cy="12" r="1.6" fill="rgba(180,210,255,0.9)">
-                    <animate attributeName="r" values="1.5;2;1.5" dur="2.2s" repeatCount="indefinite" />
-                  </circle>
-                </svg> },
+              { labelKey: 'converge.pranicTileNadi' as const, svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 12 Q8 6 12 12 Q16 18 20 12" stroke="rgba(120,180,255,0.75)" strokeWidth="1.4" fill="none"><animate attributeName="d" values="M4 12 Q8 6 12 12 Q16 18 20 12;M4 12 Q8 18 12 12 Q16 6 20 12;M4 12 Q8 6 12 12 Q16 18 20 12" dur="3.5s" repeatCount="indefinite"/></path></svg> },
+              { labelKey: 'converge.pranicTileAgni' as const, svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3 C9 7 8 9.5 8 11.5 C8 14.5 9.8 16.5 12 18 C14.2 16.5 16 14.5 16 11.5 C16 9.5 15 7 12 3 Z" stroke="rgba(212,175,55,0.8)" strokeWidth="1.3" fill="rgba(212,175,55,0.15)"><animate attributeName="d" dur="2.8s" repeatCount="indefinite" values="M12 3 C9 7 8 9.5 8 11.5 C8 14.5 9.8 16.5 12 18 C14.2 16.5 16 14.5 16 11.5 C16 9.5 15 7 12 3 Z;M12 3 C9.2 6.8 8 9.3 8.2 11.6 C8.5 14.4 10 16.4 12 17.8 C14 16.4 15.5 14.4 15.8 11.6 C16 9.3 14.8 6.8 12 3 Z;M12 3 C9 7 8 9.5 8 11.5 C8 14.5 9.8 16.5 12 18 C14.2 16.5 16 14.5 16 11.5 C16 9.5 15 7 12 3 Z" /></path><path d="M6 14 C8 13 9 12 10 10.8" stroke="rgba(120,180,255,0.7)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><animate attributeName="stroke-opacity" values="0.2;0.8;0.2" dur="1.6s" repeatCount="indefinite" /></path><path d="M18 14 C16 13 15 12 14 10.8" stroke="rgba(120,180,255,0.7)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><animate attributeName="stroke-opacity" values="0.8;0.2;0.8" dur="1.6s" repeatCount="indefinite" /></path><circle cx="12" cy="12" r="1.6" fill="rgba(180,210,255,0.9)"><animate attributeName="r" values="1.5;2;1.5" dur="2.2s" repeatCount="indefinite" /></circle></svg> },
             ].map(({ svg, labelKey }, i) => (
               <div key={i} style={{ background: 'rgba(30,80,160,0.2)', border: '1px solid rgba(100,160,255,0.15)', borderRadius: 13, padding: '11px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
                 {svg}
@@ -280,7 +260,6 @@ export default function Explore() {
       {/* ══ SACRED TOOLS ══ */}
       <SL label={t('converge.secSacredTools')} delay="0.18s" />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 16px', animation: 'sqFadeUp 0.4s 0.2s ease both' }}>
-        <SQIApothecaryBanner />
         <div
           onClick={() => (isAdmin || tier === 'akasha-infinity' || tier === 'lifetime') ? navigate('/virtual-pilgrimage') : navigate('/virtual-pilgrimage-landing')}
           style={{ gridColumn: 'span 2', position: 'relative', borderRadius: 22, overflow: 'hidden', cursor: 'pointer', border: '1px solid rgba(212,175,55,0.38)', background: 'linear-gradient(160deg,rgba(30,20,5,0.95) 0%,rgba(8,6,0,0.98) 60%,rgba(20,14,0,0.95) 100%)', minHeight: 210 }}
@@ -291,22 +270,18 @@ export default function Explore() {
           {/* Live SVG pyramid with Prema pulses */}
           <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.85 }}>
             <svg width="320" height="200" viewBox="0 0 320 200" style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)' }}>
-              {/* Prema pulse rings */}
               {[0,1,2,3,4].map(i => (
                 <circle key={i} cx="160" cy="90" r="10" fill="none" stroke="#D4AF37" strokeWidth="1.2">
                   <animate attributeName="r" values={`${10+i*18};${90}`} dur="3s" begin={`${i*0.6}s`} repeatCount="indefinite"/>
                   <animate attributeName="opacity" values="0.7;0" dur="3s" begin={`${i*0.6}s`} repeatCount="indefinite"/>
                 </circle>
               ))}
-              {/* Outer glow ring */}
               <circle cx="160" cy="90" r="88" fill="rgba(212,175,55,0.04)" stroke="rgba(212,175,55,0.15)" strokeWidth="0.8"/>
-              {/* Inverted ghost pyramid rotating */}
               <g transform="translate(160,90)">
                 <polygon points="0,60 52,-30 -52,-30" fill="rgba(212,175,55,0.04)" stroke="rgba(212,175,55,0.18)" strokeWidth="0.9">
                   <animateTransform attributeName="transform" type="rotate" values="0;360" dur="20s" repeatCount="indefinite"/>
                 </polygon>
               </g>
-              {/* Metatron overlay */}
               <g transform="translate(160,90)">
                 <circle r="54" fill="none" stroke="rgba(212,175,55,0.1)" strokeWidth="0.6">
                   <animateTransform attributeName="transform" type="rotate" values="0;360" dur="30s" repeatCount="indefinite"/>
@@ -315,15 +290,11 @@ export default function Explore() {
                   <circle key={a} cx={Math.cos(a*Math.PI/180)*54} cy={Math.sin(a*Math.PI/180)*54} r="54" fill="none" stroke="rgba(212,175,55,0.07)" strokeWidth="0.5"/>
                 ))}
               </g>
-              {/* Main pyramid — bright gold */}
               <polygon points="160,14 262,148 58,148" fill="rgba(212,175,55,0.08)" stroke="rgba(212,175,55,0.9)" strokeWidth="1.8"/>
-              {/* Horizontal layers */}
               <line x1="108" y1="60" x2="212" y2="60" stroke="rgba(212,175,55,0.3)" strokeWidth="0.8"/>
               <line x1="82" y1="95" x2="238" y2="95" stroke="rgba(212,175,55,0.25)" strokeWidth="0.7"/>
               <line x1="58" y1="130" x2="262" y2="130" stroke="rgba(212,175,55,0.2)" strokeWidth="0.7"/>
-              {/* Spine */}
               <line x1="160" y1="14" x2="160" y2="148" stroke="rgba(212,175,55,0.35)" strokeWidth="0.9"/>
-              {/* Scalar beam YOU dot */}
               <g>
                 <line x1="160" y1="90" x2="248" y2="28" stroke="rgba(212,175,55,0.5)" strokeWidth="1.2" strokeDasharray="5 4">
                   <animate attributeName="stroke-dashoffset" values="0;-36" dur="1.2s" repeatCount="indefinite"/>
@@ -338,12 +309,10 @@ export default function Explore() {
                   <animate attributeName="stroke-dashoffset" values="0;-36" dur="1.2s" repeatCount="indefinite"/>
                 </line>
               </g>
-              {/* Apex glow */}
               <circle cx="160" cy="14" r="5" fill="#FFD700" opacity="0.9">
                 <animate attributeName="r" values="4;7;4" dur="2s" repeatCount="indefinite"/>
                 <animate attributeName="opacity" values="0.9;0.5;0.9" dur="2s" repeatCount="indefinite"/>
               </circle>
-              {/* Centre core */}
               <circle cx="160" cy="90" r="5" fill="rgba(212,175,55,0.9)">
                 <animate attributeName="r" values="4;7;4" dur="3s" repeatCount="indefinite"/>
               </circle>
@@ -371,11 +340,10 @@ export default function Explore() {
         </div>
       </div>
 
-
       <SL label={t('converge.secVedic')} delay="0.26s" />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 16px', animation: 'sqFadeUp 0.4s 0.28s ease both' }}>
         {[
-          { titleKey: 'converge.wisdomGita' as const, subKey: 'converge.wisdomGitaSub' as const, href: null,              premium: false, svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="14" height="18" rx="2" stroke="rgba(212,175,55,0.8)" strokeWidth="1.4"/><line x1="8" y1="8" x2="16" y2="8" stroke="rgba(212,175,55,0.42)" strokeWidth="1.1"/><line x1="8" y1="11" x2="16" y2="11" stroke="rgba(212,175,55,0.42)" strokeWidth="1.1"/><line x1="8" y1="14" x2="13" y2="14" stroke="rgba(212,175,55,0.42)" strokeWidth="1.1"/></svg> },
+          { titleKey: 'converge.wisdomGita' as const, subKey: 'converge.wisdomGitaSub' as const, href: null, premium: false, svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="14" height="18" rx="2" stroke="rgba(212,175,55,0.8)" strokeWidth="1.4"/><line x1="8" y1="8" x2="16" y2="8" stroke="rgba(212,175,55,0.42)" strokeWidth="1.1"/><line x1="8" y1="11" x2="16" y2="11" stroke="rgba(212,175,55,0.42)" strokeWidth="1.1"/><line x1="8" y1="14" x2="13" y2="14" stroke="rgba(212,175,55,0.42)" strokeWidth="1.1"/></svg> },
         ].map(({ titleKey, subKey, href, premium, svg }) => (
           <div key={titleKey} onClick={() => {
             if (!href) { setGitaOpen(!gitaOpen); return; }
@@ -482,11 +450,11 @@ export default function Explore() {
       <SL label={t('converge.secDeepen')} delay="0.44s" />
       <div style={{ animation: 'sqFadeUp 0.4s 0.46s ease both' }}>
         {([
-          { titleKey: 'converge.deepenAvataric' as const, subKey: 'converge.deepenAvataricSub' as const, href: '/courses',                 iBg: 'linear-gradient(135deg,rgba(180,60,40,.2),rgba(120,30,10,.15))',  iBd: 'rgba(200,80,50,.2)',  svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="rgba(212,175,55,.75)" strokeWidth="1.4"/><line x1="7" y1="8" x2="17" y2="8" stroke="rgba(212,175,55,.45)" strokeWidth="1.1"/><line x1="7" y1="12" x2="17" y2="12" stroke="rgba(212,175,55,.45)" strokeWidth="1.1"/><line x1="7" y1="16" x2="13" y2="16" stroke="rgba(212,175,55,.45)" strokeWidth="1.1"/></svg> },
-          { titleKey: 'converge.deepenMentorship' as const, subKey: 'converge.deepenMentorshipSub' as const, href: '/transformation',          iBg: 'linear-gradient(135deg,rgba(160,40,40,.2),rgba(100,20,10,.15))',  iBd: 'rgba(180,60,40,.2)',  svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 21 C12 21 4 16 4 9.5 C4 6.4 6.7 4 10 4 C11 4 12 4.5 12 4.5 C12 4.5 13 4 14.5 4 C17.5 4 20 6.4 20 9.5 C20 16 12 21 12 21Z" stroke="rgba(212,175,55,.75)" strokeWidth="1.4" fill="rgba(212,175,55,.07)"/></svg> },
-          { titleKey: 'converge.deepenNeural' as const, subKey: 'converge.deepenNeuralSub' as const, href: '/private-sessions',        iBg: 'linear-gradient(135deg,rgba(40,100,40,.2),rgba(10,60,20,.15))',   iBd: 'rgba(60,130,60,.2)',  svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="3.5" stroke="rgba(212,175,55,.75)" strokeWidth="1.3"/><circle cx="16.5" cy="9" r="2.5" stroke="rgba(212,175,55,.5)" strokeWidth="1.1"/><path d="M2 20 C2 16.7 5.1 14 9 14 C12.9 14 16 16.7 16 20" stroke="rgba(212,175,55,.75)" strokeWidth="1.3" fill="none"/></svg> },
-          { titleKey: 'converge.deepenAetheric' as const, subKey: 'converge.deepenAethericSub' as const, href: '/affirmation-soundtrack',  iBg: 'linear-gradient(135deg,rgba(60,80,30,.2),rgba(30,50,10,.15))',   iBd: 'rgba(80,110,40,.2)',  svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M9 18 L15 18" stroke="rgba(212,175,55,.75)" strokeWidth="1.4" strokeLinecap="round"/><line x1="12" y1="5" x2="12" y2="18" stroke="rgba(212,175,55,.6)" strokeWidth="1.2"/><path d="M7 8 Q12 5 17 8" stroke="rgba(212,175,55,.8)" strokeWidth="1.4" fill="none"/></svg> },
-          { titleKey: 'converge.deepenCert' as const, subKey: 'converge.deepenCertSub' as const, href: '/certification',           iBg: 'linear-gradient(135deg,rgba(180,140,20,.15),rgba(120,90,10,.12))', iBd: 'rgba(212,175,55,.18)', svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><polygon points="12,2 15.1,8.3 22,9.3 17,14.1 18.2,21 12,17.8 5.8,21 7,14.1 2,9.3 8.9,8.3" stroke="rgba(212,175,55,.78)" strokeWidth="1.3" fill="rgba(212,175,55,.08)"/></svg> },
+          { titleKey: 'converge.deepenAvataric' as const, subKey: 'converge.deepenAvataricSub' as const, href: '/courses', iBg: 'linear-gradient(135deg,rgba(180,60,40,.2),rgba(120,30,10,.15))', iBd: 'rgba(200,80,50,.2)', svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="rgba(212,175,55,.75)" strokeWidth="1.4"/><line x1="7" y1="8" x2="17" y2="8" stroke="rgba(212,175,55,.45)" strokeWidth="1.1"/><line x1="7" y1="12" x2="17" y2="12" stroke="rgba(212,175,55,.45)" strokeWidth="1.1"/><line x1="7" y1="16" x2="13" y2="16" stroke="rgba(212,175,55,.45)" strokeWidth="1.1"/></svg> },
+          { titleKey: 'converge.deepenMentorship' as const, subKey: 'converge.deepenMentorshipSub' as const, href: '/transformation', iBg: 'linear-gradient(135deg,rgba(160,40,40,.2),rgba(100,20,10,.15))', iBd: 'rgba(180,60,40,.2)', svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 21 C12 21 4 16 4 9.5 C4 6.4 6.7 4 10 4 C11 4 12 4.5 12 4.5 C12 4.5 13 4 14.5 4 C17.5 4 20 6.4 20 9.5 C20 16 12 21 12 21Z" stroke="rgba(212,175,55,.75)" strokeWidth="1.4" fill="rgba(212,175,55,.07)"/></svg> },
+          { titleKey: 'converge.deepenNeural' as const, subKey: 'converge.deepenNeuralSub' as const, href: '/private-sessions', iBg: 'linear-gradient(135deg,rgba(40,100,40,.2),rgba(10,60,20,.15))', iBd: 'rgba(60,130,60,.2)', svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="3.5" stroke="rgba(212,175,55,.75)" strokeWidth="1.3"/><circle cx="16.5" cy="9" r="2.5" stroke="rgba(212,175,55,.5)" strokeWidth="1.1"/><path d="M2 20 C2 16.7 5.1 14 9 14 C12.9 14 16 16.7 16 20" stroke="rgba(212,175,55,.75)" strokeWidth="1.3" fill="none"/></svg> },
+          { titleKey: 'converge.deepenAetheric' as const, subKey: 'converge.deepenAethericSub' as const, href: '/affirmation-soundtrack', iBg: 'linear-gradient(135deg,rgba(60,80,30,.2),rgba(30,50,10,.15))', iBd: 'rgba(80,110,40,.2)', svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M9 18 L15 18" stroke="rgba(212,175,55,.75)" strokeWidth="1.4" strokeLinecap="round"/><line x1="12" y1="5" x2="12" y2="18" stroke="rgba(212,175,55,.6)" strokeWidth="1.2"/><path d="M7 8 Q12 5 17 8" stroke="rgba(212,175,55,.8)" strokeWidth="1.4" fill="none"/></svg> },
+          { titleKey: 'converge.deepenCert' as const, subKey: 'converge.deepenCertSub' as const, href: '/certification', iBg: 'linear-gradient(135deg,rgba(180,140,20,.15),rgba(120,90,10,.12))', iBd: 'rgba(212,175,55,.18)', svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><polygon points="12,2 15.1,8.3 22,9.3 17,14.1 18.2,21 12,17.8 5.8,21 7,14.1 2,9.3 8.9,8.3" stroke="rgba(212,175,55,.78)" strokeWidth="1.3" fill="rgba(212,175,55,.08)"/></svg> },
         ] as const).map(({ titleKey, subKey, href, iBg, iBd, svg }) => (
           <div key={titleKey} onClick={() => navigate(href)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}>
             <div style={{ width: 38, height: 38, flexShrink: 0, borderRadius: '50%', background: iBg, border: `1px solid ${iBd}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{svg}</div>
@@ -503,11 +471,11 @@ export default function Explore() {
       <SL label={t('converge.secConnect')} delay="0.5s" />
       <div style={{ animation: 'sqFadeUp 0.4s 0.52s ease both' }}>
         {([
-          { titleKey: 'converge.connectStargate' as const, subKey: 'converge.connectStargateSub' as const, href: '/stargate',       badgeKey: 'converge.badgeSwedish' as const,   bv: 'muted' as const, iBg: 'rgba(212,175,55,.08)', iBd: 'rgba(212,175,55,.18)', svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><polygon points="12,2 15.1,8.3 22,9.3 17,14.1 18.2,21 12,17.8 5.8,21 7,14.1 2,9.3 8.9,8.3" stroke="rgba(212,175,55,.8)" strokeWidth="1.3" fill="rgba(212,175,55,.1)"/></svg> },
-          { titleKey: 'converge.connectSangha' as const, subKey: 'converge.connectSanghaSub' as const, href: '/community',      badgeKey: undefined,   bv: 'gold' as const,  iBg: 'rgba(212,175,55,.07)', iBd: 'rgba(212,175,55,.12)', svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="3" stroke="rgba(212,175,55,.7)" strokeWidth="1.3"/><circle cx="16" cy="7" r="2.5" stroke="rgba(212,175,55,.48)" strokeWidth="1.1"/><path d="M2 19 C2 15.7 5.1 13 9 13 C12.9 13 16 15.7 16 19" stroke="rgba(212,175,55,.7)" strokeWidth="1.3" fill="none"/><path d="M16 13 C18.8 13 21 15 21 18" stroke="rgba(212,175,55,.38)" strokeWidth="1.1" fill="none"/></svg> },
-          { titleKey: 'converge.connectPodcast' as const, subKey: 'converge.connectPodcastSub' as const, href: '/podcast',        badgeKey: undefined,   bv: 'gold' as const,  iBg: 'rgba(212,175,55,.07)', iBd: 'rgba(212,175,55,.12)', svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="rgba(212,175,55,.62)" strokeWidth="1.3"/><circle cx="12" cy="12" r="4" stroke="rgba(212,175,55,.8)" strokeWidth="1.2"/></svg> },
-          { titleKey: 'converge.connectLeaderboard' as const, subKey: 'converge.connectLeaderboardSub' as const, href: '/leaderboard',    badgeKey: 'converge.badge5kShc' as const, bv: 'gold' as const,  iBg: 'rgba(212,175,55,.07)', iBd: 'rgba(212,175,55,.12)', svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><polygon points="12,2 15.1,8.3 22,9.3 17,14.1 18.2,21 12,17.8 5.8,21 7,14.1 2,9.3 8.9,8.3" stroke="rgba(212,175,55,.62)" strokeWidth="1.3"/><circle cx="12" cy="12" r="1.8" fill="rgba(212,175,55,.5)"/></svg> },
-          { titleKey: 'converge.connectAffiliate' as const, subKey: 'converge.connectAffiliateSub' as const, href: '/invite-friends', badgeKey: 'converge.badge30pct' as const, bv: 'gold' as const,  iBg: 'rgba(212,175,55,.07)', iBd: 'rgba(212,175,55,.12)', svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="3.5" stroke="rgba(212,175,55,.7)" strokeWidth="1.3"/><path d="M2 20 C2 16.7 5.1 14 9 14 C10.2 14 11.2 14.3 12.1 14.7" stroke="rgba(212,175,55,.7)" strokeWidth="1.3" fill="none"/><line x1="16" y1="15" x2="20" y2="19" stroke="rgba(212,175,55,.48)" strokeWidth="1.3"/><line x1="20" y1="15" x2="16" y2="19" stroke="rgba(212,175,55,.48)" strokeWidth="1.3"/><circle cx="18" cy="17" r="4" stroke="rgba(212,175,55,.3)" strokeWidth="1.1"/></svg> },
+          { titleKey: 'converge.connectStargate' as const, subKey: 'converge.connectStargateSub' as const, href: '/stargate', badgeKey: 'converge.badgeSwedish' as const, bv: 'muted' as const, iBg: 'rgba(212,175,55,.08)', iBd: 'rgba(212,175,55,.18)', svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><polygon points="12,2 15.1,8.3 22,9.3 17,14.1 18.2,21 12,17.8 5.8,21 7,14.1 2,9.3 8.9,8.3" stroke="rgba(212,175,55,.8)" strokeWidth="1.3" fill="rgba(212,175,55,.1)"/></svg> },
+          { titleKey: 'converge.connectSangha' as const, subKey: 'converge.connectSanghaSub' as const, href: '/community', badgeKey: undefined, bv: 'gold' as const, iBg: 'rgba(212,175,55,.07)', iBd: 'rgba(212,175,55,.12)', svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="3" stroke="rgba(212,175,55,.7)" strokeWidth="1.3"/><circle cx="16" cy="7" r="2.5" stroke="rgba(212,175,55,.48)" strokeWidth="1.1"/><path d="M2 19 C2 15.7 5.1 13 9 13 C12.9 13 16 15.7 16 19" stroke="rgba(212,175,55,.7)" strokeWidth="1.3" fill="none"/><path d="M16 13 C18.8 13 21 15 21 18" stroke="rgba(212,175,55,.38)" strokeWidth="1.1" fill="none"/></svg> },
+          { titleKey: 'converge.connectPodcast' as const, subKey: 'converge.connectPodcastSub' as const, href: '/podcast', badgeKey: undefined, bv: 'gold' as const, iBg: 'rgba(212,175,55,.07)', iBd: 'rgba(212,175,55,.12)', svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="rgba(212,175,55,.62)" strokeWidth="1.3"/><circle cx="12" cy="12" r="4" stroke="rgba(212,175,55,.8)" strokeWidth="1.2"/></svg> },
+          { titleKey: 'converge.connectLeaderboard' as const, subKey: 'converge.connectLeaderboardSub' as const, href: '/leaderboard', badgeKey: 'converge.badge5kShc' as const, bv: 'gold' as const, iBg: 'rgba(212,175,55,.07)', iBd: 'rgba(212,175,55,.12)', svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><polygon points="12,2 15.1,8.3 22,9.3 17,14.1 18.2,21 12,17.8 5.8,21 7,14.1 2,9.3 8.9,8.3" stroke="rgba(212,175,55,.62)" strokeWidth="1.3"/><circle cx="12" cy="12" r="1.8" fill="rgba(212,175,55,.5)"/></svg> },
+          { titleKey: 'converge.connectAffiliate' as const, subKey: 'converge.connectAffiliateSub' as const, href: '/invite-friends', badgeKey: 'converge.badge30pct' as const, bv: 'gold' as const, iBg: 'rgba(212,175,55,.07)', iBd: 'rgba(212,175,55,.12)', svg: <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="3.5" stroke="rgba(212,175,55,.7)" strokeWidth="1.3"/><path d="M2 20 C2 16.7 5.1 14 9 14 C10.2 14 11.2 14.3 12.1 14.7" stroke="rgba(212,175,55,.7)" strokeWidth="1.3" fill="none"/><line x1="16" y1="15" x2="20" y2="19" stroke="rgba(212,175,55,.48)" strokeWidth="1.3"/><line x1="20" y1="15" x2="16" y2="19" stroke="rgba(212,175,55,.48)" strokeWidth="1.3"/><circle cx="18" cy="17" r="4" stroke="rgba(212,175,55,.3)" strokeWidth="1.1"/></svg> },
         ] as const).map(({ titleKey, subKey, href, badgeKey, bv, iBg, iBd, svg }) => (
           <div key={titleKey} onClick={() => navigate(href)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}>
             <div style={{ width: 38, height: 38, flexShrink: 0, borderRadius: '50%', background: iBg, border: `1px solid ${iBd}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{svg}</div>
@@ -538,33 +506,33 @@ export default function Explore() {
 
       <style>{`
         @keyframes goldShimmer {
-          0%   { background-position: -200% center; }
-          100% { background-position:  200% center; }
+          0% { background-position: -200% center; }
+          100% { background-position: 200% center; }
         }
         @keyframes sqConvergePulse {
           0%, 100% { text-shadow: 0 0 20px rgba(212,175,55,0.15), 0 0 60px rgba(212,175,55,0.05); }
-          50%       { text-shadow: 0 0 40px rgba(212,175,55,0.4),  0 0 100px rgba(212,175,55,0.15); }
+          50% { text-shadow: 0 0 40px rgba(212,175,55,0.4), 0 0 100px rgba(212,175,55,0.15); }
         }
         @keyframes sqShimmer {
-          0%   { left: -110%; }
-          60%  { left: 110%; }
+          0% { left: -110%; }
+          60% { left: 110%; }
           100% { left: 110%; }
         }
         @keyframes sqFadeUp {
           from { opacity: 0; transform: translateY(12px); }
-          to   { opacity: 1; transform: translateY(0); }
+          to { opacity: 1; transform: translateY(0); }
         }
         @keyframes sqBreathe {
           0%, 100% { transform: scale(1); opacity: 0.85; }
-          50%       { transform: scale(1.07); opacity: 1; }
+          50% { transform: scale(1.07); opacity: 1; }
         }
         @keyframes sqDotPulse {
           0%, 100% { opacity: 0.7; }
-          50%       { opacity: 1; }
+          50% { opacity: 1; }
         }
         @keyframes sqLiveFlash {
           0%, 100% { opacity: 1; }
-          50%       { opacity: 0.15; }
+          50% { opacity: 0.15; }
         }
       `}</style>
     </div>
