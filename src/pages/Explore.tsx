@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+mport React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -59,8 +59,8 @@ export default function Explore() {
   return (
     <div style={{ background: '#050505', minHeight: '100vh', paddingBottom: 104 }}>
 
-      {/* ══ CONVERGE HEADER ══ */}
-      <div style={{ padding: '28px 20px 0', animation: 'fadeUp 0.35s ease both' }}>
+      {/* ══ HEADER ══ */}
+      <div style={{ padding: '24px 20px 0', animation: 'fadeUp 0.35s ease both' }}>
         <p style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.38)', marginBottom: 8 }}>
           {t('converge.headerMicro')}
         </p>
@@ -86,7 +86,7 @@ export default function Explore() {
       </div>
 
       {/* ══ SIDDHA PORTAL LABEL ══ */}
-      <div style={{ padding: '20px 20px 10px' }}>
+      <div style={{ padding: '28px 20px 10px' }}>
         <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.48em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.32)' }}>
           SIDDHA PORTAL · GATEWAY OF THE 18 MASTERS
         </span>
