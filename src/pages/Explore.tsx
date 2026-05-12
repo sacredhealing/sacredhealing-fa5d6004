@@ -59,34 +59,8 @@ export default function Explore() {
   return (
     <div style={{ background: '#050505', minHeight: '100vh', paddingBottom: 104 }}>
 
-      {/* ══ HEADER ══ */}
-      <div style={{ padding: '24px 20px 0', animation: 'fadeUp 0.35s ease both' }}>
-        <p style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.38)', marginBottom: 8 }}>
-          {t('converge.headerMicro')}
-        </p>
-        <h1 style={{
-          fontFamily: "'Cinzel', serif",
-          fontSize: 'clamp(26px, 7vw, 40px)',
-          fontWeight: 600,
-          letterSpacing: '0.04em',
-          lineHeight: 1.1,
-          margin: 0,
-          background: 'linear-gradient(135deg, #D4AF37 0%, #F5E17A 40%, #D4AF37 60%, #A07C10 100%)',
-          backgroundSize: '200% auto',
-          WebkitBackgroundClip: 'text',
-          backgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          animation: 'hShimmer 5s linear infinite',
-        }}>
-          {t('converge.title')}
-        </h1>
-        <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.95rem', color: 'rgba(255,255,255,0.38)', marginTop: 8 }}>
-          {t('converge.tagline')}
-        </p>
-      </div>
-
       {/* ══ SIDDHA PORTAL LABEL ══ */}
-      <div style={{ padding: '28px 20px 10px' }}>
+      <div style={{ padding: '20px 20px 10px' }}>
         <span style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.48em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.32)' }}>
           SIDDHA PORTAL · GATEWAY OF THE 18 MASTERS
         </span>
