@@ -1066,7 +1066,13 @@ function QuantumApothecaryInner() {
     if (!activeStudent) return '';
     return [
       '[ACTIVE STUDENT SOUL RECORD]',
-      `Name: ${activeStudent.name}`,
+      `ACTIVE STUDENT — READING FOR THIS SOUL:
+Name: ${activeStudent.name}
+Birth Date: ${activeStudent.birth_date ?? 'not provided'}
+Birth Time: ${activeStudent.birth_time ?? 'not provided'}
+Birth Place: ${activeStudent.birth_place ?? 'not provided'}
+Notes: ${activeStudent.notes ?? ''}
+JYOTISH DIRECTIVE: Compute this soul's Vedic chart from the above birth data. Derive Lagna, Moon Nakshatra, current Mahadasha/Antardasha, and dominant planetary influences. Apply this chart to ALL readings in this session. This is the student's chart — NOT the admin's.`,
       `Date of Birth: ${activeStudent.birth_date ?? 'unknown'}`,
       `Birth Place: ${activeStudent.birth_place ?? 'unknown'}`,
       `Birth Time: ${activeStudent.birth_time ?? 'unknown'}`,
@@ -1731,6 +1737,31 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         const top33 = buildTop33Rankings(payload);
         setResonanceMatches(top33);
         setShowAllTop33(false);
+        // BUG 3 FIX: Persist voice scan frequencies so SQI edge function can read them
+        if (user?.id && top33?.length) {
+          (async () => {
+            try {
+              const { data: existing } = await supabase
+                .from('user_active_transmissions')
+                .select('activations')
+                .eq('user_id', user.id)
+                .maybeSingle();
+              const current = (existing?.activations as any[]) || [];
+              const nonScan = current.filter((a: any) => a.source !== 'voice_scan');
+              const scanFreqs = top33.map((item: any) => ({
+                name: item.name,
+                title: item.name,
+                source: 'voice_scan',
+                score: item.score ?? 0,
+                is_active: true,
+                activated_at: new Date().toISOString(),
+              }));
+              await supabase
+                .from('user_active_transmissions')
+                .upsert({ user_id: user.id, activations: [...nonScan, ...scanFreqs] }, { onConflict: 'user_id' });
+            } catch (e) { console.warn('[SQI] Voice scan persist failed:', e); }
+          })();
+        }
         // ⟁ PERSIST — so list survives login/reload
         try {
           localStorage.setItem('sqi_top33_matches', JSON.stringify(top33));
