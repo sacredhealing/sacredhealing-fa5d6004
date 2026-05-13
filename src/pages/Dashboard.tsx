@@ -12,7 +12,7 @@ import type { UserProfile } from '@/lib/vedicTypes';
 import { useDailyGuidance } from '@/hooks/useDailyGuidance';
 import { useDailyJourney } from '@/hooks/useDailyJourney';
 import { useDayClosed } from '@/hooks/useDayClosed';
-import { useReturnVisit } from '@/hooks/useReturnVisit';
+import { useReturnVisit } from '@/hooks/useReturnVisit'
 import { useDashboardAutostart } from '@/hooks/useDashboardAutostart';
 import { AmbientSoundToggle } from '@/components/audio/AmbientSoundToggle';
 import { getLocalizedSuccessWindowPhrase } from '@/lib/horaPhrases';
@@ -23,7 +23,7 @@ import { DailyRitualCard } from '@/components/dashboard/DailyRitualCard';
 import { SpiritualPathCard } from '@/components/dashboard/SpiritualPathCard';
 import { AchievementPopup } from '@/components/achievements/AchievementPopup';
 import { LivingPortalTile, PORTAL_CONFIGS } from '@/components/dashboard/LivingPortalTile';
-import UserChatHistory from '@/components/UserChatHistory';
+
 
 import { useAchievements } from '@/hooks/useAchievements';
 import { useMembership } from '@/hooks/useMembership';
@@ -747,8 +747,8 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* ══ ZONE 7: SOUL FIELD — stats + achievements only (no separate achievements section below) ══ */}
-          <SectionLabel label={t('dashboard.sectionSoulField')} delay="0.35s" />
-          <div style={{ margin: '0 16px', animation: 'sqFadeUp 0.5s 0.35s ease both', overflow: 'hidden', borderRadius: '40px' }}>
+          
+          <div style={{ margin: '0 16px', animation: 'sqFadeUp 0.5s 0.35s ease both', overflow: 'hidden', borderRadius: '40px', display: 'none' }}>
             {/* Row 1: 4 stat cards — Day Streak, SHC, Presence, Min */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
               {([
@@ -873,8 +873,8 @@ const Dashboard: React.FC = () => {
           </Link>
         </div>
       )}
-      {user && <LifeBookNexusBlock userId={user.id} />}
-      {user && <UserChatHistory />}
+      {user && <Link to="/akashic-codex" style={{display:'block',margin:'0 16px 16px',background:'rgba(255,255,255,0.02)',backdropFilter:'blur(40px)',border:'1px solid rgba(212,175,55,0.15)',borderRadius:24,padding:'18px 22px',textDecoration:'none'}}><div style={{fontFamily:'Montserrat,sans-serif',fontSize:8,fontWeight:800,letterSpacing:'0.5em',textTransform:'uppercase',color:'rgba(212,175,55,0.7)',marginBottom:4}}>AKASHA ARCHIVE</div><div style={{fontFamily:'Montserrat,sans-serif',fontSize:18,fontWeight:900,color:'#D4AF37',textShadow:'0 0 15px rgba(212,175,55,0.3)'}}>Your LifeBook →</div></Link>}
+      
     </div>
   );
 };
