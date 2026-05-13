@@ -1598,78 +1598,93 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
       if (activeTransmissionContext) fieldParts.push(activeTransmissionContext);
       const enrichedJyotishContext = fieldParts.join('\n\n');
 
-      await streamChatWithSQI(
-        allMsgs,
-        upsert,
-        async () => {
-          setIsTyping(false);
-          const finalText = streamAccumRef.current;
-          const activeStudentId = getActiveStudentId();
-          // Persist the assistant reply with a `needs_codex_sync` flag so that even if
-          // the curator call below is lost (page unmount, network blip, etc.) the boot-time
-          // sweeper will replay it. The flag is cleared once the curator confirms.
-          const assistantMsg: Message = {
-            role: 'model',
-            text: finalText,
-            timestamp: Date.now(),
-            id: streamMsgId,
-            needs_codex_sync: !!(user?.id && finalText?.trim()),
-            codex_student_id: activeStudentId ?? null,
-          };
-          const persistedMessages = [...allMsgs, assistantMsg];
-          await persistMessages(persistedMessages);
-          void persistSyncChatTurn({ role: 'assistant', content: finalText });
-          setTimeout(() => autoActivateFromSQIResponse(finalText), 100);
-          // Weave this transmission into the Akashic Codex.
-          if (user?.id && finalText?.trim()) {
-            const sessionIdAtSend = currentSessionId;
-            void curateTransmission({
-              source_type: 'apothecary',
-              raw_content: finalText,
-              user_prompt: userMsg.text,
-              source_chat_id: sessionIdAtSend ?? null,
-              ...(activeStudentId ? { student_id: activeStudentId } : {}),
-            }).then(async (results) => {
-              const r = results?.[0];
-              if (!r || (!r.ok && !r.excluded)) return;
-              // Curator confirmed — clear the sync flag so the sweeper skips it.
-              try {
-                const sid = sessionIdAtSend ?? currentSessionId;
-                if (!sid) return;
-                const { data: row } = await supabase
-                  .from('sqi_sessions')
-                  .select('messages')
-                  .eq('id', sid)
-                  .maybeSingle();
-                const msgs = (row?.messages as Message[] | undefined) ?? [];
-                let mutated = false;
-                const next = msgs.map((m) => {
-                  if (m.id === streamMsgId && m.needs_codex_sync) {
-                    mutated = true;
-                    return { ...m, needs_codex_sync: false };
-                  }
-                  return m;
-                });
-                if (mutated) {
-                  await supabase.from('sqi_sessions').update({ messages: next }).eq('id', sid);
+      // Shared completion handler — runs whether direct Gemini or edge-function streaming finishes.
+      const onComplete = async () => {
+        setIsTyping(false);
+        const finalText = streamAccumRef.current;
+        const activeStudentId = getActiveStudentId();
+        const assistantMsg: Message = {
+          role: 'model',
+          text: finalText,
+          timestamp: Date.now(),
+          id: streamMsgId,
+          needs_codex_sync: !!(user?.id && finalText?.trim()),
+          codex_student_id: activeStudentId ?? null,
+        };
+        const persistedMessages = [...allMsgs, assistantMsg];
+        await persistMessages(persistedMessages);
+        void persistSyncChatTurn({ role: 'assistant', content: finalText });
+        setTimeout(() => autoActivateFromSQIResponse(finalText), 100);
+        if (user?.id && finalText?.trim()) {
+          const sessionIdAtSend = currentSessionId;
+          void curateTransmission({
+            source_type: 'apothecary',
+            raw_content: finalText,
+            user_prompt: userMsg.text,
+            source_chat_id: sessionIdAtSend ?? null,
+            ...(activeStudentId ? { student_id: activeStudentId } : {}),
+          }).then(async (results) => {
+            const r = results?.[0];
+            if (!r || (!r.ok && !r.excluded)) return;
+            try {
+              const sid = sessionIdAtSend ?? currentSessionId;
+              if (!sid) return;
+              const { data: row } = await supabase
+                .from('sqi_sessions')
+                .select('messages')
+                .eq('id', sid)
+                .maybeSingle();
+              const msgs = (row?.messages as Message[] | undefined) ?? [];
+              let mutated = false;
+              const next = msgs.map((m) => {
+                if (m.id === streamMsgId && m.needs_codex_sync) {
+                  mutated = true;
+                  return { ...m, needs_codex_sync: false };
                 }
-              } catch (e) {
-                console.warn('[codex-sync] failed to clear flag after curator success', e);
+                return m;
+              });
+              if (mutated) {
+                await supabase.from('sqi_sessions').update({ messages: next }).eq('id', sid);
               }
-            });
-          }
-        },
-        imageToSend,
-        user?.id ?? null,
-        language,
-        seekerName || undefined,
-        canonicalActivationPayload,
-        enrichedJyotishContext,
-        appLocale,
-        sqiTop33ChatBlock,
-        activeTransmissionNamesCsv,
-        studentContext,
-      );
+            } catch (e) {
+              console.warn('[codex-sync] failed to clear flag after curator success', e);
+            }
+          });
+        }
+      };
+
+      // Try direct client-side Gemini call first (bypasses Supabase edge function 60s timeout).
+      let directOk = false;
+      try {
+        const directText = await chatWithAlchemist(allMsgs, {
+          extraSystemContext: enrichedJyotishContext,
+        });
+        if (directText && directText.trim()) {
+          upsert(directText);
+          await onComplete();
+          directOk = true;
+        }
+      } catch (directErr) {
+        console.warn('[apothecary] direct Gemini call failed, falling back to edge stream:', directErr);
+      }
+
+      if (!directOk) {
+        await streamChatWithSQI(
+          allMsgs,
+          upsert,
+          onComplete,
+          imageToSend,
+          user?.id ?? null,
+          language,
+          seekerName || undefined,
+          canonicalActivationPayload,
+          enrichedJyotishContext,
+          appLocale,
+          sqiTop33ChatBlock,
+          activeTransmissionNamesCsv,
+          studentContext,
+        );
+      }
     } catch (e) {
       console.error(e);
       setMessages(prev => [...prev, { role: 'model', text: t('quantumApothecary.chat.transmissionError'), timestamp: Date.now() }]);
