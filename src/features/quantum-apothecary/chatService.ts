@@ -72,7 +72,7 @@ export interface StreamSQIParams {
   jyotishContext?: string;
   biofieldContext?: string;
   canonicalActivationNames?: string;
-  activeTransmissionNames?: string;
+  activeFieldContext?: string;
   localTime?: string;
   localDate?: string;
   timezone?: string;
@@ -91,7 +91,7 @@ export async function streamSQIResponse({
   jyotishContext,
   biofieldContext,
   canonicalActivationNames,
-  activeTransmissionNames,
+  activeFieldContext,
   localTime,
   localDate,
   timezone,
@@ -122,7 +122,7 @@ export async function streamSQIResponse({
         jyotishContext,
         biofieldContext,
         canonicalActivationNames,
-        activeTransmissionNames,
+        activeFieldContext,
         localTime,
         localDate,
         timezone,
@@ -292,7 +292,7 @@ export async function streamChatWithSQI(
     canonicalActivationNames: canonicalActivationNames ?? '',
     jyotishContext: [studentContext?.trim(), jyotishContext].filter(Boolean).join('\n\n'),
     biofieldContext: biofieldContext ?? '',
-    activeTransmissionNames: activeTransmissionNames ?? '',
+    activeFieldContext: activeTransmissionNames ?? '',
     localTime,
     localDate,
     timezone,
