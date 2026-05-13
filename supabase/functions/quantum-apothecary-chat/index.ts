@@ -671,7 +671,7 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
         body: JSON.stringify({
           system_instruction: { parts: [{ text: systemText.trim() }] },
           contents: geminiMessages,
-          generationConfig: { temperature: 0.78, topK: 45, topP: 0.95, maxOutputTokens: 1200 },
+          generationConfig: { temperature: 0.78, topK: 45, topP: 0.95, maxOutputTokens: 4096 },
           safetySettings: [
             { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
             { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
