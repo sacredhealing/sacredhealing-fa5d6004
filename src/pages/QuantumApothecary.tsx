@@ -826,13 +826,11 @@ function QuantumApothecaryInner() {
         return lines.join('\n');
       })();
 
-  /** Stable Jyotish context — only recompute when underlying field data actually changes. */
+  /** Stable Jyotish context — always include natal chart, then append live field data. */
   const stableJyotishContext = useMemo(
-    () => sqiField?.compiledContext || jyotishContext || '',
+    () => [jyotishContext, sqiField?.compiledContext].filter((s) => s && s.trim()).join('\n\n'),
     [
-      sqiField?.jyotish?.mahadasha,
-      sqiField?.nadi?.activatedNadi,
-      sqiField?.temple?.activeSite,
+      sqiField?.compiledContext,
       jyotishContext,
     ],
   );
