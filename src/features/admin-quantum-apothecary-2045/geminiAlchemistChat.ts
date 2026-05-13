@@ -200,6 +200,8 @@ function extractText(response: unknown): string {
 export type ChatWithAlchemistOptions = {
   /** When set (e.g. sessionStorage on mobile / alternate host), used instead of build-time VITE_GEMINI_API_KEY */
   apiKey?: string;
+  /** Extra context (jyotish, biofield, student, active transmissions) appended to the system instruction. */
+  extraSystemContext?: string;
 };
 
 /** @throws Error with message GEMINI_KEY_MISSING if no key */
@@ -224,13 +226,19 @@ export async function chatWithAlchemist(
     parts: [{ text: m.text }],
   }));
 
+  const extra = options?.extraSystemContext?.trim();
+  const systemInstruction = extra
+    ? `${SYSTEM_INSTRUCTION}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n LIVE FIELD CONTEXT (this seeker, this moment)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n${extra}`
+    : SYSTEM_INSTRUCTION;
+
   const ai = new GoogleGenAI({ apiKey });
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents,
     config: {
-      systemInstruction: SYSTEM_INSTRUCTION,
+      systemInstruction,
       temperature: 0.85,
+      maxOutputTokens: 2048,
     },
   });
 
