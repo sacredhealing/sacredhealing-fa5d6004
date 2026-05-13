@@ -32,6 +32,7 @@ import {
   LS_SCAN_SNAPSHOT,
 } from '@/features/quantum-apothecary/apothecarySqiUi';
 import { streamChatWithSQI } from '@/features/quantum-apothecary/chatService';
+import { chatWithAlchemist } from '@/features/admin-quantum-apothecary-2045/geminiAlchemistChat';
 import { chatSpeechLocale } from '@/lib/chatSpeechLocale';
 import { useSpeechRecognition } from 'react-speech-recognition';
 import { useTranslation } from '@/hooks/useTranslation';
