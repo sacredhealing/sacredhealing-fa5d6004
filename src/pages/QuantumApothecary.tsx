@@ -1659,23 +1659,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         }
       };
 
-      // Try direct client-side Gemini call first (bypasses Supabase edge function 60s timeout).
-      let directOk = false;
-      try {
-        const directText = await chatWithAlchemist(allMsgs, {
-          extraSystemContext: enrichedJyotishContext,
-        });
-        if (directText && directText.trim()) {
-          upsert(directText);
-          await onComplete();
-          directOk = true;
-        }
-      } catch (directErr) {
-        console.warn('[apothecary] direct Gemini call failed, falling back to edge stream:', directErr);
-      }
-
-      if (!directOk) {
-        await streamChatWithSQI(
+      await streamChatWithSQI(
           allMsgs,
           upsert,
           onComplete,
@@ -1690,7 +1674,6 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
           activeTransmissionNamesCsv,
           studentContext,
         );
-      }
     } catch (e) {
       console.error(e);
       setMessages(prev => [...prev, { role: 'model', text: t('quantumApothecary.chat.transmissionError'), timestamp: Date.now() }]);
