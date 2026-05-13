@@ -313,12 +313,20 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_ANON = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
 async function getLivingPortrait(userId: string): Promise<string> {
-  if (!userId) return "";
-  try {
-    const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
-    const { data } = await sb.from("sqi_user_memory").select("memory_profile").eq("user_id", userId).maybeSingle();
-    return data?.memory_profile ?? "";
-  } catch { return ""; }
+if (!userId) return "";
+try {
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+const { data } = await sb.from("sqi_user_memory").select("memory_profile").eq("user_id", userId).maybeSingle();
+let portrait = data?.memory_profile ?? "";
+// BUG 6 FIX: Strip contaminated Temple Home / room-activation lines
+portrait = portrait.split("\n").filter((line: string) => {
+const low = line.toLowerCase();
+return !(low.includes("miracle room") || low.includes("vishwananda room") ||
+low.includes("babaji cave") || low.includes("activated in") ||
+(low.includes("room") && low.includes("active")));
+}).join("\n").trim();
+return portrait;
+} catch { return ""; }
 }
 
 async function getLifeBookArchive(userId: string): Promise<string> {
@@ -422,7 +430,7 @@ async function updateLivingPortrait(userId: string, currentPortrait: string, new
       : `Update this Seeker Portrait with NEW confirmed facts from this session only. Do not repeat existing info. Only add what is clearly about the Seeker themselves — not third parties they mention. Keep 250-400 words. Start "LIVING PORTRAIT:".\n\nCURRENT:\n${currentPortrait}\n\nNEW EXCHANGE:\n${newExchange}`;
     const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`, {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { temperature: 0.2, maxOutputTokens: 1200 } }),
+      body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { temperature: 0.2, maxOutputTokens: 2048 } }),
     });
     if (!resp.ok) return;
     const data = await resp.json();
@@ -681,7 +689,8 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
     }
 
     let assistantText = "";
-    const transformStream = new TransformStream({
+    let flushed = false;
+  const transformStream = new TransformStream({
       transform(chunk, controller) {
         const text = new TextDecoder().decode(chunk);
         for (const line of text.split("\n")) {
@@ -697,7 +706,8 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
         }
       },
       async flush() {
-        if (!assistantText.trim() || !userId) return;
+        if (flushed || !assistantText.trim() || !userId) return;
+        flushed = true;
         try {
           const lastMsgs = rawMessages.slice(-2);
           const exchange = lastMsgs.map((m: { role: string; content: string }) =>
