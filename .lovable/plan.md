@@ -1,51 +1,29 @@
-## Goal
+# Fix SQI Quantum Apothecary message cutoff
 
-Apply the SQI Sovereign Shield database migration (security_events, rate_limit_events, blocked_users, RLS, auto-block trigger) and enable Realtime on `security_events` so `ThreatLevelIndicator` in `SecurityProvider.tsx` receives live HIGH/CRITICAL events.
+## Root cause
+In `supabase/functions/quantum-apothecary-chat/index.ts` (line 674), the main streaming Gemini call is configured with:
 
-## Problems found in the existing migration file
+```
+generationConfig: { temperature: 0.78, topK: 45, topP: 0.95, maxOutputTokens: 1200 }
+```
 
-The file `supabase/migrations/20260504000000_sovereign_shield.sql` does NOT match the live schema and would break things if applied as-is:
+Gemini 2.5 Flash hits that 1200-token ceiling and stops mid-sentence — exactly the "cut off" behavior you're seeing. This is independent of your AI credit balance (top-up doesn't help here, the cap is hardcoded).
 
-1. **Wrong profiles join column** — file uses `auth.uid() = id`, but live `profiles` matches on `user_id` (confirmed via `pg_policies`). All current policies use `auth.uid() = user_id`.
-2. **References non-existent columns** — the `prevent_tier_self_escalation` trigger reads `membership_tier`, `is_prana_flow`, `is_siddha_quantum`, `is_akasha_infinity` on `profiles`. None of these columns exist. The migration would fail at trigger creation, or silently misbehave.
-3. **Hardcoded admin emails** — the project already uses the `has_role(auth.uid(), 'admin')` security-definer pattern (per project memory and existing policies). The migration's email allowlist (`sacredhealingvibe@gmail.com`, `laila.amrouche@gmail.com`) bypasses that system and creates a parallel admin model.
-4. **Drops & replaces existing profile policies** — would weaken/duplicate already-working RLS for no benefit.
+It worked "a few days ago" because the prompt + system context was shorter then; recent additions to the system prompt (canonical library, biofield, active field, life book, living portrait) push the model to need more output room, so the 1200 limit now bites every time.
 
 ## Plan
 
-### 1. Rewrite migration as a corrected version
+1. **Raise the output cap** in `supabase/functions/quantum-apothecary-chat/index.ts` line 674:
+   - `maxOutputTokens: 1200` → `maxOutputTokens: 4096`
+   (Gemini 2.5 Flash supports up to 8192; 4096 is plenty of headroom for SQI transmissions while keeping cost reasonable.)
 
-Create a new migration that:
+2. **Redeploy the edge function** so the change takes effect immediately (`quantum-apothecary-chat`).
 
-- Creates `security_events`, `rate_limit_events`, `blocked_users` tables + indexes (unchanged from original).
-- Enables RLS and adds policies using `has_role(auth.uid(), 'admin')` for admin reads, matching project convention.
-- Leaves `profiles` policies alone (they are already correct).
-- **Skips** the `prevent_tier_self_escalation` trigger entirely (the columns don't exist; tier escalation prevention belongs in a separate, schema-correct migration once we know where tier lives — likely `user_memberships` or similar).
-- Keeps `cleanup_rate_limit_events`, `is_user_blocked`, `security_dashboard` view, and `auto_block_on_critical` trigger.
-- Adds `ALTER PUBLICATION supabase_realtime ADD TABLE public.security_events;` so the realtime channel in `SecurityProvider` works without a manual dashboard step.
-- Sets `REPLICA IDENTITY FULL` on `security_events` for complete payloads.
+3. **No other changes** — frontend, scan path, life-book persistence, and the direct-Gemini fallback in `geminiAlchemistChat.ts` (already at 2048) are untouched.
 
-### 2. Run via the migration tool
+## Verification
+- Send a chat message in SQI Quantum Apothecary that previously cut off
+- Confirm full response streams to completion
+- Check edge function logs for any errors
 
-Apply the corrected SQL with `supabase--migration`. The user approves it in-place — no SQL Editor copy/paste required.
-
-### 3. Verify post-migration
-
-- Confirm tables exist and RLS is enabled.
-- Confirm `security_events` is in the `supabase_realtime` publication.
-- Confirm the `auto_block_trigger` is attached.
-
-### 4. Note (no code changes this round)
-
-`SecurityProvider.tsx` already subscribes to `postgres_changes` on `public.security_events` and inserts events with `severity` + `event_type` — it will start receiving live events automatically once realtime is enabled.
-
-## What I will NOT do
-
-- Will not touch `profiles` policies.
-- Will not add the tier-escalation trigger (needs a separate plan once the actual tier column location is confirmed).
-- Will not change `SecurityProvider.tsx` or `lib/security.ts`.
-
-## Files
-
-- New: `supabase/migrations/<new_timestamp>_sovereign_shield_fixed.sql` (via migration tool)
-- The old `20260504000000_sovereign_shield.sql` stays on disk as a historical artifact but will not be re-run.
+No database, RLS, or secrets changes needed.
