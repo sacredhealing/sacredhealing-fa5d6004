@@ -679,6 +679,39 @@ const OracleRow: React.FC<{ icon: string; title: string; value: string }> = ({ i
   </div>
 );
 
+const VERDICT_META: Record<AffiliateFit['verdict'], { label: string; color: string; bg: string }> = {
+  strongly_yes: { label: 'STRONG YES — Your chart wants this', color: '#7CFFB2', bg: 'rgba(80,255,150,0.08)' },
+  yes:          { label: 'YES — Aligned with your dasha',     color: '#D4AF37', bg: 'rgba(212,175,55,0.08)' },
+  neutral:      { label: 'NEUTRAL — Possible with discipline', color: '#E8E8E8', bg: 'rgba(255,255,255,0.04)' },
+  not_now:      { label: 'NOT NOW — Wait for a better window', color: '#FFB37C', bg: 'rgba(255,150,80,0.06)' },
+  no:           { label: 'NO — Not aligned with your chart',   color: '#FF8080', bg: 'rgba(255,80,80,0.06)' },
+};
+
+const AffiliateFitBlock: React.FC<{ fit: AffiliateFit; onCta: () => void }> = ({ fit, onCta }) => {
+  const meta = VERDICT_META[fit.verdict] ?? VERDICT_META.neutral;
+  return (
+    <div style={{ padding: '1rem', borderRadius: 20, background: meta.bg, border: `1px solid ${meta.color}33` }}>
+      <p style={{ ...labelStyle, color: meta.color, marginBottom: '0.5rem' }}>🌐 Affiliate Fit · {meta.label}</p>
+      <p style={{ color: 'rgba(255,255,255,0.78)', fontSize: '0.92rem', lineHeight: 1.65, margin: '0 0 0.75rem' }}>{fit.reason}</p>
+      {Array.isArray(fit.how) && fit.how.length > 0 && (
+        <ul style={{ margin: '0 0 0.75rem', paddingLeft: 0, listStyle: 'none', display: 'grid', gap: 6 }}>
+          {fit.how.map((step, i) => (
+            <li key={i} style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.88rem', paddingLeft: '1.2rem', position: 'relative', lineHeight: 1.6 }}>
+              <span style={{ position: 'absolute', left: 0, color: meta.color }}>✦</span>
+              {step}
+            </li>
+          ))}
+        </ul>
+      )}
+      {(fit.verdict === 'yes' || fit.verdict === 'strongly_yes') && (
+        <button type="button" onClick={onCta} style={{ ...ctaBtn, padding: '10px 24px', fontSize: '0.85rem' }}>
+          Open Affiliate Dashboard
+        </button>
+      )}
+    </div>
+  );
+};
+
 const glassCard: React.CSSProperties = {
   background: 'rgba(255,255,255,0.02)',
   backdropFilter: 'blur(40px)',
