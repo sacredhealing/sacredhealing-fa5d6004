@@ -76,7 +76,8 @@ serve(async (req) => {
       }
     }
 
-    const cacheKey = hashChart(dob, tob, pob, readingType, dosha, dasha);
+    // "v2" salt busts all pre-May-2026 cached readings
+    const cacheKey = hashChart("v2", dob, tob, pob, readingType, dosha, dasha);
     const { data: cached } = await supabase
       .from("ai_response_cache")
       .select("response_text, id, hit_count")
