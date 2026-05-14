@@ -16,15 +16,29 @@ interface UserProfile {
   current_dasha?: string;
   moon_sign?: string;
   ascendant?: string;
+  moon_nakshatra?: string;
+  vata?: number;
+  pitta?: number;
+  kapha?: number;
+}
+
+interface AffiliateFit {
+  verdict: 'strongly_yes' | 'yes' | 'neutral' | 'not_now' | 'no';
+  reason: string;
+  how: string[];
 }
 
 interface AbundanceOracle {
   timing: string;
   investment_guidance: string;
+  quick_invest: string;
+  long_term_invest: string;
+  do_not_invest: string;
   avoid: string;
   mantra: string;
   favorable_sectors: string[];
   dosha_practice: string;
+  affiliate_fit: AffiliateFit;
 }
 
 interface DoshaRow {
