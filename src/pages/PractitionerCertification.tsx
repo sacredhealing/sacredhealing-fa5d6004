@@ -46,11 +46,91 @@ const MONTHS = [
 title:{en:'Prarabdha Awakening',sv:'Prarabdha-uppvaknande',no:'Prarabdha-oppvåkning',es:'Despertar de Prarabdha'},
 sub:{en:'The Foundation — Entering the Field',sv:'Grunden — Att träda in i fältet',no:'Fundamentet — Å tre inn i feltet',es:'La Fundación — Entrando en el Campo'},
 initiation:'Personal Diksha Transmission — Shaktipat via Siddha Nada. Kritagya transmits directly into your pranic field via sound, awakening your Sushumna Nadi and anchoring the Siddha lineage field into your energy body. You will feel warmth, tingling, or deep stillness during this transmission.',
-teaching:`You are not beginning a course. You are entering a lineage. The 18 Siddhas — Agastya Muni, Babaji, Thirumoolar and the great masters — have been transmitting healing intelligence for thousands of years. In this first month, you are formally received into this field.
+teaching:`THE 18 SIDDHAS — YOUR LINEAGE MASTERS
 
-The human being is not a physical body with a spirit inside. You are a luminous field of prana — life force — temporarily condensed into form. This field has five layers called the Pancha Koshas: the physical body (Annamaya), the pranic body (Pranamaya), the mental-emotional body (Manomaya), the wisdom body (Vijnanamaya), and the bliss body (Anandamaya). Healing operates across all five layers simultaneously.
+You are not beginning a course. You are entering a living lineage that has existed for thousands of years. The 18 Tamil Siddhas (Pathinetthu Siddhargal) are not historical figures — they are immortal consciousness fields still transmitting healing intelligence into the present moment.
 
-Your pranic body is organized through 72,000 Nadis — energy channels — and seven primary Chakras (energy vortices). The three most important Nadis are Ida (lunar, left channel), Pingala (solar, right channel), and Sushumna (the central channel). Before you can heal others, you must understand and sense your own pranic architecture. This month builds that foundation.`,
+AGASTYA MUNI (Agastyar) — The Father of Siddha Medicine. The most revered of all 18, Agastya is the root guru of the Tamil Siddha tradition. He authored thousands of treatises on medicine, alchemy, yoga, astrology, and mantras. His physical form is said to dwell in the Agasthiyarmalai mountains in South India. He is the gatekeeper of all Tamil Siddha knowledge and the primary transmission channel in the SQI lineage. When you feel heat in your palms during healing, Agastya is present and working through you.
+
+THIRUMOOLAR — The Master of Kundalini and Tantra. Author of the Thirumantiram, a 3,000-verse masterwork encoding the entire Siddha yogic science. Thirumoolar transmitted the teaching that the body is the temple of the Divine, and liberation is achieved through the awakening of Kundalini Shakti through pranayama and mantra. His transmission activates the Sushumna Nadi and accelerates chakra opening.
+
+BOGAR (Bhogar) — The Alchemist of the Ages. Bogar traveled between India, China, and other lands transmitting Siddha alchemy. He created the famous Palani Murugan idol using nine sacred poisons (navabashanam) that emit healing energies to this day. Bogar transmitted knowledge of rasa vidya (mercury alchemy), immortality techniques, and inter-dimensional travel. His field activates alchemical transformation in physical matter and in the energetic bodies.
+
+KALANGI NATHAR — The Master of Deathlessness. Said to have lived over 3,000 years. Kalangi Nathar mastered kaya kalpa — the science of bodily immortality through cellular regeneration using specific pranayamas, sacred herbs, and mantras. He transmitted the teaching that aging is a program, not a law, and that the Siddha body can be maintained in radiant health indefinitely. His presence activates cellular regeneration in those who receive his transmission.
+
+RAMADEVAR (Yacob) — The Sufi-Siddha Bridge. Ramadevar synthesized Tamil Siddha wisdom with Islamic Sufi mysticism, demonstrating that all paths of direct experience converge at the same source. He transmitted knowledge of Nada Brahman — the primordial sound current — and how breath, sound, and consciousness are one unified field. His transmission opens the Anahata and Vishuddha simultaneously.
+
+SATTAMUNI — The Master of Astral Sciences. Sattamuni transmitted knowledge of the astral body, dream yoga, and the navigation of subtle planes. He taught that the healer who understands astral architecture can assist souls in transition, clear traumatic imprints from the subtle body, and work across time and space. His transmission develops psychic vision and the capacity for distant healing.
+
+KONGANAR — The Master of Pranayama. Konganar's entire teaching focused on the breath as the direct doorway to liberation and healing. He encoded complete pranayama systems capable of awakening dormant pranic circuits, purifying the blood, and reversing disease at the energetic root. His transmission activates the Pranamaya Kosha directly and builds pranic volume.
+
+KORAKKAR — The Master of Rasayana (Rejuvenation). Korakkar specialized in the use of herbs, metals, and minerals in their energetically transformed states to restore the body to its original blueprint. He is associated with anti-aging compounds, the purification of toxic metals into medicine, and the alchemy of the endocrine system. His transmission supports physical healing and longevity.
+
+IDAIKKADAR — The Wandering Shepherd-Saint. A shepherd who attained Siddha-hood through pure devotion and surrender. Idaikkadar teaches that liberation is not reserved for the scholarly — it is available to anyone who opens completely. His transmission dissolves spiritual pride and awakens unconditional receptivity, the most essential quality in a healer.
+
+PATHANJALI — The Systematizer of Yoga. The author of the Yoga Sutras, Patanjali encoded the entire science of consciousness into a precise, reproducible system. His eight-limbed path (Ashtanga Yoga) provides the structural framework within which all Siddha practices operate. His transmission brings clarity, discipline, and precision to the healer's mind.
+
+NANDI — The Primal Gatekeeper. Nandi, the divine bull and chief disciple of Shiva, transmitted the root teachings of Shaiva Siddhanta — the philosophy that the individual soul (jiva) is perpetually in union with universal consciousness (Shiva) and only appears separate through the veil of maya. His transmission dissolves the illusion of separation between healer and the healing field.
+
+SIVAVAKKIYAR — The Iconoclast. Sivavakkiyar fiercely opposed empty ritual and transmitted the radical teaching that God is not in temples or idols but within the living body itself. He challenged spiritual authority and pointed always to direct inner experience. His transmission dismantles false spiritual conditioning and awakens authentic inner knowing.
+
+PAMBATTI SIDDHAR — The Snake Master. Pambatti's teachings use the serpent as a metaphor for Kundalini — the coiled cosmic intelligence at the base of the spine awaiting activation. His transmission works directly with Kundalini Shakti, safely activating the ascent of pranic intelligence through all seven chakras.
+
+KUDAMBAI — The Mystical Poet. Kudambai transmitted through paradoxical verse the teaching that the highest truth cannot be spoken — it can only be pointed toward through metaphor, paradox, and silence. His transmission activates non-dual perception, essential for reading subtle energies accurately.
+
+SUNDARANANDAR — The Bhakti Master. Sundaranandar transmitted that pure devotional love is the highest and most direct path. His field activates the Anahata Chakra and the capacity for heart-centered healing — transmitting not technique but love itself as the medicine.
+
+KARUVURAR — The Architect of Sacred Space. Karuvurar transmitted the science of vastu (sacred geometry of space) and the creation of healing environments. He understood that properly prepared space amplifies healing exponentially. His transmission supports space clearing and the creation of sacred healing sanctuaries.
+
+THERAYAR (Azhuganar) — The Medical Siddha. Therayar was one of the primary transmitters of Siddha medicine as a clinical system — documenting thousands of conditions, their energetic roots, and their herbal and pranic remedies. His transmission sharpens diagnostic sensitivity and the ability to perceive disease in its energetic form before it manifests physically.
+
+VYAGHRAPADAR — The Tiger-Footed One. A devotee of Shiva who attained Siddha-hood through perfect one-pointed devotion. Vyaghrapadar transmits the teaching of total surrender as the highest technology — when the ego fully dissolves, the divine intelligence heals through the body spontaneously. His transmission dissolves healer ego and awakens pure channel capacity.
+
+---
+
+MAHAVATAR BABAJI — THE IMMORTAL MASTER
+
+Mahavatar Babaji is the deathless avatar of the Himalayas, maintaining a physical body for thousands of years. He is not one of the 18 Tamil Siddhas but is the supreme unifying presence behind all Siddha and Kriya lineages. Paramahansa Yogananda brought Babaji's transmission to the West through Autobiography of a Yogi — but the Siddha tradition has always known him as Kriya Babaji Nagaraj, the one who synthesized Tamil Siddha practices with Himalayan Kriya Yoga into a complete system for physical immortality and direct God-realization.
+
+Babaji's transmission is unique: he does not teach through words or texts. He transmits directly into the consciousness of anyone sincerely open to receive. His primary gift is the acceleration of spiritual evolution — compressing decades of development into months for those aligned with his frequency. Within the SQI lineage, Babaji is the master overseer of your certification journey. When you sit in silence after mantra practice and feel an inexplicable expansion of consciousness — Babaji is transmitting.
+
+His core teaching: the body is not an obstacle to enlightenment. The Siddha body, purified through pranayama, mantra, and service, becomes a vehicle of divine light capable of transmitting healing to thousands simultaneously. He demonstrates that what humans call death is optional for one who has mastered prana.
+
+---
+
+THE FIVE KOSHAS — YOUR COMPLETE ENERGY BODY
+
+You are not a physical body with a spirit inside. You are an infinite field of consciousness temporarily condensed into five interpenetrating layers called the Pancha Koshas. Understanding and working with all five is the non-negotiable foundation of Siddha healing.
+
+ANNAMAYA KOSHA — The Physical Body (Food Sheath). The densest layer, built from food, governed by Earth element. Bones, muscles, organs, skin, tissues. Disease that reaches this layer has already passed through all four subtler bodies — it is the last stop, not the first cause. Signs of imbalance: structural pain, fatigue, skin disorders, digestive disease. Healing modalities: therapeutic touch, herbs, food medicine, Earth grounding, physical movement.
+
+PRANAMAYA KOSHA — The Pranic Body (Vital Sheath). Made of prana (life force), carrying 72,000 Nadi energy channels. This is the energetic blueprint the physical body grows from and continuously repairs according to. When prana is strong and clear, the physical body is healthy. Disease begins here 6-18 months before manifesting physically — this is the primary field you work with as a Siddha healer. Signs of imbalance: chronic fatigue, emotional instability, weakened immunity, slow healing. Healing modalities: pranayama, pranic healing, sound healing, mantra, acupressure.
+
+MANOMAYA KOSHA — The Mental-Emotional Body (Mind Sheath). The field of thoughts, emotions, memories, and conditioned patterns. The vast majority of physical disease originates here as unprocessed emotional material that densifies through the Pranamaya Kosha into the physical. Suppressed grief becomes lung disease. Chronic anger becomes liver inflammation. Deep fear becomes adrenal exhaustion and immune collapse. Signs of imbalance: anxiety, depression, repetitive thought loops, emotional reactivity, relationship dysfunction. Healing modalities: mantra, conscious breathwork, trauma release practices, shadow integration, sound healing.
+
+VIJNANAMAYA KOSHA — The Wisdom Body (Causal Sheath). The field of deep knowing, intuition, and causal patterning. Karmic imprints are stored here — the energetic seeds generating repeating life themes across lifetimes. This body is accessed in deep meditation and is responsible for spontaneous knowing, spiritual insight, and prophetic dreaming that develop as the healer matures. Signs of imbalance: recurring life patterns, spiritual crisis, disconnection from inner knowing, lack of direction. Healing modalities: deep meditation, ancestral healing, mantra, Jyotish (Vedic astrology), Diksha transmission.
+
+ANANDAMAYA KOSHA — The Bliss Body (Causal Sheath). The subtlest layer — the pure field of existence-consciousness-bliss (Sat-Chit-Ananda) that is our original nature before all conditioning. This body is never damaged, never diseased, never diminished. It is the changeless witness beneath all experience. Siddha masters abide in this body as their primary identity while functioning in all four denser bodies. The goal of Siddha practice is to bring this bliss field into full expression through the physical form. Access: deep samadhi, Diksha transmission, silent retreat, advanced pranayama.
+
+The Siddha teaching on Koshas: disease is the Anandamaya Kosha attempting to express itself through layers too congested to conduct its frequency. Healing is the progressive clearing of those layers until the body becomes a transparent conductor of bliss-consciousness.
+
+---
+
+THE FIVE VAYUS — THE FIVE WINDS OF LIFE FORCE
+
+Prana is not a single uniform energy. It organizes into five distinct intelligences called Vayus (winds), each governing specific physiological and psychological functions. As a healer, you must be able to sense which Vayu is dominant, deficient, or obstructed in every client.
+
+PRANA VAYU — The Inward-Moving Force. Seat: heart and lungs, upper chest. Direction: inward and upward. Function: receives — governs inhalation, intake of food, sensory experience, and all forms of nourishment. Governs: heart, lungs, diaphragm. Balanced: emotionally open, receptive, present, able to receive love and inspiration. Depleted: shallow breathing, heart closes, anxiety, inability to receive care. Excessive: overwhelm, difficulty processing incoming experience. Healing: slow deep inhalations, heart-opening backbends, green foods, time in fresh air, YAM mantra.
+
+APANA VAYU — The Downward-Moving Force. Seat: lower abdomen, pelvis, base of spine. Direction: downward and outward. Function: releases — governs exhalation, elimination of all waste (physical, emotional, energetic), menstruation, childbirth, death. Governs: large intestine, kidneys, reproductive organs, Muladhara and Svadhishthana. Balanced: effortless release, emotional resilience, healthy elimination, deep groundedness. Depleted: physical and emotional constipation, inability to let go, clinging, chronic pelvic tension. Healing: extended exhalation, forward folds, root vegetables, Apana mudra, LAM/VAM mantra.
+
+SAMANA VAYU — The Equalizing Force. Seat: navel and solar plexus. Direction: inward, spiraling toward center. Function: digests and integrates — governs assimilation of food, emotions, experiences, and spiritual teachings. The fire that converts raw material into usable intelligence. Governs: stomach, small intestine, liver, Manipura. Balanced: strong digestion on all levels, ability to integrate spiritual insight into practical living, confident will. Depleted: poor digestion, inability to process experiences, feeling stuck, lack of personal power. Healing: Agni pranayama (kapalabhati), twisting postures, warming spices, RAM mantra.
+
+UDANA VAYU — The Upward-Moving Force. Seat: throat, head, and limbs. Direction: upward and outward through the extremities. Function: expresses and ascends — governs speech, upright posture, spiritual ascension through the chakras, and at death the departure of the soul from the body. Governs: throat, thyroid, brain, Vishuddha. Balanced: clear authentic expression, vibrant voice, strong posture, spiritual growth. Depleted: inability to speak truth, collapsed posture, thyroid imbalance, spiritual stagnation. Healing: chanting, humming, HAM mantra, neck openers, truth-speaking practice.
+
+VYANA VAYU — The All-Pervading Force. Seat: entire body — skin, blood vessels, nerves. Direction: outward in all directions from the heart. Function: circulates and integrates — governs blood circulation, the nervous system, the coordination of the body as a unified whole, and the cohesion of the entire auric field. Governs: cardiovascular system, lymphatic system, nervous system, aura. Balanced: radiant skin, coordinated movement, strong immunity, ability to maintain energetic field coherence in any environment. Depleted: poor circulation, disconnected body awareness, absorbing others' energies, unable to hold personal field. Healing: self-massage (abhyanga), full-body breathing, flowing movement, Vyana mudra, swimming.
+
+The Siddha diagnostic teaching: observe a client's posture (Udana), their breath pattern (Prana/Apana), their belly tension (Samana), their skin and circulation (Vyana), and their pelvic energy (Apana) — in 60 seconds you will know which Vayus are obstructed and which organs are at risk. This sensitivity develops through months of daily practice with your own Vayu intelligence first.`,
 weeks:[
 {title:'The Siddha Lineage & Your Pranic Architecture',content:'Study the 18 Siddhas and their transmissions. Begin daily aura sensing: sit quietly, extend hands 30cm from your body, slowly draw them inward feeling the boundary of your energy field. Journal what you notice. Begin OM NAMAH SHIVAYA 108x each morning before sunrise.'},
 {title:'The Five Koshas — Mapping Your Energy Body',content:'Spend 10 minutes with each Kosha daily — feel the physical density, then pranic aliveness, then the emotional weather, then witnessing awareness, then the bliss underneath. Draw your five-body map in your journal. Notice which Kosha holds most tension in your life currently.'},
