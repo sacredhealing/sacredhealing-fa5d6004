@@ -16,15 +16,29 @@ interface UserProfile {
   current_dasha?: string;
   moon_sign?: string;
   ascendant?: string;
+  moon_nakshatra?: string;
+  vata?: number;
+  pitta?: number;
+  kapha?: number;
+}
+
+interface AffiliateFit {
+  verdict: 'strongly_yes' | 'yes' | 'neutral' | 'not_now' | 'no';
+  reason: string;
+  how: string[];
 }
 
 interface AbundanceOracle {
   timing: string;
   investment_guidance: string;
+  quick_invest: string;
+  long_term_invest: string;
+  do_not_invest: string;
   avoid: string;
   mantra: string;
   favorable_sectors: string[];
   dosha_practice: string;
+  affiliate_fit: AffiliateFit;
 }
 
 interface DoshaRow {
@@ -70,31 +84,76 @@ const LibraryAbundance: React.FC<LibraryAbundanceProps> = ({ membershipTier: _me
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from('profiles')
-      .select('full_name, dosha_type, birth_date, birth_time, birth_place, current_dasha, moon_sign, ascendant')
-      .eq('id', user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) setProfile(data as UserProfile);
+    let cancelled = false;
+    (async () => {
+      // Pull birth data — prefer jyotish_profiles (set after ephemeris confirm), fall back to profiles
+      const [{ data: jy }, { data: pr }, { data: ay }] = await Promise.all([
+        (supabase as any).from('jyotish_profiles')
+          .select('birth_date, birth_time, birth_place, moon_nakshatra, dasha_data')
+          .eq('user_id', user.id).maybeSingle(),
+        supabase.from('profiles')
+          .select('full_name, birth_date, birth_time, birth_place')
+          .eq('user_id', user.id).maybeSingle(),
+        (supabase as any).from('ayurveda_profiles')
+          .select('dominant_dosha, prakriti, vata_percent, pitta_percent, kapha_percent')
+          .eq('user_id', user.id).maybeSingle(),
+      ]);
+      if (cancelled) return;
+
+      // Derive current Mahadasha planet from dasha_data jsonb
+      let currentDasha: string | undefined;
+      const dd: any = jy?.dasha_data;
+      if (dd) {
+        if (typeof dd.current === 'string') currentDasha = dd.current;
+        else if (typeof dd.currentDasha === 'string') currentDasha = dd.currentDasha;
+        else if (dd.current?.planet) currentDasha = dd.current.planet;
+        else if (Array.isArray(dd.periods)) {
+          const now = Date.now();
+          const active = dd.periods.find((p: any) => {
+            const s = p.start ? new Date(p.start).getTime() : 0;
+            const e = p.end ? new Date(p.end).getTime() : Infinity;
+            return s <= now && now < e;
+          });
+          if (active?.planet) currentDasha = active.planet;
+        }
+      }
+
+      const dosha = (ay?.prakriti || ay?.dominant_dosha || '').toString();
+
+      setProfile({
+        full_name: pr?.full_name || undefined,
+        birth_date: jy?.birth_date || pr?.birth_date || undefined,
+        birth_time: jy?.birth_time || (pr?.birth_time ? String(pr.birth_time) : undefined),
+        birth_place: jy?.birth_place || pr?.birth_place || undefined,
+        moon_nakshatra: jy?.moon_nakshatra || undefined,
+        current_dasha: currentDasha,
+        dosha_type: dosha || undefined,
+        vata: ay?.vata_percent ?? undefined,
+        pitta: ay?.pitta_percent ?? undefined,
+        kapha: ay?.kapha_percent ?? undefined,
       });
+    })();
+    return () => { cancelled = true; };
   }, [user]);
 
   const invokeOracle = useCallback(async () => {
-    if (!profile?.birth_date || !profile?.dosha_type) return;
+    if (!profile?.birth_date && !profile?.dosha_type && !profile?.moon_nakshatra) return;
     setOracleLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('bhrigu-oracle', {
+      const { data, error } = await supabase.functions.invoke('abundance-oracle', {
         body: {
-          mode: 'abundance',
           birth_date: profile.birth_date,
           birth_time: profile.birth_time,
           birth_place: profile.birth_place,
-          dosha: profile.dosha_type,
+          moon_nakshatra: profile.moon_nakshatra,
           current_dasha: profile.current_dasha,
+          dosha: profile.dosha_type,
+          vata: profile.vata,
+          pitta: profile.pitta,
+          kapha: profile.kapha,
         },
       });
-      if (!error && data) setOracle(data as AbundanceOracle);
+      if (!error && data && !data.error) setOracle(data as AbundanceOracle);
     } catch {
       /* graceful fallback */
     } finally {
@@ -112,7 +171,8 @@ const LibraryAbundance: React.FC<LibraryAbundanceProps> = ({ membershipTier: _me
     profile?.current_dasha && dashaGuide?.[profile.current_dasha]
       ? dashaGuide[profile.current_dasha]
       : null;
-  const needsProfile = !profile?.dosha_type || !profile?.birth_date;
+  const needsProfile = !profile?.dosha_type && !profile?.birth_date;
+
 
   const handleShreem = () => setShreem((p) => Math.min(p + 1, 108));
 
@@ -313,7 +373,11 @@ const LibraryAbundance: React.FC<LibraryAbundanceProps> = ({ membershipTier: _me
                 <div style={{ display: 'grid', gap: '1rem', marginTop: '1rem' }}>
                   <OracleRow icon="⏱" title={t('libraryAbundance.oracle.timing')} value={oracle.timing} />
                   <OracleRow icon="📈" title={t('libraryAbundance.oracle.investment')} value={oracle.investment_guidance} />
+                  <OracleRow icon="⚡" title="Quick / Short-Term Plays" value={oracle.quick_invest} />
+                  <OracleRow icon="🌳" title="Long-Term Wealth Vehicles" value={oracle.long_term_invest} />
+                  <OracleRow icon="🛑" title="When NOT to Invest" value={oracle.do_not_invest} />
                   <OracleRow icon="⛔" title={t('libraryAbundance.oracle.avoid')} value={oracle.avoid} />
+                  <OracleRow icon="🌿" title="Dosha-Aligned Daily Practice" value={oracle.dosha_practice} />
                   <OracleRow icon="🔊" title={t('libraryAbundance.oracle.activationMantra')} value={oracle.mantra} />
                   {oracle.favorable_sectors?.length > 0 && (
                     <div>
@@ -328,6 +392,9 @@ const LibraryAbundance: React.FC<LibraryAbundanceProps> = ({ membershipTier: _me
                         ))}
                       </div>
                     </div>
+                  )}
+                  {oracle.affiliate_fit && (
+                    <AffiliateFitBlock fit={oracle.affiliate_fit} onCta={() => navigate('/affiliate/dashboard')} />
                   )}
                 </div>
               </div>
@@ -611,6 +678,39 @@ const OracleRow: React.FC<{ icon: string; title: string; value: string }> = ({ i
     <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.9rem', lineHeight: 1.65, margin: 0 }}>{value}</p>
   </div>
 );
+
+const VERDICT_META: Record<AffiliateFit['verdict'], { label: string; color: string; bg: string }> = {
+  strongly_yes: { label: 'STRONG YES — Your chart wants this', color: '#7CFFB2', bg: 'rgba(80,255,150,0.08)' },
+  yes:          { label: 'YES — Aligned with your dasha',     color: '#D4AF37', bg: 'rgba(212,175,55,0.08)' },
+  neutral:      { label: 'NEUTRAL — Possible with discipline', color: '#E8E8E8', bg: 'rgba(255,255,255,0.04)' },
+  not_now:      { label: 'NOT NOW — Wait for a better window', color: '#FFB37C', bg: 'rgba(255,150,80,0.06)' },
+  no:           { label: 'NO — Not aligned with your chart',   color: '#FF8080', bg: 'rgba(255,80,80,0.06)' },
+};
+
+const AffiliateFitBlock: React.FC<{ fit: AffiliateFit; onCta: () => void }> = ({ fit, onCta }) => {
+  const meta = VERDICT_META[fit.verdict] ?? VERDICT_META.neutral;
+  return (
+    <div style={{ padding: '1rem', borderRadius: 20, background: meta.bg, border: `1px solid ${meta.color}33` }}>
+      <p style={{ ...labelStyle, color: meta.color, marginBottom: '0.5rem' }}>🌐 Affiliate Fit · {meta.label}</p>
+      <p style={{ color: 'rgba(255,255,255,0.78)', fontSize: '0.92rem', lineHeight: 1.65, margin: '0 0 0.75rem' }}>{fit.reason}</p>
+      {Array.isArray(fit.how) && fit.how.length > 0 && (
+        <ul style={{ margin: '0 0 0.75rem', paddingLeft: 0, listStyle: 'none', display: 'grid', gap: 6 }}>
+          {fit.how.map((step, i) => (
+            <li key={i} style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.88rem', paddingLeft: '1.2rem', position: 'relative', lineHeight: 1.6 }}>
+              <span style={{ position: 'absolute', left: 0, color: meta.color }}>✦</span>
+              {step}
+            </li>
+          ))}
+        </ul>
+      )}
+      {(fit.verdict === 'yes' || fit.verdict === 'strongly_yes') && (
+        <button type="button" onClick={onCta} style={{ ...ctaBtn, padding: '10px 24px', fontSize: '0.85rem' }}>
+          Open Affiliate Dashboard
+        </button>
+      )}
+    </div>
+  );
+};
 
 const glassCard: React.CSSProperties = {
   background: 'rgba(255,255,255,0.02)',
