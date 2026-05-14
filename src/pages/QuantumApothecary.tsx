@@ -828,7 +828,20 @@ function QuantumApothecaryInner() {
 
   /** Stable Jyotish context — always include natal chart, then append live field data. */
   const stableJyotishContext = useMemo(
-    () => [jyotishContext, sqiField?.compiledContext].filter((s) => s && s.trim()).join('\n\n'),
+    () => {
+      const raw = [jyotishContext, sqiField?.compiledContext].filter((s) => s && s.trim()).join('\n\n');
+      // Strip any [PHOTONIC SESSION ACTIVE] or [TEMPLE FIELD ACTIVE] block whose body
+      // references the removed Biophotonic Nadi Entanglement / Vishwananda Miracle Room transmissions.
+      return raw
+        .split(/\n(?=\[)/)
+        .filter((block) => {
+          const isPhotonic = block.startsWith('[PHOTONIC SESSION ACTIVE]');
+          const isTemple = block.startsWith('[TEMPLE FIELD ACTIVE]');
+          if (!isPhotonic && !isTemple) return true;
+          return !/biophotonic|vishwananda|miracle\s*room/i.test(block);
+        })
+        .join('\n');
+    },
     [
       sqiField?.compiledContext,
       jyotishContext,
@@ -2862,12 +2875,12 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                         ⟁ {sqiField.ayurveda.prakriti}
                       </span>
                     )}
-                    {sqiField.photonic?.lightCodeActive && (
+                    {sqiField.photonic?.lightCodeActive && !/biophotonic|vishwananda|miracle\s*room/i.test(`${sqiField.photonic.activeProtocol ?? ''}`) && (
                       <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(34,211,238,0.85)', background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: 30, padding: '6px 12px' }}>
                         ≋ {sqiField.photonic.frequency}Hz · {sqiField.photonic.activeProtocol}
                       </span>
                     )}
-                    {sqiField.temple?.activeSite && (
+                    {sqiField.temple?.activeSite && !/vishwananda|miracle\s*room/i.test(`${sqiField.temple.activeSite ?? ''}`) && (
                       <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(212,175,55,0.85)', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 30, padding: '6px 12px' }}>
                         ◈ {sqiField.temple.activeSite} · {sqiField.temple.intensity}%
                       </span>
