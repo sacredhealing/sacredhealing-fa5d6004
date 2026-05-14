@@ -373,7 +373,11 @@ const LibraryAbundance: React.FC<LibraryAbundanceProps> = ({ membershipTier: _me
                 <div style={{ display: 'grid', gap: '1rem', marginTop: '1rem' }}>
                   <OracleRow icon="⏱" title={t('libraryAbundance.oracle.timing')} value={oracle.timing} />
                   <OracleRow icon="📈" title={t('libraryAbundance.oracle.investment')} value={oracle.investment_guidance} />
+                  <OracleRow icon="⚡" title="Quick / Short-Term Plays" value={oracle.quick_invest} />
+                  <OracleRow icon="🌳" title="Long-Term Wealth Vehicles" value={oracle.long_term_invest} />
+                  <OracleRow icon="🛑" title="When NOT to Invest" value={oracle.do_not_invest} />
                   <OracleRow icon="⛔" title={t('libraryAbundance.oracle.avoid')} value={oracle.avoid} />
+                  <OracleRow icon="🌿" title="Dosha-Aligned Daily Practice" value={oracle.dosha_practice} />
                   <OracleRow icon="🔊" title={t('libraryAbundance.oracle.activationMantra')} value={oracle.mantra} />
                   {oracle.favorable_sectors?.length > 0 && (
                     <div>
@@ -388,6 +392,9 @@ const LibraryAbundance: React.FC<LibraryAbundanceProps> = ({ membershipTier: _me
                         ))}
                       </div>
                     </div>
+                  )}
+                  {oracle.affiliate_fit && (
+                    <AffiliateFitBlock fit={oracle.affiliate_fit} onCta={() => navigate('/affiliate/dashboard')} />
                   )}
                 </div>
               </div>
