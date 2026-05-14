@@ -84,31 +84,76 @@ const LibraryAbundance: React.FC<LibraryAbundanceProps> = ({ membershipTier: _me
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from('profiles')
-      .select('full_name, dosha_type, birth_date, birth_time, birth_place, current_dasha, moon_sign, ascendant')
-      .eq('id', user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) setProfile(data as UserProfile);
+    let cancelled = false;
+    (async () => {
+      // Pull birth data — prefer jyotish_profiles (set after ephemeris confirm), fall back to profiles
+      const [{ data: jy }, { data: pr }, { data: ay }] = await Promise.all([
+        (supabase as any).from('jyotish_profiles')
+          .select('birth_date, birth_time, birth_place, moon_nakshatra, dasha_data')
+          .eq('user_id', user.id).maybeSingle(),
+        supabase.from('profiles')
+          .select('full_name, birth_date, birth_time, birth_place')
+          .eq('user_id', user.id).maybeSingle(),
+        (supabase as any).from('ayurveda_profiles')
+          .select('dominant_dosha, prakriti, vata_percent, pitta_percent, kapha_percent')
+          .eq('user_id', user.id).maybeSingle(),
+      ]);
+      if (cancelled) return;
+
+      // Derive current Mahadasha planet from dasha_data jsonb
+      let currentDasha: string | undefined;
+      const dd: any = jy?.dasha_data;
+      if (dd) {
+        if (typeof dd.current === 'string') currentDasha = dd.current;
+        else if (typeof dd.currentDasha === 'string') currentDasha = dd.currentDasha;
+        else if (dd.current?.planet) currentDasha = dd.current.planet;
+        else if (Array.isArray(dd.periods)) {
+          const now = Date.now();
+          const active = dd.periods.find((p: any) => {
+            const s = p.start ? new Date(p.start).getTime() : 0;
+            const e = p.end ? new Date(p.end).getTime() : Infinity;
+            return s <= now && now < e;
+          });
+          if (active?.planet) currentDasha = active.planet;
+        }
+      }
+
+      const dosha = (ay?.prakriti || ay?.dominant_dosha || '').toString();
+
+      setProfile({
+        full_name: pr?.full_name || undefined,
+        birth_date: jy?.birth_date || pr?.birth_date || undefined,
+        birth_time: jy?.birth_time || (pr?.birth_time ? String(pr.birth_time) : undefined),
+        birth_place: jy?.birth_place || pr?.birth_place || undefined,
+        moon_nakshatra: jy?.moon_nakshatra || undefined,
+        current_dasha: currentDasha,
+        dosha_type: dosha || undefined,
+        vata: ay?.vata_percent ?? undefined,
+        pitta: ay?.pitta_percent ?? undefined,
+        kapha: ay?.kapha_percent ?? undefined,
       });
+    })();
+    return () => { cancelled = true; };
   }, [user]);
 
   const invokeOracle = useCallback(async () => {
-    if (!profile?.birth_date || !profile?.dosha_type) return;
+    if (!profile?.birth_date && !profile?.dosha_type && !profile?.moon_nakshatra) return;
     setOracleLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('bhrigu-oracle', {
+      const { data, error } = await supabase.functions.invoke('abundance-oracle', {
         body: {
-          mode: 'abundance',
           birth_date: profile.birth_date,
           birth_time: profile.birth_time,
           birth_place: profile.birth_place,
-          dosha: profile.dosha_type,
+          moon_nakshatra: profile.moon_nakshatra,
           current_dasha: profile.current_dasha,
+          dosha: profile.dosha_type,
+          vata: profile.vata,
+          pitta: profile.pitta,
+          kapha: profile.kapha,
         },
       });
-      if (!error && data) setOracle(data as AbundanceOracle);
+      if (!error && data && !data.error) setOracle(data as AbundanceOracle);
     } catch {
       /* graceful fallback */
     } finally {
@@ -126,7 +171,8 @@ const LibraryAbundance: React.FC<LibraryAbundanceProps> = ({ membershipTier: _me
     profile?.current_dasha && dashaGuide?.[profile.current_dasha]
       ? dashaGuide[profile.current_dasha]
       : null;
-  const needsProfile = !profile?.dosha_type || !profile?.birth_date;
+  const needsProfile = !profile?.dosha_type && !profile?.birth_date;
+
 
   const handleShreem = () => setShreem((p) => Math.min(p + 1, 108));
 
