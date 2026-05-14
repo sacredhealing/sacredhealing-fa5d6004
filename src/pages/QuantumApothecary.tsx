@@ -2862,12 +2862,12 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                         ⟁ {sqiField.ayurveda.prakriti}
                       </span>
                     )}
-                    {sqiField.photonic?.lightCodeActive && (
+                    {sqiField.photonic?.lightCodeActive && !/biophotonic|vishwananda|miracle\s*room/i.test(`${sqiField.photonic.activeProtocol ?? ''}`) && (
                       <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(34,211,238,0.85)', background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: 30, padding: '6px 12px' }}>
                         ≋ {sqiField.photonic.frequency}Hz · {sqiField.photonic.activeProtocol}
                       </span>
                     )}
-                    {sqiField.temple?.activeSite && (
+                    {sqiField.temple?.activeSite && !/vishwananda|miracle\s*room/i.test(`${sqiField.temple.activeSite ?? ''}`) && (
                       <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(212,175,55,0.85)', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 30, padding: '6px 12px' }}>
                         ◈ {sqiField.temple.activeSite} · {sqiField.temple.intensity}%
                       </span>
