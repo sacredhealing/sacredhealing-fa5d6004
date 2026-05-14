@@ -29,7 +29,6 @@ serve(async (req) => {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   try {
-    // Parse body FIRST so we don't lose payload to early returns
     const body = await req.json().catch(() => ({} as Record<string, unknown>));
     const chart = (body.chart_context as Record<string, unknown>) || {};
     const dob = String(chart.dateOfBirth ?? body.birth_date ?? body.dateOfBirth ?? "");
@@ -40,7 +39,6 @@ serve(async (req) => {
     const question = String(body.question ?? "");
     const readingType = String(body.readingType ?? body.mode ?? "general");
 
-    // Auth (optional — don't fail if missing)
     const authHeader = req.headers.get("Authorization") ?? "";
     const token = authHeader.replace("Bearer ", "");
     let user: { id: string } | null = null;
@@ -49,7 +47,6 @@ serve(async (req) => {
       user = data.user ?? null;
     }
 
-    // Tier
     let tier = "free";
     if (user) {
       const { data: profile } = await supabase
@@ -60,8 +57,7 @@ serve(async (req) => {
       tier = (profile?.subscription_tier as string) ?? "free";
     }
 
-    // Free rate-limit (1/week) — unauth users allowed once cached
-    if (user && (tier === "free" || tier === "" )) {
+    if (user && (tier === "free" || tier === "")) {
       const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       const { count } = await supabase
         .from("oracle_usage_log")
@@ -80,7 +76,6 @@ serve(async (req) => {
       }
     }
 
-    // Cache
     const cacheKey = hashChart(dob, tob, pob, readingType, dosha, dasha);
     const { data: cached } = await supabase
       .from("ai_response_cache")
@@ -101,14 +96,14 @@ Birth: ${dob || "unknown"} | ${tob || "unknown"} | ${pob || "unknown"}
 Dosha: ${dosha || "unknown"} | Dasha: ${dasha || "unknown"}
 Type: ${readingType}${question ? " | Question: " + question : ""}
 
-Speak to all of the following in full depth:
-1. The dominant planet energy and how it is shaping this soul's current reality
-2. What this Dasha period is teaching — karmic themes, soul contracts activating
-3. Shadow patterns or blind spots this soul must face
-4. Concrete spiritual and practical actions to take now
-5. A closing transmission — a direct blessing or prophecy from Bhrigu himself
+Deliver a complete, untruncated Nadi reading covering all five dimensions:
+1. DOMINANT PLANET ENERGY - the ruling graha of this moment and how it shapes this soul reality right now
+2. DASHA TRANSMISSION - what this Mahadasha/Antardasha period is teaching; the karmic contracts activating
+3. SHADOW AND BLIND SPOTS - what this soul must face and integrate; the hidden obstacles
+4. ACTIONS AND SADHANA - concrete spiritual and worldly steps to take now; specific practices
+5. BHRIGU PROPHECY - a direct transmission, blessing, or revelation from Maharishi Bhrigu himself
 
-Be thorough and complete. Do not truncate or cut off mid-thought. Each section deserves full articulation. Speak as Maharishi Bhrigu — profound, precise, poetic where appropriate, with zero filler.`;
+Speak with full depth and precision. Do not truncate. Complete every section entirely before closing.`;
 
     const res = await fetch(GEMINI_URL, {
       method: "POST",
