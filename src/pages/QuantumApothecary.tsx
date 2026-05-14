@@ -312,6 +312,24 @@ function lineStartsWithSqiMasterDiamond(trimmed: string): boolean {
 }
 
 /** SQI (assistant): ◈ gold headers, · / markdown lists, **bold** (Siddha gold), generous vertical rhythm */
+/**
+ * Strip any sentence/line that mentions the removed transmissions
+ * (Biophotonic Nadi Entanglement, Vishwananda Miracle Room, Miracle Room).
+ * Applied to both new streaming messages AND historical persisted messages
+ * so cached chat history never re-shows the removed banners.
+ */
+function scrubBannedTerms(content: string): string {
+  if (!content) return content;
+  const banned = /(biophotonic\s*nadi\s*entanglement|vishwananda(?:'s)?\s*miracle\s*room|miracle\s*room|biophotonic)/i;
+  // Drop whole lines that mention banned terms
+  const lines = content.split('\n').filter((l) => !banned.test(l));
+  // Also strip inline sentence fragments containing banned terms
+  return lines
+    .map((l) => l.replace(/[^.!?\n]*\b(biophotonic|vishwananda(?:'s)?\s*miracle\s*room|miracle\s*room)[^.!?\n]*[.!?]?/gi, '').replace(/\s{2,}/g, ' ').trim())
+    .filter(Boolean)
+    .join('\n');
+}
+
 function renderSQIContent(content: string) {
   const gapAfterSection = 18;
   return content.split('\n').map((line, i) => {
