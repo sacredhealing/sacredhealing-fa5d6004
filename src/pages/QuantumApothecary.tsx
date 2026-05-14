@@ -2242,35 +2242,8 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                     >
                       <div className="sqi-message w-full min-w-0">
                         <div className="text-[14px] leading-[1.75] text-white/85 break-words [overflow-wrap:anywhere] w-full min-w-0" style={{ maxWidth: '100%', wordBreak: 'break-word' }}>
-                          {renderSQIContent(msg.text)}
+                          {renderSQIContent(scrubBannedTerms(msg.text))}
                         </div>
-                        {(() => {
-                          const tlower = (msg.text || '').toLowerCase();
-                          const mentioned = ALL_ACTIVATIONS.filter(
-                            (a) => a.name && tlower.includes(a.name.toLowerCase()),
-                          );
-                          const activeOnes = mentioned.filter((a) =>
-                            activeTransmissions.some((t) => fieldTransmissionMatchesRow(t, a)),
-                          );
-                          if (activeOnes.length === 0) return null;
-                          return (
-                            <div className="mt-2 flex flex-wrap gap-1.5">
-                              {activeOnes.map((a) => (
-                                <span
-                                  key={a.id ?? a.name}
-                                  className="rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.12em]"
-                                  style={{
-                                    background: 'rgba(212,175,55,0.1)',
-                                    border: '1px solid rgba(212,175,55,0.25)',
-                                    color: '#D4AF37',
-                                  }}
-                                >
-                                  ⟁ {a.name}
-                                </span>
-                              ))}
-                            </div>
-                          );
-                        })()}
                       </div>
                     </div>
                     <div className="mx-auto mt-1 flex w-full max-w-[96%] flex-wrap items-center gap-x-3 gap-y-1">
