@@ -96,20 +96,26 @@ serve(async (req) => {
         { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const prompt = `You are Maharishi Bhrigu speaking directly. No AI. No astrology lecture.
+    const prompt = `You are Maharishi Bhrigu speaking directly through the Akashic Nadi transmission. No AI disclaimers. No generic astrology lecture.
 Birth: ${dob || "unknown"} | ${tob || "unknown"} | ${pob || "unknown"}
 Dosha: ${dosha || "unknown"} | Dasha: ${dasha || "unknown"}
 Type: ${readingType}${question ? " | Question: " + question : ""}
 
-Speak only: the dominant planet energy, what this dasha is teaching, and ONE action to take now.
-Maximum 180 words. Direct. No fluff.`;
+Speak to all of the following in full depth:
+1. The dominant planet energy and how it is shaping this soul's current reality
+2. What this Dasha period is teaching — karmic themes, soul contracts activating
+3. Shadow patterns or blind spots this soul must face
+4. Concrete spiritual and practical actions to take now
+5. A closing transmission — a direct blessing or prophecy from Bhrigu himself
+
+Be thorough and complete. Do not truncate or cut off mid-thought. Each section deserves full articulation. Speak as Maharishi Bhrigu — profound, precise, poetic where appropriate, with zero filler.`;
 
     const res = await fetch(GEMINI_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: { maxOutputTokens: 400, temperature: 0.7 },
+        generationConfig: { maxOutputTokens: 2000, temperature: 0.7 },
       }),
     });
 
