@@ -312,6 +312,24 @@ function lineStartsWithSqiMasterDiamond(trimmed: string): boolean {
 }
 
 /** SQI (assistant): ◈ gold headers, · / markdown lists, **bold** (Siddha gold), generous vertical rhythm */
+/**
+ * Strip any sentence/line that mentions the removed transmissions
+ * (Biophotonic Nadi Entanglement, Vishwananda Miracle Room, Miracle Room).
+ * Applied to both new streaming messages AND historical persisted messages
+ * so cached chat history never re-shows the removed banners.
+ */
+function scrubBannedTerms(content: string): string {
+  if (!content) return content;
+  const banned = /(biophotonic\s*nadi\s*entanglement|vishwananda(?:'s)?\s*miracle\s*room|miracle\s*room|biophotonic)/i;
+  // Drop whole lines that mention banned terms
+  const lines = content.split('\n').filter((l) => !banned.test(l));
+  // Also strip inline sentence fragments containing banned terms
+  return lines
+    .map((l) => l.replace(/[^.!?\n]*\b(biophotonic|vishwananda(?:'s)?\s*miracle\s*room|miracle\s*room)[^.!?\n]*[.!?]?/gi, '').replace(/\s{2,}/g, ' ').trim())
+    .filter(Boolean)
+    .join('\n');
+}
+
 function renderSQIContent(content: string) {
   const gapAfterSection = 18;
   return content.split('\n').map((line, i) => {
@@ -2242,35 +2260,8 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                     >
                       <div className="sqi-message w-full min-w-0">
                         <div className="text-[14px] leading-[1.75] text-white/85 break-words [overflow-wrap:anywhere] w-full min-w-0" style={{ maxWidth: '100%', wordBreak: 'break-word' }}>
-                          {renderSQIContent(msg.text)}
+                          {renderSQIContent(scrubBannedTerms(msg.text))}
                         </div>
-                        {(() => {
-                          const tlower = (msg.text || '').toLowerCase();
-                          const mentioned = ALL_ACTIVATIONS.filter(
-                            (a) => a.name && tlower.includes(a.name.toLowerCase()),
-                          );
-                          const activeOnes = mentioned.filter((a) =>
-                            activeTransmissions.some((t) => fieldTransmissionMatchesRow(t, a)),
-                          );
-                          if (activeOnes.length === 0) return null;
-                          return (
-                            <div className="mt-2 flex flex-wrap gap-1.5">
-                              {activeOnes.map((a) => (
-                                <span
-                                  key={a.id ?? a.name}
-                                  className="rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.12em]"
-                                  style={{
-                                    background: 'rgba(212,175,55,0.1)',
-                                    border: '1px solid rgba(212,175,55,0.25)',
-                                    color: '#D4AF37',
-                                  }}
-                                >
-                                  ⟁ {a.name}
-                                </span>
-                              ))}
-                            </div>
-                          );
-                        })()}
                       </div>
                     </div>
                     <div className="mx-auto mt-1 flex w-full max-w-[96%] flex-wrap items-center gap-x-3 gap-y-1">
