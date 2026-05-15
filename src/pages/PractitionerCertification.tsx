@@ -717,7 +717,7 @@ const PractitionerCertification = () => {
                 ))}
                 <button onClick={() => handleEnroll('monthly')} disabled={isLoading!==null}
                   style={{ width:'100%',marginTop:22,padding:'14px 20px',borderRadius:100,background:'none',border:'1px solid rgba(212,175,55,.4)',color:'#D4AF37',fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:11,fontWeight:800,letterSpacing:'.3em',cursor:isLoading?'not-allowed':'pointer',opacity:isLoading?0.7:1 }}>
-                  {isLoading==='monthly'?t('processing',lang):t('enrollMonthly',lang)}
+                  {isLoading==='monthly'?t('processing',lang):t('enrollM',lang)}
                 </button>
               </div>
             </div>
