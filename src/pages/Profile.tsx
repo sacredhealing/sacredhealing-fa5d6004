@@ -450,7 +450,6 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   ];
   const theCovenant = [
     { icon: Scale, label: t('settings.legal.title'), sublabel: t('settings.legal.subtitle'), onClick: () => navigate('/legal') },
-    { icon: Hexagon, label: t('profilePage.subscriptionBilling', 'Subscription & Billing'), sublabel: '', onClick: () => setShowPortal(true) },
     { icon: Settings, label: t('profile.settings.title'), sublabel: t('profile.appPreferences'), onClick: () => setSettingsOpen(true) },
   ];
 
@@ -1336,7 +1335,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
       <NotificationsDialog open={notificationsOpen} onOpenChange={setNotificationsOpen} />
       <AppearanceDialog open={appearanceOpen} onOpenChange={setAppearanceOpen} />
       <PrivacyDialog open={privacyOpen} onOpenChange={setPrivacyOpen} />
-      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} onOpenSubscription={() => { setSettingsOpen(false); setShowPortal(true); }} />
     </div>
       <SubscriptionPortal isOpen={showPortal} onClose={() => setShowPortal(false)} />
     </>

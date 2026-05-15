@@ -3,16 +3,17 @@ import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Settings, Volume2, Vibrate, Download, Trash2 } from 'lucide-react';
+import { Settings, Volume2, Vibrate, Download, Trash2, Hexagon, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
 interface SettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onOpenSubscription?: () => void;
 }
 
-export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onOpenChange }) => {
+export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onOpenChange, onOpenSubscription }) => {
   const { t } = useTranslation();
   const [soundEffects, setSoundEffects] = React.useState(true);
   const [hapticFeedback, setHapticFeedback] = React.useState(true);
@@ -37,6 +38,21 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onOpenChan
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-6 py-4">
+          {onOpenSubscription && (
+            <button
+              onClick={onOpenSubscription}
+              className="w-full flex items-center justify-between p-4 rounded-xl bg-primary/10 border border-primary/30 hover:bg-primary/20 transition-all"
+            >
+              <div className="flex items-center gap-3">
+                <Hexagon size={20} className="text-primary" />
+                <div className="text-left">
+                  <p className="font-medium text-foreground">Subscription & Billing</p>
+                  <p className="text-xs text-muted-foreground">Manage plan, receipts & upgrades</p>
+                </div>
+              </div>
+              <ChevronRight size={18} className="text-muted-foreground" />
+            </button>
+          )}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Volume2 size={18} className="text-muted-foreground" />
