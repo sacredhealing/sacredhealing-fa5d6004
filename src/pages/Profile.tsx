@@ -1335,7 +1335,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
       <NotificationsDialog open={notificationsOpen} onOpenChange={setNotificationsOpen} />
       <AppearanceDialog open={appearanceOpen} onOpenChange={setAppearanceOpen} />
       <PrivacyDialog open={privacyOpen} onOpenChange={setPrivacyOpen} />
-      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} onOpenSubscription={() => { setSettingsOpen(false); setShowPortal(true); }} />
     </div>
       <SubscriptionPortal isOpen={showPortal} onClose={() => setShowPortal(false)} />
     </>
