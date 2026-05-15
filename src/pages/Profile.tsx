@@ -28,6 +28,7 @@ import HandScanner from '@/components/scanner/HandScanner';
 import { supabase } from '@/integrations/supabase/client';
 import { getTierRank, hasFeatureAccess } from '@/lib/tierAccess';
 import RecordingsList from '@/components/recordings/RecordingsList';
+import { SubscriptionPortal, SubscriptionBadge } from '@/components/profile/SubscriptionPortal';
 
 type LifeBookCategory =
   | 'children'
@@ -114,6 +115,7 @@ const Profile: React.FC = () => {
   }, [user, vedicReading, generateReading]);
 
   const [blueprintOpen, setBlueprintOpen] = useState(false);
+  const [showPortal, setShowPortal] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [appearanceOpen, setAppearanceOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
@@ -726,6 +728,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
                 {userName?.charAt(0) || '🧘'}
               </AvatarFallback>
             </Avatar>
+                <SubscriptionBadge tier={profile?.membership_tier ?? "free"} onClick={() => setShowPortal(true)} />
           </div>
 
           {/* Edit button */}
@@ -1336,6 +1339,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
     </>
+      <SubscriptionPortal isOpen={showPortal} onClose={() => setShowPortal(false)} />
   );
 };
 
