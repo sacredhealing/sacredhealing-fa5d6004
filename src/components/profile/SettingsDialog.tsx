@@ -3,13 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Settings, Volume2, Vibrate, Download, Trash2 } from 'lucide-react';
+import { Settings, Volume2, Vibrate, Download, Trash2, Hexagon, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
 interface SettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onOpenSubscription?: () => void;
 }
 
 export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onOpenChange }) => {
