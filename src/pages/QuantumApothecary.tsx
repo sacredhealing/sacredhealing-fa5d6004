@@ -1746,7 +1746,8 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         localStorage.setItem(LS_SCAN_SNAPSHOT, JSON.stringify(payload));
         setLibraryUnlocked(true);
         setScanCooldownUntilMs(Date.now() + 24 * 60 * 60 * 1000);
-        const top33 = buildTop33Rankings(payload);
+        const ownedIds = new Set(activeTransmissions.map((a) => a.id));
+const top33 = buildTop33Rankings(payload, 600, ownedIds);
         setResonanceMatches(top33);
         setShowAllTop33(false);
         // BUG 3 FIX: Persist voice scan frequencies so SQI edge function can read them
