@@ -13,7 +13,7 @@ interface SettingsDialogProps {
   onOpenSubscription?: () => void;
 }
 
-export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onOpenChange }) => {
+export const SettingsDialog: React.FC<SettingsDialogProps> = ({ open, onOpenChange, onOpenSubscription }) => {
   const { t } = useTranslation();
   const [soundEffects, setSoundEffects] = React.useState(true);
   const [hapticFeedback, setHapticFeedback] = React.useState(true);
