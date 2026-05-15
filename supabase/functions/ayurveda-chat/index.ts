@@ -75,7 +75,7 @@ serve(async (req) => {
       body: JSON.stringify({
         system_instruction: { parts: [{ text: systemText }] },
         contents,
-        generationConfig: { maxOutputTokens: 1500, temperature: 0.8 },
+        generationConfig: { maxOutputTokens: 4000, temperature: 0.8 },
       }),
     });
 
