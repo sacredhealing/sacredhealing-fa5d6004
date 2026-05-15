@@ -450,17 +450,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   ];
   const theCovenant = [
     { icon: Scale, label: t('settings.legal.title'), sublabel: t('settings.legal.subtitle'), onClick: () => navigate('/legal') },
-  <button
-    onClick={() => setShowPortal(true)}
-    className="flex items-center gap-3 w-full text-left py-3 px-4 rounded-2xl hover:bg-white/5 transition-colors group"
-    >
-      <div className="w-8 h-8 rounded-xl bg-[rgba(212,175,55,0.1)] border border-[rgba(212,175,55,0.3)] flex items-center justify-center">
-        <span style={{color:"#D4AF37",fontSize:14}}>⬡</span>
-      </div>
-      <span className="text-sm font-medium text-white/70 group-hover:text-white transition-colors">{t('profilePage.subscriptionBilling', 'Subscription & Billing')}</span>
-      <ChevronRight className="w-4 h-4 text-white/30 ml-auto group-hover:text-white/60 transition-colors" />
-  </button>
-
+    { icon: Hexagon, label: t('profilePage.subscriptionBilling', 'Subscription & Billing'), sublabel: '', onClick: () => setShowPortal(true) },
     { icon: Settings, label: t('profile.settings.title'), sublabel: t('profile.appPreferences'), onClick: () => setSettingsOpen(true) },
   ];
 
@@ -1348,8 +1338,8 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
       <PrivacyDialog open={privacyOpen} onOpenChange={setPrivacyOpen} />
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
-    </>
       <SubscriptionPortal isOpen={showPortal} onClose={() => setShowPortal(false)} />
+    </>
   );
 };
 
