@@ -52,10 +52,12 @@ export function pctForRank(index: number): number {
 /**
  * Rank vegetarian activations: primary order from matchActivationsToScan on full bio library,
  * then pad from ALL_ACTIVATIONS (vegetarian) for a full 33 rows when possible.
+ * Pass excludeIds to filter out activations the user already owns.
  */
 export function buildTop33Rankings(
   payload: ScanSnapshotPayload,
   maxBioMatches = 600,
+  excludeIds: Set<string> = new Set(),
 ): Array<Activation & { pct: number; rowCategory: string }> {
   const vegAll = ALL_ACTIVATIONS.filter(isVegetarianActivation);
 
@@ -66,6 +68,7 @@ export function buildTop33Rankings(
   for (const a of matchedBio) {
     if (!isVegetarianActivation(a)) continue;
     if (seen.has(a.id)) continue;
+    if (excludeIds.has(a.id)) continue;
     seen.add(a.id);
     ordered.push(a);
     if (ordered.length >= 33) break;
@@ -74,6 +77,7 @@ export function buildTop33Rankings(
   if (ordered.length < 33) {
     for (const a of vegAll) {
       if (seen.has(a.id)) continue;
+      if (excludeIds.has(a.id)) continue;
       seen.add(a.id);
       ordered.push(a);
       if (ordered.length >= 33) break;
