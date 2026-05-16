@@ -1848,7 +1848,7 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
         { duration: 4000 },
       );
     },
-    [user?.id],
+    [user?.id, activeTransmissions],
   );
 
   const handleChatFocus = () => { openChatFullscreenIfMobile(); };
