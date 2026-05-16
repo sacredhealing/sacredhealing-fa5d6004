@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 
 const TIER_CONFIG: Record<string, { label: string; glyph: string; color: string; glow: string; price: string; features: string[]; }> = {
   free: { label: "Akasha Free", glyph: "◈", color: "rgba(255,255,255,0.4)", glow: "rgba(255,255,255,0.1)", price: "Free", features: ["Basic transmissions", "Community access", "Free meditations"] },
