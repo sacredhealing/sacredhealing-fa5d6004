@@ -591,8 +591,8 @@ SEEKER LANGUAGE: ${language} (${langLabel})
       systemText += `\n\n═══════════════════════════════════════════════════\n${leafHistory}\n═══════════════════════════════════════════════════\nIMPORTANT: This is leaf MEMORY. Do not repeat. Build forward. Ask the leaf if past remedies have been completed.`;
     }
 
-    // Build Gemini contents — last 14 turns (Bhrigu remembers, but doesn't drown)
-    const recent = (messages || []).slice(-14);
+    // Build Gemini contents — last 10 turns so long answers have enough output room.
+    const recent = (messages || []).slice(-10);
     const geminiContents = recent.map((m) => ({
       role: m.role === "assistant" ? "model" : "user",
       parts: [{ text: m.content || "" }],
@@ -608,7 +608,7 @@ SEEKER LANGUAGE: ${language} (${langLabel})
         temperature: 0.85,
         topK: 40,
         topP: 0.95,
-        maxOutputTokens: 2048,
+        maxOutputTokens: 8192,
       },
       safetySettings: [
         { category: "HARM_CATEGORY_HARASSMENT",        threshold: "BLOCK_NONE" },
