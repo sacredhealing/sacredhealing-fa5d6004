@@ -127,7 +127,7 @@ export function SubscriptionPortal({ isOpen, onClose }: Props) {
         .from("profiles")
         .select("id, full_name, membership_tier, created_at, stripe_customer_id")
         .order("created_at", { ascending: false });
-      setAdminUsers((data || []) as AdminUser[]);
+      setAdminUsers((data || []) as unknown as AdminUser[]);
     } catch (e) { console.error(e); }
     finally { setAdminLoading(false); }
   }
