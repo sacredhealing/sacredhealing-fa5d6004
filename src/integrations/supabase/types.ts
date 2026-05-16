@@ -6626,6 +6626,36 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_events: {
+        Row: {
+          created_at: string | null
+          current_period_end: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          stripe_subscription_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_period_end?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          stripe_subscription_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_period_end?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          stripe_subscription_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       support_requests: {
         Row: {
           category: string
