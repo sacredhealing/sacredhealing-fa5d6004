@@ -242,7 +242,22 @@ function renderInline(
       if (variant === 'heading') {
         return <strong key={i} style={{ color: 'inherit', fontWeight: 700 }}>{inner}</strong>;
       }
-      return <strong key={i} style={{ color: onGold ? 'rgba(255,255,255,0.98)' : 'rgba(255,255,255,0.97)', fontWeight: 700 }}>{inner}</strong>;
+      return (
+        <strong
+          key={i}
+          style={{
+            color: '#D4AF37',
+            fontWeight: 700,
+            fontFamily: "'Cinzel', serif",
+            fontSize: '0.88em',
+            letterSpacing: '0.04em',
+            fontStyle: 'normal',
+            textShadow: '0 0 16px rgba(212,175,55,0.35)',
+          }}
+        >
+          {inner}
+        </strong>
+      );
     }
     if (p.startsWith('*') && p.endsWith('*')) {
       return <em key={i} style={{ fontStyle: 'italic', color: variant === 'heading' ? 'inherit' : onGold ? 'rgba(255,255,255,0.78)' : 'rgba(255,255,255,0.78)' }}>{p.slice(1, -1)}</em>;
@@ -1202,6 +1217,7 @@ JYOTISH DIRECTIVE: Compute this soul's Vedic chart from the above birth data. De
   const [isRecording, setIsRecording] = useState(false);
   const [voiceResult, setVoiceResult] = useState<VoiceBiofieldResult | null>(null);
   const [showVoiceScan, setShowVoiceScan] = useState(true);
+  const [showAllTop33, setShowAllTop33] = useState(false);
 
   useEffect(() => {
     try {
@@ -1702,6 +1718,8 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
           sqiTop33ChatBlock,
           activeTransmissionNamesCsv,
           studentContext,
+          activeStudent?.id ?? null,
+          activeStudent?.name ?? null,
         );
     } catch (e) {
       console.error(e);
@@ -2236,31 +2254,45 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                 className={`flex w-full min-w-0 flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                 {msg.role === 'user' ? (
                   <div
-                    className="ml-auto max-w-[85%] rounded-[20px] px-5 py-4"
+                    className="ml-auto max-w-[85%]"
                     style={{
-                      background: 'linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08))',
-                      border: '1px solid rgba(212,175,55,0.25)',
+                      position: 'relative',
+                      padding: '14px 20px',
+                      background: 'rgba(212,175,55,0.03)',
+                      border: '1px solid rgba(212,175,55,0.1)',
                     }}
                   >
-                    <div className="markdown-body text-[14px] leading-[1.75] text-white/95 whitespace-pre-wrap break-words w-full min-w-0 text-left" style={{ maxWidth: '100%', wordBreak: 'break-word' }}>
+                    <div style={{ position: 'absolute', top: 5, right: 5, width: 10, height: 10, borderTop: '1px solid rgba(212,175,55,0.2)', borderRight: '1px solid rgba(212,175,55,0.2)', pointerEvents: 'none' }} />
+                    <p style={{ fontFamily: "'Cinzel', serif", fontSize: '7px', letterSpacing: '0.4em', color: 'rgba(212,175,55,0.28)', textTransform: 'uppercase' as const, marginBottom: '8px' }}>
+                      The Seeker inquires
+                    </p>
+                    <div className="markdown-body whitespace-pre-wrap break-words w-full min-w-0 text-left" style={{ maxWidth: '100%', wordBreak: 'break-word', fontFamily: "'IM Fell English', serif", fontStyle: 'italic', fontSize: '15px', color: 'rgba(200,184,154,0.75)', lineHeight: '1.65' }}>
                       {renderChatText(msg.text, 'user')}
                     </div>
                   </div>
                 ) : (
                   <>
                     <div
-                      className="chat-message w-full max-w-[96%] mx-auto rounded-[20px] px-5 py-4"
+                      className="chat-message w-full max-w-[96%] mx-auto sqi-manuscript-scroll"
                       style={{
-                        background: 'rgba(255,255,255,0.03)',
-                        border: '1px solid rgba(255,255,255,0.06)',
+                        position: 'relative',
+                        padding: '26px 28px 22px',
+                        background: 'linear-gradient(145deg, rgba(18,13,6,0.98) 0%, rgba(10,7,3,0.99) 100%)',
+                        border: '1px solid rgba(212,175,55,0.1)',
+                        boxShadow: 'inset 0 0 60px rgba(139,90,43,0.04), 0 20px 60px rgba(0,0,0,0.6)',
                         overflow: 'visible',
                         userSelect: 'none',
                         WebkitUserSelect: 'none',
                         WebkitTouchCallout: 'none',
                       }}
                     >
+                      <div style={{ position: 'absolute', top: 8, left: 8, width: 16, height: 16, borderTop: '1px solid rgba(212,175,55,0.22)', borderLeft: '1px solid rgba(212,175,55,0.22)', pointerEvents: 'none' }} />
+                      <div style={{ position: 'absolute', bottom: 8, right: 8, width: 16, height: 16, borderBottom: '1px solid rgba(212,175,55,0.22)', borderRight: '1px solid rgba(212,175,55,0.22)', pointerEvents: 'none' }} />
                       <div className="sqi-message w-full min-w-0">
-                        <div className="text-[14px] leading-[1.75] text-white/85 break-words [overflow-wrap:anywhere] w-full min-w-0" style={{ maxWidth: '100%', wordBreak: 'break-word' }}>
+                        <div
+                          className="sqi-ancient-body break-words"
+                          style={{ maxWidth: '100%', wordBreak: 'break-word', overflowWrap: 'anywhere', fontFamily: "'IM Fell English', Georgia, serif", fontSize: '16px', lineHeight: 1.9, color: 'rgba(225,210,185,0.9)', letterSpacing: '0.008em' }}
+                        >
                           {renderSQIContent(scrubBannedTerms(msg.text))}
                         </div>
                       </div>
@@ -2980,7 +3012,7 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
           SQI-2050 CSS Light-Codes
           ââââââââââââââââââââââââââââââââââ */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;700;800;900&display=swap');
 
         * { font-family: 'Plus Jakarta Sans', sans-serif; }
 
@@ -3117,6 +3149,50 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
   .qa-card-hover:hover { border-color: rgba(212,175,55,0.25) !important; box-shadow: 0 0 40px rgba(212,175,55,0.08) !important; transform: translateY(-2px) !important; }
   .qa-btn-shine { position:relative; overflow:hidden; }
   .qa-btn-shine::after { content:''; position:absolute; inset:0; background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.15) 50%,transparent 60%); background-size:200% 100%; animation:qa-shimmer 3s infinite; }
+
+  /* ═══ ANCIENT SCRIPTURE SKIN ═══ */
+
+  .sqi-manuscript-scroll {
+    border-radius: 2px !important;
+    position: relative;
+  }
+
+  .sqi-ancient-body p {
+    font-family: 'IM Fell English', Georgia, serif !important;
+    font-size: 16px !important;
+    line-height: 1.9 !important;
+    color: rgba(225,210,185,0.88) !important;
+    margin-bottom: 14px !important;
+  }
+
+  .sqi-ancient-body .sqi-diamond-heading {
+    font-family: 'Cinzel', serif !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.4em !important;
+    color: #D4AF37 !important;
+    text-shadow: 0 0 25px rgba(212,175,55,0.4) !important;
+    text-transform: uppercase !important;
+    margin-bottom: 12px !important;
+  }
+
+  .sqi-ancient-body strong,
+  .sqi-ancient-body b {
+    color: #D4AF37 !important;
+    font-family: 'Cinzel', serif !important;
+    font-size: 0.88em !important;
+    letter-spacing: 0.04em !important;
+    font-weight: 700 !important;
+    font-style: normal !important;
+    text-shadow: 0 0 16px rgba(212,175,55,0.35) !important;
+  }
+
+  .sqi-ancient-body li {
+    font-family: 'IM Fell English', Georgia, serif !important;
+    font-size: 15px !important;
+    line-height: 1.85 !important;
+    color: rgba(225,210,185,0.85) !important;
+  }
       `}</style>
 
       <UserChatHistory filterChatType="apothecary" />
