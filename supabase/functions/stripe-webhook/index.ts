@@ -875,6 +875,25 @@ serve(async (req) => {
           });
         }
       }
+
+      // Send subscription receipt email
+      try {
+        const customerId = typeof invoice.customer === 'string' ? invoice.customer : null;
+        if (customerId) {
+          const { data: profile } = await supabaseAdmin
+            .from('profiles')
+            .select('id')
+            .eq('stripe_customer_id', customerId)
+            .single();
+          if (profile?.id) {
+            await supabaseAdmin.functions.invoke('send-subscription-receipt', {
+              body: { invoiceId: invoice.id, userId: profile.id }
+            });
+          }
+        }
+      } catch (e) {
+        logStep("send-subscription-receipt invoke failed", { error: e instanceof Error ? e.message : String(e) });
+      }
     }
 
     // Handle payment_intent.succeeded for direct payments
