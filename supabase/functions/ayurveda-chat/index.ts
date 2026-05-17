@@ -1,6 +1,6 @@
 // supabase/functions/ayurveda-chat/index.ts
 // AGASTYA MUNI — SEALED SIDDHA BODY ORACLE
-// SQI 2050 · Full Sanskrit Depth Restored · v3.2 · 2026-05-16
+// SQI 2050 · Full Sanskrit Depth Restored · v3.2 · 2026-05-17
 // gemini-2.5-flash · maxOutputTokens: 4000 · SSE streaming
 // Frontend payload: { messages, profile, dosha, language }
 
