@@ -1070,7 +1070,8 @@ async function getLifeBookArchive(userId: string): Promise<string> {
       if (!grouped[cat]) grouped[cat] = [];
       const entries = Array.isArray(ch.content) ? ch.content : [];
       for (const e of entries.slice(-4)) {
-        if (e?.title) grouped[cat].push(e.summary ? `${e.title}: ${String(e.summary).slice(0, 120)}` : e.title);
+        const entry = e as { title?: string; summary?: string };
+        if (entry?.title) grouped[cat].push(entry.summary ? `${entry.title}: ${String(entry.summary).slice(0, 120)}` : entry.title);
       }
     }
     return Object.entries(grouped).filter(([, v]) => v.length)
