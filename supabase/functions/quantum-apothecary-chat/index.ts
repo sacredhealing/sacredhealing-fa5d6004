@@ -1078,8 +1078,14 @@ async function getLifeBookArchive(userId: string): Promise<string> {
         grouped[cat].push(pushVal);
       }
     }
-    return Object.entries(grouped).filter(([, v]) => v.length)
-      .map(([k, v]) => `${labels[k] ?? k}:\n${v.map(x => ` · ${x}`).join("\n")}`).join("\n\n");
+    const resultParts: string[] = [];
+    for (const [k, v] of Object.entries(grouped)) {
+      if (!v.length) continue;
+      const label = labels[k] ?? k;
+      const rows = v.map((x: string) => " · " + x).join("\n");
+      resultParts.push(label + ":\n" + rows);
+    }
+    return resultParts.join("\n\n");
   } catch (_) { return ""; }
 }
 
@@ -1519,9 +1525,10 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
         flushed = true;
         try {
           const lastMsgs = rawMessages.slice(-2);
-          const exchange = lastMsgs.map((m: { role: string; content: string }) =>
-            `${m.role === "user" ? "Seeker" : "SQI"}: ${m.content.slice(0, 200)}`
-          ).join("\n") + `\nSQI: ${assistantText.slice(0, 500)}`;
+          const exchange = lastMsgs.map((m: { role: string; content: string }) => {
+            const speaker = m.role === "user" ? "Seeker" : "SQI";
+            return speaker + ": " + m.content.slice(0, 200);
+          }).join("\n") + "\nSQI: " + assistantText.slice(0, 500);
           // Always write to ACTIVE subject's records (student or seeker)
           await Promise.all([
             updateLivingPortrait(activeUserId, livingPortrait, exchange, GEMINI_API_KEY),
