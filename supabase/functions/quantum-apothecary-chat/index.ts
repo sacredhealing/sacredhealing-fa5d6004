@@ -12,7 +12,7 @@ async function loadBundledActivationNames(): Promise<string> {
   try {
     const url = new URL("./activation-names.txt", import.meta.url);
     cachedBundledActivationNames = (await Deno.readTextFile(url)).trim();
-  } catch { cachedBundledActivationNames = ""; }
+  } catch (_) { cachedBundledActivationNames = ""; }
   return cachedBundledActivationNames;
 }
 
@@ -1048,7 +1048,7 @@ async function getLivingPortrait(userId: string): Promise<string> {
         (low.includes("room") && low.includes("active")));
     }).join("\n").trim();
     return portrait;
-  } catch { return ""; }
+  } catch (_) { return ""; }
 }
 
 async function getLifeBookArchive(userId: string): Promise<string> {
@@ -1070,13 +1070,16 @@ async function getLifeBookArchive(userId: string): Promise<string> {
       if (!grouped[cat]) grouped[cat] = [];
       const entries = Array.isArray(ch.content) ? ch.content : [];
       for (const e of entries.slice(-4)) {
-        const entry = e as { title?: string; summary?: string };
-        if (entry?.title) grouped[cat].push(entry.summary ? `${entry.title}: ${String(entry.summary).slice(0, 120)}` : entry.title);
+        const entry = e as Record<string, unknown>;
+        const title = entry?.title ? String(entry.title) : null;
+        if (!title) continue;
+        const summary = entry?.summary ? String(entry.summary).slice(0, 120) : null;
+        grouped[cat].push(summary ? `${title}: ${summary}` : title);
       }
     }
     return Object.entries(grouped).filter(([, v]) => v.length)
       .map(([k, v]) => `${labels[k] ?? k}:\n${v.map(x => ` · ${x}`).join("\n")}`).join("\n\n");
-  } catch { return ""; }
+  } catch (_) { return ""; }
 }
 
 async function getNadiBaseline(userId: string): Promise<string> {
@@ -1090,7 +1093,7 @@ async function getNadiBaseline(userId: string): Promise<string> {
     const date = new Date(data.scanned_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
     return `NADI BASELINE (${date}): ${(data.active_nadis || 0).toLocaleString()}/72,000 active · ${data.blockage_pct}% blockage · ${data.dominant_dosha} dominant · Primary blockage: ${data.primary_blockage}
 → Use as background context. Override with any live scan present in this conversation.`;
-  } catch { return ""; }
+  } catch (_) { return ""; }
 }
 
 async function getRecentActivity(userId: string): Promise<string> {
@@ -1112,7 +1115,7 @@ async function getRecentActivity(userId: string): Promise<string> {
       return ` · ${when}: ${label}${detail ? ` — ${detail}` : ""}`;
     });
     return "RECENT ACTIVITY:\n" + lines.join("\n");
-  } catch { return ""; }
+  } catch (_) { return ""; }
 }
 
 async function getPartnerActivity(userId: string): Promise<string> {
@@ -1141,7 +1144,7 @@ async function getPartnerActivity(userId: string): Promise<string> {
       return ` · ${when}: ${String(ad.activity || a.activity_type || "")}${String(d.place || d.frequency || d.track || "") ? ` — ${String(d.place || d.frequency || d.track || "")}` : ""}`;
     });
     return `SOUL-LINK (${partnerName}) FIELD — their biofield directly affects yours:\n${lines.join("\n")}`;
-  } catch { return ""; }
+  } catch (_) { return ""; }
 }
 
 async function getAtmaSignature(userId: string): Promise<string> {
@@ -1153,7 +1156,7 @@ async function getAtmaSignature(userId: string): Promise<string> {
       .eq("user_id", userId)
       .maybeSingle();
     return data?.signature ?? "";
-  } catch { return ""; }
+  } catch (_) { return ""; }
 }
 
 async function updateAtmaSignature(
@@ -1252,7 +1255,7 @@ async function classifyAndPersistLifeBook(options: { assistantText: string; user
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
     if (!text) return;
     let parsed: { category: string; title?: string; summary?: string };
-    try { parsed = JSON.parse(text.replace(/```json|```/g, "").trim()); } catch { return; }
+    try { parsed = JSON.parse(text.replace(/```json|```/g, "").trim()); } catch (_) { return; }
     if (!parsed || parsed.category === "skip") return;
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
     const { data: existing } = await sb.from("life_book_chapters").select("id, content").eq("user_id", userId).eq("chapter_type", parsed.category).limit(1).maybeSingle();
@@ -1334,7 +1337,7 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
             scanned_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           }, { onConflict: "user_id" });
-        } catch { /* ok */ }
+        } catch (_) { /* ok */ }
       }
       return new Response(JSON.stringify(result), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -1507,7 +1510,7 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
               assistantText += content;
               controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`));
             }
-          } catch { /* skip malformed */ }
+          } catch (_) { /* skip malformed */ }
         }
       },
       async flush() {
