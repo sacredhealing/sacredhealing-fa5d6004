@@ -1213,7 +1213,9 @@ Update only what has genuinely shifted. If the soul is in the same pattern — d
       { onConflict: "user_id" }
     );
   } catch (err) { console.error("updateAtmaSignature:", err); }
-}(userId: string, currentPortrait: string, newExchange: string, geminiApiKey: string): Promise<void> {
+}
+
+async function updateLivingPortrait(userId: string, currentPortrait: string, newExchange: string, geminiApiKey: string): Promise<void> {
   if (!userId || !newExchange.trim()) return;
   try {
     const isFirst = !currentPortrait || currentPortrait.length < 50;
@@ -1428,8 +1430,6 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
       if (nadiBaseline) systemText += `\n\n${nadiBaseline}`;
       if (lifeBookArchive) systemText += `\n\nLIFEBOOK RECORDS (build upon these — never repeat, always advance):\n${lifeBookArchive.slice(0, 1200)}`;
       if (recentActivity) systemText += `\n\n${recentActivity}`;
-      if (partnerActivity) systemText += `\n\n${partnerActivity}`;
-      systemText += `\n\n${"═".repeat(55)}\nThis Archive is the soil. The live Akashic scan is the reading.\nNever recite Archive content. Let it inform the scan.\n${"═".repeat(55)}`;
       if (partnerActivity) systemText += `\n\n${partnerActivity}`;
       systemText += `\n\n${"═".repeat(55)}\nThis Archive is the soil. The live Akashic scan is the reading.\nNever recite Archive content. Let it inform the scan.\nThe Seeker must feel KNOWN — not profiled.\n${"═".repeat(55)}`;
     }
