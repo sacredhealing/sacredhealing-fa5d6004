@@ -788,8 +788,8 @@ function QuantumApothecaryInner() {
 
   const sqiSourceDirective = useMemo(
     () =>
-      '[SQI SOURCES] Use the seeker's saved chart (below), live biometric block when present, compiled field (Ayurveda / photonic / temple), and this chat. Do not invent palm-camera analysis.\n' +
-      '[FREQUENCY LIBRARY] The canonical Frequency Library names are provided separately (canonicalActivationNames). For every substantive answer, map the seeker's topic to concrete entries from that list — use exact names. When suggesting remedies, protocols, or "what to run," include 3–10 relevant library names per topic when appropriate.',
+      "[SQI SOURCES] Use the seeker's saved chart (below), live biometric block when present, compiled field (Ayurveda / photonic / temple), and this chat. Do not invent palm-camera analysis.\n" +
+      "[FREQUENCY LIBRARY] The canonical Frequency Library names are provided separately (canonicalActivationNames). For every substantive answer, map the seeker's topic to concrete entries from that list — use exact names. When suggesting remedies, protocols, or \"what to run,\" include 3–10 relevant library names per topic when appropriate.",
     [],
   );
 
