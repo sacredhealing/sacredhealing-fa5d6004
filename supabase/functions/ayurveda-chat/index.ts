@@ -189,7 +189,7 @@ serve(async (req) => {
         ? cleanHistory
         : [{ role: "user", parts: [{ text: "Scan my body. I am ready." }] }],
       generationConfig: {
-        temperature: 0.85,
+        temperature: 2.0,
         topP: 0.95,
         topK: 40,
         maxOutputTokens: 4000,
