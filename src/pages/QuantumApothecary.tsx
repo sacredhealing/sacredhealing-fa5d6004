@@ -1,12 +1,12 @@
 // @ts-nocheck
-// ────────────────────────────────────────────────────────────────────
-// │  SQI-2050 REDESIGN — VISUAL LAYER ONLY                         │
-// │  All logic, hooks, Stripe triggers, AffiliateID tracking        │
-// │  and function signatures are UNTOUCHED.                         │
-// │  Only className strings and CSS have been upgraded.             │
-// │  SQI2050_8 + prod: tier gate stays in outer wrapper only;       │
-// │  i18n language passed to SQI chat + voice recognition.            │
-// ────────────────────────────────────────────────────────────────────
+// ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// â  SQI-2050 REDESIGN — VISUAL LAYER ONLY                         â
+// â  All logic, hooks, Stripe triggers, AffiliateID tracking        â
+// â  and function signatures are UNTOUCHED.                         â
+// â  Only className strings and CSS have been upgraded.             â
+// â  SQI2050_8 + prod: tier gate stays in outer wrapper only;       â
+// â  i18n language passed to SQI chat + voice recognition.            â
+// ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 import React, { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -87,7 +87,7 @@ function fieldTransmissionMatchesRow(tx: Activation, row: Activation): boolean {
   return !!a && !!b && a === b;
 }
 
-/* ──── Markdown-ish renderer: gold (#D4AF37) only on # / ## / ### / #### / ##### lines ──── */
+/* ââââ Markdown-ish renderer: gold (#D4AF37) only on # / ## / ### / #### / ##### lines ââââ */
 type InlineVariant = 'heading' | 'body';
 
 /** Optional SQI assistant styling for **bold** (gold body / light-on-gold on ◈ lines). */
@@ -99,7 +99,9 @@ type RenderInlineOpts = {
 function renderChatText(text: string, bubble: 'model' | 'user' = 'model') {
   const onGold = bubble === 'user';
   const gold = '#D4AF37';
+  /** User bubbles: light text on gold gradient (never dark-on-gold). */
   const body = onGold ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.92)';
+  /** Siddha-gold glow — strong on SQI (model) bubbles; user bubbles get gold + dark rim for contrast on gradient */
   const headingGlow = onGold
     ? '0 1px 2px rgba(0,0,0,0.35), 0 0 14px rgba(212,175,55,0.75), 0 0 28px rgba(212,175,55,0.4)'
     : '0 0 12px rgba(212,175,55,0.55), 0 0 26px rgba(212,175,55,0.35), 0 0 42px rgba(212,175,55,0.18)';
@@ -275,6 +277,7 @@ function renderInline(
         </code>
       );
     }
+    // Plain text segment — auto-bold sacred terms (frequency names, masters, transmission types)
     if (opts?.sqiGoldBold && variant === 'body' && p) {
       return <React.Fragment key={i}>{autoBoldSacredTerms(p)}</React.Fragment>;
     }
@@ -323,14 +326,19 @@ function lineStartsWithSqiMasterDiamond(trimmed: string): boolean {
   return trimmed.startsWith('\u00e2\u0097\u0088');
 }
 
+/** SQI (assistant): ◈ gold headers, · / markdown lists, **bold** (Siddha gold), generous vertical rhythm */
 /**
  * Strip any sentence/line that mentions the removed transmissions
  * (Biophotonic Nadi Entanglement, Vishwananda Miracle Room, Miracle Room).
+ * Applied to both new streaming messages AND historical persisted messages
+ * so cached chat history never re-shows the removed banners.
  */
 function scrubBannedTerms(content: string): string {
   if (!content) return content;
   const banned = /(biophotonic\s*nadi\s*entanglement|vishwananda(?:'s)?\s*miracle\s*room|miracle\s*room|biophotonic)/i;
+  // Drop whole lines that mention banned terms
   const lines = content.split('\n').filter((l) => !banned.test(l));
+  // Also strip inline sentence fragments containing banned terms
   return lines
     .map((l) => l.replace(/[^.!?\n]*\b(biophotonic|vishwananda(?:'s)?\s*miracle\s*room|miracle\s*room)[^.!?\n]*[.!?]?/gi, '').replace(/\s{2,}/g, ' ').trim())
     .filter(Boolean)
@@ -350,25 +358,34 @@ function renderSQIContent(content: string) {
       return (
         <p
           key={i}
-          className="sqi-diamond-heading text-[#D4AF37]"
+          className="sqi-diamond-heading"
           style={{
             color: '#D4AF37',
-            fontWeight: 800,
-            fontSize: '13px',
-            letterSpacing: '0.03em',
+            fontFamily: "'Cinzel', serif",
+            fontWeight: 700,
+            fontSize: '10px',
+            letterSpacing: '0.4em',
+            textTransform: 'uppercase' as const,
+            textShadow: '0 0 25px rgba(212,175,55,0.4)',
             marginTop: i > 0 ? `${gapAfterSection}px` : '0',
-            marginBottom: '2px',
+            marginBottom: '14px',
             wordBreak: 'break-word',
             overflowWrap: 'anywhere',
-            lineHeight: 1.45,
+            lineHeight: 1.6,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '14px',
           }}
         >
           {renderInline(trimmed, 'heading', false, { diamondLine: true })}
+          <span style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(212,175,55,0.25), transparent)', display: 'inline-block' }} />
         </p>
       );
     }
 
     if (trimmed.startsWith('·')) {
+      // Auto-bold the frequency / remedy name (text before em-dash or hyphen-dash)
+      // so transmission list names are easier to read. Skip if already contains **.
       let lineForRender = trimmed;
       if (!lineForRender.includes('**')) {
         const dashMatch = lineForRender.match(/^(·\s*)(.+?)(\s+[—–-]\s+)(.+)$/);
@@ -466,6 +483,7 @@ function languageToBcp47(languageCode: string): string {
   return 'en-GB';
 }
 
+/** Morning / midday / evening / night from local clock — for SQI tone (matches Nexus-style live time). */
 function getLocalDayPhaseLabel(d: Date): 'morning' | 'midday' | 'evening' | 'night' {
   const h = d.getHours();
   if (h >= 22 || h < 5) return 'night';
@@ -474,6 +492,7 @@ function getLocalDayPhaseLabel(d: Date): 'morning' | 'midday' | 'evening' | 'nig
   return 'evening';
 }
 
+/** When a live scan block is present, omit the duplicate [BIOMETRIC NADI FIELD] from compiled DB snapshot. */
 function stripDuplicateBiometricBlock(compiled: string | undefined, hasLiveScan: boolean): string {
   if (!compiled?.trim()) return '';
   if (!hasLiveScan) return compiled;
@@ -569,12 +588,36 @@ function extractVoiceScoringHints(result: VoiceBiofieldResult) {
   const haystack = `${emotionalTone} ${organBlob} ${priorityNames.join(' ')}`;
 
   const chakraLexicon = [
-    'muladhara', 'svadhisthana', 'manipura', 'anahata', 'vishuddha', 'ajna', 'sahasrara',
-    'root', 'sacral', 'solar plexus', 'heart', 'throat', 'third eye', 'crown',
+    'muladhara',
+    'svadhisthana',
+    'manipura',
+    'anahata',
+    'vishuddha',
+    'ajna',
+    'sahasrara',
+    'root',
+    'sacral',
+    'solar plexus',
+    'heart',
+    'throat',
+    'third eye',
+    'crown',
   ];
   const chakraHits = chakraLexicon.filter((c) => haystack.includes(c));
 
-  const organSeeds = ['liver', 'colon', 'lung', 'lymph', 'nerve', 'blood', 'kidney', 'heart', 'stomach', 'thyroid', 'brain'];
+  const organSeeds = [
+    'liver',
+    'colon',
+    'lung',
+    'lymph',
+    'nerve',
+    'blood',
+    'kidney',
+    'heart',
+    'stomach',
+    'thyroid',
+    'brain',
+  ];
   const organHits = organSeeds.filter((o) => organBlob.includes(o));
 
   const emotionWords = emotionalTone
@@ -589,12 +632,20 @@ function extractVoiceScoringHints(result: VoiceBiofieldResult) {
   if (nr.includes('sushumna')) nadiHints.push('sushumna');
   if (nr.includes('blocked')) nadiHints.push('blocked');
 
-  return { emotionalTone, emotionWords, priorityNames, chakraHits, organHits, nadiHints };
+  return {
+    emotionalTone,
+    emotionWords,
+    priorityNames,
+    chakraHits,
+    organHits,
+    nadiHints,
+  };
 }
 
 function pickTenActivationsForVoiceResult(result: VoiceBiofieldResult): Activation[] {
   const doshaKey = String(result.dominantDosha || 'Vata').split(/[\s(/]/)[0] || 'Vata';
   const dk = doshaKey.toLowerCase();
+
   const hints = extractVoiceScoringHints(result);
 
   const scored = ALL_ACTIVATIONS.map((activation) => {
@@ -602,32 +653,56 @@ function pickTenActivationsForVoiceResult(result: VoiceBiofieldResult): Activati
     const catLower = (activation.category || '').toLowerCase();
     const sigLower = `${activation.benefit || ''} ${activation.vibrationalSignature || ''}`.toLowerCase();
     const blobLower = `${nameLower} ${catLower} ${sigLower}`;
+
     let score = 0;
 
     if (blobLower.includes(dk)) score += 40;
+
     for (const chakra of hints.chakraHits) {
-      if (nameLower.includes(chakra) || sigLower.includes(chakra)) { score += 25; break; }
+      if (nameLower.includes(chakra) || sigLower.includes(chakra)) {
+        score += 25;
+        break;
+      }
     }
+
     for (const organ of hints.organHits) {
-      if (nameLower.includes(organ) || sigLower.includes(organ)) { score += 20; break; }
+      if (nameLower.includes(organ) || sigLower.includes(organ)) {
+        score += 20;
+        break;
+      }
     }
+
     if (hints.emotionalTone.length > 5) {
-      if (nameLower.includes(hints.emotionalTone) || sigLower.includes(hints.emotionalTone)) score += 15;
+      if (nameLower.includes(hints.emotionalTone) || sigLower.includes(hints.emotionalTone)) {
+        score += 15;
+      }
     }
     for (const ew of hints.emotionWords) {
-      if (ew.length > 5 && (nameLower.includes(ew) || sigLower.includes(ew))) { score += 15; break; }
+      if (ew.length > 5 && (nameLower.includes(ew) || sigLower.includes(ew))) {
+        score += 15;
+        break;
+      }
     }
+
     for (const pName of hints.priorityNames) {
-      if (pName.length > 3 && (nameLower.includes(pName) || pName.includes(nameLower))) { score += 30; break; }
+      if (pName.length > 3 && (nameLower.includes(pName) || pName.includes(nameLower))) {
+        score += 30;
+        break;
+      }
     }
+
     for (const n of hints.nadiHints) {
-      if (nameLower.includes(n) || sigLower.includes(n)) { score += 15; break; }
+      if (nameLower.includes(n) || sigLower.includes(n)) {
+        score += 15;
+        break;
+      }
     }
 
     return { activation, score };
   });
 
   const ranked = scored.filter((s) => s.score > 0).sort((a, b) => b.score - a.score);
+
   const out: Activation[] = [];
   const seen = new Set<string>();
   for (const row of ranked) {
@@ -641,12 +716,21 @@ function pickTenActivationsForVoiceResult(result: VoiceBiofieldResult): Activati
   const nadiKey: 'Ida' | 'Pingala' | 'Sushumna' | 'Blocked' = coerceVoiceNadiToEnum(result.nadiReading);
   const chakraKey = result.priorityAreas[0]?.name || 'Anahata';
   const fallback = matchActivationsToScan(
-    { dominantDosha: doshaKey, activatedNadi: nadiKey, priorityChakra: chakraKey, emotionalField: result.emotionalField, organField: result.organField },
+    {
+      dominantDosha: doshaKey,
+      activatedNadi: nadiKey,
+      priorityChakra: chakraKey,
+      emotionalField: result.emotionalField,
+      organField: result.organField,
+    },
     12,
   ).map(mapBioLibraryToActivation);
 
   for (const a of fallback) {
-    if (!seen.has(a.id)) { seen.add(a.id); out.push(a); }
+    if (!seen.has(a.id)) {
+      seen.add(a.id);
+      out.push(a);
+    }
     if (out.length >= 10) break;
   }
 
@@ -669,8 +753,11 @@ function mapUserChatArchiveToSqiMessages(raw: unknown): Message[] {
     const r = entry?.role;
     const role = r === 'assistant' || r === 'model' ? ('model' as const) : ('user' as const);
     const text =
-      typeof entry?.content === 'string' ? entry.content
-      : typeof entry?.text === 'string' ? entry.text : '';
+      typeof entry?.content === 'string'
+        ? entry.content
+        : typeof entry?.text === 'string'
+          ? entry.text
+          : '';
     const ts = entry?.timestamp ? new Date(String(entry.timestamp)).getTime() : Date.now() + i;
     return { role, text, timestamp: ts };
   });
@@ -702,10 +789,10 @@ async function syncApothecaryUserChatArchive(
   }
 }
 
-/* ────────────────────────────────────────────────────────────────────
+/* ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
    ALL LOGIC BELOW IS 100% IDENTICAL TO ORIGINAL — ZERO CHANGES
    Only className values have been updated for SQI-2050 aesthetic
-   ──────────────────────────────────────────────────────────────────── */
+   ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ */
 
 function QuantumApothecaryInner() {
   const navigate = useNavigate();
@@ -721,13 +808,18 @@ function QuantumApothecaryInner() {
     clearMessages: clearSyncChatMessages,
   } = useChatMessages('apothecary');
 
+  // On mount, sweep any SQI replies that were never accepted by the curator
+  // (tab closed mid-stream, network blip, etc.) and replay them silently.
   useEffect(() => {
     if (user?.id) void syncPendingTransmissionsOnce(user.id);
   }, [user?.id]);
 
   const [seekerName, setSeekerName] = useState('');
   useEffect(() => {
-    if (!user?.id) { setSeekerName(''); return; }
+    if (!user?.id) {
+      setSeekerName('');
+      return;
+    }
     supabase
       .from('profiles')
       .select('full_name')
@@ -744,12 +836,14 @@ function QuantumApothecaryInner() {
   const sqiField = useSQIFieldContext();
 
   const appLocale = useMemo(() => languageToBcp47(language), [language]);
+
   const { browserSupportsSpeechRecognition } = useSpeechRecognition();
 
   const [isMicListening, setIsMicListening] = useState(false);
   const micListeningRef = useRef(false);
   const nativeSpeechRef = useRef<{ stop: () => void; start: () => void; onend: (() => void) | null } | null>(null);
 
+  // Compact natal + assessed prakriti — one pass each; avoids triple-repeating the same Moon line in the model.
   const jyotishContext = jyotish.isLoading
     ? ''
     : (() => {
@@ -764,15 +858,20 @@ function QuantumApothecaryInner() {
         if (doshaProfile) {
           lines.push(
             `Ayurveda Prakriti (assessed): ${doshaProfile.primary}${doshaProfile.secondary ? ` / ${doshaProfile.secondary}` : ''}` +
-              (doshaProfile.characteristics?.length ? ` · Traits: ${doshaProfile.characteristics.slice(0, 5).join(', ')}` : ''),
+              (doshaProfile.characteristics?.length
+                ? ` · Traits: ${doshaProfile.characteristics.slice(0, 5).join(', ')}`
+                : ''),
           );
         }
         return lines.join('\n');
       })();
 
+  /** Stable Jyotish context — always include natal chart, then append live field data. */
   const stableJyotishContext = useMemo(
     () => {
       const raw = [jyotishContext, sqiField?.compiledContext].filter((s) => s && s.trim()).join('\n\n');
+      // Strip any [PHOTONIC SESSION ACTIVE] or [TEMPLE FIELD ACTIVE] block whose body
+      // references the removed Biophotonic Nadi Entanglement / Vishwananda Miracle Room transmissions.
       return raw
         .split(/\n(?=\[)/)
         .filter((block) => {
@@ -783,13 +882,16 @@ function QuantumApothecaryInner() {
         })
         .join('\n');
     },
-    [sqiField?.compiledContext, jyotishContext],
+    [
+      sqiField?.compiledContext,
+      jyotishContext,
+    ],
   );
 
   const sqiSourceDirective = useMemo(
     () =>
-      "[SQI SOURCES] Use the seeker's saved chart (below), live biometric block when present, compiled field (Ayurveda / photonic / temple), and this chat. Do not invent palm-camera analysis.\n" +
-      "[FREQUENCY LIBRARY] The canonical Frequency Library names are provided separately (canonicalActivationNames). For every substantive answer, map the seeker's topic to concrete entries from that list — use exact names. When suggesting remedies, protocols, or \"what to run,\" include 3–10 relevant library names per topic when appropriate.",
+      '[SQI SOURCES] Use the seeker’s saved chart (below), live biometric block when present, compiled field (Ayurveda / photonic / temple), and this chat. Do not invent palm-camera analysis.\n' +
+      '[FREQUENCY LIBRARY] The canonical Frequency Library names are provided separately (canonicalActivationNames). For every substantive answer, map the seeker’s topic to concrete entries from that list — use exact names. When suggesting remedies, protocols, or “what to run,” include 3–10 relevant library names per topic when appropriate.',
     [],
   );
 
@@ -799,24 +901,40 @@ function QuantumApothecaryInner() {
     [],
   );
 
+  // Live biometric scan context — prepended to jyotishContext before next SQI message
   const [liveScanContext, setLiveScanContext] = useState<string | null>(null);
 
+  /** Debounce: only recompute when underlying field data changes, not on every parent render. */
   const stableCompiledContext = useMemo(
     () => stripDuplicateBiometricBlock(sqiField.compiledContext, !!liveScanContext?.trim()),
     [
       liveScanContext,
-      sqiField.nadi?.activatedNadi, sqiField.nadi?.heartRate, sqiField.nadi?.hrvRmssd,
-      sqiField.nadi?.respiratoryRate, sqiField.nadi?.pranaCoherence, sqiField.nadi?.vagalTone,
-      sqiField.nadi?.autonomicBalance, sqiField.nadi?.scannedAt, sqiField.ayurveda?.prakriti,
-      sqiField.photonic?.activeProtocol, sqiField.photonic?.frequency, sqiField.photonic?.lightCodeActive,
-      sqiField.temple?.activeSite, sqiField.temple?.intensity,
+      sqiField.nadi?.activatedNadi,
+      sqiField.nadi?.heartRate,
+      sqiField.nadi?.hrvRmssd,
+      sqiField.nadi?.respiratoryRate,
+      sqiField.nadi?.pranaCoherence,
+      sqiField.nadi?.vagalTone,
+      sqiField.nadi?.autonomicBalance,
+      sqiField.nadi?.scannedAt,
+      sqiField.ayurveda?.prakriti,
+      sqiField.photonic?.activeProtocol,
+      sqiField.photonic?.frequency,
+      sqiField.photonic?.lightCodeActive,
+      sqiField.temple?.activeSite,
+      sqiField.temple?.intensity,
     ],
   );
 
   const TRANSMISSIONS_KEY = `sqi-transmissions-${user?.id || 'guest'}`;
 
+  /** Legacy baseline card removed — drop stale local nadi snapshot so Dashboard does not resurrect fake counts. */
   useEffect(() => {
-    try { localStorage.removeItem('sqi_scan_result'); } catch { /* ignore */ }
+    try {
+      localStorage.removeItem('sqi_scan_result');
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   const [selectedActivations, setSelectedActivations] = useState<Activation[]>([]);
@@ -828,18 +946,25 @@ function QuantumApothecaryInner() {
       let saved = localStorage.getItem(key);
       if (!saved) saved = localStorage.getItem('active_resonators');
       return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
+    } catch {
+      return [];
+    }
   });
 
   const skipNextTxHydrate = useRef(true);
   useLayoutEffect(() => {
-    if (skipNextTxHydrate.current) { skipNextTxHydrate.current = false; return; }
+    if (skipNextTxHydrate.current) {
+      skipNextTxHydrate.current = false;
+      return;
+    }
     const key = `sqi-transmissions-${user?.id || 'guest'}`;
     try {
       let raw = localStorage.getItem(key);
       if (!raw) raw = localStorage.getItem('active_resonators');
       setActiveTransmissions(raw ? JSON.parse(raw) : []);
-    } catch { setActiveTransmissions([]); }
+    } catch {
+      setActiveTransmissions([]);
+    }
   }, [user?.id]);
 
   useEffect(() => {
@@ -847,39 +972,56 @@ function QuantumApothecaryInner() {
     const load = async () => {
       try {
         const { data } = await supabase
-          .from('user_active_transmissions').select('activations').eq('user_id', user.id).maybeSingle();
+          .from('user_active_transmissions')
+          .select('activations')
+          .eq('user_id', user.id)
+          .maybeSingle();
         if (data?.activations && Array.isArray(data.activations) && data.activations.length > 0) {
           skipNextTxHydrate.current = true;
           setActiveTransmissions(data.activations as Activation[]);
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     };
     void load();
   }, [user?.id]);
 
   useEffect(() => {
-    try { localStorage.setItem(TRANSMISSIONS_KEY, JSON.stringify(activeTransmissions)); } catch { /* ignore */ }
+    try {
+      localStorage.setItem(TRANSMISSIONS_KEY, JSON.stringify(activeTransmissions));
+    } catch {
+      /* ignore */
+    }
   }, [activeTransmissions, TRANSMISSIONS_KEY]);
 
   useEffect(() => {
     if (!user?.id || activeTransmissions.length === 0) return;
     void supabase.from('user_active_transmissions').upsert(
-      { user_id: user.id, activations: activeTransmissions as unknown as Record<string, unknown>[], updated_at: new Date().toISOString() },
+      {
+        user_id: user.id,
+        activations: activeTransmissions as unknown as Record<string, unknown>[],
+        updated_at: new Date().toISOString(),
+      },
       { onConflict: 'user_id' },
     );
   }, [activeTransmissions, user?.id]);
 
   useEffect(() => {
     if (!user?.id || activeTransmissions.length === 0) return;
-    supabase.from('user_activity_log').insert({
-      user_id: user.id,
-      activity_type: 'active_transmissions',
-      activity_data: {
-        transmissions: activeTransmissions.map((t) => t.name || t.sacredName),
-        count: activeTransmissions.length,
-        timestamp: new Date().toISOString(),
-      },
-    }).then(() => {}).catch(() => {});
+    supabase
+      .from('user_activity_log')
+      .insert({
+        user_id: user.id,
+        activity_type: 'active_transmissions',
+        activity_data: {
+          transmissions: activeTransmissions.map((t) => t.name || t.sacredName),
+          count: activeTransmissions.length,
+          timestamp: new Date().toISOString(),
+        },
+      })
+      .then(() => {})
+      .catch(() => {});
   }, [activeTransmissions, user?.id]);
 
   const activeTransmissionContext = useMemo(
@@ -887,7 +1029,8 @@ function QuantumApothecaryInner() {
       activeTransmissions.length > 0
         ? `\nACTIVE SCALAR TRANSMISSIONS (running 24/7 in biofield):\n` +
           activeTransmissions.map((t) => `· ${t.sacredName || t.name}`).join('\n') +
-          `\n→ These ${activeTransmissions.length} frequencies are permanently entangled. Reference them when reading the Seeker's field.\n`
+          `\n→ These ${activeTransmissions.length} frequencies are permanently` +
+          ` entangled. Reference them when reading the Seeker's field.\n`
         : '',
     [activeTransmissions],
   );
@@ -915,11 +1058,15 @@ function QuantumApothecaryInner() {
     setTimeout(() => setCopiedMsgKey((c) => (c === key ? null : c)), 2000);
   };
 
-  const [portraitLinkStudentId, setPortraitLinkStudentId] = useState<string | null>(() => getActiveStudentId());
+  const [portraitLinkStudentId, setPortraitLinkStudentId] = useState<string | null>(() =>
+    getActiveStudentId(),
+  );
   useEffect(() => {
     const sync = () => setPortraitLinkStudentId(getActiveStudentId());
     window.addEventListener('sqi:active-student-changed', sync);
-    const onStorage = (e: StorageEvent) => { if (e.key === 'sqi_active_student_id') sync(); };
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'sqi_active_student_id') sync();
+    };
     window.addEventListener('storage', onStorage);
     return () => {
       window.removeEventListener('sqi:active-student-changed', sync);
@@ -927,45 +1074,72 @@ function QuantumApothecaryInner() {
     };
   }, []);
 
+  // ─── ACTIVE STUDENT SOUL RECORD ─────────────────────────────────────────────
+  // When a student is selected, fetch their birth data + transmission count
+  // and inject as context so SQI reads every question as being about THIS student.
   const [activeStudent, setActiveStudent] = useState<Student | null>(null);
   const [activeStudentTxCount, setActiveStudentTxCount] = useState<number>(0);
   const [activeCategory, setActiveCategory] = useState<string>('Wellness');
   useEffect(() => {
     let cancelled = false;
     const sid = portraitLinkStudentId;
-    if (!sid) { setActiveStudent(null); setActiveStudentTxCount(0); return; }
+    if (!sid) {
+      setActiveStudent(null);
+      setActiveStudentTxCount(0);
+      return;
+    }
     (async () => {
       try {
         const [s, txRes] = await Promise.all([
           getStudent(sid),
-          supabase.from('transmission_blocks').select('id', { count: 'exact', head: true }).eq('student_id', sid),
+          supabase
+            .from('transmission_blocks')
+            .select('id', { count: 'exact', head: true })
+            .eq('student_id', sid),
         ]);
         if (cancelled) return;
         setActiveStudent(s);
         setActiveStudentTxCount(txRes.count ?? 0);
       } catch (e) {
-        if (!cancelled) { console.warn('[apothecary] failed to load active student record', e); setActiveStudent(null); setActiveStudentTxCount(0); }
+        if (!cancelled) {
+          console.warn('[apothecary] failed to load active student record', e);
+          setActiveStudent(null);
+          setActiveStudentTxCount(0);
+        }
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [portraitLinkStudentId]);
 
   const studentContext = useMemo(() => {
     if (!activeStudent) return '';
     return [
       '[ACTIVE STUDENT SOUL RECORD]',
-      `ACTIVE STUDENT — READING FOR THIS SOUL:\nName: ${activeStudent.name}\nBirth Date: ${activeStudent.birth_date ?? 'not provided'}\nBirth Time: ${activeStudent.birth_time ?? 'not provided'}\nBirth Place: ${activeStudent.birth_place ?? 'not provided'}\nNotes: ${activeStudent.notes ?? ''}\nJYOTISH DIRECTIVE: Compute this soul's Vedic chart from the above birth data. Derive Lagna, Moon Nakshatra, current Mahadasha/Antardasha, and dominant planetary influences. Apply this chart to ALL readings in this session. This is the student's chart — NOT the admin's.`,
+      `ACTIVE STUDENT — READING FOR THIS SOUL:
+Name: ${activeStudent.name}
+Birth Date: ${activeStudent.birth_date ?? 'not provided'}
+Birth Time: ${activeStudent.birth_time ?? 'not provided'}
+Birth Place: ${activeStudent.birth_place ?? 'not provided'}
+Notes: ${activeStudent.notes ?? ''}
+JYOTISH DIRECTIVE: Compute this soul's Vedic chart from the above birth data. Derive Lagna, Moon Nakshatra, current Mahadasha/Antardasha, and dominant planetary influences. Apply this chart to ALL readings in this session. This is the student's chart — NOT the admin's.`,
       `Date of Birth: ${activeStudent.birth_date ?? 'unknown'}`,
       `Birth Place: ${activeStudent.birth_place ?? 'unknown'}`,
       `Birth Time: ${activeStudent.birth_time ?? 'unknown'}`,
       activeStudent.notes ? `Notes: ${activeStudent.notes}` : null,
       `Active Transmissions: ${activeStudentTxCount}`,
       'Read ALL questions in this session as being about this student — not about the practitioner/admin.',
-    ].filter(Boolean).join('\n');
+    ]
+      .filter(Boolean)
+      .join('\n');
   }, [activeStudent, activeStudentTxCount]);
-
   const [libraryUnlocked, setLibraryUnlocked] = useState(() => {
-    try { return localStorage.getItem(LS_LIBRARY_UNLOCKED) === '1'; } catch { return false; }
+    try {
+      return localStorage.getItem(LS_LIBRARY_UNLOCKED) === '1';
+    } catch {
+      return false;
+    }
   });
   const [scanCooldownUntilMs, setScanCooldownUntilMs] = useState<number | null>(() => {
     try {
@@ -973,24 +1147,43 @@ function QuantumApothecaryInner() {
       if (!last) return null;
       const t = parseInt(last, 10);
       return Number.isNaN(t) ? null : t + 24 * 60 * 60 * 1000;
-    } catch { return null; }
+    } catch {
+      return null;
+    }
   });
   const [apothecaryMainTab, setApothecaryMainTab] = useState<'library' | 'archive'>('library');
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [resonanceMatches, setResonanceMatches] = useState<Array<Activation & { pct: number; rowCategory?: string }>>([]);
+  const [resonanceMatches, setResonanceMatches] = useState<
+    Array<Activation & { pct: number; rowCategory?: string }>
+  >([]);
 
+  // ⟁ RESTORE Top 33 from last voice scan on mount
   useEffect(() => {
     try {
       const saved = localStorage.getItem('sqi_top33_matches');
       const ts = parseInt(localStorage.getItem('sqi_top33_ts') || '0', 10);
-      if (saved && Date.now() - ts < 24 * 60 * 60 * 1000) setResonanceMatches(JSON.parse(saved));
-    } catch { /* ignore */ }
+      // Only restore if scan was within last 24 hours
+      if (saved && Date.now() - ts < 24 * 60 * 60 * 1000) {
+        setResonanceMatches(JSON.parse(saved));
+      }
+    } catch {
+      /* ignore */
+    }
   }, []);
+
+  // ⟁ Top 33 is owned exclusively by the LAST voice scan (restored above from sqi_top33_matches).
+  // The previous effect that rebuilt the Top 33 from LS_SCAN_SNAPSHOT on mount was REMOVED —
+  // it caused 3-5 new entries to appear each page open because matchActivationsToScan re-ranked.
+
 
   const [showKnowledge, setShowKnowledge] = useState(false);
   const [isChatFullscreen, setIsChatFullscreen] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(() => {
-    try { return localStorage.getItem('sqi_current_session_id'); } catch { return null; }
+    try {
+      return localStorage.getItem('sqi_current_session_id');
+    } catch {
+      return null;
+    }
   });
 
   const handleSaveAIMessageToCodex = useCallback(
@@ -998,11 +1191,16 @@ function QuantumApothecaryInner() {
       if (!user?.id || !(assistantMsg.text || '').trim()) return;
       let userPrompt: string | undefined;
       for (let j = globalIndex - 1; j >= 0; j--) {
-        if (messages[j]?.role === 'user') { userPrompt = messages[j].text; break; }
+        if (messages[j]?.role === 'user') {
+          userPrompt = messages[j].text;
+          break;
+        }
       }
       const activeStudentId = getActiveStudentId();
       void curateTransmission({
-        source_type: 'apothecary', raw_content: assistantMsg.text, user_prompt: userPrompt,
+        source_type: 'apothecary',
+        raw_content: assistantMsg.text,
+        user_prompt: userPrompt,
         source_chat_id: currentSessionId ?? null,
         ...(activeStudentId ? { student_id: activeStudentId } : {}),
       });
@@ -1029,9 +1227,14 @@ function QuantumApothecaryInner() {
   const [showAllTop33, setShowAllTop33] = useState(false);
 
   useEffect(() => {
-    try { sessionStorage.setItem(QA_VOICE_TAB_KEY, showVoiceScan ? '1' : '0'); } catch { /* ignore */ }
+    try {
+      sessionStorage.setItem(QA_VOICE_TAB_KEY, showVoiceScan ? '1' : '0');
+    } catch {
+      /* ignore */
+    }
   }, [showVoiceScan]);
 
+  /** Live HH:MM in chat header — same pattern as Home Nexus dashboard (ticks every 30s). */
   const [liveChatClock, setLiveChatClock] = useState(() => {
     const n = new Date();
     return `${String(n.getHours()).padStart(2, '0')}:${String(n.getMinutes()).padStart(2, '0')}`;
@@ -1046,15 +1249,27 @@ function QuantumApothecaryInner() {
     return () => window.clearInterval(id);
   }, []);
 
-  const voiceContextBlock = useMemo(() => (voiceResult ? buildVoiceFieldContext(voiceResult) : ''), [voiceResult]);
+  const voiceContextBlock = useMemo(
+    () => (voiceResult ? buildVoiceFieldContext(voiceResult) : ''),
+    [voiceResult],
+  );
 
-  const canonicalActivationNameLines = useMemo(() => ALL_ACTIVATIONS.map((a) => a.name).join('\n'), []);
+  /** One string for scan prompt + chat edge: exact Frequency Library names (incl. full LimbicArc bioenergetic list). */
+  const canonicalActivationNameLines = useMemo(
+    () => ALL_ACTIVATIONS.map((a) => a.name).join('\n'),
+    [],
+  );
 
   const activeTransmissionNamesCsv = useMemo(
-    () => activeTransmissions.map((t) => t.name).filter(Boolean).join(', '),
+    () =>
+      activeTransmissions
+        .map((t) => t.name)
+        .filter(Boolean)
+        .join(', '),
     [activeTransmissions],
   );
 
+  /** Prefix reminds model what's live in-field; body stays full canonical list for exact naming */
   const canonicalActivationPayload = useMemo(
     () =>
       [
@@ -1062,14 +1277,17 @@ function QuantumApothecaryInner() {
           ? `CURRENTLY_ACTIVE_TRANSMISSION_NAMES (prefer not to duplicate unless seeker asks): ${activeTransmissionNamesCsv}`
           : '',
         canonicalActivationNameLines,
-      ].filter(Boolean).join('\n'),
+      ]
+        .filter(Boolean)
+        .join('\n'),
     [activeTransmissionNamesCsv, canonicalActivationNameLines],
   );
 
   const sqiTop33ChatBlock = useMemo(() => {
     if (!resonanceMatches.length) return '';
     const lines = resonanceMatches.slice(0, 33).map(
-      (r, i) => `${i + 1}. ${r.name} — ${r.pct}% (${r.rowCategory || r.category || 'biofield match'})`,
+      (r, i) =>
+        `${i + 1}. ${r.name} — ${r.pct}% (${r.rowCategory || r.category || 'biofield match'})`,
     );
     return [
       `TOP ${Math.min(33, resonanceMatches.length)} BIOFIELD MATCHES (ranked — cite EXACT names):`,
@@ -1078,6 +1296,7 @@ function QuantumApothecaryInner() {
     ].join('\n');
   }, [resonanceMatches]);
 
+  /** Hydrate thread from Supabase sync table once (cross-device); skip when resuming a History session from URL. */
   const syncHydratedOnceRef = useRef(false);
   useEffect(() => {
     if (syncChatLoading) return;
@@ -1085,6 +1304,7 @@ function QuantumApothecaryInner() {
     if (syncHydratedOnceRef.current) return;
     syncHydratedOnceRef.current = true;
     if (!syncChatRows.length) return;
+    // ⟁ Only hydrate today's messages — yesterday's session must not reappear.
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
     const todayMs = startOfToday.getTime();
@@ -1104,23 +1324,35 @@ function QuantumApothecaryInner() {
     prevMsgCountRef.current = todaysRows.length;
   }, [syncChatLoading, resumeSessionParam, syncChatRows]);
 
+  // ââ Scroll: single effect, only when a new message is appended ââ
   const prevMsgCountRef = useRef(messages.length);
 
   const flushSqiLocalStorage = useCallback(() => {
-    try { if (currentSessionId) localStorage.setItem('sqi_current_session_id', currentSessionId); }
-    catch { /* ignore quota / private mode */ }
+    try {
+      if (currentSessionId) {
+        localStorage.setItem('sqi_current_session_id', currentSessionId);
+      }
+    } catch { /* ignore quota / private mode */ }
   }, [currentSessionId]);
 
-  useEffect(() => { flushSqiLocalStorage(); }, [flushSqiLocalStorage]);
+  useEffect(() => {
+    flushSqiLocalStorage();
+  }, [flushSqiLocalStorage]);
 
   useEffect(() => {
-    const onBeforeUnload = () => { flushSqiLocalStorage(); };
+    const onBeforeUnload = () => {
+      flushSqiLocalStorage();
+    };
     window.addEventListener('beforeunload', onBeforeUnload);
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [flushSqiLocalStorage]);
 
   useEffect(() => {
-    const onVisibilityChange = () => { if (document.visibilityState === 'hidden') flushSqiLocalStorage(); };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        flushSqiLocalStorage();
+      }
+    };
     document.addEventListener('visibilitychange', onVisibilityChange);
     return () => document.removeEventListener('visibilitychange', onVisibilityChange);
   }, [flushSqiLocalStorage]);
@@ -1130,6 +1362,10 @@ function QuantumApothecaryInner() {
     if (count <= prevMsgCountRef.current) return;
     prevMsgCountRef.current = count;
     const last = messages[count - 1];
+    // ⟁ When the seeker sends a new message, anchor THEIR question at the top
+    // of the chat viewport so they can read SQI's reply without manually scrolling.
+    // For streaming AI replies (which arrive token-by-token), do not auto-scroll —
+    // keep the seeker's question stable in view.
     if (last?.role !== 'user') return;
     const timer = setTimeout(() => {
       const userMsgId = last.id ?? `qa-msg-${count - 1}-${last.timestamp ?? 'na'}-user`;
@@ -1146,7 +1382,9 @@ function QuantumApothecaryInner() {
   }, [messages]);
 
   const scrollChatToBottom = useCallback(() => {
-    requestAnimationFrame(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); });
+    requestAnimationFrame(() => {
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
   }, []);
 
   const scrollChatToTop = useCallback(() => {
@@ -1155,32 +1393,57 @@ function QuantumApothecaryInner() {
 
   const normalizeActivationForMixer = useCallback((act: Activation): Activation => {
     const name = act.name?.trim() || '';
-    const id = act.id && String(act.id).trim() ? String(act.id).trim() : `bio_${name.replace(/\s+/g, '_').toLowerCase()}`;
+    const id =
+      act.id && String(act.id).trim()
+        ? String(act.id).trim()
+        : `bio_${name.replace(/\s+/g, '_').toLowerCase()}`;
     const sacredName = act.sacredName || (name ? `${name} Transmission` : 'Transmission');
     const chakra = (act as Activation & { chakra?: string }).chakra;
-    const benefit = act.benefit || [act.category, chakra].filter(Boolean).join(' · ');
+    const benefit =
+      act.benefit ||
+      [act.category, chakra].filter(Boolean).join(' · ');
     return {
-      ...act, id, name: name || id, sacredName,
+      ...act,
+      id,
+      name: name || id,
+      sacredName,
       benefit: benefit || act.vibrationalSignature || sacredName,
       vibrationalSignature: act.vibrationalSignature || sacredName,
-      type: act.type ?? 'Bioenergetic', color: act.color || '#60a5fa',
+      type: act.type ?? 'Bioenergetic',
+      color: act.color || '#60a5fa',
     };
   }, []);
 
   const autoActivateFromSQIResponse = useCallback(
     (responseText: string) => {
       if (!responseText || ALL_ACTIVATIONS.length === 0) return;
+
       const lowerText = responseText.toLowerCase();
-      const byNameLen = [...ALL_ACTIVATIONS].sort((a, b) => (b.name?.length || 0) - (a.name?.length || 0));
+      const byNameLen = [...ALL_ACTIVATIONS].sort(
+        (a, b) => (b.name?.length || 0) - (a.name?.length || 0),
+      );
       const matched: Array<Activation & { pct: number; rowCategory?: string }> = [];
+
       for (const activation of byNameLen) {
         const lowerName = (activation.name || '').toLowerCase();
         if (!lowerName.trim()) continue;
-        if (lowerText.includes(lowerName)) matched.push({ ...activation, pct: 100, rowCategory: activation.category ?? '' });
+        if (lowerText.includes(lowerName)) {
+          matched.push({
+            ...activation,
+            pct: 100,
+            rowCategory: activation.category ?? '',
+          });
+        }
       }
+
       if (matched.length === 0) return;
-      const enriched = matched.filter((m) => isVegetarianActivation(m)).map((m) => enrichTransmission(normalizeActivationForMixer(m), 'apothecary_chat'));
+
+      const enriched = matched
+        .filter((m) => isVegetarianActivation(m))
+        .map((m) => enrichTransmission(normalizeActivationForMixer(m), 'apothecary_chat'));
+
       if (enriched.length === 0) return;
+
       let addedForToast: typeof enriched = [];
       setActiveTransmissions((prev) => {
         const existingIds = new Set(prev.map((t) => t.id ?? t.name));
@@ -1189,6 +1452,7 @@ function QuantumApothecaryInner() {
         if (toAdd.length === 0) return prev;
         return [...prev, ...toAdd];
       });
+
       if (addedForToast.length > 0) {
         toast.success(
           `⟁ ${addedForToast.length} SQI transmission${addedForToast.length > 1 ? 's' : ''} activated to your field:\n` +
@@ -1196,6 +1460,10 @@ function QuantumApothecaryInner() {
           { duration: 5000 },
         );
       }
+
+      // ⟁ Top 33 panel is owned exclusively by the voice biofield scan.
+      // SQI text mentions activate transmissions silently (above) but must NOT
+      // append to the Top 33 list — that prevented "5 new entries appearing per reply".
     },
     [normalizeActivationForMixer],
   );
@@ -1207,7 +1475,6 @@ function QuantumApothecaryInner() {
     const t = setTimeout(() => setSessionsOpen(true), 400);
     return () => clearTimeout(t);
   }, [location.state, loadingSessions]);
-
   useEffect(() => {
     const fetchSessions = async () => {
       if (!user) { setSessions([]); return; }
@@ -1223,33 +1490,56 @@ function QuantumApothecaryInner() {
     if (!user?.id || !resumeSessionParam) return;
     let cancelled = false;
     void (async () => {
-      const { data: sqiRow } = await supabase.from('sqi_sessions').select('messages').eq('id', resumeSessionParam).eq('user_id', user.id).maybeSingle();
+      const { data: sqiRow } = await supabase
+        .from('sqi_sessions')
+        .select('messages')
+        .eq('id', resumeSessionParam)
+        .eq('user_id', user.id)
+        .maybeSingle();
       if (cancelled) return;
       if (sqiRow?.messages && Array.isArray(sqiRow.messages)) {
         const loaded = sqiRow.messages as Message[];
         setCurrentSessionId(resumeSessionParam);
         setMessages(loaded);
         prevMsgCountRef.current = loaded.length;
-        try { localStorage.setItem('sqi_current_session_id', resumeSessionParam); } catch { /* ignore */ }
+        try {
+          localStorage.setItem('sqi_current_session_id', resumeSessionParam);
+        } catch {
+          /* ignore */
+        }
         return;
       }
-      const { data: arch } = await supabase.from('user_chat_sessions').select('messages, chat_type').eq('id', resumeSessionParam).eq('user_id', user.id).maybeSingle();
+      const { data: arch } = await supabase
+        .from('user_chat_sessions')
+        .select('messages, chat_type')
+        .eq('id', resumeSessionParam)
+        .eq('user_id', user.id)
+        .maybeSingle();
       if (cancelled || !arch || arch.chat_type !== 'apothecary' || !Array.isArray(arch.messages)) return;
       const mapped = mapUserChatArchiveToSqiMessages(arch.messages);
       setCurrentSessionId(resumeSessionParam);
       setMessages(mapped);
       prevMsgCountRef.current = mapped.length;
-      try { localStorage.setItem('sqi_current_session_id', resumeSessionParam); } catch { /* ignore */ }
+      try {
+        localStorage.setItem('sqi_current_session_id', resumeSessionParam);
+      } catch {
+        /* ignore */
+      }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [user?.id, resumeSessionParam]);
 
+  // ââ ALL HANDLERS UNCHANGED ââ
   const openChatFullscreenIfMobile = () => { return; };
 
   const startFreshApothecaryChat = useCallback(() => {
     if (isTyping) return;
     if (!window.confirm('Start a new SQI chat? This clears the current thread on this device. Saved sessions remain under History.')) return;
-    try { localStorage.removeItem('sqi_current_session_id'); } catch { /* ignore */ }
+    try {
+      localStorage.removeItem('sqi_current_session_id');
+    } catch { /* ignore */ }
     void clearSyncChatMessages();
     syncHydratedOnceRef.current = false;
     setCurrentSessionId(null);
@@ -1275,7 +1565,10 @@ function QuantumApothecaryInner() {
     setMessages(allMsgs);
     void persistSyncChatTurn({ role: 'user', content: displayText });
     setInput('');
-    if (chatInputRef.current) chatInputRef.current.style.height = 'auto';
+    // Reset textarea height after clearing
+    if (chatInputRef.current) {
+      chatInputRef.current.style.height = 'auto';
+    }
     const imageToSend = pendingImage ?? undefined;
     setPendingImage(null);
     setIsTyping(true);
@@ -1287,7 +1580,9 @@ function QuantumApothecaryInner() {
       const acc = streamAccumRef.current;
       setMessages((prev) => {
         const idx = prev.findIndex((m) => m.id === streamMsgId);
-        if (idx >= 0) return prev.map((m, i) => (i === idx ? { ...m, text: acc } : m));
+        if (idx >= 0) {
+          return prev.map((m, i) => (i === idx ? { ...m, text: acc } : m));
+        }
         return [...prev, { role: 'model', text: acc, timestamp: Date.now(), id: streamMsgId }];
       });
     };
@@ -1299,28 +1594,59 @@ function QuantumApothecaryInner() {
           const { data, error } = await supabase.from('sqi_sessions').insert(payload).select('id, title, updated_at').single();
           if (!error && data) {
             setCurrentSessionId(data.id);
-            setSessions((prev) => { const without = prev.filter((s) => s.id !== data.id); return [data, ...without]; });
-            const archiveTitle = (typeof data.title === 'string' && data.title.trim() ? data.title : payload.title) || 'SQI Session';
+            setSessions((prev) => {
+              const without = prev.filter((s) => s.id !== data.id);
+              return [data, ...without];
+            });
+            const archiveTitle =
+              (typeof data.title === 'string' && data.title.trim() ? data.title : payload.title) || 'SQI Session';
             void syncApothecaryUserChatArchive(user.id, data.id, archiveTitle, finalMessages);
           }
         } else {
-          const { data, error } = await supabase.from('sqi_sessions').update({ title: payload.title ?? undefined, messages: finalMessages, updated_at: new Date().toISOString() }).eq('id', currentSessionId).select('id, title, updated_at').single();
+          const { data, error } = await supabase
+            .from('sqi_sessions')
+            .update({
+              title: payload.title ?? undefined,
+              messages: finalMessages,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', currentSessionId)
+            .select('id, title, updated_at')
+            .single();
           if (!error && data) {
-            setSessions((prev) => { const without = prev.filter((s) => s.id !== data.id); return [data, ...without]; });
-            const archiveTitle = (typeof data.title === 'string' && data.title.trim() ? data.title : payload.title) || 'SQI Session';
+            setSessions((prev) => {
+              const without = prev.filter((s) => s.id !== data.id);
+              return [data, ...without];
+            });
+            const archiveTitle =
+              (typeof data.title === 'string' && data.title.trim() ? data.title : payload.title) || 'SQI Session';
             void syncApothecaryUserChatArchive(user.id, currentSessionId, archiveTitle, finalMessages);
           }
         }
-      } catch (err) { console.error('Failed to persist SQI session', err); }
+      } catch (err) {
+        console.error('Failed to persist SQI session', err);
+      }
     };
     try {
+      // Build enriched context: live datetime + biometric scan + SQI field + birth chart
       const _now = new Date();
       const _tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const liveDateTime = _now.toLocaleString(appLocale, { timeZone: _tz, weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+      const liveDateTime = _now.toLocaleString(appLocale, {
+        timeZone: _tz,
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      });
       const dayPhase = getLocalDayPhaseLabel(_now);
-      const liveContext = `LIVE SYSTEM TIME: ${liveDateTime} (${_tz}). This is the confirmed device-local time. Use ONLY this for date/day/time — do not infer or recalculate.\nLOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday / evening / night (device-local clock).`;
+      const liveContext = `LIVE SYSTEM TIME: ${liveDateTime} (${_tz}). This is the confirmed device-local time. Use ONLY this for date/day/time — do not infer or recalculate.
+LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday / evening / night (device-local clock).`;
 
-      const voiceScanBlock = opts?.voiceSnapshot != null ? buildVoiceFieldContext(opts.voiceSnapshot) : voiceContextBlock;
+      const voiceScanBlock =
+        opts?.voiceSnapshot != null ? buildVoiceFieldContext(opts.voiceSnapshot) : voiceContextBlock;
       const fieldParts: string[] = [sqiSourceDirective, answerRulesDirective, liveContext];
       if (studentContext) fieldParts.unshift(studentContext);
       if (voiceScanBlock) fieldParts.push(voiceScanBlock);
@@ -1330,12 +1656,16 @@ function QuantumApothecaryInner() {
       if (activeTransmissionContext) fieldParts.push(activeTransmissionContext);
       const enrichedJyotishContext = fieldParts.join('\n\n');
 
+      // Shared completion handler — runs whether direct Gemini or edge-function streaming finishes.
       const onComplete = async () => {
         setIsTyping(false);
         const finalText = streamAccumRef.current;
         const activeStudentId = getActiveStudentId();
         const assistantMsg: Message = {
-          role: 'model', text: finalText, timestamp: Date.now(), id: streamMsgId,
+          role: 'model',
+          text: finalText,
+          timestamp: Date.now(),
+          id: streamMsgId,
           needs_codex_sync: !!(user?.id && finalText?.trim()),
           codex_student_id: activeStudentId ?? null,
         };
@@ -1346,7 +1676,9 @@ function QuantumApothecaryInner() {
         if (user?.id && finalText?.trim()) {
           const sessionIdAtSend = currentSessionId;
           void curateTransmission({
-            source_type: 'apothecary', raw_content: finalText, user_prompt: userMsg.text,
+            source_type: 'apothecary',
+            raw_content: finalText,
+            user_prompt: userMsg.text,
             source_chat_id: sessionIdAtSend ?? null,
             ...(activeStudentId ? { student_id: activeStudentId } : {}),
           }).then(async (results) => {
@@ -1355,24 +1687,47 @@ function QuantumApothecaryInner() {
             try {
               const sid = sessionIdAtSend ?? currentSessionId;
               if (!sid) return;
-              const { data: row } = await supabase.from('sqi_sessions').select('messages').eq('id', sid).maybeSingle();
+              const { data: row } = await supabase
+                .from('sqi_sessions')
+                .select('messages')
+                .eq('id', sid)
+                .maybeSingle();
               const msgs = (row?.messages as Message[] | undefined) ?? [];
               let mutated = false;
               const next = msgs.map((m) => {
-                if (m.id === streamMsgId && m.needs_codex_sync) { mutated = true; return { ...m, needs_codex_sync: false }; }
+                if (m.id === streamMsgId && m.needs_codex_sync) {
+                  mutated = true;
+                  return { ...m, needs_codex_sync: false };
+                }
                 return m;
               });
-              if (mutated) await supabase.from('sqi_sessions').update({ messages: next }).eq('id', sid);
-            } catch (e) { console.warn('[codex-sync] failed to clear flag after curator success', e); }
+              if (mutated) {
+                await supabase.from('sqi_sessions').update({ messages: next }).eq('id', sid);
+              }
+            } catch (e) {
+              console.warn('[codex-sync] failed to clear flag after curator success', e);
+            }
           });
         }
       };
 
       await streamChatWithSQI(
-        allMsgs, upsert, onComplete, imageToSend, user?.id ?? null, language,
-        seekerName || undefined, canonicalActivationPayload, enrichedJyotishContext, appLocale,
-        sqiTop33ChatBlock, activeTransmissionNamesCsv, studentContext, activeStudent?.id ?? null, activeStudent?.name ?? null,
-      );
+          allMsgs,
+          upsert,
+          onComplete,
+          imageToSend,
+          user?.id ?? null,
+          language,
+          seekerName || undefined,
+          canonicalActivationPayload,
+          enrichedJyotishContext,
+          appLocale,
+          sqiTop33ChatBlock,
+          activeTransmissionNamesCsv,
+          studentContext,
+          activeStudent?.id ?? null,
+          activeStudent?.name ?? null,
+        );
     } catch (e) {
       console.error(e);
       setMessages(prev => [...prev, { role: 'model', text: t('quantumApothecary.chat.transmissionError'), timestamp: Date.now() }]);
@@ -1385,7 +1740,10 @@ function QuantumApothecaryInner() {
       const normalized = normalizeActivationForMixer(act);
       const current = selectedActivationsRef.current;
       const isDuplicate = current.some(
-        (a) => a.id === normalized.id || (normalized.name && a.name?.toLowerCase() === normalized.name.toLowerCase()),
+        (a) =>
+          a.id === normalized.id ||
+          (normalized.name &&
+            a.name?.toLowerCase() === normalized.name.toLowerCase()),
       );
       if (isDuplicate || current.length >= AETHERIC_MIXER_MAX_SLOTS) return;
       const next = [...current, normalized];
@@ -1396,7 +1754,9 @@ function QuantumApothecaryInner() {
   );
 
   const removeActivation = useCallback((actId: string) => {
-    const next = selectedActivationsRef.current.filter((a) => a.id !== actId && a.name !== actId);
+    const next = selectedActivationsRef.current.filter(
+      (a) => a.id !== actId && a.name !== actId,
+    );
     selectedActivationsRef.current = next;
     setSelectedActivations(next);
   }, []);
@@ -1412,36 +1772,62 @@ function QuantumApothecaryInner() {
         setLibraryUnlocked(true);
         setScanCooldownUntilMs(Date.now() + 24 * 60 * 60 * 1000);
         const ownedIds = new Set(activeTransmissions.map((a) => a.id));
-        const top33 = buildTop33Rankings(payload, 600, ownedIds);
+const top33 = buildTop33Rankings(payload, 600, ownedIds);
         setResonanceMatches(top33);
         setShowAllTop33(false);
+        // BUG 3 FIX: Persist voice scan frequencies so SQI edge function can read them
         if (user?.id && top33?.length) {
           (async () => {
             try {
-              const { data: existing } = await supabase.from('user_active_transmissions').select('activations').eq('user_id', user.id).maybeSingle();
+              const { data: existing } = await supabase
+                .from('user_active_transmissions')
+                .select('activations')
+                .eq('user_id', user.id)
+                .maybeSingle();
               const current = (existing?.activations as any[]) || [];
               const nonScan = current.filter((a: any) => a.source !== 'voice_scan');
               const scanFreqs = top33.map((item: any) => ({
-                name: item.name, title: item.name, source: 'voice_scan',
-                score: item.score ?? 0, is_active: true, activated_at: new Date().toISOString(),
+                name: item.name,
+                title: item.name,
+                source: 'voice_scan',
+                score: item.score ?? 0,
+                is_active: true,
+                activated_at: new Date().toISOString(),
               }));
-              await supabase.from('user_active_transmissions').upsert({ user_id: user.id, activations: [...nonScan, ...scanFreqs] }, { onConflict: 'user_id' });
+              await supabase
+                .from('user_active_transmissions')
+                .upsert({ user_id: user.id, activations: [...nonScan, ...scanFreqs] }, { onConflict: 'user_id' });
             } catch (e) { console.warn('[SQI] Voice scan persist failed:', e); }
           })();
         }
+        // ⟁ PERSIST — so list survives login/reload
         try {
           localStorage.setItem('sqi_top33_matches', JSON.stringify(top33));
           localStorage.setItem('sqi_top33_ts', Date.now().toString());
-        } catch { /* ignore */ }
-      } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
+      } catch {
+        /* ignore */
+      }
 
       const queuedRaw = pickTenActivationsForVoiceResult(result);
       const queued = queuedRaw.filter(isVegetarianActivation);
       setActiveTransmissions((prev) => {
-        const next = prev.filter((t) => (t as any).source !== 'voice_scan');
+        // Clear old voice_scan entries — each new scan replaces the previous ones
+      const next = prev.filter((t) => (t as any).source !== 'voice_scan');
         for (const act of queued) {
           const enriched = enrichTransmission(act, 'voice_scan');
-          if (next.some((x) => x.id === enriched.id || (!!x.name && !!enriched.name && x.name.toLowerCase() === enriched.name.toLowerCase()))) continue;
+          if (
+            next.some(
+              (x) =>
+                x.id === enriched.id ||
+                (!!x.name &&
+                  !!enriched.name &&
+                  x.name.toLowerCase() === enriched.name.toLowerCase()),
+            )
+          )
+            continue;
           next.push(enriched);
         }
         return next;
@@ -1469,11 +1855,23 @@ function QuantumApothecaryInner() {
       setLiveScanContext(ctx);
       if (user?.id) {
         supabase.from('user_activity_log').insert({
-          user_id: user.id, activity_type: 'frequency_transmission',
-          activity_data: { activity: 'Voice biofield scan queued bioenergetic alignments', section: 'Quantum Apothecary', frequency: queued.map((a) => a.name).join(', '), details: { intention: 'Post-voice-scan Active Transmissions', nadi: result.nadiReading } },
+          user_id: user.id,
+          activity_type: 'frequency_transmission',
+          activity_data: {
+            activity: 'Voice biofield scan queued bioenergetic alignments',
+            section: 'Quantum Apothecary',
+            frequency: queued.map((a) => a.name).join(', '),
+            details: { intention: 'Post-voice-scan Active Transmissions', nadi: result.nadiReading },
+          },
         }).then(() => {});
       }
-      toast.success(`⟁ Voice biofield scan complete — ${queued.length} frequencies queued to your field`, { duration: 4000 });
+      // ⟁ Voice scan completes silently. Frequencies queue into Active Transmissions
+      // and the Top 33 panel — no chat message is injected. Seeker can ask SQI about
+      // the scan whenever they wish; liveScanContext above feeds it into the next reply.
+      toast.success(
+        `⟁ Voice biofield scan complete — ${queued.length} frequencies queued to your field`,
+        { duration: 4000 },
+      );
     },
     [user?.id, activeTransmissions],
   );
@@ -1493,10 +1891,14 @@ function QuantumApothecaryInner() {
     e.target.value = '';
   };
 
+  /** Fallback when react-speech-recognition is not supported (rare browsers). */
   const legacyWebkitVoice = () => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) return;
-    if (isRecording && legacyRecognitionRef.current) { legacyRecognitionRef.current.stop(); return; }
+    if (isRecording && legacyRecognitionRef.current) {
+      legacyRecognitionRef.current.stop();
+      return;
+    }
     voiceTranscriptRef.current = input;
     const recognition = new SR();
     recognition.continuous = true;
@@ -1506,13 +1908,23 @@ function QuantumApothecaryInner() {
       let interim = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const tr = event.results[i].transcript;
-        if (event.results[i].isFinal) { voiceTranscriptRef.current = (voiceTranscriptRef.current + tr).trim(); }
-        else { interim += tr; }
+        if (event.results[i].isFinal) {
+          voiceTranscriptRef.current = (voiceTranscriptRef.current + tr).trim();
+        } else {
+          interim += tr;
+        }
       }
       setInput(voiceTranscriptRef.current + interim);
     };
-    recognition.onend = () => { setInput(voiceTranscriptRef.current); setIsRecording(false); legacyRecognitionRef.current = null; };
-    recognition.onerror = () => { setIsRecording(false); legacyRecognitionRef.current = null; };
+    recognition.onend = () => {
+      setInput(voiceTranscriptRef.current);
+      setIsRecording(false);
+      legacyRecognitionRef.current = null;
+    };
+    recognition.onerror = () => {
+      setIsRecording(false);
+      legacyRecognitionRef.current = null;
+    };
     recognition.start();
     legacyRecognitionRef.current = recognition;
     setIsRecording(true);
@@ -1522,16 +1934,26 @@ function QuantumApothecaryInner() {
     (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
+
       if (isMicListening) {
         micListeningRef.current = false;
-        if (nativeSpeechRef.current) { try { nativeSpeechRef.current.stop(); } catch { /* ignore */ } nativeSpeechRef.current = null; }
+        if (nativeSpeechRef.current) {
+          try {
+            nativeSpeechRef.current.stop();
+          } catch {
+            /* ignore */
+          }
+          nativeSpeechRef.current = null;
+        }
         setIsMicListening(false);
         return;
       }
+
       const SpeechRecognitionCtor =
         (window as unknown as { SpeechRecognition?: new () => any }).SpeechRecognition ||
         (window as unknown as { webkitSpeechRecognition?: new () => any }).webkitSpeechRecognition;
       if (!SpeechRecognitionCtor) return;
+
       const recognition = new SpeechRecognitionCtor();
       recognition.lang = chatSpeechLocale(language) || 'en-US';
       recognition.continuous = false;
@@ -1539,22 +1961,50 @@ function QuantumApothecaryInner() {
       recognition.maxAlternatives = 1;
       nativeSpeechRef.current = recognition;
       micListeningRef.current = true;
+
       recognition.onresult = (event: any) => {
-        const transcript = Array.from(event.results as any[]).map((r: any) => r[0]?.transcript ?? '').join('');
+        const transcript = Array.from(event.results as any[])
+          .map((r: any) => r[0]?.transcript ?? '')
+          .join('');
         setInput(transcript);
       };
+
       recognition.onend = () => {
         if (micListeningRef.current && nativeSpeechRef.current) {
-          setTimeout(() => { try { nativeSpeechRef.current?.start(); } catch { /* ignore */ } }, 100);
-        } else { setIsMicListening(false); }
+          setTimeout(() => {
+            try {
+              nativeSpeechRef.current?.start();
+            } catch {
+              /* ignore */
+            }
+          }, 100);
+        } else {
+          setIsMicListening(false);
+        }
       };
+
       recognition.onerror = (ev: any) => {
         if (ev.error === 'no-speech') {
-          setTimeout(() => { try { nativeSpeechRef.current?.start(); } catch { /* ignore */ } }, 200);
-        } else { micListeningRef.current = false; setIsMicListening(false); }
+          setTimeout(() => {
+            try {
+              nativeSpeechRef.current?.start();
+            } catch {
+              /* ignore */
+            }
+          }, 200);
+        } else {
+          micListeningRef.current = false;
+          setIsMicListening(false);
+        }
       };
-      try { recognition.start(); setIsMicListening(true); }
-      catch { micListeningRef.current = false; setIsMicListening(false); }
+
+      try {
+        recognition.start();
+        setIsMicListening(true);
+      } catch {
+        micListeningRef.current = false;
+        setIsMicListening(false);
+      }
     },
     [isMicListening, language],
   );
@@ -1567,45 +2017,91 @@ function QuantumApothecaryInner() {
       const rawPrana = localStorage.getItem(`qa-last-nadi-prana-${txUid}`);
       const pranaVal = rawPrana ? parseInt(rawPrana, 10) : 0;
       if (pranaVal > 0) {
-        localStorage.setItem(`pre-activation-nadi-${txUid}`, JSON.stringify({ nadi: pranaVal, time: new Date().toISOString(), activations: mix.map((a) => a.name) }));
+        localStorage.setItem(
+          `pre-activation-nadi-${txUid}`,
+          JSON.stringify({
+            nadi: pranaVal,
+            time: new Date().toISOString(),
+            activations: mix.map((a) => a.name),
+          }),
+        );
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     const newT = [...activeTransmissions];
     mix.forEach((act) => {
       const normalized = normalizeActivationForMixer(act);
       const enriched = enrichTransmission(normalized, 'manual');
-      if (newT.some((t) => t.id === enriched.id || (!!t.name && !!enriched.name && t.name.toLowerCase() === enriched.name.toLowerCase()))) return;
+      if (
+        newT.some(
+          (t) =>
+            t.id === enriched.id ||
+            (!!t.name && !!enriched.name && t.name.toLowerCase() === enriched.name.toLowerCase()),
+        )
+      )
+        return;
       newT.push(enriched);
     });
     setActiveTransmissions(newT);
+    // Activation is silent — no chat message injected
     selectedActivationsRef.current = [];
     setSelectedActivations([]);
   };
 
   const activateAllTop33ToField = useCallback(() => {
     const rankings = resonanceMatches;
-    if (!rankings || rankings.length === 0) { toast('⟁ Run a Voice Biofield Scan first', { icon: '🎙' }); return; }
+    if (!rankings || rankings.length === 0) {
+      toast('⟁ Run a Voice Biofield Scan first', { icon: '🎙' });
+      return;
+    }
+
     const now = new Date().toISOString();
     const newTransmissions = rankings
       .filter((r) => !activeTransmissions.some((a) => fieldTransmissionMatchesRow(a, r)))
       .map((r) => enrichTransmission(normalizeActivationForMixer(r), 'nadi_scan'));
-    if (newTransmissions.length === 0) { toast.message('All scan matches are already in your field'); return; }
+
+    if (newTransmissions.length === 0) {
+      toast.message('All scan matches are already in your field');
+      return;
+    }
+
     const updated = [...activeTransmissions, ...newTransmissions];
     setActiveTransmissions(updated);
-    if (user?.id) {
-      void supabase.from('user_active_transmissions').upsert({ user_id: user.id, activations: updated as unknown as Record<string, unknown>[], updated_at: now }, { onConflict: 'user_id' });
-    }
-    try { localStorage.setItem(`sqi-transmissions-${user?.id || 'guest'}`, JSON.stringify(updated)); } catch { /* quota */ }
-    toast.success(`◈ ${newTransmissions.length} Transmissions activated to your field`);
-  }, [resonanceMatches, activeTransmissions, user?.id, enrichTransmission, normalizeActivationForMixer]);
 
-  // ─── CHANGE 1: StudentSelector removed from renderChatPanel — rendered above tab switcher instead ───
+    if (user?.id) {
+      void supabase.from('user_active_transmissions').upsert(
+        {
+          user_id: user.id,
+          activations: updated as unknown as Record<string, unknown>[],
+          updated_at: now,
+        },
+        { onConflict: 'user_id' },
+      );
+    }
+    try {
+      localStorage.setItem(`sqi-transmissions-${user?.id || 'guest'}`, JSON.stringify(updated));
+    } catch {
+      /* quota */
+    }
+
+    toast.success(`◈ ${newTransmissions.length} Transmissions activated to your field`);
+  }, [
+    resonanceMatches,
+    activeTransmissions,
+    user?.id,
+    enrichTransmission,
+    normalizeActivationForMixer,
+  ]);
   const renderChatPanel = () => (
     <div
       className="glass-card relative flex w-full flex-col overflow-visible"
-      style={{ minHeight: 'calc(100vh - 120px)', maxWidth: '100%' }}
+      style={{
+        minHeight: 'calc(100vh - 120px)',
+        maxWidth: '100%',
+      }}
     >
-      {/* Chat header */}
+      {/* Chat header — matches /admin-quantum-apothecary-2045 SQI strip */}
       <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] bg-white/[0.02] px-3 py-4 sm:px-6">
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           {isChatFullscreen && (
@@ -1650,47 +2146,85 @@ function QuantumApothecaryInner() {
           >
             {liveChatClock}
           </span>
-          <button type="button" onClick={scrollChatToTop}
+          <button
+            type="button"
+            onClick={() => {
+              scrollChatToTop();
+            }}
             className="rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 p-1.5 text-[#D4AF37] transition hover:border-[#D4AF37]/40 hover:bg-[#D4AF37]/20 sm:p-2"
-            title="Scroll to top of thread" aria-label="Scroll to top of thread">
+            title="Scroll to top of thread"
+            aria-label="Scroll to top of thread"
+          >
             <ChevronUp size={16} className="drop-shadow-[0_0_6px_rgba(212,175,55,0.45)]" aria-hidden />
           </button>
-          <button type="button" onClick={scrollChatToBottom}
+          <button
+            type="button"
+            onClick={() => {
+              scrollChatToBottom();
+            }}
             className="rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 p-1.5 text-[#D4AF37] transition hover:border-[#D4AF37]/40 hover:bg-[#D4AF37]/20 sm:p-2"
-            title={t('quantumApothecary.chat.scrollToBottom')} aria-label={t('quantumApothecary.chat.scrollToBottom')}>
+            title={t('quantumApothecary.chat.scrollToBottom')}
+            aria-label={t('quantumApothecary.chat.scrollToBottom')}
+          >
             <ChevronDown size={16} className="drop-shadow-[0_0_6px_rgba(212,175,55,0.45)]" aria-hidden />
           </button>
-          <button type="button" onClick={startFreshApothecaryChat} disabled={isTyping}
+          <button
+            type="button"
+            onClick={startFreshApothecaryChat}
+            disabled={isTyping}
             title={t('quantumApothecary.chat.newChatTitle')}
-            className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-1.5 text-white/50 transition hover:border-[#D4AF37]/25 hover:text-[#D4AF37] disabled:opacity-30 sm:p-2">
+            className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-1.5 text-white/50 transition hover:border-[#D4AF37]/25 hover:text-[#D4AF37] disabled:opacity-30 sm:p-2"
+          >
             <Plus size={14} />
           </button>
-          <button type="button" onClick={() => setSessionsOpen(true)}
-            className="whitespace-nowrap rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-2 py-1 text-[8px] font-bold uppercase tracking-[0.15em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20 sm:px-3 sm:py-1.5 sm:text-[9px] sm:tracking-[0.25em]">
+          <button
+            type="button"
+            onClick={() => setSessionsOpen(true)}
+            className="whitespace-nowrap rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-2 py-1 text-[8px] font-bold uppercase tracking-[0.15em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20 sm:px-3 sm:py-1.5 sm:text-[9px] sm:tracking-[0.25em]"
+          >
             {t('quantumApothecary.chat.history')}
           </button>
-          <button type="button" onClick={() => setShowKnowledge(true)}
+          <button
+            type="button"
+            onClick={() => setShowKnowledge(true)}
             className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-2 text-[#D4AF37]/70 transition hover:border-[#D4AF37]/25 hover:bg-[#D4AF37]/[0.06]"
-            title={t('quantumApothecary.chat.openKnowledge')} aria-label={t('quantumApothecary.chat.openKnowledge')}>
+            title={t('quantumApothecary.chat.openKnowledge')}
+            aria-label={t('quantumApothecary.chat.openKnowledge')}
+          >
             <Info size={14} />
           </button>
           <Cpu size={14} className="hidden text-[#D4AF37]/30 sm:block" aria-hidden />
         </div>
       </div>
 
-      {/* Messages */}
+      {/* Active student selector — routes SQI replies into chosen student's book */}
+      <div className="px-3 pt-3">
+        <StudentSelector />
+      </div>
+
+      {/* Messages — grow with thread; page/document scrolls (pre–Samsung inner-scroll behavior) */}
       <div
-        className="qa-sqi-chat relative flex flex-1 flex-col px-3 py-4 space-y-3"
-        style={{ overflowX: 'hidden', wordBreak: 'break-word', overflowWrap: 'anywhere' }}
+        className="qa-sqi-chat relative flex flex-1 flex-col px-1 py-4 space-y-3"
+        style={{
+          overflowX: 'hidden',
+          wordBreak: 'break-word',
+          overflowWrap: 'anywhere',
+        }}
       >
         <div ref={chatTopRef} className="h-px w-full shrink-0 scroll-mt-32" aria-hidden />
-        <div className={`flex min-h-full flex-col ${messages.length === 0 && !isTyping ? 'justify-center' : 'justify-end'}`}>
+        <div
+          className={`flex min-h-full flex-col ${
+            messages.length === 0 && !isTyping ? 'justify-center' : 'justify-end'
+          }`}
+        >
           {messages.length === 0 && !isTyping && (
             <div className="flex min-h-[300px] flex-1 flex-col items-center justify-center px-6 py-16 text-center">
               <p className="mb-3 text-[9px] font-black uppercase tracking-[0.4em] text-[#D4AF37]/40">
                 {t('quantumApothecary.chat.emptyState.kicker')}
               </p>
-              <div className="mb-4 text-3xl opacity-30" aria-hidden>◈</div>
+              <div className="mb-4 text-3xl opacity-30" aria-hidden>
+                ◈
+              </div>
               <h3 className="mb-2 text-base font-black tracking-[-0.03em] text-white/60">
                 {t('quantumApothecary.chat.emptyState.title')}
               </h3>
@@ -1703,42 +2237,50 @@ function QuantumApothecaryInner() {
                   'I feel things in my field — what is activating?',
                   'Activate Samadhi Bliss Transmission',
                 ].map((q) => (
-                  <button key={q} type="button"
-                    onClick={() => { setInput(q); setTimeout(() => handleSendMessage(q), 100); }}
-                    className="rounded-[14px] border border-white/[0.06] bg-white/[0.02] px-3 py-2 text-left text-[13px] text-white/55 transition-all hover:border-[#D4AF37]/30 hover:text-white/80">
+                  <button
+                    key={q}
+                    type="button"
+                    onClick={() => {
+                      setInput(q);
+                      setTimeout(() => handleSendMessage(q), 100);
+                    }}
+                    className="rounded-[14px] border border-white/[0.06] bg-white/[0.02] px-3 py-2 text-left text-[13px] text-white/55 transition-all hover:border-[#D4AF37]/30 hover:text-white/80"
+                  >
                     {q}
                   </button>
                 ))}
               </div>
             </div>
           )}
-          {/* CHANGE 2: slice(-20) → slice(-50) */}
-          {messages.slice(-50).map((msg, i) => {
-            const visStart = Math.max(0, messages.length - 50);
-            const globalIndex = visStart + i;
-            const msgKey = msg.id ?? `qa-msg-${globalIndex}-${msg.timestamp ?? 'na'}-${msg.role}`;
-            return (
+          {messages.slice(-20).map((msg, i) => {
+              const visStart = Math.max(0, messages.length - 20);
+              const globalIndex = visStart + i;
+              const msgKey = msg.id ?? `qa-msg-${globalIndex}-${msg.timestamp ?? 'na'}-${msg.role}`;
+              return (
               <motion.div key={msgKey} data-qa-msg-key={msgKey} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
                 className={`flex w-full min-w-0 flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                 {msg.role === 'user' ? (
                   <div
                     className="ml-auto max-w-[85%]"
-                    style={{ position: 'relative', padding: '14px 20px', background: 'rgba(212,175,55,0.03)', border: '1px solid rgba(212,175,55,0.1)' }}
+                    style={{
+                      position: 'relative',
+                      padding: '14px 20px',
+                      background: 'rgba(212,175,55,0.03)',
+                      border: '1px solid rgba(212,175,55,0.1)',
+                    }}
                   >
                     <div style={{ position: 'absolute', top: 5, right: 5, width: 10, height: 10, borderTop: '1px solid rgba(212,175,55,0.2)', borderRight: '1px solid rgba(212,175,55,0.2)', pointerEvents: 'none' }} />
                     <p style={{ fontFamily: "'Cinzel', serif", fontSize: '7px', letterSpacing: '0.4em', color: 'rgba(212,175,55,0.28)', textTransform: 'uppercase' as const, marginBottom: '8px' }}>
                       The Seeker inquires
                     </p>
-                    <div className="markdown-body whitespace-pre-wrap break-words w-full min-w-0 text-left"
-                      style={{ maxWidth: '100%', wordBreak: 'break-word', fontFamily: "'IM Fell English', serif", fontStyle: 'italic', fontSize: '15px', color: 'rgba(200,184,154,0.75)', lineHeight: '1.65' }}>
+                    <div className="markdown-body whitespace-pre-wrap break-words w-full min-w-0 text-left" style={{ maxWidth: '100%', wordBreak: 'break-word', fontFamily: "'IM Fell English', serif", fontStyle: 'italic', fontSize: '15px', color: 'rgba(200,184,154,0.75)', lineHeight: '1.65' }}>
                       {renderChatText(msg.text, 'user')}
                     </div>
                   </div>
                 ) : (
                   <>
-                    {/* CHANGE 4: removed max-w-[96%] — oracle bubble spans full width */}
                     <div
-                      className="chat-message w-full mx-auto sqi-manuscript-scroll"
+                      className="chat-message w-full sqi-manuscript-scroll"
                       style={{
                         position: 'relative',
                         padding: '26px 28px 22px',
@@ -1763,24 +2305,44 @@ function QuantumApothecaryInner() {
                       </div>
                     </div>
                     <div className="mx-auto mt-1 flex w-full max-w-[96%] flex-wrap items-center gap-x-3 gap-y-1">
-                      <button type="button" onClick={() => handleCopyMsg(msg.text, msgKey)}
-                        aria-label="Copy message" className="text-[10px] font-bold uppercase tracking-widest"
-                        style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: copiedMsgKey === msgKey ? '#22c55e' : '#D4AF37' }}>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyMsg(msg.text, msgKey)}
+                        aria-label="Copy message"
+                        className="text-[10px] font-bold uppercase tracking-widest"
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: copiedMsgKey === msgKey ? '#22c55e' : '#D4AF37',
+                        }}
+                      >
                         {copiedMsgKey === msgKey ? '✓ Copied' : 'Copy'}
                       </button>
                     </div>
                   </>
                 )}
               </motion.div>
-            );
-          })}
+              );
+            })}
           {isTyping && (
             <div className="flex justify-start px-1">
-              <div className="flex items-center gap-1.5 rounded-[28px] rounded-tl-none border border-white/[0.08] bg-white/[0.04] px-5 py-4"
-                role="status" aria-live="polite" aria-label="Akasha is composing">
+              <div
+                className="flex items-center gap-1.5 rounded-[28px] rounded-tl-none border border-white/[0.08] bg-white/[0.04] px-5 py-4"
+                role="status"
+                aria-live="polite"
+                aria-label="Akasha is composing"
+              >
                 {[0, 1, 2].map((i) => (
-                  <span key={i} className="h-2 w-2 animate-bounce rounded-full bg-[#D4AF37]/70"
-                    style={{ animationDelay: `${i * 0.18}s`, animationDuration: '0.65s', boxShadow: '0 0 8px rgba(212,175,55,0.55)' }} />
+                  <span
+                    key={i}
+                    className="h-2 w-2 animate-bounce rounded-full bg-[#D4AF37]/70"
+                    style={{
+                      animationDelay: `${i * 0.18}s`,
+                      animationDuration: '0.65s',
+                      boxShadow: '0 0 8px rgba(212,175,55,0.55)',
+                    }}
+                  />
                 ))}
               </div>
             </div>
@@ -1789,7 +2351,7 @@ function QuantumApothecaryInner() {
         </div>
       </div>
 
-      {/* Composer */}
+      {/* Composer — sticky at viewport bottom while the page scrolls the full thread */}
       <div
         className="sticky bottom-0 z-10 shrink-0 border-t border-white/[0.06] bg-[#050505]/80 p-4 backdrop-blur-xl sm:p-6"
         style={isChatFullscreen ? { paddingBottom: 'env(safe-area-inset-bottom, 16px)' } : undefined}
@@ -1799,22 +2361,36 @@ function QuantumApothecaryInner() {
           <div className="flex items-center gap-2 mb-3 p-2 rounded-xl bg-[#D4AF37]/5 border border-[#D4AF37]/15">
             <img src={`data:${pendingImage.mimeType};base64,${pendingImage.base64}`} alt="Attached" className="h-10 w-10 rounded-lg object-cover border border-[#D4AF37]/20" />
             <span className="text-[10px] text-[#D4AF37]/60 font-bold uppercase tracking-widest">Image attached</span>
-            <button type="button" onClick={() => setPendingImage(null)} className="ml-auto p-1 rounded-lg bg-white/5 hover:bg-red-500/20 text-white/40 hover:text-red-400 transition"><X size={12} /></button>
+            <button type="button" onClick={() => setPendingImage(null)} className="ml-auto p-1 rounded-lg bg-white/5 hover:bg-red-500/20 text-white/40 hover:text-red-400 transition">
+              <X size={12} />
+            </button>
           </div>
         )}
         <div className="flex items-center gap-2 sm:gap-3">
-          <button type="button" onClick={() => fileInputRef.current?.click()}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
             className="shrink-0 rounded-2xl border border-white/[0.08] bg-white/[0.04] p-2.5 transition hover:border-[#D4AF37]/25 hover:bg-[#D4AF37]/[0.06]"
-            title="Upload or take photo">
+            title="Upload or take photo"
+          >
             <Camera size={15} className="text-[#D4AF37]/70" />
           </button>
           {browserSupportsSpeechRecognition ? (
-            <button type="button" onClick={handleVoiceToggle}
+            <button
+              type="button"
+              onClick={handleVoiceToggle}
               title={isMicListening ? t('quantumApothecary.chat.voiceStop') : t('quantumApothecary.chat.voiceStart')}
-              className={`shrink-0 rounded-2xl border p-2.5 transition ${isMicListening ? 'border-[#22D3EE]/60 bg-[#22D3EE]/10 text-[#22D3EE]' : 'border-white/[0.08] bg-white/[0.04] text-[#D4AF37]/70 hover:border-[#D4AF37]/25'}`}
-              style={isMicListening ? { boxShadow: '0 0 12px rgba(34,211,238,0.3)', animation: 'pulse 1s ease-in-out infinite' } : {}}>
+              className={`shrink-0 rounded-2xl border p-2.5 transition ${
+                isMicListening
+                  ? 'border-[#22D3EE]/60 bg-[#22D3EE]/10 text-[#22D3EE]'
+                  : 'border-white/[0.08] bg-white/[0.04] text-[#D4AF37]/70 hover:border-[#D4AF37]/25'
+              }`}
+              style={isMicListening ? { boxShadow: '0 0 12px rgba(34,211,238,0.3)', animation: 'pulse 1s ease-in-out infinite' } : {}}
+            >
               {isMicListening ? (
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden><circle cx="12" cy="12" r="6" /></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <circle cx="12" cy="12" r="6" />
+                </svg>
               ) : (
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
                   <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
@@ -1826,16 +2402,22 @@ function QuantumApothecaryInner() {
             </button>
           ) : (
             <>
-              <button type="button" onClick={legacyWebkitVoice}
+              <button
+                type="button"
+                onClick={legacyWebkitVoice}
                 className={`shrink-0 rounded-2xl border p-2.5 transition ${isRecording ? 'animate-pulse border-red-500/40 bg-red-500/20 text-red-400' : 'border-white/[0.08] bg-white/[0.04] text-[#D4AF37]/70 hover:border-[#D4AF37]/25'}`}
-                title={isRecording ? t('quantumApothecary.chat.voiceStop') : t('quantumApothecary.chat.voiceStart')}>
+                title={isRecording ? t('quantumApothecary.chat.voiceStop') : t('quantumApothecary.chat.voiceStart')}
+              >
                 <Mic size={15} />
               </button>
               {isRecording && <span className="shrink-0 text-[10px] font-bold uppercase tracking-widest text-red-400">{t('quantumApothecary.chat.listening')}</span>}
             </>
           )}
           <div className="flex items-end gap-3 flex-1 p-4 bg-white/[0.02] border border-white/[0.05] rounded-[24px] backdrop-blur-xl">
-            <textarea ref={chatInputRef} rows={1} value={input}
+            <textarea
+              ref={chatInputRef}
+              rows={1}
+              value={input}
               onChange={(e) => {
                 setInput(e.target.value);
                 const el = e.target;
@@ -1844,8 +2426,11 @@ function QuantumApothecaryInner() {
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault(); e.stopPropagation();
-                  if (!isTyping && (input.trim() || pendingImage)) handleSendMessage();
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (!isTyping && (input.trim() || pendingImage)) {
+                    handleSendMessage();
+                  }
                 }
               }}
               onFocus={handleChatFocus}
@@ -1853,10 +2438,13 @@ function QuantumApothecaryInner() {
               style={{ resize: 'none', overflowY: 'hidden' }}
               className="w-full bg-transparent border-none outline-none text-white/90 placeholder:text-white/30 text-sm font-normal leading-relaxed min-h-[28px] max-h-[160px] focus:outline-none"
             />
-            <button type="button" onClick={() => handleSendMessage()}
+            <button
+              type="button"
+              onClick={() => handleSendMessage()}
               disabled={(!input.trim() && !pendingImage) || isTyping}
               className="flex-shrink-0 w-11 h-11 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] hover:bg-[#D4AF37]/20 hover:border-[#D4AF37]/60 transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed"
-              aria-label={t('quantumApothecary.chat.send')}>
+              aria-label={t('quantumApothecary.chat.send')}
+            >
               <Send size={15} />
             </button>
           </div>
@@ -1865,25 +2453,26 @@ function QuantumApothecaryInner() {
     </div>
   );
 
-  /* ────────────────────────────────────────────────────────────────
+  /* ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
      MAIN RENDER — SQI-2050 Visual Layer
-     ──────────────────────────────────────────────────────────────── */
+     ââââââââââââââââââââââââââââââââââââââââââââââââââââââ */
   return (
     <div
       className="relative min-h-screen text-white/90 overflow-x-hidden pb-24"
       style={{ background: '#050505', position: 'relative', overscrollBehaviorX: 'none' }}
     >
-      {/* Akasha Deep Space Background */}
+
+      {/* ââ Akasha Deep Space Background ââ */}
       <div className="fixed inset-0 z-0 pointer-events-none" style={{
         background: 'radial-gradient(ellipse at 20% 20%, rgba(212,175,55,0.04) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(212,175,55,0.03) 0%, transparent 50%), radial-gradient(ellipse at 50% 0%, rgba(212,175,55,0.06) 0%, transparent 40%)',
       }} />
 
-      {/* Star Field */}
+      {/* ââ Star Field ââ */}
       <div className="fixed inset-0 z-0 pointer-events-none" style={{
         backgroundImage: 'radial-gradient(1px 1px at 15% 25%, rgba(212,175,55,0.4) 0%, transparent 100%), radial-gradient(1px 1px at 55% 15%, rgba(255,255,255,0.2) 0%, transparent 100%), radial-gradient(1px 1px at 85% 45%, rgba(212,175,55,0.3) 0%, transparent 100%), radial-gradient(1px 1px at 35% 75%, rgba(255,255,255,0.15) 0%, transparent 100%), radial-gradient(1px 1px at 70% 85%, rgba(212,175,55,0.25) 0%, transparent 100%), radial-gradient(1.5px 1.5px at 22% 60%, rgba(212,175,55,0.35) 0%, transparent 100%), radial-gradient(1px 1px at 90% 30%, rgba(255,255,255,0.2) 0%, transparent 100%)',
       }} />
 
-      {/* Nadi SVG Overlay */}
+      {/* ââ Nadi SVG Overlay ââ */}
       <svg className={`fixed inset-0 z-0 pointer-events-none w-full h-full ${activeTransmissions.length > 0 ? 'opacity-30' : 'opacity-[0.06]'}`}>
         <defs>
           <filter id="qa-glow">
@@ -1898,10 +2487,10 @@ function QuantumApothecaryInner() {
         </g>
       </svg>
 
-      {/* Main Content */}
+      {/* ââ Main Content ââ */}
       <div className="relative z-10 max-w-7xl mx-auto px-2 sm:px-6 py-6">
 
-        {/* Header */}
+        {/* ââ Header ââ */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <button type="button" onClick={() => navigate('/explore')}
@@ -1925,8 +2514,8 @@ function QuantumApothecaryInner() {
           </button>
         </div>
 
-        {/* Gold divider */}
-        <div style={{ height: 1, background: 'linear-gradient(90deg,transparent,rgba(212,175,55,0.3),transparent)', marginBottom: 16, borderRadius: 1 }} />
+        {/* ââ Gold divider ââ */}
+        <div style={{ height:1, background:'linear-gradient(90deg,transparent,rgba(212,175,55,0.3),transparent)', marginBottom:16, borderRadius:1 }} />
 
         <div className="flex w-full max-w-none flex-col gap-5">
           <video ref={videoRef} className="hidden" muted playsInline tabIndex={-1} aria-hidden />
@@ -1953,11 +2542,6 @@ function QuantumApothecaryInner() {
             />
           </Suspense>
 
-          {/* CHANGE 1: StudentSelector moved here — above the tab switcher, visible in both tabs */}
-          <div className="px-1">
-            <StudentSelector />
-          </div>
-
           <div
             className="flex gap-2 rounded-[28px] p-1.5"
             style={{
@@ -1967,20 +2551,26 @@ function QuantumApothecaryInner() {
               WebkitBackdropFilter: 'blur(40px)',
             }}
           >
-            <button type="button" onClick={() => setApothecaryMainTab('library')}
+            <button
+              type="button"
+              onClick={() => setApothecaryMainTab('library')}
               className={`flex-1 rounded-[22px] py-3 text-[13px] font-black uppercase tracking-[0.12em] transition ${
                 apothecaryMainTab === 'library'
                   ? 'border border-[#D4AF37]/35 bg-[#D4AF37]/20 text-[#D4AF37]'
                   : 'border border-transparent text-white/40'
-              }`}>
+              }`}
+            >
               Transmission Library
             </button>
-            <button type="button" onClick={() => setApothecaryMainTab('archive')}
+            <button
+              type="button"
+              onClick={() => setApothecaryMainTab('archive')}
               className={`flex-1 rounded-[22px] py-3 text-[13px] font-black uppercase tracking-[0.12em] transition ${
                 apothecaryMainTab === 'archive'
                   ? 'border border-[#D4AF37]/35 bg-[#D4AF37]/20 text-[#D4AF37]'
                   : 'border border-transparent text-white/40'
-              }`}>
+              }`}
+            >
               Akasha-Neural Archive
             </button>
           </div>
@@ -1999,7 +2589,11 @@ function QuantumApothecaryInner() {
                   <Suspense fallback={ScannerSuspenseFallback}>
                     <VoiceBiofieldScanner
                       userName={seekerName || 'Seeker'}
-                      jyotishContext={{ mahadasha: jyotish?.mahadasha, nakshatra: jyotish?.nakshatra, primaryDosha: jyotish?.primaryDosha }}
+                      jyotishContext={{
+                        mahadasha: jyotish?.mahadasha,
+                        nakshatra: jyotish?.nakshatra,
+                        primaryDosha: jyotish?.primaryDosha,
+                      }}
                       onScanComplete={handleVoiceBiofieldComplete}
                       scanDurationSeconds={10}
                       showProgressRing
@@ -2012,10 +2606,16 @@ function QuantumApothecaryInner() {
                       {[
                         { label: 'Dosha', val: voiceResult.dominantDosha },
                         { label: 'Nadi', val: voiceResult.nadiReading },
-                        { label: 'Active Nadis', val: voiceResult.priorityAreas?.slice(0, 4).map((p) => p.name).join(' · ') || '—' },
+                        {
+                          label: 'Active Nadis',
+                          val: voiceResult.priorityAreas?.slice(0, 4).map((p) => p.name).join(' · ') || '—',
+                        },
                       ].map((c) => (
-                        <div key={c.label} className="rounded-[28px] border border-white/[0.08] bg-white/[0.02] p-4"
-                          style={{ backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)' }}>
+                        <div
+                          key={c.label}
+                          className="rounded-[28px] border border-white/[0.08] bg-white/[0.02] p-4"
+                          style={{ backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)' }}
+                        >
                           <p className="text-[13px] font-black uppercase tracking-[0.15em] text-white/85">{c.label}</p>
                           <p className="mt-2 text-[13px] leading-snug text-white/85">{c.val}</p>
                         </div>
@@ -2025,82 +2625,151 @@ function QuantumApothecaryInner() {
 
                   {resonanceMatches.length > 0 && (
                     <div className="mt-4 rounded-[28px] border border-white/[0.06] bg-white/[0.02] p-4">
+                      {/* ââ HEADER ââ */}
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                         <div>
-                          <p className="text-[11px] font-black uppercase tracking-[0.15em] text-[#D4AF37]/75">Top 33 — Full Library Match</p>
+                          <p className="text-[11px] font-black uppercase tracking-[0.15em] text-[#D4AF37]/75">
+                            Top 33 — Full Library Match
+                          </p>
                           <p className="mt-0.5 text-[10px] text-white/35">
-                            {resonanceMatches.filter((r) => activeTransmissions.some((t) => fieldTransmissionMatchesRow(t, r))).length}{' '}
+                            {resonanceMatches.filter((r) =>
+                              activeTransmissions.some((t) => fieldTransmissionMatchesRow(t, r)),
+                            ).length}{' '}
                             / {resonanceMatches.length} from scan already active in field
                           </p>
                         </div>
+                        {/* ââ ACTIVATE BUTTON ââ */}
                         {(() => {
-                          const activeFromScanCount = resonanceMatches.filter((r) => activeTransmissions.some((t) => fieldTransmissionMatchesRow(t, r))).length;
+                          const activeFromScanCount = resonanceMatches.filter((r) =>
+                            activeTransmissions.some((t) => fieldTransmissionMatchesRow(t, r)),
+                          ).length;
                           const newCount = resonanceMatches.length - activeFromScanCount;
                           const noneNew = newCount === 0;
                           return (
-                            <button type="button" onClick={activateAllTop33ToField} disabled={noneNew}
+                            <button
+                              type="button"
+                              onClick={activateAllTop33ToField}
+                              disabled={noneNew}
                               className="rounded-full px-4 py-2 text-[11px] font-black uppercase tracking-[0.12em] transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50"
                               style={{
-                                background: noneNew ? 'rgba(212,175,55,0.08)' : 'rgba(212,175,55,0.15)',
-                                border: noneNew ? '1px solid rgba(212,175,55,0.25)' : '1px solid rgba(212,175,55,0.5)',
+                                background: noneNew
+                                  ? 'rgba(212,175,55,0.08)'
+                                  : 'rgba(212,175,55,0.15)',
+                                border: noneNew
+                                  ? '1px solid rgba(212,175,55,0.25)'
+                                  : '1px solid rgba(212,175,55,0.5)',
                                 color: noneNew ? 'rgba(212,175,55,0.5)' : '#D4AF37',
                                 boxShadow: noneNew ? 'none' : '0 0 18px rgba(212,175,55,0.2)',
-                              }}>
-                              {noneNew ? '⟁ All scan rows active' : `⟁ Activate All New (${newCount})`}
+                              }}
+                            >
+                              {noneNew
+                                ? '⟁ All scan rows active'
+                                : `⟁ Activate All New (${newCount})`}
                             </button>
                           );
                         })()}
                       </div>
+                      {/* ââ ROW LIST — always full scan list (e.g. 33) ââ */}
                       <div className="max-h-[min(70vh,520px)] space-y-1.5 overflow-y-auto pr-0.5">
                         {resonanceMatches.map((row, idx) => {
-                          const isActive = activeTransmissions.some((t) => fieldTransmissionMatchesRow(t, row));
+                          const isActive = activeTransmissions.some((t) =>
+                            fieldTransmissionMatchesRow(t, row),
+                          );
                           return (
-                            <div key={row.id ?? row.name ?? idx}
+                            <div
+                              key={row.id ?? row.name ?? idx}
                               className="flex items-center gap-3 rounded-[16px] px-3 py-2.5 transition-all duration-300"
                               style={{
-                                background: isActive ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.02)',
-                                border: isActive ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(255,255,255,0.04)',
+                                background: isActive
+                                  ? 'rgba(255,255,255,0.03)'
+                                  : 'rgba(255,255,255,0.02)',
+                                border: isActive
+                                  ? '1px solid rgba(255,255,255,0.07)'
+                                  : '1px solid rgba(255,255,255,0.04)',
                                 opacity: isActive ? 0.72 : 1,
-                              }}>
+                              }}
+                            >
+                              {/* Pct bar */}
                               <div className="flex w-10 shrink-0 flex-col items-center gap-0.5">
-                                <span className="text-[12px] font-black" style={{ color: isActive ? 'rgba(255,255,255,0.38)' : 'rgba(255,255,255,0.5)' }}>
+                                <span
+                                  className="text-[12px] font-black"
+                                  style={{
+                                    color: isActive
+                                      ? 'rgba(255,255,255,0.38)'
+                                      : 'rgba(255,255,255,0.5)',
+                                  }}
+                                >
                                   {row.pct}%
                                 </span>
                                 <div className="h-[3px] w-10 overflow-hidden rounded-full bg-white/10">
-                                  <div className="h-full rounded-full transition-all duration-700"
-                                    style={{ width: `${row.pct}%`, background: isActive ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.25)' }} />
+                                  <div
+                                    className="h-full rounded-full transition-all duration-700"
+                                    style={{
+                                      width: `${row.pct}%`,
+                                      background: isActive
+                                        ? 'rgba(255,255,255,0.22)'
+                                        : 'rgba(255,255,255,0.25)',
+                                    }}
+                                  />
                                 </div>
                               </div>
+                              {/* Name + category */}
                               <div className="flex min-w-0 flex-1 flex-col">
-                                <span className="truncate text-[12px] font-bold leading-tight"
-                                  style={{ color: isActive ? 'rgba(255,255,255,0.42)' : 'rgba(255,255,255,0.85)' }}>
+                                <span
+                                  className="truncate text-[12px] font-bold leading-tight"
+                                  style={{
+                                    color: isActive
+                                      ? 'rgba(255,255,255,0.42)'
+                                      : 'rgba(255,255,255,0.85)',
+                                  }}
+                                >
                                   {row.name}
                                 </span>
                                 {row.rowCategory && (
-                                  <span className="text-[9px] font-semibold uppercase tracking-[0.12em]"
-                                    style={{ color: isActive ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.3)' }}>
+                                  <span
+                                    className="text-[9px] font-semibold uppercase tracking-[0.12em]"
+                                    style={{
+                                      color: isActive ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.3)',
+                                    }}
+                                  >
                                     {row.rowCategory}
                                   </span>
                                 )}
                               </div>
                               {isActive ? (
-                                <span className="flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-black tabular-nums"
-                                  style={{ color: 'rgba(255,255,255,0.45)', border: '1px solid rgba(255,255,255,0.08)' }}
-                                  aria-label="Already active in field">
+                                <span
+                                  className="flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-black tabular-nums"
+                                  style={{
+                                    color: 'rgba(255,255,255,0.45)',
+                                    border: '1px solid rgba(255,255,255,0.08)',
+                                  }}
+                                  aria-label="Already active in field"
+                                >
                                   <span className="text-[13px] leading-none text-[#D4AF37]/70">✓</span>
                                   <span className="text-[8px] uppercase tracking-[0.12em]">In field</span>
                                 </span>
                               ) : (
-                                <button type="button"
+                                <button
+                                  type="button"
                                   onClick={() => {
                                     setActiveTransmissions((prev) => {
-                                      if (prev.some((t) => fieldTransmissionMatchesRow(t, row))) return prev;
-                                      return [...prev, enrichTransmission(normalizeActivationForMixer(row), 'nadi_scan')];
+                                      if (prev.some((t) => fieldTransmissionMatchesRow(t, row))) {
+                                        return prev;
+                                      }
+                                      return [
+                                        ...prev,
+                                        enrichTransmission(normalizeActivationForMixer(row), 'nadi_scan'),
+                                      ];
                                     });
                                     toast.success(`⟁ ${row.name} activated`);
                                   }}
                                   className="shrink-0 rounded-full px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.15em] transition-all hover:border-[#D4AF37]/35 hover:text-[#D4AF37]/80"
-                                  style={{ background: 'transparent', color: 'rgba(255,255,255,0.35)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                                  style={{
+                                    background: 'transparent',
+                                    color: 'rgba(255,255,255,0.35)',
+                                    border: '1px solid rgba(255,255,255,0.12)',
+                                  }}
+                                >
                                   + Add
                                 </button>
                               )}
@@ -2141,38 +2810,58 @@ function QuantumApothecaryInner() {
 
               <div className="flex min-w-0 flex-col gap-5">
                 {selectedActivations.length > 0 && (
-                  <div className="rounded-[28px] p-6 sm:p-7 qa-card-hover"
-                    style={{ background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div
+                    className="rounded-[28px] p-6 sm:p-7 qa-card-hover"
+                    style={{
+                      background: 'rgba(255,255,255,0.02)',
+                      backdropFilter: 'blur(40px)',
+                      WebkitBackdropFilter: 'blur(40px)',
+                      border: '1px solid rgba(255,255,255,0.06)',
+                    }}
+                  >
                     <div style={{ height: 2, background: 'linear-gradient(90deg,transparent,#D4AF37,transparent)', marginBottom: 20, opacity: 0.4, borderRadius: 1 }} />
                     <div className="mb-4 flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <div style={{ width: 28, height: 28, background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>⚙</div>
+                        <div style={{ width:28, height:28, background:'rgba(212,175,55,0.12)', border:'1px solid rgba(212,175,55,0.25)', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>⚙</div>
                         <h2 className="text-sm font-black tracking-[-0.03em]">{t('quantumApothecary.mixer.title')}</h2>
                       </div>
                       <span className="text-[13px] font-bold uppercase tracking-[0.12em] text-[#D4AF37]/55">
-                        {t('quantumApothecary.mixer.slotsProgress', { current: selectedActivations.length, max: AETHERIC_MIXER_MAX_SLOTS })}
+                        {t('quantumApothecary.mixer.slotsProgress', {
+                          current: selectedActivations.length,
+                          max: AETHERIC_MIXER_MAX_SLOTS,
+                        })}
                       </span>
                     </div>
                     <div className="mb-4 flex flex-wrap gap-2">
                       {selectedActivations.map((act) => (
-                        <span key={act.id}
+                        <span
+                          key={act.id}
                           className="inline-flex items-center gap-2 rounded-full border border-[#22D3EE]/25 px-3 py-2 text-[13px] font-semibold text-white/85"
-                          style={{ background: 'rgba(34,211,238,0.06)' }}>
+                          style={{ background: 'rgba(34,211,238,0.06)' }}
+                        >
                           {act.name}
-                          <button type="button" onClick={() => removeActivation(act.id)} className="text-white/35 hover:text-red-400" aria-label="Remove"><X size={14} /></button>
+                          <button type="button" onClick={() => removeActivation(act.id)} className="text-white/35 hover:text-red-400" aria-label="Remove">
+                            <X size={14} />
+                          </button>
                         </span>
                       ))}
                     </div>
-                    <button type="button" onClick={transmitCocktail} disabled={selectedActivations.length === 0}
-                      className="w-full rounded-[40px] border border-[#D4AF37]/45 bg-gradient-to-b from-[#F5E17A] to-[#B8960C] py-4 text-[13px] font-black uppercase tracking-[0.2em] text-[#050505] shadow-[0_8px_32px_rgba(212,175,55,0.3)] transition-all hover:shadow-[0_12px_40px_rgba(212,175,55,0.4)] disabled:opacity-20">
+                    <button
+                      type="button"
+                      onClick={transmitCocktail}
+                      disabled={selectedActivations.length === 0}
+                      className="w-full rounded-[40px] border border-[#D4AF37]/45 bg-gradient-to-b from-[#F5E17A] to-[#B8960C] py-4 text-[13px] font-black uppercase tracking-[0.2em] text-[#050505] shadow-[0_8px_32px_rgba(212,175,55,0.3)] transition-all hover:shadow-[0_12px_40px_rgba(212,175,55,0.4)] disabled:opacity-20"
+                    >
                       Activate All to Field
                     </button>
                   </div>
                 )}
 
                 <div className="relative">
-                  <div className={libraryUnlocked ? '' : 'pointer-events-none blur-md saturate-50 opacity-[0.42]'}
-                    style={{ transition: 'filter 0.35s ease, opacity 0.35s ease' }}>
+                  <div
+                    className={libraryUnlocked ? '' : 'pointer-events-none blur-md saturate-50 opacity-[0.42]'}
+                    style={{ transition: 'filter 0.35s ease, opacity 0.35s ease' }}
+                  >
                     <Suspense fallback={
                       <div className="glass-card rounded-[28px] p-6">
                         <div className="mb-4">
@@ -2239,7 +2928,10 @@ function QuantumApothecaryInner() {
         </div>
       </div>
 
-      {/* KNOWLEDGE MODAL */}
+      {/* ââââââââââââââââââââââââââââââââââ
+          KNOWLEDGE MODAL — SQI-2050 Style
+          Logic UNCHANGED
+          ââââââââââââââââââââââââââââââââââ */}
       <AnimatePresence>
         {showKnowledge && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -2275,7 +2967,9 @@ function QuantumApothecaryInner() {
         )}
       </AnimatePresence>
 
-      {/* SESSION HISTORY DRAWER */}
+      {/* ââââââââââââââââââââââââââââââââââ
+          SESSION HISTORY DRAWER — Logic UNCHANGED
+          ââââââââââââââââââââââââââââââââââ */}
       <AnimatePresence>
         {sessionsOpen && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -2299,7 +2993,9 @@ function QuantumApothecaryInner() {
               <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2">
                 {loadingSessions && <div className="text-[10px] font-bold uppercase tracking-widest text-white/25">Loading sessions…</div>}
                 {!loadingSessions && sessions.length === 0 && (
-                  <div className="text-[10px] text-white/25 leading-relaxed">No prior SQI conversations yet. Your next transmission will be stored here.</div>
+                  <div className="text-[10px] text-white/25 leading-relaxed">
+                    No prior SQI conversations yet. Your next transmission will be stored here.
+                  </div>
                 )}
                 {sessions.map(s => (
                   <button key={s.id}
@@ -2319,36 +3015,57 @@ function QuantumApothecaryInner() {
         )}
       </AnimatePresence>
 
-      {/* SQI-2050 CSS Light-Codes */}
+      {/* ââââââââââââââââââââââââââââââââââ
+          SQI-2050 CSS Light-Codes
+          ââââââââââââââââââââââââââââââââââ */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;700;800;900&display=swap');
 
         * { font-family: 'Plus Jakarta Sans', sans-serif; }
 
+        /* SQI chat: full panel width — avoid shrink-to-content + harsh word breaks */
         .qa-sqi-chat .markdown-body {
-          width: 100%; max-width: 100%; min-width: 0;
-          word-break: normal; overflow-wrap: break-word;
+          width: 100%;
+          max-width: 100%;
+          min-width: 0;
+          word-break: normal;
+          overflow-wrap: break-word;
         }
         .qa-sqi-chat .markdown-body p,
         .qa-sqi-chat .markdown-body li,
         .qa-sqi-chat .markdown-body h1,
         .qa-sqi-chat .markdown-body h2,
-        .qa-sqi-chat .markdown-body h3 { max-width: 100%; }
-
-        .qa-sqi-chat {
-          -webkit-user-select: text; user-select: text; -webkit-touch-callout: default;
+        .qa-sqi-chat .markdown-body h3 {
+          max-width: 100%;
         }
 
-        .sqi-message strong, .sqi-message b { color: rgba(255,255,255,0.97); font-weight: 800; }
+        /* Transcript must be selectable/copyable (mobile WebKit + inherited UI guards). */
+        .qa-sqi-chat {
+          -webkit-user-select: text;
+          user-select: text;
+          -webkit-touch-callout: default;
+        }
+
+        .sqi-message strong,
+        .sqi-message b {
+          color: rgba(255,255,255,0.97);
+          font-weight: 800;
+        }
         .sqi-message .sqi-diamond-heading,
         .sqi-message .sqi-diamond-heading strong,
-        .sqi-message .sqi-diamond-heading b { color: #D4AF37; }
-        .sqi-message p, .sqi-message li {
-          margin-bottom: 12px; word-break: break-word; overflow-wrap: anywhere;
-          white-space: pre-wrap; max-width: 100%;
+        .sqi-message .sqi-diamond-heading b {
+          color: #D4AF37;
+        }
+        .sqi-message p,
+        .sqi-message li {
+          margin-bottom: 12px;
+          word-break: break-word;
+          overflow-wrap: anywhere;
+          white-space: pre-wrap;
+          max-width: 100%;
         }
 
-        /* SQI-2050 Glassmorphism Standard */
+        /* ââ SQI-2050 Glassmorphism Standard ââ */
         .glass-card {
           background: rgba(255, 255, 255, 0.02);
           backdrop-filter: blur(40px);
@@ -2357,98 +3074,137 @@ function QuantumApothecaryInner() {
           border-radius: 40px;
         }
 
-        /* Siddha-Gold Primary Button */
+        /* ââ Siddha-Gold Primary Button ââ */
         .sqi-btn-primary {
           background: linear-gradient(135deg, #D4AF37 0%, #B8940A 100%);
-          color: #050505; border-radius: 20px; font-weight: 900;
-          font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase;
-          transition: all 0.2s ease; display: flex; align-items: center;
-          justify-content: center; gap: 8px; box-shadow: 0 0 20px rgba(212,175,55,0.2);
+          color: #050505;
+          border-radius: 20px;
+          font-weight: 900;
+          font-size: 10px;
+          letter-spacing: 0.25em;
+          text-transform: uppercase;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          box-shadow: 0 0 20px rgba(212,175,55,0.2);
         }
-        .sqi-btn-primary:hover:not(:disabled) { box-shadow: 0 0 32px rgba(212,175,55,0.4); transform: translateY(-1px); }
+        .sqi-btn-primary:hover:not(:disabled) {
+          box-shadow: 0 0 32px rgba(212,175,55,0.4);
+          transform: translateY(-1px);
+        }
 
-        /* Ghost Button */
+        /* ââ Ghost Button ââ */
         .sqi-btn-ghost {
-          background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08);
-          color: rgba(255,255,255,0.6); border-radius: 20px; font-weight: 800;
-          font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase;
-          transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;
+          background: rgba(255,255,255,0.02);
+          border: 1px solid rgba(255,255,255,0.08);
+          color: rgba(255,255,255,0.6);
+          border-radius: 20px;
+          font-weight: 800;
+          font-size: 10px;
+          letter-spacing: 0.25em;
+          text-transform: uppercase;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
-        .sqi-btn-ghost:hover { background: rgba(212,175,55,0.08); border-color: rgba(212,175,55,0.25); color: #D4AF37; }
+        .sqi-btn-ghost:hover {
+          background: rgba(212,175,55,0.08);
+          border-color: rgba(212,175,55,0.25);
+          color: #D4AF37;
+        }
 
-        /* Nadi Line Animations */
+        /* ââ Nadi Line Animations (unchanged) ââ */
         .nadi-line {
-          stroke-dasharray: 1000; stroke-dashoffset: 1000;
+          stroke-dasharray: 1000;
+          stroke-dashoffset: 1000;
           animation: draw 10s linear infinite;
-          filter: drop-shadow(0 0 2px currentColor); opacity: 0.3; transition: all 0.5s ease;
+          filter: drop-shadow(0 0 2px currentColor);
+          opacity: 0.3;
+          transition: all 0.5s ease;
         }
-        .nadi-line.active { opacity: 1; stroke-width: 1.5; filter: drop-shadow(0 0 8px rgba(212,175,55,0.8)); }
+        .nadi-line.active {
+          opacity: 1;
+          stroke-width: 1.5;
+          filter: drop-shadow(0 0 8px rgba(212,175,55,0.8));
+        }
         @keyframes draw { to { stroke-dashoffset: 0; } }
 
+        /* ââ Gold Glow Pulse on scan ââ */
         @keyframes gold-pulse {
           0%, 100% { box-shadow: 0 0 0 0 rgba(212,175,55,0); }
           50% { box-shadow: 0 0 40px 8px rgba(212,175,55,0.15); }
         }
 
+        /* ââ Scrollbar ââ */
         .custom-scrollbar::-webkit-scrollbar { width: 3px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.15); border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(212,175,55,0.3); }
+  @keyframes scan-line {
+    0%   { background-position: 0 -100%; }
+    100% { background-position: 0 200%; }
+  }
+  @keyframes qa-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+  @keyframes qa-glow-pulse { 0%,100%{opacity:0.15} 50%{opacity:0.35} }
+  @keyframes qa-shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+  @keyframes qa-spin-slow { to{transform:rotate(360deg)} }
+  @keyframes qa-ping-gold { 75%,100%{transform:scale(2.2);opacity:0} }
+  .qa-card-hover { transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s !important; }
+  .qa-card-hover:hover { border-color: rgba(212,175,55,0.25) !important; box-shadow: 0 0 40px rgba(212,175,55,0.08) !important; transform: translateY(-2px) !important; }
+  .qa-btn-shine { position:relative; overflow:hidden; }
+  .qa-btn-shine::after { content:''; position:absolute; inset:0; background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.15) 50%,transparent 60%); background-size:200% 100%; animation:qa-shimmer 3s infinite; }
 
-        @keyframes scan-line { 0% { background-position: 0 -100%; } 100% { background-position: 0 200%; } }
-        @keyframes qa-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
-        @keyframes qa-glow-pulse { 0%,100%{opacity:0.15} 50%{opacity:0.35} }
-        @keyframes qa-shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
-        @keyframes qa-spin-slow { to{transform:rotate(360deg)} }
-        @keyframes qa-ping-gold { 75%,100%{transform:scale(2.2);opacity:0} }
-        .qa-card-hover { transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s !important; }
-        .qa-card-hover:hover { border-color: rgba(212,175,55,0.25) !important; box-shadow: 0 0 40px rgba(212,175,55,0.08) !important; transform: translateY(-2px) !important; }
-        .qa-btn-shine { position:relative; overflow:hidden; }
-        .qa-btn-shine::after { content:''; position:absolute; inset:0; background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.15) 50%,transparent 60%); background-size:200% 100%; animation:qa-shimmer 3s infinite; }
+  /* ═══ ANCIENT SCRIPTURE SKIN ═══ */
 
-        /* ANCIENT SCRIPTURE SKIN */
-        .sqi-manuscript-scroll { border-radius: 2px !important; position: relative; }
+  .sqi-manuscript-scroll {
+    border-radius: 2px !important;
+    position: relative;
+  }
 
-        /* CHANGE 3: font-size 16px → 18px, line-height 1.9 → 2.0 */
-        .sqi-ancient-body p {
-          font-family: 'IM Fell English', Georgia, serif !important;
-          font-size: 18px !important;
-          line-height: 2.0 !important;
-          color: rgba(225,210,185,0.88) !important;
-          margin-bottom: 14px !important;
-        }
+  .sqi-ancient-body p {
+    font-family: 'IM Fell English', Georgia, serif !important;
+    font-size: 16px !important;
+    line-height: 1.9 !important;
+    color: rgba(225,210,185,0.88) !important;
+    margin-bottom: 14px !important;
+  }
 
-        .sqi-ancient-body .sqi-diamond-heading {
-          font-family: 'Cinzel', serif !important;
-          font-size: 10px !important;
-          font-weight: 700 !important;
-          letter-spacing: 0.4em !important;
-          color: #D4AF37 !important;
-          text-shadow: 0 0 25px rgba(212,175,55,0.4) !important;
-          text-transform: uppercase !important;
-          margin-bottom: 12px !important;
-        }
+  .sqi-ancient-body .sqi-diamond-heading {
+    font-family: 'Cinzel', serif !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.4em !important;
+    color: #D4AF37 !important;
+    text-shadow: 0 0 25px rgba(212,175,55,0.4) !important;
+    text-transform: uppercase !important;
+    margin-bottom: 14px !important;
+  }
 
-        .sqi-ancient-body strong,
-        .sqi-ancient-body b {
-          color: #D4AF37 !important;
-          font-family: 'Cinzel', serif !important;
-          font-size: 0.88em !important;
-          letter-spacing: 0.04em !important;
-          font-weight: 700 !important;
-          font-style: normal !important;
-          text-shadow: 0 0 16px rgba(212,175,55,0.35) !important;
-        }
+  .sqi-ancient-body strong,
+  .sqi-ancient-body b {
+    color: #D4AF37 !important;
+    font-family: 'Cinzel', serif !important;
+    font-size: 0.88em !important;
+    letter-spacing: 0.04em !important;
+    font-weight: 700 !important;
+    font-style: normal !important;
+    text-shadow: 0 0 16px rgba(212,175,55,0.35) !important;
+  }
 
-        .sqi-ancient-body li {
-          font-family: 'IM Fell English', Georgia, serif !important;
-          font-size: 15px !important;
-          line-height: 1.85 !important;
-          color: rgba(225,210,185,0.85) !important;
-        }
+  .sqi-ancient-body li {
+    font-family: 'IM Fell English', Georgia, serif !important;
+    font-size: 15px !important;
+    line-height: 1.85 !important;
+    color: rgba(225,210,185,0.85) !important;
+  }
       `}</style>
 
       <UserChatHistory filterChatType="apothecary" />
+
+      {/* Scroll-to-top FAB */}
       <ScrollToTopButton />
     </div>
   );
@@ -2474,10 +3230,12 @@ function ScrollToTopButton() {
   );
 }
 
-/* ────────────────────────────────────────────────────────────────────
+/* ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
    OUTER WRAPPER — auth shell only
    Tier access is enforced by QuantumApothecaryGate on the /quantum-apothecary route.
-   ──────────────────────────────────────────────────────────────────── */
+   Do not gate on membership loading here: periodic membership refetches were setting
+   loading=true and unmounting the whole page (felt like endless reload).
+   ââââââââââââââââââââââââââââââââââââââââââââââââââââââ */
 export default function QuantumApothecary() {
   const { user, isLoading: authLoading } = useAuth();
 
