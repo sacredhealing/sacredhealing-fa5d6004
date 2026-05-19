@@ -37,6 +37,17 @@ Deno.serve(async (req) => {
   const url = new URL(req.url)
   const mode = url.searchParams.get('mode') || 'status'
 
+  // MODE: list_files — returns all filenames in a bucket (no migration, no R2 check)
+  if (mode === 'list_files') {
+    const targetBucket = url.searchParams.get('bucket')!
+    const files = await listAllFiles(supabase, targetBucket, '')
+    return new Response(JSON.stringify({
+      bucket: targetBucket,
+      count: files.length,
+      files: files.map(f => f.name)
+    }, null, 2), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+  }
+
   if (mode === 'status') {
     const { data: buckets } = await supabase.storage.listBuckets()
     const summary: any[] = []
@@ -66,7 +77,6 @@ Deno.serve(async (req) => {
         const r2Key = `${targetBucket}/${file.name}`
         const check = await r2.fetch(`${R2_ENDPOINT}/${R2_BUCKET}/${r2Key}`, { method: 'HEAD' })
         if (check.ok) { results.skipped++; continue }
-        // Stream directly — no ArrayBuffer, no memory spike
         const publicUrl = `${supabaseUrl}/storage/v1/object/public/${targetBucket}/${encodeURIComponent(file.name)}`
         const dlRes = await fetch(publicUrl, { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } })
         if (!dlRes.ok || !dlRes.body) { results.failed++; results.errors.push(`DL: ${file.name}`); continue }
@@ -103,8 +113,9 @@ Deno.serve(async (req) => {
     }, null, 2), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
   }
 
-  return new Response(JSON.stringify({ usage: { status: '?mode=status', migrate: '?mode=migrate&bucket=audio&offset=0&limit=3' } }),
-    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+  return new Response(JSON.stringify({
+    usage: { list_files: '?mode=list_files&bucket=audio', status: '?mode=status', migrate: '?mode=migrate&bucket=audio&offset=0&limit=3' }
+  }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
 })
 
 async function listAllFiles(supabase: any, bucket: string, folder: string): Promise<any[]> {
