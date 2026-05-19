@@ -1,0 +1,120 @@
+name: Migrate Supabase Storage to R2
+
+on:
+  workflow_dispatch:
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Migrate all storage buckets to Cloudflare R2
+        run: |
+          node -e "
+          const https = require('https');
+          const { execSync } = require('child_process');
+
+          const SUPABASE_URL = 'https://ssygukfdbtehvtndandn.supabase.co';
+          const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+          const R2_ACCOUNT_ID = '79dae6f785e6758a441aa69dd3f7b2af';
+          const R2_ACCESS_KEY = 'fe3243e15f429886b7f3c5d9e23c8262';
+          const R2_SECRET_KEY = '3e8dab0a93ba4eaa1f1b4c43682e15a961d6d1b269b8e0b40ed64fbd2e025e50';
+          const R2_BUCKET = 'siddhaquantumnexus';
+          const R2_PUBLIC_URL = 'https://pub-7a2cf16596fd425ab1717b8c0c3e567d.r2.dev';
+
+          console.log('Migration script ready - will run via fetch calls');
+          console.log('SUPABASE_URL:', SUPABASE_URL);
+          console.log('R2_BUCKET:', R2_BUCKET);
+          "
+        env:
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+
+      - name: Run Migration
+        uses: actions/github-script@v7
+        env:
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        with:
+          script: |
+            const SUPABASE_URL = 'https://ssygukfdbtehvtndandn.supabase.co';
+            const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+            const R2_ACCOUNT_ID = '79dae6f785e6758a441aa69dd3f7b2af';
+            const R2_ACCESS_KEY = 'fe3243e15f429886b7f3c5d9e23c8262';
+            const R2_SECRET_KEY = '3e8dab0a93ba4eaa1f1b4c43682e15a961d6d1b269b8e0b40ed64fbd2e025e50';
+            const R2_BUCKET = 'siddhaquantumnexus';
+            const R2_PUBLIC_URL = 'https://pub-7a2cf16596fd425ab1717b8c0c3e567d.r2.dev';
+            const R2_ENDPOINT = `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
+
+            const URL_COLUMNS = [
+              { table: 'frequencies', columns: ['audio_url','preview_url','image_url'] },
+              { table: 'activations', columns: ['audio_url','image_url'] },
+              { table: 'music_tracks', columns: ['audio_url','cover_url'] },
+              { table: 'profiles', columns: ['avatar_url'] },
+              { table: 'recordings', columns: ['audio_url','url'] },
+              { table: 'virtual_pilgrimages', columns: ['audio_url','image_url'] },
+              { table: 'sacred_sites', columns: ['audio_url','image_url'] },
+            ];
+
+            async function sbFetch(path, opts = {}) {
+              const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+                ...opts,
+                headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json', ...opts.headers }
+              });
+              return res;
+            }
+
+            // List buckets
+            const bucketsRes = await fetch(`${SUPABASE_URL}/storage/v1/bucket`, {
+              headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` }
+            });
+            const buckets = await bucketsRes.json();
+            console.log('Buckets found:', buckets.map ? buckets.map(b => b.name) : buckets);
+
+            let totalMigrated = 0, totalFailed = 0, totalUrlUpdates = 0;
+
+            for (const bucket of (buckets || [])) {
+              const filesRes = await fetch(`${SUPABASE_URL}/storage/v1/object/list/${bucket.name}`, {
+                method: 'POST',
+                headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ limit: 1000, offset: 0, prefix: '' })
+              });
+              const files = await filesRes.json();
+              if (!Array.isArray(files)) { console.log('No files in', bucket.name, files); continue; }
+              console.log(`Bucket ${bucket.name}: ${files.length} files`);
+
+              for (const file of files) {
+                if (!file.name) continue;
+                try {
+                  // Download from Supabase
+                  const dlRes = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket.name}/${file.name}`, {
+                    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` }
+                  });
+                  if (!dlRes.ok) { console.log('DL fail:', file.name); totalFailed++; continue; }
+                  const buf = await dlRes.arrayBuffer();
+
+                  // Sign and upload to R2 using AWS Signature V4
+                  const { AwsClient } = await import('https://esm.sh/aws4fetch@1.0.17');
+                  const r2 = new AwsClient({ accessKeyId: R2_ACCESS_KEY, secretAccessKey: R2_SECRET_KEY, service: 's3', region: 'auto' });
+                  const r2Key = `${bucket.name}/${file.name}`;
+                  const upRes = await r2.fetch(`${R2_ENDPOINT}/${R2_BUCKET}/${r2Key}`, { method: 'PUT', body: buf });
+                  if (upRes.ok) { totalMigrated++; console.log('✓', r2Key); }
+                  else { totalFailed++; console.log('UP fail:', r2Key, upRes.status); }
+                } catch(e) { totalFailed++; console.log('Error:', file.name, e.message); }
+              }
+
+              // Update DB URLs
+              const oldBase = `${SUPABASE_URL}/storage/v1/object/public/${bucket.name}/`;
+              const newBase = `${R2_PUBLIC_URL}/${bucket.name}/`;
+              for (const { table, columns } of URL_COLUMNS) {
+                for (const col of columns) {
+                  try {
+                    const rows = await (await sbFetch(`${table}?select=id,${col}&${col}=like.${oldBase}%25`)).json();
+                    if (Array.isArray(rows)) {
+                      for (const row of rows) {
+                        await sbFetch(`${table}?id=eq.${row.id}`, { method: 'PATCH', body: JSON.stringify({ [col]: row[col].replace(oldBase, newBase) }) });
+                        totalUrlUpdates++;
+                      }
+                    }
+                  } catch {}
+                }
+              }
+            }
+            console.log(`DONE: ${totalMigrated} migrated, ${totalFailed} failed, ${totalUrlUpdates} DB URLs updated`);
