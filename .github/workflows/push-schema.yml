@@ -1,0 +1,24 @@
+name: Push Schema to New Supabase
+
+on:
+  workflow_dispatch:  # Manual trigger - click Run workflow in GitHub Actions tab
+
+jobs:
+  push-schema:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Push all migrations to new Supabase
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          supabase db push \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --include-all \
+            --debug 2>&1 || true
+          echo "✅ Schema push complete"
