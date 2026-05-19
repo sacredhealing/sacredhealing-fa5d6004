@@ -14,35 +14,22 @@ const R2_PUBLIC_URL = 'https://pub-7a2cf16596fd425ab1717b8c0c3e567d.r2.dev'
 const R2_ENDPOINT = `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`
 
 const URL_COLUMNS = [
-  { table: 'frequencies', column: 'audio_url' },
-  { table: 'frequencies', column: 'preview_url' },
-  { table: 'frequencies', column: 'image_url' },
-  { table: 'activations', column: 'audio_url' },
-  { table: 'activations', column: 'image_url' },
-  { table: 'activation_transmissions', column: 'audio_url' },
-  { table: 'music_tracks', column: 'audio_url' },
-  { table: 'music_tracks', column: 'cover_url' },
-  { table: 'pranayama_sessions', column: 'audio_url' },
-  { table: 'healing_audios', column: 'audio_url' },
-  { table: 'transmission_recordings', column: 'audio_url' },
-  { table: 'recordings', column: 'audio_url' },
-  { table: 'recordings', column: 'url' },
-  { table: 'profiles', column: 'avatar_url' },
-  { table: 'courses', column: 'image_url' },
-  { table: 'courses', column: 'audio_url' },
-  { table: 'products', column: 'image_url' },
-  { table: 'virtual_pilgrimages', column: 'audio_url' },
-  { table: 'virtual_pilgrimages', column: 'image_url' },
-  { table: 'sacred_sites', column: 'audio_url' },
-  { table: 'sacred_sites', column: 'image_url' },
-  { table: 'quantum_sessions', column: 'audio_url' },
-  { table: 'nada_transmissions', column: 'audio_url' },
+  { table: 'frequencies', column: 'audio_url' },{ table: 'frequencies', column: 'preview_url' },
+  { table: 'frequencies', column: 'image_url' },{ table: 'activations', column: 'audio_url' },
+  { table: 'activations', column: 'image_url' },{ table: 'music_tracks', column: 'audio_url' },
+  { table: 'music_tracks', column: 'cover_url' },{ table: 'pranayama_sessions', column: 'audio_url' },
+  { table: 'healing_audios', column: 'audio_url' },{ table: 'transmission_recordings', column: 'audio_url' },
+  { table: 'recordings', column: 'audio_url' },{ table: 'recordings', column: 'url' },
+  { table: 'profiles', column: 'avatar_url' },{ table: 'courses', column: 'image_url' },
+  { table: 'courses', column: 'audio_url' },{ table: 'products', column: 'image_url' },
+  { table: 'virtual_pilgrimages', column: 'audio_url' },{ table: 'virtual_pilgrimages', column: 'image_url' },
+  { table: 'sacred_sites', column: 'audio_url' },{ table: 'sacred_sites', column: 'image_url' },
+  { table: 'quantum_sessions', column: 'audio_url' },{ table: 'nada_transmissions', column: 'audio_url' },
   { table: 'kosha_sessions', column: 'audio_url' },
 ]
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
-
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   const supabase = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } })
@@ -67,9 +54,8 @@ Deno.serve(async (req) => {
   if (mode === 'migrate') {
     const targetBucket = url.searchParams.get('bucket')!
     const offset = parseInt(url.searchParams.get('offset') || '0')
-    const limit = parseInt(url.searchParams.get('limit') || '8')
+    const limit = parseInt(url.searchParams.get('limit') || '3')
     const updateUrls = url.searchParams.get('update_urls') !== 'false'
-
     const results: any = { migrated: 0, failed: 0, skipped: 0, errors: [], url_updates: 0 }
     const files = await listAllFiles(supabase, targetBucket, '')
     const batch = files.slice(offset, offset + limit)
@@ -80,15 +66,15 @@ Deno.serve(async (req) => {
         const r2Key = `${targetBucket}/${file.name}`
         const check = await r2.fetch(`${R2_ENDPOINT}/${R2_BUCKET}/${r2Key}`, { method: 'HEAD' })
         if (check.ok) { results.skipped++; continue }
-
-        const { data: fileData, error: dlErr } = await supabase.storage.from(targetBucket).download(file.name)
-        if (dlErr || !fileData) { results.failed++; results.errors.push(`DL: ${file.name}`); continue }
-
-        const buf = await fileData.arrayBuffer()
-        const up = await r2.fetch(`${R2_ENDPOINT}/${R2_BUCKET}/${r2Key}`, {
-          method: 'PUT', body: buf,
-          headers: { 'Content-Type': getContentType(file.name) }
-        })
+        // Stream directly — no ArrayBuffer, no memory spike
+        const publicUrl = `${supabaseUrl}/storage/v1/object/public/${targetBucket}/${encodeURIComponent(file.name)}`
+        const dlRes = await fetch(publicUrl, { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } })
+        if (!dlRes.ok || !dlRes.body) { results.failed++; results.errors.push(`DL: ${file.name}`); continue }
+        const ct = dlRes.headers.get('content-type') || getContentType(file.name)
+        const cl = dlRes.headers.get('content-length')
+        const upH: Record<string,string> = { 'Content-Type': ct }
+        if (cl) upH['Content-Length'] = cl
+        const up = await r2.fetch(`${R2_ENDPOINT}/${R2_BUCKET}/${r2Key}`, { method: 'PUT', body: dlRes.body, headers: upH })
         if (!up.ok) { results.failed++; results.errors.push(`UP: ${r2Key} ${up.status}`); continue }
         results.migrated++
       } catch (e: any) { results.failed++; results.errors.push(e.message) }
@@ -111,18 +97,14 @@ Deno.serve(async (req) => {
     }
 
     return new Response(JSON.stringify({
-      bucket: targetBucket, offset, limit,
-      total_files: files.length,
-      batch_processed: batch.length,
-      has_more: hasMore,
-      next_offset: hasMore ? offset + limit : null,
-      ...results
+      bucket: targetBucket, offset, limit, total_files: files.length,
+      batch_processed: batch.length, has_more: hasMore,
+      next_offset: hasMore ? offset + limit : null, ...results
     }, null, 2), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
   }
 
-  return new Response(JSON.stringify({
-    usage: { status: '?mode=status', migrate_batch: '?mode=migrate&bucket=audio&offset=0&limit=8' }
-  }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+  return new Response(JSON.stringify({ usage: { status: '?mode=status', migrate: '?mode=migrate&bucket=audio&offset=0&limit=3' } }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
 })
 
 async function listAllFiles(supabase: any, bucket: string, folder: string): Promise<any[]> {
@@ -143,5 +125,5 @@ function getContentType(f: string): string {
   const e = f.split('.').pop()?.toLowerCase()
   return ({ mp3:'audio/mpeg',wav:'audio/wav',ogg:'audio/ogg',flac:'audio/flac',m4a:'audio/mp4',
     aac:'audio/aac',webm:'audio/webm',mp4:'video/mp4',jpg:'image/jpeg',jpeg:'image/jpeg',
-    png:'image/png',webp:'image/webp',gif:'image/gif',svg:'image/svg+xml',pdf:'application/pdf' } as any)[e||''] || 'application/octet-stream'
+    png:'image/png',webp:'image/webp',gif:'image/gif',svg:'image/svg+xml' } as any)[e||''] || 'application/octet-stream'
 }
