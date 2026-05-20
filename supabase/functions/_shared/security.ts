@@ -13,7 +13,7 @@ const WEBHOOK_SECRET = Deno.env.get('WEBHOOK_SECRET') ?? '';
 // Only allow your production domain + localhost for dev
 
 const ALLOWED_ORIGINS = [
-  'https://sacredhealing.lovable.app',
+  'https://siddhaquantumnexus.com',
   'https://siddhaquantumnexus.com',
   'http://localhost:5173',
   'http://localhost:3000',

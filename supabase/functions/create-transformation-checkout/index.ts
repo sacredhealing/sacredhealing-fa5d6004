@@ -55,7 +55,7 @@ serve(async (req) => {
       logStep("Found existing customer", { customerId });
     }
 
-    const origin = req.headers.get("origin") || "https://ssygukfdbtehvtndandn.lovableproject.com";
+    const origin = req.headers.get("origin") || "https://siddhaquantumnexus.com";
 
     // If a specific priceId is provided, use it directly
     if (priceId) {

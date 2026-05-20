@@ -80,7 +80,7 @@ serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
-    const origin = req.headers.get("origin") || "https://ssygukfdbtehvtndandn.lovableproject.com";
+    const origin = req.headers.get("origin") || "https://siddhaquantumnexus.com";
 
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
