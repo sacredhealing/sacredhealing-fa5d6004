@@ -43,7 +43,7 @@ function sendEmail(to) {
 <p style="color:rgba(255,255,255,0.7);line-height:1.8;margin:30px 0 0;">In sacred service,<br/><span style="color:#D4AF37;font-size:18px;">Shiva Siddhananda</span></p>
 </div></div></body></html>`;
 
-    const body = JSON.stringify({ from: 'Shiva Siddhananda <hello@sacredhealingvibe.com>', to: [to], subject: 'Sacred Healing has a new home ✨', html });
+    const body = JSON.stringify({ from: 'Shiva Siddhananda <noreply@siddhaquantumnexus.com>', to: [to], subject: 'Sacred Healing has a new home ✨', html });
     const req = https.request({
       hostname: 'api.resend.com', path: '/emails', method: 'POST',
       headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) }
