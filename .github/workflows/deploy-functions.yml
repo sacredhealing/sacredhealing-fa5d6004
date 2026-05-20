@@ -31,20 +31,21 @@ jobs:
       - name: Deploy critical functions
         run: |
           PROJECT=fjdzhrdpioxdeyyfogep
-          supabase functions deploy quantum-apothecary-chat --project-ref $PROJECT
-          supabase functions deploy quantum-apothecary --project-ref $PROJECT
-          supabase functions deploy guide-chat --project-ref $PROJECT
-          supabase functions deploy gemini-bridge --project-ref $PROJECT
-          supabase functions deploy vastu-chat --project-ref $PROJECT
-          supabase functions deploy bhrigu-oracle --project-ref $PROJECT
-          supabase functions deploy prediction-engine-scan --project-ref $PROJECT
-          supabase functions deploy ayurveda-chat --project-ref $PROJECT
-          supabase functions deploy nadi-scan --project-ref $PROJECT
-          supabase functions deploy sqi-oracle --project-ref $PROJECT
-          supabase functions deploy stripe-webhook --project-ref $PROJECT
-          supabase functions deploy create-membership-checkout --project-ref $PROJECT
-          supabase functions deploy check-membership-subscription --project-ref $PROJECT
-          supabase functions deploy customer-portal --project-ref $PROJECT
-          supabase functions deploy create-tier-checkout --project-ref $PROJECT
-          supabase functions deploy weekly-alignment-email --project-ref $PROJECT
-          supabase functions deploy send-welcome-email --project-ref $PROJECT
+          OPTS="--project-ref $PROJECT --use-api"
+          supabase functions deploy quantum-apothecary-chat $OPTS
+          supabase functions deploy quantum-apothecary $OPTS
+          supabase functions deploy guide-chat $OPTS
+          supabase functions deploy gemini-bridge $OPTS
+          supabase functions deploy vastu-chat $OPTS
+          supabase functions deploy bhrigu-oracle $OPTS
+          supabase functions deploy prediction-engine-scan $OPTS
+          supabase functions deploy ayurveda-chat $OPTS
+          supabase functions deploy nadi-scan $OPTS
+          supabase functions deploy sqi-oracle $OPTS
+          supabase functions deploy stripe-webhook $OPTS
+          supabase functions deploy create-membership-checkout $OPTS
+          supabase functions deploy check-membership-subscription $OPTS
+          supabase functions deploy customer-portal $OPTS
+          supabase functions deploy create-tier-checkout $OPTS
+          supabase functions deploy weekly-alignment-email $OPTS
+          supabase functions deploy send-welcome-email $OPTS
