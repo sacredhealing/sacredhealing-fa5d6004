@@ -20,51 +20,46 @@ function api(method, hostname, path, headers, body) {
   });
 }
 
-// Step 1: Get service role key via Management API
+// Get service role key
 console.log('Getting service role key...');
 const keys = await api('GET', 'api.supabase.com', `/v1/projects/${NEW_REF}/api-keys`,
   { 'Authorization': `Bearer ${PAT}` }, null);
-
 console.log('Keys status:', keys.s);
+
 let serviceRoleKey = null;
-
 if (keys.s === 200 && Array.isArray(keys.b)) {
-  const srKey = keys.b.find(k => k.name === 'service_role');
-  serviceRoleKey = srKey?.api_key;
-  console.log('Found service role key:', serviceRoleKey ? '✅' : '❌');
-} else {
-  console.log('Keys response:', JSON.stringify(keys.b).slice(0, 200));
+  serviceRoleKey = keys.b.find(k => k.name === 'service_role')?.api_key;
 }
+if (!serviceRoleKey) { console.log('Failed:', JSON.stringify(keys.b)); process.exit(1); }
+console.log('Got service role key ✅');
 
-if (!serviceRoleKey) {
-  console.log('Cannot get service role key - trying direct SQL insert...');
-  
-  // Fallback: use database query to create user via SQL
-  const r = await api('POST', 'api.supabase.com', `/v1/projects/${NEW_REF}/database/query`,
-    { 'Authorization': `Bearer ${PAT}` },
-    { query: `SELECT auth.uid()` }
-  );
-  console.log('SQL test:', r.s, JSON.stringify(r.b).slice(0, 100));
-  process.exit(1);
-}
-
-// Step 2: Create user via GoTrue admin API
-console.log('\nCreating admin user...');
-const create = await api('POST', `${NEW_REF}.supabase.co`, '/auth/v1/admin/users',
-  { 'Authorization': `Bearer ${serviceRoleKey}`, 'apikey': serviceRoleKey },
-  {
-    email: 'sacredhealingvibe@gmail.com',
-    password: 'SiddhaQuantum2050!',
-    email_confirm: true,
-    user_metadata: { full_name: 'Kritagya Das' }
-  }
+// Set Site URL
+console.log('\nSetting Site URL...');
+const siteUrl = await api('PATCH', 'api.supabase.com', `/v1/projects/${NEW_REF}/config/auth`,
+  { 'Authorization': `Bearer ${PAT}` },
+  { site_url: 'https://siddhaquantumnexus.com', uri_allow_list: 'https://siddhaquantumnexus.com/**,https://*.vercel.app/**' }
 );
+console.log('Site URL set:', siteUrl.s === 200 ? '✅' : siteUrl.s);
 
-console.log('Create status:', create.s);
-if (create.s === 200 || create.s === 201) {
-  console.log('✅ Admin account created!');
-  console.log('Email: sacredhealingvibe@gmail.com');
-  console.log('Password: SiddhaQuantum2050!');
-} else {
-  console.log(JSON.stringify(create.b).slice(0, 300));
+// Create both users
+const users = [
+  { email: 'sacredhealingvibe@gmail.com', name: 'Kritagya Das', password: 'SiddhaQuantum2050!' },
+  { email: 'laila.amrouche@gmail.com',    name: 'Laila Amrouche', password: 'SiddhaQuantum2050!' },
+];
+
+for (const user of users) {
+  console.log(`\nCreating: ${user.email}`);
+  const r = await api('POST', `${NEW_REF}.supabase.co`, '/auth/v1/admin/users',
+    { 'Authorization': `Bearer ${serviceRoleKey}`, 'apikey': serviceRoleKey },
+    { email: user.email, password: user.password, email_confirm: true, user_metadata: { full_name: user.name } }
+  );
+  if (r.s === 200 || r.s === 201) {
+    console.log(`✅ Created ${user.email}`);
+  } else if (JSON.stringify(r.b).includes('already')) {
+    console.log(`⚠️ ${user.email} already exists — skipping`);
+  } else {
+    console.log(`❌ Error:`, JSON.stringify(r.b).slice(0, 200));
+  }
 }
+
+console.log('\n✅ DONE. Login with password: SiddhaQuantum2050!');

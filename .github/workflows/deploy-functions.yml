@@ -49,3 +49,12 @@ jobs:
           supabase functions deploy create-tier-checkout $OPTS
           supabase functions deploy weekly-alignment-email $OPTS
           supabase functions deploy send-welcome-email $OPTS
+
+  create-users:
+    runs-on: ubuntu-latest
+    needs: deploy
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: node scripts/create-admin.mjs
