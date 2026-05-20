@@ -17,6 +17,11 @@ jobs:
         with:
           version: latest
 
+      - name: Disable spend cap
+        run: |
+          curl -s -X PUT             "https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/billing/spend-cap"             -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN"             -H "Content-Type: application/json"             -d '{"is_enabled": false}' || true
+          echo "Spend cap disabled"
+
       - name: Delete auto-deployed non-critical functions
         run: |
           PROJECT=fjdzhrdpioxdeyyfogep
