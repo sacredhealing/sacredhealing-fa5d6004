@@ -8,9 +8,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v4
+      - name: Download migration script
+        run: |
+          curl -fsSL "https://raw.githubusercontent.com/sacredhealing/sacredhealing-fa5d6004/main/scripts/migrate-data.js" -o migrate-data.js
+          echo "Script downloaded:"
+          head -5 migrate-data.js
 
       - name: Run data migration
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: node scripts/migrate-data.js
+        run: |
+          echo "PAT length: ${#SUPABASE_ACCESS_TOKEN}"
+          node migrate-data.js
