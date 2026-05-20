@@ -9,13 +9,11 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
       - name: Deploy all edge functions
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: |
-          curl -fsSL "https://raw.githubusercontent.com/sacredhealing/sacredhealing-fa5d6004/main/scripts/deploy-functions.js" -o deploy-functions.js
-          node deploy-functions.js
+        run: node scripts/deploy-functions.mjs
