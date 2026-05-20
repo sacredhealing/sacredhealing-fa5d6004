@@ -7,7 +7,7 @@ const RESEND_KEY = 're_W3iSeEDi_2vHcGx2mNZizdVpZfbrZHjg6';
 const payload = JSON.stringify({
   smtp_admin_email: 'noreply@mail.siddhaquantumnexus.com',
   smtp_host: 'smtp.resend.com',
-  smtp_port: 465,
+  smtp_port: '465',
   smtp_user: 'resend',
   smtp_pass: RESEND_KEY,
   smtp_sender_name: 'Sacred Healing',
@@ -15,7 +15,7 @@ const payload = JSON.stringify({
   mailer_autoconfirm: false,
   smtp_max_frequency: 60,
   site_url: 'https://siddhaquantumnexus.com',
-  uri_allow_list: ['https://siddhaquantumnexus.com/*', 'https://*.vercel.app/*']
+  uri_allow_list: 'https://siddhaquantumnexus.com/**,https://*.vercel.app/**'
 });
 
 const result = await new Promise((resolve) => {
@@ -36,8 +36,6 @@ const result = await new Promise((resolve) => {
 console.log('Status:', result.s);
 if (result.s === 200) {
   console.log('✅ Supabase email configured with Resend SMTP');
-  console.log('Resend domain: siddhaquantumnexus.com');
-  console.log('Magic link emails will now be delivered.');
 } else {
   console.log('Response:', result.b.slice(0, 300));
 }
