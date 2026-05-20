@@ -15,35 +15,35 @@ serve(async (req) => {
     { auth: { persistSession: false } }
   );
 
-  const { data: tables } = await supabase.rpc("get_public_tables").catch(() => ({ data: null }));
+  const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+  const { table, offset = 0, limit = 500 } = body;
 
-  const tableNames = tables ? tables.map((t: any) => t.table_name) : [
-    "profiles","memberships","orders","subscriptions","products","prices",
-    "affiliate_links","affiliate_conversions","healing_sessions","quantum_frequencies",
-    "frequency_purchases","user_frequencies","sacred_sites","virtual_pilgrimages",
-    "pilgrimage_activations","scalar_sessions","akashic_codex","codex_entries",
-    "codex_embeddings","akashic_transmissions","community_posts","community_comments",
-    "community_groups","group_members","direct_messages","dm_threads","notifications",
-    "video_calls","audio_tracks","audio_playlists","user_audio_history",
-    "living_portraits","portrait_sessions","jyotish_charts","vedic_readings",
-    "bhrigu_readings","ayurveda_profiles","dosha_assessments",
-    "quantum_apothecary_sessions","shakti_cycle_logs","hormonal_alchemy_sessions",
-    "social_tokens","social_posts","manychat_events","stripe_webhooks","payment_logs",
-    "user_preferences","user_streaks","meditation_logs","practitioner_certifications",
-    "siddha_transmissions"
-  ];
-
-  const result: any = {};
-  for (const table of tableNames) {
-    try {
-      const { data, count } = await supabase.from(table).select("*", { count: "exact" }).limit(10000);
-      result[table] = { count: count ?? 0, rows: data ?? [] };
-    } catch(e: any) {
-      result[table] = { count: 0, rows: [], error: e.message };
+  // Mode 1: list all tables
+  if (!table) {
+    const { data } = await supabase.rpc("get_public_tables").catch(() => ({ data: null }));
+    let tables: string[] = [];
+    if (data) {
+      tables = data.map((t: any) => t.table_name);
+    } else {
+      const res = await supabase.from("information_schema.tables" as any)
+        .select("table_name")
+        .eq("table_schema", "public")
+        .eq("table_type", "BASE TABLE");
+      tables = (res.data || []).map((r: any) => r.table_name);
     }
+    const counts: any = {};
+    for (const t of tables) {
+      const { count } = await supabase.from(t).select("*", { count: "exact", head: true });
+      counts[t] = count ?? 0;
+    }
+    return new Response(JSON.stringify({ tables: counts }), {
+      headers: { ...cors, "Content-Type": "application/json" }
+    });
   }
 
-  return new Response(JSON.stringify({ exported_at: new Date().toISOString(), tables: result }), {
+  // Mode 2: export one table with pagination
+  const { data, error } = await supabase.from(table).select("*").range(offset, offset + limit - 1);
+  return new Response(JSON.stringify({ table, offset, rows: data ?? [], error: error?.message }), {
     headers: { ...cors, "Content-Type": "application/json" }
   });
 });
