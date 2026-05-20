@@ -1,58 +1,22 @@
 import https from 'https';
 
 const RESEND_KEY = process.env.RESEND_API_KEY;
-const SUPABASE_PAT = process.env.SUPABASE_ACCESS_TOKEN;
 const OLD_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4';
 const OLD_HOST = 'ssygukfdbtehvtndandn.supabase.co';
-const NEW_REF = 'fjdzhrdpioxdeyyfogep';
-
-const TABLES = [
-  "profiles","memberships","orders","subscriptions","products",
-  "affiliate_links","affiliate_conversions","healing_sessions",
-  "quantum_frequencies","frequency_purchases","user_frequencies",
-  "community_posts","community_comments","direct_messages",
-  "audio_tracks","jyotish_charts","vedic_readings","bhrigu_readings",
-  "ayurveda_profiles","dosha_assessments","quantum_apothecary_sessions",
-  "social_tokens","social_posts","stripe_webhooks","payment_logs",
-  "user_preferences","user_streaks","meditation_logs",
-  "email_subscribers","practitioner_certifications"
-];
 
 function callOldFn(body) {
   return new Promise((resolve) => {
     const payload = JSON.stringify(body);
     const req = https.request({
-      hostname: OLD_HOST,
-      path: '/functions/v1/full-data-export',
-      method: 'POST',
+      hostname: OLD_HOST, path: '/functions/v1/full-data-export', method: 'POST',
       headers: { 'Authorization': `Bearer ${OLD_KEY}`, 'apikey': OLD_KEY, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) }
     }, (res) => {
       let data = '';
       res.on('data', c => data += c);
-      res.on('end', () => { try { resolve({ status: res.statusCode, body: JSON.parse(data) }); } catch(e) { resolve({ status: res.statusCode, body: {} }); } });
+      res.on('end', () => { try { resolve({ status: res.statusCode, body: JSON.parse(data) }); } catch(e) { resolve({ status: 0, body: {} }); } });
     });
     req.setTimeout(30000, () => { req.destroy(); resolve({ status: 0, body: {} }); });
-    req.on('error', e => resolve({ status: 0, body: {} }));
-    req.write(payload);
-    req.end();
-  });
-}
-
-function dbQuery(sql) {
-  return new Promise((resolve) => {
-    const payload = JSON.stringify({ query: sql });
-    const req = https.request({
-      hostname: 'api.supabase.com',
-      path: `/v1/projects/${NEW_REF}/database/query`,
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${SUPABASE_PAT}`, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) }
-    }, (res) => {
-      let data = '';
-      res.on('data', c => data += c);
-      res.on('end', () => { try { resolve({ status: res.statusCode, body: JSON.parse(data) }); } catch(e) { resolve({ status: res.statusCode, body: [] }); } });
-    });
-    req.setTimeout(30000, () => { req.destroy(); resolve({ status: 0, body: [] }); });
-    req.on('error', e => resolve({ status: 0, body: [] }));
+    req.on('error', () => resolve({ status: 0, body: {} }));
     req.write(payload);
     req.end();
   });
@@ -86,7 +50,7 @@ function sendEmail(to) {
     }, (res) => {
       let data = '';
       res.on('data', c => data += c);
-      res.on('end', () => resolve(res.statusCode));
+      res.on('end', () => { console.log(`  ${res.statusCode === 200 || res.statusCode === 201 ? '✅' : '⚠️ '} ${to} (${res.statusCode})`); resolve(res.statusCode); });
     });
     req.setTimeout(15000, () => { req.destroy(); resolve(0); });
     req.on('error', () => resolve(0));
@@ -95,78 +59,35 @@ function sendEmail(to) {
   });
 }
 
-function isEmail(str) {
-  return typeof str === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str);
-}
-
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function isEmail(s) { return typeof s === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s); }
 
 async function main() {
+  console.log('Fetching email_subscribers from old Supabase...');
+  const res = await callOldFn({ table: 'email_subscribers', offset: 0, limit: 1000 });
+  
+  if (res.status !== 200 || !res.body.rows) {
+    console.error('Failed to fetch:', res.status);
+    process.exit(1);
+  }
+
   const emails = new Set();
+  res.body.rows.forEach(row => {
+    Object.values(row).forEach(v => { if (isEmail(v)) emails.add(v.toLowerCase()); });
+  });
 
-  console.log('=== Step 1: Scanning all tables for email addresses ===\n');
+  console.log(`Found ${emails.size} emails\n`);
+  console.log('Sending migration emails...\n');
 
-  for (const table of TABLES) {
-    process.stdout.write(`  Scanning ${table}... `);
-    const res = await callOldFn({ table, offset: 0, limit: 500 });
-    if (res.status === 200 && res.body.rows?.length > 0) {
-      const rows = res.body.rows;
-      let found = 0;
-      rows.forEach(row => {
-        Object.values(row).forEach(val => {
-          if (isEmail(val)) { emails.add(val.toLowerCase()); found++; }
-        });
-      });
-      console.log(`${rows.length} rows, ${found} emails found`);
-    } else {
-      console.log(`empty/skip`);
-    }
-    await sleep(150);
-  }
-
-  console.log(`\n✅ Total unique emails found: ${emails.size}`);
-  console.log([...emails].join('\n'));
-
-  if (emails.size === 0) {
-    console.log('\nNo emails found in public tables. Emails are in auth.users only.');
-    process.exit(0);
-  }
-
-  // Step 2: Create email_list table in new Supabase and insert
-  console.log('\n=== Step 2: Saving to new Supabase email_list table ===\n');
-
-  await dbQuery(`
-    CREATE TABLE IF NOT EXISTS public.email_list (
-      id BIGSERIAL PRIMARY KEY,
-      email TEXT UNIQUE NOT NULL,
-      source TEXT DEFAULT 'migration',
-      created_at TIMESTAMPTZ DEFAULT NOW()
-    )
-  `);
-
-  const values = [...emails].map(e => `('${e}', 'migration')`).join(', ');
-  const insertRes = await dbQuery(`INSERT INTO public.email_list (email, source) VALUES ${values} ON CONFLICT DO NOTHING`);
-  console.log(`Inserted ${emails.size} emails into email_list table (status: ${insertRes.status})`);
-
-  // Step 3: Send emails
-  console.log('\n=== Step 3: Sending migration emails ===\n');
   let sent = 0, failed = 0;
-
   for (const email of emails) {
     const status = await sendEmail(email);
-    if (status === 200 || status === 201) {
-      console.log(`  ✅ ${email}`);
-      sent++;
-    } else {
-      console.log(`  ⚠️  ${email} (status: ${status})`);
-      failed++;
-    }
+    if (status === 200 || status === 201) sent++; else failed++;
     await sleep(300);
   }
 
   console.log(`\n${'='.repeat(50)}`);
-  console.log(`✅ COMPLETE: ${sent} emails sent, ${failed} failed`);
-  console.log(`📊 email_list table populated with ${emails.size} addresses`);
+  console.log(`✅ DONE: ${sent} sent, ${failed} failed out of ${emails.size} total`);
 }
 
 main().catch(e => { console.error('Fatal:', e.message); process.exit(1); });
