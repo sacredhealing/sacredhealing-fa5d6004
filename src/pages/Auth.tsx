@@ -484,9 +484,9 @@ const Auth: React.FC = () => {
                       });
                     }
                   }}
-                  className="text-xs text-white/60 hover:text-[#D4AF37] transition-colors"
+                  className="text-xs text-white/60 hover:text-[#D4AF37] transition-colors underline underline-offset-2"
                 >
-                  Forgot password?
+                  🔑 Send magic login link to my email
                 </button>
               </div>
             )}
