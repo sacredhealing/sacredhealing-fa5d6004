@@ -1,0 +1,83 @@
+name: Update Vercel Env Vars
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update-env:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update all Vercel projects to new Supabase
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          NEW_URL="https://fjdzhrdpioxdeyyfogep.supabase.co"
+          NEW_KEY="sb_publishable_H4AI2ZzqOL1Y7o6qRMr8ew_5-4pih8F"
+          NEW_PROJECT_ID="fjdzhrdpioxdeyyfogep"
+
+          # Get all projects
+          PROJECTS=$(curl -s "https://api.vercel.com/v9/projects?limit=20" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" | \
+            python3 -c "import json,sys; [print(p['id']+'|'+p['name']) for p in json.load(sys.stdin).get('projects',[])]")
+
+          echo "Projects found:"
+          echo "$PROJECTS"
+
+          while IFS='|' read -r PROJECT_ID PROJECT_NAME; do
+            echo ""
+            echo "=== Updating: $PROJECT_NAME ($PROJECT_ID) ==="
+
+            # Get existing env vars
+            ENVS=$(curl -s "https://api.vercel.com/v9/projects/$PROJECT_ID/env" \
+              -H "Authorization: Bearer $VERCEL_TOKEN")
+
+            update_or_create() {
+              local KEY="$1"
+              local VALUE="$2"
+              # Check if exists
+              ENV_ID=$(echo "$ENVS" | python3 -c "
+import json,sys
+data=json.load(sys.stdin)
+envs=data.get('envs',[])
+for e in envs:
+  if e.get('key')=='$KEY':
+    print(e.get('id',''))
+    break
+" 2>/dev/null)
+
+              if [ -n "$ENV_ID" ]; then
+                # Update existing
+                curl -s -X PATCH "https://api.vercel.com/v9/projects/$PROJECT_ID/env/$ENV_ID" \
+                  -H "Authorization: Bearer $VERCEL_TOKEN" \
+                  -H "Content-Type: application/json" \
+                  -d "{\"value\":\"$VALUE\",\"target\":[\"production\",\"preview\",\"development\"]}" \
+                  | python3 -c "import json,sys; d=json.load(sys.stdin); print('  ✅ Updated $KEY' if 'id' in d else f'  ⚠️ $KEY: {d}')"
+              else
+                # Create new
+                curl -s -X POST "https://api.vercel.com/v9/projects/$PROJECT_ID/env" \
+                  -H "Authorization: Bearer $VERCEL_TOKEN" \
+                  -H "Content-Type: application/json" \
+                  -d "[{\"key\":\"$KEY\",\"value\":\"$VALUE\",\"type\":\"encrypted\",\"target\":[\"production\",\"preview\",\"development\"]}]" \
+                  | python3 -c "import json,sys; d=json.load(sys.stdin); print('  ✅ Created $KEY')"
+              fi
+            }
+
+            update_or_create "VITE_SUPABASE_URL" "$NEW_URL"
+            update_or_create "SUPABASE_URL" "$NEW_URL"
+            update_or_create "VITE_SUPABASE_PUBLISHABLE_KEY" "$NEW_KEY"
+            update_or_create "SUPABASE_PUBLISHABLE_KEY" "$NEW_KEY"
+            update_or_create "VITE_SUPABASE_ANON_KEY" "$NEW_KEY"
+            update_or_create "VITE_SUPABASE_PROJECT_ID" "$NEW_PROJECT_ID"
+
+            # Trigger redeploy
+            echo "  Triggering redeploy..."
+            curl -s -X POST "https://api.vercel.com/v13/deployments" \
+              -H "Authorization: Bearer $VERCEL_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{\"name\":\"$PROJECT_NAME\",\"gitSource\":{\"type\":\"github\",\"repoId\":\"sacredhealing/sacredhealing-fa5d6004\",\"ref\":\"main\"}}" \
+              > /dev/null && echo "  ✅ Redeploy triggered"
+
+          done <<< "$PROJECTS"
+
+          echo ""
+          echo "✅ All Vercel projects updated to new Supabase"
