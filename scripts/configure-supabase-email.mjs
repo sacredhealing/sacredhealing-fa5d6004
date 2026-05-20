@@ -5,14 +5,14 @@ const NEW_REF = 'fjdzhrdpioxdeyyfogep';
 const RESEND_KEY = 're_W3iSeEDi_2vHcGx2mNZizdVpZfbrZHjg6';
 
 const payload = JSON.stringify({
-  smtp_admin_email: 'noreply@siddhaquantumnexus.com',
+  smtp_admin_email: 'noreply@mail.siddhaquantumnexus.com',
   smtp_host: 'smtp.resend.com',
   smtp_port: 465,
   smtp_user: 'resend',
   smtp_pass: RESEND_KEY,
   smtp_sender_name: 'Sacred Healing',
   enable_signup: true,
-  mailer_autoconfirm: true,
+  mailer_autoconfirm: false,
   smtp_max_frequency: 60,
   site_url: 'https://siddhaquantumnexus.com',
   uri_allow_list: ['https://siddhaquantumnexus.com/*', 'https://*.vercel.app/*']
