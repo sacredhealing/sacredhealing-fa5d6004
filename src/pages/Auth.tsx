@@ -464,13 +464,17 @@ const Auth: React.FC = () => {
                       return;
                     }
                     try {
-                      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                        redirectTo: `${window.location.origin}/reset-password`,
+                      const { error } = await supabase.auth.signInWithOtp({
+                        email,
+                        options: {
+                          shouldCreateUser: true,
+                          emailRedirectTo: `${window.location.origin}/`,
+                        }
                       });
                       if (error) throw error;
                       toast({
-                        title: t('auth.resetEmailTitle'),
-                        description: t('auth.resetEmailDescription'),
+                        title: 'Magic link sent ✨',
+                        description: 'Check your email and click the link to log in. Then set a new password in your profile.',
                       });
                     } catch (err: any) {
                       toast({
