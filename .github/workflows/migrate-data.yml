@@ -8,15 +8,81 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
-      - name: Download migration script
+      - name: Export from old Supabase via edge function
         run: |
-          curl -fsSL "https://raw.githubusercontent.com/sacredhealing/sacredhealing-fa5d6004/main/scripts/migrate-data.js" -o migrate-data.js
-          echo "Script downloaded:"
-          head -5 migrate-data.js
+          echo "Calling full-data-export edge function..."
+          curl -s \
+            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4" \
+            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4" \
+            --max-time 120 \
+            "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/full-data-export" \
+            -o /tmp/export.json
+          echo "File size: $(ls -lh /tmp/export.json | awk '{print $5}')"
+          python3 -c "
+import json,sys
+d=json.load(open('/tmp/export.json'))
+t=d.get('tables',{})
+total=sum(v.get('count',0) for v in t.values())
+print(f'Tables: {len(t)} | Total rows: {total}')
+for n,v in t.items():
+  c=v.get('count',0)
+  if c>0: print(f'  {n}: {c}')
+"
 
-      - name: Run data migration
+      - name: Import into new Supabase
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
-          echo "PAT length: ${#SUPABASE_ACCESS_TOKEN}"
-          node migrate-data.js
+          python3 - << 'PYEOF'
+import json,urllib.request,urllib.error,time,os
+
+NEW="fjdzhrdpioxdeyyfogep"
+PAT=os.environ["SUPABASE_ACCESS_TOKEN"]
+
+def q(sql,retries=3):
+  url=f"https://api.supabase.com/v1/projects/{NEW}/database/query"
+  data=json.dumps({"query":sql}).encode()
+  req=urllib.request.Request(url,data=data,headers={"Authorization":f"Bearer {PAT}","Content-Type":"application/json"})
+  for i in range(retries):
+    try:
+      with urllib.request.urlopen(req,timeout=30) as r: return json.loads(r.read()),r.status
+    except urllib.error.HTTPError as e:
+      body=e.read().decode()[:200]
+      if i==retries-1: return {"error":body},e.code
+      time.sleep(2)
+    except Exception as ex:
+      if i==retries-1: return {"error":str(ex)},0
+      time.sleep(2)
+
+def esc(v):
+  if v is None: return "NULL"
+  if isinstance(v,bool): return "TRUE" if v else "FALSE"
+  if isinstance(v,(int,float)): return str(v)
+  if isinstance(v,(dict,list)): return f"'{json.dumps(v).replace(chr(39),chr(39)*2)}'"
+  return f"'{str(v).replace(chr(39),chr(39)*2)}'"
+
+export=json.load(open("/tmp/export.json"))
+tables=export.get("tables",{})
+print(f"Importing {len(tables)} tables...\n")
+q("SET session_replication_role = replica;")
+total=0
+errs=[]
+for table,info in tables.items():
+  rows=info.get("rows",[])
+  if not rows: print(f"  o {table}: empty"); continue
+  cols=list(rows[0].keys())
+  cs=", ".join([f'"{c}"' for c in cols])
+  migrated=0
+  for i in range(0,len(rows),200):
+    batch=rows[i:i+200]
+    vals=",".join([f"({','.join([esc(r.get(c)) for c in cols])})" for r in batch])
+    res,status=q(f'INSERT INTO public."{table}" ({cs}) VALUES {vals} ON CONFLICT DO NOTHING')
+    if status==200: migrated+=len(batch)
+    else: errs.append(f"{table}:{str(res)[:80]}")
+  print(f"  {table}: {migrated} rows inserted")
+  total+=migrated
+q("SET session_replication_role = DEFAULT;")
+print(f"\n{'='*40}")
+print(f"DONE: {total} rows migrated to new Supabase")
+if errs: print(f"Warnings: {len(errs)}")
+PYEOF
