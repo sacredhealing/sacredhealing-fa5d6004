@@ -16,4 +16,27 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
-      - run: supabase functions deploy --project-ref fjdzhrdpioxdeyyfogep
+
+      - name: Deploy critical functions
+        run: |
+          PROJECT=fjdzhrdpioxdeyyfogep
+
+          # AI / Chat (core of app)
+          supabase functions deploy quantum-apothecary-chat --project-ref $PROJECT
+          supabase functions deploy quantum-apothecary --project-ref $PROJECT
+          supabase functions deploy guide-chat --project-ref $PROJECT
+          supabase functions deploy gemini-bridge --project-ref $PROJECT
+          supabase functions deploy vastu-chat --project-ref $PROJECT
+          supabase functions deploy bhrigu-oracle --project-ref $PROJECT
+          supabase functions deploy prediction-engine-scan --project-ref $PROJECT
+          supabase functions deploy ayurveda-chat --project-ref $PROJECT
+
+          # Payments (never break)
+          supabase functions deploy stripe-webhook --project-ref $PROJECT
+          supabase functions deploy create-membership-checkout --project-ref $PROJECT
+          supabase functions deploy check-membership-subscription --project-ref $PROJECT
+          supabase functions deploy customer-portal --project-ref $PROJECT
+          supabase functions deploy create-tier-checkout --project-ref $PROJECT
+
+          # Weekly emails
+          supabase functions deploy weekly-alignment-email --project-ref $PROJECT
