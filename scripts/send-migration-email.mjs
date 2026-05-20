@@ -6,21 +6,25 @@ const NEW_REF = 'fjdzhrdpioxdeyyfogep';
 
 if (!RESEND_KEY || !SUPABASE_PAT) { console.error('Missing env vars'); process.exit(1); }
 
-function supabaseApi(path, body) {
+function dbQuery(sql) {
   return new Promise((resolve) => {
-    const payload = body ? JSON.stringify(body) : '';
+    const payload = JSON.stringify({ query: sql });
     const req = https.request({
       hostname: 'api.supabase.com',
-      path, method: body ? 'POST' : 'GET',
+      path: `/v1/projects/${NEW_REF}/database/query`,
+      method: 'POST',
       headers: { 'Authorization': `Bearer ${SUPABASE_PAT}`, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) }
     }, (res) => {
       let data = '';
       res.on('data', c => data += c);
-      res.on('end', () => { try { resolve({ status: res.statusCode, body: JSON.parse(data) }); } catch(e) { resolve({ status: res.statusCode, body: data }); } });
+      res.on('end', () => {
+        console.log(`DB query status: ${res.statusCode}, data: ${data.slice(0, 200)}`);
+        try { resolve(JSON.parse(data)); } catch(e) { resolve([]); }
+      });
     });
-    req.setTimeout(30000, () => { req.destroy(); resolve({ status: 0, body: 'timeout' }); });
-    req.on('error', e => resolve({ status: 0, body: e.message }));
-    if (payload) req.write(payload);
+    req.setTimeout(30000, () => { req.destroy(); resolve([]); });
+    req.on('error', e => resolve([]));
+    req.write(payload);
     req.end();
   });
 }
@@ -70,50 +74,36 @@ const emailHtml = `<!DOCTYPE html>
 </div></body></html>`;
 
 async function main() {
-  // Get all auth users via Management API
-  console.log('Fetching all auth users...');
-  const { status, body } = await supabaseApi(
-    `/v1/projects/${NEW_REF}/auth/users?page=1&per_page=1000`, null
+  console.log('Fetching all users from auth.users...');
+  
+  // Query auth.users directly - works with service role via Management API
+  const rows = await dbQuery(
+    "SELECT email FROM auth.users WHERE email IS NOT NULL AND deleted_at IS NULL ORDER BY created_at"
   );
-  
-  console.log('Auth API status:', status);
-  
-  let users = [];
-  if (status === 200 && body.users) {
-    users = body.users.filter(u => u.email);
-  } else {
-    // Fallback: query profiles table
-    console.log('Trying profiles table...');
-    const res = await supabaseApi(`/v1/projects/${NEW_REF}/database/query`, { 
-      query: "SELECT email FROM auth.users WHERE email IS NOT NULL AND deleted_at IS NULL" 
-    });
-    console.log('Profiles status:', res.status);
-    if (res.status === 200 && Array.isArray(res.body)) {
-      users = res.body;
-    }
+
+  const users = Array.isArray(rows) ? rows.filter(r => r.email) : [];
+  console.log(`\nFound ${users.length} users to email\n`);
+
+  if (users.length === 0) {
+    console.log('No users found. Check the DB query response above.');
+    process.exit(0);
   }
 
-  console.log(`Found ${users.length} users\n`);
-
   let sent = 0, failed = 0;
-
   for (const user of users) {
-    const email = user.email;
-    if (!email) continue;
-    
-    const result = await sendEmail(email, 'Sacred Healing has a new home ✨', emailHtml);
+    const result = await sendEmail(user.email, 'Sacred Healing has a new home ✨', emailHtml);
     if (result.status === 200 || result.status === 201) {
-      console.log(`  ✅ ${email}`);
+      console.log(`  ✅ ${user.email}`);
       sent++;
     } else {
-      console.log(`  ⚠️ ${email}: ${result.body.toString().slice(0, 80)}`);
+      console.log(`  ⚠️  ${user.email}: ${result.body.toString().slice(0, 100)}`);
       failed++;
     }
     await sleep(250);
   }
 
   console.log(`\n${'='.repeat(50)}`);
-  console.log(`✅ DONE: ${sent} sent, ${failed} failed`);
+  console.log(`✅ DONE: ${sent} sent, ${failed} failed out of ${users.length} total`);
 }
 
 main().catch(e => { console.error('Fatal:', e.message); process.exit(1); });
