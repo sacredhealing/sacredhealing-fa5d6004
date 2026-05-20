@@ -1,14 +1,22 @@
 name: Deploy Edge Functions
+
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
         with:
           version: latest
-      run: supabase functions deploy quantum-apothecary-chat --project-ref fjdzhrdpioxdeyyfogep
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_PAT }}
+      - name: Link project
+        run: supabase link --project-ref fjdzhrdpioxdeyyfogep
+      - name: Deploy all functions
+        run: supabase functions deploy --project-ref fjdzhrdpioxdeyyfogep
