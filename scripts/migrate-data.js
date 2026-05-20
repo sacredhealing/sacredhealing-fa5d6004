@@ -45,9 +45,20 @@ function escapeVal(val) {
 async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 async function main() {
-  console.log('=== SQI Data Migration: Old → New Supabase ===\n');
+  console.log('=== SQI Data Migration: Old Supabase → New Supabase ===\n');
 
-  // Get all tables
+  // Verify connection to both DBs
+  console.log('Verifying connections...');
+  const oldTest = await apiCall(OLD_REF, 'SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = \'public\'');
+  const newTest = await apiCall(NEW_REF, 'SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = \'public\'');
+  
+  if (oldTest.status !== 200) { console.error('❌ Cannot connect to OLD Supabase:', oldTest.status); process.exit(1); }
+  if (newTest.status !== 200) { console.error('❌ Cannot connect to NEW Supabase:', newTest.status); process.exit(1); }
+  
+  console.log('✅ Old Supabase connected');
+  console.log('✅ New Supabase connected\n');
+
+  // Get all tables from old DB
   const tablesRes = await apiCall(OLD_REF, `
     SELECT table_name FROM information_schema.tables
     WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
@@ -55,14 +66,14 @@ async function main() {
   `);
 
   if (tablesRes.status !== 200 || !Array.isArray(tablesRes.body)) {
-    console.error('Failed to get tables:', tablesRes.status, JSON.stringify(tablesRes.body).slice(0, 200));
+    console.error('Failed to get tables:', tablesRes.status, JSON.stringify(tablesRes.body).slice(0, 300));
     process.exit(1);
   }
 
   const tables = tablesRes.body.map(r => r.table_name);
-  console.log(`Found ${tables.length} tables\n`);
+  console.log(`Found ${tables.length} tables to migrate\n`);
 
-  // Disable FK checks on new DB
+  // Disable FK constraints on new DB for clean insert
   await apiCall(NEW_REF, 'SET session_replication_role = replica;');
 
   let totalRows = 0;
@@ -72,16 +83,15 @@ async function main() {
   for (const table of tables) {
     process.stdout.write(`--- ${table}: `);
 
-    // Count rows
     const countRes = await apiCall(OLD_REF, `SELECT COUNT(*)::int as cnt FROM public."${table}"`);
     if (countRes.status !== 200 || !Array.isArray(countRes.body)) {
-      console.log(`⚠️  count failed`);
+      console.log(`⚠️  count failed (${countRes.status})`);
       errors.push(table);
       continue;
     }
 
     const count = parseInt(countRes.body[0]?.cnt || 0);
-    if (count === 0) { console.log('empty, skipping'); continue; }
+    if (count === 0) { console.log('empty'); continue; }
 
     process.stdout.write(`${count} rows → `);
     let migrated = 0;
@@ -94,37 +104,30 @@ async function main() {
       const rows = rowsRes.body;
       const cols = Object.keys(rows[0]);
       const colsStr = cols.map(c => `"${c}"`).join(', ');
-
-      const values = rows.map(row =>
-        `(${cols.map(c => escapeVal(row[c])).join(', ')})`
-      ).join(',\n');
-
+      const values = rows.map(row => `(${cols.map(c => escapeVal(row[c])).join(', ')})`).join(',\n');
       const insertSql = `INSERT INTO public."${table}" (${colsStr}) VALUES ${values} ON CONFLICT DO NOTHING`;
-      const insertRes = await apiCall(NEW_REF, insertSql);
 
+      const insertRes = await apiCall(NEW_REF, insertSql);
       if (insertRes.status !== 200) {
-        process.stdout.write(`⚠️ `);
         errors.push(`${table}@${offset}`);
       } else {
         migrated += rows.length;
       }
 
       offset += BATCH;
-      await sleep(100); // rate limit courtesy
+      await sleep(150);
     }
 
-    console.log(`✅ ${migrated} migrated`);
+    console.log(`✅ ${migrated}`);
     totalRows += migrated;
   }
 
-  // Re-enable FK checks
   await apiCall(NEW_REF, 'SET session_replication_role = DEFAULT;');
 
   console.log('\n' + '='.repeat(50));
-  console.log(`✅ MIGRATION COMPLETE`);
-  console.log(`   Total rows migrated: ${totalRows}`);
-  if (errors.length > 0) console.log(`   Warnings: ${errors.join(', ')}`);
+  console.log(`✅ MIGRATION COMPLETE — ${totalRows} total rows migrated`);
+  if (errors.length > 0) console.log(`⚠️  Issues: ${errors.join(', ')}`);
   console.log('='.repeat(50));
 }
 
-main().catch(e => { console.error('Fatal:', e); process.exit(1); });
+main().catch(e => { console.error('Fatal:', e.message); process.exit(1); });
