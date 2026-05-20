@@ -1,6 +1,10 @@
 name: Configure Supabase Email
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/configure-supabase-email.mjs'
   workflow_dispatch:
 
 jobs:
