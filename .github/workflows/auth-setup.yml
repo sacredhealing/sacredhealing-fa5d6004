@@ -1,4 +1,4 @@
-name: Setup Auth on New Supabase
+name: Setup Auth Users on New Supabase
 
 on:
   workflow_dispatch:
@@ -9,57 +9,62 @@ jobs:
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
     steps:
-      - name: Configure Site URL
+      - name: Configure Site URL + create users + send reset emails
         run: |
-          curl -s -X PATCH \
-            "https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/config/auth" \
-            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "site_url": "https://siddhaquantumnexus.com",
-              "uri_allow_list": "https://siddhaquantumnexus.com/**,https://*.vercel.app/**"
-            }'
-
-      - name: Get service role key
-        id: keys
-        run: |
-          KEYS=$(curl -s \
-            "https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/api-keys" \
-            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN")
-          echo "$KEYS"
-          SERVICE_KEY=$(echo "$KEYS" | python3 -c "import sys,json; keys=json.load(sys.stdin); print(next(k['api_key'] for k in keys if k['name']=='service_role'))")
-          echo "SERVICE_KEY=$SERVICE_KEY" >> $GITHUB_ENV
-
-      - name: Get all users from old Supabase and recreate in new
-        run: |
-          # Get old users
-          OLD_USERS=$(curl -s \
-            "https://ssygukfdbtehvtndandn.supabase.co/auth/v1/admin/users?page=1&per_page=100" \
-            -H "apikey: ${{ secrets.OLD_SERVICE_ROLE_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.OLD_SERVICE_ROLE_KEY }}")
-          
-          echo "Old users fetched"
-          
-          # Send password reset email to each user via new Supabase
           python3 << 'PYEOF'
           import urllib.request, json, os
 
-          service_key = os.environ['SERVICE_KEY']
-          base = "https://fjdzhrdpioxdeyyfogep.supabase.co"
+          PAT = os.environ['SUPABASE_ACCESS_TOKEN']
+          PROJECT = "fjdzhrdpioxdeyyfogep"
+          BASE_MGMT = "https://api.supabase.com/v1"
+          BASE_AUTH = f"https://{PROJECT}.supabase.co"
 
+          def mgmt(method, path, body=None):
+            req = urllib.request.Request(
+              f"{BASE_MGMT}{path}",
+              data=json.dumps(body).encode() if body else None,
+              headers={"Authorization": f"Bearer {PAT}", "Content-Type": "application/json"},
+              method=method
+            )
+            try:
+              with urllib.request.urlopen(req) as r:
+                return json.loads(r.read())
+            except Exception as e:
+              print(f"MGMT error {path}: {e}")
+              return {}
+
+          # 1. Set Site URL
+          print("Setting Site URL...")
+          mgmt("PATCH", f"/projects/{PROJECT}/config/auth", {
+            "site_url": "https://siddhaquantumnexus.com",
+            "uri_allow_list": "https://siddhaquantumnexus.com/**,https://*.vercel.app/**"
+          })
+          print("Site URL set.")
+
+          # 2. Get service role key
+          print("Getting service role key...")
+          keys = mgmt("GET", f"/projects/{PROJECT}/api-keys")
+          service_key = next((k['api_key'] for k in keys if k['name'] == 'service_role'), None)
+          if not service_key:
+            print("ERROR: Could not get service role key")
+            exit(1)
+          print("Got service role key.")
+
+          # 3. Create user accounts
           emails = [
+            "sacredhealingvibe@gmail.com",
             "laila.amrouche@gmail.com"
           ]
 
           for email in emails:
-            # Create user account
+            print(f"Creating user: {email}")
             data = json.dumps({
               "email": email,
               "email_confirm": True,
-              "password": "TemporarySQI2050!"
+              "password": "SQI2050sacred!"
             }).encode()
             req = urllib.request.Request(
-              f"{base}/auth/v1/admin/users",
+              f"{BASE_AUTH}/auth/v1/admin/users",
               data=data,
               headers={
                 "apikey": service_key,
@@ -70,20 +75,32 @@ jobs:
             try:
               with urllib.request.urlopen(req) as r:
                 result = json.loads(r.read())
-                print(f"Created user: {email} - ID: {result.get('id')}")
-            except Exception as e:
-              print(f"User {email} error (may already exist): {e}")
+                print(f"Created: {email} — ID: {result.get('id')}")
+            except urllib.error.HTTPError as e:
+              body = e.read().decode()
+              if 'already' in body.lower() or 'exists' in body.lower():
+                print(f"{email} already exists — skipping")
+              else:
+                print(f"Error creating {email}: {body}")
 
-            # Send password reset
-            data = json.dumps({"email": email}).encode()
+            # Send password reset email
+            print(f"Sending reset email to: {email}")
+            data = json.dumps({"email": email, "type": "recovery"}).encode()
             req = urllib.request.Request(
-              f"{base}/auth/v1/admin/generate_link",
+              f"{BASE_AUTH}/auth/v1/admin/generate_link",
               data=data,
               headers={
                 "apikey": service_key,
                 "Authorization": f"Bearer {service_key}",
                 "Content-Type": "application/json"
-              },
-              method="POST"
+              }
             )
+            try:
+              with urllib.request.urlopen(req) as r:
+                result = json.loads(r.read())
+                print(f"Reset link for {email}: {result.get('action_link', 'check email')}")
+            except Exception as e:
+              print(f"Reset email error for {email}: {e}")
+
+          print("DONE. Both accounts created. Temporary password: SQI2050sacred!")
           PYEOF
