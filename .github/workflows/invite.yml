@@ -1,0 +1,19 @@
+name: Invite Users
+on:
+  workflow_dispatch:
+jobs:
+  invite:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          node << 'EOF'
+          const KEY = '${{ secrets.NEW_SERVICE_ROLE }}';
+          const BASE = 'https://fjdzhrdpioxdeyyfogep.supabase.co';
+          const h = { 'apikey': KEY, 'Authorization': `Bearer ${KEY}`, 'Content-Type': 'application/json' };
+          const emails = await (await fetch(`${BASE}/rest/v1/email_list?select=email`, { headers: h })).json();
+          for (const { email } of emails) {
+            const r = await fetch(`${BASE}/auth/v1/invite`, { method:'POST', headers:h, body: JSON.stringify({ email, redirect_to:'https://siddhaquantumnexus.com' }) });
+            const j = await r.json();
+            console.log(r.ok ? `✓ ${email}` : `✗ ${email} ${j.msg||j.message}`);
+          }
+          EOF
