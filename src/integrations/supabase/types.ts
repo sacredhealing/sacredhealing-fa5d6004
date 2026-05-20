@@ -6095,6 +6095,48 @@ export type Database = {
         }
         Relationships: []
       }
+      shakti_cycle_logs: {
+        Row: {
+          created_at: string
+          cycle_day: number
+          energy_level: number
+          id: string
+          intention: string | null
+          logged_at: string
+          mood_score: number
+          notes: string | null
+          phase: string
+          symptoms: string[] | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          cycle_day?: number
+          energy_level?: number
+          id?: string
+          intention?: string | null
+          logged_at?: string
+          mood_score?: number
+          notes?: string | null
+          phase: string
+          symptoms?: string[] | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          cycle_day?: number
+          energy_level?: number
+          id?: string
+          intention?: string | null
+          logged_at?: string
+          mood_score?: number
+          notes?: string | null
+          phase?: string
+          symptoms?: string[] | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       shc_transactions: {
         Row: {
           amount: number
