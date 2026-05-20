@@ -1,0 +1,14 @@
+name: Deploy Edge Functions
+on:
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase functions deploy --project-ref fjdzhrdpioxdeyyfogep
+        env:
+          SUPABASE_ACCESS_TOKEN: sbp_102e689504a6e8b6e2e8df3e36a7699a7d94d744
