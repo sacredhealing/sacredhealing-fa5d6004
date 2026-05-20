@@ -17,11 +17,19 @@ jobs:
         with:
           version: latest
 
+      - name: Delete auto-deployed non-critical functions
+        run: |
+          PROJECT=fjdzhrdpioxdeyyfogep
+          # These got auto-deployed alphabetically and are not critical - delete them
+          for fn in abundance-oracle affiliate-commission akasha-codex-backfill akasha-codex-cluster akasha-codex-curator akasha-codex-export analyze-dosha analyze-music-track apply-promo-code audio-analysis audio-to-scripture auth-email-hook backfill-stripe-revenue check-achievements; do
+            supabase functions delete $fn --project-ref $PROJECT || true
+          done
+
       - name: Deploy critical functions
         run: |
           PROJECT=fjdzhrdpioxdeyyfogep
 
-          # AI / Chat (core of app)
+          # AI / Chat
           supabase functions deploy quantum-apothecary-chat --project-ref $PROJECT
           supabase functions deploy quantum-apothecary --project-ref $PROJECT
           supabase functions deploy guide-chat --project-ref $PROJECT
@@ -30,13 +38,16 @@ jobs:
           supabase functions deploy bhrigu-oracle --project-ref $PROJECT
           supabase functions deploy prediction-engine-scan --project-ref $PROJECT
           supabase functions deploy ayurveda-chat --project-ref $PROJECT
+          supabase functions deploy nadi-scan --project-ref $PROJECT
+          supabase functions deploy sqi-oracle --project-ref $PROJECT
 
-          # Payments (never break)
+          # Payments
           supabase functions deploy stripe-webhook --project-ref $PROJECT
           supabase functions deploy create-membership-checkout --project-ref $PROJECT
           supabase functions deploy check-membership-subscription --project-ref $PROJECT
           supabase functions deploy customer-portal --project-ref $PROJECT
           supabase functions deploy create-tier-checkout --project-ref $PROJECT
 
-          # Weekly emails
+          # Emails
           supabase functions deploy weekly-alignment-email --project-ref $PROJECT
+          supabase functions deploy send-welcome-email --project-ref $PROJECT
