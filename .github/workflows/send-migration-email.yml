@@ -4,11 +4,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  save-emails:
+  send:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - name: Save all emails to new Supabase
+      - name: Send via edge function
         env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: node scripts/save-emails.mjs
+          SUPABASE_TOKEN: ${{ secrets.SUPABASE_TOKEN }}
+        run: node scripts/trigger-email-send.mjs
