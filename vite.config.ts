@@ -6,6 +6,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
+// Build: 2026-05-21-v3 cache-bust
 export default defineConfig(({ mode }) => {
   const fileEnv = loadEnv(mode, process.cwd(), "");
   /** Lovable/CI often inject GEMINI_API_KEY; local dev uses VITE_GEMINI_API_KEY in .env */
