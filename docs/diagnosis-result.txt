@@ -1,0 +1,21 @@
+=== 1. Test publishable key ===
+HTTP: 401 | {"message":"Secret API key required","hint":"Only secret API keys can be used for this endpoint."}
+
+=== 2. Fetch actual API keys ===
+HTTP: 200
+  anon: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMDQwMDMsImV4cCI6MjA5MzY4MDAwM30.Mkbodv6uEb1yMKA0UIKMzm-cFWfcgNFXr-LLGtqoNcg
+  service_role: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODEwNDAwMywiZXhwIjoyMDkzNjgwMDAzfQ.HZ_VKpZpV5WrcTwfp5oQY9h4TRZLIzLGMysQoGBVkEw
+  default: sb_publishable_H4AI2ZzqOL1Y7o6qRMr8ew_5-4pih8F
+  default: sb_secret_LHmnH··························
+
+=== 3. Auth users list ===
+HTTP: 200
+Total users: 0
+
+=== 4. Login test with SVC key ===
+HTTP: 400
+LOGIN FAILED: {"code":400,"error_code":"invalid_credentials","msg":"Invalid login credentials"}
+
+=== 5. Login test with publishable key ===
+HTTP: 400
+PUB KEY LOGIN FAILED: {"code":400,"error_code":"invalid_credentials","msg":"Invalid login credentials"}
