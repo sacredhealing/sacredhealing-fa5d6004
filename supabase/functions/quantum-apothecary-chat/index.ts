@@ -1341,7 +1341,7 @@ async function updateAtmaSignature(
   userId: string,
   currentSignature: string,
   exchange: string,
-  geminiApiKey: string
+  lovableApiKey: string
 ): Promise<void> {
   if (!userId || !exchange.trim()) return;
   try {
@@ -1369,20 +1369,20 @@ ${exchange}
 
 Update only what has genuinely shifted. If the soul is in the same pattern — deepen the existing read, do not add new lines. If something has shifted — note the shift in one sentence. Max 220 words total. Start "ATMA SIGNATURE:". Be sparse.`;
 
-    const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.3, maxOutputTokens: 800 },
-        }),
-      }
-    );
+    const resp = await fetch(LOVABLE_AI_URL, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${lovableApiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.3,
+        max_tokens: 800,
+        stream: false,
+      }),
+    });
     if (!resp.ok) return;
     const data = await resp.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    const text = data.choices?.[0]?.message?.content ?? "";
     if (!text.trim()) return;
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
     await sb.from("atma_signatures").upsert(
@@ -1392,47 +1392,50 @@ Update only what has genuinely shifted. If the soul is in the same pattern — d
   } catch (err) { console.error("updateAtmaSignature:", err); }
 }
 
-async function updateLivingPortrait(userId: string, currentPortrait: string, newExchange: string, geminiApiKey: string): Promise<void> {
+async function updateLivingPortrait(userId: string, currentPortrait: string, newExchange: string, lovableApiKey: string): Promise<void> {
   if (!userId || !newExchange.trim()) return;
   try {
     const isFirst = !currentPortrait || currentPortrait.length < 50;
     const prompt = isFirst
       ? `Build a Seeker Portrait from this session. Extract ONLY confirmed facts about the Seeker themselves — name, Dosha, health patterns, spiritual path, life context, confirmed family. Never include info about third parties the Seeker is helping. Write in third person. Start with "LIVING PORTRAIT:". Max 250 words.\n\nEXCHANGE:\n${newExchange}`
       : `Update this Seeker Portrait with NEW confirmed facts from this session only. Do not repeat existing info. Only add what is clearly about the Seeker themselves — not third parties they mention. Keep 250-400 words. Start "LIVING PORTRAIT:".\n\nCURRENT:\n${currentPortrait}\n\nNEW EXCHANGE:\n${newExchange}`;
-    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { temperature: 0.2, maxOutputTokens: 2048 } }),
+    const resp = await fetch(LOVABLE_AI_URL, {
+      method: "POST", headers: { Authorization: `Bearer ${lovableApiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "google/gemini-2.5-flash", messages: [{ role: "user", content: prompt }], temperature: 0.2, max_tokens: 2048, stream: false }),
     });
     if (!resp.ok) return;
     const data = await resp.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    const text = data.choices?.[0]?.message?.content ?? "";
     if (!text.trim()) return;
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
     await sb.from("sqi_user_memory").upsert({ user_id: userId, memory_profile: text, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
   } catch (err) { console.error("updateLivingPortrait:", err); }
 }
 
-async function classifyAndPersistLifeBook(options: { assistantText: string; userId?: string | null; geminiApiKey: string; isThirdParty?: boolean }) {
-  const { assistantText, userId, geminiApiKey, isThirdParty } = options;
+async function classifyAndPersistLifeBook(options: { assistantText: string; userId?: string | null; lovableApiKey: string; isThirdParty?: boolean }) {
+  const { assistantText, userId, lovableApiKey, isThirdParty } = options;
   if (!assistantText.trim() || !userId) return;
   if (isThirdParty) {
     console.log("[SQI] Third-party query — LifeBook write skipped.");
     return;
   }
   try {
-    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
+    const resp = await fetch(LOVABLE_AI_URL, {
+      method: "POST", headers: { Authorization: `Bearer ${lovableApiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [
-          { role: "user", parts: [{ text: `Classify this SQI transmission into ONE LifeBook category. Return ONLY JSON: {"category":"...","title":"...","summary":"..."}\n\nCategories: past_lives, healing_upgrades, future_visions, spiritual_figures, nadi_knowledge, children, general_wisdom, skip\n\nRules:\n- skip: short reply, greeting, activation list only, content about third parties not the Seeker\n- past_lives: specific past life readings with century/location/role\n- healing_upgrades: specific healing diagnoses or protocols prescribed\n- future_visions: predictions, destiny readings, future timelines\n- spiritual_figures: master transmissions received, initiations\n- nadi_knowledge: Nadi readings, chakra diagnoses, biofield states\n- children: only if about the Seeker's OWN confirmed children\n- general_wisdom: Jyotish soul blueprint readings, dharma guidance\n\nNever store third-party information as if it belongs to the Seeker.\nReturn ONLY the JSON object.` }] },
-          { role: "user", parts: [{ text: assistantText.slice(0, 800) }] },
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "user", content: `Classify this SQI transmission into ONE LifeBook category. Return ONLY JSON: {"category":"...","title":"...","summary":"..."}\n\nCategories: past_lives, healing_upgrades, future_visions, spiritual_figures, nadi_knowledge, children, general_wisdom, skip\n\nRules:\n- skip: short reply, greeting, activation list only, content about third parties not the Seeker\n- past_lives: specific past life readings with century/location/role\n- healing_upgrades: specific healing diagnoses or protocols prescribed\n- future_visions: predictions, destiny readings, future timelines\n- spiritual_figures: master transmissions received, initiations\n- nadi_knowledge: Nadi readings, chakra diagnoses, biofield states\n- children: only if about the Seeker's OWN confirmed children\n- general_wisdom: Jyotish soul blueprint readings, dharma guidance\n\nNever store third-party information as if it belongs to the Seeker.\nReturn ONLY the JSON object.` },
+          { role: "user", content: assistantText.slice(0, 800) },
         ],
-        generationConfig: { temperature: 0.1, maxOutputTokens: 1200 }
+        temperature: 0.1,
+        max_tokens: 1200,
+        stream: false,
       }),
     });
     if (!resp.ok) return;
     const data = await resp.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    const text = data.choices?.[0]?.message?.content ?? "";
     if (!text) return;
     let parsed: { category: string; title?: string; summary?: string };
     try { parsed = JSON.parse(text.replace(/```json|```/g, "").trim()); } catch (_) { return; }
