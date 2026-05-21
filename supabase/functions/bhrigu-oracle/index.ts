@@ -26,6 +26,14 @@ function hashChart(...parts: string[]): string {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  // Early key validation
+  if (!GEMINI_API_KEY) {
+    console.error("[bhrigu-oracle] GEMINI_API_KEY not configured in Supabase secrets.");
+    return new Response(JSON.stringify({ error: "GEMINI_API_KEY not configured. Set it in Supabase Edge Function secrets." }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   try {
