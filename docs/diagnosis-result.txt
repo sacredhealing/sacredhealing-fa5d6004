@@ -1,12 +1,4 @@
-=== Create admin users ===
-Admin ID: 20d84b5c-c13f-4e2b-879d-97be22e75642
-Laila ID: abde2eff-316b-465c-9396-54e654a9ac77
-
-=== Verify user count ===
-Users: 200 Count: 2
- laila.amrouche@gmail.com | abde2eff-316b-465c-9396-54e654a9ac77
- sacredhealingvibe@gmail.com | 20d84b5c-c13f-4e2b-879d-97be22e75642
-
-=== Test login ===
-Login HTTP: 200
-LOGIN SUCCESS
+=== 1. Find Vercel project ===
+HTTP: 403
+Projects found: 
+ERROR: Could not find project
