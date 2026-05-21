@@ -1,0 +1,34 @@
+name: Restore Login - Create Admin Users
+
+on:
+  push:
+    paths:
+      - '.github/workflows/restore-login.yml'
+
+jobs:
+  create-admin:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create admin users via Supabase Auth Admin API
+        env:
+          SVC: ${{ secrets.NEW_SERVICE_ROLE }}
+        run: |
+          BASE="https://fjdzhrdpioxdeyyfogep.supabase.co"
+          PASS="SiddhaQuantum2050!"
+
+          create_user() {
+            EMAIL="$1"
+            echo "=== Creating: $EMAIL ==="
+            R=$(curl -s -X POST "$BASE/auth/v1/admin/users" \
+              -H "apikey: $SVC" \
+              -H "Authorization: Bearer $SVC" \
+              -H "Content-Type: application/json" \
+              -d "{\"email\":\"$EMAIL\",\"password\":\"$PASS\",\"email_confirm\":true}")
+            echo "$R"
+            echo "---"
+          }
+
+          create_user "sacredhealingvibe@gmail.com"
+          create_user "laila.amrouche@gmail.com"
+
+          echo "Done. Login with password: $PASS"
