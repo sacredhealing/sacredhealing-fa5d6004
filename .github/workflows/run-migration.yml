@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'scripts/run-full-migration.mjs'
+      - 'scripts/diagnose.mjs'
       - '.github/workflows/run-migration.yml'
 
 jobs:
@@ -15,6 +16,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Diagnose connection
+        env:
+          NEW_SERVICE_ROLE: ${{ secrets.NEW_SERVICE_ROLE }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: node scripts/diagnose.mjs
       - name: Run full migration
         env:
           NEW_SERVICE_ROLE: ${{ secrets.NEW_SERVICE_ROLE }}
