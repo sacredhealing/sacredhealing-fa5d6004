@@ -1,0 +1,66 @@
+name: Diagnose Login Issue
+
+on:
+  push:
+    paths:
+      - '.github/workflows/diagnose.yml'
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Full diagnosis
+        env:
+          SVC: ${{ secrets.NEW_SERVICE_ROLE }}
+          PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          NEW_URL="https://fjdzhrdpioxdeyyfogep.supabase.co"
+          NEW_REF="fjdzhrdpioxdeyyfogep"
+
+          echo "=== 1. Test connection with publishable key ==="
+          curl -s -o /tmp/conn.json -w "HTTP:%{http_code}" \
+            -H "apikey: sb_publishable_H4AI2ZzqOL1Y7o6qRMr8ew_5-4pih8F" \
+            -H "Authorization: Bearer sb_publishable_H4AI2ZzqOL1Y7o6qRMr8ew_5-4pih8F" \
+            "$NEW_URL/rest/v1/"
+          echo ""
+          cat /tmp/conn.json
+
+          echo ""
+          echo "=== 2. Get actual anon key via Management API ==="
+          curl -s \
+            -H "Authorization: Bearer $PAT" \
+            "https://api.supabase.com/v1/projects/$NEW_REF/api-keys" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+print(json.dumps(d, indent=2))
+"
+
+          echo ""
+          echo "=== 3. List auth users in new project ==="
+          curl -s \
+            -H "Authorization: Bearer $SVC" \
+            -H "apikey: $SVC" \
+            "$NEW_URL/auth/v1/admin/users" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+users = d.get('users', [])
+print(f'Total users: {len(users)}')
+for u in users:
+    print(f'  {u.get(\"email\")} | id={u.get(\"id\",\"\")[:8]} | confirmed={u.get(\"email_confirmed_at\") is not None}')
+"
+
+          echo ""
+          echo "=== 4. Test login with SVC key directly ==="
+          curl -s -X POST \
+            -H "apikey: $SVC" \
+            -H "Authorization: Bearer $SVC" \
+            -H "Content-Type: application/json" \
+            "$NEW_URL/auth/v1/token?grant_type=password" \
+            -d '{"email":"sacredhealingvibe@gmail.com","password":"SiddhaQuantum2050!"}' | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+if 'access_token' in d:
+    print('LOGIN SUCCESS - got access_token')
+else:
+    print('LOGIN FAILED:', d.get('error',''), d.get('error_description',''), d.get('msg',''))
+"
