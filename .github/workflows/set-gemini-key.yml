@@ -1,0 +1,32 @@
+name: Set GEMINI_API_KEY Directly
+
+on:
+  workflow_dispatch:
+    inputs:
+      gemini_key:
+        description: 'Your Google Gemini API key from aistudio.google.com'
+        required: true
+        type: string
+
+jobs:
+  set-key:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set GEMINI_API_KEY in new Supabase (fjdzhrdpioxdeyyfogep)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          GEMINI_KEY: ${{ github.event.inputs.gemini_key }}
+        run: |
+          PAYLOAD="[{\"name\":\"GEMINI_API_KEY\",\"value\":\"$GEMINI_KEY\"}]"
+          STATUS=$(curl -s -o /tmp/resp.json -w "%{http_code}" \
+            -X POST "https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/secrets" \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD")
+          echo "Status: $STATUS"
+          cat /tmp/resp.json
+          if [ "$STATUS" = "200" ] || [ "$STATUS" = "201" ]; then
+            echo "✅ GEMINI_API_KEY set successfully in fjdzhrdpioxdeyyfogep"
+          else
+            echo "❌ Failed — check SUPABASE_ACCESS_TOKEN secret has permission for this project"
+          fi
