@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'scripts/run-full-migration.mjs'
+      - '.github/workflows/run-migration.yml'
 
 jobs:
   migrate:
