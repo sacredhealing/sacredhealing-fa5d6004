@@ -1,0 +1,41 @@
+name: Create Admin User in New Supabase
+
+on:
+  workflow_dispatch:
+    inputs:
+      email:
+        description: "Email to create"
+        required: true
+        default: "sacredhealingvibe@gmail.com"
+
+jobs:
+  create-user:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create user via Supabase Auth Admin API
+        env:
+          SERVICE_ROLE: ${{ secrets.NEW_SERVICE_ROLE }}
+        run: |
+          EMAIL="${{ github.event.inputs.email }}"
+          SUPABASE_URL="https://fjdzhrdpioxdeyyfogep.supabase.co"
+          PASS="SiddhaQuantum2050!"
+          
+          echo "Creating user: $EMAIL"
+          
+          RESULT=$(curl -s -X POST \
+            "$SUPABASE_URL/auth/v1/admin/users" \
+            -H "apikey: $SERVICE_ROLE" \
+            -H "Authorization: Bearer $SERVICE_ROLE" \
+            -H "Content-Type: application/json" \
+            -d "{\"email\": \"$EMAIL\", \"password\": \"$PASS\", \"email_confirm\": true}")
+          
+          echo "Result: $RESULT"
+          echo "$RESULT" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+uid = d.get('id', '')
+if uid:
+    print(f'SUCCESS: {uid}')
+else:
+    print('ERROR or exists:', d.get('message',''), d.get('error',''))
+"
