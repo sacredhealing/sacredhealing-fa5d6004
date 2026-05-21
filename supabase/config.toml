@@ -1,6 +1,8 @@
 project_id = "fjdzhrdpioxdeyyfogep"
 
 [functions]
+  [functions.gemini-health]
+    verify_jwt = false
   [functions.analyze-dosha]
     verify_jwt = true
   [functions.analyze-music-track]
