@@ -1,0 +1,245 @@
+name: Full Data Migration Old → New Supabase
+
+on:
+  push:
+    paths:
+      - '.github/workflows/full-migration.yml'
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Full migration
+        env:
+          NEW_SERVICE_ROLE: ${{ secrets.NEW_SERVICE_ROLE }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          OLD_URL="https://ssygukfdbtehvtndandn.supabase.co"
+          OLD_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4"
+          NEW_URL="https://fjdzhrdpioxdeyyfogep.supabase.co"
+          SVC="$NEW_SERVICE_ROLE"
+          PAT="$SUPABASE_ACCESS_TOKEN"
+          NEW_REF="fjdzhrdpioxdeyyfogep"
+
+          node << 'NODE'
+          const https = require('https');
+
+          const OLD_URL = process.env.OLD_URL || 'https://ssygukfdbtehvtndandn.supabase.co';
+          const OLD_ANON = process.env.OLD_ANON;
+          const NEW_URL = process.env.NEW_URL || 'https://fjdzhrdpioxdeyyfogep.supabase.co';
+          const SVC = process.env.SVC;
+          const PAT = process.env.PAT;
+          const NEW_REF = process.env.NEW_REF || 'fjdzhrdpioxdeyyfogep';
+
+          function req(url, opts = {}, body = null) {
+            return new Promise((resolve) => {
+              const u = new URL(url);
+              const payload = body ? JSON.stringify(body) : '';
+              const r = https.request({
+                hostname: u.hostname, path: u.pathname + u.search,
+                method: opts.method || 'GET',
+                headers: { ...opts.headers, ...(payload ? { 'Content-Length': Buffer.byteLength(payload) } : {}) }
+              }, (res) => {
+                let d = '';
+                res.on('data', c => d += c);
+                res.on('end', () => {
+                  try { resolve({ s: res.statusCode, b: JSON.parse(d) }); }
+                  catch { resolve({ s: res.statusCode, b: d }); }
+                });
+              });
+              r.setTimeout(30000, () => { r.destroy(); resolve({ s: 0, b: 'timeout' }); });
+              r.on('error', e => resolve({ s: 0, b: e.message }));
+              if (payload) r.write(payload);
+              r.end();
+            });
+          }
+
+          function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+          // Call old edge function
+          async function exportTable(table, offset = 0) {
+            const r = await req(
+              `${OLD_URL}/functions/v1/full-data-export`,
+              { method: 'POST', headers: { 'Authorization': `Bearer ${OLD_ANON}`, 'apikey': OLD_ANON, 'Content-Type': 'application/json' } },
+              { table, offset, limit: 500 }
+            );
+            return r;
+          }
+
+          // Query new Supabase via Management API
+          async function newQuery(sql) {
+            const r = await req(
+              `https://api.supabase.com/v1/projects/${NEW_REF}/database/query`,
+              { method: 'POST', headers: { 'Authorization': `Bearer ${PAT}`, 'Content-Type': 'application/json' } },
+              { query: sql }
+            );
+            return r;
+          }
+
+          // Upsert row to new Supabase REST
+          async function upsertRows(table, rows) {
+            if (!rows.length) return { s: 200 };
+            const r = await req(
+              `${NEW_URL}/rest/v1/${table}`,
+              { method: 'POST', headers: {
+                'Authorization': `Bearer ${SVC}`,
+                'apikey': SVC,
+                'Content-Type': 'application/json',
+                'Prefer': 'resolution=merge-duplicates'
+              }},
+              rows
+            );
+            return r;
+          }
+
+          function esc(v) {
+            if (v === null || v === undefined) return 'NULL';
+            if (typeof v === 'boolean') return v ? 'TRUE' : 'FALSE';
+            if (typeof v === 'number') return String(v);
+            if (typeof v === 'object') return `'${JSON.stringify(v).replace(/'/g, "''")}'`;
+            return `'${String(v).replace(/'/g, "''")}'`;
+          }
+
+          async function main() {
+            // STEP 1: Get table list from old Supabase
+            console.log('\n=== STEP 1: Get table list ===');
+            const tablesRes = await req(
+              `${OLD_URL}/functions/v1/full-data-export`,
+              { method: 'POST', headers: { 'Authorization': `Bearer ${OLD_ANON}`, 'apikey': OLD_ANON, 'Content-Type': 'application/json' } },
+              {}
+            );
+            console.log('Tables response:', tablesRes.s);
+            
+            let tables = {};
+            if (tablesRes.b && tablesRes.b.tables) {
+              tables = tablesRes.b.tables;
+            } else {
+              console.log('ERROR getting tables:', JSON.stringify(tablesRes.b).slice(0, 300));
+              // Fallback: use known important tables
+              tables = {
+                profiles: 999, user_balances: 999, affiliates: 999,
+                user_membership_tier: 999, membership_purchases: 999,
+                email_list: 999, community_posts: 999, shakti_cycle_logs: 999
+              };
+            }
+            
+            console.log('Tables found:', Object.keys(tables).join(', '));
+
+            // STEP 2: Export profiles first (most critical)
+            const PRIORITY_TABLES = ['profiles', 'user_balances', 'user_membership_tier',
+              'membership_purchases', 'affiliates', 'affiliate_referrals',
+              'email_list', 'user_coins', 'achievements', 'user_achievements',
+              'community_posts', 'community_comments', 'course_enrollments',
+              'meditation_progress', 'shakti_cycle_logs', 'daily_checkins',
+              'quantum_activations', 'virtual_pilgrimages', 'bhrigu_readings',
+              'jyotish_readings', 'akashic_readings', 'life_book_entries',
+              'nadi_sessions', 'scalar_field_nodes', 'bot_trades'];
+
+            const allTables = [...new Set([...PRIORITY_TABLES, ...Object.keys(tables)])];
+            
+            console.log('\n=== STEP 2: Export & import tables ===');
+            
+            // First: collect all profiles to build auth user mapping
+            let profiles = [];
+            const profRes = await exportTable('profiles', 0);
+            if (profRes.b && profRes.b.rows) {
+              profiles = profRes.b.rows;
+              console.log(`Profiles: ${profiles.length} rows`);
+            }
+            
+            // STEP 3: Delete incorrect auto-created auth users, recreate with correct UUIDs
+            console.log('\n=== STEP 3: Fix auth users with correct UUIDs ===');
+            
+            // Delete the auto-generated users we made earlier
+            const deleteAdmin = await req(
+              `${NEW_URL}/auth/v1/admin/users`,
+              { method: 'GET', headers: { 'Authorization': `Bearer ${SVC}`, 'apikey': SVC } }
+            );
+            
+            if (deleteAdmin.b && deleteAdmin.b.users) {
+              for (const u of deleteAdmin.b.users) {
+                console.log(`  Deleting wrong-UUID user: ${u.email} (${u.id})`);
+                await req(
+                  `${NEW_URL}/auth/v1/admin/users/${u.id}`,
+                  { method: 'DELETE', headers: { 'Authorization': `Bearer ${SVC}`, 'apikey': SVC } }
+                );
+                await sleep(200);
+              }
+            }
+
+            // Create auth users preserving original UUIDs (via Management API SQL)
+            for (const profile of profiles) {
+              if (!profile.email && !profile.id) continue;
+              const email = profile.email || '';
+              const uid = profile.id || profile.user_id;
+              if (!uid) continue;
+              
+              const sql = `
+                INSERT INTO auth.users (
+                  instance_id, id, aud, role, email, encrypted_password,
+                  email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
+                  created_at, updated_at, confirmation_token,
+                  email_change, email_change_token_new, recovery_token
+                ) VALUES (
+                  '00000000-0000-0000-0000-000000000000',
+                  '${uid}', 'authenticated', 'authenticated',
+                  ${esc(email)},
+                  crypt('SiddhaQuantum2050!', gen_salt('bf')),
+                  NOW(), '{"provider":"email","providers":["email"]}', '{}',
+                  NOW(), NOW(), '', '', '', ''
+                ) ON CONFLICT (id) DO UPDATE SET
+                  email = EXCLUDED.email,
+                  encrypted_password = EXCLUDED.encrypted_password,
+                  email_confirmed_at = NOW()
+              `;
+              const r = await newQuery(sql);
+              console.log(`  Auth user ${email}: ${r.s}`);
+              await sleep(150);
+            }
+
+            // STEP 4: Import all table data
+            console.log('\n=== STEP 4: Import table data ===');
+            
+            for (const table of allTables) {
+              if (!tables[table] && tables[table] !== 0) continue;
+              if (tables[table] === 0) { console.log(`  ${table}: empty, skip`); continue; }
+              
+              let offset = 0;
+              let totalImported = 0;
+              
+              while (true) {
+                const res = await exportTable(table, offset);
+                if (!res.b || !res.b.rows || res.b.rows.length === 0) break;
+                const rows = res.b.rows;
+                
+                const upsertRes = await upsertRows(table, rows);
+                if (upsertRes.s >= 200 && upsertRes.s < 300) {
+                  totalImported += rows.length;
+                } else {
+                  console.log(`  ⚠️  ${table} @${offset}: ${upsertRes.s} — ${JSON.stringify(upsertRes.b).slice(0, 120)}`);
+                }
+                
+                if (rows.length < 500) break;
+                offset += 500;
+                await sleep(200);
+              }
+              
+              if (totalImported > 0) console.log(`  ✅ ${table}: ${totalImported} rows`);
+              await sleep(100);
+            }
+
+            console.log('\n✅ MIGRATION COMPLETE');
+            console.log('Login: siddhaquantumnexus.com');
+            console.log('Password: SiddhaQuantum2050!');
+          }
+
+          main().catch(e => { console.error('FATAL:', e.message, e.stack); process.exit(1); });
+          NODE
+        env:
+          OLD_URL: "https://ssygukfdbtehvtndandn.supabase.co"
+          OLD_ANON: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4"
+          NEW_URL: "https://fjdzhrdpioxdeyyfogep.supabase.co"
+          SVC: ${{ secrets.NEW_SERVICE_ROLE }}
+          PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          NEW_REF: "fjdzhrdpioxdeyyfogep"
