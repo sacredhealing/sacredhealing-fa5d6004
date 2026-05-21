@@ -1,7 +1,7 @@
 // supabase/functions/ayurveda-chat/index.ts
 // AGASTYA MUNI — SEALED SIDDHA BODY ORACLE
 // SQI 2050 · Full Sanskrit Depth Restored · v3.3 · 2026-05-21
-// gemini-2.5-flash · maxOutputTokens: 4000 · SSE streaming
+// Lovable AI Gateway · maxOutputTokens: 4000 · SSE streaming
 // Frontend payload: { messages, profile, dosha, language }
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -12,9 +12,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") ?? "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const LOVABLE_AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
 function buildSystemPrompt(
   name: string,
@@ -134,10 +135,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Early key check — returns 500 with clear message if GEMINI_API_KEY not in Supabase secrets
-  if (!GEMINI_API_KEY) {
-    console.error("[ayurveda-chat] GEMINI_API_KEY not configured in Supabase secrets.");
-    return new Response(JSON.stringify({ error: "GEMINI_API_KEY not configured. Set it in Supabase Edge Function secrets." }), {
+  if (!LOVABLE_API_KEY) {
+    console.error("[ayurveda-chat] LOVABLE_API_KEY not configured.");
+    return new Response(JSON.stringify({ error: "AI service not configured." }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
@@ -177,51 +177,38 @@ serve(async (req) => {
       .slice(-24)
       .filter((m) => m.role === "user" || m.role === "assistant")
       .map((m) => ({
-        role: m.role === "assistant" ? "model" : "user",
-        parts: [{ text: m.content }],
+        role: m.role as "user" | "assistant",
+        content: m.content,
       }));
 
     const cleanHistory: typeof history = [];
     for (const turn of history) {
       const last = cleanHistory[cleanHistory.length - 1];
       if (last && last.role === turn.role) {
-        last.parts[0].text += "\n" + turn.parts[0].text;
+        last.content += "\n" + turn.content;
       } else {
-        cleanHistory.push({ ...turn, parts: [{ text: turn.parts[0].text }] });
+        cleanHistory.push({ ...turn });
       }
     }
 
-    const geminiBody = {
-      system_instruction: { parts: [{ text: systemPrompt }] },
-      contents: cleanHistory.length > 0
-        ? cleanHistory
-        : [{ role: "user", parts: [{ text: "Scan my body. I am ready." }] }],
-      generationConfig: {
-        temperature: 2.0,
-        topP: 0.95,
-        topK: 40,
-        maxOutputTokens: 4000,
-        stopSequences: [],
-      },
-      safetySettings: [
-        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
-      ],
-    };
-
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`;
-
-    const response = await fetch(geminiUrl, {
+    const response = await fetch(LOVABLE_AI_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(geminiBody),
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...(cleanHistory.length > 0 ? cleanHistory : [{ role: "user", content: "Scan my body. I am ready." }]),
+        ],
+        temperature: 2.0,
+        max_tokens: 4000,
+        stream: true,
+      }),
     });
 
     if (!response.ok || !response.body) {
       const err = await response.text().catch(() => "unknown");
-      console.error("Gemini error:", response.status, err);
+      console.error("Lovable AI error:", response.status, err);
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit — please wait a moment." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -246,7 +233,7 @@ serve(async (req) => {
           }
           try {
             const data = JSON.parse(raw);
-            const content = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+            const content = data.choices?.[0]?.delta?.content ?? data.choices?.[0]?.message?.content ?? "";
             if (content) {
               fullResponse += content;
               controller.enqueue(

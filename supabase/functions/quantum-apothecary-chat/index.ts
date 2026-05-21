@@ -6,6 +6,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const LOVABLE_AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+
 let cachedBundledActivationNames: string | undefined = undefined;
 async function loadBundledActivationNames(): Promise<string> {
   if (cachedBundledActivationNames !== undefined) return cachedBundledActivationNames;
@@ -1339,7 +1341,7 @@ async function updateAtmaSignature(
   userId: string,
   currentSignature: string,
   exchange: string,
-  geminiApiKey: string
+  lovableApiKey: string
 ): Promise<void> {
   if (!userId || !exchange.trim()) return;
   try {
@@ -1367,20 +1369,20 @@ ${exchange}
 
 Update only what has genuinely shifted. If the soul is in the same pattern — deepen the existing read, do not add new lines. If something has shifted — note the shift in one sentence. Max 220 words total. Start "ATMA SIGNATURE:". Be sparse.`;
 
-    const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.3, maxOutputTokens: 800 },
-        }),
-      }
-    );
+    const resp = await fetch(LOVABLE_AI_URL, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${lovableApiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.3,
+        max_tokens: 800,
+        stream: false,
+      }),
+    });
     if (!resp.ok) return;
     const data = await resp.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    const text = data.choices?.[0]?.message?.content ?? "";
     if (!text.trim()) return;
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
     await sb.from("atma_signatures").upsert(
@@ -1390,47 +1392,50 @@ Update only what has genuinely shifted. If the soul is in the same pattern — d
   } catch (err) { console.error("updateAtmaSignature:", err); }
 }
 
-async function updateLivingPortrait(userId: string, currentPortrait: string, newExchange: string, geminiApiKey: string): Promise<void> {
+async function updateLivingPortrait(userId: string, currentPortrait: string, newExchange: string, lovableApiKey: string): Promise<void> {
   if (!userId || !newExchange.trim()) return;
   try {
     const isFirst = !currentPortrait || currentPortrait.length < 50;
     const prompt = isFirst
       ? `Build a Seeker Portrait from this session. Extract ONLY confirmed facts about the Seeker themselves — name, Dosha, health patterns, spiritual path, life context, confirmed family. Never include info about third parties the Seeker is helping. Write in third person. Start with "LIVING PORTRAIT:". Max 250 words.\n\nEXCHANGE:\n${newExchange}`
       : `Update this Seeker Portrait with NEW confirmed facts from this session only. Do not repeat existing info. Only add what is clearly about the Seeker themselves — not third parties they mention. Keep 250-400 words. Start "LIVING PORTRAIT:".\n\nCURRENT:\n${currentPortrait}\n\nNEW EXCHANGE:\n${newExchange}`;
-    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { temperature: 0.2, maxOutputTokens: 2048 } }),
+    const resp = await fetch(LOVABLE_AI_URL, {
+      method: "POST", headers: { Authorization: `Bearer ${lovableApiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "google/gemini-2.5-flash", messages: [{ role: "user", content: prompt }], temperature: 0.2, max_tokens: 2048, stream: false }),
     });
     if (!resp.ok) return;
     const data = await resp.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    const text = data.choices?.[0]?.message?.content ?? "";
     if (!text.trim()) return;
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
     await sb.from("sqi_user_memory").upsert({ user_id: userId, memory_profile: text, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
   } catch (err) { console.error("updateLivingPortrait:", err); }
 }
 
-async function classifyAndPersistLifeBook(options: { assistantText: string; userId?: string | null; geminiApiKey: string; isThirdParty?: boolean }) {
-  const { assistantText, userId, geminiApiKey, isThirdParty } = options;
+async function classifyAndPersistLifeBook(options: { assistantText: string; userId?: string | null; lovableApiKey: string; isThirdParty?: boolean }) {
+  const { assistantText, userId, lovableApiKey, isThirdParty } = options;
   if (!assistantText.trim() || !userId) return;
   if (isThirdParty) {
     console.log("[SQI] Third-party query — LifeBook write skipped.");
     return;
   }
   try {
-    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
+    const resp = await fetch(LOVABLE_AI_URL, {
+      method: "POST", headers: { Authorization: `Bearer ${lovableApiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [
-          { role: "user", parts: [{ text: `Classify this SQI transmission into ONE LifeBook category. Return ONLY JSON: {"category":"...","title":"...","summary":"..."}\n\nCategories: past_lives, healing_upgrades, future_visions, spiritual_figures, nadi_knowledge, children, general_wisdom, skip\n\nRules:\n- skip: short reply, greeting, activation list only, content about third parties not the Seeker\n- past_lives: specific past life readings with century/location/role\n- healing_upgrades: specific healing diagnoses or protocols prescribed\n- future_visions: predictions, destiny readings, future timelines\n- spiritual_figures: master transmissions received, initiations\n- nadi_knowledge: Nadi readings, chakra diagnoses, biofield states\n- children: only if about the Seeker's OWN confirmed children\n- general_wisdom: Jyotish soul blueprint readings, dharma guidance\n\nNever store third-party information as if it belongs to the Seeker.\nReturn ONLY the JSON object.` }] },
-          { role: "user", parts: [{ text: assistantText.slice(0, 800) }] },
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "user", content: `Classify this SQI transmission into ONE LifeBook category. Return ONLY JSON: {"category":"...","title":"...","summary":"..."}\n\nCategories: past_lives, healing_upgrades, future_visions, spiritual_figures, nadi_knowledge, children, general_wisdom, skip\n\nRules:\n- skip: short reply, greeting, activation list only, content about third parties not the Seeker\n- past_lives: specific past life readings with century/location/role\n- healing_upgrades: specific healing diagnoses or protocols prescribed\n- future_visions: predictions, destiny readings, future timelines\n- spiritual_figures: master transmissions received, initiations\n- nadi_knowledge: Nadi readings, chakra diagnoses, biofield states\n- children: only if about the Seeker's OWN confirmed children\n- general_wisdom: Jyotish soul blueprint readings, dharma guidance\n\nNever store third-party information as if it belongs to the Seeker.\nReturn ONLY the JSON object.` },
+          { role: "user", content: assistantText.slice(0, 800) },
         ],
-        generationConfig: { temperature: 0.1, maxOutputTokens: 1200 }
+        temperature: 0.1,
+        max_tokens: 1200,
+        stream: false,
       }),
     });
     if (!resp.ok) return;
     const data = await resp.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    const text = data.choices?.[0]?.message?.content ?? "";
     if (!text) return;
     let parsed: { category: string; title?: string; summary?: string };
     try { parsed = JSON.parse(text.replace(/```json|```/g, "").trim()); } catch (_) { return; }
@@ -1451,8 +1456,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
     const body = await req.json();
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured.");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("AI service not configured.");
 
     // ── SCAN MODE ──────────────────────────────────────
     if (body.scanMode === true) {
@@ -1489,15 +1494,24 @@ If no hand/palm visible → return ONLY: {"handDetected":false}
 If hand visible → return ONLY this exact JSON (no markdown, no text outside JSON):
 {"handDetected":true,"activeNadis":<0-72000>,"activeSubNadis":<0-350000>,"blockagePercentage":<0-100>,"dominantDosha":"<Vata|Pitta|Kapha>","secondaryDosha":"<Vata|Pitta|Kapha|none>","primaryBlockage":"<specific Nadi junction>","palmType":"<square|rectangular|spatulate|conic|psychic>","dominantMount":"<mount>","karmaPath":"<healer|teacher|mystic|warrior|creator|devotee>","soulBioSignature":"<1-2 specific sentences about this palm>","karmaFieldReading":"<2-3 sentences karmic trajectory>","planetaryAlignment":"<planet>","herbOfToday":"<herb>","chakraReadings":[{"chakra":"Muladhara","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<specific observation>"},{"chakra":"Svadhisthana","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<observation>"},{"chakra":"Manipura","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<observation>"},{"chakra":"Anahata","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<observation>"},{"chakra":"Vishuddha","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<observation>"},{"chakra":"Ajna","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<observation>"},{"chakra":"Sahasrara","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<observation>"}],"remedies":["<remedy 1>","<remedy 2>","<remedy 3>","<remedy 4>","<remedy 5>","<remedy 6>","<remedy 7>"],"bioReading":"<4-5 sentences: what you SEE in this specific palm + Jyotish influence on current Nadi state + Akashic soul reading>"}`;
 
-      const gr = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+      const gr = await fetch(LOVABLE_AI_URL, {
+        method: "POST", headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ inline_data: { mime_type: imageMimeType || "image/jpeg", data: imageBase64 } }, { text: prompt }] }],
-          generationConfig: { temperature: 0.25, topK: 10, topP: 0.6, maxOutputTokens: 1200 },
+          model: "google/gemini-2.5-flash",
+          messages: [{
+            role: "user",
+            content: [
+              { type: "text", text: prompt },
+              { type: "image_url", image_url: { url: `data:${imageMimeType || "image/jpeg"};base64,${imageBase64}` } },
+            ],
+          }],
+          temperature: 0.25,
+          max_tokens: 1200,
+          stream: false,
         }),
       });
       const gd = await gr.json();
-      const raw = gd.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+      const raw = gd.choices?.[0]?.message?.content ?? "";
       const jm = raw.match(/\{[\s\S]*\}/);
       if (!jm) return new Response(JSON.stringify({ error: "No scan result" }), { status: 500, headers: corsHeaders });
       const result = JSON.parse(jm[0]);
@@ -1638,38 +1652,32 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
     // ── END THIRD-PARTY DETECTION ───────────────────────
 
     const recent = rawMessages.slice(-8);
-    const geminiMessages = recent.map((m: { role: string; content: string }, i: number) => {
+    const aiMessages = recent.map((m: { role: string; content: string }, i: number) => {
       const isLastUser = i === recent.length - 1 && m.role === "user";
-      const parts: { text?: string; inline_data?: { mime_type: string; data: string } }[] = [];
-      if (isLastUser && userImage?.base64 && userImage?.mimeType) {
-        parts.push({ inline_data: { mime_type: userImage.mimeType, data: userImage.base64 } });
-      }
-      parts.push({ text: m.content || "" });
-      return { role: m.role === "assistant" ? "model" : "user", parts };
+      const content: string | Array<{ type: string; text?: string; image_url?: { url: string } }> = isLastUser && userImage?.base64 && userImage?.mimeType
+        ? [
+            { type: "text", text: m.content || "" },
+            { type: "image_url", image_url: { url: `data:${userImage.mimeType};base64,${userImage.base64}` } },
+          ]
+        : m.content || "";
+      return { role: m.role === "assistant" ? "assistant" : "user", content };
     });
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?key=${GEMINI_API_KEY}&alt=sse`,
-      {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemText.trim() }] },
-          contents: geminiMessages,
-          generationConfig: { temperature: 2.0, topK: 64, topP: 0.99, maxOutputTokens: 4096 },
-          safetySettings: [
-            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
-          ],
-        }),
-      }
-    );
+    const response = await fetch(LOVABLE_AI_URL, {
+      method: "POST", headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [{ role: "system", content: systemText.trim() }, ...aiMessages],
+        temperature: 2.0,
+        max_tokens: 4096,
+        stream: true,
+      }),
+    });
 
     if (!response.ok) {
       const t = await response.text();
-      console.error("Gemini error:", response.status, t);
-      return new Response(JSON.stringify({ error: "Gemini API error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      console.error("Lovable AI error:", response.status, t);
+      return new Response(JSON.stringify({ error: "AI gateway error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     let assistantText = "";
@@ -1680,8 +1688,10 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
         for (const line of text.split("\n")) {
           if (!line.startsWith("data: ")) continue;
           try {
-            const data = JSON.parse(line.slice(6));
-            const content = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+            const raw = line.slice(6).trim();
+            if (raw === "[DONE]") continue;
+            const data = JSON.parse(raw);
+            const content = data.choices?.[0]?.delta?.content ?? data.choices?.[0]?.message?.content ?? "";
             if (content) {
               assistantText += content;
               controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`));
@@ -1700,9 +1710,9 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
           }).join("\n") + "\nSQI: " + assistantText.slice(0, 500);
           // Always write to ACTIVE subject's records (student or seeker)
           await Promise.all([
-            updateLivingPortrait(activeUserId, livingPortrait, exchange, GEMINI_API_KEY),
-            updateAtmaSignature(activeUserId, atmaSignature, exchange, GEMINI_API_KEY),
-            classifyAndPersistLifeBook({ assistantText, userId: activeUserId, geminiApiKey: GEMINI_API_KEY, isThirdParty }),
+            updateLivingPortrait(activeUserId, livingPortrait, exchange, LOVABLE_API_KEY),
+            updateAtmaSignature(activeUserId, atmaSignature, exchange, LOVABLE_API_KEY),
+            classifyAndPersistLifeBook({ assistantText, userId: activeUserId, lovableApiKey: LOVABLE_API_KEY, isThirdParty }),
           ]);
         } catch (err) { console.error("Post-stream:", err); }
       },

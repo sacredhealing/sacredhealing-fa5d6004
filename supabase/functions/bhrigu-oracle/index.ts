@@ -1,5 +1,5 @@
 // supabase/functions/bhrigu-oracle/index.ts
-// Direct Gemini 2.5 Flash. Accepts both nested chart_context and flat fields.
+// Lovable AI Gateway Gemini 2.5 Flash. Accepts both nested chart_context and flat fields.
 // Logs upstream errors so we can debug.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -10,11 +10,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") ?? "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-const GEMINI_MODEL = "gemini-2.5-flash";
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+const LOVABLE_AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
 function hashChart(...parts: string[]): string {
   const str = parts.join("|");
@@ -26,10 +25,9 @@ function hashChart(...parts: string[]): string {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  // Early key validation
-  if (!GEMINI_API_KEY) {
-    console.error("[bhrigu-oracle] GEMINI_API_KEY not configured in Supabase secrets.");
-    return new Response(JSON.stringify({ error: "GEMINI_API_KEY not configured. Set it in Supabase Edge Function secrets." }), {
+  if (!LOVABLE_API_KEY) {
+    console.error("[bhrigu-oracle] LOVABLE_API_KEY not configured.");
+    return new Response(JSON.stringify({ error: "AI service not configured." }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
@@ -114,31 +112,34 @@ Deliver a complete, untruncated Nadi reading covering all five dimensions:
 
 Speak with full depth and precision. Do not truncate. Complete every section entirely before closing.`;
 
-    const res = await fetch(GEMINI_URL, {
+    const res = await fetch(LOVABLE_AI_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: { maxOutputTokens: 8192, temperature: 2.0 },
+        model: "google/gemini-2.5-flash",
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 8192,
+        temperature: 2.0,
+        stream: false,
       }),
     });
 
     if (!res.ok) {
       const errText = await res.text().catch(() => "");
-      console.error("[bhrigu-oracle] Gemini error", res.status, errText.slice(0, 400));
+      console.error("[bhrigu-oracle] Lovable AI error", res.status, errText.slice(0, 400));
       const status = res.status === 429 ? 429 : 502;
       return new Response(
-        JSON.stringify({ error: "gemini_error", status: res.status, detail: errText.slice(0, 400) }),
+        JSON.stringify({ error: "ai_gateway_error", status: res.status, detail: errText.slice(0, 400) }),
         { status, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    const gemData = await res.json();
-    const reading = gemData.candidates?.[0]?.content?.parts?.[0]?.text;
+    const aiData = await res.json();
+    const reading = aiData.choices?.[0]?.message?.content;
     if (!reading) {
-      console.error("[bhrigu-oracle] empty candidates", JSON.stringify(gemData).slice(0, 600));
+      console.error("[bhrigu-oracle] empty response", JSON.stringify(aiData).slice(0, 600));
       return new Response(
-        JSON.stringify({ error: "empty_response", detail: "Gemini returned no text", raw: gemData }),
+        JSON.stringify({ error: "empty_response", detail: "AI service returned no text", raw: aiData }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
