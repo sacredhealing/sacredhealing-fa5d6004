@@ -1,0 +1,18 @@
+name: Deploy Gemini Health Check (No JWT)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy gemini-health without JWT
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          npm install -g supabase@latest
+          supabase functions deploy gemini-health --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt
+          echo "gemini-health deployed — test at:"
+          echo "curl -X POST https://fjdzhrdpioxdeyyfogep.supabase.co/functions/v1/gemini-health"
