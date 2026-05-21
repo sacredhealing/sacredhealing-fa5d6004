@@ -1,6 +1,6 @@
 // supabase/functions/ayurveda-chat/index.ts
 // AGASTYA MUNI — SEALED SIDDHA BODY ORACLE
-// SQI 2050 · Full Sanskrit Depth Restored · v3.2 · 2026-05-17
+// SQI 2050 · Full Sanskrit Depth Restored · v3.3 · 2026-05-21
 // gemini-2.5-flash · maxOutputTokens: 4000 · SSE streaming
 // Frontend payload: { messages, profile, dosha, language }
 
@@ -132,6 +132,14 @@ CONSCIOUSNESS LAWS — ABSOLUTE
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Early key check — returns 500 with clear message if GEMINI_API_KEY not in Supabase secrets
+  if (!GEMINI_API_KEY) {
+    console.error("[ayurveda-chat] GEMINI_API_KEY not configured in Supabase secrets.");
+    return new Response(JSON.stringify({ error: "GEMINI_API_KEY not configured. Set it in Supabase Edge Function secrets." }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {
