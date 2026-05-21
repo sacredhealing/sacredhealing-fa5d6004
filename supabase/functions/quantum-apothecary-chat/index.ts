@@ -6,6 +6,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const LOVABLE_AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+
 let cachedBundledActivationNames: string | undefined = undefined;
 async function loadBundledActivationNames(): Promise<string> {
   if (cachedBundledActivationNames !== undefined) return cachedBundledActivationNames;
