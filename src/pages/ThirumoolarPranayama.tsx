@@ -525,7 +525,7 @@ export default function ThirumoolarPranayama() {
   const navigate = useNavigate();
   const { tier } = useMembership();
   const { isAdmin } = useAdminRole();
-  const userRank = isAdmin ? 3 : getTierRank(tier);
+  const userRank = isAdmin ? 3 : (getTierRank(tier) ?? 0);
   const tierRankMap = { FREE:0, PRANA:1, QUANTUM:2, AKASHA:3 };
   const canAccess = (moduleTier) => userRank >= (tierRankMap[moduleTier] ?? 0);
   const upgradePathMap = { PRANA:"/prana-flow", QUANTUM:"/siddha-quantum", AKASHA:"/akasha-infinity" };
