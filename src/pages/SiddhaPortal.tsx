@@ -538,7 +538,7 @@ export default function SiddhaPortal() {
           { title: 'Sacred Water', sub: 'Consciousness & Living Water Protocols', icon: '💧', route: '/sacred-water', soon: true },
           { title: 'Siddha Medicine', sub: 'The 18 Siddhas · Varma · Rasayana', icon: '🌿', route: '/siddha-medicine', soon: true },
           { title: 'Mantra Academy', sub: 'Nada Yoga · 24 Modules · Bija Mantras', icon: '🔔', route: '/mantra-academy', soon: false },
-          { title: 'Sacred Geometry', sub: 'Sri Yantra · Yantras · Light Codes', icon: '✦', route: '/sacred-geometry-education', soon: false },
+          { title: 'Sacred Geometry', sub: 'Sri Yantra · Merkaba · Platonic Solids', icon: '✦', route: '/sacred-geometry', soon: false },
           { title: 'Vastu Shastra', sub: 'Vedic Space & Quantum Architecture', icon: '🏛', route: '/vastu', soon: false },
           { title: 'Mantra Reference', sub: 'Mantras · Mudras · Chakras · Schedule', icon: '📿', route: '/mantra-reference', soon: false },
           { title: 'Practice Journal', sub: 'Track Your Sadhana · 40-Day Protocol', icon: '📓', route: '/practice-journal', soon: false },
