@@ -1,0 +1,47 @@
+name: Force Seed + Test Insert
+
+on:
+  workflow_dispatch:
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Insert settings + test trade via REST
+        env:
+          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          BASE="https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1"
+          LOG="_insert_test.txt"
+
+          echo "=== Insert settings row ===" | tee $LOG
+          curl -s -w "\nHTTP:%{http_code}" -X POST "${BASE}/polymarket_bot_settings" \
+            -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=representation" \
+            -d '{"paper_balance":10.0,"paper_mode":true,"risk_pct":0.05}' | tee -a $LOG
+          echo "" >> $LOG
+
+          echo "=== Insert test trade ===" | tee -a $LOG
+          curl -s -w "\nHTTP:%{http_code}" -X POST "${BASE}/polymarket_trades" \
+            -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=representation" \
+            -d '{"market_id":"test-001","market_question":"[TEST] SQI Oracle bootstrap trade","outcome":"Yes","token_id":"test-token","direction":"buy","shares":20.0,"entry_price":0.50,"amount_usdc":0.50,"tx_hash":"paper-bootstrap-test","strategy":"system_test","is_paper":true,"status":"open"}' | tee -a $LOG
+          echo "" >> $LOG
+
+          echo "=== Verify via GET ===" | tee -a $LOG
+          curl -s -w "\nHTTP:%{http_code}" "${BASE}/polymarket_bot_settings?limit=3" \
+            -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" | tee -a $LOG
+          echo "" >> $LOG
+          curl -s -w "\nHTTP:%{http_code}" "${BASE}/polymarket_trades?limit=3" \
+            -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" | tee -a $LOG
+
+          git config user.email "bot@sqi.app"; git config user.name "SQI Bot"
+          git add $LOG
+          git commit -m "Insert test $(date +%H%M%S)" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
