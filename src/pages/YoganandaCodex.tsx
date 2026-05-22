@@ -862,7 +862,7 @@ const BreathingGuide: React.FC<{active:boolean}> = ({active}) => {
   },[active,pi]);
   return(
     <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:10,padding:"16px 0"}}>
-      <button onClick={() => navigate('/siddha-portal')} style={{ position:'fixed', top:16, left:16, zIndex:9999, background:'rgba(5,5,5,0.88)', backdropFilter:'blur(12px)', border:'none', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:10, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase', color:'rgba(212,175,55,0.5)', padding:'8px 14px', borderRadius:8 }}>← SIDDHA PORTAL</button>
+      
       <div style={{width:sz,height:sz,borderRadius:"50%",background:"rgba(212,175,55,0.08)",border:"2px solid rgba(212,175,55,0.4)",transition:"width 0.1s,height 0.1s",boxShadow:active?`0 0 ${Math.round(sz/3)}px rgba(212,175,55,0.2)`:"none",display:"flex",alignItems:"center",justifyContent:"center"}}>
         {active && <Wind size={16} color="#D4AF37" />}
       </div>
