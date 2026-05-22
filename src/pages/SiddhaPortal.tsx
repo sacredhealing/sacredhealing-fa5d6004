@@ -506,6 +506,31 @@ export default function SiddhaPortal() {
         <button type="button" style={{ ...CTA_BTN, color: cyan(0.9) }}>Enter Codex →</button>
       </div>
 
+      {/* MEDITATION COURSE — live */}
+      <div
+        onClick={() => navigate('/meditation-course')}
+        style={{
+          ...CARD_BASE,
+          margin: '0 16px 12px',
+          background: `linear-gradient(135deg, rgba(167,139,250,0.07), rgba(212,175,55,0.02))`,
+          border: `1px solid rgba(167,139,250,0.28)`,
+          animation: 'sqFadeUp 0.45s 0.1s ease both',
+          cursor: 'pointer',
+        }}
+      >
+        <span style={BADGE('rgba(167,139,250,0.14)', 'rgba(167,139,250,0.3)', 'rgba(167,139,250,0.95)')}>
+          <span style={LIVE_DOT} />LIVE
+        </span>
+        <div style={{ ...CARD_TITLE, color: 'rgba(167,139,250,0.95)' }}>Supreme Siddha Meditation</div>
+        <p style={CARD_DESC}>14 modules · 51 practices · 18 Siddha Masters — from Sakshi awareness to Samadhi recognition. The complete Siddha consciousness transmission.</p>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const, marginBottom: 12 }}>
+          {[{l:'Free · 1–3', c: white(0.5)},{l:'Prana · 4–6', c:'#4ADE80'},{l:'Siddha · 7–10', c: cyan(0.9)},{l:'Akasha · 11–14', c: gold(0.95)}].map(t => (
+            <span key={t.l} style={{ ...LABEL_STYLE, fontSize: 8, color: t.c, letterSpacing:'0.2em', border: `1px solid ${t.c}30`, borderRadius: 20, padding: '2px 8px' }}>{t.l}</span>
+          ))}
+        </div>
+        <button type="button" style={{ ...CTA_BTN, color: 'rgba(167,139,250,0.9)' }}>Enter Transmission →</button>
+      </div>
+
       {/* COMING SOON GRID — 2-col for upcoming courses */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, margin: '0 16px 12px' }}>
         {[
@@ -515,7 +540,8 @@ export default function SiddhaPortal() {
           { title: 'Mantra Academy', sub: 'Nada Yoga · 24 Modules · Bija Mantras', icon: '🔔', route: '/mantra-academy', soon: false },
           { title: 'Sacred Geometry', sub: 'Sri Yantra · Yantras · Light Codes', icon: '✦', route: '/sacred-geometry-education', soon: false },
           { title: 'Vastu Shastra', sub: 'Vedic Space & Quantum Architecture', icon: '🏛', route: '/vastu', soon: false },
-          { title: 'Narasimha Path', sub: 'Protection · Power · Sovereignty', icon: '🦁', route: '/narasimha', soon: true },
+          { title: 'Mantra Reference', sub: 'Mantras · Mudras · Chakras · Schedule', icon: '📿', route: '/mantra-reference', soon: false },
+          { title: 'Practice Journal', sub: 'Track Your Sadhana · 40-Day Protocol', icon: '📓', route: '/practice-journal', soon: false },
           { title: 'Shiva Lingam', sub: 'Jyotirlinga · Abhisheka · Liberation', icon: '🔱', route: '/shiva-lingam', soon: true },
           { title: 'Ramayana Codex', sub: 'Dharma · Devotion · Avataric Blueprint', icon: '🏹', route: '/ramayana', soon: true },
           { title: 'Mudra Academy', sub: 'Hand Seals · Neural Rewiring · 10 Modules', icon: '🤲', route: '/mudra-academy', soon: false },
