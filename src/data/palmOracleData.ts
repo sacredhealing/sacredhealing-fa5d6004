@@ -635,8 +635,6 @@ The birth chart (Kundali) is the macro map — the soul\'s complete karmic bluep
   }
 };
 
-};
-};
 
 // =============================================================================
 // MODULE STRUCTURE
