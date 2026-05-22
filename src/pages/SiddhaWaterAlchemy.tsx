@@ -1926,7 +1926,7 @@ export default function SiddhaWaterAlchemy() {
               {/* MODULE HEADER */}
               <button
                 onClick={() => {
-                  if (locked) { navigate("/pricing"); return; }
+                  if (locked) { navigate("/prana-flow"); return; }
                   setOpenId(open ? null : m.id);
                   setOpenSection(null);
                 }}
@@ -2108,7 +2108,7 @@ export default function SiddhaWaterAlchemy() {
               The complete Siddha Water Alchemy curriculum — from the Free foundations to the Akasha-Infinity immortality protocols — awaits your commitment.
             </p>
             <button
-              onClick={() => navigate("/pricing")}
+              onClick={() => navigate("/prana-flow")}
               style={{
                 padding:"16px 40px",borderRadius:40,
                 background:`linear-gradient(135deg, ${GOLD}, #c9a227)`,
