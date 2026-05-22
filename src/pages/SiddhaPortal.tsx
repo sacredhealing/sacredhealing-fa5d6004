@@ -542,6 +542,7 @@ export default function SiddhaPortal() {
           { title: 'Vastu Shastra', sub: 'Vedic Space & Quantum Architecture', icon: '🏛', route: '/vastu', soon: false },
           { title: 'Mantra Reference', sub: 'Mantras · Mudras · Chakras · Schedule', icon: '📿', route: '/mantra-reference', soon: false },
           { title: 'Practice Journal', sub: 'Track Your Sadhana · 40-Day Protocol', icon: '📓', route: '/practice-journal', soon: false },
+          { title: 'Narasimha Path', sub: 'Nine Seals · Protection · Liberation', icon: '🦁', route: '/narasimha', soon: false },
           { title: 'Shiva Lingam', sub: 'Jyotirlinga · Abhisheka · Liberation', icon: '🔱', route: '/shiva-lingam', soon: true },
           { title: 'Ramayana Codex', sub: 'Dharma · Devotion · Avataric Blueprint', icon: '🏹', route: '/ramayana', soon: true },
           { title: 'Mudra Academy', sub: 'Hand Seals · Neural Rewiring · 10 Modules', icon: '🤲', route: '/mudra-academy', soon: false },
