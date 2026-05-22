@@ -1,0 +1,11 @@
+=== Test 1: sb_secret key as both apikey + bearer ===
+[]
+HTTP:200
+=== Test 2: publishable key as apikey + secret as bearer ===
+{"code":"PGRST301","details":null,"hint":null,"message":"Expected 3 parts in JWT; got 1"}
+HTTP:401
+=== Test 3: publishable as both ===
+[]
+HTTP:200
+=== Test 4: Verify data exists via Management API ===
+[{"count":0}]
