@@ -2394,10 +2394,18 @@ function SovereignHormonalAlchemy({
                   return (
                     <div
                       key={module.id}
+                      onClick={() => {
+                        if (accessible) {
+                          setExpandedModule(expanded ? null : module.id);
+                        } else if (onUpgrade) {
+                          onUpgrade(module.tier);
+                        }
+                      }}
                       style={{
                         ...S.glassCard,
                         opacity: accessible ? 1 : 0.65,
                         border: expanded ? "1px solid rgba(212,175,55,0.2)" : "1px solid rgba(255,255,255,0.05)",
+                        cursor: accessible ? "pointer" : "not-allowed",
                       }}
                     >
                       <div style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
