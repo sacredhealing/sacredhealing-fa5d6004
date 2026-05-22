@@ -1,0 +1,45 @@
+name: DB Permission Diagnostic
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Check grants and roles
+        env:
+          SUPA_PAT: ${{ secrets.SUPA_ADMIN_PAT }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          DB="https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query"
+          AUTH="Authorization: Bearer ${SUPA_PAT}"
+          LOG="_perm_diag.txt"
+
+          run_sql() {
+            local q="$1"; local label="$2"
+            echo "=== $label ===" | tee -a $LOG
+            curl -s -X POST "$DB" -H "$AUTH" -H "Content-Type: application/json" \
+              -d "{\"query\":\"$q\"}" | tee -a $LOG
+            echo "" | tee -a $LOG
+          }
+
+          run_sql "SELECT grantee, table_name, privilege_type FROM information_schema.role_table_grants WHERE table_name IN ('polymarket_bot_settings','polymarket_trades') AND table_schema='public' ORDER BY grantee, table_name;" "Current grants"
+
+          run_sql "SELECT rolname, rolsuper, rolinherit, rolbypassrls FROM pg_roles WHERE rolname IN ('service_role','anon','authenticated','postgres') ORDER BY rolname;" "Role properties"
+
+          run_sql "SELECT schemaname, tablename, tableowner FROM pg_tables WHERE tablename IN ('polymarket_bot_settings','polymarket_trades');" "Table owners"
+
+          run_sql "SELECT relname, relrowsecurity FROM pg_class WHERE relname IN ('polymarket_bot_settings','polymarket_trades');" "RLS status"
+
+          run_sql "GRANT ALL ON public.polymarket_bot_settings TO service_role, anon, authenticated;" "GRANT to all roles"
+          run_sql "GRANT ALL ON public.polymarket_trades TO service_role, anon, authenticated;" "GRANT trades to all roles"
+
+          git config user.email "bot@sqi.app"
+          git config user.name "SQI Bot"
+          git add $LOG
+          git commit -m "Perm diag $(date +%H%M%S)" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
