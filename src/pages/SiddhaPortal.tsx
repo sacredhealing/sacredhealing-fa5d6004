@@ -543,7 +543,7 @@ export default function SiddhaPortal() {
           { title: 'Mantra Reference', sub: 'Mantras · Mudras · Chakras · Schedule', icon: '📿', route: '/mantra-reference', soon: false },
           { title: 'Practice Journal', sub: 'Track Your Sadhana · 40-Day Protocol', icon: '📓', route: '/practice-journal', soon: false },
           { title: 'Narasimha Path', sub: 'Nine Seals · Protection · Liberation', icon: '🦁', route: '/narasimha', soon: false },
-          { title: 'Shiva Lingam', sub: 'Jyotirlinga · Abhisheka · Liberation', icon: '🔱', route: '/shiva-lingam', soon: true },
+          { title: 'Shiva Lingam', sub: 'Alchemical Shiva · Jyotirlinga · Liberation', icon: '🔱', route: '/shiva-lingam', soon: false },
           { title: 'Ramayana Codex', sub: '7 Kāṇḍas · 35 Secrets · Bābājī Transmission', icon: '🏹', route: '/ramayana', soon: false },
           { title: 'Mudra Academy', sub: 'Hand Seals · Neural Rewiring · 10 Modules', icon: '🤲', route: '/mudra-academy', soon: false },
           { title: 'Nadi Leaf Oracle', sub: 'Agastya Nadi · Cosmic Records', icon: '🌿', route: '/nadi-leaf', soon: true },
