@@ -739,6 +739,7 @@ function AdvancedModuleCard({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function LionOfMontrose() {
   const [activeTab, setActiveTab] = useState<"seals" | "advanced" | "mantras">("seals");
+  const navigate = useNavigate();
   const { toast } = useToast();
   const heroRef = useRef<HTMLDivElement>(null);
   const { tier, loading } = useMembership();
