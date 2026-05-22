@@ -94,6 +94,7 @@ export default defineConfig(({ mode }) => {
       },
       workbox: {
         cleanupOutdatedCaches: true,
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         // Do not take over mid-session (was causing constant reloads with autoUpdate + reg.update polling).
         clientsClaim: false,
         skipWaiting: false,
