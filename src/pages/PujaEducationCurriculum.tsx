@@ -658,7 +658,7 @@ export default function PujaEducationCurriculum() {
   const navigate = useNavigate();
   const { tier } = useMembership();
   const { isAdmin } = useAdminRole();
-  const userRank = isAdmin ? 3 : getTierRank(tier);
+  const userRank = isAdmin ? 3 : (getTierRank(tier) ?? 0);
 
   function getTierAccess(): string[] {
     if (userRank >= 3) return ["free", "prana", "siddha", "akasha"];
