@@ -77,15 +77,22 @@ serve(async (req) => {
 
       case "delete_user": {
         if (!userId) throw new Error("userId required");
-        if (ADMIN_UUIDS.includes(userId)) throw new Error("Cannot delete admin accounts");
+        // Don't allow admin to delete themselves or another admin
+        const { data: targetIsAdmin } = await adminClient.rpc("has_role", { _user_id: userId, _role: "admin" });
+        if (targetIsAdmin) throw new Error("Cannot delete admin accounts");
+
+        // Wipe app data first (FKs may cascade, but be explicit)
+        await adminClient.from("admin_granted_access").delete().eq("user_id", userId);
+        await adminClient.from("user_memberships").delete().eq("user_id", userId);
+        await adminClient.from("shc_transactions").delete().eq("user_id", userId);
+        await adminClient.from("user_balances").delete().eq("user_id", userId);
+        await adminClient.from("user_roles").delete().eq("user_id", userId);
+        await adminClient.from("profiles").delete().eq("id", userId);
 
         const { error } = await adminClient.auth.admin.deleteUser(userId);
         if (error) throw error;
 
-        await adminClient.from("profiles").delete().eq("id", userId);
-        await adminClient.from("user_memberships").delete().eq("user_id", userId);
-
-        return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       case "update_membership": {
