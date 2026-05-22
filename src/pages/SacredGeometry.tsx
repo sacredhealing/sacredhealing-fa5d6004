@@ -1178,7 +1178,7 @@ export default function SacredGeometry() {
   const navigate = useNavigate();
   const { tier } = useMembership();
   const { isAdmin } = useAdminRole();
-  const rank = isAdmin ? 3 : getTierRank(tier);
+  const rank = isAdmin ? 3 : (getTierRank(tier) ?? 0);
   const userTier: TierKey =
     rank >= 3 ? "akasha" : rank >= 2 ? "quantum" : rank >= 1 ? "prana" : "free";
   const [activeModuleId, setActiveModuleId] = useState<string | null>(MODULES[0].id);
