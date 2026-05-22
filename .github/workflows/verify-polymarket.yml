@@ -1,0 +1,36 @@
+name: Verify Polymarket Tables + Service Role
+
+on:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify polymarket_trades table exists
+        env:
+          SUPABASE_SERVICE_KEY: ${{ secrets.NEW_SERVICE_ROLE }}
+        run: |
+          PROJECT_URL="https://fjdzhrdpioxdeyyfogep.supabase.co"
+          echo "=== Testing polymarket_bot_settings ==="
+          http1=$(curl -s -o /tmp/r1.json -w "%{http_code}" \
+            -H "apikey: ${SUPABASE_SERVICE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+            "${PROJECT_URL}/rest/v1/polymarket_bot_settings?limit=1")
+          echo "HTTP $http1: $(cat /tmp/r1.json)"
+          
+          echo "=== Testing polymarket_trades ==="
+          http2=$(curl -s -o /tmp/r2.json -w "%{http_code}" \
+            -H "apikey: ${SUPABASE_SERVICE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+            "${PROJECT_URL}/rest/v1/polymarket_trades?limit=1")
+          echo "HTTP $http2: $(cat /tmp/r2.json)"
+          
+          if [ "$http1" = "200" ] && [ "$http2" = "200" ]; then
+            echo ""
+            echo "✅ BOTH TABLES CONFIRMED — NEW_SERVICE_ROLE key is valid"
+            echo "✅ Ready for Railway deployment"
+          else
+            echo "❌ Check failed — key may be wrong or tables missing"
+            exit 1
+          fi
