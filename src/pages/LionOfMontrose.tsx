@@ -744,7 +744,7 @@ export default function LionOfMontrose() {
   const heroRef = useRef<HTMLDivElement>(null);
   const { tier, loading } = useMembership();
   const { isAdmin } = useAdminRole();
-  const rank = isAdmin ? 3 : getTierRank(tier);
+  const rank = isAdmin ? 3 : (getTierRank(tier) ?? 0);
   const userTier: string =
     rank >= 3 ? "akasha_infinity" : rank >= 2 ? "siddha_quantum" : rank >= 1 ? "prana_flow" : "free";
 
