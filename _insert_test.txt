@@ -1,0 +1,11 @@
+=== Insert settings row ===
+{"code":"PGRST204","details":null,"hint":null,"message":"Could not find the 'paper_mode' column of 'polymarket_bot_settings' in the schema cache"}
+HTTP:400
+=== Insert test trade ===
+{"code":"23502","details":"Failing row contains (4c76eabb-9b51-48fb-ae45-5fc324833523, null, test-001, [TEST] SQI Oracle bootstrap trade, Yes, test-token, buy, 20.0, 0.50, null, 0.50, 0, paper-bootstrap-test, system_test, t, open, 2026-05-22 17:21:31.531672+00, null).","hint":null,"message":"null value in column \"user_id\" of relation \"polymarket_trades\" violates not-null constraint"}
+HTTP:400
+=== Verify via GET ===
+[]
+HTTP:200
+[]
+HTTP:200
