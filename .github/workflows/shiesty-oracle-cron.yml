@@ -1,0 +1,25 @@
+name: Shiesty Signal Oracle — 24/7 Scanner
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run Shiesty Signal Oracle
+        env:
+          SUPABASE_URL: https://fjdzhrdpioxdeyyfogep.supabase.co
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          PAPER_MODE: 'true'
+          RISK_PCT: '0.05'
+        run: node scripts/shiesty_oracle.mjs
