@@ -495,7 +495,7 @@ export default function RamayanaCodex() {
   const navigate = useNavigate();
   const { tier } = useMembership();
   const { isAdmin } = useAdminRole();
-  const userRank = isAdmin ? 3 : getTierRank(tier);
+  const userRank = isAdmin ? 3 : (getTierRank(tier) ?? 0);
 
   const CHAKRA_MAP = [
     { kanda: "Bāla", chakra: "Mūlādhāra", color: "#EF4444" },
