@@ -2177,7 +2177,7 @@ export default function SovereignHormonalAlchemyPage() {
   const navigate = useNavigate();
   const { tier } = useMembership();
   const { isAdmin } = useAdminRole();
-  const rank = isAdmin ? 3 : getTierRank(tier);
+  const rank = isAdmin ? 3 : (getTierRank(tier) ?? 0);
   const userTier: Tier = rank >= 3 ? "akasha" : rank >= 1 ? "prana" : "free";
   const onUpgrade = (t: Tier) => {
     navigate(t === "akasha" ? "/akasha-infinity" : "/prana-flow");
