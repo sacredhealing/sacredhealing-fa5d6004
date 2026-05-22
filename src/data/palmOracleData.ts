@@ -7,12 +7,12 @@
 // =============================================================================
 
 export interface LessonData {
-  id: string;
+  id?: string;
   tier: string;
-  tierLabel: string;
+  tierLabel?: string;
   tierColor: string;
-  module: number;
-  lessonNum: number;
+  module?: number;
+  lessonNum?: number;
   title: string;
   siddha: string;
   duration: string;
