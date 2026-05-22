@@ -7,29 +7,30 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - name: Query Supabase for trades
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Query trades and write to repo
         env:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          echo "=== polymarket_bot_settings ==="
+          echo "=== Settings ===" > _trade_log.txt
           curl -s \
             -H "apikey: ${SUPABASE_SERVICE_KEY}" \
             -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
-            "https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/polymarket_bot_settings?limit=1"
+            "https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/polymarket_bot_settings?limit=1" >> _trade_log.txt
 
-          echo ""
-          echo "=== Recent polymarket_trades ==="
+          echo "" >> _trade_log.txt
+          echo "=== Recent Trades ===" >> _trade_log.txt
           curl -s \
             -H "apikey: ${SUPABASE_SERVICE_KEY}" \
             -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
-            "https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/polymarket_trades?order=created_at.desc&limit=5" \
-            | python3 -c "
-import json,sys
-trades=json.load(sys.stdin)
-if not trades:
-  print('No trades yet')
-else:
-  print(f'Trades found: {len(trades)}')
-  for t in trades:
-    print(f'  {t[\"strategy\"]} | {t[\"direction\"]} {t[\"outcome\"]} @ {t[\"entry_price\"]} | \${t[\"amount_usdc\"]} | {t[\"created_at\"][:19]}')
-"
+            "https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/polymarket_trades?order=created_at.desc&limit=5" >> _trade_log.txt
+
+          cat _trade_log.txt
+          git config user.email "bot@sqi.app"
+          git config user.name "SQI Bot"
+          git add _trade_log.txt
+          git commit -m "Trade log check" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
