@@ -91,6 +91,7 @@ const AlchemicalShiva = React.lazy(() => import("./pages/AlchemicalShiva"));
 const SiddhaMedicineAcademy = React.lazy(() => import("./pages/SiddhaMedicineAcademy"));
 const SiddhaVastuCurriculum = React.lazy(() => import("./pages/SiddhaVastuCurriculum"));
 const YagnyaModule = React.lazy(() => import("./pages/YagnyaModule"));
+const YoganandaCodex = React.lazy(() => import("./pages/YoganandaCodex"));
 const SiddhaMantraReference = React.lazy(() => import("./pages/SiddhaMantraReference"));
 const SiddhaQuantumPracticeJournal = React.lazy(() => import("./pages/SiddhaQuantumPracticeJournal"));
 const SacredGeometryEducation = React.lazy(() => import("./pages/SacredGeometryEducation"));
@@ -353,6 +354,7 @@ function AppRoutes() {
                   <Route path="/siddha-medicine" element={<SiddhaMedicineAcademy />} />
                   <Route path="/vastu-curriculum" element={<SiddhaVastuCurriculum />} />
                   <Route path="/yagna" element={<YagnyaModule />} />
+                  <Route path="/yogananda-codex" element={<YoganandaCodex />} />
                   <Route path="/mantra-reference" element={<SiddhaMantraReference />} />
                   <Route path="/practice-journal" element={<SiddhaQuantumPracticeJournal />} />
                   <Route path="/sacred-geometry-education" element={<SacredGeometryEducation />} />
