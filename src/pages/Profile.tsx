@@ -611,11 +611,21 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
   .siddhi-card.locked .siddhi-name{color:rgba(255,255,255,0.2)}
   .siddhi-bar-bg{height:3px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden}
   .siddhi-bar-fill{height:100%;background:#D4AF37;border-radius:3px}
-  .vault-idle{text-align:center;padding:20px 0}
-  .vault-idle p{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.18rem;color:rgba(255,255,255,0.35);line-height:1.8;margin-bottom:28px;max-width:460px;margin-left:auto;margin-right:auto}
-  .vault-scan-ring{width:80px;height:80px;border-radius:50%;border:1px solid rgba(212,175,55,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 28px;animation:scanPulse 3s ease-in-out infinite;position:relative}
-  .vault-scan-ring::before{content:'';position:absolute;inset:-8px;border-radius:50%;border:1px solid rgba(212,175,55,0.1)}
-  .vault-scan-ring span{font-size:28px}
+  .vault-idle{text-align:center;padding:8px 0}
+  .vault-idle p{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.05rem;color:rgba(255,255,255,0.45);line-height:1.8;margin-bottom:24px;max-width:420px;margin-left:auto;margin-right:auto}
+  .vault-scan-ring{width:100px;height:100px;border-radius:50%;border:1.5px solid rgba(212,175,55,0.55);display:flex;align-items:center;justify-content:center;margin:0 auto 22px;animation:scanPulse 3s ease-in-out infinite;position:relative;background:radial-gradient(circle,rgba(212,175,55,0.1) 0%,transparent 70%);box-shadow:0 0 40px rgba(212,175,55,0.2),inset 0 0 30px rgba(212,175,55,0.07)}
+  .vault-scan-ring::before{content:'';position:absolute;inset:-12px;border-radius:50%;border:1px solid rgba(212,175,55,0.18);animation:scanPulse 3s ease-in-out infinite reverse}
+  .vault-scan-ring::after{content:'';position:absolute;inset:-24px;border-radius:50%;border:1px solid rgba(212,175,55,0.07)}
+  .vault-scan-ring span{font-size:34px;filter:drop-shadow(0 0 10px rgba(212,175,55,0.7))}
+  .vault-soul-card{background:linear-gradient(135deg,rgba(212,175,55,0.07) 0%,rgba(255,255,255,0.01) 60%,rgba(212,175,55,0.04) 100%);border:1px solid rgba(212,175,55,0.28);border-radius:28px;padding:36px 24px;backdrop-filter:blur(40px);position:relative;overflow:hidden;box-shadow:0 0 70px rgba(212,175,55,0.08),inset 0 1px 0 rgba(212,175,55,0.12)}
+  .vault-soul-card::before{content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:240px;height:240px;background:radial-gradient(circle,rgba(212,175,55,0.14) 0%,transparent 70%);pointer-events:none}
+  .vault-eyebrow{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:9px;letter-spacing:0.45em;text-transform:uppercase;color:rgba(212,175,55,0.55);margin-bottom:18px;display:flex;align-items:center;justify-content:center;gap:8px}
+  .vault-eyebrow::before,.vault-eyebrow::after{content:'';flex:1;height:1px;background:linear-gradient(to right,transparent,rgba(212,175,55,0.25))}
+  .vault-eyebrow::after{background:linear-gradient(to left,transparent,rgba(212,175,55,0.25))}
+  .vault-metrics-row{display:flex;gap:1px;margin:22px 0;border-radius:18px;overflow:hidden;border:1px solid rgba(212,175,55,0.18)}
+  .vault-metric-cell{flex:1;background:rgba(255,255,255,0.025);padding:14px 8px;text-align:center}
+  .vault-metric-val{font-family:'Plus Jakarta Sans',sans-serif;font-weight:900;font-size:20px;color:#D4AF37;line-height:1;margin-bottom:5px;text-shadow:0 0 16px rgba(212,175,55,0.5)}
+  .vault-metric-lbl{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:7px;letter-spacing:0.25em;text-transform:uppercase;color:rgba(255,255,255,0.28)}
   .archive-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   @media(max-width:520px){.archive-grid{grid-template-columns:1fr}}
   .archive-card{background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.1);border-radius:18px;padding:20px 18px;transition:all 0.3s;cursor:pointer}
@@ -1048,39 +1058,113 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
       {/* ── SOUL VAULT (Siddha Quantum + Akasha Infinity only) ── */}
       <div className="section-wrap">
         <div className="section-label">{t('profilePage.sectionSoulVault')}</div>
-        <div className="glass-card">
-          {hasFeatureAccess(isAdmin, tier, 2) ? (
-            <>
-              {scanPhase === 'idle' && (
-                <div className="vault-idle">
-                  <div className="vault-scan-ring"><span>◈</span></div>
-                  <p>{t('profilePage.soulVaultIdleDesc')}</p>
-                  <button type="button" className="gold-btn" style={{maxWidth:260,margin:'0 auto'}} onClick={() => navigate('/soul-scan')}>{t('profilePage.soulVaultInitiateScan')}</button>
+
+        {hasFeatureAccess(isAdmin, tier, 2) ? (
+          <div className="vault-soul-card">
+            <div className="vault-eyebrow">◈ Quantum Bio-Twinning V4.2</div>
+
+            {scanPhase === 'idle' ? (
+              <>
+                {/* Glowing scan ring */}
+                <div className="vault-scan-ring"><span>◈</span></div>
+
+                {/* Title */}
+                <div style={{textAlign:'center',marginBottom:12}}>
+                  <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:900,fontSize:22,color:'#D4AF37',letterSpacing:'-0.03em',textShadow:'0 0 20px rgba(212,175,55,0.4)',marginBottom:6}}>
+                    Deep Field Resonance
+                  </div>
+                  <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:9,letterSpacing:'0.3em',textTransform:'uppercase',color:'rgba(255,255,255,0.25)'}}>
+                    Soul Vault — Bio-Digital Archive
+                  </div>
                 </div>
-              )}
-              {scanPhase !== 'idle' && soulVaultEntries.length > 0 && (
-                <div className="space-y-3">
-                  {soulVaultEntries.slice(0, 4).map((entry) => (
-                    <div key={entry.id} className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-lg p-3">
-                      <div className="flex items-center justify-between gap-2 mb-1">
-                        <p className="text-sm font-semibold text-white/90">{soulVaultActivityLabel(entry.activity)}</p>
-                        <span className="text-sm text-white/40">{new Date(entry.created_at).toLocaleDateString(dateLocale)}</span>
-                      </div>
-                      {entry.duration_minutes && <p className="text-sm text-cyan-200/80 mb-1">{t('profilePage.soulVaultPracticeWindow', { n: entry.duration_minutes })}</p>}
-                      <p className="text-base leading-relaxed text-white/75 line-clamp-3">{entry.report}</p>
+
+                {/* What it measures */}
+                <p style={{fontFamily:"'Cormorant Garamond',serif",fontStyle:'italic',fontSize:'1.05rem',color:'rgba(255,255,255,0.5)',lineHeight:1.8,textAlign:'center',marginBottom:20,maxWidth:400,marginLeft:'auto',marginRight:'auto'}}>
+                  {t('profilePage.soulVaultIdleDesc')}
+                </p>
+
+                {/* Metrics preview row */}
+                <div className="vault-metrics-row">
+                  {[
+                    {val:'72K', lbl:'Nadis Mapped'},
+                    {val:'HRV', lbl:'Heart Field'},
+                    {val:'◈', lbl:'Prana Level'},
+                    {val:'5', lbl:'Doshas Read'},
+                  ].map(m => (
+                    <div key={m.lbl} className="vault-metric-cell">
+                      <div className="vault-metric-val">{m.val}</div>
+                      <div className="vault-metric-lbl">{m.lbl}</div>
                     </div>
                   ))}
                 </div>
-              )}
-            </>
-          ) : (
-            <div className="vault-idle" style={{ opacity: 0.85 }}>
-              <div className="vault-scan-ring" style={{ opacity: 0.5 }}><span>◈</span></div>
-              <p className="text-white/70">{t('profilePage.soulVaultLockedDesc')}</p>
-              <button type="button" className="gold-btn" style={{maxWidth:260,margin:'0 auto'}} onClick={() => navigate('/siddha-quantum')}>{t('profilePage.soulVaultUpgrade')}</button>
+
+                {/* Feature bullets */}
+                <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:24}}>
+                  {[
+                    '◈ Face camera reads real heart rate + HRV via rPPG',
+                    '◈ Dosha field, Prana level & Anahata resonance mapped',
+                    '◈ 5 felt-experience questions after your practice',
+                    '◈ Before vs After comparison saved to your Soul Vault',
+                  ].map(line => (
+                    <div key={line} style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:11,color:'rgba(255,255,255,0.4)',display:'flex',alignItems:'flex-start',gap:6,textAlign:'left',paddingLeft:8}}>
+                      <span style={{color:'rgba(212,175,55,0.6)',flexShrink:0}}>{line.slice(0,1)}</span>
+                      <span>{line.slice(2)}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/soul-scan')}
+                  style={{
+                    display:'block',width:'100%',maxWidth:320,margin:'0 auto',
+                    background:'linear-gradient(135deg,#D4AF37 0%,#B8952E 100%)',
+                    color:'#050505',border:'none',borderRadius:100,
+                    padding:'16px 26px',
+                    fontFamily:"'Plus Jakarta Sans',sans-serif",
+                    fontWeight:900,fontSize:12,letterSpacing:'0.22em',textTransform:'uppercase',
+                    cursor:'pointer',
+                    boxShadow:'0 0 30px rgba(212,175,55,0.4)',
+                    transition:'transform 0.2s,box-shadow 0.2s',
+                  }}
+                  onMouseEnter={e=>{(e.target as HTMLElement).style.transform='translateY(-2px)';(e.target as HTMLElement).style.boxShadow='0 0 45px rgba(212,175,55,0.6)'}}
+                  onMouseLeave={e=>{(e.target as HTMLElement).style.transform='translateY(0)';(e.target as HTMLElement).style.boxShadow='0 0 30px rgba(212,175,55,0.4)'}}
+                >
+                  ⚡ {t('profilePage.soulVaultInitiateScan')}
+                </button>
+              </>
+            ) : (
+              soulVaultEntries.length > 0 && (
+                <div style={{display:'flex',flexDirection:'column',gap:12}}>
+                  {soulVaultEntries.slice(0, 4).map((entry) => (
+                    <div key={entry.id} style={{borderRadius:16,border:'1px solid rgba(212,175,55,0.15)',background:'rgba(255,255,255,0.025)',backdropFilter:'blur(20px)',padding:16}}>
+                      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,marginBottom:6}}>
+                        <p style={{fontWeight:700,fontSize:13,color:'rgba(255,255,255,0.9)',margin:0}}>{soulVaultActivityLabel(entry.activity)}</p>
+                        <span style={{fontSize:11,color:'rgba(255,255,255,0.35)'}}>{new Date(entry.created_at).toLocaleDateString(dateLocale)}</span>
+                      </div>
+                      {entry.duration_minutes && <p style={{fontSize:12,color:'rgba(34,211,238,0.8)',marginBottom:6}}>{t('profilePage.soulVaultPracticeWindow', { n: entry.duration_minutes })}</p>}
+                      <p style={{fontSize:13,lineHeight:1.6,color:'rgba(255,255,255,0.65)',margin:0,display:'-webkit-box',WebkitLineClamp:3,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{entry.report}</p>
+                    </div>
+                  ))}
+                  <button type="button" onClick={() => navigate('/soul-scan')}
+                    style={{display:'block',width:'100%',maxWidth:280,margin:'8px auto 0',background:'rgba(212,175,55,0.12)',color:'#D4AF37',border:'1px solid rgba(212,175,55,0.3)',borderRadius:100,padding:'12px 24px',fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:11,letterSpacing:'0.22em',textTransform:'uppercase',cursor:'pointer'}}>
+                    ◈ New Scan Session
+                  </button>
+                </div>
+              )
+            )}
+          </div>
+        ) : (
+          <div className="vault-soul-card" style={{opacity:0.7}}>
+            <div className="vault-eyebrow">◈ Siddha Quantum — Locked</div>
+            <div className="vault-scan-ring" style={{opacity:0.4}}><span>◈</span></div>
+            <div style={{textAlign:'center',marginBottom:16}}>
+              <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:900,fontSize:20,color:'rgba(212,175,55,0.5)',marginBottom:8}}>Deep Field Resonance</div>
+              <p style={{fontFamily:"'Cormorant Garamond',serif",fontStyle:'italic',fontSize:'1rem',color:'rgba(255,255,255,0.35)',lineHeight:1.7}}>{t('profilePage.soulVaultLockedDesc')}</p>
             </div>
-          )}
-        </div>
+            <button type="button" className="gold-btn" style={{maxWidth:260,margin:'0 auto',opacity:0.8}} onClick={() => navigate('/siddha-quantum')}>{t('profilePage.soulVaultUpgrade')}</button>
+          </div>
+        )}
       </div>
 
       {/* ── AKASHIC ARCHIVE ── */}
