@@ -1,0 +1,25 @@
+name: Seed Polymarket Settings
+
+on:
+  workflow_dispatch:
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Insert settings row
+        env:
+          SUPABASE_PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer ${SUPABASE_PAT}" \
+            -H "Content-Type: application/json" \
+            -d '{"query":"INSERT INTO polymarket_bot_settings (paper_balance, paper_mode, risk_pct) SELECT 10.00, true, 0.05 WHERE NOT EXISTS (SELECT 1 FROM polymarket_bot_settings LIMIT 1);"}' \
+            "https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query"
+
+          echo "Verify:"
+          curl -s -X POST \
+            -H "Authorization: Bearer ${SUPABASE_PAT}" \
+            -H "Content-Type: application/json" \
+            -d '{"query":"SELECT * FROM polymarket_bot_settings;"}' \
+            "https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query"
