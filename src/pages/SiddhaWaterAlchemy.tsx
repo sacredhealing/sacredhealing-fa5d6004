@@ -1809,7 +1809,7 @@ export default function SiddhaWaterAlchemy() {
   const navigate = useNavigate();
   const { tier: memberTier } = useMembership();
   const { isAdmin } = useAdminRole();
-  const _rank = isAdmin ? 3 : getTierRank(memberTier);
+  const _rank = isAdmin ? 3 : (getTierRank(memberTier) ?? 0);
   const userTier = _rank >= 3 ? "akasha_infinity" : _rank >= 2 ? "siddha_quantum" : _rank >= 1 ? "prana_flow" : "free";
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<string>("all");
