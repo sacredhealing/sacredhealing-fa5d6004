@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const ADMIN_UUIDS = ["bd0b21c9-577a-450b-bb1e-21c9d0423f17"];
+
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -22,14 +22,23 @@ serve(async (req) => {
     );
 
     const { data: { user }, error: authError } = await userClient.auth.getUser();
-    if (authError || !user || !ADMIN_UUIDS.includes(user.id)) {
-      return new Response(JSON.stringify({ error: "Admin access required" }), { status: 403, headers: corsHeaders });
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
     }
 
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL"),
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
     );
+
+    // Verify admin via user_roles (security definer has_role)
+    const { data: isAdmin, error: roleErr } = await adminClient.rpc("has_role", {
+      _user_id: user.id,
+      _role: "admin",
+    });
+    if (roleErr || !isAdmin) {
+      return new Response(JSON.stringify({ error: "Admin access required" }), { status: 403, headers: corsHeaders });
+    }
 
     const { action, userId, updates } = await req.json();
 
@@ -68,15 +77,22 @@ serve(async (req) => {
 
       case "delete_user": {
         if (!userId) throw new Error("userId required");
-        if (ADMIN_UUIDS.includes(userId)) throw new Error("Cannot delete admin accounts");
+        // Don't allow admin to delete themselves or another admin
+        const { data: targetIsAdmin } = await adminClient.rpc("has_role", { _user_id: userId, _role: "admin" });
+        if (targetIsAdmin) throw new Error("Cannot delete admin accounts");
+
+        // Wipe app data first (FKs may cascade, but be explicit)
+        await adminClient.from("admin_granted_access").delete().eq("user_id", userId);
+        await adminClient.from("user_memberships").delete().eq("user_id", userId);
+        await adminClient.from("shc_transactions").delete().eq("user_id", userId);
+        await adminClient.from("user_balances").delete().eq("user_id", userId);
+        await adminClient.from("user_roles").delete().eq("user_id", userId);
+        await adminClient.from("profiles").delete().eq("id", userId);
 
         const { error } = await adminClient.auth.admin.deleteUser(userId);
         if (error) throw error;
 
-        await adminClient.from("profiles").delete().eq("id", userId);
-        await adminClient.from("user_memberships").delete().eq("user_id", userId);
-
-        return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       case "update_membership": {
@@ -100,7 +116,8 @@ serve(async (req) => {
 
       case "ban_user": {
         if (!userId) throw new Error("userId required");
-        if (ADMIN_UUIDS.includes(userId)) throw new Error("Cannot ban admin accounts");
+        const { data: targetIsAdmin } = await adminClient.rpc("has_role", { _user_id: userId, _role: "admin" });
+        if (targetIsAdmin) throw new Error("Cannot ban admin accounts");
 
         const { error } = await adminClient.auth.admin.updateUserById(userId, {
           ban_duration: updates?.unban ? "none" : "876600h",

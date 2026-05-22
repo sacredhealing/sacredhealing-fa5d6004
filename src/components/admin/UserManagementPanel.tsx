@@ -165,29 +165,26 @@ export default function UserManagementPanel() {
     } finally { setActionLoading(false); }
   };
 
-  // Hard delete — remove from all tables (optimistic)
+  // Hard delete — call admin edge function (service role: deletes auth user + all data)
   const handleDelete = async (userId: string) => {
-    // Optimistic removal immediately
+    const prevUsers = users;
     setUsers(prev => prev.filter(u => u.id !== userId));
     setConfirmDelete(null);
     setModalMode(null);
     setActionLoading(true);
     try {
-      // Delete from all tables in order
-      await supabase.from("admin_granted_access").delete().eq("user_id", userId);
-      await supabase.from("user_memberships").delete().eq("user_id", userId);
-      await supabase.from("shc_transactions").delete().eq("user_id", userId);
-      await supabase.from("user_balances").delete().eq("user_id", userId);
-      const { error } = await supabase.from("profiles").delete().eq("id", userId);
-      if (error) {
-        // Rollback UI if profiles delete fails
-        await loadUsers();
-        throw error;
-      }
-      toast({ title:"User Deleted", description:"All data removed. Auth account: delete in Supabase dashboard if needed." });
-    } catch (e:any) {
-      toast({ title:"Delete Error", description:e.message, variant:"destructive" });
-    } finally { setActionLoading(false); }
+      const { data, error } = await supabase.functions.invoke("admin-user-management", {
+        body: { action: "delete_user", userId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title: "User Deleted", description: "Auth account and all data removed." });
+    } catch (e: any) {
+      setUsers(prevUsers); // rollback
+      toast({ title: "Delete Error", description: e.message, variant: "destructive" });
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const openUser = (user:any, mode:"view"|"edit") => {
