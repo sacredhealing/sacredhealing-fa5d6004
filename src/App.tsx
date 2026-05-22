@@ -81,6 +81,7 @@ const PractitionerCertification = React.lazy(() => import("./pages/PractitionerC
 const KriyaYogaMastery = React.lazy(() => import("./pages/KriyaYogaMastery"));
 const ThirumoolarPranayama = React.lazy(() => import("./pages/ThirumoolarPranayama"));
 const MudraAcademy = React.lazy(() => import("./pages/MudraAcademy"));
+const PujaEducationCurriculum = React.lazy(() => import("./pages/PujaEducationCurriculum"));
 const SacredGeometryEducation = React.lazy(() => import("./pages/SacredGeometryEducation"));
 const Leaderboard = React.lazy(() => import("./pages/Leaderboard"));
 const AffirmationSoundtrack = React.lazy(() => import("./pages/AffirmationSoundtrack"));
@@ -331,6 +332,7 @@ function AppRoutes() {
                   <Route path="/kriya-yoga" element={<KriyaYogaMastery />} />
                   <Route path="/thirumoolar-pranayama" element={<ThirumoolarPranayama />} />
                   <Route path="/mudra-academy" element={<MudraAcademy />} />
+                  <Route path="/puja-education" element={<PujaEducationCurriculum />} />
                   <Route path="/sacred-geometry-education" element={<SacredGeometryEducation />} />
                   <Route path="/leaderboard" element={<Leaderboard />} />
                   <Route path="/affirmation-soundtrack" element={<AffirmationSoundtrack />} />
