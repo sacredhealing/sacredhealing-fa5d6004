@@ -22,14 +22,23 @@ serve(async (req) => {
     );
 
     const { data: { user }, error: authError } = await userClient.auth.getUser();
-    if (authError || !user || !ADMIN_UUIDS.includes(user.id)) {
-      return new Response(JSON.stringify({ error: "Admin access required" }), { status: 403, headers: corsHeaders });
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
     }
 
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL"),
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
     );
+
+    // Verify admin via user_roles (security definer has_role)
+    const { data: isAdmin, error: roleErr } = await adminClient.rpc("has_role", {
+      _user_id: user.id,
+      _role: "admin",
+    });
+    if (roleErr || !isAdmin) {
+      return new Response(JSON.stringify({ error: "Admin access required" }), { status: 403, headers: corsHeaders });
+    }
 
     const { action, userId, updates } = await req.json();
 
