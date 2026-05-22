@@ -1,0 +1,72 @@
+name: Fetch Supabase Service Role Key
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fetch-service-role:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install PyNaCl
+        run: pip install PyNaCl requests -q
+
+      - name: Fetch service_role key + update GitHub secret
+        env:
+          SUPA_PAT: ${{ secrets.SUPA_ADMIN_PAT }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          python3 << 'PYEOF'
+          import requests, base64, os
+          from nacl import encoding, public
+
+          SUPA_PAT = os.environ["SUPA_PAT"]
+          GH_PAT   = os.environ["GH_PAT"]
+          REPO     = "sacredhealing/sacredhealing-fa5d6004"
+          PROJECT  = "fjdzhrdpioxdeyyfogep"
+
+          # 1. Get API keys from Supabase
+          resp = requests.get(
+              f"https://api.supabase.com/v1/projects/{PROJECT}/api-keys",
+              headers={"Authorization": f"Bearer {SUPA_PAT}"}
+          )
+          print(f"Supabase API keys HTTP: {resp.status_code}")
+          keys = resp.json()
+          
+          service_role_key = None
+          for k in keys:
+              name = k.get("name","")
+              if name == "service_role":
+                  service_role_key = k.get("api_key") or k.get("apiKey")
+                  break
+          
+          if not service_role_key:
+              print("Keys returned:", [k.get("name") for k in keys])
+              raise Exception("service_role key not found in response")
+          
+          print(f"service_role key found: {service_role_key[:30]}...")
+
+          # 2. Get GitHub repo public key
+          pk = requests.get(
+              f"https://api.github.com/repos/{REPO}/actions/secrets/public-key",
+              headers={"Authorization": f"token {GH_PAT}"}
+          ).json()
+
+          # 3. Encrypt the key
+          pub_key = public.PublicKey(pk["key"].encode(), encoding.Base64Encoder())
+          box = public.SealedBox(pub_key)
+          encrypted = base64.b64encode(box.encrypt(service_role_key.encode())).decode()
+
+          # 4. Update NEW_SERVICE_ROLE secret
+          r = requests.put(
+              f"https://api.github.com/repos/{REPO}/actions/secrets/NEW_SERVICE_ROLE",
+              headers={"Authorization": f"token {GH_PAT}", "Content-Type": "application/json"},
+              json={"encrypted_value": encrypted, "key_id": pk["key_id"]}
+          )
+          print(f"NEW_SERVICE_ROLE updated: HTTP {r.status_code}")
+          
+          if r.status_code in (201, 204):
+              print("SUCCESS: service_role key is now stored in NEW_SERVICE_ROLE")
+          else:
+              print(f"FAILED: {r.text}")
+              exit(1)
+          PYEOF
