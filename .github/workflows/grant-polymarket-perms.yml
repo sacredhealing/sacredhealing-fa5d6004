@@ -1,0 +1,34 @@
+name: Grant Polymarket Permissions
+
+on:
+  workflow_dispatch:
+
+jobs:
+  grant:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run GRANT via Supabase Management API
+        env:
+          SUPABASE_PAT: ${{ secrets.SUPA_ADMIN_PAT }}
+        run: |
+          run_sql() {
+            local query="$1"
+            local label="$2"
+            echo "--- $label ---"
+            curl -s -X POST \
+              -H "Authorization: Bearer ${SUPABASE_PAT}" \
+              -H "Content-Type: application/json" \
+              -d "{\"query\":\"$query\"}" \
+              "https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query"
+            echo ""
+          }
+
+          run_sql "GRANT USAGE ON SCHEMA public TO service_role;" "Grant schema usage"
+          run_sql "GRANT ALL PRIVILEGES ON public.polymarket_bot_settings TO service_role;" "Grant bot_settings"
+          run_sql "GRANT ALL PRIVILEGES ON public.polymarket_trades TO service_role;" "Grant trades"
+          run_sql "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO service_role;" "Grant sequences"
+          run_sql "ALTER TABLE public.polymarket_bot_settings ENABLE ROW LEVEL SECURITY;" "Enable RLS bot_settings"
+          run_sql "ALTER TABLE public.polymarket_trades ENABLE ROW LEVEL SECURITY;" "Enable RLS trades"
+          run_sql "CREATE POLICY IF NOT EXISTS service_all_bot_settings ON public.polymarket_bot_settings FOR ALL TO service_role USING (true) WITH CHECK (true);" "RLS policy bot_settings"
+          run_sql "CREATE POLICY IF NOT EXISTS service_all_trades ON public.polymarket_trades FOR ALL TO service_role USING (true) WITH CHECK (true);" "RLS policy trades"
+          echo "Done."
