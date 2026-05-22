@@ -377,7 +377,7 @@ export default function MantraAcademy() {
   const navigate = useNavigate();
   const { tier } = useMembership();
   const { isAdmin } = useAdminRole();
-  const rank = isAdmin ? 3 : getTierRank(tier);
+  const rank = isAdmin ? 3 : (getTierRank(tier) ?? 0);
   const userTier: 'free' | 'prana' | 'siddha' | 'akasha' =
     rank >= 3 ? 'akasha' : rank >= 2 ? 'siddha' : rank >= 1 ? 'prana' : 'free';
 
