@@ -462,7 +462,7 @@ export default function YagnyaModule() {
   const navigate = useNavigate();
   const { tier } = useMembership();
   const { isAdmin } = useAdminRole();
-  const rank = isAdmin ? 3 : getTierRank(tier);
+  const rank = isAdmin ? 3 : (getTierRank(tier) ?? 0);
   const userTier: Tier =
     rank >= 3 ? "akasha" : rank >= 2 ? "siddha" : rank >= 1 ? "prana" : "free";
   const [activeTier, setActiveTier] = useState<Tier>(userTier);
