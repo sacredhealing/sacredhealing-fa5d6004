@@ -354,7 +354,7 @@ function LockedModule({ mod }: { mod: Module }) {
         <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', maxWidth: 420, margin: '0 auto 24px' }}>
           {mod.description}
         </p>
-        <a href="/pricing" style={{
+        <a href="/prana-flow" style={{
           display: 'inline-flex', padding: '12px 32px', borderRadius: 100,
           background: colors.bg, border: `1px solid ${colors.border}`,
           color: colors.accent, fontSize: 11, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase',
