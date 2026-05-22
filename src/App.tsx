@@ -83,6 +83,9 @@ const ThirumoolarPranayama = React.lazy(() => import("./pages/ThirumoolarPranaya
 const MudraAcademy = React.lazy(() => import("./pages/MudraAcademy"));
 const PujaEducationCurriculum = React.lazy(() => import("./pages/PujaEducationCurriculum"));
 const MantraAcademy = React.lazy(() => import("./pages/MantraAcademy"));
+const SiddhaQuantumMeditationCourse = React.lazy(() => import("./pages/SiddhaQuantumMeditationCourse"));
+const SiddhaMantraReference = React.lazy(() => import("./pages/SiddhaMantraReference"));
+const SiddhaQuantumPracticeJournal = React.lazy(() => import("./pages/SiddhaQuantumPracticeJournal"));
 const SacredGeometryEducation = React.lazy(() => import("./pages/SacredGeometryEducation"));
 const Leaderboard = React.lazy(() => import("./pages/Leaderboard"));
 const AffirmationSoundtrack = React.lazy(() => import("./pages/AffirmationSoundtrack"));
@@ -335,6 +338,9 @@ function AppRoutes() {
                   <Route path="/mudra-academy" element={<MudraAcademy />} />
                   <Route path="/puja-education" element={<PujaEducationCurriculum />} />
                   <Route path="/mantra-academy" element={<MantraAcademy />} />
+                  <Route path="/meditation-course" element={<SiddhaQuantumMeditationCourse />} />
+                  <Route path="/mantra-reference" element={<SiddhaMantraReference />} />
+                  <Route path="/practice-journal" element={<SiddhaQuantumPracticeJournal />} />
                   <Route path="/sacred-geometry-education" element={<SacredGeometryEducation />} />
                   <Route path="/leaderboard" element={<Leaderboard />} />
                   <Route path="/affirmation-soundtrack" element={<AffirmationSoundtrack />} />
