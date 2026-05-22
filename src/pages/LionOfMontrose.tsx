@@ -377,7 +377,7 @@ function LockOverlay({ tier }: { tier: string }) {
         This Seal requires <strong style={{ color: "#D4AF37" }}>{labels[tier] ?? tier}</strong> initiation
       </p>
       <button
-        onClick={() => navigate("/pricing")}
+        onClick={() => navigate("/membership")}
         style={{
           background: "linear-gradient(135deg, #D4AF37, #B8941F)",
           border: "none",
