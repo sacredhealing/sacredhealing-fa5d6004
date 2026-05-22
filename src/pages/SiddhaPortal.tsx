@@ -445,6 +445,84 @@ export default function SiddhaPortal() {
 
       <Divider />
 
+
+      <Divider />
+
+      {/* ══════════════════════════════════════════════════════════
+          SECTION — SACRED ACADEMY (Education Courses)
+      ══════════════════════════════════════════════════════════ */}
+      <div style={SECTION_TITLE}>
+        <span>📿</span>
+        <span>SACRED ACADEMY</span>
+      </div>
+
+      {/* KRIYA YOGA — live */}
+      <div
+        onClick={() => navigate('/kriya-yoga')}
+        style={{
+          ...CARD_BASE,
+          margin: '0 16px 12px',
+          background: 'linear-gradient(135deg, rgba(212,175,55,0.08), rgba(212,175,55,0.02))',
+          border: `1px solid ${gold(0.28)}`,
+          animation: 'sqFadeUp 0.45s 0.05s ease both',
+          cursor: 'pointer',
+        }}
+      >
+        <span style={BADGE(gold(0.14), gold(0.3), gold(0.9))}>
+          <span style={LIVE_DOT} />LIVE
+        </span>
+        <div style={CARD_TITLE}>Kriya Yoga Mastery</div>
+        <p style={CARD_DESC}>The complete 18-Siddha Kriya transmission — from Babaji's secret teachings to advanced Pranayama, Mahamudra, and the path to Samadhi.</p>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const, marginBottom: 12 }}>
+          {[{l:'Free · Modules I–II', c: white(0.5)},{l:'Prana · III–V', c:'#4ADE80'},{l:'Siddha · VI–VIII', c: cyan(0.9)},{l:'Akasha · IX–X', c: gold(0.95)}].map(t => (
+            <span key={t.l} style={{ ...LABEL_STYLE, fontSize: 8, color: t.c, letterSpacing:'0.2em', border: `1px solid ${t.c}30`, borderRadius: 20, padding: '2px 8px' }}>{t.l}</span>
+          ))}
+        </div>
+        <button type="button" style={CTA_BTN}>Enter Transmission →</button>
+      </div>
+
+      {/* COMING SOON GRID — 2-col for upcoming courses */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, margin: '0 16px 12px' }}>
+        {[
+          { title: 'Yogananda Codex', sub: 'Self-Realization & Kriya Science', icon: '🌟', route: '/yogananda-codex', soon: true },
+          { title: 'Sacred Water', sub: 'Consciousness & Living Water Protocols', icon: '💧', route: '/sacred-water', soon: true },
+          { title: 'Siddha Medicine', sub: 'The 18 Siddhas · Varma · Rasayana', icon: '🌿', route: '/siddha-medicine', soon: true },
+          { title: 'Mantra Vidya', sub: 'Nada Yoga · Bija · Secret Transmissions', icon: '🔔', route: '/mantra-vidya', soon: true },
+          { title: 'Sacred Geometry', sub: 'Sri Yantra · Yantras · Light Codes', icon: '✦', route: '/sacred-geometry-education', soon: false },
+          { title: 'Vastu Shastra', sub: 'Vedic Space & Quantum Architecture', icon: '🏛', route: '/vastu', soon: false },
+          { title: 'Narasimha Path', sub: 'Protection · Power · Sovereignty', icon: '🦁', route: '/narasimha', soon: true },
+          { title: 'Shiva Lingam', sub: 'Jyotirlinga · Abhisheka · Liberation', icon: '🔱', route: '/shiva-lingam', soon: true },
+          { title: 'Ramayana Codex', sub: 'Dharma · Devotion · Avataric Blueprint', icon: '🏹', route: '/ramayana', soon: true },
+          { title: 'Mudra Science', sub: 'Hand Seals · Neural Rewiring', icon: '🤲', route: '/mudra-science', soon: true },
+          { title: 'Nadi Leaf Oracle', sub: 'Agastya Nadi · Cosmic Records', icon: '🌿', route: '/nadi-leaf', soon: true },
+          { title: 'Yagna & Puja', sub: 'Fire Ceremony · Sacred Ritual', icon: '🔥', route: '/yagna-puja', soon: true },
+        ].map((course, i) => (
+          <div
+            key={course.title}
+            onClick={() => !course.soon && navigate(course.route)}
+            style={{
+              ...CARD_BASE,
+              padding: '16px 14px 18px',
+              cursor: course.soon ? 'default' : 'pointer',
+              opacity: course.soon ? 0.7 : 1,
+              animation: `sqFadeUp 0.45s ${0.05 + i * 0.04}s ease both`,
+            }}
+          >
+            <div style={{ fontSize: 22, marginBottom: 8 }}>{course.icon}</div>
+            <div style={{ ...CARD_TITLE, fontSize: 11, marginBottom: 5 }}>{course.title}</div>
+            <div style={{ ...CARD_DESC, fontSize: '0.8rem', marginBottom: course.soon ? 8 : 0, lineHeight: 1.4 }}>{course.sub}</div>
+            {course.soon && (
+              <span style={{ ...LABEL_STYLE, fontSize: 7, color: gold(0.4), border: `1px solid ${gold(0.15)}`, borderRadius: 20, padding: '2px 7px' }}>COMING SOON</span>
+            )}
+            {!course.soon && (
+              <span style={{ position: 'absolute', bottom: 12, right: 14, color: gold(0.3), fontSize: 13 }}>→</span>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <Divider />
+
       {/* ══════════════════════════════════════════════════════════
           SECTION 2 — SQI TOOLS
       ══════════════════════════════════════════════════════════ */}
