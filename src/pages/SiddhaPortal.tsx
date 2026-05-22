@@ -539,7 +539,7 @@ export default function SiddhaPortal() {
           { title: 'Siddha Medicine', sub: 'Varma · Rasayana · Kaya Kalpa · 4 Tiers', icon: '🌿', route: '/siddha-medicine', soon: false },
           { title: 'Mantra Academy', sub: 'Nada Yoga · 24 Modules · Bija Mantras', icon: '🔔', route: '/mantra-academy', soon: false },
           { title: 'Sacred Geometry', sub: 'Sri Yantra · Merkaba · Platonic Solids', icon: '✦', route: '/sacred-geometry', soon: false },
-          { title: 'Vastu Shastra', sub: 'Vedic Space & Quantum Architecture', icon: '🏛', route: '/vastu', soon: false },
+          { title: 'Vastu Shastra', sub: 'Vedic Space · Pancha Bhuta · Quantum Architecture', icon: '🏛', route: '/vastu-curriculum', soon: false },
           { title: 'Mantra Reference', sub: 'Mantras · Mudras · Chakras · Schedule', icon: '📿', route: '/mantra-reference', soon: false },
           { title: 'Practice Journal', sub: 'Track Your Sadhana · 40-Day Protocol', icon: '📓', route: '/practice-journal', soon: false },
           { title: 'Narasimha Path', sub: 'Nine Seals · Protection · Liberation', icon: '🦁', route: '/narasimha', soon: false },
