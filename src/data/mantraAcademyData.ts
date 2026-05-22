@@ -813,6 +813,9 @@ const module2: Module = {
     // ─────────────────────────────────────────────────────
     // LESSON 2.6
 
+  ],
+};
+
 const module3: Module = {
   id: 'module-03',
   number: 3,
@@ -1163,6 +1166,9 @@ const module3: Module = {
     // ─────────────────────────────────────────────────────
     // LESSON 3.6
 
+  ],
+};
+
 const module4: Module = {
   id: 'module-04',
   number: 4,
@@ -1460,6 +1466,9 @@ Rule 2 — The Sequence of Action: In a compound mantra, the Bija that appears f
 
     // ─────────────────────────────────────────────────────
     // LESSON 4.5
+
+  ],
+};
 
 const module5: Module = {
   id: 'module-05',
@@ -1803,6 +1812,9 @@ const module5: Module = {
 
 // ─── MODULES 6–10 ────────────────────────────────────────────────────────────
 
+  ],
+};
+
 const module6: Module = {
   id: 'module-06',
   number: 6,
@@ -2141,6 +2153,9 @@ const module6: Module = {
 
     // ─────────────────────────────────────────────────────
     // LESSON 6.6
+
+  ],
+};
 
 const module7: Module = {
   id: 'module-07',
@@ -2664,6 +2679,9 @@ const module7: Module = {
     // ─────────────────────────────────────────────────────
     // LESSON 7.8
 
+  ],
+};
+
 const module8: Module = {
   id: 'module-08',
   number: 8,
@@ -3005,6 +3023,9 @@ const module8: Module = {
 
     // ─────────────────────────────────────────────────────
     // LESSON 8.6
+
+  ],
+};
 
 const module9: Module = {
   id: 'module-09',
@@ -3354,6 +3375,9 @@ const module9: Module = {
 
     // ─────────────────────────────────────────────────────
     // LESSON 9.6
+
+  ],
+};
 
 const module10: Module = {
   id: 'module-10',
@@ -3779,6 +3803,9 @@ const module10: Module = {
 
 // ─── MODULES 11–15 ───────────────────────────────────────────────────────────
 
+  ],
+};
+
 const module11: Module = {
   id: 'module-11',
   number: 11,
@@ -4167,6 +4194,9 @@ const module11: Module = {
     // ─────────────────────────────────────────────────────
     // LESSON 11.6
 
+  ],
+};
+
 const module12: Module = {
   id: 'module-12',
   number: 12,
@@ -4501,6 +4531,9 @@ const module12: Module = {
 
     // ─────────────────────────────────────────────────────
     // LESSON 12.6
+
+  ],
+};
 
 const module13: Module = {
   id: 'module-13',
@@ -4897,6 +4930,9 @@ const module13: Module = {
     // ─────────────────────────────────────────────────────
     // LESSON 13.6
 
+  ],
+};
+
 const module14: Module = {
   id: 'module-14',
   number: 14,
@@ -5262,6 +5298,9 @@ const module14: Module = {
 
     // ─────────────────────────────────────────────────────
     // LESSON 14.6
+
+  ],
+};
 
 const module15: Module = {
   id: 'module-15',
@@ -5692,6 +5731,9 @@ const module15: Module = {
 
 
 // ─── MODULES 16–24 (COMPLETE) ────────────────────────────────────────────────
+
+  ],
+};
 
 const module16: Module = {
   id: 'module-16',
@@ -6143,6 +6185,9 @@ const module16: Module = {
     // ─────────────────────────────────────────────────────
     // LESSON 16.7
 
+  ],
+};
+
 const module17: Module = {
   id: 'module-17',
   number: 17,
@@ -6565,6 +6610,9 @@ const module17: Module = {
     // ─────────────────────────────────────────────────────
     // LESSON 17.7
 
+  ],
+};
+
 const module18: Module = {
   id: 'module-18',
   number: 18,
@@ -6924,6 +6972,9 @@ const module18: Module = {
 
     // ─────────────────────────────────────────────────────
     // LESSON 18.6
+
+  ],
+};
 
 const module19: Module = {
   id: 'module-19',
