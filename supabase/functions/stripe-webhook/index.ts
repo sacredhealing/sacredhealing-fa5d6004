@@ -1228,6 +1228,107 @@ serve(async (req) => {
       }, 'processed');
     }
 
+    // ============================================================
+    // Membership tier sync: prana-flow / siddha-quantum / akasha-infinity
+    // Keeps public.user_memberships in sync with Stripe subscription state
+    // so upgrades, downgrades and cancellations are reflected immediately.
+    // ============================================================
+    if (
+      event.type === "customer.subscription.created" ||
+      event.type === "customer.subscription.updated" ||
+      event.type === "customer.subscription.deleted"
+    ) {
+      const MEMBERSHIP_PRICE_TO_SLUG: Record<string, string> = {
+        "price_1T8o3YAPsnbrivP056UJqOP7": "prana-flow",
+        "price_1T8o3jAPsnbrivP0uZKR33EY": "siddha-quantum",
+        "price_1T8o3kAPsnbrivP0m8bOzl3M": "akasha-infinity",
+      };
+
+      const sub = event.data.object as Stripe.Subscription;
+      const priceId = sub.items.data[0]?.price?.id || "";
+      const tierSlug = MEMBERSHIP_PRICE_TO_SLUG[priceId];
+
+      if (tierSlug) {
+        const customerId = sub.customer.toString();
+        const status = sub.status;
+        const currentPeriodEnd = sub.current_period_end
+          ? new Date(sub.current_period_end * 1000).toISOString()
+          : null;
+
+        // Resolve user_id: prefer existing membership row, fall back to customer email
+        let userId: string | null = null;
+        const { data: existingMembership } = await supabaseAdmin
+          .from("user_memberships")
+          .select("user_id")
+          .eq("stripe_subscription_id", sub.id)
+          .maybeSingle();
+        userId = existingMembership?.user_id ?? null;
+
+        if (!userId) {
+          try {
+            const customer = await stripe.customers.retrieve(customerId);
+            const email = (customer && !(customer as any).deleted)
+              ? (customer as Stripe.Customer).email
+              : null;
+            if (email) {
+              const { data: usersList } = await supabaseAdmin.auth.admin.listUsers();
+              userId = usersList?.users?.find((u) => u.email === email)?.id || null;
+            }
+          } catch (e) {
+            logStep("Failed to resolve user from Stripe customer", { customerId, err: String(e) });
+          }
+        }
+
+        if (userId) {
+          const isActive =
+            event.type !== "customer.subscription.deleted" &&
+            (status === "active" || status === "trialing");
+
+          // Lookup tier_id
+          const { data: tierRow } = await supabaseAdmin
+            .from("membership_tiers")
+            .select("id")
+            .eq("slug", tierSlug)
+            .maybeSingle();
+
+          if (tierRow?.id) {
+            if (isActive) {
+              // Upsert active membership (handles upgrade/downgrade)
+              await supabaseAdmin.from("user_memberships").upsert(
+                {
+                  user_id: userId,
+                  tier_id: tierRow.id,
+                  status: "active",
+                  stripe_subscription_id: sub.id,
+                  expires_at: currentPeriodEnd,
+                  updated_at: new Date().toISOString(),
+                },
+                { onConflict: "user_id" },
+              );
+              logStep("Membership tier synced active", { userId, tierSlug, subscriptionId: sub.id });
+            } else {
+              // Cancelled / past_due / unpaid → mark inactive so panel shows Free
+              await supabaseAdmin
+                .from("user_memberships")
+                .update({
+                  status: "cancelled",
+                  expires_at: currentPeriodEnd,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq("user_id", userId)
+                .eq("stripe_subscription_id", sub.id);
+              logStep("Membership tier cancelled", { userId, tierSlug, status });
+            }
+          } else {
+            logStep("No membership_tier row for slug", { tierSlug });
+          }
+        } else {
+          logStep("Could not resolve userId for membership subscription", { customerId, subscriptionId: sub.id });
+        }
+      }
+    }
+
+
     return new Response(JSON.stringify({ received: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
