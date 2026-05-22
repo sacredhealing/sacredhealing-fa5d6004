@@ -520,6 +520,9 @@ m1l1: {
       'Create a "Planetary Prescription" practice for yourself based on your own Navagraha reading. Identify your three most challenging mount zones (flattest, most marked with crosses or grilles). Design one specific practice for each — a mantra, a mudra, a lifestyle change, or a creative commitment. Practice all three for 90 days. Then re-read your palm. Document every observable change.',
       'Gorakkar\'s final test for the Siddha Quantum practitioner: read a palm without looking at it first. Have the person hold their closed palm in yours. Keep your eyes closed. Breathe slowly. Notice what you perceive in your own body, your intuitive sense, your pranic feeling — before visual analysis begins. Then open your eyes and read. Compare what you felt with what you see. The closer these match, the more fully the Sampurna Hasta Darshan is awakening in you.',
     ]
+  },
+
+
 
   // ─── MODULE IV: AKASHA INFINITY ───────────────────────────────────────────
 
