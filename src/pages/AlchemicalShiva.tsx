@@ -190,7 +190,7 @@ export default function AlchemicalShiva() {
   const navigate = useNavigate();
   const { tier } = useMembership();
   const { isAdmin } = useAdminRole();
-  const rank = isAdmin ? 3 : getTierRank(tier);
+  const rank = isAdmin ? 3 : (getTierRank(tier) ?? 0);
   const userTier: Tier =
     rank >= 3 ? "akasha_infinity" : rank >= 2 ? "siddha_quantum" : rank >= 1 ? "prana_flow" : "free";
   const [expandedModule, setExpandedModule] = useState<number | null>(null);
