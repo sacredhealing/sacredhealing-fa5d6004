@@ -6329,6 +6329,81 @@ export type Database = {
         }
         Relationships: []
       }
+      soul_scans: {
+        Row: {
+          anahata_resonance: number | null
+          coherence_score: number | null
+          created_at: string | null
+          dosha_kapha: number | null
+          dosha_pitta: number | null
+          dosha_vata: number | null
+          felt_body_lightness: number | null
+          felt_heart_openness: number | null
+          felt_inner_peace: number | null
+          felt_mental_clarity: number | null
+          felt_prana_shakti: number | null
+          heart_rate: number | null
+          hrv_rmssd: number | null
+          id: string
+          nervous_system_state: string | null
+          prana_level: number | null
+          scan_type: string | null
+          session_id: string
+          stress_index: number | null
+          user_id: string | null
+          vitality_index: number | null
+          voice_coherence: number | null
+        }
+        Insert: {
+          anahata_resonance?: number | null
+          coherence_score?: number | null
+          created_at?: string | null
+          dosha_kapha?: number | null
+          dosha_pitta?: number | null
+          dosha_vata?: number | null
+          felt_body_lightness?: number | null
+          felt_heart_openness?: number | null
+          felt_inner_peace?: number | null
+          felt_mental_clarity?: number | null
+          felt_prana_shakti?: number | null
+          heart_rate?: number | null
+          hrv_rmssd?: number | null
+          id?: string
+          nervous_system_state?: string | null
+          prana_level?: number | null
+          scan_type?: string | null
+          session_id: string
+          stress_index?: number | null
+          user_id?: string | null
+          vitality_index?: number | null
+          voice_coherence?: number | null
+        }
+        Update: {
+          anahata_resonance?: number | null
+          coherence_score?: number | null
+          created_at?: string | null
+          dosha_kapha?: number | null
+          dosha_pitta?: number | null
+          dosha_vata?: number | null
+          felt_body_lightness?: number | null
+          felt_heart_openness?: number | null
+          felt_inner_peace?: number | null
+          felt_mental_clarity?: number | null
+          felt_prana_shakti?: number | null
+          heart_rate?: number | null
+          hrv_rmssd?: number | null
+          id?: string
+          nervous_system_state?: string | null
+          prana_level?: number | null
+          scan_type?: string | null
+          session_id?: string
+          stress_index?: number | null
+          user_id?: string | null
+          vitality_index?: number | null
+          voice_coherence?: number | null
+        }
+        Relationships: []
+      }
       sound_library: {
         Row: {
           category: string
