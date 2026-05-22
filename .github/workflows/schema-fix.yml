@@ -1,0 +1,63 @@
+name: Fix Schema + Full Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Check actual schema + fix
+        env:
+          SUPABASE_PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          DB="https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query"
+          BASE="https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1"
+          LOG="_schema_fix.txt"
+
+          run_sql() {
+            curl -s -X POST "$DB" \
+              -H "Authorization: Bearer ${SUPABASE_PAT}" \
+              -H "Content-Type: application/json" \
+              -d "{\"query\":\"$1\"}"
+          }
+
+          echo "=== Actual columns in polymarket_bot_settings ===" | tee $LOG
+          run_sql "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name='polymarket_bot_settings' ORDER BY ordinal_position;" | tee -a $LOG
+          echo "" >> $LOG
+
+          echo "=== Actual columns in polymarket_trades ===" | tee -a $LOG
+          run_sql "SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name='polymarket_trades' ORDER BY ordinal_position;" | tee -a $LOG
+          echo "" >> $LOG
+
+          echo "=== DROP and recreate with correct schema ===" | tee -a $LOG
+          run_sql "DROP TABLE IF EXISTS polymarket_trades; DROP TABLE IF EXISTS polymarket_bot_settings;" | tee -a $LOG
+
+          run_sql "CREATE TABLE polymarket_bot_settings (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), paper_balance numeric NOT NULL DEFAULT 10.00, paper_mode boolean NOT NULL DEFAULT true, risk_pct numeric NOT NULL DEFAULT 0.05, updated_at timestamptz DEFAULT now()); INSERT INTO polymarket_bot_settings (paper_balance,paper_mode,risk_pct) VALUES (10.00,true,0.05);" | tee -a $LOG
+
+          run_sql "CREATE TABLE polymarket_trades (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), market_id text, market_question text, outcome text, token_id text, direction text CHECK (direction IN ('buy','sell')), shares numeric, entry_price numeric, amount_usdc numeric, tx_hash text, strategy text, is_paper boolean DEFAULT true, status text DEFAULT 'open', created_at timestamptz DEFAULT now()); CREATE INDEX IF NOT EXISTS idx_poly_trades_created ON polymarket_trades (created_at DESC);" | tee -a $LOG
+
+          echo "=== GRANT all roles ===" | tee -a $LOG
+          run_sql "GRANT ALL ON polymarket_bot_settings TO service_role,anon,authenticated; GRANT ALL ON polymarket_trades TO service_role,anon,authenticated;" | tee -a $LOG
+
+          echo "=== Verify via REST ===" | tee -a $LOG
+          sleep 5
+          curl -s -w "\nHTTP:%{http_code}" "${BASE}/polymarket_bot_settings?limit=3" \
+            -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" | tee -a $LOG
+          echo "" >> $LOG
+
+          echo "=== Insert test trade ===" | tee -a $LOG
+          curl -s -w "\nHTTP:%{http_code}" -X POST "${BASE}/polymarket_trades" \
+            -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" \
+            -H "Content-Type: application/json" -H "Prefer: return=representation" \
+            -d '{"market_id":"test-001","market_question":"[TEST] SQI Oracle live","outcome":"Yes","token_id":"t1","direction":"buy","shares":20.0,"entry_price":0.50,"amount_usdc":0.50,"tx_hash":"paper-bootstrap","strategy":"system_test","is_paper":true,"status":"open"}' | tee -a $LOG
+
+          git config user.email "bot@sqi.app"; git config user.name "SQI Bot"
+          git add $LOG
+          git commit -m "Schema fix $(date +%H%M%S)" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
