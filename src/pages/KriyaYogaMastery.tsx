@@ -864,7 +864,7 @@ export default function KriyaYogaMastery() {
   const navigate = useNavigate();
   const { tier } = useMembership();
   const { isAdmin } = useAdminRole();
-  const userRank = isAdmin ? 3 : getTierRank(tier);
+  const userRank = isAdmin ? 3 : (getTierRank(tier) ?? 0);
   const tierToRank: Record<Tier, number> = { free: 0, prana: 1, siddha: 2, akasha: 3 };
   const canAccess = (modTier: Tier): boolean => userRank >= tierToRank[modTier];
 
