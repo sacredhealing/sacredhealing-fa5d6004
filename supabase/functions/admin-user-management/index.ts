@@ -116,7 +116,8 @@ serve(async (req) => {
 
       case "ban_user": {
         if (!userId) throw new Error("userId required");
-        if (ADMIN_UUIDS.includes(userId)) throw new Error("Cannot ban admin accounts");
+        const { data: targetIsAdmin } = await adminClient.rpc("has_role", { _user_id: userId, _role: "admin" });
+        if (targetIsAdmin) throw new Error("Cannot ban admin accounts");
 
         const { error } = await adminClient.auth.admin.updateUserById(userId, {
           ban_duration: updates?.unban ? "none" : "876600h",
