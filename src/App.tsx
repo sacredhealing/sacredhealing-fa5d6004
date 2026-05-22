@@ -78,6 +78,7 @@ const AdminEmailAutomation = React.lazy(() => import("./pages/AdminEmailAutomati
 const AdminSendEmail = React.lazy(() => import("./pages/AdminSendEmail"));
 const StargateMembership = React.lazy(() => import("./pages/StargateMembership"));
 const PractitionerCertification = React.lazy(() => import("./pages/PractitionerCertification"));
+const KriyaYogaMastery = React.lazy(() => import("./pages/KriyaYogaMastery"));
 const SacredGeometryEducation = React.lazy(() => import("./pages/SacredGeometryEducation"));
 const Leaderboard = React.lazy(() => import("./pages/Leaderboard"));
 const AffirmationSoundtrack = React.lazy(() => import("./pages/AffirmationSoundtrack"));
@@ -325,6 +326,7 @@ function AppRoutes() {
                   <Route path="/transformation" element={<Transformation />} />
                   <Route path="/stargate" element={<StargateMembership />} />
                   <Route path="/certification" element={<PractitionerCertification />} />
+                  <Route path="/kriya-yoga" element={<KriyaYogaMastery />} />
                   <Route path="/sacred-geometry-education" element={<SacredGeometryEducation />} />
                   <Route path="/leaderboard" element={<Leaderboard />} />
                   <Route path="/affirmation-soundtrack" element={<AffirmationSoundtrack />} />
