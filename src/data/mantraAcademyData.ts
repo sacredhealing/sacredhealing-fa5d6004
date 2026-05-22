@@ -3955,6 +3955,7 @@ const module11: Module = {
             devanagari: 'ॐ हृदयाय नमः\nॐ यकृते नमः\nॐ वृक्काभ्यां नमः\nॐ मेरुदण्डाय नमः',
             transliteration: 'OM HRIDAYAYA NAMAH (heart)\nOM YAKRTE NAMAH (liver)\nOM VRIKKABHYAM NAMAH (kidneys)\nOM MERU DANDAYA NAMAH (spine)',
             body: `The four primary organ invocation mantras. Each follows the same structure: OM + organ name (in the dative case — "to the [organ]") + NAMAH (I bow/align). This structure is not merely polite address — it is the specific declaration that the practitioner is aligning their healing intention with the organ\'s own intelligence, not overriding it. NAMAH (from NAMAS = bow) literally means "not mine" — I bow, acknowledging that this healing is not my achievement but the organ\'s own intelligence recognizing and returning to its natural state.`,
+            translation: '',
           },
         },
         {
