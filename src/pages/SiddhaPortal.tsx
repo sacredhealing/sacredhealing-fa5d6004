@@ -518,7 +518,7 @@ export default function SiddhaPortal() {
           { title: 'Narasimha Path', sub: 'Protection · Power · Sovereignty', icon: '🦁', route: '/narasimha', soon: true },
           { title: 'Shiva Lingam', sub: 'Jyotirlinga · Abhisheka · Liberation', icon: '🔱', route: '/shiva-lingam', soon: true },
           { title: 'Ramayana Codex', sub: 'Dharma · Devotion · Avataric Blueprint', icon: '🏹', route: '/ramayana', soon: true },
-          { title: 'Mudra Science', sub: 'Hand Seals · Neural Rewiring', icon: '🤲', route: '/mudra-science', soon: true },
+          { title: 'Mudra Academy', sub: 'Hand Seals · Neural Rewiring · 10 Modules', icon: '🤲', route: '/mudra-academy', soon: false },
           { title: 'Nadi Leaf Oracle', sub: 'Agastya Nadi · Cosmic Records', icon: '🌿', route: '/nadi-leaf', soon: true },
           { title: 'Yagna & Puja', sub: 'Fire Ceremony · Sacred Ritual', icon: '🔥', route: '/yagna-puja', soon: true },
         ].map((course, i) => (
