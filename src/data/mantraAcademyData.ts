@@ -3776,15 +3776,1930 @@ const module10: Module = {
     // ─────────────────────────────────────────────────────
     // LESSON 10.7
 
+
+// ─── MODULES 11–15 ───────────────────────────────────────────────────────────
+
+const module11: Module = {
+  id: 'module-11',
+  number: 11,
+  tier: 'prana',
+  title: 'Healing Mantras — Sound as Medicine',
+  subtitle: 'Nada Chikitsa · The Divine Pharmacopoeia · Siddha Sound Healing',
+  description:
+    'The Siddha tradition was the first civilization to systematically use specific sound frequencies as primary medical treatments — not as supplements to physical medicine but as the foundational layer of a complete healing system. Agastya\'s Vaidya Padam, Thirumoolar\'s Thirumantiram, and Bogar\'s medical texts all contain precise protocols for using specific mantras to address specific physiological conditions at the level where disease originates: the pranic body, upstream of physical manifestation. This module delivers the complete Siddha sound-medicine system — from the universal healing invocation of Dhanvantari through organ-specific mantras, immune protocols, mental health applications, distance healing transmission, and the complete Nada Chikitsa session design.',
+  lessons: [
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 11.1
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'l11-1',
+      number: 1,
+      title: 'Dhanvantari — The Divine Physician',
+      subtitle: 'The Universal Healing Frequency · Before All Treatment',
+      durationMin: 22,
+      sections: [
+        {
+          type: 'intro',
+          body: `In the Siddha and Ayurvedic traditions, no healing practice — whether herbal, surgical, or mantric — begins without first invoking Dhanvantari. He is the divine physician: the cosmic intelligence of medicine itself, the force that understands disease at every level from the most subtle (karmic imprint in the causal body) to the most gross (tissue pathology in the physical body). Dhanvantari is not a god of healing in the sense of a being who performs miraculous cures from outside. He is the recognition that the intelligence of healing — the body\'s own capacity to understand its condition and move toward health — is divine in nature. Invoking Dhanvantari is aligning the practitioner\'s healing intention with the cosmic healing intelligence that has been operating in biological systems since the first living cell.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'Who Dhanvantari Is — The Avatar of Healing Intelligence',
+          body: `Dhanvantari is described in the Puranas as an Avatar of Vishnu — a direct incarnation of the sustaining cosmic intelligence — who appeared from the primordial ocean during the churning of the cosmos, holding a pot of Amrita (the nectar of immortality) in one hand and carrying the Ayurvedic texts in another. His emergence from the cosmic ocean with the nectar of immortality is the mythological encoding of a precise understanding: the highest healing is not the repair of what is broken but the recognition of what is inherently whole, inherently deathless, inherently beyond disease.\n\nThe Dhanvantari mantra is therefore not a request for external healing from a deity who is somewhere else. It is an invocation of the body\'s own deepest intelligence — the intelligence that knows what health is, that has maintained this body\'s millions of functions simultaneously without the ego\'s conscious involvement for every moment of the practitioner\'s life. Breathing, digesting, circulating, repairing, immunity, hormone regulation, neural connectivity — all of these happen without the conscious mind\'s instruction. The intelligence that does all of this is Dhanvantari in the body. The mantra simply reminds the body of what it already knows.\n\nHistorically, Dhanvantari is identified with Divodasa, a legendary physician-king of ancient Varanasi who systematized the Ayurvedic medical tradition and is credited with the Sushruta Samhita — the foundational text of Ayurvedic surgery, which describes procedures (including rhinoplasty, cataract surgery, and the use of surgical tools made of specific metals) that were not "rediscovered" by Western medicine until the 18th century. The Siddhas regarded Dhanvantari as a real historical figure whose level of medical knowledge was only possible through the combination of Ayurvedic scholarship and direct inner perception (Samadhi-based diagnosis).`,
+        },
+        {
+          type: 'teaching',
+          heading: 'The Dhanvantari Mantra — Complete Anatomy',
+          body: `The primary Dhanvantari mantra: OM NAMO BHAGAVATE DHANVANTARAYE AMRTA KALASHA HASTAYA SARVA MAYA VINASHANAYA TRAILOKYA NATHAYA SHRI MAHA VISHNAVE NAMAH.\n\nThis is the extended Dhanvantari mantra — the complete invocation. Let us decode each component:\n\nOM NAMO BHAGAVATE: The universal Vishnu invocation established in Module 10. We acknowledge the divine being who possesses all six divine qualities.\n\nDHANVANTARAYE: To Dhanvantari — the name itself comes from DHANVAN (bow, precision) + ANTARA (inner) — "the one who strikes with inner precision." The physician who accurately identifies and treats the precise source of the condition.\n\nAMRTA KALASHA HASTAYA: Who holds (HASTAYA = with hand) the pot (KALASHA) of Amrita (nectar of immortality). This phrase invokes Dhanvantari specifically in his role as the carrier of the highest medicine — not physical treatments alone, but the recognition of the practitioner\'s inherent wholeness.\n\nSARVA MAYA VINASHANAYA: The destroyer (VINASHANAYA) of all (SARVA) diseases (MAYA — here used specifically in the medical sense of illness/confusion rather than the philosophical sense of cosmic illusion). This is the direct healing invocation: all diseases recognized as forms of cosmic confusion, and Dhanvantari as the intelligence that dissolves them.\n\nTRAILOKYA NATHAYA: Lord (NATHAYA) of the three worlds (TRAILOKYA) — Dhanvantari\'s healing intelligence operates not only at the physical level but at the astral and causal levels simultaneously. Physical healing without addressing the energetic root and the karmic cause is incomplete medicine.\n\nSHRI MAHA VISHNAVE NAMAH: To the great Vishnu who is Shri (auspiciousness itself), I bow. The closing acknowledges that Dhanvantari is an aspect of Vishnu\'s sustaining intelligence — and that all healing is ultimately an expression of the cosmic preservation principle.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'Mantra Jala for Dhanvantari — Water as the Medicine\'s Vehicle',
+          body: `The most ancient Dhanvantari practice in the Siddha tradition does not involve chanting alone — it involves the consecration of water through the Dhanvantari mantra, producing what the tradition calls Mantra Jala (mantra water) — water charged with the healing frequency of the divine physician\'s consciousness, used both internally (drunk by the patient) and externally (applied to the affected area).\n\nThe mechanism from a modern perspective: the piezoelectric properties of water\'s hydrogen bond network allow it to carry electromagnetic patterns — this is the basis of homeopathy\'s proposed mechanism, though the scale of the effect in Mantra Jala is considered by the tradition to be much greater than homeopathic dilution alone. The mantra spoken over water is an acoustic frequency that, through the resonant properties of the water\'s molecular structure, imprints the frequency pattern of the mantra into the water\'s electromagnetic signature. When this water is consumed, the imprinted frequency is absorbed through the digestive tract\'s water-rich tissue and distributed throughout the body\'s water-based systems.\n\nThe Siddha prescription for Mantra Jala preparation: fill a clean copper vessel with pure water. Hold it with both palms (the palms\' electromagnetic field participates in the charging process). Chant the Dhanvantari mantra 108 times directly over the water, with the intention of perfect healing specified clearly. After the 108th repetition, chant OM SHANTI 3 times. Cover the vessel and allow the water to rest for at least 15 minutes before use. For external application: pour the charged water over the affected area while chanting the mantra 3 times. For internal use: drink slowly, with full awareness of what you are receiving.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'The Dhanvantari Yantra — Geometric Amplification of Healing Intent',
+          body: `Beyond the mantra alone, the Siddha healing tradition used the Dhanvantari Yantra — a specific geometric pattern engraved on copper — as a field-generator that maintains the Dhanvantari frequency continuously in the space where healing work is conducted. The Yantra, placed in the Northeast corner of the treatment space (or on the practitioner\'s altar during healing sessions), acts as a continuous broadcast of the Dhanvantari frequency — like a radio tower continuously transmitting on the healing frequency.\n\nThe core geometry of the Dhanvantari Yantra: a central point (Bindu), surrounded by an 8-petaled lotus, enclosed in a 16-petaled outer lotus, enclosed in a square with 4 doors (representing the four directions through which healing can enter and leave). The 8 inner petals correspond to the 8 forms of Dhanvantari described in the Ayurvedic texts — each governing a different domain of medicine (surgery, internal medicine, toxicology, pediatrics, psychology, rejuvenation, aphrodisiac medicine, and the treatment of supernatural-origin illness). The 16 outer petals correspond to the 16 types of Nadi pulse (the Siddha diagnostic system based on palpating the radial pulse at the wrist to diagnose any condition in any organ system).\n\nFor practitioners who conduct healing sessions for others — whether as formal Nada Chikitsa practitioners or as individuals who practice healing mantras for family members — establishing a copper Dhanvantari Yantra in the healing space is the single most effective environmental enhancement available. It transforms the space from a neutral room into a continuously charged healing field.`,
+        },
+        {
+          type: 'practice',
+          practice: {
+            title: 'Dhanvantari Morning Protocol — Activating the Body\'s Healing Intelligence',
+            steps: [
+              'PREPARE THE WATER: The evening before, fill your copper vessel with clean water. Place it on your altar overnight, in the presence of the ghee lamp if it is lit.',
+              'AT BRAHMA MUHURTA: Sit at your altar with the copper vessel before you. Both palms over (not touching) the water surface.',
+              'GANESHA OPENING: OM GAM GANAPATAYE NAMAH × 3. The divine physician requires the doorkeeper\'s blessing before any healing work begins.',
+              'DHANVANTARI MANTRA × 108: Chant OM NAMO BHAGAVATE DHANVANTARAYE AMRTA KALASHA HASTAYA SARVA MAYA VINASHANAYA TRAILOKYA NATHAYA SHRI MAHA VISHNAVE NAMAH 108 times over the water. At a comfortable, reverent pace, this takes approximately 20-25 minutes.',
+              'SPECIFIC INTENTION: After the 108th repetition, name your specific healing intention aloud or inwardly: "May this water carry the intelligence of Dhanvantari to the specific healing of [condition / person]. May the healing occur at the physical, energetic, mental, and causal levels simultaneously."',
+              'OM SHANTI × 3: Seal the water.',
+              'DRINK FIRST PORTION: Drink one third of the charged water slowly before your morning meal. Reserve the remaining two thirds — one third for midday, one third for evening.',
+              'THIS PROTOCOL is ideally maintained for 21 consecutive days for any specific healing intention. The 21-day Dhanvantari water practice is one of the most consistently effective healing protocols in the Siddha tradition.',
+            ],
+          },
+        },
+        {
+          type: 'mantra',
+          mantra: {
+            devanagari: 'ॐ नमो भगवते धन्वन्तरये\nअमृत कलश हस्ताय\nसर्व माय विनाशनाय\nत्रैलोक्यनाथाय\nश्री महाविष्णवे नमः',
+            transliteration: 'OM NAMO BHAGAVATE DHANVANTARAYE\nAMRTA KALASHA HASTAYA\nSARVA MAYA VINASHANAYA\nTRAILOKYA NATHAYA\nSHRI MAHA VISHNAVE NAMAH',
+            translation: 'OM — to the divine being Dhanvantari\nWho holds the pot of immortal nectar\nDestroyer of all diseases\nLord of the three worlds\nTo the great Vishnu-form, I bow',
+            body: `The complete Dhanvantari mantra in its traditional Sanskrit form. This mantra is chanted before any healing work — whether the practitioner is addressing their own condition or working with another person. It is also traditionally chanted by Ayurvedic and Siddha physicians before examining a patient, before preparing any herbal medicine, and before performing any therapeutic procedure. The mantra establishes the field: it declares that what is about to happen is not the ego\'s intervention in another person\'s body, but the divine physician\'s intelligence operating through the practitioner as an instrument.`,
+          },
+        },
+        {
+          type: 'wisdom',
+          wisdomTitle: 'Agastya on the Divine Physician — "The Healer Does Not Heal"',
+          wisdomBody: `One of the most challenging teachings in the Siddha medical tradition comes from Agastya Muni\'s medical texts, translated roughly as: "The physician who believes he heals will always be limited by what he knows. The physician who knows he does not heal — that Dhanvantari heals through him — will be limited only by his sincerity and his preparation. The first physician treats 100 patients and cures 60. The second treats 100 and witnesses 95 healings — not because he is more skilled, but because he has gotten his ego out of the way of the intelligence that actually does the work. Dhanvantari does not need your knowledge. He needs your humility and your sincerity as a channel. Prepare the channel — purify the body, purify the Nadis, maintain the mantra practice — and Dhanvantari works through you. Take credit for the healings — place your name on the work — and Dhanvantari withdraws. The divine physician is shy in exactly the way Saraswati is shy: he works only through those who understand that they are not the source."`,
+        },
+        {
+          type: 'audio',
+          audio: {
+            id: 'l11-1-audio',
+            title: 'Dhanvantari Practice — 108 Rounds with Water Consecration',
+            description: 'Kritagya leads the complete Dhanvantari morning protocol: Ganesha opening, 108 complete Dhanvantari mantras with count cues, specific healing intention holding, and the OM SHANTI sealing. Use this recording as your daily healing practice companion. 35 minutes.',
+            duration: '35:00',
+            url: '',
+          },
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 11.2
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'l11-2',
+      number: 2,
+      title: 'Organ-Specific Mantras',
+      subtitle: 'The Siddha Pharmacopoeia · Heart · Liver · Kidney · Spine · Complete Map',
+      durationMin: 24,
+      sections: [
+        {
+          type: 'intro',
+          body: `The Siddha medical texts contain what is effectively the world\'s first organ-specific sound-medicine pharmacopoeia: a systematic mapping of specific mantras, specific Bija seeds, and specific sound frequencies to specific organs and physiological systems. This mapping was not theoretical — it was the result of thousands of years of clinical observation by practitioners who combined the diagnostic sensitivity of deep meditative states with empirical observation of patient outcomes. This lesson extracts the core organ-mantra correspondences from the Siddha texts and presents them as a working clinical system.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'The Siddha Organ Map — How Mantras Reach Specific Tissues',
+          body: `The Siddha understanding of how organ-specific mantras work rests on two principles that modern medicine is beginning to confirm independently:\n\nPrinciple 1 — Organ Resonance: Every organ in the body has a characteristic electromagnetic frequency — a specific range of oscillations produced by the electrical activity of its cells, the mechanical vibration of its tissue, and the acoustic properties of the fluid-filled chambers it creates. The heart\'s dominant oscillation is approximately 1-2 Hz. The liver\'s tissue resonance is in the 2-5 Hz range. The kidneys oscillate at 3-7 Hz. These are not the same as the Schumann resonance or brainwaves — they are the specific mechanical and electromagnetic signatures of each organ\'s biological activity. A mantra that creates the matching acoustic frequency in the body\'s tissues resonates with the corresponding organ\'s natural frequency — the way a tuning fork causes a nearby string tuned to the same pitch to vibrate sympathetically.\n\nPrinciple 2 — Chakra-Organ Correspondence: The chakra system maps not only to psychological states but to specific physiological systems. Muladhara governs the adrenals, the large intestine, and the skeletal system. Svadhisthana governs the kidneys, the reproductive organs, and the lymphatic system. Manipura governs the liver, the stomach, the pancreas, and the metabolic system. Anahata governs the heart, the lungs, the thymus (immune system), and the circulatory system. Vishuddha governs the thyroid, the parathyroid, and the upper respiratory system. Ajna governs the pituitary, the pineal, and the neurological system. Sahasrara governs the entire brain\'s higher cortical functions.\n\nFrom these two principles: organ-specific mantra practice works by directing the mantra\'s acoustic frequency toward the chakra governing the affected organ, while simultaneously using the specific Bija of that chakra to strengthen the pranic field of the corresponding tissue.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'The Heart — Anahata Mantras for Cardiac Health',
+          body: `The heart is the most mantric organ in the body — it is not only the physical pump of the circulatory system but the electromagnetic center of the body\'s field, generating an electromagnetic field measurable up to 3 meters from the body surface (60 times stronger than the brain\'s field). The heart\'s field is the primary interface between the individual\'s energetic system and the collective human field — which is why heart conditions so often correlate with emotional and relationship patterns.\n\nAnahata mantras for cardiac health:\n\nFor heart muscle strengthening (including recovery from cardiac events): OM HRIDAYAYA NAMAH — "OM, to the heart, I bow." HRIDAYA (heart) is itself one of the most healing words in Sanskrit — derived from HRID (heart) + DA (giving) + YA (mover) — "the mover that gives from the heart." The vibration of HRIDAYAYA specifically resonates in the cardiac region and activates the parasympathetic cardiac control (vagal tone) that is the primary protective factor against arrhythmia and cardiac stress. 108 rounds, both palms on the chest, daily for 40 days.\n\nFor emotional heart healing (grief, heartbreak, loss): YAM × 108 + OM PREMA OM × 27. The YAM opens the Anahata field and the PREMA mantra directs love-frequency specifically into the reopening process. The combination is used in the Siddha tradition for the specific condition the texts call Hridaya Shula (heart pain — emotional, not cardiac) — the grief that crystallizes in the heart center after loss.\n\nFor arrhythmia and heart rate regulation: Bhramari Pranayama (21 rounds) + OM CHANDRAYA NAMAH × 27. The lunar mantra (Chandra = moon) has a specific cooling and regularizing effect on the cardiac system — the moon governs rhythmic cycles in all biological systems, and the Chandra mantra specifically helps restore the heart\'s natural sinus rhythm when it has been disrupted by stress, caffeine, or emotional turbulence.',
+        },
+        {
+          type: 'teaching',
+          heading: 'The Liver — Manipura Mantras for Metabolic and Emotional Digestion',
+          body: `The liver is the most metabolically active organ in the body — performing over 500 distinct biochemical functions simultaneously, including detoxification, protein synthesis, glucose regulation, and the production of bile for fat digestion. In Ayurveda and Siddha medicine, the liver is the primary seat of Pitta dosha — the fire element — and the organ most directly affected by the emotions of anger, resentment, jealousy, and perfectionism.\n\nThe liver-anger connection is not metaphorical: liver cells have receptors for cortisol (the stress hormone elevated by anger), and chronic anger produces measurable inflammatory changes in hepatic tissue. Conversely, liver dysfunction produces mood changes including irritability and angry outbursts — the liver-anger relationship operates bidirectionally.\n\nLiver healing mantras from the Siddha tradition:\n\nFor liver detoxification and inflammation: OM AYURDEVAYA NAMAH — "OM, to the lord of life-force (Ayur), I bow." This mantra specifically activates the liver\'s own detoxification intelligence. Combined with the physical practice of placing the right hand (solar, heating) on the liver region (right side of the abdomen, just below the ribcage) and chanting 54 rounds at Vaikhari.\n\nFor releasing anger held in the liver: RAM × 108 (fire mantra to metabolize and transform, not suppress) + KSHAMAPANA (the forgiveness mantra): OM NAMO NARAYANAYA / SARVAAN ME APARADHAN KSHAMASWA — "OM, Narayana, forgive all my faults." The combination burns through the anger with RAM and then releases it with the forgiveness mantra — the two-stage process that the Siddhas identified as necessary because suppressing anger (without the RAM burning stage) converts it into Pitta accumulation in the liver, while releasing anger without processing it (without the RAM stage) simply extends the pattern.',
+        },
+        {
+          type: 'teaching',
+          heading: 'The Kidneys — Svadhisthana Mantras and Fear Release',
+          body: `In Chinese medicine, the kidneys store the emotion of fear. In Ayurvedic medicine, the kidneys govern Apana Vayu — the downward-moving life force of elimination and release. The Siddha tradition synthesizes both: the kidneys are the organs through which the body releases what it has extracted value from and no longer needs — and the emotion most likely to prevent this natural elimination is fear, specifically the fear of letting go.\n\nKidney health mantras:\n\nFor kidney function support and adrenal fatigue: VARUNA MANTRA — OM VARUNAYA NAMAH × 108. Varuna (the lord of cosmic water and sacred vows) governs both the kidneys and the water element of the body. This mantra specifically addresses the adrenal-kidney axis — the glandular system that produces the stress hormones (cortisol and adrenaline) that most directly burden the kidneys through chronic activation.\n\nFor releasing fear held in the kidneys: LAM × 54 (Earth — grounding, reducing the flight response) + OM APANAYA NAMAH × 27 (invoking the downward-releasing Apana Vayu). Place both palms on the lower back at kidney level during the practice. The physical warmth of the palms combined with the mantric vibration directly through the back-body approach to the kidneys is more effective than front-approach because the kidneys are retroperitoneal — they sit BEHIND the peritoneum, closer to the back body surface.\n\nFor urinary tract conditions (the kidneys\' downstream expression): VAM × 108 (water Bija) + OM SHITALA DEVYAI NAMAH (the mantra of the cooling goddess Shitala, who governs all inflammatory conditions in the water system of the body).`,
+        },
+        {
+          type: 'teaching',
+          heading: 'The Spine — The Sushumna and Structural Healing',
+          body: `The spine holds a unique position in Siddha healing: it is simultaneously a physical structure (the bony column protecting the spinal cord), an energetic structure (the Sushumna Nadi running within it), and a consciousness structure (the axis of the chakra system). Conditions of the spine — disc problems, chronic back pain, scoliosis, spinal nerve compression — have all three levels of cause: structural (the physical displacement), energetic (the Nadi blockage that allowed the structural problem to develop), and karmic (the deeper pattern of consciousness that the physical condition is expressing).\n\nSpine healing mantras:\n\nFor the complete spine (general spinal health maintenance): OM MERU DANDAYA NAMAH — "OM, to the Meru staff (the spine as the mountain axis of the body), I bow." This is a lesser-known but highly effective Siddha mantra that addresses the spine in its complete dimension — not just as a structural column but as the Meru (the cosmic mountain at the center of the universe) expressed in the human body. 108 rounds daily with the practitioner lying in Shavasana, awareness moving up the entire spine from coccyx to crown with each repetition.\n\nFor the lumbar spine (L1-L5, most common site of disc problems): LAM × 108 directed specifically to the lower back. The Earth element\'s grounding quality addresses the instability pattern that most lumbar conditions express.\n\nFor the cervical spine (neck, C1-C7): HAM × 54 (space element, vishuddha, throat) — the throat and neck region\'s energetic clearing addresses the holding patterns (literally "holding back" speech, suppressing expression) that most cervical conditions involve.\n\nFor sciatica (the nerve running from the lumbar spine through the buttock and down the leg): SOHAM × 108 in the specific Ajapa Japa breath-awareness form, feeling the breath flowing DOWN the sciatic nerve pathway on the exhale — from the lower back, through the buttock, down the leg, to the foot. The breath-mantra, directed consciously through the neural pathway of the sciatica, can release the energetic constriction that the physical nerve compression is expressing.',
+        },
+        {
+          type: 'practice',
+          practice: {
+            title: 'Organ-Specific Healing Session — The 45-Minute Siddha Protocol',
+            steps: [
+              'IDENTIFY YOUR FOCUS ORGAN: For this session, choose one organ or system to work with. Do not attempt to heal multiple organs simultaneously — concentration is more effective than breadth.',
+              'POSITION: For most organ-specific healing, lying down (Shavasana) is more effective than seated practice, because it allows full physical relaxation and allows the body\'s fluids to redistribute optimally.',
+              'DHANVANTARI OPENING (5 min): Seated, before lying down. OM NAMO BHAGAVATE DHANVANTARAYE... × 27. Set the healing field.',
+              'PHYSICAL CONTACT (ongoing throughout): Place both palms (or one palm) on the body area of the target organ. This physical contact amplifies the mantric effect significantly — the skin-to-skin contact of the palms with the body surface creates a galvanic field that works with the mantra\'s acoustic effect.',
+              'CHAKRA FOUNDATION (5 min): Chant the chakra Bija of the chakra governing the target organ — 54 times. (Heart → YAM, Liver/Stomach → RAM, Kidneys → VAM, Spine → LAM + HAM depending on which section).',
+              'ORGAN MANTRA (15 min): Chant the specific organ mantra identified in this lesson — 108 times at Vaikhari, with palms in contact with the affected area. With each repetition, send the mantric charge inward through the palms into the tissue.',
+              'VISUALIZATION (5 min): After the 108 organ mantras, keep palms in place. Visualize the organ as luminous — not diseased, not damaged, but as it is at its pranic blueprint level: whole, clear, functioning perfectly. The Siddhas held this visualization not as wishful thinking but as the recognition of the organ\'s actual state at the causal body level, which the physical body is in the process of expressing.',
+              'DHANVANTARI CLOSING (5 min): Return to seated position. OM NAMO BHAGAVATE DHANVANTARAYE... × 11. Thank the divine physician. Seal the session.',
+              'REST (10 min): Remain lying in Shavasana. The integration period after organ-specific healing is when the energetic changes settle into the physical tissue.',
+            ],
+          },
+        },
+        {
+          type: 'mantra',
+          mantra: {
+            devanagari: 'ॐ हृदयाय नमः\nॐ यकृते नमः\nॐ वृक्काभ्यां नमः\nॐ मेरुदण्डाय नमः',
+            transliteration: 'OM HRIDAYAYA NAMAH (heart)\nOM YAKRTE NAMAH (liver)\nOM VRIKKABHYAM NAMAH (kidneys)\nOM MERU DANDAYA NAMAH (spine)',
+            body: `The four primary organ invocation mantras. Each follows the same structure: OM + organ name (in the dative case — "to the [organ]") + NAMAH (I bow/align). This structure is not merely polite address — it is the specific declaration that the practitioner is aligning their healing intention with the organ\'s own intelligence, not overriding it. NAMAH (from NAMAS = bow) literally means "not mine" — I bow, acknowledging that this healing is not my achievement but the organ\'s own intelligence recognizing and returning to its natural state.`,
+          },
+        },
+        {
+          type: 'wisdom',
+          wisdomTitle: 'Bogar on Organ Intelligence — "The Liver Already Knows"',
+          wisdomBody: `Bogar Siddhar, the alchemist, gave a teaching on organ-specific healing that has direct relevance to how this practice is approached: "The practitioner who approaches the diseased organ with the mantra as a weapon — 'I will force this liver to heal' — will find the organ resistant and the healing slow. The practitioner who approaches the diseased organ as a conversation — 'Liver, I know you know what health is. I am here to remind you with this sound. Tell me what you need.' — will find the organ responsive and the healing rapid. The organ is not ignorant of health. It was healthy before the disease arrived. The disease is a departure from the organ\'s original knowing, not the organ\'s natural state. The mantra does not teach the organ anything new. It reminds the organ of what it already knew before the confusion arrived. Begin every healing session with this understanding and the quality of your mantra practice will immediately shift from intervention to recognition."`,
+        },
+        {
+          type: 'audio',
+          audio: {
+            id: 'l11-2-audio',
+            title: 'Organ Healing Protocol — Complete 45-Minute Siddha Session',
+            description: 'Kritagya guides the complete organ healing protocol. The session addresses all four organ systems (heart, liver, kidneys, spine) sequentially — useful as a comprehensive monthly tune-up even when no specific condition is present. Daily practitioners can use only the sections relevant to their target organ.',
+            duration: '50:00',
+            url: '',
+          },
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 11.3
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'l11-3',
+      number: 3,
+      title: 'Immune Activation Mantras',
+      subtitle: 'Maha Mrityunjaya Variants · Cellular Intelligence · The Body\'s Army',
+      durationMin: 20,
+      sections: [
+        {
+          type: 'intro',
+          body: `The immune system is the body\'s most sophisticated intelligence network — a distributed system of trillions of cells that communicate with each other in real time, recognize and remember millions of different molecular signatures, distinguish between "self" and "non-self" with extraordinary precision, and mount coordinated responses to threats while simultaneously repairing collateral damage. In the Siddha understanding, the immune system is the physical expression of the Ojas — the most refined product of proper digestion and practice, the subtle essence of vital force that the tradition regards as both the foundation of physical immunity and the support for spiritual realization. Mantras that strengthen the immune system work specifically by strengthening Ojas at the pranic level.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'Ojas — The Subtle Essence of Immunity',
+          body: `The Sanskrit word Ojas comes from the root OJ — to be strong, to shine. Ojas is the most refined of the seven Dhatus (bodily tissues) in Ayurvedic physiology — the end product of the complete metabolic transformation of food through all seven tissue-building stages: plasma → blood → muscle → fat → bone → bone marrow → reproductive fluid → Ojas. One drop of Ojas is produced from 30 drops of the previous substance in the chain, making it extremely precious and easily depleted.\n\nOjas has a direct dual function that makes it the bridge between physical immunity and spiritual capacity: it is simultaneously the substance that the immune system uses to respond to threats (the physical Ojas, located primarily in the heart and the immune tissue) AND the substance that makes higher meditative states accessible (the Prana Ojas, which accumulates in the subtle body through consistent practice and especially through sexual continence and the sublimation of creative energy). The depletion of Ojas through overexertion, emotional stress, irregular diet, and sexual excess simultaneously weakens the immune system AND makes deep meditation states less accessible — which is why the Siddhas who were treating serious illness often found that their patients had simultaneously become spiritually disconnected.\n\nMantras that build Ojas do so by working at the causal body level where the Ojas blueprint exists in its most complete form — before the chain of metabolic transformation has had opportunity to reduce it. The most powerful Ojas-building mantras in the Siddha tradition: Maha Mrityunjaya variants, specific forms of the Hanuman mantra, the Chyavanprash mantra (named for the legendary Ayurvedic tonic), and the Aditya Hridayam (a Surya mantra from the Ramayana specifically described as building Ojas through solar alignment).`,
+        },
+        {
+          type: 'teaching',
+          heading: 'Maha Mrityunjaya Variants for Immune Activation',
+          body: `The standard Maha Mrityunjaya taught in Module 10 (Lesson 10.2) addresses the broad spectrum of life-preservation. The Siddha healing tradition developed specific variants of this mantra for targeted immune applications:\n\nVariant 1 — For acute immune challenge (infection, fever, early-stage illness): OM TRYAMBAKAM YAJAMAHE / SUGANDHIM BALAVARDHANAM (replacing PUSHTIVARDHANAM with BALAVARDHANAM — "increasing strength" rather than "increasing nourishment"). BALA = strength, particularly the strength of the immune response. This variant is chanted 108 times at minimum, ideally continuously over several hours during the acute phase. The Siddha clinical record says it was used in the treatment of epidemic conditions, with practitioners chanting continuously over patients who were too ill to chant themselves.\n\nVariant 2 — For chronic immune depletion (autoimmune conditions, chronic fatigue, post-viral syndrome): OM TRYAMBAKAM YAJAMAHE / SUGANDHIM OJAVARDHANAM (OJAVARDHANAM = Ojas-increasing). This variant specifically rebuilds the Ojas substrate rather than mobilizing the immune response. Used once daily (108 rounds) at Brahma Muhurta for a minimum of 90 days — the period the tradition identifies as the minimum for genuine Ojas replenishment.\n\nVariant 3 — For cancer and abnormal cell growth (as a complementary practice alongside medical treatment, never as a replacement): OM TRYAMBAKAM YAJAMAHE / SUGANDHIM ROGAVINASHANAM (ROGAVINASHANAM = disease destroyer). The tradition does not claim that mantra cures cancer. It claims that the Maha Mrityunjaya in this variant strengthens the body\'s own immune surveillance — the natural killer cells and T-cell response that the immune system uses to identify and eliminate abnormal cells before they become tumors. Supporting the body\'s own intelligence, not overriding the medical treatment.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'The Aditya Hridayam — Solar Immunity',
+          body: `The Aditya Hridayam (The Heart of the Sun) is a 31-verse hymn from the Ramayana, given by the sage Agastya to Rama on the battlefield of Lanka when Rama was exhausted and demoralized. Agastya tells Rama to chant this hymn to the sun for immediate revival of energy, strength, and the capacity to defeat the seemingly invincible Ravana. The hymn\'s application in the Siddha medical tradition: it is one of the most powerful tools for rebuilding vital energy — what we would today call treating burnout, adrenal fatigue, chronic exhaustion, and immune depletion — because it directly addresses the solar intelligence that is the ultimate source of all biological energy.\n\nKey verses of the Aditya Hridayam for immune activation:\n\nADITYAM HRIDAYE KRTVA — "Placing the sun in the heart." This instruction — to hold the image of the sun literally in the heart center — creates a specific visualization-mantra combination that activates the Manipura-Anahata interface. The solar fire of Manipura merges with the sustaining love of Anahata, producing the combination that the Siddhas identified as the optimal state for Ojas production: warmth without burning, power without aggression.\n\nRAMO VIJAYATE DEVI — "Rama is victorious, O Goddess." In the healing context, Rama represents the soul\'s unconquerable essential nature. Ravana represents the illness. The declaration of Rama\'s victory is the practitioner\'s affirmation — not of wishful thinking but of the ontological reality that the soul\'s inherent health cannot ultimately be overcome by any disease of the temporal body.',
+        },
+        {
+          type: 'practice',
+          practice: {
+            title: 'Immune Activation Protocol — 40-Day Ojas Building Practice',
+            steps: [
+              'This 40-day protocol is specifically for practitioners dealing with immune depletion, chronic fatigue, post-illness recovery, or autoimmune conditions. It should be combined with appropriate medical care, not substituted for it.',
+              'DIETARY FOUNDATION (throughout the 40 days): Reduce Vata-aggravating foods (cold, dry, raw), increase Ojas-building foods (warm milk with ghee and honey, cooked grains, soaked nuts, sweet root vegetables, dates, fresh coconut). The mantra works most effectively when the physical substrate is also being supported.',
+              'BRAHMA MUHURTA (daily): OM NAMO BHAGAVATE DHANVANTARAYE × 27 as opening.',
+              'OJAS MRITYUNJAYA (40 minutes): 108 rounds of OM TRYAMBAKAM YAJAMAHE / SUGANDHIM OJAVARDHANAM / URVARUKAMIVA BANDHANAN / MRITYOR MUKSHIYA MAAMRITAT. At Vaikhari for the first 10 minutes, Upamshu for the next 20 minutes, Manasika for the final 10 minutes.',
+              'SOLAR ACTIVATION (10 minutes): At sunrise (timed with the end of the above Japa), sit facing East with eyes softly open or closed. Chant ADITYA HRIDAYAM\'s opening verse: OM ADITYAM HRIDAYE KRTVA, JAPO HRIDAYE TRAYASYA. Feel the solar energy entering the heart center and distributing through the entire body via the blood and lymphatic circulation.',
+              'EVENING INTEGRATION: One glass of cow\'s milk, warm, with 1 teaspoon ghee and a pinch of turmeric, consumed while chanting OM NAMO BHAGAVATE DHANVANTARAYE mentally. This combines the physical Ojas-building (warm milk-ghee) with the pranic Ojas-building (mantra) in a single act.',
+              'At Day 21 and Day 40: Track specific markers — energy level (1-10 scale), sleep quality, frequency of illness, emotional resilience. Most practitioners report clear improvement in all four metrics by Day 40.',
+            ],
+          },
+        },
+        {
+          type: 'mantra',
+          mantra: {
+            devanagari: 'ॐ त्र्यम्बकं यजामहे\nसुगन्धिं ओजवर्धनम्\nउर्वारुकमिव बन्धनान्\nमृत्योर्मुक्षीय मामृतात्',
+            transliteration: 'OM TRYAMBAKAM YAJAMAHE\nSUGANDHIM OJAVARDHANAM\nURVARUKAMIVA BANDHANAN\nMRITYOR MUKSHIYA MAAMRITAT',
+            body: `The Ojas-building variant of the Maha Mrityunjaya. The only change from the standard form is OJAVARDHANAM replacing PUSHTIVARDHANAM — the mantra now specifically increases Ojas (the subtle immune-spiritual essence) rather than general nourishment. This variant is used exclusively for the 40-day immune building protocol and is not a replacement for the standard Maha Mrityunjaya in other contexts.`,
+            translation: 'We worship the three-eyed one\nFragrant and Ojas-increasing\nAs a ripe cucumber from the vine\nLiberate us from death, not immortality',
+          },
+        },
+        {
+          type: 'wisdom',
+          wisdomTitle: 'The Siddha Clinical Record — Ojas and the Pandemic',
+          wisdomBody: `In the Tamil Siddha medical lineages, oral clinical records preserved for generations describe the response of Siddha practitioners to epidemic outbreaks. The consistent finding: practitioners who maintained daily Maha Mrityunjaya practice (108 rounds minimum at Brahma Muhurta) and Ekadashi fasting showed markedly lower infection rates and dramatically faster recovery when infected. The tradition did not attribute this to the mantra "killing the pathogen" — they attributed it to what modern immunology would call optimized immune surveillance and response capacity: the body\'s own intelligence, strengthened by consistent mantric practice and enhanced by the parasympathetic-dominant state that regular deep meditation produces, simply did its work more effectively. The Siddha immune protocol is not alternative medicine fighting conventional medicine. It is the systematic strengthening of the intelligence that conventional medicine is also trying to support — approached from the upstream pranic level rather than the downstream pharmaceutical level.`,
+        },
+        {
+          type: 'audio',
+          audio: {
+            id: 'l11-3-audio',
+            title: 'Immune Activation — 108 Ojas Mrityunjaya + Aditya Hridayam',
+            description: 'Kritagya leads the complete immune activation session at sunrise. 108 Ojas Mrityunjaya (full three modes: Vaikhari-Upamshu-Manasika), followed by the opening verses of the Aditya Hridayam at the moment of sunrise. Live sunrise recording from the SQI practice location. 45 minutes.',
+            duration: '45:00',
+            url: '',
+          },
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 11.4
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'l11-4',
+      number: 4,
+      title: 'Mental Health Mantras',
+      subtitle: 'Anxiety · Depression · Trauma · The Vibration Medicine',
+      durationMin: 22,
+      sections: [
+        {
+          type: 'intro',
+          body: `Mental health conditions — anxiety, depression, trauma, grief, and the spectrum of conditions collectively — are the most prevalent forms of human suffering in the 21st century. They are also conditions for which the Siddha tradition developed some of its most precise and most compassionate mantra protocols. This lesson does not present mantra as a replacement for professional mental health care. It presents it as what the Siddhas always understood it to be: a complementary treatment that addresses the vibrational and pranic dimension of mental health conditions — the dimension that pharmaceutical and psychotherapeutic approaches, however valuable, do not directly reach.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'The Siddha Understanding of Mental Health — Citta Vikara',
+          body: `The Siddha and Ayurvedic traditions use the term CITTA VIKARA (disturbances of consciousness/mind) rather than "mental illness" — a semantic distinction that carries profound therapeutic implications. VIKARA means "alteration from the natural state" — not pathology, not defect, not permanent condition. The natural state of Citta (the mind-consciousness complex) is what the Siddhas called Ananda — the natural joy of consciousness aware of its own nature. The various conditions we call anxiety, depression, trauma, and psychosis are all described as specific patterns of Citta Vikara — specific ways that consciousness has become altered from its natural condition through specific causes.\n\nThe causes identified in Siddha texts are remarkably consistent with modern psychology:\n\nFor anxiety: primarily Vata imbalance (excess Air element in the nervous system — the mind becomes wind-like, spinning, unstable, unable to land). Secondary cause: Prajnaparadha — "crimes against wisdom" — the ongoing violation of one\'s own deepest knowing (doing what you know is wrong, not doing what you know is right, consistently over time creates a specific form of chronic anxiety rooted in internal contradiction).\n\nFor depression: primarily Kapha imbalance (excess Earth and Water elements in the nervous system — the mind becomes heavy, slow, unresponsive) + often secondary Vata derangement (anxiety that has exhausted itself into flatness). The Pitta-type depression (agitated depression, irritable rather than flat) involves excess Fire imbalance.\n\nFor trauma: Samskaric imbalance — a specific intense experience has created an energetic imprint in the subtle body that continuously generates the same frequency as the original experience, keeping the nervous system in a state of perpetual re-experiencing. The Siddhas called this a "stuck Samskara" — a vibrational loop that cannot complete itself and therefore cannot dissolve.',
+        },
+        {
+          type: 'teaching',
+          heading: 'Anxiety Mantras — Grounding the Wind-Mind',
+          body: `The primary mantra approach to anxiety works through the principle of elemental counter-balance: Vata (the anxious wind-mind) is countered by Earth (LAM), Water (VAM), and the stabilizing, rhythmic repetition of any mantra done consistently enough to create the predictability and groundedness that the Vata-disturbed nervous system needs.\n\nThe specific anxiety protocol from the Siddha tradition:\n\nPhase 1 — Emergency anxiety response (acute panic or high anxiety): Bhramari Pranayama, 10 rounds at low pitch + OM NAMAH SHIVAYA × 11 (the five-element sweep of Panchakshara, with emphasis on the first syllable NA = Earth). This combination, practiced as soon as anxiety escalates, produces a measurable parasympathetic response within 90 seconds — documented in the Module 9 (Lesson 9.3) material on Bhramari\'s vagal effects.\n\nPhase 2 — Daily anxiety management: LAM × 108 at Brahma Muhurta (the most effective time — grounding the Earth element before the day\'s Vata-provoking activities begin) + SOHAM Ajapa Japa throughout the day (the breath-mantra\'s rhythmic consistency is the most effective Vata-reducing practice available because it works continuously, not only during formal practice sessions).\n\nPhase 3 — Treating the root Prajnaparadha: The anxiety that arises from internal contradiction (knowing one should do X and consistently doing Y) requires a different approach than the elemental treatments above. The Siddha prescription: SATYAM VADA DHARMAM CHARA × 108 (the Vishuddha truth-speech mantra from Module 7). This mantra specifically addresses the source of this anxiety type — the contradiction between knowing and doing — by strengthening the neural pathways of authentic self-expression and gradually reducing the cost of acting in alignment with one\'s own deepest knowing.',
+        },
+        {
+          type: 'teaching',
+          heading: 'Depression Mantras — Kindling the Dimmed Fire',
+          body: `Depression in its Kapha form (flat, heavy, slow, hopeless) requires a different approach from anxiety: not grounding (more Earth would worsen a Kapha condition) but awakening — the careful, patient, consistent reintroduction of Fire and movement into a system that has lost its capacity to generate them.\n\nThe Siddha depression protocol:\n\nPhase 1 — Physical activation alongside mantra (crucial): The Siddha tradition is emphatic that mantra practice alone is insufficient for Kapha depression. Physical movement — specifically vigorous walking, yoga asana, or any physical practice that generates warmth in the body — must accompany the mantra practice. Without the physical movement opening the gross channels, the subtle body treatments of mantra cannot penetrate. The prescription: 20 minutes of brisk physical movement, then immediately into mantra practice while the body is still warm.\n\nPhase 2 — RAM for fire rekindling: 108 rounds of RAM at Vaikhari (full voice — the Kapha-depressed person typically whispers or thinks their mantras, which is insufficient for Kapha conditions that require sound to break through density). Specifically at noon, in sunlight, standing or seated outdoors. Solar energy + RAM chanted at full voice at solar noon is the most intense fire-rekindling combination available.\n\nPhase 3 — Surya Mantras for solar alignment: OM SURYAYA NAMAH × 108 at sunrise, facing East. The solar Prana that enters the practitioner\'s field at the moment of chanting directly at the rising sun provides what Kapha depression most fundamentally lacks: the cosmic fire that the depleted individual fire cannot generate alone.\n\nFor Pitta depression (agitated, irritable, cannot stop thinking): CHANDRAYA NAMAH × 108 at night, facing the moon. The lunar cooling counters the excess heat of Pitta depression. SOHAM with left-nostril dominance (the cooling Ida channel).  YAM × 108 (heart-opening, softening the Pitta rigidity).',
+        },
+        {
+          type: 'teaching',
+          heading: 'Trauma Mantras — Dissolving the Stuck Samskara',
+          body: `Trauma is perhaps the most nuanced mental health application in the Siddha system, because the stuck Samskara of trauma requires a specific quality of mantric approach that differs significantly from both anxiety and depression treatment. The key principle: a stuck Samskara cannot be forced to dissolve. It can only be gently, repeatedly, compassionately brought into conscious awareness until the consciousness-field containing it becomes sufficiently spacious and compassionate that the Samskara can complete its natural dissolution process.\n\nThe Siddha trauma protocol:\n\nPhase 1 — Establishing safety and ground (minimum 21 days BEFORE attempting direct Samskara work): Daily Muladhara practice (LAM + Mula Bandha), Dhanvantari Mantra Jala, and Bhramari. The traumatized nervous system must be given sustained safety signals before it can release the survival-mode patterns that trauma creates. This phase is not preliminary to the healing — it IS the healing at the root level.\n\nPhase 2 — Compassionate containment (the OM SHARANAM practice): OM SHARANAM — "OM, I take refuge / I am held." This is not specifically a Siddha mantra but a universal devotional statement that the tradition applies specifically to trauma: the practitioner chants OM SHARANAM while holding whatever traumatic material is present — not analyzing it, not processing it verbally, but offering it to the field of the mantra. OM (the universal) SHARANAM (holds, contains, shelters). The traumatic material is being held in a container larger than the individual ego — the cosmic field of the Pranava.\n\nPhase 3 — Samskara dissolution through Kali mantra (only after Phase 1 and 2 are established): KREEM × 54 directed specifically at the traumatic pattern — not at the self, not at the person who caused the harm, but at the energetic pattern itself. The Kali-force dissolves the Samskara without requiring the practitioner to re-experience or analyze the original event.',
+        },
+        {
+          type: 'practice',
+          practice: {
+            title: 'Mental Health Daily Protocol — Anxiety, Depression, or Trauma',
+            steps: [
+              'Choose the protocol appropriate to your primary current condition. These protocols overlap — a practitioner dealing with trauma often has both anxiety and depression components. Use the primary protocol and add specific elements from the others as needed.',
+              'FOR ANXIETY: Dawn — LAM × 108 (Earth grounding, full Mula Bandha). Throughout day — SOHAM Ajapa Japa continuously. Evening — Bhramari × 21 (low pitch) + OM NAMAH SHIVAYA × 27 (stabilizing five-elements). If acute anxiety arises during the day: STOP. Bhramari × 10 immediately. Then continue.',
+              'FOR DEPRESSION: Dawn — Physical movement × 20 minutes (walk, yoga, any warming activity). THEN — RAM × 108 at Vaikhari, standing, in natural light. Noon — OM SURYAYA NAMAH × 27 outdoors facing sun. Evening — YAM × 54 (heart-softening) + gratitude Likhita Japa (10 specific things present today).',
+              'FOR TRAUMA: Dawn — LAM × 54 + Dhanvantari water × 108 (safety and ground). OM SHARANAM × 108 with whatever is arising held in the field, not analyzed. Evening — Bhramari × 21 (the humming bee as safe inner sound). On days when traumatic material is strongly present: add KREEM × 11 ONLY after the full safety-grounding protocol above.',
+              'ALL PROTOCOLS: Maintain for 40 days minimum. Track specific markers weekly. Work alongside (not instead of) professional mental health support. The mantra protocols address the vibrational layer; professional support addresses the narrative, relational, and neurobiological layers. All layers need care.',
+            ],
+          },
+        },
+        {
+          type: 'mantra',
+          mantra: {
+            devanagari: 'ॐ शरणम्\nत्वमेव शरणम्\nत्वमेव माता च पिता त्वमेव',
+            transliteration: 'OM SHARANAM\nTVAMEVA SHARANAM\nTVAMEVA MATA CHA PITA TVAMEVA',
+            translation: 'OM, I take refuge\nIn You alone is refuge\nYou alone are mother, you alone are father',
+            body: `The trauma mantra of surrender: OM SHARANAM (I take refuge in the Absolute) + TVAMEVA SHARANAM (in you alone is shelter — addressing the divine directly) + TVAMEVA MATA CHA PITA TVAMEVA (you are both mother and father — the complete parental care of the cosmos). This mantra is particularly healing for trauma that involves a fundamental breach of safety — betrayal by a caregiver, violation of trust, abandonment. It addresses the deepest wound: the loss of the experience of being fundamentally held and cared for. The mantra does not restore the human relationship that was broken. It offers the recognition that beneath all human relationships, there is a cosmic relationship of absolute care that was never broken and can never be broken.`,
+          },
+        },
+        {
+          type: 'wisdom',
+          wisdomTitle: 'Thirumoolar on the Healing of the Mind — "The Ocean Does Not Fear Its Own Waves"',
+          wisdomBody: `Thirumantiram verse 2751, in the context of the mind and its disturbances: "The ocean does not fear its own waves. It does not try to stop them. It does not apologize for them. The waves arise and subside in the ocean, and the ocean is unchanged. The mind\'s natural state is like the ocean — vast, deep, capable of containing any wave without being overwhelmed by it. What we call mental illness is the mind that has forgotten it is the ocean and has come to believe it is a particular wave — that this anxiety IS what I am, that this depression IS what I am, that this trauma IS what I am. The mantra practice is the reminder: you are the ocean. You are the awareness in which the wave arises, moves, and subsides. The wave cannot drown the ocean. The anxiety cannot drown the awareness. The depression cannot drown the consciousness. Sit as the ocean. Let the waves move. They will subside. They always do."`,
+        },
+        {
+          type: 'audio',
+          audio: {
+            id: 'l11-4-audio',
+            title: 'Mental Health Healing — Three Protocols',
+            description: 'Three separate recordings, each 20 minutes: (1) Anxiety Protocol — LAM + SOHAM + low-pitch Bhramari. (2) Depression Protocol — RAM at full voice + Surya mantras. (3) Trauma Protocol — OM SHARANAM + gentle Kali KREEM. Use the recording appropriate to your current condition.',
+            duration: '65:00',
+            url: '',
+          },
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 11.5
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'l11-5',
+      number: 5,
+      title: 'Healing Mantras for Others',
+      subtitle: 'Distance Transmission · The Ethics of Sound Medicine · How to Hold a Field',
+      durationMin: 20,
+      sections: [
+        {
+          type: 'intro',
+          body: `The practitioner who has established a consistent personal mantra practice will inevitably reach the point where they want to use this practice for others — family members who are ill, friends in crisis, community members suffering. This impulse is beautiful and it is exactly what the tradition says should happen: individual Sadhana that does not eventually overflow into service is incomplete Sadhana. But the act of directing mantric energy toward another person requires specific knowledge, specific ethics, and specific technique to be genuinely helpful rather than well-intentioned but potentially disruptive.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'The Ethics of Healing Transmission — Permission and Non-Interference',
+          body: `Before any technique of distance healing transmission, the practitioner must understand the ethical framework within which it operates. The Siddha tradition is unusually explicit about healing ethics — Agastya\'s medical texts contain what amounts to a complete code of practice for the healer:\n\nThe permission principle: healing energy directed at another person without their knowledge or consent is, in the Siddha framework, an interference with their karmic field. Every person\'s illness has a karmic dimension — it is, at some level, what their soul is working through. To intervene in this process without invitation may postpone the lesson the illness is delivering. This is NOT a reason to withhold healing when someone asks for it — it is a reason to ask before directing energy toward someone who has not asked.\n\nThe practical application: when a family member or friend is ill and you wish to practice healing mantra for them, the ethical approach is to tell them what you are doing and offer to do it with their consent. If they are unconscious or unable to consent, direct the practice to "the highest good of [name]" rather than to a specific outcome you have decided is correct. "May [name] receive whatever healing is for their highest good" is more aligned than "May [name] be cured of this condition immediately."\n\nThe non-attachment principle: the healer who is attached to the outcome of their healing practice is not a healer — they are an ego-project manager in healer\'s clothing. The genuine Siddha healer offers the mantra completely, releases the result completely, and trusts the divine physician\'s intelligence to know what is needed. This non-attachment is not indifference — it is the highest form of care: "I offer my practice completely to your healing, and I trust the intelligence greater than mine to use it as it serves you best."',
+        },
+        {
+          type: 'teaching',
+          heading: 'Distance Transmission — The Technology of Pranic Projection',
+          body: `The Siddha tradition maintains that Prana and mantric energy are not limited by physical distance — that they operate through the quantum field of consciousness (what the Siddhas called the Akashic field) in a way that makes physical proximity non-essential for effective transmission. This claim is consistent with the evidence from quantum entanglement in physics (though the mechanisms differ) and with the clinical experience of thousands of Siddha healers across millennia.\n\nThe distance transmission technique:\n\nStep 1 — Establish the connection: Hold a clear, vivid inner image of the person receiving healing. Not a conceptual thought about them — an actual felt inner image of their presence. If you have a photograph, look at it for 30 seconds before closing your eyes and holding the inner image. The more clearly and warmly the person can be held in inner awareness, the clearer the channel for transmission.\n\nStep 2 — Establish your own field: Complete your personal healing mantra practice (Dhanvantari opening + the specific healing mantra for the condition) first. You cannot transmit what you have not established. Send only from fullness, never from depletion.\n\nStep 3 — The projection: With the person\'s inner image held clearly at the Ajna center (third eye), chant the appropriate healing mantra 27-108 times while holding the following intention: "May the healing frequency of this mantra flow from my field through the Akashic field to [name], to whatever cells, tissues, organs, or aspects of their being most need it." Do not visualize specific outcomes. The healing intelligence knows where to go.\n\nStep 4 — The sealing: After the final repetition, hold the person\'s image for one full minute in pure light — visualize them surrounded by golden light, whole and healthy. Then consciously RELEASE the image and the connection. The practice is complete. Do not continue to "check" whether it worked — the release is the final and essential step.',
+        },
+        {
+          type: 'teaching',
+          heading: 'Group Healing Transmission — The Power of the Sangha Field',
+          body: `The most powerful form of healing transmission available to the individual practitioner is not individual distance healing but participation in a group healing field — multiple practitioners simultaneously directing mantric healing energy toward a specific recipient or group of recipients.\n\nThe mathematics of group healing in the Siddha understanding is non-linear: 10 sincere practitioners healing together do not produce 10× the individual effect — they produce closer to 100×. This is because the group field creates a coherent resonance — a synchronized mantric field — that operates at a higher order than any individual can generate alone. The Maharishi Effect research (though conducted in a different tradition — Transcendental Meditation) provides scientific evidence of non-linear group effects in consciousness research: a group of meditators practicing together produces measurable changes in the broader community\'s behavior, and the size of the effect is disproportionate to the size of the group.\n\nThe SQI community healing transmissions — conducted monthly, directed toward specific recipients who have requested healing, accessible to all platform practitioners — are an expression of this group field principle. Every practitioner who participates in the monthly SQI healing transmission is not merely doing an additional mantra session. They are adding their field to a coherent group resonance that, at sufficient size, produces non-linear healing effects. The Siddha tradition\'s promise: when 1,000 sincere practitioners simultaneously direct Dhanvantari mantra toward a specific recipient for 1 hour, the recipient\'s field receives a charge that no individual practitioner — regardless of their personal advancement — can produce alone.',
+        },
+        {
+          type: 'practice',
+          practice: {
+            title: 'Distance Healing Protocol — Complete Transmission Practice',
+            steps: [
+              'CONFIRM CONSENT: Before beginning, confirm (directly or through a family member if the recipient is incapacitated) that the person welcomes healing prayer/mantra directed toward them.',
+              'SELF-PREPARATION (10 minutes): Complete your personal practice first. Minimum: Ganesha invocation (OM GAM GANAPATAYE NAMAH × 3), Dhanvantari (× 27), 3 minutes of AUM at Vaikhari. You are preparing the channel.',
+              'CONNECTION (2 minutes): Look at a photo of the person if you have one, then close your eyes. Hold their inner image warmly and clearly at your Ajna center. Feel their presence — not as an intellectual concept but as an actual inner felt sense.',
+              'HEALING TRANSMISSION (20-30 minutes): Choose the appropriate healing mantra for their condition (organ-specific from Lesson 11.2, immune from 11.3, or mental health from 11.4). Chant 108 times while holding their inner image at the Ajna. With each repetition: feel the mantra\'s frequency flowing from your field through the space between you to their field.',
+              'LIGHT VISUALIZATION (3 minutes): After the 108th repetition, hold their image surrounded by golden Dhanvantari light — whole, healthy, at peace. Hold for 3 full minutes.',
+              'RELEASE AND SEAL: Consciously release the connection. OM SHANTI SHANTI SHANTI. "May this healing serve [name]\'s highest good. I release the outcome to the divine physician\'s wisdom." The release is complete — do not re-engage until the next scheduled session.',
+              'NOTES: Record date, the recipient\'s condition, the mantra used, and any impressions that arose during the practice. Over multiple sessions, these notes often reveal information about the recipient\'s condition that has not been shared with the practitioner — a consequence of the genuine connection the practice establishes.',
+            ],
+          },
+        },
+        {
+          type: 'mantra',
+          mantra: {
+            devanagari: 'सर्वे भवन्तु सुखिनः\nसर्वे सन्तु निरामयाः\nसर्वे भद्राणि पश्यन्तु\nमा कश्चित् दुःखभाग् भवेत्',
+            transliteration: 'SARVE BHAVANTU SUKHINAH\nSARVE SANTU NIRAMAYAH\nSARVE BHADRANI PASHYANTU\nMA KASHCHIT DUHKHABHAG BHAVET',
+            translation: 'May all beings be happy\nMay all be free from illness\nMay all see what is auspicious\nMay none suffer',
+            body: `This ancient prayer — one of the oldest healing prayers in the Sanskrit tradition — is the closing transmission of every Nada Chikitsa session. It is not directed at any specific person but at all beings everywhere. The practitioner who has just completed a specific healing session for an individual expands their field outward to all beings with this prayer — preventing the specific healing session from becoming ego-attached ("I healed that person") by immediately situating it within the universal context of all suffering and all healing simultaneously. NIRAMAYAH = free from disease (NI = without, AMAYA = disease). DUHKHABHAG = one who has a share of suffering. The prayer asks that no being be one who shares in suffering — not just the practitioner\'s specific patient, but everyone.`,
+          },
+        },
+        {
+          type: 'wisdom',
+          wisdomTitle: 'Thirumoolar on Healing Others — "The Candle Does Not Know It Gives Light"',
+          wisdomBody: `Thirumantiram verse 269: "The candle that burns in the dark room does not know it has given light to all who enter. It simply burns — that is its nature. And by burning, it illuminates without effort, without intention, without knowing that it serves. The Siddha who has established the healing mantra in their own body is the same. They need not try to heal. Their very presence — the field generated by their years of practice — illuminates the space around them. The sick person who sits near the Siddha healer often begins to feel better before a single mantra has been spoken, because the Siddha\'s field is already the answer to the sick person\'s field\'s question. The mantra practice you build is not only for your own healing. It is for everyone who will ever sit near you, who will ever hear your voice, who will ever enter the space where you have practiced. You are building the candle. The room will be illuminated. You do not need to know how."`,
+        },
+        {
+          type: 'audio',
+          audio: {
+            id: 'l11-5-audio',
+            title: 'Distance Healing Transmission — Group Session',
+            description: 'Monthly SQI Community Healing Transmission recording: Kritagya & Laila lead 108 Dhanvantari mantras + 108 Ojas Mrityunjaya directed toward the entire SQI community\'s specific healing needs (submitted through the platform). Closing: SARVE BHAVANTU SUKHINAH × 3. Listen with the names of those you are healing held in your Ajna field. 45 minutes.',
+            duration: '45:00',
+            url: '',
+          },
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 11.6
+
+const module12: Module = {
+  id: 'module-12',
+  number: 12,
+  tier: 'prana',
+  title: 'Kirtan & Bhajan — Devotional Nada Alchemy',
+  subtitle: 'Prema-Pulse Transmission · Group Field Technology · The Heart That Sings',
+  description:
+    'Kirtan is the Bhakti-Algorithm at its most direct and most democratic: the deliberate use of group sound, sacred melody, rhythm, and devotional intention to break open the Anahata chakra and flood the nervous system with Prema — unconditional love. Of all the practices in this curriculum, Kirtan is the most accessible (no prior training required), the most immediately effective (practitioners report significant state shifts within minutes), and the most socially transformative (the field it creates is contagious in the most beautiful possible sense). This final Prana-Flow module delivers the complete science behind devotional singing — the neuroscience, the Rasa system, the Bhakti lineage, the composition principles, and the SQI community practice architecture.',
+  lessons: [
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 12.1
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'l12-1',
+      number: 1,
+      title: 'The Neuroscience of Kirtan',
+      subtitle: 'Oxytocin · Mirror Neurons · Entrainment · The Group Consciousness Field',
+      durationMin: 20,
+      sections: [
+        {
+          type: 'intro',
+          body: `For centuries, practitioners across every devotional tradition have known that group singing produces something that solo practice cannot — a quality of aliveness, connection, and heart-opening that is not simply the sum of individual experiences but something categorically different, an emergent property of the group consciousness field. The Bhakti tradition called this Sangha Shakti — the power of the community. The Siddha tradition called it Nada Sangham — the confluence of sounds. Modern neuroscience, conducting its own investigation without any awareness of these ancient descriptions, has arrived at remarkably consistent findings about what actually happens in the brain, body, and social field when groups sing together. This lesson presents both accounts — the scientific and the sacred — and shows how perfectly they illuminate each other.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'Oxytocin — The Social Bonding Molecule and Its Sacred Application',
+          body: `Oxytocin is a neuropeptide produced primarily in the hypothalamus and released by the pituitary gland. It is most commonly known as the "bonding hormone" — it surges during childbirth, breastfeeding, orgasm, and physical touch with loved ones, creating the physiological substrate of deep social bonding and trust. Research published in 2015 in the journal Frontiers in Psychology found that singing in a choir produces significant oxytocin release — comparable to levels produced by other bonding activities — within the first few minutes of synchronized group singing.\n\nThe implications for Kirtan practice: the oxytocin released during group chanting is not merely making participants feel warm and connected in a pleasant social sense. It is producing a specific neurological state characterized by increased trust, decreased defensive behavior, enhanced empathy, and the temporary dissolution of the tribal boundaries that ordinarily keep humans from experiencing genuine connection with those outside their immediate social circle. This is the physiological mechanism behind what devotional traditions have always described as the "opening of the heart in Kirtan" — the Anahata chakra\'s expansion corresponds, in neurological terms, to a surge of oxytocin that literally reduces the psychological barriers between self and other.\n\nThe Siddha understanding goes one step deeper: oxytocin is not the cause of the heart-opening experience — it is the physical expression of what is occurring at the pranic level. The Prana moving freely through an open Anahata produces the physiological cascade that includes oxytocin release. The mantra and the melody are the key; the oxytocin is the lock clicking open. Modern science has discovered the biological mechanism of something that devotional practitioners have been deliberately cultivating for millennia — they simply had different words for the same process.',
+        },
+        {
+          type: 'teaching',
+          heading: 'Mirror Neurons and Collective Resonance',
+          body: `Mirror neurons are a class of neural cells that fire both when an individual performs an action AND when they observe the same action performed by another. Discovered in macaque monkeys by Italian researchers in the 1990s and subsequently confirmed in humans, mirror neurons are considered by some researchers to be the neurological basis of empathy — the capacity to literally feel what another being is experiencing through the neural simulation of their state in one\'s own brain.\n\nIn the context of Kirtan: when a group chants together and one participant opens into genuine devotional feeling — genuine Bhava (emotional resonance with the sacred) — the mirror neurons of every other participant in that moment begin to fire in the same pattern. The experience of Bhava is neurologically contagious. This is the scientific explanation for what happens in a powerful Kirtan session when one participant\'s tears or ecstasy seem to suddenly spread through the room: the mirror neuron system is firing collectively, creating what neuroscientists call "emotional contagion" and what the Bhakti tradition calls the spreading of Rasa (the nectar of devotional feeling) through the Sangha.\n\nThe devotional singer who performs Kirtan with genuine Bhava is not merely sharing their experience — they are neurologically inducing a similar state in every person who witnesses them. This is why the quality of the lead singer\'s inner state matters so profoundly in Kirtan: a technically perfect performance with no genuine devotional feeling produces pleasant music. A technically imperfect performance with genuine Bhava produces the contagious heart-opening that is the specific purpose and gift of the practice.',
+        },
+        {
+          type: 'teaching',
+          heading: 'Entrainment — How Rhythmic Sound Synchronizes the Group Brain',
+          body: `Neural entrainment is the phenomenon by which the brain\'s electrical activity synchronizes to the frequency of external rhythmic stimuli. When you tap your foot to music, your motor cortex is entraining to the musical rhythm. When you breathe more slowly in a quiet room than in a noisy one, your respiratory system is entraining to the acoustic environment. The brain is a highly entrainable system — it is exquisitely sensitive to rhythmic patterns in the environment and naturally synchronizes its activity to them.\n\nIn group Kirtan, three simultaneous entrainment processes occur:\n\nRespiratory entrainment: All participants\' breathing begins to synchronize with the rhythm of the chanting — typically within 3-5 minutes of a steady rhythmic Kirtan. When multiple people breathe in synchrony, their heart rate variability also synchronizes (because heart rate is coupled to respiration through the vagal system). A group of Kirtan participants in full respiratory synchrony is a group whose hearts are beating in coordinated rhythmic patterns — what the HeartMath Institute calls "group coherence."\n\nBrainwave entrainment: The rhythmic, repetitive quality of Kirtan\'s melodic patterns produces brainwave entrainment toward the alpha and low-theta range — the same range targeted by binaural beats and by deep meditation. The difference from passive binaural listening is that in Kirtan, the participant is actively producing the sound — the active engagement amplifies the entrainment effect beyond passive reception.\n\nElectromagnetic field synchronization: The HeartMath Institute\'s research has demonstrated that the hearts of people in close proximity gradually synchronize their electromagnetic field pulses — the process becomes more rapid when participants are engaged in coherent group activities. In Kirtan, the combined effect of respiratory, brainwave, and cardiac entrainment creates a single, coherent group electromagnetic field that is measurably different from the sum of individual fields.',
+        },
+        {
+          type: 'teaching',
+          heading: 'The Group Consciousness Field — Sangha Shakti as Physics',
+          body: `Beyond the individual entrainment mechanisms, Kirtan produces what can only be described as an emergent group consciousness field — a collective state of awareness that is qualitatively different from any individual participant\'s experience and that influences all participants simultaneously from above, rather than being constructed from individual experiences below.\n\nThis is the most difficult phenomenon to describe in scientific terms because it operates at the level of consciousness itself — which modern science has not yet found adequate instruments to measure. But the subjective reports are so consistent across cultures, traditions, and centuries that their convergence itself constitutes strong evidence:\n\nParticipants consistently report: a dissolution of the ordinary sense of being a separate individual self, replaced by a quality of being part of something larger. Simultaneous experiences of joy, peace, and a particular kind of love that is not directed at any specific person — the non-preferential love that the tradition calls Prema. A quality of time-suspension — Kirtan sessions that lasted 2 hours are frequently perceived as having taken 20 minutes. And most significantly: the sense that the group\'s combined devotional intention has created a presence in the room — something that was not there before the chanting began and that is palpably felt by all participants.\n\nThe Bhakti tradition calls this presence the "descent of grace" — Anugraha, Shakti, the actual arrival of the deity\'s consciousness in response to the group\'s sincere invocation. The scientific language would be different — emergent group coherence, collective consciousness, field effects of synchronized neural activity. But both accounts are pointing at the same unmistakable phenomenon: when human beings sing together with genuine devotional intention, something happens that cannot be explained by the sum of individual inputs. Something arrives. And that something is the most consistent transformative force available to human beings in groups.',
+        },
+        {
+          type: 'practice',
+          practice: {
+            title: 'First Group Kirtan Experience — Creating the Sangha Field',
+            steps: [
+              'IDEAL SETTING: Minimum 3 practitioners. Maximum unlimited. The floor is better than chairs — sitting in a circle on cushions creates the most coherent field geometry. If practicing alone with recordings, face a photograph of others or your altar.',
+              'OPENING SILENCE (3 minutes): Complete silence before the first sound. In this silence, each participant sets their personal intention for the session. Then one shared intention is spoken aloud by the leader: "May this practice open our hearts and send its merit to all beings."',
+              'SIMPLE SEED CHANT (10 minutes): Begin with OM × 3 together, then immediately into the Maha Mantra (HARE KRISHNA HARE KRISHNA / KRISHNA KRISHNA HARE HARE / HARE RAMA HARE RAMA / RAMA RAMA HARE HARE) — the simplest, most universally accessible Kirtan chant. No melody required — simply chanting together in unison at a comfortable, steady pace.',
+              'OBSERVE THE FIELD: Around minute 5-7, pause the chanting for 30 seconds of silence. Notice: is the room different? Does the silence feel different than the silence before the chanting began?',
+              'BUILD: Continue the Maha Mantra for another 10 minutes, allowing the pace to gradually increase. Notice: does the energy in the room change as the pace increases?',
+              'PEAK AND RELEASE: At the natural peak, gradually slow the pace over 3 minutes until the chanting stops entirely. Hold the silence that follows. Do not immediately speak. Stay in the field that was created.',
+              'JOURNAL: What was different about this experience compared to solo practice? What happened in the room that could not have happened alone?',
+            ],
+          },
+        },
+        {
+          type: 'wisdom',
+          wisdomTitle: 'Chaitanya Mahaprabhu — The Founder of the Kirtan Revolution',
+          wisdomBody: `Sri Chaitanya Mahaprabhu (1486-1534 CE) is the figure most responsible for the widespread democratization of Kirtan as a spiritual practice. His contribution was simple and revolutionary: he took the Kirtan practice out of the temples (where it had been the exclusive domain of trained priests) and into the streets — organizing large-scale public chanting processions called Nagar Sankirtan (city-wide Kirtan) that drew hundreds and then thousands of participants. He declared the Maha Mantra (HARE KRISHNA) to be accessible to everyone regardless of caste, education, or qualification — and he backed this declaration with public demonstration. The ecstatic states that Chaitanya himself displayed during Kirtan — spontaneous tears, physical trembling, periods of apparent unconsciousness while in states of divine absorption — were witnessed by thousands of people and have been documented in multiple independent historical accounts. Modern researchers who have studied these accounts note that the symptoms Chaitanya displayed during peak Kirtan are consistent with massive autonomic nervous system activation — a full-body state change that cannot be explained by ordinary emotional arousal. Chaitanya\'s teaching was simple: "Chant. Sing. The Lord will come. You need no other qualification."`,
+        },
+        {
+          type: 'audio',
+          audio: {
+            id: 'l12-1-audio',
+            title: 'Maha Mantra Kirtan — First Group Session with Kritagya & Laila',
+            description: 'Kritagya & Laila lead the Maha Mantra through a complete 30-minute Kirtan arc: slow invocation, building pace, peak, gradual descent, silence. Live recording with 20 practitioners present — you can feel the group field in this recording. Use as your first group Kirtan experience.',
+            duration: '35:00',
+            url: '',
+          },
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 12.2
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'l12-2',
+      number: 2,
+      title: 'Call and Response — The Double Effect',
+      subtitle: 'Antiphony Science · Leader and Sangha · Why It Works',
+      durationMin: 18,
+      sections: [
+        {
+          type: 'intro',
+          body: `The most distinctive structural feature of Kirtan — and the feature that most clearly distinguishes it from congregational singing or choral performance — is the call-and-response structure. A single voice (the lead singer) calls out a phrase, and the assembled group responds with the same phrase or a complementary one. This pattern repeats continuously throughout the session, creating an alternating wave of solo and collective sound. This is not merely a stylistic choice or a pedagogical convenience — the call-and-response structure of Kirtan is a precise acoustic and neurological technology that produces effects that neither solo chanting nor unison group chanting can produce alone.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'The Acoustic Physics of Antiphony',
+          body: `Antiphony — from the Greek ANTI (opposite) + PHONE (sound) — is the musical practice of alternating between two or more groups or individuals. It appears in virtually every ancient musical tradition: the call-and-response of African drumming, the antiphonal psalms of Christian monasticism, the responsive chanting of Jewish liturgy, the Sufi sama\'s call-response poetry structure, and the Indian Kirtan all employ this same fundamental architecture.\n\nThe acoustic principle that makes antiphony distinctive: when a single voice calls out a phrase, the group hears and processes it before responding. This hearing-and-processing creates a specific neural event: the auditory cortex receives the leader\'s melody, the motor cortex prepares the vocal response, and the interval between call and response is filled with a specific kind of listening attention — focused, anticipatory, ready to engage. This attentional state is fundamentally different from the more passive listening of unison group chanting, where each participant is simultaneously generating and receiving sound.\n\nThe alternating active-passive cycle of call-and-response creates what researchers call "phase-locked neural oscillations" — the auditory, motor, and attentional systems of all participants in the group begin to oscillate in phase with each other during the response intervals. This phase-locking, which can be measured with EEG during Kirtan practice, is the neural signature of the group field becoming coherent — the individual nervous systems synchronizing into a collective resonance pattern.',
+        },
+        {
+          type: 'teaching',
+          heading: 'The Leader\'s Role — The Essential Function of the Vaktri',
+          body: `In the traditional Kirtan structure, the lead singer is called the Vaktri (the one who speaks/calls). The Vaktri\'s role is not merely musical — it is the role of the Nada shaper, the one who guides the collective field through the arc of the session. The qualities required of a skilled Vaktri are specific and demanding:\n\nGenuine Bhava: The Vaktri must sing from actual devotional feeling — not from performance. The mirror neuron system of the group will immediately detect the difference between genuine and performed Bhava, and the group\'s response will reflect exactly what the Vaktri is actually feeling, not what they are trying to project. A Vaktri who is "performing devotion" will produce a group that is "performing response." A Vaktri who is actually in Bhava will produce a group that enters Bhava.\n\nMusical clarity: The calls must be clear and singable — not so ornamented that the group cannot follow, not so simple that there is nothing to respond to. The ideal Kirtan melody is what traditional musicians call Swaralankara — ornamental enough to carry emotional information, clear enough to be immediately repeatable by anyone regardless of musical training.\n\nTiming sensitivity: The Vaktri must constantly feel the group\'s state and adjust the pace, key, and intensity accordingly. Kirtan is not a performance at the group — it is a conversation with the group. The skilled Vaktri knows when to push the pace higher, when to bring it back to silence, when a single note held for 30 seconds is more powerful than 30 notes chanted rapidly.\n\nEgo-transcendence: Perhaps most importantly, the Vaktri must maintain the paradox of being the leader while being genuinely in service. The Vaktri who leads Kirtan to demonstrate their musical skill or spiritual advancement is using the practice for ego-projection. The Vaktri who leads Kirtan with the single intention of serving the group\'s heart-opening is using it correctly.',
+        },
+        {
+          type: 'teaching',
+          heading: 'What Happens During the Response — The Group\'s Inner Work',
+          body: `The response in Kirtan is not merely repetition — it is a distinct inner practice that differs fundamentally from the passive listening of a concert audience. When the group responds to the Vaktri\'s call, each participant is doing three things simultaneously:\n\nFirst — vocal production: generating the actual sound of the response. This engages the respiratory system, the vocal cords, the resonating chambers of the skull and chest, and the motor planning circuits of the brain.\n\nSecond — devotional reception: receiving the mantric content of what the Vaktri has just called and allowing it to land in the heart before offering it back. The response is not mere echo — it is an offering. The group receives the mantra from the Vaktri, allows it to pass through their own heart, and offers it back both to the Vaktri and to the deity being invoked. This three-movement process (receive-heart-offer) is the specific inner practice of the response.\n\nThird — field maintenance: through their active vocal participation, each member of the group is contributing to and maintaining the collective coherent field. A participant who only listens and does not sing contributes to the acoustic space but does not contribute to the neural entrainment and field coherence that active participation produces. This is why the tradition is emphatic: everyone sings, regardless of musical ability. "You do not need a beautiful voice for Kirtan," Chaitanya taught. "You need a sincere heart. The sincerity makes the voice beautiful."',
+        },
+        {
+          type: 'practice',
+          practice: {
+            title: 'Call-and-Response Practice — Becoming the Vaktri',
+            steps: [
+              'Begin by listening: Play the Kirtan recording for this lesson and simply receive it. Notice your own inner response — what arises in your chest, your throat, your eyes. This internal response IS the beginning of the practice.',
+              'WITH A GROUP OR PARTNER: Take turns being the Vaktri. One person calls a phrase of the Maha Mantra (or any Kirtan mantra), the other(s) respond. Do 5 minutes as Vaktri, 5 minutes as responder.',
+              'AS VAKTRI: Before you call the first phrase, take one full breath and ask yourself honestly: "Am I singing from genuine feeling right now, or am I performing?" If the honest answer is "performing," that is fine — simply acknowledge it and try to soften the performance into something more honest, even if less polished.',
+              'AS RESPONDER: Before each response, feel the call land in your chest for a fraction of a second before your voice begins. This brief receiving before responding is the inner work of the response. Even a half-second of true reception changes the quality of the response entirely.',
+              'SOLO PRACTICE: If practicing alone, alternate between calling in a slightly louder voice and responding in a slightly softer one — creating the call-response dynamic within your own voice. This is not as powerful as group practice, but it trains the inner movement between offering and receiving that is the core skill of Kirtan.',
+              'KEY INSIGHT: The call-response structure of Kirtan is the sonic form of a conversation between the individual (call) and the Absolute (response). The individual calls out its longing, its praise, its surrender — and the Absolute responds through the group\'s voice. After enough rounds of this exchange, the boundary between caller and responder begins to dissolve. This dissolution is the goal.',
+            ],
+          },
+        },
+        {
+          type: 'mantra',
+          mantra: {
+            devanagari: 'हरे कृष्ण हरे कृष्ण\nकृष्ण कृष्ण हरे हरे\nहरे राम हरे राम\nराम राम हरे हरे',
+            transliteration: 'HARE KRISHNA HARE KRISHNA\nKRISHNA KRISHNA HARE HARE\nHARE RAMA HARE RAMA\nRAMA RAMA HARE HARE',
+            translation: 'Hare (Shakti of the divine) Krishna (all-attractive) × 4\nKrishna Krishna Hare Hare\nHare Rama (reservoir of divine joy) × 4\nRama Rama Hare Hare',
+            body: `The Maha Mantra — the Great Mantra — contains 16 divine names and 32 syllables. It is the ideal call-response Kirtan mantra because its structure is naturally antiphonal: HARE KRISHNA HARE KRISHNA (call) / KRISHNA KRISHNA HARE HARE (response) / HARE RAMA HARE RAMA (call) / RAMA RAMA HARE HARE (response). Each pair is a complete call-response exchange. The mantra also has no prescribed melody — it has been sung in hundreds of different melodic settings across centuries and cultures, making it uniquely adaptable. Chaitanya declared it the supreme mantra for this age because it requires no initiation, no Sanskrit knowledge, and no special preparation — only the sincere desire to call out to the divine and receive its response.`,
+          },
+        },
+        {
+          type: 'wisdom',
+          wisdomTitle: 'Mirabai on Call and Response — "I Called and He Answered"',
+          wisdomBody: `Mirabai (c. 1498-1547 CE), the princess-saint of Rajasthan whose bhajans are still sung throughout India, wrote what is perhaps the most direct personal account of what call-and-response devotional singing feels like at its deepest level: "I have been singing for Him in the market and on the road. I have been singing for Him in the palace and in exile. I sang when I was happy and when I thought I would die of grief. And I tell you this — when you sing with your whole heart, with everything you are, when the singing becomes so complete that there is nothing left of you that is not singing — He answers. Not in words. Not in visions. In the singing itself, there comes a quality that was not there when you began. The song begins to sing itself. The longing begins to feel like being found. The calling begins to feel like being answered. This is what they mean by Bhakti — not a practice you do, but a recognition of what the Absolute has always been doing: calling you home, through the very longing that you thought was yours."`,
+        },
+        {
+          type: 'audio',
+          audio: {
+            id: 'l12-2-audio',
+            title: 'Call and Response Training — With Kritagya as Vaktri',
+            description: 'Specifically designed call-response teaching: Kritagya calls each phrase with a 4-beat pause for the practitioner to respond. Three rounds slow, three rounds medium, three rounds fast. Includes instruction on the inner movement of reception before response. 30 minutes.',
+            duration: '30:00',
+            url: '',
+          },
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 12.3
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'l12-3',
+      number: 3,
+      title: 'The Nine Rasas — The Complete Emotional Palette',
+      subtitle: 'Devotional Feeling as Spiritual Technology · The Inner Life of Bhajan',
+      durationMin: 22,
+      sections: [
+        {
+          type: 'intro',
+          body: `Classical Indian aesthetics — developed most fully by the philosopher Abhinavagupta in his 10th century masterwork Abhinavabharati — identifies nine fundamental aesthetic emotions called Rasas. The word RASA means "juice," "essence," "nectar" — the quality of inner feeling that arises in the presence of beauty, art, or the sacred. The nine Rasas are not merely categories for classifying aesthetic experience. They are the complete map of the devotional heart's emotional repertoire — the nine flavors of inner experience through which a practitioner can approach and ultimately merge with the divine. This lesson teaches the nine Rasas in the context of devotional singing: what each feels like, which deities and mantras are associated with each, and how to consciously cultivate each Rasa in your Kirtan and Bhajan practice.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'The Nine Rasas — The Complete Map',
+          body: `The nine Rasas are:\n\n1. SHRINGARA — the Rasa of love and beauty. The most fundamental of all Rasas — the feeling of being in the presence of what is most beautiful, most beloved, most perfect. In devotional practice, Shringara is the love of the devotee for the divine — not romantic love in the ordinary sense, but the Madhura Bhava (sweet emotional relationship) of the soul recognizing its Source. The color of Shringara is deep blue-green (the color of Krishna). The deity most associated with Shringara is Krishna — the all-attractive, the supreme beloved. The Kirtan form most associated with Shringara: slow, melodically rich, longing.\n\n2. HASYA — the Rasa of joy and laughter. The feeling of delight, lightness, and the cosmic humor that permeates creation when seen clearly. In devotional practice, Hasya is the joy of recognizing the divine playfulness (Lila) in all of creation. This is the Rasa of Lord Krishna as the playful child — the butter-thief, the dancer, the one who makes the gopas and gopis laugh even as he teaches the deepest truths. Hasya in Kirtan: lively, rhythmic, celebratory.\n\n3. KARUNA — the Rasa of compassion and grief. The bittersweet feeling that arises when witnessing suffering — both the suffering of others and the suffering that arises from the recognition of separation from the divine. Karuna is one of the most spiritually productive Rasas because it opens the heart powerfully — the tears of Karuna are considered sacred in the Bhakti tradition. The deity of Karuna: Rama in his aspect as the compassionate king. Karuna in Kirtan: slow, deeply melodic, minor-mode, space for tears.\n\n4. RAUDRA — the Rasa of fierce intensity and righteous anger. The feeling that arises when something sacred is being violated — the fierce love that will not tolerate the harm of what it loves. In devotional practice, Raudra is the Durga and Kali energy — the fierce mother\'s love that protects, corrects, and transforms through intensity. Raudra in Kirtan: driving rhythm, full-voice intensity, the chanting that shakes walls.\n\n5. VIRA — the Rasa of heroism and courage. The feeling of being empowered by the divine to act with complete fearlessness. In devotional practice, Vira is the energy of Hanuman — the warrior-devotee who faces any challenge because he knows who he serves. Vira in Kirtan: strong, steady, with the quality of a march or a powerful affirmation.\n\n6. BHAYANAKA — the Rasa of awe and holy fear. The overwhelming feeling of the divine\'s absolute power and incomprehensibility — the awe that reduces the ego to silence. This is Rudolf Otto\'s "numinous" — the mysterium tremendum et fascinans. In Bhakti, BHAYANAKA is the recognition that what one is approaching in devotional practice is utterly beyond the mind\'s comprehension, and the appropriate response is a kind of sacred trembling. This Rasa is rare in ordinary Kirtan but appears in advanced practitioners whose devotional depth has brought them to the threshold of genuine divine encounter.\n\n7. BIBHATSA — the Rasa of disgust and revulsion. At first this seems out of place in devotional practice — but the Siddha tradition\'s use of Bibhatsa is precise: the sincere practitioner eventually reaches the point where the ego\'s limitations, the world\'s superficiality, and the accumulated Samskaras of ordinary consciousness become genuinely and powerfully unattractive. This revulsion is healthy and productive — it is what drives the renunciation that clears space for deeper practice. Bibhatsa in devotional practice: the Kali and Bhairava mantras that refuse to make the spiritual path comfortable or aesthetically pleasing.\n\n8. ADBHUTA — the Rasa of wonder and amazement. The feeling of encountering the miraculous — both the miraculous events that occasionally accompany sincere devotional practice and the everyday miracle of existence itself, fully recognized. Adbhuta is the Rasa of the child who sees the world for the first time — and the Siddha who sees it for the last time (in the sense of seeing through its apparent ordinariness to its extraordinary nature). Adbhuta in Kirtan: moments of unexpected beauty, of harmonic convergence, of silence that is more alive than sound.\n\n9. SHANTA — the Rasa of peace and equanimity. The deepest Rasa — the stillness that is not the absence of the other eight but their integration. When Shringara, Karuna, Raudra, Vira, and all the others have been fully felt and released, what remains is Shanta — the peace that passes understanding, the stillness of the ocean after the storm has moved through it without having disturbed the depths. Shanta is the Rasa of the Siddha who has arrived — not as a distant goal but as the natural condition of the heart that has been through all the other Rasas and has recognized them all as expressions of the same awareness.',
+        },
+        {
+          type: 'teaching',
+          heading: 'Rasa as Spiritual Practice — Consciously Cultivating the Emotional Palette',
+          body: `Most practitioners in the contemporary West have limited their devotional emotional range to Shanta (peace, which they often pursue as a way of avoiding the other Rasas) and occasional Shringara (love-devotion). The full power of Kirtan as a consciousness technology is only available to the practitioner who can move through the complete palette — who can be in Karuna (genuine tears of sacred grief) in one session and Raudra (fierce intensity) in the next, who can access Adbhuta (childlike wonder) and VIRA (warrior courage) as readily as the more comfortable Shanta.\n\nThis is not emotional performance — it is the conscious cultivation of the full spectrum of the heart\'s capacity. The Bhakti tradition understood that the divine is not one-dimensional: the Absolute is simultaneously the most tender and the most fierce, the most intimate and the most vast, the most accessible and the most incomprehensible. A devotional practice that only accesses one or two Rasas is relating to only one or two facets of an infinite jewel.\n\nThe practical instruction for Rasa cultivation: in your private Bhajan practice, deliberately choose a different Rasa for different sessions. On Monday, sing in Karuna — bring to mind the suffering of those you love, the grief of separation, and sing from that place. On Wednesday, sing in Vira — bring to mind the courage required to fully commit to this practice, the warrior spirit of the sincere practitioner, and sing from that strength. On Friday, sing in Shringara — bring to mind the beauty of the one you love most in the world, let that love expand to include the divine, and sing from the place where ordinary love becomes sacred love. Over weeks and months, the full palette becomes available to you — and the Kirtan that flows from the full palette is something categorically different from the Kirtan that flows from one emotional register.`,
+        },
+        {
+          type: 'practice',
+          practice: {
+            title: 'Rasa Practice — Nine Saturdays of the Heart',
+            steps: [
+              'For the next nine consecutive weeks, dedicate each Saturday\'s Kirtan or Bhajan practice to a different Rasa — one Rasa per Saturday, in the order given above.',
+              'PREPARATION: Before each session, spend 5 minutes reading about that week\'s Rasa and holding an experience from your own life that corresponds to its quality. For Karuna — a genuine grief. For Vira — a genuine act of courage. For Shringara — a genuine experience of love\'s beauty.',
+              'THE SESSION: 20-30 minutes of the Maha Mantra (or any Kirtan mantra you know) chanted specifically FROM the quality of that week\'s Rasa. Let the Rasa color every syllable. Do not perform it — inhabit it.',
+              'JOURNAL AFTER EACH SESSION: What happened when you sang from this Rasa? Was it easy or difficult to access? What arose that surprised you? What part of the divine did this Rasa reveal that other Rasas do not?',
+              'INTEGRATION: After the nine weeks, do one session that holds all nine simultaneously — one verse per Rasa, cycling through all nine in sequence. At the end, sit in silence and notice: is the silence different? Has the Shanta that follows nine-Rasa Kirtan a different quality than the Shanta that follows single-Rasa chanting?',
+            ],
+          },
+        },
+        {
+          type: 'wisdom',
+          wisdomTitle: 'Abhinavagupta on Rasa — "The Mirror That Has No Reflections"',
+          wisdomBody: `Abhinavagupta, the 10th-century Kashmir Shaivite master who wrote the most complete philosophy of Rasa in the tradition, gives this teaching in the Abhinavabharati: "The Rasa arises in the audience not from the emotions of the characters portrayed, but from the consciousness of the audience recognizing itself in those emotions. The character weeps — and the audience is moved. Why? Not because they feel sad for the character. Because the character\'s weeping has made visible a quality of their own consciousness — the quality of Karuna — that was present but dormant. The art does not create Karuna in the audience. It reveals it. The same is true in devotional practice: the Kirtan does not create Bhakti in the practitioner. It reveals the Bhakti that was always present in the heart, waiting for the mirror that could show it to itself. The heart is already full of all nine Rasas — already full of love, courage, wonder, and peace. The devotional practice is the mirror that has no reflections of its own but shows the viewer exactly what they bring to it, including the divine that they have always carried but not recognized."`,
+        },
+        {
+          type: 'audio',
+          audio: {
+            id: 'l12-3-audio',
+            title: 'Nine Rasas Kirtan — A Journey Through the Complete Heart',
+            description: 'Kritagya & Laila lead a 60-minute Kirtan that deliberately moves through all nine Rasas in sequence: beginning with Shringara (slow, tender Maha Mantra), building through Karuna, Vira, Raudra, and arriving at Shanta. A complete emotional-devotional arc. Best experienced on a Saturday evening.',
+            duration: '60:00',
+            url: '',
+          },
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 12.4
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'l12-4',
+      number: 4,
+      title: 'The Bhakti Masters as Living Transmissions',
+      subtitle: 'Mirabai · Kabir · Tukaram · The Lineages That Still Sing',
+      durationMin: 22,
+      sections: [
+        {
+          type: 'intro',
+          body: `The Bhakti movement — the great devotional revolution that swept across India from the 7th century onward — produced some of the most extraordinary human beings in recorded history. These were not scholars or priests or institutional leaders. They were weavers, potters, untouchables, princesses, and cobblers who were so completely consumed by their devotional love that the poetry, music, and transmission that flowed through them has not merely survived 500+ years — it has remained so alive that millions of people today continue to be transformed by it. This lesson presents three of the most significant Bhakti masters as living transmission lineages — their life stories not as historical curiosities but as maps of the devotional path that remain directly relevant to the modern practitioner.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'Mirabai — The Princess Who Chose Krishna Over Everything',
+          body: `Mirabai (c. 1498-1547 CE) was a Rajput princess who from early childhood felt a complete identification with Krishna as her husband, her lord, and her only love. Married by her family to a Rajput king (who died young, leaving her a widow), Mirabai refused to follow the expected path of a royal widow — she refused to perform Sati (widow self-immolation), refused to remain secluded, refused to stop singing and dancing before her Krishna image in public. Her in-laws, humiliated by her refusal to conform to social expectations, reportedly attempted to kill her multiple times — each attempt reportedly failing miraculously.\n\nMirabai eventually left the palace altogether and wandered as a saintly singer-devotee, composing and performing bhajans throughout Rajasthan and Gujarat before disappearing at Dwarka — the traditional site of Krishna\'s earthly city — in what the tradition describes as a physical merger with the Krishna image in the Ranchhodrai temple. Her body was never found.\n\nFor the practitioner, Mirabai\'s transmission is the model of absolute devotional courage — the willingness to give up everything (social standing, safety, family approval, comfort, ultimately the body itself) for the sake of genuine union with the divine. Her bhajans encode this courage — they are not beautiful songs about devotion, they are the field reports of someone who has actually chosen devotion over all other options and discovered what becomes possible on the other side of that choice. When you sing Mirabai\'s bhajans, you are accessing the transmission of a consciousness that burned completely in the fire of Bhakti. Something of that burning transmits.',
+        },
+        {
+          type: 'teaching',
+          heading: 'Kabir — The Weaver Who Wove Truth Into Song',
+          body: `Kabir (c. 1440-1518 CE) was a Muslim weaver of Varanasi whose transmission transcends every religious category, making him one of the most universally revered of all Indian saints. Born to or adopted by a Muslim family, he became a disciple of the Hindu Vaishnava saint Ramananda — and then rejected both traditions\'s exclusivism with characteristic directness. His dohas (couplets) skewer religious hypocrisy with the precision of a surgeon and the warmth of a friend:\n\n"Are you looking for me? I am in the next seat. My shoulder is against yours. You will not find me in stupas, not in Indian shrine rooms, not in synagogues, not in cathedrals: not in masses, nor kirtans, not in legs winding around your own neck, nor in eating nothing but vegetables. When you really look for me, you will see me instantly — you will find me in the tiniest house of time."\n\nKabir\'s transmission for the contemporary practitioner: an absolute insistence on direct experience over religious form. His Ulte Vans (inverted poems) — deliberately paradoxical, logically impossible images — use the mind\'s disorientation as a doorway to transcend the mind. His songs cannot be understood by the intellect because they are not addressed to the intellect. They are addressed to the awareness that knows itself to be prior to thought.\n\nKabir\'s most famous doha for mantra practitioners: "BOLO RAM RAM RAM RE, JO MANTRA MAHA MANTRESHWARA" — "Speak Ram, Ram, Ram — this is the mantra of the greatest lord of mantras." His instruction strips away all complexity: in the end, what matters is not the sophistication of the mantra or the elaborateness of the practice — it is the sincere, repeated invocation of the name of the Absolute. RAMA NAMA — the name of Ram — Kabir taught as the supreme mantra precisely because it requires nothing other than the willingness to say it.',
+        },
+        {
+          type: 'teaching',
+          heading: 'Tukaram — The Failed Merchant Who Became the Ocean',
+          body: `Tukaram (c. 1608-1649 CE) is the most beloved saint of the Maharashtra Bhakti tradition — a merchant from Pune who lost his family to famine, lost his business to debt, lost his social standing to failure, and in the depths of that loss discovered the Vithoba (Vitthal/Vishnu) at Pandharpur — and never left. His abhangas (devotional hymns in Marathi) number over 4,000 and remain the living scripture of Maharashtra to this day.\n\nTukaram\'s contribution to the practitioner\'s understanding of Bhakti: he is the exemplary case of the man who has nothing left to protect, nothing left to perform for, and therefore nothing standing between him and the absolute sincerity that genuine devotional practice requires. After the failures and losses stripped away every social identity and every ego-project, what remained was Tukaram standing before Vithoba with completely empty hands — and discovering that empty hands are exactly what the divine requires.\n\nHis most quoted abhanga for mantra practice: "VITHU MAAZE MAHER MAULE, VITHU MAAZE VITTHAL" — "Vithoba is my beloved mother, Vithoba is my Vitthal." The repetition of the name, the simplicity of the emotion (a child calling its mother), and the total absence of theological sophistication are Tukaram\'s specific teaching: the most advanced Bhakti and the most childlike Bhakti are identical. The difference between the saint and the child is that the saint has gone all the way around the circumference of sophistication and returned to the origin of sincere, simple calling.',
+        },
+        {
+          type: 'practice',
+          practice: {
+            title: 'Bhakti Master Practice — Singing Their Words as Your Own',
+            steps: [
+              'For one week, dedicate each morning\'s Bhajan practice to a different master:\n   Monday-Tuesday: Mirabai. Wednesday-Thursday: Kabir. Friday-Saturday: Tukaram.',
+              'MIRABAI SESSION: Learn one Mirabai bhajan (recordings and texts are widely available — start with PAYO JI MAINE RAM RATAN DHA-N PAYO, "I have received the wealth of Ram\'s name"). Before singing, read her story from this lesson and feel what it cost her. Sing from that place — from the place that has already given everything.',
+              'KABIR SESSION: Learn one Kabir doha (start with MOKO KAHAN DHOONDHE RE BANDE — "Why do you look for me?"). Before singing, rest in the complete collapse of every religious identification. Are you Hindu, Muslim, Christian, or Buddhist right now in this moment? Or are you simply the awareness that is reading these words, which fits none of these categories? Sing from that place.',
+              'TUKARAM SESSION: Learn one Tukaram abhanga (start with SUKHI KARAN MAZA KESHAVA — "Make me joyful, O Keshava"). Before singing, hold in mind a specific real loss in your life — something that failed, something that was taken, something that disappointed. Bring Tukaram\'s discovery to it: in the emptiness of that loss, there is the space in which Vithoba can be found. Sing from that space.',
+              'INTEGRATION: On Sunday, sit with all three. Which master\'s transmission felt most alive in your specific practice session? Which Rasa did each naturally evoke? Which master is speaking most directly to where you are right now in your life?',
+            ],
+          },
+        },
+        {
+          type: 'mantra',
+          mantra: {
+            devanagari: 'पायो जी मैंने राम रतन धन पायो\nवस्तु अमोलक दी मेरे सतगुरु\nकिरपा करि अपनायो',
+            transliteration: 'PAYO JI MAINE RAM RATAN DHAN PAYO\nVASTU AMOLAK DI MERE SATGURU\nKIRPA KARI APNAYO',
+            translation: 'I have received it — I have found the jewel-wealth of Ram\'s name\nMy true Guru gave me this priceless thing\nAnd took me as his own through grace',
+            body: `This is Mirabai\'s most famous bhajan — translated literally as "I have found the jewel-wealth of Ram\'s name." Its Rasa is Shringara deepening into Vira — the lover who has found her beloved speaks with the joy of arrival and the courage of one who gave everything to get there. The RAM here is not merely the deity Rama but the Pranava frequency embedded in RAM — the fire-seed mantra within the name. Mirabai is singing that the mantra itself — Ram Nama — is the greatest wealth in the universe, more valuable than any kingdom, any marriage, any social standing. Chant this bhajan in the key most natural to your voice. If you do not know the traditional melody, simply chant the words to any simple ascending-descending pattern. The words themselves carry the transmission.`,
+          },
+        },
+        {
+          type: 'wisdom',
+          wisdomTitle: 'The Bhakti Revolution — Why the Weavers and Cobblers Were Right',
+          wisdomBody: `The Bhakti movement was, at its core, a radical democratic spiritual revolution: it declared that direct experience of the divine was available to anyone — regardless of caste, gender, education, or religious affiliation — through the path of sincere devotional love. The Brahmin priests held the mantras, the Sanskrit texts, the ritual procedures. The Bhakti saints held something the priests did not: the unmediated, direct experience of what those mantras and rituals were designed to produce. Kabir, who could not read Sanskrit, accessed states that most Sanskrit scholars never touched. Mirabai, who as a woman was excluded from Brahminical initiation, merged with the divine in a way that most Brahmins only theorized about. Tukaram, who failed at everything the world valued, discovered the one thing that cannot be failed: the unconditional availability of the divine to any sincere heart. The teaching: the most advanced spiritual technology in the universe is available without institutional membership, without academic credentials, without financial resources, and without social approval. It requires only the willingness to call out, to sing, to surrender, to love. The Bhakti masters proved this with their lives. Their songs are the proof.`,
+        },
+        {
+          type: 'audio',
+          audio: {
+            id: 'l12-4-audio',
+            title: 'Bhakti Masters Transmission — Songs of Mirabai, Kabir, and Tukaram',
+            description: 'Laila sings three bhajans: PAYO JI MAINE (Mirabai), MOKO KAHAN DHOONDHE (Kabir), and SUKHI KARAN MAZA KESHAVA (Tukaram). Each sung in its traditional melodic style, with a brief teaching on the master\'s context before each song. 45 minutes.',
+            duration: '45:00',
+            url: '',
+          },
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 12.5
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'l12-5',
+      number: 5,
+      title: 'Creating Your Own Kirtan',
+      subtitle: 'Composition from Sacred Syllables · Melody as Mantra · The Practitioner as Channel',
+      durationMin: 20,
+      sections: [
+        {
+          type: 'intro',
+          body: `The 18 Siddhas were not merely practitioners of existing traditions — they were composers. Thirumoolar composed the Thirumantiram. Kabir composed his dohas. Mirabai composed her bhajans. Tukaram composed over 4,000 abhangas. The Bhakti masters were not preservers of received forms — they were channels through which new mantric transmissions entered the world in response to the specific needs of their specific moment in history. This lesson teaches the Siddha compositional science: not how to write clever devotional poetry, but how to become sufficiently transparent to the mantric intelligence that genuinely new transmissions can flow through you — transmissions that carry the same quality of living force that the great bhajans have always carried.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'What Makes a Bhajan a Transmission Rather Than a Song',
+          body: `The distinction between a bhajan that carries transmission and a bhajan that is merely a pleasant devotional song is precise and learnable — though it cannot be manufactured by technique alone. The key factors:\n\nFactor 1 — Mantrically charged language: A genuine bhajan uses words that are themselves mantric — words that carry the vibrational frequency of the reality they describe, not merely their conceptual content. KRISHNA in a bhajan is not just a name — it is a mantric invocation that carries the Krishna-frequency whenever a sincere devotee pronounces it. PREMA is not just the Hindi/Sanskrit word for love — it is the word that vibrates at the frequency of divine love. The composer who uses these words with full awareness of their mantric power, rather than as poetic vocabulary, produces a different result.\n\nFactor 2 — Melodic alignment: The melody of a bhajan must serve the mantra, not compete with it. Complex, technically demanding melodies that draw attention to the singer\'s skill distract from the mantric content. The most powerful bhajans have melodies that almost disappear behind the words — melodies that make the words easier to return to, not more impressive.\n\nFactor 3 — Rhythmic inevitability: The rhythm of a great bhajan feels inevitable — not composed but discovered. The practitioner who finds a rhythm for a mantra that makes that mantra feel like it could not possibly be in any other rhythm has found the mantra\'s natural rhythm. This rhythm, once found, is itself a transmission — the body enters a specific state of alignment when that particular rhythm is felt.\n\nFactor 4 — Compositional state: The most critical factor is the state of the composer during composition. A bhajan composed in a state of genuine devotional absorption carries that absorption into every subsequent performance of it. A bhajan composed from intellectual effort — from technique — carries that effort. Both may be beautiful. Only the first is a transmission.',
+        },
+        {
+          type: 'teaching',
+          heading: 'The Composition Method — Listening Before Writing',
+          body: `The Siddha approach to bhajan composition begins not with composition but with deep listening — the Nada Dhyana practice applied specifically to the creative process:\n\nPhase 1 — Establish the mantra: Choose the mantra or divine name around which your bhajan will be built. This is not chosen intellectually — it is felt. Which mantra has been most alive in your practice recently? Which divine name most naturally causes your heart to open when you say it? Begin there.\n\nPhase 2 — Listen before composing: Spend 20 minutes in pure Ajapa Japa with your chosen mantra — SOHAM on the breath, or the mantra itself simply repeated slowly. Do not try to compose anything. Do not try to be creative. Simply listen — to the mantra, to the silence around it, to whatever quality of feeling arises in relation to it.\n\nPhase 3 — The spontaneous phrase: At some point in the listening, a phrase may arise spontaneously — a word, a melody fragment, a rhythmic pattern. When this happens, do not analyze it. Write it down immediately in its exact form, as it came. This spontaneous arising is the bhajan beginning to compose itself through you.\n\nPhase 4 — Expansion: From the initial spontaneous phrase, allow the bhajan to expand organically — each subsequent phrase arising from the same quality of listening attention, not from the intellect trying to complete a structure. The question to ask with each new phrase: "Does this deepen the feeling of the first phrase, or does it change it?" Keep only what deepens. Release what changes.\n\nPhase 5 — Refinement: After the initial composition, sing the bhajan as it has come. Adjust the melody and rhythm to serve the words — not the other way around. If a word has to be distorted in pronunciation to fit a chosen melody, change the melody. The words are the mantra; the melody is their vehicle.',
+        },
+        {
+          type: 'teaching',
+          heading: 'The SQI Bhajan Framework — Mantric Structure for Original Songs',
+          body: `For practitioners who want to begin composing but feel uncertain about where to start, the SQI Bhajan Framework provides a simple structural template that has produced consistently effective results:\n\nTHE REFRAIN (2-4 lines): The heart of the bhajan — the mantric statement that will be repeated most often. Should contain the primary divine name or Bija. Should be simple enough to be memorized immediately. Should have a melodic shape that rises and releases — a melodic arc that opens and closes like a breath.\n\nTHE VERSE (2-4 lines): A single devotional statement that illuminates one facet of the relationship between the practitioner and the divine. Should use specific, concrete imagery rather than abstract devotional language. Mirabai\'s bhajans are specific: she mentions specific places (Vrindavan), specific actions (Krishna dancing), specific feelings (longing, grief, joy). Abstraction ("I love the divine") is less powerful than specificity ("In the marketplace of Vrindavan I wait for you by the same well where you came yesterday").\n\nSTRUCTURE: REFRAIN — VERSE 1 — REFRAIN — VERSE 2 — REFRAIN — extended REFRAIN (gradually more freely repeated, building in devotional intensity) — slow return to REFRAIN — final silence.\n\nThis structure (which mirrors the Kirtan arc of building and releasing) gives even a beginner\'s first original bhajan a coherent emotional journey rather than simply a collection of devotional phrases.',
+        },
+        {
+          type: 'practice',
+          practice: {
+            title: 'Your First Original Bhajan — The 7-Day Composition Practice',
+            steps: [
+              'DAY 1 — CHOOSE THE MANTRA: Which divine name or mantra do you most want to sing? Spend the day with this name — say it internally throughout the day. Notice how it feels in the morning vs the evening. Notice what other words naturally arise in relation to it.',
+              'DAY 2 — LISTENING SESSION: 30 minutes of Ajapa Japa with your chosen name. After 20 minutes of pure listening, open your notebook and write whatever comes — phrases, images, feelings. Do not edit. Do not reject anything as "too simple" or "not spiritual enough."',
+              'DAY 3 — REFRAIN SEARCH: From everything written on Day 2, identify the phrase that feels most like a refrain — the one you would most want to keep returning to. Find a melody for it that arises naturally from speaking the words aloud repeatedly. Do not borrow a melody — let the words themselves suggest their rhythm.',
+              'DAYS 4-5 — VERSE DEVELOPMENT: Write two verses, each illuminating a single specific image or feeling related to your divine name. Keep both verses anchored in concrete sensory experience, not abstraction.',
+              'DAY 6 — FIRST COMPLETE SING-THROUGH: Sing your bhajan from beginning to end for the first time. Do not perform it — simply discover it. What feels right? What feels false? Adjust only what feels false.',
+              'DAY 7 — OFFER IT: Share your bhajan with one other person — a partner, a friend, anyone. Sing it for them and let them respond. The bhajan\'s transmission quality reveals itself in the quality of the response it produces in a sincere listener.',
+            ],
+          },
+        },
+        {
+          type: 'wisdom',
+          wisdomTitle: 'Tukaram on Composition — "I Did Not Write These Songs"',
+          wisdomBody: `Tukaram left behind accounts of his compositional process that reveal something essential about what genuine Bhakti composition is. He consistently denied authorship: "These abhangas are not mine. Vitthal (his deity) speaks them through me. I am the reed; he is the breath. What comes out through me I did not plan and could not have produced by effort. When I sit before Vitthal with an empty heart — when there is truly nothing in me that wants anything other than his presence — the songs begin. When I am distracted, when I am thinking about my debts or my failures, when I am someone who has opinions about how the songs should go — nothing comes. The songs arrive when Tukaram has left. They leave when he returns." This teaching — that the compositions of the Bhakti masters were not composed in the ordinary creative sense but were received in states of sufficient inner emptiness — has direct implications for the practitioner\'s approach to Kirtan composition. The composition practice is not an exercise in creativity. It is an exercise in emptying — in making room for what wants to come through.`,
+        },
+        {
+          type: 'audio',
+          audio: {
+            id: 'l12-5-audio',
+            title: 'Original SQI Bhajan — Kritagya & Laila\'s First Original Composition',
+            description: 'An original bhajan composed by Kritagya & Laila in the tradition of the Bhakti masters — with full transparency about their compositional process (including what came from listening, what was consciously adjusted, and what arrived spontaneously). Includes the complete composition story before the song itself. 20 minutes.',
+            duration: '20:00',
+            url: '',
+          },
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 12.6
+
+const module13: Module = {
+  id: 'module-13',
+  number: 13,
+  tier: 'siddha',
+  title: 'The 18 Siddhas — Their Transmissions',
+  subtitle: 'Avataric Blueprint Codex · Lineage Frequency Map · Direct Meeting',
+  description:
+    'The 18 Tamil Siddhas are not historical figures in the ordinary sense. They are living fields of consciousness — specific frequencies of realized awareness that remain active and accessible in the Akashic record, available to any practitioner sufficiently prepared to receive them. Each Siddha carries a unique signature: a specific quality of enlightened consciousness that manifested through their life, their alchemy, their poetry, and their mantric gifts to humanity. This module is not about studying the Siddhas. It is about meeting them — through their specific mantras, their specific teachings, and the specific quality of inner silence from which each one speaks.',
+  lessons: [
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 13.1
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'l13-1',
+      number: 1,
+      title: 'Who the 18 Siddhas Are',
+      subtitle: 'Siddha as Perfected Being · The Tamil Lineage · Why 18',
+      durationMin: 20,
+      sections: [
+        {
+          type: 'intro',
+          body: `The word SIDDHA (சித்தர் in Tamil, सिद्ध in Sanskrit) means "perfected one" — from the root SIDH, to accomplish, to complete, to succeed. A Siddha is a being who has completed the supreme accomplishment: the full realization of the nature of consciousness, combined with the mastery of the physical world through that realization. The Siddha is not merely enlightened in the philosophical sense — not merely someone who has recognized the Absolute through meditation and remains absorbed in inner experience. The Siddha has brought that realization fully into the body, the world, and matter itself. Their mastery is simultaneously spiritual and physical — they can heal the sick, extend their lifespan indefinitely, transmute base metals (Kaya Kalpa alchemy), and operate in ways that ordinary physics does not predict. This is the Siddha distinction: realization completed not by transcending the world but by fully inhabiting it.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'Why Specifically 18 — The Sacred Number of the Siddha Council',
+          body: `The number 18 recurs throughout Indian spiritual literature with specific significance: the Mahabharata has 18 books. The Bhagavad Gita has 18 chapters. The Puranas number 18. The number 18 in Vedic numerology is 1+8=9 — the number of completion in all directions. But the 18 Siddhas are not merely a numerologically convenient grouping. They represent a specific council of realized beings who, according to the Tamil Siddha tradition, have collectively served as the guardians and transmitters of the Shaiva Siddhanta and Siddha Yoga traditions for thousands of years.\n\nThe 18 Siddhas are understood not as a historical committee but as a living spiritual body — a collective intelligence that operates through individual expressions (each Siddha represents a specific domain of mastery) while maintaining a unified field. The tradition describes them as still active: Mahavatar Babaji (identified in some traditions as one of the 18 or as their primary initiator) is the most widely known example of a Siddha who is understood to be physically present in the world — but the Siddha tradition maintains that multiple others among the 18 have achieved Deathlessness (Jiva Samadhi or physical immortality through alchemical transmutation of the body) and continue to operate in subtle and occasionally physical ways.\n\nFor the practitioner, this understanding has a direct practical implication: the 18 Siddhas are not only subjects of historical study — they are accessible fields of consciousness that can be directly engaged through specific mantras, specific inner postures, and the quality of Siddha-directed Sadhana that this module teaches.',
+        },
+        {
+          type: 'teaching',
+          heading: 'The Four Primary Domains of Siddha Mastery',
+          body: `The 18 Siddhas collectively cover four primary domains of knowledge that the tradition considers the complete map of what a realized being masters:\n\nNADA YOGA — Sound science, mantra, the inner hearing of the Anahata Nada, and the use of specific sound frequencies to produce specific changes in consciousness and matter. Thirumoolar is the supreme Nada Yoga Siddha.\n\nKAYA KALPA — Physical immortality through alchemical treatment of the body with specific herbs, minerals, and practices that gradually replace the body's perishable tissues with what the Siddhas called Kaya Siddha — imperishable divine body material. Agastya, Bogar, and Sattaimuni are the primary Kaya Kalpa Siddhas.\n\nRASA VIDYA — Alchemical transmutation of metals, preparation of Siddha medicines (Muppu — the universal medicine), and the broader science of transforming material substances through consciousness. Bogar is the supreme Rasa Vidya Siddha, followed by Konganavar.\n\nJNANA YOGA — Direct inquiry into the nature of consciousness, the non-dual recognition of the Self, the philosophical systematization of Shaiva Siddhanta and Advaita. Thirumoolar (again), Patanjali (who some traditions include as a Siddha), and Sundaranandar are primary Jnana Yoga Siddhas.\n\nEvery practitioner has a natural affinity for one or two of these domains — and the Siddha whose primary mastery aligns with the practitioner\'s natural orientation will typically be the one whose mantra and teaching is most immediately alive and effective. Part of the work of this module is identifying which of the 18 Siddhas speaks most directly to your specific path.',
+        },
+        {
+          type: 'teaching',
+          heading: 'How to Receive a Siddha Transmission — The Prerequisites',
+          body: `The Siddha-Quantum tier is not available to practitioners who have not completed the Free and Prana-Flow tiers — and this is not an arbitrary commercial gating. It reflects genuine spiritual physics. The Siddha transmissions contained in these six modules operate at a frequency that requires a prepared vehicle to receive and integrate without disturbance. Specifically:\n\nNadi purity: The 12 months of progressively purifying mantra and pranayama practice in the Free and Prana-Flow tiers has cleared the Nadi system to a degree that makes the Siddha transmissions receivable. A practitioner attempting these mantras with congested, imbalanced Nadis would experience the transmissions as too intense, too disorienting, or simply ineffective — the way a radio with damaged internal circuits cannot receive a signal that the same signal can produce beautiful sound in through a properly functioning receiver.\n\nAnahata opening: The Kirtan, healing, and devotional practices of the Prana-Flow tier have progressively opened the heart center. The Siddha transmissions enter primarily through the heart — not the intellect, not the crown, but the Anahata, which must be sufficiently open to receive at the frequency the Siddhas transmit.\n\nEgo-reduction: The consistent practice of NAMAH (I bow, not mine) in the mantra work, the SARVE BHAVANTU SUKHINAH in the healing work, and the Kirtan\'s repeated dissolution of individual self-consciousness have reduced the ego\'s resistance to transmission by a meaningful degree. The Siddhas do not give transmission to practitioners whose ego is in full defensive operation — not as a judgment but as a physics: the ego\'s defensive field is precisely what blocks the transmission from landing.',
+        },
+        {
+          type: 'practice',
+          practice: {
+            title: 'Siddha Lineage Opening — The Complete Invocation',
+            steps: [
+              'This practice is the opening ceremony for the entire Siddha-Quantum tier. It is done once — now, at the beginning of Module 13 — and then recalled briefly at the beginning of each subsequent module.',
+              'Sit in your consecrated space. Light incense and ghee lamp. This must be Brahma Muhurta or as close to it as possible — the Siddhas specified dawn as the optimal time for first contact with a new lineage transmission.',
+              'GANESHA OPENING: OM GAM GANAPATAYE NAMAH × 9. The doorkeeper must be honored before the inner sanctum is entered.',
+              'GURU STOTRAM: GURUR BRAHMA GURUR VISHNU GURUR DEVO MAHESHVARAH / GURUR SAKSHAAT PARAM BRAHMA TASMAI SHRI GURAVE NAMAH × 3. You are placing yourself within the Guru-field — acknowledging that what you are about to receive is not information but transmission, and that transmission requires the Guru relationship.',
+              'THE 18 SIDDHA INVOCATION: Chant each of the following names once, pausing after each for one full breath of recognition: THIRUMOOLAR — AGASTYA — BOGAR — MACHAMUNI — GORAKSHANATH — KONGANAVAR — SATTAIMUNI — SUNDARANANDAR — KUDAMBAI — KALANGI NATHAR — AZHUKKANI — PAMBATTI — RAMADEVAR — IDAIKKADAR — KARUVOORAR — DHANVANTARI — NANDIDEVAR — PATANJALI.',
+              'CLOSING SANKALPA: "I enter the Siddha-Quantum tier as a sincere practitioner who has prepared through the Free and Prana-Flow tiers. I bow to the 18 Siddhas and ask for their transmission to enter through whatever channel they find most appropriate in my specific being. I am here to receive, not to achieve. OM SHANTI SHANTI SHANTI."',
+              'Remain in silence for 10 minutes. This silence after the invocation is itself the beginning of the transmission.',
+            ],
+          },
+        },
+        {
+          type: 'mantra',
+          mantra: {
+            devanagari: 'ॐ सिद्धेभ्यो नमः\nनमोस्तु सिद्धाचार्यार्थम्\nसर्व सिद्धि प्रदायिने',
+            transliteration: 'OM SIDDHEBYHO NAMAH\nNAMOSTU SIDDHACHARYA ARTHAM\nSARVA SIDDHI PRADAYINE',
+            translation: 'OM — to all the Siddhas, I bow\nI bow for the purpose of the Siddha teaching\nTo the one who gives all Siddhis (perfections)',
+            body: `The universal Siddha invocation — not addressed to any single Siddha but to the collective field of all perfected beings. SIDDHEBYHO (to the Siddhas, plural dative — "to all of them") places the practitioner in relationship with the entire lineage simultaneously. NIDHACHARYA ARTHAM (for the purpose of the Siddha teaching) declares the intention: not personal power, not extraordinary abilities, not self-aggrandizement — the teaching itself is the goal. SARVA SIDDHI PRADAYINE (to the one who gives all perfections) acknowledges that what is being requested is not one specific ability but the complete development of consciousness that the Siddha tradition calls Sarva Siddhi — all perfections arising naturally from the full realization of one's own nature.`,
+          },
+        },
+        {
+          type: 'wisdom',
+          wisdomTitle: 'The Siddhas on Why They Remain — "We Did Not Leave"',
+          wisdomBody: `A teaching transmitted through the Agastya lineage, preserved in the living oral tradition of certain Tamil Siddha families: "You ask why the Siddhas remain — why those who have achieved liberation from all limitation continue to exist in or near the physical world rather than dissolving completely into the Absolute. The answer is this: liberation is not separation. The realized being does not abandon the world any more than the ocean abandons the wave by recognizing that the wave is water. The Siddha who has recognized their identity with the Absolute discovers that all beings are expressions of the same consciousness they have recognized as their own nature. How can a Siddha leave, when there is nowhere to go? They are already everywhere. The apparent remaining is simply the continued expression of the compassion that was always the deepest quality of their consciousness — the recognition that other beings, not yet aware of their own nature, are experiencing suffering that is unnecessary, and that this suffering can be reduced through transmission. We did not leave. We were never anywhere other than where you are. Open your inner hearing. We are speaking now."`,
+        },
+        {
+          type: 'audio',
+          audio: {
+            id: 'l13-1-audio',
+            title: 'Siddha Lineage Opening — The Complete Invocation Ceremony',
+            description: 'Kritagya leads the complete Siddha-Quantum tier opening: Ganesha opening, Guru Stotram, the 18 Siddha names chanted one by one with a singing bowl struck after each name, the Sankalpa, and 10 minutes of transmission silence. This is a one-time ceremony that opens the Siddha-Quantum field for the practitioner. 30 minutes.',
+            duration: '30:00',
+            url: '',
+          },
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 13.2
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'l13-2',
+      number: 2,
+      title: 'The First Six Siddhas',
+      subtitle: 'Thirumoolar · Agastya · Bogar · Machamuni · Gorakshanath · Konganavar',
+      durationMin: 28,
+      sections: [
+        {
+          type: 'intro',
+          body: `The first six Siddhas in the traditional Tamil listing represent the foundational pillars of the complete Siddha system: Nada Yoga, medical science, alchemy, the founding of Hatha Yoga, the physical mastery of the body, and the science of longevity. Understanding these six is to understand the core framework within which all Siddha knowledge operates. Each one carried a specific fire — a specific quality of realized consciousness — that expressed through their particular domain of mastery and that they encoded in specific mantras now available to the Siddha-Quantum tier practitioner.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'THIRUMOOLAR — The Voice of Shaiva Siddhanta',
+          body: `Thirumoolar is, without question, the most significant figure in the entire Tamil Siddha tradition. His Thirumantiram — 3,047 verses encoding the complete Shaiva Siddhanta philosophy, Yoga science, Tantra, Nada Yoga, medicine, and alchemy — is considered by the tradition to be the most comprehensive single spiritual text in the Tamil language. He is said to have arrived in Tamil Nadu from the Himalayas (where he was a disciple of Nandi, Shiva\'s divine bull and the first teacher of Yoga) and to have entered into the body of a dead shepherd (a form of Yoga called Parakaya Pravesha — entering another body) after his original body was mistakenly claimed by a bull who had died nearby.\n\nIn this shepherd\'s body, Thirumoolar composed the Thirumantiram over a period of 3,000 years — composing one verse per year while remaining in a state of continuous Samadhi between compositions. Each verse was composed from the direct experience of Samadhi rather than from memory or study — making the Thirumantiram not a systematic exposition of received doctrine but a spontaneous outpouring of direct realization encoded in language.\n\nThirumoolar\'s primary teaching: "Anbey Sivam" — Love IS Shiva. The Absolute is not distant, not demanding, not conditional — it is love itself, the most intimate possible reality. His Nada Yoga teaching: the inner sound (Anahata Nada) is the direct path to this love, because the inner sound is Shiva sounding himself within the practitioner\'s own consciousness.\n\nThirumoolar\'s specific transmission mantra: OM THIRUMOOLAR SIDDHAM — "OM, the perfection of Thirumoolar." This mantra is chanted to invoke Thirumoolar\'s field specifically for Nada Yoga practice, for the study of the Thirumantiram, and for the cultivation of the specific quality of consciousness that recognizes love as the fundamental nature of reality. 108 rounds at Brahma Muhurta for 21 consecutive days opens the Thirumoolar channel in the practitioner\'s subtle body.',
+        },
+        {
+          type: 'teaching',
+          heading: 'AGASTYA — Father of Tamil and Lord of the Southern Lineage',
+          body: `Agastya Muni is perhaps the oldest identifiable Siddha in the tradition — appearing in the Rigveda (composed approximately 3,500+ years ago), in the Ramayana, in Tamil classical literature, and in the living traditions of South Indian temples to this day. He is the Rishi credited with bringing the Vedic spiritual tradition to South India, the founder of the Tamil language (said to have composed the first grammar of Tamil at Shiva\'s instruction), and the primary teacher of medicine in the Siddha lineage.\n\nAgastya\'s legendary capacity: he once swallowed the ocean (in the mythological account of the Vindhya mountains growing to block the sun) — a cosmological encoding of a real spiritual ability: the capacity to absorb and contain enormous quantities of cosmic force without being overwhelmed. This quality — the ability to digest and contain what would shatter a smaller consciousness — is the specific transmission that Agastya offers practitioners.\n\nIn the medical domain, Agastya\'s texts (the Agastya Samhita and related works) contain the most complete account of Kaya Kalpa — the physical rejuvenation and longevity practices — available in any Indian medical tradition. His Vaidya Padam (medical hymns) include the vowel-sequence healing practice introduced in Module 6 (the A-AA-I-U-E vowel-breathing-into-body-parts protocol).\n\nAgastya\'s transmission mantra: OM AGASTYAYA NAMAH — "OM, to Agastya, I bow." This mantra opens the Southern lineage transmission — the specific quality of Siddha wisdom that works through the language and geography of South India, the Tamil Shaiva tradition, and the medical-spiritual integration that is Agastya\'s unique contribution. It is also the mantra for developing the capacity to contain and digest difficult experience — the quality Agastya embodied when he swallowed the ocean.',
+        },
+        {
+          type: 'teaching',
+          heading: 'BOGAR (BHOGA NATHAR) — The Alchemist Who Crossed Civilizations',
+          body: `Bogar is the most cosmically adventurous of the 18 Siddhas. His biography — preserved in his own text, the Bogar 7000 — describes him traveling to China (where he trained the sage who became Laozi, the founder of Taoism), to Arabia, to Greece, and throughout India, synthesizing the alchemical and medical knowledge of multiple civilizations into the most comprehensive Siddha alchemy system. The Palani Murugan temple\'s primary deity statue — the most-visited Siddha temple in Tamil Nadu — was created by Bogar from Nava Pashanam (nine poisons/medicines combined alchemically into a substance that the tradition claims has Ojas-building and healing properties that cannot be replicated by any single substance alone).\n\nBogar\'s primary domain: Rasa Vidya — the alchemical transmutation of metals and the preparation of Siddha medicines that operate at multiple simultaneous levels of the body-mind system. His insight: the physical world is not separate from the spiritual world — it is the spiritual world in its densest expression. To work with matter alchemically is to work with consciousness in its most concentrated form. The ability to transmute lead into gold (Dhatu Vada) is, in the Siddha understanding, the same capacity that transmutes ordinary consciousness into enlightened consciousness — applied at the material rather than the subtle level.\n\nBogar\'s transmission mantra: OM BOHEMAM SIDDHAM — the mantra of Bogar\'s alchemical intelligence. This mantra is specifically for practitioners working with the transformation of material reality — business, creative work, any field where the practitioner wants to apply the alchemical principle of transmutation. It is also the mantra for deepening the understanding that matter and spirit are not two separate domains.',
+        },
+        {
+          type: 'teaching',
+          heading: 'MACHAMUNI (MATSYENDRANATH) — Founder of the Nath Tradition',
+          body: `Matsyendranath — known in Tamil as Machamuni (Fish Sage, from MATCHA = fish) — is one of the most significant figures in the entire yoga tradition of India. He is the founder of the Nath Siddha tradition, the first teacher of Gorakshanath (who follows immediately in this lesson), and the being through whom the Hatha Yoga lineage that has given the world asana, pranayama, and the complete physical yoga system originated.\n\nThe legend of Matsyendranath: Shiva was teaching Parvati the secrets of Yoga at the bottom of the ocean. A fish (Matsya) nearby overheard the entire teaching and, through the power of this hearing, became realized — transformed into the sage Matsyendranath. This legend encodes a precise teaching: enlightenment is available through pure receptivity — through listening so completely that the very consciousness of what is heard transforms the listener. Matsyendranath did not practice Yoga. He heard Yoga being taught, and in the perfection of his listening, became Yoga itself.\n\nMatsyendranath\'s transmission: the specific quality of consciousness that transforms through perfect hearing — the capacity to listen to a teaching at the level where the sound of the teaching IS the transmission of the teaching. This is the quality that makes the practitioner capable of receiving the Guru\'s transmission through mantra rather than through physical instruction.\n\nTransmission mantra: OM MACHAMUNIYAI NAMAH — invoking the capacity for transformative reception. Combined practice: 27 rounds of OM MACHAMUNIYAI NAMAH followed immediately by Nada Dhyana — the quality of receptive listening that Matsyendranath embodies makes him the ideal guide into the inner sound practice.',
+        },
+        {
+          type: 'teaching',
+          heading: 'GORAKSHANATH — Master of the Body as Cosmic Temple',
+          body: `Gorakshanath (Goraksha = Protector of Cows, Nathar = Lord of the Naths) is the disciple of Matsyendranath who systematized the teachings of the Nath tradition into the practical Hatha Yoga system that forms the physical foundation of all modern yoga. His primary texts — Goraksha Shataka and Goraksha Paddhati — are the earliest systematic presentations of asana, pranayama, mudra, and the physical practices of Yoga as a complete spiritual science.\n\nGorakshanath\'s primary innovation: the declaration that the physical body is the most perfect instrument available for spiritual realization — not an obstacle to be overcome or transcended, but the actual arena in which the highest realization occurs. His teaching: the body is a microcosmic replica of the cosmos, with every planet, every deity, every cosmic process having its corresponding point within the human form. Yoga is the science of recognizing and aligning these correspondences — of becoming, through disciplined physical practice combined with conscious awareness, a body that accurately expresses the cosmos at every level.\n\nGorakshanath\'s specific transmission for this curriculum: the understanding that the mantra practice taught throughout the Free and Prana-Flow tiers is not merely a mental or spiritual exercise — it is a physical transmutation of the body\'s tissues through sustained vibrational input. The practitioner who has done 40 days of LAM has physically changed their pelvic floor musculature, their adrenal tissue, and their root chakra region\'s neural connectivity. The body remembers every mantra.\n\nTransmission mantra: OM GORAKSHA — the single most concentrated invocation of Gorakshanath\'s field. Combined practice: OM GORAKSHA followed by OM AADESH AADESH (the Nath salutation) × 9, then 20 minutes of sustained physical awareness meditation — simply being present in the body with complete attention, feeling the body as the cosmic temple.',
+        },
+        {
+          type: 'teaching',
+          heading: 'KONGANAVAR — The Mercury Alchemist',
+          body: `Konganavar (named for the Kongu region of Tamil Nadu where he primarily operated) is the Siddha most specialized in Mercury alchemy — the transformation of mercury (Parada in Sanskrit) into specific medicinal preparations that the Siddha tradition claims can rejuvenate the body at the cellular level. Mercury, in Siddha alchemy, is considered the most potent of all physical substances because it is the one metal that is liquid at room temperature — always in motion, never static, mirroring the quality of consciousness itself.\n\nKonganavar\'s primary domain: Parada Karma (Mercury work), specifically the preparation of what the tradition calls Parada Sneha (mercury gold) — a preparation of mercury transformed through specific alchemical processes into a substance that, in the tradition\'s understanding, operates at the pranic level of the body to slow aging, enhance cognitive function, and build the specific quality of Ojas that supports both longevity and enlightenment.\n\nIn terms accessible to the contemporary practitioner: Konganavar\'s teaching is about the transformation of the mind\'s fluid, adaptable, ever-moving quality (symbolized by mercury) into a stable but not rigid quality — the mind that is both completely responsive to the present moment AND consistently oriented toward its own deepest nature. The mind that is Parada Sneha — golden mercury — is neither the fixed, rigid mind that cannot change nor the scattered, unfocused mind that cannot hold a direction. It is both fluid and directional simultaneously.\n\nTransmission mantra: OM KONGANAVAR SIDDHAM — invoking the quality of fluid, adaptive intelligence that maintains consistent direction. Practice: 27 rounds of the mantra, then 20 minutes of attention practice in which awareness is deliberately fluid (moving freely among objects of attention) while maintaining a consistent center of gravity (always returning to the breath or the inner sound). This is the specific Konganavar transmission: fluid stability.',
+        },
+        {
+          type: 'practice',
+          practice: {
+            title: 'First Six Siddhas Practice — Rotating Transmission Sessions',
+            steps: [
+              'For six consecutive days, dedicate one Brahma Muhurta session to each of the first six Siddhas — one Siddha per day.',
+              'DAY 1 — THIRUMOOLAR: After Ganesha opening, chant OM THIRUMOOLAR SIDDHAM × 108. Then 15 minutes of Nada Dhyana listening. Journal: What quality of inner sound or inner awareness arose during or after the mantra? What did Thirumoolar\'s field feel like in the silence?',
+              'DAY 2 — AGASTYA: OM AGASTYAYA NAMAH × 108. Then 15 minutes of awareness of one specific difficulty you are currently carrying — hold it in the Agastya field without trying to solve it. The practice is containment, not resolution.',
+              'DAY 3 — BOGAR: OM BOHEMAM SIDDHAM × 108. Then spend 15 minutes in contemplation of one specific aspect of your physical or material life that you want to transform. Not strategizing — simply holding it in the alchemical field of Bogar\'s consciousness.',
+              'DAY 4 — MACHAMUNI: OM MACHAMUNIYAI NAMAH × 108. Then 20 minutes of pure listening — to the inner sound, to the silence, to whatever arises from the most receptive quality of attention you can sustain.',
+              'DAY 5 — GORAKSHANATH: OM GORAKSHA × 108. Then 15 minutes of body-awareness meditation — feeling the body as sacred, as cosmic, as the exact right temple for the specific consciousness you carry.',
+              'DAY 6 — KONGANAVAR: OM KONGANAVAR SIDDHAM × 108. Then 15 minutes of fluid attention practice — allowing awareness to move freely while maintaining orientation toward the breath as home base.',
+              'Day 7: journal comparison — which Siddha\'s transmission landed most strongly in you? Which field did you most naturally respond to? This is data about your primary Siddha lineage affiliation.',
+            ],
+          },
+        },
+        {
+          type: 'mantra',
+          mantra: {
+            devanagari: 'ॐ थिरुमूलर् सिद्धम्\nॐ अगस्त्याय नमः\nॐ बोहेमं सिद्धम्\nॐ मच्छमुनियै नमः\nॐ गोरक्ष · ॐ कोङ्गनावर् सिद्धम्',
+            transliteration: 'OM THIRUMOOLAR SIDDHAM\nOM AGASTYAYA NAMAH\nOM BOHEMAM SIDDHAM\nOM MACHAMUNIYAI NAMAH\nOM GORAKSHA · OM KONGANAVAR SIDDHAM',
+            translation: 'The six transmission mantras of the first six Siddhas\nin sequential invocation order',
+            body: `These six mantras can be chanted together as a sequential invocation at the opening of any practice session — one round of each, in the order given, taking approximately 3-4 minutes. This six-Siddha opening establishes contact with the entire first council of the 18, creating the field within which subsequent practice occurs. In the Tamil temple tradition, such opening invocations are considered the most important element of any ceremony — the door must be opened before the house can be entered. These six mantras open six specific doors of the Siddha consciousness field.`,
+          },
+        },
+        {
+          type: 'wisdom',
+          wisdomTitle: 'Agastya on the Gift of the 18 — "We Are Not Separate From You"',
+          wisdomBody: `In one of the fragments of the living Agastya oral tradition preserved by certain South Indian families who have maintained continuity with the lineage: "You think of us — the 18 Siddhas — as great beings who achieved something you have not. This is the confusion that prevents you from receiving what we offer. We did not achieve something that is not your nature. We recognized something that IS your nature and that you have not yet recognized. The gift of the 18 Siddhas to humanity is not superhuman power — it is the demonstration of what is possible for a human being who sincerely pursues the recognition of their own nature without compromise. We are the proof of what you are. Not the proof of what you might become, if you are lucky or specially chosen — the proof of what you already are. The mantras we have given carry this recognition. Every time you chant our names, you are invoking the recognition of your own nature. We are not separate from you. We are what you will discover when you look at yourself completely honestly. Come. Look."`,
+        },
+        {
+          type: 'audio',
+          audio: {
+            id: 'l13-2-audio',
+            title: 'First Six Siddhas — Transmission Sessions',
+            description: 'Six 15-minute recordings, one per Siddha: each begins with 27 rounds of the Siddha\'s mantra (Kritagya chanting), followed by 10 minutes of transmission silence specific to that Siddha\'s quality. Use as a 6-day rotation or as individual sessions when working with a specific Siddha.',
+            duration: '90:00',
+            url: '',
+          },
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 13.3
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'l13-3',
+      number: 3,
+      title: 'The Second Six Siddhas',
+      subtitle: 'Sattaimuni · Sundaranandar · Kudambai · Kalangi Nathar · Azhukkani · Pambatti',
+      durationMin: 26,
+      sections: [
+        {
+          type: 'intro',
+          body: `The second group of six Siddhas represents the deeper esoteric dimensions of the Siddha tradition: body mastery and physical immortality, the joy-consciousness of enlightenment, the feminine Siddha and Kundalini wisdom, mastery over time and past lives, the intelligence of the plant kingdom, and the Kundalini serpent codes that are among the most directly powerful and least publicly discussed transmissions in the entire tradition.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'SATTAIMUNI — Master of the Physical Body',
+          body: `Sattaimuni (SATTAI = body, MUNI = sage — "the body sage") is the Siddha who carried the most complete knowledge of Kaya Siddhi — the perfection of the physical body as a spiritual instrument. His primary teaching: the physical body, properly prepared and maintained through specific Siddha practices, is not merely a temporary vehicle for consciousness — it can be transformed into a permanent vehicle, what the tradition calls a Siddha Deha (perfected body) that neither ages nor dies in the ordinary sense.\n\nThe Sattaimuni practices for body mastery: specific dietary protocols (primarily focused on the preparation and use of Siddha medicines derived from mercury, sulfur, and plant sources), specific pranayama sequences for maintaining the body\'s vital fire, and specific mantra practice that addresses the physical body at the cellular level. His primary teaching on aging: the body ages because the Prana gradually loses its grip on the physical tissues — the vital force that animates the cells gradually weakens, and the cells respond by losing their capacity for repair and self-renewal. The Sattaimuni practices reverse this process by continuously recharging the pranic body through specific techniques, making the physical cells\' environment one of continuous pranic abundance rather than pranic depletion.\n\nTransmission mantra: OM SATTAIYAI SIVAMAYAM — "OM, the body is Shiva-substance." This is Sattaimuni\'s core teaching encoded in a mantra: the body is not mere matter — it is Shiva (pure consciousness) in its densest, most concentrated form. To treat the body as Shiva is to care for it with the same reverence one would bring to any sacred object. The practitioner who chants this mantra while performing any act of physical self-care (eating, bathing, exercising, resting) transforms that act from ordinary maintenance into sacred ritual.',
+        },
+        {
+          type: 'teaching',
+          heading: 'SUNDARANANDAR — The Siddha of Bliss Consciousness',
+          body: `Sundaranandar (SUNDARA = beautiful, ANANDA = bliss, NANDA = one who gives joy — approximately "the beautiful giver of bliss") carries perhaps the most accessible and most immediately recognizable transmission of all 18 Siddhas: pure, unconditional, causeless joy. His teaching is simple and radical: the natural state of consciousness is Ananda. Not earned Ananda, not achieved Ananda, not the Ananda that follows a good meditation session — the inherent, intrinsic, always-already-present Ananda that is the quality of consciousness recognizing its own nature.\n\nSundaranandar\'s primary question to practitioners: "Are you happy right now?" Not "Are you content?" Not "Are you at peace?" HAPPY. And his teaching is that if the honest answer is "no" or "not really," this is not a reflection of life circumstances — it is a reflection of the specific way the practitioner is relating to their experience in this moment. Happiness is not dependent on circumstances. It is dependent on the relationship between awareness and experience. When the relationship is one of acceptance and recognition ("this moment is exactly as it is, and awareness of this moment is itself a form of completeness"), Ananda is present. When the relationship is one of resistance, comparison, and wanting-it-otherwise, Ananda is obscured.\n\nTransmission mantra: OM SUNDARANANDAM SIVAM — "OM, the beauty of Ananda is Shiva." This mantra is used specifically for moments when the practitioner is experiencing the absence of joy — when the inner state is contracted, dull, or unhappy. Rather than fighting the absence of joy (which amplifies it), the practitioner chants OM SUNDARANANDAM SIVAM — invoking Sundaranandar\'s recognition that beneath the absent joy is the always-present joy, that beneath the contraction is the Ananda that does not require any particular condition to be present.',
+        },
+        {
+          type: 'teaching',
+          heading: 'KUDAMBAI — The Female Siddha and Kundalini Mistress',
+          body: `Kudambai is the most significant of the female Siddhas in the Tamil tradition — and her presence among the 18 is a declaration that the Siddha path is not exclusively masculine. Her name KUDAMBAI relates to the word for a small vessel or pot (KUDAM) — she is the vessel, the feminine receptacle of the highest spiritual energy. Her texts (the Kudambai Padalgal) are written in the first-person feminine and speak directly from the experience of Shakti moving through the female body.\n\nKudambai\'s specific domain: the Kundalini Shakti as it operates through the feminine body — the specific energetic and physiological processes by which the Shakti (divine feminine force) rises through the female practitioner\'s system. Her teaching is a direct refutation of the idea that the Kundalini path requires the suppression or transcendence of feminine qualities. For Kudambai, the Kundalini path for women involves the full inhabitation of feminine energy — the receptivity, the creativity, the emotional depth, and the capacity for embodied love that are specifically feminine qualities — as the primary vehicle through which the Shakti ascends.\n\nKudambai\'s transmission is particularly relevant for any practitioner — regardless of gender — who has experienced difficulty accessing or expressing their feminine, receptive, or creative qualities. She specifically addresses the cultural suppression of these qualities and offers the Shakti\'s own intelligence as the antidote.\n\nTransmission mantra: OM KUDAMBAI SHAKTIYAI NAMAH — "OM, to the Shakti of Kudambai, I bow." This mantra specifically invokes the feminine Kundalini intelligence — the receptive, creative, embodied quality of Shakti that rises through willingness and openness rather than through effort or force.',
+        },
+        {
+          type: 'teaching',
+          heading: 'KALANGI NATHAR — Master of Time and Past-Life Access',
+          body: `Kalangi Nathar\'s name encodes his primary domain: KALAM = time, KALANGI = one who has mastered time, NATHAR = lord. He is the Siddha who developed the most complete practices for accessing the Akashic record — the complete record of all past experiences, past lives, and the karmic patterns that carry forward from previous incarnations into the current one.\n\nKalangi Nathar\'s understanding of time: the past is not gone — it is present in a different modality. Every experience that has ever occurred leaves a vibrational imprint in the Akashic field that is permanently accessible to a consciousness sufficiently still and sufficiently developed to perceive it. The practitioner who has reached a sufficient level of Nadi purification and Ajna development can begin to perceive these past impressions — not as visions or hallucinations but as clear, calm recognitions that arise in the silence of deep meditation.\n\nKalangi Nathar\'s gift to the practitioner: the capacity to access the karmic root of present conditions — to trace a current pattern (a recurring relationship dynamic, a persistent physical condition, an inexplicable emotional pattern) back to its originating experience in a previous life, and in that recognition, to dissolve it. His mantras are used in the tradition specifically for Sanchita Karma work — the resolution of the stored karma that has not yet manifested in this life but is building toward manifestation.\n\nTransmission mantra: OM KALANGIM SIDDHIM — "OM, the perfection of Kalangi." This mantra is used during practices of deep retrospective awareness — sitting with a current pattern and asking, in the deepest silence possible, "Where did this begin?" The Kalangi field opens the Akashic access that makes such retrospective awareness possible.',
+        },
+        {
+          type: 'teaching',
+          heading: 'AZHUKKANI — The Plant Intelligence Siddha',
+          body: `Azhukkani (the name relates to AZHUKKU — sticky, clinging — and to the quality of persistence) is the Siddha most deeply connected to the intelligence of plants — the awareness that exists within the plant kingdom and that, when accessed, provides direct knowledge of any plant\'s healing and spiritual properties without requiring chemical analysis.\n\nAzhukkani\'s domain: botanical intelligence, specifically the Siddha\'s ability to communicate directly with plants to learn their healing applications, the preparation of plant-based Siddha medicines, and the broader understanding that the plant kingdom is a vast intelligence network operating through chemical signaling (now confirmed by plant neuroscience research) and electromagnetic fields that the Siddha\'s developed perceptual capacity can directly perceive.\n\nFor the modern practitioner, Azhukkani\'s transmission opens a specific quality of sensory intelligence: the ability to be deeply receptive to the information present in natural environments — forests, gardens, wild spaces — that most humans have completely lost through the filtering of civilized consciousness. Azhukkani\'s practice is as simple as spending time in nature with complete, undivided, mantric attention.\n\nTransmission mantra: OM AZHUKKANI MUNIM — "OM, the sage Azhukkani." This mantra is chanted before entering any natural environment, before preparing or consuming herbal medicines, and before any practice in which the practitioner wants to access the intelligence of the plant kingdom. Combined practice: 27 rounds of the mantra, then 30 minutes of silent sitting in a natural environment with eyes open and awareness completely receptive — not doing anything, not seeking anything, simply being present in the intelligence of the living world.',
+        },
+        {
+          type: 'teaching',
+          heading: 'PAMBATTI — The Serpent Siddha and Kundalini Codes',
+          body: `Pambatti (PAMBAM = snake, ATTI = player/one who handles — "the snake handler") is the Siddha who worked most directly with the serpent power — the Kundalini Shakti — and whose practices and mantras are specifically for the activation, direction, and stabilization of the Kundalini energy once it has begun to move.\n\nPambatti\'s poems (the Pambatti Siddhar Padalgal) are extraordinary documents — written in the voice of someone in direct dialogue with a snake that represents the Kundalini: "My snake will not leave my body, it coils and rises and fills my skull with light." They are among the most explicit accounts of the Kundalini experience in the Tamil Siddha literature — written not theoretically but from direct, lived experience of the Shakti\'s movement through the subtle body.\n\nPambatti\'s primary teaching: the Kundalini is not a force to be controlled — it is a being to be respected. His relationship with the serpent was always dialogic — he spoke with it, listened to it, cooperated with it. The Siddha who approaches the Kundalini with an attitude of "I will control this power" is, in Pambatti\'s framework, misunderstanding the fundamental nature of the relationship. Shakti is not a tool of the ego. She is the Absolute feminine intelligence, and the practitioner who has the extraordinary fortune to feel her moving in their body is being given a transmission from the deepest possible source. Cooperate. Do not command.\n\nTransmission mantra: OM PAMBATTIM NAMASKARAMI — "OM, to Pambatti I pay homage." This mantra is used specifically for Kundalini-related practice — before any session that involves Kundalini activation techniques, after any spontaneous Kundalini experience that requires stabilization, and as a daily practice for those who have begun to feel the serpent\'s movement in their system.',
+        },
+        {
+          type: 'practice',
+          practice: {
+            title: 'Second Six Siddhas — Six-Day Rotation Protocol',
+            steps: [
+              'Continue the six-day rotation from Lesson 13.2 — six more days, one Siddha per day.',
+              'DAY 7 — SATTAIMUNI: OM SATTAIYAI SIVAMAYAM × 108. Then 15 minutes of conscious, reverent attention to your physical body — beginning at the crown and moving attention slowly down through every region of the body, feeling each area as sacred, as Shiva-substance.',
+              'DAY 8 — SUNDARANANDAR: OM SUNDARANANDAM SIVAM × 108. Then 15 minutes of resting in pure awareness without any attempt to produce any particular state. Simply noticing: is there any happiness already present in awareness right now, regardless of circumstances?',
+              'DAY 9 — KUDAMBAI: OM KUDAMBAI SHAKTIYAI NAMAH × 108. Then 15 minutes of complete receptivity practice — not doing, not seeking, not directing. Simply being the open vessel. Whatever arises in consciousness during this time is received and witnessed without analysis.',
+              'DAY 10 — KALANGI NATHAR: OM KALANGIM SIDDHIM × 108. Then 15 minutes of retrospective awareness — choose one current pattern in your life and ask in complete silence: "When did this begin?" Do not think about it. Simply hold the question in the Kalangi field and receive.',
+              'DAY 11 — AZHUKKANI: OM AZHUKKANI MUNIM × 108. Then 30 minutes in a natural environment — outdoors if possible, with a plant or tree if indoors. Complete silence. Complete receptivity to whatever intelligence the plant world offers.',
+              'DAY 12 — PAMBATTI: OM PAMBATTIM NAMASKARAMI × 108. Then 15 minutes of Kundalini awareness — feel the base of the spine without directing anything. Simply witness any sensations that arise at the Muladhara or along the spinal column.',
+            ],
+          },
+        },
+        {
+          type: 'mantra',
+          mantra: {
+            devanagari: 'ॐ सत्तैयै शिवमयम्\nॐ सुन्दरानन्दं शिवम्\nॐ कुडम्बै शक्त्यै नमः\nॐ कालङ्गिं सिद्धिम्\nॐ अळुक्कणि मुनिम्\nॐ पम्बट्टिं नमस्करामि',
+            transliteration: 'OM SATTAIYAI SIVAMAYAM\nOM SUNDARANANDAM SIVAM\nOM KUDAMBAI SHAKTIYAI NAMAH\nOM KALANGIM SIDDHIM\nOM AZHUKKANI MUNIM\nOM PAMBATTIM NAMASKARAMI',
+            translation: 'The six transmission mantras of Siddhas 7-12',
+            body: `These six mantras complete the second council of the 18 Siddhas. Together with the first six from Lesson 13.2, 12 of the 18 have now been contacted. Note the range: from the body as cosmic temple (Sattaimuni) to the serpent power itself (Pambatti), from causeless joy (Sundaranandar) to past-life access (Kalangi Nathar). The 18 Siddhas cover every conceivable dimension of the spiritual path — ensuring that regardless of a practitioner's specific challenges, constitution, or orientation, at least one or two Siddhas among the 18 speaks directly to their specific situation.`,
+          },
+        },
+        {
+          type: 'audio',
+          audio: {
+            id: 'l13-3-audio',
+            title: 'Second Six Siddhas — Transmission Sessions',
+            description: 'Six 15-minute recordings for Siddhas 7-12. Same format as the first six: 27 mantra rounds followed by transmission silence specific to each Siddha\'s quality. Pambatti\'s session includes a brief Kundalini-specific Nadi Shodhana sequence before the mantra, as Kundalini work requires particularly clean channel preparation.',
+            duration: '90:00',
+            url: '',
+          },
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 13.4
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'l13-4',
+      number: 4,
+      title: 'The Final Six Siddhas',
+      subtitle: 'Ramadevar · Idaikkadar · Karuvoorar · Dhanvantari · Nandidevar · Patanjali',
+      durationMin: 26,
+      sections: [
+        {
+          type: 'intro',
+          body: `The final six Siddhas complete the 18 with transmissions spanning the most diverse territory yet: the Sufi-Siddha bridge between Islamic and Hindu mysticism, the intelligence of the natural world, the sacred architecture of temples as consciousness technology, the divine physician encountered in Module 11, the cosmic doorkeeper Nandi, and the systematizer of the eight-limbed Yoga path. With these six, the complete Council of 18 is fully available to the practitioner.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'RAMADEVAR (YACOB) — The Sufi-Siddha Bridge',
+          body: `Ramadevar — also known as Yacob (or Sheikh Yusuf, or Sheik Siththa, depending on the account) — is the most unusual of the 18 Siddhas: a Muslim who achieved Siddha realization within the Tamil Siddha tradition, creating the most complete known bridge between Sufi mysticism and Siddha Yoga. His inclusion among the 18 is a definitive statement by the tradition itself: the Siddha realization is not the property of any single religion. It is available through sincere, deep practice in any tradition that takes consciousness transformation seriously.\n\nRamadevar\'s specific transmission: the recognition that the devotional heart-opening of Sufi love mysticism and the non-dual Shakti transmission of the Siddha tradition are not different paths arriving at the same destination — they are different expressions of the same fundamental movement: the dissolution of the separation between the individual consciousness and the Absolute through the force of love. His Padalgal (songs) move fluidly between Arabic and Tamil, between Islamic and Hindu imagery, demonstrating in their very structure that the deepest spiritual realities cannot be contained by any single language or tradition.\n\nTransmission mantra: OM RAMADEVAROM SIDDHAM — invoking the specifically cross-traditional quality of Ramadevar\'s consciousness. This mantra is used when the practitioner is working across spiritual traditions (which many modern practitioners do), and when there is any sense of conflict, incompatibility, or guilt about drawing from multiple lineages simultaneously. Ramadevar\'s field specifically dissolves the unnecessary boundaries that organized religion creates and returns the practitioner to the universal consciousness that precedes and transcends all of them.',
+        },
+        {
+          type: 'teaching',
+          heading: 'IDAIKKADAR — The Shepherd Siddha and Earth Intelligence',
+          body: `Idaikkadar (IDAIKKAN = shepherd — one who tends cattle/goats) is the Siddha who came from the most humble and most earth-connected background of all 18 — a working shepherd who spent his life in direct contact with the land, the animals, and the rhythms of natural life that urban practitioners have almost completely lost access to. His realization arose not from scholarship or intensive formal practice but from the depth of presence he brought to an extremely simple life.\n\nIdaikkadar\'s primary teaching: the spiritual path does not require leaving ordinary life — it requires bringing complete presence to ordinary life. His songs are addressed to fellow shepherds and farmers and speak in the language of that world: "While tending the cattle, watch the mind. While watching the cattle eat, watch who is watching. The watcher behind the watcher is God." This pointing — from the simplest possible external activity to the deepest possible inner recognition — is Idaikkadar\'s specific gift.\n\nFor contemporary practitioners overwhelmed by complex practices and elaborate protocols, Idaikkadar\'s transmission is the simplest and potentially the most radical: bring the same quality of attention to your most ordinary activities that you bring to your formal meditation. Wash dishes with Nada awareness. Walk to the kitchen with Chakra awareness. Eat with the quality of conscious reception that Kirtan practice develops. The spiritual path is not what happens on the meditation cushion — it is what happens in the space between the cushion sessions, and Idaikkadar is the master teacher of that in-between practice.\n\nTransmission mantra: OM IDAIKKADAR MUNIM — invoking the quality of fully-present ordinary-life consciousness. Combined practice: 27 rounds of the mantra, then perform one completely ordinary task (washing dishes, preparing food, folding laundry) with the same quality of deliberate, aware, sacred attention that is brought to formal mantra practice.',
+        },
+        {
+          type: 'teaching',
+          heading: 'KARUVOORAR — The Temple Architect',
+          body: `Karuvoorar is the Siddha specifically associated with the design and construction of Hindu temples — the science of sacred architecture that encodes specific mantric and energetic principles into physical structures so that the building itself becomes a consciousness-transformer for everyone who enters it. His primary insight: a temple is not a building in which worship happens — it is a three-dimensional Yantra, a sacred geometric field-generator, in which every measurement, every proportion, every material, and every directional orientation has been chosen to create a specific electromagnetic environment that resonates with the deity installed at its center.\n\nKaruvoorar\'s transmission for the contemporary practitioner: the understanding that all physical environments either support or inhibit the development of consciousness — and the capacity to design, arrange, and consecrate physical spaces as consciousness-supporting environments. This is directly relevant to the sacred space work of Module 5, extended to its most sophisticated application.\n\nThe contemporary Karuvoorar practitioner is the one who understands their home, their workspace, and their practice space as three-dimensional Yantras — and who brings the same intentionality to the arrangement of physical space that they bring to the arrangement of mantra sequences. Every object, every direction, every proportion of space is a variable in the field-generator. The practitioner who works with Karuvoorar\'s transmission becomes increasingly sensitive to the consciousness-affecting properties of physical environments — both their own and those they enter.\n\nTransmission mantra: OM KARUVOORAM SIDDHAM — invoking the sacred architecture intelligence. Combined practice: 27 rounds of the mantra, then spend 15 minutes consciously reconfiguring one physical space in your environment to better support your practice. Apply the Vastu directional principles of Module 5 (Lesson 5.1) with the depth of Karuvoorar\'s architectural intelligence.',
+        },
+        {
+          type: 'teaching',
+          heading: 'DHANVANTARI (As Siddha) — The Divine Physician Among the 18',
+          body: `Dhanvantari appears both as a deity (encountered in Module 11, Lesson 11.1) and as one of the 18 Siddhas — a human master of medicine who achieved Siddha realization through the depth of his service to healing others. The Siddha Dhanvantari is not identical to the deity Dhanvantari but carries the same frequency — the divine physician intelligence expressed through a human being who fully realized it.\n\nWithin the 18 Siddhas, Dhanvantari\'s transmission is the completion of the healing work that the Prana-Flow tier began: where Module 11\'s Dhanvantari practice was about learning and applying healing mantras, the Siddha Dhanvantari transmission is about becoming the healing field — developing the quality of consciousness that automatically perceives the health blueprint of any being it encounters and naturally radiates the frequency of that blueprint toward them.\n\nThis is the advanced Nada Chikitsa level: the practitioner who has worked with Dhanvantari\'s mantra consistently for a year or more begins to notice a specific quality in their presence around sick or depleted people — a quality that those people often recognize and describe as calming, healing, or uplifting, without the practitioner having done anything specific. This is Dhanvantari\'s Siddhi: the body\'s biofield has become so consistently tuned to the healing frequency that it transmits that frequency passively, through presence alone.\n\nTransmission mantra at the Siddha-Quantum level: OM DHANVANTARAYE SIDDHAM — the Siddha-level invocation (using SIDDHAM rather than NAMAH) that addresses Dhanvantari as an accomplished being among the 18 rather than as an external deity. This mantra specifically deepens the practitioner\'s alignment with the healing intelligence at the level of their own consciousness rather than as an external source.',
+        },
+        {
+          type: 'teaching',
+          heading: 'NANDIDEVAR — The Cosmic Doorkeeper and Shiva\'s Bull',
+          body: `Nandidevar (NANDI = the bull who gives joy, DEVAR = divine being) is Shiva\'s doorkeeper — the divine being who stands at the threshold of Shiva\'s realm and determines who may enter, and who is also the first guru of Yoga, having received the teachings of Yoga directly from Shiva and transmitted them to humanity through the Agamic texts.\n\nNandi\'s cosmic role: the gatekeeper who ensures that those who approach the inner sanctum of consciousness are genuinely prepared to receive what they find there. Nandi does not block anyone permanently — he provides exactly the preparation that each practitioner needs before the next level of transmission can be safely given. The apparent blocks in a practitioner\'s path — the periods of apparent stagnation, the experiences that seem to prevent forward movement — are, from the Nandi perspective, Nandi\'s work: the doorkeeper ensuring that the foundation is genuinely solid before the next floor is added.\n\nNandi\'s specific transmission for the practitioner: patience that is not passive waiting but active preparation — the understanding that when progress seems blocked, the most productive response is to go deeper into the foundation practices rather than to seek new, more advanced techniques. Every block in spiritual development is an invitation to strengthen what is already present before adding something new.\n\nTransmission mantra: OM NANDIDEVAM SHAMBHUM — "OM, Nandideva and Shambhu (Shiva) together" — invoking both the doorkeeper and the one who stands beyond the door simultaneously, recognizing that the gate and the destination are aspects of the same consciousness.',
+        },
+        {
+          type: 'teaching',
+          heading: 'PATANJALI — The Systematizer of the Eight Paths',
+          body: `Patanjali is the compiler of the Yoga Sutras — 196 aphorisms that represent the most complete and most systematically organized presentation of the Yoga path available in any single text. In some traditions he is considered a partial incarnation of Anantashesha (the cosmic serpent on whom Vishnu rests) — a divine being who specifically took human form to organize and preserve the yoga teaching for humanity.\n\nPatanjali\'s specific gift: the recognition that spiritual development follows a discernible structure — that the inner journey is not random or chaotic but follows specific stages (Yamas, Niyamas, Asana, Pranayama, Pratyahara, Dharana, Dhyana, Samadhi) that build upon each other in a way that can be systematically cultivated. The eight-limbed path (Ashtanga Yoga) is not a to-do list of separate practices — it is a description of how consciousness naturally organizes itself as it moves from ordinary functioning toward its own deepest recognition.\n\nFor the SQI Mantra Nada Academy specifically: Patanjali\'s contribution is the understanding that mantra practice (which falls under Dharana — concentration — in the eight-limbed system) is most effective when embedded in the complete eight-limbed structure. The Yamas (ethical principles) and Niyamas (personal disciplines) are not optional prerequisites to be skipped in favor of more interesting meditation techniques — they are the structural foundation without which the concentration practices of mantra are built on sand.\n\nTransmission mantra: OM PATANJALIM PRANAMYAMI — "OM, I honor Patanjali." PRANAMYAMI means "I bow with folded hands" — the most formal possible gesture of respect in the Indian tradition. This mantra is used specifically when working with any systematic spiritual practice — acknowledging the intelligence that knows how practices relate to each other and how development unfolds across time.',
+        },
+        {
+          type: 'practice',
+          practice: {
+            title: 'Final Six Siddhas — Six-Day Completion Rotation',
+            steps: [
+              'The final six days of the 18-day Siddha meeting protocol.',
+              'DAY 13 — RAMADEVAR: OM RAMADEVAROM SIDDHAM × 108. Then 15 minutes of practice specifically with the feeling of the divine as the beloved — Sufi-style, personal, intimate love-prayer directed to the Absolute. No technique. Simply love.',
+              'DAY 14 — IDAIKKADAR: OM IDAIKKADAR MUNIM × 108. Then the entire remainder of the morning — every act performed with the same quality of Nada awareness and body-reverence as formal practice. The practice continues through breakfast, through the morning\'s work, through every ordinary interaction.',
+              'DAY 15 — KARUVOORAR: OM KARUVOORAM SIDDHAM × 108. Then 15 minutes consciously redesigning your practice space or any other space for greater consciousness-support.',
+              'DAY 16 — DHANVANTARI (Siddha level): OM DHANVANTARAYE SIDDHAM × 108. Then 15 minutes of self-healing practice — holding your own hands over your heart and allowing the Dhanvantari field to move through you as a healing transmission to yourself.',
+              'DAY 17 — NANDIDEVAR: OM NANDIDEVAM SHAMBHUM × 108. Then 15 minutes of honest self-assessment: where in your practice have you been trying to advance without first deepening the foundation? What would Nandi ask you to strengthen before opening the next door?',
+              'DAY 18 — PATANJALI: OM PATANJALIM PRANAMYAMI × 108. Then review the entire SQI curriculum you have completed so far — all 13 modules — and trace how each practice has built upon the previous. Feel Patanjali\'s intelligence in the systematic design of the path you have been walking.',
+            ],
+          },
+        },
+        {
+          type: 'mantra',
+          mantra: {
+            devanagari: 'ॐ रामदेवरोम् सिद्धम्\nॐ इडैक्कादर् मुनिम्\nॐ करुवूरम् सिद्धम्\nॐ धन्वन्तरये सिद्धम्\nॐ नन्दिदेवम् शम्भुम्\nॐ पतञ्जलिं प्रणाम्यामि',
+            transliteration: 'OM RAMADEVAROM SIDDHAM\nOM IDAIKKADAR MUNIM\nOM KARUVOORAM SIDDHAM\nOM DHANVANTARAYE SIDDHAM\nOM NANDIDEVAM SHAMBHUM\nOM PATANJALIM PRANAMYAMI',
+            translation: 'The six transmission mantras of the final Siddhas 13-18',
+            body: `With these six mantras, all 18 Siddha transmission mantras have been given. The complete sequence of 18 — chanted once each at the opening of a practice session — takes approximately 5-7 minutes and establishes contact with the entire Council simultaneously. This 18-mantra opening is recommended for any intensive practice session, any new 40-day Sadhana, any healing session for serious conditions, and any ceremony marking a significant threshold in the practitioner's spiritual development.`,
+          },
+        },
+        {
+          type: 'audio',
+          audio: {
+            id: 'l13-4-audio',
+            title: 'Final Six Siddhas — Transmission Sessions',
+            description: 'Six 15-minute recordings for Siddhas 13-18. Includes the special Idaikkadar session — conducted outdoors in nature by Laila, without any formal meditation instruction, as a demonstration of his teaching that the ordinary moment, fully inhabited, IS the practice. 90 minutes total.',
+            duration: '90:00',
+            url: '',
+          },
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 13.5
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'l13-5',
+      number: 5,
+      title: 'The Siddha Collective Field',
+      subtitle: 'Working with All 18 Simultaneously · The Council Transmission',
+      durationMin: 22,
+      sections: [
+        {
+          type: 'intro',
+          body: `Now that each of the 18 Siddhas has been met individually, the curriculum turns to something that was not possible before this preparation: working with all 18 simultaneously as a unified field. The 18 Siddhas are not 18 separate beings who happen to share a catalog entry. They are 18 expressions of a single, unified consciousness field — the collective intelligence of all perfected beings who have realized the full nature of Siddha consciousness. When all 18 are invoked together, something qualitatively different from the sum of individual invocations occurs: the complete Siddha field becomes accessible.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'The Collective Field vs Individual Invocation',
+          body: `Working with individual Siddhas is like receiving specific wavelengths of light — one at a time, each illuminating a different aspect of reality. Working with the collective Siddha field is like receiving the full spectrum simultaneously — the white light that contains all colors without emphasizing any one.\n\nThe collective Siddha field does not produce the specific targeted effects of individual Siddha invocations. Instead, it produces a quality of all-round support and illumination that the tradition calls Guru Kripa — the grace of the collective teacher — which can move through whatever channel in the practitioner\'s being is most in need at any given moment. The practitioner does not direct this grace. They open to it and allow it to do what it does best: perceive the practitioner\'s specific situation with far greater clarity than the practitioner\'s own ego-mind can manage, and address it at the most effective level available.\n\nThe physics of the collective field: when the 18 Siddha transmissions are held in awareness simultaneously — when the practitioner can feel all 18 qualities (Thirumoolar\'s Nada intelligence, Agastya\'s containing power, Bogar\'s alchemical vision, Machamuni\'s receptivity, Gorakshanath\'s body wisdom, Konganavar\'s fluid stability, and all 12 more) as simultaneous presences in their awareness — the resulting consciousness field is not 18 times the size of any individual field. It is orders of magnitude larger, because the 18 qualities are not additive — they are multiplicative in their interaction. Each quality amplifies every other quality in ways that cannot be predicted from any single quality alone.',
+        },
+        {
+          type: 'teaching',
+          heading: 'The Siddha Mandala — The Geometric Field of the 18',
+          body: `The traditional Siddha iconography arranges the 18 Siddhas in a specific geometric pattern — a Mandala (sacred circle) — rather than a simple list. This geometric arrangement is not decorative. It reflects the functional relationships between the Siddhas\' specific qualities and how they support each other in the complete field.\n\nThe center of the Siddha Mandala: Shiva and Shakti — the ultimate masculine and feminine poles of the Absolute — at the center point, with all 18 Siddhas arranged around them as expressions of different facets of this central unity.\n\nThe four cardinal Siddhas (at North, East, South, West): Thirumoolar (North, Sushumna direction), Agastya (South, grounding direction), Bogar (East, expanding direction), and Patanjali (West, completing direction). These four anchor the Mandala in the four directions and represent the four primary knowledge domains: Nada Yoga, medicine, alchemy, and the systematization of the complete path.\n\nThe four diagonal Siddhas (at NE, NW, SE, SW): Machamuni (NE, receptivity), Gorakshanath (SE, body mastery), Kudambai (NW, feminine Shakti), and Dhanvantari (SW, healing). These four bridge between the cardinal anchors and create the eight-fold structure that supports the remaining 10.\n\nThe practitioner who visualizes this Mandala during the collective Siddha practice — holding the 18 presences in their specific geometric arrangement around the central Shiva-Shakti — is working with a three-dimensional consciousness field that operates as a complete, self-supporting system rather than as a collection of individual presences.',
+        },
+        {
+          type: 'teaching',
+          heading: 'Accessing the Collective Field — Three Stages',
+          body: `The collective Siddha field cannot be rushed into. It is accessed through a specific three-stage progression that mirrors the way any genuine transmission is received:\n\nStage 1 — Recognition: The practitioner must genuinely recognize each Siddha as an actual field of consciousness — not as a concept or a historical figure, but as a living presence that can be felt. This recognition comes through the 18-day individual Siddha rotation of Lessons 13.2-13.4. Without genuine recognition of each Siddha individually, the collective invocation is merely words.\n\nStage 2 — Simultaneous Holding: The practitioner develops the capacity to hold all 18 qualities simultaneously in awareness — like holding 18 different colors in the visual field at once, or 18 different musical notes in the inner ear simultaneously. This is a specific kind of expanded awareness that goes beyond ordinary sequential processing. The Ajna chakra (third eye) is the faculty that makes this simultaneous holding possible — which is why the Siddha-Quantum tier requires the Ajna development that the Prana-Flow tier has built.\n\nStage 3 — Dissolution into the Field: When the simultaneous holding is sufficiently stable, the practitioner releases the individual identities of the 18 and allows their combined field to become a single unified presence. This dissolution — the movement from 18 distinct qualities to one unified Siddha consciousness — is what the tradition means when it speaks of receiving "the Siddha transmission" as a single event rather than a sequence of 18 separate events.',
+        },
+        {
+          type: 'practice',
+          practice: {
+            title: 'The Complete 18-Siddha Collective Transmission Practice',
+            steps: [
+              'Set aside 90 minutes. This practice requires unhurried time. Brahma Muhurta is ideal.',
+              'PREPARATION (15 min): Complete chakra Bija sequence (LAM through AUM), 21 rounds of Gayatri, Nadi Shodhana × 10.',
+              'INDIVIDUAL INVOCATION (30 min): Chant all 18 Siddha mantras in sequence, one round each with a 10-second pause between each: OM THIRUMOOLAR SIDDHAM — OM AGASTYAYA NAMAH — OM BOHEMAM SIDDHAM — OM MACHAMUNIYAI NAMAH — OM GORAKSHA — OM KONGANAVAR SIDDHAM — OM SATTAIYAI SIVAMAYAM — OM SUNDARANANDAM SIVAM — OM KUDAMBAI SHAKTIYAI NAMAH — OM KALANGIM SIDDHIM — OM AZHUKKANI MUNIM — OM PAMBATTIM NAMASKARAMI — OM RAMADEVAROM SIDDHAM — OM IDAIKKADAR MUNIM — OM KARUVOORAM SIDDHAM — OM DHANVANTARAYE SIDDHAM — OM NANDIDEVAM SHAMBHUM — OM PATANJALIM PRANAMYAMI. Then repeat the sequence 3 more times without pauses, at increasing pace.',
+              'SIMULTANEOUS HOLDING (10 min): Close the eyes. Bring all 18 presences into awareness simultaneously — not as a list but as a field, all 18 qualities present at once, like 18 candles all burning simultaneously in a circle around you.',
+              'COLLECTIVE DISSOLUTION (15 min): In the simultaneous holding, gently release the individual identities. Allow the 18 to become one — the white light of the complete Siddha field. Rest in this unified field. Do not seek any particular experience. Do not analyze what arises. Simply receive.',
+              'INTEGRATION (10 min): Very slowly return to ordinary awareness. Lie in Shavasana. Feel the field settling.',
+              'OM SIDDHEBYHO NAMAH × 3 as closing. Journal immediately after.',
+            ],
+          },
+        },
+        {
+          type: 'wisdom',
+          wisdomTitle: 'Thirumoolar — The Final Teaching of the 18',
+          wisdomBody: `From the Thirumantiram, the verse that completes the section on the Siddha lineage: "The 18 Siddhas are not 18 beings. They are 18 faces of the one consciousness that is your own nature, seen from 18 different angles. When you look at the ocean from the shore, from the cliff, from the fisherman\'s boat, from the depths of the water, from the sky above — you see 18 different things. But you are always looking at the same ocean. The 18 Siddhas are the 18 angles from which the one Siddha consciousness — your own deepest nature, fully realized — can be approached. You do not need to meet all 18 to receive the transmission. You need to receive the transmission of your own nature from any angle that opens you to it completely. The purpose of the 18 is to ensure that no matter what your specific constitution, your specific challenge, your specific gift — there is at least one Siddha whose particular angle on the absolute corresponds precisely to yours. Find that Siddha. Receive completely from that one. And in receiving completely from that one, you will discover that you have received from all 18 simultaneously — because the ocean from any angle is still the ocean."`,
+        },
+        {
+          type: 'audio',
+          audio: {
+            id: 'l13-5-audio',
+            title: 'The 18-Siddha Collective Transmission — Full 90-Minute Practice',
+            description: 'Kritagya & Laila lead the complete collective practice together. All 18 mantras chanted in sequence four times, followed by the simultaneous holding, the collective dissolution, and the integration. Live recording from their own Siddha-Quantum practice. The field in this recording carries the accumulated charge of their 18-day individual Siddha rotation that immediately preceded it.',
+            duration: '90:00',
+            url: '',
+          },
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 13.6
+
+const module14: Module = {
+  id: 'module-14',
+  number: 14,
+  tier: 'siddha',
+  title: 'Mahavatar Babaji — The Kriya Sound Codes',
+  subtitle: 'The Immortal Himalayan Siddha · Spinal Electricity · The Breath That Defeats Death',
+  description:
+    'Mahavatar Babaji is the most extraordinary figure in the entire Siddha tradition — not because he is the most ancient or the most philosophically sophisticated, but because he is the most present. Multiple independent accounts across five centuries describe encounters with a physically young, ageless man in the Himalayas who claims and demonstrates mastery over time, matter, and death. His specific contribution to the tradition: the Kriya Yoga system — a complete set of pranayama, mantra, mudra, and concentration techniques that accelerate the evolution of consciousness with a precision that has never been equalled. This module delivers the complete publicly receivable Kriya sound transmission: what it is, how it works, and what it produces in the practitioner who approaches it with the preparation this curriculum has built.',
+  lessons: [
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 14.1
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'l14-1',
+      number: 1,
+      title: 'Who Is Babaji',
+      subtitle: 'Historical Evidence · Yogananda\'s Testimony · Modern Encounters · The Immortal',
+      durationMin: 22,
+      sections: [
+        {
+          type: 'intro',
+          body: `The question "Who is Babaji?" is one of the most interesting questions in all of spirituality — not because it is difficult to answer philosophically, but because the factual evidence surrounding Babaji is simultaneously extraordinary and verifiable in ways that most spiritual claims are not. Multiple independent accounts, from multiple centuries, in multiple languages, describing a physically identical individual — a young man appearing to be in his early 20s, with an exceptionally powerful spiritual presence — provide a body of convergent testimony that is unusually difficult to dismiss as mere mythology. This lesson presents that evidence honestly, without supernatural inflation and without reductive skepticism, and arrives at the most reasonable conclusion available from the totality of what is known.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'The Earliest Historical Records — The 5th Century Account',
+          body: `The Babaji tradition traces its historical documentation to the Tamil Siddha Agastya, who is said to have met Babaji (described as the "deathless one of the Himalayas") during Agastya\'s own lifetime — which the tradition places somewhere between 4,000 and 5,000 years ago. While this is beyond verifiable history in the modern sense, Agastya\'s texts do contain references to a specific individual who had achieved physical immortality through Kaya Kalpa alchemy and who functioned as a cosmic transmitter of Kriya knowledge.\n\nThe first accounts that can be cross-referenced with documented historical records date to the 17th-18th century CE, when the Tamil Siddha lineage includes references to encounters with Babaji by saints and practitioners whose other biographical details are historically verifiable. These accounts describe the same individual — always appearing young, always in the Himalayas, always associated with Kriya Yoga transmission — across a period of centuries during which a naturally aging human being would have died many times over.\n\nThe next significant documented account: in 1861 CE, Lahiri Mahasaya — a Bengali householder engineer employed by the British government in Ranikhet — was led by what he later described as an inner compulsion to a cave in the Himalayan foothills near Ranikhet, where he encountered Babaji, who recognized him as a former disciple from a previous life and initiated him into the complete Kriya Yoga system. Lahiri Mahasaya\'s biography is extensively documented — his employment records, family records, and the accounts of his many students (including Sri Yukteswar, who taught Paramahansa Yogananda) provide a solid historical framework within which the Babaji encounter can be placed.',
+        },
+        {
+          type: 'teaching',
+          heading: 'Yogananda\'s Testimony — The Account That Changed the West',
+          body: `The account of Babaji that most directly introduced him to the Western world is Paramahansa Yogananda\'s 1946 "Autobiography of a Yogi" — one of the bestselling spiritual books in history and the book that Steve Jobs requested to be distributed (in digital form) at his memorial service. Yogananda describes Babaji not from personal encounter (he never physically met Babaji during his recorded lifetime) but from the accounts of his teacher Sri Yukteswar, who had met Babaji directly, and from Yogananda\'s own visionary experiences.\n\nYogananda\'s most significant contribution to the Babaji record: he gathered testimony from multiple independent witnesses across multiple generations — Lahiri Mahasaya\'s direct disciples, Sri Yukteswar\'s direct experience, and accounts from various figures in the wider Himalayan spiritual community — and found them mutually corroborating in specific details that would be difficult to fabricate consistently across multiple unconnected sources. The physical description (young appearance, medium height, luminous complexion), the geographic location (Himalayan caves in the Badrinath region), the specific teaching content (Kriya Yoga), and the specific mode of interaction (always by appointment that the disciple feels drawn to keep rather than Babaji actively seeking contact) remain consistent across dozens of independent accounts spanning hundreds of years.\n\nYogananda also describes a specific quality in Babaji\'s presence that multiple witnesses independently corroborate: a quality of absolute peace combined with absolute authority — not the peace of passivity or the authority of domination, but what Yogananda calls "the peace of Brahman" — the effortless stillness of a consciousness that knows itself to be the ground of all existence and therefore encounters nothing that can disturb it.',
+        },
+        {
+          type: 'teaching',
+          heading: 'Modern Encounters — The 20th and 21st Century Reports',
+          body: `Since Yogananda\'s book, reports of encounters with Babaji have continued to emerge from independent sources. The most systematic contemporary account comes from Marshall Govindan, a Kriya Yoga teacher who spent years in India researching the Babaji tradition and who published "Babaji and the 18 Siddha Kriya Yoga Tradition" — a scholarly account that attempts to trace the historical lineage through Tamil Siddha records and to distinguish the Himalayan Babaji from other Indian teachers who use the same name (Babaji simply means "revered father" in Hindi, and there have been multiple teachers known by this name in the 20th century, most unrelated to the Himalayan figure).\n\nGovindan\'s research identifies the Himalayan Babaji as a specific individual within the Tamil Siddha lineage — a human being who was born approximately 203 CE in Tamil Nadu, achieved physical immortality through the Kaya Kalpa practices of the Siddha tradition by approximately the age of 16, and has maintained a physically young body ever since through continuous alchemical practice and the specific Kriya Yoga techniques that maintain the body\'s vital force at a level that prevents ordinary biological aging.\n\nThe 21st century encounters: numerous practitioners who have spent extended time in the Himalayan regions report encounters that they attribute to Babaji — brief, unmistakable meetings with an individual whose description matches the classical accounts and whose presence produces the specific quality of inner transformation associated with genuine initiation. These accounts continue to emerge from credible sources — Kriya Yoga practitioners, Himalayan trekkers with no prior interest in the Babaji tradition, and scholars who encounter the accounts with appropriate skepticism and find themselves unable to provide satisfactory alternative explanations.',
+        },
+        {
+          type: 'teaching',
+          heading: 'The Most Accurate Answer — What We Can Honestly Say About Babaji',
+          body: `After presenting all the evidence, the most honest and intellectually rigorous answer to "Who is Babaji?" is: a specific individual who has existed in or near the physical world for a period far exceeding ordinary human lifespan, who has maintained a physical form through practices that the Siddha tradition identifies as Kaya Kalpa alchemy and Kriya Yoga, and who functions as the primary source and transmitter of the Kriya Yoga system that has been the foundational practice of one of the most significant spiritual lineages of the modern era.\n\nWhether one accepts the physical immortality claim literally, metaphorically, or as pointing to something real but differently understood than the tradition\'s own language suggests — the practical implication for the SQI practitioner is the same: Babaji\'s Kriya system is the most precisely designed consciousness-evolution technology in the public domain, developed and refined over a period of centuries by a consciousness of extraordinary depth, and transmitted through a lineage (Babaji → Lahiri Mahasaya → Sri Yukteswar → Yogananda → multiple subsequent lineage holders) that has produced documented and verifiable results in thousands of practitioners worldwide.\n\nThe Kriya practitioner does not need to resolve the metaphysical question of Babaji\'s immortality to receive the full benefit of the transmission. What is required is what Babaji himself consistently asked for: sincerity, preparation, and the willingness to practice. The Siddha-Quantum tier has provided the preparation. The modules that follow provide the transmission. The sincerity is the practitioner\'s contribution.',
+        },
+        {
+          type: 'practice',
+          practice: {
+            title: 'Babaji Contact Practice — The Inner Meeting',
+            steps: [
+              'This practice is the specific meditation that Yogananda taught for those seeking inner contact with Babaji\'s consciousness.',
+              'Sit at Brahma Muhurta in your practice space. The practice requires complete outer stillness — even more so than ordinary meditation. Close your eyes.',
+              'Complete the 18-Siddha opening sequence from Module 13. When you reach THIRUMOOLAR and AGASTYA, hold a moment longer with each — they are Babaji\'s closest lineage connections in the Tamil tradition.',
+              'BABAJI MANTRA × 27: OM KRIYA BABAJI NAMA AUM (the publicly available invocation mantra given by Babaji through Govindan for universal use). Chant slowly. Each syllable landing completely.',
+              'INNER INVITATION: After the 27 rounds, fall completely silent. Make an inner gesture of genuine invitation — not demand, not expectation, but the quality of a door opened. In the Kriya tradition this is described as: "Present. Available. Waiting without waiting."',
+              'SUSTAIN THE SILENCE: Remain in this inner posture for a minimum of 20 minutes. Something may arise — a quality of presence, a specific inner peace, a clarity of recognition, occasionally a visual impression. Something may not arise at all in the ordinary sense. Both are valid practice.',
+              'WHAT TO DO WITH WHAT ARISES: Receive without interpreting. If you feel something — do not immediately think "that was Babaji." Simply feel it completely. The interpretation can come later. The receiving must be pure.',
+              'Close with OM SHANTI × 3 and GURUR BRAHMA... × 1.',
+            ],
+          },
+        },
+        {
+          type: 'mantra',
+          mantra: {
+            devanagari: 'ॐ क्रिया बाबाजी नम आउम्',
+            transliteration: 'OM KRIYA BABAJI NAMA AUM',
+            translation: 'OM — conscious action — revered father who liberates — I bow — AUM',
+            body: `This is the universal Babaji invocation given through Marshall Govindan for the use of all sincere practitioners regardless of initiation status. KRIYA (conscious action — not ordinary action, but the action of consciousness recognizing itself through deliberate, aware activity). BABAJI (the revered father — BA = father, JI = suffix of profound respect). NAMA (I bow, I recognize, not mine). AUM (the Pranava that completes and contains everything). The traditional instruction: chant this mantra with the sincere longing to be in the field of Babaji\'s consciousness. The tradition says that this sincere longing IS the qualification for receiving a response. Not formal initiation, not years of preparation, not geographical proximity — simply the genuine longing of the soul for its highest possibility, expressed through this specific sound form.`,
+          },
+        },
+        {
+          type: 'wisdom',
+          wisdomTitle: 'Babaji\'s Own Words — "Your Liberation Is My Concern"',
+          wisdomBody: `In the accounts preserved by Lahiri Mahasaya\'s disciples and transmitted through Sri Yukteswar to Yogananda, Babaji is recorded as saying to Lahiri Mahasaya at their initial encounter: "I have called you here to give you the ancient rite of Kriya, which I received from Agastya and Goraksha. Yoga, including Kriya, was long neglected in India. I am finding it advisable to give the holy techniques only to those who have contacted me, or to those who have previously received the preparation by me... You, Lahiri, have been sent to me by God for the liberation of many sincere seekers. Your liberation is my concern — and through you, the liberation of many others." This statement contains two teachings that are central to understanding Babaji\'s role: first, that his primary concern is genuinely the liberation of souls, not the preservation of a tradition or the accumulation of disciples. Second, that he works through lineages — through specific individuals who are prepared to receive and transmit — rather than addressing each practitioner separately. The SQI curriculum is, in the tradition\'s understanding, one of the vehicles through which this lineage reaches the practitioners who are ready for it in this era.`,
+        },
+        {
+          type: 'audio',
+          audio: {
+            id: 'l14-1-audio',
+            title: 'Babaji Contact — The Inner Meeting Practice',
+            description: 'Kritagya leads the complete Babaji contact practice: 18-Siddha opening, OM KRIYA BABAJI NAMA AUM × 27, 20 minutes of receptive inner meeting silence with a Theta-binaural field. No voice during the silence period — simply the field, held by Kritagya\'s own simultaneous practice. 45 minutes.',
+            duration: '45:00',
+            url: '',
+          },
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 14.2
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'l14-2',
+      number: 2,
+      title: 'The Kriya Pranayama Sound Sequence',
+      subtitle: 'The Vowel Tones of the Spinal Breath · Spinal Electricity · The Current',
+      durationMin: 24,
+      sections: [
+        {
+          type: 'intro',
+          body: `Module 9, Lesson 9.5 introduced the preliminary elements of the Kriya breath-sound system: Hong-Sau, the five ascending vowels, the spinal awareness practice. This lesson deepens that introduction substantially — going into the specific mechanics of the Kriya pranayama sound current with the detail that the Siddha-Quantum practitioner is now prepared to work with. The emphasis: how the specific vowel tones of the Kriya breath create an electromagnetic current in the spinal cord that Yogananda called "spinal electricity" — and what that current does to the consciousness of the practitioner who sustains it with consistency and sincerity over time.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'The Spinal Cord as the Primary Instrument of Kriya',
+          body: `The human spinal cord is the most complex structure in the known universe per unit of volume. Within a structure approximately 45 cm long and 1 cm in diameter, the spinal cord contains: 31 pairs of spinal nerves governing every voluntary movement and every sensation in the body below the head; the primary pathways of the sympathetic and parasympathetic nervous systems (the two arms of the autonomic nervous system); direct neural connections to every organ in the body through these autonomic pathways; the primary conduit for cerebrospinal fluid flow; and, in the Siddha understanding, the physical housing for the Sushumna Nadi — the central energy channel through which Kundalini ascends and through which the Kriya current flows.\n\nYogananda\'s description of why the spinal cord is Kriya\'s primary instrument: "The ancient yoga scientists discovered that man\'s spinal cord is actually a cosmic electrical instrument. Its twenty-four vertebrae are aligned in six pairs that correspond to the twelve signs of the zodiac, the twelve months of the year, and the twelve pairs of cranial nerves. The Kriya Yogi who circuits his life energy around the six spinal centers in an upward-downward current, in half-minute revolutions, effects in 30 seconds what natural evolution requires a full year to accomplish."\n\nThis extraordinary claim — that Kriya pranayama accelerates evolution by a factor of approximately 17,500 — has made many skeptical. But from the perspective of what we know about neural plasticity and the mechanisms of consciousness change, it is not inherently unreasonable. The primary limitation on ordinary spiritual evolution is the rate at which the nervous system can reorganize itself — the rate at which old patterns dissolve and new capacities emerge. If the Kriya current dramatically accelerates neuroplasticity through its specific electromagnetic effects on spinal and brain tissue, the acceleration of apparent evolutionary progress would follow as a natural consequence.',
+        },
+        {
+          type: 'teaching',
+          heading: 'The Five Vowel-Prana Pairs — The Building Blocks of the Sound Current',
+          body: `The Kriya pranayama sound sequence is built on the five Sanskrit vowel-Prana correspondences first introduced in Module 9, Lesson 9.5. This lesson specifies them with greater precision:\n\nA (aah) at Muladhara-Svadhisthana: The most open, most grounded vowel. Produced with the throat maximally open, the tongue flat, the jaw relaxed and dropped. The resonance of A fills the chest from the bottom — it is the sound of the lowest register of the singing voice, the sound that vibrates the structures of the lower torso most strongly. When the Kriya breath ascends from the base of the spine, A is the sound that marks its passage through the lowest segment of the spinal column (lumbar and sacral).\n\nAA (extended ah) at Manipura: The same vowel slightly extended and slightly higher in resonance — as if A is beginning to rise. The throat remains open but there is a slight thinning of the sound quality, a slight brightening. In Manipura (the solar plexus), the ascending Prana begins its transformation from earthly energy to fire energy — AA marks this transition.\n\nI (ee) at Anahata: The high front vowel — tongue raised and forward, lips spreading slightly. I is the vowel of brightness, of intelligence, of the heart\'s clear awareness. In the body, I resonates most strongly in the sternum, the chest cavity, and the throat\'s lower region. When the ascending Prana reaches Anahata, it takes the quality of the I sound — clear, bright, and suffused with the intelligence of the open heart.\n\nU (oo) at Vishuddha: The high back vowel — tongue raised and back, lips rounded forward. U is the vowel of depth, of resonance, of the inner ear. It is the vowel most associated with the sound of space and of the inner acoustic field. In the body, U resonates most strongly in the skull\'s resonating chambers — the sinuses, the nasopharynx, the temporal bones. When the ascending Prana reaches Vishuddha, it takes the quality of U — the spacious, resonant quality of the fully open throat.\n\nM (mmm — the Anusvara-Nada) at Ajna-Sahasrara: Not strictly a vowel but the nasal resonance that completes every Bija and that, in the Kriya system, represents the culmination of the ascending current at the highest centers. The M sound is produced with closed lips and is felt primarily in the skull — specifically in the frontal and parietal bones, the hard palate, and through bone conduction in the pineal gland. When the ascending Prana reaches the highest centers, it takes the quality of M — the self-contained, internally resonant quality of consciousness recognizing its own crown.',
+        },
+        {
+          type: 'teaching',
+          heading: 'The Complete Kriya Breath Cycle — Ascending and Descending',
+          body: `The complete Kriya pranayama cycle is a continuous loop — there is no beginning and no end, only the continuous circulation of Prana up and down the spinal column on the breath, accompanied by the corresponding vowel sequence in both directions.\n\nASCENDING (inhale): The breath enters through the nostrils and the awareness simultaneously descends to the Muladhara at the base of the spine. As the breath is drawn in — slowly, over 4-6 seconds — the awareness rises along the spinal column from base to crown, accompanied by the vowel sequence: A (base) → AA (navel) → I (heart) → U (throat) → M (crown). The vowels are not spoken aloud during Kriya pranayama — they are heard internally, the way the inner ear hears music. The feeling is of a sound rising within the spinal column as a felt vibration, not as an audible sound.\n\nDESCENDING (exhale): As the breath is released through the nostrils — equally slowly, over 4-6 seconds — the awareness descends from crown to base, and the vowel sequence reverses: M (crown) → U (throat) → I (heart) → AA (navel) → A (base). The feeling is of a sound descending within the spinal column, a current flowing downward from the head to the root as the breath completes its outward movement.\n\nThe Kumbhaka (retention) between cycles: a brief, natural pause at the top of the inhale (crown — full of Prana) and at the bottom of the exhale (base — empty of breath). During these pauses, the vowel of the corresponding center — M at the top, A at the bottom — is held in the inner acoustic field without movement. These pauses are not forced breath retention in the sense of Hatha Yoga Kumbhaka — they are natural stillpoints between the ascending and descending currents, analogous to the turning points of a pendulum or the momentary stillness of a wave before it reverses direction.\n\nYogananda\'s description of what this feels like to the practitioner who has established the practice: "A subtle current of electricity is felt at the base of the spine, which gradually rises upward through the spine and enters the brain, and then descends through the same path. The practitioner is aware of the passage of this current through each of the spinal centers, accompanied by specific sensations of vibration and light that are distinct at each center and that deepen in intensity as the practice matures."',
+        },
+        {
+          type: 'teaching',
+          heading: 'The Acceleration Effect — Why Kriya Works Faster Than Ordinary Practice',
+          body: `The extraordinary claim of the Kriya tradition — that Kriya pranayama accelerates spiritual evolution dramatically — rests on a specific understanding of what spiritual evolution actually is and what ordinarily limits its rate.\n\nIn the Kriya understanding, spiritual evolution is the progressive purification and refinement of the nervous system\'s capacity to conduct and express the qualities of higher consciousness — love, clarity, equanimity, the direct perception of the nature of awareness itself. Ordinary spiritual evolution is limited primarily by the rate of neuroplastic reorganization — the speed at which the brain and spinal cord can reorganize their connectivity patterns in response to meditation and practice.\n\nKriya pranayama\'s mechanism of acceleration: the specific electromagnetic field generated by the circulating Kriya current in the spinal cord is qualitatively different from the electromagnetic field generated by ordinary breathing, by ordinary mantra, or even by advanced Hatha Yoga pranayama. The circuit of the spinal cord — an essentially closed loop of neural tissue running from the base of the spine to the brain stem — when activated by the specific frequency and direction of the Kriya breath current, generates a resonant electromagnetic standing wave that directly stimulates the regenerative and reorganizing capacities of neural tissue far beyond what random activation (as occurs in ordinary thought, sensation, and action) produces.\n\nIn practical terms: a Kriya practitioner who does 108 rounds of Kriya pranayama daily is subjecting their spinal cord to a specific, coherent, regenerative electromagnetic field for approximately 18-36 minutes per day. Over months and years, this sustained stimulation produces measurable changes in the quality of neural tissue, in the coherence of brainwave activity, and — in practitioners who have reached advanced stages — in the specific perceptual capacities (inner light, inner sound, direct perception of the Chakras and Nadis as living realities) that the tradition describes as the hallmarks of advanced Kriya practice.',
+        },
+        {
+          type: 'practice',
+          practice: {
+            title: 'The Kriya Breath-Sound Sequence — Advanced Practice',
+            steps: [
+              'PREREQUISITE: Minimum 40 days of Hong-Sau practice (Module 9, Lesson 9.5) and minimum 3 months of Nadi Shodhana with Kumbhaka (Module 9, Lesson 9.2). Without this preparation, the Kriya spinal current cannot be productively worked with.',
+              'OPENING: OM KRIYA BABAJI NAMA AUM × 3. Then the 18-Siddha sequence × 1 complete round. Then 5 minutes of Hong-Sau (SOHAM breath awareness) to establish the breath as the primary object of attention.',
+              'SPINAL POSTURE: Spine maximally erect. The slight elongation of the spine — achieved by pressing gently upward at the crown and downward at the pelvis — creates a slight stretching of the spinal cord within the vertebral canal. This elongation is the physical preparation for the Kriya current: a slightly elongated spinal cord conducts the current more efficiently than a compressed one.',
+              'ROUND 1-12 (slow establishment): Inhale in 4-6 counts with ascending vowel awareness (A-AA-I-U-M from base to crown). Natural pause at crown (3-4 counts) with M held internally. Exhale in 4-6 counts with descending vowel awareness (M-U-I-AA-A from crown to base). Natural pause at base (3-4 counts) with A held internally. This is one complete Kriya round.',
+              'ROUNDS 13-54 (building current): The pace quickens slightly — each full cycle (ascent + descent) taking approximately 15-20 seconds. The vowel awareness is maintained but becomes more fluid — less sequential-discrete and more like a continuous current of sensation rising and falling with the breath.',
+              'ROUNDS 55-108 (Kriya current): By this point, the current should be feeling relatively self-sustaining — the breath and vowel sequence running themselves with minimal deliberate effort. Simply witness the current moving. Do not interfere with what has now established its own rhythm.',
+              'INTEGRATION (10-15 min): Release the Kriya breath. Return to Hong-Sau. Then natural breath. Then complete stillness. The post-Kriya integration period is when the spinal current\'s reorganizing effects settle into the nervous system.',
+            ],
+          },
+        },
+        {
+          type: 'mantra',
+          mantra: {
+            devanagari: 'अ आ इ उ म्\nम् उ इ आ अ',
+            transliteration: 'A — AA — I — U — M\nM — U — I — AA — A',
+            translation: 'The ascending vowel current (Muladhara to Sahasrara)\nThe descending vowel current (Sahasrara to Muladhara)',
+            body: `These ten sounds — five ascending, five descending — are the mantra of the Kriya breath-sound sequence. They are not chanted as ordinary mantra but heard internally as the acoustic quality of the ascending and descending Prana current in the spinal column. The tradition\'s instruction: do not try to produce these sounds — listen for them as the spontaneous acoustic quality of the Prana moving through the specific region of the spine corresponding to each vowel. When the practice is established, these vowels arise naturally and inevitably with the breath, the way SOHAM arises naturally with ordinary breathing in established Ajapa Japa practice. The sequence self-reveals through sustained, sincere practice.`,
+          },
+        },
+        {
+          type: 'wisdom',
+          wisdomTitle: 'Lahiri Mahasaya on the Kriya Current — "The River Was Always There"',
+          wisdomBody: `Lahiri Mahasaya, in teaching the Kriya system to his disciples, consistently used the river metaphor that appears throughout the Indian mantra tradition: "When I first practiced Kriya, I thought I was creating the spinal current — that my effort was generating something that was not there before. After years of practice, I realized the opposite: the current was always there. It had been flowing in the spine since the day I was born. What my effort created was not the current but the ears to hear it. The sensitivity to feel what had been flowing continuously but inaudibly in the background of all my ordinary experience. The Kriya Yogi does not generate an extraordinary phenomenon. He develops ordinary sensitivity to an ordinary phenomenon that ordinary human consciousness has simply never learned to notice. The spine is always carrying this current. The question is only whether you are quiet enough, refined enough, and deliberate enough to feel it."`,
+        },
+        {
+          type: 'audio',
+          audio: {
+            id: 'l14-2-audio',
+            title: 'Kriya Breath-Sound Sequence — 108 Rounds',
+            description: 'Kritagya guides 108 complete Kriya breath-sound rounds with count cues and spinal awareness instruction. The recording includes the opening Hong-Sau establishment (5 min), the full 108 rounds (approximately 30-35 minutes), and the integration silence (15 min). Total 55 minutes. Use this as your primary Kriya practice companion.',
+            duration: '55:00',
+            url: '',
+          },
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 14.3
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'l14-3',
+      number: 3,
+      title: 'The Kriya Mantra System',
+      subtitle: 'OM KRIYA BABAJI NAMA AUM · The Invocation · Lineage Activation',
+      durationMin: 20,
+      sections: [
+        {
+          type: 'intro',
+          body: `The Kriya tradition is not merely a breathing practice — it is a complete mantra-pranayama-mudra system in which every element is precisely designed and every element supports every other element. The mantra dimension of Kriya is not separate from the pranayama dimension — the two are interwoven so that the mantra functions simultaneously as the sound vehicle of the breath, the directional guide of the Prana, and the consciousness-calibrator that ensures the breath-work is happening in the correct inner attitude. This lesson delivers the complete publicly receivable Kriya mantra system — the mantras that Babaji has authorized for universal use and the specific way they are integrated into the breathing practice.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'The Three-Level Mantra Structure of Kriya',
+          body: `The Kriya mantra system operates simultaneously at three levels, each serving a distinct function:\n\nLevel 1 — The Invocation Mantra (before practice): OM KRIYA BABAJI NAMA AUM. This mantra, given through Govindan for universal use, establishes the field of the Kriya lineage before practice begins. It is the declaration that what follows is not personal effort but lineage transmission — that the practitioner is positioning themselves as a vessel for the Kriya intelligence to move through, rather than as an individual efforting toward a personal goal. Chanted 3-9 times at the beginning of every Kriya session.\n\nLevel 2 — The Breath-Sound (during practice): The vowel sequence A-AA-I-U-M from Lesson 14.2. This is the mantra that runs continuously throughout the Kriya breath practice — heard internally as the acoustic quality of the ascending and descending Prana current. It is simultaneously a mantra (sacred sound with specific frequency properties) and a real-time map of where the Prana is in the spinal column at every moment.\n\nLevel 3 — The Integration Mantra (after practice): SOHAM or HONG-SAU, returning to the breath-mantra that began the session. After the active Kriya breath work, the practitioner returns to the simple, self-sustaining awareness of the natural breath as SOHAM — the recognition that the Kriya\'s extraordinary breath work and the ordinary breath of moment-to-moment life are expressions of the same underlying mantra: consciousness recognizing itself as the sound of the universe breathing.',
+        },
+        {
+          type: 'teaching',
+          heading: 'The Mantra in the Kumbhaka — The Most Concentrated Kriya Point',
+          body: `In the complete Kriya system, the Kumbhaka (the stillpoints between ascending and descending currents) are the moments of maximum mantric concentration. In the Antara Kumbhaka (the natural pause at the top of the inhale — the moment when the crown is filled and the base is suspended), the practitioner hears the M sound — the culminating sound of the ascending sequence — in the inner acoustic field at the Sahasrara and Ajna centers.\n\nThis moment — the M at the crown in the suspended breath — is what Yogananda described as the "stillpoint of Kriya." It is the moment when the ascending Prana has reached its highest point, when the individual breath has momentarily ceased, and when the consciousness of the practitioner is suspended between the exhale that preceded and the inhale that follows. In this suspension — which lasts naturally for 3-5 seconds before the exhale begins — the mantra M is not produced by effort but simply present as the quality of the consciousness resting at the crown.\n\nAdvanced practitioners report that as the M deepens through thousands of rounds of Kriya practice, it begins to reveal itself as the same Anahata Nada introduced in Module 3 — the unstruck sound that is always present but becomes audible only in states of sufficient inner stillness. The Kriya practice\'s specific gift is the creation of this stillness systematically, through the upward circulation of the breath current, rather than waiting for spontaneous stillness to arise as in passive Nada Dhyana.',
+        },
+        {
+          type: 'teaching',
+          heading: 'The Om Mantra Within the Kriya — The Hidden Fifth Element',
+          body: `The Kriya system has a fifth mantra element that most teachings omit: the Om that underlies and contains all the vowel sounds of the ascending and descending sequence. The tradition teaches that the five vowels (A-AA-I-U-M) are the five sonic dimensions of AUM — not separate sounds that happen to sound like AUM\'s components, but the actual AUM expanded into its five constituent frequencies as they appear in the five regions of the body-spine.\n\nA is the body of AUM below the diaphragm — the AUM as Earth and Water experience it. AA is the AUM at the navel — the same frequency one octave higher. I is the AUM at the heart — two octaves higher, the frequency at which the AUM sounds in the medium of love. U is the AUM at the throat — three octaves higher, the frequency at which AUM sounds in the medium of pure space. M is the AUM at the crown — the highest-frequency overtone of the fundamental AUM, the sound that is closest to the silence from which AUM arises.\n\nThis understanding — that the Kriya vowel sequence is the AUM expanded through the full range of the human body — transforms the Kriya practice from a complex breathing technique into a full-body AUM chanting session conducted internally, in which every cell of the body participates as a resonator for the Pranava in one of its five elemental expressions. Yogananda said: "The Kriya yogi who practices the complete system eventually discovers that the entire practice is AUM — that all the techniques, all the mantras, all the pranayama, are simply different ways of arriving at the same recognition: the universe IS AUM, and I am the universe recognizing itself as AUM."',
+        },
+        {
+          type: 'teaching',
+          heading: 'Mantra Siddhi in the Kriya Context',
+          body: `The concept of Mantra Siddhi (perfection in a mantra, introduced in the Free Tier) takes a specific form in the Kriya context. In the Kriya tradition, the equivalent of Mantra Siddhi is called Kriya Siddhi — the point at which the Kriya practice has been sufficiently established in the nervous system that it begins to operate autonomously.\n\nKriya Siddhi is described as occurring when: the spinal current begins to run continuously (not only during formal practice sessions but as a background phenomenon throughout waking life); the vowel sequence becomes audible during ordinary states of rest and relaxation without deliberate practice; and the specific qualities of consciousness associated with each spinal center begin to manifest spontaneously — the Muladhara\'s groundedness without any specific grounding practice, the Anahata\'s heart-openness without any specific heart-opening practice.\n\nThe count for Kriya Siddhi: the tradition is less specific than for other mantras, but the consensus across multiple Kriya lineage holders is that approximately 1,000 full sessions of 108 Kriya rounds each is the threshold at which Kriya Siddhi begins to become accessible. At 108 rounds per session and one session per day, this is approximately 2.7 years of consistent daily practice. The acceleration factor (one Kriya round = approximately 6 months of natural evolution, per Yogananda) means that 108 rounds × 365 days × 2.7 years = approximately 108,000 Kriya rounds — which represents, in traditional Siddha terms, approximately 108,000 × 6 months = 54,000 years of natural evolution in 2.7 years of practice.',
+        },
+        {
+          type: 'practice',
+          practice: {
+            title: 'The Three-Level Kriya Mantra Practice — Complete Integration',
+            steps: [
+              'This practice integrates all three levels of the Kriya mantra system into one continuous session.',
+              'LEVEL 1 — INVOCATION (5 min): OM KRIYA BABAJI NAMA AUM × 9 at Vaikhari. Then 18-Siddha opening × 1 complete round. Then 5 minutes of Hong-Sau to establish breath awareness.',
+              'LEVEL 2 — KRIYA BREATH-SOUND (30-40 min): The complete ascending-descending vowel sequence for 54-108 rounds. During the Antara Kumbhaka (top pause), add: mentally hear OM at the crown — the underlying unity of all five vowels. This OM-at-crown is the deepest element of the Kriya mantra system.',
+              'TRANSITION: Without breaking the inner stillness of the post-Kriya state, allow the breath to return to its natural rhythm.',
+              'LEVEL 3 — HONG-SAU INTEGRATION (10 min): Natural breath. HONG on inhale (hearing the ascending quality of the Kriya still present in the natural breath). SAU on exhale (hearing the descending quality still present). The Kriya has merged with the ordinary breath.',
+              'FINAL SILENCE (10 min): Release even Hong-Sau. Simply sit in whatever has been produced by the complete three-level Kriya mantra practice. The M from the crown stillpoint typically continues to sound subtly in the inner ear during this silence — do not try to hear it. Simply notice if it is present.',
+              'CLOSING: OM KRIYA BABAJI NAMA AUM × 3. The practice returns to where it began — the invocation — recognizing that the invocation and the integration are the same mantra at different stages of its completion.',
+            ],
+          },
+        },
+        {
+          type: 'wisdom',
+          wisdomTitle: 'Sri Yukteswar on Mantra and Kriya — "The Sound Current Never Stops"',
+          wisdomBody: `Sri Yukteswar — Yogananda\'s teacher and Lahiri Mahasaya\'s primary disciple — is reported to have taught the following about the relationship between mantra and Kriya: "People ask whether mantra practice and Kriya are different paths or the same path. The answer is both and neither. They are both expressions of the same underlying principle: the use of sound — in its grossest form as spoken syllables, in its subtle form as the breath\'s acoustic quality, in its subtlest form as the inner Nada — to reveal the consciousness that both produces and perceives the sound. The mantra practitioner moves from the spoken syllable inward toward the inner sound. The Kriya practitioner moves from the breath\'s subtle sound outward toward its cosmic source. They are traveling in opposite directions from different starting points and arriving at the same destination: the recognition that the sound and the listener of the sound and the silence from which both arise are one and the same consciousness, recognizing itself. The sound current never stops. It has been flowing through your spine since the first moment of this existence. Both mantra and Kriya are simply methods of learning to hear what has always been sounding."`,
+        },
+        {
+          type: 'audio',
+          audio: {
+            id: 'l14-3-audio',
+            title: 'Three-Level Kriya Mantra Practice — Complete Session',
+            description: 'Kritagya leads the complete three-level Kriya mantra integration: Level 1 invocation, Level 2 Kriya breath-sound with OM-at-crown instruction, Level 3 Hong-Sau integration, and final silence. 60 minutes.',
+            duration: '60:00',
+            url: '',
+          },
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 14.4
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'l14-4',
+      number: 4,
+      title: 'The 18 Kriya Techniques — Overview and Framework',
+      subtitle: 'The Complete System · What Each Technique Does · The Architecture of Liberation',
+      durationMin: 22,
+      sections: [
+        {
+          type: 'intro',
+          body: `The complete Kriya Yoga system as transmitted by Babaji through Lahiri Mahasaya consists of 18 primary techniques — a number that mirrors the 18 Siddhas and the 18 chapters of the Bhagavad Gita, suggesting a deliberate structural parallel: just as the 18 Siddhas represent the complete Council of realized consciousness, and the 18 Gita chapters represent the complete teaching of Krishna, the 18 Kriya techniques represent the complete technology of consciousness transformation. This lesson provides the publicly receivable overview of all 18 — their names, their primary function, and their place in the overall Kriya architecture — making clear which techniques are universally available and which are transmitted only through formal initiation.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'The Four Categories of Kriya Techniques',
+          body: `The 18 Kriya techniques divide into four functional categories, each addressing a different dimension of the consciousness-transformation process:\n\nCategory 1 — PURIFICATION KRIYAS (Techniques 1-6): These are the foundational cleansing techniques that prepare the subtle body, the Nadis, and the physical body to receive and conduct the higher-voltage transmissions of the later techniques. They include the specific Shatkarmas (six cleansing practices) of Hatha Yoga as adapted by Babaji for the Kriya system, as well as the preliminary pranayamas and the Hong-Sau practice that initiates the breath-awareness training.\n\nCategory 2 — CONCENTRATION KRIYAS (Techniques 7-12): These are the primary meditation and concentration techniques that develop the specific qualities of inner attention required for the more advanced Kriya practices. They include the Om technique for Ajna and crown development, the specific mantra sequences for Nadi purification, and the preliminary forms of the complete Kriya pranayama.\n\nCategory 3 — TRANSFORMATION KRIYAS (Techniques 13-15): These are the core transformative techniques of the Kriya system — the practices that directly effect the neural and consciousness changes that make Kriya distinctive. The primary Kriya pranayama (the spinal breath-sound sequence of Lessons 14.2 and 14.3) is the centerpiece of this category. These three techniques are considered the heart of Kriya Yoga and are transmitted only through formal initiation in the Babaji-Lahiri-Yukteswar-Yogananda lineage.\n\nCategory 4 — LIBERATION KRIYAS (Techniques 16-18): The three final techniques that address the ultimate stages of the Kriya journey: the dissolution of the ego\'s root identification, the sustained dwelling in Samadhi states, and the specific practices for maintaining the Kriya current during ordinary daily activity — making the Kriya a 24-hour, continuous practice rather than a session-specific event.',
+        },
+        {
+          type: 'teaching',
+          heading: 'The Six Publicly Available Techniques — What This Curriculum Has Given You',
+          body: `Of the 18 Kriya techniques, six have been publicly shared by authorized lineage holders (primarily Yogananda through his published works and Govindan through his Babaji research publications) and form the foundation of what the SQI curriculum has already transmitted:\n\nTechnique 1 — HONG-SAU: The breath-awareness practice introduced in Module 9, Lesson 9.5. The foundational concentration technique of the Kriya system — the development of the quality of inner attention without which all other techniques are ineffective.\n\nTechnique 2 — AOM (Om Technique): The third eye and crown development practice using the Om mantra with Shambhavi Mudra, delivered in Module 7, Lesson 7.6 (Ajna activation). The development of the two-petaled Ajna lotus is the specific preparation for receiving the higher Kriya transmissions.\n\nTechnique 3 — SPINAL BREATH: The preliminary spinal breath awareness introduced in Module 9, Lesson 9.5 — directing breath awareness through the five chakra points without the vowel sequence. This is the structural preparation for the complete Kriya pranayama.\n\nTechnique 4 — KRIYA PRANAYAMA (Primary): The spinal breath-sound sequence delivered in Lessons 14.2 and 14.3. This is the central technique of the entire Kriya system — the technique that Lahiri Mahasaya called "the supreme spiritual science."\n\nTechnique 5 — NADI SHODHANA as Kriya preparation: The alternate nostril breathing of Module 9, Lesson 9.2, understood as the Kriya tradition\'s primary Nadi purification technique.\n\nTechnique 6 — MAHA MUDRA (the Great Seal): A specific physical posture combined with breath retention and internal mantra that is the primary Hatha Yoga complement to the Kriya pranayama — not delivered in detail in this curriculum but referenced here so practitioners seeking formal initiation understand that it exists.',
+        },
+        {
+          type: 'teaching',
+          heading: 'Why the Remaining 12 Require Formal Initiation',
+          body: `The 12 techniques not publicly available through the SQI curriculum — particularly the three Transformation Kriyas (Techniques 13-15) and the three Liberation Kriyas (Techniques 16-18) — require formal Kriya initiation for several specific reasons that are not about religious exclusivity or institutional gatekeeping:\n\nReason 1 — Prerequisite verification: The higher Kriya techniques are specifically designed for nervous systems that have been prepared by the preliminary techniques to a specific degree of purity and stability. A practitioner who has not genuinely established the preliminary practices cannot receive the advanced techniques productively — the signal is correct but the receiver is not calibrated to it. Formal initiation includes assessment of the practitioner\'s actual state of preparation, not merely their self-reported practice history.\n\nReason 2 — Transmission integrity: The higher Kriya techniques carry their full potency only when transmitted in the presence of the lineage energy — the specific energetic charge that a lineage holder carries in their field as a result of their own sustained practice. This is not something that can be conveyed through text or audio recording alone. The formal initiation ceremony is specifically designed to transmit this charge directly from the teacher\'s field to the student\'s field.\n\nReason 3 — Post-initiation support: The advanced Kriya techniques produce experiences — both positive (extraordinary states of peace, light, and expanded perception) and challenging (the dissolution of old identity structures that is necessarily uncomfortable before it is liberating) — that require ongoing guidance from an experienced teacher. Formal initiation establishes this ongoing relationship.\n\nThe SQI Siddha-Quantum curriculum provides the most complete publicly available preparation for formal Kriya initiation that exists. Any practitioner who has sincerely worked through all 14 modules to this point is, in the tradition\'s assessment, exceptionally well prepared for formal initiation.',
+        },
+        {
+          type: 'practice',
+          practice: {
+            title: 'Kriya Integration Practice — All Six Public Techniques in One Session',
+            steps: [
+              'This practice integrates all six publicly available Kriya techniques into a single 75-minute session — the complete publicly receivable Kriya Yoga session.',
+              'TECHNIQUE 1 — HONG-SAU (10 min): Natural breath, HONG on inhale, SAU on exhale. No control. Simply aware witnessing.',
+              'TECHNIQUE 2 — OM TECHNIQUE (10 min): Eyes upward in Shambhavi. OM × 21 at Upamshu directed to Ajna. Then 9 Manasika. Then pure Ajna Dhyana in silence.',
+              'TECHNIQUE 5 — NADI SHODHANA KRIYA PREP (10 min): The complete three-stage Nadi Shodhana from Module 9: basic, then HA-THA codes, then SOHAM-Kumbhaka. This balances the Nadis immediately before the primary pranayama.',
+              'TECHNIQUE 3 — SPINAL BREATH AWARENESS (5 min): 9 rounds of spinal breath without vowel sequence — simply feeling the awareness moving up and down the spinal column with the breath.',
+              'TECHNIQUE 4 — PRIMARY KRIYA PRANAYAMA (30 min): 108 rounds of the complete ascending-descending vowel sequence with OM-at-crown during the Kumbhaka.',
+              'TECHNIQUE 6 — MAHA MUDRA reference (5 min): Sit with spine elongated, the long muscles of the back gently engaged. Hold the awareness of the entire spinal column as a unified field. This is the structural awareness that Maha Mudra cultivates through specific physical means — here approached through pure awareness alone.',
+              'INTEGRATION — HONG-SAU return (5 min): Natural breath. HONG-SAU awareness. Feel all six techniques as one continuous movement of the same intelligence.',
+            ],
+          },
+        },
+        {
+          type: 'mantra',
+          mantra: {
+            devanagari: 'ॐ क्रिया बाबाजी नम आउम्\nहंग सः · सो हम्\nअ आ इ उ म् (और वापस)',
+            transliteration: 'OM KRIYA BABAJI NAMA AUM\nHONG SAH · SO HAM\nA AA I U M (and return)',
+            translation: 'The three primary Kriya mantras:\nInvocation · Breath-awareness · The sound current',
+            body: `These three mantras — the invocation, the breath awareness, and the sound current — are the complete publicly receivable mantric framework of the Kriya system. Used together in the sequence and manner described in Lessons 14.2-14.4, they constitute the most complete publicly available Kriya practice in existence. For practitioners who subsequently receive formal initiation, these three mantras will become the foundation of the more advanced techniques that initiation delivers. They are not preliminary in the sense of being replaced — they are foundational in the sense of being permanently present in all subsequent practice, the way the spine is permanently present in all movement of the body.`,
+          },
+        },
+        {
+          type: 'wisdom',
+          wisdomTitle: 'Babaji on the 18 Techniques — "One Practiced Completely Is Enough"',
+          wisdomBody: `A teaching transmitted through the Govindan lineage, attributed to Babaji in the context of practitioners who were anxious about not having access to all 18 techniques: "Hear me carefully. One Kriya technique practiced with absolute sincerity, with absolute consistency, for an adequate period — this one technique will give you everything. The 18 techniques exist because different beings need different entry points — not because all 18 are required. A musician with a perfect ear for melody does not need to master every instrument to know music. A Kriya Yogi who has established Hong-Sau completely has established the complete awareness of consciousness in the medium of the breath. A Kriya Yogi who has established the primary pranayama completely has established the direct experience of the spinal current as a living reality. Either of these, completely established, is a complete liberation. The 18 together are the complete system for those who need the support of the complete system. For those who find their home in one or two, those one or two are sufficient. Do not worry about what you do not have. Go completely into what you have. This is the Siddha way."`,
+        },
+        {
+          type: 'audio',
+          audio: {
+            id: 'l14-4-audio',
+            title: 'Complete 6-Technique Kriya Session — 75 Minutes',
+            description: 'Kritagya leads the full integration session: Hong-Sau, Om Technique, Nadi Shodhana Kriya prep, Spinal Breath awareness, 108 rounds of Primary Kriya Pranayama with OM-at-crown, Maha Mudra awareness, and Hong-Sau return. This is the most complete single recording in the Siddha-Quantum tier.',
+            duration: '75:00',
+            url: '',
+          },
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 14.5
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'l14-5',
+      number: 5,
+      title: 'Preparing for Kriya Initiation',
+      subtitle: 'Physical · Mental · Karmic Requirements · The Readiness Assessment',
+      durationMin: 20,
+      sections: [
+        {
+          type: 'intro',
+          body: `For practitioners who feel drawn to formal Kriya initiation — to receiving the complete 18-technique Kriya system through a lineage-holding teacher — this lesson provides the most honest and complete assessment of what genuine preparation for initiation involves. This is not a description of bureaucratic requirements (signing a form, attending a seminar, paying a fee) but of the actual inner conditions that make formal Kriya initiation productive rather than merely ceremonial.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'Physical Preparation — The Body as a Receiving Instrument',
+          body: `Kriya initiation transmits a significantly higher-voltage energetic current than the preliminary practices. The physical body must be prepared to receive and conduct this current without being destabilized by it. The signs that the body is physically prepared:\n\nNadi purity: Regular Nadi Shodhana practice (minimum 6 months, ideally 1-2 years) has produced a noticeable shift in the quality of the breath — the exhale is consistently longer and more complete than the inhale, the nasal cycle is smooth and regular, and both nostrils open simultaneously during early morning practice (Sushumna Svara) with increasing frequency.\n\nDigestive fire: The digestive system is functioning cleanly — regular elimination, no chronic digestive conditions, minimal accumulation of Ama (undigested material) in the system. The Siddha tradition associates Ama with a specific heaviness and dullness in consciousness that Kriya initiation can temporarily exacerbate — a physically clean digestive system ensures that the initiation\'s energetic impact integrates cleanly.\n\nSexual continence or conscious Tantric practice: The Kriya tradition requires either celibacy (Brahmacharya) or, for householders, a conscious, respectful, and spiritually directed approach to sexual energy. The reason is physiological as much as moral: the Ojas that Kriya initiation most directly works with is the most refined biological product of the sexual creative force. A practitioner who is continuously losing Ojas through casual sexual activity or compulsive sexuality will find that the Kriya initiation\'s effects, while real, are significantly reduced.',
+        },
+        {
+          type: 'teaching',
+          heading: 'Mental Preparation — The Qualities of Inner Readiness',
+          body: `Beyond the physical, the mental qualities that indicate readiness for Kriya initiation are specific and assessable:\n\nEstablished concentration: The ability to hold a single object of attention (the breath, an inner sound, a mantra) for a minimum of 20 consecutive minutes without major interruption by unrelated thought. This is not about suppressing thought — it is about the natural extension of the concentration capacity that Hong-Sau and other Module 14 practices have been building. A practitioner who cannot sustain Hong-Sau for 20 minutes will not be able to productively use the more advanced Kriya concentration techniques that initiation delivers.\n\nEmotional stability: Not the absence of emotion — the capacity to feel strong emotions without being controlled by them. The Kriya practices, particularly in the early post-initiation period, often trigger significant emotional releases as old Samskaric patterns dissolve. A practitioner with sufficient emotional stability will be able to witness these releases with equanimity rather than being destabilized by them.\n\nAbsence of active ego-inflation: One of the most significant contraindications for Kriya initiation is what the tradition calls Dambha — spiritual pride, the conviction that one\'s spiritual development is more advanced than it actually is. The higher Kriya techniques, when received by a consciousness that is using spiritual practice primarily for ego-enhancement, produce a temporary intensification of the ego\'s most characteristic patterns rather than their dissolution. Honest self-assessment in this area — which requires genuine humility and the willingness to see one\'s actual state rather than one\'s preferred self-image — is both the most difficult and the most important preparation.',
+        },
+        {
+          type: 'teaching',
+          heading: 'Karmic Preparation — What Needs to Be in Order',
+          body: `The third dimension of Kriya preparation addresses the karmic field — the patterns of action and consequence that constitute the practitioner\'s Prarabdha Karma (the karma from previous actions that is currently "ripening" into present experience). The tradition does not require that the practitioner be karmically "clean" — Kriya initiation is, in fact, specifically designed to accelerate the dissolution of karma. What is required is that certain specific karmic patterns be addressed before initiation:\n\nUnresolved ethical violations: If the practitioner has caused significant harm to another person — through deception, exploitation, physical harm, or the violation of trust — and has not made sincere effort toward amends, this unresolved pattern creates a specific kind of obstruction in the karmic field that Kriya initiation cannot bypass. The tradition\'s prescription: before seeking initiation, complete any outstanding amends that are within the practitioner\'s power to make.\n\nActive addictions: Chemical addictions (alcohol, drugs, tobacco in the Indian context) are understood as karmic loops — patterns of craving and temporary satisfaction that continuously regenerate the Samskaric seed they arise from. Active addiction does not prevent Kriya initiation but significantly reduces its effectiveness — the Kriya current\'s dissolving intelligence encounters a constantly refreshed pattern rather than a pattern that is ready to dissolve.\n\nFulfillment of primary dharmic obligations: The tradition holds that spiritual practice which causes the neglect of genuine responsibilities — to children, to dependent family members, to professional commitments — creates a specific form of karmic debt that interferes with the reception of advanced spiritual transmissions. Kriya Yoga is, emphatically, a householder\'s path — Lahiri Mahasaya himself was a government employee and family man. It is not necessary to abandon the world. It is necessary to fulfill one\'s genuine responsibilities within the world before adding the intensive demands of formal Kriya practice.',
+        },
+        {
+          type: 'practice',
+          practice: {
+            title: 'The Readiness Assessment — An Honest Inventory',
+            steps: [
+              'Spend 30 minutes with your Likhita Japa notebook completing this honest self-assessment. No spiritual performance — the most useful answers are the most honest ones.',
+              'PHYSICAL: Can you sustain 108 rounds of Kriya breath-sound with reasonable focus and physical comfort? (yes/no/partially). Is your digestive system clean and regular? (yes/no). Are you in a conscious, respectful relationship with your sexual energy? (yes/no/working on it).',
+              'MENTAL: Can you sustain Hong-Sau for 20 minutes with no major distraction? (yes/no). How would you honestly rate your emotional stability (1-10)? Is there any area of your spiritual self-assessment where you suspect you may be inflating your development? (be specific if yes).',
+              'KARMIC: Is there anyone to whom you owe amends that are within your power to make? (yes/no — if yes, note specifically who and what). Are there any active patterns of craving or compulsion that refresh themselves regularly? (yes/no). Are your primary dharmic responsibilities being fulfilled? (yes/no).',
+              'After the inventory: Total the areas that are clearly ready and note the areas that require more work. There is no shame in any answer — the inventory is a tool, not a judgment. It shows you where to direct your next period of practice before seeking formal initiation.',
+              'TIMELINE GUIDANCE: If the majority of the physical and mental criteria are met, you are likely ready within 1 year of consistent current practice. If significant work remains in any category, the tradition recommends 2-3 more years of preparation practice before seeking initiation.',
+            ],
+          },
+        },
+        {
+          type: 'wisdom',
+          wisdomTitle: 'Lahiri Mahasaya on Readiness — "Prepare the Field"',
+          wisdomBody: `Lahiri Mahasaya was known for his careful assessment of readiness before initiating students — he turned away many who came with impressive credentials and sincere desire, while initiating others who seemed, by external standards, far less qualified. When asked about his criteria, he gave this answer that has been preserved in the lineage: "I am not assessing their learning or their practice history or their social standing. I am feeling the quality of their field. A field that has been well prepared — broken up, cleared of rocks, irrigated, composted — receives the seed of Kriya and immediately produces growth. A field that has not been prepared — even if it is larger, even if it is in a better location — receives the same seed and produces nothing, or produces weeds. The preparation of the field is everything. The seed will do its work perfectly when the field is ready. My job is not to give Kriya to everyone who asks. My job is to identify the fields that are ready to grow."`,
+        },
+        {
+          type: 'audio',
+          audio: {
+            id: 'l14-5-audio',
+            title: 'Readiness Cultivation Practice — Deepening the Preparation',
+            description: 'Kritagya leads a practice specifically designed to develop the three preparation qualities: 20-minute Hong-Sau for concentration, 15 minutes of honest self-reflection with Kali KREEM for shadow honesty, and 15 minutes of SOHAM integration. This practice is specifically for the period of final preparation before seeking formal initiation. 50 minutes.',
+            duration: '50:00',
+            url: '',
+          },
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 14.6
+
+const module15: Module = {
+  id: 'module-15',
+  number: 15,
+  tier: 'siddha',
+  title: 'Tantric Mantra Science — The Hidden Grammar',
+  subtitle: 'Shakti Vidya · Sri Vidya · Yantra · Nyasa · The Complete Tantric Architecture',
+  description:
+    'Tantra is the most misunderstood spiritual tradition in the modern world — and simultaneously the one whose mantra science is the most precisely developed, most experientially direct, and most completely integrated with the reality of embodied human existence. In its authentic form, Tantra is the systematic use of every dimension of human experience — the body, its energies, its desires, its relationships, its sufferings — as the raw material of realization. Nothing is excluded. Nothing is transcended by denial. Everything is included and transmuted. The Tantric mantra science presented in this module is the deep grammar that underlies every mantra in this curriculum — the structural logic of how sound, geometry, body, and consciousness interact to produce the most direct possible recognition of the Absolute.',
+  lessons: [
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 15.1
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'l15-1',
+      number: 1,
+      title: 'What Tantra Actually Is',
+      subtitle: 'The 36 Tattvas · The Universe as Consciousness Recognizing Itself · Nothing Excluded',
+      durationMin: 22,
+      sections: [
+        {
+          type: 'intro',
+          body: `Before any Tantric practice can be taught, the word Tantra must be accurately defined — because the contemporary understanding of Tantra is so distorted by commercialization, cultural projection, and deliberate mystification that most practitioners who approach it are approaching a fiction. The fiction usually involves either: Tantra as a system for "spiritual sex" (the Western New Age version), Tantra as exotic ritual magic involving elaborate ceremonies and forbidden substances (the romantic-occult version), or Tantra as a dangerous tradition that should be avoided by serious spiritual practitioners (the orthodox Hindu version). None of these accounts is accurate. All of them miss the fundamental point: Tantra is a complete philosophical and practical system for realizing the non-dual nature of consciousness through the systematic engagement with all 36 levels of manifest reality — not through any single level alone.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'The Word TANTRA — Its True Meaning',
+          body: `The Sanskrit word TANTRA comes from the root TAN — to extend, to expand, to weave — and TRA — instrument, means, protection. TANTRA literally means "the instrument of expansion" or "the weaving that expands" — a system that systematically expands the practitioner\'s consciousness through the weaving together of what has been falsely divided.\n\nWhat has been falsely divided? Every apparent duality in human experience: sacred and profane, body and spirit, male and female, matter and consciousness, ordinary and extraordinary, self and other, meditation and action. The Tantric recognition is that every apparent duality is a division within the unified field of consciousness — a division that consciousness itself has made in order to experience itself from multiple angles simultaneously. Tantra is the systematic process of weaving these divided threads back into the recognition of their underlying unity — not by suppressing either thread, not by choosing one over the other, but by holding both completely until the unity that was always present reveals itself.\n\nThis is why the Tantric mantra is fundamentally different in structure from the Vedic mantra: where the Vedic mantra reaches toward the celestial, the transcendent, the divine conceived as above and beyond the material world, the Tantric mantra reaches into the material, into the body, into the very substance of the ego\'s most intimate experience — and finds the same Absolute already present there. The celestial and the material are one consciousness in Tantra. The mantra that demonstrates this recognition is the Tantric mantra.',
+        },
+        {
+          type: 'teaching',
+          heading: 'The 36 Tattvas — The Complete Map of Reality in the Kashmir Shaivism Framework',
+          body: `Kashmir Shaivism — the most philosophically sophisticated of the Tantric traditions and the one whose mantra science most directly informs this module — maps reality as 36 Tattvas (principles or categories of existence). This is not a cosmological speculation but a phenomenological map: a description of the 36 different ways in which pure consciousness appears to itself as it moves from its most undifferentiated form to its most densified, individualized, material expression.\n\nThe first five Tattvas are the five "pure" principles — the dimensions of consciousness before it contracts into individual experience:\n1. SHIVA TATTVA: Pure consciousness — the absolute witness, undivided, without object.\n2. SHAKTI TATTVA: The power of consciousness to recognize itself — the first movement of awareness toward itself.\n3. SADASHIVA TATTVA: The first "I am this" — the dawn of cosmic self-recognition with a predominantly "I" quality.\n4. ISHVARA TATTVA: The "I am this world" — cosmic self-recognition with equal emphasis on both I and This.\n5. SUDDHA VIDYA TATTVA: Pure knowledge — the full recognition of "I am this" in perfect balance.\n\nThe next seven Tattvas are the "limiting" principles — the specific ways consciousness veils its own infinity to create the experience of individual existence:\n6-11. The Kanchukas (veils): limited knowledge, limited efficacy, limited fullness, limited power, limited time, limited causality — the six specific ways in which the infinite Shiva-consciousness contracts into the experience of a limited individual self.\n12. PURUSHA: The individual soul — the "I" that has been created by the contraction of the previous six limitations.\n\nThe remaining 24 Tattvas are the 24 levels of material existence — from pure mind (Buddhi) through ego (Ahamkara), through the five sense faculties, the five action faculties, the five Pranas, the five subtle elements (Tanmatras), and the five gross elements (Earth, Water, Fire, Air, Space).\n\nThe revolutionary Tantric implication: all 36 Tattvas — from pure consciousness to dense matter — are expressions of the same Shiva-Shakti. The mantra practitioner who realizes this recognizes that every physical experience — including the most "unspiritual" — is consciousness recognizing itself in a specific form. The Tantric mantra is the sound that this recognition makes.',
+        },
+        {
+          type: 'teaching',
+          heading: 'The Siddha Tantric View — Synthesis of Kashmir Shaivism and Tamil Siddha',
+          body: `The Tamil Siddha tradition represents a unique synthesis of the Kashmir Shaivism philosophical framework (the 36 Tattvas, the non-dual recognition of Shiva-Shakti) with the specifically Tamil contributions of Siddha medicine, Kaya Kalpa alchemy, and Nada Yoga. Where Kashmir Shaivism is primarily philosophical — oriented toward the recognition of non-dual awareness — the Tamil Siddha tradition is primarily alchemical — oriented toward the full expression of realized consciousness through the transformation of the physical body itself.\n\nThirumoolar was the primary bridge between these two traditions. His Thirumantiram incorporates both the Kashmir Shaiva philosophical framework (which he almost certainly encountered directly through the Himalayan tradition) and the uniquely Tamil Siddha practices of body alchemy and Nada Yoga. The result is a synthesis that is more complete than either tradition alone: the philosophical clarity of Kashmir Shaivism tells the practitioner what they are realizing, the alchemical precision of the Tamil Siddha tradition tells them how to realize it through every dimension of their embodied existence.\n\nThe specific contribution of the Siddha-Tantric synthesis to mantra science: the understanding that mantra operates simultaneously at all 36 Tattva levels. An AUM does not merely address the mental level (as a concentration technique) or the pranic level (as a pranayama technique) or the physical level (as an acoustic vibration) — it addresses all 36 simultaneously, from Shiva Tattva (pure consciousness recognizing itself as sound) to Prithvi Tattva (the physical vibration in the bones and tissues of the body). The mantra that is understood and practiced at all 36 levels simultaneously produces realization that no single-level practice can produce.',
+        },
+        {
+          type: 'teaching',
+          heading: 'The Authentic Tantric Attitude — Inclusion, Not Suppression',
+          body: `The most distinctive and most commonly misunderstood quality of the Tantric path is its attitude of radical inclusion — the recognition that no aspect of human experience is inherently spiritually impure or an obstacle to realization. This recognition is not a license for indulgence or a justification for bypassing discipline. It is a philosophical position with specific practical implications.\n\nWhat the inclusion principle means practically: the difficult emotions — anger, lust, jealousy, pride, grief — are not spiritual problems to be suppressed. They are Shakti in specific forms that have not yet been recognized as Shakti. The practice is not suppression but recognition: seeing through the specific form of the emotion to the Shakti that is expressing through it, and returning that Shakti to its source. The Tantric mantra practices in this module — particularly the Kali and Kavacha practices — are specifically designed to support this recognition process.\n\nWhat the inclusion principle does NOT mean: that all actions are equally valid spiritually, that ethical boundaries are irrelevant, or that anything done in the name of "Tantra" is automatically acceptable. The authentic Tantric tradition is extremely careful about ethics — perhaps more careful than many conventional religious traditions — because it recognizes that the consequences of actions taken from a place of ego-inflation rather than genuine realization can be severe at the karmic level. The Guru-guided, systematically structured approach of authentic Tantra is the opposite of the anarchic "anything goes" image that the popular Tantra myth promotes.',
+        },
+        {
+          type: 'practice',
+          practice: {
+            title: 'Tattva Awareness Meditation — Feeling All 36 Simultaneously',
+            steps: [
+              'This practice develops the specifically Tantric capacity for multi-level simultaneous awareness — the ability to feel the same consciousness present at the physical, pranic, mental, and pure-awareness levels simultaneously rather than sequentially.',
+              'Sit in meditation. Close eyes. Settle for 3 minutes in natural breath.',
+              'LEVEL 1 — PHYSICAL AWARENESS: Feel the weight of the body, the temperature of the air on the skin, the sound of the environment. These are the five Bhuta (Earth, Water, Fire, Air, Space) Tattvas. Feel them completely for 2 minutes.',
+              'LEVEL 2 — PRANIC AWARENESS: Without losing the physical awareness, add awareness of the breath as Prana moving through the body. Feel the five Pranas. 2 minutes with BOTH levels simultaneously.',
+              'LEVEL 3 — MENTAL AWARENESS: Without losing physical and pranic awareness, add awareness of the thoughts and emotions arising in the mind. These are the Manas, Ahamkara, Buddhi Tattvas. 2 minutes with THREE levels simultaneously.',
+              'LEVEL 4 — PURE AWARENESS: Without losing any of the previous three, add the awareness of the awareness itself — the witness that is watching all three levels. Who or what is aware of the body, breath, and mind? This is the Purusha Tattva, approaching Shiva Tattva. 5 minutes with ALL levels simultaneously.',
+              'Notice: the awareness that watches the body, breath, and mind is not troubled by any of them. It does not need any of them to be different. This unchanged, unchangeable awareness IS Shiva Tattva. This recognition — not as a concept but as a direct, felt recognition — is the Tantric realization.',
+            ],
+          },
+        },
+        {
+          type: 'wisdom',
+          wisdomTitle: 'Abhinavagupta — The Tantric Master\'s Definition',
+          wisdomBody: `Abhinavagupta (c. 950-1016 CE), the greatest systematic thinker in the Kashmir Shaivism tradition and the author of the Tantraloka (the most comprehensive Tantric text ever written), defined Tantra in the opening verses of his work with precision that has never been surpassed: "Tantra is that by which the nature of reality is expanded — that which weaves together the multiplicity of apparent experience into the recognition of its underlying unity, and simultaneously illuminates the unity in all of its apparently multiple expressions. The word Tantra means both the text that teaches this weaving and the practice that accomplishes it. Every authentic Tantric mantra is both a teaching about this weaving and an instrument for performing it. The mantra that sounds in the practitioner\'s throat, heard by the practitioner\'s inner ear, recognized by the practitioner\'s deepest awareness — this triple movement of sound-hearing-knowing IS the Tantric weaving in the smallest possible form. The Tantraloka (the illumination of Tantra) is all of this in its largest possible form. Both are the same recognition." This teaching — that every authentic mantra contains and demonstrates the entire Tantric understanding in miniature — transforms every mantra practice in this curriculum into a Tantric practice.`,
+        },
+        {
+          type: 'audio',
+          audio: {
+            id: 'l15-1-audio',
+            title: 'Tattva Awareness — The 36 Levels in One Practice',
+            description: 'Kritagya guides the complete four-level Tattva awareness meditation, then leads into a 15-minute Tantric mantra sequence (HREEM-SHREEM-KLEEM in ascending and descending combination) with the instruction to feel the mantra simultaneously at all four levels. 35 minutes.',
+            duration: '35:00',
+            url: '',
+          },
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 15.2
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'l15-2',
+      number: 2,
+      title: 'HREEM KLEEM SHREEM — The Three Queens',
+      subtitle: 'Complete Anatomy of the Shakti Bijas · Their Combinations · Their Specific Powers',
+      durationMin: 24,
+      sections: [
+        {
+          type: 'intro',
+          body: `The three Shakti Bijas — HREEM, KLEEM, and SHREEM — were introduced in the Free Tier (Module 4, Lesson 4.1) as seed syllables associated with three primary expressions of the divine feminine. This lesson goes far deeper: the complete anatomical deconstruction of each Bija, the specific neurological and energetic effects of each, the system of their combination and the rules that govern which combinations produce which effects, and the specific practices that make these three Bijas not merely powerful sounds but living relationships with three distinct intelligences of the Absolute.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'HREEM — The Maya Bija — Complete Anatomy',
+          body: `HREEM (ह्रीं) is called the Maya Bija — the seed syllable of the cosmic creative-projective power that produces the appearance of a world separate from pure consciousness. The word HREEM is related etymologically to HRIH — the Sanskrit root for shame, modesty, inner conscience — and to HRIDAYA (heart). HREEM is the seed of the heart\'s most refined knowing: the recognition that the world\'s apparent separateness from consciousness is not a mistake or a defect — it is Maya\'s creative genius, the way consciousness makes the infinite experienceable by making it apparently finite.\n\nHREEM\'s anatomical structure: H + R + I + M (Anusvara). H is the out-breath, the emission of Shiva\'s projecting Shakti. R is the fire-seed, the transformative intelligence that both creates and dissolves. I is the Shakti vowel, the power of creative expression. M (Anusvara) seals the circuit, preventing the projected energy from dispersing beyond the field of conscious use.\n\nHREEM\'s specific resonance: the chest cavity and particularly the heart center. When chanted correctly — the H from the back of the throat, the R with the slight fire-quality of a retroflex flap, the I bright and forward, the M nasal and complete — HREEM produces a specific vibration in the sternum that experienced practitioners describe as a "membrane opening" at the heart. This is the Maya veil becoming transparent: the same intelligence that projects the apparent world begins to see through its own projection.\n\nHREEM\'s neurological effect: increased activity in the insula — the brain region associated with the feeling of presence and the integration of emotional and physical experience. The insula is the seat of what researchers call "interoception" — the felt sense of being inside a living body. HREEM practice is the Tantric technology of interoception: the deepening of the felt sense of presence in the body as the vehicle for recognizing the consciousness that inhabits it.\n\nPrimary application: all practices involving the Shakti principle directly — Devi puja, Kundalini preparation, manifestation work grounded in genuine Shakti alignment, and any practice involving the dissolution of the veil between ordinary and sacred perception.',
+        },
+        {
+          type: 'teaching',
+          heading: 'KLEEM — The Kama Bija — Complete Anatomy',
+          body: `KLEEM (क्लीं) is called the Kama Bija — the seed syllable of divine attraction, the cosmic force of magnetism, desire purified to its essential quality: the movement of consciousness toward its own completeness. KAMA is ordinarily translated as "desire" or "love" in the romantic sense, but at its deepest level KAMA is the creative yearning of the Absolute for its own self-recognition — the force that drives all seeking, all creation, all relationship. Purified KAMA is not personal desire for a specific object — it is the field of attraction through which the universe continually moves toward its own recognition.\n\nKLEEM\'s anatomical structure: K + L + I + M (Anusvara). K is the beginning of all — the first consonant of the Sanskrit alphabet (Ka is Brahma, the creator principle). L is the earth-touching lateral sound — the tongue making complete lateral contact with the teeth ridge, grounded and stable. I is the Shakti vowel. M (Anusvara) completes the circuit. Together: creation (K) grounded in earth (L) through Shakti\'s power (I) into completion (M). This is the structure of magnetic attraction: it begins in the infinite (K), touches the Earth (L), flows through the creative principle (I), and completes itself (M).\n\nKLEEM\'s specific resonance: the sacral-navel interface — between Svadhisthana (sacral, water, creativity) and Manipura (navel, fire, will). This is the exact region of the body where desire and will meet — where the attraction principle (KAMA) interfaces with the action principle (AGNI). Practitioners who work with KLEEM consistently for extended periods report a specific quality shift in their relationship with desire itself: not the elimination of desire (which would be Vairagya, the Vedantic path), not the multiplication of desire (which would be Bhoga, ordinary enjoyment), but a purification of desire — the gradual dissolution of the craving quality (the anxious, grasping quality that makes desire painful) while the underlying attraction quality (the natural movement toward beauty, truth, and completeness) intensifies and clarifies.\n\nPrimary application: creative work that needs magnetic power, relationship practices, manifestation work, and — most significantly in the Tantric framework — the transformation of ordinary desire into Bhakti: the specific process by which the personal, object-directed quality of desire is expanded into the universal, non-object quality of devotion.',
+        },
+        {
+          type: 'teaching',
+          heading: 'SHREEM — The Lakshmi Bija — Complete Anatomy',
+          body: `SHREEM (श्रीं) is the Lakshmi Bija — the seed syllable of Shri, the cosmic principle of auspiciousness, luminous excellence, and the right relationship between consciousness and all forms of abundance. It was introduced in Module 10 (Lesson 10.4) in the context of Lakshmi\'s full identity. This lesson deepens into SHREEM\'s specific Tantric function — its role as the primary amplifier Bija and its specific alchemical action on the practitioner\'s relationship with the world.\n\nSHREEM\'s anatomical structure: SH + R + I + M (Anusvara). SH is the palatal fricative — the "shushing" quality associated with the feminine principle in Sanskrit phonology. It is the sound of gentle redirection, of the goddess saying "shhh — be still — receive." R is again the fire-seed, but here it is not the aggressive fire of RAM or the projecting fire of HREEM — it is the gentle fire of beauty, of gold becoming luminous. I is the Shakti vowel. M completes. Together: the gentle receiving (SH) of transformative light (R) through Shakti (I) into completion (M). This is the structure of genuine receptivity: not the passive receptivity of emptiness but the active receptivity of a consciousness prepared to be illuminated.\n\nSHREEM\'s specific resonance: the crown and the space immediately above the crown. Unlike most other Bijas whose resonance points are within the body, SHREEM\'s primary resonance is at and above the Sahasrara — the crown lotus — making it uniquely appropriate for practices that work with the descent of grace from above rather than the ascent of energy from below. Practitioners who work consistently with SHREEM report the specific experience of something arriving from above: a quality of peace, illumination, or blessing that did not arise from their own effort but descended into them from a source they experience as larger than themselves.\n\nSHREEM\'s amplification property: as noted in Module 10, SHREEM amplifies whatever it is combined with. This amplification quality is specifically the Lakshmi-Shri quality of increasing what it touches — the way the presence of genuine auspiciousness (Shri) makes everything in its vicinity more auspicious. SHREEM before a mantra increases the mantra\'s attraction and amplification of the quality it addresses. SHREEM after a mantra (less common) increases the quality\'s completeness and its capacity to sustain beyond the practice session.',
+        },
+        {
+          type: 'teaching',
+          heading: 'The Trika — AIM HREEM KLEEM as the Complete Shakti System',
+          body: `The three great Shakti Bijas are traditionally combined in specific sequences to produce specific compound effects. The most fundamental compound is the Trika — the triple goddess seed — AIM HREEM KLEEM, which represents the three primary Shakti principles in their active, creative-projective, and magnetic forms:\n\nAIM (Saraswati) = the faculty of pure discriminative intelligence — the Shakti who sees clearly. HREEM (Lakshmi as Maya-Shakti) = the projective-creative power — the Shakti who makes. KLEEM (Kali-Kameshvari) = the magnetic attraction principle — the Shakti who draws together.\n\nIn the Tantric understanding: any creative act requires all three simultaneously. First, clear intelligence (AIM) to perceive what wants to be created. Then, projective Shakti (HREEM) to actually project it into existence. Then, magnetic power (KLEEM) to draw the necessary resources and conditions toward the creation. AIM without HREEM stays in the realm of pure intelligence, never manifesting. HREEM without AIM projects indiscriminately, creating without wisdom. KLEEM without AIM or HREEM attracts without discernment or direction. Together — AIM HREEM KLEEM — the three constitute the complete creative intelligence of the Absolute.\n\nThe reverse sequence — KLEEM HREEM AIM — describes the path of dissolution: what was attracted (KLEEM) is projected into a wider field (HREEM) and ultimately recognized as pure intelligence (AIM). This is the dissolving path of Kali — from the personal and material toward the impersonal and transcendent. Advanced practitioners work with both sequences, using AIM HREEM KLEEM for creative-manifestation work and KLEEM HREEM AIM for dissolution-liberation work.',
+        },
+        {
+          type: 'practice',
+          practice: {
+            title: 'The Three Queens Practice — Complete Shakti Bija Session',
+            steps: [
+              'OPENING: OM GAM GANAPATAYE NAMAH × 3. OM KRIYA BABAJI NAMA AUM × 3. 18-Siddha opening × 1 round.',
+              'HREEM × 54 (Vaikhari): Feel the heart center. Each HREEM — the membrane of the heart becoming more transparent. What is behind the veil of Maya? Stay with the question in the H-R-I-M vibration.',
+              'KLEEM × 54 (Vaikhari): Feel the sacral-navel interface. Each KLEEM — what is the underlying attraction quality beneath your desires right now? Not the object of desire — the quality of the desire itself. Let that quality reveal its deepest nature in the K-L-I-M vibration.',
+              'SHREEM × 54 (Vaikhari): Feel the crown and the space above. Each SHREEM — allow something to descend. Not from your effort but from above. Auspiciousness, grace, illumination — whatever quality of Shri wants to arrive, receive it completely in the SH-R-I-M vibration.',
+              'AIM HREEM KLEEM × 27 (the Trika): Intelligence-projection-attraction as a unified creative movement. Feel all three simultaneously in each compound repetition.',
+              'KLEEM HREEM AIM × 27 (the Dissolution sequence): Attraction-projection-intelligence in the dissolving direction. Feel the movement from material toward transcendent.',
+              'INTEGRATION SILENCE (10 min): Release all Bija work. Simply sit in what has been activated. Notice: what is different in the inner space after working with all three Queens? What quality of consciousness is now present that was less accessible before the session?',
+            ],
+          },
+        },
+        {
+          type: 'mantra',
+          mantra: {
+            devanagari: 'ऐं ह्रीं क्लीं\nक्लीं ह्रीं ऐं\nह्रीं श्रीं क्लीं',
+            transliteration: 'AIM HREEM KLEEM (creative direction)\nKLEEM HREEM AIM (dissolving direction)\nHREEM SHREEM KLEEM (the Mahalakshmi Trikuta)',
+            translation: 'Intelligence-Projection-Attraction\nAttraction-Projection-Intelligence\nProjection-Auspiciousness-Attraction',
+            body: `Three primary Trika sequences of the Shakti Bija system. The first two (AIM HREEM KLEEM and KLEEM HREEM AIM) are the creative and dissolving directions of the complete Shakti cycle — creation and return. The third (HREEM SHREEM KLEEM) is the Mahalakshmi Trikuta — the specific combination that invokes the full Lakshmi field in its complete Shakti expression: HREEM (the heart-Maya veil opening to allow Shri in), SHREEM (the auspicious quality of Lakshmi herself descending), KLEEM (the magnetic force that sustains the connection between the practitioner and the Lakshmi field). Used specifically for abundance practices, the Mahalakshmi Trikuta should always be chanted from the gratitude-ground established in Module 10, Lesson 10.4.`,
+          },
+        },
+        {
+          type: 'wisdom',
+          wisdomTitle: 'The Tripura Sundari Teaching — Beauty as the Direct Path',
+          wisdomBody: `In the Sri Vidya tradition, the Goddess is called Tripura Sundari — the Beautiful One of the Three Cities (the three cities being the three states of consciousness: waking, dreaming, and deep sleep). Her beauty is not aesthetic beauty in the ordinary sense — it is the beauty of truth, the beauty of a consciousness that is perfectly aligned with its own nature. The Tantric teaching: beauty (Sundara) is not a quality that some objects have and others lack. Beauty is the quality of consciousness recognizing itself in whatever it perceives — the experience of the Absolute meeting the Absolute in the moment of perception. When you genuinely find something beautiful — truly beautiful, not merely pleasant — you are experiencing what the Tantric tradition calls the Sundari recognition: the divine seeing the divine. The three Shakti Bijas HREEM KLEEM SHREEM are the three-fold mantra of Tripura Sundari: HREEM is her projecting power (the beauty she creates), KLEEM is her magnetic power (the beauty that draws you toward her), SHREEM is her auspicious presence (the beauty that remains when all else has dissolved). Work with these three Bijas as the voices of the Beautiful One — and notice how the world begins to become more beautiful as the practice deepens.`,
+        },
+        {
+          type: 'audio',
+          audio: {
+            id: 'l15-2-audio',
+            title: 'Three Queens Practice — HREEM KLEEM SHREEM Complete Session',
+            description: 'Laila leads the complete Three Queens practice: 54 rounds of each individual Bija, then AIM HREEM KLEEM × 27, then KLEEM HREEM AIM × 27, then the Mahalakshmi Trikuta × 27. 10-minute integration silence. Laila\'s voice carries a specific resonance with the feminine Shakti Bijas — recorded in her own deep Bhava. 55 minutes.',
+            duration: '55:00',
+            url: '',
+          },
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 15.3
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'l15-3',
+      number: 3,
+      title: 'Sri Vidya — The Complete 15-Syllable Teaching',
+      subtitle: 'The Panchadashi · The Mother of All Mantras · The Secret Structure',
+      durationMin: 24,
+      sections: [
+        {
+          type: 'intro',
+          body: `Sri Vidya — the "Knowledge of Shri" — is the most complete and most systematically developed of all the Shakti-Tantra traditions. Its primary mantra, the Panchadashi (the 15-syllabled mantra), is considered by the tradition to be the queen of all mantras — the mantra from which all other mantras arise and to which they all return. It is also one of the most protected mantras in the tradition — historically given only to initiated practitioners after years of careful preparation. This lesson presents the publicly receivable level of Sri Vidya — the structural understanding of the Panchadashi without the specific pronunciation that requires direct lineage transmission, and the preparatory practices that make formal Sri Vidya initiation possible.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'What the Panchadashi Is — The 15-Syllable Structure',
+          body: `The Panchadashi (PANCHA = five, DASHI = ten, together = fifteen) is divided into three Kutas (peaks or sections) of five syllables each. Each Kuta is associated with one of the three primary qualities of Shakti and one of the three realms of existence:\n\nVAGBHAVA KUTA (the first five syllables): The Kuta of speech and creation, associated with Saraswati and the creative Shakti. This Kuta addresses the supreme Bindu — the point of undivided consciousness from which all creation arises. It begins with the Kamakala — the most sacred of all Bija combinations in the Sri Vidya tradition.\n\nKAMERAJA KUTA (the middle five syllables): The Kuta of desire and sustenance, associated with Lakshmi and the sustaining Shakti. This Kuta addresses the specific Shakti that maintains and nourishes all of creation once it has been projected. It contains the specific frequency of what the tradition calls the Kamakala\'s second aspect — the creative desire that sustains what it has projected.\n\nSHAKTI KUTA (the final five syllables): The Kuta of power and dissolution, associated with the dissolution Shakti and the return of all creation to its source. This final Kuta addresses the self-referential recognition: the Shakti that has projected and sustained the world recognizing itself as the consciousness that was never divided from the Absolute.\n\nThe specific syllables of the Panchadashi are not given here — they belong to the realm of direct lineage transmission and the tradition\'s requirement is that they be received orally from a qualified Sri Vidya teacher. What is given is the structural understanding that allows the practitioner to recognize the Panchadashi\'s role in the complete Tantric mantra system and to prepare for its eventual reception.',
+        },
+        {
+          type: 'teaching',
+          heading: 'The Shodashi — The 16th Syllable — The Secret of Sri Vidya',
+          body: `The Panchadashi (15 syllables) has an optional 16th syllable — making it the Shodashi (SHODASHA = sixteen) — which is considered the most secret element of the entire Sri Vidya tradition. This 16th syllable is SHREEM — the Lakshmi Bija whose anatomy was analyzed in Lesson 15.2.\n\nThe addition of SHREEM as the 16th syllable to the Panchadashi transforms the mantra from a cosmological statement (the 15 syllables describe the complete arc of creation, sustenance, and dissolution) into a realization statement: the SHREEM at the end is the recognition that the consciousness that has moved through all 15 levels of the Panchadashi\'s cosmological journey has arrived at Shri — at the auspicious, luminous, complete recognition of its own nature. The 16th syllable is the destination to which the 15-syllable journey points.\n\nThis is why SHREEM — which the practitioner has already been working with in this curriculum — is not merely a Lakshmi mantra for abundance. It is the seed syllable of the highest recognition in the Sri Vidya tradition. Every sincere repetition of SHREEM in the context of this curriculum is, in the tradition\'s understanding, a preliminary touching of the Shodashi\'s final recognition — the same recognition that the complete 16-syllable mantra makes explicit.',
+        },
+        {
+          type: 'teaching',
+          heading: 'The Sri Chakra (Sri Yantra) as the Panchadashi in Geometric Form',
+          body: `The Sri Vidya tradition is unique in having the most complete correspondence between mantra and Yantra of any tradition in the world: the Panchadashi mantra and the Sri Yantra are the same reality — the same cosmic understanding of creation, sustenance, and dissolution — expressed in two different media. The Sri Yantra is the Panchadashi in geometric form. The Panchadashi is the Sri Yantra in sound form.\n\nThe Sri Yantra\'s structure: nine interlocking triangles — five pointing downward (representing Shakti, the creative-projective principle, the five-Kuta structure of the Panchadashi) and four pointing upward (representing Shiva, the pure consciousness within which the five Shakti triangles play). Their intersection creates 43 smaller triangles arranged in four concentric rings — each ring corresponding to specific syllables of the Panchadashi and specific Tattva levels from the 36-Tattva map.\n\nThe central point — the Bindu — is the undivided source: the point of pure consciousness before the nine-triangle complexity arises. In the mantra, the Bindu is the silent point before the first syllable of the Panchadashi is spoken. In the Sri Yantra, the Bindu is the geometric point at the center of all the triangles. Both — mantra and Yantra — are the same consciousness recognizing itself from slightly different angles. The practitioner who works with both simultaneously creates the most complete Sri Vidya practice possible without formal initiation.',
+        },
+        {
+          type: 'teaching',
+          heading: 'Preparatory Sri Vidya Practice — The Five-Kuta Approach',
+          body: `The most complete preparatory Sri Vidya practice available without formal initiation uses the publicly receivable mantras that correspond to the three Kutas of the Panchadashi:\n\nFor the Vagbhava Kuta (creation): AIM — the Saraswati Bija, the creation principle. 108 rounds.\n\nFor the Kamereja Kuta (sustenance): HREEM SHREEM KLEEM — the Mahalakshmi Trikuta, the sustenance principle. 108 rounds.\n\nFor the Shakti Kuta (dissolution-recognition): KREEM — the Kali Bija, the dissolution-recognition principle. 54 rounds.\n\nThese three, practiced in sequence (AIM → HREEM SHREEM KLEEM → KREEM) trace the same arc as the Panchadashi: creation (AIM) → sustenance (the Trikuta) → recognition-dissolution (KREEM). The practitioner who establishes this three-section preparatory practice for 40 consecutive days is, according to the tradition, generating the specific pranic field that formal Sri Vidya initiation requires.',
+        },
+        {
+          type: 'practice',
+          practice: {
+            title: 'Sri Vidya Preparation Practice — Five-Kuta Approach',
+            steps: [
+              'This practice is the preparatory Sri Vidya session — the most complete Sri Vidya approach available without formal Panchadashi initiation.',
+              'OPENING: OM GAM GANAPATAYE NAMAH × 9. The Lalita Sahasranama opening verse: "SINDHURA RUNA VIGRAHI TIRASKARITA VIDRUMA / LEELA VIGRAHA ROOPA CHAKRA RAJA NIKETANA" — invoking the goddess Lalita (another name for Tripura Sundari) as the one who surpasses coral in redness, who plays in her own form, who dwells in the Sri Chakra.',
+              'VAGBHAVA KUTA SECTION — AIM × 108 (Vaikhari): Feel the creation principle — the first movement of intelligence. Each AIM is the dawn of a new recognition.',
+              'KAMEREJA KUTA SECTION — HREEM SHREEM KLEEM × 108: The sustaining Shakti in its triple form. Each compound is the full cycle of creation maintained in abundance.',
+              'SHAKTI KUTA SECTION — KREEM × 54: The recognition-dissolution. Each KREEM is the moment of seeing through the apparent multiplicity to the single consciousness that generates it.',
+              'SRI YANTRA VISUALIZATION (10 min): With eyes closed, visualize the Sri Yantra at the Ajna center — the nine triangles, the 43 smaller triangles, and the central Bindu. Hold this visualization in the post-mantra silence as the Yantra settles into the inner space.',
+              'CLOSING: SHREEM × 3 as the Shodashi recognition. Three SHREEM — each one a complete touching of what the Panchadashi arrives at.',
+            ],
+          },
+        },
+        {
+          type: 'mantra',
+          mantra: {
+            devanagari: 'ऐं (वाग्भव)\nह्रीं श्रीं क्लीं (कामराज)\nक्रीं (शक्ति)\nश्रीं (षोडशी)',
+            transliteration: 'AIM (Vagbhava Kuta)\nHREEM SHREEM KLEEM (Kamereja Kuta)\nKREEM (Shakti Kuta)\nSHREEM (The Shodashi recognition)',
+            translation: 'Creation intelligence\nSustaining Shakti triple\nRecognition-dissolution\nThe 16th — the complete arrival',
+            body: `The four-element structure of the preparatory Sri Vidya practice — matching the three Kutas of the Panchadashi with their publicly available Bija counterparts, and the SHREEM Shodashi recognition as the completion. This sequence, practiced sincerely for 40+ days, creates the specific inner architecture that Sri Vidya initiation builds upon. The tradition holds that a practitioner who has established this preparatory practice deeply will, when they receive formal Panchadashi initiation, recognize the 15 syllables as a completion of what they were already approaching — not as something entirely new.`,
+          },
+        },
+        {
+          type: 'wisdom',
+          wisdomTitle: 'Adi Shankaracharya on Sri Vidya — The Mantra of Liberation',
+          wisdomBody: `Adi Shankaracharya — the 8th century philosopher who systematized Advaita Vedanta and who composed some of the tradition\'s most significant Sri Vidya texts (including the Soundarya Lahari, the 100-verse celebration of the Goddess\'s beauty) — gave this teaching on the Panchadashi that the tradition has preserved as the essential Sri Vidya teaching: "There are mantras that address specific deities for specific purposes. These are good and useful. And there is the Panchadashi, which is not addressed to any deity for any purpose — it IS the deity, it IS the purpose, it IS the one who addresses, and it IS the one who is addressed. It is the universe speaking itself to itself in 15 sounds. The practitioner who receives this mantra does not receive a tool — they receive a mirror. And in that mirror, they see, for the first time clearly, what they have always been. This is why the tradition protects this mantra so carefully: not because it is dangerous to know, but because its premature reception — before the practitioner is sufficiently still, sufficiently prepared, sufficiently empty of the self that would intercept the mirror\'s reflection — produces a poor image rather than a clear one. Prepare the mirror. Then receive the light."`,
+        },
+        {
+          type: 'audio',
+          audio: {
+            id: 'l15-3-audio',
+            title: 'Sri Vidya Preparation — Complete Five-Kuta Practice',
+            description: 'Kritagya leads the complete Sri Vidya preparatory practice: AIM × 108, HREEM SHREEM KLEEM × 108, KREEM × 54, Sri Yantra visualization, and SHREEM Shodashi recognition. 60 minutes. Includes a 432hz drone in the Saraswati frequency range throughout.',
+            duration: '60:00',
+            url: '',
+          },
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 15.4
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'l15-4',
+      number: 4,
+      title: 'Yantra — Mantra Frozen in Geometry',
+      subtitle: 'Sri Yantra Decoded · Sacred Geometry as Consciousness Technology · Living Yantras',
+      durationMin: 22,
+      sections: [
+        {
+          type: 'intro',
+          body: `A Yantra (from the root YAM — to hold, to contain, to restrain + TRA — instrument) is a geometric diagram that holds and concentrates a specific sacred frequency — a mantra's vibrational signature expressed in two-dimensional geometric form. Where a mantra is the temporal unfolding of a consciousness-field (the syllables appear in sequence, one after another, in time), a Yantra is the spatial instantiation of the same consciousness-field (the geometry exists simultaneously in space, all of it present at once). The mantra exists in time. The Yantra exists in space. Together, they address the complete space-time reality in which the practitioner lives — making the Yantra-mantra combination the most complete possible expression of a sacred frequency in physical reality.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'How a Yantra Works — The Geometric Frequency Field',
+          body: `The human visual system is extraordinarily sensitive to geometric patterns — far more so than the cognitive mind typically recognizes. The visual cortex processes geometric information at multiple simultaneous levels: the primary visual cortex (V1) responds to edges, lines, and simple geometric relationships; the secondary visual cortex (V2) responds to more complex patterns and their spatial relationships; and the higher visual areas (including the fusiform and parahippocampal regions) respond to holistic geometric patterns — the overall organization of a complex design — in ways that directly influence the emotional, autonomic, and limbic systems.\n\nThe geometry of a Yantra is not arbitrary decoration. Every angle, every proportion, every relationship between the geometric elements has been chosen (or, in the tradition\'s understanding, revealed through Samadhi-level perception) to produce a specific response in the practitioner\'s visual-neural system that corresponds to the consciousness-frequency of the associated mantra and deity. The Sri Yantra\'s nine-triangle structure, for example, produces a visual-neural response that the tradition identifies with the specific quality of Tripura Sundari\'s consciousness — the simultaneous recognition of creation (downward triangles), pure consciousness (upward triangles), and their union (the 43 smaller triangles created by their intersection).\n\nThe modern research convergence: chaos mathematics has discovered that many of the geometric patterns used in Tantric Yantras are what mathematicians call "strange attractors" — geometric forms that represent the stable states of complex non-linear dynamical systems. The Sri Yantra is mathematically related to several significant strange attractor geometries. This is the modern way of saying what the tradition said through different language: these geometric forms represent the stable, attractor states of consciousness — the forms that consciousness naturally settles into when it is in its most coherent, most self-consistent, most "realized" configurations.',
+        },
+        {
+          type: 'teaching',
+          heading: 'The Sri Yantra — Complete Structural Decoding',
+          body: `The Sri Yantra is the most complex and most complete Yantra in the tradition. Its structure, from outside to inside:\n\nBHUPURA (the earth boundary): A square boundary with three lines (giving it the appearance of a square gate on each side). The square represents Earth — the stable, grounded, material plane. The four gates correspond to the four cardinal directions and the four primary ways consciousness can enter the sacred field of the Yantra.\n\nTHREE CONCENTRIC CIRCLES: Between the Bhupura and the lotus petals, three circles represent the three qualities (Gunas) of manifest reality: Tamas (inertia), Rajas (activity), and Sattva (luminosity).\n\n16-PETAL LOTUS: The outer lotus of 16 petals corresponds to the 16 Nitya goddesses (one for each day of the waxing and waning lunar fortnight), the 16 arts (Kalas), and the 16 vowels of the Sanskrit alphabet. This is the gateway from the gross world to the subtle.\n\n8-PETAL LOTUS: The inner lotus of 8 petals corresponds to the 8 directions, the 8 Vasus (elemental divine beings), and the 8 primary emotional qualities of love. This is the heart of the Yantra\'s devotional field.\n\n14-TRIANGLE RING (Manvantara chakra): 14 triangles formed by the intersection of the nine primary triangles in the outermost ring. Associated with the 14 worlds of Vedic cosmology and the 14 primary channels of the nervous system.\n\n10-TRIANGLE RING (Bahirdashara chakra): 10 triangles in the outer ring of the central complex. Associated with the 10 Mahavidyas (the 10 great wisdom goddesses) and the 10 primary Pranas.\n\n10-TRIANGLE RING (Antardashara chakra): 10 triangles in the inner ring of the central complex. Associated with the 10 directions (including up and down) and the 10 organs of cognition and action.\n\n8-TRIANGLE RING (Ashtara chakra): 8 triangles forming the immediate surround of the central triangle. Associated with the 8 Matrikas (the 8 mother goddesses of the Sanskrit phonemes) and the 8 limbs of Yoga.\n\nCENTRAL TRIANGLE: The primary triangle, pointing downward, representing the Shakti principle at the heart of all creation. The primary Goddess dwells here.\n\nCENTRAL BINDU: The point. The undivided. The ground of the ground. The silence before the first sound. The consciousness before the first thought. This is Shiva-Shakti in their primordial unity before any triangle, any lotus, any boundary was necessary.',
+        },
+        {
+          type: 'teaching',
+          heading: 'Trataka on the Sri Yantra — The Visual Mantra Practice',
+          body: `The primary Sri Yantra practice for the non-initiated practitioner is Trataka — fixed-gaze meditation on the Yantra. Where mantra works through the auditory system, Yantra Trataka works through the visual system to produce the same consciousness-transformation from a different sensory angle.\n\nThe Trataka protocol for Sri Yantra:\n\nPhase 1 — Outer to inner: Begin with the gaze resting softly at the Bhupura (the square boundary). Do not focus sharply — allow the gaze to be soft, receptive, like the gaze at the full moon. Gradually allow the gaze to be drawn inward — from the Bhupura to the outer lotus, from the outer lotus to the inner lotus, from the inner lotus to the triangle rings, and finally to the central Bindu.\n\nPhase 2 — Bindu absorption: Allow the gaze to rest at the Bindu for as long as is natural. The Bindu is geometrically the point of zero dimension — it has location but no extent. Gazing at a true Bindu, the visual system eventually cannot distinguish between the point and the space around it — they merge. This merging of Bindu and space in the visual system mirrors the Tantric recognition: the point of undivided consciousness and the infinite space of awareness are not two things.\n\nPhase 3 — Inner vision: After sufficient Trataka, close the eyes. The after-image of the Sri Yantra will appear spontaneously on the inner visual field. Do not try to hold it — simply observe it as it moves, changes, and eventually fades. This inner Yantra is the beginning of the visual mantra\'s transition from the outer to the inner — the Yantra is now operating from within rather than from without.',
+        },
+        {
+          type: 'practice',
+          practice: {
+            title: 'Sri Yantra Trataka — The Visual Mantra Practice',
+            steps: [
+              'Obtain or print a clear Sri Yantra image and place it at eye level, approximately arm\'s length away, on your altar. Ideally a copper Sri Yantra engraved image — but a clean, clear printed image on white paper is adequate for this practice.',
+              'PREPARATION: 5 minutes of Nadi Shodhana to balance the visual brain hemispheres (left and right visual processing) before the practice.',
+              'OUTER TRATAKA (10 minutes): Soft, receptive gaze at the Bhupura (outer boundary). No blinking suppressed — natural blinking. The gaze is receptive, not penetrating.',
+              'PROGRESSIVE CENTERING (5 minutes): Allow the gaze to move inward — from the outer boundary through each ring, spending approximately 30 seconds at each ring level. Allow the geometric complexity to simplify as the gaze moves toward the center.',
+              'BINDU ABSORPTION (5 minutes): Rest at the central Bindu. Allow the visual system to soften until the boundary between point and space begins to dissolve.',
+              'INNER YANTRA (10 minutes): Close the eyes. Observe the after-image without interfering with it. When the after-image fades, continue to hold the space of the inner visual field with the same receptive, non-grasping attention.',
+              'MANTRA INTEGRATION (5 minutes): While still in the inner Yantra space, chant HREEM SHREEM KLEEM × 27 at Upamshu. Feel the mantra and the inner geometric field as two expressions of the same consciousness.',
+              'COMPLETE INTEGRATION SILENCE (5 minutes). Do not speak immediately after Yantra Trataka — the inner visual field is still active and speech interrupts its natural completion.',
+            ],
+          },
+        },
+        {
+          type: 'wisdom',
+          wisdomTitle: 'Ramana Maharshi on the Sri Yantra — "The Map Is the Territory"',
+          wisdomBody: `A devotee once asked Ramana Maharshi whether the Sri Yantra was a map of the cosmos or whether it was the cosmos itself. Ramana\'s response, characteristically precise and brief: "What is the difference? The map of the territory and the territory are both images in consciousness. The Sri Yantra is no less real than the world you call real. And the world you call real is no more real than the Sri Yantra. Both arise in the same consciousness, both are made of the same consciousness, both dissolve into the same consciousness. The only question worth asking about either is: whose consciousness is this? Find that one. Everything else, including the Sri Yantra, will be found within it." This teaching — that the Yantra\'s geometric perfection and the world\'s apparent chaotic complexity are equally within the one consciousness — is the Tantric non-dual recognition applied to the specific question of sacred geometry.`,
+        },
+        {
+          type: 'audio',
+          audio: {
+            id: 'l15-4-audio',
+            title: 'Sri Yantra Trataka — Guided Visual Mantra Session',
+            description: 'Kritagya guides the complete Sri Yantra Trataka protocol. The recording describes each phase without music during the gaze periods — only silence and occasional soft guidance. HREEM SHREEM KLEEM chanted at Upamshu during the mantra integration phase. 45 minutes. Use with a printed Sri Yantra at eye level.',
+            duration: '45:00',
+            url: '',
+          },
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 15.5
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'l15-5',
+      number: 5,
+      title: 'Nyasa — Mantric Installation of the Divine',
+      subtitle: 'Consecrating the Body as a Living Temple · Six Forms · Touch as Transmission',
+      durationMin: 20,
+      sections: [
+        {
+          type: 'intro',
+          body: `Nyasa (from the Sanskrit root NYA — to place, to install, to deposit) is the Tantric practice of installing specific sacred syllables, specific deity presences, and specific cosmic principles into specific points of the physical body through touch and mantra simultaneously. It is the most direct possible expression of the Tantric understanding that the body IS the temple — not a metaphor for the temple but the actual locus of sacred reality, requiring the same consecration and installation that a physical temple receives before the deity is installed in its sanctum. This lesson delivers the complete Nyasa system — all six forms — and the specific practice that transforms the body from an ordinary physical instrument into a living field of consecrated mantric intelligence.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'Why Nyasa — The Body as the Ultimate Yantra',
+          body: `The tradition\'s rationale for Nyasa is specific and philosophically precise: if the practitioner approaches their mantra practice with a body that has not been ritually consecrated, they are asking a radio that has not been tuned to receive a specific signal. The Bija mantras, Shakti transmissions, and sacred practices of the Siddha-Quantum tier all operate at frequencies that the unprepared body\'s field may be partially transparent to, partially reflecting, or partially absorbing in ways that are not optimal for the intended practice.\n\nNyasa specifically addresses this by installing the desired sacred frequencies at specific body points before practice begins — tuning the instrument to the frequency it will be asked to receive and transmit. A body that has been properly Nyasa-consecrated before practice does not need to gradually "warm up" — it begins at a level of sacred alignment that unprepared bodies only gradually reach (if at all) through practice alone.\n\nThe body as the ultimate Yantra: just as the Sri Yantra\'s 43 triangles, 24 lotus petals, and central Bindu are geometric representations of specific cosmic principles, the human body\'s 72,000 Nadis, 114 chakra points, and central Sushumna are the living, breathing, conscious version of the same cosmic principles. The Sri Yantra and the human body are both diagrams of the same reality — one in copper and geometry, one in flesh and Prana. Nyasa is the consecration of the living diagram — installing the mantric signatures of the cosmic principles into the specific body-points where those principles are most concentrated and most receptive.',
+        },
+        {
+          type: 'teaching',
+          heading: 'The Six Forms of Nyasa — A Complete Typology',
+          body: `The Tantric tradition identifies six distinct forms of Nyasa, each installing a different level of sacred content at a different level of specificity:\n\n1. HRIDAYA NYASA (Heart Installation): The simplest and most universal form. The practitioner places the right palm on the heart center and chants the heart mantra: NAMAH HRIDAYAYA. This single gesture consecrates the heart as the seat of the practice and establishes the Devi or deity of the practice as present at the heart before any other practice begins. This is the minimum Nyasa that every practice session should include.\n\n2. ANGA NYASA (Six-Limb Installation): The installation of six specific mantras at six body locations, corresponding to six cosmic principles: Heart (NAMAH), Crown (NAMAH SIRASE SVAHA), Tuft (NAMAH SHIKHAYAI VASHAT), Armor/chest (NAMAH KAVACHAYA HUM), Ajna/eyes (NAMAH NETRATRAYAYA VAUSHAT), Palms (NAMAH ASTRAYA PHAT). These six constitute the armor of the body — the energetic protection field installed before any intensive practice.\n\n3. KARA NYASA (Hand/Finger Installation): The installation of five Bija mantras at the five fingers of the right hand — one per finger, touching each finger to the thumb. This is done before any mantra practice involving a mala, before Japa, and before any healing transmission work with the hands. It transforms the hand into a consecrated instrument of mantric power.\n\n4. MATRIKA NYASA (Alphabet Installation): The installation of all 50 Sanskrit phonemes (the Matrikas — "the little mothers" of all language) at 50 specific body points. This is the most complete form of Nyasa — effectively installing the entire Sanskrit mantra system into the practitioner\'s body at once. Used before advanced mantra practice and before any practice that involves creating or chanting new mantras.\n\n5. BRAHMA NYASA (Full Body Consecration): A systematic installation covering 24 specific body regions, corresponding to the 24 categories of the Sankhya philosophical system. This form of Nyasa installs the complete metaphysical structure of the universe into the practitioner\'s body — making the body a living, embodied version of the complete cosmic map.\n\n6. JIVA NYASA (Soul Installation): The most advanced form — the installation of the practitioner\'s own Jiva (individual soul) into each body part, followed by the installation of the Atman (cosmic Self) into each body part. This practice is the Tantric equivalent of the Vedantic AHAM BRAHMASMI — the recognition that the individual soul and the cosmic Self are identical — but performed through specific touch and mantra at each body part rather than through philosophical contemplation.',
+        },
+        {
+          type: 'teaching',
+          heading: 'Kara Nyasa and Anga Nyasa — The Daily Practice Forms',
+          body: `Of the six forms, Kara Nyasa (hand installation) and Anga Nyasa (six-limb installation) are the two that the tradition prescribes for daily use — done at the beginning of every practice session before any other mantra work begins.\n\nKARA NYASA — The Hand Consecration Sequence (approximately 90 seconds):\n- Touch thumb to index finger: "ANG ANGUSTHABHYAM NAMAH" (I install at the thumbs)\n- Touch thumb to middle finger: "ING TARJANIBHYAM NAMAH" (I install at the index fingers)\n- Touch thumb to ring finger: "UNG MADHYAMABHYAM NAMAH" (I install at the middle fingers)\n- Touch thumb to little finger: "AING ANAMIKABHYAM NAMAH" (I install at the ring fingers)\n- Touch thumb to palm: "AUNG KANISHTHIKABHYAM NAMAH" (I install at the little fingers)\n- Clap hands together: "AH KARATALA KARA PRISHTHABHYAM NAMAH" (I install at the front and back of the hands)\n\nANGA NYASA — The Six-Limb Armor Sequence (approximately 2 minutes):\n- Right palm to heart: "OM AIM HREEM KLEEM NAMAH HRIDAYAYA" (the Trika heart installation)\n- Right hand touching crown: "OM AIM HREEM KLEEM NAMAH SIRASE SVAHA"\n- Right hand touching tuft: "OM AIM HREEM KLEEM NAMAH SHIKHAYAI VASHAT"\n- Both arms crossed over chest: "OM AIM HREEM KLEEM NAMAH KAVACHAYA HUM"\n- Right hand touching both eyes: "OM AIM HREEM KLEEM NAMAH NETRATRAYAYA VAUSHAT"\n- Both palms open, moving away from body: "OM AIM HREEM KLEEM NAMAH ASTRAYA PHAT"\n\nThese two sequences together — Kara Nyasa and Anga Nyasa — constitute the Tantric preparation that transforms every subsequent mantra from a sound the practitioner produces into a mantra that a consecrated instrument of the divine generates.',
+        },
+        {
+          type: 'practice',
+          practice: {
+            title: 'Daily Nyasa Protocol — Complete Pre-Practice Installation',
+            steps: [
+              'This protocol is done at the very beginning of every practice session — before Ganesha, before the Siddha sequence, before any mantra. Nyasa creates the consecrated field within which all subsequent practice occurs.',
+              'KARA NYASA (90 seconds): Sitting in meditation posture, perform the six-step hand installation as described above. With each touch: feel the specific Bija landing in the specific finger pair. This is not imagination — the fingers\' acupressure points are real, the touch activates them, and the mantra\'s frequency imprints at that activation point.',
+              'ANGA NYASA (2 minutes): Perform the six-location body installation. Each touch + mantra creates a specific point of sacred installation. After the final PHAT (releasing gesture), the six-point armor is established.',
+              'HRIDAYA NYASA DEEPENING (30 seconds): Return to the heart. Right palm on sternum. One additional moment of intentional installation: "I install the complete transmission of this practice into this heart. May everything that arises in this session arise from the heart center and return to it. OM." This personal Hridaya Nyasa is the most important of all the installations — it ensures the entire practice is heart-centered.',
+              'NOW BEGIN THE REST OF YOUR PRACTICE: Ganesha, 18-Siddha sequence, and whatever the session\'s primary focus is — all occurring within the consecrated field that Nyasa has established.',
+              'Once learned, the complete Kara + Anga + Hridaya Nyasa takes approximately 4 minutes. Do not skip it in the interests of time — those 4 minutes transform the quality of everything that follows by a degree that practitioners consistently report is qualitatively unmistakable.',
+            ],
+          },
+        },
+        {
+          type: 'mantra',
+          mantra: {
+            devanagari: 'ॐ ऐं ह्रीं क्लीं नमः हृदयाय\nॐ ऐं ह्रीं क्लीं नमः शिरसे स्वाहा\nॐ ऐं ह्रीं क्लीं नमः शिखायै वषट्\nॐ ऐं ह्रीं क्लीं नमः कवचाय हुम्\nॐ ऐं ह्रीं क्लीं नमः नेत्रत्रयाय वौषट्\nॐ ऐं ह्रीं क्लीं नमः अस्त्राय फट्',
+            transliteration: 'OM AIM HREEM KLEEM NAMAH HRIDAYAYA\nOM AIM HREEM KLEEM NAMAH SIRASE SVAHA\nOM AIM HREEM KLEEM NAMAH SHIKHAYAI VASHAT\nOM AIM HREEM KLEEM NAMAH KAVACHAYA HUM\nOM AIM HREEM KLEEM NAMAH NETRATRAYAYA VAUSHAT\nOM AIM HREEM KLEEM NAMAH ASTRAYA PHAT',
+            body: `The complete Anga Nyasa sequence with the Trika Bija (AIM HREEM KLEEM) as the primary consecrating force. The six terminal syllables — NAMAH (salutation/submission), SVAHA (complete offering to fire), VASHAT (offering to the gods), HUM (protection seal), VAUSHAT (empowerment), PHAT (dissolution/release) — are the six sacred completion words that seal each Nyasa installation. They encode the six primary modes of relating to the sacred: recognition, offering, honoring, protection, empowerment, and release. The complete Nyasa is therefore not only a mantra installation — it is a complete theology of the practitioner\'s relationship with the divine, encoded in six sequential gestures.`,
+          },
+        },
+        {
+          type: 'wisdom',
+          wisdomTitle: 'The Siddha Teaching on Touch — "Every Touch Is a Transmission"',
+          wisdomBody: `A teaching from the living Agastya tradition: "The Tantric tradition began with a recognition that most spirituality has forgotten: the human hand is itself a spiritual instrument of extraordinary precision. The hand has more neural representation in the sensory and motor cortex than any other body part except the face. It has 29 bones, 30+ joints, and over 100 muscles, tendons, and ligaments operating in coordinated precision. Its sensitivity is so fine that it can detect surface variations of less than a micron. And yet most people use this extraordinary instrument to pick up objects and tap screens. The Nyasa tradition uses the hand as what it actually is: a precision instrument of mantric installation. When the right palm — charged with the AIM HREEM KLEEM of the Anga Nyasa — touches the heart center, it is not a symbolic gesture. It is a physical event: the hand\'s electromagnetic field, carrying the imprint of the mantric sequence that preceded the touch, makes direct contact with the heart center\'s electromagnetic field and introduces the mantric imprint directly into the body\'s most powerful electromagnetic generator. Every touch is a transmission. Nyasa makes this transmission conscious, deliberate, and complete."`,
+        },
+        {
+          type: 'audio',
+          audio: {
+            id: 'l15-5-audio',
+            title: 'Nyasa Practice — Complete Daily Protocol',
+            description: 'Kritagya demonstrates and guides the complete daily Nyasa protocol: Kara Nyasa (6 finger pairs), Anga Nyasa (6 body locations with the Trika), and the personal Hridaya Nyasa deepening. Slow enough to follow in real time. 10 minutes — short enough to use as the actual opening of every session.',
+            duration: '10:00',
+            url: '',
+          },
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 15.6
+    // ─────────────────────────────────────────────────────
+    {
+      id: 'l15-6',
+      number: 6,
+      title: 'Kavacha — Mantra as Armor',
+      subtitle: 'Protective Fields · The Energetic Boundary · When and Why to Use It',
+      durationMin: 18,
+      sections: [
+        {
+          type: 'intro',
+          body: `KAVACHA (कवच) means armor, protective covering, or shield in Sanskrit. The Kavacha practices are a specific class of mantric work designed to create and maintain a protective energetic field around the practitioner — a boundary that prevents the infiltration of discordant, harmful, or destabilizing energies from the environment and from the psychic field of other people. This is not superstition or paranoid magical thinking — it is the practical application of the field-physics that the entire Siddha tradition is built upon: the recognition that the practitioner\'s subtle body is a permeable field that can be influenced by the fields of other beings and environments, and that maintaining the integrity of this field is as important for genuine practice as maintaining the integrity of any other aspect of the body-mind system.`,
+        },
+        {
+          type: 'teaching',
+          heading: 'Why Kavacha Is Needed — The Reality of Field Interaction',
+          body: `The research of HeartMath Institute has established that the human heart generates an electromagnetic field measurable up to 3 meters from the body surface — a field that is detectably different in its frequency signature depending on the emotional state of the individual. This field interacts with the fields of nearby individuals: when two people are in close physical proximity, their heart fields overlap and influence each other. The general principle has been confirmed: human electromagnetic fields are not contained within the skin. They extend into the space around the body and interact with the fields of other beings.\n\nThe Siddha tradition identified this interactive field-property of the subtle body thousands of years before HeartMath had instruments to measure it, and developed systematic practices — primarily mantra-based Kavacha — for managing these interactions in ways that preserve the integrity and direction of the practitioner\'s own field while maintaining genuine openness and care for the beings encountered.\n\nThe circumstances that most specifically require Kavacha practice:\n\nAfter intensive healing work: The practitioner who has opened their field for healing transmission work (Nada Chikitsa, Module 11) has deliberately increased the permeability of their subtle body field for the duration of the session. Post-healing Kavacha seals this field before the practitioner re-enters the ordinary social environment.\n\nBefore entering disturbed environments: Hospitals, prisons, densely populated urban environments with high levels of emotional distress, family gatherings where significant unresolved tension is present — all are environments in which the practitioner\'s open field can absorb discordant frequencies that interfere with practice quality for days afterward.\n\nAfter significant Kundalini activation: Periods of intensive practice — particularly any practice that involves significant Kundalini movement or Samadhi states — leave the subtle body in a state of heightened openness and sensitivity. Kavacha in these periods is protective in a similar way to the Anga Nyasa before practice: it provides the containment that prevents the opened field from excessive interaction with the ordinary world.',
+        },
+        {
+          type: 'teaching',
+          heading: 'The Primary Kavacha Mantras',
+          body: `Several specific mantras constitute the primary Kavacha toolkit:\n\nNARAYANA KAVACHA: The most complete of all Kavachas — a 40-verse text from the Bhagavata Purana in which every body part, every faculty, every direction, and every dimension of existence is protected by the specific forms of Narayana/Vishnu associated with it. The complete Narayana Kavacha is traditionally chanted on Saturday morning at Brahma Muhurta for maximum protective effect. Its core verse: "SADA PAD MALA PATRAM VAKSHE SRIVATSAYA KAUSTUBHA / NAMAMI VISHNUM SUNDARAM" — "I bow to the beautiful Vishnu who always wears the lotus garland, the Kaustubha gem on his chest."\n\nDURGA KAVACHA: The protective field of the fierce mother — specifically for practitioners who are dealing with significant negative external influences, psychic attack from disturbed individuals, or periods of intense karmic challenge. The Durga Kavacha from the Devi Mahatmya is the most potent protective mantra for difficult circumstances, invoking each of Durga\'s specific forms as armor for each specific dimension of the practitioner\'s being.\n\nHANUMAN KAVACHA: The 8-verse armor of Hanuman that the tradition associates with the most direct physical and psychic protection. Chanted before sleep (when the practitioner\'s field is most vulnerable due to the relaxation of ordinary boundary awareness), before entering dangerous situations, and before any practice that involves working with difficult energies (shadow work, Kali practice, advanced Kundalini work).\n\nPANCHAKSHARA KAVACHA: The five-element armor using OM NAMAH SHIVAYA — specifically: NA EARTH protects the lower body, MA WATER protects the digestive system, SHI FIRE protects the heart, VA AIR protects the throat, YA SPACE protects the mind and skull. Chanted once per element, with awareness of the specific body region being protected.',
+        },
+        {
+          type: 'practice',
+          practice: {
+            title: 'The Complete Kavacha Protocol — Before Intensive Practice and After Healing Work',
+            steps: [
+              'PRE-PRACTICE KAVACHA (2 minutes): After Nyasa, before the primary mantra practice, chant the following three-part protection sequence: OM NAMAH SHIVAYA × 3 (with element-awareness for each syllable), then OM NAMO NARAYANAYA × 3 (Vishnu protection field established), then JAI HANUMAN × 3 (the warrior\'s field of fearlessness). This three-deity Kavacha establishes Shiva\'s purifying field, Vishnu\'s sustaining field, and Hanuman\'s protective field simultaneously.',
+              'POST-HEALING KAVACHA (5 minutes): After any healing session for another person — after Nada Chikitsa, after distance healing, after group transmission. Wash hands with cold water while chanting OM NAMO NARAYANAYA × 3. Then: right palm over heart, chant AIM HREEM KLEEM NAMAH HRIDAYAYA × 3 (re-sealing the heart after it was opened for healing). Then: both arms crossed over chest (Kavachaya position from Anga Nyasa), chant OM NAMAH SHIVAYA KAVACHAYA HUM × 3.',
+              'PANCHAKSHARA KAVACHA (for challenging environments, 3 minutes): Touch the base of the spine: "NA — the earth element protects my physical foundation." Touch the navel: "MA — the water element protects my creative and emotional field." Touch the heart: "SHI — the fire element protects my heart and vital force." Touch the throat: "VA — the air element protects my expression and communication." Touch the crown: "YA — the space element protects my mind and awareness." Chant OM NAMAH SHIVAYA 5 times, feeling all five elements simultaneously active.',
+              'SLEEP KAVACHA (before sleep, 2 minutes): Lie in bed. Right palm on heart, left palm on Muladhara (base of abdomen). Chant HANUMAN CHALISA opening verse: "JAI HANUMAN GYAN GUN SAGAR / JAI KAPIS TIHUN LOK UJAAGAR" × 3. Then SOHAM × 21 on the natural breath. Sleep in the field that has been established.',
+            ],
+          },
+        },
+        {
+          type: 'mantra',
+          mantra: {
+            devanagari: 'ओम् नमः शिवाय कवचाय हुम्\nओम् नमो नारायणाय रक्षतु\nजय हनुमान विजय हनुमान',
+            transliteration: 'OM NAMAH SHIVAYA KAVACHAYA HUM\nOM NAMO NARAYANAYA RAKSHATU\nJAI HANUMAN VIJAYA HANUMAN',
+            translation: 'OM Namah Shivaya — armor — protection seal\nOM Namo Narayanaya — may he protect\nVictory to Hanuman — victorious Hanuman',
+            body: `The three-deity Kavacha mantra — the minimum viable protective field for the Siddha-Quantum practitioner. Each of the three addresses a different dimension of the practitioner\'s field: OM NAMAH SHIVAYA KAVACHAYA HUM seals the pranic body (Shiva\'s purifying armor). OM NAMO NARAYANAYA RAKSHATU asks for the sustaining protection (RAKSHATU = may he protect) of Narayana\'s all-pervading field. JAI HANUMAN VIJAYA HANUMAN invokes Hanuman\'s specific quality of fearless, warrior-strength protection — the protection of a being who faces everything with complete confidence because he knows who he serves.`,
+          },
+        },
+        {
+          type: 'wisdom',
+          wisdomTitle: 'The Siddha Perspective on Protection — "The Clear Mirror Does Not Need a Shield"',
+          wisdomBody: `A nuanced teaching from the Thirumoolar tradition on the relationship between spiritual development and the need for Kavacha: "At the beginning of the path, the practitioner needs much Kavacha — their field is porous, uncontrolled, easily influenced by every passing current of collective emotion and individual psychic activity. The Kavacha practices are essential at this stage — they provide the container within which the Nadi purification and the opening of the higher chakras can occur safely. As the practice matures, something changes: the Siddha whose consciousness has become clear and still — like a clean mirror — does not need a shield. Not because they have become impervious to external influence, but because their inner clarity naturally reflects external influence without absorbing it. The disturbed field of a troubled person enters the Siddha\'s presence and is reflected back to its source in a purified form — the Siddha has become a mirror rather than a sponge. This transformation does not make Kavacha unnecessary — even mirrors benefit from proper care. But it changes Kavacha from urgent defense into thoughtful maintenance. Use Kavacha diligently in the early and middle stages of practice. As the inner clarity develops, notice how the need gradually changes quality. The day you realize you are practicing Kavacha for others\' benefit rather than your own is the day you understand what the tradition was always pointing toward."`,
+        },
+        {
+          type: 'audio',
+          audio: {
+            id: 'l15-6-audio',
+            title: 'Kavacha Practices — All Four Protocols',
+            description: 'Kritagya guides all four Kavacha protocols in sequence: Pre-practice (2 min), Post-healing (5 min), Panchakshara for challenging environments (3 min), and Sleep Kavacha (2 min). Total 12 minutes — short enough to use as actual daily practice recordings.',
+            duration: '15:00',
+            url: '',
+          },
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────
+    // LESSON 15.7
+
 export const ACADEMY_CURRICULUM: Module[] = [
   module1, module2, module3, module4, module5,
   module6, module7, module8, module9, module10,
-  // module11–24 — append as files arrive
+  module11, module12, module13, module14, module15,
+  // module16–24 — append as files arrive
 ];
 
 export const TIER_CONFIG = {
-  free:   { label: 'Nada Bija',       price: 'Free',       color: '#6B7280', modules: [1,2,3,4,5,6] },
-  prana:  { label: 'Prana-Flow',      price: '€19/mo',     color: '#10B981', modules: [7,8,9,10,11,12] },
-  siddha: { label: 'Siddha-Quantum',  price: '€45/mo',     color: '#D4AF37', modules: [13,14,15,16,17,18] },
-  akasha: { label: 'Akasha-Infinity', price: '€1,111',     color: '#A78BFA', modules: [19,20,21,22,23,24] },
+  free:   { label: 'Nada Bija',       price: 'Free',   color: '#6B7280', modules: [1,2,3,4,5,6] },
+  prana:  { label: 'Prana-Flow',      price: '€19/mo', color: '#10B981', modules: [7,8,9,10,11,12] },
+  siddha: { label: 'Siddha-Quantum',  price: '€45/mo', color: '#D4AF37', modules: [13,14,15,16,17,18] },
+  akasha: { label: 'Akasha-Infinity', price: '€1,111', color: '#A78BFA', modules: [19,20,21,22,23,24] },
 };
