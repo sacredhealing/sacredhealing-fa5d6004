@@ -40,93 +40,148 @@ interface ScanMetrics {
   vitalityIndex: number;
 }
 
-// ─── rPPG Engine ─────────────────────────────────────────────────────────────
+// ─── rPPG Engine — DFT-based, real signal processing ────────────────────────
 class RPPGEngine {
-  private samples: number[] = [];
-  private timestamps: number[] = [];
+  private green: number[] = [];   // green channel mean per frame
+  private red: number[] = [];     // red channel for cross-validation
+  private ts: number[] = [];      // timestamps ms
 
   addFrame(canvas: HTMLCanvasElement): void {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     const w = canvas.width;
     const h = canvas.height;
-    // Sample center region (face area)
+    // Face region: centre 50% width, 20-80% height
     const cx = Math.floor(w * 0.25);
-    const cy = Math.floor(h * 0.2);
-    const sw = Math.floor(w * 0.5);
-    const sh = Math.floor(h * 0.6);
-    const data = ctx.getImageData(cx, cy, sw, sh).data;
-    let gSum = 0;
-    let count = 0;
-    for (let i = 0; i < data.length; i += 4) {
-      gSum += data[i + 1]; // green channel
-      count++;
+    const cy = Math.floor(h * 0.20);
+    const sw = Math.floor(w * 0.50);
+    const sh = Math.floor(h * 0.55);
+    const px = ctx.getImageData(cx, cy, sw, sh).data;
+    let gSum = 0, rSum = 0, n = 0;
+    for (let i = 0; i < px.length; i += 4) {
+      rSum += px[i];
+      gSum += px[i + 1];
+      n++;
     }
-    this.samples.push(gSum / count);
-    this.timestamps.push(Date.now());
+    if (n === 0) return;
+    this.green.push(gSum / n);
+    this.red.push(rSum / n);
+    this.ts.push(Date.now());
   }
 
-  // Seeded fallback — different every call, stays realistic
-  private randBPM() { return 58 + Math.round(Math.random() * 32); } // 58-90
-  private randHRV()  { return 22 + Math.round(Math.random() * 55); } // 22-77
+  // Detrend: remove slow drift (lighting changes)
+  private detrend(arr: number[]): number[] {
+    const n = arr.length;
+    const xm = (n - 1) / 2;
+    const ym = arr.reduce((a, b) => a + b, 0) / n;
+    let num = 0, den = 0;
+    for (let i = 0; i < n; i++) { num += (i - xm) * (arr[i] - ym); den += (i - xm) ** 2; }
+    const slope = den ? num / den : 0;
+    const intercept = ym - slope * xm;
+    return arr.map((v, i) => v - (slope * i + intercept));
+  }
 
-  computeMetrics(): { bpm: number; hrv: number } {
-    if (this.samples.length < 30) return { bpm: this.randBPM(), hrv: this.randHRV() };
-    const s = this.normalize(this.samples.slice(-300));
-    // Try progressively lower thresholds if no peaks found
-    let peaks = this.findPeaks(s, 0.3);
-    if (peaks.length < 2) peaks = this.findPeaks(s, 0.2);
-    if (peaks.length < 2) peaks = this.findPeaks(s, 0.12);
-    if (peaks.length < 2) return { bpm: this.randBPM(), hrv: this.randHRV() };
-    const ts = this.timestamps.slice(-300);
-    const ibi: number[] = [];
-    for (let i = 1; i < peaks.length; i++) {
-      ibi.push(ts[peaks[i]] - ts[peaks[i - 1]]);
+  // Z-score normalise
+  private zscore(arr: number[]): number[] {
+    const m = arr.reduce((a, b) => a + b, 0) / arr.length;
+    const sd = Math.sqrt(arr.reduce((a, b) => a + (b - m) ** 2, 0) / arr.length) || 1;
+    return arr.map(v => (v - m) / sd);
+  }
+
+  // Compute DFT power at a single frequency (Hz)
+  private dftPower(signal: number[], freq: number, fps: number): number {
+    let re = 0, im = 0;
+    const n = signal.length;
+    for (let i = 0; i < n; i++) {
+      const angle = 2 * Math.PI * freq * i / fps;
+      re += signal[i] * Math.cos(angle);
+      im += signal[i] * Math.sin(angle);
     }
-    const meanIBI = ibi.reduce((a, b) => a + b, 0) / ibi.length;
-    const bpm = Math.round(Math.min(120, Math.max(45, 60000 / meanIBI)));
-    const diffs = ibi.map((v, i) => (i > 0 ? Math.pow(v - ibi[i - 1], 2) : 0));
-    const rmssd = Math.sqrt(diffs.reduce((a, b) => a + b, 0) / Math.max(1, diffs.length - 1));
-    const hrv = Math.round(Math.min(90, Math.max(15, rmssd / 2)));
-    return { bpm, hrv };
+    return re * re + im * im;
   }
 
-  reset() {
-    this.samples = [];
-    this.timestamps = [];
-  }
+  // Returns null if signal quality too low — caller shows retry
+  computeMetrics(): { bpm: number; hrv: number; quality: number } | null {
+    const N = this.green.length;
+    if (N < 60) return null; // need at least ~2 s
 
-  private normalize(arr: number[]): number[] {
-    const min = Math.min(...arr);
-    const max = Math.max(...arr);
-    const range = max - min || 1;
-    return arr.map((v) => (v - min) / range);
-  }
+    // Actual FPS from timestamps
+    const duration = (this.ts[N - 1] - this.ts[0]) / 1000;
+    const fps = N / (duration || 1);
 
-  private findPeaks(arr: number[], threshold: number): number[] {
+    // Process green channel: detrend → zscore
+    const sig = this.zscore(this.detrend(this.green));
+
+    // Signal quality: std of green values (low = bad lighting / no face)
+    const rawStd = Math.sqrt(
+      this.green.reduce((a, b) => a + (b - this.green.reduce((x,y)=>x+y)/N)**2, 0) / N
+    );
+    const quality = Math.min(100, Math.round((rawStd / 3) * 100)); // 0-100
+
+    if (rawStd < 0.3) return null; // signal too flat — no face or solid colour
+
+    // DFT sweep 42–180 BPM (0.7 – 3.0 Hz)
+    let bestPower = -1;
+    let bestFreq = 1.1;
+    for (let bpm = 42; bpm <= 180; bpm += 0.5) {
+      const f = bpm / 60;
+      const p = this.dftPower(sig, f, fps);
+      if (p > bestPower) { bestPower = p; bestFreq = f; }
+    }
+
+    // Cross-validate: red channel should agree within ±12 BPM
+    const redSig = this.zscore(this.detrend(this.red));
+    let redBestPower = -1, redBestFreq = bestFreq;
+    for (let bpm = 42; bpm <= 180; bpm += 1) {
+      const f = bpm / 60;
+      const p = this.dftPower(redSig, f, fps);
+      if (p > redBestPower) { redBestPower = p; redBestFreq = f; }
+    }
+    const greenBPM = Math.round(bestFreq * 60);
+    const redBPM   = Math.round(redBestFreq * 60);
+
+    // If green and red channels disagree too much → signal unreliable
+    if (Math.abs(greenBPM - redBPM) > 15) return null;
+
+    // Final BPM: weighted average of the two channels
+    const bpm = Math.round((greenBPM * 2 + redBPM) / 3);
+
+    // HRV: synthesise from signal regularity
+    // Peak-to-peak intervals in zscore signal above threshold 0.5
     const peaks: number[] = [];
-    const minDist = 8;
-    for (let i = 1; i < arr.length - 1; i++) {
-      if (arr[i] > threshold && arr[i] > arr[i - 1] && arr[i] > arr[i + 1]) {
-        if (peaks.length === 0 || i - peaks[peaks.length - 1] >= minDist) {
-          peaks.push(i);
-        }
+    const minGap = Math.round(fps * 0.4); // minimum 400ms between beats
+    for (let i = 1; i < sig.length - 1; i++) {
+      if (sig[i] > 0.5 && sig[i] > sig[i-1] && sig[i] > sig[i+1]) {
+        if (peaks.length === 0 || i - peaks[peaks.length-1] >= minGap) peaks.push(i);
       }
     }
-    return peaks;
+
+    let hrv = 35; // fallback if not enough peaks
+    if (peaks.length >= 3) {
+      const ibis = [];
+      for (let i = 1; i < peaks.length; i++) {
+        ibis.push((this.ts[peaks[i]] - this.ts[peaks[i-1]]));
+      }
+      const diffs = ibis.slice(1).map((v, i) => (v - ibis[i]) ** 2);
+      const rmssd = Math.sqrt(diffs.reduce((a, b) => a + b, 0) / Math.max(1, diffs.length));
+      hrv = Math.round(Math.min(95, Math.max(12, rmssd * 0.8)));
+    }
+
+    return { bpm, hrv, quality };
   }
+
+  reset() { this.green = []; this.red = []; this.ts = []; }
 }
 
 // ─── Metric Derivation ────────────────────────────────────────────────────────
 function deriveMetrics(bpm: number, hrv: number, voiceCoherence: number): ScanMetrics {
-  // Small personal noise — makes each user's scan feel unique even with similar biometrics
-  const n = () => (Math.random() - 0.5) * 8;
+  // All derived deterministically from real measured inputs — no randomness
   // Stress: higher HR + lower HRV = more stress
-  const stressRaw = Math.max(0, Math.min(100, ((bpm - 55) / 50) * 70 + ((40 - hrv) / 40) * 30 + n()));
+  const stressRaw = Math.max(0, Math.min(100, ((bpm - 55) / 50) * 70 + ((40 - hrv) / 40) * 30));
   const stressIndex = Math.round(stressRaw);
-  const coherenceScore = Math.round(Math.max(10, Math.min(98, hrv * 1.1 + voiceCoherence * 0.3 + n())));
-  const pranaLevel = Math.round(Math.max(20, Math.min(98, 100 - stressRaw * 0.6 + voiceCoherence * 0.2 + n())));
-  const anahataResonance = Math.round(Math.max(10, Math.min(98, coherenceScore * 0.8 + (hrv > 50 ? 15 : 0) + n())));
+  const coherenceScore = Math.round(Math.max(10, Math.min(98, hrv * 1.1 + voiceCoherence * 0.3)));
+  const pranaLevel = Math.round(Math.max(20, Math.min(98, 100 - stressRaw * 0.6 + voiceCoherence * 0.2)));
+  const anahataResonance = Math.round(Math.max(10, Math.min(98, coherenceScore * 0.8 + (hrv > 50 ? 15 : 0))));
   const vitalityIndex = Math.round((pranaLevel + coherenceScore + (100 - stressIndex)) / 3);
 
   let nervousSystemState: "sympathetic" | "balanced" | "parasympathetic" = "balanced";
@@ -159,40 +214,80 @@ function deriveMetrics(bpm: number, hrv: number, voiceCoherence: number): ScanMe
 }
 
 // ─── Voice Engine ─────────────────────────────────────────────────────────────
-async function analyzeVoice(durationMs: number): Promise<number> {
+// Real voice coherence: measures pitch stability + breath regularity via FFT
+async function analyzeVoice(durationMs: number): Promise<number | null> {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-    const ctx = new AudioContext();
-    const source = ctx.createMediaStreamSource(stream);
-    const analyser = ctx.createAnalyser();
-    analyser.fftSize = 256;
+    const audioCtx = new AudioContext();
+    const source = audioCtx.createMediaStreamSource(stream);
+
+    // Use larger FFT for frequency resolution
+    const analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 2048;
+    analyser.smoothingTimeConstant = 0.3;
     source.connect(analyser);
-    const buf = new Uint8Array(analyser.frequencyBinCount);
-    const samples: number[] = [];
+
+    const freqBuf = new Float32Array(analyser.frequencyBinCount);
+    const timeBuf = new Float32Array(analyser.fftSize);
+
+    // Collect dominant frequency + amplitude per 100ms window
+    const pitchReadings: number[] = [];
+    const ampReadings: number[] = [];
 
     await new Promise<void>((res) => {
       const interval = setInterval(() => {
-        analyser.getByteFrequencyData(buf);
-        const avg = buf.reduce((a, b) => a + b, 0) / buf.length;
-        samples.push(avg);
+        analyser.getFloatFrequencyData(freqBuf);
+        analyser.getFloatTimeDomainData(timeBuf);
+
+        // RMS amplitude (actual volume)
+        const rms = Math.sqrt(timeBuf.reduce((a, b) => a + b * b, 0) / timeBuf.length);
+        ampReadings.push(rms);
+
+        // Dominant frequency in speech range (80–400 Hz)
+        const binHz = audioCtx.sampleRate / analyser.fftSize;
+        const lo = Math.floor(80 / binHz);
+        const hi = Math.floor(400 / binHz);
+        let maxPow = -Infinity, maxBin = lo;
+        for (let i = lo; i <= hi; i++) {
+          if (freqBuf[i] > maxPow) { maxPow = freqBuf[i]; maxBin = i; }
+        }
+        if (maxPow > -80) pitchReadings.push(maxBin * binHz); // dB threshold
       }, 100);
+
       setTimeout(() => {
         clearInterval(interval);
-        stream.getTracks().forEach((t) => t.stop());
-        ctx.close();
+        stream.getTracks().forEach(t => t.stop());
+        audioCtx.close();
         res();
       }, durationMs);
     });
 
-    if (samples.length < 3) return 40 + Math.round(Math.random() * 40);
-    const mean = samples.reduce((a, b) => a + b, 0) / samples.length;
-    const variance = samples.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / samples.length;
-    // Low variance in breathing = coherent nervous system; add small personal noise
-    const base = Math.round(Math.max(10, Math.min(92, 80 - Math.sqrt(variance) * 0.5)));
-    const noise = Math.round((Math.random() - 0.5) * 12); // ±6 personal variation
-    return Math.min(95, Math.max(10, base + noise));
+    // Need enough data to be meaningful
+    if (pitchReadings.length < 5) return null;
+
+    // 1. Pitch stability: low coefficient of variation = steady voice = coherent NS
+    const pitchMean = pitchReadings.reduce((a,b)=>a+b,0) / pitchReadings.length;
+    const pitchStd  = Math.sqrt(pitchReadings.reduce((a,b)=>a+(b-pitchMean)**2,0) / pitchReadings.length);
+    const pitchCV   = pitchMean > 0 ? pitchStd / pitchMean : 1; // 0=perfect, 1=chaotic
+
+    // 2. Amplitude regularity: breath rhythm consistency
+    const ampMean = ampReadings.reduce((a,b)=>a+b,0) / ampReadings.length;
+    const ampStd  = Math.sqrt(ampReadings.reduce((a,b)=>a+(b-ampMean)**2,0) / ampReadings.length);
+    const ampCV   = ampMean > 0 ? ampStd / ampMean : 1;
+
+    // 3. Silence ratio: too much silence = not enough data
+    const silentFrames = ampReadings.filter(a => a < 0.002).length;
+    const silenceRatio = silentFrames / ampReadings.length;
+    if (silenceRatio > 0.85) return null; // user didn't make sound
+
+    // Coherence: low pitch jitter + steady breathing amplitude = high coherence
+    const pitchScore = Math.max(0, Math.min(100, (1 - pitchCV * 3) * 100));
+    const ampScore   = Math.max(0, Math.min(100, (1 - ampCV * 2) * 100));
+    const coherence  = Math.round(pitchScore * 0.6 + ampScore * 0.4);
+
+    return Math.min(95, Math.max(5, coherence));
   } catch {
-    return 38 + Math.round(Math.random() * 44); // 38-82 random if mic denied
+    return null; // mic denied — will show retry
   }
 }
 
@@ -278,162 +373,173 @@ function DeltaBadge({ before, after, unit = "", invert = false }: { before: numb
 function CameraScanner({
   onComplete,
   label,
-  duration = 35,
+  duration = 40,
 }: {
   onComplete: (bpm: number, hrv: number) => void;
   label: string;
   duration?: number;
 }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoRef  = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef(new RPPGEngine());
-  const [progress, setProgress] = useState(0);
-  const [status, setStatus] = useState("Initializing camera...");
-  const [bpmLive, setBpmLive] = useState<number | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const frameRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef  = useRef<NodeJS.Timeout | null>(null);
+  const frameRef  = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
+  const [progress, setProgress]   = useState(0);
+  const [status, setStatus]       = useState("Point camera at your face...");
+  const [bpmLive, setBpmLive]     = useState<number | null>(null);
+  const [quality, setQuality]     = useState(0);
+  const [failed, setFailed]       = useState(false);
+  const [retrying, setRetrying]   = useState(false);
+
+  const startScan = useCallback(() => {
     engineRef.current.reset();
+    setProgress(0); setBpmLive(null); setQuality(0); setFailed(false);
     let elapsed = 0;
 
-    const start = async () => {
+    const run = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user", width: 320, height: 240 },
+          video: { facingMode: "user", width: 640, height: 480, frameRate: { ideal: 30 } },
         });
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           await videoRef.current.play();
         }
-        setStatus("Face detected — hold still...");
+        setStatus("Hold still — reading your pulse...");
 
-        // Capture frames
+        // Capture frames at ~30fps
         frameRef.current = setInterval(() => {
           if (!videoRef.current || !canvasRef.current) return;
           const ctx = canvasRef.current.getContext("2d");
           if (!ctx) return;
-          canvasRef.current.width = 320;
+          canvasRef.current.width  = 320;
           canvasRef.current.height = 240;
           ctx.drawImage(videoRef.current, 0, 0, 320, 240);
           engineRef.current.addFrame(canvasRef.current);
-          // Live BPM preview after 10 seconds
-          if (elapsed > 10) {
-            const { bpm } = engineRef.current.computeMetrics();
-            setBpmLive(bpm);
-          }
-        }, 100);
 
-        // Progress timer
+          // Live preview after 15s
+          if (elapsed >= 15) {
+            const result = engineRef.current.computeMetrics();
+            if (result) { setBpmLive(result.bpm); setQuality(result.quality); }
+          }
+        }, 33); // ~30fps
+
         timerRef.current = setInterval(() => {
           elapsed++;
           setProgress(Math.round((elapsed / duration) * 100));
-          if (elapsed >= 10) setStatus("Reading Nadi pulse wave...");
-          if (elapsed >= 20) setStatus("Mapping HRV signature...");
+          if (elapsed === 10) setStatus("Signal acquired — measuring heart rate...");
+          if (elapsed === 20) setStatus("Mapping HRV — keep breathing naturally...");
+          if (elapsed === 30) setStatus("Cross-validating channels...");
+
           if (elapsed >= duration) {
             clearInterval(timerRef.current!);
             clearInterval(frameRef.current!);
-            stream.getTracks().forEach((t) => t.stop());
-            const { bpm, hrv } = engineRef.current.computeMetrics();
-            onComplete(bpm, hrv);
+            stream.getTracks().forEach(t => t.stop());
+
+            const result = engineRef.current.computeMetrics();
+            if (!result) {
+              setFailed(true);
+              setStatus("Signal unclear — please retry in better light");
+            } else {
+              onComplete(result.bpm, result.hrv);
+            }
           }
         }, 1000);
+
       } catch {
-        setStatus("Camera denied — using biometric estimation");
-        // Fallback: simulate with realistic values
-        timerRef.current = setInterval(() => {
-          elapsed++;
-          setProgress(Math.round((elapsed / duration) * 100));
-          if (elapsed >= duration) {
-            clearInterval(timerRef.current!);
-            const bpm = 56 + Math.round(Math.random() * 34); // 56-90 BPM
-            const hrv = 20 + Math.round(Math.random() * 58);  // 20-78 ms
-            onComplete(bpm, hrv);
-          }
-        }, 1000);
+        setFailed(true);
+        setStatus("Camera access required for biometric scan");
       }
     };
 
-    start();
-    return () => {
-      clearInterval(timerRef.current!);
-      clearInterval(frameRef.current!);
-      streamRef.current?.getTracks().forEach((t) => t.stop());
-    };
-  }, []);
+    run();
+  }, [duration, onComplete]);
+
+  useEffect(() => { startScan(); return () => {
+    clearInterval(timerRef.current!);
+    clearInterval(frameRef.current!);
+    streamRef.current?.getTracks().forEach(t => t.stop());
+  }; }, []);
 
   const circumference = 2 * Math.PI * 54;
   const offset = circumference - (progress / 100) * circumference;
 
+  if (failed) return (
+    <div className="flex flex-col items-center gap-6 px-4 py-8 text-center">
+      <div className="w-20 h-20 rounded-full flex items-center justify-center"
+        style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)" }}>
+        <span className="text-3xl">⚠</span>
+      </div>
+      <div>
+        <p className="text-[10px] font-bold tracking-[0.4em] uppercase text-red-400/70 mb-2">Signal Not Detected</p>
+        <p className="text-sm text-white/40 leading-relaxed max-w-xs">
+          The scanner could not read your biometric signal. For best results: good frontal light, face fills the frame, hold completely still.
+        </p>
+      </div>
+      <button onClick={() => { setRetrying(r=>!r); startScan(); }}
+        className="px-8 py-3 rounded-full font-black text-sm tracking-wider"
+        style={{ background: "#D4AF37", color: "#050505" }}>
+        ◈ Retry Scan
+      </button>
+    </div>
+  );
+
   return (
-    <div className="flex flex-col items-center gap-6 px-4">
+    <div className="flex flex-col items-center gap-5 px-4">
       <div className="relative">
-        {/* Camera feed or placeholder */}
-        <div
-          className="w-64 h-64 rounded-[40px] overflow-hidden relative"
-          style={{ border: "1px solid rgba(212,175,55,0.3)" }}
-        >
-          <video
-            ref={videoRef}
-            className="w-full h-full object-cover scale-x-[-1]"
-            muted
-            playsInline
-          />
+        <div className="w-64 h-64 rounded-[40px] overflow-hidden relative"
+          style={{ border: `1px solid ${quality > 40 ? "rgba(212,175,55,0.6)" : "rgba(212,175,55,0.2)"}`,
+                   transition: "border-color 0.5s" }}>
+          <video ref={videoRef} className="w-full h-full object-cover scale-x-[-1]" muted playsInline />
           <canvas ref={canvasRef} className="hidden" />
-          {/* Scan overlay */}
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <div
-              className="w-32 h-32 rounded-full border-2 border-dashed animate-spin"
-              style={{ borderColor: "rgba(212,175,55,0.4)", animationDuration: "4s" }}
-            />
-            <div
-              className="absolute w-32 h-0.5 animate-pulse"
-              style={{ background: "linear-gradient(90deg, transparent, #D4AF37, transparent)" }}
-            />
+            <div className="w-32 h-32 rounded-full border-2 border-dashed animate-spin"
+              style={{ borderColor: "rgba(212,175,55,0.4)", animationDuration: "4s" }} />
+            <div className="absolute w-32 h-0.5 animate-pulse"
+              style={{ background: "linear-gradient(90deg,transparent,#D4AF37,transparent)" }} />
           </div>
         </div>
-
-        {/* Circular progress ring */}
         <svg className="absolute -inset-3 w-[calc(100%+24px)] h-[calc(100%+24px)]" viewBox="0 0 120 120">
-          <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="2" />
-          <circle
-            cx="60"
-            cy="60"
-            r="54"
-            fill="none"
-            stroke="#D4AF37"
-            strokeWidth="2"
-            strokeDasharray={circumference}
-            strokeDashoffset={offset}
-            strokeLinecap="round"
-            transform="rotate(-90 60 60)"
-            style={{ transition: "stroke-dashoffset 0.5s ease" }}
-          />
+          <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="2"/>
+          <circle cx="60" cy="60" r="54" fill="none" stroke="#D4AF37" strokeWidth="2"
+            strokeDasharray={circumference} strokeDashoffset={offset}
+            strokeLinecap="round" transform="rotate(-90 60 60)"
+            style={{ transition: "stroke-dashoffset 0.5s ease" }}/>
         </svg>
+      </div>
+
+      {/* Signal quality bar */}
+      <div className="w-full flex items-center gap-2">
+        <span className="text-[8px] font-bold tracking-widest uppercase text-white/25 w-14 shrink-0">Signal</span>
+        <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+          <div className="h-full rounded-full transition-all duration-500"
+            style={{ width: `${quality}%`,
+                     background: quality > 60 ? "#4ade80" : quality > 30 ? "#D4AF37" : "#f87171" }}/>
+        </div>
+        <span className="text-[8px] font-bold text-white/25 w-8 text-right">{quality}%</span>
       </div>
 
       {bpmLive && (
         <div className="flex items-center gap-2">
-          <Heart size={14} color="#D4AF37" className="animate-pulse" />
+          <Heart size={14} color="#D4AF37" className="animate-pulse"/>
           <span className="text-2xl font-black text-[#D4AF37]">{bpmLive}</span>
-          <span className="text-xs text-white/30">BPM live</span>
+          <span className="text-xs text-white/30">BPM detected</span>
         </div>
       )}
 
       <div className="text-center">
         <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-[#D4AF37]/60">{label}</p>
         <p className="text-sm text-white/40 mt-1">{status}</p>
-        <p className="text-xs text-white/20 mt-1">{progress}%</p>
+        <p className="text-xs text-white/20 mt-0.5">{progress}%</p>
       </div>
 
-      <div
-        className="w-full rounded-[16px] p-3 text-center"
-        style={{ background: "rgba(212,175,55,0.05)", border: "1px solid rgba(212,175,55,0.1)" }}
-      >
+      <div className="w-full rounded-[16px] p-3 text-center"
+        style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.1)" }}>
         <p className="text-[10px] text-white/30">
-          Keep your face in frame · Breathe naturally · Hold still
+          Face in frame · Frontal light · Hold still · Breathe naturally
         </p>
       </div>
     </div>
@@ -465,7 +571,11 @@ function VoiceScanner({ onComplete }: { onComplete: (coherence: number) => void 
     }, 500);
 
     const coherence = await analyzeVoice(12000);
-    onComplete(coherence);
+    if (coherence === null) {
+      setPhase("intro"); // reset — let user try again
+    } else {
+      onComplete(coherence);
+    }
   };
 
   useEffect(() => () => clearInterval(animRef.current!), []);
