@@ -1,0 +1,40 @@
+name: Diagnose Supabase Key Access
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run diagnostics
+        env:
+          SUPA_PAT: ${{ secrets.SUPA_ADMIN_PAT }}
+        run: |
+          OUT=/tmp/diag.txt
+          echo "=== api-keys endpoint ===" | tee -a $OUT
+          curl -s -w "\nHTTP_STATUS:%{http_code}" \
+            -H "Authorization: Bearer ${SUPA_PAT}" \
+            "https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/api-keys" | tee -a $OUT
+          
+          echo "" >> $OUT
+          echo "=== project info ===" | tee -a $OUT
+          curl -s -w "\nHTTP_STATUS:%{http_code}" \
+            -H "Authorization: Bearer ${SUPA_PAT}" \
+            "https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep" | tee -a $OUT
+          
+          echo "" >> $OUT  
+          echo "=== postgrest config ===" | tee -a $OUT
+          curl -s -w "\nHTTP_STATUS:%{http_code}" \
+            -H "Authorization: Bearer ${SUPA_PAT}" \
+            "https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/postgrest" | tee -a $OUT
+          
+          cat $OUT
+          
+      - name: Upload diagnostic
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: supabase-diag
+          path: /tmp/diag.txt
+          retention-days: 1
