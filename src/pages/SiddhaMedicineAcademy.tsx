@@ -259,7 +259,7 @@ const SiddhaMedicineAcademy = () => {
   // ── Real membership gating ───────────────────────────────────────────────
   const { tier } = useMembership();
   const { isAdmin } = useAdminRole();
-  const userTierLevel = isAdmin ? 3 : getTierRank(tier);
+  const userTierLevel = isAdmin ? 3 : (getTierRank(tier) ?? 0);
   const userTierKey = userTierLevel >= 3 ? "akasha" : userTierLevel >= 2 ? "quantum" : userTierLevel >= 1 ? "prana" : "free";
   const loadingTier = false;
 
@@ -277,7 +277,8 @@ const SiddhaMedicineAcademy = () => {
   const visibleModules: Module[] = visibleCurricIds.flatMap(k => CURRICULUM[k] ?? []);
   const activeModule    = visibleModules.find(m => m.id === activeModuleId) ?? null;
   const activeLesson    = activeModule?.lessons.find(l => l.id === activeLessonId) ?? null;
-  const isLocked        = (tier: typeof ACADEMY_TIERS[0]) => tier.requiredLevel > userTierLevel;
+  const safeLevel = isNaN(userTierLevel) ? 0 : userTierLevel;
+  const isLocked = (tier: typeof ACADEMY_TIERS[0]) => tier.requiredLevel > safeLevel;
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   const selectTier = (tierId: string) => {
