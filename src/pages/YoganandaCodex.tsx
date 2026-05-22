@@ -757,7 +757,7 @@ const KRIYA_LEVELS: KriyaLevel[] = [
 function useTierLevel(): TierLevel {
   const { tier } = useMembership();
   const { isAdmin } = useAdminRole();
-  const rank = isAdmin ? 3 : getTierRank(tier);
+  const rank = isAdmin ? 3 : (getTierRank(tier) ?? 0);
   return (rank >= 3 ? 3 : rank >= 2 ? 2 : rank >= 1 ? 1 : 0) as TierLevel;
 }
 
