@@ -531,6 +531,31 @@ export default function SiddhaPortal() {
         <button type="button" style={{ ...CTA_BTN, color: 'rgba(167,139,250,0.9)' }}>Enter Transmission →</button>
       </div>
 
+      {/* SHAKTI ALCHEMY — live */}
+      <div
+        onClick={() => navigate('/shakti-alchemy')}
+        style={{
+          ...CARD_BASE,
+          margin: '0 16px 12px',
+          background: `linear-gradient(135deg, rgba(168,85,247,0.08), rgba(212,175,55,0.02))`,
+          border: `1px solid rgba(168,85,247,0.28)`,
+          animation: 'sqFadeUp 0.45s 0.12s ease both',
+          cursor: 'pointer',
+        }}
+      >
+        <span style={BADGE('rgba(168,85,247,0.14)', 'rgba(168,85,247,0.3)', 'rgba(168,85,247,0.95)')}>
+          <span style={LIVE_DOT} />LIVE
+        </span>
+        <div style={{ ...CARD_TITLE, color: 'rgba(168,85,247,0.95)' }}>Sovereign Hormonal Alchemy</div>
+        <p style={CARD_DESC}>Shakti Cycle Intelligence — 5 tabs of Siddha feminine wisdom: cycle phases, modules, plant medicine, planetary timing & pregnancy protocols.</p>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const, marginBottom: 12 }}>
+          {[{l:'Free · Phases', c: white(0.5)},{l:'Prana · Modules', c:'#4ADE80'},{l:'Akasha · Full', c: gold(0.95)}].map(t => (
+            <span key={t.l} style={{ ...LABEL_STYLE, fontSize: 8, color: t.c, letterSpacing:'0.2em', border: `1px solid ${t.c}30`, borderRadius: 20, padding: '2px 8px' }}>{t.l}</span>
+          ))}
+        </div>
+        <button type="button" style={{ ...CTA_BTN, color: 'rgba(168,85,247,0.9)' }}>Enter Shakti Portal →</button>
+      </div>
+
       {/* COMING SOON GRID — 2-col for upcoming courses */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, margin: '0 16px 12px' }}>
         {[
