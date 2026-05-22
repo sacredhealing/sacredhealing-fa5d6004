@@ -534,7 +534,7 @@ export default function SiddhaPortal() {
       {/* COMING SOON GRID — 2-col for upcoming courses */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, margin: '0 16px 12px' }}>
         {[
-          { title: 'Yogananda Codex', sub: 'Self-Realization & Kriya Science', icon: '🌟', route: '/yogananda-codex', soon: true },
+          { title: 'Yogananda Codex', sub: 'Autobiography Decoded · Kriya Lineage · 4 Tiers', icon: '🌟', route: '/yogananda-codex', soon: false },
           { title: 'Sacred Water', sub: 'Consciousness & Living Water Protocols', icon: '💧', route: '/sacred-water', soon: true },
           { title: 'Siddha Medicine', sub: 'Varma · Rasayana · Kaya Kalpa · 4 Tiers', icon: '🌿', route: '/siddha-medicine', soon: false },
           { title: 'Mantra Academy', sub: 'Nada Yoga · 24 Modules · Bija Mantras', icon: '🔔', route: '/mantra-academy', soon: false },
