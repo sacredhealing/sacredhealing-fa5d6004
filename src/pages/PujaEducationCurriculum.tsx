@@ -822,7 +822,7 @@ export default function PujaEducationCurriculum() {
         </div>
 
         {/* ── TIER CARDS ─────────────────────────────────────────── */}
-        <div style={{
+        <div id="puja-curriculum" style={{
           fontSize: 10, fontWeight: 800, letterSpacing: "0.4em",
           textTransform: "uppercase" as const, color: "rgba(255,255,255,0.25)",
           marginBottom: 20
@@ -962,7 +962,7 @@ export default function PujaEducationCurriculum() {
         {/* ── NAVIGATION CTAs ─────────────────────────────────────── */}
         <div style={{ display: "flex", gap: 12, marginTop: 32, flexWrap: "wrap" as const }}>
           <button
-            onClick={() => navigate("/puja-education")}
+            onClick={() => { const el = document.getElementById("puja-curriculum"); if(el) el.scrollIntoView({behavior:"smooth"}); }}
             style={{
               flex: 1, minWidth: 180, padding: "16px 24px", borderRadius: 60,
               border: `1px solid ${G}`, background: `${G}15`,
