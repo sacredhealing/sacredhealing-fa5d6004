@@ -1,0 +1,35 @@
+name: Check Oracle Trades
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query Supabase for trades
+        env:
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          echo "=== polymarket_bot_settings ==="
+          curl -s \
+            -H "apikey: ${SUPABASE_SERVICE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+            "https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/polymarket_bot_settings?limit=1"
+
+          echo ""
+          echo "=== Recent polymarket_trades ==="
+          curl -s \
+            -H "apikey: ${SUPABASE_SERVICE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+            "https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/polymarket_trades?order=created_at.desc&limit=5" \
+            | python3 -c "
+import json,sys
+trades=json.load(sys.stdin)
+if not trades:
+  print('No trades yet')
+else:
+  print(f'Trades found: {len(trades)}')
+  for t in trades:
+    print(f'  {t[\"strategy\"]} | {t[\"direction\"]} {t[\"outcome\"]} @ {t[\"entry_price\"]} | \${t[\"amount_usdc\"]} | {t[\"created_at\"][:19]}')
+"
