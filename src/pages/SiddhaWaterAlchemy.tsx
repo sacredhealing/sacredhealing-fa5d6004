@@ -1904,7 +1904,7 @@ export default function SiddhaWaterAlchemy() {
               position:"absolute",right:16,top:"50%",transform:"translateY(-50%)",
               background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,0.3)"
             }}>
-              <X size={16}/>
+              ✕
             </button>
           )}
         </div>
