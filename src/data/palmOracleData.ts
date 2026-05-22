@@ -8,7 +8,7 @@
 
 export interface LessonData {
   id: string;
-  tier: "free" | "prana_flow" | "siddha_quantum" | "akasha_infinity";
+  tier: string;
   tierLabel: string;
   tierColor: string;
   module: number;
