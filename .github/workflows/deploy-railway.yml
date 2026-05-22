@@ -8,6 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -17,71 +19,35 @@ jobs:
       - name: Install Railway CLI
         run: npm install -g @railway/cli@latest
 
-      - name: Create project + deploy via Railway API
+      - name: Deploy and capture output
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          GRAPHQL="https://backboard.railway.app/graphql/v2"
-          AUTH="Bearer ${RAILWAY_TOKEN}"
-          WORKSPACE_ID="711da385-acfe-4bb4-83f5-d2e2f52e604a"
+          LOG="_railway_deploy_log.txt"
+          echo "=== Railway Deploy Log $(date) ===" > $LOG
 
-          echo "=== Step 1: Get or create project ==="
-          # List existing projects in workspace
-          PROJECTS=$(curl -s -X POST "$GRAPHQL" \
-            -H "Authorization: $AUTH" \
+          echo "--- railway version ---" >> $LOG
+          railway --version >> $LOG 2>&1
+
+          echo "--- railway whoami ---" >> $LOG
+          railway whoami >> $LOG 2>&1 || echo "whoami failed" >> $LOG
+
+          echo "--- railway projects list ---" >> $LOG
+          railway list >> $LOG 2>&1 || echo "list failed" >> $LOG
+
+          echo "--- GraphQL me query ---" >> $LOG
+          curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
             -H "Content-Type: application/json" \
-            -d '{"query":"{ me { projects { edges { node { id name } } } } }"}')
-          echo "Projects: $PROJECTS" | head -c 500
+            -d '{"query":"{ me { id email projects { edges { node { id name } } } } }"}' >> $LOG 2>&1
 
-          # Extract existing project ID if shiesty-oracle exists
-          PROJECT_ID=$(echo "$PROJECTS" | python3 -c "
-          import json,sys
-          d=json.load(sys.stdin)
-          edges = d.get('data',{}).get('me',{}).get('projects',{}).get('edges',[])
-          for e in edges:
-            n = e.get('node',{})
-            if 'shiesty' in n.get('name','').lower() or 'polymarket' in n.get('name','').lower():
-              print(n['id'])
-              break
-          " 2>/dev/null)
+          cat $LOG
 
-          if [ -z "$PROJECT_ID" ]; then
-            echo "Creating new project..."
-            CREATE=$(curl -s -X POST "$GRAPHQL" \
-              -H "Authorization: $AUTH" \
-              -H "Content-Type: application/json" \
-              -d "{"query":"mutation { projectCreate(input: { name: \\"shiesty-signal-oracle\\", teamId: \\"$WORKSPACE_ID\\" }) { id name } }"}")
-            echo "Create response: $CREATE"
-            PROJECT_ID=$(echo "$CREATE" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('data',{}).get('projectCreate',{}).get('id',''))" 2>/dev/null)
-          fi
-
-          echo "Project ID: $PROJECT_ID"
-
-          if [ -z "$PROJECT_ID" ]; then
-            echo "ERROR: Could not get or create project"
-            exit 1
-          fi
-
-          echo "=== Step 2: Deploy via CLI with project ID ==="
-          cd polymarket-worker
-          railway up \
-            --project "$PROJECT_ID" \
-            --service shiesty-signal-oracle \
-            --detach 2>&1 || \
-          railway up \
-            --project "$PROJECT_ID" \
-            --detach 2>&1
-
-          echo "=== Step 3: Set environment variables ==="
-          railway variables set \
-            --project "$PROJECT_ID" \
-            SUPABASE_URL=https://fjdzhrdpioxdeyyfogep.supabase.co \
-            "SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}" \
-            PAPER_MODE=true \
-            RISK_PCT=0.05 \
-            PORT=8080 2>&1 || echo "Note: set env vars manually in Railway dashboard"
-
-          echo "=== Done ==="
-          echo "Project ID: $PROJECT_ID"
-          echo "Check: https://railway.app/project/$PROJECT_ID"
+          # Commit the log so Claude can read it
+          git config user.email "deploy@sqi.app"
+          git config user.name "SQI Deploy Bot"
+          git add $LOG
+          git commit -m "Deploy log $(date +%H%M%S)" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
