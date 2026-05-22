@@ -671,7 +671,7 @@ const CHAPTERS: Chapter[] = [
     ],
     activation:`This is the final activation of the Yogananda Codex. Sit in your deepest meditation posture. Bring to mind the entire journey you have taken through these 49 chapters — the saints the teachings the historical secrets the quantum science the Akasha transmissions. Feel the accumulated field of this entire transmission in your body right now. Now make one commitment: which one Kriya practice will you begin or deepen from this day forward? Name it clearly in your mind. Offer this commitment upward to the lineage — Babaji Lahiri Yukteswar Yogananda. Feel the lineage receive it. Feel them respond with the unmistakable warmth in the heart that confirms: We are with you. We have always been with you. Begin now. The mission continues through you.`,
   }
-]];
+];
 
 const MASTERS: Master[] = [
   {
