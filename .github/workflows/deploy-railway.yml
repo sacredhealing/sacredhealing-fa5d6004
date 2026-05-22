@@ -1,0 +1,33 @@
+name: Deploy Polymarket Oracle to Railway
+
+on:
+  workflow_dispatch:
+    inputs:
+      service_role_key:
+        description: 'Supabase service_role key (paste from dashboard)'
+        required: true
+      railway_token:
+        description: 'Railway API token (from railway.app/account/tokens)'
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Store secrets in GitHub
+        env:
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+          SERVICE_ROLE: ${{ github.event.inputs.service_role_key }}
+          RAILWAY_TOKEN: ${{ github.event.inputs.railway_token }}
+        run: bash scripts/store_deploy_secrets.sh
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ github.event.inputs.railway_token }}
+          SERVICE_ROLE: ${{ github.event.inputs.service_role_key }}
+        run: bash scripts/railway_deploy.sh
