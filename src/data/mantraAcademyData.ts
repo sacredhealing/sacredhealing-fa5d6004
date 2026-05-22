@@ -5644,6 +5644,7 @@ const module15: Module = {
             devanagari: 'ॐ ऐं ह्रीं क्लीं नमः हृदयाय\nॐ ऐं ह्रीं क्लीं नमः शिरसे स्वाहा\nॐ ऐं ह्रीं क्लीं नमः शिखायै वषट्\nॐ ऐं ह्रीं क्लीं नमः कवचाय हुम्\nॐ ऐं ह्रीं क्लीं नमः नेत्रत्रयाय वौषट्\nॐ ऐं ह्रीं क्लीं नमः अस्त्राय फट्',
             transliteration: 'OM AIM HREEM KLEEM NAMAH HRIDAYAYA\nOM AIM HREEM KLEEM NAMAH SIRASE SVAHA\nOM AIM HREEM KLEEM NAMAH SHIKHAYAI VASHAT\nOM AIM HREEM KLEEM NAMAH KAVACHAYA HUM\nOM AIM HREEM KLEEM NAMAH NETRATRAYAYA VAUSHAT\nOM AIM HREEM KLEEM NAMAH ASTRAYA PHAT',
             body: `The complete Anga Nyasa sequence with the Trika Bija (AIM HREEM KLEEM) as the primary consecrating force. The six terminal syllables — NAMAH (salutation/submission), SVAHA (complete offering to fire), VASHAT (offering to the gods), HUM (protection seal), VAUSHAT (empowerment), PHAT (dissolution/release) — are the six sacred completion words that seal each Nyasa installation. They encode the six primary modes of relating to the sacred: recognition, offering, honoring, protection, empowerment, and release. The complete Nyasa is therefore not only a mantra installation — it is a complete theology of the practitioner\'s relationship with the divine, encoded in six sequential gestures.`,
+            translation: '',
           },
         },
         {
