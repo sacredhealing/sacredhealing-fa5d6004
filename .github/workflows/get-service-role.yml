@@ -1,67 +1,13 @@
 name: Get Service Role Key
-
 on:
   workflow_dispatch:
-
 jobs:
   get-key:
     runs-on: ubuntu-latest
     steps:
-      - name: Fetch api-keys and store service_role
+      - uses: actions/checkout@v4
+      - name: Fetch and store service_role key
         env:
           SUPA_PAT: ${{ secrets.SUPA_ADMIN_PAT }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
-        run: |
-          # Fetch all API keys
-          curl -s -H "Authorization: Bearer ${SUPA_PAT}"             "https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/api-keys"             > /tmp/keys.json
-          
-          echo "Raw response length: $(wc -c < /tmp/keys.json)"
-          echo "First 200 chars:"
-          head -c 200 /tmp/keys.json
-          echo ""
-          
-          # Extract service_role key with jq
-          SERVICE_KEY=$(cat /tmp/keys.json | jq -r '.[] | select(.name=="service_role") | .api_key // empty' 2>/dev/null)
-          
-          if [ -z "$SERVICE_KEY" ]; then
-            echo "jq extraction failed. Trying alternate field names..."
-            SERVICE_KEY=$(cat /tmp/keys.json | jq -r '.[] | select(.name=="service_role") | .apiKey // empty' 2>/dev/null)
-          fi
-          
-          if [ -z "$SERVICE_KEY" ]; then
-            echo "Still empty. Full JSON:"
-            cat /tmp/keys.json
-            exit 1
-          fi
-          
-          echo "Service key found (first 20): ${SERVICE_KEY:0:20}..."
-          
-          # Get GitHub repo public key
-          curl -s -H "Authorization: token ${GH_PAT}"             "https://api.github.com/repos/sacredhealing/sacredhealing-fa5d6004/actions/secrets/public-key"             > /tmp/pubkey.json
-          
-          PK=$(cat /tmp/pubkey.json | jq -r '.key')
-          KEY_ID=$(cat /tmp/pubkey.json | jq -r '.key_id')
-          
-          # Encrypt using Python (nacl available via pip)
-          pip install PyNaCl -q
-          ENCRYPTED=$(python3 -c "
-import sys, base64
-from nacl import encoding, public
-pk = public.PublicKey('$PK'.encode(), encoding.Base64Encoder())
-box = public.SealedBox(pk)
-enc = box.encrypt(sys.argv[1].encode())
-print(base64.b64encode(enc).decode())
-" "$SERVICE_KEY")
-          
-          # Update GitHub secret
-          RESULT=$(curl -s -w "\n%{http_code}" -X PUT             -H "Authorization: token ${GH_PAT}"             -H "Content-Type: application/json"             "https://api.github.com/repos/sacredhealing/sacredhealing-fa5d6004/actions/secrets/NEW_SERVICE_ROLE"             -d "{\"encrypted_value\":\"${ENCRYPTED}\",\"key_id\":\"${KEY_ID}\"}")
-          
-          HTTP_CODE=$(echo "$RESULT" | tail -1)
-          echo "GitHub secret update HTTP: $HTTP_CODE"
-          
-          if [ "$HTTP_CODE" = "201" ] || [ "$HTTP_CODE" = "204" ]; then
-            echo "SUCCESS: NEW_SERVICE_ROLE updated!"
-          else
-            echo "FAILED: $RESULT"
-            exit 1
-          fi
+        run: bash scripts/get_service_role.sh
