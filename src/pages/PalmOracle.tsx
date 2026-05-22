@@ -366,13 +366,13 @@ export default function PalmOracle() {
   // Load archive
   useEffect(() => {
     if (activeTab === "archive" && user) {
-      supabase
+      (supabase as any)
         .from("palm_readings")
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(10)
-        .then(({ data }) => setHistory(data ?? []));
+        .then(({ data }: any) => setHistory(data ?? []));
     }
   }, [activeTab, user]);
 
