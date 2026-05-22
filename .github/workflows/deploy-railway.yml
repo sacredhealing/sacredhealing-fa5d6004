@@ -1,14 +1,7 @@
-name: Deploy Polymarket Oracle to Railway
+name: Deploy Shiesty Signal Oracle to Railway
 
 on:
   workflow_dispatch:
-    inputs:
-      service_role_key:
-        description: 'Supabase service_role key (paste from dashboard)'
-        required: true
-      railway_token:
-        description: 'Railway API token (from railway.app/account/tokens)'
-        required: true
 
 jobs:
   deploy:
@@ -16,18 +9,56 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Store secrets in GitHub
-        env:
-          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
-          SERVICE_ROLE: ${{ github.event.inputs.service_role_key }}
-          RAILWAY_TOKEN: ${{ github.event.inputs.railway_token }}
-        run: bash scripts/store_deploy_secrets.sh
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
       - name: Install Railway CLI
-        run: npm install -g @railway/cli
+        run: npm install -g @railway/cli@latest
 
-      - name: Deploy to Railway
+      - name: Verify Railway auth
         env:
-          RAILWAY_TOKEN: ${{ github.event.inputs.railway_token }}
-          SERVICE_ROLE: ${{ github.event.inputs.service_role_key }}
-        run: bash scripts/railway_deploy.sh
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway whoami
+
+      - name: Deploy polymarket-worker to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          cd polymarket-worker
+          
+          # Deploy — Railway CLI will create service if it doesn't exist
+          railway up --detach --service shiesty-signal-oracle 2>&1 || \
+          railway up --detach 2>&1
+
+      - name: Set environment variables
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          railway variables set \
+            SUPABASE_URL=https://fjdzhrdpioxdeyyfogep.supabase.co \
+            "SUPABASE_SERVICE_KEY=$SUPABASE_SERVICE_KEY" \
+            PAPER_MODE=true \
+            RISK_PCT=0.05 \
+            PORT=8080 \
+            --service shiesty-signal-oracle 2>&1 || \
+          railway variables set \
+            SUPABASE_URL=https://fjdzhrdpioxdeyyfogep.supabase.co \
+            "SUPABASE_SERVICE_KEY=$SUPABASE_SERVICE_KEY" \
+            PAPER_MODE=true \
+            RISK_PCT=0.05 \
+            PORT=8080 2>&1
+
+          echo "✅ Environment variables set"
+
+      - name: Get deployment URL
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          sleep 10
+          railway status 2>&1 || true
+          echo "Check railway.app for your deployment URL"
+          echo "Health endpoint: https://<your-domain>/health"
