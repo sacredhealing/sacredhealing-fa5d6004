@@ -124,11 +124,14 @@ function deriveMetrics(bpm: number, hrv: number, voiceCoherence: number): ScanMe
   if (bpm > 85 || hrv < 25) nervousSystemState = "sympathetic";
   else if (bpm < 65 && hrv > 55) nervousSystemState = "parasympathetic";
 
-  // Dosha: Vata (high HR variability), Pitta (heat/stress), Kapha (calm/low)
-  const total = 100;
-  const vata = Math.round(Math.min(60, hrv * 0.8));
-  const kapha = Math.round(Math.min(60, Math.max(10, (100 - stressIndex) * 0.5)));
-  const pitta = total - vata - kapha;
+  // Dosha: Vata (variability), Pitta (heat/stress), Kapha (calm/stability)
+  const vataRaw = Math.min(50, hrv * 0.6);
+  const kaphaRaw = Math.min(50, Math.max(10, (100 - stressIndex) * 0.4));
+  const pittaRaw = Math.max(5, 100 - vataRaw - kaphaRaw);
+  const doshaSum = vataRaw + kaphaRaw + pittaRaw;
+  const vata = Math.round((vataRaw / doshaSum) * 100);
+  const kapha = Math.round((kaphaRaw / doshaSum) * 100);
+  const pitta = 100 - vata - kapha;
 
   return {
     heartRate: bpm,
@@ -728,45 +731,55 @@ function ResultsPanel({ metrics, label }: { metrics: ScanMetrics; label: string 
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        <MetricCard icon={Heart} label="Heart Rate" value={metrics.heartRate} unit="BPM" barValue={Math.min(100, ((metrics.heartRate - 40) / 80) * 100)} />
-        <MetricCard icon={Activity} label="HRV" value={metrics.hrv} unit="ms" barValue={Math.min(100, (metrics.hrv / 90) * 100)} sub="Higher = better" />
-        <MetricCard icon={Zap} label="Prana Level" value={metrics.pranaLevel} unit="%" barValue={metrics.pranaLevel} color="#D4AF37" />
-        <MetricCard icon={Brain} label="Coherence" value={metrics.coherenceScore} unit="%" barValue={metrics.coherenceScore} color="#22D3EE" />
-        <MetricCard icon={Wind} label="Stress Index" value={metrics.stressIndex} unit="%" barValue={metrics.stressIndex} color={metrics.stressIndex > 60 ? "#f87171" : "#D4AF37"} sub="Lower = better" />
-        <MetricCard icon={Star} label="Anahata" value={metrics.anahataResonance} unit="%" barValue={metrics.anahataResonance} color="#D4AF37" />
+        <MetricCard icon={Heart} label="Heart Rate" value={metrics.heartRate} unit="BPM"
+          barValue={Math.min(100, ((metrics.heartRate - 40) / 80) * 100)}
+          sub={metrics.heartRate < 60 ? "Calm & resting — ideal for deep practice" : metrics.heartRate < 80 ? "Normal range — body is balanced" : "Elevated — take a few deep breaths"} />
+        <MetricCard icon={Activity} label="HRV" value={metrics.hrv} unit="ms"
+          barValue={Math.min(100, (metrics.hrv / 90) * 100)}
+          sub={metrics.hrv > 60 ? "Excellent — nervous system very resilient" : metrics.hrv > 35 ? "Good — your body adapts well to stress" : "Low — rest and breathe deeply today"} />
+        <MetricCard icon={Zap} label="Prana Level" value={metrics.pranaLevel} unit="%" barValue={metrics.pranaLevel} color="#D4AF37"
+          sub="Vital life-force flowing through your 72,000 Nadis. Higher = more energy available for healing." />
+        <MetricCard icon={Brain} label="Coherence" value={metrics.coherenceScore} unit="%" barValue={metrics.coherenceScore} color="#22D3EE"
+          sub="How aligned your heart, mind and breath are. Above 70% = meditative coherence state." />
+        <MetricCard icon={Wind} label="Stress Index" value={metrics.stressIndex} unit="%" barValue={metrics.stressIndex}
+          color={metrics.stressIndex > 60 ? "#f87171" : "#D4AF37"}
+          sub={metrics.stressIndex < 20 ? "Very low — system in deep rest mode" : metrics.stressIndex < 50 ? "Moderate — normal waking state" : "High — pranayama recommended before practice"} />
+        <MetricCard icon={Star} label="Anahata" value={metrics.anahataResonance} unit="%" barValue={metrics.anahataResonance} color="#D4AF37"
+          sub="Heart chakra field strength. Measures emotional openness and capacity to give and receive love." />
       </div>
 
       {/* NS State */}
-      <div
-        className="rounded-[20px] p-4"
-        style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}
-      >
-        <div className="flex items-center justify-between">
+      <div className="rounded-[20px] p-4" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+        <div className="flex items-center justify-between mb-2">
           <span className="text-[9px] font-bold tracking-[0.3em] uppercase text-white/30">Nervous System</span>
-          <span
-            className="text-xs font-bold px-3 py-1 rounded-full capitalize"
-            style={{ background: `${nsColor}20`, color: nsColor }}
-          >
+          <span className="text-xs font-bold px-3 py-1 rounded-full capitalize"
+            style={{ background: `${nsColor}20`, color: nsColor }}>
             {metrics.nervousSystemState}
           </span>
         </div>
+        <p className="text-[10px] text-white/30 leading-relaxed">
+          {metrics.nervousSystemState === "parasympathetic"
+            ? "Rest & digest mode active. Your nervous system is in the ideal state for meditation, healing, and deep Nadi absorption. The Siddhas enter this field."
+            : metrics.nervousSystemState === "sympathetic"
+            ? "Fight-or-flight mode detected. Stress hormones elevated. Begin with 4-7-8 breathing or Nadi Shodhana to shift into rest mode before practice."
+            : "Balanced state — neither stressed nor overly relaxed. Good baseline for any practice. Pranayama will deepen this into parasympathetic."}
+        </p>
       </div>
 
       {/* Dosha */}
-      <div
-        className="rounded-[20px] p-4"
-        style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}
-      >
-        <p className="text-[9px] font-bold tracking-[0.3em] uppercase text-white/30 mb-3">Dosha Field</p>
+      <div className="rounded-[20px] p-4" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+        <p className="text-[9px] font-bold tracking-[0.3em] uppercase text-white/30 mb-1">Dosha Field</p>
+        <p className="text-[10px] text-white/25 mb-3 leading-relaxed">Your current energetic constitution based on HRV and stress signature. Doshas shift with practice, season and time of day.</p>
         <div className="flex gap-2 text-center">
           {[
-            { name: "Vata", val: metrics.doshaVata },
-            { name: "Pitta", val: metrics.doshaKapha },
-            { name: "Kapha", val: metrics.doshaKapha2 },
+            { name: "Vata", val: metrics.doshaVata, desc: "Air & Space. Movement, creativity, nervous energy. High Vata = racing mind." },
+            { name: "Pitta", val: metrics.doshaKapha, desc: "Fire & Water. Drive, heat, intensity. High Pitta = stress & inflammation." },
+            { name: "Kapha", val: metrics.doshaKapha2, desc: "Earth & Water. Stability, calm, endurance. High Kapha = deep groundedness." },
           ].map((d) => (
-            <div key={d.name} className="flex-1">
+            <div key={d.name} className="flex-1 flex flex-col gap-1">
               <div className="text-sm font-black text-[#D4AF37]">{d.val}%</div>
-              <div className="text-[9px] text-white/30 uppercase tracking-wider">{d.name}</div>
+              <div className="text-[9px] text-white/30 uppercase tracking-wider mb-1">{d.name}</div>
+              <div className="text-[8px] text-white/20 leading-tight">{d.desc}</div>
             </div>
           ))}
         </div>
@@ -778,12 +791,12 @@ function ResultsPanel({ metrics, label }: { metrics: ScanMetrics; label: string 
 // ─── Comparison Panel ─────────────────────────────────────────────────────────
 function ComparisonPanel({ before, after, subjective }: { before: ScanMetrics; after: ScanMetrics; subjective: SubjectiveAnswers }) {
   const bioRows = [
-    { label: "Heart Rate", icon: Heart, bv: before.heartRate, av: after.heartRate, unit: " BPM", invert: true },
-    { label: "HRV", icon: Activity, bv: before.hrv, av: after.hrv, unit: " ms" },
-    { label: "Prana Level", icon: Zap, bv: before.pranaLevel, av: after.pranaLevel, unit: "%" },
-    { label: "Coherence", icon: Brain, bv: before.coherenceScore, av: after.coherenceScore, unit: "%" },
-    { label: "Stress Index", icon: Wind, bv: before.stressIndex, av: after.stressIndex, unit: "%", invert: true },
-    { label: "Anahata", icon: Star, bv: before.anahataResonance, av: after.anahataResonance, unit: "%" },
+    { label: "Heart Rate", icon: Heart, bv: before.heartRate, av: after.heartRate, unit: " BPM", invert: true, explain: "Lower after practice = deeper calm" },
+    { label: "HRV", icon: Activity, bv: before.hrv, av: after.hrv, unit: " ms", explain: "Higher = nervous system more resilient" },
+    { label: "Prana Level", icon: Zap, bv: before.pranaLevel, av: after.pranaLevel, unit: "%", explain: "Vital life-force through your Nadis" },
+    { label: "Coherence", icon: Brain, bv: before.coherenceScore, av: after.coherenceScore, unit: "%", explain: "Heart-mind-breath alignment" },
+    { label: "Stress Index", icon: Wind, bv: before.stressIndex, av: after.stressIndex, unit: "%", invert: true, explain: "Lower after practice = success" },
+    { label: "Anahata", icon: Star, bv: before.anahataResonance, av: after.anahataResonance, unit: "%", explain: "Heart chakra field opening" },
   ];
 
   // Subjective average (1-5 → 0-100)
@@ -883,17 +896,20 @@ function ComparisonPanel({ before, after, subjective }: { before: ScanMetrics; a
           <span className="text-center">Δ</span>
         </div>
         {bioRows.map((r) => (
-          <div key={r.label} className="grid grid-cols-4 px-4 py-3 items-center"
+          <div key={r.label} className="px-4 py-3 items-start"
             style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-            <div className="flex items-center gap-1 col-span-1">
-              <r.icon size={10} color="#D4AF37" />
-              <span className="text-[9px] text-white/40">{r.label}</span>
+            <div className="grid grid-cols-4 items-center">
+              <div className="flex items-center gap-1 col-span-1">
+                <r.icon size={10} color="#D4AF37" />
+                <span className="text-[9px] text-white/40">{r.label}</span>
+              </div>
+              <span className="text-center text-xs font-bold text-white/40">{r.bv}{r.unit}</span>
+              <span className="text-center text-xs font-bold text-[#D4AF37]">{r.av}{r.unit}</span>
+              <div className="flex justify-center">
+                <DeltaBadge before={r.bv} after={r.av} unit={r.unit} invert={r.invert} />
+              </div>
             </div>
-            <span className="text-center text-xs font-bold text-white/40">{r.bv}{r.unit}</span>
-            <span className="text-center text-xs font-bold text-[#D4AF37]">{r.av}{r.unit}</span>
-            <div className="flex justify-center">
-              <DeltaBadge before={r.bv} after={r.av} unit={r.unit} invert={r.invert} />
-            </div>
+            <p className="text-[8px] text-white/20 mt-1 pl-4">{r.explain}</p>
           </div>
         ))}
       </div>
