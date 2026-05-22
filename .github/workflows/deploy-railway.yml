@@ -17,29 +17,71 @@ jobs:
       - name: Install Railway CLI
         run: npm install -g @railway/cli@latest
 
-      - name: Deploy to Railway
+      - name: Create project + deploy via Railway API
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
-          echo "Railway CLI version:"
-          railway --version
+          GRAPHQL="https://backboard.railway.app/graphql/v2"
+          AUTH="Bearer ${RAILWAY_TOKEN}"
+          WORKSPACE_ID="711da385-acfe-4bb4-83f5-d2e2f52e604a"
 
-          echo "Attempting deploy from polymarket-worker directory..."
+          echo "=== Step 1: Get or create project ==="
+          # List existing projects in workspace
+          PROJECTS=$(curl -s -X POST "$GRAPHQL" \
+            -H "Authorization: $AUTH" \
+            -H "Content-Type: application/json" \
+            -d '{"query":"{ me { projects { edges { node { id name } } } } }"}')
+          echo "Projects: $PROJECTS" | head -c 500
+
+          # Extract existing project ID if shiesty-oracle exists
+          PROJECT_ID=$(echo "$PROJECTS" | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)
+          edges = d.get('data',{}).get('me',{}).get('projects',{}).get('edges',[])
+          for e in edges:
+            n = e.get('node',{})
+            if 'shiesty' in n.get('name','').lower() or 'polymarket' in n.get('name','').lower():
+              print(n['id'])
+              break
+          " 2>/dev/null)
+
+          if [ -z "$PROJECT_ID" ]; then
+            echo "Creating new project..."
+            CREATE=$(curl -s -X POST "$GRAPHQL" \
+              -H "Authorization: $AUTH" \
+              -H "Content-Type: application/json" \
+              -d "{"query":"mutation { projectCreate(input: { name: \\"shiesty-signal-oracle\\", teamId: \\"$WORKSPACE_ID\\" }) { id name } }"}")
+            echo "Create response: $CREATE"
+            PROJECT_ID=$(echo "$CREATE" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('data',{}).get('projectCreate',{}).get('id',''))" 2>/dev/null)
+          fi
+
+          echo "Project ID: $PROJECT_ID"
+
+          if [ -z "$PROJECT_ID" ]; then
+            echo "ERROR: Could not get or create project"
+            exit 1
+          fi
+
+          echo "=== Step 2: Deploy via CLI with project ID ==="
           cd polymarket-worker
+          railway up \
+            --project "$PROJECT_ID" \
+            --service shiesty-signal-oracle \
+            --detach 2>&1 || \
+          railway up \
+            --project "$PROJECT_ID" \
+            --detach 2>&1
 
-          # Try deploy with service name
-          railway up --detach --service shiesty-signal-oracle || {
-            echo "Named service deploy failed, trying without service flag..."
-            railway up --detach
-          }
-
-          echo "Setting env vars..."
+          echo "=== Step 3: Set environment variables ==="
           railway variables set \
+            --project "$PROJECT_ID" \
             SUPABASE_URL=https://fjdzhrdpioxdeyyfogep.supabase.co \
             "SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}" \
             PAPER_MODE=true \
             RISK_PCT=0.05 \
-            PORT=8080 || echo "Env vars will need to be set manually in Railway dashboard"
+            PORT=8080 2>&1 || echo "Note: set env vars manually in Railway dashboard"
 
-          echo "Deploy complete. Check https://railway.app for service status."
+          echo "=== Done ==="
+          echo "Project ID: $PROJECT_ID"
+          echo "Check: https://railway.app/project/$PROJECT_ID"
