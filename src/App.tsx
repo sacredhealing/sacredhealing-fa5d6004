@@ -94,8 +94,6 @@ const SiddhaMedicineAcademy = React.lazy(() => import("./pages/SiddhaMedicineAca
 const SiddhaVastuCurriculum = React.lazy(() => import("./pages/SiddhaVastuCurriculum"));
 const YagnyaModule = React.lazy(() => import("./pages/YagnyaModule"));
 const YoganandaCodex = React.lazy(() => import("./pages/YoganandaCodex"));
-const SiddhaWaterAlchemy = React.lazy(() => import("./pages/SiddhaWaterAlchemy"));
-const PalmOracle = React.lazy(() => import("./pages/PalmOracle"));
 const SiddhaMantraReference = React.lazy(() => import("./pages/SiddhaMantraReference"));
 const SiddhaQuantumPracticeJournal = React.lazy(() => import("./pages/SiddhaQuantumPracticeJournal"));
 const SacredGeometryEducation = React.lazy(() => import("./pages/SacredGeometryEducation"));
