@@ -481,6 +481,31 @@ export default function SiddhaPortal() {
         <button type="button" style={CTA_BTN}>Enter Transmission →</button>
       </div>
 
+      {/* THIRUMOOLAR PRANAYAMA — live */}
+      <div
+        onClick={() => navigate('/thirumoolar-pranayama')}
+        style={{
+          ...CARD_BASE,
+          margin: '0 16px 12px',
+          background: `linear-gradient(135deg, ${cyan(0.07)}, rgba(212,175,55,0.02))`,
+          border: `1px solid ${cyan(0.25)}`,
+          animation: 'sqFadeUp 0.45s 0.08s ease both',
+          cursor: 'pointer',
+        }}
+      >
+        <span style={BADGE(cyan(0.14), cyan(0.3), cyan(0.9))}>
+          <span style={LIVE_DOT} />LIVE
+        </span>
+        <div style={{ ...CARD_TITLE, color: cyan(0.92) }}>Thirumoolar's Pranayama Codex</div>
+        <p style={CARD_DESC}>3,000 years of Tamil Siddha breath-science — 8 modules from Prana & Nadi anatomy through Kevala Kumbhaka, Babaji's Kriya Pranayama, and Shiva-Nishvasa.</p>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const, marginBottom: 12 }}>
+          {[{l:'Free · I–II', c: white(0.5)},{l:'Prana · III–IV', c:'#4ADE80'},{l:'Siddha · V–VI', c: cyan(0.9)},{l:'Akasha · VII–VIII', c: gold(0.95)}].map(t => (
+            <span key={t.l} style={{ ...LABEL_STYLE, fontSize: 8, color: t.c, letterSpacing:'0.2em', border: `1px solid ${t.c}30`, borderRadius: 20, padding: '2px 8px' }}>{t.l}</span>
+          ))}
+        </div>
+        <button type="button" style={{ ...CTA_BTN, color: cyan(0.9) }}>Enter Codex →</button>
+      </div>
+
       {/* COMING SOON GRID — 2-col for upcoming courses */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, margin: '0 16px 12px' }}>
         {[
