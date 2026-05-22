@@ -2040,8 +2040,8 @@ export default function SiddhaWaterAlchemy() {
                             {s.body.split("\n\n").map((para,pi) => (
                               <p key={pi} style={{
                                 fontSize:14,lineHeight:1.8,color:"rgba(255,255,255,0.65)",
-                                marginBottom:pi < s.body.split("\n\n").length - 1 ? 14 : 0,
-                                margin:0,marginBottom:14
+                                marginBottom:14,
+                                margin:0
                               }}>
                                 {para}
                               </p>
