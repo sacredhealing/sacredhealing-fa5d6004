@@ -1,4 +1,4 @@
 === Settings ===
-{"code":"42501","details":null,"hint":"Grant the required privileges to the current role with: GRANT SELECT ON public.polymarket_bot_settings TO service_role;","message":"permission denied for table polymarket_bot_settings"}
+[]
 === Recent Trades ===
-{"code":"42501","details":null,"hint":"Grant the required privileges to the current role with: GRANT SELECT ON public.polymarket_trades TO service_role;","message":"permission denied for table polymarket_trades"}
+[]
