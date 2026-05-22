@@ -820,7 +820,7 @@ export default function SiddhaVastuCurriculum() {
           {(["free", "prana", "siddha", "akasha"] as Tier[]).map((t) => (
             <button
               key={t}
-              onClick={() => setUserTier(t)}
+              onClick={() => { /* tier switching disabled */ void t; }}
               title={TIER_LABEL[t]}
               style={{
                 padding: "6px 10px",
