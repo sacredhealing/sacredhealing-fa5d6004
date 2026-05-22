@@ -28,7 +28,8 @@ import {
   MessageCircle,
   Volume2,
   Languages,
-  Gift
+  Gift,
+  UserCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -224,6 +225,13 @@ function AdminSigilIcon({
 }
 
 const adminSections = [
+  {
+    title: 'User Management',
+    description: 'View, edit, ban, delete users and manage membership tiers',
+    icon: UserCheck,
+    href: '/admin/users',
+    color: 'text-amber-500',
+  },
   {
     title: 'Grant Access',
     description: 'Give users free access to courses, membership, Sri Yantra, Creative Soul & more',
