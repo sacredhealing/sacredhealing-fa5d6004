@@ -120,19 +120,32 @@ class RPPGEngine {
 
     if (rawStd < 0.3) return null; // signal too flat — no face or solid colour
 
-    // DFT sweep 42–180 BPM (0.7 – 3.0 Hz)
+    // DFT sweep 45–180 BPM (0.75 – 3.0 Hz)
     let bestPower = -1;
     let bestFreq = 1.1;
-    for (let bpm = 42; bpm <= 180; bpm += 0.5) {
+    for (let bpm = 45; bpm <= 180; bpm += 0.5) {
       const f = bpm / 60;
       const p = this.dftPower(sig, f, fps);
       if (p > bestPower) { bestPower = p; bestFreq = f; }
     }
 
-    // Cross-validate: red channel should agree within ±12 BPM
+    // Subharmonic check: if detected BPM < 55, test if 2× has even higher power
+    // (DFT sometimes locks onto half the real cardiac frequency)
+    const greenBPMRaw = Math.round(bestFreq * 60);
+    if (greenBPMRaw < 55) {
+      const doubleFreq = bestFreq * 2;
+      if (doubleFreq * 60 <= 180) {
+        const doublePower = this.dftPower(sig, doubleFreq, fps);
+        if (doublePower > bestPower * 0.6) { // 2× freq has meaningful power → use it
+          bestFreq = doubleFreq;
+        }
+      }
+    }
+
+    // Cross-validate with red channel
     const redSig = this.zscore(this.detrend(this.red));
     let redBestPower = -1, redBestFreq = bestFreq;
-    for (let bpm = 42; bpm <= 180; bpm += 1) {
+    for (let bpm = 45; bpm <= 180; bpm += 1) {
       const f = bpm / 60;
       const p = this.dftPower(redSig, f, fps);
       if (p > redBestPower) { redBestPower = p; redBestFreq = f; }
@@ -140,11 +153,13 @@ class RPPGEngine {
     const greenBPM = Math.round(bestFreq * 60);
     const redBPM   = Math.round(redBestFreq * 60);
 
-    // If green and red channels disagree too much → signal unreliable
-    if (Math.abs(greenBPM - redBPM) > 15) return null;
+    // If channels disagree too much → signal unreliable
+    if (Math.abs(greenBPM - redBPM) > 18) return null;
 
-    // Final BPM: weighted average of the two channels
+    // Final BPM: weighted average
     const bpm = Math.round((greenBPM * 2 + redBPM) / 3);
+    // Sanity clamp — no human resting HR below 40 or above 160
+    if (bpm < 40 || bpm > 160) return null;
 
     // HRV: synthesise from signal regularity
     // Peak-to-peak intervals in zscore signal above threshold 0.5
@@ -176,8 +191,11 @@ class RPPGEngine {
 // ─── Metric Derivation ────────────────────────────────────────────────────────
 function deriveMetrics(bpm: number, hrv: number, voiceCoherence: number): ScanMetrics {
   // All derived deterministically from real measured inputs — no randomness
-  // Stress: higher HR + lower HRV = more stress
-  const stressRaw = Math.max(0, Math.min(100, ((bpm - 55) / 50) * 70 + ((40 - hrv) / 40) * 30));
+  // Stress: HR deviation from 65 BPM + low HRV both contribute
+  // At 65 BPM + HRV 60ms → ~5% stress (deep rest). At 90 BPM + HRV 20ms → ~80% stress.
+  const bpmComponent = Math.max(-20, Math.min(60, ((bpm - 65) / 35) * 60));
+  const hrvComponent = Math.max(-10, Math.min(40, ((35 - hrv) / 35) * 40));
+  const stressRaw = Math.max(2, Math.min(100, bpmComponent + hrvComponent + 20));
   const stressIndex = Math.round(stressRaw);
   const coherenceScore = Math.round(Math.max(10, Math.min(98, hrv * 1.1 + voiceCoherence * 0.3)));
   const pranaLevel = Math.round(Math.max(20, Math.min(98, 100 - stressRaw * 0.6 + voiceCoherence * 0.2)));
