@@ -458,7 +458,7 @@ m1l1: {
       'Each full moon night: sit outside (or near a window where moonlight enters) with your left palm open, face-up, and allow moonlight to fall directly on your Chandra Parvat for 10 minutes. Close your eyes. Breathe slowly. "The moon is the original activator of this mount. Let the teacher teach directly."',
       'Begin a dream journal immediately. Upon waking, before speaking or checking your phone, write down everything from the dream state: images, emotions, themes, specific scenes. Date every entry. Review monthly. Over time, patterns emerge revealing the Akashic communications coming through your dream channel.',
       'The Moon mount intuition practice: once daily, before a decision, pause for 60 seconds with eyes closed. Ask internally: "What do I feel about this — not what do I think?" Write down the first impression, however subtle. Over weeks, compare intuitive impressions with how situations actually unfolded. This builds discernment — the capacity to trust the genuine intuitive signal.',
-      'If your Moon mount is very prominent and you absorb others' states easily: Pambatti\'s field-clearing practice. At day\'s end, stand barefoot and visualize a golden sphere of light surrounding your aura, 3 feet in all directions. State clearly: "What is mine, I keep. What is not mine, I release." Three slow exhales directed downward through the feet into the earth.',
+      'If your Moon mount is very prominent and you absorb others\' states easily: Pambatti\'s field-clearing practice. At day\'s end, stand barefoot and visualize a golden sphere of light surrounding your aura, 3 feet in all directions. State clearly: "What is mine, I keep. What is not mine, I release." Three slow exhales directed downward through the feet into the earth.',
     ]
   },
 
@@ -520,6 +520,9 @@ m1l1: {
       'Create a "Planetary Prescription" practice for yourself based on your own Navagraha reading. Identify your three most challenging mount zones (flattest, most marked with crosses or grilles). Design one specific practice for each — a mantra, a mudra, a lifestyle change, or a creative commitment. Practice all three for 90 days. Then re-read your palm. Document every observable change.',
       'Gorakkar\'s final test for the Siddha Quantum practitioner: read a palm without looking at it first. Have the person hold their closed palm in yours. Keep your eyes closed. Breathe slowly. Notice what you perceive in your own body, your intuitive sense, your pranic feeling — before visual analysis begins. Then open your eyes and read. Compare what you felt with what you see. The closer these match, the more fully the Sampurna Hasta Darshan is awakening in you.',
     ]
+  },
+
+
 
   // ─── MODULE IV: AKASHA INFINITY ───────────────────────────────────────────
 
@@ -632,8 +635,6 @@ The birth chart (Kundali) is the macro map — the soul\'s complete karmic bluep
   }
 };
 
-};
-};
 
 // =============================================================================
 // MODULE STRUCTURE
