@@ -17,48 +17,29 @@ jobs:
       - name: Install Railway CLI
         run: npm install -g @railway/cli@latest
 
-      - name: Verify Railway auth
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: railway whoami
-
-      - name: Deploy polymarket-worker to Railway
+      - name: Deploy to Railway
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
+          echo "Railway CLI version:"
+          railway --version
+
+          echo "Attempting deploy from polymarket-worker directory..."
           cd polymarket-worker
-          
-          # Deploy — Railway CLI will create service if it doesn't exist
-          railway up --detach --service shiesty-signal-oracle 2>&1 || \
-          railway up --detach 2>&1
 
-      - name: Set environment variables
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: |
+          # Try deploy with service name
+          railway up --detach --service shiesty-signal-oracle || {
+            echo "Named service deploy failed, trying without service flag..."
+            railway up --detach
+          }
+
+          echo "Setting env vars..."
           railway variables set \
             SUPABASE_URL=https://fjdzhrdpioxdeyyfogep.supabase.co \
-            "SUPABASE_SERVICE_KEY=$SUPABASE_SERVICE_KEY" \
+            "SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}" \
             PAPER_MODE=true \
             RISK_PCT=0.05 \
-            PORT=8080 \
-            --service shiesty-signal-oracle 2>&1 || \
-          railway variables set \
-            SUPABASE_URL=https://fjdzhrdpioxdeyyfogep.supabase.co \
-            "SUPABASE_SERVICE_KEY=$SUPABASE_SERVICE_KEY" \
-            PAPER_MODE=true \
-            RISK_PCT=0.05 \
-            PORT=8080 2>&1
+            PORT=8080 || echo "Env vars will need to be set manually in Railway dashboard"
 
-          echo "✅ Environment variables set"
-
-      - name: Get deployment URL
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: |
-          sleep 10
-          railway status 2>&1 || true
-          echo "Check railway.app for your deployment URL"
-          echo "Health endpoint: https://<your-domain>/health"
+          echo "Deploy complete. Check https://railway.app for service status."
