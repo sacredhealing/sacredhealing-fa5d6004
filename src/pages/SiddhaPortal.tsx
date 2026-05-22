@@ -512,7 +512,7 @@ export default function SiddhaPortal() {
           { title: 'Yogananda Codex', sub: 'Self-Realization & Kriya Science', icon: '🌟', route: '/yogananda-codex', soon: true },
           { title: 'Sacred Water', sub: 'Consciousness & Living Water Protocols', icon: '💧', route: '/sacred-water', soon: true },
           { title: 'Siddha Medicine', sub: 'The 18 Siddhas · Varma · Rasayana', icon: '🌿', route: '/siddha-medicine', soon: true },
-          { title: 'Mantra Vidya', sub: 'Nada Yoga · Bija · Secret Transmissions', icon: '🔔', route: '/mantra-vidya', soon: true },
+          { title: 'Mantra Academy', sub: 'Nada Yoga · 24 Modules · Bija Mantras', icon: '🔔', route: '/mantra-academy', soon: false },
           { title: 'Sacred Geometry', sub: 'Sri Yantra · Yantras · Light Codes', icon: '✦', route: '/sacred-geometry-education', soon: false },
           { title: 'Vastu Shastra', sub: 'Vedic Space & Quantum Architecture', icon: '🏛', route: '/vastu', soon: false },
           { title: 'Narasimha Path', sub: 'Protection · Power · Sovereignty', icon: '🦁', route: '/narasimha', soon: true },
