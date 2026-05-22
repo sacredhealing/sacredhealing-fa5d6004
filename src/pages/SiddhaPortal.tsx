@@ -547,6 +547,7 @@ export default function SiddhaPortal() {
           { title: 'Ramayana Codex', sub: '7 Kāṇḍas · 35 Secrets · Bābājī Transmission', icon: '🏹', route: '/ramayana', soon: false },
           { title: 'Mudra Academy', sub: 'Hand Seals · Neural Rewiring · 10 Modules', icon: '🤲', route: '/mudra-academy', soon: false },
           { title: 'Nadi Leaf Oracle', sub: 'Agastya Nadi · Cosmic Records', icon: '🌿', route: '/nadi-leaf', soon: true },
+          { title: 'Palm Oracle', sub: 'Hasta Samudrika · 29 Transmissions · AI Reading', icon: '🤚', route: '/palm-oracle', soon: false },
           { title: 'Yagna Fire Academy', sub: 'Rishi Transmission · Agnihotra · Cosmic Fire', icon: '🔥', route: '/yagna', soon: false },
           { title: 'Puja Education', sub: 'Sacred Ritual · 4 Tiers · Pancha Bhuta', icon: '🪔', route: '/puja-education', soon: false },
         ].map((course, i) => (
