@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useMembershipTier } from "@/hooks/useMembershipTier";
+import { useMembership } from "@/hooks/useMembership";
+import { useAdminRole } from "@/hooks/useAdminRole";
+import { getTierRank } from "@/lib/tierAccess";
 import { Lock, ChevronDown, ChevronUp, Droplets, Sparkles, Zap, Infinity, Search } from "lucide-react";
 
 interface WS { heading: string; body: string; }
@@ -1805,7 +1807,10 @@ Om Neer Amritaya Namaha.`},
 // ─── COMPONENT ────────────────────────────────────────────────────────────────
 export default function SiddhaWaterAlchemy() {
   const navigate = useNavigate();
-  const { tier: userTier } = useMembershipTier();
+  const { tier: memberTier } = useMembership();
+  const { isAdmin } = useAdminRole();
+  const _rank = isAdmin ? 3 : getTierRank(memberTier);
+  const userTier = _rank >= 3 ? "akasha_infinity" : _rank >= 2 ? "siddha_quantum" : _rank >= 1 ? "prana_flow" : "free";
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<string>("all");
   const [openId, setOpenId] = useState<string | null>(null);
@@ -1834,9 +1839,10 @@ export default function SiddhaWaterAlchemy() {
     }}>
       {/* ─── HERO ─────────────────────────────────────────────────────────────── */}
       <div style={{
-        textAlign:"center", padding:"80px 24px 60px",
+        position:"relative", textAlign:"center", padding:"80px 24px 60px",
         background:"radial-gradient(ellipse at 50% 0%, rgba(212,175,55,0.10) 0%, transparent 70%)"
       }}>
+        <button onClick={() => navigate("/siddha-portal")} style={{ position:"absolute", top:20, left:20, background:"none", border:"none", cursor:"pointer", fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:10, fontWeight:800, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(212,175,55,0.45)", padding:0 }}>← SIDDHA PORTAL</button>
         <div style={{fontSize:64,marginBottom:16}}>💧</div>
         <div style={{
           fontSize:9,letterSpacing:"0.5em",textTransform:"uppercase",
