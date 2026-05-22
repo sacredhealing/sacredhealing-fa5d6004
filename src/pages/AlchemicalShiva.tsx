@@ -997,7 +997,7 @@ export default function AlchemicalShiva() {
                     <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.25)" }}>
                       {tierUpgradeLabel(mod.requiredTier)}
                     </p>
-                    <a className="upgrade-btn" href="/pricing">
+                    <a className="upgrade-btn" href="/siddha-quantum">
                       <Lock size={10} />
                       UPGRADE TO UNLOCK
                     </a>
@@ -1111,7 +1111,7 @@ export default function AlchemicalShiva() {
                 These three mantras were transmitted only from Guru to disciple at the moment of Shaktipat.
                 They require the sovereign container of Akasha Infinity.
               </p>
-              <a className="upgrade-btn" href="/pricing" style={{ borderColor: "rgba(255,107,107,0.3)", color: "#FF6B6B", background: "rgba(255,107,107,0.08)" }}>
+              <a className="upgrade-btn" href="/siddha-quantum" style={{ borderColor: "rgba(255,107,107,0.3)", color: "#FF6B6B", background: "rgba(255,107,107,0.08)" }}>
                 <Lock size={10} />
                 AKASHA INFINITY — €1,111 LIFETIME
               </a>
