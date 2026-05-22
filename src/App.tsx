@@ -126,6 +126,7 @@ const SQISovereignBot = React.lazy(() => import("./pages/income-streams/SQISover
 const PredictionMarketBot = React.lazy(() => import("./pages/PredictionMarketBot"));
 const AdminSystem = React.lazy(() => import("./pages/AdminSystem"));
 const AdminGrantAccess = React.lazy(() => import("./pages/AdminGrantAccess"));
+const AdminUsers = React.lazy(() => import("./pages/AdminUsers"));
 const AdminBreathing = React.lazy(() => import("./pages/AdminBreathing"));
 const AdminAmbientSounds = React.lazy(() => import("./pages/AdminAmbientSounds"));
 const AdminAffirmation = React.lazy(() => import("./pages/AdminAffirmation"));
@@ -437,6 +438,7 @@ function AppRoutes() {
                   <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/admin/social-automation" element={<SQISocialAutomation />} />
                   <Route path="/admin/grant-access" element={<AdminGrantAccess />} />
+                  <Route path="/admin/users" element={<AdminUsers />} />
                   <Route path="/admin/meditations" element={<AdminMeditations />} />
                   <Route path="/admin/meditations/:id" element={<AdminMeditationEdit />} />
                   <Route path="/admin/music" element={<AdminMusic />} />
