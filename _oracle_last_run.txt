@@ -1,33 +1,33 @@
 ══════════════════════════════════════════════════════
   SQI-2050 🦈 CLAWBOT v7 — Production
-  2026-05-23T16:41:21.396Z | PAPER
+  2026-05-23T17:45:10.721Z | PAPER
   Min: $100 | Entry zone: 6%–94%
 ══════════════════════════════════════════════════════
-Balance: $3.97
+Balance: $3.41
 
-🔍 Scanning 87,322,278 → 87,322,728
-  0xE111180000: 87492 logs → 4916 whale trades
-  0xe2222d279d: 18516 logs → 2156 whale trades
+🔍 Scanning 87,324,466 → 87,324,916
+  0xE111180000: 107634 logs → 5714 whale trades
+  0xe2222d279d: 19011 logs → 1784 whale trades
 
-Total: 7072 | New: 7072
+Total: 7498 | New: 7498
 
 📊 Top trades:
-  $   74292 | 0x7523cafcee | 959499578951...
-  $   74292 | 0xfcd0eadb24 | 959499578951...
-  $   74292 | 0xfcd0eadb24 | 959499578951...
-  $   31950 | 0xb45a797faa | 352607002626...
-  $   31950 | 0x1d1ade627d | 325688453764...
+  $  113200 | 0xdb859a551f | 108932351289...
+  $  113200 | 0xdb859a551f | 108932351289...
+  $  100000 | 0x08fff5b9a7 | 765444110403...
+  $  100000 | 0x08fff5b9a7 | 765444110403...
+  $  100000 | 0xd1c537b2a7 | 108932351289...
 
-✅ MIRRORED #1: 🦈B45A79
-   Whale $31950 → Mirror $0.1986 | Over @ 47.5%
+✅ MIRRORED #1: 🦈DB859A
+   Whale $113200 → Mirror $0.1703 | Yes @ 69.5%
+   Will FC Bayern München win on 2026-05-23?
+
+✅ MIRRORED #2: 🦈D1C537
+   Whale $100000 → Mirror $0.1618 | Yes @ 69.5%
+   Will FC Bayern München win on 2026-05-23?
+
+✅ MIRRORED #3: 🦈4BFF30
+   Whale $91734 → Mirror $0.1537 | Over @ 45.5%
    Houston Astros vs. Chicago Cubs: O/U 7.5
 
-✅ MIRRORED #2: 🦈1D1ADE
-   Whale $31950 → Mirror $0.1887 | Under @ 52.5%
-   Houston Astros vs. Chicago Cubs: O/U 7.5
-
-✅ MIRRORED #3: 🦈647E83
-   Whale $25000 → Mirror $0.1792 | Max Alcala Gurri @ 79.0%
-   Cervia: Max Alcala Gurri vs Buvaysar Gadamauri
-
-━━━ CLAWBOT v7: 3 mirrored | Bal $3.4055 ━━━
+━━━ CLAWBOT v7: 3 mirrored | Bal $2.9197 ━━━
