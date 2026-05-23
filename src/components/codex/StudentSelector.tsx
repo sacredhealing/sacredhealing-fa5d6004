@@ -243,7 +243,6 @@ export function StudentSelector() {
           </div>
 
           {showCreate && (
-          {showCreate && (
             <div style={{ padding: "12px 14px", borderTop: "1px solid rgba(212,175,55,0.08)" }}>
               <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: "0.25em", textTransform: "uppercase", color: "rgba(212,175,55,0.45)", marginBottom: 10 }}>
                 Find in app — links jyotish + ayurveda automatically
