@@ -293,6 +293,7 @@ function AppRoutes() {
       <Route path="/sovereign-share-preview" element={<SovereignSharePreview />} />
       {/* Public referral landing — /affiliate/r/:code avoids conflicting with /affiliate/dashboard */}
       <Route path="/affiliate/r/:code" element={<AffiliateLanding />} />
+      <Route path="/polymarket-oracle" element={<PolymarketOracle />} />
       <Route element={<ProtectedRoute />}>
                   <Route path="/hand-analyzer" element={<HandAnalyzer />} />
                   <Route path="/sacred-space" element={<SacredSpace />} />
@@ -308,7 +309,6 @@ function AppRoutes() {
                   <Route path="/music/artist/:artistId" element={<ArtistProfile />} />
                   <Route path="/mastering" element={<Mastering />} />
                   <Route path="/wallet" element={<Wallet />} />
-                  <Route path="/polymarket-oracle" element={<PolymarketOracle />} />
           <Route path="/profile" element={<Profile />} />
                   <Route path="/atma-seed" element={<AtmaSeed />} />
                   <Route path="/siddha-quantum" element={<SiddhaQuantum />} />
