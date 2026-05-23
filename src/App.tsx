@@ -1,5 +1,6 @@
 import React, { Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import PolymarketOracle from "@/pages/PolymarketOracle";
 import { Toaster } from "@/components/ui/toaster";
 import { setNavigator } from "@/utils/navigation";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -307,7 +308,8 @@ function AppRoutes() {
                   <Route path="/music/artist/:artistId" element={<ArtistProfile />} />
                   <Route path="/mastering" element={<Mastering />} />
                   <Route path="/wallet" element={<Wallet />} />
-                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/polymarket-oracle" element={<PolymarketOracle />} />
+          <Route path="/profile" element={<Profile />} />
                   <Route path="/atma-seed" element={<AtmaSeed />} />
                   <Route path="/siddha-quantum" element={<SiddhaQuantum />} />
                   <Route path="/prana-flow" element={<PranaFlow />} />
