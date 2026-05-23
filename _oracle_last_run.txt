@@ -1,33 +1,33 @@
 ══════════════════════════════════════════════════════
   SQI-2050 🦈 CLAWBOT v7 — Production
-  2026-05-23T17:45:10.721Z | PAPER
+  2026-05-23T18:45:44.896Z | PAPER
   Min: $100 | Entry zone: 6%–94%
 ══════════════════════════════════════════════════════
-Balance: $3.41
+Balance: $2.92
 
-🔍 Scanning 87,324,466 → 87,324,916
-  0xE111180000: 107634 logs → 5714 whale trades
-  0xe2222d279d: 19011 logs → 1784 whale trades
+🔍 Scanning 87,326,543 → 87,326,993
+  0xE111180000: 101446 logs → 5659 whale trades
+  0xe2222d279d: 17778 logs → 2569 whale trades
 
-Total: 7498 | New: 7498
+Total: 8228 | New: 8228
 
 📊 Top trades:
-  $  113200 | 0xdb859a551f | 108932351289...
-  $  113200 | 0xdb859a551f | 108932351289...
-  $  100000 | 0x08fff5b9a7 | 765444110403...
-  $  100000 | 0x08fff5b9a7 | 765444110403...
-  $  100000 | 0xd1c537b2a7 | 108932351289...
+  $  200000 | 0xee3ecc39c4 | 946036486363...
+  $  200000 | 0xa39c488ea8 | 946036486363...
+  $  200000 | 0xa39c488ea8 | 946036486363...
+  $   53725 | 0xbee54d9005 | 290322234023...
+  $   53725 | 0xbee54d9005 | 290322234023...
 
-✅ MIRRORED #1: 🦈DB859A
-   Whale $113200 → Mirror $0.1703 | Yes @ 69.5%
-   Will FC Bayern München win on 2026-05-23?
+✅ MIRRORED #1: 🦈BEE54D
+   Whale $53725 → Mirror $0.146 | Yes @ 37.5%
+   Will RCD Espanyol de Barcelona win on 2026-05-23?
 
-✅ MIRRORED #2: 🦈D1C537
-   Whale $100000 → Mirror $0.1618 | Yes @ 69.5%
-   Will FC Bayern München win on 2026-05-23?
+✅ MIRRORED #2: 🦈C3ACF5
+   Whale $50000 → Mirror $0.1387 | No @ 50.5%
+   Will FC Barcelona win on 2026-05-23?
 
-✅ MIRRORED #3: 🦈4BFF30
-   Whale $91734 → Mirror $0.1537 | Over @ 45.5%
-   Houston Astros vs. Chicago Cubs: O/U 7.5
+✅ MIRRORED #3: 🦈492442
+   Whale $45391 → Mirror $0.1318 | Under @ 47.5%
+   Knicks vs. Cavaliers: O/U 214.5
 
-━━━ CLAWBOT v7: 3 mirrored | Bal $2.9197 ━━━
+━━━ CLAWBOT v7: 3 mirrored | Bal $2.5032 ━━━
