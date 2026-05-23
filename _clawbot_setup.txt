@@ -1,0 +1,14 @@
+Creating polymarket_whales...
+[]
+Creating polymarket_seen_trades...
+[]
+Granting permissions...
+[]
+Seeding whale wallets...
+[]
+Verify via REST:
+[{"alias":"Shark-99WR","win_rate_30d":99,"roi_30d":97}, 
+ {"alias":"Shark-75WR","win_rate_30d":75,"roi_30d":60}, 
+ {"alias":"Shark-D","win_rate_30d":60,"roi_30d":45}, 
+ {"alias":"Shark-C","win_rate_30d":50,"roi_30d":30}, 
+ {"alias":"Shark-E","win_rate_30d":55,"roi_30d":25}]
