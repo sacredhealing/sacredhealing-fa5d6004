@@ -201,6 +201,7 @@ const SiddhaSoundAlchemyOracle = React.lazy(() => import("./pages/SiddhaSoundAlc
 const SiddhaOracleAbout = React.lazy(() => import("./pages/SiddhaOracleAbout"));
 const CreativeSoulAbout = React.lazy(() => import("./pages/CreativeSoulAbout"));
 const ExploreAkasha = React.lazy(() => import("./pages/ExploreAkasha"));
+const SqiLexicon = React.lazy(() => import("./pages/SqiLexicon"));
 const AdminDivineTransmissions = React.lazy(() => import("./pages/AdminDivineTransmissions"));
 const SQISocialAutomation = React.lazy(() => import("./pages/SQISocialAutomation"));
 
@@ -520,4 +521,5 @@ function App() {
 }
 
 export default App;
+
 
