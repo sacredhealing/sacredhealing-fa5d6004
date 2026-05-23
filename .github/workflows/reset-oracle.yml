@@ -1,0 +1,46 @@
+name: Reset Oracle + Discover Whales
+
+on:
+  workflow_dispatch:
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Reset + discover whales
+        env:
+          SUPABASE_PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          POLYGON_RPC: ${{ secrets.POLYGON_RPC_URL }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          DB="https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query"
+          BASE="https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1"
+          LOG="_reset_log.txt"
+
+          q() { curl -s -X POST "$DB" -H "Authorization: Bearer ${SUPABASE_PAT}" -H "Content-Type: application/json" -d "{\"query\":\"$1\"}" | tee -a $LOG; echo "" >> $LOG; }
+
+          echo "=== Reset paper balance to 10.00 ===" | tee $LOG
+          q "UPDATE polymarket_bot_settings SET paper_balance = 10.00, updated_at = NOW();"
+
+          echo "=== Clear test trades (keep real clawbot trades) ===" | tee -a $LOG
+          q "DELETE FROM polymarket_trades WHERE tx_hash IN ('paper-bootstrap','paper-bootstrap-test') OR market_id = 'test-001';"
+
+          echo "=== Add whale position_pct and last_roi columns ===" | tee -a $LOG
+          q "ALTER TABLE polymarket_whales ADD COLUMN IF NOT EXISTS avg_position_pct numeric DEFAULT 0;"
+          q "ALTER TABLE polymarket_whales ADD COLUMN IF NOT EXISTS last_trade_size numeric DEFAULT 0;"
+          q "ALTER TABLE polymarket_whales ADD COLUMN IF NOT EXISTS total_trades_seen integer DEFAULT 0;"
+
+          echo "=== Verify balance ===" | tee -a $LOG
+          curl -s "${BASE}/polymarket_bot_settings?select=paper_balance,updated_at" -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" | tee -a $LOG
+          echo "" >> $LOG
+
+          echo "=== Current whale count ===" | tee -a $LOG
+          curl -s "${BASE}/polymarket_whales?select=alias,address,win_rate_30d,roi_30d,trades_tracked" -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" | tee -a $LOG
+
+          git config user.email "bot@sqi.app"; git config user.name "SQI Bot"
+          git add $LOG && git commit -m "Reset balance + schema update $(date +%H%M%S)" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
