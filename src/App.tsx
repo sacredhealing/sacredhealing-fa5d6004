@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import PolymarketOracle from "@/pages/PolymarketOracle";
+const PolymarketOracle = React.lazy(() => import("@/pages/PolymarketOracle"));
 import { Toaster } from "@/components/ui/toaster";
 import { setNavigator } from "@/utils/navigation";
 import { Toaster as Sonner } from "@/components/ui/sonner";
