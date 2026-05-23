@@ -43,11 +43,10 @@ import { supabase } from '@/integrations/supabase/client';
 import type { NadiReading } from '@/components/NadiScanner';
 import type { VoiceBiofieldResult } from '@/components/VoiceBiofieldScanner';
 import { useSQIFieldContext } from '@/hooks/useSQIFieldContext';
-import { StudentSelector } from '@/components/codex/StudentSelector';
+import { StudentSelector, useActiveStudent } from '@/components/codex/StudentSelector';
 import { getActiveStudentId, getStudent, type Student } from '@/lib/codex/students';
 import { curateTransmission } from '@/lib/codex/curatorClient';
 import { syncPendingTransmissionsOnce } from '@/lib/codex/codexSync';
-import UserChatHistory from '@/components/UserChatHistory';
 import { useChatMessages } from '@/hooks/useChatMessages';
 import { toast } from 'sonner';
 
@@ -792,6 +791,7 @@ function QuantumApothecaryInner() {
   }, [user?.id, user?.email]);
 
   const jyotish = useJyotishProfile();
+  const linkedActiveStudent = useActiveStudent();
   const { doshaProfile } = useAyurvedaAnalysis();
   const sqiField = useSQIFieldContext();
 
@@ -2106,6 +2106,7 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
           >
             {liveChatClock}
           </span>
+          <StudentSelector />
           <button
             type="button"
             onClick={() => {
@@ -2155,11 +2156,6 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
           </button>
           <Cpu size={14} className="hidden text-[#D4AF37]/30 sm:block" aria-hidden />
         </div>
-      </div>
-
-      {/* Active student selector — routes SQI replies into chosen student's book */}
-      <div className="px-3 pt-3">
-        <StudentSelector />
       </div>
 
       {/* Messages — grow with thread; page/document scrolls (pre–Samsung inner-scroll behavior) */}
@@ -2451,26 +2447,24 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
       <div className="relative z-10 max-w-7xl mx-auto px-2 sm:px-6 py-6">
 
         {/* ââ Header ââ */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
             <button type="button" onClick={() => navigate('/explore')}
-              className="p-2.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/30 transition">
-              <ArrowLeft size={16} className="text-white/60" />
+              className="p-2 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:bg-[#D4AF37]/08 hover:border-[#D4AF37]/20 transition">
+              <ArrowLeft size={14} className="text-white/40" />
             </button>
-            <div className="w-11 h-11 rounded-2xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #D4AF37, #B8940A)', boxShadow: '0 0 24px rgba(212,175,55,0.3)' }}>
-              <Cpu size={20} className="text-black" />
-            </div>
             <div>
-              <h1 className="text-2xl font-black tracking-[-0.05em] text-white" style={{ textShadow: '0 0 30px rgba(212,175,55,0.2)' }}>
-                {t('quantumApothecary.title')}
+              <p className="text-[7px] font-black uppercase tracking-[0.5em] text-[#D4AF37]/35 mb-1">
+                Siddha · Quantum · 2050
+              </p>
+              <h1 className="text-[22px] font-black tracking-[-0.05em]" style={{ color: '#D4AF37', textShadow: '0 0 40px rgba(212,175,55,0.18)' }}>
+                Quantum Apothecary
               </h1>
-              <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.5em] text-[#D4AF37]/40">{t('quantumApothecary.subtitle')}</p>
             </div>
           </div>
           <button type="button" onClick={() => setShowKnowledge(true)}
-            className="p-2.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/30 transition">
-            <Info size={15} className="text-[#D4AF37]/60" />
+            className="p-2 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:bg-[#D4AF37]/08 hover:border-[#D4AF37]/20 transition">
+            <Info size={13} className="text-[#D4AF37]/40" />
           </button>
         </div>
 
@@ -2536,7 +2530,7 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
           </div>
 
           {apothecaryMainTab === 'library' ? (
-            <div className="grid w-full gap-5 lg:grid-cols-2">
+            <div className="grid w-full gap-5 lg:grid-cols-2" style={{ maxWidth: '100%' }}>
               <div className="flex min-w-0 flex-col gap-5">
                 <div className="glass-card rounded-[28px] p-4 sm:p-5 qa-card-hover">
                   <div className="mb-4 flex items-center justify-between gap-2">
@@ -2854,30 +2848,7 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                   )}
                 </div>
 
-                {!sqiField.loading && (sqiField.nadi || sqiField.ayurveda || sqiField.photonic?.lightCodeActive || sqiField.temple?.activeSite) && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, paddingLeft: 2, paddingRight: 2 }}>
-                    {sqiField.nadi?.activatedNadi && (
-                      <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(212,175,55,0.85)', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 30, padding: '6px 12px' }}>
-                        ◈ {sqiField.nadi.activatedNadi} Nadi · {sqiField.nadi.heartRate} BPM
-                      </span>
-                    )}
-                    {sqiField.ayurveda?.prakriti && (
-                      <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(212,175,55,0.85)', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 30, padding: '6px 12px' }}>
-                        ⟁ {sqiField.ayurveda.prakriti}
-                      </span>
-                    )}
-                    {sqiField.photonic?.lightCodeActive && !/biophotonic|vishwananda|miracle\s*room/i.test(`${sqiField.photonic.activeProtocol ?? ''}`) && (
-                      <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(34,211,238,0.85)', background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.2)', borderRadius: 30, padding: '6px 12px' }}>
-                        ≋ {sqiField.photonic.frequency}Hz · {sqiField.photonic.activeProtocol}
-                      </span>
-                    )}
-                    {sqiField.temple?.activeSite && !/vishwananda|miracle\s*room/i.test(`${sqiField.temple.activeSite ?? ''}`) && (
-                      <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(212,175,55,0.85)', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 30, padding: '6px 12px' }}>
-                        ◈ {sqiField.temple.activeSite} · {sqiField.temple.intensity}%
-                      </span>
-                    )}
-                  </div>
-                )}
+
               </div>
             </div>
           ) : (
@@ -3161,8 +3132,6 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
     color: rgba(225,210,185,0.85) !important;
   }
       `}</style>
-
-      <UserChatHistory filterChatType="apothecary" />
 
       {/* Scroll-to-top FAB */}
       <ScrollToTopButton />
