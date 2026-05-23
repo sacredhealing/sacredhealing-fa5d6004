@@ -1,52 +1,75 @@
 ══════════════════════════════════════════════════
   SQI-2050 🦈 CLAWBOT — Prediction Shark Tracker
-  2026-05-23T08:02:01.418Z | PAPER
+  2026-05-23T08:05:18.235Z | PAPER
   Min trade size to mirror: $500
 ══════════════════════════════════════════════════
 
-Balance: $8.57
-GET polymarket_whales: 404 {"code":"PGRST205","details":null,"hint":"Perhaps you meant the table 'public.polymarket_trades'","message":"Could not find the table 'public.polymark
+Balance: $7.35
 
-Tracking 0 whale wallets
+Tracking 5 whale wallets
 
 Discovering top wallets from Polymarket leaderboard...
-GET polymarket_seen_trades: 404 {"code":"PGRST205","details":null,"hint":"Perhaps you meant the table 'public.polymarket_trades'","message":"Could not find the table 'public.polymark
   Already seen: 0 trades
+
+🦈 Scanning Shark-99WR (99% WR | +97% ROI)...
+  [0xb91560] API returned 400/401
+  Raw trades fetched: 0
+  New large trades: 0
+
+🦈 Scanning Shark-75WR (75% WR | +60% ROI)...
+  [0x7ea542] API returned 400/401
+  Raw trades fetched: 0
+  New large trades: 0
+
+🦈 Scanning Shark-D (60% WR | +45% ROI)...
+  [0x4bfb41] API returned 400/401
+  Raw trades fetched: 0
+  New large trades: 0
+
+🦈 Scanning Shark-C (50% WR | +30% ROI)...
+  [0xfce454] API returned 400/401
+  Raw trades fetched: 0
+  New large trades: 0
+
+🦈 Scanning Shark-E (55% WR | +25% ROI)...
+  [0x8d97be] API returned 400/401
+  Raw trades fetched: 0
+  New large trades: 0
 
 ━━━ CLAWBOT Run Complete ━━━
   Signals found: 0
   Trades mirrored: 0
-  Balance: $8.5737
+  Balance: $7.3508
   Next run: ~15 min (cron)
 ══════════════════════════════════════════════════
   SQI-2050 ⚡ Shiesty Signal Oracle
-  2026-05-23T08:02:03.459Z | PAPER | Risk 5%
+  2026-05-23T08:05:24.511Z | PAPER | Risk 5%
 ══════════════════════════════════════════════════
-Balance: $8.5737 | Row: 052ae9dc-7355-46ab-8584-70d2ba33ae68
+Balance: $7.3508 | Row: 052ae9dc-7355-46ab-8584-70d2ba33ae68
 
 Fetching Polymarket...
   API returned: 100 markets
 
   Top 10 markets by volume:
-    $49578k vol | Yes=1%, No=99% | Will Bernie Sanders win the 2028 Democratic presidential nomination?
+    $49579k vol | Yes=1%, No=99% | Will Bernie Sanders win the 2028 Democratic presidential nomination?
     $44434k vol | Yes=0%, No=100% | Will Uzbekistan win the 2026 FIFA World Cup?
-    $41957k vol | Yes=1%, No=99% | Will Hillary Clinton win the 2028 Democratic presidential nomination?
+    $41958k vol | Yes=1%, No=99% | Will Hillary Clinton win the 2028 Democratic presidential nomination?
     $40546k vol | Yes=1%, No=99% | Will Tim Walz win the 2028 Democratic presidential nomination?
     $40073k vol | Yes=0%, No=100% | Will Curaçao win the 2026 FIFA World Cup?
-    $39582k vol | Yes=1%, No=99% | Will Phil Murphy win the 2028 Democratic presidential nomination?
+    $39583k vol | Yes=1%, No=99% | Will Phil Murphy win the 2028 Democratic presidential nomination?
     $36330k vol | Yes=1%, No=99% | Will Zohran Mamdani win the 2028 Democratic presidential nomination?
     $36218k vol | Yes=1%, No=99% | Will Liz Cheney win the 2028 Democratic presidential nomination?
     $35545k vol | Yes=1%, No=99% | Will USA win the 2026 FIFA World Cup?
     $34746k vol | Yes=0%, No=100% | Will New Zealand win the 2026 FIFA World Cup?
 
   Signals found: 6 total → top 3 selected
-    [90] [ORACLE] Will the San Antonio Spurs win the 2026 NBA Finals? | Yes@16% | vol $29690k
-    [90] [ORACLE] Will France win the 2026 FIFA World Cup? | Yes@18% | vol $29566k
+    [90] [ORACLE] Will the San Antonio Spurs win the 2026 NBA Finals? | Yes@16% | vol $29695k
+    [90] [ORACLE] Will France win the 2026 FIFA World Cup? | Yes@18% | vol $29568k
     [90] [ORACLE] Will Gavin Newsom win the 2028 Democratic presidential nomination? | No@76% | vol $25456k
 
 Executing trades...
-  ✅ #1 BUY Yes @ 15.8% | $0.4287 → bal $8.145
-  ✅ #2 BUY Yes @ 17.8% | $0.4073 → bal $7.7377
-  ✅ #3 BUY No @ 75.8% | $0.3869 → bal $7.3508
+  ✅ #1 BUY Yes @ 15.8% | $0.3675 → bal $6.9833
+  ✅ #2 BUY Yes @ 17.8% | $0.3492 → bal $6.6341
+  ✅ #3 BUY No @ 75.8% | $0.3317 → bal $6.3024
 
-━━━ Done: 3 trade(s) | Final bal $7.3508 ━━━
+━━━ Done: 3 trade(s) | Final bal $6.3024 ━━━
