@@ -1,0 +1,26 @@
+=== Reset paper balance to 10.00 ===
+[]
+=== Clear test trades (keep real clawbot trades) ===
+[]
+=== Add whale position_pct and last_roi columns ===
+[]
+[]
+[]
+=== Verify balance ===
+[{"paper_balance":10.00,"updated_at":"2026-05-23T09:00:33.863499+00:00"}]
+=== Current whale count ===
+[{"alias":"Shark-99WR","address":"0xb9156052b7f3886a1c999045fc5cca3aaf77b1e","win_rate_30d":99,"roi_30d":97,"trades_tracked":0}, 
+ {"alias":"Shark-75WR","address":"0x7ea542b1492c7e1dd8040e3ba27da67ab3de7b0","win_rate_30d":75,"roi_30d":60,"trades_tracked":0}, 
+ {"alias":"Shark-C","address":"0xfce454e6597f7b9dc6e3d0e0f40db7be8f36d8e","win_rate_30d":50,"roi_30d":30,"trades_tracked":0}, 
+ {"alias":"Shark-D","address":"0x4bfb41d5b3570defd03c39a9a4d8de6bd8b8982","win_rate_30d":60,"roi_30d":45,"trades_tracked":0}, 
+ {"alias":"Shark-E","address":"0x8d97be0a35bb00d3db9da3f52d3a60d9a4b0f6e","win_rate_30d":55,"roi_30d":25,"trades_tracked":0}, 
+ {"alias":"🦈A49B6E","address":"0xa49b6ea0a604c581f2a9569db42c192b1c487054","win_rate_30d":0,"roi_30d":0,"trades_tracked":0}, 
+ {"alias":"🦈CE2EED","address":"0xce2eed5021906822d79061254c08e8b6e581a7b2","win_rate_30d":0,"roi_30d":0,"trades_tracked":0}, 
+ {"alias":"🦈6A8D17","address":"0x6a8d1709bfb718d8555d315a983c4816278350f9","win_rate_30d":0,"roi_30d":0,"trades_tracked":0}, 
+ {"alias":"🦈B04063","address":"0xb040634cfe6d3ca5295e915ad0077d4016bfef71","win_rate_30d":0,"roi_30d":0,"trades_tracked":0}, 
+ {"alias":"🦈FBF3D5","address":"0xfbf3d501e88815464642d0e913f15379c3eeb218","win_rate_30d":0,"roi_30d":0,"trades_tracked":0}, 
+ {"alias":"🦈5E04E1","address":"0x5e04e12c3376a6a68f8cdffc8b972df3bd9e08a2","win_rate_30d":0,"roi_30d":0,"trades_tracked":0}, 
+ {"alias":"🦈74471A","address":"0x74471a007ddcc488f6d57b5e86dfb35a8d48a16d","win_rate_30d":0,"roi_30d":0,"trades_tracked":0}, 
+ {"alias":"🦈8FBB3C","address":"0x8fbb3c32496d4bcff8f456c3342f90edaaa09a17","win_rate_30d":0,"roi_30d":0,"trades_tracked":0}, 
+ {"alias":"🦈113636","address":"0x1136368d7f6728e94ed14c532ab95a932f710c2e","win_rate_30d":0,"roi_30d":0,"trades_tracked":0}, 
+ {"alias":"🦈A69D0C","address":"0xa69d0cd47b794edd9642208409695d35150d509b","win_rate_30d":0,"roi_30d":0,"trades_tracked":0}]
