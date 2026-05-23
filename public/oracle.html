@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CLAWBOT Oracle | SQI-2050</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050505;color:#fff;font-family:'Plus Jakarta Sans',system-ui,sans-serif;padding:24px 20px;min-height:100vh}
+.wrap{max-width:1000px;margin:0 auto}
+h1{font-size:26px;font-weight:900;letter-spacing:-.03em;margin-bottom:4px}
+.sub{font-size:12px;color:rgba(255,255,255,.35);margin-bottom:20px}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+.badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:5px;border:1px solid}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:24px}
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px}
+.card-label{font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:8px}
+.card-val{font-size:24px;font-weight:900;color:#D4AF37}
+.section{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:18px;margin-bottom:16px}
+.sec-label{font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:14px}
+.row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:12px}
+.row:last-child{border-bottom:none}
+.mkt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:rgba(255,255,255,.8)}
+.meta{font-size:10px;color:rgba(255,255,255,.3);margin-top:2px}
+.amt{font-size:13px;font-weight:700;color:#D4AF37;text-align:right;flex-shrink:0}
+.outcome{font-size:10px;text-align:right}
+.tabs{display:flex;gap:4px;background:rgba(255,255,255,.04);border-radius:10px;padding:4px;width:fit-content;margin-bottom:20px}
+.tab{padding:7px 16px;border-radius:8px;border:none;cursor:pointer;font-size:11px;font-weight:700;text-transform:uppercase;background:transparent;color:rgba(255,255,255,.4)}
+.tab.active{background:#D4AF37;color:#050505}
+.pane{display:none}.pane.active{display:block}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{padding:8px 10px;text-align:left;font-size:9px;letter-spacing:.2em;color:rgba(255,255,255,.3);font-weight:700;border-bottom:1px solid rgba(255,255,255,.08)}
+td{padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.04)}
+.loader{text-align:center;padding:40px;color:#D4AF37;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div style="font-size:9px;letter-spacing:.4em;color:#D4AF37;margin-bottom:6px">SQI-2050 · ADMIN ONLY</div>
+  <h1>🦈 CLAWBOT Oracle</h1>
+  <div class="sub">On-chain Polymarket whale tracker · Polygon V2 · Every 15 min via GitHub Actions</div>
+  <div class="badges">
+    <span class="badge" style="background:#22D3EE20;color:#22D3EE;border-color:#22D3EE40">PAPER MODE</span>
+    <span class="badge" id="b-whales" style="background:#D4AF3720;color:#D4AF37;border-color:#D4AF3740">...</span>
+    <span class="badge" style="background:#10B98120;color:#10B981;border-color:#10B98140">24/7 ACTIVE</span>
+    <span class="badge" id="b-mirrors" style="background:#A78BFA20;color:#A78BFA;border-color:#A78BFA40">...</span>
+    <span id="b-time" style="font-size:10px;color:rgba(255,255,255,.25);align-self:center"></span>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="show('dashboard',this)">Dashboard</button>
+    <button class="tab" onclick="show('trades',this)" id="tab-trades">Trades</button>
+    <button class="tab" onclick="show('whales',this)" id="tab-whales">Whales</button>
+    <button class="tab" onclick="show('setup',this)">Go Live</button>
+  </div>
+
+  <div class="pane active" id="pane-dashboard">
+    <div class="grid" id="stats">
+      <div class="card"><div class="card-label">Paper Balance</div><div class="card-val" id="s-bal">—</div><div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:4px">Started $10.00</div></div>
+      <div class="card"><div class="card-label">Open Positions</div><div class="card-val" id="s-open">—</div></div>
+      <div class="card"><div class="card-label">Whale Mirrors</div><div class="card-val" id="s-claw" style="color:#A78BFA">—</div></div>
+      <div class="card"><div class="card-label">7-Day Trades</div><div class="card-val" id="s-7d">—</div></div>
+      <div class="card"><div class="card-label">Whales Found</div><div class="card-val" id="s-whales" style="color:#22D3EE">—</div></div>
+      <div class="card"><div class="card-label">Risk/Trade</div><div class="card-val" id="s-risk">5%</div></div>
+    </div>
+    <div class="section">
+      <div class="sec-label">Latest Whale Mirrors</div>
+      <div id="latest"><div class="loader">⟳ Loading...</div></div>
+    </div>
+  </div>
+
+  <div class="pane" id="pane-trades">
+    <div class="section">
+      <div class="sec-label" id="trades-label">All paper trades</div>
+      <div id="trades-table"><div class="loader">⟳ Loading...</div></div>
+    </div>
+  </div>
+
+  <div class="pane" id="pane-whales">
+    <div class="section">
+      <div class="sec-label">Whale Wallets</div>
+      <div id="whales-table"><div class="loader">⟳ Loading...</div></div>
+    </div>
+  </div>
+
+  <div class="pane" id="pane-setup">
+    <div class="section">
+      <div class="sec-label">Go Live — Wallet Setup</div>
+      <div class="row"><div style="color:#D4AF37;font-weight:700;font-size:12px;min-width:160px">1. Fresh MetaMask wallet</div><div style="font-size:12px;color:rgba(255,255,255,.4)">Create a NEW wallet only for this bot. Never your main wallet.</div></div>
+      <div class="row"><div style="color:#D4AF37;font-weight:700;font-size:12px;min-width:160px">2. Add Polygon (Chain 137)</div><div style="font-size:12px;color:rgba(255,255,255,.4)">polygon-mainnet.g.alchemy.com/v2/az4D7Awbl2E2rNpe6kc3M</div></div>
+      <div class="row"><div style="color:#D4AF37;font-weight:700;font-size:12px;min-width:160px">3. Fund USDC on Polygon</div><div style="font-size:12px;color:rgba(255,255,255,.4)">Binance/Coinbase → withdraw USDC to Polygon. Add ~€12 for gas.</div></div>
+      <div class="row"><div style="color:#D4AF37;font-weight:700;font-size:12px;min-width:160px">4. Polymarket account</div><div style="font-size:12px;color:rgba(255,255,255,.4)">polymarket.com → connect MetaMask → Deposit → V2 wallet auto-created</div></div>
+      <div class="row"><div style="color:#D4AF37;font-weight:700;font-size:12px;min-width:160px">5. USDC → pUSD</div><div style="font-size:12px;color:rgba(255,255,255,.4)">Auto-wrapped on deposit. 1:1, zero fee.</div></div>
+      <div class="row"><div style="color:#D4AF37;font-weight:700;font-size:12px;min-width:160px">6. Private key to GitHub</div><div style="font-size:12px;color:rgba(255,255,255,.4)">Repo → Settings → Secrets → POLYMARKET_PRIVATE_KEY</div></div>
+    </div>
+    <div class="section">
+      <div class="sec-label">Paper vs Live — Identical Execution</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px">
+        <div style="background:#22D3EE10;border:1px solid #22D3EE30;border-radius:12px;padding:14px">
+          <div style="color:#22D3EE;font-weight:700;margin-bottom:8px;font-size:13px">📋 Paper (Now)</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.9">✓ Real whale detection<br>✓ Real prices + timing<br>✓ Fees calculated<br>✗ No real profit</div>
+        </div>
+        <div style="background:#D4AF3710;border:1px solid #D4AF3730;border-radius:12px;padding:14px">
+          <div style="color:#D4AF37;font-weight:700;margin-bottom:8px;font-size:13px">🔴 Live (After 7 days)</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.9">✓ Real USDC on Polygon<br>✓ Real Polymarket V2<br>✓ Profit withdrawable<br>⚠ Start with €10</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SB='https://fjdzhrdpioxdeyyfogep.supabase.co';
+const KEY='sb_publishable_H4AI2ZzqOL1Y7o6qRMr8ew_5-4pih8F';
+const H={apikey:KEY,Authorization:'Bearer '+KEY};
+
+function show(id,btn){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('pane-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+async function get(table,qs=''){
+  const r=await fetch(SB+'/rest/v1/'+table+'?'+qs,{headers:H});
+  return r.ok?r.json():[];
+}
+
+function clean(s){return String(s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\[.*?\]/g,'').trim()}
+
+async function load(){
+  const [trades,whales,settings]=await Promise.all([
+    get('polymarket_trades','order=created_at.desc&limit=200'),
+    get('polymarket_whales','order=roi_30d.desc'),
+    get('polymarket_bot_settings','limit=1'),
+  ]);
+  const s=settings?.[0];
+  const paper=(trades||[]).filter(t=>t.is_paper);
+  const open=paper.filter(t=>t.status==='open');
+  const claw=paper.filter(t=>(t.strategy||'').includes('clawbot'));
+  const d7=paper.filter(t=>new Date(t.created_at)>new Date(Date.now()-7*864e5));
+  const active=(whales||[]).filter(w=>w.is_active);
+  const staked=open.reduce((s,t)=>s+Number(t.amount_usdc),0);
+
+  document.getElementById('s-bal').textContent='$'+Number(s?.paper_balance||0).toFixed(2);
+  document.getElementById('s-open').textContent=open.length;
+  document.getElementById('s-claw').textContent=claw.length;
+  document.getElementById('s-7d').textContent=d7.length;
+  document.getElementById('s-whales').textContent=active.length;
+  document.getElementById('b-whales').textContent=active.length+' Whales';
+  document.getElementById('b-mirrors').textContent=claw.length+' Mirrors';
+  if(s?.updated_at) document.getElementById('b-time').textContent='Updated '+new Date(s.updated_at).toLocaleTimeString();
+  document.getElementById('tab-trades').textContent='Trades ('+paper.length+')';
+  document.getElementById('tab-whales').textContent='Whales ('+(whales||[]).length+')';
+  document.getElementById('trades-label').textContent=paper.length+' paper trades · '+open.length+' open';
+
+  const latest=document.getElementById('latest');
+  latest.innerHTML=open.length===0
+    ?'<div style="color:rgba(255,255,255,.25);font-size:13px;padding:8px 0">No open positions — next scan within 15 min</div>'
+    :open.slice(0,8).map(t=>`<div class="row"><div style="flex:1;min-width:0"><div class="mkt">${clean(t.market_question)}</div><div class="meta">${new Date(t.created_at).toLocaleString()}</div></div><div><div class="amt">$${Number(t.amount_usdc).toFixed(3)}</div><div class="outcome" style="color:${t.outcome==='Yes'?'#10B981':'#F59E0B'}">${t.outcome} @ ${(Number(t.entry_price)*100).toFixed(1)}%</div></div></div>`).join('');
+
+  document.getElementById('trades-table').innerHTML=paper.length===0
+    ?'<div class="loader">No trades yet</div>'
+    :`<table><thead><tr><th>Time</th><th>Market</th><th>Outcome</th><th>Entry</th><th>Size</th><th>Type</th></tr></thead><tbody>${paper.slice(0,100).map(t=>`<tr><td style="color:rgba(255,255,255,.3);font-size:10px">${new Date(t.created_at).toLocaleDateString()}</td><td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${clean(t.market_question).slice(0,50)}…</td><td style="color:${t.outcome==='Yes'?'#10B981':'#F59E0B'};font-weight:700">${t.outcome}</td><td style="color:#D4AF37;font-weight:700">${(Number(t.entry_price)*100).toFixed(1)}¢</td><td>$${Number(t.amount_usdc).toFixed(3)}</td><td><span style="font-size:10px;padding:2px 7px;border-radius:4px;background:${(t.strategy||'').includes('clawbot')?'#D4AF3722':'#22D3EE22'};color:${(t.strategy||'').includes('clawbot')?'#D4AF37':'#22D3EE'}">${(t.strategy||'').includes('clawbot')?'🦈 Whale':'📊 EV'}</span></td></tr>`).join('')}</tbody></table>`;
+
+  document.getElementById('whales-table').innerHTML=(whales||[]).length===0
+    ?'<div class="loader">No whales yet</div>'
+    :`<table><thead><tr><th>Alias</th><th>Wallet</th><th>Win Rate</th><th>ROI 30d</th><th>Trades</th><th>Status</th></tr></thead><tbody>${(whales||[]).map(w=>`<tr><td style="color:#D4AF37;font-weight:700">${w.alias||'—'}</td><td style="color:rgba(255,255,255,.3);font-size:10px;font-family:monospace">${(w.address||'').slice(0,12)}…</td><td style="color:${w.win_rate_30d>60?'#10B981':'rgba(255,255,255,.35)';font-weight:700">${w.win_rate_30d>0?w.win_rate_30d+'%':'Building...'}</td><td style="color:${w.roi_30d>0?'#10B981':'rgba(255,255,255,.35)'};font-weight:700">${w.roi_30d>0?'+'+w.roi_30d+'%':'—'}</td><td style="color:rgba(255,255,255,.5)">${w.total_trades_seen||0}</td><td style="font-size:10px;color:${w.is_active?'#10B981':'#6B7280'}">${w.is_active?'● Active':'○ Paused'}</td></tr>`).join('')}</tbody></table>`;
+}
+
+load();
+setInterval(load,30000);
+</script>
+</body>
+</html>
