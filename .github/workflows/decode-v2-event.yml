@@ -1,0 +1,80 @@
+name: Decode V2 Event Sample
+
+on:
+  workflow_dispatch:
+
+jobs:
+  decode:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Decode one real V2 log
+        env:
+          POLYGON_RPC: ${{ secrets.POLYGON_RPC_URL }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          node << 'JSEOF'
+          const RPC = process.env.POLYGON_RPC;
+
+          async function rpc(method, params) {
+            const r = await fetch(RPC, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id: 1, jsonrpc: '2.0', method, params }),
+            });
+            return (await r.json()).result;
+          }
+
+          async function main() {
+            const latest = parseInt(await rpc('eth_blockNumber', []), 16);
+            const from   = latest - 9;
+
+            // Get one log from V2 CTF contract
+            const logs = await rpc('eth_getLogs', [{
+              fromBlock: '0x' + from.toString(16),
+              toBlock:   '0x' + latest.toString(16),
+              address:   '0xE111180000d2663C0091e4f400237545B87B996B',
+            }]);
+
+            console.log('Total logs in last 9 blocks:', logs.length);
+
+            if (logs.length === 0) {
+              console.log('No logs — try a bigger range');
+              return;
+            }
+
+            // Show first 3 logs in full
+            for (const log of logs.slice(0, 3)) {
+              console.log('\n=== LOG ===');
+              console.log('topics:', JSON.stringify(log.topics, null, 2));
+              console.log('data:', log.data);
+              console.log('data length (chars):', log.data.length);
+              console.log('data length (bytes):', (log.data.length - 2) / 2);
+
+              // Try to decode data as sequence of uint256
+              const raw = log.data.slice(2);
+              const numWords = Math.floor(raw.length / 64);
+              console.log('Words in data:', numWords);
+              for (let i = 0; i < numWords; i++) {
+                const hex = '0x' + raw.slice(i * 64, i * 64 + 64);
+                const big = BigInt(hex);
+                const small = big < BigInt('1000000000000') ? Number(big) / 1e6 : 'OVERFLOW';
+                console.log('  word[' + i + ']:', hex.slice(0,20) + '... | decimal:', small);
+              }
+
+              // Also get the full tx for context
+              const tx = await rpc('eth_getTransactionReceipt', [log.transactionHash]);
+              console.log('tx status:', tx?.status, '| from:', tx?.from);
+            }
+          }
+          main().catch(console.error);
+          JSEOF
+
+          git config user.email "bot@sqi.app"; git config user.name "SQI Bot"
+          git add -A && git commit -m "V2 decode $(date +%H%M%S)" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
