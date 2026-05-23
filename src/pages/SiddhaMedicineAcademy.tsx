@@ -192,8 +192,7 @@ const CURRICULUM: TierCurriculum = {
               { label: "Shankhapushpi — 1 tsp dried herb as tea", text: "Opens the higher Tattva channels (Buddhi → Ahamkara → Manas). Enhances meditation depth and the capacity to trace symptoms to their causal origin." },
             ],
             quote: {
-              tamil: "தத்துவமசி — நீயே அது
-ஆறு அறிவாவது அறிவே சிவம்",
+              tamil: "தத்துவமசி — நீயே அது\nஆறு அறிவாவது அறிவே சிவம்",
               english: "Tat Tvam Asi — That thou art. The sixth sense that knows is itself Shiva.",
               master: "Agathiyar · Agathiyar Gnana Paadam",
             },
@@ -225,8 +224,7 @@ const CURRICULUM: TierCurriculum = {
               { label: "Ashwagandha (Amukkura) — 1 tsp in warm milk", text: "Vatham-balancing adaptogen. Nourishes Ojas (vital essence), calms the nervous system, strengthens all tissues. Evening use before sleep." },
             ],
             quote: {
-              tamil: "வாதம் பித்தம் கபம் என்னும்
-மூன்றும் தெரிந்தால் வைத்தியன்",
+              tamil: "வாதம் பித்தம் கபம் என்னும்\nமூன்றும் தெரிந்தால் வைத்தியன்",
               english: "One who truly knows Vatham, Pittham, and Kapham — that one alone is a physician.",
               master: "Agathiyar · Vaidya Thirattu",
             },
@@ -258,8 +256,7 @@ const CURRICULUM: TierCurriculum = {
               { label: "Sesame oil — 1 tbsp oil pulling (kavala)", text: "Purifies the Vata-governing channels in the jaw and throat, which improves Vatham pulse accuracy. Ancient Siddha pre-diagnostic purification." },
             ],
             quote: {
-              tamil: "நாடி அறிந்தவன் நாட்டை ஆள்வான்
-நாடி அறியாதவன் நலிவில் வீழ்வான்",
+              tamil: "நாடி அறிந்தவன் நாட்டை ஆள்வான்\nநாடி அறியாதவன் நலிவில் வீழ்வான்",
               english: "One who knows the Nadi governs the land. One who knows it not falls into ruin.",
               master: "Thirumoolar · Thirumantiram 826",
             },
@@ -299,8 +296,7 @@ const CURRICULUM: TierCurriculum = {
               { label: "Sesame (Til) — 1 tbsp seeds daily", text: "Highest calcium-density food in Siddha pharmacopoeia. Rebuilds Asthi Dhatu. Black sesame specifically nourishes the kidney-bone axis (Vrikka-Asthi connection in Siddha physiology)." },
             ],
             quote: {
-              tamil: "மண்ணில் நின்று மண்ணை அறிந்தால்
-வானை அறிவது வழிவரும்",
+              tamil: "மண்ணில் நின்று மண்ணை அறிந்தால்\nவானை அறிவது வழிவரும்",
               english: "Standing on the earth and knowing the earth — the way to know the sky naturally follows.",
               master: "Agathiyar · Agathiyar 12000",
             },
@@ -331,8 +327,7 @@ const CURRICULUM: TierCurriculum = {
               { label: "Amla (Nelli) — 2 fresh or 1 tsp powder", text: "The supreme Rasa Dhatu nourisher. Highest natural vitamin C in Siddha pharmacopoeia. Builds Ojas while purifying Rakta Dhatu." },
             ],
             quote: {
-              tamil: "நீரில்லா இடத்தில் நிலம் இல்லை
-காரணமில்லா இடத்தில் காரியமில்லை",
+              tamil: "நீரில்லா இடத்தில் நிலம் இல்லை\nகாரணமில்லா இடத்தில் காரியமில்லை",
               english: "Without water there is no earth. Without cause there is no effect.",
               master: "Thiruvalluvar · Thirukkural 20",
             },
@@ -364,8 +359,7 @@ const CURRICULUM: TierCurriculum = {
               { label: "Cumin (Jeeragam) water — 1 tsp seeds boiled 5 min", text: "The mildest Agni-activator. Safe for all Doshas. Morning use. The first Siddha recommendation for sluggish digestion and post-illness recovery." },
             ],
             quote: {
-              tamil: "அனலும் அனிலமும் ஆன உடல் உண்மை
-ஞானாக்கினி நீக்கும் சகல வினையே",
+              tamil: "அனலும் அனிலமும் ஆன உடல் உண்மை\nஞானாக்கினி நீக்கும் சகல வினையே",
               english: "The body made of fire and wind — the fire of wisdom burns away all karmas.",
               master: "Thirumoolar · Thirumantiram 725",
             },
@@ -397,8 +391,7 @@ const CURRICULUM: TierCurriculum = {
               { label: "Ghee (Sarpi) — 1 tsp on empty stomach morning", text: "The supreme Vayu and Akasha tonic. Lubricates all bodily spaces, nourishes nerve tissue, and creates the subtle physical substrate for higher spiritual states. Siddha immortality science begins with ghee." },
             ],
             quote: {
-              tamil: "ஆகாயம் காற்று அனல் நீர் மண் ஐந்தும்
-யோகியின் உடலில் யோகமாய் நிற்கும்",
+              tamil: "ஆகாயம் காற்று அனல் நீர் மண் ஐந்தும்\nயோகியின் உடலில் யோகமாய் நிற்கும்",
               english: "Space, air, fire, water, earth — these five stand as Yoga within the Yogi's body.",
               master: "Agathiyar · Agathiyar Gnana 200",
             },
@@ -438,8 +431,7 @@ const CURRICULUM: TierCurriculum = {
               { label: "Neem (Vembu) twig — for teeth and gum health", text: "Siddha dentistry used neem twigs to clean teeth. Neem's bitter taste (Tikta rasa) reduces Kapham and Pittham in the oral cavity, improving the accuracy of Jihva diagnosis by removing pathological coating." },
             ],
             quote: {
-              tamil: "நோயை அறிந்து மருந்து கொள்வோர்
-ஆயுளோடு அன்பாய் இருப்பார்",
+              tamil: "நோயை அறிந்து மருந்து கொள்வோர்\nஆயுளோடு அன்பாய் இருப்பார்",
               english: "Those who understand the disease before taking medicine live long and with love.",
               master: "Agathiyar · Agathiyar Vaidyam 2000",
             },
@@ -471,8 +463,7 @@ const CURRICULUM: TierCurriculum = {
               { label: "Saffron milk (Kumkuma paal) — 3 strands in warm milk at night", text: "Nourishes all seven Dhatus simultaneously. The most sattvic tissue-nourisher. Particularly valuable during illness recovery when Ojas is depleted." },
             ],
             quote: {
-              tamil: "உடல் நலமும் உள்ளம் நலமும்
-ஒரே வழியில் ஒன்றாய் வரும்",
+              tamil: "உடல் நலமும் உள்ளம் நலமும்\nஒரே வழியில் ஒன்றாய் வரும்",
               english: "Physical health and inner health — they come together on the same path.",
               master: "Thiruvalluvar · Thirukkural 941",
             },
@@ -505,8 +496,7 @@ const CURRICULUM: TierCurriculum = {
               { label: "Rose water (Panneer Jal) — sip throughout the day", text: "Sattvic heart-opener. Reduces Pittham-anger stored in Rakta Dhatu. The most gentle and universally applicable Siddha mental medicine. The taste itself opens Anahata Chakra." },
             ],
             quote: {
-              tamil: "மனமே மருந்து மனமே நஞ்சு
-மனமே மனிதனின் உயிர்த்துணை",
+              tamil: "மனமே மருந்து மனமே நஞ்சு\nமனமே மனிதனின் உயிர்த்துணை",
               english: "The mind is medicine. The mind is poison. The mind is the companion of the human soul.",
               master: "Agathiyar · Gnana Agathiyam",
             },
@@ -538,8 +528,7 @@ const CURRICULUM: TierCurriculum = {
               { label: "Turmeric (Manjal) — ¼ tsp in everything", text: "The universal Siddha kitchen medicine. Anti-Ama, anti-Pittham, anti-Kapham. Purifies Rakta Dhatu (blood). The single most powerful dietary medicine in the Siddha system. Non-negotiable daily use." },
             ],
             quote: {
-              tamil: "உண்பது நாழி உறங்குவது யாமம்
-திண்பது கைப்பிடி செய்வது சிறிதே",
+              tamil: "உண்பது நாழி உறங்குவது யாமம்\nதிண்பது கைப்பிடி செய்வது சிறிதே",
               english: "Eat a measure, sleep a watch of the night, hold tight what is firm — act with precision and restraint.",
               master: "Thiruvalluvar · Thirukkural 943",
             },
@@ -580,8 +569,7 @@ const CURRICULUM: TierCurriculum = {
               { label: "Ushapana — warm water on rising", text: "The first Siddha medicine each day: 300-500ml warm (not boiling) water on waking. Flushes the kidneys, activates the lymph, softens overnight Ama, and begins the body's thermal activation before any food or stimulant." },
             ],
             quote: {
-              tamil: "காலை எழுந்திரு கடவுளை நினை
-மாலை இறங்கும் முன் மருந்தை உண்",
+              tamil: "காலை எழுந்திரு கடவுளை நினை\nமாலை இறங்கும் முன் மருந்தை உண்",
               english: "Rise at dawn and remember the Divine. Take your medicine before evening descends.",
               master: "Agathiyar · Vaidya Sastra",
             },
@@ -612,8 +600,7 @@ const CURRICULUM: TierCurriculum = {
               { label: "Castor oil — soles of feet before sleep", text: "Ancient Siddha Marma therapy for the Talahridaya (sole) Marma. Castor oil penetrates deeply, stimulates the kidney reflex points, and induces profound sleep. Wrap feet in cotton socks after application." },
             ],
             quote: {
-              tamil: "வர்மம் அறிந்தவன் வாழ்வை அறிந்தான்
-மர்மம் அறிந்தவன் மரணம் வெல்வான்",
+              tamil: "வர்மம் அறிந்தவன் வாழ்வை அறிந்தான்\nமர்மம் அறிந்தவன் மரணம் வெல்வான்",
               english: "One who knows Varma knows life. One who knows the secret (Marma) conquers death.",
               master: "Konganar Siddhar · Varma Sutram",
             },
@@ -645,8 +632,7 @@ const CURRICULUM: TierCurriculum = {
               { label: "Navayasa Churna — as prescribed", text: "Iron-rich Siddha formula for rebuilding Ojas in Rakta Dhatu deficiency. Essential for practitioners with anemia, fatigue, or prior blood loss. Works synergistically with the Kaya Kalpa morning protocol." },
             ],
             quote: {
-              tamil: "காயம் கனியும் கலப்பை தெரிந்தால்
-யோகம் வருமே உலகில் அறிந்தால்",
+              tamil: "காயம் கனியும் கலப்பை தெரிந்தால்\nயோகம் வருமே உலகில் அறிந்தால்",
               english: "When one knows the formula that ripens the body — Yoga arises and the world becomes known.",
               master: "Bhogar Siddhar · Bhogar 7000",
             },
@@ -678,8 +664,7 @@ const CURRICULUM: TierCurriculum = {
               { label: "Vibuthi (Sacred ash) — applied to forehead, throat, chest", text: "Ash from sacred fires carries the Shiva frequency that transmutes karmic Ama directly. Thiruvannamalai Vibuthi is considered most potent. Applied at the three primary Marma areas: Ajna (wisdom), Vishuddha (truth), Anahata (heart-karma)." },
             ],
             quote: {
-              tamil: "கர்மம் கடினம் கடந்தவர் எவரோ
-தர்மம் வழியில் தவறாமல் நடந்தார்",
+              tamil: "கர்மம் கடினம் கடந்தவர் எவரோ\nதர்மம் வழியில் தவறாமல் நடந்தார்",
               english: "Those who crossed the hardness of Karma — they walked without deviation on the path of Dharma.",
               master: "Agathiyar · Karma Kandham",
             },
@@ -715,8 +700,7 @@ const CURRICULUM: TierCurriculum = {
               { label: "Nilavembu Kudineer — 60ml decoction, morning empty stomach", text: "The supreme Siddha immune-system formula. 9 herbs. The most clinically validated Siddha formula — used successfully in Tamil Nadu for dengue fever. Now confirmed effective for multiple viral conditions." },
             ],
             quote: {
-              tamil: "மூலிகை மூலம் மோட்சம் காண்பார்
-ஆலிகை அறிந்தோர் அழியார் என்றும்",
+              tamil: "மூலிகை மூலம் மோட்சம் காண்பார்\nஆலிகை அறிந்தோர் அழியார் என்றும்",
               english: "Through herbs one finds liberation. Those who know the plant-science never perish.",
               master: "Agathiyar · Gunapadam",
             },
@@ -900,8 +884,7 @@ const CURRICULUM: TierCurriculum = {
               { label: "Thippili (Long pepper) + Sukku (Dry ginger) decoction", text: "Internal Vayu-clearing formula for Varma-injury recovery. When a Varma point is accidentally struck, this formula clears the pranic stagnation that results, preventing it from solidifying into chronic blockage." },
             ],
             quote: {
-              tamil: "வர்மம் வல்லவன் வாழ்வைக் காப்பான்
-வர்மம் இல்லாதவன் வாழ்வை இழப்பான்",
+              tamil: "வர்மம் வல்லவன் வாழ்வைக் காப்பான்\nவர்மம் இல்லாதவன் வாழ்வை இழப்பான்",
               english: "The master of Varma protects life. One without Varma knowledge loses life.",
               master: "Konganar · Varma Odivu Murivu Saaram",
             },
@@ -1089,9 +1072,7 @@ const CURRICULUM: TierCurriculum = {
               { label: "Amalaki Rasayana — 1 tsp Amla powder + ghee + honey", text: "The simplest complete Rasayana. Amla in ghee and honey meets all four Rasayana criteria. Begin here before progressing to more complex formulas. Safe for all constitutions." },
             ],
             quote: {
-              tamil: "இளமையை நிலைக்கச் செய்வோம்
-குளமையை நிலைக்கச் செய்வோம்
-மூலிகை மூலம் முக்தி பெறுவோம்",
+              tamil: "இளமையை நிலைக்கச் செய்வோம்\nகுளமையை நிலைக்கச் செய்வோம்\nமூலிகை மூலம் முக்தி பெறுவோம்",
               english: "Let us stabilize youth. Let us stabilize coolness. Through herbs let us attain liberation.",
               master: "Agathiyar · Rasavada Vidhi",
             },
