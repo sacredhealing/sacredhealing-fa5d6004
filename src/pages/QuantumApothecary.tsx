@@ -454,11 +454,6 @@ function renderSQIContent(content: string) {
   return elements;
 }
 
-  if (!hasLiveScan) return compiled;
-  const segments = compiled.split(/\n(?=\[)/);
-  return segments.filter((s) => !s.trimStart().startsWith('[BIOMETRIC NADI FIELD')).join('\n').trim();
-}
-
 function resolveActivationsByExactNames(preferred: string[]): Activation[] {
   const out: Activation[] = [];
   const seen = new Set<string>();
