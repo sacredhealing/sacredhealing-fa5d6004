@@ -1,65 +1,33 @@
 ══════════════════════════════════════════════════════
   SQI-2050 🦈 CLAWBOT v7 — Production
-  2026-05-23T08:39:29.299Z | PAPER
-  Min: $300 | Entry zone: 6%–94%
+  2026-05-23T09:03:45.557Z | PAPER
+  Min: $100 | Entry zone: 6%–94%
 ══════════════════════════════════════════════════════
-Balance: $1.74
+Balance: $10.00
 
-🔍 Scanning 87,305,757 → 87,306,207
-  0xE111180000: 84859 logs → 1798 whale trades
-  0xe2222d279d: 17406 logs → 877 whale trades
+🔍 Scanning 87,306,589 → 87,307,039
+  0xE111180000: 72883 logs → 4904 whale trades
+  0xe2222d279d: 16116 logs → 1603 whale trades
 
-Total: 2675 | New: 2664
+Total: 6507 | New: 6507
 
 📊 Top trades:
-  $   56209 | 0xbacd00c908 | 702002047956...
-  $   56209 | 0xbacd00c908 | 702002047956...
-  $   51405 | 0x74471a007d | 702002047956...
-  $   51405 | 0x74471a007d | 702002047956...
-  $   50000 | 0xcf6087abd6 | 285932155343...
+  $  400000 | 0x5a084f50b7 | 104302892772...
+  $  400000 | 0x5a084f50b7 | 104302892772...
+  $  147678 | 0x71b7c96c83 | 765444110403...
+  $  147678 | 0x71b7c96c83 | 765444110403...
+  $  130004 | 0x5a084f50b7 | 104302892772...
 
-✅ MIRRORED #1: 🦈8FBB3C
-   Whale $20000 → Mirror $0.0868 | MIBR @ 35.5%
-   Counter-Strike: MIBR vs Legacy (BO3) - CS Asia Championships Playoffs
+✅ MIRRORED #1: 🦈000D25
+   Whale $35049 → Mirror $0.5 | Yes @ 48.4%
+   Iran closes its airspace by May 24?
 
-✅ MIRRORED #2: 🦈113636
-   Whale $20000 → Mirror $0.0825 | Legacy @ 64.5%
-   Counter-Strike: MIBR vs Legacy (BO3) - CS Asia Championships Playoffs
+✅ MIRRORED #2: 🦈E7BD61
+   Whale $22102 → Mirror $0.475 | Yes @ 53.6%
+   Iran closes its airspace by May 27?
 
-✅ MIRRORED #3: 🦈A69D0C
-   Whale $20000 → Mirror $0.0784 | Legacy @ 64.5%
-   Counter-Strike: MIBR vs Legacy (BO3) - CS Asia Championships Playoffs
+✅ MIRRORED #3: 🦈56C9FB
+   Whale $20000 → Mirror $0.4513 | Dplus KIA @ 64.5%
+   LoL: Dplus KIA vs BNK FEARX - Game 2 Winner
 
-━━━ CLAWBOT v7: 3 mirrored | Bal $1.4892 ━━━
-══════════════════════════════════════════════════
-  SQI-2050 ⚡ Shiesty Signal Oracle
-  2026-05-23T08:39:50.536Z | PAPER | Risk 5%
-══════════════════════════════════════════════════
-Balance: $1.4892 | Row: 052ae9dc-7355-46ab-8584-70d2ba33ae68
-
-Fetching Polymarket...
-  API returned: 100 markets
-
-  Top 10 markets by volume:
-    $49583k vol | Yes=1%, No=99% | Will Bernie Sanders win the 2028 Democratic presidential nomination?
-    $44434k vol | Yes=0%, No=100% | Will Uzbekistan win the 2026 FIFA World Cup?
-    $41964k vol | Yes=1%, No=99% | Will Hillary Clinton win the 2028 Democratic presidential nomination?
-    $40550k vol | Yes=1%, No=99% | Will Tim Walz win the 2028 Democratic presidential nomination?
-    $40073k vol | Yes=0%, No=100% | Will Curaçao win the 2026 FIFA World Cup?
-    $39585k vol | Yes=1%, No=99% | Will Phil Murphy win the 2028 Democratic presidential nomination?
-    $36332k vol | Yes=1%, No=99% | Will Zohran Mamdani win the 2028 Democratic presidential nomination?
-    $36221k vol | Yes=1%, No=99% | Will Liz Cheney win the 2028 Democratic presidential nomination?
-    $35546k vol | Yes=1%, No=99% | Will USA win the 2026 FIFA World Cup?
-    $34746k vol | Yes=0%, No=100% | Will New Zealand win the 2026 FIFA World Cup?
-
-  Signals found: 6 total → top 3 selected
-    [90] [ORACLE] Will the San Antonio Spurs win the 2026 NBA Finals? | Yes@16% | vol $29696k
-    [90] [ORACLE] Will France win the 2026 FIFA World Cup? | Yes@18% | vol $29597k
-    [90] [ORACLE] Will Gavin Newsom win the 2028 Democratic presidential nomination? | No@76% | vol $25456k
-
-Executing trades...
-  ✅ #1 BUY Yes @ 15.8% | $0.1 → bal $1.3892
-  ✅ #2 BUY Yes @ 17.8% | $0.1 → bal $1.2892
-  ✅ #3 BUY No @ 75.8% | $0.1 → bal $1.1892
-
-━━━ Done: 3 trade(s) | Final bal $1.1892 ━━━
+━━━ CLAWBOT v7: 3 mirrored | Bal $8.5737 ━━━
