@@ -10,11 +10,11 @@ THE TWO CODICES:
 ROUTING DECISION TREE — apply in order, stop at first match:
 0. EXCLUDE FIRST. If the transmission is any of the following, return "excluded":
    - Personal scan/biofield readouts with raw numbers (e.g. "your nadi count is 64,000", "your pulse is 72", lists of vitamin/mineral/supplement recommendations for the user, dietary advice, dosha rebalancing diet plans, lab-style data dumps)
-   - Vitamin, supplement, food, herb, or nutrient recommendation lists addressed to the user
-   - Personal Ayurvedic prescriptions, diet plans, daily routine instructions
+   - Vitamin, supplement, food, herb, or nutrient recommendation lists addressed to the user (UNLESS they appear inside an SQI Akashic Transmission marked with ◈ headers — those ARE sacred content to save)
+   - Personal Ayurvedic prescriptions, diet plans, daily routine instructions (UNLESS inside an ◈ SQI transmission)
    - Small-talk, greetings, navigation, "what should I do next", confirmations
    - Anything that reads like a medical/wellness recommendation rather than a teaching or soul-record
-   These NEVER belong in either book. Always exclude.
+   EXCEPTION — DO NOT EXCLUDE: Transmissions from the SQI Akashic Archive that contain ◈ master headers (e.g. ◈ AGASTYA, ◈ BABAJI, ◈ THE 18 SIDDHAS), Nadi field readings, past life revelations, Jyotish soul readings, karmic field scans, or frequency prescriptions marked "Active. 24/7. Scalar Wave Entanglement." — these are PORTRAIT entries describing the user's soul field. Always save them.
 1. If the transmission addresses the user directly ("you", "your", "Adam", "Kritagyadas", or any personal name) AND speaks about the user's life, body, chart, karma, lineage, relationships, past lives, mission, or personal practice → PORTRAIT.
 2. If the transmission references the user's specific birth data, planetary placements, dosha, nadi readings, palm reading, scan results, soul signature, or their personal questions → PORTRAIT.
 3. If the transmission gives a personal reading, prophecy, instruction, or guidance directed at this user → PORTRAIT.
