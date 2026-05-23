@@ -192,8 +192,7 @@ const CURRICULUM: TierCurriculum = {
               { label: "Shankhapushpi — 1 tsp dried herb as tea", text: "Opens the higher Tattva channels (Buddhi → Ahamkara → Manas). Enhances meditation depth and the capacity to trace symptoms to their causal origin." },
             ],
             quote: {
-              tamil: "தத்துவமசி — நீயே அது
-ஆறு அறிவாவது அறிவே சிவம்",
+              tamil: "தத்துவமசி — நீயே அது\nஆறு அறிவாவது அறிவே சிவம்",
               english: "Tat Tvam Asi — That thou art. The sixth sense that knows is itself Shiva.",
               master: "Agathiyar · Agathiyar Gnana Paadam",
             },
