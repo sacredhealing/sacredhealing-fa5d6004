@@ -1,0 +1,36 @@
+name: Test Oracle API
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Test publishable key + CORS
+        env:
+          PUB_KEY: sb_publishable_H4AI2ZzqOL1Y7o6qRMr8ew_5-4pih8F
+          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          BASE="https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1"
+          LOG="_api_test.txt"
+
+          echo "=== Test 1: publishable key ===" | tee $LOG
+          curl -sv -H "apikey: ${PUB_KEY}"             -H "Authorization: Bearer ${PUB_KEY}"             -H "Origin: https://sacredhealing.lovable.app"             "${BASE}/polymarket_bot_settings?limit=1" 2>&1 | grep -E "HTTP|access-control|content-type|{|}" | tee -a $LOG
+
+          echo "" >> $LOG
+          echo "=== Test 2: service key ===" | tee -a $LOG
+          curl -s -H "apikey: ${SK}"             -H "Authorization: Bearer ${SK}"             "${BASE}/polymarket_bot_settings?limit=1" | tee -a $LOG
+
+          echo "" >> $LOG
+          echo "=== Test 3: counts ===" | tee -a $LOG
+          curl -s -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}"             "${BASE}/polymarket_trades?select=count" | tee -a $LOG
+          curl -s -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}"             "${BASE}/polymarket_whales?select=count" | tee -a $LOG
+
+          git config user.email "bot@sqi.app"; git config user.name "SQI Bot"
+          git add $LOG && git commit -m "API test $(date +%H%M%S)" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
