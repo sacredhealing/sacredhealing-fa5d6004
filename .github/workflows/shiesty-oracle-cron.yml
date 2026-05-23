@@ -13,24 +13,27 @@ jobs:
         with:
           token: ${{ secrets.GH_ADMIN_PAT }}
 
-      - name: Setup Node 20
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Run Shiesty Signal Oracle
+      - name: Run CLAWBOT Whale Tracker
         env:
           SUPABASE_URL: https://fjdzhrdpioxdeyyfogep.supabase.co
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           PAPER_MODE: 'true'
-          RISK_PCT: '0.05'
+          MIN_TRADE_SIZE: '500'
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          node scripts/shiesty_oracle.mjs 2>&1 | tee _oracle_last_run.txt
-          echo "Exit code: $?"
+          echo "=== Phase 1: Run CLAWBOT Whale Tracker ===" 
+          node scripts/clawbot_oracle.mjs 2>&1 | tee _oracle_last_run.txt
+          
+          echo ""
+          echo "=== Phase 2: Run Value-EV Oracle (backup signals) ==="
+          node scripts/shiesty_oracle.mjs 2>&1 | tee -a _oracle_last_run.txt
 
           git config user.email "bot@sqi.app"
-          git config user.name "SQI Oracle Bot"
+          git config user.name "SQI CLAWBOT"
           git add _oracle_last_run.txt
-          git commit -m "Oracle run $(date -u +%Y-%m-%dT%H:%M)" || true
+          git commit -m "CLAWBOT run $(date -u +%Y-%m-%dT%H:%M)" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
