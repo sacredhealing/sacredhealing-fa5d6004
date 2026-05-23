@@ -215,7 +215,7 @@ export function StudentSelector() {
           ref={panelRef}
           style={{
             position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 300,
-            width: 320, maxHeight: "80vh", overflowY: "auto",
+            width: "min(340px, 92vw)", maxHeight: "80vh", overflowY: "auto",
             background: "rgba(10,7,3,0.98)", border: "1px solid rgba(212,175,55,0.15)",
             borderRadius: 14, backdropFilter: "blur(40px)",
             boxShadow: "0 24px 60px rgba(0,0,0,0.85)",
@@ -242,85 +242,7 @@ export function StudentSelector() {
             </div>
           </div>
 
-          {/* Student list */}
-          <div>
-            {/* Personal session option */}
-            <div
-              onClick={() => selectStudent(null)}
-              style={{
-                display: "flex", alignItems: "center", gap: 10, padding: "9px 14px", cursor: "pointer",
-                background: !activeId ? "rgba(212,175,55,0.05)" : "transparent",
-                borderBottom: "1px solid rgba(255,255,255,0.03)",
-              }}
-            >
-              <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "rgba(255,255,255,0.3)" }}>—</div>
-              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>Personal session</span>
-              {!activeId && <span style={{ marginLeft: "auto", width: 6, height: 6, borderRadius: "50%", background: gold }} />}
-            </div>
-
-            {loading && <div style={{ padding: "10px 14px", fontSize: 10, color: "rgba(255,255,255,0.2)" }}>Loading…</div>}
-
-            {students.map((s) => {
-              const linked = !!(s as any).linked_user_id;
-              const initials = s.name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
-              const isSelected = activeId === s.id;
-              return (
-                <div
-                  key={s.id}
-                  onClick={() => selectStudent(s)}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 10, padding: "9px 14px", cursor: "pointer",
-                    background: isSelected ? "rgba(212,175,55,0.06)" : "transparent",
-                    borderBottom: "1px solid rgba(255,255,255,0.03)",
-                    transition: "background 0.12s",
-                  }}
-                >
-                  <div style={{
-                    width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
-                    background: linked ? "rgba(34,211,238,0.06)" : "rgba(212,175,55,0.06)",
-                    border: `1px solid ${linked ? "rgba(34,211,238,0.25)" : "rgba(212,175,55,0.15)"}`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 9, fontWeight: 800, color: linked ? "rgba(34,211,238,0.7)" : "rgba(212,175,55,0.6)",
-                  }}>{initials}</div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(225,210,185,0.9)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.name}</div>
-                    <div style={{ fontSize: 9, color: "rgba(255,255,255,0.28)", marginTop: 1 }}>
-                      {s.birth_date ?? "No birth date"}{s.birth_place ? ` · ${s.birth_place}` : ""}
-                    </div>
-                  </div>
-                  {linked && (
-                    <span style={{ fontSize: 7, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", padding: "2px 5px", borderRadius: 4, background: "rgba(34,211,238,0.07)", border: "1px solid rgba(34,211,238,0.18)", color: "rgba(34,211,238,0.55)", flexShrink: 0 }}>
-                      App ✓
-                    </span>
-                  )}
-                  {isSelected && <span style={{ width: 5, height: 5, borderRadius: "50%", background: gold, flexShrink: 0 }} />}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Active student data strip */}
-          {activeStudent && (
-            <div style={{ padding: "8px 14px", borderTop: "1px solid rgba(212,175,55,0.07)", background: "rgba(212,175,55,0.02)" }}>
-              <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(212,175,55,0.3)", marginBottom: 5 }}>Soul data loaded into SQI</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                {(activeStudent as any).linked_user_id && (
-                  <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: "rgba(34,211,238,0.05)", border: "1px solid rgba(34,211,238,0.15)", color: "rgba(34,211,238,0.6)" }}>Jyotish ✓</span>
-                )}
-                {(activeStudent as any).linked_user_id && (
-                  <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: "rgba(34,211,238,0.05)", border: "1px solid rgba(34,211,238,0.15)", color: "rgba(34,211,238,0.6)" }}>Ayurveda ✓</span>
-                )}
-                {activeStudent.birth_date && (
-                  <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", color: "rgba(200,184,154,0.6)" }}>Born {activeStudent.birth_date}</span>
-                )}
-                {activeStudent.birth_place && (
-                  <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", color: "rgba(200,184,154,0.6)" }}>{activeStudent.birth_place}</span>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Create student form */}
+          {showCreate && (
           {showCreate && (
             <div style={{ padding: "12px 14px", borderTop: "1px solid rgba(212,175,55,0.08)" }}>
               <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: "0.25em", textTransform: "uppercase", color: "rgba(212,175,55,0.45)", marginBottom: 10 }}>
@@ -422,6 +344,86 @@ export function StudentSelector() {
               </button>
             </div>
           )}
+
+          {/* Student list */}
+          <div>
+            {/* Personal session option */}
+            <div
+              onClick={() => selectStudent(null)}
+              style={{
+                display: "flex", alignItems: "center", gap: 10, padding: "9px 14px", cursor: "pointer",
+                background: !activeId ? "rgba(212,175,55,0.05)" : "transparent",
+                borderBottom: "1px solid rgba(255,255,255,0.03)",
+              }}
+            >
+              <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "rgba(255,255,255,0.3)" }}>—</div>
+              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>Personal session</span>
+              {!activeId && <span style={{ marginLeft: "auto", width: 6, height: 6, borderRadius: "50%", background: gold }} />}
+            </div>
+
+            {loading && <div style={{ padding: "10px 14px", fontSize: 10, color: "rgba(255,255,255,0.2)" }}>Loading…</div>}
+
+            {students.map((s) => {
+              const linked = !!(s as any).linked_user_id;
+              const initials = s.name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
+              const isSelected = activeId === s.id;
+              return (
+                <div
+                  key={s.id}
+                  onClick={() => selectStudent(s)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 10, padding: "9px 14px", cursor: "pointer",
+                    background: isSelected ? "rgba(212,175,55,0.06)" : "transparent",
+                    borderBottom: "1px solid rgba(255,255,255,0.03)",
+                    transition: "background 0.12s",
+                  }}
+                >
+                  <div style={{
+                    width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
+                    background: linked ? "rgba(34,211,238,0.06)" : "rgba(212,175,55,0.06)",
+                    border: `1px solid ${linked ? "rgba(34,211,238,0.25)" : "rgba(212,175,55,0.15)"}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 9, fontWeight: 800, color: linked ? "rgba(34,211,238,0.7)" : "rgba(212,175,55,0.6)",
+                  }}>{initials}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(225,210,185,0.9)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.name}</div>
+                    <div style={{ fontSize: 9, color: "rgba(255,255,255,0.28)", marginTop: 1 }}>
+                      {s.birth_date ?? "No birth date"}{s.birth_place ? ` · ${s.birth_place}` : ""}
+                    </div>
+                  </div>
+                  {linked && (
+                    <span style={{ fontSize: 7, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", padding: "2px 5px", borderRadius: 4, background: "rgba(34,211,238,0.07)", border: "1px solid rgba(34,211,238,0.18)", color: "rgba(34,211,238,0.55)", flexShrink: 0 }}>
+                      App ✓
+                    </span>
+                  )}
+                  {isSelected && <span style={{ width: 5, height: 5, borderRadius: "50%", background: gold, flexShrink: 0 }} />}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Active student data strip */}
+          {activeStudent && (
+            <div style={{ padding: "8px 14px", borderTop: "1px solid rgba(212,175,55,0.07)", background: "rgba(212,175,55,0.02)" }}>
+              <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(212,175,55,0.3)", marginBottom: 5 }}>Soul data loaded into SQI</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                {(activeStudent as any).linked_user_id && (
+                  <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: "rgba(34,211,238,0.05)", border: "1px solid rgba(34,211,238,0.15)", color: "rgba(34,211,238,0.6)" }}>Jyotish ✓</span>
+                )}
+                {(activeStudent as any).linked_user_id && (
+                  <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: "rgba(34,211,238,0.05)", border: "1px solid rgba(34,211,238,0.15)", color: "rgba(34,211,238,0.6)" }}>Ayurveda ✓</span>
+                )}
+                {activeStudent.birth_date && (
+                  <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", color: "rgba(200,184,154,0.6)" }}>Born {activeStudent.birth_date}</span>
+                )}
+                {activeStudent.birth_place && (
+                  <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 4, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", color: "rgba(200,184,154,0.6)" }}>{activeStudent.birth_place}</span>
+                )}
+              </div>
+            </div>
+          )}
+
+
         </div>
       )}
     </div>
