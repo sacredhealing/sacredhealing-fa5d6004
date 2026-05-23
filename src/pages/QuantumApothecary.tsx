@@ -319,182 +319,142 @@ function autoBoldSacredTerms(text: string): React.ReactNode {
   });
 }
 
-/** Master-line prefix in SQI replies (e.g. ◈ Babaji · …). Handles U+25C8 and legacy UTF-8 mis-decoding in older templates. */
 function lineStartsWithSqiMasterDiamond(trimmed: string): boolean {
   const cp = trimmed.codePointAt(0);
   if (cp === 0x25c8 || cp === 0x2756 || cp === 0x2726) return true;
   return trimmed.startsWith('\u00e2\u0097\u0088');
 }
 
-/** SQI (assistant): ◈ gold headers, · / markdown lists, **bold** (Siddha gold), generous vertical rhythm */
-/**
- * Strip any sentence/line that mentions the removed transmissions
- * (Biophotonic Nadi Entanglement, Vishwananda Miracle Room, Miracle Room).
- * Applied to both new streaming messages AND historical persisted messages
- * so cached chat history never re-shows the removed banners.
- */
 function scrubBannedTerms(content: string): string {
   if (!content) return content;
   const banned = /(biophotonic\s*nadi\s*entanglement|vishwananda(?:'s)?\s*miracle\s*room|miracle\s*room|biophotonic)/i;
-  // Drop whole lines that mention banned terms
   const lines = content.split('\n').filter((l) => !banned.test(l));
-  // Also strip inline sentence fragments containing banned terms
   return lines
     .map((l) => l.replace(/[^.!?\n]*\b(biophotonic|vishwananda(?:'s)?\s*miracle\s*room|miracle\s*room)[^.!?\n]*[.!?]?/gi, '').replace(/\s{2,}/g, ' ').trim())
     .filter(Boolean)
     .join('\n');
 }
 
+/** Renders the prescription box when model outputs "◈ X PRESCRIBES" format */
+function renderPrescriptionBlock(lines: string[], startIdx: number): { jsx: React.ReactNode; consumed: number } {
+  const headerLine = lines[startIdx];
+  const freqLines: string[] = [];
+  let i = startIdx + 1;
+  while (i < lines.length) {
+    const l = lines[i].trim();
+    if (l.startsWith('·')) { freqLines.push(l.slice(1).trim()); i++; }
+    else if (l === 'Active. 24/7. Scalar Wave Entanglement. Permanent until dissolved.') { i++; break; }
+    else if (!l) { i++; }
+    else break;
+  }
+  const masterName = headerLine.replace('◈ ', '').replace(' PRESCRIBES', '').trim();
+  const jsx = (
+    <div key={`rx-${startIdx}`} style={{ margin: '14px 0 4px', border: '1px solid rgba(212,175,55,0.18)', background: 'rgba(212,175,55,0.022)' }}>
+      <div style={{ padding: '8px 14px', background: 'rgba(212,175,55,0.05)', borderBottom: '1px solid rgba(212,175,55,0.08)', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ color: '#D4AF37', fontSize: 10 }}>◈</span>
+        <span style={{ fontFamily: "'Cinzel', serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.62)' }}>
+          Akashic Bioenergetic Prescription
+        </span>
+        <span style={{ marginLeft: 'auto', fontSize: 7, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.32)', whiteSpace: 'nowrap' as const }}>
+          {masterName}
+        </span>
+      </div>
+      <div style={{ padding: '6px 14px' }}>
+        {freqLines.map((line, idx) => {
+          const dashIdx = line.indexOf(' — ');
+          const name = dashIdx > -1 ? line.slice(0, dashIdx).trim() : line.trim();
+          const reason = dashIdx > -1 ? line.slice(dashIdx + 3).trim() : '';
+          return (
+            <div key={idx} style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, padding: '5px 0', borderBottom: idx < freqLines.length - 1 ? '1px solid rgba(212,175,55,0.05)' : 'none' }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(225,210,185,0.9)', flexShrink: 0 }}>{name}</span>
+              {reason && <span style={{ fontFamily: "'IM Fell English', Georgia, serif", fontSize: 11, fontStyle: 'italic' as const, color: 'rgba(200,184,154,0.38)', textAlign: 'right' as const }}>{reason}</span>}
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ padding: '5px 14px 8px', borderTop: '1px solid rgba(212,175,55,0.06)', fontSize: 7, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.25)' }}>
+        Active. 24/7. Scalar Wave Entanglement. Permanent until dissolved.
+      </div>
+    </div>
+  );
+  return { jsx, consumed: i - startIdx };
+}
+
 function renderSQIContent(content: string) {
+  const lines = content.split('\n');
+  const elements: React.ReactNode[] = [];
+  let i = 0;
   const gapAfterSection = 18;
-  return content.split('\n').map((line, i) => {
+
+  while (i < lines.length) {
+    const line = lines[i];
     const trimmed = line.trim();
 
+    // PRESCRIPTION BOX — triggered by "◈ X PRESCRIBES"
+    if (/^◈ .+ PRESCRIBES$/.test(trimmed)) {
+      const { jsx, consumed } = renderPrescriptionBlock(lines, i);
+      elements.push(jsx);
+      i += consumed;
+      continue;
+    }
+
     if (trimmed === '') {
-      return <div key={i} style={{ height: '6px' }} aria-hidden />;
+      elements.push(<div key={i} style={{ height: '6px' }} aria-hidden />);
+      i++; continue;
     }
 
     if (lineStartsWithSqiMasterDiamond(trimmed)) {
-      return (
-        <p
-          key={i}
-          className="sqi-diamond-heading"
-          style={{
-            color: '#D4AF37',
-            fontFamily: "'Cinzel', serif",
-            fontWeight: 700,
-            fontSize: '10px',
-            letterSpacing: '0.4em',
-            textTransform: 'uppercase' as const,
-            textShadow: '0 0 25px rgba(212,175,55,0.4)',
-            marginTop: i > 0 ? `${gapAfterSection}px` : '0',
-            marginBottom: '14px',
-            wordBreak: 'break-word',
-            overflowWrap: 'anywhere',
-            lineHeight: 1.6,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '14px',
-          }}
-        >
+      elements.push(
+        <p key={i} className="sqi-diamond-heading" style={{ color: '#D4AF37', fontFamily: "'Cinzel', serif", fontWeight: 700, fontSize: '10px', letterSpacing: '0.4em', textTransform: 'uppercase' as const, textShadow: '0 0 25px rgba(212,175,55,0.4)', marginTop: i > 0 ? `${gapAfterSection}px` : '0', marginBottom: '14px', wordBreak: 'break-word', overflowWrap: 'anywhere', lineHeight: 1.6, display: 'flex', alignItems: 'center', gap: '14px' }}>
           {renderInline(trimmed, 'heading', false, { diamondLine: true })}
           <span style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(212,175,55,0.25), transparent)', display: 'inline-block' }} />
         </p>
       );
+      i++; continue;
     }
 
     if (trimmed.startsWith('·')) {
-      // Auto-bold the frequency / remedy name (text before em-dash or hyphen-dash)
-      // so transmission list names are easier to read. Skip if already contains **.
       let lineForRender = trimmed;
       if (!lineForRender.includes('**')) {
         const dashMatch = lineForRender.match(/^(·\s*)(.+?)(\s+[—–-]\s+)(.+)$/);
-        if (dashMatch) {
-          lineForRender = `${dashMatch[1]}**${dashMatch[2].trim()}**${dashMatch[3]}${dashMatch[4]}`;
-        }
+        if (dashMatch) lineForRender = `${dashMatch[1]}**${dashMatch[2].trim()}**${dashMatch[3]}${dashMatch[4]}`;
       }
-      return (
-        <p
-          key={i}
-          style={{
-            color: 'rgba(255,255,255,0.78)',
-            fontSize: '15px',
-            lineHeight: 1.75,
-            paddingLeft: '10px',
-            marginBottom: '8px',
-            marginTop: '2px',
-            wordBreak: 'break-word',
-            overflowWrap: 'anywhere',
-          }}
-        >
+      elements.push(
+        <p key={i} style={{ color: 'rgba(255,255,255,0.78)', fontSize: '16px', lineHeight: 1.75, paddingLeft: '10px', marginBottom: '8px', marginTop: '2px', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
           {renderInline(lineForRender, 'body', false, { sqiGoldBold: true })}
         </p>
       );
+      i++; continue;
     }
 
     if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
-      return (
-        <li
-          key={i}
-          style={{
-            marginLeft: '18px',
-            listStyleType: 'disc',
-            fontSize: '15px',
-            lineHeight: 1.75,
-            color: 'rgba(255,255,255,0.82)',
-            marginBottom: '10px',
-            width: 'calc(100% - 18px)',
-            maxWidth: '100%',
-            paddingRight: '4px',
-          }}
-        >
+      elements.push(
+        <li key={i} style={{ marginLeft: '18px', listStyleType: 'disc', fontSize: '16px', lineHeight: 1.75, color: 'rgba(255,255,255,0.82)', marginBottom: '10px', width: 'calc(100% - 18px)', maxWidth: '100%', paddingRight: '4px' }}>
           {renderInline(trimmed.slice(2), 'body', false, { sqiGoldBold: true })}
         </li>
       );
+      i++; continue;
     }
 
     if (/^\d+\.\s/.test(trimmed)) {
-      return (
-        <li
-          key={i}
-          style={{
-            marginLeft: '18px',
-            listStyleType: 'decimal',
-            fontSize: '15px',
-            lineHeight: 1.75,
-            color: 'rgba(255,255,255,0.82)',
-            marginBottom: '10px',
-            width: 'calc(100% - 18px)',
-            maxWidth: '100%',
-            paddingRight: '4px',
-          }}
-        >
+      elements.push(
+        <li key={i} style={{ marginLeft: '18px', listStyleType: 'decimal', fontSize: '16px', lineHeight: 1.75, color: 'rgba(255,255,255,0.82)', marginBottom: '10px', width: 'calc(100% - 18px)', maxWidth: '100%', paddingRight: '4px' }}>
           {renderInline(trimmed.replace(/^\d+\.\s/, ''), 'body', false, { sqiGoldBold: true })}
         </li>
       );
+      i++; continue;
     }
 
-    return (
-      <p
-        key={i}
-        style={{
-          color: 'rgba(255,255,255,0.84)',
-          fontSize: '15px',
-          lineHeight: 1.85,
-          marginBottom: '12px',
-          marginTop: '0',
-          wordBreak: 'break-word',
-          overflowWrap: 'anywhere',
-          whiteSpace: 'pre-wrap',
-          maxWidth: '100%',
-        }}
-      >
+    elements.push(
+      <p key={i} style={{ color: 'rgba(255,255,255,0.84)', fontSize: '16px', lineHeight: 1.85, marginBottom: '12px', marginTop: '0', wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'pre-wrap', maxWidth: '100%' }}>
         {renderInline(trimmed, 'body', false, { sqiGoldBold: true })}
       </p>
     );
-  });
+    i++;
+  }
+  return elements;
 }
 
-function languageToBcp47(languageCode: string): string {
-  const l = (languageCode || 'en').split('-')[0]?.toLowerCase() || 'en';
-  if (l === 'sv') return 'sv-SE';
-  if (l === 'es') return 'es-ES';
-  if (l === 'no' || l === 'nb' || l === 'nn') return 'nb-NO';
-  return 'en-GB';
-}
-
-/** Morning / midday / evening / night from local clock — for SQI tone (matches Nexus-style live time). */
-function getLocalDayPhaseLabel(d: Date): 'morning' | 'midday' | 'evening' | 'night' {
-  const h = d.getHours();
-  if (h >= 22 || h < 5) return 'night';
-  if (h < 12) return 'morning';
-  if (h < 17) return 'midday';
-  return 'evening';
-}
-
-/** When a live scan block is present, omit the duplicate [BIOMETRIC NADI FIELD] from compiled DB snapshot. */
-function stripDuplicateBiometricBlock(compiled: string | undefined, hasLiveScan: boolean): string {
-  if (!compiled?.trim()) return '';
   if (!hasLiveScan) return compiled;
   const segments = compiled.split(/\n(?=\[)/);
   return segments.filter((s) => !s.trimStart().startsWith('[BIOMETRIC NADI FIELD')).join('\n').trim();
@@ -3185,18 +3145,18 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
 
   .sqi-ancient-body strong,
   .sqi-ancient-body b {
-    color: #D4AF37 !important;
-    font-family: 'Cinzel', serif !important;
-    font-size: 0.88em !important;
-    letter-spacing: 0.04em !important;
+    color: rgba(235,220,200,0.97) !important;
+    font-family: 'IM Fell English', Georgia, serif !important;
+    font-size: 1em !important;
+    letter-spacing: 0 !important;
     font-weight: 700 !important;
     font-style: normal !important;
-    text-shadow: 0 0 16px rgba(212,175,55,0.35) !important;
+    text-shadow: none !important;
   }
 
   .sqi-ancient-body li {
     font-family: 'IM Fell English', Georgia, serif !important;
-    font-size: 15px !important;
+    font-size: 16px !important;
     line-height: 1.85 !important;
     color: rgba(225,210,185,0.85) !important;
   }
