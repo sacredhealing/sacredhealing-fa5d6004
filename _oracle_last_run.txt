@@ -1,33 +1,33 @@
 ══════════════════════════════════════════════════════
   SQI-2050 🦈 CLAWBOT v7 — Production
-  2026-05-23T21:08:57.971Z | PAPER
+  2026-05-23T22:09:20.561Z | PAPER
   Min: $100 | Entry zone: 6%–94%
 ══════════════════════════════════════════════════════
-Balance: $2.15
+Balance: $1.84
 
-🔍 Scanning 87,331,454 → 87,331,904
-  0xE111180000: 118422 logs → 9262 whale trades
-  0xe2222d279d: 28282 logs → 2846 whale trades
+🔍 Scanning 87,333,524 → 87,333,974
+  0xE111180000: 83371 logs → 5743 whale trades
+  0xe2222d279d: 14870 logs → 1500 whale trades
 
-Total: 12108 | New: 12108
+Total: 7243 | New: 7243
 
 📊 Top trades:
-  $  700000 | 0xea2f794a7f | 371264349621...
-  $  700000 | 0xea2f794a7f | 371264349621...
-  $  343413 | 0x5d189e816b | 371264349621...
-  $  200000 | 0xc21ea96be7 | 371264349621...
-  $  138508 | 0x152fdae6b1 | 573600537716...
+  $  239255 | 0xd959b6925d | 125257477790...
+  $  239255 | 0xd959b6925d | 125257477790...
+  $  141462 | 0x37e4728b3c | 113101257407...
+  $   96939 | 0x780296eb0d | 573600537716...
+  $   96939 | 0x780296eb0d | 573600537716...
 
-✅ MIRRORED #1: 🦈35611D
-   Whale $103385 → Mirror $0.1073 | Rico @ 6.5%
-   Glory in Giza: Oleksandr Usyk vs. Rico Verhoeven
+✅ MIRRORED #1: 🦈D959B6
+   Whale $239255 → Mirror $0.092 | Cavaliers @ 55.5%
+   Knicks vs. Cavaliers
 
-✅ MIRRORED #2: 🦈BDDF61
-   Whale $93977 → Mirror $0.1019 | Usyk @ 93.5%
-   Glory in Giza: Oleksandr Usyk vs. Rico Verhoeven
+✅ MIRRORED #2: 🦈37E472
+   Whale $141462 → Mirror $0.0874 | Knicks @ 44.5%
+   Knicks vs. Cavaliers
 
-✅ MIRRORED #3: 🦈EE0D15
-   Whale $26814 → Mirror $0.0968 | Over @ 39.5%
-   Mirassol FC vs. Fluminense FC: O/U 2.5
+✅ MIRRORED #3: 🦈F39651
+   Whale $59260 → Mirror $0.083 | No @ 32.5%
+   US x Iran permanent peace deal by May 31, 2026?
 
-━━━ CLAWBOT v7: 3 mirrored | Bal $1.8401 ━━━
+━━━ CLAWBOT v7: 3 mirrored | Bal $1.5777 ━━━
