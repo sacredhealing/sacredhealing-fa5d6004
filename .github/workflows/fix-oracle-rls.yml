@@ -1,0 +1,34 @@
+name: Fix Oracle RLS for Browser
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Allow anon reads on oracle tables
+        env:
+          SUPABASE_PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          DB="https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query"
+          H="Authorization: Bearer ${SUPABASE_PAT}"
+          CT="Content-Type: application/json"
+
+          run() { curl -s -X POST "$DB" -H "$H" -H "$CT" -d "{\"query\":\"$1\"}" ; echo ""; }
+
+          echo "=== Enable RLS with permissive anon policies ==="
+          run "ALTER TABLE polymarket_trades DISABLE ROW LEVEL SECURITY;"
+          run "ALTER TABLE polymarket_whales DISABLE ROW LEVEL SECURITY;"
+          run "ALTER TABLE polymarket_bot_settings DISABLE ROW LEVEL SECURITY;"
+          run "GRANT SELECT ON polymarket_trades TO anon, authenticated, service_role;"
+          run "GRANT SELECT ON polymarket_whales TO anon, authenticated, service_role;"
+          run "GRANT SELECT ON polymarket_bot_settings TO anon, authenticated, service_role;"
+          run "GRANT INSERT, UPDATE ON polymarket_trades TO service_role;"
+          run "GRANT INSERT, UPDATE ON polymarket_whales TO service_role;"
+          run "GRANT INSERT, UPDATE ON polymarket_bot_settings TO service_role;"
+
+          echo "=== Verify anon can SELECT ==="
+          run "SELECT COUNT(*) FROM polymarket_trades;"
+          run "SELECT COUNT(*) FROM polymarket_whales;"
+          run "SELECT paper_balance FROM polymarket_bot_settings LIMIT 1;"
