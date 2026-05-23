@@ -1,16 +1,16 @@
-name: Setup CLAWBOT Whale Tables
+name: Create CLAWBOT Tables
 
 on:
   workflow_dispatch:
 
 jobs:
-  setup:
+  create:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_ADMIN_PAT }}
-      - name: Apply whale schema + seed wallets
+      - name: Create + seed whale tables
         env:
           SUPABASE_PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
@@ -20,31 +20,23 @@ jobs:
           BASE="https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1"
           LOG="_clawbot_setup.txt"
 
-          run_sql() {
-            curl -s -X POST "$DB" \
-              -H "Authorization: Bearer ${SUPABASE_PAT}" \
-              -H "Content-Type: application/json" \
-              -d "{\"query\":\"$1\"}" | tee -a $LOG
-            echo "" >> $LOG
-          }
+          q() { curl -s -X POST "$DB" -H "Authorization: Bearer ${SUPABASE_PAT}" -H "Content-Type: application/json" -d "{\"query\":\"$1\"}" | tee -a $LOG; echo "" >> $LOG; }
 
-          echo "=== Create whale tables ===" | tee $LOG
-          run_sql "CREATE TABLE IF NOT EXISTS polymarket_whales (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), address text UNIQUE NOT NULL, alias text, win_rate_30d numeric DEFAULT 0, roi_30d numeric DEFAULT 0, total_profit numeric DEFAULT 0, trades_tracked integer DEFAULT 0, last_checked timestamptz DEFAULT now(), is_active boolean DEFAULT true, created_at timestamptz DEFAULT now());"
-          
-          run_sql "CREATE TABLE IF NOT EXISTS polymarket_seen_trades (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), trade_id text UNIQUE NOT NULL, whale_address text NOT NULL, detected_at timestamptz DEFAULT now());"
-          
-          echo "=== Grant permissions ===" | tee -a $LOG
-          run_sql "GRANT ALL ON polymarket_whales TO service_role, anon, authenticated; GRANT ALL ON polymarket_seen_trades TO service_role, anon, authenticated;"
+          echo "Creating polymarket_whales..." | tee $LOG
+          q "CREATE TABLE IF NOT EXISTS polymarket_whales (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), address text UNIQUE NOT NULL, alias text, win_rate_30d numeric DEFAULT 0, roi_30d numeric DEFAULT 0, total_profit numeric DEFAULT 0, trades_tracked integer DEFAULT 0, last_checked timestamptz DEFAULT now(), is_active boolean DEFAULT true, created_at timestamptz DEFAULT now());"
 
-          echo "=== Seed known shark wallets ===" | tee -a $LOG
-          # Seed with top Polymarket wallets - will be expanded by auto-discovery
-          run_sql "INSERT INTO polymarket_whales (address, alias, win_rate_30d, roi_30d) VALUES ('0xb9156052b7f3886a1c999045fc5cca3aaf77b1e','Shark-99WR',99,97),('0x7ea542b1492c7e1dd8040e3ba27da67ab3de7b0','Shark-75WR',75,60),('0xfce454e6597f7b9dc6e3d0e0f40db7be8f36d8e','Shark-C',0,0),('0x4bfb41d5b3570defd03c39a9a4d8de6bd8b8982','Shark-D',0,0),('0x8d97be0a35bb00d3db9da3f52d3a60d9a4b0f6e','Shark-E',0,0) ON CONFLICT (address) DO NOTHING;"
+          echo "Creating polymarket_seen_trades..." | tee -a $LOG
+          q "CREATE TABLE IF NOT EXISTS polymarket_seen_trades (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), trade_id text UNIQUE NOT NULL, whale_address text NOT NULL, detected_at timestamptz DEFAULT now());"
 
-          echo "=== Verify ===" | tee -a $LOG
-          curl -s "${BASE}/polymarket_whales?select=alias,address,win_rate_30d,roi_30d" \
-            -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" | tee -a $LOG
+          echo "Granting permissions..." | tee -a $LOG
+          q "GRANT ALL ON polymarket_whales TO service_role, anon, authenticated; GRANT ALL ON polymarket_seen_trades TO service_role, anon, authenticated;"
+
+          echo "Seeding whale wallets..." | tee -a $LOG
+          q "INSERT INTO polymarket_whales (address, alias, win_rate_30d, roi_30d) VALUES ('0xb9156052b7f3886a1c999045fc5cca3aaf77b1e','Shark-99WR',99,97),('0x7ea542b1492c7e1dd8040e3ba27da67ab3de7b0','Shark-75WR',75,60),('0xfce454e6597f7b9dc6e3d0e0f40db7be8f36d8e','Shark-C',50,30),('0x4bfb41d5b3570defd03c39a9a4d8de6bd8b8982','Shark-D',60,45),('0x8d97be0a35bb00d3db9da3f52d3a60d9a4b0f6e','Shark-E',55,25) ON CONFLICT (address) DO NOTHING;"
+
+          echo "Verify via REST:" | tee -a $LOG
+          curl -s "${BASE}/polymarket_whales?select=alias,win_rate_30d,roi_30d&order=roi_30d.desc" -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" | tee -a $LOG
 
           git config user.email "bot@sqi.app"; git config user.name "SQI Bot"
-          git add $LOG
-          git commit -m "CLAWBOT setup $(date +%H%M%S)" || true
+          git add $LOG && git commit -m "CLAWBOT tables created $(date +%H%M%S)" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
