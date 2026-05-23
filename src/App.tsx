@@ -424,6 +424,7 @@ function AppRoutes() {
                   <Route path="/vajra-sky-breaker" element={<VajraSkyBreaker />} />
                   <Route path="/prompt-library" element={<PromptLibrary />} />
                   <Route path="/explore-akasha" element={<ExploreAkasha />} />
+                <Route path="/lexicon" element={<SqiLexicon />} />
                   <Route path="/creative-soul" element={<Navigate to="/creative-soul/store" replace />} />
                   <Route path="/creative-soul-hub" element={<CreativeSoulHub />} />
                   {/* ROUTE DEFINITION: /creative-soul/store renders CreativeSoulStore.tsx */}
