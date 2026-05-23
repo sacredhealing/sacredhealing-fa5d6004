@@ -1,33 +1,33 @@
 ══════════════════════════════════════════════════════
   SQI-2050 🦈 CLAWBOT v7 — Production
-  2026-05-23T20:07:37.934Z | PAPER
+  2026-05-23T21:08:57.971Z | PAPER
   Min: $100 | Entry zone: 6%–94%
 ══════════════════════════════════════════════════════
-Balance: $2.50
+Balance: $2.15
 
-🔍 Scanning 87,329,350 → 87,329,800
-  0xE111180000: 71041 logs → 4498 whale trades
-  0xe2222d279d: 17012 logs → 1987 whale trades
+🔍 Scanning 87,331,454 → 87,331,904
+  0xE111180000: 118422 logs → 9262 whale trades
+  0xe2222d279d: 28282 logs → 2846 whale trades
 
-Total: 6485 | New: 6485
+Total: 12108 | New: 12108
 
 📊 Top trades:
-  $   82175 | 0xe613b515bd | 105252206997...
-  $   82175 | 0xe613b515bd | 105252206997...
-  $   76655 | 0xfedc381bf3 | 993036051819...
-  $   76655 | 0xe613b515bd | 993036051819...
-  $   76655 | 0xe613b515bd | 993036051819...
+  $  700000 | 0xea2f794a7f | 371264349621...
+  $  700000 | 0xea2f794a7f | 371264349621...
+  $  343413 | 0x5d189e816b | 371264349621...
+  $  200000 | 0xc21ea96be7 | 371264349621...
+  $  138508 | 0x152fdae6b1 | 573600537716...
 
-✅ MIRRORED #1: 🦈ABB899
-   Whale $49298 → Mirror $0.1252 | Chicago Cubs @ 6.5%
-   Houston Astros vs. Chicago Cubs
+✅ MIRRORED #1: 🦈35611D
+   Whale $103385 → Mirror $0.1073 | Rico @ 6.5%
+   Glory in Giza: Oleksandr Usyk vs. Rico Verhoeven
 
-✅ MIRRORED #2: 🦈5DAB5E
-   Whale $48393 → Mirror $0.1189 | Atlanta Braves @ 60.5%
-   Washington Nationals vs. Atlanta Braves
+✅ MIRRORED #2: 🦈BDDF61
+   Whale $93977 → Mirror $0.1019 | Usyk @ 93.5%
+   Glory in Giza: Oleksandr Usyk vs. Rico Verhoeven
 
-✅ MIRRORED #3: 🦈5DAB5E
-   Whale $41044 → Mirror $0.113 | Chicago White Sox @ 49.5%
-   Chicago White Sox vs. San Francisco Giants
+✅ MIRRORED #3: 🦈EE0D15
+   Whale $26814 → Mirror $0.0968 | Over @ 39.5%
+   Mirassol FC vs. Fluminense FC: O/U 2.5
 
-━━━ CLAWBOT v7: 3 mirrored | Bal $2.1461 ━━━
+━━━ CLAWBOT v7: 3 mirrored | Bal $1.8401 ━━━
