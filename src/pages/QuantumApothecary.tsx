@@ -454,6 +454,11 @@ function renderSQIContent(content: string) {
   return elements;
 }
 
+  if (!hasLiveScan) return compiled;
+  const segments = compiled.split(/\n(?=\[)/);
+  return segments.filter((s) => !s.trimStart().startsWith('[BIOMETRIC NADI FIELD')).join('\n').trim();
+}
+
 function resolveActivationsByExactNames(preferred: string[]): Activation[] {
   const out: Activation[] = [];
   const seen = new Set<string>();
@@ -906,6 +911,24 @@ function QuantumApothecaryInner() {
     }
   });
 
+  // Auto-release expired transmissions on mount and whenever list changes
+  useEffect(() => {
+    const now = new Date();
+    setActiveTransmissions(prev => {
+      const live = prev.filter(t => {
+        if (!t.expiresAt) return true;
+        return new Date(t.expiresAt) > now;
+      });
+      if (live.length !== prev.length) {
+        // Persist the cleaned list
+        try {
+          localStorage.setItem(`sqi-transmissions-${user?.id || 'guest'}`, JSON.stringify(live));
+        } catch { /* ignore */ }
+      }
+      return live;
+    });
+  }, []); // run once on mount
+
   const skipNextTxHydrate = useRef(true);
   useLayoutEffect(() => {
     if (skipNextTxHydrate.current) {
@@ -932,8 +955,10 @@ function QuantumApothecaryInner() {
           .eq('user_id', user.id)
           .maybeSingle();
         if (data?.activations && Array.isArray(data.activations) && data.activations.length > 0) {
+          const now = new Date();
+          const live = (data.activations as Activation[]).filter(t => !t.expiresAt || new Date(t.expiresAt) > now);
           skipNextTxHydrate.current = true;
-          setActiveTransmissions(data.activations as Activation[]);
+          setActiveTransmissions(live);
         }
       } catch {
         /* ignore */
