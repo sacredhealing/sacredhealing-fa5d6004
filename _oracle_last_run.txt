@@ -1,33 +1,33 @@
 ══════════════════════════════════════════════════════
   SQI-2050 🦈 CLAWBOT v7 — Production
-  2026-05-23T10:53:42.208Z | PAPER
+  2026-05-23T12:01:18.571Z | PAPER
   Min: $100 | Entry zone: 6%–94%
 ══════════════════════════════════════════════════════
-Balance: $7.35
+Balance: $6.30
 
-🔍 Scanning 87,310,358 → 87,310,808
-  0xE111180000: 81038 logs → 5388 whale trades
-  0xe2222d279d: 15026 logs → 1834 whale trades
+🔍 Scanning 87,312,676 → 87,313,126
+  0xE111180000: 90207 logs → 5271 whale trades
+  0xe2222d279d: 14470 logs → 1518 whale trades
 
-Total: 7222 | New: 7222
+Total: 6789 | New: 6789
 
 📊 Top trades:
-  $  733697 | 0xee3ecc39c4 | 946036486363...
-  $  733697 | 0xee3ecc39c4 | 946036486363...
-  $  500000 | 0xa7a8c1fd4b | 946036486363...
-  $  300000 | 0xa39c488ea8 | 946036486363...
-  $  300000 | 0xa39c488ea8 | 946036486363...
+  $   94425 | 0x9146ac1662 | 267430176142...
+  $   94425 | 0x9146ac1662 | 267430176142...
+  $   76618 | 0xb218156faa | 110318953828...
+  $   76618 | 0xb218156faa | 110318953828...
+  $   50000 | 0xfc25f141ed | 572981099187...
 
-✅ MIRRORED #1: 🦈C3C3B3
-   Whale $43624 → Mirror $0.3675 | Yes @ 55.5%
-   Will Girona FC win on 2026-05-23?
+✅ MIRRORED #1: 🦈B21815
+   Whale $76618 → Mirror $0.3151 | Canadiens @ 36.5%
+   Canadiens vs. Hurricanes
 
-✅ MIRRORED #2: 🦈C3C3B3
-   Whale $40000 → Mirror $0.3492 | No @ 57.5%
-   Will Real Betis Balompié win on 2026-05-23?
+✅ MIRRORED #2: 🦈13414A
+   Whale $37736 → Mirror $0.2994 | Hurricanes @ 63.5%
+   Canadiens vs. Hurricanes
 
-✅ MIRRORED #3: 🦈DE9F03
-   Whale $37439 → Mirror $0.3317 | Yes @ 6.0%
-   Will Bitcoin dip to $65,000 in May?
+✅ MIRRORED #3: 🦈335592
+   Whale $35370 → Mirror $0.2844 | Yes @ 91.5%
+   Will the Iran ceasefire continue through May 23?
 
-━━━ CLAWBOT v7: 3 mirrored | Bal $6.3024 ━━━
+━━━ CLAWBOT v7: 3 mirrored | Bal $5.4035 ━━━
