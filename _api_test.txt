@@ -1,0 +1,41 @@
+=== Test 1: publishable key ===
+} [5 bytes data]
+} [512 bytes data]
+{ [5 bytes data]
+{ [122 bytes data]
+{ [19 bytes data]
+{ [2530 bytes data]
+{ [80 bytes data]
+{ [52 bytes data]
+} [1 bytes data]
+} [52 bytes data]
+} [5 bytes data]
+* using HTTP/2
+* [HTTP/2] [1] OPENED stream for https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/polymarket_bot_settings?limit=1
+* [HTTP/2] [1] [:method: GET]
+* [HTTP/2] [1] [:scheme: https]
+* [HTTP/2] [1] [:authority: fjdzhrdpioxdeyyfogep.supabase.co]
+* [HTTP/2] [1] [:path: /rest/v1/polymarket_bot_settings?limit=1]
+* [HTTP/2] [1] [user-agent: curl/8.5.0]
+* [HTTP/2] [1] [accept: */*]
+* [HTTP/2] [1] [apikey: sb_publishable_H4AI2ZzqOL1Y7o6qRMr8ew_5-4pih8F]
+* [HTTP/2] [1] [authorization: Bearer sb_publishable_H4AI2ZzqOL1Y7o6qRMr8ew_5-4pih8F]
+* [HTTP/2] [1] [origin: https://sacredhealing.lovable.app]
+} [5 bytes data]
+> GET /rest/v1/polymarket_bot_settings?limit=1 HTTP/2
+{ [5 bytes data]
+{ [230 bytes data]
+{ [230 bytes data]
+{ [5 bytes data]
+< HTTP/2 200 
+< content-type: application/json; charset=utf-8
+< access-control-allow-origin: https://sacredhealing.lovable.app
+< x-content-type-options: nosniff
+< access-control-expose-headers: Content-Encoding, Content-Location, Content-Range, Content-Type, Date, Location, Server, Transfer-Encoding, Range-Unit
+{ [149 bytes data]
+[{"id":"052ae9dc-7355-46ab-8584-70d2ba33ae68","paper_balance":7.3508,"paper_mode":true,"risk_pct":0.05,"updated_at":"2026-05-23T09:21:57.909+00:00"}]
+
+=== Test 2: service key ===
+[{"id":"052ae9dc-7355-46ab-8584-70d2ba33ae68","paper_balance":7.3508,"paper_mode":true,"risk_pct":0.05,"updated_at":"2026-05-23T09:21:57.909+00:00"}]
+=== Test 3: counts ===
+[{"count":46}][{"count":21}]
