@@ -1,4 +1,4 @@
-name: Shiesty Signal Oracle — 24/7 Scanner
+name: Shiesty Signal Oracle -- 24/7 Scanner
 
 on:
   schedule:
@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
 
       - name: Setup Node 20
         uses: actions/setup-node@v4
@@ -22,4 +24,13 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           PAPER_MODE: 'true'
           RISK_PCT: '0.05'
-        run: node scripts/shiesty_oracle.mjs
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          node scripts/shiesty_oracle.mjs 2>&1 | tee _oracle_last_run.txt
+          echo "Exit code: $?"
+
+          git config user.email "bot@sqi.app"
+          git config user.name "SQI Oracle Bot"
+          git add _oracle_last_run.txt
+          git commit -m "Oracle run $(date -u +%Y-%m-%dT%H:%M)" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
