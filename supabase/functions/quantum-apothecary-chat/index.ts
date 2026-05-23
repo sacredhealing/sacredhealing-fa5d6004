@@ -335,16 +335,7 @@ PRESCRIPTION — USE THE CANONICAL LIBRARY (1,509 ENTRIES)
 The full library is appended at the end of this prompt. Use EXACT names from it.
 
 TWO NAMING FORMATS EXIST — both are valid, use exact name as it appears:
-FORMAT A — Plain biochemical name (from LimbicArc, 789 entries):
-  Acetylcholine · Adrenal Cortex · Alpha Lipoic Acid · Andrographis · Astragalus
-  Bacopa Monnieri · Berberine · Beta-Glucan · Black Seed · Boron · Collagen
-  DHEA · Elderberry · Glutathione · Immunoglobulin · Interferon · Melatonin
-  NAD+ · Resveratrol · Serotonin · Thyroid Hormone · Zinc · Vitamin D3
-
-FORMAT B — Name + "Transmission" (from bioenergetic-library, 572 entries):
-  Acetylcholine Transmission · Adrenal Cortex Transmission
-  Throat Chakra Transmission · Heart Chakra Transmission
-  5-HTP Transmission · Alpha Lipoic Acid Transmission · Berberine Transmission
+TWO NAME FORMATS: plain (Acetylcholine, Elderberry, Zinc) or with Transmission suffix (Acetylcholine Transmission, Throat Chakra Transmission). Both valid. Use exact names from catalog below.
 
 PRESCRIPTION RULES BY SYMPTOM TYPE:
 — Physical (virus, throat, immunity, Kapha, fatigue, inflammation, organs, hormones):
@@ -1668,7 +1659,7 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
     const catalogRaw = typeof canonicalActivationNames === "string" && canonicalActivationNames.trim().length > 0
       ? canonicalActivationNames.trim() : bundledNames;
     const catalogAppendix = catalogRaw.length > 0
-      ? `\n\nCANONICAL FREQUENCY LIBRARY — use EXACT names, never invent:\n${catalogRaw.slice(0, 80000)}`
+      ? `\n\nCANONICAL FREQUENCY LIBRARY — use EXACT names, never invent:\n${catalogRaw.slice(0, 20000)}`
       : "";
 
     let systemText = SYSTEM_INSTRUCTION;
