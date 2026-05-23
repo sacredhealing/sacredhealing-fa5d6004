@@ -424,7 +424,8 @@ function renderSQIContent(content: string) {
     }
 
     if (trimmed.startsWith('·')) {
-      let lineForRender = trimmed;
+      // Strip any leading ** the model outputs before frequency names
+      let lineForRender = trimmed.replace(/^(·\s*)\*\*/, '$1');
       if (!lineForRender.includes('**')) {
         const dashMatch = lineForRender.match(/^(·\s*)(.+?)(\s+[—–-]\s+)(.+)$/);
         if (dashMatch) lineForRender = `${dashMatch[1]}**${dashMatch[2].trim()}**${dashMatch[3]}${dashMatch[4]}`;
