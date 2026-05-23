@@ -1,33 +1,33 @@
 ══════════════════════════════════════════════════════
   SQI-2050 🦈 CLAWBOT v7 — Production
-  2026-05-23T12:01:18.571Z | PAPER
+  2026-05-23T15:31:46.528Z | PAPER
   Min: $100 | Entry zone: 6%–94%
 ══════════════════════════════════════════════════════
-Balance: $6.30
+Balance: $4.63
 
-🔍 Scanning 87,312,676 → 87,313,126
-  0xE111180000: 90207 logs → 5271 whale trades
-  0xe2222d279d: 14470 logs → 1518 whale trades
+🔍 Scanning 87,319,893 → 87,320,343
+  0xE111180000: 99717 logs → 6061 whale trades
+  0xe2222d279d: 17139 logs → 1781 whale trades
 
-Total: 6789 | New: 6789
+Total: 7842 | New: 7842
 
 📊 Top trades:
-  $   94425 | 0x9146ac1662 | 267430176142...
-  $   94425 | 0x9146ac1662 | 267430176142...
-  $   76618 | 0xb218156faa | 110318953828...
-  $   76618 | 0xb218156faa | 110318953828...
-  $   50000 | 0xfc25f141ed | 572981099187...
+  $  373791 | 0x08fff5b9a7 | 104302892772...
+  $  373791 | 0x08fff5b9a7 | 104302892772...
+  $  309881 | 0x71b7c96c83 | 104302892772...
+  $   50000 | 0xbddf61af53 | 436615092513...
+  $   50000 | 0x267eee7e20 | 436615092513...
 
-✅ MIRRORED #1: 🦈B21815
-   Whale $76618 → Mirror $0.3151 | Canadiens @ 36.5%
-   Canadiens vs. Hurricanes
+✅ MIRRORED #1: 🦈C6587B
+   Whale $28207 → Mirror $0.2316 | Yes @ 16.5%
+   US x Iran permanent peace deal by May 26, 2026?
 
-✅ MIRRORED #2: 🦈13414A
-   Whale $37736 → Mirror $0.2994 | Hurricanes @ 63.5%
-   Canadiens vs. Hurricanes
+✅ MIRRORED #2: 🦈9F2FE0
+   Whale $27720 → Mirror $0.2201 | Knicks @ 44.5%
+   Knicks vs. Cavaliers
 
-✅ MIRRORED #3: 🦈335592
-   Whale $35370 → Mirror $0.2844 | Yes @ 91.5%
-   Will the Iran ceasefire continue through May 23?
+✅ MIRRORED #3: 🦈3DD16E
+   Whale $27720 → Mirror $0.2091 | Cavaliers @ 55.5%
+   Knicks vs. Cavaliers
 
-━━━ CLAWBOT v7: 3 mirrored | Bal $5.4035 ━━━
+━━━ CLAWBOT v7: 3 mirrored | Bal $3.9720 ━━━
