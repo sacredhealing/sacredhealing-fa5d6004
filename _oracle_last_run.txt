@@ -1,13 +1,32 @@
 ══════════════════════════════════════════════════
   SQI-2050 ⚡ Shiesty Signal Oracle
-  2026-05-23T07:26:00.595Z | PAPER | Risk 5%
+  2026-05-23T07:28:32.730Z | PAPER | Risk 5%
 ══════════════════════════════════════════════════
-Settings: [{"id":"052ae9dc-7355-46ab-8584-70d2ba33ae68","paper_balance":10,"paper_mode":true,"risk_pct":0.05,"updated_at":"2026-05-22T17:23:10.639969+00:00"}]
-Balance: $10.00 | Settings ID: 052ae9dc-7355-46ab-8584-70d2ba33ae68
+Balance: $10.0000 | Row: 052ae9dc-7355-46ab-8584-70d2ba33ae68
 
-Fetching markets...
-  Raw markets from API: 100
-  Active markets: 100
-  Top 50 by volume. Top 3 vol: $49574k, $44434k, $41956k
-  Signals generated: 0 → top 0 selected
-No signals this run.
+Fetching Polymarket...
+  API returned: 100 markets
+
+  Top 10 markets by volume:
+    $49575k vol | Yes=1%, No=99% | Will Bernie Sanders win the 2028 Democratic presidential nomination?
+    $44434k vol | Yes=0%, No=100% | Will Uzbekistan win the 2026 FIFA World Cup?
+    $41956k vol | Yes=1%, No=99% | Will Hillary Clinton win the 2028 Democratic presidential nomination?
+    $40544k vol | Yes=1%, No=99% | Will Tim Walz win the 2028 Democratic presidential nomination?
+    $40073k vol | Yes=0%, No=100% | Will Curaçao win the 2026 FIFA World Cup?
+    $39578k vol | Yes=1%, No=99% | Will Phil Murphy win the 2028 Democratic presidential nomination?
+    $36329k vol | Yes=1%, No=99% | Will Zohran Mamdani win the 2028 Democratic presidential nomination?
+    $36215k vol | Yes=1%, No=99% | Will Liz Cheney win the 2028 Democratic presidential nomination?
+    $35239k vol | Yes=1%, No=99% | Will USA win the 2026 FIFA World Cup?
+    $34746k vol | Yes=0%, No=100% | Will New Zealand win the 2026 FIFA World Cup?
+
+  Signals found: 6 total → top 3 selected
+    [90] [ORACLE] Will the San Antonio Spurs win the 2026 NBA Finals? | Yes@16% | vol $29690k
+    [90] [ORACLE] Will France win the 2026 FIFA World Cup? | Yes@18% | vol $29563k
+    [90] [ORACLE] Will Gavin Newsom win the 2028 Democratic presidential nomination? | No@76% | vol $25456k
+
+Executing trades...
+  ✅ #1 BUY Yes @ 15.8% | $0.5 → bal $9.5
+  ✅ #2 BUY Yes @ 17.8% | $0.475 → bal $9.025
+  ✅ #3 BUY No @ 75.8% | $0.4513 → bal $8.5737
+
+━━━ Done: 3 trade(s) | Final bal $8.5737 ━━━
