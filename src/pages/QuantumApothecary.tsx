@@ -220,7 +220,12 @@ function renderInline(
   onGold = false,
   opts?: RenderInlineOpts,
 ): React.ReactNode {
-  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
+  // Strip lone ** markers the model occasionally outputs without closing pair
+  const cleaned = text.replace(/\*\*([^*])/g, (m, c) => {
+    // If no closing ** exists later in the string, remove the opening **
+    return m;
+  }).replace(/(?<!\*)\*\*(?![^*]*\*\*)/g, '');
+  const parts = cleaned.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
   return parts.map((p, i) => {
     if (p.startsWith('**') && p.endsWith('**')) {
       const inner = p.slice(2, -2);
