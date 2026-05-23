@@ -1,33 +1,33 @@
 ══════════════════════════════════════════════════════
   SQI-2050 🦈 CLAWBOT v7 — Production
-  2026-05-23T09:03:45.557Z | PAPER
+  2026-05-23T09:21:41.586Z | PAPER
   Min: $100 | Entry zone: 6%–94%
 ══════════════════════════════════════════════════════
-Balance: $10.00
+Balance: $8.57
 
-🔍 Scanning 87,306,589 → 87,307,039
-  0xE111180000: 72883 logs → 4904 whale trades
-  0xe2222d279d: 16116 logs → 1603 whale trades
+🔍 Scanning 87,307,204 → 87,307,654
+  0xE111180000: 74704 logs → 4729 whale trades
+  0xe2222d279d: 15164 logs → 1491 whale trades
 
-Total: 6507 | New: 6507
+Total: 6220 | New: 6220
 
 📊 Top trades:
-  $  400000 | 0x5a084f50b7 | 104302892772...
-  $  400000 | 0x5a084f50b7 | 104302892772...
-  $  147678 | 0x71b7c96c83 | 765444110403...
-  $  147678 | 0x71b7c96c83 | 765444110403...
-  $  130004 | 0x5a084f50b7 | 104302892772...
+  $   84200 | 0x8c0b024c17 | 983966162856...
+  $   84200 | 0x8c0b024c17 | 983966162856...
+  $   50000 | 0xfc25f141ed | 805451892903...
+  $   36504 | 0x60e68a63db | 702002047956...
+  $   36504 | 0x60e68a63db | 702002047956...
 
-✅ MIRRORED #1: 🦈000D25
-   Whale $35049 → Mirror $0.5 | Yes @ 48.4%
+✅ MIRRORED #1: 🦈8C0B02
+   Whale $84200 → Mirror $0.4287 | LNG Esports @ 42.0%
+   LoL: Team WE vs LNG Esports - Game 4 Winner
+
+✅ MIRRORED #2: 🦈FC25F1
+   Whale $50000 → Mirror $0.4073 | Team WE @ 58.0%
+   LoL: Team WE vs LNG Esports - Game 4 Winner
+
+✅ MIRRORED #3: 🦈60E68A
+   Whale $36504 → Mirror $0.3869 | No @ 79.9%
    Iran closes its airspace by May 24?
 
-✅ MIRRORED #2: 🦈E7BD61
-   Whale $22102 → Mirror $0.475 | Yes @ 53.6%
-   Iran closes its airspace by May 27?
-
-✅ MIRRORED #3: 🦈56C9FB
-   Whale $20000 → Mirror $0.4513 | Dplus KIA @ 64.5%
-   LoL: Dplus KIA vs BNK FEARX - Game 2 Winner
-
-━━━ CLAWBOT v7: 3 mirrored | Bal $8.5737 ━━━
+━━━ CLAWBOT v7: 3 mirrored | Bal $7.3508 ━━━
