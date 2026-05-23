@@ -1621,8 +1621,39 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
     // The teacher (userId) is the WITNESS. The student is the SUBJECT.
     const activeUserId = studentUserId || userId;
     const activeSeekerName = studentName || seekerName;
-    const activeJyotishContext = studentJyotishContext || jyotishContext;
     const isStudentMode = !!studentUserId && studentUserId !== userId;
+
+    // For linked students: fetch their actual jyotish_profiles data from Supabase
+    let resolvedStudentJyotish = studentJyotishContext || "";
+    if (studentUserId && !resolvedStudentJyotish) {
+      try {
+        const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+        const { data: studentRow } = await sb
+          .from("students")
+          .select("linked_user_id, name, birth_date, birth_time, birth_place")
+          .eq("id", studentUserId)
+          .maybeSingle();
+        if (studentRow?.linked_user_id) {
+          const { data: jp } = await sb
+            .from("jyotish_profiles")
+            .select("nakshatra, moon_sign, ascendant, mahadasha, antardasha, primary_dosha, karma_focus, active_yogas")
+            .eq("user_id", studentRow.linked_user_id)
+            .maybeSingle();
+          if (jp) {
+            resolvedStudentJyotish = [
+              "[STUDENT JYOTISH — LIVE FROM APP PROFILE]",
+              `Moon nakshatra: ${jp.nakshatra ?? "—"} · Rashi: ${jp.moon_sign ?? "—"} · Lagna: ${jp.ascendant ?? "—"}`,
+              `Mahadasha: ${jp.mahadasha ?? "—"} · Antara: ${jp.antardasha ?? "—"}`,
+              `Dosha: ${jp.primary_dosha ?? "—"} · Karma: ${jp.karma_focus ?? "—"}`,
+              `Yogas: ${Array.isArray(jp.active_yogas) ? jp.active_yogas.join(", ") : "—"}`,
+              "Apply this chart fully to ALL readings for this student in this session.",
+            ].join("\n");
+          }
+        }
+      } catch (e) { console.warn("Student jyotish fetch:", e); }
+    }
+
+    const activeJyotishContext = resolvedStudentJyotish || jyotishContext;
     // ── END STUDENT MODE ───────────────────────────────────────────
 
     const [livingPortrait, lifeBookArchive, nadiBaseline, recentActivity, partnerActivity, atmaSignature] = await Promise.all([
