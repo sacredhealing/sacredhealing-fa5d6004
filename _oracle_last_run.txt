@@ -1,33 +1,33 @@
 ══════════════════════════════════════════════════════
   SQI-2050 🦈 CLAWBOT v7 — Production
-  2026-05-23T22:09:20.561Z | PAPER
+  2026-05-23T23:12:34.706Z | PAPER
   Min: $100 | Entry zone: 6%–94%
 ══════════════════════════════════════════════════════
-Balance: $1.84
+Balance: $1.58
 
-🔍 Scanning 87,333,524 → 87,333,974
-  0xE111180000: 83371 logs → 5743 whale trades
-  0xe2222d279d: 14870 logs → 1500 whale trades
+🔍 Scanning 87,335,691 → 87,336,141
+  0xE111180000: 84328 logs → 6320 whale trades
+  0xe2222d279d: 13617 logs → 1433 whale trades
 
-Total: 7243 | New: 7243
+Total: 7753 | New: 7753
 
 📊 Top trades:
-  $  239255 | 0xd959b6925d | 125257477790...
-  $  239255 | 0xd959b6925d | 125257477790...
-  $  141462 | 0x37e4728b3c | 113101257407...
-  $   96939 | 0x780296eb0d | 573600537716...
-  $   96939 | 0x780296eb0d | 573600537716...
+  $  158632 | 0xa5ea13a81d | 503025477760...
+  $  158632 | 0xa5ea13a81d | 503025477760...
+  $   61696 | 0xa5ea13a81d | 503025477760...
+  $   61696 | 0xa5ea13a81d | 503025477760...
+  $   60920 | 0xf1528f12e6 | 264513785071...
 
-✅ MIRRORED #1: 🦈D959B6
-   Whale $239255 → Mirror $0.092 | Cavaliers @ 55.5%
-   Knicks vs. Cavaliers
+✅ MIRRORED #1: 🦈A5EA13
+   Whale $158632 → Mirror $0.0789 | Milwaukee Brewers @ 48.5%
+   Los Angeles Dodgers vs. Milwaukee Brewers
 
-✅ MIRRORED #2: 🦈37E472
-   Whale $141462 → Mirror $0.0874 | Knicks @ 44.5%
-   Knicks vs. Cavaliers
+✅ MIRRORED #2: 🦈A5EA13
+   Whale $61696 → Mirror $0.0749 | Milwaukee Brewers @ 48.5%
+   Los Angeles Dodgers vs. Milwaukee Brewers
 
-✅ MIRRORED #3: 🦈F39651
-   Whale $59260 → Mirror $0.083 | No @ 32.5%
-   US x Iran permanent peace deal by May 31, 2026?
+✅ MIRRORED #3: 🦈F1528F
+   Whale $60920 → Mirror $0.0712 | Los Angeles Dodgers @ 51.5%
+   Los Angeles Dodgers vs. Milwaukee Brewers
 
-━━━ CLAWBOT v7: 3 mirrored | Bal $1.5777 ━━━
+━━━ CLAWBOT v7: 3 mirrored | Bal $1.3527 ━━━
