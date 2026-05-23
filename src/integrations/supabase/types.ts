@@ -6710,6 +6710,8 @@ export type Database = {
           birth_time: string | null
           created_at: string
           id: string
+          linked_user_email: string | null
+          linked_user_id: string | null
           name: string
           notes: string | null
           practitioner_id: string
@@ -6723,6 +6725,8 @@ export type Database = {
           birth_time?: string | null
           created_at?: string
           id?: string
+          linked_user_email?: string | null
+          linked_user_id?: string | null
           name: string
           notes?: string | null
           practitioner_id: string
@@ -6736,6 +6740,8 @@ export type Database = {
           birth_time?: string | null
           created_at?: string
           id?: string
+          linked_user_email?: string | null
+          linked_user_id?: string | null
           name?: string
           notes?: string | null
           practitioner_id?: string
@@ -8328,6 +8334,16 @@ export type Database = {
           message: Json
           msg_id: number
           read_ct: number
+        }[]
+      }
+      search_app_users: {
+        Args: { search_term: string }
+        Returns: {
+          email: string
+          full_name: string
+          has_ayurveda: boolean
+          has_jyotish: boolean
+          user_id: string
         }[]
       }
       strip_biofield_noise: { Args: { t: string }; Returns: string }
