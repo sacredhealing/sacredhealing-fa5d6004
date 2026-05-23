@@ -1,0 +1,13 @@
+══════════════════════════════════════════════════
+  SQI-2050 ⚡ Shiesty Signal Oracle
+  2026-05-23T07:26:00.595Z | PAPER | Risk 5%
+══════════════════════════════════════════════════
+Settings: [{"id":"052ae9dc-7355-46ab-8584-70d2ba33ae68","paper_balance":10,"paper_mode":true,"risk_pct":0.05,"updated_at":"2026-05-22T17:23:10.639969+00:00"}]
+Balance: $10.00 | Settings ID: 052ae9dc-7355-46ab-8584-70d2ba33ae68
+
+Fetching markets...
+  Raw markets from API: 100
+  Active markets: 100
+  Top 50 by volume. Top 3 vol: $49574k, $44434k, $41956k
+  Signals generated: 0 → top 0 selected
+No signals this run.
