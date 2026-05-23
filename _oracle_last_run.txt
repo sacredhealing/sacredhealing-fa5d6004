@@ -1,69 +1,49 @@
 ══════════════════════════════════════════════════════
-  SQI-2050 🦈 CLAWBOT v5 — Fixed V2 Decoder
-  2026-05-23T08:32:41.078Z | PAPER
-  Min: $300 | Max: $10000000
+  SQI-2050 🦈 CLAWBOT v6 — Real Whale Positions
+  2026-05-23T08:36:14.162Z | PAPER
 ══════════════════════════════════════════════════════
-Balance: $3.07
+Balance: $2.04
 
-🔍 Blocks 87,305,524 → 87,305,974
+🔍 Blocks 87,305,645 → 87,306,095
 
-  Contract: 0xE111180000...
-  Logs: 103099 | Valid whale trades: 981
+  0xE111180000...
+  Logs: 98957 | Valid whale trades: 1740
 
-  Contract: 0xe2222d279d...
-  Logs: 18571 | Valid whale trades: 619
+  0xe2222d279d...
+  Logs: 17726 | Valid whale trades: 933
 
-📋 Raw log sample decode:
-  topics: [
-  '0xd543adfd945773f1a62f74f0ee55a5e3b9b1a28262980ba90b1a89f2ea84d8ee',
-  '0xa69f4103a59b3a12648ec8ccd366a37c01f9815264250e6ccac9dad4454b703f',
-  '0x00000000000000000000000019cd345dcd11a9f1aedb29fc45577d8d57a0af9a',
-  '0x000000000000000000000000337b7fca244bf2ef3272469ee02a2bd541097e26'
-]
-  data words:
-    [0] 0x0000000000000000... = $0.00
-    [1] 0x4be8255024b7d22c... = OVERFLOW/token
-    [2] 0x0000000000000000... = $4.05
-    [3] 0x0000000000000000... = $5.00
+📊 Top whale trades:
+  $   51405 | 0x74471a007d | token 702002047956476...
+  $   51405 | 0x74471a007d | token 702002047956476...
+  $   35248 | 0xbddf61af53 | token 410044849055568...
+  $   35248 | 0x3658c36f12 | token 410044849055568...
+  $   35248 | 0x3658c36f12 | token 410044849055568...
+  $   33840 | 0x3b4c4ff845 | token 350808940163975...
+  $   33840 | 0x3b4c4ff845 | token 350808940163975...
+  $   33333 | 0x8affb8d7dc | token 104302892772638...
+New unseen: 2673
 
-📊 Top 8 whale trades:
-  $   87915 | 0xfbf3d501e8 | tokenId 1
-  $   87915 | 0xfbf3d501e8 | tokenId 1
-  $   45882 | 0x5e04e12c33 | tokenId 0
-  $   43474 | 0x74471a007d | tokenId 1
-  $   43474 | 0x74471a007d | tokenId 1
-  $   39960 | 0x2037bb7a07 | tokenId 0
-  $   35248 | 0xbddf61af53 | tokenId 1
-  $   33233 | 0xc8ab97a908 | tokenId 0
+  Processing: $51405 | Iran closes its airspace by May 24?
+  ⏭ SKIP: price 3% near resolved
 
-New trades: 1600
+  Processing: $51405 | Iran closes its airspace by May 24?
+  ⏭ SKIP: price 3% near resolved
 
-  ✅ MIRRORED #1: 🦈FBF3D5
-     $87915 whale → $0.1537 mirror | BUY Yes @ 50.0%
-     Token 1
+  Processing: $35248 | Will Sweden win the 2026 FIFA World Cup?
+  ⏭ SKIP: price 1% near resolved
 
-  ✅ MIRRORED #2: 🦈FBF3D5
-     $87915 whale → $0.146 mirror | BUY Yes @ 50.0%
-     Token 1
+  Processing: $35248 | Will Sweden win the 2026 FIFA World Cup?
+  ⏭ SKIP: price 1% near resolved
 
-  ✅ MIRRORED #3: 🦈5E04E1
-     $45882 whale → $0.1387 mirror | BUY Yes @ 50.0%
-     Token 0
+  Processing: $35248 | Will Sweden win the 2026 FIFA World Cup?
+  ⏭ SKIP: price 1% near resolved
 
-  ✅ MIRRORED #4: 🦈74471A
-     $43474 whale → $0.1318 mirror | BUY Yes @ 50.0%
-     Token 1
-
-  ✅ MIRRORED #5: 🦈74471A
-     $43474 whale → $0.1252 mirror | BUY Yes @ 50.0%
-     Token 1
-
-━━━ CLAWBOT v5: 5 mirrored | Bal $2.3780 ━━━
+━━━ CLAWBOT v6: 0 mirrored | Bal $2.0388 ━━━
 ══════════════════════════════════════════════════
   SQI-2050 ⚡ Shiesty Signal Oracle
-  2026-05-23T08:33:08.460Z | PAPER | Risk 5%
+  2026-05-23T08:36:30.429Z | PAPER | Risk 5%
 ══════════════════════════════════════════════════
-Balance: $2.3780 | Row: 052ae9dc-7355-46ab-8584-70d2ba33ae68
+Balance: $2.0388 | Row: 052ae9dc-7355-46ab-8584-70d2ba33ae68
 
 Fetching Polymarket...
   API returned: 100 markets
@@ -86,8 +66,8 @@ Fetching Polymarket...
     [90] [ORACLE] Will Gavin Newsom win the 2028 Democratic presidential nomination? | No@76% | vol $25456k
 
 Executing trades...
-  ✅ #1 BUY Yes @ 15.8% | $0.1189 → bal $2.2591
-  ✅ #2 BUY Yes @ 17.8% | $0.113 → bal $2.1461
-  ✅ #3 BUY No @ 75.8% | $0.1073 → bal $2.0388
+  ✅ #1 BUY Yes @ 15.8% | $0.1019 → bal $1.9369
+  ✅ #2 BUY Yes @ 17.8% | $0.1 → bal $1.8369
+  ✅ #3 BUY No @ 75.8% | $0.1 → bal $1.7369
 
-━━━ Done: 3 trade(s) | Final bal $2.0388 ━━━
+━━━ Done: 3 trade(s) | Final bal $1.7369 ━━━
