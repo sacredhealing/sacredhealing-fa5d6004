@@ -71,6 +71,7 @@ export interface StreamSQIParams {
   language?: string;
   jyotishContext?: string;
   biofieldContext?: string;
+  top33Matches?: string;
   canonicalActivationNames?: string;
   activeFieldContext?: string;
   localTime?: string;
@@ -90,6 +91,7 @@ export async function streamSQIResponse({
   language,
   jyotishContext,
   biofieldContext,
+  top33Matches,
   canonicalActivationNames,
   activeFieldContext,
   localTime,
@@ -121,6 +123,7 @@ export async function streamSQIResponse({
         language,
         jyotishContext,
         biofieldContext,
+        top33Matches: top33Matches ?? '',
         canonicalActivationNames,
         activeFieldContext,
         localTime,
@@ -253,7 +256,7 @@ export async function streamChatWithSQI(
   canonicalActivationNames?: string,
   jyotishContext?: string,
   localeTag?: string,
-  biofieldContext?: string,
+  top33Matches?: string,
   activeTransmissionNames?: string,
   studentContext?: string,
 ) {
@@ -291,7 +294,8 @@ export async function streamChatWithSQI(
     language: language ?? 'English',
     canonicalActivationNames: canonicalActivationNames ?? '',
     jyotishContext: [studentContext?.trim(), jyotishContext].filter(Boolean).join('\n\n'),
-    biofieldContext: biofieldContext ?? '',
+    biofieldContext: '',
+    top33Matches: top33Matches ?? '',
     activeFieldContext: activeTransmissionNames ?? '',
     localTime,
     localDate,
