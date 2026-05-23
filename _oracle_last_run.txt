@@ -1,73 +1,65 @@
 ══════════════════════════════════════════════════════
-  SQI-2050 🦈 CLAWBOT v6 — Real Whale Positions
-  2026-05-23T08:36:14.162Z | PAPER
+  SQI-2050 🦈 CLAWBOT v7 — Production
+  2026-05-23T08:39:29.299Z | PAPER
+  Min: $300 | Entry zone: 6%–94%
 ══════════════════════════════════════════════════════
-Balance: $2.04
+Balance: $1.74
 
-🔍 Blocks 87,305,645 → 87,306,095
+🔍 Scanning 87,305,757 → 87,306,207
+  0xE111180000: 84859 logs → 1798 whale trades
+  0xe2222d279d: 17406 logs → 877 whale trades
 
-  0xE111180000...
-  Logs: 98957 | Valid whale trades: 1740
+Total: 2675 | New: 2664
 
-  0xe2222d279d...
-  Logs: 17726 | Valid whale trades: 933
+📊 Top trades:
+  $   56209 | 0xbacd00c908 | 702002047956...
+  $   56209 | 0xbacd00c908 | 702002047956...
+  $   51405 | 0x74471a007d | 702002047956...
+  $   51405 | 0x74471a007d | 702002047956...
+  $   50000 | 0xcf6087abd6 | 285932155343...
 
-📊 Top whale trades:
-  $   51405 | 0x74471a007d | token 702002047956476...
-  $   51405 | 0x74471a007d | token 702002047956476...
-  $   35248 | 0xbddf61af53 | token 410044849055568...
-  $   35248 | 0x3658c36f12 | token 410044849055568...
-  $   35248 | 0x3658c36f12 | token 410044849055568...
-  $   33840 | 0x3b4c4ff845 | token 350808940163975...
-  $   33840 | 0x3b4c4ff845 | token 350808940163975...
-  $   33333 | 0x8affb8d7dc | token 104302892772638...
-New unseen: 2673
+✅ MIRRORED #1: 🦈8FBB3C
+   Whale $20000 → Mirror $0.0868 | MIBR @ 35.5%
+   Counter-Strike: MIBR vs Legacy (BO3) - CS Asia Championships Playoffs
 
-  Processing: $51405 | Iran closes its airspace by May 24?
-  ⏭ SKIP: price 3% near resolved
+✅ MIRRORED #2: 🦈113636
+   Whale $20000 → Mirror $0.0825 | Legacy @ 64.5%
+   Counter-Strike: MIBR vs Legacy (BO3) - CS Asia Championships Playoffs
 
-  Processing: $51405 | Iran closes its airspace by May 24?
-  ⏭ SKIP: price 3% near resolved
+✅ MIRRORED #3: 🦈A69D0C
+   Whale $20000 → Mirror $0.0784 | Legacy @ 64.5%
+   Counter-Strike: MIBR vs Legacy (BO3) - CS Asia Championships Playoffs
 
-  Processing: $35248 | Will Sweden win the 2026 FIFA World Cup?
-  ⏭ SKIP: price 1% near resolved
-
-  Processing: $35248 | Will Sweden win the 2026 FIFA World Cup?
-  ⏭ SKIP: price 1% near resolved
-
-  Processing: $35248 | Will Sweden win the 2026 FIFA World Cup?
-  ⏭ SKIP: price 1% near resolved
-
-━━━ CLAWBOT v6: 0 mirrored | Bal $2.0388 ━━━
+━━━ CLAWBOT v7: 3 mirrored | Bal $1.4892 ━━━
 ══════════════════════════════════════════════════
   SQI-2050 ⚡ Shiesty Signal Oracle
-  2026-05-23T08:36:30.429Z | PAPER | Risk 5%
+  2026-05-23T08:39:50.536Z | PAPER | Risk 5%
 ══════════════════════════════════════════════════
-Balance: $2.0388 | Row: 052ae9dc-7355-46ab-8584-70d2ba33ae68
+Balance: $1.4892 | Row: 052ae9dc-7355-46ab-8584-70d2ba33ae68
 
 Fetching Polymarket...
   API returned: 100 markets
 
   Top 10 markets by volume:
-    $49581k vol | Yes=1%, No=99% | Will Bernie Sanders win the 2028 Democratic presidential nomination?
+    $49583k vol | Yes=1%, No=99% | Will Bernie Sanders win the 2028 Democratic presidential nomination?
     $44434k vol | Yes=0%, No=100% | Will Uzbekistan win the 2026 FIFA World Cup?
     $41964k vol | Yes=1%, No=99% | Will Hillary Clinton win the 2028 Democratic presidential nomination?
     $40550k vol | Yes=1%, No=99% | Will Tim Walz win the 2028 Democratic presidential nomination?
     $40073k vol | Yes=0%, No=100% | Will Curaçao win the 2026 FIFA World Cup?
-    $39584k vol | Yes=1%, No=99% | Will Phil Murphy win the 2028 Democratic presidential nomination?
+    $39585k vol | Yes=1%, No=99% | Will Phil Murphy win the 2028 Democratic presidential nomination?
     $36332k vol | Yes=1%, No=99% | Will Zohran Mamdani win the 2028 Democratic presidential nomination?
-    $36220k vol | Yes=1%, No=99% | Will Liz Cheney win the 2028 Democratic presidential nomination?
+    $36221k vol | Yes=1%, No=99% | Will Liz Cheney win the 2028 Democratic presidential nomination?
     $35546k vol | Yes=1%, No=99% | Will USA win the 2026 FIFA World Cup?
     $34746k vol | Yes=0%, No=100% | Will New Zealand win the 2026 FIFA World Cup?
 
   Signals found: 6 total → top 3 selected
     [90] [ORACLE] Will the San Antonio Spurs win the 2026 NBA Finals? | Yes@16% | vol $29696k
-    [90] [ORACLE] Will France win the 2026 FIFA World Cup? | Yes@18% | vol $29596k
+    [90] [ORACLE] Will France win the 2026 FIFA World Cup? | Yes@18% | vol $29597k
     [90] [ORACLE] Will Gavin Newsom win the 2028 Democratic presidential nomination? | No@76% | vol $25456k
 
 Executing trades...
-  ✅ #1 BUY Yes @ 15.8% | $0.1019 → bal $1.9369
-  ✅ #2 BUY Yes @ 17.8% | $0.1 → bal $1.8369
-  ✅ #3 BUY No @ 75.8% | $0.1 → bal $1.7369
+  ✅ #1 BUY Yes @ 15.8% | $0.1 → bal $1.3892
+  ✅ #2 BUY Yes @ 17.8% | $0.1 → bal $1.2892
+  ✅ #3 BUY No @ 75.8% | $0.1 → bal $1.1892
 
-━━━ Done: 3 trade(s) | Final bal $1.7369 ━━━
+━━━ Done: 3 trade(s) | Final bal $1.1892 ━━━
