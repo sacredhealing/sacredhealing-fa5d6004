@@ -1,31 +1,56 @@
 ══════════════════════════════════════════════════════
-  SQI-2050 🦈 CLAWBOT v3 — On-Chain Whale Tracker
-  2026-05-23T08:21:09.745Z | PAPER
-  Min whale trade: $300 USDC
+  SQI-2050 🦈 CLAWBOT v4 — Polymarket V2 Scanner
+  2026-05-23T08:26:49.424Z | PAPER
+  Min whale: $300 | V2 Contracts
 ══════════════════════════════════════════════════════
-Balance: $5.40
+Balance: $4.63
 
-🔍 Scanning 87,305,128 → 87,305,578 (450 blocks)
-  Using 10-block chunks (50 API calls per contract)
+🔍 Blocks 87,305,322 → 87,305,772 (~15 min)
 
-  Contract: 0x4bFb41d5B3...
-  Total logs: 0
-  Whale trades (>$300): 0
+  Scanning V2 contract: 0xE111180000...
+  Total logs: 107666 | Whale trades (>$300): 86600
 
-  Contract: 0xC5d563A36A...
-  Total logs: 0
-  Whale trades (>$300): 0
+  Scanning V2 contract: 0xe2222d279d...
+  Total logs: 19235 | Whale trades (>$300): 15052
 
-📊 Top whale trades this window:
+📊 Top whale trades:
+  $1.1579035830927196e+71 USDC | 0xa49b6ea0a6 | tx 0x06f9ffbb23
+  $1.1579035830927196e+71 USDC | 0xce2eed5021 | tx 0x06f9ffbb23
+  $1.1579035830927196e+71 USDC | 0xce2eed5021 | tx 0x06f9ffbb23
+  $1.1579035830927196e+71 USDC | 0x6a8d1709bf | tx 0x3ba19d6410
+  $1.1579035830927196e+71 USDC | 0xb040634cfe | tx 0x3ba19d6410
+  $1.1579035830927196e+71 USDC | 0xb040634cfe | tx 0x3ba19d6410
+  $1.1579035830927196e+71 USDC | 0xb40e89677d | tx 0xe9e3297c85
+  $1.1579035830927196e+71 USDC | 0x97f1d27ee4 | tx 0xe9e3297c85
 
-New trades to process: 0
+New trades: 101652
 
-━━━ CLAWBOT v3 Done: 0 mirrored | Bal $5.4035 ━━━
+  ✅ MIRRORED #1: 🦈A49B6E
+     Whale: $1.1579035830927196e+71 pUSD | Mirror: $0.2316 | Bal: $4.4012
+     BUY Yes @ 50.0% | Token 0
+
+  ✅ MIRRORED #2: 🦈CE2EED
+     Whale: $1.1579035830927196e+71 pUSD | Mirror: $0.2201 | Bal: $4.1811
+     BUY Yes @ 50.0% | Token 1
+
+  ✅ MIRRORED #3: 🦈CE2EED
+     Whale: $1.1579035830927196e+71 pUSD | Mirror: $0.2091 | Bal: $3.972
+     BUY Yes @ 50.0% | Token 1
+
+  ✅ MIRRORED #4: 🦈6A8D17
+     Whale: $1.1579035830927196e+71 pUSD | Mirror: $0.1986 | Bal: $3.7734
+     BUY Yes @ 50.0% | Token 1
+
+  ✅ MIRRORED #5: 🦈B04063
+     Whale: $1.1579035830927196e+71 pUSD | Mirror: $0.1887 | Bal: $3.5847
+     BUY Yes @ 50.0% | Token 0
+
+━━━ CLAWBOT v4 Done: 5 mirrored | Bal $3.5847 ━━━
 ══════════════════════════════════════════════════
   SQI-2050 ⚡ Shiesty Signal Oracle
-  2026-05-23T08:21:19.207Z | PAPER | Risk 5%
+  2026-05-23T08:27:12.485Z | PAPER | Risk 5%
 ══════════════════════════════════════════════════
-Balance: $5.4035 | Row: 052ae9dc-7355-46ab-8584-70d2ba33ae68
+Balance: $3.5847 | Row: 052ae9dc-7355-46ab-8584-70d2ba33ae68
 
 Fetching Polymarket...
   API returned: 100 markets
@@ -38,7 +63,7 @@ Fetching Polymarket...
     $40073k vol | Yes=0%, No=100% | Will Curaçao win the 2026 FIFA World Cup?
     $39584k vol | Yes=1%, No=99% | Will Phil Murphy win the 2028 Democratic presidential nomination?
     $36332k vol | Yes=1%, No=99% | Will Zohran Mamdani win the 2028 Democratic presidential nomination?
-    $36219k vol | Yes=1%, No=99% | Will Liz Cheney win the 2028 Democratic presidential nomination?
+    $36220k vol | Yes=1%, No=99% | Will Liz Cheney win the 2028 Democratic presidential nomination?
     $35546k vol | Yes=1%, No=99% | Will USA win the 2026 FIFA World Cup?
     $34746k vol | Yes=0%, No=100% | Will New Zealand win the 2026 FIFA World Cup?
 
@@ -48,8 +73,8 @@ Fetching Polymarket...
     [90] [ORACLE] Will Gavin Newsom win the 2028 Democratic presidential nomination? | No@76% | vol $25456k
 
 Executing trades...
-  ✅ #1 BUY Yes @ 15.8% | $0.2702 → bal $5.1333
-  ✅ #2 BUY Yes @ 17.8% | $0.2567 → bal $4.8766
-  ✅ #3 BUY No @ 75.8% | $0.2438 → bal $4.6328
+  ✅ #1 BUY Yes @ 15.8% | $0.1792 → bal $3.4055
+  ✅ #2 BUY Yes @ 17.8% | $0.1703 → bal $3.2352
+  ✅ #3 BUY No @ 75.8% | $0.1618 → bal $3.0734
 
-━━━ Done: 3 trade(s) | Final bal $4.6328 ━━━
+━━━ Done: 3 trade(s) | Final bal $3.0734 ━━━
