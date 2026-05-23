@@ -454,6 +454,11 @@ function renderSQIContent(content: string) {
   return elements;
 }
 
+  if (!hasLiveScan) return compiled;
+  const segments = compiled.split(/\n(?=\[)/);
+  return segments.filter((s) => !s.trimStart().startsWith('[BIOMETRIC NADI FIELD')).join('\n').trim();
+}
+
 function resolveActivationsByExactNames(preferred: string[]): Activation[] {
   const out: Activation[] = [];
   const seen = new Set<string>();
@@ -1157,6 +1162,7 @@ JYOTISH DIRECTIVE: Compute this soul's Vedic chart from the above birth data. De
         raw_content: assistantMsg.text,
         user_prompt: userPrompt,
         source_chat_id: currentSessionId ?? null,
+        routing_override: 'force_portrait',
         ...(activeStudentId ? { student_id: activeStudentId } : {}),
       });
     },
@@ -1635,6 +1641,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
             raw_content: finalText,
             user_prompt: userMsg.text,
             source_chat_id: sessionIdAtSend ?? null,
+            routing_override: 'force_portrait',
             ...(activeStudentId ? { student_id: activeStudentId } : {}),
           }).then(async (results) => {
             const r = results?.[0];
