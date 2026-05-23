@@ -1,33 +1,33 @@
 ══════════════════════════════════════════════════════
   SQI-2050 🦈 CLAWBOT v7 — Production
-  2026-05-23T18:45:44.896Z | PAPER
+  2026-05-23T20:07:37.934Z | PAPER
   Min: $100 | Entry zone: 6%–94%
 ══════════════════════════════════════════════════════
-Balance: $2.92
+Balance: $2.50
 
-🔍 Scanning 87,326,543 → 87,326,993
-  0xE111180000: 101446 logs → 5659 whale trades
-  0xe2222d279d: 17778 logs → 2569 whale trades
+🔍 Scanning 87,329,350 → 87,329,800
+  0xE111180000: 71041 logs → 4498 whale trades
+  0xe2222d279d: 17012 logs → 1987 whale trades
 
-Total: 8228 | New: 8228
+Total: 6485 | New: 6485
 
 📊 Top trades:
-  $  200000 | 0xee3ecc39c4 | 946036486363...
-  $  200000 | 0xa39c488ea8 | 946036486363...
-  $  200000 | 0xa39c488ea8 | 946036486363...
-  $   53725 | 0xbee54d9005 | 290322234023...
-  $   53725 | 0xbee54d9005 | 290322234023...
+  $   82175 | 0xe613b515bd | 105252206997...
+  $   82175 | 0xe613b515bd | 105252206997...
+  $   76655 | 0xfedc381bf3 | 993036051819...
+  $   76655 | 0xe613b515bd | 993036051819...
+  $   76655 | 0xe613b515bd | 993036051819...
 
-✅ MIRRORED #1: 🦈BEE54D
-   Whale $53725 → Mirror $0.146 | Yes @ 37.5%
-   Will RCD Espanyol de Barcelona win on 2026-05-23?
+✅ MIRRORED #1: 🦈ABB899
+   Whale $49298 → Mirror $0.1252 | Chicago Cubs @ 6.5%
+   Houston Astros vs. Chicago Cubs
 
-✅ MIRRORED #2: 🦈C3ACF5
-   Whale $50000 → Mirror $0.1387 | No @ 50.5%
-   Will FC Barcelona win on 2026-05-23?
+✅ MIRRORED #2: 🦈5DAB5E
+   Whale $48393 → Mirror $0.1189 | Atlanta Braves @ 60.5%
+   Washington Nationals vs. Atlanta Braves
 
-✅ MIRRORED #3: 🦈492442
-   Whale $45391 → Mirror $0.1318 | Under @ 47.5%
-   Knicks vs. Cavaliers: O/U 214.5
+✅ MIRRORED #3: 🦈5DAB5E
+   Whale $41044 → Mirror $0.113 | Chicago White Sox @ 49.5%
+   Chicago White Sox vs. San Francisco Giants
 
-━━━ CLAWBOT v7: 3 mirrored | Bal $2.5032 ━━━
+━━━ CLAWBOT v7: 3 mirrored | Bal $2.1461 ━━━
