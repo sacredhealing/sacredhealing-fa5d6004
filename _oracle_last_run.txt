@@ -1,33 +1,33 @@
 ══════════════════════════════════════════════════════
   SQI-2050 🦈 CLAWBOT v7 — Production
-  2026-05-23T15:31:46.528Z | PAPER
+  2026-05-23T16:41:21.396Z | PAPER
   Min: $100 | Entry zone: 6%–94%
 ══════════════════════════════════════════════════════
-Balance: $4.63
+Balance: $3.97
 
-🔍 Scanning 87,319,893 → 87,320,343
-  0xE111180000: 99717 logs → 6061 whale trades
-  0xe2222d279d: 17139 logs → 1781 whale trades
+🔍 Scanning 87,322,278 → 87,322,728
+  0xE111180000: 87492 logs → 4916 whale trades
+  0xe2222d279d: 18516 logs → 2156 whale trades
 
-Total: 7842 | New: 7842
+Total: 7072 | New: 7072
 
 📊 Top trades:
-  $  373791 | 0x08fff5b9a7 | 104302892772...
-  $  373791 | 0x08fff5b9a7 | 104302892772...
-  $  309881 | 0x71b7c96c83 | 104302892772...
-  $   50000 | 0xbddf61af53 | 436615092513...
-  $   50000 | 0x267eee7e20 | 436615092513...
+  $   74292 | 0x7523cafcee | 959499578951...
+  $   74292 | 0xfcd0eadb24 | 959499578951...
+  $   74292 | 0xfcd0eadb24 | 959499578951...
+  $   31950 | 0xb45a797faa | 352607002626...
+  $   31950 | 0x1d1ade627d | 325688453764...
 
-✅ MIRRORED #1: 🦈C6587B
-   Whale $28207 → Mirror $0.2316 | Yes @ 16.5%
-   US x Iran permanent peace deal by May 26, 2026?
+✅ MIRRORED #1: 🦈B45A79
+   Whale $31950 → Mirror $0.1986 | Over @ 47.5%
+   Houston Astros vs. Chicago Cubs: O/U 7.5
 
-✅ MIRRORED #2: 🦈9F2FE0
-   Whale $27720 → Mirror $0.2201 | Knicks @ 44.5%
-   Knicks vs. Cavaliers
+✅ MIRRORED #2: 🦈1D1ADE
+   Whale $31950 → Mirror $0.1887 | Under @ 52.5%
+   Houston Astros vs. Chicago Cubs: O/U 7.5
 
-✅ MIRRORED #3: 🦈3DD16E
-   Whale $27720 → Mirror $0.2091 | Cavaliers @ 55.5%
-   Knicks vs. Cavaliers
+✅ MIRRORED #3: 🦈647E83
+   Whale $25000 → Mirror $0.1792 | Max Alcala Gurri @ 79.0%
+   Cervia: Max Alcala Gurri vs Buvaysar Gadamauri
 
-━━━ CLAWBOT v7: 3 mirrored | Bal $3.9720 ━━━
+━━━ CLAWBOT v7: 3 mirrored | Bal $3.4055 ━━━
