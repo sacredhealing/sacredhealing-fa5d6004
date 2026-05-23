@@ -17,23 +17,22 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Run CLAWBOT Whale Tracker
+      - name: Run CLAWBOT v2 (On-Chain Whale Scanner)
         env:
           SUPABASE_URL: https://fjdzhrdpioxdeyyfogep.supabase.co
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          POLYGON_RPC_URL: ${{ secrets.POLYGON_RPC_URL }}
           PAPER_MODE: 'true'
-          MIN_TRADE_SIZE: '500'
+          MIN_TRADE_USDC: '300'
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          echo "=== Phase 1: Run CLAWBOT Whale Tracker ===" 
           node scripts/clawbot_oracle.mjs 2>&1 | tee _oracle_last_run.txt
-          
           echo ""
-          echo "=== Phase 2: Run Value-EV Oracle (backup signals) ==="
+          echo "=== Backup: Value-EV Oracle ==="
           node scripts/shiesty_oracle.mjs 2>&1 | tee -a _oracle_last_run.txt
 
           git config user.email "bot@sqi.app"
           git config user.name "SQI CLAWBOT"
           git add _oracle_last_run.txt
-          git commit -m "CLAWBOT run $(date -u +%Y-%m-%dT%H:%M)" || true
+          git commit -m "CLAWBOT v2 $(date -u +%Y-%m-%dT%H:%M)" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
