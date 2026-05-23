@@ -748,6 +748,29 @@ async function syncApothecaryUserChatArchive(
    Only className values have been updated for SQI-2050 aesthetic
    ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ */
 
+function languageToBcp47(languageCode: string): string {
+  const l = (languageCode || 'en').split('-')[0]?.toLowerCase() || 'en';
+  if (l === 'sv') return 'sv-SE';
+  if (l === 'es') return 'es-ES';
+  if (l === 'no' || l === 'nb' || l === 'nn') return 'nb-NO';
+  return 'en-GB';
+}
+
+function getLocalDayPhaseLabel(d: Date): 'morning' | 'midday' | 'evening' | 'night' {
+  const h = d.getHours();
+  if (h >= 22 || h < 5) return 'night';
+  if (h < 12) return 'morning';
+  if (h < 17) return 'midday';
+  return 'evening';
+}
+
+function stripDuplicateBiometricBlock(compiled: string | undefined, hasLiveScan: boolean): string {
+  if (!compiled?.trim()) return '';
+  if (!hasLiveScan) return compiled;
+  const segments = compiled.split(/\n(?=\[)/);
+  return segments.filter((s) => !s.trimStart().startsWith('[BIOMETRIC NADI FIELD')).join('\n').trim();
+}
+
 function QuantumApothecaryInner() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -2164,6 +2187,13 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
           </button>
           <button
             type="button"
+            onClick={() => navigate('/lexicon')}
+            className="whitespace-nowrap rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-2 py-1 text-[8px] font-bold uppercase tracking-[0.15em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20 sm:px-3 sm:py-1.5 sm:text-[9px] sm:tracking-[0.25em]"
+          >
+            Lexicon
+          </button>
+          <button
+            type="button"
             onClick={() => setShowKnowledge(true)}
             className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-2 text-[#D4AF37]/70 transition hover:border-[#D4AF37]/25 hover:bg-[#D4AF37]/[0.06]"
             title={t('quantumApothecary.chat.openKnowledge')}
@@ -3197,3 +3227,4 @@ export default function QuantumApothecary() {
 
   return <QuantumApothecaryInner />;
 }
+
