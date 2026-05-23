@@ -320,8 +320,14 @@ function autoBoldSacredTerms(text: string): React.ReactNode {
 
 function lineStartsWithSqiMasterDiamond(trimmed: string): boolean {
   const cp = trimmed.codePointAt(0);
-  if (cp === 0x25c8 || cp === 0x2756 || cp === 0x2726) return true;
-  return trimmed.startsWith('\u00e2\u0097\u0088');
+  const isDiamond = cp === 0x25c8 || cp === 0x2756 || cp === 0x2726
+    || trimmed.startsWith('\u00e2\u0097\u0088');
+  if (!isDiamond) return false;
+  // Must be ◈ followed by space then a letter — NOT a number or Nadi scan data
+  // e.g. "◈ AGASTYA" = valid master header
+  // e.g. "◈12 / 72,000" = Nadi scan line — NOT a master header
+  const afterDiamond = trimmed.slice(1).trimStart();
+  return /^[A-ZÁÉÍÓÚ]/.test(afterDiamond);
 }
 
 function scrubBannedTerms(content: string): string {
