@@ -1,33 +1,33 @@
 ══════════════════════════════════════════════════════
   SQI-2050 🦈 CLAWBOT v7 — Production
-  2026-05-24T07:42:52.780Z | PAPER
+  2026-05-24T09:32:54.290Z | PAPER
   Min: $100 | Entry zone: 6%–94%
 ══════════════════════════════════════════════════════
-Balance: $0.99
+Balance: $0.85
 
-🔍 Scanning 87,353,187 → 87,353,637
-  0xE111180000: 86950 logs → 4824 whale trades
-  0xe2222d279d: 16682 logs → 1759 whale trades
+🔍 Scanning 87,356,960 → 87,357,410
+  0xE111180000: 108794 logs → 6079 whale trades
+  0xe2222d279d: 16841 logs → 1625 whale trades
 
-Total: 6583 | New: 6583
+Total: 7704 | New: 7704
 
 📊 Top trades:
-  $  305917 | 0x47661b3073 | 337473050420...
-  $  305917 | 0x8a815b830d | 337473050420...
-  $  305917 | 0x8a815b830d | 337473050420...
-  $   38266 | 0x2117ae94a9 | 329952340583...
-  $   38266 | 0x2117ae94a9 | 329952340583...
+  $   55801 | 0x2c335066fe | 901252619506...
+  $   55801 | 0x2c335066fe | 901252619506...
+  $   53396 | 0xec23da31bc | 355803841063...
+  $   53396 | 0xec23da31bc | 355803841063...
+  $   50297 | 0x5dab5ed969 | 880250968273...
 
-✅ MIRRORED #1: 🦈CF19C4
-   Whale $35002 → Mirror $0.0497 | Yes @ 13.2%
-   Strait of Hormuz traffic returns to normal by end of May?
+✅ MIRRORED #1: 🦈2C3350
+   Whale $55801 → Mirror $0.0426 | Legacy @ 56.5%
+   Counter-Strike: Team Falcons vs Legacy (BO5) - CS Asia Championships Playoffs
 
-✅ MIRRORED #2: 🦈CF19C4
-   Whale $30727 → Mirror $0.0472 | Yes @ 13.2%
-   Strait of Hormuz traffic returns to normal by end of May?
+✅ MIRRORED #2: 🦈EC23DA
+   Whale $53396 → Mirror $0.0405 | Mumbai Indians @ 49.5%
+   Indian Premier League: Mumbai Indians vs Rajasthan Royals
 
-✅ MIRRORED #3: 🦈F10185
-   Whale $24865 → Mirror $0.0449 | No @ 68.5%
-   US x Iran permanent peace deal by May 26, 2026?
+✅ MIRRORED #3: 🦈5DAB5E
+   Whale $50297 → Mirror $0.0385 | Rajasthan Royals @ 50.5%
+   Indian Premier League: Mumbai Indians vs Rajasthan Royals
 
-━━━ CLAWBOT v7: 3 mirrored | Bal $0.8526 ━━━
+━━━ CLAWBOT v7: 3 mirrored | Bal $0.7310 ━━━
