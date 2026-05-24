@@ -1,33 +1,33 @@
 ══════════════════════════════════════════════════════
   SQI-2050 🦈 CLAWBOT v7 — Production
-  2026-05-24T09:32:54.290Z | PAPER
+  2026-05-24T11:03:19.995Z | PAPER
   Min: $100 | Entry zone: 6%–94%
 ══════════════════════════════════════════════════════
-Balance: $0.85
+Balance: $0.73
 
-🔍 Scanning 87,356,960 → 87,357,410
-  0xE111180000: 108794 logs → 6079 whale trades
-  0xe2222d279d: 16841 logs → 1625 whale trades
+🔍 Scanning 87,360,060 → 87,360,510
+  0xE111180000: 87453 logs → 4871 whale trades
+  0xe2222d279d: 15833 logs → 1901 whale trades
 
-Total: 7704 | New: 7704
+Total: 6772 | New: 6772
 
 📊 Top trades:
-  $   55801 | 0x2c335066fe | 901252619506...
-  $   55801 | 0x2c335066fe | 901252619506...
-  $   53396 | 0xec23da31bc | 355803841063...
-  $   53396 | 0xec23da31bc | 355803841063...
-  $   50297 | 0x5dab5ed969 | 880250968273...
+  $  275000 | 0x5e4dbe95f8 | 110545219743...
+  $  275000 | 0x5e4dbe95f8 | 110545219743...
+  $  100000 | 0x2d7be5170a | 214756143346...
+  $  100000 | 0x5e4dbe95f8 | 110545219743...
+  $  100000 | 0x5e4dbe95f8 | 110545219743...
 
-✅ MIRRORED #1: 🦈2C3350
-   Whale $55801 → Mirror $0.0426 | Legacy @ 56.5%
-   Counter-Strike: Team Falcons vs Legacy (BO5) - CS Asia Championships Playoffs
+✅ MIRRORED #1: 🦈5E4DBE
+   Whale $275000 → Mirror $0.0365 | Yes @ 57.5%
+   Will West Ham United FC win on 2026-05-24?
 
-✅ MIRRORED #2: 🦈EC23DA
-   Whale $53396 → Mirror $0.0405 | Mumbai Indians @ 49.5%
-   Indian Premier League: Mumbai Indians vs Rajasthan Royals
+✅ MIRRORED #2: 🦈2D7BE5
+   Whale $100000 → Mirror $0.0347 | No @ 42.5%
+   Will West Ham United FC win on 2026-05-24?
 
-✅ MIRRORED #3: 🦈5DAB5E
-   Whale $50297 → Mirror $0.0385 | Rajasthan Royals @ 50.5%
-   Indian Premier League: Mumbai Indians vs Rajasthan Royals
+✅ MIRRORED #3: 🦈5E4DBE
+   Whale $100000 → Mirror $0.033 | Yes @ 57.5%
+   Will West Ham United FC win on 2026-05-24?
 
-━━━ CLAWBOT v7: 3 mirrored | Bal $0.7310 ━━━
+━━━ CLAWBOT v7: 3 mirrored | Bal $0.6268 ━━━
