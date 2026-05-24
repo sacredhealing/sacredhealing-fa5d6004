@@ -2286,12 +2286,12 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                 className={`flex w-full min-w-0 flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                 {msg.role === 'user' ? (
                   <div
-                    className="ml-auto max-w-[85%]"
+                    className="ml-auto max-w-[88%]" style={{ marginRight: 12, marginTop: 8 }}
                     style={{
                       position: 'relative',
                       padding: '14px 20px',
                       background: 'rgba(212,175,55,0.03)',
-                      border: '1px solid rgba(212,175,55,0.1)',
+                      borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)',
                     }}
                   >
                     <div style={{ position: 'absolute', top: 5, right: 5, width: 10, height: 10, borderTop: '1px solid rgba(212,175,55,0.2)', borderRight: '1px solid rgba(212,175,55,0.2)', pointerEvents: 'none' }} />
@@ -2308,18 +2308,18 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                       className="chat-message w-full sqi-manuscript-scroll"
                       style={{
                         position: 'relative',
-                        padding: '26px 28px 22px',
-                        background: 'linear-gradient(145deg, rgba(18,13,6,0.98) 0%, rgba(10,7,3,0.99) 100%)',
-                        border: '1px solid rgba(212,175,55,0.1)',
-                        boxShadow: 'inset 0 0 60px rgba(139,90,43,0.04), 0 20px 60px rgba(0,0,0,0.6)',
+                        padding: '20px 16px 14px',
+                        background: 'rgba(255,255,255,0.016)',
+                        borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)',
+                        
                         overflow: 'visible',
                         userSelect: 'none',
                         WebkitUserSelect: 'none',
                         WebkitTouchCallout: 'none',
                       }}
                     >
-                      <div style={{ position: 'absolute', top: 8, left: 8, width: 16, height: 16, borderTop: '1px solid rgba(212,175,55,0.22)', borderLeft: '1px solid rgba(212,175,55,0.22)', pointerEvents: 'none' }} />
-                      <div style={{ position: 'absolute', bottom: 8, right: 8, width: 16, height: 16, borderBottom: '1px solid rgba(212,175,55,0.22)', borderRight: '1px solid rgba(212,175,55,0.22)', pointerEvents: 'none' }} />
+                      
+                      
                       <div className="sqi-message w-full min-w-0">
                         <div
                           className="sqi-ancient-body break-words"
