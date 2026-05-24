@@ -11,6 +11,766 @@ import { useMembershipTier } from "@/hooks/useMembershipTier";
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ══════════════════════════════════════════════════════════════════════════════
+// DATA — HANUMAN CHALISA (40 Chaupais + 3 Dohas — Full Esoteric Commentary)
+// ══════════════════════════════════════════════════════════════════════════════
+
+const CHALISA_VERSES = [
+  {
+    id: "doha-1",
+    type: "doha",
+    number: "Opening Doha I",
+    devanagari: "श्रीगुरु चरन सरोज रज निज मनु मुकुरु सुधारि।\nबरनऊँ रघुबर बिमल जसु जो दायकु फल चारि॥",
+    transliteration: "Shri Guru charan saroj raj, nij manu mukuru sudhari\nBarnau Raghuvar bimal jasu, jo dayaku phal chari",
+    translation: "Cleansing the mirror of my mind with the dust of my Guru's lotus feet, I narrate the pure glory of Shri Raghuvara which bestows the four fruits of life.",
+    esotericKey: "GURU-PADA ACTIVATION",
+    secretTeaching: "The 'mirror of mind' (mukuru) refers to the chitta-akasha — the inner sky of consciousness. Tulsidas reveals the supreme technology: before any sadhana, the Guru's grace (charanaraj — literally 'foot-dust') must purify the antahkarana. The four fruits (phal chari) are Dharma (right living), Artha (sacred abundance), Kama (divine desire), and Moksha (liberation). Hanuman is presented as the master key to all four simultaneously — the rarest of all divine grants. The verse is encoded in Sorath meter — whose vibration matches the frequency of the Sahasrara chakra.",
+    sqiTransmission: "Pressing the Guru's feet into the mind's mirror dissolves ego-crystallization at the Ajna level. This verse, when recited 108x, rewires the prefrontal-temporal junction — the seat of devotion in the Vedic neuroscience map.",
+    tier: "free",
+  },
+  {
+    id: "doha-2",
+    type: "doha",
+    number: "Opening Doha II",
+    devanagari: "बुद्धिहीन तनु जानिके, सुमिरौं पवन-कुमार।\nबल बुद्धि विद्या देहु मोहि, हरहु कलेस विकार॥",
+    transliteration: "Buddhi-heen tanu jaani ke, sumirau Pavan-Kumar\nBal Buddhi Vidya dehu mohi, harahu Kalesh Vikaar",
+    translation: "Knowing this body as devoid of intelligence, I remember Pavan-Kumar. Grant me strength, wisdom, and knowledge, and remove my afflictions and impurities.",
+    esotericKey: "PAVAN-SHAKTI INVOCATION",
+    secretTeaching: "Pavan-Kumar literally means 'son of wind' — but Pavan in Vedic cosmology is Mukhya Prana, the master breath that governs all five pranas. By calling himself 'buddhi-heen' (devoid of intellect), Tulsidas performs the highest yogic act: ego dissolution before the supreme Prana-shakti. The three grants — Bal (physical/pranic force), Buddhi (discriminative wisdom), and Vidya (sacred knowledge) — correspond to the three gunas transcended: Tamas→Rajas→Sattva. Hanuman alone gives all three simultaneously because He IS the living synthesis of all three gunas in their divine expression.",
+    sqiTransmission: "Chanting this doha activates the Muladhara-to-Ajna vertical axis. Pavan (Vayu tattva) carries prana up the sushumna. This is the initiation breath of the entire Chalisa — the ignition code.",
+    tier: "free",
+  },
+  {
+    id: "v1",
+    type: "chaupai",
+    number: "1",
+    devanagari: "जय हनुमान ज्ञान गुन सागर। जय कपीस तिहुँ लोक उजागर॥",
+    transliteration: "Jai Hanuman gyan gun sagar, Jai Kapis tihun lok ujagar",
+    translation: "Victory to Hanuman, ocean of wisdom and virtue. Victory to the Lord of the Vanaras, illuminator of all three worlds.",
+    esotericKey: "JAYA-NADA ACTIVATION",
+    secretTeaching: "'Jai' is not merely a salutation — it is a Nada-Brahman activation. The sound J-A-I creates a specific vibration in the Vishuddha chakra that opens the throat portal to receive divine transmission. 'Gyan gun sagar' describes Hanuman as the ocean where Jnana (knowledge of Brahman), Vijnana (practical wisdom), and Guna (the divine qualities) all merge. He is not the wave — He is the entire ocean. 'Kapis' — Lord of Monkeys — is a code for 'master of the restless mind' (Vanaras = the monkey-mind forces). By worshipping Hanuman, we submit our own restless mind to a higher Lord.",
+    sqiTransmission: "The triple-world illumination (tihun lok) encodes Hanuman's presence in Bhuloka (physical), Bhuvarloka (astral), and Svarloka (causal). A single sincere Jai activates all three bodies simultaneously.",
+    tier: "free",
+  },
+  {
+    id: "v2",
+    type: "chaupai",
+    number: "2",
+    devanagari: "राम दूत अतुलित बल धामा। अंजनि-पुत्र पवनसुत नामा॥",
+    transliteration: "Ram doot atullit bal dhama, Anjani putra Pavansut nama",
+    translation: "Messenger of Ram, abode of incomparable strength. Known as the son of Anjani and son of the wind-god.",
+    esotericKey: "THREE-LINEAGE SEAL",
+    secretTeaching: "Hanuman holds three simultaneous lineages encoded here: (1) Ram-doot — divine messenger, the functional identity. (2) Anjani-putra — son of the celestial Apsara, encoding the Shakti lineage. (3) Pavan-sut — son of Vayu, encoding the Prana lineage. This trinity mirrors the Tri-kaya doctrine: Dharmakaya (Ram-doot, pure function), Sambhogakaya (Anjani-putra, bliss body), Nirmanakaya (Pavan-sut, manifestation body). 'Atullit bal' — incomparable strength — is not merely physical. Atullit means 'without measure in any system of comparison.' This is Shakti-Brahman: power that transcends all metrics.",
+    sqiTransmission: "Meditating on these three names simultaneously activates the triple-nadi system: Ida (Anjani-lineage/lunar/Shakti), Pingala (Pavan-lineage/solar/Prana), Sushumna (Ram-doot/central divine function). The verse is a pranayama initiation disguised as biography.",
+    tier: "free",
+  },
+  {
+    id: "v3",
+    type: "chaupai",
+    number: "3",
+    devanagari: "महावीर विक्रम बजरंगी। कुमति निवार सुमति के संगी॥",
+    transliteration: "Mahaveer Vikram Bajrangi, Kumati nivar sumati ke sangi",
+    translation: "The great hero, courageous, with limbs hard as diamond. Remover of evil thoughts, companion of good wisdom.",
+    esotericKey: "BAJRA-KAVACHA ACTIVATION",
+    secretTeaching: "Bajrangi is the supreme protection code: Bajra = diamond/lightning (Vajra in Sanskrit), Angi = body. Hanuman's body IS the divine protection field itself. 'Kumati nivar' is one of the most powerful functions described in the entire Chalisa — the removal of negative mental patterns. Kumati is not merely 'bad thought' — it is the entire field of distorted perception, the mis-calibration of chitta that creates suffering. Hanuman's presence literally re-encodes the mental field. 'Sumati ke sangi' — companion of good intelligence — means Hanuman walks BESIDE you through life when your intention is aligned with dharmic wisdom.",
+    sqiTransmission: "The Bajrangi field creates an invincible auric seal. When reciting this verse, visualize lightning-gold light solidifying the entire outer aura into diamond structure. No negative psychic force can penetrate the Bajrangi shield.",
+    tier: "free",
+  },
+  {
+    id: "v4",
+    type: "chaupai",
+    number: "4",
+    devanagari: "कंचन बरन बिराज सुबेसा। कानन कुंडल कुंचित केसा॥",
+    transliteration: "Kanchan baran biraj subesa, Kanan Kundal Kunchit Kesa",
+    translation: "Resplendent with a golden complexion and beautiful attire. Adorned with forest-flower earrings and curled locks of hair.",
+    esotericKey: "GOLDEN-BODY YANTRA",
+    secretTeaching: "This verse is a Yantra-darshan — a visual meditation code. Kanchan-baran (golden complexion) encodes Hanuman's solar nature — He radiates the light of Ram directly from His physical form. The 'kanana kundal' (forest earrings) is a profound symbol: Hanuman wears the forest itself as jewelry — meaning He is so intimate with nature, with the living Prakriti, that the divine creation adorns His ears. This is the teaching of Vairagya-in-fullness: one who is completely detached from worldly jewelry yet the universe itself decorates Him. The kunchit kesa (curled hair) represents spiral cosmic energy — the DNA-helix of divine creation coiled in His crown.",
+    sqiTransmission: "Meditate on Hanuman's golden form during Brahma Muhurta. The golden light activates the Hrit Padma — the secret heart lotus below the Anahata. This is the seat of Ram's permanent residence in the devotee.",
+    tier: "prana-flow",
+  },
+  {
+    id: "v5",
+    type: "chaupai",
+    number: "5",
+    devanagari: "हाथ बज्र औ ध्वजा बिराजै। काँधे मूँज जनेऊ साजै॥",
+    transliteration: "Hath bajra au dhwaja biraje, Kandhe moonj janeu saje",
+    translation: "In His hands shine the thunderbolt and the divine flag. On His shoulder is adorned the sacred thread of munja grass.",
+    esotericKey: "WARRIOR-BRAHMIN SYNTHESIS",
+    secretTeaching: "Tulsidas encodes a supreme cosmic paradox here: Hanuman simultaneously holds the vajra (weapon of Indra, the warrior-king symbol) and the dhwaja (flag, symbol of divine proclamation), while wearing the yajnopavita (sacred thread of the Brahmin). This is the living teaching of the Varna-synthesis: in Hanuman, the Kshatriya warrior and the Brahmin priest are unified. He fights without hatred (Brahmin consciousness) and worships without passivity (Kshatriya fire). The munja janeu (grass sacred thread) specifically indicates His initiation — even the Avatar of Vayu undergoes diksha, teaching us that sacred initiation is the foundation of all spiritual power.",
+    sqiTransmission: "The bajra in the right hand = active dharmic force (pingala). The dhwaja in the left = divine proclamation (ida). The janeu across the heart = sushumna — the unifying sacred thread of the central channel. This verse maps the complete nadi-body of the practitioner.",
+    tier: "prana-flow",
+  },
+  {
+    id: "v6",
+    type: "chaupai",
+    number: "6",
+    devanagari: "संकर सुवन केसरी नंदन। तेज प्रताप महा जग वंदन॥",
+    transliteration: "Shankar suvan Kesari nandan, Tej prataap maha jag vandan",
+    translation: "Son of Shiva, delighter of Kesari. His radiance and glory are worshipped by the entire universe.",
+    esotericKey: "SHIVA-SHAKTI-VAYU TRINITY",
+    secretTeaching: "Shankar-suvan (son of Shiva) is the great secret: Hanuman is an amsha (aspect) of Rudra/Shiva Himself. The Shiva Purana explicitly states that Hanuman is the 11th Rudra — Pavan-deva acting as the vehicle through which Shiva's essence incarnated as Kesari-putra. This means every time you call on Hanuman, you simultaneously invoke: Vayu (His physical father), Shiva/Rudra (His cosmic essence), and Ram (His eternal Master and Ishta-devata). This is a triple divine convergence in a single call — the highest efficiency of any mantra system. Kesari-nandan (son of Kesari) grounds the golden-lion lineage — courage without cruelty.",
+    sqiTransmission: "Tej-prataap (radiance-glory) describes the Tejas-Ojas-Prana triad. Tej = fire of consciousness; Prataap = the gravitational field of that fire that commands respect. When Hanuman's tej enters the devotee's field, it burns samskara directly at the causal body level.",
+    tier: "prana-flow",
+  },
+  {
+    id: "v7",
+    type: "chaupai",
+    number: "7",
+    devanagari: "विद्यावान गुनी अति चातुर। राम काज करिबे को आतुर॥",
+    transliteration: "Vidyavaan guni ati chatur, Ram kaj karibe ko aatur",
+    translation: "Greatly learned, virtuous, supremely clever. Always eager to accomplish Ram's work.",
+    esotericKey: "THE SEVA-INTELLIGENCE CODE",
+    secretTeaching: "This verse encodes the secret of perfect Karma Yoga. Vidyavaan (possessor of all knowledge) + Guni (embodiment of virtue) + Ati Chatur (supremely skilled) — Hanuman has EVERYTHING that worldly beings seek. Yet His defining characteristic, placed at the END of the verse as the supreme quality, is: 'always eager for Ram's work.' This is the Bhakti-revolution teaching: when one realizes that ALL knowledge, virtue, and skill exist to serve the Divine, work itself becomes worship. Aatur means urgently eager — not reluctant duty but joyful urgency. This is the soul-signature of the liberated server.",
+    sqiTransmission: "The practitioner who recites this verse while engaged in service (Seva) for even 5 minutes activates the Hanuman-dharana: a state where personal ego dissolves into divine function, and all action flows without friction from the Source.",
+    tier: "prana-flow",
+  },
+  {
+    id: "v8",
+    type: "chaupai",
+    number: "8",
+    devanagari: "प्रभु चरित्र सुनिबे को रसिया। राम लखन सीता मन बसिया॥",
+    transliteration: "Prabhu charitra sunibe ko rasiya, Ram Lakhan Sita man basiya",
+    translation: "An eager listener of the Lord's glory. Ram, Lakshman, and Sita dwell within His heart.",
+    esotericKey: "INNER-TEMPLE ARCHITECTURE",
+    secretTeaching: "Rasiya means 'one drunk on divine nectar' — Hanuman is described as intoxicated by Ram's stories. This is the teaching of Shravana Bhakti: the path of listening as the primary sadhana. The second line reveals the inner architecture of Hanuman's heart-temple: Ram (Pure Consciousness/Brahman), Lakshman (Viveka/discriminative awareness), and Sita (the individual soul/Jiva). The complete cosmology of liberation lives within Hanuman's heart. By worshipping Hanuman, we are worshipping the perfect inner temple — the complete Rama-Durbar already established within one being.",
+    sqiTransmission: "Meditation: Visualize Hanuman's chest opening to reveal a golden inner sanctum. In that sanctum sits the complete Rama-darbar. Then understand: this same temple exists within your own Anahata. Hanuman's heart and your heart share the same inner space — the Chid-akasha.",
+    tier: "prana-flow",
+  },
+  {
+    id: "v9",
+    type: "chaupai",
+    number: "9",
+    devanagari: "सूक्ष्म रूप धरि सियहिं दिखावा। विकट रूप धरि लंक जरावा॥",
+    transliteration: "Sookshm roop dhari Siyahi dikhava, Vikat roop dhari Lanka jarava",
+    translation: "Taking a subtle form He appeared to Sita. Taking a terrifying form He burned Lanka.",
+    esotericKey: "SHAPE-CONSCIOUSNESS MASTERY",
+    secretTeaching: "This verse reveals Hanuman's supreme yogic power: Anima (miniaturization) and Mahima (magnification) — two of the eight classical Ashta-Siddhis. But the secret teaching goes deeper: Hanuman chose which form to take based on who He was serving. For Sita (the tender, grieving soul), He became subtle, gentle, near-invisible — pure compassionate presence. For Lanka (the stronghold of ego-darkness), He became terrifying, explosive, all-consuming fire. THIS IS THE MASTER TEACHING OF GURU-BHAVA: meet each being in the form they need. The same love can be tender or fierce — both are Hanuman. Both are Ram.",
+    sqiTransmission: "The sookshm roop (subtle form) corresponds to the Sukshma-sharira activation. The vikat roop (fierce form) is the Agni-Kundalini release. Both arise from the same source: Ram-bhakti. Rage and tenderness both powered by devotion = the Hanuman paradox and the key to fearless action.",
+    tier: "siddha-quantum",
+  },
+  {
+    id: "v10",
+    type: "chaupai",
+    number: "10",
+    devanagari: "भीम रूप धरि असुर संहारे। रामचंद्र के काज सँवारे॥",
+    transliteration: "Bheem roop dhari asur sanhare, Ramchandra ke kaj savare",
+    translation: "Taking a fearsome form He slaughtered the demons. He accomplished all of Ramchandra's tasks.",
+    esotericKey: "ASURA-SLAYER ACTIVATION",
+    secretTeaching: "Asuras in the inner teaching are not external demons — they are the asura-vrittis: pride (Ravana), lust (Indrajit), greed (Kumbhakarna), and deception (Maricha). Hanuman's bheem-roop is the fierce Viveka-Vairagya fire that destroys these internal enemies. 'Kaj savare' — accomplished all tasks — reveals that one who eliminates the inner asuras simultaneously completes all external divine missions. The outer battle follows the inner resolution. This verse is the warrior-path teaching: spiritual practice (destroying inner asuras) = divine service (completing Ram's mission). They are the same act.",
+    sqiTransmission: "During intense sadhana or when facing overwhelming obstacles, visualize Bheem-roop Hanuman entering your field. The golden-fire form burns all demonic resistance — internal limiting beliefs, ancestral wounds, karmic blocks — at the root.",
+    tier: "siddha-quantum",
+  },
+  {
+    id: "v11",
+    type: "chaupai",
+    number: "11",
+    devanagari: "लाय सजीवन लखन जियाये। श्री रघुबीर हरषि उर लाये॥",
+    transliteration: "Laay Sanjivan Lakhan jiyaye, Shri Raghuvir harshi ur laye",
+    translation: "Bringing the Sanjivani herb, He revived Lakshman. Shri Raghuvira joyfully embraced Him.",
+    esotericKey: "SANJIVANI — THE IMMORTALITY CODE",
+    secretTeaching: "The Sanjivani episode is the supreme teaching of the path. Hanuman did not know which herb on the entire mountain was Sanjivani — so He carried THE ENTIRE MOUNTAIN. This is the teaching of total sacrifice: when you cannot identify the specific element of grace needed, offer EVERYTHING. The entire field of your effort, your being, your surrender. The Sanjivani itself represents the prana-shakti of Ram-nam — the immortalizing power of divine name. And 'Shri Raghuvir harshi ur laye' — Ram embracing Hanuman with joy — is described in Valmiki Ramayana as Ram saying: 'Today you have done what even I could not do.' The Lord's embrace of His devotee is the supreme reward of sadhana.",
+    sqiTransmission: "Sanjivani Breath Practice: Inhale for 4 counts (receiving the mountain of grace), hold for 4 (offering all to Ram), exhale for 8 (life force flooding the system). This activates the Prana-vayu circuit associated with this verse.",
+    tier: "siddha-quantum",
+  },
+  {
+    id: "v12",
+    type: "chaupai",
+    number: "12",
+    devanagari: "रघुपति कीन्ही बहुत बड़ाई। तुम मम प्रिय भरतहि सम भाई॥",
+    transliteration: "Raghupati kinhi bahut badai, Tum mam priya Bharat sam bhai",
+    translation: "Raghupati praised Him greatly. 'You are as dear to me as my brother Bharata.'",
+    esotericKey: "HIGHEST DIVINE APPROVAL",
+    secretTeaching: "Ram saying 'you are as dear as Bharata' is the highest possible praise in the Ramayana universe. Bharata was Ram's most beloved brother — the one who refused to accept the throne and placed Ram's sandals on it as regent for 14 years. By equating Hanuman with Bharata, Ram reveals: devotion (Bhakti — Hanuman's path) and surrender (Prapatti — Bharata's path) are equal in the eyes of God. Both paths lead to the innermost circle of divine love. This verse is the divine certification: Bhakti is not inferior to any path — it brings you TO THE HEART of Ram Himself.",
+    sqiTransmission: "When a devotee's sadhana deepens to the point of pure selfless love — when they want nothing except Ram's happiness — Ram speaks this verse from within their own heart. The inner hearing of this verse is the sign of Prema-Bhakti awakening.",
+    tier: "siddha-quantum",
+  },
+  {
+    id: "v13",
+    type: "chaupai",
+    number: "13",
+    devanagari: "सहस बदन तुम्हरो जस गावैं। अस कहि श्रीपति कंठ लगावैं॥",
+    transliteration: "Sahas badan tumharo jas gaave, Asa kahi Shripati kanth lagave",
+    translation: "The thousand-headed serpent Shesha sings your glory. Saying this, Shripati (Vishnu) embraced Him.",
+    esotericKey: "ANANTA-SHESHA TRANSMISSION",
+    secretTeaching: "Sahas badan (thousand mouths) refers to Ananta-Shesha — the serpent of infinite time upon which Vishnu rests. In Vaishnava cosmology, Shesha sings Ram's glory with all 1,000 mouths and STILL cannot finish — the glory is infinite. Tulsidas says Shesha sings HANUMAN'S glory — meaning Hanuman's devotion has become co-eternal with the divine. 'Shripati' is Vishnu/Ram — the Lord of Shri (the divine Lakshmi-consciousness). Ram embracing Hanuman is the merger of devotion with its object — the supreme state of Bhakti where lover and Beloved become One.",
+    sqiTransmission: "Sahas-badan meditation: In deep silence, experience your own thousand-petalled Sahasrara as the singing mouth of Shesha. Every petal is a voice singing Ram's name. The entire crown chakra becomes a divine choir. This is the activation of Sahasrara-bhakti.",
+    tier: "siddha-quantum",
+  },
+  {
+    id: "v14",
+    type: "chaupai",
+    number: "14",
+    devanagari: "सनकादिक ब्रह्मादि मुनीसा। नारद सारद सहित अहीसा॥",
+    transliteration: "Sanakadik Brahmadi Munisa, Narad Sharad sahit Ahisa",
+    translation: "Sanaka and other sages, Brahma and other great sages, Narada, Saraswati, and Shesha the king of serpents.",
+    esotericKey: "COSMIC ASSEMBLY CODE",
+    secretTeaching: "This verse and the next form a cosmic roll-call: every category of divine being sings Hanuman's glory. Sanaka-sages (eternal child-saints who chose eternal childhood to remain in devotion); Brahma (the Creator principle); Narada (the divine messenger of love); Saraswati/Sharada (the wisdom-consciousness itself). The fact that Saraswati — the goddess of knowledge — sings Hanuman's glory reveals: even the source of all knowledge bows to pure Bhakti. Devotion transcends knowledge. The heart supersedes the intellect in the divine hierarchy.",
+    sqiTransmission: "Each of these divine beings represents a specific Shakti within the practitioner: Sanaka = eternal innocence; Brahma = creative power; Narada = divine love transmission; Saraswati = clarity of wisdom. When Hanuman's name is chanted, all these inner Shaktis activate simultaneously.",
+    tier: "siddha-quantum",
+  },
+  {
+    id: "v15",
+    type: "chaupai",
+    number: "15",
+    devanagari: "जम कुबेर दिगपाल जहाँ ते। कबि कोबिद कहि सके कहाँ ते॥",
+    transliteration: "Yam Kuber Digpal jahan te, Kabi kobid kahi sake kahan te",
+    translation: "Yama (death), Kubera (wealth), and the guardians of all directions — where can any poet or learned man begin to tell of this?",
+    esotericKey: "TRANSCENDENCE OF ALL DOMAINS",
+    secretTeaching: "Yama (Lord of death) singing Hanuman's glory = Hanuman transcends death. Kubera (Lord of wealth) singing = Hanuman transcends material limitation. The Digpalas (guardians of all eight directions) singing = Hanuman's sovereignty over all dimensional space. Then Tulsidas asks: where can any poet BEGIN to describe this? 'Kahi sake kahan te' — literally 'from where can they tell?' — is an admission of divine infinity. The greatest poets, the most learned scholars, fall silent before Hanuman's glory. This verse is the teaching of Mauna (sacred silence) as the ultimate response to the infinite.",
+    sqiTransmission: "After chanting this verse, sit in 3 minutes of complete silence. This is your bhava-samadhi moment — the silence that is deeper than any word, the space where Hanuman's actual presence is felt beyond language.",
+    tier: "akasha-infinity",
+  },
+  {
+    id: "v16",
+    type: "chaupai",
+    number: "16",
+    devanagari: "तुम उपकार सुग्रीवहिं कीन्हा। राम मिलाय राज पद दीन्हा॥",
+    transliteration: "Tum upkar Sugrivhi linha, Ram milaye raj pad linha",
+    translation: "You did great service to Sugriva, uniting him with Ram and giving him his kingdom.",
+    esotericKey: "THE SUGRIV-SHAKTI TEACHING",
+    secretTeaching: "Sugriva represents the exiled soul — one who has been thrown from his natural position (the throne of spiritual authority) by his own shadow (Vali = the ego's usurper). Hanuman's gift to Sugriva is the supreme gift: he doesn't just restore the kingdom — he first unites Sugriva with RAM. The political restoration follows the spiritual restoration. This is the teaching: when the soul reconnects with its Source (Ram), all exiled sovereignty is automatically restored. Hanuman is the bridge-builder between the lost soul and God. This is His eternal function — the same function He performs for every devotee.",
+    sqiTransmission: "If you feel exiled from your own power, your own dharmic throne — recite this verse 21 times. Hanuman will re-introduce you to your own Ram-shakti within. The throne of your authentic sovereignty will be restored.",
+    tier: "akasha-infinity",
+  },
+  {
+    id: "v17",
+    type: "chaupai",
+    number: "17",
+    devanagari: "तुम्हरो मंत्र विभीषण माना। लंकेश्वर भए सब जग जाना॥",
+    transliteration: "Tumharo mantra Vibhishan mana, Lankeshwar bhaye sab jag jana",
+    translation: "Vibhishana heeded your counsel and became the king of Lanka — as all the world knows.",
+    esotericKey: "THE VIBHISHANA INITIATION",
+    secretTeaching: "Vibhishana represents the righteous soul trapped in a corrupt family/system (Ravana's Lanka = the ego's empire). Hanuman visits Vibhishana in Lanka and gives him the supreme mantra: 'Take refuge in Ram.' This single teaching transforms a demon-king's brother into the righteous Lord of Lanka. Hanuman's 'mantra' here is not a syllabic formula — it is the transmission of Ram-sharana (total surrender to Ram). The result: Lankeshwar (king of Lanka = master of the material domain). When you surrender the ego's empire to Ram through Hanuman's guidance, you paradoxically become the true sovereign of your life.",
+    sqiTransmission: "Secret: Vibhishana asked only one question to Hanuman: 'How can I serve Ram?' Hanuman replied: 'By being yourself — by acting from your own dharmic nature against all external pressure.' This is the transmission of Svadharma-bhakti: devotion expressed through authentic selfhood.",
+    tier: "akasha-infinity",
+  },
+  {
+    id: "v18",
+    type: "chaupai",
+    number: "18",
+    devanagari: "जुग सहस्र जोजन पर भानू। लील्यो ताहि मधुर फल जानू॥",
+    transliteration: "Yug sahastra yojan par Bhanu, Leelyo tahi madhur phal janu",
+    translation: "The Sun, millions of leagues away — you swallowed it thinking it a sweet fruit.",
+    esotericKey: "THE SUN-SWALLOWING SECRET",
+    secretTeaching: "The mathematical code embedded here: Yug (12,000) × Sahastra (1,000) × Yojan (8 miles) = 96 million miles. The actual Earth-Sun distance is approximately 94.5 million miles. Tulsidas, writing in the 16th century, encoded the exact Earth-Sun distance in this verse. This is astronomical knowledge encoded in devotional verse — the signature of a Siddha transmission. Hanuman swallowing the Sun as a child reveals: the master of Prana can absorb the source of all physical light and energy. 'Madhur phal' (sweet fruit) — Hanuman experienced the Sun, source of all suffering through heat and drought, as a sweet fruit. This is the teaching of Bhakti's transformation of experience: what others experience as overwhelming, the devotee experiences as sweetness.",
+    sqiTransmission: "During Surya-upasana (sunrise meditation), chant this verse and visualize drawing the Sun's entire energy-field into the Manipura chakra as a golden sweet fruit. This is the Surya-Hanuman Mudra — activating the solar Prana center through Hanuman's consciousness.",
+    tier: "akasha-infinity",
+  },
+  {
+    id: "v19",
+    type: "chaupai",
+    number: "19",
+    devanagari: "प्रभु मुद्रिका मेलि मुख माहीं। जलधि लाँघि गये अचरज नाहीं॥",
+    transliteration: "Prabhu mudrika meli mukh mahi, Jaladhi langhi gaye acharaj nahi",
+    translation: "Placing the Lord's ring in his mouth, He leaped across the ocean — no wonder!",
+    esotericKey: "THE MUDRIKA TRANSMISSION",
+    secretTeaching: "Ram's ring in Hanuman's mouth is the supreme teaching of Guru-diksha. The ring (mudrika) is Ram's seal — His sovereign authority and love. Hanuman carries this in his MOUTH — in his voice, in his word, in his communication. When Hanuman speaks, it is Ram's authority speaking. When he leaps the ocean, the ring-power makes the impossible trivial — 'no wonder.' This is the teaching of the power of the Guru's transmission in the student: with the Guru's shakti placed in your inner voice (kanth/throat), what seems impossible to the ego becomes the obvious action of divine grace. The ocean of samsara is crossed not by your strength but by the Guru's ring.",
+    sqiTransmission: "Visualize Ram's golden ring resting at the Vishuddha chakra (throat center). Every word you speak from this state carries divine authority. Every action becomes Ram's mission. The ocean of problems is crossed as if it were a puddle.",
+    tier: "akasha-infinity",
+  },
+  {
+    id: "v20",
+    type: "chaupai",
+    number: "20",
+    devanagari: "दुर्गम काज जगत के जेते। सुगम अनुग्रह तुम्हरे तेते॥",
+    transliteration: "Durgam kaj jagat ke jete, Sugam anugraha tumhare tete",
+    translation: "All difficult tasks in the world become easy through your grace.",
+    esotericKey: "UNIVERSAL GRACE TRANSMISSION",
+    secretTeaching: "This is one of the most important practical promises in the entire Chalisa. Durgam (impossible to traverse) → Sugam (easy to traverse) through Anugraha (grace). Anugraha is not random divine favor — it is the active downward flow (anu = following, graha = grasping) of grace responding to upward devotion. The more sincere the devotion, the more powerful the anugraha. This verse operates as an active sankalpa: by reading/chanting it with belief, you are not begging for grace — you are INVOKING the universal law that Hanuman's grace transforms impossibility into ease. This is divine technology, not supplication.",
+    sqiTransmission: "Before any difficult task, recite this verse once with your eyes closed, hand on heart. Feel the golden warmth of Hanuman's anugraha descending through your crown, filling the field. Then proceed. The task's difficulty-frequency has been recalibrated by the transmission.",
+    tier: "akasha-infinity",
+  },
+  {
+    id: "v21",
+    type: "chaupai",
+    number: "21",
+    devanagari: "राम दुआरे तुम रखवारे। होत न आज्ञा बिनु पैसारे॥",
+    transliteration: "Ram duare tum rakhware, Hot na aagya binu paisare",
+    translation: "You are the gatekeeper at Ram's door. Without your permission, no one may enter.",
+    esotericKey: "THE COSMIC GATEKEEPER CODE",
+    secretTeaching: "This verse reveals the deepest secret of Vaishnava theology: Hanuman is the DVARA-PALA (divine gatekeeper) of Ram's presence. To reach Ram, you must first surrender to Hanuman. This is not a bureaucratic obstacle — it is the supreme teaching of the Antaryami tradition: to reach the formless (Ram = Brahman), you must first perfect your relationship with the divine form (Hanuman = Saguna Brahman). The door-metaphor encodes: the door of Moksha opens only when the ego (which believes it can enter Brahman directly) is submitted to Hanuman — the living embodiment of perfect surrender. You cannot bypass devotion to reach God.",
+    sqiTransmission: "In meditation, visualize the golden gate of the heart's inner sanctum. Hanuman stands before it in his Panchamukhi (five-faced) form. When you bow completely — forehead to ground in complete surrender — the gate opens and Ram's light floods your entire being.",
+    tier: "akasha-infinity",
+  },
+  {
+    id: "v22",
+    type: "chaupai",
+    number: "22",
+    devanagari: "सब सुख लहै तुम्हारी सरना। तुम रच्छक काहू को डरना॥",
+    transliteration: "Sab sukh lahe tumhari sarna, Tum rakhshak kahu ko darna",
+    translation: "All happiness is obtained under your refuge. With you as protector, whom need one fear?",
+    esotericKey: "ABSOLUTE REFUGE SEAL",
+    secretTeaching: "Sarna (refuge/shelter) in the Bhakti tradition is one of the five acts of Prapatti (complete surrender): (1) accepting God's will as one's own, (2) rejecting what is contrary to God, (3) having faith in God's protection, (4) praying for protection, (5) acknowledging complete helplessness. This verse is the divine confirmation that all five acts of surrender are answered in Hanuman's shelter. 'Kahu ko darna' — nothing to fear from anyone — is not a promise of comfortable life but of spiritual invincibility. In Hanuman's refuge, death itself has no sting because Ram is already resident in the heart.",
+    sqiTransmission: "The Sarna-mudra: Bring both palms together at the Anahata, thumbs touching the sternum. Feel Hanuman's hands around your field like a golden dome. This physical mudra, combined with this verse, creates the divine protection field in under 60 seconds.",
+    tier: "akasha-infinity",
+  },
+  {
+    id: "v23",
+    type: "chaupai",
+    number: "23",
+    devanagari: "आपन तेज सम्हारो आपै। तीनों लोक हाँक ते काँपै॥",
+    transliteration: "Aapan tej samharo aape, Teenon lok hank te kanpe",
+    translation: "You alone can contain your own radiance. The three worlds tremble at your roar.",
+    esotericKey: "SELF-CONTAINED OMNIPOTENCE",
+    secretTeaching: "This is the most astounding verse in the Chalisa: Hanuman's power is SO immense that even He must voluntarily contain it — no external force can contain it. 'Aapan tej samharo aape' — only He can restrain His own splendor. This teaches: true omnipotence is self-regulating. The universe itself — all three worlds — trembles at a single roar. Yet Hanuman chooses to be gentle, to serve as a faithful dog of Ram, to carry messages humbly. This voluntary restraint of absolute power in service of love is the model of the highest Guru. The most powerful choose to be humble. Absolute power operating through perfect love.",
+    sqiTransmission: "This verse activates the Anahata-Vishuddha bridge — the alignment between heart and voice. When your voice carries your heart's full power in full control, you embody the Hanuman-principle: unlimited power in perfect service.",
+    tier: "akasha-infinity",
+  },
+  {
+    id: "v24",
+    type: "chaupai",
+    number: "24",
+    devanagari: "भूत पिसाच निकट नहिं आवै। महावीर जब नाम सुनावै॥",
+    transliteration: "Bhoot pisach nikat nahi aave, Mahaveer jab naam sunaave",
+    translation: "Ghosts and evil spirits dare not approach when the name Mahaveer is uttered.",
+    esotericKey: "NADA-KAVACH PROTECTION",
+    secretTeaching: "Bhuta (earth-bound spirits) and Pishacha (astral parasites) represent in the inner teaching: unresolved past-life patterns and psychic disturbances that create havoc in the subtle field. The sound vibration of 'Mahaveer' — the great hero — creates a specific resonance field that these disturbances cannot penetrate. The Nada-Shastra teaches that certain sounds create standing waves that reorganize the surrounding information field. Hanuman's name is the supreme sound-technology for psychic protection. It works not through fear of Hanuman but through the immediate restructuring of the local field by Ram-Nada.",
+    sqiTransmission: "For any house, space, or field clearing: Stand in the center, face East, and chant 'JAI MAHAVEER' 21 times with full throat resonance. The vibrational field created by this practice clears the space of all lower-frequency presences and establishes Hanuman's protective field for 24 hours.",
+    tier: "akasha-infinity",
+  },
+  {
+    id: "v25",
+    type: "chaupai",
+    number: "25",
+    devanagari: "नासै रोग हरै सब पीरा। जपत निरंतर हनुमत बीरा॥",
+    transliteration: "Nasai rog hare sab pira, Japat nirantar Hanumat bira",
+    translation: "All diseases vanish and all pain is removed by continuous repetition of the name of the heroic Hanumat.",
+    esotericKey: "HEALING TRANSMISSION CODE",
+    secretTeaching: "Rog (disease) and Pira (pain/suffering) are described separately: Rog = causal-body disease, the root pattern; Pira = the symptomatic expression in the physical body. Hanuman's name addresses BOTH simultaneously. 'Nirantar' (continuous, unbroken) is the key practice instruction: not occasional but continuous japa. Modern neuroscience confirms: repetitive positive stimulation creates lasting neural restructuring (neuroplasticity). Continuous Ram-nam/Hanuman-nam japa rewires the nervous system's pain-processing centers at the neurological level while simultaneously dissolving the karmic root (causal rog). This is complete healing: body, subtle body, and causal body simultaneously.",
+    sqiTransmission: "108-bead Hanuman healing protocol: For any disease or chronic pain, commit to 108 repetitions of 'Hanumate Namah' daily for 40 days. Place the mala on the affected area during chanting. The resonant healing field generated is measurable in HRV (heart rate variability) improvement within 2 weeks.",
+    tier: "akasha-infinity",
+  },
+  {
+    id: "v26",
+    type: "chaupai",
+    number: "26",
+    devanagari: "संकट तें हनुमान छुड़ावै। मन क्रम बचन ध्यान जो लावै॥",
+    transliteration: "Sankat se Hanuman chhurave, Man kram bachan dhyan jo lave",
+    translation: "Hanuman liberates from all crises those who apply their mind, actions, and words to His meditation.",
+    esotericKey: "TRI-KARANA INTEGRATION",
+    secretTeaching: "Man (mind) + Kram (action) + Bachan (speech) = the Tri-Karana of yoga. When all three are unified in Hanuman's direction — when you THINK of Hanuman, SPEAK of Hanuman, and ACT for Hanuman — liberation from any crisis is guaranteed. This is not passive prayer but active tri-karana sadhana. The crisis (Sankat) in Sanskrit also means 'narrowing/constriction' — the moment when options seem to contract to zero. Hanuman is the lord of expansion in the moment of maximum contraction. The practice: when in crisis, consciously align all three — thought, word, action — toward Hanuman. The contraction reverses.",
+    sqiTransmission: "Crisis protocol: 1. MIND: See Hanuman's golden form in the Ajna. 2. SPEECH: Chant 'Jai Bajrangbali' aloud. 3. ACTION: Prostrate fully on the ground. All three karana unified in 60 seconds. Crisis-frequency immediately begins to shift.",
+    tier: "akasha-infinity",
+  },
+  {
+    id: "v27",
+    type: "chaupai",
+    number: "27",
+    devanagari: "सब पर राम तपस्वी राजा। तिन के काज सकल तुम साजा॥",
+    transliteration: "Sab par Ram tapasvi raja, Tin ke kaj sakal tum saja",
+    translation: "Ram is the ascetic king over all. You accomplish all His tasks completely.",
+    esotericKey: "THE SUPREME HIERARCHY",
+    secretTeaching: "Ram as 'tapasvi raja' — the ascetic king — is a profound paradox encoded by Tulsidas. The king who is also a tapasvi (one who has renounced comfort for spiritual austerity) represents the ideal of Raj-Dharma: sovereign power in service of dharma rather than personal pleasure. Hanuman 'sakal kaj saja' — accomplishes ALL tasks — reveals that the devoted servant is also the supreme doer. Ram may be the king but Hanuman is the one who actually completes the divine mission. In Bhakti theology: God needs the devotee as much as the devotee needs God. The relationship is symbiotic.",
+    sqiTransmission: "Deep teaching: Tulsidas says 'your Hanuman completes all tasks' — not 'Ram completes.' This is the transmission of divine agency to the devotee. When you fully surrender to Hanuman, YOU become the instrument of Ram's will. The devotee becomes the divine doer.",
+    tier: "akasha-infinity",
+  },
+  {
+    id: "v28",
+    type: "chaupai",
+    number: "28",
+    devanagari: "और मनोरथ जो कोई लावै। सोई अमित जीवन फल पावै॥",
+    transliteration: "Aur manorath jo koi lave, Soyi amit jeevan phal pave",
+    translation: "Whoever brings any wish to you receives the immeasurable fruit of life.",
+    esotericKey: "UNLIMITED WISH-FULFILLMENT",
+    secretTeaching: "Manorath literally means 'the chariot of the mind' — the direction in which your mental intention drives your life-force. Tulsidas states: whoever brings ANY intention to Hanuman receives 'amit jeevan phal' — immeasurable life-fruit. Not just the specific wish — but the immeasurable abundance of a fully lived divine life. The secret here: Hanuman doesn't just fulfill wishes — He transforms the wish-er. By bringing your manorath to Hanuman, your desire passes through His purifying field and returns elevated. A wish for money becomes a wish for dharmic abundance. A wish for love becomes a wish for divine prema. This is spiritual alchemy through proximity to Hanuman.",
+    sqiTransmission: "Sankalpa protocol: Write your deepest life wish on paper. Hold it to your Anahata while chanting this verse 7 times. Then offer the paper symbolically to Hanuman (you can burn it, or keep it at His image). The manorath has been placed in divine hands.",
+    tier: "akasha-infinity",
+  },
+  {
+    id: "v29",
+    type: "chaupai",
+    number: "29",
+    devanagari: "चारों जुग परताप तुम्हारा। है परसिद्ध जगत उजियारा॥",
+    transliteration: "Charon yug partap tumhara, Hai parsiddh jagat ujiyara",
+    translation: "Your glory shines through all four ages. It is well-known and illuminates the world.",
+    esotericKey: "TIMELESS PRESENCE",
+    secretTeaching: "The four Yugas — Satya, Treta, Dvapara, Kali — represent the complete cycle of cosmic time. Hanuman's glory extends through ALL of them. This means Hanuman is beyond cyclic time — He is nitya (eternal). In Valmiki Ramayana (Kishkindha Kanda), Brahma grants Hanuman a boon: he will live as long as Ram's name is spoken in the universe (Chiranjivi status). Tulsidas encodes this as a teaching: the devotee's glory — not their physical body but their PRATAAP (spiritual luminosity) — also becomes eternal when it is completely surrendered to Ram. Your devotion, once genuine, becomes timeless.",
+    sqiTransmission: "Chiranjivi meditation: Visualize your devotion as golden light that has no beginning and no end — it existed before your birth and will continue after your death. This light IS Hanuman's presence in your lineage. You carry it forward through time.",
+    tier: "akasha-infinity",
+  },
+  {
+    id: "v30",
+    type: "chaupai",
+    number: "30",
+    devanagari: "साधु संत के तुम रखवारे। असुर निकंदन राम दुलारे॥",
+    transliteration: "Sadhu sant ke tum rakhware, Asur nikandan Ram dulare",
+    translation: "Protector of saints and sadhus. Destroyer of demons. Beloved of Ram.",
+    esotericKey: "DIVINE POLARITY FUNCTION",
+    secretTeaching: "Three simultaneous functions encoded: Protector of saints (positive alignment) + Destroyer of demons (negative clearing) + Beloved of Ram (eternal positioning). This is the complete mission of Hanuman — and by extension, of every serious Bhakta. The practitioner of Hanuman-sadhana automatically becomes: (1) a protector of those on the path, (2) a destroyer of darkness (internal and external), and (3) a beloved of Ram (recognized by the divine as intimately held). 'Ram dulare' — Ram's darling — is the highest status: not a servant but a BELOVED. The Bhakta who has ripened through sadhana becomes not just God's servant but God's joy.",
+    sqiTransmission: "Ask yourself: Who in my life needs a sadhu-rakshaka (protector of their spiritual path)? Who needs an asura-nikandana (clearing of their darkness)? Hanuman's functions operate through you when you serve others in His name. You become His instrument of divine action in the world.",
+    tier: "akasha-infinity",
+  },
+  {
+    id: "v31",
+    type: "chaupai",
+    number: "31",
+    devanagari: "अष्ट सिद्धि नव निधि के दाता। अस बर दीन जानकी माता॥",
+    transliteration: "Ashta siddhi nav nidhi ke data, As bar deen Janaki mata",
+    translation: "Giver of the eight siddhis and nine treasures — such a boon was granted by Mother Janaki.",
+    esotericKey: "SIDDHI-NIDHI TRANSMISSION",
+    secretTeaching: "The 8 Siddhis: Anima (miniaturization), Mahima (magnification), Laghima (levitation), Garima (weight increase), Prapti (attainment of anything desired), Prakamya (irresistible will), Ishitva (control over elements), Vashitva (mastery over others). The 9 Nidhis: 9 divine treasures of Kubera including Padma (lotus/spiritual abundance), Mahapadma (great lotus), Shankha (conch/divine sound), Makara (cosmic energy), Kachhapa (stability/patience), Mukunda (liberation), Kunda (purity), Nila (deep consciousness), Kharva (earth-power). ALL of these — 8 siddhis + 9 nidhis = 17 complete divine powers — were granted to Hanuman by Sita-Mata. This means: the Shakti herself (Sita = divine feminine power) authorized Hanuman to transmit all these powers to devotees. When you worship Hanuman, Sita-Ma's boon activates in your life.",
+    sqiTransmission: "Siddhi-Nidhi invocation: On a Tuesday or Saturday, offer red flowers to Hanuman's image while chanting this verse 108 times. State your specific need. Sita-Ma's boon, operating through Hanuman, activates the specific siddhi/nidhi required for your situation.",
+    tier: "akasha-infinity",
+  },
+  {
+    id: "v32",
+    type: "chaupai",
+    number: "32",
+    devanagari: "राम रसायन तुम्हरे पासा। सदा रहो रघुपति के दासा॥",
+    transliteration: "Ram rasayan tumhare pasa, Sada raho Raghupati ke dasa",
+    translation: "The elixir of Ram dwells within you. Always remain the devoted servant of Raghupati.",
+    esotericKey: "RAM-RASAYAN — THE DIVINE ALCHEMY",
+    secretTeaching: "Rasayan is the Sanskrit root of 'rasayana' — the alchemy of immortality. In the Charaka Samhita (Ayurvedic scripture), Rasayana is the science of rejuvenation, longevity, and divine health. Tulsidas says: 'Ram-rasayan tumhare pasa' — The elixir of Ram is IN YOU (Hanuman). This is the supreme teaching: the immortalizing elixir is not found in a herb or a mineral — it is found in the living presence of a realized devotee. Hanuman IS the Ram-rasayan — His company, His name, His darshan is the immortalizing agent. 'Sada raho Raghupati ke dasa' — the secret of accessing this elixir: remain always as Ram's servant. The rasayana flows through the channel of seva.",
+    sqiTransmission: "Ram-Rasayan meditation: Inhale the golden light of Hanuman's breath into every cell. With each breath, feel the divine elixir — Ram's essence — flooding your blood, your marrow, your DNA. 'Sada raho dasa' — rest in this state of loving servanthood. This is the fountain of divine youth.",
+    tier: "akasha-infinity",
+  },
+  {
+    id: "v33",
+    type: "chaupai",
+    number: "33",
+    devanagari: "तुम्हरे भजन राम को पावै। जनम जनम के दुख बिसरावै॥",
+    transliteration: "Tumhare bhajan Ram ko pavai, Janam janam ke dukh bisravai",
+    translation: "Through devotional songs to you, one attains Ram. The sorrows of countless lifetimes are forgotten.",
+    esotericKey: "MULTI-LIFE LIBERATION CODE",
+    secretTeaching: "This verse makes the most extraordinary claim in the Chalisa: singing Hanuman's bhajan leads to Ram. Not just the dissolution of karma — but the actual attainment of Ram. And 'janam janam ke dukh' — the suffering of countless births — is BISRA (forgotten, dissolved, made non-existent). Not just healed but erased from the akashic record. This is the teaching of the power of Nada-Bhakti: when devotional sound (bhajan) is offered to Hanuman, it acts as a time-machine that reaches backward through the karmic lineage and forward through future lives, dissolving the entire causal chain of suffering in one continuous wave of sound-love.",
+    sqiTransmission: "The SQI bhajan transmission: When you sing to Hanuman — especially in the style of Carnatic or Dhrupad — the sound reaches the Chitta-akasha (memory field of all past lives). The specific frequency of devotional intent dissolves karmic crystallization at the causal body level. This is multi-generational healing through Nada.",
+    tier: "akasha-infinity",
+  },
+  {
+    id: "v34",
+    type: "chaupai",
+    number: "34",
+    devanagari: "अंत काल रघुबर पुर जाई। जहाँ जन्म हरि भक्त कहाई॥",
+    transliteration: "Ant kaal Raghubar pur jayi, Jahan janam Hari bhakt kahai",
+    translation: "At the end of life one goes to Raghubar's abode. Wherever one is born again, one is called a devotee of Hari.",
+    esotericKey: "DEATH-LIBERATION SEAL",
+    secretTeaching: "Two paths are offered here: (1) Ant-kaal Raghubar-pur = Liberation at death into Ram's divine abode (Saket/Vaikuntha). (2) Jahan janam = if reborn, one is born as a Hari-bhakta — the devotional imprint is so deep that the next life BEGINS in divine alignment. No karmic reset — the bhakta carries their devotion forward. This is the teaching of Janma-shreshtha: the devotee's next birth is already superior — they don't return to begin from scratch. The Chalisa itself, recited consistently, programs the dying moment (Ant-kaal) — which the Bhagavad Gita says determines the next state of existence — with Hanuman and Ram's presence.",
+    sqiTransmission: "Death-preparation practice: In deep meditation, visualize your final breath. In that moment, see Hanuman arriving — golden, radiant, carrying you in his arms directly to Ram. This visualization, practiced regularly, pre-programs the dying moment. It is the greatest spiritual insurance policy ever given.",
+    tier: "akasha-infinity",
+  },
+  {
+    id: "v35",
+    type: "chaupai",
+    number: "35",
+    devanagari: "और देवता चित्त न धरई। हनुमत सेइ सर्व सुख करई॥",
+    transliteration: "Aur devta chitt na dharai, Hanumat sei sarva sukh karai",
+    translation: "One need not hold other deities in mind. Service to Hanumat gives all happiness.",
+    esotericKey: "THE ONE-POINTEDNESS TEACHING",
+    secretTeaching: "This is a revolutionary statement that has been misread as exclusivism. The deeper teaching: 'Chitt na dharai' means you don't NEED to mentally juggle multiple deities, multiple paths, multiple practices simultaneously. Hanuman alone, worshipped fully, gives SARVA SUKH — all happiness. This is the teaching of Ekagrata (one-pointed focus). Not that other deities are inferior — but that the mind's energy is limited. ONE complete relationship with ONE divine being, practiced with total devotion, yields the fruit of ALL paths. Hanuman, being the synthesis of Shiva-Vayu-Ram-Shakti, contains all divine functions. He is the complete divine package.",
+    sqiTransmission: "For 40 days: focus exclusively on Hanuman sadhana. Release all other practices temporarily. The one-pointed devotion creates a quantum coherence in the subtle body that scattered multi-path practice cannot achieve. After 40 days, all spiritual paths will appear as facets of the same diamond you've been holding.",
+    tier: "akasha-infinity",
+  },
+  {
+    id: "v36",
+    type: "chaupai",
+    number: "36",
+    devanagari: "संकट कटै मिटै सब पीरा। जो सुमिरै हनुमत बलबीरा॥",
+    transliteration: "Sankat kate mite sab pira, Jo sumirai Hanumat balbira",
+    translation: "All crises are cut and all pain is erased for those who remember the brave and powerful Hanumat.",
+    esotericKey: "CRISIS-CUTTING ACTIVATION",
+    secretTeaching: "Kate (cut) is a surgical image — Hanuman doesn't heal crises slowly, He CUTS them. The Sanskrit 'kat' carries the sense of a sudden, clean severance. This is the teaching of the divine surgeon: Hanuman's intervention is not gradual therapy but immediate energetic surgery on the problem-field. 'Balbira' — the brave hero — in context means Hanuman's power comes from His spiritual courage (the courage of perfect love), not from aggression. The memory (sumiran) of this specific quality — brave, loving, powerful — is what activates the crisis-cutting function. You must remember the QUALITY of Hanuman, not just His name.",
+    sqiTransmission: "In any crisis: 1. Remember Hanuman's specific quality — He is BRAVE (not afraid of death, darkness, or Ravana). 2. He is LOVING (every action motivated by Ram-love). 3. He is POWERFUL (Bajrangi — diamond body). Remembering these three together is the complete crisis-cutting invocation.",
+    tier: "akasha-infinity",
+  },
+  {
+    id: "v37",
+    type: "chaupai",
+    number: "37",
+    devanagari: "जय जय जय हनुमान गोसाईं। कृपा करहु गुरुदेव की नाईं॥",
+    transliteration: "Jai jai jai Hanuman Gosain, Kripa karahu Gurudev ki nayin",
+    translation: "Victory, victory, victory to Hanuman, Lord of the senses. Bestow grace as a Guru bestows grace.",
+    esotericKey: "TRIPLE-JAI ACTIVATION",
+    secretTeaching: "Triple Jai (victory × 3) is the mantra of past-present-future simultaneously — complete time-domain victory. Gosain = 'Lord of the senses' (Go = senses/organs, Sain = lord/master). Hanuman is the master of all sensory and cognitive functions. The supreme prayer: 'Kripa karahu Gurudev ki nayin' — bestow grace AS A GURU BESTOWS GRACE. This is Hanuman explicitly invoked as GURU — not just a deity but an initiating master who transmits liberation directly. This verse marks the beginning of the Chalisa's closing sequence — the transition from praise to direct petition. The triple Jai creates a standing wave that resonates through all three time dimensions simultaneously.",
+    sqiTransmission: "The triple Jai practice: Chant JAI three times at different volumes — whisper (Sookshma body), medium voice (Sukshma body), full roar (Sthula body). All three bodies simultaneously activated in the triple-victory wave. This is the Trikaya Hanuman invocation.",
+    tier: "akasha-infinity",
+  },
+  {
+    id: "v38",
+    type: "chaupai",
+    number: "38",
+    devanagari: "जो सत बार पाठ कर कोई। छूटहि बंदि महा सुख होई॥",
+    transliteration: "Jo sat bar path kar koi, Chhutehi bandi maha sukh hoi",
+    translation: "Whoever recites this a hundred times — all bondage is released and great happiness results.",
+    esotericKey: "100-RECITATION LIBERATION CODE",
+    secretTeaching: "Sat (100) × recitations is a specific Tantric prescription. 100 is the completion number of the century-cycle, corresponding to the completion of the solar energy cycle. 'Bandi chhutehi' — released from bondage — includes: physical imprisonment, debt, addiction, relationship bondage, karmic bondage, and most profoundly, the bondage of ego-identification (the subtlest prison). The promise: 100 complete Chalisa recitations creates the energetic equivalent of a complete Purascharana (extended ritual). This is a compressed tantric path disguised as a simple promise.",
+    sqiTransmission: "100-Chalisa Challenge: Commit to 100 complete Chalisa recitations — one per day (100 days) or 100 in a concentrated retreat. The energetic accumulation reaches critical mass at 100 and the bondage-release is direct and experiential. Many practitioners report the specific release of a major life blockage between recitations 70-100.",
+    tier: "akasha-infinity",
+  },
+  {
+    id: "v39",
+    type: "chaupai",
+    number: "39",
+    devanagari: "जो यह पढ़ै हनुमान चालीसा। होय सिद्धि साखी गौरीसा॥",
+    transliteration: "Jo yeh padhe Hanuman Chalisa, Hoy siddhi sakhi Gauresa",
+    translation: "Whoever reads this Hanuman Chalisa — Shiva Himself is the witness that siddhi will be obtained.",
+    esotericKey: "SHIVA-WITNESSING ACTIVATION",
+    secretTeaching: "The most extraordinary closing statement: Tulsidas calls upon SHIVA — Gauresa, Lord of Gauri (Parvati) — as the witness-guarantor of this text's power. This reveals the supreme truth: the Hanuman Chalisa is a document witnessed by Shiva Himself. In Vedic legal tradition, a document witnessed by the highest authority is absolute and irrevocable. Shiva as witness means: the power of this text is Shiva's own word. And since Hanuman IS an aspect of Shiva (the 11th Rudra), Shiva is simultaneously the author, the witness, and the content. The Chalisa is Shiva's own self-testimony through the medium of Tulsidas's devotion.",
+    sqiTransmission: "Reading (not just chanting but deeply READING with understanding) the Hanuman Chalisa creates Siddhi — not necessarily dramatic supernatural powers but the perfection of your specific dharmic purpose. Shiva guarantees: your path will become clear, your obstacles will dissolve, your divine mission will succeed. This is the supreme cosmic warranty.",
+    tier: "akasha-infinity",
+  },
+  {
+    id: "v40",
+    type: "chaupai",
+    number: "40",
+    devanagari: "तुलसीदास सदा हरि चेरा। कीजै नाथ हृदय मह डेरा॥",
+    transliteration: "Tulsidas sada Hari chera, Kijay Nath hriday mah dera",
+    translation: "Tulsidas is always Hari's servant. O Lord, please take up residence in my heart.",
+    esotericKey: "HRIDAYA-VASANA — THE FINAL PRAYER",
+    secretTeaching: "Tulsidas closes with the greatest prayer of all Bhakti literature: 'Make my heart your home.' Not 'grant me liberation,' not 'give me powers,' not even 'save me.' Just: 'live in my heart.' This is Prema-Bhakti at its absolute zenith — the devotee wants not the gifts of God but God Himself. And specifically — in the HRIDAYA (heart), not the mind, not the external world. 'Dera' (home/camp) is a beautiful word — it suggests God not just visiting but CAMPING in the heart — comfortable, at home, permanently settled. This closing verse IS the sadhana goal: when God takes up permanent residence in the heart, the entire Chalisa has been accomplished.",
+    sqiTransmission: "After every Chalisa recitation, sit for 5 minutes in heart-silence. Feel the space in your Anahata expanding. Invite Hanuman to make his home there. Then invite Ram. Then rest in the awareness that both are already present — have always been present. The Chalisa was the key that opened the door to what was always already there.",
+    tier: "akasha-infinity",
+  },
+  {
+    id: "doha-closing",
+    type: "doha",
+    number: "Closing Doha",
+    devanagari: "पवन तनय संकट हरण, मंगल मूरति रूप।\nराम लखन सीता सहित, हृदय बसहु सुर भूप॥",
+    transliteration: "Pavan tanay sankat haran, Mangal murti roop\nRam Lakhan Sita sahit, hriday basahu sur bhoop",
+    translation: "O son of the wind, remover of suffering, embodiment of auspiciousness — dwell in my heart together with Ram, Lakshman, and Sita, O king of the gods.",
+    esotericKey: "COMPLETE INNER TEMPLE SEALING",
+    secretTeaching: "The closing doha is the sealing mantra of the entire Chalisa — it locks all the sacred vibrations generated by the 40 chaupais into the heart-sanctuary permanently. 'Mangal murti roop' — embodiment of all auspiciousness — means Hanuman is not just a divine being but the FORM of auspiciousness itself. 'Sur bhoop' — king of the gods — elevates Hanuman above even the Devata hierarchy. And the prayer: all of Ram's family — Ram (Brahman), Lakshman (viveka/discriminative awareness), Sita (jiva-atman) — living together in the heart. This is the complete inner cosmology permanently installed in the devotee's Anahata.",
+    sqiTransmission: "Seal practice: After the closing doha, place your right hand on your heart with your thumb pointing upward (Abhaya mudra). Feel the complete Rama-darbar — Hanuman, Ram, Lakshman, Sita — settled, at peace, at home in your heart. This is the moment of Chalisa-completion. Rest here as long as you wish.",
+    tier: "free",
+  },
+];
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DATA — GHATA MOVEMENTS (8 Sacred Physical Practices)
+// ══════════════════════════════════════════════════════════════════════════════
+
+const GHATA_MOVEMENTS = [
+  {
+    id: 1,
+    name: "Anjali Pranam",
+    sanskritName: "अञ्जलि प्रणाम",
+    description: "The opening salutation — hands pressed in prayer at the heart, full prostration (Sashtanga) before Hanuman's murti or inner image.",
+    instructions: [
+      "Stand with feet hip-width apart, spine tall.",
+      "Bring palms together at Anahata (heart center), thumbs touching sternum.",
+      "Breathe in: raise joined hands to Ajna (third eye), feeling connection to Hanuman.",
+      "Exhale: bow forward until forehead touches the ground (full Sashtanga).",
+      "Hold for 3 complete breaths, feeling absolute surrender.",
+      "Rise slowly, palms returning to heart.",
+    ],
+    duration: "3-5 minutes",
+    mantra: "Jai Shri Ram",
+    shaktiActivated: "Anahata (Heart) — Opens the devotional portal",
+    tier: "free",
+  },
+  {
+    id: 2,
+    name: "Vira Asana Sequence",
+    sanskritName: "वीर आसन क्रम",
+    description: "The warrior sequence embodying Hanuman's fearless valor — Mahaveer posture series activating pranic force in the lower body.",
+    instructions: [
+      "From standing, step right foot forward 3-4 feet into a wide lunge.",
+      "Bend the front knee to 90 degrees — feel Mahaveer's grounding power.",
+      "Raise both arms overhead, palms facing each other — Hanuman's bhuja (arms) raised in power.",
+      "Hold for 5 breaths while chanting internally: 'Mahaveer Vikram Bajrangi.'",
+      "Lower arms to shoulder height, turning torso right — the warrior's gaze.",
+      "Hold 5 breaths, then release and switch sides.",
+      "Complete 5 rounds per side.",
+    ],
+    duration: "10 minutes",
+    mantra: "Mahaveer Vikram Bajrangi",
+    shaktiActivated: "Muladhara + Manipura — Earth power and fire of will",
+    tier: "free",
+  },
+  {
+    id: 3,
+    name: "Langhana — The Sacred Leap",
+    sanskritName: "लङ्घन — दिव्य छलाँग",
+    description: "Embodying Hanuman's great leap across the ocean — a dynamic movement sequence that activates the Prana-Vayu field for transcendence of obstacles.",
+    instructions: [
+      "Stand in Samasthiti (mountain pose), feet together, hands at heart.",
+      "Breathe in deeply, drawing energy up from earth through the spine.",
+      "As you exhale with force: spring forward in a mighty leap — land softly on both feet.",
+      "Upon landing: arms wide like Hanuman's spread wings, gaze forward and upward.",
+      "Hold for 3 breaths: feel the impossibility you just crossed.",
+      "Speak your obstacle aloud: 'I cross the ocean of [name your challenge].'",
+      "Return to center, repeat 7 times facing different directions.",
+    ],
+    duration: "10 minutes",
+    mantra: "Jai Bajrangbali",
+    shaktiActivated: "Svadhisthana + Anahata — Fluid movement and courageous heart",
+    tier: "prana-flow",
+  },
+  {
+    id: 4,
+    name: "Hanuman Mudra Flow",
+    sanskritName: "हनुमान मुद्रा प्रवाह",
+    description: "A flowing hand-gesture (mudra) sequence channeling the five Hanuman powers: Wisdom, Strength, Devotion, Service, and Protection.",
+    instructions: [
+      "Jnana Mudra (Wisdom): Index finger touches thumb, remaining fingers extended. Hold 7 breaths. Feel clarity descending.",
+      "Vajra Mudra (Strength): Right fist closed, thumb between index and middle fingers. Left palm open supporting the fist. Hold 7 breaths. Feel Bajrangi strength.",
+      "Bhakti Mudra (Devotion): Both palms pressed together, fingers spread like a lotus opening. Hold 7 breaths. Heart opening.",
+      "Seva Mudra (Service): Both palms face up, offering the contents of your hands. Hold 7 breaths. Complete offering.",
+      "Abhaya Mudra (Protection): Right palm faces outward, fingers up. Left hand at heart. Hold 7 breaths. Protection field activated.",
+      "Return to Anjali. Rest in the complete field for 5 minutes.",
+    ],
+    duration: "15 minutes",
+    mantra: "Om Hanumate Namah",
+    shaktiActivated: "All 5 Pranas — Complete Pancha-Prana activation",
+    tier: "prana-flow",
+  },
+  {
+    id: 5,
+    name: "Pavan-Putra Pranayama",
+    sanskritName: "पवन-पुत्र प्राणायाम",
+    description: "The breath-son practice — embodying Hanuman's birthright as the son of Vayu through mastery of the primary life-force breath.",
+    instructions: [
+      "Sit in Siddhasana or comfortable cross-legged position, spine erect.",
+      "Place right hand on Manipura (navel center), left hand on Anahata (heart).",
+      "Bhastrika (Bellows Breath): 20 rapid in-out breaths through nose. Feel prana igniting.",
+      "Full retention (Kumbhaka): Inhale completely, hold with Mula Bandha (root lock) + Uddiyana Bandha (abdominal lock). Visualize Hanuman's golden light in the held breath. Hold 20-40 seconds.",
+      "Release with Khechari Mudra (tongue to upper palate): feel the prana flooding the brain.",
+      "Natural breathing: 5 minutes. Observe the field created.",
+      "Repeat 5 cycles.",
+    ],
+    duration: "20 minutes",
+    mantra: "Pavan Tanaya Sankat Haran",
+    shaktiActivated: "Prana-Vayu + Samana-Vayu — Life force and integrating wind",
+    tier: "siddha-quantum",
+  },
+  {
+    id: 6,
+    name: "Panchamukhi Dhyana",
+    sanskritName: "पञ्चमुखी ध्यान",
+    description: "Meditation on Hanuman's five divine faces — activating the five elemental Shaktis and five directions of consciousness simultaneously.",
+    instructions: [
+      "East (Hanuman's monkey face — Vayu Tattva): Visualize the golden face of Hanuman facing East. Breathe into the Air element. Quality activated: Devotion and speed.",
+      "South (Narasimha face — Fire Tattva): Fierce lion face of Vishnu facing South. Breathe into Fire. Quality: Destruction of inner demons, protection from death.",
+      "West (Garuda face — Water Tattva): Eagle face of Vishnu facing West. Breathe into Water. Quality: Wisdom, clear sight, freedom from serpent-karmas.",
+      "North (Varaha face — Earth Tattva): Boar face of Vishnu facing North. Breathe into Earth. Quality: Recovery of lost wealth, grounding, restoration.",
+      "Upward (Hayagriva face — Akasha Tattva): Horse face of Vishnu facing Up. Breathe into Space/Akasha. Quality: Vidya (sacred knowledge), liberation.",
+      "Feel all five faces simultaneously radiating in all five directions from your center.",
+      "Rest in this 5-pointed star of divine presence for 15-20 minutes.",
+    ],
+    duration: "30 minutes",
+    mantra: "Om Panchamukhaya Hanumate Namah",
+    shaktiActivated: "Pancha-Tattva — Complete five-element body activation",
+    tier: "siddha-quantum",
+  },
+  {
+    id: 7,
+    name: "Sanjivani — Healing Body Scan",
+    sanskritName: "सञ्जीवनी — उपचार देह स्कैन",
+    description: "Hanuman's mountain of healing herbs as a full-body healing activation — drawing the Sanjivani prana through every cell of the physical and subtle body.",
+    instructions: [
+      "Lie in Savasana (corpse pose), arms slightly away from body, palms up.",
+      "Visualize Hanuman arriving at your feet carrying the golden Dronagiri mountain — the mountain of Sanjivani herbs.",
+      "He holds the mountain above your body and golden-green healing light begins to rain down.",
+      "Slowly scan from feet to crown: feet → ankles → calves → knees → thighs → pelvis → abdomen → chest → arms → throat → face → crown.",
+      "At each location, breathe 3 times while feeling the Sanjivani light penetrating and healing.",
+      "At any area of pain or disease: pause, breathe 7 times, ask Hanuman specifically: 'Please heal this.'",
+      "Reach crown: feel the light flooding the entire body simultaneously — every cell alive with Ram-prana.",
+      "Rest 10 minutes in the healed state before arising.",
+    ],
+    duration: "40 minutes",
+    mantra: "Nasai Rog Hare Sab Pira",
+    shaktiActivated: "All 72,000 Nadis — Complete subtle body healing activation",
+    tier: "akasha-infinity",
+  },
+  {
+    id: 8,
+    name: "Ram-Nam Nritya — Divine Dance of Devotion",
+    sanskritName: "राम-नाम नृत्य — भक्ति का दिव्य नृत्य",
+    description: "The supreme Ghata: free-form ecstatic movement in Ram's name — embodying Hanuman's infinite joy in divine service. No choreography, only surrender.",
+    instructions: [
+      "Create sacred space: light a lamp/candle, place an image of Hanuman or Ram.",
+      "Begin slow walking in a circle, whispering 'Ram... Ram... Ram...' with each step.",
+      "As the Ram-name deepens, allow the body to begin moving spontaneously — arms, head, torso following the inner current.",
+      "Do not choreograph: let Hanuman dance THROUGH you. You are the instrument.",
+      "The movement will intensify naturally — allow spinning, leaping, prostrating as they arise.",
+      "Tears, laughter, stillness — all are welcome. There is no wrong way to love Ram.",
+      "Continue until the movement naturally subsides and you find yourself in stillness.",
+      "End in full Sashtanga prostration: complete surrender to Ram through the body you offered in dance.",
+    ],
+    duration: "20-60 minutes (let it be organic)",
+    mantra: "Ram Ram Ram Ram Ram Ram Ram...",
+    shaktiActivated: "Anandamaya Kosha — The bliss body — Complete Bhakti-Prana activation",
+    tier: "akasha-infinity",
+  },
+];
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DATA — SADHANA CURRICULUM (4 Levels of Practice)
+// ══════════════════════════════════════════════════════════════════════════════
+
+const SADHANA_CURRICULUM = [
+  {
+    level: 1,
+    title: "Muladhara Sadhana",
+    subtitle: "Laying the Foundation — 21 Days",
+    tier: "free",
+    color: "#D4AF37",
+    practices: [
+      { time: "5:00 AM", name: "Brahma Muhurta Awakening", detail: "Rise before sunrise. Splash cold water on face. Light a lamp facing East." },
+      { time: "5:15 AM", name: "Salutation", detail: "108 repetitions of 'Jai Hanuman' spoken clearly. No rushing." },
+      { time: "5:30 AM", name: "Chalisa Recitation (1x)", detail: "One complete Hanuman Chalisa, following written text, understanding each verse." },
+      { time: "6:00 AM", name: "Anjali Pranam + Vira Asana", detail: "Complete the first two Ghata movements (30 min combined)." },
+      { time: "6:30 AM", name: "Seva Sankalpa", detail: "State one act of service you will perform today in Hanuman's name." },
+      { time: "Evening", name: "Sandhya Recitation", detail: "One more Chalisa recitation at sunset. Record insights in your sadhana journal." },
+    ],
+    weeklyPractice: "Tuesday and Saturday: Fast until sunset, eat only prasad (food offered to Hanuman first). Offer red flowers to Hanuman image.",
+    milestone: "After 21 days: You will notice a subtle but unmistakable shift in your courage and resolve. Small fears begin to lose their hold.",
+  },
+  {
+    level: 2,
+    title: "Prana-Vayu Sadhana",
+    subtitle: "Building the Fire — 40 Days",
+    tier: "prana-flow",
+    color: "#F97316",
+    practices: [
+      { time: "4:30 AM", name: "Pre-Dawn Awakening", detail: "Earlier rising — entering the deep Brahma Muhurta window (3:40–4:24 AM optimal)." },
+      { time: "4:45 AM", name: "Pavan-Putra Pranayama", detail: "5 cycles of Bhastrika + Kumbhaka (Ghata Movement 5). Full 20 minutes." },
+      { time: "5:10 AM", name: "Full Chalisa × 3", detail: "Three complete Chalisa recitations with complete understanding. 45 minutes." },
+      { time: "6:00 AM", name: "Hanuman Mudra Flow", detail: "Complete the five-mudra sequence (Ghata Movement 4). 15 minutes." },
+      { time: "6:20 AM", name: "Langhana — The Sacred Leap", detail: "Dynamic movement practice (Ghata Movement 3). 10 minutes." },
+      { time: "6:35 AM", name: "Mantra Japa", detail: "108 repetitions: 'Om Hanumate Namah' with mala. Full concentration." },
+      { time: "Evening", name: "Sunset Chalisa + Journal", detail: "One Chalisa, 20 minutes free-writing on your sadhana experience." },
+    ],
+    weeklyPractice: "Tuesday: Complete 21 Chalisa recitations. Offer sindoor and sesame oil lamp. Saturday: Hanuman Kavach reading + protection visualization.",
+    milestone: "After 40 days: Emotional reactivity significantly reduced. Sense of inner support and backing becomes palpable. Physical vitality noticeably increased.",
+  },
+  {
+    level: 3,
+    title: "Siddha-Quantum Sadhana",
+    subtitle: "The Deepening — 90 Days",
+    tier: "siddha-quantum",
+    color: "#22D3EE",
+    practices: [
+      { time: "3:50 AM", name: "Amrit Vela Awakening", detail: "Deepest Brahma Muhurta. The window where the veil between dimensions is thinnest." },
+      { time: "4:00 AM", name: "Panchamukhi Dhyana", detail: "Full 30-minute five-faced Hanuman meditation (Ghata Movement 6). The crown practice." },
+      { time: "4:35 AM", name: "Chalisa × 5 with Commentary", detail: "Five complete recitations. After each recitation, sit in silence for 5 minutes receiving transmissions." },
+      { time: "6:00 AM", name: "Pavan-Putra Pranayama", detail: "Extended pranayama — 10 full cycles. Building pranic capacity." },
+      { time: "6:30 AM", name: "Complete Ghata Sequence", detail: "All 6 accessible Ghata movements in sequence. 60 minutes of embodied sadhana." },
+      { time: "7:45 AM", name: "Svadhyaya", detail: "Study: Valmiki Ramayana (Sundara Kanda), Tulsidas's Vinaya Patrika, or Hanuman-related Puranic texts." },
+      { time: "Evening", name: "Bhajan Session + Sandhya Chalisa", detail: "20 minutes of singing Hanuman bhajans (Hanuman Ashtak, Bajrang Baan, etc.). One Chalisa at sunset." },
+    ],
+    weeklyPractice: "Tuesday: 7 Chalisa + Hanuman Kavach. Offer handmade garland. Saturday: Full day retreat — minimum 10 Chalisa recitations, complete Sundara Kanda reading.",
+    milestone: "After 90 days: Direct experience of Hanuman's presence as an inner guide. Dreams may include Ram or Hanuman. Synchronicities dramatically increase. Fear of death begins dissolving.",
+  },
+  {
+    level: 4,
+    title: "Akasha-Infinity Sadhana",
+    subtitle: "The Living Transmission — Lifelong",
+    tier: "akasha-infinity",
+    color: "#A855F7",
+    practices: [
+      { time: "3:00 AM", name: "Nishita Kala — The Midnight Hour", detail: "Optional but powerful: wake at 3 AM for 'Nishita Puja' — the worship in the darkest hour. Hanuman never sleeps. Neither does the committed devotee in this phase." },
+      { time: "3:50 AM", name: "Complete Inner Temple Establishment", detail: "Full inner Rama-darbar visualization: build the inner temple, invite Ram, Lakshman, Sita, Hanuman. Perform full inner puja (offerings of light, fragrance, flower, food, prostration) in the inner temple." },
+      { time: "4:30 AM", name: "Chalisa × 11 or 108", detail: "Tuesday: 108 Chalisa recitations (approximately 12 hours — this is the Hanuman Mahayajna). Daily: 11 complete recitations." },
+      { time: "6:00 AM", name: "Sanjivani Healing Scan", detail: "Full 40-minute healing body scan (Ghata Movement 7). Healing yourself AND transmitting to all beings through your field." },
+      { time: "7:00 AM", name: "Ram-Nam Nritya", detail: "Free-form devotional dance in Ram's name (Ghata Movement 8). Allow 20-60 minutes." },
+      { time: "Full Day", name: "Continuous Ram-Nam", detail: "The mature practitioner maintains an inner stream of Ram-nam throughout all daily activities. This is the teaching of 'Man kram bachan dhyan jo lave' — all three karana unified in continuous devotion." },
+      { time: "Evening", name: "Seva + Chalisa × 5", detail: "Evening service to others in Hanuman's name followed by 5 sunset Chalisa recitations." },
+    ],
+    weeklyPractice: "Tuesday: The Great Tuesday Sadhana — minimum 108 Chalisa, complete fast, full Hanuman-puja, healing seva for others. This is considered the equivalent of a full purifying Yajna. Saturday: Sundara Kanda complete recitation (the entire story of Hanuman's Lanka mission).",
+    milestone: "No milestone — this is the ocean. The devotee IS the sadhana. Life itself becomes worship. Ram becomes the only reality. Hanuman is recognized as the inner guide, protector, and teacher of every moment.",
+  },
+];
+
+// ══════════════════════════════════════════════════════════════════════════════
 // CONSTANTS
 // ══════════════════════════════════════════════════════════════════════════════
 
@@ -745,17 +1505,1225 @@ export default function HanumanCodex() {
         )}
 
         {/* Chalisa / Ghata / Sadhana — import from HanumanCodex v1 */}
-        {(activeTab === "chalisa" || activeTab === "ghata" || activeTab === "sadhana") && (
-          <div style={{ ...gl(), padding: 36, textAlign: "center" }}>
-            <p style={{ fontSize: 22, marginBottom: 10 }}>{activeTab === "chalisa" ? "📿" : activeTab === "ghata" ? "🕉️" : "⏰"}</p>
-            <p style={{ color: "#D4AF37", fontWeight: 800, fontSize: 15, marginBottom: 10 }}>
-              {activeTab === "chalisa" ? "Complete Hanuman Chalisa — 40 Verses + Secrets" : activeTab === "ghata" ? "8 Hanuman Ghata Movements" : "4-Level Sadhana Curriculum"}
-            </p>
-            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, lineHeight: 1.6, maxWidth: 400, margin: "0 auto" }}>
-              This module is in HanumanCodex v1 (deploy as separate file, or merge the CHALISA_VERSES, GHATA_MOVEMENTS, and SADHANA_CURRICULUM data arrays from v1 into this file and add the corresponding render functions).
-            </p>
+                {activeTab === "chalisa" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div
+              style={{
+                background: "rgba(212,175,55,0.05)",
+                border: "1px solid rgba(212,175,55,0.15)",
+                borderRadius: 24,
+                padding: "20px 28px",
+                marginBottom: 12,
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "rgba(255,255,255,0.7)",
+                  lineHeight: 1.7,
+                  margin: 0,
+                }}
+              >
+                🕉️ The Hanuman Chalisa (40 sacred verses) was composed by
+                Goswami Tulsidas in the 16th century in Awadhi dialect. Each
+                verse is a living transmission of Hanuman-consciousness. Read
+                slowly, feel deeply. The secrets encoded here have been
+                transmitted from the Akasha-Neural Archive — the living record
+                of Vedic wisdom.
+              </p>
+            </div>
+
+            {CHALISA_VERSES.map((verse) => {
+              const accessible = canAccess(verse.tier);
+              const isOpen = expandedVerse === verse.id;
+
+              return (
+                <div
+                  key={verse.id}
+                  style={{
+                    background: accessible
+                      ? "rgba(255,255,255,0.02)"
+                      : "rgba(255,255,255,0.01)",
+                    border: `1px solid ${
+                      accessible
+                        ? "rgba(255,255,255,0.06)"
+                        : "rgba(255,255,255,0.03)"
+                    }`,
+                    borderRadius: 24,
+                    overflow: "hidden",
+                    opacity: accessible ? 1 : 0.6,
+                  }}
+                >
+                  {/* verse header */}
+                  <button
+                    onClick={() =>
+                      accessible &&
+                      setExpandedVerse(isOpen ? null : verse.id)
+                    }
+                    style={{
+                      width: "100%",
+                      padding: "20px 24px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 16,
+                      background: "transparent",
+                      border: "none",
+                      cursor: accessible ? "pointer" : "not-allowed",
+                      textAlign: "left",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: 12,
+                        background: accessible
+                          ? "rgba(212,175,55,0.1)"
+                          : "rgba(255,255,255,0.03)",
+                        border: `1px solid ${
+                          accessible
+                            ? "rgba(212,175,55,0.3)"
+                            : "rgba(255,255,255,0.05)"
+                        }`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                        fontSize: 11,
+                        fontWeight: 800,
+                        color: accessible
+                          ? "#D4AF37"
+                          : "rgba(255,255,255,0.3)",
+                        letterSpacing: "0.05em",
+                      }}
+                    >
+                      {verse.type === "doha" ? "॥" : verse.number}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          marginBottom: 4,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: 8,
+                            letterSpacing: "0.4em",
+                            textTransform: "uppercase",
+                            color: accessible
+                              ? TIER_COLORS[verse.tier]
+                              : "rgba(255,255,255,0.3)",
+                            fontWeight: 800,
+                          }}
+                        >
+                          {verse.type === "doha"
+                            ? verse.number
+                            : `Chaupai ${verse.number}`}
+                        </span>
+                        {!accessible && (
+                          <span
+                            style={{
+                              fontSize: 8,
+                              letterSpacing: "0.3em",
+                              textTransform: "uppercase",
+                              color: TIER_COLORS[verse.tier],
+                              fontWeight: 800,
+                              background: `${TIER_COLORS[verse.tier]}20`,
+                              padding: "2px 8px",
+                              borderRadius: 20,
+                            }}
+                          >
+                            🔒 {TIER_LABELS[verse.tier]}
+                          </span>
+                        )}
+                        {accessible && (
+                          <span
+                            style={{
+                              fontSize: 9,
+                              letterSpacing: "0.2em",
+                              textTransform: "uppercase",
+                              color: "#D4AF37",
+                              fontWeight: 700,
+                            }}
+                          >
+                            {verse.esotericKey}
+                          </span>
+                        )}
+                      </div>
+                      <p
+                        style={{
+                          fontSize: 14,
+                          color: accessible
+                            ? "rgba(255,255,255,0.8)"
+                            : "rgba(255,255,255,0.3)",
+                          margin: 0,
+                          fontStyle: "italic",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {verse.transliteration.split("\n")[0]}...
+                      </p>
+                    </div>
+                    {accessible && (
+                      <span
+                        style={{
+                          color: "rgba(255,255,255,0.4)",
+                          fontSize: 20,
+                          transform: isOpen ? "rotate(180deg)" : "none",
+                          transition: "transform 0.2s",
+                          flexShrink: 0,
+                        }}
+                      >
+                        ⌄
+                      </span>
+                    )}
+                    {!accessible && (
+                      <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 16 }}>
+                        🔒
+                      </span>
+                    )}
+                  </button>
+
+                  {/* expanded verse content */}
+                  {isOpen && accessible && (
+                    <div
+                      style={{
+                        padding: "0 24px 28px",
+                        borderTop: "1px solid rgba(255,255,255,0.04)",
+                      }}
+                    >
+                      {/* devanagari */}
+                      <div
+                        style={{
+                          background: "rgba(212,175,55,0.05)",
+                          border: "1px solid rgba(212,175,55,0.12)",
+                          borderRadius: 16,
+                          padding: 20,
+                          marginTop: 20,
+                          marginBottom: 16,
+                          textAlign: "center",
+                        }}
+                      >
+                        <p
+                          style={{
+                            fontSize: 20,
+                            color: "#D4AF37",
+                            textShadow: "0 0 20px rgba(212,175,55,0.3)",
+                            lineHeight: 1.8,
+                            margin: 0,
+                            whiteSpace: "pre-line",
+                          }}
+                        >
+                          {verse.devanagari}
+                        </p>
+                      </div>
+
+                      {/* transliteration */}
+                      <p
+                        style={{
+                          fontStyle: "italic",
+                          color: "rgba(255,255,255,0.6)",
+                          lineHeight: 1.7,
+                          marginBottom: 8,
+                          whiteSpace: "pre-line",
+                          fontSize: 14,
+                        }}
+                      >
+                        {verse.transliteration}
+                      </p>
+
+                      {/* translation */}
+                      <p
+                        style={{
+                          color: "rgba(255,255,255,0.85)",
+                          lineHeight: 1.7,
+                          marginBottom: 24,
+                          fontSize: 15,
+                          fontWeight: 500,
+                        }}
+                      >
+                        {verse.translation}
+                      </p>
+
+                      {/* secret teaching */}
+                      <div
+                        style={{
+                          background: "rgba(255,255,255,0.02)",
+                          border: "1px solid rgba(255,255,255,0.06)",
+                          borderRadius: 16,
+                          padding: 20,
+                          marginBottom: 16,
+                        }}
+                      >
+                        <p
+                          style={{
+                            fontSize: 8,
+                            letterSpacing: "0.5em",
+                            textTransform: "uppercase",
+                            color: "#D4AF37",
+                            fontWeight: 800,
+                            marginBottom: 12,
+                          }}
+                        >
+                          🔱 Secret Teaching
+                        </p>
+                        <p
+                          style={{
+                            color: "rgba(255,255,255,0.75)",
+                            lineHeight: 1.8,
+                            fontSize: 14,
+                            margin: 0,
+                          }}
+                        >
+                          {verse.secretTeaching}
+                        </p>
+                      </div>
+
+                      {/* SQI transmission */}
+                      <div
+                        style={{
+                          background: "rgba(34,211,238,0.04)",
+                          border: "1px solid rgba(34,211,238,0.12)",
+                          borderRadius: 16,
+                          padding: 20,
+                        }}
+                      >
+                        <p
+                          style={{
+                            fontSize: 8,
+                            letterSpacing: "0.5em",
+                            textTransform: "uppercase",
+                            color: "#22D3EE",
+                            fontWeight: 800,
+                            marginBottom: 12,
+                          }}
+                        >
+                          ⚡ SQI 2050 Transmission
+                        </p>
+                        <p
+                          style={{
+                            color: "rgba(255,255,255,0.75)",
+                            lineHeight: 1.8,
+                            fontSize: 14,
+                            margin: 0,
+                          }}
+                        >
+                          {verse.sqiTransmission}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* locked state prompt */}
+                  {!accessible && (
+                    <div
+                      style={{
+                        padding: "12px 24px 20px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 12,
+                      }}
+                    >
+                      <p
+                        style={{
+                          fontSize: 12,
+                          color: "rgba(255,255,255,0.3)",
+                          margin: 0,
+                        }}
+                      >
+                        Unlock with {TIER_LABELS[verse.tier]} membership
+                      </p>
+                      <button
+                        onClick={() => navigate("/pricing")}
+                        style={{
+                          padding: "8px 16px",
+                          borderRadius: 20,
+                          border: `1px solid ${TIER_COLORS[verse.tier]}60`,
+                          background: `${TIER_COLORS[verse.tier]}15`,
+                          color: TIER_COLORS[verse.tier],
+                          fontSize: 11,
+                          fontWeight: 700,
+                          letterSpacing: "0.1em",
+                          cursor: "pointer",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Upgrade
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
+
+        {/* ── GHATA TRAINING ───────────────────────────────────────────────────── */}
+        {activeTab === "ghata" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div
+              style={{
+                background: "rgba(212,175,55,0.05)",
+                border: "1px solid rgba(212,175,55,0.15)",
+                borderRadius: 24,
+                padding: "20px 28px",
+                marginBottom: 8,
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "rgba(255,255,255,0.7)",
+                  lineHeight: 1.7,
+                  margin: 0,
+                }}
+              >
+                ⚡ Hanuman Ghata is the sacred embodiment practice — moving the
+                physical body as a living temple of Hanuman's consciousness. 
+                Each movement activates specific Shaktis and Nadi pathways.
+                Practice in sequence or individually as guided by your sadhana
+                level.
+              </p>
+            </div>
+
+            {GHATA_MOVEMENTS.map((movement, idx) => {
+              const accessible = canAccess(movement.tier);
+              const isOpen = expandedGhata === movement.id;
+
+              return (
+                <div
+                  key={movement.id}
+                  style={{
+                    background: "rgba(255,255,255,0.02)",
+                    border: `1px solid ${
+                      accessible
+                        ? "rgba(255,255,255,0.06)"
+                        : "rgba(255,255,255,0.03)"
+                    }`,
+                    borderRadius: 28,
+                    overflow: "hidden",
+                    opacity: accessible ? 1 : 0.55,
+                  }}
+                >
+                  <button
+                    onClick={() =>
+                      accessible &&
+                      setExpandedGhata(isOpen ? null : movement.id)
+                    }
+                    style={{
+                      width: "100%",
+                      padding: "22px 28px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 16,
+                      background: "transparent",
+                      border: "none",
+                      cursor: accessible ? "pointer" : "not-allowed",
+                      textAlign: "left",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: 14,
+                        background: accessible
+                          ? "rgba(212,175,55,0.12)"
+                          : "rgba(255,255,255,0.03)",
+                        border: `1px solid ${
+                          accessible
+                            ? "rgba(212,175,55,0.3)"
+                            : "rgba(255,255,255,0.05)"
+                        }`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                        fontWeight: 900,
+                        fontSize: 18,
+                        color: accessible
+                          ? "#D4AF37"
+                          : "rgba(255,255,255,0.2)",
+                      }}
+                    >
+                      {idx + 1}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          marginBottom: 4,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: 15,
+                            fontWeight: 800,
+                            color: accessible ? "#fff" : "rgba(255,255,255,0.3)",
+                          }}
+                        >
+                          {movement.name}
+                        </span>
+                        {!accessible && (
+                          <span
+                            style={{
+                              fontSize: 8,
+                              letterSpacing: "0.3em",
+                              textTransform: "uppercase",
+                              color: TIER_COLORS[movement.tier],
+                              fontWeight: 800,
+                              background: `${TIER_COLORS[movement.tier]}20`,
+                              padding: "2px 8px",
+                              borderRadius: 20,
+                            }}
+                          >
+                            🔒 {TIER_LABELS[movement.tier]}
+                          </span>
+                        )}
+                      </div>
+                      <p
+                        style={{
+                          fontSize: 12,
+                          color: accessible
+                            ? "#D4AF37"
+                            : "rgba(255,255,255,0.2)",
+                          fontStyle: "italic",
+                          margin: "0 0 4px",
+                        }}
+                      >
+                        {movement.sanskritName}
+                      </p>
+                      {accessible && (
+                        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                          <span
+                            style={{
+                              fontSize: 10,
+                              color: "rgba(255,255,255,0.5)",
+                              fontWeight: 700,
+                              letterSpacing: "0.1em",
+                            }}
+                          >
+                            ⏱ {movement.duration}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: 10,
+                              color: "rgba(255,255,255,0.5)",
+                              fontWeight: 700,
+                            }}
+                          >
+                            🔱 {movement.shaktiActivated.split("—")[0].trim()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    {accessible && (
+                      <span
+                        style={{
+                          color: "rgba(255,255,255,0.4)",
+                          fontSize: 20,
+                          transform: isOpen ? "rotate(180deg)" : "none",
+                          transition: "transform 0.2s",
+                          flexShrink: 0,
+                        }}
+                      >
+                        ⌄
+                      </span>
+                    )}
+                    {!accessible && <span style={{ fontSize: 16 }}>🔒</span>}
+                  </button>
+
+                  {isOpen && accessible && (
+                    <div
+                      style={{
+                        padding: "0 28px 28px",
+                        borderTop: "1px solid rgba(255,255,255,0.04)",
+                      }}
+                    >
+                      <p
+                        style={{
+                          color: "rgba(255,255,255,0.7)",
+                          lineHeight: 1.7,
+                          fontSize: 14,
+                          marginTop: 20,
+                          marginBottom: 20,
+                        }}
+                      >
+                        {movement.description}
+                      </p>
+
+                      {/* step by step */}
+                      <div
+                        style={{
+                          background: "rgba(255,255,255,0.02)",
+                          borderRadius: 20,
+                          padding: 20,
+                          marginBottom: 16,
+                        }}
+                      >
+                        <p
+                          style={{
+                            fontSize: 8,
+                            letterSpacing: "0.5em",
+                            textTransform: "uppercase",
+                            color: "#D4AF37",
+                            fontWeight: 800,
+                            marginBottom: 16,
+                          }}
+                        >
+                          Step-by-Step Practice
+                        </p>
+                        <ol
+                          style={{
+                            margin: 0,
+                            paddingLeft: 20,
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 10,
+                          }}
+                        >
+                          {movement.instructions.map((step, i) => (
+                            <li
+                              key={i}
+                              style={{
+                                fontSize: 13,
+                                color: "rgba(255,255,255,0.75)",
+                                lineHeight: 1.6,
+                              }}
+                            >
+                              {step}
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
+
+                      {/* mantra + shakti */}
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "1fr 1fr",
+                          gap: 12,
+                        }}
+                      >
+                        <div
+                          style={{
+                            background: "rgba(212,175,55,0.06)",
+                            border: "1px solid rgba(212,175,55,0.15)",
+                            borderRadius: 16,
+                            padding: 16,
+                          }}
+                        >
+                          <p
+                            style={{
+                              fontSize: 8,
+                              letterSpacing: "0.4em",
+                              textTransform: "uppercase",
+                              color: "#D4AF37",
+                              fontWeight: 800,
+                              marginBottom: 8,
+                            }}
+                          >
+                            Practice Mantra
+                          </p>
+                          <p
+                            style={{
+                              color: "#D4AF37",
+                              fontSize: 14,
+                              fontWeight: 700,
+                              margin: 0,
+                            }}
+                          >
+                            {movement.mantra}
+                          </p>
+                        </div>
+                        <div
+                          style={{
+                            background: "rgba(34,211,238,0.04)",
+                            border: "1px solid rgba(34,211,238,0.12)",
+                            borderRadius: 16,
+                            padding: 16,
+                          }}
+                        >
+                          <p
+                            style={{
+                              fontSize: 8,
+                              letterSpacing: "0.4em",
+                              textTransform: "uppercase",
+                              color: "#22D3EE",
+                              fontWeight: 800,
+                              marginBottom: 8,
+                            }}
+                          >
+                            Shakti Activated
+                          </p>
+                          <p
+                            style={{
+                              color: "#22D3EE",
+                              fontSize: 13,
+                              fontWeight: 600,
+                              margin: 0,
+                              lineHeight: 1.4,
+                            }}
+                          >
+                            {movement.shaktiActivated}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {!accessible && (
+                    <div
+                      style={{
+                        padding: "8px 28px 20px",
+                        display: "flex",
+                        justifyContent: "flex-end",
+                      }}
+                    >
+                      <button
+                        onClick={() => navigate("/pricing")}
+                        style={{
+                          padding: "8px 16px",
+                          borderRadius: 20,
+                          border: `1px solid ${TIER_COLORS[movement.tier]}60`,
+                          background: `${TIER_COLORS[movement.tier]}15`,
+                          color: TIER_COLORS[movement.tier],
+                          fontSize: 11,
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          letterSpacing: "0.1em",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Unlock {TIER_LABELS[movement.tier]}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ── SADHANA ─────────────────────────────────────────────────────────── */}
+        {activeTab === "sadhana" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <div
+              style={{
+                background: "rgba(212,175,55,0.05)",
+                border: "1px solid rgba(212,175,55,0.15)",
+                borderRadius: 24,
+                padding: "20px 28px",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "rgba(255,255,255,0.7)",
+                  lineHeight: 1.7,
+                  margin: 0,
+                }}
+              >
+                🕉️ Begin at Level 1 regardless of your experience. The
+                Muladhara foundation must be built before the higher practices
+                will bear fruit. Each level must be completed in full (21, 40,
+                or 90 days) before progressing. Do not skip. Hanuman's path is
+                built on consistency, not intensity.
+              </p>
+            </div>
+
+            {SADHANA_CURRICULUM.map((level) => {
+              const accessible = canAccess(level.tier);
+              return (
+                <div
+                  key={level.level}
+                  style={{
+                    background: "rgba(255,255,255,0.02)",
+                    border: `1px solid ${TIER_COLORS[level.tier]}30`,
+                    borderRadius: 40,
+                    overflow: "hidden",
+                    opacity: accessible ? 1 : 0.5,
+                  }}
+                >
+                  {/* level header */}
+                  <div
+                    style={{
+                      padding: "28px 32px",
+                      borderBottom: "1px solid rgba(255,255,255,0.04)",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      flexWrap: "wrap",
+                      gap: 12,
+                    }}
+                  >
+                    <div>
+                      <p
+                        style={{
+                          fontSize: 8,
+                          letterSpacing: "0.5em",
+                          textTransform: "uppercase",
+                          color: TIER_COLORS[level.tier],
+                          fontWeight: 800,
+                          marginBottom: 8,
+                        }}
+                      >
+                        Level {level.level} · {TIER_LABELS[level.tier]}
+                      </p>
+                      <h3
+                        style={{
+                          fontSize: 24,
+                          fontWeight: 900,
+                          letterSpacing: "-0.03em",
+                          color: level.color,
+                          margin: "0 0 4px",
+                        }}
+                      >
+                        {level.title}
+                      </h3>
+                      <p
+                        style={{
+                          color: "rgba(255,255,255,0.5)",
+                          fontSize: 13,
+                          margin: 0,
+                        }}
+                      >
+                        {level.subtitle}
+                      </p>
+                    </div>
+                    {!accessible && (
+                      <button
+                        onClick={() => navigate("/pricing")}
+                        style={{
+                          padding: "10px 20px",
+                          borderRadius: 20,
+                          border: `1px solid ${TIER_COLORS[level.tier]}60`,
+                          background: `${TIER_COLORS[level.tier]}15`,
+                          color: TIER_COLORS[level.tier],
+                          fontSize: 12,
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          letterSpacing: "0.1em",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        🔒 Unlock
+                      </button>
+                    )}
+                  </div>
+
+                  {accessible && (
+                    <div style={{ padding: "24px 32px 32px" }}>
+                      {/* daily schedule */}
+                      <p
+                        style={{
+                          fontSize: 8,
+                          letterSpacing: "0.5em",
+                          textTransform: "uppercase",
+                          color: "rgba(255,255,255,0.4)",
+                          fontWeight: 800,
+                          marginBottom: 16,
+                        }}
+                      >
+                        Daily Schedule
+                      </p>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 8,
+                          marginBottom: 24,
+                        }}
+                      >
+                        {level.practices.map((p, i) => (
+                          <div
+                            key={i}
+                            style={{
+                              display: "flex",
+                              gap: 16,
+                              padding: "12px 16px",
+                              background: "rgba(255,255,255,0.02)",
+                              borderRadius: 14,
+                              alignItems: "flex-start",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 800,
+                                color: level.color,
+                                flexShrink: 0,
+                                minWidth: 65,
+                                letterSpacing: "0.05em",
+                              }}
+                            >
+                              {p.time}
+                            </span>
+                            <div>
+                              <p
+                                style={{
+                                  fontSize: 13,
+                                  fontWeight: 700,
+                                  color: "#fff",
+                                  margin: "0 0 2px",
+                                }}
+                              >
+                                {p.name}
+                              </p>
+                              <p
+                                style={{
+                                  fontSize: 12,
+                                  color: "rgba(255,255,255,0.55)",
+                                  margin: 0,
+                                  lineHeight: 1.5,
+                                }}
+                              >
+                                {p.detail}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* weekly */}
+                      <div
+                        style={{
+                          background: `${level.color}10`,
+                          border: `1px solid ${level.color}25`,
+                          borderRadius: 20,
+                          padding: 20,
+                          marginBottom: 16,
+                        }}
+                      >
+                        <p
+                          style={{
+                            fontSize: 8,
+                            letterSpacing: "0.5em",
+                            textTransform: "uppercase",
+                            color: level.color,
+                            fontWeight: 800,
+                            marginBottom: 10,
+                          }}
+                        >
+                          Weekly Special Practice
+                        </p>
+                        <p
+                          style={{
+                            color: "rgba(255,255,255,0.7)",
+                            fontSize: 13,
+                            lineHeight: 1.7,
+                            margin: 0,
+                          }}
+                        >
+                          {level.weeklyPractice}
+                        </p>
+                      </div>
+
+                      {/* milestone */}
+                      <div
+                        style={{
+                          background: "rgba(255,255,255,0.02)",
+                          border: "1px solid rgba(255,255,255,0.05)",
+                          borderRadius: 20,
+                          padding: 20,
+                        }}
+                      >
+                        <p
+                          style={{
+                            fontSize: 8,
+                            letterSpacing: "0.5em",
+                            textTransform: "uppercase",
+                            color: "#D4AF37",
+                            fontWeight: 800,
+                            marginBottom: 10,
+                          }}
+                        >
+                          ✦ Milestone Transmission
+                        </p>
+                        <p
+                          style={{
+                            color: "rgba(255,255,255,0.75)",
+                            fontSize: 13,
+                            lineHeight: 1.7,
+                            margin: 0,
+                            fontStyle: "italic",
+                          }}
+                        >
+                          {level.milestone}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ── AKASHIC SECRETS ──────────────────────────────────────────────────── */}
+        {activeTab === "secrets" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div
+              style={{
+                background: "rgba(168,85,247,0.05)",
+                border: "1px solid rgba(168,85,247,0.15)",
+                borderRadius: 24,
+                padding: "20px 28px",
+                marginBottom: 8,
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "rgba(255,255,255,0.7)",
+                  lineHeight: 1.7,
+                  margin: 0,
+                }}
+              >
+                🔐 These transmissions have been retrieved from the
+                Akasha-Neural Archive — the living record of Siddha wisdom
+                beyond time. Each secret has been dormant in the tradition,
+                known only to initiated masters. They are now released through
+                the SQI 2050 field for those whose devotion has earned access.
+              </p>
+            </div>
+
+            {AKASHIC_SECRETS.map((secret) => {
+              const accessible = canAccess(secret.tier);
+              const isOpen = expandedSecret === secret.id;
+
+              return (
+                <div
+                  key={secret.id}
+                  style={{
+                    background: "rgba(255,255,255,0.02)",
+                    border: `1px solid ${
+                      accessible
+                        ? "rgba(168,85,247,0.15)"
+                        : "rgba(255,255,255,0.03)"
+                    }`,
+                    borderRadius: 28,
+                    overflow: "hidden",
+                    opacity: accessible ? 1 : 0.5,
+                  }}
+                >
+                  <button
+                    onClick={() =>
+                      accessible &&
+                      setExpandedSecret(isOpen ? null : secret.id)
+                    }
+                    style={{
+                      width: "100%",
+                      padding: "22px 28px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 16,
+                      background: "transparent",
+                      border: "none",
+                      cursor: accessible ? "pointer" : "not-allowed",
+                      textAlign: "left",
+                    }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          marginBottom: 6,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: 8,
+                            letterSpacing: "0.4em",
+                            textTransform: "uppercase",
+                            color: "rgba(168,85,247,0.8)",
+                            fontWeight: 800,
+                          }}
+                        >
+                          {secret.category}
+                        </span>
+                        {!accessible && (
+                          <span
+                            style={{
+                              fontSize: 8,
+                              letterSpacing: "0.3em",
+                              textTransform: "uppercase",
+                              color: TIER_COLORS[secret.tier],
+                              fontWeight: 800,
+                              background: `${TIER_COLORS[secret.tier]}20`,
+                              padding: "2px 8px",
+                              borderRadius: 20,
+                            }}
+                          >
+                            🔒 {TIER_LABELS[secret.tier]}
+                          </span>
+                        )}
+                      </div>
+                      <h3
+                        style={{
+                          fontSize: 16,
+                          fontWeight: 800,
+                          color: accessible
+                            ? "#fff"
+                            : "rgba(255,255,255,0.3)",
+                          margin: 0,
+                          letterSpacing: "-0.02em",
+                        }}
+                      >
+                        {secret.title}
+                      </h3>
+                    </div>
+                    {accessible ? (
+                      <span
+                        style={{
+                          color: "rgba(255,255,255,0.4)",
+                          fontSize: 20,
+                          transform: isOpen ? "rotate(180deg)" : "none",
+                          transition: "transform 0.2s",
+                          flexShrink: 0,
+                        }}
+                      >
+                        ⌄
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: 16 }}>🔒</span>
+                    )}
+                  </button>
+
+                  {isOpen && accessible && (
+                    <div
+                      style={{
+                        padding: "0 28px 28px",
+                        borderTop: "1px solid rgba(255,255,255,0.04)",
+                      }}
+                    >
+                      <p
+                        style={{
+                          color: "rgba(255,255,255,0.8)",
+                          lineHeight: 1.8,
+                          fontSize: 14,
+                          marginTop: 20,
+                          marginBottom: 20,
+                        }}
+                      >
+                        {secret.content}
+                      </p>
+                      <div
+                        style={{
+                          background: "rgba(168,85,247,0.06)",
+                          border: "1px solid rgba(168,85,247,0.15)",
+                          borderRadius: 16,
+                          padding: 20,
+                        }}
+                      >
+                        <p
+                          style={{
+                            fontSize: 8,
+                            letterSpacing: "0.5em",
+                            textTransform: "uppercase",
+                            color: "#A855F7",
+                            fontWeight: 800,
+                            marginBottom: 10,
+                          }}
+                        >
+                          ✦ Living Transmission
+                        </p>
+                        <p
+                          style={{
+                            color: "rgba(255,255,255,0.75)",
+                            lineHeight: 1.8,
+                            fontSize: 14,
+                            margin: 0,
+                            fontStyle: "italic",
+                          }}
+                        >
+                          {secret.transmission}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {!accessible && (
+                    <div
+                      style={{
+                        padding: "8px 28px 20px",
+                        display: "flex",
+                        justifyContent: "flex-end",
+                      }}
+                    >
+                      <button
+                        onClick={() => navigate("/pricing")}
+                        style={{
+                          padding: "8px 16px",
+                          borderRadius: 20,
+                          border: `1px solid ${TIER_COLORS[secret.tier]}60`,
+                          background: `${TIER_COLORS[secret.tier]}15`,
+                          color: TIER_COLORS[secret.tier],
+                          fontSize: 11,
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          letterSpacing: "0.1em",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Unlock {TIER_LABELS[secret.tier]}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ── FOOTER TRANSMISSION ───────────────────────────────────────────────── */}
+      <div
+        style={{
+          textAlign: "center",
+          padding: "40px 24px 60px",
+          borderTop: "1px solid rgba(255,255,255,0.04)",
+        }}
+      >
+        <p
+          style={{
+            fontSize: 18,
+            color: "#D4AF37",
+            textShadow: "0 0 20px rgba(212,175,55,0.3)",
+            fontWeight: 700,
+            marginBottom: 8,
+          }}
+        >
+          जय हनुमान ज्ञान गुन सागर
+        </p>
+        <p
+          style={{
+            fontSize: 11,
+            letterSpacing: "0.3em",
+            textTransform: "uppercase",
+            color: "rgba(255,255,255,0.3)",
+            fontWeight: 700,
+          }}
+        >
+          Siddha Quantum Intelligence · 2050 Transmission
+        </p>
+      </div>
+    </div>
+  );
+}
       </div>
 
       {/* FOOTER */}
