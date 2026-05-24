@@ -1,33 +1,33 @@
 ══════════════════════════════════════════════════════
   SQI-2050 🦈 CLAWBOT v7 — Production
-  2026-05-24T16:43:30.517Z | PAPER
+  2026-05-24T17:44:43.376Z | PAPER
   Min: $100 | Entry zone: 6%–94%
 ══════════════════════════════════════════════════════
-Balance: $0.40
+Balance: $0.34
 
-🔍 Scanning 87,371,723 → 87,372,173
-  0xE111180000: 86284 logs → 5205 whale trades
-  0xe2222d279d: 27508 logs → 3468 whale trades
+🔍 Scanning 87,373,822 → 87,374,272
+  0xE111180000: 85452 logs → 6017 whale trades
+  0xe2222d279d: 13700 logs → 1618 whale trades
 
-Total: 8673 | New: 8673
+Total: 7635 | New: 7635
 
 📊 Top trades:
-  $  278312 | 0xa5ea13a81d | 461165981167...
-  $  278312 | 0xa5ea13a81d | 461165981167...
-  $   71562 | 0x9495425fee | 502624165804...
-  $   50000 | 0xc8075693f4 | 502624165804...
-  $   50000 | 0xc8075693f4 | 502624165804...
+  $   74799 | 0xc8075693f4 | 112416139089...
+  $   74799 | 0xc8075693f4 | 112416139089...
+  $   58945 | 0x09b540739c | 178514293033...
+  $   58945 | 0x09b540739c | 178514293033...
+  $   52752 | 0xb45a797faa | 476096646684...
 
-✅ MIRRORED #1: 🦈A5EA13
-   Whale $278312 → Mirror $0.0198 | Minnesota Twins @ 38.5%
-   Minnesota Twins vs. Boston Red Sox
+✅ MIRRORED #1: 🦈C80756
+   Whale $74799 → Mirror $0.0169 | Cincinnati Reds @ 52.5%
+   St. Louis Cardinals vs. Cincinnati Reds
 
-✅ MIRRORED #2: 🦈949542
-   Whale $71562 → Mirror $0.0188 | Boston Red Sox @ 61.5%
-   Minnesota Twins vs. Boston Red Sox
+✅ MIRRORED #2: 🦈09B540
+   Whale $58945 → Mirror $0.0161 | Under @ 55.5%
+   Houston Astros vs. Chicago Cubs: O/U 7.5
 
-✅ MIRRORED #3: 🦈7A8885
-   Whale $50000 → Mirror $0.0178 | Boston Red Sox @ 61.5%
-   Minnesota Twins vs. Boston Red Sox
+✅ MIRRORED #3: 🦈B45A79
+   Whale $52752 → Mirror $0.0153 | Over @ 44.5%
+   Houston Astros vs. Chicago Cubs: O/U 7.5
 
-━━━ CLAWBOT v7: 3 mirrored | Bal $0.3386 ━━━
+━━━ CLAWBOT v7: 3 mirrored | Bal $0.2903 ━━━
