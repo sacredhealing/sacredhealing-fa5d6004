@@ -1,33 +1,33 @@
 ══════════════════════════════════════════════════════
   SQI-2050 🦈 CLAWBOT v7 — Production
-  2026-05-24T00:14:34.676Z | PAPER
+  2026-05-24T04:42:43.398Z | PAPER
   Min: $100 | Entry zone: 6%–94%
 ══════════════════════════════════════════════════════
-Balance: $1.35
+Balance: $1.16
 
-🔍 Scanning 87,337,817 → 87,338,267
-  0xE111180000: 76248 logs → 3891 whale trades
-  0xe2222d279d: 16066 logs → 1579 whale trades
+🔍 Scanning 87,347,011 → 87,347,461
+  0xE111180000: 59155 logs → 3060 whale trades
+  0xe2222d279d: 15109 logs → 1056 whale trades
 
-Total: 5470 | New: 5470
+Total: 4116 | New: 4116
 
 📊 Top trades:
-  $  235294 | 0xbee54d9005 | 206123205859...
-  $  235294 | 0xbee54d9005 | 206123205859...
-  $  199678 | 0x9495425fee | 659093651051...
-  $  126943 | 0x2c335066fe | 113101257407...
-  $  126943 | 0x2c335066fe | 113101257407...
+  $  100725 | 0xa5ea13a81d | 901252619506...
+  $  100725 | 0x8fbb3c3249 | 953130816504...
+  $  100725 | 0x8fbb3c3249 | 953130816504...
+  $   34631 | 0xc8ab97a908 | 107333736674...
+  $   34631 | 0xc8ab97a908 | 107333736674...
 
-✅ MIRRORED #1: 🦈BEE54D
-   Whale $235294 → Mirror $0.0676 | No @ 48.5%
-   Will Nashville SC win on 2026-05-23?
+✅ MIRRORED #1: 🦈A5EA13
+   Whale $100725 → Mirror $0.058 | Legacy @ 24.5%
+   Counter-Strike: Team Falcons vs Legacy (BO5) - CS Asia Championships Playoffs
 
-✅ MIRRORED #2: 🦈949542
-   Whale $199678 → Mirror $0.0643 | Yes @ 51.5%
-   Will Nashville SC win on 2026-05-23?
+✅ MIRRORED #2: 🦈8FBB3C
+   Whale $100725 → Mirror $0.0551 | Team Falcons @ 75.5%
+   Counter-Strike: Team Falcons vs Legacy (BO5) - CS Asia Championships Playoffs
 
-✅ MIRRORED #3: 🦈2C3350
-   Whale $126943 → Mirror $0.061 | Knicks @ 43.5%
-   Knicks vs. Cavaliers
+✅ MIRRORED #3: 🦈13414A
+   Whale $26161 → Mirror $0.0523 | FURIA Esports @ 51.5%
+   LoL: RED Canids vs FURIA Esports (BO5) - CBLOL Playoffs
 
-━━━ CLAWBOT v7: 3 mirrored | Bal $1.1598 ━━━
+━━━ CLAWBOT v7: 3 mirrored | Bal $0.9944 ━━━
