@@ -283,7 +283,7 @@ function renderInline(
     }
     // Plain text segment — auto-bold sacred terms (frequency names, masters, transmission types)
     if (opts?.sqiGoldBold && variant === 'body' && p) {
-      return <React.Fragment key={i}>{autoBoldSacredTerms(p)}</React.Fragment>;
+      return p;
     }
     return p;
   });
@@ -431,7 +431,7 @@ function renderSQIContent(content: string) {
         if (dashMatch) lineForRender = `${dashMatch[1]}**${dashMatch[2].trim()}**${dashMatch[3]}${dashMatch[4]}`;
       }
       elements.push(
-        <p key={i} style={{ color: 'rgba(255,255,255,0.78)', fontSize: '16px', lineHeight: 1.75, paddingLeft: '10px', marginBottom: '8px', marginTop: '2px', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+        <p key={i} style={{ color: 'rgba(255,255,255,0.78)', fontSize: '18px', lineHeight: 1.75, paddingLeft: '10px', marginBottom: '8px', marginTop: '2px', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
           {renderInline(lineForRender, 'body', false, { sqiGoldBold: true })}
         </p>
       );
@@ -457,7 +457,7 @@ function renderSQIContent(content: string) {
     }
 
     elements.push(
-      <p key={i} style={{ color: 'rgba(255,255,255,0.84)', fontSize: '16px', lineHeight: 1.85, marginBottom: '12px', marginTop: '0', wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'pre-wrap', maxWidth: '100%' }}>
+      <p key={i} style={{ color: 'rgba(255,255,255,0.84)', fontSize: '18px', lineHeight: 1.85, marginBottom: '12px', marginTop: '0', wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'pre-wrap', maxWidth: '100%' }}>
         {renderInline(trimmed, 'body', false, { sqiGoldBold: true })}
       </p>
     );
@@ -3156,7 +3156,7 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
 
   .sqi-ancient-body p {
     font-family: 'IM Fell English', Georgia, serif !important;
-    font-size: 16px !important;
+    font-size: 18px !important;
     line-height: 1.9 !important;
     color: rgba(225,210,185,0.88) !important;
     margin-bottom: 14px !important;
@@ -3186,7 +3186,7 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
 
   .sqi-ancient-body li {
     font-family: 'IM Fell English', Georgia, serif !important;
-    font-size: 16px !important;
+    font-size: 18px !important;
     line-height: 1.85 !important;
     color: rgba(225,210,185,0.85) !important;
   }
