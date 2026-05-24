@@ -1,33 +1,33 @@
 ══════════════════════════════════════════════════════
   SQI-2050 🦈 CLAWBOT v7 — Production
-  2026-05-24T18:53:26.111Z | PAPER
+  2026-05-24T20:08:11.424Z | PAPER
   Min: $100 | Entry zone: 6%–94%
 ══════════════════════════════════════════════════════
-Balance: $0.29
+Balance: $0.25
 
-🔍 Scanning 87,376,178 → 87,376,628
-  0xE111180000: 82756 logs → 5104 whale trades
-  0xe2222d279d: 18012 logs → 2236 whale trades
+🔍 Scanning 87,378,741 → 87,379,191
+  0xE111180000: 98166 logs → 5071 whale trades
+  0xe2222d279d: 21441 logs → 2063 whale trades
 
-Total: 7340 | New: 7340
+Total: 7134 | New: 7134
 
 📊 Top trades:
-  $  100000 | 0xf5198df69e | 187047785406...
-  $  100000 | 0x6d22929355 | 187047785406...
-  $  100000 | 0x6d22929355 | 187047785406...
-  $   60533 | 0x65b54274eb | 619369260215...
-  $   60533 | 0x65b54274eb | 619369260215...
+  $   47718 | 0xa77105bb4d | 857955324523...
+  $   47718 | 0xfedc381bf3 | 857955324523...
+  $   47718 | 0xfedc381bf3 | 857955324523...
+  $   43333 | 0x3dfb153c19 | 231853730773...
+  $   43333 | 0x3dfb153c19 | 231853730773...
 
-✅ MIRRORED #1: 🦈65B542
-   Whale $60533 → Mirror $0.0145 | Yes @ 62.5%
-   Will Como 1907 win on 2026-05-24?
+✅ MIRRORED #1: 🦈3DFB15
+   Whale $43333 → Mirror $0.0124 | San Francisco Giants @ 53.5%
+   Chicago White Sox vs. San Francisco Giants
 
-✅ MIRRORED #2: 🦈D202BF
-   Whale $45137 → Mirror $0.0138 | No @ 36.5%
-   Will Como 1907 win on 2026-05-24?
+✅ MIRRORED #2: 🦈113636
+   Whale $40961 → Mirror $0.0118 | Chicago White Sox @ 46.5%
+   Chicago White Sox vs. San Francisco Giants
 
-✅ MIRRORED #3: 🦈65B542
-   Whale $35000 → Mirror $0.0131 | Yes @ 63.5%
-   Will Como 1907 win on 2026-05-24?
+✅ MIRRORED #3: 🦈440A14
+   Whale $17502 → Mirror $0.0112 | Yes @ 59.5%
+   Will AC Milan win on 2026-05-24?
 
-━━━ CLAWBOT v7: 3 mirrored | Bal $0.2489 ━━━
+━━━ CLAWBOT v7: 3 mirrored | Bal $0.2135 ━━━
