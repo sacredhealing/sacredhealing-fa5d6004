@@ -1147,6 +1147,8 @@ export default function HanumanCodex() {
   const { tier: memberTier } = useMembershipTier();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [openItem, setOpenItem] = useState<string | null>(null);
+  const [expandedVerse, setExpandedVerse] = useState<string | null>(null);
+  const [expandedGhata, setExpandedGhata] = useState<string | null>(null);
 
   const userLevel = TIER_ORDER[memberTier ?? "free"] ?? 0;
   const canAccess = (t: string) => userLevel >= TIER_ORDER[t];
