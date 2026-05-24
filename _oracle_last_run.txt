@@ -1,33 +1,33 @@
 ══════════════════════════════════════════════════════
   SQI-2050 🦈 CLAWBOT v7 — Production
-  2026-05-24T17:44:43.376Z | PAPER
+  2026-05-24T18:53:26.111Z | PAPER
   Min: $100 | Entry zone: 6%–94%
 ══════════════════════════════════════════════════════
-Balance: $0.34
+Balance: $0.29
 
-🔍 Scanning 87,373,822 → 87,374,272
-  0xE111180000: 85452 logs → 6017 whale trades
-  0xe2222d279d: 13700 logs → 1618 whale trades
+🔍 Scanning 87,376,178 → 87,376,628
+  0xE111180000: 82756 logs → 5104 whale trades
+  0xe2222d279d: 18012 logs → 2236 whale trades
 
-Total: 7635 | New: 7635
+Total: 7340 | New: 7340
 
 📊 Top trades:
-  $   74799 | 0xc8075693f4 | 112416139089...
-  $   74799 | 0xc8075693f4 | 112416139089...
-  $   58945 | 0x09b540739c | 178514293033...
-  $   58945 | 0x09b540739c | 178514293033...
-  $   52752 | 0xb45a797faa | 476096646684...
+  $  100000 | 0xf5198df69e | 187047785406...
+  $  100000 | 0x6d22929355 | 187047785406...
+  $  100000 | 0x6d22929355 | 187047785406...
+  $   60533 | 0x65b54274eb | 619369260215...
+  $   60533 | 0x65b54274eb | 619369260215...
 
-✅ MIRRORED #1: 🦈C80756
-   Whale $74799 → Mirror $0.0169 | Cincinnati Reds @ 52.5%
-   St. Louis Cardinals vs. Cincinnati Reds
+✅ MIRRORED #1: 🦈65B542
+   Whale $60533 → Mirror $0.0145 | Yes @ 62.5%
+   Will Como 1907 win on 2026-05-24?
 
-✅ MIRRORED #2: 🦈09B540
-   Whale $58945 → Mirror $0.0161 | Under @ 55.5%
-   Houston Astros vs. Chicago Cubs: O/U 7.5
+✅ MIRRORED #2: 🦈D202BF
+   Whale $45137 → Mirror $0.0138 | No @ 36.5%
+   Will Como 1907 win on 2026-05-24?
 
-✅ MIRRORED #3: 🦈B45A79
-   Whale $52752 → Mirror $0.0153 | Over @ 44.5%
-   Houston Astros vs. Chicago Cubs: O/U 7.5
+✅ MIRRORED #3: 🦈65B542
+   Whale $35000 → Mirror $0.0131 | Yes @ 63.5%
+   Will Como 1907 win on 2026-05-24?
 
-━━━ CLAWBOT v7: 3 mirrored | Bal $0.2903 ━━━
+━━━ CLAWBOT v7: 3 mirrored | Bal $0.2489 ━━━
