@@ -1,33 +1,33 @@
 ══════════════════════════════════════════════════════
   SQI-2050 🦈 CLAWBOT v7 — Production
-  2026-05-24T20:08:11.424Z | PAPER
+  2026-05-24T21:12:19.769Z | PAPER
   Min: $100 | Entry zone: 6%–94%
 ══════════════════════════════════════════════════════
-Balance: $0.25
+Balance: $0.21
 
-🔍 Scanning 87,378,741 → 87,379,191
-  0xE111180000: 98166 logs → 5071 whale trades
-  0xe2222d279d: 21441 logs → 2063 whale trades
+🔍 Scanning 87,380,940 → 87,381,390
+  0xE111180000: 85158 logs → 4977 whale trades
+  0xe2222d279d: 15073 logs → 1791 whale trades
 
-Total: 7134 | New: 7134
+Total: 6768 | New: 6768
 
 📊 Top trades:
-  $   47718 | 0xa77105bb4d | 857955324523...
-  $   47718 | 0xfedc381bf3 | 857955324523...
-  $   47718 | 0xfedc381bf3 | 857955324523...
-  $   43333 | 0x3dfb153c19 | 231853730773...
-  $   43333 | 0x3dfb153c19 | 231853730773...
+  $  499992 | 0x8a815b830d | 439076736462...
+  $  499992 | 0x8a815b830d | 439076736462...
+  $  425907 | 0xa7a8c1fd4b | 439076736462...
+  $  204670 | 0xc0a65b1567 | 579609812765...
+  $  204670 | 0xff7bc9a43b | 250132466620...
 
-✅ MIRRORED #1: 🦈3DFB15
-   Whale $43333 → Mirror $0.0124 | San Francisco Giants @ 53.5%
-   Chicago White Sox vs. San Francisco Giants
+✅ MIRRORED #1: 🦈B91AEB
+   Whale $172485 → Mirror $0.0107 | Los Angeles Angels @ 52.5%
+   Texas Rangers vs. Los Angeles Angels
 
-✅ MIRRORED #2: 🦈113636
-   Whale $40961 → Mirror $0.0118 | Chicago White Sox @ 46.5%
-   Chicago White Sox vs. San Francisco Giants
+✅ MIRRORED #2: 🦈B45A79
+   Whale $98366 → Mirror $0.0101 | Texas Rangers @ 47.5%
+   Texas Rangers vs. Los Angeles Angels
 
-✅ MIRRORED #3: 🦈440A14
-   Whale $17502 → Mirror $0.0112 | Yes @ 59.5%
-   Will AC Milan win on 2026-05-24?
+✅ MIRRORED #3: 🦈40EA9F
+   Whale $41572 → Mirror $0.0096 | Team Liquid @ 49.5%
+   LoL: LYON vs Team Liquid - Game 2 Winner
 
-━━━ CLAWBOT v7: 3 mirrored | Bal $0.2135 ━━━
+━━━ CLAWBOT v7: 3 mirrored | Bal $0.1831 ━━━
