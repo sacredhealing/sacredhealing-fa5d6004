@@ -246,7 +246,7 @@ function renderInline(
       }
       if (opts?.sqiGoldBold && variant === 'body') {
         return (
-          <strong key={i} style={{ color: 'rgba(255,255,255,0.97)', fontWeight: 700 }}>
+          <strong key={i} style={{ color: 'rgba(225,210,185,0.92)', fontWeight: 700, fontStyle: 'normal' }}>
             {inner}
           </strong>
         );
@@ -451,7 +451,7 @@ function renderSQIContent(content: string) {
     if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
       elements.push(
         <li key={i} style={{ marginLeft: '18px', listStyleType: 'disc', fontSize: '16px', lineHeight: 1.75, color: 'rgba(255,255,255,0.82)', marginBottom: '10px', width: 'calc(100% - 18px)', maxWidth: '100%', paddingRight: '4px' }}>
-          {renderInline(trimmed.slice(2), 'body', false, { sqiGoldBold: true })}
+          {renderInline(trimmed.slice(2), 'body', false)}
         </li>
       );
       i++; continue;
@@ -460,7 +460,7 @@ function renderSQIContent(content: string) {
     if (/^\d+\.\s/.test(trimmed)) {
       elements.push(
         <li key={i} style={{ marginLeft: '18px', listStyleType: 'decimal', fontSize: '16px', lineHeight: 1.75, color: 'rgba(255,255,255,0.82)', marginBottom: '10px', width: 'calc(100% - 18px)', maxWidth: '100%', paddingRight: '4px' }}>
-          {renderInline(trimmed.replace(/^\d+\.\s/, ''), 'body', false, { sqiGoldBold: true })}
+          {renderInline(trimmed.replace(/^\d+\.\s/, ''), 'body', false)}
         </li>
       );
       i++; continue;
@@ -468,7 +468,7 @@ function renderSQIContent(content: string) {
 
     elements.push(
       <p key={i} style={{ color: 'rgba(225,210,185,0.9)', fontSize: '18px', lineHeight: 2.0, marginBottom: '14px', marginTop: '0', wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '100%' }}>
-        {renderInline(trimmed, 'body', false, { sqiGoldBold: true })}
+        {renderInline(trimmed, 'body', false)}
       </p>
     );
     i++;
