@@ -1,33 +1,33 @@
 ══════════════════════════════════════════════════════
   SQI-2050 🦈 CLAWBOT v7 — Production
-  2026-05-24T04:42:43.398Z | PAPER
+  2026-05-24T07:42:52.780Z | PAPER
   Min: $100 | Entry zone: 6%–94%
 ══════════════════════════════════════════════════════
-Balance: $1.16
+Balance: $0.99
 
-🔍 Scanning 87,347,011 → 87,347,461
-  0xE111180000: 59155 logs → 3060 whale trades
-  0xe2222d279d: 15109 logs → 1056 whale trades
+🔍 Scanning 87,353,187 → 87,353,637
+  0xE111180000: 86950 logs → 4824 whale trades
+  0xe2222d279d: 16682 logs → 1759 whale trades
 
-Total: 4116 | New: 4116
+Total: 6583 | New: 6583
 
 📊 Top trades:
-  $  100725 | 0xa5ea13a81d | 901252619506...
-  $  100725 | 0x8fbb3c3249 | 953130816504...
-  $  100725 | 0x8fbb3c3249 | 953130816504...
-  $   34631 | 0xc8ab97a908 | 107333736674...
-  $   34631 | 0xc8ab97a908 | 107333736674...
+  $  305917 | 0x47661b3073 | 337473050420...
+  $  305917 | 0x8a815b830d | 337473050420...
+  $  305917 | 0x8a815b830d | 337473050420...
+  $   38266 | 0x2117ae94a9 | 329952340583...
+  $   38266 | 0x2117ae94a9 | 329952340583...
 
-✅ MIRRORED #1: 🦈A5EA13
-   Whale $100725 → Mirror $0.058 | Legacy @ 24.5%
-   Counter-Strike: Team Falcons vs Legacy (BO5) - CS Asia Championships Playoffs
+✅ MIRRORED #1: 🦈CF19C4
+   Whale $35002 → Mirror $0.0497 | Yes @ 13.2%
+   Strait of Hormuz traffic returns to normal by end of May?
 
-✅ MIRRORED #2: 🦈8FBB3C
-   Whale $100725 → Mirror $0.0551 | Team Falcons @ 75.5%
-   Counter-Strike: Team Falcons vs Legacy (BO5) - CS Asia Championships Playoffs
+✅ MIRRORED #2: 🦈CF19C4
+   Whale $30727 → Mirror $0.0472 | Yes @ 13.2%
+   Strait of Hormuz traffic returns to normal by end of May?
 
-✅ MIRRORED #3: 🦈13414A
-   Whale $26161 → Mirror $0.0523 | FURIA Esports @ 51.5%
-   LoL: RED Canids vs FURIA Esports (BO5) - CBLOL Playoffs
+✅ MIRRORED #3: 🦈F10185
+   Whale $24865 → Mirror $0.0449 | No @ 68.5%
+   US x Iran permanent peace deal by May 26, 2026?
 
-━━━ CLAWBOT v7: 3 mirrored | Bal $0.9944 ━━━
+━━━ CLAWBOT v7: 3 mirrored | Bal $0.8526 ━━━
