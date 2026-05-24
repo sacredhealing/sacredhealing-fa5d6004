@@ -246,9 +246,9 @@ function renderInline(
       }
       if (opts?.sqiGoldBold && variant === 'body') {
         return (
-          <strong key={i} style={{ color: 'rgba(225,210,185,0.92)', fontWeight: 700, fontStyle: 'normal' }}>
+          <span key={i} style={{ color: '#D4AF37', fontWeight: 400 }}>
             {inner}
-          </strong>
+          </span>
         );
       }
       if (variant === 'heading') {
@@ -290,10 +290,7 @@ function renderInline(
       );
     }
     // Plain text segment — auto-bold sacred terms (frequency names, masters, transmission types)
-    if (opts?.sqiGoldBold && variant === 'body' && p) {
-      return p;
-    }
-    return p;
+    if (p) return p;
   });
 }
 
@@ -439,7 +436,7 @@ function renderSQIContent(content: string) {
         if (dashMatch) lineForRender = `${dashMatch[1]}**${dashMatch[2].trim()}**${dashMatch[3]}${dashMatch[4]}`;
       }
       elements.push(
-        <p key={i} style={{ color: 'rgba(255,255,255,0.85)', fontSize: '18px', lineHeight: 1.8, paddingLeft: '8px', marginBottom: '10px', marginTop: '0', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+        <p key={i} style={{ color: 'rgba(255,255,255,0.85)', fontSize: '20px', lineHeight: 1.8, paddingLeft: '8px', marginBottom: '10px', marginTop: '0', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
           {renderInline(lineForRender, 'body', false, { sqiGoldBold: true })}
         </p>
       );
@@ -465,7 +462,7 @@ function renderSQIContent(content: string) {
     }
 
     elements.push(
-      <p key={i} style={{ color: 'rgba(225,210,185,0.9)', fontSize: '18px', lineHeight: 2.0, marginBottom: '14px', marginTop: '0', wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '100%' }}>
+      <p key={i} style={{ color: 'rgba(225,210,185,0.9)', fontSize: '20px', lineHeight: 2.0, marginBottom: '16px', marginTop: '0', wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '100%' }}>
         {renderInline(trimmed, 'body', false)}
       </p>
     );
@@ -3164,7 +3161,7 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
 
   .sqi-ancient-body p {
     font-family: 'IM Fell English', Georgia, serif !important;
-    font-size: 18px !important;
+    font-size: 20px !important;
     line-height: 2.0 !important;
     color: rgba(225,210,185,0.92) !important;
     margin-bottom: 16px !important;
