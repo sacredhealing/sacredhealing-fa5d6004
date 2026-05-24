@@ -214,17 +214,25 @@ function renderChatText(text: string, bubble: 'model' | 'user' = 'model') {
   });
 }
 
+function stripAsterisks(text: string): string {
+  // Step 1: protect matched **bold** pairs with placeholder
+  const OPEN = '\u0002';
+  const CLOSE = '\u0003';
+  let s = text.replace(/\*\*([^\n*]+?)\*\*/g, OPEN + '$1' + CLOSE);
+  // Step 2: remove any remaining lone **
+  s = s.replace(/\*\*/g, '');
+  // Step 3: restore bold markers
+  s = s.replace(new RegExp(OPEN + '([^' + OPEN + CLOSE + ']+)' + CLOSE, 'g'), '**$1**');
+  return s;
+}
+
 function renderInline(
   text: string,
   variant: InlineVariant = 'body',
   onGold = false,
   opts?: RenderInlineOpts,
 ): React.ReactNode {
-  // Strip lone ** markers the model occasionally outputs without closing pair
-  const cleaned = text.replace(/\*\*([^*])/g, (m, c) => {
-    // If no closing ** exists later in the string, remove the opening **
-    return m;
-  }).replace(/(?<!\*)\*\*(?![^*]*\*\*)/g, '');
+  const cleaned = stripAsterisks(text);
   const parts = cleaned.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
   return parts.map((p, i) => {
     if (p.startsWith('**') && p.endsWith('**')) {
@@ -391,7 +399,9 @@ function renderPrescriptionBlock(lines: string[], startIdx: number): { jsx: Reac
 }
 
 function renderSQIContent(content: string) {
-  const lines = content.split('\n');
+  // Strip all unmatched ** the model outputs before line processing
+  const content2 = stripAsterisks(content);
+  const lines = content2.split('\n');
   const elements: React.ReactNode[] = [];
   let i = 0;
   const gapAfterSection = 18;
@@ -424,14 +434,14 @@ function renderSQIContent(content: string) {
     }
 
     if (trimmed.startsWith('·')) {
-      // Strip any leading ** the model outputs before frequency names
-      let lineForRender = trimmed.replace(/^(·\s*)\*\*/, '$1');
+      // Bold the frequency name (before —) in bullet lines
+      let lineForRender = trimmed;
       if (!lineForRender.includes('**')) {
         const dashMatch = lineForRender.match(/^(·\s*)(.+?)(\s+[—–-]\s+)(.+)$/);
         if (dashMatch) lineForRender = `${dashMatch[1]}**${dashMatch[2].trim()}**${dashMatch[3]}${dashMatch[4]}`;
       }
       elements.push(
-        <p key={i} style={{ color: 'rgba(255,255,255,0.78)', fontSize: '18px', lineHeight: 1.75, paddingLeft: '10px', marginBottom: '8px', marginTop: '2px', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+        <p key={i} style={{ color: 'rgba(255,255,255,0.85)', fontSize: '18px', lineHeight: 1.8, paddingLeft: '8px', marginBottom: '10px', marginTop: '0', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
           {renderInline(lineForRender, 'body', false, { sqiGoldBold: true })}
         </p>
       );
@@ -457,7 +467,7 @@ function renderSQIContent(content: string) {
     }
 
     elements.push(
-      <p key={i} style={{ color: 'rgba(255,255,255,0.84)', fontSize: '18px', lineHeight: 1.85, marginBottom: '12px', marginTop: '0', wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'pre-wrap', maxWidth: '100%' }}>
+      <p key={i} style={{ color: 'rgba(225,210,185,0.9)', fontSize: '18px', lineHeight: 2.0, marginBottom: '14px', marginTop: '0', wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '100%' }}>
         {renderInline(trimmed, 'body', false, { sqiGoldBold: true })}
       </p>
     );
@@ -3157,9 +3167,10 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
   .sqi-ancient-body p {
     font-family: 'IM Fell English', Georgia, serif !important;
     font-size: 18px !important;
-    line-height: 1.9 !important;
-    color: rgba(225,210,185,0.88) !important;
-    margin-bottom: 14px !important;
+    line-height: 2.0 !important;
+    color: rgba(225,210,185,0.92) !important;
+    margin-bottom: 16px !important;
+    width: 100% !important;
   }
 
   .sqi-ancient-body .sqi-diamond-heading {
@@ -3175,7 +3186,7 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
 
   .sqi-ancient-body strong,
   .sqi-ancient-body b {
-    color: rgba(235,220,200,0.97) !important;
+    color: rgba(255,255,255,0.98) !important;
     font-family: 'IM Fell English', Georgia, serif !important;
     font-size: 1em !important;
     letter-spacing: 0 !important;
