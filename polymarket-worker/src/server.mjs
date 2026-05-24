@@ -253,6 +253,21 @@ async function executeLiveOrder(signal) {
   } catch (e) { err('LIVE', e?.message); return null; }
 }
 
+// ─── Fetch market end date from Gamma ─────────────────────────────────────────
+const endDateCache = new Map();
+async function fetchEndDate(marketId) {
+  if (!marketId || marketId === 'unknown') return null;
+  if (endDateCache.has(marketId)) return endDateCache.get(marketId);
+  try {
+    const r = await fetch(`${GAMMA_API}/markets/${marketId}`);
+    if (!r.ok) return null;
+    const m = await r.json();
+    const endDate = m.endDate || m.end_date_iso || null;
+    if (endDate) endDateCache.set(marketId, endDate);
+    return endDate;
+  } catch { return null; }
+}
+
 // ─── Record trade (paper or live) ─────────────────────────────────────────────
 async function recordTrade(signal, strategy) {
   // ── POSITION CAP ──────────────────────────────────────────────────────────
@@ -268,6 +283,7 @@ async function recordTrade(signal, strategy) {
     log('LIVE', `${signal.direction.toUpperCase()} ${signal.outcome} $${size} @ ${(signal.currentPrice*100).toFixed(1)}%`);
     const order = await executeLiveOrder(signal);
     const txHash = order?.orderId || order?.id || `live-${Date.now()}`;
+    const endDate = await fetchEndDate(signal.marketId);
     await dbInsert('polymarket_trades', {
       market_id: signal.marketId || 'unknown',
       market_question: signal.reason || '',
@@ -276,6 +292,7 @@ async function recordTrade(signal, strategy) {
       entry_price: signal.currentPrice || 0.5, amount_usdc: size,
       tx_hash: txHash, strategy, is_paper: false,
       status: order ? 'open' : 'failed',
+      market_end_date: endDate,
     });
     openPositions++;
     tradeCount++;
@@ -572,3 +589,90 @@ async function main() {
 }
 
 main().catch(e => { console.error(e); process.exit(1); });
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RESOLUTION ENGINE — checks open trades against Polymarket API every 5 min
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function fetchMarketDetail(marketId) {
+  try {
+    const r = await fetch(`${GAMMA_API}/markets/${marketId}`);
+    if (!r.ok) return null;
+    return r.json();
+  } catch { return null; }
+}
+
+async function resolveOpenTrades() {
+  try {
+    // Get all open trades that have an end date
+    const open = await dbGet(
+      'polymarket_trades',
+      'status=eq.open&market_id=neq.unknown&select=id,market_id,outcome,direction,entry_price,amount_usdc,shares,is_paper,market_end_date'
+    );
+    if (!open?.length) return;
+
+    const now = Date.now();
+    let resolved = 0;
+
+    for (const trade of open) {
+      // Skip if market end date is in the future (with 1hr buffer)
+      if (trade.market_end_date) {
+        const endMs = new Date(trade.market_end_date).getTime();
+        if (endMs > now - 3_600_000) continue; // not expired yet
+      }
+
+      const market = await fetchMarketDetail(trade.market_id);
+      if (!market) continue;
+      if (!market.closed && !market.resolved) continue; // still live
+
+      // Find the winning outcome
+      const names    = JSON.parse(market.outcomes      || '["Yes","No"]');
+      const prices   = JSON.parse(market.outcomePrices || '[0.5,0.5]');
+      const winnerIdx = prices.findIndex(p => parseFloat(p) >= 0.99);
+      const winner    = winnerIdx >= 0 ? names[winnerIdx] : null;
+
+      if (!winner) continue; // not fully resolved yet
+
+      const tradeWon   = trade.outcome?.toLowerCase() === winner.toLowerCase();
+      const exitPrice  = tradeWon ? 1.0 : 0.0;
+      const shares     = parseFloat(trade.shares) || 0;
+      const spent      = parseFloat(trade.amount_usdc) || 0;
+      const pnl        = tradeWon ? (shares * exitPrice) - spent : -spent;
+      const pnlPct     = spent > 0 ? (pnl / spent) * 100 : 0;
+
+      await dbUpdate('polymarket_trades', `id=eq.${trade.id}`, {
+        status:            tradeWon ? 'won' : 'lost',
+        exit_price:        exitPrice,
+        pnl_usdc:          parseFloat(pnl.toFixed(4)),
+        pnl_pct:           parseFloat(pnlPct.toFixed(2)),
+        winning_outcome:   winner,
+        resolved_at:       new Date().toISOString(),
+        resolution_source: 'gamma_api',
+      });
+
+      // Update paper balance if won
+      if (trade.is_paper && tradeWon) {
+        const winnings = shares * exitPrice;
+        await loadBalance();
+        const newBal = balance + winnings;
+        await dbUpdate('polymarket_bot_settings', 'limit=1', {
+          paper_balance: parseFloat(newBal.toFixed(4)),
+        });
+        balance = newBal;
+        log('RESOLVE', `✅ WON ${trade.outcome} | +$${winnings.toFixed(2)} | new bal $${newBal.toFixed(2)}`);
+      } else {
+        log('RESOLVE', `❌ LOST ${trade.outcome} | -$${spent.toFixed(2)} | winner was ${winner}`);
+      }
+      resolved++;
+      openPositions = Math.max(0, openPositions - 1);
+      await new Promise(r => setTimeout(r, 300));
+    }
+
+    if (resolved > 0) log('RESOLVE', `Settled ${resolved} trades`);
+  } catch (e) { err('RESOLVE', e?.message); }
+}
+
+// Run resolution check every 5 minutes
+setInterval(resolveOpenTrades, 5 * 60 * 1000);
+// Also run once on boot after 30s
+setTimeout(resolveOpenTrades, 30_000);
