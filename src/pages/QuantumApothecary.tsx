@@ -322,9 +322,7 @@ function autoBoldSacredTerms(text: string): React.ReactNode {
   return parts.map((part, i) => {
     if (i % 2 === 1) {
       return (
-        <strong key={i} style={{ color: 'rgba(255,255,255,0.97)', fontWeight: 700 }}>
-          {part}
-        </strong>
+        <span key={i}>{part}</span>
       );
     }
     return part;
@@ -3048,8 +3046,8 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
 
         .sqi-message strong,
         .sqi-message b {
-          color: rgba(255,255,255,0.97);
-          font-weight: 800;
+          color: rgba(225,210,185,0.92);
+          font-weight: 700;
         }
         .sqi-message .sqi-diamond-heading,
         .sqi-message .sqi-diamond-heading strong,
