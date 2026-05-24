@@ -76,6 +76,7 @@ function getActiveNavTo(pathname: string): string | null {
         '/soul-scan',
         '/vayu-protocol',
         '/akashic-records',
+        '/hanuman-codex',
         '/akashic-reading',
         '/prompt-library',
         '/social-automation',
