@@ -1,33 +1,33 @@
 ══════════════════════════════════════════════════════
   SQI-2050 🦈 CLAWBOT v7 — Production
-  2026-05-24T11:03:19.995Z | PAPER
+  2026-05-24T12:12:14.139Z | PAPER
   Min: $100 | Entry zone: 6%–94%
 ══════════════════════════════════════════════════════
-Balance: $0.73
+Balance: $0.63
 
-🔍 Scanning 87,360,060 → 87,360,510
-  0xE111180000: 87453 logs → 4871 whale trades
-  0xe2222d279d: 15833 logs → 1901 whale trades
+🔍 Scanning 87,362,423 → 87,362,873
+  0xE111180000: 74630 logs → 5250 whale trades
+  0xe2222d279d: 17775 logs → 1982 whale trades
 
-Total: 6772 | New: 6772
+Total: 7232 | New: 7232
 
 📊 Top trades:
-  $  275000 | 0x5e4dbe95f8 | 110545219743...
-  $  275000 | 0x5e4dbe95f8 | 110545219743...
-  $  100000 | 0x2d7be5170a | 214756143346...
-  $  100000 | 0x5e4dbe95f8 | 110545219743...
-  $  100000 | 0x5e4dbe95f8 | 110545219743...
+  $  280350 | 0x5e4dbe95f8 | 333144943540...
+  $  280350 | 0x5e4dbe95f8 | 333144943540...
+  $  203348 | 0xc0a65b1567 | 901175074357...
+  $  203348 | 0xff7bc9a43b | 353031467934...
+  $  203348 | 0xff7bc9a43b | 353031467934...
 
 ✅ MIRRORED #1: 🦈5E4DBE
-   Whale $275000 → Mirror $0.0365 | Yes @ 57.5%
-   Will West Ham United FC win on 2026-05-24?
+   Whale $280350 → Mirror $0.0313 | Tomas Etcheverry @ 69.5%
+   Roland Garros ATP: Tomas Etcheverry vs Nuno Borges
 
-✅ MIRRORED #2: 🦈2D7BE5
-   Whale $100000 → Mirror $0.0347 | No @ 42.5%
-   Will West Ham United FC win on 2026-05-24?
+✅ MIRRORED #2: 🦈C3ACF5
+   Whale $200000 → Mirror $0.0298 | Nuno Borges @ 30.5%
+   Roland Garros ATP: Tomas Etcheverry vs Nuno Borges
 
 ✅ MIRRORED #3: 🦈5E4DBE
-   Whale $100000 → Mirror $0.033 | Yes @ 57.5%
+   Whale $200000 → Mirror $0.0283 | Yes @ 57.5%
    Will West Ham United FC win on 2026-05-24?
 
-━━━ CLAWBOT v7: 3 mirrored | Bal $0.6268 ━━━
+━━━ CLAWBOT v7: 3 mirrored | Bal $0.5374 ━━━
