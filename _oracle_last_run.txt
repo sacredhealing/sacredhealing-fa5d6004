@@ -1,33 +1,33 @@
 ══════════════════════════════════════════════════════
   SQI-2050 🦈 CLAWBOT v7 — Production
-  2026-05-24T15:34:03.435Z | PAPER
+  2026-05-24T16:43:30.517Z | PAPER
   Min: $100 | Entry zone: 6%–94%
 ══════════════════════════════════════════════════════
-Balance: $0.46
+Balance: $0.40
 
-🔍 Scanning 87,369,342 → 87,369,792
-  0xE111180000: 97520 logs → 6640 whale trades
-  0xe2222d279d: 25736 logs → 2709 whale trades
+🔍 Scanning 87,371,723 → 87,372,173
+  0xE111180000: 86284 logs → 5205 whale trades
+  0xe2222d279d: 27508 logs → 3468 whale trades
 
-Total: 9349 | New: 9349
+Total: 8673 | New: 8673
 
 📊 Top trades:
-  $   54873 | 0x9495425fee | 349401825999...
-  $   54873 | 0x9495425fee | 349401825999...
-  $   53290 | 0xf1528f12e6 | 721771209525...
-  $   52694 | 0x5dab5ed969 | 275049999386...
-  $   52694 | 0x5dab5ed969 | 275049999386...
+  $  278312 | 0xa5ea13a81d | 461165981167...
+  $  278312 | 0xa5ea13a81d | 461165981167...
+  $   71562 | 0x9495425fee | 502624165804...
+  $   50000 | 0xc8075693f4 | 502624165804...
+  $   50000 | 0xc8075693f4 | 502624165804...
 
-✅ MIRRORED #1: 🦈949542
-   Whale $54873 → Mirror $0.023 | Milwaukee Brewers @ 39.5%
-   Los Angeles Dodgers vs. Milwaukee Brewers
+✅ MIRRORED #1: 🦈A5EA13
+   Whale $278312 → Mirror $0.0198 | Minnesota Twins @ 38.5%
+   Minnesota Twins vs. Boston Red Sox
 
-✅ MIRRORED #2: 🦈F1528F
-   Whale $53290 → Mirror $0.0219 | Los Angeles Dodgers @ 60.5%
-   Los Angeles Dodgers vs. Milwaukee Brewers
+✅ MIRRORED #2: 🦈949542
+   Whale $71562 → Mirror $0.0188 | Boston Red Sox @ 61.5%
+   Minnesota Twins vs. Boston Red Sox
 
-✅ MIRRORED #3: 🦈5DAB5E
-   Whale $52694 → Mirror $0.0208 | Delhi Capitals @ 45.5%
-   Indian Premier League: Kolkata Knight Riders vs Delhi Capitals
+✅ MIRRORED #3: 🦈7A8885
+   Whale $50000 → Mirror $0.0178 | Boston Red Sox @ 61.5%
+   Minnesota Twins vs. Boston Red Sox
 
-━━━ CLAWBOT v7: 3 mirrored | Bal $0.3950 ━━━
+━━━ CLAWBOT v7: 3 mirrored | Bal $0.3386 ━━━
