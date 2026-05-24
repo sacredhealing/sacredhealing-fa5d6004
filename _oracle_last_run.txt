@@ -1,33 +1,33 @@
 ══════════════════════════════════════════════════════
   SQI-2050 🦈 CLAWBOT v7 — Production
-  2026-05-24T21:12:19.769Z | PAPER
+  2026-05-24T22:13:31.053Z | PAPER
   Min: $100 | Entry zone: 6%–94%
 ══════════════════════════════════════════════════════
-Balance: $0.21
+Balance: $0.18
 
-🔍 Scanning 87,380,940 → 87,381,390
-  0xE111180000: 85158 logs → 4977 whale trades
-  0xe2222d279d: 15073 logs → 1791 whale trades
+🔍 Scanning 87,383,038 → 87,383,488
+  0xE111180000: 99308 logs → 6619 whale trades
+  0xe2222d279d: 14152 logs → 1452 whale trades
 
-Total: 6768 | New: 6768
+Total: 8071 | New: 8071
 
 📊 Top trades:
-  $  499992 | 0x8a815b830d | 439076736462...
-  $  499992 | 0x8a815b830d | 439076736462...
-  $  425907 | 0xa7a8c1fd4b | 439076736462...
-  $  204670 | 0xc0a65b1567 | 579609812765...
-  $  204670 | 0xff7bc9a43b | 250132466620...
+  $  259026 | 0xbaa2bcb543 | 720940698239...
+  $  259026 | 0xbaa2bcb543 | 720940698239...
+  $  177730 | 0xbaa2bcb543 | 729649782213...
+  $  177730 | 0xbaa2bcb543 | 729649782213...
+  $  146190 | 0xcf19c42081 | 720940698239...
 
-✅ MIRRORED #1: 🦈B91AEB
-   Whale $172485 → Mirror $0.0107 | Los Angeles Angels @ 52.5%
-   Texas Rangers vs. Los Angeles Angels
+✅ MIRRORED #1: 🦈BAA2BC
+   Whale $259026 → Mirror $0.0092 | Yes @ 34.0%
+   US x Iran permanent peace deal by May 31, 2026?
 
-✅ MIRRORED #2: 🦈B45A79
-   Whale $98366 → Mirror $0.0101 | Texas Rangers @ 47.5%
-   Texas Rangers vs. Los Angeles Angels
+✅ MIRRORED #2: 🦈BAA2BC
+   Whale $177730 → Mirror $0.0087 | Yes @ 7.5%
+   US x Iran permanent peace deal by May 26, 2026?
 
-✅ MIRRORED #3: 🦈40EA9F
-   Whale $41572 → Mirror $0.0096 | Team Liquid @ 49.5%
-   LoL: LYON vs Team Liquid - Game 2 Winner
+✅ MIRRORED #3: 🦈FBF3D5
+   Whale $100000 → Mirror $0.0083 | Under @ 35.5%
+   Thunder vs. Spurs: O/U 213.5
 
-━━━ CLAWBOT v7: 3 mirrored | Bal $0.1831 ━━━
+━━━ CLAWBOT v7: 3 mirrored | Bal $0.1569 ━━━
