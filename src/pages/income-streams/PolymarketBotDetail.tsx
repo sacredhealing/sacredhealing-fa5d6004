@@ -273,6 +273,8 @@ const PolymarketBotDetailInner: React.FC = () => {
   const [lastSync, setLastSync] = useState<string>('Never');
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [dbTrades, setDbTrades] = useState<any[]>([]);
+  const [tradesLoading, setTradesLoading] = useState(false);
   const termScrollRef = useRef<HTMLDivElement>(null);
   const prevActiveTabRef = useRef(activeTab);
   const scanIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -462,6 +464,24 @@ const PolymarketBotDetailInner: React.FC = () => {
       setIsResettingPaperData(false);
     }
   }, [user?.id, isRunning, t, addLog, refreshPnL]);
+
+  // ── Fetch trades from DB ──────────────────────────────────────────────────
+  const fetchDbTrades = useCallback(async () => {
+    try {
+      setTradesLoading(true);
+      const { data, error } = await supabase
+        .from('polymarket_trades')
+        .select('id,market_question,outcome,direction,entry_price,amount_usdc,pnl_usdc,pnl_pct,status,strategy,market_end_date,resolved_at,is_paper,created_at')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (!error && data) setDbTrades(data);
+    } catch(e) { /* silent */ } finally { setTradesLoading(false); }
+  }, []);
+
+  // Load trades when tab opens
+  useEffect(() => {
+    if (activeTab === 'trades') void fetchDbTrades();
+  }, [activeTab, fetchDbTrades]);
 
   const handleResetPaperDataHardReload = useCallback(async () => {
     if (!user?.id) return;
@@ -1041,7 +1061,7 @@ const PolymarketBotDetailInner: React.FC = () => {
           </div>
 
           <div className="tabs" style={{ marginBottom: 16 }}>
-            {[{ k: 'dashboard', l: '⬡ Terminal' }, { k: 'signals', l: '◈ Signals' }, { k: 'settings', l: '⚙ Settings' }].map((tab) => (
+            {[{ k: 'dashboard', l: '⬡ Terminal' }, { k: 'trades', l: '◈ Trades' }, { k: 'signals', l: '◈ Signals' }, { k: 'settings', l: '⚙ Settings' }].map((tab) => (
               <button key={tab.k} type="button" className={`tab ${activeTab === tab.k ? 'on' : ''}`} onClick={() => setActiveTab(tab.k)}>{tab.l}</button>
             ))}
           </div>
@@ -1073,6 +1093,114 @@ const PolymarketBotDetailInner: React.FC = () => {
                   ))
                 )}
               </div>
+            </div>
+          )}
+
+          {activeTab === 'trades' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {/* Header row */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.25em', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase' }}>
+                  {dbTrades.length} trades
+                </span>
+                <button
+                  type="button"
+                  onClick={() => void fetchDbTrades()}
+                  style={{ background: 'none', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 8, color: '#D4AF37', fontSize: 10, padding: '3px 10px', cursor: 'pointer', fontWeight: 700, letterSpacing: '0.15em' }}
+                >
+                  REFRESH
+                </button>
+              </div>
+
+              {tradesLoading && (
+                <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>Loading trades…</div>
+              )}
+
+              {!tradesLoading && dbTrades.length === 0 && (
+                <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>
+                  No trades yet. Start the engine to begin.
+                </div>
+              )}
+
+              {!tradesLoading && dbTrades.map((t) => {
+                const isOpen   = t.status === 'open';
+                const isWon    = t.status === 'won';
+                const isLost   = t.status === 'lost';
+
+                // Countdown to market end
+                let timeLeft = '';
+                if (t.market_end_date && isOpen) {
+                  const ms = new Date(t.market_end_date).getTime() - Date.now();
+                  if (ms > 0) {
+                    const h = Math.floor(ms / 3600000);
+                    const m = Math.floor((ms % 3600000) / 60000);
+                    timeLeft = h > 24
+                      ? `${Math.floor(h/24)}d ${h%24}h`
+                      : h > 0 ? `${h}h ${m}m` : `${m}m`;
+                  } else {
+                    timeLeft = 'Resolving…';
+                  }
+                } else if (t.resolved_at) {
+                  timeLeft = new Date(t.resolved_at).toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+                }
+
+                // Colours
+                const statusColor = isWon ? '#4ade80' : isLost ? '#f87171' : '#D4AF37';
+                const pnlColor    = isWon ? '#4ade80' : isLost ? '#f87171' : 'rgba(255,255,255,0.4)';
+                const dot         = isWon ? '●' : isLost ? '●' : '○';
+
+                // Strategy label short form
+                const stratLabel = (t.strategy || '').replace('whale_mirror','WHALE').replace('latency_arb','LATENCY').replace('volatility_scalp','SCALP');
+
+                // Question truncated
+                const question = (t.market_question || t.strategy || 'Unknown market').replace(/\[WHALE\]|\[LATENCY\]|\[SCALP\]/g,'').trim().slice(0, 55);
+
+                return (
+                  <div key={t.id} style={{
+                    background: 'rgba(255,255,255,0.02)',
+                    border: `1px solid ${isOpen ? 'rgba(212,175,55,0.12)' : isWon ? 'rgba(74,222,128,0.15)' : 'rgba(248,113,113,0.12)'}`,
+                    borderRadius: 16,
+                    padding: '12px 16px',
+                  }}>
+                    {/* Top row: outcome pill + PnL */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 10, color: statusColor }}>{dot}</span>
+                        <span style={{ fontSize: 11, fontWeight: 800, color: '#fff', letterSpacing: '-0.01em' }}>
+                          {t.direction?.toUpperCase()} {t.outcome}
+                        </span>
+                        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.15em', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>
+                          {stratLabel}
+                        </span>
+                      </div>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: pnlColor, fontFamily: 'monospace' }}>
+                        {isOpen
+                          ? `$${parseFloat(t.amount_usdc || 0).toFixed(2)}`
+                          : isWon
+                            ? `+$${parseFloat(t.pnl_usdc || 0).toFixed(2)}`
+                            : `-$${Math.abs(parseFloat(t.pnl_usdc || t.amount_usdc || 0)).toFixed(2)}`
+                        }
+                      </span>
+                    </div>
+
+                    {/* Market question */}
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 6, lineHeight: 1.4 }}>
+                      {question}{question.length >= 55 ? '…' : ''}
+                    </div>
+
+                    {/* Bottom row: entry price + time */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>
+                        @ {((parseFloat(t.entry_price) || 0.5) * 100).toFixed(1)}%
+                        {t.is_paper && <span style={{ marginLeft: 6, color: 'rgba(212,175,55,0.5)' }}>PAPER</span>}
+                      </span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: isOpen ? '#D4AF37' : 'rgba(255,255,255,0.25)', letterSpacing: '0.05em' }}>
+                        {isOpen && timeLeft ? `⏱ ${timeLeft}` : timeLeft}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
 
