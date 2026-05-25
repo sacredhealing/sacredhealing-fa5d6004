@@ -3035,38 +3035,11 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
             />
           </Suspense>
 
-          <div
-            className="flex gap-2 rounded-[28px] p-1.5"
-            style={{
-              background: 'rgba(255,255,255,0.02)',
-              border: '1px solid rgba(255,255,255,0.06)',
-              backdropFilter: 'blur(40px)',
-              WebkitBackdropFilter: 'blur(40px)',
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => setApothecaryMainTab('library')}
-              className={`flex-1 rounded-[22px] py-3 text-[13px] font-black uppercase tracking-[0.12em] transition ${
-                apothecaryMainTab === 'library'
-                  ? 'border border-[#D4AF37]/35 bg-[#D4AF37]/20 text-[#D4AF37]'
-                  : 'border border-transparent text-white/40'
-              }`}
-            >
-              Transmission Library
-            </button>
-            <button
-              type="button"
-              onClick={() => setApothecaryMainTab('archive')}
-              className={`flex-1 rounded-[22px] py-3 text-[13px] font-black uppercase tracking-[0.12em] transition ${
-                apothecaryMainTab === 'archive'
-                  ? 'border border-[#D4AF37]/35 bg-[#D4AF37]/20 text-[#D4AF37]'
-                  : 'border border-transparent text-white/40'
-              }`}
-            >
-              Akasha-Neural Archive
-            </button>
-          </div>
+          <ScalarTabSwitcher
+            active={apothecaryMainTab}
+            onLibrary={() => setApothecaryMainTab('library')}
+            onArchive={() => setApothecaryMainTab('archive')}
+          />
 
           {apothecaryMainTab === 'library' ? (
             <div className="grid w-full gap-5 lg:grid-cols-2" style={{ maxWidth: '100%' }}>
