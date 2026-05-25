@@ -1,4 +1,4 @@
-// ActiveTransmissionsSection — SQI 2050
+// ActiveTransmissionsSection — SQI 2050 Organic
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, ShieldCheck, X } from 'lucide-react';
@@ -27,39 +27,36 @@ function TxCanvas({ wrapRef }: { wrapRef: React.RefObject<HTMLDivElement> }) {
     const ro = new ResizeObserver(resize);
     ro.observe(wrap);
     const waves = [
-      { amp:.22, freq:4,   speed:.8,  alpha:.07, lw:1.0 },
-      { amp:.15, freq:7,   speed:1.4, alpha:.05, lw:.75 },
-      { amp:.12, freq:11,  speed:2.0, alpha:.04, lw:.65 },
-      { amp:.28, freq:2.8, speed:.55, alpha:.05, lw:1.3 },
-      { amp:.09, freq:17,  speed:2.7, alpha:.03, lw:.55 },
+      { amp:.18, freq:3.5, speed:.7,  alpha:.06, lw:.9 },
+      { amp:.12, freq:6,   speed:1.3, alpha:.04, lw:.7 },
+      { amp:.08, freq:10,  speed:1.9, alpha:.03, lw:.6 },
+      { amp:.22, freq:2.2, speed:.45, alpha:.04, lw:1.1 },
     ];
     const draw = () => {
       const W = canvas.width, H = canvas.height;
       if (!W || !H) { rafRef.current = requestAnimationFrame(draw); return; }
       ctx.clearRect(0,0,W,H);
-      const pulse = .5 + .5 * Math.sin(t * 1.1);
-      const gc = ctx.createRadialGradient(W*.5,H*.5,0,W*.5,H*.5,W*.65);
-      gc.addColorStop(0, `rgba(212,175,55,${.06+.04*pulse})`); gc.addColorStop(1,'transparent');
+      const pulse = .5 + .5 * Math.sin(t * 1.0);
+      const gc = ctx.createRadialGradient(W*.5,H*.55,0,W*.5,H*.55,W*.6);
+      gc.addColorStop(0, `rgba(212,175,55,${.04+.025*pulse})`);
+      gc.addColorStop(1, 'transparent');
       ctx.fillStyle = gc; ctx.fillRect(0,0,W,H);
-      const gt = ctx.createLinearGradient(0,0,0,H*.3);
-      gt.addColorStop(0, `rgba(212,175,55,${.10+.05*pulse})`); gt.addColorStop(1,'transparent');
-      ctx.fillStyle = gt; ctx.fillRect(0,0,W,H);
       waves.forEach((w,wi) => {
         const phase = (wi/waves.length)*Math.PI*2;
         ctx.beginPath();
         for (let x=0;x<=W;x+=1.5) {
-          const nx=x/W, env=Math.sin(nx*Math.PI)*.8+.2;
-          const y=H*.5+Math.sin(nx*w.freq*Math.PI*2+t*w.speed+phase)*H*w.amp*env;
+          const nx=x/W, env=Math.sin(nx*Math.PI)*.7+.3;
+          const y=H*.65+Math.sin(nx*w.freq*Math.PI*2+t*w.speed+phase)*H*w.amp*env;
           x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
         }
         ctx.strokeStyle=`rgba(212,175,55,${w.alpha})`; ctx.lineWidth=w.lw; ctx.stroke();
       });
-      t+=.012; rafRef.current=requestAnimationFrame(draw);
+      t+=.010; rafRef.current=requestAnimationFrame(draw);
     };
     rafRef.current=requestAnimationFrame(draw);
     return () => { cancelAnimationFrame(rafRef.current); ro.disconnect(); };
   },[]);
-  return <canvas ref={canvasRef} style={{ position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none',zIndex:0 }} />;
+  return <canvas ref={canvasRef} style={{ position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none',zIndex:0,borderRadius:32 }} />;
 }
 
 export default function ActiveTransmissionsSection({ activeTransmissions, setActiveTransmissions, onDissolveTransmission }: Props) {
@@ -67,104 +64,120 @@ export default function ActiveTransmissionsSection({ activeTransmissions, setAct
   const wrapRef = React.useRef<HTMLDivElement>(null);
 
   return (
-    <div ref={wrapRef} style={{ position:'relative', borderRadius:28, animation:'txAura 4s ease-in-out infinite' }}>
+    <div ref={wrapRef} style={{ position:'relative', filter:'drop-shadow(0 0 28px rgba(212,175,55,0.10))' }}>
       <style>{`
-        @keyframes txAura {
-          0%,100%{box-shadow:0 0 0 1px rgba(212,175,55,0.26),0 0 16px rgba(212,175,55,0.14),0 0 44px rgba(212,175,55,0.08);}
-          50%    {box-shadow:0 0 0 1px rgba(212,175,55,0.42),0 0 28px rgba(212,175,55,0.24),0 0 66px rgba(212,175,55,0.14);}
-        }
-        @keyframes txDotRing {
-          0%,100%{opacity:0.5;transform:scale(1);}
-          50%{opacity:0;transform:scale(1.8);}
+        @keyframes txHalo {
+          0%,100%{opacity:0.3;transform:scale(1);}
+          50%{opacity:0;transform:scale(1.9);}
         }
         @keyframes txLiveDot {
-          0%,100%{opacity:1;transform:scale(1);}
-          50%{opacity:0.4;transform:scale(0.65);}
+          0%,100%{opacity:1;}
+          50%{opacity:0.35;}
+        }
+        @keyframes txShimmer {
+          0%{background-position:200% center;}
+          100%{background-position:-200% center;}
         }
       `}</style>
 
       <TxCanvas wrapRef={wrapRef} />
 
-      <div style={{ position:'relative', zIndex:1, background:'rgba(10,8,3,0.80)', backdropFilter:'blur(30px)', WebkitBackdropFilter:'blur(30px)', borderRadius:28, overflow:'hidden' }}>
+      <div style={{ position:'relative', zIndex:1 }}>
 
-        {/* Header */}
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'15px 18px 13px', borderBottom:'1px solid rgba(212,175,55,0.12)', background:'linear-gradient(90deg,rgba(212,175,55,0.07),rgba(212,175,55,0.02))' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-            <Zap size={15} style={{ color:'#D4AF37', filter:'drop-shadow(0 0 5px rgba(212,175,55,0.8))' }} />
-            <h2 className="sqi-master-name-shimmer" style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:14, fontWeight:900, letterSpacing:'-0.03em' }}>
+        {/* Header — floats freely, no container */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 4px 12px' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:7 }}>
+            <Zap size={14} style={{ color:'#D4AF37', filter:'drop-shadow(0 0 4px rgba(212,175,55,0.7))' }} />
+            <h2 style={{
+              fontSize:13, fontWeight:900, letterSpacing:'-0.02em',
+              background:'linear-gradient(135deg,#D4AF37,#F5E17A,#D4AF37)',
+              backgroundSize:'200% auto',
+              WebkitBackgroundClip:'text', backgroundClip:'text',
+              WebkitTextFillColor:'transparent',
+              animation:'txShimmer 4s linear infinite',
+            }}>
               {t('quantumApothecary.activeTransmissionsSection.title')}
             </h2>
           </div>
-          <div style={{ display:'flex', alignItems:'center', gap:5, padding:'4px 11px', borderRadius:100, border:'1px solid rgba(212,175,55,0.38)', background:'rgba(212,175,55,0.08)', boxShadow:'0 0 10px rgba(212,175,55,0.18)' }}>
-            <div style={{ width:6, height:6, borderRadius:'50%', background:'#D4AF37', boxShadow:'0 0 6px #D4AF37', animation:'txLiveDot 1.6s ease-in-out infinite' }} />
-            <span style={{ fontSize:8, fontWeight:900, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.9)' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:4, padding:'3px 9px', borderRadius:100, border:'1px solid rgba(212,175,55,0.28)', background:'rgba(212,175,55,0.06)' }}>
+            <div style={{ width:5, height:5, borderRadius:'50%', background:'#D4AF37', boxShadow:'0 0 5px #D4AF37', animation:'txLiveDot 1.8s ease-in-out infinite' }} />
+            <span style={{ fontSize:7, fontWeight:900, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.8)' }}>
               {t('quantumApothecary.activeTransmissionsSection.live247')}
             </span>
           </div>
         </div>
 
-        {/* List */}
-        <div style={{ padding: activeTransmissions.length > 0 ? '12px 14px 14px' : '0', maxHeight:280, overflowY:'auto', scrollbarWidth:'thin' }}>
+        {/* Unified organic container */}
+        <div style={{
+          background:'rgba(212,175,55,0.025)',
+          borderRadius:22,
+          border:'1px solid rgba(212,175,55,0.10)',
+          overflow:'hidden',
+          backdropFilter:'blur(20px)',
+          WebkitBackdropFilter:'blur(20px)',
+        }}>
           {activeTransmissions.length === 0 ? (
             <div style={{ padding:'28px 20px', textAlign:'center' }}>
-              <ShieldCheck size={24} style={{ margin:'0 auto 10px', color:'rgba(255,255,255,0.1)', display:'block' }} />
-              <p style={{ fontSize:10, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.2)' }}>
+              <ShieldCheck size={22} style={{ margin:'0 auto 10px', color:'rgba(255,255,255,0.10)', display:'block' }} />
+              <p style={{ fontSize:10, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.18)' }}>
                 {t('quantumApothecary.activeTransmissionsSection.noActive')}
               </p>
-              <p style={{ fontSize:10, color:'rgba(255,255,255,0.15)', marginTop:4 }}>
+              <p style={{ fontSize:10, color:'rgba(255,255,255,0.12)', marginTop:4 }}>
                 {t('quantumApothecary.activeTransmissionsSection.selectHint')}
               </p>
             </div>
           ) : (
-            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            <div style={{ maxHeight:300, overflowY:'auto', scrollbarWidth:'none' }}>
               <AnimatePresence>
-                {activeTransmissions.map(act => {
+                {activeTransmissions.map((act, idx) => {
                   const c = act.color || '#D4AF37';
                   const days = daysRemaining(act);
                   const src = formatSourceLabel(act);
+                  const isLast = idx === activeTransmissions.length - 1;
                   return (
                     <motion.div
                       key={act.id ?? act.name}
-                      initial={{ opacity:0, x:-8 }}
-                      animate={{ opacity:1, x:0 }}
-                      exit={{ opacity:0, x:10 }}
+                      initial={{ opacity:0, y:-6 }}
+                      animate={{ opacity:1, y:0 }}
+                      exit={{ opacity:0, y:6 }}
+                      transition={{ duration:0.2 }}
                       style={{
-                        display:'flex', alignItems:'center', gap:10,
-                        padding:'10px 12px 10px 14px',
-                        borderRadius:14,
-                        borderLeft:`3px solid ${c}`,
-                        border:`1px solid ${c}35`,
-                        borderLeftWidth:3,
-                        background:`${c}0c`,
-                        boxShadow:`0 0 12px ${c}14`,
+                        display:'flex', alignItems:'center', gap:12,
+                        padding:'13px 14px',
+                        position:'relative',
                       }}
                     >
-                      {/* Pulsing dot — no overflow:hidden parent so ring is visible */}
-                      <div style={{ position:'relative', flexShrink:0, width:16, height:16, display:'flex', alignItems:'center', justifyContent:'center' }}>
-                        <div style={{ width:10, height:10, borderRadius:'50%', background:c, boxShadow:`0 0 8px ${c}` }} />
-                        <div style={{ position:'absolute', inset:0, borderRadius:'50%', border:`1px solid ${c}`, animation:'txDotRing 2s ease-in-out infinite' }} />
+                      {/* Thin gradient divider between rows */}
+                      {!isLast && (
+                        <div style={{ position:'absolute', bottom:0, left:14, right:14, height:1, background:'linear-gradient(90deg,transparent,rgba(212,175,55,0.10),transparent)' }} />
+                      )}
+
+                      {/* Glowing dot + halo */}
+                      <div style={{ position:'relative', width:14, height:14, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                        <div style={{ width:8, height:8, borderRadius:'50%', background:c, boxShadow:`0 0 7px ${c}, 0 0 14px ${c}60` }} />
+                        <div style={{ position:'absolute', inset:0, borderRadius:'50%', border:`1px solid ${c}`, animation:'txHalo 2.5s ease-in-out infinite' }} />
                       </div>
 
-                      {/* Info — no overflow:hidden, no whiteSpace:nowrap clipping */}
+                      {/* Text */}
                       <div style={{ flex:1, minWidth:0 }}>
-                        <p style={{ fontSize:13, fontWeight:800, color:'rgba(255,255,255,0.95)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' as const, lineHeight:1.3 }}>
+                        <p style={{ fontSize:13, fontWeight:700, color:'rgba(255,255,255,0.92)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' as const, lineHeight:1.3 }}>
                           {act.name}
                         </p>
-                        <p style={{ fontSize:10, fontWeight:600, color:'rgba(255,255,255,0.38)', marginTop:2 }}>
-                          {act.type}{src ? ` · ${src}` : ''}{days !== null ? ` · ${days}d left` : ''}
+                        <p style={{ fontSize:10, fontWeight:500, color:'rgba(255,255,255,0.30)', marginTop:2 }}>
+                          {act.type}{src ? ` · ${src}` : ''}{days !== null ? ` · ${days}d` : ''}
                         </p>
-                        <p style={{ fontSize:8, fontWeight:900, letterSpacing:'0.18em', textTransform:'uppercase' as const, color:c, marginTop:3, opacity:0.85 }}>
+                        <span style={{ display:'inline-block', marginTop:4, fontSize:7, fontWeight:900, letterSpacing:'0.16em', textTransform:'uppercase' as const, color:c, background:`${c}18`, padding:'2px 6px', borderRadius:4 }}>
                           Transmitting 24/7
-                        </p>
+                        </span>
                       </div>
 
                       {/* X */}
                       <button
                         type="button"
                         onClick={() => onDissolveTransmission ? onDissolveTransmission(act.id ?? act.name) : setActiveTransmissions(p => p.filter(x => x.id !== act.id))}
-                        style={{ display:'flex', alignItems:'center', justifyContent:'center', width:26, height:26, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.08)', background:'rgba(255,255,255,0.03)', color:'rgba(255,255,255,0.3)', cursor:'pointer', flexShrink:0 }}
+                        style={{ display:'flex', alignItems:'center', justifyContent:'center', width:24, height:24, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.06)', background:'rgba(255,255,255,0.03)', color:'rgba(255,255,255,0.22)', cursor:'pointer', flexShrink:0 }}
                       >
-                        <X size={12} />
+                        <X size={11} />
                       </button>
                     </motion.div>
                   );
