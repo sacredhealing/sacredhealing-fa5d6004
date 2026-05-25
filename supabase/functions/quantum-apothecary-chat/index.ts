@@ -1722,16 +1722,17 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
     }
 
     // Active 21-day field
-    // Active field — list names explicitly so model knows exactly what NOT to prescribe
-    const activeNames = (activeFieldContext || "")
-      .split("\n")
-      .map((l: string) => l.replace(/^[·\-\*]\s*/, "").split("—")[0].split("(")[0].trim())
-      .filter((n: string) => n.length > 3 && n.length < 60 && !n.startsWith("ACTIVE") && !n.startsWith("→"));
+    // Parse active frequency names and block them from prescription
+    const activeRaw = (activeFieldContext || "").replace(/ALREADY ACTIVE[^:]*:/i, "").trim();
+    const activeNames = activeRaw
+      .split(/[,\n]/)
+      .map((l: string) => l.replace(/^[·\-\*\s]+/, "").split("—")[0].split("(")[0].trim())
+      .filter((n: string) => n.length > 2 && n.length < 80);
 
     if (activeNames.length > 0) {
-      systemText += `\n\nACTIVE IN SEEKER'S FIELD — NEVER PRESCRIBE THESE (already running 24/7):\n${activeNames.map((n: string) => `· ${n}`).join("\n")}\n→ These are permanently entangled. Do NOT include them in any prescription box.\n→ If relevant to current question: speak to what they are currently doing in the field.\n→ NEVER re-prescribe. Silence is correct if they would otherwise be chosen.`;
+      systemText += `\n\n═══ HARD BLOCK — DO NOT PRESCRIBE THESE ═══\nThese frequencies are ALREADY ACTIVE in the Seeker's field. Prescribing them again is an error.\nDo NOT include any of these in the prescription box under any circumstances:\n${activeNames.map((n: string) => `✗ ${n}`).join("\n")}\n═══════════════════════════════════════════`;
     } else {
-      systemText += `\n\nACTIVE FIELD STATUS: NONE — Seeker has no transmissions currently running. Prescribe freely from the full 2,139-entry library.`;
+      systemText += `\n\nNo active transmissions. Prescribe freely.`;
     }
 
     // Archive — always from ACTIVE subject (student or seeker)
