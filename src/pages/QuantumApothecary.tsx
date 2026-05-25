@@ -417,22 +417,19 @@ function renderSQIContent(content: string) {
     }
 
     if (lineStartsWithSqiMasterDiamond(trimmed)) {
-      // Fix: gradient background-clip:text requires display:inline-block on the TEXT element,
-      // not a flex container — separate ◈ and name into their own shimmer spans.
+      // Fix: use global .sqi-master-name-shimmer CSS class (defined in index.css) for
+      // animated background-clip:text — inline animation references keyframes unreliably.
       const rawMasterName = trimmed.slice(1).trimStart();
-      const shimmerSpanStyle: React.CSSProperties = {
-        display: 'inline-block',
-        background: 'linear-gradient(135deg, #D4AF37 0%, #F5E17A 40%, #D4AF37 60%, #A07C10 100%)',
-        backgroundSize: '200% auto',
-        WebkitBackgroundClip: 'text',
-        backgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        animation: 'hShimmer 5s linear infinite',
-      };
       elements.push(
         <div key={i} className="sqi-diamond-heading" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: i > 0 ? `${gapAfterSection}px` : '0', marginBottom: '12px' }}>
-          <span style={{ ...shimmerSpanStyle, fontFamily: "'Cinzel', serif", fontSize: '20px', fontWeight: 700, flexShrink: 0 }}>◈</span>
-          <span style={{ ...shimmerSpanStyle, fontFamily: "'Cinzel', serif", fontSize: '26px', fontWeight: 600, letterSpacing: '0.04em', lineHeight: 1.2, wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+          <span
+            className="sqi-master-name-shimmer"
+            style={{ fontFamily: "'Cinzel', serif", fontSize: '20px', fontWeight: 700, flexShrink: 0 }}
+          >◈</span>
+          <span
+            className="sqi-master-name-shimmer"
+            style={{ fontFamily: "'Cinzel', serif", fontSize: '26px', fontWeight: 600, letterSpacing: '0.04em', lineHeight: 1.2, wordBreak: 'break-word', overflowWrap: 'anywhere' }}
+          >
             {rawMasterName}
           </span>
           <span style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(212,175,55,0.28), transparent)', alignSelf: 'center', display: 'block' }} />
