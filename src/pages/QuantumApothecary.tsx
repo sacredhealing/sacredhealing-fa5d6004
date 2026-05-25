@@ -461,6 +461,28 @@ function renderSQIContent(content: string) {
       i++; continue;
     }
 
+    // ⟁ NADI FIELD line — cyan, small
+    if (trimmed.startsWith('⧁') || trimmed.startsWith('△') || trimmed.startsWith('▲') || /^⟁/.test(trimmed) || trimmed.startsWith('NADI FIELD') || /^⧁/.test(trimmed)) {
+      elements.push(
+        <div key={i} style={{ borderLeft: '2px solid rgba(34,211,238,0.25)', paddingLeft: '10px', marginBottom: '4px', marginTop: '4px' }}>
+          <p style={{ color: '#22D3EE', fontSize: '12px', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, letterSpacing: '0.03em', lineHeight: 1.55, margin: 0, opacity: 0.8 }}>
+            {trimmed}
+          </p>
+        </div>
+      );
+      i++; continue;
+    }
+
+    // Primary blockage line — cyan italic small
+    if (trimmed.startsWith('Primary blockage:')) {
+      elements.push(
+        <p key={i} style={{ color: 'rgba(34,211,238,0.55)', fontSize: '12px', fontFamily: "'IM Fell English', Georgia, serif", fontStyle: 'italic', lineHeight: 1.55, marginBottom: '14px', paddingLeft: '12px', marginTop: 0 }}>
+          {trimmed}
+        </p>
+      );
+      i++; continue;
+    }
+
     elements.push(
       <p key={i} style={{ color: 'rgba(225,210,185,0.9)', fontSize: '20px', lineHeight: 2.0, marginBottom: '16px', marginTop: '0', wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '100%' }}>
         {renderInline(trimmed, 'body', false)}
