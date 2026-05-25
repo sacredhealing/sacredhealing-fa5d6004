@@ -2710,8 +2710,6 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
           </div>
         );
       })()}
-        </div>
-      </div>
     </div>
   );
 
