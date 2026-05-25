@@ -2701,9 +2701,7 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                     opacity: isTyping ? 0.4 : 1,
                   }}
                 >
-                  {(input.trim() || pendingImage)
-                    ? <Send size={16} />
-                    : <Mic size={16} />}
+                  <Send size={16} />
                 </button>
 
               </div>
