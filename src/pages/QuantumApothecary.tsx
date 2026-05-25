@@ -1117,7 +1117,7 @@ function ScalarHeaderBanner({ onBack, onInfo }: { onBack: () => void; onInfo: ()
   }, []);
   return (
     <>
-      <div ref={wrapRef} style={{ position:'relative', width:'100%', overflow:'hidden', height:164 }}>
+      <div ref={wrapRef} style={{ position:'relative', width:'100%', overflow:'hidden', height:130 }}>
         <canvas ref={canvasRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:0 }} />
         <div style={{ position:'relative', zIndex:1, height:'100%', display:'flex', alignItems:'center', padding:'0 16px', gap:14 }}>
           <button type="button" onClick={onBack} style={{ display:'flex', alignItems:'center', justifyContent:'center', width:34, height:34, borderRadius:12, border:'1px solid rgba(212,175,55,0.18)', background:'rgba(212,175,55,0.06)', color:'rgba(212,175,55,0.7)', flexShrink:0, cursor:'pointer' }}>
@@ -2834,7 +2834,6 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
             className="sticky bottom-0 z-10 shrink-0"
             style={{
               padding: '10px 12px 14px',
-              position: 'relative',
               borderTop: '1px solid rgba(212,175,55,0.12)',
               animation: 'bannerAura 4s ease-in-out infinite',
             }}
