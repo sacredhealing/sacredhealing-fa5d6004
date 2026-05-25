@@ -2405,7 +2405,8 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
     enrichTransmission,
     normalizeActivationForMixer,
   ]);
-  const renderChatPanel = () => (
+  const renderChatPanel = () => {
+    return (
     <div
       className="relative flex w-full flex-col overflow-visible"
       style={{
@@ -2708,9 +2709,9 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
               </div>
             </div>
           </div>
-      </div>
-    </div>
-  );
+        </div>
+    );
+  };
 
   /* ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
      MAIN RENDER — SQI-2050 Visual Layer
