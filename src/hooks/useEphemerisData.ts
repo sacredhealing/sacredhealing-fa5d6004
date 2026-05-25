@@ -11,6 +11,8 @@ export interface EphemerisData {
   birth_date?: string;
   birth_time?: string;
   birth_place?: string;
+  ascendant?: string | null;
+  sun_sign?: string | null;
 }
 
 /**
@@ -37,7 +39,7 @@ export function useEphemerisData() {
         // Check jyotish_profiles for confirmed data
         const { data } = await (supabase as any)
           .from('jyotish_profiles')
-          .select('moon_nakshatra, moon_longitude, nakshatra_progress, dasha_data, ephemeris_confirmed, birth_date, birth_time, birth_place')
+          .select('moon_nakshatra, moon_longitude, nakshatra_progress, dasha_data, ephemeris_confirmed, birth_date, birth_time, birth_place, ascendant, sun_sign')
           .eq('user_id', user.id)
           .maybeSingle();
 
@@ -102,6 +104,8 @@ export function useEphemerisData() {
             birth_date: birthData.birth_date,
             birth_time: birthData.birth_time,
             birth_place: birthData.birth_place,
+            ascendant: result.ascendantSign || null,
+            sun_sign: result.sunSign || null,
           });
         }
       } catch (e) {
