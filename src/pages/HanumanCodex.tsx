@@ -1917,7 +1917,7 @@ export default function HanumanCodex() {
                   <button
                     onClick={() =>
                       accessible &&
-                      setExpandedGhata(isOpen ? null : movement.id)
+                      setExpandedGhata(isOpen ? null : String(movement.id))
                     }
                     style={{
                       width: "100%",
