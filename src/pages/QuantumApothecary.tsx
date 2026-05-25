@@ -2136,14 +2136,14 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
   ]);
   const renderChatPanel = () => (
     <div
-      className="glass-card relative flex w-full flex-col overflow-visible"
+      className="relative flex w-full flex-col overflow-visible"
       style={{
         minHeight: 'calc(100vh - 120px)',
         maxWidth: '100%',
       }}
     >
       {/* Chat header — matches /admin-quantum-apothecary-2045 SQI strip */}
-      <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] bg-white/[0.02] px-3 py-4 sm:px-6">
+      <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] bg-white/[0.02] px-0 py-3 sm:px-6">
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           {isChatFullscreen && (
             <button type="button" onClick={() => setIsChatFullscreen(false)} className="shrink-0 rounded-full bg-white/5 p-2 transition hover:bg-white/10">
@@ -3231,11 +3231,11 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
 
   .sqi-ancient-body strong,
   .sqi-ancient-body b {
-    color: rgba(255,255,255,0.98) !important;
+    color: #D4AF37 !important;
     font-family: 'IM Fell English', Georgia, serif !important;
     font-size: 1em !important;
     letter-spacing: 0 !important;
-    font-weight: 700 !important;
+    font-weight: 400 !important;
     font-style: normal !important;
     text-shadow: none !important;
   }
