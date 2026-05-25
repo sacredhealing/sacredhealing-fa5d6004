@@ -436,7 +436,7 @@ function renderSQIContent(content: string) {
         if (dashMatch) lineForRender = `${dashMatch[1]}**${dashMatch[2].trim()}**${dashMatch[3]}${dashMatch[4]}`;
       }
       elements.push(
-        <p key={i} style={{ color: 'rgba(255,255,255,0.85)', fontSize: '20px', lineHeight: 1.8, paddingLeft: '8px', marginBottom: '10px', marginTop: '0', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+        <p key={i} style={{ color: 'rgba(255,255,255,0.85)', fontSize: '17px', lineHeight: 1.8, paddingLeft: '8px', marginBottom: '10px', marginTop: '0', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
           {renderInline(lineForRender, 'body', false, { sqiGoldBold: true })}
         </p>
       );
@@ -484,7 +484,7 @@ function renderSQIContent(content: string) {
     }
 
     elements.push(
-      <p key={i} style={{ color: 'rgba(225,210,185,0.9)', fontSize: '20px', lineHeight: 2.0, marginBottom: '16px', marginTop: '0', wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '100%' }}>
+      <p key={i} style={{ color: 'rgba(225,210,185,0.9)', fontSize: '17px', lineHeight: 1.9, marginBottom: '14px', marginTop: '0', wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '100%' }}>
         {renderInline(trimmed, 'body', false)}
       </p>
     );
@@ -2530,7 +2530,7 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
       </svg>
 
       {/* ââ Main Content ââ */}
-      <div className="relative z-10 max-w-7xl mx-auto px-2 sm:px-6 py-6">
+      <div className="relative z-10 max-w-7xl mx-auto px-0 py-6">
 
         {/* ââ Header ââ */}
         <div className="flex items-center justify-between mb-6">
@@ -3183,8 +3183,8 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
 
   .sqi-ancient-body p {
     font-family: 'IM Fell English', Georgia, serif !important;
-    font-size: 20px !important;
-    line-height: 2.0 !important;
+    font-size: 17px !important;
+    line-height: 1.9 !important;
     color: rgba(225,210,185,0.92) !important;
     margin-bottom: 16px !important;
     width: 100% !important;
