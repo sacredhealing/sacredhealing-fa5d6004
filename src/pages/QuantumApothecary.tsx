@@ -1526,6 +1526,7 @@ JYOTISH DIRECTIVE: Compute this soul's Vedic chart from the above birth data. De
   const streamAccumRef = useRef('');
   const streamingMsgIdRef = useRef('');
   const chatInputRef = useRef<HTMLTextAreaElement>(null);
+  const composerWrapRef = useRef<HTMLDivElement>(null);
   const chatPanelRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const legacyRecognitionRef = useRef<{ stop: () => void } | null>(null);
@@ -2572,10 +2573,7 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
       </div>
 
       {/* ═══ SCALAR COMPOSER — Telegram-style ═══ */}
-      {(() => {
-        const composerWrapRef = React.useRef<HTMLDivElement>(null);
-        return (
-          <div
+      <div
             ref={composerWrapRef}
             className="sticky bottom-0 z-10 shrink-0"
             style={{
@@ -2710,8 +2708,7 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
               </div>
             </div>
           </div>
-        );
-      })()}
+      </div>
     </div>
   );
 
