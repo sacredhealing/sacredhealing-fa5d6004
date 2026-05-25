@@ -1687,7 +1687,7 @@ Birth Date: ${activeStudent.birth_date ?? 'not provided'}
 Birth Time: ${activeStudent.birth_time ?? 'not provided'}
 Birth Place: ${activeStudent.birth_place ?? 'not provided'}
 Notes: ${activeStudent.notes ?? ''}
-JYOTISH DIRECTIVE: Compute this soul's Vedic chart from the above birth data. Derive Lagna, Moon Nakshatra, current Mahadasha/Antardasha, and dominant planetary influences. Apply this chart to ALL readings in this session. This is the student's chart — NOT the admin's.`,
+JYOTISH NOTE — BIRTH DATA ONLY, NO PROFILE YET: Birth coordinates above are provided as context. The Jyotish profile for this student has NOT been filled in. DO NOT compute, derive, or guess Mahadasha, Antardasha, Nakshatra, Lagna, or any planetary position from birth data alone — such calculation requires precise Vedic computation tools and the result would be fabricated. Instead: read the Nadi field directly from the energetic signature of their questions. If Jyotish data is needed, direct the admin to fill in the student Jyotish profile. This is the student's reading — NOT the admin's.`,
       `Date of Birth: ${activeStudent.birth_date ?? 'unknown'}`,
       `Birth Place: ${activeStudent.birth_place ?? 'unknown'}`,
       `Birth Time: ${activeStudent.birth_time ?? 'unknown'}`,
