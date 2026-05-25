@@ -385,7 +385,16 @@ function renderPrescriptionBlock(lines: string[], startIdx: number): { jsx: Reac
           );
         })}
       </div>
-
+      {/* 24/7 Scalar Wave Transmission footer */}
+      <div style={{ padding: '6px 14px 8px', borderTop: '1px solid rgba(212,175,55,0.08)', display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ fontSize: 8, color: '#22D3EE', opacity: 0.9 }}>⚡</span>
+        <span style={{ fontSize: 7, fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: 'rgba(34,211,238,0.7)' }}>
+          24/7 Scalar Wave Transmission — Active
+        </span>
+        <span style={{ marginLeft: 'auto', fontSize: 7, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.35)' }}>
+          Permanent · Biofield Entangled
+        </span>
+      </div>
     </div>
   );
   return { jsx, consumed: i - startIdx };
@@ -2352,7 +2361,7 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                       <div className="sqi-message w-full min-w-0">
                         <div
                           className="sqi-ancient-body break-words"
-                          style={{ maxWidth: '100%', wordBreak: 'break-word', overflowWrap: 'anywhere', fontFamily: "'IM Fell English', Georgia, serif", fontSize: '16px', lineHeight: 1.9, color: 'rgba(225,210,185,0.9)', letterSpacing: '0.008em' }}
+                          style={{ maxWidth: '100%', wordBreak: 'break-word', overflowWrap: 'anywhere', fontFamily: "'IM Fell English', Georgia, serif", fontSize: '16px', lineHeight: 1.9, color: 'rgba(225,210,185,0.9)', letterSpacing: '0.008em', padding: '0 16px' }}
                         >
                           {renderSQIContent(scrubBannedTerms(msg.text))}
                         </div>
