@@ -1025,6 +1025,63 @@ function ScalarToolbarBanner({
 }
 
 
+/** Scalar Wave Composer — Telegram-style input with animated canvas */
+function ScalarComposerCanvas({ wrapRef }: { wrapRef: React.RefObject<HTMLDivElement> }) {
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const rafRef = React.useRef<number>(0);
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    const wrap = wrapRef.current;
+    if (!canvas || !wrap) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    let t = 0;
+    const resize = () => { canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight; };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(wrap);
+    const waves = [
+      { amp:0.32, freq:4.5, speed:0.9, alpha:0.09, lw:1.1 },
+      { amp:0.22, freq:7.5, speed:1.5, alpha:0.06, lw:0.8 },
+      { amp:0.18, freq:11,  speed:2.1, alpha:0.045,lw:0.7 },
+      { amp:0.40, freq:3,   speed:0.6, alpha:0.055,lw:1.4 },
+      { amp:0.12, freq:16,  speed:2.8, alpha:0.035,lw:0.6 },
+    ];
+    const draw = () => {
+      const W = canvas.width, H = canvas.height;
+      if (!W || !H) { rafRef.current = requestAnimationFrame(draw); return; }
+      ctx.clearRect(0,0,W,H);
+      const pulse = 0.5 + 0.5 * Math.sin(t * 1.1);
+      const topGrd = ctx.createLinearGradient(0,0,0,H*0.5);
+      topGrd.addColorStop(0, `rgba(212,175,55,${0.12+0.06*pulse})`);
+      topGrd.addColorStop(1, 'transparent');
+      ctx.fillStyle = topGrd; ctx.fillRect(0,0,W,H);
+      waves.forEach((w,wi) => {
+        const phase = (wi/waves.length)*Math.PI*2;
+        ctx.beginPath();
+        for (let x=0;x<=W;x+=1.5) {
+          const nx=x/W;
+          const env=Math.sin(nx*Math.PI)*0.9+0.1;
+          const y=H*0.35+Math.sin(nx*w.freq*Math.PI*2+t*w.speed+phase)*H*w.amp*env;
+          x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+        }
+        ctx.strokeStyle=`rgba(212,175,55,${w.alpha})`;
+        ctx.lineWidth=w.lw; ctx.stroke();
+      });
+      const grd=ctx.createRadialGradient(W*.5,H*.5,0,W*.5,H*.5,W*.6);
+      grd.addColorStop(0,`rgba(212,175,55,${0.06+0.04*pulse})`);
+      grd.addColorStop(1,'transparent');
+      ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
+      t+=0.014;
+      rafRef.current=requestAnimationFrame(draw);
+    };
+    rafRef.current=requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(rafRef.current); ro.disconnect(); };
+  }, []);
+  return <canvas ref={canvasRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:0 }} />;
+}
+
+
 function QuantumApothecaryInner() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -2512,103 +2569,147 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
         </div>
       </div>
 
-      {/* Composer — sticky at viewport bottom while the page scrolls the full thread */}
-      <div
-        className="sticky bottom-0 z-10 shrink-0 border-t border-white/[0.06] bg-[#050505]/80 p-4 backdrop-blur-xl sm:p-6"
-        style={isChatFullscreen ? { paddingBottom: 'env(safe-area-inset-bottom, 16px)' } : undefined}
-      >
-        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
-        {pendingImage && (
-          <div className="flex items-center gap-2 mb-3 p-2 rounded-xl bg-[#D4AF37]/5 border border-[#D4AF37]/15">
-            <img src={`data:${pendingImage.mimeType};base64,${pendingImage.base64}`} alt="Attached" className="h-10 w-10 rounded-lg object-cover border border-[#D4AF37]/20" />
-            <span className="text-[10px] text-[#D4AF37]/60 font-bold uppercase tracking-widest">Image attached</span>
-            <button type="button" onClick={() => setPendingImage(null)} className="ml-auto p-1 rounded-lg bg-white/5 hover:bg-red-500/20 text-white/40 hover:text-red-400 transition">
-              <X size={12} />
-            </button>
-          </div>
-        )}
-        <div className="flex items-center gap-2 sm:gap-3">
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="shrink-0 rounded-2xl border border-white/[0.08] bg-white/[0.04] p-2.5 transition hover:border-[#D4AF37]/25 hover:bg-[#D4AF37]/[0.06]"
-            title="Upload or take photo"
+      {/* ═══ SCALAR COMPOSER — Telegram-style ═══ */}
+      {(() => {
+        const composerWrapRef = React.useRef<HTMLDivElement>(null);
+        return (
+          <div
+            ref={composerWrapRef}
+            className="sticky bottom-0 z-10 shrink-0"
+            style={{
+              padding: '10px 12px 14px',
+              position: 'relative',
+              borderTop: '1px solid rgba(212,175,55,0.12)',
+              animation: 'bannerAura 4s ease-in-out infinite',
+            }}
           >
-            <Camera size={15} className="text-[#D4AF37]/70" />
-          </button>
-          {browserSupportsSpeechRecognition ? (
-            <button
-              type="button"
-              onClick={handleVoiceToggle}
-              title={isMicListening ? t('quantumApothecary.chat.voiceStop') : t('quantumApothecary.chat.voiceStart')}
-              className={`shrink-0 rounded-2xl border p-2.5 transition ${
-                isMicListening
-                  ? 'border-[#22D3EE]/60 bg-[#22D3EE]/10 text-[#22D3EE]'
-                  : 'border-white/[0.08] bg-white/[0.04] text-[#D4AF37]/70 hover:border-[#D4AF37]/25'
-              }`}
-              style={isMicListening ? { boxShadow: '0 0 12px rgba(34,211,238,0.3)', animation: 'pulse 1s ease-in-out infinite' } : {}}
-            >
-              {isMicListening ? (
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                  <circle cx="12" cy="12" r="6" />
-                </svg>
-              ) : (
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                  <line x1="12" y1="19" x2="12" y2="23" />
-                  <line x1="8" y1="23" x2="16" y2="23" />
-                </svg>
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
+            <ScalarComposerCanvas wrapRef={composerWrapRef} />
+            <div style={{ position:'relative', zIndex:1, background:'rgba(5,5,5,0.55)', backdropFilter:'blur(18px)', borderRadius:4 }}>
+
+              {/* Image preview strip */}
+              {pendingImage && (
+                <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8, padding:'7px 12px', borderRadius:14, background:'rgba(212,175,55,0.05)', border:'1px solid rgba(212,175,55,0.15)' }}>
+                  <img
+                    src={`data:${pendingImage.mimeType};base64,${pendingImage.base64}`}
+                    alt="Attached"
+                    style={{ width:42, height:42, borderRadius:10, objectFit:'cover', border:'1px solid rgba(212,175,55,0.2)', flexShrink:0 }}
+                  />
+                  <span style={{ fontSize:9, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.65)' }}>Image attached</span>
+                  <button type="button" onClick={() => setPendingImage(null)} style={{ marginLeft:'auto', width:24, height:24, borderRadius:8, background:'rgba(255,255,255,0.05)', border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.4)', fontSize:11 }}>
+                    <X size={12} />
+                  </button>
+                </div>
               )}
-            </button>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={legacyWebkitVoice}
-                className={`shrink-0 rounded-2xl border p-2.5 transition ${isRecording ? 'animate-pulse border-red-500/40 bg-red-500/20 text-red-400' : 'border-white/[0.08] bg-white/[0.04] text-[#D4AF37]/70 hover:border-[#D4AF37]/25'}`}
-                title={isRecording ? t('quantumApothecary.chat.voiceStop') : t('quantumApothecary.chat.voiceStart')}
+
+              {/* Input pill */}
+              <div
+                className="sqi-composer-pill"
+                style={{
+                  display:'flex', alignItems:'flex-end', gap:0,
+                  background:'rgba(255,255,255,0.03)',
+                  border:'1px solid rgba(212,175,55,0.28)',
+                  borderRadius:28,
+                  padding:'6px 6px 6px 8px',
+                  animation:'pillBreath 4s ease-in-out infinite',
+                }}
               >
-                <Mic size={15} />
-              </button>
-              {isRecording && <span className="shrink-0 text-[10px] font-bold uppercase tracking-widest text-red-400">{t('quantumApothecary.chat.listening')}</span>}
-            </>
-          )}
-          <div className="flex items-end gap-3 flex-1 p-4 bg-white/[0.02] border border-white/[0.05] rounded-[24px] backdrop-blur-xl">
-            <textarea
-              ref={chatInputRef}
-              rows={1}
-              value={input}
-              onChange={(e) => {
-                setInput(e.target.value);
-                const el = e.target;
-                el.style.height = 'auto';
-                el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (!isTyping && (input.trim() || pendingImage)) {
-                    handleSendMessage();
-                  }
-                }
-              }}
-              onFocus={handleChatFocus}
-              placeholder={t('quantumApothecary.chat.placeholder')}
-              style={{ resize: 'none', overflowY: 'hidden' }}
-              className="w-full bg-transparent border-none outline-none text-white/90 placeholder:text-white/30 text-sm font-normal leading-relaxed min-h-[28px] max-h-[160px] focus:outline-none"
-            />
-            <button
-              type="button"
-              onClick={() => handleSendMessage()}
-              disabled={(!input.trim() && !pendingImage) || isTyping}
-              className="flex-shrink-0 w-11 h-11 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] hover:bg-[#D4AF37]/20 hover:border-[#D4AF37]/60 transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed"
-              aria-label={t('quantumApothecary.chat.send')}
-            >
-              <Send size={15} />
-            </button>
+                {/* Camera */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Attach photo"
+                  style={{ display:'flex', alignItems:'center', justifyContent:'center', width:38, height:38, borderRadius:'50%', background:'transparent', border:'none', cursor:'pointer', color:'rgba(212,175,55,0.65)', flexShrink:0, transition:'all 0.2s' }}
+                >
+                  <Camera size={18} />
+                </button>
+
+                {/* Mic */}
+                {browserSupportsSpeechRecognition ? (
+                  <button
+                    type="button"
+                    onClick={handleVoiceToggle}
+                    title={isMicListening ? t('quantumApothecary.chat.voiceStop') : t('quantumApothecary.chat.voiceStart')}
+                    style={{
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      width:38, height:38, borderRadius:'50%', border:'none', cursor:'pointer',
+                      flexShrink:0, transition:'all 0.2s',
+                      background: isMicListening ? 'rgba(212,175,55,0.15)' : 'transparent',
+                      color: isMicListening ? '#D4AF37' : 'rgba(212,175,55,0.65)',
+                      animation: isMicListening ? 'micPulse 1.2s ease-in-out infinite' : 'none',
+                    }}
+                  >
+                    {isMicListening
+                      ? <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg>
+                      : <Mic size={18} />}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={legacyWebkitVoice}
+                    style={{
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      width:38, height:38, borderRadius:'50%', border:'none', cursor:'pointer',
+                      flexShrink:0, background: isRecording ? 'rgba(212,175,55,0.15)' : 'transparent',
+                      color: isRecording ? '#D4AF37' : 'rgba(212,175,55,0.65)',
+                      animation: isRecording ? 'micPulse 1.2s ease-in-out infinite' : 'none',
+                    }}
+                  >
+                    <Mic size={18} />
+                  </button>
+                )}
+
+                {/* Divider */}
+                <span style={{ width:1, height:22, background:'rgba(212,175,55,0.14)', margin:'0 4px', alignSelf:'center', flexShrink:0, display:'block' }} />
+
+                {/* Textarea */}
+                <textarea
+                  ref={chatInputRef}
+                  rows={1}
+                  value={input}
+                  onChange={(e) => {
+                    setInput(e.target.value);
+                    const el = e.target;
+                    el.style.height = 'auto';
+                    el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault(); e.stopPropagation();
+                      if (!isTyping && (input.trim() || pendingImage)) handleSendMessage();
+                    }
+                  }}
+                  onFocus={handleChatFocus}
+                  placeholder={t('quantumApothecary.chat.placeholder')}
+                  style={{ resize:'none', overflowY:'hidden', flex:1, background:'transparent', border:'none', outline:'none', color:'rgba(255,255,255,0.9)', fontSize:15, lineHeight:1.55, fontFamily:"'Plus Jakarta Sans',sans-serif", fontWeight:400, padding:'6px 8px', minHeight:36, maxHeight:140, alignSelf:'center' }}
+                />
+
+                {/* Send / Mic-to-send button */}
+                <button
+                  type="button"
+                  onClick={() => handleSendMessage()}
+                  disabled={(!input.trim() && !pendingImage) || isTyping}
+                  aria-label={t('quantumApothecary.chat.send')}
+                  style={{
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    width:42, height:42, borderRadius:'50%', flexShrink:0, cursor:'pointer',
+                    border:'1px solid rgba(212,175,55,0.35)',
+                    background: (input.trim() || pendingImage) ? 'rgba(212,175,55,0.18)' : 'rgba(212,175,55,0.08)',
+                    color:'#D4AF37', transition:'all 0.25s',
+                    boxShadow:'0 0 10px rgba(212,175,55,0.18), 0 0 22px rgba(212,175,55,0.10)',
+                    opacity: isTyping ? 0.4 : 1,
+                  }}
+                >
+                  {(input.trim() || pendingImage)
+                    ? <Send size={16} />
+                    : <Mic size={16} />}
+                </button>
+
+              </div>
+            </div>
           </div>
+        );
+      })()}
         </div>
       </div>
     </div>
@@ -3330,6 +3431,14 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
     100% { background-position: -200% center; }
   }
 
+  @keyframes pillBreath {
+    0%,100% { box-shadow:0 0 0 1px rgba(212,175,55,0.10),0 0 12px rgba(212,175,55,0.12),0 0 28px rgba(212,175,55,0.07),inset 0 0 14px rgba(212,175,55,0.03); }
+    50%      { box-shadow:0 0 0 1px rgba(212,175,55,0.20),0 0 22px rgba(212,175,55,0.22),0 0 44px rgba(212,175,55,0.12),inset 0 0 22px rgba(212,175,55,0.06); }
+  }
+  @keyframes micPulse {
+    0%,100% { box-shadow:0 0 8px rgba(212,175,55,0.35),0 0 18px rgba(212,175,55,0.18); }
+    50%      { box-shadow:0 0 16px rgba(212,175,55,0.65),0 0 32px rgba(212,175,55,0.32); }
+  }
   @keyframes bannerAura {
     0%,100% { box-shadow: 0 0 0 1px rgba(212,175,55,0.18), 0 2px 18px rgba(212,175,55,0.10); }
     50%      { box-shadow: 0 0 0 1px rgba(212,175,55,0.32), 0 2px 32px rgba(212,175,55,0.20); }
