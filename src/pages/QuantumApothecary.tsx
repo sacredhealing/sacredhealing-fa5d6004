@@ -2361,7 +2361,7 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                       <div className="sqi-message w-full min-w-0">
                         <div
                           className="sqi-ancient-body break-words"
-                          style={{ maxWidth: '100%', wordBreak: 'break-word', overflowWrap: 'anywhere', fontFamily: "'IM Fell English', Georgia, serif", fontSize: '16px', lineHeight: 1.9, color: 'rgba(225,210,185,0.9)', letterSpacing: '0.008em', padding: '0 16px' }}
+                          style={{ maxWidth: '100%', wordBreak: 'break-word', overflowWrap: 'anywhere', fontFamily: "'IM Fell English', Georgia, serif", fontSize: '16px', lineHeight: 1.9, color: 'rgba(225,210,185,0.9)', letterSpacing: '0.008em' }}
                         >
                           {renderSQIContent(scrubBannedTerms(msg.text))}
                         </div>
@@ -3209,6 +3209,7 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
     color: rgba(225,210,185,0.92) !important;
     margin-bottom: 16px !important;
     width: 100% !important;
+    padding: 0 14px !important;
   }
 
   .sqi-ancient-body p.sqi-nadi-line,
