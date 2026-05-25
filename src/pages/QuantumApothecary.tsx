@@ -897,6 +897,168 @@ function stripDuplicateBiometricBlock(compiled: string | undefined, hasLiveScan:
 
 /** Scalar Wave Toolbar Banner — animated canvas + unified gold pill */
 /** Scalar Wave Header Banner — Sri Yantra + animated canvas */
+/** Scalar Wave Tab Switcher — Transmission Library / Akasha-Neural Archive */
+function ScalarTabSwitcher({
+  active,
+  onLibrary,
+  onArchive,
+}: {
+  active: 'library' | 'archive';
+  onLibrary: () => void;
+  onArchive: () => void;
+}) {
+  const wrapRef = React.useRef<HTMLDivElement>(null);
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const rafRef = React.useRef<number>(0);
+
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    const wrap = wrapRef.current;
+    if (!canvas || !wrap) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    let t = 0;
+    const resize = () => { canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight; };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(wrap);
+    const waves = [
+      { amp:.30, freq:4,   speed:.85, alpha:.07, lw:1.0 },
+      { amp:.20, freq:7,   speed:1.4, alpha:.05, lw:.75 },
+      { amp:.14, freq:11,  speed:2.1, alpha:.04, lw:.65 },
+      { amp:.38, freq:2.5, speed:.55, alpha:.05, lw:1.3 },
+      { amp:.10, freq:16,  speed:2.8, alpha:.03, lw:.55 },
+    ];
+    const draw = () => {
+      const W = canvas.width, H = canvas.height;
+      if (!W || !H) { rafRef.current = requestAnimationFrame(draw); return; }
+      ctx.clearRect(0,0,W,H);
+      const pulse = .5 + .5 * Math.sin(t * 1.1);
+      const gc = ctx.createRadialGradient(W*.5,H*.5,0,W*.5,H*.5,W*.6);
+      gc.addColorStop(0, `rgba(212,175,55,${.07+.05*pulse})`);
+      gc.addColorStop(.6, 'rgba(212,175,55,0.01)');
+      gc.addColorStop(1, 'transparent');
+      ctx.fillStyle = gc; ctx.fillRect(0,0,W,H);
+      const gt = ctx.createLinearGradient(0,0,0,H*.5);
+      gt.addColorStop(0, `rgba(212,175,55,${.12+.06*pulse})`);
+      gt.addColorStop(1, 'transparent');
+      ctx.fillStyle = gt; ctx.fillRect(0,0,W,H);
+      waves.forEach((w,wi) => {
+        const phase = (wi/waves.length)*Math.PI*2;
+        ctx.beginPath();
+        for (let x=0;x<=W;x+=1.5) {
+          const nx=x/W, env=Math.sin(nx*Math.PI)*.8+.2;
+          const y=H*.5+Math.sin(nx*w.freq*Math.PI*2+t*w.speed+phase)*H*w.amp*env;
+          x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+        }
+        ctx.strokeStyle=`rgba(212,175,55,${w.alpha})`; ctx.lineWidth=w.lw; ctx.stroke();
+      });
+      const gb = ctx.createLinearGradient(0,H*.6,0,H);
+      gb.addColorStop(0,'transparent'); gb.addColorStop(1,'rgba(5,5,5,0.5)');
+      ctx.fillStyle=gb; ctx.fillRect(0,0,W,H);
+      t+=.013; rafRef.current=requestAnimationFrame(draw);
+    };
+    rafRef.current=requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(rafRef.current); ro.disconnect(); };
+  }, []);
+
+  const tabBtn = (
+    isActive: boolean,
+    onClick: () => void,
+    icon: string,
+    label: string,
+    showDivider: boolean,
+  ) => (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        position: 'relative',
+        flex: 1,
+        padding: '16px 12px',
+        border: 'none',
+        cursor: 'pointer',
+        background: isActive
+          ? 'linear-gradient(135deg,rgba(212,175,55,0.16) 0%,rgba(212,175,55,0.06) 100%)'
+          : 'transparent',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 5,
+        overflow: 'hidden',
+        transition: 'all 0.3s',
+      }}
+    >
+      {/* Divider */}
+      {showDivider && (
+        <span style={{ position:'absolute', left:0, top:'18%', height:'64%', width:1, background:'linear-gradient(180deg,transparent,rgba(212,175,55,0.15),transparent)' }} />
+      )}
+      {/* Active inner glow */}
+      {isActive && (
+        <span style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at 50% 0%,rgba(212,175,55,0.18),transparent 70%)', pointerEvents:'none' }} />
+      )}
+      {/* Active bottom line */}
+      {isActive && (
+        <span style={{ position:'absolute', bottom:0, left:'15%', right:'15%', height:2, background:'linear-gradient(90deg,transparent,#D4AF37,transparent)', borderRadius:2, boxShadow:'0 0 8px rgba(212,175,55,0.6)' }} />
+      )}
+      {/* Icon */}
+      <span style={{
+        fontSize: 16,
+        filter: isActive ? 'drop-shadow(0 0 4px rgba(212,175,55,0.6))' : undefined,
+        opacity: isActive ? 1 : 0.22,
+      }}>
+        {icon}
+      </span>
+      {/* Label */}
+      {isActive ? (
+        <span className="sqi-master-name-shimmer" style={{
+          fontFamily: "'Plus Jakarta Sans',sans-serif",
+          fontSize: 9, fontWeight: 900, letterSpacing: '0.18em',
+          textTransform: 'uppercase' as const,
+          textAlign: 'center', lineHeight: 1.3,
+        }}>
+          {label}
+        </span>
+      ) : (
+        <span style={{
+          fontSize: 9, fontWeight: 800, letterSpacing: '0.14em',
+          textTransform: 'uppercase' as const,
+          color: 'rgba(255,255,255,0.28)',
+          textAlign: 'center', lineHeight: 1.3,
+        }}>
+          {label}
+        </span>
+      )}
+    </button>
+  );
+
+  return (
+    <div
+      ref={wrapRef}
+      style={{
+        position: 'relative',
+        borderRadius: 26,
+        overflow: 'hidden',
+        animation: 'tabsAura 4s ease-in-out infinite',
+      }}
+    >
+      <style>{`
+        @keyframes tabsAura {
+          0%,100%{box-shadow:0 0 0 1px rgba(212,175,55,0.15),0 0 18px rgba(212,175,55,0.10),0 0 44px rgba(212,175,55,0.05);}
+          50%    {box-shadow:0 0 0 1px rgba(212,175,55,0.30),0 0 28px rgba(212,175,55,0.18),0 0 64px rgba(212,175,55,0.10);}
+        }
+      `}</style>
+      <canvas ref={canvasRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:0 }} />
+      <div style={{ position:'relative', zIndex:1, display:'flex', background:'rgba(255,255,255,0.02)', backdropFilter:'blur(30px)', WebkitBackdropFilter:'blur(30px)' }}>
+        {tabBtn(active === 'library', onLibrary, '⚗️', 'Transmission\nLibrary', false)}
+        {tabBtn(active === 'archive', onArchive, '◈', 'Akasha-Neural\nArchive', true)}
+      </div>
+    </div>
+  );
+}
+
+
 function ScalarHeaderBanner({ onBack, onInfo }: { onBack: () => void; onInfo: () => void }) {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const wrapRef = React.useRef<HTMLDivElement>(null);
