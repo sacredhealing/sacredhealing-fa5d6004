@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Youtube,
   Instagram,
@@ -460,8 +461,596 @@ const PlatformGrid = () => (
 );
 
 /* ─────────────────────────────────────────────
-   Auto-Reel Creator Tab
+
+/* ─────────────────────────────────────────────
+   Auto-Reel Creator Tab — YouTube Import + Zoom Processor
 ───────────────────────────────────────────── */
+
+// ── YouTube helpers ──
+const YOUTUBE_API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY || "";
+
+const extractVideoId = (url: string): string | null => {
+  const patterns = [
+    /(?:v=)([\w-]{11})/,
+    /youtu\.be\/([\w-]{11})/,
+    /shorts\/([\w-]{11})/,
+    /embed\/([\w-]{11})/,
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return m[1];
+  }
+  return null;
+};
+
+interface YTVideo {
+  id: string;
+  title: string;
+  thumbnail: string;
+  duration: string;
+  status: "public" | "unlisted" | "private";
+  isZoom: boolean;
+  publishedAt?: string;
+}
+
+const parseDuration = (iso: string): string => {
+  const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!m) return "—";
+  const h = m[1] ? `${m[1]}:` : "";
+  const min = (m[2] || "0").padStart(h ? 2 : 1, "0");
+  const sec = (m[3] || "0").padStart(2, "0");
+  return `${h}${min}:${sec}`;
+};
+
+const detectZoom = (title: string) =>
+  /zoom|meeting|session|client|consultation|call/i.test(title);
+
+// ── ffmpeg loading ──
+let ffmpegInstance: any = null;
+const loadFFmpeg = async (): Promise<any> => {
+  if (ffmpegInstance) return ffmpegInstance;
+  // Dynamically load ffmpeg.wasm from CDN
+  if (!(window as any).FFmpegWASM) {
+    await new Promise<void>((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/umd/ffmpeg.js";
+      s.onload = () => resolve();
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+    await new Promise<void>((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = "https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/umd/index.js";
+      s.onload = () => resolve();
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+  const { FFmpeg } = (window as any).FFmpegWASM || (window as any);
+  const ff = new FFmpeg();
+  await ff.load({
+    coreURL: "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js",
+  });
+  ffmpegInstance = ff;
+  return ff;
+};
+
+// ── YouTube Import Component ──
+const YouTubeImporter = ({
+  onAddVideo,
+}: {
+  onAddVideo: (v: YTVideo) => void;
+}) => {
+  const [url, setUrl] = useState("");
+  const [batchUrls, setBatchUrls] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [fetched, setFetched] = useState<YTVideo[]>([]);
+
+  const fetchOne = async (inputUrl: string): Promise<YTVideo | null> => {
+    const id = extractVideoId(inputUrl.trim());
+    if (!id) { setError(`Could not extract video ID from: ${inputUrl.slice(0, 60)}`); return null; }
+
+    if (!YOUTUBE_API_KEY) {
+      // Fallback: create a card from the URL only (no metadata fetch)
+      return {
+        id,
+        title: `YouTube Video — ${id}`,
+        thumbnail: `https://img.youtube.com/vi/${id}/mqdefault.jpg`,
+        duration: "—",
+        status: "unlisted",
+        isZoom: false,
+      };
+    }
+
+    const res = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,status&id=${id}&key=${YOUTUBE_API_KEY}`
+    );
+    const data = await res.json();
+    if (!data.items?.length) { setError(`Video ${id} not found — check the URL`); return null; }
+    const item = data.items[0];
+    return {
+      id,
+      title: item.snippet.title,
+      thumbnail: item.snippet.thumbnails?.medium?.url || `https://img.youtube.com/vi/${id}/mqdefault.jpg`,
+      duration: parseDuration(item.contentDetails?.duration || ""),
+      status: item.status?.privacyStatus || "public",
+      isZoom: detectZoom(item.snippet.title),
+      publishedAt: item.snippet.publishedAt,
+    };
+  };
+
+  const handleFetch = async () => {
+    setLoading(true); setError(null);
+    const v = await fetchOne(url);
+    if (v) { setFetched((prev) => [v, ...prev]); setUrl(""); onAddVideo(v); }
+    setLoading(false);
+  };
+
+  const handleBatch = async () => {
+    const urls = batchUrls.split("\n").map((u) => u.trim()).filter(Boolean);
+    if (!urls.length) return;
+    setLoading(true); setError(null);
+    for (const u of urls) {
+      const v = await fetchOne(u);
+      if (v) { setFetched((prev) => [v, ...prev]); onAddVideo(v); }
+    }
+    setBatchUrls("");
+    setLoading(false);
+  };
+
+  return (
+    <div>
+      {/* Info */}
+      <div
+        style={{
+          background: "rgba(212,175,55,0.03)", border: "1px solid rgba(212,175,55,0.12)",
+          borderRadius: 16, padding: "18px 20px", marginBottom: 20,
+        }}
+      >
+        <SectionLabel>How YouTube Import Works</SectionLabel>
+        {[
+          { n: 1, t: "Paste any YouTube URL — listed, unlisted, or Zoom recordings uploaded to YouTube. Works by video ID without requiring OAuth." },
+          { n: 2, t: "SQI fetches title, thumbnail, duration, and privacy status via YouTube Data API v3." },
+          { n: 3, t: "Videos detected as Zoom recordings show a 'Process in Zoom Studio' button to crop your side out." },
+        ].map((s) => (
+          <div key={s.n} style={{ display: "flex", gap: 12, marginBottom: 10, alignItems: "flex-start" }}>
+            <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(212,175,55,0.15)", border: "1px solid rgba(212,175,55,0.3)", color: C.gold, fontSize: 11, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{s.n}</div>
+            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", margin: 0, lineHeight: 1.5 }}>{s.t}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Single URL */}
+      <GlassCard style={{ padding: "20px 24px", marginBottom: 16 }}>
+        <SectionLabel>Import by URL</SectionLabel>
+        <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+          <input
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleFetch()}
+            placeholder="https://youtube.com/watch?v=… or youtu.be/… (listed or unlisted)"
+            style={{
+              flex: 1, background: "rgba(255,255,255,0.04)", border: `1px solid ${C.border}`,
+              borderRadius: 12, padding: "12px 16px", color: "#fff", fontSize: 13,
+              fontFamily: "inherit", outline: "none",
+            }}
+          />
+          <GoldBtn onClick={handleFetch} disabled={loading || !url.trim()} small>
+            {loading ? <RefreshCw size={13} style={{ animation: "spin 1s linear infinite" }} /> : <ArrowRight size={13} />}
+            {loading ? "Fetching…" : "Fetch"}
+          </GoldBtn>
+        </div>
+        <p style={{ fontSize: 11, color: C.muted }}>Works with unlisted videos — paste the full URL including the video ID</p>
+      </GlassCard>
+
+      {/* Batch */}
+      <GlassCard style={{ padding: "20px 24px", marginBottom: 20 }}>
+        <SectionLabel>Batch Import — Multiple URLs</SectionLabel>
+        <textarea
+          value={batchUrls}
+          onChange={(e) => setBatchUrls(e.target.value)}
+          placeholder={"Paste multiple YouTube URLs, one per line:\nhttps://youtube.com/watch?v=abc123\nhttps://youtu.be/def456"}
+          rows={4}
+          style={{
+            width: "100%", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.border}`,
+            borderRadius: 12, padding: "12px 16px", color: "#fff", fontSize: 12,
+            fontFamily: "inherit", outline: "none", resize: "none", lineHeight: 1.6, boxSizing: "border-box" as const,
+          }}
+        />
+        <div style={{ display: "flex", gap: 10, marginTop: 12, alignItems: "center" }}>
+          <GoldBtn onClick={handleBatch} disabled={loading || !batchUrls.trim()} small variant="ghost">
+            {loading ? <RefreshCw size={12} style={{ animation: "spin 1s linear infinite" }} /> : <Plus size={12} />}
+            Import All
+          </GoldBtn>
+          <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>Up to 50 videos at once</p>
+        </div>
+      </GlassCard>
+
+      {error && (
+        <div style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 12, padding: "12px 16px", marginBottom: 16, fontSize: 12, color: C.red }}>
+          ⚠ {error}
+        </div>
+      )}
+
+      {/* Fetched results */}
+      {fetched.length > 0 && (
+        <div>
+          <SectionLabel>Imported Videos</SectionLabel>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {fetched.map((v) => (
+              <GlassCard
+                key={v.id}
+                style={{ padding: 16, background: "rgba(255,0,0,0.03)", border: "1px solid rgba(255,0,0,0.12)" }}
+              >
+                <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+                  <div style={{ width: 110, height: 62, borderRadius: 10, background: "#111", flexShrink: 0, overflow: "hidden", position: "relative" }}>
+                    <img src={v.thumbnail} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <div style={{ position: "absolute", bottom: 4, right: 4, background: "rgba(0,0,0,0.85)", color: "#fff", fontSize: 9, fontWeight: 700, padding: "2px 5px", borderRadius: 4 }}>{v.duration}</div>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontWeight: 800, fontSize: 13, color: "#fff", margin: "0 0 6px", lineHeight: 1.3 }}>{v.title}</p>
+                    <div style={{ display: "flex", gap: 7, flexWrap: "wrap" as const, marginBottom: 10 }}>
+                      <Tag label="youtube" color="#FF5555" />
+                      <Tag label={v.status} color={v.status === "public" ? C.green : C.amber} />
+                      {v.isZoom && <Tag label="Zoom Recording" color={C.cyan} />}
+                    </div>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
+                      {v.isZoom && (
+                        <GoldBtn variant="ghost" small onClick={() => onAddVideo({ ...v, isZoom: true })}>
+                          <Film size={12} /> Send to Zoom Studio →
+                        </GoldBtn>
+                      )}
+                      <GoldBtn variant="ghost" small>
+                        <Scissors size={12} /> Create Reels
+                      </GoldBtn>
+                    </div>
+                  </div>
+                </div>
+              </GlassCard>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Zoom Processor Component ──
+const ZoomProcessor = ({ initialVideo }: { initialVideo?: YTVideo }) => {
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoObjectUrl, setVideoObjectUrl] = useState<string | null>(null);
+  const [keepSide, setKeepSide] = useState<"left" | "right">("left");
+  const [startTime, setStartTime] = useState("00:00:00");
+  const [endTime, setEndTime] = useState("");
+  const [processing, setProcessing] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [progressLog, setProgressLog] = useState<string[]>([]);
+  const [progressLabel, setProgressLabel] = useState("");
+  const [outputUrl, setOutputUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [reelQueued, setReelQueued] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = (file: File) => {
+    if (videoObjectUrl) URL.revokeObjectURL(videoObjectUrl);
+    setVideoFile(file);
+    setVideoObjectUrl(URL.createObjectURL(file));
+    setOutputUrl(null); setReelQueued(false); setError(null); setProgressLog([]); setProgress(0);
+    // Estimate end time from file
+    const vid = document.createElement("video");
+    vid.src = URL.createObjectURL(file);
+    vid.onloadedmetadata = () => {
+      const t = vid.duration;
+      const h = Math.floor(t / 3600).toString().padStart(2, "0");
+      const m = Math.floor((t % 3600) / 60).toString().padStart(2, "0");
+      const s = Math.floor(t % 60).toString().padStart(2, "0");
+      setEndTime(`${h}:${m}:${s}`);
+    };
+  };
+
+  const cropFilter = keepSide === "left" ? "crop=iw/2:ih:0:0" : "crop=iw/2:ih:iw/2:0";
+
+  const processVideo = async () => {
+    if (!videoFile) { setError("Upload a Zoom recording first"); return; }
+    setProcessing(true); setProgress(0); setError(null); setProgressLog([]); setOutputUrl(null);
+
+    const log = (msg: string) => setProgressLog((prev) => [...prev.slice(-8), msg]);
+
+    try {
+      log("Loading FFmpeg WebAssembly engine…");
+      setProgressLabel("Loading FFmpeg…"); setProgress(5);
+
+      const ff = await loadFFmpeg();
+      ff.on("progress", ({ ratio }: any) => {
+        const pct = Math.round(5 + ratio * 88);
+        setProgress(pct);
+        setProgressLabel(`Processing: ${pct}%`);
+        log(`[ffmpeg] Progress: ${pct}%`);
+      });
+      ff.on("log", ({ message }: any) => log(`[ffmpeg] ${message}`));
+
+      setProgressLabel("Reading video file…"); setProgress(8);
+      log("Reading video file into memory…");
+
+      const { fetchFile } = (window as any).FFmpegUtil || {};
+      let inputData: Uint8Array;
+      if (fetchFile) {
+        inputData = await fetchFile(videoFile);
+      } else {
+        const buf = await videoFile.arrayBuffer();
+        inputData = new Uint8Array(buf);
+      }
+
+      await ff.writeFile("input.mp4", inputData);
+      setProgress(12); log("Video loaded — applying crop filter…");
+
+      // Build ffmpeg args
+      const args = ["-i", "input.mp4"];
+      if (startTime && startTime !== "00:00:00") args.push("-ss", startTime);
+      if (endTime) args.push("-to", endTime);
+      args.push(
+        "-vf", `${cropFilter},scale=1080:-2`,  // crop then scale to 1080px wide
+        "-c:v", "libx264",
+        "-preset", "fast",
+        "-crf", "23",
+        "-c:a", "aac",
+        "-movflags", "+faststart",
+        "output.mp4"
+      );
+
+      setProgressLabel("Cropping and encoding…"); log("Running FFmpeg crop + encode…");
+      await ff.exec(args);
+
+      setProgress(96); setProgressLabel("Reading output…"); log("Reading output file…");
+      const data = await ff.readFile("output.mp4");
+      const blob = new Blob([(data as Uint8Array).buffer], { type: "video/mp4" });
+      const url = URL.createObjectURL(blob);
+      setOutputUrl(url);
+      setProgress(100); setProgressLabel("✓ Done!");
+      log("✓ Processing complete — your side extracted successfully!");
+    } catch (err: any) {
+      setError(`Processing failed: ${err.message}. Try a shorter clip or smaller file.`);
+    }
+    setProcessing(false);
+  };
+
+  const downloadOutput = () => {
+    if (!outputUrl) return;
+    const a = document.createElement("a");
+    a.href = outputUrl;
+    a.download = `sqi-cropped-${keepSide}-${Date.now()}.mp4`;
+    a.click();
+  };
+
+  return (
+    <div>
+      {/* Info */}
+      <div style={{ background: "rgba(34,211,238,0.03)", border: "1px solid rgba(34,211,238,0.15)", borderRadius: 16, padding: "18px 20px", marginBottom: 20 }}>
+        <SectionLabel>Zoom Recording Processor</SectionLabel>
+        {[
+          { n: 1, t: "Download your Zoom recording from zoom.us → Recordings. Then upload it here — runs entirely in your browser, nothing sent to any server." },
+          { n: 2, t: "Select which side of the split-screen is you — left or right. SQI draws the crop overlay so you can see exactly what gets removed." },
+          { n: 3, t: "Hit Extract My Side → FFmpeg WASM processes the video locally and outputs a clean cropped vertical video ready for Instagram Reels and TikTok." },
+        ].map((s) => (
+          <div key={s.n} style={{ display: "flex", gap: 12, marginBottom: 10, alignItems: "flex-start" }}>
+            <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(34,211,238,0.12)", border: "1px solid rgba(34,211,238,0.25)", color: C.cyan, fontSize: 11, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{s.n}</div>
+            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", margin: 0, lineHeight: 1.5 }}>{s.t}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Upload */}
+      <input ref={fileRef} type="file" accept="video/*" style={{ display: "none" }} onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
+
+      {!videoFile ? (
+        <div
+          onClick={() => fileRef.current?.click()}
+          onDrop={(e) => { e.preventDefault(); e.dataTransfer.files[0] && handleFile(e.dataTransfer.files[0]); }}
+          onDragOver={(e) => e.preventDefault()}
+          style={{ border: "2px dashed rgba(34,211,238,0.3)", borderRadius: 20, padding: "36px 24px", textAlign: "center" as const, cursor: "pointer", marginBottom: 20, background: "rgba(34,211,238,0.02)", transition: "all 0.2s" }}
+        >
+          <div style={{ width: 56, height: 56, borderRadius: 16, background: "rgba(34,211,238,0.1)", border: "1px solid rgba(34,211,238,0.25)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px", fontSize: 24 }}>🎬</div>
+          <p style={{ fontWeight: 800, fontSize: 14, color: "#fff", margin: "0 0 6px" }}>Upload Zoom Recording</p>
+          <p style={{ fontSize: 12, color: C.muted, margin: "0 0 14px" }}>MP4 or MOV · any size · processed locally in browser · never uploaded to any server</p>
+          <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+            <Tag label="Browser-Only" color={C.cyan} />
+            <Tag label="FFmpeg WASM" color={C.gold} />
+          </div>
+        </div>
+      ) : (
+        <div>
+          {/* File info bar */}
+          <GlassCard style={{ padding: "14px 18px", marginBottom: 20, display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(34,211,238,0.1)", border: "1px solid rgba(34,211,238,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>🎬</div>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontWeight: 800, fontSize: 13, color: "#fff", margin: "0 0 4px" }}>{videoFile.name}</p>
+              <div style={{ display: "flex", gap: 8 }}>
+                <Tag label={(videoFile.size / 1024 / 1024 / 1024).toFixed(2) + " GB"} color={C.amber} />
+                <Tag label="Zoom Recording" color={C.cyan} />
+              </div>
+            </div>
+            <button
+              onClick={() => { setVideoFile(null); if (videoObjectUrl) URL.revokeObjectURL(videoObjectUrl); setVideoObjectUrl(null); setOutputUrl(null); }}
+              style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, color: C.red, fontSize: 11, fontWeight: 700, padding: "6px 12px", cursor: "pointer" }}
+            >
+              ✕ Remove
+            </button>
+          </GlassCard>
+
+          {/* Split preview */}
+          <SectionLabel>Split-Screen Preview</SectionLabel>
+          <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", border: "1px solid rgba(34,211,238,0.2)", background: "#0a0a0a", aspectRatio: "16/9", marginBottom: 8 }}>
+            {/* Simulated Zoom layout */}
+            <div style={{ position: "absolute", inset: 0, display: "flex" }}>
+              <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column" as const, gap: 8, background: "linear-gradient(135deg,rgba(212,175,55,0.07),rgba(212,175,55,0.02))", borderRight: "1px solid rgba(255,255,255,0.06)" }}>
+                <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(212,175,55,0.15)", border: "2px solid rgba(212,175,55,0.4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>🙏</div>
+                <p style={{ fontSize: 11, fontWeight: 800, color: C.gold, letterSpacing: "0.05em", margin: 0 }}>KRITAGYA DAS</p>
+              </div>
+              <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column" as const, gap: 8, background: "rgba(60,60,80,0.05)" }}>
+                <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(100,100,120,0.2)", border: "2px solid rgba(150,150,170,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>👤</div>
+                <p style={{ fontSize: 11, fontWeight: 800, color: C.muted, letterSpacing: "0.05em", margin: 0 }}>CLIENT</p>
+              </div>
+            </div>
+            {/* Crop overlay */}
+            <div style={{ position: "absolute", inset: 0, display: "flex", pointerEvents: "none" }}>
+              {keepSide === "left" ? (
+                <>
+                  <div style={{ flex: 1, background: "rgba(34,211,238,0.06)", border: "2px solid rgba(34,211,238,0.5)", position: "relative" }}>
+                    <div style={{ position: "absolute", top: 10, left: 10, background: "rgba(34,211,238,0.9)", color: "#050505", fontSize: 10, fontWeight: 800, padding: "4px 8px", borderRadius: 6 }}>✓ KEEP — Your Side</div>
+                  </div>
+                  <div style={{ flex: 1, background: "rgba(239,68,68,0.1)", position: "relative" }}>
+                    <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", fontSize: 32, opacity: 0.5 }}>✕</div>
+                    <div style={{ position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)", fontSize: 10, fontWeight: 700, color: "rgba(239,68,68,0.7)", whiteSpace: "nowrap" as const }}>CLIENT REMOVED</div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ flex: 1, background: "rgba(239,68,68,0.1)", position: "relative" }}>
+                    <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", fontSize: 32, opacity: 0.5 }}>✕</div>
+                    <div style={{ position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)", fontSize: 10, fontWeight: 700, color: "rgba(239,68,68,0.7)", whiteSpace: "nowrap" as const }}>CLIENT REMOVED</div>
+                  </div>
+                  <div style={{ flex: 1, background: "rgba(34,211,238,0.06)", border: "2px solid rgba(34,211,238,0.5)", position: "relative" }}>
+                    <div style={{ position: "absolute", top: 10, left: 10, background: "rgba(34,211,238,0.9)", color: "#050505", fontSize: 10, fontWeight: 800, padding: "4px 8px", borderRadius: 6 }}>✓ KEEP — Your Side</div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+          <p style={{ fontSize: 11, color: C.muted, textAlign: "center" as const, marginBottom: 20 }}>
+            FFmpeg filter: <code style={{ color: C.cyan, fontSize: 11 }}>{cropFilter}</code>
+          </p>
+
+          {/* Side selector */}
+          <SectionLabel>Which side is you?</SectionLabel>
+          <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+            {(["left", "right"] as const).map((side) => (
+              <button
+                key={side}
+                onClick={() => setKeepSide(side)}
+                style={{
+                  flex: 1, padding: "14px 16px", borderRadius: 14, cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 12, fontFamily: "inherit",
+                  background: keepSide === side ? "rgba(34,211,238,0.06)" : "rgba(255,255,255,0.03)",
+                  border: `1px solid ${keepSide === side ? C.cyan : C.border}`,
+                  transition: "all 0.2s",
+                }}
+              >
+                {side === "left" && <span style={{ fontSize: 20 }}>⬅</span>}
+                <div style={{ flex: 1, textAlign: "left" as const }}>
+                  <p style={{ fontSize: 13, fontWeight: 800, color: "#fff", margin: "0 0 2px", textTransform: "capitalize" as const }}>{side} Side</p>
+                  <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>I appear on the {side}</p>
+                </div>
+                {side === "right" && <span style={{ fontSize: 20 }}>➡</span>}
+                <div style={{
+                  width: 20, height: 20, borderRadius: "50%", background: C.cyan,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 11, color: "#050505", fontWeight: 900,
+                  opacity: keepSide === side ? 1 : 0, transition: "opacity 0.2s",
+                }}>✓</div>
+              </button>
+            ))}
+          </div>
+
+          {/* Clip range */}
+          <GlassCard style={{ padding: "18px 20px", marginBottom: 20 }}>
+            <SectionLabel>Clip Range (optional)</SectionLabel>
+            <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" as const }}>
+              {[{ label: "Start", val: startTime, set: setStartTime }, { label: "End", val: endTime, set: setEndTime }].map((f) => (
+                <div key={f.label} style={{ display: "flex", flexDirection: "column" as const, gap: 6 }}>
+                  <label style={{ fontSize: 9, color: C.muted, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase" as const }}>{f.label}</label>
+                  <input
+                    value={f.val}
+                    onChange={(e) => f.set(e.target.value)}
+                    placeholder="HH:MM:SS"
+                    style={{ width: 110, background: "rgba(255,255,255,0.04)", border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 12px", color: "#fff", fontSize: 12, fontFamily: "monospace", outline: "none", textAlign: "center" as const }}
+                  />
+                </div>
+              ))}
+              <p style={{ fontSize: 11, color: C.muted, alignSelf: "flex-end", paddingBottom: 2 }}>Leave empty to process entire recording</p>
+            </div>
+          </GlassCard>
+
+          {error && (
+            <div style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 12, padding: "12px 16px", marginBottom: 16, fontSize: 12, color: C.red }}>
+              ⚠ {error}
+            </div>
+          )}
+
+          {/* Process button */}
+          <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 20, flexWrap: "wrap" as const }}>
+            <GoldBtn onClick={processVideo} disabled={processing}>
+              {processing ? (
+                <><RefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} /> Processing…</>
+              ) : (
+                <><Zap size={14} /> Extract My Side</>
+              )}
+            </GoldBtn>
+            <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>Runs in browser · may take 1–5 min for long recordings</p>
+          </div>
+
+          {/* Progress */}
+          {processing && (
+            <GlassCard style={{ padding: "20px 24px", marginBottom: 20, position: "relative", overflow: "hidden" }}>
+              <div style={{ position: "absolute", left: 0, right: 0, height: 2, background: `linear-gradient(90deg,transparent,${C.cyan},transparent)`, animation: "scanLine 1.5s linear infinite", top: 0 }} />
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                <p style={{ fontWeight: 800, fontSize: 13, color: "#fff", margin: 0 }}>{progressLabel}</p>
+                <p style={{ fontWeight: 800, fontSize: 13, color: C.gold, margin: 0 }}>{progress}%</p>
+              </div>
+              <div style={{ height: 6, borderRadius: 4, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
+                <div style={{ height: "100%", background: `linear-gradient(90deg,${C.cyan},${C.gold})`, borderRadius: 4, width: `${progress}%`, transition: "width 0.3s ease" }} />
+              </div>
+              <div style={{ marginTop: 14, maxHeight: 120, overflowY: "auto" as const }}>
+                {progressLog.map((l, i) => (
+                  <p key={i} style={{ fontSize: 10, color: "rgba(34,211,238,0.5)", fontFamily: "monospace", margin: "2px 0" }}>{l}</p>
+                ))}
+              </div>
+            </GlassCard>
+          )}
+
+          {/* Output */}
+          {outputUrl && (
+            <div style={{ background: "rgba(34,197,94,0.04)", border: "1px solid rgba(34,197,94,0.25)", borderRadius: 18, padding: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                <CheckCircle2 size={18} color={C.green} />
+                <p style={{ fontWeight: 800, fontSize: 15, color: "#fff", margin: 0 }}>Your Side Extracted — Ready for Social</p>
+              </div>
+              <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap" as const }}>
+                <div style={{ width: "100%", maxWidth: 200, aspectRatio: "9/16", borderRadius: 14, background: "#0a0a0a", border: "1px solid rgba(34,211,238,0.2)", overflow: "hidden" }}>
+                  <video src={outputUrl} controls style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </div>
+                <div style={{ flex: 1, minWidth: 200 }}>
+                  {[
+                    ["Output", "960×1080 → 9:16 vertical"],
+                    ["Client", "Removed ✓"],
+                    ["Format", "MP4 H.264 + AAC"],
+                  ].map(([k, v]) => (
+                    <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 8 }}>
+                      <span style={{ color: C.muted, fontWeight: 700 }}>{k}</span>
+                      <span style={{ color: C.green }}>{v}</span>
+                    </div>
+                  ))}
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const, marginTop: 14 }}>
+                    <GoldBtn small onClick={downloadOutput}><ArrowRight size={12} /> Download MP4</GoldBtn>
+                    <GoldBtn small variant="ghost" onClick={() => setReelQueued(true)}><Scissors size={12} /> Send to Reel Creator</GoldBtn>
+                  </div>
+                  {reelQueued && (
+                    <div style={{ marginTop: 14, background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.2)", borderRadius: 12, padding: "12px 14px", display: "flex", gap: 10, alignItems: "center" }}>
+                      <CheckCircle2 size={14} color={C.gold} />
+                      <p style={{ fontSize: 12, color: C.gold, margin: 0, fontWeight: 700 }}>Added to reel queue — switch to Existing Videos tab</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Existing Videos (static list) ──
 const MOCK_VIDEOS = [
   { id: "v1", title: "Siddha Nada Transmission — Full Session", platform: "youtube", dur: "58:22", thumb: "🎥", live: false },
   { id: "v2", title: "Morning Pranayama Live", platform: "instagram", dur: "32:10", thumb: "🔴", live: true },
@@ -477,68 +1066,45 @@ const platformColor = (p: string) => {
 };
 
 const ReelCreator = () => {
+  const [subTab, setSubTab] = useState<"yt" | "zoom" | "existing">("yt");
   const [selected, setSelected] = useState<string[]>([]);
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState(false);
-  const [scanMode, setScanMode] = useState<"recent" | "live">("recent");
+  const [zoomVideo, setZoomVideo] = useState<YTVideo | undefined>(undefined);
+  const [extraVideos, setExtraVideos] = useState<YTVideo[]>([]);
 
-  const toggleSelect = (id: string) => {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+  const toggleSelect = (id: string) =>
+    setSelected((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+
+  const handleAddVideo = (v: YTVideo) => {
+    setExtraVideos((prev) => [v, ...prev.filter((x) => x.id !== v.id)]);
+    if (v.isZoom) { setZoomVideo(v); setSubTab("zoom"); }
   };
 
   const handleGenerate = () => {
     if (selected.length === 0) return;
     setGenerating(true);
-    setTimeout(() => {
-      setGenerating(false);
-      setGenerated(true);
-    }, 2800);
+    setTimeout(() => { setGenerating(false); setGenerated(true); }, 2800);
   };
+
+  const SUB_TABS: { id: "yt" | "zoom" | "existing"; label: string }[] = [
+    { id: "yt", label: "▶ YouTube Import" },
+    { id: "zoom", label: "🎬 Zoom Processor" },
+    { id: "existing", label: "📋 Existing Videos" },
+  ];
 
   return (
     <div>
       {/* How it works */}
-      <div
-        style={{
-          display: "flex",
-          gap: 0,
-          marginBottom: 24,
-          background: "rgba(255,255,255,0.025)",
-          border: `1px solid ${C.border}`,
-          borderRadius: 16,
-          overflow: "hidden",
-        }}
-      >
+      <div style={{ display: "flex", gap: 0, marginBottom: 24, background: "rgba(255,255,255,0.025)", border: `1px solid ${C.border}`, borderRadius: 16, overflow: "hidden" }}>
         {[
-          { Icon: Video, label: "1. Scan", sub: "Fetch your videos & lives" },
-          { Icon: Scissors, label: "2. AI Cuts", sub: "Auto-detect highlights" },
-          { Icon: Wand2, label: "3. Generate Reel", sub: "Captions + music + branding" },
+          { Icon: Video, label: "1. Import", sub: "YouTube URLs or Zoom files" },
+          { Icon: Scissors, label: "2. Crop", sub: "Remove client from Zoom" },
+          { Icon: Wand2, label: "3. AI Reel", sub: "Captions + music + branding" },
           { Icon: Send, label: "4. Auto-Post", sub: "Schedule across all platforms" },
         ].map((s, i) => (
-          <div
-            key={i}
-            style={{
-              flex: 1,
-              padding: "16px 14px",
-              borderRight: i < 3 ? `1px solid ${C.border}` : "none",
-              textAlign: "center",
-            }}
-          >
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 10,
-                background: "rgba(212,175,55,0.1)",
-                border: "1px solid rgba(212,175,55,0.2)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto 8px",
-              }}
-            >
+          <div key={i} style={{ flex: 1, padding: "16px 14px", borderRight: i < 3 ? `1px solid ${C.border}` : "none", textAlign: "center" as const }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(212,175,55,0.1)", border: "1px solid rgba(212,175,55,0.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 8px" }}>
               <s.Icon size={15} color={C.gold} />
             </div>
             <p style={{ fontSize: 11, fontWeight: 800, color: "#fff", margin: "0 0 2px" }}>{s.label}</p>
@@ -547,771 +1113,125 @@ const ReelCreator = () => {
         ))}
       </div>
 
-      {/* Scan Mode Toggle */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-        {(["recent", "live"] as const).map((m) => (
+      {/* Sub-tab navigation */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+        {SUB_TABS.map((t) => (
           <button
-            key={m}
-            onClick={() => setScanMode(m)}
+            key={t.id}
+            onClick={() => setSubTab(t.id)}
             style={{
-              padding: "8px 18px",
-              borderRadius: 10,
-              border: `1px solid ${scanMode === m ? C.gold : C.border}`,
-              background: scanMode === m ? "rgba(212,175,55,0.1)" : "transparent",
-              color: scanMode === m ? C.gold : C.muted,
-              fontSize: 12,
-              fontWeight: 700,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
+              padding: "9px 18px", borderRadius: 10, fontSize: 12, fontWeight: 700,
+              cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s",
+              border: `1px solid ${subTab === t.id ? C.gold : C.border}`,
+              background: subTab === t.id ? "rgba(212,175,55,0.1)" : "transparent",
+              color: subTab === t.id ? C.gold : C.muted,
             }}
           >
-            {m === "live" ? <Radio size={12} /> : <Film size={12} />}
-            {m === "recent" ? "Recent Videos" : "Past Lives"}
+            {t.label}
           </button>
         ))}
-        <button
-          style={{
-            marginLeft: "auto",
-            padding: "8px 16px",
-            borderRadius: 10,
-            border: `1px solid ${C.border}`,
-            background: "transparent",
-            color: C.muted,
-            fontSize: 12,
-            fontWeight: 700,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-          }}
-        >
-          <RefreshCw size={12} /> Refresh Scan
-        </button>
       </div>
 
-      {/* Video list */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
-        {MOCK_VIDEOS.map((v) => {
-          const sel = selected.includes(v.id);
-          return (
-            <GlassCard
-              key={v.id}
-              goldBorder={sel}
-              style={{
-                padding: "14px 16px",
-                cursor: "pointer",
-                transition: "all 0.2s",
-              }}
-            >
-              <div
-                style={{ display: "flex", alignItems: "center", gap: 14 }}
-                onClick={() => toggleSelect(v.id)}
-              >
-                {/* Checkbox */}
-                <div
-                  style={{
-                    width: 18,
-                    height: 18,
-                    borderRadius: 5,
-                    border: `2px solid ${sel ? C.gold : C.border}`,
-                    background: sel ? C.gold : "transparent",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  {sel && (
-                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                      <path d="M1 4L3.5 6.5L9 1" stroke="#050505" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
-                  )}
+      {/* Sub-tab content */}
+      {subTab === "yt" && <YouTubeImporter onAddVideo={handleAddVideo} />}
+      {subTab === "zoom" && <ZoomProcessor initialVideo={zoomVideo} />}
+      {subTab === "existing" && (
+        <div>
+          {/* Extra videos from YouTube import or Zoom */}
+          {extraVideos.map((v) => (
+            <GlassCard key={v.id} goldBorder={selected.includes(v.id)} style={{ padding: "14px 16px", marginBottom: 10, cursor: "pointer" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }} onClick={() => toggleSelect(v.id)}>
+                <div style={{ width: 18, height: 18, borderRadius: 5, border: `2px solid ${selected.includes(v.id) ? C.gold : C.border}`, background: selected.includes(v.id) ? C.gold : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  {selected.includes(v.id) && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#050505" strokeWidth="2" strokeLinecap="round" /></svg>}
                 </div>
-
-                {/* Thumb */}
-                <div
-                  style={{
-                    width: 52,
-                    height: 36,
-                    borderRadius: 8,
-                    background: `${platformColor(v.platform)}15`,
-                    border: `1px solid ${platformColor(v.platform)}30`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 18,
-                    flexShrink: 0,
-                  }}
-                >
-                  {v.thumb}
-                </div>
-
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 700,
-                      color: "#fff",
-                      margin: "0 0 3px",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    {v.title}
-                  </p>
-                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <Tag label={v.platform} color={platformColor(v.platform)} />
-                    {v.live && <Tag label="LIVE" color={C.red} />}
-                    <span style={{ fontSize: 11, color: C.muted }}>{v.dur}</span>
+                <img src={v.thumbnail} alt="" style={{ width: 52, height: 36, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: "#fff", margin: "0 0 4px" }}>{v.title}</p>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <Tag label="youtube" color="#FF5555" />
+                    <Tag label={v.status} color={v.status === "public" ? C.green : C.amber} />
+                    {v.isZoom && <Tag label="zoom-extracted" color={C.cyan} />}
+                    <span style={{ fontSize: 11, color: C.muted }}>{v.duration}</span>
                   </div>
-                </div>
-
-                <div style={{ display: "flex", gap: 6 }}>
-                  <GoldBtn variant="ghost" small>
-                    <Eye size={12} /> Preview
-                  </GoldBtn>
                 </div>
               </div>
             </GlassCard>
-          );
-        })}
-      </div>
+          ))}
 
-      {/* AI Options */}
-      {selected.length > 0 && (
-        <GlassCard style={{ padding: "18px 20px", marginBottom: 20 }}>
-          <SectionLabel>AI Reel Options</SectionLabel>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            {[
-              { label: "Clip Duration", value: "30s / 60s / 90s", icon: Clock },
-              { label: "Captions", value: "Auto (EN + SV)", icon: MessageCircle },
-              { label: "Background Music", value: "Siddha Soundscape", icon: Music2 },
-              { label: "Branding", value: "SQI 2050 Overlay", icon: Sparkles },
-            ].map((opt) => (
-              <div
-                key={opt.label}
-                style={{
-                  background: "rgba(255,255,255,0.03)",
-                  border: `1px solid ${C.border}`,
-                  borderRadius: 12,
-                  padding: "12px 14px",
-                  display: "flex",
-                  gap: 10,
-                  alignItems: "center",
-                }}
-              >
-                <opt.icon size={14} color={C.gold} />
-                <div>
-                  <p style={{ fontSize: 10, color: C.muted, margin: "0 0 2px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>{opt.label}</p>
-                  <p style={{ fontSize: 12, color: "#fff", margin: 0, fontWeight: 600 }}>{opt.value}</p>
-                </div>
-              </div>
+          {/* Scan mode toggle */}
+          <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" as const }}>
+            {(["recent", "live"] as const).map((m) => (
+              <button key={m} style={{ padding: "8px 18px", borderRadius: 10, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontFamily: "inherit" }}>
+                {m === "live" ? <Radio size={12} /> : <Film size={12} />}
+                {m === "recent" ? "Recent Videos" : "Past Lives"}
+              </button>
             ))}
+            <button style={{ marginLeft: "auto", padding: "8px 16px", borderRadius: 10, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontFamily: "inherit" }}>
+              <RefreshCw size={12} /> Refresh Scan
+            </button>
           </div>
-        </GlassCard>
-      )}
 
-      {/* Generate Button */}
-      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-        <GoldBtn
-          onClick={handleGenerate}
-          disabled={selected.length === 0 || generating}
-        >
-          {generating ? (
-            <>
-              <RefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} />
-              Generating Reels…
-            </>
-          ) : (
-            <>
-              <Wand2 size={14} />
-              Generate {selected.length > 0 ? `${selected.length} ` : ""}Reel
-              {selected.length > 1 ? "s" : ""}
-            </>
-          )}
-        </GoldBtn>
-        {selected.length === 0 && (
-          <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>
-            Select at least one video above
-          </p>
-        )}
-      </div>
-
-      {/* Generated output */}
-      {generated && (
-        <div
-          style={{
-            marginTop: 24,
-            background: "rgba(34,197,94,0.06)",
-            border: "1px solid rgba(34,197,94,0.3)",
-            borderRadius: 18,
-            padding: "20px 22px",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-            <CheckCircle2 size={18} color={C.green} />
-            <p style={{ fontWeight: 800, fontSize: 14, color: "#fff", margin: 0 }}>
-              Reels Generated — Ready to Schedule
-            </p>
-          </div>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            {selected.map((id, i) => {
-              const v = MOCK_VIDEOS.find((x) => x.id === id);
+          <div style={{ display: "flex", flexDirection: "column" as const, gap: 10, marginBottom: 20 }}>
+            {MOCK_VIDEOS.map((v) => {
+              const sel = selected.includes(v.id);
               return (
-                <div
-                  key={id}
-                  style={{
-                    background: "rgba(255,255,255,0.04)",
-                    border: `1px solid ${C.border}`,
-                    borderRadius: 10,
-                    padding: "10px 14px",
-                    fontSize: 12,
-                    color: "#fff",
-                  }}
-                >
-                  <p style={{ margin: "0 0 4px", fontWeight: 700 }}>Reel {i + 1}</p>
-                  <p style={{ margin: 0, color: C.muted, fontSize: 11 }}>{v?.title?.slice(0, 28)}…</p>
-                </div>
+                <GlassCard key={v.id} goldBorder={sel} style={{ padding: "14px 16px", cursor: "pointer" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 14 }} onClick={() => toggleSelect(v.id)}>
+                    <div style={{ width: 18, height: 18, borderRadius: 5, border: `2px solid ${sel ? C.gold : C.border}`, background: sel ? C.gold : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      {sel && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#050505" strokeWidth="2" strokeLinecap="round" /></svg>}
+                    </div>
+                    <div style={{ width: 52, height: 36, borderRadius: 8, background: `${platformColor(v.platform)}15`, border: `1px solid ${platformColor(v.platform)}30`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>{v.thumb}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: "#fff", margin: "0 0 3px", whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>{v.title}</p>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <Tag label={v.platform} color={platformColor(v.platform)} />
+                        {v.live && <Tag label="LIVE" color={C.red} />}
+                        <span style={{ fontSize: 11, color: C.muted }}>{v.dur}</span>
+                      </div>
+                    </div>
+                    <GoldBtn variant="ghost" small><Eye size={12} /> Preview</GoldBtn>
+                  </div>
+                </GlassCard>
               );
             })}
           </div>
-          <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
-            <GoldBtn variant="primary" small>
-              <Calendar size={13} /> Schedule Posts
+
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <GoldBtn onClick={handleGenerate} disabled={selected.length === 0 || generating}>
+              {generating ? (<><RefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} /> Generating Reels…</>) : (<><Wand2 size={14} /> Generate {selected.length > 0 ? `${selected.length} ` : ""}Reel{selected.length > 1 ? "s" : ""}</>)}
             </GoldBtn>
-            <GoldBtn variant="ghost" small>
-              <Upload size={13} /> Publish Now
-            </GoldBtn>
+            {selected.length === 0 && <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>Select at least one video above</p>}
           </div>
-        </div>
-      )}
 
-      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
-    </div>
-  );
-};
-
-/* ─────────────────────────────────────────────
-
-/* ─────────────────────────────────────────────
-   Publisher Tab — Sovereign Multi-Platform Engine
-───────────────────────────────────────────── */
-const SUPABASE_URL = "https://fjdzhrdpioxdeyyfogep.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTYzOTYwMDAsImV4cCI6MjAzMTk3MjAwMH0.placeholder";
-
-const fileToBase64 = (file: File): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve((reader.result as string).split(",")[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-
-const Publisher = () => {
-  const [activeProfile, setActiveProfile] = useState("kritagya");
-  const [caption, setCaption] = useState("");
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["instagram"]);
-  const [mediaFile, setMediaFile] = useState<File | null>(null);
-  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
-  const [mediaType, setMediaType] = useState<"image" | "video" | null>(null);
-  const [publishing, setPublishing] = useState(false);
-  const [publishResult, setPublishResult] = useState<any>(null);
-  const [isListening, setIsListening] = useState(false);
-  const [aiGenerating, setAiGenerating] = useState(false);
-  const [hashtags, setHashtags] = useState<string[]>([]);
-  const [scheduledTime, setScheduledTime] = useState("");
-  const [showSchedule, setShowSchedule] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const togglePlatform = (id: string) =>
-    setSelectedPlatforms((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-
-  /* ── File Upload ── */
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 100 * 1024 * 1024) { setError("File too large — max 100MB"); return; }
-    setMediaFile(file);
-    setMediaType(file.type.startsWith("video/") ? "video" : "image");
-    if (mediaPreview) URL.revokeObjectURL(mediaPreview);
-    setMediaPreview(URL.createObjectURL(file));
-    setError(null);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      const input = fileInputRef.current;
-      if (input) {
-        const dt = new DataTransfer();
-        dt.items.add(file);
-        input.files = dt.files;
-        handleFileSelect({ target: input } as any);
-      }
-    }
-  };
-
-  /* ── Voice Mic ── */
-  const startListening = () => {
-    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) { setError("Voice input not supported in this browser"); return; }
-    const recognition = new SR();
-    recognition.lang = "en-US";
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    setIsListening(true);
-    recognition.onresult = (e: any) => {
-      const spoken = e.results[0][0].transcript;
-      setCaption((prev) => (prev ? prev + " " + spoken : spoken));
-      setIsListening(false);
-    };
-    recognition.onerror = () => { setIsListening(false); setError("Voice capture failed — try again"); };
-    recognition.onend = () => setIsListening(false);
-    recognition.start();
-  };
-
-  /* ── AI Generation ── */
-  const generateAI = async () => {
-    setAiGenerating(true);
-    setError(null);
-    try {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/social-post`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
-          action: "generate_caption",
-          context: caption || "Siddha Quantum Nexus healing meditation and spiritual activation",
-          platforms: selectedPlatforms,
-          mediaType,
-        }),
-      });
-      const data = await res.json();
-      if (data.caption) setCaption(data.caption);
-      if (data.hashtags) setHashtags(data.hashtags);
-    } catch {
-      setError("AI generation failed — check edge function");
-    }
-    setAiGenerating(false);
-  };
-
-  /* ── Publish ── */
-  const publish = async () => {
-    if (!caption && !mediaFile) { setError("Add a caption or media first"); return; }
-    setPublishing(true);
-    setError(null);
-    setPublishResult(null);
-    try {
-      let mediaBase64 = null;
-      let mediaMimeType = null;
-      if (mediaFile) {
-        mediaBase64 = await fileToBase64(mediaFile);
-        mediaMimeType = mediaFile.type;
-      }
-      const fullCaption =
-        caption + (hashtags.length ? "\n\n" + hashtags.map((h) => `#${h}`).join(" ") : "");
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/social-post`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
-          action: "publish",
-          caption: fullCaption,
-          platforms: selectedPlatforms,
-          mediaBase64,
-          mediaMimeType,
-          mediaType,
-          scheduledTime: scheduledTime || null,
-          profile: activeProfile,
-        }),
-      });
-      const data = await res.json();
-      setPublishResult(data);
-    } catch (err: any) {
-      setError(err.message || "Publish failed");
-    }
-    setPublishing(false);
-  };
-
-  /* ── Remove media ── */
-  const removeMedia = () => {
-    if (mediaPreview) URL.revokeObjectURL(mediaPreview);
-    setMediaFile(null);
-    setMediaPreview(null);
-    setMediaType(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  return (
-    <div>
-      {/* Profile selector */}
-      <SectionLabel>Publishing Profile</SectionLabel>
-      <div style={{ display: "flex", gap: 10, marginBottom: 24, flexWrap: "wrap" }}>
-        {PROFILES.map((pr) => (
-          <GlassCard
-            key={pr.id}
-            goldBorder={activeProfile === pr.id}
-            style={{ padding: "12px 16px", cursor: "pointer", flex: 1, minWidth: 140, transition: "all 0.2s" }}
-          >
-            <div onClick={() => setActiveProfile(pr.id)} style={{ display: "flex", gap: 10, alignItems: "center" }}>
-              <div
-                style={{
-                  width: 32, height: 32, borderRadius: 9,
-                  background: `${pr.color}18`, border: `1px solid ${pr.color}30`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}
-              >
-                <pr.Icon size={14} color={pr.color} />
+          {generated && (
+            <div style={{ marginTop: 24, background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 18, padding: "20px 22px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                <CheckCircle2 size={18} color={C.green} />
+                <p style={{ fontWeight: 800, fontSize: 14, color: "#fff", margin: 0 }}>Reels Generated — Ready to Schedule</p>
               </div>
-              <div>
-                <p style={{ fontSize: 12, fontWeight: 800, color: "#fff", margin: 0 }}>{pr.label}</p>
-                <p style={{ fontSize: 10, color: C.muted, margin: 0 }}>{pr.sub}</p>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" as const, marginBottom: 16 }}>
+                {selected.map((id, i) => {
+                  const v = MOCK_VIDEOS.find((x) => x.id === id) || extraVideos.find((x) => x.id === id);
+                  return (
+                    <div key={id} style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${C.border}`, borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "#fff" }}>
+                      <p style={{ margin: "0 0 4px", fontWeight: 700 }}>Reel {i + 1}</p>
+                      <p style={{ margin: 0, color: C.muted, fontSize: 11 }}>{(v && "title" in v ? v.title : (v as any)?.title || "")?.slice(0, 28)}…</p>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ display: "flex", gap: 10 }}>
+                <GoldBtn variant="primary" small><Calendar size={13} /> Schedule Posts</GoldBtn>
+                <GoldBtn variant="ghost" small><Upload size={13} /> Publish Now</GoldBtn>
               </div>
             </div>
-          </GlassCard>
-        ))}
-      </div>
-
-      {/* Platform toggles */}
-      <SectionLabel>Post To</SectionLabel>
-      <div style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
-        {PLATFORMS.map((p) => {
-          const active = selectedPlatforms.includes(p.id);
-          return (
-            <button
-              key={p.id}
-              onClick={() => togglePlatform(p.id)}
-              title={p.status !== "connected" ? `${p.statusLabel} — ${p.note}` : ""}
-              style={{
-                display: "flex", alignItems: "center", gap: 7,
-                padding: "9px 14px", borderRadius: 10,
-                border: `1px solid ${active ? p.color : C.border}`,
-                background: active ? `${p.color}14` : "transparent",
-                color: active ? p.color : C.muted,
-                fontSize: 12, fontWeight: 700, cursor: "pointer", transition: "all 0.2s",
-              }}
-            >
-              <p.Icon size={13} />
-              {p.label}
-              {p.status === "error" && <AlertTriangle size={11} color={C.red} />}
-              {p.status === "pending" && <Clock size={11} color={C.amber} />}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Media Upload Drop Zone */}
-      <SectionLabel>Media — Photo or Video</SectionLabel>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*,video/*"
-        onChange={handleFileSelect}
-        style={{ display: "none" }}
-      />
-
-      {!mediaPreview ? (
-        <div
-          onClick={() => fileInputRef.current?.click()}
-          onDrop={handleDrop}
-          onDragOver={(e) => e.preventDefault()}
-          style={{
-            border: `2px dashed rgba(212,175,55,0.3)`,
-            borderRadius: 20,
-            padding: "36px 24px",
-            textAlign: "center",
-            cursor: "pointer",
-            marginBottom: 20,
-            background: "rgba(212,175,55,0.02)",
-            transition: "all 0.2s",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(212,175,55,0.6)")}
-          onMouseLeave={(e) => (e.currentTarget.style.borderColor = "rgba(212,175,55,0.3)")}
-        >
-          <div
-            style={{
-              width: 52, height: 52, borderRadius: 14,
-              background: "rgba(212,175,55,0.1)", border: "1px solid rgba(212,175,55,0.2)",
-              display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px",
-            }}
-          >
-            <Upload size={22} color={C.gold} />
-          </div>
-          <p style={{ fontWeight: 800, fontSize: 14, color: "#fff", margin: "0 0 6px" }}>
-            Drop photo or video here
-          </p>
-          <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>
-            or tap to browse · JPG, PNG, MP4, MOV · max 100MB
-          </p>
-        </div>
-      ) : (
-        <GlassCard style={{ padding: 16, marginBottom: 20, position: "relative" }}>
-          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-            {mediaType === "image" && mediaPreview ? (
-              <img
-                src={mediaPreview}
-                alt="preview"
-                style={{ width: 80, height: 60, objectFit: "cover", borderRadius: 10, flexShrink: 0 }}
-              />
-            ) : (
-              <div
-                style={{
-                  width: 80, height: 60, borderRadius: 10, flexShrink: 0,
-                  background: "rgba(34,211,238,0.1)", border: "1px solid rgba(34,211,238,0.2)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}
-              >
-                <Film size={22} color={C.cyan} />
-              </div>
-            )}
-            <div style={{ flex: 1 }}>
-              <p style={{ fontWeight: 700, fontSize: 13, color: "#fff", margin: "0 0 3px" }}>
-                {mediaFile?.name}
-              </p>
-              <div style={{ display: "flex", gap: 8 }}>
-                <Tag label={mediaType === "video" ? "VIDEO" : "IMAGE"} color={mediaType === "video" ? C.cyan : C.gold} />
-                <span style={{ fontSize: 11, color: C.muted }}>
-                  {mediaFile ? (mediaFile.size / 1024 / 1024).toFixed(1) + " MB" : ""}
-                </span>
-              </div>
-            </div>
-            <button
-              onClick={removeMedia}
-              style={{
-                background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)",
-                borderRadius: 8, color: C.red, fontSize: 11, fontWeight: 700,
-                padding: "6px 12px", cursor: "pointer",
-              }}
-            >
-              Remove
-            </button>
-          </div>
-
-          {/* Platform format info */}
-          <div style={{ marginTop: 14, display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {selectedPlatforms.includes("instagram") && (
-              <div style={{ fontSize: 10, color: C.muted, background: "rgba(225,48,108,0.08)", border: "1px solid rgba(225,48,108,0.2)", borderRadius: 6, padding: "4px 10px" }}>
-                📸 IG: 1:1 or 9:16 · 60s reel max
-              </div>
-            )}
-            {selectedPlatforms.includes("tiktok") && (
-              <div style={{ fontSize: 10, color: C.muted, background: "rgba(105,201,208,0.08)", border: "1px solid rgba(105,201,208,0.2)", borderRadius: 6, padding: "4px 10px" }}>
-                🎵 TikTok: 9:16 · 3min max
-              </div>
-            )}
-            {selectedPlatforms.includes("youtube") && (
-              <div style={{ fontSize: 10, color: C.muted, background: "rgba(255,0,0,0.08)", border: "1px solid rgba(255,0,0,0.2)", borderRadius: 6, padding: "4px 10px" }}>
-                ▶ YT Shorts: 9:16 · 60s
-              </div>
-            )}
-          </div>
-        </GlassCard>
-      )}
-
-      {/* Caption Editor */}
-      <SectionLabel>Caption / Spiritual Transmission</SectionLabel>
-      <div style={{ position: "relative", marginBottom: 12 }}>
-        <textarea
-          ref={textareaRef}
-          value={caption}
-          onChange={(e) => setCaption(e.target.value)}
-          placeholder="Speak your healing transmission here… or tap 🎙️ to dictate, or ✦ AI Generate below"
-          rows={5}
-          style={{
-            width: "100%", background: "rgba(255,255,255,0.025)", border: `1px solid ${C.border}`,
-            borderRadius: 16, padding: "16px 18px 48px", color: "#fff", fontSize: 13,
-            lineHeight: 1.6, resize: "vertical", outline: "none", fontFamily: "inherit",
-            boxSizing: "border-box", transition: "border-color 0.2s",
-          }}
-          onFocus={(e) => (e.target.style.borderColor = "rgba(212,175,55,0.4)")}
-          onBlur={(e) => (e.target.style.borderColor = C.border)}
-        />
-        {/* Mic button inside textarea */}
-        <button
-          onClick={startListening}
-          disabled={isListening}
-          title="Voice dictate"
-          style={{
-            position: "absolute", bottom: 14, right: 14,
-            background: isListening ? "rgba(239,68,68,0.2)" : "rgba(212,175,55,0.1)",
-            border: `1px solid ${isListening ? "rgba(239,68,68,0.5)" : "rgba(212,175,55,0.3)"}`,
-            borderRadius: 9, padding: "7px 12px", cursor: "pointer",
-            display: "flex", alignItems: "center", gap: 6,
-            fontSize: 11, fontWeight: 700, color: isListening ? C.red : C.gold,
-          }}
-        >
-          <Radio size={12} style={isListening ? { animation: "pulse 1s infinite" } : {}} />
-          {isListening ? "Listening…" : "🎙️ Mic"}
-        </button>
-      </div>
-      <p style={{ fontSize: 11, color: C.muted, margin: "0 0 16px" }}>
-        {caption.length} chars · ~{Math.ceil(caption.length / 150)} read-min
-      </p>
-
-      {/* AI Generate row */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
-        <GoldBtn onClick={generateAI} disabled={aiGenerating} variant="ghost" small>
-          {aiGenerating ? (
-            <><RefreshCw size={12} style={{ animation: "spin 1s linear infinite" }} /> Generating…</>
-          ) : (
-            <><Sparkles size={12} /> AI Generate Caption + Hashtags</>
-          )}
-        </GoldBtn>
-        <GoldBtn variant="ghost" small onClick={() => setShowSchedule(!showSchedule)}>
-          <Calendar size={12} /> {showSchedule ? "Hide Schedule" : "Schedule Post"}
-        </GoldBtn>
-      </div>
-
-      {/* Hashtags */}
-      {hashtags.length > 0 && (
-        <GlassCard style={{ padding: "14px 16px", marginBottom: 20 }}>
-          <SectionLabel>AI Hashtags — Viral Protocol</SectionLabel>
-          <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
-            {hashtags.map((tag, i) => (
-              <div
-                key={i}
-                onClick={() => setHashtags(hashtags.filter((_, j) => j !== i))}
-                style={{
-                  fontSize: 12, fontWeight: 600, color: C.gold,
-                  background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.2)",
-                  borderRadius: 8, padding: "5px 10px", cursor: "pointer",
-                  transition: "all 0.15s",
-                }}
-                title="Click to remove"
-              >
-                #{tag}
-              </div>
-            ))}
-            <div style={{ fontSize: 11, color: C.muted, display: "flex", alignItems: "center" }}>
-              tap to remove
-            </div>
-          </div>
-        </GlassCard>
-      )}
-
-      {/* Schedule picker */}
-      {showSchedule && (
-        <GlassCard style={{ padding: "16px 18px", marginBottom: 20 }}>
-          <SectionLabel>Schedule Transmission</SectionLabel>
-          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-            <input
-              type="datetime-local"
-              value={scheduledTime}
-              onChange={(e) => setScheduledTime(e.target.value)}
-              style={{
-                background: "rgba(255,255,255,0.04)", border: `1px solid ${C.border}`,
-                borderRadius: 10, padding: "10px 14px", color: "#fff", fontSize: 12,
-                outline: "none", fontFamily: "inherit",
-              }}
-            />
-            <div style={{ fontSize: 11, color: C.muted }}>
-              Best times: <span style={{ color: C.gold }}>Sat–Sun 9–11am CET</span> · Tue–Thu 7–9pm CET
-            </div>
-          </div>
-          {/* Optimal day guide */}
-          <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
-            {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d, i) => (
-              <div
-                key={d}
-                style={{
-                  fontSize: 10, fontWeight: 700, padding: "4px 8px", borderRadius: 6,
-                  background: [5, 6].includes(i) ? "rgba(212,175,55,0.15)" : "rgba(255,255,255,0.04)",
-                  color: [5, 6].includes(i) ? C.gold : C.muted,
-                  border: `1px solid ${[5, 6].includes(i) ? "rgba(212,175,55,0.3)" : C.border}`,
-                }}
-              >
-                {d}
-                {[5, 6].includes(i) && <span style={{ marginLeft: 3 }}>✦</span>}
-              </div>
-            ))}
-          </div>
-        </GlassCard>
-      )}
-
-      {/* Error */}
-      {error && (
-        <div style={{
-          background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.3)",
-          borderRadius: 12, padding: "12px 16px", marginBottom: 16,
-          fontSize: 12, color: C.red, display: "flex", gap: 8, alignItems: "center",
-        }}>
-          <AlertTriangle size={14} /> {error}
-        </div>
-      )}
-
-      {/* Publish / Draft buttons */}
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-        <GoldBtn onClick={publish} disabled={publishing || (!caption && !mediaFile)}>
-          {publishing ? (
-            <><RefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} /> Publishing…</>
-          ) : scheduledTime ? (
-            <><Calendar size={14} /> Schedule Transmission</>
-          ) : (
-            <><Send size={14} /> Publish Now</>
-          )}
-        </GoldBtn>
-        <GoldBtn variant="ghost">
-          <Clock size={14} /> Save Draft
-        </GoldBtn>
-      </div>
-
-      {/* Publish Result */}
-      {publishResult && (
-        <div
-          style={{
-            marginTop: 20,
-            background: "rgba(34,197,94,0.05)",
-            border: "1px solid rgba(34,197,94,0.25)",
-            borderRadius: 18,
-            padding: "20px 22px",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-            <CheckCircle2 size={18} color={C.green} />
-            <p style={{ fontWeight: 800, fontSize: 14, color: "#fff", margin: 0 }}>
-              {publishResult.success ? "Transmission Sent" : "Partial Transmission"}
-            </p>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {publishResult.results && Object.entries(publishResult.results).map(([platform, result]: any) => (
-              <div
-                key={platform}
-                style={{
-                  display: "flex", alignItems: "center", gap: 10,
-                  fontSize: 12, color: result.success ? C.green : C.muted,
-                }}
-              >
-                {result.success ? <CheckCircle2 size={13} color={C.green} /> : <XCircle size={13} color={C.muted} />}
-                <span style={{ textTransform: "capitalize", fontWeight: 700 }}>{platform}</span>
-                {result.postId && <span style={{ color: C.muted }}>· ID: {result.postId}</span>}
-                {result.reason && <span style={{ color: C.muted }}>· {result.reason}</span>}
-                {result.scheduledFor && <span style={{ color: C.gold }}>· Scheduled for {result.scheduledFor}</span>}
-              </div>
-            ))}
-          </div>
-          {publishResult.queueId && (
-            <p style={{ fontSize: 11, color: C.muted, margin: "12px 0 0" }}>
-              Queue ID: {publishResult.queueId} — post saved in transmission queue
-            </p>
           )}
         </div>
       )}
 
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @keyframes scanLine { 0% { top: -4px; } 100% { top: 100%; } }
       `}</style>
     </div>
   );
