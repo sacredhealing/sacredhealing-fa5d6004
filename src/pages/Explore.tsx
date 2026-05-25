@@ -24,10 +24,15 @@ interface ExploreVideo {
 /* ── Shared title gradient (matches /healing exactly) ── */
 const TITLE_STYLE: React.CSSProperties = {
   fontFamily: "'Cinzel', serif",
-  fontWeight: 700,
+  fontWeight: 600,
   letterSpacing: '0.04em',
   lineHeight: 1.2,
-  color: '#D4AF37',
+  background: 'linear-gradient(135deg, #D4AF37 0%, #F5E17A 40%, #D4AF37 60%, #A07C10 100%)',
+  backgroundSize: '200% auto',
+  WebkitBackgroundClip: 'text',
+  backgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  animation: 'hShimmer 5s linear infinite',
 };
 
 export default function Explore() {
