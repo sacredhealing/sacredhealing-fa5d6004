@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useMembershipTier } from "@/features/membership/useMembershipTier";
+import { useMembership } from "@/hooks/useMembership";
 
 // ─── SQI 2050 · HANUMAN CODEX · SOVEREIGN EDITION ────────────────────────────
 // Weapons · Physical Alchemy · Siddhi Attainment · Deep Devotion
