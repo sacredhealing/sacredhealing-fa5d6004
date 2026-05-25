@@ -895,6 +895,136 @@ function stripDuplicateBiometricBlock(compiled: string | undefined, hasLiveScan:
   return segments.filter((s) => !s.trimStart().startsWith('[BIOMETRIC NADI FIELD')).join('\n').trim();
 }
 
+/** Scalar Wave Toolbar Banner — animated canvas + unified gold pill */
+function ScalarToolbarBanner({
+  liveChatClock,
+  portraitLinkStudentId,
+  onHistory,
+  onLexicon,
+}: {
+  liveChatClock: string;
+  portraitLinkStudentId: string | null;
+  onHistory: () => void;
+  onLexicon: () => void;
+}) {
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const wrapRef = React.useRef<HTMLDivElement>(null);
+  const rafRef = React.useRef<number>(0);
+
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    const wrap = wrapRef.current;
+    if (!canvas || !wrap) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    let t = 0;
+    const resize = () => { canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight; };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(wrap);
+    const waves = [
+      { amp: 0.38, freq: 5,   speed: 1.0, alpha: 0.10, lw: 1.2 },
+      { amp: 0.28, freq: 8,   speed: 1.6, alpha: 0.07, lw: 0.9 },
+      { amp: 0.20, freq: 12,  speed: 2.2, alpha: 0.05, lw: 0.7 },
+      { amp: 0.45, freq: 3.5, speed: 0.7, alpha: 0.06, lw: 1.5 },
+      { amp: 0.15, freq: 18,  speed: 3.0, alpha: 0.04, lw: 0.6 },
+    ];
+    const draw = () => {
+      const W = canvas.width, H = canvas.height;
+      if (!W || !H) { rafRef.current = requestAnimationFrame(draw); return; }
+      ctx.clearRect(0, 0, W, H);
+      waves.forEach((w, wi) => {
+        const phase = (wi / waves.length) * Math.PI * 2;
+        ctx.beginPath();
+        for (let x = 0; x <= W; x += 1.5) {
+          const nx = x / W;
+          const env = Math.sin(nx * Math.PI);
+          const y = H * 0.5 + Math.sin(nx * w.freq * Math.PI * 2 + t * w.speed + phase) * H * w.amp * env;
+          x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = `rgba(212,175,55,${w.alpha})`;
+        ctx.lineWidth = w.lw;
+        ctx.stroke();
+      });
+      const pulse = 0.5 + 0.5 * Math.sin(t * 1.1);
+      const grd = ctx.createRadialGradient(W * 0.5, H * 0.5, 0, W * 0.5, H * 0.5, Math.max(W, H) * (0.55 + 0.12 * pulse));
+      grd.addColorStop(0, `rgba(212,175,55,${0.08 + 0.05 * pulse})`);
+      grd.addColorStop(0.5, 'rgba(212,175,55,0.02)');
+      grd.addColorStop(1, 'transparent');
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, W, H);
+      const lg = ctx.createLinearGradient(0, 0, W * 0.35, 0);
+      lg.addColorStop(0, `rgba(212,175,55,${0.06 + 0.03 * pulse})`);
+      lg.addColorStop(1, 'transparent');
+      ctx.fillStyle = lg; ctx.fillRect(0, 0, W, H);
+      const rg = ctx.createLinearGradient(W, 0, W * 0.65, 0);
+      rg.addColorStop(0, `rgba(212,175,55,${0.04 + 0.02 * pulse})`);
+      rg.addColorStop(1, 'transparent');
+      ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+      t += 0.014;
+      rafRef.current = requestAnimationFrame(draw);
+    };
+    rafRef.current = requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(rafRef.current); ro.disconnect(); };
+  }, []);
+
+  const shimmerSeg: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '9px 10px', flex: 1, position: 'relative' };
+  const divider: React.CSSProperties = { position: 'absolute', left: 0, top: '18%', height: '64%', width: 1, background: 'rgba(212,175,55,0.18)' };
+
+  return (
+    <div
+      ref={wrapRef}
+      style={{
+        position: 'relative',
+        borderBottom: '1px solid rgba(212,175,55,0.12)',
+        animation: 'bannerAura 4s ease-in-out infinite',
+      }}
+    >
+      <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', background: 'rgba(5,5,5,0.55)', backdropFilter: 'blur(18px)' }}>
+
+        {/* Sri Yantra + clock */}
+        <div style={shimmerSeg}>
+          <svg width="18" height="18" viewBox="0 0 100 100" style={{ flexShrink: 0, filter: 'drop-shadow(0 0 3px rgba(212,175,55,0.9)) drop-shadow(0 0 8px rgba(212,175,55,0.5))', animation: 'yPulse 3s ease-in-out infinite' }} xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="45" fill="none" stroke="#D4AF37" strokeWidth="1.5" strokeLinecap="round"/>
+            <polyline points="50,10 88,72 12,72 50,10" fill="none" stroke="#D4AF37" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round"/>
+            <polyline points="50,22 80,64 20,64 50,22" fill="none" stroke="#D4AF37" strokeWidth="1.2" strokeLinejoin="round" strokeLinecap="round" opacity="0.65"/>
+            <polyline points="50,90 12,28 88,28 50,90" fill="none" stroke="#D4AF37" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round"/>
+            <polyline points="50,78 20,36 80,36 50,78" fill="none" stroke="#D4AF37" strokeWidth="1.2" strokeLinejoin="round" strokeLinecap="round" opacity="0.65"/>
+            <polyline points="50,34 70,58 30,58 50,34" fill="none" stroke="#D4AF37" strokeWidth="1" strokeLinejoin="round" strokeLinecap="round" opacity="0.45"/>
+            <polyline points="50,66 30,42 70,42 50,66" fill="none" stroke="#D4AF37" strokeWidth="1" strokeLinejoin="round" strokeLinecap="round" opacity="0.45"/>
+            <circle cx="50" cy="50" r="4" fill="#D4AF37"/>
+            <rect x="5" y="5" width="90" height="90" rx="3" fill="none" stroke="#D4AF37" strokeWidth="0.7" opacity="0.3"/>
+          </svg>
+          <span style={{ fontSize: 8, fontWeight: 900, letterSpacing: '0.08em', color: 'rgba(212,175,55,0.6)', fontVariantNumeric: 'tabular-nums' }}>{liveChatClock}</span>
+        </div>
+
+        {/* Students */}
+        <div style={shimmerSeg}>
+          <span style={divider} />
+          <StudentSelector />
+        </div>
+
+        {/* History */}
+        <button type="button" onClick={onHistory} style={{ ...shimmerSeg, background: 'rgba(212,175,55,0.05)', border: 'none', cursor: 'pointer' }}>
+          <span style={divider} />
+          <span style={{ fontSize: 9, color: 'rgba(212,175,55,0.7)' }}>⧖</span>
+          <span className="sqi-master-name-shimmer" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 8, fontWeight: 900, letterSpacing: '0.2em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>History</span>
+        </button>
+
+        {/* Lexicon */}
+        <button type="button" onClick={onLexicon} style={{ ...shimmerSeg, background: 'rgba(212,175,55,0.05)', border: 'none', cursor: 'pointer' }}>
+          <span style={divider} />
+          <span style={{ fontSize: 9, color: 'rgba(212,175,55,0.7)' }}>◈</span>
+          <span className="sqi-master-name-shimmer" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 8, fontWeight: 900, letterSpacing: '0.2em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Lexicon</span>
+        </button>
+
+      </div>
+    </div>
+  );
+}
+
+
 function QuantumApothecaryInner() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -2226,108 +2356,12 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
       }}
     >
       {/* Chat header — matches /admin-quantum-apothecary-2045 SQI strip */}
-      <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] bg-white/[0.02] px-0 py-3 sm:px-6">
-        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-          {isChatFullscreen && (
-            <button type="button" onClick={() => setIsChatFullscreen(false)} className="shrink-0 rounded-full bg-white/5 p-2 transition hover:bg-white/10">
-              <X size={14} className="text-white/80" />
-            </button>
-          )}
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#D4AF37]/30 bg-gradient-to-br from-[#D4AF37]/25 to-[#050505] shadow-[0_0_24px_rgba(212,175,55,0.2)]">
-            <Globe size={16} className="text-[#D4AF37]" aria-hidden />
-          </div>
-          <div className="min-w-0">
-            <p className="truncate text-[8px] font-extrabold uppercase tracking-[0.35em] text-[#D4AF37] [text-shadow:0_0_12px_rgba(212,175,55,0.25)]">
-              {t('quantumApothecary.chat.sqiOnline')}
-            </p>
-            <div className="mt-1 flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-[#22D3EE] shadow-[0_0_8px_#22D3EE]" />
-              <span className="truncate text-[9px] uppercase tracking-tighter text-white/45">{t('quantumApothecary.chat.neuralSync')}</span>
-            </div>
-          </div>
-        </div>
-        <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
-          {portraitLinkStudentId ? (
-            <Link
-              to={`/akasha-portrait/${portraitLinkStudentId}`}
-              className="whitespace-nowrap rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-2 py-1 text-[8px] font-bold uppercase tracking-[0.15em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20 sm:px-3 sm:py-1.5 sm:text-[9px] sm:tracking-[0.2em]"
-            >
-              Akasha Portrait
-            </Link>
-          ) : (
-            <span
-              className="cursor-not-allowed whitespace-nowrap rounded-xl border border-white/[0.06] bg-white/[0.02] px-2 py-1 text-[8px] font-bold uppercase tracking-[0.15em] text-white/25 sm:px-3 sm:py-1.5 sm:text-[9px]"
-              title="Select an active student first"
-              aria-disabled={true}
-            >
-              Akasha Portrait
-            </span>
-          )}
-          <span
-            className="select-none font-[Montserrat,sans-serif] text-[9px] font-extrabold tracking-[0.28em] text-[#D4AF37]/50 tabular-nums"
-            aria-label={t('quantumApothecary.chat.liveClockAria')}
-            title={t('quantumApothecary.chat.liveClockAria')}
-          >
-            {liveChatClock}
-          </span>
-          <StudentSelector />
-          <button
-            type="button"
-            onClick={() => {
-              scrollChatToTop();
-            }}
-            className="rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 p-1.5 text-[#D4AF37] transition hover:border-[#D4AF37]/40 hover:bg-[#D4AF37]/20 sm:p-2"
-            title="Scroll to top of thread"
-            aria-label="Scroll to top of thread"
-          >
-            <ChevronUp size={16} className="drop-shadow-[0_0_6px_rgba(212,175,55,0.45)]" aria-hidden />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              scrollChatToBottom();
-            }}
-            className="rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 p-1.5 text-[#D4AF37] transition hover:border-[#D4AF37]/40 hover:bg-[#D4AF37]/20 sm:p-2"
-            title={t('quantumApothecary.chat.scrollToBottom')}
-            aria-label={t('quantumApothecary.chat.scrollToBottom')}
-          >
-            <ChevronDown size={16} className="drop-shadow-[0_0_6px_rgba(212,175,55,0.45)]" aria-hidden />
-          </button>
-          <button
-            type="button"
-            onClick={startFreshApothecaryChat}
-            disabled={isTyping}
-            title={t('quantumApothecary.chat.newChatTitle')}
-            className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-1.5 text-white/50 transition hover:border-[#D4AF37]/25 hover:text-[#D4AF37] disabled:opacity-30 sm:p-2"
-          >
-            <Plus size={14} />
-          </button>
-          <button
-            type="button"
-            onClick={() => setSessionsOpen(true)}
-            className="whitespace-nowrap rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-2 py-1 text-[8px] font-bold uppercase tracking-[0.15em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20 sm:px-3 sm:py-1.5 sm:text-[9px] sm:tracking-[0.25em]"
-          >
-            {t('quantumApothecary.chat.history')}
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate('/lexicon')}
-            className="whitespace-nowrap rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-2 py-1 text-[8px] font-bold uppercase tracking-[0.15em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20 sm:px-3 sm:py-1.5 sm:text-[9px] sm:tracking-[0.25em]"
-          >
-            Lexicon
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowKnowledge(true)}
-            className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-2 text-[#D4AF37]/70 transition hover:border-[#D4AF37]/25 hover:bg-[#D4AF37]/[0.06]"
-            title={t('quantumApothecary.chat.openKnowledge')}
-            aria-label={t('quantumApothecary.chat.openKnowledge')}
-          >
-            <Info size={14} />
-          </button>
-          <Cpu size={14} className="hidden text-[#D4AF37]/30 sm:block" aria-hidden />
-        </div>
-      </div>
+      <ScalarToolbarBanner
+        liveChatClock={liveChatClock}
+        portraitLinkStudentId={portraitLinkStudentId}
+        onHistory={() => setSessionsOpen(true)}
+        onLexicon={() => navigate('/lexicon')}
+      />
 
       {/* Messages — grow with thread; page/document scrolls (pre–Samsung inner-scroll behavior) */}
       <div
@@ -3294,6 +3328,15 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
   @keyframes hShimmer {
     0% { background-position: 200% center; }
     100% { background-position: -200% center; }
+  }
+
+  @keyframes bannerAura {
+    0%,100% { box-shadow: 0 0 0 1px rgba(212,175,55,0.18), 0 2px 18px rgba(212,175,55,0.10); }
+    50%      { box-shadow: 0 0 0 1px rgba(212,175,55,0.32), 0 2px 32px rgba(212,175,55,0.20); }
+  }
+  @keyframes yPulse {
+    0%,100% { filter: drop-shadow(0 0 2px rgba(212,175,55,0.7)) drop-shadow(0 0 6px rgba(212,175,55,0.35)); }
+    50%     { filter: drop-shadow(0 0 6px rgba(212,175,55,1))   drop-shadow(0 0 14px rgba(212,175,55,0.65)); }
   }
 
   .rx-pulse-dot {
