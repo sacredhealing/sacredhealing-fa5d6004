@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Youtube,
   Instagram,
@@ -795,45 +795,182 @@ const ReelCreator = () => {
 };
 
 /* ─────────────────────────────────────────────
-   Publisher Tab — Tri-Node
+
+/* ─────────────────────────────────────────────
+   Publisher Tab — Sovereign Multi-Platform Engine
 ───────────────────────────────────────────── */
+const SUPABASE_URL = "https://fjdzhrdpioxdeyyfogep.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTYzOTYwMDAsImV4cCI6MjAzMTk3MjAwMH0.placeholder";
+
+const fileToBase64 = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve((reader.result as string).split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
 const Publisher = () => {
   const [activeProfile, setActiveProfile] = useState("kritagya");
   const [caption, setCaption] = useState("");
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["instagram"]);
+  const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
+  const [mediaType, setMediaType] = useState<"image" | "video" | null>(null);
+  const [publishing, setPublishing] = useState(false);
+  const [publishResult, setPublishResult] = useState<any>(null);
+  const [isListening, setIsListening] = useState(false);
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [hashtags, setHashtags] = useState<string[]>([]);
+  const [scheduledTime, setScheduledTime] = useState("");
+  const [showSchedule, setShowSchedule] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const togglePlatform = (id: string) =>
     setSelectedPlatforms((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
 
+  /* ── File Upload ── */
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 100 * 1024 * 1024) { setError("File too large — max 100MB"); return; }
+    setMediaFile(file);
+    setMediaType(file.type.startsWith("video/") ? "video" : "image");
+    if (mediaPreview) URL.revokeObjectURL(mediaPreview);
+    setMediaPreview(URL.createObjectURL(file));
+    setError(null);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      const input = fileInputRef.current;
+      if (input) {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+        handleFileSelect({ target: input } as any);
+      }
+    }
+  };
+
+  /* ── Voice Mic ── */
+  const startListening = () => {
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) { setError("Voice input not supported in this browser"); return; }
+    const recognition = new SR();
+    recognition.lang = "en-US";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    setIsListening(true);
+    recognition.onresult = (e: any) => {
+      const spoken = e.results[0][0].transcript;
+      setCaption((prev) => (prev ? prev + " " + spoken : spoken));
+      setIsListening(false);
+    };
+    recognition.onerror = () => { setIsListening(false); setError("Voice capture failed — try again"); };
+    recognition.onend = () => setIsListening(false);
+    recognition.start();
+  };
+
+  /* ── AI Generation ── */
+  const generateAI = async () => {
+    setAiGenerating(true);
+    setError(null);
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/social-post`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          action: "generate_caption",
+          context: caption || "Siddha Quantum Nexus healing meditation and spiritual activation",
+          platforms: selectedPlatforms,
+          mediaType,
+        }),
+      });
+      const data = await res.json();
+      if (data.caption) setCaption(data.caption);
+      if (data.hashtags) setHashtags(data.hashtags);
+    } catch {
+      setError("AI generation failed — check edge function");
+    }
+    setAiGenerating(false);
+  };
+
+  /* ── Publish ── */
+  const publish = async () => {
+    if (!caption && !mediaFile) { setError("Add a caption or media first"); return; }
+    setPublishing(true);
+    setError(null);
+    setPublishResult(null);
+    try {
+      let mediaBase64 = null;
+      let mediaMimeType = null;
+      if (mediaFile) {
+        mediaBase64 = await fileToBase64(mediaFile);
+        mediaMimeType = mediaFile.type;
+      }
+      const fullCaption =
+        caption + (hashtags.length ? "\n\n" + hashtags.map((h) => `#${h}`).join(" ") : "");
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/social-post`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          action: "publish",
+          caption: fullCaption,
+          platforms: selectedPlatforms,
+          mediaBase64,
+          mediaMimeType,
+          mediaType,
+          scheduledTime: scheduledTime || null,
+          profile: activeProfile,
+        }),
+      });
+      const data = await res.json();
+      setPublishResult(data);
+    } catch (err: any) {
+      setError(err.message || "Publish failed");
+    }
+    setPublishing(false);
+  };
+
+  /* ── Remove media ── */
+  const removeMedia = () => {
+    if (mediaPreview) URL.revokeObjectURL(mediaPreview);
+    setMediaFile(null);
+    setMediaPreview(null);
+    setMediaType(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   return (
     <div>
-      <SectionLabel>Publishing Profile — Tri-Node</SectionLabel>
       {/* Profile selector */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 24 }}>
+      <SectionLabel>Publishing Profile</SectionLabel>
+      <div style={{ display: "flex", gap: 10, marginBottom: 24, flexWrap: "wrap" }}>
         {PROFILES.map((pr) => (
           <GlassCard
             key={pr.id}
             goldBorder={activeProfile === pr.id}
-            style={{
-              padding: "12px 16px",
-              cursor: "pointer",
-              flex: 1,
-              transition: "all 0.2s",
-            }}
+            style={{ padding: "12px 16px", cursor: "pointer", flex: 1, minWidth: 140, transition: "all 0.2s" }}
           >
             <div onClick={() => setActiveProfile(pr.id)} style={{ display: "flex", gap: 10, alignItems: "center" }}>
               <div
                 style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 9,
-                  background: `${pr.color}18`,
-                  border: `1px solid ${pr.color}30`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  width: 32, height: 32, borderRadius: 9,
+                  background: `${pr.color}18`, border: `1px solid ${pr.color}30`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
                 }}
               >
                 <pr.Icon size={14} color={pr.color} />
@@ -849,94 +986,338 @@ const Publisher = () => {
 
       {/* Platform toggles */}
       <SectionLabel>Post To</SectionLabel>
-      <div style={{ display: "flex", gap: 10, marginBottom: 24, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
         {PLATFORMS.map((p) => {
           const active = selectedPlatforms.includes(p.id);
           return (
             <button
               key={p.id}
               onClick={() => togglePlatform(p.id)}
+              title={p.status !== "connected" ? `${p.statusLabel} — ${p.note}` : ""}
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 7,
-                padding: "8px 14px",
-                borderRadius: 10,
+                display: "flex", alignItems: "center", gap: 7,
+                padding: "9px 14px", borderRadius: 10,
                 border: `1px solid ${active ? p.color : C.border}`,
-                background: active ? `${p.color}12` : "transparent",
+                background: active ? `${p.color}14` : "transparent",
                 color: active ? p.color : C.muted,
-                fontSize: 12,
-                fontWeight: 700,
-                cursor: "pointer",
-                transition: "all 0.2s",
+                fontSize: 12, fontWeight: 700, cursor: "pointer", transition: "all 0.2s",
               }}
             >
               <p.Icon size={13} />
               {p.label}
               {p.status === "error" && <AlertTriangle size={11} color={C.red} />}
+              {p.status === "pending" && <Clock size={11} color={C.amber} />}
             </button>
           );
         })}
       </div>
 
-      {/* Caption editor */}
-      <SectionLabel>Caption / Copy</SectionLabel>
-      <div style={{ position: "relative", marginBottom: 20 }}>
+      {/* Media Upload Drop Zone */}
+      <SectionLabel>Media — Photo or Video</SectionLabel>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*,video/*"
+        onChange={handleFileSelect}
+        style={{ display: "none" }}
+      />
+
+      {!mediaPreview ? (
+        <div
+          onClick={() => fileInputRef.current?.click()}
+          onDrop={handleDrop}
+          onDragOver={(e) => e.preventDefault()}
+          style={{
+            border: `2px dashed rgba(212,175,55,0.3)`,
+            borderRadius: 20,
+            padding: "36px 24px",
+            textAlign: "center",
+            cursor: "pointer",
+            marginBottom: 20,
+            background: "rgba(212,175,55,0.02)",
+            transition: "all 0.2s",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(212,175,55,0.6)")}
+          onMouseLeave={(e) => (e.currentTarget.style.borderColor = "rgba(212,175,55,0.3)")}
+        >
+          <div
+            style={{
+              width: 52, height: 52, borderRadius: 14,
+              background: "rgba(212,175,55,0.1)", border: "1px solid rgba(212,175,55,0.2)",
+              display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px",
+            }}
+          >
+            <Upload size={22} color={C.gold} />
+          </div>
+          <p style={{ fontWeight: 800, fontSize: 14, color: "#fff", margin: "0 0 6px" }}>
+            Drop photo or video here
+          </p>
+          <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>
+            or tap to browse · JPG, PNG, MP4, MOV · max 100MB
+          </p>
+        </div>
+      ) : (
+        <GlassCard style={{ padding: 16, marginBottom: 20, position: "relative" }}>
+          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+            {mediaType === "image" && mediaPreview ? (
+              <img
+                src={mediaPreview}
+                alt="preview"
+                style={{ width: 80, height: 60, objectFit: "cover", borderRadius: 10, flexShrink: 0 }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: 80, height: 60, borderRadius: 10, flexShrink: 0,
+                  background: "rgba(34,211,238,0.1)", border: "1px solid rgba(34,211,238,0.2)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+              >
+                <Film size={22} color={C.cyan} />
+              </div>
+            )}
+            <div style={{ flex: 1 }}>
+              <p style={{ fontWeight: 700, fontSize: 13, color: "#fff", margin: "0 0 3px" }}>
+                {mediaFile?.name}
+              </p>
+              <div style={{ display: "flex", gap: 8 }}>
+                <Tag label={mediaType === "video" ? "VIDEO" : "IMAGE"} color={mediaType === "video" ? C.cyan : C.gold} />
+                <span style={{ fontSize: 11, color: C.muted }}>
+                  {mediaFile ? (mediaFile.size / 1024 / 1024).toFixed(1) + " MB" : ""}
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={removeMedia}
+              style={{
+                background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)",
+                borderRadius: 8, color: C.red, fontSize: 11, fontWeight: 700,
+                padding: "6px 12px", cursor: "pointer",
+              }}
+            >
+              Remove
+            </button>
+          </div>
+
+          {/* Platform format info */}
+          <div style={{ marginTop: 14, display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {selectedPlatforms.includes("instagram") && (
+              <div style={{ fontSize: 10, color: C.muted, background: "rgba(225,48,108,0.08)", border: "1px solid rgba(225,48,108,0.2)", borderRadius: 6, padding: "4px 10px" }}>
+                📸 IG: 1:1 or 9:16 · 60s reel max
+              </div>
+            )}
+            {selectedPlatforms.includes("tiktok") && (
+              <div style={{ fontSize: 10, color: C.muted, background: "rgba(105,201,208,0.08)", border: "1px solid rgba(105,201,208,0.2)", borderRadius: 6, padding: "4px 10px" }}>
+                🎵 TikTok: 9:16 · 3min max
+              </div>
+            )}
+            {selectedPlatforms.includes("youtube") && (
+              <div style={{ fontSize: 10, color: C.muted, background: "rgba(255,0,0,0.08)", border: "1px solid rgba(255,0,0,0.2)", borderRadius: 6, padding: "4px 10px" }}>
+                ▶ YT Shorts: 9:16 · 60s
+              </div>
+            )}
+          </div>
+        </GlassCard>
+      )}
+
+      {/* Caption Editor */}
+      <SectionLabel>Caption / Spiritual Transmission</SectionLabel>
+      <div style={{ position: "relative", marginBottom: 12 }}>
         <textarea
+          ref={textareaRef}
           value={caption}
           onChange={(e) => setCaption(e.target.value)}
-          placeholder="Write your spiritual transmission here… or let AI generate it ✦"
+          placeholder="Speak your healing transmission here… or tap 🎙️ to dictate, or ✦ AI Generate below"
           rows={5}
           style={{
-            width: "100%",
-            background: "rgba(255,255,255,0.025)",
-            border: `1px solid ${C.border}`,
-            borderRadius: 16,
-            padding: "16px 18px",
-            color: "#fff",
-            fontSize: 13,
-            lineHeight: 1.6,
-            resize: "none",
-            outline: "none",
-            fontFamily: "inherit",
-            boxSizing: "border-box",
+            width: "100%", background: "rgba(255,255,255,0.025)", border: `1px solid ${C.border}`,
+            borderRadius: 16, padding: "16px 18px 48px", color: "#fff", fontSize: 13,
+            lineHeight: 1.6, resize: "vertical", outline: "none", fontFamily: "inherit",
+            boxSizing: "border-box", transition: "border-color 0.2s",
           }}
+          onFocus={(e) => (e.target.style.borderColor = "rgba(212,175,55,0.4)")}
+          onBlur={(e) => (e.target.style.borderColor = C.border)}
         />
-        <GoldBtn
-          variant="ghost"
-          small
-          style={{ position: "absolute", bottom: 12, right: 12 }}
+        {/* Mic button inside textarea */}
+        <button
+          onClick={startListening}
+          disabled={isListening}
+          title="Voice dictate"
+          style={{
+            position: "absolute", bottom: 14, right: 14,
+            background: isListening ? "rgba(239,68,68,0.2)" : "rgba(212,175,55,0.1)",
+            border: `1px solid ${isListening ? "rgba(239,68,68,0.5)" : "rgba(212,175,55,0.3)"}`,
+            borderRadius: 9, padding: "7px 12px", cursor: "pointer",
+            display: "flex", alignItems: "center", gap: 6,
+            fontSize: 11, fontWeight: 700, color: isListening ? C.red : C.gold,
+          }}
         >
-          <Sparkles size={12} /> AI Generate
-        </GoldBtn>
+          <Radio size={12} style={isListening ? { animation: "pulse 1s infinite" } : {}} />
+          {isListening ? "Listening…" : "🎙️ Mic"}
+        </button>
       </div>
+      <p style={{ fontSize: 11, color: C.muted, margin: "0 0 16px" }}>
+        {caption.length} chars · ~{Math.ceil(caption.length / 150)} read-min
+      </p>
 
-      {/* Media + Schedule row */}
+      {/* AI Generate row */}
       <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
-        <GoldBtn variant="ghost" small>
-          <Video size={13} /> Add Media
+        <GoldBtn onClick={generateAI} disabled={aiGenerating} variant="ghost" small>
+          {aiGenerating ? (
+            <><RefreshCw size={12} style={{ animation: "spin 1s linear infinite" }} /> Generating…</>
+          ) : (
+            <><Sparkles size={12} /> AI Generate Caption + Hashtags</>
+          )}
         </GoldBtn>
-        <GoldBtn variant="ghost" small>
-          <Calendar size={13} /> Schedule
-        </GoldBtn>
-        <GoldBtn variant="ghost" small>
-          <Wand2 size={13} /> AI Hashtags
+        <GoldBtn variant="ghost" small onClick={() => setShowSchedule(!showSchedule)}>
+          <Calendar size={12} /> {showSchedule ? "Hide Schedule" : "Schedule Post"}
         </GoldBtn>
       </div>
 
-      <div style={{ display: "flex", gap: 10 }}>
-        <GoldBtn variant="primary">
-          <Send size={14} /> Publish Now
+      {/* Hashtags */}
+      {hashtags.length > 0 && (
+        <GlassCard style={{ padding: "14px 16px", marginBottom: 20 }}>
+          <SectionLabel>AI Hashtags — Viral Protocol</SectionLabel>
+          <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+            {hashtags.map((tag, i) => (
+              <div
+                key={i}
+                onClick={() => setHashtags(hashtags.filter((_, j) => j !== i))}
+                style={{
+                  fontSize: 12, fontWeight: 600, color: C.gold,
+                  background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.2)",
+                  borderRadius: 8, padding: "5px 10px", cursor: "pointer",
+                  transition: "all 0.15s",
+                }}
+                title="Click to remove"
+              >
+                #{tag}
+              </div>
+            ))}
+            <div style={{ fontSize: 11, color: C.muted, display: "flex", alignItems: "center" }}>
+              tap to remove
+            </div>
+          </div>
+        </GlassCard>
+      )}
+
+      {/* Schedule picker */}
+      {showSchedule && (
+        <GlassCard style={{ padding: "16px 18px", marginBottom: 20 }}>
+          <SectionLabel>Schedule Transmission</SectionLabel>
+          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+            <input
+              type="datetime-local"
+              value={scheduledTime}
+              onChange={(e) => setScheduledTime(e.target.value)}
+              style={{
+                background: "rgba(255,255,255,0.04)", border: `1px solid ${C.border}`,
+                borderRadius: 10, padding: "10px 14px", color: "#fff", fontSize: 12,
+                outline: "none", fontFamily: "inherit",
+              }}
+            />
+            <div style={{ fontSize: 11, color: C.muted }}>
+              Best times: <span style={{ color: C.gold }}>Sat–Sun 9–11am CET</span> · Tue–Thu 7–9pm CET
+            </div>
+          </div>
+          {/* Optimal day guide */}
+          <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
+            {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d, i) => (
+              <div
+                key={d}
+                style={{
+                  fontSize: 10, fontWeight: 700, padding: "4px 8px", borderRadius: 6,
+                  background: [5, 6].includes(i) ? "rgba(212,175,55,0.15)" : "rgba(255,255,255,0.04)",
+                  color: [5, 6].includes(i) ? C.gold : C.muted,
+                  border: `1px solid ${[5, 6].includes(i) ? "rgba(212,175,55,0.3)" : C.border}`,
+                }}
+              >
+                {d}
+                {[5, 6].includes(i) && <span style={{ marginLeft: 3 }}>✦</span>}
+              </div>
+            ))}
+          </div>
+        </GlassCard>
+      )}
+
+      {/* Error */}
+      {error && (
+        <div style={{
+          background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.3)",
+          borderRadius: 12, padding: "12px 16px", marginBottom: 16,
+          fontSize: 12, color: C.red, display: "flex", gap: 8, alignItems: "center",
+        }}>
+          <AlertTriangle size={14} /> {error}
+        </div>
+      )}
+
+      {/* Publish / Draft buttons */}
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <GoldBtn onClick={publish} disabled={publishing || (!caption && !mediaFile)}>
+          {publishing ? (
+            <><RefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} /> Publishing…</>
+          ) : scheduledTime ? (
+            <><Calendar size={14} /> Schedule Transmission</>
+          ) : (
+            <><Send size={14} /> Publish Now</>
+          )}
         </GoldBtn>
         <GoldBtn variant="ghost">
           <Clock size={14} /> Save Draft
         </GoldBtn>
       </div>
+
+      {/* Publish Result */}
+      {publishResult && (
+        <div
+          style={{
+            marginTop: 20,
+            background: "rgba(34,197,94,0.05)",
+            border: "1px solid rgba(34,197,94,0.25)",
+            borderRadius: 18,
+            padding: "20px 22px",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+            <CheckCircle2 size={18} color={C.green} />
+            <p style={{ fontWeight: 800, fontSize: 14, color: "#fff", margin: 0 }}>
+              {publishResult.success ? "Transmission Sent" : "Partial Transmission"}
+            </p>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {publishResult.results && Object.entries(publishResult.results).map(([platform, result]: any) => (
+              <div
+                key={platform}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  fontSize: 12, color: result.success ? C.green : C.muted,
+                }}
+              >
+                {result.success ? <CheckCircle2 size={13} color={C.green} /> : <XCircle size={13} color={C.muted} />}
+                <span style={{ textTransform: "capitalize", fontWeight: 700 }}>{platform}</span>
+                {result.postId && <span style={{ color: C.muted }}>· ID: {result.postId}</span>}
+                {result.reason && <span style={{ color: C.muted }}>· {result.reason}</span>}
+                {result.scheduledFor && <span style={{ color: C.gold }}>· Scheduled for {result.scheduledFor}</span>}
+              </div>
+            ))}
+          </div>
+          {publishResult.queueId && (
+            <p style={{ fontSize: 11, color: C.muted, margin: "12px 0 0" }}>
+              Queue ID: {publishResult.queueId} — post saved in transmission queue
+            </p>
+          )}
+        </div>
+      )}
+
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+      `}</style>
     </div>
   );
 };
 
-/* ─────────────────────────────────────────────
+
    Live Scanner Tab
 ───────────────────────────────────────────── */
 const LiveScanner = () => {
