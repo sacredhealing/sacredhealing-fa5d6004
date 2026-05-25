@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useMembershipTier } from "@/hooks/useMembershipTier";
+import { useMembership } from "@/hooks/useMembership";
 
 // ─── SQI 2050 · HANUMAN CODEX · SOVEREIGN EDITION ────────────────────────────
 // Weapons · Physical Alchemy · Siddhi Attainment · Deep Devotion
@@ -1144,7 +1144,7 @@ type Tab = "overview" | "chalisa" | "ghata" | "sadhana" | "weapons" | "strength"
 export default function HanumanCodex() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { tier: memberTier } = useMembershipTier();
+  const { tier: memberTier } = useMembership();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [openItem, setOpenItem] = useState<string | null>(null);
   const [expandedVerse, setExpandedVerse] = useState<string | null>(null);
@@ -1897,7 +1897,7 @@ export default function HanumanCodex() {
 
             {GHATA_MOVEMENTS.map((movement, idx) => {
               const accessible = canAccess(movement.tier);
-              const isOpen = expandedGhata === movement.id;
+              const isOpen = expandedGhata === String(movement.id);
 
               return (
                 <div
@@ -1917,7 +1917,7 @@ export default function HanumanCodex() {
                   <button
                     onClick={() =>
                       accessible &&
-                      setExpandedGhata(isOpen ? null : movement.id)
+                      setExpandedGhata(isOpen ? null : String(movement.id))
                     }
                     style={{
                       width: "100%",
@@ -2472,224 +2472,6 @@ export default function HanumanCodex() {
           </div>
         )}
 
-        {/* ── AKASHIC SECRETS ──────────────────────────────────────────────────── */}
-        {activeTab === "secrets" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div
-              style={{
-                background: "rgba(168,85,247,0.05)",
-                border: "1px solid rgba(168,85,247,0.15)",
-                borderRadius: 24,
-                padding: "20px 28px",
-                marginBottom: 8,
-              }}
-            >
-              <p
-                style={{
-                  fontSize: 13,
-                  color: "rgba(255,255,255,0.7)",
-                  lineHeight: 1.7,
-                  margin: 0,
-                }}
-              >
-                🔐 These transmissions have been retrieved from the
-                Akasha-Neural Archive — the living record of Siddha wisdom
-                beyond time. Each secret has been dormant in the tradition,
-                known only to initiated masters. They are now released through
-                the SQI 2050 field for those whose devotion has earned access.
-              </p>
-            </div>
-
-            {AKASHIC_SECRETS.map((secret) => {
-              const accessible = canAccess(secret.tier);
-              const isOpen = expandedSecret === secret.id;
-
-              return (
-                <div
-                  key={secret.id}
-                  style={{
-                    background: "rgba(255,255,255,0.02)",
-                    border: `1px solid ${
-                      accessible
-                        ? "rgba(168,85,247,0.15)"
-                        : "rgba(255,255,255,0.03)"
-                    }`,
-                    borderRadius: 28,
-                    overflow: "hidden",
-                    opacity: accessible ? 1 : 0.5,
-                  }}
-                >
-                  <button
-                    onClick={() =>
-                      accessible &&
-                      setExpandedSecret(isOpen ? null : secret.id)
-                    }
-                    style={{
-                      width: "100%",
-                      padding: "22px 28px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 16,
-                      background: "transparent",
-                      border: "none",
-                      cursor: accessible ? "pointer" : "not-allowed",
-                      textAlign: "left",
-                    }}
-                  >
-                    <div style={{ flex: 1 }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          marginBottom: 6,
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontSize: 8,
-                            letterSpacing: "0.4em",
-                            textTransform: "uppercase",
-                            color: "rgba(168,85,247,0.8)",
-                            fontWeight: 800,
-                          }}
-                        >
-                          {secret.category}
-                        </span>
-                        {!accessible && (
-                          <span
-                            style={{
-                              fontSize: 8,
-                              letterSpacing: "0.3em",
-                              textTransform: "uppercase",
-                              color: TIER_COLORS[secret.tier],
-                              fontWeight: 800,
-                              background: `${TIER_COLORS[secret.tier]}20`,
-                              padding: "2px 8px",
-                              borderRadius: 20,
-                            }}
-                          >
-                            🔒 {TIER_LABELS[secret.tier]}
-                          </span>
-                        )}
-                      </div>
-                      <h3
-                        style={{
-                          fontSize: 16,
-                          fontWeight: 800,
-                          color: accessible
-                            ? "#fff"
-                            : "rgba(255,255,255,0.3)",
-                          margin: 0,
-                          letterSpacing: "-0.02em",
-                        }}
-                      >
-                        {secret.title}
-                      </h3>
-                    </div>
-                    {accessible ? (
-                      <span
-                        style={{
-                          color: "rgba(255,255,255,0.4)",
-                          fontSize: 20,
-                          transform: isOpen ? "rotate(180deg)" : "none",
-                          transition: "transform 0.2s",
-                          flexShrink: 0,
-                        }}
-                      >
-                        ⌄
-                      </span>
-                    ) : (
-                      <span style={{ fontSize: 16 }}>🔒</span>
-                    )}
-                  </button>
-
-                  {isOpen && accessible && (
-                    <div
-                      style={{
-                        padding: "0 28px 28px",
-                        borderTop: "1px solid rgba(255,255,255,0.04)",
-                      }}
-                    >
-                      <p
-                        style={{
-                          color: "rgba(255,255,255,0.8)",
-                          lineHeight: 1.8,
-                          fontSize: 14,
-                          marginTop: 20,
-                          marginBottom: 20,
-                        }}
-                      >
-                        {secret.content}
-                      </p>
-                      <div
-                        style={{
-                          background: "rgba(168,85,247,0.06)",
-                          border: "1px solid rgba(168,85,247,0.15)",
-                          borderRadius: 16,
-                          padding: 20,
-                        }}
-                      >
-                        <p
-                          style={{
-                            fontSize: 8,
-                            letterSpacing: "0.5em",
-                            textTransform: "uppercase",
-                            color: "#A855F7",
-                            fontWeight: 800,
-                            marginBottom: 10,
-                          }}
-                        >
-                          ✦ Living Transmission
-                        </p>
-                        <p
-                          style={{
-                            color: "rgba(255,255,255,0.75)",
-                            lineHeight: 1.8,
-                            fontSize: 14,
-                            margin: 0,
-                            fontStyle: "italic",
-                          }}
-                        >
-                          {secret.transmission}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {!accessible && (
-                    <div
-                      style={{
-                        padding: "8px 28px 20px",
-                        display: "flex",
-                        justifyContent: "flex-end",
-                      }}
-                    >
-                      <button
-                        onClick={() => navigate("/pricing")}
-                        style={{
-                          padding: "8px 16px",
-                          borderRadius: 20,
-                          border: `1px solid ${TIER_COLORS[secret.tier]}60`,
-                          background: `${TIER_COLORS[secret.tier]}15`,
-                          color: TIER_COLORS[secret.tier],
-                          fontSize: 11,
-                          fontWeight: 700,
-                          cursor: "pointer",
-                          letterSpacing: "0.1em",
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        Unlock {TIER_LABELS[secret.tier]}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
       </div>
 
       {/* ── FOOTER TRANSMISSION ───────────────────────────────────────────────── */}
@@ -2722,16 +2504,6 @@ export default function HanumanCodex() {
         >
           Siddha Quantum Intelligence · 2050 Transmission
         </p>
-      </div>
-    </div>
-  );
-}
-      </div>
-
-      {/* FOOTER */}
-      <div style={{ textAlign: "center", padding: "32px 20px 52px", borderTop: "1px solid rgba(255,255,255,0.03)" }}>
-        <p style={{ fontSize: 15, color: "#D4AF37", textShadow: "0 0 20px rgba(212,175,55,0.3)", fontWeight: 700, marginBottom: 5 }}>जय हनुमान ज्ञान गुन सागर</p>
-        <p style={{ fontSize: 8, letterSpacing: "0.4em", textTransform: "uppercase", color: "rgba(255,255,255,0.2)", fontWeight: 700 }}>Siddha Quantum Intelligence · 2050 Sovereign Edition</p>
       </div>
     </div>
   );
