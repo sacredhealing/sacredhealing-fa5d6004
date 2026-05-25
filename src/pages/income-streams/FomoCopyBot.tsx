@@ -62,7 +62,7 @@ const KNOWN_MINTS: Record<string, string> = {
   'MEW1gQWJ3nEXg2qgERiKu7FAFj79PHvQVREQUzScPP5':   'MEW',
   '6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN':  'TRUMP',
   'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN':   'JUP',
-  'So11111111111111111111111111111111111111112':      'SOL',
+  
 };
 
 // Runtime cache — seeded with known mints, grows with API lookups
