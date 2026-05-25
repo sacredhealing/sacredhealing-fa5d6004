@@ -3207,15 +3207,26 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
     letter-spacing: 0.02em !important;
   }
 
-  .sqi-ancient-body .sqi-diamond-heading {
+  @keyframes hShimmer {
+    0% { background-position: 200% center; }
+    100% { background-position: -200% center; }
+  }
+
+  .sqi-ancient-body .sqi-diamond-heading,
+  .sqi-master-shimmer {
     font-family: 'Cinzel', serif !important;
-    font-size: 10px !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.4em !important;
-    color: #D4AF37 !important;
-    text-shadow: 0 0 25px rgba(212,175,55,0.4) !important;
-    text-transform: uppercase !important;
-    margin-bottom: 14px !important;
+    font-size: 26px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.04em !important;
+    line-height: 1.2 !important;
+    background: linear-gradient(135deg, #D4AF37 0%, #F5E17A 40%, #D4AF37 60%, #A07C10 100%) !important;
+    background-size: 200% auto !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    animation: hShimmer 5s linear infinite !important;
+    margin-bottom: 12px !important;
+    text-shadow: none !important;
   }
 
   .sqi-ancient-body strong,
