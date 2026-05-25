@@ -477,7 +477,7 @@ function renderSQIContent(content: string) {
     const trimmed = line.trim();
 
     // PRESCRIPTION BOX — triggered by "◈ X PRESCRIBES"
-    if (/^◈ .+ PRESCRIBES$/.test(trimmed)) {
+    if (/^[◈❖✦◆◇♦⋄⧫⬥⬦]\s+.+\s+PRESCRIBES?\s*$/i.test(trimmed)) {
       const { jsx, consumed } = renderPrescriptionBlock(lines, i);
       elements.push(jsx);
       i += consumed;
