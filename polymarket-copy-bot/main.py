@@ -371,12 +371,46 @@ async def polyclaw_loop(executor=None):
 
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
+# ─── Health server ────────────────────────────────────────────────────────────
+PORT = int(os.getenv("PORT", "8080"))
+_start_time = time.time()
+
+
+async def health_handler(request):
+    uptime = int(time.time() - _start_time)
+    body = json.dumps({
+        "status": "running",
+        "bot": "SQI-2050 Copy Bot (Bot 2+3)",
+        "mode": "PAPER" if PAPER_MODE else "LIVE",
+        "balance": round(paper_balance, 2),
+        "trades": trade_count,
+        "uptime_seconds": uptime,
+        "whale_mirroring": bool(os.getenv("POLYGON_RPC_URL")),
+    })
+    return aiohttp.web.Response(text=body, content_type="application/json")
+
+
+async def start_health_server():
+    app = aiohttp.web.Application()
+    app.router.add_get("/health", health_handler)
+    app.router.add_get("/", health_handler)
+    runner = aiohttp.web.AppRunner(app)
+    await runner.setup()
+    site = aiohttp.web.TCPSite(runner, "0.0.0.0", PORT)
+    await site.start()
+    log.info(f"🌐 Health server → http://0.0.0.0:{PORT}/health")
+
+
+# ─── Main ─────────────────────────────────────────────────────────────────────
 async def main():
     log.info("═══════════════════════════════════════════════════")
     log.info("SQI-2050 Combined Bot 2+3 — Railway Worker")
     log.info(f"Mode: {'PAPER 📝' if PAPER_MODE else 'LIVE 💰'} | Risk: {RISK_PCT*100:.0f}%")
     log.info("Bot 2: Whale Copy-Trading | Bot 3: Arb + News Edge")
     log.info("═══════════════════════════════════════════════════")
+
+    # Start health server
+    await start_health_server()
 
     # Setup executor (live only)
     executor = None
@@ -387,7 +421,7 @@ async def main():
         except Exception as e:
             log.error(f"Executor failed: {e}. Falling back to paper.")
 
-    # Setup whale listener (Bot 2)
+    # Setup whale listener (Bot 2) — gracefully skips if no POLYGON_RPC_URL
     matcher = MarketMatcher()
     listener = WhaleListener(on_trade_callback=handle_whale_trade)
     listener.matcher = matcher
@@ -397,8 +431,8 @@ async def main():
 
     # Run both strategies concurrently
     await asyncio.gather(
-        listener.start(),  # Bot 2: whale copy-trading (on-chain)
-        polyclaw_loop(executor),  # Bot 3: arb + news edge (API)
+        listener.start(),       # Bot 2: whale copy-trading (on-chain, or standby)
+        polyclaw_loop(executor), # Bot 3: arb + news edge (API)
     )
 
 
