@@ -385,9 +385,7 @@ function renderPrescriptionBlock(lines: string[], startIdx: number): { jsx: Reac
           );
         })}
       </div>
-      <div style={{ padding: '5px 14px 8px', borderTop: '1px solid rgba(212,175,55,0.06)', fontSize: 7, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.25)' }}>
-        Active. 24/7. Scalar Wave Entanglement. Permanent until dissolved.
-      </div>
+
     </div>
   );
   return { jsx, consumed: i - startIdx };
