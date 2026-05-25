@@ -2726,13 +2726,3 @@ export default function HanumanCodex() {
     </div>
   );
 }
-      </div>
-
-      {/* FOOTER */}
-      <div style={{ textAlign: "center", padding: "32px 20px 52px", borderTop: "1px solid rgba(255,255,255,0.03)" }}>
-        <p style={{ fontSize: 15, color: "#D4AF37", textShadow: "0 0 20px rgba(212,175,55,0.3)", fontWeight: 700, marginBottom: 5 }}>जय हनुमान ज्ञान गुन सागर</p>
-        <p style={{ fontSize: 8, letterSpacing: "0.4em", textTransform: "uppercase", color: "rgba(255,255,255,0.2)", fontWeight: 700 }}>Siddha Quantum Intelligence · 2050 Sovereign Edition</p>
-      </div>
-    </div>
-  );
-}
