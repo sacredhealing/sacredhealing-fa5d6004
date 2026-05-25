@@ -141,13 +141,7 @@ export default function ExploreAkasha() {
             letterSpacing: '-0.02em',
             lineHeight: 1.1,
             margin: 0,
-            background: 'linear-gradient(135deg, #D4AF37 0%, #F5E17A 40%, #D4AF37 60%, #A07C10 100%)',
-            backgroundSize: '200% auto',
-            WebkitBackgroundClip: 'text',
-            backgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            display: 'inline-block',
-            animation: 'goldShimmer 5s linear infinite',
+            color: '#D4AF37',
           }}
         >
           {t('exploreAkasha.title')}
