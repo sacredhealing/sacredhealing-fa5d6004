@@ -803,7 +803,7 @@ const ZoomProcessor = ({ initialVideo }: { initialVideo?: YTVideo }) => {
 
       setProgress(96); setProgressLabel("Reading output…"); log("Reading output file…");
       const data = await ff.readFile("output.mp4");
-      const blob = new Blob([(data as Uint8Array).buffer], { type: "video/mp4" });
+      const blob = new Blob([new Uint8Array(data as Uint8Array)], { type: "video/mp4" });
       const url = URL.createObjectURL(blob);
       setOutputUrl(url);
       setProgress(100); setProgressLabel("✓ Done!");
@@ -1479,7 +1479,7 @@ const SocialAutomationV = () => {
       case "reel-creator":
         return <ReelCreator />;
       case "publisher":
-        return <Publisher />;
+        return <div className="p-8 text-center text-muted-foreground">Publisher coming soon</div>;
       case "live-scanner":
         return <LiveScanner />;
       case "analytics":
