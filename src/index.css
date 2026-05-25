@@ -9,7 +9,7 @@
   
   /* Container */
   --container-center: true;
-  --container-padding: 1rem;
+  --container-padding: 0px;
   --container-screen-2xl: 1400px;
   
   /* Colors - using CSS variables from :root */
