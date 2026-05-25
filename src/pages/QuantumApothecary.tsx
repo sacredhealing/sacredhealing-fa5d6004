@@ -2479,8 +2479,10 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                 className={`flex w-full min-w-0 flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                 {msg.role === 'user' ? (
                   <div
-                    className="ml-auto max-w-[88%]" style={{ marginRight: 12, marginTop: 8 }}
+                    className="ml-auto max-w-[88%]"
                     style={{
+                      marginRight: 12,
+                      marginTop: 8,
                       position: 'relative',
                       padding: '14px 20px',
                       background: 'rgba(212,175,55,0.03)',
@@ -2710,8 +2712,6 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
           </div>
         );
       })()}
-        </div>
-      </div>
     </div>
   );
 
