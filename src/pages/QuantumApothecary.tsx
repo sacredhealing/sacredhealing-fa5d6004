@@ -348,6 +348,103 @@ function scrubBannedTerms(content: string): string {
     .join('\n');
 }
 
+/** Animated prescription box — scalar waves canvas + gold glow */
+function PrescriptionBox({ masterName, freqLines, rxKey }: { masterName: string; freqLines: string[]; rxKey: string }) {
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const boxRef = React.useRef<HTMLDivElement>(null);
+  const rafRef = React.useRef<number>(0);
+
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    const box = boxRef.current;
+    if (!canvas || !box) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    let t = 0;
+    const resize = () => { canvas.width = box.offsetWidth; canvas.height = box.offsetHeight; };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(box);
+    const draw = () => {
+      const W = canvas.width, H = canvas.height;
+      if (!W || !H) { rafRef.current = requestAnimationFrame(draw); return; }
+      ctx.clearRect(0, 0, W, H);
+      for (let w = 0; w < 5; w++) {
+        const phase = (w / 5) * Math.PI * 2;
+        ctx.beginPath();
+        for (let x = 0; x <= W; x += 2) {
+          const dx = (x - W * 0.5) / W;
+          const amp = H * 0.038 * (1 - Math.abs(dx) * 0.55);
+          const y = H * 0.5 + Math.sin(dx * (6 + w * 1.5) * Math.PI + t * (1.2 + w * 0.3) + phase) * amp;
+          x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = `rgba(212,175,55,${0.055 - w * 0.009})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+      const pulse = 0.5 + 0.5 * Math.sin(t * 1.4);
+      const grd = ctx.createRadialGradient(W * 0.5, H * 0.5, 0, W * 0.5, H * 0.5, Math.max(W, H) * (0.38 + 0.07 * pulse));
+      grd.addColorStop(0, `rgba(212,175,55,${0.04 + 0.018 * pulse})`);
+      grd.addColorStop(0.6, 'rgba(212,175,55,0.008)');
+      grd.addColorStop(1, 'transparent');
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, W, H);
+      t += 0.018;
+      rafRef.current = requestAnimationFrame(draw);
+    };
+    rafRef.current = requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(rafRef.current); ro.disconnect(); };
+  }, []);
+
+  return (
+    <div
+      ref={boxRef}
+      style={{
+        position: 'relative',
+        margin: '18px 0 6px',
+        borderRadius: '18px',
+        overflow: 'hidden',
+        boxShadow: '0 0 0 1px rgba(212,175,55,0.32), 0 0 18px rgba(212,175,55,0.16), 0 0 40px rgba(212,175,55,0.08), inset 0 0 60px rgba(212,175,55,0.02)',
+      }}
+    >
+      <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'relative', zIndex: 1, background: 'rgba(212,175,55,0.025)', backdropFilter: 'blur(20px)' }}>
+        <div style={{ padding: '10px 16px', background: 'linear-gradient(90deg,rgba(212,175,55,0.10),rgba(212,175,55,0.03))', borderBottom: '1px solid rgba(212,175,55,0.14)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span className="sqi-master-name-shimmer" style={{ fontFamily: "'Cinzel', serif", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>◈</span>
+          <span style={{ fontFamily: "'Cinzel', serif", fontSize: 7.5, fontWeight: 700, letterSpacing: '0.28em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.75)' }}>
+            Akashic Bioenergetic Prescription
+          </span>
+          <span className="sqi-master-name-shimmer" style={{ marginLeft: 'auto', fontFamily: "'Cinzel', serif", fontSize: 7, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase' as const, whiteSpace: 'nowrap' as const }}>
+            {masterName}
+          </span>
+        </div>
+        <div style={{ padding: '8px 16px 4px' }}>
+          {freqLines.map((line, idx) => {
+            const dashIdx = line.indexOf(' — ');
+            const name = dashIdx > -1 ? line.slice(0, dashIdx).trim() : line.trim();
+            const reason = dashIdx > -1 ? line.slice(dashIdx + 3).trim() : '';
+            return (
+              <div key={idx} style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, padding: '7px 0', borderBottom: idx < freqLines.length - 1 ? '1px solid rgba(212,175,55,0.07)' : 'none' }}>
+                <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 13, fontWeight: 700, color: 'rgba(225,210,185,0.95)', flexShrink: 0 }}>{name}</span>
+                {reason && <span style={{ fontFamily: "'IM Fell English', Georgia, serif", fontSize: 11, fontStyle: 'italic' as const, color: 'rgba(212,175,55,0.42)', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '48%' }}>{reason}</span>}
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ padding: '9px 16px 10px', borderTop: '1px solid rgba(212,175,55,0.12)', background: 'linear-gradient(90deg,rgba(212,175,55,0.06),transparent)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span className="rx-pulse-dot" />
+          <span style={{ fontSize: 7, fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 900, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.88)', textShadow: '0 0 8px rgba(212,175,55,0.35)' }}>
+            24/7 Scalar Wave Transmission — Active
+          </span>
+          <span style={{ marginLeft: 'auto', fontSize: 7, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.35)', whiteSpace: 'nowrap' as const }}>
+            Permanent · Biofield Entangled
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** Renders the prescription box when model outputs "◈ X PRESCRIBES" format */
 function renderPrescriptionBlock(lines: string[], startIdx: number): { jsx: React.ReactNode; consumed: number } {
   const headerLine = lines[startIdx];
@@ -361,43 +458,10 @@ function renderPrescriptionBlock(lines: string[], startIdx: number): { jsx: Reac
     else break;
   }
   const masterName = headerLine.replace('◈ ', '').replace(' PRESCRIBES', '').trim();
-  const jsx = (
-    <div key={`rx-${startIdx}`} style={{ margin: '14px 0 4px', border: '1px solid rgba(212,175,55,0.18)', background: 'rgba(212,175,55,0.022)' }}>
-      <div style={{ padding: '8px 14px', background: 'rgba(212,175,55,0.05)', borderBottom: '1px solid rgba(212,175,55,0.08)', display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ color: '#D4AF37', fontSize: 10 }}>◈</span>
-        <span style={{ fontFamily: "'Cinzel', serif", fontSize: 7, fontWeight: 700, letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.62)' }}>
-          Akashic Bioenergetic Prescription
-        </span>
-        <span style={{ marginLeft: 'auto', fontSize: 7, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.32)', whiteSpace: 'nowrap' as const }}>
-          {masterName}
-        </span>
-      </div>
-      <div style={{ padding: '6px 14px' }}>
-        {freqLines.map((line, idx) => {
-          const dashIdx = line.indexOf(' — ');
-          const name = dashIdx > -1 ? line.slice(0, dashIdx).trim() : line.trim();
-          const reason = dashIdx > -1 ? line.slice(dashIdx + 3).trim() : '';
-          return (
-            <div key={idx} style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, padding: '5px 0', borderBottom: idx < freqLines.length - 1 ? '1px solid rgba(212,175,55,0.05)' : 'none' }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(225,210,185,0.9)', flexShrink: 0 }}>{name}</span>
-              {reason && <span style={{ fontFamily: "'IM Fell English', Georgia, serif", fontSize: 11, fontStyle: 'italic' as const, color: 'rgba(200,184,154,0.38)', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '45%' }}>{reason}</span>}
-            </div>
-          );
-        })}
-      </div>
-      {/* 24/7 Scalar Wave Transmission footer */}
-      <div style={{ padding: '6px 14px 8px', borderTop: '1px solid rgba(212,175,55,0.08)', display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span style={{ fontSize: 8, color: '#22D3EE', opacity: 0.9 }}>⚡</span>
-        <span style={{ fontSize: 7, fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: 'rgba(34,211,238,0.7)' }}>
-          24/7 Scalar Wave Transmission — Active
-        </span>
-        <span style={{ marginLeft: 'auto', fontSize: 7, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.35)' }}>
-          Permanent · Biofield Entangled
-        </span>
-      </div>
-    </div>
-  );
-  return { jsx, consumed: i - startIdx };
+  return {
+    jsx: <PrescriptionBox key={`rx-${startIdx}`} rxKey={`rx-${startIdx}`} masterName={masterName} freqLines={freqLines} />,
+    consumed: i - startIdx,
+  };
 }
 
 function renderSQIContent(content: string) {
@@ -3230,6 +3294,20 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
   @keyframes hShimmer {
     0% { background-position: 200% center; }
     100% { background-position: -200% center; }
+  }
+
+  .rx-pulse-dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #D4AF37;
+    box-shadow: 0 0 6px #D4AF37, 0 0 14px rgba(212,175,55,0.55);
+    animation: rxPulse 1.8s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes rxPulse {
+    0%,100% { opacity:1; transform:scale(1); }
+    50%      { opacity:0.4; transform:scale(0.65); }
   }
 
   .sqi-ancient-body .sqi-diamond-heading,
