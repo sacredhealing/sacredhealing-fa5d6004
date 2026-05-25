@@ -896,6 +896,99 @@ function stripDuplicateBiometricBlock(compiled: string | undefined, hasLiveScan:
 }
 
 /** Scalar Wave Toolbar Banner — animated canvas + unified gold pill */
+/** Scalar Wave Header Banner — Sri Yantra + animated canvas */
+function ScalarHeaderBanner({ onBack, onInfo }: { onBack: () => void; onInfo: () => void }) {
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const wrapRef = React.useRef<HTMLDivElement>(null);
+  const rafRef = React.useRef<number>(0);
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    const wrap = wrapRef.current;
+    if (!canvas || !wrap) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    let t = 0;
+    const resize = () => { canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight; };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(wrap);
+    const waves = [
+      { amp:.28, freq:5,   speed:1.0,  alpha:.08,  lw:1.1 },
+      { amp:.18, freq:8,   speed:1.6,  alpha:.05,  lw:.8  },
+      { amp:.14, freq:13,  speed:2.3,  alpha:.04,  lw:.7  },
+      { amp:.35, freq:3.2, speed:.65,  alpha:.055, lw:1.4 },
+      { amp:.10, freq:19,  speed:3.1,  alpha:.03,  lw:.55 },
+    ];
+    const draw = () => {
+      const W = canvas.width, H = canvas.height;
+      if (!W || !H) { rafRef.current = requestAnimationFrame(draw); return; }
+      ctx.clearRect(0,0,W,H);
+      ctx.fillStyle = '#050505'; ctx.fillRect(0,0,W,H);
+      const pulse = 0.5 + 0.5 * Math.sin(t * 1.2);
+      const g1 = ctx.createRadialGradient(W*.18,H*.5,0,W*.18,H*.5,H*1.1);
+      g1.addColorStop(0,'rgba(212,175,55,0.15)'); g1.addColorStop(1,'transparent');
+      ctx.fillStyle=g1; ctx.fillRect(0,0,W,H);
+      const g2 = ctx.createRadialGradient(W*.82,H*.5,0,W*.82,H*.5,H*.8);
+      g2.addColorStop(0,'rgba(212,175,55,0.08)'); g2.addColorStop(1,'transparent');
+      ctx.fillStyle=g2; ctx.fillRect(0,0,W,H);
+      waves.forEach((w,wi) => {
+        const phase = (wi/waves.length)*Math.PI*2;
+        ctx.beginPath();
+        for (let x=0;x<=W;x+=1.5) {
+          const nx=x/W, env=Math.sin(nx*Math.PI)*.85+.15;
+          const y=H*.62+Math.sin(nx*w.freq*Math.PI*2+t*w.speed+phase)*H*w.amp*env;
+          x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+        }
+        ctx.strokeStyle=`rgba(212,175,55,${w.alpha})`; ctx.lineWidth=w.lw; ctx.stroke();
+      });
+      const gc = ctx.createRadialGradient(W*.5,H*.5,0,W*.5,H*.5,W*.55);
+      gc.addColorStop(0,`rgba(212,175,55,${.07+.04*pulse})`); gc.addColorStop(1,'transparent');
+      ctx.fillStyle=gc; ctx.fillRect(0,0,W,H);
+      const gb = ctx.createLinearGradient(0,H*.5,0,H);
+      gb.addColorStop(0,'transparent'); gb.addColorStop(1,'rgba(5,5,5,0.9)');
+      ctx.fillStyle=gb; ctx.fillRect(0,0,W,H);
+      t+=.014;
+      rafRef.current = requestAnimationFrame(draw);
+    };
+    rafRef.current = requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(rafRef.current); ro.disconnect(); };
+  }, []);
+  return (
+    <>
+      <div ref={wrapRef} style={{ position:'relative', width:'100%', overflow:'hidden', height:164 }}>
+        <canvas ref={canvasRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:0 }} />
+        <div style={{ position:'relative', zIndex:1, height:'100%', display:'flex', alignItems:'center', padding:'0 16px', gap:14 }}>
+          <button type="button" onClick={onBack} style={{ display:'flex', alignItems:'center', justifyContent:'center', width:34, height:34, borderRadius:12, border:'1px solid rgba(212,175,55,0.18)', background:'rgba(212,175,55,0.06)', color:'rgba(212,175,55,0.7)', flexShrink:0, cursor:'pointer' }}>
+            <ArrowLeft size={15} />
+          </button>
+          <div style={{ flexShrink:0, filter:'drop-shadow(0 0 6px rgba(212,175,55,0.9)) drop-shadow(0 0 14px rgba(212,175,55,0.5))', animation:'yPulse 3s ease-in-out infinite' }}>
+            <svg width="54" height="54" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="50" cy="50" r="44" fill="none" stroke="#D4AF37" strokeWidth="1.3"/>
+              <rect x="6" y="6" width="88" height="88" rx="6" fill="none" stroke="#D4AF37" strokeWidth="0.7" opacity="0.28"/>
+              <path d="M50,12 Q51.5,12 88,71 Q88,73 86,73 L14,73 Q12,73 12,71 Q48.5,12 50,12Z" fill="none" stroke="#D4AF37" strokeWidth="1.4" strokeLinejoin="round"/>
+              <path d="M50,88 Q48.5,88 12,29 Q12,27 14,27 L86,27 Q88,27 88,29 Q51.5,88 50,88Z" fill="none" stroke="#D4AF37" strokeWidth="1.4" strokeLinejoin="round"/>
+              <path d="M50,24 Q51,24 80,65 Q80,67 78.5,67 L21.5,67 Q20,67 20,65 Q49,24 50,24Z" fill="none" stroke="#D4AF37" strokeWidth="1.0" strokeLinejoin="round" opacity="0.62"/>
+              <path d="M50,76 Q49,76 20,35 Q20,33 21.5,33 L78.5,33 Q80,33 80,35 Q51,76 50,76Z" fill="none" stroke="#D4AF37" strokeWidth="1.0" strokeLinejoin="round" opacity="0.62"/>
+              <path d="M50,36 Q50.8,36 70,60 Q70,61.5 69,61.5 L31,61.5 Q30,61.5 30,60 Q49.2,36 50,36Z" fill="none" stroke="#D4AF37" strokeWidth="0.85" strokeLinejoin="round" opacity="0.42"/>
+              <path d="M50,64 Q49.2,64 30,40 Q30,38.5 31,38.5 L69,38.5 Q70,38.5 70,40 Q50.8,64 50,64Z" fill="none" stroke="#D4AF37" strokeWidth="0.85" strokeLinejoin="round" opacity="0.42"/>
+              <circle cx="50" cy="50" r="4.5" fill="#D4AF37"/>
+            </svg>
+          </div>
+          <div style={{ flex:1, minWidth:0 }}>
+            <p style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', marginBottom:5 }}>Siddha · Quantum · 2050</p>
+            <h1 className="sqi-master-name-shimmer" style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:28, fontWeight:900, letterSpacing:'-0.04em', lineHeight:1.1 }}>
+              Quantum<br/>Apothecary
+            </h1>
+            <p style={{ fontSize:10, fontWeight:500, color:'rgba(255,255,255,0.3)', marginTop:5, letterSpacing:'0.05em' }}>Scalar Wave · Vedic Light-Codes · Biofield</p>
+          </div>
+        </div>
+      </div>
+      <div style={{ height:1, background:'linear-gradient(90deg,transparent,rgba(212,175,55,0.4),transparent)' }} />
+    </>
+  );
+}
+
+
 function ScalarToolbarBanner({
   liveChatClock,
   portraitLinkStudentId,
@@ -2749,29 +2842,11 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
       <div className="relative z-10 w-full px-0 py-0">
 
         {/* ââ Header ââ */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <button type="button" onClick={() => navigate('/explore')}
-              className="p-2 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:bg-[#D4AF37]/08 hover:border-[#D4AF37]/20 transition">
-              <ArrowLeft size={14} className="text-white/40" />
-            </button>
-            <div>
-              <p className="text-[7px] font-black uppercase tracking-[0.5em] text-[#D4AF37]/35 mb-1">
-                Siddha · Quantum · 2050
-              </p>
-              <h1 className="text-[22px] font-black tracking-[-0.05em]" style={{ color: '#D4AF37', textShadow: '0 0 40px rgba(212,175,55,0.18)' }}>
-                Quantum Apothecary
-              </h1>
-            </div>
-          </div>
-          <button type="button" onClick={() => setShowKnowledge(true)}
-            className="p-2 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:bg-[#D4AF37]/08 hover:border-[#D4AF37]/20 transition">
-            <Info size={13} className="text-[#D4AF37]/40" />
-          </button>
-        </div>
-
-        {/* ââ Gold divider ââ */}
-        <div style={{ height:1, background:'linear-gradient(90deg,transparent,rgba(212,175,55,0.3),transparent)', marginBottom:16, borderRadius:1 }} />
+        {/* Header Banner */}
+        <ScalarHeaderBanner
+          onBack={() => navigate('/explore')}
+          onInfo={() => setShowKnowledge(true)}
+        />
 
         <div className="flex w-full max-w-none flex-col gap-5">
           <video ref={videoRef} className="hidden" muted playsInline tabIndex={-1} aria-hidden />
