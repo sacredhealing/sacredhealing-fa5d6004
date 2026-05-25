@@ -1144,7 +1144,7 @@ type Tab = "overview" | "chalisa" | "ghata" | "sadhana" | "weapons" | "strength"
 export default function HanumanCodex() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { tier: memberTier } = useMembershipTier();
+  const { tier: memberTier } = useMembership();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [openItem, setOpenItem] = useState<string | null>(null);
   const [expandedVerse, setExpandedVerse] = useState<string | null>(null);
