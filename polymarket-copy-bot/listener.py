@@ -3,14 +3,12 @@ listener.py — The Ear
 ======================
 Monitors Polygon blockchain in real-time.
 Detects when Smart Money wallets interact with the Polymarket CTF contract.
+Gracefully skips if POLYGON_RPC_URL is not set (paper-mode compatible).
 """
 
 import asyncio
 import json
 import os
-
-from web3 import Web3
-from web3.middleware import geth_poa_middleware
 
 from logger import setup_logger
 
@@ -18,11 +16,11 @@ log = setup_logger("LISTENER")
 
 POLYGON_RPC_URL = os.getenv("POLYGON_RPC_URL", "")
 
-CTF_CONTRACT = Web3.to_checksum_address("0x4D97DCd97eC945f40cF65F87097ACe5EA0476045")
+CTF_CONTRACT_ADDR = "0x4D97DCd97eC945f40cF65F87097ACe5EA0476045"
 
-WHALE_WALLETS = [
-    Web3.to_checksum_address("0x91583ceb1ebec79951a068e1d7d02c1ea590fa7b"),
-    Web3.to_checksum_address("0x4924840e6E4249C032F40a6b797825d0d8b33782"),
+WHALE_WALLETS_RAW = [
+    "0x91583ceb1ebec79951a068e1d7d02c1ea590fa7b",
+    "0x4924840e6E4249C032F40a6b797825d0d8b33782",
 ]
 
 CTF_ABI = json.loads(
@@ -64,20 +62,47 @@ class WhaleListener:
         self.callback = on_trade_callback
         self.matcher = None
         self.executor = None
+        self._enabled = False
 
         if not POLYGON_RPC_URL:
-            raise EnvironmentError("❌ POLYGON_RPC_URL not set in .env")
+            log.warning(
+                "⚠️  POLYGON_RPC_URL not set — Whale Listener disabled. "
+                "Add an Alchemy Polygon RPC URL to enable on-chain whale mirroring."
+            )
+            return
 
-        self.w3 = Web3(Web3.HTTPProvider(POLYGON_RPC_URL))
-        self.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+        try:
+            from web3 import Web3
+            from web3.middleware import geth_poa_middleware
 
-        if not self.w3.is_connected():
-            raise ConnectionError("❌ Cannot connect to Polygon RPC. Check your Alchemy URL.")
+            self._WHALE_WALLETS = [
+                Web3.to_checksum_address(w) for w in WHALE_WALLETS_RAW
+            ]
+            self._CTF_CONTRACT = Web3.to_checksum_address(CTF_CONTRACT_ADDR)
 
-        log.info(f"✅ Connected to Polygon | Block: {self.w3.eth.block_number}")
-        self.contract = self.w3.eth.contract(address=CTF_CONTRACT, abi=CTF_ABI)
+            self.w3 = Web3(Web3.HTTPProvider(POLYGON_RPC_URL))
+            self.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+
+            if not self.w3.is_connected():
+                log.error("❌ Cannot connect to Polygon RPC — Whale Listener disabled.")
+                return
+
+            self.contract = self.w3.eth.contract(
+                address=self._CTF_CONTRACT, abi=CTF_ABI
+            )
+            self._enabled = True
+            log.info(f"✅ Whale Listener connected to Polygon | Block: {self.w3.eth.block_number}")
+
+        except Exception as e:
+            log.error(f"❌ Whale Listener init failed: {e} — running without whale mirroring.")
 
     async def start(self):
+        if not self._enabled:
+            log.info("👁️  Whale Listener: standing by (no RPC configured).")
+            while True:
+                await asyncio.sleep(3600)  # sleep forever, non-blocking
+            return
+
         last_block = self.w3.eth.block_number - 10
 
         while True:
@@ -108,7 +133,7 @@ class WhaleListener:
                 for evt in events:
                     stakeholder = evt["args"]["stakeholder"]
 
-                    if stakeholder not in WHALE_WALLETS:
+                    if stakeholder not in self._WHALE_WALLETS:
                         continue
 
                     condition_id = evt["args"]["conditionId"].hex()
