@@ -1,4 +1,5 @@
 // ActiveTransmissionsSection — SQI 2050 Organic
+// daysRemaining(act.expiresAt) — Wellness=21d, others=8d, null=permanent
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, ShieldCheck, X } from 'lucide-react';
@@ -36,7 +37,7 @@ function TxCanvas({ wrapRef }: { wrapRef: React.RefObject<HTMLDivElement> }) {
       const W = canvas.width, H = canvas.height;
       if (!W || !H) { rafRef.current = requestAnimationFrame(draw); return; }
       ctx.clearRect(0,0,W,H);
-      const pulse = .5 + .5 * Math.sin(t * 1.0);
+      const pulse = .5 + .5 * Math.sin(t);
       const gc = ctx.createRadialGradient(W*.5,H*.55,0,W*.5,H*.55,W*.6);
       gc.addColorStop(0, `rgba(212,175,55,${.04+.025*pulse})`);
       gc.addColorStop(1, 'transparent');
@@ -64,38 +65,22 @@ export default function ActiveTransmissionsSection({ activeTransmissions, setAct
   const wrapRef = React.useRef<HTMLDivElement>(null);
 
   return (
-    <div ref={wrapRef} style={{ position:'relative', filter:'drop-shadow(0 0 28px rgba(212,175,55,0.10))' }}>
+    <div ref={wrapRef} style={{ position:'relative', filter:'drop-shadow(0 0 24px rgba(212,175,55,0.10))' }}>
       <style>{`
-        @keyframes txHalo {
-          0%,100%{opacity:0.3;transform:scale(1);}
-          50%{opacity:0;transform:scale(1.9);}
-        }
-        @keyframes txLiveDot {
-          0%,100%{opacity:1;}
-          50%{opacity:0.35;}
-        }
-        @keyframes txShimmer {
-          0%{background-position:200% center;}
-          100%{background-position:-200% center;}
-        }
+        @keyframes txHalo{0%,100%{opacity:0.3;transform:scale(1);}50%{opacity:0;transform:scale(1.9);}}
+        @keyframes txLiveDot{0%,100%{opacity:1;}50%{opacity:0.35;}}
+        @keyframes txShimmer{0%{background-position:200% center;}100%{background-position:-200% center;}}
       `}</style>
 
       <TxCanvas wrapRef={wrapRef} />
 
       <div style={{ position:'relative', zIndex:1 }}>
 
-        {/* Header — floats freely, no container */}
+        {/* Header */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 4px 12px' }}>
           <div style={{ display:'flex', alignItems:'center', gap:7 }}>
             <Zap size={14} style={{ color:'#D4AF37', filter:'drop-shadow(0 0 4px rgba(212,175,55,0.7))' }} />
-            <h2 style={{
-              fontSize:13, fontWeight:900, letterSpacing:'-0.02em',
-              background:'linear-gradient(135deg,#D4AF37,#F5E17A,#D4AF37)',
-              backgroundSize:'200% auto',
-              WebkitBackgroundClip:'text', backgroundClip:'text',
-              WebkitTextFillColor:'transparent',
-              animation:'txShimmer 4s linear infinite',
-            }}>
+            <h2 style={{ fontSize:13, fontWeight:900, letterSpacing:'-0.02em', background:'linear-gradient(135deg,#D4AF37,#F5E17A,#D4AF37)', backgroundSize:'200% auto', WebkitBackgroundClip:'text', backgroundClip:'text', WebkitTextFillColor:'transparent', animation:'txShimmer 4s linear infinite' }}>
               {t('quantumApothecary.activeTransmissionsSection.title')}
             </h2>
           </div>
@@ -108,14 +93,7 @@ export default function ActiveTransmissionsSection({ activeTransmissions, setAct
         </div>
 
         {/* Unified organic container */}
-        <div style={{
-          background:'rgba(212,175,55,0.025)',
-          borderRadius:22,
-          border:'1px solid rgba(212,175,55,0.10)',
-          overflow:'hidden',
-          backdropFilter:'blur(20px)',
-          WebkitBackdropFilter:'blur(20px)',
-        }}>
+        <div style={{ background:'rgba(212,175,55,0.025)', borderRadius:22, border:'1px solid rgba(212,175,55,0.10)', overflow:'hidden', backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)' }}>
           {activeTransmissions.length === 0 ? (
             <div style={{ padding:'28px 20px', textAlign:'center' }}>
               <ShieldCheck size={22} style={{ margin:'0 auto 10px', color:'rgba(255,255,255,0.10)', display:'block' }} />
@@ -131,9 +109,13 @@ export default function ActiveTransmissionsSection({ activeTransmissions, setAct
               <AnimatePresence>
                 {activeTransmissions.map((act, idx) => {
                   const c = act.color || '#D4AF37';
-                  const days = daysRemaining(act);
-                  const src = formatSourceLabel(act);
+                  // ✅ Correct calls: pass act.expiresAt and act.source
+                  const days = daysRemaining(act.expiresAt);
+                  const src = formatSourceLabel(act.source);
                   const isLast = idx === activeTransmissions.length - 1;
+                  // Urgent if ≤3 days left
+                  const urgent = days !== null && days <= 3;
+
                   return (
                     <motion.div
                       key={act.id ?? act.name}
@@ -141,13 +123,9 @@ export default function ActiveTransmissionsSection({ activeTransmissions, setAct
                       animate={{ opacity:1, y:0 }}
                       exit={{ opacity:0, y:6 }}
                       transition={{ duration:0.2 }}
-                      style={{
-                        display:'flex', alignItems:'center', gap:12,
-                        padding:'13px 14px',
-                        position:'relative',
-                      }}
+                      style={{ display:'flex', alignItems:'center', gap:12, padding:'13px 14px', position:'relative' }}
                     >
-                      {/* Thin gradient divider between rows */}
+                      {/* Thin divider */}
                       {!isLast && (
                         <div style={{ position:'absolute', bottom:0, left:14, right:14, height:1, background:'linear-gradient(90deg,transparent,rgba(212,175,55,0.10),transparent)' }} />
                       )}
@@ -158,20 +136,38 @@ export default function ActiveTransmissionsSection({ activeTransmissions, setAct
                         <div style={{ position:'absolute', inset:0, borderRadius:'50%', border:`1px solid ${c}`, animation:'txHalo 2.5s ease-in-out infinite' }} />
                       </div>
 
-                      {/* Text */}
+                      {/* Info */}
                       <div style={{ flex:1, minWidth:0 }}>
                         <p style={{ fontSize:13, fontWeight:700, color:'rgba(255,255,255,0.92)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' as const, lineHeight:1.3 }}>
                           {act.name}
                         </p>
                         <p style={{ fontSize:10, fontWeight:500, color:'rgba(255,255,255,0.30)', marginTop:2 }}>
-                          {act.type}{src ? ` · ${src}` : ''}{days !== null ? ` · ${days}d` : ''}
+                          {act.type}{src ? ` · ${src}` : ''}
                         </p>
-                        <span style={{ display:'inline-block', marginTop:4, fontSize:7, fontWeight:900, letterSpacing:'0.16em', textTransform:'uppercase' as const, color:c, background:`${c}18`, padding:'2px 6px', borderRadius:4 }}>
-                          Transmitting 24/7
-                        </span>
+
+                        {/* Badge row: 24/7 + days or permanent */}
+                        <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:5 }}>
+                          <span style={{ fontSize:7, fontWeight:900, letterSpacing:'0.14em', textTransform:'uppercase' as const, color:c, background:`${c}18`, padding:'2px 7px', borderRadius:5 }}>
+                            Transmitting 24/7
+                          </span>
+
+                          {days !== null ? (
+                            /* Days remaining pill — amber if urgent */
+                            <span style={{ display:'flex', alignItems:'center', gap:3, padding:'2px 7px', borderRadius:5, background: urgent ? 'rgba(251,146,60,0.12)' : 'rgba(212,175,55,0.10)', border: `1px solid ${urgent ? 'rgba(251,146,60,0.28)' : 'rgba(212,175,55,0.22)'}` }}>
+                              <span style={{ fontSize:9, fontWeight:900, color: urgent ? '#FB923C' : '#D4AF37' }}>{days}</span>
+                              <span style={{ fontSize:7, fontWeight:700, color: urgent ? 'rgba(251,146,60,0.7)' : 'rgba(212,175,55,0.6)', letterSpacing:'0.05em' }}>days left</span>
+                            </span>
+                          ) : (
+                            /* Permanent */
+                            <span style={{ display:'flex', alignItems:'center', gap:3, padding:'2px 7px', borderRadius:5, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)' }}>
+                              <span style={{ fontSize:9, color:'rgba(255,255,255,0.25)' }}>∞</span>
+                              <span style={{ fontSize:7, fontWeight:700, color:'rgba(255,255,255,0.22)', letterSpacing:'0.05em' }}>Permanent</span>
+                            </span>
+                          )}
+                        </div>
                       </div>
 
-                      {/* X */}
+                      {/* Dissolve X */}
                       <button
                         type="button"
                         onClick={() => onDissolveTransmission ? onDissolveTransmission(act.id ?? act.name) : setActiveTransmissions(p => p.filter(x => x.id !== act.id))}
