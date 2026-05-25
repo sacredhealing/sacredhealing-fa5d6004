@@ -2501,7 +2501,7 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
   return (
     <div
       className="relative min-h-screen text-white/90 overflow-x-hidden pb-24"
-      style={{ background: '#050505', position: 'relative', overscrollBehaviorX: 'none' }}
+      style={{ background: '#050505', position: 'relative', overscrollBehaviorX: 'none', padding: 0, margin: 0, width: '100vw', maxWidth: '100vw' }}
     >
 
       {/* ââ Akasha Deep Space Background ââ */}
