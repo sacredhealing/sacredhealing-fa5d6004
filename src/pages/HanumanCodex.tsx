@@ -1897,7 +1897,7 @@ export default function HanumanCodex() {
 
             {GHATA_MOVEMENTS.map((movement, idx) => {
               const accessible = canAccess(movement.tier);
-              const isOpen = expandedGhata === movement.id;
+              const isOpen = expandedGhata === String(movement.id);
 
               return (
                 <div
