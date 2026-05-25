@@ -380,7 +380,7 @@ function renderPrescriptionBlock(lines: string[], startIdx: number): { jsx: Reac
           return (
             <div key={idx} style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, padding: '5px 0', borderBottom: idx < freqLines.length - 1 ? '1px solid rgba(212,175,55,0.05)' : 'none' }}>
               <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(225,210,185,0.9)', flexShrink: 0 }}>{name}</span>
-              {reason && <span style={{ fontFamily: "'IM Fell English', Georgia, serif", fontSize: 11, fontStyle: 'italic' as const, color: 'rgba(200,184,154,0.38)', textAlign: 'right' as const }}>{reason}</span>}
+              {reason && <span style={{ fontFamily: "'IM Fell English', Georgia, serif", fontSize: 11, fontStyle: 'italic' as const, color: 'rgba(200,184,154,0.38)', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '45%' }}>{reason}</span>}
             </div>
           );
         })}
@@ -3191,15 +3191,18 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
   }
 
   .sqi-ancient-body p.sqi-nadi-line,
+  .sqi-ancient-body .sqi-nadi-line,
+  p.sqi-nadi-line,
   .sqi-nadi-line {
     font-family: 'Plus Jakarta Sans', sans-serif !important;
-    font-size: 12px !important;
-    line-height: 1.55 !important;
+    font-size: 11px !important;
+    line-height: 1.5 !important;
     color: #22D3EE !important;
-    margin-bottom: 0 !important;
+    margin: 0 !important;
     font-style: normal !important;
-    font-weight: 700 !important;
-    opacity: 0.82;
+    font-weight: 600 !important;
+    opacity: 0.8;
+    letter-spacing: 0.02em !important;
   }
 
   .sqi-ancient-body .sqi-diamond-heading {
