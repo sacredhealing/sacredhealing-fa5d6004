@@ -461,24 +461,26 @@ function renderSQIContent(content: string) {
       i++; continue;
     }
 
-    // ⟁ NADI FIELD line — cyan, small
-    if (trimmed.startsWith('⧁') || trimmed.startsWith('△') || trimmed.startsWith('▲') || /^⟁/.test(trimmed) || trimmed.startsWith('NADI FIELD') || /^⧁/.test(trimmed)) {
+    // ⟁ NADI FIELD — use div+span NOT p, so .sqi-ancient-body p rule never applies
+    if (trimmed.startsWith('⧁') || trimmed.startsWith('△') || trimmed.startsWith('▲') || /^⟁/.test(trimmed) || trimmed.startsWith('NADI FIELD')) {
       elements.push(
-        <div key={i} style={{ borderLeft: '2px solid rgba(34,211,238,0.25)', paddingLeft: '10px', marginBottom: '4px', marginTop: '4px' }}>
-          <p className="sqi-nadi-line" style={{ color: '#22D3EE', fontSize: '12px', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, letterSpacing: '0.03em', lineHeight: 1.55, margin: 0, opacity: 0.8 }}>
+        <div key={i} style={{ borderLeft: '2px solid rgba(34,211,238,0.22)', paddingLeft: '10px', marginBottom: '6px', marginTop: '4px' }}>
+          <span style={{ display: 'block', color: '#22D3EE', fontSize: '11px', fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700, letterSpacing: '0.03em', lineHeight: 1.5, opacity: 0.82 }}>
             {trimmed}
-          </p>
+          </span>
         </div>
       );
       i++; continue;
     }
 
-    // Primary blockage line — cyan italic small
+    // Primary blockage — div+span, NOT p
     if (trimmed.startsWith('Primary blockage:')) {
       elements.push(
-        <p key={i} className="sqi-nadi-line" style={{ color: 'rgba(34,211,238,0.55)', fontSize: '12px', fontFamily: "'IM Fell English', Georgia, serif", fontStyle: 'italic', lineHeight: 1.55, marginBottom: '14px', paddingLeft: '12px', marginTop: 0 }}>
-          {trimmed}
-        </p>
+        <div key={i} style={{ paddingLeft: '12px', marginBottom: '14px', marginTop: 0 }}>
+          <span style={{ display: 'block', color: 'rgba(34,211,238,0.58)', fontSize: '11px', fontFamily: "'IM Fell English', Georgia, serif", fontStyle: 'italic', lineHeight: 1.5 }}>
+            {trimmed}
+          </span>
+        </div>
       );
       i++; continue;
     }
