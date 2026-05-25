@@ -319,7 +319,7 @@ function autoBoldSacredTerms(text: string): React.ReactNode {
   return parts.map((part, i) => {
     if (i % 2 === 1) {
       return (
-        <span key={i}>{part}</span>
+        <span key={i} style={{ color: '#D4AF37', fontWeight: 400 }}>{part}</span>
       );
     }
     return part;
@@ -2530,7 +2530,7 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
       </svg>
 
       {/* ââ Main Content ââ */}
-      <div className="relative z-10 max-w-7xl mx-auto px-0 py-6">
+      <div className="relative z-10 w-full px-0 py-0">
 
         {/* ââ Header ââ */}
         <div className="flex items-center justify-between mb-6">
