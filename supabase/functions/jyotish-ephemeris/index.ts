@@ -197,6 +197,8 @@ serve(async (req) => {
 
     let moonNakshatra = "";
     let moonLongitude = 0;
+    let ascendantSign = "";
+    let sunSign = "";
     let nakProgress = 0.5;
 
     try {
@@ -223,6 +225,36 @@ serve(async (req) => {
           moonNakshatra = normalizeNakshatra(String(moonData.Nakshatra));
         if (moonData.Longitude != null)
           moonLongitude = parseFloat(moonData.Longitude);
+      }
+
+      // Extract Ascendant (Lagna) — try multiple VedAstro field names
+      const ascData = payload?.AllPlanetData?.Ascendant
+        || payload?.AllPlanetData?.Lagna
+        || payload?.AllPlanetData?.Rising
+        || payload?.AllPlanetData?.['House 1']
+        || payload?.Ascendant
+        || null;
+      if (ascData) {
+        ascendantSign = String(ascData.Sign || ascData.Rashi || ascData.ZodiacSign || '').trim();
+        if (!ascendantSign && ascData.Longitude != null) {
+          // Derive sign from longitude (0-360 → 12 signs of 30° each)
+          const signIdx = Math.floor(parseFloat(ascData.Longitude) / 30) % 12;
+          const SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo',
+                         'Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+          ascendantSign = SIGNS[signIdx] || '';
+        }
+      }
+
+      // Extract Sun sign for complete natal context
+      const sunData = payload?.AllPlanetData?.Sun || null;
+      if (sunData) {
+        sunSign = String(sunData.Sign || sunData.Rashi || sunData.ZodiacSign || '').trim();
+        if (!sunSign && sunData.Longitude != null) {
+          const signIdx = Math.floor(parseFloat(sunData.Longitude) / 30) % 12;
+          const SIGNS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo',
+                         'Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+          sunSign = SIGNS[signIdx] || '';
+        }
       }
 
       // Alternative: try flat structure
@@ -303,6 +335,8 @@ serve(async (req) => {
         birth_date: birthDate,
         birth_time: birthTime || null,
         birth_place: birthPlace || null,
+        ascendant: ascendantSign || null,
+        sun_sign: sunSign || null,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "user_id" }
@@ -315,6 +349,8 @@ serve(async (req) => {
         moonLongitude,
         nakshatraProgress: nakProgress,
         dashaData: dashaResult,
+        ascendantSign,
+        sunSign,
         ephemerisData: ephemerisData,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
