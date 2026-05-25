@@ -18,6 +18,7 @@ export interface JyotishProfile {
   bhriguCycle: string;
   karmaFocus: string;
   meditationType: string;
+  sunSign?: string;
   healingFocus: string;
   musicRaga: string;
   musicFrequency: string;
@@ -427,7 +428,8 @@ export function useJyotishProfile(): JyotishProfile {
       return {
         nakshatra,
         moonSign,
-        ascendant: 'Unknown',
+        ascendant: ephemeris.ascendant || 'Unknown',
+        sunSign: ephemeris.sun_sign || '',
         mahadasha,
         antardasha,
         primaryDosha,
@@ -509,7 +511,7 @@ export function useJyotishProfile(): JyotishProfile {
     return {
       nakshatra,
       moonSign,
-      ascendant: 'Unknown',
+      ascendant: '',  // Not available without ephemeris calculation
       mahadasha,
       antardasha,
       primaryDosha,
