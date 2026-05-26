@@ -3444,12 +3444,12 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                   {resonanceMatches.length > 0 && (
                     <ScalarTop33Wrapper>
                       {/* ââ HEADER ââ */}
-                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-4 pt-4">
                         <div>
-                          <p className="text-[11px] font-black uppercase tracking-[0.15em] text-[#D4AF37]/75">
-                            Top 33 — Full Library Match
+                          <p style={{ fontSize:13, fontWeight:900, letterSpacing:'0.12em', textTransform:'uppercase', color:'#D4AF37', textShadow:'0 0 14px rgba(212,175,55,0.35)' }}>
+                            ⟁ Top 33
                           </p>
-                          <p className="mt-0.5 text-[10px] text-white/35">
+                          <p style={{ marginTop:3, fontSize:10, color:'rgba(255,255,255,0.45)', letterSpacing:'0.04em' }}>
                             {resonanceMatches.filter((r) =>
                               activeTransmissions.some((t) => fieldTransmissionMatchesRow(t, r)),
                             ).length}{' '}
@@ -3488,7 +3488,7 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                         })()}
                       </div>
                       {/* ââ ROW LIST — always full scan list (e.g. 33) ââ */}
-                      <div style={{ maxHeight:"min(70vh,520px)", overflowY:"auto", padding:"10px 12px 12px", display:"flex", flexDirection:"column", gap:5, scrollbarWidth:"thin" }}>
+                      <div style={{ maxHeight:"min(68vh,500px)", overflowY:"auto", padding:"8px 14px 14px", display:"flex", flexDirection:"column", gap:6, scrollbarWidth:"thin" }}>
                         {resonanceMatches.map((row, idx) => {
                           const isActive = activeTransmissions.some((t) =>
                             fieldTransmissionMatchesRow(t, row),
@@ -3497,10 +3497,11 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                             <div
                               style={{
                                 display: "flex", alignItems: "center", gap: 10,
-                                padding: "9px 10px", borderRadius: 13,
-                                background: isActive ? "rgba(255,255,255,0.02)" : "rgba(212,175,55,0.03)",
-                                border: isActive ? "1px solid rgba(255,255,255,0.05)" : "1px solid rgba(212,175,55,0.10)",
-                                opacity: isActive ? 0.58 : 1, transition: "all 0.2s",
+                                padding: "11px 12px", borderRadius: 16,
+                                background: isActive ? "rgba(255,255,255,0.015)" : "rgba(212,175,55,0.04)",
+                                border: isActive ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(212,175,55,0.14)",
+                                opacity: isActive ? 0.52 : 1, transition: "all 0.25s",
+                                boxShadow: isActive ? "none" : "0 2px 12px rgba(212,175,55,0.06)",
                               }}
                             >
 
