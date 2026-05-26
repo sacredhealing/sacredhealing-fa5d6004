@@ -339,235 +339,169 @@ export default function VoiceBiofieldScanner({
       onTouchMove={(ev) => ev.stopPropagation()}
       style={{ touchAction: 'none', overscrollBehavior: 'contain' }}
     >
+      <style>{`
+        @keyframes vsMicPulse {
+          0%,100%{ box-shadow:0 0 0 0 rgba(212,175,55,0.0),0 0 12px rgba(212,175,55,0.22); }
+          50%    { box-shadow:0 0 0 10px rgba(212,175,55,0.0),0 0 22px rgba(212,175,55,0.45); }
+        }
+        @keyframes vsCooldownPulse {
+          0%,100%{ opacity:0.7; } 50%{ opacity:1; }
+        }
+        @keyframes vsWaveBar {
+          0%,100%{ transform:scaleY(0.4); } 50%{ transform:scaleY(1.0); }
+        }
+      `}</style>
+
+      {/* ── IDLE ── */}
       {phase === 'idle' && (
-        <div
-          className="sqi-glass p-7 text-center"
-          style={{
-            background: 'rgba(255,255,255,.02)',
-            backdropFilter: 'blur(40px)',
-            border: '1px solid rgba(255,255,255,.06)',
-            borderRadius: 40,
-          }}
-        >
-          <p
-            style={{
-              fontSize: 9,
-              fontWeight: 800,
-              letterSpacing: '0.4em',
-              color: 'rgba(212,175,55,.55)',
-              marginBottom: 8,
-              textTransform: 'uppercase',
-            }}
-          >
-            {t('quantumApothecary.voiceBiofield.badge')}
-          </p>
-          <h2
-            style={{
-              fontSize: 22,
-              fontWeight: 900,
-              letterSpacing: '-.04em',
-              color: 'rgba(255,255,255,.95)',
-              marginBottom: 4,
-              fontFamily: "'Plus Jakarta Sans',sans-serif",
-            }}
-          >
-            {t('quantumApothecary.voiceBiofield.title')}
-          </h2>
-          <p
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: '.18em',
-              color: 'rgba(34,211,238,.65)',
-              textTransform: 'uppercase',
-              marginBottom: 24,
-            }}
-          >
-            {t('quantumApothecary.voiceBiofield.subtitle')}
-          </p>
+        <div style={{ padding: '24px 20px 20px', textAlign: 'center' }}>
+          {/* Dosha badge */}
           {jyotishContext?.primaryDosha && (
-            <p style={{ fontSize: 10, color: 'rgba(255,255,255,.35)', marginBottom: 16 }}>
-              {t('quantumApothecary.voiceBiofield.chartDosha', { dosha: jyotishContext.primaryDosha })}
+            <div style={{ display:'inline-flex', alignItems:'center', gap:6, marginBottom:20, padding:'5px 14px', borderRadius:100, background:'rgba(212,175,55,0.07)', border:'1px solid rgba(212,175,55,0.18)' }}>
+              <span style={{ fontSize:8, fontWeight:800, letterSpacing:'0.22em', textTransform:'uppercase', color:'rgba(212,175,55,0.7)' }}>
+                {t('quantumApothecary.voiceBiofield.chartDosha', { dosha: jyotishContext.primaryDosha })}
+              </span>
+            </div>
+          )}
+
+          {/* Mic orb */}
+          <div style={{ margin:'0 auto 20px', width:72, height:72, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', background:'radial-gradient(circle,rgba(212,175,55,0.16) 0%,rgba(212,175,55,0.04) 100%)', border:'1.5px solid rgba(212,175,55,0.35)', animation: cooldownActive ? 'none' : 'vsMicPulse 2.8s ease-in-out infinite' }}>
+            <svg width={30} height={30} viewBox="0 0 24 24" fill="none" stroke={cooldownActive ? 'rgba(212,175,55,0.35)' : '#D4AF37'} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+              <rect x="9" y="2" width="6" height="11" rx="3"/>
+              <path d="M5 10a7 7 0 0 0 14 0"/>
+              <line x1="12" y1="19" x2="12" y2="22"/>
+              <line x1="8" y1="22" x2="16" y2="22"/>
+            </svg>
+          </div>
+
+          {/* Cooldown timer */}
+          {cooldownActive ? (
+            <div style={{ marginBottom:20 }}>
+              <p style={{ fontSize:11, fontWeight:700, letterSpacing:'0.18em', textTransform:'uppercase', color:'rgba(34,211,238,0.55)', marginBottom:6, animation:'vsCooldownPulse 2s ease-in-out infinite' }}>
+                FIELD COOLING
+              </p>
+              <p style={{ fontSize:22, fontWeight:900, color:'rgba(34,211,238,0.9)', letterSpacing:'-0.03em', fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
+                {cooldownHours}h {cooldownMins}m
+              </p>
+              <p style={{ fontSize:10, color:'rgba(255,255,255,0.28)', marginTop:4 }}>until next biofield scan</p>
+            </div>
+          ) : (
+            <p style={{ fontSize:10, color:'rgba(255,255,255,0.32)', marginBottom:20, letterSpacing:'0.08em', lineHeight:1.6 }}>
+              {t('quantumApothecary.voiceBiofield.subtitle')}
             </p>
           )}
-          {cooldownActive && (
-            <p
-              style={{
-                fontSize: 13,
-                fontWeight: 700,
-                color: 'rgba(34,211,238,.85)',
-                marginBottom: 18,
-                lineHeight: 1.55,
-              }}
-            >
-              Next scan available in {cooldownHours}h {cooldownMins}m
-            </p>
-          )}
+
+          {/* CTA button */}
           <button
             type="button"
             onClick={startScan}
             disabled={cooldownActive}
             style={{
               width: '100%',
-              padding: '16px',
-              borderRadius: 20,
-              fontSize: 13,
+              padding: '15px',
+              borderRadius: 18,
+              fontSize: 11,
               fontWeight: 900,
-              letterSpacing: '.15em',
+              letterSpacing: '.18em',
               textTransform: 'uppercase',
-              background: 'linear-gradient(135deg,rgba(34,211,238,.12),rgba(34,211,238,.04))',
-              border: '1px solid rgba(34,211,238,.35)',
-              color: '#22D3EE',
+              background: cooldownActive
+                ? 'rgba(255,255,255,0.03)'
+                : 'linear-gradient(135deg,rgba(212,175,55,0.18) 0%,rgba(212,175,55,0.08) 100%)',
+              border: cooldownActive
+                ? '1px solid rgba(255,255,255,0.08)'
+                : '1px solid rgba(212,175,55,0.45)',
+              color: cooldownActive ? 'rgba(255,255,255,0.25)' : '#D4AF37',
               cursor: cooldownActive ? 'not-allowed' : 'pointer',
-              opacity: cooldownActive ? 0.38 : 1,
               transition: 'all .3s',
+              boxShadow: cooldownActive ? 'none' : '0 0 20px rgba(212,175,55,0.12)',
             }}
           >
-            {t('quantumApothecary.voiceBiofield.cta')}
+            {cooldownActive ? '⟁ BIOFIELD COOLING' : `⟁ ${t('quantumApothecary.voiceBiofield.cta')}`}
           </button>
         </div>
       )}
 
+      {/* ── SCANNING ── */}
       {phase === 'scanning' && (
-        <div
-          className="sqi-glass p-8 text-center"
-          style={{
-            background: 'rgba(255,255,255,.02)',
-            backdropFilter: 'blur(40px)',
-            border: '1px solid rgba(255,255,255,.06)',
-            borderRadius: 40,
-          }}
-        >
-          <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.35em', color: 'rgba(34,211,238,.75)', marginBottom: 12 }}>
+        <div style={{ padding: '28px 20px', textAlign: 'center' }}>
+          <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.38em', color: 'rgba(34,211,238,.8)', marginBottom: 20, textTransform:'uppercase' }}>
             {t('quantumApothecary.voiceBiofield.scanning')}
           </p>
           {showProgressRing ? (
-            <div style={{ margin: '0 auto 16px', width: 140, height: 140, position: 'relative' }}>
-              <svg width={140} height={140} style={{ transform: 'rotate(-90deg)' }}>
-                <circle cx={70} cy={70} r={54} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={8} />
+            <div style={{ margin: '0 auto 20px', width: 148, height: 148, position: 'relative' }}>
+              <svg width={148} height={148} style={{ transform: 'rotate(-90deg)' }}>
+                <circle cx={74} cy={74} r={58} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={6} />
                 <circle
-                  cx={70}
-                  cy={70}
-                  r={54}
-                  fill="none"
-                  stroke="#22D3EE"
-                  strokeWidth={8}
-                  strokeLinecap="round"
-                  strokeDasharray={`${2 * Math.PI * 54}`}
-                  strokeDashoffset={
-                    2 *
-                    Math.PI *
-                    54 *
-                    (1 -
-                      Math.min(
-                        1,
-                        (scanDurRef.current - secondsLeft) / scanDurRef.current,
-                      ))
-                  }
-                  style={{
-                    filter: 'drop-shadow(0 0 10px rgba(34,211,238,0.55))',
-                    transition: 'stroke-dashoffset 0.35s linear',
-                  }}
+                  cx={74} cy={74} r={58} fill="none" stroke="#22D3EE" strokeWidth={6} strokeLinecap="round"
+                  strokeDasharray={`${2 * Math.PI * 58}`}
+                  strokeDashoffset={2 * Math.PI * 58 * (1 - Math.min(1,(scanDurRef.current - secondsLeft) / scanDurRef.current))}
+                  style={{ filter: 'drop-shadow(0 0 12px rgba(34,211,238,0.7))', transition: 'stroke-dashoffset 0.35s linear' }}
                 />
               </svg>
-              <div
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  pointerEvents: 'none',
-                }}
-              >
-                <span style={{ fontSize: 34, fontWeight: 900, color: 'rgba(255,255,255,.92)', fontFamily: 'monospace' }}>
-                  {secondsLeft}s
+              <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', pointerEvents:'none', gap:2 }}>
+                <span style={{ fontSize: 36, fontWeight: 900, color: 'rgba(255,255,255,.92)', fontFamily: 'monospace', lineHeight:1 }}>
+                  {secondsLeft}
                 </span>
+                <span style={{ fontSize:9, fontWeight:700, letterSpacing:'0.2em', color:'rgba(255,255,255,0.4)', textTransform:'uppercase' }}>sec</span>
               </div>
             </div>
           ) : (
-            <p style={{ fontSize: 44, fontWeight: 900, color: 'rgba(255,255,255,.9)', fontFamily: 'monospace' }}>
+            <p style={{ fontSize: 52, fontWeight: 900, color: 'rgba(255,255,255,.9)', fontFamily: 'monospace', marginBottom:20 }}>
               {secondsLeft}s
             </p>
           )}
-          <p style={{ fontSize: 11, color: 'rgba(255,255,255,.45)', marginTop: 12, lineHeight: 1.6 }}>
+          {/* Live wave bars */}
+          <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'center', gap:3, height:24, marginBottom:14 }}>
+            {[1,1.6,0.7,2,0.9,1.4,0.6,1.8,1.1,1.5].map((h,i) => (
+              <div key={i} style={{ width:3, height:`${h * 10}px`, borderRadius:2, background:'rgba(34,211,238,0.6)', animation:`vsWaveBar ${0.6 + i*0.12}s ease-in-out infinite`, animationDelay:`${i*0.08}s` }} />
+            ))}
+          </div>
+          <p style={{ fontSize: 11, color: 'rgba(255,255,255,.38)', lineHeight: 1.6 }}>
             {t('quantumApothecary.voiceBiofield.hint')}
           </p>
         </div>
       )}
 
+      {/* ── DONE ── */}
       {phase === 'done' && lastResult && (
-        <div
-          className="sqi-glass p-6 text-center"
-          style={{
-            background: 'rgba(255,255,255,.02)',
-            border: '1px solid rgba(34,211,238,.25)',
-            borderRadius: 40,
-          }}
-        >
-          <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.25em', color: 'rgba(34,211,238,.75)', marginBottom: 10 }}>
+        <div style={{ padding: '22px 20px', textAlign: 'center' }}>
+          <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.3em', color: 'rgba(34,211,238,.8)', marginBottom:12, textTransform:'uppercase' }}>
             {t('quantumApothecary.voiceBiofield.doneTitle')}
           </p>
-          <p style={{ fontSize: 20, fontWeight: 900, color: '#22D3EE', marginBottom: 6 }}>
-            {t('quantumApothecary.voiceBiofield.coherenceLine', { n: lastResult.overallCoherence })}
-          </p>
-          <p style={{ fontSize: 11, color: 'rgba(255,255,255,.65)', lineHeight: 1.5, marginBottom: 8 }}>
+          {/* Coherence ring */}
+          <div style={{ position:'relative', width:100, height:100, margin:'0 auto 16px' }}>
+            <svg width={100} height={100} style={{ transform:'rotate(-90deg)' }}>
+              <circle cx={50} cy={50} r={40} fill="none" stroke="rgba(34,211,238,0.08)" strokeWidth={5}/>
+              <circle cx={50} cy={50} r={40} fill="none" stroke="#22D3EE" strokeWidth={5} strokeLinecap="round"
+                strokeDasharray={`${2*Math.PI*40}`}
+                strokeDashoffset={2*Math.PI*40*(1-lastResult.overallCoherence/100)}
+                style={{ filter:'drop-shadow(0 0 8px rgba(34,211,238,0.6))' }}
+              />
+            </svg>
+            <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
+              <span style={{ fontSize:22, fontWeight:900, color:'#22D3EE', lineHeight:1 }}>{lastResult.overallCoherence}</span>
+              <span style={{ fontSize:8, fontWeight:700, color:'rgba(34,211,238,0.6)', letterSpacing:'0.15em', textTransform:'uppercase' }}>%</span>
+            </div>
+          </div>
+          <p style={{ fontSize: 12, fontWeight:700, color: 'rgba(255,255,255,.8)', lineHeight: 1.5, marginBottom: 6 }}>
             {lastResult.nadiReading}
           </p>
-          <p style={{ fontSize: 10, color: 'rgba(255,255,255,.45)', lineHeight: 1.5, marginBottom: 16 }}>
+          <p style={{ fontSize: 10, color: 'rgba(255,255,255,.42)', lineHeight: 1.5, marginBottom: 18 }}>
             {lastResult.dominantDosha}
           </p>
-          <p style={{ fontSize: 10, color: 'rgba(255,255,255,.35)', marginBottom: 14 }}>
-            {t('quantumApothecary.voiceBiofield.doneHint')}
-          </p>
-          <button
-            type="button"
-            onClick={newScan}
-            style={{
-              width: '100%',
-              padding: '12px',
-              borderRadius: 20,
-              fontSize: 10,
-              fontWeight: 800,
-              letterSpacing: '.2em',
-              textTransform: 'uppercase',
-              cursor: 'pointer',
-              background: 'rgba(34,211,238,.08)',
-              border: '1px solid rgba(34,211,238,.35)',
-              color: '#22D3EE',
-            }}
-          >
+          <button type="button" onClick={newScan}
+            style={{ width:'100%', padding:'13px', borderRadius:16, fontSize:10, fontWeight:800, letterSpacing:'.2em', textTransform:'uppercase', cursor:'pointer', background:'rgba(34,211,238,.07)', border:'1px solid rgba(34,211,238,.28)', color:'#22D3EE' }}>
             {t('quantumApothecary.voiceBiofield.scanAgain')}
           </button>
         </div>
       )}
 
+      {/* ── ERROR ── */}
       {phase === 'error' && (
-        <div
-          className="sqi-glass p-6 text-center"
-          style={{
-            border: '1px solid rgba(239,68,68,.25)',
-            borderRadius: 40,
-            background: 'rgba(255,255,255,.02)',
-          }}
-        >
-          <p style={{ fontSize: 12, color: 'rgba(255,255,255,.6)', marginBottom: 16 }}>{errorMsg}</p>
-          <button
-            type="button"
-            onClick={reset}
-            style={{
-              padding: '10px 20px',
-              borderRadius: 24,
-              fontSize: 10,
-              fontWeight: 800,
-              letterSpacing: '.2em',
-              textTransform: 'uppercase',
-              cursor: 'pointer',
-              background: 'rgba(212,175,55,.08)',
-              border: '1px solid rgba(212,175,55,.25)',
-              color: '#D4AF37',
-            }}
-          >
+        <div style={{ padding:'22px 20px', textAlign:'center' }}>
+          <p style={{ fontSize: 12, color: 'rgba(255,100,100,.7)', marginBottom: 18, lineHeight:1.5 }}>{errorMsg}</p>
+          <button type="button" onClick={reset}
+            style={{ padding:'12px 24px', borderRadius:20, fontSize:10, fontWeight:800, letterSpacing:'.2em', textTransform:'uppercase', cursor:'pointer', background:'rgba(212,175,55,.08)', border:'1px solid rgba(212,175,55,.25)', color:'#D4AF37' }}>
             {t('quantumApothecary.voiceBiofield.back')}
           </button>
         </div>
