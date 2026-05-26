@@ -1059,6 +1059,102 @@ function ScalarTabSwitcher({
 }
 
 
+/** Scalar Wave wrapper for Voice Bio-Signature Scanner — visual only, no logic change */
+function ScalarVoiceWrapper({ children }: { children: React.ReactNode }) {
+  const wrapRef = React.useRef<HTMLDivElement>(null);
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const rafRef = React.useRef<number>(0);
+
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    const wrap = wrapRef.current;
+    if (!canvas || !wrap) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    let t = 0;
+    const resize = () => { canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight; };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(wrap);
+    const waves = [
+      { amp:.22, freq:4,   speed:.8,  alpha:.06, lw:.9 },
+      { amp:.14, freq:7,   speed:1.3, alpha:.04, lw:.7 },
+      { amp:.10, freq:11,  speed:2.0, alpha:.03, lw:.6 },
+      { amp:.28, freq:2.5, speed:.5,  alpha:.04, lw:1.1 },
+    ];
+    const draw = () => {
+      const W = canvas.width, H = canvas.height;
+      if (!W || !H) { rafRef.current = requestAnimationFrame(draw); return; }
+      ctx.clearRect(0,0,W,H);
+      const p = .5 + .5 * Math.sin(t);
+      const gc = ctx.createRadialGradient(W*.5,H*.5,0,W*.5,H*.5,W*.6);
+      gc.addColorStop(0, `rgba(212,175,55,${.05+.03*p})`); gc.addColorStop(1,'transparent');
+      ctx.fillStyle = gc; ctx.fillRect(0,0,W,H);
+      const gt = ctx.createLinearGradient(0,0,0,H*.4);
+      gt.addColorStop(0, `rgba(212,175,55,${.09+.04*p})`); gt.addColorStop(1,'transparent');
+      ctx.fillStyle = gt; ctx.fillRect(0,0,W,H);
+      waves.forEach((w,wi) => {
+        const ph = (wi/waves.length)*Math.PI*2;
+        ctx.beginPath();
+        for (let x=0;x<=W;x+=1.5) {
+          const nx=x/W, env=Math.sin(nx*Math.PI)*.75+.25;
+          const y=H*.58+Math.sin(nx*w.freq*Math.PI*2+t*w.speed+ph)*H*w.amp*env;
+          x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+        }
+        ctx.strokeStyle=`rgba(212,175,55,${w.alpha})`; ctx.lineWidth=w.lw; ctx.stroke();
+      });
+      t+=.011; rafRef.current=requestAnimationFrame(draw);
+    };
+    rafRef.current=requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(rafRef.current); ro.disconnect(); };
+  }, []);
+
+  return (
+    <div
+      ref={wrapRef}
+      style={{
+        position: 'relative',
+        borderRadius: 28,
+        overflow: 'hidden',
+        animation: 'vsAura 4s ease-in-out infinite',
+      }}
+    >
+      <style>{`
+        @keyframes vsAura {
+          0%,100%{box-shadow:0 0 0 1px rgba(212,175,55,0.18),0 0 20px rgba(212,175,55,0.10),0 0 50px rgba(212,175,55,0.05);}
+          50%    {box-shadow:0 0 0 1px rgba(212,175,55,0.32),0 0 32px rgba(212,175,55,0.18),0 0 70px rgba(212,175,55,0.10);}
+        }
+        @keyframes vsMicGlow {
+          0%,100%{box-shadow:0 0 8px rgba(212,175,55,0.22),0 0 16px rgba(212,175,55,0.10);}
+          50%    {box-shadow:0 0 14px rgba(212,175,55,0.45),0 0 28px rgba(212,175,55,0.22);}
+        }
+      `}</style>
+      <canvas ref={canvasRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:0 }} />
+      <div style={{ position:'relative', zIndex:1, background:'rgba(8,6,2,0.82)', backdropFilter:'blur(30px)', WebkitBackdropFilter:'blur(30px)', borderRadius:28 }}>
+        {/* Header */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'16px 18px 14px', borderBottom:'1px solid rgba(212,175,55,0.10)', background:'linear-gradient(90deg,rgba(212,175,55,0.06),transparent)' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <div style={{ width:26, height:26, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(212,175,55,0.10)', border:'1px solid rgba(212,175,55,0.25)', animation:'vsMicGlow 3s ease-in-out infinite', flexShrink:0 }}>
+              <Mic size={12} style={{ color:'#D4AF37' }} />
+            </div>
+            <h2 className="sqi-master-name-shimmer" style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:13, fontWeight:900, letterSpacing:'-0.02em' }}>
+              Voice Bio-Signature Scan
+            </h2>
+          </div>
+          <span style={{ fontSize:9, fontWeight:700, letterSpacing:'0.20em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.28)' }}>
+            Mic only
+          </span>
+        </div>
+        {/* Scanner content — untouched logic */}
+        <div style={{ padding:'4px 0 4px' }}>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 function ScalarHeaderBanner({ onBack, onInfo }: { onBack: () => void; onInfo: () => void }) {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const wrapRef = React.useRef<HTMLDivElement>(null);
@@ -3043,14 +3139,7 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
           {apothecaryMainTab === 'library' ? (
             <div className="grid w-full gap-5 lg:grid-cols-2" style={{ maxWidth: '100%' }}>
               <div className="flex min-w-0 flex-col gap-5">
-                <div className="glass-card rounded-[28px] p-4 sm:p-5 qa-card-hover">
-                  <div className="mb-4 flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <Mic size={14} className="text-[#22D3EE]" style={{ filter: 'drop-shadow(0 0 6px rgba(34,211,238,0.6))' }} />
-                      <h2 className="text-sm font-black tracking-[-0.03em] text-[#D4AF37]">Voice Bio-Signature Scan</h2>
-                    </div>
-                    <span className="text-[13px] font-bold text-white/45">Mic only</span>
-                  </div>
+                <ScalarVoiceWrapper>
                   <Suspense fallback={ScannerSuspenseFallback}>
                     <VoiceBiofieldScanner
                       userName={seekerName || 'Seeker'}
