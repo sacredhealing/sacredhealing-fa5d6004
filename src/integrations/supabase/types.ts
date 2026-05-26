@@ -5382,16 +5382,21 @@ export type Database = {
           exit_price: number | null
           id: string
           is_paper: boolean
+          market_end_date: string | null
           market_id: string
           market_question: string | null
           outcome: string
           pnl: number | null
+          pnl_pct: number | null
+          pnl_usdc: number | null
+          resolved_at: string | null
           shares: number
           status: string
           strategy: string | null
           token_id: string
           tx_hash: string | null
           user_id: string
+          winning_outcome: string | null
         }
         Insert: {
           amount_usdc: number
@@ -5402,16 +5407,21 @@ export type Database = {
           exit_price?: number | null
           id?: string
           is_paper?: boolean
+          market_end_date?: string | null
           market_id: string
           market_question?: string | null
           outcome: string
           pnl?: number | null
+          pnl_pct?: number | null
+          pnl_usdc?: number | null
+          resolved_at?: string | null
           shares?: number
           status?: string
           strategy?: string | null
           token_id: string
           tx_hash?: string | null
           user_id: string
+          winning_outcome?: string | null
         }
         Update: {
           amount_usdc?: number
@@ -5422,16 +5432,21 @@ export type Database = {
           exit_price?: number | null
           id?: string
           is_paper?: boolean
+          market_end_date?: string | null
           market_id?: string
           market_question?: string | null
           outcome?: string
           pnl?: number | null
+          pnl_pct?: number | null
+          pnl_usdc?: number | null
+          resolved_at?: string | null
           shares?: number
           status?: string
           strategy?: string | null
           token_id?: string
           tx_hash?: string | null
           user_id?: string
+          winning_outcome?: string | null
         }
         Relationships: []
       }
