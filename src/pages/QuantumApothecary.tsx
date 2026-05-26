@@ -1239,6 +1239,72 @@ function ScalarHowItWorksCard() {
 }
 
 
+/** Scalar Wave wrapper for Top 33 Full Library Match — visual only */
+function ScalarTop33Wrapper({ children }: { children: React.ReactNode }) {
+  const wrapRef = React.useRef<HTMLDivElement>(null);
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const rafRef = React.useRef<number>(0);
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    const wrap = wrapRef.current;
+    if (!canvas || !wrap) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    let t = 0;
+    const resize = () => { canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight; };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(wrap);
+    const waves = [
+      { amp:.18, freq:3.5, speed:.7,  alpha:.055, lw:.85 },
+      { amp:.12, freq:6.5, speed:1.3, alpha:.038, lw:.65 },
+      { amp:.08, freq:10,  speed:1.9, alpha:.028, lw:.55 },
+      { amp:.22, freq:2.2, speed:.48, alpha:.042, lw:1.0 },
+      { amp:.07, freq:15,  speed:2.6, alpha:.022, lw:.50 },
+    ];
+    const draw = () => {
+      const W = canvas.width, H = canvas.height;
+      if (!W || !H) { rafRef.current = requestAnimationFrame(draw); return; }
+      ctx.clearRect(0,0,W,H);
+      const p = .5 + .5 * Math.sin(t);
+      const gc = ctx.createRadialGradient(W*.5,H*.4,0,W*.5,H*.4,W*.65);
+      gc.addColorStop(0,`rgba(212,175,55,${.04+.025*p})`); gc.addColorStop(1,'transparent');
+      ctx.fillStyle=gc; ctx.fillRect(0,0,W,H);
+      const gt = ctx.createLinearGradient(0,0,0,H*.25);
+      gt.addColorStop(0,`rgba(212,175,55,${.08+.04*p})`); gt.addColorStop(1,'transparent');
+      ctx.fillStyle=gt; ctx.fillRect(0,0,W,H);
+      waves.forEach((w,wi) => {
+        const ph=(wi/waves.length)*Math.PI*2;
+        ctx.beginPath();
+        for(let x=0;x<=W;x+=1.5){
+          const nx=x/W,env=Math.sin(nx*Math.PI)*.7+.3;
+          const y=H*.7+Math.sin(nx*w.freq*Math.PI*2+t*w.speed+ph)*H*w.amp*env;
+          x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+        }
+        ctx.strokeStyle=`rgba(212,175,55,${w.alpha})`; ctx.lineWidth=w.lw; ctx.stroke();
+      });
+      t+=.010; rafRef.current=requestAnimationFrame(draw);
+    };
+    rafRef.current=requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(rafRef.current); ro.disconnect(); };
+  },[]);
+  return (
+    <div ref={wrapRef} style={{ position:'relative', borderRadius:26, overflow:'hidden', animation:'t33Aura 4s ease-in-out infinite' }}>
+      <style>{`
+        @keyframes t33Aura {
+          0%,100%{box-shadow:0 0 0 1px rgba(212,175,55,0.16),0 0 18px rgba(212,175,55,0.09),0 0 44px rgba(212,175,55,0.05);}
+          50%    {box-shadow:0 0 0 1px rgba(212,175,55,0.28),0 0 28px rgba(212,175,55,0.16),0 0 60px rgba(212,175,55,0.09);}
+        }
+      `}</style>
+      <canvas ref={canvasRef} style={{ position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none',zIndex:0 }} />
+      <div style={{ position:'relative',zIndex:1,background:'rgba(8,6,2,0.80)',backdropFilter:'blur(28px)',WebkitBackdropFilter:'blur(28px)',borderRadius:26 }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+
 function ScalarVoiceWrapper({ children }: { children: React.ReactNode }) {
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
