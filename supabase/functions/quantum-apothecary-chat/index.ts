@@ -3324,7 +3324,7 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [{ role: "system", content: systemText.trim() }, ...aiMessages],
-        temperature: 2.0,
+        temperature: 0.82,
         max_tokens: 4096,
         stream: true,
       }),
@@ -3340,7 +3340,6 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
     let flushed = false;
     let prefixBuffer = "";
     let prefixStripped = false;
-    // Buffer up to 300 chars, then strip everything before first ◈ or ⟁
     const transformStream = new TransformStream({
       transform(chunk, controller) {
         const text = new TextDecoder().decode(chunk);
@@ -3354,23 +3353,27 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
             if (content) {
               if (!prefixStripped) {
                 prefixBuffer += content;
-                // Find first sacred header marker ◈ or ⟁ in buffer
+                // Step 1: find first ◈ or ⟁ — the guaranteed response start
+                const idxCircle = prefixBuffer.indexOf("◈");
+                const idxArrow  = prefixBuffer.indexOf("⟁");
                 const firstMarker = Math.min(
-                  prefixBuffer.indexOf("◈") === -1 ? Infinity : prefixBuffer.indexOf("◈"),
-                  prefixBuffer.indexOf("⟁") === -1 ? Infinity : prefixBuffer.indexOf("⟁"),
+                  idxCircle === -1 ? Infinity : idxCircle,
+                  idxArrow  === -1 ? Infinity : idxArrow,
                 );
                 if (firstMarker < Infinity) {
-                  // Found marker — strip everything before it
                   prefixStripped = true;
                   content = prefixBuffer.slice(firstMarker);
                   prefixBuffer = "";
-                } else if (prefixBuffer.length > 300) {
-                  // No marker found after 300 chars — emit as-is (safety valve)
+                } else if (prefixBuffer.length > 400) {
+                  // No sacred marker after 400 chars — strip any "Accessing..." lines then emit
                   prefixStripped = true;
-                  content = prefixBuffer;
+                  content = prefixBuffer
+                    .replace(/^[^\n]*Accessing[^\n]*\n?/gi, "")
+                    .replace(/^[^\n]*Syncing with[^\n]*\n?/gi, "")
+                    .trimStart();
                   prefixBuffer = "";
                 } else {
-                  continue; // Still buffering
+                  continue;
                 }
               }
               if (content) {
