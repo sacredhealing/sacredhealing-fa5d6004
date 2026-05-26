@@ -2,7 +2,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, Pencil, Trash2, RefreshCw, AlertTriangle, Key, Loader2 } from "lucide-react";
+import { Eye, Pencil, Trash2, RefreshCw, AlertTriangle, Key } from "lucide-react";
+
+const ADMIN_UUID = "bd0b21c9-577a-450b-bb1e-21c9d0423f17";
 
 const TIER_LABELS: Record<string, string> = {
   free: "Free Seeker",
@@ -50,7 +52,7 @@ export default function UserManagementPanel() {
   const [newTier, setNewTier] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<string|null>(null);
   const [actionLoading, setActionLoading] = useState(false);
-  const [resetLoading, setResetLoading] = useState(false);
+  const [resetingId, setResetingId] = useState<string|null>(null);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -61,22 +63,16 @@ export default function UserManagementPanel() {
         .order("created_at", { ascending: false });
       if (error) throw error;
 
-      const { data: tiers } = await supabase
-        .from("membership_tiers")
-        .select("id,slug");
+      const { data: tiers } = await supabase.from("membership_tiers").select("id,slug");
       const tierSlugMap: Record<string,string> = {};
       (tiers||[]).forEach((t:any) => { tierSlugMap[t.id] = t.slug; });
 
       const { data: memberships } = await supabase
-        .from("user_memberships")
-        .select("user_id,tier_id,status,stripe_subscription_id,expires_at")
-        .eq("status","active");
+        .from("user_memberships").select("user_id,tier_id,status,stripe_subscription_id,expires_at").eq("status","active");
 
       const { data: grants } = await supabase
-        .from("admin_granted_access")
-        .select("user_id,tier,access_id,is_active,granted_at")
-        .eq("is_active",true)
-        .eq("access_type","membership");
+        .from("admin_granted_access").select("user_id,tier,access_id,is_active,granted_at")
+        .eq("is_active",true).eq("access_type","membership");
 
       const grantMap: Record<string,string> = {};
       (grants||[]).forEach((g:any) => {
@@ -99,12 +95,7 @@ export default function UserManagementPanel() {
         if (grant && stripe) tier = rankOf(grant) >= rankOf(stripe) ? grant : stripe;
         else if (grant) tier = grant;
         else if (stripe) tier = stripe;
-        return {
-          ...p,
-          tier: canonicalize(tier),
-          stripe_sub: memberMap[p.id]?.stripe_subscription_id || null,
-          expires_at: memberMap[p.id]?.expires_at || null,
-        };
+        return { ...p, tier: canonicalize(tier), stripe_sub: memberMap[p.id]?.stripe_subscription_id||null, expires_at: memberMap[p.id]?.expires_at||null };
       }));
     } catch (e: any) {
       toast({ title:"Load Failed", description:e.message, variant:"destructive" });
@@ -129,7 +120,7 @@ export default function UserManagementPanel() {
     akasha: users.filter(u=>u.tier==="akasha-infinity").length,
   };
 
-  // ── Grant tier via admin_granted_access ─────────────────────────────────
+  // ── Grant tier ──────────────────────────────────────────────────────────
   const handleGrantTier = async () => {
     if (!selectedUser || !newTier) return;
     setActionLoading(true);
@@ -146,6 +137,7 @@ export default function UserManagementPanel() {
           tier: newTier,
           access_id: newTier,
           is_active: true,
+          granted_by: ADMIN_UUID,          // ← fixes NOT NULL constraint
           granted_at: new Date().toISOString(),
         });
         if (error) throw error;
@@ -158,53 +150,44 @@ export default function UserManagementPanel() {
     } finally { setActionLoading(false); }
   };
 
-  // ── Password reset ───────────────────────────────────────────────────────
-  const handleResetPassword = async (userId: string) => {
-    setResetLoading(true);
+  // ── Password reset — one tap, sends email immediately ───────────────────
+  const handleResetPassword = async (userId: string, userName: string) => {
+    setResetingId(userId);
     try {
       const { data, error } = await supabase.functions.invoke("admin-user-management", {
         body: { action: "reset_password", userId },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast({ title:"🔑 Reset Transmitted", description:"Password reset email sent to the seeker's inbox." });
+      toast({ title:"🔑 Reset Email Sent", description:`Password reset link transmitted to ${userName||"seeker"}.` });
     } catch (e: any) {
       toast({ title:"Reset Failed", description:e.message, variant:"destructive" });
-    } finally {
-      setResetLoading(false);
-    }
+    } finally { setResetingId(null); }
   };
 
-  // ── Delete user ──────────────────────────────────────────────────────────
+  // ── Delete ──────────────────────────────────────────────────────────────
   const handleDelete = async (userId: string) => {
-    const prevUsers = users;
-    setUsers(prev => prev.filter(u => u.id !== userId));
-    setConfirmDelete(null);
-    setModalMode(null);
-    setActionLoading(true);
+    const prev = users;
+    setUsers(u => u.filter(x => x.id !== userId));
+    setConfirmDelete(null); setModalMode(null); setActionLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("admin-user-management", {
-        body: { action: "delete_user", userId },
-      });
+      const { data, error } = await supabase.functions.invoke("admin-user-management", { body:{ action:"delete_user", userId } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast({ title: "Soul Dissolved", description: "Auth account and all data removed." });
-    } catch (e: any) {
-      setUsers(prevUsers);
-      toast({ title: "Delete Error", description: e.message, variant: "destructive" });
-    } finally {
-      setActionLoading(false);
-    }
+      toast({ title:"Soul Dissolved", description:"Auth account and all data removed." });
+    } catch (e:any) {
+      setUsers(prev);
+      toast({ title:"Delete Error", description:e.message, variant:"destructive" });
+    } finally { setActionLoading(false); }
   };
 
   const openUser = (user:any, mode:"view"|"edit") => {
-    setSelectedUser(user);
-    setNewTier(user.tier||"free");
-    setModalMode(mode);
+    setSelectedUser(user); setNewTier(user.tier||"free"); setModalMode(mode);
   };
 
   return (
     <div style={{ fontFamily:"'Plus Jakarta Sans',Inter,sans-serif", color:"#fff", paddingBottom:60 }}>
+
       {/* Header */}
       <div style={{ marginBottom:28 }}>
         <div style={{ fontSize:9, fontWeight:800, letterSpacing:"0.5em", textTransform:"uppercase", color:gold, marginBottom:6 }}>
@@ -273,7 +256,7 @@ export default function UserManagementPanel() {
         <div style={{ textAlign:"center", padding:60, color:"rgba(255,255,255,0.3)" }}>Scanning Akasha-Neural Archive...</div>
       ) : (
         <div style={{ ...glass, overflow:"hidden" }}>
-          <div style={{ display:"grid", gridTemplateColumns:"2fr 1.6fr 1fr auto", gap:16, padding:"12px 20px", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+          <div style={{ display:"grid", gridTemplateColumns:"2fr 1.4fr 0.8fr auto", gap:10, padding:"12px 16px", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
             {["SOUL","TIER","JOINED","ACTIONS"].map(h=>(
               <div key={h} style={{ fontSize:8, fontWeight:800, letterSpacing:"0.5em", textTransform:"uppercase", color:"rgba(255,255,255,0.3)" }}>{h}</div>
             ))}
@@ -283,27 +266,43 @@ export default function UserManagementPanel() {
           ) : filtered.map(user => {
             const tierColor = TIER_COLORS[user.tier]||"rgba(255,255,255,0.3)";
             const initials = user.full_name ? user.full_name.split(" ").map((n:string)=>n[0]).join("").slice(0,2).toUpperCase() : "?";
+            const isSendingReset = resetingId === user.id;
             return (
-              <div key={user.id} style={{ display:"grid", gridTemplateColumns:"2fr 1.6fr 1fr auto", gap:16, padding:"13px 20px", borderBottom:"1px solid rgba(255,255,255,0.03)", alignItems:"center" }}>
+              <div key={user.id} style={{ display:"grid", gridTemplateColumns:"2fr 1.4fr 0.8fr auto", gap:10, padding:"12px 16px", borderBottom:"1px solid rgba(255,255,255,0.03)", alignItems:"center" }}>
+
+                {/* Soul */}
                 <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                  <div style={{ width:36, height:36, borderRadius:"50%", background:user.full_name?"rgba(212,175,55,0.15)":"rgba(245,158,11,0.1)", border:`1px solid ${user.full_name?"rgba(212,175,55,0.3)":"rgba(245,158,11,0.3)"}`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:800, color:user.full_name?gold:"#f59e0b", flexShrink:0 }}>
+                  <div style={{ width:34, height:34, borderRadius:"50%", background:user.full_name?"rgba(212,175,55,0.15)":"rgba(245,158,11,0.1)", border:`1px solid ${user.full_name?"rgba(212,175,55,0.3)":"rgba(245,158,11,0.3)"}`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:800, color:user.full_name?gold:"#f59e0b", flexShrink:0 }}>
                     {initials}
                   </div>
                   <div>
-                    <div style={{ fontSize:13, fontWeight:700, color:user.full_name?"#fff":"#f59e0b" }}>{user.full_name||"No name set"}</div>
-                    <div style={{ fontSize:10, color:"rgba(255,255,255,0.3)", fontFamily:"monospace", marginTop:1 }}>{user.id.slice(0,10)}...</div>
+                    <div style={{ fontSize:12, fontWeight:700, color:user.full_name?"#fff":"#f59e0b" }}>{user.full_name||"No name"}</div>
+                    <div style={{ fontSize:9, color:"rgba(255,255,255,0.3)", fontFamily:"monospace" }}>{user.id.slice(0,8)}…</div>
                   </div>
                 </div>
-                <span style={{ fontSize:9, fontWeight:800, letterSpacing:"0.25em", textTransform:"uppercase", color:tierColor, background:tierColor+"20", border:`1px solid ${tierColor}40`, borderRadius:8, padding:"4px 10px", display:"inline-block" }}>
-                  {TIER_LABELS[user.tier]||"Free Seeker"}
+
+                {/* Tier */}
+                <span style={{ fontSize:8, fontWeight:800, letterSpacing:"0.2em", textTransform:"uppercase", color:tierColor, background:tierColor+"20", border:`1px solid ${tierColor}40`, borderRadius:8, padding:"4px 8px", display:"inline-block" }}>
+                  {user.tier==="free"?"FREE":user.tier==="prana-flow"?"PRANA":user.tier==="siddha-quantum"?"SIDDHA":"AKASHA"}
                 </span>
-                <div style={{ fontSize:11, color:"rgba(255,255,255,0.35)" }}>
+
+                {/* Joined */}
+                <div style={{ fontSize:10, color:"rgba(255,255,255,0.35)" }}>
                   {new Date(user.created_at).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"2-digit"})}
                 </div>
-                <div style={{ display:"flex", gap:6 }}>
-                  <IconBtn icon={<Eye size={13}/>} title="View" onClick={()=>openUser(user,"view")} />
-                  <IconBtn icon={<Pencil size={13}/>} title="Edit Tier & Reset Password" onClick={()=>openUser(user,"edit")} color={gold} />
-                  <IconBtn icon={<Trash2 size={13}/>} title="Delete" onClick={()=>setConfirmDelete(user.id)} color="#ef4444" />
+
+                {/* Actions — 4 buttons: view, edit tier, reset pw, delete */}
+                <div style={{ display:"flex", gap:5 }}>
+                  <IconBtn icon={<Eye size={12}/>} title="View profile" onClick={()=>openUser(user,"view")} />
+                  <IconBtn icon={<Pencil size={12}/>} title="Change tier" onClick={()=>openUser(user,"edit")} color={gold} />
+                  <IconBtn
+                    icon={isSendingReset ? <span style={{fontSize:10}}>…</span> : <Key size={12}/>}
+                    title="Send password reset email"
+                    onClick={()=>handleResetPassword(user.id, user.full_name)}
+                    color={cyan}
+                    disabled={isSendingReset}
+                  />
+                  <IconBtn icon={<Trash2 size={12}/>} title="Delete" onClick={()=>setConfirmDelete(user.id)} color="#ef4444" />
                 </div>
               </div>
             );
@@ -311,80 +310,59 @@ export default function UserManagementPanel() {
         </div>
       )}
 
-      {/* View / Edit Modal */}
-      {modalMode && selectedUser && (
+      {/* View Modal */}
+      {modalMode==="view" && selectedUser && (
         <SQIModal onClose={()=>setModalMode(null)}>
-          <div style={{ fontSize:9, fontWeight:800, letterSpacing:"0.5em", textTransform:"uppercase", color:gold, marginBottom:8 }}>
-            {modalMode==="view" ? "SOUL PROFILE" : "TIER TRANSMISSION"}
-          </div>
+          <div style={{ fontSize:9, fontWeight:800, letterSpacing:"0.5em", textTransform:"uppercase", color:gold, marginBottom:8 }}>SOUL PROFILE</div>
           <h3 style={{ fontSize:20, fontWeight:900, color:"#fff", margin:"0 0 20px" }}>{selectedUser.full_name||"No name set"}</h3>
+          <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+            {[
+              ["ID", selectedUser.id],
+              ["Current Tier", TIER_LABELS[selectedUser.tier]||"Free"],
+              ["Joined", new Date(selectedUser.created_at).toLocaleString()],
+              ["Last Login", selectedUser.last_login_date?new Date(selectedUser.last_login_date).toLocaleString():"Unknown"],
+              ["Onboarding", selectedUser.onboarding_completed?"Complete":"Not completed"],
+              ["Stripe Sub", selectedUser.stripe_sub||"None"],
+            ].map(([label,val])=>(
+              <div key={label as string} style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
+                <span style={{ fontSize:9, fontWeight:800, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(255,255,255,0.3)" }}>{label}</span>
+                <span style={{ fontSize:12, color:"rgba(255,255,255,0.7)", maxWidth:"60%", textAlign:"right", wordBreak:"break-all" }}>{val as string}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ display:"flex", gap:10, marginTop:18, flexWrap:"wrap" }}>
+            <SQIBtn label="Edit Tier" onClick={()=>setModalMode("edit")} color={gold} />
+            <SQIBtn
+              label={resetingId===selectedUser.id?"Sending…":"🔑 Send Reset Email"}
+              onClick={()=>handleResetPassword(selectedUser.id, selectedUser.full_name)}
+              loading={resetingId===selectedUser.id}
+              color={cyan}
+            />
+            <SQIBtn label="Delete" onClick={()=>{ setModalMode(null); setConfirmDelete(selectedUser.id); }} color="#ef4444" />
+          </div>
+        </SQIModal>
+      )}
 
-          {modalMode==="view" ? (
-            <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-              {[
-                ["ID", selectedUser.id],
-                ["Name", selectedUser.full_name||"Not set"],
-                ["Current Tier", TIER_LABELS[selectedUser.tier]||selectedUser.tier||"Free"],
-                ["Joined", new Date(selectedUser.created_at).toLocaleString()],
-                ["Last Login", selectedUser.last_login_date?new Date(selectedUser.last_login_date).toLocaleString():"Unknown"],
-                ["Onboarding", selectedUser.onboarding_completed?"Complete":"Not completed"],
-                ["Birth Date", selectedUser.birth_date||"Not set"],
-                ["Stripe Sub", selectedUser.stripe_sub||"None"],
-                ["Expires", selectedUser.expires_at?new Date(selectedUser.expires_at).toLocaleDateString():"—"],
-              ].map(([label,val])=>(
-                <div key={label as string} style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
-                  <span style={{ fontSize:9, fontWeight:800, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(255,255,255,0.3)" }}>{label}</span>
-                  <span style={{ fontSize:12, color:"rgba(255,255,255,0.7)", maxWidth:"65%", textAlign:"right", wordBreak:"break-all" }}>{val as string}</span>
-                </div>
-              ))}
-              <div style={{ display:"flex", gap:10, marginTop:14, flexWrap:"wrap" }}>
-                <SQIBtn label="Edit Tier" onClick={()=>setModalMode("edit")} color={gold} />
-                <SQIBtn
-                  label={resetLoading?"Sending...":"🔑 Reset Password"}
-                  onClick={()=>handleResetPassword(selectedUser.id)}
-                  loading={resetLoading}
-                  color={cyan}
-                />
-                <SQIBtn label="Delete" onClick={()=>{ setModalMode(null); setConfirmDelete(selectedUser.id); }} color="#ef4444" />
-              </div>
-            </div>
-          ) : (
-            <div>
-              <p style={{ color:"rgba(255,255,255,0.4)", fontSize:12, marginBottom:14 }}>
-                Current: <strong style={{ color:TIER_COLORS[selectedUser.tier]||"#fff" }}>{TIER_LABELS[selectedUser.tier]||"Free"}</strong>
-              </p>
-
-              {/* Tier selector */}
-              <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:16 }}>
-                {Object.entries(TIER_LABELS).map(([value,label])=>(
-                  <button key={value} onClick={()=>setNewTier(value)}
-                    style={{ background:newTier===value?"rgba(212,175,55,0.15)":"rgba(255,255,255,0.02)", border:`1px solid ${newTier===value?gold:"rgba(255,255,255,0.08)"}`, borderRadius:12, padding:"12px 16px", color:newTier===value?gold:"rgba(255,255,255,0.6)", fontSize:13, fontWeight:newTier===value?700:400, textAlign:"left", cursor:"pointer" }}>
-                    {label}
-                  </button>
-                ))}
-              </div>
-              <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
-                <SQIBtn label={actionLoading?"Saving...":"✦ Grant Access"} onClick={handleGrantTier} loading={actionLoading} color={gold} />
-                <SQIBtn label="Cancel" onClick={()=>setModalMode(null)} />
-              </div>
-
-              {/* Password reset section */}
-              <div style={{ marginTop:20, paddingTop:20, borderTop:"1px solid rgba(255,255,255,0.05)" }}>
-                <div style={{ fontSize:9, fontWeight:800, letterSpacing:"0.5em", textTransform:"uppercase", color:"rgba(255,255,255,0.3)", marginBottom:10 }}>
-                  PASSWORD RESET TRANSMISSION
-                </div>
-                <SQIBtn
-                  label={resetLoading?"Transmitting...":"🔑 Send Password Reset Email"}
-                  onClick={()=>handleResetPassword(selectedUser.id)}
-                  loading={resetLoading}
-                  color={cyan}
-                />
-                <p style={{ fontSize:11, color:"rgba(255,255,255,0.25)", marginTop:8 }}>
-                  Sends a reset link directly to the seeker's email inbox.
-                </p>
-              </div>
-            </div>
-          )}
+      {/* Edit Tier Modal */}
+      {modalMode==="edit" && selectedUser && (
+        <SQIModal onClose={()=>setModalMode(null)}>
+          <div style={{ fontSize:9, fontWeight:800, letterSpacing:"0.5em", textTransform:"uppercase", color:gold, marginBottom:8 }}>TIER TRANSMISSION</div>
+          <h3 style={{ fontSize:20, fontWeight:900, color:"#fff", margin:"0 0 6px" }}>{selectedUser.full_name||"No name set"}</h3>
+          <p style={{ color:"rgba(255,255,255,0.4)", fontSize:12, marginBottom:14 }}>
+            Current: <strong style={{ color:TIER_COLORS[selectedUser.tier]||"#fff" }}>{TIER_LABELS[selectedUser.tier]||"Free"}</strong>
+          </p>
+          <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:16 }}>
+            {Object.entries(TIER_LABELS).map(([value,label])=>(
+              <button key={value} onClick={()=>setNewTier(value)}
+                style={{ background:newTier===value?"rgba(212,175,55,0.15)":"rgba(255,255,255,0.02)", border:`1px solid ${newTier===value?gold:"rgba(255,255,255,0.08)"}`, borderRadius:12, padding:"12px 16px", color:newTier===value?gold:"rgba(255,255,255,0.6)", fontSize:13, fontWeight:newTier===value?700:400, textAlign:"left", cursor:"pointer" }}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <div style={{ display:"flex", gap:10 }}>
+            <SQIBtn label={actionLoading?"Saving…":"✦ Grant Access"} onClick={handleGrantTier} loading={actionLoading} color={gold} />
+            <SQIBtn label="Cancel" onClick={()=>setModalMode(null)} />
+          </div>
         </SQIModal>
       )}
 
@@ -392,11 +370,11 @@ export default function UserManagementPanel() {
       {confirmDelete && (
         <SQIModal onClose={()=>setConfirmDelete(null)}>
           <div style={{ textAlign:"center" }}>
-            <div style={{ marginBottom:12 }}><AlertTriangle size={36} color="#ef4444" style={{ margin:"0 auto" }} /></div>
+            <AlertTriangle size={36} color="#ef4444" style={{ margin:"0 auto 12px" }} />
             <div style={{ fontSize:9, fontWeight:800, letterSpacing:"0.5em", textTransform:"uppercase", color:"#ef4444", marginBottom:8 }}>PERMANENT DELETE</div>
-            <h3 style={{ fontSize:20, fontWeight:900, color:"#fff", margin:"0 0 12px" }}>Delete this user completely?</h3>
+            <h3 style={{ fontSize:20, fontWeight:900, color:"#fff", margin:"0 0 12px" }}>Delete this soul record?</h3>
             <p style={{ color:"rgba(255,255,255,0.4)", fontSize:13, lineHeight:1.6, marginBottom:20 }}>
-              Removes profile, memberships, balances, and access grants immediately. Cannot be undone.
+              Removes auth account, profile, memberships, and all data. Cannot be undone.
             </p>
             <div style={{ display:"flex", gap:12, justifyContent:"center" }}>
               <SQIBtn label="Cancel" onClick={()=>setConfirmDelete(null)} />
@@ -409,10 +387,10 @@ export default function UserManagementPanel() {
   );
 }
 
-function IconBtn({icon,title,onClick,color}:any) {
+function IconBtn({icon,title,onClick,color,disabled}:any) {
   return (
-    <button title={title} onClick={onClick}
-      style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:8, width:30, height:30, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:color||"rgba(255,255,255,0.5)", flexShrink:0 }}>
+    <button title={title} onClick={onClick} disabled={disabled}
+      style={{ background:"rgba(255,255,255,0.03)", border:`1px solid ${color?color+"30":"rgba(255,255,255,0.07)"}`, borderRadius:8, width:30, height:30, display:"flex", alignItems:"center", justifyContent:"center", cursor:disabled?"not-allowed":"pointer", color:color||"rgba(255,255,255,0.5)", flexShrink:0, opacity:disabled?0.5:1 }}>
       {icon}
     </button>
   );
