@@ -3178,7 +3178,7 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                   )}
 
                   {resonanceMatches.length > 0 && (
-                    <div className="mt-4 rounded-[28px] border border-white/[0.06] bg-white/[0.02] p-4">
+                    <ScalarTop33Wrapper>
                       {/* ââ HEADER ââ */}
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                         <div>
@@ -3224,22 +3224,22 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                         })()}
                       </div>
                       {/* ââ ROW LIST — always full scan list (e.g. 33) ââ */}
-                      <div className="max-h-[min(70vh,520px)] space-y-1.5 overflow-y-auto pr-0.5">
+                      <div style={{ maxHeight:"min(70vh,520px)", overflowY:"auto", padding:"10px 12px 12px", display:"flex", flexDirection:"column", gap:5, scrollbarWidth:"thin" }}>
                         {resonanceMatches.map((row, idx) => {
                           const isActive = activeTransmissions.some((t) =>
                             fieldTransmissionMatchesRow(t, row),
                           );
                           return (
                             <div
-                              key={row.id ?? row.name ?? idx}
-                              className="flex items-center gap-3 rounded-[16px] px-3 py-2.5 transition-all duration-300"
+                            <div
                               style={{
-                                background: isActive
-                                  ? 'rgba(255,255,255,0.03)'
-                                  : 'rgba(255,255,255,0.02)',
-                                border: isActive
-                                  ? '1px solid rgba(255,255,255,0.07)'
-                                  : '1px solid rgba(255,255,255,0.04)',
+                                display: "flex", alignItems: "center", gap: 10,
+                                padding: "9px 10px", borderRadius: 13,
+                                background: isActive ? "rgba(255,255,255,0.02)" : "rgba(212,175,55,0.03)",
+                                border: isActive ? "1px solid rgba(255,255,255,0.05)" : "1px solid rgba(212,175,55,0.10)",
+                                opacity: isActive ? 0.58 : 1, transition: "all 0.2s",
+                              }}
+                            >
                                 opacity: isActive ? 0.72 : 1,
                               }}
                             >
@@ -3248,10 +3248,10 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                                 <span
                                   className="text-[12px] font-black"
                                   style={{
-                                    color: isActive
-                                      ? 'rgba(255,255,255,0.38)'
-                                      : 'rgba(255,255,255,0.5)',
+                                    color: isActive ? "rgba(255,255,255,0.28)" : "rgba(212,175,55,0.85)",
                                   }}
+                                >
+
                                 >
                                   {row.pct}%
                                 </span>
@@ -3260,10 +3260,10 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                                     className="h-full rounded-full transition-all duration-700"
                                     style={{
                                       width: `${row.pct}%`,
-                                      background: isActive
-                                        ? 'rgba(255,255,255,0.22)'
-                                        : 'rgba(255,255,255,0.25)',
+                                      background: isActive ? "rgba(255,255,255,0.18)" : "linear-gradient(90deg,#D4AF37,#F5E17A)",
                                     }}
+                                  />
+
                                   />
                                 </div>
                               </div>
@@ -3272,10 +3272,10 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                                 <span
                                   className="truncate text-[12px] font-bold leading-tight"
                                   style={{
-                                    color: isActive
-                                      ? 'rgba(255,255,255,0.42)'
-                                      : 'rgba(255,255,255,0.85)',
+                                    color: isActive ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.90)",
                                   }}
+                                >
+
                                 >
                                   {row.name}
                                 </span>
@@ -3292,16 +3292,16 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                               </div>
                               {isActive ? (
                                 <span
-                                  className="flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-black tabular-nums"
-                                  style={{
-                                    color: 'rgba(255,255,255,0.45)',
-                                    border: '1px solid rgba(255,255,255,0.08)',
-                                  }}
+                                  style={{ display:"flex", alignItems:"center", gap:3, padding:"3px 8px", borderRadius:100, border:"1px solid rgba(212,175,55,0.22)", background:"rgba(212,175,55,0.07)", flexShrink:0 }}
                                   aria-label="Already active in field"
                                 >
-                                  <span className="text-[13px] leading-none text-[#D4AF37]/70">✓</span>
-                                  <span className="text-[8px] uppercase tracking-[0.12em]">In field</span>
+                                  <span style={{ color:"#D4AF37", fontSize:10 }}>✓</span>
+                                  <span style={{ fontSize:7, fontWeight:900, letterSpacing:"0.12em", textTransform:"uppercase", color:"rgba(212,175,55,0.65)" }}>In field</span>
                                 </span>
+
+
+
+
                               ) : (
                                 <button
                                   type="button"
@@ -3331,7 +3331,7 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                           );
                         })}
                       </div>
-                    </div>
+                    </ScalarTop33Wrapper>
                   )}
                 </ScalarVoiceWrapper>
 
