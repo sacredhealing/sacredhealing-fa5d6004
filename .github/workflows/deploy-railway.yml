@@ -28,22 +28,28 @@ jobs:
               -d "$1" || echo '{"error":"curl_failed"}'
           }
 
-          # 1. Auth
-          echo "--- 1. Auth ---" >> $LOG
-          ME=$(gql '{"query":"{ me { id email } }"}')
+          # 1. Get user + workspace ID
+          echo "--- 1. Auth + Workspace ---" >> $LOG
+          ME=$(gql '{"query":"{ me { id email teams { edges { node { id name } } } } }"}')
           echo "$ME" >> $LOG
-          USER_ID=$(echo "$ME" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('data',{}).get('me',{}).get('id','FAILED'))" 2>/dev/null || echo "FAILED")
-          echo "USER_ID=$USER_ID" >> $LOG
+          WORKSPACE_ID=$(echo "$ME" | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+teams = d.get('data',{}).get('me',{}).get('teams',{}).get('edges',[])
+if teams:
+    print(teams[0]['node']['id'])
+else:
+    print('NONE')
+" 2>/dev/null || echo "NONE")
+          echo "WORKSPACE_ID=$WORKSPACE_ID" >> $LOG
 
-          if [ "$USER_ID" = "FAILED" ]; then
-            echo "AUTH FAILED - stopping" >> $LOG
-            cat $LOG
-            exit 1
-          fi
-
-          # 2. Create project
+          # 2. Create project (with workspaceId if available)
           echo "--- 2. Create project ---" >> $LOG
-          PROJ=$(gql '{"query":"mutation { projectCreate(input: { name: \"shiesty-signal-oracle\" }) { id name } }"}')
+          if [ "$WORKSPACE_ID" != "NONE" ] && [ -n "$WORKSPACE_ID" ]; then
+            PROJ=$(gql "{\"query\":\"mutation { projectCreate(input: { name: \\\"shiesty-signal-oracle\\\", defaultEnvironmentName: \\\"production\\\", teamId: \\\"${WORKSPACE_ID}\\\" }) { id name } }\"}")
+          else
+            PROJ=$(gql '{"query":"mutation { projectCreate(input: { name: \"shiesty-signal-oracle\", defaultEnvironmentName: \"production\" }) { id name } }"}')
+          fi
           echo "$PROJ" >> $LOG
           PROJECT_ID=$(echo "$PROJ" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('data',{}).get('projectCreate',{}).get('id','FAILED'))" 2>/dev/null || echo "FAILED")
           echo "PROJECT_ID=$PROJECT_ID" >> $LOG
@@ -52,68 +58,69 @@ jobs:
           echo "--- 3. Environment ---" >> $LOG
           ENV=$(gql "{\"query\":\"{ project(id: \\\"${PROJECT_ID}\\\") { environments { edges { node { id name } } } } }\"}")
           echo "$ENV" >> $LOG
-          ENV_ID=$(echo "$ENV" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['data']['project']['environments']['edges'][0]['node']['id'])" 2>/dev/null || echo "FAILED")
+          ENV_ID=$(echo "$ENV" | python3 -c "import json,sys; print(json.load(sys.stdin)['data']['project']['environments']['edges'][0]['node']['id'])" 2>/dev/null || echo "FAILED")
           echo "ENV_ID=$ENV_ID" >> $LOG
 
-          # 4. Create service (no GitHub source yet — add separately)
+          # 4. Create service
           echo "--- 4. Create service ---" >> $LOG
           SVC=$(gql "{\"query\":\"mutation { serviceCreate(input: { projectId: \\\"${PROJECT_ID}\\\", name: \\\"polymarket-worker\\\" }) { id name } }\"}")
           echo "$SVC" >> $LOG
           SVC_ID=$(echo "$SVC" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('data',{}).get('serviceCreate',{}).get('id','FAILED'))" 2>/dev/null || echo "FAILED")
           echo "SVC_ID=$SVC_ID" >> $LOG
 
-          # 5. Connect GitHub repo to service
+          # 5. Connect GitHub repo
           echo "--- 5. Connect GitHub ---" >> $LOG
           CONN=$(gql "{\"query\":\"mutation { serviceConnect(id: \\\"${SVC_ID}\\\", input: { repo: \\\"sacredhealing/sacredhealing-fa5d6004\\\", branch: \\\"main\\\" }) { id } }\"}")
           echo "$CONN" >> $LOG
 
-          # 6. Set root directory via serviceInstanceUpdate
-          echo "--- 6. Root directory ---" >> $LOG
+          # 6. Set root directory
+          echo "--- 6. Root dir ---" >> $LOG
           ROOT=$(gql "{\"query\":\"mutation { serviceInstanceUpdate(serviceId: \\\"${SVC_ID}\\\", environmentId: \\\"${ENV_ID}\\\", input: { rootDirectory: \\\"/polymarket-worker\\\" }) }\"}")
           echo "$ROOT" >> $LOG
 
-          # 7. Set env vars one by one
+          # 7. Env vars
           echo "--- 7. Env vars ---" >> $LOG
-          upsert_var() {
+          upsert() {
             NAME="$1"; VALUE="$2"
-            RES=$(curl -s -X POST "$GQL" \
+            curl -s -X POST "$GQL" \
               -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
               -H "Content-Type: application/json" \
-              --data-raw "{\"query\":\"mutation { variableUpsert(input: { projectId: \\\"${PROJECT_ID}\\\", environmentId: \\\"${ENV_ID}\\\", serviceId: \\\"${SVC_ID}\\\", name: \\\"${NAME}\\\", value: \\\"${VALUE}\\\" }) }\"}")
-            echo "  $NAME: $RES" >> $LOG
+              --data "{\"query\":\"mutation { variableUpsert(input: { projectId: \\\"${PROJECT_ID}\\\", environmentId: \\\"${ENV_ID}\\\", serviceId: \\\"${SVC_ID}\\\", name: \\\"${NAME}\\\", value: \\\"${VALUE}\\\" }) }\"}" >> $LOG
+            echo "  set $NAME" >> $LOG
           }
+          upsert "SUPABASE_URL"       "https://ssygukfdbtehvtndandn.supabase.co"
+          upsert "PAPER_MODE"         "true"
+          upsert "RISK_PCT"           "0.05"
+          upsert "MAX_POSITIONS"      "20"
+          upsert "WHALE_MIN_WR"       "0.55"
+          upsert "WHALE_MIN_TRADES"   "5"
+          upsert "PORT"               "8080"
 
-          upsert_var "SUPABASE_URL"         "https://ssygukfdbtehvtndandn.supabase.co"
-          upsert_var "PAPER_MODE"           "true"
-          upsert_var "RISK_PCT"             "0.05"
-          upsert_var "MAX_POSITIONS"        "20"
-          upsert_var "WHALE_MIN_WR"         "0.55"
-          upsert_var "WHALE_MIN_TRADES"     "5"
-          upsert_var "PORT"                 "8080"
-
-          # SUPABASE_SERVICE_KEY set separately (contains special chars)
+          # SUPABASE_SERVICE_KEY — JSON encode to handle special chars
+          ENCODED_KEY=$(python3 -c "import sys,json,os; print(json.dumps(os.environ['SUPABASE_SERVICE_KEY']))")
           curl -s -X POST "$GQL" \
             -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
             -H "Content-Type: application/json" \
-            -d "{\"query\":\"mutation { variableUpsert(input: { projectId: \\\"${PROJECT_ID}\\\", environmentId: \\\"${ENV_ID}\\\", serviceId: \\\"${SVC_ID}\\\", name: \\\"SUPABASE_SERVICE_KEY\\\", value: $(echo -n "$SUPABASE_SERVICE_KEY" | python3 -c 'import sys,json; print(json.dumps(sys.stdin.read()))') }) }\"}" >> $LOG
+            --data "{\"query\":\"mutation { variableUpsert(input: { projectId: \\\"${PROJECT_ID}\\\", environmentId: \\\"${ENV_ID}\\\", serviceId: \\\"${SVC_ID}\\\", name: \\\"SUPABASE_SERVICE_KEY\\\", value: ${ENCODED_KEY} }) }\"}" >> $LOG
+          echo "  set SUPABASE_SERVICE_KEY" >> $LOG
 
-          # 8. Generate Railway domain
+          # 8. Generate domain (correct mutation name)
           echo "--- 8. Domain ---" >> $LOG
-          DOM=$(gql "{\"query\":\"mutation { serviceInstanceDomainCreate(serviceId: \\\"${SVC_ID}\\\", environmentId: \\\"${ENV_ID}\\\") { domain } }\"}")
+          DOM=$(gql "{\"query\":\"mutation { serviceDomainCreate(input: { serviceId: \\\"${SVC_ID}\\\", environmentId: \\\"${ENV_ID}\\\", targetPort: 8080 }) { domain } }\"}")
           echo "$DOM" >> $LOG
-          RAIL_URL=$(echo "$DOM" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('data',{}).get('serviceInstanceDomainCreate',{}).get('domain','check-dashboard'))" 2>/dev/null || echo "check-dashboard")
+          RAIL_URL=$(echo "$DOM" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('data',{}).get('serviceDomainCreate',{}).get('domain','check-dashboard'))" 2>/dev/null || echo "check-dashboard")
 
           echo "" >> $LOG
           echo "======= SUMMARY =======" >> $LOG
-          echo "URL: https://$RAIL_URL" >> $LOG
+          echo "URL:     https://$RAIL_URL" >> $LOG
           echo "PROJECT: $PROJECT_ID" >> $LOG
           echo "SERVICE: $SVC_ID" >> $LOG
+          echo "ENV:     $ENV_ID" >> $LOG
           echo "======================" >> $LOG
-
           cat $LOG
 
           git config user.email "deploy@sqi.app"
           git config user.name "SQI Deploy Bot"
           git add $LOG
-          git commit -m "Railway deploy log $(date +%H%M%S)" || true
+          git commit -m "Railway v4 deploy $(date +%H%M%S)" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
