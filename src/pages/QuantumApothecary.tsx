@@ -3235,6 +3235,25 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
 
               </div>
             </div>
+              {/* Arrow row — between composer and nav */}
+              <div style={{ display:"flex", justifyContent:"flex-end", padding:"6px 2px 0" }}>
+                <button
+                  type="button"
+                  onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                  aria-label="Scroll to top"
+                  style={{
+                    width:30, height:30, borderRadius:"50%",
+                    background:"rgba(10,8,2,0.92)",
+                    border:"1px solid rgba(212,175,55,0.22)",
+                    display:"flex", alignItems:"center", justifyContent:"center",
+                    color:"rgba(212,175,55,0.60)",
+                    boxShadow:"0 0 8px rgba(212,175,55,0.12)",
+                    cursor:"pointer", flexShrink:0,
+                  }}
+                >
+                  <ChevronUp size={14} />
+                </button>
+              </div>
           </div>
         </div>
     );
@@ -3959,7 +3978,7 @@ function ScrollToTopButton() {
   return (
     <button
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-      className="fixed bottom-[88px] right-20 z-50 w-8 h-8 rounded-full border border-[#D4AF37]/25 bg-[#0a0a0a]/80 backdrop-blur-sm flex items-center justify-center text-[#D4AF37]/70 hover:bg-[#D4AF37]/10 transition shadow-md"
+      className="hidden"
       aria-label="Scroll to top"
     >
       <ChevronUp size={20} />
