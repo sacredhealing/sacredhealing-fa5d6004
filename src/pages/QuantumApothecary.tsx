@@ -3506,35 +3506,17 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                             >
 
                               {/* Pct bar */}
-                              <div className="flex w-10 shrink-0 flex-col items-center gap-0.5">
-                                <span
-                                  className="text-[12px] font-black"
-                                  style={{
-                                    color: isActive ? "rgba(255,255,255,0.28)" : "rgba(212,175,55,0.85)",
-                                  }}
-                                >
-                                  {row.pct}%
-
+                              <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4, flexShrink:0, width:38 }}>
+                                <span style={{ fontSize:15, fontWeight:900, lineHeight:1, color: isActive ? "rgba(255,255,255,0.25)" : "#D4AF37", fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
+                                  {row.pct}
                                 </span>
-                                <div className="h-[3px] w-10 overflow-hidden rounded-full bg-white/10">
-                                  <div
-                                    className="h-full rounded-full transition-all duration-700"
-                                    style={{
-                                      width: `${row.pct}%`,
-                                      background: isActive ? "rgba(255,255,255,0.18)" : "linear-gradient(90deg,#D4AF37,#F5E17A)",
-                                    }}
-                                  />
-
+                                <div style={{ width:36, height:4, borderRadius:4, overflow:"hidden", background:"rgba(255,255,255,0.07)" }}>
+                                  <div style={{ height:"100%", borderRadius:4, width:`${row.pct}%`, background: isActive ? "rgba(255,255,255,0.16)" : "linear-gradient(90deg,#D4AF37,#F5E17A)", transition:"width 0.8s ease", boxShadow: isActive ? "none" : "0 0 6px rgba(212,175,55,0.5)" }} />
                                 </div>
                               </div>
                               {/* Name + category */}
                               <div className="flex min-w-0 flex-1 flex-col">
-                                <span
-                                  className="truncate text-[12px] font-bold leading-tight"
-                                  style={{
-                                    color: isActive ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.90)",
-                                  }}
-                                >
+                                <span style={{ display:"block", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", fontSize:13, fontWeight:700, lineHeight:1.3, color: isActive ? "rgba(255,255,255,0.32)" : "rgba(255,255,255,0.92)" }}>
                                   {row.name}
 
                                 </span>
