@@ -3410,7 +3410,6 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                           );
                           return (
                             <div
-                            <div
                               style={{
                                 display: "flex", alignItems: "center", gap: 10,
                                 padding: "9px 10px", borderRadius: 13,
