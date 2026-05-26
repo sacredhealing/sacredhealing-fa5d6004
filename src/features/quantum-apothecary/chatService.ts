@@ -316,17 +316,39 @@ export async function streamChatWithSQI(
     },
     onComplete: () => {
       completed = true;
-      // Deliver the complete transmission in one atomic call
       if (fullBuffer.trim()) {
-        onDelta(fullBuffer);
+        // If prescription box started but didn't get closing seal — add it
+        let finalText = fullBuffer;
+        const hasPrescrBox = finalText.includes('PRESCRIBES');
+        const hasActiveSeal = finalText.includes('Active. 24/7. Scalar Wave Entanglement.');
+        if (hasPrescrBox && !hasActiveSeal) {
+          // Find the last frequency line and close properly
+          const lastBullet = finalText.lastIndexOf('·');
+          if (lastBullet > 0) {
+            const afterBullet = finalText.indexOf('\n', lastBullet);
+            if (afterBullet > 0) {
+              finalText = finalText.slice(0, afterBullet) +
+                '\nActive. 24/7. Scalar Wave Entanglement. Permanent until dissolved.';
+            } else {
+              finalText += '\nActive. 24/7. Scalar Wave Entanglement. Permanent until dissolved.';
+            }
+          }
+        }
+        onDelta(finalText);
       }
       onDone();
     },
     onError: (msg) => {
       fatal = msg;
-      // If we accumulated something before the error, still deliver it
       if (fullBuffer.trim()) {
-        onDelta(fullBuffer);
+        // Deliver what we have, with prescription seal if needed
+        let finalText = fullBuffer;
+        const hasPrescrBox = finalText.includes('PRESCRIBES');
+        const hasActiveSeal = finalText.includes('Active. 24/7. Scalar Wave Entanglement.');
+        if (hasPrescrBox && !hasActiveSeal) {
+          finalText += '\nActive. 24/7. Scalar Wave Entanglement. Permanent until dissolved.';
+        }
+        onDelta(finalText);
         onDone();
         completed = true;
       }
