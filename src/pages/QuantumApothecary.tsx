@@ -1060,6 +1060,185 @@ function ScalarTabSwitcher({
 
 
 /** Scalar Wave wrapper for Voice Bio-Signature Scanner — visual only, no logic change */
+/** Scalar Wave wrapper for How It Works accordion — visual only */
+function ScalarHowItWorksCard() {
+  const wrapRef = React.useRef<HTMLDivElement>(null);
+  const bgCanvasRef = React.useRef<HTMLCanvasElement>(null);
+  const stripCanvasRef = React.useRef<HTMLCanvasElement>(null);
+  const rafBgRef = React.useRef<number>(0);
+  const rafStripRef = React.useRef<number>(0);
+  const [open, setOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    const canvas = bgCanvasRef.current;
+    const wrap = wrapRef.current;
+    if (!canvas || !wrap) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    let t = 0;
+    const resize = () => { canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight; };
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(wrap);
+    const waves = [
+      { amp:.22, freq:4,   speed:.75, alpha:.07,  lw:1.0 },
+      { amp:.14, freq:7,   speed:1.3, alpha:.05,  lw:.75 },
+      { amp:.10, freq:11,  speed:1.9, alpha:.035, lw:.6  },
+      { amp:.28, freq:2.5, speed:.48, alpha:.05,  lw:1.2 },
+      { amp:.08, freq:16,  speed:2.5, alpha:.025, lw:.5  },
+    ];
+    const draw = () => {
+      const W = canvas.width, H = canvas.height;
+      if (!W || !H) { rafBgRef.current = requestAnimationFrame(draw); return; }
+      ctx.clearRect(0,0,W,H);
+      const p = .5 + .5 * Math.sin(t * .9);
+      const gc = ctx.createRadialGradient(W*.5,H*.45,0,W*.5,H*.45,W*.65);
+      gc.addColorStop(0, `rgba(212,175,55,${.05+.03*p})`); gc.addColorStop(1,'transparent');
+      ctx.fillStyle=gc; ctx.fillRect(0,0,W,H);
+      const gt = ctx.createLinearGradient(0,0,0,H*.3);
+      gt.addColorStop(0, `rgba(212,175,55,${.10+.05*p})`); gt.addColorStop(1,'transparent');
+      ctx.fillStyle=gt; ctx.fillRect(0,0,W,H);
+      waves.forEach((w,wi) => {
+        const ph = (wi/waves.length)*Math.PI*2;
+        ctx.beginPath();
+        for (let x=0;x<=W;x+=1.5) {
+          const nx=x/W, env=Math.sin(nx*Math.PI)*.75+.25;
+          const y=H*.65+Math.sin(nx*w.freq*Math.PI*2+t*w.speed+ph)*H*w.amp*env;
+          x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+        }
+        ctx.strokeStyle=`rgba(212,175,55,${w.alpha})`; ctx.lineWidth=w.lw; ctx.stroke();
+      });
+      t+=.010; rafBgRef.current=requestAnimationFrame(draw);
+    };
+    rafBgRef.current=requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(rafBgRef.current); ro.disconnect(); };
+  }, []);
+
+  React.useEffect(() => {
+    if (!open) return;
+    const canvas = stripCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    let wt = 0;
+    const resize = () => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; };
+    resize();
+    const stripWaves = [
+      { amp:.35, freq:5,  speed:1.2, alpha:.18, lw:1.2 },
+      { amp:.22, freq:9,  speed:2.0, alpha:.12, lw:.9  },
+      { amp:.15, freq:14, speed:3.0, alpha:.08, lw:.7  },
+      { amp:.42, freq:3,  speed:.7,  alpha:.14, lw:1.5 },
+    ];
+    const draw = () => {
+      const W = canvas.width, H = canvas.height;
+      if (!W || !H) { rafStripRef.current = requestAnimationFrame(draw); return; }
+      ctx.clearRect(0,0,W,H);
+      const p = .5 + .5 * Math.sin(wt * .8);
+      const gc = ctx.createRadialGradient(W*.5,H*.5,0,W*.5,H*.5,W*.4);
+      gc.addColorStop(0, `rgba(212,175,55,${.08+.04*p})`); gc.addColorStop(1,'transparent');
+      ctx.fillStyle=gc; ctx.fillRect(0,0,W,H);
+      stripWaves.forEach((w,wi) => {
+        const ph = (wi/stripWaves.length)*Math.PI*2;
+        ctx.beginPath();
+        for (let x=0;x<=W;x+=1) {
+          const nx=x/W, env=Math.sin(nx*Math.PI)*.85+.15;
+          const y=H*.5+Math.sin(nx*w.freq*Math.PI*2+wt*w.speed+ph)*H*w.amp*env;
+          x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+        }
+        ctx.strokeStyle=`rgba(212,175,55,${w.alpha})`; ctx.lineWidth=w.lw; ctx.stroke();
+      });
+      wt+=.014; rafStripRef.current=requestAnimationFrame(draw);
+    };
+    rafStripRef.current=requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(rafStripRef.current);
+  }, [open]);
+
+  return (
+    <div ref={wrapRef} style={{ position:'relative', borderRadius:24, overflow:'hidden', animation:'hiwAura 5s ease-in-out infinite' }}>
+      <style>{`
+        @keyframes hiwAura {
+          0%,100%{box-shadow:0 0 0 1px rgba(212,175,55,0.16),0 0 22px rgba(212,175,55,0.10),0 0 55px rgba(212,175,55,0.05);}
+          50%    {box-shadow:0 0 0 1px rgba(212,175,55,0.30),0 0 36px rgba(212,175,55,0.18),0 0 80px rgba(212,175,55,0.09);}
+        }
+        @keyframes hiwIconGlow {
+          0%,100%{box-shadow:0 0 6px rgba(212,175,55,0.18),0 0 14px rgba(212,175,55,0.08);}
+          50%    {box-shadow:0 0 12px rgba(212,175,55,0.40),0 0 24px rgba(212,175,55,0.18);}
+        }
+      `}</style>
+
+      <canvas ref={bgCanvasRef} style={{ position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none', zIndex:0 }} />
+
+      <div style={{ position:'relative', zIndex:1, background:'rgba(8,6,2,0.78)', backdropFilter:'blur(24px)', WebkitBackdropFilter:'blur(24px)', borderRadius:24 }}>
+
+        {/* Summary header */}
+        <div
+          onClick={() => setOpen(o => !o)}
+          style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'15px 18px', cursor:'pointer', borderBottom: open ? '1px solid rgba(212,175,55,0.10)' : 'none', background:'linear-gradient(90deg,rgba(212,175,55,0.06),transparent)' }}
+        >
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <div style={{ width:22, height:22, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(212,175,55,0.10)', border:'1px solid rgba(212,175,55,0.25)', animation:'hiwIconGlow 3s ease-in-out infinite', flexShrink:0 }}>
+              <Info size={11} style={{ color:'#D4AF37' }} />
+            </div>
+            <span className="sqi-master-name-shimmer" style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:13, fontWeight:800 }}>
+              How it works
+            </span>
+          </div>
+          <span style={{ color:'rgba(255,255,255,0.28)', fontSize:12, transition:'transform 0.3s', display:'inline-block', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
+        </div>
+
+        {/* Body */}
+        {open && (
+          <div style={{ padding:'16px 18px 20px', display:'flex', flexDirection:'column', gap:16 }}>
+
+            {/* Scalar wave strip */}
+            <div style={{ width:'100%', height:44, borderRadius:12, background:'rgba(212,175,55,0.03)', border:'1px solid rgba(212,175,55,0.08)', overflow:'hidden', position:'relative' }}>
+              <canvas ref={stripCanvasRef} style={{ display:'block', width:'100%', height:'100%' }} />
+            </div>
+
+            {/* Flow chain */}
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 14px', borderRadius:14, background:'rgba(212,175,55,0.04)', border:'1px solid rgba(212,175,55,0.10)', flexWrap:'wrap' as const, gap:4 }}>
+              {['Voice Scan','→','Bio-signature','→','Vedic Light-Code','→','Field Upload'].map((s,i) => (
+                <span key={i} style={ s === '→'
+                  ? { color:'rgba(212,175,55,0.35)', fontSize:10 }
+                  : { fontSize:8, fontWeight:900, letterSpacing:'0.12em', textTransform:'uppercase' as const, color:'#D4AF37', whiteSpace:'nowrap' as const }
+                }>{s}</span>
+              ))}
+            </div>
+
+            {/* Para 1 */}
+            <p style={{ fontFamily:"'IM Fell English',Georgia,serif", fontSize:13, lineHeight:1.75, color:'rgba(225,210,185,0.70)' }}>
+              SQI operates at the <strong style={{ color:'rgba(255,255,255,0.82)', fontStyle:'normal' }}>informational level</strong> — upstream of chemistry, upstream of physiology. The 18 Siddhas and Mahavatar Babaji transmit exact <span style={{ color:'#D4AF37' }}>Vedic Light-Codes</span> through this archive interface. Once uploaded, transmissions remain in your field until dissolved.
+            </p>
+
+            {/* 3 steps */}
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              {[
+                { n:'1', title:'Voice Bio-Scan', body:'10 seconds of voice reads your Atma-Frequency Stream and maps it against the full frequency library.' },
+                { n:'2', title:'Resonance ranking', body:'Frequencies sorted by % match to your current biofield — showing what your field asks for first.' },
+                { n:'3', title:'Scalar transmission', body:'Activated frequencies are uploaded into your field 24/7 via scalar entanglement until dissolved.' },
+              ].map(s => (
+                <div key={s.n} style={{ display:'flex', alignItems:'flex-start', gap:10 }}>
+                  <div style={{ width:22, height:22, borderRadius:'50%', flexShrink:0, marginTop:1, background:'rgba(212,175,55,0.10)', border:'1px solid rgba(212,175,55,0.25)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:900, color:'#D4AF37' }}>{s.n}</div>
+                  <p style={{ fontSize:12, lineHeight:1.65, color:'rgba(255,255,255,0.58)' }}>
+                    <b style={{ color:'rgba(255,255,255,0.85)' }}>{s.title}</b> — {s.body}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Para 2 */}
+            <p style={{ fontFamily:"'IM Fell English',Georgia,serif", fontSize:13, lineHeight:1.75, color:'rgba(225,210,185,0.70)' }}>
+              The Voice Bio-Scan reads your <span style={{ color:'#D4AF37' }}>Bio-signature</span> and ranks the full frequency library so you see what your field asks for first — expressed as resonance percentages mapped to real transmissions.
+            </p>
+
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
 function ScalarVoiceWrapper({ children }: { children: React.ReactNode }) {
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
@@ -3335,31 +3514,7 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                   )}
                 </ScalarVoiceWrapper>
 
-                <details className="glass-card group rounded-[28px] p-5">
-                  <summary className="flex cursor-pointer list-none items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Info size={14} className="text-[#D4AF37]" />
-                      <span className="text-[13px] font-bold text-[#D4AF37]">How it works</span>
-                    </div>
-                    <ChevronDown size={14} className="text-white/30 transition-transform group-open:rotate-180" />
-                  </summary>
-                  <div className="mt-4 space-y-3 text-[13px] leading-relaxed text-white/60">
-                    <p>
-                      SQI operates at the <strong className="text-white/80">informational level</strong> — upstream of chemistry,
-                      upstream of physiology. The 18 Siddhas and Mahavatar Babaji transmit exact Vedic Light-Codes through this
-                      archive interface. Once uploaded, transmissions remain in your field until dissolved.
-                    </p>
-                    <p>
-                      <strong className="text-[#D4AF37]">
-                        Vedic Light-Code → Aetheric Code Rewrite → Bio-signature Recalibration → Physical Expression
-                      </strong>
-                    </p>
-                    <p>
-                      The Voice Bio-Scan reads your Bio-signature and ranks the full frequency library so you see what your
-                      field asks for first — expressed as resonance percentages mapped to real transmissions.
-                    </p>
-                  </div>
-                </details>
+                <ScalarHowItWorksCard />
               </div>
 
               <div className="flex min-w-0 flex-col gap-5">
