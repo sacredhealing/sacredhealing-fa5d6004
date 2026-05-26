@@ -3323,7 +3323,7 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
       method: "POST", headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
-        messages: [{ role: "system", content: systemText.trim() }, ...aiMessages, { role: "assistant", content: "◈ " }],
+        messages: [{ role: "system", content: systemText.trim() }, ...aiMessages],
         temperature: 2.0,
         max_tokens: 4096,
         stream: true,
@@ -3338,7 +3338,8 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
 
     let assistantText = "";
     let flushed = false;
-    let firstChunk = true;
+    let prefixBuf = "";
+    let headerFound = false;
     const transformStream = new TransformStream({
       transform(chunk, controller) {
         const text = new TextDecoder().decode(chunk);
@@ -3350,10 +3351,22 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
             const data = JSON.parse(raw);
             let content = data.choices?.[0]?.delta?.content ?? data.choices?.[0]?.message?.content ?? "";
             if (content) {
-              // Prefill guarantees response starts after "◈ " — prepend it once
-              if (firstChunk) {
-                firstChunk = false;
-                content = "◈ " + content;
+              if (!headerFound) {
+                prefixBuf += content;
+                // Find first ◈ — the master header marker Gemini MUST output
+                const idx = prefixBuf.indexOf("◈");
+                if (idx !== -1) {
+                  headerFound = true;
+                  content = prefixBuf.slice(idx); // strip everything before ◈
+                  prefixBuf = "";
+                } else if (prefixBuf.length > 3000) {
+                  // 3000 chars and no ◈ — emit anyway (never happens if system prompt is intact)
+                  headerFound = true;
+                  content = prefixBuf;
+                  prefixBuf = "";
+                } else {
+                  continue; // keep buffering
+                }
               }
               assistantText += content;
               controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`));
