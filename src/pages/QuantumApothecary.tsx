@@ -1984,6 +1984,7 @@ function QuantumApothecaryInner() {
   // and inject as context so SQI reads every question as being about THIS student.
   const [activeStudent, setActiveStudent] = useState<Student | null>(null);
   const [activeStudentTxCount, setActiveStudentTxCount] = useState<number>(0);
+  const [activeStudentJyotish, setActiveStudentJyotish] = useState<any | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('Wellness');
   useEffect(() => {
     let cancelled = false;
@@ -2035,6 +2036,7 @@ JYOTISH NOTE — BIRTH DATA ONLY, NO PROFILE YET: Birth coordinates above are pr
       activeStudent.notes ? `Notes: ${activeStudent.notes}` : null,
       `Active Transmissions: ${activeStudentTxCount}`,
       'Read ALL questions in this session as being about this student — not about the practitioner/admin.',
+      jyotishSection || null,
     ]
       .filter(Boolean)
       .join('\n');
