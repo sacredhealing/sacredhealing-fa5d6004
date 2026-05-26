@@ -108,7 +108,6 @@ export const en = {
     default_artist: "Sacred Healing",
     default_album: "Siddha-Quantum Intelligence",
   },
-} as const;
 
   quantumApothecary: {
     chat: {
@@ -120,5 +119,7 @@ export const en = {
       },
     },
   },
+} as const;
+
 
 
