@@ -3410,7 +3410,6 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                           );
                           return (
                             <div
-                            <div
                               style={{
                                 display: "flex", alignItems: "center", gap: 10,
                                 padding: "9px 10px", borderRadius: 13,
@@ -3419,9 +3418,7 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                                 opacity: isActive ? 0.58 : 1, transition: "all 0.2s",
                               }}
                             >
-                                opacity: isActive ? 0.72 : 1,
-                              }}
-                            >
+
                               {/* Pct bar */}
                               <div className="flex w-10 shrink-0 flex-col items-center gap-0.5">
                                 <span
@@ -3430,9 +3427,8 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                                     color: isActive ? "rgba(255,255,255,0.28)" : "rgba(212,175,55,0.85)",
                                   }}
                                 >
-
-                                >
                                   {row.pct}%
+
                                 </span>
                                 <div className="h-[3px] w-10 overflow-hidden rounded-full bg-white/10">
                                   <div
@@ -3443,7 +3439,6 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                                     }}
                                   />
 
-                                  />
                                 </div>
                               </div>
                               {/* Name + category */}
@@ -3454,9 +3449,8 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                                     color: isActive ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.90)",
                                   }}
                                 >
-
-                                >
                                   {row.name}
+
                                 </span>
                                 {row.rowCategory && (
                                   <span
