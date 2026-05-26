@@ -1,12 +1,33 @@
-=== Railway Deploy Log Tue May 26 09:22:37 UTC 2026 ===
---- railway version ---
-railway 4.62.0
+=== Railway Deploy Tue May 26 09:29:20 UTC 2026 ===
+--- 1. Auth ---
+{"data":{"me":{"id":"85900719-3324-47a2-b06f-b3e6f62a9614","email":"sacredhealingvibe@gmail.com"}}}
+USER_ID=85900719-3324-47a2-b06f-b3e6f62a9614
+--- 2. Create project ---
+{"errors":[{"message":"You must specify a workspaceId to create a project","locations":[{"line":1,"column":12}],"path":["projectCreate"],"extensions":{"code":"INTERNAL_SERVER_ERROR"},"traceId":"8759066409485529204"}],"data":null}
+PROJECT_ID=FAILED
+--- 3. Environment ---
+{"errors":[{"message":"Project not found","locations":[{"line":1,"column":3}],"path":["project"],"extensions":{"code":"INTERNAL_SERVER_ERROR"},"traceId":"4787829923931590099"}],"data":null}
+ENV_ID=FAILED
+--- 4. Create service ---
+{"errors":[{"message":"Not Authorized","locations":[{"line":1,"column":12}],"path":["serviceCreate"],"extensions":{"code":"INTERNAL_SERVER_ERROR"},"traceId":"1787466039886835932"}],"data":null}
+SVC_ID=FAILED
+--- 5. Connect GitHub ---
+{"errors":[{"message":"Not Authorized","locations":[{"line":1,"column":12}],"path":["serviceConnect"],"extensions":{"code":"INTERNAL_SERVER_ERROR"},"traceId":"3791172806124550317"}],"data":null}
+--- 6. Root directory ---
+{"errors":[{"message":"Not Authorized","locations":[{"line":1,"column":12}],"path":["serviceInstanceUpdate"],"extensions":{"code":"INTERNAL_SERVER_ERROR"},"traceId":"8023377465385175356"}],"data":null}
+--- 7. Env vars ---
+  SUPABASE_URL: {"errors":[{"message":"Not Authorized","locations":[{"line":1,"column":12}],"path":["variableUpsert"],"extensions":{"code":"INTERNAL_SERVER_ERROR"},"traceId":"1913833087411308348"}],"data":null}
+  PAPER_MODE: {"errors":[{"message":"Not Authorized","locations":[{"line":1,"column":12}],"path":["variableUpsert"],"extensions":{"code":"INTERNAL_SERVER_ERROR"},"traceId":"1561748274660733502"}],"data":null}
+  RISK_PCT: {"errors":[{"message":"Not Authorized","locations":[{"line":1,"column":12}],"path":["variableUpsert"],"extensions":{"code":"INTERNAL_SERVER_ERROR"},"traceId":"7059084229309613338"}],"data":null}
+  MAX_POSITIONS: {"errors":[{"message":"Not Authorized","locations":[{"line":1,"column":12}],"path":["variableUpsert"],"extensions":{"code":"INTERNAL_SERVER_ERROR"},"traceId":"695003734231034015"}],"data":null}
+  WHALE_MIN_WR: {"errors":[{"message":"Not Authorized","locations":[{"line":1,"column":12}],"path":["variableUpsert"],"extensions":{"code":"INTERNAL_SERVER_ERROR"},"traceId":"4922711888897143539"}],"data":null}
+  WHALE_MIN_TRADES: {"errors":[{"message":"Not Authorized","locations":[{"line":1,"column":12}],"path":["variableUpsert"],"extensions":{"code":"INTERNAL_SERVER_ERROR"},"traceId":"8475819278301551446"}],"data":null}
+  PORT: {"errors":[{"message":"Not Authorized","locations":[{"line":1,"column":12}],"path":["variableUpsert"],"extensions":{"code":"INTERNAL_SERVER_ERROR"},"traceId":"3857308335641746701"}],"data":null}
+{"message":"Expected ',' or '}' after property value in JSON at position 158 (line 1 column 159)","requestId":"ee8455e0-951c-453c-880f-3d71c7591ca0"}--- 8. Domain ---
+{"errors":[{"message":"Cannot query field \"serviceInstanceDomainCreate\" on type \"Mutation\". Did you mean \"serviceDomainCreate\", \"serviceInstanceLimitsUpdate\", \"serviceInstanceUpdate\", \"serviceDomainUpdate\", or \"serviceInstanceDeploy\"?","locations":[{"line":1,"column":12}],"extensions":{"code":"GRAPHQL_VALIDATION_FAILED"},"traceId":"2382557373977569359"}]}
 
---- railway whoami ---
-Unauthorized. Please check that your RAILWAY_TOKEN is valid and has access to the resource you're trying to use.
-whoami failed
---- railway projects list ---
-Unauthorized. Please check that your RAILWAY_TOKEN is valid and has access to the resource you're trying to use.
-list failed
---- GraphQL me query ---
-{"data":{"me":{"id":"85900719-3324-47a2-b06f-b3e6f62a9614","email":"sacredhealingvibe@gmail.com","projects":{"edges":[]}}}}
+======= SUMMARY =======
+URL: https://check-dashboard
+PROJECT: FAILED
+SERVICE: FAILED
+======================
