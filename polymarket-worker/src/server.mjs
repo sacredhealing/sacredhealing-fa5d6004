@@ -113,11 +113,23 @@ async function dbUpdate(table, filter, data) {
 
 // ─── Load balance + open position count ───────────────────────────────────────
 async function loadBalance() {
-  const rows = await dbGet('polymarket_bot_settings', 'limit=1');
-  if (rows?.length) balance = parseFloat(rows[0].paper_balance) || 10;
+  // Compute balance from trades: starting $10 minus spent + winnings
+  // No global settings row exists — settings are per-user, worker tracks its own state
+  try {
+    const open   = await dbGet('polymarket_trades', 'status=eq.open&is_paper=eq.true&select=id,amount_usdc');
+    const won    = await dbGet('polymarket_trades', 'status=eq.won&is_paper=eq.true&select=pnl_usdc');
+    const lost   = await dbGet('polymarket_trades', 'status=eq.lost&is_paper=eq.true&select=amount_usdc');
 
-  const open = await dbGet('polymarket_trades', 'status=eq.open&select=id');
-  openPositions = open?.length || 0;
+    openPositions = open?.length || 0;
+
+    // Only recalculate if we have trade history, otherwise keep in-memory balance
+    if (open || won || lost) {
+      const spent    = (open  || []).reduce((s, t) => s + (parseFloat(t.amount_usdc) || 0), 0);
+      const winnings = (won   || []).reduce((s, t) => s + (parseFloat(t.pnl_usdc)   || 0), 0);
+      const losses   = (lost  || []).reduce((s, t) => s + (parseFloat(t.amount_usdc)|| 0), 0);
+      balance = Math.max(0, 10 - spent - losses + winnings);
+    }
+  } catch { /* keep in-memory balance on error */ }
 }
 
 // ─── Trade size: 5% of balance, $0.50–$50 ─────────────────────────────────────
@@ -285,13 +297,19 @@ async function recordTrade(signal, strategy) {
     const txHash = order?.orderId || order?.id || `live-${Date.now()}`;
     const endDate = await fetchEndDate(signal.marketId);
     await dbInsert('polymarket_trades', {
-      market_id: signal.marketId || 'unknown',
+      user_id:         'bd0b21c9-577a-450b-bb1e-21c9d0423f17',
+      market_id:       signal.marketId || 'unknown',
       market_question: signal.reason || '',
-      outcome: signal.outcome, token_id: signal.tokenId || txHash,
-      direction: signal.direction, shares: size / (signal.currentPrice || 0.5),
-      entry_price: signal.currentPrice || 0.5, amount_usdc: size,
-      tx_hash: txHash, strategy, is_paper: false,
-      status: order ? 'open' : 'failed',
+      outcome:         signal.outcome,
+      token_id:        signal.tokenId || txHash,
+      direction:       signal.direction,
+      shares:          size / (signal.currentPrice || 0.5),
+      entry_price:     signal.currentPrice || 0.5,
+      amount_usdc:     size,
+      tx_hash:         txHash,
+      strategy,
+      is_paper:        false,
+      status:          order ? 'open' : 'failed',
       market_end_date: endDate,
     });
     openPositions++;
@@ -311,20 +329,26 @@ async function recordTrade(signal, strategy) {
   const newBal = signal.direction === 'buy' ? balance - cost : balance + size - fee;
   const txHash = `paper-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
 
+  const endDate = await fetchEndDate(signal.marketId);
   const ok = await dbInsert('polymarket_trades', {
-    market_id: signal.marketId || 'unknown',
+    user_id:         'bd0b21c9-577a-450b-bb1e-21c9d0423f17',
+    market_id:       signal.marketId || 'unknown',
     market_question: signal.reason || '',
-    outcome: signal.outcome, token_id: signal.tokenId || txHash,
-    direction: signal.direction, shares: size / (signal.currentPrice || 0.5),
-    entry_price: signal.currentPrice || 0.5, amount_usdc: size,
-    tx_hash: txHash, strategy, is_paper: true, status: 'open',
+    outcome:         signal.outcome,
+    token_id:        signal.tokenId || txHash,
+    direction:       signal.direction,
+    shares:          size / (signal.currentPrice || 0.5),
+    entry_price:     signal.currentPrice || 0.5,
+    amount_usdc:     size,
+    tx_hash:         txHash,
+    strategy,
+    is_paper:        true,
+    status:          'open',
+    market_end_date: endDate,
   });
 
   if (ok) {
-    await dbUpdate('polymarket_bot_settings', 'limit=1', {
-      paper_balance: parseFloat(newBal.toFixed(4)),
-    });
-    balance = newBal;
+    balance = newBal; // balance tracked in-memory, recomputed from trades on reload
     openPositions++;
     tradeCount++;
     recentTrades.unshift({
@@ -653,12 +677,7 @@ async function resolveOpenTrades() {
       // Update paper balance if won
       if (trade.is_paper && tradeWon) {
         const winnings = shares * exitPrice;
-        await loadBalance();
-        const newBal = balance + winnings;
-        await dbUpdate('polymarket_bot_settings', 'limit=1', {
-          paper_balance: parseFloat(newBal.toFixed(4)),
-        });
-        balance = newBal;
+        balance = Math.max(0, balance + winnings); // recomputed from trades on next loadBalance()
         log('RESOLVE', `✅ WON ${trade.outcome} | +$${winnings.toFixed(2)} | new bal $${newBal.toFixed(2)}`);
       } else {
         log('RESOLVE', `❌ LOST ${trade.outcome} | -$${spent.toFixed(2)} | winner was ${winner}`);
