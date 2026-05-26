@@ -3732,7 +3732,7 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
               <div className="flex justify-between items-start">
                 <div>
                   <h2 className="text-lg font-black tracking-[-0.05em]">Siddha-Quantum Intelligence</h2>
-                  <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-[#D4AF37]/50 mt-1">Akasha-Neural Archive · 2050</p>
+                  
                 </div>
                 <button type="button" onClick={() => setShowKnowledge(false)} className="p-2 hover:bg-white/5 rounded-xl transition">
                   <X size={15} className="text-white/40" />
