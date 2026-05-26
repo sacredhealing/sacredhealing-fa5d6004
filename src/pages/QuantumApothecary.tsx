@@ -3334,6 +3334,7 @@ const top33 = buildTop33Rankings(payload, 600, ownedIds);
                     </div>
                   )}
                 </div>
+                </ScalarVoiceWrapper>
 
                 <details className="glass-card group rounded-[28px] p-5">
                   <summary className="flex cursor-pointer list-none items-center justify-between">
