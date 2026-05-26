@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, Pencil, Trash2, RefreshCw, AlertTriangle } from "lucide-react";
+import { Eye, Pencil, Trash2, RefreshCw, AlertTriangle, Key, Loader2 } from "lucide-react";
 
 const TIER_LABELS: Record<string, string> = {
   free: "Free Seeker",
@@ -17,7 +17,6 @@ const TIER_COLORS: Record<string, string> = {
   "akasha-infinity": "#fff8dc",
 };
 
-// Normalise any legacy slug variant to canonical
 const SLUG_MAP: Record<string, string> = {
   prana_flow:"prana-flow","prana-monthly":"prana-flow",prana_monthly:"prana-flow",
   premium_monthly:"prana-flow",prana_flow_monthly:"prana-flow",
@@ -51,38 +50,34 @@ export default function UserManagementPanel() {
   const [newTier, setNewTier] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<string|null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
     try {
-      // 1. All profiles
       const { data: profiles, error } = await supabase
         .from("profiles")
         .select("id,full_name,avatar_url,created_at,last_login_date,onboarding_completed,birth_date,birth_place")
         .order("created_at", { ascending: false });
       if (error) throw error;
 
-      // 2. membership_tiers — get id->slug map
       const { data: tiers } = await supabase
         .from("membership_tiers")
         .select("id,slug");
       const tierSlugMap: Record<string,string> = {};
       (tiers||[]).forEach((t:any) => { tierSlugMap[t.id] = t.slug; });
 
-      // 3. user_memberships — resolve tier via tierSlugMap
       const { data: memberships } = await supabase
         .from("user_memberships")
         .select("user_id,tier_id,status,stripe_subscription_id,expires_at")
         .eq("status","active");
 
-      // 4. admin_granted_access
       const { data: grants } = await supabase
         .from("admin_granted_access")
         .select("user_id,tier,access_id,is_active,granted_at")
         .eq("is_active",true)
         .eq("access_type","membership");
 
-      // Build maps
       const grantMap: Record<string,string> = {};
       (grants||[]).forEach((g:any) => {
         const slug = canonicalize(g.tier || g.access_id);
@@ -95,7 +90,6 @@ export default function UserManagementPanel() {
         memberMap[m.user_id] = { ...m, tierSlug: slug };
       });
 
-      // Merge: admin grant wins if higher
       const rankOf = (s:string) => s.includes("akasha")||s.includes("life")?3:s.includes("siddha")?2:s.includes("prana")||s.includes("premium")?1:0;
 
       setUsers((profiles||[]).map((p:any) => {
@@ -135,12 +129,11 @@ export default function UserManagementPanel() {
     akasha: users.filter(u=>u.tier==="akasha-infinity").length,
   };
 
-  // Grant tier via admin_granted_access (correct mechanism per check-membership-subscription)
+  // ── Grant tier via admin_granted_access ─────────────────────────────────
   const handleGrantTier = async () => {
     if (!selectedUser || !newTier) return;
     setActionLoading(true);
     try {
-      // Revoke existing grants
       await supabase.from("admin_granted_access")
         .update({ is_active:false })
         .eq("user_id", selectedUser.id)
@@ -158,14 +151,31 @@ export default function UserManagementPanel() {
         if (error) throw error;
       }
       setUsers(prev => prev.map(u => u.id===selectedUser.id ? {...u, tier:newTier} : u));
-      toast({ title:"Tier Updated", description:`${selectedUser.full_name||"User"} → ${TIER_LABELS[newTier]||newTier}` });
+      toast({ title:"✦ Quantum Access Granted", description:`${selectedUser.full_name||"Seeker"} → ${TIER_LABELS[newTier]||newTier}` });
       setModalMode(null);
     } catch (e:any) {
       toast({ title:"Error", description:e.message, variant:"destructive" });
     } finally { setActionLoading(false); }
   };
 
-  // Hard delete — call admin edge function (service role: deletes auth user + all data)
+  // ── Password reset ───────────────────────────────────────────────────────
+  const handleResetPassword = async (userId: string) => {
+    setResetLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-user-management", {
+        body: { action: "reset_password", userId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title:"🔑 Reset Transmitted", description:"Password reset email sent to the seeker's inbox." });
+    } catch (e: any) {
+      toast({ title:"Reset Failed", description:e.message, variant:"destructive" });
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  // ── Delete user ──────────────────────────────────────────────────────────
   const handleDelete = async (userId: string) => {
     const prevUsers = users;
     setUsers(prev => prev.filter(u => u.id !== userId));
@@ -178,9 +188,9 @@ export default function UserManagementPanel() {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast({ title: "User Deleted", description: "Auth account and all data removed." });
+      toast({ title: "Soul Dissolved", description: "Auth account and all data removed." });
     } catch (e: any) {
-      setUsers(prevUsers); // rollback
+      setUsers(prevUsers);
       toast({ title: "Delete Error", description: e.message, variant: "destructive" });
     } finally {
       setActionLoading(false);
@@ -225,7 +235,7 @@ export default function UserManagementPanel() {
         ))}
       </div>
 
-      {/* Unnamed info */}
+      {/* Unnamed warning */}
       {stats.unnamed>0 && (
         <div style={{ ...glass, borderColor:"rgba(245,158,11,0.2)", padding:"12px 18px", marginBottom:16, display:"flex", alignItems:"center", gap:12 }}>
           <AlertTriangle size={16} color="#f59e0b" />
@@ -292,7 +302,7 @@ export default function UserManagementPanel() {
                 </div>
                 <div style={{ display:"flex", gap:6 }}>
                   <IconBtn icon={<Eye size={13}/>} title="View" onClick={()=>openUser(user,"view")} />
-                  <IconBtn icon={<Pencil size={13}/>} title="Edit Tier" onClick={()=>openUser(user,"edit")} color={gold} />
+                  <IconBtn icon={<Pencil size={13}/>} title="Edit Tier & Reset Password" onClick={()=>openUser(user,"edit")} color={gold} />
                   <IconBtn icon={<Trash2 size={13}/>} title="Delete" onClick={()=>setConfirmDelete(user.id)} color="#ef4444" />
                 </div>
               </div>
@@ -301,13 +311,14 @@ export default function UserManagementPanel() {
         </div>
       )}
 
-      {/* View/Edit Modal */}
+      {/* View / Edit Modal */}
       {modalMode && selectedUser && (
         <SQIModal onClose={()=>setModalMode(null)}>
           <div style={{ fontSize:9, fontWeight:800, letterSpacing:"0.5em", textTransform:"uppercase", color:gold, marginBottom:8 }}>
             {modalMode==="view" ? "SOUL PROFILE" : "TIER TRANSMISSION"}
           </div>
           <h3 style={{ fontSize:20, fontWeight:900, color:"#fff", margin:"0 0 20px" }}>{selectedUser.full_name||"No name set"}</h3>
+
           {modalMode==="view" ? (
             <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
               {[
@@ -328,6 +339,12 @@ export default function UserManagementPanel() {
               ))}
               <div style={{ display:"flex", gap:10, marginTop:14, flexWrap:"wrap" }}>
                 <SQIBtn label="Edit Tier" onClick={()=>setModalMode("edit")} color={gold} />
+                <SQIBtn
+                  label={resetLoading?"Sending...":"🔑 Reset Password"}
+                  onClick={()=>handleResetPassword(selectedUser.id)}
+                  loading={resetLoading}
+                  color={cyan}
+                />
                 <SQIBtn label="Delete" onClick={()=>{ setModalMode(null); setConfirmDelete(selectedUser.id); }} color="#ef4444" />
               </div>
             </div>
@@ -336,6 +353,8 @@ export default function UserManagementPanel() {
               <p style={{ color:"rgba(255,255,255,0.4)", fontSize:12, marginBottom:14 }}>
                 Current: <strong style={{ color:TIER_COLORS[selectedUser.tier]||"#fff" }}>{TIER_LABELS[selectedUser.tier]||"Free"}</strong>
               </p>
+
+              {/* Tier selector */}
               <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:16 }}>
                 {Object.entries(TIER_LABELS).map(([value,label])=>(
                   <button key={value} onClick={()=>setNewTier(value)}
@@ -344,9 +363,25 @@ export default function UserManagementPanel() {
                   </button>
                 ))}
               </div>
-              <div style={{ display:"flex", gap:10 }}>
-                <SQIBtn label={actionLoading?"Saving...":"Apply Tier"} onClick={handleGrantTier} loading={actionLoading} color={gold} />
+              <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+                <SQIBtn label={actionLoading?"Saving...":"✦ Grant Access"} onClick={handleGrantTier} loading={actionLoading} color={gold} />
                 <SQIBtn label="Cancel" onClick={()=>setModalMode(null)} />
+              </div>
+
+              {/* Password reset section */}
+              <div style={{ marginTop:20, paddingTop:20, borderTop:"1px solid rgba(255,255,255,0.05)" }}>
+                <div style={{ fontSize:9, fontWeight:800, letterSpacing:"0.5em", textTransform:"uppercase", color:"rgba(255,255,255,0.3)", marginBottom:10 }}>
+                  PASSWORD RESET TRANSMISSION
+                </div>
+                <SQIBtn
+                  label={resetLoading?"Transmitting...":"🔑 Send Password Reset Email"}
+                  onClick={()=>handleResetPassword(selectedUser.id)}
+                  loading={resetLoading}
+                  color={cyan}
+                />
+                <p style={{ fontSize:11, color:"rgba(255,255,255,0.25)", marginTop:8 }}>
+                  Sends a reset link directly to the seeker's email inbox.
+                </p>
               </div>
             </div>
           )}
@@ -361,7 +396,7 @@ export default function UserManagementPanel() {
             <div style={{ fontSize:9, fontWeight:800, letterSpacing:"0.5em", textTransform:"uppercase", color:"#ef4444", marginBottom:8 }}>PERMANENT DELETE</div>
             <h3 style={{ fontSize:20, fontWeight:900, color:"#fff", margin:"0 0 12px" }}>Delete this user completely?</h3>
             <p style={{ color:"rgba(255,255,255,0.4)", fontSize:13, lineHeight:1.6, marginBottom:20 }}>
-              Removes profile, memberships, balances, and access grants immediately. The user will vanish from this list and lose all app access.
+              Removes profile, memberships, balances, and access grants immediately. Cannot be undone.
             </p>
             <div style={{ display:"flex", gap:12, justifyContent:"center" }}>
               <SQIBtn label="Cancel" onClick={()=>setConfirmDelete(null)} />
@@ -387,7 +422,7 @@ function SQIModal({children,onClose}:any) {
     <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.85)", backdropFilter:"blur(8px)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}
       onClick={(e:any)=>e.target===e.currentTarget&&onClose()}>
       <div style={{ background:"#0a0a0a", border:"1px solid rgba(212,175,55,0.2)", borderRadius:24, padding:32, maxWidth:520, width:"100%", maxHeight:"90vh", overflowY:"auto", boxShadow:"0 0 60px rgba(212,175,55,0.1)" }}>
-        <button onClick={onClose} style={{ float:"right", background:"none", border:"none", color:"rgba(255,255,255,0.3)", fontSize:18, cursor:"pointer", lineHeight:1 }}>x</button>
+        <button onClick={onClose} style={{ float:"right", background:"none", border:"none", color:"rgba(255,255,255,0.3)", fontSize:18, cursor:"pointer", lineHeight:1 }}>✕</button>
         {children}
       </div>
     </div>
