@@ -2006,11 +2006,29 @@ function QuantumApothecaryInner() {
         if (cancelled) return;
         setActiveStudent(s);
         setActiveStudentTxCount(txRes.count ?? 0);
+
+        // Fetch student Jyotish profile if they have a linked app account
+        const linkedId = (s as any)?.linked_user_id;
+        if (linkedId) {
+          try {
+            const { data: jp } = await supabase
+              .from('jyotish_profiles')
+              .select('moon_nakshatra, moon_sign, ascendant, sun_sign, mahadasha, antardasha, primary_dosha, karma_focus, active_yogas, healing_line, mantra, dasha_data, birth_date, birth_time, birth_place')
+              .eq('user_id', linkedId)
+              .maybeSingle();
+            if (!cancelled) setActiveStudentJyotish(jp ?? null);
+          } catch {
+            if (!cancelled) setActiveStudentJyotish(null);
+          }
+        } else {
+          if (!cancelled) setActiveStudentJyotish(null);
+        }
       } catch (e) {
         if (!cancelled) {
           console.warn('[apothecary] failed to load active student record', e);
           setActiveStudent(null);
           setActiveStudentTxCount(0);
+          setActiveStudentJyotish(null);
         }
       }
     })();
@@ -2021,26 +2039,48 @@ function QuantumApothecaryInner() {
 
   const studentContext = useMemo(() => {
     if (!activeStudent) return '';
+
+    // Build real Jyotish section from linked profile
+    let jyotishLines: string[] = [];
+    if (activeStudentJyotish) {
+      const jp = activeStudentJyotish;
+      const dd = jp.dasha_data ?? {};
+      const maha = jp.mahadasha || dd.currentMahadasha || dd.mahadasha || '—';
+      const antar = jp.antardasha || dd.currentAntardasha || dd.antardasha || '—';
+      jyotishLines = [
+        `[STUDENT JYOTISH — REAL EPHEMERIS DATA — USE THIS CHART NOT THE PRACTITIONER'S]`,
+        `Nakshatra: ${jp.moon_nakshatra || '—'} · Rashi: ${jp.moon_sign || '—'} · Lagna: ${jp.ascendant || '—'} · Sun: ${jp.sun_sign || '—'}`,
+        `Mahadasha: ${maha} · Antardasha: ${antar}`,
+        `Dosha: ${jp.primary_dosha || '—'} · Karma: ${jp.karma_focus || '—'}`,
+        jp.active_yogas?.length ? `Yogas: ${Array.isArray(jp.active_yogas) ? jp.active_yogas.join(', ') : jp.active_yogas}` : '',
+        jp.healing_line ? `Healing: ${jp.healing_line}` : '',
+        jp.mantra ? `Mantra: ${jp.mantra}` : '',
+        `ZERO FABRICATION LAW: The Dasha above comes from Swiss Ephemeris. Apply it exactly. Do NOT substitute any other Dasha period.`,
+        `Apply ALL past life, Nadi, and health readings to THIS student chart — not the practitioner's.`,
+      ].filter(Boolean);
+    } else if (activeStudent.birth_date) {
+      jyotishLines = [
+        `[STUDENT BIRTH DATA — JYOTISH PROFILE NOT YET LINKED]`,
+        `Birth: ${activeStudent.birth_date}${activeStudent.birth_time ? ' at ' + activeStudent.birth_time : ''}${activeStudent.birth_place ? ', ' + activeStudent.birth_place : ''}`,
+        `Use birth data to approximate Nakshatra and Dasha. State approximation clearly.`,
+        `DO NOT state fabricated Dasha as confirmed fact. Say "approximately" or "from these coordinates, the Nakshatra suggests..."`,
+      ];
+    }
+
     return [
-      '[ACTIVE STUDENT SOUL RECORD]',
-      `ACTIVE STUDENT — READING FOR THIS SOUL:
-Name: ${activeStudent.name}
-Birth Date: ${activeStudent.birth_date ?? 'not provided'}
-Birth Time: ${activeStudent.birth_time ?? 'not provided'}
-Birth Place: ${activeStudent.birth_place ?? 'not provided'}
-Notes: ${activeStudent.notes ?? ''}
-JYOTISH NOTE — BIRTH DATA ONLY, NO PROFILE YET: Birth coordinates above are provided as context. The Jyotish profile for this student has NOT been filled in. DO NOT compute, derive, or guess Mahadasha, Antardasha, Nakshatra, Lagna, or any planetary position from birth data alone — such calculation requires precise Vedic computation tools and the result would be fabricated. Instead: read the Nadi field directly from the energetic signature of their questions. If Jyotish data is needed, direct the admin to fill in the student Jyotish profile. This is the student's reading — NOT the admin's.`,
-      `Date of Birth: ${activeStudent.birth_date ?? 'unknown'}`,
-      `Birth Place: ${activeStudent.birth_place ?? 'unknown'}`,
-      `Birth Time: ${activeStudent.birth_time ?? 'unknown'}`,
+      `[STUDENT READING — SUBJECT IS THE STUDENT: ${activeStudent.name} — NOT THE PRACTITIONER]`,
+      `Name: ${activeStudent.name}`,
+      `Birth Date: ${activeStudent.birth_date ?? 'not provided'}`,
+      `Birth Time: ${activeStudent.birth_time ?? 'not provided'}`,
+      `Birth Place: ${activeStudent.birth_place ?? 'not provided'}`,
       activeStudent.notes ? `Notes: ${activeStudent.notes}` : null,
       `Active Transmissions: ${activeStudentTxCount}`,
-      'Read ALL questions in this session as being about this student — not about the practitioner/admin.',
-      jyotishSection || null,
+      jyotishLines.length > 0 ? jyotishLines.join('\n') : null,
+      `Read ALL questions in this session as being about this student.`,
     ]
       .filter(Boolean)
       .join('\n');
-  }, [activeStudent, activeStudentTxCount]);
+  }, [activeStudent, activeStudentTxCount, activeStudentJyotish]);
   const [libraryUnlocked, setLibraryUnlocked] = useState(() => {
     try {
       return localStorage.getItem(LS_LIBRARY_UNLOCKED) === '1';
