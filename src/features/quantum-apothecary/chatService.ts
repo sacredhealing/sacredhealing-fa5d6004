@@ -259,6 +259,8 @@ export async function streamChatWithSQI(
   top33Matches?: string,
   activeTransmissionNames?: string,
   studentContext?: string,
+  studentUserId?: string | null,
+  studentName?: string | null,
 ) {
   const recent = messages.slice(-15);
   let apiMessages = recent.map((m) => ({
@@ -284,6 +286,13 @@ export async function streamChatWithSQI(
     timeZone: timezone,
   });
 
+  // ── BUFFER MODE ──────────────────────────────────────────────────────
+  // Accumulate the full transmission silently, then deliver in one shot.
+  // This eliminates: mid-stream visual cuts, Nadi text bleeding into
+  // previous blocks, "Message stopped" artifacts, and partial renders.
+  // The typing indicator stays active until the full response is ready.
+  // ─────────────────────────────────────────────────────────────────────
+  let fullBuffer = '';
   let completed = false;
   let fatal: string | undefined;
 
@@ -301,17 +310,36 @@ export async function streamChatWithSQI(
     localDate,
     timezone,
     userImage: userImage ?? null,
-    onChunk: (chunk) => onDelta(chunk),
+    // Silently accumulate — do not call onDelta during streaming
+    onChunk: (chunk) => {
+      fullBuffer += chunk;
+    },
     onComplete: () => {
       completed = true;
+      // Deliver the complete transmission in one atomic call
+      if (fullBuffer.trim()) {
+        onDelta(fullBuffer);
+      }
       onDone();
     },
     onError: (msg) => {
       fatal = msg;
+      // If we accumulated something before the error, still deliver it
+      if (fullBuffer.trim()) {
+        onDelta(fullBuffer);
+        onDone();
+        completed = true;
+      }
     },
   });
 
   if (!completed) {
-    throw new Error(fatal || 'SQI transmission failed');
+    // Last resort: if something accumulated before the throw, deliver it
+    if (fullBuffer.trim()) {
+      onDelta(fullBuffer);
+      onDone();
+    } else {
+      throw new Error(fatal || 'SQI transmission failed');
+    }
   }
 }
