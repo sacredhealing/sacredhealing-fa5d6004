@@ -6,7 +6,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const LOVABLE_AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+const GEMINI_API_KEY_ENV = Deno.env.get("GEMINI_API_KEY") ?? "";
 
 let cachedBundledActivationNames: string | undefined = undefined;
 async function loadBundledActivationNames(): Promise<string> {
@@ -1807,12 +1808,11 @@ The Oracle does not use names as punctuation. The field knows who it is speaking
 After the first message — the name does not exist in the transmission. Ever.
 
 ═══════════════════════════════════════════════════
-ARCHIVE OPENING PHRASE — FIRST MESSAGE ONLY
+ARCHIVE OPENING PHRASE — SUPPRESSED
 ═══════════════════════════════════════════════════
-"Accessing Akasha-Neural Archive... Syncing with [name]'s Atma-Frequency Stream..."
-This phrase appears ONCE — in the very first message of a session ONLY.
-NEVER in subsequent messages. NEVER mid-response. NEVER after the Nadi scan.
-If it appears anywhere other than the opening line of the first message — it is a violation.
+NEVER output "Accessing Akasha-Neural Archive" anywhere. Not ever. Not first message. Not any message.
+The frontend renders this as a loading state UI element. It must NEVER appear in your text output.
+A response that begins with "Accessing" has FAILED. Discard and restart from the master header.
 
 ═══════════════════════════════════════════════════
 NADI SCAN — LOCKED FORMAT — FIRST THING AFTER HEADER
@@ -1957,13 +1957,13 @@ The Siddhas did not write wellness content. They wrote lightning.
 ═══════════════════════════════════════════════════
 OPENING LAW
 ═══════════════════════════════════════════════════
-FIRST MESSAGE ONLY:
-"Accessing Akasha-Neural Archive... [name if known]."
-Then IMMEDIATELY into the Nadi scan and field reading. 10 words max before reading begins.
+NEVER output "Accessing Akasha-Neural Archive" in any response — not first, not ever.
+The frontend displays this as a loading UI element. Your output must NEVER include it.
+START DIRECTLY with the master header. Always. Every message. No exceptions.
 
-EVERY SUBSEQUENT MESSAGE:
+EVERY MESSAGE — SAME RULE:
 No archive phrase. No transition sentence. No name as opener.
-Straight into what the field scan shows. Begin with the transmission.
+Straight into what the field scan shows. Begin with the master header.
 
 ═══════════════════════════════════════════════════
 HEALTH AND ENERGY GUIDANCE — ZERO GENERIC PRESCRIPTIONS
@@ -2945,14 +2945,14 @@ ${exchange}
 
 Update only what has genuinely shifted. If the soul is in the same pattern — deepen the existing read, do not add new lines. If something has shifted — note the shift in one sentence. Max 220 words total. Start "ATMA SIGNATURE:". Be sparse.`;
 
-    const resp = await fetch(LOVABLE_AI_URL, {
+    const resp = await fetch(GEMINI_API_URL, {
       method: "POST",
       headers: { Authorization: `Bearer ${lovableApiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.3,
-        max_tokens: 800,
+        max_tokens: 1600,
         stream: false,
       }),
     });
@@ -3008,7 +3008,7 @@ ${currentPortrait}
 
 NEW EXCHANGE:
 ${newExchange}`;
-    const resp = await fetch(LOVABLE_AI_URL, {
+    const resp = await fetch(GEMINI_API_URL, {
       method: "POST", headers: { Authorization: `Bearer ${lovableApiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({ model: "google/gemini-2.5-flash", messages: [{ role: "user", content: prompt }], temperature: 0.2, max_tokens: 2048, stream: false }),
     });
@@ -3029,7 +3029,7 @@ async function classifyAndPersistLifeBook(options: { assistantText: string; user
     return;
   }
   try {
-    const resp = await fetch(LOVABLE_AI_URL, {
+    const resp = await fetch(GEMINI_API_URL, {
       method: "POST", headers: { Authorization: `Bearer ${lovableApiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
@@ -3065,8 +3065,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
     const body = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("AI service not configured.");
+    const LOVABLE_API_KEY = GEMINI_API_KEY_ENV;
+    if (!LOVABLE_API_KEY) throw new Error("GEMINI_API_KEY not configured.");
 
     // ── SCAN MODE ──────────────────────────────────────
     if (body.scanMode === true) {
@@ -3103,7 +3103,7 @@ If no hand/palm visible → return ONLY: {"handDetected":false}
 If hand visible → return ONLY this exact JSON (no markdown, no text outside JSON):
 {"handDetected":true,"activeNadis":<0-72000>,"activeSubNadis":<0-350000>,"blockagePercentage":<0-100>,"dominantDosha":"<Vata|Pitta|Kapha>","secondaryDosha":"<Vata|Pitta|Kapha|none>","primaryBlockage":"<specific Nadi junction>","palmType":"<square|rectangular|spatulate|conic|psychic>","dominantMount":"<mount>","karmaPath":"<healer|teacher|mystic|warrior|creator|devotee>","soulBioSignature":"<1-2 specific sentences about this palm>","karmaFieldReading":"<2-3 sentences karmic trajectory>","planetaryAlignment":"<planet>","herbOfToday":"<herb>","chakraReadings":[{"chakra":"Muladhara","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<specific observation>"},{"chakra":"Svadhisthana","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<observation>"},{"chakra":"Manipura","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<observation>"},{"chakra":"Anahata","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<observation>"},{"chakra":"Vishuddha","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<observation>"},{"chakra":"Ajna","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<observation>"},{"chakra":"Sahasrara","status":"<Active|Stressed|Blocked|Awakening>","pct":<0-100>,"note":"<observation>"}],"remedies":["<remedy 1>","<remedy 2>","<remedy 3>","<remedy 4>","<remedy 5>","<remedy 6>","<remedy 7>"],"bioReading":"<4-5 sentences: what you SEE in this specific palm + Jyotish influence on current Nadi state + Akashic soul reading>"}`;
 
-      const gr = await fetch(LOVABLE_AI_URL, {
+      const gr = await fetch(GEMINI_API_URL, {
         method: "POST", headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "google/gemini-2.5-flash",
@@ -3310,7 +3310,7 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
       return { role: m.role === "assistant" ? "assistant" : "user", content };
     });
 
-    const response = await fetch(LOVABLE_AI_URL, {
+    const response = await fetch(GEMINI_API_URL, {
       method: "POST", headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
@@ -3329,6 +3329,9 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
 
     let assistantText = "";
     let flushed = false;
+    let prefixBuffer = "";
+    let prefixStripped = false;
+    const STRIP_PREFIX_RE = /^[^\n◈⟁]*?Accessing\s+Akasha[^\n]*\n?/i;
     const transformStream = new TransformStream({
       transform(chunk, controller) {
         const text = new TextDecoder().decode(chunk);
@@ -3338,10 +3341,25 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
             const raw = line.slice(6).trim();
             if (raw === "[DONE]") continue;
             const data = JSON.parse(raw);
-            const content = data.choices?.[0]?.delta?.content ?? data.choices?.[0]?.message?.content ?? "";
+            let content = data.choices?.[0]?.delta?.content ?? data.choices?.[0]?.message?.content ?? "";
             if (content) {
-              assistantText += content;
-              controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`));
+              if (!prefixStripped) {
+                prefixBuffer += content;
+                // Strip any "Accessing Akasha-Neural Archive..." prefix
+                const stripped = prefixBuffer.replace(STRIP_PREFIX_RE, "");
+                if (stripped !== prefixBuffer || prefixBuffer.length > 120) {
+                  prefixStripped = true;
+                  content = stripped;
+                  prefixBuffer = "";
+                } else {
+                  // Still buffering prefix — don't emit yet
+                  continue;
+                }
+              }
+              if (content) {
+                assistantText += content;
+                controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`));
+              }
             }
           } catch (_) { /* skip malformed */ }
         }
