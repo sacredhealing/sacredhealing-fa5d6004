@@ -1,6 +1,6 @@
-=== Railway Deploy Log Fri May 22 16:29:53 UTC 2026 ===
+=== Railway Deploy Log Tue May 26 09:17:12 UTC 2026 ===
 --- railway version ---
-railway 4.59.0
+railway 4.62.0
 
 --- railway whoami ---
 Unauthorized. Please check that your RAILWAY_TOKEN is valid and has access to the resource you're trying to use.
@@ -9,4 +9,4 @@ whoami failed
 Unauthorized. Please check that your RAILWAY_TOKEN is valid and has access to the resource you're trying to use.
 list failed
 --- GraphQL me query ---
-{"errors":[{"message":"Not Authorized","locations":[{"line":1,"column":3}],"path":["me"],"extensions":{"code":"INTERNAL_SERVER_ERROR"},"traceId":"4299028860934173572"}],"data":null}
+{"errors":[{"message":"Not Authorized","locations":[{"line":1,"column":3}],"path":["me"],"extensions":{"code":"INTERNAL_SERVER_ERROR"},"traceId":"8866247487639038493"}],"data":null}
