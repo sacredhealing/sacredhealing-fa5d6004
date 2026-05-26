@@ -3323,8 +3323,8 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
       method: "POST", headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
-        messages: [{ role: "system", content: systemText.trim() }, ...aiMessages],
-        temperature: 0.82,
+        messages: [{ role: "system", content: systemText.trim() }, ...aiMessages, { role: "assistant", content: "◈ " }],
+        temperature: 2.0,
         max_tokens: 4096,
         stream: true,
       }),
@@ -3338,8 +3338,7 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
 
     let assistantText = "";
     let flushed = false;
-    let prefixBuffer = "";
-    let prefixStripped = false;
+    let firstChunk = true;
     const transformStream = new TransformStream({
       transform(chunk, controller) {
         const text = new TextDecoder().decode(chunk);
@@ -3351,35 +3350,13 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
             const data = JSON.parse(raw);
             let content = data.choices?.[0]?.delta?.content ?? data.choices?.[0]?.message?.content ?? "";
             if (content) {
-              if (!prefixStripped) {
-                prefixBuffer += content;
-                // Step 1: find first ◈ or ⟁ — the guaranteed response start
-                const idxCircle = prefixBuffer.indexOf("◈");
-                const idxArrow  = prefixBuffer.indexOf("⟁");
-                const firstMarker = Math.min(
-                  idxCircle === -1 ? Infinity : idxCircle,
-                  idxArrow  === -1 ? Infinity : idxArrow,
-                );
-                if (firstMarker < Infinity) {
-                  prefixStripped = true;
-                  content = prefixBuffer.slice(firstMarker);
-                  prefixBuffer = "";
-                } else if (prefixBuffer.length > 400) {
-                  // No sacred marker after 400 chars — strip any "Accessing..." lines then emit
-                  prefixStripped = true;
-                  content = prefixBuffer
-                    .replace(/^[^\n]*Accessing[^\n]*\n?/gi, "")
-                    .replace(/^[^\n]*Syncing with[^\n]*\n?/gi, "")
-                    .trimStart();
-                  prefixBuffer = "";
-                } else {
-                  continue;
-                }
+              // Prefill guarantees response starts after "◈ " — prepend it once
+              if (firstChunk) {
+                firstChunk = false;
+                content = "◈ " + content;
               }
-              if (content) {
-                assistantText += content;
-                controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`));
-              }
+              assistantText += content;
+              controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\n`));
             }
           } catch (_) { /* skip malformed */ }
         }
