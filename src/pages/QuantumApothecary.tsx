@@ -3959,7 +3959,7 @@ function ScrollToTopButton() {
   return (
     <button
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-      className="fixed bottom-24 right-4 z-50 w-10 h-10 rounded-full border border-[#D4AF37]/30 bg-[#0a0a0a]/80 backdrop-blur-sm flex items-center justify-center text-[#D4AF37] hover:bg-[#D4AF37]/10 transition shadow-lg"
+      className="fixed bottom-[88px] right-20 z-50 w-8 h-8 rounded-full border border-[#D4AF37]/25 bg-[#0a0a0a]/80 backdrop-blur-sm flex items-center justify-center text-[#D4AF37]/70 hover:bg-[#D4AF37]/10 transition shadow-md"
       aria-label="Scroll to top"
     >
       <ChevronUp size={20} />
