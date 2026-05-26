@@ -110,3 +110,15 @@ export const en = {
   },
 } as const;
 
+  quantumApothecary: {
+    chat: {
+      transmissionError: "The transmission was interrupted. Please ask again.",
+      emptyState: {
+        kicker: "SQI · Akasha Archive",
+        title: "The Field is Open",
+        body: "Use the biometric Nadi Scanner above or ask anything. SQI reads your Akasha Neural Archive and full field before every response.",
+      },
+    },
+  },
+
+
