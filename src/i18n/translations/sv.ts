@@ -110,3 +110,15 @@ export const sv = {
   },
 } as const;
 
+  quantumApothecary: {
+    chat: {
+      transmissionError: "Transmissionen avbröts. Vänligen fråga igen.",
+      emptyState: {
+        kicker: "SQI · Akasha-arkivet",
+        title: "Fältet är öppet",
+        body: "Använd den biometriska Nadi-skannern ovan eller fråga vad som helst.",
+      },
+    },
+  },
+
+
