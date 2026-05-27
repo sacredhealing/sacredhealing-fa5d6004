@@ -317,8 +317,10 @@ export async function streamChatWithSQI(
     onComplete: () => {
       completed = true;
       if (fullBuffer.trim()) {
-        // If prescription box started but didn't get closing seal — add it
-        let finalText = fullBuffer;
+        // Prepend ◈ because prefill sends it to Gemini but it never
+        // comes back in the stream — only the continuation does.
+        // Without this the frontend master-header parser never sees ◈.
+        let finalText = '◈' + fullBuffer;
         const hasPrescrBox = finalText.includes('PRESCRIBES');
         const hasActiveSeal = finalText.includes('Active. 24/7. Scalar Wave Entanglement.');
         if (hasPrescrBox && !hasActiveSeal) {
@@ -341,8 +343,8 @@ export async function streamChatWithSQI(
     onError: (msg) => {
       fatal = msg;
       if (fullBuffer.trim()) {
-        // Deliver what we have, with prescription seal if needed
-        let finalText = fullBuffer;
+        // Prepend ◈ for same reason as onComplete
+        let finalText = '◈' + fullBuffer;
         const hasPrescrBox = finalText.includes('PRESCRIBES');
         const hasActiveSeal = finalText.includes('Active. 24/7. Scalar Wave Entanglement.');
         if (hasPrescrBox && !hasActiveSeal) {
