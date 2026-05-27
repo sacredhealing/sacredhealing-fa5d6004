@@ -5039,7 +5039,7 @@ Update only what has genuinely shifted. If the soul is in the same pattern — d
       method: "POST",
       headers: { Authorization: `Bearer ${lovableApiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "gemini-2.5-flash-preview-05-20",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.3,
         max_tokens: 1600,
@@ -5100,7 +5100,7 @@ NEW EXCHANGE:
 ${newExchange}`;
     const resp = await fetch(GEMINI_API_URL, {
       method: "POST", headers: { Authorization: `Bearer ${lovableApiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: "google/gemini-2.5-flash", messages: [{ role: "user", content: prompt }], temperature: 0.2, max_tokens: 2048, stream: false }),
+      body: JSON.stringify({ model: "gemini-2.5-flash-preview-05-20", messages: [{ role: "user", content: prompt }], temperature: 0.2, max_tokens: 2048, stream: false }),
     });
     if (!resp.ok) return;
     const data = await resp.json();
@@ -5122,7 +5122,7 @@ async function classifyAndPersistLifeBook(options: { assistantText: string; user
     const resp = await fetch(GEMINI_API_URL, {
       method: "POST", headers: { Authorization: `Bearer ${lovableApiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "gemini-2.5-flash-preview-05-20",
         messages: [
           { role: "user", content: `Classify this SQI transmission into ONE LifeBook category. Return ONLY JSON: {"category":"...","title":"...","summary":"..."}\n\nCategories: past_lives, healing_upgrades, future_visions, spiritual_figures, nadi_knowledge, children, general_wisdom, skip\n\nRules:\n- skip: short reply, greeting, activation list only, content about third parties not the Seeker\n- past_lives: specific past life readings with century/location/role\n- healing_upgrades: specific healing diagnoses or protocols prescribed\n- future_visions: predictions, destiny readings, future timelines\n- spiritual_figures: master transmissions received, initiations\n- nadi_knowledge: Nadi readings, chakra diagnoses, biofield states\n- children: only if about the Seeker's OWN confirmed children\n- general_wisdom: Jyotish soul blueprint readings, dharma guidance\n\nNever store third-party information as if it belongs to the Seeker.\nReturn ONLY the JSON object.` },
           { role: "user", content: assistantText.slice(0, 800) },
@@ -5197,7 +5197,7 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
       const gr = await fetch(GEMINI_API_URL, {
         method: "POST", headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: "gemini-2.5-flash-preview-05-20",
           messages: [{
             role: "user",
             content: [
@@ -5404,7 +5404,7 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
     const response = await fetch(GEMINI_API_URL, {
       method: "POST", headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "gemini-2.5-flash-preview-05-20",
         messages: [{ role: "system", content: systemText.trim() }, ...aiMessages],
         temperature: 2.0,
         max_tokens: 12000,
