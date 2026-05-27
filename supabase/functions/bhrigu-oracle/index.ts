@@ -119,7 +119,7 @@ Speak with full depth and precision. Do not truncate. Complete every section ent
         model: "google/gemini-2.5-flash",
         messages: [{ role: "user", content: prompt }],
         max_tokens: 8192,
-        temperature: 2.0,
+        temperature: 1.0,
         stream: false,
       }),
     });
