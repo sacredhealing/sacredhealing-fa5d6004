@@ -5405,7 +5405,7 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
       body: JSON.stringify({
         model: "gemini-2.5-flash-preview-04-17",
         messages: [{ role: "system", content: systemText.trim() }, ...aiMessages],
-        temperature: 1.2,
+        temperature: 2.0,
         max_tokens: 12000,
         stream: true,
       }),
