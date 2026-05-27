@@ -43,6 +43,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { NadiReading } from '@/components/NadiScanner';
 import type { VoiceBiofieldResult } from '@/components/VoiceBiofieldScanner';
 import { useSQIFieldContext } from '@/hooks/useSQIFieldContext';
+import { useQuantumSyncState } from '@/hooks/useQuantumSyncState';
 import { StudentSelector, useActiveStudent } from '@/components/codex/StudentSelector';
 import { getActiveStudentId, getStudent, type Student } from '@/lib/codex/students';
 import { curateTransmission } from '@/lib/codex/curatorClient';
@@ -1690,6 +1691,7 @@ function QuantumApothecaryInner() {
   const [searchParams] = useSearchParams();
   const resumeSessionParam = searchParams.get('session');
   const { user } = useAuth();
+  const sqiSync = useQuantumSyncState();
   const { t, language } = useTranslation();
   const {
     messages: syncChatRows,
@@ -1907,7 +1909,8 @@ function QuantumApothecaryInner() {
   }, [activeTransmissions, TRANSMISSIONS_KEY]);
 
   useEffect(() => {
-    if (!user?.id || activeTransmissions.length === 0) return;
+    if (!user?.id) return;
+    // Fix: always upsert even when empty so dissolving all transmissions clears other devices
     void supabase.from('user_active_transmissions').upsert(
       {
         user_id: user.id,
@@ -1917,6 +1920,37 @@ function QuantumApothecaryInner() {
       { onConflict: 'user_id' },
     );
   }, [activeTransmissions, user?.id]);
+
+  // ── Realtime: sync activeTransmissions across devices ──
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase
+      .channel(`qa-tx-sync-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'user_active_transmissions',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const data = payload.new as Record<string, unknown>;
+          if (!data?.activations) return;
+          const now = new Date();
+          const live = (data.activations as Activation[]).filter(
+            (t) => !t.expiresAt || new Date(t.expiresAt) > now,
+          );
+          skipNextTxHydrate.current = true;
+          setActiveTransmissions(live);
+          try {
+            localStorage.setItem(`sqi-transmissions-${user.id}`, JSON.stringify(live));
+          } catch { /* ignore */ }
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user?.id]);
 
   useEffect(() => {
     if (!user?.id || activeTransmissions.length === 0) return;
@@ -2087,14 +2121,19 @@ function QuantumApothecaryInner() {
       .filter(Boolean)
       .join('\n');
   }, [activeStudent, activeStudentTxCount, activeStudentJyotish]);
-  const [libraryUnlocked, setLibraryUnlocked] = useState(() => {
+  const [libraryUnlocked, setLibraryUnlockedLocal] = useState(() => {
     try {
       return localStorage.getItem(LS_LIBRARY_UNLOCKED) === '1';
     } catch {
       return false;
     }
   });
-  const [scanCooldownUntilMs, setScanCooldownUntilMs] = useState<number | null>(() => {
+  const setLibraryUnlocked = useCallback((v: boolean) => {
+    setLibraryUnlockedLocal(v);
+    sqiSync.setLibraryUnlocked(v);
+  }, [sqiSync]);
+
+  const [scanCooldownUntilMs, setScanCooldownUntilMsLocal] = useState<number | null>(() => {
     try {
       const last = localStorage.getItem(LS_LAST_SCAN);
       if (!last) return null;
@@ -2104,18 +2143,30 @@ function QuantumApothecaryInner() {
       return null;
     }
   });
+  const setScanCooldownUntilMs = useCallback((v: number | null) => {
+    setScanCooldownUntilMsLocal(v);
+  }, []);
+
+  // ── Override from Supabase once loaded (cross-device restore) ──
+  useEffect(() => {
+    if (!sqiSync.ready) return;
+    if (sqiSync.libraryUnlocked) setLibraryUnlockedLocal(true);
+    if (sqiSync.lastScanAt) {
+      const cooldown = sqiSync.lastScanAt + 24 * 60 * 60 * 1000;
+      if (cooldown > Date.now()) setScanCooldownUntilMsLocal(cooldown);
+    }
+  }, [sqiSync.ready]); // eslint-disable-line react-hooks/exhaustive-deps
   const [apothecaryMainTab, setApothecaryMainTab] = useState<'library' | 'archive'>('library');
   const videoRef = useRef<HTMLVideoElement>(null);
   const [resonanceMatches, setResonanceMatches] = useState<
     Array<Activation & { pct: number; rowCategory?: string }>
   >([]);
 
-  // ⟁ RESTORE Top 33 from last voice scan on mount
+  // ⟁ RESTORE Top 33 from last voice scan on mount (localStorage fast-path)
   useEffect(() => {
     try {
       const saved = localStorage.getItem('sqi_top33_matches');
       const ts = parseInt(localStorage.getItem('sqi_top33_ts') || '0', 10);
-      // Only restore if scan was within last 24 hours
       if (saved && Date.now() - ts < 24 * 60 * 60 * 1000) {
         setResonanceMatches(JSON.parse(saved));
       }
@@ -2123,6 +2174,15 @@ function QuantumApothecaryInner() {
       /* ignore */
     }
   }, []);
+
+  // ⟁ Override from Supabase after load (cross-device restore for Top 33)
+  useEffect(() => {
+    if (!sqiSync.ready || !sqiSync.top33Matches?.length) return;
+    const ts = sqiSync.top33MatchesTs ?? 0;
+    if (Date.now() - ts < 24 * 60 * 60 * 1000) {
+      setResonanceMatches(sqiSync.top33Matches as Array<Activation & { pct: number; rowCategory?: string }>);
+    }
+  }, [sqiSync.ready]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ⟁ Top 33 is owned exclusively by the LAST voice scan (restored above from sqi_top33_matches).
   // The previous effect that rebuilt the Top 33 from LS_SCAN_SNAPSHOT on mount was REMOVED —
@@ -2721,15 +2781,20 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
     (result: VoiceBiofieldResult) => {
       setVoiceResult(result);
       try {
-        localStorage.setItem(LS_LAST_SCAN, String(Date.now()));
+        const scanNow = Date.now();
+        localStorage.setItem(LS_LAST_SCAN, String(scanNow));
         localStorage.setItem(LS_LIBRARY_UNLOCKED, '1');
         const payload = voiceResultToScanPayload(result);
         localStorage.setItem(LS_SCAN_SNAPSHOT, JSON.stringify(payload));
         setLibraryUnlocked(true);
-        setScanCooldownUntilMs(Date.now() + 24 * 60 * 60 * 1000);
+        setScanCooldownUntilMs(scanNow + 24 * 60 * 60 * 1000);
         const ownedIds = new Set(activeTransmissions.map((a) => a.id));
-const top33 = buildTop33Rankings(payload, 600, ownedIds);
+        const top33 = buildTop33Rankings(payload, 600, ownedIds);
         setResonanceMatches(top33);
+        // ── Cross-device sync: push scan state to Supabase ──
+        sqiSync.setLastScanAt(scanNow);
+        sqiSync.setScanSnapshot(payload);
+        sqiSync.setTop33Matches(top33, scanNow);
         setShowAllTop33(false);
         // BUG 3 FIX: Persist voice scan frequencies so SQI edge function can read them
         if (user?.id && top33?.length) {
