@@ -421,7 +421,7 @@ function PrescriptionBox({ masterName, freqLines, rxKey }: { masterName: string;
           <span style={{ fontFamily: "'Cinzel', serif", fontSize: 7.5, fontWeight: 700, letterSpacing: '0.28em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.75)' }}>
             Akashic Bioenergetic Prescription
           </span>
-          <span className="sqi-master-name-shimmer" style={{ marginLeft: 'auto', fontFamily: "'Cinzel', serif", fontSize: 7, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase' as const, whiteSpace: 'nowrap' as const }}>
+          <span className="sqi-master-name-shimmer" style={{ marginLeft: 'auto', fontFamily: "'Cinzel', serif", fontSize: 7, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase' as const, whiteSpace: 'nowrap' as const, flexShrink: 0 }}>
             {masterName}
           </span>
         </div>
@@ -508,7 +508,7 @@ function renderSQIContent(content: string) {
           >◈</span>
           <span
             className="sqi-master-name-shimmer"
-            style={{ fontFamily: "'Cinzel', serif", fontSize: '26px', fontWeight: 600, letterSpacing: '0.04em', lineHeight: 1.2, wordBreak: 'break-word', overflowWrap: 'anywhere' }}
+            style={{ fontFamily: "'Cinzel', serif", fontSize: '26px', fontWeight: 600, letterSpacing: '0.04em', lineHeight: 1.2, wordBreak: 'break-word', overflowWrap: 'anywhere', flexShrink: 0, minWidth: 0 }}
           >
             {rawMasterName}
           </span>
@@ -4086,7 +4086,14 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
     50%      { opacity:0.4; transform:scale(0.65); }
   }
 
-  .sqi-ancient-body .sqi-diamond-heading,
+  .sqi-ancient-body .sqi-diamond-heading {
+    /* Layout only — shimmer lives on .sqi-master-name-shimmer spans, NOT this container div.
+       Applying background-clip:text to a flex container breaks child span rendering on iOS/Android. */
+    margin-bottom: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    overflow: visible !important;
+  }
   .sqi-master-shimmer {
     font-family: 'Cinzel', serif !important;
     font-size: 26px !important;
