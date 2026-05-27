@@ -1,4 +1,4 @@
-name: Deploy Apothecary Chat to Lovable Supabase
+name: Deploy Apothecary + Bhrigu to Lovable Supabase
 
 on:
   workflow_dispatch:
@@ -6,6 +6,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -13,12 +14,22 @@ jobs:
         with:
           version: latest
 
-      - name: Set GEMINI_API_KEY secret on Lovable project
+      - name: Try set LOVABLE_API_KEY secret (may fail if no access)
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
-          supabase secrets set GEMINI_API_KEY=AIzaSyAceP9hWMpkuhG-8PMbOUZNrHnocVLx7jo \
-            --project-ref ssygukfdbtehvtndandn || echo "secret set failed — continuing"
+          supabase secrets set LOVABLE_API_KEY=${{ secrets.LOVABLE_API_KEY || \'\' }} \
+            --project-ref ssygukfdbtehvtndandn 2>&1 || echo "secrets set skipped (no access)"
+        continue-on-error: true
+
+      - name: Deploy bhrigu-oracle to Lovable project
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          supabase functions deploy bhrigu-oracle \
+            --project-ref ssygukfdbtehvtndandn \
+            --no-verify-jwt 2>&1
+        continue-on-error: true
 
       - name: Deploy quantum-apothecary-chat to Lovable project
         env:
@@ -26,4 +37,10 @@ jobs:
         run: |
           supabase functions deploy quantum-apothecary-chat \
             --project-ref ssygukfdbtehvtndandn \
-            --no-verify-jwt
+            --no-verify-jwt 2>&1
+        continue-on-error: true
+
+      - name: Report result
+        run: |
+          echo "Deployment attempted for both functions."
+          echo "Check Supabase function logs to confirm success."
