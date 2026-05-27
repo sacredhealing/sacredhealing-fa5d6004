@@ -3121,6 +3121,8 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
       style={{
         minHeight: 'calc(100vh - 120px)',
         maxWidth: '100%',
+        touchAction: 'pan-y',
+        WebkitOverflowScrolling: 'touch',
       }}
     >
       {/* Chat header — matches /admin-quantum-apothecary-2045 SQI strip */}
@@ -3443,8 +3445,8 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
      ââââââââââââââââââââââââââââââââââââââââââââââââââââââ */
   return (
     <div
-      className="relative min-h-screen text-white/90 overflow-x-hidden pb-24"
-      style={{ background: '#050505', position: 'relative', overscrollBehaviorX: 'none', padding: 0, margin: 0, width: '100vw', maxWidth: '100vw' }}
+      className="relative min-h-screen text-white/90 pb-24"
+      style={{ background: '#050505', position: 'relative', overflowX: 'hidden', overscrollBehavior: 'none', padding: 0, margin: 0, width: '100%', maxWidth: '100vw', paddingTop: 'env(safe-area-inset-top, 0px)', touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}
     >
 
       {/* ââ Akasha Deep Space Background ââ */}
