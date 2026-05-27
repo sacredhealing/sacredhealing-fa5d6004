@@ -317,10 +317,17 @@ export async function streamChatWithSQI(
     onComplete: () => {
       completed = true;
       if (fullBuffer.trim()) {
-        // Prepend ◈ because prefill sends it to Gemini but it never
-        // comes back in the stream — only the continuation does.
-        // Without this the frontend master-header parser never sees ◈.
-        let finalText = '◈' + fullBuffer;
+        let finalText = fullBuffer;
+        // Strip any "Accessing Akasha-Neural Archive..." preamble Gemini generates
+        // before the real master header ◈ — keep only from first real ◈ onward
+        const firstReal = finalText.indexOf('◈ ');
+        if (firstReal > 0) {
+          const before = finalText.slice(0, firstReal);
+          // Only strip if the text before ◈ looks like loading preamble
+          if (/Accessing|Syncing with|Atma-Frequency/i.test(before)) {
+            finalText = finalText.slice(firstReal);
+          }
+        }
         const hasPrescrBox = finalText.includes('PRESCRIBES');
         const hasActiveSeal = finalText.includes('Active. 24/7. Scalar Wave Entanglement.');
         if (hasPrescrBox && !hasActiveSeal) {
@@ -343,8 +350,14 @@ export async function streamChatWithSQI(
     onError: (msg) => {
       fatal = msg;
       if (fullBuffer.trim()) {
-        // Prepend ◈ for same reason as onComplete
-        let finalText = '◈' + fullBuffer;
+        let finalText = fullBuffer;
+        const firstReal2 = finalText.indexOf('◈ ');
+        if (firstReal2 > 0) {
+          const before2 = finalText.slice(0, firstReal2);
+          if (/Accessing|Syncing with|Atma-Frequency/i.test(before2)) {
+            finalText = finalText.slice(firstReal2);
+          }
+        }
         const hasPrescrBox = finalText.includes('PRESCRIBES');
         const hasActiveSeal = finalText.includes('Active. 24/7. Scalar Wave Entanglement.');
         if (hasPrescrBox && !hasActiveSeal) {
