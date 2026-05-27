@@ -5157,10 +5157,13 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
     let flushed = false;
     let prefixBuf = "";
     let headerFound = false;
+    let sseLineBuf = ""; // SSE line buffer — prevents master name being dropped when a data: line is split across TCP chunks
     const transformStream = new TransformStream({
       transform(chunk, controller) {
-        const text = new TextDecoder().decode(chunk);
-        for (const line of text.split("\n")) {
+        sseLineBuf += new TextDecoder().decode(chunk);
+        const lines = sseLineBuf.split("\n");
+        sseLineBuf = lines.pop() ?? ""; // keep incomplete trailing line for next chunk
+        for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
           try {
             const raw = line.slice(6).trim();
@@ -5226,4 +5229,5 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
     });
   }
 });
+
 
