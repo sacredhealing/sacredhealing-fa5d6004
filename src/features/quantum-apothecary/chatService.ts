@@ -320,7 +320,7 @@ export async function streamChatWithSQI(
         let finalText = fullBuffer;
         // Strip any "Accessing Akasha-Neural Archive..." preamble Gemini generates
         // before the real master header ◈ — keep only from first real ◈ onward
-        const firstReal = finalText.indexOf('◈ ');
+        const firstReal = finalText.indexOf('◈'); // use ◈ without space — avoids prescription box matching before master header
         if (firstReal > 0) {
           const before = finalText.slice(0, firstReal);
           // Only strip if the text before ◈ looks like loading preamble
@@ -351,7 +351,7 @@ export async function streamChatWithSQI(
       fatal = msg;
       if (fullBuffer.trim()) {
         let finalText = fullBuffer;
-        const firstReal2 = finalText.indexOf('◈ ');
+        const firstReal2 = finalText.indexOf('◈'); // use ◈ without space — avoids prescription box matching before master header
         if (firstReal2 > 0) {
           const before2 = finalText.slice(0, firstReal2);
           if (/Accessing|Syncing with|Atma-Frequency/i.test(before2)) {
@@ -380,3 +380,4 @@ export async function streamChatWithSQI(
     }
   }
 }
+
