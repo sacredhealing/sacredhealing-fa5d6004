@@ -5157,6 +5157,7 @@ serve(async (req) => {
     const body = await req.json();
     const LOVABLE_API_KEY = GEMINI_API_KEY_ENV;
     if (!LOVABLE_API_KEY) throw new Error("GEMINI_API_KEY not configured.");
+    console.log("[SQI] API key present:", LOVABLE_API_KEY.length > 0, "| key prefix:", LOVABLE_API_KEY.slice(0,6));
 
     // ── SCAN MODE ──────────────────────────────────────
     if (body.scanMode === true) {
@@ -5412,9 +5413,11 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
     });
 
     if (!response.ok) {
-      const t = await response.text();
-      console.error("Lovable AI error:", response.status, t);
-      return new Response(JSON.stringify({ error: "AI gateway error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const errText = await response.text();
+      console.error("Gemini API error:", response.status, errText);
+      let geminiMsg = "";
+      try { geminiMsg = JSON.parse(errText)?.error?.message ?? errText; } catch { geminiMsg = errText; }
+      return new Response(JSON.stringify({ error: "AI gateway error", detail: geminiMsg, status: response.status }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     let assistantText = "";
