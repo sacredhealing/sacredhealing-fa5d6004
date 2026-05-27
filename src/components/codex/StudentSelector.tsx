@@ -1,10 +1,10 @@
 // src/components/codex/StudentSelector.tsx
-// Mobile-first: bottom sheet on phones, dropdown on desktop.
-// Full student list visible. New student form scrollable.
+// v3 — Prominent exit-session UX. ✕ on trigger exits immediately.
+// Panel header shows "End session" clearly when a student is active.
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { X, Plus, Search, ChevronDown, Users, ChevronRight } from "lucide-react";
+import { X, Plus, Search, ChevronDown, Users } from "lucide-react";
 import {
   listStudents,
   getActiveStudentId,
@@ -69,8 +69,8 @@ export function StudentSelector() {
   const searchTimer = useRef<ReturnType<typeof setTimeout>>();
   const gold = "#D4AF37";
   const cyan = "#22D3EE";
+  const danger = "#f87171";
 
-  // Detect mobile
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     check();
@@ -78,7 +78,6 @@ export function StudentSelector() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  // Lock body scroll when bottom sheet open on mobile
   useEffect(() => {
     if (isMobile && open) {
       document.body.style.overflow = "hidden";
@@ -101,7 +100,19 @@ export function StudentSelector() {
 
   useEffect(() => { loadStudents(); }, [loadStudents]);
 
-  // Close on outside click (desktop only)
+  // Sync active student from localStorage changes
+  useEffect(() => {
+    const sync = () => {
+      const id = getActiveStudentId();
+      setActiveId(id);
+      if (!id) {
+        setActiveStudent(null);
+      }
+    };
+    window.addEventListener("sqi:active-student-changed", sync);
+    return () => window.removeEventListener("sqi:active-student-changed", sync);
+  }, []);
+
   useEffect(() => {
     if (isMobile) return;
     const handler = (e: MouseEvent) => {
@@ -114,7 +125,6 @@ export function StudentSelector() {
     return () => document.removeEventListener("mousedown", handler);
   }, [isMobile]);
 
-  // Search users
   useEffect(() => {
     clearTimeout(searchTimer.current);
     if (searchTerm.length < 2) { setSearchResults([]); return; }
@@ -133,10 +143,16 @@ export function StudentSelector() {
     setActiveId(id);
     setActiveStudent(student);
     setActiveStudentId(id);
-    window.dispatchEvent(new Event("sqi:active-student-changed"));
+    window.dispatchEvent(new CustomEvent("sqi:active-student-changed", { detail: { id } }));
     setOpen(false);
     setView("list");
   }, []);
+
+  // EXIT — clear student session immediately, no panel needed
+  const exitSession = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    selectStudent(null);
+  }, [selectStudent]);
 
   const handleCreate = async () => {
     setCreateError("");
@@ -174,28 +190,44 @@ export function StudentSelector() {
 
   const isActive = !!activeId;
 
-  // ─── Shared inner content ─────────────────────────────────────────────────
+  // ─── List content ─────────────────────────────────────────────
   const ListContent = () => (
     <div>
-      {/* Personal session */}
+      {/* Return to personal session — always at top, prominent when student is active */}
       <div
         onClick={() => selectStudent(null)}
         style={{
           display: "flex", alignItems: "center", gap: 12,
-          padding: "12px 16px", cursor: "pointer",
-          background: !activeId ? "rgba(212,175,55,0.05)" : "transparent",
-          borderBottom: "1px solid rgba(255,255,255,0.04)",
+          padding: "14px 16px", cursor: "pointer",
+          background: !activeId ? "rgba(212,175,55,0.05)" : "rgba(241,87,87,0.04)",
+          borderBottom: "1px solid rgba(255,255,255,0.05)",
+          transition: "background 0.12s",
         }}
       >
         <div style={{
           width: 34, height: 34, borderRadius: "50%",
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.08)",
+          background: activeId ? "rgba(241,87,87,0.08)" : "rgba(255,255,255,0.04)",
+          border: activeId ? "1px solid rgba(241,87,87,0.25)" : "1px solid rgba(255,255,255,0.08)",
           display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 12, color: "rgba(255,255,255,0.25)", flexShrink: 0,
-        }}>—</div>
-        <span style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>Personal session</span>
-        {!activeId && <span style={{ marginLeft: "auto", width: 7, height: 7, borderRadius: "50%", background: gold }} />}
+          fontSize: 13, flexShrink: 0,
+          color: activeId ? "rgba(241,87,87,0.8)" : "rgba(255,255,255,0.25)",
+        }}>
+          {activeId ? "✕" : "—"}
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{
+            fontSize: 13, fontWeight: 700,
+            color: activeId ? "rgba(241,87,87,0.9)" : "rgba(255,255,255,0.4)",
+          }}>
+            {activeId ? "End student session" : "Personal session"}
+          </div>
+          {activeId && (
+            <div style={{ fontSize: 10, color: "rgba(241,87,87,0.5)", marginTop: 2 }}>
+              Return to your own reading
+            </div>
+          )}
+        </div>
+        {!activeId && <span style={{ width: 7, height: 7, borderRadius: "50%", background: gold }} />}
       </div>
 
       {loading && (
@@ -205,7 +237,7 @@ export function StudentSelector() {
       )}
 
       {!loading && students.length === 0 && (
-        <div style={{ padding: "20px 16px", textAlign: "center" }}>
+        <div style={{ padding: "24px 16px", textAlign: "center" }}>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 12 }}>No students yet</div>
           <button
             type="button"
@@ -262,7 +294,7 @@ export function StudentSelector() {
                   textTransform: "uppercase", padding: "2px 6px", borderRadius: 4,
                   background: "rgba(34,211,238,0.07)", border: "1px solid rgba(34,211,238,0.18)",
                   color: "rgba(34,211,238,0.55)",
-                }}>App ✓</span>
+                }}>Chart ✓</span>
               )}
               {isSelected && <span style={{ width: 6, height: 6, borderRadius: "50%", background: gold }} />}
             </div>
@@ -272,9 +304,9 @@ export function StudentSelector() {
     </div>
   );
 
+  // ─── Create content ───────────────────────────────────────────
   const CreateContent = () => (
     <div style={{ padding: "16px" }}>
-      {/* Link to app user */}
       <div style={{
         fontSize: 8, fontWeight: 800, letterSpacing: "0.25em",
         textTransform: "uppercase", color: "rgba(212,175,55,0.4)", marginBottom: 10,
@@ -334,7 +366,6 @@ export function StudentSelector() {
               </div>
               <div style={{ display: "flex", gap: 4 }}>
                 {u.has_jyotish && <span style={{ fontSize: 8, padding: "1px 5px", borderRadius: 3, background: "rgba(34,211,238,0.07)", border: "1px solid rgba(34,211,238,0.15)", color: "rgba(34,211,238,0.55)" }}>Jyotish</span>}
-                {u.has_ayurveda && <span style={{ fontSize: 8, padding: "1px 5px", borderRadius: 3, background: "rgba(34,211,238,0.07)", border: "1px solid rgba(34,211,238,0.15)", color: "rgba(34,211,238,0.55)" }}>Ayurveda</span>}
               </div>
             </div>
           ))}
@@ -360,20 +391,19 @@ export function StudentSelector() {
         </div>
       )}
 
-      {/* Form */}
       {[
-        { label: "Name *", value: newName, onChange: setNewName, placeholder: "Full name", type: "text" },
-        { label: "Birth date", value: newDate, onChange: setNewDate, placeholder: "YYYY-MM-DD", type: "text" },
-        { label: "Birth time", value: newTime, onChange: setNewTime, placeholder: "HH:MM (24h)", type: "text" },
-        { label: "Birth place", value: newPlace, onChange: setNewPlace, placeholder: "City, Country", type: "text" },
-        { label: "Notes for SQI", value: newNotes, onChange: setNewNotes, placeholder: "Optional context", type: "text" },
-      ].map(({ label, value, onChange, placeholder, type }) => (
+        { label: "Name *", value: newName, onChange: setNewName, placeholder: "Full name" },
+        { label: "Birth date", value: newDate, onChange: setNewDate, placeholder: "YYYY-MM-DD" },
+        { label: "Birth time", value: newTime, onChange: setNewTime, placeholder: "HH:MM (24h)" },
+        { label: "Birth place", value: newPlace, onChange: setNewPlace, placeholder: "City, Country" },
+        { label: "Notes for SQI", value: newNotes, onChange: setNewNotes, placeholder: "Optional context" },
+      ].map(({ label, value, onChange, placeholder }) => (
         <div key={label} style={{ marginBottom: 10 }}>
           <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 5 }}>
             {label}
           </div>
           <input
-            type={type}
+            type="text"
             placeholder={placeholder}
             value={value}
             onChange={(e) => onChange(e.target.value)}
@@ -415,7 +445,7 @@ export function StudentSelector() {
     </div>
   );
 
-  // ─── Panel header ─────────────────────────────────────────────────────────
+  // ─── Panel header ─────────────────────────────────────────────
   const PanelHeader = () => (
     <div style={{
       padding: "14px 16px 12px",
@@ -440,32 +470,18 @@ export function StudentSelector() {
       </div>
       <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
         {view === "list" && (
-          <>
-            <button
-              type="button"
-              onClick={() => setView("create")}
-              style={{
-                fontSize: 8, fontWeight: 800, letterSpacing: "0.12em",
-                textTransform: "uppercase", padding: "5px 10px", borderRadius: 6,
-                border: "1px solid rgba(212,175,55,0.22)",
-                background: "rgba(212,175,55,0.09)", color: gold, cursor: "pointer",
-              }}
-            >
-              + New
-            </button>
-            <button
-              type="button"
-              onClick={() => { window.location.href = "/students"; }}
-              style={{
-                fontSize: 8, fontWeight: 800, letterSpacing: "0.12em",
-                textTransform: "uppercase", padding: "5px 10px", borderRadius: 6,
-                border: "1px solid rgba(255,255,255,0.07)",
-                background: "transparent", color: "rgba(255,255,255,0.3)", cursor: "pointer",
-              }}
-            >
-              Manage
-            </button>
-          </>
+          <button
+            type="button"
+            onClick={() => setView("create")}
+            style={{
+              fontSize: 8, fontWeight: 800, letterSpacing: "0.12em",
+              textTransform: "uppercase", padding: "5px 10px", borderRadius: 6,
+              border: "1px solid rgba(212,175,55,0.22)",
+              background: "rgba(212,175,55,0.09)", color: gold, cursor: "pointer",
+            }}
+          >
+            + New
+          </button>
         )}
         <button
           type="button"
@@ -479,7 +495,7 @@ export function StudentSelector() {
   );
 
   return (
-    <div style={{ position: "relative" }}>
+    <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 4 }}>
       {/* ── TRIGGER BUTTON ── */}
       <button
         ref={btnRef}
@@ -501,10 +517,28 @@ export function StudentSelector() {
         <ChevronDown size={10} style={{ opacity: 0.5, transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
       </button>
 
-      {/* ── MOBILE: FULL-SCREEN BOTTOM SHEET ── */}
+      {/* ── EXIT BUTTON — only shows when a student is active ── */}
+      {isActive && (
+        <button
+          type="button"
+          onClick={exitSession}
+          title="Exit student session — return to personal reading"
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "center",
+            width: 26, height: 26, borderRadius: 6, cursor: "pointer",
+            border: "1px solid rgba(241,87,87,0.35)",
+            background: "rgba(241,87,87,0.08)",
+            color: "rgba(241,87,87,0.8)",
+            flexShrink: 0, transition: "all 0.15s",
+          }}
+        >
+          <X size={12} />
+        </button>
+      )}
+
+      {/* ── MOBILE: BOTTOM SHEET ── */}
       {isMobile && open && (
         <>
-          {/* Backdrop */}
           <div
             onClick={() => { setOpen(false); setView("list"); }}
             style={{
@@ -512,13 +546,11 @@ export function StudentSelector() {
               background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)",
             }}
           />
-          {/* Sheet */}
           <div
             ref={panelRef}
             style={{
               position: "fixed", bottom: 0, left: 0, right: 0,
-              zIndex: 999,
-              maxHeight: "85vh",
+              zIndex: 999, maxHeight: "85vh",
               display: "flex", flexDirection: "column",
               background: "rgba(8,5,2,0.99)",
               border: "1px solid rgba(212,175,55,0.12)",
@@ -527,18 +559,13 @@ export function StudentSelector() {
               boxShadow: "0 -12px 60px rgba(0,0,0,0.9)",
             }}
           >
-            {/* Drag handle */}
             <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 0" }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.12)" }} />
             </div>
-
             <PanelHeader />
-
             <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
               {view === "list" ? <ListContent /> : <CreateContent />}
             </div>
-
-            {/* Active student strip */}
             {activeStudent && view === "list" && (
               <div style={{
                 padding: "10px 16px 20px",
@@ -565,7 +592,7 @@ export function StudentSelector() {
         </>
       )}
 
-      {/* ── DESKTOP: DROPDOWN PANEL ── */}
+      {/* ── DESKTOP: DROPDOWN ── */}
       {!isMobile && open && (
         <div
           ref={panelRef}
