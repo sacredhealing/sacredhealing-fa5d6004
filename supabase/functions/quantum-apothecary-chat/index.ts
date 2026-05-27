@@ -5018,7 +5018,11 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
       method: "POST", headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
-        messages: [{ role: "system", content: systemText.trim() }, ...aiMessages],
+        messages: [
+          { role: "system", content: systemText.trim() },
+          ...aiMessages,
+          { role: "assistant", content: "◈" }
+        ],
         temperature: 2.0,
         max_tokens: 12000,
         stream: true,
