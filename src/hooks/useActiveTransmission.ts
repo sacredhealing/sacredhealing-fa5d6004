@@ -119,6 +119,47 @@ export function useActiveTransmission() {
     await supabase.from('active_transmissions').delete().eq('user_id', u.id);
   }, []);
 
+  // ── Realtime: keep this device in sync when another device changes the active transmission ──
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase
+      .channel(`active-tx-sync-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'active_transmissions',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (payload.eventType === 'DELETE') {
+            setActive(null);
+            setIsPlaying(false);
+            setPosition(0);
+            return;
+          }
+          const data = payload.new as Record<string, unknown>;
+          if (data?.transmission_id && data.transmission_url) {
+            const meta =
+              data.metadata && typeof data.metadata === 'object'
+                ? (data.metadata as Record<string, unknown>)
+                : {};
+            setActive({
+              id: data.transmission_id as string,
+              title: (data.transmission_title as string) ?? '',
+              url: data.transmission_url as string,
+              type: (data.transmission_type as string) ?? 'audio',
+              metadata: meta,
+            });
+            setPosition(Number(data.playback_position) || 0);
+          }
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user?.id]);
+
   return {
     active,
     isPlaying,
