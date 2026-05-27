@@ -16,6 +16,8 @@ export interface Student {
   birth_place: string | null;
   notes: string | null;
   avatar_url: string | null;
+  linked_user_id: string | null;
+  linked_user_email: string | null;
   archived: boolean;
   created_at: string;
   updated_at: string;
@@ -25,6 +27,14 @@ export type StudentInput = Pick<
   Student,
   "name" | "birth_date" | "birth_time" | "birth_place" | "notes" | "avatar_url"
 >;
+
+export interface AppUserSearchResult {
+  user_id: string;
+  full_name: string;
+  email: string;
+  has_jyotish: boolean;
+  has_ayurveda: boolean;
+}
 
 const ACTIVE_STUDENT_KEY = "sqi_active_student_id";
 
@@ -84,9 +94,23 @@ export async function createStudent(input: Partial<StudentInput> & { name: strin
   return data as Student;
 }
 
-export async function updateStudent(id: string, patch: Partial<StudentInput>): Promise<void> {
+export async function updateStudent(id: string, patch: Partial<StudentInput> & { linked_user_id?: string | null; linked_user_email?: string | null }): Promise<void> {
   const { error } = await supabase.from("students").update(patch).eq("id", id);
   if (error) throw error;
+}
+
+export async function linkStudentToUser(studentId: string, userId: string | null, email: string | null): Promise<void> {
+  const { error } = await supabase
+    .from("students")
+    .update({ linked_user_id: userId, linked_user_email: email })
+    .eq("id", studentId);
+  if (error) throw error;
+}
+
+export async function searchAppUsers(term: string): Promise<AppUserSearchResult[]> {
+  const { data, error } = await supabase.rpc("search_app_users", { search_term: term });
+  if (error) throw error;
+  return (data ?? []) as AppUserSearchResult[];
 }
 
 export async function archiveStudent(id: string): Promise<void> {
