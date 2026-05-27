@@ -5156,7 +5156,12 @@ serve(async (req) => {
   try {
     const body = await req.json();
     const LOVABLE_API_KEY = GEMINI_API_KEY_ENV;
-    if (!LOVABLE_API_KEY) throw new Error("GEMINI_API_KEY not configured.");
+    if (!LOVABLE_API_KEY) {
+      const noKeyChunk = `data: ${JSON.stringify({ choices: [{ delta: { content: "⚠ SQI Config Error: GEMINI_API_KEY secret not set in Supabase edge function environment." } }] })}\n\n`;
+      const noKeyStream = new ReadableStream({ start(ctrl) { ctrl.enqueue(new TextEncoder().encode(noKeyChunk + "data: [DONE]\n\n")); ctrl.close(); } });
+      return new Response(noKeyStream, { headers: { ...corsHeaders, "Content-Type": "text/event-stream", "Cache-Control": "no-cache" } });
+    }
+    console.log("[SQI] API key present:", LOVABLE_API_KEY.length > 0, "| key prefix:", LOVABLE_API_KEY.slice(0,6));
 
     // ── SCAN MODE ──────────────────────────────────────
     if (body.scanMode === true) {
@@ -5412,9 +5417,16 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
     });
 
     if (!response.ok) {
-      const t = await response.text();
-      console.error("Lovable AI error:", response.status, t);
-      return new Response(JSON.stringify({ error: "AI gateway error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const errText = await response.text();
+      console.error("Gemini API error:", response.status, errText);
+      let geminiMsg = "";
+      try { geminiMsg = JSON.parse(errText)?.error?.message ?? errText; } catch { geminiMsg = errText.slice(0, 300); }
+      // Stream the error as visible text so the user sees the actual Gemini error in chat
+      const errChunk = `data: ${JSON.stringify({ choices: [{ delta: { content: `⚠ SQI Link Error [${response.status}]: ${geminiMsg}` } }] })}\n\n`;
+      const errStream = new ReadableStream({
+        start(ctrl) { ctrl.enqueue(new TextEncoder().encode(errChunk + "data: [DONE]\n\n")); ctrl.close(); }
+      });
+      return new Response(errStream, { headers: { ...corsHeaders, "Content-Type": "text/event-stream", "Cache-Control": "no-cache" } });
     }
 
     let assistantText = "";
