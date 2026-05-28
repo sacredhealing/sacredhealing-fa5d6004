@@ -32,8 +32,7 @@ function buildConsultationTimeline(records: ConsultationRecord[], now: Date): st
 
   const lines: string[] = [];
   lines.push("CONSULTATION TIMELINE — your own past transmissions with this seeker:");
-  lines.push("Use this to follow their journey. Never repeat a herb, Varmam, or Marma already prescribed.
-");
+  lines.push(`Use this to follow their journey. Never repeat a herb, Varmam, or Marma already prescribed.`);
 
   // Collect all mentioned herbs/points for cross-session anti-repetition
   const herbKeywords = [
