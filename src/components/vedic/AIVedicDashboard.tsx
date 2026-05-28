@@ -26,6 +26,7 @@ import { vedicLocaleTag } from '@/lib/vedicLocale';
 
 const CosmicConsultation = lazy(() => import('./CosmicConsultation').then((m) => ({ default: m.CosmicConsultation })));
 const AccurateHoraWatch = lazy(() => import('./AccurateHoraWatch').then((m) => ({ default: m.AccurateHoraWatch })));
+const BhriguOraclePanel = lazy(() => import('./BhriguOraclePanel').then((m) => ({ default: m.BhriguOraclePanel })));
 
 interface AIVedicDashboardProps {
   user: UserProfile;
@@ -655,6 +656,13 @@ export const AIVedicDashboard: React.FC<AIVedicDashboardProps> = ({ user, userId
           </div>
         </TempleSection>
       )}
+
+      {/* ══════════ BHRIGU NADI ORACLE — AI READING + HISTORY + LEXICON ══════════ */}
+      <TempleSection title="Bhrigu Nadi Oracle" icon="✦" defaultOpen={false}>
+        <Suspense fallback={<div style={{ color: 'rgba(212,175,55,0.5)', textAlign: 'center', padding: 32, fontSize: 12, letterSpacing: '0.2em' }}>LOADING ORACLE...</div>}>
+          <BhriguOraclePanel user={user} onUpgrade={onUpgrade} membershipTier={user.plan} />
+        </Suspense>
+      </TempleSection>
 
       {/* ══════════ NADI DIRECTIONAL MAPPING ══════════ */}
       {user.plan !== 'free' && reading && (
