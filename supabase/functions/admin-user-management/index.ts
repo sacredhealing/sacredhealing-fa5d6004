@@ -6,8 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-
-
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -75,13 +73,46 @@ serve(async (req) => {
         return new Response(JSON.stringify({ users: enriched }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
+      // ── NEW: Update profiles.membership_tier directly (service role) ──────
+      case "update_profile_tier": {
+        if (!userId || !updates?.membership_tier) throw new Error("userId and membership_tier required");
+
+        const validTiers = ["free", "prana-flow", "siddha-quantum", "akasha-infinity"];
+        if (!validTiers.includes(updates.membership_tier)) throw new Error("Invalid tier");
+
+        // Prevent demoting another admin
+        const { data: targetIsAdmin } = await adminClient.rpc("has_role", { _user_id: userId, _role: "admin" });
+        if (targetIsAdmin && updates.membership_tier === "free") {
+          throw new Error("Cannot set admin accounts to free tier");
+        }
+
+        // Update profiles.membership_tier (the field SubscriptionPortal reads)
+        const { error: profileErr } = await adminClient
+          .from("profiles")
+          .update({ membership_tier: updates.membership_tier })
+          .eq("id", userId);
+
+        if (profileErr) throw profileErr;
+
+        // Also update user_memberships if that table exists (underscore format)
+        const underscoreTier = updates.membership_tier.replace(/-/g, "_");
+        await adminClient
+          .from("user_memberships")
+          .upsert({
+            user_id: userId,
+            tier: underscoreTier,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: "user_id" })
+          .then(() => {}); // Non-fatal if this table doesn't exist
+
+        return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+      }
+
       case "delete_user": {
         if (!userId) throw new Error("userId required");
-        // Don't allow admin to delete themselves or another admin
         const { data: targetIsAdmin } = await adminClient.rpc("has_role", { _user_id: userId, _role: "admin" });
         if (targetIsAdmin) throw new Error("Cannot delete admin accounts");
 
-        // Wipe app data first (FKs may cascade, but be explicit)
         await adminClient.from("admin_granted_access").delete().eq("user_id", userId);
         await adminClient.from("user_memberships").delete().eq("user_id", userId);
         await adminClient.from("shc_transactions").delete().eq("user_id", userId);
@@ -111,6 +142,11 @@ serve(async (req) => {
           }, { onConflict: "user_id" });
 
         if (error) throw error;
+
+        // Also sync profiles.membership_tier (convert underscore→hyphen)
+        const hyphenTier = updates.tier.replace(/_/g, "-");
+        await adminClient.from("profiles").update({ membership_tier: hyphenTier }).eq("id", userId);
+
         return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
       }
 
