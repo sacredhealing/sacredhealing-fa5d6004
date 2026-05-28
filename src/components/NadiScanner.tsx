@@ -55,6 +55,8 @@ interface BioSignature {
   voicePitch: number;
   voiceTremor: number;
   breathDepth: number;
+  voiceCoherence: number;
+  voiceRmsMean: number;
   handTremor: number;
   restlessness: number;
   activatedNadi: 'Ida' | 'Pingala' | 'Sushumna' | 'Blocked';
@@ -82,6 +84,8 @@ function calculatePranaCoherence(bio: Partial<BioSignature>): {
   const hasRealHRV = hrv > 5 && hrv < 120;
   const hasRealFace = stability > 0 && browT !== 0.5;
   const hasRealFlux = skinFlux > 0.35;
+  const voiceCoh   = bio.voiceCoherence ?? 0.5;
+  const hasVoiceData = (bio.voiceRmsMean ?? 0) > 0.003; // real breath/voice was captured
 
   if (!hasRealHR && !hasRealHRV && !hasRealFace) {
     return { value: 0, confidence: 'INVALID', source: 'no signal' };
@@ -121,15 +125,18 @@ function calculatePranaCoherence(bio: Partial<BioSignature>): {
   const fluxScore = hasRealFlux ? Math.min(1, skinFlux) : 0.3;
 
   const weights = hasRealHRV
-    ? { hrv: 0.45, hr: 0.2, face: 0.2, blink: 0.08, flux: 0.07 }
-    : { hrv: 0.0, hr: 0.35, face: 0.35, blink: 0.15, flux: 0.15 };
+    ? { hrv: 0.38, hr: 0.17, face: 0.18, blink: 0.08, flux: 0.06, voice: 0.13 }
+    : { hrv: 0.0,  hr: 0.28, face: 0.28, blink: 0.13, flux: 0.11, voice: 0.20 };
+
+  const voiceScore = hasVoiceData ? Math.min(1, voiceCoh) : 0.5;
 
   const composite =
-    hrvScore * weights.hrv +
-    hrScore * weights.hr +
-    faceScore * weights.face +
-    blinkScore * weights.blink +
-    fluxScore * weights.flux;
+    hrvScore    * weights.hrv +
+    hrScore     * weights.hr +
+    faceScore   * weights.face +
+    blinkScore  * weights.blink +
+    fluxScore   * weights.flux +
+    voiceScore  * weights.voice;
 
   const value = Math.round(8000 + composite * 60000);
 
@@ -153,6 +160,82 @@ function calculatePranaCoherence(bio: Partial<BioSignature>): {
   return { value, confidence, source };
 }
 
+
+// ── REAL Voice Biofield Analysis ────────────────────────────────────────────
+// Uses RMS amplitude, TRUE spectral centroid (weighted average, not peak),
+// and Zero Crossing Rate to derive tremor, stability, calmness, breath rate.
+// Wired into Nadi determination — not just dosha labels.
+function analyzeVoiceBiofield(
+  rmsSeries: number[],
+  centroidSeries: number[],
+  zcrSeries: number[],
+): {
+  coherence: number;
+  tremor: number;
+  stability: number;
+  tonalStability: number;
+  calmness: number;
+  breathRate: number;
+  hasVoice: boolean;
+  rmsMean: number;
+} {
+  const mean = (arr: number[]) =>
+    arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+  const std = (arr: number[], m: number) =>
+    arr.length
+      ? Math.sqrt(arr.reduce((s, v) => s + (v - m) ** 2, 0) / arr.length)
+      : 0;
+
+  if (!rmsSeries.length) {
+    return { coherence: 0.5, tremor: 0.2, stability: 0.5, tonalStability: 0.5, calmness: 0.5, breathRate: 14, hasVoice: false, rmsMean: 0 };
+  }
+
+  const rmsMean   = mean(rmsSeries);
+  const rmsStd    = std(rmsSeries, rmsMean);
+  const centMean  = mean(centroidSeries);
+  const centStd   = std(centroidSeries, centMean);
+  const zcrMean   = mean(zcrSeries);
+
+  // Voice activity gate — distinguish real sound from silence
+  const VOICE_FLOOR = 0.006; // ~-44 dBFS, well above thermal noise
+  const voicedFrames = rmsSeries.filter((v) => v >= VOICE_FLOOR).length;
+  const hasVoice = voicedFrames >= 8;
+
+  // Stability: low RMS variance = calm, steady breath/voice
+  const stability = Math.max(0, Math.min(1, 1 - Math.min(1, rmsStd * 5)));
+
+  // Tonal stability: low centroid variance = relaxed, non-reactive voice
+  const tonalStability = Math.max(0, Math.min(1, 1 - Math.min(1, centStd / 1500)));
+
+  // Calmness: ZCR proxy for nervous energy (high ZCR = erratic, tense vocal texture)
+  const calmness = Math.max(0, Math.min(1, 1 - Math.min(1, zcrMean * 2.8)));
+
+  // Tremor: RMS variability maps to physical/emotional tremor (stress, fear, excitement)
+  const tremor = Math.max(0, Math.min(1, rmsStd * 4.5));
+
+  // Breath rate: count local amplitude maxima (each inhale = peak in RMS envelope)
+  // At ~requestAnimationFrame rate (≈60fps), 30s ≈ 1800 samples
+  const windowMs = 8; // smooth over 8 samples to remove micro-fluctuations
+  let breathPeaks = 0;
+  const threshold = rmsMean * 1.3;
+  for (let i = windowMs; i < rmsSeries.length - windowMs; i++) {
+    const local = rmsSeries.slice(i - windowMs, i + windowMs);
+    const localMax = Math.max(...local);
+    if (rmsSeries[i] === localMax && rmsSeries[i] > threshold) {
+      breathPeaks++;
+    }
+  }
+  // Convert peaks to breaths/min (scan is SCAN_DURATION seconds)
+  const breathRate = Math.max(8, Math.min(22, Math.round((breathPeaks / SCAN_DURATION) * 60)));
+
+  const coherence = Math.max(
+    0,
+    Math.min(1, stability * 0.35 + tonalStability * 0.35 + calmness * 0.3),
+  );
+
+  return { coherence, tremor, stability, tonalStability, calmness, breathRate, hasVoice, rmsMean };
+}
+
 // ── Vedic Translation ────────────────────────────────────────
 function translateBioToVedic(
   bio: Partial<BioSignature>,
@@ -166,8 +249,11 @@ function translateBioToVedic(
   const jaw = bio.jawTension ?? 0.3;
   const lrBalance = bio.leftRightBalance ?? 0;
   const stability = bio.headStability ?? 0.7;
-  const pitch = bio.voicePitch ?? 150;
-  const tremor = bio.handTremor ?? 0.2;
+  const pitch        = bio.voicePitch ?? 150;
+  const tremor       = bio.handTremor ?? 0.2;
+
+  const voiceTremorVal = bio.voiceTremor ?? 0.2;
+  const voiceCohVal    = bio.voiceCoherence ?? 0.5;
 
   const sympatheticScore =
     (hr > 80 ? 0.3 : hr > 70 ? 0.15 : 0) +
@@ -176,7 +262,10 @@ function translateBioToVedic(
     (iris > 0.65 ? 0.1 : 0) +
     (brow > 0.5 ? 0.1 : 0) +
     (jaw > 0.5 ? 0.05 : 0) +
-    (lrBalance > 0.2 ? 0.05 : 0);
+    (lrBalance > 0.2 ? 0.05 : 0) +
+    // Voice biofield contribution to sympathetic state
+    (voiceTremorVal > 0.35 ? 0.12 : voiceTremorVal > 0.2 ? 0.05 : 0) +
+    (voiceCohVal < 0.35 ? 0.08 : voiceCohVal < 0.5 ? 0.03 : 0);
 
   const parasympatheticScore =
     (hr < 65 ? 0.3 : hr < 72 ? 0.15 : 0) +
@@ -185,10 +274,14 @@ function translateBioToVedic(
     (iris < 0.4 ? 0.1 : 0) +
     (brow < 0.25 ? 0.1 : 0) +
     (jaw < 0.2 ? 0.05 : 0) +
-    (lrBalance < -0.2 ? 0.05 : 0);
+    (lrBalance < -0.2 ? 0.05 : 0) +
+    // Voice biofield contribution to parasympathetic state
+    (voiceTremorVal < 0.1 ? 0.12 : voiceTremorVal < 0.2 ? 0.05 : 0) +
+    (voiceCohVal > 0.65 ? 0.08 : voiceCohVal > 0.5 ? 0.03 : 0);
 
   const blockageScore =
-    (hrv < 18 ? 0.4 : 0) + (brow > 0.7 ? 0.2 : 0) + (jaw > 0.7 ? 0.2 : 0) + (tremor > 0.6 ? 0.2 : 0);
+    (hrv < 18 ? 0.35 : 0) + (brow > 0.7 ? 0.18 : 0) + (jaw > 0.7 ? 0.18 : 0) + (tremor > 0.6 ? 0.15 : 0) +
+    (voiceTremorVal > 0.55 ? 0.14 : 0); // high voice tremor signals deep blockage
 
   let activatedNadi: BioSignature['activatedNadi'];
   if (blockageScore > 0.5) {
@@ -234,6 +327,8 @@ function translateBioToVedic(
     voicePitch: pitch,
     voiceTremor: bio.voiceTremor ?? 0.2,
     breathDepth: bio.breathDepth ?? 0.6,
+    voiceCoherence: bio.voiceCoherence ?? 0.5,
+    voiceRmsMean: bio.voiceRmsMean ?? 0,
     handTremor: tremor,
     restlessness: bio.restlessness ?? 0.2,
     activatedNadi,
@@ -366,6 +461,7 @@ export default function NadiScanner({
   const captureRef = useRef<number | null>(null);
   const faceMeshRef = useRef<FaceMesh | null>(null);
   const voiceStopRef = useRef<(() => void) | null>(null);
+  const rafVoiceRef = useRef<number | null>(null);
 
   const bioAccum = useRef({
     frames: [] as ImageData[],
@@ -380,6 +476,9 @@ export default function NadiScanner({
     facialSymmetries: [] as number[],
     voicePitches: [] as number[],
     voiceTremors: [] as number[],
+    voiceRmsSeries: [] as number[],
+    voiceCentroidSeries: [] as number[],
+    voiceZcrSeries: [] as number[],
     motionSamples: [] as number[],
   });
 
@@ -397,6 +496,11 @@ export default function NadiScanner({
 
     voiceStopRef.current?.();
     voiceStopRef.current = null;
+
+    if (rafVoiceRef.current != null) {
+      cancelAnimationFrame(rafVoiceRef.current);
+      rafVoiceRef.current = null;
+    }
 
     try {
       faceMeshRef.current?.close();
@@ -423,7 +527,7 @@ export default function NadiScanner({
   useEffect(() => () => cleanupMedia(), [cleanupMedia]);
 
   const processRPPG = useCallback((frames: ImageData[]) => {
-    if (frames.length < 30) return { hr: 70, hrv: 28, rr: 14, flux: 0.3 };
+    if (frames.length < 30) return { hr: 0, hrv: 0, rr: 14, flux: 0.2 };
     const fps = frames.length / SCAN_DURATION;
 
     const rgb = frames.map((f) => {
@@ -478,20 +582,25 @@ export default function NadiScanner({
     }
 
     const duration = pos.length / fps;
+
+    // Signal variance gate — detect dark/blocked camera (flat signal = no pulse)
+    const posMean = pos.reduce((a, b) => a + b, 0) / (pos.length || 1);
+    const posVar  = pos.reduce((s, v) => s + (v - posMean) ** 2, 0) / (pos.length || 1);
+    const signalFlat = posVar < 1e-8;
+
     const hr =
-      peaks.length >= 2
+      !signalFlat && peaks.length >= 2
         ? Math.max(45, Math.min(115, Math.round(((peaks.length - 1) / duration) * 60)))
-        : 68 + Math.round(Math.random() * 10);
+        : 0; // 0 = no valid signal → triggers INVALID confidence gate
 
     const rri = peaks.slice(1).map((p, i) => ((p - peaks[i]) / fps) * 1000);
     const rmssd =
-      rri.length >= 4
+      !signalFlat && rri.length >= 4
         ? Math.sqrt(rri.slice(1).reduce((s, r, i) => s + (r - rri[i]) ** 2, 0) / rri.length)
-        : 28 + Math.random() * 15;
+        : 0; // 0 = no valid signal
 
-    const flux = Math.min(0.97, 0.4 + (peaks.length / 20) * 0.57);
-    const rr = Math.max(8, Math.min(22, 13 + Math.round(Math.random() * 3)));
-    return { hr, hrv: Math.round(Math.max(10, Math.min(100, rmssd))), rr, flux };
+    const flux = signalFlat ? 0.1 : Math.min(0.97, 0.4 + (peaks.length / 20) * 0.57);
+    return { hr, hrv: Math.round(Math.max(0, Math.min(100, rmssd))), rr: 14, flux };
   }, []);
 
   const initFaceMesh = useCallback(async (): Promise<FaceMesh | null> => {
@@ -568,29 +677,72 @@ export default function NadiScanner({
       const source = ctx.createMediaStreamSource(stream);
       const analyser = ctx.createAnalyser();
       analyser.fftSize = 2048;
+      analyser.smoothingTimeConstant = 0.6;
       source.connect(analyser);
-      const dataArray = new Float32Array(analyser.frequencyBinCount);
 
-      const measurePitch = window.setInterval(() => {
-        analyser.getFloatFrequencyData(dataArray);
-        const fft = analyser.fftSize;
-        const minBin = Math.floor((80 * fft) / ctx.sampleRate);
-        const maxBin = Math.floor((400 * fft) / ctx.sampleRate);
-        let maxVal = -Infinity;
-        let maxIdx = minBin;
+      const freqBuf  = new Float32Array(analyser.frequencyBinCount);
+      const timeBuf  = new Float32Array(analyser.fftSize);
+      const sr = ctx.sampleRate;
+      const fftSize = analyser.fftSize;
+
+      // Legacy pitch bins (80–400 Hz) for dosha Vata/Kapha
+      const minBin = Math.floor((80  * fftSize) / sr);
+      const maxBin = Math.floor((400 * fftSize) / sr);
+
+      const loop = () => {
+        analyser.getFloatFrequencyData(freqBuf);
+        analyser.getFloatTimeDomainData(timeBuf);
+
+        // ── RMS (amplitude envelope — breath + voice energy) ──
+        let rms = 0;
+        let zcr = 0;
+        let prev = 0;
+        for (let i = 0; i < timeBuf.length; i++) {
+          const v = timeBuf[i];
+          rms += v * v;
+          if (i > 0 && ((v >= 0 && prev < 0) || (v < 0 && prev >= 0))) zcr++;
+          prev = v;
+        }
+        rms = Math.sqrt(rms / timeBuf.length);
+        zcr /= timeBuf.length;
+
+        // ── TRUE spectral centroid (weighted mean frequency, not peak) ──
+        let weightedSum = 0;
+        let totalEnergy = 0;
+        for (let i = 1; i < freqBuf.length; i++) {
+          // Convert dBFS to linear power
+          const energy = Math.pow(10, freqBuf[i] / 10);
+          const freq   = (i * sr) / fftSize;
+          weightedSum  += freq * energy;
+          totalEnergy  += energy;
+        }
+        const centroid = totalEnergy > 1e-12 ? weightedSum / totalEnergy : 300;
+
+        bioAccum.current.voiceRmsSeries.push(rms);
+        bioAccum.current.voiceCentroidSeries.push(centroid);
+        bioAccum.current.voiceZcrSeries.push(zcr);
+
+        // ── Legacy pitch (dominant 80–400 Hz bin) for dosha mapping ──
+        let maxVal = -Infinity, maxIdx = minBin;
         for (let i = minBin; i < maxBin; i++) {
-          if (dataArray[i] > maxVal) {
-            maxVal = dataArray[i];
-            maxIdx = i;
-          }
+          if (freqBuf[i] > maxVal) { maxVal = freqBuf[i]; maxIdx = i; }
         }
-        const pitch = (maxIdx * ctx.sampleRate) / fft;
-        if (maxVal > -60) {
-          bioAccum.current.voicePitches.push(pitch);
+        // Only store if above a realistic voice floor (-45 dBFS)
+        if (maxVal > -45) {
+          bioAccum.current.voicePitches.push((maxIdx * sr) / fftSize);
         }
-      }, 200);
 
-      return () => clearInterval(measurePitch);
+        rafVoiceRef.current = requestAnimationFrame(loop);
+      };
+
+      rafVoiceRef.current = requestAnimationFrame(loop);
+
+      return () => {
+        if (rafVoiceRef.current != null) {
+          cancelAnimationFrame(rafVoiceRef.current);
+          rafVoiceRef.current = null;
+        }
+      };
     } catch (e) {
       console.warn('Voice analysis unavailable:', e);
       return () => {};
@@ -618,6 +770,9 @@ export default function NadiScanner({
         facialSymmetries: [],
         voicePitches: [],
         voiceTremors: [],
+        voiceRmsSeries: [],
+        voiceCentroidSeries: [],
+        voiceZcrSeries: [],
         motionSamples: [],
       };
 
@@ -643,7 +798,11 @@ export default function NadiScanner({
         const layers: string[] = ['❤ Pulse'];
         setActiveLayers([...layers]);
 
-        const faceMesh = await initFaceMesh();
+        // Timeout: if FaceMesh CDN stalls, continue without face layer
+        const faceMesh = await Promise.race([
+          initFaceMesh(),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000)),
+        ]);
         const voiceStop = await initVoiceAnalysis(stream);
         voiceStopRef.current = voiceStop;
 
@@ -679,8 +838,8 @@ export default function NadiScanner({
           if (!videoRef.current || !canvasRef.current) return;
           const cctx = canvasRef.current.getContext('2d');
           if (!cctx) return;
-          cctx.drawImage(videoRef.current, 0, 0, 80, 60);
-          const frame = cctx.getImageData(0, 0, 80, 60);
+          cctx.drawImage(videoRef.current, 0, 0, 160, 120);
+          const frame = cctx.getImageData(0, 0, 160, 120);
           bioAccum.current.frames.push(frame);
           if (faceMesh && videoRef.current) {
             void faceMesh.send({ image: videoRef.current }).catch(() => {});
@@ -723,6 +882,13 @@ export default function NadiScanner({
 
               const voicePitchMean = avg(acc.voicePitches) || 150;
 
+              // ── REAL Voice Biofield Analysis ──
+              const voice = analyzeVoiceBiofield(
+                acc.voiceRmsSeries,
+                acc.voiceCentroidSeries,
+                acc.voiceZcrSeries,
+              );
+
               const headMove =
                 acc.headPositions.length > 1
                   ? acc.headPositions.slice(1).map((p, i) =>
@@ -736,7 +902,7 @@ export default function NadiScanner({
               const rawBio: Partial<BioSignature> = {
                 heartRate: rppg.hr,
                 hrvRmssd: rppg.hrv,
-                respiratoryRate: rppg.rr,
+                respiratoryRate: voice.breathRate, // real breath rate from mic
                 skinFluxCoherence: rppg.flux,
                 blinkRate: Math.max(0, Math.min(40, blinkRate)),
                 irisOpenness: avg(acc.irisOpenness),
@@ -746,8 +912,10 @@ export default function NadiScanner({
                 facialSymmetry: avg(acc.facialSymmetries),
                 leftRightBalance: lrBalance,
                 voicePitch: voicePitchMean,
-                voiceTremor: 0.2,
-                breathDepth: 0.6,
+                voiceTremor: voice.tremor,       // real voice tremor
+                breathDepth: voice.stability,     // breath/voice stability as breath depth proxy
+                voiceCoherence: voice.coherence,  // wired into Nadi scoring
+                voiceRmsMean: voice.rmsMean,
                 handTremor,
                 restlessness: handTremor,
               };
@@ -1277,7 +1445,7 @@ export default function NadiScanner({
               )}
             </div>
           </div>
-          <canvas ref={canvasRef} width={80} height={60} style={{ display: 'none' }} />
+          <canvas ref={canvasRef} width={160} height={120} style={{ display: 'none' }} />
         </div>
       )}
 
