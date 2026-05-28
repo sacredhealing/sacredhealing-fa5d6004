@@ -67,8 +67,8 @@ function buildConsultationTimeline(records: ConsultationRecord[], now: Date): st
     const timeStr = date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
     // Extract first 280 chars as summary
-    const summary = rec.content.replace(/
-+/g, " ").slice(0, 280).trim() + (rec.content.length > 280 ? "…" : "");
+    const summary = rec.content.replace(/\s+/g, " ").slice(0, 280).trim() + (rec.content.length > 280 ? "…" : "");
+
 
     lines.push(`[${idx + 1}] ${dateStr} at ${timeStr} (${timeAgo})`);
     lines.push(`    "${summary}"`);
