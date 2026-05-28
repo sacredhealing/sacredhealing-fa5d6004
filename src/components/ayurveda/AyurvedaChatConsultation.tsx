@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, X, Sparkles, Loader2, Leaf, Flame, Moon, Heart } from 'lucide-react';
+import { Send, X, Sparkles, Loader2, Leaf, Flame, Moon, Heart, BookOpen, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import type { AyurvedaUserProfile, DoshaProfile } from '@/lib/ayurvedaTypes';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useChatMessages, type ChatMessage } from '@/hooks/useChatMessages';
+import { AyurvedaLexicon } from './AyurvedaLexicon';
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ayurveda-chat`;
 
@@ -409,6 +410,98 @@ const STYLES = `
       padding-right: 16px;
     }
   }
+  .sqi-hist-panel {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    background: linear-gradient(180deg, hsl(29 73% 6%) 0%, hsl(24 62% 3%) 100%);
+    display: flex;
+    flex-direction: column;
+    border-radius: 28px;
+    overflow: hidden;
+  }
+  .sqi-hist-header {
+    padding: 16px 18px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid hsl(var(--sqi-chat-gold) / 0.16);
+    background: linear-gradient(180deg, hsl(var(--sqi-chat-gold) / 0.05), transparent);
+    flex-shrink: 0;
+  }
+  .sqi-hist-title {
+    flex: 1;
+    color: hsl(var(--sqi-chat-gold));
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .sqi-hist-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 14px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--sqi-chat-gold) / 0.15) transparent;
+  }
+  .sqi-hist-date-label {
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: hsl(var(--sqi-chat-gold) / 0.45);
+    padding: 10px 6px 4px;
+  }
+  .sqi-hist-msg {
+    padding: 11px 14px;
+    border-radius: 14px;
+    font-size: 12.5px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .sqi-hist-msg.user {
+    background: hsl(var(--sqi-chat-gold) / 0.08);
+    border: 1px solid hsl(var(--sqi-chat-gold) / 0.2);
+    color: hsl(33 50% 88%);
+    margin-left: auto;
+    max-width: 88%;
+  }
+  .sqi-hist-msg.ai {
+    background: hsl(26 18% 10% / 0.9);
+    border: 1px solid hsl(var(--sqi-chat-gold) / 0.1);
+    color: hsl(33 12% 80%);
+    max-width: 92%;
+  }
+  .sqi-hist-role {
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+    color: hsl(var(--sqi-chat-gold) / 0.6);
+  }
+  .sqi-icon-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    border: 1px solid hsl(var(--sqi-chat-gold) / 0.2);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: hsl(var(--sqi-chat-gold) / 0.65);
+    transition: 0.2s ease;
+    flex-shrink: 0;
+  }
+  .sqi-icon-btn:hover {
+    color: hsl(var(--sqi-chat-gold));
+    border-color: hsl(var(--sqi-chat-gold) / 0.45);
+    background: hsl(var(--sqi-chat-gold) / 0.07);
+  }
 `;
 
 const NadiPulse = () => {
@@ -478,6 +571,8 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+  const [showLexicon, setShowLexicon] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const handleCopy = (text: string, idx: number) => {
     navigator.clipboard?.writeText(text).catch(() => {});
     setCopiedIdx(idx);
@@ -646,7 +741,69 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
           exit={{ y: '8%', opacity: 0 }}
           transition={{ type: 'spring', damping: 28, stiffness: 260 }}
         >
-          <div className="sqi-chat-topbar" />
+          {/* History Panel */}
+        {showHistory && (
+          <div className="sqi-hist-panel">
+            <div style={{ height: 2, flexShrink: 0, background: 'linear-gradient(90deg, transparent, hsl(var(--sqi-chat-gold)), transparent)', opacity: 0.8 }} />
+            <div className="sqi-hist-header">
+              <Clock style={{ width: 16, height: 16, color: 'hsl(var(--sqi-chat-gold))', flexShrink: 0 }} />
+              <div className="sqi-hist-title">Consultation History</div>
+              <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase', color: 'hsl(var(--sqi-chat-gold) / 0.45)', marginRight: 6 }}>
+                {persistedMsgs.length} messages
+              </div>
+              <button
+                type="button"
+                className="sqi-icon-btn"
+                onClick={() => setShowHistory(false)}
+                aria-label="Close history"
+              >
+                <X style={{ width: 15, height: 15 }} />
+              </button>
+            </div>
+            <div className="sqi-hist-list">
+              {persistedMsgs.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 0', color: 'hsl(var(--sqi-chat-gold) / 0.4)', fontSize: 13 }}>
+                  No consultation history yet.
+                </div>
+              ) : (() => {
+                // Group by date
+                const groups: Record<string, typeof persistedMsgs> = {};
+                persistedMsgs.forEach(msg => {
+                  const date = msg.created_at
+                    ? new Date(msg.created_at).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+                    : 'Recent';
+                  if (!groups[date]) groups[date] = [];
+                  groups[date].push(msg);
+                });
+                return Object.entries(groups).map(([date, msgs]) => (
+                  <React.Fragment key={date}>
+                    <div className="sqi-hist-date-label">{date}</div>
+                    {msgs.map((msg, i) => (
+                      <div key={msg.id ?? i} style={{ display: 'flex', flexDirection: 'column', alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
+                        <div className={`sqi-hist-msg ${msg.role === 'user' ? 'user' : 'ai'}`}>
+                          <div className="sqi-hist-role">
+                            {msg.role === 'user' ? 'You' : '◈ Agastya Muni'}
+                          </div>
+                          {msg.content}
+                        </div>
+                        {msg.role === 'assistant' && (
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(msg.content, -1 - i)}
+                            style={{ marginTop: 4, background: 'transparent', border: 'none', cursor: 'pointer', color: copiedIdx === -1 - i ? '#22c55e' : 'rgba(212,175,55,0.45)', fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '3px 8px' }}
+                          >
+                            {copiedIdx === -1 - i ? '✓ COPIED' : 'COPY'}
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </React.Fragment>
+                ));
+              })()}
+            </div>
+          </div>
+        )}
+        <div className="sqi-chat-topbar" />
 
           <div className="sqi-chat-header">
             <div className="sqi-dv-icon">🔱</div>
@@ -663,6 +820,24 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
               <div className="sqi-live-dot" />
               <span className="sqi-live-lbl">{t('ayurvedaChat.liveBadge', 'Live')}</span>
             </div>
+            <button
+              type="button"
+              className="sqi-icon-btn"
+              onClick={() => setShowHistory(true)}
+              aria-label="Chat history"
+              title="Consultation History"
+            >
+              <Clock style={{ width: 15, height: 15 }} />
+            </button>
+            <button
+              type="button"
+              className="sqi-icon-btn"
+              onClick={() => setShowLexicon(true)}
+              aria-label="Sanskrit Lexicon"
+              title="Sanskrit Lexicon"
+            >
+              <BookOpen style={{ width: 15, height: 15 }} />
+            </button>
             {onClose && (
               <button type="button" className="sqi-close" onClick={onClose}>
                 <X style={{ width: 15, height: 15 }} />
@@ -803,5 +978,10 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
   );
 
   if (typeof document === 'undefined') return null;
-  return createPortal(overlay, document.body);
+  return (
+    <>
+      {createPortal(overlay, document.body)}
+      <AyurvedaLexicon isOpen={showLexicon} onClose={() => setShowLexicon(false)} />
+    </>
+  );
 };
