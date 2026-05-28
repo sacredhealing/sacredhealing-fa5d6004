@@ -167,7 +167,7 @@ export function SubscriptionPortal({ isOpen, onClose }: Props) {
       try {
         const { error } = await supabase
           .from("profiles")
-          .update({ membership_tier: newTier })
+          .update({ membership_tier: newTier } as any)
           .eq("id", userId);
         if (error) throw error;
         setAdminUsers(prev => prev.map(u =>

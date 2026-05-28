@@ -1141,7 +1141,7 @@ export default function NadiScanner({
             </p>
             {[
               { icon: '☀', step: '1', title: 'Good light on your face', desc: 'Sit facing a window or lamp. Your face must be clearly lit — not backlit or in shadow. Dark rooms give poor readings.' },
-              { icon: '📱', step: '2', title: 'Hold phone 20–30 cm away', desc: 'Hold it at arm's length so your whole face fits in the oval. Prop it against something steady if possible.' },
+              { icon: '📱', step: '2', title: 'Hold phone 20–30 cm away', desc: "Hold it at arm's length so your whole face fits in the oval. Prop it against something steady if possible." },
               { icon: '🪑', step: '3', title: 'Sit still and settle for a moment', desc: 'Take one slow breath before pressing Start. The calmer you are at the beginning, the more accurate your reading.' },
             ].map(({ icon, step, title, desc }) => (
               <div key={step} style={{ display: 'flex', gap: 12, marginBottom: 10, alignItems: 'flex-start' }}>
