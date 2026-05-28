@@ -136,7 +136,7 @@ export function useQuantumSyncState() {
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       const row = { user_id: uid, updated_at: new Date().toISOString(), ...stateToRow(patch) };
-      await supabase.from('user_quantum_sync').upsert(row, { onConflict: 'user_id' });
+      await (supabase as any).from('user_quantum_sync').upsert(row, { onConflict: 'user_id' });
     }, 700);
   }, []);
 
