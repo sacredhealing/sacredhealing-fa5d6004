@@ -29,14 +29,13 @@ interface AdminUser {
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const TIER_CONFIG: Record<string, { label: string; glyph: string; color: string; glow: string; price: string; features: string[]; }> = {
-  free:             { label: "Akasha Free",      glyph: "◈", color: "rgba(255,255,255,0.4)", glow: "rgba(255,255,255,0.1)",  price: "Free",           features: ["Basic transmissions", "Community access", "Free meditations"] },
-  "prana-flow":     { label: "Prana-Flow",        glyph: "⟁", color: "#22D3EE",              glow: "rgba(34,211,238,0.25)",  price: "€19/mo",         features: ["All free features", "Siddha audio library", "Vedic astrology", "Jyotish curriculum"] },
-  "siddha-quantum": { label: "Siddha-Quantum",    glyph: "⬡", color: "#D4AF37",              glow: "rgba(212,175,55,0.35)", price: "€45/mo",         features: ["All Prana-Flow features", "Quantum Apothecary", "Scalar transmissions", "Living Portrait"] },
-  "akasha-infinity":{ label: "Akasha-Infinity",   glyph: "∞", color: "#D4AF37",              glow: "rgba(212,175,55,0.5)",  price: "€1,111 Lifetime", features: ["Everything, forever", "Sovereign lifetime access", "All future features", "1:1 Siddha field"] },
+  free:             { label: "Akasha Free",     glyph: "◈", color: "rgba(255,255,255,0.4)", glow: "rgba(255,255,255,0.1)",   price: "Free",          features: ["Basic transmissions", "Community access", "Free meditations"] },
+  "prana-flow":     { label: "Prana-Flow",       glyph: "⟁", color: "#22D3EE",              glow: "rgba(34,211,238,0.25)",   price: "€19/mo",        features: ["All free features", "Siddha audio library", "Vedic astrology", "Jyotish curriculum"] },
+  "siddha-quantum": { label: "Siddha-Quantum",   glyph: "⬡", color: "#D4AF37",              glow: "rgba(212,175,55,0.35)",   price: "€45/mo",        features: ["All Prana-Flow features", "Quantum Apothecary", "Scalar transmissions", "Living Portrait"] },
+  "akasha-infinity":{ label: "Akasha-Infinity",  glyph: "∞", color: "#D4AF37",              glow: "rgba(212,175,55,0.5)",    price: "€1,111 Lifetime",features: ["Everything, forever", "Sovereign lifetime access", "All future features", "1:1 Siddha field"] },
 };
 
 const TIER_ORDER = ["free", "prana-flow", "siddha-quantum", "akasha-infinity"];
-
 const ADMIN_EMAILS = ["sacredhealingvibe@gmail.com", "laila.amrouche@gmail.com"];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -68,17 +67,20 @@ export function SubscriptionPortal({ isOpen, onClose }: Props) {
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
 
-  const [profile, setProfile]             = useState<any>(null);
-  const [stripeData, setStripeData]       = useState<StripeDetails | null>(null);
-  const [loading, setLoading]             = useState(true);
+  const [profile, setProfile] = useState<any>(null);
+  const [stripeData, setStripeData] = useState<StripeDetails | null>(null);
+  const [loading, setLoading] = useState(true);
   const [stripeLoading, setStripeLoading] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [cancelConfirm, setCancelConfirm] = useState(false);
-  const [adminUsers, setAdminUsers]       = useState<AdminUser[]>([]);
-  const [adminLoading, setAdminLoading]   = useState(false);
-  const [activeTab, setActiveTab]         = useState<"overview" | "change" | "receipts" | "admin">("overview");
-  const [msg, setMsg]                     = useState<{ text: string; ok: boolean } | null>(null);
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
+  const [adminLoading, setAdminLoading] = useState(false);
+  const [adminSearch, setAdminSearch] = useState("");
+  const [updatingUser, setUpdatingUser] = useState<string | null>(null);
+  const [tierEdits, setTierEdits] = useState<Record<string, string>>({});
+  const [activeTab, setActiveTab] = useState<"overview" | "change" | "receipts" | "admin">("overview");
+  const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
 
   const userEmail = user?.email ?? "";
   const isAdminUser = isAdmin || ADMIN_EMAILS.includes(userEmail);
@@ -101,7 +103,6 @@ export function SubscriptionPortal({ isOpen, onClose }: Props) {
         .eq("id", user!.id)
         .single();
       setProfile(data);
-      // Also try to load live Stripe data
       loadStripeData();
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
@@ -127,9 +128,59 @@ export function SubscriptionPortal({ isOpen, onClose }: Props) {
         .from("profiles")
         .select("id, full_name, membership_tier, created_at, stripe_customer_id")
         .order("created_at", { ascending: false });
-      setAdminUsers((data || []) as unknown as AdminUser[]);
+      const users = (data || []) as unknown as AdminUser[];
+      setAdminUsers(users);
+      // Pre-fill tierEdits with current tiers
+      const edits: Record<string, string> = {};
+      users.forEach(u => { edits[u.id] = u.membership_tier || "free"; });
+      setTierEdits(edits);
     } catch (e) { console.error(e); }
     finally { setAdminLoading(false); }
+  }
+
+  // ─── Admin: Update a user's membership_tier directly in profiles ─────────
+  async function handleAdminTierUpdate(userId: string) {
+    const newTier = tierEdits[userId];
+    if (!newTier) return;
+    setUpdatingUser(userId);
+    setMsg(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("No session");
+
+      // Call admin-user-management edge function (has service role access)
+      const res = await supabase.functions.invoke("admin-user-management", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: { action: "update_profile_tier", userId, updates: { membership_tier: newTier } },
+      });
+
+      if (res.data?.error) throw new Error(res.data.error);
+
+      // Update local state immediately
+      setAdminUsers(prev => prev.map(u =>
+        u.id === userId ? { ...u, membership_tier: newTier } : u
+      ));
+      const userName = adminUsers.find(u => u.id === userId)?.full_name || "User";
+      setMsg({ text: `✦ ${userName} → ${TIER_CONFIG[newTier]?.label ?? newTier}`, ok: true });
+    } catch (e: any) {
+      // Fallback: try direct client update (works if RLS allows admin update)
+      try {
+        const { error } = await supabase
+          .from("profiles")
+          .update({ membership_tier: newTier })
+          .eq("id", userId);
+        if (error) throw error;
+        setAdminUsers(prev => prev.map(u =>
+          u.id === userId ? { ...u, membership_tier: newTier } : u
+        ));
+        const userName = adminUsers.find(u => u.id === userId)?.full_name || "User";
+        setMsg({ text: `✦ ${userName} → ${TIER_CONFIG[newTier]?.label ?? newTier} (direct)`, ok: true });
+      } catch (e2: any) {
+        setMsg({ text: `Could not update tier: ${e2.message}. Deploy admin edge function update.`, ok: false });
+      }
+    } finally {
+      setUpdatingUser(null);
+    }
   }
 
   async function handleCancel() {
@@ -168,33 +219,52 @@ export function SubscriptionPortal({ isOpen, onClose }: Props) {
   }
 
   async function openStripePortal() {
-    setPortalLoading(true);
+    setPortalLoading(true); setMsg(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("No session");
       const res = await supabase.functions.invoke("stripe-subscription-portal", {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
-      if (res.data?.portalUrl) window.open(res.data.portalUrl, "_blank");
-    } catch (e) { console.error(e); }
-    finally { setPortalLoading(false); }
+      if (res.data?.portalUrl) {
+        window.open(res.data.portalUrl, "_blank");
+      } else if (res.data?.isFreeTier || !res.data?.portalUrl) {
+        // No Stripe customer found — redirect to change tab with Stripe checkout
+        setActiveTab("change");
+        setMsg({ text: "No billing portal found. Choose a plan below to start your subscription.", ok: true });
+      } else {
+        setMsg({ text: "Billing portal unavailable. Please contact support.", ok: false });
+      }
+    } catch (e: any) {
+      setMsg({ text: "Could not open billing portal. Try again.", ok: false });
+      console.error(e);
+    } finally { setPortalLoading(false); }
   }
 
   if (!isOpen) return null;
 
+  // ─── Tier resolution: prefer stripeData, then profile, then free ─────────
   const tier = stripeData?.tier ?? profile?.membership_tier ?? "free";
-  const tc   = TIER_CONFIG[tier] ?? TIER_CONFIG.free;
-  const isPaid     = tier !== "free";
+  const tc = TIER_CONFIG[tier] ?? TIER_CONFIG.free;
+  const isPaid = tier !== "free";
   const isLifetime = tier === "akasha-infinity";
   const memberSince = stripeData?.memberSince ?? profile?.created_at ?? null;
-  const daysLeft    = stripeData?.daysRemaining ?? null;
-  const periodEnd   = stripeData?.periodEnd ?? null;
+  const daysLeft = stripeData?.daysRemaining ?? null;
+  const periodEnd = stripeData?.periodEnd ?? null;
   const cancelAtEnd = stripeData?.cancelAtPeriodEnd ?? false;
-  const currentIdx  = TIER_ORDER.indexOf(tier);
-  const upgrades    = TIER_ORDER.slice(currentIdx + 1).map(t => ({ key: t, ...TIER_CONFIG[t] }));
-  const downgrades  = TIER_ORDER.slice(1, currentIdx).map(t => ({ key: t, ...TIER_CONFIG[t] }));
+  const currentIdx = TIER_ORDER.indexOf(tier);
+  const upgrades = TIER_ORDER.slice(currentIdx + 1).map(t => ({ key: t, ...TIER_CONFIG[t] }));
+  const downgrades = TIER_ORDER.slice(1, currentIdx).map(t => ({ key: t, ...TIER_CONFIG[t] }));
 
-  // ─── Styles ─────────────────────────────────────────────────────────────────
+  // ─── Filtered admin users ────────────────────────────────────────────────
+  const filteredAdminUsers = adminSearch.trim()
+    ? adminUsers.filter(u =>
+        (u.full_name || "").toLowerCase().includes(adminSearch.toLowerCase()) ||
+        (u.email || "").toLowerCase().includes(adminSearch.toLowerCase())
+      )
+    : adminUsers;
+
+  // ─── Styles ─────────────────────────────────────────────────────────────
   const lbl: React.CSSProperties = { color: "rgba(255,255,255,0.4)", fontSize: 8, fontWeight: 800, letterSpacing: "0.5em", textTransform: "uppercase", marginBottom: 8 };
   const card: React.CSSProperties = { background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 20, padding: "18px 20px" };
   const tabBtn = (t: string): React.CSSProperties => ({
@@ -286,28 +356,28 @@ export function SubscriptionPortal({ isOpen, onClose }: Props) {
                   </span>
                 </div>
               </div>
+
+              {/* Days remaining bar */}
+              {!isLifetime && daysLeft !== null && (
+                <div style={card}>
+                  <DaysBar days={daysLeft} />
+                  {periodEnd && (
+                    <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginTop: 8, marginBottom: 0 }}>
+                      {cancelAtEnd ? "⚠ Access ends" : "Renews"} {fmt(periodEnd)}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Lifetime badge */}
+              {isLifetime && (
+                <div style={{ ...card, border: "1px solid rgba(212,175,55,0.25)", textAlign: "center", padding: 20 }}>
+                  <p style={{ color: "#D4AF37", fontSize: 22, margin: "0 0 4px" }}>∞</p>
+                  <p style={{ color: "#D4AF37", fontSize: 14, fontWeight: 700, margin: 0 }}>Eternal Sovereign Access</p>
+                  <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 12, marginTop: 4 }}>No renewals. No limits. No end.</p>
+                </div>
+              )}
             </div>
-
-            {/* Days remaining bar */}
-            {!isLifetime && daysLeft !== null && (
-              <div style={card}>
-                <DaysBar days={daysLeft} />
-                {periodEnd && (
-                  <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginTop: 8, marginBottom: 0 }}>
-                    {cancelAtEnd ? "⚠ Access ends" : "Renews"} {fmt(periodEnd)}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Lifetime badge */}
-            {isLifetime && (
-              <div style={{ ...card, border: "1px solid rgba(212,175,55,0.25)", textAlign: "center", padding: 20 }}>
-                <p style={{ color: "#D4AF37", fontSize: 22, margin: "0 0 4px" }}>∞</p>
-                <p style={{ color: "#D4AF37", fontSize: 14, fontWeight: 700, margin: 0 }}>Eternal Sovereign Access</p>
-                <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 12, marginTop: 4 }}>No renewals. No limits. No end.</p>
-              </div>
-            )}
 
             {/* Action buttons */}
             {isPaid && (
@@ -433,27 +503,98 @@ export function SubscriptionPortal({ isOpen, onClose }: Props) {
           </div>
 
         ) : activeTab === "admin" && isAdminUser ? (
-          /* ── ADMIN TAB ── */
+          /* ── ADMIN TAB — Full Tier Management ── */
           <div>
-            <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 12, marginBottom: 16 }}>
-              {adminLoading ? "Loading all users..." : `${adminUsers.length} members in the field`}
+            {/* Search */}
+            <div style={{ marginBottom: 14 }}>
+              <input
+                type="text"
+                placeholder="Search by name or email..."
+                value={adminSearch}
+                onChange={e => setAdminSearch(e.target.value)}
+                style={{
+                  width: "100%", padding: "10px 16px", background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, color: "#fff",
+                  fontSize: 13, outline: "none", boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 12, marginBottom: 14 }}>
+              {adminLoading ? "Loading all users..." : `${filteredAdminUsers.length} / ${adminUsers.length} members`}
             </p>
+
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {adminUsers.map(u => {
-                const utc = TIER_CONFIG[u.membership_tier] ?? TIER_CONFIG.free;
+              {filteredAdminUsers.map(u => {
+                const currentTierKey = u.membership_tier || "free";
+                const pendingTier = tierEdits[u.id] ?? currentTierKey;
+                const utc = TIER_CONFIG[currentTierKey] ?? TIER_CONFIG.free;
+                const pendingTc = TIER_CONFIG[pendingTier] ?? TIER_CONFIG.free;
+                const hasChange = pendingTier !== currentTierKey;
+                const isUpdating = updatingUser === u.id;
+
                 return (
-                  <div key={u.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 16, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12 }}>
-                    <span style={{ fontSize: 18, color: utc.color, flexShrink: 0 }}>{utc.glyph}</span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ color: "#fff", fontSize: 13, fontWeight: 700, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.full_name || "—"}</p>
-                      <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginTop: 2 }}>Joined {fmt(u.created_at)}</p>
+                  <div key={u.id} style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${hasChange ? "rgba(212,175,55,0.25)" : "rgba(255,255,255,0.05)"}`, borderRadius: 18, padding: "14px 16px" }}>
+                    {/* User info row */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+                      <span style={{ fontSize: 18, color: utc.color, flexShrink: 0 }}>{utc.glyph}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ color: "#fff", fontSize: 13, fontWeight: 700, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {u.full_name || "—"}
+                        </p>
+                        <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 10, marginTop: 2 }}>
+                          Joined {fmt(u.created_at)}
+                          {u.stripe_customer_id && <span style={{ marginLeft: 8, color: "rgba(34,197,94,0.5)" }}>● Stripe</span>}
+                        </p>
+                      </div>
+                      {/* Current tier badge */}
+                      <span style={{ background: `${utc.glow}`, border: `1px solid ${utc.color}`, borderRadius: 8, padding: "3px 10px", fontSize: 9, fontWeight: 800, color: utc.color, whiteSpace: "nowrap", letterSpacing: "0.06em", flexShrink: 0 }}>
+                        {utc.label}
+                      </span>
                     </div>
-                    <span style={{ background: `${utc.glow}`, border: `1px solid ${utc.color}`, borderRadius: 8, padding: "3px 10px", fontSize: 9, fontWeight: 800, color: utc.color, whiteSpace: "nowrap", letterSpacing: "0.06em" }}>
-                      {utc.label}
-                    </span>
+
+                    {/* Tier update row */}
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <select
+                        value={pendingTier}
+                        onChange={e => setTierEdits(prev => ({ ...prev, [u.id]: e.target.value }))}
+                        style={{
+                          flex: 1, padding: "8px 10px", background: "rgba(255,255,255,0.04)",
+                          border: `1px solid ${hasChange ? "rgba(212,175,55,0.4)" : "rgba(255,255,255,0.1)"}`,
+                          borderRadius: 10, color: pendingTc.color, fontSize: 12, fontWeight: 700,
+                          outline: "none", cursor: "pointer",
+                        }}
+                      >
+                        <option value="free" style={{ background: "#111", color: "rgba(255,255,255,0.7)" }}>◈ Akasha Free</option>
+                        <option value="prana-flow" style={{ background: "#111", color: "#22D3EE" }}>⟁ Prana-Flow — €19/mo</option>
+                        <option value="siddha-quantum" style={{ background: "#111", color: "#D4AF37" }}>⬡ Siddha-Quantum — €45/mo</option>
+                        <option value="akasha-infinity" style={{ background: "#111", color: "#D4AF37" }}>∞ Akasha-Infinity — Lifetime</option>
+                      </select>
+                      <button
+                        onClick={() => handleAdminTierUpdate(u.id)}
+                        disabled={!hasChange || isUpdating}
+                        style={{
+                          padding: "8px 16px", borderRadius: 10, border: "none", cursor: hasChange && !isUpdating ? "pointer" : "not-allowed",
+                          background: hasChange ? "linear-gradient(135deg,rgba(212,175,55,0.25),rgba(212,175,55,0.1))" : "rgba(255,255,255,0.03)",
+                          color: hasChange ? "#D4AF37" : "rgba(255,255,255,0.2)",
+                          fontSize: 11, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase",
+                          whiteSpace: "nowrap", flexShrink: 0, transition: "all 0.2s",
+                        }}
+                      >
+                        {isUpdating ? "..." : hasChange ? "✦ Save" : "No change"}
+                      </button>
+                    </div>
                   </div>
                 );
               })}
+            </div>
+
+            {/* Admin instructions note */}
+            <div style={{ marginTop: 18, padding: "12px 16px", background: "rgba(212,175,55,0.03)", border: "1px solid rgba(212,175,55,0.1)", borderRadius: 14 }}>
+              <p style={{ ...lbl, color: "rgba(212,175,55,0.5)", marginBottom: 6 }}>ADMIN NOTE</p>
+              <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, lineHeight: 1.6, margin: 0 }}>
+                Tier changes update <code style={{ color: "rgba(212,175,55,0.6)", fontSize: 10 }}>profiles.membership_tier</code> immediately. This controls all feature access gates. Stripe billing is separate — manual tier grants do not create Stripe subscriptions.
+              </p>
             </div>
           </div>
         ) : null}
