@@ -118,7 +118,7 @@ class RPPGEngine {
     );
     const quality = Math.min(100, Math.round((rawStd / 3) * 100)); // 0-100
 
-    if (rawStd < 0.3) return null; // signal too flat — no face or solid colour
+    if (rawStd < 0.5) return null; // signal too flat — poor light, no face, or camera blocked
 
     // DFT sweep 45–180 BPM (0.75 – 3.0 Hz)
     let bestPower = -1;
@@ -171,7 +171,12 @@ class RPPGEngine {
       }
     }
 
-    let hrv = 35; // fallback if not enough peaks
+    // HRV fallback: when peak detection can't get enough beats (short scan, poor signal),
+    // estimate from known HR/HRV correlation rather than a fixed number.
+    // At rest, lower HR generally means higher HRV — this preserves differentiation.
+    const bpmEst = Math.round(bestFreq * 60);
+    const hrvFallback = Math.max(12, Math.min(42, 85 - bpmEst * 0.7));
+    let hrv = Math.round(hrvFallback);
     if (peaks.length >= 3) {
       const ibis = [];
       for (let i = 1; i < peaks.length; i++) {
@@ -269,7 +274,9 @@ async function analyzeVoice(durationMs: number): Promise<number | null> {
         for (let i = lo; i <= hi; i++) {
           if (freqBuf[i] > maxPow) { maxPow = freqBuf[i]; maxBin = i; }
         }
-        if (maxPow > -80) pitchReadings.push(maxBin * binHz); // dB threshold
+        // -45 dBFS threshold rejects ambient room noise (~-50 to -40 dBFS)
+        // Only real voice/humming (louder than noise floor) gets counted
+        if (maxPow > -45 && rms > 0.008) pitchReadings.push(maxBin * binHz);
       }, 100);
 
       setTimeout(() => {
@@ -280,10 +287,10 @@ async function analyzeVoice(durationMs: number): Promise<number | null> {
       }, durationMs);
     });
 
-    // Need enough data to be meaningful
+    // If no real voice was detected, return null → user retries with humming
     if (pitchReadings.length < 5) return null;
 
-    // 1. Pitch stability: low coefficient of variation = steady voice = coherent NS
+    // 1. Pitch stability using only voiced frames (filtered above)
     const pitchMean = pitchReadings.reduce((a,b)=>a+b,0) / pitchReadings.length;
     const pitchStd  = Math.sqrt(pitchReadings.reduce((a,b)=>a+(b-pitchMean)**2,0) / pitchReadings.length);
     const pitchCV   = pitchMean > 0 ? pitchStd / pitchMean : 1; // 0=perfect, 1=chaotic
@@ -554,11 +561,29 @@ function CameraScanner({
         <p className="text-xs text-white/20 mt-0.5">{progress}%</p>
       </div>
 
-      <div className="w-full rounded-[16px] p-3 text-center"
+      {/* Live coaching — changes with progress */}
+      <div className="w-full rounded-[16px] p-3"
         style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.1)" }}>
-        <p className="text-[10px] text-white/30">
-          Face in frame · Frontal light · Hold still · Breathe naturally
-        </p>
+        {progress <= 25 && (
+          <p className="text-[10px] text-white/45 text-center leading-relaxed">
+            ☀ <strong style={{color:"rgba(255,255,255,0.6)"}}>Check your light</strong> — Face a window or lamp. If the signal bar stays red, move to brighter light.
+          </p>
+        )}
+        {progress > 25 && progress <= 55 && (
+          <p className="text-[10px] text-white/45 text-center leading-relaxed">
+            🌬 <strong style={{color:"rgba(255,255,255,0.6)"}}>Breathe slowly</strong> — Inhale 4 counts, exhale 6. Keep your face in the frame. Don't blink rapidly.
+          </p>
+        )}
+        {progress > 55 && progress <= 80 && (
+          <p className="text-[10px] text-white/45 text-center leading-relaxed">
+            😌 <strong style={{color:"rgba(255,255,255,0.6)"}}>Soften your face</strong> — Relax your jaw, unclench your brow, let your eyes be soft. HRV reads this.
+          </p>
+        )}
+        {progress > 80 && (
+          <p className="text-[10px] leading-relaxed text-center" style={{color:"rgba(212,175,55,0.7)"}}>
+            🙏 <strong>Almost done — do not move.</strong> HRV pattern locking in. Keep breathing slowly.
+          </p>
+        )}
       </div>
     </div>
   );
@@ -628,9 +653,24 @@ function VoiceScanner({ onComplete }: { onComplete: (coherence: number) => void 
           <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-[#D4AF37]/60">
             Voice Coherence Scan
           </p>
-          <p className="text-sm text-white/40">
-            Breathe deeply and hum or speak softly for 12 seconds. Your voice carries your nervous system signature.
-          </p>
+          <div className="flex flex-col gap-2 text-left">
+            <p className="text-sm text-white/50 leading-relaxed text-center">
+              Your voice and breath carry your nervous system signature. The scan reads tremor, pitch stability, and breath rhythm.
+            </p>
+            <div className="rounded-[16px] p-3 flex flex-col gap-2 mt-1"
+              style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.12)" }}>
+              {[
+                { icon: "🎵", text: 'Hum "Om" or any steady tone for the full 12 seconds' },
+                { icon: "🌬", text: "Or breathe audibly — slow inhale through nose, long exhale through mouth" },
+                { icon: "🤫", text: "Silence gives no data — even soft humming works perfectly" },
+                { icon: "📱", text: "Hold the phone close to your mouth or chin" },
+              ].map(({ icon, text }) => (
+                <p key={text} className="text-[10px] text-white/40 leading-relaxed">
+                  {icon} {text}
+                </p>
+              ))}
+            </div>
+          </div>
           <button
             onClick={startScan}
             className="px-8 py-3 rounded-full font-bold text-sm tracking-wider"
@@ -1167,6 +1207,29 @@ export default function SoulScan() {
               <p className="text-sm text-white/40 leading-relaxed">
                 SQI maps your 72,000 Nadis, Dosha field, HRV signature, Prana level, nervous system state, and Anahata resonance — <em>before and after</em> your practice.
               </p>
+            </div>
+
+            {/* ── BEFORE YOU BEGIN ── */}
+            <div className="rounded-[24px] p-4 flex flex-col gap-3"
+              style={{ background: "rgba(212,175,55,0.04)", border: "1px solid rgba(212,175,55,0.12)" }}>
+              <p className="text-[8px] font-bold tracking-[0.35em] uppercase text-[#D4AF37]/60">◈ Before You Begin</p>
+              {[
+                { icon: "☀", title: "Good light on your face", desc: "Sit facing a window or lamp. Not backlit. Dark rooms give unreliable readings." },
+                { icon: "📱", title: "Hold phone 20–30 cm away", desc: "Your whole face must be visible. Prop the phone if possible so it stays steady." },
+                { icon: "🪑", title: "Sit still and take one breath", desc: "Settle before pressing Start. The calmer your body, the more accurate the scan." },
+                { icon: "🎵", title: "Hum or breathe audibly for Voice scan", desc: 'Say "Om", hum softly, or breathe through your mouth. Silence gives poor voice data.' },
+              ].map(({ icon, title, desc }) => (
+                <div key={title} className="flex items-start gap-3">
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-sm"
+                    style={{ background: "rgba(212,175,55,0.1)", border: "1px solid rgba(212,175,55,0.2)" }}>
+                    {icon}
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold text-white/80 mb-0.5">{title}</p>
+                    <p className="text-[10px] leading-relaxed text-white/35">{desc}</p>
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* Scan modes */}
