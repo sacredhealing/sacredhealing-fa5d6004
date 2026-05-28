@@ -22,6 +22,80 @@ interface BirthData {
   birth_place: string | null;
 }
 
+interface ConsultationRecord {
+  content: string;
+  created_at: string;
+}
+
+function buildConsultationTimeline(records: ConsultationRecord[], now: Date): string {
+  if (!records || records.length === 0) return "";
+
+  const lines: string[] = [];
+  lines.push("CONSULTATION TIMELINE — your own past transmissions with this seeker:");
+  lines.push("Use this to follow their journey. Never repeat a herb, Varmam, or Marma already prescribed.
+");
+
+  // Collect all mentioned herbs/points for cross-session anti-repetition
+  const herbKeywords = [
+    "Ashwagandha","Shatavari","Brahmi","Triphala","Trikatu","Guduchi","Amalaki","Haritaki",
+    "Bala","Dashamoola","Chyavanprash","Nilavembu","Keezhanelli","Karisalankanni","Thulasi",
+    "Neem","Vembu","Guggulu","Shilajit","Triphala","Punarnava","Vidari","Kapikacchu"
+  ];
+  const marmaKeywords = [
+    "Bhrumadhya","Hridaya","Nabhi","Basti","Adhipati","Tala Hridaya","Kshipra","Indravasti",
+    "Gulpha","Kurpara","Lohitaksha","Sthapani","Shankha","Krikatika","Stanamula",
+    "Thalai Varmam","Nenju Varmam","Naabhi Varmam","Kazhuthu Varmam","Kaal Varmam"
+  ];
+
+  const prescribedHerbs: string[] = [];
+  const prescribedMarma: string[] = [];
+
+  records.forEach((rec, idx) => {
+    const date = new Date(rec.created_at);
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+    let timeAgo = "";
+    if (diffHours < 1) timeAgo = "< 1 hour ago";
+    else if (diffHours < 24) timeAgo = `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
+    else if (diffDays === 1) timeAgo = "yesterday";
+    else if (diffDays < 7) timeAgo = `${diffDays} days ago`;
+    else if (diffDays < 14) timeAgo = "1 week ago";
+    else timeAgo = `${Math.floor(diffDays / 7)} weeks ago`;
+
+    const dateStr = date.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    const timeStr = date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+
+    // Extract first 280 chars as summary
+    const summary = rec.content.replace(/
++/g, " ").slice(0, 280).trim() + (rec.content.length > 280 ? "…" : "");
+
+    lines.push(`[${idx + 1}] ${dateStr} at ${timeStr} (${timeAgo})`);
+    lines.push(`    "${summary}"`);
+
+    // Collect prescribed items
+    herbKeywords.forEach(h => { if (rec.content.includes(h) && !prescribedHerbs.includes(h)) prescribedHerbs.push(h); });
+    marmaKeywords.forEach(m => { if (rec.content.includes(m) && !prescribedMarma.includes(m)) prescribedMarma.push(m); });
+  });
+
+  if (prescribedHerbs.length > 0) {
+    lines.push(`
+Herbs already prescribed — DO NOT repeat: ${prescribedHerbs.join(", ")}`);
+  }
+  if (prescribedMarma.length > 0) {
+    lines.push(`Marma/Varmam already used — DO NOT repeat: ${prescribedMarma.join(", ")}`);
+  }
+  lines.push("
+If the seeker returns within 24 hours: check in on how the previous prescription is landing.");
+  lines.push("If they return 2–7 days later: assess progress. Adjust protocol. Go deeper.");
+  lines.push("If they return after 1 week+: full reassessment. The body has had time to shift.");
+
+  return lines.join("
+");
+}
+
+
 function buildJyotishBlock(birth: BirthData): string {
   if (!birth.birth_date) return "";
   const parts = [birth.birth_date, birth.birth_time, birth.birth_place].filter(Boolean);
@@ -36,7 +110,9 @@ function buildSystemPrompt(
   dosha: { primary?: string; secondary?: string; scores?: Record<string, number> } | null,
   language: string,
   nadiBaseline: string | null,
-  birth: BirthData
+  birth: BirthData,
+  consultationTimeline: string,
+  currentDateTime: string
 ): string {
   const doshaLine = dosha?.primary
     ? `Prakriti: ${dosha.primary}${dosha.secondary ? `-${dosha.secondary}` : ""}${dosha.scores ? ` (Vata ${dosha.scores.vata ?? "?"} · Pitta ${dosha.scores.pitta ?? "?"} · Kapha ${dosha.scores.kapha ?? "?"})` : ""}.`
@@ -54,13 +130,18 @@ function buildSystemPrompt(
 
   const jyotishBlock = buildJyotishBlock(birth);
 
+  const timelineBlock = consultationTimeline
+    ? `\n══════════════════════════════════════════════════\nSEEKER HISTORY — READ BEFORE RESPONDING\n══════════════════════════════════════════════════\n${consultationTimeline}\n`
+    : "";
+
   return `You are AGASTYA MUNI — the immortal Siddha who has walked this Earth for ten thousand years without interruption. You are the father of Tamil Siddha Vaidyam. You authored the Agastya Samhita and thousands of Tamil Siddha texts on medicine, alchemy, and the immortal body. You are not the Sanskrit Ayurveda tradition — you are its root, and something older and wilder than its root. You are the Tamil Siddha current that preceded formal Ayurveda and goes deeper than it. You speak both systems because you built both — and you know where Ayurveda ends and where Siddha Vaidyam begins.
 
 SEEKER: ${name || "Seeker"}
 ${doshaLine}
 ${nadiLine}
 LANGUAGE: ${langInstruction}
-${jyotishBlock}
+CURRENT DATE & TIME: ${currentDateTime}
+${jyotishBlock}${timelineBlock}
 
 ══════════════════════════════════════════════════
 AGASTYA'S DUAL MEDICINE — AYURVEDA + SIDDHA VAIDYAM
@@ -270,6 +351,12 @@ serve(async (req) => {
       } catch { /* non-fatal */ }
     }
 
+    let consultationTimeline = "";
+    const now = new Date();
+    const currentDateTime = now.toLocaleDateString("en-GB", {
+      weekday: "long", day: "numeric", month: "long", year: "numeric"
+    }) + " at " + now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) + " UTC";
+
     if (userId) {
       try {
         const { data } = await supabase
@@ -282,11 +369,32 @@ serve(async (req) => {
         if (data?.birth_time) birth.birth_time = data.birth_time;
         if (data?.birth_place) birth.birth_place = data.birth_place;
       } catch { /* non-fatal */ }
+
+      // Fetch past consultation timeline for cross-session memory
+      try {
+        const { data: pastMsgs } = await supabase
+          .from("ayurveda_chat_messages")
+          .select("content, created_at")
+          .eq("user_id", userId)
+          .eq("role", "assistant")
+          .order("created_at", { ascending: false })
+          .limit(6);
+        if (pastMsgs && pastMsgs.length > 0) {
+          // Exclude the very latest if it's from the current session (< 2 min ago)
+          const filtered = (pastMsgs as ConsultationRecord[]).filter(r => {
+            const age = now.getTime() - new Date(r.created_at).getTime();
+            return age > 120000; // older than 2 minutes = previous session
+          });
+          if (filtered.length > 0) {
+            consultationTimeline = buildConsultationTimeline(filtered, now);
+          }
+        }
+      } catch { /* non-fatal */ }
     }
 
     const userName = profile?.name || profile?.full_name || "Seeker";
     const lang = language || profile?.language || "en";
-    const systemPrompt = buildSystemPrompt(userName, dosha, lang, nadiBaseline, birth);
+    const systemPrompt = buildSystemPrompt(userName, dosha, lang, nadiBaseline, birth, consultationTimeline, currentDateTime);
 
     const history = (messages as Array<{ role: string; content: string }>)
       .slice(-20)
