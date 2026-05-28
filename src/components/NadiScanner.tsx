@@ -1134,52 +1134,47 @@ export default function NadiScanner({
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 24 }}>
+          {/* ── BEFORE YOU BEGIN ── */}
+          <div style={{ marginBottom: 20, padding: '16px 14px', borderRadius: 24, background: 'rgba(212,175,55,.04)', border: '1px solid rgba(212,175,55,.12)' }}>
+            <p style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.35em', textTransform: 'uppercase', color: 'rgba(212,175,55,.6)', marginBottom: 12 }}>
+              ◈ Before You Begin
+            </p>
             {[
-              { icon: '❤', label: 'Pulse rPPG', sub: 'HR · HRV · Respiratory' },
-              { icon: '◎', label: 'Face Mesh', sub: '468 landmarks · Iris' },
-              { icon: '🎙', label: 'Voice Field', sub: 'Pitch · Tremor · Breath' },
-              { icon: '≋', label: 'Motion', sub: 'Tremor · Restlessness' },
-            ].map(({ icon, label, sub }) => (
-              <div
-                key={label}
-                style={{
-                  background: 'rgba(255,255,255,.02)',
-                  border: '1px solid rgba(255,255,255,.05)',
-                  borderRadius: 20,
-                  padding: '12px 10px',
-                  textAlign: 'center',
-                }}
-              >
-                <div style={{ fontSize: 18, marginBottom: 4 }}>{icon}</div>
-                <p
-                  style={{
-                    fontSize: 9,
-                    fontWeight: 800,
-                    letterSpacing: '.1em',
-                    textTransform: 'uppercase',
-                    color: 'rgba(255,255,255,.7)',
-                    marginBottom: 2,
-                  }}
-                >
-                  {label}
-                </p>
-                <p style={{ fontSize: 8, color: 'rgba(255,255,255,.3)' }}>{sub}</p>
+              { icon: '☀', step: '1', title: 'Good light on your face', desc: 'Sit facing a window or lamp. Your face must be clearly lit — not backlit or in shadow. Dark rooms give poor readings.' },
+              { icon: '📱', step: '2', title: 'Hold phone 20–30 cm away', desc: 'Hold it at arm's length so your whole face fits in the oval. Prop it against something steady if possible.' },
+              { icon: '🪑', step: '3', title: 'Sit still and settle for a moment', desc: 'Take one slow breath before pressing Start. The calmer you are at the beginning, the more accurate your reading.' },
+            ].map(({ icon, step, title, desc }) => (
+              <div key={step} style={{ display: 'flex', gap: 12, marginBottom: 10, alignItems: 'flex-start' }}>
+                <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(212,175,55,.1)', border: '1px solid rgba(212,175,55,.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 14 }}>
+                  {icon}
+                </div>
+                <div>
+                  <p style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,.85)', marginBottom: 2 }}>{title}</p>
+                  <p style={{ fontSize: 10, color: 'rgba(255,255,255,.38)', lineHeight: 1.55 }}>{desc}</p>
+                </div>
               </div>
             ))}
           </div>
 
-          <p
-            style={{
-              fontSize: 11,
-              color: 'rgba(255,255,255,.35)',
-              lineHeight: 1.6,
-              marginBottom: 24,
-              padding: '0 8px',
-            }}
-          >
-            30-second scan. Camera + microphone required. Genuine bio-signature — different every person,
-            every scan.
+          {/* ── WHAT GETS MEASURED ── */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 20 }}>
+            {[
+              { icon: '❤', label: 'Pulse (rPPG)', sub: 'Your heartbeat is read from skin colour changes in the camera. Keep your face in the oval and hold still.' },
+              { icon: '◎', label: 'Face Mesh', sub: 'AI tracks 468 points on your face — brow tension, jaw, iris, blinking. Relax your face completely.' },
+              { icon: '🎙', label: 'Voice & Breath', sub: 'The mic reads your breath rhythm and voice tremor. Breathe slowly and deeply. You may hum or say "Om" softly.' },
+              { icon: '≋', label: 'Motion', sub: 'The phone senses micro-tremors in your hands. Rest your elbows or prop the phone to minimise shaking.' },
+            ].map(({ icon, label, sub }) => (
+              <div key={label} style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.05)', borderRadius: 18, padding: '12px 10px', textAlign: 'center' }}>
+                <div style={{ fontSize: 18, marginBottom: 5 }}>{icon}</div>
+                <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,.7)', marginBottom: 4 }}>{label}</p>
+                <p style={{ fontSize: 9, color: 'rgba(255,255,255,.3)', lineHeight: 1.5 }}>{sub}</p>
+              </div>
+            ))}
+          </div>
+
+          <p style={{ fontSize: 10, color: 'rgba(255,255,255,.3)', lineHeight: 1.6, marginBottom: 20, padding: '0 4px', textAlign: 'center' }}>
+            30-second scan · Camera + microphone required<br />
+            <span style={{ color: 'rgba(212,175,55,.4)' }}>Every person gets a genuinely unique reading based on their real bio-field.</span>
           </p>
           <button
             type="button"
@@ -1426,23 +1421,61 @@ export default function NadiScanner({
                 </span>
               ))}
             </div>
-            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {progress > 10 && (
-                <p style={{ fontSize: 10, color: 'rgba(255,255,255,.4)' }}>◈ Pulse waveform extracting</p>
+            {/* ── LIVE COACHING — changes as scan progresses ── */}
+            <div style={{ marginTop: 14, borderRadius: 18, background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,.04)', padding: '12px 14px' }}>
+              {progress <= 20 && (
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                  <span style={{ fontSize: 18, flexShrink: 0 }}>☀</span>
+                  <div>
+                    <p style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,.75)', marginBottom: 2 }}>Check your lighting</p>
+                    <p style={{ fontSize: 10, color: 'rgba(255,255,255,.38)', lineHeight: 1.5 }}>Make sure light is falling on your face — not behind you. If the oval stays white (not gold), move to brighter light.</p>
+                  </div>
+                </div>
               )}
-              {progress > 25 && faceDetected && (
-                <p style={{ fontSize: 10, color: 'rgba(255,255,255,.4)' }}>◈ 468 face landmarks tracking</p>
+              {progress > 20 && progress <= 40 && (
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                  <span style={{ fontSize: 18, flexShrink: 0 }}>🌬</span>
+                  <div>
+                    <p style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,.75)', marginBottom: 2 }}>Breathe slowly and deeply</p>
+                    <p style={{ fontSize: 10, color: 'rgba(255,255,255,.38)', lineHeight: 1.5 }}>Inhale through your nose for 4 counts, exhale for 6. Your microphone is reading your breath rhythm right now.</p>
+                  </div>
+                </div>
               )}
-              {progress > 40 && <p style={{ fontSize: 10, color: 'rgba(255,255,255,.4)' }}>◈ HRV inter-beat analysis</p>}
-              {progress > 55 && faceDetected && (
-                <p style={{ fontSize: 10, color: 'rgba(255,255,255,.4)' }}>◈ Iris coherence measuring</p>
+              {progress > 40 && progress <= 60 && (
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                  <span style={{ fontSize: 18, flexShrink: 0 }}>🎵</span>
+                  <div>
+                    <p style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,.75)', marginBottom: 2 }}>You may hum or say "Om" softly</p>
+                    <p style={{ fontSize: 10, color: 'rgba(255,255,255,.38)', lineHeight: 1.5 }}>A soft hum, mantra, or even a slow exhale through your lips gives the voice layer richer data. Silence is fine too — your breath is enough.</p>
+                  </div>
+                </div>
               )}
-              {progress > 70 && (
-                <p style={{ fontSize: 10, color: 'rgba(255,255,255,.4)' }}>◈ Facial tension mapping</p>
+              {progress > 60 && progress <= 80 && (
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                  <span style={{ fontSize: 18, flexShrink: 0 }}>😌</span>
+                  <div>
+                    <p style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,.75)', marginBottom: 2 }}>Soften your jaw and brow</p>
+                    <p style={{ fontSize: 10, color: 'rgba(255,255,255,.38)', lineHeight: 1.5 }}>Let your jaw drop slightly. Unclench your teeth. The face mesh is reading tension in your brow and jaw muscles — this directly affects your Nadi reading.</p>
+                  </div>
+                </div>
               )}
-              {progress > 85 && (
-                <p style={{ fontSize: 10, color: 'rgba(255,255,255,.4)' }}>◈ Nadi pattern recognition</p>
+              {progress > 80 && (
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                  <span style={{ fontSize: 18, flexShrink: 0 }}>🙏</span>
+                  <div>
+                    <p style={{ fontSize: 10, fontWeight: 800, color: 'rgba(212,175,55,.8)', marginBottom: 2 }}>Almost complete — stay still</p>
+                    <p style={{ fontSize: 10, color: 'rgba(255,255,255,.38)', lineHeight: 1.5 }}>Do not move now. The final phase locks in your HRV pattern and Nadi signature. Keep breathing slowly.</p>
+                  </div>
+                </div>
               )}
+            </div>
+            {/* System status (small, below coaching) */}
+            <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 3 }}>
+              {progress > 10 && <p style={{ fontSize: 9, color: 'rgba(255,255,255,.25)' }}>◈ Pulse waveform reading</p>}
+              {progress > 30 && faceDetected && <p style={{ fontSize: 9, color: 'rgba(255,255,255,.25)' }}>◈ 468 face landmarks active</p>}
+              {progress > 50 && <p style={{ fontSize: 9, color: 'rgba(255,255,255,.25)' }}>◈ Voice coherence + breath rate computing</p>}
+              {progress > 70 && <p style={{ fontSize: 9, color: 'rgba(255,255,255,.25)' }}>◈ HRV · Iris · Jaw mapping</p>}
+              {progress > 88 && <p style={{ fontSize: 9, color: 'rgba(212,175,55,.4)' }}>◈ Nadi pattern locking in</p>}
             </div>
           </div>
           <canvas ref={canvasRef} width={160} height={120} style={{ display: 'none' }} />
