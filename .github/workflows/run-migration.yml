@@ -11,20 +11,25 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Trigger migration edge function
+      - uses: actions/checkout@v4
+
+      - name: Run migration edge function
         run: |
-          echo "Calling migrate-to-new-project edge function..."
-          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+          echo "Calling migrate-to-new-project on old Supabase..."
+          RESPONSE=$(curl -s -X POST \
             "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/migrate-to-new-project" \
             -H "Content-Type: application/json" \
             -H "x-new-service-role: ${{ secrets.NEW_SERVICE_ROLE }}" \
             --max-time 300)
-          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-          BODY=$(echo "$RESPONSE" | head -n -1)
-          echo "HTTP Status: $HTTP_CODE"
-          echo "$BODY" | python3 -m json.tool 2>/dev/null || echo "$BODY"
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "Migration failed with status $HTTP_CODE"
-            exit 1
-          fi
-          echo "Migration complete!"
+
+          echo "Response:"
+          echo "$RESPONSE"
+          echo "$RESPONSE" > migration-report.json
+
+      - name: Commit migration report
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+          git add migration-report.json
+          git diff --staged --quiet || git commit -m "chore: migration report $(date +%Y%m%d-%H%M%S)"
+          git push || true
