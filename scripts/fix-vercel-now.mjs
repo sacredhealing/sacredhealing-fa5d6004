@@ -2,7 +2,7 @@ import https from 'https';
 
 const TOKEN = process.env.VERCEL_TOKEN;
 const NEW_URL = 'https://fjdzhrdpioxdeyyfogep.supabase.co';
-const NEW_KEY = 'sb_publishable_H4AI2ZzqOL1Y7o6qRMr8ew_5-4pih8F';
+const NEW_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMDQwMDMsImV4cCI6MjA5MzY4MDAwM30.Mkbodv6uEb1yMKA0UIKMzm-cFWfcgNFXr-LLGtqoNcg';
 const NEW_PROJECT_ID = 'fjdzhrdpioxdeyyfogep';
 
 function api(method, path, body) {
@@ -44,7 +44,6 @@ async function main() {
     const { b: envData } = await api('GET', `/v9/projects/${project.id}/env`, null);
     const existing = envData?.envs || [];
 
-    // Delete all old Supabase-related env vars
     for (const env of existing) {
       if (KEYS.includes(env.key)) {
         const { s } = await api('DELETE', `/v9/projects/${project.id}/env/${env.id}`, null);
@@ -53,28 +52,21 @@ async function main() {
       }
     }
 
-    // Create fresh with correct NEW Supabase values
     const newVars = KEYS.map(key => ({
       key, value: VALUES[key], type: 'encrypted',
       target: ['production', 'preview', 'development']
     }));
-
     const { s } = await api('POST', `/v9/projects/${project.id}/env`, newVars);
     console.log(`  Created all vars (${s}) ✅`);
     await sleep(200);
 
-    // Trigger redeploy
     const { s: ds } = await api('POST', `/v13/deployments`, {
-      name: project.name,
-      project: project.id,
-      target: 'production',
+      name: project.name, project: project.id, target: 'production',
       gitSource: { type: 'github', ref: 'main' }
     });
-    console.log(`  Redeploying... (${ds})`);
+    console.log(`  Redeploying (${ds})`);
   }
-
-  console.log('\n✅ Done! siddhaquantumnexus.com will use NEW Supabase in ~2 minutes.');
-  console.log('Login with: SiddhaQuantum2050!');
+  console.log('\n✅ All done! Login with SiddhaQuantum2050!');
 }
 
 main().catch(e => { console.error(e.message); process.exit(1); });
