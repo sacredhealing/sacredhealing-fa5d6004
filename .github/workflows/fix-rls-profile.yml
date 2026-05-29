@@ -1,0 +1,47 @@
+name: Fix RLS and Insert Profile
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-rls-profile.yml'
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fix profiles RLS and insert Adam
+        run: |
+          PAT="${{ secrets.SUPABASE_ACCESS_TOKEN }}"
+          REF="fjdzhrdpioxdeyyfogep"
+          BASE="https://fjdzhrdpioxdeyyfogep.supabase.co"
+          SVC="${{ secrets.NEW_SERVICE_ROLE }}"
+          UUID="bd0b21c9-577a-450b-bb1e-21c9d0423f17"
+
+          run_sql() {
+            curl -s -X POST "https://api.supabase.com/v1/projects/$REF/database/query" \
+              -H "Authorization: Bearer $PAT" \
+              -H "Content-Type: application/json" \
+              -d "{\"query\":\"$1\"}"
+          }
+
+          echo "=== Check profiles table columns ==="
+          run_sql "SELECT column_name, data_type FROM information_schema.columns WHERE table_name='profiles' AND table_schema='public' ORDER BY ordinal_position"
+
+          echo ""
+          echo "=== Check existing RLS policies on profiles ==="
+          run_sql "SELECT policyname, cmd, qual FROM pg_policies WHERE tablename='profiles'"
+
+          echo ""
+          echo "=== Check existing profile rows ==="
+          run_sql "SELECT id, email, full_name, display_name, membership_tier FROM public.profiles LIMIT 5"
+
+          echo ""
+          echo "=== Add RLS policies for profiles ==="
+          run_sql "DROP POLICY IF EXISTS allow_users_read_own ON public.profiles"
+          run_sql "CREATE POLICY allow_users_read_own ON public.profiles FOR SELECT USING (auth.uid() = id)"
+          run_sql "DROP POLICY IF EXISTS allow_users_update_own ON public.profiles"
+          run_sql "CREATE POLICY allow_users_update_own ON public.profiles FOR UPDATE USING (auth.uid() = id)"
+          run_sql "DROP POLICY IF EXISTS allow_insert_own ON public.profiles"
+          run_sql "CREATE POLICY allow_insert_own ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id)"
+
+          echo "RLS policies done"
