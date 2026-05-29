@@ -1,0 +1,162 @@
+name: Grant Full Access to Admins
+
+on:
+  push:
+    paths:
+      - '.github/workflows/grant-full-access.yml'
+
+jobs:
+  grant:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Grant everything to Adam and Laila
+        env:
+          SVC: ${{ secrets.NEW_SERVICE_ROLE }}
+          PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          node << 'EOF'
+          const https = require('https');
+          const NEW = 'https://fjdzhrdpioxdeyyfogep.supabase.co';
+          const SVC = process.env.SVC;
+          const PAT = process.env.PAT;
+          const REF = 'fjdzhrdpioxdeyyfogep';
+          const ADAM = 'bd0b21c9-577a-450b-bb1e-21c9d0423f17';
+
+          function req(url, method, headers, body) {
+            return new Promise((resolve) => {
+              const u = new URL(url);
+              const payload = body ? JSON.stringify(body) : '';
+              const r = https.request({ hostname: u.hostname, path: u.pathname + u.search, method,
+                headers: { ...headers, ...(payload ? { 'Content-Length': Buffer.byteLength(payload) } : {}) }
+              }, (res) => {
+                let d = ''; res.on('data', c => d += c);
+                res.on('end', () => { try { resolve({ s: res.statusCode, b: JSON.parse(d) }); } catch { resolve({ s: res.statusCode, b: d }); } });
+              });
+              r.on('error', e => resolve({ s: 0, b: e.message }));
+              if (payload) r.write(payload);
+              r.end();
+            });
+          }
+
+          function sql(query) {
+            return req(`https://api.supabase.com/v1/projects/${REF}/database/query`, 'POST',
+              { 'Authorization': `Bearer ${PAT}`, 'Content-Type': 'application/json' }, { query });
+          }
+
+          const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+          async function grantEverything(uuid, name, email) {
+            console.log(`\n=== Granting full access to ${name} (${uuid}) ===`);
+
+            // 1. Ensure profile exists with full access
+            const profileResult = await sql(`
+              INSERT INTO public.profiles (
+                user_id, email, full_name, display_name,
+                membership_tier, subscription_tier, subscription_status,
+                has_prana_flow_access, has_siddha_quantum_access, has_akasha_infinity_access,
+                is_admin, onboarding_completed, preferred_language,
+                push_enabled, email_notifications, notify_live, notify_new_post, notify_new_message
+              ) VALUES (
+                '${uuid}', '${email}', '${name}', '${name}',
+                'akasha_infinity', 'akasha_infinity', 'active',
+                true, true, true,
+                true, true, 'en',
+                false, true, true, true, true
+              )
+              ON CONFLICT (user_id) DO UPDATE SET
+                membership_tier = 'akasha_infinity',
+                subscription_tier = 'akasha_infinity',
+                subscription_status = 'active',
+                has_prana_flow_access = true,
+                has_siddha_quantum_access = true,
+                has_akasha_infinity_access = true,
+                is_admin = true,
+                onboarding_completed = true
+            `);
+            console.log(`Profile: ${profileResult.s}`);
+            await sleep(200);
+
+            // 2. Admin role
+            await sql(`INSERT INTO public.user_roles (user_id, role) VALUES ('${uuid}', 'admin') ON CONFLICT (user_id, role) DO NOTHING`);
+            await sql(`INSERT INTO public.user_roles (user_id, role) VALUES ('${uuid}', 'super_admin') ON CONFLICT (user_id, role) DO NOTHING`);
+            console.log('Admin roles set');
+            await sleep(200);
+
+            // 3. Grant all features in admin_granted_access
+            const features = [
+              'creative_soul_meditation', 'siddha_oracle', 'creative_soul',
+              'quantum_apothecary', 'bhrigu_oracle', 'ayurveda',
+              'jyotish', 'nadi_scanner', 'virtual_pilgrimage',
+              'akashic_codex', 'healing_audio', 'meditations',
+              'shakti_cycle', 'practitioner_cert', 'stargate',
+              'community', 'live_events', 'group_chat',
+              'premium', 'prana_flow', 'siddha_quantum', 'akasha_infinity',
+              'all_features', 'admin_panel'
+            ];
+
+            for (const f of features) {
+              await sql(`INSERT INTO public.admin_granted_access (user_id, access_type, access_id)
+                VALUES ('${uuid}', 'program', '${f}')
+                ON CONFLICT DO NOTHING`);
+              await sql(`INSERT INTO public.admin_granted_access (user_id, access_type, access_id)
+                VALUES ('${uuid}', '${f}', NULL)
+                ON CONFLICT DO NOTHING`);
+            }
+            console.log(`Granted ${features.length} features in admin_granted_access`);
+            await sleep(200);
+
+            // 4. Creative soul entitlements
+            for (const f of features) {
+              await sql(`INSERT INTO public.creative_soul_entitlements (user_id, feature_key)
+                VALUES ('${uuid}', '${f}')
+                ON CONFLICT (user_id, feature_key) DO NOTHING`);
+            }
+            console.log('Creative soul entitlements set');
+            await sleep(200);
+          }
+
+          async function main() {
+            // Get Laila's UUID from auth
+            console.log('=== Finding Laila UUID ===');
+            const users = await req(`${NEW}/auth/v1/admin/users?per_page=100`,
+              'GET', { 'apikey': SVC, 'Authorization': `Bearer ${SVC}` });
+
+            let lailaUUID = null;
+            if (users.b && users.b.users) {
+              const laila = users.b.users.find(u => u.email === 'laila.amrouche@gmail.com');
+              lailaUUID = laila?.id;
+              console.log('All users:', users.b.users.map(u => `${u.email}:${u.id.slice(0,8)}`).join(', '));
+            }
+
+            // Grant to Adam
+            await grantEverything(ADAM, 'Adam', 'sacredhealingvibe@gmail.com');
+
+            // Grant to Laila if found
+            if (lailaUUID) {
+              await grantEverything(lailaUUID, 'Laila', 'laila.amrouche@gmail.com');
+            } else {
+              console.log('\nLaila not found in auth - creating her account...');
+              const createLaila = await req(`${NEW}/auth/v1/admin/users`, 'POST',
+                { 'apikey': SVC, 'Authorization': `Bearer ${SVC}`, 'Content-Type': 'application/json' },
+                { email: 'laila.amrouche@gmail.com', password: 'SiddhaAdmin2026', email_confirm: true,
+                  user_metadata: { full_name: 'Laila', display_name: 'Laila' } });
+              lailaUUID = createLaila.b?.id;
+              console.log('Laila created:', lailaUUID);
+              if (lailaUUID) await grantEverything(lailaUUID, 'Laila', 'laila.amrouche@gmail.com');
+            }
+
+            // Verify
+            console.log('\n=== Final verification ===');
+            const adamProfile = await sql(`SELECT membership_tier, is_admin, has_akasha_infinity_access FROM public.profiles WHERE user_id = '${ADAM}'`);
+            console.log('Adam profile:', JSON.stringify(adamProfile.b));
+            if (lailaUUID) {
+              const lailaProfile = await sql(`SELECT membership_tier, is_admin, has_akasha_infinity_access FROM public.profiles WHERE user_id = '${lailaUUID}'`);
+              console.log('Laila profile:', JSON.stringify(lailaProfile.b));
+            }
+            const roles = await sql(`SELECT user_id, role FROM public.user_roles`);
+            console.log('All admin roles:', JSON.stringify(roles.b));
+            console.log('\nDONE - Full access granted to both admins');
+          }
+
+          main().catch(e => { console.error('FATAL:', e.message); process.exit(1); });
+          EOF
