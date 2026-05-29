@@ -18,20 +18,24 @@ export default defineConfig(({ mode }) => {
     "";
 
   /** Lovable Cloud Secrets often use SUPABASE_URL / SUPABASE_ANON_KEY without VITE_ — expose as client env */
+  // On Vercel: process.env has project settings (new Supabase)
+  // On Lovable: fileEnv (.env file) has old Supabase — preserves lovable.app
   const supabaseUrlForClient =
-    (fileEnv.VITE_SUPABASE_URL || "").trim() ||
     (process.env.VITE_SUPABASE_URL || "").trim() ||
-    (fileEnv.SUPABASE_URL || "").trim() ||
     (process.env.SUPABASE_URL || "").trim() ||
+    (fileEnv.VITE_SUPABASE_URL || "").trim() ||
+    (fileEnv.SUPABASE_URL || "").trim() ||
     "";
 
+  // On Vercel: process.env has project settings (new Supabase key)
+  // On Lovable: fileEnv (.env file) has old Supabase key
   const supabasePublishableForClient =
-    (fileEnv.VITE_SUPABASE_PUBLISHABLE_KEY || "").trim() ||
     (process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "").trim() ||
-    (fileEnv.VITE_SUPABASE_ANON_KEY || "").trim() ||
     (process.env.VITE_SUPABASE_ANON_KEY || "").trim() ||
-    (fileEnv.SUPABASE_ANON_KEY || "").trim() ||
     (process.env.SUPABASE_ANON_KEY || "").trim() ||
+    (fileEnv.VITE_SUPABASE_PUBLISHABLE_KEY || "").trim() ||
+    (fileEnv.VITE_SUPABASE_ANON_KEY || "").trim() ||
+    (fileEnv.SUPABASE_ANON_KEY || "").trim() ||
     "";
 
   return {
