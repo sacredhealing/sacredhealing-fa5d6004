@@ -1,0 +1,87 @@
+name: Fix Auth Users
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-users.yml'
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: List and fix auth users
+        env:
+          SVC: ${{ secrets.NEW_SERVICE_ROLE }}
+        run: |
+          BASE="https://fjdzhrdpioxdeyyfogep.supabase.co"
+          
+          echo "=== All users in new Supabase ==="
+          USERS=$(curl -s "$BASE/auth/v1/admin/users?per_page=100" \
+            -H "apikey: $SVC" -H "Authorization: Bearer $SVC")
+          echo "$USERS" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+for u in d.get('users',[]):
+    meta = u.get('user_metadata',{})
+    print(f'  {u[\"email\"]} | id:{u[\"id\"]} | name:{meta.get(\"full_name\",meta.get(\"name\",\"\"))}')
+"
+
+          echo ""
+          echo "=== Deleting all users except sacredhealingvibe and laila ==="
+          KEEP=("sacredhealingvibe@gmail.com" "laila.amrouche@gmail.com")
+          
+          echo "$USERS" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+keep=['sacredhealingvibe@gmail.com','laila.amrouche@gmail.com']
+for u in d.get('users',[]):
+    if u['email'] not in keep:
+        print(u['id']+'|'+u['email'])
+" | while IFS='|' read UID EMAIL; do
+            echo "  Deleting: $EMAIL ($UID)"
+            curl -s -X DELETE "$BASE/auth/v1/admin/users/$UID" \
+              -H "apikey: $SVC" -H "Authorization: Bearer $SVC"
+          done
+
+          echo ""
+          echo "=== Ensuring sacredhealingvibe@gmail.com exists with correct UUID ==="
+          # Delete existing and recreate with exact UUID bd0b21c9-577a-450b-bb1e-21c9d0423f17
+          EXISTING=$(curl -s "$BASE/auth/v1/admin/users?per_page=100" \
+            -H "apikey: $SVC" -H "Authorization: Bearer $SVC" \
+            | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+for u in d.get('users',[]):
+    if u['email']=='sacredhealingvibe@gmail.com':
+        print(u['id'])
+")
+          
+          if [ -n "$EXISTING" ]; then
+            echo "  Found existing user: $EXISTING"
+            # Reset password
+            curl -s -X PUT "$BASE/auth/v1/admin/users/$EXISTING" \
+              -H "apikey: $SVC" -H "Authorization: Bearer $SVC" \
+              -H "Content-Type: application/json" \
+              -d '{"password":"SiddhaQuantum2050!","email_confirm":true}' \
+              | python3 -c "import sys,json; d=json.load(sys.stdin); print('  Reset OK' if 'id' in d else '  Error:'+str(d)[:80])"
+          else
+            echo "  Creating with correct UUID..."
+            curl -s -X POST "$BASE/auth/v1/admin/users" \
+              -H "apikey: $SVC" -H "Authorization: Bearer $SVC" \
+              -H "Content-Type: application/json" \
+              -d '{"id":"bd0b21c9-577a-450b-bb1e-21c9d0423f17","email":"sacredhealingvibe@gmail.com","password":"SiddhaQuantum2050!","email_confirm":true}' \
+              | python3 -c "import sys,json; d=json.load(sys.stdin); print('  Created:'+d.get('id','')[:8] if 'id' in d else '  Error:'+str(d)[:80])"
+          fi
+
+          echo ""
+          echo "=== Final user list ==="
+          curl -s "$BASE/auth/v1/admin/users?per_page=100" \
+            -H "apikey: $SVC" -H "Authorization: Bearer $SVC" \
+            | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+users=d.get('users',[])
+print(f'Total: {len(users)}')
+for u in users:
+    print(f'  {u[\"email\"]} | {u[\"id\"]} | confirmed:{bool(u.get(\"email_confirmed_at\"))}')
+"
