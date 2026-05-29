@@ -1,0 +1,50 @@
+name: Create Meditations Table
+
+on:
+  push:
+    paths:
+      - '.github/workflows/create-meditations.yml'
+
+jobs:
+  create:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create meditations table in new Supabase
+        run: |
+          PAT="${{ secrets.SUPABASE_ACCESS_TOKEN }}"
+          REF="fjdzhrdpioxdeyyfogep"
+
+          sql() {
+            curl -s -X POST "https://api.supabase.com/v1/projects/$REF/database/query" \
+              -H "Authorization: Bearer $PAT" \
+              -H "Content-Type: application/json" \
+              --data-binary "{\"query\":$(echo "$1" | python3 -c 'import sys,json; print(json.dumps(sys.stdin.read().strip()))')}"
+          }
+
+          echo "=== Create meditations table ==="
+          sql "CREATE TABLE IF NOT EXISTS public.meditations (
+            id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+            title text NOT NULL,
+            description text,
+            duration_minutes integer,
+            audio_url text,
+            cover_image_url text,
+            category text,
+            is_premium boolean DEFAULT false,
+            shc_reward integer DEFAULT 5,
+            play_count integer DEFAULT 0,
+            created_at timestamptz DEFAULT now(),
+            script_text text,
+            language text DEFAULT 'en'
+          )"
+
+          echo "=== Grant permissions ==="
+          sql "GRANT ALL ON public.meditations TO authenticated, anon, service_role"
+
+          echo "=== Enable RLS ==="
+          sql "ALTER TABLE public.meditations ENABLE ROW LEVEL SECURITY"
+          sql "CREATE POLICY read_all ON public.meditations FOR SELECT USING (true)"
+          sql "CREATE POLICY admin_all ON public.meditations TO service_role USING (true) WITH CHECK (true)"
+
+          echo "=== Check table created ==="
+          sql "SELECT COUNT(*) FROM public.meditations"
