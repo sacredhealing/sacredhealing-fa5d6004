@@ -1,0 +1,188 @@
+name: Migrate All Member Profiles
+
+on:
+  push:
+    paths:
+      - '.github/workflows/migrate-all-members.yml'
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Migrate all member profiles from old to new Supabase
+        env:
+          SVC: ${{ secrets.NEW_SERVICE_ROLE }}
+          PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          node << 'EOF'
+          const https = require('https');
+          const OLD = 'https://ssygukfdbtehvtndandn.supabase.co';
+          const NEW = 'https://fjdzhrdpioxdeyyfogep.supabase.co';
+          const OLD_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4';
+          const SVC = process.env.SVC;
+          const PAT = process.env.PAT;
+          const REF = 'fjdzhrdpioxdeyyfogep';
+
+          function req(url, method, headers, body) {
+            return new Promise((resolve) => {
+              const u = new URL(url);
+              const payload = body ? JSON.stringify(body) : '';
+              const r = https.request({ hostname: u.hostname, path: u.pathname + u.search, method,
+                headers: { ...headers, ...(payload ? { 'Content-Length': Buffer.byteLength(payload) } : {}) }
+              }, (res) => {
+                let d = ''; res.on('data', c => d += c);
+                res.on('end', () => { try { resolve({ s: res.statusCode, b: JSON.parse(d) }); } catch { resolve({ s: res.statusCode, b: d }); } });
+              });
+              r.on('error', e => resolve({ s: 0, b: e.message }));
+              if (payload) r.write(payload);
+              r.end();
+            });
+          }
+
+          function sql(query) {
+            return req(`https://api.supabase.com/v1/projects/${REF}/database/query`, 'POST',
+              { 'Authorization': `Bearer ${PAT}`, 'Content-Type': 'application/json' }, { query });
+          }
+
+          const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+          async function main() {
+            // STEP 1: Get all auth users from old Supabase via edge function
+            console.log('=== Step 1: Migrate auth users ===');
+            const authRes = await req(`${OLD}/functions/v1/migrate-to-new-project`,
+              'POST', {
+                'Content-Type': 'application/json',
+                'x-new-service-role': SVC
+              }, {});
+            console.log('Edge function status:', authRes.s);
+            if (authRes.b && authRes.b.report) {
+              const r = authRes.b.report;
+              console.log('Auth users found:', r.auth_users_found);
+              console.log('Auth result:', JSON.stringify(r.auth));
+              console.log('Profiles:', JSON.stringify(r.profiles));
+            } else {
+              console.log('Response:', JSON.stringify(authRes.b).slice(0,300));
+            }
+
+            // STEP 2: Also directly get profiles via old anon key (public fields)
+            // and upsert into new Supabase using service role
+            console.log('\n=== Step 2: Direct profile migration ===');
+            const profilesRes = await req(`${OLD}/rest/v1/profiles?select=*&limit=1000`,
+              'GET', { 'apikey': OLD_KEY, 'Authorization': `Bearer ${OLD_KEY}` });
+
+            if (profilesRes.s === 200 && Array.isArray(profilesRes.b)) {
+              console.log(`Found ${profilesRes.b.length} profiles in old Supabase`);
+
+              // For each profile, ensure the auth user exists in new Supabase
+              let profilesCreated = 0, profilesSkipped = 0, errors = [];
+
+              for (const profile of profilesRes.b) {
+                const userId = profile.user_id;
+                if (!userId) continue;
+
+                // Check if profile already exists in new Supabase
+                const existing = await sql(`SELECT user_id FROM public.profiles WHERE user_id = '${userId}'`);
+                if (existing.b && Array.isArray(existing.b) && existing.b.length > 0) {
+                  // Profile exists - update tier if they have a paid tier
+                  const tier = profile.membership_tier || profile.subscription_tier || 'free';
+                  if (tier !== 'free') {
+                    await sql(`UPDATE public.profiles SET
+                      membership_tier = '${tier}',
+                      subscription_tier = '${tier}',
+                      has_prana_flow_access = ${['prana_flow','prana-flow','siddha_quantum','siddha-quantum','akasha_infinity','akasha-infinity'].includes(tier)},
+                      has_siddha_quantum_access = ${['siddha_quantum','siddha-quantum','akasha_infinity','akasha-infinity'].includes(tier)},
+                      has_akasha_infinity_access = ${['akasha_infinity','akasha-infinity'].includes(tier)}
+                    WHERE user_id = '${userId}'`);
+                  }
+                  profilesSkipped++;
+                  continue;
+                }
+
+                // Check if auth user exists
+                const authCheck = await req(`${NEW}/auth/v1/admin/users?page=1&per_page=1000`,
+                  'GET', { 'apikey': SVC, 'Authorization': `Bearer ${SVC}` });
+
+                const authExists = authCheck.b?.users?.some(u => u.id === userId);
+
+                if (!authExists) {
+                  // Create auth user with temp password
+                  const email = profile.email;
+                  if (!email) { profilesSkipped++; continue; }
+
+                  const createRes = await req(`${NEW}/auth/v1/admin/users`, 'POST',
+                    { 'apikey': SVC, 'Authorization': `Bearer ${SVC}`, 'Content-Type': 'application/json' },
+                    { id: userId, email, password: 'SiddhaQuantum2050!', email_confirm: true,
+                      user_metadata: { full_name: profile.full_name || profile.display_name || '' } });
+
+                  if (createRes.s > 299 && createRes.s !== 422) {
+                    errors.push(`Auth ${email}: ${createRes.s}`);
+                    continue;
+                  }
+                  await sleep(100);
+                }
+
+                // Create profile
+                const tier = profile.membership_tier || profile.subscription_tier || 'free';
+                const insertRes = await sql(`
+                  INSERT INTO public.profiles (
+                    user_id, email, full_name, display_name, membership_tier,
+                    subscription_tier, subscription_status,
+                    has_prana_flow_access, has_siddha_quantum_access, has_akasha_infinity_access,
+                    is_admin, onboarding_completed, preferred_language,
+                    avatar_url, bio, stripe_customer_id, stripe_subscription_id,
+                    push_enabled, email_notifications
+                  ) VALUES (
+                    '${userId}',
+                    ${profile.email ? `'${profile.email.replace(/'/g,"''")}'` : 'NULL'},
+                    ${profile.full_name ? `'${profile.full_name.replace(/'/g,"''")}'` : 'NULL'},
+                    ${profile.display_name ? `'${profile.display_name.replace(/'/g,"''")}'` : 'NULL'},
+                    '${tier}', '${tier}',
+                    '${profile.subscription_status || 'inactive'}',
+                    ${['prana_flow','prana-flow','siddha_quantum','siddha-quantum','akasha_infinity','akasha-infinity'].includes(tier)},
+                    ${['siddha_quantum','siddha-quantum','akasha_infinity','akasha-infinity'].includes(tier)},
+                    ${['akasha_infinity','akasha-infinity'].includes(tier)},
+                    ${profile.is_admin || false},
+                    true,
+                    '${profile.preferred_language || 'en'}',
+                    ${profile.avatar_url ? `'${profile.avatar_url.replace(/'/g,"''")}'` : 'NULL'},
+                    ${profile.bio ? `'${profile.bio.replace(/'/g,"''")}'` : 'NULL'},
+                    ${profile.stripe_customer_id ? `'${profile.stripe_customer_id}'` : 'NULL'},
+                    ${profile.stripe_subscription_id ? `'${profile.stripe_subscription_id}'` : 'NULL'},
+                    false, true
+                  ) ON CONFLICT (user_id) DO UPDATE SET
+                    membership_tier = EXCLUDED.membership_tier,
+                    subscription_tier = EXCLUDED.subscription_tier,
+                    has_prana_flow_access = EXCLUDED.has_prana_flow_access,
+                    has_siddha_quantum_access = EXCLUDED.has_siddha_quantum_access,
+                    has_akasha_infinity_access = EXCLUDED.has_akasha_infinity_access,
+                    stripe_customer_id = COALESCE(EXCLUDED.stripe_customer_id, public.profiles.stripe_customer_id)
+                `);
+
+                if (insertRes.s < 300) profilesCreated++;
+                else errors.push(`Profile ${userId}: ${JSON.stringify(insertRes.b).slice(0,80)}`);
+
+                await sleep(150);
+              }
+
+              console.log(`\nProfiles created: ${profilesCreated}`);
+              console.log(`Profiles skipped (already exist): ${profilesSkipped}`);
+              if (errors.length) console.log('Errors:', errors.slice(0,5));
+            } else {
+              console.log('Could not read profiles from old Supabase (RLS blocked)');
+              console.log('Status:', profilesRes.s);
+            }
+
+            // STEP 3: Final count
+            console.log('\n=== Final counts ===');
+            const counts = await sql('SELECT COUNT(*) FROM public.profiles');
+            console.log('Total profiles in new Supabase:', JSON.stringify(counts.b));
+            const authCount = await req(`${NEW}/auth/v1/admin/users?per_page=1`,
+              'GET', { 'apikey': SVC, 'Authorization': `Bearer ${SVC}` });
+            console.log('Total auth users:', authCount.b?.total || '?');
+
+            console.log('\nDONE');
+          }
+
+          main().catch(e => { console.error('FATAL:', e.message); process.exit(1); });
+          EOF
