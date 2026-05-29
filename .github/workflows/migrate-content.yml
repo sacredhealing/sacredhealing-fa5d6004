@@ -1,0 +1,75 @@
+name: Migrate Content Data
+
+on:
+  push:
+    paths:
+      - '.github/workflows/migrate-content.yml'
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Migrate meditations and other content
+        env:
+          SVC: ${{ secrets.NEW_SERVICE_ROLE }}
+        run: |
+          OLD="https://ssygukfdbtehvtndandn.supabase.co"
+          NEW="https://fjdzhrdpioxdeyyfogep.supabase.co"
+          OLD_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4"
+          R2="https://pub-7a2cf16596fd425ab1717b8c0c3e567d.r2.dev"
+
+          migrate_table() {
+            TABLE=$1
+            echo "=== Migrating $TABLE ==="
+            DATA=$(curl -s "$OLD/rest/v1/$TABLE?select=*" \
+              -H "apikey: $OLD_KEY" \
+              -H "Authorization: Bearer $OLD_KEY")
+            
+            COUNT=$(echo "$DATA" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d) if isinstance(d,list) else 0)" 2>/dev/null || echo 0)
+            echo "Found $COUNT rows"
+            
+            if [ "$COUNT" -gt "0" ]; then
+              # Replace old storage URLs with R2
+              UPDATED=$(echo "$DATA" | python3 -c "
+import sys,json
+data = json.load(sys.stdin)
+for row in data:
+    for k,v in row.items():
+        if isinstance(v,str) and 'ssygukfdbtehvtndandn.supabase.co/storage' in v:
+            row[k] = v.replace('https://ssygukfdbtehvtndandn.supabase.co/storage/v1/object/public/','$R2/')
+print(json.dumps(data))
+")
+              RESULT=$(curl -s -X POST "$NEW/rest/v1/$TABLE" \
+                -H "apikey: $SVC" \
+                -H "Authorization: Bearer $SVC" \
+                -H "Content-Type: application/json" \
+                -H "Prefer: resolution=merge-duplicates,return=minimal" \
+                -d "$UPDATED")
+              echo "Result: $RESULT"
+            fi
+          }
+
+          migrate_table meditations
+          migrate_table music_tracks
+          migrate_table courses
+          migrate_table lessons
+          migrate_table teachers
+          migrate_table healing_audios
+          migrate_table sound_tracks
+          migrate_table audio_tracks
+          migrate_table products
+          migrate_table community_posts
+          migrate_table announcements
+          migrate_table mantras
+          migrate_table frequencies
+          migrate_table activations
+
+          echo "=== Final counts ==="
+          for TABLE in meditations music_tracks courses lessons; do
+            COUNT=$(curl -s "$NEW/rest/v1/$TABLE?select=id" \
+              -H "apikey: $SVC" \
+              -H "Authorization: Bearer $SVC" \
+              -H "Prefer: count=exact" \
+              -I | grep -i "content-range" | grep -o "[0-9]*$" || echo "?")
+            echo "$TABLE: $COUNT rows"
+          done
