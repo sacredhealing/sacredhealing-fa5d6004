@@ -9,39 +9,44 @@ jobs:
   fix:
     runs-on: ubuntu-latest
     steps:
-      - name: Fix profiles RLS and insert Adam
+      - name: Grant permissions and fix RLS
         run: |
           PAT="${{ secrets.SUPABASE_ACCESS_TOKEN }}"
           REF="fjdzhrdpioxdeyyfogep"
-          BASE="https://fjdzhrdpioxdeyyfogep.supabase.co"
-          SVC="${{ secrets.NEW_SERVICE_ROLE }}"
-          UUID="bd0b21c9-577a-450b-bb1e-21c9d0423f17"
 
-          run_sql() {
+          sql() {
+            local Q="$1"
             curl -s -X POST "https://api.supabase.com/v1/projects/$REF/database/query" \
               -H "Authorization: Bearer $PAT" \
               -H "Content-Type: application/json" \
-              -d "{\"query\":\"$1\"}"
+              --data-binary "{\"query\":$(echo "$Q" | python3 -c 'import sys,json; print(json.dumps(sys.stdin.read().strip()))')}"
           }
 
-          echo "=== Check profiles table columns ==="
-          run_sql "SELECT column_name, data_type FROM information_schema.columns WHERE table_name='profiles' AND table_schema='public' ORDER BY ordinal_position"
+          echo "=== Grant table permissions ==="
+          sql "GRANT ALL ON public.profiles TO authenticated, anon, service_role"
+          sql "GRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated, anon, service_role"
+          sql "GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated, anon, service_role"
 
           echo ""
-          echo "=== Check existing RLS policies on profiles ==="
-          run_sql "SELECT policyname, cmd, qual FROM pg_policies WHERE tablename='profiles'"
+          echo "=== Verify and recreate RLS policies on profiles ==="
+          sql "ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY"
+          sql "DROP POLICY IF EXISTS allow_users_read_own ON public.profiles"
+          sql "CREATE POLICY allow_users_read_own ON public.profiles FOR SELECT TO authenticated USING (auth.uid() = id)"
+          sql "DROP POLICY IF EXISTS allow_users_update_own ON public.profiles"
+          sql "CREATE POLICY allow_users_update_own ON public.profiles FOR UPDATE TO authenticated USING (auth.uid() = id) WITH CHECK (auth.uid() = id)"
+          sql "DROP POLICY IF EXISTS allow_users_insert_own ON public.profiles"
+          sql "CREATE POLICY allow_users_insert_own ON public.profiles FOR INSERT TO authenticated WITH CHECK (auth.uid() = id)"
+          sql "DROP POLICY IF EXISTS allow_service_all ON public.profiles"
+          sql "CREATE POLICY allow_service_all ON public.profiles TO service_role USING (true) WITH CHECK (true)"
 
           echo ""
-          echo "=== Check existing profile rows ==="
-          run_sql "SELECT id, email, full_name, display_name, membership_tier FROM public.profiles LIMIT 5"
+          echo "=== Check profile columns ==="
+          sql "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema='public' AND table_name='profiles' ORDER BY ordinal_position"
 
           echo ""
-          echo "=== Add RLS policies for profiles ==="
-          run_sql "DROP POLICY IF EXISTS allow_users_read_own ON public.profiles"
-          run_sql "CREATE POLICY allow_users_read_own ON public.profiles FOR SELECT USING (auth.uid() = id)"
-          run_sql "DROP POLICY IF EXISTS allow_users_update_own ON public.profiles"
-          run_sql "CREATE POLICY allow_users_update_own ON public.profiles FOR UPDATE USING (auth.uid() = id)"
-          run_sql "DROP POLICY IF EXISTS allow_insert_own ON public.profiles"
-          run_sql "CREATE POLICY allow_insert_own ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id)"
+          echo "=== Check existing profiles rows ==="
+          sql "SELECT id, email, full_name, display_name, membership_tier, is_admin FROM public.profiles LIMIT 5"
 
-          echo "RLS policies done"
+          echo ""
+          echo "=== Check policies ==="
+          sql "SELECT policyname, cmd, roles FROM pg_policies WHERE tablename='profiles'"
