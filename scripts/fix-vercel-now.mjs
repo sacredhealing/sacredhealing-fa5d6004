@@ -1,8 +1,9 @@
 import https from 'https';
 
 const TOKEN = process.env.VERCEL_TOKEN;
-const OLD_URL = 'https://ssygukfdbtehvtndandn.supabase.co';
-const OLD_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4';
+const NEW_URL = 'https://fjdzhrdpioxdeyyfogep.supabase.co';
+const NEW_KEY = 'sb_publishable_H4AI2ZzqOL1Y7o6qRMr8ew_5-4pih8F';
+const NEW_PROJECT_ID = 'fjdzhrdpioxdeyyfogep';
 
 function api(method, path, body) {
   return new Promise((resolve) => {
@@ -21,29 +22,29 @@ function api(method, path, body) {
   });
 }
 
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 const KEYS = ['VITE_SUPABASE_URL','SUPABASE_URL','VITE_SUPABASE_PUBLISHABLE_KEY','SUPABASE_PUBLISHABLE_KEY','VITE_SUPABASE_ANON_KEY','VITE_SUPABASE_PROJECT_ID'];
 const VALUES = {
-  'VITE_SUPABASE_URL': OLD_URL,
-  'SUPABASE_URL': OLD_URL,
-  'VITE_SUPABASE_PUBLISHABLE_KEY': OLD_KEY,
-  'SUPABASE_PUBLISHABLE_KEY': OLD_KEY,
-  'VITE_SUPABASE_ANON_KEY': OLD_KEY,
-  'VITE_SUPABASE_PROJECT_ID': 'ssygukfdbtehvtndandn'
+  'VITE_SUPABASE_URL': NEW_URL,
+  'SUPABASE_URL': NEW_URL,
+  'VITE_SUPABASE_PUBLISHABLE_KEY': NEW_KEY,
+  'SUPABASE_PUBLISHABLE_KEY': NEW_KEY,
+  'VITE_SUPABASE_ANON_KEY': NEW_KEY,
+  'VITE_SUPABASE_PROJECT_ID': NEW_PROJECT_ID
 };
 
 async function main() {
   const { b: projData } = await api('GET', '/v9/projects?limit=20', null);
   const projects = projData?.projects || [];
-  console.log(`Found ${projects.length} projects`);
+  console.log(`Found ${projects.length} Vercel projects`);
 
   for (const project of projects) {
     console.log(`\n=== ${project.name} ===`);
     const { b: envData } = await api('GET', `/v9/projects/${project.id}/env`, null);
     const existing = envData?.envs || [];
 
-    // Delete all Supabase-related env vars first
+    // Delete all old Supabase-related env vars
     for (const env of existing) {
       if (KEYS.includes(env.key)) {
         const { s } = await api('DELETE', `/v9/projects/${project.id}/env/${env.id}`, null);
@@ -52,7 +53,7 @@ async function main() {
       }
     }
 
-    // Create fresh with correct old Supabase values
+    // Create fresh with correct NEW Supabase values
     const newVars = KEYS.map(key => ({
       key, value: VALUES[key], type: 'encrypted',
       target: ['production', 'preview', 'development']
@@ -63,16 +64,17 @@ async function main() {
     await sleep(200);
 
     // Trigger redeploy
-    await api('POST', `/v13/deployments`, {
+    const { s: ds } = await api('POST', `/v13/deployments`, {
       name: project.name,
       project: project.id,
       target: 'production',
-      gitSource: { type: 'github', repoId: project.link?.repoId, ref: 'main' }
+      gitSource: { type: 'github', ref: 'main' }
     });
-    console.log(`  Redeploying...`);
+    console.log(`  Redeploying... (${ds})`);
   }
 
-  console.log('\n✅ Done. siddhaquantumnexus.com will work with your old password in ~2 minutes.');
+  console.log('\n✅ Done! siddhaquantumnexus.com will use NEW Supabase in ~2 minutes.');
+  console.log('Login with: SiddhaQuantum2050!');
 }
 
 main().catch(e => { console.error(e.message); process.exit(1); });
