@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -96,6 +97,129 @@ const logWebhookEvent = async (
     logStep("Failed to log webhook event to DB", { error: err instanceof Error ? err.message : err });
   }
 };
+
+
+// ── Purchase confirmation email ──────────────────────────────────────────────
+async function sendPurchaseEmail(params: {
+  toEmail: string;
+  toName: string;
+  productName: string;
+  amount: number;
+  currency: string;
+  isRecurring?: boolean;
+  receiptUrl?: string | null;
+}): Promise<void> {
+  const resendKey = Deno.env.get("RESEND_API_KEY");
+  if (!resendKey) { console.log("[PURCHASE-EMAIL] No RESEND_API_KEY, skipping"); return; }
+  const resend = new Resend(resendKey);
+
+  const { toEmail, toName, productName, amount, currency, isRecurring, receiptUrl } = params;
+  const firstName = toName?.split(" ")[0] || "Seeker";
+  const amountFmt = `${amount.toFixed(2)} ${currency.toUpperCase()}`;
+  const subject = isRecurring
+    ? `✦ Payment received — ${productName} | Sacred Healing`
+    : `✦ Welcome — ${productName} activated | Sacred Healing`;
+
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#050505;font-family:'Helvetica Neue',Arial,sans-serif;color:#fff;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#050505;">
+<tr><td align="center" style="padding:40px 16px 60px;">
+<table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
+
+  <!-- Header -->
+  <tr><td style="text-align:center;padding:48px 0 32px;">
+    <div style="color:rgba(212,175,55,0.5);font-size:9px;letter-spacing:0.7em;text-transform:uppercase;margin-bottom:12px;">
+      SIDDHA QUANTUM NEXUS · SQI 2050
+    </div>
+    <div style="font-size:40px;margin-bottom:10px;">⟁</div>
+    <div style="color:#D4AF37;font-size:26px;font-weight:900;letter-spacing:-0.03em;text-shadow:0 0 20px rgba(212,175,55,0.4);">
+      ${isRecurring ? "Payment Received" : "Access Activated"}
+    </div>
+    <div style="color:rgba(255,255,255,0.35);font-size:11px;margin-top:8px;letter-spacing:0.2em;">
+      ${isRecurring ? "YOUR SUBSCRIPTION RENEWED" : "YOUR QUANTUM FIELD IS OPEN"}
+    </div>
+  </td></tr>
+
+  <!-- Greeting -->
+  <tr><td style="padding:0 0 24px;">
+    <div style="background:rgba(212,175,55,0.04);border:1px solid rgba(212,175,55,0.15);border-radius:20px;padding:28px 32px;">
+      <p style="font-size:16px;color:rgba(255,255,255,0.85);margin:0 0 12px;line-height:1.7;">
+        Namaste <strong style="color:#D4AF37;">${firstName}</strong>,
+      </p>
+      <p style="font-size:14px;color:rgba(255,255,255,0.55);margin:0;line-height:1.8;">
+        ${isRecurring
+          ? `Your subscription has been renewed. The Siddha field remains open and your journey continues.`
+          : `Your purchase is confirmed. The transmission has been activated and is ready for you now.`
+        }
+      </p>
+    </div>
+  </td></tr>
+
+  <!-- Order card -->
+  <tr><td style="padding:0 0 24px;">
+    <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:20px;padding:28px 32px;">
+      <div style="font-size:8px;font-weight:800;letter-spacing:0.5em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:16px;">
+        ORDER SUMMARY
+      </div>
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span style="font-size:9px;font-weight:800;letter-spacing:0.4em;text-transform:uppercase;color:rgba(255,255,255,0.3);">PRODUCT</span><br>
+            <span style="font-size:15px;font-weight:700;color:#fff;margin-top:4px;display:block;">${productName}</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span style="font-size:9px;font-weight:800;letter-spacing:0.4em;text-transform:uppercase;color:rgba(255,255,255,0.3);">AMOUNT PAID</span><br>
+            <span style="font-size:22px;font-weight:900;color:#D4AF37;margin-top:4px;display:block;">${amountFmt}</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:10px 0;">
+            <span style="font-size:9px;font-weight:800;letter-spacing:0.4em;text-transform:uppercase;color:rgba(255,255,255,0.3);">STATUS</span><br>
+            <span style="display:inline-block;margin-top:6px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:100px;padding:4px 14px;font-size:11px;font-weight:800;color:#22c55e;letter-spacing:0.1em;">✓ PAID</span>
+          </td>
+        </tr>
+      </table>
+      ${receiptUrl ? `<div style="margin-top:18px;text-align:center;"><a href="${receiptUrl}" style="display:inline-block;padding:10px 24px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.25);border-radius:100px;color:#D4AF37;font-size:11px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;text-decoration:none;">View Receipt →</a></div>` : ""}
+    </div>
+  </td></tr>
+
+  <!-- CTA -->
+  <tr><td style="padding:0 0 32px;text-align:center;">
+    <a href="https://sacredhealing.app" style="display:inline-block;padding:16px 40px;background:#D4AF37;color:#050505;border-radius:100px;font-size:12px;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;text-decoration:none;box-shadow:0 0 24px rgba(212,175,55,0.4);">
+      ◈ Enter Sacred Space
+    </a>
+  </td></tr>
+
+  <!-- Footer -->
+  <tr><td style="text-align:center;padding:24px 0 0;border-top:1px solid rgba(255,255,255,0.05);">
+    <p style="font-size:11px;color:rgba(255,255,255,0.2);margin:0;line-height:1.8;">
+      Sacred Healing · Siddha Quantum Intelligence<br>
+      <a href="https://sacredhealing.app" style="color:rgba(212,175,55,0.4);text-decoration:none;">sacredhealing.app</a>
+    </p>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
+
+  try {
+    await resend.emails.send({
+      from: "Sacred Healing <hello@sacredhealing.app>",
+      to: [toEmail],
+      subject,
+      html,
+    });
+    console.log(`[PURCHASE-EMAIL] Sent to ${toEmail} — ${productName}`);
+  } catch (e) {
+    console.error("[PURCHASE-EMAIL] Send failed:", e instanceof Error ? e.message : String(e));
+  }
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -722,6 +846,28 @@ serve(async (req) => {
 
       await logWebhookEvent(supabaseAdmin, event.id, event.type, { sessionId: session.id, amount: purchaseAmount }, 'processed');
 
+      // ── Send purchase confirmation email ──────────────────────────────────
+      if (customerEmail) {
+        // Resolve display name: metadata > email prefix
+        let buyerName = session.metadata?.full_name || session.customer_details?.name || customerEmail.split("@")[0] || "Seeker";
+        // If we have userId, try to get full_name from profiles
+        const resolvedUserId = session.metadata?.user_id;
+        if (resolvedUserId && !session.metadata?.full_name) {
+          const { data: profileRow } = await supabaseAdmin.from("profiles").select("full_name").eq("id", resolvedUserId).maybeSingle();
+          if (profileRow?.full_name) buyerName = profileRow.full_name;
+        }
+        await sendPurchaseEmail({
+          toEmail: customerEmail,
+          toName: buyerName,
+          productName,
+          amount: purchaseAmount,
+          currency,
+          isRecurring: false,
+          receiptUrl: session.url || null,
+        });
+      }
+      // ─────────────────────────────────────────────────────────────────────
+
       return new Response(JSON.stringify({ received: true, processed: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -894,6 +1040,20 @@ serve(async (req) => {
       } catch (e) {
         logStep("send-subscription-receipt invoke failed", { error: e instanceof Error ? e.message : String(e) });
       }
+
+      // ── Send purchase confirmation email for recurring payment ────────────
+      if (customerEmail && amountPaid > 0) {
+        await sendPurchaseEmail({
+          toEmail: customerEmail,
+          toName: customerEmail.split("@")[0],
+          productName: productInfo.name,
+          amount: amountPaid,
+          currency,
+          isRecurring: invoice.billing_reason === "subscription_cycle",
+          receiptUrl: invoice.hosted_invoice_url ?? null,
+        });
+      }
+      // ─────────────────────────────────────────────────────────────────────
     }
 
     // Handle payment_intent.succeeded for direct payments
