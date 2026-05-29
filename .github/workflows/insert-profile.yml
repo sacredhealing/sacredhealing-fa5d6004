@@ -9,25 +9,49 @@ jobs:
   fix:
     runs-on: ubuntu-latest
     steps:
-      - name: Insert correct profile for Adam
+      - uses: actions/checkout@v4
+
+      - name: Insert Adam profile into new Supabase
         run: |
           BASE="https://fjdzhrdpioxdeyyfogep.supabase.co"
           SVC="${{ secrets.NEW_SERVICE_ROLE }}"
           UUID="bd0b21c9-577a-450b-bb1e-21c9d0423f17"
+          EMAIL="sacredhealingvibe@gmail.com"
 
-          echo "=== Check what columns profiles table has ==="
-          curl -s "$BASE/rest/v1/profiles?select=*&limit=3" \
+          echo "=== Current profiles in new Supabase ===" | tee -a output.txt
+          curl -s "$BASE/rest/v1/profiles?select=*&limit=5" \
             -H "apikey: $SVC" \
-            -H "Authorization: Bearer $SVC"
+            -H "Authorization: Bearer $SVC" | tee -a output.txt
 
-          echo ""
-          echo "=== Check if Adam profile exists ==="
+          echo "" | tee -a output.txt
+          echo "=== Upsert Adam profile ===" | tee -a output.txt
+          curl -s -X POST "$BASE/rest/v1/profiles" \
+            -H "apikey: $SVC" \
+            -H "Authorization: Bearer $SVC" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: resolution=merge-duplicates" \
+            -d '{
+              "id": "bd0b21c9-577a-450b-bb1e-21c9d0423f17",
+              "email": "sacredhealingvibe@gmail.com",
+              "full_name": "Adam",
+              "display_name": "Adam",
+              "membership_tier": "akasha_infinity",
+              "is_admin": true
+            }' | tee -a output.txt
+
+          echo "" | tee -a output.txt
+          echo "=== Verify profile after upsert ===" | tee -a output.txt
           curl -s "$BASE/rest/v1/profiles?id=eq.$UUID" \
             -H "apikey: $SVC" \
-            -H "Authorization: Bearer $SVC"
+            -H "Authorization: Bearer $SVC" | tee -a output.txt
 
-          echo ""
-          echo "=== List all profiles ==="
-          curl -s "$BASE/rest/v1/profiles?select=id,full_name,display_name,email,membership_tier&limit=10" \
-            -H "apikey: $SVC" \
-            -H "Authorization: Bearer $SVC"
+          cp output.txt /tmp/profile-output.txt
+
+      - name: Commit output
+        run: |
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+          mv /tmp/profile-output.txt scripts/profile-output.txt
+          git add scripts/profile-output.txt
+          git commit -m "diag: profile insert output" || echo "no change"
+          git push
