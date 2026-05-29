@@ -29,6 +29,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { getTierRank, hasFeatureAccess } from '@/lib/tierAccess';
 import RecordingsList from '@/components/recordings/RecordingsList';
 import { SubscriptionPortal } from '@/components/profile/SubscriptionPortal';
+import BookTranslatorPanel from '@/components/books/BookTranslatorPanel';
 
 type LifeBookCategory =
   | 'children'
@@ -1200,6 +1201,13 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         <div className="section-label">My Recordings</div>
         <RecordingsList callType="dm" largeText emptyText="No 1-on-1 call recordings yet. They'll appear here automatically after your sessions." />
       </div>
+
+      {/* ── SACRED ARCHIVE V1 (old books + translation) — admin only ── */}
+      {isAdmin && (
+        <div className="section-wrap">
+          <BookTranslatorPanel />
+        </div>
+      )}
 
       {/* ── ABUNDANCE & LINEAGE ── */}
       <div className="section-wrap">
