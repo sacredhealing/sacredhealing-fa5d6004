@@ -9,44 +9,42 @@ jobs:
   fix:
     runs-on: ubuntu-latest
     steps:
-      - name: Grant permissions and fix RLS
+      - name: Fix RLS to use user_id column
         run: |
           PAT="${{ secrets.SUPABASE_ACCESS_TOKEN }}"
           REF="fjdzhrdpioxdeyyfogep"
 
           sql() {
-            local Q="$1"
             curl -s -X POST "https://api.supabase.com/v1/projects/$REF/database/query" \
               -H "Authorization: Bearer $PAT" \
               -H "Content-Type: application/json" \
-              --data-binary "{\"query\":$(echo "$Q" | python3 -c 'import sys,json; print(json.dumps(sys.stdin.read().strip()))')}"
+              --data-binary "{\"query\":$(echo "$1" | python3 -c 'import sys,json; print(json.dumps(sys.stdin.read().strip()))')}"
           }
 
-          echo "=== Grant table permissions ==="
-          sql "GRANT ALL ON public.profiles TO authenticated, anon, service_role"
-          sql "GRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated, anon, service_role"
-          sql "GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated, anon, service_role"
-
-          echo ""
-          echo "=== Verify and recreate RLS policies on profiles ==="
-          sql "ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY"
+          echo "=== Drop old wrong policies ==="
           sql "DROP POLICY IF EXISTS allow_users_read_own ON public.profiles"
-          sql "CREATE POLICY allow_users_read_own ON public.profiles FOR SELECT TO authenticated USING (auth.uid() = id)"
           sql "DROP POLICY IF EXISTS allow_users_update_own ON public.profiles"
-          sql "CREATE POLICY allow_users_update_own ON public.profiles FOR UPDATE TO authenticated USING (auth.uid() = id) WITH CHECK (auth.uid() = id)"
           sql "DROP POLICY IF EXISTS allow_users_insert_own ON public.profiles"
-          sql "CREATE POLICY allow_users_insert_own ON public.profiles FOR INSERT TO authenticated WITH CHECK (auth.uid() = id)"
           sql "DROP POLICY IF EXISTS allow_service_all ON public.profiles"
-          sql "CREATE POLICY allow_service_all ON public.profiles TO service_role USING (true) WITH CHECK (true)"
+
+          echo "=== Create correct policies using user_id ==="
+          sql "CREATE POLICY allow_read ON public.profiles FOR SELECT TO authenticated USING (auth.uid() = user_id)"
+          sql "CREATE POLICY allow_update ON public.profiles FOR UPDATE TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id)"
+          sql "CREATE POLICY allow_insert ON public.profiles FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id)"
+          sql "CREATE POLICY allow_service ON public.profiles TO service_role USING (true) WITH CHECK (true)"
 
           echo ""
-          echo "=== Check profile columns ==="
-          sql "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema='public' AND table_name='profiles' ORDER BY ordinal_position"
+          echo "=== Check policies created ==="
+          sql "SELECT policyname, cmd FROM pg_policies WHERE tablename='profiles'"
 
           echo ""
-          echo "=== Check existing profiles rows ==="
-          sql "SELECT id, email, full_name, display_name, membership_tier, is_admin FROM public.profiles LIMIT 5"
+          echo "=== Check Adam profile exists ==="
+          sql "SELECT id, user_id, email, full_name, display_name, membership_tier, is_admin, has_akasha_infinity_access FROM public.profiles WHERE user_id='bd0b21c9-577a-450b-bb1e-21c9d0423f17'"
 
           echo ""
-          echo "=== Check policies ==="
-          sql "SELECT policyname, cmd, roles FROM pg_policies WHERE tablename='profiles'"
+          echo "=== Update Adam profile with correct data ==="
+          sql "UPDATE public.profiles SET full_name='Adam', display_name='Adam', email='sacredhealingvibe@gmail.com', membership_tier='akasha_infinity', subscription_tier='akasha_infinity', subscription_status='active', has_prana_flow_access=true, has_siddha_quantum_access=true, has_akasha_infinity_access=true, is_admin=true, onboarding_completed=true WHERE user_id='bd0b21c9-577a-450b-bb1e-21c9d0423f17'"
+
+          echo ""
+          echo "=== Verify final state ==="
+          sql "SELECT id, user_id, full_name, membership_tier, is_admin, has_akasha_infinity_access FROM public.profiles WHERE user_id='bd0b21c9-577a-450b-bb1e-21c9d0423f17'"
