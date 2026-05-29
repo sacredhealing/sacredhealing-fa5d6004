@@ -23,6 +23,7 @@ import { DailyRitualCard } from '@/components/dashboard/DailyRitualCard';
 import { SpiritualPathCard } from '@/components/dashboard/SpiritualPathCard';
 import { AchievementPopup } from '@/components/achievements/AchievementPopup';
 import { LivingPortalTile, PORTAL_CONFIGS } from '@/components/dashboard/LivingPortalTile';
+import BooksV2DashboardWidget from '@/components/books/BooksV2DashboardWidget';
 
 
 import { useAchievements } from '@/hooks/useAchievements';
@@ -873,7 +874,11 @@ const Dashboard: React.FC = () => {
           </Link>
         </div>
       )}
-      {user && <Link to="/akashic-codex" style={{display:'block',margin:'0 16px 16px',background:'rgba(255,255,255,0.02)',backdropFilter:'blur(40px)',border:'1px solid rgba(212,175,55,0.15)',borderRadius:24,padding:'18px 22px',textDecoration:'none'}}><div style={{fontFamily:'Montserrat,sans-serif',fontSize:8,fontWeight:800,letterSpacing:'0.5em',textTransform:'uppercase',color:'rgba(212,175,55,0.7)',marginBottom:4}}>AKASHA ARCHIVE</div><div style={{fontFamily:'Montserrat,sans-serif',fontSize:18,fontWeight:900,color:'#D4AF37',textShadow:'0 0 15px rgba(212,175,55,0.3)'}}>Your LifeBook →</div></Link>}
+      {user && (
+        <div style={{ margin: '0 16px 24px' }}>
+          <BooksV2DashboardWidget />
+        </div>
+      )}
       
     </div>
   );
