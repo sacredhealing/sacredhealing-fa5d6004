@@ -9,67 +9,73 @@ jobs:
   migrate:
     runs-on: ubuntu-latest
     steps:
-      - name: Migrate meditations and other content
+      - name: Migrate content tables
         env:
-          SVC: ${{ secrets.NEW_SERVICE_ROLE }}
+          NEW_SVC: ${{ secrets.NEW_SERVICE_ROLE }}
         run: |
-          OLD="https://ssygukfdbtehvtndandn.supabase.co"
-          NEW="https://fjdzhrdpioxdeyyfogep.supabase.co"
-          OLD_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4"
-          R2="https://pub-7a2cf16596fd425ab1717b8c0c3e567d.r2.dev"
+          node << 'EOF'
+          const https = require('https');
 
-          migrate_table() {
-            TABLE=$1
-            echo "=== Migrating $TABLE ==="
-            DATA=$(curl -s "$OLD/rest/v1/$TABLE?select=*" \
-              -H "apikey: $OLD_KEY" \
-              -H "Authorization: Bearer $OLD_KEY")
-            
-            COUNT=$(echo "$DATA" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d) if isinstance(d,list) else 0)" 2>/dev/null || echo 0)
-            echo "Found $COUNT rows"
-            
-            if [ "$COUNT" -gt "0" ]; then
-              # Replace old storage URLs with R2
-              UPDATED=$(echo "$DATA" | python3 -c "
-import sys,json
-data = json.load(sys.stdin)
-for row in data:
-    for k,v in row.items():
-        if isinstance(v,str) and 'ssygukfdbtehvtndandn.supabase.co/storage' in v:
-            row[k] = v.replace('https://ssygukfdbtehvtndandn.supabase.co/storage/v1/object/public/','$R2/')
-print(json.dumps(data))
-")
-              RESULT=$(curl -s -X POST "$NEW/rest/v1/$TABLE" \
-                -H "apikey: $SVC" \
-                -H "Authorization: Bearer $SVC" \
-                -H "Content-Type: application/json" \
-                -H "Prefer: resolution=merge-duplicates,return=minimal" \
-                -d "$UPDATED")
-              echo "Result: $RESULT"
-            fi
+          const OLD = 'https://ssygukfdbtehvtndandn.supabase.co';
+          const NEW = 'https://fjdzhrdpioxdeyyfogep.supabase.co';
+          const OLD_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4';
+          const SVC = process.env.NEW_SVC;
+          const R2 = 'https://pub-7a2cf16596fd425ab1717b8c0c3e567d.r2.dev';
+
+          function req(url, method, headers, body) {
+            return new Promise((resolve) => {
+              const u = new URL(url);
+              const payload = body ? JSON.stringify(body) : '';
+              const r = https.request({ hostname: u.hostname, path: u.pathname + u.search, method,
+                headers: { ...headers, ...(payload ? { 'Content-Length': Buffer.byteLength(payload) } : {}) }
+              }, (res) => {
+                let d = ''; res.on('data', c => d += c);
+                res.on('end', () => { try { resolve({ s: res.statusCode, b: JSON.parse(d) }); } catch { resolve({ s: res.statusCode, b: d }); } });
+              });
+              r.on('error', e => resolve({ s: 0, b: e.message }));
+              if (payload) r.write(payload);
+              r.end();
+            });
           }
 
-          migrate_table meditations
-          migrate_table music_tracks
-          migrate_table courses
-          migrate_table lessons
-          migrate_table teachers
-          migrate_table healing_audios
-          migrate_table sound_tracks
-          migrate_table audio_tracks
-          migrate_table products
-          migrate_table community_posts
-          migrate_table announcements
-          migrate_table mantras
-          migrate_table frequencies
-          migrate_table activations
+          const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-          echo "=== Final counts ==="
-          for TABLE in meditations music_tracks courses lessons; do
-            COUNT=$(curl -s "$NEW/rest/v1/$TABLE?select=id" \
-              -H "apikey: $SVC" \
-              -H "Authorization: Bearer $SVC" \
-              -H "Prefer: count=exact" \
-              -I | grep -i "content-range" | grep -o "[0-9]*$" || echo "?")
-            echo "$TABLE: $COUNT rows"
-          done
+          function fixUrls(rows) {
+            return rows.map(row => {
+              const fixed = { ...row };
+              for (const [k, v] of Object.entries(fixed)) {
+                if (typeof v === 'string' && v.includes('ssygukfdbtehvtndandn.supabase.co/storage')) {
+                  fixed[k] = v.replace('https://ssygukfdbtehvtndandn.supabase.co/storage/v1/object/public/', R2 + '/');
+                }
+              }
+              return fixed;
+            });
+          }
+
+          async function migrateTable(table) {
+            const { s, b } = await req(`${OLD}/rest/v1/${table}?select=*&limit=1000`,
+              'GET', { 'apikey': OLD_KEY, 'Authorization': `Bearer ${OLD_KEY}` });
+            if (s !== 200 || !Array.isArray(b) || b.length === 0) {
+              console.log(`${table}: skip (${s}, ${b?.length || 0} rows)`);
+              return;
+            }
+            const rows = fixUrls(b);
+            const { s: ws, b: wb } = await req(`${NEW}/rest/v1/${table}`, 'POST',
+              { 'apikey': SVC, 'Authorization': `Bearer ${SVC}`,
+                'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+              rows);
+            console.log(`${table}: ${b.length} rows → status ${ws} ${ws >= 300 ? JSON.stringify(wb).slice(0,80) : 'OK'}`);
+            await sleep(200);
+          }
+
+          async function main() {
+            const tables = ['meditations','music_tracks','courses','lessons','teachers',
+              'healing_audios','sound_tracks','audio_tracks','products','community_posts',
+              'announcements','mantras','frequencies','activations','transmissions',
+              'meditation_content','course_modules','chakras','sacred_sites'];
+            for (const t of tables) await migrateTable(t);
+            console.log('DONE');
+          }
+
+          main().catch(e => { console.error('Error:', e.message); process.exit(1); });
+          EOF
