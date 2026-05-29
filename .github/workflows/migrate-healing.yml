@@ -1,0 +1,133 @@
+name: Migrate Healing Audio and Fix Admin
+
+on:
+  push:
+    paths:
+      - '.github/workflows/migrate-healing.yml'
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Migrate healing_audio table and fix admin
+        env:
+          SVC: ${{ secrets.NEW_SERVICE_ROLE }}
+          PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          node << 'EOF'
+          const https = require('https');
+          const OLD = 'https://ssygukfdbtehvtndandn.supabase.co';
+          const NEW = 'https://fjdzhrdpioxdeyyfogep.supabase.co';
+          const OLD_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4';
+          const SVC = process.env.SVC;
+          const PAT = process.env.PAT;
+          const REF = 'fjdzhrdpioxdeyyfogep';
+          const R2 = 'https://pub-7a2cf16596fd425ab1717b8c0c3e567d.r2.dev';
+
+          function req(url, method, headers, body) {
+            return new Promise((resolve) => {
+              const u = new URL(url);
+              const payload = body ? JSON.stringify(body) : '';
+              const r = https.request({ hostname: u.hostname, path: u.pathname + u.search, method,
+                headers: { ...headers, ...(payload ? { 'Content-Length': Buffer.byteLength(payload) } : {}) }
+              }, (res) => {
+                let d = ''; res.on('data', c => d += c);
+                res.on('end', () => { try { resolve({ s: res.statusCode, b: JSON.parse(d) }); } catch { resolve({ s: res.statusCode, b: d }); } });
+              });
+              r.on('error', e => resolve({ s: 0, b: e.message }));
+              if (payload) r.write(payload);
+              r.end();
+            });
+          }
+
+          function sql(query) {
+            return req(`https://api.supabase.com/v1/projects/${REF}/database/query`, 'POST',
+              { 'Authorization': `Bearer ${PAT}`, 'Content-Type': 'application/json' }, { query });
+          }
+
+          function fixUrls(rows) {
+            return rows.map(row => {
+              const fixed = { ...row };
+              for (const [k, v] of Object.entries(fixed)) {
+                if (typeof v === 'string' && v.includes('ssygukfdbtehvtndandn.supabase.co/storage')) {
+                  fixed[k] = v.replace('https://ssygukfdbtehvtndandn.supabase.co/storage/v1/object/public/', R2 + '/');
+                }
+              }
+              return fixed;
+            });
+          }
+
+          async function main() {
+            // 1. Create healing_audio table if missing
+            console.log('=== Creating healing_audio table ===');
+            const createResult = await sql(`
+              CREATE TABLE IF NOT EXISTS public.healing_audio (
+                id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+                title text NOT NULL,
+                description text,
+                audio_url text,
+                preview_url text,
+                cover_image_url text,
+                duration_seconds integer DEFAULT 0,
+                is_free boolean DEFAULT false,
+                price_usd numeric DEFAULT 0,
+                price_shc integer DEFAULT 0,
+                category text DEFAULT 'healing',
+                play_count integer DEFAULT 0,
+                created_at timestamptz DEFAULT now(),
+                script_text text,
+                language text DEFAULT 'en',
+                tags jsonb DEFAULT '[]'
+              )
+            `);
+            console.log('Create table:', createResult.s);
+
+            // Grant permissions
+            await sql('GRANT ALL ON public.healing_audio TO authenticated, anon, service_role');
+            await sql('ALTER TABLE public.healing_audio ENABLE ROW LEVEL SECURITY');
+            await sql('DROP POLICY IF EXISTS read_all ON public.healing_audio');
+            await sql('CREATE POLICY read_all ON public.healing_audio FOR SELECT USING (true)');
+            await sql('DROP POLICY IF EXISTS service_all ON public.healing_audio');
+            await sql('CREATE POLICY service_all ON public.healing_audio TO service_role USING (true) WITH CHECK (true)');
+            console.log('Permissions set');
+
+            // 2. Fetch from old Supabase
+            console.log('=== Fetching healing_audio from old Supabase ===');
+            const { s, b } = await req(`${OLD}/rest/v1/healing_audio?select=*&limit=1000`,
+              'GET', { 'apikey': OLD_KEY, 'Authorization': `Bearer ${OLD_KEY}` });
+            console.log(`Fetched: ${s} - ${Array.isArray(b) ? b.length : 'error'} rows`);
+
+            if (Array.isArray(b) && b.length > 0) {
+              const rows = fixUrls(b);
+              const { s: ws, b: wb } = await req(`${NEW}/rest/v1/healing_audio`, 'POST',
+                { 'apikey': SVC, 'Authorization': `Bearer ${SVC}`,
+                  'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' }, rows);
+              console.log(`Inserted healing_audio: ${ws} ${ws >= 300 ? JSON.stringify(wb).slice(0,100) : 'OK'}`);
+            }
+
+            // 3. Fix admin profile - add missing columns
+            console.log('=== Fixing admin profile ===');
+            const adminFix = await sql(`
+              UPDATE public.profiles SET
+                is_admin = true,
+                has_prana_flow_access = true,
+                has_siddha_quantum_access = true,
+                has_akasha_infinity_access = true,
+                membership_tier = 'akasha_infinity',
+                subscription_tier = 'akasha_infinity',
+                subscription_status = 'active',
+                onboarding_completed = true
+              WHERE user_id = 'bd0b21c9-577a-450b-bb1e-21c9d0423f17'
+            `);
+            console.log('Admin profile updated:', adminFix.s);
+
+            // 4. Verify
+            const count = await req(`${NEW}/rest/v1/healing_audio?select=id`,
+              'GET', { 'apikey': SVC, 'Authorization': `Bearer ${SVC}`, 'Prefer': 'count=exact' });
+            console.log('healing_audio count in new DB:', count.b?.length || 0);
+
+            console.log('DONE');
+          }
+
+          main().catch(e => { console.error('FATAL:', e.message); process.exit(1); });
+          EOF
