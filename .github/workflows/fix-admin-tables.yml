@@ -1,0 +1,204 @@
+name: Fix Admin Tables and Divine Transmissions
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-admin-tables.yml'
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fix all admin tables and migrate content
+        env:
+          SVC: ${{ secrets.NEW_SERVICE_ROLE }}
+          PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          node << 'EOF'
+          const https = require('https');
+          const OLD = 'https://ssygukfdbtehvtndandn.supabase.co';
+          const NEW = 'https://fjdzhrdpioxdeyyfogep.supabase.co';
+          const OLD_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4';
+          const SVC = process.env.SVC;
+          const PAT = process.env.PAT;
+          const REF = 'fjdzhrdpioxdeyyfogep';
+          const ADMIN_UUID = 'bd0b21c9-577a-450b-bb1e-21c9d0423f17';
+          const R2 = 'https://pub-7a2cf16596fd425ab1717b8c0c3e567d.r2.dev';
+
+          function req(url, method, headers, body) {
+            return new Promise((resolve) => {
+              const u = new URL(url);
+              const payload = body ? JSON.stringify(body) : '';
+              const r = https.request({ hostname: u.hostname, path: u.pathname + u.search, method,
+                headers: { ...headers, ...(payload ? { 'Content-Length': Buffer.byteLength(payload) } : {}) }
+              }, (res) => {
+                let d = ''; res.on('data', c => d += c);
+                res.on('end', () => { try { resolve({ s: res.statusCode, b: JSON.parse(d) }); } catch { resolve({ s: res.statusCode, b: d }); } });
+              });
+              r.on('error', e => resolve({ s: 0, b: e.message }));
+              if (payload) r.write(payload);
+              r.end();
+            });
+          }
+
+          function sql(query) {
+            return req(`https://api.supabase.com/v1/projects/${REF}/database/query`, 'POST',
+              { 'Authorization': `Bearer ${PAT}`, 'Content-Type': 'application/json' }, { query });
+          }
+
+          function fixUrls(rows) {
+            return rows.map(row => {
+              const fixed = { ...row };
+              for (const [k, v] of Object.entries(fixed)) {
+                if (typeof v === 'string' && v.includes('ssygukfdbtehvtndandn.supabase.co/storage')) {
+                  fixed[k] = v.replace('https://ssygukfdbtehvtndandn.supabase.co/storage/v1/object/public/', R2 + '/');
+                }
+              }
+              return fixed;
+            });
+          }
+
+          async function upsertToNew(table, rows) {
+            if (!rows.length) return;
+            return req(`${NEW}/rest/v1/${table}`, 'POST',
+              { 'apikey': SVC, 'Authorization': `Bearer ${SVC}`,
+                'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' }, rows);
+          }
+
+          async function readFromOld(table) {
+            const { s, b } = await req(`${OLD}/rest/v1/${table}?select=*&limit=1000`,
+              'GET', { 'apikey': OLD_KEY, 'Authorization': `Bearer ${OLD_KEY}` });
+            return Array.isArray(b) ? b : [];
+          }
+
+          const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+          async function main() {
+            // 1. Create user_roles table and has_role function
+            console.log('=== Setting up user_roles and has_role ===');
+            await sql(`CREATE TABLE IF NOT EXISTS public.user_roles (
+              id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+              user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+              role text NOT NULL,
+              created_at timestamptz DEFAULT now(),
+              UNIQUE(user_id, role)
+            )`);
+            await sql('GRANT ALL ON public.user_roles TO authenticated, anon, service_role');
+            await sql('ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY');
+            await sql('DROP POLICY IF EXISTS service_all ON public.user_roles');
+            await sql('CREATE POLICY service_all ON public.user_roles TO service_role USING (true) WITH CHECK (true)');
+            await sql('DROP POLICY IF EXISTS read_own ON public.user_roles');
+            await sql('CREATE POLICY read_own ON public.user_roles FOR SELECT TO authenticated USING (user_id = auth.uid())');
+
+            // Insert admin role for Adam
+            await sql(`INSERT INTO public.user_roles (user_id, role) VALUES ('${ADMIN_UUID}', 'admin') ON CONFLICT (user_id, role) DO NOTHING`);
+            console.log('Admin role inserted');
+
+            // Create has_role function
+            await sql(`CREATE OR REPLACE FUNCTION public.has_role(_user_id uuid, _role text)
+              RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER AS $$
+                SELECT EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = _user_id AND role = _role)
+              $$`);
+            await sql('GRANT EXECUTE ON FUNCTION public.has_role(uuid, text) TO authenticated, anon, service_role');
+            console.log('has_role function created');
+
+            // 2. Create and migrate divine_transmissions
+            console.log('=== divine_transmissions ===');
+            await sql(`CREATE TABLE IF NOT EXISTS public.divine_transmissions (
+              id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+              title text NOT NULL,
+              description text,
+              category text DEFAULT 'divine_transmissions',
+              audio_url_en text,
+              audio_url_sv text,
+              cover_image_url text,
+              duration_seconds integer DEFAULT 0,
+              is_free boolean DEFAULT false,
+              required_tier integer DEFAULT 0,
+              series_name text,
+              series_order integer,
+              published boolean DEFAULT true,
+              created_at timestamptz DEFAULT now(),
+              updated_at timestamptz DEFAULT now()
+            )`);
+            await sql('GRANT ALL ON public.divine_transmissions TO authenticated, anon, service_role');
+            await sql('ALTER TABLE public.divine_transmissions ENABLE ROW LEVEL SECURITY');
+            await sql('DROP POLICY IF EXISTS read_published ON public.divine_transmissions');
+            await sql('CREATE POLICY read_published ON public.divine_transmissions FOR SELECT USING (published = true OR auth.uid() IS NOT NULL)');
+            await sql('DROP POLICY IF EXISTS service_all ON public.divine_transmissions');
+            await sql('CREATE POLICY service_all ON public.divine_transmissions TO service_role USING (true) WITH CHECK (true)');
+
+            const dtRows = await readFromOld('divine_transmissions');
+            console.log('divine_transmissions from old:', dtRows.length);
+            if (dtRows.length) {
+              const { s } = await upsertToNew('divine_transmissions', fixUrls(dtRows));
+              console.log('divine_transmissions migrated:', s);
+            }
+
+            // 3. Create admin_granted_access table
+            console.log('=== admin_granted_access ===');
+            await sql(`CREATE TABLE IF NOT EXISTS public.admin_granted_access (
+              id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+              user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+              access_type text NOT NULL,
+              access_id text,
+              granted_by uuid,
+              created_at timestamptz DEFAULT now(),
+              UNIQUE(user_id, access_type, access_id)
+            )`);
+            await sql('GRANT ALL ON public.admin_granted_access TO authenticated, anon, service_role');
+            await sql('ALTER TABLE public.admin_granted_access ENABLE ROW LEVEL SECURITY');
+            await sql('DROP POLICY IF EXISTS service_all ON public.admin_granted_access');
+            await sql('CREATE POLICY service_all ON public.admin_granted_access TO service_role USING (true) WITH CHECK (true)');
+            await sql('DROP POLICY IF EXISTS read_own ON public.admin_granted_access');
+            await sql('CREATE POLICY read_own ON public.admin_granted_access FOR SELECT TO authenticated USING (user_id = auth.uid())');
+
+            // Grant Adam access to creative soul features
+            for (const feature of ['creative_soul_meditation', 'siddha_oracle', 'creative_soul']) {
+              await sql(`INSERT INTO public.admin_granted_access (user_id, access_type, access_id)
+                VALUES ('${ADMIN_UUID}', 'program', '${feature}')
+                ON CONFLICT (user_id, access_type, access_id) DO NOTHING`);
+              await sql(`INSERT INTO public.admin_granted_access (user_id, access_type, access_id)
+                VALUES ('${ADMIN_UUID}', '${feature}', NULL)
+                ON CONFLICT DO NOTHING`);
+            }
+            console.log('Admin access granted for creative soul');
+
+            // 4. Create creative_soul_entitlements table
+            console.log('=== creative_soul_entitlements ===');
+            await sql(`CREATE TABLE IF NOT EXISTS public.creative_soul_entitlements (
+              id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+              user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+              feature_key text NOT NULL,
+              granted_at timestamptz DEFAULT now(),
+              UNIQUE(user_id, feature_key)
+            )`);
+            await sql('GRANT ALL ON public.creative_soul_entitlements TO authenticated, anon, service_role');
+            await sql('ALTER TABLE public.creative_soul_entitlements ENABLE ROW LEVEL SECURITY');
+            await sql('DROP POLICY IF EXISTS service_all ON public.creative_soul_entitlements');
+            await sql('CREATE POLICY service_all ON public.creative_soul_entitlements TO service_role USING (true) WITH CHECK (true)');
+            await sql('DROP POLICY IF EXISTS read_own ON public.creative_soul_entitlements');
+            await sql('CREATE POLICY read_own ON public.creative_soul_entitlements FOR SELECT TO authenticated USING (user_id = auth.uid())');
+
+            // Grant Adam all creative soul entitlements
+            for (const feature of ['creative_soul_meditation', 'siddha_oracle', 'creative_soul', 'all']) {
+              await sql(`INSERT INTO public.creative_soul_entitlements (user_id, feature_key)
+                VALUES ('${ADMIN_UUID}', '${feature}')
+                ON CONFLICT (user_id, feature_key) DO NOTHING`);
+            }
+            console.log('Creative soul entitlements set');
+
+            // 5. Verify
+            console.log('=== Final verification ===');
+            const roleCheck = await sql(`SELECT role FROM public.user_roles WHERE user_id = '${ADMIN_UUID}'`);
+            console.log('Admin roles:', JSON.stringify(roleCheck.b));
+            const dtCount = await sql('SELECT COUNT(*) FROM public.divine_transmissions');
+            console.log('divine_transmissions count:', JSON.stringify(dtCount.b));
+            const hasRoleTest = await sql(`SELECT public.has_role('${ADMIN_UUID}', 'admin')`);
+            console.log('has_role test:', JSON.stringify(hasRoleTest.b));
+
+            console.log('ALL DONE');
+          }
+
+          main().catch(e => { console.error('FATAL:', e.message); process.exit(1); });
+          EOF
