@@ -1,52 +1,39 @@
-name: Full Data Migration Old → New Supabase
+name: Direct Data Migration via Management API
 
 on:
-  push:
-    paths:
-      - '.github/workflows/full-migration.yml'
+  workflow_dispatch:
 
 jobs:
   migrate:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - name: Full migration
+      - uses: actions/checkout@v4
+
+      - name: Migrate all user data directly
         env:
-          NEW_SERVICE_ROLE: ${{ secrets.NEW_SERVICE_ROLE }}
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          NEW_SVC: ${{ secrets.NEW_SERVICE_ROLE }}
+          PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
-          OLD_URL="https://ssygukfdbtehvtndandn.supabase.co"
-          OLD_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4"
-          NEW_URL="https://fjdzhrdpioxdeyyfogep.supabase.co"
-          SVC="$NEW_SERVICE_ROLE"
-          PAT="$SUPABASE_ACCESS_TOKEN"
-          NEW_REF="fjdzhrdpioxdeyyfogep"
+          cat << 'NODE' > /tmp/migrate.mjs
+          import https from 'https';
 
-          node << 'NODE'
-          const https = require('https');
-
-          const OLD_URL = process.env.OLD_URL || 'https://ssygukfdbtehvtndandn.supabase.co';
-          const OLD_ANON = process.env.OLD_ANON;
-          const NEW_URL = process.env.NEW_URL || 'https://fjdzhrdpioxdeyyfogep.supabase.co';
-          const SVC = process.env.SVC;
+          const OLD_REF = 'ssygukfdbtehvtndandn';
+          const NEW_REF = 'fjdzhrdpioxdeyyfogep';
+          const NEW_URL = 'https://fjdzhrdpioxdeyyfogep.supabase.co';
           const PAT = process.env.PAT;
-          const NEW_REF = process.env.NEW_REF || 'fjdzhrdpioxdeyyfogep';
+          const NEW_SVC = process.env.NEW_SVC;
 
-          function req(url, opts = {}, body = null) {
+          function req(url, method, headers, body) {
             return new Promise((resolve) => {
               const u = new URL(url);
               const payload = body ? JSON.stringify(body) : '';
               const r = https.request({
-                hostname: u.hostname, path: u.pathname + u.search,
-                method: opts.method || 'GET',
-                headers: { ...opts.headers, ...(payload ? { 'Content-Length': Buffer.byteLength(payload) } : {}) }
+                hostname: u.hostname, path: u.pathname + u.search, method,
+                headers: { ...headers, ...(payload ? { 'Content-Length': Buffer.byteLength(payload) } : {}) }
               }, (res) => {
-                let d = '';
-                res.on('data', c => d += c);
-                res.on('end', () => {
-                  try { resolve({ s: res.statusCode, b: JSON.parse(d) }); }
-                  catch { resolve({ s: res.statusCode, b: d }); }
-                });
+                let d = ''; res.on('data', c => d += c);
+                res.on('end', () => { try { resolve({ s: res.statusCode, b: JSON.parse(d) }); } catch { resolve({ s: res.statusCode, b: d }); } });
               });
               r.setTimeout(30000, () => { r.destroy(); resolve({ s: 0, b: 'timeout' }); });
               r.on('error', e => resolve({ s: 0, b: e.message }));
@@ -55,191 +42,164 @@ jobs:
             });
           }
 
-          function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+          const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-          // Call old edge function
-          async function exportTable(table, offset = 0) {
-            const r = await req(
-              `${OLD_URL}/functions/v1/full-data-export`,
-              { method: 'POST', headers: { 'Authorization': `Bearer ${OLD_ANON}`, 'apikey': OLD_ANON, 'Content-Type': 'application/json' } },
-              { table, offset, limit: 500 }
-            );
-            return r;
-          }
-
-          // Query new Supabase via Management API
-          async function newQuery(sql) {
-            const r = await req(
-              `https://api.supabase.com/v1/projects/${NEW_REF}/database/query`,
-              { method: 'POST', headers: { 'Authorization': `Bearer ${PAT}`, 'Content-Type': 'application/json' } },
+          // Query OLD Supabase via Management API (uses PAT - can access any project)
+          async function queryOld(sql) {
+            return req(
+              `https://api.supabase.com/v1/projects/${OLD_REF}/database/query`,
+              'POST',
+              { 'Authorization': `Bearer ${PAT}`, 'Content-Type': 'application/json' },
               { query: sql }
             );
-            return r;
           }
 
-          // Upsert row to new Supabase REST
-          async function upsertRows(table, rows) {
+          // Query NEW Supabase via Management API
+          async function queryNew(sql) {
+            return req(
+              `https://api.supabase.com/v1/projects/${NEW_REF}/database/query`,
+              'POST',
+              { 'Authorization': `Bearer ${PAT}`, 'Content-Type': 'application/json' },
+              { query: sql }
+            );
+          }
+
+          // Upsert rows to new Supabase REST
+          async function upsert(table, rows) {
             if (!rows.length) return { s: 200 };
-            const r = await req(
+            return req(
               `${NEW_URL}/rest/v1/${table}`,
-              { method: 'POST', headers: {
-                'Authorization': `Bearer ${SVC}`,
-                'apikey': SVC,
-                'Content-Type': 'application/json',
-                'Prefer': 'resolution=merge-duplicates'
-              }},
+              'POST',
+              { 'Authorization': `Bearer ${NEW_SVC}`, 'apikey': NEW_SVC,
+                'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' },
               rows
             );
-            return r;
           }
 
           function esc(v) {
             if (v === null || v === undefined) return 'NULL';
             if (typeof v === 'boolean') return v ? 'TRUE' : 'FALSE';
             if (typeof v === 'number') return String(v);
-            if (typeof v === 'object') return `'${JSON.stringify(v).replace(/'/g, "''")}'`;
+            if (typeof v === 'object') return `'${JSON.stringify(v).replace(/'/g, "''")}'::jsonb`;
             return `'${String(v).replace(/'/g, "''")}'`;
           }
 
           async function main() {
-            // STEP 1: Get table list from old Supabase
-            console.log('\n=== STEP 1: Get table list ===');
-            const tablesRes = await req(
-              `${OLD_URL}/functions/v1/full-data-export`,
-              { method: 'POST', headers: { 'Authorization': `Bearer ${OLD_ANON}`, 'apikey': OLD_ANON, 'Content-Type': 'application/json' } },
-              {}
-            );
-            console.log('Tables response:', tablesRes.s);
-            
-            let tables = {};
-            if (tablesRes.b && tablesRes.b.tables) {
-              tables = tablesRes.b.tables;
-            } else {
-              console.log('ERROR getting tables:', JSON.stringify(tablesRes.b).slice(0, 300));
-              // Fallback: use known important tables
-              tables = {
-                profiles: 999, user_balances: 999, affiliates: 999,
-                user_membership_tier: 999, membership_purchases: 999,
-                email_list: 999, community_posts: 999, shakti_cycle_logs: 999
-              };
-            }
-            
-            console.log('Tables found:', Object.keys(tables).join(', '));
+            console.log('=== Direct Migration: Old Supabase → New Supabase ===\n');
 
-            // STEP 2: Export profiles first (most critical)
-            const PRIORITY_TABLES = ['profiles', 'user_balances', 'user_membership_tier',
-              'membership_purchases', 'affiliates', 'affiliate_referrals',
-              'email_list', 'user_coins', 'achievements', 'user_achievements',
-              'community_posts', 'community_comments', 'course_enrollments',
-              'meditation_progress', 'shakti_cycle_logs', 'daily_checkins',
-              'quantum_activations', 'virtual_pilgrimages', 'bhrigu_readings',
-              'jyotish_readings', 'akashic_readings', 'life_book_entries',
-              'nadi_sessions', 'scalar_field_nodes', 'bot_trades'];
+            // STEP 1: Get all public tables from old project
+            console.log('Step 1: Discover tables in old Supabase...');
+            const tablesRes = await queryOld(`
+              SELECT tablename, n_live_tup as row_count
+              FROM pg_catalog.pg_tables t
+              LEFT JOIN pg_stat_user_tables s ON s.relname = t.tablename
+              WHERE schemaname = 'public'
+              ORDER BY n_live_tup DESC NULLS LAST
+            `);
 
-            const allTables = [...new Set([...PRIORITY_TABLES, ...Object.keys(tables)])];
-            
-            console.log('\n=== STEP 2: Export & import tables ===');
-            
-            // First: collect all profiles to build auth user mapping
-            let profiles = [];
-            const profRes = await exportTable('profiles', 0);
-            if (profRes.b && profRes.b.rows) {
-              profiles = profRes.b.rows;
-              console.log(`Profiles: ${profiles.length} rows`);
-            }
-            
-            // STEP 3: Delete incorrect auto-created auth users, recreate with correct UUIDs
-            console.log('\n=== STEP 3: Fix auth users with correct UUIDs ===');
-            
-            // Delete the auto-generated users we made earlier
-            const deleteAdmin = await req(
-              `${NEW_URL}/auth/v1/admin/users`,
-              { method: 'GET', headers: { 'Authorization': `Bearer ${SVC}`, 'apikey': SVC } }
-            );
-            
-            if (deleteAdmin.b && deleteAdmin.b.users) {
-              for (const u of deleteAdmin.b.users) {
-                console.log(`  Deleting wrong-UUID user: ${u.email} (${u.id})`);
-                await req(
-                  `${NEW_URL}/auth/v1/admin/users/${u.id}`,
-                  { method: 'DELETE', headers: { 'Authorization': `Bearer ${SVC}`, 'apikey': SVC } }
-                );
-                await sleep(200);
-              }
+            if (tablesRes.s !== 200) {
+              console.log('ERROR querying old tables:', tablesRes.s, JSON.stringify(tablesRes.b).slice(0,300));
+              process.exit(1);
             }
 
-            // Create auth users preserving original UUIDs (via Management API SQL)
-            for (const profile of profiles) {
-              if (!profile.email && !profile.id) continue;
-              const email = profile.email || '';
-              const uid = profile.id || profile.user_id;
-              if (!uid) continue;
-              
-              const sql = `
-                INSERT INTO auth.users (
-                  instance_id, id, aud, role, email, encrypted_password,
-                  email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
-                  created_at, updated_at, confirmation_token,
-                  email_change, email_change_token_new, recovery_token
-                ) VALUES (
-                  '00000000-0000-0000-0000-000000000000',
-                  '${uid}', 'authenticated', 'authenticated',
-                  ${esc(email)},
-                  crypt('SiddhaQuantum2050!', gen_salt('bf')),
-                  NOW(), '{"provider":"email","providers":["email"]}', '{}',
-                  NOW(), NOW(), '', '', '', ''
-                ) ON CONFLICT (id) DO UPDATE SET
-                  email = EXCLUDED.email,
-                  encrypted_password = EXCLUDED.encrypted_password,
-                  email_confirmed_at = NOW()
-              `;
-              const r = await newQuery(sql);
-              console.log(`  Auth user ${email}: ${r.s}`);
-              await sleep(150);
-            }
+            const tables = tablesRes.b;
+            console.log(`Found ${tables.length} tables:\n`);
+            tables.forEach(t => console.log(`  ${t.tablename}: ~${t.row_count || 0} rows`));
 
-            // STEP 4: Import all table data
-            console.log('\n=== STEP 4: Import table data ===');
-            
-            for (const table of allTables) {
-              if (!tables[table] && tables[table] !== 0) continue;
-              if (tables[table] === 0) { console.log(`  ${table}: empty, skip`); continue; }
-              
-              let offset = 0;
-              let totalImported = 0;
-              
+            // Priority order: user-data tables first
+            const PRIORITY = [
+              'profiles', 'user_memberships', 'subscriptions', 'membership_purchases',
+              'user_membership_tier', 'user_balances', 'affiliates', 'affiliate_referrals',
+              'affiliate_clicks', 'email_list', 'jyotish_charts', 'jyotish_readings',
+              'bhrigu_readings', 'astrology_data', 'user_astrology', 'dosha_profiles',
+              'ayurveda_sessions', 'shakti_cycle_logs', 'meditation_progress',
+              'course_enrollments', 'community_posts', 'community_comments',
+              'quantum_activations', 'akashic_records', 'virtual_pilgrimages',
+              'scalar_field_activations', 'nadi_sessions', 'life_book_entries',
+              'bot_trades', 'daily_checkins', 'achievements', 'user_achievements',
+              'user_coins', 'announcements', 'mantra_logs', 'meditation_sessions',
+              'practitioner_progress', 'quantum_apothecary_sessions'
+            ];
+
+            const tableNames = tables.map(t => t.tablename);
+            const ordered = [...new Set([...PRIORITY.filter(t => tableNames.includes(t)), ...tableNames])];
+
+            console.log('\nStep 2: Migrate table data...\n');
+
+            const results = {};
+            for (const table of ordered) {
+              const tableInfo = tables.find(t => t.tablename === table);
+              const count = parseInt(tableInfo?.row_count || 0);
+              if (count === 0) { results[table] = 'empty'; continue; }
+
+              let offset = 0, migrated = 0, errors = 0;
               while (true) {
-                const res = await exportTable(table, offset);
-                if (!res.b || !res.b.rows || res.b.rows.length === 0) break;
-                const rows = res.b.rows;
-                
-                const upsertRes = await upsertRows(table, rows);
-                if (upsertRes.s >= 200 && upsertRes.s < 300) {
-                  totalImported += rows.length;
-                } else {
-                  console.log(`  ⚠️  ${table} @${offset}: ${upsertRes.s} — ${JSON.stringify(upsertRes.b).slice(0, 120)}`);
-                }
-                
+                const res = await queryOld(`SELECT * FROM public."${table}" LIMIT 500 OFFSET ${offset}`);
+                if (res.s !== 200 || !Array.isArray(res.b) || res.b.length === 0) break;
+                const rows = res.b;
+
+                const u = await upsert(table, rows);
+                if (u.s >= 200 && u.s < 300) { migrated += rows.length; }
+                else { errors++; console.log(`  ⚠️  ${table}@${offset}: ${u.s} ${JSON.stringify(u.b).slice(0,100)}`); }
+
                 if (rows.length < 500) break;
                 offset += 500;
-                await sleep(200);
+                await sleep(150);
               }
-              
-              if (totalImported > 0) console.log(`  ✅ ${table}: ${totalImported} rows`);
-              await sleep(100);
+              results[table] = errors ? `${migrated} migrated, ${errors} errors` : `✅ ${migrated}`;
+              console.log(`  ${table}: ${results[table]}`);
             }
 
-            console.log('\n✅ MIGRATION COMPLETE');
+            // STEP 3: Fix auth users — preserve original UUIDs via SQL
+            console.log('\nStep 3: Fix auth users with correct UUIDs...');
+            const profRes = await queryOld(`SELECT id, email, created_at FROM public.profiles LIMIT 500`);
+            if (profRes.s === 200 && Array.isArray(profRes.b)) {
+              let authFixed = 0;
+              for (const p of profRes.b) {
+                if (!p.email || !p.id) continue;
+                const sql = `
+                  INSERT INTO auth.users (
+                    instance_id, id, aud, role, email, encrypted_password,
+                    email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+                    confirmation_token, email_change, email_change_token_new, recovery_token
+                  ) VALUES (
+                    '00000000-0000-0000-0000-000000000000',
+                    '${p.id}', 'authenticated', 'authenticated',
+                    ${esc(p.email)},
+                    crypt('SiddhaQuantum2050!', gen_salt('bf')),
+                    NOW(), '{"provider":"email","providers":["email"]}', '{}',
+                    ${esc(p.created_at || new Date().toISOString())},
+                    NOW(), '', '', '', ''
+                  )
+                  ON CONFLICT (id) DO UPDATE SET
+                    email = EXCLUDED.email,
+                    email_confirmed_at = NOW(),
+                    updated_at = NOW()
+                `;
+                const r = await queryNew(sql);
+                if (r.s === 200 || r.s === 201) authFixed++;
+                else console.log(`  ⚠️  auth ${p.email}: ${r.s} ${JSON.stringify(r.b).slice(0,100)}`);
+                await sleep(100);
+              }
+              console.log(`  Auth users fixed: ${authFixed}`);
+            }
+
+            console.log('\n=== MIGRATION COMPLETE ===');
             console.log('Login: siddhaquantumnexus.com');
             console.log('Password: SiddhaQuantum2050!');
+            console.log('\nFull results:', JSON.stringify(results, null, 2));
           }
 
-          main().catch(e => { console.error('FATAL:', e.message, e.stack); process.exit(1); });
+          main().catch(e => { console.error('FATAL:', e.message); process.exit(1); });
           NODE
-        env:
-          OLD_URL: "https://ssygukfdbtehvtndandn.supabase.co"
-          OLD_ANON: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4"
-          NEW_URL: "https://fjdzhrdpioxdeyyfogep.supabase.co"
-          SVC: ${{ secrets.NEW_SERVICE_ROLE }}
-          PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          NEW_REF: "fjdzhrdpioxdeyyfogep"
+          node /tmp/migrate.mjs
+
+      - name: Save migration report
+        if: always()
+        run: |
+          echo "Migration ran at $(date)" > scripts/last-migration-report.txt
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+          git add scripts/last-migration-report.txt || true
+          git commit -m "chore: migration report" || echo "nothing to commit"
+          git push || echo "push skipped"
