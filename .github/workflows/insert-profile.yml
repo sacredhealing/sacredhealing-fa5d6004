@@ -1,0 +1,33 @@
+name: Insert Adam Profile
+
+on:
+  push:
+    paths:
+      - '.github/workflows/insert-profile.yml'
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Insert correct profile for Adam
+        run: |
+          BASE="https://fjdzhrdpioxdeyyfogep.supabase.co"
+          SVC="${{ secrets.NEW_SERVICE_ROLE }}"
+          UUID="bd0b21c9-577a-450b-bb1e-21c9d0423f17"
+
+          echo "=== Check what columns profiles table has ==="
+          curl -s "$BASE/rest/v1/profiles?select=*&limit=3" \
+            -H "apikey: $SVC" \
+            -H "Authorization: Bearer $SVC"
+
+          echo ""
+          echo "=== Check if Adam profile exists ==="
+          curl -s "$BASE/rest/v1/profiles?id=eq.$UUID" \
+            -H "apikey: $SVC" \
+            -H "Authorization: Bearer $SVC"
+
+          echo ""
+          echo "=== List all profiles ==="
+          curl -s "$BASE/rest/v1/profiles?select=id,full_name,display_name,email,membership_tier&limit=10" \
+            -H "apikey: $SVC" \
+            -H "Authorization: Bearer $SVC"
