@@ -9,49 +9,31 @@ jobs:
   fix:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Insert Adam profile into new Supabase
+      - name: Upsert Adam profile into new Supabase
         run: |
           BASE="https://fjdzhrdpioxdeyyfogep.supabase.co"
           SVC="${{ secrets.NEW_SERVICE_ROLE }}"
           UUID="bd0b21c9-577a-450b-bb1e-21c9d0423f17"
-          EMAIL="sacredhealingvibe@gmail.com"
 
-          echo "=== Current profiles in new Supabase ===" | tee -a output.txt
-          curl -s "$BASE/rest/v1/profiles?select=*&limit=5" \
-            -H "apikey: $SVC" \
-            -H "Authorization: Bearer $SVC" | tee -a output.txt
-
-          echo "" | tee -a output.txt
-          echo "=== Upsert Adam profile ===" | tee -a output.txt
+          echo "=== Upsert Adam profile ==="
           curl -s -X POST "$BASE/rest/v1/profiles" \
             -H "apikey: $SVC" \
             -H "Authorization: Bearer $SVC" \
             -H "Content-Type: application/json" \
-            -H "Prefer: resolution=merge-duplicates" \
-            -d '{
-              "id": "bd0b21c9-577a-450b-bb1e-21c9d0423f17",
-              "email": "sacredhealingvibe@gmail.com",
-              "full_name": "Adam",
-              "display_name": "Adam",
-              "membership_tier": "akasha_infinity",
-              "is_admin": true
-            }' | tee -a output.txt
+            -H "Prefer: resolution=merge-duplicates,return=representation" \
+            -d "{\"id\":\"$UUID\",\"email\":\"sacredhealingvibe@gmail.com\",\"full_name\":\"Adam\",\"display_name\":\"Adam\",\"membership_tier\":\"akasha_infinity\",\"is_admin\":true}"
 
-          echo "" | tee -a output.txt
-          echo "=== Verify profile after upsert ===" | tee -a output.txt
-          curl -s "$BASE/rest/v1/profiles?id=eq.$UUID" \
+          echo ""
+          echo "=== Also set membership table if exists ==="
+          curl -s -X POST "$BASE/rest/v1/user_memberships" \
             -H "apikey: $SVC" \
-            -H "Authorization: Bearer $SVC" | tee -a output.txt
+            -H "Authorization: Bearer $SVC" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: resolution=merge-duplicates" \
+            -d "{\"user_id\":\"$UUID\",\"tier\":\"akasha_infinity\",\"status\":\"active\"}" || true
 
-          cp output.txt /tmp/profile-output.txt
-
-      - name: Commit output
-        run: |
-          git config user.email "action@github.com"
-          git config user.name "GitHub Action"
-          mv /tmp/profile-output.txt scripts/profile-output.txt
-          git add scripts/profile-output.txt
-          git commit -m "diag: profile insert output" || echo "no change"
-          git push
+          echo ""
+          echo "=== Verify ==="
+          curl -s "$BASE/rest/v1/profiles?id=eq.$UUID&select=id,full_name,display_name,email,membership_tier,is_admin" \
+            -H "apikey: $SVC" \
+            -H "Authorization: Bearer $SVC"
