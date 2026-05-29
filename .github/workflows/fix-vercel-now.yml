@@ -9,13 +9,4 @@ jobs:
       - name: Fix Vercel env vars
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: |
-          node scripts/fix-vercel-now.mjs | tee /tmp/output.txt
-          cat /tmp/output.txt > scripts/vercel-diag-output.json
-      - name: Commit diagnostic output
-        run: |
-          git config user.email "action@github.com"
-          git config user.name "GitHub Action"
-          git add scripts/vercel-diag-output.json
-          git commit -m "diag: Vercel project state" || echo "no changes"
-          git push
+        run: node scripts/fix-vercel-now.mjs
