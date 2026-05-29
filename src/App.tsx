@@ -176,6 +176,7 @@ const AkashicRecords = React.lazy(() => import("./pages/AkashicRecords"));
 const AkashicReadingInitiating = React.lazy(() => import("./pages/AkashicReadingInitiating"));
 const AkashicReadingFull = React.lazy(() => import("./pages/AkashicReadingFull"));
 const AkashicCodex = React.lazy(() => import("./pages/AkashicCodex"));
+const AkashicCodexV2 = React.lazy(() => import("./pages/AkashicCodexV2"));
 const LivingPortraitCodex = React.lazy(() => import("./pages/LivingPortraitCodex"));
 const Students = React.lazy(() => import("./pages/Students"));
 const StudentCodex = React.lazy(() => import("./pages/StudentCodex"));
@@ -405,6 +406,7 @@ function AppRoutes() {
                   <Route path="/vastu" element={<Vastu />} />
                   <Route path="/quantum-apothecary" element={<QuantumApothecaryGate />} />
                   <Route path="/life-book" element={<LifeBook />} />
+                  <Route path="/akashic-codex-v2" element={<AkashicCodexV2 />} />
                   <Route path="/sri-yantra-shield" element={<SriYantraShield />} />
                   <Route path="/temple-home" element={<TempleHome />} />
                   <Route path="/virtual-pilgrimage" element={<VirtualPilgrimage />} />
