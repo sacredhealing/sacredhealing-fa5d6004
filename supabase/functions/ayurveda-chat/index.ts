@@ -85,13 +85,11 @@ Herbs already prescribed — DO NOT repeat: ${prescribedHerbs.join(", ")}`);
   if (prescribedMarma.length > 0) {
     lines.push(`Marma/Varmam already used — DO NOT repeat: ${prescribedMarma.join(", ")}`);
   }
-  lines.push("
-If the seeker returns within 24 hours: check in on how the previous prescription is landing.");
+  lines.push("\nIf the seeker returns within 24 hours: check in on how the previous prescription is landing.");
   lines.push("If they return 2–7 days later: assess progress. Adjust protocol. Go deeper.");
   lines.push("If they return after 1 week+: full reassessment. The body has had time to shift.");
 
-  return lines.join("
-");
+  return lines.join("\n");
 }
 
 
