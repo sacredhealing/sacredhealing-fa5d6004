@@ -1,0 +1,63 @@
+name: Fix Profiles RLS
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-profiles-rls.yml'
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fix profiles RLS and check user data
+        env:
+          PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SVC: ${{ secrets.NEW_SERVICE_ROLE }}
+        run: |
+          node << 'EOF'
+          const https = require('https');
+          const PAT = process.env.PAT;
+          const SVC = process.env.SVC;
+          const REF = 'fjdzhrdpioxdeyyfogep';
+          const NEW_URL = 'https://fjdzhrdpioxdeyyfogep.supabase.co';
+
+          function sql(q) {
+            return new Promise(res => {
+              const b = JSON.stringify({query:q});
+              const r = https.request({hostname:'api.supabase.com',path:`/v1/projects/${REF}/database/query`,method:'POST',
+                headers:{'Authorization':`Bearer ${PAT}`,'Content-Type':'application/json','Content-Length':Buffer.byteLength(b)}
+              },resp=>{let d='';resp.on('data',c=>d+=c);resp.on('end',()=>{try{res(JSON.parse(d))}catch{res(d)}})});
+              r.on('error',e=>res(e.message)); r.write(b); r.end();
+            });
+          }
+
+          async function main() {
+            // Fix ambiguous user_id in profiles RLS
+            await sql(`DROP POLICY IF EXISTS allow_read_all ON public.profiles`);
+            await sql(`DROP POLICY IF EXISTS allow_write_own ON public.profiles`);
+            await sql(`DROP POLICY IF EXISTS allow_service ON public.profiles`);
+
+            await sql(`CREATE POLICY allow_read_all ON public.profiles FOR SELECT USING (true)`);
+            await sql(`CREATE POLICY allow_write_own ON public.profiles FOR ALL TO authenticated USING (auth.uid() = profiles.user_id OR auth.uid() = profiles.id) WITH CHECK (auth.uid() = profiles.user_id OR auth.uid() = profiles.id)`);
+            await sql(`CREATE POLICY allow_service ON public.profiles TO service_role USING (true) WITH CHECK (true)`);
+            console.log('Profiles RLS fixed');
+
+            // Check tier breakdown
+            const tiers = await sql(`SELECT membership_tier, COUNT(*) as count FROM public.profiles GROUP BY membership_tier ORDER BY count DESC`);
+            console.log('Tier breakdown:', JSON.stringify(tiers.b));
+
+            // Check total profiles vs auth users
+            const profCount = await sql(`SELECT COUNT(*) FROM public.profiles`);
+            console.log('Total profiles:', JSON.stringify(profCount.b));
+
+            // Check subscriptions
+            const subs = await sql(`SELECT status, COUNT(*) FROM public.subscriptions GROUP BY status`);
+            console.log('Subscriptions:', JSON.stringify(subs.b));
+
+            // Check stripe customers
+            const stripe = await sql(`SELECT COUNT(*) FROM public.profiles WHERE stripe_customer_id IS NOT NULL`);
+            console.log('With Stripe:', JSON.stringify(stripe.b));
+          }
+
+          main().catch(e=>{console.error('FATAL:',e.message);process.exit(1);});
+          EOF
