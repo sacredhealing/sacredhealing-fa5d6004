@@ -1872,9 +1872,13 @@ function QuantumApothecaryInner() {
     try {
       let raw = localStorage.getItem(key);
       if (!raw) raw = localStorage.getItem('active_resonators');
-      setActiveTransmissions(raw ? JSON.parse(raw) : []);
+      // Only override from localStorage if it has data — otherwise Supabase load wins
+      if (raw) {
+        setActiveTransmissions(JSON.parse(raw));
+      }
+      // If localStorage is empty, Supabase useEffect below will hydrate
     } catch {
-      setActiveTransmissions([]);
+      // localStorage empty/corrupt — Supabase will hydrate
     }
   }, [user?.id]);
 
