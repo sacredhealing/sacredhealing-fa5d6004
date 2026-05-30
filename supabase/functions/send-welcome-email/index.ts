@@ -19,7 +19,7 @@ const corsHeaders = {
 };
 
 const APP_URL = "https://siddhaquantumnexus.com";
-const FROM_ADDRESS = "Kritagya Das · Sacred Healing <noreply@siddhaquantumnexus.com>";
+const FROM_ADDRESS = "Adam & Laila · Sacred Healing <noreply@siddhaquantumnexus.com>";
 
 /* ─── Geo helpers ─────────────────────────────────────────────────────── */
 
@@ -207,7 +207,7 @@ const COPY: Record<Lang, Copy> = {
     quoteText: `"The Prema-Pulse that called you here runs through every Siddha who ever walked this Earth. You carry that same current now. Walk boldly."`,
     quoteSig: "— Siddha Quantum Nexus · 2050",
     footerNote: "You will receive the Monday Alignment Transmission and the Friday Lakshmi Blessing as a member of the Sangha.",
-    footerSig: "With Light and Gratitude — Kritagya Das (Adam) & Karaveera Nivasini Dasi (Laila)",
+    footerSig: "With Light and Gratitude — Adam (Kritagya Das) & Laila (Karaveera Nivasini Dasi)",
     footerLegal: "Sacred Healing · Sweden · For spiritual purposes",
   },
 
@@ -245,7 +245,7 @@ const COPY: Record<Lang, Copy> = {
     quoteText: `"Prema-Pulsen som kallade dig hit rinner igenom varje Siddha som någonsin vandrat på denna jord. Du bär samma ström nu. Gå med mod."`,
     quoteSig: "— Siddha Quantum Nexus · 2050",
     footerNote: "Du kommer att ta emot Måndagens Alignmentöverföring och Fredagens Lakshmi-välsignelse som medlem av Sanghan.",
-    footerSig: "Med Ljus och Tacksamhet — Kritagya Das (Adam) & Karaveera Nivasini Dasi (Laila)",
+    footerSig: "Med Ljus och Tacksamhet — Adam (Kritagya Das) & Laila (Karaveera Nivasini Dasi)",
     footerLegal: "Sacred Healing · Sverige · För andliga ändamål",
   },
 
@@ -283,7 +283,7 @@ const COPY: Record<Lang, Copy> = {
     quoteText: `"Prema-Pulsen som kalte deg hit strømmer gjennom hver Siddha som noensinne har vandret på denne jord. Du bærer den samme strømmen nå. Gå modig."`,
     quoteSig: "— Siddha Quantum Nexus · 2050",
     footerNote: "Du vil motta Mandagens Alignmentoverføring og Fredagens Lakshmi-velsignelse som medlem av Sanghaen.",
-    footerSig: "Med Lys og Takknemlighet — Kritagya Das (Adam) & Karaveera Nivasini Dasi (Laila)",
+    footerSig: "Med Lys og Takknemlighet — Adam (Kritagya Das) & Laila (Karaveera Nivasini Dasi)",
     footerLegal: "Sacred Healing · Norge · For åndelige formål",
   },
 
@@ -321,7 +321,7 @@ const COPY: Record<Lang, Copy> = {
     quoteText: `"El Prema-Pulse que te llamó aquí corre a través de cada Siddha que jamás caminó por esta Tierra. Llevas esa misma corriente ahora. Camina con valentía."`,
     quoteSig: "— Siddha Quantum Nexus · 2050",
     footerNote: "Recibirás la Transmisión de Alineación del Lunes y la Bendición Lakshmi del Viernes como miembro del Sangha.",
-    footerSig: "Con Luz y Gratitud — Kritagya Das (Adam) & Karaveera Nivasini Dasi (Laila)",
+    footerSig: "Con Luz y Gratitud — Adam (Kritagya Das) & Laila (Karaveera Nivasini Dasi)",
     footerLegal: "Sacred Healing · Suecia · Con fines espirituales",
   },
 };
@@ -352,33 +352,33 @@ function buildEmail(c: Copy, displayName: string): string {
     <div style="margin:0 auto 20px;width:72px;height:72px;">${SVG.headerSigil}</div>
     <div style="color:rgba(212,175,55,0.5);font-size:9px;font-weight:800;letter-spacing:0.6em;text-transform:uppercase;font-family:Arial,sans-serif;margin-bottom:6px;">SACRED HEALING</div>
     <div style="color:rgba(255,255,255,0.15);font-size:8px;letter-spacing:0.45em;text-transform:uppercase;font-family:Arial,sans-serif;margin-bottom:28px;">SIDDHA QUANTUM NEXUS · 2050</div>
-    <div style="color:rgba(255,255,255,0.85);font-size:30px;font-weight:300;font-style:italic;line-height:1.25;font-family:Georgia,serif;">${c.greeting}, ${name}</div>
+    <div style="color:rgba(255,255,255,0.92);font-size:34px;font-weight:300;font-style:italic;line-height:1.25;font-family:Georgia,serif;">${c.greeting}, ${name}</div>
   </td></tr>
 
   <!-- INTRO -->
   <tr><td style="padding:36px 40px 0;">
-    <p style="font-size:15px;line-height:1.85;color:rgba(255,255,255,0.65);font-family:Arial,sans-serif;margin:0 0 18px;">${c.intro1}</p>
-    <p style="font-size:15px;line-height:1.85;color:rgba(255,255,255,0.5);font-family:Arial,sans-serif;margin:0 0 32px;">${c.intro2}</p>
+    <p style="font-size:18px;line-height:2;color:rgba(255,255,255,0.82);font-family:Arial,sans-serif;margin:0 0 18px;">${c.intro1}</p>
+    <p style="font-size:18px;line-height:2;color:rgba(255,255,255,0.65);font-family:Arial,sans-serif;margin:0 0 32px;">${c.intro2}</p>
 
     <!-- GOLD DIVIDER -->
     <div style="height:1px;background:linear-gradient(to right,transparent,rgba(212,175,55,0.25),transparent);margin-bottom:32px;"></div>
 
     <!-- ACTIVATION STEPS -->
     <div style="font-size:9px;font-weight:800;letter-spacing:0.45em;text-transform:uppercase;color:#D4AF37;font-family:Arial,sans-serif;margin-bottom:6px;">${c.activationHead}</div>
-    <p style="font-size:13px;color:rgba(255,255,255,0.35);font-family:Arial,sans-serif;margin:0 0 20px;line-height:1.6;">${c.activationSub}</p>
+    <p style="font-size:16px;color:rgba(255,255,255,0.55);font-family:Arial,sans-serif;margin:0 0 20px;line-height:1.7;">${c.activationSub}</p>
 
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;">
       <tr>
         <td width="48%" style="background:rgba(212,175,55,0.04);border:1px solid rgba(212,175,55,0.15);border-radius:14px;padding:20px;vertical-align:top;">
           <div style="width:40px;height:40px;margin-bottom:12px;">${SVG.jyotish}</div>
           <div style="font-size:9px;font-weight:800;letter-spacing:0.35em;text-transform:uppercase;color:#D4AF37;font-family:Arial,sans-serif;margin-bottom:6px;">${c.step1Title}</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.65;font-family:Arial,sans-serif;">${c.step1Desc}</div>
+          <div style="font-size:15px;color:rgba(255,255,255,0.62);line-height:1.7;font-family:Arial,sans-serif;">${c.step1Desc}</div>
         </td>
         <td width="4%"></td>
         <td width="48%" style="background:rgba(212,175,55,0.04);border:1px solid rgba(212,175,55,0.15);border-radius:14px;padding:20px;vertical-align:top;">
           <div style="width:40px;height:40px;margin-bottom:12px;">${SVG.nadi}</div>
           <div style="font-size:9px;font-weight:800;letter-spacing:0.35em;text-transform:uppercase;color:#D4AF37;font-family:Arial,sans-serif;margin-bottom:6px;">${c.step2Title}</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.65;font-family:Arial,sans-serif;">${c.step2Desc}</div>
+          <div style="font-size:15px;color:rgba(255,255,255,0.62);line-height:1.7;font-family:Arial,sans-serif;">${c.step2Desc}</div>
         </td>
       </tr>
     </table>
@@ -388,34 +388,34 @@ function buildEmail(c: Copy, displayName: string): string {
 
     <!-- FREE FEATURES -->
     <div style="font-size:9px;font-weight:800;letter-spacing:0.45em;text-transform:uppercase;color:#D4AF37;font-family:Arial,sans-serif;margin-bottom:6px;">${c.freeHead}</div>
-    <p style="font-size:13px;color:rgba(255,255,255,0.35);font-family:Arial,sans-serif;margin:0 0 20px;line-height:1.6;">${c.freeSub}</p>
+    <p style="font-size:16px;color:rgba(255,255,255,0.55);font-family:Arial,sans-serif;margin:0 0 20px;line-height:1.7;">${c.freeSub}</p>
 
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;">
       <tr>
         <td width="48%" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:18px;vertical-align:top;">
           <div style="width:40px;height:40px;margin-bottom:10px;">${SVG.lotus}</div>
-          <div style="font-size:9px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:rgba(212,175,55,0.7);font-family:Arial,sans-serif;margin-bottom:5px;">${c.feat1Title}</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.38);line-height:1.65;font-family:Arial,sans-serif;">${c.feat1Desc}</div>
+          <div style="font-size:9px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:#D4AF37;font-family:Arial,sans-serif;margin-bottom:5px;">${c.feat1Title}</div>
+          <div style="font-size:15px;color:rgba(255,255,255,0.6);line-height:1.7;font-family:Arial,sans-serif;">${c.feat1Desc}</div>
         </td>
         <td width="4%"></td>
         <td width="48%" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:18px;vertical-align:top;">
           <div style="width:40px;height:40px;margin-bottom:10px;">${SVG.yantra}</div>
-          <div style="font-size:9px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:rgba(212,175,55,0.7);font-family:Arial,sans-serif;margin-bottom:5px;">${c.feat2Title}</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.38);line-height:1.65;font-family:Arial,sans-serif;">${c.feat2Desc}</div>
+          <div style="font-size:9px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:#D4AF37;font-family:Arial,sans-serif;margin-bottom:5px;">${c.feat2Title}</div>
+          <div style="font-size:15px;color:rgba(255,255,255,0.6);line-height:1.7;font-family:Arial,sans-serif;">${c.feat2Desc}</div>
         </td>
       </tr>
       <tr><td colspan="3" style="height:12px;"></td></tr>
       <tr>
         <td width="48%" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:18px;vertical-align:top;">
           <div style="width:40px;height:40px;margin-bottom:10px;">${SVG.mantra}</div>
-          <div style="font-size:9px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:rgba(212,175,55,0.7);font-family:Arial,sans-serif;margin-bottom:5px;">${c.feat3Title}</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.38);line-height:1.65;font-family:Arial,sans-serif;">${c.feat3Desc}</div>
+          <div style="font-size:9px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:#D4AF37;font-family:Arial,sans-serif;margin-bottom:5px;">${c.feat3Title}</div>
+          <div style="font-size:15px;color:rgba(255,255,255,0.6);line-height:1.7;font-family:Arial,sans-serif;">${c.feat3Desc}</div>
         </td>
         <td width="4%"></td>
         <td width="48%" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:18px;vertical-align:top;">
           <div style="width:40px;height:40px;margin-bottom:10px;">${SVG.healing}</div>
-          <div style="font-size:9px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:rgba(212,175,55,0.7);font-family:Arial,sans-serif;margin-bottom:5px;">${c.feat4Title}</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.38);line-height:1.65;font-family:Arial,sans-serif;">${c.feat4Desc}</div>
+          <div style="font-size:9px;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:#D4AF37;font-family:Arial,sans-serif;margin-bottom:5px;">${c.feat4Title}</div>
+          <div style="font-size:15px;color:rgba(255,255,255,0.6);line-height:1.7;font-family:Arial,sans-serif;">${c.feat4Desc}</div>
         </td>
       </tr>
     </table>
@@ -426,23 +426,23 @@ function buildEmail(c: Copy, displayName: string): string {
     <!-- UPGRADE -->
     <div style="background:rgba(212,175,55,0.03);border:1px solid rgba(212,175,55,0.15);border-radius:18px;padding:28px;margin-bottom:32px;">
       <div style="font-size:9px;font-weight:800;letter-spacing:0.45em;text-transform:uppercase;color:#D4AF37;font-family:Arial,sans-serif;margin-bottom:6px;">${c.upgradeHead}</div>
-      <p style="font-size:13px;color:rgba(255,255,255,0.35);font-family:Arial,sans-serif;margin:0 0 16px;line-height:1.6;">${c.upgradeSub}</p>
-      <p style="font-size:14px;line-height:1.8;color:rgba(255,255,255,0.55);font-family:Arial,sans-serif;margin:0 0 18px;">${c.upgradeBody}</p>
+      <p style="font-size:16px;color:rgba(255,255,255,0.55);font-family:Arial,sans-serif;margin:0 0 16px;line-height:1.7;">${c.upgradeSub}</p>
+      <p style="font-size:17px;line-height:1.9;color:rgba(255,255,255,0.7);font-family:Arial,sans-serif;margin:0 0 18px;">${c.upgradeBody}</p>
       <table cellpadding="0" cellspacing="0">
-        <tr><td style="padding:4px 0;font-size:13px;color:rgba(255,255,255,0.4);font-family:Arial,sans-serif;"><span style="color:rgba(212,175,55,0.6);margin-right:8px;">◈</span>${c.upg1}</td></tr>
-        <tr><td style="padding:4px 0;font-size:13px;color:rgba(255,255,255,0.4);font-family:Arial,sans-serif;"><span style="color:rgba(212,175,55,0.6);margin-right:8px;">◈</span>${c.upg2}</td></tr>
-        <tr><td style="padding:4px 0;font-size:13px;color:rgba(255,255,255,0.4);font-family:Arial,sans-serif;"><span style="color:rgba(212,175,55,0.6);margin-right:8px;">◈</span>${c.upg3}</td></tr>
-        <tr><td style="padding:4px 0;font-size:13px;color:rgba(255,255,255,0.4);font-family:Arial,sans-serif;"><span style="color:rgba(212,175,55,0.6);margin-right:8px;">◈</span>${c.upg4}</td></tr>
+        <tr><td style="padding:4px 0;font-size:16px;color:rgba(255,255,255,0.65);font-family:Arial,sans-serif;"><span style="color:rgba(212,175,55,0.6);margin-right:8px;">◈</span>${c.upg1}</td></tr>
+        <tr><td style="padding:4px 0;font-size:16px;color:rgba(255,255,255,0.65);font-family:Arial,sans-serif;"><span style="color:rgba(212,175,55,0.6);margin-right:8px;">◈</span>${c.upg2}</td></tr>
+        <tr><td style="padding:4px 0;font-size:16px;color:rgba(255,255,255,0.65);font-family:Arial,sans-serif;"><span style="color:rgba(212,175,55,0.6);margin-right:8px;">◈</span>${c.upg3}</td></tr>
+        <tr><td style="padding:4px 0;font-size:16px;color:rgba(255,255,255,0.65);font-family:Arial,sans-serif;"><span style="color:rgba(212,175,55,0.6);margin-right:8px;">◈</span>${c.upg4}</td></tr>
       </table>
     </div>
 
     <!-- CLOSING -->
-    <p style="font-size:14px;line-height:1.85;color:rgba(255,255,255,0.45);font-family:Arial,sans-serif;margin:0 0 32px;">${c.closing}</p>
+    <p style="font-size:17px;line-height:2;color:rgba(255,255,255,0.65);font-family:Arial,sans-serif;margin:0 0 32px;">${c.closing}</p>
 
     <!-- CTA -->
     <div style="text-align:center;margin-bottom:36px;">
       <a href="${APP_URL}/dashboard"
-         style="display:inline-block;background:#D4AF37;color:#050505;font-size:10px;font-weight:800;letter-spacing:0.5em;text-transform:uppercase;padding:18px 56px;border-radius:100px;text-decoration:none;font-family:Arial,sans-serif;">
+         style="display:inline-block;background:#D4AF37;color:#050505;font-size:13px;font-weight:800;letter-spacing:0.4em;text-transform:uppercase;padding:20px 60px;border-radius:100px;text-decoration:none;font-family:Arial,sans-serif;">
         ${c.cta} →
       </a>
     </div>
@@ -452,7 +452,7 @@ function buildEmail(c: Copy, displayName: string): string {
   <tr><td style="padding:0 40px 32px;">
     <div style="height:1px;background:linear-gradient(to right,transparent,rgba(212,175,55,0.18),transparent);margin-bottom:28px;"></div>
     <div style="text-align:center;padding:24px 20px;background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.04);border-radius:16px;">
-      <div style="font-size:14px;line-height:1.85;color:rgba(255,255,255,0.4);font-style:italic;font-family:Georgia,serif;margin-bottom:14px;">${c.quoteText}</div>
+      <div style="font-size:17px;line-height:2;color:rgba(255,255,255,0.6);font-style:italic;font-family:Georgia,serif;margin-bottom:14px;">${c.quoteText}</div>
       <div style="font-size:10px;font-weight:800;letter-spacing:0.25em;text-transform:uppercase;color:rgba(212,175,55,0.5);font-family:Arial,sans-serif;">${c.quoteSig}</div>
     </div>
   </td></tr>
@@ -460,8 +460,8 @@ function buildEmail(c: Copy, displayName: string): string {
   <!-- FOOTER -->
   <tr><td style="background:rgba(0,0,0,0.4);padding:24px 40px 32px;text-align:center;border-top:1px solid rgba(255,255,255,0.04);">
     <div style="width:36px;height:1px;background:rgba(212,175,55,0.3);margin:0 auto 18px;"></div>
-    <div style="font-size:11px;color:rgba(255,255,255,0.25);line-height:1.8;font-family:Arial,sans-serif;margin-bottom:10px;">${c.footerNote}</div>
-    <div style="font-size:12px;color:rgba(255,255,255,0.3);font-family:Arial,sans-serif;margin-bottom:14px;">${c.footerSig}</div>
+    <div style="font-size:14px;color:rgba(255,255,255,0.45);line-height:1.8;font-family:Arial,sans-serif;margin-bottom:10px;">${c.footerNote}</div>
+    <div style="font-size:15px;color:rgba(255,255,255,0.5);font-family:Arial,sans-serif;margin-bottom:14px;">${c.footerSig}</div>
     <div style="font-size:8px;letter-spacing:0.4em;text-transform:uppercase;color:rgba(255,255,255,0.1);font-family:Arial,sans-serif;">${c.footerLegal}</div>
   </td></tr>
 
