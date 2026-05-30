@@ -1,0 +1,79 @@
+name: Fix Creative Soul and Quantum Sync
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-creative-quantum.yml'
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check and fix both issues
+        env:
+          PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          node << 'EOF'
+          const https = require('https');
+          const PAT = process.env.PAT;
+          const REF = 'ssygukfdbtehvtndandn';
+          const ADAM = 'bd0b21c9-577a-450b-bb1e-21c9d0423f17';
+
+          function sql(query) {
+            return new Promise((resolve) => {
+              const body = JSON.stringify({ query });
+              const r = https.request({
+                hostname: 'api.supabase.com',
+                path: `/v1/projects/${REF}/database/query`,
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${PAT}`, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) }
+              }, (res) => {
+                let d = ''; res.on('data', c => d += c);
+                res.on('end', () => { try { resolve({ s: res.statusCode, b: JSON.parse(d) }); } catch { resolve({ s: res.statusCode, b: d }); } });
+              });
+              r.on('error', e => resolve({ s: 0, b: e.message }));
+              r.write(body); r.end();
+            });
+          }
+
+          async function main() {
+            // 1. Check user_active_transmissions for Adam
+            console.log('=== user_active_transmissions for Adam ===');
+            const tx = await sql(`SELECT user_id, updated_at, jsonb_array_length(activations::jsonb) as activation_count FROM public.user_active_transmissions WHERE user_id = '${ADAM}'`);
+            console.log('Result:', JSON.stringify(tx.b));
+
+            // 2. Check user_quantum_sync for Adam
+            console.log('\n=== user_quantum_sync for Adam ===');
+            const qs = await sql(`SELECT user_id, updated_at, library_unlocked, jsonb_array_length(top33_matches::jsonb) as top33_count FROM public.user_quantum_sync WHERE user_id = '${ADAM}'`);
+            console.log('Result:', JSON.stringify(qs.b));
+
+            // 3. Check RLS on user_active_transmissions
+            console.log('\n=== RLS on user_active_transmissions ===');
+            const rls = await sql(`SELECT policyname, cmd, qual FROM pg_policies WHERE tablename = 'user_active_transmissions'`);
+            console.log('Policies:', JSON.stringify(rls.b));
+
+            // 4. Check creative_tools table
+            console.log('\n=== creative_tools table ===');
+            const tools = await sql(`SELECT id, slug, name, tool_type, price_eur, is_active FROM public.creative_tools ORDER BY price_eur`);
+            console.log('Tools:', JSON.stringify(tools.b));
+
+            // 5. Check music_tracks categories
+            console.log('\n=== music_tracks categories ===');
+            const music = await sql(`SELECT category, COUNT(*) as count, MIN(title) as sample FROM public.music_tracks GROUP BY category`);
+            console.log('Music categories:', JSON.stringify(music.b));
+
+            // 6. Check creative soul meditation sound tables
+            console.log('\n=== All tables with sound/music/audio ===');
+            const soundTables = await sql(`
+              SELECT tablename, n_live_tup as rows
+              FROM pg_catalog.pg_tables t
+              LEFT JOIN pg_stat_user_tables s ON s.relname = t.tablename
+              WHERE schemaname = 'public'
+              AND (tablename LIKE '%sound%' OR tablename LIKE '%music%' OR tablename LIKE '%audio%' OR tablename LIKE '%track%' OR tablename LIKE '%creative%')
+              ORDER BY n_live_tup DESC NULLS LAST
+            `);
+            console.log('Sound tables:', JSON.stringify(soundTables.b));
+          }
+
+          main().catch(e => { console.error('FATAL:', e.message); process.exit(1); });
+          EOF
