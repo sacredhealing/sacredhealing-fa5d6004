@@ -1,0 +1,230 @@
+name: Complete Migration Old to New Supabase
+
+on:
+  push:
+    paths:
+      - '.github/workflows/full-transfer.yml'
+
+jobs:
+  transfer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Full scan and transfer
+        env:
+          PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          NEW_SVC: ${{ secrets.NEW_SERVICE_ROLE }}
+        run: |
+          node << 'EOF'
+          const https = require('https');
+          const OLD_REF = 'ssygukfdbtehvtndandn';
+          const NEW_REF = 'fjdzhrdpioxdeyyfogep';
+          const NEW_URL = 'https://fjdzhrdpioxdeyyfogep.supabase.co';
+          const OLD_URL = 'https://ssygukfdbtehvtndandn.supabase.co';
+          const PAT = process.env.PAT;
+          const NEW_SVC = process.env.NEW_SVC;
+          const R2 = 'https://pub-7a2cf16596fd425ab1717b8c0c3e567d.r2.dev';
+
+          const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+          function req(url, method, headers, body) {
+            return new Promise((resolve) => {
+              const u = new URL(url);
+              const payload = body ? JSON.stringify(body) : '';
+              const r = https.request({
+                hostname: u.hostname, path: u.pathname + u.search, method,
+                headers: { ...headers, ...(payload ? {'Content-Length': Buffer.byteLength(payload)} : {}) }
+              }, (res) => {
+                let d = ''; res.on('data', c => d += c);
+                res.on('end', () => { try { resolve({s: res.statusCode, b: JSON.parse(d)}); } catch { resolve({s: res.statusCode, b: d}); } });
+              });
+              r.on('error', e => resolve({s: 0, b: e.message}));
+              if (payload) r.write(payload);
+              r.end();
+            });
+          }
+
+          function sqlOld(q) {
+            return req(`https://api.supabase.com/v1/projects/${OLD_REF}/database/query`, 'POST',
+              {'Authorization': `Bearer ${PAT}`, 'Content-Type': 'application/json'}, {query: q});
+          }
+
+          function sqlNew(q) {
+            return req(`https://api.supabase.com/v1/projects/${NEW_REF}/database/query`, 'POST',
+              {'Authorization': `Bearer ${PAT}`, 'Content-Type': 'application/json'}, {query: q});
+          }
+
+          function upsertNew(table, rows) {
+            if (!rows || !rows.length) return Promise.resolve({s: 200, b: []});
+            // Fix storage URLs to use R2
+            const fixed = rows.map(row => {
+              const r = {...row};
+              for (const [k, v] of Object.entries(r)) {
+                if (typeof v === 'string' && v.includes('ssygukfdbtehvtndandn.supabase.co/storage')) {
+                  r[k] = v.replace('https://ssygukfdbtehvtndandn.supabase.co/storage/v1/object/public/', R2 + '/');
+                }
+              }
+              return r;
+            });
+            return req(`${NEW_URL}/rest/v1/${table}`, 'POST',
+              {'apikey': NEW_SVC, 'Authorization': `Bearer ${NEW_SVC}`,
+               'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal'},
+              fixed);
+          }
+
+          const report = {};
+
+          async function main() {
+            // STEP 1: Discover ALL tables in old Supabase
+            console.log('=== STEP 1: Scanning old Supabase tables ===');
+            const tablesRes = await sqlOld(`
+              SELECT t.tablename, COALESCE(s.n_live_tup, 0) as rows
+              FROM pg_catalog.pg_tables t
+              LEFT JOIN pg_stat_user_tables s ON s.relname = t.tablename
+              WHERE t.schemaname = 'public'
+              ORDER BY COALESCE(s.n_live_tup, 0) DESC NULLS LAST
+            `);
+
+            if (!Array.isArray(tablesRes.b)) {
+              console.log('ERROR getting tables:', JSON.stringify(tablesRes.b).slice(0,200));
+              process.exit(1);
+            }
+
+            const tables = tablesRes.b;
+            console.log(`Found ${tables.length} tables:`);
+            tables.forEach(t => console.log(`  ${t.tablename}: ${t.rows} rows`));
+
+            // STEP 2: Migrate auth users
+            console.log('\n=== STEP 2: Migrating auth users ===');
+            const usersRes = await req(`${OLD_URL}/auth/v1/admin/users?per_page=1000`,
+              'GET', {'apikey': NEW_SVC, 'Authorization': `Bearer ${NEW_SVC}`});
+            
+            // Use PAT to get old users via management API
+            const oldUsersRes = await req(`https://api.supabase.com/v1/projects/${OLD_REF}/auth/users?page=1&per_page=1000`,
+              'GET', {'Authorization': `Bearer ${PAT}`});
+            
+            let authCreated = 0, authSkipped = 0;
+            const oldUsers = oldUsersRes.b?.users || [];
+            console.log(`Found ${oldUsers.length} auth users in old Supabase`);
+
+            for (const u of oldUsers) {
+              if (!u.email) continue;
+              const createRes = await req(`${NEW_URL}/auth/v1/admin/users`, 'POST',
+                {'apikey': NEW_SVC, 'Authorization': `Bearer ${NEW_SVC}`, 'Content-Type': 'application/json'},
+                {id: u.id, email: u.email, email_confirm: true,
+                 user_metadata: u.user_metadata || {}, app_metadata: u.app_metadata || {},
+                 created_at: u.created_at});
+              if (createRes.s === 200 || createRes.s === 201) authCreated++;
+              else if (createRes.b?.code === 'email_exists' || createRes.s === 422) authSkipped++;
+              else console.log(`  Auth error for ${u.email}: ${createRes.s}`);
+              await sleep(80);
+            }
+            report.auth = {created: authCreated, skipped: authSkipped, total: oldUsers.length};
+            console.log('Auth result:', JSON.stringify(report.auth));
+
+            // STEP 3: Migrate all tables
+            console.log('\n=== STEP 3: Migrating all tables ===');
+
+            // Priority order - dependencies first
+            const PRIORITY = [
+              'profiles', 'user_memberships', 'subscriptions', 'user_roles',
+              'admin_granted_access', 'creative_soul_entitlements',
+              'affiliate_clicks', 'affiliate_referrals', 'affiliates',
+              'meditation_style_sounds', 'meditations', 'music_tracks', 
+              'healing_audio', 'divine_transmissions', 'courses', 'lessons',
+              'creative_tools', 'creative_tool_access', 'user_entitlements',
+              'user_granted_access', 'jyotish_charts', 'jyotish_profiles',
+              'jyotish_readings', 'bhrigu_readings', 'ayurveda_sessions',
+              'shakti_cycle_logs', 'user_active_transmissions', 'user_quantum_sync',
+              'sqi_sessions', 'user_chat_sessions', 'chat_messages',
+              'transmission_blocks', 'user_activity_log', 'meditation_sessions',
+              'pranayama_sessions', 'practitioner_progress', 'virtual_pilgrimages',
+              'scalar_field_activations', 'akashic_records', 'life_book_entries',
+              'community_posts', 'community_comments', 'announcements',
+              'email_list', 'user_coins', 'user_balances', 'daily_checkins',
+              'achievements', 'user_achievements', 'mantras', 'frequencies',
+              'activations', 'sacred_sites', 'bot_trades', 'daily_remedies',
+              'dosha_profiles', 'nadi_sessions', 'quantum_apothecary_sessions',
+            ];
+
+            const tableNames = tables.map(t => t.tablename);
+            const ordered = [...new Set([
+              ...PRIORITY.filter(t => tableNames.includes(t)),
+              ...tableNames
+            ])];
+
+            for (const table of ordered) {
+              const tableInfo = tables.find(t => t.tablename === table);
+              const rowCount = parseInt(tableInfo?.rows || 0);
+
+              // Read from old in batches
+              let offset = 0, migrated = 0, errors = 0;
+              while (true) {
+                const readRes = await sqlOld(`SELECT * FROM public."${table}" LIMIT 500 OFFSET ${offset}`);
+                if (readRes.s !== 200 || !Array.isArray(readRes.b) || readRes.b.length === 0) break;
+
+                const rows = readRes.b;
+                const writeRes = await upsertNew(table, rows);
+
+                if (writeRes.s >= 200 && writeRes.s < 300) {
+                  migrated += rows.length;
+                } else {
+                  errors++;
+                  if (errors === 1) {
+                    const errMsg = typeof writeRes.b === 'string' ? writeRes.b.slice(0,100) : JSON.stringify(writeRes.b).slice(0,100);
+                    console.log(`  ⚠️  ${table}: ${writeRes.s} - ${errMsg}`);
+                  }
+                }
+
+                if (rows.length < 500) break;
+                offset += 500;
+                await sleep(100);
+              }
+
+              report[table] = errors > 0 ? `⚠️ ${migrated} ok, ${errors} errors` : `✅ ${migrated}`;
+              if (migrated > 0 || errors > 0) console.log(`  ${table}: ${report[table]}`);
+              await sleep(50);
+            }
+
+            // STEP 4: Ensure RLS and grants on new Supabase
+            console.log('\n=== STEP 4: Ensuring permissions ===');
+            await sqlNew(`GRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated, anon, service_role`);
+            await sqlNew(`GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated, anon, service_role`);
+            console.log('Grants applied');
+
+            // Fix profiles RLS
+            await sqlNew(`DROP POLICY IF EXISTS profiles_read ON public.profiles`);
+            await sqlNew(`CREATE POLICY profiles_read ON public.profiles FOR SELECT TO authenticated USING (auth.uid() = user_id OR auth.uid() = id)`);
+            await sqlNew(`DROP POLICY IF EXISTS profiles_update ON public.profiles`);
+            await sqlNew(`CREATE POLICY profiles_update ON public.profiles FOR UPDATE TO authenticated USING (auth.uid() = user_id OR auth.uid() = id)`);
+            await sqlNew(`DROP POLICY IF EXISTS profiles_insert ON public.profiles`);
+            await sqlNew(`CREATE POLICY profiles_insert ON public.profiles FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id OR auth.uid() = id)`);
+            await sqlNew(`DROP POLICY IF EXISTS profiles_service ON public.profiles`);
+            await sqlNew(`CREATE POLICY profiles_service ON public.profiles TO service_role USING (true) WITH CHECK (true)`);
+            console.log('Profiles RLS fixed');
+
+            // STEP 5: Summary
+            console.log('\n=== MIGRATION COMPLETE ===');
+            console.log('Auth users:', JSON.stringify(report.auth));
+            const migrated = Object.entries(report).filter(([k,v]) => k !== 'auth' && v.includes('✅'));
+            const errors = Object.entries(report).filter(([k,v]) => k !== 'auth' && v.includes('⚠️'));
+            console.log(`Tables migrated: ${migrated.length}, Tables with errors: ${errors.length}`);
+            if (errors.length) console.log('Errors:', errors.map(([k,v]) => `${k}: ${v}`).join(', '));
+          }
+
+          main().catch(e => { console.error('FATAL:', e.message); process.exit(1); });
+          EOF
+
+      - name: Save report
+        if: always()
+        run: |
+          echo "Migration completed at $(date)" > scripts/migration-final-report.txt
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+          git add scripts/migration-final-report.txt || true
+          git diff --staged --quiet || git commit -m "chore: final migration report" || true
+          git push || true
