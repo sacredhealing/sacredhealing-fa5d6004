@@ -1,60 +1,56 @@
-// Vercel edge function — proxies R2 audio to add CORS headers
-// Auto-handles: /api/audio/meditations/foo.wav, /api/audio/songs/bar.mp3, etc.
+// Node.js serverless function — CORS proxy for R2 audio
+// Handles /api/audio/meditations/foo.wav, /api/audio/songs/bar.mp3 etc.
+
+const https = require('https');
 
 const R2_BASE = 'https://pub-7a2cf16596fd425ab1717b8c0c3e567d.r2.dev';
 
-export const config = { runtime: 'edge' };
-
-export default async function handler(req) {
-  const origin = req.headers.get('origin') || '*';
-
-  // CORS preflight
+module.exports = async function handler(req, res) {
+  const origin = req.headers['origin'] || '*';
+  
+  // CORS headers on all responses
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type');
+  res.setHeader('Access-Control-Expose-Headers', 'Content-Length, Content-Type, Content-Range, Accept-Ranges, ETag');
+  res.setHeader('Vary', 'Origin');
+  
   if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
-      headers: {
-        'Access-Control-Allow-Origin': origin,
-        'Access-Control-Allow-Methods': 'GET, HEAD',
-        'Access-Control-Allow-Headers': 'Range, Content-Type',
-        'Access-Control-Max-Age': '86400',
-        'Vary': 'Origin',
-      },
-    });
+    res.status(204).end();
+    return;
   }
-
-  // Extract path: /api/audio/meditations/foo.wav → /meditations/foo.wav
-  const url = new URL(req.url);
-  const r2Path = url.pathname.replace(/^\/api\/audio/, '') || '/';
+  
+  // Extract R2 path from URL: /api/audio/meditations/foo.wav -> /meditations/foo.wav
+  const r2Path = req.url.replace(/^\/api\/audio/, '') || '/';
   const r2Url = R2_BASE + r2Path;
-
-  const upstreamHeaders = {};
-  const range = req.headers.get('range');
-  if (range) upstreamHeaders['Range'] = range;
-
+  
   try {
-    const upstream = await fetch(r2Url, {
+    const upstreamHeaders = {};
+    if (req.headers['range']) upstreamHeaders['Range'] = req.headers['range'];
+    
+    // Fetch from R2
+    const response = await fetch(r2Url, {
       method: req.method === 'HEAD' ? 'HEAD' : 'GET',
-      headers: upstreamHeaders,
+      headers: upstreamHeaders
     });
-
-    const responseHeaders = {
-      'Access-Control-Allow-Origin': origin,
-      'Access-Control-Expose-Headers': 'Content-Length, Content-Type, Content-Range, Accept-Ranges, ETag',
-      'Vary': 'Origin',
-      'Cache-Control': 'public, max-age=3600',
-    };
-
-    // Forward essential streaming headers from R2
-    for (const h of ['content-type', 'content-length', 'content-range', 'accept-ranges', 'etag', 'last-modified']) {
-      const v = upstream.headers.get(h);
-      if (v) responseHeaders[h] = v;
+    
+    // Forward status and key headers
+    res.status(response.status);
+    for (const h of ['content-type', 'content-length', 'content-range', 'accept-ranges', 'etag', 'last-modified', 'cache-control']) {
+      const v = response.headers.get(h);
+      if (v) res.setHeader(h, v);
     }
-
-    return new Response(req.method === 'HEAD' ? null : upstream.body, {
-      status: upstream.status,
-      headers: responseHeaders,
-    });
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    
+    if (req.method === 'HEAD') {
+      res.end();
+      return;
+    }
+    
+    // Stream body
+    const buffer = await response.arrayBuffer();
+    res.end(Buffer.from(buffer));
   } catch (err) {
-    return new Response('Proxy error: ' + err.message, { status: 502 });
+    res.status(502).end('Proxy error: ' + err.message);
   }
-}
+};
