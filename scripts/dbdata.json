@@ -1,0 +1,20 @@
+{
+  "meditation_style_sounds": {
+    "message": "Your account does not have the necessary privileges to access this endpoint. For more details, refer to our documentation https://supabase.com/docs/guides/platform/access-control"
+  },
+  "user_active_transmissions": {
+    "message": "Your account does not have the necessary privileges to access this endpoint. For more details, refer to our documentation https://supabase.com/docs/guides/platform/access-control"
+  },
+  "creative_tools": {
+    "message": "Your account does not have the necessary privileges to access this endpoint. For more details, refer to our documentation https://supabase.com/docs/guides/platform/access-control"
+  },
+  "music_tracks_categories": {
+    "message": "Your account does not have the necessary privileges to access this endpoint. For more details, refer to our documentation https://supabase.com/docs/guides/platform/access-control"
+  },
+  "tx_rls": {
+    "message": "Your account does not have the necessary privileges to access this endpoint. For more details, refer to our documentation https://supabase.com/docs/guides/platform/access-control"
+  },
+  "sounds_rls": {
+    "message": "Your account does not have the necessary privileges to access this endpoint. For more details, refer to our documentation https://supabase.com/docs/guides/platform/access-control"
+  }
+}
