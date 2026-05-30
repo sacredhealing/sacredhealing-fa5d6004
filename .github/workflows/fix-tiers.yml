@@ -8,6 +8,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: node --no-experimental-vm-modules scripts/fixtiers.js
+      - run: node scripts/fixtiers.js
         env:
           PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
