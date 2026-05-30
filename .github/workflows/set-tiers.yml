@@ -1,115 +1,20 @@
-name: Set Member Tiers
+name: Set Member Tiers and Migrate User Data
 
 on:
   push:
     paths:
+      - 'scripts/set-tiers.mjs'
       - '.github/workflows/set-tiers.yml'
+  workflow_dispatch:
 
 jobs:
   fix:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - name: Set correct tiers and migrate user data via edge function
+      - uses: actions/checkout@v4
+      - name: Set tiers and migrate user data
         env:
           PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SVC: ${{ secrets.NEW_SERVICE_ROLE }}
-          OLD_SVC: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: |
-          node << 'EOF'
-          const https = require('https');
-          const PAT = process.env.PAT;
-          const SVC = process.env.SVC;
-          const REF = 'fjdzhrdpioxdeyyfogep';
-          const NEW_URL = 'https://fjdzhrdpioxdeyyfogep.supabase.co';
-          const OLD_URL = 'https://ssygukfdbtehvtndandn.supabase.co';
-          const OLD_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4';
-
-          function sql(ref, q) {
-            return new Promise(res => {
-              const b = JSON.stringify({query:q});
-              const r = https.request({hostname:'api.supabase.com',path:`/v1/projects/${ref}/database/query`,method:'POST',
-                headers:{'Authorization':`Bearer ${PAT}`,'Content-Type':'application/json','Content-Length':Buffer.byteLength(b)}
-              },resp=>{let d='';resp.on('data',c=>d+=c);resp.on('end',()=>{try{res(JSON.parse(d))}catch{res(d)}})});
-              r.on('error',e=>res(e.message)); r.write(b); r.end();
-            });
-          }
-
-          function restNew(table, rows) {
-            return new Promise(res => {
-              const b = JSON.stringify(rows);
-              const r = https.request({hostname:'fjdzhrdpioxdeyyfogep.supabase.co',
-                path:`/rest/v1/${table}`,method:'POST',
-                headers:{'apikey':SVC,'Authorization':`Bearer ${SVC}`,'Content-Type':'application/json',
-                  'Prefer':'resolution=merge-duplicates,return=minimal','Content-Length':Buffer.byteLength(b)}
-              },resp=>{let d='';resp.on('data',c=>d+=c);resp.on('end',()=>{try{res({s:resp.statusCode,b:JSON.parse(d)})}catch{res({s:resp.statusCode,b:d})}})});
-              r.on('error',e=>res({s:0,b:e.message})); r.write(b); r.end();
-            });
-          }
-
-          const sleep = ms => new Promise(r => setTimeout(r, ms));
-
-          async function main() {
-            // STEP 1: Set correct tiers for named members
-            console.log('=== Setting member tiers ===');
-
-            const AKASHA = ['anette ahl', 'margaretha donosa', 'pia svanberg'];
-            const SIDDHA = ['julia atkins'];
-            const PRANA = ['monica mortensson', 'monica fransson', 'lunalarsdotter', 'tina östensson'];
-
-            const setTier = async (nameLike, tier) => {
-              const prana = ['prana_flow','prana-flow','prana_flow'].includes(tier);
-              const siddha = ['siddha_quantum','siddha-quantum','siddha_quantum'].includes(tier) || prana;
-              const akasha = tier.includes('akasha');
-              const q = `UPDATE public.profiles SET
-                membership_tier = '${tier}',
-                subscription_tier = '${tier}',
-                subscription_status = 'active',
-                has_prana_flow_access = ${prana || siddha || akasha},
-                has_siddha_quantum_access = ${siddha || akasha},
-                has_akasha_infinity_access = ${akasha}
-                WHERE LOWER(full_name) LIKE LOWER('%${nameLike}%') OR LOWER(display_name) LIKE LOWER('%${nameLike}%') OR LOWER(email) LIKE LOWER('%${nameLike.replace(' ','')}%')`;
-              const r = await sql(REF, q);
-              const updated = r.b?.[0]?.count || 'unknown';
-              console.log(`  ${nameLike} -> ${tier}: ${JSON.stringify(r.b).slice(0,80)}`);
-            };
-
-            for (const name of AKASHA) await setTier(name, 'akasha_infinity');
-            for (const name of SIDDHA) await setTier(name, 'siddha_quantum');
-            for (const name of PRANA) await setTier(name, 'prana_flow');
-
-            console.log('\nTier update done');
-
-            // STEP 2: Verify tier breakdown
-            const tiers = await sql(REF, `SELECT membership_tier, COUNT(*) FROM public.profiles GROUP BY membership_tier ORDER BY count DESC`);
-            console.log('Tier breakdown:', JSON.stringify(tiers.b));
-
-            // STEP 3: Trigger migration edge function for user-specific data
-            console.log('\n=== Triggering edge function for user data migration ===');
-            const edgeRes = await new Promise(res => {
-              const b = JSON.stringify({});
-              const r = https.request({
-                hostname:'ssygukfdbtehvtndandn.supabase.co',
-                path:'/functions/v1/migrate-to-new-project',
-                method:'POST',
-                headers:{'Content-Type':'application/json','x-new-service-role':SVC,'Content-Length':Buffer.byteLength(b)}
-              },resp=>{let d='';resp.on('data',c=>d+=c);resp.on('end',()=>{try{res({s:resp.statusCode,b:JSON.parse(d)})}catch{res({s:resp.statusCode,b:d})}})});
-              r.on('error',e=>res({s:0,b:e.message}));
-              r.setTimeout(300000, ()=>{r.destroy(); res({s:0,b:'timeout'});});
-              r.write(b); r.end();
-            });
-            console.log('Edge function status:', edgeRes.s);
-            if (edgeRes.b?.report) {
-              const r = edgeRes.b.report;
-              console.log('Auth users found:', r.auth_users_found);
-              console.log('Auth result:', JSON.stringify(r.auth));
-              const tables = Object.entries(r).filter(([k]) => !['started_at','completed_at','auth_users_found','auth'].includes(k));
-              tables.forEach(([k,v]) => { if (JSON.stringify(v) !== '{"count":0}') console.log(`  ${k}:`, JSON.stringify(v)); });
-            } else {
-              console.log('Edge response:', JSON.stringify(edgeRes.b).slice(0,300));
-            }
-
-            console.log('\n=== ALL DONE ===');
-          }
-
-          main().catch(e=>{console.error('FATAL:',e.message);process.exit(1);});
-          EOF
+        run: node scripts/set-tiers.mjs
