@@ -464,17 +464,13 @@ const Auth: React.FC = () => {
                       return;
                     }
                     try {
-                      const { error } = await supabase.auth.signInWithOtp({
-                        email,
-                        options: {
-                          shouldCreateUser: true,
-                          emailRedirectTo: `${window.location.origin}/`,
-                        }
+                      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                        redirectTo: `${window.location.origin}/reset-password`,
                       });
                       if (error) throw error;
                       toast({
-                        title: 'Magic link sent ✨',
-                        description: 'Check your email and click the link to log in. Then set a new password in your profile.',
+                        title: 'Password reset email sent',
+                        description: 'Check your inbox and click the link to set a new password.',
                       });
                     } catch (err: any) {
                       toast({
@@ -486,7 +482,7 @@ const Auth: React.FC = () => {
                   }}
                   className="text-xs text-white/60 hover:text-[#D4AF37] transition-colors underline underline-offset-2"
                 >
-                  🔑 Send magic login link to my email
+                  Forgot password?
                 </button>
               </div>
             )}
