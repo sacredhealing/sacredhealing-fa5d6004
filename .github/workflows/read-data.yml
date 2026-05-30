@@ -12,15 +12,17 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Read DB and save output
+      - name: Read storage and DB
         env:
           PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SVC: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           node << 'EOF' > /tmp/dbdata.json
           const https = require('https');
           const PAT = process.env.PAT;
           const REF = 'ssygukfdbtehvtndandn';
-          const ADAM = 'bd0b21c9-577a-450b-bb1e-21c9d0423f17';
+          const OLD = 'https://ssygukfdbtehvtndandn.supabase.co';
+          const SVC = process.env.SVC;
 
           function sql(q) {
             return new Promise(res => {
@@ -32,15 +34,47 @@ jobs:
             });
           }
 
+          function rest(path) {
+            return new Promise(res => {
+              const r = https.request({hostname:'ssygukfdbtehvtndandn.supabase.co',path,method:'GET',
+                headers:{'apikey':SVC,'Authorization':`Bearer ${SVC}`}
+              },resp=>{let d='';resp.on('data',c=>d+=c);resp.on('end',()=>{try{res(JSON.parse(d))}catch{res(d)}})});
+              r.on('error',e=>res(e.message)); r.end();
+            });
+          }
+
           async function main() {
-            const result = {
-              meditation_style_sounds: await sql('SELECT style_id, name, file_path, is_active FROM public.meditation_style_sounds LIMIT 30'),
-              user_active_transmissions: await sql(`SELECT user_id, updated_at, activations FROM public.user_active_transmissions WHERE user_id = '${ADAM}'`),
-              creative_tools: await sql('SELECT slug, name, tool_type, is_active, workspace_url FROM public.creative_tools'),
-              music_tracks_categories: await sql('SELECT category, COUNT(*) as count FROM public.music_tracks GROUP BY category'),
-              tx_rls: await sql("SELECT policyname, cmd FROM pg_policies WHERE tablename = 'user_active_transmissions'"),
-              sounds_rls: await sql("SELECT policyname, cmd FROM pg_policies WHERE tablename = 'meditation_style_sounds'"),
-            };
+            const result = {};
+
+            // Check storage buckets
+            result.buckets = await sql(`SELECT id, name, public FROM storage.buckets ORDER BY name`);
+
+            // Check creative-soul-library files by folder
+            const folders = ['indian','shamanic','mystic','tibetan','sufi','zen','nature','ocean','sound_bath','chakra','higher_consciousness','relaxing','forest','breath_focus','kundalini'];
+            const storageCounts = {};
+            for (const folder of folders) {
+              const files = await sql(`SELECT COUNT(*) as count FROM storage.objects WHERE bucket_id = 'creative-soul-library' AND name LIKE '${folder}/%'`);
+              storageCounts[folder] = files.b?.[0]?.count || 0;
+            }
+            result.creative_soul_storage_counts = storageCounts;
+
+            // Total files in creative-soul-library
+            result.creative_soul_total = await sql(`SELECT COUNT(*) as count FROM storage.objects WHERE bucket_id = 'creative-soul-library'`);
+
+            // Sample files
+            result.creative_soul_sample = await sql(`SELECT name, bucket_id FROM storage.objects WHERE bucket_id = 'creative-soul-library' LIMIT 10`);
+
+            // meditation_style_sounds count
+            result.style_sounds_count = await sql(`SELECT COUNT(*) FROM public.meditation_style_sounds`);
+
+            // Check all buckets and their file counts
+            result.all_bucket_counts = await sql(`
+              SELECT bucket_id, COUNT(*) as files
+              FROM storage.objects
+              GROUP BY bucket_id
+              ORDER BY files DESC
+            `);
+
             console.log(JSON.stringify(result, null, 2));
           }
           main().catch(e=>console.error(e.message));
@@ -52,5 +86,5 @@ jobs:
           git config user.email "action@github.com"
           git config user.name "GitHub Action"
           git add scripts/dbdata.json
-          git diff --staged --quiet || git commit -m "diag: DB data output"
+          git diff --staged --quiet || git commit -m "diag: storage and DB data"
           git push
