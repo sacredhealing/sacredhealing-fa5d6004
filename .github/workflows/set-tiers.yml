@@ -3,7 +3,7 @@ name: Set Member Tiers and Migrate User Data
 on:
   push:
     paths:
-      - 'scripts/set-tiers.mjs'
+      - 'scripts/set-tiers.cjs'
       - '.github/workflows/set-tiers.yml'
   workflow_dispatch:
 
@@ -13,8 +13,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - name: Set tiers and migrate user data
+      - name: Set tiers
         env:
           PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SVC: ${{ secrets.NEW_SERVICE_ROLE }}
-        run: node scripts/set-tiers.mjs
+        run: node scripts/set-tiers.cjs
