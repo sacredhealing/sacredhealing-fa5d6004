@@ -1,0 +1,13 @@
+name: Fix Tiers
+on:
+  push:
+    paths: ['scripts/fixtiers.js']
+  workflow_dispatch:
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: node --no-experimental-vm-modules scripts/fixtiers.js
+        env:
+          PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
