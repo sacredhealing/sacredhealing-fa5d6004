@@ -1,20 +1,34 @@
 {
-  "meditation_style_sounds": {
+  "buckets": {
     "message": "Your account does not have the necessary privileges to access this endpoint. For more details, refer to our documentation https://supabase.com/docs/guides/platform/access-control"
   },
-  "user_active_transmissions": {
+  "creative_soul_storage_counts": {
+    "indian": 0,
+    "shamanic": 0,
+    "mystic": 0,
+    "tibetan": 0,
+    "sufi": 0,
+    "zen": 0,
+    "nature": 0,
+    "ocean": 0,
+    "sound_bath": 0,
+    "chakra": 0,
+    "higher_consciousness": 0,
+    "relaxing": 0,
+    "forest": 0,
+    "breath_focus": 0,
+    "kundalini": 0
+  },
+  "creative_soul_total": {
     "message": "Your account does not have the necessary privileges to access this endpoint. For more details, refer to our documentation https://supabase.com/docs/guides/platform/access-control"
   },
-  "creative_tools": {
+  "creative_soul_sample": {
     "message": "Your account does not have the necessary privileges to access this endpoint. For more details, refer to our documentation https://supabase.com/docs/guides/platform/access-control"
   },
-  "music_tracks_categories": {
+  "style_sounds_count": {
     "message": "Your account does not have the necessary privileges to access this endpoint. For more details, refer to our documentation https://supabase.com/docs/guides/platform/access-control"
   },
-  "tx_rls": {
-    "message": "Your account does not have the necessary privileges to access this endpoint. For more details, refer to our documentation https://supabase.com/docs/guides/platform/access-control"
-  },
-  "sounds_rls": {
+  "all_bucket_counts": {
     "message": "Your account does not have the necessary privileges to access this endpoint. For more details, refer to our documentation https://supabase.com/docs/guides/platform/access-control"
   }
 }
