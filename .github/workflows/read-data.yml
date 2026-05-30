@@ -1,0 +1,56 @@
+name: Read DB Data
+
+on:
+  push:
+    paths:
+      - '.github/workflows/read-data.yml'
+
+jobs:
+  read:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read DB and save output
+        env:
+          PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          node << 'EOF' > /tmp/dbdata.json
+          const https = require('https');
+          const PAT = process.env.PAT;
+          const REF = 'ssygukfdbtehvtndandn';
+          const ADAM = 'bd0b21c9-577a-450b-bb1e-21c9d0423f17';
+
+          function sql(q) {
+            return new Promise(res => {
+              const b = JSON.stringify({query:q});
+              const r = https.request({hostname:'api.supabase.com',path:`/v1/projects/${REF}/database/query`,method:'POST',
+                headers:{'Authorization':`Bearer ${PAT}`,'Content-Type':'application/json','Content-Length':Buffer.byteLength(b)}
+              },resp=>{let d='';resp.on('data',c=>d+=c);resp.on('end',()=>{try{res(JSON.parse(d))}catch{res(d)}})});
+              r.on('error',e=>res(e.message)); r.write(b); r.end();
+            });
+          }
+
+          async function main() {
+            const result = {
+              meditation_style_sounds: await sql('SELECT style_id, name, file_path, is_active FROM public.meditation_style_sounds LIMIT 30'),
+              user_active_transmissions: await sql(`SELECT user_id, updated_at, activations FROM public.user_active_transmissions WHERE user_id = '${ADAM}'`),
+              creative_tools: await sql('SELECT slug, name, tool_type, is_active, workspace_url FROM public.creative_tools'),
+              music_tracks_categories: await sql('SELECT category, COUNT(*) as count FROM public.music_tracks GROUP BY category'),
+              tx_rls: await sql("SELECT policyname, cmd FROM pg_policies WHERE tablename = 'user_active_transmissions'"),
+              sounds_rls: await sql("SELECT policyname, cmd FROM pg_policies WHERE tablename = 'meditation_style_sounds'"),
+            };
+            console.log(JSON.stringify(result, null, 2));
+          }
+          main().catch(e=>console.error(e.message));
+          EOF
+
+      - name: Commit output
+        run: |
+          cp /tmp/dbdata.json scripts/dbdata.json
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+          git add scripts/dbdata.json
+          git diff --staged --quiet || git commit -m "diag: DB data output"
+          git push
