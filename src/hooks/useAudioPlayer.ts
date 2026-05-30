@@ -215,7 +215,9 @@ export function useAudioPlayer(
 
     const audio = new Audio();
     audio.preload = 'auto';
-    audio.crossOrigin = 'anonymous';
+    // NOTE: Do NOT set crossOrigin='anonymous' — R2 public bucket does not send
+    // CORS headers, causing the browser to block audio entirely. We don't need
+    // cross-origin read access (no canvas/analyser), so omitting this is correct.
     Object.defineProperty(audio, 'playsInline', { value: true });
     audio.setAttribute('playsinline', 'true');
     audio.setAttribute('webkit-playsinline', 'true');
