@@ -115,6 +115,7 @@ const NotFound = React.lazy(() => import("./pages/NotFound"));
 const AffiliateDetail = React.lazy(() => import("./pages/income-streams/AffiliateDetail"));
 const AffiliateDashboard = React.lazy(() => import("./pages/AffiliateDashboard"));
 const AffiliateLanding = React.lazy(() => import("./pages/AffiliateLanding"));
+const QROnboarding = React.lazy(() => import("./pages/QROnboarding"));
 const SHCCoinDetail = React.lazy(() => import("./pages/income-streams/SHCCoinDetail"));
 const CopyTradingDetail = React.lazy(() => import("./pages/income-streams/CopyTradingDetail"));
 const BitcoinMiningDetail = React.lazy(() => import("./pages/income-streams/BitcoinMiningDetail"));
@@ -296,6 +297,7 @@ function AppRoutes() {
       <Route path="/sovereign-share-preview" element={<SovereignSharePreview />} />
       {/* Public referral landing — /affiliate/r/:code avoids conflicting with /affiliate/dashboard */}
       <Route path="/affiliate/r/:code" element={<AffiliateLanding />} />
+      <Route path="/join" element={<QROnboarding />} />
       <Route path="/polymarket-oracle" element={<PolymarketOracle />} />
       <Route element={<ProtectedRoute />}>
                   <Route path="/hand-analyzer" element={<HandAnalyzer />} />
