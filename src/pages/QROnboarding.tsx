@@ -152,6 +152,10 @@ export default function QROnboarding() {
         title: "Check your email",
         description: "Confirm your account then return here to choose your path.",
       });
+      // Fire welcome email — non-blocking
+      supabase.functions.invoke("send-welcome-email", {
+        body: { email, name: email.split("@")[0], language: navigator.language },
+      }).catch(() => {/* best-effort */});
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Signup failed";
       // If already exists, try sign-in
