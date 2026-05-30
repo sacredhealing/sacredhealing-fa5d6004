@@ -681,12 +681,16 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     audioRef.current = audio;
 
+    // Trigger fetch — without this the browser may not start loading
+    audio.load();
+
     await new Promise<void>((resolve) => {
       const el = audioRef.current;
-      if (!el) {
-        resolve();
-        return;
-      }
+      if (!el) { resolve(); return; }
+
+      // Timeout: never hang forever if metadata never arrives
+      const timeout = setTimeout(resolve, 8000);
+
       const applyMeta = () => {
         const a = audioRef.current;
         if (!a) return;
@@ -701,18 +705,16 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
           setProgress((seekTo / dur) * 100);
         }
       };
+
+      const done = () => { clearTimeout(timeout); resolve(); };
+
       if (el.readyState >= 1) {
         applyMeta();
-        resolve();
+        done();
       } else {
-        el.addEventListener(
-          'loadedmetadata',
-          () => {
-            applyMeta();
-            resolve();
-          },
-          { once: true }
-        );
+        el.addEventListener('loadedmetadata', () => { applyMeta(); done(); }, { once: true });
+        // Also resolve on error so play() still gets attempted
+        el.addEventListener('error', done, { once: true });
       }
     });
 
