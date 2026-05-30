@@ -49,7 +49,15 @@ async function upsertNew(table, rows) {
 async function main() {
   // Get all tables
   const tablesRes = await sqlOld(`SELECT tablename, COALESCE(n_live_tup,0) as rows FROM pg_catalog.pg_tables t LEFT JOIN pg_stat_user_tables s ON s.relname=t.tablename WHERE schemaname='public' ORDER BY COALESCE(n_live_tup,0) DESC NULLS LAST`);
-  if (!Array.isArray(tablesRes.b)) { console.error('Cannot read tables:', JSON.stringify(tablesRes.b).slice(0,200)); process.exit(1); }
+  if (!Array.isArray(tablesRes.b)) { 
+    console.error('Cannot read tables:', JSON.stringify(tablesRes.b).slice(0,200)); 
+    console.log('Retrying with direct REST approach...');
+    // Fallback: try REST API directly
+    const fallback = await req(`${NEW_URL}/rest/v1/profiles?select=id&limit=1`, 'GET', 
+      {'apikey': NEW_SVC, 'Authorization': `Bearer ${NEW_SVC}`});
+    console.log('Fallback test:', fallback.s);
+    process.exit(1); 
+  }
 
   console.log(`Scanning ${tablesRes.b.length} tables in old Supabase:`);
   tablesRes.b.forEach(t => console.log(`  ${t.tablename}: ${t.rows} rows`));
