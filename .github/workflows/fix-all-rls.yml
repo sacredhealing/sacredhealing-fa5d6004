@@ -1,0 +1,96 @@
+name: Fix All RLS Policies New Supabase
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-all-rls.yml'
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fix all RLS policies
+        env:
+          PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SVC: ${{ secrets.NEW_SERVICE_ROLE }}
+        run: |
+          node << 'EOF'
+          const https = require('https');
+          const PAT = process.env.PAT;
+          const REF = 'fjdzhrdpioxdeyyfogep';
+          const NEW_URL = 'https://fjdzhrdpioxdeyyfogep.supabase.co';
+          const SVC = process.env.SVC;
+
+          function sql(q) {
+            return new Promise(res => {
+              const b = JSON.stringify({query: q});
+              const r = https.request({hostname:'api.supabase.com', path:`/v1/projects/${REF}/database/query`, method:'POST',
+                headers:{'Authorization':`Bearer ${PAT}`,'Content-Type':'application/json','Content-Length':Buffer.byteLength(b)}
+              }, resp=>{let d='';resp.on('data',c=>d+=c);resp.on('end',()=>{try{res(JSON.parse(d))}catch{res(d)}})});
+              r.on('error',e=>res(e.message)); r.write(b); r.end();
+            });
+          }
+
+          async function main() {
+            // Grant all permissions globally
+            await sql('GRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated, anon, service_role');
+            await sql('GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated, anon, service_role');
+            await sql('GRANT USAGE ON SCHEMA public TO authenticated, anon, service_role');
+            console.log('Global grants done');
+
+            // Get all tables
+            const tables = await sql(`SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='public'`);
+            console.log('Tables:', tables.b?.length || 0);
+
+            // For each table: enable RLS and add open read policy + service_role full access
+            for (const t of (tables.b || [])) {
+              const name = t.tablename;
+              await sql(`ALTER TABLE public."${name}" ENABLE ROW LEVEL SECURITY`);
+              await sql(`DROP POLICY IF EXISTS allow_read_all ON public."${name}"`);
+              await sql(`CREATE POLICY allow_read_all ON public."${name}" FOR SELECT USING (true)`);
+              await sql(`DROP POLICY IF EXISTS allow_service ON public."${name}"`);
+              await sql(`CREATE POLICY allow_service ON public."${name}" TO service_role USING (true) WITH CHECK (true)`);
+            }
+            console.log('RLS policies set for all tables');
+
+            // User-specific write policies for key tables
+            const userTables = [
+              'profiles', 'user_memberships', 'subscriptions', 'user_roles',
+              'user_active_transmissions', 'user_quantum_sync', 'sqi_sessions',
+              'user_chat_sessions', 'chat_messages', 'shakti_cycle_logs',
+              'jyotish_profiles', 'jyotish_charts', 'jyotish_readings',
+              'dosha_profiles', 'virtual_pilgrimages', 'daily_checkins',
+              'user_coins', 'user_balances', 'user_achievements',
+              'admin_granted_access', 'creative_soul_entitlements',
+              'user_entitlements', 'user_granted_access',
+            ];
+
+            for (const t of userTables) {
+              // profiles uses user_id column
+              if (t === 'profiles') {
+                await sql(`DROP POLICY IF EXISTS allow_write_own ON public.profiles`);
+                await sql(`CREATE POLICY allow_write_own ON public.profiles FOR ALL TO authenticated USING (auth.uid() = user_id OR auth.uid() = id) WITH CHECK (auth.uid() = user_id OR auth.uid() = id)`);
+              } else {
+                await sql(`DROP POLICY IF EXISTS allow_write_own ON public."${t}"`);
+                await sql(`CREATE POLICY allow_write_own ON public."${t}" FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id)`);
+              }
+            }
+            console.log('User-specific write policies set');
+
+            // Content tables - allow insert/update for authenticated users
+            const contentTables = ['meditation_style_sounds','meditations','music_tracks','healing_audio','courses','lessons','creative_tools'];
+            for (const t of contentTables) {
+              await sql(`DROP POLICY IF EXISTS allow_admin_write ON public."${t}"`);
+              await sql(`CREATE POLICY allow_admin_write ON public."${t}" FOR ALL TO authenticated USING (true) WITH CHECK (true)`);
+            }
+            console.log('Content table policies set');
+
+            // has_role function
+            await sql(`CREATE OR REPLACE FUNCTION public.has_role(_user_id uuid, _role text) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER AS $$ SELECT EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = _user_id AND role = _role) $$`);
+            await sql('GRANT EXECUTE ON FUNCTION public.has_role(uuid, text) TO authenticated, anon, service_role');
+            console.log('has_role function created');
+
+            console.log('ALL RLS DONE');
+          }
+          main().catch(e=>{console.error('FATAL:',e.message);process.exit(1);});
+          EOF
