@@ -14,10 +14,8 @@ interface MembershipStatus {
 }
 
 
-const CACHE_TTL_MS = 60 * 60 * 1000; // 60 minutes — cost optimisation (was 5 min)
-// Bump this version whenever tier slugs / canonical mapping change so old cached
-// values (e.g. "siddha-quantum-monthly", "premium-monthly", "lifetime") are discarded.
-const CACHE_VERSION = 'v3';
+const CACHE_TTL_MS = 60 * 60 * 1000;
+const CACHE_VERSION = 'v4'; // bumped — schema cache bypass
 
 
 function getCacheKey(userId: string) {
@@ -27,7 +25,6 @@ function getCacheKey(userId: string) {
 
 function loadFromCache(userId: string): MembershipStatus | null {
   try {
-    // Clean up any older cache versions so paid users never see stale "free".
     Object.keys(localStorage).forEach((k) => {
       if (k.startsWith('sh:membership:') && !k.startsWith(`sh:membership:${CACHE_VERSION}:`)) {
         localStorage.removeItem(k);
@@ -54,14 +51,13 @@ function saveToCache(userId: string, data: MembershipStatus) {
       JSON.stringify({ data, expiresAt: Date.now() + CACHE_TTL_MS })
     );
   } catch {
-    // ignore storage errors
+    // ignore
   }
 }
 
 
 export const useMembership = () => {
   const { user, isLoading: authLoading } = useAuth();
-  // Whether we've completed at least one fresh server check this mount
   const [settled, setSettled] = useState(false);
   const [status, setStatus] = useState<MembershipStatus>(() => ({
     subscribed: false,
@@ -108,33 +104,51 @@ export const useMembership = () => {
     setSettled(false);
 
     try {
-      const [{ data: isAdmin }, { data: grant }, { data, error }] = await Promise.all([
-        supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' }),
+      // Read directly from profiles + user_memberships — bypasses schema cache issues with RPCs/edge functions
+      const [profileRes, membershipRes] = await Promise.all([
         supabase
-          .from('admin_granted_access')
-          .select('tier, access_id')
+          .from('profiles')
+          .select('is_admin, subscription_status')
           .eq('user_id', user.id)
-          .eq('is_active', true)
-          .eq('access_type', 'membership')
-          .order('granted_at', { ascending: false })
-          .limit(5),
-        supabase.functions.invoke('check-membership-subscription'),
+          .single(),
+        supabase
+          .from('user_memberships')
+          .select('tier_id, status, expires_at, membership_tiers(slug, name)')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
       ]);
 
-      const grantRows = Array.isArray(grant) ? grant : [];
-      const grantTier = grantRows
-        .map((row: any) => row.tier || row.access_id || 'free')
-        .sort((a: string, b: string) => getTierRank(b) - getTierRank(a))[0];
+      const isAdmin = profileRes.data?.is_admin === true;
+      const membershipRow = membershipRes.data as any;
+      const tierSlug = membershipRow?.membership_tiers?.slug ?? 'free';
+      const expiresAt = membershipRow?.expires_at ?? null;
 
-      const cloudTier = !error && data?.tier ? String(data.tier) : 'free';
-      const bestTier = [cloudTier, grantTier || 'free'].sort((a, b) => getTierRank(b) - getTierRank(a))[0];
+      // Also check admin_granted_access as fallback
+      const { data: grant } = await supabase
+        .from('admin_granted_access')
+        .select('tier, access_id')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .eq('access_type', 'membership')
+        .order('granted_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const grantTier = (grant as any)?.tier || (grant as any)?.access_id || null;
+      const bestTier = isAdmin
+        ? 'akasha-infinity'
+        : [tierSlug, grantTier || 'free'].sort((a: string, b: string) => getTierRank(b) - getTierRank(a))[0];
+
       const next: MembershipStatus = {
-        subscribed: Boolean(data?.subscribed) || !!grantTier || isAdmin === true,
-        tier: isAdmin === true ? 'akasha-infinity' : bestTier,
-        subscriptionEnd: data?.subscription_end ?? data?.subscriptionEnd ?? null,
+        subscribed: isAdmin || !!membershipRow || !!grantTier,
+        tier: bestTier,
+        subscriptionEnd: expiresAt,
         loading: false,
         adminGranted: !!grantTier,
-        isAdmin: isAdmin === true,
+        isAdmin,
       };
 
       if (!mountedRef.current) return;
