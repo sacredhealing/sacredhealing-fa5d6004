@@ -1,0 +1,73 @@
+name: Fix Quantum Sync Data
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-quantum-sync.yml'
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check and fix user_quantum_sync
+        env:
+          SVC: ${{ secrets.NEW_SERVICE_ROLE }}
+          PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          node << 'EOF'
+          const https = require('https');
+          const OLD = 'https://ssygukfdbtehvtndandn.supabase.co';
+          const OLD_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4';
+          const PAT = process.env.PAT;
+          const OLD_SVC = process.env.SVC; // We only have new SVC, but old is anon-accessible
+          const REF_OLD = 'ssygukfdbtehvtndandn';
+          const ADAM = 'bd0b21c9-577a-450b-bb1e-21c9d0423f17';
+
+          function req(url, method, headers, body) {
+            return new Promise((resolve) => {
+              const u = new URL(url);
+              const payload = body ? JSON.stringify(body) : '';
+              const r = https.request({ hostname: u.hostname, path: u.pathname + u.search, method,
+                headers: { ...headers, ...(payload ? { 'Content-Length': Buffer.byteLength(payload) } : {}) }
+              }, (res) => {
+                let d = ''; res.on('data', c => d += c);
+                res.on('end', () => { try { resolve({ s: res.statusCode, b: JSON.parse(d) }); } catch { resolve({ s: res.statusCode, b: d }); } });
+              });
+              r.on('error', e => resolve({ s: 0, b: e.message }));
+              if (payload) r.write(payload);
+              r.end();
+            });
+          }
+
+          function sqlOld(query) {
+            return req(`https://api.supabase.com/v1/projects/${REF_OLD}/database/query`, 'POST',
+              { 'Authorization': `Bearer ${PAT}`, 'Content-Type': 'application/json' }, { query });
+          }
+
+          async function main() {
+            // 1. Check what's in user_quantum_sync for Adam in OLD Supabase
+            console.log('=== Adam quantum sync in OLD Supabase ===');
+            const oldSync = await sqlOld(`SELECT * FROM public.user_quantum_sync WHERE user_id = '${ADAM}'`);
+            console.log('Old sync status:', oldSync.s);
+            console.log('Old sync data:', JSON.stringify(oldSync.b));
+
+            // 2. Check user_active_transmissions
+            console.log('\n=== user_active_transmissions for Adam ===');
+            const oldTx = await sqlOld(`SELECT * FROM public.user_active_transmissions WHERE user_id = '${ADAM}' LIMIT 20`);
+            console.log('Transmissions status:', oldTx.s);
+            console.log('Transmissions:', JSON.stringify(oldTx.b));
+
+            // 3. Check transmission_blocks
+            console.log('\n=== transmission_blocks for Adam ===');
+            const oldBlocks = await sqlOld(`SELECT * FROM public.transmission_blocks WHERE user_id = '${ADAM}' LIMIT 10`);
+            console.log('Blocks status:', oldBlocks.s);
+            console.log('Blocks:', JSON.stringify(oldBlocks.b));
+
+            // 4. Check sqi_sessions
+            console.log('\n=== sqi_sessions for Adam ===');
+            const oldSessions = await sqlOld(`SELECT id, created_at, session_type FROM public.sqi_sessions WHERE user_id = '${ADAM}' ORDER BY created_at DESC LIMIT 5`);
+            console.log('Sessions:', JSON.stringify(oldSessions.b));
+          }
+
+          main().catch(e => { console.error('FATAL:', e.message); process.exit(1); });
+          EOF
