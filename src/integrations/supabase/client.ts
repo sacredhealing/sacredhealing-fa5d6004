@@ -4,13 +4,13 @@ import type { Database } from './types';
 
 const SUPABASE_URL =
   import.meta.env.VITE_SUPABASE_URL ||
-  '';
+  'https://ssygukfdbtehvtndandn.supabase.co';
 
 /** Prefer publishable key name; Lovable may expose the anon JWT as SUPABASE_ANON_KEY (bridged in vite.config). */
 const SUPABASE_PUBLISHABLE_KEY =
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
   import.meta.env.VITE_SUPABASE_ANON_KEY ||
-  '';
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4';
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
@@ -22,3 +22,4 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
   },
 });
+
