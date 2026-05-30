@@ -15,14 +15,18 @@ export const useAdminRole = () => {
         return;
       }
 
+      // Read directly from profiles table — bypasses schema cache RPC issues
       const { data, error } = await supabase
-        .rpc('has_role', { _user_id: user.id, _role: 'admin' });
+        .from('profiles')
+        .select('is_admin')
+        .eq('user_id', user.id)
+        .single();
 
       if (error) {
         console.error('Error checking admin role:', error);
         setIsAdmin(false);
       } else {
-        setIsAdmin(data === true);
+        setIsAdmin(data?.is_admin === true);
       }
       setIsLoading(false);
     };
