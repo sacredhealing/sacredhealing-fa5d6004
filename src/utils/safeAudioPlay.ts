@@ -84,9 +84,9 @@ export function proxyAudioUrl(url: string | null | undefined): string | null | u
   try {
     const parsed = new URL(url);
     if (parsed.hostname === R2_HOST) {
-      // e.g. /meditations/foo.wav  or /audio/healing/bar.mp3
+      // /meditations/foo.wav → /api/audio/meditations/foo.wav
       const path = parsed.pathname; // already has leading /
-      return `/api/audio?path=${encodeURIComponent(path)}`;
+      return `/api/audio${path}`;
     }
   } catch {
     // not a valid URL — return as-is
