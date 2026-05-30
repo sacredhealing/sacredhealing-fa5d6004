@@ -34,48 +34,48 @@ const RESET_LINK = "https://siddhaquantumnexus.com/reset-password";
 
 const templates: Record<string, { subject: string; greeting: string; cta: string; body: string; footer: string }> = {
   sv: {
-    subject: "Återställ ditt lösenord — Sacred Healing",
+    subject: "Återställ ditt lösenord — Siddha Quantum Nexus",
     greeting: "Hej",
     cta: "Återställ lösenord",
     body: `
-    <p>Vi fick en begäran om att återställa lösenordet för ditt Sacred Healing-konto.</p>
+    <p>Vi fick en begäran om att återställa lösenordet för ditt Siddha Quantum Nexus-konto.</p>
     <p>Klicka på knappen nedan för att välja ett nytt lösenord. Länken är giltig i <strong>60 minuter</strong>.</p>
     <p style="color:#888;font-size:13px;">Om du inte begärde detta kan du ignorera detta e-postmeddelande — ditt konto är säkert.</p>
   `,
-    footer: "Med ljus och omsorg,<br/><strong>Sacred Healing · SQI 2050</strong>",
+    footer: "Med ljus och omsorg,<br/><strong>Siddha Quantum Nexus · 2050</strong>",
   },
   en: {
-    subject: "Reset your password — Sacred Healing",
+    subject: "Reset your password — Siddha Quantum Nexus",
     greeting: "Hello",
     cta: "Reset Password",
     body: `
-    <p>We received a request to reset the password for your Sacred Healing account.</p>
+    <p>We received a request to reset the password for your Siddha Quantum Nexus account.</p>
     <p>Click the button below to choose a new password. This link is valid for <strong>60 minutes</strong>.</p>
     <p style="color:#888;font-size:13px;">If you didn't request this, you can safely ignore this email — your account is secure.</p>
   `,
-    footer: "With light and care,<br/><strong>Sacred Healing · SQI 2050</strong>",
+    footer: "With light and care,<br/><strong>Siddha Quantum Nexus · 2050</strong>",
   },
   no: {
-    subject: "Tilbakestill passordet ditt — Sacred Healing",
+    subject: "Tilbakestill passordet ditt — Siddha Quantum Nexus",
     greeting: "Hei",
     cta: "Tilbakestill passord",
     body: `
-    <p>Vi mottok en forespørsel om å tilbakestille passordet for din Sacred Healing-konto.</p>
+    <p>Vi mottok en forespørsel om å tilbakestille passordet for din Siddha Quantum Nexus-konto.</p>
     <p>Klikk på knappen nedenfor for å velge et nytt passord. Lenken er gyldig i <strong>60 minutter</strong>.</p>
     <p style="color:#888;font-size:13px;">Hvis du ikke ba om dette, kan du trygt ignorere denne e-posten — kontoen din er sikker.</p>
   `,
-    footer: "Med lys og omsorg,<br/><strong>Sacred Healing · SQI 2050</strong>",
+    footer: "Med lys og omsorg,<br/><strong>Siddha Quantum Nexus · 2050</strong>",
   },
   es: {
-    subject: "Restablece tu contraseña — Sacred Healing",
+    subject: "Restablece tu contraseña — Siddha Quantum Nexus",
     greeting: "Hola",
     cta: "Restablecer contraseña",
     body: `
-    <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta de Sacred Healing.</p>
+    <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta de Siddha Quantum Nexus.</p>
     <p>Haz clic en el botón de abajo para elegir una nueva contraseña. El enlace es válido durante <strong>60 minutos</strong>.</p>
     <p style="color:#888;font-size:13px;">Si no solicitaste esto, puedes ignorar este correo — tu cuenta está segura.</p>
   `,
-    footer: "Con luz y cuidado,<br/><strong>Sacred Healing · SQI 2050</strong>",
+    footer: "Con luz y cuidado,<br/><strong>Siddha Quantum Nexus · 2050</strong>",
   },
 };
 
@@ -139,7 +139,7 @@ const handler = async (req: Request): Promise<Response> => {
         <circle cx="32" cy="32" r="1.5" fill="#D4AF37" opacity="0.9"/>
       </svg>
     </div>
-    <h1 style="color:#D4AF37;font-size:11px;font-weight:800;letter-spacing:0.5em;text-transform:uppercase;margin:0 0 8px;">SACRED HEALING</h1>
+    <h1 style="color:#D4AF37;font-size:11px;font-weight:800;letter-spacing:0.5em;text-transform:uppercase;margin:0 0 8px;">SIDDHA QUANTUM NEXUS</h1>
     <p style="color:rgba(255,255,255,0.3);font-size:8px;letter-spacing:0.4em;text-transform:uppercase;margin:0;">SIDDHA-QUANTUM INTELLIGENCE · 2050</p>
   </div>
   <div style="padding:40px 40px 32px;">
@@ -162,7 +162,7 @@ const handler = async (req: Request): Promise<Response> => {
 `;
 
     const result = await resend.emails.send({
-      from: Deno.env.get("EMAIL_FROM") || "Adam & Laila · Sacred Healing <noreply@siddhaquantumnexus.com>",
+      from: Deno.env.get("EMAIL_FROM") || "Adam & Laila · Siddha Quantum Nexus <noreply@siddhaquantumnexus.com>",
       to: [email],
       subject: t.subject,
       html,

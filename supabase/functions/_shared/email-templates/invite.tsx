@@ -27,15 +27,15 @@ export const InviteEmail = ({
 }: InviteEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>You've been invited to Sacred Healing</Preview>
+    <Preview>You've been invited to Siddha Quantum Nexus</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={brandMark}>✦ SACRED HEALING</Text>
+        <Text style={brandMark}>✦ SIDDHA QUANTUM NEXUS</Text>
         <Heading style={h1}>You've been invited</Heading>
         <Text style={text}>
           You've been invited to join{' '}
           <Link href={siteUrl} style={link}>
-            <strong>Sacred Healing</strong>
+            <strong>Siddha Quantum Nexus</strong>
           </Link>
           . Click below to accept and begin your journey.
         </Text>
@@ -45,7 +45,7 @@ export const InviteEmail = ({
         <Text style={footer}>
           If you weren't expecting this invitation, you can safely ignore this email.
         </Text>
-        <Text style={brand}>Sacred Healing · SQI 2050</Text>
+        <Text style={brand}>Siddha Quantum Nexus · 2050</Text>
       </Container>
     </Body>
   </Html>

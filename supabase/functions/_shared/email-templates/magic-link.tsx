@@ -24,13 +24,13 @@ export const MagicLinkEmail = ({
 }: MagicLinkEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Your login link — Sacred Healing</Preview>
+    <Preview>Your login link — Siddha Quantum Nexus</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={brandMark}>✦ SACRED HEALING</Text>
+        <Text style={brandMark}>✦ SIDDHA QUANTUM NEXUS</Text>
         <Heading style={h1}>Your login link</Heading>
         <Text style={text}>
-          Click the button below to log in to Sacred Healing. This link will expire shortly.
+          Click the button below to log in to Siddha Quantum Nexus. This link will expire shortly.
         </Text>
         <Button style={button} href={confirmationUrl}>
           Log In →
@@ -38,7 +38,7 @@ export const MagicLinkEmail = ({
         <Text style={footer}>
           If you didn't request this link, you can safely ignore this email.
         </Text>
-        <Text style={brand}>Sacred Healing · SQI 2050</Text>
+        <Text style={brand}>Siddha Quantum Nexus · 2050</Text>
       </Container>
     </Body>
   </Html>

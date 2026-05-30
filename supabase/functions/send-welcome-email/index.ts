@@ -19,7 +19,7 @@ const corsHeaders = {
 };
 
 const APP_URL = "https://siddhaquantumnexus.com";
-const FROM_ADDRESS = "Adam & Laila · Sacred Healing <noreply@siddhaquantumnexus.com>";
+const FROM_ADDRESS = "Adam & Laila · Siddha Quantum Nexus <noreply@siddhaquantumnexus.com>";
 
 /* ─── Geo helpers ─────────────────────────────────────────────────────── */
 
@@ -208,7 +208,7 @@ const COPY: Record<Lang, Copy> = {
     quoteSig: "— Siddha Quantum Nexus · 2050",
     footerNote: "You will receive the Monday Alignment Transmission and the Friday Lakshmi Blessing as a member of the Sangha.",
     footerSig: "With Light and Gratitude — Adam (Kritagya Das) & Laila (Karaveera Nivasini Dasi)",
-    footerLegal: "Sacred Healing · Sweden · For spiritual purposes",
+    footerLegal: "Siddha Quantum Nexus · Sweden · For spiritual purposes",
   },
 
   sv: {
@@ -246,7 +246,7 @@ const COPY: Record<Lang, Copy> = {
     quoteSig: "— Siddha Quantum Nexus · 2050",
     footerNote: "Du kommer att ta emot Måndagens Alignmentöverföring och Fredagens Lakshmi-välsignelse som medlem av Sanghan.",
     footerSig: "Med Ljus och Tacksamhet — Adam (Kritagya Das) & Laila (Karaveera Nivasini Dasi)",
-    footerLegal: "Sacred Healing · Sverige · För andliga ändamål",
+    footerLegal: "Siddha Quantum Nexus · Sverige · För andliga ändamål",
   },
 
   no: {
@@ -284,7 +284,7 @@ const COPY: Record<Lang, Copy> = {
     quoteSig: "— Siddha Quantum Nexus · 2050",
     footerNote: "Du vil motta Mandagens Alignmentoverføring og Fredagens Lakshmi-velsignelse som medlem av Sanghaen.",
     footerSig: "Med Lys og Takknemlighet — Adam (Kritagya Das) & Laila (Karaveera Nivasini Dasi)",
-    footerLegal: "Sacred Healing · Norge · For åndelige formål",
+    footerLegal: "Siddha Quantum Nexus · Norge · For åndelige formål",
   },
 
   es: {
@@ -322,7 +322,7 @@ const COPY: Record<Lang, Copy> = {
     quoteSig: "— Siddha Quantum Nexus · 2050",
     footerNote: "Recibirás la Transmisión de Alineación del Lunes y la Bendición Lakshmi del Viernes como miembro del Sangha.",
     footerSig: "Con Luz y Gratitud — Adam (Kritagya Das) & Laila (Karaveera Nivasini Dasi)",
-    footerLegal: "Sacred Healing · Suecia · Con fines espirituales",
+    footerLegal: "Siddha Quantum Nexus · Suecia · Con fines espirituales",
   },
 };
 
@@ -350,7 +350,7 @@ function buildEmail(c: Copy, displayName: string): string {
   <!-- HEADER -->
   <tr><td style="background:#080808;padding:48px 40px 36px;text-align:center;border-bottom:1px solid rgba(212,175,55,0.1);">
     <div style="margin:0 auto 20px;width:72px;height:72px;">${SVG.headerSigil}</div>
-    <div style="color:rgba(212,175,55,0.5);font-size:9px;font-weight:800;letter-spacing:0.6em;text-transform:uppercase;font-family:Arial,sans-serif;margin-bottom:6px;">SACRED HEALING</div>
+    <div style="color:rgba(212,175,55,0.5);font-size:9px;font-weight:800;letter-spacing:0.6em;text-transform:uppercase;font-family:Arial,sans-serif;margin-bottom:6px;">SIDDHA QUANTUM NEXUS</div>
     <div style="color:rgba(255,255,255,0.15);font-size:8px;letter-spacing:0.45em;text-transform:uppercase;font-family:Arial,sans-serif;margin-bottom:28px;">SIDDHA QUANTUM NEXUS · 2050</div>
     <div style="color:rgba(255,255,255,0.92);font-size:34px;font-weight:300;font-style:italic;line-height:1.25;font-family:Georgia,serif;">${c.greeting}, ${name}</div>
   </td></tr>

@@ -19,17 +19,17 @@ interface ReauthenticationEmailProps {
 export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Your verification code — Sacred Healing</Preview>
+    <Preview>Your verification code — Siddha Quantum Nexus</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={brandMark}>✦ SACRED HEALING</Text>
+        <Text style={brandMark}>✦ SIDDHA QUANTUM NEXUS</Text>
         <Heading style={h1}>Verification code</Heading>
         <Text style={text}>Use the code below to confirm your identity:</Text>
         <Text style={codeStyle}>{token}</Text>
         <Text style={footer}>
           This code will expire shortly. If you didn't request this, you can safely ignore this email.
         </Text>
-        <Text style={brand}>Sacred Healing · SQI 2050</Text>
+        <Text style={brand}>Siddha Quantum Nexus · 2050</Text>
       </Container>
     </Body>
   </Html>

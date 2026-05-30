@@ -29,15 +29,15 @@ export const SignupEmail = ({
 }: SignupEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Welcome to Sacred Healing — confirm your email</Preview>
+    <Preview>Welcome to Siddha Quantum Nexus — confirm your email</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={brandMark}>✦ SACRED HEALING</Text>
+        <Text style={brandMark}>✦ SIDDHA QUANTUM NEXUS</Text>
         <Heading style={h1}>Welcome, beautiful soul</Heading>
         <Text style={text}>
           Thank you for joining{' '}
           <Link href={siteUrl} style={link}>
-            <strong>Sacred Healing</strong>
+            <strong>Siddha Quantum Nexus</strong>
           </Link>
           . Your journey begins now.
         </Text>
@@ -54,7 +54,7 @@ export const SignupEmail = ({
         <Text style={footer}>
           If you didn't create an account, you can safely ignore this email.
         </Text>
-        <Text style={brand}>Sacred Healing · SQI 2050</Text>
+        <Text style={brand}>Siddha Quantum Nexus · 2050</Text>
       </Container>
     </Body>
   </Html>

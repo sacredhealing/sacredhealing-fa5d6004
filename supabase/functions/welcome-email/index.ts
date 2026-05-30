@@ -98,13 +98,13 @@ function buildWelcomeHTML(firstName: string): string {
 
     <tr><td style="text-align:center;padding:32px 0 16px;">
       <div style="color:rgba(212,175,55,0.4);font-size:9px;letter-spacing:0.5em;text-transform:uppercase;margin-bottom:10px;">
-        SACRED HEALING · SIDDHA QUANTUM NEXUS
+        SIDDHA QUANTUM NEXUS · SIDDHA QUANTUM NEXUS
       </div>
       <div style="color:rgba(255,255,255,0.2);font-size:11px;line-height:1.7;">
         You'll receive Monday transmissions & Friday Lakshmi emails as a member of the Sangha.
       </div>
       <div style="margin-top:10px;color:rgba(255,255,255,0.12);font-size:11px;">
-        © 2026 Sacred Healing ·
+        © 2026 Siddha Quantum Nexus ·
         <a href="https://sacredhealing.lovable.app" style="color:rgba(212,175,55,0.3);text-decoration:none;">sacredhealing.lovable.app</a>
       </div>
     </td></tr>

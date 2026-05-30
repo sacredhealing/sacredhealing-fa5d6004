@@ -29,10 +29,10 @@ export const EmailChangeEmail = ({
 }: EmailChangeEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Confirm your email change — Sacred Healing</Preview>
+    <Preview>Confirm your email change — Siddha Quantum Nexus</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={brandMark}>✦ SACRED HEALING</Text>
+        <Text style={brandMark}>✦ SIDDHA QUANTUM NEXUS</Text>
         <Heading style={h1}>Confirm your email change</Heading>
         <Text style={text}>
           You requested to change your email from{' '}
@@ -45,7 +45,7 @@ export const EmailChangeEmail = ({
         <Text style={footer}>
           If you didn't request this change, please secure your account immediately.
         </Text>
-        <Text style={brand}>Sacred Healing · SQI 2050</Text>
+        <Text style={brand}>Siddha Quantum Nexus · 2050</Text>
       </Container>
     </Body>
   </Html>

@@ -24,13 +24,13 @@ export const RecoveryEmail = ({
 }: RecoveryEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Reset your password — Sacred Healing</Preview>
+    <Preview>Reset your password — Siddha Quantum Nexus</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Text style={brandMark}>✦ SACRED HEALING</Text>
+        <Text style={brandMark}>✦ SIDDHA QUANTUM NEXUS</Text>
         <Heading style={h1}>Reset your password</Heading>
         <Text style={text}>
-          We received a request to reset the password for your Sacred Healing account.
+          We received a request to reset the password for your Siddha Quantum Nexus account.
           Click the button below to choose a new password. This link is valid for 60 minutes.
         </Text>
         <Button style={button} href={confirmationUrl}>
@@ -39,7 +39,7 @@ export const RecoveryEmail = ({
         <Text style={footer}>
           If you didn't request this, you can safely ignore this email — your account is secure.
         </Text>
-        <Text style={brand}>Sacred Healing · SQI 2050</Text>
+        <Text style={brand}>Siddha Quantum Nexus · 2050</Text>
       </Container>
     </Body>
   </Html>
