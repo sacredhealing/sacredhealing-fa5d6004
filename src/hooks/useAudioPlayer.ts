@@ -12,7 +12,7 @@
 
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useT } from '@/i18n/useT';
-import { safePlay, safeSetMediaSession, safeSetMediaSessionHandlers } from '@/utils/safeAudioPlay';
+import { safePlay, safeSetMediaSession, safeSetMediaSessionHandlers, proxyAudioUrl } from '@/utils/safeAudioPlay';
 
 export interface AudioTrackMeta {
   title: string;
@@ -223,7 +223,7 @@ export function useAudioPlayer(
     audio.setAttribute('webkit-playsinline', 'true');
     audio.setAttribute('x-webkit-airplay', 'allow');
 
-    audio.src = src;
+    audio.src = proxyAudioUrl(src) ?? src;
     audio.load();
     audioRef.current = audio;
 

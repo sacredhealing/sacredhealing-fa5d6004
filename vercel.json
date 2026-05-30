@@ -4,6 +4,7 @@
   "framework": "vite",
   "rewrites": [
     { "source": "/oracle.html", "destination": "/oracle.html" },
+    { "source": "/api/audio", "destination": "/api/audio" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [

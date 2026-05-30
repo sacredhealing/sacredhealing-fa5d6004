@@ -10,7 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
 import { useUpgradeModal } from '@/components/UpgradeModal';
 import { getMusicTrackRequiredRank, getUserMusicAccessRank } from '@/lib/tierAccess';
-import { safePlay } from '@/utils/safeAudioPlay';
+import { safePlay, safeSetMediaSession, safeSetMediaSessionHandlers, proxyAudioUrl } from '@/utils/safeAudioPlay';
 import { AudioErrorBoundary } from '@/components/AudioErrorBoundary';
 
 const SH_LAST_SESSION_KEY = 'sh_last_session';
@@ -587,7 +587,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
 
     const audioUrl = canPlayFull ? track.full_audio_url : track.preview_url;
-    const audio = new Audio(audioUrl);
+    const audio = new Audio(proxyAudioUrl(audioUrl) ?? audioUrl);
     audio.volume = volume;
 
     audio.ontimeupdate = () => {
