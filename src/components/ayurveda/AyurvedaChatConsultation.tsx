@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, X, Sparkles, Loader2, Leaf, Flame, Moon, Heart, BookOpen, Clock } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import type { AyurvedaUserProfile, DoshaProfile } from '@/lib/ayurvedaTypes';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useChatMessages, type ChatMessage } from '@/hooks/useChatMessages';
@@ -573,6 +575,37 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [showLexicon, setShowLexicon] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const { user } = useAuth();
+  const [jyotishProfile, setJyotishProfile] = useState<{
+    lagna: string | null;
+    moon_sign: string | null;
+    current_dasha: string | null;
+    birth_date: string | null;
+    birth_time: string | null;
+    birth_place: string | null;
+  } | null>(null);
+
+  // ── Fetch Jyotish profile from Supabase on mount ──
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase
+      .from('profiles')
+      .select('lagna, moon_sign, current_dasha, birth_date, birth_time, birth_place')
+      .eq('id', user.id)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          setJyotishProfile({
+            lagna: data.lagna ?? null,
+            moon_sign: data.moon_sign ?? null,
+            current_dasha: data.current_dasha ?? null,
+            birth_date: data.birth_date ?? null,
+            birth_time: data.birth_time ?? null,
+            birth_place: data.birth_place ?? null,
+          });
+        }
+      });
+  }, [user?.id]);
   const handleCopy = (text: string, idx: number) => {
     navigator.clipboard?.writeText(text).catch(() => {});
     setCopiedIdx(idx);
@@ -632,6 +665,7 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
           profile,
           dosha,
           language,
+          jyotishProfile,
         }),
       });
 
