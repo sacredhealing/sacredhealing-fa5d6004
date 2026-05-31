@@ -1,0 +1,75 @@
+name: Add Jyotish Profile Columns
+
+on:
+  workflow_dispatch:
+
+jobs:
+  migrate-both:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run migration on OLD Supabase (Lovable)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          SQL="ALTER TABLE profiles ADD COLUMN IF NOT EXISTS lagna TEXT; ALTER TABLE profiles ADD COLUMN IF NOT EXISTS moon_sign TEXT; ALTER TABLE profiles ADD COLUMN IF NOT EXISTS current_dasha TEXT; ALTER TABLE profiles ADD COLUMN IF NOT EXISTS birth_place TEXT; ALTER TABLE profiles ADD COLUMN IF NOT EXISTS birth_time TEXT;"
+          
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "https://api.supabase.com/v1/projects/ssygukfdbtehvtndandn/database/query" \
+            -H "Authorization: Bearer ${SUPABASE_ACCESS_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\":\"${SQL}\"}")
+          
+          HTTP=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+          echo "OLD Supabase HTTP: $HTTP"
+          echo "OLD Supabase Response: $BODY"
+          
+          if [ "$HTTP" = "200" ] || [ "$HTTP" = "201" ]; then
+            echo "✅ OLD Supabase migration SUCCESS"
+          else
+            echo "⚠️ OLD Supabase: $HTTP — columns may already exist"
+          fi
+
+      - name: Run migration on NEW Supabase
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          SQL="ALTER TABLE profiles ADD COLUMN IF NOT EXISTS lagna TEXT; ALTER TABLE profiles ADD COLUMN IF NOT EXISTS moon_sign TEXT; ALTER TABLE profiles ADD COLUMN IF NOT EXISTS current_dasha TEXT; ALTER TABLE profiles ADD COLUMN IF NOT EXISTS birth_place TEXT; ALTER TABLE profiles ADD COLUMN IF NOT EXISTS birth_time TEXT;"
+          
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query" \
+            -H "Authorization: Bearer ${SUPABASE_ACCESS_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\":\"${SQL}\"}")
+          
+          HTTP=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+          echo "NEW Supabase HTTP: $HTTP"
+          echo "NEW Supabase Response: $BODY"
+          
+          if [ "$HTTP" = "200" ] || [ "$HTTP" = "201" ]; then
+            echo "✅ NEW Supabase migration SUCCESS"
+          else
+            echo "⚠️ NEW Supabase: $HTTP — columns may already exist"
+          fi
+
+      - name: Deploy ayurveda-chat to BOTH Supabase projects
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          FUNCTION_CODE=$(cat supabase/functions/ayurveda-chat/index.ts)
+          
+          for PROJECT in ssygukfdbtehvtndandn fjdzhrdpioxdeyyfogep; do
+            echo "--- Deploying to $PROJECT ---"
+            HTTP=$(curl -s -o /tmp/fn_resp.json -w "%{http_code}" \
+              -X PATCH \
+              "https://api.supabase.com/v1/projects/${PROJECT}/functions/ayurveda-chat" \
+              -H "Authorization: Bearer ${SUPABASE_ACCESS_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d "{\"slug\":\"ayurveda-chat\",\"name\":\"ayurveda-chat\",\"body\":$(jq -Rs . <<< "$FUNCTION_CODE"),\"verify_jwt\":true}")
+            echo "$PROJECT HTTP: $HTTP"
+            cat /tmp/fn_resp.json | head -c 300
+            echo ""
+          done
