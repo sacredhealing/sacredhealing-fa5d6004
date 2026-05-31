@@ -628,6 +628,28 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
             )}
           </div>
 
+          {/* Chat Tab Bar */}
+          <div style={{ display:'flex', borderBottom:'1px solid rgba(212,175,55,0.1)', flexShrink:0 }}>
+            <button type="button" onClick={() => { setShowHistory(false); setShowLexicon(false); }}
+              style={{ flex:1, padding:'9px 0', fontSize:10, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase',
+                background:'none', border:'none', borderBottom: !showHistory && !showLexicon ? '2px solid #D4AF37' : '2px solid transparent',
+                color: !showHistory && !showLexicon ? '#D4AF37' : 'rgba(255,255,255,0.4)', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", transition:'all 0.2s' }}>
+              ✦ Consult
+            </button>
+            <button type="button" onClick={() => { setShowLexicon(true); setShowHistory(false); }}
+              style={{ flex:1, padding:'9px 0', fontSize:10, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase',
+                background:'none', border:'none', borderBottom: showLexicon ? '2px solid #D4AF37' : '2px solid transparent',
+                color: showLexicon ? '#D4AF37' : 'rgba(255,255,255,0.4)', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", transition:'all 0.2s' }}>
+              ◈ Lexicon
+            </button>
+            <button type="button" onClick={() => { setShowHistory(true); setShowLexicon(false); }}
+              style={{ flex:1, padding:'9px 0', fontSize:10, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase',
+                background:'none', border:'none', borderBottom: showHistory ? '2px solid #D4AF37' : '2px solid transparent',
+                color: showHistory ? '#D4AF37' : 'rgba(255,255,255,0.4)', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", transition:'all 0.2s' }}>
+              ◇ History
+            </button>
+          </div>
+
           {/* Jyotish active bar */}
           {hasJyotish && (
             <div className="sqi-jy-bar">
