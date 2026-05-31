@@ -2,11 +2,6 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "functions": {
-    "api/audio/[...path].js": {
-      "runtime": "@vercel/node@3.x"
-    }
-  },
   "rewrites": [
     {
       "source": "/oracle.html",
