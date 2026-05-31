@@ -31,7 +31,7 @@ jobs:
 
       - name: Set Gemini API secret
         run: |
-          supabase secrets set GEMINI_API_KEY=AIzaSyAceP9hWMpkuhG-8PMbOUZNrHnocVLx7jo --project-ref fjdzhrdpioxdeyyfogep
+          supabase secrets set GEMINI_API_KEY=AIzaSyAdDnCIjX7AZqzLGBUYEi5BGZ6fgzA6SS0 --project-ref fjdzhrdpioxdeyyfogep
 
       - name: Deploy critical functions
         run: |
