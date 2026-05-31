@@ -1,6 +1,6 @@
 import type { Message } from './types';
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/quantum-apothecary-chat`;
+const CHAT_URL = "https://ssygukfdbtehvtndandn.supabase.co/functions/v1/quantum-apothecary-chat"; // Function deployed on Lovable Supabase — new Supabase deployment pending
 
 /** Phrases that indicate a direct activation request (not a general question). */
 const ACTIVATION_COMMANDS = [
@@ -52,11 +52,8 @@ function withActivationInstructionForLastUser(
 }
 
 function supabaseAnonHeader(): string {
-  return (
-    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
-    import.meta.env.VITE_SUPABASE_ANON_KEY ??
-    ''
-  );
+  // Use old Lovable Supabase anon key for function auth (function deployed there)
+  return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4";
 }
 
 export interface UserImagePayload {
