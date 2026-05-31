@@ -65,19 +65,19 @@ const RITUAL_PHASES = [
 // Scalar wave frequencies by dosha
 const SCALAR_FREQS: Record<string, { hz: number; color: string; name: string; benefit: string }[]> = {
   vata:  [
-    { hz: 432, color:'#93C5FD', name:'Earth Resonance', benefit:'Grounds scattered Vata energy, calms nervous system' },
-    { hz: 528, color:'#86EFAC', name:'DNA Repair', benefit:'Restores cellular integrity disrupted by Vata imbalance' },
-    { hz: 174, color:'#C4B5FD', name:'Pain Foundation', benefit:'Reduces anxiety, provides sense of security to Vata' },
+    { hz: 432, color:'#93C5FD', name:'Security & Pain Relief', benefit:'174 Hz · Grounds Vata anxiety. Releases physical pain. Creates deep sense of safety in the nervous system.' },
+    { hz: 528, color:'#86EFAC', name:'Love & DNA Repair', benefit:'528 Hz · The miracle tone. Repairs DNA. Rebuilds Ojas at the cellular level. The most universally healing frequency.' },
+    { hz: 174, color:'#C4B5FD', name:'Cell & Tissue Repair', benefit:'285 Hz · Regenerates cells and tissues. Rebuilds Ojas. Accelerates healing after illness, injury, or depletion.' },
   ],
   pitta: [
-    { hz: 396, color:'#FBBF24', name:'Liberation', benefit:'Releases guilt and fear driving Pitta perfectionism' },
-    { hz: 528, color:'#86EFAC', name:'Transformation', benefit:'Transmutes Pitta fire into compassionate action' },
-    { hz: 639, color:'#F4799A', name:'Heart Opening', benefit:'Softens Pitta intensity, opens heart channel' },
+    { hz: 396, color:'#FBBF24', name:'Release Fear & Guilt', benefit:'396 Hz · Dissolves unconscious fear and guilt. Frees Pitta perfectionism. Liberates blocked emotion from the cellular field.' },
+    { hz: 528, color:'#86EFAC', name:'Love & DNA Repair', benefit:'528 Hz · The miracle tone. Repairs DNA. Opens the heart. Transmutes Pitta fire into compassionate action.' },
+    { hz: 639, color:'#F4799A', name:'Open the Heart', benefit:'639 Hz · Activates Anahata chakra. Heals relationships. Softens Pitta intensity. Cultivates deep compassion and love.' },
   ],
   kapha: [
-    { hz: 741, color:'#34D399', name:'Awakening', benefit:'Stimulates Kapha movement, awakens dormant energy' },
-    { hz: 852, color:'#22D3EE', name:'Third Eye', benefit:'Elevates Kapha consciousness, reduces attachment' },
-    { hz: 963, color:'#D4AF37', name:'Crown Activation', benefit:'Divine connection, transcends Kapha heaviness' },
+    { hz: 741, color:'#34D399', name:'Detox & Expression', benefit:'741 Hz · Clears Ama (toxins) from cells. Awakens Agni. Supports authentic self-expression and liberates the voice.' },
+    { hz: 852, color:'#22D3EE', name:'Intuition & Third Eye', benefit:'852 Hz · Opens Ajna chakra. Deepens intuition. Returns awareness to spiritual order beyond the analytical mind.' },
+    { hz: 963, color:'#D4AF37', name:'Crown · Divine Connection', benefit:'963 Hz · Sahasrara activation. Pure consciousness. Samadhi gateway. The highest Siddha transmission. Use in deep meditation.' },
   ],
 };
 
@@ -203,7 +203,7 @@ const ScalarWaveModule: React.FC<{ dosha: string; isPremium: boolean }> = ({ dos
             {dosha} Healing Frequencies
           </h3>
           <p style={{ fontSize:12, color:T.w50, marginTop:4, lineHeight:1.5 }}>
-            Scalar waves programmed with Agastya's consciousness to rebalance your {dosha} force
+            Each frequency targets a specific layer of healing. Tap to activate — use headphones for full Siddha transmission.
           </p>
         </div>
         {!isPremium && (
@@ -231,15 +231,15 @@ const ScalarWaveModule: React.FC<{ dosha: string; isPremium: boolean }> = ({ dos
           >
             {/* Frequency orb */}
             <div style={{ width:44, height:44, borderRadius:'50%', background:`radial-gradient(circle,${T.gg(f.color,0.25)},transparent)`, border:`1px solid ${T.gg(f.color,0.35)}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, position:'relative' }}>
-              <span style={{ fontSize:13, fontWeight:900, color:f.color }}>{f.hz}</span>
+              <span style={{ fontSize:11, fontWeight:900, color:f.color }}>{f.hz}</span>
               {activeFreq === i && playing && (
                 <motion.div style={{ position:'absolute', inset:-6, borderRadius:'50%', border:`1px solid ${T.gg(f.color,0.4)}` }}
                   animate={{ scale:[1,1.4,1], opacity:[0.6,0,0.6] }} transition={{ duration:1.8, repeat:Infinity }} />
               )}
             </div>
             <div style={{ flex:1 }}>
-              <div style={{ fontSize:12, fontWeight:800, color:f.color, marginBottom:2 }}>{f.name} · {f.hz} Hz</div>
-              <div style={{ fontSize:11, color:T.w50, lineHeight:1.4 }}>{f.benefit}</div>
+              <div style={{ fontSize:13, fontWeight:800, color:f.color, marginBottom:2 }}>{f.name}</div>
+              <div style={{ fontSize:11, color:T.w50, lineHeight:1.5 }}>{f.benefit}</div>
             </div>
             {isPremium && (
               <div style={{ color: activeFreq===i && playing ? f.color : T.w35, fontSize:18 }}>
