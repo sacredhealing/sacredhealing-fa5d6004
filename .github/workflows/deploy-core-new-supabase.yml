@@ -15,90 +15,83 @@ jobs:
 
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.3.3
 
-      - name: Set Gemini + Resend + Stripe secrets on new Supabase
+      - name: Link to new Supabase project
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
-          supabase secrets set GEMINI_API_KEY=${{ secrets.S_GEMINI }} --project-ref fjdzhrdpioxdeyyfogep 2>&1 || echo "WARN: gemini key"
-          supabase secrets set RESEND_API_KEY=${{ secrets.S_RESEND }} --project-ref fjdzhrdpioxdeyyfogep 2>&1 || echo "WARN: resend key"
-          supabase secrets set STRIPE_SECRET_KEY=${{ secrets.S_STRIPE_SECRET }} --project-ref fjdzhrdpioxdeyyfogep 2>&1 || echo "WARN: stripe secret"
-          supabase secrets set STRIPE_WEBHOOK_SECRET=${{ secrets.S_STRIPE_WEBHOOK }} --project-ref fjdzhrdpioxdeyyfogep 2>&1 || echo "WARN: stripe webhook"
-          supabase secrets set SUPABASE_SERVICE_ROLE_KEY=${{ secrets.NEW_SERVICE_ROLE }} --project-ref fjdzhrdpioxdeyyfogep 2>&1 || echo "WARN: service role"
+          supabase link --project-ref fjdzhrdpioxdeyyfogep
+
+      - name: Set all secrets on new project
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          supabase secrets set GEMINI_API_KEY=${{ secrets.S_GEMINI }} --project-ref fjdzhrdpioxdeyyfogep
+          supabase secrets set RESEND_API_KEY=${{ secrets.S_RESEND }} --project-ref fjdzhrdpioxdeyyfogep
+          supabase secrets set STRIPE_SECRET_KEY=${{ secrets.S_STRIPE_SECRET }} --project-ref fjdzhrdpioxdeyyfogep
+          supabase secrets set STRIPE_WEBHOOK_SECRET=${{ secrets.S_STRIPE_WEBHOOK }} --project-ref fjdzhrdpioxdeyyfogep
+          supabase secrets set SUPABASE_SERVICE_ROLE_KEY=${{ secrets.NEW_SERVICE_ROLE }} --project-ref fjdzhrdpioxdeyyfogep
         continue-on-error: true
 
       - name: Deploy quantum-apothecary-chat
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: supabase functions deploy quantum-apothecary-chat --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt 2>&1
-        continue-on-error: true
+        run: supabase functions deploy quantum-apothecary-chat --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt
 
       - name: Deploy ayurveda-chat
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: supabase functions deploy ayurveda-chat --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt 2>&1
+        run: supabase functions deploy ayurveda-chat --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt
         continue-on-error: true
 
       - name: Deploy bhrigu-oracle
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: supabase functions deploy bhrigu-oracle --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt 2>&1
+        run: supabase functions deploy bhrigu-oracle --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt
         continue-on-error: true
 
       - name: Deploy check-membership-subscription
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: supabase functions deploy check-membership-subscription --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt 2>&1
+        run: supabase functions deploy check-membership-subscription --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt
         continue-on-error: true
 
       - name: Deploy stripe-webhook
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: supabase functions deploy stripe-webhook --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt 2>&1
+        run: supabase functions deploy stripe-webhook --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt
         continue-on-error: true
 
       - name: Deploy nadi-scan
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: supabase functions deploy nadi-scan --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt 2>&1
-        continue-on-error: true
-
-      - name: Deploy jyotish-ephemeris
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: supabase functions deploy jyotish-ephemeris --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt 2>&1
+        run: supabase functions deploy nadi-scan --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt
         continue-on-error: true
 
       - name: Deploy admin-user-management
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: supabase functions deploy admin-user-management --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt 2>&1
+        run: supabase functions deploy admin-user-management --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt
         continue-on-error: true
 
       - name: Deploy send-welcome-email
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: supabase functions deploy send-welcome-email --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt 2>&1
-        continue-on-error: true
-
-      - name: Deploy notify-community
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: supabase functions deploy notify-community --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt 2>&1
+        run: supabase functions deploy send-welcome-email --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt
         continue-on-error: true
 
       - name: Deploy create-membership-checkout
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: supabase functions deploy create-membership-checkout --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt 2>&1
+        run: supabase functions deploy create-membership-checkout --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt
         continue-on-error: true
 
       - name: Deploy create-tier-checkout
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: supabase functions deploy create-tier-checkout --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt 2>&1
+        run: supabase functions deploy create-tier-checkout --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt
         continue-on-error: true
 
       - name: Done
-        run: echo "✅ All core functions deployed to fjdzhrdpioxdeyyfogep"
+        run: echo "✅ Deploy complete — build 2026-05-31-v2"
