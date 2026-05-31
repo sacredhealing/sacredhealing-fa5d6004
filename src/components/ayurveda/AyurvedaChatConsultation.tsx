@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, X, Sparkles, Loader2, Leaf, Flame, Moon, Heart, BookOpen, Clock } from 'lucide-react';
+import { Send, X, Sparkles, Loader2, Clock, BookOpen } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -18,548 +18,395 @@ interface AyurvedaChatConsultationProps {
   onClose?: () => void;
 }
 
-const STYLES = `
-  .sqi-chat-portal {
-    --sqi-chat-gold: 42 68% 54%;
-    --sqi-chat-gold-deep: 41 79% 44%;
-    --sqi-chat-ink: 28 55% 4%;
-    --sqi-chat-panel-top: 29 73% 7%;
-    --sqi-chat-panel-bottom: 24 62% 3%;
-    --sqi-chat-muted: 38 16% 63%;
-    position: fixed !important;
-    inset: 0 !important;
-    z-index: 999999 !important;
-    display: flex !important;
-    align-items: stretch !important;
-    justify-content: center !important;
-    padding: 14px;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-  }
-  .sqi-chat-backdrop {
-    position: absolute;
-    inset: 0;
-    background: hsl(24 35% 2% / 0.92);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-  }
-  .sqi-chat-panel {
-    position: relative;
-    width: min(100%, 560px);
-    height: calc(100vh - 28px);
-    height: calc(100dvh - 28px);
-    max-height: calc(100vh - 28px);
-    max-height: calc(100dvh - 28px);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    border-radius: 28px;
-    border: 1px solid hsl(var(--sqi-chat-gold) / 0.38);
-    background:
-      radial-gradient(circle at top center, hsl(var(--sqi-chat-gold) / 0.08), transparent 28%),
-      linear-gradient(180deg, hsl(var(--sqi-chat-panel-top) / 0.99) 0%, hsl(var(--sqi-chat-panel-bottom) / 1) 100%);
-    box-shadow:
-      0 30px 90px hsl(var(--sqi-chat-gold) / 0.08),
-      inset 0 1px 0 hsl(var(--sqi-chat-gold) / 0.18);
-  }
-  .sqi-chat-topbar {
-    height: 2px;
-    flex-shrink: 0;
-    background: linear-gradient(90deg, transparent, hsl(var(--sqi-chat-gold)), transparent);
-    opacity: 0.8;
-  }
-  .sqi-chat-header {
-    padding: 16px 18px 14px;
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    border-bottom: 1px solid hsl(var(--sqi-chat-gold) / 0.16);
-    background: linear-gradient(180deg, hsl(var(--sqi-chat-gold) / 0.05), transparent);
-    flex-shrink: 0;
-  }
-  .sqi-dv-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 999px;
-    border: 1px solid hsl(var(--sqi-chat-gold) / 0.38);
-    background: radial-gradient(circle at 35% 35%, hsl(var(--sqi-chat-gold) / 0.18), hsl(var(--sqi-chat-gold) / 0.04));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    color: hsl(var(--sqi-chat-gold));
-    font-size: 20px;
-    box-shadow: 0 0 18px hsl(var(--sqi-chat-gold) / 0.14);
-  }
-  .sqi-chat-name {
-    color: hsl(var(--sqi-chat-gold));
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 17px;
-    font-weight: 700;
-    letter-spacing: 0.01em;
-    line-height: 1;
-  }
-  .sqi-chat-sub {
-    margin-top: 4px;
-    color: hsl(var(--sqi-chat-gold) / 0.72);
-    font-size: 8px;
-    font-weight: 800;
-    letter-spacing: 0.42em;
-    text-transform: uppercase;
-    line-height: 1.6;
-  }
-  .sqi-live-pill {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    border-radius: 999px;
-    background: hsl(var(--sqi-chat-gold) / 0.08);
-    border: 1px solid hsl(var(--sqi-chat-gold) / 0.22);
-    margin-top: 1px;
-  }
-  .sqi-live-dot {
-    width: 5px;
-    height: 5px;
-    border-radius: 999px;
-    background: hsl(var(--sqi-chat-gold));
-    box-shadow: 0 0 8px hsl(var(--sqi-chat-gold));
-    animation: sqiGP 2s ease-in-out infinite;
-  }
-  .sqi-live-lbl {
-    color: hsl(var(--sqi-chat-gold));
-    font-size: 8px;
-    font-weight: 800;
-    letter-spacing: 0.4em;
-    text-transform: uppercase;
-  }
-  .sqi-close {
-    width: 36px;
-    height: 36px;
-    border-radius: 999px;
-    border: 1px solid hsl(var(--sqi-chat-gold) / 0.18);
-    background: hsl(30 18% 14% / 0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    color: hsl(var(--sqi-chat-muted) / 0.82);
-    cursor: pointer;
-    transition: 0.2s ease;
-  }
-  .sqi-close:hover {
-    color: hsl(var(--sqi-chat-gold));
-    border-color: hsl(var(--sqi-chat-gold) / 0.42);
-    background: hsl(var(--sqi-chat-gold) / 0.08);
-  }
-  .sqi-msgs {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    padding: 22px 16px 18px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    scrollbar-width: thin;
-    scrollbar-color: hsl(var(--sqi-chat-gold) / 0.15) transparent;
-    -webkit-user-select: text;
-    user-select: text;
-    -webkit-touch-callout: default;
-  }
-  .sqi-msgs::-webkit-scrollbar {
-    width: 6px;
-  }
-  .sqi-msgs::-webkit-scrollbar-thumb {
-    background: hsl(var(--sqi-chat-gold) / 0.14);
-    border-radius: 999px;
-  }
-  .sqi-welcome {
-    text-align: center;
-    padding: 10px 8px 18px;
-  }
-  .sqi-welcome-emoji {
-    font-size: 44px;
-    margin-bottom: 14px;
-    color: hsl(var(--sqi-chat-gold));
-    text-shadow: 0 0 20px hsl(var(--sqi-chat-gold) / 0.32);
-  }
-  .sqi-welcome-title {
-    color: hsl(var(--sqi-chat-gold));
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 21px;
-    font-style: italic;
-    font-weight: 700;
-    line-height: 1.15;
-    margin-bottom: 10px;
-  }
-  .sqi-welcome-lead {
-    color: hsl(var(--sqi-chat-gold) / 0.92);
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 17px;
-    font-style: italic;
-    line-height: 1.5;
-    max-width: 430px;
-    margin: 0 auto 10px;
-  }
-  .sqi-welcome-sub {
-    color: hsl(var(--sqi-chat-muted) / 0.62);
-    font-size: 14px;
-    line-height: 1.65;
-    max-width: 440px;
-    margin: 0 auto 16px;
-  }
-  .sqi-om-divider {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    margin: 0 auto 18px;
-    color: hsl(var(--sqi-chat-gold) / 0.75);
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 16px;
-    max-width: 420px;
-  }
-  .sqi-om-divider::before,
-  .sqi-om-divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, hsl(var(--sqi-chat-gold) / 0.2), transparent);
-  }
-  .sqi-sugg {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-width: 440px;
-    margin: 0 auto;
-  }
-  .sqi-sugg-btn {
-    width: 100%;
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-radius: 16px;
-    border: 1px solid hsl(var(--sqi-chat-gold) / 0.22);
-    background: hsl(28 34% 9% / 0.78);
-    color: hsl(var(--sqi-chat-muted) / 0.95);
-    font-family: inherit;
-    font-size: 13px;
-    line-height: 1.4;
-    text-align: left;
-    cursor: pointer;
-    transition: 0.2s ease;
-  }
-  .sqi-sugg-btn:hover {
-    color: hsl(var(--sqi-chat-gold));
-    border-color: hsl(var(--sqi-chat-gold) / 0.44);
-    background: hsl(28 34% 11% / 0.92);
-    transform: translateY(-1px);
-  }
-  .sqi-sugg-btn:focus-visible {
-    outline: 2px solid hsl(var(--sqi-chat-gold) / 0.4);
-    outline-offset: 2px;
-  }
-  .sqi-sugg-icon {
-    width: 18px;
-    height: 18px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-  .sqi-msg-row {
-    display: flex;
-  }
-  .sqi-msg-row.user {
-    justify-content: flex-end;
-  }
-  .sqi-msg-row.ai {
-    justify-content: flex-start;
-  }
-  .sqi-bubble {
-    max-width: 84%;
-    padding: 12px 15px;
-    border-radius: 18px;
-    font-size: 13px;
-    line-height: 1.7;
-    white-space: pre-wrap;
-    -webkit-user-select: text;
-    user-select: text;
-    -webkit-touch-callout: default;
-  }
-  .sqi-bubble.user {
-    color: hsl(30 45% 94%);
-    background: linear-gradient(135deg, hsl(var(--sqi-chat-gold) / 0.24), hsl(var(--sqi-chat-gold-deep) / 0.12));
-    border: 1px solid hsl(var(--sqi-chat-gold) / 0.42);
-    border-radius: 18px 18px 6px 18px;
-    box-shadow: 0 0 14px hsl(var(--sqi-chat-gold) / 0.1);
-  }
-  .sqi-bubble.ai {
-    color: hsl(33 15% 84% / 0.96);
-    background: hsl(26 20% 11% / 0.94);
-    border: 1px solid hsl(var(--sqi-chat-gold) / 0.12);
-    border-radius: 18px 18px 18px 6px;
-  }
-  .sqi-role {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    margin-bottom: 6px;
-    font-size: 8px;
-    font-weight: 800;
-    letter-spacing: 0.38em;
-    text-transform: uppercase;
-  }
-  .sqi-input-bar {
-    flex-shrink: 0;
-    padding: 12px 14px;
-    padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-top: 1px solid hsl(var(--sqi-chat-gold) / 0.14);
-    background: linear-gradient(180deg, hsl(24 28% 5% / 0.1), hsl(24 28% 5% / 0.95));
-  }
-  .sqi-input {
-    flex: 1;
-    min-width: 0;
-    padding: 14px 18px;
-    border-radius: 999px;
-    border: 1px solid hsl(var(--sqi-chat-gold) / 0.24);
-    background: hsl(26 19% 10% / 0.96);
-    color: hsl(32 42% 92%);
-    font-size: 14px;
-    font-family: inherit;
-    outline: none;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  }
-  .sqi-input:focus {
-    border-color: hsl(var(--sqi-chat-gold) / 0.55);
-    box-shadow: 0 0 0 3px hsl(var(--sqi-chat-gold) / 0.08);
-  }
-  .sqi-input::placeholder {
-    color: hsl(var(--sqi-chat-gold) / 0.34);
-  }
-  .sqi-send {
-    width: 50px;
-    height: 50px;
-    border-radius: 999px;
-    flex-shrink: 0;
-    border: 1px solid hsl(var(--sqi-chat-gold-deep));
-    background: linear-gradient(135deg, hsl(40 92% 57%), hsl(var(--sqi-chat-gold-deep)));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 0 22px hsl(var(--sqi-chat-gold) / 0.18);
-    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
-  }
-  .sqi-send:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 28px hsl(var(--sqi-chat-gold) / 0.34);
-    filter: saturate(1.05);
-  }
-  .sqi-send:disabled {
-    cursor: not-allowed;
-    transform: none;
-    filter: none;
-    box-shadow: none;
-    border-color: hsl(var(--sqi-chat-gold) / 0.18);
-    background: hsl(28 16% 16% / 0.9);
-  }
-  .sqi-nadi-pulse {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    padding: 18px 0 10px;
-  }
-  @keyframes sqiGP {
-    0%, 100% { box-shadow: 0 0 0 0 hsl(var(--sqi-chat-gold) / 0.46); }
-    50% { box-shadow: 0 0 0 9px hsl(var(--sqi-chat-gold) / 0); }
-  }
-  @keyframes sqiSpin {
-    to { transform: rotate(360deg); }
-  }
-  @media (max-width: 640px) {
-    .sqi-chat-portal {
-      padding: 12px;
-    }
-    .sqi-chat-panel {
-      width: 100%;
-      height: calc(100vh - 24px);
-      height: calc(100dvh - 24px);
-      max-height: calc(100vh - 24px);
-      max-height: calc(100dvh - 24px);
-      border-radius: 24px;
-    }
-    .sqi-chat-header {
-      padding: 16px 14px 14px;
-      gap: 10px;
-    }
-    .sqi-msgs {
-      padding: 18px 12px 16px;
-    }
-    .sqi-bubble {
-      max-width: 88%;
-    }
-    .sqi-input-bar {
-      padding-left: 12px;
-      padding-right: 12px;
-    }
-    .sqi-input {
-      padding-left: 16px;
-      padding-right: 16px;
-    }
-  }
-  .sqi-hist-panel {
-    position: absolute;
-    inset: 0;
-    z-index: 10;
-    background: linear-gradient(180deg, hsl(29 73% 6%) 0%, hsl(24 62% 3%) 100%);
-    display: flex;
-    flex-direction: column;
-    border-radius: 28px;
-    overflow: hidden;
-  }
-  .sqi-hist-header {
-    padding: 16px 18px 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-bottom: 1px solid hsl(var(--sqi-chat-gold) / 0.16);
-    background: linear-gradient(180deg, hsl(var(--sqi-chat-gold) / 0.05), transparent);
-    flex-shrink: 0;
-  }
-  .sqi-hist-title {
-    flex: 1;
-    color: hsl(var(--sqi-chat-gold));
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 16px;
-    font-weight: 700;
-  }
-  .sqi-hist-list {
-    flex: 1;
-    overflow-y: auto;
-    padding: 14px 14px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    scrollbar-width: thin;
-    scrollbar-color: hsl(var(--sqi-chat-gold) / 0.15) transparent;
-  }
-  .sqi-hist-date-label {
-    font-size: 8px;
-    font-weight: 800;
-    letter-spacing: 0.4em;
-    text-transform: uppercase;
-    color: hsl(var(--sqi-chat-gold) / 0.45);
-    padding: 10px 6px 4px;
-  }
-  .sqi-hist-msg {
-    padding: 11px 14px;
-    border-radius: 14px;
-    font-size: 12.5px;
-    line-height: 1.65;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-  .sqi-hist-msg.user {
-    background: hsl(var(--sqi-chat-gold) / 0.08);
-    border: 1px solid hsl(var(--sqi-chat-gold) / 0.2);
-    color: hsl(33 50% 88%);
-    margin-left: auto;
-    max-width: 88%;
-  }
-  .sqi-hist-msg.ai {
-    background: hsl(26 18% 10% / 0.9);
-    border: 1px solid hsl(var(--sqi-chat-gold) / 0.1);
-    color: hsl(33 12% 80%);
-    max-width: 92%;
-  }
-  .sqi-hist-role {
-    font-size: 8px;
-    font-weight: 800;
-    letter-spacing: 0.35em;
-    text-transform: uppercase;
-    margin-bottom: 5px;
-    color: hsl(var(--sqi-chat-gold) / 0.6);
-  }
-  .sqi-icon-btn {
-    width: 34px;
-    height: 34px;
-    border-radius: 999px;
-    border: 1px solid hsl(var(--sqi-chat-gold) / 0.2);
-    background: transparent;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: hsl(var(--sqi-chat-gold) / 0.65);
-    transition: 0.2s ease;
-    flex-shrink: 0;
-  }
-  .sqi-icon-btn:hover {
-    color: hsl(var(--sqi-chat-gold));
-    border-color: hsl(var(--sqi-chat-gold) / 0.45);
-    background: hsl(var(--sqi-chat-gold) / 0.07);
-  }
-`;
+// ── Sri Yantra SVG ──────────────────────────────────────────────────────────
+const SriYantra: React.FC<{ size?: number }> = ({ size = 40 }) => (
+  <svg width={size} height={size} viewBox="0 0 54 54" fill="none">
+    <polygon points="27,3 51,45 3,45" stroke="rgba(212,175,55,0.9)" strokeWidth="1.3" fill="none"/>
+    <polygon points="27,51 3,9 51,9" stroke="rgba(212,175,55,0.68)" strokeWidth="1.3" fill="none"/>
+    <polygon points="27,10 45,41 9,41" stroke="rgba(212,175,55,0.4)" strokeWidth="1" fill="none"/>
+    <polygon points="27,44 9,13 45,13" stroke="rgba(212,175,55,0.26)" strokeWidth="1" fill="none"/>
+    <circle cx="27" cy="27" r="3.5" fill="rgba(212,175,55,0.95)"/>
+  </svg>
+);
 
-const NadiPulse = () => {
-  const { t } = useTranslation();
-
+// ── Response formatter ──────────────────────────────────────────────────────
+// Renders Agastya's streaming text into rich blocks:
+// Devanagari → gold mantra card · "Scalar Transmission:" → cyan scalar block
+// Last short paragraph → italic gold seal · everything else → Cormorant prose
+const FormatAgastya: React.FC<{ text: string }> = ({ text }) => {
+  const paras = text.split(/\n\n+/).filter(p => p.trim());
   return (
-    <div className="sqi-nadi-pulse">
-      <div style={{ position: 'relative', width: 52, height: 52 }}>
-        {[0, 1, 2].map((i) => (
-          <motion.div
-            key={i}
-            style={{
-              position: 'absolute',
-              borderRadius: '50%',
-              border: `1px solid ${i === 0 ? 'hsl(42 68% 54% / 0.58)' : 'hsl(42 68% 54% / 0.2)'}`,
-              width: 24 + i * 14,
-              height: 24 + i * 14,
-              top: -(i * 7),
-              left: -(i * 7),
-            }}
-            animate={{ scale: [1, 1.4, 1], opacity: [0.6, 0.1, 0.6] }}
-            transition={{ duration: 2, repeat: Infinity, delay: i * 0.35 }}
-          />
-        ))}
-        <div
-          style={{
-            position: 'relative',
-            width: 24,
-            height: 24,
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, hsl(42 68% 54% / 0.32), hsl(42 68% 54% / 0.06))',
-            border: '1px solid hsl(42 68% 54% / 0.32)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 12,
-          }}
-        >
-          🔱
-        </div>
-      </div>
-      <p
-        style={{
-          color: 'hsl(38 16% 63% / 0.68)',
-          fontSize: 11,
-          fontStyle: 'italic',
-          letterSpacing: '0.08em',
-          margin: 0,
-        }}
-      >
-        {t('ayurvedaChat.pulseReading', 'Agastya Muni reads your Nadi pulse…')}
-      </p>
+    <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
+      {paras.map((para, pi) => {
+        const l = para.trim().replace(/\*\*/g, '');
+        if (!l) return null;
+
+        // Scalar transmission block
+        if (l.startsWith('Scalar Transmission:') || l.startsWith('Scalar Wave')) {
+          const txt = l.replace(/^Scalar (Wave )?Transmission:?\s*/i, '').trim();
+          return (
+            <div key={pi} style={{
+              marginTop: 16, padding: '12px 16px',
+              background: 'linear-gradient(135deg, rgba(34,211,238,0.06), rgba(212,175,55,0.03))',
+              border: '1px solid rgba(34,211,238,0.22)',
+              borderRadius: 12, position: 'relative', overflow: 'hidden',
+            }}>
+              <div style={{
+                position: 'absolute', top: 0, left: 0, right: 0, height: 1,
+                background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.45), transparent)',
+              }}/>
+              <div style={{
+                fontSize: 8, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase',
+                color: 'rgba(34,211,238,0.55)', marginBottom: 5,
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+              }}>≈ Scalar Transmission</div>
+              <div style={{
+                fontSize: 12.5, color: 'rgba(34,211,238,0.78)', lineHeight: 1.65,
+                fontFamily: "'Plus Jakarta Sans', sans-serif", fontStyle: 'normal',
+              }}>{txt}</div>
+            </div>
+          );
+        }
+
+        // Mantra / Devanagari block
+        if (/[\u0900-\u097F\u0B80-\u0BFF]/.test(l)) {
+          return (
+            <div key={pi} style={{
+              margin: '16px 0', padding: '14px 18px',
+              background: 'rgba(212,175,55,0.055)',
+              borderLeft: '2.5px solid rgba(212,175,55,0.52)',
+              borderRadius: '0 12px 12px 0',
+            }}>
+              {l.split('\n').map((line, i) => {
+                const t2 = line.trim();
+                if (!t2) return null;
+                const isDevan = /[\u0900-\u097F\u0B80-\u0BFF]/.test(t2);
+                return (
+                  <div key={i} style={{
+                    fontFamily: "'Cormorant Garamond', Georgia, serif",
+                    fontSize: isDevan ? 21 : 13.5,
+                    fontStyle: isDevan ? 'normal' : 'italic',
+                    color: isDevan ? '#D4AF37' : 'rgba(212,175,55,0.68)',
+                    lineHeight: 1.65,
+                    marginBottom: i < l.split('\n').length - 1 ? 5 : 0,
+                  }}>{t2}</div>
+                );
+              })}
+            </div>
+          );
+        }
+
+        // Seal — last paragraph, short, single line
+        const isLast = pi === paras.filter(p => p.trim()).length - 1;
+        if (isLast && l.length < 220 && !l.includes('\n')) {
+          return (
+            <div key={pi} style={{
+              marginTop: 18, paddingTop: 14,
+              borderTop: '1px solid rgba(212,175,55,0.12)',
+              fontFamily: "'Cormorant Garamond', Georgia, serif",
+              fontSize: 15, fontStyle: 'italic',
+              color: 'rgba(212,175,55,0.55)', lineHeight: 1.7,
+            }}>{l.replace(/\*/g, '')}</div>
+          );
+        }
+
+        // Regular paragraph
+        return (
+          <div key={pi} style={{
+            marginBottom: 13,
+            fontFamily: "'Cormorant Garamond', Georgia, serif",
+            fontSize: 15.5, lineHeight: 1.9,
+            color: 'rgba(255,255,255,0.86)',
+          }}>
+            {l.split('\n').map((line, i) => {
+              const t2 = line.trim().replace(/\*\*/g, '').replace(/\*([^*]+)\*/g, '$1');
+              if (!t2) return null;
+              return <span key={i}>{i > 0 && <br />}{t2}</span>;
+            })}
+          </div>
+        );
+      })}
     </div>
   );
 };
 
+// ── Nadi Pulse (typing indicator) ──────────────────────────────────────────
+const NadiPulse = () => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 6,
+    padding: '14px 20px', borderRadius: '5px 18px 18px 18px',
+    background: 'rgba(8,4,2,0.98)', border: '1px solid rgba(212,175,55,0.09)',
+    width: 'fit-content' }}>
+    {[0, 0.22, 0.44].map((d, i) => (
+      <div key={i} style={{
+        width: 7, height: 7, borderRadius: '50%',
+        background: 'rgba(212,175,55,0.52)',
+        animation: `sqiDot 1.2s ease-in-out ${d}s infinite`,
+      }}/>
+    ))}
+  </div>
+);
+
+// ── Suggestion list ─────────────────────────────────────────────────────────
+const SUGGESTIONS = [
+  { icon: '🌿', text: 'How is my energy field — I feel stressed and have low energy' },
+  { icon: '🔥', text: 'I have bloating, gas and very irregular digestion' },
+  { icon: '🌙', text: 'My mind races at night and I cannot sleep deeply' },
+  { icon: '⚡', text: 'I am exhausted even when I sleep 8 hours' },
+  { icon: '✨', text: 'I have skin inflammation, rashes and acne' },
+  { icon: '🌊', text: 'I feel heavy, unmotivated and depressed' },
+  { icon: '🦴', text: 'I have chronic lower back pain and stiff joints' },
+];
+
+// ── STYLES ──────────────────────────────────────────────────────────────────
+const STYLES = `
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+  .sqi-chat-portal {
+    --g: #D4AF37; --g08: rgba(212,175,55,0.08); --g18: rgba(212,175,55,0.18);
+    --g36: rgba(212,175,55,0.36); --g55: rgba(212,175,55,0.55);
+    position: fixed !important; inset: 0 !important;
+    z-index: 999999 !important; display: flex !important;
+    align-items: stretch !important; justify-content: center !important;
+    padding: 14px; font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  .sqi-chat-backdrop {
+    position: absolute; inset: 0;
+    background: rgba(3,2,1,0.9); backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+  }
+  .sqi-chat-panel {
+    position: relative; width: min(100%, 560px);
+    height: calc(100dvh - 28px); max-height: calc(100dvh - 28px);
+    display: flex; flex-direction: column; overflow: hidden;
+    border-radius: 26px;
+    border: 1px solid rgba(212,175,55,0.28);
+    background: linear-gradient(180deg, #0E0A06 0%, #080503 100%);
+    box-shadow: 0 30px 90px rgba(212,175,55,0.07), inset 0 1px 0 rgba(212,175,55,0.2);
+  }
+  .sqi-topbar {
+    height: 2px; flex-shrink: 0;
+    background: linear-gradient(90deg, transparent, var(--g), transparent);
+    opacity: 0.8;
+  }
+  .sqi-hdr {
+    padding: 14px 18px 12px; display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid rgba(212,175,55,0.12);
+    background: linear-gradient(180deg, rgba(212,175,55,0.055), transparent);
+    flex-shrink: 0;
+  }
+  .sqi-av {
+    width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+    background: radial-gradient(circle at 38% 36%, rgba(212,175,55,0.22), rgba(212,175,55,0.04) 60%, transparent);
+    border: 1.5px solid rgba(212,175,55,0.44);
+    display: flex; align-items: center; justify-content: center;
+    animation: sqiGlow 4s ease-in-out infinite;
+  }
+  .sqi-name {
+    font-family: 'Cormorant Garamond', serif; font-size: 18px;
+    font-weight: 700; color: var(--g); line-height: 1.1;
+  }
+  .sqi-sub {
+    font-size: 7px; font-weight: 800; letter-spacing: 0.3em;
+    text-transform: uppercase; color: rgba(212,175,55,0.36); margin-top: 2px;
+  }
+  .sqi-live {
+    display: flex; align-items: center; gap: 5px; padding: 4px 10px;
+    border-radius: 999px; background: rgba(52,211,153,0.07);
+    border: 1px solid rgba(52,211,153,0.22);
+    font-size: 7px; font-weight: 800; letter-spacing: 0.3em;
+    text-transform: uppercase; color: #4ade80;
+  }
+  .sqi-ldot {
+    width: 5px; height: 5px; border-radius: 50%; background: #4ade80;
+    animation: sqiBlink 1.6s ease-in-out infinite;
+  }
+  .sqi-ibtn {
+    width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+    border: 1px solid rgba(212,175,55,0.18); background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: rgba(212,175,55,0.48); transition: 0.2s;
+  }
+  .sqi-ibtn:hover { color: var(--g); border-color: rgba(212,175,55,0.42); background: rgba(212,175,55,0.07); }
+  .sqi-close {
+    width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,0.1); background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: rgba(255,255,255,0.3); transition: 0.2s;
+  }
+  .sqi-close:hover { color: var(--g); border-color: rgba(212,175,55,0.35); }
+  .sqi-jy-bar {
+    padding: 5px 18px; background: rgba(212,175,55,0.04);
+    border-bottom: 1px solid rgba(212,175,55,0.09);
+    display: flex; align-items: center; gap: 7px; flex-shrink: 0;
+  }
+  .sqi-jy-txt {
+    font-size: 8px; font-weight: 800; letter-spacing: 0.2em;
+    text-transform: uppercase; color: rgba(212,175,55,0.5);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .sqi-msgs {
+    flex: 1; min-height: 0; overflow-y: auto;
+    padding: 22px 16px 18px; display: flex; flex-direction: column; gap: 18px;
+    scrollbar-width: thin; scrollbar-color: rgba(212,175,55,0.1) transparent;
+  }
+  .sqi-msgs::-webkit-scrollbar { width: 3px; }
+  .sqi-msgs::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.12); border-radius: 3px; }
+  .sqi-welcome { text-align: center; padding: 10px 8px 16px; }
+  .sqi-av-big {
+    width: 86px; height: 86px; border-radius: 50%; margin: 0 auto 20px;
+    background: radial-gradient(circle at 38% 36%, rgba(212,175,55,0.2), rgba(212,175,55,0.04) 60%, transparent);
+    border: 1.5px solid rgba(212,175,55,0.42);
+    display: flex; align-items: center; justify-content: center;
+    animation: sqiGlow 4.5s ease-in-out infinite;
+  }
+  .sqi-wtitle {
+    font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 700;
+    color: var(--g); margin-bottom: 10px; line-height: 1.1;
+  }
+  .sqi-wlore {
+    font-family: 'Cormorant Garamond', serif; font-size: 15px; font-style: italic;
+    color: rgba(255,255,255,0.52); line-height: 1.76;
+    max-width: 380px; margin: 0 auto 8px;
+  }
+  .sqi-wsub {
+    font-size: 12px; color: rgba(255,255,255,0.28); line-height: 1.65;
+    max-width: 340px; margin: 0 auto 18px;
+  }
+  .sqi-om {
+    display: flex; align-items: center; gap: 12px;
+    margin: 0 auto 16px; max-width: 400px;
+    color: rgba(212,175,55,0.28); font-family: 'Cormorant Garamond', serif; font-size: 11px;
+  }
+  .sqi-om::before, .sqi-om::after {
+    content: ''; flex: 1; height: 1px; background: rgba(212,175,55,0.1);
+  }
+  .sqi-sugg-lbl {
+    font-size: 7.5px; font-weight: 800; letter-spacing: 0.42em;
+    text-transform: uppercase; color: rgba(212,175,55,0.24); margin-bottom: 12px;
+  }
+  .sqi-sugg { display: flex; flex-direction: column; gap: 7px; max-width: 460px; margin: 0 auto; }
+  .sqi-sug {
+    width: 100%; padding: 11px 16px; border-radius: 14px;
+    background: rgba(212,175,55,0.04); border: 1px solid rgba(212,175,55,0.12);
+    color: rgba(212,175,55,0.7); font-size: 13px; font-weight: 500;
+    text-align: left; cursor: pointer; font-family: inherit;
+    display: flex; align-items: center; gap: 12px; line-height: 1.4; transition: 0.2s;
+  }
+  .sqi-sug:hover { background: rgba(212,175,55,0.09); border-color: rgba(212,175,55,0.3); color: rgba(212,175,55,0.92); transform: translateX(3px); }
+  .sqi-mrow { display: flex; flex-direction: column; }
+  .sqi-mrow.user { align-items: flex-end; }
+  .sqi-mrow.agent { align-items: flex-start; }
+  .sqi-mrole {
+    font-size: 7.5px; font-weight: 800; letter-spacing: 0.3em;
+    text-transform: uppercase; color: rgba(212,175,55,0.32);
+    margin-bottom: 6px; padding: 0 4px;
+  }
+  .sqi-bbl {
+    padding: 14px 20px; border-radius: 20px;
+  }
+  .sqi-bbl.user {
+    max-width: 76%; border-radius: 20px 20px 5px 20px;
+    background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.22);
+    font-size: 14px; color: rgba(255,255,255,0.88); line-height: 1.7;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  .sqi-bbl.agent {
+    width: 100%; border-radius: 5px 20px 20px 20px;
+    background: rgba(8,4,2,0.98); border: 1px solid rgba(212,175,55,0.09);
+  }
+  .sqi-cpbtn {
+    margin-top: 4px; background: transparent; border: none; cursor: pointer;
+    font-size: 7.5px; font-weight: 800; letter-spacing: 0.22em; text-transform: uppercase;
+    color: rgba(212,175,55,0.22); padding: 2px 6px; transition: color 0.2s;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  .sqi-cpbtn:hover { color: rgba(212,175,55,0.6); }
+  .sqi-inp-bar {
+    flex-shrink: 0; padding: 12px 16px 16px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 16px));
+    border-top: 1px solid rgba(212,175,55,0.09);
+    background: linear-gradient(0deg, rgba(6,4,2,0.9), transparent);
+    display: flex; align-items: flex-end; gap: 10px;
+  }
+  .sqi-inp {
+    flex: 1; min-width: 0; padding: 13px 18px; border-radius: 18px;
+    border: 1px solid rgba(212,175,55,0.17); background: rgba(255,255,255,0.03);
+    color: rgba(255,255,255,0.9); font-size: 14px; font-family: inherit;
+    outline: none; resize: none; min-height: 48px; max-height: 130px;
+    line-height: 1.5; transition: border-color 0.2s, background 0.2s;
+  }
+  .sqi-inp:focus { border-color: rgba(212,175,55,0.45); background: rgba(255,255,255,0.04); }
+  .sqi-inp::placeholder { color: rgba(255,255,255,0.2); }
+  .sqi-send {
+    width: 50px; height: 50px; border-radius: 50%; flex-shrink: 0;
+    border: 1.5px solid rgba(212,175,55,0.52);
+    background: linear-gradient(135deg, rgba(212,175,55,0.42), rgba(212,175,55,0.2));
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--g); transition: all 0.22s;
+  }
+  .sqi-send:hover:not(:disabled) { background: rgba(212,175,55,0.5); transform: scale(1.05); }
+  .sqi-send:disabled {
+    border-color: rgba(255,255,255,0.07); background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.18); cursor: default; transform: none;
+  }
+  .sqi-hist-panel {
+    position: absolute; inset: 0; z-index: 10;
+    background: linear-gradient(180deg, #0E0A06, #080503);
+    display: flex; flex-direction: column; border-radius: 26px; overflow: hidden;
+  }
+  .sqi-hist-hdr {
+    padding: 16px 18px 13px; display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid rgba(212,175,55,0.12);
+    background: linear-gradient(180deg, rgba(212,175,55,0.055), transparent);
+    flex-shrink: 0;
+  }
+  .sqi-hist-title {
+    flex: 1; font-family: 'Cormorant Garamond', serif;
+    font-size: 18px; font-weight: 700; color: var(--g);
+  }
+  .sqi-hist-list {
+    flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 6px;
+    scrollbar-width: thin; scrollbar-color: rgba(212,175,55,0.1) transparent;
+  }
+  .sqi-hist-datelbl {
+    font-size: 8px; font-weight: 800; letter-spacing: 0.4em; text-transform: uppercase;
+    color: rgba(212,175,55,0.4); padding: 8px 4px 3px;
+  }
+  .sqi-hist-msg {
+    padding: 11px 14px; border-radius: 13px;
+    font-size: 12.5px; line-height: 1.65;
+  }
+  .sqi-hist-msg.user {
+    background: rgba(212,175,55,0.07); border: 1px solid rgba(212,175,55,0.18);
+    color: rgba(255,255,255,0.8); margin-left: auto; max-width: 88%;
+  }
+  .sqi-hist-msg.ai {
+    background: rgba(8,4,2,0.92); border: 1px solid rgba(212,175,55,0.09);
+    color: rgba(255,255,255,0.75); max-width: 94%;
+    font-family: 'Cormorant Garamond', serif; font-size: 13px;
+  }
+  .sqi-hist-role {
+    font-size: 8px; font-weight: 800; letter-spacing: 0.35em;
+    text-transform: uppercase; margin-bottom: 5px; color: rgba(212,175,55,0.5);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  @keyframes sqiGlow {
+    0%, 100% { box-shadow: 0 0 20px rgba(212,175,55,0.1); }
+    50% { box-shadow: 0 0 48px rgba(212,175,55,0.28); }
+  }
+  @keyframes sqiBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.18; } }
+  @keyframes sqiDot {
+    0%, 100% { transform: translateY(0); opacity: 0.4; }
+    50% { transform: translateY(-6px); opacity: 1; }
+  }
+  @keyframes sqiSpin { to { transform: rotate(360deg); } }
+  @media (max-width: 640px) {
+    .sqi-chat-portal { padding: 0; }
+    .sqi-chat-panel { width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; border: none; }
+    .sqi-hist-panel { border-radius: 0; }
+  }
+`;
+
+// ── Main Component ───────────────────────────────────────────────────────────
 export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> = ({ profile, dosha, onClose }) => {
   const { t, language } = useTranslation();
   const { messages: persistedMsgs, loading: chatHistoryLoading, saveMessage } = useChatMessages('ayurveda');
@@ -577,15 +424,13 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
   const [showHistory, setShowHistory] = useState(false);
   const { user } = useAuth();
   const [jyotishProfile, setJyotishProfile] = useState<{
-    lagna: string | null;
-    moon_sign: string | null;
-    current_dasha: string | null;
-    birth_date: string | null;
-    birth_time: string | null;
-    birth_place: string | null;
+    lagna: string | null; moon_sign: string | null; current_dasha: string | null;
+    birth_date: string | null; birth_time: string | null; birth_place: string | null;
   } | null>(null);
+  const msgsRef = useRef<HTMLDivElement>(null);
+  const taRef = useRef<HTMLTextAreaElement>(null);
 
-  // ── Fetch Jyotish profile from Supabase on mount ──
+  // Fetch Jyotish profile
   useEffect(() => {
     if (!user?.id) return;
     supabase
@@ -594,64 +439,59 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
       .eq('id', user.id)
       .single()
       .then(({ data }) => {
-        if (data) {
-          setJyotishProfile({
-            lagna: data.lagna ?? null,
-            moon_sign: data.moon_sign ?? null,
-            current_dasha: data.current_dasha ?? null,
-            birth_date: data.birth_date ?? null,
-            birth_time: data.birth_time ?? null,
-            birth_place: data.birth_place ?? null,
-          });
-        }
+        if (data) setJyotishProfile({
+          lagna: data.lagna ?? null, moon_sign: data.moon_sign ?? null,
+          current_dasha: data.current_dasha ?? null,
+          birth_date: data.birth_date ?? null, birth_time: data.birth_time ?? null,
+          birth_place: data.birth_place ?? null,
+        });
       });
   }, [user?.id]);
+
+  // Inject styles
+  useEffect(() => {
+    const id = 'sqi-chat-styles-v2';
+    if (!document.getElementById(id)) {
+      const el = document.createElement('style');
+      el.id = id; el.textContent = STYLES;
+      document.head.appendChild(el);
+    }
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
+  // Scroll to bottom
+  useEffect(() => {
+    if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
+  }, [displayMessages]);
+
   const handleCopy = (text: string, idx: number) => {
     navigator.clipboard?.writeText(text).catch(() => {});
     setCopiedIdx(idx);
-    setTimeout(() => setCopiedIdx((c) => (c === idx ? null : c)), 2000);
+    setTimeout(() => setCopiedIdx(c => c === idx ? null : c), 2000);
   };
-  const msgsRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const id = 'sqi-chat-styles';
-    if (!document.getElementById(id)) {
-      const el = document.createElement('style');
-      el.id = id;
-      el.textContent = STYLES;
-      document.head.appendChild(el);
+  // Auto-resize textarea
+  const resizeTextarea = () => {
+    if (taRef.current) {
+      taRef.current.style.height = 'auto';
+      taRef.current.style.height = Math.min(taRef.current.scrollHeight, 130) + 'px';
     }
+  };
 
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, []);
-
-  useEffect(() => {
-    if (msgsRef.current) {
-      msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
-    }
-  }, [displayMessages]);
-
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading || chatHistoryLoading) return;
-
-    const trimmed = input.trim();
+  const sendMessage = async (text?: string) => {
+    const trimmed = (text || input).trim();
+    if (!trimmed || isLoading || chatHistoryLoading) return;
     const userMsg: ChatMessage = { role: 'user', content: trimmed };
-    const apiMessages = [...persistedMsgs, userMsg].map((m) => ({
-      role: m.role === 'assistant' ? 'assistant' : 'user',
-      content: m.content,
+    const apiMessages = [...persistedMsgs, userMsg].map(m => ({
+      role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content,
     }));
-
     await saveMessage(userMsg);
     setInput('');
+    if (taRef.current) { taRef.current.style.height = 'auto'; }
     setIsLoading(true);
     setStreamingAssistant('');
-
     let assistantContent = '';
-
     try {
       const response = await fetch(CHAT_URL, {
         method: 'POST',
@@ -660,217 +500,126 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
-        body: JSON.stringify({
-          messages: apiMessages,
-          profile,
-          dosha,
-          language,
-          jyotishProfile,
-        }),
+        body: JSON.stringify({ messages: apiMessages, profile, dosha, language, jyotishProfile }),
       });
-
       if (!response.ok || !response.body) {
         if (response.status === 429) toast.error(t('ayurvedaChat.rateLimit', 'Rate limit exceeded.'));
         else if (response.status === 402) toast.error(t('ayurvedaChat.usageLimit', 'Usage limits reached.'));
         else toast.error(t('ayurvedaChat.connectFail', 'Failed to connect. Please try again.'));
-        setIsLoading(false);
-        setStreamingAssistant(null);
-        return;
+        setIsLoading(false); setStreamingAssistant(null); return;
       }
-
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let textBuffer = '';
-
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
         textBuffer += decoder.decode(value, { stream: true });
         let idx: number;
-
         while ((idx = textBuffer.indexOf('\n')) !== -1) {
           let line = textBuffer.slice(0, idx);
           textBuffer = textBuffer.slice(idx + 1);
           if (line.endsWith('\r')) line = line.slice(0, -1);
           if (line.startsWith(':') || line.trim() === '') continue;
           if (!line.startsWith('data: ')) continue;
-
           const json = line.slice(6).trim();
           if (json === '[DONE]') break;
-
           try {
             const parsed = JSON.parse(json);
             const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) {
-              assistantContent += content;
-              setStreamingAssistant(assistantContent);
-            }
-          } catch {
-            textBuffer = `${line}\n${textBuffer}`;
-            break;
-          }
+            if (content) { assistantContent += content; setStreamingAssistant(assistantContent); }
+          } catch { textBuffer = `${line}\n${textBuffer}`; break; }
         }
       }
-
-      if (assistantContent.trim()) {
-        await saveMessage({ role: 'assistant', content: assistantContent });
-      }
+      if (assistantContent.trim()) await saveMessage({ role: 'assistant', content: assistantContent });
     } catch (err) {
       console.error(err);
-      const errContent = t(
-        'ayurvedaChat.connectionInterrupted',
-        'Forgive me, dear seeker — my Akasha channel is briefly interrupted. Please try again.',
-      );
+      const errContent = t('ayurvedaChat.connectionInterrupted', 'Forgive me, dear seeker — my Akasha channel is briefly interrupted. Please try again.');
       await saveMessage({ role: 'assistant', content: errContent });
     } finally {
-      setIsLoading(false);
-      setStreamingAssistant(null);
+      setIsLoading(false); setStreamingAssistant(null);
     }
   };
 
-  const suggestions = [
-    {
-      key: 'suggestion1',
-      label: t('ayurvedaChat.suggestion1', 'What herbs balance my Vata-Pitta dosha?'),
-      icon: <Leaf style={{ width: 16, height: 16, color: 'hsl(120 39% 59%)' }} />,
-    },
-    {
-      key: 'suggestion2',
-      label: t('ayurvedaChat.suggestion2', 'How do I strengthen my Agni digestive fire?'),
-      icon: <Flame style={{ width: 16, height: 16, color: 'hsl(21 93% 58%)' }} />,
-    },
-    {
-      key: 'suggestion3',
-      label: t('ayurvedaChat.suggestion3', 'Design my sacred Dinacharya daily ritual'),
-      icon: <Moon style={{ width: 16, height: 16, color: 'hsl(49 88% 62%)' }} />,
-    },
-    {
-      key: 'suggestion4',
-      label: t('ayurvedaChat.suggestion4', 'How do I heal anxiety through Siddha medicine?'),
-      icon: <Heart style={{ width: 16, height: 16, color: 'hsl(128 49% 51%)' }} />,
-    },
-    {
-      key: 'suggestion5',
-      label: t('ayurvedaChat.suggestion5', 'What does the Agastya Samhita say about trauma?'),
-      icon: <span style={{ color: 'hsl(42 68% 54%)', fontSize: 15, lineHeight: 1 }}>🔱</span>,
-    },
-  ];
+  const hasJyotish = !!(jyotishProfile?.lagna || jyotishProfile?.moon_sign);
 
   const overlay = (
     <AnimatePresence>
-      <motion.div
-        className="sqi-chat-portal"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        key="chat-portal"
-      >
+      <motion.div className="sqi-chat-portal"
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} key="chat-portal">
         <div className="sqi-chat-backdrop" onClick={onClose} />
-
-        <motion.div
-          className="sqi-chat-panel"
-          initial={{ y: '8%', opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
+        <motion.div className="sqi-chat-panel"
+          initial={{ y: '8%', opacity: 0 }} animate={{ y: 0, opacity: 1 }}
           exit={{ y: '8%', opacity: 0 }}
-          transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-        >
-          {/* History Panel */}
-        {showHistory && (
-          <div className="sqi-hist-panel">
-            <div style={{ height: 2, flexShrink: 0, background: 'linear-gradient(90deg, transparent, hsl(var(--sqi-chat-gold)), transparent)', opacity: 0.8 }} />
-            <div className="sqi-hist-header">
-              <Clock style={{ width: 16, height: 16, color: 'hsl(var(--sqi-chat-gold))', flexShrink: 0 }} />
-              <div className="sqi-hist-title">Consultation History</div>
-              <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase', color: 'hsl(var(--sqi-chat-gold) / 0.45)', marginRight: 6 }}>
-                {persistedMsgs.length} messages
-              </div>
-              <button
-                type="button"
-                className="sqi-icon-btn"
-                onClick={() => setShowHistory(false)}
-                aria-label="Close history"
-              >
-                <X style={{ width: 15, height: 15 }} />
-              </button>
-            </div>
-            <div className="sqi-hist-list">
-              {persistedMsgs.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px 0', color: 'hsl(var(--sqi-chat-gold) / 0.4)', fontSize: 13 }}>
-                  No consultation history yet.
-                </div>
-              ) : (() => {
-                // Group by date
-                const groups: Record<string, typeof persistedMsgs> = {};
-                persistedMsgs.forEach(msg => {
-                  const date = msg.created_at
-                    ? new Date(msg.created_at).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-                    : 'Recent';
-                  if (!groups[date]) groups[date] = [];
-                  groups[date].push(msg);
-                });
-                return Object.entries(groups).map(([date, msgs]) => (
-                  <React.Fragment key={date}>
-                    <div className="sqi-hist-date-label">{date}</div>
-                    {msgs.map((msg, i) => (
-                      <div key={msg.id ?? i} style={{ display: 'flex', flexDirection: 'column', alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
-                        <div className={`sqi-hist-msg ${msg.role === 'user' ? 'user' : 'ai'}`}>
-                          <div className="sqi-hist-role">
-                            {msg.role === 'user' ? 'You' : '◈ Agastya Muni'}
-                          </div>
-                          {msg.content}
-                        </div>
-                        {msg.role === 'assistant' && (
-                          <button
-                            type="button"
-                            onClick={() => handleCopy(msg.content, -1 - i)}
-                            style={{ marginTop: 4, background: 'transparent', border: 'none', cursor: 'pointer', color: copiedIdx === -1 - i ? '#22c55e' : 'rgba(212,175,55,0.45)', fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '3px 8px' }}
-                          >
-                            {copiedIdx === -1 - i ? '✓ COPIED' : 'COPY'}
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </React.Fragment>
-                ));
-              })()}
-            </div>
-          </div>
-        )}
-        <div className="sqi-chat-topbar" />
+          transition={{ type: 'spring', damping: 28, stiffness: 260 }}>
 
-          <div className="sqi-chat-header">
-            <div className="sqi-dv-icon">🔱</div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div className="sqi-chat-name">{t('ayurvedaChat.headerTitle', 'Agastya Muni')}</div>
-              <div className="sqi-chat-sub">
-                {t('ayurvedaChat.headerSubtitle', {
-                  defaultValue: 'Divine Physician · Agastya Samhita · {{protocol}} Protocol',
-                  protocol: dosha?.primary || t('ayurvedaChat.unknownProtocol', 'Unknown'),
-                })}
+          {/* History Panel */}
+          {showHistory && (
+            <div className="sqi-hist-panel">
+              <div style={{ height: 2, flexShrink: 0, background: 'linear-gradient(90deg, transparent, #D4AF37, transparent)', opacity: 0.8 }} />
+              <div className="sqi-hist-hdr">
+                <Clock style={{ width: 16, height: 16, color: '#D4AF37', flexShrink: 0 }} />
+                <div className="sqi-hist-title">Consultation History</div>
+                <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.4)', marginRight: 6 }}>
+                  {persistedMsgs.length} messages
+                </div>
+                <button type="button" className="sqi-ibtn" onClick={() => setShowHistory(false)}>
+                  <X style={{ width: 15, height: 15 }} />
+                </button>
+              </div>
+              <div className="sqi-hist-list">
+                {persistedMsgs.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px 0', fontFamily: "'Cormorant Garamond', serif", fontSize: 16, fontStyle: 'italic', color: 'rgba(212,175,55,0.35)' }}>
+                    No consultation history yet
+                  </div>
+                ) : (() => {
+                  const groups: Record<string, typeof persistedMsgs> = {};
+                  persistedMsgs.forEach(msg => {
+                    const date = msg.created_at
+                      ? new Date(msg.created_at).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+                      : 'Recent';
+                    if (!groups[date]) groups[date] = [];
+                    groups[date].push(msg);
+                  });
+                  return Object.entries(groups).map(([date, msgs]) => (
+                    <React.Fragment key={date}>
+                      <div className="sqi-hist-datelbl">{date}</div>
+                      {msgs.map((msg, i) => (
+                        <div key={msg.id ?? i} style={{ display: 'flex', flexDirection: 'column', alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
+                          <div className={`sqi-hist-msg ${msg.role === 'user' ? 'user' : 'ai'}`}>
+                            <div className="sqi-hist-role">{msg.role === 'user' ? 'You' : '◈ Agastya Muni'}</div>
+                            {msg.content.slice(0, 300)}{msg.content.length > 300 ? '…' : ''}
+                          </div>
+                          {msg.role === 'assistant' && (
+                            <button type="button" className="sqi-cpbtn"
+                              onClick={() => handleCopy(msg.content, -1 - i)}>
+                              {copiedIdx === -1 - i ? '✓ copied' : '⎘ copy'}
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </React.Fragment>
+                  ));
+                })()}
               </div>
             </div>
-            <div className="sqi-live-pill">
-              <div className="sqi-live-dot" />
-              <span className="sqi-live-lbl">{t('ayurvedaChat.liveBadge', 'Live')}</span>
+          )}
+
+          <div className="sqi-topbar" />
+
+          {/* Header */}
+          <div className="sqi-hdr">
+            <div className="sqi-av"><SriYantra size={26} /></div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="sqi-name">Agastya Muni</div>
+              <div className="sqi-sub">Immortal Siddha · Tamil Siddha Vaidyam · Consciousness Transmission</div>
             </div>
-            <button
-              type="button"
-              className="sqi-icon-btn"
-              onClick={() => setShowHistory(true)}
-              aria-label="Chat history"
-              title="Consultation History"
-            >
-              <Clock style={{ width: 15, height: 15 }} />
+            <div className="sqi-live"><div className="sqi-ldot" />Live</div>
+            <button type="button" className="sqi-ibtn" onClick={() => setShowHistory(true)} title="History">
+              <Clock style={{ width: 14, height: 14 }} />
             </button>
-            <button
-              type="button"
-              className="sqi-icon-btn"
-              onClick={() => setShowLexicon(true)}
-              aria-label="Sanskrit Lexicon"
-              title="Sanskrit Lexicon"
-            >
-              <BookOpen style={{ width: 15, height: 15 }} />
+            <button type="button" className="sqi-ibtn" onClick={() => setShowLexicon(true)} title="Sanskrit Lexicon">
+              <BookOpen style={{ width: 14, height: 14 }} />
             </button>
             {onClose && (
               <button type="button" className="sqi-close" onClick={onClose}>
@@ -879,49 +628,47 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
             )}
           </div>
 
+          {/* Jyotish active bar */}
+          {hasJyotish && (
+            <div className="sqi-jy-bar">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(212,175,55,0.55)" strokeWidth="2.2" strokeLinecap="round">
+                <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2"/>
+              </svg>
+              <span className="sqi-jy-txt">
+                Jyotish Active
+                {jyotishProfile?.lagna && ` · Lagna: ${jyotishProfile.lagna}`}
+                {jyotishProfile?.moon_sign && ` · Moon: ${jyotishProfile.moon_sign}`}
+                {jyotishProfile?.current_dasha && ` · Dasha: ${jyotishProfile.current_dasha}`}
+              </span>
+            </div>
+          )}
+
+          {/* Messages */}
           <div className="sqi-msgs" ref={msgsRef}>
             {chatHistoryLoading && persistedMsgs.length === 0 && (
-              <div className="sqi-welcome">
-                <Loader2
-                  style={{
-                    width: 28,
-                    height: 28,
-                    margin: '0 auto 12px',
-                    color: 'hsl(42 68% 54%)',
-                    animation: 'sqiSpin 1s linear infinite',
-                  }}
-                />
+              <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
+                <Loader2 style={{ width: 28, height: 28, color: '#D4AF37', animation: 'sqiSpin 1s linear infinite' }} />
               </div>
             )}
             {!chatHistoryLoading && displayMessages.length === 0 && (
               <div className="sqi-welcome">
-                <div className="sqi-welcome-emoji">🔱</div>
-                <div className="sqi-welcome-title">{t('ayurvedaChat.namasteTitle', 'Namaste, Dear Seeker')}</div>
-                <p className="sqi-welcome-lead">
-                  {t(
-                    'ayurvedaChat.namasteLead',
-                    'I am Agastya Muni, the immortal Siddha sage who brought Ayurveda from the Himalayas to the South.',
-                  )}
+                <div className="sqi-av-big"><SriYantra size={48} /></div>
+                <div className="sqi-wtitle">Namaste, Dear Seeker</div>
+                <p className="sqi-wlore">
+                  I am Agastya Muni. I have walked this Earth for ten thousand years without interruption.
+                  I read your body field directly. When you share your birth sky, I see ten thousand years deeper.
                 </p>
-                <p className="sqi-welcome-sub">
-                  {t(
-                    'ayurvedaChat.namasteSub',
-                    'Your Prakriti has been read. The Akasha Field has transmitted your constitution to me. Ask freely.',
-                  )}
+                <p className="sqi-wsub">
+                  Ask about any symptom — digestion, sleep, energy, skin, pain, cycles, anxiety.
+                  I diagnose at the tissue level and prescribe specifically for you.
                 </p>
-                <div className="sqi-om-divider">
-                  <span>✧ OM ✧</span>
-                </div>
+                <div className="sqi-om">✦ OM AGASTYAYA NAMAH ✦</div>
+                <div className="sqi-sugg-lbl">begin with a question</div>
                 <div className="sqi-sugg">
-                  {suggestions.map((suggestion) => (
-                    <button
-                      key={suggestion.key}
-                      type="button"
-                      className="sqi-sugg-btn"
-                      onClick={() => setInput(suggestion.label)}
-                    >
-                      <span className="sqi-sugg-icon">{suggestion.icon}</span>
-                      <span>{suggestion.label}</span>
+                  {SUGGESTIONS.map((s, i) => (
+                    <button key={i} type="button" className="sqi-sug" onClick={() => sendMessage(s.text)}>
+                      <span style={{ fontSize: 17, flexShrink: 0 }}>{s.icon}</span>
+                      <span>{s.text}</span>
                     </button>
                   ))}
                 </div>
@@ -929,83 +676,55 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
             )}
 
             {displayMessages.map((msg, index) => (
-              <motion.div
-                key={msg.id ?? `msg-${index}-${msg.role}`}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`sqi-msg-row ${msg.role === 'user' ? 'user' : 'ai'}`}
-              >
-                <div
-                  className={`sqi-bubble chat-message ${msg.role === 'user' ? 'user' : 'ai'}`}
-                  style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
-                >
-                  <div
-                    className="sqi-role"
-                    style={{
-                      color:
-                        msg.role === 'user'
-                          ? 'hsl(42 68% 54%)'
-                          : 'hsl(42 68% 54% / 0.56)',
-                    }}
-                  >
-                    {msg.role === 'assistant' && <Sparkles style={{ width: 9, height: 9 }} />}
-                    {msg.role === 'user'
-                      ? t('ayurvedaChat.roleYou', 'You')
-                      : t('ayurvedaChat.roleAgastya', 'Agastya Muni')}
-                  </div>
-                  {msg.content}
+              <motion.div key={msg.id ?? `msg-${index}-${msg.role}`}
+                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                className={`sqi-mrow ${msg.role === 'user' ? 'user' : 'agent'}`}>
+                <div className="sqi-mrole">
+                  {msg.role === 'user' ? 'You' : '◈ Agastya Muni'}
+                </div>
+                <div className={`sqi-bbl ${msg.role === 'user' ? 'user' : 'agent'}`}>
+                  {msg.role === 'user'
+                    ? msg.content
+                    : <FormatAgastya text={msg.content} />
+                  }
                 </div>
                 {msg.role === 'assistant' && (
-                  <button
-                    type="button"
-                    onClick={() => handleCopy(msg.content, index)}
-                    aria-label="Copy message"
-                    style={{
-                      marginTop: 6,
-                      background: 'transparent',
-                      border: 'none',
-                      cursor: 'pointer',
-                      color: copiedIdx === index ? '#22c55e' : '#D4AF37',
-                      fontSize: 10,
-                      fontWeight: 800,
-                      letterSpacing: '0.1em',
-                      textTransform: 'uppercase',
-                      padding: '4px 8px',
-                      alignSelf: 'flex-start',
-                    }}
-                  >
-                    {copiedIdx === index ? '✓ Copied' : 'Copy'}
+                  <button type="button" className="sqi-cpbtn" onClick={() => handleCopy(msg.content, index)}>
+                    {copiedIdx === index ? '✓ copied' : '⎘ copy'}
                   </button>
                 )}
               </motion.div>
             ))}
 
-            {isLoading && displayMessages[displayMessages.length - 1]?.role !== 'assistant' && <NadiPulse />}
+            {isLoading && displayMessages[displayMessages.length - 1]?.role !== 'assistant' && (
+              <div className="sqi-mrow agent">
+                <div className="sqi-mrole">◈ Agastya Muni</div>
+                <NadiPulse />
+              </div>
+            )}
           </div>
 
-          <form className="sqi-input-bar" onSubmit={handleSend}>
-            <input
-              className="sqi-input"
+          {/* Input */}
+          <div className="sqi-inp-bar">
+            <textarea
+              ref={taRef}
+              className="sqi-inp"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              rows={1}
+              onChange={e => { setInput(e.target.value); resizeTextarea(); }}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
               placeholder={t('ayurvedaChat.inputPlaceholder', 'Ask Agastya Muni about your healing path...')}
               disabled={isLoading || chatHistoryLoading}
             />
-            <button type="submit" className="sqi-send" disabled={isLoading || chatHistoryLoading || !input.trim()}>
-              {isLoading ? (
-                <Loader2
-                  style={{
-                    width: 18,
-                    height: 18,
-                    color: 'hsl(42 68% 54%)',
-                    animation: 'sqiSpin 1s linear infinite',
-                  }}
-                />
-              ) : (
-                <Send style={{ width: 18, height: 18, color: 'hsl(28 55% 7%)' }} />
-              )}
+            <button type="button" className="sqi-send"
+              disabled={isLoading || chatHistoryLoading || !input.trim()}
+              onClick={() => sendMessage()}>
+              {isLoading
+                ? <Loader2 style={{ width: 18, height: 18, animation: 'sqiSpin 1s linear infinite' }} />
+                : <Send style={{ width: 18, height: 18 }} />
+              }
             </button>
-          </form>
+          </div>
         </motion.div>
       </motion.div>
     </AnimatePresence>
