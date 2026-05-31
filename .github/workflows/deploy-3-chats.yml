@@ -24,39 +24,63 @@ jobs:
           echo "Secrets HTTP $STATUS"
           cat /tmp/resp.json
 
-  deploy:
+  deploy-ayurveda:
+    runs-on: ubuntu-latest
+    needs: set-key
+    timeout-minutes: 15
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Deploy ayurveda-chat
+        run: |
+          supabase functions deploy ayurveda-chat \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt
+          echo "ayurveda-chat deployed OK"
+
+  deploy-bhrigu:
+    runs-on: ubuntu-latest
+    needs: set-key
+    timeout-minutes: 15
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Deploy bhrigu-oracle
+        run: |
+          supabase functions deploy bhrigu-oracle \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt
+          echo "bhrigu-oracle deployed OK"
+
+  deploy-qa-chat:
     runs-on: ubuntu-latest
     needs: set-key
     timeout-minutes: 20
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
-
+      - name: Sparse checkout QA chat only
+        run: |
+          git init
+          git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/sacredhealing/sacredhealing-fa5d6004.git
+          git config core.sparseCheckout true
+          echo "supabase/functions/quantum-apothecary-chat/" >> .git/info/sparse-checkout
+          echo "supabase/functions/_shared/" >> .git/info/sparse-checkout
+          git pull origin main --depth=1
       - uses: supabase/setup-cli@v1
         with:
           version: latest
-
       - name: Deploy quantum-apothecary-chat
         run: |
           supabase functions deploy quantum-apothecary-chat \
             --project-ref fjdzhrdpioxdeyyfogep \
             --no-verify-jwt
-          echo "QA chat deployed"
-
-      - name: Deploy ayurveda-chat
-        run: |
-          supabase functions deploy ayurveda-chat \
-            --project-ref fjdzhrdpioxdeyyfogep \
-            --no-verify-jwt
-          echo "Ayurveda chat deployed"
-
-      - name: Deploy bhrigu-oracle
-        run: |
-          supabase functions deploy bhrigu-oracle \
-            --project-ref fjdzhrdpioxdeyyfogep \
-            --no-verify-jwt
-          echo "Bhrigu oracle deployed"
-
-      - name: Done
-        run: echo "All 3 chats live"
+          echo "quantum-apothecary-chat deployed OK"
