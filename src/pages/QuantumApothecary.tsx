@@ -3291,11 +3291,12 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
       {/* ═══ SCALAR COMPOSER — Telegram-style ═══ */}
       <div
             ref={composerWrapRef}
-            className="sticky bottom-0 z-10 shrink-0"
+            className="relative z-10 shrink-0"
             style={{
               padding: '10px 12px 14px',
               borderTop: '1px solid rgba(212,175,55,0.12)',
               animation: 'bannerAura 4s ease-in-out infinite',
+              marginBottom: 'env(safe-area-inset-bottom, 0px)',
             }}
           >
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
