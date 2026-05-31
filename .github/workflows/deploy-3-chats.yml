@@ -20,7 +20,7 @@ jobs:
             -X POST "https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/secrets" \
             -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
             -H "Content-Type: application/json" \
-            -d '[{"name":"GEMINI_API_KEY","value":"AIzaSyAdDnCIjX7AZqzLGBUYEi5BGZ6fgzA6SS0"}]')
+            -d '[{"name":"GEMINI_API_KEY","value":"${{ secrets.GEMINI_API_KEY }}"}]')
           echo "Secrets HTTP $STATUS"
           cat /tmp/resp.json
 
