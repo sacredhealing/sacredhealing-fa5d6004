@@ -349,7 +349,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { messages = [], profile = {}, dosha = null, language = "en" } = body;
+    const { messages = [], profile = {}, dosha = null, language = "en", jyotishProfile = null } = body;
 
     const authHeader = req.headers.get("Authorization") ?? "";
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -385,6 +385,16 @@ serve(async (req) => {
         if (data?.moon_sign) birth.moon_sign = data.moon_sign;
         if (data?.current_dasha) birth.dasha = data.current_dasha;
       } catch { /* non-fatal */ }
+
+    // Frontend jyotishProfile overrides DB values (always most current)
+    if (jyotishProfile && typeof jyotishProfile === 'object') {
+      if (jyotishProfile.lagna)         birth.lagna      = String(jyotishProfile.lagna);
+      if (jyotishProfile.moon_sign)     birth.moon_sign  = String(jyotishProfile.moon_sign);
+      if (jyotishProfile.current_dasha) birth.dasha      = String(jyotishProfile.current_dasha);
+      if (jyotishProfile.birth_date)    birth.birth_date = String(jyotishProfile.birth_date);
+      if (jyotishProfile.birth_time)    birth.birth_time = String(jyotishProfile.birth_time);
+      if (jyotishProfile.birth_place)   birth.birth_place = String(jyotishProfile.birth_place);
+    }
 
       // Fetch past consultation timeline for cross-session memory
       try {
