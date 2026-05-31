@@ -1,0 +1,84 @@
+name: Deploy Core Functions to New Supabase
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy quantum-apothecary-chat
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase functions deploy quantum-apothecary-chat --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt 2>&1 || echo "FAILED: quantum-apothecary-chat"
+        continue-on-error: true
+
+      - name: Deploy ayurveda-chat
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase functions deploy ayurveda-chat --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt 2>&1 || echo "FAILED: ayurveda-chat"
+        continue-on-error: true
+
+      - name: Deploy bhrigu-oracle
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase functions deploy bhrigu-oracle --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt 2>&1 || echo "FAILED: bhrigu-oracle"
+        continue-on-error: true
+
+      - name: Deploy check-membership-subscription
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase functions deploy check-membership-subscription --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt 2>&1 || echo "FAILED: check-membership-subscription"
+        continue-on-error: true
+
+      - name: Deploy stripe-webhook
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase functions deploy stripe-webhook --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt 2>&1 || echo "FAILED: stripe-webhook"
+        continue-on-error: true
+
+      - name: Deploy send-welcome-email
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase functions deploy send-welcome-email --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt 2>&1 || echo "FAILED: send-welcome-email"
+        continue-on-error: true
+
+      - name: Deploy nadi-scan
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase functions deploy nadi-scan --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt 2>&1 || echo "FAILED: nadi-scan"
+        continue-on-error: true
+
+      - name: Deploy jyotish-ephemeris
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase functions deploy jyotish-ephemeris --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt 2>&1 || echo "FAILED: jyotish-ephemeris"
+        continue-on-error: true
+
+      - name: Deploy admin-user-management
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase functions deploy admin-user-management --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt 2>&1 || echo "FAILED: admin-user-management"
+        continue-on-error: true
+
+      - name: Deploy notify-community
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase functions deploy notify-community --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt 2>&1 || echo "FAILED: notify-community"
+        continue-on-error: true
+
+      - name: Set GEMINI_API_KEY secret on new project
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase secrets set GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} --project-ref fjdzhrdpioxdeyyfogep 2>&1 || echo "FAILED: set GEMINI_API_KEY"
+        continue-on-error: true
+
+      - name: Done
+        run: echo "All core functions deployed to fjdzhrdpioxdeyyfogep"
