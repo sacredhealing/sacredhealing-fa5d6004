@@ -1,0 +1,57 @@
+name: Fix All 3 Chats - Set Gemini Key + Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/fix-all-3-chats.yml
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROJECT: fjdzhrdpioxdeyyfogep
+      GEMINI_KEY: AIzaSyAdDnCIjX7AZqzLGBUYEi5BGZ6fgzA6SS0
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Set GEMINI_API_KEY secret on Supabase
+        run: |
+          STATUS=$(curl -s -o /tmp/resp.json -w "%{http_code}" \
+            -X POST "https://api.supabase.com/v1/projects/$PROJECT/secrets" \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "[{\"name\":\"GEMINI_API_KEY\",\"value\":\"$GEMINI_KEY\"}]")
+          echo "Secret set status: $STATUS"
+          cat /tmp/resp.json
+
+      - name: Deploy quantum-apothecary-chat
+        run: |
+          supabase functions deploy quantum-apothecary-chat \
+            --project-ref $PROJECT \
+            --no-verify-jwt 2>&1
+          echo "QA exit: $?"
+
+      - name: Deploy bhrigu-oracle
+        run: |
+          supabase functions deploy bhrigu-oracle \
+            --project-ref $PROJECT \
+            --no-verify-jwt 2>&1
+          echo "Bhrigu exit: $?"
+
+      - name: Deploy ayurveda-chat
+        run: |
+          supabase functions deploy ayurveda-chat \
+            --project-ref $PROJECT \
+            --no-verify-jwt 2>&1
+          echo "Ayurveda exit: $?"
+
+      - name: Done
+        run: echo "All 3 chats deployed with fresh Gemini key at $(date)"
