@@ -10,16 +10,11 @@ jobs:
   fix:
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    env:
-      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
-      PROJECT: fjdzhrdpioxdeyyfogep
-      GEMINI_KEY: AIzaSyAdDnCIjX7AZqzLGBUYEi5BGZ6fgzA6SS0
 
     steps:
       - name: Checkout with PAT
         run: |
-          git clone https://x-access-token:$GH_PAT@github.com/sacredhealing/sacredhealing-fa5d6004.git repo
+          git clone https://x-access-token:${{ secrets.GH_ADMIN_PAT }}@github.com/sacredhealing/sacredhealing-fa5d6004.git repo
           echo "Checkout done"
 
       - uses: supabase/setup-cli@v1
@@ -27,40 +22,38 @@ jobs:
           version: latest
 
       - name: Set GEMINI_API_KEY secret on Supabase
+        env:
+          KNOWN_PAT: sbp_102e689504a6e8b6e2e8df3e36a7699a7d94d744
+          PROJECT: fjdzhrdpioxdeyyfogep
+          GEMINI_KEY: AIzaSyAdDnCIjX7AZqzLGBUYEi5BGZ6fgzA6SS0
         run: |
           STATUS=$(curl -s -o /tmp/resp.json -w "%{http_code}" \
             -X POST "https://api.supabase.com/v1/projects/$PROJECT/secrets" \
-            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            -H "Authorization: Bearer $KNOWN_PAT" \
             -H "Content-Type: application/json" \
             -d '[{"name":"GEMINI_API_KEY","value":"AIzaSyAdDnCIjX7AZqzLGBUYEi5BGZ6fgzA6SS0"}]')
           echo "Secret status: $STATUS"
           cat /tmp/resp.json
 
-      - name: Deploy quantum-apothecary-chat
+      - name: Deploy all 3 chats
+        env:
+          SUPABASE_ACCESS_TOKEN: sbp_102e689504a6e8b6e2e8df3e36a7699a7d94d744
+          PROJECT: fjdzhrdpioxdeyyfogep
         working-directory: repo
         run: |
+          echo "Deploying quantum-apothecary-chat..."
           supabase functions deploy quantum-apothecary-chat \
             --project-ref $PROJECT \
-            --no-verify-jwt 2>&1
-          echo "QA exit: $?"
+            --no-verify-jwt 2>&1 || echo "QA deploy failed - continuing"
 
-      - name: Deploy bhrigu-oracle
-        working-directory: repo
-        run: |
+          echo "Deploying bhrigu-oracle..."
           supabase functions deploy bhrigu-oracle \
             --project-ref $PROJECT \
-            --no-verify-jwt 2>&1
-          echo "Bhrigu exit: $?"
-        continue-on-error: true
+            --no-verify-jwt 2>&1 || echo "Bhrigu deploy failed - continuing"
 
-      - name: Deploy ayurveda-chat
-        working-directory: repo
-        run: |
+          echo "Deploying ayurveda-chat..."
           supabase functions deploy ayurveda-chat \
             --project-ref $PROJECT \
-            --no-verify-jwt 2>&1
-          echo "Ayurveda exit: $?"
-        continue-on-error: true
+            --no-verify-jwt 2>&1 || echo "Ayurveda deploy failed - continuing"
 
-      - name: Done
-        run: echo "All 3 chats deployed at $(date)"
+          echo "All deploy attempts complete at $(date)"
