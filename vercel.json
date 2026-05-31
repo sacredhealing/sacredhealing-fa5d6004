@@ -4,7 +4,7 @@
   "framework": "vite",
   "functions": {
     "api/audio/[...path].js": {
-      "runtime": "@vercel/node"
+      "runtime": "@vercel/node@3.x"
     }
   },
   "rewrites": [
