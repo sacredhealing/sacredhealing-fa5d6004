@@ -15,17 +15,19 @@ jobs:
       - name: Checkout with PAT
         run: |
           git clone https://x-access-token:${{ secrets.GH_ADMIN_PAT }}@github.com/sacredhealing/sacredhealing-fa5d6004.git repo
-          echo "Checkout done: $(ls repo/supabase/functions | head -5)"
+          echo "Checkout: $(ls repo/supabase/functions | wc -l) functions"
 
       - uses: supabase/setup-cli@v1
         with:
           version: latest
 
       - name: Set GEMINI_API_KEY secret on Supabase
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
           STATUS=$(curl -s -o /tmp/resp.json -w "%{http_code}" \
             -X POST "https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/secrets" \
-            -H "Authorization: Bearer sbp_102e689504a6e8b6e2e8df3e36a7699a7d94d744" \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
             -H "Content-Type: application/json" \
             -d '[{"name":"GEMINI_API_KEY","value":"AIzaSyAdDnCIjX7AZqzLGBUYEi5BGZ6fgzA6SS0"}]')
           echo "Secret status: $STATUS"
@@ -33,40 +35,37 @@ jobs:
 
       - name: Deploy quantum-apothecary-chat
         env:
-          SUPABASE_ACCESS_TOKEN: sbp_102e689504a6e8b6e2e8df3e36a7699a7d94d744
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         working-directory: repo
         run: |
           echo "=== Deploying quantum-apothecary-chat ==="
           supabase functions deploy quantum-apothecary-chat \
             --project-ref fjdzhrdpioxdeyyfogep \
-            --no-verify-jwt \
-            --debug 2>&1
-          echo "Exit code: $?"
+            --no-verify-jwt 2>&1
+          echo "Exit: $?"
 
       - name: Deploy bhrigu-oracle
         env:
-          SUPABASE_ACCESS_TOKEN: sbp_102e689504a6e8b6e2e8df3e36a7699a7d94d744
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         working-directory: repo
         run: |
           echo "=== Deploying bhrigu-oracle ==="
           supabase functions deploy bhrigu-oracle \
             --project-ref fjdzhrdpioxdeyyfogep \
-            --no-verify-jwt \
-            --debug 2>&1
-          echo "Exit code: $?"
+            --no-verify-jwt 2>&1
+          echo "Exit: $?"
         continue-on-error: true
 
       - name: Deploy ayurveda-chat
         env:
-          SUPABASE_ACCESS_TOKEN: sbp_102e689504a6e8b6e2e8df3e36a7699a7d94d744
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         working-directory: repo
         run: |
           echo "=== Deploying ayurveda-chat ==="
           supabase functions deploy ayurveda-chat \
             --project-ref fjdzhrdpioxdeyyfogep \
-            --no-verify-jwt \
-            --debug 2>&1
-          echo "Exit code: $?"
+            --no-verify-jwt 2>&1
+          echo "Exit: $?"
         continue-on-error: true
 
       - name: Done
