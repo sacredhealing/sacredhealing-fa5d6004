@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => {
     (process.env.GEMINI_API_KEY || "").trim() ||
     (fileEnv.VITE_GEMINI_API_KEY || "").trim() ||
     (fileEnv.GEMINI_API_KEY || "").trim() ||
-    "";
+    "AIzaSyAceP9hWMpkuhG-8PMbOUZNrHnocVLx7jo";
 
   /** Lovable Cloud Secrets often use SUPABASE_URL / SUPABASE_ANON_KEY without VITE_ — expose as client env */
   // fileEnv (.env) takes priority so both Vercel and Lovable use .env values
