@@ -1,0 +1,62 @@
+name: Deploy 3 Chats - QA + Ayurveda + Bhrigu
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - supabase/functions/quantum-apothecary-chat/**
+      - supabase/functions/ayurveda-chat/**
+      - supabase/functions/bhrigu-oracle/**
+
+jobs:
+  set-key:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set GEMINI_API_KEY in Supabase
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          STATUS=$(curl -s -o /tmp/resp.json -w "%{http_code}" \
+            -X POST "https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/secrets" \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '[{"name":"GEMINI_API_KEY","value":"AIzaSyAdDnCIjX7AZqzLGBUYEi5BGZ6fgzA6SS0"}]')
+          echo "Secrets HTTP $STATUS"
+          cat /tmp/resp.json
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: set-key
+    timeout-minutes: 20
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy quantum-apothecary-chat
+        run: |
+          supabase functions deploy quantum-apothecary-chat \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt
+          echo "QA chat deployed"
+
+      - name: Deploy ayurveda-chat
+        run: |
+          supabase functions deploy ayurveda-chat \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt
+          echo "Ayurveda chat deployed"
+
+      - name: Deploy bhrigu-oracle
+        run: |
+          supabase functions deploy bhrigu-oracle \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt
+          echo "Bhrigu oracle deployed"
+
+      - name: Done
+        run: echo "All 3 chats live"
