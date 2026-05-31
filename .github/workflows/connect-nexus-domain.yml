@@ -1,0 +1,77 @@
+name: Connect siddhaquantumnexus.com
+
+on:
+  workflow_dispatch:
+
+jobs:
+  connect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Add domain to Vercel project + fix CORS
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          set -e
+          
+          echo "=== 1. Find main Vercel project ==="
+          PROJECTS=$(curl -s "https://api.vercel.com/v9/projects?limit=20" \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}")
+          
+          # Get project with most env vars (the main app)
+          PROJ_ID=$(echo "$PROJECTS" | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+projects = data.get('projects', [])
+# Sort by env var count descending, pick top
+projects.sort(key=lambda p: len(p.get('env', [])), reverse=True)
+main = projects[0] if projects else None
+if main:
+    print(main['id'])
+    import sys; print(main['name'], file=sys.stderr)
+")
+          echo "Project ID: $PROJ_ID"
+
+          echo ""
+          echo "=== 2. Add www.siddhaquantumnexus.com ==="
+          R1=$(curl -s -o /tmp/r1.json -w "%{http_code}" \
+            -X POST "https://api.vercel.com/v9/projects/${PROJ_ID}/domains" \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"name":"www.siddhaquantumnexus.com"}')
+          echo "HTTP $R1: $(cat /tmp/r1.json | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('error',{}).get('message','OK') if 'error' in d else 'Added OK')" 2>/dev/null)"
+
+          echo ""
+          echo "=== 3. Add apex siddhaquantumnexus.com ==="
+          R2=$(curl -s -o /tmp/r2.json -w "%{http_code}" \
+            -X POST "https://api.vercel.com/v9/projects/${PROJ_ID}/domains" \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"name":"siddhaquantumnexus.com"}')
+          echo "HTTP $R2: $(cat /tmp/r2.json | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('error',{}).get('message','OK') if 'error' in d else 'Added OK')" 2>/dev/null)"
+
+          echo ""
+          echo "=== 4. Update CORS in ayurveda-chat edge function (both Supabase) ==="
+          for PROJECT in ssygukfdbtehvtndandn fjdzhrdpioxdeyyfogep; do
+            echo "--- $PROJECT ---"
+            # Get current function
+            FN=$(curl -s "https://api.supabase.com/v1/projects/${PROJECT}/functions/ayurveda-chat" \
+              -H "Authorization: Bearer ${SUPABASE_ACCESS_TOKEN}")
+            echo "Function: $(echo $FN | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('slug','not found'))" 2>/dev/null)"
+          done
+
+          echo ""
+          echo "=== 5. DNS records needed ==="
+          curl -s "https://api.vercel.com/v6/domains/www.siddhaquantumnexus.com/config" \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}" | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+print('Misconfigured:', d.get('misconfigured', False))
+print('A records:', d.get('aValues', []))
+print('CNAME:', d.get('cnames', []))
+"
+          
+          echo ""
+          echo "=== DONE ==="
