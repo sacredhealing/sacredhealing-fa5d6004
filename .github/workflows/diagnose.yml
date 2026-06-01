@@ -1,9 +1,7 @@
 name: Diagnose Login Issue
 
 on:
-  push:
-    paths:
-      - '.github/workflows/diagnose.yml'
+  workflow_dispatch:
 
 jobs:
   diagnose:
