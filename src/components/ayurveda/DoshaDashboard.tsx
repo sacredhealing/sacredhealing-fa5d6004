@@ -553,7 +553,7 @@ interface DoshaDashboardProps {
   onOpenChat?: () => void;
 }
 
-export 
+ 
 // ── AGASTYAR ACADEMY 108 MODULES ─────────────────────────────────────────
 const ACADEMY_PHASES = [
   {
@@ -724,7 +724,7 @@ const AgastyarAcademy: React.FC<{ dosha: string; isPremium: boolean }> = ({ isPr
   );
 };
 
-const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
+export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
   profile, dosha, dailyGuidance, isLoadingGuidance,
   onRestart, onFetchGuidance, isPremium = false, onOpenChat,
 }) => {
