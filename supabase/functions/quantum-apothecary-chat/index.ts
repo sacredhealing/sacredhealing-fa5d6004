@@ -6,6 +6,28 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// ── Rate Limiting ── 30 requests per user per hour ──────────────────────────
+const RATE_LIMIT = 30;
+const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+async function checkRateLimit(supabase: any, userId: string, fnName: string): Promise<{ allowed: boolean; remaining: number }> {
+  const windowStart = new Date(Date.now() - RATE_WINDOW_MS).toISOString();
+  const { count } = await supabase
+    .from("rate_limit_log")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("function_name", fnName)
+    .gte("created_at", windowStart);
+
+  const used = count ?? 0;
+  if (used >= RATE_LIMIT) return { allowed: false, remaining: 0 };
+
+  await supabase.from("rate_limit_log").insert({ user_id: userId, function_name: fnName });
+  return { allowed: true, remaining: RATE_LIMIT - used - 1 };
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
+
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
 const GEMINI_API_KEY_ENV = Deno.env.get("GEMINI_API_KEY") ?? "";
 
