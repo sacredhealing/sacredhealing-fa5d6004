@@ -14,7 +14,6 @@ on:
       - 'tsconfig*.json'
   workflow_dispatch:
 
-# Cancel in-progress deploys when a new push comes in
 concurrency:
   group: pages-deploy
   cancel-in-progress: true
@@ -32,11 +31,11 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Build
         env:
@@ -45,24 +44,24 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
-          NODE_OPTIONS: '--max-old-space-size=4096'
-        run: npm run build
-
-      - name: Add SPA routing support
+          NODE_OPTIONS: '--max-old-space-size=6144'
         run: |
-          # GitHub Pages serves 404.html for unknown routes
-          # Copy index.html as 404.html so React Router handles all routes
-          cp dist/index.html dist/404.html
-          # Add CNAME for custom domain
-          echo "siddhaquantumnexus.com" > dist/CNAME
-          # Prevent Jekyll processing (not needed for Vite builds)
-          touch dist/.nojekyll
+          echo 'Building SQI 2050...'
+          npm run build
+          echo 'Build complete.'
 
-      - name: Deploy to GitHub Pages
+      - name: Prepare for GitHub Pages
+        run: |
+          cp dist/index.html dist/404.html
+          echo 'siddhaquantumnexus.com' > dist/CNAME
+          touch dist/.nojekyll
+          echo 'SPA routing configured.'
+
+      - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
           publish_branch: gh-pages
           force_orphan: true
-          commit_message: 'deploy: ${{ github.sha }} — ${{ github.event.head_commit.message }}'
+          commit_message: 'deploy: ${{ github.sha }}'
