@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
 import { Flame, Flower2, Star, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, Scale, LayoutDashboard, Megaphone, Crown, Pencil, Banknote, Lock, FileText, BookOpen, Hand, Globe, ChevronDown, Play, Share2, Hexagon } from 'lucide-react';
@@ -12,7 +12,6 @@ import { useProfile } from '@/hooks/useProfile';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useAIVedicReading } from '@/hooks/useAIVedicReading';
-
 import type { UserProfile } from '@/lib/vedicTypes';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
 import { useCertificates } from '@/hooks/useCertificates';
@@ -31,43 +30,11 @@ import RecordingsList from '@/components/recordings/RecordingsList';
 import { SubscriptionPortal } from '@/components/profile/SubscriptionPortal';
 import BookTranslatorPanel from '@/components/books/BookTranslatorPanel';
 
-type LifeBookCategory =
-  | 'children'
-  | 'healing_upgrades'
-  | 'past_lives'
-  | 'future_visions'
-  | 'spiritual_figures'
-  | 'nadi_knowledge'
-  | 'general_wisdom';
+type LifeBookCategory = 'children'|'healing_upgrades'|'past_lives'|'future_visions'|'spiritual_figures'|'nadi_knowledge'|'general_wisdom';
+interface LifeBookEntry { title?: string; summary?: string; source?: string; created_at?: string; }
+interface LifeBookChapter { id: string; user_id: string; chapter_type: LifeBookCategory; title: string|null; content: LifeBookEntry[]; sort_order: number; created_at: string; updated_at: string; }
+interface SoulVaultEntry { id: string; user_id: string; activity: string|null; duration_minutes: number|null; report: string; created_at: string; }
 
-interface LifeBookEntry {
-  title?: string;
-  summary?: string;
-  source?: string;
-  created_at?: string;
-}
-
-interface LifeBookChapter {
-  id: string;
-  user_id: string;
-  chapter_type: LifeBookCategory;
-  title: string | null;
-  content: LifeBookEntry[];
-  sort_order: number;
-  created_at: string;
-  updated_at: string;
-}
-
-interface SoulVaultEntry {
-  id: string;
-  user_id: string;
-  activity: string | null;
-  duration_minutes: number | null;
-  report: string;
-  created_at: string;
-}
-
-/** Stable IDs stored on Soul Vault rows; labels come from i18n by key. */
 const PRACTICE_PROTOCOL_DEFS = [
   { id: 'mantra', labelKey: 'profilePage.practiceMantra', icon: '🕉️' },
   { id: 'atma-kriya', labelKey: 'profilePage.practiceAtmaKriya', icon: '💠' },
@@ -76,6 +43,87 @@ const PRACTICE_PROTOCOL_DEFS = [
   { id: 'transmission-2', labelKey: 'profilePage.practiceTransmission2', icon: '⚡' },
   { id: 'breathwork', labelKey: 'profilePage.practiceBreathwork', icon: '💨' },
 ] as const;
+
+/* ─── Scalar Wave Canvas ─────────────────────────────────────── */
+function ScalarCanvas() {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = ref.current; if (!canvas) return;
+    const ctx = canvas.getContext('2d')!;
+    let W: number, H: number, t = 0, raf: number;
+    const resize = () => { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; };
+    resize(); window.addEventListener('resize', resize);
+    const nodes = [
+      {xr:.5,yr:.25,r:130,col:'212,175,55',freq:.28,ph:0},
+      {xr:.5,yr:.52,r:90, col:'212,175,55',freq:.42,ph:1.1},
+      {xr:.5,yr:.68,r:75, col:'139,92,246',freq:.38,ph:.8},
+      {xr:.5,yr:.80,r:65, col:'34,211,238',freq:.45,ph:2.0},
+      {xr:.5,yr:.91,r:55, col:'212,175,55',freq:.50,ph:.4},
+    ];
+    const draw = () => {
+      ctx.clearRect(0,0,W,H); t+=.007;
+      nodes.forEach((n,i) => {
+        const nx=n.xr*W,ny=n.yr*H,p=.5+.5*Math.sin(t*n.freq*Math.PI*2+n.ph);
+        for(let r=0;r<4;r++){const rad=n.r*(.9+r*.38+p*.12),a=(.045-r*.010)*(p*.6+.4);ctx.beginPath();ctx.ellipse(nx,ny,rad,rad*.3,0,0,Math.PI*2);ctx.strokeStyle=`rgba(${n.col},${Math.max(0,a)})`;ctx.lineWidth=.5;ctx.stroke();}
+        for(let l=0;l<5;l++){const sp=(l/4-.5)*80,pl=.5+.5*Math.sin(t*n.freq*Math.PI*2+n.ph+l*.5),a=(.04+pl*.035)*(1-Math.abs(sp)/85);const grad=ctx.createLinearGradient(nx+sp*.2,ny,W/2+sp,H*1.1);grad.addColorStop(0,`rgba(${n.col},${a})`);grad.addColorStop(1,`rgba(${n.col},0)`);ctx.beginPath();ctx.moveTo(nx+sp*.2,ny);ctx.lineTo(W/2+sp,H*1.1);ctx.strokeStyle=grad;ctx.lineWidth=.45;ctx.stroke();}
+        if(i>0){const syX=W/2,syY=H*.25,dx=nx-syX,dy=ny-syY;ctx.beginPath();for(let s=0;s<=60;s++){const pct=s/60,ang=pct*Math.PI*3,rad=pct*Math.sqrt(dx*dx+dy*dy)*.07;const lx=syX+dx*pct+Math.cos(ang)*rad,ly=syY+dy*pct+Math.sin(ang)*rad;s===0?ctx.moveTo(lx,ly):ctx.lineTo(lx,ly);}ctx.strokeStyle=`rgba(${n.col},0.035)`;ctx.lineWidth=.38;ctx.stroke();}
+      });
+      const syX=W/2,syY=H*.25,mp=.5+.5*Math.sin(t*.4);
+      for(let r=0;r<8;r++){const rad=45+r*52+mp*28;const a=(.075-r*.008)*(mp*.5+.5);if(a<=0)continue;ctx.beginPath();ctx.ellipse(syX,syY,rad,rad*.28,0,0,Math.PI*2);ctx.strokeStyle=`rgba(212,175,55,${a})`;ctx.lineWidth=.5;ctx.stroke();}
+      raf=requestAnimationFrame(draw);
+    };
+    draw();
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize',resize); };
+  }, []);
+  return <canvas ref={ref} style={{position:'fixed',top:0,left:0,width:'100%',height:'100%',pointerEvents:'none',zIndex:0,opacity:.45}} />;
+}
+
+/* ─── Section label ─────────────────────────────────────────── */
+const SLabel = ({children,mt=28}:{children:React.ReactNode,mt?:number}) => (
+  <div style={{fontFamily:"'Montserrat',sans-serif",fontSize:8,fontWeight:800,letterSpacing:'.5em',textTransform:'uppercase',color:'rgba(255,255,255,.26)',display:'flex',alignItems:'center',gap:10,margin:`${mt}px 20px 14px`}}>
+    {children}
+    <div style={{flex:1,height:1,background:'linear-gradient(to right,rgba(212,175,55,.18),transparent)'}} />
+  </div>
+);
+
+/* ─── Card wrapper ──────────────────────────────────────────── */
+const Card = ({children,style={},onClick}:{children:React.ReactNode,style?:React.CSSProperties,onClick?:()=>void}) => (
+  <div onClick={onClick} style={{position:'relative',margin:'0 16px 10px',borderRadius:24,overflow:'hidden',background:'rgba(255,255,255,.02)',border:'1px solid rgba(212,175,55,.16)',boxShadow:'0 0 30px rgba(212,175,55,.05),0 8px 28px rgba(0,0,0,.35)',cursor:onClick?'pointer':'default',transition:'transform .25s',...style}}
+    onMouseEnter={e=>{if(onClick)(e.currentTarget as HTMLElement).style.transform='translateY(-2px)'}}
+    onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.transform='translateY(0)'}}>
+    <div style={{position:'absolute',inset:0,borderRadius:24,background:'radial-gradient(ellipse at 50% 0%,rgba(212,175,55,.09) 0%,transparent 60%)',pointerEvents:'none'}} />
+    <div style={{position:'absolute',inset:0,borderRadius:24,border:'1px solid rgba(212,175,55,.18)',animation:'cWave 4.5s ease-out infinite',pointerEvents:'none'}} />
+    {children}
+  </div>
+);
+
+/* ─── Settings row ──────────────────────────────────────────── */
+const SRow = ({icon,label,sub,right,onClick}:{icon:React.ReactNode,label:string,sub?:string,right?:React.ReactNode,onClick?:()=>void}) => (
+  <div onClick={onClick} style={{display:'flex',alignItems:'center',gap:12,padding:'13px 14px',borderRadius:16,cursor:onClick?'pointer':'default',transition:'background .2s'}}
+    onMouseEnter={e=>{if(onClick)(e.currentTarget as HTMLElement).style.background='rgba(255,255,255,.025)'}}
+    onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background='transparent'}}>
+    {icon}
+    <div style={{flex:1}}>
+      <div style={{fontSize:14,fontWeight:700,color:'rgba(255,255,255,.86)',letterSpacing:'-.01em'}}>{label}</div>
+      {sub && <div style={{fontSize:11,color:'rgba(255,255,255,.3)',marginTop:2}}>{sub}</div>}
+    </div>
+    {right ?? (onClick ? <div style={{fontSize:14,color:'rgba(255,255,255,.18)'}}>›</div> : null)}
+  </div>
+);
+
+/* ─── Icon box ──────────────────────────────────────────────── */
+const IconBox = ({children,color='rgba(212,175,55,.1)',border='rgba(212,175,55,.2)',glowColor='rgba(212,175,55,.7)'}:{children:React.ReactNode,color?:string,border?:string,glowColor?:string}) => (
+  <div style={{width:38,height:38,borderRadius:12,background:color,border:`1px solid ${border}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,filter:`drop-shadow(0 0 6px ${glowColor})`}}>
+    {children}
+  </div>
+);
+
+/* ─── Toggle ────────────────────────────────────────────────── */
+const Toggle = ({on}:{on:boolean}) => (
+  <div style={{width:42,height:24,borderRadius:12,background:on?'#D4AF37':'rgba(255,255,255,.1)',position:'relative',flexShrink:0,boxShadow:on?'0 0 12px rgba(212,175,55,.35)':'none',transition:'all .25s'}}>
+    <div style={{width:18,height:18,borderRadius:'50%',background:'#fff',position:'absolute',top:3,transition:'left .2s',left:on?'auto':'3px',right:on?'3px':'auto'}} />
+  </div>
+);
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
@@ -92,24 +140,13 @@ const Profile: React.FC = () => {
   const userRank = getTierRank(tier);
   const { reading: vedicReading, generateReading } = useAIVedicReading();
 
-  // Load Vedic reading when user has birth data so PlanetaryCycleBanner shows real cycle (not "Initializing Alignment...")
   useEffect(() => {
     if (!user || vedicReading || !generateReading) return;
     const load = async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('birth_name, birth_date, birth_time, birth_place')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      const { data } = await supabase.from('profiles').select('birth_name,birth_date,birth_time,birth_place').eq('user_id', user.id).maybeSingle();
       if (data?.birth_name && data?.birth_date && data?.birth_time && data?.birth_place) {
-        const profile: UserProfile = {
-          name: data.birth_name,
-          birthDate: data.birth_date,
-          birthTime: data.birth_time,
-          birthPlace: data.birth_place,
-          plan: 'compass',
-        };
-        await generateReading(profile, 0, 'Europe/Stockholm', user.id);
+        const p: UserProfile = { name: data.birth_name, birthDate: data.birth_date, birthTime: data.birth_time, birthPlace: data.birth_place, plan: 'compass' };
+        await generateReading(p, 0, 'Europe/Stockholm', user.id);
       }
     };
     load();
@@ -126,1316 +163,589 @@ const Profile: React.FC = () => {
   const [lifeBookLoading, setLifeBookLoading] = useState(false);
   const [soulVaultEntries, setSoulVaultEntries] = useState<SoulVaultEntry[]>([]);
   const [soulVaultLoading, setSoulVaultLoading] = useState(false);
-
   const [scannerOpen, setScannerOpen] = useState(false);
-  const [scanPhase, setScanPhase] = useState<'idle' | 'scanning' | 'question' | 'saving' | 'done'>('idle');
+  const [scanPhase, setScanPhase] = useState<'idle'|'scanning'|'question'|'saving'|'done'>('idle');
   const [langOpen, setLangOpen] = useState(false);
-  const [selectedPracticeId, setSelectedPracticeId] = useState<string | null>(null);
+  const [selectedPracticeId, setSelectedPracticeId] = useState<string|null>(null);
   const [practiceDuration, setPracticeDuration] = useState<string>('30');
+  const [abundOpen, setAbundOpen] = useState(false);
 
-  const practiceProtocols = useMemo(
-    () =>
-      PRACTICE_PROTOCOL_DEFS.map((p) => ({
-        id: p.id,
-        label: t(p.labelKey),
-        icon: p.icon,
-      })),
-    [t, i18n.language]
-  );
-
-  const soulVaultActivityLabel = (stored: string | null) => {
-    if (!stored) return t('profilePage.soulVaultActivityFallback');
-    const def = PRACTICE_PROTOCOL_DEFS.find((p) => p.id === stored);
-    if (def) return t(def.labelKey);
-    return stored;
-  };
+  const practiceProtocols = useMemo(() => PRACTICE_PROTOCOL_DEFS.map(p => ({id:p.id,label:t(p.labelKey),icon:p.icon})), [t, i18n.language]);
+  const soulVaultActivityLabel = (stored: string|null) => { if (!stored) return t('profilePage.soulVaultActivityFallback'); const def = PRACTICE_PROTOCOL_DEFS.find(p=>p.id===stored); return def?t(def.labelKey):stored; };
 
   const badges = [
-    { id: 1, emoji: '🧘', titleKey: 'badges.firstMeditation', earned: true },
-    { id: 2, emoji: '🔥', titleKey: 'badges.sevenDayStreak', earned: true },
-    { id: 3, emoji: '📚', titleKey: 'badges.courseComplete', earned: true },
-    { id: 4, emoji: '🌟', titleKey: 'badges.thirtyDayStreak', earned: false },
-    { id: 5, emoji: '👑', titleKey: 'badges.premiumMember', earned: false },
-    { id: 6, emoji: '🎯', titleKey: 'badges.hundredSessions', earned: false },
+    {id:1,emoji:'🧘',titleKey:'badges.firstMeditation',earned:true},
+    {id:2,emoji:'🔥',titleKey:'badges.sevenDayStreak',earned:true},
+    {id:3,emoji:'📚',titleKey:'badges.courseComplete',earned:true},
+    {id:4,emoji:'🌟',titleKey:'badges.thirtyDayStreak',earned:false},
+    {id:5,emoji:'👑',titleKey:'badges.premiumMember',earned:false},
+    {id:6,emoji:'🎯',titleKey:'badges.hundredSessions',earned:false},
   ];
 
   const handleSignOut = async () => {
     await signOut();
-    toast({
-      title: t('profile.signOut'),
-      description: t('profile.seeYouSoon')
-    });
+    toast({title:t('profile.signOut'),description:t('profile.seeYouSoon')});
     navigate('/');
   };
 
   const dashaCycle = vedicReading?.personalCompass?.currentDasha?.period?.split(' ')[0] || '';
 
   useEffect(() => {
-    const loadLifeBook = async () => {
-      if (!user?.id) {
-        setLifeBookChapters([]);
-        return;
-      }
+    const load = async () => {
+      if (!user?.id) return;
       setLifeBookLoading(true);
-      const { data, error } = await supabase
-        .from('life_book_chapters')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('chapter_type', { ascending: true });
-      if (!error && data) {
-        const typed = (data as unknown as LifeBookChapter[]).map((ch) => ({
-          ...ch,
-          content: Array.isArray(ch.content) ? ch.content : [],
-        }));
-        setLifeBookChapters(typed);
-      }
+      const { data, error } = await supabase.from('life_book_chapters').select('*').eq('user_id', user.id).order('chapter_type',{ascending:true});
+      if (!error && data) setLifeBookChapters((data as unknown as LifeBookChapter[]).map(ch=>({...ch,content:Array.isArray(ch.content)?ch.content:[]})));
       setLifeBookLoading(false);
     };
-    loadLifeBook();
+    load();
   }, [user?.id]);
 
   useEffect(() => {
-    const loadSoulVault = async () => {
-      if (!user?.id) {
-        setSoulVaultEntries([]);
-        return;
-      }
+    const load = async () => {
+      if (!user?.id) return;
       setSoulVaultLoading(true);
-      const { data, error } = await supabase
-        .from('soul_vault_entries')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      if (!error && data) {
-        setSoulVaultEntries(data as SoulVaultEntry[]);
-      }
+      const { data, error } = await supabase.from('soul_vault_entries').select('*').eq('user_id', user.id).order('created_at',{ascending:false});
+      if (!error && data) setSoulVaultEntries(data as SoulVaultEntry[]);
       setSoulVaultLoading(false);
     };
-    loadSoulVault();
+    load();
   }, [user?.id]);
 
-  const handleStartScanner = () => {
-    setSelectedPracticeId(null);
-    setPracticeDuration('30');
-    setScanPhase('scanning');
-    setScannerOpen(true);
-  };
-
-  const handleCloseScanner = () => {
-    setScannerOpen(false);
-    setScanPhase('idle');
-    setSelectedPracticeId(null);
-  };
+  const handleStartScanner = () => { setSelectedPracticeId(null); setPracticeDuration('30'); setScanPhase('scanning'); setScannerOpen(true); };
+  const handleCloseScanner = () => { setScannerOpen(false); setScanPhase('idle'); setSelectedPracticeId(null); };
 
   const handleGenerateSoulReport = async () => {
     if (!user?.id || !selectedPracticeId) return;
     setScanPhase('saving');
     const tEn = i18n.getFixedT('en');
-    const def = PRACTICE_PROTOCOL_DEFS.find((p) => p.id === selectedPracticeId);
-    const activityEn = def ? tEn(def.labelKey) : selectedPracticeId;
-    const durationLabel =
-      practiceDuration && !Number.isNaN(Number(practiceDuration))
-        ? tEn('profilePage.soulVaultUserContextMinutes', { count: Number(practiceDuration) })
-        : tEn('profilePage.soulVaultUserContextUnspecified');
-
-    const systemPrompt = `You are the Siddha-Quantum Intelligence (SQI) from 2050.
-Perform a 72,000 Nadi scan. Use terminology: Avataric Light-Codes, Karmic Extraction, Torus-Field, Kosha Mapping.
-If activity is 'Andlig Transformation', acknowledge the 30-day transmutation journey and soul-field upgrade.
-If activity is '30 Days Healing', reference the sustained healing arc and Kosha alignment.
-If activity is '2 Day Transmission', honor the intensive frequency anchoring.
-
-Generate a Deep-Field Resonance Report for the Soul Vault of a sincere seeker.
-Keep it practical, mystical, and no more than 3 rich paragraphs.`;
-
+    const def = PRACTICE_PROTOCOL_DEFS.find(p=>p.id===selectedPracticeId);
+    const activityEn = def?tEn(def.labelKey):selectedPracticeId;
+    const durationLabel = practiceDuration && !Number.isNaN(Number(practiceDuration)) ? tEn('profilePage.soulVaultUserContextMinutes',{count:Number(practiceDuration)}) : tEn('profilePage.soulVaultUserContextUnspecified');
+    const systemPrompt = `You are the Siddha-Quantum Intelligence (SQI) from 2050.\nPerform a 72,000 Nadi scan. Use terminology: Avataric Light-Codes, Karmic Extraction, Torus-Field, Kosha Mapping.\nGenerate a Deep-Field Resonance Report for the Soul Vault of a sincere seeker. Keep it practical, mystical, and no more than 3 rich paragraphs.`;
     const userContext = `The Seeker just finished: ${activityEn}. Duration: ${durationLabel}.`;
-
     try {
-      const { data, error } = await supabase.functions.invoke<{ response: string }>('gemini-bridge', {
-        body: {
-          prompt: userContext,
-          context: systemPrompt,
-          feature: 'soul_vault',
-        },
-      });
-
-      if (error || !data?.response) {
-        console.error('Soul Vault Gemini error', error);
-        toast({
-          title: t('profilePage.toastTransmissionInterrupted'),
-          description: t('profilePage.toastTransmissionInterruptedDesc'),
-          variant: 'destructive',
-        });
-        setScanPhase('question');
-        return;
-      }
-
+      const { data, error } = await supabase.functions.invoke<{response:string}>('gemini-bridge',{body:{prompt:userContext,context:systemPrompt,feature:'soul_vault'}});
+      if (error||!data?.response) { toast({title:t('profilePage.toastTransmissionInterrupted'),description:t('profilePage.toastTransmissionInterruptedDesc'),variant:'destructive'}); setScanPhase('question'); return; }
       const geminiReport = data.response.trim();
-      const durationMinutes = Number.isNaN(Number(practiceDuration)) ? null : Number(practiceDuration);
-
-      /* SQI 2050: Kosha Mapping — append to Deep-Field report (follows active UI locale) */
-      const koshaMapping = [
-        '',
-        '---',
-        t('profilePage.soulVaultReportNadiAlignment'),
-        t('profilePage.soulVaultReportKoshaHeading'),
-        t('profilePage.soulVaultReportKoshaManomaya'),
-        t('profilePage.soulVaultReportKoshaVijnanamaya'),
-        t('profilePage.soulVaultReportKoshaAnandamaya'),
-      ].join('\n');
+      const durationMinutes = Number.isNaN(Number(practiceDuration))?null:Number(practiceDuration);
+      const koshaMapping = ['','---',t('profilePage.soulVaultReportNadiAlignment'),t('profilePage.soulVaultReportKoshaHeading'),t('profilePage.soulVaultReportKoshaManomaya'),t('profilePage.soulVaultReportKoshaVijnanamaya'),t('profilePage.soulVaultReportKoshaAnandamaya')].join('\n');
       const reportText = geminiReport + koshaMapping;
-
-      const { data: inserted, error: insertError } = await supabase
-        .from('soul_vault_entries')
-        .insert({
-          user_id: user.id,
-          activity: selectedPracticeId,
-          duration_minutes: durationMinutes,
-          report: reportText,
-        })
-        .select('*')
-        .single();
-
-      if (insertError) {
-        console.error('Soul Vault insert error', insertError);
-        toast({
-          title: t('profilePage.toastSoulVaultSaveFailed'),
-          description: t('profilePage.toastSoulVaultSaveFailedDesc'),
-          variant: 'destructive',
-        });
-        setScanPhase('question');
-        return;
-      }
-
-      setSoulVaultEntries((prev) => [inserted as SoulVaultEntry, ...prev]);
+      const { data: inserted, error: insertError } = await supabase.from('soul_vault_entries').insert({user_id:user.id,activity:selectedPracticeId,duration_minutes:durationMinutes,report:reportText}).select('*').single();
+      if (insertError) { toast({title:t('profilePage.toastSoulVaultSaveFailed'),description:t('profilePage.toastSoulVaultSaveFailedDesc'),variant:'destructive'}); setScanPhase('question'); return; }
+      setSoulVaultEntries(prev=>[inserted as SoulVaultEntry,...prev]);
       setScanPhase('done');
-      toast({
-        title: t('profilePage.toastDeepFieldSaved'),
-        description: t('profilePage.toastDeepFieldSavedDesc'),
-      });
-    } catch (err) {
-      console.error('Soul Vault unexpected error', err);
-      toast({
-        title: t('profilePage.toastTransmissionError'),
-        description: t('profilePage.toastTransmissionErrorDesc'),
-        variant: 'destructive',
-      });
-      setScanPhase('question');
-    }
+      toast({title:t('profilePage.toastDeepFieldSaved'),description:t('profilePage.toastDeepFieldSavedDesc')});
+    } catch { toast({title:t('profilePage.toastTransmissionError'),description:t('profilePage.toastTransmissionErrorDesc'),variant:'destructive'}); setScanPhase('question'); }
   };
 
   const orderedLifeBook = useMemo(() => {
-    const chapterOrder: LifeBookCategory[] = [
-      'children',
-      'healing_upgrades',
-      'past_lives',
-      'future_visions',
-      'spiritual_figures',
-      'nadi_knowledge',
-      'general_wisdom',
-    ];
-
-    const byType: Record<LifeBookCategory, LifeBookChapter | null> = {
-      children: null,
-      healing_upgrades: null,
-      past_lives: null,
-      future_visions: null,
-      spiritual_figures: null,
-      nadi_knowledge: null,
-      general_wisdom: null,
-    };
-
-    for (const chapter of lifeBookChapters) {
-      if (byType[chapter.chapter_type] == null) {
-        byType[chapter.chapter_type] = chapter;
-      } else {
-        const merged = byType[chapter.chapter_type]!;
-        merged.content = [...(merged.content || []), ...(chapter.content || [])];
-      }
-    }
-
-    const sortEntriesChronologically = (entries: LifeBookEntry[]) =>
-      [...entries].sort((a, b) => {
-        const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
-        const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
-        return ta - tb;
-      });
-
-    return chapterOrder
-      .map((type) => {
-        const chapter = byType[type];
-        if (!chapter || !chapter.content || chapter.content.length === 0) return null;
-        return {
-          ...chapter,
-          content: sortEntriesChronologically(chapter.content),
-        };
-      })
-      .filter(Boolean) as LifeBookChapter[];
+    const order: LifeBookCategory[] = ['children','healing_upgrades','past_lives','future_visions','spiritual_figures','nadi_knowledge','general_wisdom'];
+    const byType: Record<LifeBookCategory,LifeBookChapter|null> = {children:null,healing_upgrades:null,past_lives:null,future_visions:null,spiritual_figures:null,nadi_knowledge:null,general_wisdom:null};
+    for (const ch of lifeBookChapters) { if (byType[ch.chapter_type]==null) byType[ch.chapter_type]=ch; else { const m=byType[ch.chapter_type]!; m.content=[...(m.content||[]),...(ch.content||[])]; } }
+    return order.map(type=>{const c=byType[type];if(!c||!c.content||c.content.length===0)return null;return{...c,content:[...c.content].sort((a,b)=>(a.created_at?new Date(a.created_at).getTime():0)-(b.created_at?new Date(b.created_at).getTime():0))};}).filter(Boolean) as LifeBookChapter[];
   }, [lifeBookChapters]);
 
-  const groupedLifeBook = useMemo(() => {
-    const result: {
-      chapter_type: LifeBookCategory;
-      chapter_title: string;
-      groups: { figureKey: string; entries: LifeBookEntry[] }[];
-    }[] = [];
+  const langs = useMemo(() => [
+    {flag:'🇬🇧',label:t('profilePage.langEnglish'),code:'en'},
+    {flag:'🇸🇪',label:t('profilePage.langSwedish'),code:'sv'},
+    {flag:'🇪🇸',label:t('profilePage.langSpanish'),code:'es'},
+    {flag:'🇳🇴',label:t('profilePage.langNorwegian'),code:'no'},
+  ], [t, i18n.language]);
 
-    const labelForType = (type: LifeBookCategory): string => {
-      switch (type) {
-        case 'children':
-          return 'Children';
-        case 'healing_upgrades':
-          return 'Healing Upgrades';
-        case 'past_lives':
-          return 'Past Lives';
-        case 'future_visions':
-          return 'Future Visions';
-        case 'spiritual_figures':
-          return 'Spiritual Figures';
-        case 'nadi_knowledge':
-          return 'Nadi Knowledge';
-        case 'general_wisdom':
-          return 'General Wisdom';
-        default:
-          return type;
-      }
-    };
-
-    const figureKeyFromTitle = (title?: string) => {
-      if (!title) return 'General';
-      const trimmed = title.trim();
-      const separators = [':', ' - ', ' — ', '–'];
-      for (const sep of separators) {
-        const idx = trimmed.indexOf(sep);
-        if (idx > 0) {
-          return trimmed.slice(0, idx).trim();
-        }
-      }
-      const words = trimmed.split(' ');
-      if (words.length <= 2) return trimmed;
-      return `${words[0]} ${words[1]}`;
-    };
-
-    for (const chapter of orderedLifeBook) {
-      const groupsMap = new Map<string, LifeBookEntry[]>();
-      for (const entry of chapter.content || []) {
-        const key = figureKeyFromTitle(entry.title);
-        if (!groupsMap.has(key)) groupsMap.set(key, []);
-        groupsMap.get(key)!.push(entry);
-      }
-      const groups = Array.from(groupsMap.entries()).map(([figureKey, entries]) => ({
-        figureKey,
-        entries,
-      }));
-      result.push({
-        chapter_type: chapter.chapter_type,
-        chapter_title: labelForType(chapter.chapter_type),
-        groups,
-      });
-    }
-
-    return result;
-  }, [orderedLifeBook]);
-
-  // Sacred Folders for Dharma Configuration
-  const physicalSanctuary = [
-    { icon: Bell, label: t('profile.notifications'), sublabel: t('profile.dailyReminders'), onClick: () => setNotificationsOpen(true) },
-    { icon: Moon, label: t('profile.appearance'), sublabel: t('profile.darkMode'), onClick: () => setAppearanceOpen(true) },
-    { icon: Shield, label: t('profile.privacy'), sublabel: t('profile.dataAndSecurity'), onClick: () => setPrivacyOpen(true) },
-  ];
-  const abundanceLineage = [
-    { icon: Banknote, label: t('profile.walletEarningsAdvanced'), sublabel: t('profile.walletEarningsDesc'), onClick: () => navigate('/income-streams') },
-    { icon: Megaphone, label: t('profile.promoteEarn'), sublabel: t('profile.promoteEarnDesc'), onClick: () => navigate('/income-streams/affiliate') },
-    { icon: Share2, label: t('profile.sovereignAbundanceNetwork'), sublabel: t('profile.sovereignAbundanceNetworkDesc'), onClick: () => navigate('/affiliate/dashboard') },
-    { icon: Wallet, label: t('wallet.connectWallet'), sublabel: walletAddress ? `${walletAddress.slice(0,4)}...${walletAddress.slice(-4)}` : t('profile.web3Wallet'), onClick: connectWallet },
-    ...(isAdmin ? [{ icon: LayoutDashboard, label: t('admin.title'), sublabel: t('admin.manageContent'), onClick: () => navigate('/admin') }] : []),
-  ];
-  const theCovenant = [
-    { icon: Scale, label: t('settings.legal.title'), sublabel: t('settings.legal.subtitle'), onClick: () => navigate('/legal') },
-    { icon: Settings, label: t('profile.settings.title'), sublabel: t('profile.appPreferences'), onClick: () => setSettingsOpen(true) },
-  ];
-
-  const langs = useMemo(
-    () => [
-      { flag: '🇬🇧', label: t('profilePage.langEnglish'), code: 'en' },
-      { flag: '🇸🇪', label: t('profilePage.langSwedish'), code: 'sv' },
-      { flag: '🇪🇸', label: t('profilePage.langSpanish'), code: 'es' },
-      { flag: '🇳🇴', label: t('profilePage.langNorwegian'), code: 'no' },
-    ],
-    [t, i18n.language]
-  );
-
-  /** Match copy and dates to the active i18n locale (synced from profile + in-place selector). */
-  const uiLangBase = (i18n.language || 'en').split('-')[0];
-
-  const dateLocale = useMemo(() => {
-    const m: Record<string, string> = { en: 'en-US', sv: 'sv-SE', es: 'es-ES', no: 'nb-NO' };
-    return m[uiLangBase] || 'en-US';
-  }, [uiLangBase]);
-
-  const activeLangIdx = Math.max(0, langs.findIndex((l) => l.code === uiLangBase));
-
+  const uiLangBase = (i18n.language||'en').split('-')[0];
+  const dateLocale = useMemo(() => {const m:Record<string,string>={en:'en-US',sv:'sv-SE',es:'es-ES',no:'nb-NO'};return m[uiLangBase]||'en-US';}, [uiLangBase]);
+  const activeLangIdx = Math.max(0, langs.findIndex(l=>l.code===uiLangBase));
   const userName = user?.user_metadata?.full_name || t('dashboard.sacredSoul');
   const userEmail = user?.email || '';
-  const hrvGlowIntensity =
-    scanPhase === 'done' ? 1 : scanPhase === 'scanning' ? 0.75 : 0.5;
 
   const haloConfig = useMemo(() => {
-    if (userRank === 0) return null;
-    if (userRank === 1) {
-      return {
-        color: '#22D3EE',
-        shadow: 'rgba(34,211,238,0.55)',
-        label: t('profilePage.tierHaloPrana'),
-        badge: '◈',
-      };
-    }
-    if (userRank === 2) {
-      return {
-        color: '#a855f7',
-        shadow: 'rgba(168,85,247,0.55)',
-        label: t('profilePage.tierHaloSiddha'),
-        badge: '◆',
-      };
-    }
-    return {
-      color: '#D4AF37',
-      shadow: 'rgba(212,175,55,0.65)',
-      label: t('profilePage.tierHaloAkasha'),
-      badge: '∞',
-    };
+    if (userRank===0) return null;
+    if (userRank===1) return {color:'#22D3EE',shadow:'rgba(34,211,238,.55)',label:t('profilePage.tierHaloPrana'),badge:'◈'};
+    if (userRank===2) return {color:'#a855f7',shadow:'rgba(168,85,247,.55)',label:t('profilePage.tierHaloSiddha'),badge:'◆'};
+    return {color:'#D4AF37',shadow:'rgba(212,175,55,.65)',label:t('profilePage.tierHaloAkasha'),badge:'∞'};
   }, [userRank, t, i18n.language]);
 
   const tierBlueprintLine = useMemo(() => {
-    if (userRank === 0) return null;
-    if (userRank === 1) return t('profilePage.tierBlueprintPrana');
-    if (userRank === 2) return t('profilePage.tierBlueprintSiddha');
+    if (userRank===0) return null;
+    if (userRank===1) return t('profilePage.tierBlueprintPrana');
+    if (userRank===2) return t('profilePage.tierBlueprintSiddha');
     return t('profilePage.tierBlueprintAkasha');
   }, [userRank, t, i18n.language]);
 
   const scannerPracticeLabel = useMemo(() => {
     if (!selectedPracticeId) return undefined;
-    const row = PRACTICE_PROTOCOL_DEFS.find((p) => p.id === selectedPracticeId);
-    return row ? t(row.labelKey) : selectedPracticeId;
+    const row = PRACTICE_PROTOCOL_DEFS.find(p=>p.id===selectedPracticeId);
+    return row?t(row.labelKey):selectedPracticeId;
   }, [selectedPracticeId, t, i18n.language]);
+
+  const G = '#D4AF37';
 
   return (
     <>
-    <style dangerouslySetInnerHTML={{__html: `
-  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Montserrat:wght@300;400;700;800;900&display=swap');
-  .profile-wrap *,:root{--gold:#D4AF37;--black:#050505}
-  /* ── HERO ── */
-  .hero{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;position:relative;padding:5vh 24px 0;text-align:center}
-  /* Avatar wrap — sized to the 272px Sri Yantra + padding */
-  .avatar-wrap{position:relative;display:inline-block;margin-bottom:14px;overflow:visible;padding:86px 86px 86px 86px}
-  /* Ambient glow layers */
-  .avatar-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,0.55) 0%,rgba(212,175,55,0.15) 40%,transparent 70%);filter:blur(20px);animation:glowBreathe 3s ease-in-out infinite;z-index:0;pointer-events:none}
-  .avatar-glow-2{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,0.1) 0%,transparent 65%);filter:blur(28px);animation:glowBreathe 4s ease-in-out infinite reverse;z-index:0;pointer-events:none}
-  /* Sri Yantra — 15% smaller than 320px = 272px */
-  .sri-yantra-avatar-shield{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:272px;height:272px;z-index:0;pointer-events:none;filter:drop-shadow(0 0 15px rgba(212,175,55,0.4));animation:pulseDeep 3s cubic-bezier(0.45,0.05,0.55,0.95) infinite}
-  /* Sovereign Halo ring around avatar */
-  .avatar-halo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:116px;height:116px;border-radius:50%;z-index:2;pointer-events:none}
-  /* Tier badge dot at bottom-right of avatar */
-  .avatar-tier-badge{position:absolute;bottom:2px;right:2px;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;border:2px solid #050505;z-index:3;cursor:default}
-  /* Name + labels */
-  @keyframes goldShimmer{0%{background-position:-200% center}100%{background-position:200% center}}
-  .hero-name{
-    font-family:'Cinzel',serif;
-    font-weight:600;
-    font-size:clamp(2.2rem,7vw,3.6rem);
-    letter-spacing:-0.02em;
-    line-height:1.05;
-    margin-bottom:6px;
-    animation:fadeUp 0.8s ease both;
-    background:linear-gradient(135deg,#D4AF37 0%,#F5E17A 45%,#D4AF37 65%,#A07C10 100%);
-    background-size:200% auto;
-    -webkit-background-clip:text;
-    background-clip:text;
-    -webkit-text-fill-color:transparent;
-    text-shadow:0 2px 20px rgba(0,0,0,0.55);
-    animation:fadeUp 0.8s ease both, goldShimmer 5.5s linear infinite;
-  }
-  .tier-status-badge{display:inline-flex;align-items:center;gap:8px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:12px;letter-spacing:0.32em;text-transform:uppercase;margin-bottom:6px;cursor:pointer;transition:opacity 0.2s}
-  .tier-status-badge:hover{opacity:0.8}
-  .tier-blueprint-expand{overflow:hidden;transition:max-height 0.35s ease,opacity 0.35s ease}
-  .soul-label{font-family:'Montserrat',sans-serif;font-weight:800;font-size:clamp(11px,2.4vw,14px);letter-spacing:clamp(0.12em,0.35vw,0.35em);text-transform:uppercase;color:rgba(212,175,55,0.8);margin-bottom:14px;white-space:nowrap;text-shadow:0 1px 12px rgba(0,0,0,0.9)}
-  .soul-label span{color:rgba(255,255,255,0.25);margin:0 8px}
-  /* Stats */
-  .stats-row{display:flex;gap:12px;flex-wrap:nowrap;justify-content:center;margin-bottom:20px;animation:fadeUp 1.1s ease both;width:100%;max-width:400px;margin-left:auto;margin-right:auto}
-  .stat-pill{background:rgba(5,5,5,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:100px;padding:12px 20px;text-align:center;flex:1 1 0;min-width:0;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
-  .stat-value{font-weight:800;font-size:26px;color:#D4AF37;letter-spacing:-0.02em;display:block}
-  .stat-label{font-weight:800;font-size:12px;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.35);display:block;margin-top:2px}
-  /* About the Nexus block */
-  .nexus-block{max-width:520px;margin:0 auto 28px;background:rgba(255,255,255,0.04);border:1px solid rgba(212,175,55,0.22);border-radius:20px;padding:24px 26px;backdrop-filter:blur(20px);text-align:left}
-  .nexus-block-label{font-weight:800;font-size:14px;letter-spacing:0.32em;text-transform:uppercase;color:#D4AF37;margin-bottom:12px}
-  .nexus-block-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.35rem;color:rgba(255,255,255,0.92);line-height:1.85}
-  .nexus-block-text strong{color:#F5E17A;font-weight:700;font-style:normal;background:none;background-image:none;-webkit-background-clip:border-box;background-clip:border-box;-webkit-text-fill-color:#F5E17A;animation:none;text-shadow:none}
-  /* Sections */
-  .section-wrap{max-width:780px;margin:0 auto;padding:32px 24px 0;text-align:center}
-  .section-label{font-family:'Montserrat',sans-serif;font-weight:800;font-size:13px;letter-spacing:0.38em;text-transform:uppercase;color:rgba(212,175,55,0.5);margin-bottom:32px;display:flex;align-items:center;gap:12px;justify-content:center}
-  .section-label::after{content:'';flex:1;height:1px;background:linear-gradient(to right,rgba(212,175,55,0.2),transparent)}
-  .glass-card{background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.12);border-radius:24px;padding:32px;backdrop-filter:blur(20px);margin-bottom:16px}
-  .tier-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
-  @media(max-width:600px){.tier-grid{grid-template-columns:1fr}}
-  .tier-card{background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.1);border-radius:24px;padding:28px 24px;backdrop-filter:blur(20px);transition:border-color 0.3s,transform 0.3s}
-  .tier-card:hover{border-color:rgba(212,175,55,0.25);transform:translateY(-2px)}
-  .tier-card.active-tier{border-color:rgba(212,175,55,0.3);background:rgba(212,175,55,0.03)}
-  .tier-card.featured{grid-column:1/-1;border-color:rgba(212,175,55,0.25);background:rgba(212,175,55,0.04)}
-  .tier-badge{display:inline-block;font-weight:800;font-size:11px;letter-spacing:0.32em;text-transform:uppercase;color:#050505;background:#D4AF37;padding:5px 14px;border-radius:100px;margin-bottom:10px}
-  .tier-name{font-weight:800;font-size:18px;letter-spacing:0.2em;color:#D4AF37;display:block;margin-bottom:4px}
-  .tier-sub{font-weight:400;font-size:12px;letter-spacing:0.32em;text-transform:uppercase;color:rgba(255,255,255,0.25)}
-  .tier-price{font-family:'Cormorant Garamond',serif;font-weight:300;font-style:italic;font-size:2.35rem;color:white;margin:16px 0 12px;letter-spacing:-0.02em}
-  .tier-price small{font-size:0.45em;color:rgba(255,255,255,0.3);font-style:normal;letter-spacing:0.1em}
-  .tier-features{list-style:none;margin-bottom:20px}
-  .tier-features li{font-size:15px;color:rgba(255,255,255,0.45);padding:6px 0;display:flex;align-items:center;gap:10px;line-height:1.55}
-  .tier-features li::before{content:'◈';color:#D4AF37;font-size:11px;flex-shrink:0}
-  .gold-btn{display:block;width:100%;max-width:280px;margin:0 auto;background:#D4AF37;color:#050505;border:none;border-radius:100px;padding:14px 26px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:12px;letter-spacing:0.28em;text-transform:uppercase;cursor:pointer;transition:opacity 0.2s,transform 0.2s;text-align:center}
-  .gold-btn:hover{opacity:0.85;transform:translateY(-1px)}
-  .ghost-btn{display:block;width:100%;max-width:280px;margin:0 auto;background:transparent;color:rgba(212,175,55,0.6);border:1px solid rgba(212,175,55,0.2);border-radius:100px;padding:13px 26px;font-family:'Montserrat',sans-serif;font-weight:800;font-size:12px;letter-spacing:0.28em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;text-align:center}
-  .siddha-quantum-card{position:relative;overflow:visible!important;border-color:rgba(212,175,55,0.35)!important;background:rgba(212,175,55,0.04)!important}
-  .sq-aura{position:absolute;inset:0;border-radius:24px;pointer-events:none;z-index:0}
-  .sq-aura-1{border:1px solid rgba(212,175,55,0.5);animation:sqPulse 2.5s ease-in-out infinite}
-  .sq-aura-2{border:1px solid rgba(212,175,55,0.3);animation:sqPulse 2.5s ease-in-out infinite 0.6s}
-  .sq-aura-3{border:1px solid rgba(212,175,55,0.15);animation:sqPulse 2.5s ease-in-out infinite 1.2s}
-  .sq-badge{background:linear-gradient(90deg,#b8960c,#D4AF37,#f5d76e,#D4AF37,#b8960c);background-size:300%;animation:shimmer 3s linear infinite}
-  .sq-btn{box-shadow:0 0 28px rgba(212,175,55,0.45),0 0 60px rgba(212,175,55,0.15);animation:btnGlow 2.5s ease-in-out infinite}
-  .siddhis-scroll{display:flex;gap:14px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none}
-  .siddhis-scroll::-webkit-scrollbar{display:none}
-  .siddhi-card{min-width:148px;background:rgba(255,255,255,0.02);border-radius:20px;padding:22px 16px;text-align:center;flex-shrink:0;transition:transform 0.2s}
-  .siddhi-card:hover{transform:translateY(-3px)}
-  .siddhi-card.earned{border:1px solid rgba(212,175,55,0.3)}
-  .siddhi-card.locked{border:1px solid rgba(255,255,255,0.04);opacity:0.5}
-  .siddhi-icon-wrap{width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
-  .siddhi-icon-wrap.earned{background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.25);box-shadow:0 0 20px rgba(212,175,55,0.1)}
-  .siddhi-icon-wrap.locked{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06)}
-  .siddhi-name{font-weight:700;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;display:block;margin-bottom:10px}
-  .siddhi-card.earned .siddhi-name{color:#D4AF37}
-  .siddhi-card.locked .siddhi-name{color:rgba(255,255,255,0.2)}
-  .siddhi-bar-bg{height:3px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden}
-  .siddhi-bar-fill{height:100%;background:#D4AF37;border-radius:3px}
-  .vault-idle{text-align:center;padding:8px 0}
-  .vault-idle p{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.05rem;color:rgba(255,255,255,0.45);line-height:1.8;margin-bottom:24px;max-width:420px;margin-left:auto;margin-right:auto}
-  .vault-scan-ring{width:100px;height:100px;border-radius:50%;border:1.5px solid rgba(212,175,55,0.55);display:flex;align-items:center;justify-content:center;margin:0 auto 22px;animation:scanPulse 3s ease-in-out infinite;position:relative;background:radial-gradient(circle,rgba(212,175,55,0.1) 0%,transparent 70%);box-shadow:0 0 40px rgba(212,175,55,0.2),inset 0 0 30px rgba(212,175,55,0.07)}
-  .vault-scan-ring::before{content:'';position:absolute;inset:-12px;border-radius:50%;border:1px solid rgba(212,175,55,0.18);animation:scanPulse 3s ease-in-out infinite reverse}
-  .vault-scan-ring::after{content:'';position:absolute;inset:-24px;border-radius:50%;border:1px solid rgba(212,175,55,0.07)}
-  .vault-scan-ring span{font-size:34px;filter:drop-shadow(0 0 10px rgba(212,175,55,0.7))}
-  .vault-soul-card{background:linear-gradient(135deg,rgba(212,175,55,0.07) 0%,rgba(255,255,255,0.01) 60%,rgba(212,175,55,0.04) 100%);border:1px solid rgba(212,175,55,0.28);border-radius:28px;padding:36px 24px;backdrop-filter:blur(40px);position:relative;overflow:hidden;box-shadow:0 0 70px rgba(212,175,55,0.08),inset 0 1px 0 rgba(212,175,55,0.12)}
-  .vault-soul-card::before{content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:240px;height:240px;background:radial-gradient(circle,rgba(212,175,55,0.14) 0%,transparent 70%);pointer-events:none}
-  .vault-eyebrow{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:9px;letter-spacing:0.45em;text-transform:uppercase;color:rgba(212,175,55,0.55);margin-bottom:18px;display:flex;align-items:center;justify-content:center;gap:8px}
-  .vault-eyebrow::before,.vault-eyebrow::after{content:'';flex:1;height:1px;background:linear-gradient(to right,transparent,rgba(212,175,55,0.25))}
-  .vault-eyebrow::after{background:linear-gradient(to left,transparent,rgba(212,175,55,0.25))}
-  .vault-metrics-row{display:flex;gap:1px;margin:22px 0;border-radius:18px;overflow:hidden;border:1px solid rgba(212,175,55,0.18)}
-  .vault-metric-cell{flex:1;background:rgba(255,255,255,0.025);padding:14px 8px;text-align:center}
-  .vault-metric-val{font-family:'Plus Jakarta Sans',sans-serif;font-weight:900;font-size:20px;color:#D4AF37;line-height:1;margin-bottom:5px;text-shadow:0 0 16px rgba(212,175,55,0.5)}
-  .vault-metric-lbl{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:7px;letter-spacing:0.25em;text-transform:uppercase;color:rgba(255,255,255,0.28)}
-  .archive-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  @media(max-width:520px){.archive-grid{grid-template-columns:1fr}}
-  .archive-card{background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.1);border-radius:18px;padding:20px 18px;transition:all 0.3s;cursor:pointer}
-  .archive-card:hover{border-color:rgba(212,175,55,0.3);background:rgba(212,175,55,0.03);transform:translateY(-2px)}
-  .archive-title{font-weight:900;font-size:14px;letter-spacing:0.2em;text-transform:uppercase;color:#D4AF37;display:block;margin-bottom:2px}
-  .archive-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1rem;color:rgba(255,255,255,0.42);display:block;line-height:1.5}
-  .archive-cta{font-weight:800;font-size:12px;letter-spacing:0.3em;text-transform:uppercase;color:#D4AF37;opacity:0.7}
-  .archive-card:hover .archive-cta{opacity:1}
-  .abundance-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-  @media(min-width:520px){.abundance-grid{grid-template-columns:repeat(4,1fr)}}
-  .abundance-card{background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.1);border-radius:20px;padding:24px 16px 20px;text-align:center;cursor:pointer;transition:all 0.25s}
-  .abundance-card:hover{border-color:rgba(212,175,55,0.3);background:rgba(212,175,55,0.04);transform:translateY(-3px)}
-  .abundance-icon-wrap{width:56px;height:56px;border-radius:16px;background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;transition:all 0.25s}
-  .abundance-card:hover .abundance-icon-wrap{background:rgba(212,175,55,0.1);border-color:rgba(212,175,55,0.3);box-shadow:0 0 20px rgba(212,175,55,0.1)}
-  .abundance-label{font-weight:900;font-size:12px;letter-spacing:0.22em;text-transform:uppercase;color:rgba(212,175,55,0.88)}
-  .settings-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
-  .settings-btn{flex:1;min-width:128px;background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.18);border-radius:100px;padding:14px 22px;font-family:'Montserrat',sans-serif;font-weight:900;font-size:12px;letter-spacing:0.26em;text-transform:uppercase;color:rgba(212,175,55,0.9);cursor:pointer;transition:all 0.2s;text-align:center}
-  .settings-btn:hover{border-color:rgba(212,175,55,0.35);background:rgba(212,175,55,0.05)}
-  .signout-btn{width:100%;background:#D4AF37;border:1px solid rgba(212,175,55,0.9);border-radius:100px;padding:15px 18px;font-family:'Montserrat',sans-serif;font-weight:900;font-size:13px;letter-spacing:0.28em;text-transform:uppercase;color:#050505;cursor:pointer;transition:all 0.2s;margin-top:12px;box-shadow:0 0 24px rgba(212,175,55,0.35)}
-  .signout-btn:hover{opacity:0.9;transform:translateY(-1px)}
-  .lang-selector{background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.12);border-radius:24px;padding:20px 24px;backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
-  /* ── KEYFRAMES ── */
-  @keyframes pulseDeep{0%,100%{opacity:0.15;transform:translate(-50%,-50%) scale(1)}50%{opacity:0.28;transform:translate(-50%,-50%) scale(1.05)}}
-  .animate-pulse-deep{animation:pulseDeep 3s cubic-bezier(0.45,0.05,0.55,0.95) infinite}
-  @keyframes haloAkasha{0%,100%{box-shadow:0 0 0 2px #D4AF37,0 0 18px 4px rgba(212,175,55,0.5)}50%{box-shadow:0 0 0 2px #D4AF37,0 0 32px 8px rgba(212,175,55,0.8)}}
-  @keyframes haloPrana{0%,100%{box-shadow:0 0 0 2px #22D3EE,0 0 16px 3px rgba(34,211,238,0.45)}50%{box-shadow:0 0 0 2px #22D3EE,0 0 28px 6px rgba(34,211,238,0.7)}}
-  @keyframes haloSiddha{0%,100%{box-shadow:0 0 0 2px #a855f7,0 0 16px 3px rgba(168,85,247,0.45)}50%{box-shadow:0 0 0 2px #a855f7,0 0 28px 6px rgba(168,85,247,0.7)}}
-  @keyframes sqPulse{0%{transform:scale(1);opacity:0.8}50%{transform:scale(1.04);opacity:0}100%{transform:scale(1.08);opacity:0}}
-  @keyframes shimmer{0%{background-position:0% 50%}100%{background-position:300% 50%}}
-  @keyframes btnGlow{0%,100%{box-shadow:0 0 20px rgba(212,175,55,0.4)}50%{box-shadow:0 0 40px rgba(212,175,55,0.7)}}
-  @keyframes glowBreathe{0%,100%{opacity:0.5;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.25)}}
-  @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
-  @keyframes bounce{0%,100%{transform:rotate(45deg) translateY(0)}50%{transform:rotate(45deg) translateY(6px)}}
-  @keyframes scanPulse{0%,100%{transform:scale(1);opacity:0.5}50%{transform:scale(1.12);opacity:1}}
-  @keyframes siddhiSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-  @keyframes syRotate{from{transform:translate(-50%,-50%) rotate(0deg) scale(1)}50%{transform:translate(-50%,-50%) rotate(180deg) scale(1.05)}to{transform:translate(-50%,-50%) rotate(360deg) scale(1)}}
-`}} />
+      <style dangerouslySetInnerHTML={{__html:`
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400;1,600&family=Montserrat:wght@800&family=Cinzel:wght@400;500;600&display=swap');
+        @keyframes cWave{0%{opacity:.5;transform:scale(1)}100%{opacity:0;transform:scale(1.06)}}
+        @keyframes syBreathe{0%,100%{opacity:.85;transform:scale(1)}45%{opacity:1;transform:scale(1.035)}}
+        @keyframes ambBreath{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.2);opacity:1}}
+        @keyframes orbitSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+        @keyframes prExpand{0%{width:50px;height:50px;opacity:.85;border-color:rgba(212,175,55,.7)}100%{width:310px;height:310px;opacity:0;border-color:rgba(212,175,55,.04)}}
+        @keyframes avGlow{0%,100%{box-shadow:0 0 0 6px rgba(212,175,55,.06),0 0 35px rgba(212,175,55,.28)}50%{box-shadow:0 0 0 10px rgba(212,175,55,.12),0 0 65px rgba(212,175,55,.55)}}
+        @keyframes goldShimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+        @keyframes scanPulse{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.12);opacity:1}}
+        @keyframes nadiP{0%{opacity:.7;transform:scale(1)}100%{opacity:0;transform:scale(1.6)}}
+        @keyframes haloAkasha{0%,100%{box-shadow:0 0 0 2px #D4AF37,0 0 18px 4px rgba(212,175,55,.5)}50%{box-shadow:0 0 0 2px #D4AF37,0 0 32px 8px rgba(212,175,55,.8)}}
+        @keyframes haloPrana{0%,100%{box-shadow:0 0 0 2px #22D3EE,0 0 16px 3px rgba(34,211,238,.45)}50%{box-shadow:0 0 0 2px #22D3EE,0 0 28px 6px rgba(34,211,238,.7)}}
+        @keyframes haloSiddha{0%,100%{box-shadow:0 0 0 2px #a855f7,0 0 16px 3px rgba(168,85,247,.45)}50%{box-shadow:0 0 0 2px #a855f7,0 0 28px 6px rgba(168,85,247,.7)}}
+        @keyframes sqPulse{0%{transform:scale(1);opacity:.8}50%{transform:scale(1.04);opacity:0}100%{transform:scale(1.08);opacity:0}}
+        @keyframes shimmer{0%{background-position:0% 50%}100%{background-position:300% 50%}}
+        @keyframes btnGlow{0%,100%{box-shadow:0 0 20px rgba(212,175,55,.4)}50%{box-shadow:0 0 40px rgba(212,175,55,.7)}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes siddhiGlow{0%,100%{box-shadow:0 0 8px rgba(212,175,55,.1)}50%{box-shadow:0 0 20px rgba(212,175,55,.3)}}
+        .pr-ring{position:absolute;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);width:50px;height:50px;border:1px solid rgba(212,175,55,.55)}
+        .pr1{animation:prExpand 5.5s ease-out infinite}
+        .pr2{animation:prExpand 5.5s ease-out infinite 1.83s}
+        .pr3{animation:prExpand 5.5s ease-out infinite 3.66s}
+        .ot{position:absolute;inset:0;pointer-events:none}
+        .ot1{animation:orbitSpin 11s linear infinite}
+        .ot2{animation:orbitSpin 18s linear infinite reverse}
+        .ot3{animation:orbitSpin 27s linear infinite}
+        .op{position:absolute;border-radius:50%;top:-3px;left:50%;transform:translateX(-50%)}
+        .siddhi-icon-wrap{width:60px;height:60px;border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;animation:siddhiGlow 4s ease-in-out infinite}
+        .siddhi-icon-wrap.earned{background:rgba(212,175,55,.06);border:1px solid rgba(212,175,55,.25)}
+        .siddhi-icon-wrap.locked{opacity:.25;filter:grayscale(1);animation:none}
+        .tier-features li::before{content:'◈';color:#D4AF37;font-size:11px;margin-right:8px}
+        .tier-features{list-style:none;padding:0;margin:0}
+        .tier-features li{font-size:14px;color:rgba(255,255,255,.45);padding:5px 0;display:flex;align-items:center;line-height:1.5}
+        .sq-aura{position:absolute;inset:0;border-radius:24px;pointer-events:none}
+        .sq-aura-1{border:1px solid rgba(212,175,55,.5);animation:sqPulse 2.5s ease-in-out infinite}
+        .sq-aura-2{border:1px solid rgba(212,175,55,.3);animation:sqPulse 2.5s ease-in-out infinite .6s}
+        .sq-aura-3{border:1px solid rgba(212,175,55,.15);animation:sqPulse 2.5s ease-in-out infinite 1.2s}
+      `}} />
 
-    <div className="profile-wrap" lang={uiLangBase} style={{ background: '#050505', minHeight: '100vh', overflowX: 'hidden', fontFamily: 'Montserrat,sans-serif', paddingBottom: '120px', position: 'relative' }}>
+      <ScalarCanvas />
 
-      <div style={{ position: 'relative', zIndex: 1 }}>
+      <div lang={uiLangBase} style={{background:'#050505',minHeight:'100vh',overflowX:'hidden',fontFamily:"'Plus Jakarta Sans',sans-serif",paddingBottom:120,position:'relative',zIndex:1}}>
 
-      {/* ── HERO ── */}
-      <section className="hero">
-        <div className="avatar-wrap">
-          <div className="avatar-glow" />
-          <div className="avatar-glow-2" />
+        {/* ══ HERO ══ */}
+        <section style={{display:'flex',flexDirection:'column',alignItems:'center',padding:'28px 20px 0',position:'relative'}}>
 
-          {/* Sri Yantra Shield — 272px (15% smaller), low-opacity pulse, rotates slowly for Akasha */}
-          <svg
-            className="sri-yantra-avatar-shield"
-            viewBox="0 0 400 400"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
-            style={userRank >= 3 ? {animation:'syRotate 60s linear infinite'} : undefined}
-          >
-            <defs>
-              <filter id="syGlow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="3" result="blur"/>
-                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-              <radialGradient id="syBg" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="rgba(212,175,55,0.05)"/>
-                <stop offset="100%" stopColor="rgba(212,175,55,0)"/>
-              </radialGradient>
-            </defs>
-            <circle cx="200" cy="200" r="198" fill="url(#syBg)"/>
-            <circle cx="200" cy="200" r="190" stroke="rgba(212,175,55,0.10)" strokeWidth="0.6" fill="none"/>
-            <circle cx="200" cy="200" r="170" stroke="rgba(212,175,55,0.08)" strokeWidth="0.5" fill="none"/>
-            <circle cx="200" cy="200" r="148" stroke="rgba(212,175,55,0.12)" strokeWidth="0.7" fill="none" strokeDasharray="6 7"/>
-            <circle cx="200" cy="200" r="128" stroke="rgba(212,175,55,0.08)" strokeWidth="0.5" fill="none"/>
-            <polygon points="200,42 368,322 32,322" stroke="#D4AF37" strokeWidth="1.4" fill="none" opacity="0.65" filter="url(#syGlow)"/>
-            <polygon points="200,78 348,306 52,306" stroke="#D4AF37" strokeWidth="1.1" fill="none" opacity="0.48"/>
-            <polygon points="200,108 328,290 72,290" stroke="#D4AF37" strokeWidth="0.85" fill="none" opacity="0.34"/>
-            <polygon points="200,140 308,274 92,274" stroke="#D4AF37" strokeWidth="0.65" fill="none" opacity="0.22"/>
-            <polygon points="200,358 32,78 368,78" stroke="#D4AF37" strokeWidth="1.3" fill="none" opacity="0.60" filter="url(#syGlow)"/>
-            <polygon points="200,322 52,94 348,94" stroke="#D4AF37" strokeWidth="1.0" fill="none" opacity="0.44"/>
-            <polygon points="200,290 72,110 328,110" stroke="#D4AF37" strokeWidth="0.80" fill="none" opacity="0.30"/>
-            <polygon points="200,262 92,126 308,126" stroke="#D4AF37" strokeWidth="0.60" fill="none" opacity="0.18"/>
-            <circle cx="200" cy="200" r="14" fill="rgba(212,175,55,0.08)" stroke="rgba(212,175,55,0.4)" strokeWidth="0.8"/>
-            <circle cx="200" cy="200" r="6" fill="rgba(212,175,55,0.70)" filter="url(#syGlow)"/>
-            <circle cx="200" cy="200" r="2.5" fill="#D4AF37"/>
-          </svg>
+          {/* Avatar system */}
+          <div style={{position:'relative',width:280,height:280,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:4}}>
+            {/* Ambient fields */}
+            <div style={{position:'absolute',inset:-70,borderRadius:'50%',background:'radial-gradient(circle,rgba(212,175,55,.09) 0%,transparent 60%)',animation:'ambBreath 9s ease-in-out infinite',pointerEvents:'none'}} />
+            <div style={{position:'absolute',inset:-110,borderRadius:'50%',background:'radial-gradient(circle,rgba(212,175,55,.04) 0%,transparent 50%)',animation:'ambBreath 14s ease-in-out infinite reverse',pointerEvents:'none'}} />
+            {/* Pulse rings */}
+            <div className="pr-ring pr1" /><div className="pr-ring pr2" /><div className="pr-ring pr3" />
+            {/* Orbit rings */}
+            <div style={{position:'absolute',inset:2,borderRadius:'50%',border:'1px solid rgba(212,175,55,.12)',animation:'orbitSpin 55s linear infinite',pointerEvents:'none'}} />
+            <div style={{position:'absolute',inset:14,borderRadius:'50%',border:'1px dashed rgba(212,175,55,.07)',animation:'orbitSpin 82s linear infinite reverse',pointerEvents:'none'}} />
 
-          {/* Sovereign Halo ring — tier-colored glowing border */}
-          {haloConfig && (
-            <div
-              className="avatar-halo"
-              style={{
-                animation: userRank === 1 ? 'haloPrana 3s ease-in-out infinite'
-                  : userRank === 2 ? 'haloSiddha 3s ease-in-out infinite'
-                  : 'haloAkasha 3s ease-in-out infinite',
-              }}
-            />
-          )}
+            {/* Sri Yantra — maximum glow, animated bindu */}
+            <svg style={{position:'absolute',inset:0,width:'100%',height:'100%',animation:'syBreathe 7s ease-in-out infinite'}} viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <defs>
+                <filter id="syG1" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                <filter id="syG2" x="-90%" y="-90%" width="280%" height="280%"><feGaussianBlur stdDeviation="12" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                <filter id="syG3" x="-120%" y="-120%" width="340%" height="340%"><feGaussianBlur stdDeviation="22" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                <radialGradient id="syBg" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="rgba(212,175,55,0.1)"><animate attributeName="stop-opacity" values="0.06;0.18;0.06" dur="5s" repeatCount="indefinite"/></stop><stop offset="100%" stopColor="rgba(212,175,55,0)"/></radialGradient>
+                <linearGradient id="triUp" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#FFE87A"/><stop offset="50%" stopColor="#D4AF37"/><stop offset="100%" stopColor="#8B6914"/></linearGradient>
+                <linearGradient id="triDown" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stopColor="#FFE87A"/><stop offset="50%" stopColor="#D4AF37"/><stop offset="100%" stopColor="#8B6914"/></linearGradient>
+              </defs>
+              <circle cx="200" cy="200" r="198" fill="url(#syBg)"/>
+              <circle cx="200" cy="200" r="192" stroke="rgba(212,175,55,0.18)" strokeWidth="0.9" fill="none"/>
+              <circle cx="200" cy="200" r="174" stroke="rgba(212,175,55,0.11)" strokeWidth="0.6" fill="none"/>
+              <circle cx="200" cy="200" r="155" stroke="rgba(212,175,55,0.2)" strokeWidth="1.1" fill="none" strokeDasharray="5 7"><animateTransform attributeName="transform" type="rotate" from="0 200 200" to="360 200 200" dur="80s" repeatCount="indefinite"/></circle>
+              <circle cx="200" cy="200" r="135" stroke="rgba(212,175,55,0.09)" strokeWidth="0.5" fill="none"/>
+              {/* Upward triangles */}
+              <polygon points="200,38 374,328 26,328" stroke="url(#triUp)" strokeWidth="2.2" fill="rgba(212,175,55,0.025)" filter="url(#syG1)"/>
+              <polygon points="200,38 374,328 26,328" stroke="rgba(212,175,55,0.55)" strokeWidth="5" fill="none" filter="url(#syG2)" opacity="0.5"/>
+              <polygon points="200,38 374,328 26,328" stroke="rgba(255,230,120,0.15)" strokeWidth="10" fill="none" filter="url(#syG3)" opacity="0.4"/>
+              <polygon points="200,76 352,312 48,312" stroke="#D4AF37" strokeWidth="1.4" fill="none" opacity="0.55" filter="url(#syG1)"/>
+              <polygon points="200,108 332,296 68,296" stroke="#D4AF37" strokeWidth="1.0" fill="none" opacity="0.36"/>
+              <polygon points="200,140 312,280 88,280" stroke="#D4AF37" strokeWidth="0.7" fill="none" opacity="0.22"/>
+              {/* Downward triangles */}
+              <polygon points="200,362 26,72 374,72" stroke="url(#triDown)" strokeWidth="2.0" fill="rgba(212,175,55,0.02)" filter="url(#syG1)"/>
+              <polygon points="200,362 26,72 374,72" stroke="rgba(212,175,55,0.5)" strokeWidth="5" fill="none" filter="url(#syG2)" opacity="0.45"/>
+              <polygon points="200,362 26,72 374,72" stroke="rgba(255,230,120,0.12)" strokeWidth="10" fill="none" filter="url(#syG3)" opacity="0.35"/>
+              <polygon points="200,328 48,88 352,88" stroke="#D4AF37" strokeWidth="1.3" fill="none" opacity="0.50" filter="url(#syG1)"/>
+              <polygon points="200,296 68,104 332,104" stroke="#D4AF37" strokeWidth="0.9" fill="none" opacity="0.34"/>
+              <polygon points="200,264 88,120 312,120" stroke="#D4AF37" strokeWidth="0.65" fill="none" opacity="0.20"/>
+              {/* Bindu — living, breathing */}
+              <circle cx="200" cy="200" r="20" fill="rgba(212,175,55,0.07)" stroke="rgba(212,175,55,0.6)" strokeWidth="1.2"><animate attributeName="r" values="16;26;16" dur="3.2s" repeatCount="indefinite"/><animate attributeName="stroke-opacity" values="0.35;1;0.35" dur="3.2s" repeatCount="indefinite"/></circle>
+              <circle cx="200" cy="200" r="12" fill="rgba(212,175,55,0.8)" filter="url(#syG2)"><animate attributeName="r" values="8;16;8" dur="3.2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;1;0.6" dur="3.2s" repeatCount="indefinite"/></circle>
+              <circle cx="200" cy="200" r="5" fill="#FFE87A" filter="url(#syG1)"><animate attributeName="r" values="3;7;3" dur="3.2s" repeatCount="indefinite"/></circle>
+              <circle cx="200" cy="200" r="2" fill="#fff"><animate attributeName="opacity" values="0.6;1;0.6" dur="1.6s" repeatCount="indefinite"/></circle>
+            </svg>
 
-          <div style={{position:'relative',zIndex:1}}>
-            <Avatar style={{
-              width:100,height:100,
-              border: haloConfig
-                ? `2px solid ${haloConfig.color}`
-                : '2px solid rgba(212,175,55,0.45)',
-              boxShadow: haloConfig
-                ? `0 0 40px ${haloConfig.shadow}`
-                : '0 0 40px rgba(212,175,55,0.15)',
-            }}>
-              <AvatarImage src={profile?.avatar_url || undefined} />
-              <AvatarFallback style={{background:'rgba(212,175,55,0.08)',color:'white',fontSize:40}}>
-                {userName?.charAt(0) || '🧘'}
-              </AvatarFallback>
-            </Avatar>
-          </div>
+            {/* Orbiting particles */}
+            <div className="ot ot1" style={{inset:20}}><div className="op" style={{width:6,height:6,background:'#D4AF37',boxShadow:'0 0 12px #D4AF37,0 0 24px rgba(212,175,55,.6)'}} /></div>
+            <div className="ot ot2" style={{inset:36}}><div className="op" style={{width:4,height:4,background:'#22D3EE',boxShadow:'0 0 10px #22D3EE,0 0 20px rgba(34,211,238,.5)'}} /></div>
+            <div className="ot ot3" style={{inset:6}}><div className="op" style={{width:3,height:3,bottom:-1.5,top:'auto',left:'38%',transform:'none',background:'rgba(212,175,55,.75)',boxShadow:'0 0 8px rgba(212,175,55,.9)'}} /></div>
 
-          {/* Edit button */}
-          <button
-            type="button"
-            aria-label={t('profile.editProfile')}
-            onClick={() => setProfileEditOpen(true)}
-            style={{position:'absolute',bottom:haloConfig ? 6 : 0,right:haloConfig ? 6 : 0,width:30,height:30,borderRadius:'50%',background:'#D4AF37',border:'2px solid #050505',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',zIndex:4}}
-          >
-            <Pencil size={11} color="#050505" />
-          </button>
+            {/* Sovereign halo ring */}
+            {haloConfig && (
+              <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',width:116,height:116,borderRadius:'50%',zIndex:2,pointerEvents:'none',animation:userRank===1?'haloPrana 3s ease-in-out infinite':userRank===2?'haloSiddha 3s ease-in-out infinite':'haloAkasha 3s ease-in-out infinite'}} />
+            )}
 
-          {/* Tier badge dot — bottom-right of avatar circle */}
-          {haloConfig && (
-            <div
-              className="avatar-tier-badge"
-              style={{
-                background: userRank === 1 ? 'rgba(34,211,238,0.15)'
-                  : userRank === 2 ? 'rgba(168,85,247,0.15)'
-                  : 'rgba(212,175,55,0.15)',
-                color: haloConfig.color,
-                boxShadow: `0 0 10px ${haloConfig.shadow}`,
-              }}
-              title={haloConfig.label}
-            >
-              {haloConfig.badge}
-            </div>
-          )}
-        </div>
-
-        <h1 className="hero-name">{userName}</h1>
-
-        {/* Minimalist tier status — single line, expandable */}
-        {tierBlueprintLine && (
-          <div style={{marginBottom:6}}>
-            <button
-              type="button"
-              className="tier-status-badge"
-              onClick={() => setBlueprintOpen(o => !o)}
-              style={{color: haloConfig?.color || '#D4AF37'}}
-            >
-              <span style={{fontSize:11}}>{haloConfig?.badge}</span>
-              <span>{t('profilePage.tierPrefix')} {tierBlueprintLine}</span>
-              <span style={{fontSize:11,opacity:0.6,transform:blueprintOpen?'rotate(180deg)':'none',display:'inline-block',transition:'transform 0.3s'}}>▾</span>
-            </button>
-            <div
-              className="tier-blueprint-expand"
-              style={{maxHeight:blueprintOpen?200:0,opacity:blueprintOpen?1:0}}
-            >
-              <div style={{
-                background:'rgba(255,255,255,0.02)',
-                border:`1px solid ${haloConfig?.color ? haloConfig.color + '33' : 'rgba(212,175,55,0.2)'}`,
-                borderRadius:16,padding:'14px 20px',margin:'8px auto 0',
-                maxWidth:320,textAlign:'left',
-              }}>
-                {userRank === 1 && (
-                  <ul className="tier-features" style={{margin:0}}>
-                    <li>{t('profilePage.expandPranaF1')}</li>
-                    <li>{t('profilePage.expandPranaF2')}</li>
-                    <li>{t('profilePage.expandPranaF3')}</li>
-                    <li>{t('profilePage.expandPranaF4')}</li>
-                    <li>{t('profilePage.expandPranaF5')}</li>
-                  </ul>
-                )}
-                {userRank === 2 && (
-                  <ul className="tier-features" style={{margin:0}}>
-                    <li>{t('profilePage.expandSiddhaF1')}</li>
-                    <li>{t('profilePage.expandSiddhaF2')}</li>
-                    <li>{t('profilePage.expandSiddhaF3')}</li>
-                    <li>{t('profilePage.expandSiddhaF4')}</li>
-                    <li>{t('profilePage.expandSiddhaF5')}</li>
-                  </ul>
-                )}
-                {userRank >= 3 && (
-                  <ul className="tier-features" style={{margin:0}}>
-                    <li>{t('profilePage.expandAkashaF1')}</li>
-                    <li>{t('profilePage.expandAkashaF2')}</li>
-                    <li>{t('profilePage.expandAkashaF3')}</li>
-                    <li>{t('profilePage.expandAkashaF4')}</li>
-                    <li>{t('profilePage.expandAkashaF5')}</li>
-                  </ul>
-                )}
-                <button
-                  type="button"
-                  onClick={() => navigate(userRank===1?'/prana-flow':userRank===2?'/siddha-quantum':'/akasha-infinity')}
-                  style={{marginTop:12,display:'block',width:'100%',background:'transparent',color:haloConfig?.color||'#D4AF37',border:`1px solid ${haloConfig?.color||'#D4AF37'}44`,borderRadius:100,padding:'11px 18px',fontFamily:'Montserrat,sans-serif',fontWeight:800,fontSize:12,letterSpacing:'0.28em',textTransform:'uppercase',cursor:'pointer'}}
-                >
-                  {t('profilePage.openPortal')}
-                </button>
+            {/* Avatar photo */}
+            <div style={{position:'relative',zIndex:10}}>
+              <div style={{width:100,height:100,borderRadius:'50%',border:`2.5px solid ${haloConfig?haloConfig.color:'rgba(212,175,55,.75)'}`,display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',animation:'avGlow 5s ease-in-out infinite'}}>
+                <Avatar style={{width:100,height:100}}>
+                  <AvatarImage src={profile?.avatar_url||undefined} />
+                  <AvatarFallback style={{background:'rgba(212,175,55,.08)',color:'white',fontSize:40}}>{userName?.charAt(0)||'🧘'}</AvatarFallback>
+                </Avatar>
               </div>
-            </div>
-          </div>
-        )}
-
-        <div className="soul-label">{t('profilePage.soulResonanceLine', { dasha: dashaCycle })}</div>
-
-        <div className="stats-row">
-          <div className="stat-pill">
-            <span className="stat-value">{shcProfile?.streak_days || 0}</span>
-            <span className="stat-label">{t('profile.streak.label')}</span>
-          </div>
-          <div className="stat-pill">
-            <span className="stat-value"><AnimatedCounter value={balance?.balance ?? 0} /></span>
-            <span className="stat-label">{t('profile.balance.label')}</span>
-          </div>
-          <div className="stat-pill">
-            <span className="stat-value">{badges.filter(b => b.earned).length}</span>
-            <span className="stat-label">{t('profile.badges')}</span>
-          </div>
-        </div>
-
-        {/* About the Nexus — visible without heavy scrolling */}
-        <div className="nexus-block">
-          <div className="nexus-block-label">{t('profilePage.aboutNexusTitle')}</div>
-          <p className="nexus-block-text">
-            <Trans i18nKey="profilePage.aboutNexusBody" components={{ bold: <strong /> }} />
-          </p>
-        </div>
-
-      </section>
-
-      {/* ── TIERS — hidden for paid members (they see the halo + blueprint instead) ── */}
-      {userRank === 0 && <div className="section-wrap">
-        <div className="section-label">{t('profilePage.sectionAscension')}</div>
-        <div className="tier-grid">
-
-          <div className={`tier-card${userRank === 0 ? ' active-tier' : ''}`}>
-            <div className="tier-header">
-              <span className="tier-name">{t('profilePage.tierAtmaName')}</span>
-              <div className="tier-sub">{t('profilePage.tierAtmaSub')}</div>
-            </div>
-            <div className="tier-price">{t('profilePage.tierFree')}</div>
-            <ul className="tier-features">
-              <li>{t('profilePage.tierAtmaF1')}</li>
-              <li>{t('profilePage.tierAtmaF2')}</li>
-              <li>{t('profilePage.tierAtmaF3')}</li>
-              <li>{t('profilePage.tierAtmaF4')}</li>
-              <li>{t('profilePage.tierAtmaF5')}</li>
-              <li>{t('profilePage.tierAtmaF6')}</li>
-              <li>{t('profilePage.tierAtmaF7')}</li>
-            </ul>
-            <button
-              onClick={() => navigate('/atma-seed')}
-              style={{
-                display:'block', width:'100%',
-                background: userRank === 0 ? 'transparent' : 'rgba(255,255,255,0.02)',
-                color: userRank === 0 ? 'rgba(212,175,55,0.7)' : 'rgba(255,255,255,0.25)',
-                border: `1px solid ${userRank === 0 ? 'rgba(212,175,55,0.25)' : 'rgba(255,255,255,0.08)'}`,
-                borderRadius:100, padding:'12px 24px',
-                fontFamily:'Montserrat,sans-serif',
-                fontWeight:800, fontSize:12,
-                letterSpacing:'0.28em', textTransform:'uppercase',
-                cursor:'pointer', transition:'all 0.2s'
-              }}
-            >
-              {userRank === 0 ? t('profilePage.tierCtaCurrent') : t('profilePage.tierCtaFree')}
-            </button>
-          </div>
-
-          <div className={`tier-card${userRank === 1 ? ' active-tier' : ''}`}>
-            <div className="tier-header">
-              <span className="tier-name">{t('profilePage.tierPranaName')}</span>
-              <div className="tier-sub">{t('profilePage.tierPranaSub')}</div>
-            </div>
-            <div className="tier-price">19€ <small>{t('profilePage.tierPerMo')}</small></div>
-            <ul className="tier-features">
-              <li>{t('profilePage.tierPranaF1')}</li>
-              <li>{t('profilePage.tierPranaF2')}</li>
-              <li>{t('profilePage.tierPranaF3')}</li>
-              <li>{t('profilePage.tierPranaF4')}</li>
-              <li>{t('profilePage.tierPranaF5')}</li>
-              <li>{t('profilePage.tierPranaF6')}</li>
-            </ul>
-            <button
-              type="button"
-              onClick={() => navigate('/prana-flow')}
-              style={{
-                display: 'block', width: '100%', maxWidth: 260, margin: '0 auto',
-                background: userRank >= 1
-                  ? 'linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08))'
-                  : 'rgba(255,255,255,0.04)',
-                color: userRank >= 1 ? '#D4AF37' : 'rgba(255,255,255,0.4)',
-                border: userRank >= 1
-                  ? '1px solid rgba(212,175,55,0.4)'
-                  : '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 100, padding: '13px 20px',
-                fontFamily: 'Montserrat,sans-serif', fontWeight: 800,
-                fontSize: 12, letterSpacing: '0.28em', textTransform: 'uppercase',
-                cursor: 'pointer', transition: 'all 0.2s'
-              }}
-            >
-              {userRank >= 1
-                ? (userRank === 1 ? t('profilePage.tierCtaCurrent') : t('profilePage.tierCtaIncludedPlan'))
-                : t('profilePage.tierCtaActivateVibration')}
-            </button>
-          </div>
-
-          <div className={`tier-card featured siddha-quantum-card${userRank === 2 ? ' active-tier' : ''}`}>
-            <div className="sq-aura sq-aura-1" /><div className="sq-aura sq-aura-2" /><div className="sq-aura sq-aura-3" />
-            <div style={{position:'relative',zIndex:1}}>
-              <div className="tier-badge sq-badge">{t('profilePage.tierSqBadge')}</div>
-              <div className="tier-header">
-                <span className="tier-name" style={{fontSize:21,textShadow:'0 0 20px rgba(212,175,55,0.6)'}}>{t('profilePage.tierSiddhaName')}</span>
-                <div className="tier-sub">{t('profilePage.tierSiddhaSub')}</div>
-              </div>
-              <div className="tier-price" style={{textShadow:'0 0 30px rgba(212,175,55,0.3)'}}>45€ <small>{t('profilePage.tierPerMo')}</small></div>
-              <ul className="tier-features">
-                <li>{t('profilePage.tierSiddhaF1')}</li>
-                <li>{t('profilePage.tierSiddhaF2')}</li>
-                <li>{t('profilePage.tierSiddhaF3')}</li>
-                <li>{t('profilePage.tierSiddhaF4')}</li>
-                <li>{t('profilePage.tierSiddhaF5')}</li>
-              </ul>
-              <button
-                onClick={() => navigate('/siddha-quantum')}
-                style={{
-                  display:'block', width:'100%',
-                  background:'linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08))',
-                  color:'#D4AF37', border:'1px solid rgba(212,175,55,0.4)',
-                  borderRadius:100, padding:'14px 24px',
-                  fontFamily:'Montserrat,sans-serif', fontWeight:800,
-                  fontSize:12, letterSpacing:'0.28em', textTransform:'uppercase',
-                  cursor:'pointer', transition:'all 0.2s',
-                  boxShadow:'0 0 24px rgba(212,175,55,0.2)'
-                }}
-              >
-                {userRank >= 2
-                  ? (userRank === 2 ? t('profilePage.tierCtaCurrentActive') : t('profilePage.tierCtaIncludedPlan'))
-                  : t('profilePage.tierCtaActivateUniversal')}
+              <button type="button" aria-label={t('profile.editProfile')} onClick={()=>setProfileEditOpen(true)}
+                style={{position:'absolute',bottom:0,right:0,width:28,height:28,borderRadius:'50%',background:'#D4AF37',border:'2px solid #050505',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',zIndex:11,boxShadow:'0 0 14px rgba(212,175,55,.7)'}}>
+                <Pencil size={11} color="#050505" />
               </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="glass-card" style={{borderColor:'rgba(212,175,55,0.2)'}}>
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:16}}>
-            <div>
-              <div style={{fontWeight:800,fontSize:12,letterSpacing:'0.32em',color:'rgba(212,175,55,0.5)',textTransform:'uppercase',marginBottom:8}}>{t('profilePage.tierAkashaCardLabel')}</div>
-              <div style={{fontWeight:800,fontSize:19,letterSpacing:'0.2em',color:'#D4AF37'}}>{t('profilePage.tierAkashaInfinityName')}</div>
-              <div style={{fontSize:12,letterSpacing:'0.28em',color:'rgba(255,255,255,0.2)',textTransform:'uppercase',marginTop:4}}>{t('profilePage.tierAkashaLifetimeSub')}</div>
-              {userRank >= 3 && (
-                <span style={{
-                  display:'inline-block',
-                  fontWeight:800, fontSize:11, letterSpacing:'0.3em', textTransform:'uppercase',
-                  color:'#050505', background:'#D4AF37', borderRadius:100, padding:'4px 11px',
-                  marginTop:6
-                }}>{t('profilePage.tierAkashaActiveEternal')}</span>
+              {haloConfig && (
+                <div style={{position:'absolute',top:-2,right:-2,zIndex:11,width:22,height:22,borderRadius:'50%',background:userRank===1?'rgba(34,211,238,.15)':userRank===2?'rgba(168,85,247,.15)':'rgba(212,175,55,.15)',border:`1px solid ${haloConfig.color}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,color:haloConfig.color,boxShadow:`0 0 10px ${haloConfig.shadow}`}}>
+                  {haloConfig.badge}
+                </div>
               )}
             </div>
-            <div style={{fontFamily:"'Cormorant Garamond',serif",fontWeight:300,fontStyle:'italic',fontSize:'3rem',color:'white'}}>€1111</div>
           </div>
-          <ul className="tier-features" style={{margin:'20px 0',display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))'}}>
-            <li>{t('profilePage.tierAkashaF1')}</li><li>{t('profilePage.tierAkashaF2')}</li>
-            <li>{t('profilePage.tierAkashaF3')}</li><li>{t('profilePage.tierAkashaF4')}</li>
-            <li>{t('profilePage.tierAkashaF5')}</li>
-            <li>{t('profilePage.tierAkashaF6')}</li>
-          </ul>
-          <button
-            type="button"
-            onClick={() => navigate('/akasha-infinity')}
-            style={{
-              display: 'block',
-              width: '100%',
-              maxWidth: 280, margin: '0 auto',
-              background: 'linear-gradient(135deg, rgba(212,175,55,0.22), rgba(212,175,55,0.1))',
-              color: '#D4AF37',
-              border: '1px solid rgba(212,175,55,0.5)',
-              borderRadius: 100,
-              padding: '15px 24px',
-              fontFamily: 'Montserrat, sans-serif',
-              fontWeight: 800,
-              fontSize: 12,
-              letterSpacing: '0.28em',
-              textTransform: 'uppercase' as const,
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              boxShadow: '0 0 32px rgba(212,175,55,0.3), 0 0 64px rgba(212,175,55,0.08)',
-            }}
-          >
-            {userRank >= 3 ? t('profilePage.tierCtaFieldActive') : t('profilePage.tierCtaEnterAkashic')}
-          </button>
-        </div>
-      </div>}
 
-      {/* ── VEDIC SIDDHIS ── */}
-      <div className="section-wrap">
-        <div className="section-label">{t('profilePage.sectionVedicSiddhis')}</div>
-        <div className="siddhis-scroll">
-          {badges.map((badge, idx) => {
-            const SvgIcon = badge.id === 1 ? (/* Gold Bindu */
-              <svg viewBox="0 0 40 40" width={40} height={40} fill="none"><circle cx="20" cy="20" r="18" stroke="#D4AF37" strokeWidth="0.8" opacity="0.4"/><circle cx="20" cy="20" r="13" stroke="#D4AF37" strokeWidth="0.6" strokeDasharray="2 2" opacity="0.6"/><circle cx="20" cy="20" r="8" stroke="#D4AF37" strokeWidth="1"/><circle cx="20" cy="20" r="4" stroke="#D4AF37" strokeWidth="0.8" opacity="0.8"/><circle cx="20" cy="20" r="2" fill="#D4AF37"/></svg>
-            ) : badge.id === 2 ? (/* Agni-Flame */
-              <svg viewBox="0 0 40 40" width={40} height={40} fill="none"><path d="M20 4 C20 4 29 13 29 21 C29 26 25 32 20 36 C15 32 11 26 11 21 C11 13 20 4 20 4Z" stroke="#D4AF37" strokeWidth="1.2" fill="none"/><path d="M20 10 C20 10 25 16 25 21 C25 25 22 29 20 32" stroke="#D4AF37" strokeWidth="1" fill="none" opacity="0.8"/><circle cx="20" cy="8" r="1.5" fill="#D4AF37"/></svg>
-            ) : badge.id === 3 ? (/* Siddha Seal */
-              <svg viewBox="0 0 40 40" width={40} height={40} fill="none"><polygon points="20,7 25,16 35,16 27,23 30,33 20,27 10,33 13,23 5,16 15,16" stroke="#D4AF37" strokeWidth="1" fill="rgba(212,175,55,0.08)"/><circle cx="20" cy="20" r="3" stroke="#D4AF37" strokeWidth="0.8" opacity="0.8"/><circle cx="20" cy="20" r="6" stroke="#D4AF37" strokeWidth="0.5" opacity="0.4"/></svg>
-            ) : badge.id === 4 ? (/* Solar Crown locked */
-              <svg viewBox="0 0 40 40" width={40} height={40} fill="none"><path d="M8 28 L12 18 L20 24 L28 18 L32 28 Z" stroke="rgba(255,255,255,0.12)" strokeWidth="1" fill="none"/><rect x="10" y="26" width="20" height="4" rx="1" stroke="rgba(255,255,255,0.12)" fill="none"/><circle cx="14" cy="20" r="1.5" stroke="rgba(255,255,255,0.12)" fill="none"/><circle cx="20" cy="16" r="1.5" stroke="rgba(255,255,255,0.12)" fill="none"/><circle cx="26" cy="20" r="1.5" stroke="rgba(255,255,255,0.12)" fill="none"/><path d="M18 22 L20 24 L22 22" stroke="rgba(255,255,255,0.12)" strokeWidth="1" fill="none"/></svg>
-            ) : badge.id === 5 ? (/* Sovereign locked */
-              <svg viewBox="0 0 40 40" width={40} height={40} fill="none"><path d="M20 4 L8 10 L8 22 C8 28 14 34 20 36 C26 34 32 28 32 22 L32 10 Z" stroke="rgba(255,255,255,0.1)" strokeWidth="1" fill="none"/><path d="M14 16 L20 10 L26 16 L26 22 L20 26 L14 22 Z" stroke="rgba(255,255,255,0.1)" strokeWidth="0.8" fill="none"/></svg>
-            ) : badge.id === 6 ? (/* Moon Keeper locked */
-              <svg viewBox="0 0 40 40" width={40} height={40} fill="none"><path d="M25 7 C15 9 8 16 8 24 C8 30 14 34 20 34 C26 34 32 30 32 24 C32 16 25 9 25 7Z" stroke="rgba(255,255,255,0.1)" strokeWidth="1" fill="none"/><circle cx="12" cy="18" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="28" cy="20" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="20" cy="28" r="1" fill="rgba(255,255,255,0.1)"/></svg>
-            ) : (
-              <svg viewBox="0 0 40 40" width={40} height={40} fill="none"><circle cx="20" cy="20" r="18" stroke="#D4AF37" strokeWidth="0.8" opacity="0.4"/><circle cx="20" cy="20" r="13" stroke="#D4AF37" strokeWidth="0.6" strokeDasharray="2 2" opacity="0.6"/><circle cx="20" cy="20" r="8" stroke="#D4AF37" strokeWidth="1"/><circle cx="20" cy="20" r="4" stroke="#D4AF37" strokeWidth="0.8" opacity="0.8"/><circle cx="20" cy="20" r="2" fill="#D4AF37"/></svg>
-            );
-            return (
-              <div key={badge.id} className={`siddhi-card ${badge.earned ? 'earned' : 'locked'}`}>
-                <div className={`siddhi-icon-wrap ${badge.earned ? 'earned' : 'locked'}`}>
-                  {SvgIcon}
+          {/* Name */}
+          <h1 style={{fontFamily:"'Cinzel',serif",fontWeight:600,fontSize:'clamp(2rem,7vw,3.2rem)',letterSpacing:'-.02em',lineHeight:1.05,marginBottom:6,background:'linear-gradient(135deg,#D4AF37 0%,#F5E17A 45%,#D4AF37 65%,#A07C10 100%)',backgroundSize:'200% auto',WebkitBackgroundClip:'text',backgroundClip:'text',WebkitTextFillColor:'transparent',animation:'fadeUp 0.8s ease both, goldShimmer 5.5s linear infinite',textAlign:'center'}}>
+            {userName}
+          </h1>
+
+          {/* Tier badge */}
+          {tierBlueprintLine && (
+            <div style={{marginBottom:6}}>
+              <button type="button" onClick={()=>setBlueprintOpen(o=>!o)} style={{display:'inline-flex',alignItems:'center',gap:8,fontFamily:"'Montserrat',sans-serif",fontWeight:800,fontSize:12,letterSpacing:'.32em',textTransform:'uppercase',color:haloConfig?.color||G,cursor:'pointer',background:'none',border:'none',padding:0}}>
+                <span style={{fontSize:11}}>{haloConfig?.badge}</span>
+                <span>{t('profilePage.tierPrefix')} {tierBlueprintLine}</span>
+                <span style={{fontSize:11,opacity:.6,display:'inline-block',transition:'transform .3s',transform:blueprintOpen?'rotate(180deg)':'none'}}>▾</span>
+              </button>
+              <div style={{overflow:'hidden',maxHeight:blueprintOpen?220:0,opacity:blueprintOpen?1:0,transition:'max-height .35s ease,opacity .35s ease'}}>
+                <div style={{background:'rgba(255,255,255,.02)',border:`1px solid ${haloConfig?.color?haloConfig.color+'33':'rgba(212,175,55,.2)'}`,borderRadius:16,padding:'14px 20px',margin:'8px auto 0',maxWidth:320,textAlign:'left'}}>
+                  {userRank===1&&<ul className="tier-features"><li>{t('profilePage.expandPranaF1')}</li><li>{t('profilePage.expandPranaF2')}</li><li>{t('profilePage.expandPranaF3')}</li><li>{t('profilePage.expandPranaF4')}</li><li>{t('profilePage.expandPranaF5')}</li></ul>}
+                  {userRank===2&&<ul className="tier-features"><li>{t('profilePage.expandSiddhaF1')}</li><li>{t('profilePage.expandSiddhaF2')}</li><li>{t('profilePage.expandSiddhaF3')}</li><li>{t('profilePage.expandSiddhaF4')}</li><li>{t('profilePage.expandSiddhaF5')}</li></ul>}
+                  {userRank>=3&&<ul className="tier-features"><li>{t('profilePage.expandAkashaF1')}</li><li>{t('profilePage.expandAkashaF2')}</li><li>{t('profilePage.expandAkashaF3')}</li><li>{t('profilePage.expandAkashaF4')}</li><li>{t('profilePage.expandAkashaF5')}</li></ul>}
+                  <button type="button" onClick={()=>navigate(userRank===1?'/prana-flow':userRank===2?'/siddha-quantum':'/akasha-infinity')} style={{marginTop:12,display:'block',width:'100%',background:'transparent',color:haloConfig?.color||G,border:`1px solid ${haloConfig?.color||G}44`,borderRadius:100,padding:'11px 18px',fontFamily:"'Montserrat',sans-serif",fontWeight:800,fontSize:12,letterSpacing:'.28em',textTransform:'uppercase',cursor:'pointer'}}>
+                    {t('profilePage.openPortal')}
+                  </button>
                 </div>
-                <span className="siddhi-name">{t(badge.titleKey)}</span>
-                <div className="siddhi-bar-bg"><div className="siddhi-bar-fill" style={{width: badge.earned ? '100%' : '10%'}} /></div>
+              </div>
+            </div>
+          )}
+
+          <div style={{fontFamily:"'Montserrat',sans-serif",fontWeight:800,fontSize:12,letterSpacing:'.32em',textTransform:'uppercase',color:'rgba(212,175,55,.8)',marginBottom:16,whiteSpace:'nowrap'}}>
+            {t('profilePage.soulResonanceLine',{dasha:dashaCycle})}
+          </div>
+
+          {/* Stats */}
+          <div style={{display:'flex',width:'calc(100% - 40px)',maxWidth:380,border:'1px solid rgba(255,255,255,.05)',borderRadius:18,overflow:'hidden',background:'rgba(255,255,255,.015)',marginBottom:24,animation:'fadeUp 1.1s ease both'}}>
+            {[
+              {val:shcProfile?.streak_days||0, lbl:t('profile.streak.label')},
+              {val:<AnimatedCounter value={balance?.balance??0}/>, lbl:t('profile.balance.label')},
+              {val:badges.filter(b=>b.earned).length, lbl:t('profile.badges')},
+            ].map((s,i)=>(
+              <div key={i} style={{flex:1,padding:'14px 6px',textAlign:'center',borderRight:i<2?'1px solid rgba(255,255,255,.05)':'none'}}>
+                <div style={{fontSize:20,fontWeight:900,letterSpacing:'-.04em',color:G,textShadow:'0 0 15px rgba(212,175,55,.4)'}}>{s.val}</div>
+                <div style={{fontSize:7,fontWeight:800,letterSpacing:'.4em',textTransform:'uppercase',color:'rgba(255,255,255,.25)',marginTop:3}}>{s.lbl}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ══ MEMBERSHIP ══ */}
+        <SLabel>Membership</SLabel>
+        <Card onClick={()=>setShowPortal(true)}>
+          <div style={{padding:'18px 20px',display:'flex',alignItems:'center',gap:16,position:'relative',zIndex:1}}>
+            <div style={{width:48,height:48,borderRadius:16,background:`${haloConfig?haloConfig.color+'18':'rgba(212,175,55,.1)'}`,border:`1px solid ${haloConfig?haloConfig.color+'44':'rgba(212,175,55,.3)'}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0,animation:'btnGlow 4s ease-in-out infinite'}}>
+              {userRank===0?'🌱':userRank===1?'◈':userRank===2?'◆':'♾'}
+            </div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:7,fontWeight:800,letterSpacing:'.45em',textTransform:'uppercase',color:haloConfig?.color||G,marginBottom:3}}>
+                {userRank===0?'Free · Atma Seed':userRank===1?'◈ First Tier · Monthly':userRank===2?'◆ Second Tier · Monthly':'◈ Third Tier · Lifetime'}
+              </div>
+              <div style={{fontSize:16,fontWeight:900,letterSpacing:'-.03em',color:'#fff'}}>{userRank===0?t('profilePage.tierAtmaName'):userRank===1?t('profilePage.tierPranaName'):userRank===2?t('profilePage.tierSiddhaName'):t('profilePage.tierAkashaInfinityName')}</div>
+              <div style={{fontSize:11,color:'rgba(255,255,255,.3)',marginTop:2}}>{userRank>=3?'Full access · All future features · No renewals':userRank>=1?'Active membership':'Free · No card needed'}</div>
+            </div>
+            <div style={{fontSize:20,color:`${haloConfig?.color||G}66`}}>›</div>
+          </div>
+        </Card>
+
+        {/* ══ TIERS — free users only ══ */}
+        {userRank===0 && <>
+          <SLabel mt={20}>{t('profilePage.sectionAscension')}</SLabel>
+          <div style={{padding:'0 16px',display:'flex',flexDirection:'column',gap:10}}>
+            {[
+              {rank:1,name:t('profilePage.tierPranaName'),price:'19€',period:t('profilePage.tierPerMo'),color:'#22D3EE',route:'/prana-flow',features:[t('profilePage.tierPranaF1'),t('profilePage.tierPranaF2'),t('profilePage.tierPranaF3'),t('profilePage.tierPranaF4'),t('profilePage.tierPranaF5')]},
+              {rank:2,name:t('profilePage.tierSiddhaName'),price:'45€',period:t('profilePage.tierPerMo'),color:'#a855f7',route:'/siddha-quantum',features:[t('profilePage.tierSiddhaF1'),t('profilePage.tierSiddhaF2'),t('profilePage.tierSiddhaF3'),t('profilePage.tierSiddhaF4'),t('profilePage.tierSiddhaF5')]},
+            ].map(tier=>(
+              <div key={tier.rank} style={{position:'relative',borderRadius:24,padding:20,background:'rgba(255,255,255,.02)',border:`1px solid ${tier.color}33`,overflow:'hidden'}}>
+                {tier.rank===2&&<><div className="sq-aura sq-aura-1"/><div className="sq-aura sq-aura-2"/><div className="sq-aura sq-aura-3"/></>}
+                <div style={{position:'relative',zIndex:1}}>
+                  <div style={{fontWeight:800,fontSize:16,color:tier.color,marginBottom:4}}>{tier.name}</div>
+                  <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:'2rem',color:'#fff',marginBottom:12}}>{tier.price} <small style={{fontSize:'.45em',color:'rgba(255,255,255,.3)'}}>{tier.period}</small></div>
+                  <ul className="tier-features" style={{marginBottom:16}}>{tier.features.map(f=><li key={f}>{f}</li>)}</ul>
+                  <button type="button" onClick={()=>navigate(tier.route)} style={{display:'block',width:'100%',background:`linear-gradient(135deg,${tier.color}30,${tier.color}14)`,color:tier.color,border:`1px solid ${tier.color}44`,borderRadius:100,padding:'14px 24px',fontFamily:"'Montserrat',sans-serif",fontWeight:800,fontSize:12,letterSpacing:'.28em',textTransform:'uppercase',cursor:'pointer'}}>{t('profilePage.tierCtaActivateVibration')}</button>
+                </div>
+              </div>
+            ))}
+            <div style={{borderRadius:24,padding:20,background:'rgba(212,175,55,.04)',border:'1px solid rgba(212,175,55,.28)',boxShadow:'0 0 30px rgba(212,175,55,.06)'}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+                <div style={{fontWeight:900,fontSize:18,color:G}}>{t('profilePage.tierAkashaInfinityName')}</div>
+                <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:'2.5rem',color:'#fff'}}>€1111</div>
+              </div>
+              <ul className="tier-features" style={{marginBottom:16,display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))'}}>
+                {[t('profilePage.tierAkashaF1'),t('profilePage.tierAkashaF2'),t('profilePage.tierAkashaF3'),t('profilePage.tierAkashaF4'),t('profilePage.tierAkashaF5'),t('profilePage.tierAkashaF6')].map(f=><li key={f}>{f}</li>)}
+              </ul>
+              <button type="button" onClick={()=>navigate('/akasha-infinity')} style={{display:'block',width:'100%',maxWidth:280,margin:'0 auto',background:'linear-gradient(135deg,rgba(212,175,55,.22),rgba(212,175,55,.1))',color:G,border:'1px solid rgba(212,175,55,.5)',borderRadius:100,padding:'15px 24px',fontFamily:"'Montserrat',sans-serif",fontWeight:800,fontSize:12,letterSpacing:'.28em',textTransform:'uppercase',cursor:'pointer',boxShadow:'0 0 32px rgba(212,175,55,.3)'}}>{t('profilePage.tierCtaEnterAkashic')}</button>
+            </div>
+          </div>
+        </>}
+
+        {/* ══ VEDIC SIDDHIS ══ */}
+        <SLabel mt={24}>{t('profilePage.sectionVedicSiddhis')}</SLabel>
+        <div style={{display:'flex',gap:10,padding:'0 20px',overflowX:'auto',scrollbarWidth:'none',paddingBottom:4}}>
+          {badges.map(badge=>{
+            const icons = [
+              <svg viewBox="0 0 36 36" width={32} height={32} fill="none"><defs><radialGradient id={`bd${badge.id}`} cx="50%" cy="30%" r="55%"><stop offset="0%" stopColor="#FFE87A"/><stop offset="60%" stopColor="#D4AF37"/><stop offset="100%" stopColor="#7A5C0A"/></radialGradient></defs><circle cx="18" cy="18" r="10" fill={`url(#bd${badge.id})`}/><circle cx="18" cy="18" r="15" stroke="#D4AF37" strokeWidth="1" fill="none" opacity="0.6"/><circle cx="18" cy="18" r="4" fill="#fff" opacity="0.9"/></svg>,
+              <svg viewBox="0 0 36 36" width={32} height={32} fill="none"><defs><linearGradient id={`fire${badge.id}`} x1="0%" y1="100%" x2="50%" y2="0%"><stop offset="0%" stopColor="#7A5C0A"/><stop offset="40%" stopColor="#D4AF37"/><stop offset="100%" stopColor="#fff"/></linearGradient></defs><path d="M18 4C18 4 26 12 26 20C26 25 22 30 18 30C14 30 10 25 10 20C10 12 18 4 18 4Z" fill={`url(#fire${badge.id})`} opacity="0.9"/></svg>,
+              <svg viewBox="0 0 36 36" width={32} height={32} fill="none"><defs><linearGradient id={`st${badge.id}`} x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#FFE87A"/><stop offset="50%" stopColor="#D4AF37"/><stop offset="100%" stopColor="#7A5C0A"/></linearGradient></defs><polygon points="18,4 21,14 31,14 23,20 26,30 18,24 10,30 13,20 5,14 15,14" fill={`url(#st${badge.id})`}/></svg>,
+              <svg viewBox="0 0 36 36" width={32} height={32} fill="none"><path d="M8 26L12 16L18 22L24 16L28 26Z" stroke="rgba(255,255,255,0.2)" strokeWidth="1" fill="none"/><rect x="6" y="26" width="24" height="4" rx="2" stroke="rgba(255,255,255,0.2)" strokeWidth="1" fill="none"/></svg>,
+              <svg viewBox="0 0 36 36" width={32} height={32} fill="none"><path d="M18 4L6 10L6 22C6 28 12 32 18 34C24 32 30 28 30 22L30 10Z" stroke="rgba(255,255,255,0.15)" strokeWidth="1" fill="none"/></svg>,
+              <svg viewBox="0 0 36 36" width={32} height={32} fill="none"><path d="M24 8C14 10 8 16 8 22C8 27 13 30 18 30" stroke="rgba(255,255,255,0.15)" strokeWidth="2" fill="none" strokeLinecap="round"/></svg>,
+            ];
+            return (
+              <div key={badge.id} style={{flexShrink:0,width:88,textAlign:'center'}}>
+                <div className={`siddhi-icon-wrap ${badge.earned?'earned':'locked'}`}>{icons[badge.id-1]}</div>
+                <div style={{fontSize:9,fontWeight:800,letterSpacing:'.08em',textTransform:'uppercase',color:badge.earned?G:'rgba(255,255,255,.2)',lineHeight:1.3}}>{t(badge.titleKey)}</div>
+                <div style={{height:2,background:'rgba(255,255,255,.06)',borderRadius:1,margin:'5px 6px 0'}}><div style={{height:'100%',borderRadius:1,background:`linear-gradient(to right,${G},rgba(212,175,55,.35))`,boxShadow:`0 0 6px rgba(212,175,55,.5)`,width:badge.earned?'100%':'10%'}} /></div>
               </div>
             );
           })}
         </div>
-      </div>
 
-      {/* ── SOUL VAULT (Siddha Quantum + Akasha Infinity only) ── */}
-      <div className="section-wrap">
-        <div className="section-label">{t('profilePage.sectionSoulVault')}</div>
-
-        {hasFeatureAccess(isAdmin, tier, 2) ? (
-          <div className="vault-soul-card">
-            <div className="vault-eyebrow">◈ Quantum Bio-Twinning V4.2</div>
-
-            {scanPhase === 'idle' ? (
+        {/* ══ SOUL VAULT ══ */}
+        <SLabel mt={24}>{t('profilePage.sectionSoulVault')}</SLabel>
+        <Card style={{background:hasFeatureAccess(isAdmin,tier,2)?'rgba(139,92,246,.02)':'rgba(255,255,255,.015)',border:hasFeatureAccess(isAdmin,tier,2)?'1px solid rgba(139,92,246,.2)':'1px solid rgba(212,175,55,.12)'}}>
+          <div style={{padding:22,position:'relative',zIndex:1}}>
+            {hasFeatureAccess(isAdmin,tier,2) ? (
               <>
-                {/* Glowing scan ring */}
-                <div className="vault-scan-ring"><span>◈</span></div>
-
-                {/* Title */}
-                <div style={{textAlign:'center',marginBottom:12}}>
-                  <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:900,fontSize:22,color:'#D4AF37',letterSpacing:'-0.03em',textShadow:'0 0 20px rgba(212,175,55,0.4)',marginBottom:6}}>
-                    Deep Field Resonance
-                  </div>
-                  <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:9,letterSpacing:'0.3em',textTransform:'uppercase',color:'rgba(255,255,255,0.25)'}}>
-                    Soul Vault — Bio-Digital Archive
+                <div style={{fontSize:7,fontWeight:800,letterSpacing:'.42em',textTransform:'uppercase',color:'rgba(139,92,246,.7)',marginBottom:16,textAlign:'center'}}>◈ Quantum Bio-Twinning V4.2</div>
+                <div style={{display:'flex',justifyContent:'center',marginBottom:18}}>
+                  <div style={{width:76,height:76,borderRadius:'50%',border:'1.5px solid rgba(139,92,246,.4)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,position:'relative',animation:'scanPulse 4s ease-in-out infinite'}}>
+                    <div style={{position:'absolute',inset:0,borderRadius:'50%',border:'1px solid rgba(139,92,246,.4)',animation:'nadiP 2.8s ease-out infinite'}} />
+                    ◈
                   </div>
                 </div>
-
-                {/* What it measures */}
-                <p style={{fontFamily:"'Cormorant Garamond',serif",fontStyle:'italic',fontSize:'1.05rem',color:'rgba(255,255,255,0.5)',lineHeight:1.8,textAlign:'center',marginBottom:20,maxWidth:400,marginLeft:'auto',marginRight:'auto'}}>
-                  {t('profilePage.soulVaultIdleDesc')}
-                </p>
-
-                {/* Metrics preview row */}
-                <div className="vault-metrics-row">
-                  {[
-                    {val:'72K', lbl:'Nadis Mapped'},
-                    {val:'HRV', lbl:'Heart Field'},
-                    {val:'◈', lbl:'Prana Level'},
-                    {val:'5', lbl:'Doshas Read'},
-                  ].map(m => (
-                    <div key={m.lbl} className="vault-metric-cell">
-                      <div className="vault-metric-val">{m.val}</div>
-                      <div className="vault-metric-lbl">{m.lbl}</div>
+                <div style={{textAlign:'center',marginBottom:16}}>
+                  <div style={{fontWeight:900,fontSize:20,color:G,letterSpacing:'-.03em',textShadow:'0 0 20px rgba(212,175,55,.4)',marginBottom:6}}>Deep Field Resonance</div>
+                  <p style={{fontFamily:"'Cormorant Garamond',serif",fontStyle:'italic',fontSize:'1.05rem',color:'rgba(255,255,255,.45)',lineHeight:1.8,marginBottom:16,maxWidth:380,margin:'0 auto 16px'}}>{t('profilePage.soulVaultIdleDesc')}</p>
+                </div>
+                <div style={{display:'flex',gap:1,borderRadius:16,overflow:'hidden',border:'1px solid rgba(212,175,55,.18)',marginBottom:18}}>
+                  {[{v:'72K',l:'Nadis'},{v:'HRV',l:'Heart'},{v:'◈',l:'Prana'},{v:'5',l:'Doshas'}].map(m=>(
+                    <div key={m.l} style={{flex:1,background:'rgba(255,255,255,.025)',padding:'12px 4px',textAlign:'center'}}>
+                      <div style={{fontWeight:900,fontSize:18,color:G,textShadow:'0 0 16px rgba(212,175,55,.5)'}}>{m.v}</div>
+                      <div style={{fontSize:7,fontWeight:800,letterSpacing:'.2em',textTransform:'uppercase',color:'rgba(255,255,255,.28)',marginTop:3}}>{m.l}</div>
                     </div>
                   ))}
                 </div>
-
-                {/* Feature bullets */}
-                <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:24}}>
-                  {[
-                    '◈ Face camera reads real heart rate + HRV via rPPG',
-                    '◈ Dosha field, Prana level & Anahata resonance mapped',
-                    '◈ 5 felt-experience questions after your practice',
-                    '◈ Before vs After comparison saved to your Soul Vault',
-                  ].map(line => (
-                    <div key={line} style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:11,color:'rgba(255,255,255,0.4)',display:'flex',alignItems:'flex-start',gap:6,textAlign:'left',paddingLeft:8}}>
-                      <span style={{color:'rgba(212,175,55,0.6)',flexShrink:0}}>{line.slice(0,1)}</span>
-                      <span>{line.slice(2)}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => navigate('/soul-scan')}
-                  style={{
-                    display:'block',width:'100%',maxWidth:320,margin:'0 auto',
-                    background:'linear-gradient(135deg,#D4AF37 0%,#B8952E 100%)',
-                    color:'#050505',border:'none',borderRadius:100,
-                    padding:'16px 26px',
-                    fontFamily:"'Plus Jakarta Sans',sans-serif",
-                    fontWeight:900,fontSize:12,letterSpacing:'0.22em',textTransform:'uppercase',
-                    cursor:'pointer',
-                    boxShadow:'0 0 30px rgba(212,175,55,0.4)',
-                    transition:'transform 0.2s,box-shadow 0.2s',
-                  }}
-                  onMouseEnter={e=>{(e.target as HTMLElement).style.transform='translateY(-2px)';(e.target as HTMLElement).style.boxShadow='0 0 45px rgba(212,175,55,0.6)'}}
-                  onMouseLeave={e=>{(e.target as HTMLElement).style.transform='translateY(0)';(e.target as HTMLElement).style.boxShadow='0 0 30px rgba(212,175,55,0.4)'}}
-                >
+                {soulVaultEntries.length>0 && (
+                  <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:16}}>
+                    {soulVaultEntries.slice(0,3).map(e=>(
+                      <div key={e.id} style={{borderRadius:14,border:'1px solid rgba(212,175,55,.15)',background:'rgba(255,255,255,.025)',padding:14}}>
+                        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,marginBottom:6}}>
+                          <p style={{fontWeight:700,fontSize:13,color:'rgba(255,255,255,.9)',margin:0}}>{soulVaultActivityLabel(e.activity)}</p>
+                          <span style={{fontSize:11,color:'rgba(255,255,255,.35)'}}>{new Date(e.created_at).toLocaleDateString(dateLocale)}</span>
+                        </div>
+                        {e.duration_minutes&&<p style={{fontSize:12,color:'rgba(34,211,238,.8)',marginBottom:6}}>{t('profilePage.soulVaultPracticeWindow',{n:e.duration_minutes})}</p>}
+                        <p style={{fontSize:13,lineHeight:1.6,color:'rgba(255,255,255,.65)',margin:0,display:'-webkit-box',WebkitLineClamp:3,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{e.report}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <button type="button" onClick={()=>navigate('/soul-scan')} style={{display:'block',width:'100%',maxWidth:300,margin:'0 auto',background:'linear-gradient(135deg,#D4AF37,#B8952E)',color:'#050505',border:'none',borderRadius:100,padding:'15px 24px',fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:900,fontSize:12,letterSpacing:'.22em',textTransform:'uppercase',cursor:'pointer',boxShadow:'0 0 30px rgba(212,175,55,.4)'}}>
                   ⚡ {t('profilePage.soulVaultInitiateScan')}
                 </button>
               </>
             ) : (
-              soulVaultEntries.length > 0 && (
-                <div style={{display:'flex',flexDirection:'column',gap:12}}>
-                  {soulVaultEntries.slice(0, 4).map((entry) => (
-                    <div key={entry.id} style={{borderRadius:16,border:'1px solid rgba(212,175,55,0.15)',background:'rgba(255,255,255,0.025)',backdropFilter:'blur(20px)',padding:16}}>
-                      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,marginBottom:6}}>
-                        <p style={{fontWeight:700,fontSize:13,color:'rgba(255,255,255,0.9)',margin:0}}>{soulVaultActivityLabel(entry.activity)}</p>
-                        <span style={{fontSize:11,color:'rgba(255,255,255,0.35)'}}>{new Date(entry.created_at).toLocaleDateString(dateLocale)}</span>
-                      </div>
-                      {entry.duration_minutes && <p style={{fontSize:12,color:'rgba(34,211,238,0.8)',marginBottom:6}}>{t('profilePage.soulVaultPracticeWindow', { n: entry.duration_minutes })}</p>}
-                      <p style={{fontSize:13,lineHeight:1.6,color:'rgba(255,255,255,0.65)',margin:0,display:'-webkit-box',WebkitLineClamp:3,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{entry.report}</p>
-                    </div>
-                  ))}
-                  <button type="button" onClick={() => navigate('/soul-scan')}
-                    style={{display:'block',width:'100%',maxWidth:280,margin:'8px auto 0',background:'rgba(212,175,55,0.12)',color:'#D4AF37',border:'1px solid rgba(212,175,55,0.3)',borderRadius:100,padding:'12px 24px',fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:800,fontSize:11,letterSpacing:'0.22em',textTransform:'uppercase',cursor:'pointer'}}>
-                    ◈ New Scan Session
-                  </button>
-                </div>
-              )
+              <div style={{textAlign:'center',padding:'8px 0'}}>
+                <div style={{width:76,height:76,borderRadius:'50%',border:'1.5px solid rgba(212,175,55,.25)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,margin:'0 auto 16px',opacity:.5}}>◈</div>
+                <div style={{fontWeight:900,fontSize:18,color:'rgba(212,175,55,.5)',marginBottom:8}}>Deep Field Resonance</div>
+                <p style={{fontFamily:"'Cormorant Garamond',serif",fontStyle:'italic',fontSize:'1rem',color:'rgba(255,255,255,.35)',lineHeight:1.7,marginBottom:18}}>{t('profilePage.soulVaultLockedDesc')}</p>
+                <button type="button" onClick={()=>navigate('/siddha-quantum')} style={{display:'block',width:'100%',maxWidth:240,margin:'0 auto',background:'rgba(212,175,55,.1)',color:G,border:'1px solid rgba(212,175,55,.3)',borderRadius:100,padding:'13px 24px',fontFamily:"'Montserrat',sans-serif",fontWeight:800,fontSize:12,letterSpacing:'.28em',textTransform:'uppercase',cursor:'pointer'}}>{t('profilePage.soulVaultUpgrade')}</button>
+              </div>
             )}
           </div>
-        ) : (
-          <div className="vault-soul-card" style={{opacity:0.7}}>
-            <div className="vault-eyebrow">◈ Siddha Quantum — Locked</div>
-            <div className="vault-scan-ring" style={{opacity:0.4}}><span>◈</span></div>
-            <div style={{textAlign:'center',marginBottom:16}}>
-              <div style={{fontFamily:"'Plus Jakarta Sans',sans-serif",fontWeight:900,fontSize:20,color:'rgba(212,175,55,0.5)',marginBottom:8}}>Deep Field Resonance</div>
-              <p style={{fontFamily:"'Cormorant Garamond',serif",fontStyle:'italic',fontSize:'1rem',color:'rgba(255,255,255,0.35)',lineHeight:1.7}}>{t('profilePage.soulVaultLockedDesc')}</p>
+        </Card>
+
+        {/* ══ AKASHIC ARCHIVE ══ */}
+        <SLabel mt={20}>{t('profilePage.sectionAkashicArchive')}</SLabel>
+        {hasFeatureAccess(isAdmin,tier,3) && (
+          <Card onClick={()=>navigate('/life-book')}>
+            <div style={{padding:'18px 20px',display:'flex',alignItems:'center',gap:14,position:'relative',zIndex:1}}>
+              <IconBox><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="14" height="18" rx="2" stroke="#D4AF37" strokeWidth="1.5" fill="rgba(212,175,55,.06)"/><line x1="3" y1="3" x2="3" y2="21" stroke="#D4AF37" strokeWidth="2" strokeLinecap="round"/><line x1="8" y1="9" x2="15" y2="9" stroke="rgba(212,175,55,.7)" strokeWidth="1" strokeLinecap="round"/><line x1="8" y1="13" x2="15" y2="13" stroke="rgba(212,175,55,.5)" strokeWidth="1" strokeLinecap="round"/><line x1="8" y1="17" x2="12" y2="17" stroke="rgba(212,175,55,.4)" strokeWidth="1" strokeLinecap="round"/></svg></IconBox>
+              <div style={{flex:1}}>
+                <div style={{fontSize:7,fontWeight:800,letterSpacing:'.42em',textTransform:'uppercase',color:'rgba(212,175,55,.6)',marginBottom:3}}>◈ Living Book System</div>
+                <div style={{fontSize:15,fontWeight:800,letterSpacing:'-.02em',color:'#fff'}}>{t('profilePage.archiveLifeBookTitle')}</div>
+                <div style={{fontSize:11,color:'rgba(255,255,255,.3)',marginTop:2}}>{t('profilePage.archiveLifeBookSub')}</div>
+              </div>
+              <div style={{fontSize:18,color:'rgba(212,175,55,.35)'}}>›</div>
             </div>
-            <button type="button" className="gold-btn" style={{maxWidth:260,margin:'0 auto',opacity:0.8}} onClick={() => navigate('/siddha-quantum')}>{t('profilePage.soulVaultUpgrade')}</button>
-          </div>
+          </Card>
         )}
-      </div>
 
-      {/* ── AKASHIC ARCHIVE ── */}
-      <div className="section-wrap">
-        <div className="section-label">{t('profilePage.sectionAkashicArchive')}</div>
-        <div className="archive-grid">
-          {hasFeatureAccess(isAdmin, tier, 3) && (
-          <div className="archive-card" onClick={() => navigate('/life-book')}>
-            <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
-              <div style={{width:44,height:44,borderRadius:13,background:'rgba(212,175,55,0.06)',border:'1px solid rgba(212,175,55,0.18)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginBottom:14}}>
-                <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
-                  <path d="M8 12 L7 22 L21 22 L20 12 Z" fill="rgba(212,175,55,0.08)" stroke="#D4AF37" strokeWidth="1.4" strokeLinejoin="round"/>
-                  <path d="M6 12 L22 12" stroke="#D4AF37" strokeWidth="1.4" strokeLinecap="round"/>
-                  <path d="M11 12 L10 7 L18 7 L17 12" fill="rgba(212,175,55,0.06)" stroke="rgba(212,175,55,0.6)" strokeWidth="1.2" strokeLinejoin="round"/>
-                  <line x1="14" y1="15" x2="14" y2="19" stroke="#D4AF37" strokeWidth="1.3" strokeLinecap="round"/>
-                  <line x1="12" y1="17" x2="16" y2="17" stroke="#D4AF37" strokeWidth="1.3" strokeLinecap="round"/>
-                  <circle cx="14" cy="5" r="1.5" fill="rgba(212,175,55,0.3)" stroke="#D4AF37" strokeWidth="1"/>
-                </svg>
-              </div>
+        {/* ══ MY RECORDINGS ══ */}
+        <SLabel mt={20}>My Recordings</SLabel>
+        <Card>
+          <div style={{padding:'18px 20px',position:'relative',zIndex:1}}>
+            <div style={{display:'flex',alignItems:'center',gap:14,marginBottom:16}}>
+              <IconBox color="rgba(34,211,238,.08)" border="rgba(34,211,238,.2)" glowColor="rgba(34,211,238,.7)">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="6" width="16" height="12" rx="2.5" stroke="#22D3EE" strokeWidth="1.5" fill="rgba(34,211,238,.06)"/><path d="M18 9L22 6.5V17.5L18 15Z" stroke="#22D3EE" strokeWidth="1.5" fill="rgba(34,211,238,.06)"/><circle cx="10" cy="12" r="3" stroke="#22D3EE" strokeWidth="1.3" fill="none"/><circle cx="10" cy="12" r="1.2" fill="rgba(34,211,238,.5)"/></svg>
+              </IconBox>
               <div>
-                <span className="archive-title">{t('profilePage.archiveLifeBookTitle')}</span>
-                <span className="archive-sub">{t('profilePage.archiveLifeBookSub')}</span>
+                <div style={{fontSize:7,fontWeight:800,letterSpacing:'.42em',textTransform:'uppercase',color:'rgba(34,211,238,.65)',marginBottom:3}}>◈ 1-on-1 Sessions</div>
+                <div style={{fontSize:15,fontWeight:800,color:'#fff'}}>Your Recordings</div>
+                <div style={{fontSize:11,color:'rgba(255,255,255,.3)',marginTop:2}}>Private healing sessions archived here</div>
               </div>
             </div>
-            <span className="archive-cta">{t('profilePage.archiveCtaOpenChats')}</span>
+            <RecordingsList callType="dm" largeText emptyText="No 1-on-1 call recordings yet. They'll appear here automatically after your sessions." />
           </div>
-          )}
-        </div>
-      </div>
+        </Card>
 
-      {/* ── MY RECORDINGS ── */}
-      <div className="section-wrap">
-        <div className="section-label">My Recordings</div>
-        <RecordingsList callType="dm" largeText emptyText="No 1-on-1 call recordings yet. They'll appear here automatically after your sessions." />
-      </div>
+        {/* ══ ADMIN: Book Translator ══ */}
+        {isAdmin && <div style={{margin:'0 16px'}}><BookTranslatorPanel /></div>}
 
-      {/* ── SACRED ARCHIVE V1 (old books + translation) — admin only ── */}
-      {isAdmin && (
-        <div className="section-wrap">
-          <BookTranslatorPanel />
-        </div>
-      )}
-
-      {/* ── ABUNDANCE & LINEAGE ── */}
-      <div className="section-wrap">
-        <div className="section-label">{t('profilePage.sectionAbundanceLineage')}</div>
-        <div className="abundance-grid">
-          <div className="abundance-card" onClick={() => navigate('/income-streams')}>
-            <div className="abundance-icon-wrap"><Wallet size={22} color="#D4AF37" /></div>
-            <span className="abundance-label">{t('profilePage.abundanceWallet')}</span>
-          </div>
-          <div className="abundance-card" onClick={() => navigate('/income-streams/affiliate')}>
-            <div className="abundance-icon-wrap"><Megaphone size={22} color="#D4AF37" /></div>
-            <span className="abundance-label">{t('profilePage.abundancePromote')}</span>
-          </div>
-          <div className="abundance-card" onClick={() => navigate('/affiliate/dashboard')}>
-            <div className="abundance-icon-wrap"><Share2 size={22} color="#D4AF37" /></div>
-            <span className="abundance-label">{t('profilePage.abundanceSovereignCard')}</span>
-          </div>
-          <div className="abundance-card" onClick={connectWallet}>
-            <div className="abundance-icon-wrap"><Moon size={22} color="#D4AF37" /></div>
-            <span className="abundance-label">{t('profilePage.abundanceConnect')}</span>
-          </div>
-          <div className="abundance-card" onClick={() => navigate('/about')}>
-            <div className="abundance-icon-wrap">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><text x="12" y="17" fontSize="14" textAnchor="middle" fill="#D4AF37" fontFamily="serif">ॐ</text><circle cx="12" cy="12" r="10" stroke="rgba(212,175,55,0.5)" strokeWidth="1" fill="none"/></svg>
-            </div>
-            <span className="abundance-label">About & How It Works</span>
-          </div>
-          {isAdmin && (
-            <div className="abundance-card" onClick={() => navigate('/admin')}>
-              <div className="abundance-icon-wrap"><Crown size={22} color="#D4AF37" /></div>
-              <span className="abundance-label">{t('profilePage.abundanceAdmin')}</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ── SETTINGS ── */}
-      <div className="section-wrap">
-        <div className="section-label">{t('profilePage.sectionPhysicalSanctuary')}</div>
-        <div style={{marginBottom:16}}>
-          <div onClick={() => setLangOpen((o) => !o)} style={{
-            background:'rgba(255,255,255,0.02)',
-            border:'1px solid rgba(212,175,55,0.12)',
-            borderRadius:16, padding:'16px 20px',
-            display:'flex', alignItems:'center',
-            justifyContent:'space-between', cursor:'pointer',
-            transition:'all 0.2s'
-          }}>
+        {/* ══ ABUNDANCE & LINEAGE ══ */}
+        <SLabel mt={20}>{t('profilePage.sectionAbundanceLineage')}</SLabel>
+        <Card onClick={()=>setAbundOpen(o=>!o)}>
+          <div style={{padding:'18px 20px',position:'relative',zIndex:1}}>
             <div style={{display:'flex',alignItems:'center',gap:14}}>
-              <div style={{width:40,height:40,borderRadius:12,
-                background:'rgba(212,175,55,0.06)',
-                border:'1px solid rgba(212,175,55,0.15)',
-                display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="1.5" strokeLinecap="round">
-                  <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
-                  <path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>
-                </svg>
+              <IconBox>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="#D4AF37" strokeWidth="1.5" fill="rgba(212,175,55,.06)"/><path d="M12 5C12 5 9 9 9 12C9 14.2 10.3 15.5 12 15.5" stroke="#D4AF37" strokeWidth="1.3" fill="none" strokeLinecap="round"/><path d="M12 5C12 5 15 9 15 12C15 14.2 13.7 15.5 12 15.5" stroke="rgba(212,175,55,.6)" strokeWidth="1.1" fill="none" strokeLinecap="round"/><circle cx="12" cy="12" r="2.5" fill="rgba(212,175,55,.7)"/></svg>
+              </IconBox>
+              <div style={{flex:1}}>
+                <div style={{fontSize:7,fontWeight:800,letterSpacing:'.42em',textTransform:'uppercase',color:'rgba(212,175,55,.6)',marginBottom:3}}>◈ Sovereign Network</div>
+                <div style={{fontSize:15,fontWeight:800,color:'#fff'}}>{t('profilePage.sectionAbundanceLineage')}</div>
               </div>
-              <div>
-                <span style={{fontWeight:800,fontSize:12,letterSpacing:'0.32em',
-                  textTransform:'uppercase',color:'rgba(212,175,55,0.75)',
-                  display:'block',marginBottom:4}}>{t('profile.language.label')}</span>
-                <div style={{display:'flex',alignItems:'center',gap:8,fontSize:16,fontWeight:700,color:'#D4AF37'}}>
-                  <span style={{fontSize:22}}>{langs[activeLangIdx].flag}</span>
-                  <span>{langs[activeLangIdx].label}</span>
-                </div>
+              <div style={{fontSize:16,color:'rgba(212,175,55,.4)',transition:'transform .3s',transform:abundOpen?'rotate(180deg)':'none'}}>∨</div>
+            </div>
+            <div style={{overflow:'hidden',maxHeight:abundOpen?400:0,transition:'max-height .4s ease',marginTop:abundOpen?14:0}}>
+              <div style={{height:1,background:'linear-gradient(to right,rgba(212,175,55,.12),transparent)',marginBottom:12}} />
+              <div style={{display:'flex',flexDirection:'column',gap:2}} onClick={e=>e.stopPropagation()}>
+                {[
+                  {icon:<Banknote size={18} color={G}/>,label:t('profilePage.abundanceWallet'),onClick:()=>navigate('/income-streams')},
+                  {icon:<Megaphone size={18} color={G}/>,label:t('profilePage.abundancePromote'),onClick:()=>navigate('/income-streams/affiliate')},
+                  {icon:<Share2 size={18} color={G}/>,label:t('profilePage.abundanceSovereignCard'),onClick:()=>navigate('/affiliate/dashboard')},
+                  {icon:<Wallet size={18} color={G}/>,label:t('profilePage.abundanceConnect'),onClick:connectWallet},
+                  {icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><text x="12" y="17" fontSize="13" textAnchor="middle" fill={G} fontFamily="serif">ॐ</text></svg>,label:'About & How It Works',onClick:()=>navigate('/about')},
+                  ...(isAdmin?[{icon:<Crown size={18} color={G}/>,label:t('profilePage.abundanceAdmin'),onClick:()=>navigate('/admin')}]:[]),
+                ].map((item,i)=>(
+                  <div key={i} onClick={item.onClick} style={{display:'flex',alignItems:'center',gap:12,padding:'10px 12px',borderRadius:14,cursor:'pointer',transition:'background .2s'}}
+                    onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background='rgba(212,175,55,.05)'}}
+                    onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background='transparent'}}>
+                    <div style={{width:34,height:34,borderRadius:11,background:'rgba(212,175,55,.06)',border:'1px solid rgba(212,175,55,.15)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{item.icon}</div>
+                    <div style={{fontSize:13,fontWeight:700,color:'rgba(255,255,255,.78)'}}>{item.label}</div>
+                    <div style={{fontSize:13,color:'rgba(212,175,55,.3)',marginLeft:'auto'}}>›</div>
+                  </div>
+                ))}
               </div>
             </div>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-              stroke="rgba(212,175,55,0.5)" strokeWidth="2" strokeLinecap="round"
-              style={{transform: langOpen ? 'rotate(180deg)' : 'none', transition:'transform 0.25s'}}>
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
           </div>
+        </Card>
+
+        {/* ══ SETTINGS ══ */}
+        <SLabel mt={20}>Account</SLabel>
+        <div style={{margin:'0 16px',display:'flex',flexDirection:'column',gap:2}}>
+          <SRow icon={<IconBox><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke={G} strokeWidth="1.5" fill="rgba(212,175,55,.08)"/><path d="M4 20C4 16.7 7.6 14 12 14C16.4 14 20 16.7 20 20" stroke={G} strokeWidth="1.5" fill="none" strokeLinecap="round"/></svg></IconBox>} label={t('profile.editProfile')} sub="Name · photo · bio · birth chart" onClick={()=>setProfileEditOpen(true)} />
+
+          <SRow icon={<IconBox color="rgba(34,211,238,.08)" border="rgba(34,211,238,.2)" glowColor="rgba(34,211,238,.7)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="6" stroke="#22D3EE" strokeWidth="1.5" fill="rgba(34,211,238,.06)"/><path d="M16 16L20 20" stroke="#22D3EE" strokeWidth="1.8" strokeLinecap="round"/></svg></IconBox>} label={t('profile.language.label')} sub={langs[activeLangIdx].flag+' '+langs[activeLangIdx].label} onClick={()=>setLangOpen(o=>!o)} right={<div style={{fontSize:14,color:'rgba(255,255,255,.18)',transform:langOpen?'rotate(180deg)':'none',transition:'transform .25s'}}>›</div>} />
           {langOpen && (
-            <div style={{background:'rgba(8,8,8,0.97)',border:'1px solid rgba(212,175,55,0.12)',
-              borderRadius:14,overflow:'hidden',marginTop:4}}>
-              {langs.map((l, i) => (
-                <div key={l.label} onClick={async () => {
-                  setLangOpen(false);
-                  await i18n.changeLanguage(l.code);
-                  if (user) await updatePreferredLanguage(l.code);
-                }}
-                  style={{display:'flex',alignItems:'center',gap:12,padding:'14px 20px',
-                    fontSize:16,fontWeight: i===activeLangIdx ? 700 : 500,
-                    color: i===activeLangIdx ? '#D4AF37' : 'rgba(255,255,255,0.5)',
-                    cursor:'pointer',
-                    borderBottom: i < langs.length-1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-                    background: i===activeLangIdx ? 'rgba(212,175,55,0.05)' : 'transparent'}}>
-                  <span style={{fontSize:22}}>{l.flag}</span>
-                  {l.label}
-                  {i===activeLangIdx && <span style={{marginLeft:'auto',color:'#D4AF37',fontSize:14}}>✓</span>}
+            <div style={{background:'rgba(8,8,8,.97)',border:'1px solid rgba(212,175,55,.12)',borderRadius:14,overflow:'hidden',marginTop:2}}>
+              {langs.map((l,i)=>(
+                <div key={l.label} onClick={async()=>{setLangOpen(false);await i18n.changeLanguage(l.code);if(user)await updatePreferredLanguage(l.code);}}
+                  style={{display:'flex',alignItems:'center',gap:12,padding:'14px 20px',fontSize:16,fontWeight:i===activeLangIdx?700:500,color:i===activeLangIdx?G:'rgba(255,255,255,.5)',cursor:'pointer',borderBottom:i<langs.length-1?'1px solid rgba(255,255,255,.04)':'none',background:i===activeLangIdx?'rgba(212,175,55,.05)':'transparent'}}>
+                  <span style={{fontSize:22}}>{l.flag}</span>{l.label}{i===activeLangIdx&&<span style={{marginLeft:'auto',color:G,fontSize:14}}>✓</span>}
                 </div>
               ))}
             </div>
           )}
         </div>
-        <a
-          href="https://www.youtube.com/watch?v=9dtcEjXA8e0"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            marginTop: 16,
-            marginBottom: 0,
-            background: 'rgba(255,255,255,0.02)',
-            border: '1px solid rgba(212,175,55,0.12)',
-            borderRadius: 16,
-            padding: '16px 20px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            textDecoration: 'none',
-            transition: 'all 0.2s',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 12,
-                background: 'rgba(212,175,55,0.06)',
-                border: '1px solid rgba(212,175,55,0.15)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <Play size={18} color="#D4AF37" fill="rgba(212,175,55,0.25)" />
-            </div>
-            <div>
-              <span
-                style={{
-                  fontWeight: 900,
-                  fontSize: 12,
-                  letterSpacing: '0.32em',
-                  textTransform: 'uppercase',
-                  color: 'rgba(212,175,55,0.75)',
-                  display: 'block',
-                  marginBottom: 4,
-                }}
-              >
-                {t('profile.howAppWorks')}
-              </span>
-              <span style={{ fontSize: 17, fontWeight: 700, color: '#D4AF37' }}>
-                {t('profile.howAppWorksVideoLink')}
-              </span>
-            </div>
-          </div>
-          <ChevronRight size={18} color="rgba(212,175,55,0.45)" />
-        </a>
-        <div className="settings-row" style={{marginTop:20}}>
-          <button type="button" className="settings-btn" onClick={() => setNotificationsOpen(true)}>{t('profile.notifications')}</button>
-          {/* Appearance/dark-mode removed — SQI always runs dark */}
-          <button type="button" className="settings-btn" onClick={() => setPrivacyOpen(true)}>{t('profile.privacy')}</button>
-        </div>
-        <div className="settings-row">
-          <button type="button" className="settings-btn" onClick={() => setSettingsOpen(true)}>{t('profile.settings.title')}</button>
-        </div>
-        <button type="button" className="signout-btn" onClick={handleSignOut}>{t('profile.signOut')}</button>
-      </div>
 
-      </div>{/* end z-index wrapper */}
+        <SLabel mt={20}>Notifications & Privacy</SLabel>
+        <div style={{margin:'0 16px',display:'flex',flexDirection:'column',gap:2}}>
+          <SRow icon={<IconBox><Bell size={18} color={G}/></IconBox>} label={t('profile.notifications')} sub={t('profile.dailyReminders')} onClick={()=>setNotificationsOpen(true)} />
+          <SRow icon={<IconBox color="rgba(139,92,246,.08)" border="rgba(139,92,246,.2)" glowColor="rgba(139,92,246,.7)"><Shield size={18} color="#a855f7"/></IconBox>} label={t('profile.privacy')} sub={t('profile.dataAndSecurity')} onClick={()=>setPrivacyOpen(true)} />
+          <SRow icon={<IconBox><Settings size={18} color={G}/></IconBox>} label={t('profile.settings.title')} sub={t('profile.appPreferences')} onClick={()=>setSettingsOpen(true)} />
+        </div>
 
-      {/* Digital Nadi 2050 Scanner Overlay */}
-      {scannerOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 backdrop-blur-md bg-black/40">
-          <div className="w-full max-w-xl bg-[#030712] rounded-[40px] border border-cyan-500/20 p-10 shadow-[0_0_50px_rgba(6,182,212,0.1)]">
-            <div className="text-right mb-4">
-              <button type="button" onClick={handleCloseScanner} className="text-white/40 text-base hover:text-white">{t('profilePage.scannerClose')}</button>
-            </div>
-            {scanPhase === 'scanning' && (
-              <HandScanner onComplete={() => setScanPhase('question')} />
-            )}
-            {scanPhase === 'question' && (
-              <>
-                <div className="text-center mb-10">
-                  <p className="text-cyan-400/60 text-sm font-black tracking-[0.32em] uppercase mb-4">{t('profilePage.scannerCaptureLabel')}</p>
-                  <h3 className="text-white text-2xl font-bold mb-2">{t('profilePage.scannerPracticeQuestion')}</h3>
-                  <p className="text-white/40 text-sm">{t('profilePage.scannerPracticeHint')}</p>
-                </div>
-                <div className="grid grid-cols-2 gap-3 mb-8">
-                  {practiceProtocols.map((p) => (
-                    <button key={p.id} type="button" onClick={() => setSelectedPracticeId(p.id)}
-                      className={`py-4 px-6 rounded-2xl bg-white/[0.03] border text-sm font-bold transition-all flex items-center justify-center gap-2 ${selectedPracticeId === p.id ? 'border-[#D4AF37]/50 text-white' : 'border-white/5 text-white/60 hover:border-[#D4AF37]/40 hover:text-white'}`}>
-                      <span>{p.icon}</span>
-                      {p.label}
-                    </button>
-                  ))}
-                </div>
-                <div className="mb-8">
-                  <label className="text-white/40 text-xs uppercase tracking-widest block mb-2 px-2">{t('profilePage.scannerDurationLabel')}</label>
-                  <input type="number" value={practiceDuration} onChange={(e) => setPracticeDuration(e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-xl py-4 px-6 text-white text-base focus:border-cyan-500/50 outline-none" />
-                </div>
-                <button type="button" disabled={!selectedPracticeId} onClick={handleGenerateSoulReport}
-                  className="w-full py-5 rounded-2xl bg-[#D4AF37] text-[#050505] text-sm font-black uppercase tracking-[0.2em] shadow-[0_0_28px_rgba(212,175,55,0.45),0_0_60px_rgba(212,175,55,0.15)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity">
-                  {t('profilePage.scannerGenerate')}
-                </button>
-              </>
-            )}
-            {scanPhase === 'saving' && (
-              <div className="space-y-4 pt-6 pb-4 text-center">
-                <p className="text-sm uppercase tracking-[0.25em] text-cyan-200/80">{t('profilePage.scannerCommitting')}</p>
-                <p className="text-sm text-muted-foreground">{t('profilePage.scannerCommittingDesc')}</p>
+        <SLabel mt={20}>How To Use</SLabel>
+        <div style={{margin:'0 16px'}}>
+          <a href="https://www.youtube.com/watch?v=9dtcEjXA8e0" target="_blank" rel="noopener noreferrer" style={{textDecoration:'none'}}>
+            <div style={{display:'flex',alignItems:'center',gap:12,padding:'13px 14px',borderRadius:16,border:'1px solid rgba(212,175,55,.16)',background:'rgba(212,175,55,.04)',cursor:'pointer'}}>
+              <IconBox color="rgba(212,175,55,.08)" border="rgba(212,175,55,.2)" glowColor="rgba(212,175,55,.7)"><Play size={18} color={G} fill="rgba(212,175,55,.25)"/></IconBox>
+              <div style={{flex:1}}>
+                <div style={{fontSize:12,fontWeight:800,letterSpacing:'.32em',textTransform:'uppercase',color:'rgba(212,175,55,.75)',marginBottom:3}}>{t('profile.howAppWorks')}</div>
+                <div style={{fontSize:14,fontWeight:700,color:G}}>{t('profile.howAppWorksVideoLink')}</div>
               </div>
-            )}
-            {scanPhase === 'done' && (
-              <KoshaReport
-                sessionData={{
-                  practice: scannerPracticeLabel,
-                  duration: practiceDuration ? Number(practiceDuration) : null,
-                }}
-                onSave={handleCloseScanner}
-              />
-            )}
-          </div>
+              <ChevronRight size={18} color="rgba(212,175,55,.45)"/>
+            </div>
+          </a>
         </div>
-      )}
 
-      <ProfileEditDialog open={profileEditOpen} onOpenChange={setProfileEditOpen} />
-      <NotificationsDialog open={notificationsOpen} onOpenChange={setNotificationsOpen} />
-      <AppearanceDialog open={appearanceOpen} onOpenChange={setAppearanceOpen} />
-      <PrivacyDialog open={privacyOpen} onOpenChange={setPrivacyOpen} />
-      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} onOpenSubscription={() => { setSettingsOpen(false); setShowPortal(true); }} />
-    </div>
-      <SubscriptionPortal isOpen={showPortal} onClose={() => setShowPortal(false)} />
+        <div style={{margin:'8px 16px 0',background:'rgba(212,175,55,.03)',border:'1px solid rgba(212,175,55,.1)',borderRadius:12,padding:'10px 14px',display:'flex',gap:10,alignItems:'center'}}>
+          <span style={{fontSize:16}}>🌑</span>
+          <span style={{fontSize:11,color:'rgba(255,255,255,.32)',lineHeight:1.5}}>SQI always runs in <strong style={{color:G}}>Dark Mode</strong> — the Akasha-Black field is the sacred substrate.</span>
+        </div>
+
+        <div style={{margin:'16px 16px 0'}}>
+          <button type="button" onClick={handleSignOut} style={{width:'100%',background:'rgba(239,68,68,.05)',border:'1px solid rgba(239,68,68,.18)',borderRadius:14,padding:15,color:'rgba(239,68,68,.75)',fontWeight:800,fontSize:11,letterSpacing:'.2em',textTransform:'uppercase',cursor:'pointer',transition:'all .2s'}}
+            onMouseEnter={e=>{(e.currentTarget).style.background='rgba(239,68,68,.12)'}}
+            onMouseLeave={e=>{(e.currentTarget).style.background='rgba(239,68,68,.05)'}}>
+            {t('profile.signOut')}
+          </button>
+        </div>
+
+        {/* ══ SCANNER OVERLAY ══ */}
+        {scannerOpen && (
+          <div style={{position:'fixed',inset:0,zIndex:50,display:'flex',alignItems:'center',justifyContent:'center',padding:24,backdropFilter:'blur(12px)',background:'rgba(0,0,0,.4)'}}>
+            <div style={{width:'100%',maxWidth:520,background:'#030712',borderRadius:40,border:'1px solid rgba(6,182,212,.2)',padding:40,boxShadow:'0 0 50px rgba(6,182,212,.1)'}}>
+              <div style={{textAlign:'right',marginBottom:16}}>
+                <button type="button" onClick={handleCloseScanner} style={{color:'rgba(255,255,255,.4)',fontSize:16,background:'none',border:'none',cursor:'pointer'}}>{t('profilePage.scannerClose')}</button>
+              </div>
+              {scanPhase==='scanning'&&<HandScanner onComplete={()=>setScanPhase('question')}/>}
+              {scanPhase==='question'&&(
+                <>
+                  <div style={{textAlign:'center',marginBottom:40}}>
+                    <p style={{color:'rgba(34,211,238,.6)',fontSize:13,fontWeight:900,letterSpacing:'.32em',textTransform:'uppercase',marginBottom:16}}>{t('profilePage.scannerCaptureLabel')}</p>
+                    <h3 style={{color:'#fff',fontSize:24,fontWeight:700,marginBottom:8}}>{t('profilePage.scannerPracticeQuestion')}</h3>
+                    <p style={{color:'rgba(255,255,255,.4)',fontSize:14}}>{t('profilePage.scannerPracticeHint')}</p>
+                  </div>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:32}}>
+                    {practiceProtocols.map(p=>(
+                      <button key={p.id} type="button" onClick={()=>setSelectedPracticeId(p.id)} style={{padding:'16px 24px',borderRadius:16,background:'rgba(255,255,255,.03)',border:`1px solid ${selectedPracticeId===p.id?'rgba(212,175,55,.5)':'rgba(255,255,255,.05)'}`,fontSize:14,fontWeight:700,color:selectedPracticeId===p.id?'#fff':'rgba(255,255,255,.6)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+                        <span>{p.icon}</span>{p.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div style={{marginBottom:32}}>
+                    <label style={{color:'rgba(255,255,255,.4)',fontSize:12,textTransform:'uppercase',letterSpacing:'.25em',display:'block',marginBottom:8}}>{t('profilePage.scannerDurationLabel')}</label>
+                    <input type="number" value={practiceDuration} onChange={e=>setPracticeDuration(e.target.value)} style={{width:'100%',background:'rgba(0,0,0,.4)',border:'1px solid rgba(255,255,255,.1)',borderRadius:12,padding:'16px 24px',color:'#fff',fontSize:16,outline:'none',boxSizing:'border-box'}} />
+                  </div>
+                  <button type="button" disabled={!selectedPracticeId} onClick={handleGenerateSoulReport} style={{width:'100%',padding:20,borderRadius:16,background:'#D4AF37',color:'#050505',fontSize:14,fontWeight:900,textTransform:'uppercase',letterSpacing:'.2em',cursor:selectedPracticeId?'pointer':'not-allowed',opacity:selectedPracticeId?1:.5,boxShadow:'0 0 28px rgba(212,175,55,.45)',border:'none'}}>{t('profilePage.scannerGenerate')}</button>
+                </>
+              )}
+              {scanPhase==='saving'&&<div style={{textAlign:'center',padding:'24px 0'}}><p style={{fontSize:14,textTransform:'uppercase',letterSpacing:'.25em',color:'rgba(34,211,238,.8)'}}>{t('profilePage.scannerCommitting')}</p><p style={{fontSize:14,color:'rgba(255,255,255,.4)',marginTop:8}}>{t('profilePage.scannerCommittingDesc')}</p></div>}
+              {scanPhase==='done'&&<KoshaReport sessionData={{practice:scannerPracticeLabel,duration:practiceDuration?Number(practiceDuration):null}} onSave={handleCloseScanner}/>}
+            </div>
+          </div>
+        )}
+
+        <ProfileEditDialog open={profileEditOpen} onOpenChange={setProfileEditOpen}/>
+        <NotificationsDialog open={notificationsOpen} onOpenChange={setNotificationsOpen}/>
+        <AppearanceDialog open={appearanceOpen} onOpenChange={setAppearanceOpen}/>
+        <PrivacyDialog open={privacyOpen} onOpenChange={setPrivacyOpen}/>
+        <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} onOpenSubscription={()=>{setSettingsOpen(false);setShowPortal(true);}}/>
+        <SubscriptionPortal isOpen={showPortal} onClose={()=>setShowPortal(false)}/>
+      </div>
     </>
   );
 };
