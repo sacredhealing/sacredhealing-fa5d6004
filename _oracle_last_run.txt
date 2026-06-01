@@ -1,2 +1,1 @@
-triggered: 2026-06-01T10:45:58.197790+00:00
-fix: quiz completion flow
+triggered: 2026-06-01T11:48:27.352453+00:00
