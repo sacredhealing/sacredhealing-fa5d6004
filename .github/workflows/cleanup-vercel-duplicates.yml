@@ -1,9 +1,7 @@
 name: Cleanup Vercel Duplicate Projects
 
 on:
-  push:
-    paths:
-      - '.github/workflows/cleanup-vercel-duplicates.yml'
+  workflow_dispatch:
 
 jobs:
   cleanup:
