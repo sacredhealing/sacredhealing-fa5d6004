@@ -77,7 +77,7 @@ export default defineConfig(({ mode }) => {
     VitePWA({
       // prompt + manual register in main.tsx (no auto-inject): avoids reload loops on Lovable
       // and never full-page reloads when a new SW is waiting.
-      registerType: "prompt",
+      registerType: "autoUpdate",
       injectRegister: null,
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "masked-icon.svg"],
       manifest: {
