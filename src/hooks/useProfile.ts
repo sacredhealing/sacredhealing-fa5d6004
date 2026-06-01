@@ -19,7 +19,7 @@ async function fetchProfile(userId: string): Promise<Profile | null> {
     .from('profiles')
     .select('user_id, full_name, avatar_url, bio, streak_days, preferred_language, last_login_date, total_referrals')
     .eq('user_id', userId)
-    .single();
+    .maybeSingle();
 
   if (error) throw error;
   return data;
