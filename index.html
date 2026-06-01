@@ -16,7 +16,7 @@
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
     
-    <!-- App icons — Siddha Quantum Nexus mark (favicon + PWA + Apple) -->
+    <!-- App icons -->
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512x512.png" />
@@ -42,15 +42,41 @@
     <meta name="apple-mobile-web-app-title" content="Siddha Quantum Nexus" />
     <meta name="mobile-web-app-capable" content="yes" />
     
-    <!-- Performance: DNS Prefetch for external services -->
+    <!-- DNS Prefetch -->
     <link rel="dns-prefetch" href="https://ssygukfdbtehvtndandn.supabase.co" />
     <link rel="preconnect" href="https://ssygukfdbtehvtndandn.supabase.co" crossorigin />
     
-    <!-- Preload critical fonts -->
+    <!-- Fonts -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" as="style" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" />
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@300;400;700;800;900&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
+
+    <!-- Google Analytics 4 — G-J5R5EQ7LY9 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J5R5EQ7LY9"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-J5R5EQ7LY9');
+    </script>
+
+    <!-- Meta Pixel — 1665112711174337 -->
+    <script>
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', '1665112711174337');
+      fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+      src="https://www.facebook.com/tr?id=1665112711174337&ev=PageView&noscript=1"/></noscript>
+
   </head>
 
   <body class="dark" style="background: #030303; min-height: 100vh;">
