@@ -43,7 +43,9 @@ export const ProtectedRoute: React.FC = () => {
     }
   }, [isAuthenticated, user]);
 
-  if (isLoading || checkingOnboarding) {
+  // While React Query is initialising the session from localStorage/Supabase,
+  // show the spinner — NEVER redirect to /auth during this window.
+  if (isLoading || (isAuthenticated && checkingOnboarding)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -52,10 +54,8 @@ export const ProtectedRoute: React.FC = () => {
   }
 
   if (!isAuthenticated) {
-    // Allow marketing-style access to a small set of pages so membership banners
-    // can remain visible (no redirect flicker).
     if (isPublicPath) return <Outlet />;
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/auth" replace state={{ from: location }} />;
   }
 
   // Redirect to onboarding if not completed (unless already on onboarding page)
