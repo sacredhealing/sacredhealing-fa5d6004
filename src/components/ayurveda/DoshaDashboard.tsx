@@ -553,7 +553,178 @@ interface DoshaDashboardProps {
   onOpenChat?: () => void;
 }
 
-export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
+export 
+// ── AGASTYAR ACADEMY 108 MODULES ─────────────────────────────────────────
+const ACADEMY_PHASES = [
+  {
+    id: 1, label: 'Phase I · Free', sublabel: 'Adhi Vidya', color: '#9CA3AF', tierReq: 0,
+    desc: 'Foundation of Siddha knowledge — open to all seekers.',
+    modules: [
+      { n:'01', title:'Prakriti — Original Nature', sub:'Your birth constitution', mins:45, ct:'video' },
+      { n:'02', title:'Pancha Mahabhutas', sub:'The five sacred elements', mins:38, ct:'video' },
+      { n:'03', title:'Tri Dosha System', sub:'Vata, Pitta, Kapha in depth', mins:52, ct:'video' },
+      { n:'04', title:'Agni — The Sacred Fire', sub:'Your digestive intelligence', mins:40, ct:'interactive' },
+      { n:'05', title:'Ama — Toxic Residue', sub:'Root of all disease', mins:35, ct:'video' },
+      { n:'06', title:'Dinacharya', sub:'Sacred daily routine', mins:60, ct:'pdf' },
+      { n:'07', title:'Ritucharya', sub:'Seasonal Ayurvedic wisdom', mins:42, ct:'video' },
+      { n:'08', title:'The Three Gunas', sub:'Sattva, Rajas, Tamas', mins:38, ct:'video' },
+      { n:'09', title:'Ojas — Vital Essence', sub:'The seat of immunity', mins:30, ct:'audio' },
+      { n:'10', title:'Nadi Pariksha Intro', sub:'Reading the pulse', mins:55, ct:'interactive' },
+      { n:'11', title:'Dravyaguna Intro', sub:'Ayurvedic herb science', mins:65, ct:'pdf' },
+      { n:'12', title:'Your Personal Practice', sub:'Bringing it all together', mins:45, ct:'interactive' },
+    ]
+  },
+  {
+    id: 2, label: 'Phase II · Prana Flow', sublabel: 'Jijnasa', color: '#4ADE80', tierReq: 1,
+    desc: 'Deep investigation. Nadi pulse, Marma, seven tissues. Prana Flow and above.',
+    modules: [
+      { n:'13', title:'Advanced Nadi Pariksha', sub:'12 pulse positions', mins:75, ct:'video' },
+      { n:'14', title:'Marma Chikitsa', sub:'108 vital points', mins:80, ct:'interactive' },
+      { n:'15', title:'Srotamsi', sub:'The 16 channel systems', mins:60, ct:'video' },
+      { n:'16', title:'Sapta Dhatu', sub:'Seven tissue science', mins:70, ct:'video' },
+      { n:'17', title:'Vikruti Assessment', sub:'Reading current imbalance', mins:55, ct:'interactive' },
+      { n:'18', title:'Advanced Pulse Mastery', sub:'Organ vitality reading', mins:80, ct:'video' },
+      { n:'19', title:'Ahara Vidya', sub:'Sacred food science', mins:65, ct:'pdf' },
+      { n:'20', title:'Pranayama Science', sub:'Advanced breath work', mins:55, ct:'audio' },
+      { n:'21', title:'Abhyanga Vidya', sub:'Oil therapy mastery', mins:60, ct:'video' },
+      { n:'22', title:'Emotional Alchemy', sub:'Ayurveda and the mind', mins:70, ct:'interactive' },
+      { n:'23', title:'Nidra Vidya', sub:'Sleep science', mins:45, ct:'audio' },
+      { n:'24', title:'Rasayana Introduction', sub:'Rejuvenation science', mins:65, ct:'video' },
+    ]
+  },
+  {
+    id: 3, label: 'Phase III · Siddha Quantum', sublabel: 'Vaidya Tantra', color: '#D4AF37', tierReq: 2,
+    desc: 'Clinical Siddha medicine. Panchakarma, Rasayana, Muppu alchemy. Siddha Quantum.',
+    modules: [
+      { n:'25', title:'Panchakarma', sub:'The five purifications', mins:90, ct:'video' },
+      { n:'26', title:'Advanced Rasayana', sub:'Rejuvenation protocols', mins:80, ct:'video' },
+      { n:'27', title:'Muppu — Tamil Alchemy', sub:'The three-salt formula', mins:75, ct:'video' },
+      { n:'28', title:'Varmam Science', sub:'Tamil vital points', mins:85, ct:'interactive' },
+      { n:'29', title:'Jyotish Integration', sub:'Astrology and medicine', mins:70, ct:'video' },
+      { n:'30', title:'Manas Chikitsa', sub:'Siddha psychology', mins:80, ct:'video' },
+      { n:'31', title:'Classical Formulas', sub:'100 Siddha preparations', mins:90, ct:'pdf' },
+      { n:'32', title:'Stri Roga', sub:"Women's sacred medicine", mins:75, ct:'video' },
+      { n:'33', title:'Kaumarabhritya', sub:"Children's medicine", mins:60, ct:'video' },
+      { n:'34', title:'Visha Vaidya', sub:'Toxicology science', mins:65, ct:'video' },
+      { n:'35', title:'Advanced Herbology', sub:'Deep herb science', mins:85, ct:'pdf' },
+      { n:'36', title:'Clinical Case Studies', sub:'20 complete cases', mins:95, ct:'video' },
+    ]
+  },
+  {
+    id: 4, label: 'Phase IV · Akasha ∞', sublabel: 'Siddha Vidya', color: '#A78BFA', tierReq: 3,
+    desc: 'Esoteric science. Kaya Kalpa, Tamil alchemy, longevity. Akasha Infinity only.',
+    modules: [
+      { n:'37', title:'Kaya Kalpa', sub:'Body immortality science', mins:110, ct:'video' },
+      { n:'38', title:'Mercury Alchemy', sub:'Parada Shastra', mins:90, ct:'video' },
+      { n:'39', title:'Tamil Nadi Astrology', sub:'Palm leaf manuscripts', mins:95, ct:'video' },
+      { n:'40', title:'Longevity Science', sub:'Ayus Shastra', mins:100, ct:'video' },
+      { n:'41', title:'Siddha Yoga Medicine', sub:'Yoga as healing', mins:85, ct:'interactive' },
+      { n:'42', title:'Consciousness Healing', sub:'The subtle body', mins:70, ct:'audio' },
+      { n:'43', title:'Cosmic Herb Intelligence', sub:'Living plant medicine', mins:80, ct:'video' },
+      { n:'44', title:'Siddhi Medicine', sub:'Extraordinary capabilities', mins:75, ct:'video' },
+      { n:'45', title:'The 18 Siddhas', sub:'Direct lineage transmission', mins:120, ct:'live' },
+      { n:'46-72', title:'Advanced Sciences', sub:'26 deep transmissions', mins:0, ct:'live' },
+    ]
+  },
+  {
+    id: 5, label: 'Phase V · Atma Vidya', sublabel: 'Self-Realization', color: '#F0ABFC', tierReq: 3,
+    desc: 'Medicine of the Self. 72,000 Nadis, Samadhi, Liberation. Akasha ∞ only.',
+    modules: [
+      { n:'73', title:'The 72,000 Nadis', sub:'Pranic anatomy', mins:90, ct:'video' },
+      { n:'74', title:'Atma Vidya', sub:'Science of the Self', mins:80, ct:'audio' },
+      { n:'75', title:'Samadhi Medicine', sub:'States of consciousness', mins:70, ct:'interactive' },
+      { n:'76', title:'Transmission Science', sub:'Energy medicine', mins:85, ct:'video' },
+      { n:'77', title:'Mantra Chikitsa', sub:'Sound as medicine', mins:75, ct:'audio' },
+      { n:'78', title:'Yantra Vidya', sub:'Sacred geometry healing', mins:65, ct:'interactive' },
+      { n:'79-108', title:'The Final Transmissions', sub:'30 advanced modules', mins:0, ct:'live' },
+    ]
+  },
+];
+
+const TIER_RANK: Record<string, number> = { FREE: 0, PREMIUM: 1, LIFETIME: 3 };
+
+const AgastyarAcademy: React.FC<{ dosha: string; isPremium: boolean }> = ({ isPremium }) => {
+  const [activePhase, setActivePhase] = React.useState(1);
+  const [expandedMod, setExpandedMod] = React.useState<string | null>(null);
+  const tierRank = isPremium ? 3 : 0; // simplified — admin gets all
+  const phase = ACADEMY_PHASES.find(p => p.id === activePhase)!;
+  const hasAccess = tierRank >= phase.tierReq;
+  const ctIcon: Record<string, string> = { video:'▶', audio:'♪', pdf:'📄', interactive:'⚡', live:'◉' };
+
+  return (
+    <Card accent={T.saff} delay={0.9} style={{ padding:'22px 20px' }}>
+      <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase', color:T.saff, marginBottom:6 }}>
+        ✦ Agastyar Academy · 108 Modules ✦
+      </div>
+      <h3 style={{ fontSize:17, fontWeight:900, letterSpacing:'-0.03em', color:T.w90, marginBottom:4 }}>
+        Siddha Ayurveda Mastery Path
+      </h3>
+      <p style={{ fontSize:12, color:T.w50, marginBottom:16, lineHeight:1.5 }}>
+        The complete Agastya lineage — tap any module to open the sacred teaching
+      </p>
+
+      {/* Phase Tabs */}
+      <div style={{ display:'flex', gap:6, marginBottom:14, overflowX:'auto', paddingBottom:4 }}>
+        {ACADEMY_PHASES.map(p => (
+          <button key={p.id} onClick={() => setActivePhase(p.id)}
+            style={{
+              padding:'6px 12px', borderRadius:999, fontSize:10, fontWeight:800,
+              letterSpacing:'0.12em', textTransform:'uppercase', whiteSpace:'nowrap',
+              cursor:'pointer', border:`1px solid ${p.color}${activePhase === p.id ? '80' : '33'}`,
+              background: activePhase === p.id ? `${p.color}20` : 'transparent',
+              color: activePhase === p.id ? p.color : `${p.color}aa`,
+              fontFamily:"'Plus Jakarta Sans',sans-serif", flexShrink:0,
+            }}>
+            {p.id === activePhase ? p.label : `Phase ${p.id}`}
+          </button>
+        ))}
+      </div>
+
+      {/* Phase Description */}
+      <p style={{ fontSize:11, color:T.w40, marginBottom:14, lineHeight:1.55 }}>{phase.desc}</p>
+
+      {!hasAccess ? (
+        <div style={{ padding:'24px 16px', borderRadius:18, border:`1px solid ${phase.color}33`, background:`radial-gradient(ellipse at center,${phase.color}0e,transparent 70%)`, textAlign:'center' }}>
+          <div style={{ fontSize:24, marginBottom:10, opacity:0.4 }}>🔒</div>
+          <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase', color:phase.color, marginBottom:8 }}>Unlock {phase.sublabel}</div>
+          <div style={{ fontSize:15, fontWeight:900, color:T.w90, marginBottom:8 }}>{phase.modules.length} Modules Await</div>
+          <div style={{ fontSize:11, fontWeight:800, color:phase.color }}>Requires: {phase.id <= 2 ? 'Prana Flow ◈' : phase.id === 3 ? 'Siddha Quantum ◉' : 'Akasha Infinity ∞'}</div>
+        </div>
+      ) : (
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:9 }}>
+          {phase.modules.map(m => (
+            <motion.button key={m.n}
+              onClick={() => setExpandedMod(expandedMod === m.n ? null : m.n)}
+              whileHover={{ y:-2 }} whileTap={{ scale:0.98 }}
+              style={{
+                padding:'13px 12px', borderRadius:18, textAlign:'left', cursor:'pointer',
+                background: expandedMod === m.n ? `${phase.color}12` : 'rgba(255,255,255,0.025)',
+                border:`1px solid ${expandedMod === m.n ? phase.color+'44' : 'rgba(255,255,255,0.07)'}`,
+                transition:'all 0.2s', position:'relative', overflow:'hidden',
+              }}>
+              <span style={{ position:'absolute', right:8, top:8, fontSize:8, fontWeight:700, color:'rgba(255,255,255,0.15)' }}>#{m.n}</span>
+              <div style={{ display:'inline-flex', alignItems:'center', gap:3, borderRadius:6, border:`1px solid ${phase.color}2a`, background:`${phase.color}12`, padding:'2px 7px', marginBottom:7 }}>
+                <span style={{ fontSize:7, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase', color:phase.color }}>{phase.tierReq === 0 ? 'Free' : phase.id <= 2 ? 'Prana' : phase.id === 3 ? 'Siddha' : 'Akasha'}</span>
+              </div>
+              <div style={{ fontSize:12, fontWeight:900, color:T.w90, lineHeight:1.3, marginBottom:3, paddingRight:16 }}>{m.title}</div>
+              <div style={{ fontSize:10, color:phase.color, opacity:0.85, marginBottom: expandedMod === m.n ? 8 : 0 }}>{m.sub}</div>
+              {expandedMod === m.n && (
+                <div style={{ fontSize:10, color:T.w50, borderTop:`1px solid rgba(255,255,255,0.08)`, paddingTop:8 }}>
+                  <div style={{ display:'flex', justifyContent:'space-between' }}>
+                    <span>{ctIcon[m.ct]} {m.ct}</span>
+                    <span>⏱ {m.mins > 0 ? `${m.mins}m` : 'Live'}</span>
+                  </div>
+                </div>
+              )}
+            </motion.button>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+};
+
+const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
   profile, dosha, dailyGuidance, isLoadingGuidance,
   onRestart, onFetchGuidance, isPremium = false, onOpenChat,
 }) => {
