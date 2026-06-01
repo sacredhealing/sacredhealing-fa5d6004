@@ -113,9 +113,10 @@ export function sanitizeObject<T extends Record<string, unknown>>(obj: T): T {
 }
 
 // ── 3. SESSION GUARD ────────────────────────────────────────
-// Auto-logout on inactivity, session token validation
+// Auto-logout on inactivity — 30 days for sovereign practitioners
+// Previously 2 hours — too aggressive for a daily spiritual platform
 
-const SESSION_TIMEOUT_MS = 2 * 60 * 60 * 1000; // 2 hours
+const SESSION_TIMEOUT_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 const ACTIVITY_EVENTS = ['mousedown', 'keydown', 'touchstart', 'scroll'];
 
 let activityTimer: ReturnType<typeof setTimeout> | null = null;
@@ -139,7 +140,8 @@ export function initSessionGuard(onTimeout: () => void) {
 }
 
 // ── 4. DEVICE FINGERPRINT ───────────────────────────────────
-// Detects account sharing / suspicious multi-device usage
+// Stored in localStorage so it survives tab/window reopens
+// (sessionStorage was wiping it on every new tab = false MISMATCH alerts)
 
 export async function generateFingerprint(): Promise<string> {
   const components = [
@@ -261,9 +263,10 @@ export function generateCSRFToken(): string {
 }
 
 export function storeCSRFToken(token: string) {
-  sessionStorage.setItem('sqi_csrf', token);
+  // Use localStorage so CSRF token persists across tabs
+  localStorage.setItem('sqi_csrf', token);
 }
 
 export function validateCSRFToken(token: string): boolean {
-  return sessionStorage.getItem('sqi_csrf') === token;
+  return localStorage.getItem('sqi_csrf') === token;
 }
