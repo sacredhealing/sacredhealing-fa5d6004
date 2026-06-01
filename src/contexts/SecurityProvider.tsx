@@ -53,6 +53,9 @@ interface SecurityProviderProps {
 export function SecurityProvider({ children }: SecurityProviderProps) {
   const navigate = useNavigate();
   const [csrfToken] = useState(() => {
+    // Reuse existing CSRF token from localStorage across tabs/reloads
+    const existing = localStorage.getItem('sqi_csrf');
+    if (existing) return existing;
     const token = generateCSRFToken();
     storeCSRFToken(token);
     return token;
@@ -71,12 +74,14 @@ export function SecurityProvider({ children }: SecurityProviderProps) {
   }, []);
 
   // ── Fingerprint generation ──────────────────────────────
+  // Stored in localStorage so it persists across tabs and page reloads
+  // sessionStorage was wiping on every new tab = false MISMATCH alerts = forced logout
   useEffect(() => {
     generateFingerprint().then((fp) => {
       setFingerprint(fp);
-      const stored = sessionStorage.getItem('sqi_fp');
+      const stored = localStorage.getItem('sqi_fp');
       if (!stored) {
-        sessionStorage.setItem('sqi_fp', fp);
+        localStorage.setItem('sqi_fp', fp);
       } else if (stored !== fp) {
         logSecurityEvent('FINGERPRINT_MISMATCH', { stored, current: fp }, 'HIGH');
         addSecurityEvent('FINGERPRINT_MISMATCH', 'HIGH');
@@ -86,6 +91,7 @@ export function SecurityProvider({ children }: SecurityProviderProps) {
   }, [addSecurityEvent]);
 
   // ── Session guard (auto-logout on inactivity) ──────────
+  // Timeout is now 30 days — defined in security.ts
   useEffect(() => {
     const cleanup = initSessionGuard(async () => {
       setIsSessionValid(false);
@@ -142,8 +148,8 @@ export function SecurityProvider({ children }: SecurityProviderProps) {
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT') {
         setIsSessionValid(false);
-        sessionStorage.removeItem('sqi_fp');
-        sessionStorage.removeItem('sqi_csrf');
+        // Only clear session-specific data, not fingerprint or CSRF
+        // (those should persist across logins on the same device)
       }
       if (event === 'TOKEN_REFRESHED') {
         logSecurityEvent('TOKEN_REFRESHED', { userId: session?.user?.id }, 'LOW');
