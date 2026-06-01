@@ -82,7 +82,7 @@ export const SHCProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           .from('profiles')
           .select('user_id, full_name, avatar_url, bio, streak_days, preferred_language, last_login_date, total_referrals')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
         return profileData;
       },
       staleTime: 5 * 60 * 1000,
