@@ -225,5 +225,15 @@ jobs:
             --no-verify-jwt 2>&1
         continue-on-error: true
 
+      - name: Deploy admin-user-management
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
+        run: |
+          supabase functions deploy admin-user-management \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt 2>&1
+        continue-on-error: true
+
       - name: Done
         run: echo "All function deployments completed at $(date)"
