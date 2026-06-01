@@ -1,4 +1,4 @@
-// SQI Build: 1780316450
+// SQI Build: 1780316618
 import React, { Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 const PolymarketOracle = React.lazy(() => import("@/pages/PolymarketOracle"));
