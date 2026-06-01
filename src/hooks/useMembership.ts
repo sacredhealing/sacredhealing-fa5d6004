@@ -104,13 +104,11 @@ export const useMembership = () => {
     setSettled(false);
 
     try {
-      // Read directly from profiles + user_memberships — bypasses schema cache issues with RPCs/edge functions
-      const [profileRes, membershipRes] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('is_admin, subscription_status')
-          .eq('user_id', user.id)
-          .single(),
+      const [adminRes, membershipRes] = await Promise.all([
+        supabase.rpc('has_role', {
+          _user_id: user.id,
+          _role: 'admin',
+        }),
         supabase
           .from('user_memberships')
           .select('tier_id, status, expires_at, membership_tiers(slug, name)')
@@ -121,7 +119,7 @@ export const useMembership = () => {
           .maybeSingle(),
       ]);
 
-      const isAdmin = profileRes.data?.is_admin === true;
+      const isAdmin = adminRes.data === true;
       const membershipRow = membershipRes.data as any;
       const tierSlug = membershipRow?.membership_tiers?.slug ?? 'free';
       const expiresAt = membershipRow?.expires_at ?? null;
