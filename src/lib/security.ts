@@ -117,17 +117,32 @@ export function sanitizeObject<T extends Record<string, unknown>>(obj: T): T {
 // Previously 2 hours — too aggressive for a daily spiritual platform
 
 const SESSION_TIMEOUT_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+const MAX_TIMER_DELAY_MS = 2_147_000_000; // Browser-safe setTimeout limit (~24.8 days)
 const ACTIVITY_EVENTS = ['mousedown', 'keydown', 'touchstart', 'scroll'];
 
 let activityTimer: ReturnType<typeof setTimeout> | null = null;
+let activityDeadline = 0;
 
 export function initSessionGuard(onTimeout: () => void) {
-  const resetTimer = () => {
+  const clearActivityTimer = () => {
     if (activityTimer) clearTimeout(activityTimer);
-    activityTimer = setTimeout(() => {
+    activityTimer = null;
+  };
+
+  const scheduleTimer = () => {
+    clearActivityTimer();
+    const remainingMs = activityDeadline - Date.now();
+    if (remainingMs <= 0) {
       onTimeout();
       void logSecurityEvent('SESSION_TIMEOUT', { reason: 'inactivity' }, 'MEDIUM');
-    }, SESSION_TIMEOUT_MS);
+      return;
+    }
+    activityTimer = setTimeout(scheduleTimer, Math.min(remainingMs, MAX_TIMER_DELAY_MS));
+  };
+
+  const resetTimer = () => {
+    activityDeadline = Date.now() + SESSION_TIMEOUT_MS;
+    scheduleTimer();
   };
 
   ACTIVITY_EVENTS.forEach((evt) => window.addEventListener(evt, resetTimer, { passive: true }));
@@ -135,7 +150,7 @@ export function initSessionGuard(onTimeout: () => void) {
 
   return () => {
     ACTIVITY_EVENTS.forEach((evt) => window.removeEventListener(evt, resetTimer));
-    if (activityTimer) clearTimeout(activityTimer);
+    clearActivityTimer();
   };
 }
 
