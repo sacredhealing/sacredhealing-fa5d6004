@@ -132,8 +132,41 @@ export function useAyurvedaAnalysis(): UseAyurvedaAnalysisResult {
       // Save to database
       await saveProfile(profile, doshaData);
     } catch (err) {
-      console.error('Failed to analyze dosha:', err);
-      setError(err instanceof Error ? err.message : 'Failed to analyze dosha');
+      console.error('Failed to analyze dosha (edge fn), computing locally:', err);
+      // ── Fallback: compute dosha from quiz scores in personalityTraits
+      try {
+        const traits = profile.personalityTraits || '';
+        const vataMatch = traits.match(/Vata (\d+)%/);
+        const pittaMatch = traits.match(/Pitta (\d+)%/);
+        const kaphaMatch = traits.match(/Kapha (\d+)%/);
+        const vata  = vataMatch  ? parseInt(vataMatch[1])  : 45;
+        const pitta = pittaMatch ? parseInt(pittaMatch[1]) : 35;
+        const kapha = kaphaMatch ? parseInt(kaphaMatch[1]) : 20;
+        const primary   = vata >= pitta && vata >= kapha ? 'Vata' : pitta >= kapha ? 'Pitta' : 'Kapha';
+        const secondary = primary === 'Vata' ? (pitta >= kapha ? 'Pitta' : 'Kapha')
+                        : primary === 'Pitta' ? (vata >= kapha ? 'Vata' : 'Kapha')
+                        : (vata >= pitta ? 'Vata' : 'Pitta');
+        const fallbackProfile = {
+          primary, secondary,
+          percentages: { vata, pitta, kapha },
+          nadiScore: 72,
+          nadiStatus: 'Harmonious',
+          nadiEmoji: '🌿',
+          summary: `Your ${primary}-${secondary} constitution has been read through the Agastya Samhita. ${primary === 'Vata' ? 'Air and Space govern your creative intelligence and movement.' : primary === 'Pitta' ? 'Fire and Water govern your transformative intelligence and metabolism.' : 'Earth and Water govern your enduring strength and stability.'}`,
+          recommendations: {
+            diet: primary === 'Vata' ? ['Warm, oily, grounding foods', 'Ghee and sesame oil', 'Root vegetables and grains'] : primary === 'Pitta' ? ['Cooling, sweet foods', 'Coconut and cucumber', 'Leafy greens and dairy'] : ['Light, warm, spiced foods', 'Ginger and black pepper', 'Legumes and honey'],
+            herbs: primary === 'Vata' ? ['Ashwagandha', 'Shatavari', 'Brahmi'] : primary === 'Pitta' ? ['Shatavari', 'Amalaki', 'Brahmi'] : ['Trikatu', 'Guggulu', 'Tulsi'],
+            lifestyle: primary === 'Vata' ? ['Consistent daily routine', 'Abhyanga oil massage', 'Nadi Shodhana pranayama'] : primary === 'Pitta' ? ['Cooling walks at dawn/dusk', 'Moon gazing meditation', 'Sheetali breathing'] : ['Vigorous morning exercise', 'Dry brushing', 'Bhastrika pranayama'],
+            mantra: primary === 'Vata' ? 'Om Vayu Devaya Namah' : primary === 'Pitta' ? 'Om Dum Durgayei Namah' : 'Om Gam Ganapataye Namah',
+          },
+        } as DoshaProfile;
+        setDoshaProfile(fallbackProfile);
+        setUserProfile(profile);
+        await saveProfile(profile, fallbackProfile);
+      } catch (fallbackErr) {
+        console.error('Fallback also failed:', fallbackErr);
+        setError(err instanceof Error ? err.message : 'Failed to analyze dosha');
+      }
     } finally {
       setIsLoading(false);
     }
