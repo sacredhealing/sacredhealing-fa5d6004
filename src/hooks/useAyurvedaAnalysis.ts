@@ -146,20 +146,21 @@ export function useAyurvedaAnalysis(): UseAyurvedaAnalysisResult {
         const secondary = primary === 'Vata' ? (pitta >= kapha ? 'Pitta' : 'Kapha')
                         : primary === 'Pitta' ? (vata >= kapha ? 'Vata' : 'Kapha')
                         : (vata >= pitta ? 'Vata' : 'Pitta');
-        const fallbackProfile = {
-          primary, secondary,
-          percentages: { vata, pitta, kapha },
+        const fallbackProfile: DoshaProfile = {
+          vata,
+          pitta,
+          kapha,
+          primary,
           mentalConstitution: primary === 'Vata' ? 'Creative, quick mind' : primary === 'Pitta' ? 'Sharp, focused mind' : 'Patient, steady mind',
-          summary: `Your ${primary}-${secondary} constitution has been read through the Agastya Samhita. ${primary === 'Vata' ? 'Air and Space govern your creative intelligence and movement.' : primary === 'Pitta' ? 'Fire and Water govern your transformative intelligence and metabolism.' : 'Earth and Water govern your enduring strength and stability.'}`,
+          personalitySummary: `${primary} dominant with ${secondary} influence.`,
+          lifeSituationAdvice: 'Follow your constitution daily protocol.',
+          summary: `Your ${primary}-${secondary} constitution has been read through the Agastya Samhita.`,
           guidelines: {
             diet: primary === 'Vata' ? ['Warm, oily, grounding foods', 'Ghee and sesame oil', 'Root vegetables and grains'] : primary === 'Pitta' ? ['Cooling, sweet foods', 'Coconut and cucumber', 'Leafy greens and dairy'] : ['Light, warm, spiced foods', 'Ginger and black pepper', 'Legumes and honey'],
             herbs: primary === 'Vata' ? ['Ashwagandha', 'Shatavari', 'Brahmi'] : primary === 'Pitta' ? ['Shatavari', 'Amalaki', 'Brahmi'] : ['Trikatu', 'Guggulu', 'Tulsi'],
             lifestyle: primary === 'Vata' ? ['Consistent daily routine', 'Abhyanga oil massage', 'Nadi Shodhana pranayama'] : primary === 'Pitta' ? ['Cooling walks at dawn/dusk', 'Moon gazing meditation', 'Sheetali breathing'] : ['Vigorous morning exercise', 'Dry brushing', 'Bhastrika pranayama'],
-            personalitySummary: `${primary} dominant with ${secondary} influence.`,
           },
-          lifeSituationAdvice: 'Follow your constitution daily protocol.',
-        
-        } as DoshaProfile;
+        };
         setDoshaProfile(fallbackProfile);
         setUserProfile(profile);
         await saveProfile(profile, fallbackProfile);
