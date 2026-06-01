@@ -2,9 +2,10 @@
 // SQI 2050 — HEALING NEXUS ADMIN DASHBOARD
 // ⚠️ Preserves all existing navigation links to sub-pages exactly as-is
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+const UserManagementPanel = lazy(() => import("@/components/admin/UserManagementPanel"));
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 type Protocol = "30_days_healing" | "andlig_transformation";
@@ -70,6 +71,7 @@ function StarField() {
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
 export default function AdminHealingNexus() {
   const navigate = useNavigate();
+  const [showUserMgmt, setShowUserMgmt] = useState(false);
 
   // Users from Supabase
   const [users, setUsers] = useState<UserNode[]>([]);
@@ -653,6 +655,29 @@ export default function AdminHealingNexus() {
           }} />
           <div className="eyebrow" style={{ marginBottom:14 }}>Command Sections</div>
         </div>
+
+        {/* ── User Management Panel ── */}
+        <div
+          className="section-card"
+          onClick={() => setShowUserMgmt(v => !v)}
+          style={{ marginBottom: 10, cursor: "pointer", display: "flex", alignItems: "center", gap: 12, padding: "14px 20px" }}
+        >
+          <div className="section-icon">👥</div>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 3 }}>
+              User Management {showUserMgmt ? "▲" : "▼"}
+            </div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", lineHeight: 1.5 }}>
+              View, edit tiers, grant access, delete — all users
+            </div>
+          </div>
+        </div>
+
+        {showUserMgmt && (
+          <Suspense fallback={<div style={{ color: "#D4AF37", padding: 20 }}>Loading User Management...</div>}>
+            <UserManagementPanel />
+          </Suspense>
+        )}
 
         <div style={{
           display:"grid",
