@@ -1229,6 +1229,12 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
             <div className="abundance-icon-wrap"><Moon size={22} color="#D4AF37" /></div>
             <span className="abundance-label">{t('profilePage.abundanceConnect')}</span>
           </div>
+          <div className="abundance-card" onClick={() => navigate('/about')}>
+            <div className="abundance-icon-wrap">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><text x="12" y="17" fontSize="14" textAnchor="middle" fill="#D4AF37" fontFamily="serif">ॐ</text><circle cx="12" cy="12" r="10" stroke="rgba(212,175,55,0.5)" strokeWidth="1" fill="none"/></svg>
+            </div>
+            <span className="abundance-label">About & How It Works</span>
+          </div>
           {isAdmin && (
             <div className="abundance-card" onClick={() => navigate('/admin')}>
               <div className="abundance-icon-wrap"><Crown size={22} color="#D4AF37" /></div>
@@ -1356,7 +1362,7 @@ Keep it practical, mystical, and no more than 3 rich paragraphs.`;
         </a>
         <div className="settings-row" style={{marginTop:20}}>
           <button type="button" className="settings-btn" onClick={() => setNotificationsOpen(true)}>{t('profile.notifications')}</button>
-          <button type="button" className="settings-btn" onClick={() => setAppearanceOpen(true)}>{t('profile.appearance')}</button>
+          {/* Appearance/dark-mode removed — SQI always runs dark */}
           <button type="button" className="settings-btn" onClick={() => setPrivacyOpen(true)}>{t('profile.privacy')}</button>
         </div>
         <div className="settings-row">
