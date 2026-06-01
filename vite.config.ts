@@ -6,7 +6,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
-// Build: 2026-05-21-v3 cache-bust
+// Build: 2026-06-01-v4 cache-bust — force SW update for all users
 export default defineConfig(({ mode }) => {
   const fileEnv = loadEnv(mode, process.cwd(), "");
   /** Lovable/CI often inject GEMINI_API_KEY; local dev uses VITE_GEMINI_API_KEY in .env */
@@ -97,11 +97,13 @@ export default defineConfig(({ mode }) => {
       workbox: {
         cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        // Do not take over mid-session (was causing constant reloads with autoUpdate + reg.update polling).
-        clientsClaim: false,
-        skipWaiting: false,
-        // Do not precache HTML: stale index.html pins old hashed JS chunks (users never see QA updates).
-        globIgnores: ["**/index.html", "index.html"],
+        // Take over immediately on new deploy — users get updates without closing all tabs
+        clientsClaim: true,
+        skipWaiting: true,
+        // Do not precache HTML or hashed JS/CSS assets — immutable files served by Vercel CDN directly
+        // Precaching hashed chunks causes stale bundle delivery to all users after deploys
+        globIgnores: ["**/index.html", "index.html", "assets/**"],
+        globPatterns: ["**/{icon-192x192,icon-512x512,favicon}.{png,ico}", "manifest.webmanifest"],
         // SPA offline: still serve app shell when network fails (filled after first online visit).
         navigateFallback: "index.html",
         navigateFallbackDenylist: [/^\/api\//],
