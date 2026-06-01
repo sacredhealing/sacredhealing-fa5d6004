@@ -14,21 +14,15 @@ export const useAuth = () => {
   const { data: session, isLoading } = useQuery({
     queryKey: ['auth-user'],
     queryFn: getSession,
-    // Keep session fresh for 30 minutes before background refetch
-    // Previously 60s — caused brief unauthenticated flashes on every minute boundary
-    staleTime: 30 * 60 * 1000,
-    // Keep cached session for 24 hours so page reloads restore immediately
-    gcTime: 24 * 60 * 60 * 1000,
-    // Don't retry on auth failures — avoids 3x redundant Supabase calls
+    staleTime: 30 * 60 * 1000,       // 30 minutes — no refetch churn
+    gcTime: 24 * 60 * 60 * 1000,     // cache for 24h so reloads restore instantly
     retry: false,
-    // Refetch when window regains focus to catch token refresh events
     refetchOnWindowFocus: true,
   });
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      // Directly update the cache with the new session instead of invalidating
-      // This prevents the loading flash that was causing the "logged out" feeling
+      // Directly update cache — no invalidate → no loading flash → no bounce to /auth
       queryClient.setQueryData(['auth-user'], newSession);
     });
     return () => subscription.unsubscribe();
@@ -46,6 +40,10 @@ export const useAuth = () => {
         data: { full_name: fullName },
       },
     });
+    // Immediately seed the cache so ProtectedRoute sees session before navigation
+    if (data.session) {
+      queryClient.setQueryData(['auth-user'], data.session);
+    }
     return { data, error };
   };
 
@@ -54,11 +52,18 @@ export const useAuth = () => {
       email,
       password,
     });
+    // Immediately seed the cache so ProtectedRoute sees session before navigation
+    if (data.session) {
+      queryClient.setQueryData(['auth-user'], data.session);
+    }
     return { data, error };
   };
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
+    if (!error) {
+      queryClient.setQueryData(['auth-user'], null);
+    }
     return { error };
   };
 
