@@ -8,6 +8,24 @@ async function getSession(): Promise<Session | null> {
   return session;
 }
 
+async function ensureUserProfile(session: Session | null) {
+  const user = session?.user;
+  if (!user) return;
+
+  try {
+    await supabase.from('profiles').upsert(
+      {
+        user_id: user.id,
+        full_name: (user.user_metadata?.full_name as string | undefined) ?? user.email ?? null,
+        preferred_language: 'en',
+      },
+      { onConflict: 'user_id', ignoreDuplicates: true }
+    );
+  } catch {
+    // A missing profile must never block a successful auth session.
+  }
+}
+
 export const useAuth = () => {
   const queryClient = useQueryClient();
 
@@ -24,6 +42,7 @@ export const useAuth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
       // Directly update cache — no invalidate → no loading flash → no bounce to /auth
       queryClient.setQueryData(['auth-user'], newSession);
+      window.setTimeout(() => void ensureUserProfile(newSession), 0);
     });
     return () => subscription.unsubscribe();
   }, [queryClient]);
@@ -42,6 +61,7 @@ export const useAuth = () => {
     });
     // Immediately seed the cache so ProtectedRoute sees session before navigation
     if (data.session) {
+      await ensureUserProfile(data.session);
       queryClient.setQueryData(['auth-user'], data.session);
     }
     return { data, error };
@@ -54,6 +74,7 @@ export const useAuth = () => {
     });
     // Immediately seed the cache so ProtectedRoute sees session before navigation
     if (data.session) {
+      await ensureUserProfile(data.session);
       queryClient.setQueryData(['auth-user'], data.session);
     }
     return { data, error };
