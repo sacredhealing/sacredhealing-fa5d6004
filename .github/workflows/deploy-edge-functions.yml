@@ -9,34 +9,26 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
-    steps:
-      - uses: actions/checkout@v4
+    timeout-minutes: 30
 
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
+    steps:
+      - name: Checkout with PAT
+        run: |
+          git clone https://x-access-token:${{ secrets.GH_ADMIN_PAT }}@github.com/sacredhealing/sacredhealing-fa5d6004.git repo
+          echo "Checkout OK: $(ls repo/supabase/functions | wc -l) functions found"
+
+      - uses: supabase/setup-cli@v1
         with:
           version: latest
 
-      - name: Deploy critical functions first
+      - name: Deploy all updated functions
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
         run: |
-          for fn in quantum-apothecary-chat bhrigu-oracle ayurveda-chat jyotish-ephemeris stripe-webhook send-welcome-email gemini-health; do
-            if [ -d "supabase/functions/$fn" ]; then
-              echo "Deploying $fn..."
-              supabase functions deploy $fn --project-ref fjdzhrdpioxdeyyfogep || echo "WARNING: $fn failed"
-            fi
+          PROJECT=fjdzhrdpioxdeyyfogep
+          for fn in quantum-apothecary-chat bhrigu-oracle ayurveda-chat vastu-chat guide-chat gemini-bridge nadi-scan sqi-oracle stripe-webhook admin-user-management; do
+            echo "=== Deploying $fn ==="
+            supabase functions deploy $fn --project-ref $PROJECT --no-verify-jwt 2>&1 || echo "WARNING: $fn failed (continuing)"
           done
-
-      - name: Deploy all remaining functions
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: |
-          for fn in supabase/functions/*/; do
-            fn=$(basename $fn)
-            if [[ "$fn" != _* ]]; then
-              echo "Deploying $fn..."
-              supabase functions deploy $fn --project-ref fjdzhrdpioxdeyyfogep || echo "WARNING: $fn failed"
-            fi
-          done
+          echo "Done at $(date)"
