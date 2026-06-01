@@ -1,23 +1,2 @@
-══════════════════════════════════════════════════════
-  SQI-2050 🦈 CLAWBOT v7 — Production
-  2026-06-01T09:41:48.048Z | PAPER
-  Min: $100 | Entry zone: 6%–94%
-══════════════════════════════════════════════════════
-Balance: $0.15
-
-🔍 Scanning 87,752,229 → 87,752,679
-  0xE111180000: 83075 logs → 3623 whale trades
-  0xe2222d279d: 14325 logs → 1488 whale trades
-
-Total: 5111 | New: 5111
-
-📊 Top trades:
-  $  177748 | 0x44c1dfe432 | 720940698239...
-  $  177748 | 0xfbe66593e4 | 429182200852...
-  $  177748 | 0xfbe66593e4 | 429182200852...
-  $   50000 | 0x9d6a0986ca | 248407781959...
-  $   50000 | 0x9d6a0986ca | 248407781959...
-
-Balance too low, stopping.
-
-━━━ CLAWBOT v7: 0 mirrored | Bal $0.1491 ━━━
+triggered: 2026-06-01T10:23:32.183092
+fix: index.html noscript moved to body
