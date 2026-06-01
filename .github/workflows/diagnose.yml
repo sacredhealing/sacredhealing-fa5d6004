@@ -2,6 +2,9 @@ name: Diagnose Login Issue
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - 'deploy-only-never-matches'
 
 jobs:
   diagnose:
