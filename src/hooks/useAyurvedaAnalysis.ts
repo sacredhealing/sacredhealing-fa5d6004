@@ -156,8 +156,9 @@ export function useAyurvedaAnalysis(): UseAyurvedaAnalysisResult {
             herbs: primary === 'Vata' ? ['Ashwagandha', 'Shatavari', 'Brahmi'] : primary === 'Pitta' ? ['Shatavari', 'Amalaki', 'Brahmi'] : ['Trikatu', 'Guggulu', 'Tulsi'],
             lifestyle: primary === 'Vata' ? ['Consistent daily routine', 'Abhyanga oil massage', 'Nadi Shodhana pranayama'] : primary === 'Pitta' ? ['Cooling walks at dawn/dusk', 'Moon gazing meditation', 'Sheetali breathing'] : ['Vigorous morning exercise', 'Dry brushing', 'Bhastrika pranayama'],
             personalitySummary: `${primary} dominant with ${secondary} influence.`,
-          lifeSituationAdvice: 'Follow your constitution's daily protocol.',
-          }
+          },
+          lifeSituationAdvice: 'Follow your constitution daily protocol.',
+        
         } as DoshaProfile;
         setDoshaProfile(fallbackProfile);
         setUserProfile(profile);
