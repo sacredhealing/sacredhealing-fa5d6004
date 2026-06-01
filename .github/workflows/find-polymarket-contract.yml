@@ -2,6 +2,9 @@ name: Find Polymarket Contract
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - 'deploy-only-never-matches'
 
 jobs:
   find:
