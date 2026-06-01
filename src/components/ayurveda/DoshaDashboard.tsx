@@ -553,7 +553,7 @@ interface DoshaDashboardProps {
   onOpenChat?: () => void;
 }
 
-export 
+ 
 // ── AGASTYAR ACADEMY 108 MODULES ─────────────────────────────────────────
 const ACADEMY_PHASES = [
   {
