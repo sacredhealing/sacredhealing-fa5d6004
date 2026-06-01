@@ -724,7 +724,7 @@ const AgastyarAcademy: React.FC<{ dosha: string; isPremium: boolean }> = ({ isPr
   );
 };
 
-const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
+export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
   profile, dosha, dailyGuidance, isLoadingGuidance,
   onRestart, onFetchGuidance, isPremium = false, onOpenChat,
 }) => {
