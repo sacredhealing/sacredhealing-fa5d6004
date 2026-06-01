@@ -2,6 +2,9 @@ name: Deploy Shiesty Signal Oracle to Railway
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - 'deploy-only-never-matches'
 
 jobs:
   deploy:
