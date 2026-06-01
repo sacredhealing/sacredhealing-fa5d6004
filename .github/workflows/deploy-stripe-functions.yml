@@ -8,7 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout with PAT
+        run: |
+          git clone https://x-access-token:${{ secrets.GH_ADMIN_PAT }}@github.com/sacredhealing/sacredhealing-fa5d6004.git repo
+          echo "Functions: $(ls repo/supabase/functions | wc -l)"
 
       - uses: supabase/setup-cli@v1
         with:
@@ -17,29 +20,35 @@ jobs:
       - name: Deploy stripe-webhook
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
         run: |
+          echo "=== Deploying stripe-webhook ==="
           supabase functions deploy stripe-webhook \
             --project-ref fjdzhrdpioxdeyyfogep \
             --no-verify-jwt 2>&1
-        continue-on-error: false
+          echo "Exit: $?"
 
       - name: Deploy create-tier-checkout
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
         run: |
+          echo "=== Deploying create-tier-checkout ==="
           supabase functions deploy create-tier-checkout \
             --project-ref fjdzhrdpioxdeyyfogep \
             --no-verify-jwt 2>&1
-        continue-on-error: false
+          echo "Exit: $?"
 
       - name: Deploy process-payout-request
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
         run: |
+          echo "=== Deploying process-payout-request ==="
           supabase functions deploy process-payout-request \
             --project-ref fjdzhrdpioxdeyyfogep \
             --no-verify-jwt 2>&1
-        continue-on-error: false
+          echo "Exit: $?"
 
-      - name: Confirm
-        run: echo "✓ All 3 Stripe functions deployed to fjdzhrdpioxdeyyfogep"
+      - name: Done
+        run: echo "All 3 Stripe functions deployed at $(date)"
