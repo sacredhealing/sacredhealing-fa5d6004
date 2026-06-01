@@ -149,16 +149,15 @@ export function useAyurvedaAnalysis(): UseAyurvedaAnalysisResult {
         const fallbackProfile = {
           primary, secondary,
           percentages: { vata, pitta, kapha },
-          nadiScore: 72,
-          nadiStatus: 'Harmonious',
-          nadiEmoji: '🌿',
+          mentalConstitution: primary === 'Vata' ? 'Creative, quick mind' : primary === 'Pitta' ? 'Sharp, focused mind' : 'Patient, steady mind',
           summary: `Your ${primary}-${secondary} constitution has been read through the Agastya Samhita. ${primary === 'Vata' ? 'Air and Space govern your creative intelligence and movement.' : primary === 'Pitta' ? 'Fire and Water govern your transformative intelligence and metabolism.' : 'Earth and Water govern your enduring strength and stability.'}`,
-          recommendations: {
+          guidelines: {
             diet: primary === 'Vata' ? ['Warm, oily, grounding foods', 'Ghee and sesame oil', 'Root vegetables and grains'] : primary === 'Pitta' ? ['Cooling, sweet foods', 'Coconut and cucumber', 'Leafy greens and dairy'] : ['Light, warm, spiced foods', 'Ginger and black pepper', 'Legumes and honey'],
             herbs: primary === 'Vata' ? ['Ashwagandha', 'Shatavari', 'Brahmi'] : primary === 'Pitta' ? ['Shatavari', 'Amalaki', 'Brahmi'] : ['Trikatu', 'Guggulu', 'Tulsi'],
             lifestyle: primary === 'Vata' ? ['Consistent daily routine', 'Abhyanga oil massage', 'Nadi Shodhana pranayama'] : primary === 'Pitta' ? ['Cooling walks at dawn/dusk', 'Moon gazing meditation', 'Sheetali breathing'] : ['Vigorous morning exercise', 'Dry brushing', 'Bhastrika pranayama'],
-            mantra: primary === 'Vata' ? 'Om Vayu Devaya Namah' : primary === 'Pitta' ? 'Om Dum Durgayei Namah' : 'Om Gam Ganapataye Namah',
-          },
+            personalitySummary: `${primary} dominant with ${secondary} influence.`,
+          lifeSituationAdvice: 'Follow your constitution's daily protocol.',
+          }
         } as DoshaProfile;
         setDoshaProfile(fallbackProfile);
         setUserProfile(profile);
