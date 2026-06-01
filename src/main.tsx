@@ -26,13 +26,16 @@ if ("serviceWorker" in navigator) {
   if (disableServiceWorker) {
     void navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => void r.unregister()));
   } else {
-    registerSW({
+    // autoUpdate: new SW activates immediately (skipWaiting:true in vite.config)
+    // then reloads the page once to load the new bundle — users always get latest build
+    const updateSW = registerSW({
       immediate: true,
       onNeedRefresh() {
-        /* New build available — user can refresh when ready; do not interrupt work. */
+        // New build deployed — activate immediately and reload to serve new bundle
+        updateSW(true);
       },
       onOfflineReady() {
-        /* App cached for offline */
+        /* App cached for offline use */
       },
     });
   }
