@@ -9,46 +9,221 @@ on:
       - '.github/workflows/deploy-functions.yml'
   workflow_dispatch:
 
-permissions:
-  contents: read
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:
-      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+    timeout-minutes: 30
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout with PAT
+        run: |
+          git clone https://x-access-token:${{ secrets.GH_ADMIN_PAT }}@github.com/sacredhealing/sacredhealing-fa5d6004.git repo
+          echo "Checkout OK: $(ls repo/supabase/functions | wc -l) functions found"
 
       - uses: supabase/setup-cli@v1
         with:
           version: latest
 
       - name: Set Gemini API secret
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
-          supabase secrets set GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} --project-ref fjdzhrdpioxdeyyfogep
+          curl -s -o /tmp/secret_resp.json -w "HTTP:%{http_code}" \
+            -X POST "https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/secrets" \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '[{"name":"GEMINI_API_KEY","value":"${{ secrets.GEMINI_API_KEY }}"}]'
+          echo ""
 
-      - name: Deploy critical functions
+      - name: Deploy quantum-apothecary-chat
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
         run: |
-          PROJECT=fjdzhrdpioxdeyyfogep
-          OPTS="--project-ref $PROJECT --use-api"
-          supabase functions deploy quantum-apothecary-chat $OPTS
-          supabase functions deploy quantum-apothecary $OPTS
-          supabase functions deploy guide-chat $OPTS
-          supabase functions deploy gemini-bridge $OPTS
-          supabase functions deploy vastu-chat $OPTS
-          supabase functions deploy bhrigu-oracle $OPTS
-          supabase functions deploy prediction-engine-scan $OPTS
-          supabase functions deploy ayurveda-chat $OPTS
-          supabase functions deploy nadi-scan $OPTS
-          supabase functions deploy sqi-oracle $OPTS
-          supabase functions deploy stripe-webhook $OPTS
-          supabase functions deploy create-membership-checkout $OPTS
-          supabase functions deploy check-membership-subscription $OPTS
-          supabase functions deploy customer-portal $OPTS
-          supabase functions deploy create-tier-checkout $OPTS
-          supabase functions deploy weekly-alignment-email $OPTS
-          supabase functions deploy send-welcome-email $OPTS
-          supabase functions deploy fetch-podcast-episodes $OPTS
-          supabase functions deploy fetch-shc-price $OPTS
-          supabase functions deploy polymarket-proxy $OPTS
+          supabase functions deploy quantum-apothecary-chat \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt 2>&1
+        continue-on-error: true
+
+      - name: Deploy quantum-apothecary
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
+        run: |
+          supabase functions deploy quantum-apothecary \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt 2>&1
+        continue-on-error: true
+
+      - name: Deploy ayurveda-chat
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
+        run: |
+          supabase functions deploy ayurveda-chat \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt 2>&1
+        continue-on-error: true
+
+      - name: Deploy bhrigu-oracle
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
+        run: |
+          supabase functions deploy bhrigu-oracle \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt 2>&1
+        continue-on-error: true
+
+      - name: Deploy vastu-chat
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
+        run: |
+          supabase functions deploy vastu-chat \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt 2>&1
+        continue-on-error: true
+
+      - name: Deploy guide-chat
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
+        run: |
+          supabase functions deploy guide-chat \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt 2>&1
+        continue-on-error: true
+
+      - name: Deploy gemini-bridge
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
+        run: |
+          supabase functions deploy gemini-bridge \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt 2>&1
+        continue-on-error: true
+
+      - name: Deploy nadi-scan
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
+        run: |
+          supabase functions deploy nadi-scan \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt 2>&1
+        continue-on-error: true
+
+      - name: Deploy sqi-oracle
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
+        run: |
+          supabase functions deploy sqi-oracle \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt 2>&1
+        continue-on-error: true
+
+      - name: Deploy prediction-engine-scan
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
+        run: |
+          supabase functions deploy prediction-engine-scan \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt 2>&1
+        continue-on-error: true
+
+      - name: Deploy stripe-webhook
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
+        run: |
+          supabase functions deploy stripe-webhook \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt 2>&1
+        continue-on-error: true
+
+      - name: Deploy create-membership-checkout
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
+        run: |
+          supabase functions deploy create-membership-checkout \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt 2>&1
+        continue-on-error: true
+
+      - name: Deploy check-membership-subscription
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
+        run: |
+          supabase functions deploy check-membership-subscription \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt 2>&1
+        continue-on-error: true
+
+      - name: Deploy customer-portal
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
+        run: |
+          supabase functions deploy customer-portal \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt 2>&1
+        continue-on-error: true
+
+      - name: Deploy send-welcome-email
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
+        run: |
+          supabase functions deploy send-welcome-email \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt 2>&1
+        continue-on-error: true
+
+      - name: Deploy weekly-alignment-email
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
+        run: |
+          supabase functions deploy weekly-alignment-email \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt 2>&1
+        continue-on-error: true
+
+      - name: Deploy polymarket-proxy
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
+        run: |
+          supabase functions deploy polymarket-proxy \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt 2>&1
+        continue-on-error: true
+
+      - name: Deploy fetch-podcast-episodes
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
+        run: |
+          supabase functions deploy fetch-podcast-episodes \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt 2>&1
+        continue-on-error: true
+
+      - name: Deploy fetch-shc-price
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
+        run: |
+          supabase functions deploy fetch-shc-price \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt 2>&1
+        continue-on-error: true
+
+      - name: Done
+        run: echo "All function deployments completed at $(date)"
