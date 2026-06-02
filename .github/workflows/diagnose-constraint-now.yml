@@ -1,0 +1,38 @@
+name: Diagnose Constraint NOW
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Check constraint
+        env:
+          SUPA_PAT: ${{ secrets.SUPA_ADMIN_PAT }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          DB="https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query"
+          AUTH="Authorization: Bearer ${SUPA_PAT}"
+          LOG="_diag_constraint.txt"
+
+          echo "=== CONSTRAINTS ===" | tee $LOG
+          curl -s -X POST "$DB" -H "$AUTH" -H "Content-Type: application/json" \
+            -d '{"query":"SELECT conname, pg_get_constraintdef(oid) as def FROM pg_constraint WHERE conrelid = '\''public.admin_granted_access'\''::regclass AND contype = '\''c'\'';"}' \
+            | tee -a $LOG
+          echo "" | tee -a $LOG
+
+          echo "=== COLUMNS ===" | tee -a $LOG
+          curl -s -X POST "$DB" -H "$AUTH" -H "Content-Type: application/json" \
+            -d '{"query":"SELECT column_name, data_type FROM information_schema.columns WHERE table_schema='\''public'\'' AND table_name='\''admin_granted_access'\'' ORDER BY ordinal_position;"}' \
+            | tee -a $LOG
+          echo "" | tee -a $LOG
+
+          git config user.email "bot@sqi.app"
+          git config user.name "SQI Bot"
+          git add $LOG
+          git commit -m "diag constraint output" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
