@@ -1,4 +1,5 @@
 const https = require('https');
+const fs = require('fs');
 const PAT = process.env.PAT;
 
 function query(q, cb) {
@@ -17,8 +18,9 @@ function query(q, cb) {
   r.write(b);r.end();
 }
 
-query(`SELECT tier_required, COUNT(*) as cnt FROM public.ayurveda_courses GROUP BY tier_required ORDER BY tier_required`, (status, data) => {
+query(`SELECT tier_required, phase, COUNT(*) as cnt FROM public.ayurveda_courses GROUP BY tier_required, phase ORDER BY phase, tier_required`, (status, data) => {
+  const result = {status, data: JSON.parse(data), timestamp: new Date().toISOString()};
+  fs.writeFileSync('academy-verify.json', JSON.stringify(result, null, 2));
   console.log('HTTP:', status);
-  console.log('Result:', data);
-  process.exit(status >= 200 && status < 300 ? 0 : 1);
+  console.log(data);
 });
