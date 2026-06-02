@@ -12,7 +12,7 @@ jobs:
           token: ${{ secrets.GH_ADMIN_PAT }}
       - name: Check constraint
         env:
-          SUPA_PAT: ${{ secrets.SUPA_ADMIN_PAT }}
+          SUPA_PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
           DB="https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query"
@@ -34,5 +34,5 @@ jobs:
           git config user.email "bot@sqi.app"
           git config user.name "SQI Bot"
           git add $LOG
-          git commit -m "diag constraint output" || true
+          git commit -m "diag constraint $(date +%H%M%S)" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
