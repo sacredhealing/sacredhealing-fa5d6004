@@ -70,7 +70,7 @@ function AddEntryModal({
     setSaving(true);
     try {
       const tags = form.tags.split(',').map(t => t.trim()).filter(Boolean);
-      const { error } = await supabase.from('book_entries').insert({
+      const { error } = await (supabase as any).from('book_entries').insert({
         book_type: bookType,
         chapter_id: form.chapter_id || null,
         title: form.title.trim(),
@@ -259,7 +259,7 @@ function AddChapterModal({
     if (!title.trim()) { toast({ title: 'Title required', variant: 'destructive' }); return; }
     setSaving(true);
     try {
-      const { error } = await supabase.from('book_chapters').insert({
+      const { error } = await (supabase as any).from('book_chapters').insert({
         book_type: bookType,
         title: title.trim(),
         glyph: glyph || '⟁',

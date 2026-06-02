@@ -37,13 +37,13 @@ export default function BooksV2DashboardWidget() {
 
       // Load MY entry counts only (RLS enforces user_id filter)
       const [{ count: cc, data: cd }, { count: lc, data: ld }] = await Promise.all([
-        supabase.from('book_entries')
+        (supabase as any).from('book_entries')
           .select('title', { count: 'exact' })
           .eq('book_type', 'akashic_codex')
           .eq('is_archived', false)
           .order('created_at', { ascending: false })
           .limit(1),
-        supabase.from('book_entries')
+        (supabase as any).from('book_entries')
           .select('title', { count: 'exact' })
           .eq('book_type', 'life_book')
           .eq('is_archived', false)
