@@ -1,0 +1,31 @@
+{
+  "status": 201,
+  "data": [
+    {
+      "tier_required": "free",
+      "phase": 1,
+      "cnt": 22
+    },
+    {
+      "tier_required": "prana-flow",
+      "phase": 2,
+      "cnt": 22
+    },
+    {
+      "tier_required": "siddha-quantum",
+      "phase": 3,
+      "cnt": 22
+    },
+    {
+      "tier_required": "akasha-infinity",
+      "phase": 4,
+      "cnt": 21
+    },
+    {
+      "tier_required": "akasha-infinity",
+      "phase": 5,
+      "cnt": 21
+    }
+  ],
+  "timestamp": "2026-06-02T15:39:29.771Z"
+}
