@@ -553,6 +553,7 @@ interface DoshaDashboardProps {
   onRestart: () => void;
   onFetchGuidance: () => void;
   isPremium?: boolean;
+  isSiddhaPlus?: boolean;
   onOpenChat?: () => void;
 }
 
