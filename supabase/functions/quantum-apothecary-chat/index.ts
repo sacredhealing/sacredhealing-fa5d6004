@@ -29,6 +29,7 @@ async function checkRateLimit(supabase: any, userId: string, fnName: string): Pr
 
 
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+const GEMINI_MODEL = "gemini-2.5-flash";
 const GEMINI_API_KEY_ENV = Deno.env.get("GEMINI_API_KEY") ?? "";
 
 let cachedBundledActivationNames: string | undefined = undefined;
