@@ -185,64 +185,55 @@ const AgastyChatBanner = ({
   canChat, onOpenChat, doshaName, userName
 }: {canChat:boolean; onOpenChat:()=>void; doshaName:string; userName:string}) => (
   <motion.div
-    initial={{opacity:0,y:-12}} animate={{opacity:1,y:0}} transition={{delay:0.2}}
+    initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{delay:0.1}}
+    onClick={onOpenChat}
+    whileHover={{scale:1.01,boxShadow: canChat ? '0 0 80px rgba(212,175,55,0.2),0 0 160px rgba(212,175,55,0.1)' : 'none'}}
+    whileTap={{scale:0.99}}
     style={{
-      padding:'22px 24px', borderRadius:40, marginBottom:4,
       background: canChat
-        ? 'linear-gradient(135deg,rgba(255,140,0,0.12),rgba(212,175,55,0.06))'
+        ? 'linear-gradient(135deg,rgba(255,140,0,0.08),rgba(212,175,55,0.04),rgba(255,140,0,0.06))'
         : 'rgba(255,255,255,0.02)',
       backdropFilter:'blur(40px)', WebkitBackdropFilter:'blur(40px)',
-      border: canChat ? '1px solid rgba(255,140,0,0.45)' : '1px solid rgba(255,255,255,0.06)',
-      boxShadow: canChat ? '0 0 50px rgba(255,140,0,0.12)' : 'none',
-      position:'relative', overflow:'hidden',
+      border: canChat ? '1.5px solid rgba(212,175,55,0.45)' : '1px solid rgba(255,255,255,0.06)',
+      borderRadius:40, padding:'28px 24px',
+      boxShadow: canChat ? '0 0 60px rgba(212,175,55,0.12),0 0 120px rgba(212,175,55,0.06)' : 'none',
+      position:'relative', overflow:'hidden', cursor:'pointer', marginBottom:4,
     }}
   >
-    {canChat && <div style={{position:'absolute',top:0,left:'8%',right:'8%',height:1,background:'linear-gradient(90deg,transparent,rgba(255,140,0,0.6),rgba(212,175,55,0.9),rgba(255,140,0,0.6),transparent)'}}/>}
-    <div style={{display:'flex',alignItems:'center',gap:16}}>
+    <div style={{position:'absolute',top:0,left:0,right:0,height:2,background: canChat ? 'linear-gradient(90deg,transparent,rgba(255,140,0,0.8),rgba(212,175,55,1),rgba(255,140,0,0.8),transparent)' : 'linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent)'}}/>
+    {canChat && (
+      <motion.div style={{position:'absolute',top:0,bottom:0,width:80,background:'linear-gradient(90deg,transparent,rgba(212,175,55,0.12),transparent)',left:'-80px'}}
+        animate={{left:['-80px','110%']}} transition={{duration:4,repeat:Infinity,ease:'easeInOut',repeatDelay:3}}/>
+    )}
+    <div style={{display:'flex',alignItems:'flex-start',gap:16}}>
       <motion.div
-        animate={canChat ? {boxShadow:['0 0 16px rgba(255,140,0,0.2)','0 0 36px rgba(255,140,0,0.6)','0 0 16px rgba(255,140,0,0.2)']} : {}}
+        animate={canChat ? {boxShadow:['0 0 20px rgba(212,175,55,0.25)','0 0 40px rgba(212,175,55,0.5)','0 0 20px rgba(212,175,55,0.25)']} : {}}
         transition={{duration:3,repeat:Infinity}}
-        style={{
-          width:54,height:54,borderRadius:18,flexShrink:0,
-          background: canChat ? 'radial-gradient(circle,rgba(255,140,0,0.22),rgba(212,175,55,0.08))' : 'rgba(255,255,255,0.04)',
-          border: canChat ? '1px solid rgba(255,140,0,0.5)' : '1px solid rgba(255,255,255,0.08)',
-          display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,
-        }}
-      >
-        🔱
-      </motion.div>
+        style={{width:64,height:64,borderRadius:'50%',background: canChat ? 'radial-gradient(circle,rgba(212,175,55,0.25),rgba(212,175,55,0.08))' : 'rgba(255,255,255,0.04)',border: canChat ? '2px solid rgba(212,175,55,0.55)' : '1px solid rgba(255,255,255,0.08)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,flexShrink:0}}
+      >🔱</motion.div>
       <div style={{flex:1}}>
-        <div style={{fontSize:8,fontWeight:800,letterSpacing:'0.5em',textTransform:'uppercase',color: canChat ? '#FF8C00' : 'rgba(255,255,255,0.3)',marginBottom:4}}>
+        <div style={{fontSize:8,fontWeight:800,letterSpacing:'0.5em',textTransform:'uppercase',color: canChat ? 'rgba(255,140,0,0.8)' : 'rgba(255,255,255,0.25)',marginBottom:5}}>
           ✦ Your Personal Guide · Agastya Samhita ✦
         </div>
-        <div className="sqi-serif" style={{fontSize:18,fontStyle:'italic',color: canChat ? '#D4AF37' : 'rgba(255,255,255,0.35)',marginBottom:5,letterSpacing:'0.01em'}}>
-          {canChat ? `Speak with Agastya Muni` : 'Divine Physician — Locked'}
-        </div>
-        <p style={{fontSize:12,lineHeight:1.6,color: canChat ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.25)',margin:0}}>
+        <h3 style={{fontSize:20,fontWeight:900,letterSpacing:'-0.04em',color: canChat ? '#D4AF37' : 'rgba(255,255,255,0.3)',marginBottom:6,fontFamily:"'Cormorant Garamond',serif",fontStyle:'italic'}}>
+          {canChat ? 'Speak with Agastya Muni' : 'Divine Physician — Locked'}
+        </h3>
+        <p style={{fontSize:13,lineHeight:1.65,color: canChat ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.28)',marginBottom:14}}>
           {canChat
-            ? `${userName}, I see your ${doshaName} constitution clearly. I have specific prescriptions from the Agastya Samhita waiting for you. Ask me anything — herbs, rituals, emotional healing, or the deeper question behind your suffering.`
-            : 'Upgrade to Prana Flow or higher to unlock direct consultations with Agastya Muni — herbs, rituals, and sacred prescriptions for your exact Prakriti.'}
+            ? `${userName.split(' ')[0]}, I see your ${doshaName} constitution clearly. I have specific prescriptions from the Agastya Samhita waiting for you. Ask me anything — herbs, rituals, emotional healing, or the deeper question behind your suffering.`
+            : 'Upgrade to Prana Flow or higher to consult directly with Agastya Muni — sacred herb prescriptions, ritual protocols, and deep healing for your exact Prakriti.'}
         </p>
+        <motion.div
+          whileHover={{scale:1.03}} whileTap={{scale:0.98}}
+          style={{display:'inline-flex',alignItems:'center',gap:8,padding:'11px 24px',borderRadius:999,background: canChat ? 'linear-gradient(135deg,#FF8C00,#D4AF37)' : 'rgba(255,255,255,0.06)',border: canChat ? 'none' : '1px solid rgba(255,255,255,0.1)',color: canChat ? '#050505' : 'rgba(255,255,255,0.3)',fontSize:13,fontWeight:900,letterSpacing:'-0.02em',fontFamily:"'Plus Jakarta Sans',sans-serif",cursor:'pointer'}}
+        >
+          <span style={{fontSize:16}}>{canChat ? '🔱' : '🔒'}</span>
+          {canChat ? 'Open Divine Physician' : 'Prana Flow Required'}
+        </motion.div>
       </div>
-      <motion.button
-        whileHover={{scale:1.05}} whileTap={{scale:0.96}}
-        onClick={onOpenChat}
-        style={{
-          flexShrink:0,
-          display:'flex',alignItems:'center',gap:8,
-          padding:'12px 20px',borderRadius:999,
-          background: canChat ? 'linear-gradient(135deg,#FF8C00,#D4AF37)' : 'rgba(255,255,255,0.06)',
-          border: canChat ? 'none' : '1px solid rgba(255,255,255,0.1)',
-          color: canChat ? '#050505' : 'rgba(255,255,255,0.3)',
-          fontFamily:"'Plus Jakarta Sans',sans-serif",fontSize:12,fontWeight:800,
-          cursor:'pointer',letterSpacing:canChat?'-0.01em':'0.05em',
-          whiteSpace:'nowrap',
-        }}
-      >
-        {canChat ? <><span style={{fontSize:14}}>🏥</span> Open Divine Physician</> : <><span>🔒</span> Prana Flow+</>}
-      </motion.button>
     </div>
   </motion.div>
+
 );
 
 const Gate=({icon,title,desc,tierLabel,onBack}:{icon:string;title:string;desc:string;tierLabel:string;onBack:()=>void})=>(
