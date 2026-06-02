@@ -8,6 +8,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: diag
+        env:
+          SB: https://fjdzhrdpioxdeyyfogep.supabase.co
+          SK: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          echo "SK length: ${#SK}"
+          echo "SK prefix: ${SK:0:20}"
+          curl -s -w "\nHTTP:%{http_code}" "$SB/auth/v1/admin/users?per_page=2" -H "apikey: $SK" -H "Authorization: Bearer $SK" | tail -c 200
+          echo ""
       - name: seed
         env:
           SB: https://fjdzhrdpioxdeyyfogep.supabase.co
