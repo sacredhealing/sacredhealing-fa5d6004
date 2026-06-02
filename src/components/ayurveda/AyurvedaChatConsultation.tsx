@@ -409,7 +409,7 @@ const STYLES = `
 // ── Main Component ───────────────────────────────────────────────────────────
 export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> = ({ profile, dosha, onClose }) => {
   const { t, language } = useTranslation();
-  const { messages: persistedMsgs, loading: chatHistoryLoading, saveMessage } = useChatMessages('ayurveda');
+  const { messages: persistedMsgs, loading: chatHistoryLoading, saveMessage, refreshMessages } = useChatMessages('ayurveda');
   const [streamingAssistant, setStreamingAssistant] = useState<string | null>(null);
   const displayMessages = useMemo((): ChatMessage[] => {
     if (streamingAssistant !== null) {
@@ -420,6 +420,7 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+  const [copiedAll, setCopiedAll] = useState(false);
   const [showLexicon, setShowLexicon] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const { user } = useAuth();
@@ -464,6 +465,15 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
   useEffect(() => {
     if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
   }, [displayMessages]);
+
+  const handleCopyAll = () => {
+    const allText = displayMessages
+      .map(m => `${m.role === 'user' ? 'You' : 'Agastya Muni'}:\n${m.content}`)
+      .join('\n\n---\n\n');
+    navigator.clipboard?.writeText(allText).catch(() => {});
+    setCopiedAll(true);
+    setTimeout(() => setCopiedAll(false), 2500);
+  };
 
   const handleCopy = (text: string, idx: number) => {
     navigator.clipboard?.writeText(text).catch(() => {});
@@ -531,7 +541,10 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
           } catch { textBuffer = `${line}\n${textBuffer}`; break; }
         }
       }
-      if (assistantContent.trim()) await saveMessage({ role: 'assistant', content: assistantContent });
+      if (assistantContent.trim()) {
+        // Edge function saves assistant message server-side; refresh to get real DB record
+        await refreshMessages();
+      }
     } catch (err) {
       console.error(err);
       const errContent = t('ayurvedaChat.connectionInterrupted', 'Forgive me, dear seeker — my Akasha channel is briefly interrupted. Please try again.');
@@ -747,6 +760,39 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
               }
             </button>
           </div>
+
+          {/* Copy Conversation Button */}
+          {displayMessages.length > 0 && (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              padding: '6px 20px 14px',
+              flexShrink: 0,
+            }}>
+              <button
+                type="button"
+                onClick={handleCopyAll}
+                style={{
+                  background: 'none',
+                  border: '1px solid rgba(212,175,55,0.25)',
+                  borderRadius: 20,
+                  color: copiedAll ? '#D4AF37' : 'rgba(255,255,255,0.35)',
+                  fontSize: 11,
+                  fontFamily: "'Plus Jakarta Sans',sans-serif",
+                  fontWeight: 700,
+                  letterSpacing: '0.08em',
+                  padding: '5px 14px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                {copiedAll ? '✓ Consultation Copied' : '⎘ Copy Full Consultation'}
+              </button>
+            </div>
+          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>
