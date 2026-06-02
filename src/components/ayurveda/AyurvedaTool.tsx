@@ -395,6 +395,7 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({ membershipLevel = 'F
                 onFetchGuidance={handleFetchGuidance}
                 isPremium={canChat}
                 isSiddhaPlus={isSiddhaPlus}
+                isAdmin={isAdmin}
                 onOpenChat={handleOpenChat}
               />
             </div>
