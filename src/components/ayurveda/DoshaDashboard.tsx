@@ -1,651 +1,9 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Sun, Brain, Heart, Leaf, Sparkles, RotateCcw, Moon,
-  Zap, RefreshCw, Wind, Flame, Droplets, Star, Eye,
-  Activity, Shield, Clock, ChevronDown, ChevronRight, Mic,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useTranslation } from '@/hooks/useTranslation';
+import { ChevronDown, RotateCcw, RefreshCw } from 'lucide-react';
 import type { AyurvedaUserProfile, DoshaProfile } from '@/lib/ayurvedaTypes';
 import { getDoshaEmoji } from '@/lib/ayurvedaTypes';
 
-// ── SQI 2050 SIDDHA DESIGN TOKENS ─────────────────────────────────────────
-const T = {
-  gold: '#D4AF37', gold2: '#F5D660', gold3: '#B8960C',
-  saff: '#FF8C00', saffL: '#FFB347',
-  lotus: '#E8527A', lotusDim: 'rgba(232,82,122,0.15)',
-  emerald: '#10B981', em: '#34D399',
-  indigo: '#8B5CF6', indigoDim: 'rgba(139,92,246,0.15)',
-  cyan: '#22D3EE',
-  vata: '#93C5FD', vataDim: 'rgba(147,197,253,0.14)', vataGlow: 'rgba(96,165,250,0.4)',
-  pitta: '#FBBF24', pittaDim: 'rgba(251,191,36,0.14)', pittaGlow: 'rgba(245,158,11,0.4)',
-  kapha: '#34D399', kaphaDim: 'rgba(52,211,153,0.14)', kaphaGlow: 'rgba(16,185,129,0.4)',
-  bg: '#050505',
-  glass: 'rgba(255,255,255,0.025)',
-  glb: 'rgba(255,255,255,0.055)',
-  r40: '40px',
-  w90: 'rgba(255,255,255,0.90)', w70: 'rgba(255,255,255,0.70)',
-  w50: 'rgba(255,255,255,0.50)', w40: 'rgba(255,255,255,0.40)', w35: 'rgba(255,255,255,0.35)',
-  w20: 'rgba(255,255,255,0.20)', w10: 'rgba(255,255,255,0.10)',
-  gg: (hex: string, o = 0.15) => {
-    const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
-    return `rgba(${r},${g},${b},${o})`;
-  }
-};
-
-const HERBS_DB: Record<string, { property: string; element: string; color: string; emoji: string; action: string }> = {
-  ashwagandha: { property:'Ojas Builder', element:'Earth 🌍', color:'#86EFAC', emoji:'🌿', action:'Rebuilds vital essence, adrenal support, grounds Vata' },
-  brahmi:      { property:'Medha Rasayana', element:'Water 💧', color:'#93C5FD', emoji:'🌿', action:'Supreme nervine, enhances Medha (intelligence), calms Pitta' },
-  turmeric:    { property:'Agni Kindler', element:'Fire 🔥', color:'#FBBF24', emoji:'🌿', action:'Purifies blood, kindles digestive fire, anti-inflammatory' },
-  tulsi:       { property:'Sattva Amplifier', element:'Air 🌬️', color:'#86EFAC', emoji:'🌿', action:'Opens heart chakra, elevates Sattva, immune adaptogen' },
-  triphala:    { property:'Tridosha Balancer', element:'Ether ☯️', color:'#C4B5FD', emoji:'🌿', action:'Balances all three doshas, cleanses, rejuvenates tissues' },
-  shatavari:   { property:'Soma Nectar', element:'Water 💧', color:'#93C5FD', emoji:'🌿', action:'Rebuilds Ojas, nourishes female energy, Pitta cooling' },
-  neem:        { property:'Rakta Shodhana', element:'Air 🌬️', color:'#4ADE80', emoji:'🌿', action:'Blood purifier, clears Pitta heat, anti-parasitic' },
-  ginger:      { property:'Deepana Fire', element:'Fire 🔥', color:'#FB923C', emoji:'🌿', action:'Kindles Agni, breaks Kapha congestion, warming' },
-  licorice:    { property:'Rasa Builder', element:'Earth 🌍', color:'#FCD34D', emoji:'🌿', action:'Builds Rasa dhatu, soothes inflammation, tonifying' },
-  guggulu:     { property:'Lekhana Catalyst', element:'Fire 🔥', color:'#F87171', emoji:'🌿', action:'Scrapes Ama, reduces Kapha, purifies channels' },
-  jatamansi:   { property:'Sacred Essence', element:'Ether ☯️', color:'#C4B5FD', emoji:'🌿', action:'Deep sleep, reduces intrusive thoughts, nervous restoration' },
-  shankhapushpi:{ property:'Sacred Essence', element:'Ether ☯️', color:'#C4B5FD', emoji:'🌿', action:'Stabilizes nervous system, enhances memory, calms Vata' },
-};
-
-const getSiddha = (herb: string) => {
-  const k = herb.toLowerCase().split(' ')[0].replace(/[^a-z]/g,'');
-  return HERBS_DB[k] || { property:'Sacred Essence', element:'Ether ☯️', color:'#C4B5FD', emoji:'🌿', action:'Balances and restores the subtle body' };
-};
-
-const RITUAL_PHASES = [
-  { time:'5:00 AM',  label:'Brahma Muhurta',  emoji:'🌅', phase:'dawn'    },
-  { time:'7:00 AM',  label:'Morning Agni',    emoji:'☀️', phase:'morning' },
-  { time:'12:00 PM', label:'Pitta Peak',      emoji:'🔥', phase:'midday'  },
-  { time:'6:00 PM',  label:'Sandhya Kala',   emoji:'🌇', phase:'evening' },
-  { time:'9:00 PM',  label:'Kapha Rest',      emoji:'🌙', phase:'night'   },
-];
-
-// Scalar wave frequencies by dosha
-const SCALAR_FREQS: Record<string, { hz: number; color: string; name: string; benefit: string }[]> = {
-  vata:  [
-    { hz: 432, color:'#93C5FD', name:'Security & Pain Relief', benefit:'174 Hz · Grounds Vata anxiety. Releases physical pain. Creates deep sense of safety in the nervous system.' },
-    { hz: 528, color:'#86EFAC', name:'Love & DNA Repair', benefit:'528 Hz · The miracle tone. Repairs DNA. Rebuilds Ojas at the cellular level. The most universally healing frequency.' },
-    { hz: 174, color:'#C4B5FD', name:'Cell & Tissue Repair', benefit:'285 Hz · Regenerates cells and tissues. Rebuilds Ojas. Accelerates healing after illness, injury, or depletion.' },
-  ],
-  pitta: [
-    { hz: 396, color:'#FBBF24', name:'Release Fear & Guilt', benefit:'396 Hz · Dissolves unconscious fear and guilt. Frees Pitta perfectionism. Liberates blocked emotion from the cellular field.' },
-    { hz: 528, color:'#86EFAC', name:'Love & DNA Repair', benefit:'528 Hz · The miracle tone. Repairs DNA. Opens the heart. Transmutes Pitta fire into compassionate action.' },
-    { hz: 639, color:'#F4799A', name:'Open the Heart', benefit:'639 Hz · Activates Anahata chakra. Heals relationships. Softens Pitta intensity. Cultivates deep compassion and love.' },
-  ],
-  kapha: [
-    { hz: 741, color:'#34D399', name:'Detox & Expression', benefit:'741 Hz · Clears Ama (toxins) from cells. Awakens Agni. Supports authentic self-expression and liberates the voice.' },
-    { hz: 852, color:'#22D3EE', name:'Intuition & Third Eye', benefit:'852 Hz · Opens Ajna chakra. Deepens intuition. Returns awareness to spiritual order beyond the analytical mind.' },
-    { hz: 963, color:'#D4AF37', name:'Crown · Divine Connection', benefit:'963 Hz · Sahasrara activation. Pure consciousness. Samadhi gateway. The highest Siddha transmission. Use in deep meditation.' },
-  ],
-};
-
-// Agastya wisdom modules by dosha
-const AGASTYA_MODULES: Record<string, { title: string; wisdom: string; practice: string; mantra: string }[]> = {
-  vata: [
-    { title:'The Wind that Loses Its Way', wisdom:'Vata, the force of movement and creativity, becomes your greatest enemy when it loses its anchor. Like wind without direction, an imbalanced Vata mind scatters energy, creates anxiety, and depletes Ojas — the vital essence that is your life force.', practice:'Begin each day with Abhyanga — warm sesame oil massage from feet to crown. The touch of warm oil is the most powerful medicine for Vata. This single practice, done daily, can transform your nervous system within 21 days.', mantra:'Om Vayu Devaya Namah — I honor the lord of the life-giving wind' },
-    { title:'Building Ojas — The Sacred Nectar', wisdom:'Ojas is the subtle essence of all dhatus, the final product of perfect digestion. In the Agastya Samhita, I wrote: when Ojas is depleted, the spirit has no vessel. Modern life — addiction, overwork, poor sleep — destroys Ojas faster than any herb can rebuild it.', practice:'Drink warm milk with Ashwagandha, Shatavari, and ghee before sleep. This Ojas-building protocol, practiced for 90 days, rebuilds what years of depletion have taken away.', mantra:'Om Namah Shivaya — I surrender to the infinite that sustains all' },
-  ],
-  pitta: [
-    { title:'The Fire That Burns Its Own House', wisdom:'Pitta is the sacred fire of intelligence, digestion, and transformation. But when Pitta inflames beyond its proper channel, it turns inward — burning the mind with perfectionism, the gut with acid, the liver with anger. The brilliant mind becomes its own destroyer.', practice:'Practice Sheetali pranayama — rolled tongue breathing — for 10 minutes at midday when Pitta peaks. Apply coconut oil to the crown and soles of feet before bed. Eat the largest meal at noon, never work or argue after 7 PM.', mantra:'Om Namo Narayanaya — I surrender my fire to the cooling waters of grace' },
-    { title:'Pitta in Service vs. Pitta in Control', wisdom:'The highest expression of Pitta is the physician who heals, the warrior who protects, the leader who serves. The lowest expression is the tyrant of their own life. I have seen this pattern across ten thousand years — the most gifted beings are often most trapped by their own fire.', practice:'Viharaya — conscious recreation. One full day weekly with no agenda, no productivity, no achievement. Simply be. Walk in nature. This is not laziness; this is the Ayurvedic prescription for Pitta longevity.', mantra:'Om Dum Durgayei Namah — I invoke the goddess who transforms fire into protection' },
-  ],
-  kapha: [
-    { title:'The Earth That Forgot to Move', wisdom:'Kapha is the body\'s love — stable, nourishing, patient. But Kapha unmoving becomes depression, weight, attachment, and forgetting. The lotus grows in water yet rises above it. This is the Kapha path: to be grounded but not stuck, loving but not clinging.', practice:'Vigorous exercise before sunrise when Kapha is highest. Dry brush the body before showering. Fast one day per month — the sacred Ekadashi fast burns accumulated Ama and awakens Kapha\'s hidden fire.', mantra:'Om Gam Ganapataye Namah — I invoke the remover of obstacles within myself' },
-    { title:'The Medicine of Stimulation', wisdom:'For Kapha, warmth, spice, stimulation, and challenge are the medicines. I prescribed ginger, pepper, and movement for Kapha ten thousand years ago and this prescription has not changed. The Kapha person needs what feels uncomfortable — that is precisely where their medicine lives.', practice:'Begin each morning with hot ginger-lemon water before anything else. Take Trikatu (ginger + pepper + pippali) with honey before meals. Practice Bhastrika pranayama — bellows breath — to stoke the inner fire.', mantra:'Om Namah Shivaya — the sacred fire dissolves all that no longer serves' },
-  ],
-};
-
-// ── CARD WRAPPER ─────────────────────────────────────────────────────────────
-const Card: React.FC<{
-  children: React.ReactNode;
-  accent?: string;
-  delay?: number;
-  style?: React.CSSProperties;
-  className?: string;
-}> = ({ children, accent = T.gold, delay = 0, style = {}, className }) => (
-  <motion.div
-    initial={{ opacity:0, y:18 }} animate={{ opacity:1, y:0 }} transition={{ delay }}
-    className={className}
-    style={{
-      background: T.glass, backdropFilter:'blur(40px)', WebkitBackdropFilter:'blur(40px)',
-      border:`1px solid ${T.glb}`, borderRadius:T.r40,
-      position:'relative', overflow:'hidden',
-      ...style,
-    }}
-  >
-    <div style={{ position:'absolute', top:0, left:'8%', right:'8%', height:1, background:`linear-gradient(90deg,transparent,${T.gg(accent,0.5)},${T.gg(accent,0.85)},${T.gg(accent,0.5)},transparent)` }} />
-    {children}
-  </motion.div>
-);
-
-// ── AGASTYA CONSULT CARD ──────────────────────────────────────────────────────
-const AgastyaConsultCard: React.FC<{
-  dosha: string; onOpenChat: () => void; userName: string;
-}> = ({ dosha, onOpenChat, userName }) => {
-  const d = dosha?.toLowerCase() || 'vata';
-  const doshaColor = d === 'vata' ? T.vata : d === 'pitta' ? T.pitta : T.kapha;
-  return (
-    <motion.div
-      initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.1 }}
-      style={{
-        background:`linear-gradient(135deg,${T.gg(T.saff,0.08)},${T.gg(T.gold,0.04)},${T.gg(doshaColor,0.06)})`,
-        backdropFilter:'blur(40px)', WebkitBackdropFilter:'blur(40px)',
-        border:`1.5px solid ${T.gg(T.saff,0.45)}`,
-        borderRadius:T.r40, padding:'28px 24px',
-        boxShadow:`0 0 60px ${T.gg(T.saff,0.12)}, 0 0 120px ${T.gg(T.gold,0.06)}`,
-        position:'relative', overflow:'hidden',
-        cursor:'pointer',
-      }}
-      onClick={onOpenChat}
-      whileHover={{ scale:1.01, boxShadow:`0 0 80px ${T.gg(T.saff,0.2)}, 0 0 160px ${T.gg(T.gold,0.1)}` }}
-      whileTap={{ scale:0.99 }}
-    >
-      {/* Top accent */}
-      <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:`linear-gradient(90deg,transparent,${T.saff},${T.gold},${T.saff},transparent)` }} />
-
-      {/* Subtle scan */}
-      <motion.div style={{ position:'absolute', top:0, bottom:0, width:80, background:`linear-gradient(90deg,transparent,${T.gg(T.saff,0.12)},transparent)`, left:'-80px' }}
-        animate={{ left:['−80px','110%'] }} transition={{ duration:4, repeat:Infinity, ease:'easeInOut', repeatDelay:3 }} />
-
-      <div style={{ display:'flex', alignItems:'flex-start', gap:16 }}>
-        {/* Agastya avatar */}
-        <motion.div
-          animate={{ boxShadow:[`0 0 20px ${T.gg(T.saff,0.25)}`,`0 0 40px ${T.gg(T.saff,0.5)}`,`0 0 20px ${T.gg(T.saff,0.25)}`] }}
-          transition={{ duration:3, repeat:Infinity }}
-          style={{ width:64, height:64, borderRadius:'50%', background:`radial-gradient(circle,${T.gg(T.saff,0.25)},${T.gg(T.gold,0.08)})`, border:`2px solid ${T.gg(T.saff,0.55)}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:28, flexShrink:0 }}
-        >🔱</motion.div>
-
-        <div style={{ flex:1 }}>
-          <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase', color:T.saff, opacity:0.8, marginBottom:5 }}>
-            ✦ Your Personal Guide · Agastya Samhita ✦
-          </div>
-          <h3 style={{ fontSize:20, fontWeight:900, letterSpacing:'-0.04em', color:T.gold, marginBottom:6, fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic' }}>
-            Speak with Agastya Muni
-          </h3>
-          <p style={{ fontSize:13, lineHeight:1.65, color:T.w70, marginBottom:14 }}>
-            {userName.split(' ')[0]}, I see your {dosha} constitution clearly. I have specific prescriptions from the Agastya Samhita waiting for you. Ask me anything — herbs, rituals, emotional healing, or the deeper question behind your suffering.
-          </p>
-
-          {/* CTA */}
-          <motion.div
-            whileHover={{ scale:1.03 }} whileTap={{ scale:0.98 }}
-            style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'11px 24px', borderRadius:999, background:`linear-gradient(135deg,${T.saff},${T.gold})`, color:T.bg, fontSize:13, fontWeight:900, letterSpacing:'-0.02em', fontFamily:"'Plus Jakarta Sans',sans-serif", cursor:'pointer' }}
-          >
-            <span style={{ fontSize:16 }}>🔱</span>
-            Open Divine Physician
-            <ChevronRight style={{ width:14, height:14 }} />
-          </motion.div>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
-
-// ── SCALAR WAVE MODULE ────────────────────────────────────────────────────────
-const ScalarWaveModule: React.FC<{ dosha: string; isPremium: boolean }> = ({ dosha, isPremium }) => {
-  const d = dosha?.toLowerCase() || 'vata';
-  const freqs = SCALAR_FREQS[d] || SCALAR_FREQS.vata;
-  const [activeFreq, setActiveFreq] = useState(0);
-  const [playing, setPlaying] = useState(false);
-
-  const doshaColor = d === 'vata' ? T.vata : d === 'pitta' ? T.pitta : T.kapha;
-
-  return (
-    <Card accent={doshaColor} delay={0.3} style={{ padding:'24px 22px' }}>
-      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:18 }}>
-        <div>
-          <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase', color:doshaColor, opacity:0.75, marginBottom:6 }}>
-            ✦ Agastya Scalar Transmission ✦
-          </div>
-          <h3 style={{ fontSize:17, fontWeight:900, letterSpacing:'-0.03em', color:T.w90 }}>
-            {dosha} Healing Frequencies
-          </h3>
-          <p style={{ fontSize:12, color:T.w50, marginTop:4, lineHeight:1.5 }}>
-            Each frequency targets a specific layer of healing. Tap to activate — use headphones for full Siddha transmission.
-          </p>
-        </div>
-        {!isPremium && (
-          <div style={{ padding:'3px 10px', borderRadius:999, background:`${T.gg(T.cyan,0.1)}`, border:`1px solid ${T.gg(T.cyan,0.3)}`, fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase', color:T.cyan, flexShrink:0 }}>
-            Prana Flow
-          </div>
-        )}
-      </div>
-
-      <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-        {freqs.map((f, i) => (
-          <motion.div
-            key={i}
-            onClick={() => { if(isPremium) { setActiveFreq(i); setPlaying(p=>!p); } }}
-            whileHover={isPremium ? { scale:1.01 } : {}}
-            style={{
-              padding:'14px 16px', borderRadius:20,
-              background: activeFreq === i && playing ? `${T.gg(f.color,0.14)}` : `rgba(255,255,255,0.03)`,
-              border:`1px solid ${activeFreq === i && playing ? T.gg(f.color,0.4) : 'rgba(255,255,255,0.06)'}`,
-              cursor: isPremium ? 'pointer' : 'default',
-              opacity: isPremium ? 1 : 0.6,
-              display:'flex', alignItems:'center', gap:14,
-              transition:'all 0.25s',
-            }}
-          >
-            {/* Frequency orb */}
-            <div style={{ width:44, height:44, borderRadius:'50%', background:`radial-gradient(circle,${T.gg(f.color,0.25)},transparent)`, border:`1px solid ${T.gg(f.color,0.35)}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, position:'relative' }}>
-              <span style={{ fontSize:11, fontWeight:900, color:f.color }}>{f.hz}</span>
-              {activeFreq === i && playing && (
-                <motion.div style={{ position:'absolute', inset:-6, borderRadius:'50%', border:`1px solid ${T.gg(f.color,0.4)}` }}
-                  animate={{ scale:[1,1.4,1], opacity:[0.6,0,0.6] }} transition={{ duration:1.8, repeat:Infinity }} />
-              )}
-            </div>
-            <div style={{ flex:1 }}>
-              <div style={{ fontSize:13, fontWeight:800, color:f.color, marginBottom:2 }}>{f.name}</div>
-              <div style={{ fontSize:11, color:T.w50, lineHeight:1.5 }}>{f.benefit}</div>
-            </div>
-            {isPremium && (
-              <div style={{ color: activeFreq===i && playing ? f.color : T.w35, fontSize:18 }}>
-                {activeFreq===i && playing ? '⏸' : '▶'}
-              </div>
-            )}
-          </motion.div>
-        ))}
-      </div>
-
-      {!isPremium && (
-        <div style={{ marginTop:14, padding:'12px 16px', borderRadius:16, background:`${T.gg(T.cyan,0.06)}`, border:`1px solid ${T.gg(T.cyan,0.2)}`, textAlign:'center' }}>
-          <p style={{ fontSize:12, color:T.w50, marginBottom:0 }}>Unlock Scalar Transmissions with Prana Flow ◈</p>
-        </div>
-      )}
-    </Card>
-  );
-};
-
-// ── AGASTYA WISDOM MODULE ─────────────────────────────────────────────────────
-const AgastyaWisdomModule: React.FC<{ dosha: string; isPremium: boolean }> = ({ dosha, isPremium }) => {
-  const d = dosha?.toLowerCase() || 'vata';
-  const modules = AGASTYA_MODULES[d] || AGASTYA_MODULES.vata;
-  const [expanded, setExpanded] = useState<number | null>(0);
-  const doshaColor = d === 'vata' ? T.vata : d === 'pitta' ? T.pitta : T.kapha;
-
-  return (
-    <Card accent={T.gold} delay={0.4} style={{ padding:'24px 22px' }}>
-      <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase', color:T.gold, opacity:0.75, marginBottom:8 }}>
-        ✦ Agastya Samhita · Deep Wisdom ✦
-      </div>
-      <h3 style={{ fontSize:17, fontWeight:900, letterSpacing:'-0.03em', color:T.w90, marginBottom:4 }}>
-        Ancient Prescriptions for Your Soul
-      </h3>
-      <p style={{ fontSize:12, color:T.w50, marginBottom:18, lineHeight:1.5 }}>
-        Agastya Muni's personal teachings for {dosha} consciousness
-      </p>
-
-      {modules.map((m, i) => (
-        <motion.div key={i} style={{ marginBottom:10 }}>
-          <motion.button
-            onClick={() => setExpanded(expanded === i ? null : i)}
-            style={{
-              width:'100%', padding:'14px 16px', borderRadius:18,
-              background: expanded===i ? `linear-gradient(135deg,${T.gg(T.saff,0.1)},${T.gg(T.gold,0.05)})` : 'rgba(255,255,255,0.03)',
-              border:`1px solid ${expanded===i ? T.gg(T.gold,0.35) : 'rgba(255,255,255,0.06)'}`,
-              display:'flex', alignItems:'center', justifyContent:'space-between', gap:12,
-              cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif",
-              transition:'all 0.22s',
-            }}
-            whileHover={{ background:`${T.gg(T.gold,0.07)}` }}
-          >
-            <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-              <span style={{ fontSize:20 }}>📜</span>
-              <div style={{ textAlign:'left' }}>
-                <div style={{ fontSize:13, fontWeight:800, color: expanded===i ? T.gold : T.w70, letterSpacing:'-0.02em' }}>{m.title}</div>
-              </div>
-            </div>
-            <motion.div animate={{ rotate: expanded===i ? 90 : 0 }} transition={{ duration:0.2 }}>
-              <ChevronRight style={{ width:14, height:14, color:T.w35 }} />
-            </motion.div>
-          </motion.button>
-
-          <AnimatePresence>
-            {expanded === i && (
-              <motion.div
-                initial={{ height:0, opacity:0 }} animate={{ height:'auto', opacity:1 }} exit={{ height:0, opacity:0 }}
-                transition={{ duration:0.3 }}
-                style={{ overflow:'hidden' }}
-              >
-                <div style={{ padding:'18px 16px 14px', borderRadius:'0 0 18px 18px', background:`${T.gg(T.gold,0.04)}`, border:`1px solid ${T.gg(T.gold,0.14)}`, borderTop:'none', marginTop:-2 }}>
-                  <p style={{ fontSize:15, lineHeight:1.78, color:T.w70, marginBottom:16, fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif" }}>
-                    "{m.wisdom}"
-                  </p>
-                  <div style={{ padding:'12px 14px', borderRadius:12, background:`${T.gg(T.emerald,0.08)}`, border:`1px solid ${T.gg(T.emerald,0.2)}`, marginBottom:14 }}>
-                    <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase', color:T.emerald, marginBottom:6 }}>✦ Practice</div>
-                    <p style={{ fontSize:12, color:T.w70, lineHeight:1.6, margin:0 }}>{m.practice}</p>
-                  </div>
-                  <div style={{ padding:'10px 14px', borderRadius:12, background:`${T.gg(T.gold,0.08)}`, border:`1px solid ${T.gg(T.gold,0.2)}` }}>
-                    <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase', color:T.gold, marginBottom:4 }}>✦ Sacred Mantra</div>
-                    <p style={{ fontSize:13, color:T.gold, lineHeight:1.5, margin:0, fontStyle:'italic', fontFamily:"'Cormorant Garamond',serif" }}>{m.mantra}</p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-      ))}
-    </Card>
-  );
-};
-
-// ── DOSHA BALANCE METER ────────────────────────────────────────────────────────
-const DoshaOrb: React.FC<{ name: string; value: number; orbColor: string; glowHex: string; delay: number; element: string }> = ({ name, value, orbColor, glowHex, delay, element }) => (
-  <motion.div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:11 }}
-    initial={{ opacity:0, scale:0.5 }} animate={{ opacity:1, scale:1 }}
-    transition={{ delay, duration:0.9, type:'spring', stiffness:200 }}
-  >
-    <div style={{ position:'relative' }}>
-      {/* Outer aura */}
-      <motion.div style={{ position:'absolute', inset:-18, borderRadius:'50%', background:`radial-gradient(circle,${glowHex}40,transparent 70%)` }}
-        animate={{ scale:[1,1.25,1], opacity:[0.3,0.65,0.3] }} transition={{ duration:3.5, repeat:Infinity, ease:'easeInOut', delay }} />
-      {/* Ring */}
-      <motion.div style={{ position:'absolute', inset:-5, borderRadius:'50%', border:`1px solid ${glowHex}40` }}
-        animate={{ scale:[1,1.08,1], opacity:[0.4,0.8,0.4] }} transition={{ duration:2.5, repeat:Infinity, delay:delay+0.5 }} />
-      {/* Sphere */}
-      <motion.div style={{
-        width:96, height:96, borderRadius:'50%',
-        background:`radial-gradient(circle at 32% 32%,${orbColor}cc,${orbColor}66 50%,${orbColor}22)`,
-        boxShadow:`0 0 36px ${glowHex}55, inset 0 0 24px ${glowHex}22, 0 0 0 1.5px ${glowHex}44`,
-        display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden', position:'relative',
-      }} animate={{ rotate:360 }} transition={{ duration:22, repeat:Infinity, ease:'linear' }}>
-        <motion.div style={{ position:'absolute', width:34, height:34, borderRadius:'50%', background:`${orbColor}88`, top:'12%', left:'18%', filter:'blur(5px)' }}
-          animate={{ opacity:[0.4,1,0.4] }} transition={{ duration:2.2, repeat:Infinity, delay }} />
-        <div style={{ position:'relative', zIndex:1, textAlign:'center' }}>
-          <span style={{ fontSize:22, fontWeight:900, color:'white', textShadow:'0 2px 8px rgba(0,0,0,.6)', letterSpacing:'-0.04em' }}>{value}%</span>
-        </div>
-      </motion.div>
-      {/* Element badge */}
-      <div style={{ position:'absolute', bottom:-4, right:-4, width:28, height:28, borderRadius:'50%', background:`rgba(5,5,5,0.85)`, border:`1.5px solid ${glowHex}50`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, backdropFilter:'blur(8px)' }}>
-        {element}
-      </div>
-    </div>
-    <div style={{ textAlign:'center' }}>
-      <div style={{ fontSize:9, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase', color:orbColor, marginBottom:2 }}>{name}</div>
-      {/* Progress bar */}
-      <div style={{ width:70, height:3, borderRadius:2, background:'rgba(255,255,255,0.08)', overflow:'hidden' }}>
-        <motion.div style={{ height:'100%', borderRadius:2, background:orbColor, boxShadow:`0 0 6px ${glowHex}` }}
-          initial={{ width:0 }} animate={{ width:`${value}%` }} transition={{ delay:delay+0.5, duration:1, ease:'easeOut' }} />
-      </div>
-    </div>
-  </motion.div>
-);
-
-// ── NADI PULSE SCORE ──────────────────────────────────────────────────────────
-const NadiScore: React.FC<{ dosha: DoshaProfile }> = ({ dosha }) => {
-  const primary = dosha.primary?.toLowerCase() || 'vata';
-  const v = Number(dosha.vata) || 45;
-  const p = Number(dosha.pitta) || 35;
-  const k = Number(dosha.kapha) || 20;
-  const balance = primary === 'vata' ? v < 60 ? 'Balanced' : 'Elevated' :
-                  primary === 'pitta' ? p < 50 ? 'Balanced' : 'Elevated' : 'Balanced';
-  const score = Math.max(0, 100 - Math.abs(v - 45) - Math.abs(p - 35) - Math.abs(k - 20));
-  const color = score > 70 ? T.emerald : score > 50 ? T.gold : T.lotus;
-
-  return (
-    <div style={{ display:'flex', alignItems:'center', gap:16, padding:'16px 20px', borderRadius:20, background:`${T.gg(color,0.08)}`, border:`1px solid ${T.gg(color,0.25)}` }}>
-      <div style={{ width:52, height:52, borderRadius:'50%', background:`radial-gradient(circle,${T.gg(color,0.25)},transparent)`, border:`1px solid ${T.gg(color,0.4)}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-        <Activity style={{ width:22, height:22, color }} />
-      </div>
-      <div>
-        <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase', color, opacity:0.8, marginBottom:2 }}>Nadi Pulse Reading</div>
-        <div style={{ fontSize:22, fontWeight:900, color, letterSpacing:'-0.04em' }}>{score}/100</div>
-        <div style={{ fontSize:11, color:T.w50 }}>Dosha Balance Score · {balance} {primary} expression</div>
-      </div>
-      <div style={{ marginLeft:'auto', textAlign:'center', flexShrink:0 }}>
-        <div style={{ fontSize:20, marginBottom:2 }}>
-          {score > 70 ? '🌸' : score > 50 ? '🌿' : '🔥'}
-        </div>
-        <div style={{ fontSize:9, color:T.w35 }}>{score > 70 ? 'Harmonious' : score > 50 ? 'Seeking' : 'Active'}</div>
-      </div>
-    </div>
-  );
-};
-
-// ── DOSHA-SPECIFIC DAILY INTELLIGENCE ─────────────────────────────────────────
-const DailyIntelligence: React.FC<{ dosha: DoshaProfile; profile: AyurvedaUserProfile }> = ({ dosha, profile }) => {
-  const primary = dosha.primary?.toLowerCase() || 'vata';
-  const doshaColor = primary === 'vata' ? T.vata : primary === 'pitta' ? T.pitta : T.kapha;
-
-  const intelligence = {
-    vata: {
-      color: T.vata,
-      morning: { time:'5:00 AM', emoji:'🌅', title:'Brahma Muhurta', tip:'Do NOT check phone. Oil 3 drops sesame in nostrils (Nasya). 20 min Nadi Shodhana before anything else.' },
-      food: { emoji:'🍲', title:'Vata Pacifying Foods', items:['Warm, oily, cooked, heavy', 'Root vegetables, ghee, warm milk', 'Avoid raw foods, cold drinks, caffeine'] },
-      warning: { emoji:'⚠️', title:'Vata Triggers Today', tip:'Wind, cold, screen time after 8PM, skipping meals, and multi-tasking are your top Vata aggravators. Choose one task at a time.' }
-    },
-    pitta: {
-      color: T.pitta,
-      morning: { time:'6:00 AM', emoji:'☀️', title:'Pitta Morning Protocol', tip:'Cool shower first. Coconut oil on crown. Never start work before breakfast. Arguments before noon destroy your Pitta balance for the day.' },
-      food: { emoji:'🥗', title:'Pitta Cooling Foods', items:['Cool, light, slightly dry', 'Sweet fruits, cucumber, coconut water', 'Avoid chili, vinegar, fermented, alcohol'] },
-      warning: { emoji:'⚠️', title:'Pitta Triggers Today', tip:'Deadline pressure, overheating, skipping lunch, criticism (given or received), and perfectionism will elevate your Pitta fire today.' }
-    },
-    kapha: {
-      color: T.kapha,
-      morning: { time:'5:00 AM', emoji:'⚡', title:'Kapha Activation Protocol', tip:'VIGOROUS exercise before sunrise is your medicine. Dry brush skin. Hot ginger water before anything else. Kapha heaviness peaks at dawn — this is when you must move.' },
-      food: { emoji:'🌶️', title:'Kapha Stimulating Foods', items:['Light, dry, warm, spicy', 'Legumes, greens, ginger, honey', 'Avoid dairy, sweets, heavy oils, cold food'] },
-      warning: { emoji:'⚠️', title:'Kapha Triggers Today', tip:'Oversleeping, comfort food, avoiding challenges, lack of stimulation, and emotional overeating are your primary Kapha escalators.' }
-    }
-  };
-
-  const data = intelligence[primary as keyof typeof intelligence] || intelligence.vata;
-
-  return (
-    <Card accent={doshaColor} delay={0.25} style={{ padding:'22px 20px' }}>
-      <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase', color:doshaColor, opacity:0.75, marginBottom:8 }}>
-        ✦ Today's {dosha.primary} Intelligence ✦
-      </div>
-      <h3 style={{ fontSize:17, fontWeight:900, letterSpacing:'-0.03em', color:T.w90, marginBottom:16 }}>
-        Agastya's Daily Prescription
-      </h3>
-
-      <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-        {/* Morning */}
-        <div style={{ padding:'14px 16px', borderRadius:18, background:`${T.gg(doshaColor,0.08)}`, border:`1px solid ${T.gg(doshaColor,0.22)}` }}>
-          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
-            <span style={{ fontSize:20 }}>{data.morning.emoji}</span>
-            <div>
-              <div style={{ fontSize:9, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase', color:doshaColor, opacity:0.75 }}>{data.morning.time}</div>
-              <div style={{ fontSize:14, fontWeight:800, color:T.w90 }}>{data.morning.title}</div>
-            </div>
-          </div>
-          <p style={{ fontSize:12, color:T.w70, lineHeight:1.6, margin:0 }}>{data.morning.tip}</p>
-        </div>
-
-        {/* Foods */}
-        <div style={{ padding:'14px 16px', borderRadius:18, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
-            <span style={{ fontSize:20 }}>{data.food.emoji}</span>
-            <div style={{ fontSize:14, fontWeight:800, color:T.w90 }}>{data.food.title}</div>
-          </div>
-          {data.food.items.map((item, i) => (
-            <div key={i} style={{ display:'flex', gap:8, fontSize:12, color:T.w50, marginBottom:i<data.food.items.length-1?5:0 }}>
-              <span style={{ color:doshaColor, opacity:0.6 }}>◦</span>{item}
-            </div>
-          ))}
-        </div>
-
-        {/* Warning */}
-        <div style={{ padding:'14px 16px', borderRadius:18, background:`${T.gg(T.lotus,0.07)}`, border:`1px solid ${T.gg(T.lotus,0.22)}` }}>
-          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
-            <span style={{ fontSize:20 }}>{data.warning.emoji}</span>
-            <div style={{ fontSize:14, fontWeight:800, color:T.lotus }}>{data.warning.title}</div>
-          </div>
-          <p style={{ fontSize:12, color:T.w70, lineHeight:1.6, margin:0 }}>{data.warning.tip}</p>
-        </div>
-      </div>
-    </Card>
-  );
-};
-
-// ── ENHANCED HERBARIUM ────────────────────────────────────────────────────────
-const EnhancedHerbarium: React.FC<{ herbs: string[]; dosha: string }> = ({ herbs, dosha }) => {
-  const [selected, setSelected] = useState<string | null>(null);
-
-  return (
-    <Card accent={T.emerald} delay={0.5} style={{ padding:'22px 20px' }}>
-      <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase', color:T.emerald, opacity:0.75, marginBottom:8 }}>
-        ✦ Sacred Herbarium · Agastya Protocols ✦
-      </div>
-      <h3 style={{ fontSize:17, fontWeight:900, letterSpacing:'-0.03em', color:T.w90, marginBottom:4 }}>
-        Your Botanical Medicine
-      </h3>
-      <p style={{ fontSize:12, color:T.w50, marginBottom:18, lineHeight:1.5 }}>
-        Tap each herb to reveal Agastya's specific dosage and preparation protocol
-      </p>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))', gap:12 }}>
-        {herbs.map((herb, i) => {
-          const info = getSiddha(herb);
-          const isSelected = selected === herb;
-          return (
-            <motion.div key={i}
-              onClick={() => setSelected(isSelected ? null : herb)}
-              whileHover={{ scale:1.02, y:-2 }} whileTap={{ scale:0.98 }}
-              style={{
-                padding:'16px 14px', borderRadius:22,
-                background: isSelected ? `${T.gg(info.color,0.12)}` : 'rgba(255,255,255,0.025)',
-                border:`1px solid ${isSelected ? T.gg(info.color,0.4) : T.gg(info.color,0.18)}`,
-                cursor:'pointer', transition:'all 0.22s',
-                boxShadow: isSelected ? `0 0 20px ${T.gg(info.color,0.15)}` : 'none',
-                position:'relative', overflow:'hidden',
-              }}
-            >
-              {/* Aura */}
-              <motion.div style={{ position:'absolute', top:-10, right:-10, width:50, height:50, borderRadius:'50%', background:`radial-gradient(circle,${T.gg(info.color,0.28)},transparent 70%)` }}
-                animate={{ scale:[1,1.4,1], opacity:[0.2,0.5,0.2] }} transition={{ duration:3.8, repeat:Infinity, delay:i*0.3 }} />
-              <div style={{ position:'relative', zIndex:1 }}>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
-                  <span style={{ fontSize:18 }}>{info.emoji}</span>
-                  <span style={{ fontSize:7, fontWeight:700, color:info.color, opacity:0.8, letterSpacing:'0.15em' }}>{info.element}</span>
-                </div>
-                <div style={{ fontSize:12, fontWeight:800, color:T.w90, lineHeight:1.3, marginBottom:6 }}>{herb}</div>
-                <div style={{ display:'inline-block', padding:'2px 8px', borderRadius:999, fontSize:8, fontWeight:700, background:`${T.gg(info.color,0.1)}`, color:info.color, border:`1px solid ${T.gg(info.color,0.22)}` }}>
-                  {info.property}
-                </div>
-                {/* Expanded info */}
-                <AnimatePresence>
-                  {isSelected && (
-                    <motion.div initial={{ height:0, opacity:0 }} animate={{ height:'auto', opacity:1 }} exit={{ height:0, opacity:0 }} style={{ overflow:'hidden', marginTop:10 }}>
-                      <div style={{ fontSize:11, color:T.w70, lineHeight:1.55, borderTop:`1px solid ${T.gg(info.color,0.2)}`, paddingTop:8 }}>
-                        {info.action}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
-    </Card>
-  );
-};
-
-
-// ── JYOTISH PLANETARY DOSHA ALIGNMENT ─────────────────────────────────────────
-const JYOTISH_DATA: Record<string, {
-  planet: string; sign: string; nakshatra: string; influence: string;
-  remedy: string; mantra: string; gem: string; color: string; icon: string;
-}> = {
-  vata: {
-    planet: 'Saturn & Rahu', sign: 'Aquarius / Virgo', nakshatra: 'Ardra · Swati · Shatabhisha',
-    influence: 'Saturn amplifies Vata — irregular rhythms, anxiety, dispersed prana. Ground through routine and warmth.',
-    remedy: 'Sesame oil Abhyanga at sunrise. Blue sapphire or Hessonite worn on Saturday.',
-    mantra: 'Om Shanaishcharaya Namah — 108x every Saturday at dawn',
-    gem: 'Blue Sapphire / Hessonite', color: '#93C5FD', icon: '🪐',
-  },
-  pitta: {
-    planet: 'Sun & Mars', sign: 'Aries / Leo / Scorpio', nakshatra: 'Krittika · Vishakha · Jyeshtha',
-    influence: 'Sun–Mars fire intensifies Pitta — perfectionism, inflammation, liver heat. Cool through lunar practices.',
-    remedy: 'Moonlight meditation. Pearl or moonstone worn on Monday. Rose water face wash.',
-    mantra: 'Om Chandraya Namah — 108x every Monday at moonrise',
-    gem: 'Pearl / Moonstone', color: '#F59E0B', icon: '☀️',
-  },
-  kapha: {
-    planet: 'Jupiter & Moon', sign: 'Taurus / Cancer / Pisces', nakshatra: 'Rohini · Punarvasu · Uttara Bhadra',
-    influence: 'Jupiter–Moon abundance deepens Kapha — attachment, sluggishness, water retention. Activate through dynamic fire.',
-    remedy: 'Sun salutations at sunrise. Yellow sapphire or red coral. Dry brushing before shower.',
-    mantra: 'Om Suryaya Namah — 108x every Sunday at sunrise',
-    gem: 'Yellow Sapphire / Red Coral', color: '#34D399', icon: '🌕',
-  },
-};
-
-const JyotishPlanetaryCard: React.FC<{ dosha: string; isPremium: boolean }> = ({ dosha, isPremium }) => {
-  const d = dosha?.toLowerCase() || 'vata';
-  const data = JYOTISH_DATA[d] || JYOTISH_DATA.vata;
-  const [expanded, setExpanded] = useState(false);
-  const accent = data.color;
-
-  if (!isPremium) return (
-    <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }}
-      style={{ background:'rgba(255,255,255,0.02)', backdropFilter:'blur(40px)', border:'1px solid rgba(255,255,255,0.05)', borderRadius:40, padding:'28px 22px', textAlign:'center' }}>
-      <div style={{ fontSize:32, marginBottom:12 }}>🔮</div>
-      <div style={{ fontSize:9, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase', color:'rgba(212,175,55,0.6)', marginBottom:8 }}>Jyotish · Planetary Alignment</div>
-      <p style={{ fontSize:13, color:'rgba(255,255,255,0.35)', marginBottom:0 }}>Available from Siddha Quantum tier — unlock your planetary dosha alignment.</p>
-    </motion.div>
-  );
-
-  return (
-    <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }}
-      style={{ background:`linear-gradient(135deg,${accent}09,${accent}04)`, backdropFilter:'blur(40px)', WebkitBackdropFilter:'blur(40px)', border:`1px solid ${accent}45`, borderRadius:40, padding:'28px 22px', position:'relative', overflow:'hidden' }}>
-      <div style={{ position:'absolute', top:0, left:'10%', right:'10%', height:1, background:`linear-gradient(90deg,transparent,${accent}70,transparent)` }} />
-      <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:20 }}>
-        <div style={{ width:46, height:46, borderRadius:16, background:`${accent}18`, border:`1px solid ${accent}35`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22 }}>{data.icon}</div>
-        <div>
-          <div style={{ fontSize:9, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase', color:accent, opacity:0.75, marginBottom:3 }}>✦ Jyotish · Planetary Dosha</div>
-          <div style={{ fontSize:17, fontWeight:900, letterSpacing:'-0.04em', color:'rgba(255,255,255,0.9)' }}>Vedic Sky Blueprint</div>
-        </div>
-      </div>
-
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:16 }}>
-        {[
-          { label:'Ruling Planet', value:data.planet },
-          { label:'Rashi / Sign', value:data.sign },
-          { label:'Nakshatra', value:data.nakshatra },
-          { label:'Sacred Gem', value:data.gem },
-        ].map((item,i) => (
-          <div key={i} style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:16, padding:'12px 14px' }}>
-            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase', color:accent, opacity:0.65, marginBottom:4 }}>{item.label}</div>
-            <div style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.82)', lineHeight:1.4 }}>{item.value}</div>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ background:`${accent}08`, border:`1px solid ${accent}22`, borderRadius:18, padding:'14px 16px', marginBottom:12 }}>
-        <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase', color:accent, opacity:0.7, marginBottom:6 }}>✦ Planetary Influence</div>
-        <p style={{ fontSize:13, lineHeight:1.65, color:'rgba(255,255,255,0.65)', margin:0 }}>{data.influence}</p>
-      </div>
-
-      <motion.button whileTap={{ scale:0.97 }} onClick={() => setExpanded(!expanded)}
-        style={{ width:'100%', background:'transparent', border:`1px solid ${accent}30`, borderRadius:14, padding:'10px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer', color:accent, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:11, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' }}>
-        Planetary Remedy & Mantra
-        <ChevronDown style={{ width:14, height:14, transform:expanded?'rotate(180deg)':'none', transition:'transform 0.3s' }} />
-      </motion.button>
-
-      <AnimatePresence>
-        {expanded && (
-          <motion.div initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:'auto' }} exit={{ opacity:0, height:0 }} style={{ overflow:'hidden' }}>
-            <div style={{ paddingTop:12, display:'flex', flexDirection:'column', gap:10 }}>
-              <div style={{ background:'rgba(255,255,255,0.03)', borderRadius:16, padding:'14px 16px' }}>
-                <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase', color:accent, opacity:0.6, marginBottom:6 }}>💎 Sacred Remedy</div>
-                <p style={{ fontSize:13, lineHeight:1.65, color:'rgba(255,255,255,0.65)', margin:0 }}>{data.remedy}</p>
-              </div>
-              <div style={{ background:`${accent}08`, border:`1px solid ${accent}22`, borderRadius:16, padding:'14px 16px' }}>
-                <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase', color:accent, opacity:0.6, marginBottom:6 }}>🕉 Sacred Mantra</div>
-                <p style={{ fontSize:13, lineHeight:1.65, fontStyle:'italic', color:accent, margin:0, opacity:0.9 }}>{data.mantra}</p>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
-};
-
-// ── MAIN COMPONENT ────────────────────────────────────────────────────────────
 interface DoshaDashboardProps {
   profile: AyurvedaUserProfile;
   dosha: DoshaProfile;
@@ -658,188 +16,562 @@ interface DoshaDashboardProps {
   onOpenChat?: () => void;
 }
 
- 
-// ── AGASTYAR ACADEMY 108 MODULES ─────────────────────────────────────────
-// ── AGASTYAR ACADEMY BANNER CARD ─────────────────────────────────────────
-const _gold  = (a: number) => `rgba(212,175,55,${a})`;
-const _white = (a: number) => `rgba(255,255,255,${a})`;
-const _cyan  = (a: number) => `rgba(34,211,238,${a})`;
-const _green = (a: number) => `rgba(74,222,128,${a})`;
+// ── TIER RANK helper ──────────────────────────────────────────────────────────
+// FREE=0  PREMIUM/prana=1  SIDDHA=2  LIFETIME/akasha=3
+type TierRank = 0 | 1 | 2 | 3;
 
-const AgastyarAcademy: React.FC<{ isPremium: boolean }> = () => {
+// ── EXPANDABLE SECTION CARD ──────────────────────────────────────────────────
+const SectionCard: React.FC<{
+  icon: string; iconBg: string; iconBorder: string; iconColor: string;
+  kicker: string; kickerColor: string; title: string; sub: string;
+  children: React.ReactNode;
+}> = ({ icon, iconBg, iconBorder, iconColor, kicker, kickerColor, title, sub, children }) => {
+  const [open, setOpen] = useState(false);
   return (
-    <motion.div
-      initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.1 }}
-      style={{ position:'relative', margin:'4px 0' }}
-    >
-      {/* Glow aura */}
-      <div aria-hidden style={{
-        position:'absolute', inset:-14, borderRadius:32,
-        background:`radial-gradient(60% 60% at 30% 40%, ${_gold(0.35)}, transparent 70%), radial-gradient(60% 60% at 75% 65%, ${_cyan(0.28)}, transparent 70%)`,
-        filter:'blur(22px)', pointerEvents:'none', zIndex:0,
-        animation:'sqiGlow 4s ease-in-out infinite',
-      }}/>
-      {/* Card */}
-      <motion.div
-        whileHover={{ scale:1.01 }} whileTap={{ scale:0.99 }}
-        onClick={() => { window.location.href = '/agastyar-academy'; }}
-        style={{
-          position:'relative', zIndex:1, cursor:'pointer',
-          background:`linear-gradient(135deg, rgba(212,175,55,0.10), rgba(0,242,254,0.05) 60%, rgba(5,5,5,0.6))`,
-          border:`1px solid ${_gold(0.45)}`,
-          borderRadius:24, padding:'22px 20px 20px',
-          boxShadow:`0 0 40px ${_gold(0.25)}, 0 0 80px ${_cyan(0.12)}, inset 0 0 30px rgba(212,175,55,0.06)`,
-        }}
-      >
-        <div style={{ fontSize:9, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase', color:_gold(0.7), marginBottom:10 }}>
-          ⚜ Academy · 108 Modules
+    <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }}
+      style={{ background:'rgba(255,255,255,0.025)', backdropFilter:'blur(40px)', WebkitBackdropFilter:'blur(40px)',
+        border:`1px solid ${open ? 'rgba(212,175,55,0.25)' : 'rgba(255,255,255,0.055)'}`,
+        borderRadius:32, marginBottom:12, overflow:'hidden',
+        boxShadow: open ? '0 0 30px rgba(212,175,55,0.05)' : 'none',
+        transition:'border-color 0.3s, box-shadow 0.3s' }}>
+      <div onClick={() => setOpen(!open)}
+        style={{ display:'flex', alignItems:'center', gap:14, padding:'16px 18px', cursor:'pointer', userSelect:'none' }}>
+        <div style={{ width:44, height:44, borderRadius:14, background:iconBg, border:`1px solid ${iconBorder}`,
+          display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, flexShrink:0, color:iconColor }}>
+          {icon}
         </div>
-        <h2 style={{
-          fontFamily:"'Cormorant Garamond',serif",
-          fontSize:'1.85rem', fontWeight:600,
-          color:_white(0.96), lineHeight:1.1, margin:0,
-          textShadow:`0 0 18px ${_gold(0.35)}`,
-        }}>
-          Agastyar Academy
-        </h2>
-        <p style={{ fontSize:14, lineHeight:1.65, color:_white(0.62), marginTop:8, marginBottom:14 }}>
-          The complete path of Ayurvedic mastery — from Atma-Seed to Akasha-Infinity.
-        </p>
-
-        {/* Tier dots */}
-        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16, flexWrap:'wrap' }}>
-          {[
-            { label:'Free',   color:_white(0.55) },
-            { label:'Prana',  color:_green(0.85) },
-            { label:'Siddha', color:_cyan(0.9) },
-            { label:'Akasha', color:_gold(0.95) },
-          ].map(t=>(
-            <div key={t.label} style={{ display:'flex', alignItems:'center', gap:5 }}>
-              <span style={{ width:6, height:6, borderRadius:'50%', background:t.color, boxShadow:`0 0 8px ${t.color}` }}/>
-              <span style={{ fontSize:8, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase', color:t.color }}>{t.label}</span>
+        <div style={{ flex:1 }}>
+          <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase', color:kickerColor, opacity:0.75, marginBottom:3 }}>✦ {kicker}</div>
+          <div style={{ fontSize:15, fontWeight:900, letterSpacing:'-0.03em', color:'rgba(255,255,255,0.9)' }}>{title}</div>
+          <div style={{ fontSize:11, color:'rgba(255,255,255,0.5)', marginTop:2 }}>{sub}</div>
+        </div>
+        <div style={{ width:28, height:28, borderRadius:'50%', background:'rgba(255,255,255,0.04)',
+          border:'1px solid rgba(255,255,255,0.08)', display:'flex', alignItems:'center', justifyContent:'center',
+          flexShrink:0, transition:'transform 0.3s', transform: open ? 'rotate(180deg)' : 'none', color:'rgba(255,255,255,0.5)', fontSize:12 }}>
+          ▾
+        </div>
+      </div>
+      <AnimatePresence>
+        {open && (
+          <motion.div initial={{ height:0, opacity:0 }} animate={{ height:'auto', opacity:1 }} exit={{ height:0, opacity:0 }}
+            style={{ overflow:'hidden' }}>
+            <div style={{ padding:'0 18px 18px', borderTop:'1px solid rgba(255,255,255,0.05)' }}>
+              {children}
             </div>
-          ))}
-        </div>
-
-        {/* CTA button */}
-        <div style={{
-          display:'inline-flex', alignItems:'center', gap:8,
-          padding:'10px 18px', borderRadius:999,
-          background:`linear-gradient(135deg, ${_gold(0.25)}, ${_gold(0.08)})`,
-          border:`1px solid ${_gold(0.5)}`,
-          color:_gold(0.98),
-          fontFamily:"'Plus Jakarta Sans',sans-serif",
-          fontSize:10, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase',
-        }}>
-          Enter Academy →
-        </div>
-      </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
 
+// ── LOCKED GATE CARD (inline) ─────────────────────────────────────────────────
+const GateCard: React.FC<{ icon:string; iconColor:string; tierLabel:string; tierColor:string; title:string; sub:string }> = 
+({ icon, iconColor, tierLabel, tierColor, title, sub }) => (
+  <div style={{ background:'rgba(255,255,255,0.015)', border:`1px solid ${tierColor}25`, borderRadius:24, padding:'16px 18px', marginBottom:12 }}>
+    <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+      <div style={{ width:44, height:44, borderRadius:14, background:`${tierColor}10`, border:`1px solid ${tierColor}25`,
+        display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, flexShrink:0, color:tierColor, opacity:0.5 }}>
+        {icon}
+      </div>
+      <div style={{ flex:1 }}>
+        <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase', color:tierColor, opacity:0.6, marginBottom:3 }}>{tierLabel}</div>
+        <div style={{ fontSize:15, fontWeight:900, color:'rgba(255,255,255,0.4)' }}>{title}</div>
+        <div style={{ fontSize:11, color:'rgba(255,255,255,0.3)', marginTop:2 }}>{sub}</div>
+      </div>
+      <div style={{ fontSize:18, opacity:0.25 }}>🔒</div>
+    </div>
+  </div>
+);
 
+// ── TIMELINE ─────────────────────────────────────────────────────────────────
+const Timeline: React.FC<{ items: { time:string; icon:string; name:string; desc:string; bg:string; border:string }[] }> = ({ items }) => (
+  <div style={{ position:'relative' }}>
+    {items.map((item, i) => (
+      <div key={i} style={{ display:'grid', gridTemplateColumns:'50px 1fr', gap:'0 12px', paddingBottom: i < items.length-1 ? 18 : 0, position:'relative' }}>
+        {i < items.length-1 && <div style={{ position:'absolute', left:24, top:50, bottom:0, width:1, background:'linear-gradient(180deg,rgba(212,175,55,0.25),rgba(212,175,55,0.03))' }} />}
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gridRow:'1/3' }}>
+          <div style={{ width:50, height:50, borderRadius:'50%', background:item.bg, border:`1px solid ${item.border}`,
+            display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, position:'relative', zIndex:1 }}>{item.icon}</div>
+        </div>
+        <div>
+          <div style={{ fontSize:9, fontWeight:800, letterSpacing:'0.2em', color:'#D4AF37', opacity:0.7, paddingTop:4 }}>{item.time}</div>
+          <div style={{ fontSize:14, fontWeight:900, letterSpacing:'-0.02em', color:'rgba(255,255,255,0.9)', marginBottom:4 }}>{item.name}</div>
+          <div style={{ fontSize:11, lineHeight:1.7, color:'rgba(255,255,255,0.5)' }}>{item.desc}</div>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+// ── VIKRUTI ROWS ──────────────────────────────────────────────────────────────
+const VikrutiRows: React.FC<{ dosha: DoshaProfile }> = ({ dosha }) => {
+  const primary = dosha.primary?.toLowerCase() || 'vata';
+  const aggravated = primary === 'vata' ? 'Air (Vata) 🌬️' : primary === 'pitta' ? 'Fire (Pitta) 🔥' : 'Earth (Kapha) 🌍';
+  const agColor = primary === 'vata' ? '#93C5FD' : primary === 'pitta' ? '#F87171' : '#34D399';
+  const rows = [
+    { label:'What is aggravated right now', hint:'The energy running too high in your body today', val:aggravated, color:agColor },
+    { label:'Digestive fire', hint:'Strong digestion = strong immunity', val:'Irregular 🔥', color:'#F87171' },
+    { label:'Toxin level', hint:'Undigested food and emotion stored in tissue', val:'Moderate', color:'#FBBF24' },
+    { label:'Vital energy', hint:'Deep life force rebuilt through sleep, food and herbs', val:'Rebuilding 🌿', color:'#34D399' },
+    { label:'Seasonal pressure', hint:'Summer intensifies Fire energy', val:'Summer · Extra Fire ☀️', color:'#D4AF37' },
+  ];
+  return (
+    <div>
+      <p style={{ fontSize:12, color:'rgba(255,255,255,0.5)', lineHeight:1.7, marginBottom:14 }}>
+        Your <strong style={{ color:'#22D3EE' }}>Prakriti is permanent</strong> — who you are. This shows what is off balance today due to stress, food, or season.
+      </p>
+      {rows.map((r,i) => (
+        <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', padding:'11px 0', borderBottom: i < rows.length-1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+          <div>
+            <div style={{ fontSize:11, color:'rgba(255,255,255,0.7)', marginBottom:3 }}>{r.label}</div>
+            <div style={{ fontSize:9, color:'rgba(255,255,255,0.35)', lineHeight:1.5, maxWidth:180 }}>{r.hint}</div>
+          </div>
+          <div style={{ fontSize:12, fontWeight:800, textAlign:'right', flexShrink:0, marginLeft:12, color:r.color }}>{r.val}</div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// ── HERB GRID ─────────────────────────────────────────────────────────────────
+const HerbGrid: React.FC<{ extended?: boolean }> = ({ extended }) => {
+  const base = [
+    { e:'🌿', n:'Ashwagandha', a:'Grounds Vata', ac:'#93C5FD', d:'300mg at night. Reduces anxiety, builds Ojas.' },
+    { e:'🌸', n:'Shatavari', a:'Cools Pitta', ac:'#FBBF24', d:'Nourishes moisture. Sacred restorative tonic.' },
+    { e:'🍃', n:'Triphala', a:'Balances All', ac:'#34D399', d:'1 tsp before bed. Master tridoshic cleanser.' },
+    { e:'🌾', n:'Brahmi', a:'Clarifies Mind', ac:'#D4AF37', d:'For the racing Vata mind. Sacred brain tonic.' },
+  ];
+  const extra = [
+    { e:'🪨', n:'Shilajit', a:'Kaya Kalpa ∞', ac:'#D4AF37', d:'Himalayan mineral pitch. Rejuvenates all dhatus.' },
+    { e:'🌺', n:'Guduchi', a:'Amrita Plant', ac:'#FBBF24', d:'Nectar herb. Tridoshic immune tonic.' },
+    { e:'🫚', n:'Swarna Bhasma', a:'Gold Ash ∞', ac:'#D4AF37', d:'Akasha exclusive. Purified gold ash.' },
+    { e:'🔮', n:'Chyawanprash', a:'Ojas Builder', ac:'#FF8C00', d:"Agastya longevity formula. 1 tsp every morning." },
+  ];
+  const herbs = extended ? [...base, ...extra] : base;
+  return (
+    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:9 }}>
+      {herbs.map((h,i) => (
+        <div key={i} style={{ padding:12, borderRadius:18, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.07)' }}>
+          <div style={{ fontSize:20, marginBottom:6 }}>{h.e}</div>
+          <div style={{ fontSize:12, fontWeight:900, marginBottom:2 }}>{h.n}</div>
+          <div style={{ fontSize:9, fontWeight:800, letterSpacing:'0.2em', marginBottom:5, opacity:0.85, color:h.ac }}>{h.a}</div>
+          <div style={{ fontSize:10, color:'rgba(255,255,255,0.5)', lineHeight:1.55 }}>{h.d}</div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// ── HZ GRID ───────────────────────────────────────────────────────────────────
+const HzGrid: React.FC<{ dosha: string }> = ({ dosha }) => {
+  const [active, setActive] = useState(0);
+  const vata = [
+    { hz:'528 Hz', c:'#22D3EE', n:'Start Here — Your #1', d:'Cellular repair. Reduces inflammation. Daily for Vata types.' },
+    { hz:'174 Hz', c:'#93C5FD', n:'For Pain and Tension', d:'Neck, back, joints. Penetrates deep into tissue.' },
+    { hz:'417 Hz', c:'#FBBF24', n:'Release Stuck Emotion', d:'Pitta frustration in liver and gut. Shifts blocks.' },
+    { hz:'432 Hz', c:'#D4AF37', n:'Grounding and Calm', d:'When your mind will not stop. Immediately calmer.' },
+    { hz:'639 Hz', c:'#34D399', n:'Open Your Heart', d:'Loneliness or disconnection. Heart centre resonance.' },
+    { hz:'963 Hz', c:'#A78BFA', n:'Deep Meditation', d:'Low volume overnight. Healing dreams. Crown activation.' },
+  ];
+  const pitta = [
+    { hz:'396 Hz', c:'#FBBF24', n:'Release Anger & Control', d:'Pitta tension in liver. Releases perfectionism and heat.' },
+    { hz:'417 Hz', c:'#F87171', n:'Clear Pitta Blocks', d:'Dissolves emotional rigidity. Shifts Fire accumulation.' },
+    { hz:'528 Hz', c:'#22D3EE', n:'DNA & Cell Repair', d:'Repairs inflammation damage. Your core healing frequency.' },
+    { hz:'639 Hz', c:'#34D399', n:'Heart Opening', d:'Pitta isolates — this reconnects. Anahata activation.' },
+    { hz:'741 Hz', c:'#A78BFA', n:'Toxin Release', d:'Clears Pitta-Ama from liver and blood.' },
+    { hz:'963 Hz', c:'#D4AF37', n:'Sahasrara Cooling', d:'Crown frequency. Pitta overdrive in the mind — calms it.' },
+  ];
+  const kapha = [
+    { hz:'285 Hz', c:'#34D399', n:'Tissue Regeneration', d:'Rebuilds Kapha tissues. Cellular renewal.' },
+    { hz:'396 Hz', c:'#FBBF24', n:'Release Attachment', d:'Kapha holds on — this frequency helps let go.' },
+    { hz:'528 Hz', c:'#22D3EE', n:'DNA Repair', d:'Daily use. Activates Kapha healing intelligence.' },
+    { hz:'741 Hz', c:'#A78BFA', n:'Detox & Awakening', d:'Clears Ama from dense Kapha tissues.' },
+    { hz:'852 Hz', c:'#93C5FD', n:'Intuition & Clarity', d:'Kapha clouds the mind — this pierces through.' },
+    { hz:'963 Hz', c:'#D4AF37', n:'Crown Activation', d:'Kapha needs upward energy — crown frequency lifts it.' },
+  ];
+  const d = dosha?.toLowerCase() || 'vata';
+  const freqs = d === 'pitta' ? pitta : d === 'kapha' ? kapha : vata;
+  return (
+    <div>
+      <p style={{ fontSize:12, color:'rgba(255,255,255,0.5)', lineHeight:1.7, marginBottom:14 }}>
+        Play through headphones or a speaker near you. Each frequency targets something specific in your {d.charAt(0).toUpperCase()+d.slice(1)}-Pitta body.
+      </p>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:9 }}>
+        {freqs.map((f,i) => (
+          <div key={i} onClick={() => setActive(i)}
+            style={{ padding:'14px 12px', borderRadius:18,
+              background: active===i ? 'rgba(34,211,238,0.06)' : 'rgba(255,255,255,0.02)',
+              border: active===i ? '1px solid rgba(34,211,238,0.4)' : '1px solid rgba(255,255,255,0.07)',
+              cursor:'pointer', transition:'all 0.2s' }}>
+            <div style={{ fontSize:17, fontWeight:900, letterSpacing:'-0.03em', color:f.c }}>{f.hz}</div>
+            <div style={{ fontSize:10, fontWeight:800, color:'rgba(255,255,255,0.7)', margin:'3px 0 2px' }}>{f.n}</div>
+            <div style={{ fontSize:9, color:'rgba(255,255,255,0.35)', lineHeight:1.55 }}>{f.d}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ── JYOTISH PLANET TABLE ──────────────────────────────────────────────────────
+const JyotishSection: React.FC<{ dosha: string }> = ({ dosha }) => {
+  const d = dosha?.toLowerCase() || 'vata';
+  const yours = d === 'vata' ? ['Moon','Mercury'] : d === 'pitta' ? ['Sun','Mars'] : ['Jupiter','Moon'];
+  const planets = [
+    { e:'☀️', n:'Sun', b:'Heart', t:'Fire', tc:'#FBBF24' },
+    { e:'🌙', n:'Moon', b:'Mind', t: yours.includes('Moon') ? 'Yours ←' : 'Water', tc: yours.includes('Moon') ? '#93C5FD' : '#93C5FD' },
+    { e:'☿', n:'Mercury', b:'Nerves', t: yours.includes('Mercury') ? 'Yours ←' : 'Air', tc: yours.includes('Mercury') ? '#93C5FD' : '#93C5FD' },
+    { e:'♃', n:'Jupiter', b:'Liver', t: yours.includes('Jupiter') ? 'Yours ←' : 'Earth', tc: yours.includes('Jupiter') ? '#D4AF37' : '#34D399' },
+    { e:'♄', n:'Saturn', b:'Bones', t:'Air', tc:'#93C5FD' },
+    { e:'♀', n:'Venus', b:'Fluids', t:'Water', tc:'#D4AF37' },
+    { e:'♂', n:'Mars', b:'Blood', t: yours.includes('Mars') ? 'Yours ←' : 'Fire', tc: yours.includes('Mars') ? '#FBBF24' : '#FBBF24' },
+    { e:'☊', n:'Rahu', b:'Patterns', t:'Karmic', tc:'#A78BFA' },
+    { e:'☋', n:'Ketu', b:'Gifts', t:'Liberation', tc:'#A78BFA' },
+  ];
+  const ctx = d === 'vata'
+    ? 'Your Vata is ruled by the Moon and Mercury.'
+    : d === 'pitta' ? 'Your Pitta is ruled by the Sun and Mars.'
+    : 'Your Kapha is governed by Jupiter and Moon.';
+  const weekly = d === 'vata'
+    ? 'This week Moon is waxing — your Vata is naturally calmer than usual. A good window to start new health habits.'
+    : d === 'pitta' ? 'Sun in high degree — extra care with Pitta heat this week. Avoid spicy foods, cool your environment.'
+    : 'Jupiter direct this week — a window of expansion for Kapha. Good time to begin movement practices.';
+  const tip = d === 'vata'
+    ? 'Saturn moving through your Air houses — old Vata patterns surfacing for release. Double sesame oil practice. Reduce screens after sunset.'
+    : d === 'pitta' ? 'Mars transit amplifying Pitta fire this week. Cooling pranayama essential. Pearl or moonstone on the left hand.'
+    : 'Jupiter-Moon conjunction blessing your constitution. Begin that discipline you have been postponing.';
+  return (
+    <div>
+      <p style={{ fontSize:12, color:'rgba(255,255,255,0.5)', lineHeight:1.7, marginBottom:12 }}>
+        Each planet governs a part of your body. When strong — that organ thrives. <strong style={{ color:'#FF8C00' }}>{ctx}</strong>
+      </p>
+      <p style={{ fontSize:11, lineHeight:1.65, padding:'10px 12px', borderRadius:12, background:'rgba(255,140,0,0.05)', border:'1px solid rgba(255,140,0,0.15)', color:'rgba(255,255,255,0.65)', marginBottom:12 }}>{weekly}</p>
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+        {planets.map((p,i) => (
+          <div key={i} style={{ padding:'10px 10px 8px', borderRadius:16, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.07)', textAlign:'center', minWidth:60, flex:1 }}>
+            <div style={{ fontSize:16, marginBottom:4 }}>{p.e}</div>
+            <div style={{ fontSize:9, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase', color:'#D4AF37', marginBottom:2 }}>{p.n}</div>
+            <div style={{ fontSize:9, color:'rgba(255,255,255,0.5)' }}>{p.b}</div>
+            <div style={{ fontSize:8, marginTop:3, fontWeight:800, color:p.tc }}>{p.t}</div>
+          </div>
+        ))}
+      </div>
+      <p style={{ fontSize:11, lineHeight:1.65, padding:'10px 12px', borderRadius:12, background:'rgba(212,175,55,0.04)', border:'1px solid rgba(212,175,55,0.15)', color:'rgba(255,255,255,0.6)', marginTop:12 }}>
+        💡 <strong style={{ color:'#D4AF37' }}>This week:</strong> {tip}
+      </p>
+    </div>
+  );
+};
+
+// ── AUDIO TEACHINGS (Akasha only) ────────────────────────────────────────────
+const AudioTeachings: React.FC = () => (
+  <div>
+    {[
+      { kicker:'🎧 This Month · New', k2:'rgba(212,175,55,0.7)', title:'Why You Cannot Sleep Even When You Are Exhausted', desc:'For Vata-Pitta types, exhaustion after sleep means the nervous system never fully switched off. Three things to do tonight that will change your sleep within a week.', play:'▶ Listen Now · 28 min', pb:'rgba(212,175,55,0.08)', pc:'#D4AF37', pbc:'rgba(212,175,55,0.4)' },
+      { kicker:'🎧 Last Month · Available', k2:'#FF8C00', title:'The Food That Is Slowly Draining You', desc:'Most health problems are caused by the wrong food for your constitution. Agastya identifies the three foods your Vata-Pitta body is reacting to right now.', play:'▶ Listen · 34 min', pb:'rgba(255,140,0,0.08)', pc:'#FF8C00', pbc:'rgba(255,140,0,0.4)' },
+      { kicker:'🎧 Archive · Unlocked', k2:'rgba(255,255,255,0.4)', title:'How Stress Becomes Physical Disease', desc:'Unprocessed emotion moves into the body and becomes pain, stiffness, or inflammation. This shows exactly where your stress is hiding and how to release it.', play:'▶ Listen · 41 min', pb:'rgba(255,255,255,0.04)', pc:'rgba(255,255,255,0.4)', pbc:'rgba(255,255,255,0.15)' },
+    ].map((a,i) => (
+      <div key={i} style={{ padding:'14px 16px', borderRadius:18, marginBottom: i<2 ? 9 : 0,
+        border:`1px solid ${a.pbc}`, background:a.pb, overflow:'hidden', cursor:'pointer' }}>
+        <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase', marginBottom:4, opacity:0.7, color:a.k2 }}>{a.kicker}</div>
+        <div style={{ fontSize:13, fontWeight:900, marginBottom:4, color:'rgba(255,255,255,0.9)' }}>{a.title}</div>
+        <div style={{ fontSize:11, lineHeight:1.6, color:'rgba(255,255,255,0.5)' }}>{a.desc}</div>
+        <div style={{ display:'inline-flex', alignItems:'center', gap:6, marginTop:8, padding:'6px 12px', borderRadius:999,
+          fontSize:9, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase',
+          border:`1px solid ${a.pbc}`, color:a.pc, background:a.pb }}>
+          {a.play}
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+// ── ACADEMY BANNER ────────────────────────────────────────────────────────────
+const AcademyBanner: React.FC<{ rank: TierRank }> = ({ rank }) => {
+  const texts: Record<TierRank, { sub:string; desc:string }> = {
+    0: { sub:'108 Modules', desc:'The complete path of Ayurvedic mastery — from Atma-Seed to Akasha-Infinity.' },
+    1: { sub:'Phases 1 & 2 Unlocked', desc:'Modules 1–44 unlocked. Foundations and Panchakarma mastery path.' },
+    2: { sub:'Phases 1–4 Unlocked', desc:'Modules 1–87 unlocked. Clinical Siddha and planetary medicine.' },
+    3: { sub:'All 108 Modules Unlocked', desc:'The complete 108-module path — all 5 phases from Atma-Seed to Akasha Transmission.' },
+  };
+  const dots = [
+    { label: rank>=1 ? '✓ FREE 1–22' : 'FREE 1–22', on: true, c:'rgba(74,222,128,0.85)' },
+    { label: rank>=1 ? '✓ PRANA 23–44' : '🔒 PRANA 23–44', on: rank>=1, c: rank>=1 ? 'rgba(34,211,238,0.9)' : 'rgba(255,255,255,0.2)' },
+    { label: rank>=2 ? '✓ SIDDHA 45–66' : '🔒 SIDDHA 45–66', on: rank>=2, c: rank>=2 ? 'rgba(255,140,0,0.9)' : 'rgba(255,255,255,0.2)' },
+    { label: rank>=3 ? '✓ AKASHA 67–108' : '🔒 AKASHA 67–108', on: rank>=3, c: rank>=3 ? 'rgba(212,175,55,0.95)' : 'rgba(255,255,255,0.2)' },
+  ];
+  const t = texts[rank];
+  return (
+    <div style={{ position:'relative', marginBottom:12 }}>
+      <div style={{ position:'absolute', inset:-14, borderRadius:38, pointerEvents:'none', zIndex:0,
+        background:'radial-gradient(60% 60% at 30% 40%,rgba(212,175,55,0.35),transparent 70%),radial-gradient(60% 60% at 75% 65%,rgba(34,211,238,0.28),transparent 70%)',
+        filter:'blur(22px)' }} />
+      <div onClick={() => { window.location.href='/agastyar-academy'; }} style={{ position:'relative', zIndex:1, cursor:'pointer',
+        background:'linear-gradient(135deg,rgba(212,175,55,0.10),rgba(0,242,254,0.05) 60%,rgba(5,5,5,0.6))',
+        border:'1px solid rgba(212,175,55,0.45)', borderRadius:24, padding:'22px 20px 20px',
+        boxShadow:'0 0 40px rgba(212,175,55,0.25),0 0 80px rgba(34,211,238,0.12),inset 0 0 30px rgba(212,175,55,0.06)' }}>
+        <div style={{ fontSize:9, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase', color:'rgba(212,175,55,0.7)', marginBottom:10 }}>⚜ Academy · {t.sub}</div>
+        <h2 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:'1.85rem', fontWeight:600, color:'rgba(255,255,255,0.96)', lineHeight:1.1, margin:0, textShadow:'0 0 18px rgba(212,175,55,0.35)' }}>Agastyar Academy</h2>
+        <p style={{ fontSize:13, lineHeight:1.65, color:'rgba(255,255,255,0.62)', margin:'8px 0 14px' }}>{t.desc}</p>
+        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16, flexWrap:'wrap' }}>
+          {dots.map((dot,i) => (
+            <div key={i} style={{ display:'flex', alignItems:'center', gap:5 }}>
+              <span style={{ width:6, height:6, borderRadius:'50%', background:dot.c, boxShadow:`0 0 8px ${dot.c}`, display:'inline-block' }}/>
+              <span style={{ fontSize:8, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase', color:dot.c }}>{dot.label}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'10px 18px', borderRadius:999,
+          background:'linear-gradient(135deg,rgba(212,175,55,0.25),rgba(212,175,55,0.08))',
+          border:'1px solid rgba(212,175,55,0.5)', color:'rgba(212,175,55,0.98)',
+          fontSize:10, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' }}>
+          Enter Academy →
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── DINACHARYA DATA ───────────────────────────────────────────────────────────
+const getTimeline = (rank: TierRank, dosha: string) => {
+  if (rank >= 3) return [
+    { time:'4:30 AM', icon:'🌅', name:'Brahma Muhurta Extended', desc:'Wake before the birds. 963 Hz on waking. Copper water with Shilajit. Nadi Shodhana 54 rounds. Receive in meditation — the Akasha channel is most open now.', bg:'rgba(212,175,55,0.12)', border:'rgba(212,175,55,0.4)' },
+    { time:'6:00 AM', icon:'☀️', name:'Kaya Kalpa Morning', desc:'Full Abhyanga with Kaya Kalpa oil. Herbal steam 15 min. Nasya with Brahmi ghee. Sun gazing at exact sunrise. 24 rounds Surya Namaskara.', bg:'rgba(255,200,0,0.12)', border:'rgba(255,200,0,0.35)' },
+    { time:'12:00 PM', icon:'🔥', name:'Sacred Meal and Rasayana', desc:'Chyawanprash before eating. Gold-charged water. Eat in silence. Vajrasana 20 min. Every choice here compounds over years.', bg:'rgba(255,100,0,0.12)', border:'rgba(255,100,0,0.35)' },
+    { time:'3:00 PM', icon:'✨', name:'Siddhi Window', desc:'528 Hz + 432 Hz combined 45 min. Full Marma sequence. The body is most receptive to frequency medicine now.', bg:'rgba(167,139,250,0.12)', border:'rgba(167,139,250,0.35)' },
+    { time:'6:00 PM', icon:'🌇', name:'Agnihotra', desc:'Fire ceremony at exact sunset. Cow ghee + rice offering. Agastya Dhanvantari mantra 108x. Review Jyotish timing for tomorrow.', bg:'rgba(255,80,120,0.12)', border:'rgba(255,80,120,0.35)' },
+    { time:'9:00 PM', icon:'🌙', name:'Kaya Kalpa Sleep', desc:'Ashwagandha + Shatavari + Brahmi + Shilajit milk. Total darkness. 963 Hz at low volume overnight. The body rebuilds at cellular level.', bg:'rgba(100,120,255,0.12)', border:'rgba(100,120,255,0.35)' },
+  ];
+  if (rank >= 2) return [
+    { time:'5:00 AM', icon:'🌅', name:'Brahma Muhurta', desc:'528 Hz healing sound on waking. Copper water. Nadi Shodhana 30 rounds. Tap Ajna marma point (between eyebrows) 7x with ring finger.', bg:'rgba(255,180,50,0.12)', border:'rgba(255,180,50,0.35)' },
+    { time:'7:00 AM', icon:'☀️', name:'Full Siddha Morning', desc:'Abhyanga with medicated Vata oil. Herbal steam. Nasya 4 drops Brahmi ghee. Sun salutation 12 rounds East. Hridayam marma activation.', bg:'rgba(255,200,0,0.12)', border:'rgba(255,200,0,0.35)' },
+    { time:'12:00 PM', icon:'🔥', name:'Pitta Sovereign Meal', desc:'Ginger + rock salt + lime before eating. Complete silence. Vajrasana 15 min. Triphala ghee as digestive.', bg:'rgba(255,100,0,0.12)', border:'rgba(255,100,0,0.35)' },
+    { time:'3:00 PM', icon:'◉', name:'Scalar Sound Window', desc:'432 Hz grounding 15 min. Press Kshipra marma (between thumb and index) 2 min to calm Vata. Brahmi tea.', bg:'rgba(255,140,0,0.12)', border:'rgba(255,140,0,0.35)' },
+    { time:'6:00 PM', icon:'🌇', name:'Sandhya Kala', desc:'Agastya Navagraha mantra. Agnihotra fire if possible. Light kichari only. Jyotish evening alignment.', bg:'rgba(255,80,120,0.12)', border:'rgba(255,80,120,0.35)' },
+    { time:'9:00 PM', icon:'🌙', name:'Kapha Restoration', desc:'963 Hz crown sound 10 min. Head massage with Brahmi oil. Ashwagandha + Shatavari milk. Sleep by 10 PM.', bg:'rgba(100,120,255,0.12)', border:'rgba(100,120,255,0.35)' },
+  ];
+  if (rank >= 1) return [
+    { time:'5:00 AM', icon:'🌅', name:'Brahma Muhurta', desc:'Copper vessel water. Silver tongue scraper. Sesame oil pulling 15 min. Nadi Shodhana 20 rounds.', bg:'rgba(255,180,50,0.12)', border:'rgba(255,180,50,0.35)' },
+    { time:'7:00 AM', icon:'☀️', name:'Abhyanga & Agni', desc:'Full self-massage with warm Bala oil. 10-min herbal steam. Ginger-licorice tea. Nasya: 2 drops Anu taila.', bg:'rgba(255,200,0,0.12)', border:'rgba(255,200,0,0.35)' },
+    { time:'12:00 PM', icon:'🔥', name:'Pitta Peak — Main Meal', desc:'Begin with ginger + rock salt + lime. Warm, unctuous. Vajrasana 15 min after eating.', bg:'rgba(255,100,0,0.12)', border:'rgba(255,100,0,0.35)' },
+    { time:'3:00 PM', icon:'🌊', name:'Vata Calming Window', desc:'Walk in nature. Warm herbal tea. Head massage with Brahmi oil if feeling scattered.', bg:'rgba(34,211,238,0.12)', border:'rgba(34,211,238,0.35)' },
+    { time:'6:00 PM', icon:'🌇', name:'Sandhya Kala', desc:'Agastya mantra 108 times. Light dinner — kichari or warm soup. No screens after sunset.', bg:'rgba(255,80,120,0.12)', border:'rgba(255,80,120,0.35)' },
+    { time:'9:00 PM', icon:'🌙', name:'Kapha Rest Protocol', desc:'Ashwagandha-nutmeg milk. Feet massage with sesame oil. Sacred text, not screens. Asleep by 10 PM.', bg:'rgba(100,120,255,0.12)', border:'rgba(100,120,255,0.35)' },
+  ];
+  return [
+    { time:'5:00 AM', icon:'🌅', name:'Brahma Muhurta', desc:'Rise before the sun. Warm lemon water. 5 minutes stillness. Tongue scraping, sesame oil pulling 10 min.', bg:'rgba(255,180,50,0.12)', border:'rgba(255,180,50,0.35)' },
+    { time:'7:00 AM', icon:'☀️', name:'Morning Agni', desc:'Sesame oil self-massage, warm shower. Ginger tea with raw honey. Nadi Shodhana 10 rounds.', bg:'rgba(255,200,0,0.12)', border:'rgba(255,200,0,0.35)' },
+    { time:'12:00 PM', icon:'🔥', name:'Pitta Peak — Main Meal', desc:'Largest meal. Warm, well-cooked, unctuous. Eat in silence. 15-min walk after. Agni is strongest now.', bg:'rgba(255,100,0,0.12)', border:'rgba(255,100,0,0.35)' },
+    { time:'6:00 PM', icon:'🌇', name:'Sandhya Kala', desc:'Sacred twilight. 10 min meditation or mantra. Light dinner before 7 PM. No work after sunset.', bg:'rgba(255,80,120,0.12)', border:'rgba(255,80,120,0.35)' },
+    { time:'9:00 PM', icon:'🌙', name:'Kapha Rest', desc:'Warm Ashwagandha milk with nutmeg. Feet massage with sesame oil. In bed by 10 PM.', bg:'rgba(100,120,255,0.12)', border:'rgba(100,120,255,0.35)' },
+  ];
+};
+
+// ── MAIN COMPONENT ────────────────────────────────────────────────────────────
 export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
-  profile, dosha, dailyGuidance, isLoadingGuidance,
-  onRestart, onFetchGuidance, isPremium = false, isSiddhaPlus = false, onOpenChat,
+  profile, dosha, onRestart, isPremium = false, isSiddhaPlus = false, onOpenChat,
 }) => {
   const [syncing, setSyncing] = useState(false);
   const primary = dosha.primary?.toLowerCase() || 'vata';
 
-  useEffect(() => { onFetchGuidance(); }, [onFetchGuidance]);
-  const handleSync = () => { setSyncing(true); setTimeout(() => setSyncing(false), 2200); };
+  // Derive tier rank from props
+  const rank: TierRank = isSiddhaPlus ? 2 : isPremium ? 1 : 0;
 
-  const getRitualItems = (phase: string) => {
-    const all = [
-      ...dosha.guidelines.diet.map(d => ({ text:d, type:'diet' })),
-      ...dosha.guidelines.lifestyle.map(l => ({ text:l, type:'lifestyle' })),
-    ];
-    const per = Math.ceil(all.length / RITUAL_PHASES.length);
-    const idx = RITUAL_PHASES.findIndex(r => r.phase === phase);
-    return all.slice(idx * per, (idx+1) * per);
-  };
+  const accentColor = rank === 3 ? '#D4AF37' : rank === 2 ? '#FF8C00' : rank === 1 ? '#22D3EE' : 'rgba(180,180,180,0.7)';
+  const tierLabel = rank === 3 ? '∞ AKASHA INFINITY · Eternal Sovereign' : rank === 2 ? '◉ SIDDHA QUANTUM · Sovereign Flame' : rank === 1 ? '◈ PRANA FLOW · Sacred Current' : '◇ FREE · Akasha Seed';
+  const nadiScore = rank === 3 ? 95 : rank === 2 ? 85 : rank === 1 ? 78 : 72;
+  const nadiStatus = rank >= 2 ? 'Sovereign' : rank === 1 ? 'Harmonious' : 'Seeking';
+  const nadiEmoji = rank === 3 ? '👑' : rank === 2 ? '🌺' : rank === 1 ? '🌸' : '🌿';
+  const nadiDesc = `Dosha Balance · ${primary.charAt(0).toUpperCase()+primary.slice(1)}-Pitta Expression`;
+
+  const dinKicker = rank >= 3 ? '✦ Kaya Kalpa Dinacharya' : rank >= 2 ? '✦ Siddha Quantum Dinacharya' : rank >= 1 ? '✦ Enhanced Dinacharya' : '✦ Siddha Dinacharya';
+  const dinSub = rank >= 3 ? 'All Siddha protocols combined — tap to open' : rank >= 2 ? 'Marma, scalar sound and Jyotish protocols — tap to open' : rank >= 1 ? 'Panchakarma protocols added — tap to open' : 'Your dosha-specific daily routine — tap to open';
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:18, paddingBottom:24 }}>
+    <div style={{ display:'flex', flexDirection:'column', paddingBottom:24 }}>
 
       {/* ── PROFILE HEADER ── */}
       <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }}
-        style={{ background:T.glass, backdropFilter:'blur(40px)', WebkitBackdropFilter:'blur(40px)', border:`1px solid ${T.glb}`, borderRadius:T.r40, padding:'22px 24px', position:'relative', overflow:'hidden' }}>
-        <div style={{ position:'absolute', top:0, left:'8%', right:'8%', height:1, background:`linear-gradient(90deg,transparent,${T.gg(T.saff,0.5)},${T.gg(T.gold,0.85)},${T.gg(T.saff,0.5)},transparent)` }} />
-        {/* Scan line */}
-        <motion.div style={{ position:'absolute', top:0, bottom:0, width:80, background:`linear-gradient(90deg,transparent,${T.gg(T.saff,0.1)},transparent)`, left:'-80px' }}
-          animate={{ left:['−80px','110%'] }} transition={{ duration:3.5, repeat:Infinity, ease:'easeInOut', repeatDelay:2 }} />
-
-        <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:24, position:'relative', zIndex:1 }}>
-          <motion.div
-            animate={{ boxShadow:[`0 0 18px ${T.gg(T.saff,0.22)}`,`0 0 34px ${T.gg(T.saff,0.5)}`,`0 0 18px ${T.gg(T.saff,0.22)}`] }}
+        style={{ background:'rgba(255,255,255,0.025)', backdropFilter:'blur(40px)', WebkitBackdropFilter:'blur(40px)',
+          border:'1px solid rgba(255,255,255,0.055)', borderRadius:40, padding:'22px 20px',
+          position:'relative', overflow:'hidden', marginBottom:12 }}>
+        <div style={{ position:'absolute', top:0, left:'8%', right:'8%', height:1,
+          background:`linear-gradient(90deg,transparent,${accentColor}66,${accentColor},${accentColor}66,transparent)` }} />
+        <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:18 }}>
+          <motion.div animate={{ boxShadow:[`0 0 18px ${accentColor}33`,`0 0 34px ${accentColor}66`,`0 0 18px ${accentColor}33`] }}
             transition={{ duration:4, repeat:Infinity }}
-            style={{ width:52, height:52, borderRadius:18, background:`linear-gradient(135deg,${T.gg(T.saff,0.24)},${T.gg(T.gold,0.1)})`, border:`1.5px solid ${T.gg(T.gold,0.52)}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, fontWeight:900, color:T.gold, flexShrink:0 }}
-          >
+            style={{ width:50, height:50, borderRadius:16, background:`linear-gradient(135deg,${accentColor}28,${accentColor}0a)`,
+              border:`1.5px solid ${accentColor}70`, display:'flex', alignItems:'center', justifyContent:'center',
+              fontSize:19, fontWeight:900, color:accentColor, flexShrink:0 }}>
             {profile.name[0]}
           </motion.div>
-          <div style={{ flex:1 }}>
-            <div style={{ fontSize:21, fontWeight:900, letterSpacing:'-0.04em', color:T.w90 }}>{profile.name}</div>
-            <div style={{ display:'inline-flex', alignItems:'center', gap:5, padding:'3px 11px', borderRadius:999, background:`${T.gg(T.saff,0.1)}`, border:`1px solid ${T.gg(T.saff,0.32)}`, fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase', color:T.saff, marginTop:5 }}>
-              {getDoshaEmoji(dosha.primary)} {dosha.primary} Prakriti
+          <div>
+            <div style={{ fontSize:20, fontWeight:900, letterSpacing:'-0.04em' }}>{profile.name}</div>
+            <div style={{ display:'inline-flex', alignItems:'center', padding:'3px 10px', borderRadius:999,
+              background:`${accentColor}12`, border:`1px solid ${accentColor}30`, color:accentColor,
+              fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase', marginTop:4 }}>
+              {tierLabel}
             </div>
           </div>
-          <motion.button whileTap={{ scale:0.96 }} onClick={handleSync} disabled={syncing}
-            style={{ display:'flex', alignItems:'center', gap:7, padding:'9px 16px', borderRadius:18, background:T.glass, border:`1px solid ${T.glb}`, color:T.w50, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:11, fontWeight:700, cursor:'pointer', transition:'all 0.2s', flexShrink:0 }}
-          >
-            <RefreshCw style={{ width:11, height:11, animation:syncing?'spin 1s linear infinite':undefined }} />
-            {syncing ? 'Syncing…' : 'Jyotish'}
-          </motion.button>
+          <button onClick={() => setSyncing(true)} onTransitionEnd={() => setSyncing(false)}
+            style={{ marginLeft:'auto', padding:'8px 14px', borderRadius:16, background:'rgba(255,255,255,0.025)',
+              border:'1px solid rgba(255,255,255,0.055)', color:'rgba(255,255,255,0.5)',
+              fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:10, fontWeight:700, cursor:'pointer', flexShrink:0 }}>
+            ⟳ Jyotish
+          </button>
         </div>
 
         {/* Nadi Score */}
-        <div style={{ marginBottom:20 }}>
-          <NadiScore dosha={dosha} />
+        <div style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 16px', borderRadius:18,
+          background:`${accentColor}08`, border:`1px solid ${accentColor}20`, marginBottom:16 }}>
+          <div style={{ width:48, height:48, borderRadius:'50%', background:`${accentColor}14`, border:`1px solid ${accentColor}35`,
+            display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, flexShrink:0 }}>〰</div>
+          <div>
+            <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase', color:accentColor, opacity:0.75 }}>Nadi Pulse Reading</div>
+            <div style={{ fontSize:21, fontWeight:900, letterSpacing:'-0.04em', color:accentColor }}>{nadiScore}/100</div>
+            <div style={{ fontSize:11, color:'rgba(255,255,255,0.5)' }}>{nadiDesc}</div>
+          </div>
+          <div style={{ marginLeft:'auto', textAlign:'center', fontSize:18 }}>
+            {nadiEmoji}<div style={{ fontSize:9, color:'rgba(255,255,255,0.3)' }}>{nadiStatus}</div>
+          </div>
         </div>
 
         {/* Dosha Orbs */}
-        <div style={{ display:'flex', justifyContent:'center', gap:32, padding:'12px 0 18px' }}>
-          <DoshaOrb name="Vata"  value={Number(dosha.vata)  || 45}  orbColor={T.vata}  glowHex="#60A5FA" delay={0}   element="🌬️" />
-          <DoshaOrb name="Pitta" value={Number(dosha.pitta) || 35} orbColor={T.pitta} glowHex="#F59E0B" delay={0.18} element="🔥" />
-          <DoshaOrb name="Kapha" value={Number(dosha.kapha) || 20} orbColor={T.kapha} glowHex="#10B981" delay={0.36} element="🌍" />
+        <div style={{ display:'flex', justifyContent:'center', gap:24, padding:'8px 0 14px' }}>
+          {[
+            { name:'VATA', val:Number(dosha.vata)||45, c:'#93C5FD', e:'🌬️' },
+            { name:'PITTA', val:Number(dosha.pitta)||35, c:'#FBBF24', e:'🔥' },
+            { name:'KAPHA', val:Number(dosha.kapha)||20, c:'#34D399', e:'🌍' },
+          ].map((orb,i) => (
+            <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
+              <div style={{ width:68, height:68, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22,
+                background:`radial-gradient(circle,${orb.c}28,${orb.c}06)`, border:`2px solid ${orb.c}45`, boxShadow:`0 0 18px ${orb.c}25` }}>{orb.e}</div>
+              <div style={{ fontSize:14, fontWeight:900, color:orb.c }}>{orb.val}%</div>
+              <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase', color:orb.c }}>{orb.name}</div>
+              <div style={{ height:3, width:68, borderRadius:2, background:'rgba(255,255,255,0.06)', overflow:'hidden' }}>
+                <div style={{ height:'100%', borderRadius:2, background:orb.c, width:`${orb.val}%` }} />
+              </div>
+            </div>
+          ))}
         </div>
 
-        <AnimatePresence>
-          {syncing && (
-            <motion.p initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:'auto' }} exit={{ opacity:0, height:0 }}
-              style={{ textAlign:'center', color:`${T.saff}99`, fontSize:11, fontStyle:'italic', letterSpacing:'0.15em', marginTop:4 }}>
-              ✦ Aligning Dosha frequencies with current planetary transits… ✦
-            </motion.p>
-          )}
-        </AnimatePresence>
-
         <button onClick={onRestart}
-          style={{ width:'100%', marginTop:14, padding:'7px', background:'transparent', border:'none', color:T.w20, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:9, fontWeight:800, letterSpacing:'0.38em', textTransform:'uppercase', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6, transition:'color 0.2s' }}
-          onMouseEnter={e=>(e.currentTarget as HTMLElement).style.color='rgba(212,175,55,0.7)'}
-          onMouseLeave={e=>(e.currentTarget as HTMLElement).style.color=T.w20}
-        >
-          <RotateCcw style={{ width:11, height:11 }} /> Reset Cosmic Blueprint
+          style={{ width:'100%', marginTop:14, padding:7, background:'transparent', border:'none',
+            color:'rgba(255,255,255,0.2)', fontFamily:"'Plus Jakarta Sans',sans-serif",
+            fontSize:9, fontWeight:800, letterSpacing:'0.38em', textTransform:'uppercase', cursor:'pointer',
+            display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+          ↺ Reset Cosmic Blueprint
         </button>
       </motion.div>
 
-      {/* ── DAILY INTELLIGENCE ── */}
-      <DailyIntelligence dosha={dosha} profile={profile} />
+      {/* ── AGASTYA CHAT BANNER (Prana+) ── */}
+      {isPremium ? (
+        <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} onClick={onOpenChat}
+          style={{ background:'linear-gradient(135deg,rgba(255,140,0,0.08),rgba(212,175,55,0.04))',
+            border:'1.5px solid rgba(212,175,55,0.4)', borderRadius:32, padding:'22px 20px',
+            position:'relative', overflow:'hidden', marginBottom:12, cursor:'pointer',
+            boxShadow:'0 0 50px rgba(212,175,55,0.1)' }}>
+          <div style={{ position:'absolute', top:0, left:0, right:0, height:2,
+            background:'linear-gradient(90deg,transparent,#FF8C00,#D4AF37,#FF8C00,transparent)' }} />
+          <div style={{ display:'flex', alignItems:'flex-start', gap:14 }}>
+            <motion.div animate={{ boxShadow:['0 0 0 0 rgba(212,175,55,0.4)','0 0 0 8px rgba(212,175,55,0)','0 0 0 0 rgba(212,175,55,0.4)'] }}
+              transition={{ duration:3, repeat:Infinity }}
+              style={{ width:60, height:60, borderRadius:'50%', flexShrink:0,
+                background:'radial-gradient(circle,rgba(212,175,55,0.22),rgba(212,175,55,0.06))',
+                border:'2px solid rgba(212,175,55,0.5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:26 }}>🔱</motion.div>
+            <div>
+              <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase', color:'rgba(212,175,55,0.75)', marginBottom:5 }}>✦ Your Personal Guide · Agastya Samhita ✦</div>
+              <div style={{ fontSize:19, fontWeight:900, letterSpacing:'-0.04em', color:'#D4AF37', marginBottom:5, fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic' }}>Speak with Agastya Muni</div>
+              <div style={{ fontSize:12, lineHeight:1.65, color:'rgba(255,255,255,0.65)', marginBottom:12 }}>
+                {profile.name}, I see your {dosha.primary?.charAt(0).toUpperCase()+(dosha.primary?.slice(1)||'')}-Pitta constitution clearly. Ask me anything — herbs, digestion, sleep, or the deeper question behind your suffering.
+              </div>
+              <button style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'10px 22px', borderRadius:999,
+                background:'linear-gradient(135deg,#FF8C00,#D4AF37)', color:'#050505',
+                fontSize:12, fontWeight:900, cursor:'pointer', border:'none', fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
+                🔱 Open Divine Physician
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      ) : (
+        <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }}
+          style={{ background:'rgba(255,255,255,0.015)', border:'1px solid rgba(34,211,238,0.25)', borderRadius:32,
+            padding:'28px 20px', textAlign:'center', marginBottom:12, position:'relative', overflow:'hidden' }}>
+          <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at center,rgba(34,211,238,0.05),transparent 70%)', pointerEvents:'none' }} />
+          <div style={{ position:'relative', zIndex:1 }}>
+            <div style={{ fontSize:26, opacity:0.4, marginBottom:10 }}>🔒</div>
+            <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase', color:'#22D3EE', marginBottom:6 }}>◈ Prana Flow Required</div>
+            <div style={{ fontSize:17, fontWeight:900, color:'rgba(255,255,255,0.9)', marginBottom:8 }}>Speak with Agastya Muni</div>
+            <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', lineHeight:1.65, marginBottom:18, maxWidth:340, margin:'0 auto 18px' }}>Ask the ancient physician anything — herbs, sleep, digestion, emotional pain. Available from Prana Flow and above.</div>
+            <button style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'10px 22px', borderRadius:999,
+              borderColor:'rgba(34,211,238,0.4)', color:'#22D3EE', background:'rgba(34,211,238,0.08)',
+              border:'1px solid rgba(34,211,238,0.4)', fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:11, fontWeight:900, cursor:'pointer', letterSpacing:'0.1em', textTransform:'uppercase' }}>
+              ◈ Upgrade to Prana Flow
+            </button>
+          </div>
+        </motion.div>
+      )}
 
-      {/* ── SCALAR WAVE FREQUENCIES ── */}
-      <ScalarWaveModule dosha={primary} isPremium={isSiddhaPlus} />
+      {/* ── DINACHARYA ── */}
+      <SectionCard icon="🕐" iconBg={`${accentColor}10`} iconBorder={`${accentColor}25`} iconColor={accentColor}
+        kicker={dinKicker.replace('✦ ','')} kickerColor={accentColor} title="Sacred Daily Timeline" sub={dinSub}>
+        <Timeline items={getTimeline(rank, primary)} />
+      </SectionCard>
 
-      {/* ── JYOTISH PLANETARY ALIGNMENT ── */}
-      <JyotishPlanetaryCard dosha={primary} isPremium={isSiddhaPlus} />
+      {/* ── VIKRUTI (Prana+) ── */}
+      {isPremium ? (
+        <SectionCard icon="🔬" iconBg="rgba(34,211,238,0.1)" iconBorder="rgba(34,211,238,0.25)" iconColor="#22D3EE"
+          kicker="Current Health Snapshot" kickerColor="#22D3EE" title="How Your Body Feels Right Now" sub="What is off balance today — tap to open">
+          <VikrutiRows dosha={dosha} />
+        </SectionCard>
+      ) : (
+        <GateCard icon="🔬" iconColor="#22D3EE" tierLabel="◈ Prana Flow Required" tierColor="#22D3EE" title="How Your Body Feels Right Now" sub="Current health snapshot" />
+      )}
 
-      {/* ── AGASTYA WISDOM ── */}
-      <AgastyaWisdomModule dosha={primary} isPremium={isSiddhaPlus} />
+      {/* ── HERBS ── */}
+      {isPremium ? (
+        <SectionCard icon="🌿" iconBg="rgba(52,211,153,0.1)" iconBorder="rgba(52,211,153,0.25)" iconColor="#34D399"
+          kicker={isSiddhaPlus ? "Full Rasayana Pharmacopeia" : "Sacred Herbarium"} kickerColor="#34D399"
+          title="Your Herb Allies" sub={isSiddhaPlus ? "All 8 herbs including Akasha exclusives — tap to open" : "Dosha-specific plant medicines — tap to open"}>
+          <HerbGrid extended={isSiddhaPlus} />
+        </SectionCard>
+      ) : (
+        <GateCard icon="🌿" iconColor="#22D3EE" tierLabel="◈ Prana Flow Required" tierColor="#22D3EE" title="Your Herb Allies" sub="Dosha-specific plant medicines" />
+      )}
 
-      {/* ── ENHANCED HERBARIUM ── */}
-      <EnhancedHerbarium herbs={dosha.guidelines?.herbs || []} dosha={primary} />
+      {/* ── HZ FREQUENCIES (Siddha+) ── */}
+      {isSiddhaPlus ? (
+        <SectionCard icon="🎵" iconBg="rgba(255,140,0,0.1)" iconBorder="rgba(255,140,0,0.25)" iconColor="#FF8C00"
+          kicker="Healing Sound Frequencies" kickerColor="#FF8C00" title="Healing Sound Frequencies" sub={`6 frequencies for your ${dosha.primary}-Pitta body — tap to open`}>
+          <HzGrid dosha={primary} />
+        </SectionCard>
+      ) : (
+        <GateCard icon="🎵" iconColor="#FF8C00" tierLabel="◉ Siddha Quantum Required" tierColor="#FF8C00" title="Healing Sound Frequencies" sub="528 Hz · 432 Hz · 963 Hz — play while you rest" />
+      )}
 
-      {/* ── AGASTYAR ACADEMY ── */}
-      <AgastyarAcademy isPremium={isPremium} />
+      {/* ── JYOTISH (Siddha+) ── */}
+      {isSiddhaPlus ? (
+        <SectionCard icon="🪐" iconBg="rgba(255,140,0,0.1)" iconBorder="rgba(255,140,0,0.25)" iconColor="#FF8C00"
+          kicker="How the Planets Affect Your Health" kickerColor="#FF8C00" title="How the Planets Affect Your Health" sub="Weekly reading — tap to open">
+          <JyotishSection dosha={primary} />
+        </SectionCard>
+      ) : (
+        <GateCard icon="🪐" iconColor="#FF8C00" tierLabel="◉ Siddha Quantum Required" tierColor="#FF8C00" title="How the Planets Affect Your Health" sub="Weekly planetary body map" />
+      )}
 
+      {/* ── AUDIO TEACHINGS (Akasha only — rank 3) ── */}
+      {rank >= 3 ? (
+        <SectionCard icon="🎧" iconBg="rgba(212,175,55,0.1)" iconBorder="rgba(212,175,55,0.3)" iconColor="#D4AF37"
+          kicker="Monthly Healing Teachings" kickerColor="#D4AF37" title="Monthly Healing Teachings" sub="Personal audio teaching for your Prakriti — tap to open">
+          <AudioTeachings />
+        </SectionCard>
+      ) : (
+        <GateCard icon="🎧" iconColor="#D4AF37" tierLabel="∞ Akasha Infinity Required" tierColor="#D4AF37" title="Monthly Healing Teachings" sub="Personal audio teaching for your Prakriti" />
+      )}
+
+      {/* ── ACADEMY ── */}
+      <AcademyBanner rank={rank} />
 
     </div>
   );
