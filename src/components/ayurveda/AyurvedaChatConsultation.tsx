@@ -16,6 +16,7 @@ interface AyurvedaChatConsultationProps {
   profile: AyurvedaUserProfile | null;
   dosha: DoshaProfile | null;
   onClose?: () => void;
+  inlineMode?: boolean;
 }
 
 // ── Sri Yantra SVG ──────────────────────────────────────────────────────────
@@ -407,7 +408,7 @@ const STYLES = `
 `;
 
 // ── Main Component ───────────────────────────────────────────────────────────
-export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> = ({ profile, dosha, onClose }) => {
+export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> = ({ profile, dosha, onClose, inlineMode = false }) => {
   const { t, language } = useTranslation();
   const { messages: persistedMsgs, loading: chatHistoryLoading, saveMessage, refreshMessages } = useChatMessages('ayurveda');
   const [streamingAssistant, setStreamingAssistant] = useState<string | null>(null);
@@ -801,6 +802,139 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
       </motion.div>
     </AnimatePresence>
   );
+
+  if (typeof document === 'undefined') return null;
+
+  // Inline mode: render chat panel directly in the page (no portal/overlay/backdrop)
+  if (inlineMode) {
+    return (
+      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: '#050505' }}>
+        <style>{STYLES}</style>
+        <div className="sqi-chat-panel" style={{ position: 'relative', height: '100%', maxHeight: '100dvh', borderRadius: 0, border: 'none', width: '100%', maxWidth: '100%', flex: 1, display: 'flex', flexDirection: 'column' }}>
+          {/* History Panel (inline mode) */}
+          {showHistory && (
+            <div className="sqi-hist-panel" style={{ borderRadius: 0 }}>
+              <div style={{ height: 2, flexShrink: 0, background: 'linear-gradient(90deg, transparent, #D4AF37, transparent)', opacity: 0.8 }} />
+              <div className="sqi-hist-hdr">
+                <div className="sqi-hist-title">Consultation History</div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', fontFamily: "'Plus Jakarta Sans',sans-serif" }}>{persistedMsgs.length} messages</div>
+                <button type="button" className="sqi-ibtn" onClick={() => setShowHistory(false)}>✕</button>
+              </div>
+              <div className="sqi-hist-list">
+                {persistedMsgs.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px 0', fontFamily: "'Cormorant Garamond', serif", fontSize: 16, fontStyle: 'italic', color: 'rgba(212,175,55,0.35)' }}>
+                    No consultation history yet
+                  </div>
+                ) : (() => {
+                  const groups: Record<string, typeof persistedMsgs> = {};
+                  persistedMsgs.forEach(msg => {
+                    const date = msg.created_at
+                      ? new Date(msg.created_at).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+                      : 'Recent';
+                    if (!groups[date]) groups[date] = [];
+                    groups[date].push(msg);
+                  });
+                  return Object.entries(groups).map(([date, msgs]) => (
+                    <React.Fragment key={date}>
+                      <div className="sqi-hist-datelbl">{date}</div>
+                      {msgs.map((msg, i) => (
+                        <div key={msg.id ?? i} style={{ display: 'flex', flexDirection: 'column', alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
+                          <div className={`sqi-hist-msg ${msg.role === 'user' ? 'user' : 'ai'}`}>
+                            <div className="sqi-hist-role">{msg.role === 'user' ? 'You' : '◈ Agastya Muni'}</div>
+                            {msg.content.slice(0, 300)}{msg.content.length > 300 ? '…' : ''}
+                          </div>
+                          {msg.role === 'assistant' && (
+                            <button type="button" className="sqi-cpbtn" onClick={() => handleCopy(msg.content, -1 - i)}>
+                              {copiedIdx === -1 - i ? '✓ copied' : '⎘ copy'}
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </React.Fragment>
+                  ));
+                })()}
+              </div>
+            </div>
+          )}
+
+          {/* Tab Bar */}
+          <div style={{ display: 'flex', gap: 0, padding: '14px 20px 0', flexShrink: 0, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+            <button type="button" onClick={() => { setShowHistory(false); setShowLexicon(false); }}
+              style={{ background: 'none', border: 'none', borderBottom: !showHistory && !showLexicon ? '2px solid #D4AF37' : '2px solid transparent', color: !showHistory && !showLexicon ? '#D4AF37' : 'rgba(255,255,255,0.4)', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans',sans-serif", transition: 'all 0.2s', fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', padding: '0 16px 10px' }}>
+              ◈ Chat
+            </button>
+            <button type="button" onClick={() => { setShowLexicon(true); setShowHistory(false); }}
+              style={{ background: 'none', border: 'none', borderBottom: showLexicon ? '2px solid #D4AF37' : '2px solid transparent', color: showLexicon ? '#D4AF37' : 'rgba(255,255,255,0.4)', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans',sans-serif", transition: 'all 0.2s', fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', padding: '0 16px 10px' }}>
+              ◇ Lexicon
+            </button>
+            <button type="button" onClick={() => { setShowHistory(true); setShowLexicon(false); }}
+              style={{ background: 'none', border: 'none', borderBottom: showHistory ? '2px solid #D4AF37' : '2px solid transparent', color: showHistory ? '#D4AF37' : 'rgba(255,255,255,0.4)', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans',sans-serif", transition: 'all 0.2s', fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', padding: '0 16px 10px' }}>
+              ◇ History
+            </button>
+          </div>
+
+          {/* Messages */}
+          <div ref={msgsRef} style={{ flex: 1, overflowY: 'auto', padding: '20px 18px 8px', display: 'flex', flexDirection: 'column', gap: 16, scrollBehavior: 'smooth' }}>
+            {chatHistoryLoading && persistedMsgs.length === 0 && (
+              <div style={{ display: 'flex', justifyContent: 'center', padding: 32 }}><div style={{ width: 24, height: 24, border: '2px solid rgba(212,175,55,0.15)', borderTop: '2px solid #D4AF37', borderRadius: '50%', animation: 'sqiSpin 1s linear infinite' }} /></div>
+            )}
+            {!chatHistoryLoading && displayMessages.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '40px 20px', fontFamily: "'Cormorant Garamond', serif", fontSize: 18, fontStyle: 'italic', color: 'rgba(212,175,55,0.45)', lineHeight: 1.6 }}>
+                "I have been awaiting you.<br/>Ask me anything — your body, your herbs, your path."<br/>
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', fontFamily: "'Plus Jakarta Sans',sans-serif", fontStyle: 'normal', fontWeight: 600, letterSpacing: '0.1em' }}>— AGASTYA MUNI</span>
+              </div>
+            )}
+            {displayMessages.map((msg, index) => (
+              <motion.div key={msg.id ?? `msg-${index}-${msg.role}`}
+                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                className={`sqi-mrow ${msg.role === 'user' ? 'user' : 'agent'}`}>
+                <div className="sqi-mrole">{msg.role === 'user' ? 'You' : '◈ Agastya Muni'}</div>
+                <div className={`sqi-bbl ${msg.role === 'user' ? 'user' : 'agent'}`}>
+                  {msg.role === 'user' ? msg.content : <FormatAgastya text={msg.content} />}
+                </div>
+                {msg.role === 'assistant' && (
+                  <button type="button" className="sqi-cpbtn" onClick={() => handleCopy(msg.content, index)}>
+                    {copiedIdx === index ? '✓ copied' : '⎘ copy'}
+                  </button>
+                )}
+              </motion.div>
+            ))}
+            {isLoading && displayMessages[displayMessages.length - 1]?.role !== 'assistant' && (
+              <div className="sqi-mrow agent">
+                <div className="sqi-mrole">◈ Agastya Muni</div>
+                <NadiPulse />
+              </div>
+            )}
+          </div>
+
+          {/* Input */}
+          <div className="sqi-inp-bar">
+            <textarea ref={taRef} className="sqi-inp" value={input} rows={1}
+              onChange={e => { setInput(e.target.value); resizeTextarea(); }}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+              placeholder={t('ayurvedaChat.inputPlaceholder', 'Ask Agastya Muni about your healing path...')}
+              disabled={isLoading || chatHistoryLoading}
+            />
+            <button type="button" className="sqi-send"
+              disabled={isLoading || chatHistoryLoading || !input.trim()}
+              onClick={() => sendMessage()}>
+              {isLoading ? <Loader2 style={{ width: 18, height: 18, animation: 'sqiSpin 1s linear infinite' }} /> : <Send style={{ width: 18, height: 18 }} />}
+            </button>
+          </div>
+
+          {/* Copy Full Consultation */}
+          {displayMessages.length > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '6px 20px 14px', flexShrink: 0 }}>
+              <button type="button" onClick={handleCopyAll} style={{ background: 'none', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 20, color: copiedAll ? '#D4AF37' : 'rgba(255,255,255,0.35)', fontSize: 11, fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 700, letterSpacing: '0.08em', padding: '5px 14px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6 }}>
+                {copiedAll ? '✓ Consultation Copied' : '⎘ Copy Full Consultation'}
+              </button>
+            </div>
+          )}
+        </div>
+        <AyurvedaLexicon isOpen={showLexicon} onClose={() => setShowLexicon(false)} />
+      </div>
+    );
+  }
 
   if (typeof document === 'undefined') return null;
   return (
