@@ -1,4 +1,4 @@
 === CONSTRAINTS ===
-{"message":"Unauthorized"}
+[{"conname":"admin_granted_access_access_type_check","def":"CHECK (((access_type IS NOT NULL) AND (length(TRIM(BOTH FROM access_type)) > 0)))"}]
 === COLUMNS ===
-{"message":"Unauthorized"}
+[{"column_name":"id","data_type":"uuid"},{"column_name":"user_id","data_type":"uuid"},{"column_name":"access_type","data_type":"text"},{"column_name":"access_id","data_type":"text"},{"column_name":"tier","data_type":"text"},{"column_name":"granted_by","data_type":"uuid"},{"column_name":"granted_at","data_type":"timestamp with time zone"},{"column_name":"expires_at","data_type":"timestamp with time zone"},{"column_name":"notes","data_type":"text"},{"column_name":"is_active","data_type":"boolean"},{"column_name":"created_at","data_type":"timestamp with time zone"},{"column_name":"updated_at","data_type":"timestamp with time zone"}]
