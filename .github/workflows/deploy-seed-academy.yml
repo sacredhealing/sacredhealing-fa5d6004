@@ -1,0 +1,38 @@
+name: Deploy and Run Academy Seed
+
+on:
+  workflow_dispatch:
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy seed-academy function
+        run: |
+          supabase functions deploy seed-academy \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Invoke seed-academy function
+        run: |
+          curl -s -X POST \
+            "https://fjdzhrdpioxdeyyfogep.supabase.co/functions/v1/seed-academy" \
+            -H "Authorization: Bearer ${{ secrets.NEW_SERVICE_ROLE }}" \
+            -H "Content-Type: application/json" \
+            | python3 -c "
+import sys, json
+d = json.loads(sys.stdin.read())
+print('Total modules:', d.get('total'))
+print('Tiers:', d.get('tiers'))
+print('Phases:', d.get('phases'))
+if d.get('error'): print('ERROR:', d['error'])
+"
