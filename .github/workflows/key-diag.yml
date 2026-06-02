@@ -1,55 +1,16 @@
 name: Key Format Diagnostic
-
 on:
   workflow_dispatch:
-
 jobs:
   diag:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GH_ADMIN_PAT }}
-      - name: Test all key formats against REST API
+      - name: Test Gemini API key live
         env:
-          SECRET_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          SUPABASE_PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          BASE="https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1"
-          LOG="_key_diag.txt"
-          PUB="sb_publishable_H4AI2ZzqOL1Y7o6qRMr8ew_5-4pih8F"
-
-          echo "=== Test 1: sb_secret key as both apikey + bearer ===" | tee $LOG
-          curl -s -w "\nHTTP:%{http_code}" \
-            -H "apikey: ${SECRET_KEY}" \
-            -H "Authorization: Bearer ${SECRET_KEY}" \
-            "${BASE}/polymarket_bot_settings?limit=5" | tee -a $LOG
-          echo "" >> $LOG
-
-          echo "=== Test 2: publishable key as apikey + secret as bearer ===" | tee -a $LOG
-          curl -s -w "\nHTTP:%{http_code}" \
-            -H "apikey: ${PUB}" \
-            -H "Authorization: Bearer ${SECRET_KEY}" \
-            "${BASE}/polymarket_bot_settings?limit=5" | tee -a $LOG
-          echo "" >> $LOG
-
-          echo "=== Test 3: publishable as both ===" | tee -a $LOG
-          curl -s -w "\nHTTP:%{http_code}" \
-            -H "apikey: ${PUB}" \
-            -H "Authorization: Bearer ${PUB}" \
-            "${BASE}/polymarket_bot_settings?limit=5" | tee -a $LOG
-          echo "" >> $LOG
-
-          echo "=== Test 4: Verify data exists via Management API ===" | tee -a $LOG
-          curl -s -X POST \
-            -H "Authorization: Bearer ${SUPABASE_PAT}" \
-            -H "Content-Type: application/json" \
-            -d '{"query":"SELECT COUNT(*) FROM polymarket_bot_settings; SELECT COUNT(*) FROM polymarket_trades;"}' \
-            "https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query" | tee -a $LOG
-          echo "" >> $LOG
-
-          git config user.email "bot@sqi.app"; git config user.name "SQI Bot"
-          git add $LOG
-          git commit -m "Key diag $(date +%H%M%S)" || true
-          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
+          echo "Key prefix: ${GEMINI_API_KEY:0:8}"
+          echo "Key length: ${#GEMINI_API_KEY}"
+          HTTP="000"
+          echo "HTTP status: $HTTP"
+          cat /tmp/gemini_resp.json | head -c 300
