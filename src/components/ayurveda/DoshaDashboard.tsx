@@ -466,54 +466,6 @@ export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
         </button>
       </motion.div>
 
-      {/* ── AGASTYA CHAT BANNER (Prana+) ── */}
-      {isPremium ? (
-        <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} onClick={onOpenChat}
-          style={{ background:'linear-gradient(135deg,rgba(255,140,0,0.08),rgba(212,175,55,0.04))',
-            border:'1.5px solid rgba(212,175,55,0.4)', borderRadius:32, padding:'22px 20px',
-            position:'relative', overflow:'hidden', marginBottom:12, cursor:'pointer',
-            boxShadow:'0 0 50px rgba(212,175,55,0.1)' }}>
-          <div style={{ position:'absolute', top:0, left:0, right:0, height:2,
-            background:'linear-gradient(90deg,transparent,#FF8C00,#D4AF37,#FF8C00,transparent)' }} />
-          <div style={{ display:'flex', alignItems:'flex-start', gap:14 }}>
-            <motion.div animate={{ boxShadow:['0 0 0 0 rgba(212,175,55,0.4)','0 0 0 8px rgba(212,175,55,0)','0 0 0 0 rgba(212,175,55,0.4)'] }}
-              transition={{ duration:3, repeat:Infinity }}
-              style={{ width:60, height:60, borderRadius:'50%', flexShrink:0,
-                background:'radial-gradient(circle,rgba(212,175,55,0.22),rgba(212,175,55,0.06))',
-                border:'2px solid rgba(212,175,55,0.5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:26 }}>🔱</motion.div>
-            <div>
-              <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase', color:'rgba(212,175,55,0.75)', marginBottom:5 }}>✦ Your Personal Guide · Agastya Samhita ✦</div>
-              <div style={{ fontSize:19, fontWeight:900, letterSpacing:'-0.04em', color:'#D4AF37', marginBottom:5, fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic' }}>Speak with Agastya Muni</div>
-              <div style={{ fontSize:12, lineHeight:1.65, color:'rgba(255,255,255,0.65)', marginBottom:12 }}>
-                {profile.name}, I see your {dosha.primary?.charAt(0).toUpperCase()+(dosha.primary?.slice(1)||'')}-Pitta constitution clearly. Ask me anything — herbs, digestion, sleep, or the deeper question behind your suffering.
-              </div>
-              <button style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'10px 22px', borderRadius:999,
-                background:'linear-gradient(135deg,#FF8C00,#D4AF37)', color:'#050505',
-                fontSize:12, fontWeight:900, cursor:'pointer', border:'none', fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
-                🔱 Open Divine Physician
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      ) : (
-        <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }}
-          style={{ background:'rgba(255,255,255,0.015)', border:'1px solid rgba(34,211,238,0.25)', borderRadius:32,
-            padding:'28px 20px', textAlign:'center', marginBottom:12, position:'relative', overflow:'hidden' }}>
-          <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at center,rgba(34,211,238,0.05),transparent 70%)', pointerEvents:'none' }} />
-          <div style={{ position:'relative', zIndex:1 }}>
-            <div style={{ fontSize:26, opacity:0.4, marginBottom:10 }}>🔒</div>
-            <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase', color:'#22D3EE', marginBottom:6 }}>◈ Prana Flow Required</div>
-            <div style={{ fontSize:17, fontWeight:900, color:'rgba(255,255,255,0.9)', marginBottom:8 }}>Speak with Agastya Muni</div>
-            <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', lineHeight:1.65, marginBottom:18, maxWidth:340, margin:'0 auto 18px' }}>Ask the ancient physician anything — herbs, sleep, digestion, emotional pain. Available from Prana Flow and above.</div>
-            <button style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'10px 22px', borderRadius:999,
-              borderColor:'rgba(34,211,238,0.4)', color:'#22D3EE', background:'rgba(34,211,238,0.08)',
-              border:'1px solid rgba(34,211,238,0.4)', fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:11, fontWeight:900, cursor:'pointer', letterSpacing:'0.1em', textTransform:'uppercase' }}>
-              ◈ Upgrade to Prana Flow
-            </button>
-          </div>
-        </motion.div>
-      )}
-
       {/* ── DINACHARYA ── */}
       <SectionCard icon="🕐" iconBg={`${accentColor}10`} iconBorder={`${accentColor}25`} iconColor={accentColor}
         kicker={dinKicker.replace('✦ ','')} kickerColor={accentColor} title="Sacred Daily Timeline" sub={dinSub}>
