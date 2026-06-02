@@ -233,7 +233,7 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${GEMINI_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "gemini-2.0-flash",
+          model: "gemini-2.5-flash",
           messages: [{ role: "user", content: prompt }],
           max_tokens: 2500,
           temperature: 0.9,
@@ -282,7 +282,7 @@ serve(async (req) => {
       method: "POST",
       headers: { Authorization: `Bearer ${GEMINI_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "gemini-2.0-flash",
+        model: "gemini-2.5-flash",
         messages: allMessages,
         max_tokens: 600,
         temperature: 0.92,
