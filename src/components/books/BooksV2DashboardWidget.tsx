@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BookOpen, User, ArrowRight } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _supabase } from '@/integrations/supabase/client';
+const supabase: any = _supabase;
 import { useNavigate } from 'react-router-dom';
 
 const ADMIN_UUID = 'bd0b21c9-577a-450b-bb1e-21c9d0423f17';
@@ -37,13 +38,13 @@ export default function BooksV2DashboardWidget() {
 
       // Load MY entry counts only (RLS enforces user_id filter)
       const [{ count: cc, data: cd }, { count: lc, data: ld }] = await Promise.all([
-        (supabase as any).from('book_entries')
+        supabase.from('book_entries')
           .select('title', { count: 'exact' })
           .eq('book_type', 'akashic_codex')
           .eq('is_archived', false)
           .order('created_at', { ascending: false })
           .limit(1),
-        (supabase as any).from('book_entries')
+        supabase.from('book_entries')
           .select('title', { count: 'exact' })
           .eq('book_type', 'life_book')
           .eq('is_archived', false)

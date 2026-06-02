@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Search, BookOpen, X } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _supabase } from '@/integrations/supabase/client';
+const supabase: any = _supabase;
 import { useToast } from '@/hooks/use-toast';
 import ChapterTree from '@/components/books/ChapterTree';
 import BookEntry from '@/components/books/BookEntry';
@@ -103,14 +104,14 @@ export default function AkashicCodexV2() {
       `Transfer "${entry.title}" to the Life Book?`
     );
     if (!confirmed) return;
-    const { error } = await (supabase as any).from('book_entries').update({
+    const { error } = await supabase.from('book_entries').update({
       book_type: 'life_book',
       chapter_id: null,
     }).eq('id', entry.id);
     if (error) { toast({ title: 'Transfer failed', variant: 'destructive' }); return; }
 
     // Log
-    await (supabase as any).from('book_entry_transfers').insert({
+    await supabase.from('book_entry_transfers').insert({
       entry_id: entry.id, from_book: 'akashic_codex', to_book: 'life_book',
       from_chapter_id: entry.chapter_id, transferred_by: userId,
     });
@@ -119,7 +120,7 @@ export default function AkashicCodexV2() {
   };
 
   const handleDelete = async (id: string) => {
-    const { error } = await (supabase as any).from('book_entries').update({ is_archived: true }).eq('id', id);
+    const { error } = await supabase.from('book_entries').update({ is_archived: true }).eq('id', id);
     if (error) { toast({ title: 'Error', variant: 'destructive' }); return; }
     toast({ title: 'Entry archived' });
     loadEntries();

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Search, User, X, Lock } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _supabase } from '@/integrations/supabase/client';
+const supabase: any = _supabase;
 import { useToast } from '@/hooks/use-toast';
 import ChapterTree from '@/components/books/ChapterTree';
 import BookEntry from '@/components/books/BookEntry';

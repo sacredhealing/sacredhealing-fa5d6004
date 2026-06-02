@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Archive, ChevronDown, ChevronUp } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as _supabase } from '@/integrations/supabase/client';
+const supabase: any = _supabase;
 
 interface ArchiveEntry {
   id: string;
@@ -29,8 +30,8 @@ export default function BookArchive() {
     if (akashicV1.length > 0) return; // already loaded
     setLoading(true);
     const [{ data: a }, { data: p }] = await Promise.all([
-      (supabase as any).from('akashic_archive_v1').select('id,subject,content,raw_text,created_at').order('created_at', { ascending: false }).limit(100),
-      (supabase as any).from('portrait_archive_v1').select('id,category,content,created_at').order('created_at', { ascending: false }).limit(50),
+      supabase.from('akashic_archive_v1').select('id,subject,content,raw_text,created_at').order('created_at', { ascending: false }).limit(100),
+      supabase.from('portrait_archive_v1').select('id,category,content,created_at').order('created_at', { ascending: false }).limit(50),
     ]);
     setAkashicV1(a || []);
     setPortraitV1(p || []);
