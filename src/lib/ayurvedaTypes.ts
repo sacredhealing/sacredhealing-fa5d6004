@@ -3,9 +3,10 @@
  */
 
 export enum AyurvedaMembershipLevel {
-  FREE = 'FREE',
-  PREMIUM = 'PREMIUM',
-  LIFETIME = 'LIFETIME'
+  FREE     = 'FREE',
+  PREMIUM  = 'PREMIUM',   // Prana Flow
+  SIDDHA   = 'SIDDHA',    // Siddha Quantum
+  LIFETIME = 'LIFETIME'   // Akasha Infinity
 }
 
 export interface AyurvedaUserProfile {
