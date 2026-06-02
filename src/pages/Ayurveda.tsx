@@ -42,8 +42,9 @@ const Ayurveda = () => {
   const getAyurvedaLevel = (): AyurvedaMembershipLevel => {
     if (isAdmin) return 'LIFETIME' as AyurvedaMembershipLevel;
     const rank = getTierRank(tier);
-    if (rank >= 3) return 'LIFETIME' as AyurvedaMembershipLevel;
-    if (rank >= 1 || isPremium) return 'PREMIUM' as AyurvedaMembershipLevel;
+    if (rank >= 3) return 'LIFETIME' as AyurvedaMembershipLevel;  // Akasha Infinity
+    if (rank >= 2) return 'SIDDHA'   as AyurvedaMembershipLevel;  // Siddha Quantum
+    if (rank >= 1 || isPremium) return 'PREMIUM' as AyurvedaMembershipLevel; // Prana Flow
     return 'FREE' as AyurvedaMembershipLevel;
   };
 
