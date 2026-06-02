@@ -57,12 +57,12 @@ const FormatAgastya: React.FC<{ text: string }> = ({ text }) => {
                 background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.45), transparent)',
               }}/>
               <div style={{
-                fontSize: 8, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase',
+                fontSize: 9, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase',
                 color: 'rgba(34,211,238,0.55)', marginBottom: 5,
                 fontFamily: "'Plus Jakarta Sans', sans-serif",
               }}>≈ Scalar Transmission</div>
               <div style={{
-                fontSize: 12.5, color: 'rgba(34,211,238,0.78)', lineHeight: 1.65,
+                fontSize: 15, color: 'rgba(34,211,238,0.88)', lineHeight: 1.7,
                 fontFamily: "'Plus Jakarta Sans', sans-serif", fontStyle: 'normal',
               }}>{txt}</div>
             </div>
@@ -85,7 +85,7 @@ const FormatAgastya: React.FC<{ text: string }> = ({ text }) => {
                 return (
                   <div key={i} style={{
                     fontFamily: "'Cormorant Garamond', Georgia, serif",
-                    fontSize: isDevan ? 21 : 13.5,
+                    fontSize: isDevan ? 24 : 16,
                     fontStyle: isDevan ? 'normal' : 'italic',
                     color: isDevan ? '#D4AF37' : 'rgba(212,175,55,0.68)',
                     lineHeight: 1.65,
@@ -105,7 +105,7 @@ const FormatAgastya: React.FC<{ text: string }> = ({ text }) => {
               marginTop: 18, paddingTop: 14,
               borderTop: '1px solid rgba(212,175,55,0.12)',
               fontFamily: "'Cormorant Garamond', Georgia, serif",
-              fontSize: 15, fontStyle: 'italic',
+              fontSize: 17, fontStyle: 'italic',
               color: 'rgba(212,175,55,0.55)', lineHeight: 1.7,
             }}>{l.replace(/\*/g, '')}</div>
           );
@@ -116,7 +116,7 @@ const FormatAgastya: React.FC<{ text: string }> = ({ text }) => {
           <div key={pi} style={{
             marginBottom: 13,
             fontFamily: "'Cormorant Garamond', Georgia, serif",
-            fontSize: 15.5, lineHeight: 1.9,
+            fontSize: 17.5, lineHeight: 2.05,
             color: 'rgba(255,255,255,0.86)',
           }}>
             {l.split('\n').map((line, i) => {
@@ -206,8 +206,8 @@ const STYLES = `
     font-weight: 700; color: var(--g); line-height: 1.1;
   }
   .sqi-sub {
-    font-size: 7px; font-weight: 800; letter-spacing: 0.3em;
-    text-transform: uppercase; color: rgba(212,175,55,0.36); margin-top: 2px;
+    font-size: 8px; font-weight: 800; letter-spacing: 0.3em;
+    text-transform: uppercase; color: rgba(212,175,55,0.5); margin-top: 2px;
   }
   .sqi-live {
     display: flex; align-items: center; gap: 5px; padding: 4px 10px;
@@ -240,7 +240,7 @@ const STYLES = `
     display: flex; align-items: center; gap: 7px; flex-shrink: 0;
   }
   .sqi-jy-txt {
-    font-size: 8px; font-weight: 800; letter-spacing: 0.2em;
+    font-size: 9px; font-weight: 800; letter-spacing: 0.2em;
     text-transform: uppercase; color: rgba(212,175,55,0.5);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
@@ -264,12 +264,12 @@ const STYLES = `
     color: var(--g); margin-bottom: 10px; line-height: 1.1;
   }
   .sqi-wlore {
-    font-family: 'Cormorant Garamond', serif; font-size: 15px; font-style: italic;
-    color: rgba(255,255,255,0.52); line-height: 1.76;
+    font-family: 'Cormorant Garamond', serif; font-size: 17px; font-style: italic;
+    color: rgba(255,255,255,0.55); line-height: 1.8;
     max-width: 380px; margin: 0 auto 8px;
   }
   .sqi-wsub {
-    font-size: 12px; color: rgba(255,255,255,0.28); line-height: 1.65;
+    font-size: 14px; color: rgba(255,255,255,0.32); line-height: 1.7;
     max-width: 340px; margin: 0 auto 18px;
   }
   .sqi-om {
@@ -281,14 +281,14 @@ const STYLES = `
     content: ''; flex: 1; height: 1px; background: rgba(212,175,55,0.1);
   }
   .sqi-sugg-lbl {
-    font-size: 7.5px; font-weight: 800; letter-spacing: 0.42em;
+    font-size: 9px; font-weight: 800; letter-spacing: 0.42em;
     text-transform: uppercase; color: rgba(212,175,55,0.24); margin-bottom: 12px;
   }
   .sqi-sugg { display: flex; flex-direction: column; gap: 7px; max-width: 460px; margin: 0 auto; }
   .sqi-sug {
     width: 100%; padding: 11px 16px; border-radius: 14px;
     background: rgba(212,175,55,0.04); border: 1px solid rgba(212,175,55,0.12);
-    color: rgba(212,175,55,0.7); font-size: 13px; font-weight: 500;
+    color: rgba(212,175,55,0.7); font-size: 15px; font-weight: 500;
     text-align: left; cursor: pointer; font-family: inherit;
     display: flex; align-items: center; gap: 12px; line-height: 1.4; transition: 0.2s;
   }
@@ -297,8 +297,8 @@ const STYLES = `
   .sqi-mrow.user { align-items: flex-end; }
   .sqi-mrow.agent { align-items: flex-start; }
   .sqi-mrole {
-    font-size: 7.5px; font-weight: 800; letter-spacing: 0.3em;
-    text-transform: uppercase; color: rgba(212,175,55,0.32);
+    font-size: 9px; font-weight: 800; letter-spacing: 0.3em;
+    text-transform: uppercase; color: rgba(212,175,55,0.5);
     margin-bottom: 6px; padding: 0 4px;
   }
   .sqi-bbl {
@@ -307,7 +307,7 @@ const STYLES = `
   .sqi-bbl.user {
     max-width: 76%; border-radius: 20px 20px 5px 20px;
     background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.22);
-    font-size: 14px; color: rgba(255,255,255,0.88); line-height: 1.7;
+    font-size: 16px; color: rgba(255,255,255,0.88); line-height: 1.75;
     font-family: 'Plus Jakarta Sans', sans-serif;
   }
   .sqi-bbl.agent {
@@ -316,7 +316,7 @@ const STYLES = `
   }
   .sqi-cpbtn {
     margin-top: 4px; background: transparent; border: none; cursor: pointer;
-    font-size: 7.5px; font-weight: 800; letter-spacing: 0.22em; text-transform: uppercase;
+    font-size: 9px; font-weight: 800; letter-spacing: 0.22em; text-transform: uppercase;
     color: rgba(212,175,55,0.22); padding: 2px 6px; transition: color 0.2s;
     font-family: 'Plus Jakarta Sans', sans-serif;
   }
@@ -331,7 +331,7 @@ const STYLES = `
   .sqi-inp {
     flex: 1; min-width: 0; padding: 13px 18px; border-radius: 18px;
     border: 1px solid rgba(212,175,55,0.17); background: rgba(255,255,255,0.03);
-    color: rgba(255,255,255,0.9); font-size: 14px; font-family: inherit;
+    color: rgba(255,255,255,0.9); font-size: 16px; font-family: inherit;
     outline: none; resize: none; min-height: 48px; max-height: 130px;
     line-height: 1.5; transition: border-color 0.2s, background 0.2s;
   }
@@ -369,12 +369,12 @@ const STYLES = `
     scrollbar-width: thin; scrollbar-color: rgba(212,175,55,0.1) transparent;
   }
   .sqi-hist-datelbl {
-    font-size: 8px; font-weight: 800; letter-spacing: 0.4em; text-transform: uppercase;
-    color: rgba(212,175,55,0.4); padding: 8px 4px 3px;
+    font-size: 9px; font-weight: 800; letter-spacing: 0.4em; text-transform: uppercase;
+    color: rgba(212,175,55,0.5); padding: 8px 4px 3px;
   }
   .sqi-hist-msg {
     padding: 11px 14px; border-radius: 13px;
-    font-size: 12.5px; line-height: 1.65;
+    font-size: 15px; line-height: 1.7;
   }
   .sqi-hist-msg.user {
     background: rgba(212,175,55,0.07); border: 1px solid rgba(212,175,55,0.18);
@@ -383,11 +383,11 @@ const STYLES = `
   .sqi-hist-msg.ai {
     background: rgba(8,4,2,0.92); border: 1px solid rgba(212,175,55,0.09);
     color: rgba(255,255,255,0.75); max-width: 94%;
-    font-family: 'Cormorant Garamond', serif; font-size: 13px;
+    font-family: 'Cormorant Garamond', serif; font-size: 15.5px;
   }
   .sqi-hist-role {
-    font-size: 8px; font-weight: 800; letter-spacing: 0.35em;
-    text-transform: uppercase; margin-bottom: 5px; color: rgba(212,175,55,0.5);
+    font-size: 9px; font-weight: 800; letter-spacing: 0.35em;
+    text-transform: uppercase; margin-bottom: 5px; color: rgba(212,175,55,0.6);
     font-family: 'Plus Jakarta Sans', sans-serif;
   }
   @keyframes sqiGlow {
@@ -649,19 +649,19 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
           {/* Chat Tab Bar */}
           <div style={{ display:'flex', borderBottom:'1px solid rgba(212,175,55,0.1)', flexShrink:0 }}>
             <button type="button" onClick={() => { setShowHistory(false); setShowLexicon(false); }}
-              style={{ flex:1, padding:'9px 0', fontSize:10, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase',
+              style={{ flex:1, padding:'10px 0', fontSize:11, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase',
                 background:'none', border:'none', borderBottom: !showHistory && !showLexicon ? '2px solid #D4AF37' : '2px solid transparent',
                 color: !showHistory && !showLexicon ? '#D4AF37' : 'rgba(255,255,255,0.4)', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", transition:'all 0.2s' }}>
               ✦ Consult
             </button>
             <button type="button" onClick={() => { setShowLexicon(true); setShowHistory(false); }}
-              style={{ flex:1, padding:'9px 0', fontSize:10, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase',
+              style={{ flex:1, padding:'10px 0', fontSize:11, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase',
                 background:'none', border:'none', borderBottom: showLexicon ? '2px solid #D4AF37' : '2px solid transparent',
                 color: showLexicon ? '#D4AF37' : 'rgba(255,255,255,0.4)', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", transition:'all 0.2s' }}>
               ◈ Lexicon
             </button>
             <button type="button" onClick={() => { setShowHistory(true); setShowLexicon(false); }}
-              style={{ flex:1, padding:'9px 0', fontSize:10, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase',
+              style={{ flex:1, padding:'10px 0', fontSize:11, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase',
                 background:'none', border:'none', borderBottom: showHistory ? '2px solid #D4AF37' : '2px solid transparent',
                 color: showHistory ? '#D4AF37' : 'rgba(255,255,255,0.4)', cursor:'pointer', fontFamily:"'Plus Jakarta Sans',sans-serif", transition:'all 0.2s' }}>
               ◇ History
