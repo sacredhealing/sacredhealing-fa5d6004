@@ -433,6 +433,40 @@ const Profile: React.FC = () => {
             </div>
           )}
 
+          {/* ══ ADMIN PANEL BUTTON (visible only to admin) ══ */}
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => navigate('/admin')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                marginBottom: 12,
+                padding: '9px 22px',
+                borderRadius: 100,
+                background: 'linear-gradient(135deg,rgba(212,175,55,.18) 0%,rgba(212,175,55,.08) 100%)',
+                border: '1px solid rgba(212,175,55,.55)',
+                color: '#D4AF37',
+                fontFamily: "'Montserrat',sans-serif",
+                fontWeight: 800,
+                fontSize: 10,
+                letterSpacing: '.38em',
+                textTransform: 'uppercase',
+                cursor: 'pointer',
+                boxShadow: '0 0 18px rgba(212,175,55,.22)',
+                transition: 'all .2s',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 28px rgba(212,175,55,.45)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 0 18px rgba(212,175,55,.22)'; }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="#D4AF37" strokeWidth="1.8" fill="rgba(212,175,55,.25)"/>
+              </svg>
+              ◈ Admin Panel
+            </button>
+          )}
+
           <div style={{fontFamily:"'Montserrat',sans-serif",fontWeight:800,fontSize:12,letterSpacing:'.32em',textTransform:'uppercase',color:'rgba(212,175,55,.8)',marginBottom:16,whiteSpace:'nowrap'}}>
             {t('profilePage.soulResonanceLine',{dasha:dashaCycle})}
           </div>
