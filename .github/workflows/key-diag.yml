@@ -5,12 +5,33 @@ jobs:
   diag:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+
       - name: Test Gemini API key live
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          echo "Key prefix: ${GEMINI_API_KEY:0:8}"
-          echo "Key length: ${#GEMINI_API_KEY}"
-          HTTP="000"
-          echo "HTTP status: $HTTP"
-          cat /tmp/gemini_resp.json | head -c 300
+          PREFIX="${GEMINI_API_KEY:0:8}"
+          LENGTH="${#GEMINI_API_KEY}"
+          HTTP=$(curl -s -o /tmp/gresp.json -w "%{http_code}" \
+            -X POST "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions" \
+            -H "Authorization: Bearer $GEMINI_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"model":"gemini-2.0-flash","messages":[{"role":"user","content":"hi"}],"max_tokens":5}')
+          BODY=$(cat /tmp/gresp.json | head -c 400)
+          echo "PREFIX=$PREFIX LENGTH=$LENGTH HTTP=$HTTP"
+          echo "BODY=$BODY"
+          mkdir -p diag-output
+          echo "prefix=$PREFIX length=$LENGTH http=$HTTP" > diag-output/gemini-key-test.txt
+          echo "body=$BODY" >> diag-output/gemini-key-test.txt
+
+      - name: Commit results
+        run: |
+          git config user.email "sqi@siddhaquantumnexus.com"
+          git config user.name "SQI Bot"
+          git add diag-output/
+          git commit -m "diag: gemini key test result $(date -u +%H:%M)" || echo "no changes"
+          git push
