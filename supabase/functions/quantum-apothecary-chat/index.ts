@@ -5224,7 +5224,7 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
       const gr = await fetch(GEMINI_API_URL, {
         method: "POST", headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "gemini-2.0-flash",
+          model: GEMINI_MODEL,
           messages: [{
             role: "user",
             content: [
@@ -5431,7 +5431,7 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
     const response = await fetch(GEMINI_API_URL, {
       method: "POST", headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "gemini-2.0-flash",
+        model: GEMINI_MODEL,
         messages: [{ role: "system", content: systemText.trim() }, ...aiMessages],
         temperature: 2.0,
         max_tokens: 8192,
