@@ -639,7 +639,7 @@ const AgastyarAcademy: React.FC<{ isPremium: boolean }> = () => {
 
 export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
   profile, dosha, dailyGuidance, isLoadingGuidance,
-  onRestart, onFetchGuidance, isPremium = false, onOpenChat,
+  onRestart, onFetchGuidance, isPremium = false, isSiddhaPlus = false, onOpenChat,
 }) => {
   const [syncing, setSyncing] = useState(false);
   const primary = dosha.primary?.toLowerCase() || 'vata';
@@ -724,10 +724,10 @@ export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
       <DailyIntelligence dosha={dosha} profile={profile} />
 
       {/* ── SCALAR WAVE FREQUENCIES ── */}
-      <ScalarWaveModule dosha={primary} isPremium={isPremium} />
+      <ScalarWaveModule dosha={primary} isPremium={isSiddhaPlus} />
 
       {/* ── AGASTYA WISDOM ── */}
-      <AgastyaWisdomModule dosha={primary} isPremium={isPremium} />
+      <AgastyaWisdomModule dosha={primary} isPremium={isSiddhaPlus} />
 
       {/* ── ENHANCED HERBARIUM ── */}
       <EnhancedHerbarium herbs={dosha.guidelines?.herbs || []} dosha={primary} />
