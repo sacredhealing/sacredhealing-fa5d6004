@@ -7,16 +7,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useAyurvedaProgress } from '@/hooks/useAyurvedaProgress';
-import { useAdminRole } from '@/hooks/useAdminRole';
-import { useMembership } from '@/hooks/useMembership';
-import { hasFeatureAccess, getCourseTierRequiredRank, getSalesPageForRank, getTierRank } from '@/lib/tierAccess';
-import {
-  ArrowLeft, Award, BookOpen, CheckCircle2, FileText,
-  FlaskConical, GraduationCap, Lock, Music, Play,
-  Search, Sprout, Stethoscope, TrendingUp, Users, Zap as ZapIcon,
-  Infinity as InfinityIcon,
-} from 'lucide-react';
 import type { AyurvedaUserProfile, DoshaProfile } from '@/lib/ayurvedaTypes';
 import { getDoshaEmoji } from '@/lib/ayurvedaTypes';
 
@@ -568,240 +558,80 @@ interface DoshaDashboardProps {
 
  
 // ── AGASTYAR ACADEMY 108 MODULES ─────────────────────────────────────────
-// ── AGASTYAR ACADEMY — REAL SUPABASE-CONNECTED ────────────────────────────
+// ── AGASTYAR ACADEMY BANNER CARD ─────────────────────────────────────────
+const _gold  = (a: number) => `rgba(212,175,55,${a})`;
+const _white = (a: number) => `rgba(255,255,255,${a})`;
+const _cyan  = (a: number) => `rgba(34,211,238,${a})`;
+const _green = (a: number) => `rgba(74,222,128,${a})`;
 
-const PHASE_NUMBERS_AA = [1,2,3,4,5] as const;
-const PHASE_TIER_SLUG_AA: Record<number,string> = {1:'free',2:'prana-flow',3:'siddha-quantum',4:'akasha-infinity',5:'akasha-infinity'};
-const PHASE_HEX_AA: Record<number,string> = {1:'#9CA3AF',2:'#4ADE80',3:'#D4AF37',4:'#A78BFA',5:'#F0ABFC'};
-
-function phaseHexRgb(hex:string){const h=hex.replace('#','');const n=parseInt(h,16);return `${(n>>16)&255},${(n>>8)&255},${n&255}`;}
-
-function PhaseGlyphAA({phase}:{phase:number}){
-  const cls='h-6 w-6 text-white/90';
-  switch(phase){
-    case 1: return <Sprout className={cls}/>;
-    case 2: return <FlaskConical className={cls}/>;
-    case 3: return <Stethoscope className={cls}/>;
-    case 4: return <Sparkles className={cls}/>;
-    default: return <InfinityIcon className={cls}/>;
-  }
-}
-
-function contentTypeLabelAA(ct:string|null|undefined){
-  const m:Record<string,string>={video:'Video',audio:'Audio',pdf:'PDF',interactive:'Interactive',live:'Live'};
-  return m[(ct||'video').toLowerCase()]||'Video';
-}
-
-const HubModuleCardAA: React.FC<{
-  module: any; progress?: any; isAdmin:boolean; tier:string|null|undefined;
-  onNavigateUpgrade:(h:string)=>void;
-}> = ({module:m, progress:prog, isAdmin, tier, onNavigateUpgrade}) => {
-  const completed = prog?.completed??false;
-  const pct = completed?100:Math.min(100,Math.max(0,prog?.progress_percent??0));
-  const need = getCourseTierRequiredRank(m.tier_required);
-  const allowed = hasFeatureAccess(isAdmin,tier,need);
-  const slug=(m.tier_required||'free').toLowerCase();
-  const tierColor=slug.includes('akasha')?'rgba(167,139,250,0.95)':slug.includes('siddha')?'#D4AF37':slug.includes('prana')?'rgba(74,222,128,0.95)':'rgba(156,163,175,0.85)';
-  const glow=slug.includes('akasha')?'rgba(167,139,250,0.12)':slug.includes('siddha')?'rgba(212,175,55,0.12)':slug.includes('prana')?'rgba(74,222,128,0.12)':'rgba(156,163,175,0.08)';
-  const upgradeHref=getSalesPageForRank(need);
+const AgastyarAcademy: React.FC<{ isPremium: boolean }> = () => {
   return (
-    <button type="button" onClick={()=>!allowed&&onNavigateUpgrade(upgradeHref)}
-      className={`relative w-full overflow-hidden rounded-[22px] border p-5 text-left transition hover:-translate-y-0.5 hover:border-[#D4AF37]/25 ${completed?'border-[#D4AF37]/25':'border-white/[0.06]'}`}
-      style={{background:completed?'linear-gradient(135deg,rgba(212,175,55,0.08),transparent)':'rgba(255,255,255,0.02)',backdropFilter:'blur(40px)'}}
+    <motion.div
+      initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.1 }}
+      style={{ position:'relative', margin:'4px 0' }}
     >
-      <span className="absolute right-4 top-4 text-[9px] font-extrabold tracking-wide text-white/15">#{String(m.module_number).padStart(3,'0')}</span>
-      <div className="mb-3 inline-flex items-center gap-1 rounded-md border px-2 py-0.5" style={{background:glow,borderColor:`${tierColor}33`}}>
-        {!allowed&&<Lock size={9} style={{color:tierColor}}/>}
-        {completed&&<CheckCircle2 size={9} className="text-[#D4AF37]"/>}
-        <span className="text-[7px] font-extrabold uppercase tracking-[0.35em]" style={{color:tierColor}}>{slug.includes('akasha')?'Akasha':slug.includes('siddha')?'Siddha':slug.includes('prana')?'Prana Flow':'Free'}</span>
-      </div>
-      <h3 className={`pr-10 text-sm font-black leading-snug ${allowed?'text-white':'text-white/45'}`}>{m.title}</h3>
-      {m.subtitle&&<p className={`mt-1 text-[11px] ${allowed?'text-[#D4AF37]/75':'text-[#D4AF37]/35'}`}>{m.subtitle}</p>}
-      {m.description&&<p className="mt-2 line-clamp-2 text-[11px] leading-relaxed text-white/40">{m.description}</p>}
-      <div className="mt-4 flex items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-3 text-[10px] text-white/30">
-          {m.duration_minutes!=null&&<span className="inline-flex items-center gap-1"><Clock style={{width:10,height:10}}/>{m.duration_minutes}m</span>}
-          <span className="inline-flex items-center gap-1 capitalize">
-            {(m.content_type||'video').toLowerCase()==='video'&&<Play style={{width:10,height:10}}/>}
-            {(m.content_type||'').toLowerCase()==='audio'&&<Music style={{width:10,height:10}}/>}
-            {(m.content_type||'').toLowerCase()==='pdf'&&<FileText style={{width:10,height:10}}/>}
-            {(m.content_type||'').toLowerCase()==='interactive'&&<ZapIcon style={{width:10,height:10}}/>}
-            {(m.content_type||'').toLowerCase()==='live'&&<Users style={{width:10,height:10}}/>}
-            {contentTypeLabelAA(m.content_type)}
-          </span>
+      {/* Glow aura */}
+      <div aria-hidden style={{
+        position:'absolute', inset:-14, borderRadius:32,
+        background:`radial-gradient(60% 60% at 30% 40%, ${_gold(0.35)}, transparent 70%), radial-gradient(60% 60% at 75% 65%, ${_cyan(0.28)}, transparent 70%)`,
+        filter:'blur(22px)', pointerEvents:'none', zIndex:0,
+        animation:'sqiGlow 4s ease-in-out infinite',
+      }}/>
+      {/* Card */}
+      <motion.div
+        whileHover={{ scale:1.01 }} whileTap={{ scale:0.99 }}
+        onClick={() => { window.location.href = '/agastyar-academy'; }}
+        style={{
+          position:'relative', zIndex:1, cursor:'pointer',
+          background:`linear-gradient(135deg, rgba(212,175,55,0.10), rgba(0,242,254,0.05) 60%, rgba(5,5,5,0.6))`,
+          border:`1px solid ${_gold(0.45)}`,
+          borderRadius:24, padding:'22px 20px 20px',
+          boxShadow:`0 0 40px ${_gold(0.25)}, 0 0 80px ${_cyan(0.12)}, inset 0 0 30px rgba(212,175,55,0.06)`,
+        }}
+      >
+        <div style={{ fontSize:9, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase', color:_gold(0.7), marginBottom:10 }}>
+          ⚜ Academy · 108 Modules
         </div>
-        {allowed?(
-          <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border ${completed?'border-[#D4AF37]/35 bg-[#D4AF37]/12 text-[#D4AF37]':'border-white/[0.1] text-white/45'}`}>
-            {completed?<CheckCircle2 size={14}/>:<Play size={12} className="translate-x-px"/>}
-          </span>
-        ):(
-          <span className="text-[8px] font-extrabold uppercase tracking-[0.28em]" style={{color:tierColor}}>Unlock →</span>
-        )}
-      </div>
-      {allowed&&pct>0&&!completed&&<div className="mt-3 h-0.5 overflow-hidden rounded-full bg-white/[0.06]"><div className="h-full rounded-full bg-[#D4AF37]" style={{width:`${pct}%`}}/></div>}
-    </button>
-  );
-};
-
-const AgastyarAcademy: React.FC<{ isPremium: boolean }> = ({ isPremium }) => {
-  const { isAdmin } = useAdminRole();
-  const { tier } = useMembership();
-  const { courses, progressByModuleId, stats, loading: loadingData, error: loadError, refresh, getPhaseModules } = useAyurvedaProgress(true);
-  const [activePhase, setActivePhase] = React.useState(1);
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const [filterType, setFilterType] = React.useState('all');
-
-  const phaseStats = React.useMemo(()=>PHASE_NUMBERS_AA.map(num=>{
-    const mods=courses.filter(c=>c.phase===num);
-    const completed=mods.filter(c=>progressByModuleId[c.id]?.completed).length;
-    return {num,total:mods.length,completed};
-  }),[courses,progressByModuleId]);
-
-  const phaseAccess = React.useCallback((n:number)=>hasFeatureAccess(isAdmin,tier,getCourseTierRequiredRank(PHASE_TIER_SLUG_AA[n])),[isAdmin,tier]);
-
-  const activeModules = React.useMemo(()=>{
-    const q=searchQuery.trim().toLowerCase();
-    return getPhaseModules(activePhase).filter(m=>{
-      const matchSearch=!q||m.title.toLowerCase().includes(q)||(m.subtitle||'').toLowerCase().includes(q)||(m.description||'').toLowerCase().includes(q);
-      const ct=(m.content_type||'').toLowerCase();
-      return matchSearch&&(filterType==='all'||ct===filterType);
-    });
-  },[getPhaseModules,activePhase,searchQuery,filterType]);
-
-  const currentPhaseAccess=phaseAccess(activePhase);
-  const phaseName=['','Dinacharya','Panchakarma','Marma & Nadi','Jyotish & Rasa','Akasha Transmission'][activePhase]||`Phase ${activePhase}`;
-  const color=PHASE_HEX_AA[activePhase]||'#D4AF37';
-
-  const navigate = (path: string) => { window.location.href = path; };
-
-  return (
-    <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{delay:0.2}}
-      style={{background:'rgba(255,255,255,0.02)',backdropFilter:'blur(40px)',WebkitBackdropFilter:'blur(40px)',border:'1px solid rgba(255,255,255,0.055)',borderRadius:40,overflow:'hidden'}}>
-
-      {/* Academy Hero Banner */}
-      <div style={{position:'relative',padding:'32px 28px 24px',borderBottom:'1px solid rgba(255,255,255,0.05)',overflow:'hidden'}}>
-        <div style={{position:'absolute',top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,transparent,${color}99,#D4AF37,${color}99,transparent)`}}/>
-        <div style={{position:'absolute',top:'-60px',right:'-60px',width:200,height:200,borderRadius:'50%',background:`radial-gradient(circle,${color}18,transparent 70%)`}}/>
-        <div style={{display:'flex',alignItems:'center',gap:14,marginBottom:12,position:'relative',zIndex:1}}>
-          <div style={{width:48,height:48,borderRadius:16,background:`${color}18`,border:`1px solid ${color}44`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0}}>📿</div>
-          <div>
-            <div style={{fontSize:8,fontWeight:800,letterSpacing:'0.5em',textTransform:'uppercase',color,marginBottom:3}}>✦ Agastyar Academy · 108 Sacred Modules ✦</div>
-            <h3 style={{fontSize:20,fontWeight:900,letterSpacing:'-0.04em',color:'rgba(255,255,255,0.92)',margin:0}}>Siddha Ayurveda Mastery Path</h3>
-          </div>
-        </div>
-        <p style={{fontSize:13,color:'rgba(255,255,255,0.5)',lineHeight:1.65,maxWidth:560,margin:'0 0 20px',position:'relative',zIndex:1}}>
-          The complete Agastya Samhita encoded into 108 modules across 5 sacred phases — from daily Dinacharya to Akasha transmission. Progress saves automatically.
+        <h2 style={{
+          fontFamily:"'Cormorant Garamond',serif",
+          fontSize:'1.85rem', fontWeight:600,
+          color:_white(0.96), lineHeight:1.1, margin:0,
+          textShadow:`0 0 18px ${_gold(0.35)}`,
+        }}>
+          Agastyar Academy
+        </h2>
+        <p style={{ fontSize:14, lineHeight:1.65, color:_white(0.62), marginTop:8, marginBottom:14 }}>
+          The complete path of Ayurvedic mastery — from Atma-Seed to Akasha-Infinity.
         </p>
-        {/* Stats row */}
-        <div style={{display:'flex',gap:10,flexWrap:'wrap',position:'relative',zIndex:1}}>
+
+        {/* Tier dots */}
+        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16, flexWrap:'wrap' }}>
           {[
-            {label:'Completed',val:stats.completedModules,icon:'✓'},
-            {label:'Phase',val:stats.currentPhase,icon:'◈'},
-            {label:'Hours',val:Math.round(stats.totalMinutesLearned/60),icon:'⏱'},
-            {label:'Progress',val:`${stats.completionPercent}%`,icon:'◉'},
-          ].map(s=>(
-            <div key={s.label} style={{padding:'8px 14px',borderRadius:16,background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',display:'flex',alignItems:'center',gap:8}}>
-              <span style={{fontSize:12,color}}>{s.icon}</span>
-              <div>
-                <div style={{fontSize:14,fontWeight:900,color:'rgba(255,255,255,0.9)',letterSpacing:'-0.03em'}}>{s.val}</div>
-                <div style={{fontSize:8,fontWeight:800,letterSpacing:'0.35em',textTransform:'uppercase',color:'rgba(255,255,255,0.3)'}}>{s.label}</div>
-              </div>
+            { label:'Free',   color:_white(0.55) },
+            { label:'Prana',  color:_green(0.85) },
+            { label:'Siddha', color:_cyan(0.9) },
+            { label:'Akasha', color:_gold(0.95) },
+          ].map(t=>(
+            <div key={t.label} style={{ display:'flex', alignItems:'center', gap:5 }}>
+              <span style={{ width:6, height:6, borderRadius:'50%', background:t.color, boxShadow:`0 0 8px ${t.color}` }}/>
+              <span style={{ fontSize:8, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase', color:t.color }}>{t.label}</span>
             </div>
           ))}
         </div>
-      </div>
 
-      {/* Phase Tabs */}
-      <div style={{padding:'20px 28px 0',overflowX:'auto'}}>
-        <div style={{display:'flex',gap:8,minWidth:'max-content',paddingBottom:4}}>
-          {phaseStats.map(({num,total,completed})=>{
-            const c2=PHASE_HEX_AA[num];
-            const isActive=activePhase===num;
-            const hasAcc=phaseAccess(num);
-            const pct=total>0?(completed/total)*100:0;
-            return (
-              <button key={num} onClick={()=>setActivePhase(num)}
-                style={{
-                  padding:'12px 16px',borderRadius:24,border:`1px solid ${isActive?c2+'55':'rgba(255,255,255,0.07)'}`,
-                  background:isActive?`rgba(${phaseHexRgb(c2)},0.1)`:'rgba(255,255,255,0.02)',
-                  cursor:'pointer',minWidth:130,textAlign:'left',position:'relative',overflow:'hidden',
-                  fontFamily:"'Plus Jakarta Sans',sans-serif",transition:'all 0.2s',
-                }}>
-                <div style={{marginBottom:6,opacity:0.85}}><PhaseGlyphAA phase={num}/></div>
-                <div style={{fontSize:7,fontWeight:800,letterSpacing:'0.38em',textTransform:'uppercase',color:c2,marginBottom:2}}>Phase {num} · {!hasAcc?'🔒 ':''}{num===1?'Free':num===2?'Prana Flow':num<=3?'Siddha Quantum':'Akasha ∞'}</div>
-                <div style={{fontSize:12,fontWeight:900,color:'rgba(255,255,255,0.85)'}}>{phaseName}</div>
-                <div style={{marginTop:8,height:2,borderRadius:1,background:'rgba(255,255,255,0.06)',overflow:'hidden'}}>
-                  <div style={{height:'100%',borderRadius:1,background:hasAcc?c2:'rgba(255,255,255,0.1)',width:`${hasAcc?pct:0}%`,transition:'width 0.7s'}}/>
-                </div>
-                <div style={{marginTop:4,fontSize:9,color:'rgba(255,255,255,0.3)'}}>{hasAcc?`${completed}/${total} done`:`${total} modules`}</div>
-              </button>
-            );
-          })}
+        {/* CTA button */}
+        <div style={{
+          display:'inline-flex', alignItems:'center', gap:8,
+          padding:'10px 18px', borderRadius:999,
+          background:`linear-gradient(135deg, ${_gold(0.25)}, ${_gold(0.08)})`,
+          border:`1px solid ${_gold(0.5)}`,
+          color:_gold(0.98),
+          fontFamily:"'Plus Jakarta Sans',sans-serif",
+          fontSize:10, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase',
+        }}>
+          Enter Academy →
         </div>
-      </div>
-
-      {/* Search + Filter */}
-      <div style={{padding:'16px 28px',display:'flex',gap:10,flexWrap:'wrap',alignItems:'center'}}>
-        <div style={{display:'flex',alignItems:'center',gap:8,padding:'8px 14px',borderRadius:16,background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',flex:1,minWidth:180}}>
-          <Search style={{width:13,height:13,color:'rgba(255,255,255,0.3)',flexShrink:0}}/>
-          <input value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="Search modules..."
-            style={{border:'none',background:'transparent',color:'rgba(255,255,255,0.8)',fontSize:12,outline:'none',width:'100%',fontFamily:"'Plus Jakarta Sans',sans-serif"}}/>
-        </div>
-        <select value={filterType} onChange={e=>setFilterType(e.target.value)}
-          style={{padding:'8px 12px',borderRadius:16,border:'1px solid rgba(255,255,255,0.08)',background:'#0a0a0a',color:'rgba(255,255,255,0.6)',fontSize:11,outline:'none',fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
-          <option value="all">All Types</option>
-          <option value="video">Video</option>
-          <option value="audio">Audio</option>
-          <option value="pdf">PDF</option>
-          <option value="interactive">Interactive</option>
-          <option value="live">Live</option>
-        </select>
-        <button onClick={()=>void refresh()} style={{padding:'8px 14px',borderRadius:16,border:'1px solid rgba(255,255,255,0.08)',background:'transparent',color:'rgba(255,255,255,0.4)',fontSize:9,fontWeight:800,letterSpacing:'0.2em',textTransform:'uppercase',cursor:'pointer',fontFamily:"'Plus Jakarta Sans',sans-serif"}}>Refresh</button>
-      </div>
-
-      {/* Modules grid */}
-      <div style={{padding:'0 28px 28px'}}>
-        {loadError&&<div style={{marginBottom:16,padding:'12px 16px',borderRadius:16,border:'1px solid rgba(239,68,68,0.25)',background:'rgba(239,68,68,0.1)',fontSize:12,color:'rgba(252,165,165,0.9)'}}>{loadError}</div>}
-        {loadingData&&courses.length===0?(
-          <div style={{display:'flex',justifyContent:'center',padding:'48px 0'}}>
-            <div style={{width:36,height:36,borderRadius:'50%',border:'2px solid rgba(212,175,55,0.2)',borderTop:'2px solid #D4AF37',animation:'sqiSpin 1s linear infinite'}}/>
-          </div>
-        ):!currentPhaseAccess?(
-          <div style={{padding:'48px 24px',borderRadius:28,border:`1px solid ${color}44`,background:'rgba(255,255,255,0.02)',textAlign:'center',position:'relative',overflow:'hidden'}}>
-            <div style={{position:'absolute',inset:0,background:`radial-gradient(ellipse at center,${color}14,transparent 72%)`,pointerEvents:'none'}}/>
-            <div style={{position:'relative',zIndex:1}}>
-              <Lock style={{width:44,height:44,color,margin:'0 auto 16px',opacity:0.5}}/>
-              <div style={{fontSize:8,fontWeight:800,letterSpacing:'0.45em',textTransform:'uppercase',color,marginBottom:8}}>Requires {activePhase<=2?'Prana Flow ◈':activePhase===3?'Siddha Quantum ◉':'Akasha Infinity ∞'}</div>
-              <div style={{fontSize:20,fontWeight:900,color:'rgba(255,255,255,0.9)',marginBottom:8}}>{phaseName}</div>
-              <div style={{fontSize:13,color:'rgba(255,255,255,0.45)',marginBottom:24}}>{courses.filter(c=>c.phase===activePhase).length} sacred modules await your initiation</div>
-              <button onClick={()=>navigate(getSalesPageForRank(getCourseTierRequiredRank(PHASE_TIER_SLUG_AA[activePhase])))}
-                style={{padding:'12px 32px',borderRadius:999,background:`linear-gradient(135deg,${color},${color}bb)`,color:'#050505',fontSize:11,fontWeight:900,letterSpacing:'0.22em',textTransform:'uppercase',border:'none',cursor:'pointer',boxShadow:`0 0 28px ${color}33`,fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
-                Unlock This Phase
-              </button>
-            </div>
-          </div>
-        ):activeModules.length===0?(
-          <div style={{padding:'48px 16px',borderRadius:24,border:'1px solid rgba(255,255,255,0.06)',textAlign:'center',color:'rgba(255,255,255,0.3)'}}>
-            <BookOpen style={{width:36,height:36,margin:'0 auto 12px',opacity:0.3}}/>
-            <p style={{fontSize:13}}>{courses.length===0?'Loading Agastya Samhita…':'No modules match your search.'}</p>
-          </div>
-        ):(
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:14}}>
-            {activeModules.map(m=>(
-              <HubModuleCardAA key={m.id} module={m} isAdmin={isAdmin} tier={tier} progress={progressByModuleId[m.id]}
-                onNavigateUpgrade={href=>navigate(href)}/>
-            ))}
-          </div>
-        )}
-
-        {/* Closing */}
-        <div style={{marginTop:32,padding:'28px',borderRadius:28,border:'1px solid rgba(212,175,55,0.15)',background:'rgba(212,175,55,0.04)',textAlign:'center'}}>
-          <GraduationCap style={{width:28,height:28,color:'rgba(212,175,55,0.6)',margin:'0 auto 12px'}}/>
-          <p style={{fontSize:8,fontWeight:800,letterSpacing:'0.45em',textTransform:'uppercase',color:'rgba(212,175,55,0.7)',marginBottom:10}}>✦ Agastya Muni · Father of Siddha Medicine ✦</p>
-          <p style={{fontSize:14,fontStyle:'italic',lineHeight:1.7,color:'rgba(255,255,255,0.65)',maxWidth:480,margin:'0 auto 8px'}}>"The medicine that heals the body also heals the soul. The Siddha path is not a discipline — it is a remembering."</p>
-          <p style={{fontSize:9,fontWeight:800,letterSpacing:'0.3em',textTransform:'uppercase',color:'rgba(212,175,55,0.5)'}}>Agastya Samhita · SQI Intelligence 2050</p>
-        </div>
-      </div>
+      </motion.div>
     </motion.div>
   );
 };
