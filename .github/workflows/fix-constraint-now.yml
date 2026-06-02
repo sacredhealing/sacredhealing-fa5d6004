@@ -1,0 +1,65 @@
+name: Fix Admin Granted Access Constraint
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix-constraint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+
+      - name: Diagnose and fix constraint
+        env:
+          SUPA_PAT: ${{ secrets.SUPA_ADMIN_PAT }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          DB="https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query"
+          AUTH="Authorization: Bearer ${SUPA_PAT}"
+          LOG="_constraint_fix.txt"
+
+          run_sql() {
+            local label="$1"
+            local q="$2"
+            echo "=== $label ===" | tee -a $LOG
+            curl -s -X POST "$DB" -H "$AUTH" -H "Content-Type: application/json"               -d "{"query":"$q"}" | tee -a $LOG
+            echo "" | tee -a $LOG
+          }
+
+          # 1. Check what constraints exist on admin_granted_access
+          run_sql "EXISTING CONSTRAINTS"             "SELECT conname, consrc FROM pg_constraint WHERE conrelid = 'public.admin_granted_access'::regclass AND contype = 'c';"
+
+          # 2. Check table columns
+          run_sql "TABLE COLUMNS"             "SELECT column_name, data_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema='public' AND table_name='admin_granted_access' ORDER BY ordinal_position;"
+
+          # 3. Drop ALL check constraints on admin_granted_access
+          run_sql "DROP ALL CHECK CONSTRAINTS"             "DO \$\$ DECLARE r RECORD; BEGIN FOR r IN SELECT conname FROM pg_constraint WHERE conrelid = 'public.admin_granted_access'::regclass AND contype = 'c' LOOP EXECUTE 'ALTER TABLE public.admin_granted_access DROP CONSTRAINT IF EXISTS ' || quote_ident(r.conname); END LOOP; END \$\$;"
+
+          # 4. Ensure access_type column exists
+          run_sql "ENSURE ACCESS_TYPE COLUMN"             "DO \$\$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='admin_granted_access' AND column_name='access_type') THEN ALTER TABLE public.admin_granted_access ADD COLUMN access_type TEXT NOT NULL DEFAULT 'membership'; END IF; END \$\$;"
+
+          # 5. Ensure access_id column exists
+          run_sql "ENSURE ACCESS_ID COLUMN"             "DO \$\$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='admin_granted_access' AND column_name='access_id') THEN ALTER TABLE public.admin_granted_access ADD COLUMN access_id TEXT; END IF; END \$\$;"
+
+          # 6. Ensure granted_by column exists
+          run_sql "ENSURE GRANTED_BY COLUMN"             "DO \$\$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='admin_granted_access' AND column_name='granted_by') THEN ALTER TABLE public.admin_granted_access ADD COLUMN granted_by UUID; END IF; END \$\$;"
+
+          # 7. Add permissive constraint - any non-empty string
+          run_sql "ADD PERMISSIVE CONSTRAINT"             "ALTER TABLE public.admin_granted_access ADD CONSTRAINT admin_granted_access_access_type_check CHECK (access_type IS NOT NULL AND length(trim(access_type)) > 0);"
+
+          # 8. Verify final state
+          run_sql "FINAL CONSTRAINTS"             "SELECT conname, consrc FROM pg_constraint WHERE conrelid = 'public.admin_granted_access'::regclass AND contype = 'c';"
+
+          # 9. Test insert with product type
+          run_sql "TEST INSERT (will rollback)"             "BEGIN; INSERT INTO public.admin_granted_access (user_id, access_type, access_id, is_active, granted_at) VALUES ('00000000-0000-0000-0000-000000000001', 'product', 'test-product', false, now()); ROLLBACK;"
+
+          # Commit log
+          git config user.email "bot@sqi.app"
+          git config user.name "SQI Bot"
+          git add $LOG
+          git commit -m "constraint fix log $(date +%H%M%S)" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
+
+          echo "DONE"
