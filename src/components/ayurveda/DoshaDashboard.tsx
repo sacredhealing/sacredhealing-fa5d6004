@@ -544,6 +544,107 @@ const EnhancedHerbarium: React.FC<{ herbs: string[]; dosha: string }> = ({ herbs
   );
 };
 
+
+// ── JYOTISH PLANETARY DOSHA ALIGNMENT ─────────────────────────────────────────
+const JYOTISH_DATA: Record<string, {
+  planet: string; sign: string; nakshatra: string; influence: string;
+  remedy: string; mantra: string; gem: string; color: string; icon: string;
+}> = {
+  vata: {
+    planet: 'Saturn & Rahu', sign: 'Aquarius / Virgo', nakshatra: 'Ardra · Swati · Shatabhisha',
+    influence: 'Saturn amplifies Vata — irregular rhythms, anxiety, dispersed prana. Ground through routine and warmth.',
+    remedy: 'Sesame oil Abhyanga at sunrise. Blue sapphire or Hessonite worn on Saturday.',
+    mantra: 'Om Shanaishcharaya Namah — 108x every Saturday at dawn',
+    gem: 'Blue Sapphire / Hessonite', color: '#93C5FD', icon: '🪐',
+  },
+  pitta: {
+    planet: 'Sun & Mars', sign: 'Aries / Leo / Scorpio', nakshatra: 'Krittika · Vishakha · Jyeshtha',
+    influence: 'Sun–Mars fire intensifies Pitta — perfectionism, inflammation, liver heat. Cool through lunar practices.',
+    remedy: 'Moonlight meditation. Pearl or moonstone worn on Monday. Rose water face wash.',
+    mantra: 'Om Chandraya Namah — 108x every Monday at moonrise',
+    gem: 'Pearl / Moonstone', color: '#F59E0B', icon: '☀️',
+  },
+  kapha: {
+    planet: 'Jupiter & Moon', sign: 'Taurus / Cancer / Pisces', nakshatra: 'Rohini · Punarvasu · Uttara Bhadra',
+    influence: 'Jupiter–Moon abundance deepens Kapha — attachment, sluggishness, water retention. Activate through dynamic fire.',
+    remedy: 'Sun salutations at sunrise. Yellow sapphire or red coral. Dry brushing before shower.',
+    mantra: 'Om Suryaya Namah — 108x every Sunday at sunrise',
+    gem: 'Yellow Sapphire / Red Coral', color: '#34D399', icon: '🌕',
+  },
+};
+
+const JyotishPlanetaryCard: React.FC<{ dosha: string; isPremium: boolean }> = ({ dosha, isPremium }) => {
+  const d = dosha?.toLowerCase() || 'vata';
+  const data = JYOTISH_DATA[d] || JYOTISH_DATA.vata;
+  const [expanded, setExpanded] = useState(false);
+  const accent = data.color;
+
+  if (!isPremium) return (
+    <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }}
+      style={{ background:'rgba(255,255,255,0.02)', backdropFilter:'blur(40px)', border:'1px solid rgba(255,255,255,0.05)', borderRadius:40, padding:'28px 22px', textAlign:'center' }}>
+      <div style={{ fontSize:32, marginBottom:12 }}>🔮</div>
+      <div style={{ fontSize:9, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase', color:'rgba(212,175,55,0.6)', marginBottom:8 }}>Jyotish · Planetary Alignment</div>
+      <p style={{ fontSize:13, color:'rgba(255,255,255,0.35)', marginBottom:0 }}>Available from Siddha Quantum tier — unlock your planetary dosha alignment.</p>
+    </motion.div>
+  );
+
+  return (
+    <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }}
+      style={{ background:`linear-gradient(135deg,${accent}09,${accent}04)`, backdropFilter:'blur(40px)', WebkitBackdropFilter:'blur(40px)', border:`1px solid ${accent}45`, borderRadius:40, padding:'28px 22px', position:'relative', overflow:'hidden' }}>
+      <div style={{ position:'absolute', top:0, left:'10%', right:'10%', height:1, background:`linear-gradient(90deg,transparent,${accent}70,transparent)` }} />
+      <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:20 }}>
+        <div style={{ width:46, height:46, borderRadius:16, background:`${accent}18`, border:`1px solid ${accent}35`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22 }}>{data.icon}</div>
+        <div>
+          <div style={{ fontSize:9, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase', color:accent, opacity:0.75, marginBottom:3 }}>✦ Jyotish · Planetary Dosha</div>
+          <div style={{ fontSize:17, fontWeight:900, letterSpacing:'-0.04em', color:'rgba(255,255,255,0.9)' }}>Vedic Sky Blueprint</div>
+        </div>
+      </div>
+
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:16 }}>
+        {[
+          { label:'Ruling Planet', value:data.planet },
+          { label:'Rashi / Sign', value:data.sign },
+          { label:'Nakshatra', value:data.nakshatra },
+          { label:'Sacred Gem', value:data.gem },
+        ].map((item,i) => (
+          <div key={i} style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:16, padding:'12px 14px' }}>
+            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase', color:accent, opacity:0.65, marginBottom:4 }}>{item.label}</div>
+            <div style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.82)', lineHeight:1.4 }}>{item.value}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ background:`${accent}08`, border:`1px solid ${accent}22`, borderRadius:18, padding:'14px 16px', marginBottom:12 }}>
+        <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase', color:accent, opacity:0.7, marginBottom:6 }}>✦ Planetary Influence</div>
+        <p style={{ fontSize:13, lineHeight:1.65, color:'rgba(255,255,255,0.65)', margin:0 }}>{data.influence}</p>
+      </div>
+
+      <motion.button whileTap={{ scale:0.97 }} onClick={() => setExpanded(!expanded)}
+        style={{ width:'100%', background:'transparent', border:`1px solid ${accent}30`, borderRadius:14, padding:'10px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer', color:accent, fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:11, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' }}>
+        Planetary Remedy & Mantra
+        <ChevronDown style={{ width:14, height:14, transform:expanded?'rotate(180deg)':'none', transition:'transform 0.3s' }} />
+      </motion.button>
+
+      <AnimatePresence>
+        {expanded && (
+          <motion.div initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:'auto' }} exit={{ opacity:0, height:0 }} style={{ overflow:'hidden' }}>
+            <div style={{ paddingTop:12, display:'flex', flexDirection:'column', gap:10 }}>
+              <div style={{ background:'rgba(255,255,255,0.03)', borderRadius:16, padding:'14px 16px' }}>
+                <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase', color:accent, opacity:0.6, marginBottom:6 }}>💎 Sacred Remedy</div>
+                <p style={{ fontSize:13, lineHeight:1.65, color:'rgba(255,255,255,0.65)', margin:0 }}>{data.remedy}</p>
+              </div>
+              <div style={{ background:`${accent}08`, border:`1px solid ${accent}22`, borderRadius:16, padding:'14px 16px' }}>
+                <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase', color:accent, opacity:0.6, marginBottom:6 }}>🕉 Sacred Mantra</div>
+                <p style={{ fontSize:13, lineHeight:1.65, fontStyle:'italic', color:accent, margin:0, opacity:0.9 }}>{data.mantra}</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+};
+
 // ── MAIN COMPONENT ────────────────────────────────────────────────────────────
 interface DoshaDashboardProps {
   profile: AyurvedaUserProfile;
@@ -726,6 +827,9 @@ export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
 
       {/* ── SCALAR WAVE FREQUENCIES ── */}
       <ScalarWaveModule dosha={primary} isPremium={isSiddhaPlus} />
+
+      {/* ── JYOTISH PLANETARY ALIGNMENT ── */}
+      <JyotishPlanetaryCard dosha={primary} isPremium={isSiddhaPlus} />
 
       {/* ── AGASTYA WISDOM ── */}
       <AgastyaWisdomModule dosha={primary} isPremium={isSiddhaPlus} />
