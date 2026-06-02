@@ -15,24 +15,19 @@ jobs:
           version: latest
 
       - name: Deploy seed-academy function
-        run: |
-          supabase functions deploy seed-academy \
-            --project-ref fjdzhrdpioxdeyyfogep \
-            --no-verify-jwt
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-
-      - name: Invoke seed-academy function
         run: |
-          curl -s -X POST \
+          supabase functions deploy seed-academy --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt
+
+      - name: Invoke seed-academy and verify
+        env:
+          SK: ${{ secrets.NEW_SERVICE_ROLE }}
+        run: |
+          RESP=$(curl -s -X POST \
             "https://fjdzhrdpioxdeyyfogep.supabase.co/functions/v1/seed-academy" \
-            -H "Authorization: Bearer ${{ secrets.NEW_SERVICE_ROLE }}" \
+            -H "Authorization: Bearer $SK" \
             -H "Content-Type: application/json" \
-            | python3 -c "
-import sys, json
-d = json.loads(sys.stdin.read())
-print('Total modules:', d.get('total'))
-print('Tiers:', d.get('tiers'))
-print('Phases:', d.get('phases'))
-if d.get('error'): print('ERROR:', d['error'])
-"
+            --max-time 120)
+          echo "Response: $RESP"
+
