@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_ADMIN_PAT }}
-      - name: Check constraint
+      - name: Deep diagnose
         env:
           SUPA_PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
@@ -19,20 +19,35 @@ jobs:
           AUTH="Authorization: Bearer ${SUPA_PAT}"
           LOG="_diag_constraint.txt"
 
-          echo "=== CONSTRAINTS ===" | tee $LOG
-          curl -s -X POST "$DB" -H "$AUTH" -H "Content-Type: application/json" \
-            -d '{"query":"SELECT conname, pg_get_constraintdef(oid) as def FROM pg_constraint WHERE conrelid = '\''public.admin_granted_access'\''::regclass AND contype = '\''c'\'';"}' \
-            | tee -a $LOG
-          echo "" | tee -a $LOG
+          run_sql() {
+            local label="$1"
+            local query="$2"
+            echo "=== $label ===" | tee -a $LOG
+            curl -s -X POST "$DB" -H "$AUTH" -H "Content-Type: application/json" \
+              -d "{\"query\":\"$query\"}" | tee -a $LOG
+            echo "" | tee -a $LOG
+          }
 
-          echo "=== COLUMNS ===" | tee -a $LOG
-          curl -s -X POST "$DB" -H "$AUTH" -H "Content-Type: application/json" \
-            -d '{"query":"SELECT column_name, data_type FROM information_schema.columns WHERE table_schema='\''public'\'' AND table_name='\''admin_granted_access'\'' ORDER BY ordinal_position;"}' \
-            | tee -a $LOG
-          echo "" | tee -a $LOG
+          echo "START $(date)" > $LOG
+
+          run_sql "CONSTRAINTS" "SELECT conname, pg_get_constraintdef(oid) as def FROM pg_constraint WHERE conrelid = 'public.admin_granted_access'::regclass;"
+
+          run_sql "RLS_POLICIES" "SELECT policyname, cmd, qual, with_check FROM pg_policies WHERE tablename = 'admin_granted_access';"
+
+          run_sql "RLS_ENABLED" "SELECT relname, relrowsecurity FROM pg_class WHERE relname = 'admin_granted_access';"
+
+          run_sql "TABLE_GRANTS" "SELECT grantee, privilege_type FROM information_schema.role_table_grants WHERE table_name = 'admin_granted_access' AND table_schema = 'public';"
+
+          run_sql "TEST_INSERT_MEMBERSHIP" "INSERT INTO public.admin_granted_access (user_id, access_type, access_id, is_active, granted_at) VALUES ('bd0b21c9-577a-450b-bb1e-21c9d0423f17', 'membership', 'siddha-quantum', false, now()) RETURNING id;"
+
+          run_sql "TEST_INSERT_PRODUCT" "INSERT INTO public.admin_granted_access (user_id, access_type, access_id, is_active, granted_at) VALUES ('bd0b21c9-577a-450b-bb1e-21c9d0423f17', 'product', 'digital-nadi', false, now()) RETURNING id;"
+
+          run_sql "CLEANUP" "DELETE FROM public.admin_granted_access WHERE is_active = false AND user_id = 'bd0b21c9-577a-450b-bb1e-21c9d0423f17';"
+
+          echo "END $(date)" | tee -a $LOG
 
           git config user.email "bot@sqi.app"
           git config user.name "SQI Bot"
           git add $LOG
-          git commit -m "diag constraint $(date +%H%M%S)" || true
+          git commit -m "deep diag $(date +%H%M%S)" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
