@@ -195,7 +195,7 @@ export const AyurvedaLexicon: React.FC<AyurvedaLexiconProps> = ({ isOpen, onClos
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           style={{
-            position: 'fixed', inset: 0, zIndex: 1000000,
+            position: 'fixed', inset: 0, zIndex: 2147483647,
             display: 'flex', alignItems: 'stretch', justifyContent: 'center',
             padding: 14, fontFamily: "'Plus Jakarta Sans', sans-serif",
           }}
