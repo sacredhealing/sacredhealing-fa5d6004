@@ -1,0 +1,70 @@
+name: Fix Constraint Direct
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+
+      - name: Write fix script
+        run: |
+          cat > /tmp/fix.py << 'PYEOF'
+import os, json, urllib.request, urllib.error
+
+pat = os.environ["SUPA_PAT"]
+url = "https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query"
+headers = {"Authorization": "Bearer " + pat, "Content-Type": "application/json"}
+log = []
+
+def run_sql(label, sql):
+    print("\n=== " + label + " ===")
+    log.append("\n=== " + label + " ===")
+    data = json.dumps({"query": sql}).encode()
+    req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+    try:
+        with urllib.request.urlopen(req) as resp:
+            result = resp.read().decode()
+            print(result)
+            log.append(result)
+            return result
+    except urllib.error.HTTPError as e:
+        err = e.read().decode()
+        print("ERROR " + str(e.code) + ": " + err)
+        log.append("ERROR " + str(e.code) + ": " + err)
+        return None
+
+run_sql("1_CURRENT_CONSTRAINTS", "SELECT conname, pg_get_constraintdef(oid) as def FROM pg_constraint WHERE conrelid = 'public.admin_granted_access'::regclass AND contype = 'c';")
+
+run_sql("2_TABLE_COLUMNS", "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema='public' AND table_name='admin_granted_access' ORDER BY ordinal_position;")
+
+run_sql("3_DROP_ALL_CHECKS", """DO $$ DECLARE r RECORD; BEGIN FOR r IN SELECT conname FROM pg_constraint WHERE conrelid = 'public.admin_granted_access'::regclass AND contype = 'c' LOOP EXECUTE 'ALTER TABLE public.admin_granted_access DROP CONSTRAINT IF EXISTS ' || quote_ident(r.conname); RAISE NOTICE 'Dropped: %', r.conname; END LOOP; END $$;""")
+
+run_sql("4_ENSURE_COLUMNS", """DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='admin_granted_access' AND column_name='access_type') THEN ALTER TABLE public.admin_granted_access ADD COLUMN access_type TEXT NOT NULL DEFAULT 'membership'; END IF; IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='admin_granted_access' AND column_name='access_id') THEN ALTER TABLE public.admin_granted_access ADD COLUMN access_id TEXT; END IF; IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='admin_granted_access' AND column_name='granted_by') THEN ALTER TABLE public.admin_granted_access ADD COLUMN granted_by UUID; END IF; END $$;""")
+
+run_sql("5_ADD_PERMISSIVE_CONSTRAINT", "ALTER TABLE public.admin_granted_access ADD CONSTRAINT admin_granted_access_access_type_check CHECK (access_type IS NOT NULL AND length(trim(access_type)) > 0);")
+
+run_sql("6_VERIFY", "SELECT conname, pg_get_constraintdef(oid) as def FROM pg_constraint WHERE conrelid = 'public.admin_granted_access'::regclass AND contype = 'c';")
+
+run_sql("7_TEST_PRODUCT", """DO $$ BEGIN INSERT INTO public.admin_granted_access (user_id, access_type, access_id, is_active, granted_at) VALUES ('bd0b21c9-577a-450b-bb1e-21c9d0423f17', 'product', 'test-product-delete-me', false, now()); DELETE FROM public.admin_granted_access WHERE access_id = 'test-product-delete-me'; RAISE NOTICE 'TEST PASSED'; END $$;""")
+
+with open("_constraint_fix.txt", "w") as f:
+    f.write("\n".join(log))
+print("DONE")
+PYEOF
+
+      - name: Run fix script
+        env:
+          SUPA_PAT: ${{ secrets.SUPA_ADMIN_PAT }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          python3 /tmp/fix.py
+          git config user.email "bot@sqi.app"
+          git config user.name "SQI Bot"
+          git add _constraint_fix.txt
+          git commit -m "constraint fix log" || echo "nothing to commit"
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
