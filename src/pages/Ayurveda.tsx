@@ -1,4 +1,4 @@
-// cache-bust: 20260602-162724
+// cache-bust: 20260602-163606
 import React from 'react';
 import { AyurvedaTool } from '@/components/ayurveda/AyurvedaTool';
 import { useAuth } from '@/hooks/useAuth';
