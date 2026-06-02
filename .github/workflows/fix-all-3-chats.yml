@@ -21,7 +21,7 @@ jobs:
         with:
           version: latest
 
-      - name: Set GEMINI_API_KEY secret on Supabase
+      - name: Set all secrets on Supabase
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
@@ -29,7 +29,12 @@ jobs:
             -X POST "https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/secrets" \
             -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
             -H "Content-Type: application/json" \
-            -d '[{"name":"GEMINI_API_KEY","value":"${{ secrets.GEMINI_API_KEY }}"}]')
+            -d '[
+              {"name":"GEMINI_API_KEY","value":"${{ secrets.GEMINI_API_KEY }}"},
+              {"name":"SUPABASE_URL","value":"https://fjdzhrdpioxdeyyfogep.supabase.co"},
+              {"name":"SUPABASE_SERVICE_ROLE_KEY","value":"${{ secrets.NEW_SERVICE_ROLE }}"},
+              {"name":"SUPABASE_ANON_KEY","value":"${{ secrets.VITE_SUPABASE_ANON_KEY }}"}
+            ]')
           echo "Secret status: $STATUS"
           cat /tmp/resp.json
 
