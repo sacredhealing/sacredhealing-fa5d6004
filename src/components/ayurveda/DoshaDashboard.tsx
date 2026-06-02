@@ -810,6 +810,21 @@ export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
         </button>
       </motion.div>
 
+      {/* ── DAILY INTELLIGENCE ── */}
+      <DailyIntelligence dosha={dosha} profile={profile} />
+
+      {/* ── SCALAR WAVE FREQUENCIES ── */}
+      <ScalarWaveModule dosha={primary} isPremium={isPremium} />
+
+      {/* ── AGASTYA WISDOM ── */}
+      <AgastyaWisdomModule dosha={primary} isPremium={isPremium} />
+
+      {/* ── ENHANCED HERBARIUM ── */}
+      <EnhancedHerbarium herbs={dosha.guidelines?.herbs || []} dosha={primary} />
+
+      {/* ── AGASTYAR ACADEMY ── */}
+      <AgastyarAcademy dosha={primary} isPremium={isPremium} />
+
       {/* ── AGASTYA CONSULT CTA — MOST PROMINENT ── */}
       <AgastyaConsultCard dosha={dosha.primary} onOpenChat={onOpenChat || (() => {})} userName={profile.name} />
     </div>
