@@ -825,8 +825,7 @@ export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
       {/* ── AGASTYAR ACADEMY ── */}
       <AgastyarAcademy dosha={primary} isPremium={isPremium} />
 
-      {/* ── AGASTYA CONSULT CTA — MOST PROMINENT ── */}
-      <AgastyaConsultCard dosha={dosha.primary} onOpenChat={onOpenChat || (() => {})} userName={profile.name} />
+
     </div>
   );
 };
