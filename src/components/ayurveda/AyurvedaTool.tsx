@@ -26,6 +26,8 @@ const GLOBAL_CSS = `
 @keyframes sqiTicker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 @keyframes sqiGlow{0%,100%{box-shadow:0 0 20px rgba(255,140,0,0.2),0 0 40px rgba(212,175,55,0.1)}50%{box-shadow:0 0 40px rgba(255,140,0,0.45),0 0 80px rgba(212,175,55,0.22)}}
 @keyframes sqiSpin{to{transform:rotate(360deg)}}
+.sqi-consult-inner{display:flex;align-items:flex-start;gap:16px}
+@media(max-width:480px){.sqi-consult-inner{flex-direction:column;align-items:center;text-align:center}}
 `;
 
 const ParticleField = React.memo(() => {
@@ -205,7 +207,7 @@ const AgastyChatBanner = ({
       <motion.div style={{position:'absolute',top:0,bottom:0,width:80,background:'linear-gradient(90deg,transparent,rgba(212,175,55,0.12),transparent)',left:'-80px'}}
         animate={{left:['-80px','110%']}} transition={{duration:4,repeat:Infinity,ease:'easeInOut',repeatDelay:3}}/>
     )}
-    <div style={{display:'flex',alignItems:'flex-start',gap:16}}>
+    <div className="sqi-consult-inner">
       <motion.div
         animate={canChat ? {boxShadow:['0 0 20px rgba(212,175,55,0.25)','0 0 40px rgba(212,175,55,0.5)','0 0 20px rgba(212,175,55,0.25)']} : {}}
         transition={{duration:3,repeat:Infinity}}
