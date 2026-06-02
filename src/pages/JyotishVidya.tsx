@@ -82,12 +82,12 @@ const JyotishVidya: React.FC = () => {
   // Load existing birth data from profiles
   useEffect(() => {
     if (!user?.id) return;
-    supabase
+    (supabase as any)
       .from('profiles')
       .select('birth_date, birth_time, birth_place, lagna, moon_sign, current_dasha')
       .eq('id', user.id)
-      .single()
-      .then(({ data }) => {
+      .maybeSingle()
+      .then(({ data }: { data: any }) => {
         if (data) setBirthData({
           birth_date:    data.birth_date    ?? '',
           birth_time:    data.birth_time    ?? '',
