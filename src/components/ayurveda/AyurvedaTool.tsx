@@ -254,7 +254,7 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({ membershipLevel = 'F
   const { t } = useTranslation();
   const effectiveMembership = isAdmin ? 'LIFETIME' as AyurvedaMembershipLevel : membershipLevel;
   const [membership, setMembership] = useState<AyurvedaMembershipLevel>(effectiveMembership);
-  const [activeTab, setActiveTab] = useState<'home'|'assessment'|'chat'|'chat-inline'>('home');
+  const [activeTab, setActiveTab] = useState<'home'|'assessment'|'chat'>('home');
   const [showChat, setShowChat] = useState(false);
 
   React.useEffect(() => { setMembership(isAdmin ? 'LIFETIME' as AyurvedaMembershipLevel : membershipLevel); }, [isAdmin, membershipLevel]);
@@ -277,7 +277,7 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({ membershipLevel = 'F
   const handleFetchGuidance = useCallback(() => { if (userProfile) getDailyGuidance(userProfile); }, [userProfile, getDailyGuidance]);
   const handleRestart = async () => { await reset(); setActiveTab('home'); };
   const handleOpenChat = () => {
-    if (canChat) setActiveTab('chat-inline');
+    if (canChat) setShowChat(true);
     else setActiveTab('chat');
   };
 
@@ -408,37 +408,6 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({ membershipLevel = 'F
       case 'assessment':
         return <DoshaQuiz onComplete={handleAssessmentComplete} isLoading={isLoading}/>;
 
-      case 'chat-inline':
-        return (
-          <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 14,
-              padding: '18px 20px 14px',
-              borderBottom: '1px solid rgba(212,175,55,0.1)',
-              background: 'rgba(5,5,5,0.92)',
-              backdropFilter: 'blur(20px)',
-              position: 'sticky', top: 0, zIndex: 10,
-            }}>
-              <button type="button" onClick={() => setActiveTab('home')} style={{
-                background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: 12, color: 'rgba(255,255,255,0.5)', padding: '7px 14px',
-                fontSize: 12, fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 700, cursor: 'pointer',
-              }}>← Back</button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1 }}>
-                <motion.div animate={{ boxShadow: ['0 0 12px rgba(255,140,0,0.2)','0 0 28px rgba(255,140,0,0.5)','0 0 12px rgba(255,140,0,0.2)'] }} transition={{ duration: 3, repeat: Infinity }} style={{ fontSize: 22 }}>🔱</motion.div>
-                <div>
-                  <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(255,140,0,0.7)', marginBottom: 2 }}>Divine Physician · Agastya Samhita</div>
-                  <div style={{ fontSize: 15, fontWeight: 900, letterSpacing: '-0.04em', color: '#D4AF37', fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic' }}>Agastya Muni</div>
-                </div>
-              </div>
-              <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.3)' }}>528 Hz · Active</div>
-            </div>
-            <div style={{ flex: 1, position: 'relative' }}>
-              <AyurvedaChatConsultation profile={userProfile} dosha={doshaProfile} onClose={() => setActiveTab('home')} inlineMode={true} />
-            </div>
-          </div>
-        );
-
       case 'chat':
         // Only FREE users land here — everyone else goes directly to showChat modal
         return (
@@ -455,12 +424,6 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({ membershipLevel = 'F
     }
   };
 
-  const navTabs = [
-    { key: 'home', icon: '\u25c8', label: 'Prakriti', locked: false },
-    { key: 'chat-inline', icon: '\U0001f531', label: 'Agastya', locked: !canChat },
-    { key: 'assessment', icon: '\u25c7', label: 'Quiz', locked: false },
-  ];
-
   return (
     <div className="sqi-root" style={{width:'100%',minHeight:'100vh',background:'#050505',color:'rgba(255,255,255,0.85)',position:'relative'}}>
       <div style={{padding:'0 14px 80px'}}>{renderContent()}</div>
@@ -473,29 +436,6 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({ membershipLevel = 'F
         <p className="sqi-serif" style={{fontStyle:'italic',fontSize:14,color:'rgba(255,255,255,0.3)',marginBottom:7}}>"Health is wealth, peace of mind is happiness, Yoga shows the way."</p>
         <p style={{fontSize:8,fontWeight:800,letterSpacing:'0.45em',textTransform:'uppercase',color:'#D4AF37',opacity:0.18}}>Siddha Quantum Nexus · Agastya Samhita · SQI Intelligence 2050</p>
       </motion.div>
-      {activeTab !== 'chat-inline' && (
-        <div style={{
-          position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
-          background: 'rgba(5,5,5,0.92)', backdropFilter: 'blur(30px)',
-          borderTop: '1px solid rgba(212,175,55,0.1)',
-          display: 'flex', justifyContent: 'center',
-          padding: '0 0 env(safe-area-inset-bottom,0)',
-        }}>
-          {navTabs.map(tab => {
-            const isActive = activeTab === tab.key || (tab.key === 'chat-inline' && activeTab === 'chat');
-            return (
-              <button key={tab.key} type="button"
-                onClick={() => { if (tab.key === 'chat-inline') handleOpenChat(); else setActiveTab(tab.key as any); }}
-                style={{ flex: 1, maxWidth: 140, background: 'none', border: 'none', cursor: 'pointer', padding: '12px 0 14px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, position: 'relative' }}>
-                {isActive && <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: 2, background: 'linear-gradient(90deg,transparent,#D4AF37,transparent)', borderRadius: 99 }} />}
-                <span style={{ fontSize: tab.key === 'chat-inline' ? 18 : 14, opacity: isActive ? 1 : 0.35, filter: isActive && tab.key === 'chat-inline' ? 'drop-shadow(0 0 8px rgba(255,140,0,0.6))' : 'none', transition: 'all 0.2s' }}>{tab.icon}</span>
-                <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', fontFamily: "'Plus Jakarta Sans',sans-serif", color: isActive ? '#D4AF37' : 'rgba(255,255,255,0.28)', transition: 'color 0.2s' }}>{tab.label}</span>
-                {tab.locked && <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.2)' }}>\ud83d\udd12</span>}
-              </button>
-            );
-          })}
-        </div>
-      )}
       <AnimatePresence>
         {showChat && <AyurvedaChatConsultation profile={userProfile} dosha={doshaProfile} onClose={()=>setShowChat(false)}/>}
       </AnimatePresence>
