@@ -1,10 +1,14 @@
 {
-  "id": "https://sacredhealing.lovable.app/",
+  "id": "https://siddhaquantumnexus.com/",
   "name": "Siddha Quantum Nexus - Awaken Your Inner Light",
   "short_name": "Siddha Quantum Nexus",
   "description": "Transform your life with guided meditations, healing courses, and spiritual growth. Earn SHC tokens as you progress on your journey.",
   "start_url": "/",
-  "display_override": ["standalone", "minimal-ui", "browser"],
+  "display_override": [
+    "standalone",
+    "minimal-ui",
+    "browser"
+  ],
   "display": "standalone",
   "launch_handler": {
     "client_mode": "navigate-existing"
@@ -15,7 +19,12 @@
   "scope": "/",
   "lang": "en",
   "dir": "ltr",
-  "categories": ["health", "lifestyle", "wellness", "meditation"],
+  "categories": [
+    "health",
+    "lifestyle",
+    "wellness",
+    "meditation"
+  ],
   "icons": [
     {
       "src": "/icon-master.png",
@@ -70,73 +79,10 @@
       "form_factor": "wide"
     },
     {
-      "src": "/screenshots/breathing-wide.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "label": "Breathing exercises",
-      "form_factor": "wide"
-    },
-    {
-      "src": "/screenshots/healing-wide.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "label": "Healing audio library",
-      "form_factor": "wide"
-    },
-    {
-      "src": "/screenshots/music-wide.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "label": "Music - Browse tracks by genre and mood",
-      "form_factor": "wide"
-    },
-    {
-      "src": "/screenshots/explore-wide.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "label": "Explore - Healing Journey and What We Offer",
-      "form_factor": "wide"
-    },
-    {
-      "src": "/screenshots/community-wide.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "label": "Community - Chat and Go Live",
-      "form_factor": "wide"
-    },
-    {
-      "src": "/screenshots/profile-wide.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "label": "Profile - Badges, streak, and premium upgrade",
-      "form_factor": "wide"
-    },
-    {
-      "src": "/screenshots/membership-wide.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "label": "30 Days of Sacred Healing - Membership",
-      "form_factor": "wide"
-    },
-    {
       "src": "/screenshots/home-narrow.png",
       "sizes": "1080x1920",
       "type": "image/png",
       "label": "Home screen",
-      "form_factor": "narrow"
-    },
-    {
-      "src": "/screenshots/meditations-narrow.png",
-      "sizes": "1080x1920",
-      "type": "image/png",
-      "label": "Meditations on mobile",
-      "form_factor": "narrow"
-    },
-    {
-      "src": "/screenshots/music-narrow.png",
-      "sizes": "1080x1920",
-      "type": "image/png",
-      "label": "Music on mobile",
       "form_factor": "narrow"
     },
     {
@@ -145,13 +91,6 @@
       "type": "image/png",
       "label": "Profile on mobile",
       "form_factor": "narrow"
-    },
-    {
-      "src": "/screenshots/community-narrow.png",
-      "sizes": "1080x1920",
-      "type": "image/png",
-      "label": "Community on mobile",
-      "form_factor": "narrow"
     }
   ],
   "shortcuts": [
@@ -159,44 +98,39 @@
       "name": "Meditate",
       "short_name": "Meditate",
       "url": "/meditations",
-      "icons": [{ "src": "/icon-master.png", "sizes": "512x512", "type": "image/png" }]
+      "icons": [
+        {
+          "src": "/icon-master.png",
+          "sizes": "512x512",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Healing Audio",
       "short_name": "Healing",
       "url": "/healing",
-      "icons": [{ "src": "/icon-master.png", "sizes": "512x512", "type": "image/png" }]
+      "icons": [
+        {
+          "src": "/icon-master.png",
+          "sizes": "512x512",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Breathing",
       "short_name": "Breathe",
       "url": "/breathing",
-      "icons": [{ "src": "/icon-master.png", "sizes": "512x512", "type": "image/png" }]
-    }
-  ],
-  "related_applications": [],
-  "prefer_related_applications": false,
-  "file_handlers": [
-    {
-      "action": "/creative-soul/meditation",
-      "accept": {
-        "audio/mpeg": [".mp3"],
-        "audio/wav": [".wav"],
-        "audio/mp4": [".m4a"]
-      }
-    }
-  ],
-  "share_target": {
-    "action": "/creative-soul/meditation",
-    "method": "POST",
-    "enctype": "multipart/form-data",
-    "params": {
-      "files": [
+      "icons": [
         {
-          "name": "audio",
-          "accept": ["audio/mpeg", "audio/wav", "audio/mp4"]
+          "src": "/icon-master.png",
+          "sizes": "512x512",
+          "type": "image/png"
         }
       ]
     }
-  }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
 }
