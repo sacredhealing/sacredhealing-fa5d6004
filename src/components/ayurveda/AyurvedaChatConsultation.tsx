@@ -149,13 +149,9 @@ const NadiPulse = () => (
 
 // ── Suggestion list ─────────────────────────────────────────────────────────
 const SUGGESTIONS = [
-  { icon: '🌿', text: 'How is my energy field — I feel stressed and have low energy' },
-  { icon: '🔥', text: 'I have bloating, gas and very irregular digestion' },
+  { icon: '🌿', text: 'I feel stressed and have low energy — scan my field' },
+  { icon: '🔥', text: 'I have bloating and very irregular digestion' },
   { icon: '🌙', text: 'My mind races at night and I cannot sleep deeply' },
-  { icon: '⚡', text: 'I am exhausted even when I sleep 8 hours' },
-  { icon: '✨', text: 'I have skin inflammation, rashes and acne' },
-  { icon: '🌊', text: 'I feel heavy, unmotivated and depressed' },
-  { icon: '🦴', text: 'I have chronic lower back pain and stiff joints' },
 ];
 
 // ── STYLES ──────────────────────────────────────────────────────────────────
@@ -290,15 +286,18 @@ const STYLES = `
     font-size: 9px; font-weight: 800; letter-spacing: 0.42em;
     text-transform: uppercase; color: rgba(212,175,55,0.24); margin-bottom: 12px;
   }
-  .sqi-sugg { display: flex; flex-direction: column; gap: 7px; max-width: 460px; margin: 0 auto; }
-  .sqi-sug {
-    width: 100%; padding: 11px 16px; border-radius: 14px;
-    background: rgba(212,175,55,0.04); border: 1px solid rgba(212,175,55,0.12);
-    color: rgba(212,175,55,0.7); font-size: 15px; font-weight: 500;
-    text-align: left; cursor: pointer; font-family: inherit;
-    display: flex; align-items: center; gap: 12px; line-height: 1.4; transition: 0.2s;
+  .sqi-sugg {
+    display: flex; flex-direction: column; gap: 8px;
+    width: 100%; max-width: 420px; margin: 0 auto;
   }
-  .sqi-sug:hover { background: rgba(212,175,55,0.09); border-color: rgba(212,175,55,0.3); color: rgba(212,175,55,0.92); transform: translateX(3px); }
+  .sqi-sug {
+    width: 100%; padding: 13px 18px; border-radius: 16px;
+    background: rgba(212,175,55,0.04); border: 1px solid rgba(212,175,55,0.14);
+    color: rgba(212,175,55,0.75); font-size: 15px; font-weight: 500;
+    text-align: left; cursor: pointer; font-family: inherit;
+    display: flex; align-items: center; gap: 13px; line-height: 1.45; transition: 0.2s;
+  }
+  .sqi-sug:hover { background: rgba(212,175,55,0.09); border-color: rgba(212,175,55,0.3); color: rgba(212,175,55,0.92); transform: translateX(2px); }
   .sqi-mrow { display: flex; flex-direction: column; }
   .sqi-mrow.user { align-items: flex-end; }
   .sqi-mrow.agent { align-items: flex-start; }
@@ -427,22 +426,21 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
   const [pendingUserMsg, setPendingUserMsg] = useState<ChatMessage | null>(null);
   const displayMessages = useMemo((): ChatMessage[] => {
     const base = persistedMsgs;
-    // Check if pending user message is already in persistedMsgs (saved to DB)
-    const pendingAlreadySaved = pendingUserMsg
+    // Is the pending user message already confirmed in DB?
+    const pendingInDb = pendingUserMsg
       ? base.some(m => m.role === 'user' && m.content === pendingUserMsg.content)
       : true;
+
+    // Build base with pending if not yet in DB
+    const withPending = (pendingUserMsg && !pendingInDb)
+      ? [...base, pendingUserMsg]
+      : base;
+
     if (streamingAssistant !== null) {
-      // Show: persisted msgs + pending user msg (if not yet in DB) + streaming assistant
-      const withPending = (!pendingAlreadySaved && pendingUserMsg)
-        ? [...base, pendingUserMsg]
-        : base;
+      // Append streaming assistant bubble
       return [...withPending, { role: 'assistant', content: streamingAssistant }];
     }
-    // Not streaming — show persisted msgs, optionally with pending user msg
-    if (!pendingAlreadySaved && pendingUserMsg) {
-      return [...base, pendingUserMsg];
-    }
-    return base;
+    return withPending;
   }, [persistedMsgs, streamingAssistant, pendingUserMsg]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -553,8 +551,11 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
     await saveMessage(userMsg);
     setInput('');
     if (taRef.current) { taRef.current.style.height = 'auto'; }
-    // Scroll to bottom when user sends
+    // Force scroll to bottom on send
     isNearBottomRef.current = true;
+    requestAnimationFrame(() => {
+      if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
+    });
     setIsLoading(true);
     setStreamingAssistant('');
     let assistantContent = '';
@@ -604,6 +605,10 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
       if (assistantContent.trim()) {
         // Edge function saves assistant message server-side; refresh to get real DB record
         await refreshMessages();
+        // Scroll to bottom after full response is in
+        requestAnimationFrame(() => {
+          if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
+        });
       }
     } catch (err) {
       console.error(err);
@@ -612,8 +617,10 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
     } finally {
       setIsLoading(false);
       setStreamingAssistant(null);
-      // Clear pending after a short delay so DB has time to confirm
-      setTimeout(() => setPendingUserMsg(null), 1200);
+      // refreshMessages re-fetches from DB — once that lands, pendingUserMsg 
+      // will be found in persistedMsgs and naturally excluded from display.
+      // Clear it after refresh completes to avoid any stale state.
+      setPendingUserMsg(null);
     }
   };
 
@@ -811,7 +818,7 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
               rows={1}
               onChange={e => { setInput(e.target.value); resizeTextarea(); }}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-              placeholder={t('ayurvedaChat.inputPlaceholder', 'Ask Agastya Muni about your healing path...')}
+              placeholder="Ask Agastya Muni..."
               disabled={isLoading || chatHistoryLoading}
             />
             <button type="button" className="sqi-send"
@@ -970,7 +977,7 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
             <textarea ref={taRef} className="sqi-inp" value={input} rows={1}
               onChange={e => { setInput(e.target.value); resizeTextarea(); }}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-              placeholder={t('ayurvedaChat.inputPlaceholder', 'Ask Agastya Muni about your healing path...')}
+              placeholder="Ask Agastya Muni..."
               disabled={isLoading || chatHistoryLoading}
             />
             <button type="button" className="sqi-send"
