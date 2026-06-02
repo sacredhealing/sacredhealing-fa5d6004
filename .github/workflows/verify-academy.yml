@@ -1,0 +1,15 @@
+name: Verify Academy DB
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - scripts/verify-academy.cjs
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Count modules per tier
+        env:
+          PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: node scripts/verify-academy.cjs
