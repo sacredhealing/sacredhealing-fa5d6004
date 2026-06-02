@@ -2,6 +2,9 @@ name: Seed Agastyar Academy 108 Modules
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/batch_1.json'
 
 jobs:
   seed:
@@ -11,22 +14,22 @@ jobs:
 
       - name: Upsert batch 1 (modules 1-36)
         env:
-          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SK: ${{ secrets.NEW_SERVICE_ROLE }}
         run: python3 scripts/upsert_batch.py scripts/batch_1.json
 
       - name: Upsert batch 2 (modules 37-72)
         env:
-          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SK: ${{ secrets.NEW_SERVICE_ROLE }}
         run: python3 scripts/upsert_batch.py scripts/batch_2.json
 
       - name: Upsert batch 3 (modules 73-108)
         env:
-          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SK: ${{ secrets.NEW_SERVICE_ROLE }}
         run: python3 scripts/upsert_batch.py scripts/batch_3.json
 
       - name: Verify count
         env:
-          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SK: ${{ secrets.NEW_SERVICE_ROLE }}
         run: |
           python3 - <<'EOF'
 import urllib.request, os, json
