@@ -503,11 +503,15 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
     setStreamingAssistant('');
     let assistantContent = '';
     try {
+      // Get user's JWT so the edge function can identify user for memory + rate limiting
+      const { data: { session } } = await (supabase as any).auth.getSession();
+      const authToken = session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
       const response = await fetch(CHAT_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${authToken}`,
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
         body: JSON.stringify({ messages: apiMessages, profile, dosha, language, jyotishProfile }),
