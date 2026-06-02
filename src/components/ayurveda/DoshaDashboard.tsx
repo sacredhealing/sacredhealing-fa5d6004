@@ -13,6 +13,7 @@ interface DoshaDashboardProps {
   onFetchGuidance: () => void;
   isPremium?: boolean;
   isSiddhaPlus?: boolean;
+  isLifetime?: boolean;
   isAdmin?: boolean;
   onOpenChat?: () => void;
 }
@@ -371,13 +372,13 @@ const getTimeline = (rank: TierRank, dosha: string) => {
 
 // ── MAIN COMPONENT ────────────────────────────────────────────────────────────
 export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
-  profile, dosha, onRestart, isPremium = false, isSiddhaPlus = false, isAdmin = false, onOpenChat,
+  profile, dosha, onRestart, isPremium = false, isSiddhaPlus = false, isLifetime = false, isAdmin = false, onOpenChat,
 }) => {
   const [syncing, setSyncing] = useState(false);
   const primary = dosha.primary?.toLowerCase() || 'vata';
 
   // Derive tier rank from props
-  const rank: TierRank = (isAdmin || false) ? 3 : isSiddhaPlus ? 2 : isPremium ? 1 : 0;
+  const rank: TierRank = (isAdmin || isLifetime) ? 3 : isSiddhaPlus ? 2 : isPremium ? 1 : 0;
 
   const accentColor = rank === 3 ? '#D4AF37' : rank === 2 ? '#FF8C00' : rank === 1 ? '#22D3EE' : 'rgba(180,180,180,0.7)';
   const tierLabel = rank === 3 ? '∞ AKASHA INFINITY · Eternal Sovereign' : rank === 2 ? '◉ SIDDHA QUANTUM · Sovereign Flame' : rank === 1 ? '◈ PRANA FLOW · Sacred Current' : '◇ FREE · Akasha Seed';
