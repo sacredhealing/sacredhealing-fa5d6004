@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_ADMIN_PAT }}
-      - name: Deep diagnose
+      - name: Fix granted_by NOT NULL
         env:
           SUPA_PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
@@ -30,17 +30,13 @@ jobs:
 
           echo "START $(date)" > $LOG
 
-          run_sql "CONSTRAINTS" "SELECT conname, pg_get_constraintdef(oid) as def FROM pg_constraint WHERE conrelid = 'public.admin_granted_access'::regclass;"
+          run_sql "MAKE_GRANTED_BY_NULLABLE" "ALTER TABLE public.admin_granted_access ALTER COLUMN granted_by DROP NOT NULL;"
 
-          run_sql "RLS_POLICIES" "SELECT policyname, cmd, qual, with_check FROM pg_policies WHERE tablename = 'admin_granted_access';"
+          run_sql "VERIFY_COLUMN" "SELECT column_name, is_nullable FROM information_schema.columns WHERE table_schema='public' AND table_name='admin_granted_access' AND column_name='granted_by';"
 
-          run_sql "RLS_ENABLED" "SELECT relname, relrowsecurity FROM pg_class WHERE relname = 'admin_granted_access';"
+          run_sql "TEST_INSERT_MEMBERSHIP" "INSERT INTO public.admin_granted_access (user_id, access_type, access_id, is_active, granted_at, granted_by) VALUES ('bd0b21c9-577a-450b-bb1e-21c9d0423f17', 'membership', 'siddha-quantum', false, now(), 'bd0b21c9-577a-450b-bb1e-21c9d0423f17') RETURNING id, access_type, access_id;"
 
-          run_sql "TABLE_GRANTS" "SELECT grantee, privilege_type FROM information_schema.role_table_grants WHERE table_name = 'admin_granted_access' AND table_schema = 'public';"
-
-          run_sql "TEST_INSERT_MEMBERSHIP" "INSERT INTO public.admin_granted_access (user_id, access_type, access_id, is_active, granted_at) VALUES ('bd0b21c9-577a-450b-bb1e-21c9d0423f17', 'membership', 'siddha-quantum', false, now()) RETURNING id;"
-
-          run_sql "TEST_INSERT_PRODUCT" "INSERT INTO public.admin_granted_access (user_id, access_type, access_id, is_active, granted_at) VALUES ('bd0b21c9-577a-450b-bb1e-21c9d0423f17', 'product', 'digital-nadi', false, now()) RETURNING id;"
+          run_sql "TEST_INSERT_PRODUCT" "INSERT INTO public.admin_granted_access (user_id, access_type, access_id, is_active, granted_at, granted_by) VALUES ('bd0b21c9-577a-450b-bb1e-21c9d0423f17', 'product', 'digital-nadi', false, now(), 'bd0b21c9-577a-450b-bb1e-21c9d0423f17') RETURNING id, access_type, access_id;"
 
           run_sql "CLEANUP" "DELETE FROM public.admin_granted_access WHERE is_active = false AND user_id = 'bd0b21c9-577a-450b-bb1e-21c9d0423f17';"
 
@@ -49,5 +45,5 @@ jobs:
           git config user.email "bot@sqi.app"
           git config user.name "SQI Bot"
           git add $LOG
-          git commit -m "deep diag $(date +%H%M%S)" || true
+          git commit -m "fix granted_by nullable + test $(date +%H%M%S)" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
