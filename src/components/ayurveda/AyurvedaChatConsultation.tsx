@@ -164,24 +164,30 @@ const STYLES = `
   .sqi-chat-portal {
     --g: #D4AF37; --g08: rgba(212,175,55,0.08); --g18: rgba(212,175,55,0.18);
     --g36: rgba(212,175,55,0.36); --g55: rgba(212,175,55,0.55);
-    position: fixed !important; inset: 0 !important;
-    z-index: 999999 !important; display: flex !important;
-    align-items: stretch !important; justify-content: center !important;
-    padding: 14px; font-family: 'Plus Jakarta Sans', sans-serif;
+    position: fixed !important;
+    top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+    width: 100% !important; height: 100% !important;
+    z-index: 2147483647 !important;
+    display: flex !important;
+    align-items: center !important; justify-content: center !important;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    padding: 0;
   }
   .sqi-chat-backdrop {
-    position: absolute; inset: 0;
-    background: rgba(3,2,1,0.9); backdrop-filter: blur(22px);
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    width: 100%; height: 100%;
+    background: rgba(3,2,1,0.97); backdrop-filter: blur(22px);
     -webkit-backdrop-filter: blur(22px);
+    z-index: 0;
   }
   .sqi-chat-panel {
-    position: relative; width: min(100%, 560px);
-    height: calc(100dvh - 28px); max-height: calc(100dvh - 28px);
+    position: relative; z-index: 1;
+    width: 100%; max-width: 560px;
+    height: 100%; height: 100svh;
     display: flex; flex-direction: column; overflow: hidden;
-    border-radius: 26px;
-    border: 1px solid rgba(212,175,55,0.28);
+    border-radius: 0;
+    border: none;
     background: linear-gradient(180deg, #0E0A06 0%, #080503 100%);
-    box-shadow: 0 30px 90px rgba(212,175,55,0.07), inset 0 1px 0 rgba(212,175,55,0.2);
   }
   .sqi-topbar {
     height: 2px; flex-shrink: 0;
@@ -400,9 +406,14 @@ const STYLES = `
     50% { transform: translateY(-6px); opacity: 1; }
   }
   @keyframes sqiSpin { to { transform: rotate(360deg); } }
-  @media (max-width: 640px) {
+  @media (max-width: 900px) {
     .sqi-chat-portal { padding: 0; }
-    .sqi-chat-panel { width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; border: none; }
+    .sqi-chat-panel {
+      width: 100%; max-width: 100%;
+      height: 100svh; height: 100dvh;
+      max-height: 100svh; max-height: 100dvh;
+      border-radius: 0; border: none;
+    }
     .sqi-hist-panel { border-radius: 0; }
   }
 `;
@@ -458,8 +469,19 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
       el.id = id; el.textContent = STYLES;
       document.head.appendChild(el);
     }
+    // Lock scroll on both body and html to prevent background scroll on all devices
+    const prev = document.body.style.overflow;
+    const prevHtml = document.documentElement.style.overflow;
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    return () => {
+      document.body.style.overflow = prev;
+      document.documentElement.style.overflow = prevHtml;
+      document.body.style.position = '';
+      document.body.style.width = '';
+    };
   }, []);
 
   // Scroll to bottom
@@ -567,9 +589,9 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} key="chat-portal">
         <div className="sqi-chat-backdrop" onClick={onClose} />
         <motion.div className="sqi-chat-panel"
-          initial={{ y: '8%', opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-          exit={{ y: '8%', opacity: 0 }}
-          transition={{ type: 'spring', damping: 28, stiffness: 260 }}>
+          initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.98 }}
+          transition={{ duration: 0.18, ease: 'easeOut' }}>
 
           {/* History Panel */}
           {showHistory && (
