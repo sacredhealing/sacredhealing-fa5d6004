@@ -377,9 +377,12 @@ const DoshaOrb: React.FC<{ name: string; value: number; orbColor: string; glowHe
 // ── NADI PULSE SCORE ──────────────────────────────────────────────────────────
 const NadiScore: React.FC<{ dosha: DoshaProfile }> = ({ dosha }) => {
   const primary = dosha.primary?.toLowerCase() || 'vata';
-  const balance = primary === 'vata' ? dosha.vata < 60 ? 'Balanced' : 'Elevated' :
-                  primary === 'pitta' ? dosha.pitta < 50 ? 'Balanced' : 'Elevated' : 'Balanced';
-  const score = Math.max(0, 100 - Math.abs(dosha.vata - 45) - Math.abs(dosha.pitta - 35) - Math.abs(dosha.kapha - 20));
+  const v = Number(dosha.vata) || 45;
+  const p = Number(dosha.pitta) || 35;
+  const k = Number(dosha.kapha) || 20;
+  const balance = primary === 'vata' ? v < 60 ? 'Balanced' : 'Elevated' :
+                  primary === 'pitta' ? p < 50 ? 'Balanced' : 'Elevated' : 'Balanced';
+  const score = Math.max(0, 100 - Math.abs(v - 45) - Math.abs(p - 35) - Math.abs(k - 20));
   const color = score > 70 ? T.emerald : score > 50 ? T.gold : T.lotus;
 
   return (
@@ -784,9 +787,9 @@ export const DoshaDashboard: React.FC<DoshaDashboardProps> = ({
 
         {/* Dosha Orbs */}
         <div style={{ display:'flex', justifyContent:'center', gap:32, padding:'12px 0 18px' }}>
-          <DoshaOrb name="Vata"  value={dosha.vata}  orbColor={T.vata}  glowHex="#60A5FA" delay={0}   element="🌬️" />
-          <DoshaOrb name="Pitta" value={dosha.pitta} orbColor={T.pitta} glowHex="#F59E0B" delay={0.18} element="🔥" />
-          <DoshaOrb name="Kapha" value={dosha.kapha} orbColor={T.kapha} glowHex="#10B981" delay={0.36} element="🌍" />
+          <DoshaOrb name="Vata"  value={Number(dosha.vata)  || 45}  orbColor={T.vata}  glowHex="#60A5FA" delay={0}   element="🌬️" />
+          <DoshaOrb name="Pitta" value={Number(dosha.pitta) || 35} orbColor={T.pitta} glowHex="#F59E0B" delay={0.18} element="🔥" />
+          <DoshaOrb name="Kapha" value={Number(dosha.kapha) || 20} orbColor={T.kapha} glowHex="#10B981" delay={0.36} element="🌍" />
         </div>
 
         <AnimatePresence>
