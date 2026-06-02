@@ -1,61 +1,41 @@
 name: Update Vercel GEMINI Key
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/update-vercel-gemini.yml
+
 jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - name: Update VITE_GEMINI_API_KEY in all Vercel projects
+      - name: Set Gemini key in all Vercel projects
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          # Get all projects
-          PROJECTS=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
-            "https://api.vercel.com/v9/projects?limit=20" | python3 -c "
-import json,sys
-data=json.load(sys.stdin)
-for p in data.get('projects',[]):
-    print(p['id'], p['name'])
-")
-          echo "Projects: $PROJECTS"
+          echo "Fetching Vercel projects..."
+          PROJECTS=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" "https://api.vercel.com/v9/projects?limit=20")
+          echo "Projects: $(echo $PROJECTS | python3 -c "import json,sys; print([p['name'] for p in json.load(sys.stdin).get('projects',[])])")"
           
-          # For each project, update/create VITE_GEMINI_API_KEY
-          while IFS= read -r line; do
-            PID=$(echo $line | cut -d' ' -f1)
-            PNAME=$(echo $line | cut -d' ' -f2)
-            echo "=== $PNAME ($PID) ==="
+          for PID in $(echo $PROJECTS | python3 -c "import json,sys; [print(p['id']) for p in json.load(sys.stdin).get('projects',[])]"); do
+            echo "=== Project: $PID ==="
+            ENVS=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" "https://api.vercel.com/v9/projects/$PID/env")
             
-            # Get existing env vars
-            ENVS=$(curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
-              "https://api.vercel.com/v9/projects/$PID/env")
-            
-            # Delete existing VITE_GEMINI_API_KEY and S_GEMINI if present
-            for KEY_NAME in "VITE_GEMINI_API_KEY" "S_GEMINI"; do
-              ENV_ID=$(echo $ENVS | python3 -c "
+            # Delete old Gemini keys
+            for EID in $(echo $ENVS | python3 -c "
 import json,sys
 data=json.load(sys.stdin)
 for e in data.get('envs',[]):
-    if e['key']=='$KEY_NAME':
+    if e['key'] in ['VITE_GEMINI_API_KEY','S_GEMINI']:
         print(e['id'])
-        break
-" 2>/dev/null)
-              if [ -n "$ENV_ID" ]; then
-                curl -s -X DELETE -H "Authorization: Bearer $VERCEL_TOKEN" \
-                  "https://api.vercel.com/v9/projects/$PID/env/$ENV_ID" > /dev/null
-                echo "Deleted $KEY_NAME ($ENV_ID)"
-              fi
+" 2>/dev/null); do
+              curl -s -X DELETE -H "Authorization: Bearer $VERCEL_TOKEN" "https://api.vercel.com/v9/projects/$PID/env/$EID"
+              echo "Deleted env $EID"
             done
             
-            # Create new VITE_GEMINI_API_KEY for all environments
-            RESULT=$(curl -s -X POST \
-              -H "Authorization: Bearer $VERCEL_TOKEN" \
-              -H "Content-Type: application/json" \
-              "https://api.vercel.com/v9/projects/$PID/env" \
-              -d "[
-                {\"key\":\"VITE_GEMINI_API_KEY\",\"value\":\"$GEMINI_API_KEY\",\"type\":\"plain\",\"target\":[\"production\",\"preview\",\"development\"]},
-                {\"key\":\"S_GEMINI\",\"value\":\"$GEMINI_API_KEY\",\"type\":\"plain\",\"target\":[\"production\",\"preview\",\"development\"]}
-              ]")
-            echo "Set result: $(echo $RESULT | head -c 100)"
-          done <<< "$PROJECTS"
-          echo "Done"
+            # Set new keys
+            RESULT=$(curl -s -X POST               -H "Authorization: Bearer $VERCEL_TOKEN"               -H "Content-Type: application/json"               "https://api.vercel.com/v9/projects/$PID/env"               -d '[{"key":"VITE_GEMINI_API_KEY","value":"'$GEMINI_KEY'","type":"plain","target":["production","preview","development"]},{"key":"S_GEMINI","value":"'$GEMINI_KEY'","type":"plain","target":["production","preview","development"]}]')
+            echo "Set result: $(echo $RESULT | head -c 120)"
+          done
+          echo "All projects updated"
