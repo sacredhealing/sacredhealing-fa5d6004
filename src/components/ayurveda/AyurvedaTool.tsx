@@ -264,6 +264,7 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({ membershipLevel = 'F
   // canChat = Prana Flow, Siddha Quantum, Akasha Infinity — NOT free
   const canChat = isAdmin || (membership !== ('FREE' as AyurvedaMembershipLevel));
   const isSiddhaPlus = isAdmin || membership === ('SIDDHA' as AyurvedaMembershipLevel) || membership === ('LIFETIME' as AyurvedaMembershipLevel);
+  const isLifetime = isAdmin || membership === ('LIFETIME' as AyurvedaMembershipLevel);
 
   React.useEffect(() => {
     if (doshaProfile && activeTab === 'assessment') setActiveTab('home');
@@ -347,6 +348,7 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({ membershipLevel = 'F
                         <TierCard tier={tier} active={
                           (membership === ('FREE' as AyurvedaMembershipLevel) && tier.key === 'free') ||
                           (membership === ('PREMIUM' as AyurvedaMembershipLevel) && tier.key === 'prana') ||
+                          (membership === ('SIDDHA' as AyurvedaMembershipLevel) && tier.key === 'siddha') ||
                           (membership === ('LIFETIME' as AyurvedaMembershipLevel) && tier.key === 'akasha')
                         }/>
                       </motion.div>
@@ -395,6 +397,7 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({ membershipLevel = 'F
                 onFetchGuidance={handleFetchGuidance}
                 isPremium={canChat}
                 isSiddhaPlus={isSiddhaPlus}
+                isLifetime={isLifetime}
                 isAdmin={isAdmin}
                 onOpenChat={handleOpenChat}
               />
