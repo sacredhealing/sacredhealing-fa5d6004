@@ -58,14 +58,14 @@ export const AyurvedaTool: React.FC<AyurvedaToolProps> = ({ membershipLevel = 'F
 
   React.useEffect(() => { setMembership(isAdmin ? 'LIFETIME' as AyurvedaMembershipLevel : membershipLevel); }, [isAdmin, membershipLevel]);
 
+  const { doshaProfile, userProfile, dailyGuidance, isLoading, isLoadingGuidance, isLoadingSaved, analyzeDosha, getDailyGuidance, reset } = useAyurvedaAnalysis();
+
   // Auto-advance to dashboard when doshaProfile becomes available
   React.useEffect(() => {
     if (doshaProfile && activeTab === 'assessment') {
       setActiveTab('home');
     }
   }, [doshaProfile, activeTab]);
-
-  const { doshaProfile, userProfile, dailyGuidance, isLoading, isLoadingGuidance, isLoadingSaved, analyzeDosha, getDailyGuidance, reset } = useAyurvedaAnalysis();
   const handleAssessmentComplete = async (profile: AyurvedaUserProfile) => {
     await analyzeDosha(profile);
     // analyzeDosha sets doshaProfile on success (or via fallback)

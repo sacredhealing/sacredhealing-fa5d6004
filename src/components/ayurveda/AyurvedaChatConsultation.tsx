@@ -433,12 +433,12 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
   // Fetch Jyotish profile
   useEffect(() => {
     if (!user?.id) return;
-    supabase
+    (supabase as any)
       .from('profiles')
       .select('lagna, moon_sign, current_dasha, birth_date, birth_time, birth_place')
       .eq('id', user.id)
-      .single()
-      .then(({ data }) => {
+      .maybeSingle()
+      .then(({ data }: { data: any }) => {
         if (data) setJyotishProfile({
           lagna: data.lagna ?? null, moon_sign: data.moon_sign ?? null,
           current_dasha: data.current_dasha ?? null,
