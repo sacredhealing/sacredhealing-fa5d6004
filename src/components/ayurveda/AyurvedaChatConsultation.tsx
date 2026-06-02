@@ -440,6 +440,7 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
       // Append streaming assistant bubble
       return [...withPending, { role: 'assistant', content: streamingAssistant }];
     }
+    // Not streaming: show base with pending user msg pinned if not yet in DB
     return withPending;
   }, [persistedMsgs, streamingAssistant, pendingUserMsg]);
   const [input, setInput] = useState('');
@@ -546,7 +547,8 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
     const apiMessages = [...persistedMsgs, userMsg].map(m => ({
       role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content,
     }));
-    // Set pending immediately so it never disappears from UI
+    // Clear any previous pending, then set new one immediately
+    setPendingUserMsg(null);
     setPendingUserMsg(userMsg);
     await saveMessage(userMsg);
     setInput('');
@@ -617,10 +619,9 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
     } finally {
       setIsLoading(false);
       setStreamingAssistant(null);
-      // refreshMessages re-fetches from DB — once that lands, pendingUserMsg 
-      // will be found in persistedMsgs and naturally excluded from display.
-      // Clear it after refresh completes to avoid any stale state.
-      setPendingUserMsg(null);
+      // DO NOT clear pendingUserMsg here — it stays until next send.
+      // The memo's pendingInDb check prevents duplicates once DB confirms.
+      // Clearing it here causes the question to vanish mid-render.
     }
   };
 
