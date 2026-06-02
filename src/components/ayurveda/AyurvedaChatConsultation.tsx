@@ -423,12 +423,27 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
   const { t, language } = useTranslation();
   const { messages: persistedMsgs, loading: chatHistoryLoading, saveMessage, refreshMessages } = useChatMessages('ayurveda');
   const [streamingAssistant, setStreamingAssistant] = useState<string | null>(null);
+  // Track pending user message so it never disappears while streaming
+  const [pendingUserMsg, setPendingUserMsg] = useState<ChatMessage | null>(null);
   const displayMessages = useMemo((): ChatMessage[] => {
+    const base = persistedMsgs;
+    // Check if pending user message is already in persistedMsgs (saved to DB)
+    const pendingAlreadySaved = pendingUserMsg
+      ? base.some(m => m.role === 'user' && m.content === pendingUserMsg.content)
+      : true;
     if (streamingAssistant !== null) {
-      return [...persistedMsgs, { role: 'assistant', content: streamingAssistant }];
+      // Show: persisted msgs + pending user msg (if not yet in DB) + streaming assistant
+      const withPending = (!pendingAlreadySaved && pendingUserMsg)
+        ? [...base, pendingUserMsg]
+        : base;
+      return [...withPending, { role: 'assistant', content: streamingAssistant }];
     }
-    return persistedMsgs;
-  }, [persistedMsgs, streamingAssistant]);
+    // Not streaming — show persisted msgs, optionally with pending user msg
+    if (!pendingAlreadySaved && pendingUserMsg) {
+      return [...base, pendingUserMsg];
+    }
+    return base;
+  }, [persistedMsgs, streamingAssistant, pendingUserMsg]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
@@ -484,9 +499,23 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
     };
   }, []);
 
-  // Scroll to bottom
+  // Smart scroll — only pull to bottom if user is already near bottom (within 120px)
+  // This prevents yanking the view while user tries to read streaming text
+  const isNearBottomRef = React.useRef(true);
+
+  const handleScroll = () => {
+    if (!msgsRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = msgsRef.current;
+    isNearBottomRef.current = scrollHeight - scrollTop - clientHeight < 120;
+  };
+
   useEffect(() => {
-    if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
+    const el = msgsRef.current;
+    if (!el) return;
+    // Only scroll if near bottom OR if this is a brand new message (not mid-stream)
+    if (isNearBottomRef.current) {
+      el.scrollTop = el.scrollHeight;
+    }
   }, [displayMessages]);
 
   const handleCopyAll = () => {
@@ -519,9 +548,13 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
     const apiMessages = [...persistedMsgs, userMsg].map(m => ({
       role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content,
     }));
+    // Set pending immediately so it never disappears from UI
+    setPendingUserMsg(userMsg);
     await saveMessage(userMsg);
     setInput('');
     if (taRef.current) { taRef.current.style.height = 'auto'; }
+    // Scroll to bottom when user sends
+    isNearBottomRef.current = true;
     setIsLoading(true);
     setStreamingAssistant('');
     let assistantContent = '';
@@ -577,7 +610,10 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
       const errContent = t('ayurvedaChat.connectionInterrupted', 'Forgive me, dear seeker — my Akasha channel is briefly interrupted. Please try again.');
       await saveMessage({ role: 'assistant', content: errContent });
     } finally {
-      setIsLoading(false); setStreamingAssistant(null);
+      setIsLoading(false);
+      setStreamingAssistant(null);
+      // Clear pending after a short delay so DB has time to confirm
+      setTimeout(() => setPendingUserMsg(null), 1200);
     }
   };
 
@@ -706,7 +742,7 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
           )}
 
           {/* Messages */}
-          <div className="sqi-msgs" ref={msgsRef}>
+          <div className="sqi-msgs" ref={msgsRef} onScroll={handleScroll}>
             {chatHistoryLoading && persistedMsgs.length === 0 && (
               <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
                 <Loader2 style={{ width: 28, height: 28, color: '#D4AF37', animation: 'sqiSpin 1s linear infinite' }} />
@@ -896,7 +932,7 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
           </div>
 
           {/* Messages */}
-          <div ref={msgsRef} style={{ flex: 1, overflowY: 'auto', padding: '20px 18px 8px', display: 'flex', flexDirection: 'column', gap: 16, scrollBehavior: 'smooth' }}>
+          <div ref={msgsRef} onScroll={handleScroll} style={{ flex: 1, overflowY: 'auto', padding: '20px 18px 8px', display: 'flex', flexDirection: 'column', gap: 16 }}>
             {chatHistoryLoading && persistedMsgs.length === 0 && (
               <div style={{ display: 'flex', justifyContent: 'center', padding: 32 }}><div style={{ width: 24, height: 24, border: '2px solid rgba(212,175,55,0.15)', borderTop: '2px solid #D4AF37', borderRadius: '50%', animation: 'sqiSpin 1s linear infinite' }} /></div>
             )}
