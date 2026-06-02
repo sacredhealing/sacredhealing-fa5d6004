@@ -235,5 +235,16 @@ jobs:
             --no-verify-jwt 2>&1
         continue-on-error: true
 
+
+      - name: Deploy analyze-dosha
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
+        run: |
+          supabase functions deploy analyze-dosha \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt 2>&1
+        continue-on-error: true
+
       - name: Done
         run: echo "All function deployments completed at $(date)"
