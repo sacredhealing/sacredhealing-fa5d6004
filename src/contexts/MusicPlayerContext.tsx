@@ -245,7 +245,6 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const currentAudioRef = useRef<UniversalAudioItem | null>(null);
 
   const PREVIEW_LIMIT = 30;
-  const DIRECT_UNIVERSAL_AUDIO = true;
 
   const userMusicRank = useMemo(
     () => getUserMusicAccessRank({ user, isAdmin, adminGranted, isPremium, membershipTier }),
