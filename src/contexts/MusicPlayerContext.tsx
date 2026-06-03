@@ -884,12 +884,126 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setDuration(0);
   }, [persistActiveTransmissionRow]);
 
+  const playUniversalAudioDirect = useCallback(async (
+    audio: UniversalAudioItem,
+    opts?: { resumePositionSec?: number; autoPlay?: boolean }
+  ) => {
+    const resumeSec = opts?.resumePositionSec ?? 0;
+    const autoPlay = opts?.autoPlay !== false;
+    const resolvedUrl = proxyAudioUrl(audio.audio_url) ?? audio.audio_url;
+
+    if (!resolvedUrl) {
+      toast({ title: 'Audio unavailable', description: 'This track has no playable audio file.' });
+      return;
+    }
+
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
+      audioRef.current.load();
+      audioRef.current = null;
+    }
+
+    medPlayerRef.current.pause();
+    if (devForceEndTimeoutRef.current) {
+      clearTimeout(devForceEndTimeoutRef.current);
+      devForceEndTimeoutRef.current = null;
+    }
+    completedThresholdForIdRef.current = null;
+
+    const el = new Audio(resolvedUrl);
+    el.preload = 'auto';
+    el.volume = volume;
+    el.setAttribute('playsinline', 'true');
+    el.setAttribute('webkit-playsinline', 'true');
+    el.setAttribute('x-webkit-airplay', 'allow');
+
+    audioRef.current = el;
+    playStartTimeRef.current = Date.now();
+    setCurrentTrack(null);
+    setCurrentAudio(audio);
+    setAudioContentType(audio.contentType);
+    setProgress(0);
+    setCurrentTime(0);
+    setDuration(audio.duration_seconds || 0);
+
+    el.addEventListener('loadedmetadata', () => {
+      const dur = el.duration;
+      if (dur > 0 && isFinite(dur)) {
+        setDuration(dur);
+        if (resumeSec > 0) {
+          const seekTo = Math.min(resumeSec, Math.max(0, dur - 0.25));
+          el.currentTime = seekTo;
+          setCurrentTime(seekTo);
+          setProgress((seekTo / dur) * 100);
+        }
+      }
+    });
+
+    el.addEventListener('timeupdate', () => {
+      const time = el.currentTime;
+      const dur = el.duration;
+      setCurrentTime(time);
+      if (dur > 0 && isFinite(dur)) {
+        setDuration(dur);
+        setProgress((time / dur) * 100);
+      }
+    });
+
+    el.addEventListener('ended', () => {
+      setIsPlaying(false);
+      void handleMeditationEnded();
+    });
+
+    el.addEventListener('error', () => {
+      setIsPlaying(false);
+      toast({ title: 'Audio failed to load', description: audio.title });
+    });
+
+    if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
+      const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+      if (params.get('devForceEnd') === '1') {
+        devForceEndTimeoutRef.current = setTimeout(() => {
+          writeLastSessionAndNotify(Date.now(), 240, audio.contentType);
+          devForceEndTimeoutRef.current = null;
+        }, 4000);
+      }
+    }
+
+    el.load();
+    if (autoPlay) {
+      const started = await safePlay(el);
+      setIsPlaying(started);
+      if (!started) {
+        toast({ title: 'Tap play again', description: 'Your browser blocked the first audio start.' });
+      }
+    } else {
+      setIsPlaying(false);
+    }
+  }, [handleMeditationEnded, toast, volume]);
+
   // Universal audio player for meditation and healing (useAudioPlayer: MediaSession + heartbeat + WakeLock)
   const playUniversalAudio = useCallback(async (
     audio: UniversalAudioItem,
     opts?: { resumePositionSec?: number; autoPlay?: boolean }
   ) => {
     if (audio.contentType !== 'meditation' && audio.contentType !== 'healing') {
+      return;
+    }
+
+    if (DIRECT_UNIVERSAL_AUDIO) {
+      if (currentAudio?.id === audio.id && !opts?.resumePositionSec && audioRef.current) {
+        if (isPlaying) {
+          audioRef.current.pause();
+          setIsPlaying(false);
+        } else {
+          const ok = await safePlay(audioRef.current);
+          setIsPlaying(ok);
+        }
+        return;
+      }
+
+      await playUniversalAudioDirect(audio, opts);
       return;
     }
 
@@ -934,7 +1048,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         }, 4000);
       }
     }
-  }, [currentAudio]);
+  }, [currentAudio, isPlaying, playUniversalAudioDirect]);
 
   useEffect(() => {
     if (!user?.id) {
