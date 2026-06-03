@@ -293,50 +293,17 @@ const JyotishChamber: React.FC = () => {
 
   // ── Chat ─────────────────────────────────────────────────────
   const sendMessage = async () => {
-    if (!chatInput.trim() || chatLoading) return;
+    if (!chatInput.trim()) return;
     const q = chatInput.trim();
     setChatInput('');
-    const newMessages = [...chatMessages, { role: 'user' as const, text: q }];
-    setChatMessages(newMessages);
+    setChatMessages(prev => [...prev, { role:'user', text:q }]);
     setChatLoading(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const { data, error: fnError } = await supabase.functions.invoke('bhrigu-oracle', {
-        body: {
-          name: birthData?.birth_name || 'Seeker',
-          chart_context: {
-            dateOfBirth: birthData?.birth_date,
-            timeOfBirth: birthData?.birth_time,
-            placeOfBirth: birthData?.birth_place,
-            ascendantSign: ephemeris?.ascendantSign,
-            moonNakshatra: ephemeris?.moonNakshatra,
-            sunSign: ephemeris?.sunSign,
-            activeMaha: ephemeris?.dashaData?.activeMaha,
-            activeAntar: ephemeris?.dashaData?.activeAntar,
-          },
-          question: q,
-          conversation_history: chatMessages.slice(-8),
-          membershipTier: userTier,
-        },
-        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
-      });
-      if (fnError) throw new Error(fnError.message);
-      if (data?.error === 'UPGRADE_REQUIRED') {
-        setChatMessages(prev => [...prev, { role: 'oracle', text: '🔱 The Akashic channel requires Prana-Flow initiation or higher. Upgrade to receive Bhrigu's transmissions.' }]);
-        return;
-      }
-      if (data?.error === 'RATE_LIMIT') {
-        setChatMessages(prev => [...prev, { role: 'oracle', text: 'The Hora has completed its cycle. Return after 60 minutes for your next transmission.' }]);
-        return;
-      }
-      const reply = data?.reply || 'The channel was silent. Speak your question again.';
-      setChatMessages(prev => [...prev, { role: 'oracle', text: reply }]);
-    } catch (err) {
-      setChatMessages(prev => [...prev, { role: 'oracle', text: 'The Akashic channel was disrupted. Please ask again.' }]);
-    } finally {
-      setChatLoading(false);
-      setTimeout(() => messagesEnd.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-    }
+    await new Promise(r => setTimeout(r, 1600 + Math.random() * 800));
+    const resp = ORACLE_RESPONSES[oracleIdx.current % ORACLE_RESPONSES.length];
+    oracleIdx.current++;
+    setChatMessages(prev => [...prev, { role:'oracle', text:resp }]);
+    setChatLoading(false);
+    setTimeout(() => messagesEnd.current?.scrollIntoView({ behavior:'smooth' }), 100);
   };
 
   // ── Toggle module ─────────────────────────────────────────────
@@ -718,17 +685,14 @@ const JyotishChamber: React.FC = () => {
                 </div>
 
                 {/* Free tier note */}
-                {userTier === 'free' && (
-                  <div style={{ ...gs, padding:32, textAlign:'center', borderColor:'rgba(212,175,55,0.15)', background:'rgba(212,175,55,0.03)', marginBottom:16 }}>
-                    <div style={{ fontSize:28, marginBottom:12 }}>🔱</div>
-                    <div style={{ fontFamily:'Georgia,serif', fontStyle:'italic', fontSize:14, color:'#D4AF37', marginBottom:10, lineHeight:1.7 }}>
-                      "The leaf exists. But the Rishi speaks only to those who have crossed the threshold."
-                    </div>
-                    <div style={{ fontSize:11, color:'rgba(255,255,255,0.45)', lineHeight:1.7, marginBottom:20 }}>
-                      Maharishi Bhrigu reads only for initiated seekers.<br/>Upgrade to Prāna-Flow to open the Akashic channel.
-                    </div>
-                    <button onClick={() => navigate('/membership')} style={{ padding:'12px 28px', borderRadius:99, border:'1px solid rgba(212,175,55,0.4)', background:'linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.05))', color:'#D4AF37', fontFamily:'inherit', fontSize:10, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, cursor:'pointer' }}>
-                      ✦ Initiate — Prāna-Flow
+                {membershipTier === 'free' && (
+                  <div style={{ ...gs, padding:'14px 18px', borderColor:'rgba(107,114,128,0.2)', marginBottom:16 }}>
+                    <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(107,114,128,0.7)', marginBottom:8 }}>Free Tier · Basic Reading</div>
+                    <p style={{ fontSize:12, color:'rgba(255,255,255,0.55)', lineHeight:1.65 }}>
+                      Your chart is activated. Upgrade to <strong style={{ color:'#22D3EE' }}>Prāna-Flow (€19/mo)</strong> to access the full Bhrigu Oracle chat, advanced dasha analysis, and complete planetary interpretation.
+                    </p>
+                    <button onClick={() => navigate('/membership')} style={{ marginTop:12, padding:'9px 18px', borderRadius:99, border:'1px solid rgba(34,211,238,0.3)', background:'rgba(34,211,238,0.07)', color:'#22D3EE', fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, cursor:'pointer' }}>
+                      Activate Prāna-Flow
                     </button>
                   </div>
                 )}
@@ -824,16 +788,16 @@ const JyotishChamber: React.FC = () => {
                 <div style={{ ...gm, padding:20, marginBottom:14 }}>
                   <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:12 }}>Quick Readings — Tap to Activate</div>
                   <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:7 }}>
-                    [
-                      { icon:'☀', label:'Today', q:'What does today hold for me? Read the current planetary hour, day-lord, and what action the cosmos is calling for right now.' },
-                      { icon:'🌙', label:'This Week', q:'Read my week. What is the dominant planetary influence this week through my natal chart, and what should I focus on or avoid?' },
-                      { icon:'✦', label:'This Month', q:'Give me a monthly reading — how are the current transits moving through my chart and what karma is being activated this month?' },
-                      { icon:'🔱', label:'This Year', q:'Read my year. What is the full Dasha narrative for 2026 — what karma is burning, what is being built, what windows open?' },
-                      { icon:'☊', label:'My Past Lives', q:'Read the past-life roots of my current karmic patterns. What did I come to release and what mastery did I carry in?' },
-                      { icon:'⭐', label:'Future: 2026–2030', q:'Look forward from 2050. What major Dasha transitions and life events are written in my record between now and 2030?' },
-                      { icon:'♄', label:'Current Dasha', q:'Read my current Mahadasha and Antardasha deeply. What karmic contract is active? What is the hidden gift inside this period?' },
-                      { icon:'🕉', label:'Soul Mission', q:'What is my Atmakaraka? What soul mission did I agree to in this incarnation, and how is my current dasha serving that agreement?' },
-                      { icon:'📿', label:'Sādhana Now', q:'Prescribe the Bhrigu remedy for my current planetary period — the precise mantra, timing, and practice I need right now.' },
+                    {[
+                      { icon:'☊', label:'Rahu Cycle', q:'Read my Rahu Mahadasha — karmic curriculum, breakthrough windows, and what to navigate carefully.' },
+                      { icon:'♄', label:'Financial Verdict', q:'Financial verdict for my current dasha period. Best action months and what to avoid.' },
+                      { icon:'♀', label:'Relationship Karma', q:'Analyse my relationship karma from Venus and 7th house. What soul-pattern is being resolved?' },
+                      { icon:'🕉', label:'Soul Mission', q:'What is my Atmakaraka and what does it reveal about my soul mission in this incarnation?' },
+                      { icon:'♃', label:'Dharma Path', q:'Read my 10th house and Saturn for dharmic career direction and timing.' },
+                      { icon:'🔱', label:'Bhrigu Remedy', q:'Identify the primary karmic obstacle and prescribe the Bhrigu remedy with mantra.' },
+                      { icon:'☋', label:'Ketu Karma', q:'What does my Ketu reveal about past-life mastery and what I came to release this life?' },
+                      { icon:'⭐', label:'Timing Oracle', q:'Is my current dasha period auspicious for my spiritual platform? Precise timing.' },
+                      { icon:'📿', label:'Graha Sādhana', q:'Prescribe the optimal Graha sādhana — mantra, gem, and practice — for my weakest planet.' },
                     ].map(qa => (
                       <button key={qa.label} onClick={() => { setChatInput(qa.q); setOracleOpen(true); }} style={{
                         padding:'10px 8px', borderRadius:14, border:'1px solid rgba(212,175,55,0.12)',
