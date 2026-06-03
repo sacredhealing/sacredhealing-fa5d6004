@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Crown, Leaf, Sparkles, Flame, Infinity, MessageSquare } from 'lucide-react';
+import { Crown, Leaf, Sparkles, Flame, Infinity as InfinityIcon, MessageSquare } from 'lucide-react';
 import { DoshaQuiz } from './DoshaQuiz';
 import { DoshaDashboard } from './DoshaDashboard';
 import { AyurvedaChatConsultation } from './AyurvedaChatConsultation';
