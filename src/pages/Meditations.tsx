@@ -813,7 +813,10 @@ const Meditations: React.FC = () => {
 
   const initiatePlay = (med: MeditationFull, lang: ContentLanguage) => {
     const audioUrl = lang === 'sv' && med.audio_url_sv ? med.audio_url_sv : med.audio_url;
-    if (!audioUrl) return;
+    if (!audioUrl) {
+      toast.error('Audio not yet uploaded for this meditation. Please check the admin panel.');
+      return;
+    }
     playUniversalAudio({ id: med.id, title: med.title, audio_url: audioUrl, artist: '', cover_image_url: null, duration_seconds: 0, shc_reward: 0, contentType: 'meditation' });
   };
 
