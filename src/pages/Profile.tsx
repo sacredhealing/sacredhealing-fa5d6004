@@ -165,6 +165,7 @@ const Profile: React.FC = () => {
   const [soulVaultLoading, setSoulVaultLoading] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scanPhase, setScanPhase] = useState<'idle'|'scanning'|'question'|'saving'|'done'>('idle');
+  const [generatedReport, setGeneratedReport] = useState<string>('');
   const [langOpen, setLangOpen] = useState(false);
   const [selectedPracticeId, setSelectedPracticeId] = useState<string|null>(null);
   const [practiceDuration, setPracticeDuration] = useState<string>('30');
@@ -213,7 +214,7 @@ const Profile: React.FC = () => {
   }, [user?.id]);
 
   const handleStartScanner = () => { setSelectedPracticeId(null); setPracticeDuration('30'); setScanPhase('scanning'); setScannerOpen(true); };
-  const handleCloseScanner = () => { setScannerOpen(false); setScanPhase('idle'); setSelectedPracticeId(null); };
+  const handleCloseScanner = () => { setScannerOpen(false); setScanPhase('idle'); setSelectedPracticeId(null); setGeneratedReport(''); };
 
   const handleGenerateSoulReport = async () => {
     if (!user?.id || !selectedPracticeId) return;
@@ -234,6 +235,7 @@ const Profile: React.FC = () => {
       const { data: inserted, error: insertError } = await supabase.from('soul_vault_entries').insert({user_id:user.id,activity:selectedPracticeId,duration_minutes:durationMinutes,report:reportText}).select('*').single();
       if (insertError) { toast({title:t('profilePage.toastSoulVaultSaveFailed'),description:t('profilePage.toastSoulVaultSaveFailedDesc'),variant:'destructive'}); setScanPhase('question'); return; }
       setSoulVaultEntries(prev=>[inserted as SoulVaultEntry,...prev]);
+      setGeneratedReport(geminiReport);
       setScanPhase('done');
       toast({title:t('profilePage.toastDeepFieldSaved'),description:t('profilePage.toastDeepFieldSavedDesc')});
     } catch { toast({title:t('profilePage.toastTransmissionError'),description:t('profilePage.toastTransmissionErrorDesc'),variant:'destructive'}); setScanPhase('question'); }
@@ -768,7 +770,7 @@ const Profile: React.FC = () => {
                 </>
               )}
               {scanPhase==='saving'&&<div style={{textAlign:'center',padding:'24px 0'}}><p style={{fontSize:14,textTransform:'uppercase',letterSpacing:'.25em',color:'rgba(34,211,238,.8)'}}>{t('profilePage.scannerCommitting')}</p><p style={{fontSize:14,color:'rgba(255,255,255,.4)',marginTop:8}}>{t('profilePage.scannerCommittingDesc')}</p></div>}
-              {scanPhase==='done'&&<KoshaReport sessionData={{practice:scannerPracticeLabel,duration:practiceDuration?Number(practiceDuration):null}} onSave={handleCloseScanner}/>}
+              {scanPhase==='done'&&<KoshaReport sessionData={{practice:scannerPracticeLabel,duration:practiceDuration?Number(practiceDuration):null,report:generatedReport}} onSave={handleCloseScanner}/>}
             </div>
           </div>
         )}
@@ -785,3 +787,4 @@ const Profile: React.FC = () => {
 };
 
 export default Profile;
+
