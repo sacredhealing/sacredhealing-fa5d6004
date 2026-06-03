@@ -626,7 +626,10 @@ const Healing: React.FC = () => {
   const initiatePlay = (audio: HealingAudio) => {
     const canPlay = isAdmin || audio.is_free || ownedAudioIds.has(audio.id) || hasHealingAccess;
     const audioUrl = canPlay ? audio.audio_url : audio.preview_url;
-    if (!audioUrl) { if (canPlay && !audio.audio_url) sonnerToast.error('Audio not yet uploaded'); return; }
+    if (!audioUrl) {
+      sonnerToast.error(canPlay ? 'Audio not yet uploaded for this healing track. Upload via Admin panel.' : 'No preview available for this track.');
+      return;
+    }
     // Play directly using the same mini-player as meditations — no banner gate
     startPlayback(audio);
   };
