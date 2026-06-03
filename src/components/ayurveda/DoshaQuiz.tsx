@@ -1,358 +1,409 @@
 /**
  * ████████████████████████████████████████████████████████████████
- *  SQI 2050 — PRAKRITI DEEP-SCAN PROTOCOL
- *  DoshaQuiz.tsx — Maximum Accuracy Siddha Intelligence
+ *  SQI 2050 — PRAKRITI DEEP-SCAN PROTOCOL v2
+ *  DoshaQuiz.tsx — 18-Dimension Single-Trait Accuracy
  *
- *  WHY THIS IS MORE ACCURATE:
- *  1. 7 Dimensional Scan (vs old 2-field text form):
- *     Body Constitution · Digestive Fire · Mental Nature ·
- *     Emotional Pattern · Sensory Tendencies · Sleep & Energy ·
- *     Life Situation
- *  2. Visual selection cards (reduces bias vs free-text)
- *  3. Birth data + location kept (Jyotish overlay support)
- *  4. Seasonal & climate questions (Vikruti detection)
- *  5. All data passed as structured JSON to the AI prompt
- *
- *  FUNCTIONAL LOGIC: onComplete(profile) — PRESERVED EXACTLY
+ *  UPGRADE FROM v1:
+ *  - 18 focused questions (one atomic observable per question)
+ *  - No more bundled multi-trait answers → eliminates mixed-constitution confusion
+ *  - Vikruti (current imbalance) detected separately on final question
+ *  - Cleaner progress UX (dots + %)
+ *  - onComplete(profile) — PRESERVED EXACTLY
  * ████████████████████████████████████████████████████████████████
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, ScanLine } from 'lucide-react';
 import type { AyurvedaUserProfile } from '@/lib/ayurvedaTypes';
-import { useTranslation } from '@/hooks/useTranslation';
 
 // ── SQI tokens ───────────────────────────────────────────────────
 const G = {
   gold:       '#D4AF37',
   goldBorder: 'rgba(212,175,55,0.25)',
   goldStrong: 'rgba(212,175,55,0.5)',
-  goldGlow:   'rgba(212,175,55,0.18)',
-  glass:      'rgba(255,255,255,0.02)',
+  goldGlow:   'rgba(212,175,55,0.15)',
+  glass:      'rgba(255,255,255,0.025)',
+  glassBorder:'rgba(255,255,255,0.06)',
+  w90:        'rgba(255,255,255,0.9)',
   w60:        'rgba(255,255,255,0.6)',
   w40:        'rgba(255,255,255,0.4)',
 };
 
-// Dosha colour map
 const DC = {
-  vata:  { c: '#93C5FD', g: 'rgba(147,197,253,0.15)', b: 'rgba(147,197,253,0.25)' },
-  pitta: { c: '#FBBF24', g: 'rgba(251,191,36,0.15)',  b: 'rgba(251,191,36,0.25)' },
-  kapha: { c: '#34D399', g: 'rgba(52,211,153,0.15)',  b: 'rgba(52,211,153,0.25)' },
+  vata:  { c: '#93C5FD', g: 'rgba(147,197,253,0.12)', b: 'rgba(147,197,253,0.25)' },
+  pitta: { c: '#FBBF24', g: 'rgba(251,191,36,0.12)',  b: 'rgba(251,191,36,0.25)' },
+  kapha: { c: '#34D399', g: 'rgba(52,211,153,0.12)',  b: 'rgba(52,211,153,0.25)' },
 };
+
+// ── 18 single-trait questions ─────────────────────────────────────
+interface QuizOption { d: 'vata' | 'pitta' | 'kapha'; icon: string; label: string; desc: string; }
+interface QuizQuestion { cat: string; icon: string; q: string; opts: QuizOption[]; }
+
+const QUESTIONS: QuizQuestion[] = [
+  {
+    cat: 'Body Frame', icon: '🌿', q: 'What is your natural body frame?',
+    opts: [
+      { d: 'vata',  icon: '🌬️', label: 'Lean & Slender',      desc: 'Fine bones, narrow shoulders, hard to gain weight' },
+      { d: 'pitta', icon: '🔥', label: 'Medium & Athletic',    desc: 'Medium frame, defined muscles, moderate build' },
+      { d: 'kapha', icon: '🌍', label: 'Broad & Solid',        desc: 'Wide frame, gains weight easily, solid structure' },
+    ],
+  },
+  {
+    cat: 'Skin Texture', icon: '✨', q: 'How does your skin naturally feel?',
+    opts: [
+      { d: 'vata',  icon: '💨', label: 'Dry & Rough',          desc: 'Often flaky, cool to touch, chaps easily' },
+      { d: 'pitta', icon: '🌡️', label: 'Warm & Sensitive',     desc: 'Prone to redness, warm, reactive to heat' },
+      { d: 'kapha', icon: '💧', label: 'Smooth & Moist',       desc: 'Naturally soft, thick, cool to touch' },
+    ],
+  },
+  {
+    cat: 'Hair Quality', icon: '🌀', q: 'What is your hair naturally like?',
+    opts: [
+      { d: 'vata',  icon: '🌬️', label: 'Dry & Fine',           desc: 'Frizzy, breaks easily, lacks moisture' },
+      { d: 'pitta', icon: '🔥', label: 'Straight & Fine',      desc: 'Thin texture, premature greying or thinning' },
+      { d: 'kapha', icon: '🌊', label: 'Thick & Lustrous',     desc: 'Dense, oily, slow to grey, voluminous' },
+    ],
+  },
+  {
+    cat: 'Appetite', icon: '🔥', q: 'How would you describe your appetite?',
+    opts: [
+      { d: 'vata',  icon: '💨', label: 'Irregular & Variable', desc: 'Sometimes starving, sometimes no appetite at all' },
+      { d: 'pitta', icon: '⚡', label: 'Strong & Intense',     desc: 'Must eat on time — irritable if meals are skipped' },
+      { d: 'kapha', icon: '🌿', label: 'Slow & Steady',        desc: 'Can skip meals easily, rarely feels truly hungry' },
+    ],
+  },
+  {
+    cat: 'Digestion Speed', icon: '⚡', q: 'How quickly do you digest food?',
+    opts: [
+      { d: 'vata',  icon: '💨', label: 'Unpredictable',        desc: 'Sometimes fast, sometimes constipated or bloated' },
+      { d: 'pitta', icon: '🔥', label: 'Fast & Complete',      desc: 'Digests well, loose stools when stressed' },
+      { d: 'kapha', icon: '🌊', label: 'Slow & Heavy',         desc: 'Feels heavy after eating, slow full digestion' },
+    ],
+  },
+  {
+    cat: 'Energy Pattern', icon: '⚡', q: 'How does your energy flow through the day?',
+    opts: [
+      { d: 'vata',  icon: '🌩️', label: 'Bursts & Crashes',     desc: 'High energy spurts followed by exhaustion' },
+      { d: 'pitta', icon: '☀️', label: 'Steady & Driven',      desc: 'Consistent energy, peaks in afternoon' },
+      { d: 'kapha', icon: '🌙', label: 'Slow to Start',        desc: 'Low morning energy that improves through the day' },
+    ],
+  },
+  {
+    cat: 'Sleep Nature', icon: '🌙', q: 'How do you sleep?',
+    opts: [
+      { d: 'vata',  icon: '🌬️', label: 'Light & Disturbed',    desc: 'Wake easily, vivid dreams, often under 6 hours' },
+      { d: 'pitta', icon: '🔥', label: 'Moderate & Intense',   desc: '7–8 hours, vivid dreams, alert on waking' },
+      { d: 'kapha', icon: '🌊', label: 'Deep & Long',          desc: 'Sleep heavily, 9+ hours, hard to wake up' },
+    ],
+  },
+  {
+    cat: 'Mind Speed', icon: '🧠', q: 'How does your mind process information?',
+    opts: [
+      { d: 'vata',  icon: '🌪️', label: 'Fast & Scattered',     desc: 'Quick to grasp, quick to forget, jumps between topics' },
+      { d: 'pitta', icon: '🎯', label: 'Sharp & Focused',      desc: 'Analytical, decisive, retains information well' },
+      { d: 'kapha', icon: '🌿', label: 'Slow & Deep',          desc: 'Takes time to learn but never forgets' },
+    ],
+  },
+  {
+    cat: 'Stress Response', icon: '💚', q: 'When stressed or overwhelmed, you tend to…',
+    opts: [
+      { d: 'vata',  icon: '😰', label: 'Worry & Scatter',      desc: 'Anxiety spikes, overthinking, freeze response' },
+      { d: 'pitta', icon: '😤', label: 'Anger & Control',      desc: 'Irritability rises, urge to fix everything fast' },
+      { d: 'kapha', icon: '😔', label: 'Withdraw & Numb',      desc: 'Retreat inward, comfort eat, slow emotional response' },
+    ],
+  },
+  {
+    cat: 'Core Emotion', icon: '💫', q: 'What is your most common emotional tendency?',
+    opts: [
+      { d: 'vata',  icon: '🌬️', label: 'Enthusiasm → Anxiety', desc: 'Excited quickly, but worry and fear follow easily' },
+      { d: 'pitta', icon: '🔥', label: 'Passion → Anger',      desc: 'Driven and intense, temper rises under pressure' },
+      { d: 'kapha', icon: '🌿', label: 'Love → Attachment',    desc: 'Deeply caring, holds on, slow to release' },
+    ],
+  },
+  {
+    cat: 'Memory Type', icon: '🔮', q: 'How is your memory?',
+    opts: [
+      { d: 'vata',  icon: '💨', label: 'Quick but Forgetful',  desc: 'Absorbs fast, forgets names and details easily' },
+      { d: 'pitta', icon: '🎯', label: 'Sharp & Precise',      desc: 'Retains facts, figures, and sequences accurately' },
+      { d: 'kapha', icon: '🌊', label: 'Slow but Lasting',     desc: 'Takes longer to memorize, but never truly forgets' },
+    ],
+  },
+  {
+    cat: 'Climate Preference', icon: '🌤️', q: 'Which climate feels best for your body?',
+    opts: [
+      { d: 'vata',  icon: '☀️', label: 'Warm & Humid',         desc: 'Cold and wind aggravate you the most' },
+      { d: 'pitta', icon: '❄️', label: 'Cool & Airy',          desc: 'Heat exhausts you — love cool breezes' },
+      { d: 'kapha', icon: '🌞', label: 'Dry & Warm',           desc: 'Cold and damp make you heavy and sluggish' },
+    ],
+  },
+  {
+    cat: 'Speech Pattern', icon: '🗣️', q: 'How do you naturally speak?',
+    opts: [
+      { d: 'vata',  icon: '🌪️', label: 'Fast & Talkative',     desc: 'Speaks quickly, topic-hops, gestures often' },
+      { d: 'pitta', icon: '⚡', label: 'Clear & Precise',      desc: 'Direct, articulate, persuasive by nature' },
+      { d: 'kapha', icon: '🌿', label: 'Slow & Melodious',     desc: 'Deep voice, thoughtful, few but meaningful words' },
+    ],
+  },
+  {
+    cat: 'Decision Making', icon: '⚖️', q: 'How do you make decisions?',
+    opts: [
+      { d: 'vata',  icon: '🌬️', label: 'Fast but Indecisive',  desc: 'Changes mind often, second-guesses frequently' },
+      { d: 'pitta', icon: '🔥', label: 'Fast & Confident',     desc: 'Decisive, rarely reverses, thinks strategically' },
+      { d: 'kapha', icon: '🌊', label: 'Slow & Deliberate',    desc: 'Takes time, but once committed — stays committed' },
+    ],
+  },
+  {
+    cat: 'Exercise Style', icon: '🏃', q: 'What kind of physical activity feels natural?',
+    opts: [
+      { d: 'vata',  icon: '💨', label: 'Light & Varied',       desc: 'Yoga, walking, dance — dislikes rigid routine' },
+      { d: 'pitta', icon: '🔥', label: 'Intense & Competitive',desc: 'Loves challenges, sport, high-intensity training' },
+      { d: 'kapha', icon: '🌍', label: 'Steady & Enduring',    desc: 'Prefers slow endurance over rapid bursts' },
+    ],
+  },
+  {
+    cat: 'Social Nature', icon: '👁️', q: 'How do you recharge socially?',
+    opts: [
+      { d: 'vata',  icon: '🌬️', label: 'Stimulated by People', desc: 'Loves social energy but gets scattered quickly' },
+      { d: 'pitta', icon: '🎯', label: 'Selective & Purposeful',desc: 'Socializes with intention, dislikes small talk' },
+      { d: 'kapha', icon: '🌿', label: 'Intimate & Loyal',     desc: 'Prefers deep one-on-one over large groups' },
+    ],
+  },
+  {
+    cat: 'Elimination', icon: '🌊', q: 'What describes your natural bowel pattern?',
+    opts: [
+      { d: 'vata',  icon: '💨', label: 'Irregular & Dry',      desc: 'Constipation, gas, and bloating common' },
+      { d: 'pitta', icon: '🔥', label: 'Regular & Loose',      desc: 'Once or more daily, often soft or loose' },
+      { d: 'kapha', icon: '🌍', label: 'Regular & Slow',       desc: 'Consistent but slow, heavy stools' },
+    ],
+  },
+  {
+    cat: 'Current Imbalance', icon: '🔮', q: 'What has been most prominent in the last 3 months?',
+    opts: [
+      { d: 'vata',  icon: '⚡', label: 'Anxiety · Dryness · Restlessness', desc: 'Racing mind, sleep issues, irregular digestion' },
+      { d: 'pitta', icon: '🌡️', label: 'Irritability · Heat · Inflammation', desc: 'Skin flares, impatience, burning sensations' },
+      { d: 'kapha', icon: '💧', label: 'Heaviness · Lethargy · Congestion', desc: 'Weight gain, mucus, low motivation' },
+    ],
+  },
+];
+
+const TOTAL = QUESTIONS.length;
 
 interface DoshaQuizProps {
   onComplete: (profile: AyurvedaUserProfile) => void;
   isLoading: boolean;
 }
 
-type TQuiz = (key: string, fallbackOrOptions?: string | Record<string, unknown>) => string;
-
-function buildScanDimensions(t: TQuiz) {
-  const dim = (id: string, prefix: string, icon: string, optIcons: [string, string, string]) => ({
-    id,
-    title: t(`ayurvedaQuiz.${prefix}Title`, ''),
-    subtitle: t(`ayurvedaQuiz.${prefix}Subtitle`, ''),
-    icon,
-    question: t(`ayurvedaQuiz.${prefix}Q`, ''),
-    options: [
-      { label: t(`ayurvedaQuiz.${prefix}VataL`, ''), desc: t(`ayurvedaQuiz.${prefix}VataD`, ''), dosha: 'vata', icon: optIcons[0] },
-      { label: t(`ayurvedaQuiz.${prefix}PittaL`, ''), desc: t(`ayurvedaQuiz.${prefix}PittaD`, ''), dosha: 'pitta', icon: optIcons[1] },
-      { label: t(`ayurvedaQuiz.${prefix}KaphaL`, ''), desc: t(`ayurvedaQuiz.${prefix}KaphaD`, ''), dosha: 'kapha', icon: optIcons[2] },
-    ],
-  });
-  return [
-    dim('body', 'body', '🌿', ['🌬️', '🔥', '🌍']),
-    dim('agni', 'agni', '🔥', ['💨', '⚡', '🌊']),
-    dim('manas', 'manas', '🧠', ['🌪️', '🎯', '🌿']),
-    dim('bhava', 'bhava', '💚', ['😰', '😤', '😔']),
-    dim('indriya', 'indriya', '👁️', ['🎵', '👀', '🌸']),
-    dim('prana', 'prana', '⚡', ['🌩️', '☀️', '🌙']),
-    dim('vikruti', 'vikruti', '🔮', ['⚡', '🔥', '💧']),
-  ];
-}
-
-interface ScanAnswer { [dimensionId: string]: string } // stores dosha selected
+type Phase = 'identity' | 'scan' | 'situation';
 
 export const DoshaQuiz: React.FC<DoshaQuizProps> = ({ onComplete, isLoading }) => {
-  const { t } = useTranslation();
-  const scanDimensions = useMemo(() => buildScanDimensions(t), [t]);
-  const [phase, setPhase] = useState<'identity' | 'scan' | 'situation'>('identity');
-  const [scanStep, setScanStep] = useState(0);
-  const [answers, setAnswers] = useState<ScanAnswer>({});
+  const [phase, setPhase]       = useState<Phase>('identity');
+  const [step, setStep]         = useState(0);
+  const [answers, setAnswers]   = useState<Record<string, string>>({});
   const [formData, setFormData] = useState<AyurvedaUserProfile>({
-    name: '',
-    birthDate: '',
-    birthTime: '',
-    location: '',
-    currentChallenge: '',
-    personalityTraits: '',
+    name: '', birthDate: '', birthTime: '', location: '',
+    currentChallenge: '', personalityTraits: '',
   });
 
-  // ── Tally dosha scores ────────────────────────────────────────
+  // ── Tally ────────────────────────────────────────────────────
   const scores = Object.values(answers).reduce<Record<string, number>>(
-    (acc, dosha) => { acc[dosha] = (acc[dosha] || 0) + 1; return acc; },
-    {}
+    (acc, d) => { acc[d] = (acc[d] || 0) + 1; return acc; }, {}
   );
-  const maxScore = scanDimensions.length;
+  const vScore = scores['vata']  || 0;
+  const pScore = scores['pitta'] || 0;
+  const kScore = scores['kapha'] || 0;
+  const vPct   = Math.round((vScore / TOTAL) * 100);
+  const pPct   = Math.round((pScore / TOTAL) * 100);
+  const kPct   = Math.round((kScore / TOTAL) * 100);
 
-  // ── Answer a dimension ────────────────────────────────────────
-  const handleAnswer = (dimensionId: string, dosha: string) => {
-    setAnswers(prev => ({ ...prev, [dimensionId]: dosha }));
+  // ── Answer handler ───────────────────────────────────────────
+  const handleAnswer = (dosha: string) => {
+    const key = QUESTIONS[step].cat;
+    setAnswers(prev => ({ ...prev, [key]: dosha }));
     setTimeout(() => {
-      if (scanStep < scanDimensions.length - 1) {
-        setScanStep(s => s + 1);
+      if (step < TOTAL - 1) {
+        setStep(s => s + 1);
       } else {
         setPhase('situation');
       }
-    }, 380);
+    }, 320);
   };
 
-  // ── Submit ────────────────────────────────────────────────────
+  // ── Submit ───────────────────────────────────────────────────
   const handleSubmit = () => {
-    const scanSummary = scanDimensions.map(d => {
-      const ans = answers[d.id];
-      const opt = d.options.find(o => o.dosha === ans);
-      return `${d.title}: ${opt?.label || ans} (${opt?.desc || ''})`;
+    const scanLines = QUESTIONS.map(q => {
+      const ans = answers[q.cat];
+      const opt = q.opts.find(o => o.d === ans);
+      return `${q.cat}: ${opt?.label || ans}`;
     }).join('\n');
 
-    const vataPct  = Math.round(((scores['vata']  || 0) / maxScore) * 100);
-    const pittaPct = Math.round(((scores['pitta'] || 0) / maxScore) * 100);
-    const kaphaPct = Math.round(((scores['kapha'] || 0) / maxScore) * 100);
-
-    const enrichedProfile: AyurvedaUserProfile = {
+    onComplete({
       ...formData,
-      personalityTraits: `PRAKRITI SCAN (7-Dimension SQI Protocol):\n${scanSummary}\n\nDOSHA SCORES: Vata ${vataPct}% | Pitta ${pittaPct}% | Kapha ${kaphaPct}%`,
-      currentChallenge: formData.currentChallenge,
-    };
-
-    onComplete(enrichedProfile);
+      personalityTraits: `PRAKRITI SCAN (18-Dimension SQI Protocol):\n${scanLines}\n\nDOSHA SCORES: Vata ${vPct}% | Pitta ${pPct}% | Kapha ${kPct}%`,
+    });
   };
 
-  // Loading state
+  // ── Loading ──────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div style={{
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
-        minHeight: '50vh', gap: 24, textAlign: 'center',
-        padding: '40px 24px',
-      }}>
-        <div style={{ position: 'relative', width: 80, height: 80 }}>
-          {[0, 1].map(i => (
-            <motion.div
-              key={i}
-              style={{
-                position: 'absolute',
-                inset: -(i * 16),
-                borderRadius: '50%',
-                border: `1px solid ${i === 0 ? G.goldStrong : G.goldBorder}`,
-              }}
+      <div style={{ display:'flex', flexDirection:'column', alignItems:'center',
+        justifyContent:'center', minHeight:'50vh', gap:24, textAlign:'center', padding:'40px 24px' }}>
+        <div style={{ position:'relative', width:80, height:80 }}>
+          {[0,1].map(i => (
+            <motion.div key={i}
+              style={{ position:'absolute', inset:-(i*16), borderRadius:'50%',
+                border:`1px solid ${i===0 ? G.goldStrong : G.goldBorder}` }}
               animate={{ rotate: 360 }}
-              transition={{ duration: 3 + i * 2, repeat: Infinity, ease: 'linear' }}
+              transition={{ duration: 3+i*2, repeat:Infinity, ease:'linear' }}
             />
           ))}
-          <div style={{
-            width: 80, height: 80, borderRadius: '50%',
-            background: `radial-gradient(circle, rgba(212,175,55,0.2), transparent)`,
-            border: `1px solid ${G.goldBorder}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 28,
-          }}>🔱</div>
+          <div style={{ width:80, height:80, borderRadius:'50%',
+            background:'radial-gradient(circle, rgba(212,175,55,0.2), transparent)',
+            border:`1px solid ${G.goldBorder}`, display:'flex',
+            alignItems:'center', justifyContent:'center', fontSize:28 }}>🔱</div>
         </div>
         <div>
-          <div style={{
-            fontSize: 24, fontWeight: 900, letterSpacing: '-0.04em',
-            color: G.gold, marginBottom: 8,
-          }}>
-            {t('ayurvedaQuiz.loadingTitle', 'Consulting the Sages…')}
+          <div style={{ fontSize:24, fontWeight:900, letterSpacing:'-0.04em', color:G.gold, marginBottom:8 }}>
+            Consulting the Sages…
           </div>
-          <p style={{ fontSize: 14, color: G.w40, lineHeight: 1.65 }}>
-            {t('ayurvedaQuiz.loadingSub', 'The Akasha-Neural Archive maps your Prakriti with Siddha wisdom.')}
+          <p style={{ fontSize:14, color:G.w40, lineHeight:1.65 }}>
+            The Akasha-Neural Archive maps your Prakriti with Siddha wisdom.
           </p>
         </div>
       </div>
     );
   }
 
-  // ── PHASE: IDENTITY ───────────────────────────────────────────
+  // ── PHASE: IDENTITY ──────────────────────────────────────────
   if (phase === 'identity') {
+    const ready = formData.name && formData.birthDate && formData.birthTime && formData.location;
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-        style={{ maxWidth: 600, margin: '0 auto', padding: '32px 16px' }}
-      >
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.6em', textTransform: 'uppercase', color: G.gold, marginBottom: 12, opacity: .7 }}>
-            {t('ayurvedaQuiz.idLabel', '✦ Prakriti Deep-Scan Protocol · Step 1 of 3 ✦')}
-          </div>
-          <h2 style={{ fontSize: 32, fontWeight: 900, letterSpacing: '-0.05em', color: 'rgba(255,255,255,0.9)', marginBottom: 8 }}>
-            {t('ayurvedaQuiz.idTitle', 'Sacred Beginnings')}
-          </h2>
-          <p style={{ fontSize: 14, color: G.w40, lineHeight: 1.65 }}>
-            {t('ayurvedaQuiz.idSubtitle', 'Birth data activates Jyotish-Ayurveda alignment for higher accuracy')}
+      <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }}
+        style={{ maxWidth:580, margin:'0 auto', padding:'32px 16px' }}>
+        <div style={{ textAlign:'center', marginBottom:36 }}>
+          <div style={badge}>✦ Prakriti Deep-Scan Protocol · Step 1 of 3 ✦</div>
+          <h2 style={{ fontSize:30, fontWeight:900, letterSpacing:'-0.05em',
+            color:G.w90, marginBottom:8 }}>Sacred Beginnings</h2>
+          <p style={{ fontSize:13, color:G.w40, lineHeight:1.65 }}>
+            Birth data activates Jyotish-Ayurveda alignment for higher accuracy
           </p>
         </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <ScanField label={t('ayurvedaQuiz.fieldName', 'Your Sacred Name')} type="text" placeholder={t('ayurvedaQuiz.placeholderName', 'Full name')}
-            value={formData.name} onChange={v => setFormData(p => ({ ...p, name: v }))} />
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <ScanField label={t('ayurvedaQuiz.fieldBirthDate', 'Birth Date')} type="date" placeholder=""
-              value={formData.birthDate} onChange={v => setFormData(p => ({ ...p, birthDate: v }))} />
-            <ScanField label={t('ayurvedaQuiz.fieldBirthTime', 'Birth Time')} type="time" placeholder=""
-              value={formData.birthTime} onChange={v => setFormData(p => ({ ...p, birthTime: v }))} />
+        <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
+          <ScanField label="Your Sacred Name" type="text" placeholder="Full name"
+            value={formData.name} onChange={v => setFormData(p => ({ ...p, name:v }))} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+            <ScanField label="Birth Date" type="date" placeholder=""
+              value={formData.birthDate} onChange={v => setFormData(p => ({ ...p, birthDate:v }))} />
+            <ScanField label="Birth Time" type="time" placeholder=""
+              value={formData.birthTime} onChange={v => setFormData(p => ({ ...p, birthTime:v }))} />
           </div>
-
-          <ScanField label={t('ayurvedaQuiz.fieldLocation', 'Current Location')} type="text" placeholder={t('ayurvedaQuiz.placeholderLocation', 'City, Country')}
-            value={formData.location} onChange={v => setFormData(p => ({ ...p, location: v }))} />
-
-          <GoldButton
-            onClick={() => setPhase('scan')}
-            disabled={!formData.name || !formData.birthDate || !formData.birthTime || !formData.location}
-          >
-            {t('ayurvedaQuiz.beginScan', 'Begin Prakriti Scan')}
-            <ScanLine style={{ width: 18, height: 18, marginLeft: 8 }} />
+          <ScanField label="Current Location" type="text" placeholder="City, Country"
+            value={formData.location} onChange={v => setFormData(p => ({ ...p, location:v }))} />
+          <GoldButton onClick={() => setPhase('scan')} disabled={!ready}>
+            Begin Prakriti Scan <ScanLine style={{ width:18, height:18, marginLeft:8 }} />
           </GoldButton>
         </div>
       </motion.div>
     );
   }
 
-  // ── PHASE: SCAN DIMENSIONS ────────────────────────────────────
+  // ── PHASE: SCAN ──────────────────────────────────────────────
   if (phase === 'scan') {
-    const dim = scanDimensions[scanStep];
-    const progress = ((scanStep) / scanDimensions.length) * 100;
+    const q   = QUESTIONS[step];
+    const pct = Math.round((step / TOTAL) * 100);
 
     return (
-      <div style={{ maxWidth: 680, margin: '0 auto', padding: '24px 16px' }}>
-        {/* Progress bar */}
-        <div style={{ marginBottom: 28 }}>
-          <div style={{
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10,
-          }}>
-            <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.5em', textTransform: 'uppercase', color: G.gold, opacity: .7 }}>
-              {t('ayurvedaQuiz.scanProgress', {
-                defaultValue: '✦ Scan Dimension {{current}} of {{total}} ✦',
-                current: scanStep + 1,
-                total: scanDimensions.length,
-              })}
-            </div>
-            <div style={{ fontSize: 11, fontWeight: 800, color: G.gold }}>
-              {Math.round(progress)}%
-            </div>
+      <div style={{ maxWidth:640, margin:'0 auto', padding:'24px 16px' }}>
+        {/* Progress */}
+        <div style={{ marginBottom:26 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', marginBottom:10 }}>
+            <div style={badge}>✦ Question {step+1} of {TOTAL} ✦</div>
+            <div style={{ fontSize:11, fontWeight:900, color:G.gold }}>{pct}%</div>
           </div>
-          {/* Gold progress track */}
-          <div style={{ height: 2, borderRadius: 2, background: 'rgba(255,255,255,0.05)' }}>
-            <motion.div
-              style={{ height: '100%', borderRadius: 2, background: `linear-gradient(90deg, ${G.gold}, #B8960C)`, boxShadow: `0 0 8px ${G.gold}` }}
-              initial={{ width: `${progress}%` }}
-              animate={{ width: `${progress + (100 / scanDimensions.length)}%` }}
-              transition={{ duration: 0.4 }}
+          <div style={{ height:2, borderRadius:2, background:'rgba(255,255,255,0.06)' }}>
+            <motion.div style={{ height:'100%', borderRadius:2,
+              background:`linear-gradient(90deg, ${G.gold}, #B8960C)`,
+              boxShadow:`0 0 10px ${G.gold}` }}
+              animate={{ width:`${pct + (100/TOTAL)}%` }}
+              transition={{ duration:0.4 }}
             />
           </div>
-          {/* Dimension dots */}
-          <div style={{ display: 'flex', gap: 6, marginTop: 10, justifyContent: 'center' }}>
-            {scanDimensions.map((d, i) => (
-              <div key={d.id} style={{
-                width: i === scanStep ? 20 : 6, height: 6, borderRadius: 3,
-                background: i < scanStep ? G.gold : i === scanStep ? G.gold : 'rgba(255,255,255,0.1)',
-                transition: 'all 0.3s',
-                boxShadow: i === scanStep ? `0 0 8px ${G.gold}` : 'none',
+          {/* Dots */}
+          <div style={{ display:'flex', gap:5, marginTop:10, flexWrap:'wrap' }}>
+            {QUESTIONS.map((_, i) => (
+              <div key={i} style={{
+                height:5, borderRadius:3,
+                width: i===step ? 18 : 5,
+                background: i<step ? G.gold : i===step ? G.gold : 'rgba(255,255,255,0.1)',
+                opacity: i<step ? 0.5 : 1,
+                boxShadow: i===step ? `0 0 8px ${G.gold}` : 'none',
+                transition:'all 0.3s',
               }} />
             ))}
           </div>
         </div>
 
         <AnimatePresence mode="wait">
-          <motion.div
-            key={scanStep}
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -30 }}
-            transition={{ duration: 0.28 }}
-          >
-            {/* Dimension header */}
-            <div style={{
-              textAlign: 'center', marginBottom: 28,
-              padding: '24px 20px', borderRadius: 24,
-              background: G.glass,
-              border: `1px solid ${G.goldBorder}`,
-            }}>
-              <div style={{ fontSize: 36, marginBottom: 10 }}>{dim.icon}</div>
-              <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.5em', textTransform: 'uppercase', color: G.gold, opacity: .7, marginBottom: 8 }}>
-                {dim.title}
-              </div>
-              <p style={{ fontSize: 12, color: G.w40, marginBottom: 12 }}>{dim.subtitle}</p>
-              <p style={{ fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.85)', lineHeight: 1.5 }}>
-                {dim.question}
-              </p>
+          <motion.div key={step}
+            initial={{ opacity:0, x:28 }} animate={{ opacity:1, x:0 }}
+            exit={{ opacity:0, x:-28 }} transition={{ duration:0.25 }}>
+            {/* Question card */}
+            <div style={{ textAlign:'center', marginBottom:16, padding:'24px 20px',
+              borderRadius:24, background:G.glass, border:`1px solid ${G.goldBorder}` }}>
+              <div style={{ fontSize:34, marginBottom:10 }}>{q.icon}</div>
+              <div style={badge}>{q.cat}</div>
+              <p style={{ fontSize:16, fontWeight:800, color:G.w90, lineHeight:1.45,
+                letterSpacing:'-0.02em', marginTop:8 }}>{q.q}</p>
             </div>
 
             {/* Options */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {dim.options.map(opt => {
-                const dc = DC[opt.dosha as keyof typeof DC];
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              {q.opts.map(opt => {
+                const dc = DC[opt.d];
                 return (
-                  <motion.button
-                    key={opt.dosha}
-                    whileHover={{ scale: 1.02, x: 4 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleAnswer(dim.id, opt.dosha)}
-                    style={{
-                      display: 'flex', alignItems: 'flex-start', gap: 16,
-                      padding: '18px 20px', borderRadius: 20,
-                      background: G.glass,
-                      border: `1px solid ${G.goldBorder}`,
-                      cursor: 'pointer', textAlign: 'left',
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      transition: 'all 0.2s',
-                    }}
+                  <motion.button key={opt.d}
+                    whileHover={{ scale:1.015, x:4 }} whileTap={{ scale:0.98 }}
+                    onClick={() => handleAnswer(opt.d)}
+                    style={{ display:'flex', alignItems:'center', gap:14,
+                      padding:'16px 18px', borderRadius:18,
+                      background:G.glass, border:`1px solid ${G.glassBorder}`,
+                      cursor:'pointer', textAlign:'left',
+                      fontFamily:"'Plus Jakarta Sans', sans-serif",
+                      width:'100%', transition:'background 0.2s, border-color 0.2s' }}
                     onMouseEnter={e => {
                       (e.currentTarget as HTMLElement).style.background = dc.g;
                       (e.currentTarget as HTMLElement).style.borderColor = dc.b;
                     }}
                     onMouseLeave={e => {
                       (e.currentTarget as HTMLElement).style.background = G.glass;
-                      (e.currentTarget as HTMLElement).style.borderColor = G.goldBorder;
-                    }}
-                  >
-                    <div style={{
-                      width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-                      background: dc.g, border: `1px solid ${dc.b}`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 20,
+                      (e.currentTarget as HTMLElement).style.borderColor = G.glassBorder;
                     }}>
+                    <div style={{ width:42, height:42, borderRadius:12, flexShrink:0,
+                      background:dc.g, border:`1px solid ${dc.b}`,
+                      display:'flex', alignItems:'center', justifyContent:'center', fontSize:18 }}>
                       {opt.icon}
                     </div>
-                    <div>
-                      <div style={{ fontSize: 15, fontWeight: 800, color: 'rgba(255,255,255,.9)', marginBottom: 4 }}>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontSize:14, fontWeight:800, color:G.w90, marginBottom:3 }}>
                         {opt.label}
                       </div>
-                      <div style={{ fontSize: 12, color: G.w60, lineHeight: 1.55 }}>
+                      <div style={{ fontSize:11, color:G.w40, lineHeight:1.55 }}>
                         {opt.desc}
                       </div>
                     </div>
-                    <div style={{ marginLeft: 'auto', color: dc.c, opacity: .5, flexShrink: 0, fontSize: 16, alignSelf: 'center' }}>→</div>
+                    <div style={{ color:dc.c, opacity:0.4, flexShrink:0, fontSize:15, alignSelf:'center' }}>→</div>
                   </motion.button>
                 );
               })}
             </div>
 
-            {/* Back button */}
-            {scanStep > 0 && (
-              <button
-                onClick={() => setScanStep(s => s - 1)}
-                style={{
-                  marginTop: 16, padding: '8px 20px', borderRadius: 999,
-                  background: 'transparent', border: `1px solid ${G.goldBorder}`,
-                  color: G.w40, fontSize: 12, fontWeight: 700,
-                  cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif",
-                }}
-              >
-                {t('ayurvedaQuiz.back', '← Back')}
+            {step > 0 && (
+              <button onClick={() => setStep(s => s-1)}
+                style={{ marginTop:14, padding:'8px 20px', borderRadius:999,
+                  background:'transparent', border:`1px solid ${G.glassBorder}`,
+                  color:G.w40, fontSize:12, fontWeight:700,
+                  cursor:'pointer', fontFamily:"'Plus Jakarta Sans', sans-serif" }}>
+                ← Back
               </button>
             )}
           </motion.div>
@@ -362,184 +413,121 @@ export const DoshaQuiz: React.FC<DoshaQuizProps> = ({ onComplete, isLoading }) =
   }
 
   // ── PHASE: SITUATION & SUBMIT ─────────────────────────────────
-  if (phase === 'situation') {
-    const v = scores['vata'] || 0;
-    const p = scores['pitta'] || 0;
-    const k = scores['kapha'] || 0;
-
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-        style={{ maxWidth: 600, margin: '0 auto', padding: '32px 16px' }}
-      >
-        {/* Scan summary */}
-        <div style={{
-          padding: '24px', borderRadius: 24, marginBottom: 28,
-          background: `linear-gradient(135deg, rgba(212,175,55,0.07), rgba(212,175,55,0.02))`,
-          border: `1px solid ${G.goldBorder}`,
-          boxShadow: `0 0 40px ${G.goldGlow}`,
-        }}>
-          <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.5em', textTransform: 'uppercase', color: G.gold, marginBottom: 16, opacity: .7 }}>
-            {t('ayurvedaQuiz.scanComplete', '✦ Prakriti Scan Complete ✦')}
-          </div>
-          <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-            {[
-              { label: t('ayurvedaQuiz.doshaVata', 'Vata'), val: v, color: DC.vata.c },
-              { label: t('ayurvedaQuiz.doshaPitta', 'Pitta'), val: p, color: DC.pitta.c },
-              { label: t('ayurvedaQuiz.doshaKapha', 'Kapha'), val: k, color: DC.kapha.c },
-            ].map(d => (
-              <div key={d.label} style={{ flex: 1, textAlign: 'center' }}>
-                <div style={{ fontSize: 22, fontWeight: 900, color: d.color, letterSpacing: '-0.04em' }}>
-                  {Math.round((d.val / maxScore) * 100)}%
-                </div>
-                <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.4em', textTransform: 'uppercase', color: G.w40, marginTop: 2 }}>
-                  {d.label}
-                </div>
-                {/* Mini bar */}
-                <div style={{ height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.06)', marginTop: 6 }}>
-                  <div style={{
-                    height: '100%', borderRadius: 2,
-                    width: `${(d.val / maxScore) * 100}%`,
-                    background: d.color,
-                    boxShadow: `0 0 6px ${d.color}`,
-                  }} />
-                </div>
+  return (
+    <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }}
+      style={{ maxWidth:580, margin:'0 auto', padding:'32px 16px' }}>
+      {/* Score summary */}
+      <div style={{ padding:24, borderRadius:24, marginBottom:24,
+        background:`linear-gradient(135deg, rgba(212,175,55,0.08), rgba(212,175,55,0.02))`,
+        border:`1px solid ${G.goldBorder}`, boxShadow:`0 0 50px ${G.goldGlow}` }}>
+        <div style={{ ...badge, marginBottom:14 }}>✦ Prakriti Scan Complete — 18 Dimensions ✦</div>
+        <div style={{ display:'flex', gap:12 }}>
+          {[
+            { label:'Vata · Air',   val:vPct, color:DC.vata.c },
+            { label:'Pitta · Fire', val:pPct, color:DC.pitta.c },
+            { label:'Kapha · Earth',val:kPct, color:DC.kapha.c },
+          ].map(d => (
+            <div key={d.label} style={{ flex:1, textAlign:'center' }}>
+              <div style={{ fontSize:24, fontWeight:900, letterSpacing:'-0.04em', color:d.color }}>
+                {d.val}%
               </div>
-            ))}
-          </div>
+              <div style={{ fontSize:8, fontWeight:800, letterSpacing:'.4em',
+                textTransform:'uppercase', color:G.w40, marginTop:3 }}>
+                {d.label}
+              </div>
+              <div style={{ height:3, borderRadius:2, background:'rgba(255,255,255,0.06)', marginTop:6 }}>
+                <div style={{ height:'100%', borderRadius:2, width:`${d.val}%`,
+                  background:d.color, boxShadow:`0 0 6px ${d.color}` }} />
+              </div>
+            </div>
+          ))}
         </div>
+      </div>
 
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.6em', textTransform: 'uppercase', color: G.gold, marginBottom: 10, opacity: .7 }}>
-            {t('ayurvedaQuiz.finalLabel', '✦ Final Dimension · Step 3 of 3 ✦')}
-          </div>
-          <h2 style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-0.04em', color: 'rgba(255,255,255,.9)', marginBottom: 6 }}>
-            {t('ayurvedaQuiz.situationTitle', 'Life Situation')}
-          </h2>
-          <p style={{ fontSize: 13, color: G.w40, lineHeight: 1.65 }}>
-            {t('ayurvedaQuiz.situationSub', 'This unlocks your personalized Siddha healing path')}
-          </p>
-        </div>
+      <div style={{ textAlign:'center', marginBottom:24 }}>
+        <div style={badge}>✦ Final Dimension · Step 3 of 3 ✦</div>
+        <h2 style={{ fontSize:24, fontWeight:900, letterSpacing:'-0.04em',
+          color:G.w90, marginTop:10, marginBottom:6 }}>Life Situation</h2>
+        <p style={{ fontSize:13, color:G.w40, lineHeight:1.65 }}>
+          This unlocks your personalized Siddha healing path
+        </p>
+      </div>
 
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.5em', textTransform: 'uppercase', color: G.gold, opacity: .7, marginBottom: 10 }}>
-            {t('ayurvedaQuiz.challengesLabel', 'Current Life Challenges')}
-          </div>
-          <textarea
-            required
-            rows={4}
-            value={formData.currentChallenge}
-            onChange={e => setFormData(p => ({ ...p, currentChallenge: e.target.value }))}
-            placeholder={t(
-              'ayurvedaQuiz.challengePlaceholder',
-              'e.g. High work stress, sleep issues, relationship tension, digestive problems, financial anxiety…'
-            )}
-            style={{
-              width: '100%', padding: '16px 20px', borderRadius: 20,
-              background: 'rgba(255,255,255,0.03)',
-              border: `1px solid ${G.goldBorder}`,
-              color: 'rgba(255,255,255,0.85)',
-              fontSize: 14, lineHeight: 1.65, resize: 'none',
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              outline: 'none',
-            }}
-            onFocus={e => e.currentTarget.style.borderColor = G.goldStrong}
-            onBlur={e => e.currentTarget.style.borderColor = G.goldBorder}
-          />
-        </div>
+      <div style={{ marginBottom:22 }}>
+        <div style={{ ...badge, marginBottom:10 }}>Current Life Challenges</div>
+        <textarea required rows={4} value={formData.currentChallenge}
+          onChange={e => setFormData(p => ({ ...p, currentChallenge:e.target.value }))}
+          placeholder="e.g. High work stress, sleep issues, relationship tension, digestive problems, financial anxiety…"
+          style={{ width:'100%', padding:'16px 18px', borderRadius:18,
+            background:'rgba(255,255,255,0.03)', border:`1px solid ${G.glassBorder}`,
+            color:G.w90, fontSize:14, lineHeight:1.65, resize:'none',
+            fontFamily:"'Plus Jakarta Sans', sans-serif", outline:'none' }}
+          onFocus={e => e.currentTarget.style.borderColor = G.goldStrong}
+          onBlur={e  => e.currentTarget.style.borderColor = G.glassBorder}
+        />
+      </div>
 
-        <div style={{ display: 'flex', gap: 12 }}>
-          <button
-            onClick={() => { setPhase('scan'); setScanStep(scanDimensions.length - 1); }}
-            style={{
-              flex: 1, padding: '14px', borderRadius: 20,
-              background: 'transparent', border: `1px solid ${G.goldBorder}`,
-              color: G.w40, fontSize: 13, fontWeight: 700,
-              cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif",
-            }}
-          >
-            {t('ayurvedaQuiz.rescan', '← Rescan')}
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={!formData.currentChallenge}
-            style={{
-              flex: 3, padding: '16px', borderRadius: 20,
-              background: formData.currentChallenge
-                ? `linear-gradient(135deg, ${G.gold}, #B8960C)`
-                : 'rgba(255,255,255,0.05)',
-              border: `1px solid ${formData.currentChallenge ? G.gold : G.goldBorder}`,
-              color: formData.currentChallenge ? '#050505' : G.w40,
-              fontSize: 15, fontWeight: 900, letterSpacing: '-0.02em',
-              cursor: formData.currentChallenge ? 'pointer' : 'not-allowed',
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
-              boxShadow: formData.currentChallenge ? `0 0 30px ${G.goldGlow}` : 'none',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            }}
-          >
-            {t('ayurvedaQuiz.submitBlueprint', 'Reveal My Siddha Blueprint')}
-            <Sparkles style={{ width: 16, height: 16 }} />
-          </button>
-        </div>
-      </motion.div>
-    );
-  }
-
-  return null;
+      <div style={{ display:'flex', gap:10 }}>
+        <button onClick={() => { setPhase('scan'); setStep(TOTAL-1); }}
+          style={{ flex:1, padding:14, borderRadius:18,
+            background:'transparent', border:`1px solid ${G.glassBorder}`,
+            color:G.w40, fontSize:13, fontWeight:700,
+            cursor:'pointer', fontFamily:"'Plus Jakarta Sans', sans-serif" }}>
+          ← Rescan
+        </button>
+        <GoldButton onClick={handleSubmit} disabled={!formData.currentChallenge} style={{ flex:3 }}>
+          Reveal My Siddha Blueprint <Sparkles style={{ width:16, height:16, marginLeft:8 }} />
+        </GoldButton>
+      </div>
+    </motion.div>
+  );
 };
 
-// ── SUB-COMPONENTS ────────────────────────────────────────────────
+// ── Shared style token ────────────────────────────────────────────
+const badge: React.CSSProperties = {
+  fontSize:8, fontWeight:800, letterSpacing:'0.55em',
+  textTransform:'uppercase', color:G.gold, opacity:0.7,
+  display:'block',
+};
+
+// ── Sub-components ────────────────────────────────────────────────
 const ScanField: React.FC<{
-  label: string; type: string; placeholder: string;
-  value: string; onChange: (v: string) => void;
+  label:string; type:string; placeholder:string;
+  value:string; onChange:(v:string)=>void;
 }> = ({ label, type, placeholder, value, onChange }) => (
   <div>
-    <div style={{
-      fontSize: 8, fontWeight: 800, letterSpacing: '.5em', textTransform: 'uppercase',
-      color: G.gold, opacity: .7, marginBottom: 8,
-    }}>
-      {label}
-    </div>
-    <input
-      type={type}
-      required
-      value={value}
-      placeholder={placeholder}
+    <div style={badge}>{label}</div>
+    <input type={type} value={value} placeholder={placeholder}
       onChange={e => onChange(e.target.value)}
-      style={{
-        width: '100%', padding: '14px 20px', borderRadius: 16,
-        background: 'rgba(255,255,255,0.03)',
-        border: `1px solid ${G.goldBorder}`,
-        color: 'rgba(255,255,255,0.85)', fontSize: 14,
-        fontFamily: "'Plus Jakarta Sans', sans-serif",
-        outline: 'none',
-        colorScheme: 'dark',
-      }}
+      style={{ width:'100%', padding:'13px 18px', borderRadius:14, marginTop:8,
+        background:'rgba(255,255,255,0.03)', border:`1px solid ${G.glassBorder}`,
+        color:G.w90, fontSize:14, fontFamily:"'Plus Jakarta Sans', sans-serif",
+        outline:'none', colorScheme:'dark' }}
       onFocus={e => e.currentTarget.style.borderColor = G.goldStrong}
-      onBlur={e => e.currentTarget.style.borderColor = G.goldBorder}
+      onBlur={e  => e.currentTarget.style.borderColor = G.glassBorder}
     />
   </div>
 );
 
-const GoldButton: React.FC<{ onClick: () => void; disabled?: boolean; children: React.ReactNode }> = ({
-  onClick, disabled, children
-}) => (
-  <button
-    onClick={onClick}
-    disabled={disabled}
+const GoldButton: React.FC<{
+  onClick:()=>void; disabled?:boolean;
+  children:React.ReactNode; style?:React.CSSProperties;
+}> = ({ onClick, disabled, children, style }) => (
+  <button onClick={onClick} disabled={disabled}
     style={{
-      width: '100%', padding: '16px', borderRadius: 20,
+      padding:'15px 20px', borderRadius:18, display:'flex',
+      alignItems:'center', justifyContent:'center',
       background: disabled ? 'rgba(255,255,255,0.05)' : `linear-gradient(135deg, ${G.gold}, #B8960C)`,
-      border: `1px solid ${disabled ? G.goldBorder : G.gold}`,
+      border:`1px solid ${disabled ? G.glassBorder : G.gold}`,
       color: disabled ? G.w40 : '#050505',
-      fontSize: 15, fontWeight: 900, letterSpacing: '-0.02em',
+      fontSize:14, fontWeight:900, letterSpacing:'-0.02em',
       cursor: disabled ? 'not-allowed' : 'pointer',
-      fontFamily: "'Plus Jakarta Sans', sans-serif",
+      fontFamily:"'Plus Jakarta Sans', sans-serif",
       boxShadow: disabled ? 'none' : `0 0 30px ${G.goldGlow}`,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      transition: 'all 0.2s',
-    }}
-  >
+      transition:'all 0.2s',
+      width:'100%',
+      ...style,
+    }}>
     {children}
   </button>
 );
