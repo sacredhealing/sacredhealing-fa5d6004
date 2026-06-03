@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { safePlay } from '@/utils/safeAudioPlay';
+import { safePlay, proxyAudioUrl } from '@/utils/safeAudioPlay';
 
 export interface AmbientSound {
   id: string;
@@ -28,7 +28,7 @@ interface AmbientAudioContextType {
 
 const AmbientAudioContext = createContext<AmbientAudioContextType | undefined>(undefined);
 
-const DEFAULT_VOLUME = 0.3; // 30% volume for background audio
+const DEFAULT_VOLUME = 0.3;
 
 export const AmbientAudioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -39,7 +39,6 @@ export const AmbientAudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [volume, setVolumeState] = useState(DEFAULT_VOLUME);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch ambient sounds from database
   const fetchSounds = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -50,8 +49,6 @@ export const AmbientAudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
         .order('order_index', { ascending: true });
 
       if (error) throw error;
-      
-      // Type assertion since types may not be generated yet
       setSounds((data as AmbientSound[]) || []);
     } catch (error) {
       console.error('Error fetching ambient sounds:', error);
@@ -64,7 +61,6 @@ export const AmbientAudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
     fetchSounds();
   }, [fetchSounds]);
 
-  // Load saved preferences from localStorage
   useEffect(() => {
     const savedVolume = localStorage.getItem('ambient-audio-volume');
     if (savedVolume) {
@@ -73,29 +69,36 @@ export const AmbientAudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }, []);
 
   const playSound = useCallback((sound: AmbientSound) => {
-    if (!sound.audio_url) {
-      console.warn('No audio URL for ambient sound:', sound.name);
+    // Route R2 URLs through proxy to fix CORS
+    const resolvedUrl = proxyAudioUrl(sound.audio_url);
+    if (!resolvedUrl) {
+      console.warn('[SQI] No audio URL for ambient sound:', sound.name);
       return;
     }
 
-    // Stop current audio if playing
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
     }
 
-    // Create new audio element
-    audioRef.current = new Audio(sound.audio_url);
-    audioRef.current.loop = true; // Ambient sounds loop
-    audioRef.current.volume = volume;
+    const audio = new Audio(resolvedUrl);
+    audio.loop = true;
+    audio.volume = volume;
+    // Preload so mobile doesn't silently fail
+    audio.preload = 'auto';
+    audioRef.current = audio;
     
     void (async () => {
       const el = audioRef.current;
       if (!el) return;
-      const ok = await safePlay(el);
+      const ok = await safePlay(el, (err) => {
+        console.error('[SQI] Ambient audio failed:', sound.name, err.message);
+      });
       if (ok) {
         setCurrentSound(sound);
         setIsPlaying(true);
+      } else {
+        console.warn('[SQI] Could not play ambient sound — browser blocked autoplay:', sound.name);
       }
     })();
   }, [volume]);
@@ -129,13 +132,11 @@ export const AmbientAudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const clampedVol = Math.max(0, Math.min(1, vol));
     setVolumeState(clampedVol);
     localStorage.setItem('ambient-audio-volume', clampedVol.toString());
-    
     if (audioRef.current) {
       audioRef.current.volume = clampedVol;
     }
   }, []);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (audioRef.current) {
