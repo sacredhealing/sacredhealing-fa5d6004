@@ -3497,28 +3497,28 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
           <video ref={videoRef} className="hidden" muted playsInline tabIndex={-1} aria-hidden />
 
           {/* ══ CARD: Active Transmissions ══ */}
-          <div className="sqi-card-shell sqi-card-shell-strong" style={{ borderRadius: 28, overflow: 'hidden', animation: 'cardAuraGold 3.5s ease-in-out infinite' }}>
+          <div style={{ borderRadius: 28, overflow: 'hidden', boxShadow: '0 0 0 1px rgba(212,175,55,0.22),0 0 28px rgba(212,175,55,0.14),0 0 60px rgba(212,175,55,0.07)' }}>
             <div
-              className="sqi-card-tap"
+              style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 18px', height: 64, cursor: 'pointer', userSelect: 'none', WebkitTapHighlightColor: 'transparent', overflow: 'hidden', gap: 10, background: 'rgba(8,6,2,0.72)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', borderBottom: '1px solid rgba(212,175,55,0.10)' }}
               onClick={() => setCardTxOpen(o => !o)}
               role="button"
               tabIndex={0}
               onKeyDown={e => e.key === 'Enter' && setCardTxOpen(o => !o)}
             >
-              <div className="sqi-tap-glow" style={{ background: 'radial-gradient(circle,rgba(74,222,128,0.14) 0%,transparent 70%)' }} />
+              <div style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(circle,rgba(74,222,128,0.12) 0%,transparent 70%)', pointerEvents: 'none' }} />
               <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
-                <div className="sqi-card-orb sqi-card-orb-green">⚡</div>
+                <div style={{ width: 38, height: 38, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, background: 'radial-gradient(circle at 35% 35%,rgba(74,222,128,0.20),rgba(0,0,0,0))', border: '1px solid rgba(74,222,128,0.28)', boxShadow: '0 0 14px rgba(74,222,128,0.18),inset 0 0 8px rgba(74,222,128,0.08)' }}>⚡</div>
                 <div>
-                  <div className={`sqi-card-title${cardTxOpen ? ' sqi-card-title-open' : ''}`}>Active Transmissions</div>
-                  <div className="sqi-card-sub">Field live · 24 / 7</div>
+                  <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: '-0.02em', color: cardTxOpen ? '#D4AF37' : 'rgba(255,255,255,0.88)', textShadow: cardTxOpen ? '0 0 14px rgba(212,175,55,0.4)' : 'none', transition: 'color 0.3s,text-shadow 0.3s' }}>Active Transmissions</div>
+                  <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.22)', marginTop: 2 }}>Field live · 24 / 7</div>
                 </div>
               </div>
               <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                <div className="sqi-card-pill sqi-pill-green">{activeTransmissions.length > 0 ? `${activeTransmissions.length} Active` : 'Empty'}</div>
-                <div className={`sqi-card-chevron${cardTxOpen ? ' sqi-card-chevron-open' : ''}`}>▾</div>
+                <div style={{ fontSize: 7, fontWeight: 900, letterSpacing: '0.22em', textTransform: 'uppercase' as const, padding: '4px 10px', borderRadius: 100, color: '#4ade80', background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.28)', boxShadow: '0 0 10px rgba(74,222,128,0.12)' }}>{activeTransmissions.length > 0 ? `${activeTransmissions.length} Active` : 'Empty'}</div>
+                <div style={{ width: 24, height: 24, borderRadius: '50%', background: cardTxOpen ? 'rgba(212,175,55,0.10)' : 'rgba(255,255,255,0.03)', border: cardTxOpen ? '1px solid rgba(212,175,55,0.35)' : '1px solid rgba(212,175,55,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: cardTxOpen ? '#D4AF37' : 'rgba(212,175,55,0.35)', fontSize: 10, flexShrink: 0, transform: cardTxOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.38s cubic-bezier(0.4,0,0.2,1),background 0.3s,color 0.3s' }}>▾</div>
               </div>
             </div>
-            <div className={`sqi-card-body${cardTxOpen ? ' sqi-card-body-open' : ''}`}>
+            <div style={{ maxHeight: cardTxOpen ? 2400 : 0, overflow: 'hidden' as const, transition: 'max-height 0.45s cubic-bezier(0.4,0,0.2,1)' }}>
               <Suspense fallback={
                 <div className="glass-card rounded-[28px] p-6">
                   <div className="mb-4 flex items-center justify-between">
@@ -3555,26 +3555,26 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
               {/* ══ CARD: Voice Bio-Signature Scan ══ */}
               <div className="sqi-card-shell" style={{ borderRadius: 28, overflow: 'hidden', animation: 'cardAuraGold 4s ease-in-out infinite' }}>
                 <div
-                  className="sqi-card-tap"
+                  style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 18px', height: 64, cursor: 'pointer', userSelect: 'none', WebkitTapHighlightColor: 'transparent', overflow: 'hidden', gap: 10, background: 'rgba(8,6,2,0.72)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', borderBottom: '1px solid rgba(212,175,55,0.10)' }}
                   onClick={() => setCardVoiceOpen(o => !o)}
                   role="button"
                   tabIndex={0}
                   onKeyDown={e => e.key === 'Enter' && setCardVoiceOpen(o => !o)}
                 >
-                  <div className="sqi-tap-glow" style={{ background: 'radial-gradient(circle,rgba(34,211,238,0.12) 0%,transparent 70%)' }} />
+                  <div style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(circle,rgba(34,211,238,0.12) 0%,transparent 70%)', pointerEvents: 'none' }} />
                   <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
-                    <div className="sqi-card-orb sqi-card-orb-cyan">🎙</div>
+                    <div style={{ width: 38, height: 38, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, background: 'radial-gradient(circle at 35% 35%,rgba(34,211,238,0.18),rgba(0,0,0,0))', border: '1px solid rgba(34,211,238,0.28)', boxShadow: '0 0 14px rgba(34,211,238,0.16),inset 0 0 8px rgba(34,211,238,0.08)' }}>🎙</div>
                     <div>
-                      <div className={`sqi-card-title${cardVoiceOpen ? ' sqi-card-title-open' : ''}`}>Voice Bio-Signature Scan</div>
-                      <div className="sqi-card-sub">Nadi · Dosha · Pranic Field</div>
+                      <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: '-0.02em', color: cardVoiceOpen ? '#D4AF37' : 'rgba(255,255,255,0.88)', textShadow: cardVoiceOpen ? '0 0 14px rgba(212,175,55,0.4)' : 'none', transition: 'color 0.3s,text-shadow 0.3s' }}>Voice Bio-Signature Scan</div>
+                      <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.22)', marginTop: 2 }}>Nadi · Dosha · Pranic Field</div>
                     </div>
                   </div>
                   <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                    <div className="sqi-card-pill sqi-pill-cyan">Ready</div>
-                    <div className={`sqi-card-chevron${cardVoiceOpen ? ' sqi-card-chevron-open' : ''}`}>▾</div>
+                    <div style={{ fontSize: 7, fontWeight: 900, letterSpacing: '0.22em', textTransform: 'uppercase' as const, padding: '4px 10px', borderRadius: 100, color: '#22D3EE', background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.28)', boxShadow: '0 0 10px rgba(34,211,238,0.12)' }}>Ready</div>
+                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: cardVoiceOpen ? 'rgba(212,175,55,0.10)' : 'rgba(255,255,255,0.03)', border: cardVoiceOpen ? '1px solid rgba(212,175,55,0.35)' : '1px solid rgba(212,175,55,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: cardVoiceOpen ? '#D4AF37' : 'rgba(212,175,55,0.35)', fontSize: 10, flexShrink: 0, transform: cardVoiceOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.38s cubic-bezier(0.4,0,0.2,1),background 0.3s,color 0.3s' }}>▾</div>
                   </div>
                 </div>
-                <div className={`sqi-card-body${cardVoiceOpen ? ' sqi-card-body-open' : ''}`}>
+                <div style={{ maxHeight: cardVoiceOpen ? 2400 : 0, overflow: 'hidden' as const, transition: 'max-height 0.45s cubic-bezier(0.4,0,0.2,1)' }}>
                 <ScalarVoiceWrapper>
                   <Suspense fallback={ScannerSuspenseFallback}>
                     <VoiceBiofieldScanner
@@ -3754,28 +3754,28 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
 
               {/* ══ CARD: Top 33 Resonance Matches ══ */}
               {resonanceMatches.length > 0 && (
-                <div className="sqi-card-shell" style={{ borderRadius: 28, overflow: 'hidden', animation: 'cardAuraGold 4s ease-in-out infinite' }}>
+                <div style={{ borderRadius: 28, overflow: 'hidden', boxShadow: '0 0 0 1px rgba(212,175,55,0.18),0 0 22px rgba(212,175,55,0.10),0 0 55px rgba(212,175,55,0.05)' }}>
                   <div
-                    className="sqi-card-tap"
+                    style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 18px', height: 64, cursor: 'pointer', userSelect: 'none', WebkitTapHighlightColor: 'transparent', overflow: 'hidden', gap: 10, background: 'rgba(8,6,2,0.72)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', borderBottom: '1px solid rgba(212,175,55,0.10)' }}
                     onClick={() => setCardT33Open(o => !o)}
                     role="button"
                     tabIndex={0}
                     onKeyDown={e => e.key === 'Enter' && setCardT33Open(o => !o)}
                   >
-                    <div className="sqi-tap-glow" style={{ background: 'radial-gradient(circle,rgba(212,175,55,0.14) 0%,transparent 70%)' }} />
+                    <div style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(circle,rgba(212,175,55,0.14) 0%,transparent 70%)', pointerEvents: 'none' }} />
                     <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
-                      <div className="sqi-card-orb">⟁</div>
+                      <div style={{ width: 38, height: 38, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, background: 'radial-gradient(circle at 35% 35%,rgba(212,175,55,0.22),rgba(0,0,0,0))', border: '1px solid rgba(212,175,55,0.30)', boxShadow: '0 0 14px rgba(212,175,55,0.18),inset 0 0 8px rgba(212,175,55,0.08)' }}>⟁</div>
                       <div>
-                        <div className={`sqi-card-title${cardT33Open ? ' sqi-card-title-open' : ''}`}>Top 33 Resonance Matches</div>
-                        <div className="sqi-card-sub">From your Bio-Signature</div>
+                        <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: '-0.02em', color: cardT33Open ? '#D4AF37' : 'rgba(255,255,255,0.88)', textShadow: cardT33Open ? '0 0 14px rgba(212,175,55,0.4)' : 'none', transition: 'color 0.3s,text-shadow 0.3s' }}>Top 33 Resonance Matches</div>
+                        <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.22)', marginTop: 2 }}>From your Bio-Signature</div>
                       </div>
                     </div>
                     <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                      <div className="sqi-card-pill sqi-pill-gold">{resonanceMatches.length} Matches</div>
-                      <div className={`sqi-card-chevron${cardT33Open ? ' sqi-card-chevron-open' : ''}`}>▾</div>
+                      <div style={{ fontSize: 7, fontWeight: 900, letterSpacing: '0.22em', textTransform: 'uppercase' as const, padding: '4px 10px', borderRadius: 100, color: '#D4AF37', background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.30)', boxShadow: '0 0 10px rgba(212,175,55,0.14)' }}>{resonanceMatches.length} Matches</div>
+                      <div style={{ width: 24, height: 24, borderRadius: '50%', background: cardT33Open ? 'rgba(212,175,55,0.10)' : 'rgba(255,255,255,0.03)', border: cardT33Open ? '1px solid rgba(212,175,55,0.35)' : '1px solid rgba(212,175,55,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: cardT33Open ? '#D4AF37' : 'rgba(212,175,55,0.35)', fontSize: 10, flexShrink: 0, transform: cardT33Open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.38s cubic-bezier(0.4,0,0.2,1),background 0.3s,color 0.3s' }}>▾</div>
                     </div>
                   </div>
-                  <div className={`sqi-card-body${cardT33Open ? ' sqi-card-body-open' : ''}`}>
+                  <div style={{ maxHeight: cardT33Open ? 2400 : 0, overflow: 'hidden' as const, transition: 'max-height 0.45s cubic-bezier(0.4,0,0.2,1)' }}>
                     <ScalarTop33Wrapper>
                       {/* ── HEADER ── */}
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-4 pt-4">
@@ -3914,26 +3914,26 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
               {/* ══ CARD: Frequency Library ══ */}
               <div className="sqi-card-shell" style={{ borderRadius: 28, overflow: 'hidden', animation: 'cardAuraGold 4s ease-in-out infinite' }}>
                 <div
-                  className="sqi-card-tap"
+                  style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 18px', height: 64, cursor: 'pointer', userSelect: 'none', WebkitTapHighlightColor: 'transparent', overflow: 'hidden', gap: 10, background: 'rgba(8,6,2,0.72)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', borderBottom: '1px solid rgba(212,175,55,0.10)' }}
                   onClick={() => setCardLibOpen(o => !o)}
                   role="button"
                   tabIndex={0}
                   onKeyDown={e => e.key === 'Enter' && setCardLibOpen(o => !o)}
                 >
-                  <div className="sqi-tap-glow" style={{ background: 'radial-gradient(circle,rgba(212,175,55,0.10) 0%,transparent 70%)' }} />
+                  <div style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(circle,rgba(212,175,55,0.10) 0%,transparent 70%)', pointerEvents: 'none' }} />
                   <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
-                    <div className="sqi-card-orb">◈</div>
+                    <div style={{ width: 38, height: 38, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, background: 'radial-gradient(circle at 35% 35%,rgba(212,175,55,0.22),rgba(0,0,0,0))', border: '1px solid rgba(212,175,55,0.30)', boxShadow: '0 0 14px rgba(212,175,55,0.18),inset 0 0 8px rgba(212,175,55,0.08)' }}>◈</div>
                     <div>
-                      <div className={`sqi-card-title${cardLibOpen ? ' sqi-card-title-open' : ''}`}>Frequency Library</div>
-                      <div className="sqi-card-sub">Quantum Essences · Activations</div>
+                      <div style={{ fontSize: 13, fontWeight: 900, letterSpacing: '-0.02em', color: cardLibOpen ? '#D4AF37' : 'rgba(255,255,255,0.88)', textShadow: cardLibOpen ? '0 0 14px rgba(212,175,55,0.4)' : 'none', transition: 'color 0.3s,text-shadow 0.3s' }}>Frequency Library</div>
+                      <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.22)', marginTop: 2 }}>Quantum Essences · Activations</div>
                     </div>
                   </div>
                   <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                    <div className={`sqi-card-pill ${libraryUnlocked ? 'sqi-pill-gold' : 'sqi-pill-dim'}`}>{libraryUnlocked ? 'Unlocked' : 'Scan first'}</div>
-                    <div className={`sqi-card-chevron${cardLibOpen ? ' sqi-card-chevron-open' : ''}`}>▾</div>
+                    <div style={{ fontSize: 7, fontWeight: 900, letterSpacing: '0.22em', textTransform: 'uppercase' as const, padding: '4px 10px', borderRadius: 100, color: libraryUnlocked ? '#D4AF37' : 'rgba(255,255,255,0.30)', background: libraryUnlocked ? 'rgba(212,175,55,0.08)' : 'rgba(255,255,255,0.03)', border: libraryUnlocked ? '1px solid rgba(212,175,55,0.28)' : '1px solid rgba(255,255,255,0.09)', boxShadow: libraryUnlocked ? '0 0 10px rgba(212,175,55,0.12)' : 'none' }}>{libraryUnlocked ? 'Unlocked' : 'Scan first'}</div>
+                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: cardLibOpen ? 'rgba(212,175,55,0.10)' : 'rgba(255,255,255,0.03)', border: cardLibOpen ? '1px solid rgba(212,175,55,0.35)' : '1px solid rgba(212,175,55,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: cardLibOpen ? '#D4AF37' : 'rgba(212,175,55,0.35)', fontSize: 10, flexShrink: 0, transform: cardLibOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.38s cubic-bezier(0.4,0,0.2,1),background 0.3s,color 0.3s' }}>▾</div>
                   </div>
                 </div>
-                <div className={`sqi-card-body${cardLibOpen ? ' sqi-card-body-open' : ''}`}>
+                <div style={{ maxHeight: cardLibOpen ? 2400 : 0, overflow: 'hidden' as const, transition: 'max-height 0.45s cubic-bezier(0.4,0,0.2,1)' }}>
                 {selectedActivations.length > 0 && (
                   <div
                     className="rounded-[28px] p-6 sm:p-7 qa-card-hover"
