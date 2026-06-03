@@ -242,6 +242,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const currentAudioRef = useRef<UniversalAudioItem | null>(null);
 
   const PREVIEW_LIMIT = 30;
+  const DIRECT_UNIVERSAL_AUDIO = true;
 
   const userMusicRank = useMemo(
     () => getUserMusicAccessRank({ user, isAdmin, adminGranted, isPremium, membershipTier }),
@@ -300,6 +301,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, []);
 
   const meditationSrc = useMemo(() => {
+    if (DIRECT_UNIVERSAL_AUDIO) return null;
     if (!currentAudio?.audio_url) return null;
     if (audioContentType !== 'meditation' && audioContentType !== 'healing') return null;
     return currentAudio.audio_url;
@@ -407,6 +409,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   medPlayerRef.current = medPlayer;
 
   useEffect(() => {
+    if (DIRECT_UNIVERSAL_AUDIO) return;
     if (!pendingMeditationMountRef.current || !meditationSrc) return;
     pendingMeditationMountRef.current = false;
     const shouldPlay = pendingMeditationShouldPlayRef.current;
@@ -439,6 +442,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, [meditationSrc]);
 
   useEffect(() => {
+    if (DIRECT_UNIVERSAL_AUDIO) return;
     if (audioContentType !== 'meditation' && audioContentType !== 'healing') return;
     setIsPlaying(medPlayer.isPlaying);
     setCurrentTime(medPlayer.currentTime);
@@ -448,6 +452,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, [audioContentType, medPlayer.isPlaying, medPlayer.currentTime, medPlayer.duration]);
 
   useEffect(() => {
+    if (DIRECT_UNIVERSAL_AUDIO) return;
     if (audioContentType !== 'meditation' && audioContentType !== 'healing') return;
     const audio = currentAudio;
     if (!audio?.id) return;
@@ -461,6 +466,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, [audioContentType, currentAudio?.id, medPlayer.currentTime, medPlayer.duration]);
 
   useEffect(() => {
+    if (DIRECT_UNIVERSAL_AUDIO) return;
     if (!meditationSrc) return;
     if (audioContentType !== 'meditation' && audioContentType !== 'healing') return;
     medPlayerRef.current.setVolume(volume);
