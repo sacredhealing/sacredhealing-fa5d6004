@@ -215,7 +215,7 @@ const SiddhaMedicineSection: React.FC<{ userLevel: number }> = ({ userLevel }) =
 
           {/* CTA Button */}
           <button
-            onClick={() => navigate('/siddha-medicine-academy')}
+            onClick={() => navigate('/siddha-medicine')}
             style={{
               background: 'linear-gradient(135deg, #D4AF37 0%, #B8960C 100%)',
               border: 'none', borderRadius: 999, cursor: 'pointer',
@@ -432,7 +432,7 @@ const SiddhaMedicineSection: React.FC<{ userLevel: number }> = ({ userLevel }) =
                                     and Tamil master quotes.
                                   </p>
                                   <button
-                                    onClick={() => navigate('/siddha-medicine-academy')}
+                                    onClick={() => navigate('/siddha-medicine')}
                                     style={{
                                       background: `linear-gradient(135deg, ${tier.color}22, ${tier.color}11)`,
                                       border: `1px solid ${tier.border}`,
@@ -482,7 +482,7 @@ const SiddhaMedicineSection: React.FC<{ userLevel: number }> = ({ userLevel }) =
             "Perfect Health is the Greatest Blessing" — Agathiyar Muni
           </p>
           <button
-            onClick={() => navigate('/siddha-medicine-academy')}
+            onClick={() => navigate('/siddha-medicine')}
             style={{
               background: 'linear-gradient(135deg, #D4AF37 0%, #B8960C 100%)',
               border: 'none', borderRadius: 999, cursor: 'pointer',
