@@ -316,7 +316,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "gemini-2.5-flash",
         messages: allMessages,
-        max_tokens: 600,
+        max_tokens: 1200,
         temperature: 2.0,
       }),
     });
