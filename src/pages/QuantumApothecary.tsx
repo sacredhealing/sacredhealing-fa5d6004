@@ -3553,7 +3553,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
             <div className="flex w-full flex-col gap-4" style={{ maxWidth: '100%' }}>
 
               {/* ══ CARD: Voice Bio-Signature Scan ══ */}
-              <div className="sqi-card-shell" style={{ borderRadius: 28, overflow: 'hidden', animation: 'cardAuraGold 4s ease-in-out infinite' }}>
+              <div style={{ borderRadius: 28, overflow: 'hidden', boxShadow: '0 0 0 1px rgba(212,175,55,0.18),0 0 22px rgba(212,175,55,0.10),0 0 55px rgba(212,175,55,0.05)' }}>
                 <div
                   style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 18px', height: 64, cursor: 'pointer', userSelect: 'none', WebkitTapHighlightColor: 'transparent', overflow: 'hidden', gap: 10, background: 'rgba(8,6,2,0.72)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', borderBottom: '1px solid rgba(212,175,55,0.10)' }}
                   onClick={() => setCardVoiceOpen(o => !o)}
@@ -3912,7 +3912,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
               )}
 
               {/* ══ CARD: Frequency Library ══ */}
-              <div className="sqi-card-shell" style={{ borderRadius: 28, overflow: 'hidden', animation: 'cardAuraGold 4s ease-in-out infinite' }}>
+              <div style={{ borderRadius: 28, overflow: 'hidden', boxShadow: '0 0 0 1px rgba(212,175,55,0.18),0 0 22px rgba(212,175,55,0.10),0 0 55px rgba(212,175,55,0.05)' }}>
                 <div
                   style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 18px', height: 64, cursor: 'pointer', userSelect: 'none', WebkitTapHighlightColor: 'transparent', overflow: 'hidden', gap: 10, background: 'rgba(8,6,2,0.72)', backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', borderBottom: '1px solid rgba(212,175,55,0.10)' }}
                   onClick={() => setCardLibOpen(o => !o)}
