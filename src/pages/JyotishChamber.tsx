@@ -867,7 +867,7 @@ const JyotishChamber: React.FC = () => {
                               <p style={{ fontFamily:"'Cinzel', serif", fontSize:7, letterSpacing:'0.45em', color:'rgba(212,175,55,0.5)', textTransform:'uppercase' as const, marginBottom:10 }}>◈ Maharishi Bhrigu Transmits</p>
                               <div style={{ fontFamily:"'IM Fell English', Georgia, serif", fontSize:16, lineHeight:1.9, color:'rgba(225,210,185,0.9)', letterSpacing:'0.008em', wordBreak:'break-word' as const }}>{m.text}</div>
                             </div>
-                          )}
+                          )}</React.Fragment>
                         ))}
                         {chatLoading && (
                           <div style={{ width:'100%', padding:'20px 16px', background:'rgba(255,255,255,0.016)', borderTop:'1px solid rgba(255,255,255,0.05)', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
