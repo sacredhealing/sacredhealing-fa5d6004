@@ -1,0 +1,9 @@
+=== USERS ===
+Total users: 0
+
+=== AYURVEDA MESSAGES (service role) ===
+Total messages: 0
+NO MESSAGES - checking if table exists...
+Table check result: None
+
+=== INSERT TEST ===
