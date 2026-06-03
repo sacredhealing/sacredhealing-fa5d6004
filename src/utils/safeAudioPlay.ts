@@ -84,7 +84,20 @@ export function proxyAudioUrl(url: string | null | undefined): string | null | u
   try {
     const parsed = new URL(url);
     if (parsed.hostname === R2_HOST) {
-      // /meditations/foo.wav → /api/audio/meditations/foo.wav
+      // The /api/audio/* proxy only exists on the Vercel deployment.
+      // On Lovable preview/published hosts (lovable.app / lovableproject.com)
+      // that path 404s, killing every R2-hosted audio. The R2 public bucket
+      // serves media fine for HTML5 <audio> (no crossOrigin is set anywhere),
+      // so on non-Vercel hosts we use the direct R2 URL.
+      if (typeof window !== 'undefined') {
+        const host = window.location.hostname;
+        const isLovableHost =
+          host.endsWith('lovable.app') ||
+          host.endsWith('lovableproject.com') ||
+          host === 'localhost' ||
+          host === '127.0.0.1';
+        if (isLovableHost) return url;
+      }
       const path = parsed.pathname; // already has leading /
       return `/api/audio${path}`;
     }
