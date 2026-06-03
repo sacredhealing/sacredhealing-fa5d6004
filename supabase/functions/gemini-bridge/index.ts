@@ -29,7 +29,7 @@ const FEATURE_TOKEN_LIMITS: Record<string, number> = {
   soul_scan:             600,   // quick scan summary
   vedic_translation:     500,   // translation output, not prose
   // Medium outputs
-  soul_vault:           1500,   // soul vault reading: rich but bounded
+  soul_vault:           2200,   // soul vault reading: 3 rich paragraphs + kosha map
   transformation_doc:   1500,   // transformation narrative
   // Longer admin/content tasks
   academy_curriculum:   3000,   // module/lesson generation — genuinely long
