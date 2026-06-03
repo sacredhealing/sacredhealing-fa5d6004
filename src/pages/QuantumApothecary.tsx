@@ -3907,7 +3907,6 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                         })}
                       </div>
                     </ScalarTop33Wrapper>
-                    </ScalarTop33Wrapper>
                   </div>
                 </div>
               )}
@@ -3935,7 +3934,6 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                   </div>
                 </div>
                 <div className={`sqi-card-body${cardLibOpen ? ' sqi-card-body-open' : ''}`}>
-                  {selectedActivations.length > 0 && (
                 {selectedActivations.length > 0 && (
                   <div
                     className="rounded-[28px] p-6 sm:p-7 qa-card-hover"
@@ -3983,7 +3981,6 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                     </button>
                   </div>
                 )}
-                  )}
                 <div className="relative">
                   <div
                     className={libraryUnlocked ? '' : 'pointer-events-none blur-md saturate-50 opacity-[0.42]'}
