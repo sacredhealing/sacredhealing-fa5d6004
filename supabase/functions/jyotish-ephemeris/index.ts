@@ -163,16 +163,19 @@ serve(async (req) => {
       );
     }
 
-    // Check cache
+    // Check cache — but only use if birth_date matches
     const { data: existing } = await supabase
       .from("jyotish_profiles")
       .select(
-        "moon_nakshatra, moon_longitude, nakshatra_progress, ephemeris_data, dasha_data, ephemeris_confirmed"
+        "moon_nakshatra, moon_longitude, nakshatra_progress, ephemeris_data, dasha_data, ephemeris_confirmed, birth_date"
       )
       .eq("user_id", userId)
       .single();
 
-    if (existing?.ephemeris_confirmed && existing?.moon_nakshatra) {
+    const cacheValid = existing?.ephemeris_confirmed && existing?.moon_nakshatra
+      && existing?.birth_date === birthDate && !forceRefresh;
+
+    if (cacheValid) {
       return new Response(
         JSON.stringify({
           source: "cache",
