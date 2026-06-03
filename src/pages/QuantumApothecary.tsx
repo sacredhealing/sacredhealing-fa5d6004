@@ -3907,7 +3907,6 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                         })}
                       </div>
                     </ScalarTop33Wrapper>
-                    </ScalarTop33Wrapper>
                   </div>
                 </div>
               )}
