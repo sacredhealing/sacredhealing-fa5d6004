@@ -169,12 +169,25 @@ export const AmbientAudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
       audioRef.current.pause();
       audioRef.current = null;
     }
+    stopGeneratedSound();
     setCurrentSound(null);
     setIsPlaying(false);
-  }, []);
+  }, [stopGeneratedSound]);
 
   const togglePlay = useCallback(() => {
-    if (!audioRef.current) return;
+    if (!audioRef.current) {
+      const ctx = generatedCtxRef.current;
+      if (!ctx) return;
+
+      if (isPlaying) {
+        void ctx.suspend();
+        setIsPlaying(false);
+      } else {
+        void ctx.resume();
+        setIsPlaying(true);
+      }
+      return;
+    }
     
     if (isPlaying) {
       audioRef.current.pause();
@@ -196,6 +209,11 @@ export const AmbientAudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (audioRef.current) {
       audioRef.current.volume = clampedVol;
     }
+    const ctx = generatedCtxRef.current;
+    if (ctx) {
+      const gain = ctx.destination.numberOfInputs ? null : null;
+      void gain;
+    }
   }, []);
 
   useEffect(() => {
@@ -204,8 +222,9 @@ export const AmbientAudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
         audioRef.current.pause();
         audioRef.current = null;
       }
+      stopGeneratedSound();
     };
-  }, []);
+  }, [stopGeneratedSound]);
 
   return (
     <AmbientAudioContext.Provider
