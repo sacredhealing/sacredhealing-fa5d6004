@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
  * useChatMessages — reads/writes ayurveda_chat_messages (same table the edge function uses).
  * The edge function already saves assistant replies server-side; the frontend only saves user messages.
  */
-const TABLE_AYURVEDA = 'ayurveda_chat_messages' as const;
+const TABLE_AYURVEDA = 'user_sync_chat_messages' as const;
 const TABLE_APOTHECARY = 'apothecary_chat_messages' as const;
 
 export interface ChatMessage {
@@ -40,6 +40,7 @@ export function useChatMessages(context: 'apothecary' | 'ayurveda') {
           .from(TABLE_AYURVEDA)
           .select('id, role, content, created_at')
           .eq('user_id', user.id)
+          .eq('chat_context', 'ayurveda')
           .order('created_at', { ascending: true })
           .limit(500);
       } else {
@@ -90,6 +91,7 @@ export function useChatMessages(context: 'apothecary' | 'ayurveda') {
         .from(TABLE_AYURVEDA)
         .insert({
           user_id: user.id,
+          chat_context: 'ayurveda',
           role: message.role,
           content: message.content,
         })
@@ -121,7 +123,7 @@ export function useChatMessages(context: 'apothecary' | 'ayurveda') {
     } = await supabase.auth.getUser();
     if (!user) return;
     if (isAyurveda) {
-      await (supabase as any).from(TABLE_AYURVEDA).delete().eq('user_id', user.id);
+      await (supabase as any).from(TABLE_AYURVEDA).delete().eq('user_id', user.id).eq('chat_context', 'ayurveda');
     } else {
       await (supabase as any).from(TABLE_APOTHECARY).delete().eq('user_id', user.id).eq('chat_context', context);
     }
