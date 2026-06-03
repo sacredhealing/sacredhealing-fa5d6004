@@ -7,9 +7,10 @@ jobs:
   restore:
     runs-on: ubuntu-latest
     env:
-      SUPABASE_URL: https://fjdzhrdpioxdeyyfogep.supabase.co
       SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
       SK2: ${{ secrets.NEW_SERVICE_ROLE }}
+      OLD_SK: ${{ secrets.SUPABASE_TOKEN }}
+      SUPABASE_TOKEN: ${{ secrets.SUPABASE_TOKEN }}
       GH_TOKEN: ${{ secrets.GH_ADMIN_PAT }}
     steps:
       - uses: actions/checkout@v4
