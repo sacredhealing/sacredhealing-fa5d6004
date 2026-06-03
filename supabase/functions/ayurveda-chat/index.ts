@@ -434,9 +434,10 @@ serve(async (req) => {
       // Fetch past consultation timeline for cross-session memory
       try {
         const { data: pastMsgs } = await supabase
-          .from("ayurveda_chat_messages")
+          .from("user_sync_chat_messages")
           .select("content, created_at")
           .eq("user_id", userId)
+          .eq("chat_context", "ayurveda")
           .eq("role", "assistant")
           .order("created_at", { ascending: false })
           .limit(12);
@@ -533,8 +534,8 @@ serve(async (req) => {
         controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
         if (userId && fullResponse) {
           supabase
-            .from("ayurveda_chat_messages")
-            .insert([{ user_id: userId, role: "assistant", content: fullResponse }])
+            .from("user_sync_chat_messages")
+            .insert([{ user_id: userId, chat_context: "ayurveda", role: "assistant", content: fullResponse }])
             .then(() => {}).catch(() => {});
         }
       },
