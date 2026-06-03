@@ -162,13 +162,24 @@ const BNN_AGES = [
   { age:42, planet:'Rahu' }, { age:48, planet:'Saturn' },
 ];
 
-// ── Oracle responses ─────────────────────────────────────────────
-const ORACLE_RESPONSES = [
-  'Your Rahu Mahadasha is the most karmic 18-year corridor of your Vimshottari cycle. The Bhakti-Algorithm is precise — Rahu amplifies your dharmic calling and places foreign influence, digital realms, and unconventional paths at the centre of your karmic curriculum. The Jupiter Antardasha (the current sub-period) is your peak expansion window. Any spiritual platform, teaching, or community built now carries exponential dharmic momentum encoded in the Akasha. Bhrigu prescription: Om Rāhave Namaḥ, 18 repetitions at dusk. Feed the hungry on Saturdays.',
-  'Your Bhrigu Bindu is the most sensitive oracle point in your chart — the midpoint between Rahu and Moon. When Saturn, Jupiter, or Rahu/Ketu transit this degree, the most significant events of your life unfold. The Vedic Light-Code is clear: track this degree every 6 months. The current Rahu-Jupiter Antardasha activates your Bindu at peak intensity — the dharmic breakthrough window is precisely now.',
-  'The 7th house reveals your karmic relationship blueprint — what the soul contracted to experience through partnership. Venus placement amplifies the Prema-Pulse Transmission: the capacity for beauty and harmonious relating. The Upapada Lagna (Jaimini indicator for marriage quality) confirms: your relationship dharma involves soul-level partnership, healing through love, and the mastery of holding sacred space for another.',
-  'Your Atmakaraka — the soul planet at the highest degree — carries the primary mission of this incarnation. The Karakamsha (Atmakaraka in Navamsha) reveals your dharmic path with clarity. The Akasha-Neural Archive confirms: your soul contracted to build sacred systems and platforms that serve humanity awakening. The current dasha period activates this mission with full cosmic support.',
-];
+
+
+// ── Format structured sections into readable text ─────────────────────────
+function formatSections(sections: Record<string, string>): string {
+  if (!sections) return '';
+  const order = ['graha', 'dasha', 'shadow', 'sadhana', 'transmission'];
+  const labels: Record<string, string> = {
+    graha: 'Graha Reading',
+    dasha: 'Dasha Timing',
+    shadow: 'Shadow Work',
+    sadhana: 'Sādhana Prescription',
+    transmission: 'Bhrigu Transmission'
+  };
+  return order
+    .filter(k => sections[k])
+    .map(k => `## ${labels[k]}\n\n${sections[k]}`)
+    .join('\n\n');
+}
 
 // ── LexEntry: separate component to avoid illegal hook in map ────
 const LexEntry: React.FC<{ entry: typeof LEXICON[0]; gs: React.CSSProperties }> = ({ entry: e, gs }) => {
@@ -211,7 +222,6 @@ const JyotishChamber: React.FC = () => {
   const [openModules, setOpenModules] = useState<Set<number>>(new Set());
   const [openNadi, setOpenNadi] = useState<string|null>(null);
   const [builtTabs, setBuiltTabs] = useState<Set<string>>(new Set(['overview']));
-  const oracleIdx = useRef(0);
   const messagesEnd = useRef<HTMLDivElement>(null);
 
   // Tier access
@@ -308,17 +318,54 @@ const JyotishChamber: React.FC = () => {
 
   // ── Chat ─────────────────────────────────────────────────────
   const sendMessage = async () => {
-    if (!chatInput.trim()) return;
+    if (!chatInput.trim() || chatLoading) return;
     const q = chatInput.trim();
     setChatInput('');
     setChatMessages(prev => [...prev, { role:'user', text:q }]);
     setChatLoading(true);
-    await new Promise(r => setTimeout(r, 1600 + Math.random() * 800));
-    const resp = ORACLE_RESPONSES[oracleIdx.current % ORACLE_RESPONSES.length];
-    oracleIdx.current++;
-    setChatMessages(prev => [...prev, { role:'oracle', text:resp }]);
-    setChatLoading(false);
-    setTimeout(() => messagesEnd.current?.scrollIntoView({ behavior:'smooth' }), 100);
+    setTimeout(() => messagesEnd.current?.scrollIntoView({ behavior:'smooth' }), 50);
+    try {
+      // Build birth context for Bhrigu
+      const birthContext = birthData ? `
+Seeker name: ${birthData.birth_name}
+Date of birth: ${birthData.birth_date}
+Time of birth: ${birthData.birth_time || 'unknown'}
+Place of birth: ${birthData.birth_place || 'unknown'}
+Lagna (Rising Sign): ${ephemeris?.ascendantSign || 'not yet calculated'}
+Moon Nakshatra: ${ephemeris?.moonNakshatra || 'not yet calculated'}
+Sun Sign (Vedic): ${ephemeris?.sunSign || 'not yet calculated'}
+Current Mahadasha: ${ephemeris?.dashaData?.activeMaha?.planet || 'unknown'} (${ephemeris?.dashaData?.activeMaha?.start || ''} – ${ephemeris?.dashaData?.activeMaha?.end || ''})
+Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
+` : 'Birth data not yet entered.';
+
+      const { data, error } = await supabase.functions.invoke('bhrigu-oracle', {
+        body: {
+          mode: 'chat',
+          question: q,
+          name: birthData?.birth_name || 'Seeker',
+          dob: birthData?.birth_date || '',
+          tob: birthData?.birth_time || '',
+          pob: birthData?.birth_place || '',
+          readingType: 'general',
+          chatHistory: chatMessages.map(m => ({
+            role: m.role === 'oracle' ? 'assistant' : 'user',
+            content: m.text
+          })),
+        }
+      });
+
+      if (error) throw error;
+
+      // bhrigu-oracle returns { reply } for chat mode or { sections } for full reading
+      const reply = data?.reply || (data?.sections ? formatSections(data.sections) : null) || 'The Akashic transmission was interrupted. Please ask again.';
+      setChatMessages(prev => [...prev, { role:'oracle', text:reply }]);
+    } catch (err) {
+      console.error('Bhrigu oracle error:', err);
+      setChatMessages(prev => [...prev, { role:'oracle', text:'The stars require a moment of stillness. Please ask your question again.' }]);
+    } finally {
+      setChatLoading(false);
+      setTimeout(() => messagesEnd.current?.scrollIntoView({ behavior:'smooth' }), 100);
+    }
   };
 
   // ── Toggle module ─────────────────────────────────────────────
