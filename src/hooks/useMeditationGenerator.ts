@@ -613,8 +613,26 @@ export function useMeditationGenerator() {
     nodesRef.current.ambient.push(...oscillators);
   }, []);
 
-  // Style to generator mapping
-  const styleGenerators: Record<MeditationStyleType, (ctx: AudioContext, gain: GainNode, vol: number) => void> = {
+  // Style to generator mapping — stored in ref to avoid stale closure in startPlaying
+  const styleGeneratorsRef = useRef<Record<MeditationStyleType, (ctx: AudioContext, gain: GainNode, vol: number) => void>>({
+    indian: createTanpuraDrone,
+    tibetan: createTibetanBowls,
+    ocean: createOceanWaves,
+    nature: createForestAmbience,
+    forest: createForestAmbience,
+    shamanic: createShamanicDrums,
+    sound_bath: createCrystalBowls,
+    mystic: createEtherealPad,
+    zen: createBreathingAir,
+    breath_focus: createBreathingAir,
+    chakra: createChakraTones,
+    sufi: createNeyFlute,
+    higher_consciousness: createCosmicPad,
+    relaxing: createRelaxingNoise,
+    kundalini: createKundaliniDrone,
+  });
+  // Keep ref current on every render
+  styleGeneratorsRef.current = {
     indian: createTanpuraDrone,
     tibetan: createTibetanBowls,
     ocean: createOceanWaves,
@@ -648,7 +666,7 @@ export function useMeditationGenerator() {
     ambientGainRef.current.connect(masterGainRef.current);
 
     // Generate ambient sound based on style
-    const generator = styleGenerators[settings.style];
+    const generator = styleGeneratorsRef.current[settings.style];
     if (generator) {
       generator(ctx, ambientGainRef.current, settings.ambientVolume / 100);
     }
@@ -703,7 +721,7 @@ export function useMeditationGenerator() {
 
     setCurrentSettings(settings);
     setIsPlaying(true);
-  }, [initializeAudioContext, cleanupNodes, styleGenerators]);
+  }, [initializeAudioContext, cleanupNodes]);
 
   // Stop playing
   const stopPlaying = useCallback(() => {
