@@ -32,6 +32,8 @@ const DEFAULT_VOLUME = 0.3;
 
 export const AmbientAudioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const generatedCtxRef = useRef<AudioContext | null>(null);
+  const generatedCleanupRef = useRef<(() => void) | null>(null);
   
   const [sounds, setSounds] = useState<AmbientSound[]>([]);
   const [currentSound, setCurrentSound] = useState<AmbientSound | null>(null);
@@ -68,11 +70,69 @@ export const AmbientAudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, []);
 
+  const stopGeneratedSound = useCallback(() => {
+    generatedCleanupRef.current?.();
+    generatedCleanupRef.current = null;
+    generatedCtxRef.current?.close().catch(() => {});
+    generatedCtxRef.current = null;
+  }, []);
+
+  const playGeneratedSound = useCallback((sound: AmbientSound) => {
+    stopGeneratedSound();
+    const AudioCtxCtor = window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtxCtor) return;
+
+    const ctx = new AudioCtxCtor();
+    const master = ctx.createGain();
+    master.gain.value = volume;
+    master.connect(ctx.destination);
+
+    const nodes: AudioNode[] = [master];
+    const stopFns: Array<() => void> = [];
+
+    if (sound.slug === 'temple-rain') {
+      const buffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i += 1) data[i] = (Math.random() * 2 - 1) * 0.7;
+      const source = ctx.createBufferSource();
+      const filter = ctx.createBiquadFilter();
+      source.buffer = buffer;
+      source.loop = true;
+      filter.type = 'lowpass';
+      filter.frequency.value = 1400;
+      source.connect(filter).connect(master);
+      source.start();
+      stopFns.push(() => source.stop());
+      nodes.push(filter);
+    } else {
+      const freqs = sound.slug === 'deep-om' ? [136.1, 272.2] : [216, 432, 864];
+      freqs.forEach((freq, index) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.value = index === 0 ? 0.28 : 0.1;
+        osc.connect(gain).connect(master);
+        osc.start();
+        stopFns.push(() => osc.stop());
+        nodes.push(gain);
+      });
+    }
+
+    generatedCtxRef.current = ctx;
+    generatedCleanupRef.current = () => stopFns.forEach((stop) => {
+      try { stop(); } catch (_) { /* already stopped */ }
+    });
+    void ctx.resume();
+    setCurrentSound(sound);
+    setIsPlaying(true);
+  }, [stopGeneratedSound, volume]);
+
   const playSound = useCallback((sound: AmbientSound) => {
     // Route R2 URLs through proxy to fix CORS
     const resolvedUrl = proxyAudioUrl(sound.audio_url);
     if (!resolvedUrl) {
-      console.warn('[SQI] No audio URL for ambient sound:', sound.name);
+      playGeneratedSound(sound);
       return;
     }
 
@@ -80,6 +140,7 @@ export const AmbientAudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
       audioRef.current.pause();
       audioRef.current = null;
     }
+    stopGeneratedSound();
 
     const audio = new Audio(resolvedUrl);
     audio.loop = true;
@@ -101,7 +162,7 @@ export const AmbientAudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
         console.warn('[SQI] Could not play ambient sound — browser blocked autoplay:', sound.name);
       }
     })();
-  }, [volume]);
+  }, [playGeneratedSound, stopGeneratedSound, volume]);
 
   const stopSound = useCallback(() => {
     if (audioRef.current) {
