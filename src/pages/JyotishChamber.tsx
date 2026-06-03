@@ -3,10 +3,10 @@
 // Pulls existing birth data from profiles table automatically
 // Akasha-Neural Archive v8 | Beginner-to-Master Journey
 
-import React, { useState, useEffect, useRef, lazy, Suspense, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { User, Calendar, Clock, MapPin, ChevronDown, Lock, Crown, Sparkles, Send, Loader2, Search, RefreshCw } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
@@ -170,11 +170,26 @@ const ORACLE_RESPONSES = [
   'Your Atmakaraka — the soul planet at the highest degree — carries the primary mission of this incarnation. The Karakamsha (Atmakaraka in Navamsha) reveals your dharmic path with clarity. The Akasha-Neural Archive confirms: your soul contracted to build sacred systems and platforms that serve humanity's awakening. The current dasha period activates this mission with full cosmic support.',
 ];
 
+// ── LexEntry: separate component to avoid illegal hook in map ────
+const LexEntry: React.FC<{ entry: typeof LEXICON[0]; gs: React.CSSProperties }> = ({ entry: e, gs }) => {
+  const [expanded, setExpanded] = React.useState(false);
+  return (
+    <div onClick={() => setExpanded(!expanded)} style={{ ...gs, padding:'13px 15px', marginBottom:7, cursor:'pointer', transition:'background 0.2s' }}>
+      <div style={{ display:'flex', alignItems:'center', gap:9, marginBottom: expanded ? 8 : 0 }}>
+        <span style={{ fontSize:13, fontWeight:900, letterSpacing:'-0.02em' }}>{e.term}</span>
+        {e.skt && <span style={{ fontSize:14, color:'rgba(212,175,55,0.6)' }}>{e.skt}</span>}
+        <span style={{ padding:'2px 8px', borderRadius:99, fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, background:'rgba(212,175,55,0.08)', border:'1px solid rgba(212,175,55,0.15)', color:'#D4AF37', marginLeft:'auto' }}>{e.cat}</span>
+      </div>
+      {expanded && <p style={{ fontSize:11.5, color:'rgba(255,255,255,0.6)', lineHeight:1.55 }}>{e.m}</p>}
+    </div>
+  );
+};
+
 // ── Component ────────────────────────────────────────────────────
 const JyotishChamber: React.FC = () => {
   const { user } = useAuth();
   const { membershipTier, isAdmin } = useMembership();
-  const { t } = useTranslation();
+  useTranslation();
   const navigate = useNavigate();
 
   // State
@@ -1063,19 +1078,9 @@ const JyotishChamber: React.FC = () => {
               const mq = !lexSearch || e.term.toLowerCase().includes(lexSearch.toLowerCase()) || e.m.toLowerCase().includes(lexSearch.toLowerCase()) || (e.skt||'').includes(lexSearch);
               const mc = lexCat==='All' || e.cat===lexCat;
               return mq && mc;
-            }).map(e => {
-              const [expanded, setExpanded] = React.useState(false);
-              return (
-                <div key={e.term} onClick={() => setExpanded(!expanded)} style={{ ...gs, padding:'13px 15px', marginBottom:7, cursor:'pointer', transition:'background 0.2s' }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:9, marginBottom: expanded ? 8 : 0 }}>
-                    <span style={{ fontSize:13, fontWeight:900, letterSpacing:'-0.02em' }}>{e.term}</span>
-                    {e.skt && <span style={{ fontSize:14, color:'rgba(212,175,55,0.6)' }}>{e.skt}</span>}
-                    <span style={{ padding:'2px 8px', borderRadius:99, fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, background:'rgba(212,175,55,0.08)', border:'1px solid rgba(212,175,55,0.15)', color:'#D4AF37', marginLeft:'auto' }}>{e.cat}</span>
-                  </div>
-                  {expanded && <p style={{ fontSize:11.5, color:'rgba(255,255,255,0.6)', lineHeight:1.55 }}>{e.m}</p>}
-                </div>
-              );
-            })}
+            }).map(e => (
+              <LexEntry key={e.term} entry={e} gs={gs} />
+            ))}
           </motion.div>
         )}
 
