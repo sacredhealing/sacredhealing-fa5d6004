@@ -649,7 +649,30 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
 
           {/* History Panel */}
           {showHistory && (
-            <div className="sqi-hist-panel">
+            <div className="sqi-hist-panel" style={{ position: 'absolute', inset: 0, zIndex: 10, overflow: 'hidden' }}>
+              {/* Full Message Modal — inside history panel so z-index stacks correctly */}
+              {selectedHistMsg && (
+                <div style={{ position: 'absolute', inset: 0, zIndex: 30, background: 'rgba(5,5,5,0.98)', backdropFilter: 'blur(20px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                  <div style={{ height: 2, background: 'linear-gradient(90deg, transparent, #D4AF37, transparent)', flexShrink: 0 }} />
+                  <div style={{ padding: '14px 18px 12px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid rgba(212,175,55,0.12)', flexShrink: 0, background: 'linear-gradient(180deg, rgba(212,175,55,0.055), transparent)' }}>
+                    <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', flex: 1, fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
+                      {selectedHistMsg.role === 'user' ? '◈ Your Inquiry' : '◈ Agastya Muni — Full Transmission'}
+                    </div>
+                    <button type="button" style={{ width: 34, height: 34, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: 'rgba(255,255,255,0.45)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontFamily: 'sans-serif' }} onClick={() => setSelectedHistMsg(null)}>✕</button>
+                  </div>
+                  <div style={{ flex: 1, overflowY: 'auto', padding: '22px 18px 40px', scrollbarWidth: 'thin', scrollbarColor: 'rgba(212,175,55,0.1) transparent' }}>
+                    {selectedHistMsg.role === 'assistant'
+                      ? <FormatAgastya text={selectedHistMsg.content} />
+                      : <div style={{ fontSize: 17, color: 'rgba(255,255,255,0.8)', lineHeight: 1.75, fontFamily: "'Plus Jakarta Sans',sans-serif" }}>{selectedHistMsg.content}</div>
+                    }
+                    {selectedHistMsg.role === 'assistant' && (
+                      <button type="button" onClick={() => { if (selectedHistMsg) handleCopy(selectedHistMsg.content, 9999); }} style={{ marginTop: 28, background: 'none', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 20, color: copiedIdx === 9999 ? '#D4AF37' : 'rgba(255,255,255,0.35)', fontSize: 11, fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 700, letterSpacing: '0.08em', padding: '7px 18px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {copiedIdx === 9999 ? '✓ Copied' : '⎘ Copy Transmission'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
               <div style={{ height: 2, flexShrink: 0, background: 'linear-gradient(90deg, transparent, #D4AF37, transparent)', opacity: 0.8 }} />
               <div className="sqi-hist-hdr">
                 <Clock style={{ width: 16, height: 16, color: '#D4AF37', flexShrink: 0 }} />
@@ -657,7 +680,7 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
                 <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.4)', marginRight: 6 }}>
                   {persistedMsgs.length} messages
                 </div>
-                <button type="button" className="sqi-ibtn" onClick={() => setShowHistory(false)}>
+                <button type="button" className="sqi-ibtn" onClick={() => { setShowHistory(false); setSelectedHistMsg(null); }}>
                   <X style={{ width: 15, height: 15 }} />
                 </button>
               </div>
@@ -885,29 +908,6 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
             </div>
           )}
 
-          {/* Full Message Modal */}
-          {selectedHistMsg && (
-            <div style={{ position: 'absolute', inset: 0, zIndex: 20, background: 'rgba(5,5,5,0.97)', backdropFilter: 'blur(20px)', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
-              <div style={{ height: 2, background: 'linear-gradient(90deg, transparent, #D4AF37, transparent)', flexShrink: 0 }} />
-              <div style={{ padding: '14px 18px 12px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid rgba(212,175,55,0.12)', flexShrink: 0 }}>
-                <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', flex: 1, fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
-                  {selectedHistMsg.role === 'user' ? 'Your Inquiry' : '◈ Agastya Muni — Full Transmission'}
-                </div>
-                <button type="button" style={{ width: 34, height: 34, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }} onClick={() => setSelectedHistMsg(null)}>✕</button>
-              </div>
-              <div style={{ padding: '20px 18px 40px', flex: 1 }}>
-                {selectedHistMsg.role === 'assistant'
-                  ? <FormatAgastya text={selectedHistMsg.content} />
-                  : <div style={{ fontSize: 17, color: 'rgba(255,255,255,0.8)', lineHeight: 1.75, fontFamily: "'Plus Jakarta Sans',sans-serif" }}>{selectedHistMsg.content}</div>
-                }
-                {selectedHistMsg.role === 'assistant' && (
-                  <button type="button" onClick={() => { if (selectedHistMsg) handleCopy(selectedHistMsg.content, 9999); }} style={{ marginTop: 24, background: 'none', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 20, color: copiedIdx === 9999 ? '#D4AF37' : 'rgba(255,255,255,0.35)', fontSize: 11, fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 700, letterSpacing: '0.08em', padding: '5px 14px', cursor: 'pointer' }}>
-                    {copiedIdx === 9999 ? '✓ Copied' : '⎘ Copy Transmission'}
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>
@@ -923,12 +923,35 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
         <div className="sqi-chat-panel" style={{ position: 'relative', height: '100%', maxHeight: '100dvh', borderRadius: 0, border: 'none', width: '100%', maxWidth: '100%', flex: 1, display: 'flex', flexDirection: 'column' }}>
           {/* History Panel (inline mode) */}
           {showHistory && (
-            <div className="sqi-hist-panel" style={{ borderRadius: 0 }}>
+            <div className="sqi-hist-panel" style={{ borderRadius: 0, overflow: 'hidden' }}>
+              {/* Full Message Modal — inside history panel */}
+              {selectedHistMsg && (
+                <div style={{ position: 'absolute', inset: 0, zIndex: 30, background: 'rgba(5,5,5,0.98)', backdropFilter: 'blur(20px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                  <div style={{ height: 2, background: 'linear-gradient(90deg, transparent, #D4AF37, transparent)', flexShrink: 0 }} />
+                  <div style={{ padding: '14px 18px 12px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid rgba(212,175,55,0.12)', flexShrink: 0, background: 'linear-gradient(180deg, rgba(212,175,55,0.055), transparent)' }}>
+                    <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', flex: 1, fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
+                      {selectedHistMsg.role === 'user' ? '◈ Your Inquiry' : '◈ Agastya Muni — Full Transmission'}
+                    </div>
+                    <button type="button" style={{ width: 34, height: 34, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: 'rgba(255,255,255,0.45)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontFamily: 'sans-serif' }} onClick={() => setSelectedHistMsg(null)}>✕</button>
+                  </div>
+                  <div style={{ flex: 1, overflowY: 'auto', padding: '22px 18px 40px', scrollbarWidth: 'thin', scrollbarColor: 'rgba(212,175,55,0.1) transparent' }}>
+                    {selectedHistMsg.role === 'assistant'
+                      ? <FormatAgastya text={selectedHistMsg.content} />
+                      : <div style={{ fontSize: 17, color: 'rgba(255,255,255,0.8)', lineHeight: 1.75, fontFamily: "'Plus Jakarta Sans',sans-serif" }}>{selectedHistMsg.content}</div>
+                    }
+                    {selectedHistMsg.role === 'assistant' && (
+                      <button type="button" onClick={() => { if (selectedHistMsg) handleCopy(selectedHistMsg.content, 9999); }} style={{ marginTop: 28, background: 'none', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 20, color: copiedIdx === 9999 ? '#D4AF37' : 'rgba(255,255,255,0.35)', fontSize: 11, fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 700, letterSpacing: '0.08em', padding: '7px 18px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {copiedIdx === 9999 ? '✓ Copied' : '⎘ Copy Transmission'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
               <div style={{ height: 2, flexShrink: 0, background: 'linear-gradient(90deg, transparent, #D4AF37, transparent)', opacity: 0.8 }} />
               <div className="sqi-hist-hdr">
                 <div className="sqi-hist-title">Consultation History</div>
                 <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', fontFamily: "'Plus Jakarta Sans',sans-serif" }}>{persistedMsgs.length} messages</div>
-                <button type="button" className="sqi-ibtn" onClick={() => setShowHistory(false)}>✕</button>
+                <button type="button" className="sqi-ibtn" onClick={() => { setShowHistory(false); setSelectedHistMsg(null); }}>✕</button>
               </div>
               <div className="sqi-hist-list">
                 {persistedMsgs.length === 0 ? (
@@ -1051,29 +1074,6 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
             </div>
           )}
 
-          {/* Full Message Modal (inline mode) */}
-          {selectedHistMsg && (
-            <div style={{ position: 'absolute', inset: 0, zIndex: 20, background: 'rgba(5,5,5,0.97)', backdropFilter: 'blur(20px)', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
-              <div style={{ height: 2, background: 'linear-gradient(90deg, transparent, #D4AF37, transparent)', flexShrink: 0 }} />
-              <div style={{ padding: '14px 18px 12px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid rgba(212,175,55,0.12)', flexShrink: 0 }}>
-                <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', flex: 1, fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
-                  {selectedHistMsg.role === 'user' ? 'Your Inquiry' : '◈ Agastya Muni — Full Transmission'}
-                </div>
-                <button type="button" style={{ width: 34, height: 34, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }} onClick={() => setSelectedHistMsg(null)}>✕</button>
-              </div>
-              <div style={{ padding: '20px 18px 40px', flex: 1, overflowY: 'auto' }}>
-                {selectedHistMsg.role === 'assistant'
-                  ? <FormatAgastya text={selectedHistMsg.content} />
-                  : <div style={{ fontSize: 17, color: 'rgba(255,255,255,0.8)', lineHeight: 1.75, fontFamily: "'Plus Jakarta Sans',sans-serif" }}>{selectedHistMsg.content}</div>
-                }
-                {selectedHistMsg.role === 'assistant' && (
-                  <button type="button" onClick={() => { if (selectedHistMsg) handleCopy(selectedHistMsg.content, 9999); }} style={{ marginTop: 24, background: 'none', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 20, color: copiedIdx === 9999 ? '#D4AF37' : 'rgba(255,255,255,0.35)', fontSize: 11, fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 700, letterSpacing: '0.08em', padding: '5px 14px', cursor: 'pointer' }}>
-                    {copiedIdx === 9999 ? '✓ Copied' : '⎘ Copy Transmission'}
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
         </div>
         <AyurvedaLexicon isOpen={showLexicon} onClose={() => setShowLexicon(false)} />
       </div>
