@@ -9,7 +9,7 @@ jobs:
     steps:
       - name: List users and restore ayurveda history
         env:
-          SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
           cat > /tmp/restore.py << 'PYEOF'
 import json, urllib.request, urllib.error, sys, os
