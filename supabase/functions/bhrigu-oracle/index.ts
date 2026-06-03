@@ -131,7 +131,8 @@ Tell me: in the past twelve months, have you experienced a significant loss, a s
 function buildConversationPrompt(
   name: string, dob: string, tob: string, pob: string,
   readingType: string, question: string,
-  history: {role: string; content: string}[]
+  history: {role: string; content: string}[],
+  leafConfirmed: boolean = false
 ): {system: string; messages: {role: string; content: string}[]} {
 
   const firstName = name ? name.split(" ")[0] : "Seeker";
@@ -144,7 +145,11 @@ TIME OF BIRTH: ${tob || "not yet provided"}
 PLACE OF BIRTH: ${pob || "not yet provided"}
 READING FOCUS: ${readingType || "general"}
 ${question ? `SEEKER'S QUESTION: "${question}"` : ""}
-${hasBirthData ? "" : "NOTE: Birth data not yet confirmed. Verify the leaf belongs to them through 2-3 precise questions before delivering the full reading."}
+${leafConfirmed ? 
+  "LEAF STATUS: CONFIRMED. This soul has been verified in a previous session. Their leaf is already found. Do NOT run verification questions. Open by acknowledging their leaf is before you, then answer their question directly from the birth chart data." 
+  : hasBirthData ? 
+  "LEAF STATUS: FIRST SESSION — LEAF NOT YET CONFIRMED. Run the sacred leaf-finding ceremony. Ask 2-3 verification questions — each from a DIFFERENT life domain: childhood events, family dynamics, physical marks, early karmic events, relationship patterns. NEVER ask about a parent name initial letter. NEVER repeat the same type of question twice. Keep the language ancient and Bhrigu-like. After 2-3 questions and answers, declare the leaf found and proceed to reading." 
+  : "Birth data not yet provided. Ask the seeker for their date, time and place of birth."}
 `;
 
   const systemWithContext = BHRIGU_SYSTEM_PROMPT + "\n\n" + contextBlock;
@@ -225,6 +230,8 @@ serve(async (req) => {
     const readingType = String(body.readingType ?? "general");
     const chatHistory = (body.history as {role: string; content: string}[]) ?? [];
     const isOpening = Boolean(body.is_opening);
+    const leafConfirmed = Boolean(body.leaf_confirmed);
+    const leafConfirmed = Boolean(body.leaf_confirmed);
 
     // ── Opening message — no API call needed ───────────────────────────────
     if (isOpening) {
@@ -302,7 +309,7 @@ serve(async (req) => {
 
     // ── CONVERSATIONAL CHAT MODE ───────────────────────────────────────────
     const { system, messages } = buildConversationPrompt(
-      name, dob, tob, pob, readingType, question, chatHistory
+      name, dob, tob, pob, readingType, question, chatHistory, leafConfirmed
     );
 
     const allMessages = [
@@ -332,10 +339,13 @@ serve(async (req) => {
 
     // Detect if Bhrigu is ready to deliver the full reading
     // (after enough dialogue, he transitions to the full structured reading)
-    const isReadyForReading = chatHistory.length >= 4 ||
-      reply.toLowerCase().includes("the leaf is confirmed") ||
+    const isReadyForReading = leafConfirmed || chatHistory.length >= 6 ||
+      reply.toLowerCase().includes("leaf is confirmed") ||
+      reply.toLowerCase().includes("leaf is found") ||
       reply.toLowerCase().includes("i will now read") ||
-      reply.toLowerCase().includes("leaf belongs to you");
+      reply.toLowerCase().includes("leaf belongs to you") ||
+      reply.toLowerCase().includes("your leaf is before me") ||
+      reply.toLowerCase().includes("the leaf is yours");
 
     return new Response(JSON.stringify({ reply, ready_for_reading: isReadyForReading, mode: "chat" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } });
