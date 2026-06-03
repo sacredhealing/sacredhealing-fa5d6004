@@ -605,11 +605,22 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
         }
       }
       if (assistantContent.trim()) {
-        // Edge function saves assistant message server-side; refresh to get real DB record
-        await refreshMessages();
-        // Scroll to bottom after full response is in
+        // Persist assistant message in local state immediately (optimistic).
+        // Edge function also writes to DB async; we do NOT refresh from DB here
+        // because a race can wipe the just-streamed answer from the UI.
+        await saveMessage({ role: 'assistant', content: assistantContent });
+        // Clear pending user msg now that the turn is complete
+        setPendingUserMsg(null);
+        // Scroll so the TOP of the new assistant answer is at the top of the viewport
         requestAnimationFrame(() => {
-          if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
+          const el = msgsRef.current;
+          if (!el) return;
+          const rows = el.querySelectorAll('.sqi-mrow.agent');
+          const last = rows[rows.length - 1] as HTMLElement | undefined;
+          if (last) {
+            el.scrollTop = last.offsetTop - 12;
+            isNearBottomRef.current = false;
+          }
         });
       }
     } catch (err) {
@@ -619,11 +630,9 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
     } finally {
       setIsLoading(false);
       setStreamingAssistant(null);
-      // DO NOT clear pendingUserMsg here — it stays until next send.
-      // The memo's pendingInDb check prevents duplicates once DB confirms.
-      // Clearing it here causes the question to vanish mid-render.
     }
   };
+
 
   const hasJyotish = !!(jyotishProfile?.lagna || jyotishProfile?.moon_sign);
 
