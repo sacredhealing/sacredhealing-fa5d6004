@@ -465,7 +465,7 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       const durationListenedSec = Math.floor((Date.now() - playStartTimeRef.current) / 1000);
       writeLastSessionAndNotify(Date.now(), durationListenedSec, audio.contentType);
     }
-  }, [audioContentType, currentAudio?.id, medPlayer.currentTime, medPlayer.duration]);
+  }, [audioContentType, currentAudio, medPlayer.currentTime, medPlayer.duration]);
 
   useEffect(() => {
     if (DIRECT_UNIVERSAL_AUDIO) return;
