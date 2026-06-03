@@ -3451,7 +3451,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
   return (
     <div
       className="relative min-h-screen text-white/90 pb-24"
-      style={{ background: '#050505', position: 'relative', overflowX: 'hidden', overscrollBehavior: 'contain', padding: 0, margin: 0, width: '100%', maxWidth: '100vw', paddingTop: 'env(safe-area-inset-top, 0px)', touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}
+      style={{ background: '#050505', position: 'relative', overflowX: 'hidden', padding: 0, margin: 0, width: '100%', maxWidth: '100vw', paddingTop: 'env(safe-area-inset-top, 0px)', touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}
     >
 
       {/* ââ Akasha Deep Space Background ââ */}
@@ -3465,7 +3465,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
       }} />
 
       {/* ââ Nadi SVG Overlay ââ */}
-      <svg className={`fixed inset-0 z-0 pointer-events-none w-full h-full ${activeTransmissions.length > 0 ? 'opacity-30' : 'opacity-[0.06]'}`}>
+      <svg className={`fixed inset-0 z-0 pointer-events-none w-full h-full ${activeTransmissions.length > 0 ? 'opacity-30' : 'opacity-[0.06]'}`} style={{ pointerEvents: 'none' }}>
         <defs>
           <filter id="qa-glow">
             <feGaussianBlur stdDeviation={activeTransmissions.length > 0 ? '3' : '1'} result="coloredBlur"/>
