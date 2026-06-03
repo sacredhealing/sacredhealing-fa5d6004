@@ -3981,7 +3981,6 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                     </button>
                   </div>
                 )}
-                  )}
                 <div className="relative">
                   <div
                     className={libraryUnlocked ? '' : 'pointer-events-none blur-md saturate-50 opacity-[0.42]'}
