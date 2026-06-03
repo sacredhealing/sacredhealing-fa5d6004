@@ -54,7 +54,7 @@ const SectionCard: React.FC<{
         </div>
       </div>
       <AnimatePresence>
-        {open && (
+        {open && status !== 'upcoming' && (
           <motion.div initial={{ height:0, opacity:0 }} animate={{ height:'auto', opacity:1 }} exit={{ height:0, opacity:0 }}
             style={{ overflow:'hidden' }}>
             <div style={{ padding:'0 18px 18px', borderTop:'1px solid rgba(255,255,255,0.05)' }}>
@@ -434,7 +434,9 @@ interface TeachingData {
   quote: { tamil: string; english: string; master: string };
 }
 
-const TeachingCard: React.FC<{ t: TeachingData; isCurrent: boolean }> = ({ t, isCurrent }) => {
+const TeachingCard: React.FC<{ t: TeachingData; status: 'current' | 'archive' | 'upcoming' }> = ({ t, status }) => {
+  const isCurrent = status === 'current';
+  const isArchive = status === 'archive';
   const [open, setOpen] = React.useState(false);
   return (
     <div style={{ borderRadius:18, marginBottom:10, overflow:'hidden',
@@ -442,20 +444,25 @@ const TeachingCard: React.FC<{ t: TeachingData; isCurrent: boolean }> = ({ t, is
       background: open || isCurrent ? t.bg : 'rgba(255,255,255,0.02)',
       transition:'border-color 0.25s, background 0.25s' }}>
       <div style={{ padding:'14px 16px 0' }}>
-        <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase' as const, marginBottom:5, color:t.accent, opacity:0.8 }}>
-          {t.badge}{isCurrent ? ' · Current' : ''}
+        <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase' as const, marginBottom:5, color: status === 'upcoming' ? 'rgba(255,255,255,0.25)' : t.accent, opacity:0.8 }}>
+          {t.badge}{isCurrent ? ' · Current' : isArchive ? ' · Archive' : ' · Upcoming'}
         </div>
-        <div style={{ fontSize:13, fontWeight:900, marginBottom:5, color:'rgba(255,255,255,0.92)', lineHeight:1.3, letterSpacing:'-0.02em' }}>{t.title}</div>
-        <div style={{ fontSize:11, lineHeight:1.65, color:'rgba(255,255,255,0.48)', paddingBottom:12 }}>{t.teaser}</div>
+        <div style={{ fontSize:13, fontWeight:900, marginBottom:5, color: status === 'upcoming' ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.92)', lineHeight:1.3, letterSpacing:'-0.02em' }}>
+          {status === 'upcoming' ? `🔒 ${t.month} — Coming Soon` : t.title}
+        </div>
+        {status !== 'upcoming' && <div style={{ fontSize:11, lineHeight:1.65, color:'rgba(255,255,255,0.48)', paddingBottom:12 }}>{t.teaser}</div>}
+        {status === 'upcoming' && <div style={{ fontSize:11, lineHeight:1.65, color:'rgba(255,255,255,0.28)', paddingBottom:12 }}>This transmission unlocks in {t.month}.</div>}
       </div>
-      <button onClick={() => setOpen(o => !o)} style={{ display:'inline-flex', alignItems:'center', gap:6,
-        margin:'0 16px 14px', padding:'7px 14px', borderRadius:999,
-        fontSize:9, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const,
-        color:t.accent, border:`1px solid ${t.border}`, background:t.bg, cursor:'pointer' }}>
-        <span style={{ display:'inline-block', transform:open?'rotate(180deg)':'rotate(0deg)', transition:'transform 0.3s', fontSize:11 }}>▾</span>
-        {open ? 'Close Teaching' : 'Read Full Teaching'}
-      </button>
-      {open && (
+      {status !== 'upcoming' && (
+        <button onClick={() => setOpen(o => !o)} style={{ display:'inline-flex', alignItems:'center', gap:6,
+          margin:'0 16px 14px', padding:'7px 14px', borderRadius:999,
+          fontSize:9, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const,
+          color:t.accent, border:`1px solid ${t.border}`, background:t.bg, cursor:'pointer' }}>
+          <span style={{ display:'inline-block', transform:open?'rotate(180deg)':'rotate(0deg)', transition:'transform 0.3s', fontSize:11 }}>▾</span>
+          {open ? 'Close Teaching' : 'Read Full Teaching'}
+        </button>
+      )}
+      {open && status !== 'upcoming' && (
         <div style={{ padding:'0 16px 18px', borderTop:`1px solid ${t.border}` }}>
           {t.sections.map((s, si) => (
             <div key={si} style={{ marginTop:16 }}>
@@ -492,12 +499,17 @@ const TeachingCard: React.FC<{ t: TeachingData; isCurrent: boolean }> = ({ t, is
 };
 
 const AudioTeachings: React.FC = () => {
-  const currentMonth = new Date().getMonth() + 1;
+  // June 2026 = month 6. July is the NEXT/current release.
+  // Months 1–6 already released (archive). Month 7 = current. 8–12 = upcoming.
+  const LIVE_THROUGH = 7; // July is first live month
   return (
     <div>
-      {MONTHLY_TEACHINGS.map(t => (
-        <TeachingCard key={t.month} t={t} isCurrent={t.num === currentMonth} />
-      ))}
+      {MONTHLY_TEACHINGS.map(t => {
+        const status: 'current' | 'archive' | 'upcoming' =
+          t.num === LIVE_THROUGH ? 'current' :
+          t.num < LIVE_THROUGH ? 'archive' : 'upcoming';
+        return <TeachingCard key={t.month} t={t} status={status} />;
+      })}
     </div>
   );
 };
