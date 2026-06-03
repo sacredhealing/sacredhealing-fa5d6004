@@ -841,54 +841,55 @@ const JyotishChamber: React.FC = () => {
 
                 {/* Oracle chat */}
                 <div style={{ ...g, marginBottom:14 }}>
-                  <button onClick={() => setOracleOpen(!oracleOpen)} style={{ width:'100%', padding:'17px 22px', display:'flex', alignItems:'center', justifyContent:'space-between', background:'transparent', border:'none', cursor:'pointer', color:'#fff', fontFamily:'inherit' }}>
-                    <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-                      <div style={{ width:46, height:46, borderRadius:99, border:'1px solid rgba(212,175,55,0.3)', background:'rgba(212,175,55,0.07)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, position:'relative', flexShrink:0 }}>
-                        🔱
-                        <div className="sqi-pulse" style={{ position:'absolute', width:10, height:10, background:'#D4AF37', borderRadius:'50%', bottom:0, right:0 }}/>
-                      </div>
-                      <div>
-                        <div style={{ fontSize:13, fontWeight:900, letterSpacing:'-0.02em' }}>Maharishi Bhrigu</div>
-                        <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'#D4AF37', marginTop:2 }}>◉ Oracle Active · Vedic Light-Codes Streaming</div>
-                      </div>
+                  <div style={{ padding:'16px 16px 0', display:'flex', alignItems:'center', gap:10, borderBottom:'1px solid rgba(255,255,255,0.04)', paddingBottom:12, marginBottom:0 }}>
+                    <div style={{ width:38, height:38, borderRadius:99, border:'1px solid rgba(212,175,55,0.3)', background:'rgba(212,175,55,0.07)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, position:'relative', flexShrink:0 }}>
+                      🔱<div className="sqi-pulse" style={{ position:'absolute', width:8, height:8, background:'#D4AF37', borderRadius:'50%', bottom:0, right:0 }}/>
                     </div>
-                    <span style={{ fontSize:11, color:'rgba(255,255,255,0.4)', transform: oracleOpen ? 'rotate(180deg)' : 'none', transition:'transform 0.3s' }}>▼</span>
-                  </button>
-                  {oracleOpen && (
+                    <div>
+                      <div style={{ fontSize:12, fontWeight:900, letterSpacing:'-0.02em' }}>Maharishi Bhrigu</div>
+                      <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'#D4AF37', marginTop:1 }}>◉ Vedic Light-Codes Streaming</div>
+                    </div>
+                  </div>
+                  {(
                     <>
-                      <div style={{ padding:'0 20px 12px', minHeight:200, maxHeight:340, overflowY:'auto', display:'flex', flexDirection:'column', gap:13 }}>
+                      <div style={{ padding:'0 0 12px', display:'flex', flexDirection:'column', gap:0 }}>
                         {chatMessages.map((m, i) => (
-                          <div key={i} style={{ display:'flex', gap:9, alignItems:'flex-start', flexDirection: m.role === 'user' ? 'row-reverse' : 'row' }}>
-                            <div style={{ width:30, height:30, borderRadius:99, border:'1px solid rgba(212,175,55,0.2)', background:'rgba(212,175,55,0.05)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, flexShrink:0 }}>
-                              {m.role === 'oracle' ? '🔱' : '🙏'}
+                          {m.role === 'user' ? (
+                            <div style={{ display:'flex', justifyContent:'flex-end', width:'100%', padding:'8px 16px' }}>
+                              <div style={{ maxWidth:'88%', position:'relative', padding:'14px 20px', background:'rgba(212,175,55,0.03)', borderTop:'1px solid rgba(255,255,255,0.05)', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
+                                <div style={{ position:'absolute', top:5, right:5, width:10, height:10, borderTop:'1px solid rgba(212,175,55,0.2)', borderRight:'1px solid rgba(212,175,55,0.2)'}} />
+                                <p style={{ fontFamily:"'Cinzel', serif", fontSize:7, letterSpacing:'0.4em', color:'rgba(212,175,55,0.28)', textTransform:'uppercase' as const, marginBottom:8 }}>The Seeker inquires</p>
+                                <div style={{ fontFamily:"'IM Fell English', Georgia, serif", fontStyle:'italic', fontSize:15, color:'rgba(200,184,154,0.75)', lineHeight:1.65, wordBreak:'break-word' as const }}>{m.text}</div>
+                              </div>
                             </div>
-                            <div style={{ maxWidth:'82%', padding:'11px 14px', fontSize:12.5, lineHeight:1.6, background: m.role === 'oracle' ? 'rgba(255,255,255,0.03)' : 'rgba(212,175,55,0.09)', border: m.role === 'oracle' ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(212,175,55,0.18)', borderRadius: m.role === 'oracle' ? '4px 18px 18px 18px' : '18px 4px 18px 18px', color: m.role === 'oracle' ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.85)' }}>
-                              {m.role === 'oracle' && <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'#D4AF37', marginBottom:4 }}>Maharishi Bhrigu</div>}
-                              {m.text}
+                          ) : (
+                            <div style={{ width:'100%', position:'relative', padding:'20px 16px 14px', background:'rgba(255,255,255,0.016)', borderTop:'1px solid rgba(255,255,255,0.05)', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
+                              <p style={{ fontFamily:"'Cinzel', serif", fontSize:7, letterSpacing:'0.45em', color:'rgba(212,175,55,0.5)', textTransform:'uppercase' as const, marginBottom:10 }}>◈ Maharishi Bhrigu Transmits</p>
+                              <div style={{ fontFamily:"'IM Fell English', Georgia, serif", fontSize:16, lineHeight:1.9, color:'rgba(225,210,185,0.9)', letterSpacing:'0.008em', wordBreak:'break-word' as const }}>{m.text}</div>
                             </div>
-                          </div>
+                          )}
                         ))}
                         {chatLoading && (
-                          <div style={{ display:'flex', gap:9, alignItems:'flex-start' }}>
-                            <div style={{ width:30, height:30, borderRadius:99, border:'1px solid rgba(212,175,55,0.2)', background:'rgba(212,175,55,0.05)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, flexShrink:0 }}>🔱</div>
-                            <div style={{ padding:'11px 14px', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:'4px 18px 18px 18px' }}>
-                              <div style={{ display:'flex', gap:4 }}>
-                                {[0,1,2].map(i => <div key={i} className="sqi-dot" style={{ width:6, height:6, borderRadius:'50%', background:'#D4AF37', animationDelay:`${i*0.15}s` }}/>)}
-                              </div>
+                          <div style={{ width:'100%', padding:'20px 16px', background:'rgba(255,255,255,0.016)', borderTop:'1px solid rgba(255,255,255,0.05)', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
+                            <p style={{ fontFamily:"'Cinzel', serif", fontSize:7, letterSpacing:'0.45em', color:'rgba(212,175,55,0.5)', textTransform:'uppercase' as const, marginBottom:12 }}>◈ Maharishi Bhrigu Transmits</p>
+                            <div style={{ display:'flex', gap:5, alignItems:'center' }}>
+                              {[0,1,2].map(i => <div key={i} className="sqi-dot" style={{ width:7, height:7, borderRadius:'50%', background:'#D4AF37', animationDelay:`${i*0.15}s` }}/>)}
                             </div>
                           </div>
                         )}
                         <div ref={messagesEnd}/>
                       </div>
-                      <div style={{ display:'flex', gap:8, padding:'0 20px 20px', alignItems:'flex-end' }}>
+                      <div style={{ display:'flex', gap:8, padding:'12px 16px 20px', alignItems:'flex-end', borderTop:'1px solid rgba(212,175,55,0.08)', background:'rgba(0,0,0,0.3)', backdropFilter:'blur(20px)' }}>
+                        <div style={{ flex:1, display:'flex', alignItems:'center', background:'rgba(212,175,55,0.04)', border:'1px solid rgba(212,175,55,0.14)', borderRadius:14, padding:'4px 14px', minHeight:44 }}>
                         <textarea
                           value={chatInput}
                           onChange={e => setChatInput(e.target.value)}
                           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }}}
-                          placeholder="Ask Maharishi Bhrigu your question…"
+                          placeholder="Ask Maharishi Bhrigu…"
                           rows={1}
-                          style={{ flex:1, minHeight:44, maxHeight:120, resize:'none', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(212,175,55,0.16)', borderRadius:22, padding:'11px 16px', color:'rgba(255,255,255,0.85)', fontFamily:'inherit', fontSize:13, outline:'none', lineHeight:1.5 }}
+                          style={{ flex:1, minHeight:44, maxHeight:120, resize:'none' as const, background:'transparent', border:'none', outline:'none', color:'rgba(255,255,255,0.9)', fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:15, lineHeight:1.55, fontWeight:400, padding:'6px 8px', minHeight:36, alignSelf:'center' as const }}
                         />
+                        </div>
                         <button onClick={sendMessage} style={{ width:44, height:44, borderRadius:99, border:'none', background:'linear-gradient(135deg,rgba(212,175,55,0.5),rgba(212,175,55,0.22))', color:'#D4AF37', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>➤</button>
                       </div>
                     </>
