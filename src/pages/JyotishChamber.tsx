@@ -210,9 +210,7 @@ const JyotishChamber: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [calcLoading, setCalcLoading] = useState(false);
   const [birthDialogOpen, setBirthDialogOpen] = useState(false);
-  const [chatMessages, setChatMessages] = useState<Array<{role:'user'|'oracle', text:string}>>([
-    { role:'oracle', text:'I have read your Akashic record across 108 lifetimes. The Rahu-Jupiter period you enter now is among the most expansive in your entire 120-year Vimshottari cycle. Speak your query and I shall illuminate what the stars have encoded for your liberation.' }
-  ]);
+  const [chatMessages, setChatMessages] = useState<Array<{role:'user'|'oracle', text:string}>>([]);
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
   const [oracleOpen, setOracleOpen] = useState(true);
@@ -222,6 +220,7 @@ const JyotishChamber: React.FC = () => {
   const [openModules, setOpenModules] = useState<Set<number>>(new Set());
   const [openNadi, setOpenNadi] = useState<string|null>(null);
   const [builtTabs, setBuiltTabs] = useState<Set<string>>(new Set(['overview']));
+  const [leafConfirmed, setLeafConfirmed] = useState(false);
   const messagesEnd = useRef<HTMLDivElement>(null);
 
   // Tier access
@@ -251,6 +250,21 @@ const JyotishChamber: React.FC = () => {
         // 2. Load or calculate ephemeris
         await loadEphemeris(profile as BirthData);
       }
+      // 3. Set opening message after leaf status is known
+      const { data: jp } = await supabase
+        .from('jyotish_profiles')
+        .select('bhrigu_leaf_confirmed')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      const confirmed = Boolean((jp as any)?.bhrigu_leaf_confirmed);
+      if (confirmed) setLeafConfirmed(true);
+      const firstName = profile?.birth_name?.split(' ')[0] || 'Seeker';
+      setChatMessages([{
+        role: 'oracle',
+        text: confirmed
+          ? `${firstName}, your leaf is before me. The Akashic record is open. What do you seek to understand?`
+          : `${firstName}, I sense your presence across the ages. I have many leaves before me. To find yours, I must ask a few things first.`
+      }]);
     } catch (e) {
       console.error('loadBirthData error:', e);
     } finally {
@@ -263,7 +277,7 @@ const JyotishChamber: React.FC = () => {
     // Try cache first
     const { data: cached } = await supabase
       .from('jyotish_profiles')
-      .select('moon_nakshatra, ascendant, sun_sign, dasha_data, ephemeris_confirmed')
+      .select('moon_nakshatra, ascendant, sun_sign, dasha_data, ephemeris_confirmed, bhrigu_leaf_confirmed')
       .eq('user_id', user.id)
       .maybeSingle();
 
@@ -275,6 +289,8 @@ const JyotishChamber: React.FC = () => {
         sunSign: cached.sun_sign || '',
         dashaData: cached.dasha_data as any,
       });
+      // Load leaf confirmed status
+      if ((cached as any).bhrigu_leaf_confirmed) setLeafConfirmed(true);
       return;
     }
     // Calculate fresh
@@ -347,6 +363,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
           tob: birthData?.birth_time || '',
           pob: birthData?.birth_place || '',
           readingType: 'general',
+          leaf_confirmed: leafConfirmed,
           chatHistory: chatMessages.map(m => ({
             role: m.role === 'oracle' ? 'assistant' : 'user',
             content: m.text
@@ -355,6 +372,14 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
       });
 
       if (error) throw error;
+
+      // If Bhrigu just confirmed the leaf — save it permanently
+      if (data?.ready_for_reading && !leafConfirmed && user) {
+        setLeafConfirmed(true);
+        await supabase.from('jyotish_profiles')
+          .update({ bhrigu_leaf_confirmed: true } as any)
+          .eq('user_id', user.id);
+      }
 
       // bhrigu-oracle returns { reply } for chat mode or { sections } for full reading
       const reply = data?.reply || (data?.sections ? formatSections(data.sections) : null) || 'The Akashic transmission was interrupted. Please ask again.';
