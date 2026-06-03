@@ -906,13 +906,13 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                               <div style={{ maxWidth:'88%', position:'relative', padding:'14px 20px', background:'rgba(212,175,55,0.03)', borderTop:'1px solid rgba(255,255,255,0.05)', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
                                 <div style={{ position:'absolute', top:5, right:5, width:10, height:10, borderTop:'1px solid rgba(212,175,55,0.2)', borderRight:'1px solid rgba(212,175,55,0.2)'}} />
                                 <p style={{ fontFamily:"'Cinzel', serif", fontSize:7, letterSpacing:'0.4em', color:'rgba(212,175,55,0.28)', textTransform:'uppercase' as const, marginBottom:8 }}>The Seeker inquires</p>
-                                <div style={{ fontFamily:"'IM Fell English', Georgia, serif", fontStyle:'italic', fontSize:15, color:'rgba(200,184,154,0.75)', lineHeight:1.65, wordBreak:'break-word' as const }}>{m.text}</div>
+                                <div style={{ fontFamily:"'IM Fell English', Georgia, serif", fontStyle:'italic', fontSize:13, color:'rgba(200,184,154,0.75)', lineHeight:1.6, wordBreak:'break-word' as const }}>{m.text}</div>
                               </div>
                             </div>
                           ) : (
                             <div style={{ width:'100%', position:'relative', padding:'20px 16px 14px', background:'rgba(255,255,255,0.016)', borderTop:'1px solid rgba(255,255,255,0.05)', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
                               <p style={{ fontFamily:"'Cinzel', serif", fontSize:7, letterSpacing:'0.45em', color:'rgba(212,175,55,0.5)', textTransform:'uppercase' as const, marginBottom:10 }}>◈ Maharishi Bhrigu Transmits</p>
-                              <div style={{ fontFamily:"'IM Fell English', Georgia, serif", fontSize:16, lineHeight:1.9, color:'rgba(225,210,185,0.9)', letterSpacing:'0.008em', wordBreak:'break-word' as const }}>{m.text}</div>
+                              <div style={{ fontFamily:"'IM Fell English', Georgia, serif", fontSize:14, lineHeight:1.75, color:'rgba(225,210,185,0.9)', letterSpacing:'0.008em', wordBreak:'break-word' as const }}>{m.text}</div>
                             </div>
                           )}</React.Fragment>
                         ))}
