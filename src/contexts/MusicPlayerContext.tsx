@@ -15,6 +15,7 @@ import { AudioErrorBoundary } from '@/components/AudioErrorBoundary';
 
 const SH_LAST_SESSION_KEY = 'sh_last_session';
 const SH_LAST_SESSION_UPDATED = 'sh_last_session_updated';
+const DIRECT_UNIVERSAL_AUDIO = true;
 
 function writeLastSessionAndNotify(ts: number, durationSec: number, type: string): void {
   try {
@@ -23,7 +24,9 @@ function writeLastSessionAndNotify(ts: number, durationSec: number, type: string
       JSON.stringify({ v: 1, ts, duration: durationSec, type })
     );
     window.dispatchEvent(new Event(SH_LAST_SESSION_UPDATED));
-  } catch (_) {}
+  } catch (_) {
+    // localStorage may be unavailable in private mode.
+  }
 }
 
 // Audio content type enum
@@ -76,7 +79,7 @@ export interface UniversalAudioItem {
   shc_reward: number;
   contentType: AudioContentType;
   // Original data reference
-  originalData?: any;
+  originalData?: unknown;
 }
 
 /** Persisted row shape for `active_transmissions` (cross-device resume). */
