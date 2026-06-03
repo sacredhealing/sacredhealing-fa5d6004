@@ -2244,6 +2244,10 @@ function QuantumApothecaryInner() {
   const [voiceResult, setVoiceResult] = useState<VoiceBiofieldResult | null>(null);
   const [showVoiceScan, setShowVoiceScan] = useState(true);
   const [showAllTop33, setShowAllTop33] = useState(false);
+  const [cardTxOpen, setCardTxOpen] = useState(true);
+  const [cardVoiceOpen, setCardVoiceOpen] = useState(false);
+  const [cardT33Open, setCardT33Open] = useState(false);
+  const [cardLibOpen, setCardLibOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -3492,27 +3496,52 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         <div className="flex w-full max-w-none flex-col gap-5">
           <video ref={videoRef} className="hidden" muted playsInline tabIndex={-1} aria-hidden />
 
-          <Suspense fallback={
-            <div className="glass-card rounded-[28px] p-6">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Zap size={14} className="text-[#D4AF37]" style={{ filter: 'drop-shadow(0 0 6px rgba(212,175,55,0.6))' }} />
-                  <h2 className="text-sm font-black tracking-[-0.03em]">Active Transmissions</h2>
+          {/* ══ CARD: Active Transmissions ══ */}
+          <div className="sqi-card-shell sqi-card-shell-strong" style={{ borderRadius: 28, overflow: 'hidden', animation: 'cardAuraGold 3.5s ease-in-out infinite' }}>
+            <div
+              className="sqi-card-tap"
+              onClick={() => setCardTxOpen(o => !o)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={e => e.key === 'Enter' && setCardTxOpen(o => !o)}
+            >
+              <div className="sqi-tap-glow" style={{ background: 'radial-gradient(circle,rgba(74,222,128,0.14) 0%,transparent 70%)' }} />
+              <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+                <div className="sqi-card-orb sqi-card-orb-green">⚡</div>
+                <div>
+                  <div className={`sqi-card-title${cardTxOpen ? ' sqi-card-title-open' : ''}`}>Active Transmissions</div>
+                  <div className="sqi-card-sub">Field live · 24 / 7</div>
                 </div>
-                <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest text-emerald-300">Loading...</span>
               </div>
-              <div className="space-y-2">
-                <div className="h-16 rounded-2xl bg-white/[0.02] animate-pulse" />
-                <div className="h-16 rounded-2xl bg-white/[0.02] animate-pulse" />
+              <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                <div className="sqi-card-pill sqi-pill-green">{activeTransmissions.length > 0 ? `${activeTransmissions.length} Active` : 'Empty'}</div>
+                <div className={`sqi-card-chevron${cardTxOpen ? ' sqi-card-chevron-open' : ''}`}>▾</div>
               </div>
             </div>
-          }>
-            <ActiveTransmissionsSection
-              activeTransmissions={activeTransmissions}
-              setActiveTransmissions={setActiveTransmissions}
-              onDissolveTransmission={dissolveTransmission}
-            />
-          </Suspense>
+            <div className={`sqi-card-body${cardTxOpen ? ' sqi-card-body-open' : ''}`}>
+              <Suspense fallback={
+                <div className="glass-card rounded-[28px] p-6">
+                  <div className="mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Zap size={14} className="text-[#D4AF37]" style={{ filter: 'drop-shadow(0 0 6px rgba(212,175,55,0.6))' }} />
+                      <h2 className="text-sm font-black tracking-[-0.03em]">Active Transmissions</h2>
+                    </div>
+                    <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest text-emerald-300">Loading...</span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-16 rounded-2xl bg-white/[0.02] animate-pulse" />
+                    <div className="h-16 rounded-2xl bg-white/[0.02] animate-pulse" />
+                  </div>
+                </div>
+              }>
+                <ActiveTransmissionsSection
+                  activeTransmissions={activeTransmissions}
+                  setActiveTransmissions={setActiveTransmissions}
+                  onDissolveTransmission={dissolveTransmission}
+                />
+              </Suspense>
+            </div>
+          </div>
 
           <ScalarTabSwitcher
             active={apothecaryMainTab}
@@ -3521,8 +3550,31 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
           />
 
           {apothecaryMainTab === 'library' ? (
-            <div className="grid w-full gap-5 lg:grid-cols-2" style={{ maxWidth: '100%' }}>
-              <div className="flex min-w-0 flex-col gap-5">
+            <div className="flex w-full flex-col gap-4" style={{ maxWidth: '100%' }}>
+
+              {/* ══ CARD: Voice Bio-Signature Scan ══ */}
+              <div className="sqi-card-shell" style={{ borderRadius: 28, overflow: 'hidden', animation: 'cardAuraGold 4s ease-in-out infinite' }}>
+                <div
+                  className="sqi-card-tap"
+                  onClick={() => setCardVoiceOpen(o => !o)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={e => e.key === 'Enter' && setCardVoiceOpen(o => !o)}
+                >
+                  <div className="sqi-tap-glow" style={{ background: 'radial-gradient(circle,rgba(34,211,238,0.12) 0%,transparent 70%)' }} />
+                  <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+                    <div className="sqi-card-orb sqi-card-orb-cyan">🎙</div>
+                    <div>
+                      <div className={`sqi-card-title${cardVoiceOpen ? ' sqi-card-title-open' : ''}`}>Voice Bio-Signature Scan</div>
+                      <div className="sqi-card-sub">Nadi · Dosha · Pranic Field</div>
+                    </div>
+                  </div>
+                  <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                    <div className="sqi-card-pill sqi-pill-cyan">Ready</div>
+                    <div className={`sqi-card-chevron${cardVoiceOpen ? ' sqi-card-chevron-open' : ''}`}>▾</div>
+                  </div>
+                </div>
+                <div className={`sqi-card-body${cardVoiceOpen ? ' sqi-card-body-open' : ''}`}>
                 <ScalarVoiceWrapper>
                   <Suspense fallback={ScannerSuspenseFallback}>
                     <VoiceBiofieldScanner
@@ -3695,11 +3747,195 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                     </ScalarTop33Wrapper>
                   )}
                 </ScalarVoiceWrapper>
-
+                  {/* How It Works */}
                 <ScalarHowItWorksCard />
+                </div>
               </div>
 
-              <div className="flex min-w-0 flex-col gap-5">
+              {/* ══ CARD: Top 33 Resonance Matches ══ */}
+              {resonanceMatches.length > 0 && (
+                <div className="sqi-card-shell" style={{ borderRadius: 28, overflow: 'hidden', animation: 'cardAuraGold 4s ease-in-out infinite' }}>
+                  <div
+                    className="sqi-card-tap"
+                    onClick={() => setCardT33Open(o => !o)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={e => e.key === 'Enter' && setCardT33Open(o => !o)}
+                  >
+                    <div className="sqi-tap-glow" style={{ background: 'radial-gradient(circle,rgba(212,175,55,0.14) 0%,transparent 70%)' }} />
+                    <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+                      <div className="sqi-card-orb">⟁</div>
+                      <div>
+                        <div className={`sqi-card-title${cardT33Open ? ' sqi-card-title-open' : ''}`}>Top 33 Resonance Matches</div>
+                        <div className="sqi-card-sub">From your Bio-Signature</div>
+                      </div>
+                    </div>
+                    <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                      <div className="sqi-card-pill sqi-pill-gold">{resonanceMatches.length} Matches</div>
+                      <div className={`sqi-card-chevron${cardT33Open ? ' sqi-card-chevron-open' : ''}`}>▾</div>
+                    </div>
+                  </div>
+                  <div className={`sqi-card-body${cardT33Open ? ' sqi-card-body-open' : ''}`}>
+                    <ScalarTop33Wrapper>
+                      {/* ── HEADER ── */}
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-4 pt-4">
+                        <div>
+                          <p style={{ fontSize:13, fontWeight:900, letterSpacing:'0.12em', textTransform:'uppercase', color:'#D4AF37', textShadow:'0 0 14px rgba(212,175,55,0.35)' }}>
+                            ⟁ Top 33
+                          </p>
+                          <p style={{ marginTop:3, fontSize:10, color:'rgba(255,255,255,0.45)', letterSpacing:'0.04em' }}>
+                            {resonanceMatches.filter((r) =>
+                              activeTransmissions.some((t) => fieldTransmissionMatchesRow(t, r)),
+                            ).length}{' '}
+                            / {resonanceMatches.length} from scan already active in field
+                          </p>
+                        </div>
+                        {/* ââ ACTIVATE BUTTON ââ */}
+                        {(() => {
+                          const activeFromScanCount = resonanceMatches.filter((r) =>
+                            activeTransmissions.some((t) => fieldTransmissionMatchesRow(t, r)),
+                          ).length;
+                          const newCount = resonanceMatches.length - activeFromScanCount;
+                          const noneNew = newCount === 0;
+                          return (
+                            <button
+                              type="button"
+                              onClick={activateAllTop33ToField}
+                              disabled={noneNew}
+                              className="rounded-full px-4 py-2 text-[11px] font-black uppercase tracking-[0.12em] transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50"
+                              style={{
+                                background: noneNew
+                                  ? 'rgba(212,175,55,0.08)'
+                                  : 'rgba(212,175,55,0.15)',
+                                border: noneNew
+                                  ? '1px solid rgba(212,175,55,0.25)'
+                                  : '1px solid rgba(212,175,55,0.5)',
+                                color: noneNew ? 'rgba(212,175,55,0.5)' : '#D4AF37',
+                                boxShadow: noneNew ? 'none' : '0 0 18px rgba(212,175,55,0.2)',
+                              }}
+                            >
+                              {noneNew
+                                ? '⟁ All scan rows active'
+                                : `⟁ Activate All New (${newCount})`}
+                            </button>
+                          );
+                        })()}
+                      </div>
+                      {/* ââ ROW LIST — always full scan list (e.g. 33) ââ */}
+                      <div style={{ maxHeight:"min(68vh,500px)", overflowY:"auto", padding:"8px 14px 14px", display:"flex", flexDirection:"column", gap:6, scrollbarWidth:"thin" }}>
+                        {resonanceMatches.map((row, idx) => {
+                          const isActive = activeTransmissions.some((t) =>
+                            fieldTransmissionMatchesRow(t, row),
+                          );
+                          return (
+                            <div
+                              style={{
+                                display: "flex", alignItems: "center", gap: 10,
+                                padding: "11px 12px", borderRadius: 16,
+                                background: isActive ? "rgba(255,255,255,0.015)" : "rgba(212,175,55,0.04)",
+                                border: isActive ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(212,175,55,0.14)",
+                                opacity: isActive ? 0.52 : 1, transition: "all 0.25s",
+                                boxShadow: isActive ? "none" : "0 2px 12px rgba(212,175,55,0.06)",
+                              }}
+                            >
+
+                              {/* Pct bar */}
+                              <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4, flexShrink:0, width:38 }}>
+                                <span style={{ fontSize:15, fontWeight:900, lineHeight:1, color: isActive ? "rgba(255,255,255,0.25)" : "#D4AF37", fontFamily:"'Plus Jakarta Sans',sans-serif" }}>
+                                  {row.pct}
+                                </span>
+                                <div style={{ width:36, height:4, borderRadius:4, overflow:"hidden", background:"rgba(255,255,255,0.07)" }}>
+                                  <div style={{ height:"100%", borderRadius:4, width:`${row.pct}%`, background: isActive ? "rgba(255,255,255,0.16)" : "linear-gradient(90deg,#D4AF37,#F5E17A)", transition:"width 0.8s ease", boxShadow: isActive ? "none" : "0 0 6px rgba(212,175,55,0.5)" }} />
+                                </div>
+                              </div>
+                              {/* Name + category */}
+                              <div className="flex min-w-0 flex-1 flex-col">
+                                <span style={{ display:"block", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", fontSize:13, fontWeight:700, lineHeight:1.3, color: isActive ? "rgba(255,255,255,0.32)" : "rgba(255,255,255,0.92)" }}>
+                                  {row.name}
+
+                                </span>
+                                {row.rowCategory && (
+                                  <span
+                                    className="text-[9px] font-semibold uppercase tracking-[0.12em]"
+                                    style={{
+                                      color: isActive ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.3)',
+                                    }}
+                                  >
+                                    {row.rowCategory}
+                                  </span>
+                                )}
+                              </div>
+                              {isActive ? (
+                                <span
+                                  style={{ display:"flex", alignItems:"center", gap:3, padding:"3px 8px", borderRadius:100, border:"1px solid rgba(212,175,55,0.22)", background:"rgba(212,175,55,0.07)", flexShrink:0 }}
+                                  aria-label="Already active in field"
+                                >
+                                  <span style={{ color:"#D4AF37", fontSize:10 }}>✓</span>
+                                  <span style={{ fontSize:7, fontWeight:900, letterSpacing:"0.12em", textTransform:"uppercase", color:"rgba(212,175,55,0.65)" }}>In field</span>
+                                </span>
+
+
+
+
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveTransmissions((prev) => {
+                                      if (prev.some((t) => fieldTransmissionMatchesRow(t, row))) {
+                                        return prev;
+                                      }
+                                      return [
+                                        ...prev,
+                                        enrichTransmission(normalizeActivationForMixer(row), 'nadi_scan'),
+                                      ];
+                                    });
+                                    toast.success(`⟁ ${row.name} activated`);
+                                  }}
+                                  className="shrink-0 rounded-full px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.15em] transition-all hover:border-[#D4AF37]/35 hover:text-[#D4AF37]/80"
+                                  style={{
+                                    background: 'transparent',
+                                    color: 'rgba(255,255,255,0.35)',
+                                    border: '1px solid rgba(255,255,255,0.12)',
+                                  }}
+                                >
+                                  + Add
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </ScalarTop33Wrapper>
+                    </ScalarTop33Wrapper>
+                  </div>
+                </div>
+              )}
+
+              {/* ══ CARD: Frequency Library ══ */}
+              <div className="sqi-card-shell" style={{ borderRadius: 28, overflow: 'hidden', animation: 'cardAuraGold 4s ease-in-out infinite' }}>
+                <div
+                  className="sqi-card-tap"
+                  onClick={() => setCardLibOpen(o => !o)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={e => e.key === 'Enter' && setCardLibOpen(o => !o)}
+                >
+                  <div className="sqi-tap-glow" style={{ background: 'radial-gradient(circle,rgba(212,175,55,0.10) 0%,transparent 70%)' }} />
+                  <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+                    <div className="sqi-card-orb">◈</div>
+                    <div>
+                      <div className={`sqi-card-title${cardLibOpen ? ' sqi-card-title-open' : ''}`}>Frequency Library</div>
+                      <div className="sqi-card-sub">Quantum Essences · Activations</div>
+                    </div>
+                  </div>
+                  <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                    <div className={`sqi-card-pill ${libraryUnlocked ? 'sqi-pill-gold' : 'sqi-pill-dim'}`}>{libraryUnlocked ? 'Unlocked' : 'Scan first'}</div>
+                    <div className={`sqi-card-chevron${cardLibOpen ? ' sqi-card-chevron-open' : ''}`}>▾</div>
+                  </div>
+                </div>
+                <div className={`sqi-card-body${cardLibOpen ? ' sqi-card-body-open' : ''}`}>
+                  {selectedActivations.length > 0 && (
                 {selectedActivations.length > 0 && (
                   <div
                     className="rounded-[28px] p-6 sm:p-7 qa-card-hover"
@@ -3747,7 +3983,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                     </button>
                   </div>
                 )}
-
+                  )}
                 <div className="relative">
                   <div
                     className={libraryUnlocked ? '' : 'pointer-events-none blur-md saturate-50 opacity-[0.42]'}
@@ -3785,8 +4021,9 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                   )}
                 </div>
 
-
+                </div>
               </div>
+
             </div>
           ) : (
             <div ref={chatPanelRef} className="w-full min-w-0">
