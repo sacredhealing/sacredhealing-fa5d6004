@@ -1,9 +1,8 @@
-=== USERS ===
-Total users: 0
-
-=== AYURVEDA MESSAGES (service role) ===
-Total messages: 0
-NO MESSAGES - checking if table exists...
-Table check result: None
-
-=== INSERT TEST ===
+SK present: True len=41
+SK2 present: True len=41
+=== TESTING KEYS ===
+  SK: HTTP 404 - {"code":"PGRST205","details":null,"hint":"Perhaps you meant the table 'public.apothecary_chat_messages'","message":"Could not find the table 'public.ayurveda_chat_messages' in the schema cache"}
+  SK2: HTTP 404 - {"code":"PGRST205","details":null,"hint":"Perhaps you meant the table 'public.apothecary_chat_messages'","message":"Could not find the table 'public.ayurveda_chat_messages' in the schema cache"}
+NO WORKING KEY FOUND
+  AUTH SK: {"users":[{"id":"0e099d82-7fae-43d1-9cad-d95ea6c61559","aud":"authenticated","role":"authenticated","email":"ayahands@gmail.com","email_confirmed_at":"2026-05-31T13:14:43.37953Z","phone":"","confirmed
+  AUTH SK2: {"users":[{"id":"0e099d82-7fae-43d1-9cad-d95ea6c61559","aud":"authenticated","role":"authenticated","email":"ayahands@gmail.com","email_confirmed_at":"2026-05-31T13:14:43.37953Z","phone":"","confirmed
