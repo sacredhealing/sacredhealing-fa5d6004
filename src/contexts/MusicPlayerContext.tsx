@@ -766,6 +766,18 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const togglePlay = useCallback(() => {
     if (currentAudio && (audioContentType === 'meditation' || audioContentType === 'healing')) {
+      if (DIRECT_UNIVERSAL_AUDIO && audioRef.current) {
+        if (isPlaying) {
+          audioRef.current.pause();
+          setIsPlaying(false);
+        } else {
+          void (async () => {
+            const ok = await safePlay(audioRef.current!);
+            setIsPlaying(ok);
+          })();
+        }
+        return;
+      }
       const m = medPlayerRef.current;
       if (m.isPlaying) m.pause();
       else void m.play().catch(() => setIsPlaying(false));
@@ -786,6 +798,16 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const seekTo = useCallback((percent: number) => {
     if (currentAudio && (audioContentType === 'meditation' || audioContentType === 'healing')) {
+      if (DIRECT_UNIVERSAL_AUDIO && audioRef.current) {
+        const dur = audioRef.current.duration;
+        if (dur > 0 && isFinite(dur)) {
+          const nextTime = (percent / 100) * dur;
+          audioRef.current.currentTime = nextTime;
+          setCurrentTime(nextTime);
+          setProgress(percent);
+        }
+        return;
+      }
       const m = medPlayerRef.current;
       const dur = m.duration;
       if (dur > 0 && isFinite(dur)) {
@@ -810,6 +832,10 @@ export const MusicPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const setVolume = useCallback((vol: number) => {
     setVolumeState(vol);
     if (currentAudio && (audioContentType === 'meditation' || audioContentType === 'healing')) {
+      if (DIRECT_UNIVERSAL_AUDIO && audioRef.current) {
+        audioRef.current.volume = vol;
+        return;
+      }
       medPlayerRef.current.setVolume(vol);
       return;
     }
