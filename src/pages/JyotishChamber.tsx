@@ -854,7 +854,7 @@ const JyotishChamber: React.FC = () => {
                     <>
                       <div style={{ padding:'0 0 12px', display:'flex', flexDirection:'column', gap:0 }}>
                         {chatMessages.map((m, i) => (
-                          {m.role === 'user' ? (
+                          <React.Fragment key={i}>{m.role === 'user' ? (
                             <div style={{ display:'flex', justifyContent:'flex-end', width:'100%', padding:'8px 16px' }}>
                               <div style={{ maxWidth:'88%', position:'relative', padding:'14px 20px', background:'rgba(212,175,55,0.03)', borderTop:'1px solid rgba(255,255,255,0.05)', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
                                 <div style={{ position:'absolute', top:5, right:5, width:10, height:10, borderTop:'1px solid rgba(212,175,55,0.2)', borderRight:'1px solid rgba(212,175,55,0.2)'}} />
