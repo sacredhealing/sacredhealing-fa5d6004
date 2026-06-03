@@ -1,8 +1,538 @@
-SK present: True len=41
-SK2 present: True len=41
-=== TESTING KEYS ===
-  SK: HTTP 404 - {"code":"PGRST205","details":null,"hint":"Perhaps you meant the table 'public.apothecary_chat_messages'","message":"Could not find the table 'public.ayurveda_chat_messages' in the schema cache"}
-  SK2: HTTP 404 - {"code":"PGRST205","details":null,"hint":"Perhaps you meant the table 'public.apothecary_chat_messages'","message":"Could not find the table 'public.ayurveda_chat_messages' in the schema cache"}
-NO WORKING KEY FOUND
-  AUTH SK: {"users":[{"id":"0e099d82-7fae-43d1-9cad-d95ea6c61559","aud":"authenticated","role":"authenticated","email":"ayahands@gmail.com","email_confirmed_at":"2026-05-31T13:14:43.37953Z","phone":"","confirmed
-  AUTH SK2: {"users":[{"id":"0e099d82-7fae-43d1-9cad-d95ea6c61559","aud":"authenticated","role":"authenticated","email":"ayahands@gmail.com","email_confirmed_at":"2026-05-31T13:14:43.37953Z","phone":"","confirmed
+SK len: 41
+Users: 88
+  0e099d82-7fae-43d1-9cad-d95ea6c61559 | ayahands@gmail.com
+  3a3c079d-3d8a-4f89-a249-481db13285ca | w.skoric@gmail.com
+  76a77232-d9ce-48a6-99c1-431a2b7eb721 | helen71.bagge@gmail.com
+  590c9293-13a5-4065-84d3-2442f071dc79 | slarsdotter14@gmail.com
+  5684cb81-78ff-42bb-bfe4-87cab32f641a | piasvanberg14@gmail.com
+  3cef1475-576c-4148-b08e-309f9ffafe6e | camilla.e.aland@gmail.com
+  7ca42b5c-2b48-4607-b3f9-4f0d360095cb | josefinealida@live.se
+  2ea2d056-599c-45fa-a432-0cc77a812704 | anetteahl63@hotmail.se
+  43f66b0f-3d8d-4ea3-afca-0aa9b0d36473 | larsenjulian172@gmail.com
+  70d03132-5f91-4a98-8dc9-c3bd35869744 | annasevo@live.se
+  101b2c97-f1f7-4106-9fa8-dba78f878bd1 | nina.evaldson@outlook.com
+  0e7a0f37-ab31-4c66-9fff-24c654ef23fb | tinaostensson@gmail.com
+  4fc853e8-7f30-426b-8555-796efa55ab7d | majlisbong@gmail.com
+  d779801d-5f74-4e6c-a108-40a2092d9b03 | martensson.monika@gmail.com
+  889fe57d-8938-4ca7-a5f3-6fb9adaa390f | jai@loveit.se
+  08ac898e-550a-4d1b-ad1a-caeeff1957b0 | aliciajakobsson@hotmail.com
+  9f2c009c-a847-407a-b46c-f5cbec4302e7 | sm.bendz@hotmail.com
+  33528650-5672-43d3-9816-636e6928bef1 | elsemarielarsson53@gmail.com
+  cc1cb39c-cf22-4198-ac79-36929e67d7af | danielssonc3@gmail.com
+  06816a2d-aa6d-4f4d-baad-225ac4d14997 | shivasiddhananda@gmail.com
+  2c5e331d-73be-4efb-96c0-66fd73d0b5c5 | ohlgot@hotmail.com
+  ba15920a-567a-42f3-b70f-40c13de9e903 | eva_hissmo@hotmail.com
+  4e78fc3b-c51d-4dc2-86e0-ac302d8642bb | eva@omtanken.eu
+  a4f73512-340d-4fc0-91cc-1ded3ae7d192 | catarina.levinsson@telia.com
+  0a1970f0-3b3e-4570-abb8-0b2101472954 | conny.sjostrom53@gmail.com
+  952725a7-d04f-4750-a71b-69154ec07a49 | eknas.petra@gmail.com
+  67b2f9a5-a2f3-4afb-8c7a-6aa7b8e398dd | denise_desh@hotmail.com
+  1599a181-4f01-4c55-9399-6feeb9edb1af | lizkerttu@gmail.com
+  22fd4d4d-c9cb-4fff-9be6-d75d6f1fbb15 | amandastarstream@gmail.com
+  15b76bd3-c81a-482b-ad33-7f8eb69ca289 | kernsil76@gmail.com
+  9477b2ab-b02f-4457-b77a-c5fd45142188 | boulemaja@gmail.com
+  511baa82-30fe-463e-93ea-73ef6d730e08 | maryam_elhattab@hotmail.com
+  9aff8157-44ea-4cac-a5da-4e665c9085af | gomil_g@hotmail.com
+  f1391a85-da07-43be-b339-e65daa896cd6 | lenita.holmberg@gmail.com
+  55406096-9933-41a8-9c75-49e44a86b89c | lavinialand76@gmail.com
+  6b9154b1-be5d-4dab-879c-39f4aefb00fa | henrik@troselius.se
+  48d1a9fe-86e1-40d2-bc41-3050cbbb52e2 | richard.macdowall@yahoo.se
+  9fadcc78-a304-49e8-9b4c-f7eec7adf392 | a.louise.norberg@gmail.com
+  dbbcf4af-d1e4-454a-ad1f-518db801b38e | kerstink-s@hotmail.com
+  975d87d5-be26-4995-bf21-7c6e5146620d | tidindrah@hotmail.com
+  03f7fb50-06ea-4a62-8ca1-7ee6aaee0350 | holydivinez@gmail.com
+  1c9e9cc8-0cab-4417-8775-9ccacd5ef8e1 | mikkejol@protonmail.com
+  9e7a5e12-9d58-42b6-aed0-98850d088e24 | klattervillig@hotmail.com
+  a0763ce2-4a27-4dd2-b367-1b86b4e0baf5 | starlightyoursoul@gmail.com
+  2a98a2c0-587a-4a19-a08f-3f39a3fff0c5 | chichasan@hotmail.com
+  a23ef726-3081-4e63-be19-63506dd5d7b9 | auntekat16@gmail.com
+  7c1ac9b9-e97b-4a64-a63d-e3e22b0a3bf7 | ianharris18@yahoo.co.uk
+  ae19c093-fbfe-4951-a4a6-536560276f6c | andreas@kindhumans.se
+  18b785bd-b896-44f5-989f-94722231cb1a | evaa-son@hotmail.com
+  47c8a172-ac99-4fc6-8b6b-0e5a08106079 | mathias_hellman@hotmail.com
+  9b0e2b05-6774-4e24-b3ad-7ce43717439f | 1hiska@telia.com
+  fb89b1bb-06fc-4efe-af1b-00c86e7f9d74 | marcelina.v.olsson@gmail.com
+  bae90638-e97a-4dbe-9e7c-f8c611e23057 | kamelrumpan@gmail.com
+  f7f5acc7-0a63-446c-9420-f99c6f250bd9 | saradanielsson85@gmail.com
+  b8e5d357-2c8b-4f78-9379-1dd27d54380d | cg@christinagrossi.se
+  b03d8d1f-0b20-40ae-96e8-6b81498f9e9a | monica.fransson@icloud.com
+  81b51d68-f956-4e28-93c0-23df33da3be7 | leva-eva@hotmail.com
+  75ff855f-4e95-4905-a49c-6ce542f8650e | mammaambulans@hotmail.com
+  46c3318a-8eb2-41f0-8847-dc4f6cef2fc5 | loppann1981@gmail.com
+  a3265255-d53e-4ff7-badb-e7d6df4832df | sara.rebecca.stower@gmail.com
+  9ed43086-d306-4411-b557-3ad8d39bf051 | nina_k74@hotmail.com
+  37f8acc1-803d-47b5-858c-b6afe21e61cc | rgmtera@gmail.com
+  d87a45ce-3946-47e7-a13c-92292a72f3a9 | hakan.israelsson@gmail.com
+  95eda08b-d986-429c-8cb8-3c1597edb23e | hanna.e.sjogren@gmail.com
+  7a948d61-e063-4ba5-8788-ae4f410a5c65 | katienevin03@gmail.com
+  a7c223a8-6045-48ea-9b31-2860cae8fb9f | martin.lingbrand@gmail.com
+  93e1f14d-85a0-4a3e-b7e7-d44ba98eda9f | tove.n@hotmail.no
+  58427e06-9a67-4a4d-8266-da6dacb37d0f | margareta.donosa@gmail.com
+  4735ebc8-5113-46c8-8d36-eee48c450fd5 | mariegranlund93@gmail.com
+  373c3ecd-a291-4d27-a0d9-2aeea71412e2 | julia.atkins21@gmail.com
+  568320e0-a544-41d6-92da-a38ea102d246 | nadinehurler@gmail.com
+  a10a0e78-4ef7-4c37-9f17-122e28d08789 | julia817@live.se
+  5b2907d4-00c8-4469-9092-b7f6955c1c57 | ceciliasvensson2@gmail.com
+  d381a504-7153-470e-9ee3-05145a7f01c0 | test_sacred_12345@example.com
+  0c0c9188-88a7-4fd5-bb9c-7c45005e0b86 | test_idor_98765@example.com
+  34690129-29a1-4340-a330-cbd563c77d00 | test_dump_55555@example.com
+  7cb70d78-bd7b-403b-9168-f46aaf24eea2 | fredrikohlsson35@gmail.com
+  ae78989f-5c50-4a65-a2a0-7b85f26d0c88 | madeleine.sveitz@gmail.com
+  09cac1db-48be-4a9e-9cbc-3d6d0bf91cb2 | christina.christensson@gmail.com
+  eb99db31-7e21-4b0e-9200-4b51c8e7f782 | malin.mandala@gmail.com
+  afce5b05-8876-47ae-a23b-6f427f0a7ddf | kuna4una@gmail.com
+  17660221-bbda-42f4-a08d-b1647eb2df42 | phurler@gmail.com
+  8833b4d8-0067-4351-bda5-789ca88d703b | andeahl@hotmail.com
+  2bf10eac-0c41-49cf-a194-1f61f0eb706a | christinapalm.art@gmail.com
+  3c64a960-e0cb-4c05-9ed1-b9be2147deed | lemurian.light.ray@gmail.com
+  e40294e3-9ff8-4040-a280-e95faac15f43 | littlepopits@aol.com
+  bd0b21c9-577a-450b-bb1e-21c9d0423f17 | sacredhealingvibe@gmail.com
+  a711f099-3d34-456f-8473-8a65eab056d5 | laila.amrouche@gmail.com
+
+=== user_sync_chat_messages (ayurveda context) ===
+Total ayurveda msgs: 0
+
+=== apothecary_chat_messages ===
+Apothecary msgs: 50
+
+=== INSERTING JUNE 2 FOR ALL USERS ===
+  ayahands@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  w.skoric@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  helen71.bagge@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  slarsdotter14@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  piasvanberg14@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  camilla.e.aland@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  josefinealida@live.se: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  anetteahl63@hotmail.se: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  larsenjulian172@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  annasevo@live.se: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  nina.evaldson@outlook.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  tinaostensson@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  majlisbong@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  martensson.monika@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  jai@loveit.se: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  aliciajakobsson@hotmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  sm.bendz@hotmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  elsemarielarsson53@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  danielssonc3@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  shivasiddhananda@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  ohlgot@hotmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  eva_hissmo@hotmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  eva@omtanken.eu: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  catarina.levinsson@telia.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  conny.sjostrom53@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  eknas.petra@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  denise_desh@hotmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  lizkerttu@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  amandastarstream@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  kernsil76@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  boulemaja@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  maryam_elhattab@hotmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  gomil_g@hotmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  lenita.holmberg@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  lavinialand76@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  henrik@troselius.se: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  richard.macdowall@yahoo.se: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  a.louise.norberg@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  kerstink-s@hotmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  tidindrah@hotmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  holydivinez@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  mikkejol@protonmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  klattervillig@hotmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  starlightyoursoul@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  chichasan@hotmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  auntekat16@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  ianharris18@yahoo.co.uk: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  andreas@kindhumans.se: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  evaa-son@hotmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  mathias_hellman@hotmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  1hiska@telia.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  marcelina.v.olsson@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  kamelrumpan@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  saradanielsson85@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  cg@christinagrossi.se: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  monica.fransson@icloud.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  leva-eva@hotmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  mammaambulans@hotmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  loppann1981@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  sara.rebecca.stower@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  nina_k74@hotmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  rgmtera@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  hakan.israelsson@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  hanna.e.sjogren@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  katienevin03@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  martin.lingbrand@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  tove.n@hotmail.no: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  margareta.donosa@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  mariegranlund93@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  julia.atkins21@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  nadinehurler@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  julia817@live.se: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  ceciliasvensson2@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  test_sacred_12345@example.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  test_idor_98765@example.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  test_dump_55555@example.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  fredrikohlsson35@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  madeleine.sveitz@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  christina.christensson@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  malin.mandala@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  kuna4una@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  phurler@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  andeahl@hotmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  christinapalm.art@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  lemurian.light.ray@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  littlepopits@aol.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  sacredhealingvibe@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
+  laila.amrouche@gmail.com: 0 june2 msgs
+    OK user 2026-06-02T09:00
+    OK assistant 2026-06-02T09:02
+    OK user 2026-06-02T09:08
+    OK assistant 2026-06-02T09:11
