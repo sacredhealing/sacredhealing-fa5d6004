@@ -2,7 +2,6 @@ import React, { useState, useRef } from 'react';
 import { Upload, X, Music, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface AudioUploadProps {
@@ -12,7 +11,12 @@ interface AudioUploadProps {
   label?: string;
 }
 
-const AudioUpload = ({ value, onChange, folder = 'mantras', label = 'Audio File' }: AudioUploadProps) => {
+/**
+ * SQI Admin Audio Upload — uploads directly to Cloudflare R2 via /api/audio-upload.
+ * Returns the R2 public CDN URL (pub-7a2cf16596fd425ab1717b8c0c3e567d.r2.dev/…).
+ * The audio proxy at /api/audio/* handles CORS for playback.
+ */
+const AudioUpload = ({ value, onChange, folder = 'meditations', label = 'Audio File' }: AudioUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [showUrlInput, setShowUrlInput] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -21,13 +25,10 @@ const AudioUpload = ({ value, onChange, folder = 'mantras', label = 'Audio File'
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('audio/')) {
       toast.error('Please select an audio file');
       return;
     }
-
-    // Validate file size (max 500MB)
     if (file.size > 500 * 1024 * 1024) {
       toast.error('File size must be less than 500MB');
       return;
@@ -35,24 +36,26 @@ const AudioUpload = ({ value, onChange, folder = 'mantras', label = 'Audio File'
 
     setUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('folder', folder);
 
-      const { error: uploadError } = await supabase.storage
-        .from('audio')
-        .upload(fileName, file);
+      const response = await fetch('/api/audio-upload', {
+        method: 'POST',
+        body: formData,
+      });
 
-      if (uploadError) throw uploadError;
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: response.statusText }));
+        throw new Error(err.error || 'Upload failed');
+      }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('audio')
-        .getPublicUrl(fileName);
-
-      onChange(publicUrl);
-      toast.success('Audio uploaded successfully');
+      const { url } = await response.json();
+      onChange(url);
+      toast.success('Audio uploaded to SQI Cloud ✓');
     } catch (error: any) {
-      console.error('Upload error:', error);
-      toast.error('Failed to upload audio: ' + error.message);
+      console.error('[SQI] Upload error:', error);
+      toast.error('Upload failed: ' + error.message);
     } finally {
       setUploading(false);
     }
@@ -60,16 +63,13 @@ const AudioUpload = ({ value, onChange, folder = 'mantras', label = 'Audio File'
 
   const clearAudio = () => {
     onChange('');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium">{label}</label>
 
-      {/* Always mounted so "Replace file" works when a URL is already set */}
       <input
         ref={fileInputRef}
         type="file"
@@ -98,31 +98,21 @@ const AudioUpload = ({ value, onChange, folder = 'mantras', label = 'Audio File'
               }}
               disabled={uploading}
             >
-              {uploading ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Upload className="w-4 h-4 mr-2" />
-              )}
+              {uploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
               {uploading ? 'Uploading…' : 'Replace file'}
             </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => setShowUrlInput((v) => !v)}
-            >
+            <Button type="button" variant="secondary" size="sm" onClick={() => setShowUrlInput(v => !v)}>
               {showUrlInput ? 'Hide URL' : 'Edit URL'}
             </Button>
             <Button type="button" variant="ghost" size="sm" onClick={clearAudio}>
-              <X className="w-4 h-4 mr-1" />
-              Remove
+              <X className="w-4 h-4 mr-1" />Remove
             </Button>
           </div>
           {showUrlInput && (
             <Input
               placeholder="Paste new audio URL…"
               value={value}
-              onChange={(e) => onChange(e.target.value)}
+              onChange={e => onChange(e.target.value)}
               className="font-mono text-xs"
             />
           )}
@@ -137,27 +127,18 @@ const AudioUpload = ({ value, onChange, folder = 'mantras', label = 'Audio File'
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
             >
-              {uploading ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Upload className="w-4 h-4 mr-2" />
-              )}
-              {uploading ? 'Uploading...' : 'Upload File'}
+              {uploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
+              {uploading ? 'Uploading to R2…' : 'Upload File'}
             </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => setShowUrlInput(!showUrlInput)}
-            >
+            <Button type="button" variant="ghost" onClick={() => setShowUrlInput(!showUrlInput)}>
               URL
             </Button>
           </div>
-
           {showUrlInput && (
             <Input
-              placeholder="Or paste audio URL..."
+              placeholder="Or paste R2 audio URL..."
               value={value}
-              onChange={(e) => onChange(e.target.value)}
+              onChange={e => onChange(e.target.value)}
             />
           )}
         </div>
