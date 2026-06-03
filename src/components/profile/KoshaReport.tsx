@@ -13,6 +13,7 @@ interface KoshaReportProps {
     practice?: string;
     duration?: string | number | null;
     koshas?: Partial<Record<string, string>>;
+    report?: string;
   };
   onSave?: () => void;
 }
@@ -38,6 +39,48 @@ const KoshaReport: React.FC<KoshaReportProps> = ({ sessionData, onSave }) => {
     [t, i18n.language, sessionData?.koshas]
   );
 
+  // If we have a live Gemini report, show it directly as a rich text block
+  if (sessionData?.report) {
+    return (
+      <div className="w-full bg-[#050505] rounded-[40px] border border-[#D4AF37]/20 p-8 backdrop-blur-3xl">
+        <div className="text-center mb-8">
+          <h3 className="text-[#D4AF37] text-2xl font-black tracking-tighter uppercase italic">{t('koshaReport.title')}</h3>
+          <p className="text-white/20 text-sm font-black tracking-[0.32em] uppercase mt-1">{t('koshaReport.subtitle')}</p>
+          {sessionData.practice && (
+            <p className="text-white/30 text-xs mt-2 tracking-widest uppercase">{sessionData.practice} · {sessionData.duration ?? '?'} min</p>
+          )}
+        </div>
+
+        {/* Live Gemini-generated report */}
+        <div className="space-y-4 mb-6">
+          {sessionData.report.split('\n').filter(p => p.trim() && p.trim() !== '---').map((para, i) => (
+            <p key={i} className="text-white/80 text-sm leading-relaxed font-light">{para}</p>
+          ))}
+        </div>
+
+        {/* Kosha legend */}
+        <div className="border-t border-white/5 pt-6 space-y-3">
+          <p className="text-[#D4AF37]/40 text-[10px] font-black tracking-[0.4em] uppercase mb-4">◈ Kosha Activation Map</p>
+          {koshas.map((k, i) => (
+            <div key={i} className="flex justify-between items-center py-2 border-b border-white/[0.03]">
+              <span className="text-[#D4AF37] text-xs font-black tracking-widest">{k.name}</span>
+              <span className="text-white/30 text-xs font-mono">{k.layer}</span>
+            </div>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={onSave}
+          className="w-full mt-8 py-4 rounded-2xl bg-white/[0.05] border border-white/10 text-white/40 text-sm font-black uppercase tracking-widest hover:text-white transition-all"
+        >
+          {t('koshaReport.saveButton')}
+        </button>
+      </div>
+    );
+  }
+
+  // Fallback: static kosha display (for viewing old vault entries without live report)
   return (
     <div className="w-full bg-[#050505] rounded-[40px] border border-[#D4AF37]/20 p-8 backdrop-blur-3xl">
       <div className="text-center mb-8">
