@@ -33,6 +33,7 @@ const DEFAULT_VOLUME = 0.3;
 export const AmbientAudioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const generatedCtxRef = useRef<AudioContext | null>(null);
+  const generatedMasterRef = useRef<GainNode | null>(null);
   const generatedCleanupRef = useRef<(() => void) | null>(null);
   
   const [sounds, setSounds] = useState<AmbientSound[]>([]);
@@ -75,6 +76,7 @@ export const AmbientAudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
     generatedCleanupRef.current = null;
     generatedCtxRef.current?.close().catch(() => {});
     generatedCtxRef.current = null;
+    generatedMasterRef.current = null;
   }, []);
 
   const playGeneratedSound = useCallback((sound: AmbientSound) => {
@@ -86,6 +88,7 @@ export const AmbientAudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const master = ctx.createGain();
     master.gain.value = volume;
     master.connect(ctx.destination);
+    generatedMasterRef.current = master;
 
     const nodes: AudioNode[] = [master];
     const stopFns: Array<() => void> = [];
@@ -209,10 +212,8 @@ export const AmbientAudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (audioRef.current) {
       audioRef.current.volume = clampedVol;
     }
-    const ctx = generatedCtxRef.current;
-    if (ctx) {
-      const gain = ctx.destination.numberOfInputs ? null : null;
-      void gain;
+    if (generatedMasterRef.current) {
+      generatedMasterRef.current.gain.value = clampedVol;
     }
   }, []);
 
