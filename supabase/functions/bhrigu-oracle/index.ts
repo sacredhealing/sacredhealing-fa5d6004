@@ -132,7 +132,8 @@ function buildConversationPrompt(
   name: string, dob: string, tob: string, pob: string,
   readingType: string, question: string,
   history: {role: string; content: string}[],
-  leafConfirmed: boolean = false
+  leafConfirmed: boolean = false,
+  memory: any = null
 ): {system: string; messages: {role: string; content: string}[]} {
 
   const firstName = name ? name.split(" ")[0] : "Seeker";
@@ -145,6 +146,16 @@ TIME OF BIRTH: ${tob || "not yet provided"}
 PLACE OF BIRTH: ${pob || "not yet provided"}
 READING FOCUS: ${readingType || "general"}
 ${question ? `SEEKER'S QUESTION: "${question}"` : ""}
+${memory && (memory.session_count > 0 || memory.bhrigu_notes) ? `
+BHRIGU MEMORY — WHAT YOU KNOW ABOUT THIS SOUL:
+Sessions together: ${memory.session_count || 0}
+${memory.bhrigu_notes ? `Your accumulated understanding: ${memory.bhrigu_notes}` : ''}
+${memory.recurring_themes?.length ? `Recurring themes in their life: ${JSON.stringify(memory.recurring_themes)}` : ''}
+${memory.confirmed_facts?.length ? `Life facts confirmed: ${JSON.stringify(memory.confirmed_facts.slice(-10))}` : ''}
+${memory.prescribed_remedies?.length ? `Remedies already given (do not repeat): ${JSON.stringify(memory.prescribed_remedies.slice(-5))}` : ''}
+${memory.session_summaries?.length ? `Previous sessions: ${JSON.stringify(memory.session_summaries.slice(-5))}` : ''}
+INSTRUCTION: Reference this knowledge naturally. If a theme recurs, acknowledge it. Show that you remember. Make the seeker feel deeply known.
+` : ''}
 ${leafConfirmed ? 
   "LEAF STATUS: CONFIRMED. This soul has been verified in a previous session. Their leaf is already found. Do NOT run verification questions. Open by acknowledging their leaf is before you, then answer their question directly from the birth chart data." 
   : hasBirthData ? 
@@ -307,9 +318,20 @@ serve(async (req) => {
         { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // ── LOAD BHRIGU MEMORY ────────────────────────────────────────────────
+    let bhriguMemory = null;
+    if (user?.id) {
+      const { data: mem } = await supabase
+        .from('bhrigu_memory')
+        .select('soul_profile, confirmed_facts, recurring_themes, prescribed_remedies, session_summaries, bhrigu_notes, session_count')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      bhriguMemory = mem;
+    }
+
     // ── CONVERSATIONAL CHAT MODE ───────────────────────────────────────────
     const { system, messages } = buildConversationPrompt(
-      name, dob, tob, pob, readingType, question, chatHistory, leafConfirmed
+      name, dob, tob, pob, readingType, question, chatHistory, leafConfirmed, bhriguMemory
     );
 
     const allMessages = [
@@ -346,6 +368,68 @@ serve(async (req) => {
       reply.toLowerCase().includes("leaf belongs to you") ||
       reply.toLowerCase().includes("your leaf is before me") ||
       reply.toLowerCase().includes("the leaf is yours");
+
+    // ── SAVE MEMORY UPDATE ────────────────────────────────────────────────
+    if (user?.id && reply) {
+      try {
+        // Build a quick memory extract from this exchange
+        const newSummary = {
+          date: new Date().toISOString().split('T')[0],
+          topic: question.slice(0, 80),
+          bhrigu_response_snippet: reply.slice(0, 200)
+        };
+
+        // Use Gemini to extract key facts from this conversation turn
+        const extractRes = await fetch(GEMINI_URL, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${GEMINI_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "gemini-2.0-flash",
+            messages: [
+              { role: "system", content: "Extract key soul facts from this conversation. Return ONLY valid JSON with keys: new_facts (array of strings), new_themes (array of strings), notes_addition (1 sentence about this person's soul journey). Be brief." },
+              { role: "user", content: `Seeker said: "${question}"
+Bhrigu replied: "${reply.slice(0, 400)}"` }
+            ],
+            max_tokens: 200,
+            temperature: 0.3,
+          }),
+        });
+        
+        if (extractRes.ok) {
+          const extractData = await extractRes.json();
+          const extractText = extractData.choices?.[0]?.message?.content ?? "{}";
+          let extracted: any = {};
+          try { extracted = JSON.parse(extractText.replace(/```json|```/g, '').trim()); } catch {}
+
+          // Get existing memory
+          const { data: existingMem } = await supabase
+            .from('bhrigu_memory')
+            .select('*')
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+          const updatedSummaries = [...(existingMem?.session_summaries || []), newSummary].slice(-10);
+          const updatedFacts = [...(existingMem?.confirmed_facts || []), ...(extracted.new_facts || [])].slice(-30);
+          const updatedThemes = [...new Set([...(existingMem?.recurring_themes || []), ...(extracted.new_themes || [])])].slice(-20);
+          const updatedNotes = existingMem?.bhrigu_notes 
+            ? `${existingMem.bhrigu_notes} ${extracted.notes_addition || ''}`.trim()
+            : (extracted.notes_addition || '');
+
+          await supabase.from('bhrigu_memory').upsert({
+            user_id: user.id,
+            soul_profile: existingMem?.soul_profile || {},
+            confirmed_facts: updatedFacts,
+            recurring_themes: updatedThemes,
+            session_summaries: updatedSummaries,
+            bhrigu_notes: updatedNotes.slice(0, 2000),
+            session_count: (existingMem?.session_count || 0) + 1,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'user_id' });
+        }
+      } catch (memErr) {
+        console.error('Memory save error (non-fatal):', memErr);
+      }
+    }
 
     return new Response(JSON.stringify({ reply, ready_for_reading: isReadyForReading, mode: "chat" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } });
