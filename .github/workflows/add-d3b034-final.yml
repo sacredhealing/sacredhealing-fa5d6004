@@ -1,0 +1,33 @@
+name: Add D3B034 Final
+
+on:
+  workflow_dispatch:
+
+jobs:
+  add:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Add D3B034 + final count
+        env:
+          SUPABASE_PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          DB="https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query"
+          LOG="_final_count.txt"
+          q() { curl -s -X POST "$DB" -H "Authorization: Bearer ${SUPABASE_PAT}" -H "Content-Type: application/json" -d "{\"query\":\"$1\"}" >> $LOG; echo "" >> $LOG; }
+          echo "=== Final whale count fix ===" > $LOG
+
+          # Insert D3B034 (+$14,882, 500 trades, seen 1x)
+          q "INSERT INTO polymarket_whales (address,alias,win_rate_30d,roi_30d,total_profit,trades_tracked,total_trades_seen,is_active,is_elite,strategy,last_checked) VALUES ('0xd3b034d7bfb2473fb252d0414646d9786bac329e','🏆Elite-D3B034',54,3,14882,500,1,true,true,'mirror',now()) ON CONFLICT (address) DO UPDATE SET alias='🏆Elite-D3B034',is_elite=true,last_checked=now();"
+
+          # Final tally
+          q "SELECT COUNT(*) FILTER (WHERE is_elite=true) as elite, COUNT(*) FILTER (WHERE is_active=true AND is_elite=false) as watching, COUNT(*) as total FROM polymarket_whales;"
+          q "SELECT alias, total_profit::numeric, strategy FROM polymarket_whales WHERE is_elite=true ORDER BY total_profit DESC;"
+
+          cat $LOG
+          git config user.email "bot@sqi.app"; git config user.name "SQI"
+          git add $LOG; git commit -m "Final whale count: 14 elite" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
