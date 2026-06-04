@@ -1,0 +1,12 @@
+=== CLAWBOT v8 Elite Whale Rebuild Thu Jun  4 10:14:29 UTC 2026 ===
+--- Adding is_elite column if missing ---
+[]
+--- Wiping all auto-discovered whales (0 trades seen, not elite) ---
+DELETE zero-track-record whales: HTTP 204
+
+--- Seeding ELITE wallets (real known Polymarket winners) ---
+Seed elite whales: {"code":"PGRST204","details":null,"hint":null,"message":"Could not find the 'is_elite' column of 'polymarket_whales' in the schema cache"}
+HTTP:400
+
+--- Final whale count ---
+[]
