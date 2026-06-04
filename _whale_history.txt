@@ -1,37 +1,27 @@
-╔══════════════════════════════════════════════════════╗
-  🦈 MEGASCAN — Insider & Big Player Detection
-  2026-06-04T12:50:49.566Z
-╚══════════════════════════════════════════════════════╝
+🔍 Scanning Polygon for $10k+ trades (last 7 days)...
+node:internal/deps/undici/undici:14976
+      Error.captureStackTrace(err);
+            ^
 
-🔍 STRATEGY 1: High-volume recent traders via activity API
-Active events found: 20
-  Presidential Election Winner 2024 | vol: $3686335059
-  NBA Champion | vol: $1712132664
-  World Cup Winner  | vol: $1538517847
-  Democratic Presidential Nominee 2028 | vol: $1180993231
-  Super Bowl Champion 2025 | vol: $1152274393
+TypeError: Failed to parse URL from undefined
+    at node:internal/deps/undici/undici:14976:13
+    at async rpc (file:///home/runner/work/sacredhealing-fa5d6004/sacredhealing-fa5d6004/scripts/whale_scan_v3.mjs:25:13)
+    at async scanForBigTrades (file:///home/runner/work/sacredhealing-fa5d6004/sacredhealing-fa5d6004/scripts/whale_scan_v3.mjs:57:27)
+    at async file:///home/runner/work/sacredhealing-fa5d6004/sacredhealing-fa5d6004/scripts/whale_scan_v3.mjs:176:19 {
+  [cause]: TypeError: Invalid URL
+      at new URL (node:internal/url:806:29)
+      at new Request (node:internal/deps/undici/undici:9804:25)
+      at fetch (node:internal/deps/undici/undici:10533:25)
+      at fetch (node:internal/deps/undici/undici:14974:10)
+      at fetch (node:internal/bootstrap/web/exposed-window-or-worker:72:12)
+      at rpc (file:///home/runner/work/sacredhealing-fa5d6004/sacredhealing-fa5d6004/scripts/whale_scan_v3.mjs:25:19)
+      at scanForBigTrades (file:///home/runner/work/sacredhealing-fa5d6004/sacredhealing-fa5d6004/scripts/whale_scan_v3.mjs:57:33)
+      at file:///home/runner/work/sacredhealing-fa5d6004/sacredhealing-fa5d6004/scripts/whale_scan_v3.mjs:176:25
+      at ModuleJob.run (node:internal/modules/esm/module_job:325:25)
+      at async ModuleLoader.import (node:internal/modules/esm/loader:606:24) {
+    code: 'ERR_INVALID_URL',
+    input: 'undefined'
+  }
+}
 
-Top markets by volume: 20
-  Havlickova vs. Kabbaj: Set 1 Games O/U 9.5 | vol: $100 | liq: $56
-  AS FAR vs. Difaâ Hassani El Jadida: Both Teams to Score | vol: $100 | liq: $6320
-  Will Max Verstappen get pole position at the 2026 F1 Mo | vol: $100 | liq: $4200
-  Will Detroit Pistons win the 2027 NBA Finals? | vol: $9998 | liq: $75055
-  Will Vegalta Sendai win on 2026-06-06? | vol: $10 | liq: $2726
-
-🔍 STRATEGY 2: Wallets with $10k+ single positions
-
-New wallets found from large trades: 0
-
-🔍 STRATEGY 3: Insider pattern scan on 6 addresses
-Looking for: large positions closed quickly, consistent wins on political/geo events
-
-
-
-╔══════════════════════════════════════════════════════╗
-  FINAL RANKING — TOP INSIDER/BIG PLAYER WALLETS
-╚══════════════════════════════════════════════════════╝
-
-
-Total profitable wallets found: 0
-With $50k+ single wins: 0
-With $10k+ positions: 0
+Node.js v20.20.2
