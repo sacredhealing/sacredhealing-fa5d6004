@@ -1,0 +1,40 @@
+name: Check Whale Performance
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Pull whale + trade stats
+        env:
+          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          BASE="https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1"
+          LOG="_whale_perf.txt"
+
+          echo "=== WHALES (all) ===" > $LOG
+          curl -s "${BASE}/polymarket_whales?order=roi_30d.desc&limit=100" \
+            -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" >> $LOG
+
+          echo "" >> $LOG
+          echo "=== TRADES summary (last 200) ===" >> $LOG
+          curl -s "${BASE}/polymarket_trades?order=created_at.desc&limit=200&select=whale_address,outcome,entry_price,exit_price,amount_usdc,status,strategy,created_at,pnl" \
+            -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" >> $LOG
+
+          echo "" >> $LOG
+          echo "=== RESOLVED trades with PnL ===" >> $LOG
+          curl -s "${BASE}/polymarket_trades?status=eq.resolved&order=created_at.desc&limit=100" \
+            -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" >> $LOG
+
+          cat $LOG
+          git config user.email "bot@sqi.app"
+          git config user.name "SQI CLAWBOT"
+          git add $LOG
+          git commit -m "Whale perf check $(date -u +%H%M%S)" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
