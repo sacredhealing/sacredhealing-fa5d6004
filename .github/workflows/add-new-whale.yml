@@ -1,0 +1,41 @@
+name: Add New Whale E9076A
+
+on:
+  workflow_dispatch:
+
+jobs:
+  add:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Add new whale + update stats
+        env:
+          SUPABASE_PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          DB="https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query"
+          LOG="_new_whale.txt"
+          q() { curl -s -X POST "$DB" -H "Authorization: Bearer ${SUPABASE_PAT}" -H "Content-Type: application/json" -d "{\"query\":\"$1\"}" >> $LOG; echo "" >> $LOG; }
+
+          echo "=== Adding new whale + seeding all 3 strategy elites ===" > $LOG
+
+          # New co-trader whale
+          q "INSERT INTO polymarket_whales (address,alias,win_rate_30d,roi_30d,total_profit,trades_tracked,is_active,is_elite,last_checked) VALUES ('0xe9076a87c5ed90ef16e6fe6529c943baeca0cff6','🏆Apex-E9076A',83,42,30103,500,true,true,now()) ON CONFLICT (address) DO UPDATE SET alias='🏆Apex-E9076A',win_rate_30d=83,roi_30d=42,total_profit=30103,trades_tracked=500,is_elite=true,last_checked=now();"
+
+          # Tag our 3 strategy whales with strategy type for the v9 bot
+          q "ALTER TABLE polymarket_whales ADD COLUMN IF NOT EXISTS strategy text DEFAULT 'mirror';"
+          q "UPDATE polymarket_whales SET strategy='insider_geo' WHERE address='0xbaa2bcb5439e985ce4ccf815b4700027d1b92c73';"
+          q "UPDATE polymarket_whales SET strategy='confirmation' WHERE address='0xb2a3623364c33561d8312e1edb79eb941c798510';"
+          q "UPDATE polymarket_whales SET strategy='no_machine' WHERE address='0xed107a85a4585a381e48c7f7ca4144909e7dd2e5';"
+          q "UPDATE polymarket_whales SET strategy='mirror' WHERE strategy IS NULL OR strategy='';"
+
+          echo "--- Final elite list ---" >> $LOG
+          q "SELECT alias,total_profit::numeric,win_rate_30d,strategy,is_elite FROM polymarket_whales WHERE is_elite=true ORDER BY total_profit DESC;"
+
+          cat $LOG
+          git config user.email "bot@sqi.app"; git config user.name "SQI"
+          git add $LOG
+          git commit -m "Add E9076A whale + strategy tags" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
