@@ -364,7 +364,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
           tob: birthData?.birth_time || '',
           pob: birthData?.birth_place || '',
           readingType: 'general',
-          leaf_confirmed: leafConfirmed || Boolean(birthData?.birth_date),
+          leaf_confirmed: leafConfirmed,
           chatHistory: chatMessages.map(m => ({
             role: m.role === 'oracle' ? 'assistant' : 'user',
             content: m.text
