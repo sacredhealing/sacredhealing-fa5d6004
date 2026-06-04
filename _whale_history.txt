@@ -1,14 +1,560 @@
+Fetching seen_trades from Supabase...
+Rows returned: 464
 
-=======================================================
-  Apex-C8AB97
-  Known PnL: $283,246
-=======================================================
-Trades: 0
-Positions: 0
+Unique addresses found: 262
+  29x | 0x0e26a5a60755f60a20500a0fb858739c18b4550e
+  24x | 0xa7a8c1fd4bfff08ea30214efa7efaf75d7c6580c
+  9x | 0xa5ea13a81d2b7e8e424b182bdc1db08e756bd96a
+  9x | 0x8cb0e35148f57403e8e785ed13c7bbb2f34f9811
+  7x | 0x5e4dbe95f805e27959532f4845e2e4180017b874
+  7x | 0x65b54274eba5c76dee6f0fab18a590653811e82f
+  6x | 0x74471a007ddcc488f6d57b5e86dfb35a8d48a16d
+  6x | 0xb91aeb5accc33a5f9a8615b8ed6b2d352e913987
+  6x | 0xa61ef8773ec2e821962306ca87d4b57e39ff0abd
+  5x | 0xbee54d90051720e27921dc6874f02d646ffca636
+  5x | 0x9097b9fd27dd69aa8170e1b16f1b8b839ad70ef0
+  4x | 0xbddf61af533ff524d27154e589d2d7a81510c684
+  4x | 0xfea31bc088000ff909be1dfd8d0e3f2c7ef2d227
+  4x | 0x08fff5b9a79576a7c6e18a9d05ece0658a34ba79
+  4x | 0x2c335066fe58fe9237c3d3dc7b275c2a034a0563
+  4x | 0xc8ab97a9089a9ff7e6ef0688e6e591a066946418
+  4x | 0xc0a65b15679eb6a7be095f70523535835a1a2d6c
+  4x | 0xc4d1a863e9cc45d02ba22d3a1ae9ba7822018ce8
+  3x | 0x6480542954b70a674a74bd1a6015dec362dc8dc5
+  3x | 0xdf17f4a8dd01a4cfa6fc3da323a2baee5f8697d1
+  3x | 0xfedc381bf3fb5d20433bb4a0216b15dbbc5c6398
+  3x | 0xabb89972b21b304c1bed2bf26f35c8741ac9bba3
+  3x | 0x5dab5ed9691fab220535891d9c7f5c28eed322e1
+  3x | 0x152fdae6b14b9131a61ec77ed61dda50f68da549
+  3x | 0xd959b6925d3d3391a40c1a85dd3d8916ef16daf7
+  3x | 0x3dfb153c197d4c19d3b31c1ecd2c7b6860eeabaf
+  3x | 0x13414a77a4be48988851c73dfd824d0168e70853
+  3x | 0xcf19c420814435ffb1c459588208ed23a7ee6402
+  3x | 0x09b540739cfa17ba6b61f4351000583cd6397e72
+  3x | 0xbaa2bcb5439e985ce4ccf815b4700027d1b92c73
+🔴 $      -458 | 0x0e26a5a60755f60a20500a0fb858739c18b4550e | tr:4 wk:4 mo:4 seen:29x
+🟢 $     47413 | 0xa7a8c1fd4bfff08ea30214efa7efaf75d7c6580c | tr:46 wk:17 mo:46 seen:24x
+🔴 $ -24048513 | 0xa5ea13a81d2b7e8e424b182bdc1db08e756bd96a | tr:500 wk:154 mo:500 seen:9x
+🟢 $         0 | 0x8cb0e35148f57403e8e785ed13c7bbb2f34f9811 | tr:0 wk:0 mo:0 seen:9x
+🔴 $  -2302809 | 0x5e4dbe95f805e27959532f4845e2e4180017b874 | tr:82 wk:16 mo:82 seen:7x
+🔴 $  -4475404 | 0x65b54274eba5c76dee6f0fab18a590653811e82f | tr:212 wk:81 mo:212 seen:7x
+🔴 $   -389623 | 0x74471a007ddcc488f6d57b5e86dfb35a8d48a16d | tr:500 wk:42 mo:451 seen:6x
+🟢 $         0 | 0xb91aeb5accc33a5f9a8615b8ed6b2d352e913987 | tr:134 wk:70 mo:134 seen:6x
+🔴 $    -15395 | 0xa61ef8773ec2e821962306ca87d4b57e39ff0abd | tr:500 wk:3 mo:32 seen:6x
+🔴 $ -10925140 | 0xbee54d90051720e27921dc6874f02d646ffca636 | tr:500 wk:99 mo:500 seen:5x
+🔴 $    -27228 | 0x9097b9fd27dd69aa8170e1b16f1b8b839ad70ef0 | tr:6 wk:6 mo:6 seen:5x
+🔴 $ -29432526 | 0xbddf61af533ff524d27154e589d2d7a81510c684 | tr:500 wk:7 mo:82 seen:4x
+🟢 $      3044 | 0xfea31bc088000ff909be1dfd8d0e3f2c7ef2d227 | tr:500 wk:206 mo:500 seen:4x
+🔴 $    -41883 | 0x08fff5b9a79576a7c6e18a9d05ece0658a34ba79 | tr:482 wk:188 mo:482 seen:4x
+🔴 $  -7117229 | 0x2c335066fe58fe9237c3d3dc7b275c2a034a0563 | tr:500 wk:314 mo:500 seen:4x
+🔴 $    -36868 | 0xc8ab97a9089a9ff7e6ef0688e6e591a066946418 | tr:500 wk:500 mo:500 seen:4x
+🔴 $    -11325 | 0xc0a65b15679eb6a7be095f70523535835a1a2d6c | tr:30 wk:6 mo:30 seen:4x
+🔴 $   -307170 | 0xc4d1a863e9cc45d02ba22d3a1ae9ba7822018ce8 | tr:500 wk:1 mo:9 seen:4x
+🟢 $      1763 | 0x6480542954b70a674a74bd1a6015dec362dc8dc5 | tr:500 wk:46 mo:200 seen:3x
+🔴 $    -17880 | 0xdf17f4a8dd01a4cfa6fc3da323a2baee5f8697d1 | tr:500 wk:219 mo:500 seen:3x
+🔴 $     -2827 | 0xfedc381bf3fb5d20433bb4a0216b15dbbc5c6398 | tr:500 wk:12 mo:35 seen:3x
+🔴 $   -397310 | 0xabb89972b21b304c1bed2bf26f35c8741ac9bba3 | tr:500 wk:225 mo:500 seen:3x
+🔴 $   -360862 | 0x5dab5ed9691fab220535891d9c7f5c28eed322e1 | tr:50 wk:0 mo:37 seen:3x
+🔴 $    -24993 | 0x152fdae6b14b9131a61ec77ed61dda50f68da549 | tr:356 wk:27 mo:314 seen:3x
+🟢 $         0 | 0xd959b6925d3d3391a40c1a85dd3d8916ef16daf7 | tr:202 wk:66 mo:202 seen:3x
+🔴 $   -633940 | 0x3dfb153c197d4c19d3b31c1ecd2c7b6860eeabaf | tr:500 wk:410 mo:500 seen:3x
+🔴 $  -7096045 | 0x13414a77a4be48988851c73dfd824d0168e70853 | tr:500 wk:57 mo:500 seen:3x
+🔴 $    -24067 | 0xcf19c420814435ffb1c459588208ed23a7ee6402 | tr:500 wk:70 mo:222 seen:3x
+🔴 $   -370543 | 0x09b540739cfa17ba6b61f4351000583cd6397e72 | tr:267 wk:5 mo:243 seen:3x
+🟢 $    189819 | 0xbaa2bcb5439e985ce4ccf815b4700027d1b92c73 | tr:500 wk:92 mo:500 seen:3x
+🔴 $  -1865552 | 0x5966db1fe50763c9e3c014d756369bad07e1f804 | tr:410 wk:144 mo:401 seen:3x
+🔴 $   -812428 | 0x966cd85371117d811aab6e6f2b98377433659b1a | tr:235 wk:33 mo:229 seen:3x
+🔴 $    -28003 | 0x24c8cf69a0e0a17eee21f69d29752bfa32e823e1 | tr:500 wk:118 mo:500 seen:3x
+🟢 $     58958 | 0xed107a85a4585a381e48c7f7ca4144909e7dd2e5 | tr:500 wk:81 mo:344 seen:3x
+🔴 $     -5921 | 0xffed687882ea20e77879f0cf0897060c49554706 | tr:14 wk:5 mo:11 seen:3x
+🟢 $       168 | 0x9400e280ba7bda5780f077be13d5433a3a742951 | tr:3 wk:3 mo:3 seen:3x
+🔴 $   -509742 | 0xfbf3d501e88815464642d0e913f15379c3eeb218 | tr:500 wk:52 mo:432 seen:2x
+🔴 $       -50 | 0x3b4c4ff8459237e1c65c981d7a8ee43746e5e850 | tr:66 wk:3 mo:10 seen:2x
+🔴 $   -980013 | 0x8fbb3c32496d4bcff8f456c3342f90edaaa09a17 | tr:341 wk:113 mo:295 seen:2x
+🟢 $         0 | 0x5a084f50b757b96ee03c3f0db42f2fb2e29fcce8 | tr:267 wk:1 mo:237 seen:2x
+🔴 $  -3409584 | 0x56c9fbdeccf198f1f5ad95ace39b24f5f7fb0d9e | tr:500 wk:500 mo:500 seen:2x
+🔴 $      -262 | 0xf38e6583dfa37026ee25cf0a567b8cef6307a38a | tr:465 wk:0 mo:41 seen:2x
+🔴 $    -56708 | 0xee3ecc39c41e8a6b5399b1cd1b03d72f5271ebb5 | tr:500 wk:304 mo:500 seen:2x
+🔴 $    -24342 | 0xd355b7dc3d83658eeb6701dc88ec80522278f69c | tr:39 wk:0 mo:34 seen:2x
+🔴 $ -11613181 | 0xc3c3b3ef304ddbea39fa2246e683a71da5d0eec8 | tr:500 wk:0 mo:200 seen:2x
+🔴 $  -5867285 | 0xe16d3f2a5807999b358affd9445c3a09e45e5e30 | tr:500 wk:378 mo:500 seen:2x
+🔴 $    -16456 | 0x176f1fe4250fa90dd8306a8aca55afae5fe5cd75 | tr:35 wk:8 mo:25 seen:2x
+🔴 $   -860708 | 0xc6587b11a2209e46dfe3928b31c5514a8e33b784 | tr:500 wk:28 mo:282 seen:2x
+🟢 $       246 | 0x9f2fe025f84839ca81dd8e0338892605702d2ca8 | tr:349 wk:38 mo:117 seen:2x
+🔴 $   -369532 | 0x7523cafcee7bcf2db9a79d80e0d79b88a9a54c4c | tr:500 wk:23 mo:89 seen:2x
+🟢 $      3424 | 0x93511d72d294f1478739bc38f578bf0306fd9e4d | tr:500 wk:373 mo:500 seen:2x
+🔴 $   -434616 | 0xc3acf5878a03523d09a3ac859943445d7baeb964 | tr:87 wk:46 mo:87 seen:2x
+🔴 $   -290262 | 0x492442eab586f242b53bda933fd5de859c8a3782 | tr:500 wk:18 mo:127 seen:2x
+🔴 $ -13201100 | 0x9495425feeb0c250accb89275c97587011b19a27 | tr:500 wk:500 mo:500 seen:2x
+🔴 $    -67401 | 0xf39651f0addaad0221806d828197064b97feed0d | tr:500 wk:11 mo:284 seen:2x
+🟢 $         0 | 0xf1018544528ebc2019516f620b1d5f2d286ff994 | tr:12 wk:5 mo:12 seen:2x
+🔴 $     -9604 | 0x39ec75cc9dc48d0ca433735bf543ad0d55186504 | tr:94 wk:0 mo:0 seen:2x
+🔴 $  -1387826 | 0x7a8885c8dc075f0578b648f29fa233408a7d41cc | tr:500 wk:55 mo:240 seen:2x
+🔴 $    -60529 | 0x9db7de9bbc878305f55be28b24d920d755c5e0d8 | tr:38 wk:4 mo:4 seen:2x
+🟢 $      6136 | 0xa77105bb4d2d4d200b0133a2036222353831162d | tr:131 wk:0 mo:82 seen:2x
+🟢 $         0 | 0xbd9377d82d8dcb311b3bd1b8230447693fa82ffc | tr:6 wk:5 mo:5 seen:2x
+🔴 $      -623 | 0x996ac56c9e72b6ca38a30ae9f6e85152d9afe3cc | tr:500 wk:87 mo:500 seen:2x
+🔴 $    -86519 | 0xc84f7e76ec28ef20e7773b7b4926bfb7378be0c5 | tr:500 wk:86 mo:309 seen:2x
+🔴 $   -339094 | 0x6139c42e48cf190e67a0a85d492413b499336b7a | tr:500 wk:37 mo:169 seen:2x
+🔴 $  -2053630 | 0xcd65c3279408a33866a9129bed6943064cb6ee96 | tr:500 wk:398 mo:500 seen:2x
+🔴 $     -1540 | 0x34d9fa1062def79dca8c85c6dc2640e6b152c8b1 | tr:10 wk:3 mo:5 seen:2x
+🟢 $         0 | 0xeeb8c48abc6185c22db94d8706b2ab8748cfcab5 | tr:28 wk:2 mo:2 seen:2x
+🔴 $    -26045 | 0x44c1dfe43260c94ed4f1d00de2e1f80fb113ebc1 | tr:500 wk:159 mo:500 seen:2x
+🔴 $   -328142 | 0x8a6764a2da22d13ed16efd05ec67123b656de403 | tr:191 wk:71 mo:71 seen:2x
+🔴 $   -376709 | 0x5d189e816b4149be00977c1a3c8840374aec4972 | tr:319 wk:5 mo:41 seen:2x
+🔴 $  -1221180 | 0xc44f432b014f36679e13615f95996eac32bbd49f | tr:500 wk:129 mo:500 seen:2x
+🔴 $    -31819 | 0xe9076a87c5ed90ef16e6fe6529c943baeca0cff6 | tr:500 wk:500 mo:500 seen:2x
+🔴 $   -365874 | 0x1136368d7f6728e94ed14c532ab95a932f710c2e | tr:500 wk:140 mo:500 seen:2x
+🔴 $     -2530 | 0xa12e1d221a19fbcd37b3df481071b154f5e4315f | tr:9 wk:9 mo:9 seen:2x
+🟢 $      1547 | 0x15a8117b6d1f5dabe7a9ada5332f597d0c8dbdd7 | tr:5 wk:5 mo:5 seen:2x
+🔴 $   -181609 | 0x4a2be7a7e6e3b41dc2de00706b4c09660ca9af20 | tr:500 wk:53 mo:310 seen:2x
+🔴 $  -3850742 | 0x0dcf5b49627c5194805bd1af846fd0bd3388c556 | tr:500 wk:144 mo:454 seen:2x
+🟢 $         0 | 0x9adc4c8c7434d27cae75315287c994c436d79e4e | tr:10 wk:10 mo:10 seen:2x
+🔴 $      -207 | 0x7cc46bbedf1b035666f29d1a10a797ce4b5d0039 | tr:3 wk:3 mo:3 seen:2x
+🔴 $   -123612 | 0xa49b6ea0a604c581f2a9569db42c192b1c487054 | tr:500 wk:500 mo:500 seen:1x
+🔴 $    -15885 | 0x69a810c24476c2f2e140418a99bae708e312a712 | tr:8 wk:3 mo:3 seen:1x
+🔴 $   -288934 | 0x45bc74efa620b45c02308acaecdff1f7c06f978b | tr:500 wk:20 mo:185 seen:1x
+🔴 $    -10132 | 0x6a8d1709bfb718d8555d315a983c4816278350f9 | tr:500 wk:500 mo:500 seen:1x
+🟢 $         0 | 0x8a504be89c716fc8703371d9399559704a5aed9a | tr:145 wk:145 mo:145 seen:1x
+🟢 $    120021 | 0xb2a3623364c33561d8312e1edb79eb941c798510 | tr:115 wk:37 mo:77 seen:1x
+🔴 $    -33415 | 0x5f659bccbc353dbf7bcdffdee73bee60bb482036 | tr:6 wk:6 mo:6 seen:1x
+🔴 $    -69856 | 0xbacd00c9080a82ded56f504ee8810af732b0ab35 | tr:500 wk:310 mo:500 seen:1x
+🔴 $   -128219 | 0xa69d0cd47b794edd9642208409695d35150d509b | tr:246 wk:0 mo:73 seen:1x
+🟢 $         0 | 0xfc25f141ed27bb1787338d2c4e7f51e3a15e1f7f | tr:500 wk:222 mo:500 seen:1x
+🟢 $         0 | 0x71b7c96c83974bb0fc2125dd326b75e8e494e6b9 | tr:83 wk:0 mo:58 seen:1x
+🔴 $     -6185 | 0x39063a8d47e2a90a7b682d6a5b8c112ee3577556 | tr:249 wk:0 mo:6 seen:1x
+🟢 $      7504 | 0x000d257d2dc7616feaef4ae0f14600fdf50a758e | tr:500 wk:29 mo:106 seen:1x
+🟢 $        45 | 0xe7bd61ac59883bd4abda5c63865430452ecfebce | tr:500 wk:263 mo:500 seen:1x
+🔴 $    -76608 | 0xf3b04dd038fcf191692927c0aa5a38018ea323a1 | tr:129 wk:0 mo:19 seen:1x
+🔴 $   -111262 | 0xd68430d35d77cfa80e95a3e773aa1c55c137f320 | tr:299 wk:5 mo:133 seen:1x
+🔴 $   -709818 | 0x8c0b024c17831a0dde038547b7e791ae6a0d7aa5 | tr:500 wk:84 mo:500 seen:1x
+🟢 $         0 | 0x60e68a63dbdd14fa39dbbadbb6386f86b8ad71d2 | tr:2 wk:0 mo:2 seen:1x
+🔴 $    -37903 | 0x46992d0e547e3822a9c28723f51bfa804ae4e03c | tr:500 wk:459 mo:500 seen:1x
+🔴 $     -2526 | 0xa39c488ea8269609aea27f5f8486044d839908bc | tr:266 wk:13 mo:46 seen:1x
+🔴 $   -269493 | 0xde9f03151fb0a4b8cbcf6bbe24b73bf5856bb8f7 | tr:500 wk:1 mo:157 seen:1x
+🔴 $      -138 | 0xb14a38df57cd19431af674ed0e413c075a5f1e4e | tr:12 wk:10 mo:10 seen:1x
+🔴 $    -84691 | 0xa55ce71987243538f7e44e199e20def2958274ba | tr:45 wk:4 mo:7 seen:1x
+🔴 $      -958 | 0x7a16aaab6f509353948461e306d05e680fa033db | tr:97 wk:8 mo:40 seen:1x
+🔴 $   -363785 | 0xc31d0a0d63d760d72a1236d16beaa6a71c854ebe | tr:295 wk:2 mo:16 seen:1x
+🟢 $      2384 | 0xf8ccb567e89c3240359217ebd0b5b5fe7fce5a82 | tr:500 wk:0 mo:0 seen:1x
+🔴 $      -548 | 0x7e3321b6863f291019dc04b4dbc1f1b53a411482 | tr:150 wk:3 mo:6 seen:1x
+🔴 $        -4 | 0x9146ac16620582d382305acee8b267d615116ab0 | tr:168 wk:55 mo:118 seen:1x
+🔴 $   -114271 | 0xb218156faaf0d8a010cbca47dbf30abc4f9f67e4 | tr:16 wk:0 mo:16 seen:1x
+🟢 $      8303 | 0x335592400e402c26583ce8b56d12605e9548a126 | tr:33 wk:10 mo:15 seen:1x
+🟢 $       706 | 0x410338a0360417802c93d2e8f1c490f0fcc5a4e7 | tr:68 wk:0 mo:2 seen:1x
+🔴 $   -229643 | 0x52f5efdfb8759d4b9be1fbe63f80401474445e8a | tr:59 wk:8 mo:45 seen:1x
+🔴 $    -33467 | 0xb886580698ede4b18de3e446b2d8da8bcedd81b3 | tr:500 wk:65 mo:500 seen:1x
+🔴 $  -1790497 | 0xc97485a44146b5db0b8b121358f57cf297cdb33b | tr:500 wk:35 mo:283 seen:1x
+🔴 $     -5612 | 0xb45a797faa52b0fd8adc56d30382022b7b12192c | tr:500 wk:3 mo:9 seen:1x
+🔴 $       -84 | 0x647e8333632690e3e48dc3b40295589b417bdd9b | tr:343 wk:12 mo:90 seen:1x
+🟢 $      1689 | 0xa52b785a5510117ac3ae03d75d029f89a36c9480 | tr:500 wk:37 mo:100 seen:1x
+🔴 $    -55300 | 0x63739796b47577a15c0b6d05cde710bda76da0b7 | tr:500 wk:168 mo:475 seen:1x
+🔴 $  -1005692 | 0xdb859a551fcf56e49416160911476bea7307152f | tr:485 wk:64 mo:136 seen:1x
+🔴 $  -2426491 | 0xd1c537b2a7cba8d365e111bffb9de7b205e2cbd0 | tr:135 wk:0 mo:135 seen:1x
+🔴 $  -6491438 | 0x4bff30af91642dc7d2b19a8664378fe55c45fc26 | tr:500 wk:160 mo:500 seen:1x
+🔴 $   -481018 | 0xe613b515bd46b1585a8b137a4d291d9b80bd540e | tr:500 wk:116 mo:500 seen:1x
+🔴 $     -2069 | 0xea2f794a7f0ce05e4bbd357b3ccbb3bd2048a8ef | tr:500 wk:12 mo:38 seen:1x
+🔴 $     -2597 | 0xef7d4c8f88e886ecd1632b80f07814adeaff5e3f | tr:114 wk:2 mo:2 seen:1x
+🔴 $   -139121 | 0xa022ba0a68e11a78348382ff168601012d4d77f8 | tr:500 wk:40 mo:500 seen:1x
+🔴 $    -56177 | 0x35611d315e2546a4f9394fdf68ca2444439bd87c | tr:22 wk:15 mo:22 seen:1x
+🔴 $     -6489 | 0xd0055bc6aed640e6ca34657a09a519a1d1a2f2c5 | tr:119 wk:14 mo:94 seen:1x
+🔴 $  -6770209 | 0xee0d153c17fe82b8866b484753b56a700ab457ab | tr:500 wk:0 mo:96 seen:1x
+🔴 $    -82597 | 0xe734e7bf7cfb9e464681f71822f6c2f6be514f0c | tr:500 wk:165 mo:489 seen:1x
+🔴 $    -79407 | 0x6e1d5040d0ac73709b0621f620d2a60b80d2d0fa | tr:500 wk:500 mo:500 seen:1x
+🔴 $     -1086 | 0x780296eb0d6039b59853832a326fb628d9ede9cb | tr:8 wk:0 mo:2 seen:1x
+🔴 $    -36331 | 0xb87b5c3cf36ab3c5afcc81cd33de4b2fda203626 | tr:474 wk:20 mo:51 seen:1x
+🔴 $     -1702 | 0x58fd45d701b93e76d6c04a0983ee5b3cc29d43a6 | tr:500 wk:183 mo:500 seen:1x
+🔴 $     -1051 | 0x47661b3073d6dd0130e61a5c5b6f00b6f8da0286 | tr:38 wk:2 mo:2 seen:1x
+🔴 $   -273529 | 0x2117ae94a97d69b78cbc81b6680a62deb1955c26 | tr:500 wk:500 mo:500 seen:1x
+🔴 $    -53748 | 0xec23da31bc1c13346b03dce69cf33da3983824fd | tr:95 wk:13 mo:75 seen:1x
+🔴 $   -973819 | 0xc72d7dcdb23597d143a83536fb97b1d7db7efc21 | tr:242 wk:116 mo:153 seen:1x
+🟢 $         0 | 0x96672e2f487f6b6036243765f6dbe14c3ed86e07 | tr:22 wk:10 mo:13 seen:1x
+🔴 $    -38524 | 0x73df71df65effd8a41a40cd7eb854e817c630c9a | tr:21 wk:16 mo:16 seen:1x
+🔴 $    -14526 | 0xc13cbd011bc02c0c9fd9a5d4dbd236ecc0e8a202 | tr:251 wk:21 mo:30 seen:1x
+🔴 $  -4327365 | 0xc8075693f48668a264b9fa313b47f52712fcc12b | tr:500 wk:15 mo:179 seen:1x
+🟢 $         0 | 0x0a879ba9a2ba863254a5b5244bcdf87e20503345 | tr:176 wk:8 mo:40 seen:1x
+🔴 $   -120385 | 0xf5198df69e13937a40d1c76d6f72d9aa067d906b | tr:500 wk:34 mo:450 seen:1x
+🔴 $  -2212092 | 0x2d7be5170a8026c18709eaea1027c7f12e8ce2ce | tr:36 wk:10 mo:36 seen:1x
+🟢 $       627 | 0x31234101ffb9421eeab5b704fe974f0b6721b44d | tr:500 wk:55 mo:102 seen:1x
+🔴 $    -49705 | 0x440a147c6b2b82bad733e001957ba209f716035a | tr:69 wk:3 mo:22 seen:1x
+🔴 $       -53 | 0x8a815b830d6ecfb203abd27334ef8d621e2558b0 | tr:347 wk:65 mo:93 seen:1x
+🔴 $   -244405 | 0xe5047b7b7eb66eafdc80540048c31227f641600e | tr:500 wk:209 mo:500 seen:1x
+🟢 $         0 | 0x40ea9faef8f8eeac2b3262f2e1b75f9fbb16832f | tr:500 wk:27 mo:480 seen:1x
+🔴 $      -806 | 0x195d0bfaeaf0af2d68e2d9200d2fd4d2edff2dec | tr:500 wk:14 mo:182 seen:1x
+🔴 $    -52450 | 0x1f66796b45581868376365aef54b51eb84184c8d | tr:500 wk:253 mo:500 seen:1x
+🔴 $    -14919 | 0xcd66d7ff1d5ddbb5e57d9eac844403550256664f | tr:460 wk:28 mo:98 seen:1x
+🔴 $    -84712 | 0xfe9455e2cad5257b26547af62cbbfd75c8968a3d | tr:241 wk:3 mo:239 seen:1x
+🔴 $    -12849 | 0xd902d85156fe7b309c12299375c00d86ea83cdb9 | tr:170 wk:3 mo:37 seen:1x
+🟢 $      9286 | 0xeed588bab0b0df73a9a6def7a59e512e9ede1a33 | tr:69 wk:17 mo:44 seen:1x
+🔴 $    -30042 | 0x47e6d461c40169233b41ea6cdad6b6cb8126fd61 | tr:244 wk:11 mo:56 seen:1x
+🔴 $      -139 | 0xe21040efd9bff86a723b89cbfed391a667c9b956 | tr:44 wk:0 mo:9 seen:1x
+🔴 $     -8155 | 0x0d05b729b369f742a3b47b1312de4424ad396a81 | tr:500 wk:80 mo:251 seen:1x
+🟢 $         0 | 0x11a4c16d55eb0401d6bda5d979de261ea682b1e2 | tr:61 wk:0 mo:43 seen:1x
+🔴 $     -2139 | 0x0eab618c1038208fbda8f045f6b3dd230e5bd4bf | tr:500 wk:202 mo:500 seen:1x
+🟢 $       234 | 0x6b25d12302d416c027770e93004c34d79b8a8963 | tr:1 wk:0 mo:1 seen:1x
+🔴 $     -5001 | 0xf9c1190aa8184bcbe418e6f5321c53b0bfbc39e2 | tr:500 wk:135 mo:500 seen:1x
+🔴 $   -721135 | 0x86e99faea12fccd8925de5d9f052471baf7a4cdf | tr:500 wk:363 mo:500 seen:1x
+🔴 $     -5279 | 0x43774ec4527391f2c5de6cac9508679242a51764 | tr:86 wk:23 mo:74 seen:1x
+🔴 $    -25067 | 0xbc8c61c1de7c31a8ff68aebf55256c028db9273f | tr:500 wk:118 mo:171 seen:1x
+🔴 $      -331 | 0x5fc814d89c2aa979bd987add20d6eb39eb0439ef | tr:500 wk:1 mo:4 seen:1x
+🟢 $     12423 | 0x204f72f35326db932158cba6adff0b9a1da95e14 | tr:500 wk:500 mo:500 seen:1x
+🔴 $  -9309542 | 0xfe787d2da716d60e8acff57fb87eb13cd4d10319 | tr:500 wk:500 mo:500 seen:1x
+🔴 $  -3251294 | 0xdb2223cc5202a4718c3069f577ec971f71c96478 | tr:500 wk:19 mo:170 seen:1x
+🔴 $       -83 | 0xbce2ae81dded77a0fdf69c4ea2b4869d6b5d0ab4 | tr:500 wk:129 mo:493 seen:1x
+🔴 $     -4561 | 0xa5761fa386787d4bb7fb9f866acf034647538678 | tr:138 wk:95 mo:138 seen:1x
+🔴 $      -505 | 0x16905fb8633a07853b532709572d2a0de0158c4d | tr:500 wk:9 mo:120 seen:1x
+🟢 $       443 | 0xfbe66593e49c4e7a7180a2582f041158bfb800f8 | tr:100 wk:17 mo:79 seen:1x
+🟢 $         0 | 0xe6d80855059a0d2256b3e6014595a93504fd9d21 | tr:154 wk:0 mo:129 seen:1x
+🔴 $  -1142761 | 0x52ecea7b3159f09db589e4f4ee64872fd0bba6f3 | tr:500 wk:148 mo:500 seen:1x
+🔴 $    -10086 | 0x4478d7bd8a295691ac84f60a5ec2b47e122102a4 | tr:500 wk:121 mo:500 seen:1x
+🔴 $   -374693 | 0x5b6331e7ff0831a3fe2ed12004747db1a9c911a4 | tr:500 wk:500 mo:500 seen:1x
+🔴 $    -17926 | 0x45e40dbee6f546c7b318498f8c9778560f5a7e20 | tr:264 wk:25 mo:173 seen:1x
+🔴 $  -2001309 | 0xf284ad6d607f777f34bc643cea587c33a886b9f9 | tr:500 wk:300 mo:500 seen:1x
+🔴 $    -12585 | 0x204e14f11a08a465479e437b0e37b7e9e0358d08 | tr:500 wk:39 mo:161 seen:1x
+🔴 $     -5722 | 0x37d366a769f58ef478f72c6b1bf730424b2b709a | tr:441 wk:137 mo:358 seen:1x
+🟢 $      1739 | 0xb4f2f0c858566fef705edf8efc1a5e9fba307862 | tr:500 wk:6 mo:22 seen:1x
+🔴 $        -0 | 0xbebe49168cc3fe33fd9060c6fc83355c3359a8b5 | tr:50 wk:1 mo:7 seen:1x
+🟢 $     44654 | 0xf49ce459b52f60b70ce0fe9aa6203e6bf90f9786 | tr:500 wk:186 mo:380 seen:1x
+🔴 $   -423634 | 0x9b491485819135564450669aeadb2d85f7b104a8 | tr:500 wk:107 mo:500 seen:1x
+🔴 $        -0 | 0x9360b2f34cd705a36393fd96fda05ccaabf3f1c8 | tr:7 wk:1 mo:4 seen:1x
+🔴 $  -7788641 | 0x84cb17a50bc2487e8d64029783c3d2abcba328ad | tr:500 wk:139 mo:300 seen:1x
+🔴 $      -701 | 0x720b615cd83203982c57b3c6854254f31756ae16 | tr:1 wk:1 mo:1 seen:1x
+🔴 $  -1156789 | 0x72d815133f9f8b6529e911cf3be492846ce05213 | tr:54 wk:25 mo:39 seen:1x
+🔴 $     -1311 | 0x539d01b1c4d860570a3ea35aaf87168a1f351e69 | tr:82 wk:3 mo:7 seen:1x
+🟢 $      2105 | 0xe639e41094bbeae18f3e6d1790c17299183f082a | tr:500 wk:5 mo:16 seen:1x
+🟢 $     14882 | 0xd3b034d7bfb2473fb252d0414646d9786bac329e | tr:500 wk:185 mo:500 seen:1x
+🔴 $    -89757 | 0xfffadf38a520cd5a0035ff52d7fceb436a08864b | tr:500 wk:30 mo:94 seen:1x
+🔴 $     -2112 | 0x59c49a09e5335430833b96d96af9e581b0a9b517 | tr:113 wk:9 mo:21 seen:1x
+🔴 $   -116081 | 0x594d0c9a3eb7f958b9fc100e3088ffc5de99059d | tr:99 wk:17 mo:99 seen:1x
+🔴 $     -9189 | 0xb1889886a55ec6c684948e014f7b18693bb78d5b | tr:107 wk:89 mo:107 seen:1x
+🔴 $    -32456 | 0x2ce991d0324ce55cf613a88ccbc0a031b7649452 | tr:5 wk:5 mo:5 seen:1x
+🔴 $      -485 | 0x146fda3540946f1da00c10b80eac9e9d955a9410 | tr:176 wk:3 mo:5 seen:1x
+🔴 $   -406229 | 0x7c585894ec02d5ed4fcd118ad8982f859360a5a1 | tr:166 wk:16 mo:89 seen:1x
+🔴 $   -159100 | 0x2aee593a42e2df517cd588827182aa5a144ab327 | tr:300 wk:32 mo:92 seen:1x
+🔴 $    -58684 | 0x1e6d8ac5250769601852d1026c4279f6d15308a8 | tr:134 wk:62 mo:134 seen:1x
+🔴 $     -1417 | 0x69a62d07dc49a7d22380a0da9f670c552c867a2c | tr:500 wk:79 mo:156 seen:1x
+🔴 $      -911 | 0xd9e6bff02c1ac887221e923ef9ed805b3b41902e | tr:7 wk:3 mo:7 seen:1x
+🔴 $       -61 | 0xaa40c6d014c93e36911bad25cbad0439e76c526d | tr:106 wk:52 mo:94 seen:1x
+🔴 $      -167 | 0x9985e769d8860f32d34b3bd36c16832e78e172aa | tr:107 wk:2 mo:6 seen:1x
+🔴 $     -5806 | 0x9c2617462567859fcf5764e03b9a687ebca274bc | tr:474 wk:21 mo:81 seen:1x
+🔴 $        -0 | 0x071ff9c03fa6073437912333daee87c3967de67c | tr:1 wk:1 mo:1 seen:1x
+🔴 $   -162247 | 0x16dba53490dd65e717955690bb26dcef289e8d0f | tr:500 wk:254 mo:500 seen:1x
+🔴 $  -2419067 | 0x73e35ce0b7e36ef3ce29ebd12b30b28007383239 | tr:324 wk:63 mo:301 seen:1x
+🔴 $     -6202 | 0x8f545e21724899fdf219f04beaf09c6a8310f1c9 | tr:11 wk:11 mo:11 seen:1x
+🔴 $   -774732 | 0x4be1fa92e6ceaf886aac0bbec3be6c527133aa70 | tr:478 wk:111 mo:204 seen:1x
+🔴 $   -340412 | 0x2fa0ad4b0d86e392716bd302dd6e4446b88bbe6d | tr:377 wk:277 mo:377 seen:1x
+🔴 $      -965 | 0xda63359ec77dceae4e6916b2fb078ff215da4378 | tr:72 wk:28 mo:47 seen:1x
+🔴 $        -0 | 0x1afaab6cc7812fa583241d860209cd5b041a72d7 | tr:97 wk:22 mo:22 seen:1x
+🟢 $        20 | 0x4a4281aad8a247eed86469b3b8a6e9f094d9fab9 | tr:500 wk:0 mo:49 seen:1x
+🟢 $         0 | 0x35353a3a2988c7c26e53849d602be60df49aa775 | tr:34 wk:17 mo:34 seen:1x
+🟢 $         0 | 0x2ff7fa71d9a7ecceb48c9244ab695ac8d653e982 | tr:7 wk:7 mo:7 seen:1x
+🔴 $    -65387 | 0x25ea4f22f4ab4350b0c01fbfe497d7f0eeebfa5f | tr:500 wk:165 mo:500 seen:1x
+🔴 $      -398 | 0x4c9166cf069e51cb2687a51da4fa7543c21a1b66 | tr:6 wk:1 mo:2 seen:1x
+🔴 $   -154577 | 0x30c7ac0158499ddc6761047f7f69bcf7d036ac3b | tr:455 wk:50 mo:228 seen:1x
+🔴 $    -27846 | 0x4f3818cc7bca7c79680bb7fd3ac4108b7f3a2e85 | tr:28 wk:1 mo:6 seen:1x
+🔴 $   -219213 | 0x780a7539200e74e882dde303952029bda21684f0 | tr:53 wk:20 mo:53 seen:1x
+🔴 $   -711355 | 0x3d6ac5150675a83e2090234414222e968888c2b5 | tr:158 wk:158 mo:158 seen:1x
+🔴 $   -258038 | 0xb687f00464e33934f5d591f224e71c3559ecaee5 | tr:500 wk:500 mo:500 seen:1x
+🔴 $      -507 | 0x785fd6221d9987a8a401ea0ee3f5d65e26b6c1b5 | tr:1 wk:1 mo:1 seen:1x
+🔴 $    -48365 | 0xc1a9273b15a17d21af09dddb42b9239b93d4e2db | tr:206 wk:40 mo:186 seen:1x
+🔴 $      -114 | 0x4ec5de57c800c871cd3379f4ab906b28fa9fdef4 | tr:21 wk:21 mo:21 seen:1x
+🔴 $     -2384 | 0x5ae56cbb75e93991d871e3f9a7ef6088702168e1 | tr:500 wk:0 mo:0 seen:1x
+🔴 $  -1894408 | 0xe015b5a2a299167be835a2fd1e86f09c49e06ffd | tr:500 wk:84 mo:93 seen:1x
+🔴 $     -9262 | 0x9d6a0986caa27991eff970422a69945ba866819e | tr:369 wk:354 mo:369 seen:1x
+🔴 $      -756 | 0x1a61fc69eaca80c9db0a42c6f5c0332d775994f0 | tr:56 wk:14 mo:56 seen:1x
+🔴 $     -8801 | 0xe2b3561e815f7e3dfd4a5227a67e4052325f87b7 | tr:3 wk:3 mo:3 seen:1x
+🔴 $      -385 | 0x9416b0ca9df006a64def65021451caba9adf5a15 | tr:500 wk:92 mo:92 seen:1x
+🔴 $      -289 | 0x35ae23385c813e6bf3afedc31969822f52601206 | tr:6 wk:2 mo:5 seen:1x
+🔴 $     -1240 | 0x9b1c4ec09fe464c0770053154225c88da0bc025e | tr:46 wk:9 mo:21 seen:1x
+🔴 $     -1197 | 0xbb227c252b21b06517d036e03086ad8114bf5440 | tr:4 wk:4 mo:4 seen:1x
+🟢 $      1280 | 0x0f0223dc4b5c68f345ac4f0444f2955740b85bfb | tr:43 wk:22 mo:43 seen:1x
+🔴 $      -966 | 0xad8fa162f4adf45eaaeaa8e48ffb6d9a46dc7bc8 | tr:7 wk:6 mo:7 seen:1x
+🔴 $     -2816 | 0xc5d32cd2a0b088910a6fdd77862fbb4f87fdb524 | tr:332 wk:1 mo:1 seen:1x
+🔴 $      -400 | 0xe57ef4adcb19325d92827ee6219aeebdb8e7adb8 | tr:2 wk:2 mo:2 seen:1x
+🟢 $         0 | 0xb62a06f5675d41b19a0d19972dce87ce576f7c3e | tr:0 wk:0 mo:0 seen:1x
+🔴 $     -7201 | 0xa0f210f55165ba63307ae71f6f2cae906eb86086 | tr:45 wk:14 mo:14 seen:1x
+🔴 $    -11658 | 0x5762d2a6494e9d9c10a4ef1c99fd10bff0e790ee | tr:77 wk:77 mo:77 seen:1x
+🔴 $      -962 | 0xf2d40781ff39cdba3e4ebe624d22cf2d30432037 | tr:210 wk:4 mo:4 seen:1x
+🔴 $  -2421416 | 0xf8831548531d56ad6a4331493243c447a827cd1f | tr:415 wk:164 mo:415 seen:1x
+🔴 $      -378 | 0x43e98f912cd6ddadaad88d3297e78c0648e688e5 | tr:500 wk:37 mo:65 seen:1x
+🔴 $       -32 | 0x6789cd30f84546779e0f825eea6ae37420f0ac37 | tr:49 wk:3 mo:3 seen:1x
+🔴 $     -4786 | 0xbefa95c276ee8ef6ff3ef43d1c1c454f52bc300d | tr:500 wk:116 mo:334 seen:1x
+🔴 $   -214573 | 0x8bfee7aeca33003fe9d7398d5143dc7866542d74 | tr:141 wk:28 mo:141 seen:1x
+🔴 $     -2793 | 0x141167b7f2aed0ca21e882a93124237eab875afd | tr:29 wk:5 mo:5 seen:1x
+🔴 $      -993 | 0xd69de9b87f6b30ab45479dc12bbb0ece50a62892 | tr:146 wk:3 mo:3 seen:1x
+🟢 $      6734 | 0xe52c0a1327a12edc7bd54ea6f37ce00a4ca96924 | tr:500 wk:10 mo:79 seen:1x
+🔴 $      -641 | 0x3ecf3a41334cc299e87f182efbc2225584fde6af | tr:54 wk:3 mo:3 seen:1x
+🔴 $     -7928 | 0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b | tr:500 wk:126 mo:500 seen:1x
+🔴 $    -11841 | 0x48185887c8dc95de60ee89722f1d0ee7894cbf0b | tr:500 wk:17 mo:99 seen:1x
+🔴 $     -1388 | 0x0c63b5f982d56f135aa69fa1f4bc7d48187e60c2 | tr:2 wk:2 mo:2 seen:1x
+🔴 $      -820 | 0xd4fafcacfdc438258cdf5b28ad0abd30cbca3c79 | tr:500 wk:279 mo:500 seen:1x
+🔴 $        -1 | 0xef51ebb7ed5c84e5049fc76e1ae4db3b5799c0d3 | tr:500 wk:449 mo:500 seen:1x
+🔴 $       -15 | 0xd99f3bec8e060ada0aef0c4057695dd5bc22fcdc | tr:98 wk:8 mo:24 seen:1x
+🟢 $         0 | 0x0fc6239b71b84d30663f8bf3624aece88a6d7b7d | tr:8 wk:8 mo:8 seen:1x
+🔴 $     -5156 | 0xa44f4d180c58afb790545cc969570b15902b3f19 | tr:74 wk:6 mo:14 seen:1x
+🔴 $    -10135 | 0x482bf5accdecfaffa67c14d4d4fbb59f428a3266 | tr:500 wk:137 mo:370 seen:1x
+🟢 $         0 | 0x9501ec3b8b3e330ae593ebe5b071c3d11b648223 | tr:7 wk:3 mo:3 seen:1x
 
-=======================================================
-  Apex-A7A8C1
-  Known PnL: $47,554
-=======================================================
-Trades: 0
-Positions: 0
+=== FINAL RANKING ===
+🏆 0xbaa2bcb5439e985ce4ccf815b4700027d1b92c73 | pnl:$189819 | t:500 wk:92/mo:500 seen:3x
+🏆 0xb2a3623364c33561d8312e1edb79eb941c798510 | pnl:$120021 | t:115 wk:37/mo:77 seen:1x
+🏆 0xed107a85a4585a381e48c7f7ca4144909e7dd2e5 | pnl:$58958 | t:500 wk:81/mo:344 seen:3x
+🏆 0xa7a8c1fd4bfff08ea30214efa7efaf75d7c6580c | pnl:$47413 | t:46 wk:17/mo:46 seen:24x
+🏆 0xf49ce459b52f60b70ce0fe9aa6203e6bf90f9786 | pnl:$44654 | t:500 wk:186/mo:380 seen:1x
+🏆 0xd3b034d7bfb2473fb252d0414646d9786bac329e | pnl:$14882 | t:500 wk:185/mo:500 seen:1x
+🏆 0x204f72f35326db932158cba6adff0b9a1da95e14 | pnl:$12423 | t:500 wk:500/mo:500 seen:1x
+🟢 0xeed588bab0b0df73a9a6def7a59e512e9ede1a33 | pnl:$9286 | t:69 wk:17/mo:44 seen:1x
+🟢 0x335592400e402c26583ce8b56d12605e9548a126 | pnl:$8303 | t:33 wk:10/mo:15 seen:1x
+🟢 0x000d257d2dc7616feaef4ae0f14600fdf50a758e | pnl:$7504 | t:500 wk:29/mo:106 seen:1x
+🟢 0xe52c0a1327a12edc7bd54ea6f37ce00a4ca96924 | pnl:$6734 | t:500 wk:10/mo:79 seen:1x
+🟢 0xa77105bb4d2d4d200b0133a2036222353831162d | pnl:$6136 | t:131 wk:0/mo:82 seen:2x
+🟢 0x93511d72d294f1478739bc38f578bf0306fd9e4d | pnl:$3424 | t:500 wk:373/mo:500 seen:2x
+🟢 0xfea31bc088000ff909be1dfd8d0e3f2c7ef2d227 | pnl:$3044 | t:500 wk:206/mo:500 seen:4x
+🟢 0xf8ccb567e89c3240359217ebd0b5b5fe7fce5a82 | pnl:$2384 | t:500 wk:0/mo:0 seen:1x
+🟢 0xe639e41094bbeae18f3e6d1790c17299183f082a | pnl:$2105 | t:500 wk:5/mo:16 seen:1x
+🟢 0x6480542954b70a674a74bd1a6015dec362dc8dc5 | pnl:$1763 | t:500 wk:46/mo:200 seen:3x
+🟢 0xb4f2f0c858566fef705edf8efc1a5e9fba307862 | pnl:$1739 | t:500 wk:6/mo:22 seen:1x
+🟢 0xa52b785a5510117ac3ae03d75d029f89a36c9480 | pnl:$1689 | t:500 wk:37/mo:100 seen:1x
+🟢 0x15a8117b6d1f5dabe7a9ada5332f597d0c8dbdd7 | pnl:$1547 | t:5 wk:5/mo:5 seen:2x
+🟢 0x0f0223dc4b5c68f345ac4f0444f2955740b85bfb | pnl:$1280 | t:43 wk:22/mo:43 seen:1x
+🟢 0x410338a0360417802c93d2e8f1c490f0fcc5a4e7 | pnl:$706 | t:68 wk:0/mo:2 seen:1x
+🟢 0x31234101ffb9421eeab5b704fe974f0b6721b44d | pnl:$627 | t:500 wk:55/mo:102 seen:1x
+🟢 0xfbe66593e49c4e7a7180a2582f041158bfb800f8 | pnl:$443 | t:100 wk:17/mo:79 seen:1x
+🟢 0x9f2fe025f84839ca81dd8e0338892605702d2ca8 | pnl:$246 | t:349 wk:38/mo:117 seen:2x
+🟢 0x6b25d12302d416c027770e93004c34d79b8a8963 | pnl:$234 | t:1 wk:0/mo:1 seen:1x
+🟢 0x9400e280ba7bda5780f077be13d5433a3a742951 | pnl:$168 | t:3 wk:3/mo:3 seen:3x
+🟢 0xe7bd61ac59883bd4abda5c63865430452ecfebce | pnl:$45 | t:500 wk:263/mo:500 seen:1x
+🟢 0x4a4281aad8a247eed86469b3b8a6e9f094d9fab9 | pnl:$20 | t:500 wk:0/mo:49 seen:1x
+🔴 0x8cb0e35148f57403e8e785ed13c7bbb2f34f9811 | pnl:$0 | t:0 wk:0/mo:0 seen:9x
+🔴 0xb91aeb5accc33a5f9a8615b8ed6b2d352e913987 | pnl:$0 | t:134 wk:70/mo:134 seen:6x
+🔴 0xd959b6925d3d3391a40c1a85dd3d8916ef16daf7 | pnl:$0 | t:202 wk:66/mo:202 seen:3x
+🔴 0x5a084f50b757b96ee03c3f0db42f2fb2e29fcce8 | pnl:$0 | t:267 wk:1/mo:237 seen:2x
+🔴 0xf1018544528ebc2019516f620b1d5f2d286ff994 | pnl:$0 | t:12 wk:5/mo:12 seen:2x
+🔴 0xbd9377d82d8dcb311b3bd1b8230447693fa82ffc | pnl:$0 | t:6 wk:5/mo:5 seen:2x
+🔴 0xeeb8c48abc6185c22db94d8706b2ab8748cfcab5 | pnl:$0 | t:28 wk:2/mo:2 seen:2x
+🔴 0x9adc4c8c7434d27cae75315287c994c436d79e4e | pnl:$0 | t:10 wk:10/mo:10 seen:2x
+🔴 0x8a504be89c716fc8703371d9399559704a5aed9a | pnl:$0 | t:145 wk:145/mo:145 seen:1x
+🔴 0xfc25f141ed27bb1787338d2c4e7f51e3a15e1f7f | pnl:$0 | t:500 wk:222/mo:500 seen:1x
+🔴 0x71b7c96c83974bb0fc2125dd326b75e8e494e6b9 | pnl:$0 | t:83 wk:0/mo:58 seen:1x
+🔴 0x60e68a63dbdd14fa39dbbadbb6386f86b8ad71d2 | pnl:$0 | t:2 wk:0/mo:2 seen:1x
+🔴 0x96672e2f487f6b6036243765f6dbe14c3ed86e07 | pnl:$0 | t:22 wk:10/mo:13 seen:1x
+🔴 0x0a879ba9a2ba863254a5b5244bcdf87e20503345 | pnl:$0 | t:176 wk:8/mo:40 seen:1x
+🔴 0x40ea9faef8f8eeac2b3262f2e1b75f9fbb16832f | pnl:$0 | t:500 wk:27/mo:480 seen:1x
+🔴 0x11a4c16d55eb0401d6bda5d979de261ea682b1e2 | pnl:$0 | t:61 wk:0/mo:43 seen:1x
+🔴 0xe6d80855059a0d2256b3e6014595a93504fd9d21 | pnl:$0 | t:154 wk:0/mo:129 seen:1x
+🔴 0x35353a3a2988c7c26e53849d602be60df49aa775 | pnl:$0 | t:34 wk:17/mo:34 seen:1x
+🔴 0x2ff7fa71d9a7ecceb48c9244ab695ac8d653e982 | pnl:$0 | t:7 wk:7/mo:7 seen:1x
+🔴 0xb62a06f5675d41b19a0d19972dce87ce576f7c3e | pnl:$0 | t:0 wk:0/mo:0 seen:1x
+🔴 0x0fc6239b71b84d30663f8bf3624aece88a6d7b7d | pnl:$0 | t:8 wk:8/mo:8 seen:1x
+🔴 0x9501ec3b8b3e330ae593ebe5b071c3d11b648223 | pnl:$0 | t:7 wk:3/mo:3 seen:1x
+🔴 0xbebe49168cc3fe33fd9060c6fc83355c3359a8b5 | pnl:$-0 | t:50 wk:1/mo:7 seen:1x
+🔴 0x9360b2f34cd705a36393fd96fda05ccaabf3f1c8 | pnl:$-0 | t:7 wk:1/mo:4 seen:1x
+🔴 0x071ff9c03fa6073437912333daee87c3967de67c | pnl:$-0 | t:1 wk:1/mo:1 seen:1x
+🔴 0x1afaab6cc7812fa583241d860209cd5b041a72d7 | pnl:$-0 | t:97 wk:22/mo:22 seen:1x
+🔴 0xef51ebb7ed5c84e5049fc76e1ae4db3b5799c0d3 | pnl:$-1 | t:500 wk:449/mo:500 seen:1x
+🔴 0x9146ac16620582d382305acee8b267d615116ab0 | pnl:$-4 | t:168 wk:55/mo:118 seen:1x
+🔴 0xd99f3bec8e060ada0aef0c4057695dd5bc22fcdc | pnl:$-15 | t:98 wk:8/mo:24 seen:1x
+🔴 0x6789cd30f84546779e0f825eea6ae37420f0ac37 | pnl:$-32 | t:49 wk:3/mo:3 seen:1x
+🔴 0x3b4c4ff8459237e1c65c981d7a8ee43746e5e850 | pnl:$-50 | t:66 wk:3/mo:10 seen:2x
+🔴 0x8a815b830d6ecfb203abd27334ef8d621e2558b0 | pnl:$-53 | t:347 wk:65/mo:93 seen:1x
+🔴 0xaa40c6d014c93e36911bad25cbad0439e76c526d | pnl:$-61 | t:106 wk:52/mo:94 seen:1x
+🔴 0xbce2ae81dded77a0fdf69c4ea2b4869d6b5d0ab4 | pnl:$-83 | t:500 wk:129/mo:493 seen:1x
+🔴 0x647e8333632690e3e48dc3b40295589b417bdd9b | pnl:$-84 | t:343 wk:12/mo:90 seen:1x
+🔴 0x4ec5de57c800c871cd3379f4ab906b28fa9fdef4 | pnl:$-114 | t:21 wk:21/mo:21 seen:1x
+🔴 0xb14a38df57cd19431af674ed0e413c075a5f1e4e | pnl:$-138 | t:12 wk:10/mo:10 seen:1x
+🔴 0xe21040efd9bff86a723b89cbfed391a667c9b956 | pnl:$-139 | t:44 wk:0/mo:9 seen:1x
+🔴 0x9985e769d8860f32d34b3bd36c16832e78e172aa | pnl:$-167 | t:107 wk:2/mo:6 seen:1x
+🔴 0x7cc46bbedf1b035666f29d1a10a797ce4b5d0039 | pnl:$-207 | t:3 wk:3/mo:3 seen:2x
+🔴 0xf38e6583dfa37026ee25cf0a567b8cef6307a38a | pnl:$-262 | t:465 wk:0/mo:41 seen:2x
+🔴 0x35ae23385c813e6bf3afedc31969822f52601206 | pnl:$-289 | t:6 wk:2/mo:5 seen:1x
+🔴 0x5fc814d89c2aa979bd987add20d6eb39eb0439ef | pnl:$-331 | t:500 wk:1/mo:4 seen:1x
+🔴 0x43e98f912cd6ddadaad88d3297e78c0648e688e5 | pnl:$-378 | t:500 wk:37/mo:65 seen:1x
+🔴 0x9416b0ca9df006a64def65021451caba9adf5a15 | pnl:$-385 | t:500 wk:92/mo:92 seen:1x
+🔴 0x4c9166cf069e51cb2687a51da4fa7543c21a1b66 | pnl:$-398 | t:6 wk:1/mo:2 seen:1x
+🔴 0xe57ef4adcb19325d92827ee6219aeebdb8e7adb8 | pnl:$-400 | t:2 wk:2/mo:2 seen:1x
+🔴 0x0e26a5a60755f60a20500a0fb858739c18b4550e | pnl:$-458 | t:4 wk:4/mo:4 seen:29x
+🔴 0x146fda3540946f1da00c10b80eac9e9d955a9410 | pnl:$-485 | t:176 wk:3/mo:5 seen:1x
+🔴 0x16905fb8633a07853b532709572d2a0de0158c4d | pnl:$-505 | t:500 wk:9/mo:120 seen:1x
+🔴 0x785fd6221d9987a8a401ea0ee3f5d65e26b6c1b5 | pnl:$-507 | t:1 wk:1/mo:1 seen:1x
+🔴 0x7e3321b6863f291019dc04b4dbc1f1b53a411482 | pnl:$-548 | t:150 wk:3/mo:6 seen:1x
+🔴 0x996ac56c9e72b6ca38a30ae9f6e85152d9afe3cc | pnl:$-623 | t:500 wk:87/mo:500 seen:2x
+🔴 0x3ecf3a41334cc299e87f182efbc2225584fde6af | pnl:$-641 | t:54 wk:3/mo:3 seen:1x
+🔴 0x720b615cd83203982c57b3c6854254f31756ae16 | pnl:$-701 | t:1 wk:1/mo:1 seen:1x
+🔴 0x1a61fc69eaca80c9db0a42c6f5c0332d775994f0 | pnl:$-756 | t:56 wk:14/mo:56 seen:1x
+🔴 0x195d0bfaeaf0af2d68e2d9200d2fd4d2edff2dec | pnl:$-806 | t:500 wk:14/mo:182 seen:1x
+🔴 0xd4fafcacfdc438258cdf5b28ad0abd30cbca3c79 | pnl:$-820 | t:500 wk:279/mo:500 seen:1x
+🔴 0xd9e6bff02c1ac887221e923ef9ed805b3b41902e | pnl:$-911 | t:7 wk:3/mo:7 seen:1x
+🔴 0x7a16aaab6f509353948461e306d05e680fa033db | pnl:$-958 | t:97 wk:8/mo:40 seen:1x
+🔴 0xf2d40781ff39cdba3e4ebe624d22cf2d30432037 | pnl:$-962 | t:210 wk:4/mo:4 seen:1x
+🔴 0xda63359ec77dceae4e6916b2fb078ff215da4378 | pnl:$-965 | t:72 wk:28/mo:47 seen:1x
+🔴 0xad8fa162f4adf45eaaeaa8e48ffb6d9a46dc7bc8 | pnl:$-966 | t:7 wk:6/mo:7 seen:1x
+🔴 0xd69de9b87f6b30ab45479dc12bbb0ece50a62892 | pnl:$-993 | t:146 wk:3/mo:3 seen:1x
+🔴 0x47661b3073d6dd0130e61a5c5b6f00b6f8da0286 | pnl:$-1051 | t:38 wk:2/mo:2 seen:1x
+🔴 0x780296eb0d6039b59853832a326fb628d9ede9cb | pnl:$-1086 | t:8 wk:0/mo:2 seen:1x
+🔴 0xbb227c252b21b06517d036e03086ad8114bf5440 | pnl:$-1197 | t:4 wk:4/mo:4 seen:1x
+🔴 0x9b1c4ec09fe464c0770053154225c88da0bc025e | pnl:$-1240 | t:46 wk:9/mo:21 seen:1x
+🔴 0x539d01b1c4d860570a3ea35aaf87168a1f351e69 | pnl:$-1311 | t:82 wk:3/mo:7 seen:1x
+🔴 0x0c63b5f982d56f135aa69fa1f4bc7d48187e60c2 | pnl:$-1388 | t:2 wk:2/mo:2 seen:1x
+🔴 0x69a62d07dc49a7d22380a0da9f670c552c867a2c | pnl:$-1417 | t:500 wk:79/mo:156 seen:1x
+🔴 0x34d9fa1062def79dca8c85c6dc2640e6b152c8b1 | pnl:$-1540 | t:10 wk:3/mo:5 seen:2x
+🔴 0x58fd45d701b93e76d6c04a0983ee5b3cc29d43a6 | pnl:$-1702 | t:500 wk:183/mo:500 seen:1x
+🔴 0xea2f794a7f0ce05e4bbd357b3ccbb3bd2048a8ef | pnl:$-2069 | t:500 wk:12/mo:38 seen:1x
+🔴 0x59c49a09e5335430833b96d96af9e581b0a9b517 | pnl:$-2112 | t:113 wk:9/mo:21 seen:1x
+🔴 0x0eab618c1038208fbda8f045f6b3dd230e5bd4bf | pnl:$-2139 | t:500 wk:202/mo:500 seen:1x
+🔴 0x5ae56cbb75e93991d871e3f9a7ef6088702168e1 | pnl:$-2384 | t:500 wk:0/mo:0 seen:1x
+🔴 0xa39c488ea8269609aea27f5f8486044d839908bc | pnl:$-2526 | t:266 wk:13/mo:46 seen:1x
+🔴 0xa12e1d221a19fbcd37b3df481071b154f5e4315f | pnl:$-2530 | t:9 wk:9/mo:9 seen:2x
+🔴 0xef7d4c8f88e886ecd1632b80f07814adeaff5e3f | pnl:$-2597 | t:114 wk:2/mo:2 seen:1x
+🔴 0x141167b7f2aed0ca21e882a93124237eab875afd | pnl:$-2793 | t:29 wk:5/mo:5 seen:1x
+🔴 0xc5d32cd2a0b088910a6fdd77862fbb4f87fdb524 | pnl:$-2816 | t:332 wk:1/mo:1 seen:1x
+🔴 0xfedc381bf3fb5d20433bb4a0216b15dbbc5c6398 | pnl:$-2827 | t:500 wk:12/mo:35 seen:3x
+🔴 0xa5761fa386787d4bb7fb9f866acf034647538678 | pnl:$-4561 | t:138 wk:95/mo:138 seen:1x
+🔴 0xbefa95c276ee8ef6ff3ef43d1c1c454f52bc300d | pnl:$-4786 | t:500 wk:116/mo:334 seen:1x
+🔴 0xf9c1190aa8184bcbe418e6f5321c53b0bfbc39e2 | pnl:$-5001 | t:500 wk:135/mo:500 seen:1x
+🔴 0xa44f4d180c58afb790545cc969570b15902b3f19 | pnl:$-5156 | t:74 wk:6/mo:14 seen:1x
+🔴 0x43774ec4527391f2c5de6cac9508679242a51764 | pnl:$-5279 | t:86 wk:23/mo:74 seen:1x
+🔴 0xb45a797faa52b0fd8adc56d30382022b7b12192c | pnl:$-5612 | t:500 wk:3/mo:9 seen:1x
+🔴 0x37d366a769f58ef478f72c6b1bf730424b2b709a | pnl:$-5722 | t:441 wk:137/mo:358 seen:1x
+🔴 0x9c2617462567859fcf5764e03b9a687ebca274bc | pnl:$-5806 | t:474 wk:21/mo:81 seen:1x
+🔴 0xffed687882ea20e77879f0cf0897060c49554706 | pnl:$-5921 | t:14 wk:5/mo:11 seen:3x
+🔴 0x39063a8d47e2a90a7b682d6a5b8c112ee3577556 | pnl:$-6185 | t:249 wk:0/mo:6 seen:1x
+🔴 0x8f545e21724899fdf219f04beaf09c6a8310f1c9 | pnl:$-6202 | t:11 wk:11/mo:11 seen:1x
+🔴 0xd0055bc6aed640e6ca34657a09a519a1d1a2f2c5 | pnl:$-6489 | t:119 wk:14/mo:94 seen:1x
+🔴 0xa0f210f55165ba63307ae71f6f2cae906eb86086 | pnl:$-7201 | t:45 wk:14/mo:14 seen:1x
+🔴 0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b | pnl:$-7928 | t:500 wk:126/mo:500 seen:1x
+🔴 0x0d05b729b369f742a3b47b1312de4424ad396a81 | pnl:$-8155 | t:500 wk:80/mo:251 seen:1x
+🔴 0xe2b3561e815f7e3dfd4a5227a67e4052325f87b7 | pnl:$-8801 | t:3 wk:3/mo:3 seen:1x
+🔴 0xb1889886a55ec6c684948e014f7b18693bb78d5b | pnl:$-9189 | t:107 wk:89/mo:107 seen:1x
+🔴 0x9d6a0986caa27991eff970422a69945ba866819e | pnl:$-9262 | t:369 wk:354/mo:369 seen:1x
+🔴 0x39ec75cc9dc48d0ca433735bf543ad0d55186504 | pnl:$-9604 | t:94 wk:0/mo:0 seen:2x
+🔴 0x4478d7bd8a295691ac84f60a5ec2b47e122102a4 | pnl:$-10086 | t:500 wk:121/mo:500 seen:1x
+🔴 0x6a8d1709bfb718d8555d315a983c4816278350f9 | pnl:$-10132 | t:500 wk:500/mo:500 seen:1x
+🔴 0x482bf5accdecfaffa67c14d4d4fbb59f428a3266 | pnl:$-10135 | t:500 wk:137/mo:370 seen:1x
+🔴 0xc0a65b15679eb6a7be095f70523535835a1a2d6c | pnl:$-11325 | t:30 wk:6/mo:30 seen:4x
+🔴 0x5762d2a6494e9d9c10a4ef1c99fd10bff0e790ee | pnl:$-11658 | t:77 wk:77/mo:77 seen:1x
+🔴 0x48185887c8dc95de60ee89722f1d0ee7894cbf0b | pnl:$-11841 | t:500 wk:17/mo:99 seen:1x
+🔴 0x204e14f11a08a465479e437b0e37b7e9e0358d08 | pnl:$-12585 | t:500 wk:39/mo:161 seen:1x
+🔴 0xd902d85156fe7b309c12299375c00d86ea83cdb9 | pnl:$-12849 | t:170 wk:3/mo:37 seen:1x
+🔴 0xc13cbd011bc02c0c9fd9a5d4dbd236ecc0e8a202 | pnl:$-14526 | t:251 wk:21/mo:30 seen:1x
+🔴 0xcd66d7ff1d5ddbb5e57d9eac844403550256664f | pnl:$-14919 | t:460 wk:28/mo:98 seen:1x
+🔴 0xa61ef8773ec2e821962306ca87d4b57e39ff0abd | pnl:$-15395 | t:500 wk:3/mo:32 seen:6x
+🔴 0x69a810c24476c2f2e140418a99bae708e312a712 | pnl:$-15885 | t:8 wk:3/mo:3 seen:1x
+🔴 0x176f1fe4250fa90dd8306a8aca55afae5fe5cd75 | pnl:$-16456 | t:35 wk:8/mo:25 seen:2x
+🔴 0xdf17f4a8dd01a4cfa6fc3da323a2baee5f8697d1 | pnl:$-17880 | t:500 wk:219/mo:500 seen:3x
+🔴 0x45e40dbee6f546c7b318498f8c9778560f5a7e20 | pnl:$-17926 | t:264 wk:25/mo:173 seen:1x
+🔴 0xcf19c420814435ffb1c459588208ed23a7ee6402 | pnl:$-24067 | t:500 wk:70/mo:222 seen:3x
+🔴 0xd355b7dc3d83658eeb6701dc88ec80522278f69c | pnl:$-24342 | t:39 wk:0/mo:34 seen:2x
+🔴 0x152fdae6b14b9131a61ec77ed61dda50f68da549 | pnl:$-24993 | t:356 wk:27/mo:314 seen:3x
+🔴 0xbc8c61c1de7c31a8ff68aebf55256c028db9273f | pnl:$-25067 | t:500 wk:118/mo:171 seen:1x
+🔴 0x44c1dfe43260c94ed4f1d00de2e1f80fb113ebc1 | pnl:$-26045 | t:500 wk:159/mo:500 seen:2x
+🔴 0x9097b9fd27dd69aa8170e1b16f1b8b839ad70ef0 | pnl:$-27228 | t:6 wk:6/mo:6 seen:5x
+🔴 0x4f3818cc7bca7c79680bb7fd3ac4108b7f3a2e85 | pnl:$-27846 | t:28 wk:1/mo:6 seen:1x
+🔴 0x24c8cf69a0e0a17eee21f69d29752bfa32e823e1 | pnl:$-28003 | t:500 wk:118/mo:500 seen:3x
+🔴 0x47e6d461c40169233b41ea6cdad6b6cb8126fd61 | pnl:$-30042 | t:244 wk:11/mo:56 seen:1x
+🔴 0xe9076a87c5ed90ef16e6fe6529c943baeca0cff6 | pnl:$-31819 | t:500 wk:500/mo:500 seen:2x
+🔴 0x2ce991d0324ce55cf613a88ccbc0a031b7649452 | pnl:$-32456 | t:5 wk:5/mo:5 seen:1x
+🔴 0x5f659bccbc353dbf7bcdffdee73bee60bb482036 | pnl:$-33415 | t:6 wk:6/mo:6 seen:1x
+🔴 0xb886580698ede4b18de3e446b2d8da8bcedd81b3 | pnl:$-33467 | t:500 wk:65/mo:500 seen:1x
+🔴 0xb87b5c3cf36ab3c5afcc81cd33de4b2fda203626 | pnl:$-36331 | t:474 wk:20/mo:51 seen:1x
+🔴 0xc8ab97a9089a9ff7e6ef0688e6e591a066946418 | pnl:$-36868 | t:500 wk:500/mo:500 seen:4x
+🔴 0x46992d0e547e3822a9c28723f51bfa804ae4e03c | pnl:$-37903 | t:500 wk:459/mo:500 seen:1x
+🔴 0x73df71df65effd8a41a40cd7eb854e817c630c9a | pnl:$-38524 | t:21 wk:16/mo:16 seen:1x
+🔴 0x08fff5b9a79576a7c6e18a9d05ece0658a34ba79 | pnl:$-41883 | t:482 wk:188/mo:482 seen:4x
+🔴 0xc1a9273b15a17d21af09dddb42b9239b93d4e2db | pnl:$-48365 | t:206 wk:40/mo:186 seen:1x
+🔴 0x440a147c6b2b82bad733e001957ba209f716035a | pnl:$-49705 | t:69 wk:3/mo:22 seen:1x
+🔴 0x1f66796b45581868376365aef54b51eb84184c8d | pnl:$-52450 | t:500 wk:253/mo:500 seen:1x
+🔴 0xec23da31bc1c13346b03dce69cf33da3983824fd | pnl:$-53748 | t:95 wk:13/mo:75 seen:1x
+🔴 0x63739796b47577a15c0b6d05cde710bda76da0b7 | pnl:$-55300 | t:500 wk:168/mo:475 seen:1x
+🔴 0x35611d315e2546a4f9394fdf68ca2444439bd87c | pnl:$-56177 | t:22 wk:15/mo:22 seen:1x
+🔴 0xee3ecc39c41e8a6b5399b1cd1b03d72f5271ebb5 | pnl:$-56708 | t:500 wk:304/mo:500 seen:2x
+🔴 0x1e6d8ac5250769601852d1026c4279f6d15308a8 | pnl:$-58684 | t:134 wk:62/mo:134 seen:1x
+🔴 0x9db7de9bbc878305f55be28b24d920d755c5e0d8 | pnl:$-60529 | t:38 wk:4/mo:4 seen:2x
+🔴 0x25ea4f22f4ab4350b0c01fbfe497d7f0eeebfa5f | pnl:$-65387 | t:500 wk:165/mo:500 seen:1x
+🔴 0xf39651f0addaad0221806d828197064b97feed0d | pnl:$-67401 | t:500 wk:11/mo:284 seen:2x
+🔴 0xbacd00c9080a82ded56f504ee8810af732b0ab35 | pnl:$-69856 | t:500 wk:310/mo:500 seen:1x
+🔴 0xf3b04dd038fcf191692927c0aa5a38018ea323a1 | pnl:$-76608 | t:129 wk:0/mo:19 seen:1x
+🔴 0x6e1d5040d0ac73709b0621f620d2a60b80d2d0fa | pnl:$-79407 | t:500 wk:500/mo:500 seen:1x
+🔴 0xe734e7bf7cfb9e464681f71822f6c2f6be514f0c | pnl:$-82597 | t:500 wk:165/mo:489 seen:1x
+🔴 0xa55ce71987243538f7e44e199e20def2958274ba | pnl:$-84691 | t:45 wk:4/mo:7 seen:1x
+🔴 0xfe9455e2cad5257b26547af62cbbfd75c8968a3d | pnl:$-84712 | t:241 wk:3/mo:239 seen:1x
+🔴 0xc84f7e76ec28ef20e7773b7b4926bfb7378be0c5 | pnl:$-86519 | t:500 wk:86/mo:309 seen:2x
+🔴 0xfffadf38a520cd5a0035ff52d7fceb436a08864b | pnl:$-89757 | t:500 wk:30/mo:94 seen:1x
+🔴 0xd68430d35d77cfa80e95a3e773aa1c55c137f320 | pnl:$-111262 | t:299 wk:5/mo:133 seen:1x
+🔴 0xb218156faaf0d8a010cbca47dbf30abc4f9f67e4 | pnl:$-114271 | t:16 wk:0/mo:16 seen:1x
+🔴 0x594d0c9a3eb7f958b9fc100e3088ffc5de99059d | pnl:$-116081 | t:99 wk:17/mo:99 seen:1x
+🔴 0xf5198df69e13937a40d1c76d6f72d9aa067d906b | pnl:$-120385 | t:500 wk:34/mo:450 seen:1x
+🔴 0xa49b6ea0a604c581f2a9569db42c192b1c487054 | pnl:$-123612 | t:500 wk:500/mo:500 seen:1x
+🔴 0xa69d0cd47b794edd9642208409695d35150d509b | pnl:$-128219 | t:246 wk:0/mo:73 seen:1x
+🔴 0xa022ba0a68e11a78348382ff168601012d4d77f8 | pnl:$-139121 | t:500 wk:40/mo:500 seen:1x
+🔴 0x30c7ac0158499ddc6761047f7f69bcf7d036ac3b | pnl:$-154577 | t:455 wk:50/mo:228 seen:1x
+🔴 0x2aee593a42e2df517cd588827182aa5a144ab327 | pnl:$-159100 | t:300 wk:32/mo:92 seen:1x
+🔴 0x16dba53490dd65e717955690bb26dcef289e8d0f | pnl:$-162247 | t:500 wk:254/mo:500 seen:1x
+🔴 0x4a2be7a7e6e3b41dc2de00706b4c09660ca9af20 | pnl:$-181609 | t:500 wk:53/mo:310 seen:2x
+🔴 0x8bfee7aeca33003fe9d7398d5143dc7866542d74 | pnl:$-214573 | t:141 wk:28/mo:141 seen:1x
+🔴 0x780a7539200e74e882dde303952029bda21684f0 | pnl:$-219213 | t:53 wk:20/mo:53 seen:1x
+🔴 0x52f5efdfb8759d4b9be1fbe63f80401474445e8a | pnl:$-229643 | t:59 wk:8/mo:45 seen:1x
+🔴 0xe5047b7b7eb66eafdc80540048c31227f641600e | pnl:$-244405 | t:500 wk:209/mo:500 seen:1x
+🔴 0xb687f00464e33934f5d591f224e71c3559ecaee5 | pnl:$-258038 | t:500 wk:500/mo:500 seen:1x
+🔴 0xde9f03151fb0a4b8cbcf6bbe24b73bf5856bb8f7 | pnl:$-269493 | t:500 wk:1/mo:157 seen:1x
+🔴 0x2117ae94a97d69b78cbc81b6680a62deb1955c26 | pnl:$-273529 | t:500 wk:500/mo:500 seen:1x
+🔴 0x45bc74efa620b45c02308acaecdff1f7c06f978b | pnl:$-288934 | t:500 wk:20/mo:185 seen:1x
+🔴 0x492442eab586f242b53bda933fd5de859c8a3782 | pnl:$-290262 | t:500 wk:18/mo:127 seen:2x
+🔴 0xc4d1a863e9cc45d02ba22d3a1ae9ba7822018ce8 | pnl:$-307170 | t:500 wk:1/mo:9 seen:4x
+🔴 0x8a6764a2da22d13ed16efd05ec67123b656de403 | pnl:$-328142 | t:191 wk:71/mo:71 seen:2x
+🔴 0x6139c42e48cf190e67a0a85d492413b499336b7a | pnl:$-339094 | t:500 wk:37/mo:169 seen:2x
+🔴 0x2fa0ad4b0d86e392716bd302dd6e4446b88bbe6d | pnl:$-340412 | t:377 wk:277/mo:377 seen:1x
+🔴 0x5dab5ed9691fab220535891d9c7f5c28eed322e1 | pnl:$-360862 | t:50 wk:0/mo:37 seen:3x
+🔴 0xc31d0a0d63d760d72a1236d16beaa6a71c854ebe | pnl:$-363785 | t:295 wk:2/mo:16 seen:1x
+🔴 0x1136368d7f6728e94ed14c532ab95a932f710c2e | pnl:$-365874 | t:500 wk:140/mo:500 seen:2x
+🔴 0x7523cafcee7bcf2db9a79d80e0d79b88a9a54c4c | pnl:$-369532 | t:500 wk:23/mo:89 seen:2x
+🔴 0x09b540739cfa17ba6b61f4351000583cd6397e72 | pnl:$-370543 | t:267 wk:5/mo:243 seen:3x
+🔴 0x5b6331e7ff0831a3fe2ed12004747db1a9c911a4 | pnl:$-374693 | t:500 wk:500/mo:500 seen:1x
+🔴 0x5d189e816b4149be00977c1a3c8840374aec4972 | pnl:$-376709 | t:319 wk:5/mo:41 seen:2x
+🔴 0x74471a007ddcc488f6d57b5e86dfb35a8d48a16d | pnl:$-389623 | t:500 wk:42/mo:451 seen:6x
+🔴 0xabb89972b21b304c1bed2bf26f35c8741ac9bba3 | pnl:$-397310 | t:500 wk:225/mo:500 seen:3x
+🔴 0x7c585894ec02d5ed4fcd118ad8982f859360a5a1 | pnl:$-406229 | t:166 wk:16/mo:89 seen:1x
+🔴 0x9b491485819135564450669aeadb2d85f7b104a8 | pnl:$-423634 | t:500 wk:107/mo:500 seen:1x
+🔴 0xc3acf5878a03523d09a3ac859943445d7baeb964 | pnl:$-434616 | t:87 wk:46/mo:87 seen:2x
+🔴 0xe613b515bd46b1585a8b137a4d291d9b80bd540e | pnl:$-481018 | t:500 wk:116/mo:500 seen:1x
+🔴 0xfbf3d501e88815464642d0e913f15379c3eeb218 | pnl:$-509742 | t:500 wk:52/mo:432 seen:2x
+🔴 0x3dfb153c197d4c19d3b31c1ecd2c7b6860eeabaf | pnl:$-633940 | t:500 wk:410/mo:500 seen:3x
+🔴 0x8c0b024c17831a0dde038547b7e791ae6a0d7aa5 | pnl:$-709818 | t:500 wk:84/mo:500 seen:1x
+🔴 0x3d6ac5150675a83e2090234414222e968888c2b5 | pnl:$-711355 | t:158 wk:158/mo:158 seen:1x
+🔴 0x86e99faea12fccd8925de5d9f052471baf7a4cdf | pnl:$-721135 | t:500 wk:363/mo:500 seen:1x
+🔴 0x4be1fa92e6ceaf886aac0bbec3be6c527133aa70 | pnl:$-774732 | t:478 wk:111/mo:204 seen:1x
+🔴 0x966cd85371117d811aab6e6f2b98377433659b1a | pnl:$-812428 | t:235 wk:33/mo:229 seen:3x
+🔴 0xc6587b11a2209e46dfe3928b31c5514a8e33b784 | pnl:$-860708 | t:500 wk:28/mo:282 seen:2x
+🔴 0xc72d7dcdb23597d143a83536fb97b1d7db7efc21 | pnl:$-973819 | t:242 wk:116/mo:153 seen:1x
+🔴 0x8fbb3c32496d4bcff8f456c3342f90edaaa09a17 | pnl:$-980013 | t:341 wk:113/mo:295 seen:2x
+🔴 0xdb859a551fcf56e49416160911476bea7307152f | pnl:$-1005692 | t:485 wk:64/mo:136 seen:1x
+🔴 0x52ecea7b3159f09db589e4f4ee64872fd0bba6f3 | pnl:$-1142761 | t:500 wk:148/mo:500 seen:1x
+🔴 0x72d815133f9f8b6529e911cf3be492846ce05213 | pnl:$-1156789 | t:54 wk:25/mo:39 seen:1x
+🔴 0xc44f432b014f36679e13615f95996eac32bbd49f | pnl:$-1221180 | t:500 wk:129/mo:500 seen:2x
+🔴 0x7a8885c8dc075f0578b648f29fa233408a7d41cc | pnl:$-1387826 | t:500 wk:55/mo:240 seen:2x
+🔴 0xc97485a44146b5db0b8b121358f57cf297cdb33b | pnl:$-1790497 | t:500 wk:35/mo:283 seen:1x
+🔴 0x5966db1fe50763c9e3c014d756369bad07e1f804 | pnl:$-1865552 | t:410 wk:144/mo:401 seen:3x
+🔴 0xe015b5a2a299167be835a2fd1e86f09c49e06ffd | pnl:$-1894408 | t:500 wk:84/mo:93 seen:1x
+🔴 0xf284ad6d607f777f34bc643cea587c33a886b9f9 | pnl:$-2001309 | t:500 wk:300/mo:500 seen:1x
+🔴 0xcd65c3279408a33866a9129bed6943064cb6ee96 | pnl:$-2053630 | t:500 wk:398/mo:500 seen:2x
+🔴 0x2d7be5170a8026c18709eaea1027c7f12e8ce2ce | pnl:$-2212092 | t:36 wk:10/mo:36 seen:1x
+🔴 0x5e4dbe95f805e27959532f4845e2e4180017b874 | pnl:$-2302809 | t:82 wk:16/mo:82 seen:7x
+🔴 0x73e35ce0b7e36ef3ce29ebd12b30b28007383239 | pnl:$-2419067 | t:324 wk:63/mo:301 seen:1x
+🔴 0xf8831548531d56ad6a4331493243c447a827cd1f | pnl:$-2421416 | t:415 wk:164/mo:415 seen:1x
+🔴 0xd1c537b2a7cba8d365e111bffb9de7b205e2cbd0 | pnl:$-2426491 | t:135 wk:0/mo:135 seen:1x
+🔴 0xdb2223cc5202a4718c3069f577ec971f71c96478 | pnl:$-3251294 | t:500 wk:19/mo:170 seen:1x
+🔴 0x56c9fbdeccf198f1f5ad95ace39b24f5f7fb0d9e | pnl:$-3409584 | t:500 wk:500/mo:500 seen:2x
+🔴 0x0dcf5b49627c5194805bd1af846fd0bd3388c556 | pnl:$-3850742 | t:500 wk:144/mo:454 seen:2x
+🔴 0xc8075693f48668a264b9fa313b47f52712fcc12b | pnl:$-4327365 | t:500 wk:15/mo:179 seen:1x
+🔴 0x65b54274eba5c76dee6f0fab18a590653811e82f | pnl:$-4475404 | t:212 wk:81/mo:212 seen:7x
+🔴 0xe16d3f2a5807999b358affd9445c3a09e45e5e30 | pnl:$-5867285 | t:500 wk:378/mo:500 seen:2x
+🔴 0x4bff30af91642dc7d2b19a8664378fe55c45fc26 | pnl:$-6491438 | t:500 wk:160/mo:500 seen:1x
+🔴 0xee0d153c17fe82b8866b484753b56a700ab457ab | pnl:$-6770209 | t:500 wk:0/mo:96 seen:1x
+🔴 0x13414a77a4be48988851c73dfd824d0168e70853 | pnl:$-7096045 | t:500 wk:57/mo:500 seen:3x
+🔴 0x2c335066fe58fe9237c3d3dc7b275c2a034a0563 | pnl:$-7117229 | t:500 wk:314/mo:500 seen:4x
+🔴 0x84cb17a50bc2487e8d64029783c3d2abcba328ad | pnl:$-7788641 | t:500 wk:139/mo:300 seen:1x
+🔴 0xfe787d2da716d60e8acff57fb87eb13cd4d10319 | pnl:$-9309542 | t:500 wk:500/mo:500 seen:1x
+🔴 0xbee54d90051720e27921dc6874f02d646ffca636 | pnl:$-10925140 | t:500 wk:99/mo:500 seen:5x
+🔴 0xc3c3b3ef304ddbea39fa2246e683a71da5d0eec8 | pnl:$-11613181 | t:500 wk:0/mo:200 seen:2x
+🔴 0x9495425feeb0c250accb89275c97587011b19a27 | pnl:$-13201100 | t:500 wk:500/mo:500 seen:2x
+🔴 0xa5ea13a81d2b7e8e424b182bdc1db08e756bd96a | pnl:$-24048513 | t:500 wk:154/mo:500 seen:9x
+🔴 0xbddf61af533ff524d27154e589d2d7a81510c684 | pnl:$-29432526 | t:500 wk:7/mo:82 seen:4x
