@@ -1,0 +1,70 @@
+name: Reset CLAWBOT Paper Balance
+
+on:
+  workflow_dispatch:
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+
+      - name: Reset paper balance to $10
+        env:
+          SUPABASE_URL: https://fjdzhrdpioxdeyyfogep.supabase.co
+          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          LOG="_oracle_reset.txt"
+          echo "=== CLAWBOT Reset $(date -u) ===" > $LOG
+
+          # Check current state
+          echo "--- Current settings ---" >> $LOG
+          curl -s "${SUPABASE_URL}/rest/v1/polymarket_bot_settings?limit=1" \
+            -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" >> $LOG
+
+          echo "" >> $LOG
+
+          # Try UPDATE first
+          echo "--- Attempting UPDATE ---" >> $LOG
+          RES=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X PATCH "${SUPABASE_URL}/rest/v1/polymarket_bot_settings?id=gt.0" \
+            -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" \
+            -H "Content-Type: application/json" \
+            -d '{"paper_balance":10.00,"updated_at":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"}')
+          echo "PATCH all rows: $RES" >> $LOG
+
+          # Also try with no filter (update all)
+          RES2=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X PATCH "${SUPABASE_URL}/rest/v1/polymarket_bot_settings" \
+            -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=minimal" \
+            -d '{"paper_balance":10.00,"updated_at":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"}')
+          echo "PATCH no-filter: $RES2" >> $LOG
+
+          # Also UPSERT to ensure row exists
+          echo "--- UPSERT fallback ---" >> $LOG
+          RES3=$(curl -s -w "\nHTTP:%{http_code}" \
+            -X POST "${SUPABASE_URL}/rest/v1/polymarket_bot_settings" \
+            -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: resolution=merge-duplicates,return=representation" \
+            -d '[{"id":1,"paper_balance":10.00,"risk_pct":0.05,"updated_at":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"}]')
+          echo "UPSERT: $RES3" >> $LOG
+
+          # Verify result
+          echo "" >> $LOG
+          echo "--- Final state ---" >> $LOG
+          curl -s "${SUPABASE_URL}/rest/v1/polymarket_bot_settings?limit=1" \
+            -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" >> $LOG
+
+          cat $LOG
+
+          git config user.email "bot@sqi.app"
+          git config user.name "SQI CLAWBOT"
+          git add $LOG
+          git commit -m "CLAWBOT balance reset $(date -u +%H%M%S)" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
