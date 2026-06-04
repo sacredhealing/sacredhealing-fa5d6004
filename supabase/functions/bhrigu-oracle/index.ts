@@ -387,7 +387,7 @@ serve(async (req) => {
         model: "gemini-2.5-flash",
         messages: allMessages,
         max_tokens: 3000,
-        temperature: 0.9,
+        temperature: 2.0,
       }),
     });
 
