@@ -1,32 +1,49 @@
-=== CLOB API Public Endpoint Probe ===
+╔══════════════════════════════════════════════════════╗
+  CO-TRADER SCAN — Find hidden insiders in same markets
+╚══════════════════════════════════════════════════════╝
 
-🔑 clob.polymarket.com/trades?limit=10
-🔑 clob.polymarket.com/trades?limit=10&maker_address=0xbaa2bcb5439e9
-🔑 clob.polymarket.com/trades?limit=10&taker_address=0xbaa2bcb5439e9
-400 clob.polymarket.com/books?token_id=217426331434639062905690501558
-✅ clob.polymarket.com/last-trade-price?token_id=2174263314346390629
-   → {"price":"0.998","side":"SELL"}
+BAA2BC (Iran Oracle): 61 unique markets traded
+B2A362 (Peace Whale): 15 unique markets traded
+ED107A (NO Machine): 202 unique markets traded
 
-✅ clob.polymarket.com/tick-size?token_id=21742633143463906290569050
-   → {"minimum_tick_size":0.001}
+Total unique markets across all 3 insiders: 267
+  Scanned 10/30 markets, found 128 wallets  Scanned 20/30 markets, found 128 wallets  Scanned 30/30 markets, found 128 wallets
+All insiders co-traders found: 128
+New wallets to scan (excluding known insiders): 128
 
-✅ clob.polymarket.com/sampling-markets?limit=5
-   → {"data":[{"enable_order_book":true,"active":true,"closed":false,"archived":false,"accepting_orders":true,"accepting_order_timestamp":"2025-11-26T16:55:29Z","minimum_order_size":5,"minimum_tick_size":0.01,"condition_id":"0x384e2707bbb95da4bfa6f330fe7d5ccbec1c0a85e20be900cbf599987588e1a4","question_id
-✅ clob.polymarket.com/sampling-simplified-markets?limit=5
-   → {"data":[{"condition_id":"0x384e2707bbb95da4bfa6f330fe7d5ccbec1c0a85e20be900cbf599987588e1a4","rewards":{"rates":[{"asset_address":"0x2791bca1f2de4661ed88a30c99a7a9449aa84174","rewards_daily_rate":0.001}],"min_size":20,"max_spread":3.5},"tokens":[{"token_id":"7843302451867668043117447832285414860657
-✅ data-api.polymarket.com/trades?user=0xbaa2bcb5439e985ce4ccf815b47
-   → [{"proxyWallet":"0xbaa2bcb5439e985ce4ccf815b4700027d1b92c73","side":"BUY","asset":"25525886838936661349801315808447476243176190100445157889430252006398510133975","conditionId":"0x9d3f02264a94bafc676afd7add8b11442e6ec72dabaa69cefef835f0672275c7","size":310.05,"price":0.16,"timestamp":1780563139,"titl
-✅ data-api.polymarket.com/positions?user=0xbaa2bcb5439e985ce4ccf815
-   → [{"proxyWallet":"0xbaa2bcb5439e985ce4ccf815b4700027d1b92c73","asset":"106181075047366745139197108801635573283215248045056329679360376976893016488727","conditionId":"0xbb4d51e6364066d92eb6f9b8413dd7193de70966736044463b205834805a1f3b","size":289841.6679,"avgPrice":0.661,"initialValue":191594.9072,"cur
-🔑 gamma-api.polymarket.com/profiles?address=0xbaa2bcb5439e985ce4ccf
-🔑 gamma-api.polymarket.com/profiles?id=0xbaa2bcb5439e985ce4ccf815b4
+🔍 Deep PnL scan on top 40 co-traders...
 
-=== Auth requirement check ===
-Auth type: 404 404 page not found
+🟢 0xe9076a87c5ed90 | pnl:$30103 | WR:83% | $50k+:0 | wk:500t | markets:30
+🟢 0x20d2309cd92b79 | pnl:$113 | WR:43% | $50k+:0 | wk:500t | markets:30
+🟢 0x4f1d5ae26fc314 | pnl:$228 | WR:18% | $50k+:0 | wk:500t | markets:30
+🟢 0x48a924e4580284 | pnl:$1 | WR:50% | $50k+:0 | wk:500t | markets:30
+🟢 0x4705408c791455 | pnl:$132 | WR:50% | $50k+:0 | wk:500t | markets:30
+🟢 0x1abc2b469b5ded | pnl:$7158 | WR:100% | $50k+:0 | wk:500t | markets:30
+🟢 0xd71776a8d4fdde | pnl:$0 | WR:67% | $50k+:0 | wk:500t | markets:30
 
+╔══════════════════════════════════════════════════════╗
+  🚨 NEW HIDDEN WHALES DISCOVERED
+╚══════════════════════════════════════════════════════╝
 
-CLOB trades (BAA2BC): 401 {"error":"Unauthorized/Invalid api key"}
+🟢 #1 0xe9076a87c5ed90ef16e6fe6529c943baeca0cff6
+  PnL:$30103 | WR:83% | Best:+$5710 | MaxPos:$42270 | SharedMarkets:30 | Wk:500t
 
+🟢 #2 0x1abc2b469b5ded495d6c8b21fc79dcb8d8f345e7
+  PnL:$7158 | WR:100% | Best:+$222 | MaxPos:$1320 | SharedMarkets:30 | Wk:500t
 
-CLOB trades (B2A362): 401 {"error":"Unauthorized/Invalid api key"}
+🟢 #3 0x4f1d5ae26fc31472966e951af3183308736d8de2
+  PnL:$228 | WR:18% | Best:+$73 | MaxPos:$1104 | SharedMarkets:30 | Wk:500t
 
+🟢 #4 0x4705408c791455edffc66782d4cea30c17afd03e
+  PnL:$132 | WR:50% | Best:+$331 | MaxPos:$177 | SharedMarkets:30 | Wk:500t
+
+🟢 #5 0x20d2309cd92b797ae7ca175ed828ed8a27fbe29d
+  PnL:$113 | WR:43% | Best:+$119 | MaxPos:$66 | SharedMarkets:30 | Wk:500t
+
+🟢 #6 0x48a924e458028426c763bec74205eb48d5ae3730
+  PnL:$1 | WR:50% | Best:+$3 | MaxPos:$52 | SharedMarkets:30 | Wk:500t
+
+🟢 #7 0xd71776a8d4fddeb3c150c4607b3f8bec31213b85
+  PnL:$0 | WR:67% | Best:+$0 | MaxPos:$20 | SharedMarkets:30 | Wk:500t
+
+SUMMARY: 7 new profitable wallets | 0 with $50k+ wins | 1 with $10k+ total PnL
