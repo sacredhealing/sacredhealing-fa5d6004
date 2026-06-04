@@ -1,55 +1,90 @@
-🔍 LEADERBOARD + TOP TRADER DISCOVERY
+Scanning 25 top markets for big traders...
 
-404 | data-api.polymarket.com/leaderboard?limit=100
-404 | data-api.polymarket.com/leaderboard?window=all&limit=10
-404 | data-api.polymarket.com/leaderboard?interval=all&limit=
-404 | data-api.polymarket.com/rankings?limit=100
-404 | data-api.polymarket.com/top-traders?limit=100
-404 | data-api.polymarket.com/traders?sortBy=pnl&limit=100
-404 | gamma-api.polymarket.com/leaderboard?limit=100
-404 | clob.polymarket.com/leaderboard?limit=100
-404 | polymarket.com/api/leaderboard/users?interval=all&limit
-404 | data-api.polymarket.com/users?sortBy=profit&limit=100
-404 | data-api.polymarket.com/stats/leaderboard?limit=100
 
-🔍 Activity in $1B+ volume markets...
-Top events:
-  Presidential Election Winner 2024 | vol: $3,686,335,059.295
-  Fields: id, ticker, slug, title, description, resolutionSource, startDate, creationDate, endDate, image, icon, active, closed, archived, new, featured, restricted, volume, openInterest, sortBy, published_at, updatedBy, createdAt, updatedAt, commentsEnabled, volume1wk, volume1mo, volume1yr, featuredImage, enableOrderBook, negRisk, negRiskMarketID, negRiskFeeBips, commentCount, markets, tags, cyom, closedTime, showAllOutcomes, showMarketImages, automaticallyResolved, enableNegRisk, automaticallyActive, gmpChartMode, negRiskAugmented, pendingDeployment, deploying, requiresTranslation, eventMetadata
-  Markets: [{"id":"253591","question":"Will Donald Trump win the 2024 US Presidential Election?","conditionId":"0xdd22472e552920b8438158ea7238bfadfa4f736aa4cee91a6b86c39ead110917","slug":"will-donald-trump-win-t
-  NBA Champion | vol: $1,712,132,663.962
-  Fields: id, ticker, slug, title, description, resolutionSource, startDate, creationDate, endDate, image, icon, active, closed, archived, new, featured, restricted, volume, openInterest, sortBy, createdAt, updatedAt, volume1wk, volume1mo, volume1yr, enableOrderBook, negRisk, negRiskMarketID, commentCount, markets, tags, cyom, closedTime, showAllOutcomes, showMarketImages, automaticallyResolved, enableNegRisk, automaticallyActive, gmpChartMode, negRiskAugmented, featuredOrder, pendingDeployment, deploying, requiresTranslation, eventMetadata
-  Markets: [{"id":"507869","question":"Will the LA Clippers win the 2025 NBA Finals?","conditionId":"0x4e2dd28f54a645ac62743a49116dfae0b6fd22ef4187ee2a340d1346ca612bcf","slug":"will-the-la-clippers-win-the-2025-
-  World Cup Winner  | vol: $1,538,788,626.494
-  Fields: id, ticker, slug, title, description, resolutionSource, startDate, creationDate, endDate, image, icon, active, closed, archived, new, featured, restricted, liquidity, volume, openInterest, sortBy, createdAt, updatedAt, competitive, volume24hr, volume1wk, volume1mo, volume1yr, enableOrderBook, liquidityClob, negRisk, negRiskMarketID, commentCount, markets, tags, cyom, showAllOutcomes, showMarketImages, enableNegRisk, automaticallyActive, gmpChartMode, negRiskAugmented, featuredOrder, estimateValue, cumulativeMarkets, pendingDeployment, deploying, deployingTimestamp, requiresTranslation, eventMetadata
-  Markets: [{"id":"558934","question":"Will Spain win the 2026 FIFA World Cup?","conditionId":"0x7976b8dbacf9077eb1453a62bcefd6ab2df199acd28aad276ff0d920d6992892","slug":"will-spain-win-the-2026-fifa-world-cup-9
-  Democratic Presidential Nominee 2028 | vol: $1,180,996,651.314
-  Fields: id, ticker, slug, title, description, resolutionSource, startDate, creationDate, endDate, image, icon, active, closed, archived, new, featured, restricted, liquidity, volume, openInterest, sortBy, createdAt, updatedAt, competitive, volume24hr, volume1wk, volume1mo, volume1yr, enableOrderBook, liquidityClob, negRisk, negRiskMarketID, commentCount, markets, tags, cyom, showAllOutcomes, showMarketImages, enableNegRisk, automaticallyActive, startTime, gmpChartMode, negRiskAugmented, countryName, electionType, estimateValue, cumulativeMarkets, pendingDeployment, deploying, deployingTimestamp, requiresTranslation, eventMetadata
-  Markets: [{"id":"559657","question":"Will Stephen A. Smith win the 2028 Democratic presidential nomination?","conditionId":"0xc8f1cf5d4f26e0fd9c8fe89f2a7b3263b902cf14fde7bfccef525753bb492e47","slug":"will-step
-  Super Bowl Champion 2025 | vol: $1,152,274,393.341
-  Fields: id, ticker, slug, title, description, resolutionSource, startDate, creationDate, endDate, image, icon, active, closed, archived, new, featured, restricted, volume, sortBy, createdAt, updatedAt, volume1wk, volume1mo, volume1yr, enableOrderBook, negRisk, negRiskMarketID, commentCount, markets, tags, cyom, closedTime, showAllOutcomes, showMarketImages, automaticallyResolved, enableNegRisk, automaticallyActive, gmpChartMode, negRiskAugmented, pendingDeployment, deploying, requiresTranslation, eventMetadata
-  Markets: [{"id":"503297","question":"Will the Cardinals win Super Bowl 2025?","conditionId":"0x729a3298ae0559a4eebd1320216c8c9b8d51381ce5ce690da7e8df1f951a923a","slug":"will-the-cardinals-win-super-bowl-2025",
+✅ Trump win 2024: 200 trades via trades endpoint
+  $    5556 | 0x146703a8a73a @ 0.540
 
-Presidential activity: null
+✅ World Cup Winner Spain: 200 trades via trades endpoint
+  $    5556 | 0x146703a8a73a @ 0.540
 
-🎯 Largest trades ever (sorted by size): 100
-  $         0 | 0x6b7f6ebcd16e | Bitcoin Up or Down - June 4, 9:05AM-9:10
-  $         0 | 0x3654e2c92f08 | Bitcoin Up or Down - June 4, 9:05AM-9:10
-  $         0 | 0x4aa1a546a8be | Bitcoin Up or Down - June 4, 9:05AM-9:10
-  $         0 | 0x77238e94c781 | Solana Up or Down - June 4, 9:10AM-9:15A
-  $         0 | 0xf75350ccd4b3 | Birmingham: Celine Naef vs Mary Stoiana
-  $         0 | 0xc27144d7dd77 | Will the highest temperature in Ankara b
-  $         0 | 0x77357b4fcc68 | Will the highest temperature in Singapor
-  $         0 | 0xcb82cb90cc08 | Will the Iranian regime fall by June 30?
-  $         0 | 0x7c4ac895d496 | Counter-Strike: THUNDER dOWNUNDER vs Fly
-  $         0 | 0xce25e214d5cf | Bitcoin Up or Down - June 4, 9:00AM-9:15
-  $         0 | 0xb6d8ca067eb0 | Will Türkiye win Group D in the 2026 FIF
-  $         0 | 0xc73b89b2bdcf | Will the highest temperature in Moscow b
-  $         0 | 0x682c6b7e3f59 | Bitcoin Up or Down - June 4, 9:05AM-9:10
-  $         0 | 0x1d501441fa9d | Birmingham: Billy Harris vs Yunchaokete 
-  $         0 | 0x16d45f55461a | Bitcoin Up or Down - June 4, 9:00AM-9:15
-  $         0 | 0xf4d2036f2efa | US x Iran permanent peace deal by June 3
-  $         0 | 0x227bae2c175d | Will Roy Cooper win the 2028 Democratic 
-  $         0 | 0xa86e12e7883c | Bitcoin Up or Down - June 4, 9:05AM-9:10
-  $         0 | 0xa36f7985dcea | Bitcoin Up or Down - June 4, 9:05AM-9:10
-  $         0 | 0x369cb003e5c3 | Will Bitcoin reach $70,000 in June?
+✅ NBA Finals 2025 Clippers: 200 trades via trades endpoint
+  $    5556 | 0x146703a8a73a @ 0.540
+
+✅ Dem Nominee 2028 Stephen A: 200 trades via trades endpoint
+  $    5556 | 0x146703a8a73a @ 0.540
+
+✅ Iran regime fall June 30: 200 trades via trades endpoint
+  $    5556 | 0x146703a8a73a @ 0.540
+
+✅ Will Donald Trump win the 2024 US Presid: 200 trades via trades endpoint
+  $    5556 | 0x146703a8a73a @ 0.540
+
+✅ Will Joe Biden win the 2024 US President: 200 trades via trades endpoint
+  $    5556 | 0x146703a8a73a @ 0.540
+
+✅ Will the LA Clippers win the 2025 NBA Fi: 200 trades via trades endpoint
+  $    5556 | 0x146703a8a73a @ 0.540
+
+✅ Will the Miami Heat win the 2025 NBA Fin: 200 trades via trades endpoint
+  $    5556 | 0x146703a8a73a @ 0.540
+
+✅ Will Spain win the 2026 FIFA World Cup?: 200 trades via trades endpoint
+  $    5556 | 0x146703a8a73a @ 0.540
+
+✅ Will New Zealand win the 2026 FIFA World: 200 trades via trades endpoint
+  $    5556 | 0x146703a8a73a @ 0.540
+
+✅ Will Stephen A. Smith win the 2028 Democ: 200 trades via trades endpoint
+  $    5556 | 0x146703a8a73a @ 0.540
+
+✅ Will Gretchen Whitmer win the 2028 Democ: 200 trades via trades endpoint
+  $    5556 | 0x146703a8a73a @ 0.540
+
+✅ Will the Cardinals win Super Bowl 2025?: 200 trades via trades endpoint
+  $    5556 | 0x146703a8a73a @ 0.540
+
+✅ Will the Falcons win Super Bowl 2025?: 200 trades via trades endpoint
+  $    5556 | 0x146703a8a73a @ 0.540
+
+✅ Will Inter Milan win the UEFA Champions : 200 trades via trades endpoint
+  $    5556 | 0x146703a8a73a @ 0.540
+
+✅ Will Juventus win the UEFA Champions Lea: 200 trades via trades endpoint
+  $    5556 | 0x146703a8a73a @ 0.540
+
+✅ Manchester City wins the Premier League?: 200 trades via trades endpoint
+  $    5556 | 0x146703a8a73a @ 0.540
+
+✅ Arsenal wins the Premier League?: 200 trades via trades endpoint
+  $    5556 | 0x146703a8a73a @ 0.540
+
+✅ Will the Arizona Cardinals win Super Bow: 200 trades via trades endpoint
+  $    5556 | 0x146703a8a73a @ 0.540
+
+✅ Will the Atlanta Falcons win Super Bowl : 200 trades via trades endpoint
+  $    5556 | 0x146703a8a73a @ 0.540
+
+✅ Fed decreases interest rates by 50+ bps : 200 trades via trades endpoint
+  $    5556 | 0x146703a8a73a @ 0.540
+
+✅ Fed decreases interest rates by 25 bps a: 200 trades via trades endpoint
+  $    5556 | 0x146703a8a73a @ 0.540
+
+✅ Will Donald Trump win the 2028 Republica: 200 trades via trades endpoint
+  $    5556 | 0x146703a8a73a @ 0.540
+
+✅ Will Person AN win the 2028 Republican p: 200 trades via trades endpoint
+  $    5556 | 0x146703a8a73a @ 0.540
+
+
+Discovered 1 wallets with $5k+ single trades
+
+🔍 Deep PnL scan...
+
+🔴 0x146703a8a73ae1 | pnl:$-164112 | WR:3% | $50k+wins:0 | seen via: Trump win 2024 ($5556)
+
+╔═══════════════════════════════════════════════════════╗
+  🚨 NEW INSIDERS + WHALES DISCOVERED
+╚═══════════════════════════════════════════════════════╝
+
+TOTAL NEW: 0 profitable | 0 whales | 0 insiders
