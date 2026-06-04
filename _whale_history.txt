@@ -1,148 +1,37 @@
+╔══════════════════════════════════════════════════════╗
+  🦈 MEGASCAN — Insider & Big Player Detection
+  2026-06-04T12:50:49.566Z
+╚══════════════════════════════════════════════════════╝
 
-════════════════════════════════════════════════════════════
-  🏆 BAA2BC | Known PnL: $189,819
-  0xbaa2bcb5439e985ce4ccf815b4700027d1b92c73
-════════════════════════════════════════════════════════════
+🔍 STRATEGY 1: High-volume recent traders via activity API
+Active events found: 20
+  Presidential Election Winner 2024 | vol: $3686335059
+  NBA Champion | vol: $1712132664
+  World Cup Winner  | vol: $1538517847
+  Democratic Presidential Nominee 2028 | vol: $1180993231
+  Super Bowl Champion 2025 | vol: $1152274393
 
-Trades: 500 | Positions: 54
-Active since: 2026-05-21 → 2026-06-04
+Top markets by volume: 20
+  Havlickova vs. Kabbaj: Set 1 Games O/U 9.5 | vol: $100 | liq: $56
+  AS FAR vs. Difaâ Hassani El Jadida: Both Teams to Score | vol: $100 | liq: $6320
+  Will Max Verstappen get pole position at the 2026 F1 Mo | vol: $100 | liq: $4200
+  Will Detroit Pistons win the 2027 NBA Finals? | vol: $9998 | liq: $75055
+  Will Vegalta Sendai win on 2026-06-06? | vol: $10 | liq: $2726
 
-Closed positions: 54
-Win/Loss: 44W / 10L = 81% WR
-Avg win: +$5369 | Best single trade: +$59118
-Avg loss: -$4597 | Worst trade: -$13268
-Avg position size: $21777 | Max: $191595 | Min: $52
+🔍 STRATEGY 2: Wallets with $10k+ single positions
 
-Top 5 winning positions:
-  +$   59118 | Will the Iranian regime fall before 2027?
-  +$   43537 | Will the U.S. invade Iran before 2027?
-  +$   25602 | Will the Iranian regime fall by June 30?
-  +$   18731 | Will France, UK, or Germany strike Iran by June 30?
-  +$   10885 | Will Reza Pahlavi enter Iran by December 31?
+New wallets found from large trades: 0
 
-Position fields: proxyWallet, asset, conditionId, size, avgPrice, initialValue, currentValue, cashPnl, percentPnl, totalBought, realizedPnl, percentRealizedPnl, curPrice, redeemable, mergeable, title, slug, icon, eventId, eventSlug, outcome, outcomeIndex, oppositeOutcome, oppositeAsset, endDate, negativeRisk
-Sample: {"proxyWallet":"0xbaa2bcb5439e985ce4ccf815b4700027d1b92c73","asset":"106181075047366745139197108801635573283215248045056329679360376976893016488727","conditionId":"0xbb4d51e6364066d92eb6f9b8413dd7193de70966736044463b205834805a1f3b","size":289841.6679,"avgPrice":0.661,"initialValue":191594.9072,"currentValue":250713.0427,"cashPnl":59118.1354,"percentPnl":30.8557,"totalBought":294110.0674,"realizedP
-
-Monthly trade activity:
-  2026-05: 483 trades | $0 volume
-  2026-06: 17 trades | $0 volume
-
-════════════════════════════════════════════════════════════
-  🏆 B2A362 | Known PnL: $120,021
-  0xb2a3623364c33561d8312e1edb79eb941c798510
-════════════════════════════════════════════════════════════
-
-Trades: 115 | Positions: 4
-Active since: 2026-03-12 → 2026-06-03
-
-Closed positions: 4
-Win/Loss: 3W / 1L = 75% WR
-Avg win: +$44154 | Best single trade: +$84466
-Avg loss: -$13798 | Worst trade: -$13798
-Avg position size: $660335 | Max: $1342948 | Min: $33448
-
-Top 5 winning positions:
-  +$   84466 | US x Iran permanent peace deal by June 7, 2026?
-  +$   24846 | US x Iran permanent peace deal by July 31, 2026?
-  +$   23150 | US x Iran permanent peace deal by June 30, 2026?
-
-Position fields: proxyWallet, asset, conditionId, size, avgPrice, initialValue, currentValue, cashPnl, percentPnl, totalBought, realizedPnl, percentRealizedPnl, curPrice, redeemable, mergeable, title, slug, icon, eventId, eventSlug, outcome, outcomeIndex, oppositeOutcome, oppositeAsset, endDate, negativeRisk
-Sample: {"proxyWallet":"0xb2a3623364c33561d8312e1edb79eb941c798510","asset":"104709284002113814284527094459750550924724996349053105098692118136695631316738","conditionId":"0x366f89649caea042c96ee741b185461ec7faa408a2664ec44469a0061924b537","size":1358033.6795,"avgPrice":0.8923,"initialValue":1211777.5263,"currentValue":1296243.1471,"cashPnl":84465.6207,"percentPnl":6.9703,"totalBought":1358033.6795,"reali
-
-Monthly trade activity:
-  2026-03: 27 trades | $0 volume
-  2026-04: 11 trades | $0 volume
-  2026-05: 59 trades | $0 volume
-  2026-06: 18 trades | $0 volume
-
-════════════════════════════════════════════════════════════
-  🏆 ED107A | Known PnL: $58,958
-  0xed107a85a4585a381e48c7f7ca4144909e7dd2e5
-════════════════════════════════════════════════════════════
-
-Trades: 500 | Positions: 48
-Active since: 2026-04-22 → 2026-06-04
-
-Closed positions: 48
-Win/Loss: 43W / 5L = 90% WR
-Avg win: +$60068 | Best single trade: +$2523750
-Avg loss: -$504799 | Worst trade: -$2523750
-Avg position size: $196894 | Max: $3750000 | Min: $138
-
-Top 5 winning positions:
-  +$ 2523750 | Will JD Vance win the 2028 US Presidential Election?
-  +$   26247 | Trump out as President by June 30?
-  +$   10513 | Will Trump acquire Greenland before 2027?
-  +$    4626 | Will Base launch a token by June 30, 2026?
-  +$    3676 | Will the US confirm that aliens exist by June 30?
-
-Position fields: proxyWallet, asset, conditionId, size, avgPrice, initialValue, currentValue, cashPnl, percentPnl, totalBought, realizedPnl, percentRealizedPnl, curPrice, redeemable, mergeable, title, slug, icon, eventId, eventSlug, outcome, outcomeIndex, oppositeOutcome, oppositeAsset, endDate, negativeRisk
-Sample: {"proxyWallet":"0xed107a85a4585a381e48c7f7ca4144909e7dd2e5","asset":"94476829201604408463453426454480212459887267917122244941405244686637914508323","conditionId":"0x7ad403c3508f8e3912940fd1a913f227591145ca0614074208e0b962d5fcc422","size":7500000,"avgPrice":0.5,"initialValue":3750000,"currentValue":6273750,"cashPnl":2523750,"percentPnl":67.3,"totalBought":31250000,"realizedPnl":0,"percentRealizedPn
-
-Monthly trade activity:
-  2026-04: 112 trades | $0 volume
-  2026-05: 367 trades | $0 volume
-  2026-06: 21 trades | $0 volume
-
-════════════════════════════════════════════════════════════
-  🏆 A7A8C1 | Known PnL: $47,413
-  0xa7a8c1fd4bfff08ea30214efa7efaf75d7c6580c
-════════════════════════════════════════════════════════════
-
-Trades: 46 | Positions: 23
-Active since: 2026-05-05 → 2026-06-04
-
-Closed positions: 23
-Win/Loss: 20W / 3L = 87% WR
-Avg win: +$2527 | Best single trade: +$9908
-Avg loss: -$1049 | Worst trade: -$2500
-Avg position size: $18633 | Max: $87981 | Min: $498
-
-Top 5 winning positions:
-  +$    9908 | Will Uruguay win the 2026 FIFA World Cup?
-  +$    6167 | Will Belgium win the 2026 FIFA World Cup?
-  +$    4123 | Will Ecuador win the 2026 FIFA World Cup?
-  +$    3904 | Will Colombia win the 2026 FIFA World Cup?
-  +$    3390 | Will Canada win the 2026 FIFA World Cup?
-
-Position fields: proxyWallet, asset, conditionId, size, avgPrice, initialValue, currentValue, cashPnl, percentPnl, totalBought, realizedPnl, percentRealizedPnl, curPrice, redeemable, mergeable, title, slug, icon, eventId, eventSlug, outcome, outcomeIndex, oppositeOutcome, oppositeAsset, endDate, negativeRisk
-Sample: {"proxyWallet":"0xa7a8c1fd4bfff08ea30214efa7efaf75d7c6580c","asset":"97239126062673310243763617236644392945530356142765650402171508075574679292913","conditionId":"0x7876851632c295043c66536150a304cb785abdf712ba8489d298c6e6926be106","size":8512054.0944,"avgPrice":0.0103,"initialValue":87980.5911,"currentValue":97888.622,"cashPnl":9908.0308,"percentPnl":11.2616,"totalBought":9262098.8482,"realizedPnl
-
-Monthly trade activity:
-  2026-05: 29 trades | $0 volume
-  2026-06: 17 trades | $0 volume
-
-════════════════════════════════════════════════════════════
-  🏆 F49CE4 | Known PnL: $44,654
-  0xf49ce459b52f60b70ce0fe9aa6203e6bf90f9786
-════════════════════════════════════════════════════════════
-
-Trades: 500 | Positions: 105
-Active since: 2026-04-24 → 2026-06-04
-
-Closed positions: 105
-Win/Loss: 55W / 49L = 52% WR
-Avg win: +$996 | Best single trade: +$40759
-Avg loss: -$210 | Worst trade: -$2283
-Avg position size: $2062 | Max: $21069 | Min: $1
-
-Top 5 winning positions:
-  +$   40759 | Will the New York Knicks win the 2026 NBA Finals?
-  +$    2450 | Will Edin Džeko be the top goalscorer at the 2026 FIFA World
-  +$    1565 | Will Germany win the 2026 FIFA World Cup?
-  +$    1279 | Will Belgium win the 2026 FIFA World Cup?
-  +$    1113 | Will Turkiye win the 2026 FIFA World Cup?
-
-Position fields: proxyWallet, asset, conditionId, size, avgPrice, initialValue, currentValue, cashPnl, percentPnl, totalBought, realizedPnl, percentRealizedPnl, curPrice, redeemable, mergeable, title, slug, icon, eventId, eventSlug, outcome, outcomeIndex, oppositeOutcome, oppositeAsset, endDate, negativeRisk
-Sample: {"proxyWallet":"0xf49ce459b52f60b70ce0fe9aa6203e6bf90f9786","asset":"20257190540739490630509657713144742134547949967093643458458133445357169845406","conditionId":"0x713641f745d71f6ec61f906237ffca3c8583f251e49384429a63ceb0ccdb2d37","size":90744.0813,"avgPrice":0.0853,"initialValue":7743.2832,"currentValue":48502.7114,"cashPnl":40759.4281,"percentPnl":526.3843,"totalBought":455625.4325,"realizedPnl"
-
-Monthly trade activity:
-  2026-04: 69 trades | $0 volume
-  2026-05: 280 trades | $0 volume
-  2026-06: 151 trades | $0 volume
+🔍 STRATEGY 3: Insider pattern scan on 6 addresses
+Looking for: large positions closed quickly, consistent wins on political/geo events
 
 
-══════════════════════════════════════
-  MARKET CATEGORY ANALYSIS
-══════════════════════════════════════
-Top wallet market categories: {"election":1,"ai":3,"trump":4}
+
+╔══════════════════════════════════════════════════════╗
+  FINAL RANKING — TOP INSIDER/BIG PLAYER WALLETS
+╚══════════════════════════════════════════════════════╝
+
+
+Total profitable wallets found: 0
+With $50k+ single wins: 0
+With $10k+ positions: 0
