@@ -1,0 +1,63 @@
+name: Seed 14 Elite Whales
+
+on:
+  workflow_dispatch:
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Seed all 14 confirmed profitable wallets
+        env:
+          SUPABASE_PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          DB="https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query"
+          LOG="_elite14_seed.txt"
+          echo "=== Seeding 14 Elite Whales $(date -u) ===" > $LOG
+
+          q() {
+            curl -s -X POST "$DB" \
+              -H "Authorization: Bearer ${SUPABASE_PAT}" \
+              -H "Content-Type: application/json" \
+              -d "{\"query\":\"$1\"}" >> $LOG
+            echo "" >> $LOG
+          }
+
+          # Wipe all fake/old entries first
+          q "DELETE FROM polymarket_whales WHERE total_profit <= 0 AND is_elite = false;"
+          q "DELETE FROM polymarket_whales WHERE address IN ('0x5f659bccbc4510e7be4f15b4e5b7fa54e3fd1e5e','0xad4b83e044f30699f4f0a56e0b2ff48c1e1e4e7a','0x0c88fc04da4f8bceebb47d2a7e9c0c2e4e5e6e7f','0xc8ab97a9089a1b59b75b4900ecfb5c51f3f0b4bf','0xa7a8c1fd4bff8e71c49c9c9e2b89e4c3f4d0e9a8','0xfea31bc08800e4e6b6e7f9e1c5d4a3b2c1d0e9f8');"
+
+          # Insert all 14 real profitable wallets
+          q "INSERT INTO polymarket_whales (address, alias, win_rate_30d, roi_30d, total_profit, trades_tracked, total_trades_seen, is_active, is_elite, last_checked) VALUES
+            ('0xbaa2bcb5439e985ce4ccf815b4700027d1b92c73','🏆Apex-BAA2BC',65,38,189819,500,3,true,true,now()),
+            ('0xb2a3623364c33561d8312e1edb79eb941c798510','🏆Apex-B2A362',60,104,120021,115,1,true,true,now()),
+            ('0xed107a85a4585a381e48c7f7ca4144909e7dd2e5','🏆Apex-ED107A',58,17,58958,500,3,true,true,now()),
+            ('0xa7a8c1fd4bfff08ea30214efa7efaf75d7c6580c','🏆Apex-A7A8C1',62,103,47413,46,24,true,true,now()),
+            ('0xf49ce459b52f60b70ce0fe9aa6203e6bf90f9786','🏆Apex-F49CE4',55,12,44654,500,1,true,true,now()),
+            ('0xd3b034d7bfb2473fb252d0414646d9786bac329e','🟢Elite-D3B034',54,3,14882,500,1,true,true,now()),
+            ('0x204f72f35326db932158cba6adff0b9a1da95e14','🟢Elite-204F72',53,2,12423,500,1,true,true,now()),
+            ('0xeed588bab0b0df73a9a6def7a59e512e9ede1a33','🟢Elite-EED588',57,13,9286,69,1,true,true,now()),
+            ('0x335592400e402c26583ce8b56d12605e9548a126','🟢Elite-335592',58,25,8303,33,1,true,false,now()),
+            ('0x000d257d2dc7616feaef4ae0f14600fdf50a758e','🟢Elite-000D25',55,7,7504,500,1,true,false,now()),
+            ('0xe52c0a1327a12edc7bd54ea6f37ce00a4ca96924','🟢Elite-E52C0A',53,1,6734,500,1,true,false,now()),
+            ('0xa77105bb4d2d4d200b0133a2036222353831162d','🟢Elite-A77105',54,5,6136,131,2,true,false,now()),
+            ('0x93511d72d294f1478739bc38f578bf0306fd9e4d','🟢Elite-93511D',52,1,3424,500,2,true,false,now()),
+            ('0xfea31bc088000ff909be1dfd8d0e3f2c7ef2d227','🟢Elite-FEA31B',51,1,3044,500,4,true,false,now())
+            ON CONFLICT (address) DO UPDATE SET
+              alias=EXCLUDED.alias, win_rate_30d=EXCLUDED.win_rate_30d,
+              roi_30d=EXCLUDED.roi_30d, total_profit=EXCLUDED.total_profit,
+              trades_tracked=EXCLUDED.trades_tracked, is_active=EXCLUDED.is_active,
+              is_elite=EXCLUDED.is_elite, last_checked=now();"
+
+          # Verify
+          q "SELECT alias, total_profit::numeric, trades_tracked, is_elite FROM polymarket_whales WHERE total_profit > 0 ORDER BY total_profit DESC;"
+
+          cat $LOG
+          git config user.email "bot@sqi.app"; git config user.name "SQI"
+          git add $LOG
+          git commit -m "14 elite whales seeded $(date -u +%H%M%S)" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
