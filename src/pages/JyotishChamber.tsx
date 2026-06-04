@@ -363,6 +363,17 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
           dob: birthData?.birth_date || '',
           tob: birthData?.birth_time || '',
           pob: birthData?.birth_place || '',
+          birth_context: birthData ? JSON.stringify({
+            name: birthData.birth_name,
+            dob: birthData.birth_date,
+            tob: birthData.birth_time || 'unknown',
+            pob: birthData.birth_place || 'unknown',
+            lagna: ephemeris?.ascendantSign || '',
+            moonNakshatra: ephemeris?.moonNakshatra || '',
+            sunSign: ephemeris?.sunSign || '',
+            activeMaha: ephemeris?.dashaData?.activeMaha?.planet || '',
+            activeAntar: ephemeris?.dashaData?.activeAntar?.planet || '',
+          }) : '',
           readingType: 'general',
           leaf_confirmed: leafConfirmed,
           chatHistory: chatMessages
