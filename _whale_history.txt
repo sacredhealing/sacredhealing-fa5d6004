@@ -1,0 +1,24 @@
+══════════════════════════════════════════
+  SQI WHALE HISTORY SCANNER
+  2026-06-04T10:20:11.639Z
+══════════════════════════════════════════
+
+📡 Querying Polymarket leaderboards...
+Leaderboard 1m: null
+Leaderboard 6m: null
+Leaderboard 1y: null
+Top Activity: null
+
+🦈 Checking 3 elite wallets...
+
+--- 🏆Apex-5F659B | 0x5f659bccbc4510e7be4f15b4e5b7fa54e3fd1e5e ---
+Profile: null
+Positions: []
+
+--- 🏆Apex-AD4B83 | 0xad4b83e044f30699f4f0a56e0b2ff48c1e1e4e7a ---
+Profile: null
+Positions: []
+
+--- 🏆Apex-0C88FC | 0x0c88fc04da4f8bceebb47d2a7e9c0c2e4e5e6e7f ---
+Profile: null
+Positions: []
