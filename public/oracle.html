@@ -2,8 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CLAWBOT Oracle</title>
+<title>CLAWBOT Oracle v3 — SQI 2050</title>
+<!-- BUILD:1780576218 -->
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -15,7 +19,7 @@ h1{font-size:26px;font-weight:900;letter-spacing:-.03em;margin-bottom:4px}
 .badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;align-items:center}
 .badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:6px;border:1px solid}
 .tabs{display:flex;gap:4px;background:rgba(255,255,255,.04);border-radius:12px;padding:4px;width:fit-content;margin-bottom:20px;flex-wrap:wrap}
-.tab{padding:7px 14px;border-radius:8px;border:none;cursor:pointer;font-size:11px;font-weight:800;text-transform:uppercase;background:transparent;color:rgba(255,255,255,.35);letter-spacing:.06em;transition:all .2s}
+.tab{padding:7px 14px;border-radius:8px;border:none;cursor:pointer;font-size:11px;font-weight:800;text-transform:uppercase;background:transparent;color:rgba(255,255,255,.35);letter-spacing:.06em;transition:all .15s}
 .tab.active{background:#D4AF37;color:#050505}
 .pane{display:none}.pane.active{display:block}
 .card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:20px;padding:18px}
@@ -23,38 +27,38 @@ h1{font-size:26px;font-weight:900;letter-spacing:-.03em;margin-bottom:4px}
 .lbl{font-size:9px;font-weight:800;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:8px}
 .val{font-size:26px;font-weight:900;letter-spacing:-.03em;color:#D4AF37}
 .val-sm{font-size:11px;color:rgba(255,255,255,.35);margin-top:3px}
-.whale-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-bottom:16px}
-.whale-card{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:16px;position:relative;overflow:hidden}
-.whale-card.elite{border-color:rgba(212,175,55,.3)}
-.whale-card.elite::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#D4AF37,rgba(212,175,55,.1))}
-.whale-card.watch{border-color:rgba(34,211,238,.15)}
-.whale-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
-.whale-alias{font-size:14px;font-weight:900;letter-spacing:-.02em}
-.whale-alias.gold{color:#D4AF37}
-.whale-alias.cyan{color:#22D3EE}
-.whale-addr{font-size:9px;color:rgba(255,255,255,.2);font-family:monospace;margin-top:2px}
-.whale-pnl{font-size:20px;font-weight:900;color:#10B981}
-.whale-note{font-size:10px;color:rgba(255,255,255,.4);line-height:1.6;margin:8px 0}
-.whale-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px}
-.ws{text-align:center;background:rgba(255,255,255,.04);border-radius:8px;padding:6px 4px}
-.ws-v{font-size:13px;font-weight:800}
-.ws-l{font-size:8px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-top:2px}
-.stag{display:inline-block;font-size:9px;font-weight:800;padding:2px 8px;border-radius:5px;letter-spacing:.08em;text-transform:uppercase;margin-top:6px}
+.wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px;margin-bottom:16px}
+.wcard{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:16px;position:relative;overflow:hidden}
+.wcard.elite{border-color:rgba(212,175,55,.3)}
+.wcard.elite::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#D4AF37,rgba(212,175,55,.1))}
+.wcard.watch{border-color:rgba(34,211,238,.15)}
+.wh{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.walias{font-size:13px;font-weight:900;letter-spacing:-.02em}
+.walias.gold{color:#D4AF37}.walias.cyan{color:#22D3EE}
+.waddr{font-size:9px;color:rgba(255,255,255,.2);font-family:monospace;margin-top:2px}
+.wpnl{font-size:19px;font-weight:900;color:#10B981}
+.wnote{font-size:10px;color:rgba(255,255,255,.4);line-height:1.6;margin:8px 0}
+.wstats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-top:10px}
+.ws{text-align:center;background:rgba(255,255,255,.04);border-radius:8px;padding:5px 3px}
+.wsv{font-size:12px;font-weight:800}
+.wsl{font-size:8px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-top:1px}
+.stag{display:inline-block;font-size:9px;font-weight:800;padding:2px 8px;border-radius:5px;letter-spacing:.06em;text-transform:uppercase;margin-top:6px}
 .stag.geo{background:rgba(212,175,55,.1);color:#D4AF37;border:1px solid rgba(212,175,55,.2)}
 .stag.sports{background:rgba(16,185,129,.1);color:#10B981;border:1px solid rgba(16,185,129,.2)}
-.stag.political{background:rgba(168,85,247,.1);color:#A855F7;border:1px solid rgba(168,85,247,.2)}
-.stag.longshot{background:rgba(239,68,68,.1);color:#EF4444;border:1px solid rgba(239,68,68,.2)}
+.stag.pol{background:rgba(168,85,247,.1);color:#A855F7;border:1px solid rgba(168,85,247,.2)}
+.stag.long{background:rgba(239,68,68,.1);color:#EF4444;border:1px solid rgba(239,68,68,.2)}
 .stag.multi{background:rgba(34,211,238,.1);color:#22D3EE;border:1px solid rgba(34,211,238,.2)}
-.insight{padding:12px 14px;border-radius:12px;margin-bottom:12px;font-size:12px;line-height:1.6}
-.insight.warn{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);color:rgba(255,255,255,.6)}
-.insight.win{background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.15);color:rgba(255,255,255,.6)}
-.insight.gold{background:rgba(212,175,55,.06);border:1px solid rgba(212,175,55,.2);color:rgba(255,255,255,.6)}
-.insight strong{font-weight:800;color:#fff}
-.proj-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
-.proj-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.4);width:110px;flex-shrink:0}
-.proj-bar-wrap{flex:1;background:rgba(255,255,255,.06);border-radius:4px;height:8px;overflow:hidden}
-.proj-bar{height:8px;border-radius:4px;background:linear-gradient(90deg,#D4AF37,rgba(212,175,55,.3))}
-.proj-val{font-size:11px;font-weight:800;color:#D4AF37;width:70px;text-align:right;flex-shrink:0}
+.box{padding:12px 14px;border-radius:12px;margin-bottom:12px;font-size:12px;line-height:1.6}
+.box.warn{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);color:rgba(255,255,255,.6)}
+.box.win{background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.15);color:rgba(255,255,255,.6)}
+.box.gold{background:rgba(212,175,55,.06);border:1px solid rgba(212,175,55,.2);color:rgba(255,255,255,.6)}
+.box.blue{background:rgba(34,211,238,.06);border:1px solid rgba(34,211,238,.2);color:rgba(255,255,255,.6)}
+.box strong{font-weight:800;color:#fff}
+.prow{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.plbl{font-size:11px;font-weight:700;color:rgba(255,255,255,.4);width:110px;flex-shrink:0}
+.pbw{flex:1;background:rgba(255,255,255,.06);border-radius:4px;height:8px;overflow:hidden}
+.pb{height:8px;border-radius:4px;background:linear-gradient(90deg,#D4AF37,rgba(212,175,55,.3))}
+.pval{font-size:11px;font-weight:800;color:#D4AF37;width:70px;text-align:right;flex-shrink:0}
 .sec{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:18px;margin-bottom:14px}
 .slbl{font-size:9px;font-weight:800;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:14px}
 .row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:12px}
@@ -62,21 +66,34 @@ h1{font-size:26px;font-weight:900;letter-spacing:-.03em;margin-bottom:4px}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{padding:7px 8px;text-align:left;font-size:9px;font-weight:800;letter-spacing:.2em;color:rgba(255,255,255,.28);border-bottom:1px solid rgba(255,255,255,.08);text-transform:uppercase}
 td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.04)}
-.section-hdr{font-size:9px;font-weight:800;letter-spacing:.3em;text-transform:uppercase;margin:16px 0 8px;padding:0 2px}
+.shdr{font-size:9px;font-weight:800;letter-spacing:.3em;text-transform:uppercase;margin:14px 0 8px;padding:0 2px}
+/* USDC flow */
+.flow{display:flex;align-items:center;gap:0;flex-wrap:wrap;margin:12px 0}
+.flow-step{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px 14px;font-size:11px;font-weight:700;color:rgba(255,255,255,.7)}
+.flow-arrow{color:rgba(255,255,255,.2);font-size:14px;padding:0 6px}
+.flow-step.highlight{background:rgba(212,175,55,.08);border-color:rgba(212,175,55,.3);color:#D4AF37}
 </style>
 </head>
 <body>
+<script>
+// Kill service worker cache
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.getRegistrations().then(function(regs){
+    regs.forEach(function(r){r.unregister();});
+  });
+}
+</script>
 <div class="wrap">
 
-<div class="eyebrow">SQI-2050 &middot; ADMIN ONLY</div>
+<div class="eyebrow">SQI-2050 &middot; ADMIN ONLY &middot; v3</div>
 <h1>&#129416; CLAWBOT Oracle</h1>
-<div class="sub">On-chain Polymarket whale tracker &middot; Polygon V2 &middot; Every 15 min</div>
+<div class="sub">On-chain Polymarket whale tracker &middot; Polygon V2 &middot; Every 15 min &middot; Paper trading active</div>
 
 <div class="badges">
   <span class="badge" style="background:#22D3EE20;color:#22D3EE;border-color:#22D3EE40">PAPER MODE</span>
-  <span class="badge" style="background:#D4AF3720;color:#D4AF37;border-color:#D4AF3740">14 Elites</span>
+  <span class="badge" style="background:#D4AF3720;color:#D4AF37;border-color:#D4AF3740">14 ELITES</span>
   <span class="badge" style="background:#10B98120;color:#10B981;border-color:#10B98140">24/7 ACTIVE</span>
-  <span class="badge" id="bm" style="background:#A78BFA20;color:#A78BFA;border-color:#A78BFA40">...</span>
+  <span class="badge" id="bm" style="background:#A78BFA20;color:#A78BFA;border-color:#A78BFA40">2% / TRADE</span>
   <span id="bt" style="font-size:10px;color:rgba(255,255,255,.2)"></span>
 </div>
 
@@ -95,267 +112,140 @@ td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.04)}
     <div class="card"><div class="lbl">Open Positions</div><div class="val" id="vo">0</div><div class="val-sm" id="vs">$0 staked</div></div>
     <div class="card"><div class="lbl">Elite Whales</div><div class="val" style="color:#D4AF37">14</div><div class="val-sm">Confirmed profitable</div></div>
     <div class="card"><div class="lbl">7-Day Trades</div><div class="val" id="v7">0</div></div>
-    <div class="card"><div class="lbl">Risk/Trade</div><div class="val">2%</div><div class="val-sm">Max 10 mirrors/day</div></div>
-    <div class="card"><div class="lbl">Bot Status</div><div class="val" style="color:#10B981;font-size:16px">v8 LIVE</div><div class="val-sm" id="bt2">Every 15 min</div></div>
+    <div class="card"><div class="lbl">Risk / Trade</div><div class="val">2%</div><div class="val-sm">Max 10 / day</div></div>
+    <div class="card"><div class="lbl">Bot</div><div class="val" style="color:#10B981;font-size:15px">v8 LIVE</div><div class="val-sm" id="bt2">Every 15 min</div></div>
   </div>
-  <div class="sec"><div class="slbl">Latest Mirrors</div><div id="lat"><div style="color:rgba(255,255,255,.25);font-size:13px">Scanning for elite whale trades... next run within 15 min</div></div></div>
+  <div class="sec">
+    <div class="slbl">Latest Mirrors</div>
+    <div id="lat"><div style="color:rgba(255,255,255,.25);font-size:13px">Scanning elite wallets every 15 min — first mirror appears here when an elite whale trades</div></div>
+  </div>
 </div>
 
-<!-- ELITE WHALES — hardcoded so never fails -->
+<!-- ELITE WHALES -->
 <div class="pane" id="pw">
-  <div class="insight gold">
-    <strong>14 confirmed profitable wallets</strong> from a real-time scan of 262 Polymarket addresses. Only 5.3% of all traders are profitable. These are the ones the bot mirrors.
-  </div>
+  <div class="box gold"><strong>14 confirmed profitable wallets</strong> from a real scan of 262 Polymarket addresses. 5.3% win rate across the whole market. These are the 14 that actually make money.</div>
 
-  <div class="section-hdr" style="color:#D4AF37">🏆 ELITE — 9 WALLETS (is_elite = true)</div>
-  <div class="whale-grid">
+  <div class="shdr" style="color:#D4AF37">🏆 ELITE — 9 WALLETS</div>
+  <div class="wgrid">
 
-    <div class="whale-card elite">
-      <div class="whale-header">
-        <div><div class="whale-alias gold">🏆 Apex-BAA2BC</div><div class="whale-addr">0xbaa2bcb5...027d1b92c73</div><span class="stag geo">Geopolitical</span></div>
-        <div style="text-align:right"><div class="whale-pnl">+$189,819</div><div style="font-size:9px;color:rgba(255,255,255,.3);margin-top:2px">81% WR · 44W/10L</div></div>
-      </div>
-      <div class="whale-note">Iran/Middle East specialist. 14 days history, $21k avg position. Regime change + US invasion markets.</div>
-      <div class="whale-stats">
-        <div class="ws"><div class="ws-v" style="color:#D4AF37">81%</div><div class="ws-l">Win Rate</div></div>
-        <div class="ws"><div class="ws-v">38%</div><div class="ws-l">ROI</div></div>
-        <div class="ws"><div class="ws-v">500</div><div class="ws-l">Trades</div></div>
-      </div>
+    <div class="wcard elite">
+      <div class="wh"><div><div class="walias gold">🏆 Apex-BAA2BC</div><div class="waddr">0xbaa2bcb5...027d1b92c73</div><span class="stag geo">Geopolitical</span></div>
+      <div style="text-align:right"><div class="wpnl">+$189,819</div><div style="font-size:9px;color:rgba(255,255,255,.3);margin-top:2px">81% WR · 44W / 10L</div></div></div>
+      <div class="wnote">Iran/Middle East specialist. $21k avg position. Regime change + US invasion markets. 14 days history.</div>
+      <div class="wstats"><div class="ws"><div class="wsv" style="color:#D4AF37">81%</div><div class="wsl">Win Rate</div></div><div class="ws"><div class="wsv">38%</div><div class="wsl">ROI</div></div><div class="ws"><div class="wsv">500</div><div class="wsl">Trades</div></div></div>
     </div>
 
-    <div class="whale-card elite">
-      <div class="whale-header">
-        <div><div class="whale-alias gold">🏆 Apex-B2A362</div><div class="whale-addr">0xb2a36233...41c798510</div><span class="stag geo">Macro</span></div>
-        <div style="text-align:right"><div class="whale-pnl">+$120,021</div><div style="font-size:9px;color:rgba(255,255,255,.3);margin-top:2px">75% WR · 3W/1L</div></div>
-      </div>
-      <div class="whale-note">$660k avg position. US-Iran peace deal macro plays. Possibly insider-level conviction. 3 months active.</div>
-      <div class="whale-stats">
-        <div class="ws"><div class="ws-v" style="color:#D4AF37">75%</div><div class="ws-l">Win Rate</div></div>
-        <div class="ws"><div class="ws-v">104%</div><div class="ws-l">ROI</div></div>
-        <div class="ws"><div class="ws-v">115</div><div class="ws-l">Trades</div></div>
-      </div>
+    <div class="wcard elite">
+      <div class="wh"><div><div class="walias gold">🏆 Apex-B2A362</div><div class="waddr">0xb2a36233...41c798510</div><span class="stag geo">Macro</span></div>
+      <div style="text-align:right"><div class="wpnl">+$120,021</div><div style="font-size:9px;color:rgba(255,255,255,.3);margin-top:2px">75% WR · 3W / 1L</div></div></div>
+      <div class="wnote">$660k avg position. US-Iran peace deal. Insider-level conviction. 3 months active.</div>
+      <div class="wstats"><div class="ws"><div class="wsv" style="color:#D4AF37">75%</div><div class="wsl">Win Rate</div></div><div class="ws"><div class="wsv">104%</div><div class="wsl">ROI</div></div><div class="ws"><div class="wsv">115</div><div class="wsl">Trades</div></div></div>
     </div>
 
-    <div class="whale-card elite">
-      <div class="whale-header">
-        <div><div class="whale-alias gold">🏆 Apex-ED107A ⭐</div><div class="whale-addr">0xed107a85...09e7dd2e5</div><span class="stag longshot">1000x Plays</span></div>
-        <div style="text-align:right"><div class="whale-pnl">+$58,958</div><div style="font-size:9px;color:rgba(255,255,255,.3);margin-top:2px">90% WR · 43W/5L</div></div>
-      </div>
-      <div class="whale-note">THE 1000x wallet. 90% WR. Enters long-dated political markets early when cheap. Open position: +$2.52M on JD Vance 2028.</div>
-      <div class="whale-stats">
-        <div class="ws"><div class="ws-v" style="color:#EF4444">90%</div><div class="ws-l">Win Rate</div></div>
-        <div class="ws"><div class="ws-v">17%</div><div class="ws-l">ROI</div></div>
-        <div class="ws"><div class="ws-v">500</div><div class="ws-l">Trades</div></div>
-      </div>
+    <div class="wcard elite">
+      <div class="wh"><div><div class="walias gold">🏆 Apex-ED107A ⭐</div><div class="waddr">0xed107a85...09e7dd2e5</div><span class="stag long">1000x Plays</span></div>
+      <div style="text-align:right"><div class="wpnl">+$58,958</div><div style="font-size:9px;color:rgba(255,255,255,.3);margin-top:2px">90% WR · 43W / 5L</div></div></div>
+      <div class="wnote">THE 1000x wallet. Enters long-dated political markets early at cheap prices. Open: +$2.52M on JD Vance 2028.</div>
+      <div class="wstats"><div class="ws"><div class="wsv" style="color:#EF4444">90%</div><div class="wsl">Win Rate</div></div><div class="ws"><div class="wsv">17%</div><div class="wsl">ROI</div></div><div class="ws"><div class="wsv">500</div><div class="wsl">Trades</div></div></div>
     </div>
 
-    <div class="whale-card elite">
-      <div class="whale-header">
-        <div><div class="whale-alias gold">🏆 Apex-A7A8C1 ⭐</div><div class="whale-addr">0xa7a8c1fd...7d7c6580c</div><span class="stag sports">World Cup</span></div>
-        <div style="text-align:right"><div class="whale-pnl">+$47,413</div><div style="font-size:9px;color:rgba(255,255,255,.3);margin-top:2px">87% WR · 20W/3L</div></div>
-      </div>
-      <div class="whale-note">FIFA World Cup 2026 specialist. 87% WR. Active daily right now. June-July = peak window. Best wallet to mirror.</div>
-      <div class="whale-stats">
-        <div class="ws"><div class="ws-v" style="color:#10B981">87%</div><div class="ws-l">Win Rate</div></div>
-        <div class="ws"><div class="ws-v">103%</div><div class="ws-l">ROI</div></div>
-        <div class="ws"><div class="ws-v">46</div><div class="ws-l">Trades</div></div>
-      </div>
+    <div class="wcard elite">
+      <div class="wh"><div><div class="walias gold">🏆 Apex-A7A8C1 ⭐</div><div class="waddr">0xa7a8c1fd...7d7c6580c</div><span class="stag sports">World Cup 2026</span></div>
+      <div style="text-align:right"><div class="wpnl">+$47,413</div><div style="font-size:9px;color:rgba(255,255,255,.3);margin-top:2px">87% WR · 20W / 3L</div></div></div>
+      <div class="wnote">FIFA World Cup 2026 specialist. 87% WR. 17 trades this week. June–July = peak window NOW.</div>
+      <div class="wstats"><div class="ws"><div class="wsv" style="color:#10B981">87%</div><div class="wsl">Win Rate</div></div><div class="ws"><div class="wsv">103%</div><div class="wsl">ROI</div></div><div class="ws"><div class="wsv">46</div><div class="wsl">Trades</div></div></div>
     </div>
 
-    <div class="whale-card elite">
-      <div class="whale-header">
-        <div><div class="whale-alias gold">🏆 Apex-F49CE4</div><div class="whale-addr">0xf49ce459...0f90f9786</div><span class="stag multi">High Freq</span></div>
-        <div style="text-align:right"><div class="whale-pnl">+$44,654</div><div style="font-size:9px;color:rgba(255,255,255,.3);margin-top:2px">52% WR · 186 trades/wk</div></div>
-      </div>
-      <div class="whale-note">186 trades/week. 52% WR but avg win 5× avg loss. Sports + politics. Best signal frequency. Knicks +$40k.</div>
-      <div class="whale-stats">
-        <div class="ws"><div class="ws-v" style="color:#22D3EE">52%</div><div class="ws-l">Win Rate</div></div>
-        <div class="ws"><div class="ws-v">12%</div><div class="ws-l">ROI</div></div>
-        <div class="ws"><div class="ws-v">500</div><div class="ws-l">Trades</div></div>
-      </div>
+    <div class="wcard elite">
+      <div class="wh"><div><div class="walias gold">🏆 Apex-F49CE4</div><div class="waddr">0xf49ce459...0f90f9786</div><span class="stag multi">High Freq</span></div>
+      <div style="text-align:right"><div class="wpnl">+$44,654</div><div style="font-size:9px;color:rgba(255,255,255,.3);margin-top:2px">52% WR · 186/wk</div></div></div>
+      <div class="wnote">186 trades/week. Avg win 5× avg loss. Sports + politics. Knicks NBA Finals +$40k.</div>
+      <div class="wstats"><div class="ws"><div class="wsv" style="color:#22D3EE">52%</div><div class="wsl">Win Rate</div></div><div class="ws"><div class="wsv">12%</div><div class="wsl">ROI</div></div><div class="ws"><div class="wsv">500</div><div class="wsl">Trades</div></div></div>
     </div>
 
-    <div class="whale-card elite">
-      <div class="whale-header">
-        <div><div class="whale-alias gold">🏆 Elite-EED588</div><div class="whale-addr">0xeed588ba...9ede1a33</div><span class="stag multi">Multi</span></div>
-        <div style="text-align:right"><div class="whale-pnl">+$11,740</div><div style="font-size:9px;color:rgba(255,255,255,.3);margin-top:2px">57% WR</div></div>
-      </div>
-      <div class="whale-stats">
-        <div class="ws"><div class="ws-v">57%</div><div class="ws-l">Win Rate</div></div>
-        <div class="ws"><div class="ws-v">13%</div><div class="ws-l">ROI</div></div>
-        <div class="ws"><div class="ws-v">69</div><div class="ws-l">Trades</div></div>
-      </div>
+    <div class="wcard elite">
+      <div class="wh"><div><div class="walias gold">🏆 Elite-EED588</div><div class="waddr">0xeed588ba...9ede1a33</div><span class="stag multi">Multi</span></div>
+      <div style="text-align:right"><div class="wpnl">+$11,740</div><div style="font-size:9px;color:rgba(255,255,255,.3)">57% WR</div></div></div>
+      <div class="wstats"><div class="ws"><div class="wsv">57%</div><div class="wsl">Win Rate</div></div><div class="ws"><div class="wsv">13%</div><div class="wsl">ROI</div></div><div class="ws"><div class="wsv">69</div><div class="wsl">Trades</div></div></div>
     </div>
 
-    <div class="whale-card elite">
-      <div class="whale-header">
-        <div><div class="whale-alias gold">🏆 Elite-000D25</div><div class="whale-addr">0x000d257d...fdf50a758e</div><span class="stag political">Political</span></div>
-        <div style="text-align:right"><div class="whale-pnl">+$8,017</div><div style="font-size:9px;color:rgba(255,255,255,.3);margin-top:2px">55% WR</div></div>
-      </div>
-      <div class="whale-stats">
-        <div class="ws"><div class="ws-v">55%</div><div class="ws-l">Win Rate</div></div>
-        <div class="ws"><div class="ws-v">7%</div><div class="ws-l">ROI</div></div>
-        <div class="ws"><div class="ws-v">500</div><div class="ws-l">Trades</div></div>
-      </div>
+    <div class="wcard elite">
+      <div class="wh"><div><div class="walias gold">🏆 Elite-000D25</div><div class="waddr">0x000d257d...fdf50a758e</div><span class="stag pol">Political</span></div>
+      <div style="text-align:right"><div class="wpnl">+$8,017</div><div style="font-size:9px;color:rgba(255,255,255,.3)">55% WR</div></div></div>
+      <div class="wstats"><div class="ws"><div class="wsv">55%</div><div class="wsl">Win Rate</div></div><div class="ws"><div class="wsv">7%</div><div class="wsl">ROI</div></div><div class="ws"><div class="wsv">500</div><div class="wsl">Trades</div></div></div>
     </div>
 
-    <div class="whale-card elite">
-      <div class="whale-header">
-        <div><div class="whale-alias gold">🏆 Elite-335592</div><div class="whale-addr">0x33559240...9548a126</div><span class="stag sports">Sports</span></div>
-        <div style="text-align:right"><div class="whale-pnl">+$7,499</div><div style="font-size:9px;color:rgba(255,255,255,.3);margin-top:2px">58% WR</div></div>
-      </div>
-      <div class="whale-stats">
-        <div class="ws"><div class="ws-v">58%</div><div class="ws-l">Win Rate</div></div>
-        <div class="ws"><div class="ws-v">25%</div><div class="ws-l">ROI</div></div>
-        <div class="ws"><div class="ws-v">33</div><div class="ws-l">Trades</div></div>
-      </div>
+    <div class="wcard elite">
+      <div class="wh"><div><div class="walias gold">🏆 Elite-335592</div><div class="waddr">0x33559240...9548a126</div><span class="stag sports">Sports</span></div>
+      <div style="text-align:right"><div class="wpnl">+$7,499</div><div style="font-size:9px;color:rgba(255,255,255,.3)">58% WR</div></div></div>
+      <div class="wstats"><div class="ws"><div class="wsv">58%</div><div class="wsl">Win Rate</div></div><div class="ws"><div class="wsv">25%</div><div class="wsl">ROI</div></div><div class="ws"><div class="wsv">33</div><div class="wsl">Trades</div></div></div>
     </div>
 
-    <div class="whale-card elite">
-      <div class="whale-header">
-        <div><div class="whale-alias gold">🏆 Elite-E52C0A</div><div class="whale-addr">0xe52c0a13...ca96924</div><span class="stag political">Political</span></div>
-        <div style="text-align:right"><div class="whale-pnl">+$6,943</div><div style="font-size:9px;color:rgba(255,255,255,.3);margin-top:2px">53% WR</div></div>
-      </div>
-      <div class="whale-stats">
-        <div class="ws"><div class="ws-v">53%</div><div class="ws-l">Win Rate</div></div>
-        <div class="ws"><div class="ws-v">1%</div><div class="ws-l">ROI</div></div>
-        <div class="ws"><div class="ws-v">500</div><div class="ws-l">Trades</div></div>
-      </div>
+    <div class="wcard elite">
+      <div class="wh"><div><div class="walias gold">🏆 Elite-E52C0A</div><div class="waddr">0xe52c0a13...ca96924</div><span class="stag pol">Political</span></div>
+      <div style="text-align:right"><div class="wpnl">+$6,943</div><div style="font-size:9px;color:rgba(255,255,255,.3)">53% WR</div></div></div>
+      <div class="wstats"><div class="ws"><div class="wsv">53%</div><div class="wsl">Win Rate</div></div><div class="ws"><div class="wsv">1%</div><div class="wsl">ROI</div></div><div class="ws"><div class="wsv">500</div><div class="wsl">Trades</div></div></div>
     </div>
 
   </div>
 
-  <div class="section-hdr" style="color:#22D3EE">🟢 WATCHING — 5 WALLETS (profitable, building trust)</div>
-  <div class="whale-grid">
-
-    <div class="whale-card watch">
-      <div class="whale-header">
-        <div><div class="whale-alias cyan">🟢 Elite-A77105</div><div class="whale-addr">0xa77105bb...53831162d</div><span class="stag sports">Sports</span></div>
-        <div style="text-align:right"><div class="whale-pnl">+$6,136</div></div>
-      </div>
-      <div class="whale-stats">
-        <div class="ws"><div class="ws-v">54%</div><div class="ws-l">Win Rate</div></div>
-        <div class="ws"><div class="ws-v">5%</div><div class="ws-l">ROI</div></div>
-        <div class="ws"><div class="ws-v">131</div><div class="ws-l">Trades</div></div>
-      </div>
-    </div>
-
-    <div class="whale-card watch">
-      <div class="whale-header">
-        <div><div class="whale-alias cyan">🟢 Elite-D3B034</div><div class="whale-addr">0xd3b034d7...86bac329e</div><span class="stag multi">Multi</span></div>
-        <div style="text-align:right"><div class="whale-pnl">+$14,882</div></div>
-      </div>
-      <div class="whale-stats">
-        <div class="ws"><div class="ws-v">54%</div><div class="ws-l">Win Rate</div></div>
-        <div class="ws"><div class="ws-v">3%</div><div class="ws-l">ROI</div></div>
-        <div class="ws"><div class="ws-v">500</div><div class="ws-l">Trades</div></div>
-      </div>
-    </div>
-
-    <div class="whale-card watch">
-      <div class="whale-header">
-        <div><div class="whale-alias cyan">🟢 Elite-204F72</div><div class="whale-addr">0x204f72f3...da95e14</div><span class="stag multi">Multi</span></div>
-        <div style="text-align:right"><div class="whale-pnl">+$12,423</div></div>
-      </div>
-      <div class="whale-stats">
-        <div class="ws"><div class="ws-v">53%</div><div class="ws-l">Win Rate</div></div>
-        <div class="ws"><div class="ws-v">2%</div><div class="ws-l">ROI</div></div>
-        <div class="ws"><div class="ws-v">500</div><div class="ws-l">Trades</div></div>
-      </div>
-    </div>
-
-    <div class="whale-card watch">
-      <div class="whale-header">
-        <div><div class="whale-alias cyan">🟢 Elite-93511D</div><div class="whale-addr">0x93511d72...06fd9e4d</div><span class="stag multi">Multi</span></div>
-        <div style="text-align:right"><div class="whale-pnl">+$3,424</div></div>
-      </div>
-      <div class="whale-stats">
-        <div class="ws"><div class="ws-v">52%</div><div class="ws-l">Win Rate</div></div>
-        <div class="ws"><div class="ws-v">1%</div><div class="ws-l">ROI</div></div>
-        <div class="ws"><div class="ws-v">500</div><div class="ws-l">Trades</div></div>
-      </div>
-    </div>
-
-    <div class="whale-card watch">
-      <div class="whale-header">
-        <div><div class="whale-alias cyan">🟢 Elite-FEA31B</div><div class="whale-addr">0xfea31bc0...ef2d227</div><span class="stag multi">Multi</span></div>
-        <div style="text-align:right"><div class="whale-pnl">+$3,044</div></div>
-      </div>
-      <div class="whale-stats">
-        <div class="ws"><div class="ws-v">51%</div><div class="ws-l">Win Rate</div></div>
-        <div class="ws"><div class="ws-v">1%</div><div class="ws-l">ROI</div></div>
-        <div class="ws"><div class="ws-v">500</div><div class="ws-l">Trades</div></div>
-      </div>
-    </div>
-
+  <div class="shdr" style="color:#22D3EE">🟢 WATCHING — 5 WALLETS (profitable · building trust)</div>
+  <div class="wgrid">
+    <div class="wcard watch"><div class="wh"><div><div class="walias cyan">🟢 Elite-D3B034</div><div class="waddr">0xd3b034d7...86bac329e</div><span class="stag multi">Multi</span></div><div style="text-align:right"><div class="wpnl">+$14,882</div></div></div><div class="wstats"><div class="ws"><div class="wsv">54%</div><div class="wsl">Win Rate</div></div><div class="ws"><div class="wsv">3%</div><div class="wsl">ROI</div></div><div class="ws"><div class="wsv">500</div><div class="wsl">Trades</div></div></div></div>
+    <div class="wcard watch"><div class="wh"><div><div class="walias cyan">🟢 Elite-204F72</div><div class="waddr">0x204f72f3...da95e14</div><span class="stag multi">Multi</span></div><div style="text-align:right"><div class="wpnl">+$12,423</div></div></div><div class="wstats"><div class="ws"><div class="wsv">53%</div><div class="wsl">Win Rate</div></div><div class="ws"><div class="wsv">2%</div><div class="wsl">ROI</div></div><div class="ws"><div class="wsv">500</div><div class="wsl">Trades</div></div></div></div>
+    <div class="wcard watch"><div class="wh"><div><div class="walias cyan">🟢 Elite-A77105</div><div class="waddr">0xa77105bb...53831162d</div><span class="stag sports">Sports</span></div><div style="text-align:right"><div class="wpnl">+$6,136</div></div></div><div class="wstats"><div class="ws"><div class="wsv">54%</div><div class="wsl">Win Rate</div></div><div class="ws"><div class="wsv">5%</div><div class="wsl">ROI</div></div><div class="ws"><div class="wsv">131</div><div class="wsl">Trades</div></div></div></div>
+    <div class="wcard watch"><div class="wh"><div><div class="walias cyan">🟢 Elite-93511D</div><div class="waddr">0x93511d72...06fd9e4d</div><span class="stag multi">Multi</span></div><div style="text-align:right"><div class="wpnl">+$3,424</div></div></div><div class="wstats"><div class="ws"><div class="wsv">52%</div><div class="wsl">Win Rate</div></div><div class="ws"><div class="wsv">1%</div><div class="wsl">ROI</div></div><div class="ws"><div class="wsv">500</div><div class="wsl">Trades</div></div></div></div>
+    <div class="wcard watch"><div class="wh"><div><div class="walias cyan">🟢 Elite-FEA31B</div><div class="waddr">0xfea31bc0...ef2d227</div><span class="stag multi">Multi</span></div><div style="text-align:right"><div class="wpnl">+$3,044</div></div></div><div class="wstats"><div class="ws"><div class="wsv">51%</div><div class="wsl">Win Rate</div></div><div class="ws"><div class="wsv">1%</div><div class="wsl">ROI</div></div><div class="ws"><div class="wsv">500</div><div class="wsl">Trades</div></div></div></div>
   </div>
 </div>
 
 <!-- RESEARCH -->
 <div class="pane" id="pr">
-  <div class="insight gold"><strong>Deep Intelligence Report</strong> — Top 5 profiles from full on-chain position analysis. Last scan: 262 wallets, June 4 2026.</div>
+  <div class="box gold"><strong>Deep Intelligence Report</strong> — Full on-chain position analysis. Scan: 262 wallets · June 4 2026.</div>
 
-  <div class="whale-card elite" style="margin-bottom:12px">
-    <div class="whale-header">
-      <div><div class="whale-alias gold">🏆 BAA2BC — The Iran Oracle</div><span class="stag geo">Geopolitical</span></div>
-      <div style="text-align:right"><div class="whale-pnl">+$189,819</div><div style="font-size:9px;color:rgba(255,255,255,.3)">81% WR · 44W/10L</div></div>
-    </div>
-    <div class="insight win" style="font-size:11px;margin:8px 0">Every position is Iran-related: regime change, US invasion, diplomatic outcomes. Avg position $21,777. Only 14 days history but exceptional consistency.</div>
-    <div style="font-size:11px;color:rgba(255,255,255,.45);line-height:2.1">+$59,118 &nbsp; Will the Iranian regime fall before 2027?<br>+$43,537 &nbsp; Will the U.S. invade Iran before 2027?<br>+$25,602 &nbsp; Will the Iranian regime fall by June 30?<br>+$18,731 &nbsp; Will France/UK/Germany strike Iran by June 30?</div>
-    <div class="insight warn" style="font-size:11px;margin-top:8px">⚠ Only 14 days of history. Monitor 2 more weeks before full trust.</div>
+  <div class="wcard elite" style="margin-bottom:12px">
+    <div class="wh"><div><div class="walias gold">🏆 BAA2BC — The Iran Oracle</div><span class="stag geo">Geopolitical</span></div><div style="text-align:right"><div class="wpnl">+$189,819</div><div style="font-size:9px;color:rgba(255,255,255,.3)">81% WR · 44W/10L</div></div></div>
+    <div class="box win" style="font-size:11px;margin:8px 0">Exclusively trades Iran/Middle East markets. Every major position is regime change, US invasion, or diplomatic outcomes. $21k avg position size.</div>
+    <div style="font-size:11px;color:rgba(255,255,255,.4);line-height:2.2">+$59,118 &nbsp; Will the Iranian regime fall before 2027?<br>+$43,537 &nbsp; Will the U.S. invade Iran before 2027?<br>+$25,602 &nbsp; Will the Iranian regime fall by June 30?<br>+$18,731 &nbsp; Will France/UK/Germany strike Iran by June 30?</div>
+    <div class="box warn" style="font-size:11px;margin-top:8px">⚠ Only 14 days of on-chain history. Could be right-place-right-time. Watch 2 more weeks.</div>
   </div>
 
-  <div class="whale-card elite" style="margin-bottom:12px">
-    <div class="whale-header">
-      <div><div class="whale-alias gold">🏆 B2A362 — The $1M Macro Whale</div><span class="stag geo">Macro</span></div>
-      <div style="text-align:right"><div class="whale-pnl">+$120,021</div><div style="font-size:9px;color:rgba(255,255,255,.3)">75% WR · 4 positions only</div></div>
-    </div>
-    <div class="insight win" style="font-size:11px;margin:8px 0">Bets $660k+ per trade. US-Iran peace deal specialist. Possibly has insider diplomatic access. Cannot copy at $10 scale but can mirror the thesis.</div>
-    <div style="font-size:11px;color:rgba(255,255,255,.45);line-height:2.1">+$84,466 &nbsp; US × Iran permanent peace deal by June 7?<br>+$24,846 &nbsp; US × Iran permanent peace deal by July 31?<br>+$23,150 &nbsp; US × Iran peace deal by June 30?</div>
-    <div class="insight warn" style="font-size:11px;margin-top:8px">⚠ Only 4 closed positions total. Very small sample.</div>
+  <div class="wcard elite" style="margin-bottom:12px">
+    <div class="wh"><div><div class="walias gold">🏆 B2A362 — The $1M Macro Whale</div><span class="stag geo">Macro</span></div><div style="text-align:right"><div class="wpnl">+$120,021</div><div style="font-size:9px;color:rgba(255,255,255,.3)">75% WR · only 4 positions</div></div></div>
+    <div class="box win" style="font-size:11px;margin:8px 0">Bets $660k+ per trade. All positions on US-Iran peace deal timing. May have real diplomatic intel. Cannot copy at small scale but mirror the same thesis.</div>
+    <div style="font-size:11px;color:rgba(255,255,255,.4);line-height:2.2">+$84,466 &nbsp; US × Iran permanent peace deal by June 7?<br>+$24,846 &nbsp; US × Iran permanent peace deal by July 31?<br>+$23,150 &nbsp; US × Iran peace deal by June 30?</div>
+    <div class="box warn" style="font-size:11px;margin-top:8px">⚠ Only 4 closed positions. Very small sample size.</div>
   </div>
 
-  <div class="whale-card elite" style="margin-bottom:12px">
-    <div class="whale-header">
-      <div><div class="whale-alias gold">🏆 ED107A — The 1000x Machine ⭐</div><span class="stag longshot">Long-Shot Early Entry</span></div>
-      <div style="text-align:right"><div class="whale-pnl">+$58,958</div><div style="font-size:9px;color:rgba(255,255,255,.3)">90% WR · 43W/5L</div></div>
-    </div>
-    <div class="insight gold" style="font-size:11px;margin:8px 0"><strong>This is the 1000x wallet.</strong> Enters low-probability long-dated political markets early when prices are cheap (5–15¢). 90% WR on 48 closed positions = systematic edge. Best open position: +$2,523,750 unrealized on JD Vance winning 2028.</div>
-    <div style="font-size:11px;color:rgba(255,255,255,.45);line-height:2.1"><span style="color:#D4AF37">+$2,523,750</span> &nbsp; Will JD Vance win 2028 US President? (OPEN)<br>+$26,247 &nbsp;&nbsp;&nbsp;&nbsp; Trump out as President by June 30?<br>+$10,513 &nbsp;&nbsp;&nbsp;&nbsp; Will Trump acquire Greenland before 2027?<br>+$4,626 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Will Base launch a token by June 30, 2026?</div>
-    <div class="insight win" style="font-size:11px;margin-top:8px">✅ When this wallet enters at 5–10¢, the bot mirrors $0.20. If it hits: $0.20 → $2–$20. That's the 10x–100x play per position.</div>
+  <div class="wcard elite" style="margin-bottom:12px">
+    <div class="wh"><div><div class="walias gold">🏆 ED107A — The 1000x Machine ⭐</div><span class="stag long">Long-Shot Early Entry</span></div><div style="text-align:right"><div class="wpnl">+$58,958</div><div style="font-size:9px;color:rgba(255,255,255,.3)">90% WR · 43W/5L</div></div></div>
+    <div class="box gold" style="font-size:11px;margin:8px 0"><strong>This is the 1000x wallet.</strong> Enters long-dated political markets when odds are cheap (5–15¢). 90% WR on 48 closed positions. Open position: +$2,523,750 unrealized on JD Vance winning 2028.<br><br>When this wallet enters at 5–10¢, the bot mirrors $0.20. If it resolves YES → $0.20 becomes $2–$4. That's the 10x–20x per position.</div>
+    <div style="font-size:11px;color:rgba(255,255,255,.4);line-height:2.2"><span style="color:#D4AF37">+$2,523,750</span> &nbsp; Will JD Vance win 2028 US President? (OPEN)<br>+$26,247 &nbsp;&nbsp;&nbsp;&nbsp; Trump out as President by June 30?<br>+$10,513 &nbsp;&nbsp;&nbsp;&nbsp; Will Trump acquire Greenland before 2027?</div>
   </div>
 
-  <div class="whale-card elite" style="margin-bottom:12px">
-    <div class="whale-header">
-      <div><div class="whale-alias gold">🏆 A7A8C1 — World Cup Oracle ⭐</div><span class="stag sports">Sports Analytics</span></div>
-      <div style="text-align:right"><div class="whale-pnl">+$47,413</div><div style="font-size:9px;color:rgba(255,255,255,.3)">87% WR · 20W/3L</div></div>
-    </div>
-    <div class="insight win" style="font-size:11px;margin:8px 0">FIFA World Cup 2026 specialist with deep analytics edge. 87% WR, active daily, 17 trades this week. World Cup runs June–July 2026 — <strong>this is peak season right now.</strong></div>
-    <div style="font-size:11px;color:rgba(255,255,255,.45);line-height:2.1">+$9,908 &nbsp; Uruguay win 2026 FIFA World Cup<br>+$6,167 &nbsp; Belgium win 2026 FIFA World Cup<br>+$4,123 &nbsp; Ecuador win 2026 FIFA World Cup<br>+$3,904 &nbsp; Colombia win 2026 FIFA World Cup</div>
+  <div class="wcard elite" style="margin-bottom:12px">
+    <div class="wh"><div><div class="walias gold">🏆 A7A8C1 — World Cup Oracle ⭐</div><span class="stag sports">Sports Analytics</span></div><div style="text-align:right"><div class="wpnl">+$47,413</div><div style="font-size:9px;color:rgba(255,255,255,.3)">87% WR · 20W/3L</div></div></div>
+    <div class="box win" style="font-size:11px;margin:8px 0">FIFA World Cup 2026 specialist with deep analytics edge. 87% WR. Active daily, 17 trades this week. <strong>World Cup runs June–July 2026 — peak season right now.</strong> Best wallet to mirror immediately.</div>
+    <div style="font-size:11px;color:rgba(255,255,255,.4);line-height:2.2">+$9,908 &nbsp; Uruguay win 2026 FIFA World Cup<br>+$6,167 &nbsp; Belgium win 2026 FIFA World Cup<br>+$4,123 &nbsp; Ecuador win 2026 FIFA World Cup<br>+$3,904 &nbsp; Colombia win 2026 FIFA World Cup</div>
   </div>
 
-  <div class="whale-card elite" style="margin-bottom:12px">
-    <div class="whale-header">
-      <div><div class="whale-alias gold">🏆 F49CE4 — High-Frequency Volume</div><span class="stag multi">Multi-Market</span></div>
-      <div style="text-align:right"><div class="whale-pnl">+$44,654</div><div style="font-size:9px;color:rgba(255,255,255,.3)">52% WR · 186 trades/wk</div></div>
-    </div>
-    <div class="insight win" style="font-size:11px;margin:8px 0">52% WR sounds low but avg win (+$996) is 5× avg loss (−$210). Math works out positive. 186 trades/week = highest signal frequency of all 14. NBA + World Cup + politics.</div>
-    <div style="font-size:11px;color:rgba(255,255,255,.45);line-height:2.1">+$40,759 &nbsp; NY Knicks win 2026 NBA Finals<br>+$2,450 &nbsp;&nbsp; Edin Džeko top scorer World Cup 2026<br>+$1,565 &nbsp;&nbsp; Germany win 2026 FIFA World Cup</div>
+  <div class="wcard elite" style="margin-bottom:16px">
+    <div class="wh"><div><div class="walias gold">🏆 F49CE4 — Volume Machine</div><span class="stag multi">High Frequency</span></div><div style="text-align:right"><div class="wpnl">+$44,654</div><div style="font-size:9px;color:rgba(255,255,255,.3)">52% WR · 186/wk</div></div></div>
+    <div class="box win" style="font-size:11px;margin:8px 0">52% WR but avg win (+$996) is 5× avg loss (−$210). Math stays positive at volume. 186 trades/week = most signals. Sports + NBA + World Cup + politics.</div>
+    <div style="font-size:11px;color:rgba(255,255,255,.4);line-height:2.2">+$40,759 &nbsp; NY Knicks win 2026 NBA Finals<br>+$2,450 &nbsp;&nbsp; Edin Džeko top scorer World Cup<br>+$1,565 &nbsp;&nbsp; Germany win 2026 FIFA World Cup</div>
   </div>
 
   <div class="sec">
-    <div class="slbl">Weekly Projection — By Balance Size</div>
-    <div style="font-size:10px;font-weight:800;color:rgba(255,255,255,.25);letter-spacing:.2em;text-transform:uppercase;margin-bottom:10px">$10 PAPER (NOW)</div>
-    <div class="proj-row"><span class="proj-label">Conservative</span><div class="proj-bar-wrap"><div class="proj-bar" style="width:20%"></div></div><span class="proj-val">$0.20–$0.50</span></div>
-    <div class="proj-row"><span class="proj-label">Realistic</span><div class="proj-bar-wrap"><div class="proj-bar" style="width:50%"></div></div><span class="proj-val">$0.50–$1.00</span></div>
-    <div class="proj-row"><span class="proj-label">Best case</span><div class="proj-bar-wrap"><div class="proj-bar" style="width:70%"></div></div><span class="proj-val">$1.00–$2.00</span></div>
-    <div style="font-size:10px;font-weight:800;color:rgba(255,255,255,.25);letter-spacing:.2em;text-transform:uppercase;margin:16px 0 10px">€100 LIVE</div>
-    <div class="proj-row"><span class="proj-label">Conservative</span><div class="proj-bar-wrap"><div class="proj-bar" style="width:30%"></div></div><span class="proj-val">€3–€8/wk</span></div>
-    <div class="proj-row"><span class="proj-label">Realistic</span><div class="proj-bar-wrap"><div class="proj-bar" style="width:60%"></div></div><span class="proj-val">€10–€25/wk</span></div>
-    <div class="proj-row"><span class="proj-label">1000x hit</span><div class="proj-bar-wrap"><div class="proj-bar" style="width:100%;background:linear-gradient(90deg,#A855F7,#D4AF37)"></div></div><span class="proj-val" style="color:#A855F7">€50–€500</span></div>
-    <div class="insight warn" style="font-size:11px;margin-top:14px">
-      <strong>Honest truth:</strong> ED107A's $2.5M is unrealized (2028 market). B2A362 has only 4 trades. Verified consistent closed profits: <strong>A7A8C1 (87% WR)</strong> and <strong>F49CE4 (positive EV)</strong>. Paper trade 2–3 weeks, then scale to real USDC.
-    </div>
+    <div class="slbl">Weekly Projection by Balance</div>
+    <div style="font-size:10px;font-weight:800;color:rgba(255,255,255,.25);letter-spacing:.2em;text-transform:uppercase;margin-bottom:10px">$10 PAPER (NOW) — 2% = $0.20 / trade</div>
+    <div class="prow"><span class="plbl">Conservative</span><div class="pbw"><div class="pb" style="width:20%"></div></div><span class="pval">$0.20–$0.50</span></div>
+    <div class="prow"><span class="plbl">Realistic</span><div class="pbw"><div class="pb" style="width:50%"></div></div><span class="pval">$0.50–$1.00</span></div>
+    <div class="prow"><span class="plbl">Best case</span><div class="pbw"><div class="pb" style="width:70%"></div></div><span class="pval">$1.00–$2.00</span></div>
+    <div style="font-size:10px;font-weight:800;color:rgba(255,255,255,.25);letter-spacing:.2em;text-transform:uppercase;margin:16px 0 10px">€100 LIVE — 2% = €2 / trade</div>
+    <div class="prow"><span class="plbl">Conservative</span><div class="pbw"><div class="pb" style="width:30%"></div></div><span class="pval">€3–€8/wk</span></div>
+    <div class="prow"><span class="plbl">Realistic</span><div class="pbw"><div class="pb" style="width:60%"></div></div><span class="pval">€10–€25/wk</span></div>
+    <div class="prow"><span class="plbl">1000x hit</span><div class="pbw"><div class="pb" style="width:100%;background:linear-gradient(90deg,#A855F7,#D4AF37)"></div></div><span class="pval" style="color:#A855F7">€50–€500</span></div>
+    <div class="box warn" style="font-size:11px;margin-top:14px"><strong>Honest:</strong> ED107A's $2.5M is unrealized (2028). B2A362 has 4 trades only. Verified consistent closed profits: <strong>A7A8C1 (87% WR)</strong> and <strong>F49CE4 (positive EV)</strong>. Paper trade 2–3 weeks first.</div>
   </div>
 </div>
 
@@ -364,22 +254,56 @@ td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.04)}
   <div class="sec"><div class="slbl" id="tl">Trades</div><div id="tb"><div style="color:rgba(255,255,255,.3)">Loading trades...</div></div></div>
 </div>
 
-<!-- GO LIVE -->
+<!-- GO LIVE — USDC ONLY, NO USDT -->
 <div class="pane" id="ps">
+
+  <div class="box blue" style="margin-bottom:16px">
+    <strong>Polymarket only accepts USDC — not USDT.</strong> Both are stablecoins but different tokens. The path is simple: withdraw USDC directly from Binance on the Polygon network. No swap needed.
+  </div>
+
+  <div class="sec" style="margin-bottom:14px">
+    <div class="slbl">USDC Flow — Binance to Polymarket</div>
+    <div class="flow">
+      <div class="flow-step">Your Binance</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step highlight">Withdraw USDC<br><span style="font-size:9px;font-weight:400">Polygon network</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">MetaMask<br><span style="font-size:9px;font-weight:400">receives USDC</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step highlight">Polymarket<br><span style="font-size:9px;font-weight:400">Deposit → pUSD</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="color:#10B981;border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.06)">Bot trades<br><span style="font-size:9px;font-weight:400">2% per mirror</span></div>
+    </div>
+    <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:10px;line-height:1.7">
+      Withdrawal fee: ~$0.50–$1 &nbsp;·&nbsp; Arrives in ~2 min &nbsp;·&nbsp; Gas on Polygon: fractions of a cent &nbsp;·&nbsp; pUSD wraps 1:1 from USDC, zero fee
+    </div>
+  </div>
+
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
-    <div class="sec"><div class="slbl" style="color:#22D3EE">Paper mode (now)</div>
-      <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:2">&#10003; Real whale detection<br>&#10003; Mirrors 14 elite wallets<br>&#10003; 2% per trade sizing<br>&#10007; No real profit/loss</div></div>
-    <div class="sec"><div class="slbl" style="color:#D4AF37">Live mode (2–3 weeks)</div>
-      <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:2">&#10003; Real USDC on Polygon<br>&#10003; Real Polymarket V2<br>&#10003; Profit withdrawable<br>&#9888; Start with €50–100</div></div>
+    <div class="sec">
+      <div class="slbl" style="color:#22D3EE">Paper mode (now)</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:2.1">&#10003; Real whale detection<br>&#10003; Mirrors 14 elite wallets<br>&#10003; 2% per trade<br>&#10003; Runs every 15 min<br>&#10007; No real money</div>
+    </div>
+    <div class="sec">
+      <div class="slbl" style="color:#D4AF37">Live mode (2–3 weeks)</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:2.1">&#10003; Real USDC on Polygon<br>&#10003; Polymarket V2<br>&#10003; Profit withdrawable<br>&#10003; Same 2% sizing<br>&#9888; Start €50–100 USDC</div>
+    </div>
   </div>
-  <div class="sec"><div class="slbl">Wallet Setup</div>
-    <div class="row"><b style="color:#D4AF37;font-size:12px;min-width:160px;flex-shrink:0">1. Fresh MetaMask</b><span style="font-size:12px;color:rgba(255,255,255,.4)">Create NEW wallet only for this bot.</span></div>
-    <div class="row"><b style="color:#D4AF37;font-size:12px;min-width:160px;flex-shrink:0">2. Add Polygon 137</b><span style="font-size:12px;color:rgba(255,255,255,.4)">polygon-mainnet.g.alchemy.com/v2/az4D7Awbl2E2rNpe6kc3M</span></div>
-    <div class="row"><b style="color:#D4AF37;font-size:12px;min-width:160px;flex-shrink:0">3. Fund USDC</b><span style="font-size:12px;color:rgba(255,255,255,.4)">Binance → withdraw USDC to Polygon. ~€12 for gas.</span></div>
-    <div class="row"><b style="color:#D4AF37;font-size:12px;min-width:160px;flex-shrink:0">4. Polymarket</b><span style="font-size:12px;color:rgba(255,255,255,.4)">polymarket.com → MetaMask → Deposit → V2</span></div>
-    <div class="row"><b style="color:#D4AF37;font-size:12px;min-width:160px;flex-shrink:0">5. USDC → pUSD</b><span style="font-size:12px;color:rgba(255,255,255,.4)">Auto-wrapped 1:1, zero fee.</span></div>
-    <div class="row"><b style="color:#D4AF37;font-size:12px;min-width:160px;flex-shrink:0">6. GitHub Secret</b><span style="font-size:12px;color:rgba(255,255,255,.4)">Repo → Settings → Secrets → POLYMARKET_PRIVATE_KEY</span></div>
+
+  <div class="sec">
+    <div class="slbl">6-Step Setup</div>
+    <div class="row"><b style="color:#D4AF37;font-size:12px;min-width:24px">1.</b><b style="color:#D4AF37;font-size:12px;min-width:150px;flex-shrink:0">Fresh MetaMask wallet</b><span style="font-size:12px;color:rgba(255,255,255,.4)">Create a NEW wallet dedicated to this bot only. Never use your main wallet.</span></div>
+    <div class="row"><b style="color:#D4AF37;font-size:12px;min-width:24px">2.</b><b style="color:#D4AF37;font-size:12px;min-width:150px;flex-shrink:0">Add Polygon network</b><span style="font-size:12px;color:rgba(255,255,255,.4)">Chain ID 137 &nbsp;·&nbsp; RPC: polygon-mainnet.g.alchemy.com/v2/az4D7Awbl2E2rNpe6kc3M</span></div>
+    <div class="row"><b style="color:#D4AF37;font-size:12px;min-width:24px">3.</b><b style="color:#D4AF37;font-size:12px;min-width:150px;flex-shrink:0">Withdraw USDC</b><span style="font-size:12px;color:rgba(255,255,255,.4)">Binance → Withdraw → USDC → <b style="color:#fff">Polygon network</b> → your MetaMask address. NOT USDT.</span></div>
+    <div class="row"><b style="color:#D4AF37;font-size:12px;min-width:24px">4.</b><b style="color:#D4AF37;font-size:12px;min-width:150px;flex-shrink:0">Polymarket account</b><span style="font-size:12px;color:rgba(255,255,255,.4)">polymarket.com → Connect MetaMask → Deposit USDC → auto-wraps to pUSD 1:1</span></div>
+    <div class="row"><b style="color:#D4AF37;font-size:12px;min-width:24px">5.</b><b style="color:#D4AF37;font-size:12px;min-width:150px;flex-shrink:0">Export private key</b><span style="font-size:12px;color:rgba(255,255,255,.4)">MetaMask → Account → Export Private Key. This is what the bot uses to sign trades.</span></div>
+    <div class="row"><b style="color:#D4AF37;font-size:12px;min-width:24px">6.</b><b style="color:#D4AF37;font-size:12px;min-width:150px;flex-shrink:0">Add to GitHub Secrets</b><span style="font-size:12px;color:rgba(255,255,255,.4)">GitHub repo → Settings → Secrets → New → Name: POLYMARKET_PRIVATE_KEY → paste key</span></div>
   </div>
+
+  <div class="box warn" style="font-size:11px">
+    <strong>Security:</strong> The bot wallet should hold ONLY what you're willing to risk. Never store more than your trading allocation. The private key in GitHub Secrets is encrypted and only readable by the Actions runner.
+  </div>
+
 </div>
 
 </div>
@@ -417,26 +341,41 @@ function load(){
     t('vo',open.length);
     t('vs','$'+staked.toFixed(2)+' staked');
     t('v7',d7.length);
-    t('bm',open.length+' open mirrors');
-    if(s.updated_at){t('bt','Updated '+new Date(s.updated_at).toLocaleTimeString());t('bt2','Last: '+new Date(s.updated_at).toLocaleTimeString());}
-    h('lat',open.length===0
-      ?'<div style="color:rgba(255,255,255,.25);font-size:13px">No open mirrors yet — bot scans every 15 min for elite whale trades</div>'
-      :open.slice(0,8).map(function(x){
-        return '<div class="row"><div style="flex:1;min-width:0"><div style="font-size:12px;color:rgba(255,255,255,.8);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+cl(x.market_question)+'</div><div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:2px">'+new Date(x.created_at).toLocaleString()+'</div></div><div style="text-align:right;flex-shrink:0"><div style="color:#D4AF37;font-weight:700;font-size:13px">$'+Number(x.amount_usdc).toFixed(3)+'</div><div style="font-size:10px;color:'+(x.outcome==='Yes'?'#10B981':'#F59E0B')+'">'+e(x.outcome)+' @ '+(Number(x.entry_price)*100).toFixed(1)+'%</div></div></div>';
-      }).join(''));
+    t('bm',open.length+' open');
+    if(s.updated_at){var d=new Date(s.updated_at);t('bt','Updated '+d.toLocaleTimeString());t('bt2','Last scan: '+d.toLocaleTimeString());}
     t('tl',paper.length+' trades | '+open.length+' open');
+    h('lat',open.length===0
+      ?'<div style="color:rgba(255,255,255,.25);font-size:13px">No mirrors yet — bot scans every 15 min for elite whale trades</div>'
+      :open.slice(0,8).map(function(x){
+        return '<div class="row">'
+          +'<div style="flex:1;min-width:0">'
+          +'<div style="font-size:12px;color:rgba(255,255,255,.8);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+cl(x.market_question)+'</div>'
+          +'<div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:2px">'+new Date(x.created_at).toLocaleString()+'</div>'
+          +'</div>'
+          +'<div style="text-align:right;flex-shrink:0">'
+          +'<div style="color:#D4AF37;font-weight:800;font-size:13px">$'+Number(x.amount_usdc).toFixed(3)+'</div>'
+          +'<div style="font-size:10px;color:'+(x.outcome==='Yes'?'#10B981':'#F59E0B')+'">'+e(x.outcome)+' @ '+(Number(x.entry_price)*100).toFixed(1)+'%</div>'
+          +'</div></div>';
+      }).join(''));
     h('tb',paper.length===0
-      ?'<div style="color:rgba(255,255,255,.3)">No trades yet — bot is running, watching for elite whale moves</div>'
-      :'<table><thead><tr><th>Date</th><th>Market</th><th>Side</th><th>Entry</th><th>Size</th><th>Status</th></tr></thead><tbody>'+paper.slice(0,100).map(function(x){
-        return '<tr><td style="color:rgba(255,255,255,.3);font-size:10px;white-space:nowrap">'+new Date(x.created_at).toLocaleDateString()+'</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+cl(x.market_question).slice(0,45)+'...</td><td style="color:'+(x.outcome==='Yes'?'#10B981':'#F59E0B')+';font-weight:700">'+e(x.outcome)+'</td><td style="color:#D4AF37;font-weight:700">'+(Number(x.entry_price)*100).toFixed(1)+'¢</td><td>$'+Number(x.amount_usdc).toFixed(3)+'</td><td><span style="font-size:10px;padding:2px 7px;border-radius:4px;background:'+(x.status==='open'?'#22D3EE22':'#10B98122')+';color:'+(x.status==='open'?'#22D3EE':'#10B981')+'">'+e(x.status)+'</span></td></tr>';
-      }).join('')+'</tbody></table>');
+      ?'<div style="color:rgba(255,255,255,.3);font-size:13px">No trades recorded yet — watching elite wallets every 15 min</div>'
+      :'<table><thead><tr><th>Date</th><th>Market</th><th>Side</th><th>Entry</th><th>Size</th><th>Status</th></tr></thead><tbody>'
+        +paper.slice(0,100).map(function(x){
+          return '<tr>'
+            +'<td style="color:rgba(255,255,255,.3);font-size:10px;white-space:nowrap">'+new Date(x.created_at).toLocaleDateString()+'</td>'
+            +'<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+e(x.market_question)+'">'+cl(x.market_question).slice(0,44)+'…</td>'
+            +'<td style="color:'+(x.outcome==='Yes'?'#10B981':'#F59E0B')+';font-weight:700">'+e(x.outcome)+'</td>'
+            +'<td style="color:#D4AF37;font-weight:700">'+(Number(x.entry_price)*100).toFixed(1)+'¢</td>'
+            +'<td style="color:rgba(255,255,255,.6)">$'+Number(x.amount_usdc).toFixed(3)+'</td>'
+            +'<td><span style="font-size:9px;padding:2px 7px;border-radius:4px;background:'+(x.status==='open'?'#22D3EE18':'#10B98118')+';color:'+(x.status==='open'?'#22D3EE':'#10B981')+';font-weight:700">'+e(x.status)+'</span></td>'
+            +'</tr>';
+        }).join('')+'</tbody></table>');
   }).catch(function(){
-    // Supabase unreachable (e.g. file:// local) — show static state, no error
-    t('vb','$10.00'); t('vo','0'); t('v7','0');
-    h('lat','<div style="color:rgba(255,255,255,.25);font-size:13px">Open <b style="color:#D4AF37">siddhaquantumnexus.com/oracle.html</b> to see live data</div>');
+    t('vb','$10.00');t('vo','0');t('v7','0');
+    h('lat','<div style="color:rgba(255,255,255,.25);font-size:13px">Open <strong style="color:#D4AF37">siddhaquantumnexus.com/oracle.html</strong> to see live data</div>');
+    h('tb','<div style="color:rgba(255,255,255,.3)">Open the live URL to see trades</div>');
   });
 }
-
 load();
 setInterval(load,30000);
 </script>
