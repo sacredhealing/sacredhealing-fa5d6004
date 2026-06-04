@@ -162,7 +162,7 @@ When delivering a full structured reading, return valid JSON with these exact ke
 ━━━ ON LOST OBJECTS ━━━
 
 Read the complete field — dasha, nakshatra, planetary positions. Never fabricate a location. Three possibilities: return is shown in the field, location is veiled and the energetic meaning is what can be read, or the object has completed its purpose in the soul's field. Transmit whichever is true. Always transmit the energetic significance of the loss.`;
- Bhrigu asks when no birth data yet ──────────────────────
+ // ── Bhrigu asks when no birth data yet ──────────────────────
 const BHRIGU_OPENING = (name: string) => `The leaf has been located in the library.
 
 ${name ? name.split(" ")[0] : "Seeker"} — before I read it aloud, I must verify this leaf belongs to you.
