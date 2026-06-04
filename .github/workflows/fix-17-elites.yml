@@ -1,4 +1,4 @@
-name: Fix to 17 Elite Whales
+name: Fix 17 Elite Clean
 
 on:
   workflow_dispatch:
@@ -10,73 +10,67 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_ADMIN_PAT }}
-      - name: Ensure all 17 are elite
+      - name: Fix 17 elite whales
         env:
           SUPABASE_PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          DB="https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query"
+          BASE="https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1"
           LOG="_fix17.txt"
-          q() { curl -s -X POST "$DB" \
-            -H "Authorization: Bearer ${SUPABASE_PAT}" \
-            -H "Content-Type: application/json" \
-            -d "{\"query\":\"$1\"}" >> $LOG; echo "" >> $LOG; }
-
           echo "=== Fixing to 17 elite ===" > $LOG
 
-          # The 14 original confirmed profitable wallets
-          # + 3 new: BAA2BC, B2A362, ED107A
-          # BAA2BC and ED107A were already in the 14 but now get strategy tags
-          # B2A362 is genuinely new
-          # E9076A was discovered today as #15 co-trader
-          # So: 14 original + B2A362 (new) + E9076A (new) = 16
-          # + D3B034 was IN the original 14 but missing from elite = still 16
-          # 
-          # The 3 "amazing ones" the user refers to are distinct FROM the 14
-          # So all 3 must be elite AND the original 14 = 17 total
+          upsert() {
+            curl -s -w "\n%{http_code}" \
+              -X POST "${BASE}/polymarket_whales?on_conflict=address" \
+              -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" \
+              -H "Content-Type: application/json" \
+              -H "Prefer: resolution=merge-duplicates,return=minimal" \
+              -d "$1" >> $LOG
+            echo "" >> $LOG
+          }
 
-          # Make sure all 3 strategy wallets are elite with correct data
-          q "INSERT INTO polymarket_whales (address,alias,win_rate_30d,roi_30d,total_profit,trades_tracked,total_trades_seen,is_active,is_elite,strategy,last_checked)
-             VALUES
-             ('0xbaa2bcb5439e985ce4ccf815b4700027d1b92c73','🚨 BAA2BC — Iran Insider',83,38,191503,500,3,true,true,'insider_geo',now()),
-             ('0xb2a3623364c33561d8312e1edb79eb941c798510','🚨 B2A362 — Confirmation Whale',75,104,125453,115,1,true,true,'confirmation',now()),
-             ('0xed107a85a4585a381e48c7f7ca4144909e7dd2e5','🚨 ED107A — 99x NO Machine',89,17,58947,500,3,true,true,'no_machine',now())
-             ON CONFLICT (address) DO UPDATE SET
-               alias=EXCLUDED.alias, win_rate_30d=EXCLUDED.win_rate_30d,
-               roi_30d=EXCLUDED.roi_30d, total_profit=EXCLUDED.total_profit,
-               is_elite=true, strategy=EXCLUDED.strategy, last_checked=now();" >> $LOG
+          patch() {
+            curl -s -o /dev/null -w "%{http_code}" \
+              -X PATCH "${BASE}/polymarket_whales?address=eq.$1" \
+              -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" \
+              -H "Content-Type: application/json" \
+              -d "$2" >> $LOG
+            echo "" >> $LOG
+          }
 
-          # Make sure all original 14 are elite
-          q "UPDATE polymarket_whales SET is_elite=true WHERE address IN (
-             '0xa7a8c1fd4bfff08ea30214efa7efaf75d7c6580c',
-             '0xf49ce459b52f60b70ce0fe9aa6203e6bf90f9786',
-             '0xed107a85a4585a381e48c7f7ca4144909e7dd2e5',
-             '0xbaa2bcb5439e985ce4ccf815b4700027d1b92c73',
-             '0xb2a3623364c33561d8312e1edb79eb941c798510',
-             '0xd3b034d7bfb2473fb252d0414646d9786bac329e',
-             '0x204f72f35326db932158cba6adff0b9a1da95e14',
-             '0xeed588bab0b0df73a9a6def7a59e512e9ede1a33',
-             '0x335592400e402c26583ce8b56d12605e9548a126',
-             '0x000d257d2dc7616feaef4ae0f14600fdf50a758e',
-             '0xe52c0a1327a12edc7bd54ea6f37ce00a4ca96924',
-             '0xa77105bb4d2d4d200b0133a2036222353831162d',
-             '0x93511d72d294f1478739bc38f578bf0306fd9e4d',
-             '0xfea31bc088000ff909be1dfd8d0e3f2c7ef2d227'
-          );" >> $LOG
+          # The 3 special strategy wallets
+          echo "--- Upserting 3 strategy wallets ---" >> $LOG
+          upsert '{"address":"0xbaa2bcb5439e985ce4ccf815b4700027d1b92c73","alias":"BAA2BC-IranInsider","win_rate_30d":83,"roi_30d":38,"total_profit":191503,"trades_tracked":500,"total_trades_seen":3,"is_active":true,"is_elite":true,"strategy":"insider_geo"}'
+          upsert '{"address":"0xb2a3623364c33561d8312e1edb79eb941c798510","alias":"B2A362-ConfirmWhale","win_rate_30d":75,"roi_30d":104,"total_profit":125453,"trades_tracked":115,"total_trades_seen":1,"is_active":true,"is_elite":true,"strategy":"confirmation"}'
+          upsert '{"address":"0xed107a85a4585a381e48c7f7ca4144909e7dd2e5","alias":"ED107A-NoMachine99x","win_rate_30d":89,"roi_30d":17,"total_profit":58947,"trades_tracked":500,"total_trades_seen":3,"is_active":true,"is_elite":true,"strategy":"no_machine"}'
+
+          # Promote all 14 originals to elite (patch by address)
+          echo "--- Promoting original 14 ---" >> $LOG
+          for addr in \
+            0xa7a8c1fd4bfff08ea30214efa7efaf75d7c6580c \
+            0xf49ce459b52f60b70ce0fe9aa6203e6bf90f9786 \
+            0xd3b034d7bfb2473fb252d0414646d9786bac329e \
+            0x204f72f35326db932158cba6adff0b9a1da95e14 \
+            0xeed588bab0b0df73a9a6def7a59e512e9ede1a33 \
+            0x335592400e402c26583ce8b56d12605e9548a126 \
+            0x000d257d2dc7616feaef4ae0f14600fdf50a758e \
+            0xe52c0a1327a12edc7bd54ea6f37ce00a4ca96924 \
+            0xa77105bb4d2d4d200b0133a2036222353831162d \
+            0x93511d72d294f1478739bc38f578bf0306fd9e4d \
+            0xfea31bc088000ff909be1dfd8d0e3f2c7ef2d227 \
+            0xe9076a87c5ed90ef16e6fe6529c943baeca0cff6
+          do
+            patch "$addr" '{"is_elite":true,"is_active":true}'
+          done
 
           # Final count
-          q "SELECT COUNT(*) FILTER (WHERE is_elite=true) as elite,
-                    COUNT(*) FILTER (WHERE is_active=true AND is_elite=false) as watching,
-                    COUNT(*) as total
-             FROM polymarket_whales;" >> $LOG
-
-          q "SELECT alias, total_profit::numeric, strategy, is_elite
-             FROM polymarket_whales
-             WHERE is_elite=true
-             ORDER BY total_profit DESC;" >> $LOG
+          echo "--- Final count ---" >> $LOG
+          curl -s "${BASE}/polymarket_whales?select=alias,total_profit,strategy,is_elite&order=total_profit.desc" \
+            -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" >> $LOG
 
           cat $LOG
           git config user.email "bot@sqi.app"; git config user.name "SQI"
           git add $LOG
-          git commit -m "Fix: 17 elite whales confirmed" || true
+          git commit -m "17 elite whales confirmed" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
