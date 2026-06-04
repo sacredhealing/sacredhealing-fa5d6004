@@ -199,7 +199,7 @@ const LexEntry: React.FC<{ entry: typeof LEXICON[0]; gs: React.CSSProperties }> 
 // ── Component ────────────────────────────────────────────────────
 const JyotishChamber: React.FC = () => {
   const { user } = useAuth();
-  const { membershipTier, isAdmin } = useMembership();
+  const { tier: membershipTier, isAdmin } = useMembership();
   useTranslation();
   const navigate = useNavigate();
 
@@ -277,16 +277,17 @@ const JyotishChamber: React.FC = () => {
     // Try cache first
     const { data: cached } = await supabase
       .from('jyotish_profiles')
-      .select('moon_nakshatra, ascendant, sun_sign, dasha_data, ephemeris_confirmed, bhrigu_leaf_confirmed')
+      .select('moon_nakshatra, dasha_data, ephemeris_confirmed, ephemeris_data')
       .eq('user_id', user.id)
       .maybeSingle();
 
     if (cached?.moon_nakshatra) {
+      const eph = (cached as any).ephemeris_data || {};
       setEphemeris({
         moonNakshatra: cached.moon_nakshatra,
         moonLongitude: 0,
-        ascendantSign: cached.ascendant || '',
-        sunSign: cached.sun_sign || '',
+        ascendantSign: eph.ascendant || '',
+        sunSign: eph.sun_sign || '',
         dashaData: cached.dasha_data as any,
       });
       // Load leaf confirmed status
@@ -959,7 +960,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }}}
                           placeholder="Ask Maharishi Bhrigu…"
                           rows={1}
-                          style={{ flex:1, minHeight:44, maxHeight:120, resize:'none' as const, background:'transparent', border:'none', outline:'none', color:'rgba(255,255,255,0.9)', fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:15, lineHeight:1.55, fontWeight:400, padding:'6px 8px', minHeight:36, alignSelf:'center' as const }}
+                          style={{ flex:1, maxHeight:120, resize:'none' as const, background:'transparent', border:'none', outline:'none', color:'rgba(255,255,255,0.9)', fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:15, lineHeight:1.55, fontWeight:400, padding:'6px 8px', minHeight:36, alignSelf:'center' as const }}
                         />
                         </div>
                         <button onClick={sendMessage} style={{ width:44, height:44, borderRadius:99, border:'none', background:'linear-gradient(135deg,rgba(212,175,55,0.5),rgba(212,175,55,0.22))', color:'#D4AF37', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>➤</button>
