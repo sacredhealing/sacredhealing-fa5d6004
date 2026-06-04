@@ -1,6 +1,6 @@
 ══════════════════════════════════════════════════════════════
   SQI-2050 🦈 CLAWBOT v9 — Three Strategy Engine
-  2026-06-04T13:58:43.398Z | PAPER
+  2026-06-04T16:00:11.422Z | PAPER
   S1:InsiderGeo  S2:Confirmation  S3:NoMachine
 ══════════════════════════════════════════════════════════════
 
@@ -8,12 +8,12 @@ Strategy roster:
   S1 InsiderGeo:   1 wallets (BAA2BC)
   S2 Confirmation: 1 wallets
   S3 NoMachine:    1 wallets
-  Standard Mirror: 9 wallets
+  Standard Mirror: 12 wallets
 
 Balance: $10.00
 Today: 0/10 mirrors used
 
-🔍 Scanning 87,917,243 → 87,917,693
+🔍 Scanning 87,922,102 → 87,922,552
   0xE111180000: 0 logs → 0 trades ($500+)
   0xe2222d279d: 0 logs → 0 trades ($500+)
 
