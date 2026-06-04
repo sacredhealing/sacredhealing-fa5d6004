@@ -1,0 +1,21 @@
+ELITE WALLETS:
+[{"alias":"BAA2BC-IranInsider","total_profit":191503,"win_rate_30d":83,"strategy":"insider_geo"}, 
+ {"alias":"NEW-INSIDER-06DC51","total_profit":131298.13590000014,"win_rate_30d":78,"strategy":"mirror"}, 
+ {"alias":"B2A362-ConfirmWhale","total_profit":125453,"win_rate_30d":75,"strategy":"confirmation"}, 
+ {"alias":"NEW-INSIDER-84CFFF","total_profit":60730.252499999864,"win_rate_30d":30,"strategy":"no_machine"}, 
+ {"alias":"ED107A-NoMachine99x","total_profit":58947,"win_rate_30d":89,"strategy":"no_machine"}, 
+ {"alias":"🏆A7A8C1","total_profit":47554.02,"win_rate_30d":84,"strategy":"mirror"}, 
+ {"alias":"🏆F49CE4","total_profit":41974.73,"win_rate_30d":51,"strategy":"mirror"}, 
+ {"alias":"🏆Apex-E9076A","total_profit":30103,"win_rate_30d":83,"strategy":"mirror"}, 
+ {"alias":"NEW-INSIDER-204F72","total_profit":25928.3165,"win_rate_30d":100,"strategy":"mirror"}, 
+ {"alias":"NEW-INSIDER-84AD9C","total_profit":16633.455500000022,"win_rate_30d":18,"strategy":"insider_geo"}, 
+ {"alias":"🏆Elite-D3B034","total_profit":14882,"win_rate_30d":54,"strategy":"mirror"}, 
+ {"alias":"🏆EED588","total_profit":11739.79,"win_rate_30d":67,"strategy":"mirror"}, 
+ {"alias":"🏆000D25","total_profit":8016.67,"win_rate_30d":51,"strategy":"mirror"}, 
+ {"alias":"🏆335592","total_profit":7499.03,"win_rate_30d":100,"strategy":"mirror"}, 
+ {"alias":"🏆E52C0A","total_profit":6942.63,"win_rate_30d":69,"strategy":"mirror"}, 
+ {"alias":"🏆A77105","total_profit":6135.74,"win_rate_30d":78,"strategy":"mirror"}, 
+ {"alias":"🟢93511D","total_profit":3322.36,"win_rate_30d":80,"strategy":"mirror"}, 
+ {"alias":"🏆Elite-FEA31B","total_profit":2151.41,"win_rate_30d":75,"strategy":"mirror"}]
+TOTAL COUNT:
+Elite: 18 | Total: 35
