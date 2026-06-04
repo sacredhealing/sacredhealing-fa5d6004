@@ -1,29 +1,27 @@
-╔══════════════════════════════════════════════════════════╗
-  🚨 INSIDER MEGASCAN v2 — Correct Topic Hash
-  2026-06-04T16:28:19.804Z
-  Min size: $5,000 | Topic: 0xd543adfd945773f1...
-╚══════════════════════════════════════════════════════════╝
+Latest: 87924169
 
-Latest block: 87,923,676
-Topic verification (10 blocks): 578 logs
+=== Tenderly WITH topic filter ===
+Range    1000: ✅ 113787 logs
+Range    5000: ❌ The operation was aborted due to timeout
+Range   10000: ❌ {"code":-32602,"message":"invalid params","data":"Query returned more 
+Range   50000: ❌ {"code":-32602,"message":"invalid params","data":"Query returned more 
+Range  100000: ❌ {"code":-32602,"message":"invalid params","data":"Query returned more 
+Range  200000: ❌ {"code":-32602,"message":"invalid params","data":"Query returned more 
 
-Scanning 30 days in 3 chunks × 2 contracts
+=== Alchemy 10-block speed test ===
+10 calls in 1316ms = 132ms/call
+Sample logs found: 9975
 
-  [1/6] 0xe111180000 86,627,676-87,117,675 | found: 0
-  ⚠️ {"code":-32602,"message":"invalid params","data":"
-  [2/6] 0xe2222d279d 86,627,676-87,117,675 | found: 0
-  ⚠️ {"code":-32602,"message":"invalid params","data":"
-  [3/6] 0xe111180000 87,117,676-87,607,675 | found: 0
-  ⚠️ {"code":-32602,"message":"invalid params","data":"
-  [4/6] 0xe2222d279d 87,117,676-87,607,675 | found: 0
-  ⚠️ {"code":-32602,"message":"invalid params","data":"
-  [5/6] 0xe111180000 87,607,676-87,923,676 | found: 0
-  ⚠️ {"code":-32602,"message":"invalid params","data":"
-  [6/6] 0xe2222d279d 87,607,676-87,923,676 | found: 0
-  ⚠️ {"code":-32602,"message":"invalid params","data":"
+Estimate for 30 days:
+  1.3M blocks / 10 = 130,000 calls
+  At 132ms/call = 4.8 hours
+  Too slow for GitHub Actions (6 min limit)
 
+Best approach: Use Tenderly WITHOUT topic, filter in JS
 
-✅ SCAN: 0 trades over $5,000
-
-⚠️ Still 0 results. The event data encoding may differ from assumed.
-Check raw log data from the verification step above.
+=== Tenderly WITHOUT topic (larger range test) ===
+Range   10000 (no topic): ❌ {"code":-32602,"message":"invalid params","data":"Query returned more 
+Range   50000 (no topic): ❌ {"code":-32602,"message":"invalid params","data":"Query returned more 
+Range  100000 (no topic): ❌ {"code":-32602,"message":"invalid params","data":"Query returned more 
+Range  300000 (no topic): ❌ {"code":-32099,"message":"request timeout"}
+Range  500000 (no topic): ❌ {"code":-32602,"message":"invalid params","data":"Query returned more 
