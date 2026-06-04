@@ -1,0 +1,5 @@
+=== Fixing to 17 elite ===
+{"message":"Bad control character in string literal in JSON at position 163 (line 1 column 164)"}
+{"message":"Bad control character in string literal in JSON at position 71 (line 1 column 72)"}
+{"message":"Bad control character in string literal in JSON at position 64 (line 1 column 65)"}
+{"message":"Bad control character in string literal in JSON at position 65 (line 1 column 66)"}
