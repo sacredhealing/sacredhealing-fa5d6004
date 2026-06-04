@@ -1,27 +1,6 @@
 🔍 Scanning Polygon for $10k+ trades (last 7 days)...
-node:internal/deps/undici/undici:14976
-      Error.captureStackTrace(err);
-            ^
+Scanning blocks 87,612,780 → 87,915,180 (~7 days)
 
-TypeError: Failed to parse URL from undefined
-    at node:internal/deps/undici/undici:14976:13
-    at async rpc (file:///home/runner/work/sacredhealing-fa5d6004/sacredhealing-fa5d6004/scripts/whale_scan_v3.mjs:25:13)
-    at async scanForBigTrades (file:///home/runner/work/sacredhealing-fa5d6004/sacredhealing-fa5d6004/scripts/whale_scan_v3.mjs:57:27)
-    at async file:///home/runner/work/sacredhealing-fa5d6004/sacredhealing-fa5d6004/scripts/whale_scan_v3.mjs:176:19 {
-  [cause]: TypeError: Invalid URL
-      at new URL (node:internal/url:806:29)
-      at new Request (node:internal/deps/undici/undici:9804:25)
-      at fetch (node:internal/deps/undici/undici:10533:25)
-      at fetch (node:internal/deps/undici/undici:14974:10)
-      at fetch (node:internal/bootstrap/web/exposed-window-or-worker:72:12)
-      at rpc (file:///home/runner/work/sacredhealing-fa5d6004/sacredhealing-fa5d6004/scripts/whale_scan_v3.mjs:25:19)
-      at scanForBigTrades (file:///home/runner/work/sacredhealing-fa5d6004/sacredhealing-fa5d6004/scripts/whale_scan_v3.mjs:57:33)
-      at file:///home/runner/work/sacredhealing-fa5d6004/sacredhealing-fa5d6004/scripts/whale_scan_v3.mjs:176:25
-      at ModuleJob.run (node:internal/modules/esm/module_job:325:25)
-      at async ModuleLoader.import (node:internal/modules/esm/loader:606:24) {
-    code: 'ERR_INVALID_URL',
-    input: 'undefined'
-  }
-}
 
-Node.js v20.20.2
+Total $10k+ trades found: 0
+No $10k+ trades found in scan window. Try extending range.
