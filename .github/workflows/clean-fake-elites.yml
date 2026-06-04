@@ -1,0 +1,47 @@
+name: Clean Fake Elite Whales
+
+on:
+  workflow_dispatch:
+
+jobs:
+  clean:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Remove fake elites, dedup, set weekly rescan
+        env:
+          SUPABASE_PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          DB="https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query"
+          LOG="_whale_clean.txt"
+          echo "=== Clean + Final State $(date -u) ===" > $LOG
+
+          q() {
+            curl -s -X POST "$DB" \
+              -H "Authorization: Bearer ${SUPABASE_PAT}" \
+              -H "Content-Type: application/json" \
+              -d "{\"query\":\"$1\"}"
+          }
+
+          # Delete 3 fake seeds (address has no real trades)
+          q "DELETE FROM polymarket_whales WHERE address IN ('0x5f659bccbc4510e7be4f15b4e5b7fa54e3fd1e5e','0xad4b83e044f30699f4f0a56e0b2ff48c1e1e4e7a','0x0c88fc04da4f8bceebb47d2a7e9c0c2e4e5e6e7f');" >> $LOG
+
+          # Also delete the duplicate unscored versions of our 2 elites (the ones with alias 🦈C8AB97 not 🏆)
+          q "DELETE FROM polymarket_whales WHERE alias IN ('🦈C8AB97','🦈A7A8C1','🦈FEA31B');" >> $LOG
+
+          # Delete fake Shark-C, Shark-D, Shark-E dupes
+          q "DELETE FROM polymarket_whales WHERE alias IN ('Shark-C','Shark-D','Shark-E');" >> $LOG
+
+          # Final clean count
+          q "SELECT alias, total_profit::numeric, win_rate_30d, roi_30d, trades_tracked, is_elite, is_active FROM polymarket_whales ORDER BY is_elite DESC, total_profit DESC;" >> $LOG
+
+          cat $LOG
+          git config user.email "bot@sqi.app"
+          git config user.name "SQI CLAWBOT"
+          git add $LOG
+          git commit -m "Whale list cleaned $(date -u +%H%M%S)" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
