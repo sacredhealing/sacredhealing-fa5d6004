@@ -5656,7 +5656,7 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
         model: GEMINI_MODEL,
         messages: [{ role: "system", content: systemText.trim() }, ...aiMessages],
         temperature: 2.0,
-        max_tokens: 8192,
+        max_tokens: 32768,
         stream: true,
       }),
     });
