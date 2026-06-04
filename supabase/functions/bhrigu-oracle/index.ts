@@ -398,15 +398,10 @@ serve(async (req) => {
       ...messages
     ];
 
-    const res = await fetch(GEMINI_URL, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${GEMINI_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "gemini-2.5-flash",
-        messages: allMessages,
-        max_tokens: 3000,
-        temperature: 2.0,
-      }),
+    const res = await callAI({
+      messages: allMessages,
+      max_tokens: 3000,
+      temperature: 2.0,
     });
 
     if (!res.ok) {
