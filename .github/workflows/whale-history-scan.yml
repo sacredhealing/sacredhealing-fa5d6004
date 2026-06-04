@@ -13,15 +13,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Run whale scan v3
+      - name: Run whale scan
         env:
           SUPABASE_URL: https://fjdzhrdpioxdeyyfogep.supabase.co
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          POLYGON_RPC_URL: ${{ secrets.POLYGON_RPC_URL }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
           node scripts/whale_scan_v3.mjs 2>&1 | tee _whale_history.txt
           git config user.email "bot@sqi.app"
           git config user.name "SQI"
           git add _whale_history.txt
-          git commit -m "Whale scan v3 $(date -u +%H%M%S)" || true
+          git commit -m "Whale scan $(date -u +%H%M%S)" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
