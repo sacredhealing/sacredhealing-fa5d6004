@@ -960,7 +960,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }}}
                           placeholder="Ask Maharishi Bhrigu…"
                           rows={1}
-                          style={{ flex:1, minHeight:44, maxHeight:120, resize:'none' as const, background:'transparent', border:'none', outline:'none', color:'rgba(255,255,255,0.9)', fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:15, lineHeight:1.55, fontWeight:400, padding:'6px 8px', minHeight:36, alignSelf:'center' as const }}
+                          style={{ flex:1, maxHeight:120, resize:'none' as const, background:'transparent', border:'none', outline:'none', color:'rgba(255,255,255,0.9)', fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:15, lineHeight:1.55, fontWeight:400, padding:'6px 8px', minHeight:36, alignSelf:'center' as const }}
                         />
                         </div>
                         <button onClick={sendMessage} style={{ width:44, height:44, borderRadius:99, border:'none', background:'linear-gradient(135deg,rgba(212,175,55,0.5),rgba(212,175,55,0.22))', color:'#D4AF37', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>➤</button>
