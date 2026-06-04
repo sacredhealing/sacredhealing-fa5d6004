@@ -1,90 +1,63 @@
-Scanning 25 top markets for big traders...
+
+=== 0xbaa2bcb5439e ===
+
+Biggest 10 trades by size:
+  $       0 | 2026-06-04T08:52 | BUY @ 0.160 |  Iran agrees to end enrichment of uraniu
+  $       0 | 2026-06-02T17:34 | BUY @ 0.220 |  Iran agrees to end enrichment of uraniu
+  $       0 | 2026-06-02T17:34 | BUY @ 0.220 |  Iran agrees to end enrichment of uraniu
+  $       0 | 2026-06-01T23:26 | BUY @ 0.220 |  Iran agrees to end enrichment of uraniu
+  $       0 | 2026-06-01T18:12 | BUY @ 0.220 |  Iran agrees to end enrichment of uraniu
+  $       0 | 2026-06-01T17:51 | BUY @ 0.230 |  Iran agrees to end enrichment of uraniu
+  $       0 | 2026-06-01T17:45 | BUY @ 0.120 | Will Donald Trump announce that the Unit
+  $       0 | 2026-06-01T17:36 | BUY @ 0.320 | US-Iran nuclear deal by June 30?
+  $       0 | 2026-06-01T17:35 | BUY @ 0.290 | Will Trump agree to Iranian oil sanction
+  $       0 | 2026-06-01T17:35 | BUY @ 0.290 | Will Trump agree to unfreeze Iranian ass
+
+=== 0xb2a3623364c3 ===
+
+Biggest 10 trades by size:
+  $       0 | 2026-06-03T10:19 | BUY @ 0.887 | US x Iran permanent peace deal by June 1
+  $       0 | 2026-06-03T10:17 | BUY @ 0.882 | US x Iran permanent peace deal by June 1
+  $       0 | 2026-06-03T10:17 | BUY @ 0.875 | US x Iran permanent peace deal by June 1
+  $       0 | 2026-06-02T16:43 | BUY @ 0.754 | US x Iran permanent peace deal by June 3
+  $       0 | 2026-06-02T15:58 | BUY @ 0.871 | US x Iran permanent peace deal by June 1
+  $       0 | 2026-06-02T15:57 | BUY @ 0.950 | US x Iran permanent peace deal by June 7
+  $       0 | 2026-06-02T15:56 | BUY @ 0.870 | US x Iran permanent peace deal by June 1
+  $       0 | 2026-06-02T15:56 | BUY @ 0.880 | US x Iran permanent peace deal by June 1
+  $       0 | 2026-06-02T10:30 | BUY @ 0.870 | US x Iran permanent peace deal by June 1
+  $       0 | 2026-06-02T10:29 | BUY @ 0.950 | US x Iran permanent peace deal by June 7
+
+=== 0xed107a85a458 ===
+
+Biggest 10 trades by size:
+  $       0 | 2026-06-04T03:53 | BUY @ 0.987 | Trump out as President by June 30?
+  $       0 | 2026-06-03T21:46 | SELL @ 0.987 | Will Anthropic’s market cap be $600B or 
+  $       0 | 2026-06-03T21:46 | SELL @ 0.986 | Will Anthropic not IPO by June 30, 2026?
+  $       0 | 2026-06-03T21:45 | SELL @ 0.990 | Will US withdraw from NATO by June 30?
+  $       0 | 2026-06-03T21:45 | SELL @ 0.991 | Will Trump be impeached by June 30?
+  $       0 | 2026-06-03T21:45 | SELL @ 0.989 | Will Anthropic not IPO by June 30, 2026?
+  $       0 | 2026-06-03T21:43 | SELL @ 0.986 | Trump out as President by June 30?
+  $       0 | 2026-06-03T21:43 | SELL @ 0.981 | Will the US confirm that aliens exist by
+  $       0 | 2026-06-03T16:28 | SELL @ 0.992 | Xi Jinping out by June 30?
+  $       0 | 2026-06-03T13:26 | SELL @ 0.995 | Will Base launch a token by June 30, 202
 
 
-✅ Trump win 2024: 200 trades via trades endpoint
-  $    5556 | 0x146703a8a73a @ 0.540
+=== MARKET-BASED WHALE DISCOVERY ===
 
-✅ World Cup Winner Spain: 200 trades via trades endpoint
-  $    5556 | 0x146703a8a73a @ 0.540
+Event: Presidential Election Winner 2024
+  Market ID: 253591 | Will Donald Trump win the 2024 US Presid
+  Activity: null
+  Market ID: 253592 | Will Joe Biden win the 2024 US President
+  Activity: null
 
-✅ NBA Finals 2025 Clippers: 200 trades via trades endpoint
-  $    5556 | 0x146703a8a73a @ 0.540
+Event: NBA Champion
+  Market ID: 507869 | Will the LA Clippers win the 2025 NBA Fi
+  Activity: null
+  Market ID: 507873 | Will the Miami Heat win the 2025 NBA Fin
+  Activity: null
 
-✅ Dem Nominee 2028 Stephen A: 200 trades via trades endpoint
-  $    5556 | 0x146703a8a73a @ 0.540
-
-✅ Iran regime fall June 30: 200 trades via trades endpoint
-  $    5556 | 0x146703a8a73a @ 0.540
-
-✅ Will Donald Trump win the 2024 US Presid: 200 trades via trades endpoint
-  $    5556 | 0x146703a8a73a @ 0.540
-
-✅ Will Joe Biden win the 2024 US President: 200 trades via trades endpoint
-  $    5556 | 0x146703a8a73a @ 0.540
-
-✅ Will the LA Clippers win the 2025 NBA Fi: 200 trades via trades endpoint
-  $    5556 | 0x146703a8a73a @ 0.540
-
-✅ Will the Miami Heat win the 2025 NBA Fin: 200 trades via trades endpoint
-  $    5556 | 0x146703a8a73a @ 0.540
-
-✅ Will Spain win the 2026 FIFA World Cup?: 200 trades via trades endpoint
-  $    5556 | 0x146703a8a73a @ 0.540
-
-✅ Will New Zealand win the 2026 FIFA World: 200 trades via trades endpoint
-  $    5556 | 0x146703a8a73a @ 0.540
-
-✅ Will Stephen A. Smith win the 2028 Democ: 200 trades via trades endpoint
-  $    5556 | 0x146703a8a73a @ 0.540
-
-✅ Will Gretchen Whitmer win the 2028 Democ: 200 trades via trades endpoint
-  $    5556 | 0x146703a8a73a @ 0.540
-
-✅ Will the Cardinals win Super Bowl 2025?: 200 trades via trades endpoint
-  $    5556 | 0x146703a8a73a @ 0.540
-
-✅ Will the Falcons win Super Bowl 2025?: 200 trades via trades endpoint
-  $    5556 | 0x146703a8a73a @ 0.540
-
-✅ Will Inter Milan win the UEFA Champions : 200 trades via trades endpoint
-  $    5556 | 0x146703a8a73a @ 0.540
-
-✅ Will Juventus win the UEFA Champions Lea: 200 trades via trades endpoint
-  $    5556 | 0x146703a8a73a @ 0.540
-
-✅ Manchester City wins the Premier League?: 200 trades via trades endpoint
-  $    5556 | 0x146703a8a73a @ 0.540
-
-✅ Arsenal wins the Premier League?: 200 trades via trades endpoint
-  $    5556 | 0x146703a8a73a @ 0.540
-
-✅ Will the Arizona Cardinals win Super Bow: 200 trades via trades endpoint
-  $    5556 | 0x146703a8a73a @ 0.540
-
-✅ Will the Atlanta Falcons win Super Bowl : 200 trades via trades endpoint
-  $    5556 | 0x146703a8a73a @ 0.540
-
-✅ Fed decreases interest rates by 50+ bps : 200 trades via trades endpoint
-  $    5556 | 0x146703a8a73a @ 0.540
-
-✅ Fed decreases interest rates by 25 bps a: 200 trades via trades endpoint
-  $    5556 | 0x146703a8a73a @ 0.540
-
-✅ Will Donald Trump win the 2028 Republica: 200 trades via trades endpoint
-  $    5556 | 0x146703a8a73a @ 0.540
-
-✅ Will Person AN win the 2028 Republican p: 200 trades via trades endpoint
-  $    5556 | 0x146703a8a73a @ 0.540
-
-
-Discovered 1 wallets with $5k+ single trades
-
-🔍 Deep PnL scan...
-
-🔴 0x146703a8a73ae1 | pnl:$-164112 | WR:3% | $50k+wins:0 | seen via: Trump win 2024 ($5556)
-
-╔═══════════════════════════════════════════════════════╗
-  🚨 NEW INSIDERS + WHALES DISCOVERED
-╚═══════════════════════════════════════════════════════╝
-
-TOTAL NEW: 0 profitable | 0 whales | 0 insiders
+Event: World Cup Winner 
+  Market ID: 558934 | Will Spain win the 2026 FIFA World Cup?
+  Activity: null
+  Market ID: 558957 | Will New Zealand win the 2026 FIFA World
+  Activity: null
