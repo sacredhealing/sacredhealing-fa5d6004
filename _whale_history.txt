@@ -1,14 +1,15 @@
-╔══════════════════════════════════════════════════════════╗
-  🚨 INSIDER MEGASCAN — Tenderly Free / 30-Day History
-  2026-06-04T16:12:13.551Z
-╚══════════════════════════════════════════════════════════╝
-file:///home/runner/work/sacredhealing-fa5d6004/sacredhealing-fa5d6004/scripts/whale_scan_v3.mjs:32
-  if (d.error) throw new Error(d.error.message||JSON.stringify(d.error));
-                     ^
+Latest block: 87923203
 
-Error: request timeout
-    at rpc (file:///home/runner/work/sacredhealing-fa5d6004/sacredhealing-fa5d6004/scripts/whale_scan_v3.mjs:32:22)
-    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async file:///home/runner/work/sacredhealing-fa5d6004/sacredhealing-fa5d6004/scripts/whale_scan_v3.mjs:212:19
+=== Tenderly block range calibration ===
+Range    1000: ✅ 0 logs in 692ms
+Range    5000: ✅ 0 logs in 325ms
+Range   10000: ✅ 0 logs in 952ms
+Range   50000: ✅ 0 logs in 255ms
+Range  100000: ✅ 0 logs in 665ms
+Range  200000: ✅ 0 logs in 10604ms
+Range  500000: ✅ 0 logs in 2141ms
 
-Node.js v20.20.2
+=== PublicNode calibration ===
+Range 1000: ✅ 0 logs
+Range 10000: ✅ 0 logs
+Range 50000: ❌ exceed maximum block range: 10000
