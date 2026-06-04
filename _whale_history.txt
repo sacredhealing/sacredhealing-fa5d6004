@@ -1,3 +1,12 @@
-Scanning blocks 87914820 → 87915320
-0xE111180000d2663C0091e4f400237545B87B996B: no logs
-0xe2222d279d744050d28e00520010520000310F59: no logs
+Latest block: 87915378
+Total logs in 200 blocks (no filter): error: undefined
+
+0xE111180000d2663C0091e4f400237545B87B996B
+  Code length: 42076 chars (HAS CODE ✅)
+
+0xe2222d279d744050d28e00520010520000310F59
+  Code length: 42076 chars (HAS CODE ✅)
+
+--- Testing known active range ---
+0xE111180000: undefined logs
+0xe2222d279d: undefined logs
