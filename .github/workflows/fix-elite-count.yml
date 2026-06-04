@@ -1,0 +1,38 @@
+name: Fix Elite Count
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Fix elite count to 17
+        env:
+          SUPABASE_PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          DB="https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query"
+          LOG="_elite_fix.txt"
+          q() { curl -s -X POST "$DB" -H "Authorization: Bearer ${SUPABASE_PAT}" -H "Content-Type: application/json" -d "{\"query\":\"$1\"}" >> $LOG; echo "" >> $LOG; }
+          echo "=== Fixing elite count ===" > $LOG
+
+          # Promote D3B034 (+$14k) and FEA31B (+$3k) to elite
+          q "UPDATE polymarket_whales SET is_elite=true WHERE alias IN ('🟢Elite-D3B034','🟢FEA31B','🟢Elite-FEA31B') OR address IN ('0xd3b034d7bfb2473fb252d0414646d9786bac329e','0xfea31bc088000ff909be1dfd8d0e3f2c7ef2d227');"
+
+          # Also update aliases to gold
+          q "UPDATE polymarket_whales SET alias='🏆Elite-D3B034' WHERE address='0xd3b034d7bfb2473fb252d0414646d9786bac329e';"
+          q "UPDATE polymarket_whales SET alias='🏆Elite-FEA31B' WHERE address='0xfea31bc088000ff909be1dfd8d0e3f2c7ef2d227';"
+
+          # Final count
+          q "SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE is_elite=true) as elite, COUNT(*) FILTER (WHERE is_active=true AND is_elite=false) as watching FROM polymarket_whales;"
+          q "SELECT alias, total_profit::numeric, strategy, is_elite FROM polymarket_whales WHERE is_elite=true ORDER BY total_profit DESC;"
+
+          cat $LOG
+          git config user.email "bot@sqi.app"; git config user.name "SQI"
+          git add $LOG
+          git commit -m "Fix elite count: D3B034+FEA31B promoted" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
