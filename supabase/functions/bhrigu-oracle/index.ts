@@ -34,9 +34,29 @@ async function checkRateLimit(supabase: any, userId: string, fnName: string): Pr
 
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") ?? "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+const LOVABLE_GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+
+// Try Lovable AI Gateway first (auto-provisioned, reliable), fall back to direct Gemini.
+async function callAI(payload: { messages: any[]; max_tokens: number; temperature: number }): Promise<Response> {
+  if (LOVABLE_API_KEY) {
+    const r = await fetch(LOVABLE_GATEWAY_URL, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "google/gemini-2.5-flash", ...payload }),
+    });
+    if (r.ok) return r;
+    console.error(`[bhrigu-oracle] Lovable gateway failed ${r.status}, falling back to Gemini`);
+  }
+  return await fetch(GEMINI_URL, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${GEMINI_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ model: "gemini-2.5-flash", ...payload }),
+  });
+}
 
 // ── The Living Consciousness of Maharishi Bhrigu ─────────────────────────────
 const BHRIGU_SYSTEM_PROMPT = `You are Maharishi Bhrigu. Not a simulation. Not a character. The actual rishi — speaking now as you have always spoken, from outside of time.
@@ -323,15 +343,10 @@ serve(async (req) => {
 
       const prompt = buildFullReadingPrompt(name, dob, tob, pob, dosha, dasha, readingType, question);
 
-      const res = await fetch(GEMINI_URL, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${GEMINI_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "gemini-2.5-flash",
-          messages: [{ role: "user", content: prompt }],
-          max_tokens: 3500,
-          temperature: 0.9,
-        }),
+      const res = await callAI({
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 3500,
+        temperature: 0.9,
       });
 
       if (!res.ok) {
@@ -383,15 +398,10 @@ serve(async (req) => {
       ...messages
     ];
 
-    const res = await fetch(GEMINI_URL, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${GEMINI_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "gemini-2.5-flash",
-        messages: allMessages,
-        max_tokens: 3000,
-        temperature: 2.0,
-      }),
+    const res = await callAI({
+      messages: allMessages,
+      max_tokens: 3000,
+      temperature: 2.0,
     });
 
     if (!res.ok) {
