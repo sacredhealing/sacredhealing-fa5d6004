@@ -1,23 +1,16 @@
 ══════════════════════════════════════════════════════
-  SQI-2050 🦈 CLAWBOT v7 — Production
-  2026-06-04T09:01:55.465Z | PAPER
-  Min: $100 | Entry zone: 6%–94%
+  SQI-2050 🦈 CLAWBOT v8 — Elite Whale Filter
+  2026-06-04T12:03:09.724Z | PAPER
+  Min whale: $100 | WR gate: 60% | Min trades: 10
 ══════════════════════════════════════════════════════
-Balance: $0.15
+Balance: $10.00
+Today's mirrors: 0/10
 
-🔍 Scanning 87,905,371 → 87,905,821
-  0xE111180000: 77737 logs → 2780 whale trades
-  0xe2222d279d: 13171 logs → 1236 whale trades
+🔍 Scanning 87,912,620 → 87,913,070
+  0xE111180000: 0 logs → 0 large trades ($100+)
+  0xe2222d279d: 0 logs → 0 large trades ($100+)
 
-Total: 4016 | New: 4016
+Total: 0 | New: 0
 
-📊 Top trades:
-  $   43861 | 0x5f659bccbc | 412848731297...
-  $   43861 | 0x5f659bccbc | 412848731297...
-  $   25357 | 0xad4b83e044 | 439437288738...
-  $   25357 | 0xad4b83e044 | 439437288738...
-  $   23250 | 0x0c88fc04da | 299840195148...
-
-Balance too low, stopping.
-
-━━━ CLAWBOT v7: 0 mirrored | Bal $0.1491 ━━━
+━━━ CLAWBOT v8: 0 mirrored | 0 new wallets observed | Bal $10.0000 ━━━
+    Daily total: 0/10
