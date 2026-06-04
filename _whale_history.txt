@@ -1,39 +1,12 @@
-
-✅ 200 | https://gamma-api.polymarket.com/events?limit=1
-   [{"id":"2890","ticker":"nba-will-the-mavericks-beat-the-grizzlies-by-more-than-5pt5-points-in-their-december-4-matchup","slug":"nba-will-the-mavericks
-
-✅ 200 | https://gamma-api.polymarket.com/markets?limit=1
-   [{"id":"540817","question":"New Rihanna Album before GTA VI?","conditionId":"0x1fad72fae204143ff1c3035e99e7c0f65ea8d5cd9bd1070987bd1a3316f772be","slug
-
-✅ 401 | https://gamma-api.polymarket.com/profiles?address=0x5f659bccbc4510e7be4f15b4e5b7fa54e3fd1e5e
-   invalid token/cookies
-
-
-✅ 200 | https://clob.polymarket.com/markets?limit=1
-   {"data":[{"enable_order_book":false,"active":true,"closed":true,"archived":false,"accepting_orders":false,"accepting_order_timestamp":null,"minimum_or
-
-✅ 200 | https://clob.polymarket.com/sampling-markets?limit=1
-   {"data":[{"enable_order_book":true,"active":true,"closed":false,"archived":false,"accepting_orders":true,"accepting_order_timestamp":"2025-11-26T16:55
-
-✅ 404 | https://data-api.polymarket.com/leaderboard?interval=1y&limit=5
-   404 page not found
-
-
-✅ 400 | https://data-api.polymarket.com/activity?limit=5
-   {"error":"required query param 'user' not provided"}
-
-✅ 200 | https://data-api.polymarket.com/positions?user=0x5f659bccbc4510e7be4f15b4e5b7fa54e3fd1e5e
-   []
-
-✅ 404 | https://data-api.polymarket.com/profit?user=0x5f659bccbc4510e7be4f15b4e5b7fa54e3fd1e5e
-   404 page not found
-
-
-✅ 404 | https://polymarket.com/api/leaderboard?interval=all&limit=5
-   <!DOCTYPE html><html data-dpl-id="dpl_6CSK14uchZjZ9hPdBYUD6P5rcuHk" id="__pm_html" lang="en"><head><meta charSet="utf-8"/><meta name="viewport" conten
-
-✅ 404 | https://polymarket.com/api/profile/0x5f659bccbc4510e7be4f15b4e5b7fa54e3fd1e5e
-   <!DOCTYPE html><html data-dpl-id="dpl_6CSK14uchZjZ9hPdBYUD6P5rcuHk" id="__pm_html" lang="en"><head><meta charSet="utf-8"/><meta name="viewport" conten
-❌ FAIL | https://lb.polymarket.com/v2/leaderboard?window=all&limit=50 | fetch failed
-❌ FAIL | https://lb.polymarket.com/leaderboard?window=all&limit=50 | fetch failed
-❌ FAIL | https://user-data.polymarket.com/positions?user=0x5f659bccbc4510e7be4f15b4e5b7fa54e3fd1e5e | fetch failed
+200 | data-api.polymarket.com/activity?user=0x5f659bccbc4510e7be4f
+200 | data-api.polymarket.com/activity?user=0x5f659bccbc4510e7be4f
+200 | data-api.polymarket.com/trades?user=0x5f659bccbc4510e7be4f15
+404 | data-api.polymarket.com/orders?user=0x5f659bccbc4510e7be4f15
+404 | data-api.polymarket.com/pnl?user=0x5f659bccbc4510e7be4f15b4e
+404 | data-api.polymarket.com/earnings?user=0x5f659bccbc4510e7be4f
+404 | data-api.polymarket.com/history?user=0x5f659bccbc4510e7be4f1
+404 | data-api.polymarket.com/user-market-trades?user=0x5f659bccbc
+404 | gamma-api.polymarket.com/activity?user=0x5f659bccbc4510e7be4
+404 | gamma-api.polymarket.com/trades?makerAddress=0x5f659bccbc451
+404 | gamma-api.polymarket.com/portfolio?user=0x5f659bccbc4510e7be
+401 | clob.polymarket.com/trades?maker_address=0x5f659bccbc4510e7b
