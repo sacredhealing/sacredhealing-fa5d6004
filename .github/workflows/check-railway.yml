@@ -1,39 +1,41 @@
-name: Railway CLI Deploy
+name: Railway Check v2
 
 on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_ADMIN_PAT }}
-
-      - name: Install Railway CLI and deploy
+      - name: Check Railway
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          LOG="_railway_cli.txt"
-          echo "=== Railway CLI Deploy $(date -u) ===" > $LOG
+          LOG="_railway_check2.txt"
+          echo "=== Railway Check $(date -u) ===" > $LOG
 
-          # Install Railway CLI
-          npm install -g @railway/cli 2>&1 | tail -3 >> $LOG
-          railway --version >> $LOG
+          # Install CLI
+          npm install -g @railway/cli --silent 2>/dev/null
+          
+          echo "--- whoami ---" >> $LOG
+          RAILWAY_TOKEN="${RAILWAY_TOKEN}" railway whoami 2>&1 >> $LOG
+          
+          echo "--- projects ---" >> $LOG
+          RAILWAY_TOKEN="${RAILWAY_TOKEN}" railway list 2>&1 >> $LOG || true
 
-          # Test token
-          echo "--- Testing token ---" >> $LOG
-          railway whoami 2>&1 >> $LOG
-
-          # List projects
-          echo "--- Listing projects ---" >> $LOG  
-          railway list 2>&1 >> $LOG
+          # Try API with correct token
+          echo "--- API projects ---" >> $LOG
+          curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"query":"{ me { id name email projects { edges { node { id name } } } } }"}' >> $LOG
 
           cat $LOG
           git config user.email "bot@sqi.app"; git config user.name "SQI"
           git add $LOG
-          git commit -m "Railway CLI test $(date -u +%H%M%S)" || true
+          git commit -m "Railway check v2" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
