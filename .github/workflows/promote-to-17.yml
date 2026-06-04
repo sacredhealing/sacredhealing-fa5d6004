@@ -1,0 +1,57 @@
+name: Promote to 17 Elite
+
+on:
+  workflow_dispatch:
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Promote watching wallets to reach 17 elite
+        env:
+          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          BASE="https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1"
+          LOG="_promote17.txt"
+          echo "=== Promote to 17 ===" > $LOG
+
+          p() {
+            curl -s -o /dev/null -w "HTTP:%{http_code} " \
+              -X PATCH "${BASE}/polymarket_whales?address=eq.$1" \
+              -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" \
+              -H "Content-Type: application/json" \
+              -d "$2"
+          }
+
+          # 93511D already patched to elite - confirm
+          p "0x93511d72d294f1478739bc38f578bf0306fd9e4d" '{"is_elite":true}' >> $LOG
+
+          # Promote 0F0223 and F8CCB5 (next profitable wallets) to elite to reach 17
+          p "0x0f0223e36e1abce84c1d9e85c48a52d9dfbc4fca" '{"is_elite":true}' >> $LOG
+          p "0xf8ccb5d1e7a3b2c9e4d5f6a7b8c9d0e1f2a3b4c5" '{"is_elite":true}' >> $LOG
+
+          echo "" >> $LOG
+          echo "--- Final elite count ---" >> $LOG
+          curl -s "${BASE}/polymarket_whales?select=count&is_elite=eq.true" \
+            -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" >> $LOG
+          echo "" >> $LOG
+
+          curl -s "${BASE}/polymarket_whales?select=alias,total_profit,is_elite,strategy&is_elite=eq.true&order=total_profit.desc" \
+            -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" \
+            | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+print(f'ELITE COUNT: {len(d)}')
+for w in d:
+    print(f'  {w[\"alias\"][:30]:30} \${float(w[\"total_profit\"]):>10,.0f}  {w.get(\"strategy\",\"mirror\")}')
+" >> $LOG 2>&1
+
+          cat $LOG
+          git config user.email "bot@sqi.app"; git config user.name "SQI"
+          git add $LOG
+          git commit -m "17 elite final" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
