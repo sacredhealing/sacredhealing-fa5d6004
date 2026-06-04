@@ -1,0 +1,21 @@
+Demoting 9 negative EV wallets...
+84CFFF: 204
+84AD9C: 204
+EED588: 204
+000D25: 204
+E52C0A: 204
+93511D: 204
+D3B034: 204
+B2A362: 204
+335592: 204
+
+REMAINING ELITE:
+[{"alias":"BAA2BC-IranInsider","total_profit":191503,"win_rate_30d":83,"strategy":"insider_geo"}, 
+ {"alias":"CryptoOracle-06DC51","total_profit":131298,"win_rate_30d":78,"strategy":"mirror"}, 
+ {"alias":"ED107A-NoMachine99x","total_profit":58947,"win_rate_30d":89,"strategy":"no_machine"}, 
+ {"alias":"🏆A7A8C1","total_profit":47554.02,"win_rate_30d":84,"strategy":"mirror"}, 
+ {"alias":"🏆F49CE4","total_profit":41974.73,"win_rate_30d":51,"strategy":"mirror"}, 
+ {"alias":"CoTrader-E9076A","total_profit":30103,"win_rate_30d":83,"strategy":"mirror"}, 
+ {"alias":"PerfectWR-204F72","total_profit":25928,"win_rate_30d":100,"strategy":"mirror"}, 
+ {"alias":"🏆A77105","total_profit":6135.74,"win_rate_30d":78,"strategy":"mirror"}, 
+ {"alias":"🏆Elite-FEA31B","total_profit":2151.41,"win_rate_30d":75,"strategy":"mirror"}]
