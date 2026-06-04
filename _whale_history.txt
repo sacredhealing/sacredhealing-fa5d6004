@@ -1,22 +1,19 @@
-=== Testing Alchemy block range limits on Polygon ===
+Latest Polygon block: 87922693
 
-Latest block: 87922606
-Range 10: ❌ ERROR — Under the Free tier plan, you can make eth_getLogs requests with up to a 10 block range. Based on your parameters, this block range should work: [0x53d97a4, 0x53d97ad]. Upgrade to PAYG for expanded block range.
-Range 50: ❌ ERROR — Under the Free tier plan, you can make eth_getLogs requests with up to a 10 block range. Based on your parameters, this block range should work: [0x53d977c, 0x53d9785]. Upgrade to PAYG for expanded block range.
-Range 100: ❌ ERROR — Under the Free tier plan, you can make eth_getLogs requests with up to a 10 block range. Based on your parameters, this block range should work: [0x53d974a, 0x53d9753]. Upgrade to PAYG for expanded block range.
-Range 500: ❌ ERROR — Under the Free tier plan, you can make eth_getLogs requests with up to a 10 block range. Based on your parameters, this block range should work: [0x53d95ba, 0x53d95c3]. Upgrade to PAYG for expanded block range.
-Range 1000: ❌ ERROR — Under the Free tier plan, you can make eth_getLogs requests with up to a 10 block range. Based on your parameters, this block range should work: [0x53d93c6, 0x53d93cf]. Upgrade to PAYG for expanded block range.
-Range 2000: ❌ ERROR — Under the Free tier plan, you can make eth_getLogs requests with up to a 10 block range. Based on your parameters, this block range should work: [0x53d8fde, 0x53d8fe7]. Upgrade to PAYG for expanded block range.
-Range 5000: ❌ ERROR — Under the Free tier plan, you can make eth_getLogs requests with up to a 10 block range. Based on your parameters, this block range should work: [0x53d8426, 0x53d842f]. Upgrade to PAYG for expanded block range.
+=== FREE RPC PROVIDER TEST ===
 
-=== Testing QuickNode free public endpoints ===
-❌ https://polygon-mainnet.quiknode.pro/ | Unexpected end of JSON input
-❌ https://rpc.ankr.com/polygon | Unauthorized: You must authenticate your
-✅ https://polygon-rpc.com | block: NaN
-   getLogs 1000 blocks: ✅ 0 logs
-   getLogs 10k blocks:  ✅ 0 logs — FREE RANGE UNLOCKED
-❌ https://rpc-mainnet.matic.network | fetch failed
-❌ https://matic-mainnet.chainstacklabs.com | fetch failed
-❌ https://polygon.llamarpc.com | fetch failed
-❌ https://1rpc.io/matic | fetch failed
-❌ https://polygon.rpc.blxrbdn.com | fetch failed
+❌ Polygon Official     | "message: API key disabled, reason: tenant disable
+❌ Polygon Bor 1        | fetch failed
+✅ Polygon Bor 2        | 10k OK (0 logs) | 100k: ❌ | MAX ~10k blocks
+🟡 PublicNode           | alive but getLogs fails: The operation was aborted due to timeout
+❌ Chainstack Free      | The operation was aborted due to timeout
+❌ Ankr Free            | "message: API key is not allowed to access blockch
+❌ BlockPI              | Unexpected token '<', "<!DOCTYPE "... is not valid
+🟡 dRPC                 | 1k OK (0 logs) | 10k: ranges over 10000 blocks are not support
+🚀 Tenderly             | 10k OK | 100k OK (0 logs) | UNLIMITED RANGE!
+❌ LlamaRPC             | fetch failed
+❌ Meowrpc              | Unexpected token '<', "<!DOCTYPE "... is not valid
+❌ NodeReal             | fetch failed
+❌ OmniaTech            | Unexpected token '<', "<!DOCTYPE "... is not valid
+🟡 1RPC                 | alive but getLogs fails: eth_getLogs is limited to 0 - 50 blocks range
+❌ Blast                | Blast API is no longer available. Please update yo
