@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, Pencil, Trash2, RefreshCw, AlertTriangle, Key, Package, Crown } from "lucide-react";
+import { Eye, Pencil, Trash2, RefreshCw, AlertTriangle, Key, Package, Crown, UserPlus, Mail } from "lucide-react";
 
 const ADMIN_UUID = "bd0b21c9-577a-450b-bb1e-21c9d0423f17";
 
@@ -19,7 +19,6 @@ const TIER_COLORS: Record<string, string> = {
   "akasha-infinity": "#fff8dc",
 };
 
-// ── All individually grantable products ─────────────────────────────────────
 export const PRODUCTS: { id: string; label: string; desc: string; icon: string; route: string }[] = [
   { id: "akashic-reading",    label: "Akashic Deep Reading",         desc: "Full Akashic Records access",         icon: "⟁",  route: "/akashic-reading" },
   { id: "digital-nadi",       label: "Digital Nāḍī Scanner",         desc: "4-layer biometric Nāḍī scan",         icon: "◈",  route: "/digital-nadi" },
@@ -27,7 +26,7 @@ export const PRODUCTS: { id: string; label: string; desc: string; icon: string; 
   { id: "shakti-cycle",       label: "Shakti Cycle Intelligence",    desc: "Sovereign Hormonal Alchemy system",   icon: "☽",  route: "/sovereign-hormonal-alchemy" },
   { id: "virtual-pilgrimage", label: "Virtual Pilgrimage",           desc: "26 sacred sites scalar field",        icon: "⊕",  route: "/virtual-pilgrimage" },
   { id: "jyotish-vidya",      label: "Jyotish Vidya Full Curriculum","desc": "All 32 Jyotish modules unlocked",   icon: "★",  route: "/vedic-astrology" },
-  { id: "quantum-apothecary", label: "Quantum Apothecary Unlimited", desc: "Unlimited SQI AI transmissions",      icon: "◇",  route: "/quantum-apothecary" },
+  { id: "quantum-apothecary", label: "Quantum Apothecary Unlimited", desc: "Unlimited SQI transmissions",         icon: "◇",  route: "/quantum-apothecary" },
   { id: "akashic-codex",      label: "Akashic Codex",                desc: "Living book of soul transmissions",   icon: "⊗",  route: "/akashic-codex" },
 ];
 
@@ -52,6 +51,14 @@ const glass: React.CSSProperties = {
   WebkitBackdropFilter:"blur(40px)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:24,
 };
 
+// ── Input style ────────────────────────────────────────────────────────────
+const inputStyle: React.CSSProperties = {
+  width:"100%", background:"rgba(255,255,255,0.04)",
+  border:"1px solid rgba(255,255,255,0.1)", borderRadius:12,
+  padding:"12px 16px", color:"#fff", fontSize:13, outline:"none",
+  boxSizing:"border-box",
+};
+
 export default function UserManagementPanel() {
   const { toast } = useToast();
   const [users, setUsers] = useState<any[]>([]);
@@ -60,13 +67,18 @@ export default function UserManagementPanel() {
   const [filterTier, setFilterTier] = useState("all");
   const [showUnnamed, setShowUnnamed] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [modalMode, setModalMode] = useState<"view"|"edit-tier"|"edit-products"|null>(null);
+  const [modalMode, setModalMode] = useState<"view"|"edit-tier"|"edit-products"|"create-user"|null>(null);
   const [newTier, setNewTier] = useState("");
-  const [userProducts, setUserProducts] = useState<string[]>([]);  // currently granted product ids
   const [pendingProducts, setPendingProducts] = useState<string[]>([]);
   const [confirmDelete, setConfirmDelete] = useState<string|null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [resetingId, setResetingId] = useState<string|null>(null);
+
+  // ── Create user form state ───────────────────────────────────────────────
+  const [newEmail, setNewEmail] = useState("");
+  const [newFullName, setNewFullName] = useState("");
+  const [newUserTier, setNewUserTier] = useState("free");
+  const [createResult, setCreateResult] = useState<{success:boolean; message:string; invite_link?:string}|null>(null);
 
   // ── Load users ──────────────────────────────────────────────────────────
   const loadUsers = useCallback(async () => {
@@ -89,7 +101,6 @@ export default function UserManagementPanel() {
         .from("admin_granted_access").select("user_id,tier,access_id,access_type,is_active,granted_at")
         .eq("is_active",true);
 
-      // Separate membership grants vs product grants
       const membershipGrants: Record<string,string> = {};
       const productGrants: Record<string,string[]> = {};
       (grants||[]).forEach((g:any) => {
@@ -149,6 +160,45 @@ export default function UserManagementPanel() {
     withProducts: users.filter(u=>u.grantedProducts?.length>0).length,
   };
 
+  // ── CREATE USER ─────────────────────────────────────────────────────────
+  const handleCreateUser = async () => {
+    if (!newEmail || !newEmail.includes("@")) {
+      toast({ title:"Invalid Email", description:"Enter a valid email address.", variant:"destructive" });
+      return;
+    }
+    setActionLoading(true);
+    setCreateResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-user-management", {
+        body: {
+          action: "create_user",
+          email: newEmail.trim().toLowerCase(),
+          full_name: newFullName.trim() || null,
+          tier: newUserTier,
+          send_invite: true,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      setCreateResult({
+        success: true,
+        message: `✦ Soul ${newFullName || newEmail} initiated into the Quantum Field. Invite email transmitted.`,
+        invite_link: data.invite_link,
+      });
+      toast({ title:"✦ Soul Created", description:`${newFullName || newEmail} — invite email sent.` });
+      // Reset form
+      setNewEmail("");
+      setNewFullName("");
+      setNewUserTier("free");
+      // Reload users list
+      await loadUsers();
+    } catch (e:any) {
+      setCreateResult({ success: false, message: e.message });
+      toast({ title:"Creation Failed", description:e.message, variant:"destructive" });
+    } finally { setActionLoading(false); }
+  };
+
   // ── Grant tier ──────────────────────────────────────────────────────────
   const handleGrantTier = async () => {
     if (!selectedUser || !newTier) return;
@@ -179,25 +229,21 @@ export default function UserManagementPanel() {
     } finally { setActionLoading(false); }
   };
 
-  // ── Load user's current products when opening product modal ─────────────
   const openProductModal = async (user: any) => {
     setSelectedUser(user);
     setPendingProducts([...(user.grantedProducts || [])]);
     setModalMode("edit-products");
   };
 
-  // ── Save product grants ─────────────────────────────────────────────────
   const handleSaveProducts = async () => {
     if (!selectedUser) return;
     setActionLoading(true);
     try {
-      // Revoke all existing product grants for this user
       await supabase.from("admin_granted_access")
         .update({ is_active: false })
         .eq("user_id", selectedUser.id)
         .eq("access_type", "product");
 
-      // Insert all pending products
       if (pendingProducts.length > 0) {
         const inserts = pendingProducts.map(pid => ({
           user_id: selectedUser.id,
@@ -215,8 +261,7 @@ export default function UserManagementPanel() {
       setUsers(prev => prev.map(u =>
         u.id===selectedUser.id ? {...u, grantedProducts: pendingProducts} : u
       ));
-      const names = pendingProducts.map(p => PRODUCTS.find(x=>x.id===p)?.label||p).join(", ");
-      toast({ title:"◈ Products Transmitted", description: pendingProducts.length > 0 ? `${selectedUser.full_name||"Seeker"} → ${names}` : `All products revoked for ${selectedUser.full_name||"Seeker"}` });
+      toast({ title:"◈ Products Transmitted", description: pendingProducts.length > 0 ? `${selectedUser.full_name||"Seeker"} → ${pendingProducts.length} products granted` : `All products revoked` });
       setModalMode(null);
     } catch (e:any) {
       toast({ title:"Error", description:e.message, variant:"destructive" });
@@ -229,7 +274,6 @@ export default function UserManagementPanel() {
     );
   };
 
-  // ── Password reset ──────────────────────────────────────────────────────
   const handleResetPassword = async (userId: string, userName: string) => {
     setResetingId(userId);
     try {
@@ -244,7 +288,6 @@ export default function UserManagementPanel() {
     } finally { setResetingId(null); }
   };
 
-  // ── Delete ──────────────────────────────────────────────────────────────
   const handleDelete = async (userId: string) => {
     const prev = users;
     setUsers(u => u.filter(x => x.id !== userId));
@@ -268,17 +311,32 @@ export default function UserManagementPanel() {
     <div style={{ fontFamily:"'Plus Jakarta Sans',Inter,sans-serif", color:"#fff", paddingBottom:60 }}>
 
       {/* Header */}
-      <div style={{ marginBottom:28 }}>
-        <div style={{ fontSize:9, fontWeight:800, letterSpacing:"0.5em", textTransform:"uppercase", color:gold, marginBottom:6 }}>
-          AKASHA-NEURAL ARCHIVE · ADMIN NEXUS
+      <div style={{ marginBottom:28, display:"flex", justifyContent:"space-between", alignItems:"flex-end", flexWrap:"wrap", gap:12 }}>
+        <div>
+          <div style={{ fontSize:9, fontWeight:800, letterSpacing:"0.5em", textTransform:"uppercase", color:gold, marginBottom:6 }}>
+            AKASHA-NEURAL ARCHIVE · ADMIN NEXUS
+          </div>
+          <h2 style={{ fontSize:28, fontWeight:900, letterSpacing:"-0.04em", color:gold, textShadow:"0 0 20px rgba(212,175,55,0.4)", margin:0 }}>
+            Soul Registry
+          </h2>
+          <p style={{ color:"rgba(255,255,255,0.4)", fontSize:13, marginTop:4 }}>
+            {users.length} seekers in the Quantum Field
+            {stats.unnamed>0 && <span style={{ color:"#f59e0b", marginLeft:8 }}>· {stats.unnamed} incomplete profiles</span>}
+          </p>
         </div>
-        <h2 style={{ fontSize:28, fontWeight:900, letterSpacing:"-0.04em", color:gold, textShadow:"0 0 20px rgba(212,175,55,0.4)", margin:0 }}>
-          Soul Registry
-        </h2>
-        <p style={{ color:"rgba(255,255,255,0.4)", fontSize:13, marginTop:4 }}>
-          {users.length} seekers in the Quantum Field
-          {stats.unnamed>0 && <span style={{ color:"#f59e0b", marginLeft:8 }}>· {stats.unnamed} incomplete profiles</span>}
-        </p>
+        {/* ADD NEW USER button */}
+        <button
+          onClick={() => { setCreateResult(null); setModalMode("create-user"); }}
+          style={{
+            display:"flex", alignItems:"center", gap:8,
+            background:"rgba(212,175,55,0.12)", border:`1.5px solid ${gold}`,
+            borderRadius:14, padding:"12px 20px", color:gold,
+            fontSize:13, fontWeight:700, cursor:"pointer",
+            boxShadow:"0 0 20px rgba(212,175,55,0.15)",
+          }}>
+          <UserPlus size={15} />
+          Add New Soul
+        </button>
       </div>
 
       {/* Stats */}
@@ -298,7 +356,6 @@ export default function UserManagementPanel() {
         ))}
       </div>
 
-      {/* Unnamed warning */}
       {stats.unnamed>0 && (
         <div style={{ ...glass, borderColor:"rgba(245,158,11,0.2)", padding:"12px 18px", marginBottom:16, display:"flex", alignItems:"center", gap:12 }}>
           <AlertTriangle size={16} color="#f59e0b" />
@@ -351,7 +408,6 @@ export default function UserManagementPanel() {
             return (
               <div key={user.id} style={{ display:"grid", gridTemplateColumns:"2fr 1.2fr 1.4fr 0.8fr auto", gap:10, padding:"12px 16px", borderBottom:"1px solid rgba(255,255,255,0.03)", alignItems:"center" }}>
 
-                {/* Soul */}
                 <div style={{ display:"flex", alignItems:"center", gap:10 }}>
                   <div style={{ width:34, height:34, borderRadius:"50%", background:user.full_name?"rgba(212,175,55,0.15)":"rgba(245,158,11,0.1)", border:`1px solid ${user.full_name?"rgba(212,175,55,0.3)":"rgba(245,158,11,0.3)"}`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:800, color:user.full_name?gold:"#f59e0b", flexShrink:0 }}>
                     {initials}
@@ -362,12 +418,10 @@ export default function UserManagementPanel() {
                   </div>
                 </div>
 
-                {/* Tier */}
                 <span style={{ fontSize:8, fontWeight:800, letterSpacing:"0.2em", textTransform:"uppercase", color:tierColor, background:tierColor+"20", border:`1px solid ${tierColor}40`, borderRadius:8, padding:"4px 8px", display:"inline-block" }}>
                   {user.tier==="free"?"FREE":user.tier==="prana-flow"?"PRANA":user.tier==="siddha-quantum"?"SIDDHA":"AKASHA"}
                 </span>
 
-                {/* Products */}
                 <div style={{ display:"flex", flexWrap:"wrap", gap:4 }}>
                   {productCount === 0 ? (
                     <span style={{ fontSize:9, color:"rgba(255,255,255,0.2)" }}>None granted</span>
@@ -382,12 +436,10 @@ export default function UserManagementPanel() {
                   {productCount > 3 && <span style={{ fontSize:8, color:"rgba(255,255,255,0.3)" }}>+{productCount-3}</span>}
                 </div>
 
-                {/* Joined */}
                 <div style={{ fontSize:10, color:"rgba(255,255,255,0.35)" }}>
                   {new Date(user.created_at).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"2-digit"})}
                 </div>
 
-                {/* Actions */}
                 <div style={{ display:"flex", gap:4, flexWrap:"wrap" }}>
                   <IconBtn icon={<Eye size={12}/>} title="View profile" onClick={()=>openUser(user,"view")} />
                   <IconBtn icon={<Crown size={12}/>} title="Change membership tier" onClick={()=>openUser(user,"edit-tier")} color={gold} />
@@ -405,6 +457,118 @@ export default function UserManagementPanel() {
             );
           })}
         </div>
+      )}
+
+      {/* ── CREATE USER MODAL ──────────────────────────────────────────────── */}
+      {modalMode==="create-user" && (
+        <SQIModal onClose={()=>{ setModalMode(null); setCreateResult(null); }}>
+          <div style={{ fontSize:9, fontWeight:800, letterSpacing:"0.5em", textTransform:"uppercase", color:gold, marginBottom:8 }}>
+            SOUL INITIATION
+          </div>
+          <h3 style={{ fontSize:20, fontWeight:900, color:"#fff", margin:"0 0 4px" }}>Add New Soul</h3>
+          <p style={{ color:"rgba(255,255,255,0.4)", fontSize:12, marginBottom:24 }}>
+            Creates auth account + profile. An invite email is sent so the soul can set their password.
+          </p>
+
+          <div style={{ display:"flex", flexDirection:"column", gap:14, marginBottom:20 }}>
+            {/* Email */}
+            <div>
+              <label style={{ fontSize:9, fontWeight:800, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(255,255,255,0.4)", display:"block", marginBottom:6 }}>
+                EMAIL ADDRESS *
+              </label>
+              <div style={{ position:"relative" }}>
+                <Mail size={13} style={{ position:"absolute", left:14, top:"50%", transform:"translateY(-50%)", color:"rgba(255,255,255,0.3)" }} />
+                <input
+                  type="email"
+                  placeholder="soul@example.com"
+                  value={newEmail}
+                  onChange={e=>setNewEmail(e.target.value)}
+                  style={{ ...inputStyle, paddingLeft:36 }}
+                />
+              </div>
+            </div>
+
+            {/* Full Name */}
+            <div>
+              <label style={{ fontSize:9, fontWeight:800, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(255,255,255,0.4)", display:"block", marginBottom:6 }}>
+                FULL NAME (optional)
+              </label>
+              <input
+                type="text"
+                placeholder="Soul's full name"
+                value={newFullName}
+                onChange={e=>setNewFullName(e.target.value)}
+                style={inputStyle}
+              />
+            </div>
+
+            {/* Tier */}
+            <div>
+              <label style={{ fontSize:9, fontWeight:800, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(255,255,255,0.4)", display:"block", marginBottom:8 }}>
+                INITIAL TIER
+              </label>
+              <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                {Object.entries(TIER_LABELS).map(([value,label]) => {
+                  const tc = TIER_COLORS[value];
+                  const isSelected = newUserTier === value;
+                  return (
+                    <button key={value} onClick={()=>setNewUserTier(value)}
+                      style={{
+                        background: isSelected ? tc+"18" : "rgba(255,255,255,0.02)",
+                        border: `1px solid ${isSelected ? tc+"80" : "rgba(255,255,255,0.08)"}`,
+                        borderRadius:12, padding:"10px 14px",
+                        color: isSelected ? tc : "rgba(255,255,255,0.5)",
+                        fontSize:12, fontWeight: isSelected ? 700 : 400,
+                        textAlign:"left", cursor:"pointer",
+                        display:"flex", alignItems:"center", gap:8,
+                      }}>
+                      <div style={{ width:8, height:8, borderRadius:"50%", background: isSelected ? tc : "rgba(255,255,255,0.2)", flexShrink:0 }} />
+                      {label as string}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Result feedback */}
+          {createResult && (
+            <div style={{
+              padding:"12px 16px", borderRadius:12, marginBottom:16,
+              background: createResult.success ? "rgba(212,175,55,0.08)" : "rgba(239,68,68,0.08)",
+              border: `1px solid ${createResult.success ? "rgba(212,175,55,0.25)" : "rgba(239,68,68,0.25)"}`,
+            }}>
+              <div style={{ fontSize:12, color: createResult.success ? gold : "#ef4444", fontWeight:600 }}>
+                {createResult.message}
+              </div>
+              {createResult.invite_link && (
+                <div style={{ marginTop:8 }}>
+                  <div style={{ fontSize:9, fontWeight:800, letterSpacing:"0.3em", textTransform:"uppercase", color:"rgba(255,255,255,0.3)", marginBottom:4 }}>
+                    INVITE LINK (backup)
+                  </div>
+                  <div style={{ fontSize:10, color:"rgba(34,211,238,0.8)", wordBreak:"break-all", fontFamily:"monospace" }}>
+                    {createResult.invite_link}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+            <SQIBtn
+              label={actionLoading ? "Transmitting…" : "✦ Create & Send Invite"}
+              onClick={handleCreateUser}
+              loading={actionLoading}
+              color={gold}
+            />
+            <SQIBtn label="Close" onClick={()=>{ setModalMode(null); setCreateResult(null); }} />
+          </div>
+
+          <p style={{ fontSize:10, color:"rgba(255,255,255,0.25)", marginTop:16, lineHeight:1.6 }}>
+            The soul will receive an invite email to set their password and access the platform.
+            Tier access is granted immediately via Akashic records.
+          </p>
+        </SQIModal>
       )}
 
       {/* View Modal */}
@@ -427,7 +591,6 @@ export default function UserManagementPanel() {
               </div>
             ))}
           </div>
-          {/* Granted products in view modal */}
           <div style={{ marginBottom:20 }}>
             <div style={{ fontSize:9, fontWeight:800, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(167,139,250,0.6)", marginBottom:10 }}>GRANTED PRODUCTS</div>
             {selectedUser.grantedProducts?.length > 0 ? (
@@ -502,20 +665,12 @@ export default function UserManagementPanel() {
                     borderRadius:14, padding:"12px 16px", textAlign:"left", cursor:"pointer",
                     display:"flex", alignItems:"center", gap:12, transition:"all 0.15s",
                   }}>
-                  {/* Toggle indicator */}
-                  <div style={{
-                    width:18, height:18, borderRadius:"50%", flexShrink:0,
-                    background: isGranted ? "#a78bfa" : "rgba(255,255,255,0.1)",
-                    border: `2px solid ${isGranted ? "#a78bfa" : "rgba(255,255,255,0.2)"}`,
-                    display:"flex", alignItems:"center", justifyContent:"center",
-                  }}>
+                  <div style={{ width:18, height:18, borderRadius:"50%", flexShrink:0, background: isGranted ? "#a78bfa" : "rgba(255,255,255,0.1)", border: `2px solid ${isGranted ? "#a78bfa" : "rgba(255,255,255,0.2)"}`, display:"flex", alignItems:"center", justifyContent:"center" }}>
                     {isGranted && <span style={{ color:"#fff", fontSize:10, fontWeight:900 }}>✓</span>}
                   </div>
                   <span style={{ fontSize:20, lineHeight:1 }}>{product.icon}</span>
                   <div style={{ flex:1 }}>
-                    <div style={{ fontSize:13, fontWeight:700, color: isGranted ? "#a78bfa" : "rgba(255,255,255,0.7)" }}>
-                      {product.label}
-                    </div>
+                    <div style={{ fontSize:13, fontWeight:700, color: isGranted ? "#a78bfa" : "rgba(255,255,255,0.7)" }}>{product.label}</div>
                     <div style={{ fontSize:10, color:"rgba(255,255,255,0.3)", marginTop:2 }}>{product.desc}</div>
                   </div>
                 </button>
