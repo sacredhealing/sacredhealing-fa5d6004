@@ -1,62 +1,14 @@
-══════════════════════════════════════════
-  SQI WHALE HISTORY DEEP SCAN
-  2026-06-04T10:25:25.229Z
-══════════════════════════════════════════
 
-📊 Top 20 most-seen wallets from 464 trade records:
-  0x0e26a5a60755... seen 29x
-  0xa7a8c1fd4bff... seen 24x
-  0x8cb0e35148f5... seen 9x
-  0xa5ea13a81d2b... seen 9x
-  0x65b54274eba5... seen 7x
-  0x5e4dbe95f805... seen 7x
-  0xb91aeb5accc3... seen 6x
-  0xa61ef8773ec2... seen 6x
-  0x74471a007ddc... seen 6x
-  0x9097b9fd27dd... seen 5x
-  0xbee54d900517... seen 5x
-  0x08fff5b9a795... seen 4x
-  0xbddf61af533f... seen 4x
-  0xfea31bc08800... seen 4x
-  0xc4d1a863e9cc... seen 4x
-  0xc8ab97a9089a... seen 4x
-  0x2c335066fe58... seen 4x
-  0xc0a65b15679e... seen 4x
-  0xdf17f4a8dd01... seen 3x
-  0x152fdae6b14b... seen 3x
+=======================================================
+  Apex-C8AB97
+  Known PnL: $283,246
+=======================================================
+Trades: 0
+Positions: 0
 
-🔍 Deep scanning 23 wallets for 6mo + 12mo performance...
-
-  Scanning 0x0e26a5a60755... trades:4 | 6mo: 0%WR +0%ROI (0t) | 12mo: 0%WR +0%ROI (0t) | PnL: $-1404.16
-  Scanning 0xa7a8c1fd4bff... trades:46 | 6mo: 0%WR +0%ROI (0t) | 12mo: 0%WR +0%ROI (0t) | PnL: $47553.99
-  Scanning 0x8cb0e35148f5... trades:0 | 6mo: 0%WR +0%ROI (0t) | 12mo: 0%WR +0%ROI (0t) | PnL: $0
-  Scanning 0xa5ea13a81d2b... trades:500 | 6mo: 0%WR +0%ROI (0t) | 12mo: 0%WR +0%ROI (0t) | PnL: $-782365.47
-  Scanning 0x65b54274eba5... trades:212 | 6mo: 0%WR +0%ROI (0t) | 12mo: 0%WR +0%ROI (0t) | PnL: $-4475404.14
-  Scanning 0x5e4dbe95f805... trades:82 | 6mo: 0%WR +0%ROI (0t) | 12mo: 0%WR +0%ROI (0t) | PnL: $-2302809.05
-  Scanning 0xb91aeb5accc3... trades:134 | 6mo: 0%WR +0%ROI (0t) | 12mo: 0%WR +0%ROI (0t) | PnL: $0
-  Scanning 0xa61ef8773ec2... trades:500 | 6mo: 0%WR +0%ROI (0t) | 12mo: 0%WR +0%ROI (0t) | PnL: $-15571.8
-  Scanning 0x74471a007ddc... trades:500 | 6mo: 0%WR +0%ROI (0t) | 12mo: 0%WR +0%ROI (0t) | PnL: $-390117.76
-  Scanning 0x9097b9fd27dd... trades:6 | 6mo: 0%WR +0%ROI (0t) | 12mo: 0%WR +0%ROI (0t) | PnL: $-27228.04
-  Scanning 0xbee54d900517... trades:500 | 6mo: 0%WR +0%ROI (0t) | 12mo: 0%WR +0%ROI (0t) | PnL: $-10925139.73
-  Scanning 0x08fff5b9a795... trades:482 | 6mo: 0%WR +0%ROI (0t) | 12mo: 0%WR +0%ROI (0t) | PnL: $-41883.39
-  Scanning 0xbddf61af533f... trades:500 | 6mo: 0%WR +0%ROI (0t) | 12mo: 0%WR +0%ROI (0t) | PnL: $-159928.83
-  Scanning 0xfea31bc08800... trades:500 | 6mo: 0%WR +0%ROI (0t) | 12mo: 0%WR +0%ROI (0t) | PnL: $2715.99
-  Scanning 0xc4d1a863e9cc... trades:500 | 6mo: 0%WR +0%ROI (0t) | 12mo: 0%WR +0%ROI (0t) | PnL: $-307169.5
-  Scanning 0xc8ab97a9089a... trades:500 | 6mo: 0%WR +0%ROI (0t) | 12mo: 0%WR +0%ROI (0t) | PnL: $283246.07
-  Scanning 0x2c335066fe58... trades:500 | 6mo: 0%WR +0%ROI (0t) | 12mo: 0%WR +0%ROI (0t) | PnL: $-774991.63
-  Scanning 0xc0a65b15679e... trades:30 | 6mo: 0%WR +0%ROI (0t) | 12mo: 0%WR +0%ROI (0t) | PnL: $-11324.76
-  Scanning 0xdf17f4a8dd01... trades:500 | 6mo: 0%WR +0%ROI (0t) | 12mo: 0%WR +0%ROI (0t) | PnL: $-18239.76
-  Scanning 0x152fdae6b14b... trades:356 | 6mo: 0%WR +0%ROI (0t) | 12mo: 0%WR +0%ROI (0t) | PnL: $-25171.52
-  Scanning 0x5f659bccbc45... no resolved trade data (0 activity, 0 trades)
-  Scanning 0xad4b83e044f3... no resolved trade data (0 activity, 0 trades)
-  Scanning 0x0c88fc04da4f... no resolved trade data (0 activity, 0 trades)
-
-
-🏆 ELITE CANDIDATES FOUND: 0
-
-
-━━━ SCAN COMPLETE ━━━
-Scanned: 23 | Elite found: 0
-
-Sample trade fields: proxyWallet, timestamp, conditionId, type, size, usdcSize, transactionHash, price, asset, side, outcomeIndex, title, slug, icon, eventSlug, outcome, name, pseudonym, bio, profileImage, profileImageOptimized
-Sample: {"proxyWallet":"0x0e26a5a60755f60a20500a0fb858739c18b4550e","timestamp":1780563925,"conditionId":"0xcd836ec4d94b8a4ddc5713d80fe9db245d2fb4796eaf12337974da1b4e96100d","type":"TRADE","size":1000,"usdcSize":1,"transactionHash":"0x1bdc310a466e2b63f650ae30da9f542fce984bb6ca3beac60bb5c4380398c4bc","price"
+=======================================================
+  Apex-A7A8C1
+  Known PnL: $47,554
+=======================================================
+Trades: 0
+Positions: 0
