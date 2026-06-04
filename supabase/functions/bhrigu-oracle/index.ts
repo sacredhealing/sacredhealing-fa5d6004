@@ -284,7 +284,6 @@ serve(async (req) => {
     const chatHistory = (body.history as {role: string; content: string}[]) ?? [];
     const isOpening = Boolean(body.is_opening);
     const leafConfirmed = Boolean(body.leaf_confirmed);
-    const leafConfirmed = Boolean(body.leaf_confirmed);
 
     // ── Opening message — no API call needed ───────────────────────────────
     if (isOpening) {
@@ -327,7 +326,7 @@ serve(async (req) => {
         body: JSON.stringify({
           model: "gemini-2.5-flash",
           messages: [{ role: "user", content: prompt }],
-          max_tokens: 2500,
+          max_tokens: 3500,
           temperature: 0.9,
         }),
       });
