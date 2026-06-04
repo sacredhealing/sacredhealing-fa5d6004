@@ -1,0 +1,28 @@
+name: Find D3B034
+
+on:
+  workflow_dispatch:
+
+jobs:
+  find:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Find and fix D3B034
+        env:
+          SUPABASE_PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          DB="https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query"
+          LOG="_d3b_fix.txt"
+          q() { curl -s -X POST "$DB" -H "Authorization: Bearer ${SUPABASE_PAT}" -H "Content-Type: application/json" -d "{\"query\":\"$1\"}" >> $LOG; echo "" >> $LOG; }
+          echo "=== Find D3B034 ===" > $LOG
+          q "SELECT id, alias, address, total_profit::numeric, is_elite FROM polymarket_whales WHERE address LIKE '%d3b0%' OR alias LIKE '%D3B0%' OR alias LIKE '%d3b%';"
+          q "UPDATE polymarket_whales SET is_elite=true, alias='🏆Elite-D3B034' WHERE address='0xd3b034d7bfb2473fb252d0414646d9786bac329e';"
+          q "SELECT COUNT(*) FILTER (WHERE is_elite=true) as elite FROM polymarket_whales;"
+          cat $LOG
+          git config user.email "bot@sqi.app"; git config user.name "SQI"
+          git add $LOG; git commit -m "Fix D3B034" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
