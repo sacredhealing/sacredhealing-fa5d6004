@@ -29,7 +29,7 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
     );
 
-    // Verify admin via user_roles (security definer has_role)
+    // Verify admin
     const { data: isAdmin, error: roleErr } = await adminClient.rpc("has_role", {
       _user_id: user.id,
       _role: "admin",
@@ -38,9 +38,77 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Admin access required" }), { status: 403, headers: corsHeaders });
     }
 
-    const { action, userId, updates } = await req.json();
+    const body = await req.json();
+    const { action, userId, updates } = body;
 
     switch (action) {
+
+      // ── CREATE USER ────────────────────────────────────────────────────────
+      case "create_user": {
+        const { email, full_name, tier, send_invite } = body;
+        if (!email) throw new Error("email required");
+
+        const validTiers = ["free", "prana-flow", "siddha-quantum", "akasha-infinity"];
+        const chosenTier = validTiers.includes(tier) ? tier : "free";
+
+        // 1. Create auth user (invite flow – sends signup email automatically)
+        const { data: newUser, error: createErr } = await adminClient.auth.admin.createUser({
+          email,
+          email_confirm: false,           // keeps user unconfirmed until they click the email
+          user_metadata: { full_name: full_name || "" },
+          ...(send_invite !== false && { // send invite/magic-link email
+            app_metadata: {}
+          })
+        });
+        if (createErr) throw createErr;
+
+        const uid = newUser.user.id;
+
+        // 2. Upsert profile row
+        await adminClient.from("profiles").upsert({
+          id: uid,
+          full_name: full_name || null,
+          membership_tier: chosenTier,
+          created_at: new Date().toISOString(),
+          onboarding_completed: false,
+        }, { onConflict: "id" });
+
+        // 3. Grant tier via admin_granted_access (if non-free)
+        if (chosenTier !== "free") {
+          await adminClient.from("admin_granted_access").insert({
+            user_id: uid,
+            access_type: "membership",
+            tier: chosenTier,
+            access_id: chosenTier,
+            is_active: true,
+            granted_by: user.id,
+            granted_at: new Date().toISOString(),
+          });
+        }
+
+        // 4. Send invite/signup email so the user can set their password
+        //    generateLink type "invite" sends a proper "You're invited" email
+        const { data: linkData, error: linkErr } = await adminClient.auth.admin.generateLink({
+          type: "invite",
+          email,
+          options: {
+            data: { full_name: full_name || "" },
+          },
+        });
+        if (linkErr) {
+          // Non-fatal — user is still created, just log the error
+          console.error("generateLink error:", linkErr.message);
+        }
+
+        return new Response(JSON.stringify({
+          success: true,
+          user_id: uid,
+          email,
+          invite_link: linkData?.properties?.action_link || null,
+        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      // ── LIST USERS ────────────────────────────────────────────────────────
       case "list_users": {
         const { data: authUsers, error } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
         if (error) throw error;
@@ -73,20 +141,17 @@ serve(async (req) => {
         return new Response(JSON.stringify({ users: enriched }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
-      // ── NEW: Update profiles.membership_tier directly (service role) ──────
       case "update_profile_tier": {
         if (!userId || !updates?.membership_tier) throw new Error("userId and membership_tier required");
 
         const validTiers = ["free", "prana-flow", "siddha-quantum", "akasha-infinity"];
         if (!validTiers.includes(updates.membership_tier)) throw new Error("Invalid tier");
 
-        // Prevent demoting another admin
         const { data: targetIsAdmin } = await adminClient.rpc("has_role", { _user_id: userId, _role: "admin" });
         if (targetIsAdmin && updates.membership_tier === "free") {
           throw new Error("Cannot set admin accounts to free tier");
         }
 
-        // Update profiles.membership_tier (the field SubscriptionPortal reads)
         const { error: profileErr } = await adminClient
           .from("profiles")
           .update({ membership_tier: updates.membership_tier })
@@ -94,7 +159,6 @@ serve(async (req) => {
 
         if (profileErr) throw profileErr;
 
-        // Also update user_memberships if that table exists (underscore format)
         const underscoreTier = updates.membership_tier.replace(/-/g, "_");
         await adminClient
           .from("user_memberships")
@@ -103,7 +167,7 @@ serve(async (req) => {
             tier: underscoreTier,
             updated_at: new Date().toISOString(),
           }, { onConflict: "user_id" })
-          .then(() => {}); // Non-fatal if this table doesn't exist
+          .then(() => {});
 
         return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
       }
@@ -143,7 +207,6 @@ serve(async (req) => {
 
         if (error) throw error;
 
-        // Also sync profiles.membership_tier (convert underscore→hyphen)
         const hyphenTier = updates.tier.replace(/_/g, "-");
         await adminClient.from("profiles").update({ membership_tier: hyphenTier }).eq("id", userId);
 
