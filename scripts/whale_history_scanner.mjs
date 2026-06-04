@@ -1,33 +1,39 @@
 #!/usr/bin/env node
-// Probe every known Polymarket endpoint to find what's reachable
+// Deep probe: find wallet history endpoints
+
+const ADDR = '0x5f659bccbc4510e7be4f15b4e5b7fa54e3fd1e5e';
+const DATA = 'https://data-api.polymarket.com';
+const GAMMA = 'https://gamma-api.polymarket.com';
 
 const endpoints = [
-  'https://gamma-api.polymarket.com/events?limit=1',
-  'https://gamma-api.polymarket.com/markets?limit=1',
-  'https://gamma-api.polymarket.com/profiles?address=0x5f659bccbc4510e7be4f15b4e5b7fa54e3fd1e5e',
-  'https://clob.polymarket.com/markets?limit=1',
-  'https://clob.polymarket.com/sampling-markets?limit=1',
-  'https://data-api.polymarket.com/leaderboard?interval=1y&limit=5',
-  'https://data-api.polymarket.com/activity?limit=5',
-  'https://data-api.polymarket.com/positions?user=0x5f659bccbc4510e7be4f15b4e5b7fa54e3fd1e5e',
-  'https://data-api.polymarket.com/profit?user=0x5f659bccbc4510e7be4f15b4e5b7fa54e3fd1e5e',
-  'https://polymarket.com/api/leaderboard?interval=all&limit=5',
-  'https://polymarket.com/api/profile/0x5f659bccbc4510e7be4f15b4e5b7fa54e3fd1e5e',
-  'https://lb.polymarket.com/v2/leaderboard?window=all&limit=50',
-  'https://lb.polymarket.com/leaderboard?window=all&limit=50',
-  'https://user-data.polymarket.com/positions?user=0x5f659bccbc4510e7be4f15b4e5b7fa54e3fd1e5e',
+  // Data API variants
+  `${DATA}/activity?user=${ADDR}&limit=20`,
+  `${DATA}/activity?user=${ADDR}&limit=20&type=TRADE`,
+  `${DATA}/trades?user=${ADDR}&limit=20`,
+  `${DATA}/orders?user=${ADDR}&limit=20`,
+  `${DATA}/pnl?user=${ADDR}`,
+  `${DATA}/earnings?user=${ADDR}`,
+  `${DATA}/history?user=${ADDR}&limit=20`,
+  `${DATA}/user-market-trades?user=${ADDR}&limit=10`,
+  // Gamma API variants  
+  `${GAMMA}/activity?user=${ADDR}&limit=10`,
+  `${GAMMA}/trades?makerAddress=${ADDR}&limit=10`,
+  `${GAMMA}/portfolio?user=${ADDR}`,
+  // CLOB
+  `https://clob.polymarket.com/trades?maker_address=${ADDR}&limit=10`,
 ];
 
 for (const url of endpoints) {
   try {
-    const r = await fetch(url, { 
-      headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0' },
-      signal: AbortSignal.timeout(5000)
+    const r = await fetch(url, {
+      headers: { Accept: 'application/json', 'User-Agent': 'Mozilla/5.0' },
+      signal: AbortSignal.timeout(6000),
     });
     const text = await r.text();
-    console.log(`\n✅ ${r.status} | ${url}`);
-    console.log(`   ${text.slice(0,150)}`);
+    const preview = text.slice(0, 200).replace(/\n/g,' ');
+    console.log(`${r.status} | ${url.replace('https://','').slice(0,60)}`);
+    if (r.ok && text.length > 5) console.log(`    → ${preview}`);
   } catch(e) {
-    console.log(`❌ FAIL | ${url} | ${e.message}`);
+    console.log(`ERR | ${url.replace('https://','').slice(0,60)} | ${e.message}`);
   }
 }
