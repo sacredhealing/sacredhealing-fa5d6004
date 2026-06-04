@@ -1,24 +1,39 @@
-══════════════════════════════════════════
-  SQI WHALE HISTORY SCANNER
-  2026-06-04T10:20:11.639Z
-══════════════════════════════════════════
 
-📡 Querying Polymarket leaderboards...
-Leaderboard 1m: null
-Leaderboard 6m: null
-Leaderboard 1y: null
-Top Activity: null
+✅ 200 | https://gamma-api.polymarket.com/events?limit=1
+   [{"id":"2890","ticker":"nba-will-the-mavericks-beat-the-grizzlies-by-more-than-5pt5-points-in-their-december-4-matchup","slug":"nba-will-the-mavericks
 
-🦈 Checking 3 elite wallets...
+✅ 200 | https://gamma-api.polymarket.com/markets?limit=1
+   [{"id":"540817","question":"New Rihanna Album before GTA VI?","conditionId":"0x1fad72fae204143ff1c3035e99e7c0f65ea8d5cd9bd1070987bd1a3316f772be","slug
 
---- 🏆Apex-5F659B | 0x5f659bccbc4510e7be4f15b4e5b7fa54e3fd1e5e ---
-Profile: null
-Positions: []
+✅ 401 | https://gamma-api.polymarket.com/profiles?address=0x5f659bccbc4510e7be4f15b4e5b7fa54e3fd1e5e
+   invalid token/cookies
 
---- 🏆Apex-AD4B83 | 0xad4b83e044f30699f4f0a56e0b2ff48c1e1e4e7a ---
-Profile: null
-Positions: []
 
---- 🏆Apex-0C88FC | 0x0c88fc04da4f8bceebb47d2a7e9c0c2e4e5e6e7f ---
-Profile: null
-Positions: []
+✅ 200 | https://clob.polymarket.com/markets?limit=1
+   {"data":[{"enable_order_book":false,"active":true,"closed":true,"archived":false,"accepting_orders":false,"accepting_order_timestamp":null,"minimum_or
+
+✅ 200 | https://clob.polymarket.com/sampling-markets?limit=1
+   {"data":[{"enable_order_book":true,"active":true,"closed":false,"archived":false,"accepting_orders":true,"accepting_order_timestamp":"2025-11-26T16:55
+
+✅ 404 | https://data-api.polymarket.com/leaderboard?interval=1y&limit=5
+   404 page not found
+
+
+✅ 400 | https://data-api.polymarket.com/activity?limit=5
+   {"error":"required query param 'user' not provided"}
+
+✅ 200 | https://data-api.polymarket.com/positions?user=0x5f659bccbc4510e7be4f15b4e5b7fa54e3fd1e5e
+   []
+
+✅ 404 | https://data-api.polymarket.com/profit?user=0x5f659bccbc4510e7be4f15b4e5b7fa54e3fd1e5e
+   404 page not found
+
+
+✅ 404 | https://polymarket.com/api/leaderboard?interval=all&limit=5
+   <!DOCTYPE html><html data-dpl-id="dpl_6CSK14uchZjZ9hPdBYUD6P5rcuHk" id="__pm_html" lang="en"><head><meta charSet="utf-8"/><meta name="viewport" conten
+
+✅ 404 | https://polymarket.com/api/profile/0x5f659bccbc4510e7be4f15b4e5b7fa54e3fd1e5e
+   <!DOCTYPE html><html data-dpl-id="dpl_6CSK14uchZjZ9hPdBYUD6P5rcuHk" id="__pm_html" lang="en"><head><meta charSet="utf-8"/><meta name="viewport" conten
+❌ FAIL | https://lb.polymarket.com/v2/leaderboard?window=all&limit=50 | fetch failed
+❌ FAIL | https://lb.polymarket.com/leaderboard?window=all&limit=50 | fetch failed
+❌ FAIL | https://user-data.polymarket.com/positions?user=0x5f659bccbc4510e7be4f15b4e5b7fa54e3fd1e5e | fetch failed
