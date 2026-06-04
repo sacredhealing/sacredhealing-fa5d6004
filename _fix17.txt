@@ -1,5 +1,52 @@
 === Fixing to 17 elite ===
-{"message":"Bad control character in string literal in JSON at position 163 (line 1 column 164)"}
-{"message":"Bad control character in string literal in JSON at position 71 (line 1 column 72)"}
-{"message":"Bad control character in string literal in JSON at position 64 (line 1 column 65)"}
-{"message":"Bad control character in string literal in JSON at position 65 (line 1 column 66)"}
+--- Upserting 3 strategy wallets ---
+
+200
+
+200
+
+200
+--- Promoting original 14 ---
+204
+204
+204
+204
+204
+204
+204
+204
+204
+204
+204
+204
+--- Final count ---
+[{"alias":"BAA2BC-IranInsider","total_profit":191503,"strategy":"insider_geo","is_elite":true}, 
+ {"alias":"B2A362-ConfirmWhale","total_profit":125453,"strategy":"confirmation","is_elite":true}, 
+ {"alias":"ED107A-NoMachine99x","total_profit":58947,"strategy":"no_machine","is_elite":true}, 
+ {"alias":"🏆A7A8C1","total_profit":47554.02,"strategy":"mirror","is_elite":true}, 
+ {"alias":"🏆F49CE4","total_profit":41974.73,"strategy":"mirror","is_elite":true}, 
+ {"alias":"🏆Apex-E9076A","total_profit":30103,"strategy":"mirror","is_elite":true}, 
+ {"alias":"🏆Elite-D3B034","total_profit":14882,"strategy":"mirror","is_elite":true}, 
+ {"alias":"🏆EED588","total_profit":11739.79,"strategy":"mirror","is_elite":true}, 
+ {"alias":"🏆000D25","total_profit":8016.67,"strategy":"mirror","is_elite":true}, 
+ {"alias":"🏆335592","total_profit":7499.03,"strategy":"mirror","is_elite":true}, 
+ {"alias":"🏆E52C0A","total_profit":6942.63,"strategy":"mirror","is_elite":true}, 
+ {"alias":"🏆A77105","total_profit":6135.74,"strategy":"mirror","is_elite":true}, 
+ {"alias":"🏆204F72","total_profit":5061.15,"strategy":"mirror","is_elite":true}, 
+ {"alias":"🟢93511D","total_profit":3322.36,"strategy":"mirror","is_elite":true}, 
+ {"alias":"🟢0F0223","total_profit":2863.13,"strategy":"mirror","is_elite":false}, 
+ {"alias":"🟢F8CCB5","total_profit":2232.53,"strategy":"mirror","is_elite":false}, 
+ {"alias":"🏆Elite-FEA31B","total_profit":2151.41,"strategy":"mirror","is_elite":true}, 
+ {"alias":"🟢E639E4","total_profit":2104.72,"strategy":"mirror","is_elite":false}, 
+ {"alias":"🟢648054","total_profit":1737.31,"strategy":"mirror","is_elite":false}, 
+ {"alias":"🟢B4F2F0","total_profit":1733.96,"strategy":"mirror","is_elite":false}, 
+ {"alias":"🟢A52B78","total_profit":1678.44,"strategy":"mirror","is_elite":false}, 
+ {"alias":"🟢15A811","total_profit":1547.37,"strategy":"mirror","is_elite":false}, 
+ {"alias":"🟢410338","total_profit":706.03,"strategy":"mirror","is_elite":false}, 
+ {"alias":"🟢312341","total_profit":626.88,"strategy":"mirror","is_elite":false}, 
+ {"alias":"🟢FBE665","total_profit":327.93,"strategy":"mirror","is_elite":false}, 
+ {"alias":"🟢9F2FE0","total_profit":245.93,"strategy":"mirror","is_elite":false}, 
+ {"alias":"🟢6B25D1","total_profit":233.71,"strategy":"mirror","is_elite":false}, 
+ {"alias":"🟢9400E2","total_profit":168.33,"strategy":"mirror","is_elite":false}, 
+ {"alias":"🟢E7BD61","total_profit":97.53,"strategy":"mirror","is_elite":false}, 
+ {"alias":"🟢4A4281","total_profit":19.89,"strategy":"mirror","is_elite":false}]
