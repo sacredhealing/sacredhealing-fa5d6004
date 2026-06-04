@@ -365,10 +365,12 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
           pob: birthData?.birth_place || '',
           readingType: 'general',
           leaf_confirmed: leafConfirmed,
-          chatHistory: chatMessages.map(m => ({
-            role: m.role === 'oracle' ? 'assistant' : 'user',
-            content: m.text
-          })),
+          chatHistory: chatMessages
+            .filter((_m, idx) => idx > 0) // skip opening greeting — not a real Bhrigu transmission
+            .map(m => ({
+              role: m.role === 'oracle' ? 'assistant' : 'user',
+              content: m.text
+            })),
         }
       });
 
