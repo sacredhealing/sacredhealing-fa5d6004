@@ -1,4 +1,4 @@
-name: Shiesty Signal Oracle -- 24/7 Scanner
+name: CLAWBOT v8 — 24/7 Elite Whale Scanner
 
 on:
   schedule:
@@ -17,13 +17,13 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Run CLAWBOT v7 Whale Scanner
+      - name: Run CLAWBOT v8 Elite Whale Scanner
         env:
           SUPABASE_URL: https://fjdzhrdpioxdeyyfogep.supabase.co
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           POLYGON_RPC_URL: ${{ secrets.POLYGON_RPC_URL }}
           PAPER_MODE: 'true'
-          MIN_TRADE_USDC: '100'
+          MIN_TRADE_USDC: '500'
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
           node scripts/clawbot_oracle.mjs 2>&1 | tee _oracle_last_run.txt
