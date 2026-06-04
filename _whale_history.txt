@@ -1,35 +1,14 @@
 ╔══════════════════════════════════════════════════════════╗
   🚨 INSIDER MEGASCAN — Tenderly Free / 30-Day History
-  2026-06-04T16:07:14.771Z
+  2026-06-04T16:12:13.551Z
 ╚══════════════════════════════════════════════════════════╝
+file:///home/runner/work/sacredhealing-fa5d6004/sacredhealing-fa5d6004/scripts/whale_scan_v3.mjs:32
+  if (d.error) throw new Error(d.error.message||JSON.stringify(d.error));
+                     ^
 
-Tenderly confirmed. Latest block: 87,922,833
+Error: request timeout
+    at rpc (file:///home/runner/work/sacredhealing-fa5d6004/sacredhealing-fa5d6004/scripts/whale_scan_v3.mjs:32:22)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async file:///home/runner/work/sacredhealing-fa5d6004/sacredhealing-fa5d6004/scripts/whale_scan_v3.mjs:212:19
 
-📡 Scanning 1,296,000 blocks (30 days)
-   From: 86,626,833 → 87,922,833
-   Looking for: $10,000+ single trades
-
-  Chunk 1/26 | blocks 86,626,833-86,676,832 | found: 0  Chunk 2/26 | blocks 86,676,833-86,726,832 | found: 0  Chunk 3/26 | blocks 86,726,833-86,776,832 | found: 0  Chunk 4/26 | blocks 86,776,833-86,826,832 | found: 0  Chunk 5/26 | blocks 86,826,833-86,876,832 | found: 0  Chunk 6/26 | blocks 86,876,833-86,926,832 | found: 0  Chunk 7/26 | blocks 86,926,833-86,976,832 | found: 0  Chunk 8/26 | blocks 86,976,833-87,026,832 | found: 0  Chunk 9/26 | blocks 87,026,833-87,076,832 | found: 0  Chunk 10/26 | blocks 87,076,833-87,126,832 | found: 0  Chunk 11/26 | blocks 87,126,833-87,176,832 | found: 0  Chunk 12/26 | blocks 87,176,833-87,226,832 | found: 0  Chunk 13/26 | blocks 87,226,833-87,276,832 | found: 0  Chunk 14/26 | blocks 87,276,833-87,326,832 | found: 0  Chunk 15/26 | blocks 87,326,833-87,376,832 | found: 0  Chunk 16/26 | blocks 87,376,833-87,426,832 | found: 0  Chunk 17/26 | blocks 87,426,833-87,476,832 | found: 0  Chunk 18/26 | blocks 87,476,833-87,526,832 | found: 0  Chunk 19/26 | blocks 87,526,833-87,576,832 | found: 0  Chunk 20/26 | blocks 87,576,833-87,626,832 | found: 0  Chunk 21/26 | blocks 87,626,833-87,676,832 | found: 0  Chunk 22/26 | blocks 87,676,833-87,726,832 | found: 0  Chunk 23/26 | blocks 87,726,833-87,776,832 | found: 0  Chunk 24/26 | blocks 87,776,833-87,826,832 | found: 0  Chunk 25/26 | blocks 87,826,833-87,876,832 | found: 0  Chunk 26/26 | blocks 87,876,833-87,922,833 | found: 0
-
-✅ Scan complete: 0 trades over $10,000
-
-Unique wallets with $10k+ trades: 0
-
-📊 Top 20 by largest single trade:
-
-Scanning 0 NEW wallets (excluding known 15)...
-
-🔍 Deep scanning 0 wallets for insider patterns...
-
-
-
-╔══════════════════════════════════════════════════════════╗
-  🚨 NEW INSIDER WALLETS DISCOVERED
-╚══════════════════════════════════════════════════════════╝
-
-
-━━━ MEGASCAN COMPLETE ━━━
-Total $10k+ wallets: 0
-New insiders found: 0
-New profitable: 0
-Saved to DB: 0
+Node.js v20.20.2
