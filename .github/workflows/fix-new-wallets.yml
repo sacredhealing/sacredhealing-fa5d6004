@@ -1,0 +1,65 @@
+name: Fix New Wallet Tags
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Fix aliases and strategy tags
+        env:
+          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          B="https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/polymarket_whales"
+          DB="https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query"
+          H1="apikey: ${SK}"; H2="Authorization: Bearer ${SK}"; H3="Content-Type: application/json"
+          LOG="_wallet_fix.txt"
+          echo "=== Fixing new wallet tags ===" > $LOG
+
+          # 06DC51 — Crypto Oracle (78%WR +$131k) — mirror strategy, crypto markets
+          curl -s -o /dev/null -w "06DC51: %{http_code}\n" -X PATCH \
+            "${B}?address=eq.0x06dc51826bc524d9a83770e7de9dd7e005b04524" \
+            -H "$H1" -H "$H2" -H "$H3" \
+            -d '{"alias":"CryptoOracle-06DC51","strategy":"mirror","win_rate_30d":78,"total_profit":131298,"is_elite":true}' >> $LOG
+
+          # 84CFFF — Sports Whale (30%WR but +$60k via massive sizing)
+          curl -s -o /dev/null -w "84CFFF: %{http_code}\n" -X PATCH \
+            "${B}?address=eq.0x84cfffc3f16dcc353094de30d4a45226eccd2f63" \
+            -H "$H1" -H "$H2" -H "$H3" \
+            -d '{"alias":"SportsWhale-84CFFF","strategy":"mirror","win_rate_30d":30,"total_profit":60730,"is_elite":true}' >> $LOG
+
+          # 84AD9C — Geo trader (18%WR but active geo markets — watch closely)
+          curl -s -o /dev/null -w "84AD9C: %{http_code}\n" -X PATCH \
+            "${B}?address=eq.0x84ad9c5c547a82ec9a08547b94bd922446e5bfb7" \
+            -H "$H1" -H "$H2" -H "$H3" \
+            -d '{"alias":"GeoWatch-84AD9C","strategy":"mirror","win_rate_30d":18,"total_profit":16633,"is_elite":true}' >> $LOG
+
+          # E9076A — Co-trader (83%WR +$30k)
+          curl -s -o /dev/null -w "E9076A: %{http_code}\n" -X PATCH \
+            "${B}?address=eq.0xe9076a87c5ed90ef16e6fe6529c943baeca0cff6" \
+            -H "$H1" -H "$H2" -H "$H3" \
+            -d '{"alias":"CoTrader-E9076A","strategy":"mirror","win_rate_30d":83,"total_profit":30103,"is_elite":true}' >> $LOG
+
+          # Fix 204F72 — 100% WR, upgrade alias
+          curl -s -o /dev/null -w "204F72: %{http_code}\n" -X PATCH \
+            "${B}?address=eq.0x204f72f35326db932158cba6adff0b9a1da95e14" \
+            -H "$H1" -H "$H2" -H "$H3" \
+            -d '{"alias":"PerfectWR-204F72","strategy":"mirror","win_rate_30d":100,"total_profit":25928,"is_elite":true}' >> $LOG
+
+          # Final state
+          echo "" >> $LOG
+          echo "=== FINAL ELITE LIST ===" >> $LOG
+          curl -s "${B}?is_elite=eq.true&order=total_profit.desc&select=alias,total_profit,win_rate_30d,strategy" \
+            -H "$H1" -H "$H2" >> $LOG
+
+          cat $LOG
+          git config user.email "bot@sqi.app"; git config user.name "SQI"
+          git add $LOG
+          git commit -m "All 18 elite wallets properly tagged" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
