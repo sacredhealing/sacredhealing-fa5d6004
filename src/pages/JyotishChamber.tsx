@@ -355,37 +355,30 @@ Current Mahadasha: ${ephemeris?.dashaData?.activeMaha?.planet || 'unknown'} (${e
 Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
 ` : 'Birth data not yet entered.';
 
-      const { data, error } = await supabase.functions.invoke('bhrigu-oracle', {
-        body: {
+      const { data } = { data: null as any, error: null as any };
+      // Call bhrigu-oracle on Lovable project where Gemini key is active
+      const _bhriguResp = await fetch('https://ssygukfdbtehvtndandn.supabase.co/functions/v1/bhrigu-oracle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDgzNTg0NTIsImV4cCI6MjAyMzkzNDQ1Mn0.B5_TYUEP8INxDkXEQBuPgXx_4dBBuAJzSdJBQM7rkOo'
+        },
+        body: JSON.stringify({
           mode: 'chat',
           question: q,
           name: birthData?.birth_name || 'Seeker',
           dob: birthData?.birth_date || '',
           tob: birthData?.birth_time || '',
           pob: birthData?.birth_place || '',
-          birth_context: birthData ? JSON.stringify({
-            name: birthData.birth_name,
-            dob: birthData.birth_date,
-            tob: birthData.birth_time || 'unknown',
-            pob: birthData.birth_place || 'unknown',
-            lagna: ephemeris?.ascendantSign || '',
-            moonNakshatra: ephemeris?.moonNakshatra || '',
-            sunSign: ephemeris?.sunSign || '',
-            activeMaha: ephemeris?.dashaData?.activeMaha?.planet || '',
-            activeAntar: ephemeris?.dashaData?.activeAntar?.planet || '',
-          }) : '',
           readingType: 'general',
           leaf_confirmed: leafConfirmed,
-          chatHistory: chatMessages
-            .filter((_m, idx) => idx > 0) // skip opening greeting — not a real Bhrigu transmission
-            .map(m => ({
-              role: m.role === 'oracle' ? 'assistant' : 'user',
-              content: m.text
-            })),
-        }
+          history: chatMessages
+            .filter((_m, idx) => idx > 0)
+            .map(m => ({ role: m.role === 'oracle' ? 'assistant' : 'user', content: m.text })),
+        })
       });
-
-      if (error) throw error;
+      if (!_bhriguResp.ok) throw new Error(`Oracle: ${_bhriguResp.status}`);
+      ({ data } = { data: await _bhriguResp.json() });
 
       // If Bhrigu just confirmed the leaf — save it permanently
       if (data?.ready_for_reading && !leafConfirmed && user) {
