@@ -1,63 +1,32 @@
+=== CLOB API Public Endpoint Probe ===
 
-=== 0xbaa2bcb5439e ===
+🔑 clob.polymarket.com/trades?limit=10
+🔑 clob.polymarket.com/trades?limit=10&maker_address=0xbaa2bcb5439e9
+🔑 clob.polymarket.com/trades?limit=10&taker_address=0xbaa2bcb5439e9
+400 clob.polymarket.com/books?token_id=217426331434639062905690501558
+✅ clob.polymarket.com/last-trade-price?token_id=2174263314346390629
+   → {"price":"0.998","side":"SELL"}
 
-Biggest 10 trades by size:
-  $       0 | 2026-06-04T08:52 | BUY @ 0.160 |  Iran agrees to end enrichment of uraniu
-  $       0 | 2026-06-02T17:34 | BUY @ 0.220 |  Iran agrees to end enrichment of uraniu
-  $       0 | 2026-06-02T17:34 | BUY @ 0.220 |  Iran agrees to end enrichment of uraniu
-  $       0 | 2026-06-01T23:26 | BUY @ 0.220 |  Iran agrees to end enrichment of uraniu
-  $       0 | 2026-06-01T18:12 | BUY @ 0.220 |  Iran agrees to end enrichment of uraniu
-  $       0 | 2026-06-01T17:51 | BUY @ 0.230 |  Iran agrees to end enrichment of uraniu
-  $       0 | 2026-06-01T17:45 | BUY @ 0.120 | Will Donald Trump announce that the Unit
-  $       0 | 2026-06-01T17:36 | BUY @ 0.320 | US-Iran nuclear deal by June 30?
-  $       0 | 2026-06-01T17:35 | BUY @ 0.290 | Will Trump agree to Iranian oil sanction
-  $       0 | 2026-06-01T17:35 | BUY @ 0.290 | Will Trump agree to unfreeze Iranian ass
+✅ clob.polymarket.com/tick-size?token_id=21742633143463906290569050
+   → {"minimum_tick_size":0.001}
 
-=== 0xb2a3623364c3 ===
+✅ clob.polymarket.com/sampling-markets?limit=5
+   → {"data":[{"enable_order_book":true,"active":true,"closed":false,"archived":false,"accepting_orders":true,"accepting_order_timestamp":"2025-11-26T16:55:29Z","minimum_order_size":5,"minimum_tick_size":0.01,"condition_id":"0x384e2707bbb95da4bfa6f330fe7d5ccbec1c0a85e20be900cbf599987588e1a4","question_id
+✅ clob.polymarket.com/sampling-simplified-markets?limit=5
+   → {"data":[{"condition_id":"0x384e2707bbb95da4bfa6f330fe7d5ccbec1c0a85e20be900cbf599987588e1a4","rewards":{"rates":[{"asset_address":"0x2791bca1f2de4661ed88a30c99a7a9449aa84174","rewards_daily_rate":0.001}],"min_size":20,"max_spread":3.5},"tokens":[{"token_id":"7843302451867668043117447832285414860657
+✅ data-api.polymarket.com/trades?user=0xbaa2bcb5439e985ce4ccf815b47
+   → [{"proxyWallet":"0xbaa2bcb5439e985ce4ccf815b4700027d1b92c73","side":"BUY","asset":"25525886838936661349801315808447476243176190100445157889430252006398510133975","conditionId":"0x9d3f02264a94bafc676afd7add8b11442e6ec72dabaa69cefef835f0672275c7","size":310.05,"price":0.16,"timestamp":1780563139,"titl
+✅ data-api.polymarket.com/positions?user=0xbaa2bcb5439e985ce4ccf815
+   → [{"proxyWallet":"0xbaa2bcb5439e985ce4ccf815b4700027d1b92c73","asset":"106181075047366745139197108801635573283215248045056329679360376976893016488727","conditionId":"0xbb4d51e6364066d92eb6f9b8413dd7193de70966736044463b205834805a1f3b","size":289841.6679,"avgPrice":0.661,"initialValue":191594.9072,"cur
+🔑 gamma-api.polymarket.com/profiles?address=0xbaa2bcb5439e985ce4ccf
+🔑 gamma-api.polymarket.com/profiles?id=0xbaa2bcb5439e985ce4ccf815b4
 
-Biggest 10 trades by size:
-  $       0 | 2026-06-03T10:19 | BUY @ 0.887 | US x Iran permanent peace deal by June 1
-  $       0 | 2026-06-03T10:17 | BUY @ 0.882 | US x Iran permanent peace deal by June 1
-  $       0 | 2026-06-03T10:17 | BUY @ 0.875 | US x Iran permanent peace deal by June 1
-  $       0 | 2026-06-02T16:43 | BUY @ 0.754 | US x Iran permanent peace deal by June 3
-  $       0 | 2026-06-02T15:58 | BUY @ 0.871 | US x Iran permanent peace deal by June 1
-  $       0 | 2026-06-02T15:57 | BUY @ 0.950 | US x Iran permanent peace deal by June 7
-  $       0 | 2026-06-02T15:56 | BUY @ 0.870 | US x Iran permanent peace deal by June 1
-  $       0 | 2026-06-02T15:56 | BUY @ 0.880 | US x Iran permanent peace deal by June 1
-  $       0 | 2026-06-02T10:30 | BUY @ 0.870 | US x Iran permanent peace deal by June 1
-  $       0 | 2026-06-02T10:29 | BUY @ 0.950 | US x Iran permanent peace deal by June 7
-
-=== 0xed107a85a458 ===
-
-Biggest 10 trades by size:
-  $       0 | 2026-06-04T03:53 | BUY @ 0.987 | Trump out as President by June 30?
-  $       0 | 2026-06-03T21:46 | SELL @ 0.987 | Will Anthropic’s market cap be $600B or 
-  $       0 | 2026-06-03T21:46 | SELL @ 0.986 | Will Anthropic not IPO by June 30, 2026?
-  $       0 | 2026-06-03T21:45 | SELL @ 0.990 | Will US withdraw from NATO by June 30?
-  $       0 | 2026-06-03T21:45 | SELL @ 0.991 | Will Trump be impeached by June 30?
-  $       0 | 2026-06-03T21:45 | SELL @ 0.989 | Will Anthropic not IPO by June 30, 2026?
-  $       0 | 2026-06-03T21:43 | SELL @ 0.986 | Trump out as President by June 30?
-  $       0 | 2026-06-03T21:43 | SELL @ 0.981 | Will the US confirm that aliens exist by
-  $       0 | 2026-06-03T16:28 | SELL @ 0.992 | Xi Jinping out by June 30?
-  $       0 | 2026-06-03T13:26 | SELL @ 0.995 | Will Base launch a token by June 30, 202
+=== Auth requirement check ===
+Auth type: 404 404 page not found
 
 
-=== MARKET-BASED WHALE DISCOVERY ===
+CLOB trades (BAA2BC): 401 {"error":"Unauthorized/Invalid api key"}
 
-Event: Presidential Election Winner 2024
-  Market ID: 253591 | Will Donald Trump win the 2024 US Presid
-  Activity: null
-  Market ID: 253592 | Will Joe Biden win the 2024 US President
-  Activity: null
 
-Event: NBA Champion
-  Market ID: 507869 | Will the LA Clippers win the 2025 NBA Fi
-  Activity: null
-  Market ID: 507873 | Will the Miami Heat win the 2025 NBA Fin
-  Activity: null
+CLOB trades (B2A362): 401 {"error":"Unauthorized/Invalid api key"}
 
-Event: World Cup Winner 
-  Market ID: 558934 | Will Spain win the 2026 FIFA World Cup?
-  Activity: null
-  Market ID: 558957 | Will New Zealand win the 2026 FIFA World
-  Activity: null
