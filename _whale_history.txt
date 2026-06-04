@@ -1,15 +1,43 @@
-Latest block: 87923203
+╔══════════════════════════════════════════════════════════╗
+  🚨 INSIDER MEGASCAN — Tenderly 30-Day History
+  2026-06-04T16:19:46.954Z
+╚══════════════════════════════════════════════════════════╝
 
-=== Tenderly block range calibration ===
-Range    1000: ✅ 0 logs in 692ms
-Range    5000: ✅ 0 logs in 325ms
-Range   10000: ✅ 0 logs in 952ms
-Range   50000: ✅ 0 logs in 255ms
-Range  100000: ✅ 0 logs in 665ms
-Range  200000: ✅ 0 logs in 10604ms
-Range  500000: ✅ 0 logs in 2141ms
+Latest block: 87,923,335
+Scanning: block 86,627,335 → 87,923,335 (30 days)
+Chunks: 3 × 2 contracts
 
-=== PublicNode calibration ===
-Range 1000: ✅ 0 logs
-Range 10000: ✅ 0 logs
-Range 50000: ❌ exceed maximum block range: 10000
+  Chunk 1 | 0xE111180000 | blocks 86,627,335-87,117,334
+    → 0 total logs | 0 over $10,000
+  Chunk 1 | 0xe2222d279d | blocks 86,627,335-87,117,334
+    → 0 total logs | 0 over $10,000
+  Chunk 2 | 0xE111180000 | blocks 87,117,335-87,607,334
+    → 0 total logs | 0 over $10,000
+  Chunk 2 | 0xe2222d279d | blocks 87,117,335-87,607,334
+    → 0 total logs | 0 over $10,000
+  Chunk 3 | 0xE111180000 | blocks 87,607,335-87,923,335
+    → 0 total logs | 0 over $10,000
+  Chunk 3 | 0xe2222d279d | blocks 87,607,335-87,923,335
+    → 0 total logs | 0 over $10,000
+
+✅ SCAN COMPLETE: 0 trades over $10,000
+
+Unique wallets with $10k+ trades: 0
+
+Top 30 by largest single trade:
+
+New wallets to deep scan: 0
+
+🔍 Deep scanning for PnL + insider patterns...
+
+
+
+╔══════════════════════════════════════════════════════════╗
+  🚨 NEW INSIDER & WHALE WALLETS DISCOVERED
+╚══════════════════════════════════════════════════════════╝
+
+━━━ MEGASCAN DONE ━━━
+$10k+ wallets found: 0
+New profitable: 0
+New insiders: 0
+Saved to DB: 0
