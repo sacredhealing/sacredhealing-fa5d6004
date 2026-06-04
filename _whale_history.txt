@@ -1,247 +1,309 @@
-╔═══════════════════════════════════════════════════════╗
-  🚨 FINAL INSIDER SCAN — trades?conditionId method
-  2026-06-04T16:52:40.864Z
-╚═══════════════════════════════════════════════════════╝
-
-0xbaa2bcb5439e: 500 trades → 61 markets
-0xed107a85a458: 500 trades → 203 markets
-0xa7a8c1fd4bff: 46 trades → 16 markets
-0xb2a3623364c3: 115 trades → 15 markets
-
-Total markets to scan: 284
-
-  Scanned 20/284 markets | 323 unique wallets  Scanned 40/284 markets | 323 unique wallets  Scanned 60/284 markets | 569 unique wallets  Scanned 80/284 markets | 569 unique wallets  Scanned 100/284 markets | 569 unique wallets  Scanned 120/284 markets | 569 unique wallets  Scanned 140/284 markets | 569 unique wallets  Scanned 160/284 markets | 569 unique wallets  Scanned 180/284 markets | 569 unique wallets  Scanned 200/284 markets | 569 unique wallets  Scanned 220/284 markets | 569 unique wallets  Scanned 240/284 markets | 569 unique wallets  Scanned 260/284 markets | 569 unique wallets  Scanned 280/284 markets | 569 unique wallets
-
-✅ Found 569 unique co-traders across 284 markets
-
-Top 20 most active co-traders:
-  # 1 0xeebde7a0e019a63e6b476eb425505b7b3e6eba30 | 284 shared markets | 3123 trades
-  # 2 0x5c076820baea7364c6754764f8a0482d0301f091 | 284 shared markets | 2837 trades
-  # 3 0x82311cdedaa7ee25d4672b0e3a3ee0dd0cd2c02e | 284 shared markets | 2265 trades
-  # 4 0x84ad9c5c547a82ec9a08547b94bd922446e5bfb7 | 284 shared markets | 1990 trades
-  # 5 0xa8ccda0419f357f819271437efb61022f01341a9 | 284 shared markets | 1983 trades
-  # 6 0x5e2b9261b0c4f697b55bf921ff2bc227183d9101 | 284 shared markets | 1701 trades
-  # 7 0x75cc3b63a2f2423085e10706c78b494017b93ce1 | 284 shared markets | 1701 trades
-  # 8 0xb27bc932bf8110d8f78e55da7d5f0497a18b5b82 | 284 shared markets | 1426 trades
-  # 9 0x674887d1ac838099a48b629dff53f25b7b87ee08 | 284 shared markets | 1422 trades
-  #10 0xce25e214d5cfe4f459cf67f08df581885aae7fdc | 284 shared markets | 1138 trades
-  #11 0xb55fa1296e6ec55d0ce53d93b9237389f11764d4 | 284 shared markets | 1135 trades
-  #12 0x06dc51826bc524d9a83770e7de9dd7e005b04524 | 284 shared markets | 1133 trades
-  #13 0x4228048ea2f8f571ff2777cc32baee584c5134cb | 284 shared markets | 1133 trades
-  #14 0x7931fd06ecb2d159e71884226402da0cb38eb4e0 | 284 shared markets | 856 trades
-  #15 0x84cfffc3f16dcc353094de30d4a45226eccd2f63 | 284 shared markets | 853 trades
-  #16 0x032eb1bc893940263ad0b01889f262fc232f2a9e | 284 shared markets | 853 trades
-  #17 0x227bae2c175dc2f652202044f391db7117a376f9 | 284 shared markets | 850 trades
-  #18 0x60a32ad6f44ae555507b464268f499252c613850 | 284 shared markets | 850 trades
-  #19 0x0c7c5204404e9d5402d258fedac59c7212bae4cb | 284 shared markets | 578 trades
-  #20 0x920a59e4ad92f0969eb53e602c17788adf5d8b49 | 284 shared markets | 571 trades
-
-🔍 Deep PnL scan on 80 wallets...
-
-🔴 0xeebde7a0e019a6 | pnl:$-3082 WR:23% 🔀 MIXED | markets:284 trades:3123
-🔴 0x5c076820baea73 | pnl:$-1 WR:25% 🔀 MIXED | markets:284 trades:2837
-🟢 0x82311cdedaa7ee | pnl:$54 WR:75% 🔀 MIXED | markets:284 trades:2265
-🏆 0x84ad9c5c547a82 | pnl:$16633 WR:18% 🌍 GEO | markets:284 trades:1990
-🟢 0xa8ccda0419f357 | pnl:$397 WR:50% 🔀 MIXED | markets:284 trades:1983
-🔴 0x5e2b9261b0c4f6 | pnl:$-1 WR:67% 🔀 MIXED | markets:284 trades:1701
-🟢 0x75cc3b63a2f242 | pnl:$53 WR:62% 🔀 MIXED | markets:284 trades:1701
-🔴 0xb27bc932bf8110 | pnl:$-1973 WR:7% 🔀 MIXED | markets:284 trades:1426
-🟢 0x674887d1ac8380 | pnl:$3251 WR:5% 🔀 MIXED | markets:284 trades:1422
-🔴 0xce25e214d5cfe4 | pnl:$-245 WR:24% 🔀 MIXED | markets:284 trades:1138
-🔴 0xb55fa1296e6ec5 | pnl:$-539 WR:33% 🔀 MIXED | markets:284 trades:1135
-🚨 WHALE 0x06dc51826bc524 | pnl:$131298 WR:78% 🔀 MIXED | markets:284 trades:1133 🚨1x$50k+
-   +$    68027 | Will the price of Bitcoin be above $62,000 on June 4?
-🔴 0x4228048ea2f8f5 | pnl:$-508 WR:0% 🔀 MIXED | markets:284 trades:1133
-🔴 0x7931fd06ecb2d1 | pnl:$-189 WR:3% 🔀 MIXED | markets:284 trades:856
-🚨 WHALE 0x84cfffc3f16dcc | pnl:$60730 WR:30% 🏛 POL | markets:284 trades:853 🚨1x$50k+
-   +$    59697 | Will the San Antonio Spurs win the 2026 NBA Finals?
-🔴 0x032eb1bc893940 | pnl:$-84555 WR:14% ⚽ SPORTS | markets:284 trades:853
-🔴 0x227bae2c175dc2 | pnl:$-0 WR:0% 🌍 GEO | markets:284 trades:850
-🔴 0x60a32ad6f44ae5 | pnl:$-1056 WR:13% 🔀 MIXED | markets:284 trades:850
-🔴 0x0c7c5204404e9d | pnl:$-403 WR:2% 🔀 MIXED | markets:284 trades:578
-🔴 0x920a59e4ad92f0 | pnl:$-22 WR:27% 🔀 MIXED | markets:284 trades:571
-🔴 0xe0229e10a85886 | pnl:$-151 WR:33% 🔀 MIXED | markets:284 trades:570
-🔴 0x60889af507ec3f | pnl:$-363 WR:19% 🌍 GEO | markets:284 trades:569
-🔴 0xdd839008359188 | pnl:$-0 WR:0% 🔀 MIXED | markets:284 trades:567
-🟢 0x927f7694de44d1 | pnl:$41 WR:75% 🔀 MIXED | markets:284 trades:567
-🔴 0x63ac790ad72344 | pnl:$-1214 WR:0% 🔀 MIXED | markets:284 trades:567
-🟢 0xdf7930e89a2c47 | pnl:$2499 WR:67% 🔀 MIXED | markets:284 trades:292
-🔴 0x6777a24d939db4 | pnl:$-241 WR:1% 🔀 MIXED | markets:284 trades:290
-🔴 0xa76f1831eab3cb | pnl:$-415 WR:0% 🔀 MIXED | markets:284 trades:286
-🔴 0xc419a56eb33785 | pnl:$0 WR:0% 🔀 MIXED | markets:284 trades:286
-🔴 0x4c3acceaa187d6 | pnl:$-1256 WR:1% 🔀 MIXED | markets:284 trades:286
-🏆 0x204f72f35326db | pnl:$25928 WR:100% 🔀 MIXED | markets:284 trades:285
-🔴 0x14e72e19ea2f6e | pnl:$-35366 WR:1% 🌍 GEO | markets:284 trades:285
-🔴 0x6b96beea1b9b4c | pnl:$-240 WR:3% 🔀 MIXED | markets:284 trades:285
-🟢 0x78857e71c06017 | pnl:$64 WR:38% 🔀 MIXED | markets:284 trades:285
-🔴 0x37c705fb8b61cd | pnl:$-12 WR:24% 🏛 POL | markets:284 trades:285
-🔴 0xf6cdf4fa26dfdc | pnl:$-166 WR:45% 🔀 MIXED | markets:284 trades:285
-🔴 0x97c068e06ca788 | pnl:$-0 WR:50% 🔀 MIXED | markets:284 trades:285
-🔴 0x069cd074ad3bcf | pnl:$-24 WR:0% 🔀 MIXED | markets:284 trades:285
-🔴 0xa6bbe81981432f | pnl:$-86 WR:25% 🔀 MIXED | markets:284 trades:284
-🔴 0x50cab89ed22d15 | pnl:$-3759 WR:0% 🔀 MIXED | markets:284 trades:284
-🟢 0xdfcbf461e8bf35 | pnl:$9 WR:64% 🔀 MIXED | markets:284 trades:284
-🔴 0x6f37a4b6cea17a | pnl:$-3194 WR:0% 🔀 MIXED | markets:284 trades:284
-🔴 0x0d84ef335851c9 | pnl:$-578 WR:1% 🔀 MIXED | markets:284 trades:284
-🔴 0x24432fa453c132 | pnl:$-2658 WR:8% 🔀 MIXED | markets:284 trades:284
-🔴 0xd7f9d0ef6cabe0 | pnl:$-347 WR:11% 🔀 MIXED | markets:284 trades:284
-🟢 0x50ea9d870f0347 | pnl:$18 WR:23% 🔀 MIXED | markets:284 trades:284
-🔴 0x2a709d203b9e19 | pnl:$-132 WR:3% 🔀 MIXED | markets:284 trades:284
-🟢 0x3653235d75a0d5 | pnl:$1 WR:50% 🔀 MIXED | markets:284 trades:284
-🔴 0x218f36c313d6c0 | pnl:$-6 WR:50% 🔀 MIXED | markets:284 trades:284
-🔴 0xeb68675c06e0bb | pnl:$-0 WR:33% 🔀 MIXED | markets:284 trades:284
-🔴 0x005ed998fcb786 | pnl:$-0 WR:33% 🔀 MIXED | markets:284 trades:284
-🔴 0xfb0f17657c9c24 | pnl:$-31 WR:50% 🔀 MIXED | markets:284 trades:284
-🔴 0x14edb1cf0ce246 | pnl:$0 WR:0% 🔀 MIXED | markets:284 trades:284
-🔴 0x8df34ba185201a | pnl:$-620 WR:0% 🔀 MIXED | markets:284 trades:284
-🔴 0x026b72036f5121 | pnl:$-6838 WR:0% 🔀 MIXED | markets:284 trades:284
-🔴 0x7419ee335fd6c7 | pnl:$-673 WR:1% 🔀 MIXED | markets:284 trades:284
-🔴 0x1f19c48aee80ec | pnl:$-5 WR:50% 🔀 MIXED | markets:284 trades:284
-🔴 0xd7f95bfa0dfe43 | pnl:$0 WR:0% 🔀 MIXED | markets:284 trades:284
-🔴 0x251c1a283703be | pnl:$-1622 WR:6% 🔀 MIXED | markets:284 trades:284
-🔴 0x2f62889da42b77 | pnl:$-199 WR:3% 🔀 MIXED | markets:284 trades:284
-🔴 0xa32dc3a5da3c04 | pnl:$-1 WR:0% ⚽ SPORTS | markets:284 trades:284
-🔴 0x0bba462910d353 | pnl:$-66 WR:43% 🔀 MIXED | markets:284 trades:284
-🔴 0x1c1c2c6e2228dd | pnl:$-1 WR:0% 🔀 MIXED | markets:284 trades:284
-🔴 0x05e8f2a449cf92 | pnl:$-1 WR:0% 🔀 MIXED | markets:284 trades:284
-🔴 0x5b8b7ccefe311f | pnl:$-2885 WR:6% 🔀 MIXED | markets:284 trades:284
-🔴 0xb07afa532e202d | pnl:$-31 WR:50% 🔀 MIXED | markets:284 trades:284
-🟢 0xa6896d11f76dfa | pnl:$27 WR:100% 🔀 MIXED | markets:284 trades:284
-🔴 0xe3575b1f6cf47c | pnl:$-17 WR:50% 🔀 MIXED | markets:284 trades:284
-🔴 0xebdbf6abe04074 | pnl:$-6382 WR:0% 🔀 MIXED | markets:284 trades:284
-🔴 0x6ea8fea90ffdc3 | pnl:$-8 WR:48% 🔀 MIXED | markets:284 trades:284
-🟢 0x20d2309cd92b79 | pnl:$1 WR:46% 🔀 MIXED | markets:284 trades:284
-🔴 0x957dc146dd75a8 | pnl:$-91 WR:12% 🔀 MIXED | markets:284 trades:284
-🔴 0x4d40c3f3627f64 | pnl:$-636 WR:0% 🔀 MIXED | markets:284 trades:284
-🔴 0x1a9011c916ba48 | pnl:$-665 WR:2% 🔀 MIXED | markets:284 trades:284
-🔴 0xfbd8c9c22ca76b | pnl:$-2651 WR:3% 🏛 POL | markets:283 trades:2547
-🔴 0xed89b210faa8d8 | pnl:$-772 WR:2% 🔀 MIXED | markets:283 trades:1981
-🔴 0x4c818c1965c5e5 | pnl:$-101 WR:45% 🔀 MIXED | markets:283 trades:1981
-🟢 0x4f1d5ae26fc314 | pnl:$701 WR:19% 🏛 POL | markets:283 trades:1981
-🟢 0x9c13cd45bc3cb9 | pnl:$1878 WR:40% 🔀 MIXED | markets:283 trades:1698
-🟢 0x5d4aba8ad45bb5 | pnl:$13 WR:63% 🔀 MIXED | markets:283 trades:1698
-
-
-╔═══════════════════════════════════════════════════════╗
-  🚨 NEW INSIDER & WHALE WALLETS DISCOVERED
-╚═══════════════════════════════════════════════════════╝
-
-🚨🚨 INSIDER #1
-  0x06dc51826bc524d9a83770e7de9dd7e005b04524
-  PnL: $131298 | WR: 78% (388W/112L) | 🔀 MIXED
-  Best: +$68027 | Max pos: $209105 | Shared markets: 284 | Wk: 200t
-  Trades: Will the price of XRP be above $1.30 on June 5? | Will the price of Bitcoin be above $60,000 on June 10?
-
-🚨🚨 INSIDER #2
-  0x84cfffc3f16dcc353094de30d4a45226eccd2f63
-  PnL: $60730 | WR: 30% (81W/186L) | 🏛 POL
-  Best: +$59697 | Max pos: $91031 | Shared markets: 284 | Wk: 200t
-  Trades: San Diego Padres vs. Philadelphia Phillies: O/U 8.5 | Golden Knights vs. Hurricanes: O/U 5.5
-
-🏆 ELITE #3
-  0x204f72f35326db932158cba6adff0b9a1da95e14
-  PnL: $25928 | WR: 100% (500W/0L) | 🔀 MIXED
-  Best: +$2345 | Max pos: $14921 | Shared markets: 284 | Wk: 200t
-  Trades: Andorra vs. Liechtenstein: O/U 0.5 | Prostejov: Hynek Barton vs Norbert Gombos
-
-🏆 ELITE #4
-  0x84ad9c5c547a82ec9a08547b94bd922446e5bfb7
-  PnL: $16633 | WR: 18% (89W/411L) | 🌍 GEO
-  Best: +$2497 | Max pos: $3103 | Shared markets: 284 | Wk: 200t
-  Trades: Perugia: Andrea Pellegrino vs Roberto Carballes Baena | Makarska: Elina Avanesyan vs Dominika Salkova
-
-🟢 PROFITABLE #5
-  0x674887d1ac838099a48b629dff53f25b7b87ee08
-  PnL: $3251 | WR: 5% (23W/477L) | 🔀 MIXED
-  Best: +$250 | Max pos: $250 | Shared markets: 284 | Wk: 200t
-  Trades: Bitcoin Up or Down - June 4, 12:45PM-1:00PM ET | Bitcoin Up or Down - June 4, 12:50PM-12:55PM ET
-
-🟢 PROFITABLE #6
-  0xdf7930e89a2c47560165331863c31deca0733dcd
-  PnL: $2499 | WR: 67% (4W/2L) | 🔀 MIXED
-  Best: +$1263 | Max pos: $1228 | Shared markets: 284 | Wk: 200t
-  Trades: Bitcoin Up or Down - June 4, 12:50PM-12:55PM ET | Bitcoin Up or Down - June 4, 12:45PM-12:50PM ET
-
-🟢 PROFITABLE #7
-  0x9c13cd45bc3cb9cdee51c2be029486d74f2f4b42
-  PnL: $1878 | WR: 40% (2W/3L) | 🔀 MIXED
-  Best: +$2092 | Max pos: $1429 | Shared markets: 283 | Wk: 200t
-  Trades: Bitcoin Up or Down - June 4, 12:50PM-12:55PM ET
-
-🟢 PROFITABLE #8
-  0x4f1d5ae26fc31472966e951af3183308736d8de2
-  PnL: $701 | WR: 19% (94W/406L) | 🏛 POL
-  Best: +$422 | Max pos: $1104 | Shared markets: 283 | Wk: 200t
-  Trades: Will the highest temperature in London be 21°C on June 5? | Will the highest temperature in London be 15°C on June 5?
-
-🟢 PROFITABLE #9
-  0xa8ccda0419f357f819271437efb61022f01341a9
-  PnL: $397 | WR: 50% (77W/77L) | 🔀 MIXED
-  Best: +$661 | Max pos: $607 | Shared markets: 284 | Wk: 200t
-  Trades: Bitcoin Up or Down - June 4, 12:45PM-1:00PM ET | Bitcoin Up or Down - June 4, 12PM ET
-
-🟢 PROFITABLE #10
-  0x78857e71c0601752a6c487b2d2e1fe9c22ed1173
-  PnL: $64 | WR: 38% (17W/28L) | 🔀 MIXED
-  Best: +$30 | Max pos: $157 | Shared markets: 284 | Wk: 200t
-  Trades: Northern Ireland vs. Guinea: O/U 1.5 | Roland Garros WTA: Diana Shnaider vs Maja Chwalinska
-
-🟢 PROFITABLE #11
-  0x82311cdedaa7ee25d4672b0e3a3ee0dd0cd2c02e
-  PnL: $54 | WR: 75% (3W/1L) | 🔀 MIXED
-  Best: +$36 | Max pos: $177 | Shared markets: 284 | Wk: 200t
-  Trades: Bitcoin Up or Down - June 4, 12:50PM-12:55PM ET | Bitcoin Up or Down - June 4, 12:45PM-1:00PM ET
-
-🟢 PROFITABLE #12
-  0x75cc3b63a2f2423085e10706c78b494017b93ce1
-  PnL: $53 | WR: 62% (13W/8L) | 🔀 MIXED
-  Best: +$64 | Max pos: $34 | Shared markets: 284 | Wk: 200t
-  Trades: Bitcoin Up or Down - June 4, 12:50PM-12:55PM ET | Bitcoin Up or Down - June 4, 12:45PM-1:00PM ET
-
-🟢 PROFITABLE #13
-  0x927f7694de44d19a72bce76254e628d1c141d215
-  PnL: $41 | WR: 75% (3W/1L) | 🔀 MIXED
-  Best: +$49 | Max pos: $144 | Shared markets: 284 | Wk: 200t
-  Trades: Bitcoin Up or Down - June 4, 12:50PM-12:55PM ET | Bitcoin Up or Down - June 4, 12:45PM-12:50PM ET
-
-🟢 PROFITABLE #14
-  0xa6896d11f76dfa2820662c1f441496f51553559b
-  PnL: $27 | WR: 100% (2W/0L) | 🔀 MIXED
-  Best: +$25 | Max pos: $51 | Shared markets: 284 | Wk: 200t
-  Trades: Bitcoin Up or Down - June 4, 12:50PM-12:55PM ET | Bitcoin Up or Down - June 4, 12:45PM-12:50PM ET
-
-🟢 PROFITABLE #15
-  0x50ea9d870f0347402afbf9d42713bb857bda5963
-  PnL: $18 | WR: 23% (3W/10L) | 🔀 MIXED
-  Best: +$84 | Max pos: $404 | Shared markets: 284 | Wk: 200t
-  Trades: Bitcoin Up or Down - June 4, 12:50PM-12:55PM ET | Bitcoin Up or Down - June 4, 12:45PM-12:50PM ET
-
-🟢 PROFITABLE #16
-  0x5d4aba8ad45bb5eab3499a0294b42da5d1e455d3
-  PnL: $13 | WR: 63% (10W/6L) | 🔀 MIXED
-  Best: +$10 | Max pos: $17 | Shared markets: 283 | Wk: 200t
-  Trades: Bitcoin Up or Down - June 4, 12:50PM-12:55PM ET | Bitcoin Up or Down - June 4, 12:45PM-1:00PM ET
-
-🟢 PROFITABLE #17
-  0xdfcbf461e8bf351bae58b2897fb1bcbc2456bf61
-  PnL: $9 | WR: 64% (7W/4L) | 🔀 MIXED
-  Best: +$4 | Max pos: $50 | Shared markets: 284 | Wk: 73t
-  Trades: Will the highest temperature in New York City be between 86- | Will the highest temperature in Dallas be 88°F or higher on 
-
-🟢 PROFITABLE #18
-  0x3653235d75a0d5969c42f7514d4df8ea5f8cef74
-  PnL: $1 | WR: 50% (1W/1L) | 🔀 MIXED
-  Best: +$2 | Max pos: $3 | Shared markets: 284 | Wk: 200t
-  Trades: Will the highest temperature in London be 22°C on June 5? | Will the highest temperature in Lucknow be 40°C on June 5?
-
-🟢 PROFITABLE #19
-  0x20d2309cd92b797ae7ca175ed828ed8a27fbe29d
-  PnL: $1 | WR: 46% (11W/13L) | 🔀 MIXED
-  Best: +$44 | Max pos: $50 | Shared markets: 284 | Wk: 200t
-  Trades: Solana Up or Down - June 4, 12:45PM-1:00PM ET | Bitcoin Up or Down - June 4, 12:45PM-12:50PM ET
-
-━━━ COMPLETE ━━━
-Co-traders found: 569
-Profitable: 19
-Insiders/Whales: 2
-Saved to DB: 6
+=== RAW DATA ===
+[
+  {
+    "alias": "BAA2BC — Iran Insider",
+    "addr": "0xbaa2bcb5439e985ce4ccf815b4700027d1b92c73",
+    "pnl": 191503,
+    "wr": 83,
+    "strategy": "insider_geo",
+    "wk": 81,
+    "mo": 500,
+    "avgEntry": 0.397,
+    "avgWinPnl": 5688.41,
+    "avgLossPnl": -4057.99,
+    "avgWinSize": 24364.45,
+    "avgMultiple": 1.23,
+    "topWin": 59118.14,
+    "topLoss": -14316.38,
+    "totalPositions": 54
+  },
+  {
+    "alias": "CryptoOracle-06DC51",
+    "addr": "0x06dc51826bc524d9a83770e7de9dd7e005b04524",
+    "pnl": 131298,
+    "wr": 78,
+    "strategy": "mirror",
+    "wk": 500,
+    "mo": 500,
+    "avgEntry": 0.572,
+    "avgWinPnl": 118.84,
+    "avgLossPnl": -0.27,
+    "avgWinSize": 1971.19,
+    "avgMultiple": 1.06,
+    "topWin": 3727.35,
+    "topLoss": -0.7,
+    "totalPositions": 500
+  },
+  {
+    "alias": "B2A362 — Confirm Whale",
+    "addr": "0xb2a3623364c33561d8312e1edb79eb941c798510",
+    "pnl": 125453,
+    "wr": 75,
+    "strategy": "confirmation",
+    "wk": 20,
+    "mo": 77,
+    "avgEntry": 0.797,
+    "avgWinPnl": 46506.92,
+    "avgLossPnl": -13798.28,
+    "avgWinSize": 432796.97,
+    "avgMultiple": 1.11,
+    "topWin": 90576.77,
+    "topLoss": -13798.28,
+    "totalPositions": 4
+  },
+  {
+    "alias": "SportsWhale-84CFFF",
+    "addr": "0x84cfffc3f16dcc353094de30d4a45226eccd2f63",
+    "pnl": 60730,
+    "wr": 30,
+    "strategy": "mirror",
+    "wk": 500,
+    "mo": 500,
+    "avgEntry": 0.507,
+    "avgWinPnl": 777.46,
+    "avgLossPnl": -182.8,
+    "avgWinSize": 3032.26,
+    "avgMultiple": 1.26,
+    "topWin": 59696.56,
+    "topLoss": -15277.21,
+    "totalPositions": 297
+  },
+  {
+    "alias": "ED107A — NO Machine",
+    "addr": "0xed107a85a4585a381e48c7f7ca4144909e7dd2e5",
+    "pnl": 58947,
+    "wr": 89,
+    "strategy": "no_machine",
+    "wk": 75,
+    "mo": 344,
+    "avgEntry": 0.89,
+    "avgWinPnl": 58883.08,
+    "avgLossPnl": -632880.89,
+    "avgWinSize": 127440.02,
+    "avgMultiple": 1.46,
+    "topWin": 2531250,
+    "topLoss": -2531250,
+    "totalPositions": 48
+  },
+  {
+    "alias": "A7A8C1 — World Cup",
+    "addr": "0xa7a8c1fd4bfff08ea30214efa7efaf75d7c6580c",
+    "pnl": 47554,
+    "wr": 87,
+    "strategy": "mirror",
+    "wk": 17,
+    "mo": 45,
+    "avgEntry": 0.017,
+    "avgWinPnl": 2536.65,
+    "avgLossPnl": -1040.52,
+    "avgWinSize": 21112.01,
+    "avgMultiple": 1.12,
+    "topWin": 10031.09,
+    "topLoss": -2499.99,
+    "totalPositions": 23
+  },
+  {
+    "alias": "F49CE4 — High Freq",
+    "addr": "0xf49ce459b52f60b70ce0fe9aa6203e6bf90f9786",
+    "pnl": 41975,
+    "wr": 52,
+    "strategy": "mirror",
+    "wk": 174,
+    "mo": 388,
+    "avgEntry": 0.239,
+    "avgWinPnl": 915.88,
+    "avgLossPnl": -198.19,
+    "avgWinSize": 2394.42,
+    "avgMultiple": 1.38,
+    "topWin": 40850.17,
+    "topLoss": -2282.68,
+    "totalPositions": 109
+  },
+  {
+    "alias": "E9076A — Co-Trader",
+    "addr": "0xe9076a87c5ed90ef16e6fe6529c943baeca0cff6",
+    "pnl": 30103,
+    "wr": 83,
+    "strategy": "mirror",
+    "wk": 500,
+    "mo": 500,
+    "avgEntry": 0.424,
+    "avgWinPnl": 63.51,
+    "avgLossPnl": -0.05,
+    "avgWinSize": 613.61,
+    "avgMultiple": 1.1,
+    "topWin": 5192.94,
+    "topLoss": -0.09,
+    "totalPositions": 500
+  },
+  {
+    "alias": "PerfectWR-204F72",
+    "addr": "0x204f72f35326db932158cba6adff0b9a1da95e14",
+    "pnl": 25928,
+    "wr": 100,
+    "strategy": "mirror",
+    "wk": 500,
+    "mo": 500,
+    "avgEntry": 0.505,
+    "avgWinPnl": 125.11,
+    "avgLossPnl": 0,
+    "avgWinSize": 741.09,
+    "avgMultiple": 1.17,
+    "topWin": 7173.53,
+    "topLoss": 0.5,
+    "totalPositions": 500
+  },
+  {
+    "alias": "GeoWatch-84AD9C",
+    "addr": "0x84ad9c5c547a82ec9a08547b94bd922446e5bfb7",
+    "pnl": 16633,
+    "wr": 18,
+    "strategy": "mirror",
+    "wk": 500,
+    "mo": 500,
+    "avgEntry": 0.613,
+    "avgWinPnl": 293.67,
+    "avgLossPnl": -2.34,
+    "avgWinSize": 473.72,
+    "avgMultiple": 1.62,
+    "topWin": 9160.71,
+    "topLoss": -5.25,
+    "totalPositions": 500
+  },
+  {
+    "alias": "Elite-D3B034",
+    "addr": "0xd3b034d7bfb2473fb252d0414646d9786bac329e",
+    "pnl": 14882,
+    "wr": 54,
+    "strategy": "mirror",
+    "wk": 186,
+    "mo": 500,
+    "avgEntry": 0.566,
+    "avgWinPnl": 4281.83,
+    "avgLossPnl": -2981.93,
+    "avgWinSize": 10077.34,
+    "avgMultiple": 1.42,
+    "topWin": 7015.9,
+    "topLoss": -6021.11,
+    "totalPositions": 6
+  },
+  {
+    "alias": "EED588",
+    "addr": "0xeed588bab0b0df73a9a6def7a59e512e9ede1a33",
+    "pnl": 11740,
+    "wr": 67,
+    "strategy": "mirror",
+    "wk": 16,
+    "mo": 44,
+    "avgEntry": 0.819,
+    "avgWinPnl": 6968.28,
+    "avgLossPnl": -1759,
+    "avgWinSize": 144082.77,
+    "avgMultiple": 1.05,
+    "topWin": 12218.07,
+    "topLoss": -1759,
+    "totalPositions": 3
+  },
+  {
+    "alias": "000D25",
+    "addr": "0x000d257d2dc7616feaef4ae0f14600fdf50a758e",
+    "pnl": 8017,
+    "wr": 51,
+    "strategy": "mirror",
+    "wk": 29,
+    "mo": 104,
+    "avgEntry": 0.838,
+    "avgWinPnl": 3295.36,
+    "avgLossPnl": -2794.24,
+    "avgWinSize": 11985.49,
+    "avgMultiple": 1.27,
+    "topWin": 39609.2,
+    "topLoss": -18879.05,
+    "totalPositions": 49
+  },
+  {
+    "alias": "335592",
+    "addr": "0x335592400e402c26583ce8b56d12605e9548a126",
+    "pnl": 7499,
+    "wr": 100,
+    "strategy": "mirror",
+    "wk": 8,
+    "mo": 15,
+    "avgEntry": 0.844,
+    "avgWinPnl": 3548.52,
+    "avgLossPnl": 0,
+    "avgWinSize": 187620.5,
+    "avgMultiple": 1.02,
+    "topWin": 7096.35,
+    "topLoss": 0.69,
+    "totalPositions": 2
+  },
+  {
+    "alias": "E52C0A",
+    "addr": "0xe52c0a1327a12edc7bd54ea6f37ce00a4ca96924",
+    "pnl": 6943,
+    "wr": 69,
+    "strategy": "mirror",
+    "wk": 10,
+    "mo": 79,
+    "avgEntry": 0.79,
+    "avgWinPnl": 1094.19,
+    "avgLossPnl": -1064.77,
+    "avgWinSize": 51598.65,
+    "avgMultiple": 1.02,
+    "topWin": 2929.8,
+    "topLoss": -1572.01,
+    "totalPositions": 13
+  },
+  {
+    "alias": "A77105",
+    "addr": "0xa77105bb4d2d4d200b0133a2036222353831162d",
+    "pnl": 6136,
+    "wr": 78,
+    "strategy": "mirror",
+    "wk": 0,
+    "mo": 82,
+    "avgEntry": 0.179,
+    "avgWinPnl": 651.85,
+    "avgLossPnl": -1500.1,
+    "avgWinSize": 5253.96,
+    "avgMultiple": 1.12,
+    "topWin": 2011.18,
+    "topLoss": -8970.8,
+    "totalPositions": 39
+  },
+  {
+    "alias": "93511D",
+    "addr": "0x93511d72d294f1478739bc38f578bf0306fd9e4d",
+    "pnl": 3322,
+    "wr": 80,
+    "strategy": "mirror",
+    "wk": 366,
+    "mo": 500,
+    "avgEntry": 0.969,
+    "avgWinPnl": 213.03,
+    "avgLossPnl": -225.7,
+    "avgWinSize": 39229.18,
+    "avgMultiple": 1.01,
+    "topWin": 1238.4,
+    "topLoss": -410.28,
+    "totalPositions": 25
+  },
+  {
+    "alias": "Elite-FEA31B",
+    "addr": "0xfea31bc088000ff909be1dfd8d0e3f2c7ef2d227",
+    "pnl": 2151,
+    "wr": 75,
+    "strategy": "mirror",
+    "wk": 205,
+    "mo": 500,
+    "avgEntry": 0.666,
+    "avgWinPnl": 2413.74,
+    "avgLossPnl": -7997.83,
+    "avgWinSize": 44511.02,
+    "avgMultiple": 1.05,
+    "topWin": 70000,
+    "topLoss": -70000,
+    "totalPositions": 48
+  }
+]
