@@ -199,7 +199,7 @@ const LexEntry: React.FC<{ entry: typeof LEXICON[0]; gs: React.CSSProperties }> 
 // ── Component ────────────────────────────────────────────────────
 const JyotishChamber: React.FC = () => {
   const { user } = useAuth();
-  const { membershipTier, isAdmin } = useMembership();
+  const { tier: membershipTier, isAdmin } = useMembership();
   useTranslation();
   const navigate = useNavigate();
 
