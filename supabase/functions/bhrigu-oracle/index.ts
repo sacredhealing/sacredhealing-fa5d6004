@@ -274,9 +274,12 @@ serve(async (req) => {
     const mode = String(body.mode ?? "chat"); // "chat" | "full_reading"
     const chart = (body.chart_context as Record<string, unknown>) || {};
     const name     = String(body.name ?? chart.name ?? "");
-    const dob      = String(chart.dateOfBirth ?? body.birth_date ?? body.dateOfBirth ?? "");
-    const tob      = String(chart.timeOfBirth ?? body.birth_time ?? body.timeOfBirth ?? "");
-    const pob      = String(chart.placeOfBirth ?? body.birth_place ?? body.placeOfBirth ?? "");
+    // Parse birth_context JSON fallback if individual fields empty
+    let birthCtx: Record<string,string> = {};
+    try { if (body.birth_context) birthCtx = JSON.parse(String(body.birth_context)); } catch {}
+    const dob      = String(chart.dateOfBirth ?? body.birth_date ?? body.dateOfBirth ?? birthCtx.dob ?? "");
+    const tob      = String(chart.timeOfBirth ?? body.birth_time ?? body.timeOfBirth ?? birthCtx.tob ?? "");
+    const pob      = String(chart.placeOfBirth ?? body.birth_place ?? body.placeOfBirth ?? birthCtx.pob ?? "");
     const dosha    = String(body.dosha ?? "");
     const dasha    = String(body.current_dasha ?? "");
     const question = String(body.question ?? "");
