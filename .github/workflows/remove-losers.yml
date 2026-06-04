@@ -1,0 +1,62 @@
+name: Remove Negative EV Wallets
+
+on:
+  workflow_dispatch:
+
+jobs:
+  remove:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Demote negative EV wallets
+        env:
+          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          B="https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/polymarket_whales"
+          H1="apikey: ${SK}"; H2="Authorization: Bearer ${SK}"; H3="Content-Type: application/json"
+          LOG="_removed_losers.txt"
+          echo "=== Removing negative EV wallets ===" > $LOG
+
+          # Demote to watching (is_elite=false) — keep in DB for monitoring
+          for addr in \
+            "0x84cfffc3f16dcc353094de30d4a45226eccd2f63" \
+            "0x84ad9c5c547a82ec9a08547b94bd922446e5bfb7" \
+            "0xeed588bab0b0df73a9a6def7a59e512e9ede1a33" \
+            "0x000d257d2dc7616feaef4ae0f14600fdf50a758e" \
+            "0xe52c0a1327a12edc7bd54ea6f37ce00a4ca96924" \
+            "0x93511d72d294f1478739bc38f578bf0306fd9e4d" \
+            "0xd3b034d7bfb2473fb252d0414646d9786bac329e" \
+            "0xb2a3623364c33561d8312e1edb79eb941c798510" \
+            "0x335592400e402c26583ce8b56d12605e9548a126"
+          do
+            R=$(curl -s -o /dev/null -w "%{http_code}" -X PATCH \
+              "${B}?address=eq.${addr}" \
+              -H "$H1" -H "$H2" -H "$H3" \
+              -d '{"is_elite":false,"is_active":true}')
+            echo "Demoted ${addr}: HTTP ${R}" >> $LOG
+          done
+
+          echo "" >> $LOG
+          echo "=== REMAINING ELITE ===" >> $LOG
+          curl -s "${B}?is_elite=eq.true&order=total_profit.desc&select=alias,total_profit,win_rate_30d,strategy" \
+            -H "$H1" -H "$H2" >> $LOG
+
+          echo "" >> $LOG
+          echo "=== COUNT ===" >> $LOG
+          curl -s "${B}?select=is_elite" -H "$H1" -H "$H2" \
+            | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+e=sum(1 for w in d if w.get('is_elite'))
+w=sum(1 for w in d if not w.get('is_elite'))
+print(f'Elite: {e} | Watching: {w} | Total: {len(d)}')
+" >> $LOG
+
+          cat $LOG
+          git config user.email "bot@sqi.app"; git config user.name "SQI"
+          git add $LOG
+          git commit -m "Removed 9 negative EV wallets from elite" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
