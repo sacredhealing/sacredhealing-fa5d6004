@@ -1,0 +1,6 @@
+=== Fixing elite count ===
+[]
+[]
+[]
+[{"total":29,"elite":13,"watching":16}]
+[{"alias":"🏆BAA2BC","total_profit":"191503.52","strategy":"insider_geo","is_elite":true},{"alias":"🏆B2A362","total_profit":"125453.61","strategy":"confirmation","is_elite":true},{"alias":"🏆ED107A","total_profit":"58947.92","strategy":"no_machine","is_elite":true},{"alias":"🏆A7A8C1","total_profit":"47554.02","strategy":"mirror","is_elite":true},{"alias":"🏆F49CE4","total_profit":"41974.73","strategy":"mirror","is_elite":true},{"alias":"🏆Apex-E9076A","total_profit":"30103","strategy":"mirror","is_elite":true},{"alias":"🏆EED588","total_profit":"11739.79","strategy":"mirror","is_elite":true},{"alias":"🏆000D25","total_profit":"8016.67","strategy":"mirror","is_elite":true},{"alias":"🏆335592","total_profit":"7499.03","strategy":"mirror","is_elite":true},{"alias":"🏆E52C0A","total_profit":"6942.63","strategy":"mirror","is_elite":true},{"alias":"🏆A77105","total_profit":"6135.74","strategy":"mirror","is_elite":true},{"alias":"🏆204F72","total_profit":"5061.15","strategy":"mirror","is_elite":true},{"alias":"🏆Elite-FEA31B","total_profit":"2151.41","strategy":"mirror","is_elite":true}]
