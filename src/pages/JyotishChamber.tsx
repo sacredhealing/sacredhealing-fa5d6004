@@ -277,16 +277,17 @@ const JyotishChamber: React.FC = () => {
     // Try cache first
     const { data: cached } = await supabase
       .from('jyotish_profiles')
-      .select('moon_nakshatra, ascendant, sun_sign, dasha_data, ephemeris_confirmed, bhrigu_leaf_confirmed')
+      .select('moon_nakshatra, dasha_data, ephemeris_confirmed, ephemeris_data')
       .eq('user_id', user.id)
       .maybeSingle();
 
     if (cached?.moon_nakshatra) {
+      const eph = (cached as any).ephemeris_data || {};
       setEphemeris({
         moonNakshatra: cached.moon_nakshatra,
         moonLongitude: 0,
-        ascendantSign: cached.ascendant || '',
-        sunSign: cached.sun_sign || '',
+        ascendantSign: eph.ascendant || '',
+        sunSign: eph.sun_sign || '',
         dashaData: cached.dasha_data as any,
       });
       // Load leaf confirmed status
