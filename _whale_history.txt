@@ -1,27 +1,36 @@
-Latest: 87924169
+╔═══════════════════════════════════════════════════════╗
+  🚨 INSIDER DISCOVERY — Co-Trader Method
+  2026-06-04T16:44:46.287Z
+╚═══════════════════════════════════════════════════════╝
 
-=== Tenderly WITH topic filter ===
-Range    1000: ✅ 113787 logs
-Range    5000: ❌ The operation was aborted due to timeout
-Range   10000: ❌ {"code":-32602,"message":"invalid params","data":"Query returned more 
-Range   50000: ❌ {"code":-32602,"message":"invalid params","data":"Query returned more 
-Range  100000: ❌ {"code":-32602,"message":"invalid params","data":"Query returned more 
-Range  200000: ❌ {"code":-32602,"message":"invalid params","data":"Query returned more 
+📡 Pulling market IDs from known insiders...
+  0xbaa2bcb5439e: 500 trades, 61 markets
+  0xed107a85a458: 500 trades, 203 markets
+  0xa7a8c1fd4bff: 46 trades, 16 markets
 
-=== Alchemy 10-block speed test ===
-10 calls in 1316ms = 132ms/call
-Sample logs found: 9975
+Total unique markets to scan: 275
 
-Estimate for 30 days:
-  1.3M blocks / 10 = 130,000 calls
-  At 132ms/call = 4.8 hours
-  Too slow for GitHub Actions (6 min limit)
+📡 Finding co-traders in each market...
+  Scanned 10/275 markets | 0 wallets found  Scanned 20/275 markets | 0 wallets found  Scanned 30/275 markets | 0 wallets found  Scanned 40/275 markets | 0 wallets found  Scanned 50/275 markets | 0 wallets found  Scanned 60/275 markets | 0 wallets found  Scanned 70/275 markets | 0 wallets found  Scanned 80/275 markets | 0 wallets found  Scanned 90/275 markets | 0 wallets found  Scanned 100/275 markets | 0 wallets found  Scanned 110/275 markets | 0 wallets found  Scanned 120/275 markets | 0 wallets found  Scanned 130/275 markets | 0 wallets found  Scanned 140/275 markets | 0 wallets found  Scanned 150/275 markets | 0 wallets found  Scanned 160/275 markets | 0 wallets found  Scanned 170/275 markets | 0 wallets found  Scanned 180/275 markets | 0 wallets found  Scanned 190/275 markets | 0 wallets found  Scanned 200/275 markets | 0 wallets found  Scanned 210/275 markets | 0 wallets found  Scanned 220/275 markets | 0 wallets found  Scanned 230/275 markets | 0 wallets found  Scanned 240/275 markets | 0 wallets found  Scanned 250/275 markets | 0 wallets found  Scanned 260/275 markets | 0 wallets found  Scanned 270/275 markets | 0 wallets found
 
-Best approach: Use Tenderly WITHOUT topic, filter in JS
+✅ Co-trader discovery: 0 wallets with $5k+ trades
 
-=== Tenderly WITHOUT topic (larger range test) ===
-Range   10000 (no topic): ❌ {"code":-32602,"message":"invalid params","data":"Query returned more 
-Range   50000 (no topic): ❌ {"code":-32602,"message":"invalid params","data":"Query returned more 
-Range  100000 (no topic): ❌ {"code":-32602,"message":"invalid params","data":"Query returned more 
-Range  300000 (no topic): ❌ {"code":-32099,"message":"request timeout"}
-Range  500000 (no topic): ❌ {"code":-32602,"message":"invalid params","data":"Query returned more 
+📡 Scanning top-volume markets for large players...
+
+Total unique wallets: 0
+
+Top 20 by largest single trade:
+
+🔍 Deep scanning 0 new wallets...
+
+
+
+╔═══════════════════════════════════════════════════════╗
+  🚨 NEW INSIDER WALLETS — FULL REPORT
+╚═══════════════════════════════════════════════════════╝
+
+━━━ SCAN COMPLETE ━━━
+Wallets scanned: 0
+New profitable: 0
+Classified as insiders: 0
+Saved to DB: 0
