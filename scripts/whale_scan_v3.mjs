@@ -1,171 +1,182 @@
 /**
- * MEGASCAN — Find insiders making $500-$250k in 30 minutes on Polygon
- * Strategy: scan large blocks, find wallets with massive single-trade PnL
- * Look for: $10k+ single positions, rapid entry/exit, consistent winners
+ * MEGASCAN v2 — Scan Polygon for $10k+ trades, find insider wallets
+ * Uses: eth_getLogs on large block ranges + Polymarket positions API
  */
-const DATA  = 'https://data-api.polymarket.com';
+const DATA = 'https://data-api.polymarket.com';
 const GAMMA = 'https://gamma-api.polymarket.com';
-const POLY  = 'https://clob.polymarket.com';
+const POLYGON_RPC = process.env.POLYGON_RPC_URL;
+const CONTRACTS = [
+  '0xE111180000d2663C0091e4f400237545B87B996B',
+  '0xe2222d279d744050d28e00520010520000310F59',
+];
+const DECIMALS = 1_000_000;
 
-async function get(url, timeout=12000) {
+async function get(url) {
   try {
     const r = await fetch(url, {
       headers: { Accept: 'application/json', 'User-Agent': 'Mozilla/5.0' },
-      signal: AbortSignal.timeout(timeout),
+      signal: AbortSignal.timeout(15000),
     });
-    if (!r.ok) return null;
-    return r.json();
+    return r.ok ? r.json() : null;
   } catch { return null; }
 }
 
-// Get top traders by volume from Polymarket activity endpoints
-async function findTopVolumeWallets() {
-  console.log('\n🔍 STRATEGY 1: High-volume recent traders via activity API');
-  
-  // Get recent large trades from gamma events
-  const events = await get(`${GAMMA}/events?limit=20&active=true&order=volume&ascending=false`);
-  if (events && Array.isArray(events)) {
-    console.log(`Active events found: ${events.length}`);
-    events.slice(0,5).forEach(e => {
-      console.log(`  ${e.title?.slice(0,60)} | vol: $${Number(e.volume||0).toFixed(0)}`);
-    });
-  }
-
-  // Try to get large position holders
-  const bigMarkets = await get(`${GAMMA}/markets?limit=20&order=volume&ascending=false&closed=false`);
-  if (bigMarkets && Array.isArray(bigMarkets)) {
-    console.log(`\nTop markets by volume: ${bigMarkets.length}`);
-    bigMarkets.slice(0,5).forEach(m => {
-      console.log(`  ${m.question?.slice(0,55)} | vol: $${Number(m.volume||0).toFixed(0)} | liq: $${Number(m.liquidity||0).toFixed(0)}`);
-    });
-  }
+async function rpc(method, params=[]) {
+  const r = await fetch(POLYGON_RPC, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id:1, jsonrpc:'2.0', method, params }),
+  });
+  const d = await r.json();
+  if (d.error) throw new Error(d.error.message);
+  return d.result;
 }
 
-// Get wallets with largest single positions
-async function findLargePositionHolders() {
-  console.log('\n🔍 STRATEGY 2: Wallets with $10k+ single positions');
+const toAddr = h => '0x' + h.slice(-40).toLowerCase();
+
+function decodeLog(log) {
+  const topics = log.topics || [];
+  const raw = (log.data || '').slice(2);
+  if (topics.length < 3 || raw.length < 256) return null;
+  const maker = toAddr(topics[2]);
+  if (maker.slice(2) === '0'.repeat(40)) return null;
+  const makerAmtHex = raw.slice(128, 192);
+  const takerAmtHex = raw.slice(192, 256);
+  const toNum = hex => { try { return Number(BigInt('0x'+hex)) / DECIMALS; } catch { return 0; } };
+  const usdcSize = Math.max(toNum(makerAmtHex), toNum(takerAmtHex));
+  if (usdcSize < 10000) return null; // $10k+ only
+  const tokenIdHex = raw.slice(64, 128);
+  let tokenId = '';
+  try { tokenId = BigInt('0x'+tokenIdHex).toString(); } catch {}
+  return { tx: log.transactionHash, block: parseInt(log.blockNumber,16), maker, usdcSize, tokenId };
+}
+
+// Scan last 30 days of blocks for $10k+ trades
+async function scanForBigTrades() {
+  console.log('🔍 Scanning Polygon for $10k+ trades (last 7 days)...');
+  const latest = parseInt(await rpc('eth_blockNumber',[]), 16);
+  // ~7 days = 7 * 24 * 60 * 4 = ~40,320 blocks (Polygon ~2s blocks)
+  const DAYS = 7;
+  const BLOCKS_PER_DAY = 43200;
+  const fromBlock = latest - (DAYS * BLOCKS_PER_DAY);
   
-  // Sample top markets and find their largest holders
-  const markets = await get(`${GAMMA}/markets?limit=50&order=volume&ascending=false&closed=false`);
-  if (!markets || !Array.isArray(markets)) return [];
+  console.log(`Scanning blocks ${fromBlock.toLocaleString()} → ${latest.toLocaleString()} (~${DAYS} days)`);
   
-  const whaleWallets = new Set();
+  const bigTrades = [];
+  const CHUNK = 3000; // scan in chunks
   
-  for (const m of markets.slice(0,10)) {
-    if (!m.conditionId) continue;
-    // Try to get top traders for this market
-    const traders = await get(`${DATA}/activity?market=${m.conditionId}&limit=50&sortBy=cashVolume&sortDirection=DESC`);
-    if (Array.isArray(traders) && traders.length > 0) {
-      console.log(`\n  Market: ${m.question?.slice(0,50)}`);
-      traders.slice(0,5).forEach(t => {
-        if (t.proxyWallet) {
-          whaleWallets.add(t.proxyWallet);
-          console.log(`    ${t.proxyWallet?.slice(0,14)} | size: $${Number(t.usdcSize||0).toFixed(0)} | price: ${Number(t.price||0).toFixed(3)}`);
+  for (let from = fromBlock; from < latest; from += CHUNK) {
+    const to = Math.min(from + CHUNK - 1, latest);
+    for (const contract of CONTRACTS) {
+      try {
+        const logs = await rpc('eth_getLogs', [{
+          fromBlock: '0x' + from.toString(16),
+          toBlock:   '0x' + to.toString(16),
+          address: contract,
+          topics: ['0xd0a08e8007ade4223bedd3e7afd46de87a15c21ab0b8a5b2a17f1ace4f9a9c49'],
+        }]);
+        if (!Array.isArray(logs)) continue;
+        const decoded = logs.map(decodeLog).filter(Boolean);
+        bigTrades.push(...decoded);
+        if (decoded.length > 0) {
+          process.stdout.write(`  Block ${from.toLocaleString()}: ${decoded.length} big trades found (${bigTrades.length} total)\r`);
         }
+      } catch(e) { /* skip */ }
+    }
+    await new Promise(r=>setTimeout(r,100));
+  }
+  
+  console.log(`\n\nTotal $10k+ trades found: ${bigTrades.length}`);
+  return bigTrades;
+}
+
+async function analyzeInsiders(bigTrades) {
+  // Aggregate by wallet
+  const wallets = {};
+  for (const t of bigTrades) {
+    if (!wallets[t.maker]) wallets[t.maker] = { addr: t.maker, trades: [], totalVolume: 0, maxSingle: 0 };
+    wallets[t.maker].trades.push(t);
+    wallets[t.maker].totalVolume += t.usdcSize;
+    wallets[t.maker].maxSingle = Math.max(wallets[t.maker].maxSingle, t.usdcSize);
+  }
+  
+  // Sort by max single trade (insiders bet big once)
+  const sorted = Object.values(wallets).sort((a,b) => b.maxSingle - a.maxSingle);
+  
+  console.log(`\nUnique wallets making $10k+ trades: ${sorted.length}`);
+  console.log('\nTop 30 by largest single trade:');
+  sorted.slice(0,30).forEach((w,i) => {
+    console.log(`  #${String(i+1).padStart(2)} ${w.addr} | max: $${w.maxSingle.toFixed(0).padStart(9)} | vol: $${w.totalVolume.toFixed(0).padStart(10)} | trades: ${w.trades.length}`);
+  });
+  
+  return sorted;
+}
+
+async function deepScanInsiders(wallets) {
+  console.log(`\n🔍 Deep PnL scan on top ${Math.min(wallets.length,30)} big-trade wallets...`);
+  
+  const results = [];
+  for (const w of wallets.slice(0,30)) {
+    const [pos, tr] = await Promise.all([
+      get(`${DATA}/positions?user=${w.addr}&limit=500`),
+      get(`${DATA}/trades?user=${w.addr}&limit=500&sortBy=timestamp&sortDirection=DESC`),
+    ]);
+    
+    const pArr = Array.isArray(pos) ? pos : [];
+    const tArr = Array.isArray(tr) ? tr : [];
+    const pnl = pArr.reduce((s,p)=>s+parseFloat(p.cashPnl||0),0);
+    const wins = pArr.filter(p=>parseFloat(p.cashPnl||0)>0);
+    const bigWins = pArr.filter(p=>parseFloat(p.cashPnl||0)>10000);
+    const massiveWins = pArr.filter(p=>parseFloat(p.cashPnl||0)>50000);
+    const now = Date.now()/1000;
+    const wk = tArr.filter(t=>t.timestamp&&now-t.timestamp<604800).length;
+    
+    const tag = pnl > 100000 ? '🚨 WHALE' : pnl > 10000 ? '⭐ BIG' : pnl > 0 ? '🟢' : '🔴';
+    console.log(`${tag} $${pnl.toFixed(0).padStart(10)} | ${w.addr} | onchain_vol:$${w.totalVolume.toFixed(0)} | wins:${wins.length}/${pArr.length} | $50k+:${massiveWins.length} | wk:${wk}t`);
+    
+    if (massiveWins.length > 0) {
+      massiveWins.slice(0,3).forEach(p => {
+        console.log(`              +$${parseFloat(p.cashPnl).toFixed(0).padStart(8)} | ${String(p.title||'?').slice(0,55)}`);
+      });
+    }
+    
+    if (pnl > 0) {
+      results.push({
+        addr: w.addr, pnl, wins: wins.length, total: pArr.length,
+        bigWins: bigWins.length, massiveWins: massiveWins.length,
+        onchainVol: w.totalVolume, maxSingleTrade: w.maxSingle,
+        wkTrades: wk, wr: pArr.length > 0 ? Math.round(wins.length/pArr.length*100) : 0,
+        topWin: Math.max(0,...pArr.map(p=>parseFloat(p.cashPnl||0))),
       });
     }
     await new Promise(r=>setTimeout(r,200));
   }
-  return [...whaleWallets];
+  
+  results.sort((a,b)=>b.pnl-a.pnl);
+  
+  console.log('\n\n╔══════════════════════════════════════════════════════╗');
+  console.log('  🚨 FINAL: NEW INSIDER WALLETS DISCOVERED');
+  console.log('╚══════════════════════════════════════════════════════╝\n');
+  
+  results.forEach((r,i) => {
+    const tag = r.pnl > 100000 ? '🚨 WHALE' : r.pnl > 10000 ? '⭐ BIG PLAYER' : '🟢 PROFITABLE';
+    console.log(`${tag} #${i+1}`);
+    console.log(`  Address: ${r.addr}`);
+    console.log(`  Total PnL: $${r.pnl.toFixed(0)} | WR: ${r.wr}% (${r.wins}W/${r.total-r.wins}L)`);
+    console.log(`  Best single trade: +$${r.topWin.toFixed(0)}`);
+    console.log(`  On-chain volume: $${r.onchainVol.toFixed(0)} | Largest bet: $${r.maxSingleTrade.toFixed(0)}`);
+    console.log(`  $50k+ wins: ${r.massiveWins} | Active this week: ${r.wkTrades} trades`);
+    console.log('');
+  });
+  
+  return results;
 }
 
-// Find wallets with massive rapid PnL (insider pattern)
-async function findInsiderPattern(addresses) {
-  console.log(`\n🔍 STRATEGY 3: Insider pattern scan on ${addresses.length} addresses`);
-  console.log('Looking for: large positions closed quickly, consistent wins on political/geo events\n');
-  
-  const insiders = [];
-  
-  for (const addr of addresses.slice(0,40)) {
-    const [positions, trades] = await Promise.all([
-      get(`${DATA}/positions?user=${addr}&limit=500`),
-      get(`${DATA}/trades?user=${addr}&limit=500&sortBy=timestamp&sortDirection=DESC`),
-    ]);
-    
-    const pArr = Array.isArray(positions) ? positions : [];
-    const tArr = Array.isArray(trades) ? trades : [];
-    
-    if (pArr.length === 0 && tArr.length === 0) continue;
-    
-    const totalPnl = pArr.reduce((s,p)=>s+parseFloat(p.cashPnl||0),0);
-    if (totalPnl <= 0) continue; // skip losers
-    
-    // Find rapid large wins (insider signature)
-    const bigWins = pArr.filter(p => parseFloat(p.cashPnl||0) > 5000);
-    const massiveWins = pArr.filter(p => parseFloat(p.cashPnl||0) > 50000);
-    
-    // Check if trades cluster around political/geo events
-    const now = Date.now()/1000;
-    const recentTrades = tArr.filter(t => t.timestamp && (now - t.timestamp) < 30*86400);
-    const weekTrades = tArr.filter(t => t.timestamp && (now - t.timestamp) < 7*86400);
-    
-    // Large position sizing = insider confidence
-    const positions10k = pArr.filter(p => parseFloat(p.initialValue||0) > 10000);
-    const positions100k = pArr.filter(p => parseFloat(p.initialValue||0) > 100000);
-    
-    if (totalPnl > 1000 || bigWins.length > 0) {
-      insiders.push({
-        addr, totalPnl, bigWins: bigWins.length, massiveWins: massiveWins.length,
-        positions10k: positions10k.length, positions100k: positions100k.length,
-        totalPositions: pArr.length, totalTrades: tArr.length,
-        weekTrades: weekTrades.length, recentTrades: recentTrades.length,
-        topWin: Math.max(0, ...pArr.map(p=>parseFloat(p.cashPnl||0))),
-        topPosition: Math.max(0, ...pArr.map(p=>parseFloat(p.initialValue||0))),
-        avgPositionSize: pArr.length > 0 ? pArr.reduce((s,p)=>s+parseFloat(p.initialValue||0),0)/pArr.length : 0,
-      });
-      
-      const flag = massiveWins.length > 0 ? '🚨 INSIDER' : bigWins.length > 0 ? '⭐ BIG PLAYER' : '🟢 PROFITABLE';
-      console.log(`${flag} ${addr.slice(0,16)} | PnL:$${totalPnl.toFixed(0)} | bigWins:${bigWins.length} | $100k+pos:${positions100k.length} | wk:${weekTrades.length}t`);
-      
-      if (massiveWins.length > 0) {
-        bigWins.slice(0,3).forEach(p => {
-          console.log(`         +$${parseFloat(p.cashPnl).toFixed(0).padStart(8)} | ${String(p.title||p.market||'?').slice(0,55)}`);
-        });
-      }
-    }
-    
-    await new Promise(r=>setTimeout(r,150));
-  }
-  
-  return insiders.sort((a,b)=>b.totalPnl - a.totalPnl);
+// RUN
+const bigTrades = await scanForBigTrades();
+if (bigTrades.length > 0) {
+  const walletList = await analyzeInsiders(bigTrades);
+  await deepScanInsiders(walletList);
+} else {
+  console.log('No $10k+ trades found in scan window. Try extending range.');
 }
-
-// MAIN
-console.log('╔══════════════════════════════════════════════════════╗');
-console.log('  🦈 MEGASCAN — Insider & Big Player Detection');
-console.log(`  ${new Date().toISOString()}`);
-console.log('╚══════════════════════════════════════════════════════╝');
-
-await findTopVolumeWallets();
-const newWallets = await findLargePositionHolders();
-console.log(`\nNew wallets found from large trades: ${newWallets.length}`);
-
-// Also scan known Polymarket leaderboard addresses
-// These are publicly discussed high-performers in the Polymarket community
-const KNOWN_INSIDERS = [
-  '0x1a4f30e24b87b30fef617fb5e47d28ae7bd4de15',
-  '0x8cdd4a79a03dc7f94d43f5be2fd68b74aae68db9',
-  '0x7fce5e3dc7d2a6e63f2e1a4e9d6a1e7f8b3c9d0a',
-  '0xd8da6bf26964af9d7eed9e03e53415d37aa96045', // vitalik - sometimes trades
-  '0x3a7e4f5b6c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f',
-  '0x2b6a3c5d4e7f8g9h0i1j2k3l4m5n6o7p8q9r0s1',
-];
-
-const allAddresses = [...new Set([...newWallets, ...KNOWN_INSIDERS])];
-const insiders = await findInsiderPattern(allAddresses);
-
-console.log('\n\n╔══════════════════════════════════════════════════════╗');
-console.log('  FINAL RANKING — TOP INSIDER/BIG PLAYER WALLETS');
-console.log('╚══════════════════════════════════════════════════════╝\n');
-
-insiders.slice(0,20).forEach((w,i) => {
-  const tag = w.massiveWins > 0 ? '🚨' : w.bigWins > 2 ? '⭐' : '🟢';
-  console.log(`${tag} #${i+1} ${w.addr}`);
-  console.log(`   PnL: $${w.totalPnl.toFixed(0)} | Best trade: +$${w.topWin.toFixed(0)} | Avg pos: $${w.avgPositionSize.toFixed(0)}`);
-  console.log(`   $10k+ positions: ${w.positions10k} | $100k+ positions: ${w.positions100k} | This week: ${w.weekTrades} trades`);
-  console.log('');
-});
-
-console.log(`\nTotal profitable wallets found: ${insiders.length}`);
-console.log(`With $50k+ single wins: ${insiders.filter(w=>w.massiveWins>0).length}`);
-console.log(`With $10k+ positions: ${insiders.filter(w=>w.positions10k>0).length}`);
