@@ -259,7 +259,7 @@ async function main() {
 
     if (mirrored >= MAX_MIRRORS_RUN || mirrored >= remainingDaily) break;
 
-    const size   = parseFloat(Math.min(2.00, balance * 0.05).toFixed(4)); // max $2 per trade
+    const size   = parseFloat((balance * 0.02).toFixed(4)); // 2% of balance (e.g. $10 &rarr; $0.20, $100 &rarr; $2.00)
     const newBal = parseFloat((balance - size).toFixed(4));
     const txHash = `clawbot-v8-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
     const reason = `[🦈ELITE] ${whale.alias} (${winRate}%WR / ${tradesSeen} seen) BUY ${outcome} @ $${price.toFixed(3)} | Whale: $${trade.usdcSize.toFixed(0)} | ${question.slice(0,60)}`;
@@ -290,3 +290,4 @@ async function main() {
 }
 
 main().catch(e => { console.error('FATAL:', e.message); process.exit(1); });
+
