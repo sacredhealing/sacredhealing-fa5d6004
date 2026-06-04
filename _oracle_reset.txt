@@ -1,0 +1,12 @@
+=== CLAWBOT Reset Thu Jun  4 09:32:25 UTC 2026 ===
+--- Current settings ---
+[{"id":"052ae9dc-7355-46ab-8584-70d2ba33ae68","paper_balance":0.1491,"paper_mode":true,"risk_pct":0.05,"updated_at":"2026-05-24T23:17:54.594+00:00","total_fees_paid":0.000000}]
+--- Attempting UPDATE ---
+PATCH all rows: 400
+PATCH no-filter: 400
+--- UPSERT fallback ---
+UPSERT: {"code":"22P02","details":null,"hint":null,"message":"invalid input syntax for type uuid: \"1\""}
+HTTP:400
+
+--- Final state ---
+[{"id":"052ae9dc-7355-46ab-8584-70d2ba33ae68","paper_balance":0.1491,"paper_mode":true,"risk_pct":0.05,"updated_at":"2026-05-24T23:17:54.594+00:00","total_fees_paid":0.000000}]
