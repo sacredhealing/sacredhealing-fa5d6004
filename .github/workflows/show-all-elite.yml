@@ -1,0 +1,41 @@
+name: Show All Elite Whales
+
+on:
+  workflow_dispatch:
+
+jobs:
+  show:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: List all elite whales
+        env:
+          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          BASE="https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1"
+          LOG="_elite_full_list.txt"
+          
+          echo "=== ALL ELITE WHALES $(date -u) ===" > $LOG
+          curl -s "${BASE}/polymarket_whales?is_elite=eq.true&order=total_profit.desc&select=alias,address,total_profit,win_rate_30d,strategy,is_elite" \
+            -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" >> $LOG
+          echo "" >> $LOG
+          
+          echo "=== COUNTS ===" >> $LOG
+          curl -s "${BASE}/polymarket_whales?select=is_elite,is_active" \
+            -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" \
+            | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+elite=sum(1 for w in d if w.get('is_elite'))
+watch=sum(1 for w in d if not w.get('is_elite') and w.get('is_active'))
+print(f'Elite: {elite} | Watching: {watch} | Total: {len(d)}')
+" >> $LOG
+          
+          cat $LOG
+          git config user.email "bot@sqi.app"; git config user.name "SQI"
+          git add $LOG
+          git commit -m "Elite list snapshot" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
