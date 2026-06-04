@@ -1,49 +1,22 @@
-╔══════════════════════════════════════════════════════╗
-  CO-TRADER SCAN — Find hidden insiders in same markets
-╚══════════════════════════════════════════════════════╝
+=== Testing Alchemy block range limits on Polygon ===
 
-BAA2BC (Iran Oracle): 61 unique markets traded
-B2A362 (Peace Whale): 15 unique markets traded
-ED107A (NO Machine): 202 unique markets traded
+Latest block: 87922606
+Range 10: ❌ ERROR — Under the Free tier plan, you can make eth_getLogs requests with up to a 10 block range. Based on your parameters, this block range should work: [0x53d97a4, 0x53d97ad]. Upgrade to PAYG for expanded block range.
+Range 50: ❌ ERROR — Under the Free tier plan, you can make eth_getLogs requests with up to a 10 block range. Based on your parameters, this block range should work: [0x53d977c, 0x53d9785]. Upgrade to PAYG for expanded block range.
+Range 100: ❌ ERROR — Under the Free tier plan, you can make eth_getLogs requests with up to a 10 block range. Based on your parameters, this block range should work: [0x53d974a, 0x53d9753]. Upgrade to PAYG for expanded block range.
+Range 500: ❌ ERROR — Under the Free tier plan, you can make eth_getLogs requests with up to a 10 block range. Based on your parameters, this block range should work: [0x53d95ba, 0x53d95c3]. Upgrade to PAYG for expanded block range.
+Range 1000: ❌ ERROR — Under the Free tier plan, you can make eth_getLogs requests with up to a 10 block range. Based on your parameters, this block range should work: [0x53d93c6, 0x53d93cf]. Upgrade to PAYG for expanded block range.
+Range 2000: ❌ ERROR — Under the Free tier plan, you can make eth_getLogs requests with up to a 10 block range. Based on your parameters, this block range should work: [0x53d8fde, 0x53d8fe7]. Upgrade to PAYG for expanded block range.
+Range 5000: ❌ ERROR — Under the Free tier plan, you can make eth_getLogs requests with up to a 10 block range. Based on your parameters, this block range should work: [0x53d8426, 0x53d842f]. Upgrade to PAYG for expanded block range.
 
-Total unique markets across all 3 insiders: 267
-  Scanned 10/30 markets, found 128 wallets  Scanned 20/30 markets, found 128 wallets  Scanned 30/30 markets, found 128 wallets
-All insiders co-traders found: 128
-New wallets to scan (excluding known insiders): 128
-
-🔍 Deep PnL scan on top 40 co-traders...
-
-🟢 0xe9076a87c5ed90 | pnl:$30103 | WR:83% | $50k+:0 | wk:500t | markets:30
-🟢 0x20d2309cd92b79 | pnl:$113 | WR:43% | $50k+:0 | wk:500t | markets:30
-🟢 0x4f1d5ae26fc314 | pnl:$228 | WR:18% | $50k+:0 | wk:500t | markets:30
-🟢 0x48a924e4580284 | pnl:$1 | WR:50% | $50k+:0 | wk:500t | markets:30
-🟢 0x4705408c791455 | pnl:$132 | WR:50% | $50k+:0 | wk:500t | markets:30
-🟢 0x1abc2b469b5ded | pnl:$7158 | WR:100% | $50k+:0 | wk:500t | markets:30
-🟢 0xd71776a8d4fdde | pnl:$0 | WR:67% | $50k+:0 | wk:500t | markets:30
-
-╔══════════════════════════════════════════════════════╗
-  🚨 NEW HIDDEN WHALES DISCOVERED
-╚══════════════════════════════════════════════════════╝
-
-🟢 #1 0xe9076a87c5ed90ef16e6fe6529c943baeca0cff6
-  PnL:$30103 | WR:83% | Best:+$5710 | MaxPos:$42270 | SharedMarkets:30 | Wk:500t
-
-🟢 #2 0x1abc2b469b5ded495d6c8b21fc79dcb8d8f345e7
-  PnL:$7158 | WR:100% | Best:+$222 | MaxPos:$1320 | SharedMarkets:30 | Wk:500t
-
-🟢 #3 0x4f1d5ae26fc31472966e951af3183308736d8de2
-  PnL:$228 | WR:18% | Best:+$73 | MaxPos:$1104 | SharedMarkets:30 | Wk:500t
-
-🟢 #4 0x4705408c791455edffc66782d4cea30c17afd03e
-  PnL:$132 | WR:50% | Best:+$331 | MaxPos:$177 | SharedMarkets:30 | Wk:500t
-
-🟢 #5 0x20d2309cd92b797ae7ca175ed828ed8a27fbe29d
-  PnL:$113 | WR:43% | Best:+$119 | MaxPos:$66 | SharedMarkets:30 | Wk:500t
-
-🟢 #6 0x48a924e458028426c763bec74205eb48d5ae3730
-  PnL:$1 | WR:50% | Best:+$3 | MaxPos:$52 | SharedMarkets:30 | Wk:500t
-
-🟢 #7 0xd71776a8d4fddeb3c150c4607b3f8bec31213b85
-  PnL:$0 | WR:67% | Best:+$0 | MaxPos:$20 | SharedMarkets:30 | Wk:500t
-
-SUMMARY: 7 new profitable wallets | 0 with $50k+ wins | 1 with $10k+ total PnL
+=== Testing QuickNode free public endpoints ===
+❌ https://polygon-mainnet.quiknode.pro/ | Unexpected end of JSON input
+❌ https://rpc.ankr.com/polygon | Unauthorized: You must authenticate your
+✅ https://polygon-rpc.com | block: NaN
+   getLogs 1000 blocks: ✅ 0 logs
+   getLogs 10k blocks:  ✅ 0 logs — FREE RANGE UNLOCKED
+❌ https://rpc-mainnet.matic.network | fetch failed
+❌ https://matic-mainnet.chainstacklabs.com | fetch failed
+❌ https://polygon.llamarpc.com | fetch failed
+❌ https://1rpc.io/matic | fetch failed
+❌ https://polygon.rpc.blxrbdn.com | fetch failed
