@@ -1,12 +1,12 @@
 ══════════════════════════════════════════════════════
   SQI-2050 🦈 CLAWBOT v8 — Elite Whale Filter
-  2026-06-04T12:03:09.724Z | PAPER
+  2026-06-04T12:19:58.551Z | PAPER
   Min whale: $100 | WR gate: 60% | Min trades: 10
 ══════════════════════════════════════════════════════
 Balance: $10.00
 Today's mirrors: 0/10
 
-🔍 Scanning 87,912,620 → 87,913,070
+🔍 Scanning 87,913,293 → 87,913,743
   0xE111180000: 0 logs → 0 large trades ($100+)
   0xe2222d279d: 0 logs → 0 large trades ($100+)
 
