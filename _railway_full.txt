@@ -1,0 +1,6 @@
+=== Railway Full Check ===
+--- All accessible projects ---
+{"data":{"projects":{"edges":[]}}}
+
+--- Me info ---
+{"errors":[{"message":"Cannot query field \"teams\" on type \"User\". Did you mean \"flags\" or \"name\"?","locations":[{"line":1,"column":22}],"extensions":{"code":"GRAPHQL_VALIDATION_FAILED"},"traceId":"695039433577862373"}]}
