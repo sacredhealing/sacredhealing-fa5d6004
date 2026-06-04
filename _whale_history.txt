@@ -1,43 +1,32 @@
-╔══════════════════════════════════════════════════════════╗
-  🚨 INSIDER MEGASCAN — Tenderly 30-Day History
-  2026-06-04T16:19:46.954Z
-╚══════════════════════════════════════════════════════════╝
+=== Verifying at known active range (87905371-87905821) ===
+All logs (10 blocks, no filter): 12792
+Contract addresses:
+  0x4d97dcd97ec945f40cf65f87097ace5ea0476045: 1822 logs
+  0xc011a7e12a19f7b1f670d46f03b03f3342e82dfb: 1816 logs
+  0x0000000000000000000000000000000000001010: 1455 logs
+  0x2791bca1f2de4661ed88a30c99a7a9449aa84174: 1342 logs
+  0xeb51d9a39ad5eef215dc0bf39a8821ff804a0f01: 1291 logs
+  0xe111180000d2663c0091e4f400237545b87b996b: 1026 logs
+  0x8f3cf7ad23cd3cadbd9735aff958023239c6a063: 836 logs
+  0x99a57e6c8558bc6689f894e068733adf83c19725: 691 logs
+  0x882df4b0fb50a229c3b4124eb18c759911485bfb: 396 logs
+  0x3c499c542cef5e3811e1192ce70d8cc03d5c3359: 220 logs
+Topic[0] values:
+  0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef: 4401 logs
+  0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925: 1626 logs
+  0x4dfe1bbbcf077ddc3e01291eea2d5c70c2b422b415d95645b9adcfd678cb1d63: 1332 logs
+  0xc3d58168c5ae7397731d063d5bbf3d657854427343f4c083240f7aacaa2d0f62: 796 logs
+  0xd543adfd945773f1a62f74f0ee55a5e3b9b1a28262980ba90b1a89f2ea84d8ee: 669 logs
 
-Latest block: 87,923,335
-Scanning: block 86,627,335 → 87,923,335 (30 days)
-Chunks: 3 × 2 contracts
+0xE111180000d2663C0091e4f400237545B87B996B (10 blocks): 1026 logs
+Sample: {"address":"0xe111180000d2663c0091e4f400237545b87b996b","topics":["0xd543adfd945773f1a62f74f0ee55a5e3b9b1a28262980ba90b1a89f2ea84d8ee","0x6eddce2d3b1f30eab4094cc5460c24b0b06aa19c1f55e08c7abd0516c9134cd9","0x000000000000000000000000d9caea7b7c1bf292957e674850ce3bd9b8f5f253","0x000000000000000000000000
 
-  Chunk 1 | 0xE111180000 | blocks 86,627,335-87,117,334
-    → 0 total logs | 0 over $10,000
-  Chunk 1 | 0xe2222d279d | blocks 86,627,335-87,117,334
-    → 0 total logs | 0 over $10,000
-  Chunk 2 | 0xE111180000 | blocks 87,117,335-87,607,334
-    → 0 total logs | 0 over $10,000
-  Chunk 2 | 0xe2222d279d | blocks 87,117,335-87,607,334
-    → 0 total logs | 0 over $10,000
-  Chunk 3 | 0xE111180000 | blocks 87,607,335-87,923,335
-    → 0 total logs | 0 over $10,000
-  Chunk 3 | 0xe2222d279d | blocks 87,607,335-87,923,335
-    → 0 total logs | 0 over $10,000
+0xe2222d279d744050d28e00520010520000310F59 (10 blocks): 161 logs
+Sample: {"address":"0xe2222d279d744050d28e00520010520000310f59","topics":["0xd543adfd945773f1a62f74f0ee55a5e3b9b1a28262980ba90b1a89f2ea84d8ee","0xf1cdfdad483eba030885399727a1a8d43c987ff8aea946aa4147c9f2df0bd558","0x0000000000000000000000006161740411c079f743470d678ade504d610f8ad9","0x000000000000000000000000
 
-✅ SCAN COMPLETE: 0 trades over $10,000
+0xE111180000d2663C0091e4f400237545B87B996B WITH TOPIC (10 blocks): 0 logs
 
-Unique wallets with $10k+ trades: 0
+0xe2222d279d744050d28e00520010520000310F59 WITH TOPIC (10 blocks): 0 logs
 
-Top 30 by largest single trade:
-
-New wallets to deep scan: 0
-
-🔍 Deep scanning for PnL + insider patterns...
-
-
-
-╔══════════════════════════════════════════════════════════╗
-  🚨 NEW INSIDER & WHALE WALLETS DISCOVERED
-╚══════════════════════════════════════════════════════════╝
-
-━━━ MEGASCAN DONE ━━━
-$10k+ wallets found: 0
-New profitable: 0
-New insiders: 0
-Saved to DB: 0
+=== Tenderly same range ===
+Tenderly all logs (10 blocks): 12792
