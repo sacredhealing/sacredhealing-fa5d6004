@@ -1,0 +1,27 @@
+name: Whale History Scanner Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run whale history scanner
+        env:
+          SUPABASE_URL: https://fjdzhrdpioxdeyyfogep.supabase.co
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          node scripts/whale_history_scanner.mjs 2>&1 | tee _whale_history.txt
+          git config user.email "bot@sqi.app"
+          git config user.name "SQI CLAWBOT"
+          git add _whale_history.txt
+          git commit -m "Whale history scan $(date -u +%H%M%S)" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
