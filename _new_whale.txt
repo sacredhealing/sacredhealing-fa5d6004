@@ -1,0 +1,9 @@
+=== Adding new whale + seeding all 3 strategy elites ===
+[]
+[]
+[]
+[]
+[]
+[]
+--- Final elite list ---
+[{"alias":"🏆BAA2BC","total_profit":"191503.52","win_rate_30d":"83","strategy":"insider_geo","is_elite":true},{"alias":"🏆B2A362","total_profit":"125453.61","win_rate_30d":"75","strategy":"confirmation","is_elite":true},{"alias":"🏆ED107A","total_profit":"58947.92","win_rate_30d":"89","strategy":"no_machine","is_elite":true},{"alias":"🏆A7A8C1","total_profit":"47554.02","win_rate_30d":"84","strategy":"mirror","is_elite":true},{"alias":"🏆F49CE4","total_profit":"41974.73","win_rate_30d":"51","strategy":"mirror","is_elite":true},{"alias":"🏆Apex-E9076A","total_profit":"30103","win_rate_30d":"83","strategy":"mirror","is_elite":true},{"alias":"🏆EED588","total_profit":"11739.79","win_rate_30d":"67","strategy":"mirror","is_elite":true},{"alias":"🏆000D25","total_profit":"8016.67","win_rate_30d":"51","strategy":"mirror","is_elite":true},{"alias":"🏆335592","total_profit":"7499.03","win_rate_30d":"100","strategy":"mirror","is_elite":true},{"alias":"🏆E52C0A","total_profit":"6942.63","win_rate_30d":"69","strategy":"mirror","is_elite":true},{"alias":"🏆A77105","total_profit":"6135.74","win_rate_30d":"78","strategy":"mirror","is_elite":true},{"alias":"🏆204F72","total_profit":"5061.15","win_rate_30d":"67","strategy":"mirror","is_elite":true}]
