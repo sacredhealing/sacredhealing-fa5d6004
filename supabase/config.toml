@@ -14,7 +14,7 @@ project_id = "fjdzhrdpioxdeyyfogep"
   [functions.ayurveda-chat]
     verify_jwt = false
   [functions.bhrigu-oracle]
-    verify_jwt = true
+    verify_jwt = false
   [functions.check-meditation-membership]
     verify_jwt = true
   [functions.check-music-membership]
