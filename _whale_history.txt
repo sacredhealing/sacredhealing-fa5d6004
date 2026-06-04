@@ -1,36 +1,21 @@
-╔═══════════════════════════════════════════════════════╗
-  🚨 INSIDER DISCOVERY — Co-Trader Method
-  2026-06-04T16:44:46.287Z
-╚═══════════════════════════════════════════════════════╝
 
-📡 Pulling market IDs from known insiders...
-  0xbaa2bcb5439e: 500 trades, 61 markets
-  0xed107a85a458: 500 trades, 203 markets
-  0xa7a8c1fd4bff: 46 trades, 16 markets
+400 /activity?conditionId=0x9d3f02264a94bafc676afd7add8b11442e6ec72dabaa69cefef835f0672275c7&limit=10
 
-Total unique markets to scan: 275
+400 /activity?market=0x9d3f02264a94bafc676afd7add8b11442e6ec72dabaa69cefef835f0672275c7&limit=10
 
-📡 Finding co-traders in each market...
-  Scanned 10/275 markets | 0 wallets found  Scanned 20/275 markets | 0 wallets found  Scanned 30/275 markets | 0 wallets found  Scanned 40/275 markets | 0 wallets found  Scanned 50/275 markets | 0 wallets found  Scanned 60/275 markets | 0 wallets found  Scanned 70/275 markets | 0 wallets found  Scanned 80/275 markets | 0 wallets found  Scanned 90/275 markets | 0 wallets found  Scanned 100/275 markets | 0 wallets found  Scanned 110/275 markets | 0 wallets found  Scanned 120/275 markets | 0 wallets found  Scanned 130/275 markets | 0 wallets found  Scanned 140/275 markets | 0 wallets found  Scanned 150/275 markets | 0 wallets found  Scanned 160/275 markets | 0 wallets found  Scanned 170/275 markets | 0 wallets found  Scanned 180/275 markets | 0 wallets found  Scanned 190/275 markets | 0 wallets found  Scanned 200/275 markets | 0 wallets found  Scanned 210/275 markets | 0 wallets found  Scanned 220/275 markets | 0 wallets found  Scanned 230/275 markets | 0 wallets found  Scanned 240/275 markets | 0 wallets found  Scanned 250/275 markets | 0 wallets found  Scanned 260/275 markets | 0 wallets found  Scanned 270/275 markets | 0 wallets found
+200 /trades?conditionId=0x9d3f02264a94bafc676afd7add8b11442e6ec72dabaa69cefef835f0672275c7&limit=10
+  → [{"proxyWallet":"0x78857e71c0601752a6c487b2d2e1fe9c22ed1173","side":"BUY","asset":"56862034715455423626898676009927020086579681828752811859299251028347089169631","conditionId":"0xdc09be650f66b005c91e5
 
-✅ Co-trader discovery: 0 wallets with $5k+ trades
+200 /activity?user=0xbaa2bcb5439e985ce4ccf815b4700027d1b92c73&limit=10
+  → [{"proxyWallet":"0xbaa2bcb5439e985ce4ccf815b4700027d1b92c73","timestamp":1780583350,"conditionId":"0xa70fc3695a65833b91b45df6db6015096f3e1471b70352ca411b4209010e7633","type":"TRADE","size":7750.92,"us
 
-📡 Scanning top-volume markets for large players...
+200 /trades?user=0xbaa2bcb5439e985ce4ccf815b4700027d1b92c73&limit=5
+  → [{"proxyWallet":"0xbaa2bcb5439e985ce4ccf815b4700027d1b92c73","side":"BUY","asset":"25525886838936661349801315808447476243176190100445157889430252006398510133975","conditionId":"0x9d3f02264a94bafc676af
 
-Total unique wallets: 0
+BAA2BC trade fields: proxyWallet, side, asset, conditionId, size, price, timestamp, title, slug, icon, eventSlug, outcome, outcomeIndex, name, pseudonym, bio, profileImage, profileImageOptimized, transactionHash
+conditionId: 0x9d3f02264a94bafc676afd7add8b11442e6ec72dabaa69cefef835f0672275c7
+Full sample: {"proxyWallet":"0xbaa2bcb5439e985ce4ccf815b4700027d1b92c73","side":"BUY","asset":"25525886838936661349801315808447476243176190100445157889430252006398510133975","conditionId":"0x9d3f02264a94bafc676afd7add8b11442e6ec72dabaa69cefef835f0672275c7","size":310.05,"price":0.16,"timestamp":1780563139,"title":" Iran agrees to end enrichment of uranium by June 30?","slug":"iran-agrees-to-end-enrichment-of-u
 
-Top 20 by largest single trade:
-
-🔍 Deep scanning 0 new wallets...
-
-
-
-╔═══════════════════════════════════════════════════════╗
-  🚨 NEW INSIDER WALLETS — FULL REPORT
-╚═══════════════════════════════════════════════════════╝
-
-━━━ SCAN COMPLETE ━━━
-Wallets scanned: 0
-New profitable: 0
-Classified as insiders: 0
-Saved to DB: 0
+Trades by conditionId 0x9d3f02264a94bafc67...: 20
+Sample trader: 0xb55fa1296e6ec55d0ce53d93b9237389f11764d4 size: undefined
+Unique wallets in this market: 18 0xb55fa1296e6ec55d0ce53d93b9237389f11764d4, 0xafdcbcebe7cc1a61c9317dd663ab4ef7f8b0d278, 0x5e2b9261b0c4f697b55bf921ff2bc227183d9101, 0xeebde7a0e019a63e6b476eb425505b7b3e6eba30, 0x91843311c15fa1c6fa58ca2b3e71787fd0339f9f
