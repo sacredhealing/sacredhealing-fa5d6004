@@ -1,6 +1,3 @@
-🔍 Scanning Polygon for $10k+ trades (last 7 days)...
-Scanning blocks 87,612,780 → 87,915,180 (~7 days)
-
-
-Total $10k+ trades found: 0
-No $10k+ trades found in scan window. Try extending range.
+Scanning blocks 87914820 → 87915320
+0xE111180000d2663C0091e4f400237545B87B996B: no logs
+0xe2222d279d744050d28e00520010520000310F59: no logs
