@@ -1,93 +1,94 @@
-/**
- * Test QuickNode free tier block range limits on Polygon
- * Then scan for government/insider wallets
- */
-const QN_FREE = 'https://polygon-mainnet.quiknode.pro/'; // placeholder - need actual endpoint
 const ALCHEMY = process.env.POLYGON_RPC_URL;
-
-async function rpc(url, method, params=[]) {
-  try {
-    const r = await fetch(url, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({id:1,jsonrpc:'2.0',method,params}),
-    });
-    const d = await r.json();
-    if (d.error) return { error: d.error.message };
-    return { result: d.result };
-  } catch(e) { return { error: e.message }; }
-}
-
-// Test Alchemy with progressively larger block ranges to find the real limit
-console.log('=== Testing Alchemy block range limits on Polygon ===\n');
-const latest = parseInt((await rpc(ALCHEMY,'eth_blockNumber')).result, 16);
-console.log('Latest block:', latest);
-
 const CONTRACT = '0xE111180000d2663C0091e4f400237545B87B996B';
 const TOPIC    = '0xd0a08e8007ade4223bedd3e7afd46de87a15c21ab0b8a5b2a17f1ace4f9a9c49';
 
-for (const range of [10, 50, 100, 500, 1000, 2000, 5000]) {
-  const from = latest - range;
-  const res = await rpc(ALCHEMY, 'eth_getLogs', [{
-    fromBlock: '0x' + from.toString(16),
-    toBlock:   '0x' + latest.toString(16),
-    address: CONTRACT,
-    topics: [TOPIC],
-  }]);
-  if (res.error) {
-    console.log(`Range ${range}: ❌ ERROR — ${res.error}`);
-  } else {
-    console.log(`Range ${range}: ✅ ${res.result?.length || 0} logs`);
-  }
-  await new Promise(r=>setTimeout(r,300));
+async function rpc(url, method, params=[], timeout=12000) {
+  try {
+    const r = await fetch(url, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({id:1,jsonrpc:'2.0',method,params}),
+      signal: AbortSignal.timeout(timeout),
+    });
+    const d = await r.json();
+    if (d.error) return {error: d.error.message || JSON.stringify(d.error)};
+    return {result: d.result};
+  } catch(e) {return {error: e.message};}
 }
 
-// Now test QuickNode public endpoint
-console.log('\n=== Testing QuickNode free public endpoints ===');
-const QN_ENDPOINTS = [
-  'https://polygon-mainnet.quiknode.pro/',
-  'https://rpc.ankr.com/polygon',
-  'https://polygon-rpc.com',
-  'https://rpc-mainnet.matic.network',
-  'https://matic-mainnet.chainstacklabs.com',
-  'https://polygon.llamarpc.com',
-  'https://1rpc.io/matic',
-  'https://polygon.rpc.blxrbdn.com',
+// Get latest block from Alchemy (known working)
+const latestHex = (await rpc(ALCHEMY,'eth_blockNumber')).result;
+const latest = parseInt(latestHex, 16);
+console.log('Latest Polygon block:', latest);
+
+// All free Polygon RPCs to test
+const ENDPOINTS = [
+  {name:'Polygon Official',  url:'https://polygon-rpc.com'},
+  {name:'Polygon Bor 1',     url:'https://bor-mainnet.polygon.technology'},
+  {name:'Polygon Bor 2',     url:'https://polygon-bor-rpc.publicnode.com'},
+  {name:'PublicNode',        url:'https://polygon-bor-rpc.publicnode.com'},
+  {name:'Chainstack Free',   url:'https://matic-mainnet.chainstacklabs.com'},
+  {name:'Ankr Free',         url:'https://rpc.ankr.com/polygon_no_key'},
+  {name:'BlockPI',           url:'https://polygon.blockpi.network/v1/rpc/public'},
+  {name:'dRPC',              url:'https://polygon.drpc.org'},
+  {name:'Tenderly',          url:'https://polygon.gateway.tenderly.co'},
+  {name:'LlamaRPC',          url:'https://polygon.llamarpc.com'},
+  {name:'Meowrpc',           url:'https://polygon.meowrpc.com'},
+  {name:'NodeReal',          url:'https://polygon-mainnet.nodereal.io/v1/pub'},
+  {name:'OmniaTech',         url:'https://endpoints.omniatech.io/v1/matic/mainnet/public'},
+  {name:'1RPC',              url:'https://1rpc.io/matic'},
+  {name:'Blast',             url:'https://polygon-mainnet.blastapi.io/public'},
 ];
 
-for (const url of QN_ENDPOINTS) {
-  const blockRes = await rpc(url, 'eth_blockNumber');
-  if (blockRes.error) {
-    console.log(`❌ ${url.slice(0,45)} | ${blockRes.error?.slice(0,40)}`);
+console.log('\n=== FREE RPC PROVIDER TEST ===\n');
+
+for (const ep of ENDPOINTS) {
+  // First check if it responds
+  const blkRes = await rpc(ep.url, 'eth_blockNumber', [], 8000);
+  if (blkRes.error) {
+    console.log(`❌ ${ep.name.padEnd(20)} | ${blkRes.error.slice(0,50)}`);
+    await new Promise(r=>setTimeout(r,200));
     continue;
   }
-  const blk = parseInt(blockRes.result, 16);
-  console.log(`✅ ${url.slice(0,45)} | block: ${blk}`);
   
-  // Test getLogs range
-  const from = blk - 1000;
-  const logsRes = await rpc(url, 'eth_getLogs', [{
-    fromBlock: '0x' + from.toString(16),
+  const blk = parseInt(blkRes.result, 16) || latest; // fallback to alchemy latest
+  
+  // Test 10k block range
+  const from10k = blk - 10000;
+  const res10k = await rpc(ep.url, 'eth_getLogs', [{
+    fromBlock: '0x' + from10k.toString(16),
     toBlock:   '0x' + blk.toString(16),
-    address: CONTRACT,
-    topics: [TOPIC],
-  }]);
-  if (logsRes.error) {
-    console.log(`   getLogs 1000 blocks: ❌ ${logsRes.error?.slice(0,60)}`);
-  } else {
-    console.log(`   getLogs 1000 blocks: ✅ ${logsRes.result?.length || 0} logs`);
-    // Try 10000 blocks
-    const from2 = blk - 10000;
-    const big = await rpc(url, 'eth_getLogs', [{
-      fromBlock: '0x' + from2.toString(16),
+    address: CONTRACT, topics: [TOPIC],
+  }], 10000);
+  
+  if (res10k.error) {
+    // Try 1000 blocks
+    const from1k = blk - 1000;
+    const res1k = await rpc(ep.url, 'eth_getLogs', [{
+      fromBlock: '0x' + from1k.toString(16),
       toBlock:   '0x' + blk.toString(16),
       address: CONTRACT, topics: [TOPIC],
-    }]);
-    if (big.error) {
-      console.log(`   getLogs 10k blocks:  ❌ ${big.error?.slice(0,60)}`);
+    }], 8000);
+    
+    if (res1k.error) {
+      console.log(`🟡 ${ep.name.padEnd(20)} | alive but getLogs fails: ${res1k.error.slice(0,50)}`);
     } else {
-      console.log(`   getLogs 10k blocks:  ✅ ${big.result?.length || 0} logs — FREE RANGE UNLOCKED`);
+      console.log(`🟡 ${ep.name.padEnd(20)} | 1k OK (${res1k.result?.length} logs) | 10k: ${res10k.error?.slice(0,40)}`);
+    }
+  } else {
+    const logCount = res10k.result?.length || 0;
+    // Try 100k blocks if 10k worked
+    const from100k = blk - 100000;
+    const res100k = await rpc(ep.url, 'eth_getLogs', [{
+      fromBlock: '0x' + from100k.toString(16),
+      toBlock:   '0x' + blk.toString(16),
+      address: CONTRACT, topics: [TOPIC],
+    }], 15000);
+    
+    if (res100k.error) {
+      console.log(`✅ ${ep.name.padEnd(20)} | 10k OK (${logCount} logs) | 100k: ❌ | MAX ~10k blocks`);
+    } else {
+      console.log(`🚀 ${ep.name.padEnd(20)} | 10k OK | 100k OK (${res100k.result?.length} logs) | UNLIMITED RANGE!`);
     }
   }
-  await new Promise(r=>setTimeout(r,500));
+  await new Promise(r=>setTimeout(r,400));
 }
