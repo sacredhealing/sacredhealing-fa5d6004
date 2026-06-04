@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * SQI-2050 🦈 CLAWBOT v9 — Three Strategy Engine
+ * SQI-2050 🦈 CLAWBOT v9.1 — 18 Elite Wallets, All Strategies
  * ═══════════════════════════════════════════════════════════
  * STRATEGY 1: INSIDER_GEO — Mirror BAA2BC + E9076A
  *   Copy any new position immediately. These wallets have
@@ -22,19 +22,19 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const POLYGON_RPC  = process.env.POLYGON_RPC_URL;
 const PAPER_MODE   = (process.env.PAPER_MODE ?? 'true') === 'true';
-const MIN_USDC     = parseFloat(process.env.MIN_TRADE_USDC || '500');
+const MIN_USDC     = parseFloat(process.env.MIN_TRADE_USDC || '100');
 const MAX_USDC     = 10_000_000;
 const DECIMALS     = 1_000_000;
 
 // Strategy price gates
 const INSIDER_MIN  = 0.05;  // insider_geo: enter 5-60¢
-const INSIDER_MAX  = 0.60;
+const INSIDER_MAX  = 0.70;
 const CONFIRM_MIN  = 0.65;  // confirmation: near-certain YES
 const CONFIRM_MAX  = 0.95;
 const NO_MIN       = 0.01;  // no_machine: buy NO at 1-8¢
 const NO_MAX       = 0.08;
 
-const MAX_MIRRORS_RUN = 3;
+const MAX_MIRRORS_RUN = 5;
 const MAX_MIRRORS_DAY = 10;
 
 const CONTRACTS = [
@@ -151,7 +151,7 @@ function isObviousNo(question, price) {
 
 async function main() {
   console.log('══════════════════════════════════════════════════════════════');
-  console.log('  SQI-2050 🦈 CLAWBOT v9 — Three Strategy Engine');
+  console.log('  SQI-2050 🦈 CLAWBOT v9.1 — 18 Elite Wallets Active');
   console.log(`  ${new Date().toISOString()} | ${PAPER_MODE ? 'PAPER' : 'LIVE'}`);
   console.log('  S1:InsiderGeo  S2:Confirmation  S3:NoMachine');
   console.log('══════════════════════════════════════════════════════════════');
@@ -305,10 +305,9 @@ async function main() {
       shouldMirror = noPrice >= NO_MIN && noPrice <= NO_MAX;
       stratLabel = `S3:NoMachine`;
     } else {
-      // Standard mirror: 60%+ WR gate, 8-92¢ range
-      shouldMirror = (whale.win_rate_30d || 0) >= 60 && 
-                     price >= 0.08 && price <= 0.92 &&
-                     (whale.total_trades_seen || 0) >= 10;
+      // Standard mirror: 50%+ WR gate, 5-95¢ range (lowered for more signals)
+      shouldMirror = (whale.win_rate_30d || 0) >= 50 && 
+                     price >= 0.05 && price <= 0.95;
       stratLabel = `S0:Mirror`;
     }
 
@@ -344,7 +343,7 @@ async function main() {
       console.log(`   ${mirrorOutcome} @ ${(mirrorPrice*100).toFixed(1)}¢ | Whale $${trade.usdcSize.toFixed(0)} → Mirror $${size}`);
       console.log(`   ${question.slice(0,75)}`);
     }
-    await new Promise(r => setTimeout(r, 400));
+    await new Promise(r => setTimeout(r, 100));
   }
 
   console.log(`\n━━━ CLAWBOT v9: ${mirrored} mirrored | ${observed} observed | Bal $${balance.toFixed(4)} ━━━`);
@@ -353,3 +352,4 @@ async function main() {
 }
 
 main().catch(e => { console.error('FATAL:', e.message); process.exit(1); });
+
