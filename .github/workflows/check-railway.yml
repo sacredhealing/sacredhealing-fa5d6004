@@ -1,87 +1,39 @@
-name: Create Railway Project
+name: Railway CLI Deploy
 
 on:
   workflow_dispatch:
 
 jobs:
-  create:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_ADMIN_PAT }}
-      - name: Create Railway project + deploy
+
+      - name: Install Railway CLI and deploy
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          LOG="_railway_deploy.txt"
-          echo "=== Railway Deploy $(date -u) ===" > $LOG
+          LOG="_railway_cli.txt"
+          echo "=== Railway CLI Deploy $(date -u) ===" > $LOG
 
-          # Step 1: Create project
-          echo "--- Creating project ---" >> $LOG
-          PROJECT=$(curl -s -X POST "https://backboard.railway.app/graphql/v2" \
-            -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d '{"query":"mutation { projectCreate(input: { name: \"CLAWBOT-Polymarket\" }) { id name } }"}')
-          echo "$PROJECT" >> $LOG
-          PROJECT_ID=$(echo "$PROJECT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('data',{}).get('projectCreate',{}).get('id',''))" 2>/dev/null)
-          echo "Project ID: $PROJECT_ID" >> $LOG
+          # Install Railway CLI
+          npm install -g @railway/cli 2>&1 | tail -3 >> $LOG
+          railway --version >> $LOG
 
-          if [ -z "$PROJECT_ID" ]; then
-            echo "ERROR: Could not create project. Token may need refresh." >> $LOG
-            cat $LOG
-            exit 1
-          fi
+          # Test token
+          echo "--- Testing token ---" >> $LOG
+          railway whoami 2>&1 >> $LOG
 
-          # Step 2: Get environment ID
-          echo "--- Getting environment ---" >> $LOG
-          ENV_RESP=$(curl -s -X POST "https://backboard.railway.app/graphql/v2" \
-            -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d "{\"query\":\"{ project(id: \\\"${PROJECT_ID}\\\") { environments { edges { node { id name } } } } }\"}")
-          echo "$ENV_RESP" >> $LOG
-          ENV_ID=$(echo "$ENV_RESP" | python3 -c "import sys,json; d=json.load(sys.stdin); envs=d.get('data',{}).get('project',{}).get('environments',{}).get('edges',[]); print(envs[0]['node']['id'] if envs else '')" 2>/dev/null)
-          echo "Environment ID: $ENV_ID" >> $LOG
-
-          # Step 3: Create service from GitHub repo
-          echo "--- Creating service ---" >> $LOG
-          SVC=$(curl -s -X POST "https://backboard.railway.app/graphql/v2" \
-            -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d "{\"query\":\"mutation { serviceCreate(input: { projectId: \\\"${PROJECT_ID}\\\", name: \\\"clawbot-worker\\\", source: { repo: \\\"sacredhealing/sacredhealing-fa5d6004\\\" } }) { id name } }\"}")
-          echo "$SVC" >> $LOG
-          SVC_ID=$(echo "$SVC" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('data',{}).get('serviceCreate',{}).get('id',''))" 2>/dev/null)
-          echo "Service ID: $SVC_ID" >> $LOG
-
-          # Step 4: Set env vars
-          echo "--- Setting env vars ---" >> $LOG
-          VARS="{\"SUPABASE_URL\":\"https://fjdzhrdpioxdeyyfogep.supabase.co\",\"SUPABASE_SERVICE_KEY\":\"${SK}\",\"POLYGON_RPC_URL\":\"https://polygon-mainnet.g.alchemy.com/v2/az4D7Awbl2E2rNpe6kc3M\",\"PAPER_MODE\":\"true\",\"RISK_PCT\":\"0.02\",\"PORT\":\"8080\",\"ROOT_DIR\":\"polymarket-worker\"}"
-          
-          for key in SUPABASE_URL SUPABASE_SERVICE_KEY POLYGON_RPC_URL PAPER_MODE RISK_PCT PORT ROOT_DIR; do
-            VAL=$(echo "$VARS" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('$key',''))" 2>/dev/null)
-            SET_RESP=$(curl -s -X POST "https://backboard.railway.app/graphql/v2" \
-              -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
-              -H "Content-Type: application/json" \
-              -d "{\"query\":\"mutation { variableUpsert(input: { projectId: \\\"${PROJECT_ID}\\\", environmentId: \\\"${ENV_ID}\\\", serviceId: \\\"${SVC_ID}\\\", name: \\\"${key}\\\", value: \\\"${VAL}\\\" }) }\"}")
-            echo "Set $key: $(echo $SET_RESP | python3 -c 'import sys,json; d=json.load(sys.stdin); print(d.get(\"data\",{}).get(\"variableUpsert\",\"err\"))' 2>/dev/null)" >> $LOG
-          done
-
-          # Step 5: Trigger deployment
-          echo "--- Triggering deployment ---" >> $LOG
-          DEPLOY=$(curl -s -X POST "https://backboard.railway.app/graphql/v2" \
-            -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d "{\"query\":\"mutation { serviceInstanceDeploy(serviceId: \\\"${SVC_ID}\\\", environmentId: \\\"${ENV_ID}\\\") }\"}")
-          echo "Deploy: $DEPLOY" >> $LOG
-
-          echo "" >> $LOG
-          echo "=== DONE ===" >> $LOG
-          echo "Project: https://railway.app/project/${PROJECT_ID}" >> $LOG
+          # List projects
+          echo "--- Listing projects ---" >> $LOG  
+          railway list 2>&1 >> $LOG
 
           cat $LOG
           git config user.email "bot@sqi.app"; git config user.name "SQI"
           git add $LOG
-          git commit -m "Railway deploy attempt $(date -u +%H%M%S)" || true
+          git commit -m "Railway CLI test $(date -u +%H%M%S)" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
