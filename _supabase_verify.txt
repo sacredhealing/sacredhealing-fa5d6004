@@ -1,0 +1,11 @@
+=== SUPABASE VERIFICATION ===
+  ERROR: clawbot_members: HTTP Error 403: Forbidden
+  ERROR: clawbot_fee_ledger: HTTP Error 403: Forbidden
+  ERROR: clawbot_platform_config: HTTP Error 403: Forbidden
+  ERROR: clawbot_affiliate_rates: HTTP Error 403: Forbidden
+  ERROR: profiles.referred_by: HTTP Error 403: Forbidden
+  ERROR: affiliate_commissions.source: HTTP Error 403: Forbidden
+  ERROR: affiliate_commissions.level: HTTP Error 403: Forbidden
+  ERROR: affiliate_commissions.clawbot_trade_id: HTTP Error 403: Forbidden
+  RATES ERROR: HTTP Error 403: Forbidden
+  CONFIG ERROR: HTTP Error 403: Forbidden
