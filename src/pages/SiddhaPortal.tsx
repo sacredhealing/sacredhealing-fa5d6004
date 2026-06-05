@@ -525,7 +525,7 @@ export default function SiddhaPortal() {
         <p style={CARD_DESC}>The most complete Siddha transmission on the sacred pre-dawn window — cosmology, neuroscience, Nadi science, secret mantras, Kala Vortex mechanics and direct initiations from Agastyar, Thirumoolar, Bogar & Mahavatar Babaji. 12 modules across all 4 tiers.</p>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const, marginBottom: 12 }}>
           {[{l:'Free · I–III', c: white(0.5)},{l:'Prana · IV–VI', c:'#4ADE80'},{l:'Siddha · VII–IX', c: cyan(0.9)},{l:'Akasha · X–XII', c: gold(0.95)}].map(t => (
-            <span key={t.l} style={{ ...LABEL_STYLE, fontSize: 8, color: t.c, letterSpacing:'0.2em', border: , borderRadius: 20, padding: '2px 8px' }}>{t.l}</span>
+            <span key={t.l} style={{ ...LABEL_STYLE, fontSize: 8, color: t.c, letterSpacing:'0.2em', border: `1px solid ${t.c}`, borderRadius: 20, padding: '2px 8px' }}>{t.l}</span>
           ))}
         </div>
         <button type="button" style={CTA_BTN}>Enter Transmission →</button>
