@@ -788,7 +788,91 @@ async function processMemberFee(tradeId, userId, grossPnl) {
       platform_wallet: platformWallet || 'not_set',
     });
     log('FEE', `${member.wallet.slice(0,8)} gross $${grossPnl.toFixed(2)} → fee $${feeUsdc.toFixed(2)} → net $${netPnl.toFixed(2)}`);
+
+    // Process 2-tier affiliate commissions on this win
+    processAffiliateCommissions(tradeId, userId, grossPnl, member.tier).catch(() => {});
   } catch (e) { logErr('FEE', e?.message); }
+}
+
+
+// ─── Affiliate 2-tier commission on trading wins ──────────────────────────────
+async function processAffiliateCommissions(tradeId, userId, grossPnl, tier) {
+  try {
+    if (grossPnl <= 0) return;
+
+    // Get commission rates for this tier
+    const rates = await dbGet('clawbot_affiliate_rates', `tier=eq.${tier}&select=l1_pct,l2_pct`);
+    if (!rates?.length) return;
+    const { l1_pct, l2_pct } = rates[0];
+
+    // Get user's referred_by (their L1 referrer affiliate code)
+    const profile = await dbGet('profiles', `id=eq.${userId}&select=referred_by`);
+    const l1Code = profile?.[0]?.referred_by;
+    if (!l1Code) return; // no referrer — skip
+
+    // Get L1 referrer user_id
+    const l1Aff = await dbGet('affiliate_profiles', `affiliate_code=eq.${l1Code}&select=user_id,affiliate_code`);
+    if (!l1Aff?.length) return;
+    const l1UserId = l1Aff[0].user_id;
+
+    // L1 commission
+    const l1Amount = parseFloat((grossPnl * l1_pct / 100).toFixed(4));
+    if (l1Amount > 0) {
+      await dbInsert('affiliate_commissions', {
+        affiliate_user_id:  l1UserId,
+        referred_user_id:   userId,
+        gross_amount:        grossPnl,
+        commission_amount:   l1Amount,
+        commission_rate:     l1_pct / 100,
+        currency:            'USD',
+        status:              'approved',
+        source:              'trading_l1',
+        clawbot_trade_id:    tradeId,
+        level:               1,
+      });
+
+      // Update affiliate profile total_earnings
+      const l1Profile = await dbGet('affiliate_profiles', `user_id=eq.${l1UserId}&select=total_earnings`);
+      const currentL1 = parseFloat(l1Profile?.[0]?.total_earnings || 0);
+      await dbGet('affiliate_profiles', ''); // just to test connectivity
+      // Use PATCH to increment
+      try {
+        const patchReq = { total_earnings: currentL1 + l1Amount, pending_balance: currentL1 + l1Amount };
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/affiliate_profiles?user_id=eq.${l1UserId}`, {
+          method: 'PATCH',
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(patchReq),
+        });
+        if (r.ok) log('AFFILIATE', `L1 ${l1Code} +$${l1Amount.toFixed(2)} (${l1_pct}% of $${grossPnl.toFixed(2)})`);
+      } catch {}
+    }
+
+    // Get L2 referrer (L1's own referrer)
+    const l1Profile2 = await dbGet('profiles', `id=eq.${l1UserId}&select=referred_by`);
+    const l2Code = l1Profile2?.[0]?.referred_by;
+    if (!l2Code || l2_pct <= 0) return;
+
+    const l2Aff = await dbGet('affiliate_profiles', `affiliate_code=eq.${l2Code}&select=user_id`);
+    if (!l2Aff?.length) return;
+    const l2UserId = l2Aff[0].user_id;
+
+    const l2Amount = parseFloat((grossPnl * l2_pct / 100).toFixed(4));
+    if (l2Amount > 0) {
+      await dbInsert('affiliate_commissions', {
+        affiliate_user_id:  l2UserId,
+        referred_user_id:   userId,
+        gross_amount:        grossPnl,
+        commission_amount:   l2Amount,
+        commission_rate:     l2_pct / 100,
+        currency:            'USD',
+        status:              'approved',
+        source:              'trading_l2',
+        clawbot_trade_id:    tradeId,
+        level:               2,
+      });
+      log('AFFILIATE', `L2 ${l2Code} +$${l2Amount.toFixed(2)} (${l2_pct}% of $${grossPnl.toFixed(2)})`);
+    }
+  } catch (e) { logErr('AFFILIATE', e?.message); }
 }
 
 async function main() {
