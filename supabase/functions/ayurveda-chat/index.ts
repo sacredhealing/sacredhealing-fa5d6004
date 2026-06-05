@@ -604,7 +604,7 @@ serve(async (req) => {
           .eq("chat_context", "ayurveda")
           .eq("role", "assistant")
           .order("created_at", { ascending: false })
-          .limit(12);
+          .limit(40);
         if (pastMsgs && pastMsgs.length > 0) {
           // Exclude the very latest if it's from the current session (< 2 min ago)
           const filtered = (pastMsgs as ConsultationRecord[]).filter(r => {
