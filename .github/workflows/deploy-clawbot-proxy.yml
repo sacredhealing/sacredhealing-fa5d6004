@@ -1,0 +1,41 @@
+name: Deploy Clawbot Proxy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Deploy clawbot-proxy edge function
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          LOG="_clawbot_proxy_deploy.txt"
+          echo "=== Deploy clawbot-proxy $(date -u) ===" | tee $LOG
+
+          npm install -g supabase@latest 2>&1 | tail -3 | tee -a $LOG
+          echo "Supabase CLI: $(supabase --version)" | tee -a $LOG
+
+          git clone "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" repo
+          cd repo
+
+          supabase functions deploy clawbot-proxy             --project-ref fjdzhrdpioxdeyyfogep             --no-verify-jwt 2>&1 | tee -a "../$LOG"
+
+          echo "Done." | tee -a "../$LOG"
+          cd ..
+
+          git config user.email "bot@sqi.app"
+          git config user.name "SQI-Bot"
+          git add $LOG
+          git commit -m "clawbot-proxy deploy result" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
