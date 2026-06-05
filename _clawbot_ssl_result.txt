@@ -1,32 +1,20 @@
-=== CLAWBOT Domain Refresh ===
-Calling Railway GraphQL API...
-GQL ERROR: HTTP Error 403: Forbidden
-Traceback (most recent call last):
-  File "/home/runner/work/sacredhealing-fa5d6004/sacredhealing-fa5d6004/scripts/clawbot_ssl_fix.py", line 34, in <module>
-    r = gql('{ service(id: "' + SERVICE_ID + '") { id name domains { edges { node { id domain status } } } } }')
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/sacredhealing-fa5d6004/sacredhealing-fa5d6004/scripts/clawbot_ssl_fix.py", line 23, in gql
-    resp = urllib.request.urlopen(req, timeout=20)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
-    return opener.open(url, data, timeout)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
-    response = meth(req, response)
-               ^^^^^^^^^^^^^^^^^^^
-  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
-    response = self.parent.error(
-               ^^^^^^^^^^^^^^^^^^
-  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
-    return self._call_chain(*args)
-           ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
-    result = func(*args)
-             ^^^^^^^^^^^
-  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
-    raise HTTPError(req.full_url, code, msg, hdrs, fp)
-urllib.error.HTTPError: HTTP Error 403: Forbidden
-ode, msg, hdrs, fp)
-urllib.error.HTTPError: HTTP Error 403: Forbidden
+=== CLAWBOT Domain SSL Fix ===
 
-Exit code: 0
+3 packages are looking for funding
+  run `npm fund` for details
+CLI: railway 5.1.0
+Auth test:
+Unauthorized. Please check that your RAILWAY_TOKEN is valid and has access to the resource you're trying to use.
+Services:
+Unauthorized. Please check that your RAILWAY_TOKEN is valid and has access to the resource you're trying to use.
+Domain operation:
+Trying Railway REST API...
+<html>
+<head><title>301 Moved Permanently</title></head>
+<body>
+<center><h1>301 Moved Permanently</h1></center>
+<hr><center>cloudflare</center>
+</body>
+</html>
+Direct health check:
+{"status":"running","bot":"SQI-2050 Shiesty Signal Oracle v2","mode":"PAPER","liveEnabled":false,"balance":10,"tradeCount":0,"scanCount":11,"openPositions":0,"maxPositions":20,"whaleFilter":{"minWR":"55%","minTrades":5},"approvedWhales":[],"riskPct":"2%","tradeSize":0.5,"lastScan":"2026-06-05T10:50:10.556Z","uptime":170,"recentErrors":[]}
