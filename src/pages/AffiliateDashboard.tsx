@@ -21,6 +21,8 @@ interface Commission {
   currency: string;
   status: 'pending' | 'approved' | 'paid' | 'rejected';
   created_at: string;
+  source?: string;
+  level?: number;
 }
 
 interface PayoutRequest {
@@ -406,7 +408,36 @@ const AffiliateDashboard: React.FC = () => {
                 Memberships · One-time purchases · Sessions · Courses · All products
               </p>
             </div>
-          </div>
+
+
+            {/* Trading Commission card */}
+            <div style={{ ...glassCard, background: 'rgba(34,197,94,0.04)', border: '1px solid rgba(34,197,94,0.15)', marginTop: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <p style={{ ...microLabel, color: 'rgba(34,197,94,0.7)' }}>⚡ CLAWBOT TRADING COMMISSIONS</p>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+                {[
+                  { tier: 'Free', l1: '10%', l2: '3%' },
+                  { tier: 'Prana-Flow', l1: '8%', l2: '2%' },
+                  { tier: 'Siddha-Quantum', l1: '5%', l2: '1%' },
+                  { tier: 'Akasha-∞', l1: '3%', l2: '1%' },
+                ].map(r => (
+                  <div key={r.tier} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 12, padding: '8px 10px' }}>
+                    <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', marginBottom: 2 }}>{r.tier}</div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#22c55e' }}>L1: {r.l1}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>L2: {r.l2}</div>
+                  </div>
+                ))}
+              </div>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', lineHeight: 1.6, margin: 0 }}>
+                Earn % of every trading win from people you refer (L1) and people they refer (L2) · Paid automatically on each resolved trade
+              </p>
+              <div style={{ marginTop: 10, padding: '8px 12px', background: 'rgba(34,197,94,0.06)', borderRadius: 10, textAlign: 'center' }}>
+                <span style={{ fontSize: '0.75rem', color: 'rgba(34,197,94,0.8)' }}>
+                  Your trading earnings: ${commissions.filter(c => c.source?.startsWith('trading')).reduce((s, c) => s + Number(c.commission_amount), 0).toFixed(2)}
+                </span>
+              </div>
+            </div>          </div>
         )}
 
         {/* ── Links tab ──────────────────────────────────────────────────────── */}
@@ -467,7 +498,7 @@ const AffiliateDashboard: React.FC = () => {
                 {commissions.map((c) => (
                   <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.015)', borderRadius: 16, padding: '12px 16px' }}>
                     <div>
-                      <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', margin: 0 }}>Initiation Quantum Dividend</p>
+                      <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', margin: 0 }}>{c.source === 'trading_l1' ? '⚡ Trading — Level 1 Referral' : c.source === 'trading_l2' ? '🔗 Trading — Level 2 Referral' : 'Initiation Quantum Dividend'}</p>
                       <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.75rem', marginTop: 2 }}>
                         {new Date(c.created_at).toLocaleDateString(localeTag, { day: 'numeric', month: 'short', year: 'numeric' })}
                         {' · Gross: '}{formatMoney(Number(c.gross_amount), c.currency || cur, localeTag)}
