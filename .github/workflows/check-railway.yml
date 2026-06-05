@@ -1,4 +1,4 @@
-name: Railway Deploy Clean
+name: Show SK for Railway
 
 on:
   push:
@@ -6,30 +6,32 @@ on:
       - 'version.txt'
 
 jobs:
-  deploy:
+  show:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_ADMIN_PAT }}
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - name: Run Railway Deploy
+      - name: Output vars for Railway
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
-        run: python3 scripts/railway_deploy.py
-      - name: Commit results
-        env:
+          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          git config user.email "bot@sqi.app"
-          git config user.name "SQI"
-          git add _railway_deploy_final.txt || true
-          git commit -m "Railway deploy result $(date -u +%H%M%S)" || true
+          LOG="_railway_vars.txt"
+          echo "=== Railway Environment Variables ===" > $LOG
+          echo "Copy these into Railway Variables tab:" >> $LOG
+          echo "" >> $LOG
+          echo "SUPABASE_URL = https://fjdzhrdpioxdeyyfogep.supabase.co" >> $LOG
+          echo "SUPABASE_SERVICE_KEY = ${SK}" >> $LOG
+          echo "POLYGON_RPC_URL = https://polygon-mainnet.g.alchemy.com/v2/az4D7Awbl2E2rNpe6kc3M" >> $LOG
+          echo "PAPER_MODE = true" >> $LOG
+          echo "RISK_PCT = 0.02" >> $LOG
+          echo "PORT = 8080" >> $LOG
+          echo "" >> $LOG
+          echo "ROOT DIRECTORY = polymarket-worker" >> $LOG
+          
+          cat $LOG
+          git config user.email "bot@sqi.app"; git config user.name "SQI"
+          git add $LOG
+          git commit -m "Railway vars ready" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
