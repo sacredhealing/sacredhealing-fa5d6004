@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LotusIcon } from '@/components/icons/LotusIcon';
 import { Button } from '@/components/ui/button';
@@ -14,12 +14,9 @@ import { useToast } from '@/hooks/use-toast';
  *   https://siddhaquantumnexus.com/reset-password?code=XXXX   (PKCE / newer flow)
  *   https://siddhaquantumnexus.com/reset-password#type=recovery&access_token=... (legacy)
  *
- * For the PKCE flow Supabase JS v2 automatically exchanges the ?code= param
- * and fires the PASSWORD_RECOVERY auth event. We listen for that + also accept
- * the legacy hash so both flows work.
- *
- * Critical: we call supabase.auth.exchangeCodeForSession() if ?code= is present
- * so the session is established before updateUser() is called.
+ * Fix: stale closure bug removed — isReady ref used inside timeout.
+ * Fix: longer timeout (8s) to allow slow PKCE exchange.
+ * Fix: token_hash flow supported for email OTP links.
  */
 const ResetPassword: React.FC = () => {
   const navigate = useNavigate();
@@ -32,50 +29,84 @@ const ResetPassword: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
+  // Ref to avoid stale closure in timeout
+  const isReadyRef = useRef(false);
+
+  const markReady = () => {
+    isReadyRef.current = true;
+    setIsReady(true);
+    setIsExchanging(false);
+  };
+
+  const markError = (msg: string) => {
+    setIsExchanging(false);
+    setError(msg);
+  };
+
   useEffect(() => {
     let mounted = true;
 
     const init = async () => {
-      // 1. PKCE flow — ?code= in URL
       const params = new URLSearchParams(window.location.search);
       const code = params.get('code');
+      const tokenHash = params.get('token_hash');
+      const type = params.get('type');
 
+      // ── 1. PKCE flow: ?code= ──────────────────────────────
       if (code) {
         try {
           const { error: exchError } = await supabase.auth.exchangeCodeForSession(code);
+          if (!mounted) return;
           if (exchError) {
-            if (mounted) setError('This reset link is invalid or has expired. Please request a new one.');
+            markError('This reset link is invalid or has expired. Please request a new one.');
           } else {
-            if (mounted) { setIsReady(true); setIsExchanging(false); }
+            markReady();
           }
         } catch {
-          if (mounted) setError('Something went wrong. Please request a new reset link.');
+          if (mounted) markError('Something went wrong. Please request a new reset link.');
         }
         return;
       }
 
-      // 2. Legacy hash flow — #type=recovery
-      const hash = window.location.hash;
-      if (hash.includes('type=recovery')) {
-        if (mounted) { setIsReady(true); setIsExchanging(false); }
+      // ── 2. Email OTP / token_hash flow ───────────────────
+      if (tokenHash && type === 'recovery') {
+        try {
+          const { error: verifyError } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: 'recovery',
+          });
+          if (!mounted) return;
+          if (verifyError) {
+            markError('This reset link is invalid or has expired. Please request a new one.');
+          } else {
+            markReady();
+          }
+        } catch {
+          if (mounted) markError('Something went wrong. Please request a new reset link.');
+        }
         return;
       }
 
-      // 3. Listen for PASSWORD_RECOVERY event (Supabase fires this after redirect)
+      // ── 3. Legacy hash flow: #type=recovery ──────────────
+      if (window.location.hash.includes('type=recovery')) {
+        if (mounted) markReady();
+        return;
+      }
+
+      // ── 4. Listen for PASSWORD_RECOVERY auth event ───────
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
         if (event === 'PASSWORD_RECOVERY' && mounted) {
-          setIsReady(true);
-          setIsExchanging(false);
+          markReady();
         }
       });
 
-      // Give the auth state listener 3s to fire before showing error
+      // 8s timeout — use ref to avoid stale closure
       const timeout = setTimeout(() => {
-        if (mounted && !isReady) {
-          setIsExchanging(false);
-          setError('This reset link is invalid or has expired. Please request a new one.');
+        if (mounted && !isReadyRef.current) {
+          subscription.unsubscribe();
+          markError('This reset link is invalid or has expired. Please request a new one.');
         }
-      }, 3000);
+      }, 8000);
 
       return () => {
         subscription.unsubscribe();
@@ -123,6 +154,7 @@ const ResetPassword: React.FC = () => {
       <div style={styles.page}>
         <Loader2 style={{ width: 40, height: 40, color: '#D4AF37', animation: 'spin 1s linear infinite' }} />
         <p style={styles.subText}>Verifying your reset link…</p>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
@@ -146,6 +178,7 @@ const ResetPassword: React.FC = () => {
         <button style={styles.goldBtn} onClick={() => navigate('/auth')}>
           Back to Login
         </button>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
