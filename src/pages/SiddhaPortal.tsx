@@ -513,7 +513,7 @@ export default function SiddhaPortal() {
           ...CARD_BASE,
           margin: '0 16px 12px',
           background: 'linear-gradient(135deg, rgba(212,175,55,0.09), rgba(255,200,50,0.03))',
-          border: ,
+          border: `1px solid ${gold(0.3)}`,
           animation: 'sqFadeUp 0.45s 0.09s ease both',
           cursor: 'pointer',
         }}
