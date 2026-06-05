@@ -577,7 +577,7 @@ serve(async (req) => {
         .filter(m => m.role === "user").slice(-1)[0];
       if (latestUserMsg?.content && !isFirstMessage) {
         supabase
-          .from("user_sync_chat_messages")
+          .from("apothecary_chat_messages")
           .insert([{ user_id: userId, chat_context: "ayurveda", role: "user", content: latestUserMsg.content }])
           .then(() => {}).catch(() => {});
       }
@@ -585,7 +585,7 @@ serve(async (req) => {
       // Fetch past consultation timeline for cross-session memory
       try {
         const { data: pastMsgs } = await supabase
-          .from("user_sync_chat_messages")
+          .from("apothecary_chat_messages")
           .select("content, created_at")
           .eq("user_id", userId)
           .eq("chat_context", "ayurveda")
@@ -613,7 +613,7 @@ serve(async (req) => {
         if (!userId) return [];
         try {
           const { data } = await supabase
-            .from("user_sync_chat_messages")
+            .from("apothecary_chat_messages")
             .select("content, created_at")
             .eq("user_id", userId)
             .eq("chat_context", "ayurveda")
@@ -717,7 +717,7 @@ serve(async (req) => {
         controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
         if (userId && fullResponse) {
           supabase
-            .from("user_sync_chat_messages")
+            .from("apothecary_chat_messages")
             .insert([{ user_id: userId, chat_context: "ayurveda", role: "assistant", content: fullResponse }])
             .then(() => {}).catch(() => {});
         }
