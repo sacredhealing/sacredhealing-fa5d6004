@@ -1,64 +1,36 @@
-name: Railway Deploy Fresh
+name: Railway Simple Test
 
 on:
-  workflow_dispatch:
   push:
     paths:
-      - '.github/workflows/check-railway.yml'
+      - 'version.txt'
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_ADMIN_PAT }}
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Deploy CLAWBOT to Railway
+      - name: Test Railway token
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          LOG="_railway_takeover.txt"
-          echo "=== Railway Deploy $(date -u) ===" > $LOG
-
-          npm install -g @railway/cli 2>&1 | tail -1 >> $LOG
-          echo "CLI: $(railway --version 2>&1)" >> $LOG
-          echo "" >> $LOG
-
-          echo "--- Auth ---" >> $LOG
-          railway whoami 2>&1 >> $LOG
-          echo "" >> $LOG
-
-          echo "--- Projects via API ---" >> $LOG
-          curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+          LOG="_rw_test.txt"
+          echo "=== Token Test $(date -u) ===" > $LOG
+          echo "Token length: ${#RAILWAY_TOKEN}" >> $LOG
+          echo "Token prefix: ${RAILWAY_TOKEN:0:8}..." >> $LOG
+          
+          # Test API
+          RESP=$(curl -s -X POST "https://backboard.railway.app/graphql/v2" \
             -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
             -H "Content-Type: application/json" \
-            -d '{"query":"{ me { id name email projects { edges { node { id name services { edges { node { id name } } } environments { edges { node { id name } } } } } } } }"}' \
-            | python3 -c "
-import sys,json
-d=json.load(sys.stdin)
-if 'errors' in d:
-    print('TOKEN ERROR:', d['errors'][0]['message'])
-    sys.exit(1)
-me=d['data']['me']
-print('User:', me['name'], me['email'])
-projects=me.get('projects',{}).get('edges',[])
-print(f'Projects: {len(projects)}')
-for p in projects:
-    n=p['node']
-    print(f'  {n[\"name\"]} id:{n[\"id\"]}')
-    for s in n.get('services',{}).get('edges',[]):
-        print(f'    svc: {s[\"node\"][\"name\"]} id:{s[\"node\"][\"id\"]}')
-    for e in n.get('environments',{}).get('edges',[]):
-        print(f'    env: {e[\"node\"][\"name\"]} id:{e[\"node\"][\"id\"]}')
-" >> $LOG 2>&1
-
+            -d '{"query":"{ me { id name email } }"}')
+          echo "API response: $RESP" >> $LOG
+          
           cat $LOG
           git config user.email "bot@sqi.app"; git config user.name "SQI"
           git add $LOG
-          git commit -m "Railway deploy $(date -u +%H%M%S)" || true
+          git commit -m "Railway token test $(date -u +%H%M%S)" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
