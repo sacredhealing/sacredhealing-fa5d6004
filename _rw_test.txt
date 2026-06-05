@@ -1,4 +1,4 @@
-=== Token Test Fri Jun  5 06:35:29 UTC 2026 ===
+=== Token Test Fri Jun  5 06:39:29 UTC 2026 ===
 Token length: 36
 Token prefix: 3731a77e...
-API response: {"errors":[{"message":"Not Authorized","locations":[{"line":1,"column":3}],"path":["me"],"extensions":{"code":"INTERNAL_SERVER_ERROR"},"traceId":"8173336933165376364"}],"data":null}
+API response: {"errors":[{"message":"Not Authorized","locations":[{"line":1,"column":3}],"path":["me"],"extensions":{"code":"INTERNAL_SERVER_ERROR"},"traceId":"4495426118717734601"}],"data":null}
