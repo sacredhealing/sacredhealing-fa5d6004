@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
-import { Flame, Flower2, Star, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, Scale, LayoutDashboard, Megaphone, Crown, Pencil, Banknote, Lock, FileText, BookOpen, Hand, Globe, ChevronDown, Play, Share2, Hexagon } from 'lucide-react';
+import { Flame, Flower2, Key, Star, Settings, LogOut, ChevronRight, Wallet, Bell, Moon, Shield, Scale, LayoutDashboard, Megaphone, Crown, Pencil, Banknote, Lock, FileText, BookOpen, Hand, Globe, ChevronDown, Play, Share2, Hexagon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
@@ -28,6 +28,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { getTierRank, hasFeatureAccess } from '@/lib/tierAccess';
 import RecordingsList from '@/components/recordings/RecordingsList';
 import { SubscriptionPortal } from '@/components/profile/SubscriptionPortal';
+import { ChangePasswordDialog } from '@/components/profile/ChangePasswordDialog';
 import BookTranslatorPanel from '@/components/books/BookTranslatorPanel';
 
 type LifeBookCategory = 'children'|'healing_upgrades'|'past_lives'|'future_visions'|'spiritual_figures'|'nadi_knowledge'|'general_wisdom';
@@ -154,6 +155,7 @@ const Profile: React.FC = () => {
 
   const [blueprintOpen, setBlueprintOpen] = useState(false);
   const [showPortal, setShowPortal] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [appearanceOpen, setAppearanceOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
@@ -693,6 +695,8 @@ const Profile: React.FC = () => {
         <div style={{margin:'0 16px',display:'flex',flexDirection:'column',gap:2}}>
           <SRow icon={<IconBox><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke={G} strokeWidth="1.5" fill="rgba(212,175,55,.08)"/><path d="M4 20C4 16.7 7.6 14 12 14C16.4 14 20 16.7 20 20" stroke={G} strokeWidth="1.5" fill="none" strokeLinecap="round"/></svg></IconBox>} label={t('profile.editProfile')} sub="Name · photo · bio · birth chart" onClick={()=>setProfileEditOpen(true)} />
 
+          <SRow icon={<IconBox color="rgba(212,175,55,.08)" border="rgba(212,175,55,.25)" glowColor="rgba(212,175,55,.7)"><Key size={18} color={G}/></IconBox>} label="Change Password" sub="Update or reset your sacred access key" onClick={()=>setPasswordDialogOpen(true)} />
+
           <SRow icon={<IconBox color="rgba(34,211,238,.08)" border="rgba(34,211,238,.2)" glowColor="rgba(34,211,238,.7)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="6" stroke="#22D3EE" strokeWidth="1.5" fill="rgba(34,211,238,.06)"/><path d="M16 16L20 20" stroke="#22D3EE" strokeWidth="1.8" strokeLinecap="round"/></svg></IconBox>} label={t('profile.language.label')} sub={langs[activeLangIdx].flag+' '+langs[activeLangIdx].label} onClick={()=>setLangOpen(o=>!o)} right={<div style={{fontSize:14,color:'rgba(255,255,255,.18)',transform:langOpen?'rotate(180deg)':'none',transition:'transform .25s'}}>›</div>} />
           {langOpen && (
             <div style={{background:'rgba(8,8,8,.97)',border:'1px solid rgba(212,175,55,.12)',borderRadius:14,overflow:'hidden',marginTop:2}}>
@@ -775,6 +779,7 @@ const Profile: React.FC = () => {
           </div>
         )}
 
+        <ChangePasswordDialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}/>
         <ProfileEditDialog open={profileEditOpen} onOpenChange={setProfileEditOpen}/>
         <NotificationsDialog open={notificationsOpen} onOpenChange={setNotificationsOpen}/>
         <AppearanceDialog open={appearanceOpen} onOpenChange={setAppearanceOpen}/>
