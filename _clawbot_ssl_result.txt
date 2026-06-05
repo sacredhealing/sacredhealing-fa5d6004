@@ -1,0 +1,32 @@
+=== CLAWBOT Domain Refresh ===
+Calling Railway GraphQL API...
+GQL ERROR: HTTP Error 403: Forbidden
+Traceback (most recent call last):
+  File "/home/runner/work/sacredhealing-fa5d6004/sacredhealing-fa5d6004/scripts/clawbot_ssl_fix.py", line 34, in <module>
+    r = gql('{ service(id: "' + SERVICE_ID + '") { id name domains { edges { node { id domain status } } } } }')
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/sacredhealing-fa5d6004/sacredhealing-fa5d6004/scripts/clawbot_ssl_fix.py", line 23, in gql
+    resp = urllib.request.urlopen(req, timeout=20)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 403: Forbidden
+ode, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 403: Forbidden
+
+Exit code: 0
