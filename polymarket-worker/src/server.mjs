@@ -644,6 +644,51 @@ app.get('/', (_req, res) =>
 );
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
+
+// ─── Seed known elite whale addresses ────────────────────────────────────────
+const KNOWN_WHALES = [
+  '0x91583ceb1ebec79951a068e1d7d02c1ea590fa7b',
+  '0x06dc51826bc524d9a83770e7de9dd7e005b04524',
+  '0xed107a85a4585a381e48c7f7ca4144909e7dd2e5',
+  '0x204f72f35326db932158cba6adff0b9a1da95e14',
+  '0xa77105bb4d2d4d200b0133a2036222353831162d',
+  '0x93511d72d294f1478739bc38f578bf0306fd9e4d',
+  '0xe9076a87c5ed90ef16e6fe6529c943baeca0cff6',
+  '0xf49ce459b52f60b70ce0fe9aa6203e6bf90f9786',
+  '0xbaa2bcb5439e985ce4ccf815b4700027d1b92c73',
+  '0x84cfffc3f16dcc353094de30d4a45226eccd2f63',
+  '0xeed588bab0b0df73a9a6def7a59e512e9ede1a33',
+  '0x335592400e402c26583ce8b56d12605e9548a126',
+  '0xb2a3623364c33561d8312e1edb79eb941c798510',
+  '0xfea31bc088000ff909be1dfd8d0e3f2c7ef2d227',
+  '0x84ad9c5c547a82ec9a08547b94bd922446e5bfb7',
+  '0xa7a8c1fd4bfff08ea30214efa7efaf75d7c6580c',
+  '0xd3b034d7bfb2473fb252d0414646d9786bac329e',
+  '0x000d257d2dc7616feaef4ae0f14600fdf50a758e',
+  '0xe52c0a1327a12edc7bd54ea6f37ce00a4ca96924',
+];
+
+async function seedWhaleRegistry() {
+  log('WHALE', `Seeding ${KNOWN_WHALES.length} known elite whale addresses...`);
+  for (const addr of KNOWN_WHALES) {
+    if (!whaleRegistry.has(addr)) {
+      // Pre-register with null WR so they show in dashboard immediately
+      // Real WR will be fetched on first block or CLOB query
+      whaleRegistry.set(addr, {
+        wins: 0, losses: 0, total: 0, wr: null,
+        rawTrades: 0, lastUpdated: Date.now()
+      });
+    }
+  }
+  log('WHALE', `Registry seeded. Fetching win rates in background...`);
+  // Fetch WR for each in background, staggered to avoid rate limits
+  for (let i = 0; i < KNOWN_WHALES.length; i++) {
+    setTimeout(async () => {
+      try { await fetchWhaleWR(KNOWN_WHALES[i]); } catch {}
+    }, i * 3000); // 3s apart
+  }
+}
+
 async function main() {
   console.log('══════════════════════════════════════════════════════');
   console.log('  SQI-2050 ⚡ Shiesty Signal Oracle v3 — Railway');
@@ -657,6 +702,7 @@ async function main() {
   }
 
   await loadBalance();
+  await seedWhaleRegistry();
   log('BOOT', `Balance: $${balance.toFixed(2)} | Open: ${openPositions}/${MAX_POSITIONS}`);
 
   if (!PAPER_MODE && POLY_API_KEY && POLY_API_SEC && POLY_PASS) {
