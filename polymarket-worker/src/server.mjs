@@ -645,18 +645,18 @@ app.get('/', (_req, res) =>
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
 
-// ─── Seed known elite whale addresses ────────────────────────────────────────
-// 9 Elite Whales — verified by on-chain PnL scan (May 2026)
+// ─── 9 Confirmed Elite Whale Addresses (verified June 2026) ─────────────────
+// Ranked by PnL | Top 3: BAA2BC (Iran Insider), ED107A (NO Machine), A7A8C1 (World Cup)
 const KNOWN_WHALES = [
   '0xbaa2bcb5439e985ce4ccf815b4700027d1b92c73',
   '0x06dc51826bc524d9a83770e7de9dd7e005b04524',
-  '0xb2a3623364c33561d8312e1edb79eb941c798510',
   '0xed107a85a4585a381e48c7f7ca4144909e7dd2e5',
   '0xa7a8c1fd4bfff08ea30214efa7efaf75d7c6580c',
   '0xf49ce459b52f60b70ce0fe9aa6203e6bf90f9786',
   '0xe9076a87c5ed90ef16e6fe6529c943baeca0cff6',
   '0x204f72f35326db932158cba6adff0b9a1da95e14',
-  '0x91583ceb1ebec79951a068e1d7d02c1ea590fa7b',
+  '0xa77105bb4d2d4d200b0133a2036222353831162d',
+  '0xfea31bc088000ff909be1dfd8d0e3f2c7ef2d227',
 ];
 
 async function seedWhaleRegistry() {
