@@ -13,19 +13,47 @@ jobs:
         with:
           token: ${{ secrets.GH_ADMIN_PAT }}
 
-      - name: Run SSL fix script
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Railway CLI domain fix
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          set -x
-          echo "RAILWAY_TOKEN length: ${#RAILWAY_TOKEN}"
-          echo "Python version: $(python3 --version)"
-          python3 scripts/clawbot_ssl_fix.py 2>&1 | tee _clawbot_ssl_result.txt
-          EXIT_CODE=$?
-          echo "Exit code: $EXIT_CODE" >> _clawbot_ssl_result.txt
+          LOG="_clawbot_ssl_result.txt"
+          exec 2>&1
+          
+          echo "=== CLAWBOT Domain SSL Fix ===" | tee $LOG
+          
+          # Install Railway CLI
+          npm install -g @railway/cli 2>&1 | tail -3 | tee -a $LOG
+          echo "CLI: $(railway --version 2>&1)" | tee -a $LOG
+          
+          # Test auth
+          echo "Auth test:" | tee -a $LOG
+          railway whoami 2>&1 | tee -a $LOG
+          
+          # List services  
+          echo "Services:" | tee -a $LOG
+          railway list 2>&1 | tee -a $LOG || true
+          
+          # Try to use railway domain command
+          echo "Domain operation:" | tee -a $LOG
+          
+          # Try the Railway REST API v1 (different from GraphQL)
+          # Railway has a REST API at railway.app/api
+          echo "Trying Railway REST API..." | tee -a $LOG
+          curl -s -X GET "https://railway.app/api/v2/services/b6311e53-fe5a-4c4a-b724-e0fef686236f/domains"             -H "Authorization: Bearer $RAILWAY_TOKEN"             -H "Content-Type: application/json" 2>&1 | tee -a $LOG || true
+          
+          # Health check direct URL
+          echo "Direct health check:" | tee -a $LOG  
+          curl -s --max-time 15 "https://siddha-soma-apothecary-production.up.railway.app/health" 2>&1 | tee -a $LOG || echo "Direct URL failed" | tee -a $LOG
+          
+          cat $LOG
           git config user.email "bot@sqi.app"
           git config user.name "SQI-Bot"
-          git add _clawbot_ssl_result.txt
-          git commit -m "CLAWBOT SSL fix result" || true
+          git add $LOG
+          git commit -m "CLAWBOT SSL result" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
