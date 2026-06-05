@@ -77,11 +77,45 @@ function safeInt(v, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+// Proxy support for bypassing Cloudflare datacenter blocks
+const PROXY_URL = process.env.PROXY_URL || '';
+let proxyAgent = null;
+
+async function getProxyAgent() {
+  if (!PROXY_URL || proxyAgent) return proxyAgent;
+  try {
+    // Format: http://user:pass@host:port OR host:port:user:pass
+    let proxyStr = PROXY_URL;
+    if (!proxyStr.startsWith('http')) {
+      const parts = proxyStr.split(':');
+      if (parts.length === 4) {
+        proxyStr = `http://${parts[2]}:${parts[3]}@${parts[0]}:${parts[1]}`;
+      } else if (parts.length === 2) {
+        proxyStr = `http://${parts[0]}:${parts[1]}`;
+      }
+    }
+    const { HttpsProxyAgent } = await import('https-proxy-agent');
+    proxyAgent = new HttpsProxyAgent(proxyStr);
+    log('PROXY', `Residential proxy configured: ${proxyStr.replace(/:([^:@]+)@/, ':***@')}`);
+  } catch (e) {
+    warn('PROXY', `Could not init proxy: ${e?.message}`);
+  }
+  return proxyAgent;
+}
+
 async function safeFetch(url, opts = {}, timeoutMs = 10000) {
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
-    const res = await fetch(url, { ...opts, signal: controller.signal });
+    // Use proxy for Polymarket URLs to bypass Cloudflare
+    const agent = (url.includes('polymarket.com') || url.includes('poly.market'))
+      ? await getProxyAgent()
+      : null;
+    const res = await fetch(url, {
+      ...opts,
+      signal: controller.signal,
+      ...(agent ? { dispatcher: agent } : {}),
+    });
     clearTimeout(timer);
     return res;
   } catch (e) {
