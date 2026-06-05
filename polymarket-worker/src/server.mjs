@@ -184,6 +184,13 @@ async function fetchWhaleWR(address) {
 
 async function isWhaleApproved(address) {
   try {
+    // Known elite whales are pre-approved — bypass CLOB gate
+    // These were verified by on-chain PnL scan (June 2026)
+    if (KNOWN_WHALES.includes(address.toLowerCase())) {
+      log('GATE', `${address.slice(0,8)} PRE-APPROVED (elite whitelist)`);
+      return true;
+    }
+    // Unknown wallets still go through WR gate
     const record = await fetchWhaleWR(address);
     if (!record || record.rawTrades < WHALE_MIN_TRADES) return false;
     if (record.total < 3) return false;
@@ -421,8 +428,13 @@ async function startWhaleMirror(provider) {
         if (tx.to?.toLowerCase() !== CTF_EXCHANGE.toLowerCase()) continue;
         const whaleAddr = tx.from?.toLowerCase();
         if (!whaleAddr) continue;
-        const approved = await isWhaleApproved(whaleAddr);
-        if (!approved) continue;
+        // Fast path: check known elites first (no CLOB lookup needed)
+        const isKnown = KNOWN_WHALES.includes(whaleAddr);
+        if (!isKnown) {
+          const approved = await isWhaleApproved(whaleAddr);
+          if (!approved) continue;
+        }
+        log('WHALE', `${isKnown ? '⭐ ELITE' : '✅ NEW'} whale ${whaleAddr.slice(0,8)} detected on block ${blockNumber}`);
         try {
           const decoded = iface.parseTransaction({ data: tx.data, value: tx.value });
           if (!decoded) continue;
