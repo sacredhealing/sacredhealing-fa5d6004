@@ -11,12 +11,12 @@ jobs:
         with:
           token: ${{ secrets.GH_ADMIN_PAT }}
 
-      - name: Refresh domain SSL
+      - name: Refresh Railway domain SSL
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          python3 - <<'PYSC'
+          cat > ssl_fix.py << 'ENDPY'
 import urllib.request, json, time, os
 
 token = os.environ['RAILWAY_TOKEN']
@@ -30,61 +30,56 @@ def gql(query):
     req = urllib.request.Request(
         "https://backboard.railway.app/graphql/v2",
         data=data,
-        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+        headers={"Authorization": "Bearer " + token, "Content-Type": "application/json"}
     )
     resp = urllib.request.urlopen(req, timeout=20)
     return json.loads(resp.read())
 
 def log(msg):
-    print(msg)
+    print(msg, flush=True)
     LOG.append(str(msg))
 
 log("=== CLAWBOT Domain Refresh ===")
-
-r = gql(f'{{ service(id: "{SERVICE_ID}") {{ id name domains {{ edges {{ node {{ id domain status }} }} }} }} }}')
-log(f"Domain query: {json.dumps(r)}")
+r = gql('{ service(id: "' + SERVICE_ID + '") { id name domains { edges { node { id domain status } } } } }')
+log("Domains: " + json.dumps(r))
 
 edges = r.get("data",{}).get("service",{}).get("domains",{}).get("edges",[])
 target_id = None
 for e in edges:
     node = e["node"]
-    log(f"  Found: {node['domain']} | {node.get('status')} | {node['id']}")
+    log("  Found: " + node["domain"] + " | " + str(node.get("status")) + " | " + node["id"])
     if "clawbot" in node["domain"]:
         target_id = node["id"]
 
 if target_id:
-    log(f"Deleting {target_id}...")
-    r2 = gql(f'mutation {{ customDomainDelete(id: "{target_id}") }}')
-    log(f"Delete result: {json.dumps(r2)}")
+    log("Deleting " + target_id)
+    r2 = gql('mutation { customDomainDelete(id: "' + target_id + '") }')
+    log("Delete: " + json.dumps(r2))
     time.sleep(10)
 
-log("Adding domain fresh...")
-r3 = gql(f'mutation {{ customDomainCreate(input: {{ serviceId: "{SERVICE_ID}", domain: "{DOMAIN}" }}) {{ id domain status }} }}')
-log(f"Add result: {json.dumps(r3)}")
+log("Adding domain...")
+r3 = gql('mutation { customDomainCreate(input: { serviceId: "' + SERVICE_ID + '", domain: "' + DOMAIN + '" }) { id domain status } }')
+log("Add: " + json.dumps(r3))
 
 time.sleep(30)
 
-r4 = gql(f'{{ service(id: "{SERVICE_ID}") {{ domains {{ edges {{ node {{ id domain status }} }} }} }} }}')
-log(f"Final status: {json.dumps(r4)}")
+r4 = gql('{ service(id: "' + SERVICE_ID + '") { domains { edges { node { id domain status } } } } }')
+log("Final: " + json.dumps(r4))
 
-for url in [
-    "https://siddha-soma-apothecary-production.up.railway.app/health",
-    f"https://{DOMAIN}/health"
-]:
+for url in ["https://siddha-soma-apothecary-production.up.railway.app/health", "https://" + DOMAIN + "/health"]:
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "SQI"})
-        resp = urllib.request.urlopen(req, timeout=15)
-        log(f"HEALTH {url} -> {resp.status}: {resp.read().decode()[:100]}")
-    except Exception as e:
-        log(f"HEALTH {url} -> {type(e).__name__}: {e}")
+        req2 = urllib.request.Request(url, headers={"User-Agent": "SQI"})
+        resp2 = urllib.request.urlopen(req2, timeout=15)
+        log("OK " + url + " -> " + resp2.read().decode()[:100])
+    except Exception as ex:
+        log("FAIL " + url + " -> " + str(ex))
 
 with open("_clawbot_ssl_result.txt", "w") as f:
     f.write("\n".join(LOG))
-print("Done")
-PYSC
-
+ENDPY
+          python3 ssl_fix.py
           git config user.email "bot@sqi.app"
           git config user.name "SQI-Bot"
           git add _clawbot_ssl_result.txt
-          git commit -m "CLAWBOT domain refresh result" || true
+          git commit -m "CLAWBOT SSL fix" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
