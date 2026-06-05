@@ -1,0 +1,68 @@
+name: Railway Takeover
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Deploy CLAWBOT to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          LOG="_railway_takeover.txt"
+          echo "=== Railway Takeover $(date -u) ===" > $LOG
+
+          # Install Railway CLI
+          npm install -g @railway/cli 2>&1 | tail -2 >> $LOG
+          echo "CLI version: $(railway --version 2>&1)" >> $LOG
+
+          # Test auth
+          echo "" >> $LOG
+          echo "--- Auth test ---" >> $LOG
+          railway whoami 2>&1 >> $LOG
+
+          # List projects
+          echo "" >> $LOG
+          echo "--- Projects ---" >> $LOG
+          railway list 2>&1 >> $LOG
+
+          # API query for projects
+          echo "" >> $LOG
+          echo "--- API query ---" >> $LOG
+          curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"query":"{ me { id name email projects { edges { node { id name createdAt services { edges { node { id name } } } } } } } }"}' \
+            | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+if 'errors' in d:
+    print('TOKEN ERROR:', d['errors'])
+else:
+    me = d.get('data',{}).get('me',{})
+    print('Logged in as:', me.get('name'), me.get('email'))
+    projects = me.get('projects',{}).get('edges',[])
+    print(f'Projects found: {len(projects)}')
+    for p in projects:
+        n = p['node']
+        svcs = n.get('services',{}).get('edges',[])
+        print(f'  Project: {n[\"name\"]} (id:{n[\"id\"]})')
+        for s in svcs:
+            print(f'    Service: {s[\"node\"][\"name\"]} (id:{s[\"node\"][\"id\"]})')
+" >> $LOG 2>&1
+
+          cat $LOG
+          git config user.email "bot@sqi.app"; git config user.name "SQI"
+          git add $LOG
+          git commit -m "Railway takeover $(date -u +%H%M%S)" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
