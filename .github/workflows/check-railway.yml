@@ -18,9 +18,14 @@ jobs:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          python3 scripts/clawbot_ssl_fix.py
+          set -x
+          echo "RAILWAY_TOKEN length: ${#RAILWAY_TOKEN}"
+          echo "Python version: $(python3 --version)"
+          python3 scripts/clawbot_ssl_fix.py 2>&1 | tee _clawbot_ssl_result.txt
+          EXIT_CODE=$?
+          echo "Exit code: $EXIT_CODE" >> _clawbot_ssl_result.txt
           git config user.email "bot@sqi.app"
           git config user.name "SQI-Bot"
           git add _clawbot_ssl_result.txt
-          git commit -m "CLAWBOT SSL fix result $(date -u)" || true
+          git commit -m "CLAWBOT SSL fix result" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
