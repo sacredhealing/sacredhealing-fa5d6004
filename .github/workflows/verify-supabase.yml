@@ -11,67 +11,14 @@ jobs:
         with:
           token: ${{ secrets.GH_ADMIN_PAT }}
 
-      - name: Verify all CLAWBOT tables exist
+      - name: Run verification
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          PAT="${SUPABASE_ACCESS_TOKEN}"
-          REF="fjdzhrdpioxdeyyfogep"
-          LOG="_supabase_verify.txt"
-
-          echo "=== SUPABASE TABLE VERIFICATION $(date -u) ===" > $LOG
-
-          run_query() {
-            local q="$1"
-            curl -s -X POST               -H "Authorization: Bearer $PAT"               -H "Content-Type: application/json"               -d "{"query": "$q"}"               "https://api.supabase.com/v1/projects/$REF/database/query"
-          }
-
-          echo "" >> $LOG
-          echo "--- CLAWBOT TABLES ---" >> $LOG
-          for t in clawbot_members clawbot_fee_ledger clawbot_platform_config clawbot_affiliate_rates; do
-            result=$(run_query "SELECT COUNT(*) FROM information_schema.tables WHERE table_name='$t' AND table_schema='public'")
-            count=$(echo "$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['count'] if d else 0)" 2>/dev/null || echo "0")
-            if [ "$count" = "1" ]; then
-              echo "  PASS: $t" >> $LOG
-            else
-              echo "  FAIL: $t MISSING" >> $LOG
-            fi
-          done
-
-          echo "" >> $LOG
-          echo "--- NEW COLUMNS ---" >> $LOG
-          for tc in "profiles|referred_by" "affiliate_commissions|source" "affiliate_commissions|level" "affiliate_commissions|clawbot_trade_id"; do
-            t=$(echo $tc | cut -d'|' -f1)
-            c=$(echo $tc | cut -d'|' -f2)
-            result=$(run_query "SELECT COUNT(*) FROM information_schema.columns WHERE table_name='$t' AND column_name='$c'")
-            count=$(echo "$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['count'] if d else 0)" 2>/dev/null || echo "0")
-            if [ "$count" = "1" ]; then
-              echo "  PASS: $t.$c" >> $LOG
-            else
-              echo "  FAIL: $t.$c MISSING" >> $LOG
-            fi
-          done
-
-          echo "" >> $LOG
-          echo "--- CLAWBOT PLATFORM CONFIG ---" >> $LOG
-          result=$(run_query "SELECT * FROM clawbot_platform_config LIMIT 1")
-          echo "$result" >> $LOG
-
-          echo "" >> $LOG
-          echo "--- AFFILIATE RATES ---" >> $LOG
-          result=$(run_query "SELECT * FROM clawbot_affiliate_rates ORDER BY tier")
-          echo "$result" >> $LOG
-
-          echo "" >> $LOG
-          echo "--- CLAWBOT_MEMBERS count ---" >> $LOG
-          result=$(run_query "SELECT COUNT(*) FROM clawbot_members")
-          echo "$result" >> $LOG
-
-          cat $LOG
-
+          python3 scripts/verify_supabase.py
           git config user.email "bot@sqi.app"
           git config user.name "SQI-Bot"
-          git add $LOG
-          git commit -m "Supabase verification result" || true
+          git add _supabase_verify.txt
+          git commit -m "Supabase verify result" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
