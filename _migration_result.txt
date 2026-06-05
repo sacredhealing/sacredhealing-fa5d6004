@@ -1,0 +1,10 @@
+=== DIRECT MIGRATION APPLY ===
+
+--- supabase/migrations/20260605000000_clawbot_profit_share.sql ---
+  HTTP 403: error code: 1010
+
+--- supabase/migrations/20260605100000_fix_clawbot_rls.sql ---
+  HTTP 403: error code: 1010
+
+--- supabase/migrations/20260605200000_clawbot_affiliate.sql ---
+  HTTP 403: error code: 1010
