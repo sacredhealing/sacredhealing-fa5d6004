@@ -1,10 +1,43 @@
-=== DIRECT MIGRATION APPLY ===
+=== CLAWBOT Migration Apply Fri Jun  5 18:29:29 UTC 2026 ===
 
---- supabase/migrations/20260605000000_clawbot_profit_share.sql ---
-  HTTP 403: error code: 1010
+added 2 packages in 2s
+Pushing schema via CLI...
+DESCRIPTION
+  Push new migrations to the remote database.
 
---- supabase/migrations/20260605100000_fix_clawbot_rls.sql ---
-  HTTP 403: error code: 1010
+USAGE
+  supabase db push [flags]
 
---- supabase/migrations/20260605200000_clawbot_affiliate.sql ---
-  HTTP 403: error code: 1010
+FLAGS
+  --include-all            Include all migrations not found on remote history table.
+  --include-roles          Include custom roles from supabase/roles.sql.
+  --include-seed           Include seed data from your config.
+  --dry-run                Print the migrations that would be applied, but don't actually apply them.
+  --db-url string          Pushes to the database specified by the connection string (must be percent-encoded).
+  --linked                 Pushes to the linked project.
+  --local                  Pushes to the local database.
+  --password, -p string    Password to your remote Postgres database.
+
+GLOBAL FLAGS
+  --help, -h                Show help information
+  --version                 Show version information
+  --completions choice      Print shell completion script (choices: bash, zsh, fish, sh)
+  --log-level choice        Sets the minimum log level (choices: all, trace, debug, info, warn, warning, error, fatal, none)
+  --output-format choice    Output format: text (default), json, or stream-json (NDJSON) (choices: text, json, stream-json)
+  --output, -o choice       Output format of status variables. (choices: env, pretty, json, toml, yaml)
+  --profile string          Use a specific profile for connecting to Supabase API.
+  --debug                   Output debug logs to stderr.
+  --workdir string          Path to a Supabase project directory.
+  --experimental            Enable experimental features.
+  --network-id string       Use the specified Docker network instead of a generated one.
+  --yes                     Answer yes to all prompts.
+  --dns-resolver choice     Look up domain names using the specified resolver. (choices: native, https)
+  --create-ticket           Create a support ticket for any CLI error.
+  --agent choice            Override agent detection: yes, no, or auto. (choices: auto, yes, no)
+
+ERROR
+  Unrecognized flag: --project-ref in command supabase db push
+[31mHelp requested[39m
+Try rerunning the command with --debug to troubleshoot the error.
+
+Done.
