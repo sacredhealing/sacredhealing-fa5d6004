@@ -23,6 +23,16 @@
  */
 
 import 'dotenv/config';
+
+// ─── Global crash guard ───────────────────────────────────────────────────────
+process.on('uncaughtException', (e) => {
+  console.error('[CRASH GUARD] uncaughtException:', e.message);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('[CRASH GUARD] unhandledRejection:', reason?.message ?? reason);
+});
+
+
 import express from 'express';
 import { ethers } from 'ethers';
 
@@ -678,7 +688,7 @@ async function resolveOpenTrades() {
       if (trade.is_paper && tradeWon) {
         const winnings = shares * exitPrice;
         balance = Math.max(0, balance + winnings); // recomputed from trades on next loadBalance()
-        log('RESOLVE', `✅ WON ${trade.outcome} | +$${winnings.toFixed(2)} | new bal $${newBal.toFixed(2)}`);
+        log('RESOLVE', `✅ WON ${trade.outcome} | +$${winnings.toFixed(2)} | new bal $${balance.toFixed(2)}`);
       } else {
         log('RESOLVE', `❌ LOST ${trade.outcome} | -$${spent.toFixed(2)} | winner was ${winner}`);
       }
