@@ -128,6 +128,7 @@ const PolymarketCopyTradingInfo = React.lazy(() => import("./pages/income-stream
 const FomoCopyBot = React.lazy(() => import("./pages/income-streams/FomoCopyBot"));
 const WhaleIntelligence = React.lazy(() => import("./pages/income-streams/WhaleIntelligence"));
 const SQISovereignBot = React.lazy(() => import("./pages/income-streams/SQISovereignBot"));
+const SniperBot = React.lazy(() => import("./pages/income-streams/SniperBot"));
 const PredictionMarketBot = React.lazy(() => import("./pages/PredictionMarketBot"));
 const AdminSystem = React.lazy(() => import("./pages/AdminSystem"));
 const AdminGrantAccess = React.lazy(() => import("./pages/AdminGrantAccess"));
@@ -344,6 +345,7 @@ function AppRoutes() {
                   <Route path="/income-streams/fomo-copy-bot" element={<FomoCopyBot />} />
                   <Route path="/income-streams/whale-intelligence" element={<WhaleIntelligence />} />
                   <Route path="/income-streams/sqi-sovereign-bot" element={<SQISovereignBot />} />
+                  <Route path="/income-streams/sniper-bot" element={<SniperBot />} />
                   <Route path="/sqi-chat" element={<Navigate to="/quantum-apothecary" replace />} />
                   <Route path="/spiritual-education" element={<SpiritualEducation />} />
                   <Route path="/community" element={<Community />} />
@@ -535,5 +537,6 @@ function App() {
 }
 
 export default App;
+
 
 
