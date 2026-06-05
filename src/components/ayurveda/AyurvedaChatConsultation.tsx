@@ -34,17 +34,40 @@ const SriYantra: React.FC<{ size?: number }> = ({ size = 40 }) => (
 // Renders Agastya's streaming text into rich blocks:
 // Devanagari → gold mantra card · "Scalar Transmission:" → cyan scalar block
 // Last short paragraph → italic gold seal · everything else → Cormorant prose
+// Inline markdown: **bold** → gold, *italic* → soft italic
+const renderInline = (text: string): React.ReactNode[] => {
+  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g).filter(Boolean);
+  return parts.map((p, i) => {
+    if (p.startsWith('**') && p.endsWith('**')) {
+      return <strong key={i} style={{ color: '#D4AF37', fontWeight: 800, textShadow: '0 0 14px rgba(212,175,55,0.35)' }}>{p.slice(2, -2)}</strong>;
+    }
+    if (p.startsWith('*') && p.endsWith('*')) {
+      return <em key={i} style={{ fontStyle: 'italic', color: 'rgba(255,255,255,0.82)' }}>{p.slice(1, -1)}</em>;
+    }
+    if (p.startsWith('`') && p.endsWith('`')) {
+      return <code key={i} style={{ background: 'rgba(212,175,55,0.12)', padding: '1px 6px', borderRadius: 4, fontSize: '0.92em', color: '#D4AF37' }}>{p.slice(1, -1)}</code>;
+    }
+    return <span key={i}>{p}</span>;
+  });
+};
+
 const FormatAgastya: React.FC<{ text: string }> = ({ text }) => {
+  // Body color/size matched to Quantum Apothecary
+  const body = 'rgba(255,255,255,0.92)';
+  const gold = '#D4AF37';
+  const headingGlow = '0 0 12px rgba(212,175,55,0.55), 0 0 26px rgba(212,175,55,0.35)';
+  const headingGlowSoft = '0 0 10px rgba(212,175,55,0.45)';
+
   const paras = text.split(/\n\n+/).filter(p => p.trim());
   return (
-    <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}>
+    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       {paras.map((para, pi) => {
-        const l = para.trim().replace(/\*\*/g, '');
+        const l = para.trim();
         if (!l) return null;
 
-        // Scalar transmission block
-        if (l.startsWith('Scalar Transmission:') || l.startsWith('Scalar Wave')) {
-          const txt = l.replace(/^Scalar (Wave )?Transmission:?\s*/i, '').trim();
+        // Scalar transmission block — keep the cyan card
+        if (/^scalar (wave )?transmission:?/i.test(l)) {
+          const txt = l.replace(/^scalar (wave )?transmission:?\s*/i, '').trim();
           return (
             <div key={pi} style={{
               marginTop: 16, padding: '12px 16px',
@@ -52,19 +75,9 @@ const FormatAgastya: React.FC<{ text: string }> = ({ text }) => {
               border: '1px solid rgba(34,211,238,0.22)',
               borderRadius: 12, position: 'relative', overflow: 'hidden',
             }}>
-              <div style={{
-                position: 'absolute', top: 0, left: 0, right: 0, height: 1,
-                background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.45), transparent)',
-              }}/>
-              <div style={{
-                fontSize: 9, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase',
-                color: 'rgba(34,211,238,0.55)', marginBottom: 5,
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
-              }}>≈ Scalar Transmission</div>
-              <div style={{
-                fontSize: 15, color: 'rgba(34,211,238,0.88)', lineHeight: 1.7,
-                fontFamily: "'Plus Jakarta Sans', sans-serif", fontStyle: 'normal',
-              }}>{txt}</div>
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.45), transparent)' }}/>
+              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.32em', textTransform: 'uppercase', color: 'rgba(34,211,238,0.7)', marginBottom: 6 }}>≈ Scalar Transmission</div>
+              <div style={{ fontSize: 15, color: 'rgba(186,240,255,0.95)', lineHeight: 1.75 }}>{renderInline(txt.replace(/\*\*/g, ''))}</div>
             </div>
           );
         }
@@ -87,7 +100,7 @@ const FormatAgastya: React.FC<{ text: string }> = ({ text }) => {
                     fontFamily: "'Cormorant Garamond', Georgia, serif",
                     fontSize: isDevan ? 24 : 16,
                     fontStyle: isDevan ? 'normal' : 'italic',
-                    color: isDevan ? '#D4AF37' : 'rgba(212,175,55,0.68)',
+                    color: isDevan ? gold : 'rgba(212,175,55,0.78)',
                     lineHeight: 1.65,
                     marginBottom: i < l.split('\n').length - 1 ? 5 : 0,
                   }}>{t2}</div>
@@ -97,32 +110,46 @@ const FormatAgastya: React.FC<{ text: string }> = ({ text }) => {
           );
         }
 
-        // Seal — last paragraph, short, single line
-        const isLast = pi === paras.filter(p => p.trim()).length - 1;
-        if (isLast && l.length < 220 && !l.includes('\n')) {
-          return (
-            <div key={pi} style={{
-              marginTop: 18, paddingTop: 14,
-              borderTop: '1px solid rgba(212,175,55,0.12)',
-              fontFamily: "'Cormorant Garamond', Georgia, serif",
-              fontSize: 17, fontStyle: 'italic',
-              color: 'rgba(212,175,55,0.55)', lineHeight: 1.7,
-            }}>{l.replace(/\*/g, '')}</div>
-          );
-        }
-
-        // Regular paragraph
+        // Render each line with markdown awareness
         return (
-          <div key={pi} style={{
-            marginBottom: 13,
-            fontFamily: "'Cormorant Garamond', Georgia, serif",
-            fontSize: 17.5, lineHeight: 2.05,
-            color: 'rgba(255,255,255,0.72)',
-          }}>
-            {l.split('\n').map((line, i) => {
-              const t2 = line.trim().replace(/\*\*/g, '').replace(/\*([^*]+)\*/g, '$1');
-              if (!t2) return null;
-              return <span key={i}>{i > 0 && <br />}{t2}</span>;
+          <div key={pi} style={{ marginBottom: 10 }}>
+            {l.split('\n').map((rawLine, li) => {
+              const line = rawLine.trim();
+              if (!line) return <div key={li} style={{ height: 4 }} />;
+
+              // Headings
+              if (line.startsWith('### ')) return (
+                <h3 key={li} style={{ color: gold, fontWeight: 800, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 12, marginBottom: 6, textShadow: headingGlowSoft }}>
+                  {renderInline(line.slice(4))}
+                </h3>
+              );
+              if (line.startsWith('## ')) return (
+                <h2 key={li} style={{ color: gold, fontWeight: 900, fontSize: 15, letterSpacing: '-0.01em', marginTop: 14, marginBottom: 6, textShadow: headingGlow }}>
+                  {renderInline(line.slice(3))}
+                </h2>
+              );
+              if (line.startsWith('# ')) return (
+                <h1 key={li} style={{ color: gold, fontWeight: 900, fontSize: 17, letterSpacing: '-0.01em', marginTop: 14, marginBottom: 6, textShadow: headingGlow }}>
+                  {renderInline(line.slice(2))}
+                </h1>
+              );
+              // Bullets
+              if (line.startsWith('- ') || line.startsWith('* ') || line.startsWith('· ')) return (
+                <li key={li} style={{ marginLeft: 18, listStyleType: 'disc', fontSize: 16, lineHeight: 1.8, color: body, marginBottom: 4 }}>
+                  {renderInline(line.slice(2))}
+                </li>
+              );
+              if (/^\d+\.\s/.test(line)) return (
+                <li key={li} style={{ marginLeft: 18, listStyleType: 'decimal', fontSize: 16, lineHeight: 1.8, color: body, marginBottom: 4 }}>
+                  {renderInline(line.replace(/^\d+\.\s/, ''))}
+                </li>
+              );
+              // Body paragraph
+              return (
+                <p key={li} style={{ fontSize: 16, lineHeight: 1.8, color: body, marginBottom: 6 }}>
+                  {renderInline(line)}
+                </p>
+              );
             })}
           </div>
         );
