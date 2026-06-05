@@ -1,20 +1,19 @@
 === SUPABASE TABLE VERIFICATION ===
-NO KEY SET
-  WARN: clawbot_members HTTP 401 {"message":"No API key found in request","hint":"No `apikey` request header or u
-  WARN: clawbot_fee_ledger HTTP 401 {"message":"No API key found in request","hint":"No `apikey` request header or u
-  WARN: clawbot_platform_config HTTP 401 {"message":"No API key found in request","hint":"No `apikey` request header or u
-  WARN: clawbot_affiliate_rates HTTP 401 {"message":"No API key found in request","hint":"No `apikey` request header or u
-  WARN: polymarket_trades HTTP 401 {"message":"No API key found in request","hint":"No `apikey` request header or u
-  WARN: affiliate_profiles HTTP 401 {"message":"No API key found in request","hint":"No `apikey` request header or u
-  WARN: affiliate_commissions HTTP 401 {"message":"No API key found in request","hint":"No `apikey` request header or u
+  STATUS: clawbot_members HTTP 404 {"code":"PGRST205","details":null,"hint":"Perhaps you meant 
+  STATUS: clawbot_fee_ledger HTTP 404 {"code":"PGRST205","details":null,"hint":"Perhaps you meant 
+  STATUS: clawbot_platform_config HTTP 404 {"code":"PGRST205","details":null,"hint":"Perhaps you meant 
+  STATUS: clawbot_affiliate_rates HTTP 404 {"code":"PGRST205","details":null,"hint":"Perhaps you meant 
+  PASS: polymarket_trades
+  PASS: affiliate_profiles
+  PASS: affiliate_commissions
 
-=== COLUMN CHECKS ===
-  WARN: profiles.referred_by HTTP 401 {"message":"No API key found in request","hint":"No `apikey` request header or u
-  WARN: affiliate_commissions.source HTTP 401 {"message":"No API key found in request","hint":"No `apikey` request header or u
-  WARN: affiliate_commissions.level HTTP 401 {"message":"No API key found in request","hint":"No `apikey` request header or u
+=== COLUMNS ===
+  PASS: profiles.referred_by
+  FAIL: affiliate_commissions.source MISSING
+  FAIL: affiliate_commissions.level MISSING
 
-=== PLATFORM CONFIG ===
-  Error: HTTP Error 401: Unauthorized
+=== RATES ===
+  (404, '{"code":"PGRST205","details":null,"hint":"Perhaps you meant the table \'public.affiliate_codes\'","message":"Could not find the table \'public.clawbot_af')
 
-=== AFFILIATE RATES ===
-  Error: HTTP Error 401: Unauthorized
+=== CONFIG ===
+  (404, '{"code":"PGRST205","details":null,"hint":"Perhaps you meant the table \'public.bot_guard_config\'","message":"Could not find the table \'public.clawbot_p')
