@@ -5353,7 +5353,17 @@ Never infer what was not stated. If a category is not mentioned — leave it out
 
 EXCHANGE:
 ${newExchange}`
-      : `Update this Seeker Portrait with NEW confirmed facts from this session only. Do not repeat existing information. Do not contradict previous confirmed facts unless the Seeker explicitly corrected them. Only add what is clearly about the Seeker themselves. Keep 300-500 words. Start "LIVING PORTRAIT:".
+      : `Update this Seeker Portrait with NEW confirmed facts from this session only.
+
+STATED FACTS LOCK — ABSOLUTE LAW:
+— Any fact the Seeker has directly stated in any prior session is PERMANENTLY LOCKED.
+— NEVER remove, soften, or rewrite a locked fact.
+— NEVER say a Seeker said something they did not say.
+— Only UPDATE a fact if the Seeker has explicitly corrected it in the NEW EXCHANGE.
+— If nothing new is confirmed about a category, keep the existing line VERBATIM.
+— When in doubt: preserve. Never erase.
+
+Only add what is clearly new and confirmed about the Seeker themselves. Keep 300-500 words. Start "LIVING PORTRAIT:".
 
 When updating, specifically look for NEW information in these categories:
 — Has their Dosha been confirmed or refined?
@@ -5665,7 +5675,7 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
     }
     // ── END THIRD-PARTY DETECTION ───────────────────────
 
-    const recent = rawMessages.slice(-8);
+    const recent = rawMessages.slice(-20); // SQI-FIX: extended context window
     const aiMessages = recent.map((m: { role: string; content: string }, i: number) => {
       const isLastUser = i === recent.length - 1 && m.role === "user";
       const content: string | Array<{ type: string; text?: string; image_url?: { url: string } }> = isLastUser && userImage?.base64 && userImage?.mimeType
@@ -5746,7 +5756,7 @@ If hand visible → return ONLY this exact JSON (no markdown, no text outside JS
         if (flushed || !assistantText.trim() || !userId) return;
         flushed = true;
         try {
-          const lastMsgs = rawMessages.slice(-2);
+          const lastMsgs = rawMessages.slice(-6); // SQI-FIX: richer portrait context
           const exchange = lastMsgs.map((m: { role: string; content: string }) => {
             const speaker = m.role === "user" ? "Seeker" : "SQI";
             return speaker + ": " + m.content.slice(0, 200);
