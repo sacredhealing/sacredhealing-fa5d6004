@@ -1,4 +1,4 @@
-name: Railway Simple Test
+name: Full Railway Deploy
 
 on:
   push:
@@ -6,31 +6,174 @@ on:
       - 'version.txt'
 
 jobs:
-  test:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_ADMIN_PAT }}
-      - name: Test Railway token
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Deploy CLAWBOT to Railway
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          LOG="_rw_test.txt"
-          echo "=== Token Test $(date -u) ===" > $LOG
-          echo "Token length: ${#RAILWAY_TOKEN}" >> $LOG
-          echo "Token prefix: ${RAILWAY_TOKEN:0:8}..." >> $LOG
-          
-          # Test API
-          RESP=$(curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+          LOG="_railway_deploy_final.txt"
+          echo "=== Railway Full Deploy $(date -u) ===" > $LOG
+
+          # Install Railway CLI
+          npm install -g @railway/cli 2>&1 | tail -1 >> $LOG
+
+          # Test auth
+          echo "--- Auth check ---" >> $LOG
+          railway whoami 2>&1 >> $LOG
+
+          # List existing projects
+          echo "" >> $LOG
+          echo "--- Existing projects ---" >> $LOG
+          railway list 2>&1 >> $LOG
+
+          # Check if project a8b01992 exists
+          echo "" >> $LOG
+          echo "--- API: all projects ---" >> $LOG
+          curl -s -X POST "https://backboard.railway.app/graphql/v2" \
             -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
             -H "Content-Type: application/json" \
-            -d '{"query":"{ me { id name email } }"}')
-          echo "API response: $RESP" >> $LOG
+            -d '{"query":"{ me { id name email projects { edges { node { id name services { edges { node { id name } } } environments { edges { node { id name } } } } } } } }"}' >> $LOG
+
+          # Parse project info
+          echo "" >> $LOG
+          echo "--- Parsed project info ---" >> $LOG
+          curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"query":"{ me { id name email projects { edges { node { id name services { edges { node { id name } } } environments { edges { node { id name } } } } } } } }"}' \
+            | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+if 'errors' in d:
+    print('ERROR:', d['errors'][0]['message'])
+    sys.exit(1)
+me=d['data']['me']
+print('LOGGED IN AS:', me['name'], me['email'])
+projects=me.get('projects',{}).get('edges',[])
+print(f'PROJECTS: {len(projects)}')
+for p in projects:
+    n=p['node']
+    svcs=n.get('services',{}).get('edges',[])
+    envs=n.get('environments',{}).get('edges',[])
+    print(f'PROJECT: {n[\"name\"]} ID:{n[\"id\"]}')
+    for s in svcs:
+        print(f'  SERVICE: {s[\"node\"][\"name\"]} ID:{s[\"node\"][\"id\"]}')
+    for e in envs:
+        print(f'  ENV: {e[\"node\"][\"name\"]} ID:{e[\"node\"][\"id\"]}')
+" >> $LOG 2>&1
+
+          # Now create the project if empty, or use existing
+          PROJECT_INFO=$(curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"query":"{ me { projects { edges { node { id name } } } } }"}')
           
+          PROJECT_COUNT=$(echo "$PROJECT_INFO" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('data',{}).get('me',{}).get('projects',{}).get('edges',[])))" 2>/dev/null || echo "0")
+          echo "" >> $LOG
+          echo "Project count: $PROJECT_COUNT" >> $LOG
+
+          if [ "$PROJECT_COUNT" = "0" ]; then
+            echo "No projects found - creating new one..." >> $LOG
+            CREATE=$(curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+              -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d '{"query":"mutation { projectCreate(input: { name: \"CLAWBOT-Polymarket\" }) { id name } }"}')
+            echo "Create result: $CREATE" >> $LOG
+            PROJECT_ID=$(echo "$CREATE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('data',{}).get('projectCreate',{}).get('id',''))" 2>/dev/null)
+          else
+            PROJECT_ID=$(echo "$PROJECT_INFO" | python3 -c "import sys,json; d=json.load(sys.stdin); edges=d.get('data',{}).get('me',{}).get('projects',{}).get('edges',[]); print(edges[0]['node']['id'] if edges else '')" 2>/dev/null)
+          fi
+          echo "Using Project ID: $PROJECT_ID" >> $LOG
+
+          # Get environment ID
+          ENV_ID=$(curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\":\"{ project(id: \\\"${PROJECT_ID}\\\") { environments { edges { node { id name } } } } }\"}" \
+            | python3 -c "import sys,json; d=json.load(sys.stdin); envs=d.get('data',{}).get('project',{}).get('environments',{}).get('edges',[]); print(envs[0]['node']['id'] if envs else '')" 2>/dev/null)
+          echo "Environment ID: $ENV_ID" >> $LOG
+
+          # Check if service exists, create if not
+          SVC_COUNT=$(curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\":\"{ project(id: \\\"${PROJECT_ID}\\\") { services { edges { node { id name } } } } }\"}" \
+            | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('data',{}).get('project',{}).get('services',{}).get('edges',[])))" 2>/dev/null || echo "0")
+          echo "Service count: $SVC_COUNT" >> $LOG
+
+          if [ "$SVC_COUNT" = "0" ]; then
+            echo "Creating service from GitHub repo..." >> $LOG
+            SVC=$(curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+              -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d "{\"query\":\"mutation { serviceCreate(input: { projectId: \\\"${PROJECT_ID}\\\", name: \\\"clawbot-worker\\\", source: { repo: \\\"sacredhealing/sacredhealing-fa5d6004\\\" } }) { id name } }\"}")
+            echo "Service created: $SVC" >> $LOG
+            SVC_ID=$(echo "$SVC" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('data',{}).get('serviceCreate',{}).get('id',''))" 2>/dev/null)
+          else
+            SVC_ID=$(curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+              -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d "{\"query\":\"{ project(id: \\\"${PROJECT_ID}\\\") { services { edges { node { id name } } } } }\"}" \
+              | python3 -c "import sys,json; d=json.load(sys.stdin); svcs=d.get('data',{}).get('project',{}).get('services',{}).get('edges',[]); print(svcs[0]['node']['id'] if svcs else '')" 2>/dev/null)
+          fi
+          echo "Service ID: $SVC_ID" >> $LOG
+
+          # Set environment variables
+          echo "" >> $LOG
+          echo "--- Setting env vars ---" >> $LOG
+          
+          set_var() {
+            local KEY=$1
+            local VAL=$2
+            RES=$(curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+              -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d "{\"query\":\"mutation { variableUpsert(input: { projectId: \\\"${PROJECT_ID}\\\", environmentId: \\\"${ENV_ID}\\\", serviceId: \\\"${SVC_ID}\\\", name: \\\"${KEY}\\\", value: \\\"${VAL}\\\" }) }\"}")
+            echo "Set $KEY: $(echo $RES | python3 -c 'import sys,json; d=json.load(sys.stdin); print("ok" if d.get("data",{}).get("variableUpsert") else d.get("errors",["err"])[0]["message"] if "errors" in d else "?")' 2>/dev/null)" >> $LOG
+          }
+
+          set_var "SUPABASE_URL" "https://fjdzhrdpioxdeyyfogep.supabase.co"
+          set_var "SUPABASE_SERVICE_KEY" "${SK}"
+          set_var "POLYGON_RPC_URL" "https://polygon-mainnet.g.alchemy.com/v2/az4D7Awbl2E2rNpe6kc3M"
+          set_var "PAPER_MODE" "true"
+          set_var "RISK_PCT" "0.02"
+          set_var "PORT" "8080"
+          set_var "ROOT_DIRECTORY" "polymarket-worker"
+
+          # Configure service to use polymarket-worker subfolder
+          echo "" >> $LOG
+          echo "--- Configuring root directory ---" >> $LOG
+          CONFIG=$(curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\":\"mutation { serviceInstanceUpdate(serviceId: \\\"${SVC_ID}\\\", environmentId: \\\"${ENV_ID}\\\", input: { rootDirectory: \\\"polymarket-worker\\\" }) }\"}")
+          echo "Root dir config: $CONFIG" >> $LOG
+
+          # Trigger deployment
+          echo "" >> $LOG
+          echo "--- Triggering deployment ---" >> $LOG
+          DEPLOY=$(curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\":\"mutation { serviceInstanceDeploy(serviceId: \\\"${SVC_ID}\\\", environmentId: \\\"${ENV_ID}\\\") }\"}")
+          echo "Deploy triggered: $DEPLOY" >> $LOG
+
+          echo "" >> $LOG
+          echo "=== DONE ===" >> $LOG
+          echo "Dashboard: https://railway.app/project/${PROJECT_ID}" >> $LOG
+
           cat $LOG
           git config user.email "bot@sqi.app"; git config user.name "SQI"
           git add $LOG
-          git commit -m "Railway token test $(date -u +%H%M%S)" || true
+          git commit -m "Railway full deploy $(date -u +%H%M%S)" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
