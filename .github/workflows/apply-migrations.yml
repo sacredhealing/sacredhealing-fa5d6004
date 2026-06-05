@@ -1,4 +1,4 @@
-name: Apply CLAWBOT Migrations
+name: Apply CLAWBOT Migrations Direct
 
 on:
   workflow_dispatch:
@@ -11,15 +11,32 @@ jobs:
         with:
           token: ${{ secrets.GH_ADMIN_PAT }}
 
-      - name: Apply migrations
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Apply via Supabase CLI
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          python3 scripts/apply_migrations.py
+          LOG="_migration_result.txt"
+          echo "=== CLAWBOT Migration Apply $(date -u) ===" > $LOG
+
+          npm install -g supabase@latest 2>&1 | tail -2 | tee -a $LOG
+
+          git clone "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" repo
+          cd repo
+
+          echo "Pushing schema via CLI..." | tee -a "../$LOG"
+          supabase db push             --project-ref fjdzhrdpioxdeyyfogep             --include-all 2>&1 | tee -a "../$LOG" || true
+
+          echo "" | tee -a "../$LOG"
+          echo "Done." | tee -a "../$LOG"
+          cd ..
+
           git config user.email "bot@sqi.app"
           git config user.name "SQI-Bot"
-          git add _migration_result.txt
-          git commit -m "Migration apply result" || true
+          git add $LOG
+          git commit -m "Migration result $(date -u +%H%M)" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
