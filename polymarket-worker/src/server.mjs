@@ -717,6 +717,80 @@ async function seedWhaleRegistry() {
   }
 }
 
+
+// ─── Member registry + Profit Share System ───────────────────────────────────
+let memberRegistry = [];
+let platformWallet = '';
+
+async function loadMembers() {
+  try {
+    const members = await dbGet(
+      'clawbot_members',
+      'is_active=eq.true&select=user_id,poly_wallet_address,tier,platform_fee_pct,paper_mode,balance_usdc'
+    );
+    const config = await dbGet('clawbot_platform_config', 'select=platform_wallet');
+    memberRegistry = (members || []).map(m => ({
+      userId:   m.user_id,
+      wallet:   m.poly_wallet_address,
+      tier:     m.tier,
+      feePct:   parseFloat(m.platform_fee_pct || 50),
+      paperMode: m.paper_mode !== false,
+      balance:  parseFloat(m.balance_usdc || 0),
+    }));
+    platformWallet = config?.[0]?.platform_wallet || '';
+    log('MEMBERS', `${memberRegistry.length} active members | Platform wallet: ${platformWallet ? platformWallet.slice(0,10)+'...' : 'NOT SET'}`);
+  } catch (e) { logErr('MEMBERS', e?.message); }
+}
+
+setInterval(loadMembers, 5 * 60 * 1000);
+
+async function copyTradeToMembers(signal, strategy) {
+  if (!memberRegistry.length) return;
+  for (const member of memberRegistry) {
+    try {
+      const size = Math.max(0.50, Math.min(50, member.balance * 0.02));
+      if (size < 0.50) continue;
+      const txHash = `paper-member-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
+      await dbInsert('polymarket_trades', {
+        user_id:         member.userId,
+        market_id:       signal.marketId || 'unknown',
+        market_question: signal.reason || '',
+        outcome:         signal.outcome,
+        token_id:        signal.tokenId || txHash,
+        direction:       signal.direction,
+        shares:          size / safeFloat(signal.currentPrice, 0.5),
+        entry_price:     safeFloat(signal.currentPrice, 0.5),
+        amount_usdc:     size,
+        tx_hash:         txHash,
+        strategy,
+        is_paper:        member.paperMode,
+        status:          'open',
+      });
+      log('MEMBER', `Copied → ${member.wallet.slice(0,8)} $${size.toFixed(2)} tier:${member.tier} fee:${member.feePct}%`);
+    } catch (e) { logErr('MEMBER_COPY', e?.message); }
+  }
+}
+
+async function processMemberFee(tradeId, userId, grossPnl) {
+  try {
+    const member = memberRegistry.find(m => m.userId === userId);
+    if (!member || grossPnl <= 0) return;
+    const feeUsdc = parseFloat((grossPnl * member.feePct / 100).toFixed(4));
+    const netPnl  = parseFloat((grossPnl - feeUsdc).toFixed(4));
+    await dbInsert('clawbot_fee_ledger', {
+      user_id:         userId,
+      trade_id:        tradeId,
+      tier:            member.tier,
+      gross_pnl_usdc:  grossPnl,
+      fee_pct:         member.feePct,
+      fee_usdc:        feeUsdc,
+      net_pnl_usdc:    netPnl,
+      platform_wallet: platformWallet || 'not_set',
+    });
+    log('FEE', `${member.wallet.slice(0,8)} gross $${grossPnl.toFixed(2)} → fee $${feeUsdc.toFixed(2)} → net $${netPnl.toFixed(2)}`);
+  } catch (e) { logErr('FEE', e?.message); }
+}
+
 async function main() {
   console.log('══════════════════════════════════════════════════════');
   console.log('  SQI-2050 ⚡ Shiesty Signal Oracle v3 — Railway');
