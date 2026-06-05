@@ -506,6 +506,31 @@ export default function SiddhaPortal() {
         <button type="button" style={{ ...CTA_BTN, color: cyan(0.9) }}>Enter Codex →</button>
       </div>
 
+      {/* BRAHMA MUHURTA — live */}
+      <div
+        onClick={() => navigate('/brahma-muhurta')}
+        style={{
+          ...CARD_BASE,
+          margin: '0 16px 12px',
+          background: 'linear-gradient(135deg, rgba(212,175,55,0.09), rgba(255,200,50,0.03))',
+          border: ,
+          animation: 'sqFadeUp 0.45s 0.09s ease both',
+          cursor: 'pointer',
+        }}
+      >
+        <span style={BADGE(gold(0.14), gold(0.3), gold(0.9))}>
+          <span style={LIVE_DOT} />LIVE
+        </span>
+        <div style={CARD_TITLE}>Brahma Muhurta — The Creator's Hour</div>
+        <p style={CARD_DESC}>The most complete Siddha transmission on the sacred pre-dawn window — cosmology, neuroscience, Nadi science, secret mantras, Kala Vortex mechanics and direct initiations from Agastyar, Thirumoolar, Bogar & Mahavatar Babaji. 12 modules across all 4 tiers.</p>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const, marginBottom: 12 }}>
+          {[{l:'Free · I–III', c: white(0.5)},{l:'Prana · IV–VI', c:'#4ADE80'},{l:'Siddha · VII–IX', c: cyan(0.9)},{l:'Akasha · X–XII', c: gold(0.95)}].map(t => (
+            <span key={t.l} style={{ ...LABEL_STYLE, fontSize: 8, color: t.c, letterSpacing:'0.2em', border: , borderRadius: 20, padding: '2px 8px' }}>{t.l}</span>
+          ))}
+        </div>
+        <button type="button" style={CTA_BTN}>Enter Transmission →</button>
+      </div>
+
       {/* MEDITATION COURSE — live */}
       <div
         onClick={() => navigate('/meditation-course')}
