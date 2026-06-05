@@ -73,17 +73,27 @@ const mintSymbolCache = new Map<string, string>(Object.entries(KNOWN_MINTS));
 // The other 4 addresses from the previous version were REMOVED — unverifiable.
 // Add more: fomo.fund → Leaderboard → sort 30d PnL → copy wallet address.
 const WHALE_PRESETS: { label: string; address: string; note: string }[] = [
-  {
-    label: 'Cupsey',
-    address: 'GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE',
-    note: 'High-frequency micro-cap sniper',
-  },
-  {
-    label: 'Orange',
-    address: '96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5',
-    note: 'Pump.fun launch hunter',
-  },
-  // ↓ Paste verified addresses from fomo.fund leaderboard here
+  { label: 'Cupsey',       address: 'GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE', note: 'Micro-cap sniper' },
+  { label: 'Orange',       address: '96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5', note: 'Pump.fun launch hunter' },
+  { label: 'Shreem Brzee', address: 'HL3FZ8XWnLnn1HuktmgpNRyFRjuAxWbXNQVj5fPPzZwt', note: 'High win-rate scalper' },
+  { label: 'Heyitsyolo',   address: 'Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ', note: 'Known FOMO trader' },
+  { label: 'Lenion',       address: 'DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm', note: 'Meme coin specialist' },
+  { label: 'Boredboar',    address: 'gasAx5Y917MYdmdnwiomwYDhmDKNGDJnN1MmEbxVdVw',  note: 'Aggressive entry style' },
+  { label: 'Hades',        address: 'HdxkiXqeN6qpK2YbG51W23QSWj3Yygc1eEk2zwmKJExp', note: 'High-frequency trader' },
+  { label: 'Kubera 72',    address: 'AAvdewt71kkde2segr6gYnNemhNLfokyZpdzwwi4yDfm', note: 'Top leaderboard wallet' },
+  { label: 'Brzee God',    address: 'JD38n7ynKYcgPpF7k1BhXEeREu1KqptU93fVGy3S624k', note: 'Sovereign copy target' },
+  { label: 'GBack',        address: '9VPozuXeRi8FACAePmg8ckdSZkbeZfTJc6SqUDcKsUKm', note: 'Consistent performer' },
+  { label: 'Tuna',         address: 'GjK3S2ZgxTVFEkxg43JE8eC1tbztWCseBYyZ8o8sg9f', note: 'Active meme trader' },
+  { label: 'Fireball',     address: 'AgmLJBMDCqWynYnQiPCuj9ewsNNsBJXyzoUhD9LJzN51', note: 'Fast entry sniper' },
+  { label: 'Hachjdn',      address: 'EqgZsS7GhtW9swJt1C4iYy5GVZgvsMVQK6nvBdPhRBmS', note: 'Leaderboard regular' },
+  { label: 'Crypto Circle',address: '5DzUSNro5kfNwB2dxkkTTYrPDXAi6vRnjf4mAN2an7Gc', note: 'Community whale' },
+  { label: 'Crocodile',    address: '2cBedD94RXYSEhEfQJUyLaNaHB4PVoL9z7LK6Mu11sJv', note: 'Patient hunter' },
+  { label: 'Snow Spirit',  address: '4ev7HVsESzFxKqGzQxJ5mzSM6NstGCTQXKXT8yHiaRP3', note: 'Consistent PnL' },
+  { label: 'Cented',       address: 'CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o', note: 'Active swing trader' },
+  { label: 'The Grande',   address: 'Gygj9QQby4j2jryqyqBHvLP7ctv2SaANgh4sCb69BUpA', note: 'Large position trader' },
+  { label: 'Remusofmars',  address: 'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu', note: 'Meme coin hunter' },
+  { label: 'A Milly',      address: 'Fv9w9TQnqhzUszbDGRFPPkXwu5iJWG9VytmMJTCTnjxW', note: 'High-value trader' },
+  { label: 'J2ANNaq',      address: 'J2ANNaq4uUk3iUGoNijKCwXTReGLyg2yQpGcAZjzyBZG', note: 'Tracked wallet' },
 ];
 
 // ─────────────────────────────────────────────────────────
