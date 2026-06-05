@@ -11,85 +11,92 @@ jobs:
         with:
           token: ${{ secrets.GH_ADMIN_PAT }}
 
-      - name: Fix Railway SSL for clawbot.siddhaquantumnexus.com
+      - name: Fix Railway SSL
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          LOG="_railway_ssl_fix.txt"
-          echo "=== Railway SSL Fix $(date -u) ===" > $LOG
+          python3 - <<'PYSC'
+import urllib.request, json, time, subprocess, os
 
-          SERVICE_ID="b6311e53-fe5a-4c4a-b724-e0fef686236f"
-          DOMAIN="clawbot.siddhaquantumnexus.com"
+token = os.environ['RAILWAY_TOKEN']
+gh_pat = os.environ['GH_PAT']
+SERVICE_ID = "b6311e53-fe5a-4c4a-b724-e0fef686236f"
+DOMAIN = "clawbot.siddhaquantumnexus.com"
+LOG = []
 
-          echo "" >> $LOG
-          echo "--- Step 1: List current domains ---" >> $LOG
-          DOMAINS_RESP=$(curl -s -X POST "https://backboard.railway.app/graphql/v2" \
-            -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d "{\"query\":\"{ service(id: \\\"${SERVICE_ID}\\\") { id name domains { edges { node { id domain status createdAt } } } } }\"}")
-          echo "$DOMAINS_RESP" >> $LOG
+def gql(query):
+    data = json.dumps({"query": query}).encode()
+    req = urllib.request.Request(
+        "https://backboard.railway.app/graphql/v2",
+        data=data,
+        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    )
+    resp = urllib.request.urlopen(req, timeout=15)
+    return json.loads(resp.read())
 
-          TARGET_ID=$(echo "$DOMAINS_RESP" | python3 -c "
-import sys, json
-try:
-  d = json.load(sys.stdin)
-  edges = d.get('data',{}).get('service',{}).get('domains',{}).get('edges',[])
-  for e in edges:
-    node = e['node']
-    print('Found domain: ' + node['domain'] + ' status: ' + str(node.get('status','?')))
-    if 'clawbot' in node['domain']:
-      print('TARGET_ID=' + node['id'])
-except Exception as ex:
-  print('PARSE_ERROR: ' + str(ex))
-" 2>&1)
-          echo "$TARGET_ID" >> $LOG
-          REAL_TARGET=$(echo "$TARGET_ID" | grep "^TARGET_ID=" | cut -d= -f2 | tr -d '[:space:]')
-          echo "Extracted ID: [$REAL_TARGET]" >> $LOG
+def log(msg):
+    print(msg)
+    LOG.append(msg)
 
-          if [ -n "$REAL_TARGET" ]; then
-            echo "" >> $LOG
-            echo "--- Step 2: Delete domain $REAL_TARGET ---" >> $LOG
-            DELETE_RESP=$(curl -s -X POST "https://backboard.railway.app/graphql/v2" \
-              -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
-              -H "Content-Type: application/json" \
-              -d "{\"query\":\"mutation { customDomainDelete(id: \\\"${REAL_TARGET}\\\") }\"}")
-            echo "$DELETE_RESP" >> $LOG
-            sleep 8
-          else
-            echo "No existing domain to delete - adding fresh" >> $LOG
-          fi
+log("=== CLAWBOT SSL Fix ===")
 
-          echo "" >> $LOG
-          echo "--- Step 3: Re-add domain ---" >> $LOG
-          ADD_RESP=$(curl -s -X POST "https://backboard.railway.app/graphql/v2" \
-            -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d "{\"query\":\"mutation { customDomainCreate(input: { serviceId: \\\"${SERVICE_ID}\\\", domain: \\\"${DOMAIN}\\\" }) { id domain status } }\"}")
-          echo "$ADD_RESP" >> $LOG
+# Step 1: List domains
+log("Step 1: Listing domains...")
+r = gql(f'{{ service(id: "{SERVICE_ID}") {{ id name domains {{ edges {{ node {{ id domain status }} }} }} }} }}')
+log(json.dumps(r, indent=2))
 
-          echo "" >> $LOG
-          echo "--- Step 4: Wait 45s for SSL provisioning ---" >> $LOG
-          sleep 45
+edges = r.get("data",{}).get("service",{}).get("domains",{}).get("edges",[])
+target_id = None
+for e in edges:
+    node = e["node"]
+    log(f"  Domain: {node['domain']} | Status: {node.get('status','?')} | ID: {node['id']}")
+    if "clawbot" in node["domain"]:
+        target_id = node["id"]
 
-          echo "" >> $LOG
-          echo "--- Step 5: Final domain list ---" >> $LOG
-          curl -s -X POST "https://backboard.railway.app/graphql/v2" \
-            -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d "{\"query\":\"{ service(id: \\\"${SERVICE_ID}\\\") { domains { edges { node { id domain status } } } } }\"}" >> $LOG
+# Step 2: Delete if exists
+if target_id:
+    log(f"Step 2: Deleting domain {target_id}...")
+    r2 = gql(f'mutation {{ customDomainDelete(id: "{target_id}") }}')
+    log(json.dumps(r2))
+    time.sleep(8)
+else:
+    log("Step 2: No existing domain - will add fresh")
 
-          echo "" >> $LOG
-          echo "--- Step 6: Direct Railway URL health test ---" >> $LOG
-          curl -s --max-time 15 "https://siddha-soma-apothecary-production.up.railway.app/health" >> $LOG 2>&1 || echo "Direct URL: FAIL" >> $LOG
+# Step 3: Add domain
+log("Step 3: Adding domain...")
+r3 = gql(f'mutation {{ customDomainCreate(input: {{ serviceId: "{SERVICE_ID}", domain: "{DOMAIN}" }}) {{ id domain status }} }}')
+log(json.dumps(r3))
 
-          echo "" >> $LOG
-          echo "--- Step 7: Custom domain health test ---" >> $LOG
-          curl -sk --max-time 20 "https://${DOMAIN}/health" >> $LOG 2>&1 || echo "Custom domain: SSL may need 5-10 more min" >> $LOG
+# Step 4: Wait
+log("Step 4: Waiting 30s for SSL...")
+time.sleep(30)
 
-          cat $LOG
+# Step 5: Final status
+log("Step 5: Final status check...")
+r4 = gql(f'{{ service(id: "{SERVICE_ID}") {{ domains {{ edges {{ node {{ id domain status }} }} }} }} }}')
+log(json.dumps(r4, indent=2))
+
+# Step 6: Health check
+log("Step 6: Health checks...")
+for url in [
+    "https://siddha-soma-apothecary-production.up.railway.app/health",
+    f"https://{DOMAIN}/health"
+]:
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "SQI-Bot"})
+        resp = urllib.request.urlopen(req, timeout=15)
+        log(f"  {url} -> {resp.status} {resp.read().decode()[:200]}")
+    except Exception as e:
+        log(f"  {url} -> ERROR: {e}")
+
+# Write output
+with open("_railway_ssl_fix.txt", "w") as f:
+    f.write("\n".join(LOG))
+PYSC
+
           git config user.email "bot@sqi.app"
           git config user.name "SQI-Bot"
-          git add $LOG
-          git commit -m "CLAWBOT SSL fix $(date -u +%H%M%S)" || true
+          git add _railway_ssl_fix.txt
+          git commit -m "CLAWBOT SSL fix result" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
