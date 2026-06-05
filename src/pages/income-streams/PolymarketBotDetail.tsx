@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bot, Activity, TrendingUp, DollarSign, Zap, Shield, Eye, RefreshCw, AlertCircle, CheckCircle, Clock, BarChart3, Users, Target } from 'lucide-react';
+import { ArrowLeft, Bot, Activity, TrendingUp, DollarSign, Zap, Shield, Eye, RefreshCw, AlertCircle, Clock, BarChart3, Users, Target } from 'lucide-react';
 
 const GOLD = '#D4AF37';
 const BG = '#050505';
-const RAILWAY = 'https://siddha-soma-apothecary-production.up.railway.app';
+const PROXY = 'https://fjdzhrdpioxdeyyfogep.supabase.co/functions/v1/clawbot-proxy';
 
 const GLASS = 'rounded-[40px] bg-white/[0.02] border border-white/[0.05] backdrop-blur-xl';
 const GLASS_SM = 'rounded-[20px] bg-white/[0.02] border border-white/[0.05] backdrop-blur-xl';
@@ -34,7 +34,6 @@ interface Trade {
   side?: string;
   size?: number;
   price?: number;
-  outcome?: string;
   pnl?: number;
   timestamp?: string;
   whale?: string;
@@ -86,10 +85,7 @@ function StatCard({ icon: Icon, label, value, sub, glow = false }: {
 function PulsingDot({ color = '#22c55e' }: { color?: string }) {
   return (
     <span className="relative flex h-2.5 w-2.5">
-      <span
-        className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60"
-        style={{ background: color }}
-      />
+      <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" style={{ background: color }} />
       <span className="relative inline-flex h-2.5 w-2.5 rounded-full" style={{ background: color }} />
     </span>
   );
@@ -109,39 +105,37 @@ export default function ClawbotDashboard() {
     try {
       setError(null);
       const [healthRes, tradesRes, whalesRes] = await Promise.allSettled([
-        fetch(`${RAILWAY}/health`),
-        fetch(`${RAILWAY}/trades?limit=20`),
-        fetch(`${RAILWAY}/whales`),
+        fetch(`${PROXY}?endpoint=health`),
+        fetch(`${PROXY}?endpoint=trades&limit=20`),
+        fetch(`${PROXY}?endpoint=whales`),
       ]);
 
       if (healthRes.status === 'fulfilled' && healthRes.value.ok) {
         const h = await healthRes.value.json();
-        setHealth(h);
+        if (h.error) { setError('Bot offline'); } else { setHealth(h); }
       } else {
         setError('Bot offline or unreachable');
       }
 
       if (tradesRes.status === 'fulfilled' && tradesRes.value.ok) {
         const t = await tradesRes.value.json();
-        setTrades(Array.isArray(t) ? t : t.trades || []);
+        if (!t.error) setTrades(Array.isArray(t) ? t : t.trades ?? []);
       }
 
       if (whalesRes.status === 'fulfilled' && whalesRes.value.ok) {
         const w = await whalesRes.value.json();
-        setWhales(Array.isArray(w) ? w : w.whales || []);
+        if (!w.error) setWhales(Array.isArray(w) ? w : w.whales ?? []);
       }
 
       setLastRefresh(new Date());
-    } catch (e) {
+    } catch {
       setError('Connection failed');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
+  useEffect(() => { fetchAll(); }, [fetchAll]);
 
   useEffect(() => {
     if (!autoRefresh) return;
@@ -149,7 +143,7 @@ export default function ClawbotDashboard() {
     return () => clearInterval(iv);
   }, [autoRefresh, fetchAll]);
 
-  const uptimeHrs = health ? (health.uptime / 3600).toFixed(1) : '0';
+  const uptimeHrs = health ? (health.uptime / 3600).toFixed(1) : '—';
   const lastScanAgo = health?.lastScan
     ? Math.floor((Date.now() - new Date(health.lastScan).getTime()) / 1000)
     : null;
@@ -159,37 +153,26 @@ export default function ClawbotDashboard() {
       className="min-h-screen w-full max-w-full overflow-x-hidden pb-32 text-white"
       style={{ background: BG, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
     >
-      {/* Ambient glow */}
       <div
         className="pointer-events-none fixed inset-0 z-0"
-        style={{
-          background:
-            'radial-gradient(ellipse 80% 45% at 50% 0%, rgba(212,175,55,0.07) 0%, transparent 60%)',
-        }}
+        style={{ background: 'radial-gradient(ellipse 80% 45% at 50% 0%, rgba(212,175,55,0.07) 0%, transparent 60%)' }}
       />
-
       <div className="relative z-10 px-4 pt-4 max-w-2xl mx-auto">
 
         {/* Header */}
         <div className="mb-6 flex items-start gap-3">
-          <button
-            onClick={() => navigate('/income-streams')}
-            className="shrink-0 rounded-2xl border border-white/[0.08] p-2.5 hover:bg-white/[0.04] transition-colors"
-          >
+          <button onClick={() => navigate('/income-streams')}
+            className="shrink-0 rounded-2xl border border-white/[0.08] p-2.5 hover:bg-white/[0.04] transition-colors">
             <ArrowLeft className="h-5 w-5" style={{ color: GOLD }} />
           </button>
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-1">
-              <div
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border"
-                style={{ borderColor: 'rgba(212,175,55,0.25)', background: 'rgba(212,175,55,0.08)' }}
-              >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border"
+                style={{ borderColor: 'rgba(212,175,55,0.25)', background: 'rgba(212,175,55,0.08)' }}>
                 <Bot className="h-5 w-5" style={{ color: GOLD }} />
               </div>
-              <h1
-                className="font-black tracking-tight text-xl sm:text-2xl"
-                style={{ color: GOLD, textShadow: '0 0 18px rgba(212,175,55,0.25)' }}
-              >
+              <h1 className="font-black tracking-tight text-xl sm:text-2xl"
+                style={{ color: GOLD, textShadow: '0 0 18px rgba(212,175,55,0.25)' }}>
                 CLAWBOT
               </h1>
               <Pill>Polymarket Oracle</Pill>
@@ -197,19 +180,15 @@ export default function ClawbotDashboard() {
             <p className="text-[12px] text-white/40">SQI-2050 Sovereign Signal Intelligence</p>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setAutoRefresh(v => !v)}
+            <button onClick={() => setAutoRefresh(v => !v)}
               className="rounded-2xl border border-white/[0.08] p-2.5 hover:bg-white/[0.04] transition-colors"
-              title={autoRefresh ? 'Pause auto-refresh' : 'Resume auto-refresh'}
-            >
+              title={autoRefresh ? 'Pause' : 'Resume'}>
               {autoRefresh
                 ? <Activity className="h-4 w-4 text-green-400" />
                 : <Clock className="h-4 w-4 text-white/30" />}
             </button>
-            <button
-              onClick={() => { setLoading(true); fetchAll(); }}
-              className="rounded-2xl border border-white/[0.08] p-2.5 hover:bg-white/[0.04] transition-colors"
-            >
+            <button onClick={() => { setLoading(true); fetchAll(); }}
+              className="rounded-2xl border border-white/[0.08] p-2.5 hover:bg-white/[0.04] transition-colors">
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} style={{ color: GOLD }} />
             </button>
           </div>
@@ -242,46 +221,25 @@ export default function ClawbotDashboard() {
               <Pill color={health?.mode === 'PAPER' ? '#94a3b8' : '#22c55e'}>
                 {health?.mode ?? '—'} MODE
               </Pill>
-              {health?.liveEnabled && <Pill color="#f59e0b">LIVE TRADING</Pill>}
+              {health?.liveEnabled && <Pill color="#f59e0b">LIVE</Pill>}
             </div>
           </div>
-          {lastScanAgo !== null && (
+          {health && lastScanAgo !== null && (
             <div className="mt-3 text-[11px] text-white/30">
-              Last scan {lastScanAgo < 60 ? `${lastScanAgo}s ago` : `${Math.floor(lastScanAgo/60)}m ago`}
+              Last scan {lastScanAgo < 60 ? `${lastScanAgo}s ago` : `${Math.floor(lastScanAgo / 60)}m ago`}
               {' · '}Auto-refresh {autoRefresh ? 'ON (15s)' : 'OFF'}
-              {' · '}Updated {lastRefresh.toLocaleTimeString()}
+              {' · '}{lastRefresh.toLocaleTimeString()}
             </div>
           )}
         </div>
 
-        {/* Stats Grid */}
+        {/* Stats */}
         {health && (
           <div className="grid grid-cols-2 gap-3 mb-4">
-            <StatCard
-              icon={DollarSign}
-              label="Balance"
-              value={`$${health.balance.toFixed(2)}`}
-              sub="Paper trading wallet"
-              glow
-            />
-            <StatCard
-              icon={BarChart3}
-              label="Scans"
-              value={health.scanCount}
-              sub="Markets analysed"
-            />
-            <StatCard
-              icon={TrendingUp}
-              label="Trades"
-              value={health.tradeCount}
-              sub={`${health.openPositions} open / ${health.maxPositions} max`}
-            />
-            <StatCard
-              icon={Zap}
-              label="Uptime"
-              value={`${uptimeHrs}h`}
-              sub="Continuous operation"
-            />
+            <StatCard icon={DollarSign} label="Balance" value={`$${health.balance.toFixed(2)}`} sub="Paper wallet" glow />
+            <StatCard icon={BarChart3} label="Scans" value={health.scanCount} sub="Markets analysed" />
+            <StatCard icon={TrendingUp} label="Trades" value={health.tradeCount} sub={`${health.openPositions} open / ${health.maxPositions} max`} />
+            <StatCard icon={Zap} label="Uptime" value={`${uptimeHrs}h`} sub="Continuous" />
           </div>
         )}
 
@@ -294,12 +252,12 @@ export default function ClawbotDashboard() {
             </div>
             <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
               {[
-                ['Risk per trade', health.riskPct],
+                ['Risk / trade', health.riskPct],
                 ['Trade size', `$${health.tradeSize}`],
                 ['Min whale WR', health.whaleFilter.minWR],
-                ['Min whale trades', String(health.whaleFilter.minTrades)],
+                ['Min trades', String(health.whaleFilter.minTrades)],
                 ['Max positions', String(health.maxPositions)],
-                ['Open positions', String(health.openPositions)],
+                ['Open now', String(health.openPositions)],
               ].map(([k, v]) => (
                 <div key={k} className="flex justify-between items-center border-b border-white/[0.04] pb-2">
                   <span className="text-white/40 text-[11px]">{k}</span>
@@ -310,7 +268,7 @@ export default function ClawbotDashboard() {
           </div>
         )}
 
-        {/* Whale Intelligence */}
+        {/* Whales */}
         <div className={`${GLASS} p-5 mb-4`}>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -321,21 +279,20 @@ export default function ClawbotDashboard() {
               {health?.approvedWhales?.length ?? whales.length} active
             </span>
           </div>
-          {whales.length === 0 && (
+          {whales.length === 0 ? (
             <div className="text-center py-6">
               <Eye className="h-8 w-8 text-white/10 mx-auto mb-2" />
               <p className="text-xs text-white/25">Scanning whale wallets…</p>
               <p className="text-[10px] text-white/15 mt-1">9 elite wallets tracked in real time</p>
             </div>
-          )}
-          {whales.map((w, i) => (
+          ) : whales.map((w, i) => (
             <div key={i} className="flex items-center justify-between py-2 border-b border-white/[0.04]">
               <span className="text-[11px] font-mono text-white/40">
-                {w.address ? `${w.address.slice(0,6)}…${w.address.slice(-4)}` : `Whale ${i+1}`}
+                {w.address ? `${w.address.slice(0, 6)}…${w.address.slice(-4)}` : `Whale ${i + 1}`}
               </span>
               <div className="flex gap-3">
                 {w.winRate !== undefined && (
-                  <span className="text-[11px] font-bold" style={{ color: GOLD }}>{(w.winRate*100).toFixed(0)}% WR</span>
+                  <span className="text-[11px] font-bold" style={{ color: GOLD }}>{(w.winRate * 100).toFixed(0)}% WR</span>
                 )}
                 {w.tradeCount !== undefined && (
                   <span className="text-[11px] text-white/30">{w.tradeCount} trades</span>
@@ -345,7 +302,7 @@ export default function ClawbotDashboard() {
           ))}
         </div>
 
-        {/* Recent Trades */}
+        {/* Trades */}
         <div className={`${GLASS} p-5 mb-4`}>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -360,28 +317,25 @@ export default function ClawbotDashboard() {
               <p className="text-xs text-white/25">No trades yet — scanning markets</p>
               <p className="text-[10px] text-white/15 mt-1">Paper mode active · waiting for high-probability signals</p>
             </div>
-          ) : (
-            trades.slice(0, 10).map((t, i) => (
-              <div key={t.id ?? i} className="flex items-start justify-between py-3 border-b border-white/[0.04]">
-                <div className="flex-1 min-w-0">
-                  <div className="text-[11px] font-bold text-white/70 truncate">{t.market ?? 'Unknown market'}</div>
-                  <div className="flex gap-2 mt-0.5">
-                    {t.side && <span className={`text-[10px] font-bold ${t.side === 'YES' ? 'text-green-400' : 'text-red-400'}`}>{t.side}</span>}
-                    {t.whale && <span className="text-[10px] text-white/25">via {t.whale.slice(0,6)}…</span>}
-                    {t.timestamp && <span className="text-[10px] text-white/20">{new Date(t.timestamp).toLocaleTimeString()}</span>}
-                  </div>
-                </div>
-                <div className="text-right ml-3">
-                  {t.size !== undefined && <div className="text-[11px] font-bold" style={{ color: GOLD }}>${t.size}</div>}
-                  {t.pnl !== undefined && (
-                    <div className={`text-[10px] font-bold ${t.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {t.pnl >= 0 ? '+' : ''}{t.pnl.toFixed(2)}
-                    </div>
-                  )}
+          ) : trades.slice(0, 10).map((t, i) => (
+            <div key={t.id ?? i} className="flex items-start justify-between py-3 border-b border-white/[0.04]">
+              <div className="flex-1 min-w-0">
+                <div className="text-[11px] font-bold text-white/70 truncate">{t.market ?? 'Market'}</div>
+                <div className="flex gap-2 mt-0.5">
+                  {t.side && <span className={`text-[10px] font-bold ${t.side === 'YES' ? 'text-green-400' : 'text-red-400'}`}>{t.side}</span>}
+                  {t.timestamp && <span className="text-[10px] text-white/20">{new Date(t.timestamp).toLocaleTimeString()}</span>}
                 </div>
               </div>
-            ))
-          )}
+              <div className="text-right ml-3">
+                {t.size !== undefined && <div className="text-[11px] font-bold" style={{ color: GOLD }}>${t.size}</div>}
+                {t.pnl !== undefined && (
+                  <div className={`text-[10px] font-bold ${t.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {t.pnl >= 0 ? '+' : ''}{t.pnl.toFixed(2)}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Errors */}
@@ -389,7 +343,7 @@ export default function ClawbotDashboard() {
           <div className={`${GLASS} p-5 mb-4`}>
             <div className="flex items-center gap-2 mb-3">
               <AlertCircle className="h-4 w-4 text-red-400" />
-              <h2 className="text-[10px] font-extrabold tracking-[0.25em] uppercase text-white/50">Recent Errors</h2>
+              <h2 className="text-[10px] font-extrabold tracking-[0.25em] uppercase text-white/50">Errors</h2>
             </div>
             {health.recentErrors.map((e, i) => (
               <div key={i} className="text-[11px] text-red-400/70 py-1 border-b border-white/[0.04]">{e}</div>
@@ -397,23 +351,21 @@ export default function ClawbotDashboard() {
           </div>
         )}
 
-        {/* Live mode CTA */}
+        {/* Footer CTA */}
         <div className={`${GLASS} p-6 mb-4 text-center`}>
-          <div
-            className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border mb-3"
-            style={{ borderColor: 'rgba(212,175,55,0.25)', background: 'rgba(212,175,55,0.08)' }}
-          >
+          <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border mb-3"
+            style={{ borderColor: 'rgba(212,175,55,0.25)', background: 'rgba(212,175,55,0.08)' }}>
             <Zap className="h-6 w-6" style={{ color: GOLD }} />
           </div>
           <h3 className="font-black tracking-tight text-lg mb-1" style={{ color: GOLD }}>
             PAPER MODE ACTIVE
           </h3>
           <p className="text-xs text-white/40 mb-4">
-            CLAWBOT is scanning markets & validating whale signals.<br />
-            No real capital deployed until live mode is activated.
+            CLAWBOT scanning markets & validating whale signals.<br />
+            No real capital deployed until live mode activated.
           </p>
           <div className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] px-4 py-2">
-            <CheckCircle className="h-3.5 w-3.5 text-green-400" />
+            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
             <span className="text-[11px] text-white/50">Scanning every 15 seconds</span>
           </div>
         </div>
