@@ -1,0 +1,9 @@
+=== CLAWBOT SQL Fri Jun  5 18:47:15 UTC 2026 ===
+DB host: 
+Running profit_share...
+  ERR: 403: error code: 1010
+Running rls_fix...
+  ERR: 403: error code: 1010
+Running affiliate...
+  ERR: 403: error code: 1010
+Done
