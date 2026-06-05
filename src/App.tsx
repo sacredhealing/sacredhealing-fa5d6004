@@ -165,6 +165,7 @@ const CreativeSoulHub = React.lazy(() => import("./pages/CreativeSoulHub"));
 import CreativeSoulMeditationTool from "./pages/CreativeSoulMeditationTool";
 import AgastyarAcademy from "@/pages/AgastyarAcademy";
 import AgastyarModule from "@/pages/AgastyarModule";
+import BrahmaMuhurta from "@/pages/BrahmaMuhurta";
 const CreativeSoulStore = React.lazy(() => import("./pages/CreativeSoulStore"));
 const InviteFriends = React.lazy(() => import("./pages/InviteFriends"));
 const VedicAstrology = React.lazy(() => import("./pages/VedicAstrology"));
@@ -405,6 +406,7 @@ function AppRoutes() {
                   <Route path="/akasha-portrait/:studentId" element={<StudentCodex />} />
                   <Route path="/ayurveda" element={<Ayurveda />} />
                   <Route path="/agastyar-academy" element={<AgastyarAcademy />} />
+                  <Route path="/brahma-muhurta" element={<BrahmaMuhurta />} />
                   <Route path="/agastyar-academy/module/:id" element={<AgastyarModule />} />
                   <Route path="/jyotish-vidya" element={<JyotishVidya />} />
                   <Route path="/jyotish-vidya/module/:moduleId" element={<JyotishModuleViewer />} />
