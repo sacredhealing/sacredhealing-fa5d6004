@@ -1,11 +1,20 @@
-=== SUPABASE VERIFICATION ===
-  ERROR: clawbot_members: HTTP Error 403: Forbidden
-  ERROR: clawbot_fee_ledger: HTTP Error 403: Forbidden
-  ERROR: clawbot_platform_config: HTTP Error 403: Forbidden
-  ERROR: clawbot_affiliate_rates: HTTP Error 403: Forbidden
-  ERROR: profiles.referred_by: HTTP Error 403: Forbidden
-  ERROR: affiliate_commissions.source: HTTP Error 403: Forbidden
-  ERROR: affiliate_commissions.level: HTTP Error 403: Forbidden
-  ERROR: affiliate_commissions.clawbot_trade_id: HTTP Error 403: Forbidden
-  RATES ERROR: HTTP Error 403: Forbidden
-  CONFIG ERROR: HTTP Error 403: Forbidden
+=== SUPABASE TABLE VERIFICATION ===
+NO KEY SET
+  WARN: clawbot_members HTTP 401 {"message":"No API key found in request","hint":"No `apikey` request header or u
+  WARN: clawbot_fee_ledger HTTP 401 {"message":"No API key found in request","hint":"No `apikey` request header or u
+  WARN: clawbot_platform_config HTTP 401 {"message":"No API key found in request","hint":"No `apikey` request header or u
+  WARN: clawbot_affiliate_rates HTTP 401 {"message":"No API key found in request","hint":"No `apikey` request header or u
+  WARN: polymarket_trades HTTP 401 {"message":"No API key found in request","hint":"No `apikey` request header or u
+  WARN: affiliate_profiles HTTP 401 {"message":"No API key found in request","hint":"No `apikey` request header or u
+  WARN: affiliate_commissions HTTP 401 {"message":"No API key found in request","hint":"No `apikey` request header or u
+
+=== COLUMN CHECKS ===
+  WARN: profiles.referred_by HTTP 401 {"message":"No API key found in request","hint":"No `apikey` request header or u
+  WARN: affiliate_commissions.source HTTP 401 {"message":"No API key found in request","hint":"No `apikey` request header or u
+  WARN: affiliate_commissions.level HTTP 401 {"message":"No API key found in request","hint":"No `apikey` request header or u
+
+=== PLATFORM CONFIG ===
+  Error: HTTP Error 401: Unauthorized
+
+=== AFFILIATE RATES ===
+  Error: HTTP Error 401: Unauthorized
