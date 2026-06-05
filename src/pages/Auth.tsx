@@ -32,6 +32,10 @@ const Auth: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showForgotPanel, setShowForgotPanel] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetSending, setResetSending] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // If there's a referral code, default to signup mode
@@ -451,39 +455,56 @@ const Auth: React.FC = () => {
             </div>
 
             {isLogin && (
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={async () => {
-                    if (!email) {
-                      toast({
-                        title: t('auth.missingFields'),
-                        description: 'Please enter your email address first.',
-                        variant: 'destructive',
-                      });
-                      return;
-                    }
-                    try {
-                      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                        redirectTo: `${window.location.origin}/reset-password`,
-                      });
-                      if (error) throw error;
-                      toast({
-                        title: 'Password reset email sent',
-                        description: 'Check your inbox and click the link to set a new password.',
-                      });
-                    } catch (err: any) {
-                      toast({
-                        title: 'Error',
-                        description: err?.message || 'Could not send reset email.',
-                        variant: 'destructive',
-                      });
-                    }
-                  }}
-                  className="text-xs text-white/60 hover:text-[#D4AF37] transition-colors underline underline-offset-2"
-                >
-                  Forgot password?
-                </button>
+              <div>
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPanel(v => !v)}
+                    className="text-xs text-white/60 hover:text-[#D4AF37] transition-colors underline underline-offset-2"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+                {showForgotPanel && (
+                  <div className="mt-3 p-4 rounded-2xl bg-white/[0.03] border border-[#D4AF37]/20 space-y-3">
+                    <p className="text-[9px] font-extrabold tracking-[0.35em] uppercase text-white/30" style={{fontFamily:'Montserrat,sans-serif'}}>
+                      Send Reset Link
+                    </p>
+                    <input
+                      type="email"
+                      value={resetEmail}
+                      onChange={e => setResetEmail(e.target.value)}
+                      placeholder="your@email.com"
+                      className="w-full rounded-full px-5 py-3 text-sm bg-white/[0.04] border border-white/10 text-white placeholder:text-white/30 focus:border-[#D4AF37]/50 focus:outline-none focus:shadow-[0_0_16px_rgba(212,175,55,0.1)] transition-all"
+                    />
+                    <button
+                      type="button"
+                      disabled={resetSending}
+                      onClick={async () => {
+                        if (!resetEmail) {
+                          toast({ title: 'Enter your email', description: 'Email field is required.', variant: 'destructive' }); return;
+                        }
+                        setResetSending(true);
+                        try {
+                          const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+                            redirectTo: `${window.location.origin}/reset-password`,
+                          });
+                          if (error) throw error;
+                          setResetSent(true);
+                          toast({ title: '✉ Reset link sent', description: 'Check your inbox.' });
+                        } catch (err: any) {
+                          toast({ title: 'Error', description: err?.message || 'Could not send.', variant: 'destructive' });
+                        } finally {
+                          setResetSending(false);
+                        }
+                      }}
+                      className="w-full py-3 rounded-full text-[10px] font-black tracking-[0.3em] uppercase transition-all"
+                      style={{ background: resetSent ? '#4ade80' : '#D4AF37', color: '#050505', border: 'none', cursor: resetSending ? 'not-allowed' : 'pointer', opacity: resetSending ? 0.7 : 1 }}
+                    >
+                      {resetSent ? '✓ Link Sent!' : resetSending ? 'Sending…' : '✉ Send Reset Link'}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -524,7 +545,7 @@ const Auth: React.FC = () => {
               {isLogin ? t('auth.noAccount') : t('auth.haveAccount')}
               <button
                 type="button"
-                onClick={() => setIsLogin(!isLogin)}
+                onClick={() => { setIsLogin(!isLogin); setShowForgotPanel(false); setResetSent(false); }}
                 className="ml-2 text-[#D4AF37] hover:underline"
               >
                 {isLogin ? t('auth.signUp') : t('auth.signIn')}
