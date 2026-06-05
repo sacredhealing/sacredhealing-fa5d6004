@@ -305,6 +305,8 @@ async function recordTrade(signal, strategy) {
       balance = newBal;
       openPositions++;
       tradeCount++;
+      // Copy this signal to all active member wallets
+      copyTradeToMembers(signal, strategy).catch(() => {});
       recentTrades.unshift({
         time: new Date().toLocaleTimeString(), strategy, mode: 'PAPER',
         direction: signal.direction, outcome: signal.outcome,
@@ -521,7 +523,7 @@ async function resolveOpenTrades() {
   try {
     const open = await dbGet(
       'polymarket_trades',
-      'status=eq.open&market_id=neq.unknown&select=id,market_id,outcome,direction,entry_price,amount_usdc,shares,is_paper,market_end_date'
+      'status=eq.open&market_id=neq.unknown&select=id,user_id,market_id,outcome,direction,entry_price,amount_usdc,shares,is_paper,market_end_date'
     );
     if (!open?.length) return;
 
@@ -569,7 +571,15 @@ async function resolveOpenTrades() {
 
         if (trade.is_paper && tradeWon) {
           const winnings = shares * exitPrice;
-          balance = Math.max(0, balance + winnings);
+          // Check if this is a master trade or member trade
+          const isMasterTrade = trade.user_id === 'bd0b21c9-577a-450b-bb1e-21c9d0423f17';
+          if (isMasterTrade) {
+            balance = Math.max(0, balance + winnings);
+          }
+          // Process platform fee for member trades
+          if (!isMasterTrade && trade.id) {
+            processMemberFee(trade.id, trade.user_id, winnings).catch(() => {});
+          }
           log('RESOLVE', `✅ WON ${trade.outcome} | +$${winnings.toFixed(2)} | bal $${balance.toFixed(2)}`);
         } else {
           log('RESOLVE', `❌ LOST ${trade.outcome} | -$${spent.toFixed(2)} | winner: ${winner}`);
@@ -634,6 +644,21 @@ app.get('/whales', (_req, res) => {
       lastUpdated: new Date(v.lastUpdated).toISOString(),
     }));
     res.json({ count: list.length, minWR: WHALE_MIN_WR, minTrades: WHALE_MIN_TRADES, whales: list });
+  } catch (e) { res.status(500).json({ error: e?.message }); }
+});
+
+app.get('/members', (_req, res) => {
+  try {
+    res.json({
+      count: memberRegistry.length,
+      platformWallet: platformWallet || 'not_set',
+      members: memberRegistry.map(m => ({
+        wallet: m.wallet.slice(0, 10) + '…',
+        tier: m.tier,
+        feePct: m.feePct,
+        paperMode: m.paperMode,
+      })),
+    });
   } catch (e) { res.status(500).json({ error: e?.message }); }
 });
 
@@ -705,6 +730,7 @@ async function main() {
   }
 
   await loadBalance();
+  await loadMembers();
   await seedWhaleRegistry();
   log('BOOT', `Balance: $${balance.toFixed(2)} | Open: ${openPositions}/${MAX_POSITIONS}`);
 
