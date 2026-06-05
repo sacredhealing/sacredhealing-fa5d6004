@@ -449,6 +449,7 @@ const IncomeStreams: React.FC = () => {
               stream.internal_slug === 'fomo-copy-bot' ||
               stream.internal_slug === 'whale-intelligence' ||
               stream.internal_slug === 'sqi-sovereign-bot';
+  if (stream.internal_slug === 'delta-arb-bot' && !isAdmin) return false;
             if (isPolymarketStream && !isAdmin) return false;
             return true;
           })
@@ -463,6 +464,7 @@ const IncomeStreams: React.FC = () => {
             const isFomo = stream.internal_slug === 'fomo-copy-bot';
             const isWhaleIntel = stream.internal_slug === 'whale-intelligence';
             const isSqiSovereign = stream.internal_slug === 'sqi-sovereign-bot';
+  if (stream.internal_slug === 'delta-arb-bot' && !isAdmin) return false;
             const title = isPolymarket
               ? t('incomeStreams.hftCard.title')
               : isCopyTrading
