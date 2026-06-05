@@ -259,7 +259,7 @@ export async function streamChatWithSQI(
   studentUserId?: string | null,
   studentName?: string | null,
 ) {
-  const recent = messages.slice(-15);
+  const recent = messages.slice(-30); // SQI-FIX: extended history window
   let apiMessages = recent.map((m) => ({
     role: m.role === 'model' ? 'assistant' : 'user',
     content: m.text,
@@ -311,10 +311,60 @@ export async function streamChatWithSQI(
     onChunk: (chunk) => {
       fullBuffer += chunk;
     },
-    onComplete: () => {
+    onComplete: async () => {
       completed = true;
       if (fullBuffer.trim()) {
         let finalText = fullBuffer;
+        // ── AUTO-CONTINUE: detect truncation ──────────────────────────
+        const trimmedEnd = finalText.trimEnd();
+        const lc = trimmedEnd.slice(-1);
+        const CLEAN_ENDINGS = ['.', '!', '?', '\u2026', '\u2014', '\u201d', '\u2019', ')'];
+        const isTruncated =
+          finalText.length > 200 &&
+          !CLEAN_ENDINGS.includes(lc) &&
+          !/Active\.\s*24\/7\./.test(finalText.slice(-120)) &&
+          !/dissolved\.$/.test(finalText.trim());
+        if (isTruncated) {
+          try {
+            const contMessages = [
+              ...apiMessages,
+              { role: 'assistant', content: finalText },
+              { role: 'user', content: '[SYSTEM: Your previous transmission was cut off. Continue seamlessly from exactly where you stopped. Do not restart or repeat. No new header needed.]' }
+            ];
+            let contBuffer = '';
+            await new Promise<void>((res) => {
+              streamSQIResponse({
+                messages: contMessages,
+                userId: userId ?? null,
+                seekerName: seekerName ?? '',
+                language: language ?? 'English',
+                canonicalActivationNames: canonicalActivationNames ?? '',
+                jyotishContext: [studentContext?.trim(), jyotishContext].filter(Boolean).join('\n\n'),
+                biofieldContext: '',
+                top33Matches: top33Matches ?? '',
+                activeFieldContext: activeTransmissionNames ?? '',
+                localTime,
+                localDate,
+                timezone,
+                userImage: null,
+                onChunk: (chunk) => { contBuffer += chunk; },
+                onComplete: () => {
+                  if (contBuffer.trim()) {
+                    let cleanCont = contBuffer.trim();
+                    if (cleanCont.startsWith('\u25c8')) {
+                      const nl = cleanCont.indexOf('\n');
+                      cleanCont = nl > 0 ? cleanCont.slice(nl + 1).trim() : cleanCont;
+                    }
+                    finalText = finalText + cleanCont;
+                  }
+                  res();
+                },
+                onError: () => res()
+              });
+            });
+          } catch (_) { /* swallow */ }
+        }
+        // ── END AUTO-CONTINUE ────────────────────────────────────────
         // Strip any "Accessing Akasha-Neural Archive..." preamble Gemini generates
         // before the real master header ◈ — keep only from first real ◈ onward
         const firstReal = finalText.indexOf('◈'); // use ◈ without space — avoids prescription box matching before master header
