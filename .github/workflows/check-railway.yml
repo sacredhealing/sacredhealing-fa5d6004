@@ -1,7 +1,10 @@
-name: Railway Takeover
+name: Railway Deploy Fresh
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/check-railway.yml'
 
 jobs:
   deploy:
@@ -20,49 +23,42 @@ jobs:
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
           LOG="_railway_takeover.txt"
-          echo "=== Railway Takeover $(date -u) ===" > $LOG
+          echo "=== Railway Deploy $(date -u) ===" > $LOG
 
-          # Install Railway CLI
-          npm install -g @railway/cli 2>&1 | tail -2 >> $LOG
-          echo "CLI version: $(railway --version 2>&1)" >> $LOG
-
-          # Test auth
+          npm install -g @railway/cli 2>&1 | tail -1 >> $LOG
+          echo "CLI: $(railway --version 2>&1)" >> $LOG
           echo "" >> $LOG
-          echo "--- Auth test ---" >> $LOG
+
+          echo "--- Auth ---" >> $LOG
           railway whoami 2>&1 >> $LOG
-
-          # List projects
           echo "" >> $LOG
-          echo "--- Projects ---" >> $LOG
-          railway list 2>&1 >> $LOG
 
-          # API query for projects
-          echo "" >> $LOG
-          echo "--- API query ---" >> $LOG
+          echo "--- Projects via API ---" >> $LOG
           curl -s -X POST "https://backboard.railway.app/graphql/v2" \
             -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
             -H "Content-Type: application/json" \
-            -d '{"query":"{ me { id name email projects { edges { node { id name createdAt services { edges { node { id name } } } } } } } }"}' \
+            -d '{"query":"{ me { id name email projects { edges { node { id name services { edges { node { id name } } } environments { edges { node { id name } } } } } } } }"}' \
             | python3 -c "
 import sys,json
 d=json.load(sys.stdin)
 if 'errors' in d:
-    print('TOKEN ERROR:', d['errors'])
-else:
-    me = d.get('data',{}).get('me',{})
-    print('Logged in as:', me.get('name'), me.get('email'))
-    projects = me.get('projects',{}).get('edges',[])
-    print(f'Projects found: {len(projects)}')
-    for p in projects:
-        n = p['node']
-        svcs = n.get('services',{}).get('edges',[])
-        print(f'  Project: {n[\"name\"]} (id:{n[\"id\"]})')
-        for s in svcs:
-            print(f'    Service: {s[\"node\"][\"name\"]} (id:{s[\"node\"][\"id\"]})')
+    print('TOKEN ERROR:', d['errors'][0]['message'])
+    sys.exit(1)
+me=d['data']['me']
+print('User:', me['name'], me['email'])
+projects=me.get('projects',{}).get('edges',[])
+print(f'Projects: {len(projects)}')
+for p in projects:
+    n=p['node']
+    print(f'  {n[\"name\"]} id:{n[\"id\"]}')
+    for s in n.get('services',{}).get('edges',[]):
+        print(f'    svc: {s[\"node\"][\"name\"]} id:{s[\"node\"][\"id\"]}')
+    for e in n.get('environments',{}).get('edges',[]):
+        print(f'    env: {e[\"node\"][\"name\"]} id:{e[\"node\"][\"id\"]}')
 " >> $LOG 2>&1
 
           cat $LOG
           git config user.email "bot@sqi.app"; git config user.name "SQI"
           git add $LOG
-          git commit -m "Railway takeover $(date -u +%H%M%S)" || true
+          git commit -m "Railway deploy $(date -u +%H%M%S)" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
