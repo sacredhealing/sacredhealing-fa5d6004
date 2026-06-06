@@ -260,7 +260,7 @@ const Profile: React.FC = () => {
   const uiLangBase = (i18n.language||'en').split('-')[0];
   const dateLocale = useMemo(() => {const m:Record<string,string>={en:'en-US',sv:'sv-SE',es:'es-ES',no:'nb-NO'};return m[uiLangBase]||'en-US';}, [uiLangBase]);
   const activeLangIdx = Math.max(0, langs.findIndex(l=>l.code===uiLangBase));
-  const userName = user?.user_metadata?.full_name || t('dashboard.sacredSoul');
+  const userName = profile?.full_name || user?.user_metadata?.full_name || t('dashboard.sacredSoul');
   const userEmail = user?.email || '';
 
   const haloConfig = useMemo(() => {
