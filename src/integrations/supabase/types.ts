@@ -7882,6 +7882,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_quantum_sync: {
+        Row: {
+          daily_remedies: Json
+          last_scan_at: number | null
+          library_unlocked: boolean
+          palm_scan: Json | null
+          scan_snapshot: Json | null
+          top33_matches: Json | null
+          top33_matches_ts: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          daily_remedies?: Json
+          last_scan_at?: number | null
+          library_unlocked?: boolean
+          palm_scan?: Json | null
+          scan_snapshot?: Json | null
+          top33_matches?: Json | null
+          top33_matches_ts?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          daily_remedies?: Json
+          last_scan_at?: number | null
+          library_unlocked?: boolean
+          palm_scan?: Json | null
+          scan_snapshot?: Json | null
+          top33_matches?: Json | null
+          top33_matches_ts?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
