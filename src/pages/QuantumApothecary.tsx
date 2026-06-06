@@ -2843,10 +2843,38 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
 
       const queuedRaw = pickTenActivationsForVoiceResult(result);
       const queued = queuedRaw.filter(isVegetarianActivation);
+
+      // ── Auto-activate top 3 Siddha Transmissions matched by scan ──
+      // These are added alongside the standard 10 voice_scan activations
+      const siddhaMatched = ALL_ACTIVATIONS
+        .filter(a => a.type === 'Siddha Transmission')
+        .map(a => {
+          const blob = `${a.name} ${a.benefit || ''} ${a.vibrationalSignature || ''}`.toLowerCase();
+          const payload = voiceResultToScanPayload(result);
+          let score = 0;
+          const dosha = String(result.dominantDosha || '').toLowerCase().split(/[\s(/]/)[0];
+          if (dosha && blob.includes(dosha)) score += 40;
+          if (result.priorityAreas?.length) {
+            for (const area of result.priorityAreas) {
+              const areaL = (area.name || '').toLowerCase();
+              if (areaL && blob.includes(areaL)) { score += 25; break; }
+            }
+          }
+          if (result.organField && blob.includes(result.organField.toLowerCase())) score += 20;
+          if (result.emotionalField && blob.includes(result.emotionalField.toLowerCase())) score += 15;
+          return { activation: a, score };
+        })
+        .filter(s => s.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3)
+        .map(s => s.activation);
+
+      const allQueued = [...queued, ...siddhaMatched];
+
       setActiveTransmissions((prev) => {
         // Clear old voice_scan entries — each new scan replaces the previous ones
       const next = prev.filter((t) => (t as any).source !== 'voice_scan');
-        for (const act of queued) {
+        for (const act of allQueued) {
           const enriched = enrichTransmission(act, 'voice_scan');
           if (
             next.some(
