@@ -117,7 +117,7 @@ export default function ClawbotDashboard() {
 
   const loadMembership = useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase
+    const { data } = await sb
       .from('clawbot_members')
       .select('*')
       .eq('user_id', user.id)
@@ -126,7 +126,7 @@ export default function ClawbotDashboard() {
     if (data?.poly_wallet_address) setWalletAddress(data.poly_wallet_address);
 
     // Load my trades
-    const { data: trades } = await supabase
+    const { data: trades } = await sb
       .from('polymarket_trades')
       .select('*')
       .eq('user_id', user.id)
@@ -135,7 +135,7 @@ export default function ClawbotDashboard() {
     setMyTrades(trades ?? []);
 
     // Load my fee ledger stats
-    const { data: fees } = await supabase
+    const { data: fees } = await sb
       .from('clawbot_fee_ledger')
       .select('gross_pnl_usdc, fee_usdc, net_pnl_usdc')
       .eq('user_id', user.id);
