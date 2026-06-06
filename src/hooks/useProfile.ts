@@ -58,11 +58,16 @@ export const useProfile = () => {
   const updateProfileMutation = useMutation({
     mutationFn: async (updates: { full_name?: string; bio?: string }) => {
       if (!user) throw new Error('No user');
+      // Update profiles table
       const { error } = await supabase
         .from('profiles')
         .update(updates)
         .eq('user_id', user.id);
       if (error) throw error;
+      // Also sync full_name to Supabase Auth user_metadata so display name updates immediately
+      if (updates.full_name !== undefined) {
+        await supabase.auth.updateUser({ data: { full_name: updates.full_name } });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
