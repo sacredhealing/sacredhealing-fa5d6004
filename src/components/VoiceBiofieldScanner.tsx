@@ -128,10 +128,15 @@ export default function VoiceBiofieldScanner({
   const scanDur = scanDurationSeconds ?? SCAN_SECONDS;
   const scanDurRef = useRef(scanDur);
   scanDurRef.current = scanDur;
-  const [phase, setPhase] = useState<'idle' | 'scanning' | 'done' | 'error'>('idle');
+  const [phase, setPhase] = useState<'idle' | 'scanning' | 'tapping' | 'done' | 'error'>('idle');
   const [secondsLeft, setSecondsLeft] = useState(scanDur);
   const [errorMsg, setErrorMsg] = useState('');
   const [lastResult, setLastResult] = useState<VoiceBiofieldResult | null>(null);
+  const [tapTimes, setTapTimes] = useState<number[]>([]);
+  const [tapCount, setTapCount] = useState(0);
+  const [tapReady, setTapReady] = useState(false);
+  const tapStartRef = useRef<number>(0);
+  const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const audioCtxRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -145,6 +150,65 @@ export default function VoiceBiofieldScanner({
     centroidSeries: [],
     zcrSeries: [],
   });
+
+  const scheduleTap = useCallback(() => {
+    if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
+    const delay = 600 + Math.random() * 1400;
+    tapTimeoutRef.current = setTimeout(() => {
+      setTapReady(true);
+      tapStartRef.current = performance.now();
+      // Auto-cancel if missed after 2.5s
+      tapTimeoutRef.current = setTimeout(() => {
+        setTapReady(false);
+        scheduleTap();
+      }, 2500);
+    }, delay);
+  }, []);
+
+  const handleTap = useCallback(() => {
+    if (!tapReady) return;
+    if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
+    const latency = performance.now() - tapStartRef.current;
+    setTapReady(false);
+    setTapTimes(prev => {
+      const next = [...prev, latency];
+      setTapCount(next.length);
+      if (next.length >= 5) {
+        // All 5 taps done — finalize with reaction time
+        const avgMs = next.reduce((a,b) => a+b, 0) / next.length;
+        const neuroIndex = avgMs < 260 ? 'Sharp' : avgMs < 380 ? 'Balanced' : 'Resting';
+        setLastResult(prev2 => {
+          if (!prev2) return prev2;
+          const enhanced = {
+            ...prev2,
+            reactionMs: Math.round(avgMs),
+            neuroIndex,
+            // Refine coherence score with neurological input
+            overallCoherence: Math.round(
+              prev2.overallCoherence * 0.7 +
+              (avgMs < 260 ? 95 : avgMs < 380 ? 75 : 55) * 0.3
+            ),
+          };
+          setPhase('done');
+          onScanComplete?.(enhanced as any);
+          return enhanced;
+        });
+      } else {
+        scheduleTap();
+      }
+      return next;
+    });
+  }, [tapReady, scheduleTap, onScanComplete]);
+
+  // Start tap sequence when phase becomes 'tapping'
+  React.useEffect(() => {
+    if (phase !== 'tapping') return;
+    setTapTimes([]);
+    setTapCount(0);
+    setTapReady(false);
+    scheduleTap();
+    return () => { if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current); };
+  }, [phase, scheduleTap]);
 
   const cleanup = useCallback(() => {
     if (timerRef.current != null) {
@@ -288,8 +352,7 @@ export default function VoiceBiofieldScanner({
 
             const result = analyzeVoiceBuffer(samplesRef.current);
             setLastResult(result);
-            setPhase('done');
-            onScanComplete?.(result);
+            setPhase('tapping'); // Phase 2: neurological calibration
             return;
           }
 
@@ -340,6 +403,10 @@ export default function VoiceBiofieldScanner({
       style={{ touchAction: 'none', overscrollBehavior: 'contain' }}
     >
       <style>{`
+        @keyframes vsTapPulse {
+          0%,100%{ box-shadow: 0 0 0 0 rgba(212,175,55,0.4), 0 0 30px rgba(212,175,55,0.4); transform: scale(1); }
+          50%    { box-shadow: 0 0 0 16px rgba(212,175,55,0), 0 0 50px rgba(212,175,55,0.2); transform: scale(1.04); }
+        }
         @keyframes vsMicPulse {
           0%,100%{ box-shadow:0 0 0 0 rgba(212,175,55,0.0),0 0 12px rgba(212,175,55,0.22); }
           50%    { box-shadow:0 0 0 10px rgba(212,175,55,0.0),0 0 22px rgba(212,175,55,0.45); }
@@ -463,6 +530,57 @@ export default function VoiceBiofieldScanner({
       )}
 
       {/* ── DONE ── */}
+      {phase === 'tapping' && (
+        <div style={{ padding: '32px 20px', textAlign: 'center' }}>
+          <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.3em', color: 'rgba(212,175,55,.8)', marginBottom: 8, textTransform: 'uppercase' as const }}>
+            NEUROLOGICAL CALIBRATION
+          </p>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginBottom: 28, lineHeight: 1.6 }}>
+            Tap the pulse when it appears · 5 taps · Do not anticipate
+          </p>
+
+          {/* Golden pulse target */}
+          <div
+            onClick={handleTap}
+            onTouchEnd={(e) => { e.preventDefault(); handleTap(); }}
+            style={{
+              width: 88, height: 88, borderRadius: '50%',
+              margin: '0 auto 28px',
+              background: tapReady ? 'rgba(212,175,55,0.15)' : 'rgba(255,255,255,0.03)',
+              border: tapReady ? '2px solid rgba(212,175,55,0.8)' : '2px solid rgba(255,255,255,0.08)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: tapReady ? 'pointer' : 'default',
+              transition: 'all 0.15s',
+              boxShadow: tapReady ? '0 0 30px rgba(212,175,55,0.4), 0 0 60px rgba(212,175,55,0.15)' : 'none',
+              animation: tapReady ? 'vsTapPulse 1s ease-in-out infinite' : 'none',
+              userSelect: 'none' as const,
+              WebkitUserSelect: 'none' as const,
+              touchAction: 'manipulation' as const,
+            }}
+          >
+            <span style={{ fontSize: tapReady ? 28 : 14, transition: 'font-size 0.15s', color: tapReady ? '#D4AF37' : 'rgba(255,255,255,0.15)' }}>
+              {tapReady ? '◈' : '·'}
+            </span>
+          </div>
+
+          {/* Progress dots */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 16 }}>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} style={{
+                width: 10, height: 10, borderRadius: '50%',
+                background: i < tapCount ? '#D4AF37' : 'rgba(255,255,255,0.08)',
+                border: i < tapCount ? '1px solid rgba(212,175,55,0.6)' : '1px solid rgba(255,255,255,0.1)',
+                boxShadow: i < tapCount ? '0 0 8px rgba(212,175,55,0.5)' : 'none',
+                transition: 'all 0.2s',
+              }} />
+            ))}
+          </div>
+          <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', fontWeight: 600 }}>
+            {tapCount} / 5 taps registered
+          </p>
+        </div>
+      )}
+
       {phase === 'done' && lastResult && (
         <div style={{ padding: '22px 20px', textAlign: 'center' }}>
           <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.3em', color: 'rgba(34,211,238,.8)', marginBottom:12, textTransform:'uppercase' }}>
