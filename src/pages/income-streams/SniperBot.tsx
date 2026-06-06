@@ -245,7 +245,7 @@ function WalletTab({ member, userId, memberTier, onConnect }: any) {
   const save = async () => {
     if (!addr.match(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/)) { toast({ title: "Invalid Solana address", variant: "destructive" }); return; }
     setSaving(true);
-    const { error } = await supabase.from("sniper_members").upsert({ user_id: userId, wallet_address: addr, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+    const { error } = await sb.from("sniper_members").upsert({ user_id: userId, wallet_address: addr, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
     setSaving(false);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else { onConnect(addr); toast({ title: "✦ Wallet connected", description: "Profit share activated." }); }
@@ -348,7 +348,7 @@ export default function SniperBot() {
     supabase.auth.getUser().then(({ data }) => {
       if (!data.user) return;
       setUserId(data.user.id);
-      supabase.from("sniper_members").select("*").eq("user_id", data.user.id).maybeSingle().then(({ data: m }) => m && setMember(m));
+      sb.from("sniper_members").select("*").eq("user_id", data.user.id).maybeSingle().then(({ data: m }) => m && setMember(m));
     });
   }, []);
 

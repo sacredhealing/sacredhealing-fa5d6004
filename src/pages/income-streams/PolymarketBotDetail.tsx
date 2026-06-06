@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Bot, Activity, TrendingUp, DollarSign, Zap, Shield, Eye, RefreshCw, AlertCircle, Clock, BarChart3, Users, Target, Wallet, Settings, ChevronRight, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+const sb = supabase as any;
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
 
@@ -158,7 +159,7 @@ export default function ClawbotDashboard() {
     if (!user || !walletAddress.startsWith('0x')) return;
     setSavingWallet(true);
     try {
-      await supabase.from('clawbot_members').upsert({
+      await sb.from('clawbot_members').upsert({
         user_id: user.id,
         poly_wallet_address: walletAddress.toLowerCase().trim(),
         tier,
