@@ -55,6 +55,7 @@ const NadiScanner = lazy(() => import('@/components/NadiScanner'));
 const VoiceBiofieldScanner = lazy(() => import('@/components/VoiceBiofieldScanner'));
 const FrequencyLibrarySection = lazy(() => import('@/features/quantum-apothecary/FrequencyLibrarySection'));
 const ActiveTransmissionsSection = lazy(() => import('@/features/quantum-apothecary/ActiveTransmissionsSection'));
+import MidCycleBanner from '@/features/quantum-apothecary/MidCycleBanner';
 
 const ScannerSuspenseFallback = (
   <div style={{ padding: 40, textAlign: 'center', color: 'rgba(212,175,55,0.5)', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 800 }}>
@@ -3534,7 +3535,8 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                   </div>
                 </div>
               }>
-                <ActiveTransmissionsSection
+                <MidCycleBanner activeTransmissions={activeTransmissions} />
+              <ActiveTransmissionsSection
                   activeTransmissions={activeTransmissions}
                   setActiveTransmissions={setActiveTransmissions}
                   onDissolveTransmission={dissolveTransmission}
