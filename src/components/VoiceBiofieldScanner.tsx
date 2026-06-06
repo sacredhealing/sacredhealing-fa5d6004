@@ -2,7 +2,7 @@
 // No camera, no rPPG, no FaceMesh.
 // Timing uses wall-clock (Date.now) so background tabs / timer throttling cannot
 // burst-complete or leave the countdown stuck; completion runs at most once.
-import { useState, useRef, useCallback, useEffect, type MouseEvent } from 'react';
+import React, { useState, useRef, useCallback, useEffect, type MouseEvent } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 
 const SCAN_SECONDS = 22;
