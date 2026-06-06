@@ -95,6 +95,7 @@ export function enrichTransmission(
   act: Activation,
   source: NonNullable<Activation['source']>,
 ): Activation {
+  // Wellness = 21 days, Siddha Transmissions = 8 days, all others = 8 days
   const days = act.type === 'Wellness' ? 21 : 8;
   const activatedAt = new Date().toISOString();
   const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
@@ -114,6 +115,8 @@ export function formatSourceLabel(source?: Activation['source']): string {
   return 'manual';
 }
 
+/** Returns days remaining — negative means expired and should be auto-removed.
+ * Wellness = 21d, Siddha Transmissions = 8d, others = 8d, null = permanent */
 export function daysRemaining(expiresAt?: string): number | null {
   if (!expiresAt) return null;
   const t = new Date(expiresAt).getTime();
