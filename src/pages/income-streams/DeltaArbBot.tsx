@@ -152,7 +152,7 @@ export default function DeltaArbBot() {
     setAffiliateProfile(aff);
 
     if (aff) {
-      const { data: commissions } = await supabase
+      const { data: commissions } = await sb
         .from('affiliate_commissions')
         .select('commission_amount,level,source')
         .eq('affiliate_user_id', user.id)
