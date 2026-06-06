@@ -16,7 +16,8 @@ export type SqiLibraryTab =
   | 'Sacred Plants'
   | 'Bioenergetic'
   | 'Ayurveda'
-  | 'Avataric';
+  | 'Avataric'
+  | 'Siddha Transmissions';
 
 interface Props {
   activeCategory: string;
@@ -35,6 +36,7 @@ const SQI_TABS: SqiLibraryTab[] = [
   'Bioenergetic',
   'Ayurveda',
   'Avataric',
+  'Siddha Transmissions',
 ];
 
 const TAB_COLORS: Record<SqiLibraryTab, string> = {
@@ -44,6 +46,7 @@ const TAB_COLORS: Record<SqiLibraryTab, string> = {
   Bioenergetic: '#60a5fa',
   Ayurveda: '#fb923c',
   Avataric: '#D4AF37',
+  'Siddha Transmissions': '#D4AF37',
 };
 
 type GeoKind = 'torus' | 'sri' | 'flower' | 'metatron' | 'sriGold';
@@ -61,6 +64,8 @@ function geoKindForTab(tab: string): GeoKind {
     case 'Ayurveda':
       return 'flower';
     case 'Avataric':
+      return 'sriGold';
+    case 'Siddha Transmissions':
       return 'sriGold';
     default:
       return 'torus';
@@ -81,6 +86,8 @@ function matchesSqiTab(act: Activation, tab: string): boolean {
       return act.type === 'Ayurvedic Herb';
     case 'Avataric':
       return act.type === 'avataric' || act.type === 'plant_deva';
+    case 'Siddha Transmissions':
+      return act.type === 'Siddha Transmission';
     default:
       return true;
   }
