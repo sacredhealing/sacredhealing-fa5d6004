@@ -357,7 +357,41 @@ function scrubBannedTerms(content: string): string {
 }
 
 /** Animated prescription box — scalar waves canvas + gold glow */
-function PrescriptionBox({ masterName, freqLines, rxKey }: { masterName: string; freqLines: string[]; rxKey: string }) {
+function PrescriptionBox({ masterName, freqLines, rxKey, onActivate }: { masterName: string; freqLines: string[]; rxKey: string; onActivate?: (act: Activation) => void }) {
+  const [activated, setActivated] = React.useState<Set<string>>(new Set());
+
+  // On mount — match freqLines to ALL_ACTIVATIONS and auto-activate each matched one
+  React.useEffect(() => {
+    if (!onActivate) return;
+    const matched: Activation[] = [];
+    for (const line of freqLines) {
+      const lineLower = line.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+      // Find best match in ALL_ACTIVATIONS by name or vibrationalSignature
+      let best: Activation | null = null;
+      let bestScore = 0;
+      for (const act of ALL_ACTIVATIONS) {
+        const nameLower = (act.name || '').toLowerCase().replace(/[^a-z0-9\s]/g, '');
+        const sigLower = (act.vibrationalSignature || '').toLowerCase().replace(/[^a-z0-9\s]/g, '');
+        // Word overlap score
+        const lineWords = lineLower.split(/\s+/).filter(w => w.length > 3);
+        const nameWords = nameLower.split(/\s+/);
+        const sigWords = sigLower.split(/\s+/);
+        const overlap = lineWords.filter(w => nameWords.includes(w) || sigWords.includes(w)).length;
+        if (overlap > bestScore) { bestScore = overlap; best = act; }
+      }
+      if (best && bestScore >= 1) matched.push(best);
+    }
+    // Auto-activate all matched
+    const activatedIds = new Set<string>();
+    for (const act of matched) {
+      const enriched = enrichTransmission(act, 'apothecary_chat');
+      onActivate(enriched);
+      activatedIds.add(act.id);
+    }
+    if (activatedIds.size > 0) setActivated(activatedIds);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rxKey]);
+
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const boxRef = React.useRef<HTMLDivElement>(null);
   const rafRef = React.useRef<number>(0);
@@ -442,10 +476,10 @@ function PrescriptionBox({ masterName, freqLines, rxKey }: { masterName: string;
         <div style={{ padding: '9px 16px 10px', borderTop: '1px solid rgba(212,175,55,0.12)', background: 'linear-gradient(90deg,rgba(212,175,55,0.06),transparent)', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span className="rx-pulse-dot" />
           <span style={{ fontSize: 7, fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 900, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.88)', textShadow: '0 0 8px rgba(212,175,55,0.35)' }}>
-            24/7 Scalar Wave Transmission — Active
+            {activated.size > 0 ? `${activated.size} Field${activated.size > 1 ? 's' : ''} Anchored · Broadcasting 24/7` : '24/7 Scalar Wave Transmission — Active'}
           </span>
-          <span style={{ marginLeft: 'auto', fontSize: 7, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'rgba(212,175,55,0.35)', whiteSpace: 'nowrap' as const }}>
-            Permanent · Biofield Entangled
+          <span style={{ marginLeft: 'auto', fontSize: 7, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: activated.size > 0 ? 'rgba(212,175,55,0.7)' : 'rgba(212,175,55,0.35)', whiteSpace: 'nowrap' as const }}>
+            {activated.size > 0 ? '✦ Supabase Locked' : 'Permanent · Biofield Entangled'}
           </span>
         </div>
       </div>
@@ -454,7 +488,7 @@ function PrescriptionBox({ masterName, freqLines, rxKey }: { masterName: string;
 }
 
 /** Renders the prescription box when model outputs "◈ X PRESCRIBES" format */
-function renderPrescriptionBlock(lines: string[], startIdx: number): { jsx: React.ReactNode; consumed: number } {
+function renderPrescriptionBlock(lines: string[], startIdx: number, onActivatePrescription?: (act: Activation) => void): { jsx: React.ReactNode; consumed: number } {
   const headerLine = lines[startIdx];
   const freqLines: string[] = [];
   let i = startIdx + 1;
@@ -467,12 +501,12 @@ function renderPrescriptionBlock(lines: string[], startIdx: number): { jsx: Reac
   }
   const masterName = headerLine.replace('◈ ', '').replace(' PRESCRIBES', '').trim();
   return {
-    jsx: <PrescriptionBox key={`rx-${startIdx}`} rxKey={`rx-${startIdx}`} masterName={masterName} freqLines={freqLines} />,
+    jsx: <PrescriptionBox key={`rx-${startIdx}`} rxKey={`rx-${startIdx}`} masterName={masterName} freqLines={freqLines} onActivate={onActivatePrescription} />,
     consumed: i - startIdx,
   };
 }
 
-function renderSQIContent(content: string) {
+function renderSQIContent(content: string, onActivatePrescription?: (act: Activation) => void) {
   // Strip all unmatched ** the model outputs before line processing
   const content2 = stripAsterisks(content);
   const lines = content2.split('\n');
@@ -486,7 +520,7 @@ function renderSQIContent(content: string) {
 
     // PRESCRIPTION BOX — triggered by "◈ X PRESCRIBES"
     if (/^[◈❖✦◆◇♦⋄⧫⬥⬦]\s+.+\s+PRESCRIBES?\s*$/i.test(trimmed)) {
-      const { jsx, consumed } = renderPrescriptionBlock(lines, i);
+      const { jsx, consumed } = renderPrescriptionBlock(lines, i, onActivatePrescription);
       elements.push(jsx);
       i += consumed;
       continue;
@@ -2843,38 +2877,10 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
 
       const queuedRaw = pickTenActivationsForVoiceResult(result);
       const queued = queuedRaw.filter(isVegetarianActivation);
-
-      // ── Auto-activate top 3 Siddha Transmissions matched by scan ──
-      // These are added alongside the standard 10 voice_scan activations
-      const siddhaMatched = ALL_ACTIVATIONS
-        .filter(a => a.type === 'Siddha Transmission')
-        .map(a => {
-          const blob = `${a.name} ${a.benefit || ''} ${a.vibrationalSignature || ''}`.toLowerCase();
-          const payload = voiceResultToScanPayload(result);
-          let score = 0;
-          const dosha = String(result.dominantDosha || '').toLowerCase().split(/[\s(/]/)[0];
-          if (dosha && blob.includes(dosha)) score += 40;
-          if (result.priorityAreas?.length) {
-            for (const area of result.priorityAreas) {
-              const areaL = (area.name || '').toLowerCase();
-              if (areaL && blob.includes(areaL)) { score += 25; break; }
-            }
-          }
-          if (result.organField && blob.includes(result.organField.toLowerCase())) score += 20;
-          if (result.emotionalField && blob.includes(result.emotionalField.toLowerCase())) score += 15;
-          return { activation: a, score };
-        })
-        .filter(s => s.score > 0)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 3)
-        .map(s => s.activation);
-
-      const allQueued = [...queued, ...siddhaMatched];
-
       setActiveTransmissions((prev) => {
         // Clear old voice_scan entries — each new scan replaces the previous ones
       const next = prev.filter((t) => (t as any).source !== 'voice_scan');
-        for (const act of allQueued) {
+        for (const act of queued) {
           const enriched = enrichTransmission(act, 'voice_scan');
           if (
             next.some(
@@ -3270,7 +3276,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                           className="sqi-ancient-body break-words"
                           style={{ maxWidth: '100%', wordBreak: 'break-word', overflowWrap: 'anywhere', fontFamily: "'IM Fell English', Georgia, serif", fontSize: '16px', lineHeight: 1.9, color: 'rgba(225,210,185,0.9)', letterSpacing: '0.008em' }}
                         >
-                          {renderSQIContent(scrubBannedTerms(msg.text))}
+                          {renderSQIContent(scrubBannedTerms(msg.text), addActivation)}
                         </div>
                       </div>
                     </div>
