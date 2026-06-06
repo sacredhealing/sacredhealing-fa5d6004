@@ -1,8 +1,9 @@
 // ActiveTransmissionsSection — SQI 2050 Organic
 // daysRemaining(act.expiresAt) — Wellness=21d, others=8d, null=permanent
+// AUTO-EXPIRY: expired transmissions are filtered out on render + rescan prompt shown
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, ShieldCheck, X } from 'lucide-react';
+import { Zap, ShieldCheck, X, RefreshCw } from 'lucide-react';
 import type { Activation } from '@/features/quantum-apothecary/types';
 import { daysRemaining, formatSourceLabel } from '@/features/quantum-apothecary/apothecarySqiUi';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -60,9 +61,52 @@ function TxCanvas({ wrapRef }: { wrapRef: React.RefObject<HTMLDivElement> }) {
   return <canvas ref={canvasRef} style={{ position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none',zIndex:0,borderRadius:32 }} />;
 }
 
+/** Returns elapsed days since activatedAt (for display) */
+function daysActive(activatedAt?: string): number | null {
+  if (!activatedAt) return null;
+  const t = new Date(activatedAt).getTime();
+  if (Number.isNaN(t)) return null;
+  return Math.max(0, Math.floor((Date.now() - t) / (24 * 60 * 60 * 1000)));
+}
+
 export default function ActiveTransmissionsSection({ activeTransmissions, setActiveTransmissions, onDissolveTransmission }: Props) {
   const { t } = useTranslation();
   const wrapRef = React.useRef<HTMLDivElement>(null);
+
+  // ── AUTO-EXPIRY on render ─────────────────────────────────────
+  // Split into live vs expired; auto-remove expired ones from state
+  const { live, justExpired } = React.useMemo(() => {
+    const live: Activation[] = [];
+    const justExpired: Activation[] = [];
+    for (const act of activeTransmissions) {
+      const days = daysRemaining(act.expiresAt);
+      // null = no expiresAt = permanent; days >= 0 = still live; days === 0 means expires today — still show
+      if (days === null || days >= 0) {
+        live.push(act);
+      } else {
+        justExpired.push(act);
+      }
+    }
+    return { live, justExpired };
+  }, [activeTransmissions]);
+
+  // Auto-remove expired from state (once per render cycle)
+  React.useEffect(() => {
+    if (justExpired.length > 0) {
+      setActiveTransmissions(prev =>
+        prev.filter(act => {
+          const days = daysRemaining(act.expiresAt);
+          return days === null || days >= 0;
+        })
+      );
+    }
+  }, [justExpired.length, setActiveTransmissions]);
+
+  // Count how many are expiring within 3 days — for rescan nudge
+  const expiringSoon = live.filter(act => {
+    const days = daysRemaining(act.expiresAt);
+    return days !== null && days <= 3;
+  });
 
   return (
     <div ref={wrapRef} style={{ position:'relative', filter:'drop-shadow(0 0 24px rgba(212,175,55,0.10))' }}>
@@ -70,6 +114,7 @@ export default function ActiveTransmissionsSection({ activeTransmissions, setAct
         @keyframes txHalo{0%,100%{opacity:0.3;transform:scale(1);}50%{opacity:0;transform:scale(1.9);}}
         @keyframes txLiveDot{0%,100%{opacity:1;}50%{opacity:0.35;}}
         @keyframes txShimmer{0%{background-position:200% center;}100%{background-position:-200% center;}}
+        @keyframes txExpiredPulse{0%,100%{opacity:0.6;}50%{opacity:1;}}
       `}</style>
 
       <TxCanvas wrapRef={wrapRef} />
@@ -92,9 +137,19 @@ export default function ActiveTransmissionsSection({ activeTransmissions, setAct
           </div>
         </div>
 
+        {/* Rescan nudge — shown when any transmission expires within 3 days */}
+        {expiringSoon.length > 0 && (
+          <div style={{ marginBottom:10, padding:'10px 14px', borderRadius:14, background:'rgba(251,146,60,0.07)', border:'1px solid rgba(251,146,60,0.22)', display:'flex', alignItems:'center', gap:8 }}>
+            <RefreshCw size={12} style={{ color:'#FB923C', flexShrink:0 }} />
+            <p style={{ fontSize:10, fontWeight:700, color:'rgba(251,146,60,0.9)', lineHeight:1.5 }}>
+              {expiringSoon.length} transmission{expiringSoon.length > 1 ? 's' : ''} expiring soon — your field is shifting. Rescan to recalibrate.
+            </p>
+          </div>
+        )}
+
         {/* Unified organic container */}
         <div style={{ background:'rgba(212,175,55,0.025)', borderRadius:22, border:'1px solid rgba(212,175,55,0.10)', overflow:'hidden', backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)' }}>
-          {activeTransmissions.length === 0 ? (
+          {live.length === 0 ? (
             <div style={{ padding:'28px 20px', textAlign:'center' }}>
               <ShieldCheck size={22} style={{ margin:'0 auto 10px', color:'rgba(255,255,255,0.10)', display:'block' }} />
               <p style={{ fontSize:10, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.18)' }}>
@@ -107,14 +162,15 @@ export default function ActiveTransmissionsSection({ activeTransmissions, setAct
           ) : (
             <div style={{ maxHeight:300, overflowY:'auto', scrollbarWidth:'none' }}>
               <AnimatePresence>
-                {activeTransmissions.map((act, idx) => {
+                {live.map((act, idx) => {
                   const c = act.color || '#D4AF37';
-                  // ✅ Correct calls: pass act.expiresAt and act.source
                   const days = daysRemaining(act.expiresAt);
+                  const elapsed = daysActive(act.activatedAt);
                   const src = formatSourceLabel(act.source);
-                  const isLast = idx === activeTransmissions.length - 1;
-                  // Urgent if ≤3 days left
+                  const isLast = idx === live.length - 1;
                   const urgent = days !== null && days <= 3;
+                  const totalDays = act.type === 'Wellness' ? 21 : 8;
+                  const pct = elapsed !== null ? Math.min(100, Math.round((elapsed / totalDays) * 100)) : null;
 
                   return (
                     <motion.div
@@ -145,20 +201,32 @@ export default function ActiveTransmissionsSection({ activeTransmissions, setAct
                           {act.type}{src ? ` · ${src}` : ''}
                         </p>
 
-                        {/* Badge row: 24/7 + days or permanent */}
+                        {/* Progress bar (elapsed vs total) */}
+                        {pct !== null && (
+                          <div style={{ marginTop:5, height:2, borderRadius:2, background:'rgba(255,255,255,0.06)', overflow:'hidden' }}>
+                            <div style={{ height:'100%', width:`${pct}%`, borderRadius:2, background: urgent ? 'rgba(251,146,60,0.7)' : `rgba(${c === '#D4AF37' ? '212,175,55' : '255,255,255'},0.4)`, transition:'width 0.5s ease' }} />
+                          </div>
+                        )}
+
+                        {/* Badge row */}
                         <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:5 }}>
                           <span style={{ fontSize:7, fontWeight:900, letterSpacing:'0.14em', textTransform:'uppercase' as const, color:c, background:`${c}18`, padding:'2px 7px', borderRadius:5 }}>
                             Transmitting 24/7
                           </span>
 
+                          {/* Days active */}
+                          {elapsed !== null && (
+                            <span style={{ fontSize:7, fontWeight:700, color:'rgba(255,255,255,0.25)', padding:'2px 7px', borderRadius:5, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)' }}>
+                              {elapsed}d active
+                            </span>
+                          )}
+
                           {days !== null ? (
-                            /* Days remaining pill — amber if urgent */
                             <span style={{ display:'flex', alignItems:'center', gap:3, padding:'2px 7px', borderRadius:5, background: urgent ? 'rgba(251,146,60,0.12)' : 'rgba(212,175,55,0.10)', border: `1px solid ${urgent ? 'rgba(251,146,60,0.28)' : 'rgba(212,175,55,0.22)'}` }}>
                               <span style={{ fontSize:9, fontWeight:900, color: urgent ? '#FB923C' : '#D4AF37' }}>{days}</span>
                               <span style={{ fontSize:7, fontWeight:700, color: urgent ? 'rgba(251,146,60,0.7)' : 'rgba(212,175,55,0.6)', letterSpacing:'0.05em' }}>days left</span>
                             </span>
                           ) : (
-                            /* Permanent */
                             <span style={{ display:'flex', alignItems:'center', gap:3, padding:'2px 7px', borderRadius:5, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)' }}>
                               <span style={{ fontSize:9, color:'rgba(255,255,255,0.25)' }}>∞</span>
                               <span style={{ fontSize:7, fontWeight:700, color:'rgba(255,255,255,0.22)', letterSpacing:'0.05em' }}>Permanent</span>
