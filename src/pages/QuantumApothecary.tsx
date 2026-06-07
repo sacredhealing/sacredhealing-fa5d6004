@@ -778,6 +778,18 @@ function pickTenActivationsForVoiceResult(result: VoiceBiofieldResult): Activati
 
     if (blobLower.includes(dk)) score += 40;
 
+    // ── Spoken keyword matching — highest weight ──────────────────
+    // Words the user actually spoke during the scan are the strongest signal
+    const spoken = (result as any).spokenKeywords as string[] | undefined;
+    if (spoken?.length) {
+      let spokenHits = 0;
+      for (const word of spoken) {
+        if (word.length > 3 && blobLower.includes(word)) spokenHits++;
+      }
+      // Each spoken word match adds 30 points — spoken intent is the primary signal
+      score += Math.min(120, spokenHits * 30);
+    }
+
     for (const chakra of hints.chakraHits) {
       if (nameLower.includes(chakra) || sigLower.includes(chakra)) {
         score += 25;
@@ -2796,9 +2808,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
 
   const addActivation = useCallback(
     (act: Activation) => {
-      // Ensure activatedAt + expiresAt are always set (field connection)
-      const withExpiry = act.activatedAt ? act : enrichTransmission(act, 'manual');
-      const normalized = normalizeActivationForMixer(withExpiry);
+      const normalized = normalizeActivationForMixer(act);
       const current = selectedActivationsRef.current;
       const isDuplicate = current.some(
         (a) =>
@@ -2852,14 +2862,26 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                 .maybeSingle();
               const current = (existing?.activations as any[]) || [];
               const nonScan = current.filter((a: any) => a.source !== 'voice_scan');
-              const scanFreqs = top33.map((item: any) => ({
-                name: item.name,
-                title: item.name,
-                source: 'voice_scan',
-                score: item.score ?? 0,
-                is_active: true,
-                activated_at: new Date().toISOString(),
-              }));
+              // Save FULL Activation objects — not just names
+              // This ensures cross-device restore has complete field data
+              const activatedAt = new Date().toISOString();
+              const scanFreqs = top33.slice(0, 10).map((item: any) => {
+                // Find the full Activation from ALL_ACTIVATIONS
+                const full = ALL_ACTIVATIONS.find((a: any) =>
+                  a.id === item.id ||
+                  (a.name && item.name && a.name.toLowerCase() === item.name.toLowerCase())
+                );
+                const base = full || item;
+                return enrichTransmission({
+                  id: base.id || `scan_${(base.name || '').replace(/\s+/g,'_').toLowerCase()}`,
+                  name: base.name || item.name,
+                  type: base.type || item.type || 'Bioenergetic',
+                  benefit: base.benefit || '',
+                  vibrationalSignature: base.vibrationalSignature || '',
+                  color: base.color || '#D4AF37',
+                  source: 'voice_scan',
+                } as any, 'voice_scan');
+              });
               await supabase
                 .from('user_active_transmissions')
                 .upsert({ user_id: user.id, activations: [...nonScan, ...scanFreqs] }, { onConflict: 'user_id' });
@@ -2898,41 +2920,7 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         }
         return next;
       });
-      // ── Add top 3 matched Siddha Transmissions to activation
-      const siddhaMatched = ALL_ACTIVATIONS
-        .filter((a: any) => a.type === 'Siddha Transmission')
-        .map((a: any) => {
-          const blob = `${a.name} ${a.benefit || ''} ${a.vibrationalSignature || ''}`.toLowerCase();
-          let score = 0;
-          const dosha = String(result.dominantDosha || '').toLowerCase().split(/[\s(/]/)[0];
-          if (dosha && blob.includes(dosha)) score += 40;
-          if (result.priorityAreas?.length) {
-            for (const area of result.priorityAreas) {
-              if ((area.name || '').toLowerCase().split(' ').some((w: string) => w.length > 3 && blob.includes(w))) { score += 25; break; }
-            }
-          }
-          if (result.organField && blob.includes(result.organField.toLowerCase())) score += 20;
-          if (result.emotionalField && blob.includes(result.emotionalField.toLowerCase())) score += 15;
-          return { act: a, score };
-        })
-        .filter((s: any) => s.score > 0)
-        .sort((a: any, b: any) => b.score - a.score)
-        .slice(0, 3)
-        .map((s: any) => s.act);
-
-      // Enrich and add Siddha matches to active transmissions
-      setActiveTransmissions((prev: any) => {
-        const next = [...prev];
-        for (const act of siddhaMatched) {
-          const enriched = enrichTransmission(act as any, 'voice_scan');
-          if (next.some((x: any) => x.id === enriched.id)) continue;
-          next.push(enriched);
-        }
-        return next;
-      });
-
-      const allActivated = [...queued, ...siddhaMatched];
-      const queuedLines = allActivated.map((a: any) => `· **${a.name}** (${a.type})`).join('\n');
+      const queuedLines = queued.map((a) => `· **${a.name}** (${a.type})`).join('\n');
       const ctx = [
         '[LIVE VOICE BIOFIELD SCAN — microphone spectrum; educational only, not a medical diagnosis]',
         `**Overall coherence:** ${result.overallCoherence}/100`,
