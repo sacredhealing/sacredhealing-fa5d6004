@@ -2198,6 +2198,19 @@ function QuantumApothecaryInner() {
     setScanCooldownUntilMsLocal(v);
   }, []);
 
+  // ── Admin: reset scan cooldown immediately ──────────────────────
+  const isAdmin = user?.id === 'bd0b21c9-577a-450b-bb1e-21c9d0423f17';
+  const handleAdminResetCooldown = useCallback(() => {
+    try {
+      localStorage.removeItem('sqi_last_scan');
+      localStorage.removeItem('sqi_scan_snapshot');
+      localStorage.removeItem('sqi_library_unlocked');
+      localStorage.removeItem('sqi_top33_matches');
+      localStorage.removeItem('sqi_top33_ts');
+    } catch {}
+    setScanCooldownUntilMs(null);
+  }, [setScanCooldownUntilMs]);
+
   // ── Override from Supabase once loaded (cross-device restore) ──
   useEffect(() => {
     if (!sqiSync.ready) return;
@@ -3649,6 +3662,30 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                       showProgressRing
                       disableUntilMs={scanCooldownUntilMs}
                     />
+                  {/* Admin-only: reset 24h scan cooldown instantly */}
+                  {isAdmin && scanCooldownUntilMs && scanCooldownUntilMs > Date.now() && (
+                    <div style={{ marginTop: 8, textAlign: 'center' }}>
+                      <button
+                        type="button"
+                        onClick={handleAdminResetCooldown}
+                        style={{
+                          padding: '5px 14px',
+                          borderRadius: 100,
+                          border: '1px solid rgba(212,175,55,0.25)',
+                          background: 'rgba(212,175,55,0.06)',
+                          color: 'rgba(212,175,55,0.6)',
+                          fontSize: 9,
+                          fontWeight: 800,
+                          letterSpacing: '0.2em',
+                          textTransform: 'uppercase',
+                          cursor: 'pointer',
+                          fontFamily: 'inherit',
+                        }}
+                      >
+                        ⟁ Admin · Reset Scan Cooldown
+                      </button>
+                    </div>
+                  )}
                   </Suspense>
 
                   {voiceResult && (
