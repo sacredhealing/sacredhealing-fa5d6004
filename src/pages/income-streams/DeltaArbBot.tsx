@@ -118,11 +118,15 @@ export default function DeltaArbBot() {
       const lost   = all.filter(t => t.status === 'lost');
       const open   = all.filter(t => t.status === 'open' || !t.status);
       const total  = won.length + lost.length;
+      // Use pnl_usdc directly — it's the real value from the bot
+      // Only skip open/pending trades
       const totalPnl = all.reduce((s, t) => {
-        if (t.pnl_usdc !== null && t.pnl_usdc !== undefined) return s + (parseFloat(t.pnl_usdc) || 0);
+        const p = parseFloat(t.pnl_usdc);
+        if (!isNaN(p) && p !== 0) return s + p;
+        // For trades with pnl_usdc=0 or null, use status-based estimate
         if (t.status === 'lost') return s - (parseFloat(t.size_usd) || 10);
-        if (t.status === 'won')  return s + (parseFloat(t.size_usd) || 10) * 0.12;
-        return s;
+        if (t.status === 'won')  return s + (parseFloat(t.size_usd) || 10) * 0.35;
+        return s; // open trades don't count yet
       }, 0);
 
       setStats({
