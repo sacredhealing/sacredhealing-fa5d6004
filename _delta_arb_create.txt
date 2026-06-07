@@ -1,53 +1,9 @@
-Found 47 trades with pnl=NULL
-  071c3782 ? won -> pnl=1.4064
-  cd688357 ? won -> pnl=1.3392
-  c477f89c ? won -> pnl=1.1682
-  75579d34 ? won -> pnl=1.3621
-  ba30049a ? won -> pnl=1.2542
-  cd57faa8 ? won -> pnl=1.0639
-  0cc4b127 ? won -> pnl=0.7522
-  510c188f ? won -> pnl=1.0944
-  025a6024 ? won -> pnl=1.3028
-  09a634f7 ? won -> pnl=0.7009
-  44fe1dff ? won -> pnl=1.3421
-  c1896d28 ? won -> pnl=1.2497
-  fcb7dc96 ? lost -> pnl=-10.32
-  ca6f26fa ? won -> pnl=1.1693
-  6a77e5a7 ? won -> pnl=1.2368
-  54fe3f65 ? won -> pnl=1.0426
-  18b445da ? won -> pnl=0.8527
-  7a9cb6d7 ? won -> pnl=0.91
-  55479549 ? won -> pnl=0.7588
-  e2acb541 ? won -> pnl=1.3185
-  9f226c1b ? won -> pnl=1.2871
-  452d06ec ? lost -> pnl=-10.11
-  f9508a96 ? lost -> pnl=-9.09
-  9acd1000 ? won -> pnl=1.0577
-  802cf355 ? won -> pnl=0.6118
-  b0747e4a ? won -> pnl=0.8592
-  e3e1ae05 ? won -> pnl=1.1675
-  08f5f05c ? won -> pnl=0.9628
-  6776e1a5 ? won -> pnl=0.7139
-  63c008bf ? won -> pnl=0.7813
-  01b54a84 ? won -> pnl=0.8452
-  1a4aa41e ? won -> pnl=0.6887
-  b3f46177 ? won -> pnl=1.0176
-  403ea3cd ? won -> pnl=0.7915
-  1d677edd ? won -> pnl=1.2079
-  ef57ec84 ? won -> pnl=0.7021
-  1cffa75c ? won -> pnl=0.8412
-  7cb40c39 ? won -> pnl=0.8641
-  f549bbc6 ? lost -> pnl=-9.35
-  0d732a33 ? won -> pnl=0.8551
-  211ecf51 ? won -> pnl=0.7927
-  c9fcbf79 ? won -> pnl=0.9218
-  3f52bf4b ? won -> pnl=1.236
-  1d32eec6 ? won -> pnl=0.7256
-  daa48478 ? won -> pnl=0.9396
-  ba58aa3c ? won -> pnl=0.8178
-  920ab318 ? lost -> pnl=-9.1
+Found 3 trades with pnl=NULL
+  01beb816 ? won -> pnl=1.0915
+  e01d0a5b ? lost -> pnl=-8.19
+  4852faac ? lost -> pnl=-8.19
 
 === SUMMARY ===
-Total: 65 | Won: 60 | Lost: 5 | Open: 0
-Total PnL: +$44.74 USDC
-Balance: $144.74
+Total: 68 | Won: 61 | Lost: 7 | Open: 0
+Total PnL: +$29.45 USDC
+Balance: $129.45
