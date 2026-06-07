@@ -1,42 +1,14 @@
-Found 18 trades with pnl=NULL
-  2c4a5d13 ? won -> pnl=10.0
-  854114d0 ? won -> pnl=11.0
-  d69d45f4 ? won -> pnl=12.1
-  ffb2723f ? won -> pnl=0.9589
-  fa8acd48 ? won -> pnl=1.1982
-  a078316f ? won -> pnl=1.2195
-  c74f6230 ? won -> pnl=0.7898
-  c5939d6b ? won -> pnl=1.1682
-  a9e8e820 ? won -> pnl=1.005
-  0be850a7 ? won -> pnl=1.2102
-  03a69ba4 ? won -> pnl=1.3422
-  19d081dd ? won -> pnl=0.9478
-  0ec61ad0 ? won -> pnl=0.8143
-  53055771 ? won -> pnl=1.4129
-  8bb8b75a ? won -> pnl=1.5695
-  3f7b2748 ? won -> pnl=1.0806
-  32a29141 ? won -> pnl=1.5747
-  f651fdb9 ? won -> pnl=1.3018
+Total: 102 | Won: 90 | Lost: 12
 
-=== SUMMARY ===
-Trades: 18 | Wins: 18 | Losses: 0
-Total PnL: $50.69
+Win PnLs  (first 10): [10.0, 11.0, 12.1, 0.96, 1.2, 1.22, 0.79, 1.17, 1.0, 1.21]
+Loss PnLs (first 10): [-10.32, -10.11, -9.09, -9.35, -9.1, -8.19, -8.19, 0.0, 0.0, 0.0]
 
-  SOL  UP   +0.1556%     won    pnl=$1.3018
-  BTC  DOWN -0.1653%     won    pnl=$1.5747
-  ETH  DOWN -0.2233%     won    pnl=$1.0806
-  BTC  DOWN -0.2144%     won    pnl=$1.5695
-  SOL  UP   +0.2648%     won    pnl=$1.4129
-  BTC  UP   +0.1793%     won    pnl=$0.8143
-  ETH  UP   +0.1755%     won    pnl=$0.9478
-  SOL  DOWN -0.2953%     won    pnl=$1.3422
-  ETH  DOWN -0.2364%     won    pnl=$1.2102
-  BTC  DOWN -0.1666%     won    pnl=$1.005
-  SOL  UP   +0.1557%     won    pnl=$1.1682
-  SOL  UP   +0.1559%     won    pnl=$0.7898
-  ETH  UP   +0.2583%     won    pnl=$1.2195
-  SOL  UP   +0.1559%     won    pnl=$1.1982
-  ETH  UP   +0.2788%     won    pnl=$0.9589
-  BTC  DOWN -0.1684%     won    pnl=$12.1
-  ETH  DOWN -0.3450%     won    pnl=$11.0
-  SOL  DOWN -0.2332%     won    pnl=$10.0
+Total win PnL:  +93.80
+Total loss PnL:  -64.35
+NET: 29.45
+Balance: $129.45
+
+Recalculating with correct formula...
+Fixed 33 trades
+CORRECT BALANCE: $102.08 (net PnL: +2.08)
+Won=90 Lost=12
