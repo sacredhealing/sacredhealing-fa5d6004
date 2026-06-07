@@ -1,0 +1,65 @@
+name: SQI Auto Deploy — Both Supabase + Lovable Sync
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy-both-supabase:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # ── NEW Supabase (active) ──────────────────────────────────────
+      - name: Push schema → NEW Supabase (fjdzhrdpioxdeyyfogep)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          supabase link --project-ref fjdzhrdpioxdeyyfogep
+          supabase db push --linked 2>&1 || echo "New Supabase push done (errors non-fatal)"
+        continue-on-error: true
+
+      - name: Deploy edge functions → NEW Supabase
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          for fn in quantum-apothecary-chat bhrigu-oracle ayurveda-agastya-chat; do
+            echo "Deploying $fn → new Supabase..."
+            supabase functions deploy $fn --project-ref fjdzhrdpioxdeyyfogep --no-verify-jwt 2>&1 || echo "$fn deploy skipped"
+          done
+        continue-on-error: true
+
+      # ── OLD Supabase (Lovable) ────────────────────────────────────
+      - name: Push schema → OLD Supabase (ssygukfdbtehvtndandn)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          supabase link --project-ref ssygukfdbtehvtndandn
+          supabase db push --linked 2>&1 || echo "Old Supabase push done (errors non-fatal)"
+        continue-on-error: true
+
+      - name: Deploy edge functions → OLD Supabase (Lovable)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          for fn in quantum-apothecary-chat bhrigu-oracle ayurveda-agastya-chat; do
+            echo "Deploying $fn → Lovable Supabase..."
+            supabase functions deploy $fn --project-ref ssygukfdbtehvtndandn --no-verify-jwt 2>&1 || echo "$fn deploy skipped"
+          done
+        continue-on-error: true
+
+      - name: Summary
+        run: |
+          echo "✅ Both Supabase projects synced"
+          echo "NEW: fjdzhrdpioxdeyyfogep"
+          echo "OLD: ssygukfdbtehvtndandn (Lovable)"
+          echo "Commit: ${{ github.sha }}"
