@@ -444,7 +444,6 @@ class MultiWalletMonitor {
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
     try { this.ws?.close(); } catch {}
   }
-}
 
 // ─────────────────────────────────────────────────────────
 //  PAPER ENGINE — sells the actual mint the whale sold
@@ -557,7 +556,6 @@ class PaperEngine {
       return entry;
     }
   }
-}
 }
 
 // ─────────────────────────────────────────────────────────
