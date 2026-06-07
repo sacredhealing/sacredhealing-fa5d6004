@@ -65,7 +65,7 @@ export default function DeltaArbBot() {
 
   // ── Core state ────────────────────────────────────────────────────────────
   const [trades, setTrades]           = useState<any[]>([]);
-  const [loading, setLoading]         = useState(true);
+  const [loading, setLoading]         = useState(false);
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [autoRefresh,    setAutoRefresh]    = useState(true);
   const [activeStrategy, setActiveStrategy] = useState<'conservative'|'moderate'|'aggressive'>('moderate');
@@ -96,15 +96,21 @@ export default function DeltaArbBot() {
   const l2Rate = AFFILIATE_L2[tier]  ?? 3;
 
   // ── Main data fetch — reads directly from Supabase ────────────────────────
+  const sb = supabase as any;
+
   const fetchAll = useCallback(async () => {
     try {
-      const { data: rawTrades } = await supabase
+      const { data: rawTrades, error } = await sb
         .from('delta_arb_trades')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(100);
 
-      const all = rawTrades ?? [];
+      if (error) {
+        console.error('Trades fetch error:', error);
+      }
+
+      const all = (rawTrades as any[]) ?? [];
       setTrades(all);
 
       // Compute stats
@@ -131,14 +137,16 @@ export default function DeltaArbBot() {
       });
 
       // Load active strategy from platform config
-      const { data: cfg } = await supabase
-        .from('delta_arb_platform_config')
-        .select('active_strategy')
-        .eq('id', 1)
-        .maybeSingle();
-      if (cfg?.active_strategy) {
-        setActiveStrategy(cfg.active_strategy as any);
-      }
+      try {
+        const { data: cfg } = await sb
+          .from('delta_arb_platform_config')
+          .select('active_strategy')
+          .eq('id', 1)
+          .maybeSingle();
+        if (cfg?.active_strategy) {
+          setActiveStrategy(cfg.active_strategy as any);
+        }
+      } catch (_) {}
 
       setLastRefresh(new Date());
     } catch (e) {
@@ -184,7 +192,7 @@ export default function DeltaArbBot() {
   const saveStrategy = async (s: 'conservative' | 'moderate' | 'aggressive') => {
     setSavingStrategy(true);
     try {
-      await supabase
+      await (supabase as any)
         .from('delta_arb_platform_config')
         .update({ active_strategy: s })
         .eq('id', 1);
