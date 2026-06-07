@@ -1,0 +1,59 @@
+name: Add Helius API Key to Vercel
+
+on:
+  workflow_dispatch:
+
+jobs:
+  add-helius-key:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inject VITE_HELIUS_API_KEY into all Vercel projects
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          node - << 'EOF'
+          const https = require('https');
+          const TOKEN = process.env.VERCEL_TOKEN;
+          const HELIUS_KEY = '775d3d1f-6801-41de-a063-8aee4382d0f4';
+
+          function api(method, path, body) {
+            return new Promise(resolve => {
+              const payload = body ? JSON.stringify(body) : '';
+              const req = https.request({
+                hostname: 'api.vercel.com', path, method,
+                headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) }
+              }, res => {
+                let d = ''; res.on('data', c => d += c);
+                res.on('end', () => { try { resolve({ s: res.statusCode, b: JSON.parse(d) }); } catch { resolve({ s: res.statusCode, b: d }); } });
+              });
+              req.on('error', () => resolve({ s: 0, b: {} }));
+              if (payload) req.write(payload);
+              req.end();
+            });
+          }
+
+          async function main() {
+            const { b } = await api('GET', '/v9/projects?limit=20', null);
+            const projects = b?.projects || [];
+            console.log(`Found ${projects.length} projects`);
+            for (const p of projects) {
+              console.log(`\nProject: ${p.name} (${p.id})`);
+              const { b: envData } = await api('GET', `/v9/projects/${p.id}/env`, null);
+              const existing = (envData?.envs || []).find(e => e.key === 'VITE_HELIUS_API_KEY');
+              if (existing) {
+                const { s } = await api('PATCH', `/v9/projects/${p.id}/env/${existing.id}`, {
+                  value: HELIUS_KEY, target: ['production', 'preview', 'development']
+                });
+                console.log(`  ${s === 200 ? '✅' : '⚠️'} Updated VITE_HELIUS_API_KEY (${s})`);
+              } else {
+                const { s } = await api('POST', `/v9/projects/${p.id}/env`, [{
+                  key: 'VITE_HELIUS_API_KEY', value: HELIUS_KEY,
+                  type: 'encrypted', target: ['production', 'preview', 'development']
+                }]);
+                console.log(`  ${s === 200 || s === 201 ? '✅' : '⚠️'} Created VITE_HELIUS_API_KEY (${s})`);
+              }
+            }
+            console.log('\nDone. Triggering redeploy...');
+          }
+          main().catch(console.error);
+          EOF
