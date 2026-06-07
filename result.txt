@@ -2,278 +2,196 @@ Initialising login role...
 Connecting to remote database...
 Skipping migration 20260521b_check_admin_users.sql... (file name must match pattern "<timestamp>_name.sql")
 Skipping migration rate_limit_log.sql... (file name must match pattern "<timestamp>_name.sql")
-Do you want to push these migrations to the remote database?
- • 20250509_virtual_pilgrimage.sql
- • 20250512000001_stargate_community_overhaul.sql
- • 20251201212351_2dcf48df-7030-4d78-b778-30ca43a58095.sql
- • 20251201214734_4c38c1ff-70ee-4cf2-9e40-f995dae7bde3.sql
- • 20251201220001_79d16a3f-2a5d-4a5f-a5dd-0c9959f489dc.sql
- • 20251201220649_fb010e2c-9f79-4b35-a2af-c11bde4fc65a.sql
- • 20251201221647_315a35b0-2914-443f-8942-c44ababd29e6.sql
- • 20251201222205_c91ee7cf-5f89-43d6-a343-5cdd1012e746.sql
- • 20251201222352_92bfd99a-985d-4008-87ee-d960c5b4286d.sql
- • 20251201222706_636da751-220b-4004-9c31-2ad567206ca6.sql
- • 20251201232341_d26a2a3a-b52f-425f-9e9b-42216bb86d33.sql
- • 20251201233400_d76ada7f-8a4a-4ce0-baa6-42b8db86d9cf.sql
- • 20251201234008_ae59fe5c-a2f4-4349-b052-985d6d53df90.sql
- • 20251202000048_ecd661ca-a336-4964-a2f4-4ebf9a1dc82c.sql
- • 20251202000548_f2519d9a-4347-4f71-a2c0-e0055cfe85bc.sql
- • 20251202000941_ee0f9b9a-3708-4b09-a31a-493af6df0d51.sql
- • 20251202002139_def278aa-d37d-4260-8ba1-bd5a401754ed.sql
- • 20251202003439_3adb35e7-5640-43e5-8b1f-986d4eef25af.sql
- • 20251202004055_ddc5fd80-43b3-4964-8220-57cbccb18093.sql
- • 20251202081705_10b340bb-7887-4fe3-a2ec-ce99b16bcaee.sql
- • 20251202082826_c7e4c2da-4e9c-488a-a3f7-266d38c98209.sql
- • 20251202091625_ea37e7ec-ff06-458c-b0bf-91f10d413bff.sql
- • 20251202113455_1bb803a5-76cf-4a40-9d9e-9d7ffcc2cc42.sql
- • 20251202115231_7d3b0b60-fcb2-434e-a8d6-4a255cadcfae.sql
- • 20251203133858_f6c23a2e-2721-4c05-b528-51bad18dcb62.sql
- • 20251203135202_0e8ff7b0-00d3-459c-8100-1d34e397fca6.sql
- • 20251205104654_34620509-fb77-4f55-a2a8-dc456bcbd46c.sql
- • 20251205123003_f8c233d1-0eea-4bc9-b1e7-fc23140e5d8f.sql
- • 20251205124808_6f7d3a41-7483-45eb-9a36-f7f94a32b918.sql
- • 20251208132013_9ddc0a37-f62a-4aaf-95bf-e3aad80e95f4.sql
- • 20251208133456_c9f2581d-2a0a-43cc-9b60-ef0e5447038f.sql
- • 20251208134337_35c385c3-2cf9-4cf1-9a92-437ae6a31a64.sql
- • 20251208140027_bad6ca45-4dfb-4981-acb1-68fd95def5cb.sql
- • 20251209095251_2c37fd01-2ab8-445e-8fe8-2a829c8c166e.sql
- • 20251209130312_857a7923-2352-4446-b0c0-4978529deab1.sql
- • 20251210103044_3aae70ab-d43c-4a7e-8d1a-7bf5509bf035.sql
- • 20251210104047_fa3afb43-e82f-438c-a98c-9e9248b932f0.sql
- • 20251210104816_49a17a5d-ae4f-41fa-aa97-57e98b21945b.sql
- • 20251210110307_b6f0eb2f-f781-48a8-895f-3e04e95fbccb.sql
- • 20251210111843_bb5054e8-4acb-4d22-ab30-9c8bf9ad8048.sql
- • 20251210123508_36c2b493-97d0-406d-bb4f-6afb78518813.sql
- • 20251212082723_b43dfbeb-d7bf-4d34-9975-1932c1200a64.sql
- • 20251212084202_1d257822-461e-424e-ac67-3d19a8dc2cbe.sql
- • 20251212085617_3e1a3a89-b395-4781-9957-f2bfb3009932.sql
- • 20251212093208_123f57c1-451b-43ae-804f-89793cba193c.sql
- • 20251219215751_aaa275a4-125a-4353-b427-801ec3fcda21.sql
- • 20251220114501_977d5ee3-957a-43c4-bdc9-2c7629540c5f.sql
- • 20251226175658_ed827447-b3cc-4559-9c09-9a475f3eff24.sql
- • 20260101122730_4e6bfebd-822b-44eb-99cc-e8472f9c0ac4.sql
- • 20260101223046_32a2119a-a5b1-4e24-8084-df444d3a3489.sql
- • 20260101224702_0ace518b-8aa0-4953-9136-e84541bd080b.sql
- • 20260101231529_c5835431-91c9-40e2-af6b-2e18705ed74a.sql
- • 20260101232401_a865537f-6906-45a1-9af7-d4130e976735.sql
- • 20260103100502_72d14729-a21a-4b43-84a0-0b8c1f87aa4b.sql
- • 20260103101609_2437ce58-d534-4c93-8399-67e4187b18d7.sql
- • 20260103111424_9c279c11-6df5-4aa3-acaf-efef83172370.sql
- • 20260103120644_8ba64433-a32c-4416-82e6-4b45c74a1521.sql
- • 20260103122011_a03f1652-e49c-4ef5-b169-992d9ed3bbe5.sql
- • 20260104115654_971dd294-48c9-4bc3-99d1-50cbd231c185.sql
- • 20260104124959_f02b9f8c-0ff2-4484-8a89-afd3fe30c1d6.sql
- • 20260104135451_4883f1a6-0071-4a30-86f4-fa6f2430aee6.sql
- • 20260104142204_24ea6bd0-5470-4345-bdaa-f4deeac605de.sql
- • 20260104143616_1cebcaec-fe66-4290-931d-286378851098.sql
- • 20260104150814_0d21438b-5434-4430-a69a-ee3ea17cbf70.sql
- • 20260104151557_eae76212-5aab-4e11-ba12-fe4a7c3e1925.sql
- • 20260104152723_a7449f84-11cc-4f0c-9417-7a8ac765070c.sql
- • 20260104153557_435eaada-1b35-40ed-8e7e-fd5748733327.sql
- • 20260104154410_88c86983-fe8b-4f16-815f-82ed944117c6.sql
- • 20260104161138_218771b5-5be6-4033-99db-f621702ef95e.sql
- • 20260104165106_1106ea64-7997-468a-adcd-5cb5cd258f67.sql
- • 20260104170152_0a4177db-cf3a-4189-9fba-b4042c92cc00.sql
- • 20260104210259_9f8ebe55-8540-456f-878f-ba376f927d1a.sql
- • 20260105084912_091a6a9e-7bf9-418e-bc06-b418e1cd14e4.sql
- • 20260107101040_4c7e95cb-ad20-4d7d-b0a3-e2752b2c79af.sql
- • 20260108102127_c57e7f63-8fed-43a1-9a67-860bf5d31261.sql
- • 20260108112937_content_roadmap_tasks.sql
- • 20260108120000_fix_revenue_tracking.sql
- • 20260109000000_add_script_text_to_content_tasks.sql
- • 20260109000001_add_script_text_to_healing_audio.sql
- • 20260109000002_populate_healing_scripts.sql
- • 20260109000003_populate_all_healing_scripts.sql
- • 20260109000004_add_admin_update_policy_healing_audio.sql
- • 20260109120000_add_script_text_column_final.sql
- • 20260109201434_ee792b12-a5a3-4da3-a60c-7d5668506290.sql
- • 20260110000000_mql_trading_bot_system.sql
- • 20260110000001_gamification_and_community_features.sql
- • 20260110000002_90_day_roadmap_system.sql
- • 20260110120000_fix_content_tasks_performance.sql
- • 20260110124131_71b199d6-cbf6-4c05-8bb4-f7dc4f7619c7.sql
- • 20260110130000_fix_challenges_rls.sql
- • 20260110140000_creative_tool_access.sql
- • 20260110150000_add_featured_tool_support.sql
- • 20260110160000_add_featured_rotation_promotions.sql
- • 20260110170000_fix_live_events_rls.sql
- • 20260110180000_add_vedic_astrology_tiers.sql
- • 20260110185000_update_membership_tiers_vedic.sql
- • 20260110190000_add_birth_details_to_profiles.sql
- • 20260110191826_34c31398-56d2-4a5d-b12d-fe654d4983b6.sql
- • 20260110200000_update_creative_soul_price.sql
- • 20260110210000_grant_full_admin_access.sql
- • 20260110220000_fix_creative_tools_display.sql
- • 20260110230000_ensure_creative_tools_exist.sql
- • 20260110240000_fix_rls_and_tools_final.sql
- • 20260110250000_fix_tool_type_constraint.sql
- • 20260110260000_fix_creative_tools_complete.sql
- • 20260110270000_add_creative_soul_usage_tracking.sql
- • 20260111120000_creative_soul_meditation.sql
- • 20260111130000_add_script_text_to_meditations.sql
- • 20260111130001_populate_meditations.sql
- • 20260111140000_create_creative_soul_items_registry.sql
- • 20260111150000_creative_soul_gating_tables.sql
- • 20260112135644_64952de3-e1a7-4b1b-acf7-d9853b126ae2.sql
- • 20260113000000_creative_soul_stripe_integration.sql
- • 20260113112221_ca23c91c-1c49-4a81-b83b-52ea3b75744b.sql
- • 20260113124646_74efd5a8-102d-490e-8c74-89f19c24e569.sql
- • 20260114171449_414aba0e-9878-429b-a194-8104ce5d1169.sql
- • 20260116155704_6bcca9b6-4296-48fd-bcf5-fa41419984b0.sql
- • 20260119115553_8ac1bde3-4571-4560-8bdb-60306fc40fbb.sql
- • 20260119212237_3b4846e6-a844-4a12-a994-18f950ddb954.sql
- • 20260121102600_c17c27ee-ee8e-40c8-b276-c6a4d6c1947a.sql
- • 20260121111120_647e96fe-1a18-4b4d-a3de-b2970ef822b5.sql
- • 20260121132958_e9832bbd-82c5-4099-ba55-e9c704dce328.sql
- • 20260122094617_d0b344db-d5e7-48a8-8c80-5c48489f4f84.sql
- • 20260124151009_73d90c95-a9c5-49ef-8da0-e1a3d3e923f3.sql
- • 20260124152011_c25a76d1-b234-45f6-bd3e-2c90ed57e0c6.sql
- • 20260125000000_vedic_guru_chat_history.sql
- • 20260209000000_add_language_to_meditations.sql
- • 20260210113337_5ab5368b-a36d-4d2c-8e21-26b080408e1e.sql
- • 20260211000000_add_diary_entries.sql
- • 20260212135626_add_missing_supercharger_videos.sql
- • 20260212143438_add_language_to_healing_audio.sql
- • 20260215000000_mantras_category_planet_premium.sql
- • 20260216000000_community_groups_polls_pins.sql
- • 20260217000000_fix_chat_members_recursion.sql
- • 20260217000001_add_multimedia_to_chat.sql
- • 20260218000000_weekly_motivational_email_schedule.sql
- • 20260218000001_emergency_fix_member_visibility_rls.sql
- • 20260218000007_scriptural_books.sql
- • 20260218000008_execute_divine_will.sql
- • 20260218000009_hidden_wisdom_vault.sql
- • 20260218000010_scheduled_messages.sql
- • 20260218000011_universal_translations.sql
- • 20260218000012_is_admin_v3_final_fix.sql
- • 20260218000013_ai_templates.sql
- • 20260218000014_jyotish_mantra_sync.sql
- • 20260218000015_vishwananda_core_stability.sql
- • 20260218000016_schema_refresh_rpc.sql
- • 20260218000017_create_vastu_course.sql
- • 20260218230000_mantra_admin_rpc.sql
- • 20260219112710_e0ec00f2-1bb7-4085-ab7e-0fdc95f804d3.sql
- • 20260219114923_bf0776f9-b582-45e6-b916-5b883db8ddc1.sql
- • 20260219114938_9ac6b91e-6865-4416-a936-b124785b39f7.sql
- • 20260220000000_akashic_readings.sql
- • 20260221000000_pending_crypto_payments.sql
- • 20260226093755_414c04fa-f637-4842-9282-25ea30dd91e2.sql
- • 20260302000000_sri_yantra_access.sql
- • 20260302120000_admin_grant_access_all_types.sql
- • 20260302120001_admin_sri_yantra_grant.sql
- • 20260303120000_sqi_sessions.sql
- • 20260303123000_life_book_chapters.sql
- • 20260303133000_soul_vault_entries.sql
- • 20260304114631_b9cf7c07-b217-4753-9d81-b98ecd300367.sql
- • 20260308000000_healing_reports.sql
- • 20260308205847_a8bdc9c8-85d6-433e-bfd4-2b98f1fd0f85.sql
- • 20260309000000_profiles_rls_birth_data.sql
- • 20260311111209_e5d20515-4e32-4464-9a89-b7af607f6c61.sql
- • 20260312000000_community_profiles_visible.sql
- • 20260312100000_divine_transmissions.sql
- • 20260312140000_create_divine_transmissions_retry.sql
- • 20260313081856_6da3d66f-a01e-464b-b9bc-0a50270121f8.sql
- • 20260316123554_caa5eae2-48f7-41e0-9c82-acb24fb200d9.sql
- • 20260327120000_nadi_baselines.sql
- • 20260331093057_0b7e9246-3c58-4d11-b8e3-57ff2710006a.sql
- • 20260331095034_458340a2-db3c-4858-958d-31f8cb7a9900.sql
- • 20260331105753_email_infra.sql
- • 20260401114125_ed7eb5f5-cdb4-4a05-93ba-cd2692baadfd.sql
- • 20260407150000_add_shakti_cycle_logs_to_profiles.sql
- • 20260412132410_68c44403-5fb0-4c74-ac5c-196cf4aed5da.sql
- • 20260412132606_076a6601-d9d7-4e0f-aeb0-df7baa47c84b.sql
- • 20260414134725_e379eee4-67ae-4832-80a1-d69f2329606b.sql
- • 20260414180000_sqi_unified_field_context.sql
- • 20260415072127_c2e709ef-ab05-485a-af2f-e04fbaacf46b.sql
- • 20260415082138_06440a4c-a33e-4be6-8931-59b217c1c039.sql
- • 20260418120000_sqi_bot_trades_sessions.sql
- • 20260420113326_8ad9be46-13da-422d-9203-53b2f1ab4584.sql
- • 20260424103907_b2cabb72-e599-41aa-8b3d-35ea1e08f1c8.sql
- • 20260424110624_d718f62d-cf52-420a-8951-8e1ace676f54.sql
- • 20260426120000_shiesty_polymarket_worker.sql
- • 20260426182123_81af4a29-de7d-493c-aeef-2c2491a6ae3f.sql
- • 20260429125024_2404f201-2b80-41b7-9c3e-623f4134d89e.sql
- • 20260430043816_c156daeb-4495-4bdc-b3d2-5c3c5aff3cf6.sql
- • 20260501080513_6bad6d49-ff07-4d54-a4b6-64ca5d7051de.sql
- • 20260501104953_32ef398b-f071-4859-a4ab-05c4c61fbffe.sql
- • 20260501145134_ceb698e9-1ed2-4375-a092-f031ea21d0a9.sql
- • 20260502101300_5261a187-e8b2-4145-87a7-164a481d477b.sql
- • 20260502161229_177b879b-0238-47c0-8039-0b6a2ac6985b.sql
- • 20260502161715_59cb9dec-3e28-4f86-ae15-d0cbbcd1ba65.sql
- • 20260503131956_1215d7b3-749f-47a3-9131-e6575f57b70c.sql
- • 20260503132013_12627056-65a3-42ab-a726-a87d8747f1d3.sql
- • 20260503181041_9caf6a8c-3546-40a1-85a1-88db74422bdf.sql
- • 20260503184500_public_aggregate_dashboard_stats.sql
- • 20260503191210_534a80b7-0135-4e9a-becd-9afe248750b2.sql
- • 20260503200657_a5f1b476-dc21-45c6-8587-6ffd768ff7ff.sql
- • 20260503201000_agastyar_academy_courses.sql
- • 20260503203000_ayurveda_courses_pdf_audio.sql
- • 20260503210000_ayurveda_academy_extended_downloads.sql
- • 20260503220000_jyotish_vidya.sql
- • 20260503231500_jyotish_oracle_queries.sql
- • 20260504000000_ai_cost_shield.sql
- • 20260504000000_sovereign_shield.sql
- • 20260504185918_993bf10e-27b6-4e92-a3fe-67cb4752bed8.sql
- • 20260505082816_1d7ba1e1-2abb-4ca3-83b7-0690947631f0.sql
- • 20260505100000_affiliate_system.sql
- • 20260506075629_04af3b12-9235-4211-9bc2-220ce39375d6.sql
- • 20260506111606_c776ff3b-08e9-48c6-a6ea-616cab1867d7.sql
- • 20260506120000_email_automation_system.sql
- • 20260506190000_ai_usage_limits_and_response_cache.sql
- • 20260506200000_user_chat_sessions.sql
- • 20260506210000_temple_home_siddha_activation.sql
- • 20260506220000_temple_activations.sql
- • 20260507040203_12449a74-1132-4fb9-85bb-057fac4713cb.sql
- • 20260507183000_user_active_transmissions.sql
- • 20260508180000_user_sync_chat_messages.sql
- • 20260508181717_8db618fa-e212-4768-bbaa-10be7edb6e4a.sql
- • 20260508210421_a9768c2a-3538-4864-9678-e308c7fe8d41.sql
- • 20260508210455_fdeda460-f359-40a0-aadc-34401c68f10b.sql
- • 20260509095424_57ced298-c0ba-4e60-8727-c31fefa54d68.sql
- • 20260509120000_virtual_pilgrimage_activations.sql
- • 20260509150000_active_transmissions.sql
- • 20260513000000_sqi_bugs_fix.sql
- • 20260514000000_add_stripe_customer_id.sql
- • 20260516000001_fix_user_tiers.sql
- • 20260516000002_fix_user_tiers.sql
- • 20260516093115_5d8478c2-5e22-42b4-82f4-fa3bf53874dd.sql
- • 20260520101324_14ba1fa2-839f-4176-9e76-0bae9e253c1a.sql
- • 20260521_create_admin_users.sql
- • 20260522000000_polymarket_bot_tables.sql
- • 20260522130749_35e768a7-e682-4a86-b0dd-5f49c2f54691.sql
- • 20260522200000_grant_polymarket_permissions.sql
- • 20260523000000_clawbot_whale_tables.sql
- • 20260523112620_adaa0d80-935f-4183-a598-b94abbcb6c11.sql
- • 20260524000001_trade_resolution_tracking.sql
- • 20260525_social_post_queue.sql
- • 20260526083658_afecffbc-c521-4d7e-ae98-d71e9f7292fb.sql
- • 20260527000000_quantum_cross_device_sync.sql
- • 20260601000000_stripe_infra_fix.sql
- • 20260602180000_fix_admin_granted_access_constraint.sql
- • 20260602190000_fix_granted_by_not_null.sql
- • 20260603000001_bhrigu_memory.sql
- • 20260604000001_fix_adam_birth_date.sql
- • 20260605000000_clawbot_profit_share.sql
- • 20260605100000_fix_clawbot_rls.sql
- • 20260605200000_clawbot_affiliate.sql
- • 20260605220000_delta_arb_bot.sql
- • 20260605_sniper_bot.sql
- • 20260606070046_e2af7d26-4107-4c3a-a012-370246b060d9.sql
- • 20260606071549_750787be-0236-4770-90d9-68051f01f495.sql
- • 20260607120000_check_wallets.sql
- • 20260607120000_temple_activations_scalar_bridge.sql
- • 20260607150000_delta_arb_full_setup.sql
- • 20260625000000_btc_bot_tables.sql
- • 20260625000001_add_jyotish_profile_columns.sql
+Found local migration files to be inserted before the last migration on remote database.
 
- [Y/n] y
-Applying migration 20250509_virtual_pilgrimage.sql...
-NOTICE (42P07): relation "virtual_pilgrimage_activations" already exists, skipping
-ERROR: policy "Users can manage their own pilgrimage" for table "virtual_pilgrimage_activations" already exists (SQLSTATE 42710)
-At statement: 2                                                                                                                 
-CREATE POLICY "Users can manage their own pilgrimage"                                                                           
-  ON virtual_pilgrimage_activations                                                                                             
-  FOR ALL                                                                                                                       
-  USING (auth.uid() = user_id)                                                                                                  
-  WITH CHECK (auth.uid() = user_id)                                                                                             
-Try rerunning the command with --debug to troubleshoot the error.
+Rerun the command with --include-all flag to apply these migrations:
+supabase/migrations/20250509_virtual_pilgrimage.sql                         
+supabase/migrations/20250512000001_stargate_community_overhaul.sql          
+supabase/migrations/20251201212351_2dcf48df-7030-4d78-b778-30ca43a58095.sql 
+supabase/migrations/20251201214734_4c38c1ff-70ee-4cf2-9e40-f995dae7bde3.sql 
+supabase/migrations/20251201220001_79d16a3f-2a5d-4a5f-a5dd-0c9959f489dc.sql 
+supabase/migrations/20251201220649_fb010e2c-9f79-4b35-a2af-c11bde4fc65a.sql 
+supabase/migrations/20251201221647_315a35b0-2914-443f-8942-c44ababd29e6.sql 
+supabase/migrations/20251201222205_c91ee7cf-5f89-43d6-a343-5cdd1012e746.sql 
+supabase/migrations/20251201222352_92bfd99a-985d-4008-87ee-d960c5b4286d.sql 
+supabase/migrations/20251201222706_636da751-220b-4004-9c31-2ad567206ca6.sql 
+supabase/migrations/20251201232341_d26a2a3a-b52f-425f-9e9b-42216bb86d33.sql 
+supabase/migrations/20251201233400_d76ada7f-8a4a-4ce0-baa6-42b8db86d9cf.sql 
+supabase/migrations/20251201234008_ae59fe5c-a2f4-4349-b052-985d6d53df90.sql 
+supabase/migrations/20251202000048_ecd661ca-a336-4964-a2f4-4ebf9a1dc82c.sql 
+supabase/migrations/20251202000548_f2519d9a-4347-4f71-a2c0-e0055cfe85bc.sql 
+supabase/migrations/20251202000941_ee0f9b9a-3708-4b09-a31a-493af6df0d51.sql 
+supabase/migrations/20251202002139_def278aa-d37d-4260-8ba1-bd5a401754ed.sql 
+supabase/migrations/20251202003439_3adb35e7-5640-43e5-8b1f-986d4eef25af.sql 
+supabase/migrations/20251202004055_ddc5fd80-43b3-4964-8220-57cbccb18093.sql 
+supabase/migrations/20251202081705_10b340bb-7887-4fe3-a2ec-ce99b16bcaee.sql 
+supabase/migrations/20251202082826_c7e4c2da-4e9c-488a-a3f7-266d38c98209.sql 
+supabase/migrations/20251202091625_ea37e7ec-ff06-458c-b0bf-91f10d413bff.sql 
+supabase/migrations/20251202113455_1bb803a5-76cf-4a40-9d9e-9d7ffcc2cc42.sql 
+supabase/migrations/20251202115231_7d3b0b60-fcb2-434e-a8d6-4a255cadcfae.sql 
+supabase/migrations/20251203133858_f6c23a2e-2721-4c05-b528-51bad18dcb62.sql 
+supabase/migrations/20251203135202_0e8ff7b0-00d3-459c-8100-1d34e397fca6.sql 
+supabase/migrations/20251205104654_34620509-fb77-4f55-a2a8-dc456bcbd46c.sql 
+supabase/migrations/20251205123003_f8c233d1-0eea-4bc9-b1e7-fc23140e5d8f.sql 
+supabase/migrations/20251205124808_6f7d3a41-7483-45eb-9a36-f7f94a32b918.sql 
+supabase/migrations/20251208132013_9ddc0a37-f62a-4aaf-95bf-e3aad80e95f4.sql 
+supabase/migrations/20251208133456_c9f2581d-2a0a-43cc-9b60-ef0e5447038f.sql 
+supabase/migrations/20251208134337_35c385c3-2cf9-4cf1-9a92-437ae6a31a64.sql 
+supabase/migrations/20251208140027_bad6ca45-4dfb-4981-acb1-68fd95def5cb.sql 
+supabase/migrations/20251209095251_2c37fd01-2ab8-445e-8fe8-2a829c8c166e.sql 
+supabase/migrations/20251209130312_857a7923-2352-4446-b0c0-4978529deab1.sql 
+supabase/migrations/20251210103044_3aae70ab-d43c-4a7e-8d1a-7bf5509bf035.sql 
+supabase/migrations/20251210104047_fa3afb43-e82f-438c-a98c-9e9248b932f0.sql 
+supabase/migrations/20251210104816_49a17a5d-ae4f-41fa-aa97-57e98b21945b.sql 
+supabase/migrations/20251210110307_b6f0eb2f-f781-48a8-895f-3e04e95fbccb.sql 
+supabase/migrations/20251210111843_bb5054e8-4acb-4d22-ab30-9c8bf9ad8048.sql 
+supabase/migrations/20251210123508_36c2b493-97d0-406d-bb4f-6afb78518813.sql 
+supabase/migrations/20251212082723_b43dfbeb-d7bf-4d34-9975-1932c1200a64.sql 
+supabase/migrations/20251212084202_1d257822-461e-424e-ac67-3d19a8dc2cbe.sql 
+supabase/migrations/20251212085617_3e1a3a89-b395-4781-9957-f2bfb3009932.sql 
+supabase/migrations/20251212093208_123f57c1-451b-43ae-804f-89793cba193c.sql 
+supabase/migrations/20251219215751_aaa275a4-125a-4353-b427-801ec3fcda21.sql 
+supabase/migrations/20251220114501_977d5ee3-957a-43c4-bdc9-2c7629540c5f.sql 
+supabase/migrations/20251226175658_ed827447-b3cc-4559-9c09-9a475f3eff24.sql 
+supabase/migrations/20260101122730_4e6bfebd-822b-44eb-99cc-e8472f9c0ac4.sql 
+supabase/migrations/20260101223046_32a2119a-a5b1-4e24-8084-df444d3a3489.sql 
+supabase/migrations/20260101224702_0ace518b-8aa0-4953-9136-e84541bd080b.sql 
+supabase/migrations/20260101231529_c5835431-91c9-40e2-af6b-2e18705ed74a.sql 
+supabase/migrations/20260101232401_a865537f-6906-45a1-9af7-d4130e976735.sql 
+supabase/migrations/20260103100502_72d14729-a21a-4b43-84a0-0b8c1f87aa4b.sql 
+supabase/migrations/20260103101609_2437ce58-d534-4c93-8399-67e4187b18d7.sql 
+supabase/migrations/20260103111424_9c279c11-6df5-4aa3-acaf-efef83172370.sql 
+supabase/migrations/20260103120644_8ba64433-a32c-4416-82e6-4b45c74a1521.sql 
+supabase/migrations/20260103122011_a03f1652-e49c-4ef5-b169-992d9ed3bbe5.sql 
+supabase/migrations/20260104115654_971dd294-48c9-4bc3-99d1-50cbd231c185.sql 
+supabase/migrations/20260104124959_f02b9f8c-0ff2-4484-8a89-afd3fe30c1d6.sql 
+supabase/migrations/20260104135451_4883f1a6-0071-4a30-86f4-fa6f2430aee6.sql 
+supabase/migrations/20260104142204_24ea6bd0-5470-4345-bdaa-f4deeac605de.sql 
+supabase/migrations/20260104143616_1cebcaec-fe66-4290-931d-286378851098.sql 
+supabase/migrations/20260104150814_0d21438b-5434-4430-a69a-ee3ea17cbf70.sql 
+supabase/migrations/20260104151557_eae76212-5aab-4e11-ba12-fe4a7c3e1925.sql 
+supabase/migrations/20260104152723_a7449f84-11cc-4f0c-9417-7a8ac765070c.sql 
+supabase/migrations/20260104153557_435eaada-1b35-40ed-8e7e-fd5748733327.sql 
+supabase/migrations/20260104154410_88c86983-fe8b-4f16-815f-82ed944117c6.sql 
+supabase/migrations/20260104161138_218771b5-5be6-4033-99db-f621702ef95e.sql 
+supabase/migrations/20260104165106_1106ea64-7997-468a-adcd-5cb5cd258f67.sql 
+supabase/migrations/20260104170152_0a4177db-cf3a-4189-9fba-b4042c92cc00.sql 
+supabase/migrations/20260104210259_9f8ebe55-8540-456f-878f-ba376f927d1a.sql 
+supabase/migrations/20260105084912_091a6a9e-7bf9-418e-bc06-b418e1cd14e4.sql 
+supabase/migrations/20260107101040_4c7e95cb-ad20-4d7d-b0a3-e2752b2c79af.sql 
+supabase/migrations/20260108102127_c57e7f63-8fed-43a1-9a67-860bf5d31261.sql 
+supabase/migrations/20260108112937_content_roadmap_tasks.sql                
+supabase/migrations/20260108120000_fix_revenue_tracking.sql                 
+supabase/migrations/20260109000000_add_script_text_to_content_tasks.sql     
+supabase/migrations/20260109000001_add_script_text_to_healing_audio.sql     
+supabase/migrations/20260109000002_populate_healing_scripts.sql             
+supabase/migrations/20260109000003_populate_all_healing_scripts.sql         
+supabase/migrations/20260109000004_add_admin_update_policy_healing_audio.sql
+supabase/migrations/20260109120000_add_script_text_column_final.sql         
+supabase/migrations/20260109201434_ee792b12-a5a3-4da3-a60c-7d5668506290.sql 
+supabase/migrations/20260110000000_mql_trading_bot_system.sql               
+supabase/migrations/20260110000001_gamification_and_community_features.sql  
+supabase/migrations/20260110000002_90_day_roadmap_system.sql                
+supabase/migrations/20260110120000_fix_content_tasks_performance.sql        
+supabase/migrations/20260110124131_71b199d6-cbf6-4c05-8bb4-f7dc4f7619c7.sql 
+supabase/migrations/20260110130000_fix_challenges_rls.sql                   
+supabase/migrations/20260110140000_creative_tool_access.sql                 
+supabase/migrations/20260110150000_add_featured_tool_support.sql            
+supabase/migrations/20260110160000_add_featured_rotation_promotions.sql     
+supabase/migrations/20260110170000_fix_live_events_rls.sql                  
+supabase/migrations/20260110180000_add_vedic_astrology_tiers.sql            
+supabase/migrations/20260110185000_update_membership_tiers_vedic.sql        
+supabase/migrations/20260110190000_add_birth_details_to_profiles.sql        
+supabase/migrations/20260110191826_34c31398-56d2-4a5d-b12d-fe654d4983b6.sql 
+supabase/migrations/20260110200000_update_creative_soul_price.sql           
+supabase/migrations/20260110210000_grant_full_admin_access.sql              
+supabase/migrations/20260110220000_fix_creative_tools_display.sql           
+supabase/migrations/20260110230000_ensure_creative_tools_exist.sql          
+supabase/migrations/20260110240000_fix_rls_and_tools_final.sql              
+supabase/migrations/20260110250000_fix_tool_type_constraint.sql             
+supabase/migrations/20260110260000_fix_creative_tools_complete.sql          
+supabase/migrations/20260110270000_add_creative_soul_usage_tracking.sql     
+supabase/migrations/20260111120000_creative_soul_meditation.sql             
+supabase/migrations/20260111130000_add_script_text_to_meditations.sql       
+supabase/migrations/20260111130001_populate_meditations.sql                 
+supabase/migrations/20260111140000_create_creative_soul_items_registry.sql  
+supabase/migrations/20260111150000_creative_soul_gating_tables.sql          
+supabase/migrations/20260112135644_64952de3-e1a7-4b1b-acf7-d9853b126ae2.sql 
+supabase/migrations/20260113000000_creative_soul_stripe_integration.sql     
+supabase/migrations/20260113112221_ca23c91c-1c49-4a81-b83b-52ea3b75744b.sql 
+supabase/migrations/20260113124646_74efd5a8-102d-490e-8c74-89f19c24e569.sql 
+supabase/migrations/20260114171449_414aba0e-9878-429b-a194-8104ce5d1169.sql 
+supabase/migrations/20260116155704_6bcca9b6-4296-48fd-bcf5-fa41419984b0.sql 
+supabase/migrations/20260119115553_8ac1bde3-4571-4560-8bdb-60306fc40fbb.sql 
+supabase/migrations/20260119212237_3b4846e6-a844-4a12-a994-18f950ddb954.sql 
+supabase/migrations/20260121102600_c17c27ee-ee8e-40c8-b276-c6a4d6c1947a.sql 
+supabase/migrations/20260121111120_647e96fe-1a18-4b4d-a3de-b2970ef822b5.sql 
+supabase/migrations/20260121132958_e9832bbd-82c5-4099-ba55-e9c704dce328.sql 
+supabase/migrations/20260122094617_d0b344db-d5e7-48a8-8c80-5c48489f4f84.sql 
+supabase/migrations/20260124151009_73d90c95-a9c5-49ef-8da0-e1a3d3e923f3.sql 
+supabase/migrations/20260124152011_c25a76d1-b234-45f6-bd3e-2c90ed57e0c6.sql 
+supabase/migrations/20260125000000_vedic_guru_chat_history.sql              
+supabase/migrations/20260209000000_add_language_to_meditations.sql          
+supabase/migrations/20260210113337_5ab5368b-a36d-4d2c-8e21-26b080408e1e.sql 
+supabase/migrations/20260211000000_add_diary_entries.sql                    
+supabase/migrations/20260212135626_add_missing_supercharger_videos.sql      
+supabase/migrations/20260212143438_add_language_to_healing_audio.sql        
+supabase/migrations/20260215000000_mantras_category_planet_premium.sql      
+supabase/migrations/20260216000000_community_groups_polls_pins.sql          
+supabase/migrations/20260217000000_fix_chat_members_recursion.sql           
+supabase/migrations/20260217000001_add_multimedia_to_chat.sql               
+supabase/migrations/20260218000000_weekly_motivational_email_schedule.sql   
+supabase/migrations/20260218000001_emergency_fix_member_visibility_rls.sql  
+supabase/migrations/20260218000007_scriptural_books.sql                     
+supabase/migrations/20260218000008_execute_divine_will.sql                  
+supabase/migrations/20260218000009_hidden_wisdom_vault.sql                  
+supabase/migrations/20260218000010_scheduled_messages.sql                   
+supabase/migrations/20260218000011_universal_translations.sql               
+supabase/migrations/20260218000012_is_admin_v3_final_fix.sql                
+supabase/migrations/20260218000013_ai_templates.sql                         
+supabase/migrations/20260218000014_jyotish_mantra_sync.sql                  
+supabase/migrations/20260218000015_vishwananda_core_stability.sql           
+supabase/migrations/20260218000016_schema_refresh_rpc.sql                   
+supabase/migrations/20260218000017_create_vastu_course.sql                  
+supabase/migrations/20260218230000_mantra_admin_rpc.sql                     
+supabase/migrations/20260219112710_e0ec00f2-1bb7-4085-ab7e-0fdc95f804d3.sql 
+supabase/migrations/20260219114923_bf0776f9-b582-45e6-b916-5b883db8ddc1.sql 
+supabase/migrations/20260219114938_9ac6b91e-6865-4416-a936-b124785b39f7.sql 
+supabase/migrations/20260220000000_akashic_readings.sql                     
+supabase/migrations/20260221000000_pending_crypto_payments.sql              
+supabase/migrations/20260226093755_414c04fa-f637-4842-9282-25ea30dd91e2.sql 
+supabase/migrations/20260302000000_sri_yantra_access.sql                    
+supabase/migrations/20260302120000_admin_grant_access_all_types.sql         
+supabase/migrations/20260302120001_admin_sri_yantra_grant.sql               
+supabase/migrations/20260303120000_sqi_sessions.sql                         
+supabase/migrations/20260303123000_life_book_chapters.sql                   
+supabase/migrations/20260303133000_soul_vault_entries.sql                   
+supabase/migrations/20260304114631_b9cf7c07-b217-4753-9d81-b98ecd300367.sql 
+supabase/migrations/20260308000000_healing_reports.sql                      
+supabase/migrations/20260308205847_a8bdc9c8-85d6-433e-bfd4-2b98f1fd0f85.sql 
+supabase/migrations/20260309000000_profiles_rls_birth_data.sql              
+supabase/migrations/20260311111209_e5d20515-4e32-4464-9a89-b7af607f6c61.sql 
+supabase/migrations/20260312000000_community_profiles_visible.sql           
+supabase/migrations/20260312100000_divine_transmissions.sql                 
+supabase/migrations/20260312140000_create_divine_transmissions_retry.sql    
+supabase/migrations/20260313081856_6da3d66f-a01e-464b-b9bc-0a50270121f8.sql 
+supabase/migrations/20260316123554_caa5eae2-48f7-41e0-9c82-acb24fb200d9.sql 
+supabase/migrations/20260327120000_nadi_baselines.sql                       
+supabase/migrations/20260331093057_0b7e9246-3c58-4d11-b8e3-57ff2710006a.sql 
+supabase/migrations/20260331095034_458340a2-db3c-4858-958d-31f8cb7a9900.sql 
+supabase/migrations/20260331105753_email_infra.sql                          
+supabase/migrations/20260401114125_ed7eb5f5-cdb4-4a05-93ba-cd2692baadfd.sql 
+supabase/migrations/20260407150000_add_shakti_cycle_logs_to_profiles.sql    
+supabase/migrations/20260412132410_68c44403-5fb0-4c74-ac5c-196cf4aed5da.sql 
+supabase/migrations/20260412132606_076a6601-d9d7-4e0f-aeb0-df7baa47c84b.sql 
+supabase/migrations/20260414134725_e379eee4-67ae-4832-80a1-d69f2329606b.sql 
+supabase/migrations/20260414180000_sqi_unified_field_context.sql            
+supabase/migrations/20260415072127_c2e709ef-ab05-485a-af2f-e04fbaacf46b.sql 
+supabase/migrations/20260415082138_06440a4c-a33e-4be6-8931-59b217c1c039.sql 
+supabase/migrations/20260418120000_sqi_bot_trades_sessions.sql              
+supabase/migrations/20260420113326_8ad9be46-13da-422d-9203-53b2f1ab4584.sql 
+supabase/migrations/20260424103907_b2cabb72-e599-41aa-8b3d-35ea1e08f1c8.sql 
+supabase/migrations/20260424110624_d718f62d-cf52-420a-8951-8e1ace676f54.sql 
+supabase/migrations/20260426120000_shiesty_polymarket_worker.sql            
+supabase/migrations/20260426182123_81af4a29-de7d-493c-aeef-2c2491a6ae3f.sql 
+
