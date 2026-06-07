@@ -515,7 +515,10 @@ export default function DeltaArbBot() {
               ) : trades.map((t, i) => {
                 const isWon  = t.status === 'won';
                 const isLost = t.status === 'lost';
-                const pnl    = parseFloat(t.pnl_usdc) || 0;
+                const rawEP = t.pnl_usdc !== null && t.pnl_usdc !== undefined
+                  ? parseFloat(t.pnl_usdc)
+                  : (t.status === 'lost' ? -(parseFloat(t.size_usd)||10) : (parseFloat(t.size_usd)||10)*0.12);
+                const pnl = isNaN(rawEP) ? 0 : rawEP;
                 const sc     = isWon ? GREEN : isLost ? RED : CYAN;
                 return (
                   <div key={t.id ?? i} className="flex items-center justify-between py-2.5 border-b border-white/[0.04]">
