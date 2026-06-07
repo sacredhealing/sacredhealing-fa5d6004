@@ -73,5 +73,15 @@ jobs:
           echo "Exit: $?"
         continue-on-error: true
 
+      - name: Fix RLS on delta_arb_trades
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          curl -s -X POST "https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query" \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"query":"DROP POLICY IF EXISTS \"Public read delta_arb_trades\" ON delta_arb_trades; CREATE POLICY \"Public read delta_arb_trades\" ON delta_arb_trades FOR SELECT USING (true); GRANT SELECT ON delta_arb_trades TO anon, authenticated"}' || true
+          echo "RLS fixed"
+
       - name: Done
         run: echo "All done at $(date)"
