@@ -1,0 +1,27 @@
+name: Read Platform Wallet
+
+on:
+  workflow_dispatch:
+
+jobs:
+  read:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Query Supabase for wallet address
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          npm install -g supabase@latest 2>&1 | tail -1
+          git clone "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" repo
+          cd repo
+          supabase link --project-ref fjdzhrdpioxdeyyfogep 2>&1 | tail -3
+          
+          echo "=== WALLET QUERY ==="
+          supabase db execute --linked --sql "SELECT platform_wallet FROM clawbot_platform_config WHERE id = 1;" 2>&1
+          echo "=== DELTA ARB WALLET ==="
+          supabase db execute --linked --sql "SELECT platform_wallet FROM delta_arb_platform_config WHERE id = 1;" 2>&1
+          echo "Done"
