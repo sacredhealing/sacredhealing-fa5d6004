@@ -441,44 +441,8 @@ class MultiWalletMonitor {
     clearTimeout(this.reconnectTimer);
     try { this.ws?.close(); } catch {}
   }
+}
 
-    if (data.method === 'transactionNotification') {
-      const t0    = Date.now();
-      const value = data.params?.result?.transaction;
-      const sig   = data.params?.result?.signature || value?.transaction?.signatures?.[0];
-      if (!value || !sig) return;
-      const trade = parseTradeFromTx(value, this.wallet, sig);
-      if (trade) this.onTrade(trade, Date.now() - t0);
-      return;
-    }
-
-    if (data.method === 'logsNotification') {
-      const sig = data.params?.result?.value?.signature;
-      if (!sig) return;
-      const t0 = Date.now();
-      try {
-        const txData = await rpcCall('getTransaction', [sig, {
-          encoding: 'jsonParsed',
-          maxSupportedTransactionVersion: 0,
-          commitment: 'confirmed',
-        }]);
-        const tx = txData.result;
-        if (!tx) return;
-        const trade = parseTradeFromTx(tx, this.wallet, sig);
-        if (trade) this.onTrade(trade, Date.now() - t0);
-      } catch {}
-    }
-  }
-
-  disconnect() {
-    this.killed = true;
-    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
-    try { this.ws?.close(); } catch {}
-  }
-
-// ─────────────────────────────────────────────────────────
-//  PAPER ENGINE — sells the actual mint the whale sold
-// ─────────────────────────────────────────────────────────
 // ─────────────────────────────────────────────────────────
 //  REALISTIC PAPER ENGINE — mirrors live trading costs
 //
