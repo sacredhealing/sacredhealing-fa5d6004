@@ -87,8 +87,19 @@ function calculatePranaCoherence(bio: Partial<BioSignature>): {
   const voiceCoh   = bio.voiceCoherence ?? 0.5;
   const hasVoiceData = (bio.voiceRmsMean ?? 0) > 0.003; // real breath/voice was captured
 
+  // Voice-only path — genuinely varies per person via pitch + RMS + tremor
   if (!hasRealHR && !hasRealHRV && !hasRealFace) {
-    return { value: 0, confidence: 'INVALID', source: 'no signal' };
+    const voiceRms   = bio.voiceRmsMean ?? 0;
+    const voicePitch = bio.voicePitch    ?? 0;
+    const voiceTrem  = bio.voiceTremor   ?? 0;
+    const hasVoice   = voiceRms > 0.003 || voicePitch > 80;
+    if (!hasVoice) return { value: 0, confidence: 'INVALID', source: 'no signal' };
+    const pitchNorm  = Math.max(0, Math.min(1, (voicePitch - 80) / 400));
+    const rmsNorm    = Math.max(0, Math.min(1, voiceRms * 40));
+    const tremorAdj  = Math.max(0, Math.min(1, 1 - voiceTrem * 3));
+    const voiceComp  = pitchNorm * 0.45 + rmsNorm * 0.35 + tremorAdj * 0.20;
+    const value      = Math.round(12000 + voiceComp * 56000);
+    return { value, confidence: 'LOW', source: `Voice · Pitch:${Math.round(voicePitch)}Hz · RMS:${Math.round(voiceRms*1000)}` };
   }
 
   let hrvScore = 0;
@@ -400,7 +411,7 @@ function bioSignatureToNadiReading(bio: BioSignature): NadiReading {
   return {
     activatedNadi: bio.activatedNadi,
     pranaCoherence: bio.pranaCoherence,
-    activeNadis: bio.pranaCoherence,
+    activeNadis: Math.round(bio.pranaCoherence * (0.6 + (bio.voiceCoherence ?? 0.5) * 0.4)),
     blockageLocation,
     chakraState,
     vagalTone,
