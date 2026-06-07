@@ -1,0 +1,24 @@
+name: Deploy Delta-Arb Proxy Direct
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        run: git clone https://x-access-token:${{ secrets.GH_ADMIN_PAT }}@github.com/sacredhealing/sacredhealing-fa5d6004.git repo
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Deploy delta-arb-proxy with no JWT
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
+        run: |
+          echo "Deploying delta-arb-proxy..."
+          supabase functions deploy delta-arb-proxy \
+            --project-ref fjdzhrdpioxdeyyfogep \
+            --no-verify-jwt 2>&1
+          echo "Done"
