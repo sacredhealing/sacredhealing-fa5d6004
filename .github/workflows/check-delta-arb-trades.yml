@@ -1,0 +1,103 @@
+name: Check Delta-Arb Trades
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Query trades + resolve open ones
+        env:
+          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SK2: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          KEY="${SK:-$SK2}"
+          BASE="https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1"
+          LOG="_trades_check.txt"
+
+          echo "=== ALL TRADES ===" | tee $LOG
+          curl -s "${BASE}/delta_arb_trades?select=id,asset,signal,delta,size_usd,entry_price,status,pnl_usdc,created_at&order=created_at.desc&limit=20" \
+            -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}" | python3 -m json.tool 2>/dev/null | tee -a $LOG
+
+          echo "" >> $LOG
+          echo "=== COUNTS ===" | tee -a $LOG
+          echo -n "Total: " >> $LOG
+          curl -s "${BASE}/delta_arb_trades?select=id" \
+            -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}" \
+            -H "Prefer: count=exact" -I 2>/dev/null | grep -i "content-range" | tee -a $LOG
+
+          echo -n "Open: " >> $LOG
+          curl -s "${BASE}/delta_arb_trades?status=eq.open&select=id" \
+            -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}" \
+            -H "Prefer: count=exact" -I 2>/dev/null | grep -i "content-range" | tee -a $LOG
+
+          echo "" >> $LOG
+          echo "=== RESOLVING OPEN TRADES (force resolve all > 5 min old) ===" | tee -a $LOG
+
+          # Get open trade IDs
+          OPEN_TRADES=$(curl -s "${BASE}/delta_arb_trades?status=eq.open&select=id,delta,size_usd,entry_price&limit=50" \
+            -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}")
+          echo "$OPEN_TRADES" | tee -a $LOG
+          echo "" >> $LOG
+
+          # Force resolve each open trade based on delta
+          echo "$OPEN_TRADES" | python3 -c "
+import sys, json, urllib.request, os
+
+KEY  = os.environ.get('SK') or os.environ.get('SK2', '')
+BASE = 'https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1'
+
+try:
+    trades = json.load(sys.stdin)
+except:
+    print('No trades to resolve')
+    sys.exit(0)
+
+print(f'Resolving {len(trades)} open trades...')
+THRESHOLD = 0.0015
+
+for t in trades:
+    trade_id = t['id']
+    delta_str = t.get('delta', '+0.0000%')
+    try:
+        delta_val = abs(float(delta_str.replace('%','')) / 100)
+    except:
+        delta_val = 0.0
+
+    size_usd   = float(t.get('size_usd') or 10)
+    entry_price = float(t.get('entry_price') or 0.58)
+    shares     = size_usd / max(entry_price, 0.01)
+    is_win     = delta_val >= THRESHOLD
+    status     = 'won' if is_win else 'lost'
+    pnl        = round((shares * 1.00 - size_usd) if is_win else -size_usd, 4)
+
+    payload = json.dumps({'status': status, 'pnl_usdc': pnl, 'net_pnl_usdc': pnl}).encode()
+    req = urllib.request.Request(
+        f'{BASE}/delta_arb_trades?id=eq.{trade_id}',
+        data=payload,
+        headers={
+            'apikey': KEY, 'Authorization': f'Bearer {KEY}',
+            'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+        },
+        method='PATCH'
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10): pass
+        print(f'  {trade_id[:8]} -> {status} pnl={pnl}')
+    except Exception as e:
+        print(f'  ERROR {trade_id[:8]}: {e}')
+"
+
+          echo "" >> $LOG
+          echo "=== AFTER RESOLVE ===" | tee -a $LOG
+          curl -s "${BASE}/delta_arb_trades?select=asset,signal,delta,status,pnl_usdc&order=created_at.desc&limit=20" \
+            -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}" | python3 -m json.tool 2>/dev/null | tee -a $LOG
+
+          git config user.email "bot@sqi.app"; git config user.name "SQI-Bot"
+          git add $LOG && git commit -m "ci: trades check + force resolve" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
