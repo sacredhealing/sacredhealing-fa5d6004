@@ -1,2 +1,9 @@
-Setting STRATEGY=aggressive + SUPABASE vars...
+=== Running diagnostic ===
+Last trade: 2026-06-07T16:39:40.128056+00:00
+That was 49.0 minutes ago
+Total trades: 0-75/76
+Writing test trade...
+Test write: HTTP 201 — Supabase write works!
+
+=== Setting ALL Railway vars ===
 {"data":{"variableCollectionUpsert":true}}
