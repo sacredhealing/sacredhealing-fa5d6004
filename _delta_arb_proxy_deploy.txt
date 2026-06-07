@@ -1,4 +1,4 @@
-=== Deploy delta-arb-proxy Sun Jun  7 14:17:17 UTC 2026 ===
+=== Deploy delta-arb-proxy Sun Jun  7 14:20:43 UTC 2026 ===
 
 added 2 packages in 3s
 Deleting old unused functions to free slot...
@@ -25,7 +25,6 @@ ff86ea2e5edc: Download complete
 6800868e255e: Download complete
 cb0b0573a680: Verifying Checksum
 cb0b0573a680: Download complete
-1732128487dd: Verifying Checksum
 1732128487dd: Download complete
 ede75d680c8d: Verifying Checksum
 ede75d680c8d: Download complete
@@ -37,7 +36,7 @@ ede75d680c8d: Pull complete
 1732128487dd: Pull complete
 Digest: sha256:2781daf92394db91f7e94129cc3d04ec474ad16a8fe64b3fbeef6e7d557ab120
 Status: Downloaded newer image for public.ecr.aws/supabase/edge-runtime:v1.74.0
-No change found in Function: delta-arb-proxy
+Deploying Function: delta-arb-proxy (script size: 77.06kB)
 Deployed Functions on project fjdzhrdpioxdeyyfogep: delta-arb-proxy
 You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/fjdzhrdpioxdeyyfogep/functions
 Done.
