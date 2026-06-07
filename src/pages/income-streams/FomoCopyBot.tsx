@@ -7,7 +7,7 @@ import { Buffer } from 'buffer';
 import { useAdminRole } from '@/hooks/useAdminRole';
 
 // ═══════════════════════════════════════════════════════════
-//  SQI 2050 — SOVEREIGN COPY INTELLIGENCE BOT  v5  [2026-06-07 17:04 UTC]
+//  SQI 2050 — SOVEREIGN COPY INTELLIGENCE BOT  v10 [2026-06-07 17:04 UTC]
 //  Shreem Brzee Freedom Bot | Solana Mainnet | Jupiter v6
 //  + Live SOL price (Jupiter API, 60s refresh)
 //  + Mint symbol resolution (Jupiter tokens API, cached)
@@ -19,6 +19,43 @@ import { useAdminRole } from '@/hooks/useAdminRole';
 // ═══════════════════════════════════════════════════════════
 
 // window.solana is declared in src/hooks/usePhantomWallet.ts
+
+// ── Crash-proof wrapper — any error in this page stays contained ──
+class BotErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: string }
+> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, error: '' };
+  }
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error: error?.message || String(error) };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ minHeight: '100vh', background: '#050505', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div style={{ color: '#D4AF37', fontSize: 18, fontWeight: 900, marginBottom: 12 }}>Shreem Brzee Bot</div>
+          <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginBottom: 20, textAlign: 'center' }}>
+            Something went wrong. Try refreshing the page.
+          </div>
+          <div style={{ color: 'rgba(248,113,113,0.7)', fontSize: 10, fontFamily: 'monospace', maxWidth: 320, wordBreak: 'break-all', textAlign: 'center' }}>
+            {this.state.error}
+          </div>
+          <button onClick={() => window.location.reload()} style={{
+            marginTop: 24, padding: '12px 24px', borderRadius: 14, cursor: 'pointer',
+            background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.3)',
+            color: '#D4AF37', fontSize: 11, fontWeight: 800, letterSpacing: '0.2em',
+          }}>
+            RELOAD PAGE
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const COLORS = {
   gold: '#D4AF37',
@@ -2034,6 +2071,6 @@ export default function FomoCopyBot() {
   if (!isLoading && !isAdmin && !timedOut) {
     return <Navigate to="/income-streams" replace />;
   }
-  return <FomoCopyBotInner />;
+  return <BotErrorBoundary><FomoCopyBotInner /></BotErrorBoundary>;
   </div>
 }
