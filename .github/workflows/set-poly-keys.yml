@@ -7,30 +7,17 @@ jobs:
   set-vars:
     runs-on: ubuntu-latest
     steps:
-      - name: Set Railway variables
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Set vars
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          SERVICE_ID="b6311e53-fe5a-4c4a-b724-e0fef686236f"
-
-          # Get environment ID
-          ENV_ID=$(curl -s -X POST "https://backboard.railway.app/graphql/v2" \
-            -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d '{"query":"{ service(id: \"'$SERVICE_ID\'") { serviceInstances { edges { node { environmentId } } } } }"}' \
-            | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['data']['service']['serviceInstances']['edges'][0]['node']['environmentId'])")
-          echo "Env ID: $ENV_ID"
-
-          # Set each variable
-          for VAR_NAME in POLY_API_KEY POLY_API_SECRET POLY_API_PASSPHRASE; do
-            if [ "$VAR_NAME" = "POLY_API_KEY" ]; then VAL="019ea166-7177-7743-9b89-cb1840c13ec8"; fi
-            if [ "$VAR_NAME" = "POLY_API_SECRET" ]; then VAL="wIx5xHwsa6CP2lZLKEEsNsoHSoddW-FYFDE1048IOKA="; fi
-            if [ "$VAR_NAME" = "POLY_API_PASSPHRASE" ]; then VAL="fd7c9f4fcc70ee2673d9c073b0da53f274f0b09b161141d3c6d5d934cb666197"; fi
-
-            RESULT=$(curl -s -X POST "https://backboard.railway.app/graphql/v2" \
-              -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
-              -H "Content-Type: application/json" \
-              -d "{\"query\":\"mutation { variableUpsert(input: { serviceId: \\\"$SERVICE_ID\\\", environmentId: \\\"$ENV_ID\\\", name: \\\"$VAR_NAME\\\", value: \\\"$VAL\\\" }) }\"}")
-            echo "$VAR_NAME: $RESULT"
-          done
-          echo "Done"
+          python3 scripts/set_railway_vars.py 2>&1 | tee _set_vars_result.txt
+          git config user.email "bot@sqi.app"
+          git config user.name "SQI-Bot"
+          git add _set_vars_result.txt
+          git commit -m "Set vars result" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
