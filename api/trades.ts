@@ -1,25 +1,20 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+export const config = { runtime: 'edge' };
 
 const SUPABASE_URL = 'https://fjdzhrdpioxdeyyfogep.supabase.co';
-const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY || '';
+const SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NDczMTk0NSwiZXhwIjoyMDYwMzA3OTQ1fQ.supabase-service-role-placeholder';
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Cache-Control', 'no-store');
-
+export default async function handler(req: Request) {
+  const headers = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
   try {
+    // Use NEW_SERVICE_ROLE from Vercel env
+    const key = process.env.NEW_SERVICE_ROLE || process.env.SUPABASE_SERVICE_KEY || '';
     const r = await fetch(
       `${SUPABASE_URL}/rest/v1/delta_arb_trades?select=id,asset,signal,delta,size_usd,entry_price,status,pnl_usdc,created_at&order=created_at.desc&limit=200`,
-      {
-        headers: {
-          apikey: SERVICE_KEY,
-          Authorization: `Bearer ${SERVICE_KEY}`,
-        },
-      }
+      { headers: { apikey: key, Authorization: `Bearer ${key}` } }
     );
     const data = await r.json();
-    res.status(200).json(Array.isArray(data) ? data : []);
+    return new Response(JSON.stringify(Array.isArray(data) ? data : []), { headers });
   } catch (e) {
-    res.status(200).json([]);
+    return new Response('[]', { headers });
   }
 }
