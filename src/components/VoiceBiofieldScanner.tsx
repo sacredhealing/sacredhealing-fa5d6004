@@ -24,6 +24,11 @@ export interface VoiceBiofieldResult {
   topStrengths: VoiceBiofieldStrength[];
   emotionalField: string;
   organField: string;
+  /** Spoken intention keywords extracted via Web Speech API — feeds boost matching */
+  spokenKeywords?: string[];
+  /** Reaction time neurological index from finger tap phase */
+  reactionMs?: number;
+  neuroIndex?: string;
 }
 
 interface VoiceBiofieldScannerProps {
@@ -137,6 +142,9 @@ export default function VoiceBiofieldScanner({
   const [tapReady, setTapReady] = useState(false);
   const tapStartRef = useRef<number>(0);
   const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // ── Web Speech API — captures spoken words for semantic boost matching ──
+  const recognitionRef = useRef<any>(null);
+  const spokenWordsRef = useRef<string[]>([]);
 
   const audioCtxRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -290,6 +298,30 @@ export default function VoiceBiofieldScanner({
       setSecondsLeft(scanDurRef.current);
       scanStartMsRef.current = Date.now();
 
+      // ── Start Web Speech recognition to capture spoken intention ──
+      spokenWordsRef.current = [];
+      try {
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        if (SpeechRecognition) {
+          const recog = new SpeechRecognition();
+          recog.continuous = true;
+          recog.interimResults = true;
+          recog.lang = 'en-US';
+          recog.onresult = (e: any) => {
+            const words: string[] = [];
+            for (let i = 0; i < e.results.length; i++) {
+              if (e.results[i].isFinal) {
+                words.push(...e.results[i][0].transcript.toLowerCase().split(/\s+/).filter((w: string) => w.length > 2));
+              }
+            }
+            spokenWordsRef.current = [...spokenWordsRef.current, ...words];
+          };
+          recog.onerror = () => {}; // silent fail — FFT still works
+          recog.start();
+          recognitionRef.current = recog;
+        }
+      } catch { /* browser may not support — silent fail */ }
+
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: {
@@ -350,7 +382,11 @@ export default function VoiceBiofieldScanner({
               return;
             }
 
+            // Stop speech recognition before building result
+            try { recognitionRef.current?.stop(); } catch {}
             const result = analyzeVoiceBuffer(samplesRef.current);
+            // Attach spoken keywords for semantic boost matching
+            (result as any).spokenKeywords = [...new Set(spokenWordsRef.current)].slice(0, 40);
             setLastResult(result);
             setPhase('tapping'); // Phase 2: neurological calibration
             return;
@@ -431,6 +467,21 @@ export default function VoiceBiofieldScanner({
             </div>
           )}
 
+          {/* Intention guide — the key instruction that loads the voice with emotional field data */}
+          {!cooldownActive && (
+            <div style={{ marginBottom:20, padding:'14px 16px', borderRadius:18, background:'rgba(212,175,55,0.04)', border:'1px solid rgba(212,175,55,0.15)', textAlign:'left' }}>
+              <p style={{ fontSize:8, fontWeight:900, letterSpacing:'0.3em', textTransform:'uppercase', color:'rgba(212,175,55,0.6)', marginBottom:8 }}>
+                SPEAK WHEN RECORDING BEGINS
+              </p>
+              <p style={{ fontSize:13, fontWeight:700, color:'rgba(255,255,255,0.85)', lineHeight:1.6, marginBottom:4 }}>
+                "I am [your name]..."
+              </p>
+              <p style={{ fontSize:11, color:'rgba(255,255,255,0.45)', lineHeight:1.6 }}>
+                Then speak what you feel in your body right now — then what you want to receive. Your emotional voice carries your complete field signature.
+              </p>
+            </div>
+          )}
+
           {/* Mic orb */}
           <div style={{ margin:'0 auto 20px', width:72, height:72, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', background:'radial-gradient(circle,rgba(212,175,55,0.16) 0%,rgba(212,175,55,0.04) 100%)', border:'1.5px solid rgba(212,175,55,0.35)', animation: cooldownActive ? 'none' : 'vsMicPulse 2.8s ease-in-out infinite' }}>
             <svg width={30} height={30} viewBox="0 0 24 24" fill="none" stroke={cooldownActive ? 'rgba(212,175,55,0.35)' : '#D4AF37'} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
@@ -493,6 +544,9 @@ export default function VoiceBiofieldScanner({
         <div style={{ padding: '28px 20px', textAlign: 'center' }}>
           <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.38em', color: 'rgba(34,211,238,.8)', marginBottom: 20, textTransform:'uppercase' }}>
             {t('quantumApothecary.voiceBiofield.scanning')}
+          </p>
+          <p style={{ fontSize:11, color:'rgba(212,175,55,0.6)', marginBottom:16, lineHeight:1.6, fontWeight:600 }}>
+            "I am... I feel... I want to receive..."
           </p>
           {showProgressRing ? (
             <div style={{ margin: '0 auto 20px', width: 148, height: 148, position: 'relative' }}>
