@@ -10,64 +10,43 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_ADMIN_PAT }}
-      - name: Full diagnostic
+      - name: Check real PnL data
         env:
           SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
           SK2: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
-          SUPABASE_PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
           KEY="${SK:-$SK2}"
           BASE="https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1"
-          DB="https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query"
           LOG="_delta_arb_create.txt"
 
-          q() {
-            curl -s -X POST "$DB" \
-              -H "Authorization: Bearer ${SUPABASE_PAT}" \
-              -H "Content-Type: application/json" \
-              -d "$1"
-          }
-
-          echo "=== TRADE COUNT ===" | tee $LOG
-          curl -s "${BASE}/delta_arb_trades?select=id&limit=1" \
-            -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}" \
-            -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | tee -a $LOG
-
-          echo "" >> $LOG
-          echo "=== LAST 5 TRADES ===" | tee -a $LOG
-          curl -s "${BASE}/delta_arb_trades?select=id,asset,signal,delta,status,pnl_usdc,created_at&order=created_at.desc&limit=5" \
+          echo "=== REAL PNL BREAKDOWN ===" | tee $LOG
+          curl -s "${BASE}/delta_arb_trades?select=status,pnl_usdc,size_usd,entry_price&limit=500" \
             -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}" | python3 -c "
-import sys,json,datetime
-data=json.load(sys.stdin)
-now=datetime.datetime.now(datetime.timezone.utc)
-print(f'Total returned: {len(data)}')
-for t in data:
-    created=t.get('created_at','?')[:16]
-    print(f'  {created}  {t.get("asset","?"):4} {t.get("signal","?"):5} {t.get("delta","?"):12} {t.get("status","?"):6} pnl={t.get("pnl_usdc","NULL")}')
-" | tee -a $LOG
+import sys, json
+data = json.load(sys.stdin)
+won  = [t for t in data if t.get('status')=='won']
+lost = [t for t in data if t.get('status')=='lost']
+opn  = [t for t in data if t.get('status') not in ['won','lost']]
 
-          echo "" >> $LOG
-          echo "=== FIX RLS ===" | tee -a $LOG
-          q '{"query":"DROP POLICY IF EXISTS \"Public read delta_arb_trades\" ON delta_arb_trades; CREATE POLICY \"Public read delta_arb_trades\" ON delta_arb_trades FOR SELECT USING (true)"}' | tee -a $LOG
+win_pnl  = sum(float(t.get('pnl_usdc') or 0) for t in won)
+loss_pnl = sum(float(t.get('pnl_usdc') or 0) for t in lost)
+total    = win_pnl + loss_pnl
 
-          echo "" >> $LOG
-          echo "=== RESOLVE ALL NULL PNL ===" | tee -a $LOG
-          python3 scripts/resolve_trades.py 2>&1 | tee -a $LOG
-
-          echo "" >> $LOG
-          echo "=== FINAL SUMMARY ===" | tee -a $LOG
-          curl -s "${BASE}/delta_arb_trades?select=status,pnl_usdc&limit=500" \
-            -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}" | python3 -c "
-import sys,json
-data=json.load(sys.stdin)
-won=[t for t in data if t.get('status')=='won']
-lost=[t for t in data if t.get('status')=='lost']
-opn=[t for t in data if t.get('status') not in ['won','lost']]
-pnl=sum(float(t.get('pnl_usdc') or 0) for t in data)
-print(f'Total={len(data)} Won={len(won)} Lost={len(lost)} Open={len(opn)} PnL=+\${pnl:.2f}')
+print(f'Won:    {len(won):3} trades  total_pnl=+{win_pnl:.2f}')
+print(f'Lost:   {len(lost):3} trades  total_pnl={loss_pnl:.2f}')
+print(f'Open:   {len(opn):3} trades')
+print(f'NET PNL: {total:.2f}')
+print(f'Balance: {100 + total:.2f}')
+print()
+print('Sample won trades:')
+for t in won[:3]:
+    print(f'  size={t.get("size_usd")} ep={t.get("entry_price")} pnl={t.get("pnl_usdc")}')
+print('Sample lost trades:')
+for t in lost[:3]:
+    print(f'  size={t.get("size_usd")} ep={t.get("entry_price")} pnl={t.get("pnl_usdc")}')
 " | tee -a $LOG
 
           git config user.email "bot@sqi.app"; git config user.name "SQI-Bot"
-          git add $LOG && git commit -m "ci: diagnostic result" || true
+          git add $LOG && git commit -m "ci: pnl audit" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
