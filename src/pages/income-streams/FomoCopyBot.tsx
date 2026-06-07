@@ -32,7 +32,8 @@ const COLORS = {
 };
 
 // ── RPC / WebSocket ───────────────────────────────────────
-const HELIUS_KEY = (import.meta.env.VITE_HELIUS_API_KEY || '').trim();
+// ⚠ Rotate this key at helius.dev after going live — it appeared in chat
+const HELIUS_KEY = (import.meta.env.VITE_HELIUS_API_KEY || '775d3d1f-6801-41de-a063-8aee4382d0f4').trim();
 const HELIUS_RPC = HELIUS_KEY
   ? `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`
   : 'https://api.mainnet-beta.solana.com';
