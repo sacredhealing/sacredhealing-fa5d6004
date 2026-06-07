@@ -1,0 +1,36 @@
+name: Read Both Platform Wallets
+
+on:
+  workflow_dispatch:
+
+jobs:
+  read:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Query both wallet configs
+        env:
+          SUPABASE_PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          DB="https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query"
+          LOG="_wallets_result.txt"
+          
+          q() { curl -s -X POST "$DB" -H "Authorization: Bearer ${SUPABASE_PAT}" -H "Content-Type: application/json" -d "{"query":"$1"}"; }
+          
+          echo "=== CLAWBOT platform wallet ===" > $LOG
+          q "SELECT platform_wallet FROM clawbot_platform_config WHERE id=1;" >> $LOG
+          
+          echo "" >> $LOG
+          echo "=== DELTA ARB platform wallet ===" >> $LOG
+          q "SELECT platform_wallet FROM delta_arb_platform_config WHERE id=1;" >> $LOG
+          
+          cat $LOG
+          
+          git config user.email "bot@sqi.app"
+          git config user.name "SQI-Bot"
+          git add $LOG
+          git commit -m "ci: wallet read result" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
