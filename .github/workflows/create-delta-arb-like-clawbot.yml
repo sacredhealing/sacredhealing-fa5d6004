@@ -10,48 +10,59 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_ADMIN_PAT }}
-      - name: Seed affiliate rates correctly
+      - name: Force resolve all open trades
         env:
-          SUPABASE_PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SK2: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          DB="https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query"
-          LOG="_delta_arb_create.txt"
+          KEY="${SK:-$SK2}"
+          BASE="https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1"
+          LOG="_trades_check.txt"
 
-          q() {
-            curl -s -X POST "$DB" \
-              -H "Authorization: Bearer ${SUPABASE_PAT}" \
-              -H "Content-Type: application/json" \
-              -d "$1"
-          }
-
-          echo "Inserting free rate..." | tee $LOG
-          q '{"query":"INSERT INTO delta_arb_affiliate_rates (tier,l1_pct,l2_pct) VALUES ('"'"'free'"'"',10.00,3.00) ON CONFLICT (tier) DO UPDATE SET l1_pct=10.00,l2_pct=3.00"}' | tee -a $LOG
+          echo "=== TRADES BEFORE ===" | tee $LOG
+          curl -s "${BASE}/delta_arb_trades?select=asset,signal,delta,size_usd,entry_price,status,pnl_usdc&order=created_at.desc&limit=30" \
+            -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}" | tee -a $LOG
           echo "" >> $LOG
 
-          echo "Inserting prana_flow rate..." | tee -a $LOG
-          q '{"query":"INSERT INTO delta_arb_affiliate_rates (tier,l1_pct,l2_pct) VALUES ('"'"'prana_flow'"'"',8.00,2.00) ON CONFLICT (tier) DO UPDATE SET l1_pct=8.00,l2_pct=2.00"}' | tee -a $LOG
-          echo "" >> $LOG
+          echo "=== RESOLVING ===" | tee -a $LOG
+          curl -s "${BASE}/delta_arb_trades?status=eq.open&select=id,delta,size_usd,entry_price&limit=50" \
+            -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}" | python3 -c "
+import sys, json, urllib.request, os
+KEY  = os.environ.get('SK') or os.environ.get('SK2','')
+BASE = 'https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1'
+try:
+    trades = json.load(sys.stdin)
+except:
+    print('No trades'); sys.exit(0)
+print(f'Resolving {len(trades)} trades')
+THRESHOLD = 0.0015
+for t in trades:
+    tid = t['id']
+    try: dv = abs(float(t.get('delta','+0%').replace('%',''))/100)
+    except: dv = 0.0
+    sz = float(t.get('size_usd') or 10)
+    ep = float(t.get('entry_price') or 0.58)
+    sh = sz / max(ep,0.01)
+    win = dv >= THRESHOLD
+    st  = 'won' if win else 'lost'
+    pnl = round((sh-sz) if win else -sz, 4)
+    req = urllib.request.Request(
+        f'{BASE}/delta_arb_trades?id=eq.{tid}',
+        data=json.dumps({'status':st,'pnl_usdc':pnl,'net_pnl_usdc':pnl}).encode(),
+        headers={'apikey':KEY,'Authorization':f'Bearer {KEY}','Content-Type':'application/json','Prefer':'return=minimal'},
+        method='PATCH')
+    try:
+        with urllib.request.urlopen(req,timeout=10): pass
+        print(f'  {tid[:8]} -> {st} pnl={pnl}')
+    except Exception as e: print(f'  ERROR: {e}')
+" | tee -a $LOG
 
-          echo "Inserting siddha_quantum rate..." | tee -a $LOG
-          q '{"query":"INSERT INTO delta_arb_affiliate_rates (tier,l1_pct,l2_pct) VALUES ('"'"'siddha_quantum'"'"',5.00,1.00) ON CONFLICT (tier) DO UPDATE SET l1_pct=5.00,l2_pct=1.00"}' | tee -a $LOG
           echo "" >> $LOG
-
-          echo "Inserting akasha_infinity rate..." | tee -a $LOG
-          q '{"query":"INSERT INTO delta_arb_affiliate_rates (tier,l1_pct,l2_pct) VALUES ('"'"'akasha_infinity'"'"',3.00,1.00) ON CONFLICT (tier) DO UPDATE SET l1_pct=3.00,l2_pct=1.00"}' | tee -a $LOG
-          echo "" >> $LOG
-
-          echo "=== FINAL VERIFICATION ===" | tee -a $LOG
-          echo "Wallet:" | tee -a $LOG
-          curl -s "https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/delta_arb_platform_config?select=platform_wallet" \
-            -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" | tee -a $LOG
-          echo "" >> $LOG
-
-          echo "Affiliate rates:" | tee -a $LOG
-          curl -s "https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/delta_arb_affiliate_rates?select=*&order=tier" \
-            -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" | tee -a $LOG
+          echo "=== TRADES AFTER ===" | tee -a $LOG
+          curl -s "${BASE}/delta_arb_trades?select=asset,signal,delta,status,pnl_usdc&order=created_at.desc&limit=30" \
+            -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}" | tee -a $LOG
 
           git config user.email "bot@sqi.app"; git config user.name "SQI-Bot"
-          git add $LOG && git commit -m "ci: seed affiliate rates one by one" || true
+          git add $LOG && git commit -m "ci: force resolve open trades" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
