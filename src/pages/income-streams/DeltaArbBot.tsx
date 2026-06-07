@@ -311,7 +311,13 @@ export default function DeltaArbBot() {
                     const isWon  = t.status === 'won';
                     const isLost = t.status === 'lost';
                     const isOpen = !isWon && !isLost;
-                    const pnl    = parseFloat(t.pnl_usdc) || 0;
+                    // Use pnl_usdc if set, else estimate from size (for pending resolver)
+                    const rawPnl = t.pnl_usdc !== null && t.pnl_usdc !== undefined
+                      ? parseFloat(t.pnl_usdc)
+                      : isLost ? -(parseFloat(t.size_usd) || 10)
+                      : isWon  ?  (parseFloat(t.size_usd) || 10) * 0.12
+                      : 0;
+                    const pnl = isNaN(rawPnl) ? 0 : rawPnl;
                     const statusColor = isWon ? GREEN : isLost ? RED : CYAN;
                     const statusLabel = isWon ? 'WIN' : isLost ? 'LOSS' : 'OPEN';
                     return (
