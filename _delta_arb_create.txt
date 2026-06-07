@@ -1,16 +1,11 @@
-Inserting free rate...
+Adding public read policy to delta_arb_trades...
 []
-Inserting prana_flow rate...
 []
-Inserting siddha_quantum rate...
-[]
-Inserting akasha_infinity rate...
-[]
-=== FINAL VERIFICATION ===
-Wallet:
-[{"platform_wallet":"0x8BdcA3db0AAECb67b0818AAbAa5398765c649335"}]
-Affiliate rates:
-[{"tier":"akasha_infinity","l1_pct":3.00,"l2_pct":1.00}, 
- {"tier":"free","l1_pct":10.00,"l2_pct":3.00}, 
- {"tier":"prana_flow","l1_pct":8.00,"l2_pct":2.00}, 
- {"tier":"siddha_quantum","l1_pct":5.00,"l2_pct":1.00}]
+Adding public read policy to delta_arb_platform_config...
+[][]
+Verify trades visible via anon key...
+[{"id":"920ab318-ca45-496d-a1aa-d8e9d40e3d46","asset":"ETH","signal":"DOWN","delta":"-0.1620%","status":"lost","pnl_usdc":null}, 
+ {"id":"ba58aa3c-a886-44aa-82a6-db0ec32fa1b2","asset":"ETH","signal":"DOWN","delta":"-0.1868%","status":"won","pnl_usdc":null}, 
+ {"id":"daa48478-ba18-4151-9216-5c802f55837c","asset":"SOL","signal":"DOWN","delta":"-0.2763%","status":"won","pnl_usdc":null}, 
+ {"id":"1d32eec6-ef6e-4986-b1a1-046efc782ca8","asset":"BTC","signal":"DOWN","delta":"-0.1501%","status":"won","pnl_usdc":null}, 
+ {"id":"3f52bf4b-cf99-436b-b7aa-f142e6ecd012","asset":"SOL","signal":"DOWN","delta":"-0.4298%","status":"won","pnl_usdc":null}]
