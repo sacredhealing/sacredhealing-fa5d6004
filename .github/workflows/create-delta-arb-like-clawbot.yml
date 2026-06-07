@@ -1,0 +1,70 @@
+name: Create Delta-Arb Tables Like CLAWBOT
+
+on:
+  workflow_dispatch:
+
+jobs:
+  create:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Create delta-arb tables via DB API
+        env:
+          SUPABASE_PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          DB="https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query"
+          LOG="_delta_arb_create.txt"
+          echo "Starting $(date -u)" > $LOG
+
+          q() {
+            curl -s -X POST "$DB" \
+              -H "Authorization: Bearer ${SUPABASE_PAT}" \
+              -H "Content-Type: application/json" \
+              -d "$1"
+          }
+
+          echo "Creating delta_arb_members..." | tee -a $LOG
+          q '{"query":"CREATE TABLE IF NOT EXISTS delta_arb_members (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE, poly_wallet_address text, tier text NOT NULL DEFAULT '\''free'\'', platform_fee_pct integer NOT NULL DEFAULT 50, is_active boolean NOT NULL DEFAULT true, paper_mode boolean NOT NULL DEFAULT true, created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now())"}' | tee -a $LOG
+          echo "" >> $LOG
+
+          echo "Creating delta_arb_trades..." | tee -a $LOG
+          q '{"query":"CREATE TABLE IF NOT EXISTS delta_arb_trades (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE, asset text NOT NULL, interval text NOT NULL DEFAULT '\''15m'\'', signal text NOT NULL, delta text, size_usd numeric(12,4), entry_price numeric(8,6), status text NOT NULL DEFAULT '\''open'\'', pnl_usdc numeric(12,4), net_pnl_usdc numeric(12,4), mode text NOT NULL DEFAULT '\''PAPER'\'', created_at timestamptz NOT NULL DEFAULT now())"}' | tee -a $LOG
+          echo "" >> $LOG
+
+          echo "Creating delta_arb_fee_ledger..." | tee -a $LOG
+          q '{"query":"CREATE TABLE IF NOT EXISTS delta_arb_fee_ledger (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE, trade_id uuid, gross_pnl_usdc numeric(12,4) NOT NULL, fee_pct integer NOT NULL, fee_usdc numeric(12,4) NOT NULL, net_pnl_usdc numeric(12,4) NOT NULL, created_at timestamptz NOT NULL DEFAULT now())"}' | tee -a $LOG
+          echo "" >> $LOG
+
+          echo "Creating delta_arb_platform_config..." | tee -a $LOG
+          q '{"query":"CREATE TABLE IF NOT EXISTS delta_arb_platform_config (id integer PRIMARY KEY DEFAULT 1, platform_wallet text, updated_at timestamptz NOT NULL DEFAULT now(), CONSTRAINT single_row CHECK (id = 1))"}' | tee -a $LOG
+          echo "" >> $LOG
+
+          echo "Setting platform wallet..." | tee -a $LOG
+          q '{"query":"INSERT INTO delta_arb_platform_config (id, platform_wallet) VALUES (1, '\''0x8BdcA3db0AAECb67b0818AAbAa5398765c649335'\'') ON CONFLICT (id) DO UPDATE SET platform_wallet = '\''0x8BdcA3db0AAECb67b0818AAbAa5398765c649335'\'', updated_at = now()"}' | tee -a $LOG
+          echo "" >> $LOG
+
+          echo "Creating delta_arb_affiliate_rates..." | tee -a $LOG
+          q '{"query":"CREATE TABLE IF NOT EXISTS delta_arb_affiliate_rates (tier text PRIMARY KEY, l1_pct numeric(5,2) NOT NULL, l2_pct numeric(5,2) NOT NULL)"}' | tee -a $LOG
+          echo "" >> $LOG
+
+          echo "Seeding affiliate rates..." | tee -a $LOG
+          q '{"query":"INSERT INTO delta_arb_affiliate_rates (tier, l1_pct, l2_pct) VALUES (('\''free'\'',10.00,3.00),(('\''prana_flow'\'',8.00,2.00),(('\''siddha_quantum'\'',5.00,1.00),(('\''akasha_infinity'\'',3.00,1.00) ON CONFLICT (tier) DO UPDATE SET l1_pct=EXCLUDED.l1_pct, l2_pct=EXCLUDED.l2_pct"}' | tee -a $LOG
+          echo "" >> $LOG
+
+          echo "Enabling RLS..." | tee -a $LOG
+          q '{"query":"ALTER TABLE delta_arb_members ENABLE ROW LEVEL SECURITY"}' | tee -a $LOG
+          q '{"query":"ALTER TABLE delta_arb_trades ENABLE ROW LEVEL SECURITY"}' | tee -a $LOG
+          q '{"query":"ALTER TABLE delta_arb_fee_ledger ENABLE ROW LEVEL SECURITY"}' | tee -a $LOG
+          echo "" >> $LOG
+
+          echo "Verify wallet:" | tee -a $LOG
+          curl -s "https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/delta_arb_platform_config?select=platform_wallet&id=eq.1" \
+            -H "apikey: ${SK}" -H "Authorization: Bearer ${SK}" | tee -a $LOG
+
+          git config user.email "bot@sqi.app"; git config user.name "SQI-Bot"
+          git add $LOG && git commit -m "ci: delta-arb tables created" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
