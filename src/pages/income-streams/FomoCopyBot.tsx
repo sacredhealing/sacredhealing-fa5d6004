@@ -507,7 +507,7 @@ function FomoCopyBotInner() {
   const [slippageBps,  setSlippageBps]  = useState(300);   // NEW
   const [pumpFunOnly,  setPumpFunOnly]  = useState(false); // NEW
   const [autoSellMins, setAutoSellMins] = useState(0);     // NEW: 0 = disabled
-  const [maxPositions, setMaxPositions] = useState(5);     // NEW: concurrent position cap
+  const [maxPositions, setMaxPositions] = useState(15);    // concurrent position cap
 
   // ── Live state ──────────────────────────────────────────
   const [walletAddress,  setWalletAddress]  = useState<string | null>(null);
@@ -1543,7 +1543,7 @@ function FomoCopyBotInner() {
                 value={`${maxPositions} simultaneous`}
                 hint={`Bot skips new BUYs once ${maxPositions} positions are open. Protects capital fragmentation.`}>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {[1, 2, 3, 5, 8, 10].map(n => (
+                  {[5, 10, 15, 20, 25, 30].map(n => (
                     <button key={n} onClick={() => setMaxPositions(n)} style={{
                       padding: '6px 14px', borderRadius: 10, cursor: 'pointer',
                       fontSize: 10, fontWeight: 800,
