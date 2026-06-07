@@ -493,12 +493,28 @@ function FomoCopyBotInner() {
   const { t }    = useTranslation();
 
   // Auto-enter paper mode on mount — no wallet required
-  // User can connect Phantom later for LIVE mode only
   React.useEffect(() => {
     if (!walletAddress) {
       const demo = 'Paper' + Math.random().toString(36).slice(2, 7).toUpperCase();
       setWalletAddress(demo);
       setSolBalance(startingSOL);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-add all presets on first load if no wallets tracked yet
+  React.useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    const hasSaved = saved && JSON.parse(saved)?.trackedWallets?.length > 0;
+    if (!hasSaved) {
+      setTrackedWallets(WHALE_PRESETS.map(p => ({
+        address: p.address,
+        label: p.label,
+        active: true,
+        isVIP: p.isVIP,
+        riskMult: p.riskMult,
+        priorityMult: p.priorityMult,
+      })));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -809,7 +825,11 @@ function FomoCopyBotInner() {
   // ── Start/Stop Monitoring ───────────────────────────────
   const startMonitoring = useCallback(() => {
     const active = trackedWallets.filter(w => isValidWallet(w.address) && w.active);
-    if (active.length === 0) { setStatus('⚠ Add & activate at least one valid whale wallet'); return; }
+    if (active.length === 0) {
+      setStatus('⚠ No active wallets — tap ADD ALL PRESETS in the Wallets tab');
+      setTab('wallets');
+      return;
+    }
     if (!HAS_HELIUS) setStatus('⚠ No Helius key — using slow public RPC. Add VITE_HELIUS_API_KEY in Vercel.');
 
     active.forEach(tw => {
@@ -861,6 +881,14 @@ function FomoCopyBotInner() {
     });
     setBulkInput('');
     setStatus(`✓ Added ${valid.length} wallets`);
+  };
+
+  const addAllPresets = () => {
+    setTrackedWallets(WHALE_PRESETS.map(p => ({
+      address: p.address, label: p.label, active: true,
+      isVIP: p.isVIP, riskMult: p.riskMult, priorityMult: p.priorityMult,
+    })));
+    setStatus(`✓ All ${WHALE_PRESETS.length} whale presets loaded and active`);
   };
 
   const addPresetWhale = (preset: typeof WHALE_PRESETS[number]) => {
@@ -1276,26 +1304,45 @@ function FomoCopyBotInner() {
         {/* ════ WALLETS ════ */}
         {tab === 'wallets' && (
           <div>
+            {/* ADD ALL button — top of wallets tab */}
+            <button onClick={addAllPresets} style={{
+              width: '100%', padding: '14px 0', borderRadius: 16, cursor: 'pointer', marginBottom: 14,
+              background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.3)',
+              color: COLORS.gold, fontSize: 11, fontWeight: 900, letterSpacing: '0.2em',
+              textTransform: 'uppercase' as const,
+            }}>
+              ⭐ ADD ALL {WHALE_PRESETS.length} WHALE PRESETS
+            </button>
+
             <div style={{ ...glassCard, padding: 18, marginBottom: 12 }}>
               <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.45em', color: COLORS.gold, textTransform: 'uppercase', marginBottom: 12 }}>
-                ◈ VERIFIED WHALE PRESETS
+                ◈ WHALE PRESETS — TAP TO ADD
               </div>
               <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginBottom: 12, lineHeight: 1.6 }}>
-                ⚠ Only 2 presets are verified (others were removed — unconfirmed). Add more from fomo.fund → Leaderboard → sort by 30d PnL → copy wallet.
+                Tap any preset below to add individually, or use ADD ALL above to load all at once.
               </div>
-              {WHALE_PRESETS.map(p => (
+              {WHALE_PRESETS.map(p => {
+                const isAdded = trackedWallets.some(w => w.address === p.address);
+                return (
                 <button key={p.address} onClick={() => addPresetWhale(p)} style={{
                   display: 'block', width: '100%', textAlign: 'left', marginBottom: 8,
                   padding: '12px 14px', borderRadius: 14, cursor: 'pointer',
-                  background: 'rgba(255,255,255,0.02)', border: `1px solid ${COLORS.glassBorder}`,
+                  background: isAdded ? 'rgba(74,222,128,0.06)' : 'rgba(255,255,255,0.02)',
+                  border: `1px solid ${isAdded ? 'rgba(74,222,128,0.2)' : COLORS.glassBorder}`,
                 }}>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: COLORS.gold }}>{p.label}</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: p.isVIP ? COLORS.gold : 'rgba(255,255,255,0.8)' }}>
+                      {p.isVIP ? '⭐ ' : ''}{p.label}
+                    </div>
+                    {isAdded && <span style={{ fontSize: 8, color: COLORS.green, fontWeight: 800 }}>✓ ADDED</span>}
+                  </div>
                   <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>{p.note}</div>
                   <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', fontFamily: 'monospace', marginTop: 4 }}>
-                    {p.address.slice(0, 12)}…{p.address.slice(-8)}
+                    {p.address.slice(0, 10)}…{p.address.slice(-6)}
                   </div>
                 </button>
-              ))}
+                );
+              })}
             </div>
 
             <div style={{ ...glassCard, padding: 18, marginBottom: 12 }}>
