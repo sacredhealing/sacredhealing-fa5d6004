@@ -7,9 +7,25 @@ jobs:
   update-env:
     runs-on: ubuntu-latest
     steps:
-      - name: Update Vercel env vars to new Supabase
+      - name: Add NEW_SERVICE_ROLE to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          NEW_SERVICE_ROLE: ${{ secrets.NEW_SERVICE_ROLE }}
         run: |
-          curl -fsSL "https://raw.githubusercontent.com/sacredhealing/sacredhealing-fa5d6004/main/scripts/update-vercel-env.js" -o update-vercel-env.js
-          node update-vercel-env.js
+          # Get project ID first
+          PROJECT=$(curl -s "https://api.vercel.com/v9/projects" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+projs=[p for p in d.get('projects',[]) if 'sacredhealing-fa5d6004' in p.get('name','')]
+print(projs[0]['id'] if projs else '')
+")
+          echo "Project: $PROJECT"
+
+          # Set NEW_SERVICE_ROLE env var
+          curl -s -X POST "https://api.vercel.com/v10/projects/$PROJECT/env" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"key\":\"NEW_SERVICE_ROLE\",\"value\":\"$NEW_SERVICE_ROLE\",\"type\":\"encrypted\",\"target\":[\"production\",\"preview\"]}" \
+            | python3 -c "import sys,json; d=json.load(sys.stdin); print('Set:', d.get('key','error'))" || true
+          echo "Done"
