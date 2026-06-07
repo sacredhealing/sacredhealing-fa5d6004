@@ -1,0 +1,22 @@
+Found 0 open trades
+Done: 0 wins, 0 losses
+
+Final state:
+  SOL  UP   +0.1556%     -> won    pnl=None
+  BTC  DOWN -0.1653%     -> won    pnl=None
+  ETH  DOWN -0.2233%     -> won    pnl=None
+  BTC  DOWN -0.2144%     -> won    pnl=None
+  SOL  UP   +0.2648%     -> won    pnl=None
+  BTC  UP   +0.1793%     -> won    pnl=None
+  ETH  UP   +0.1755%     -> won    pnl=None
+  SOL  DOWN -0.2953%     -> won    pnl=None
+  ETH  DOWN -0.2364%     -> won    pnl=None
+  BTC  DOWN -0.1666%     -> won    pnl=None
+  SOL  UP   +0.1557%     -> won    pnl=None
+  SOL  UP   +0.1559%     -> won    pnl=None
+  ETH  UP   +0.2583%     -> won    pnl=None
+  SOL  UP   +0.1559%     -> won    pnl=None
+  ETH  UP   +0.2788%     -> won    pnl=None
+  BTC  DOWN -0.1684%     -> won    pnl=None
+  ETH  DOWN -0.3450%     -> won    pnl=None
+  SOL  DOWN -0.2332%     -> won    pnl=None
