@@ -175,6 +175,27 @@ function isValidWallet(addr: string): boolean {
   return /^[1-9A-HJ-NP-Za-km-z]+$/.test(addr);
 }
 
+// Poll getSignatureStatuses every 2s until confirmed/failed/timeout (30s max)
+async function pollConfirmation(
+  sig: string,
+  onConfirmed: () => void,
+  onFailed: (reason: string) => void,
+) {
+  for (let i = 0; i < 15; i++) {
+    await new Promise(r => setTimeout(r, 2000));
+    try {
+      const data = await rpcCall('getSignatureStatuses', [[sig], { searchTransactionHistory: true }]);
+      const status = data.result?.value?.[0];
+      if (status === null || status === undefined) continue;
+      if (status.err) { onFailed(JSON.stringify(status.err).slice(0, 60)); return; }
+      if (status.confirmationStatus === 'confirmed' || status.confirmationStatus === 'finalized') {
+        onConfirmed(); return;
+      }
+    } catch {}
+  }
+  onFailed('timeout — check Solscan');
+}
+
 // ─────────────────────────────────────────────────────────
 //  PARSE TRADE FROM PARSED TRANSACTION
 // ─────────────────────────────────────────────────────────
@@ -467,6 +488,7 @@ function FomoCopyBotInner() {
   const [slippageBps,  setSlippageBps]  = useState(300);   // NEW
   const [pumpFunOnly,  setPumpFunOnly]  = useState(false); // NEW
   const [autoSellMins, setAutoSellMins] = useState(0);     // NEW: 0 = disabled
+  const [maxPositions, setMaxPositions] = useState(5);     // NEW: concurrent position cap
 
   // ── Live state ──────────────────────────────────────────
   const [walletAddress,  setWalletAddress]  = useState<string | null>(null);
@@ -484,6 +506,8 @@ function FomoCopyBotInner() {
   const [tab,            setTab]            = useState<'dashboard' | 'wallets' | 'feed' | 'trades' | 'setup'>('dashboard');
   const [lastLatency,    setLastLatency]    = useState<number | null>(null);
   const [avgLatency,     setAvgLatency]     = useState<number | null>(null);
+  const [walletActivity, setWalletActivity] = useState<Map<string, 'checking' | 'active' | 'inactive'>>(new Map()); // NEW
+  const [isVerifying,    setIsVerifying]    = useState(false); // NEW
 
   const monitorsRef      = useRef<Record<string, WalletMonitor>>({});
   const paperRef         = useRef(new PaperEngine(0.07));
@@ -515,6 +539,7 @@ function FomoCopyBotInner() {
         if (typeof data.slippageBps === 'number')  setSlippageBps(data.slippageBps);
         if (typeof data.pumpFunOnly === 'boolean')  setPumpFunOnly(data.pumpFunOnly);
         if (typeof data.autoSellMins === 'number')  setAutoSellMins(data.autoSellMins);
+        if (typeof data.maxPositions === 'number')  setMaxPositions(data.maxPositions);
       }
     } catch {}
   }, []);
@@ -523,7 +548,7 @@ function FomoCopyBotInner() {
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        trackedWallets, riskPct, startingSOL, slippageBps, pumpFunOnly, autoSellMins,
+        trackedWallets, riskPct, startingSOL, slippageBps, pumpFunOnly, autoSellMins, maxPositions,
       }));
     } catch {}
   }, [trackedWallets, riskPct, startingSOL, slippageBps, pumpFunOnly, autoSellMins]);
@@ -607,6 +632,13 @@ function FomoCopyBotInner() {
       const wallet   = walletRef.current;
       const bal      = solBalRef.current;
       if (!wallet || !bal) return;
+
+      // ── Max concurrent positions cap ───────────────────
+      if (trade.action === 'BUY' && livePositionsRef.current.size >= maxPositions) {
+        setStatus(`⚠ Max positions (${maxPositions}) reached — skipping ${trade.symbol || trade.mint.slice(0,6)}`);
+        return;
+      }
+
       const riskLamports = Math.floor(bal * (riskPct / 100) * 1e9);
       const inputMint    = trade.action === 'BUY' ? SOL_MINT : trade.mint;
       const outputMint   = trade.action === 'BUY' ? trade.mint : SOL_MINT;
@@ -625,8 +657,22 @@ function FomoCopyBotInner() {
           } else {
             livePositionsRef.current.delete(trade.mint);
           }
-          setMyTrades(prev => prev.map(x => x.id === pendingId ? { ...x, sig, executing: false, executed: true } : x));
+          // Mark as sent, start polling for on-chain confirmation
+          setMyTrades(prev => prev.map(x =>
+            x.id === pendingId ? { ...x, sig, executing: false, executed: true, confirming: true } : x
+          ));
           getSOLBalance(wallet).then(setSolBalance);
+
+          // ── Confirmation poller ─────────────────────────
+          pollConfirmation(
+            sig,
+            () => setMyTrades(prev => prev.map(x =>
+              x.id === pendingId ? { ...x, confirming: false, confirmed: true } : x
+            )),
+            (reason) => setMyTrades(prev => prev.map(x =>
+              x.id === pendingId ? { ...x, confirming: false, confirmError: reason } : x
+            )),
+          );
         })
         .catch(err => {
           setMyTrades(prev => prev.map(x => x.id === pendingId ? { ...x, executing: false, error: err.message } : x));
@@ -696,6 +742,31 @@ function FomoCopyBotInner() {
       if (tw.some(w => w.address === preset.address)) return tw;
       return [...tw, { address: preset.address, label: preset.label, active: true }];
     });
+  };
+
+  // ── Solscan / on-chain wallet verifier ──────────────── NEW
+  const verifyWallet = async (address: string) => {
+    setWalletActivity(prev => new Map(prev).set(address, 'checking'));
+    try {
+      const data = await rpcCall('getSignaturesForAddress', [address, { limit: 5 }]);
+      const sigs = data.result || [];
+      setWalletActivity(prev => new Map(prev).set(address, sigs.length > 0 ? 'active' : 'inactive'));
+    } catch {
+      setWalletActivity(prev => new Map(prev).set(address, 'inactive'));
+    }
+  };
+
+  const verifyAllWallets = async () => {
+    setIsVerifying(true);
+    setStatus('🔍 Verifying wallets on Solana mainnet…');
+    const toCheck = trackedWallets.filter(w => isValidWallet(w.address));
+    for (const tw of toCheck) {
+      await verifyWallet(tw.address);
+      await new Promise(r => setTimeout(r, 350)); // gentle rate limit
+    }
+    setIsVerifying(false);
+    const active = Array.from(walletActivity.values()).filter(v => v === 'active').length;
+    setStatus(`✓ Verification done — ${active}/${toCheck.length} wallets have real on-chain activity`);
   };
 
   useEffect(() => () => stopMonitoring(), [stopMonitoring]);
@@ -883,6 +954,7 @@ function FomoCopyBotInner() {
                 ['MODE',         mode.toUpperCase()],
                 ['RISK / TRADE', `${riskPct}% → ${(paperPortfolio * riskPct / 100).toFixed(4)} SOL ≈ $${(paperPortfolio * riskPct / 100 * solUSD).toFixed(2)}`],
                 ['SLIPPAGE',     `${slippageBps / 100}%`],
+                ['MAX POSITIONS', `${livePositionsRef.current.size} / ${maxPositions} open`],
                 ['PUMP.FUN ONLY', pumpFunOnly ? '✓ ON' : '○ OFF'],
                 ['AUTO-SELL',    autoSellMins > 0 ? `${autoSellMins} min` : 'DISABLED'],
                 ['HELIUS WS',    HAS_HELIUS ? '✓ ACTIVE (50–200ms)' : '✗ MISSING → add VITE_HELIUS_API_KEY in Vercel'],
@@ -962,43 +1034,83 @@ function FomoCopyBotInner() {
               <div style={{ ...glassCard, padding: 32, textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>
                 No whales tracked yet. Tap a preset above or paste addresses.
               </div>
-            ) : trackedWallets.map((tw, i) => {
-              const valid = isValidWallet(tw.address);
-              return (
-                <div key={i} style={{ ...glassCard, padding: '14px 18px', marginBottom: 10,
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.4em', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', marginBottom: 4 }}>
-                      {tw.label}
+            ) : (
+              <>
+                {/* Verify all button */}
+                <button
+                  onClick={verifyAllWallets}
+                  disabled={isVerifying}
+                  style={{
+                    width: '100%', padding: '10px 0', borderRadius: 14, cursor: 'pointer', marginBottom: 12,
+                    background: 'rgba(34,211,238,0.06)', border: `1px solid rgba(34,211,238,0.2)`,
+                    color: COLORS.cyan, fontSize: 9, fontWeight: 800, letterSpacing: '0.25em',
+                    opacity: isVerifying ? 0.6 : 1,
+                  }}>
+                  {isVerifying ? '⏳ VERIFYING ON-CHAIN…' : '🔍 VERIFY ALL WALLETS ON SOLANA'}
+                </button>
+                {trackedWallets.map((tw, i) => {
+                  const valid    = isValidWallet(tw.address);
+                  const activity = walletActivity.get(tw.address);
+                  const actColor = activity === 'active' ? COLORS.green : activity === 'inactive' ? COLORS.red : activity === 'checking' ? COLORS.cyan : 'rgba(255,255,255,0.2)';
+                  const actLabel = activity === 'active' ? '✅ REAL' : activity === 'inactive' ? '❌ DEAD' : activity === 'checking' ? '⏳…' : '?';
+                  return (
+                    <div key={i} style={{ ...glassCard, padding: '14px 18px', marginBottom: 10,
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                          <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.4em', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase' }}>
+                            {tw.label}
+                          </div>
+                          {activity && (
+                            <div style={{ fontSize: 7, fontWeight: 800, color: actColor, letterSpacing: '0.2em' }}>
+                              {actLabel}
+                            </div>
+                          )}
+                        </div>
+                        <div style={{ fontSize: 11, fontWeight: 700, fontFamily: 'monospace',
+                          color: valid ? 'rgba(255,255,255,0.7)' : COLORS.red,
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {tw.address || '← Enter address'}{!valid && tw.address && ' ✗ invalid'}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                        <button onClick={() => verifyWallet(tw.address)}
+                          style={{
+                            padding: '5px 10px', borderRadius: 10, cursor: 'pointer',
+                            fontSize: 9, fontWeight: 800,
+                            background: 'rgba(34,211,238,0.06)', border: `1px solid rgba(34,211,238,0.15)`,
+                            color: COLORS.cyan,
+                          }}>🔍</button>
+                        <a href={`https://solscan.io/account/${tw.address}`} target="_blank" rel="noreferrer"
+                          style={{
+                            padding: '5px 10px', borderRadius: 10, cursor: 'pointer',
+                            fontSize: 9, fontWeight: 800, textDecoration: 'none',
+                            background: 'rgba(255,255,255,0.03)', border: `1px solid ${COLORS.glassBorder}`,
+                            color: 'rgba(255,255,255,0.4)',
+                          }}>SC</a>
+                        <button onClick={() => setTrackedWallets(arr => arr.map((w, j) => j === i ? { ...w, active: !w.active } : w))}
+                          style={{
+                            padding: '6px 12px', borderRadius: 10, cursor: 'pointer',
+                            fontSize: 9, fontWeight: 800, letterSpacing: '0.2em',
+                            background: tw.active ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.04)',
+                            color: tw.active ? COLORS.green : 'rgba(255,255,255,0.3)',
+                            border: `1px solid ${tw.active ? 'rgba(74,222,128,0.2)' : COLORS.glassBorder}`,
+                          }}>
+                          {tw.active ? '●' : '○'}
+                        </button>
+                        <button onClick={() => setTrackedWallets(arr => arr.filter((_, j) => j !== i))}
+                          style={{
+                            padding: '6px 10px', borderRadius: 10,
+                            border: '1px solid rgba(248,113,113,0.2)',
+                            background: 'rgba(248,113,113,0.06)', color: COLORS.red,
+                            cursor: 'pointer', fontSize: 9, fontWeight: 800,
+                          }}>✕</button>
+                      </div>
                     </div>
-                    <div style={{ fontSize: 11, fontWeight: 700, fontFamily: 'monospace',
-                      color: valid ? 'rgba(255,255,255,0.7)' : COLORS.red,
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {tw.address || '← Enter address'}{!valid && tw.address && ' ✗ invalid'}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={() => setTrackedWallets(arr => arr.map((w, j) => j === i ? { ...w, active: !w.active } : w))}
-                      style={{
-                        padding: '6px 14px', borderRadius: 10, cursor: 'pointer',
-                        fontSize: 9, fontWeight: 800, letterSpacing: '0.2em',
-                        background: tw.active ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.04)',
-                        color: tw.active ? COLORS.green : 'rgba(255,255,255,0.3)',
-                        border: `1px solid ${tw.active ? 'rgba(74,222,128,0.2)' : COLORS.glassBorder}`,
-                      }}>
-                      {tw.active ? '● ACTIVE' : '○ INACTIVE'}
-                    </button>
-                    <button onClick={() => setTrackedWallets(arr => arr.filter((_, j) => j !== i))}
-                      style={{
-                        padding: '6px 12px', borderRadius: 10,
-                        border: '1px solid rgba(248,113,113,0.2)',
-                        background: 'rgba(248,113,113,0.06)', color: COLORS.red,
-                        cursor: 'pointer', fontSize: 9, fontWeight: 800,
-                      }}>✕</button>
-                  </div>
-                </div>
-              );
-            })}
+                  );
+                })}
+              </>
+            )}
           </div>
         )}
 
@@ -1147,6 +1259,25 @@ function FomoCopyBotInner() {
                 </div>
               </SettingRow>
 
+              {/* NEW: Max concurrent positions */}
+              <SettingRow label="MAX OPEN POSITIONS"
+                value={`${maxPositions} simultaneous`}
+                hint={`Bot skips new BUYs once ${maxPositions} positions are open. Protects capital fragmentation.`}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {[1, 2, 3, 5, 8, 10].map(n => (
+                    <button key={n} onClick={() => setMaxPositions(n)} style={{
+                      padding: '6px 14px', borderRadius: 10, cursor: 'pointer',
+                      fontSize: 10, fontWeight: 800,
+                      background: maxPositions === n ? 'rgba(212,175,55,0.15)' : 'rgba(255,255,255,0.03)',
+                      border: `1px solid ${maxPositions === n ? 'rgba(212,175,55,0.3)' : COLORS.glassBorder}`,
+                      color: maxPositions === n ? COLORS.gold : 'rgba(255,255,255,0.4)',
+                    }}>
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </SettingRow>
+
               <SettingRow label="COPY MODE" value={mode.toUpperCase()}>
                 <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', lineHeight: 1.7 }}>
                   📄 PAPER — Simulates trades without real money. Use this first.<br />
@@ -1221,21 +1352,34 @@ function FomoCopyBotInner() {
 
 // ── Sub-components ──────────────────────────────────────────
 function TradeRow({ trade, showPnL, solUSD = 150 }: { trade: any; showPnL?: boolean; solUSD?: number }) {
-  const isSkipped   = trade.skipped;
-  const isExecuting = trade.executing;
-  const isError     = !!trade.error;
-  const symbol      = trade.symbol || (trade.token || trade.mint || '—').slice(0, 6) + '…';
+  const isSkipped      = trade.skipped;
+  const isExecuting    = trade.executing;
+  const isConfirming   = trade.confirming;
+  const isConfirmed    = trade.confirmed;
+  const isConfirmError = !!trade.confirmError;
+  const isError        = !!trade.error;
+  const symbol         = trade.symbol || (trade.token || trade.mint || '—').slice(0, 6) + '…';
+
+  const statusSuffix = isExecuting    ? ' ⏳ sending…'
+    : isConfirming   ? ' 🔄 confirming…'
+    : isConfirmed    ? ' ✅ confirmed'
+    : isConfirmError ? ` ⚠ ${trade.confirmError}`
+    : isError        ? ` ✗ ${trade.error}`
+    : trade.executed ? ' ✓ sent'
+    : '';
 
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 12,
       padding: '10px 12px', marginBottom: 6,
       background: 'rgba(255,255,255,0.01)',
-      border: `1px solid ${isError
+      border: `1px solid ${isError || isConfirmError
         ? 'rgba(248,113,113,0.15)'
-        : trade.action === 'BUY'
-          ? 'rgba(74,222,128,0.08)'
-          : 'rgba(248,113,113,0.08)'}`,
+        : isConfirmed
+          ? 'rgba(74,222,128,0.15)'
+          : trade.action === 'BUY'
+            ? 'rgba(74,222,128,0.08)'
+            : 'rgba(248,113,113,0.08)'}`,
       borderRadius: 14,
       opacity: isSkipped ? 0.55 : 1,
     }}>
@@ -1252,10 +1396,8 @@ function TradeRow({ trade, showPnL, solUSD = 150 }: { trade: any; showPnL?: bool
           color: trade.action === 'BUY' ? COLORS.green : COLORS.red,
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {trade.action} · <span style={{ color: COLORS.gold }}>{symbol}</span>
-          {isSkipped   && ' (no position)'}
-          {isExecuting && ' ⏳ sending…'}
-          {isError     && ` ✗ ${trade.error}`}
-          {trade.executed && ' ✓'}
+          {isSkipped && ' (no position)'}
+          {statusSuffix}
         </div>
         <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>
           {(trade.riskSOL || 0).toFixed(4)} SOL · {trade.label || ''} · {new Date(trade.timestamp).toLocaleTimeString()}
