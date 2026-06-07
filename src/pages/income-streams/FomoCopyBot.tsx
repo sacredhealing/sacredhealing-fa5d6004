@@ -404,7 +404,8 @@ class MultiWalletMonitor {
     clearTimeout(this.reconnectTimer);
     try { this.ws?.close(); } catch {}
   }
-}
+  }
+
 
   async _onMessage(e: MessageEvent) {
     let data: any;
@@ -556,6 +557,7 @@ class PaperEngine {
       return entry;
     }
   }
+}
 }
 
 // ─────────────────────────────────────────────────────────
