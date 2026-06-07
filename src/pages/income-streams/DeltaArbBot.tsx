@@ -110,7 +110,12 @@ export default function DeltaArbBot() {
       const lost   = all.filter(t => t.status === 'lost');
       const open   = all.filter(t => t.status === 'open' || !t.status);
       const total  = won.length + lost.length;
-      const totalPnl = all.reduce((s, t) => s + (parseFloat(t.pnl_usdc) || 0), 0);
+      const totalPnl = all.reduce((s, t) => {
+        if (t.pnl_usdc !== null && t.pnl_usdc !== undefined) return s + (parseFloat(t.pnl_usdc) || 0);
+        if (t.status === 'lost') return s - (parseFloat(t.size_usd) || 10);
+        if (t.status === 'won')  return s + (parseFloat(t.size_usd) || 10) * 0.12;
+        return s;
+      }, 0);
 
       setStats({
         balance:     Math.round((STARTING_BALANCE + totalPnl) * 100) / 100,
