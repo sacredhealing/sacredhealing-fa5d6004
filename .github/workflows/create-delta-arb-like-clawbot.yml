@@ -10,13 +10,36 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_ADMIN_PAT }}
-      - name: Resolve NULL pnl trades
+      - name: Add strategy column + set aggressive
         env:
+          SUPABASE_PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
           SK2: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          python3 scripts/resolve_trades.py 2>&1 | tee _delta_arb_create.txt
+          DB="https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query"
+          KEY="${SK:-$SK2}"
+          LOG="_delta_arb_create.txt"
+
+          q() {
+            curl -s -X POST "$DB" \
+              -H "Authorization: Bearer ${SUPABASE_PAT}" \
+              -H "Content-Type: application/json" \
+              -d "$1"
+          }
+
+          echo "Adding strategy column..." | tee $LOG
+          q '{"query":"ALTER TABLE delta_arb_platform_config ADD COLUMN IF NOT EXISTS active_strategy text NOT NULL DEFAULT '''moderate'''"}' | tee -a $LOG
+          echo "" >> $LOG
+
+          echo "Setting aggressive strategy..." | tee -a $LOG
+          q '{"query":"UPDATE delta_arb_platform_config SET active_strategy = '''aggressive''' WHERE id = 1"}' | tee -a $LOG
+          echo "" >> $LOG
+
+          echo "Verify..." | tee -a $LOG
+          curl -s "https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/delta_arb_platform_config?select=platform_wallet,active_strategy" \
+            -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}" | tee -a $LOG
+
           git config user.email "bot@sqi.app"; git config user.name "SQI-Bot"
-          git add _delta_arb_create.txt && git commit -m "ci: resolve result" || true
+          git add $LOG && git commit -m "ci: add strategy column, set aggressive" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
