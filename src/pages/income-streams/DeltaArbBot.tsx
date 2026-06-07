@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Zap, Activity, TrendingUp, DollarSign, Shield, RefreshCw, AlertCircle, Clock, BarChart3, Users, Target, Wallet, Settings, Check, Share2, Copy } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-const sb = supabase as any;
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
 
@@ -128,14 +127,14 @@ export default function DeltaArbBot() {
 
   const loadMembership = useCallback(async () => {
     if (!user) return;
-    const { data } = await sb.from('delta_arb_members').select('*').eq('user_id', user.id).maybeSingle();
+    const { data } = await supabase.from('delta_arb_members').select('*').eq('user_id', user.id).maybeSingle();
     setMembership(data);
     if (data?.poly_wallet_address) setWalletAddress(data.poly_wallet_address);
 
-    const { data: trades } = await sb.from('delta_arb_trades').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(20);
+    const { data: trades } = await supabase.from('delta_arb_trades').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(20);
     setMyTrades(trades ?? []);
 
-    const { data: fees } = await sb.from('delta_arb_fee_ledger').select('gross_pnl_usdc,fee_usdc,net_pnl_usdc').eq('user_id', user.id);
+    const { data: fees } = await supabase.from('delta_arb_fee_ledger').select('gross_pnl_usdc,fee_usdc,net_pnl_usdc').eq('user_id', user.id);
     if (fees?.length) {
       setMyStats({
         totalGross: fees.reduce((s, f) => s + parseFloat(f.gross_pnl_usdc || 0), 0),
@@ -177,7 +176,7 @@ export default function DeltaArbBot() {
     if (!user || !walletAddress.startsWith('0x')) return;
     setSavingWallet(true);
     try {
-      await sb.from('delta_arb_members').upsert({
+      await supabase.from('delta_arb_members').upsert({
         user_id: user.id,
         poly_wallet_address: walletAddress.toLowerCase().trim(),
         tier,
