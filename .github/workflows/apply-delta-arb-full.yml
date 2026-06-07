@@ -23,14 +23,34 @@ jobs:
           cd repo
           supabase link --project-ref fjdzhrdpioxdeyyfogep 2>&1 | tail -2
           
-          echo "Repairing migration history for problematic migrations..."
+          echo "Marking all old migrations as applied..."
           supabase migration repair --status applied 20250509_virtual_pilgrimage 2>&1 || true
           supabase migration repair --status applied 20250512000001_stargate_community_overhaul 2>&1 || true
+          supabase migration repair --status applied 20251201212351_2dcf48df-7030-4d78-b778-30ca43a58095 2>&1 || true
+          supabase migration repair --status applied 20251201214734_4c38c1ff-70ee-4cf2-9e40-f995dae7bde3 2>&1 || true
+          supabase migration repair --status applied 20251201220001_79d16a3f-2a5d-4a5f-a5dd-0c9959f489dc 2>&1 || true
+          supabase migration repair --status applied 20251201220649_fb010e2c-9f79-4b35-a2af-c11bde4fc65a 2>&1 || true
+          supabase migration repair --status applied 20251201221647_315a35b0-2914-443f-8942-c44ababd29e6 2>&1 || true
+          supabase migration repair --status applied 20251201222205_c91ee7cf-5f89-43d6-a343-5cdd1012e746 2>&1 || true
+          supabase migration repair --status applied 20251201222352_92bfd99a-985d-4008-87ee-d960c5b4286d 2>&1 || true
+          supabase migration repair --status applied 20251201222706_636da751-220b-4004-9c31-2ad567206ca6 2>&1 || true
+          supabase migration repair --status applied 20251201232341_d26a2a3a-b52f-425f-9e9b-42216bb86d33 2>&1 || true
+          supabase migration repair --status applied 20251201233400_d76ada7f-8a4a-4ce0-baa6-42b8db86d9cf 2>&1 || true
+          supabase migration repair --status applied 20251201234008_ae59fe5c-a2f4-4349-b052-985d6d53df90 2>&1 || true
+          supabase migration repair --status applied 20260605000000_clawbot_profit_share 2>&1 || true
+          supabase migration repair --status applied 20260605100000_fix_clawbot_rls 2>&1 || true
+          supabase migration repair --status applied 20260605200000_clawbot_affiliate 2>&1 || true
+          supabase migration repair --status applied 20260605220000_delta_arb_bot 2>&1 || true
+          supabase migration repair --status applied 20260605_sniper_bot 2>&1 || true
+          supabase migration repair --status applied 20260606070046_e2af7d26-4107-4c3a-a012-370246b060d9 2>&1 || true
+          supabase migration repair --status applied 20260606071549_750787be-0236-4770-90d9-68051f01f495 2>&1 || true
+          supabase migration repair --status applied 20260607120000_check_wallets 2>&1 || true
+          supabase migration repair --status applied 20260607120000_temple_activations_scalar_bridge 2>&1 || true
           
-          echo "Pushing only new migrations..."
+          echo "Now pushing only new delta-arb migration..."
           supabase db push --linked 2>&1 | tee ../result.txt || true
-          
           echo "Done"
+          
           cd ..
           git config user.email "bot@sqi.app"; git config user.name "SQI-Bot"
           git add result.txt && git commit -m "ci: delta-arb migration result" || true
