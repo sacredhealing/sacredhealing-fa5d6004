@@ -320,14 +320,18 @@ class MultiWalletMonitor {
     this.onTrade = onTrade;
   }
 
+  onStatusChange?: (s: 'connecting'|'connected'|'error'|'disconnected') => void;
+
   connect() {
     if (this.killed) return;
+    this.onStatusChange?.('connecting');
     this.ws           = new WebSocket(HELIUS_WS);
-    this.ws.onopen    = () => this._subscribe();
+    this.ws.onopen    = () => { this.onStatusChange?.('connecting'); this._subscribe(); };
     this.ws.onmessage = (e) => this._onMessage(e);
-    this.ws.onerror   = () => {};
+    this.ws.onerror   = () => { this.onStatusChange?.('error'); };
     this.ws.onclose   = () => {
       clearInterval(this.pingTimer);
+      this.onStatusChange?.('disconnected');
       if (this.killed) return;
       this.reconnectTimer = setTimeout(() => this.connect(), 3000);
     };
@@ -386,6 +390,12 @@ class MultiWalletMonitor {
     let data: any;
     try { data = JSON.parse(e.data); } catch { return; }
 
+    // Subscription confirmed — Helius sends {id:1, result: <subId>}
+    if (data.id === 1 && typeof data.result === 'number') {
+      this.onStatusChange?.('connected');
+      return;
+    }
+
     if (data.method === 'transactionNotification') {
       const t0    = Date.now();
       const value = data.params?.result?.transaction;
@@ -431,12 +441,6 @@ class MultiWalletMonitor {
     clearTimeout(this.reconnectTimer);
     try { this.ws?.close(); } catch {}
   }
-  }
-
-
-  async _onMessage(e: MessageEvent) {
-    let data: any;
-    try { data = JSON.parse(e.data); } catch { return; }
 
     if (data.method === 'transactionNotification') {
       const t0    = Date.now();
@@ -745,6 +749,7 @@ function FomoCopyBotInner() {
   const [avgLatency,     setAvgLatency]     = useState<number | null>(null);
   const [walletActivity, setWalletActivity] = useState<Map<string, 'checking' | 'active' | 'inactive'>>(new Map()); // NEW
   const [isVerifying,    setIsVerifying]    = useState(false); // NEW
+  const [wsStatus,       setWsStatus]       = useState<'disconnected'|'connecting'|'connected'|'error'>('disconnected');
 
   // ── Paper session tracker ────────────────────────────────
   const [sessionStart,   setSessionStart]   = useState<number | null>(null);
@@ -1036,6 +1041,11 @@ function FomoCopyBotInner() {
       entries,
       (trade, lat, label, config) => handleWhaleTrade(trade, lat, label, config),
     );
+    monitor.onStatusChange = (s) => {
+      setWsStatus(s);
+      if (s === 'error') setStatus('⚠ WebSocket error — reconnecting…');
+      if (s === 'connected') setStatus(`✅ CONNECTED — monitoring ${entries.length} wallets via ${HAS_HELIUS ? 'Helius' : 'public RPC'}`);
+    };
     monitor.connect();
     monitorRef.current = monitor;
 
@@ -1207,10 +1217,20 @@ function FomoCopyBotInner() {
       </div>
 
       {/* ── STATUS BAR ── */}
-      <div style={{ padding: '8px 20px', marginBottom: 4 }}>
-        <div style={{ fontSize: 9, color: isMonitoring ? COLORS.green : 'rgba(255,255,255,0.3)', fontWeight: 700, letterSpacing: '0.15em' }}>
+      <div style={{ padding: '8px 20px 4px', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ fontSize: 9, color: isMonitoring ? COLORS.green : 'rgba(255,255,255,0.3)', fontWeight: 700, letterSpacing: '0.15em', flex: 1 }}>
           {status || 'OFFLINE'}
         </div>
+        {isMonitoring && (
+          <div style={{
+            fontSize: 8, fontWeight: 800, letterSpacing: '0.2em', padding: '3px 8px', borderRadius: 8,
+            background: wsStatus === 'connected' ? 'rgba(74,222,128,0.1)' : wsStatus === 'error' ? 'rgba(248,113,113,0.1)' : 'rgba(255,255,255,0.05)',
+            color: wsStatus === 'connected' ? COLORS.green : wsStatus === 'error' ? COLORS.red : COLORS.cyan,
+            border: `1px solid ${wsStatus === 'connected' ? 'rgba(74,222,128,0.2)' : wsStatus === 'error' ? 'rgba(248,113,113,0.2)' : 'rgba(255,255,255,0.1)'}`,
+          }}>
+            {wsStatus === 'connected' ? '● WS LIVE' : wsStatus === 'connecting' ? '◌ CONNECTING' : wsStatus === 'error' ? '✗ WS ERROR' : '○ WS OFF'}
+          </div>
+        )}
       </div>
 
       {/* ── CONNECT + MODE ── */}
