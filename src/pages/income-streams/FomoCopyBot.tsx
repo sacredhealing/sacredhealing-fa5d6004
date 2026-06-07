@@ -7,7 +7,7 @@ import { Buffer } from 'buffer';
 import { useAdminRole } from '@/hooks/useAdminRole';
 
 // ═══════════════════════════════════════════════════════════
-//  SQI 2050 — SOVEREIGN COPY INTELLIGENCE BOT  v3
+//  SQI 2050 — SOVEREIGN COPY INTELLIGENCE BOT  v5  [2026-06-07 17:04 UTC]
 //  Shreem Brzee Freedom Bot | Solana Mainnet | Jupiter v6
 //  + Live SOL price (Jupiter API, 60s refresh)
 //  + Mint symbol resolution (Jupiter tokens API, cached)
