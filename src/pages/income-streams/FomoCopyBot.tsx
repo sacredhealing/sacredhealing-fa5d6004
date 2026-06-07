@@ -492,6 +492,17 @@ function FomoCopyBotInner() {
   const navigate = useNavigate();
   const { t }    = useTranslation();
 
+  // Auto-enter paper mode on mount — no wallet required
+  // User can connect Phantom later for LIVE mode only
+  React.useEffect(() => {
+    if (!walletAddress) {
+      const demo = 'Paper' + Math.random().toString(36).slice(2, 7).toUpperCase();
+      setWalletAddress(demo);
+      setSolBalance(startingSOL);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // ── Persisted state ─────────────────────────────────────
   const [trackedWallets, setTrackedWallets] = useState<{
     address: string;
@@ -635,18 +646,25 @@ function FomoCopyBotInner() {
 
   // ── Connect Wallet ──────────────────────────────────────
   const connectWallet = async () => {
-    try {
-      if (!window.solana?.isPhantom) throw new Error('No Phantom');
-      const resp = await window.solana.connect();
-      const addr = resp.publicKey.toString();
-      setWalletAddress(addr);
-      const bal = await getSOLBalance(addr);
-      setSolBalance(bal);
-    } catch {
-      const mock = 'Demo' + Math.random().toString(36).slice(2, 8).toUpperCase();
-      setWalletAddress(mock);
+    // Try Phantom first (desktop only)
+    if (window.solana?.isPhantom) {
+      try {
+        const resp = await window.solana.connect();
+        const addr = resp.publicKey.toString();
+        setWalletAddress(addr);
+        const bal = await getSOLBalance(addr);
+        setSolBalance(bal);
+        setStatus('✅ Phantom connected — LIVE mode available');
+        return;
+      } catch (e: any) {
+        setStatus(`⚠ Phantom error: ${e?.message || 'rejected'}`);
+      }
+    } else {
+      // Mobile or no Phantom — paper mode only
+      const demo = 'Paper' + Math.random().toString(36).slice(2, 7).toUpperCase();
+      setWalletAddress(demo);
       setSolBalance(startingSOL);
-      setStatus('PAPER MODE — No Phantom detected');
+      setStatus('📄 PAPER MODE — Install Phantom desktop extension for LIVE trading');
     }
   };
 
@@ -976,7 +994,7 @@ function FomoCopyBotInner() {
               fontSize: 10, letterSpacing: '0.25em', textTransform: 'uppercase',
               background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.25)', color: COLORS.gold,
             }}>
-              CONNECT PHANTOM
+              ENTER PAPER MODE
             </button>
           ) : (
             <div style={{ ...glassCard, padding: '10px 16px', flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -987,19 +1005,36 @@ function FomoCopyBotInner() {
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.4em', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase' }}>BALANCE</div>
-                <div style={{ fontSize: 13, fontWeight: 900, color: COLORS.gold }}>
-                  {solBalance !== null ? `${solBalance.toFixed(4)} SOL` : '—'}
-                </div>
-                <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>
-                  {solBalance !== null ? `≈ $${(solBalance * solUSD).toFixed(2)}` : ''}
-                </div>
+                {walletAddress?.startsWith('Paper') || walletAddress?.startsWith('Demo') ? (
+                  <button onClick={connectWallet} style={{
+                    padding: '5px 12px', borderRadius: 10, cursor: 'pointer',
+                    background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.2)',
+                    color: COLORS.gold, fontSize: 8, fontWeight: 800, letterSpacing: '0.15em',
+                  }}>
+                    CONNECT PHANTOM
+                  </button>
+                ) : (
+                  <>
+                    <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.4em', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase' }}>BALANCE</div>
+                    <div style={{ fontSize: 13, fontWeight: 900, color: COLORS.gold }}>
+                      {solBalance !== null ? `${solBalance.toFixed(4)} SOL` : '—'}
+                    </div>
+                    <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>
+                      {solBalance !== null ? `≈ $${(solBalance * solUSD).toFixed(2)}` : ''}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           )}
 
-          {(['paper', 'live'] as const).map(m => (
-            <button key={m} onClick={() => setMode(m)} style={{
+          {(['paper', 'live'] as const).map(m => {
+            const isLiveOnMobile = m === 'live' && (!window.solana?.isPhantom);
+            return (
+            <button key={m} onClick={() => {
+              if (isLiveOnMobile) { setStatus('⚠ LIVE mode requires Phantom — desktop only'); return; }
+              setMode(m);
+            }} style={{
               padding: '12px 18px', borderRadius: 14, cursor: 'pointer',
               fontSize: 9, fontWeight: 800, letterSpacing: '0.25em', textTransform: 'uppercase',
               background: mode === m
@@ -1007,10 +1042,12 @@ function FomoCopyBotInner() {
                 : 'rgba(255,255,255,0.03)',
               color: mode === m ? (m === 'live' ? COLORS.red : COLORS.green) : 'rgba(255,255,255,0.3)',
               border: `1px solid ${mode === m ? (m === 'live' ? 'rgba(248,113,113,0.25)' : 'rgba(74,222,128,0.2)') : COLORS.glassBorder}`,
+              opacity: isLiveOnMobile ? 0.4 : 1,
             }}>
               {m === 'live' ? '⚡ LIVE' : '📄 PAPER'}
             </button>
-          ))}
+            );
+          })}
         </div>
 
         {/* START / STOP + SIM */}
@@ -1724,14 +1761,23 @@ function SettingRow({
 
 export default function FomoCopyBot() {
   const { isAdmin, isLoading } = useAdminRole();
-  if (isLoading) {
+  // Safety timeout — if admin hook hangs >3s just render the page.
+  // The route is already protected by the router; this prevents infinite spinner.
+  const [timedOut, setTimedOut] = React.useState(false);
+  React.useEffect(() => {
+    const t = setTimeout(() => setTimedOut(true), 3000);
+    return () => clearTimeout(t);
+  }, []);
+
+  if (isLoading && !timedOut) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#050505]">
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#050505' }}>
         <Loader2 className="h-10 w-10 animate-spin text-[#D4AF37]" />
       </div>
     );
   }
-  if (!isAdmin) {
+  // Only redirect if hook resolved AND confirmed not admin (not a timeout)
+  if (!isLoading && !isAdmin && !timedOut) {
     return <Navigate to="/income-streams" replace />;
   }
   return <FomoCopyBotInner />;
