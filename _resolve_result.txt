@@ -1,4 +1,4 @@
-Deleting all old trades...
-Done — trades cleared
-Trades remaining: 0
-Checking RLS...
+Current trade count: 0-0/26
+Test write: HTTP 201
+Trade count after: 0-0/27
+Bot is running — real trades will appear as signals fire on BTC/ETH/SOL
