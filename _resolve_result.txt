@@ -1,4 +1,5 @@
-Current trade count: 0-0/26
-Test write: HTTP 201
-Trade count after: 0-0/27
-Bot is running — real trades will appear as signals fire on BTC/ETH/SOL
+Total trades: 30
+Won: 22 | Lost: 8 | Null pnl: 0
+Fixed pnl on 0 trades
+Won=22 Lost=8 Total PnL=+290.54
+BALANCE: $390.54
