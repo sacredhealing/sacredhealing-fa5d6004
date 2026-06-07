@@ -1,51 +1,52 @@
-import urllib.request, json, os, sys
+import urllib.request, json, os, datetime
 
-KEY  = os.environ.get('SK') or os.environ.get('SK2','')
+SK   = os.environ.get('SK') or os.environ.get('SK2','')
 BASE = 'https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1'
 
-def get(path):
-    req = urllib.request.Request(f'{BASE}{path}',
-        headers={'apikey':KEY,'Authorization':f'Bearer {KEY}'})
-    with urllib.request.urlopen(req,timeout=10) as r:
-        return json.loads(r.read())
+# 1. Check last trade timestamp
+req = urllib.request.Request(
+    f'{BASE}/delta_arb_trades?select=created_at&order=created_at.desc&limit=1',
+    headers={'apikey': SK, 'Authorization': f'Bearer {SK}'}
+)
+with urllib.request.urlopen(req, timeout=10) as r:
+    data = json.loads(r.read())
+    if data:
+        last = data[0]['created_at']
+        print(f'Last trade: {last}')
+        from datetime import datetime, timezone
+        last_dt = datetime.fromisoformat(last.replace('Z','+00:00'))
+        ago = (datetime.now(timezone.utc) - last_dt).total_seconds() / 60
+        print(f'That was {ago:.1f} minutes ago')
+    else:
+        print('No trades found')
 
-def patch(path, data):
-    req = urllib.request.Request(f'{BASE}{path}',
-        data=json.dumps(data).encode(),
-        headers={'apikey':KEY,'Authorization':f'Bearer {KEY}',
-                 'Content-Type':'application/json','Prefer':'return=minimal'},
-        method='PATCH')
-    with urllib.request.urlopen(req,timeout=10): pass
+# 2. Check total count
+req2 = urllib.request.Request(
+    f'{BASE}/delta_arb_trades?select=id',
+    headers={'apikey': SK, 'Authorization': f'Bearer {SK}', 'Prefer': 'count=exact'},
+)
+with urllib.request.urlopen(req2, timeout=10) as r:
+    cr = r.headers.get('content-range','?')
+    print(f'Total trades: {cr}')
 
-THRESHOLD = 0.0015
-
-# Fix ALL trades that have pnl=NULL regardless of status
-trades = get('/delta_arb_trades?pnl_usdc=is.null&select=id,delta,size_usd,entry_price,status&limit=200')
-print(f'Found {len(trades)} trades with pnl=NULL')
-
-for t in trades:
-    try: dv = abs(float(t.get('delta','+0%').replace('%',''))/100)
-    except: dv = 0.0
-    sz  = float(t.get('size_usd') or 10)
-    ep  = float(t.get('entry_price') or 0.62)
-    sh  = sz / max(ep, 0.01)
-    win = t.get('status') == 'won'
-    pnl = round((sh * 1.0 - sz) if win else -sz, 4)
-    try:
-        patch(f'/delta_arb_trades?id=eq.{t["id"]}',
-              {'pnl_usdc': pnl, 'net_pnl_usdc': pnl})
-        print(f'  {t["id"][:8]} {t.get("asset","?")} {t.get("status","?")} -> pnl={pnl}')
-    except Exception as e:
-        print(f'  ERROR {t["id"][:8]}: {e}')
-
-# Final summary
-all_t = get('/delta_arb_trades?select=status,pnl_usdc&limit=500')
-total = len(all_t)
-won   = [t for t in all_t if t.get('status')=='won']
-lost  = [t for t in all_t if t.get('status')=='lost']
-open_ = [t for t in all_t if t.get('status') not in ['won','lost']]
-total_pnl = sum(float(t.get('pnl_usdc') or 0) for t in all_t)
-print(f'\n=== SUMMARY ===')
-print(f'Total: {total} | Won: {len(won)} | Lost: {len(lost)} | Open: {len(open_)}')
-print(f'Total PnL: +${total_pnl:.2f} USDC')
-print(f'Balance: ${100 + total_pnl:.2f}')
+# 3. Write a test trade to verify Supabase write works
+print('Writing test trade...')
+payload = json.dumps({
+    'asset': 'TEST', 'signal': 'UP', 'delta': '+0.9999%',
+    'size_usd': 0.01, 'status': 'won', 'pnl_usdc': 0.001, 'mode': 'PAPER'
+}).encode()
+req3 = urllib.request.Request(
+    f'{BASE}/delta_arb_trades',
+    data=payload,
+    headers={
+        'apikey': SK, 'Authorization': f'Bearer {SK}',
+        'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+    },
+    method='POST'
+)
+try:
+    with urllib.request.urlopen(req3, timeout=10) as r:
+        print(f'Test write: HTTP {r.status} — Supabase write works!')
+except Exception as e:
+    print(f'Test write FAILED: {e}')
+    print('This means bot cannot write trades — SUPABASE_SERVICE_KEY missing or wrong')
