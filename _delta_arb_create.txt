@@ -1,11 +1,53 @@
-Adding public read policy to delta_arb_trades...
-[]
-[]
-Adding public read policy to delta_arb_platform_config...
-[][]
-Verify trades visible via anon key...
-[{"id":"920ab318-ca45-496d-a1aa-d8e9d40e3d46","asset":"ETH","signal":"DOWN","delta":"-0.1620%","status":"lost","pnl_usdc":null}, 
- {"id":"ba58aa3c-a886-44aa-82a6-db0ec32fa1b2","asset":"ETH","signal":"DOWN","delta":"-0.1868%","status":"won","pnl_usdc":null}, 
- {"id":"daa48478-ba18-4151-9216-5c802f55837c","asset":"SOL","signal":"DOWN","delta":"-0.2763%","status":"won","pnl_usdc":null}, 
- {"id":"1d32eec6-ef6e-4986-b1a1-046efc782ca8","asset":"BTC","signal":"DOWN","delta":"-0.1501%","status":"won","pnl_usdc":null}, 
- {"id":"3f52bf4b-cf99-436b-b7aa-f142e6ecd012","asset":"SOL","signal":"DOWN","delta":"-0.4298%","status":"won","pnl_usdc":null}]
+Found 47 trades with pnl=NULL
+  071c3782 ? won -> pnl=1.4064
+  cd688357 ? won -> pnl=1.3392
+  c477f89c ? won -> pnl=1.1682
+  75579d34 ? won -> pnl=1.3621
+  ba30049a ? won -> pnl=1.2542
+  cd57faa8 ? won -> pnl=1.0639
+  0cc4b127 ? won -> pnl=0.7522
+  510c188f ? won -> pnl=1.0944
+  025a6024 ? won -> pnl=1.3028
+  09a634f7 ? won -> pnl=0.7009
+  44fe1dff ? won -> pnl=1.3421
+  c1896d28 ? won -> pnl=1.2497
+  fcb7dc96 ? lost -> pnl=-10.32
+  ca6f26fa ? won -> pnl=1.1693
+  6a77e5a7 ? won -> pnl=1.2368
+  54fe3f65 ? won -> pnl=1.0426
+  18b445da ? won -> pnl=0.8527
+  7a9cb6d7 ? won -> pnl=0.91
+  55479549 ? won -> pnl=0.7588
+  e2acb541 ? won -> pnl=1.3185
+  9f226c1b ? won -> pnl=1.2871
+  452d06ec ? lost -> pnl=-10.11
+  f9508a96 ? lost -> pnl=-9.09
+  9acd1000 ? won -> pnl=1.0577
+  802cf355 ? won -> pnl=0.6118
+  b0747e4a ? won -> pnl=0.8592
+  e3e1ae05 ? won -> pnl=1.1675
+  08f5f05c ? won -> pnl=0.9628
+  6776e1a5 ? won -> pnl=0.7139
+  63c008bf ? won -> pnl=0.7813
+  01b54a84 ? won -> pnl=0.8452
+  1a4aa41e ? won -> pnl=0.6887
+  b3f46177 ? won -> pnl=1.0176
+  403ea3cd ? won -> pnl=0.7915
+  1d677edd ? won -> pnl=1.2079
+  ef57ec84 ? won -> pnl=0.7021
+  1cffa75c ? won -> pnl=0.8412
+  7cb40c39 ? won -> pnl=0.8641
+  f549bbc6 ? lost -> pnl=-9.35
+  0d732a33 ? won -> pnl=0.8551
+  211ecf51 ? won -> pnl=0.7927
+  c9fcbf79 ? won -> pnl=0.9218
+  3f52bf4b ? won -> pnl=1.236
+  1d32eec6 ? won -> pnl=0.7256
+  daa48478 ? won -> pnl=0.9396
+  ba58aa3c ? won -> pnl=0.8178
+  920ab318 ? lost -> pnl=-9.1
+
+=== SUMMARY ===
+Total: 65 | Won: 60 | Lost: 5 | Open: 0
+Total PnL: +$44.74 USDC
+Balance: $144.74
