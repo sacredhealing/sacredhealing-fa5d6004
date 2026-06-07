@@ -72,11 +72,11 @@ const mintSymbolCache = new Map<string, string>(Object.entries(KNOWN_MINTS));
 // Only Cupsey and Orange are verified from fomo.fund.
 // The other 4 addresses from the previous version were REMOVED — unverifiable.
 // Add more: fomo.fund → Leaderboard → sort 30d PnL → copy wallet address.
-const WHALE_PRESETS: { label: string; address: string; note: string }[] = [
-  { label: 'Cupsey',       address: 'GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE', note: 'Micro-cap sniper' },
+const WHALE_PRESETS: { label: string; address: string; note: string; isVIP?: boolean; riskMult?: number; priorityMult?: number }[] = [
+  { label: 'Cupsey',       address: 'GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE', note: '⭐ Verified micro-cap sniper', isVIP: true, riskMult: 1.5, priorityMult: 2 },
   { label: 'Orange',       address: '96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5', note: 'Pump.fun launch hunter' },
   { label: 'Shreem Brzee', address: 'HL3FZ8XWnLnn1HuktmgpNRyFRjuAxWbXNQVj5fPPzZwt', note: 'High win-rate scalper' },
-  { label: 'Heyitsyolo',   address: 'Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ', note: 'Known FOMO trader' },
+  { label: 'Heyitsyolo',   address: 'Av3xWHJ5EsoLZag6pr7LKbrGgLRTaykXomDD5kBhL9YQ', note: '⭐ Known FOMO.fund leaderboard trader', isVIP: true, riskMult: 1.5, priorityMult: 2 },
   { label: 'Lenion',       address: 'DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm', note: 'Meme coin specialist' },
   { label: 'Boredboar',    address: 'gasAx5Y917MYdmdnwiomwYDhmDKNGDJnN1MmEbxVdVw',  note: 'Aggressive entry style' },
   { label: 'Hades',        address: 'HdxkiXqeN6qpK2YbG51W23QSWj3Yygc1eEk2zwmKJExp', note: 'High-frequency trader' },
@@ -91,7 +91,7 @@ const WHALE_PRESETS: { label: string; address: string; note: string }[] = [
   { label: 'Snow Spirit',  address: '4ev7HVsESzFxKqGzQxJ5mzSM6NstGCTQXKXT8yHiaRP3', note: 'Consistent PnL' },
   { label: 'Cented',       address: 'CyaE1VxvBrahnPWkqm5VsdCvyS2QmNht2UFrKJHga54o', note: 'Active swing trader' },
   { label: 'The Grande',   address: 'Gygj9QQby4j2jryqyqBHvLP7ctv2SaANgh4sCb69BUpA', note: 'Large position trader' },
-  { label: 'Remusofmars',  address: 'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu', note: 'Meme coin hunter' },
+  { label: 'Remusofmars',  address: 'BCrTEXmWutwPz8qv6w1S5gDbaLnSLpXKM5kSGVWyyfxu', note: '⭐ $370→$1.2M WHITEWHALE · conviction early-entry', isVIP: true, riskMult: 2, priorityMult: 3 },
   { label: 'A Milly',      address: 'Fv9w9TQnqhzUszbDGRFPPkXwu5iJWG9VytmMJTCTnjxW', note: 'High-value trader' },
   { label: 'J2ANNaq',      address: 'J2ANNaq4uUk3iUGoNijKCwXTReGLyg2yQpGcAZjzyBZG', note: 'Tracked wallet' },
 ];
@@ -404,6 +404,7 @@ async function executeJupiterSwap(
   amountLamports: number,
   walletAddress: string,
   slippageBps = 300,
+  priorityMult = 1,   // VIP multiplier — 1x normal, 3x for Remusofmars etc.
 ): Promise<string> {
   if (!window.solana) throw new Error('Wallet not connected');
 
@@ -415,7 +416,7 @@ async function executeJupiterSwap(
   if (!quote.outAmount) throw new Error(quote.error || 'No route found');
 
   const accountKeys = [walletAddress, inputMint, outputMint];
-  const priorityFee = await getPriorityFee(accountKeys);
+  const priorityFee = Math.ceil((await getPriorityFee(accountKeys)) * Math.max(1, priorityMult));
 
   const swapRes = await fetch(JUPITER_SWAP_API, {
     method: 'POST',
@@ -481,7 +482,14 @@ function FomoCopyBotInner() {
   const { t }    = useTranslation();
 
   // ── Persisted state ─────────────────────────────────────
-  const [trackedWallets, setTrackedWallets] = useState<{ address: string; label: string; active: boolean }[]>([]);
+  const [trackedWallets, setTrackedWallets] = useState<{
+    address: string;
+    label: string;
+    active: boolean;
+    isVIP?: boolean;       // bypass pumpFunOnly filter, 3x priority fee
+    riskMult?: number;     // risk multiplier vs base (e.g. 2 = 2x base risk%)
+    priorityMult?: number; // priority fee multiplier (1–5)
+  }[]>([]);
   const [riskPct,      setRiskPct]      = useState(5);
   const [startingSOL,  setStartingSOL]  = useState(0.07);
   const [mode,         setMode]         = useState<'paper' | 'live'>('paper');
@@ -604,81 +612,108 @@ function FomoCopyBotInner() {
   };
 
   // ── Process incoming whale trade ────────────────────────
-  const handleWhaleTrade = useCallback(async (trade: ParsedTrade, latencyMs: number, label: string) => {
-    // Pump.fun-only filter
-    if (pumpFunOnly && !trade.isPumpFun) return;
+  // ── SOVEREIGN COPY ENGINE ───────────────────────────────
+  // Fire-first architecture: swap fires BEFORE symbol resolution.
+  // Symbol lookup is async background — never blocks execution.
+  // VIP whales: bypass pumpFunOnly, 2–3x priority fee, 1.5–2x risk.
+  const handleWhaleTrade = useCallback((
+    trade: ParsedTrade,
+    latencyMs: number,
+    label: string,
+    walletConfig?: { isVIP?: boolean; riskMult?: number; priorityMult?: number },
+  ) => {
+    const isVIP = walletConfig?.isVIP ?? false;
 
-    // Latency
+    // Filter — VIP wallets always bypass pumpFunOnly
+    if (pumpFunOnly && !trade.isPumpFun && !isVIP) return;
+
+    // Latency tracking
     latencyBufRef.current = [latencyMs, ...latencyBufRef.current.slice(0, 19)];
     setLastLatency(latencyMs);
     setAvgLatency(Math.round(latencyBufRef.current.reduce((a, b) => a + b, 0) / latencyBufRef.current.length));
 
-    // Resolve symbol async
-    const symbol     = await resolveMintSymbol(trade.mint);
-    const tradeWithSym = { ...trade, symbol, label, id: `${trade.sig}_${Date.now()}` };
+    // ── Get symbol from cache INSTANTLY (no await, no blocking) ──
+    const cachedSymbol = mintSymbolCache.get(trade.mint) || (trade.mint.slice(0, 4) + '…');
+    const tradeId      = `${trade.sig}_${Date.now()}`;
+    const tradeEntry   = { ...trade, symbol: cachedSymbol, label, id: tradeId, isVIP };
 
-    feedRef.current = [tradeWithSym, ...feedRef.current.slice(0, 49)];
+    // Update feed immediately
+    feedRef.current = [tradeEntry, ...feedRef.current.slice(0, 49)];
     setLiveFeed([...feedRef.current]);
 
+    // Resolve real symbol in background — updates feed when ready
+    if (!mintSymbolCache.has(trade.mint)) {
+      resolveMintSymbol(trade.mint).then(symbol => {
+        feedRef.current = feedRef.current.map(x => x.id === tradeId ? { ...x, symbol } : x);
+        setLiveFeed([...feedRef.current]);
+        setMyTrades(prev => prev.map(x => x.id === tradeId ? { ...x, symbol } : x));
+      });
+    }
+
     if (mode === 'paper') {
-      const result = paperRef.current.execute({ ...trade, symbol }, riskPct / 100, label);
+      const result = paperRef.current.execute({ ...trade, symbol: cachedSymbol }, riskPct / 100, label);
       if (result) {
-        setMyTrades(prev => [result, ...prev.slice(0, 49)]);
+        setMyTrades(prev => [{ ...result, isVIP }, ...prev.slice(0, 49)]);
         setPaperPortfolio(paperRef.current.portfolio);
         setTotalPnL(paperRef.current.trades.reduce((s, x) => s + (x.pnl || 0), 0));
       }
-    } else {
-      // LIVE mode — fire and forget with position tracking
-      const wallet   = walletRef.current;
-      const bal      = solBalRef.current;
-      if (!wallet || !bal) return;
-
-      // ── Max concurrent positions cap ───────────────────
-      if (trade.action === 'BUY' && livePositionsRef.current.size >= maxPositions) {
-        setStatus(`⚠ Max positions (${maxPositions}) reached — skipping ${trade.symbol || trade.mint.slice(0,6)}`);
-        return;
-      }
-
-      const riskLamports = Math.floor(bal * (riskPct / 100) * 1e9);
-      const inputMint    = trade.action === 'BUY' ? SOL_MINT : trade.mint;
-      const outputMint   = trade.action === 'BUY' ? trade.mint : SOL_MINT;
-      const pendingId    = `pending_${Date.now()}`;
-
-      setMyTrades(prev => [
-        { ...tradeWithSym, id: pendingId, executing: true, riskSOL: riskLamports / 1e9 },
-        ...prev.slice(0, 49),
-      ]);
-
-      executeJupiterSwap(inputMint, outputMint, riskLamports, wallet, slippageRef.current)
-        .then(sig => {
-          // Track live position
-          if (trade.action === 'BUY') {
-            livePositionsRef.current.set(trade.mint, { lamports: riskLamports, entryTime: Date.now() });
-          } else {
-            livePositionsRef.current.delete(trade.mint);
-          }
-          // Mark as sent, start polling for on-chain confirmation
-          setMyTrades(prev => prev.map(x =>
-            x.id === pendingId ? { ...x, sig, executing: false, executed: true, confirming: true } : x
-          ));
-          getSOLBalance(wallet).then(setSolBalance);
-
-          // ── Confirmation poller ─────────────────────────
-          pollConfirmation(
-            sig,
-            () => setMyTrades(prev => prev.map(x =>
-              x.id === pendingId ? { ...x, confirming: false, confirmed: true } : x
-            )),
-            (reason) => setMyTrades(prev => prev.map(x =>
-              x.id === pendingId ? { ...x, confirming: false, confirmError: reason } : x
-            )),
-          );
-        })
-        .catch(err => {
-          setMyTrades(prev => prev.map(x => x.id === pendingId ? { ...x, executing: false, error: err.message } : x));
-        });
+      return;
     }
-  }, [mode, riskPct, pumpFunOnly]);
+
+    // ── LIVE MODE — FIRE IMMEDIATELY ─────────────────────
+    const wallet = walletRef.current;
+    const bal    = solBalRef.current;
+    if (!wallet || !bal) return;
+
+    // Position cap (BUYs only)
+    if (trade.action === 'BUY' && livePositionsRef.current.size >= maxPositions) {
+      setStatus(`⚠ Max positions (${maxPositions}) reached — skipping ${cachedSymbol}`);
+      return;
+    }
+
+    const effectiveRisk = riskPct * (walletConfig?.riskMult ?? 1) / 100;
+    const riskLamports  = Math.floor(bal * effectiveRisk * 1e9);
+    const pMult         = isVIP ? (walletConfig?.priorityMult ?? 3) : 1;
+    const inputMint     = trade.action === 'BUY' ? SOL_MINT : trade.mint;
+    const outputMint    = trade.action === 'BUY' ? trade.mint : SOL_MINT;
+
+    if (riskLamports <= 0) return;
+
+    setMyTrades(prev => [
+      { ...tradeEntry, id: tradeId, executing: true, riskSOL: riskLamports / 1e9, isVIP },
+      ...prev.slice(0, 49),
+    ]);
+
+    if (isVIP) setStatus(`⚡ VIP SIGNAL: ${label} ${trade.action} ${cachedSymbol} — firing ${pMult}x priority…`);
+
+    executeJupiterSwap(inputMint, outputMint, riskLamports, wallet, slippageRef.current, pMult)
+      .then(sig => {
+        if (trade.action === 'BUY') {
+          livePositionsRef.current.set(trade.mint, { lamports: riskLamports, entryTime: Date.now() });
+        } else {
+          livePositionsRef.current.delete(trade.mint);
+        }
+        setMyTrades(prev => prev.map(x =>
+          x.id === tradeId ? { ...x, sig, executing: false, executed: true, confirming: true } : x
+        ));
+        getSOLBalance(wallet).then(setSolBalance);
+
+        pollConfirmation(
+          sig,
+          () => setMyTrades(prev => prev.map(x =>
+            x.id === tradeId ? { ...x, confirming: false, confirmed: true } : x
+          )),
+          (reason) => setMyTrades(prev => prev.map(x =>
+            x.id === tradeId ? { ...x, confirming: false, confirmError: reason } : x
+          )),
+        );
+      })
+      .catch(err => {
+        setMyTrades(prev => prev.map(x =>
+          x.id === tradeId ? { ...x, executing: false, error: err.message } : x
+        ));
+      });
+  }, [mode, riskPct, pumpFunOnly, maxPositions]);
 
   // ── Start/Stop Monitoring ───────────────────────────────
   const startMonitoring = useCallback(() => {
@@ -688,7 +723,7 @@ function FomoCopyBotInner() {
 
     active.forEach(tw => {
       if (monitorsRef.current[tw.address]) return;
-      const monitor = new WalletMonitor(tw.address, (trade, lat) => handleWhaleTrade(trade, lat, tw.label));
+      const monitor = new WalletMonitor(tw.address, (trade, lat) => handleWhaleTrade(trade, lat, tw.label, { isVIP: tw.isVIP, riskMult: tw.riskMult, priorityMult: tw.priorityMult }));
       monitor.connect();
       monitorsRef.current[tw.address] = monitor;
     });
@@ -740,7 +775,7 @@ function FomoCopyBotInner() {
   const addPresetWhale = (preset: typeof WHALE_PRESETS[number]) => {
     setTrackedWallets(tw => {
       if (tw.some(w => w.address === preset.address)) return tw;
-      return [...tw, { address: preset.address, label: preset.label, active: true }];
+      return [...tw, { address: preset.address, label: preset.label, active: true, isVIP: preset.isVIP, riskMult: preset.riskMult, priorityMult: preset.priorityMult }];
     });
   };
 
@@ -955,6 +990,7 @@ function FomoCopyBotInner() {
                 ['RISK / TRADE', `${riskPct}% → ${(paperPortfolio * riskPct / 100).toFixed(4)} SOL ≈ $${(paperPortfolio * riskPct / 100 * solUSD).toFixed(2)}`],
                 ['SLIPPAGE',     `${slippageBps / 100}%`],
                 ['MAX POSITIONS', `${livePositionsRef.current.size} / ${maxPositions} open`],
+                ['VIP WHALES', `${trackedWallets.filter(w => w.isVIP && w.active).length} active (3x priority)`],
                 ['PUMP.FUN ONLY', pumpFunOnly ? '✓ ON' : '○ OFF'],
                 ['AUTO-SELL',    autoSellMins > 0 ? `${autoSellMins} min` : 'DISABLED'],
                 ['HELIUS WS',    HAS_HELIUS ? '✓ ACTIVE (50–200ms)' : '✗ MISSING → add VITE_HELIUS_API_KEY in Vercel'],
@@ -1059,8 +1095,13 @@ function FomoCopyBotInner() {
                       <div style={{ minWidth: 0, flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                           <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.4em', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase' }}>
-                            {tw.label}
+                            {tw.isVIP && <span style={{ color: COLORS.gold }}>⭐ </span>}{tw.label}
                           </div>
+                          {tw.isVIP && (
+                            <span style={{ fontSize: 7, color: COLORS.gold, fontWeight: 800, letterSpacing: '0.2em' }}>
+                              {tw.riskMult ?? 1}x · {tw.priorityMult ?? 1}x PRI
+                            </span>
+                          )}
                           {activity && (
                             <div style={{ fontSize: 7, fontWeight: 800, color: actColor, letterSpacing: '0.2em' }}>
                               {actLabel}
@@ -1073,7 +1114,15 @@ function FomoCopyBotInner() {
                           {tw.address || '← Enter address'}{!valid && tw.address && ' ✗ invalid'}
                         </div>
                       </div>
-                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <button onClick={() => setTrackedWallets(arr => arr.map((w, j) => j === i ? { ...w, isVIP: !w.isVIP, riskMult: !w.isVIP ? 2 : 1, priorityMult: !w.isVIP ? 3 : 1 } : w))}
+                          style={{
+                            padding: '5px 10px', borderRadius: 10, cursor: 'pointer',
+                            fontSize: 9, fontWeight: 800,
+                            background: tw.isVIP ? 'rgba(212,175,55,0.15)' : 'rgba(255,255,255,0.03)',
+                            border: `1px solid ${tw.isVIP ? 'rgba(212,175,55,0.3)' : COLORS.glassBorder}`,
+                            color: tw.isVIP ? COLORS.gold : 'rgba(255,255,255,0.3)',
+                          }}>⭐</button>
                         <button onClick={() => verifyWallet(tw.address)}
                           style={{
                             padding: '5px 10px', borderRadius: 10, cursor: 'pointer',
@@ -1154,7 +1203,7 @@ function FomoCopyBotInner() {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: x.action === 'BUY' ? COLORS.green : COLORS.red }}>
-                    {x.action} · <span style={{ color: COLORS.gold }}>{x.symbol || (x.mint?.slice(0, 6) + '…')}</span> · {x.amountSOL?.toFixed?.(3) || '—'} SOL
+                    {x.isVIP && <span style={{ color: COLORS.gold, fontSize: 8, marginRight: 6 }}>⭐</span>}{x.action} · <span style={{ color: COLORS.gold }}>{x.symbol || (x.mint?.slice(0, 6) + '…')}</span> · {x.amountSOL?.toFixed?.(3) || '—'} SOL
                     {x.isPumpFun && <span style={{ color: COLORS.cyan, fontSize: 8, marginLeft: 6 }}>PUMP</span>}
                   </div>
                   <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>
