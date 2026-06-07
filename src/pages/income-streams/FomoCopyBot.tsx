@@ -129,15 +129,42 @@ async function getTokenBalance(walletAddress: string, mint: string): Promise<num
 }
 
 // Live SOL price from Jupiter — fallback 150 if unavailable
+// Multi-source SOL price — tries 3 APIs in sequence, uses first that works
 async function fetchSolPriceUSD(): Promise<number> {
-  try {
-    const res = await fetch(`${JUPITER_PRICE_API}?ids=${SOL_MINT}`);
-    if (!res.ok) throw new Error('price fail');
-    const data = await res.json();
-    const price = parseFloat(data.data?.[SOL_MINT]?.price);
-    if (price > 0) return price;
-  } catch {}
-  return 150;
+  const sources = [
+    // Binance — most reliable, no auth, CORS open
+    async () => {
+      const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT');
+      const d = await r.json();
+      const p = parseFloat(d.price);
+      if (p > 0) return p;
+      throw new Error('no price');
+    },
+    // CoinGecko free tier — CORS open
+    async () => {
+      const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd');
+      const d = await r.json();
+      const p = d?.solana?.usd;
+      if (p > 0) return p;
+      throw new Error('no price');
+    },
+    // Jupiter v6 (older endpoint, sometimes CORS-friendlier)
+    async () => {
+      const r = await fetch('https://price.jup.ag/v6/price?ids=SOL');
+      const d = await r.json();
+      const p = d?.data?.SOL?.price;
+      if (p > 0) return parseFloat(p);
+      throw new Error('no price');
+    },
+  ];
+
+  for (const source of sources) {
+    try {
+      const price = await source();
+      if (price > 50 && price < 10000) return Math.round(price * 100) / 100;
+    } catch {}
+  }
+  return 150; // final fallback
 }
 
 // Resolve mint → symbol via Jupiter token list API (cached)
