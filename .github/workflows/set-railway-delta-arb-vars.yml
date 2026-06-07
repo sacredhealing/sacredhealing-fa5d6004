@@ -10,25 +10,29 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_ADMIN_PAT }}
-      - name: Set STRATEGY=aggressive in Railway
+      - name: Diagnose + set Railway SUPABASE_SERVICE_KEY
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           SUPABASE_SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_SK2: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SK2: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
           LOG="_railway_vars_result.txt"
-          PROJECT_ID="4851410d-a6d6-4739-be6b-33e6deb5b6f2"
-          SERVICE_ID="d06cd2df-e657-434f-b8fa-db34c3b3c473"
-          ENV_ID="5745e241-6e8e-4c3e-a5fd-91efff9a72c2"
 
-          echo "Setting STRATEGY=aggressive + SUPABASE vars..." | tee $LOG
+          echo "=== Running diagnostic ===" | tee $LOG
+          python3 scripts/resolve_trades.py 2>&1 | tee -a $LOG
 
+          echo "" >> $LOG
+          echo "=== Setting ALL Railway vars ===" | tee -a $LOG
+          KEY="${SUPABASE_SK:-$SUPABASE_SK2}"
           curl -s -X POST "https://backboard.railway.app/graphql/v2" \
             -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
             -H "Content-Type: application/json" \
-            -d "{\"query\":\"mutation { variableCollectionUpsert(input: { projectId: \\\"${PROJECT_ID}\\\", environmentId: \\\"${ENV_ID}\\\", serviceId: \\\"${SERVICE_ID}\\\", variables: { STRATEGY: \\\"aggressive\\\", SUPABASE_URL: \\\"https://fjdzhrdpioxdeyyfogep.supabase.co\\\", SUPABASE_SERVICE_KEY: \\\"${SUPABASE_SK}\\\" } }) }\"}" \
+            -d "{\"query\":\"mutation { variableCollectionUpsert(input: { projectId: \\\"4851410d-a6d6-4739-be6b-33e6deb5b6f2\\\", environmentId: \\\"5745e241-6e8e-4c3e-a5fd-91efff9a72c2\\\", serviceId: \\\"d06cd2df-e657-434f-b8fa-db34c3b3c473\\\", variables: { STRATEGY: \\\"aggressive\\\", MODE: \\\"PAPER\\\", STARTING_BALANCE: \\\"100\\\", SUPABASE_URL: \\\"https://fjdzhrdpioxdeyyfogep.supabase.co\\\", SUPABASE_SERVICE_KEY: \\\"${KEY}\\\" } }) }\"}" \
             | tee -a $LOG
 
           git config user.email "bot@sqi.app"; git config user.name "SQI-Bot"
-          git add $LOG && git commit -m "ci: set STRATEGY=aggressive in Railway" || true
+          git add $LOG && git commit -m "ci: diagnostic result" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
