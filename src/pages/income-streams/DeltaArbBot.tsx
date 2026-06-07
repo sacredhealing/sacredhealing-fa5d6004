@@ -11,13 +11,29 @@ const RED   = '#ef4444';
 const SUPABASE_URL = 'https://fjdzhrdpioxdeyyfogep.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ3MzE5NDUsImV4cCI6MjA2MDMwNzk0NX0.HrUmzMBqNShHi0G9VDtHrZSHCIMoaYGC6lJUCrDWk40';
 
+const PROXY = 'https://fjdzhrdpioxdeyyfogep.supabase.co/functions/v1/delta-arb-proxy';
+
 async function fetchTrades() {
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/delta_arb_trades?select=id,asset,signal,delta,size_usd,entry_price,status,pnl_usdc,created_at&order=created_at.desc&limit=100`,
-    { headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` } }
-  );
-  if (!res.ok) return [];
-  return res.json();
+  // Try proxy first (bypasses RLS, uses service role internally)
+  try {
+    const r1 = await fetch(`${PROXY}?endpoint=trades&limit=100`,
+      { headers: { apikey: SUPABASE_ANON } });
+    if (r1.ok) {
+      const d = await r1.json();
+      if (Array.isArray(d) && d.length >= 0) return d;
+    }
+  } catch (_) {}
+
+  // Fallback: direct Supabase REST
+  try {
+    const r2 = await fetch(
+      `${SUPABASE_URL}/rest/v1/delta_arb_trades?select=id,asset,signal,delta,size_usd,entry_price,status,pnl_usdc,created_at&order=created_at.desc&limit=100`,
+      { headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` } }
+    );
+    if (r2.ok) return r2.json();
+  } catch (_) {}
+
+  return [];
 }
 
 export default function DeltaArbBot() {
