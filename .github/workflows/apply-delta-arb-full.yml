@@ -22,8 +22,14 @@ jobs:
           git clone "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" repo
           cd repo
           supabase link --project-ref fjdzhrdpioxdeyyfogep 2>&1 | tail -2
-          echo "Pushing migration..."
-          yes | supabase db push --linked --include-all 2>&1 | tee ../result.txt || true
+          
+          echo "Repairing migration history for problematic migrations..."
+          supabase migration repair --status applied 20250509_virtual_pilgrimage 2>&1 || true
+          supabase migration repair --status applied 20250512000001_stargate_community_overhaul 2>&1 || true
+          
+          echo "Pushing only new migrations..."
+          supabase db push --linked 2>&1 | tee ../result.txt || true
+          
           echo "Done"
           cd ..
           git config user.email "bot@sqi.app"; git config user.name "SQI-Bot"
