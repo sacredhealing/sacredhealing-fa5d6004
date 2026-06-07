@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Zap, Activity, TrendingUp, DollarSign, Shield, RefreshCw, AlertCircle, Clock, BarChart3, Users, Target, Wallet, Settings, Check, Share2, Copy, ChevronUp, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Zap, Activity, TrendingUp, DollarSign, Shield, RefreshCw, Clock, BarChart3, Target, Wallet, Check, Share2, Copy } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembership } from '@/hooks/useMembership';
