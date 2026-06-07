@@ -1,13 +1,13 @@
-=== Deploy delta-arb-proxy Sun Jun  7 12:38:02 UTC 2026 ===
+=== Deploy delta-arb-proxy Sun Jun  7 14:17:17 UTC 2026 ===
 
 added 2 packages in 3s
 Deleting old unused functions to free slot...
-Deleted Function sqi-oracle from project fjdzhrdpioxdeyyfogep.
-Deleted Function vastu-chat from project fjdzhrdpioxdeyyfogep.
+Function sqi-oracle does not exist on the Supabase project: nothing to delete
+Try rerunning the command with --debug to troubleshoot the error.
+Function vastu-chat does not exist on the Supabase project: nothing to delete
+Try rerunning the command with --debug to troubleshoot the error.
 Deploying delta-arb-proxy...
 Bundling Function: delta-arb-proxy
-failed to pull docker image: Error response from daemon: toomanyrequests: Rate exceeded
-Retrying after 4s: public.ecr.aws/supabase/edge-runtime:v1.74.0
 v1.74.0: Pulling from supabase/edge-runtime
 ff86ea2e5edc: Pulling fs layer
 6800868e255e: Pulling fs layer
@@ -15,19 +15,19 @@ ff86ea2e5edc: Pulling fs layer
 cb0b0573a680: Pulling fs layer
 ede75d680c8d: Pulling fs layer
 1732128487dd: Pulling fs layer
+cb0b0573a680: Waiting
 ede75d680c8d: Waiting
 1732128487dd: Waiting
-cb0b0573a680: Waiting
 5c4a6e938da5: Verifying Checksum
 5c4a6e938da5: Download complete
 ff86ea2e5edc: Verifying Checksum
 ff86ea2e5edc: Download complete
+6800868e255e: Download complete
 cb0b0573a680: Verifying Checksum
 cb0b0573a680: Download complete
-6800868e255e: Verifying Checksum
-6800868e255e: Download complete
 1732128487dd: Verifying Checksum
 1732128487dd: Download complete
+ede75d680c8d: Verifying Checksum
 ede75d680c8d: Download complete
 ff86ea2e5edc: Pull complete
 6800868e255e: Pull complete
@@ -37,7 +37,7 @@ ede75d680c8d: Pull complete
 1732128487dd: Pull complete
 Digest: sha256:2781daf92394db91f7e94129cc3d04ec474ad16a8fe64b3fbeef6e7d557ab120
 Status: Downloaded newer image for public.ecr.aws/supabase/edge-runtime:v1.74.0
-Deploying Function: delta-arb-proxy (script size: 77.06kB)
+No change found in Function: delta-arb-proxy
 Deployed Functions on project fjdzhrdpioxdeyyfogep: delta-arb-proxy
 You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/fjdzhrdpioxdeyyfogep/functions
 Done.
