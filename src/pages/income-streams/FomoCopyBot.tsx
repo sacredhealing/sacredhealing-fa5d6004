@@ -1736,17 +1736,40 @@ function FomoCopyBotInner() {
               </SettingRow>
 
               <SettingRow label="STARTING BALANCE (SOL)"
-                value={`${startingSOL} SOL ≈ $${(startingSOL * solUSD).toFixed(0)}`}>
-                <input type="number" min={0.01} step={0.01} value={startingSOL}
-                  onChange={e => {
-                    const v = +e.target.value;
-                    setStartingSOL(v);
-                    paperRef.current = new PaperEngine(v);
-                    setPaperPortfolio(v);
-                    setMyTrades([]);
-                    setTotalPnL(0);
-                  }}
-                  style={{ ...inputStyle, width: 130 }} />
+                value={`${startingSOL} SOL ≈ $${(startingSOL * solUSD).toFixed(0)}`}
+                hint="Set this to what you plan to trade with in LIVE mode">
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const, marginBottom: 8 }}>
+                  {[0.5, 1, 2, 5, 10].map(n => (
+                    <button key={n} onClick={() => {
+                      setStartingSOL(n);
+                      paperRef.current = new PaperEngine(n, slippageBps);
+                      setPaperPortfolio(n);
+                      setMyTrades([]); setTotalPnL(0);
+                    }} style={{
+                      padding: '8px 14px', borderRadius: 10, cursor: 'pointer',
+                      fontSize: 11, fontWeight: 900,
+                      background: startingSOL === n ? 'rgba(212,175,55,0.15)' : 'rgba(255,255,255,0.03)',
+                      border: `1px solid ${startingSOL === n ? 'rgba(212,175,55,0.3)' : COLORS.glassBorder}`,
+                      color: startingSOL === n ? COLORS.gold : 'rgba(255,255,255,0.5)',
+                    }}>
+                      {n} SOL
+                    </button>
+                  ))}
+                </div>
+                <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>
+                  Or type custom: <input type="number" min={0.01} step={0.01} value={startingSOL}
+                    onChange={e => {
+                      const raw = e.target.value.replace(/^0+(?=\d)/, ''); // strip leading zeros
+                      const v = parseFloat(raw);
+                      if (!isNaN(v) && v > 0) {
+                        setStartingSOL(v);
+                        paperRef.current = new PaperEngine(v, slippageBps);
+                        setPaperPortfolio(v);
+                        setMyTrades([]); setTotalPnL(0);
+                      }
+                    }}
+                    style={{ ...inputStyle, width: 80, display: 'inline-block', marginLeft: 8 }} />
+                </div>
               </SettingRow>
 
               {/* NEW: Slippage */}
