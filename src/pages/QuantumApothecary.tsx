@@ -2202,11 +2202,8 @@ function QuantumApothecaryInner() {
   const isAdmin = user?.id === 'bd0b21c9-577a-450b-bb1e-21c9d0423f17';
   const handleAdminResetCooldown = useCallback(() => {
     try {
+      // Only clear the cooldown timer — never touch scan results or activated boosts
       localStorage.removeItem('sqi_last_scan');
-      localStorage.removeItem('sqi_scan_snapshot');
-      localStorage.removeItem('sqi_library_unlocked');
-      localStorage.removeItem('sqi_top33_matches');
-      localStorage.removeItem('sqi_top33_ts');
     } catch {}
     setScanCooldownUntilMs(null);
   }, [setScanCooldownUntilMs]);
