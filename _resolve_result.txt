@@ -1,14 +1,4 @@
-Total: 102 | Won: 90 | Lost: 12
-
-Win PnLs  (first 10): [10.0, 11.0, 12.1, 0.96, 1.2, 1.22, 0.79, 1.17, 1.0, 1.21]
-Loss PnLs (first 10): [-10.32, -10.11, -9.09, -9.35, -9.1, -8.19, -8.19, -10.14, -15.0, -14.7]
-
-Total win PnL:  +131.72
-Total loss PnL:  -129.64
-NET: 2.08
-Balance: $102.08
-
-Recalculating with correct formula...
-Fixed 0 trades
-CORRECT BALANCE: $102.08 (net PnL: +2.08)
-Won=90 Lost=12
+Deleting all old trades...
+Done — trades cleared
+Trades remaining: 0
+Checking RLS...
