@@ -10,29 +10,36 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_ADMIN_PAT }}
-      - name: Diagnose + set Railway SUPABASE_SERVICE_KEY
+      - name: PnL audit
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          SUPABASE_SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          SUPABASE_SK2: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
           SK2: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
+          KEY="${SK:-$SK2}"
+          BASE="https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1"
           LOG="_railway_vars_result.txt"
 
-          echo "=== Running diagnostic ===" | tee $LOG
-          python3 scripts/resolve_trades.py 2>&1 | tee -a $LOG
-
-          echo "" >> $LOG
-          echo "=== Setting ALL Railway vars ===" | tee -a $LOG
-          KEY="${SUPABASE_SK:-$SUPABASE_SK2}"
-          curl -s -X POST "https://backboard.railway.app/graphql/v2" \
-            -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d "{\"query\":\"mutation { variableCollectionUpsert(input: { projectId: \\\"4851410d-a6d6-4739-be6b-33e6deb5b6f2\\\", environmentId: \\\"5745e241-6e8e-4c3e-a5fd-91efff9a72c2\\\", serviceId: \\\"d06cd2df-e657-434f-b8fa-db34c3b3c473\\\", variables: { STRATEGY: \\\"aggressive\\\", MODE: \\\"PAPER\\\", STARTING_BALANCE: \\\"100\\\", SUPABASE_URL: \\\"https://fjdzhrdpioxdeyyfogep.supabase.co\\\", SUPABASE_SERVICE_KEY: \\\"${KEY}\\\" } }) }\"}" \
-            | tee -a $LOG
+          curl -s "${BASE}/delta_arb_trades?select=status,pnl_usdc,size_usd,entry_price&limit=500" \
+            -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+won  = [t for t in data if t.get('status')=='won']
+lost = [t for t in data if t.get('status')=='lost']
+win_pnl  = sum(float(t.get('pnl_usdc') or 0) for t in won)
+loss_pnl = sum(float(t.get('pnl_usdc') or 0) for t in lost)
+total    = win_pnl + loss_pnl
+print(f'Won={len(won)} loss={len(lost)} win_pnl=+{win_pnl:.2f} loss_pnl={loss_pnl:.2f} NET={total:.2f}')
+print(f'Balance=\${100+total:.2f}')
+print()
+print('Sample wins:')
+for t in won[:5]:
+    print(f'  sz={t.get("size_usd")} ep={t.get("entry_price")} pnl={t.get("pnl_usdc")}')
+print('Sample losses:')
+for t in lost[:5]:
+    print(f'  sz={t.get("size_usd")} ep={t.get("entry_price")} pnl={t.get("pnl_usdc")}')
+" | tee $LOG
 
           git config user.email "bot@sqi.app"; git config user.name "SQI-Bot"
-          git add $LOG && git commit -m "ci: diagnostic result" || true
+          git add $LOG && git commit -m "ci: pnl audit" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
