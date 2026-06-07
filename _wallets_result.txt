@@ -1,0 +1,4 @@
+=== CLAWBOT platform_wallet ===
+[{"platform_wallet":"0xYO0x158ba059a4a67f796e3b5292d35e50ca79c31f22"}]
+=== DELTA_ARB platform_wallet ===
+{"code":"PGRST205","details":null,"hint":"Perhaps you meant the table 'public.clawbot_platform_config'","message":"Could not find the table 'public.delta_arb_platform_config' in the schema cache"}
