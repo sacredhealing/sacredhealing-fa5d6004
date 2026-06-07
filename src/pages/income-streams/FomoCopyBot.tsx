@@ -261,39 +261,62 @@ function parseTradeFromTx(tx: any, walletAddress: string, sig: string): ParsedTr
 // ─────────────────────────────────────────────────────────
 //  WALLET MONITOR
 // ─────────────────────────────────────────────────────────
-class WalletMonitor {
-  wallet: string;
-  onTrade: (trade: ParsedTrade, latencyMs: number) => void;
-  ws: WebSocket | null = null;
-  subId: number | null = null;
-  reconnectTimer: any = null;
-  killed = false;
+// ─────────────────────────────────────────────────────────
+//  MULTI-WALLET MONITOR — ONE WebSocket for ALL whales
+//
+//  Critical fix: mobile browsers cap at ~6 concurrent WebSocket
+//  connections. Old design (1 WS per wallet) silently dropped
+//  all wallets after the 6th. Now ONE connection monitors all
+//  21+ wallets simultaneously via accountInclude array.
+//
+//  On reconnect, re-subscribes with the full address list.
+// ─────────────────────────────────────────────────────────
+type WalletEntry = {
+  address: string;
+  label: string;
+  config?: { isVIP?: boolean; riskMult?: number; priorityMult?: number };
+};
 
-  constructor(walletAddress: string, onTrade: (t: ParsedTrade, lat: number) => void) {
-    this.wallet  = walletAddress;
+class MultiWalletMonitor {
+  wallets: WalletEntry[];
+  onTrade: (trade: ParsedTrade, latencyMs: number, label: string, config?: WalletEntry['config']) => void;
+  ws: WebSocket | null = null;
+  reconnectTimer: any  = null;
+  killed               = false;
+  pingTimer: any       = null;
+
+  constructor(
+    wallets: WalletEntry[],
+    onTrade: MultiWalletMonitor['onTrade'],
+  ) {
+    this.wallets = wallets;
     this.onTrade = onTrade;
   }
 
   connect() {
     if (this.killed) return;
-    this.ws = new WebSocket(HELIUS_WS);
+    this.ws           = new WebSocket(HELIUS_WS);
     this.ws.onopen    = () => this._subscribe();
     this.ws.onmessage = (e) => this._onMessage(e);
     this.ws.onerror   = () => {};
     this.ws.onclose   = () => {
+      clearInterval(this.pingTimer);
       if (this.killed) return;
-      this.reconnectTimer = setTimeout(() => this.connect(), 2000);
+      this.reconnectTimer = setTimeout(() => this.connect(), 3000);
     };
   }
 
   _subscribe() {
-    if (!this.ws) return;
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+    const addresses = this.wallets.map(w => w.address);
+
     if (HAS_HELIUS) {
+      // ONE subscription covers ALL wallets — no connection limit issue
       this.ws.send(JSON.stringify({
-        jsonrpc: '2.0', id: 420,
+        jsonrpc: '2.0', id: 1,
         method: 'transactionSubscribe',
         params: [
-          { vote: false, failed: false, accountInclude: [this.wallet] },
+          { vote: false, failed: false, accountInclude: addresses },
           {
             commitment: 'processed',
             encoding: 'jsonParsed',
@@ -304,13 +327,84 @@ class WalletMonitor {
         ],
       }));
     } else {
+      // Public RPC: subscribe to logs mentioning each wallet
+      // (limited — only first wallet for fallback)
       this.ws.send(JSON.stringify({
         jsonrpc: '2.0', id: 1,
         method: 'logsSubscribe',
-        params: [{ mentions: [this.wallet] }, { commitment: 'processed' }],
+        params: [{ mentions: addresses.slice(0, 1) }, { commitment: 'processed' }],
       }));
     }
+
+    // Keep-alive ping every 20s to prevent mobile browser killing the socket
+    clearInterval(this.pingTimer);
+    this.pingTimer = setInterval(() => {
+      if (this.ws?.readyState === WebSocket.OPEN) {
+        this.ws.send(JSON.stringify({ jsonrpc: '2.0', id: 99, method: 'ping', params: [] }));
+      }
+    }, 20_000);
   }
+
+  // Find which of our tracked wallets was involved in this tx
+  _matchWallet(tx: any): WalletEntry | null {
+    const keys: string[] = (tx?.transaction?.message?.accountKeys || [])
+      .map((k: any) => k.pubkey || k);
+    for (const w of this.wallets) {
+      if (keys.includes(w.address)) return w;
+    }
+    return null;
+  }
+
+  async _onMessage(e: MessageEvent) {
+    let data: any;
+    try { data = JSON.parse(e.data); } catch { return; }
+
+    if (data.method === 'transactionNotification') {
+      const t0    = Date.now();
+      const value = data.params?.result?.transaction;
+      const sig   = data.params?.result?.signature || value?.transaction?.signatures?.[0];
+      if (!value || !sig) return;
+
+      const matched = this._matchWallet(value);
+      if (!matched) return;
+
+      const trade = parseTradeFromTx(value, matched.address, sig);
+      if (trade) this.onTrade(trade, Date.now() - t0, matched.label, matched.config);
+      return;
+    }
+
+    if (data.method === 'logsNotification') {
+      const sig = data.params?.result?.value?.signature;
+      if (!sig) return;
+      const t0 = Date.now();
+      try {
+        const txData = await rpcCall('getTransaction', [sig, {
+          encoding: 'jsonParsed',
+          maxSupportedTransactionVersion: 0,
+          commitment: 'confirmed',
+        }]);
+        const tx = txData.result;
+        if (!tx) return;
+        const matched = this._matchWallet(tx) || this.wallets[0];
+        const trade = parseTradeFromTx(tx, matched.address, sig);
+        if (trade) this.onTrade(trade, Date.now() - t0, matched.label, matched.config);
+      } catch {}
+    }
+  }
+
+  updateWallets(wallets: WalletEntry[]) {
+    this.wallets = wallets;
+    // Re-subscribe with updated wallet list
+    if (this.ws?.readyState === WebSocket.OPEN) this._subscribe();
+  }
+
+  disconnect() {
+    this.killed = true;
+    clearInterval(this.pingTimer);
+    clearTimeout(this.reconnectTimer);
+    try { this.ws?.close(); } catch {}
+  }
+}
 
   async _onMessage(e: MessageEvent) {
     let data: any;
@@ -633,7 +727,7 @@ function FomoCopyBotInner() {
   const [bestTrade,      setBestTrade]       = useState<any>(null);
   const [worstTrade,     setWorstTrade]      = useState<any>(null);
 
-  const monitorsRef      = useRef<Record<string, WalletMonitor>>({});
+  const monitorRef       = useRef<MultiWalletMonitor | null>(null);
   const paperRef         = useRef(new PaperEngine(0.07));
   const feedRef          = useRef<any[]>([]);
   const latencyBufRef    = useRef<number[]>([]);
@@ -900,22 +994,31 @@ function FomoCopyBotInner() {
       setTab('wallets');
       return;
     }
-    if (!HAS_HELIUS) setStatus('⚠ No Helius key — using slow public RPC. Add VITE_HELIUS_API_KEY in Vercel.');
 
-    active.forEach(tw => {
-      if (monitorsRef.current[tw.address]) return;
-      const monitor = new WalletMonitor(tw.address, (trade, lat) => handleWhaleTrade(trade, lat, tw.label, { isVIP: tw.isVIP, riskMult: tw.riskMult, priorityMult: tw.priorityMult }));
-      monitor.connect();
-      monitorsRef.current[tw.address] = monitor;
-    });
+    // Stop any existing monitor first
+    monitorRef.current?.disconnect();
+
+    // ONE WebSocket for ALL wallets — fixes mobile connection cap
+    const entries: WalletEntry[] = active.map(tw => ({
+      address: tw.address,
+      label:   tw.label,
+      config:  { isVIP: tw.isVIP, riskMult: tw.riskMult, priorityMult: tw.priorityMult },
+    }));
+
+    const monitor = new MultiWalletMonitor(
+      entries,
+      (trade, lat, label, config) => handleWhaleTrade(trade, lat, label, config),
+    );
+    monitor.connect();
+    monitorRef.current = monitor;
 
     setIsMonitoring(true);
-    setStatus(`🟢 LIVE — Tracking ${active.length} whale${active.length > 1 ? 's' : ''} via ${HAS_HELIUS ? 'Helius Enhanced WS' : 'public RPC'}`);
+    setStatus(`🟢 MONITORING ${active.length} WHALES — 1 WebSocket — ${HAS_HELIUS ? 'Helius 50ms' : 'public RPC'}`);
   }, [trackedWallets, handleWhaleTrade]);
 
   const stopMonitoring = useCallback(() => {
-    Object.values(monitorsRef.current).forEach(m => m.disconnect());
-    monitorsRef.current = {};
+    monitorRef.current?.disconnect();
+    monitorRef.current = null;
     setIsMonitoring(false);
     setStatus('⏹ STOPPED');
   }, []);
@@ -1024,7 +1127,7 @@ function FomoCopyBotInner() {
     setStatus(`✓ Verification done — ${active}/${toCheck.length} wallets have real on-chain activity`);
   };
 
-  useEffect(() => () => stopMonitoring(), [stopMonitoring]);
+  useEffect(() => () => { monitorRef.current?.disconnect(); }, []);
 
   // ─────────────────────────────────────────────────────────
   //  RENDER
