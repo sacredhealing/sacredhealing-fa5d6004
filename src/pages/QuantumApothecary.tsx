@@ -2796,7 +2796,9 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
 
   const addActivation = useCallback(
     (act: Activation) => {
-      const normalized = normalizeActivationForMixer(act);
+      // Ensure activatedAt + expiresAt are always set (field connection)
+      const withExpiry = act.activatedAt ? act : enrichTransmission(act, 'manual');
+      const normalized = normalizeActivationForMixer(withExpiry);
       const current = selectedActivationsRef.current;
       const isDuplicate = current.some(
         (a) =>
@@ -2896,7 +2898,41 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
         }
         return next;
       });
-      const queuedLines = queued.map((a) => `· **${a.name}** (${a.type})`).join('\n');
+      // ── Add top 3 matched Siddha Transmissions to activation
+      const siddhaMatched = ALL_ACTIVATIONS
+        .filter((a: any) => a.type === 'Siddha Transmission')
+        .map((a: any) => {
+          const blob = `${a.name} ${a.benefit || ''} ${a.vibrationalSignature || ''}`.toLowerCase();
+          let score = 0;
+          const dosha = String(result.dominantDosha || '').toLowerCase().split(/[\s(/]/)[0];
+          if (dosha && blob.includes(dosha)) score += 40;
+          if (result.priorityAreas?.length) {
+            for (const area of result.priorityAreas) {
+              if ((area.name || '').toLowerCase().split(' ').some((w: string) => w.length > 3 && blob.includes(w))) { score += 25; break; }
+            }
+          }
+          if (result.organField && blob.includes(result.organField.toLowerCase())) score += 20;
+          if (result.emotionalField && blob.includes(result.emotionalField.toLowerCase())) score += 15;
+          return { act: a, score };
+        })
+        .filter((s: any) => s.score > 0)
+        .sort((a: any, b: any) => b.score - a.score)
+        .slice(0, 3)
+        .map((s: any) => s.act);
+
+      // Enrich and add Siddha matches to active transmissions
+      setActiveTransmissions((prev: any) => {
+        const next = [...prev];
+        for (const act of siddhaMatched) {
+          const enriched = enrichTransmission(act as any, 'voice_scan');
+          if (next.some((x: any) => x.id === enriched.id)) continue;
+          next.push(enriched);
+        }
+        return next;
+      });
+
+      const allActivated = [...queued, ...siddhaMatched];
+      const queuedLines = allActivated.map((a: any) => `· **${a.name}** (${a.type})`).join('\n');
       const ctx = [
         '[LIVE VOICE BIOFIELD SCAN — microphone spectrum; educational only, not a medical diagnosis]',
         `**Overall coherence:** ${result.overallCoherence}/100`,
