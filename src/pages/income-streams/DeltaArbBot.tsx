@@ -67,7 +67,9 @@ export default function DeltaArbBot() {
   const [trades, setTrades]           = useState<any[]>([]);
   const [loading, setLoading]         = useState(true);
   const [lastRefresh, setLastRefresh] = useState(new Date());
-  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [autoRefresh,    setAutoRefresh]    = useState(true);
+  const [activeStrategy, setActiveStrategy] = useState<'conservative'|'moderate'|'aggressive'>('moderate');
+  const [savingStrategy, setSavingStrategy] = useState(false);
 
   // ── Computed stats from trades ────────────────────────────────────────────
   const [stats, setStats] = useState({
@@ -128,6 +130,16 @@ export default function DeltaArbBot() {
         signalCount: all.length,
       });
 
+      // Load active strategy from platform config
+      const { data: cfg } = await supabase
+        .from('delta_arb_platform_config')
+        .select('active_strategy')
+        .eq('id', 1)
+        .maybeSingle();
+      if (cfg?.active_strategy) {
+        setActiveStrategy(cfg.active_strategy as any);
+      }
+
       setLastRefresh(new Date());
     } catch (e) {
       console.error('fetchAll error:', e);
@@ -167,6 +179,18 @@ export default function DeltaArbBot() {
       setTimeout(() => setWalletSaved(false), 3000);
     } catch (e) { console.error(e); }
     finally { setSavingWallet(false); }
+  };
+
+  const saveStrategy = async (s: 'conservative' | 'moderate' | 'aggressive') => {
+    setSavingStrategy(true);
+    try {
+      await supabase
+        .from('delta_arb_platform_config')
+        .update({ active_strategy: s })
+        .eq('id', 1);
+      setActiveStrategy(s);
+    } catch (e) { console.error(e); }
+    finally { setSavingStrategy(false); }
   };
 
   const copyAffiliateLink = () => {
@@ -267,6 +291,46 @@ export default function DeltaArbBot() {
               {stats.open} trade{stats.open > 1 ? 's' : ''} pending resolution…
             </div>
           )}
+
+          {/* Strategy Selector */}
+          <div className="mt-4 pt-4 border-t border-white/[0.06]">
+            <div className="text-[9px] font-bold tracking-[0.25em] uppercase text-white/30 mb-3">
+              ACTIVE STRATEGY — applies to both paper and live
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {([
+                { key: 'conservative', label: 'Conservative', wr: '72-79%', pos: '6%', color: '#94a3b8' },
+                { key: 'moderate',     label: 'Moderate',     wr: '79-85%', pos: '10%', color: CYAN },
+                { key: 'aggressive',   label: 'Aggressive',   wr: '85-92%', pos: '15%', color: GOLD },
+              ] as const).map(({ key, label, wr, pos, color }) => {
+                const isActive = activeStrategy === key;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => saveStrategy(key)}
+                    disabled={savingStrategy}
+                    className="rounded-2xl p-3 text-center transition-all"
+                    style={{
+                      background:  isActive ? `${color}18` : 'rgba(255,255,255,0.02)',
+                      border:      `1px solid ${isActive ? color + '88' : 'rgba(255,255,255,0.06)'}`,
+                      opacity:     savingStrategy ? 0.6 : 1,
+                    }}>
+                    <div className="text-[10px] font-black tracking-wide" style={{ color: isActive ? color : 'rgba(255,255,255,0.4)' }}>
+                      {label}
+                    </div>
+                    <div className="text-[9px] text-white/30 mt-1">{wr} win</div>
+                    <div className="text-[9px] mt-0.5" style={{ color: isActive ? color : 'rgba(255,255,255,0.2)' }}>{pos}/trade</div>
+                    {isActive && (
+                      <div className="mt-1 text-[8px] font-black tracking-widest uppercase" style={{ color }}>● ACTIVE</div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[9px] text-white/20 mt-2 text-center leading-relaxed">
+              Changing strategy updates Railway bot settings in real time
+            </p>
+          </div>
         </div>
 
         {/* ── Tabs ── */}
