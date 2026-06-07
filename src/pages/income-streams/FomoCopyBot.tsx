@@ -2035,4 +2035,5 @@ export default function FomoCopyBot() {
     return <Navigate to="/income-streams" replace />;
   }
   return <FomoCopyBotInner />;
+  </div>
 }
