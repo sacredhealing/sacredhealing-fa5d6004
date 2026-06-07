@@ -475,7 +475,18 @@ const inputStyle: React.CSSProperties = {
 // ─────────────────────────────────────────────────────────
 //  MAIN COMPONENT
 // ─────────────────────────────────────────────────────────
-const STORAGE_KEY = 'sqi_fomo_bot_v3';
+const STORAGE_KEY     = 'sqi_fomo_bot_v3';
+const SESSION_KEY     = 'sqi_paper_session_v1';
+const PAPER_DAYS      = 3;
+const PAPER_MS        = PAPER_DAYS * 24 * 60 * 60 * 1000;
+
+// Per-whale stats tracker
+type WhaleStats = {
+  label: string;
+  trades: number;
+  wins: number;
+  pnl: number;
+};
 
 function FomoCopyBotInner() {
   const navigate = useNavigate();
@@ -517,6 +528,14 @@ function FomoCopyBotInner() {
   const [walletActivity, setWalletActivity] = useState<Map<string, 'checking' | 'active' | 'inactive'>>(new Map()); // NEW
   const [isVerifying,    setIsVerifying]    = useState(false); // NEW
 
+  // ── Paper session tracker ────────────────────────────────
+  const [sessionStart,   setSessionStart]   = useState<number | null>(null);
+  const [sessionActive,  setSessionActive]  = useState(false);
+  const [whaleStats,     setWhaleStats]     = useState<Record<string, WhaleStats>>({});
+  const [dailyPnL,       setDailyPnL]       = useState<number[]>([0, 0, 0]); // day 1, 2, 3
+  const [bestTrade,      setBestTrade]       = useState<any>(null);
+  const [worstTrade,     setWorstTrade]      = useState<any>(null);
+
   const monitorsRef      = useRef<Record<string, WalletMonitor>>({});
   const paperRef         = useRef(new PaperEngine(0.07));
   const feedRef          = useRef<any[]>([]);
@@ -548,6 +567,17 @@ function FomoCopyBotInner() {
         if (typeof data.pumpFunOnly === 'boolean')  setPumpFunOnly(data.pumpFunOnly);
         if (typeof data.autoSellMins === 'number')  setAutoSellMins(data.autoSellMins);
         if (typeof data.maxPositions === 'number')  setMaxPositions(data.maxPositions);
+      // Load paper session
+      const sess = localStorage.getItem(SESSION_KEY);
+      if (sess) {
+        const sd = JSON.parse(sess);
+        if (sd.sessionStart) setSessionStart(sd.sessionStart);
+        if (sd.sessionActive) setSessionActive(sd.sessionActive);
+        if (sd.whaleStats)   setWhaleStats(sd.whaleStats);
+        if (sd.dailyPnL)     setDailyPnL(sd.dailyPnL);
+        if (sd.bestTrade)    setBestTrade(sd.bestTrade);
+        if (sd.worstTrade)   setWorstTrade(sd.worstTrade);
+      }
       }
     } catch {}
   }, []);
@@ -560,6 +590,15 @@ function FomoCopyBotInner() {
       }));
     } catch {}
   }, [trackedWallets, riskPct, startingSOL, slippageBps, pumpFunOnly, autoSellMins]);
+
+  // ── Session persistence ──────────────────────────────────
+  useEffect(() => {
+    try {
+      localStorage.setItem(SESSION_KEY, JSON.stringify({
+        sessionStart, sessionActive, whaleStats, dailyPnL, bestTrade, worstTrade,
+      }));
+    } catch {}
+  }, [sessionStart, sessionActive, whaleStats, dailyPnL, bestTrade, worstTrade]);
 
   // ── Live SOL price fetch (every 60s) ──────────────────── NEW
   useEffect(() => {
@@ -655,7 +694,41 @@ function FomoCopyBotInner() {
       if (result) {
         setMyTrades(prev => [{ ...result, isVIP }, ...prev.slice(0, 49)]);
         setPaperPortfolio(paperRef.current.portfolio);
-        setTotalPnL(paperRef.current.trades.reduce((s, x) => s + (x.pnl || 0), 0));
+        const newPnL = paperRef.current.trades.reduce((s, x) => s + (x.pnl || 0), 0);
+        setTotalPnL(newPnL);
+
+        // Track per-whale stats
+        if (!result.skipped) {
+          setWhaleStats(prev => {
+            const key = label;
+            const cur = prev[key] || { label, trades: 0, wins: 0, pnl: 0 };
+            return {
+              ...prev,
+              [key]: {
+                label,
+                trades: cur.trades + 1,
+                wins: cur.wins + (result.pnl > 0 ? 1 : 0),
+                pnl: cur.pnl + (result.pnl || 0),
+              },
+            };
+          });
+        }
+
+        // Track daily P&L
+        if (sessionStart) {
+          const dayIdx = Math.min(2, Math.floor((Date.now() - sessionStart) / (24 * 60 * 60 * 1000)));
+          setDailyPnL(prev => {
+            const next = [...prev];
+            next[dayIdx] = (next[dayIdx] || 0) + (result.pnl || 0);
+            return next;
+          });
+        }
+
+        // Track best/worst trade
+        if (result.pnl !== undefined && result.pnl !== 0 && !result.skipped) {
+          setBestTrade((prev: any) => (!prev || result.pnl > prev.pnl) ? result : prev);
+          setWorstTrade((prev: any) => (!prev || result.pnl < prev.pnl) ? result : prev);
+        }
       }
       return;
     }
@@ -777,6 +850,37 @@ function FomoCopyBotInner() {
       if (tw.some(w => w.address === preset.address)) return tw;
       return [...tw, { address: preset.address, label: preset.label, active: true, isVIP: preset.isVIP, riskMult: preset.riskMult, priorityMult: preset.priorityMult }];
     });
+  };
+
+  // ── Paper session controls ──────────────────────────────
+  const startPaperSession = () => {
+    const now = Date.now();
+    setSessionStart(now);
+    setSessionActive(true);
+    setWhaleStats({});
+    setDailyPnL([0, 0, 0]);
+    setBestTrade(null);
+    setWorstTrade(null);
+    setMyTrades([]);
+    setTotalPnL(0);
+    paperRef.current = new PaperEngine(startingSOL);
+    setPaperPortfolio(startingSOL);
+    setStatus('📄 3-DAY PAPER SESSION STARTED — tracking all trades');
+  };
+
+  const resetPaperSession = () => {
+    setSessionStart(null);
+    setSessionActive(false);
+    setWhaleStats({});
+    setDailyPnL([0, 0, 0]);
+    setBestTrade(null);
+    setWorstTrade(null);
+    setMyTrades([]);
+    setTotalPnL(0);
+    paperRef.current = new PaperEngine(startingSOL);
+    setPaperPortfolio(startingSOL);
+    localStorage.removeItem(SESSION_KEY);
+    setStatus('Session reset');
   };
 
   // ── Solscan / on-chain wallet verifier ──────────────── NEW
@@ -958,53 +1062,179 @@ function FomoCopyBotInner() {
       <div style={{ padding: '0 20px' }}>
 
         {/* ════ DASHBOARD ════ */}
-        {tab === 'dashboard' && (
+        {tab === 'dashboard' && (() => {
+          const now = Date.now();
+          const elapsed = sessionStart ? now - sessionStart : 0;
+          const remaining = sessionStart ? Math.max(0, PAPER_MS - elapsed) : PAPER_MS;
+          const daysLeft  = Math.floor(remaining / 86400000);
+          const hoursLeft = Math.floor((remaining % 86400000) / 3600000);
+          const minsLeft  = Math.floor((remaining % 3600000) / 60000);
+          const pct       = sessionStart ? Math.min(100, (elapsed / PAPER_MS) * 100) : 0;
+          const done      = sessionStart && elapsed >= PAPER_MS;
+          const winCount  = myTrades.filter(t => t.pnl > 0).length;
+          const lossCount = myTrades.filter(t => t.pnl < 0 && !t.skipped).length;
+          const winRate   = (winCount + lossCount) > 0 ? Math.round((winCount / (winCount + lossCount)) * 100) : 0;
+          const topWhales = Object.values(whaleStats).sort((a: any, b: any) => b.pnl - a.pnl);
+
+          return (
           <div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+            {/* ── 3-DAY SESSION BANNER ── */}
+            <div style={{ ...glassCard, padding: 20, marginBottom: 14,
+              border: `1px solid ${done ? 'rgba(212,175,55,0.3)' : sessionActive ? 'rgba(74,222,128,0.2)' : COLORS.glassBorder}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div>
+                  <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', color: COLORS.gold, textTransform: 'uppercase' }}>
+                    📄 PAPER SESSION — {PAPER_DAYS} DAYS
+                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 900, color: done ? COLORS.gold : sessionActive ? COLORS.green : 'rgba(255,255,255,0.5)', marginTop: 4 }}>
+                    {done ? '✅ SESSION COMPLETE — REVIEW BEFORE GOING LIVE'
+                      : sessionActive ? `${daysLeft}d ${hoursLeft}h ${minsLeft}m remaining`
+                      : 'Tap START to begin 3-day paper trial'}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {!sessionActive && !done && (
+                    <button onClick={startPaperSession} style={{
+                      padding: '8px 16px', borderRadius: 12, cursor: 'pointer',
+                      background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.25)',
+                      color: COLORS.green, fontSize: 9, fontWeight: 800, letterSpacing: '0.2em',
+                    }}>▶ START</button>
+                  )}
+                  {(sessionActive || done) && (
+                    <button onClick={resetPaperSession} style={{
+                      padding: '8px 14px', borderRadius: 12, cursor: 'pointer',
+                      background: 'rgba(255,255,255,0.03)', border: `1px solid ${COLORS.glassBorder}`,
+                      color: 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: 800,
+                    }}>RESET</button>
+                  )}
+                </div>
+              </div>
+              {/* Progress bar */}
+              <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 4, height: 4, overflow: 'hidden' }}>
+                <div style={{ background: done ? COLORS.gold : COLORS.green, width: `${pct}%`, height: '100%',
+                  borderRadius: 4, transition: 'width 1s linear' }} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 8, color: 'rgba(255,255,255,0.3)', marginTop: 6 }}>
+                <span>Day 1</span><span>Day 2</span><span>Day 3</span><span>Live?</span>
+              </div>
+            </div>
+
+            {/* ── STATS GRID ── */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
               {[
-                { label: 'PORTFOLIO',     value: `$${portfolioUSD}`,        sub: `${paperPortfolio.toFixed(4)} SOL` },
-                { label: 'TOTAL P&L',     value: `${totalPnL >= 0 ? '+' : ''}${(totalPnL * solUSD).toFixed(2)}$`,
-                  sub: `${totalPnL >= 0 ? '+' : ''}${pnlPct}%`,            color: totalPnL >= 0 ? COLORS.green : COLORS.red },
-                { label: 'LAST LATENCY',  value: lastLatency != null ? `${lastLatency}ms` : '—', sub: `avg ${avgLatency ?? '—'}ms` },
-                { label: 'TRADES',        value: `${myTrades.length}`,      sub: `${validWalletCount} whales` },
+                { label: 'PORTFOLIO',    value: `$${portfolioUSD}`,   sub: `${paperPortfolio.toFixed(3)} SOL` },
+                { label: 'TOTAL P&L',    value: `${totalPnL >= 0 ? '+' : ''}${(totalPnL * solUSD).toFixed(2)}$`,
+                  sub: `${totalPnL >= 0 ? '+' : ''}${pnlPct}%`, color: totalPnL >= 0 ? COLORS.green : COLORS.red },
+                { label: 'WIN RATE',     value: `${winRate}%`,        sub: `${winCount}W / ${lossCount}L`, color: winRate >= 60 ? COLORS.green : winRate >= 45 ? COLORS.gold : COLORS.red },
+                { label: 'LATENCY',      value: lastLatency != null ? `${lastLatency}ms` : '—', sub: `avg ${avgLatency ?? '—'}ms` },
               ].map(stat => (
-                <div key={stat.label} style={{ ...glassCard, padding: '16px 18px' }}>
-                  <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.45em', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', marginBottom: 6 }}>
-                    {stat.label}
-                  </div>
-                  <div style={{ fontSize: 20, fontWeight: 900, color: stat.color || COLORS.gold, letterSpacing: '-0.02em' }}>
-                    {stat.value}
-                  </div>
+                <div key={stat.label} style={{ ...glassCard, padding: '14px 16px' }}>
+                  <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.4em', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginBottom: 5 }}>{stat.label}</div>
+                  <div style={{ fontSize: 19, fontWeight: 900, color: stat.color || COLORS.gold, letterSpacing: '-0.02em' }}>{stat.value}</div>
                   {stat.sub && <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{stat.sub}</div>}
                 </div>
               ))}
             </div>
 
-            {/* Config summary */}
-            <div style={{ ...glassCard, padding: 18, marginBottom: 12 }}>
-              <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.45em', color: COLORS.gold, textTransform: 'uppercase', marginBottom: 14 }}>
-                ⚙ ACTIVE CONFIG
-              </div>
-              {[
-                ['MODE',         mode.toUpperCase()],
-                ['RISK / TRADE', `${riskPct}% → ${(paperPortfolio * riskPct / 100).toFixed(4)} SOL ≈ $${(paperPortfolio * riskPct / 100 * solUSD).toFixed(2)}`],
-                ['SLIPPAGE',     `${slippageBps / 100}%`],
-                ['MAX POSITIONS', `${livePositionsRef.current.size} / ${maxPositions} open`],
-                ['VIP WHALES', `${trackedWallets.filter(w => w.isVIP && w.active).length} active (3x priority)`],
-                ['PUMP.FUN ONLY', pumpFunOnly ? '✓ ON' : '○ OFF'],
-                ['AUTO-SELL',    autoSellMins > 0 ? `${autoSellMins} min` : 'DISABLED'],
-                ['HELIUS WS',    HAS_HELIUS ? '✓ ACTIVE (50–200ms)' : '✗ MISSING → add VITE_HELIUS_API_KEY in Vercel'],
-              ].map(([k, v]) => (
-                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: `1px solid ${COLORS.glassBorder}`, fontSize: 10 }}>
-                  <span style={{ color: 'rgba(255,255,255,0.35)', fontWeight: 700, fontSize: 8, letterSpacing: '0.2em' }}>{k}</span>
-                  <span style={{ color: k === 'HELIUS WS' && !HAS_HELIUS ? COLORS.red : 'rgba(255,255,255,0.8)', fontWeight: 700 }}>{v}</span>
+            {/* ── DAILY BREAKDOWN ── */}
+            {sessionActive && (
+              <div style={{ ...glassCard, padding: 16, marginBottom: 12 }}>
+                <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.45em', color: COLORS.gold, textTransform: 'uppercase', marginBottom: 12 }}>
+                  📅 DAILY P&L BREAKDOWN
                 </div>
-              ))}
-            </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                  {['Day 1', 'Day 2', 'Day 3'].map((d, i) => {
+                    const val = dailyPnL[i] || 0;
+                    const usd = (val * solUSD).toFixed(2);
+                    return (
+                      <div key={d} style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 14, padding: '12px 10px', textAlign: 'center',
+                        border: `1px solid ${val > 0 ? 'rgba(74,222,128,0.15)' : val < 0 ? 'rgba(248,113,113,0.15)' : COLORS.glassBorder}` }}>
+                        <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.3em', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginBottom: 6 }}>{d}</div>
+                        <div style={{ fontSize: 14, fontWeight: 900, color: val > 0 ? COLORS.green : val < 0 ? COLORS.red : 'rgba(255,255,255,0.3)' }}>
+                          {val === 0 ? '—' : `${val >= 0 ? '+' : ''}$${Math.abs(+usd).toFixed(2)}`}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
+            {/* ── WHALE LEADERBOARD ── */}
+            {topWhales.length > 0 && (
+              <div style={{ ...glassCard, padding: 16, marginBottom: 12 }}>
+                <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.45em', color: COLORS.gold, textTransform: 'uppercase', marginBottom: 12 }}>
+                  🐋 WHALE PERFORMANCE
+                </div>
+                {topWhales.slice(0, 8).map((w: any, i) => {
+                  const wr = w.trades > 0 ? Math.round((w.wins / w.trades) * 100) : 0;
+                  const usd = (w.pnl * solUSD).toFixed(2);
+                  return (
+                    <div key={w.label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0',
+                      borderBottom: `1px solid ${COLORS.glassBorder}` }}>
+                      <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.25)', minWidth: 14, fontWeight: 800 }}>#{i+1}</div>
+                      <div style={{ flex: 1, fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.8)' }}>{w.label}</div>
+                      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)' }}>{w.trades}T · {wr}%WR</div>
+                      <div style={{ fontSize: 12, fontWeight: 900, color: w.pnl >= 0 ? COLORS.green : COLORS.red, minWidth: 60, textAlign: 'right' }}>
+                        {w.pnl >= 0 ? '+$' : '-$'}{Math.abs(parseFloat(usd)).toFixed(2)}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* ── BEST / WORST TRADE ── */}
+            {(bestTrade || worstTrade) && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+                {bestTrade && (
+                  <div style={{ ...glassCard, padding: 14, border: '1px solid rgba(74,222,128,0.2)' }}>
+                    <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.3em', color: COLORS.green, textTransform: 'uppercase', marginBottom: 8 }}>🏆 BEST</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.gold }}>{bestTrade.symbol || '—'}</div>
+                    <div style={{ fontSize: 14, fontWeight: 900, color: COLORS.green }}>+${(bestTrade.pnl * solUSD).toFixed(2)}</div>
+                    <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{bestTrade.label}</div>
+                  </div>
+                )}
+                {worstTrade && (
+                  <div style={{ ...glassCard, padding: 14, border: '1px solid rgba(248,113,113,0.2)' }}>
+                    <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.3em', color: COLORS.red, textTransform: 'uppercase', marginBottom: 8 }}>📉 WORST</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.gold }}>{worstTrade.symbol || '—'}</div>
+                    <div style={{ fontSize: 14, fontWeight: 900, color: COLORS.red }}>${(worstTrade.pnl * solUSD).toFixed(2)}</div>
+                    <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{worstTrade.label}</div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── SESSION VERDICT (when done) ── */}
+            {done && (
+              <div style={{ ...glassCard, padding: 20, marginBottom: 12,
+                border: '1px solid rgba(212,175,55,0.3)', background: 'rgba(212,175,55,0.04)' }}>
+                <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.5em', color: COLORS.gold, textTransform: 'uppercase', marginBottom: 14 }}>
+                  ⚡ 3-DAY VERDICT — GO LIVE?
+                </div>
+                {[
+                  ['Win Rate',    `${winRate}%`,   winRate >= 55 ? '✅ Good — go live' : winRate >= 45 ? '⚠️ Marginal — wait' : '❌ Not ready — improve whale list'],
+                  ['Total P&L',  `${totalPnL >= 0 ? '+' : ''}$${(totalPnL * solUSD).toFixed(0)}`,  totalPnL > 0 ? '✅ Profitable' : '❌ Negative — do not go live'],
+                  ['Latency',    `${avgLatency ?? '—'}ms`,  (avgLatency ?? 999) < 500 ? '✅ Fast enough' : '⚠️ Check Helius key'],
+                  ['Top Whale',  topWhales[0]?.label || '—',  topWhales[0]?.pnl > 0 ? '✅ Keep as VIP' : '⚠️ Swap out'],
+                ].map(([k, v, verdict]) => (
+                  <div key={k as string} style={{ padding: '8px 0', borderBottom: `1px solid ${COLORS.glassBorder}` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+                      <span style={{ fontSize: 8, fontWeight: 800, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>{k}</span>
+                      <span style={{ fontSize: 11, fontWeight: 900, color: COLORS.gold }}>{v}</span>
+                    </div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)' }}>{verdict}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Recent trades preview */}
             {myTrades.slice(0, 3).map((x, i) => <TradeRow key={x.id || i} trade={x} showPnL solUSD={solUSD} />)}
           </div>
-        )}
+          );
+        })()}
 
         {/* ════ WALLETS ════ */}
         {tab === 'wallets' && (
