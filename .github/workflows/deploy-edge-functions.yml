@@ -27,7 +27,7 @@ jobs:
         working-directory: repo
         run: |
           PROJECT=fjdzhrdpioxdeyyfogep
-          for fn in quantum-apothecary-chat bhrigu-oracle ayurveda-chat vastu-chat guide-chat gemini-bridge nadi-scan sqi-oracle stripe-webhook admin-user-management; do
+          for fn in quantum-apothecary-chat bhrigu-oracle ayurveda-chat vastu-chat guide-chat gemini-bridge nadi-scan sqi-oracle stripe-webhook admin-user-management delta-arb-proxy clawbot-proxy; do
             echo "=== Deploying $fn ==="
             supabase functions deploy $fn --project-ref $PROJECT --no-verify-jwt 2>&1 || echo "WARNING: $fn failed (continuing)"
           done
