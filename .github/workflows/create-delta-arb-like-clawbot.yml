@@ -16,8 +16,7 @@ jobs:
           SK2: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          LOG="_delta_arb_create.txt"
-          python3 scripts/resolve_trades.py 2>&1 | tee $LOG
+          python3 scripts/resolve_trades.py 2>&1 | tee _delta_arb_create.txt
           git config user.email "bot@sqi.app"; git config user.name "SQI-Bot"
-          git add $LOG && git commit -m "ci: pnl resolve result" || true
+          git add _delta_arb_create.txt && git commit -m "ci: resolve result" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
