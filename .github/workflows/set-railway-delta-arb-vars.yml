@@ -1,0 +1,44 @@
+name: Set Railway Delta-Arb Supabase Vars
+
+on:
+  workflow_dispatch:
+
+jobs:
+  set-vars:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Set Supabase vars in Railway + get public URL
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          SUPABASE_SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          LOG="_railway_vars_result.txt"
+          PROJECT_ID="4851410d-a6d6-4739-be6b-33e6deb5b6f2"
+          SERVICE_ID="d06cd2df-e657-434f-b8fa-db34c3b3c473"
+          ENV_ID="5745e241-6e8e-4c3e-a5fd-91efff9a72c2"
+
+          echo "Setting Railway vars..." | tee $LOG
+
+          # Set via Railway API upsertVariables mutation
+          curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\":\"mutation { variableCollectionUpsert(input: { projectId: \\\"${PROJECT_ID}\\\", environmentId: \\\"${ENV_ID}\\\", serviceId: \\\"${SERVICE_ID}\\\", variables: { SUPABASE_URL: \\\"https://fjdzhrdpioxdeyyfogep.supabase.co\\\", SUPABASE_SERVICE_KEY: \\\"${SUPABASE_SK}\\\" } }) }\"}" \
+            | tee -a $LOG
+          echo "" >> $LOG
+
+          # Get service domains/public URL
+          echo "Getting public URL..." | tee -a $LOG
+          curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer ${RAILWAY_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\":\"{ service(id: \\\"${SERVICE_ID}\\\") { domains { edges { node { domain } } } } }\"}" \
+            | tee -a $LOG
+
+          git config user.email "bot@sqi.app"; git config user.name "SQI-Bot"
+          git add $LOG && git commit -m "ci: railway supabase vars set" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
