@@ -266,7 +266,7 @@ Do you want to push these migrations to the remote database?
  • 20260625000000_btc_bot_tables.sql
  • 20260625000001_add_jyotish_profile_columns.sql
 
- [Y/n] 
+ [Y/n] y
 Applying migration 20250509_virtual_pilgrimage.sql...
 NOTICE (42P07): relation "virtual_pilgrimage_activations" already exists, skipping
 ERROR: policy "Users can manage their own pilgrimage" for table "virtual_pilgrimage_activations" already exists (SQLSTATE 42710)
