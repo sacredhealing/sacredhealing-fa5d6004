@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Deploy delta-arb-proxy edge function
+      - name: Delete old function then deploy delta-arb-proxy
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
@@ -21,12 +21,18 @@ jobs:
           LOG="_delta_arb_proxy_deploy.txt"
           echo "=== Deploy delta-arb-proxy $(date -u) ===" | tee $LOG
 
-          npm install -g supabase@latest 2>&1 | tail -3 | tee -a $LOG
-          echo "Supabase CLI: $(supabase --version)" | tee -a $LOG
+          npm install -g supabase@latest 2>&1 | tail -2 | tee -a $LOG
 
           git clone "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" repo
           cd repo
 
+          echo "Deleting old unused functions to free slot..." | tee -a "../$LOG"
+          supabase functions delete sqi-oracle \
+            --project-ref fjdzhrdpioxdeyyfogep 2>&1 | tee -a "../$LOG" || true
+          supabase functions delete vastu-chat \
+            --project-ref fjdzhrdpioxdeyyfogep 2>&1 | tee -a "../$LOG" || true
+
+          echo "Deploying delta-arb-proxy..." | tee -a "../$LOG"
           supabase functions deploy delta-arb-proxy \
             --project-ref fjdzhrdpioxdeyyfogep \
             --no-verify-jwt 2>&1 | tee -a "../$LOG"
