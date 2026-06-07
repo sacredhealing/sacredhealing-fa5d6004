@@ -678,5 +678,6 @@ export default function DeltaArbBot() {
 
       </div>
     </div>
+  </div>
   );
 }
