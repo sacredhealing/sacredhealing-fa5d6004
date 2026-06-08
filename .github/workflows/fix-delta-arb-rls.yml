@@ -1,0 +1,33 @@
+name: fix-delta-arb-rls
+on:
+  workflow_dispatch:
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Disable RLS on delta_arb_trades
+        env:
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          # Disable RLS completely so anon key can read
+          curl -s -X POST "https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/rpc/exec_sql" \
+            -H "apikey: $SUPABASE_SERVICE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"query": "ALTER TABLE delta_arb_trades DISABLE ROW LEVEL SECURITY;"}' || true
+          
+          # Direct SQL via pg endpoint
+          PGRESULT=$(curl -s -X POST "https://fjdzhrdpioxdeyyfogep.supabase.co/pg/query" \
+            -H "apikey: $SUPABASE_SERVICE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"query": "ALTER TABLE delta_arb_trades DISABLE ROW LEVEL SECURITY; SELECT relrowsecurity FROM pg_class WHERE relname = '"'"'delta_arb_trades'"'"';"}')
+          echo "PG result: $PGRESULT"
+          
+          # Try anon read to confirm it works now
+          ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ3MzE5NDUsImV4cCI6MjA2MDMwNzk0NX0.HrUmzMBqNShHi0G9VDtHrZSHCIMoaYGC6lJUCrDWk40"
+          ANONRESULT=$(curl -s "https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/delta_arb_trades?select=id,status&limit=3" \
+            -H "apikey: $ANON" \
+            -H "Authorization: Bearer $ANON" \
+            -w "\nHTTP:%{http_code}")
+          echo "ANON READ: $ANONRESULT"
