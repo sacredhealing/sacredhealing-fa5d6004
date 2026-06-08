@@ -17,29 +17,22 @@ export default function DeltaArbBot() {
 
   useEffect(() => {
     let cancelled = false;
-    // Use proxy edge function — same pattern as CLAWBOT page (no auth needed)
-    const PROXY = 'https://fjdzhrdpioxdeyyfogep.supabase.co/functions/v1/delta-arb-proxy';
-    fetch(`${PROXY}?endpoint=trades&limit=200`, {
-      headers: { apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMDQwMDMsImV4cCI6MjA5MzY4MDAwM30.Mkbodv6uEb1yMKA0UIKMzm-cFWfcgNFXr-LLGtqoNcg' }
+    fetch('https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/delta_arb_trades?select=id,asset,signal,delta,size_usd,entry_price,status,pnl_usdc,created_at&order=created_at.desc&limit=200', {
+      headers: {
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMDQwMDMsImV4cCI6MjA5MzY4MDAwM30.Mkbodv6uEb1yMKA0UIKMzm-cFWfcgNFXr-LLGtqoNcg',
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMDQwMDMsImV4cCI6MjA5MzY4MDAwM30.Mkbodv6uEb1yMKA0UIKMzm-cFWfcgNFXr-LLGtqoNcg'
+      }
     })
-      .then(r => { setDebug('HTTP:' + r.status); return r.json(); })
+      .then(r => r.json())
       .then(data => {
         if (!cancelled) {
           const arr = Array.isArray(data) ? data : [];
           setTrades(arr);
           setTime(new Date().toLocaleTimeString());
-          setDebug(arr.length + ' trades loaded');
+          setDebug(arr.length + ' trades');
         }
       })
-      .catch(e => {
-        // Fallback: direct Supabase
-        fetch('https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/delta_arb_trades?select=id,asset,signal,delta,size_usd,entry_price,status,pnl_usdc,created_at&order=created_at.desc&limit=200', {
-          headers: { apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMDQwMDMsImV4cCI6MjA5MzY4MDAwM30.Mkbodv6uEb1yMKA0UIKMzm-cFWfcgNFXr-LLGtqoNcg', Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMDQwMDMsImV4cCI6MjA5MzY4MDAwM30.Mkbodv6uEb1yMKA0UIKMzm-cFWfcgNFXr-LLGtqoNcg' }
-        })
-          .then(r => r.json())
-          .then(data => { if (!cancelled) { setTrades(Array.isArray(data) ? data : []); setDebug('fallback:' + (Array.isArray(data) ? data.length : 0)); } })
-          .catch(() => { if (!cancelled) setDebug('ERR:' + e.message?.slice(0,15)); });
-      });
+      .catch(e => { if (!cancelled) setDebug('ERR'); });
     return () => { cancelled = true; };
   }, [tick]);
 
