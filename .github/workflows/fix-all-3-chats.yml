@@ -82,5 +82,23 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{"query":"ALTER TABLE delta_arb_trades DISABLE ROW LEVEL SECURITY; GRANT SELECT ON delta_arb_trades TO anon, authenticated, public"}' || true
           echo "RLS disabled"
+      - name: Embed service key in DeltaArbBot page
+        env:
+          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SK2: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          KEY="${SK:-$SK2}"
+          ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ3MzE5NDUsImV4cCI6MjA2MDMwNzk0NX0.HrUmzMBqNShHi0G9VDtHrZSHCIMoaYGC6lJUCrDWk40"
+          PAGE="src/pages/income-streams/DeltaArbBot.tsx"
+          if grep -q "$ANON" "$PAGE" 2>/dev/null; then
+            sed -i "s|${ANON}|${KEY}|g" "$PAGE"
+            git add "$PAGE"
+            git commit -m "fix: service key in page" || true
+            git push || true
+            echo "Service key embedded in page"
+          else
+            echo "Anon key not found - already using service key or page changed"
+          fi
+
       - name: Done
         run: echo "All done at $(date)"
