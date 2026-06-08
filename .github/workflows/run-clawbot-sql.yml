@@ -10,62 +10,28 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_ADMIN_PAT }}
-      - name: Fix RLS and verify anon read
+      - name: Check last trades
         env:
           SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
           SK2: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          ANON: ${{ secrets.SUPABASE_ANON_KEY }}
-          SUPABASE_PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
           KEY="${SK:-$SK2}"
           BASE="https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1"
-          DB="https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query"
           LOG="_resolve_result.txt"
-
-          q() {
-            curl -s -X POST "$DB" \
-              -H "Authorization: Bearer ${SUPABASE_PAT}" \
-              -H "Content-Type: application/json" \
-              -d "$1"
-          }
-
-          echo "=== Fix RLS on delta_arb_trades ===" | tee $LOG
-          q '{"query":"DROP POLICY IF EXISTS \"Public read delta_arb_trades\" ON delta_arb_trades; CREATE POLICY \"Public read delta_arb_trades\" ON delta_arb_trades FOR SELECT USING (true)"}' | tee -a $LOG
-          echo "" >> $LOG
-
-          echo "=== Test with service key ===" | tee -a $LOG
-          curl -s "${BASE}/delta_arb_trades?select=status,pnl_usdc&limit=5" \
+          
+          curl -s "${BASE}/delta_arb_trades?select=asset,signal,delta,status,pnl_usdc,created_at&order=created_at.desc&limit=5" \
             -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}" | python3 -c "
-import sys,json
-d=json.load(sys.stdin)
-won=[t for t in d if t.get('status')=='won']
-lost=[t for t in d if t.get('status')=='lost']
-pnl=sum(float(t.get('pnl_usdc') or 0) for t in d)
-print(f'Service key: {len(d)} trades, pnl={pnl:+.2f}')
-" | tee -a $LOG
-
-          echo "=== Get anon key from project ===" | tee -a $LOG
-          curl -s "https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/api-keys" \
-            -H "Authorization: Bearer ${SUPABASE_PAT}" | python3 -c "
-import sys,json
-d=json.loads(sys.stdin.read())
-for k in d:
-    print(f'{k.get("name")}: {k.get("api_key","")[:60]}')
-" 2>/dev/null | tee -a $LOG || echo "API key fetch blocked" | tee -a $LOG
-
-          echo "" >> $LOG
-          echo "=== Full count via service key ===" | tee -a $LOG
-          curl -s "${BASE}/delta_arb_trades?select=id,status,pnl_usdc" \
-            -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}" | python3 -c "
-import sys,json
-d=json.load(sys.stdin)
-won=[t for t in d if t.get('status')=='won']
-lost=[t for t in d if t.get('status')=='lost']
-pnl=sum(float(t.get('pnl_usdc') or 0) for t in d)
-print(f'Total={len(d)} Won={len(won)} Lost={len(lost)} PnL={pnl:+.2f} Balance=\${100+pnl:.2f}')
-" | tee -a $LOG
+import sys,json,datetime
+data=json.load(sys.stdin)
+now=datetime.datetime.now(datetime.timezone.utc)
+print(f'Last {len(data)} trades:')
+for t in data:
+    dt=datetime.datetime.fromisoformat(t['created_at'].replace('Z','+00:00'))
+    ago=round((now-dt).total_seconds()/60,1)
+    print(f'  {ago}min ago | {t.get("asset","?"):4} {t.get("signal","?"):5} {t.get("delta","?"):12} {t.get("status","?")}')
+" | tee $LOG
 
           git config user.email "bot@sqi.app"; git config user.name "SQI-Bot"
-          git add $LOG && git commit -m "ci: fix RLS result" || true
+          git add $LOG && git commit -m "ci: trade check" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
