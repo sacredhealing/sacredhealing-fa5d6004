@@ -123,7 +123,7 @@ const BitcoinMiningDetail = React.lazy(() => import("./pages/income-streams/Bitc
 const AIIncomeDetail = React.lazy(() => import("./pages/income-streams/AIIncomeDetail"));
 const EducationDetail = React.lazy(() => import("./pages/income-streams/EducationDetail"));
 const SovereignSignalOracle = React.lazy(() => import("./pages/income-streams/PolymarketBotDetail"));
-const DeltaArbBot = React.lazy(() => import("./pages/income-streams/DeltaArbBot"));
+const DeltaArbBot = React.lazy(() => import("./pages/income-streams/DeltaArbBotV2"));
 const PolymarketCopyTradingInfo = React.lazy(() => import("./pages/income-streams/PolymarketCopyTradingInfo"));
 const FomoCopyBot = React.lazy(() => import("./pages/income-streams/FomoCopyBot"));
 const WhaleIntelligence = React.lazy(() => import("./pages/income-streams/WhaleIntelligence"));
