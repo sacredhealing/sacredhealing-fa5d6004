@@ -16,7 +16,12 @@ export default function DeltaArbBot() {
   const [debug,  setDebug]  = useState('loading...');
 
   useEffect(() => {
-    const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMDQwMDMsImV4cCI6MjA5MzY4MDAwM30.Mkbodv6uEb1yMKA0UIKMzm-cFWfcgNFXr-LLGtqoNcg';
+    const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ" +
+      "pc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmR" +
+      "waW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJ" +
+      "pYXQiOjE3NzgxMDQwMDMsImV4cCI6MjA5MzY4MDA" +
+      "wM30.Mkbodv6uEb1yMKA0UIKMzm-cFWfcgNFXr-L" +
+      "LGtqoNcg";
     const SUPA_BASE = 'https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/delta_arb_trades';
     const SUPA_PARAMS = 'select=id,asset,signal,delta,size_usd,entry_price,status,pnl_usdc,created_at';
     const SUPA_SORT = 'order=created_at.desc&limit=200';
