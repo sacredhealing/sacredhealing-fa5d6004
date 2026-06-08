@@ -12,7 +12,8 @@ export default function DeltaArbBot() {
   const navigate = useNavigate();
   const [trades, setTrades] = useState<any[]>([]);
   const [tick, setTick]     = useState(0);
-  const [time, setTime]     = useState('');
+  const [time,   setTime]   = useState('');
+  const [debug,  setDebug]  = useState('loading...');
 
   useEffect(() => {
     let cancelled = false;
