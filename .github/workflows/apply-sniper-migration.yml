@@ -1,0 +1,28 @@
+name: Apply Sniper SQL Migration
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'supabase/migrations/20260608_sniper_tables.sql'
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run sniper migration
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          npm install -g supabase@latest 2>&1 | tail -2
+          
+          # Link to project
+          echo "fjdzhrdpioxdeyyfogep" | supabase link --project-ref fjdzhrdpioxdeyyfogep 2>&1 || true
+          
+          # Run the specific migration
+          supabase db execute --project-ref fjdzhrdpioxdeyyfogep \
+            --file supabase/migrations/20260608_sniper_tables.sql 2>&1
+          
+          echo "=== DONE ==="
