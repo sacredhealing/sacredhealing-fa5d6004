@@ -1954,7 +1954,6 @@ function FomoCopyBotInner() {
         </div>
       )}
     </div>
-  </div>
   );
 }
 

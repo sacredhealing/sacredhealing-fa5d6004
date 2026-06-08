@@ -699,6 +699,4 @@ export default function SniperBot() {
       </div>
     </div>
   );
-  </div>
-  </div>
 }
