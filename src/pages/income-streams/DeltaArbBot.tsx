@@ -16,11 +16,14 @@ export default function DeltaArbBot() {
   const [debug,  setDebug]  = useState('loading...');
 
   useEffect(() => {
-    let cancelled = false;
-    fetch('https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/delta_arb_trades?select=id,asset,signal,delta,size_usd,entry_price,status,pnl_usdc,created_at&order=created_at.desc&limit=200', {
+    const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMDQwMDMsImV4cCI6MjA5MzY4MDAwM30.Mkbodv6uEb1yMKA0UIKMzm-cFWfcgNFXr-LLGtqoNcg';
+    const SUPA_BASE = 'https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/delta_arb_trades';
+    const SUPA_PARAMS = 'select=id,asset,signal,delta,size_usd,entry_price,status,pnl_usdc,created_at';
+    const SUPA_SORT = 'order=created_at.desc&limit=200';
+    fetch(SUPA_BASE + '?' + SUPA_PARAMS + '&' + SUPA_SORT, {
       headers: {
-        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMDQwMDMsImV4cCI6MjA5MzY4MDAwM30.Mkbodv6uEb1yMKA0UIKMzm-cFWfcgNFXr-LLGtqoNcg',
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMDQwMDMsImV4cCI6MjA5MzY4MDAwM30.Mkbodv6uEb1yMKA0UIKMzm-cFWfcgNFXr-LLGtqoNcg'
+        apikey: SUPA_KEY,
+        Authorization: 'Bearer ' + SUPA_KEY,
       }
     })
       .then(r => r.json())
