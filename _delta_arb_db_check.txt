@@ -1,12 +1,2 @@
-[{"id":"a12bf1d8-d99a-4e98-a028-88fb16b1d67c","asset":"ETH","status":"won","pnl_usdc":137.3170,"created_at":"2026-06-08T07:29:32.263703+00:00"}, 
- {"id":"9777d8d6-7188-4e27-821a-a7a14e29130d","asset":"SOL","status":"won","pnl_usdc":138.4312,"created_at":"2026-06-08T07:29:32.006979+00:00"}, 
- {"id":"1e79ed1a-86ec-4d1b-943d-21a3e58aca80","asset":"BTC","status":"won","pnl_usdc":137.3170,"created_at":"2026-06-08T07:29:31.11084+00:00"}, 
- {"id":"ac79a104-844e-4588-9cba-c148bc4a56e4","asset":"BTC","status":"won","pnl_usdc":134.7867,"created_at":"2026-06-08T07:24:36.616273+00:00"}, 
- {"id":"9dfa66dc-3d70-413f-b443-4f2b2571e167","asset":"SOL","status":"won","pnl_usdc":132.4611,"created_at":"2026-06-08T07:24:32.343399+00:00"}, 
- {"id":"36fc992f-e276-4313-a3bf-1a42d2b2341d","asset":"ETH","status":"won","pnl_usdc":112.9775,"created_at":"2026-06-08T07:24:31.833798+00:00"}, 
- {"id":"65fe255e-f858-4abf-9b1a-ac1b5462fca9","asset":"BTC","status":"won","pnl_usdc":114.0051,"created_at":"2026-06-08T07:14:33.146977+00:00"}, 
- {"id":"e71f28ce-a8bf-422c-8c82-986cf592bedf","asset":"SOL","status":"won","pnl_usdc":118.6813,"created_at":"2026-06-08T07:14:32.593293+00:00"}, 
- {"id":"8ae4faf6-3ff1-49de-ab51-1cb776197f5d","asset":"BTC","status":"won","pnl_usdc":126.7322,"created_at":"2026-06-08T07:14:31.940839+00:00"}, 
- {"id":"0819a2c3-2259-4600-ba4f-b15d3bb84009","asset":"ETH","status":"won","pnl_usdc":116.7050,"created_at":"2026-06-08T07:14:31.70155+00:00"}]
-HTTP_CODE:200
-COUNT: content-range: 0-0/129
+{"message":"Invalid API key","hint":"Double check your Supabase `anon` or `service_role` API key."}
+HTTP:401
