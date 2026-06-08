@@ -1,0 +1,364 @@
+name: Deploy Sniper Bot — SQL + Railway Setup
+
+on:
+  workflow_dispatch:
+    inputs:
+      railway_project_id:
+        description: 'Railway Project ID (paste from Railway dashboard URL)'
+        required: false
+        default: ''
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run Supabase SQL migration
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          LOG="_sniper_deploy_result.txt"
+          echo "=== SQI Sniper Deploy $(date -u) ===" | tee $LOG
+
+          npm install -g supabase@latest 2>&1 | tail -2 | tee -a $LOG
+
+          git clone "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" repo
+          cd repo
+
+          echo "" | tee -a "../$LOG"
+          echo "--- Running Supabase SQL migration ---" | tee -a "../$LOG"
+
+          # Run the sniper SQL migration directly
+          supabase db push \
+            --project-ref fjdzhrdpioxdeyyfogep 2>&1 | tee -a "../$LOG" || true
+
+          echo "Migration attempt done." | tee -a "../$LOG"
+          cd ..
+
+      - name: Run SQL via PostgREST RPC
+        env:
+          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SK2: ${{ secrets.NEW_SERVICE_ROLE }}
+        run: |
+          LOG="_sniper_deploy_result.txt"
+          KEY="${SK:-$SK2}"
+
+          echo "" | tee -a $LOG
+          echo "--- Creating sniper tables via SQL ---" | tee -a $LOG
+
+          python3 << PYEOF | tee -a $LOG
+import os, urllib.request, json
+
+KEY = os.environ.get('SK') or os.environ.get('SK2','')
+URL = "https://fjdzhrdpioxdeyyfogep.supabase.co"
+
+SQL = """
+CREATE TABLE IF NOT EXISTS sniper_members (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
+  wallet_address text,
+  tier text NOT NULL DEFAULT 'free',
+  platform_fee_pct integer NOT NULL DEFAULT 63,
+  balance numeric(16,8) NOT NULL DEFAULT 0,
+  total_earned numeric(16,8) NOT NULL DEFAULT 0,
+  is_active boolean NOT NULL DEFAULT true,
+  paper_mode boolean NOT NULL DEFAULT true,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS sniper_trades (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+  mint text NOT NULL,
+  symbol text,
+  launchpad text NOT NULL DEFAULT 'pump_fun',
+  action text NOT NULL DEFAULT 'SNIPE_ENTRY',
+  size_sol numeric(12,8),
+  entry_price numeric(18,12),
+  exit_price numeric(18,12),
+  multiplier_x numeric(10,4) DEFAULT 1,
+  pnl_sol numeric(16,8) DEFAULT 0,
+  ai_score integer,
+  rug_score integer,
+  status text NOT NULL DEFAULT 'open',
+  mode text NOT NULL DEFAULT 'PAPER',
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS sniper_affiliate_rates (
+  tier text PRIMARY KEY,
+  l1_pct numeric(5,2) NOT NULL,
+  l2_pct numeric(5,2) NOT NULL,
+  fee_pct integer NOT NULL,
+  you_keep integer NOT NULL
+);
+
+INSERT INTO sniper_affiliate_rates (tier, l1_pct, l2_pct, fee_pct, you_keep) VALUES
+  ('free', 10.00, 3.00, 63, 37),
+  ('prana_flow', 8.00, 2.00, 35, 65),
+  ('siddha_quantum', 5.00, 1.00, 16, 84),
+  ('akasha_infinity', 3.00, 1.00, 9, 91)
+ON CONFLICT (tier) DO UPDATE SET
+  l1_pct=EXCLUDED.l1_pct, l2_pct=EXCLUDED.l2_pct,
+  fee_pct=EXCLUDED.fee_pct, you_keep=EXCLUDED.you_keep;
+
+INSERT INTO income_streams (
+  title, description, link, category, tags,
+  is_active, is_visible, stream_type, badge, new_badge,
+  internal_slug, button_label, sort_order
+) VALUES (
+  'Sovereign Sniper',
+  'Pump.fun memecoin sniper. 7 launchpads. 12-signal Gemini AI filter. Jito MEV. Dev wallet monitor. Start from 0.1 SOL.',
+  '/income-streams/sniper-bot',
+  'AI', 'MEMECOIN SNIPER · SOLANA',
+  true, true, 'Bot', 'NEW • SQI 2050', true,
+  'sniper-bot', 'Open Sniper', -3
+) ON CONFLICT (internal_slug) DO UPDATE SET
+  link='/income-streams/sniper-bot', is_active=true, is_visible=true;
+
+ALTER TABLE sniper_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sniper_trades ENABLE ROW LEVEL SECURITY;
+
+DO \$\$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='sniper_members' AND policyname='Users own their sniper_members row') THEN
+    CREATE POLICY "Users own their sniper_members row" ON sniper_members FOR ALL USING (auth.uid()=user_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='sniper_trades' AND policyname='Users own their sniper_trades') THEN
+    CREATE POLICY "Users own their sniper_trades" ON sniper_trades FOR ALL USING (auth.uid()=user_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='sniper_affiliate_rates' AND policyname='read sniper rates') THEN
+    CREATE POLICY "read sniper rates" ON sniper_affiliate_rates FOR SELECT USING (true);
+  END IF;
+END \$\$;
+"""
+
+stmts = [s.strip() for s in SQL.split(';') if s.strip() and len(s.strip()) > 10]
+
+for stmt in stmts:
+    try:
+        payload = json.dumps({"query": stmt + ";"}).encode()
+        req = urllib.request.Request(
+            f"{URL}/rest/v1/rpc/query",
+            data=payload,
+            method="POST"
+        )
+        req.add_header("apikey", KEY)
+        req.add_header("Authorization", f"Bearer {KEY}")
+        req.add_header("Content-Type", "application/json")
+        with urllib.request.urlopen(req, timeout=10) as r:
+            result = r.read().decode()[:80]
+            print(f"OK: {stmt[:50]}... -> {result}")
+    except urllib.error.HTTPError as e:
+        err = e.read().decode()[:100]
+        if 'already exists' in err or 'duplicate' in err.lower():
+            print(f"EXISTS: {stmt[:50]}...")
+        else:
+            print(f"ERR: {stmt[:50]}... -> {err}")
+    except Exception as e:
+        print(f"FAIL: {stmt[:50]}... -> {e}")
+
+print("SQL complete")
+PYEOF
+
+      - name: Set Railway environment variables
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SK2: ${{ secrets.NEW_SERVICE_ROLE }}
+          GEMINI_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+          INPUT_PROJECT_ID: ${{ github.event.inputs.railway_project_id }}
+        run: |
+          LOG="_sniper_deploy_result.txt"
+          echo "" | tee -a $LOG
+          echo "--- Setting Railway env vars ---" | tee -a $LOG
+
+          npm install -g @railway/cli@latest 2>&1 | tail -2 | tee -a $LOG
+
+          python3 << 'PYEOF' | tee -a $LOG
+import os, urllib.request, json
+
+RAILWAY_TOKEN = os.environ.get('RAILWAY_TOKEN','')
+SK = os.environ.get('SK') or os.environ.get('SK2','')
+GEMINI = os.environ.get('GEMINI_KEY', 'AIzaAb8RN6I1pEG3CwLRQUrouoAGdXVOb--n9niPBfnCdu_OCQnkJw')
+INPUT_PROJECT = os.environ.get('INPUT_PROJECT_ID','').strip()
+
+def gql(query, variables=None):
+    payload = {"query": query}
+    if variables:
+        payload["variables"] = variables
+    req = urllib.request.Request(
+        "https://backboard.railway.app/graphql/v2",
+        data=json.dumps(payload).encode(),
+        method="POST"
+    )
+    req.add_header("Authorization", f"Bearer {RAILWAY_TOKEN}")
+    req.add_header("Content-Type", "application/json")
+    with urllib.request.urlopen(req, timeout=15) as r:
+        return json.loads(r.read())
+
+# Step 1: Find the project
+print("Finding Railway projects...")
+try:
+    result = gql("{ me { id name projects { edges { node { id name services { edges { node { id name } } } } } } } }")
+    projects = result.get('data',{}).get('me',{}).get('projects',{}).get('edges',[])
+    print(f"Found {len(projects)} projects:")
+    for p in projects:
+        n = p['node']
+        services = n.get('services',{}).get('edges',[])
+        print(f"  {n['name']} (id:{n['id']})")
+        for s in services:
+            print(f"    service: {s['node']['name']} (id:{s['node']['id']})")
+except Exception as e:
+    print(f"Error fetching projects: {e}")
+    projects = []
+
+# Step 2: Find the sniper project — newest or named sniper
+project_id = INPUT_PROJECT
+service_id = None
+
+if not project_id and projects:
+    # Use most recently created (last in list) or find one named sniper
+    for p in projects:
+        n = p['node']
+        name_lower = n['name'].lower()
+        if 'sniper' in name_lower or 'sovereign' in name_lower:
+            project_id = n['id']
+            services = n.get('services',{}).get('edges',[])
+            if services:
+                service_id = services[0]['node']['id']
+            print(f"Found sniper project: {n['name']} ({project_id})")
+            break
+
+if not project_id and projects:
+    # Fall back to newest project (last created)
+    newest = projects[-1]['node']
+    project_id = newest['id']
+    services = newest.get('services',{}).get('edges',[])
+    if services:
+        service_id = services[0]['node']['id']
+    print(f"Using newest project: {newest['name']} ({project_id})")
+
+if not project_id:
+    print("ERROR: No Railway project found. Create project first, then re-run.")
+    exit(1)
+
+# Step 3: Get environment ID
+print(f"\nGetting environment for project {project_id}...")
+try:
+    env_result = gql("""
+        query($projectId: String!) {
+            project(id: $projectId) {
+                environments { edges { node { id name } } }
+                services { edges { node { id name } } }
+            }
+        }
+    """, {"projectId": project_id})
+
+    envs = env_result.get('data',{}).get('project',{}).get('environments',{}).get('edges',[])
+    svcs = env_result.get('data',{}).get('project',{}).get('services',{}).get('edges',[])
+
+    env_id = envs[0]['node']['id'] if envs else None
+    if not service_id and svcs:
+        service_id = svcs[0]['node']['id']
+
+    print(f"Environment: {envs[0]['node']['name'] if envs else 'none'} ({env_id})")
+    print(f"Service: {svcs[0]['node']['name'] if svcs else 'none'} ({service_id})")
+except Exception as e:
+    print(f"Error getting environment: {e}")
+    exit(1)
+
+if not env_id or not service_id:
+    print("ERROR: Missing environment or service ID")
+    exit(1)
+
+# Step 4: Set all env vars
+print("\nSetting environment variables...")
+
+vars_to_set = {
+    "SUPABASE_URL":         "https://fjdzhrdpioxdeyyfogep.supabase.co",
+    "SUPABASE_SERVICE_KEY": SK,
+    "GEMINI_API_KEY":       GEMINI,
+    "BOT_USER_ID":          "bd0b21c9-577a-450b-bb1e-21c9d0423f17",
+    "PAPER_MODE":           "true",
+    "BUY_AMOUNT_SOL":       "0.05",
+    "MAX_OPEN_POSITIONS":   "5",
+    "MAX_DAILY_TRADES":     "25",
+    "MAX_DAILY_LOSS_SOL":   "0.5",
+    "TAKE_PROFIT_X":        "3.0",
+    "MOONBAG_X":            "10.0",
+    "STOP_LOSS_PCT":        "0.35",
+    "TRAILING_STOP_PCT":    "0.25",
+    "MAX_HOLD_MINUTES":     "30",
+    "MIN_AI_SCORE":         "60",
+    "JITO_TIP_SOL":         "0.001",
+}
+
+set_count = 0
+for name, value in vars_to_set.items():
+    if not value:
+        print(f"  SKIP {name} (empty)")
+        continue
+    try:
+        result = gql("""
+            mutation($input: VariableCollectionUpsertInput!) {
+                variableCollectionUpsert(input: $input)
+            }
+        """, {
+            "input": {
+                "projectId":     project_id,
+                "environmentId": env_id,
+                "serviceId":     service_id,
+                "variables":     {name: value}
+            }
+        })
+        if result.get('data',{}).get('variableCollectionUpsert'):
+            print(f"  SET {name}")
+            set_count += 1
+        else:
+            print(f"  FAIL {name}: {result.get('errors','')}")
+    except Exception as e:
+        print(f"  ERROR {name}: {e}")
+
+print(f"\n{set_count}/{len(vars_to_set)} vars set")
+print(f"Project: {project_id}")
+print(f"Service: {service_id}")
+print(f"Environment: {env_id}")
+
+# Step 5: Trigger redeploy
+print("\nTriggering redeploy...")
+try:
+    deploy_result = gql("""
+        mutation($serviceId: String!, $environmentId: String!) {
+            serviceInstanceRedeploy(serviceId: $serviceId, environmentId: $environmentId)
+        }
+    """, {"serviceId": service_id, "environmentId": env_id})
+    print(f"Redeploy: {deploy_result.get('data',{}).get('serviceInstanceRedeploy','unknown')}")
+except Exception as e:
+    print(f"Redeploy trigger error: {e}")
+
+print("\nDONE — Railway sniper bot configured")
+PYEOF
+
+      - name: Save results and push
+        env:
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          git config user.email "bot@sqi.app"
+          git config user.name "SQI-Bot"
+          git add _sniper_deploy_result.txt || true
+          git commit -m "sniper deploy result $(date -u +%H%M%S)" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
+          echo ""
+          echo "=== COMPLETE ==="
+          echo "Check Railway dashboard for logs"
+          echo "Platform: https://siddhaquantumnexus.com/income-streams/sniper-bot"
