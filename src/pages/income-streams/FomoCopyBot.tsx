@@ -1030,22 +1030,56 @@ function FomoCopyBotInner() {
   }, [mode, riskPct, pumpFunOnly, maxPositions]);
 
   // ── Start/Stop Monitoring ───────────────────────────────
+  // ── POLLING ENGINE — fallback when WebSocket fails ───────
+  const pollingRef      = useRef<any>(null);
+  const lastSigRef      = useRef<Record<string, string>>({});
+
+  const pollWallets = useCallback(async () => {
+    const active = trackedWallets.filter(w => isValidWallet(w.address) && w.active);
+    for (const tw of active) {
+      try {
+        const data = await rpcCall('getSignaturesForAddress', [tw.address, { limit: 5, commitment: 'confirmed' }]);
+        const sigs: any[] = data.result || [];
+        if (!sigs.length) continue;
+        const newest = sigs[0].signature;
+        if (lastSigRef.current[tw.address] === newest) continue; // no new txs
+        const prev = lastSigRef.current[tw.address];
+        lastSigRef.current[tw.address] = newest;
+        if (!prev) continue; // first poll — just record baseline
+        // Fetch new transactions since last seen sig
+        const newSigs = sigs.filter((s: any) => s.signature !== prev && !s.err);
+        for (const sigInfo of newSigs.slice(0, 3)) {
+          const txData = await rpcCall('getTransaction', [sigInfo.signature, {
+            encoding: 'jsonParsed', maxSupportedTransactionVersion: 0, commitment: 'confirmed',
+          }]);
+          if (!txData.result) continue;
+          const trade = parseTradeFromTx(txData.result, tw.address, sigInfo.signature);
+          if (!trade) continue;
+          // Fire as if WebSocket delivered it
+          rawCountRef.current += 1; setRawMsgCount(rawCountRef.current);
+          txCountRef.current += 1;  setTxCount(txCountRef.current);
+          setLastMsgTime(new Date().toLocaleTimeString());
+          handleWhaleTrade(trade, Date.now() - (sigInfo.blockTime * 1000), tw.label,
+            { isVIP: tw.isVIP, riskMult: tw.riskMult, priorityMult: tw.priorityMult });
+        }
+      } catch {}
+      await new Promise(r => setTimeout(r, 200)); // gentle rate limit between wallets
+    }
+  }, [trackedWallets, handleWhaleTrade]);
+
   const startMonitoring = useCallback(() => {
     const active = trackedWallets.filter(w => isValidWallet(w.address) && w.active);
     if (active.length === 0) {
-      setStatus('⚠ No active wallets — tap ADD ALL PRESETS in the Wallets tab');
+      setStatus('⚠ No active wallets — go to Wallets tab');
       setTab('wallets');
       return;
     }
 
-    // Stop any existing monitor first
+    // ── Try WebSocket first ──────────────────────────────
     monitorRef.current?.disconnect();
-
-    // ONE WebSocket for ALL wallets — fixes mobile connection cap
-    const entries: WalletEntry[] = active.map(tw => ({
-      address: tw.address,
-      label:   tw.label,
-      config:  { isVIP: tw.isVIP, riskMult: tw.riskMult, priorityMult: tw.priorityMult },
+    const entries = active.map(tw => ({
+      address: tw.address, label: tw.label,
+      config: { isVIP: tw.isVIP, riskMult: tw.riskMult, priorityMult: tw.priorityMult },
     }));
 
     const monitor = new MultiWalletMonitor(
@@ -1053,29 +1087,36 @@ function FomoCopyBotInner() {
       (trade, lat, label, config) => handleWhaleTrade(trade, lat, label, config),
     );
     monitor.onRawMessage = (type) => {
-      rawCountRef.current += 1;
-      setRawMsgCount(rawCountRef.current);
+      rawCountRef.current += 1; setRawMsgCount(rawCountRef.current);
       setLastMsgTime(new Date().toLocaleTimeString());
-      if (type === 'transactionNotification') {
-        txCountRef.current += 1;
-        setTxCount(txCountRef.current);
-      }
+      if (type === 'transactionNotification') { txCountRef.current += 1; setTxCount(txCountRef.current); }
     };
     monitor.onStatusChange = (s) => {
       setWsStatus(s);
-      if (s === 'error') setStatus('⚠ WebSocket error — reconnecting…');
-      if (s === 'connected') setStatus(`✅ CONNECTED — monitoring ${entries.length} wallets via ${HAS_HELIUS ? 'Helius' : 'public RPC'}`);
+      if (s === 'connected') setStatus(`✅ WS LIVE — ${active.length} whales via Helius`);
+      if (s === 'error')     setStatus('⚠ WS error — polling active as fallback');
     };
     monitor.connect();
     monitorRef.current = monitor;
 
+    // ── Start HTTP polling immediately as reliable fallback ──
+    // Records baseline signatures on first poll, then catches new ones every 15s
+    clearInterval(pollingRef.current);
+    pollingRef.current = setInterval(() => pollWallets(), 15_000);
+    // Baseline poll immediately
+    setTimeout(() => pollWallets(), 2000);
+
     setIsMonitoring(true);
-    setStatus(`🟢 MONITORING ${active.length} WHALES — 1 WebSocket — ${HAS_HELIUS ? 'Helius 50ms' : 'public RPC'}`);
-  }, [trackedWallets, handleWhaleTrade]);
+    rawCountRef.current = 0; txCountRef.current = 0;
+    setRawMsgCount(0); setTxCount(0);
+    setStatus(`🟢 MONITORING ${active.length} WHALES — WS + polling active`);
+  }, [trackedWallets, handleWhaleTrade, pollWallets]);
 
   const stopMonitoring = useCallback(() => {
     monitorRef.current?.disconnect();
     monitorRef.current = null;
+    clearInterval(pollingRef.current);
+    pollingRef.current = null;
     setIsMonitoring(false);
     setWsStatus('disconnected');
     rawCountRef.current = 0; txCountRef.current = 0;
@@ -1187,7 +1228,7 @@ function FomoCopyBotInner() {
     setStatus(`✓ Verification done — ${active}/${toCheck.length} wallets have real on-chain activity`);
   };
 
-  useEffect(() => () => { monitorRef.current?.disconnect(); }, []);
+  useEffect(() => () => { monitorRef.current?.disconnect(); clearInterval(pollingRef.current); }, []);
 
   // ─────────────────────────────────────────────────────────
   //  RENDER
@@ -1552,6 +1593,7 @@ function FomoCopyBotInner() {
                   ['TRADES PARSED',  `${myTrades.length} trades`,   myTrades.length > 0 ? COLORS.green : 'rgba(255,255,255,0.5)'],
                   ['LAST SIGNAL',    lastMsgTime,                   'rgba(255,255,255,0.6)'],
                   ['HELIUS KEY',     HAS_HELIUS ? '✓ SET' : '✗ MISSING', HAS_HELIUS ? COLORS.green : COLORS.red],
+                  ['MODE',           wsStatus === 'connected' ? 'WS (50ms)' : 'POLLING (15s)', wsStatus === 'connected' ? COLORS.green : COLORS.cyan],
                   ['WALLETS',        `${trackedWallets.filter(w => w.active).length} active`, COLORS.gold],
                 ].map(([k, v, col]) => (
                   <div key={k as string} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0',
