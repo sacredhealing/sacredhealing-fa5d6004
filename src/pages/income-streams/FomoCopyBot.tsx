@@ -174,8 +174,8 @@ async function fetchSolPriceUSD(): Promise<number> {
       const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT');
       const d = await r.json();
       const p = parseFloat(d.price);
-      if (p > 0) return p;
-      throw new Error('no price');
+      if (p > 50 && p < 1000) return p; // sanity check: SOL must be $50-$1000
+      throw new Error('price out of range: ' + p);
     },
     // CoinGecko free tier — CORS open
     async () => {
@@ -431,8 +431,20 @@ class MultiWalletMonitor {
     // Count every raw message for diagnostics
     this.onRawMessage?.(data.method || (data.result !== undefined ? 'confirm' : 'other'));
 
+    // transactionSubscribe rejected (free plan) → fall back to logsSubscribe
+    if (data.id === 1 && data.error) {
+      console.log('[SQI] transactionSubscribe blocked:', data.error.message, '— switching to logsSubscribe');
+      this._subscribeLogsOnly();
+      return;
+    }
+
     // Subscription confirmed — Helius sends {id:1, result: <subId>}
     if (data.id === 1 && typeof data.result === 'number') {
+      this.onStatusChange?.('connected');
+      return;
+    }
+    // logsSubscribe confirmed
+    if (data.id === 2 && typeof data.result === 'number') {
       this.onStatusChange?.('connected');
       return;
     }
@@ -470,9 +482,24 @@ class MultiWalletMonitor {
     }
   }
 
+  // logsSubscribe fallback — works on Helius free tier
+  // Subscribes to logs for the first 5 wallets (browser WS limit)
+  _subscribeLogsOnly() {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+    const topWallets = this.wallets.slice(0, 5); // max 5 per WS connection
+    for (let i = 0; i < topWallets.length; i++) {
+      this.ws.send(JSON.stringify({
+        jsonrpc: '2.0', id: 2 + i,
+        method: 'logsSubscribe',
+        params: [{ mentions: [topWallets[i].address] }, { commitment: 'processed' }],
+      }));
+    }
+    console.log('[SQI] logsSubscribe active for top', topWallets.length, 'wallets. HTTP polling covers the rest.');
+    this.onStatusChange?.('connected');
+  }
+
   updateWallets(wallets: WalletEntry[]) {
     this.wallets = wallets;
-    // Re-subscribe with updated wallet list
     if (this.ws?.readyState === WebSocket.OPEN) this._subscribe();
   }
 
@@ -1109,7 +1136,7 @@ function FomoCopyBotInner() {
     setIsMonitoring(true);
     rawCountRef.current = 0; txCountRef.current = 0;
     setRawMsgCount(0); setTxCount(0);
-    setStatus(`🟢 MONITORING ${active.length} WHALES — WS + polling active`);
+    setStatus(`🟢 MONITORING ${active.length} WHALES — polling every 15s + WS`);
   }, [trackedWallets, handleWhaleTrade, pollWallets]);
 
   const stopMonitoring = useCallback(() => {
