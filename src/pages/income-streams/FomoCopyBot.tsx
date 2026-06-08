@@ -358,6 +358,7 @@ class MultiWalletMonitor {
   }
 
   onStatusChange?: (s: 'connecting'|'connected'|'error'|'disconnected') => void;
+  onRawMessage?:   (type: string) => void;  // diagnostic counter
 
   connect() {
     if (this.killed) return;
@@ -426,6 +427,9 @@ class MultiWalletMonitor {
   async _onMessage(e: MessageEvent) {
     let data: any;
     try { data = JSON.parse(e.data); } catch { return; }
+
+    // Count every raw message for diagnostics
+    this.onRawMessage?.(data.method || (data.result !== undefined ? 'confirm' : 'other'));
 
     // Subscription confirmed — Helius sends {id:1, result: <subId>}
     if (data.id === 1 && typeof data.result === 'number') {
@@ -749,7 +753,13 @@ function FomoCopyBotInner() {
   const [lastLatency,    setLastLatency]    = useState<number | null>(null);
   const [avgLatency,     setAvgLatency]     = useState<number | null>(null);
   const [walletActivity, setWalletActivity] = useState<Map<string, 'checking' | 'active' | 'inactive'>>(new Map()); // NEW
-  const [isVerifying,    setIsVerifying]    = useState(false); // NEW
+  const [isVerifying,    setIsVerifying]    = useState(false);
+  // ── Diagnostics ─────────────────────────────────────────
+  const [rawMsgCount,  setRawMsgCount]  = useState(0);
+  const [txCount,      setTxCount]      = useState(0);
+  const [lastMsgTime,  setLastMsgTime]  = useState<string>('—');
+  const rawCountRef = useRef(0);
+  const txCountRef  = useRef(0);
   const [wsStatus,       setWsStatus]       = useState<'disconnected'|'connecting'|'connected'|'error'>('disconnected');
 
   // ── Paper session tracker ────────────────────────────────
@@ -1042,6 +1052,15 @@ function FomoCopyBotInner() {
       entries,
       (trade, lat, label, config) => handleWhaleTrade(trade, lat, label, config),
     );
+    monitor.onRawMessage = (type) => {
+      rawCountRef.current += 1;
+      setRawMsgCount(rawCountRef.current);
+      setLastMsgTime(new Date().toLocaleTimeString());
+      if (type === 'transactionNotification') {
+        txCountRef.current += 1;
+        setTxCount(txCountRef.current);
+      }
+    };
     monitor.onStatusChange = (s) => {
       setWsStatus(s);
       if (s === 'error') setStatus('⚠ WebSocket error — reconnecting…');
@@ -1058,6 +1077,9 @@ function FomoCopyBotInner() {
     monitorRef.current?.disconnect();
     monitorRef.current = null;
     setIsMonitoring(false);
+    setWsStatus('disconnected');
+    rawCountRef.current = 0; txCountRef.current = 0;
+    setRawMsgCount(0); setTxCount(0); setLastMsgTime('—');
     setStatus('⏹ STOPPED');
   }, []);
 
@@ -1513,6 +1535,41 @@ function FomoCopyBotInner() {
                     <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)' }}>{verdict}</div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* ── Connection Diagnostics ── */}
+            {isMonitoring && (
+              <div style={{ ...glassCard, padding: 16, marginBottom: 12,
+                border: `1px solid ${rawMsgCount > 0 ? 'rgba(74,222,128,0.2)' : 'rgba(255,165,0,0.2)'}` }}>
+                <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.45em', color: COLORS.gold, textTransform: 'uppercase', marginBottom: 12 }}>
+                  🔌 CONNECTION DIAGNOSTICS
+                </div>
+                {[
+                  ['WS STATUS',      wsStatus.toUpperCase(),        wsStatus === 'connected' ? COLORS.green : wsStatus === 'error' ? COLORS.red : COLORS.cyan],
+                  ['RAW MESSAGES',   `${rawMsgCount} received`,     rawMsgCount > 0 ? COLORS.green : 'rgba(255,165,0,0.9)'],
+                  ['TX EVENTS',      `${txCount} whale txs`,        txCount > 0 ? COLORS.green : 'rgba(255,255,255,0.5)'],
+                  ['TRADES PARSED',  `${myTrades.length} trades`,   myTrades.length > 0 ? COLORS.green : 'rgba(255,255,255,0.5)'],
+                  ['LAST SIGNAL',    lastMsgTime,                   'rgba(255,255,255,0.6)'],
+                  ['HELIUS KEY',     HAS_HELIUS ? '✓ SET' : '✗ MISSING', HAS_HELIUS ? COLORS.green : COLORS.red],
+                  ['WALLETS',        `${trackedWallets.filter(w => w.active).length} active`, COLORS.gold],
+                ].map(([k, v, col]) => (
+                  <div key={k as string} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0',
+                    borderBottom: `1px solid ${COLORS.glassBorder}`, fontSize: 10 }}>
+                    <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 8, fontWeight: 700, letterSpacing: '0.2em' }}>{k}</span>
+                    <span style={{ color: col as string, fontWeight: 700 }}>{v}</span>
+                  </div>
+                ))}
+                {rawMsgCount === 0 && wsStatus === 'connected' && (
+                  <div style={{ fontSize: 9, color: 'rgba(255,165,0,0.8)', marginTop: 10, lineHeight: 1.6 }}>
+                    ⚠ WS connected but no messages yet. Either whales aren't trading right now or Helius subscription is pending. Tap SIM to test paper engine.
+                  </div>
+                )}
+                {wsStatus === 'error' || wsStatus === 'disconnected' ? (
+                  <div style={{ fontSize: 9, color: COLORS.red, marginTop: 10 }}>
+                    ✗ WebSocket not connected. Tap STOP then START to reconnect.
+                  </div>
+                ) : null}
               </div>
             )}
 
