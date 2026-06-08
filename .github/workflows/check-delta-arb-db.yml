@@ -6,27 +6,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Query DB and write result
-        env:
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      - name: Test anon read
         run: |
-          RESULT=$(curl -s "https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/delta_arb_trades?select=id,asset,status,pnl_usdc,created_at&order=created_at.desc&limit=10" \
-            -H "apikey: $SUPABASE_SERVICE_KEY" \
-            -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
-            -w "\nHTTP_CODE:%{http_code}")
+          ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ3MzE5NDUsImV4cCI6MjA2MDMwNzk0NX0.HrUmzMBqNShHi0G9VDtHrZSHCIMoaYGC6lJUCrDWk40"
+          RESULT=$(curl -s "https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/delta_arb_trades?select=id,asset,status,pnl_usdc&order=created_at.desc&limit=5" \
+            -H "apikey: $ANON" \
+            -H "Authorization: Bearer $ANON" \
+            -w "\nHTTP:%{http_code}")
           echo "$RESULT" > _delta_arb_db_check.txt
-          
-          COUNT=$(curl -s "https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/delta_arb_trades?select=count" \
-            -H "apikey: $SUPABASE_SERVICE_KEY" \
-            -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
-            -H "Prefer: count=exact" \
-            -I | grep -i "content-range")
-          echo "COUNT: $COUNT" >> _delta_arb_db_check.txt
           cat _delta_arb_db_check.txt
-      - name: Commit result
+      - name: Commit
         run: |
           git config user.email "bot@sqi.com"
           git config user.name "SQI Bot"
           git add _delta_arb_db_check.txt
-          git commit -m "ci: delta_arb_trades DB check result" || echo "no changes"
+          git commit -m "ci: anon read test result" || echo "no changes"
           git push
