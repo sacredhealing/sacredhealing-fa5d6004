@@ -1,19 +1,4 @@
-=== OVERNIGHT RESULTS ===
-Total trades:  252
-Won:           187
-Lost:          65
-Open:          0
-Win rate:      74.2%
-Total PnL:     +$13169728.47 USDC
-Balance:       $13169828.47
-
-Last trade:    2026-06-08T03:09 UTC (4 min ago)
-Avg win:       +$200806.66
-Avg loss:      $-375094.10
-
-Last 5 trades:
-  ETH  UP    +0.3211%     won    pnl=1677788.4841
-  BTC  UP    +0.3586%     lost   pnl=-1811939.1998
-  SOL  UP    +0.3166%     won    pnl=1320241.8944
-  SOL  DOWN  -0.1505%     lost   pnl=-2134706.8781
-  ETH  DOWN  -0.1235%     won    pnl=1625952.701
+Deleting all trades...
+Done
+Remaining: 0
+Clean slate - balance resets to $100
