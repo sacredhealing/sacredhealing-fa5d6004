@@ -5,17 +5,28 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - name: Query delta_arb_trades
+      - uses: actions/checkout@v3
+      - name: Query DB and write result
+        env:
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
-          echo "=== ROW COUNT ==="
-          curl -s "https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/delta_arb_trades?select=id,asset,status,pnl_usdc,created_at&order=created_at.desc&limit=5" \
-            -H "apikey: ${{ secrets.SUPABASE_SERVICE_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_KEY }}" \
+          RESULT=$(curl -s "https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/delta_arb_trades?select=id,asset,status,pnl_usdc,created_at&order=created_at.desc&limit=10" \
+            -H "apikey: $SUPABASE_SERVICE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
+            -w "\nHTTP_CODE:%{http_code}")
+          echo "$RESULT" > _delta_arb_db_check.txt
+          
+          COUNT=$(curl -s "https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/delta_arb_trades?select=count" \
+            -H "apikey: $SUPABASE_SERVICE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
             -H "Prefer: count=exact" \
-            -w "\nHTTP: %{http_code}"
-          echo ""
-          echo "=== TABLE EXISTS CHECK ==="
-          curl -s "https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/delta_arb_trades?limit=1" \
-            -H "apikey: ${{ secrets.SUPABASE_SERVICE_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_KEY }}" \
-            -w "\nHTTP: %{http_code}"
+            -I | grep -i "content-range")
+          echo "COUNT: $COUNT" >> _delta_arb_db_check.txt
+          cat _delta_arb_db_check.txt
+      - name: Commit result
+        run: |
+          git config user.email "bot@sqi.com"
+          git config user.name "SQI Bot"
+          git add _delta_arb_db_check.txt
+          git commit -m "ci: delta_arb_trades DB check result" || echo "no changes"
+          git push
