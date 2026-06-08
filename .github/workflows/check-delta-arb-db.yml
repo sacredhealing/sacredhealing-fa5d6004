@@ -1,0 +1,21 @@
+name: check-delta-arb-db
+on:
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query delta_arb_trades
+        run: |
+          echo "=== ROW COUNT ==="
+          curl -s "https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/delta_arb_trades?select=id,asset,status,pnl_usdc,created_at&order=created_at.desc&limit=5" \
+            -H "apikey: ${{ secrets.SUPABASE_SERVICE_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_KEY }}" \
+            -H "Prefer: count=exact" \
+            -w "\nHTTP: %{http_code}"
+          echo ""
+          echo "=== TABLE EXISTS CHECK ==="
+          curl -s "https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/delta_arb_trades?limit=1" \
+            -H "apikey: ${{ secrets.SUPABASE_SERVICE_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_KEY }}" \
+            -w "\nHTTP: %{http_code}"
