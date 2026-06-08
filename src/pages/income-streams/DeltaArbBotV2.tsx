@@ -78,10 +78,7 @@ export default function DeltaArbBotV2() {
           </button>
         </div>
 
-        {/* Debug status — always visible */}
-        <div style={{ marginBottom:12, padding:'8px 14px', background:'rgba(255,255,255,0.03)', borderRadius:16, fontSize:10, color:'rgba(255,255,255,0.4)', fontFamily:'monospace' }}>
-          {status}
-        </div>
+
 
         {/* Balance */}
         <div style={{ ...g, borderColor:`${pc}33`, background:`${pc}06` }}>
