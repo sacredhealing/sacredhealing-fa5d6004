@@ -1,135 +1,187 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, RefreshCw, Zap, TrendingUp, Activity } from 'lucide-react';
 
-const GOLD = '#D4AF37';
-const BG   = '#050505';
+const GOLD  = '#D4AF37';
+const BG    = '#050505';
+const CYAN  = '#22D3EE';
 const GREEN = '#22c55e';
 const RED   = '#ef4444';
-const CYAN  = '#22D3EE';
 
-// v2
+const PROXY = 'https://fjdzhrdpioxdeyyfogep.supabase.co/functions/v1/delta-arb-proxy';
+const ANON  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ3MzE5NDUsImV4cCI6MjA2MDMwNzk0NX0.HrUmzMBqNShHi0G9VDtHrZSHCIMoaYGC6lJUCrDWk40';
+const HDR   = { apikey: ANON, Authorization: `Bearer ${ANON}` };
+
 export default function DeltaArbBot() {
   const navigate = useNavigate();
-  const [trades, setTrades] = useState<any[]>([]);
-  const [tick, setTick]     = useState(0);
-  const [time,   setTime]   = useState('');
-  const [debug,  setDebug]  = useState('loading...');
+  const [health, setHealth]   = useState<any>(null);
+  const [trades, setTrades]   = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [ts, setTs]           = useState('');
+  const [spin, setSpin]       = useState(false);
 
-  useEffect(() => {
-    const SUPA_KEY = (import.meta as any).env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
-    const SUPA_BASE = 'https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/delta_arb_trades';
-    const SUPA_PARAMS = 'select=id,asset,signal,delta,size_usd,entry_price,status,pnl_usdc,created_at';
-    const SUPA_SORT = 'order=created_at.desc&limit=200';
-    fetch(SUPA_BASE + '?' + SUPA_PARAMS + '&' + SUPA_SORT, {
-      headers: {
-        apikey: SUPA_KEY,
-        Authorization: 'Bearer ' + SUPA_KEY,
-      }
-    })
-      .then(r => r.json())
-      .then(data => {
-        if (!cancelled) {
-          const arr = Array.isArray(data) ? data : [];
-          setTrades(arr);
-          setTime(new Date().toLocaleTimeString());
-          setDebug(arr.length + ' trades');
-        }
-      })
-      .catch(e => { if (!cancelled) setDebug('ERR'); });
-    return () => { cancelled = true; };
-  }, [tick]);
+  const load = async () => {
+    setSpin(true);
+    try {
+      const [hRes, tRes] = await Promise.all([
+        fetch(`${PROXY}?endpoint=health`, { headers: HDR }),
+        fetch(`${PROXY}?endpoint=trades&limit=50`, { headers: HDR }),
+      ]);
+      const h = await hRes.json();
+      const t = await tRes.json();
+      setHealth(h);
+      setTrades(Array.isArray(t) ? t : []);
+      setTs(new Date().toLocaleTimeString());
+    } catch (e) {
+      console.error('DeltaArb fetch error:', e);
+    } finally {
+      setLoading(false);
+      setSpin(false);
+    }
+  };
 
-  useEffect(() => {
-    const iv = setInterval(() => setTick(t => t + 1), 10000);
-    return () => clearInterval(iv);
-  }, []);
+  useEffect(() => { load(); }, []);
+  useEffect(() => { const iv = setInterval(load, 15000); return () => clearInterval(iv); }, []);
 
-  const won  = trades.filter(t => t.status === 'won');
-  const lost = trades.filter(t => t.status === 'lost');
-  const pnl  = trades.reduce((s, t) => s + (parseFloat(t.pnl_usdc) || 0), 0);
-  const bal  = Math.round((100 + pnl) * 100) / 100;
-  const wr   = won.length + lost.length > 0 ? ((won.length / (won.length + lost.length)) * 100).toFixed(1) : '—';
-  const pc   = pnl >= 0 ? GREEN : RED;
+  const bal      = health?.balance ?? 100;
+  const pnl      = bal - 100;
+  const pnlColor = pnl >= 0 ? GREEN : RED;
+  const winRate  = health?.winRate ?? '—';
+  const trades_n = health?.tradeCount ?? 0;
+  const wins_n   = Math.round((parseFloat(winRate) / 100) * trades_n) || 0;
+  const mode     = health?.mode ?? 'PAPER';
 
-  const box = { borderRadius: 32, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' };
+  const g = (extra = '') =>
+    `rounded-[32px] border border-white/[0.06] bg-white/[0.02] ${extra}`;
 
   return (
-    <div style={{ background: BG, minHeight: '100vh', color: '#fff', fontFamily: "'Plus Jakarta Sans',sans-serif", paddingBottom: 120 }}>
-      <div style={{ maxWidth: 600, margin: '0 auto', padding: '16px 16px 0' }}>
+    <div style={{ background: BG, minHeight: '100vh', fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#fff', paddingBottom: 100 }}>
 
-        {/* Header */}
+      {/* ── Header ── */}
+      <div style={{ padding: '16px 16px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-          <button onClick={() => navigate('/income-streams')} style={{ ...box, padding: 10, cursor: 'pointer', flexShrink: 0 }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          <button onClick={() => navigate('/income-streams')}
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 10, cursor: 'pointer' }}>
+            <ArrowLeft size={18} color={GOLD} />
           </button>
           <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 900, fontSize: 20, color: GOLD, letterSpacing: '-0.03em' }}>⚡ DELTA-ARB BOT</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>Binance → Polymarket · refreshes every 10s · {time}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Zap size={18} color={CYAN} />
+              <span style={{ fontWeight: 900, fontSize: 18, color: GOLD, letterSpacing: '-0.03em' }}>DELTA-ARB BOT</span>
+              <span style={{
+                fontSize: 9, fontWeight: 800, letterSpacing: '0.15em',
+                color: mode === 'LIVE' ? GREEN : CYAN,
+                border: `1px solid ${mode === 'LIVE' ? GREEN : CYAN}55`,
+                borderRadius: 99, padding: '2px 8px'
+              }}>{mode}</span>
+            </div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>
+              Polymarket · Binance WebSocket · {ts || '…'}
+            </div>
           </div>
-          <button onClick={() => setTick(t => t + 1)} style={{ ...box, padding: 10, cursor: 'pointer' }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+          <button onClick={load}
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 10, cursor: 'pointer' }}>
+            <RefreshCw size={15} color={GOLD} style={{ animation: spin ? 'spin 0.8s linear infinite' : 'none' }} />
           </button>
         </div>
 
-        {/* Balance Banner */}
-        <div style={{ ...box, padding: 20, marginBottom: 12, borderColor: `${pc}44`, background: `${pc}08` }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: GREEN, boxShadow: `0 0 8px ${GREEN}` }} />
-            <span style={{ fontSize: 11, fontWeight: 800, color: GREEN }}>PAPER MODE — LIVE</span>
-            <span style={{ marginLeft: 'auto', fontSize: 10, padding: '2px 10px', borderRadius: 99, border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.4)' }}>PAPER</span>
+        {/* ── Balance Banner ── */}
+        <div className={g()} style={{ padding: 20, marginBottom: 12, borderColor: `${pnlColor}33`, background: `${pnlColor}06` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+            <div style={{ width: 7, height: 7, borderRadius: '50%', background: GREEN, boxShadow: `0 0 6px ${GREEN}` }} />
+            <span style={{ fontSize: 10, fontWeight: 800, color: GREEN, letterSpacing: '0.15em' }}>LIVE · PAPER MODE</span>
           </div>
-          <div style={{ display: 'flex', gap: 24, alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: 16 }}>
+
+          <div style={{ display: 'flex', gap: 20, alignItems: 'flex-end', marginBottom: 16 }}>
             <div>
-              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>BALANCE</div>
-              <div style={{ fontSize: 42, fontWeight: 900, color: GOLD, letterSpacing: '-0.03em', textShadow: `0 0 30px ${GOLD}44` }}>${bal.toFixed(2)}</div>
+              <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>BALANCE</div>
+              <div style={{ fontSize: 38, fontWeight: 900, color: GOLD, letterSpacing: '-0.04em', textShadow: `0 0 24px ${GOLD}44` }}>
+                {loading ? '…' : `$${bal.toFixed(2)}`}
+              </div>
             </div>
-            <div style={{ marginBottom: 6 }}>
-              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>TOTAL P&L</div>
-              <div style={{ fontSize: 26, fontWeight: 900, color: pc }}>{pnl >= 0 ? '+' : ''}{pnl.toFixed(2)} USDC</div>
+            <div style={{ paddingBottom: 4 }}>
+              <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>TOTAL P&L</div>
+              <div style={{ fontSize: 22, fontWeight: 900, color: pnlColor }}>
+                {loading ? '…' : `${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}`}
+              </div>
             </div>
           </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>
-            {[['TRADES', won.length + lost.length, GOLD], ['WIN RATE', wr === '—' ? '—' : `${wr}%`, GOLD], ['WINS', won.length, GREEN], ['LOSSES', lost.length, lost.length > 0 ? RED : 'rgba(255,255,255,0.2)']].map(([l, v, c]) => (
-              <div key={String(l)} style={{ background: 'rgba(0,0,0,0.3)', borderRadius: 16, padding: '10px 6px', textAlign: 'center' }}>
-                <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.15em', color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>{l}</div>
-                <div style={{ fontSize: 16, fontWeight: 900, color: String(c) }}>{String(v)}</div>
+            {[
+              { l: 'TRADES',   v: loading ? '…' : trades_n,                          c: GOLD  },
+              { l: 'WIN RATE', v: loading ? '…' : winRate,                            c: GOLD  },
+              { l: 'WINS',     v: loading ? '…' : wins_n,                             c: GREEN },
+              { l: 'LOSSES',   v: loading ? '…' : (trades_n - wins_n),               c: trades_n - wins_n > 0 ? RED : 'rgba(255,255,255,0.3)' },
+            ].map(({ l, v, c }) => (
+              <div key={l} style={{ background: 'rgba(0,0,0,0.35)', borderRadius: 14, padding: '10px 6px', textAlign: 'center' }}>
+                <div style={{ fontSize: 7, fontWeight: 700, letterSpacing: '0.15em', color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>{l}</div>
+                <div style={{ fontSize: 15, fontWeight: 900, color: c }}>{v}</div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Trade Feed */}
-        <div style={{ ...box, overflow: 'hidden' }}>
-          <div style={{ padding: '16px 20px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.4)' }}>⚡ LIVE TRADE FEED</span>
-            <span style={{ fontSize: 9, fontWeight: 700, padding: '3px 10px', borderRadius: 99, border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.4)' }}>{trades.length} TOTAL</span>
+        {/* ── Trade Feed ── */}
+        <div className={g()} style={{ overflow: 'hidden' }}>
+          <div style={{ padding: '14px 20px 10px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Activity size={14} color={GOLD} />
+            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.4)' }}>TRADE FEED</span>
+            <span style={{ marginLeft: 'auto', fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>{trades.length} trades</span>
           </div>
-          {trades.length === 0 ? (
-            <div style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,0.15)', fontSize: 13 }}>
-              Waiting for first signal… Bot fires when delta ≥ 0.12%
+
+          {loading ? (
+            <div style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>
+              Scanning Akasha…
             </div>
-          ) : trades.slice(0, 25).map((t, i) => {
-            const win  = t.status === 'won';
-            const loss = t.status === 'lost';
-            const open = !win && !loss;
-            const p    = parseFloat(t.pnl_usdc) || 0;
-            const sc   = win ? GREEN : loss ? RED : CYAN;
+          ) : trades.length === 0 ? (
+            <div style={{ padding: 40, textAlign: 'center' }}>
+              <Zap size={28} color="rgba(255,255,255,0.06)" style={{ marginBottom: 10 }} />
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>
+                {health?.error ? `DB error: ${health.error}` : 'Waiting for first signal…'}
+              </div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.1)', marginTop: 6 }}>
+                Bot fires when BTC/ETH/SOL moves 0.12%+
+              </div>
+            </div>
+          ) : trades.map((t, i) => {
+            const won  = t.status === 'won';
+            const lost = t.status === 'lost';
+            const open = !won && !lost;
+            const sc   = won ? GREEN : lost ? RED : CYAN;
+            const pnlV = parseFloat(t.pnl_usdc) || 0;
             return (
-              <div key={t.id ?? i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 20px', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+              <div key={t.id ?? i} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '11px 20px', borderBottom: '1px solid rgba(255,255,255,0.03)'
+              }}>
                 <div>
-                  <div style={{ fontWeight: 800, fontSize: 13, color: 'rgba(255,255,255,0.8)' }}>
-                    {t.asset ?? '?'} <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', fontWeight: 400 }}>{t.interval ?? '15m'}</span>
+                  <div style={{ fontWeight: 800, fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>
+                    {t.asset ?? '?'}
+                    <span style={{ fontSize: 10, fontWeight: 400, color: 'rgba(255,255,255,0.3)', marginLeft: 6 }}>
+                      {t.interval ?? '15m'}
+                    </span>
                   </div>
-                  <div style={{ fontSize: 10, color: t.signal === 'UP' ? GREEN : RED, fontWeight: 700, marginTop: 2 }}>
-                    {t.signal === 'UP' ? '▲' : '▼'} {t.signal} <span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 400 }}>{t.delta}</span>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: t.signal === 'UP' ? GREEN : RED, marginTop: 2 }}>
+                    {t.signal === 'UP' ? '▲' : '▼'} {t.signal}
+                    <span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 400, marginLeft: 6 }}>{t.delta}</span>
+                  </div>
+                  <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.18)', marginTop: 2 }}>
+                    {t.created_at ? new Date(t.created_at).toLocaleTimeString() : ''}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', padding: '3px 8px', borderRadius: 99, background: `${sc}18`, color: sc, border: `1px solid ${sc}44` }}>
-                    {win ? 'WIN' : loss ? 'LOSS' : 'OPEN'}
+                  <span style={{
+                    fontSize: 9, fontWeight: 800, letterSpacing: '0.1em',
+                    padding: '3px 8px', borderRadius: 99,
+                    background: `${sc}15`, color: sc, border: `1px solid ${sc}40`
+                  }}>
+                    {won ? 'WIN' : lost ? 'LOSS' : 'OPEN'}
                   </span>
-                  <div style={{ fontSize: 13, fontWeight: 900, color: open ? 'rgba(255,255,255,0.3)' : p >= 0 ? GREEN : RED, marginTop: 4 }}>
-                    {open ? `$${parseFloat(t.size_usd||0).toFixed(2)} bet` : `${p >= 0 ? '+' : ''}${p.toFixed(2)}`}
+                  <div style={{ fontSize: 13, fontWeight: 900, color: pnlV >= 0 ? GREEN : RED, marginTop: 4 }}>
+                    {open
+                      ? `$${parseFloat(t.size_usd || 0).toFixed(2)}`
+                      : `${pnlV >= 0 ? '+' : ''}$${pnlV.toFixed(2)}`}
                   </div>
                 </div>
               </div>
@@ -137,18 +189,26 @@ export default function DeltaArbBot() {
           })}
         </div>
 
-        {/* Strategy Info */}
-        <div style={{ ...box, padding: 20, marginTop: 12 }}>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.35)', marginBottom: 12 }}>ACTIVE STRATEGY</div>
-          <div style={{ fontSize: 18, fontWeight: 900, color: GOLD, marginBottom: 4 }}>AGGRESSIVE</div>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', lineHeight: 1.6 }}>
-            15% position per trade · Compounding · 0.12% delta threshold<br />
-            Entry at $0.50–0.58 · Kill switch at −25% session loss
+        {/* ── How It Works ── */}
+        <div className={g()} style={{ padding: 20, marginTop: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+            <TrendingUp size={14} color={GOLD} />
+            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.35)' }}>HOW IT WORKS</span>
           </div>
+          {[
+            ['⚡', 'Binance WebSocket streams BTC/ETH/SOL at sub-50ms'],
+            ['📐', 'Bot detects 0.12%+ price movement → direction locked'],
+            ['🎯', 'Polymarket oracle still shows ~50/50 for 10–30 seconds'],
+            ['💰', 'Bot buys winning token at $0.50–$0.58 entry'],
+            ['🏆', 'Token resolves at $1.00 → 74–92% win rate'],
+          ].map(([icon, text]) => (
+            <div key={String(text)} style={{ display: 'flex', gap: 12, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+              <span style={{ fontSize: 16 }}>{icon}</span>
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>{text}</span>
+            </div>
+          ))}
         </div>
-
       </div>
     </div>
-  </div>
   );
 }
