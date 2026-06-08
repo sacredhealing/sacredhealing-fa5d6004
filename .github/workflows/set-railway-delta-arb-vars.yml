@@ -10,36 +10,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_ADMIN_PAT }}
-      - name: PnL audit
+      - name: Overnight audit
         env:
           SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
           SK2: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          KEY="${SK:-$SK2}"
-          BASE="https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1"
-          LOG="_railway_vars_result.txt"
-
-          curl -s "${BASE}/delta_arb_trades?select=status,pnl_usdc,size_usd,entry_price&limit=500" \
-            -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}" | python3 -c "
-import sys, json
-data = json.load(sys.stdin)
-won  = [t for t in data if t.get('status')=='won']
-lost = [t for t in data if t.get('status')=='lost']
-win_pnl  = sum(float(t.get('pnl_usdc') or 0) for t in won)
-loss_pnl = sum(float(t.get('pnl_usdc') or 0) for t in lost)
-total    = win_pnl + loss_pnl
-print(f'Won={len(won)} loss={len(lost)} win_pnl=+{win_pnl:.2f} loss_pnl={loss_pnl:.2f} NET={total:.2f}')
-print(f'Balance=\${100+total:.2f}')
-print()
-print('Sample wins:')
-for t in won[:5]:
-    print(f'  sz={t.get("size_usd")} ep={t.get("entry_price")} pnl={t.get("pnl_usdc")}')
-print('Sample losses:')
-for t in lost[:5]:
-    print(f'  sz={t.get("size_usd")} ep={t.get("entry_price")} pnl={t.get("pnl_usdc")}')
-" | tee $LOG
-
+          python3 scripts/resolve_trades.py 2>&1 | tee _railway_vars_result.txt
           git config user.email "bot@sqi.app"; git config user.name "SQI-Bot"
-          git add $LOG && git commit -m "ci: pnl audit" || true
+          git add _railway_vars_result.txt && git commit -m "ci: overnight result" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
