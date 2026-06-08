@@ -6,27 +6,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Get stats and fix RLS
-        env:
-          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          ANON: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMDQwMDMsImV4cCI6MjA5MzY4MDAwM30.Mkbodv6uEb1yMKA0UIKMzm-cFWfcgNFXr-LLGtqoNcg
-          PAT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      - name: Test anon read
         run: |
-          BASE="https://fjdzhrdpioxdeyyfogep.supabase.co"
-          # Get trades with service key
-          curl -s "$BASE/rest/v1/delta_arb_trades?select=status,pnl_usdc" -H "apikey: $SK" -H "Authorization: Bearer $SK" > _delta_arb_stats.json
-          wc -l _delta_arb_stats.json
-          head -c 500 _delta_arb_stats.json
-          # Fix RLS via management API
-          curl -s -X POST "https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query" -H "Authorization: Bearer $PAT" -H "Content-Type: application/json" -d "{"query":"ALTER TABLE delta_arb_trades DISABLE ROW LEVEL SECURITY;"}" > _rls_result.txt
-          cat _rls_result.txt
-          # Test anon read
-          curl -s "$BASE/rest/v1/delta_arb_trades?select=id,status&limit=3" -H "apikey: $ANON" -H "Authorization: Bearer $ANON" -w "HTTP:%{http_code}" > _anon_test.txt
+          ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMDQwMDMsImV4cCI6MjA5MzY4MDAwM30.Mkbodv6uEb1yMKA0UIKMzm-cFWfcgNFXr-LLGtqoNcg"
+          curl -s "https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/delta_arb_trades?select=id,status&limit=3" -H "apikey: $ANON" -H "Authorization: Bearer $ANON" -w "\nHTTP:%{http_code}" > _anon_test.txt
           cat _anon_test.txt
       - name: Commit
         run: |
           git config user.email "bot@sqi.com"
           git config user.name "SQI Bot"
-          git add _delta_arb_stats.json _rls_result.txt _anon_test.txt
-          git commit -m "ci: stats + RLS fix" || echo "no changes"
+          git add _anon_test.txt
+          git commit -m "ci: anon test" || echo "no changes"
           git push
