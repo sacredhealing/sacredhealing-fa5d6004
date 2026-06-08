@@ -27,15 +27,16 @@ export default function DeltaArbBot() {
         'Content-Type': 'application/json',
       }
     })
-      .then(r => { console.log('Trades fetch status:', r.status); return r.json(); })
+      .then(r => { setDebug('HTTP:' + r.status); return r.json(); })
       .then(data => {
-        console.log('Trades data:', data?.length, data?.[0]);
         if (!cancelled) {
-          setTrades(Array.isArray(data) ? data : []);
+          const arr = Array.isArray(data) ? data : [];
+          setTrades(arr);
           setTime(new Date().toLocaleTimeString());
+          setDebug(arr.length + ' trades');
         }
       })
-      .catch(e => { console.error('Trades fetch error:', e); });
+      .catch(e => { if(!cancelled) setDebug('ERR:' + e.message?.slice(0,20)); });
     return () => { cancelled = true; };
   }, [tick]);
 
