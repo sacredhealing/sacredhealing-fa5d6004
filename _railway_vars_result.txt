@@ -1,4 +1,7 @@
-Deleting all trades...
-Done
-Remaining: 0
-Clean slate - balance resets to $100
+Trades:    41 total (34 won / 7 lost / 0 open)
+Win rate:  82.9%
+Total PnL: +$1624.22 USDC
+Balance:   $1724.22
+Avg win:   +$63.13
+Avg loss:  $-74.61
+Last trade: 1 min ago
