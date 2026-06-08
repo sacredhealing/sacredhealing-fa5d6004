@@ -1,4 +1,4 @@
-import urllib.request, json, os
+import urllib.request, json, os, datetime
 
 KEY  = os.environ.get('SK') or os.environ.get('SK2','')
 BASE = 'https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1'
@@ -6,48 +6,45 @@ BASE = 'https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1'
 def get(path):
     req = urllib.request.Request(f'{BASE}{path}',
         headers={'apikey': KEY, 'Authorization': f'Bearer {KEY}'})
-    with urllib.request.urlopen(req, timeout=10) as r:
+    with urllib.request.urlopen(req, timeout=15) as r:
         return json.loads(r.read())
 
-def patch(path, data):
-    req = urllib.request.Request(f'{BASE}{path}',
-        data=json.dumps(data).encode(),
-        headers={'apikey': KEY, 'Authorization': f'Bearer {KEY}',
-                 'Content-Type': 'application/json', 'Prefer': 'return=minimal'},
-        method='PATCH')
-    with urllib.request.urlopen(req, timeout=10): pass
+trades = get('/delta_arb_trades?select=id,asset,signal,delta,status,pnl_usdc,size_usd,entry_price,created_at&order=created_at.desc&limit=500')
 
-trades = get('/delta_arb_trades?select=id,status,pnl_usdc,size_usd,entry_price&limit=200&order=created_at.asc')
-print(f'Total trades: {len(trades)}')
+won   = [t for t in trades if t.get('status')=='won']
+lost  = [t for t in trades if t.get('status')=='lost']
+open_ = [t for t in trades if t.get('status') not in ['won','lost']]
+pnl   = sum(float(t.get('pnl_usdc') or 0) for t in trades)
+bal   = 100 + pnl
+wr    = (len(won)/(len(won)+len(lost))*100) if (len(won)+len(lost)) > 0 else 0
 
-won  = [t for t in trades if t.get('status')=='won']
-lost = [t for t in trades if t.get('status')=='lost']
-null_pnl = [t for t in trades if t.get('pnl_usdc') is None]
+print(f'=== OVERNIGHT RESULTS ===')
+print(f'Total trades:  {len(trades)}')
+print(f'Won:           {len(won)}')
+print(f'Lost:          {len(lost)}')
+print(f'Open:          {len(open_)}')
+print(f'Win rate:      {wr:.1f}%')
+print(f'Total PnL:     +${pnl:.2f} USDC')
+print(f'Balance:       ${bal:.2f}')
+print()
 
-print(f'Won: {len(won)} | Lost: {len(lost)} | Null pnl: {len(null_pnl)}')
+# Last trade time
+if trades:
+    last = trades[0].get('created_at','')[:16]
+    now  = datetime.datetime.now(datetime.timezone.utc)
+    last_dt = datetime.datetime.fromisoformat(trades[0]['created_at'].replace('Z','+00:00'))
+    ago = (now - last_dt).total_seconds() / 60
+    print(f'Last trade:    {last} UTC ({ago:.0f} min ago)')
 
-fixed = 0
-for t in null_pnl:
-    sz = float(t.get('size_usd') or 10)
-    ep = float(t.get('entry_price') or 0.54)
-    if ep <= 0 or ep >= 1: ep = 0.54
-    win = t.get('status') == 'won'
-    # Correct formula: shares * $1 payout - position - fee
-    shares = sz / ep
-    pnl = round((shares * 1.0 - sz - sz*0.008) if win else -(sz + sz*0.008), 4)
-    try:
-        patch(f'/delta_arb_trades?id=eq.{t["id"]}',
-              {'pnl_usdc': pnl, 'net_pnl_usdc': pnl})
-        fixed += 1
-    except Exception as e:
-        print(f'Error: {e}')
+# Avg win/loss
+if won:
+    avg_win = sum(float(t.get('pnl_usdc') or 0) for t in won) / len(won)
+    print(f'Avg win:       +${avg_win:.2f}')
+if lost:
+    avg_loss = sum(float(t.get('pnl_usdc') or 0) for t in lost) / len(lost)
+    print(f'Avg loss:      ${avg_loss:.2f}')
 
-print(f'Fixed pnl on {fixed} trades')
-
-# Final summary
-all_t = get('/delta_arb_trades?select=status,pnl_usdc&limit=500')
-won2  = [t for t in all_t if t.get('status')=='won']
-lost2 = [t for t in all_t if t.get('status')=='lost']
-total_pnl = sum(float(t.get('pnl_usdc') or 0) for t in all_t)
-print(f'Won={len(won2)} Lost={len(lost2)} Total PnL={total_pnl:+.2f}')
-print(f'BALANCE: ${100+total_pnl:.2f}')
+print()
+print('Last 5 trades:')
+for t in trades[:5]:
+    print(f'  {t.get("asset","?"):4} {t.get("signal","?"):5} {t.get("delta","?"):12} {t.get("status","?"):6} pnl={t.get("pnl_usdc","NULL")}')
