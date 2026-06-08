@@ -1,0 +1,4 @@
+[{"id":"9b0bc9d5-8461-4794-906b-aa8bef2f7f69","status":"won"}, 
+ {"id":"6d6cd9d4-8ec9-4853-8fe1-75f655e17cf4","status":"lost"}, 
+ {"id":"ebe56d53-3cf0-44f0-bc46-057496443146","status":"won"}]
+HTTP:200
