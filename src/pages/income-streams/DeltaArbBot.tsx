@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, RefreshCw, Zap, TrendingUp, Activity } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 
 const GOLD  = '#D4AF37';
 const BG    = '#050505';
@@ -9,24 +8,42 @@ const CYAN  = '#22D3EE';
 const GREEN = '#22c55e';
 const RED   = '#ef4444';
 
+// Correct anon key from the app's own supabase client.ts
+const SB_URL = 'https://fjdzhrdpioxdeyyfogep.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMDQwMDMsImV4cCI6MjA5MzY4MDAwM30.Mkbodv6uEb1yMKA0UIKMzm-cFWfcgNFXr-LLGtqoNcg';
+
 export default function DeltaArbBot() {
   const navigate = useNavigate();
   const [trades, setTrades]   = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [spin, setSpin]       = useState(false);
   const [ts, setTs]           = useState('');
+  const [err, setErr]         = useState('');
 
   const load = async () => {
     setSpin(true);
+    setErr('');
     try {
-      const { data, error } = await (supabase as any)
-        .from('delta_arb_trades')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(100);
-      if (!error && data) setTrades(data);
+      const res = await fetch(
+        `${SB_URL}/rest/v1/delta_arb_trades?select=*&order=created_at.desc&limit=100`,
+        {
+          headers: {
+            apikey: SB_KEY,
+            Authorization: `Bearer ${SB_KEY}`,
+            'Content-Type': 'application/json',
+          }
+        }
+      );
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setTrades(data);
+      } else {
+        setErr(`${res.status}: ${JSON.stringify(data).slice(0, 120)}`);
+      }
       setTs(new Date().toLocaleTimeString());
-    } catch (e) { console.error(e); }
+    } catch (e: any) {
+      setErr(String(e));
+    }
     setLoading(false);
     setSpin(false);
   };
@@ -34,13 +51,13 @@ export default function DeltaArbBot() {
   useEffect(() => { load(); }, []);
   useEffect(() => { const iv = setInterval(load, 15000); return () => clearInterval(iv); }, []);
 
-  const won  = trades.filter(t => t.status === 'won');
-  const lost = trades.filter(t => t.status === 'lost');
+  const won      = trades.filter(t => t.status === 'won');
+  const lost     = trades.filter(t => t.status === 'lost');
   const totalPnl = trades.reduce((s, t) => s + (parseFloat(t.pnl_usdc) || 0), 0);
-  const bal  = Math.round((100 + totalPnl) * 100) / 100;
-  const pnl  = bal - 100;
-  const pc   = pnl >= 0 ? GREEN : RED;
-  const wr   = won.length + lost.length > 0
+  const bal      = Math.round((100 + totalPnl) * 100) / 100;
+  const pnl      = bal - 100;
+  const pc       = pnl >= 0 ? GREEN : RED;
+  const wr       = won.length + lost.length > 0
     ? ((won.length / (won.length + lost.length)) * 100).toFixed(1) + '%'
     : '—';
 
@@ -62,12 +79,21 @@ export default function DeltaArbBot() {
               <span style={{ fontWeight: 900, fontSize: 18, color: GOLD, letterSpacing: '-0.03em' }}>DELTA-ARB BOT</span>
               <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.15em', color: CYAN, border: `1px solid ${CYAN}55`, borderRadius: 99, padding: '2px 8px' }}>PAPER</span>
             </div>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>Polymarket · Binance WebSocket · {ts || '…'}</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>
+              Polymarket · Binance WebSocket · {ts || '...'}
+            </div>
           </div>
           <button onClick={load} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 10, cursor: 'pointer' }}>
             <RefreshCw size={15} color={GOLD} style={{ animation: spin ? 'spin 0.8s linear infinite' : 'none' }} />
           </button>
         </div>
+
+        {/* Error banner — shows exact error so we can debug */}
+        {err && (
+          <div style={{ marginBottom: 12, padding: '10px 16px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 16, fontSize: 10, color: RED, wordBreak: 'break-all' }}>
+            {err}
+          </div>
+        )}
 
         {/* Balance Banner */}
         <div className={g} style={{ padding: 20, marginBottom: 12, borderColor: `${pc}33`, background: `${pc}06` }}>
@@ -75,28 +101,26 @@ export default function DeltaArbBot() {
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: GREEN, boxShadow: `0 0 6px ${GREEN}` }} />
             <span style={{ fontSize: 10, fontWeight: 800, color: GREEN, letterSpacing: '0.15em' }}>LIVE · PAPER MODE</span>
           </div>
-
           <div style={{ display: 'flex', gap: 20, alignItems: 'flex-end', marginBottom: 16 }}>
             <div>
               <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>BALANCE</div>
               <div style={{ fontSize: 38, fontWeight: 900, color: GOLD, letterSpacing: '-0.04em', textShadow: `0 0 24px ${GOLD}44` }}>
-                {loading ? '…' : `$${bal.toFixed(2)}`}
+                {loading ? '...' : `$${bal.toFixed(2)}`}
               </div>
             </div>
             <div style={{ paddingBottom: 4 }}>
               <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>TOTAL P&L</div>
               <div style={{ fontSize: 22, fontWeight: 900, color: pc }}>
-                {loading ? '…' : `${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}`}
+                {loading ? '...' : `${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}`}
               </div>
             </div>
           </div>
-
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>
             {[
-              { l: 'TRADES',   v: loading ? '…' : won.length + lost.length, c: GOLD  },
-              { l: 'WIN RATE', v: loading ? '…' : wr,                        c: GOLD  },
-              { l: 'WINS',     v: loading ? '…' : won.length,                c: GREEN },
-              { l: 'LOSSES',   v: loading ? '…' : lost.length,               c: lost.length > 0 ? RED : 'rgba(255,255,255,0.3)' },
+              { l: 'TRADES',   v: loading ? '...' : won.length + lost.length, c: GOLD  },
+              { l: 'WIN RATE', v: loading ? '...' : wr,                        c: GOLD  },
+              { l: 'WINS',     v: loading ? '...' : won.length,                c: GREEN },
+              { l: 'LOSSES',   v: loading ? '...' : lost.length,               c: lost.length > 0 ? RED : 'rgba(255,255,255,0.3)' },
             ].map(({ l, v, c }) => (
               <div key={l} style={{ background: 'rgba(0,0,0,0.35)', borderRadius: 14, padding: '10px 6px', textAlign: 'center' }}>
                 <div style={{ fontSize: 7, fontWeight: 700, letterSpacing: '0.15em', color: 'rgba(255,255,255,0.25)', marginBottom: 4 }}>{l}</div>
@@ -113,13 +137,11 @@ export default function DeltaArbBot() {
             <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.4)' }}>TRADE FEED</span>
             <span style={{ marginLeft: 'auto', fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>{trades.length} trades</span>
           </div>
-
           {loading ? (
-            <div style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>Scanning Akasha…</div>
+            <div style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>Loading...</div>
           ) : trades.length === 0 ? (
             <div style={{ padding: 40, textAlign: 'center' }}>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>Waiting for first signal…</div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.1)', marginTop: 6 }}>Bot fires when BTC/ETH/SOL moves 0.12%+</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>No trades yet — bot is running</div>
             </div>
           ) : trades.map((t, i) => {
             const isWon  = t.status === 'won';
@@ -133,7 +155,8 @@ export default function DeltaArbBot() {
                     {t.asset ?? '?'}<span style={{ fontSize: 10, fontWeight: 400, color: 'rgba(255,255,255,0.3)', marginLeft: 6 }}>{t.interval ?? '15m'}</span>
                   </div>
                   <div style={{ fontSize: 10, fontWeight: 700, color: t.signal === 'UP' ? GREEN : RED, marginTop: 2 }}>
-                    {t.signal === 'UP' ? '▲' : '▼'} {t.signal}<span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 400, marginLeft: 6 }}>{t.delta}</span>
+                    {t.signal === 'UP' ? '▲' : '▼'} {t.signal}
+                    <span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 400, marginLeft: 6 }}>{t.delta}</span>
                   </div>
                   <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.18)', marginTop: 2 }}>
                     {t.created_at ? new Date(t.created_at).toLocaleTimeString() : ''}
