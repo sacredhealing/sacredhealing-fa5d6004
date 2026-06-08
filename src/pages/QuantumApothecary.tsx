@@ -2911,11 +2911,73 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
 
       const queuedRaw = pickTenActivationsForVoiceResult(result);
       const queued = queuedRaw.filter(isVegetarianActivation);
+
+      // ── Auto-select 3 Wellness boosts matched to this scan ────────────
+      const wellnessMatched = ALL_ACTIVATIONS
+        .filter((a: any) => a.type === 'Wellness')
+        .map((a: any) => {
+          const blob = `${a.name} ${a.benefit || ''} ${a.vibrationalSignature || ''}`.toLowerCase();
+          let score = 0;
+          const dosha = String(result.dominantDosha || '').toLowerCase().split(/[\s(/]/)[0];
+          if (dosha && blob.includes(dosha)) score += 40;
+          if (result.priorityAreas?.length) {
+            for (const area of result.priorityAreas) {
+              const w = (area.name || '').toLowerCase();
+              if (w && blob.includes(w)) { score += 30; break; }
+            }
+          }
+          if (result.organField && blob.includes(result.organField.toLowerCase())) score += 25;
+          if (result.emotionalField && blob.includes(result.emotionalField.toLowerCase())) score += 20;
+          const spoken = (result as any).spokenKeywords as string[] | undefined;
+          if (spoken?.length) {
+            for (const w of spoken) {
+              if (w.length > 3 && blob.includes(w)) { score += 35; break; }
+            }
+          }
+          return { act: a, score };
+        })
+        .filter((s: any) => s.score > 0)
+        .sort((a: any, b: any) => b.score - a.score)
+        .slice(0, 3)
+        .map((s: any) => s.act);
+
+      // ── Auto-select 3 Siddha Transmissions matched to this scan ───────
+      const siddhaMatched = ALL_ACTIVATIONS
+        .filter((a: any) => a.type === 'Siddha Transmission')
+        .map((a: any) => {
+          const blob = `${a.name} ${a.benefit || ''} ${a.vibrationalSignature || ''}`.toLowerCase();
+          let score = 0;
+          const dosha = String(result.dominantDosha || '').toLowerCase().split(/[\s(/]/)[0];
+          if (dosha && blob.includes(dosha)) score += 40;
+          if (result.priorityAreas?.length) {
+            for (const area of result.priorityAreas) {
+              const w = (area.name || '').toLowerCase();
+              if (w && blob.includes(w)) { score += 30; break; }
+            }
+          }
+          if (result.organField && blob.includes(result.organField.toLowerCase())) score += 25;
+          if (result.emotionalField && blob.includes(result.emotionalField.toLowerCase())) score += 20;
+          const spoken = (result as any).spokenKeywords as string[] | undefined;
+          if (spoken?.length) {
+            for (const w of spoken) {
+              if (w.length > 3 && blob.includes(w)) { score += 35; break; }
+            }
+          }
+          return { act: a, score };
+        })
+        .filter((s: any) => s.score > 0)
+        .sort((a: any, b: any) => b.score - a.score)
+        .slice(0, 3)
+        .map((s: any) => s.act);
+
+      // ── Apply all matched transmissions to active field ────────────────
       setActiveTransmissions((prev) => {
-        // Clear old voice_scan entries — each new scan replaces the previous ones
-      const next = prev.filter((t) => (t as any).source !== 'voice_scan');
-        for (const act of queued) {
-          const enriched = enrichTransmission(act, 'voice_scan');
+        // Clear old voice_scan entries — each new scan replaces the previous
+        const next = prev.filter((t) => (t as any).source !== 'voice_scan');
+        // Add matched Wellness (3) + Siddha Transmissions (3) + top bioenergetic
+        const allToActivate = [...wellnessMatched, ...siddhaMatched, ...queued];
+        for (const act of allToActivate) {
+          const enriched = enrichTransmission(act as any, 'voice_scan');
           if (
             next.some(
               (x) =>
