@@ -48,7 +48,6 @@ export default function DeltaArbBot() {
   const wr   = won.length + lost.length > 0 ? ((won.length / (won.length + lost.length)) * 100).toFixed(1) : '—';
   const pc   = pnl >= 0 ? GREEN : RED;
 
-  const g = (s: string) => ({ borderRadius: 32, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', [s]: s });
   const box = { borderRadius: 32, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' };
 
   return (
@@ -147,5 +146,6 @@ export default function DeltaArbBot() {
 
       </div>
     </div>
+  </div>
   );
 }
