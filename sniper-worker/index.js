@@ -543,48 +543,91 @@ async function checkDevWallets() {
 // ══════════════════════════════════════════════════════════════════
 // PARSE LAUNCH EVENT FROM WEBSOCKET
 // ══════════════════════════════════════════════════════════════════
+// ── Fetch full transaction to get account keys ──────────────────
+async function fetchTxAccounts(signature) {
+  try {
+    const result = await rpcCall('getTransaction', [
+      signature,
+      { encoding: 'jsonParsed', maxSupportedTransactionVersion: 0 }
+    ]);
+    if (!result) return [];
+    const keys = result?.transaction?.message?.accountKeys || [];
+    return keys.map(k => typeof k === 'string' ? k : k?.pubkey || '');
+  } catch { return []; }
+}
+
 function parseLaunchEvent(value, launchpad) {
   try {
-    const logs     = value?.logs || [];
-    const accounts = value?.accountKeys || [];
-    if (!logs.length || !accounts.length) return null;
+    const logs = value?.logs || [];
+    const sig  = value?.signature || '';
 
-    const isCreate = logs.some(l =>
+    if (!logs.length) return null;
+
+    // Pump.fun creates fire these log patterns
+    const isPumpCreate = logs.some(l =>
       l.includes('Instruction: Create') ||
-      l.includes('InitializePool') ||
-      l.includes('CreateToken')
+      l.includes('Program log: Instruction: Create')
     );
-    if (!isCreate) return null;
+    const isMoonshotCreate = logs.some(l =>
+      l.includes('InitializeMint') || l.includes('CreateToken')
+    );
+    const isOtherCreate = logs.some(l =>
+      l.includes('CreatePool') || l.includes('InitializePool')
+    );
 
-    const mint         = String(accounts[1] || '');
-    const creator      = String(accounts[0] || '');
-    const bondingCurve = String(accounts[2] || '');
+    if (!isPumpCreate && !isMoonshotCreate && !isOtherCreate) return null;
 
-    if (!mint || mint.length < 32) return null;
-    if (processedMints.has(mint)) return null;
-    processedMints.add(mint);
+    // Parse metadata from program logs — pump.fun emits JSON
+    let name = 'UNKNOWN', symbol = '???', uri = '';
+    let mintFromLog = '', creatorFromLog = '';
+
+    for (const line of logs) {
+      if (line.includes('Program log:')) {
+        const raw = line.replace(/^.*Program log:\s*/, '').trim();
+        // Try JSON decode
+        if (raw.startsWith('{')) {
+          try {
+            const decoded = JSON.parse(raw);
+            name    = decoded.name    || decoded.tokenName  || name;
+            symbol  = decoded.symbol  || decoded.tokenSymbol || symbol;
+            uri     = decoded.uri     || decoded.metadataUri || uri;
+            if (decoded.mint)   mintFromLog    = decoded.mint;
+            if (decoded.user)   creatorFromLog = decoded.user;
+          } catch {}
+        }
+        // Pump.fun v2 emits: "name: symbol: uri:"
+        if (raw.includes('name:')) {
+          const nm = raw.match(/name:\s*([^,
+]+)/)?.[1]?.trim();
+          const sy = raw.match(/symbol:\s*([^,
+]+)/)?.[1]?.trim();
+          const ur = raw.match(/uri:\s*([^,
+]+)/)?.[1]?.trim();
+          if (nm && nm !== 'UNKNOWN') name   = nm;
+          if (sy && sy !== '???')    symbol = sy;
+          if (ur)                    uri    = ur;
+        }
+      }
+    }
+
+    // Use mint from log if found, else we'll fetch via getTransaction
+    const mint = mintFromLog || sig; // placeholder — resolved in subscribe loop
+    if (!mint) return null;
+
+    const key = mintFromLog || sig;
+    if (processedMints.has(key)) return null;
+    processedMints.add(key);
     if (processedMints.size > 10000) {
-      // Trim cache after 10K entries
       const arr = [...processedMints];
       arr.slice(0, 5000).forEach(m => processedMints.delete(m));
     }
 
-    // Parse decoded metadata from logs
-    let name = 'UNKNOWN', symbol = '???', uri = '';
-    for (const line of logs) {
-      if (line.includes('Program log:')) {
-        try {
-          const decoded = JSON.parse(line.replace('Program log: ', ''));
-          name   = decoded.name   || name;
-          symbol = decoded.symbol || symbol;
-          uri    = decoded.uri    || uri;
-        } catch {}
-      }
-    }
-
     return {
-      mint, creator, bondingCurve, launchpad,
-      name, symbol, uri,
+      mint: mintFromLog || '',  // filled by fetchTxAccounts if empty
+      creator: creatorFromLog || '',
+      bondingCurve: '',
+      launchpad, name, symbol, uri,
+      signature: sig,           // keep signature for tx fetch
       solInCurve: 0, bondingPct: 0,
       uniqueBuyers: 0, devHoldPct: 0,
       clusterPct: 0, buyVelocity: 0,
@@ -592,6 +635,7 @@ function parseLaunchEvent(value, launchpad) {
       twitterMentions: 0, twitterVelocity: 0,
       devTxCount: 0, devIsFresh: true, devRugCount: 0,
       isHoneypot: false, aiScore: 0, rugScore: 0,
+      _needsAccountFetch: !mintFromLog,  // flag: need to fetch tx accounts
     };
   } catch (e) {
     log('WARN', `Parse error [${launchpad}]: ${e.message}`);
@@ -742,3 +786,4 @@ start().catch(e => {
   console.error('Fatal startup error:', e);
   process.exit(1);
 });
+
