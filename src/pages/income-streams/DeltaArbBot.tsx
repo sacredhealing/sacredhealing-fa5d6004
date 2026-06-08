@@ -7,6 +7,7 @@ const GREEN = '#22c55e';
 const RED   = '#ef4444';
 const CYAN  = '#22D3EE';
 
+// v2
 export default function DeltaArbBot() {
   const navigate = useNavigate();
   const [trades, setTrades] = useState<any[]>([]);
