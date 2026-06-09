@@ -1,37 +1,29 @@
-import urllib.request, json, os, datetime
+import urllib.request, json, os
 
-KEY  = os.environ.get('SK') or os.environ.get('SK2','')
-BASE = 'https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1'
+RAILWAY_TOKEN = os.environ.get("RAILWAY_TOKEN","")
+BASE = "https://backboard.railway.app/graphql/v2"
 
-def get(path):
-    req = urllib.request.Request(f'{BASE}{path}',
-        headers={'apikey': KEY, 'Authorization': f'Bearer {KEY}'})
-    with urllib.request.urlopen(req, timeout=15) as r:
+def gql(query):
+    req = urllib.request.Request(BASE,
+        data=json.dumps({"query": query}).encode(),
+        headers={"Authorization": f"Bearer {RAILWAY_TOKEN}", "Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=10) as r:
         return json.loads(r.read())
 
-trades = get('/delta_arb_trades?select=status,pnl_usdc,size_usd,mode,created_at&order=created_at.desc&limit=10')
+# Check env vars
+q = '{"query": "{ variables(serviceId: \\"d06cd2df-e657-434f-b8fa-db34c3b3c473\\", environmentId: \\"5745e241-6e8e-4c3e-a5fd-91efff9a72c2\\", projectId: \\"4851410d-a6d6-4739-be6b-33e6deb5b6f2\\") }"  }'
+req = urllib.request.Request(BASE,
+    data=q.encode(),
+    headers={"Authorization": f"Bearer {RAILWAY_TOKEN}", "Content-Type": "application/json"})
+with urllib.request.urlopen(req, timeout=10) as r:
+    data = json.loads(r.read())
 
-live_trades  = [t for t in trades if t.get('mode') == 'LIVE']
-paper_trades = [t for t in trades if t.get('mode') == 'PAPER']
-
-print(f'Last 10 trades:')
-for t in trades:
-    mode = t.get('mode','?')
-    sz   = float(t.get('size_usd') or 0)
-    p    = float(t.get('pnl_usdc') or 0)
-    dt   = t.get('created_at','')[:16]
-    print(f'  {dt} | {mode:5} | {t.get("status","?"):5} | size=${sz:.2f} | pnl={p:+.2f}')
-
-print()
-print(f'LIVE trades found: {len(live_trades)}')
-print(f'PAPER trades found: {len(paper_trades)}')
-
-if live_trades:
-    print()
-    print('✅ BOT IS LIVE — REAL MONEY TRADING')
-    live_pnl = sum(float(t.get('pnl_usdc') or 0) for t in live_trades)
-    print(f'Live PnL so far: {live_pnl:+.2f} USDC')
-else:
-    print()
-    print('⏳ No LIVE trades yet — bot may still be restarting')
-    print('Check again in 2 minutes')
+variables = data.get("data", {}).get("variables", {})
+print("Railway env vars:")
+for k, v in variables.items():
+    if k in ["MODE", "STARTING_BALANCE", "STRATEGY"]:
+        print(f"  {k} = {v}")
+    elif "PRIVATE" in k or "KEY" in k:
+        print(f"  {k} = {v[:10]}..." if v else f"  {k} = EMPTY")
+    elif "ADDRESS" in k or "FUNDER" in k:
+        print(f"  {k} = {v}")
