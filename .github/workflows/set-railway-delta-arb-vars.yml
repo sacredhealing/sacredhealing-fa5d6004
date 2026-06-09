@@ -8,7 +8,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_ADMIN_PAT }}
-      - name: Run audit
+      - name: Fix null pnl
         env:
           SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
           SK2: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -16,5 +16,5 @@ jobs:
         run: |
           python3 scripts/resolve_trades.py 2>&1 | tee _railway_vars_result.txt
           git config user.email "bot@sqi.app"; git config user.name "SQI-Bot"
-          git add _railway_vars_result.txt && git commit -m "ci: audit" || true
+          git add _railway_vars_result.txt && git commit -m "ci: fix null pnl result" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
