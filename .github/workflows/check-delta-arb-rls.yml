@@ -1,0 +1,33 @@
+name: Check Delta Arb RLS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check RLS + fetch trades
+        env:
+          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          BASE="https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1"
+          ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMDQwMDMsImV4cCI6MjA5MzY4MDAwM30.Mkbodv6uEb1yMKA0UIKMzm-cFWfcgNFXr-LLGtqoNcg"
+          
+          echo "=== 1. Count trades with SERVICE KEY ==="
+          curl -s "$BASE/delta_arb_trades?select=id,mode,status&order=created_at.desc&limit=5" \
+            -H "apikey: $SK" -H "Authorization: Bearer $SK" | python3 -m json.tool
+          
+          echo ""
+          echo "=== 2. Count trades with ANON KEY (what UI uses) ==="
+          STATUS=$(curl -s -o /tmp/anon.json -w "%{http_code}" \
+            "$BASE/delta_arb_trades?select=id,mode,status&limit=5" \
+            -H "apikey: $ANON" -H "Authorization: Bearer $ANON")
+          echo "HTTP Status: $STATUS"
+          cat /tmp/anon.json | python3 -m json.tool 2>/dev/null || cat /tmp/anon.json
+          
+          echo ""
+          echo "=== 3. If RLS blocking, disable it ==="
+          if [ "$STATUS" != "200" ]; then
+            echo "RLS is blocking — attempting fix via Management API"
+          fi
