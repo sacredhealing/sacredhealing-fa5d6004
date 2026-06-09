@@ -8,13 +8,24 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_ADMIN_PAT }}
-      - name: Fix null pnl
+      - name: Set STARTING_BALANCE=10 in Railway
         env:
-          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          SK2: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          python3 scripts/resolve_trades.py 2>&1 | tee _railway_vars_result.txt
+          LOG="_railway_vars_result.txt"
+
+          # Set via Railway GraphQL API
+          curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"query":"mutation { variableCollectionUpsert(input: { projectId: \"4851410d-a6d6-4739-be6b-33e6deb5b6f2\", environmentId: \"5745e241-6e8e-4c3e-a5fd-91efff9a72c2\", serviceId: \"d06cd2df-e657-434f-b8fa-db34c3b3c473\", variables: { STARTING_BALANCE: \"10\" } }) }"}' \
+            | tee $LOG
+
+          echo "" >> $LOG
+          echo "STARTING_BALANCE=10 set in Railway" >> $LOG
+          echo "Bot will restart and simulate €10 live trading" >> $LOG
+
           git config user.email "bot@sqi.app"; git config user.name "SQI-Bot"
-          git add _railway_vars_result.txt && git commit -m "ci: fix null pnl result" || true
+          git add $LOG && git commit -m "ci: set STARTING_BALANCE=10" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
