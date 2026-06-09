@@ -22,3 +22,15 @@
 {"message":"Unauthorized"}
 === GRANT trades to all roles ===
 {"message":"Unauthorized"}
+=== Current grants ===
+{"message":"Unauthorized"}
+=== Role properties ===
+{"message":"Unauthorized"}
+=== Table owners ===
+{"message":"Unauthorized"}
+=== RLS status ===
+{"message":"Unauthorized"}
+=== GRANT to all roles ===
+{"message":"Unauthorized"}
+=== GRANT trades to all roles ===
+{"message":"Unauthorized"}
