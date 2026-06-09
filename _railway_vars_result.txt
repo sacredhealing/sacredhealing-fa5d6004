@@ -1,18 +1,2 @@
-Last 10 trades:
-  2026-06-09T09:14 | PAPER | won   | size=$1.84 | pnl=+1.79
-  2026-06-09T09:14 | PAPER | won   | size=$1.84 | pnl=+1.59
-  2026-06-09T08:59 | PAPER | lost  | size=$2.18 | pnl=-2.22
-  2026-06-09T08:59 | PAPER | won   | size=$1.93 | pnl=+1.63
-  2026-06-09T08:54 | PAPER | won   | size=$1.71 | pnl=+1.50
-  2026-06-09T08:54 | PAPER | won   | size=$1.50 | pnl=+1.38
-  2026-06-09T08:49 | PAPER | won   | size=$5.00 | pnl=+4.00
-  2026-06-09T08:49 | PAPER | won   | size=$5.00 | pnl=+4.90
-  2026-06-09T08:44 | PAPER | won   | size=$5.00 | pnl=+4.41
-  2026-06-09T08:44 | PAPER | won   | size=$5.00 | pnl=+4.01
-
-LIVE trades found: 0
-PAPER trades found: 10
-
-⏳ No LIVE trades yet — bot may still be restarting
-Check again in 2 minutes
-{"data":{"variableCollectionUpsert":true}}
+Redeploy result: {"data":{"serviceInstanceRedeploy":true}}
+Bot restarting with new MODE=LIVE env vars
