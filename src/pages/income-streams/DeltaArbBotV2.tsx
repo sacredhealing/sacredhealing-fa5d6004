@@ -21,7 +21,7 @@ export default function DeltaArbBotV2() {
   const load = async () => {
     setSpin(true);
     try {
-      const r = await fetch(`${URL}?select=*&order=created_at.desc&limit=200`, {
+      const r = await fetch(`${URL}?select=*&order=created_at.desc&limit=10000`, {
         headers: { apikey: KEY, Authorization: `Bearer ${KEY}` }
       });
       const txt = await r.text();
@@ -45,7 +45,7 @@ export default function DeltaArbBotV2() {
   const won  = trades.filter(t => t.status === 'won');
   const lost = trades.filter(t => t.status === 'lost');
   const pnl  = trades.reduce((s, t) => s + (parseFloat(t.pnl_usdc) || 0), 0);
-  const bal  = 100 + pnl;
+  const bal  = 10 + pnl;
   const pc   = pnl >= 0 ? GREEN : RED;
   const wr   = (won.length + lost.length) > 0
     ? ((won.length / (won.length + lost.length)) * 100).toFixed(1) + '%'
