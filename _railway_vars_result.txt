@@ -1,4 +1,3 @@
+Trades in DB: 0
+Done — bot will show $10 on next refresh
 {"data":{"variableCollectionUpsert":true}}
-
-STARTING_BALANCE=10 set in Railway
-Bot will restart and simulate €10 live trading
