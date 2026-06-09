@@ -1,13 +1,17 @@
-=== 48H REAL PERFORMANCE ===
-Total trades:  500
-Won:           405
-Lost:          95
-Win rate:      81.0%
-Avg win:       +$124.77
-Avg loss:       $-145.56
-Trades/day:    762
-Hours tracked: 15.7h
+=== REAL TOTAL (ALL TRADES IN DB) ===
+Total trades:  795
+Won:           638
+Lost:          157
+Win rate:      80.3%
+Real balance:  $57201.39
+Total PnL:     +$57101.39
 
-Simulated $100 growth over 16h: $59032920104207528.00
-Total growth: 59032920104207424.0%
-Daily growth rate: 89955137518319776.0%/day
+Last 5 trades:
+  2026-06-09T05:39 | won   | size=$16.31 | pnl=+15.56
+  2026-06-09T05:39 | won   | size=$18.64 | pnl=+17.45
+  2026-06-09T05:44 | won   | size=$21.26 | pnl=+20.70
+  2026-06-09T05:49 | won   | size=$24.36 | pnl=+20.58
+  2026-06-09T05:54 | lost  | size=$27.45 | pnl=-27.67
+
+Page shows: last 200 of 795 total trades
+Page balance matches DB: True
