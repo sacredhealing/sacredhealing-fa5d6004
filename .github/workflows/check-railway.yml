@@ -1,10 +1,9 @@
 name: CLAWBOT SSL Refresh
-
 on:
+  workflow_dispatch:
   push:
     paths:
       - 'trigger_ssl_fix.txt'
-
 jobs:
   refresh:
     runs-on: ubuntu-latest
@@ -12,48 +11,50 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_ADMIN_PAT }}
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Railway CLI domain fix
+      - name: Set MODE=PAPER on delta-arb-bot
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          LOG="_clawbot_ssl_result.txt"
-          exec 2>&1
-          
-          echo "=== CLAWBOT Domain SSL Fix ===" | tee $LOG
-          
-          # Install Railway CLI
-          npm install -g @railway/cli 2>&1 | tail -3 | tee -a $LOG
-          echo "CLI: $(railway --version 2>&1)" | tee -a $LOG
-          
-          # Test auth
-          echo "Auth test:" | tee -a $LOG
-          railway whoami 2>&1 | tee -a $LOG
-          
-          # List services  
-          echo "Services:" | tee -a $LOG
-          railway list 2>&1 | tee -a $LOG || true
-          
-          # Try to use railway domain command
-          echo "Domain operation:" | tee -a $LOG
-          
-          # Try the Railway REST API v1 (different from GraphQL)
-          # Railway has a REST API at railway.app/api
-          echo "Trying Railway REST API..." | tee -a $LOG
-          curl -s -X GET "https://railway.app/api/v2/services/b6311e53-fe5a-4c4a-b724-e0fef686236f/domains"             -H "Authorization: Bearer $RAILWAY_TOKEN"             -H "Content-Type: application/json" 2>&1 | tee -a $LOG || true
-          
-          # Health check direct URL
-          echo "Direct health check:" | tee -a $LOG  
-          curl -s --max-time 15 "https://siddha-soma-apothecary-production.up.railway.app/health" 2>&1 | tee -a $LOG || echo "Direct URL failed" | tee -a $LOG
-          
+          LOG="_mode_paper_result.txt"
+          SVC="d06cd2df-e657-434f-b8fa-db34c3b3c473"
+          ENV="5745e241-6e8e-4c3e-a5fd-91efff9a72c2"
+          PRJ="4851410d-a6d6-4739-be6b-33e6deb5b6f2"
+
+          echo "=== Setting MODE=PAPER on sqi-delta-arb-bot ===" | tee $LOG
+
+          RESULT=$(curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\":\"mutation { variableUpsert(input: { projectId: \\\"$PRJ\\\", environmentId: \\\"$ENV\\\", serviceId: \\\"$SVC\\\", name: \\\"MODE\\\", value: \\\"PAPER\\\" }) }\"}")
+          echo "upsert result: $RESULT" | tee -a $LOG
+
+          echo "" | tee -a $LOG
+          echo "=== Verifying MODE ===" | tee -a $LOG
+          curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\":\"{ variables(serviceId: \\\"$SVC\\\", environmentId: \\\"$ENV\\\", projectId: \\\"$PRJ\\\") }\"}" \
+            | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+v=d.get('data',{}).get('variables',{})
+for k,val in v.items():
+    if k in ['MODE','STRATEGY','STARTING_BALANCE']:
+        print(f'  {k} = {val}')
+" 2>&1 | tee -a $LOG
+
+          echo "" | tee -a $LOG
+          echo "=== Redeploying ===" | tee -a $LOG
+          curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\":\"mutation { serviceInstanceRedeploy(environmentId: \\\"$ENV\\\", serviceId: \\\"$SVC\\\") }\"}" | tee -a $LOG
+
+          echo "" | tee -a $LOG
+          echo "DONE" | tee -a $LOG
           cat $LOG
-          git config user.email "bot@sqi.app"
-          git config user.name "SQI-Bot"
-          git add $LOG
-          git commit -m "CLAWBOT SSL result" || true
+
+          git config user.email "bot@sqi.app" && git config user.name "SQI-Bot"
+          git add $LOG && git commit -m "ci: set MODE=PAPER result" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
