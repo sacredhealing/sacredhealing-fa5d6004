@@ -26,7 +26,7 @@ export default function DeltaArbBot() {
     setErr('');
     try {
       const res = await fetch(
-        `${SB_URL}/rest/v1/delta_arb_trades?select=*&order=created_at.desc&limit=100`,
+        `${SB_URL}/rest/v1/delta_arb_trades?select=*&order=created_at.desc&limit=10000`,
         {
           headers: {
             apikey: SB_KEY,
