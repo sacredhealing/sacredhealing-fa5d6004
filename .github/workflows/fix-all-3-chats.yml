@@ -1,106 +1,66 @@
 name: Fix All 3 Chats - Set Gemini Key + Deploy
 
 on:
-  workflow_dispatch:
   push:
     paths:
-      - .github/workflows/fix-all-3-chats.yml
+      - '.github/workflows/fix-all-3-chats.yml'
+  workflow_dispatch:
 
 jobs:
-  fix:
+  deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
-
+    timeout-minutes: 30
     steps:
-      - name: Checkout with PAT
-        run: |
-          git clone https://x-access-token:${{ secrets.GH_ADMIN_PAT }}@github.com/sacredhealing/sacredhealing-fa5d6004.git repo
-          echo "Checkout: $(ls repo/supabase/functions | wc -l) functions"
-
-      - uses: supabase/setup-cli@v1
+      - uses: actions/checkout@v4
         with:
-          version: latest
+          token: ${{ secrets.GH_ADMIN_PAT }}
 
-      - name: Set all secrets on Supabase
+      - name: Check MODE in Railway and bot status
         env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: |
-          STATUS=$(curl -s -o /tmp/resp.json -w "%{http_code}" \
-            -X POST "https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/secrets" \
-            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d '[
-              {"name":"GEMINI_API_KEY","value":"${{ secrets.GEMINI_API_KEY }}"},
-              {"name":"SUPABASE_URL","value":"https://fjdzhrdpioxdeyyfogep.supabase.co"},
-              {"name":"SUPABASE_SERVICE_ROLE_KEY","value":"${{ secrets.NEW_SERVICE_ROLE }}"},
-              {"name":"SUPABASE_ANON_KEY","value":"${{ secrets.VITE_SUPABASE_ANON_KEY }}"}
-            ]')
-          echo "Secret status: $STATUS"
-          cat /tmp/resp.json
-
-      - name: Deploy quantum-apothecary-chat
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        working-directory: repo
-        run: |
-          echo "=== Deploying quantum-apothecary-chat ==="
-          supabase functions deploy quantum-apothecary-chat \
-            --project-ref fjdzhrdpioxdeyyfogep \
-            --no-verify-jwt 2>&1
-          echo "Exit: $?"
-
-      - name: Deploy bhrigu-oracle
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        working-directory: repo
-        run: |
-          echo "=== Deploying bhrigu-oracle ==="
-          supabase functions deploy bhrigu-oracle \
-            --project-ref fjdzhrdpioxdeyyfogep \
-            --no-verify-jwt 2>&1
-          echo "Exit: $?"
-        continue-on-error: true
-
-      - name: Deploy ayurveda-chat
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        working-directory: repo
-        run: |
-          echo "=== Deploying ayurveda-chat ==="
-          supabase functions deploy ayurveda-chat \
-            --project-ref fjdzhrdpioxdeyyfogep \
-            --no-verify-jwt 2>&1
-          echo "Exit: $?"
-        continue-on-error: true
-
-      - name: Disable RLS on delta_arb_trades
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-        run: |
-          curl -s -X POST "https://api.supabase.com/v1/projects/fjdzhrdpioxdeyyfogep/database/query" \
-            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d '{"query":"ALTER TABLE delta_arb_trades DISABLE ROW LEVEL SECURITY; GRANT SELECT ON delta_arb_trades TO anon, authenticated, public"}' || true
-          echo "RLS disabled"
-      - name: Embed service key in DeltaArbBot page
-        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
           SK2: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
+          LOG="_resolve_result.txt"
           KEY="${SK:-$SK2}"
-          ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ3MzE5NDUsImV4cCI6MjA2MDMwNzk0NX0.HrUmzMBqNShHi0G9VDtHrZSHCIMoaYGC6lJUCrDWk40"
-          PAGE="src/pages/income-streams/DeltaArbBot.tsx"
-          if grep -q "$ANON" "$PAGE" 2>/dev/null; then
-            sed -i "s|${ANON}|${KEY}|g" "$PAGE"
-            git add "$PAGE"
-            git commit -m "fix: service key in page" || true
-            git push || true
-            echo "Service key embedded in page"
-          else
-            echo "Anon key not found - already using service key or page changed"
-          fi
+
+          echo "=== Railway Variables ===" | tee $LOG
+          curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"query":"{ variables(serviceId: \"d06cd2df-e657-434f-b8fa-db34c3b3c473\", environmentId: \"5745e241-6e8e-4c3e-a5fd-91efff9a72c2\", projectId: \"4851410d-a6d6-4739-be6b-33e6deb5b6f2\") }"}' \
+            | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+v=d.get('data',{}).get('variables',{})
+for k,val in v.items():
+    if k in ['MODE','STARTING_BALANCE','STRATEGY']:
+        print(f'  {k} = {val}')
+    elif any(x in k for x in ['PRIVATE','KEY','ADDRESS','FUNDER']):
+        print(f'  {k} = {(val[:8]+"...") if val else "EMPTY"}')
+" | tee -a $LOG
+
+          echo "" >> $LOG
+          echo "=== Latest Supabase Trades ===" | tee -a $LOG
+          curl -s "https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/delta_arb_trades?select=mode,status,pnl_usdc,size_usd,created_at&order=created_at.desc&limit=5" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" | python3 -c "
+import sys,json,datetime
+trades=json.load(sys.stdin)
+now=datetime.datetime.now(datetime.timezone.utc)
+for t in trades:
+    dt=datetime.datetime.fromisoformat(t['created_at'].replace('Z','+00:00'))
+    ago=round((now-dt).total_seconds()/60,1)
+    print(f'  {ago}min ago | {t.get("mode","?"):5} | {t.get("status","?"):5} | \${float(t.get("size_usd") or 0):.2f}')
+live=[t for t in trades if t.get('mode')=='LIVE']
+print(f'LIVE trades: {len(live)}')
+if live: print('BOT IS LIVE!')
+else: print('Still PAPER or no trades yet')
+" | tee -a $LOG
+
+          git config user.email "bot@sqi.app"; git config user.name "SQI-Bot"
+          git add $LOG && git commit -m "ci: status check" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
 
       - name: Done
         run: echo "All done at $(date)"
-
-# check
