@@ -1,33 +1,94 @@
 name: Check Delta Arb RLS
-
 on:
   workflow_dispatch:
-
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - name: Check RLS + fetch trades
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Full diagnostic
         env:
+          RT: ${{ secrets.RAILWAY_TOKEN }}
           SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
-          BASE="https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1"
+          LOG="_diag_result.txt"
           ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMDQwMDMsImV4cCI6MjA5MzY4MDAwM30.Mkbodv6uEb1yMKA0UIKMzm-cFWfcgNFXr-LLGtqoNcg"
-          
-          echo "=== 1. Count trades with SERVICE KEY ==="
-          curl -s "$BASE/delta_arb_trades?select=id,mode,status&order=created_at.desc&limit=5" \
-            -H "apikey: $SK" -H "Authorization: Bearer $SK" | python3 -m json.tool
-          
-          echo ""
-          echo "=== 2. Count trades with ANON KEY (what UI uses) ==="
-          STATUS=$(curl -s -o /tmp/anon.json -w "%{http_code}" \
-            "$BASE/delta_arb_trades?select=id,mode,status&limit=5" \
-            -H "apikey: $ANON" -H "Authorization: Bearer $ANON")
-          echo "HTTP Status: $STATUS"
-          cat /tmp/anon.json | python3 -m json.tool 2>/dev/null || cat /tmp/anon.json
-          
-          echo ""
-          echo "=== 3. If RLS blocking, disable it ==="
-          if [ "$STATUS" != "200" ]; then
-            echo "RLS is blocking — attempting fix via Management API"
-          fi
+          SB="https://fjdzhrdpioxdeyyfogep.supabase.co"
+          TS=$(python3 -c "import time; print(int(int(time.time())/300)*300)")
+          echo "=== DIAGNOSTIC $(date -u) ===" | tee $LOG
+
+          echo "" && echo "=== 1. RAILWAY VARIABLES ===" | tee -a $LOG
+          curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer $RT" -H "Content-Type: application/json" \
+            -d '{"query":"{ variables(serviceId:\"d06cd2df-e657-434f-b8fa-db34c3b3c473\",environmentId:\"5745e241-6e8e-4c3e-a5fd-91efff9a72c2\",projectId:\"4851410d-a6d6-4739-be6b-33e6deb5b6f2\") }"}' \
+            | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+v=d.get('data',{}).get('variables',{})
+if not v: print('  ERROR:',json.dumps(d)[:200]); exit()
+for k,val in v.items():
+    safe=val[:12]+'...' if any(x in k for x in ['KEY','SECRET','PRIVATE','TOKEN']) and val else val
+    print(f'  {k} = {safe}')
+" 2>&1 | tee -a $LOG
+
+          echo "" && echo "=== 2. POLYMARKET SLUG TEST ===" | tee -a $LOG
+          for SLUG in "btc-updown-5m-${TS}" "eth-updown-5m-${TS}" "sol-updown-5m-${TS}"; do
+            RESULT=$(curl -sf -w "\nHTTP:%{http_code}" "https://gamma-api.polymarket.com/markets?slug=${SLUG}" -H "User-Agent: curl/8.0" 2>/dev/null)
+            HTTP=$(echo "$RESULT" | grep "HTTP:" | cut -d: -f2)
+            BODY=$(echo "$RESULT" | grep -v "HTTP:")
+            COUNT=$(echo "$BODY" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d) if isinstance(d,list) else 0)" 2>/dev/null || echo "0")
+            echo "  $SLUG -> HTTP $HTTP -> $COUNT markets found" | tee -a $LOG
+            if [ "$COUNT" -gt "0" ]; then
+              echo "$BODY" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+m=d[0] if d else {}
+tokens=m.get('clobTokenIds',[])
+print(f'    question={m.get("question","?")[:60]}')
+print(f'    active={m.get("active")} tokens={len(tokens)} first_token={str(tokens[0])[:20] if tokens else "NONE"}')
+" 2>/dev/null | tee -a $LOG
+            fi
+          done
+
+          echo "" && echo "=== 3. ACTIVE CRYPTO MARKETS ===" | tee -a $LOG
+          curl -sf "https://gamma-api.polymarket.com/markets?active=true&closed=false&tag_slug=crypto&limit=30" \
+            -H "User-Agent: curl/8.0" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+btc=[m for m in d if 'btc' in m.get('slug','').lower() or 'bitcoin' in (m.get('question') or '').lower()]
+eth=[m for m in d if 'eth' in m.get('slug','').lower()]
+sol=[m for m in d if 'sol' in m.get('slug','').lower()]
+print(f'  Total crypto markets: {len(d)} | BTC: {len(btc)} | ETH: {len(eth)} | SOL: {len(sol)}')
+updown=[m for m in d if 'updown' in m.get('slug','').lower() or 'higher' in (m.get('question') or '').lower()]
+print(f'  Updown/higher markets: {len(updown)}')
+for m in updown[:5]:
+    print(f'    {m.get("slug","?")[:55]} | active={m.get("active")} | tokens={len(m.get("clobTokenIds",[]))}')
+if not updown:
+    print('  NO UPDOWN MARKETS FOUND - showing all:')
+    for m in d[:5]:
+        print(f'    {m.get("slug","?")[:55]}')
+" 2>&1 | tee -a $LOG
+
+          echo "" && echo "=== 4. SUPABASE TRADES ===" | tee -a $LOG
+          curl -sf "$SB/rest/v1/delta_arb_trades?select=id,mode,status,asset,created_at&order=created_at.desc&limit=10" \
+            -H "apikey: $SK" -H "Authorization: Bearer $SK" | python3 -c "
+import sys,json
+trades=json.load(sys.stdin)
+print(f'  Total returned: {len(trades)}')
+for t in trades:
+    print(f'  {t.get("created_at","?")[:19]} | {t.get("mode","?")} | {t.get("status","?")} | {t.get("asset","?")}')
+" 2>&1 | tee -a $LOG
+
+          echo "" && echo "=== 5. PROXY TEST ===" | tee -a $LOG
+          SLUG="btc-updown-5m-${TS}"
+          R=$(curl -sf -w " HTTP:%{http_code}" "$SB/functions/v1/polymarket-proxy?endpoint=markets&params=slug=${SLUG}" \
+            -H "Authorization: Bearer $ANON" -H "apikey: $ANON" 2>/dev/null)
+          echo "  proxy: $R" | tee -a $LOG
+
+          cat $LOG
+          git config user.email "bot@sqi.app" && git config user.name "SQI-Bot"
+          git add $LOG
+          git commit -m "ci: diagnostic $(date -u +%H%M)" || true
+          git push "https://x-access-token:${{ secrets.GH_ADMIN_PAT }}@github.com/${GITHUB_REPOSITORY}.git" main || true
