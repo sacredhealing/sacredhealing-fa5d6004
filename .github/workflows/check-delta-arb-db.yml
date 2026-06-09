@@ -5,16 +5,72 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Test anon read
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Full bot diagnostic
+        env:
+          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
           ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMDQwMDMsImV4cCI6MjA5MzY4MDAwM30.Mkbodv6uEb1yMKA0UIKMzm-cFWfcgNFXr-LLGtqoNcg"
-          curl -s "https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/delta_arb_trades?select=id,status&limit=3" -H "apikey: $ANON" -H "Authorization: Bearer $ANON" -w "\nHTTP:%{http_code}" > _anon_test.txt
-          cat _anon_test.txt
-      - name: Commit
-        run: |
-          git config user.email "bot@sqi.com"
-          git config user.name "SQI Bot"
-          git add _anon_test.txt
-          git commit -m "ci: anon test" || echo "no changes"
-          git push
+          SB="https://fjdzhrdpioxdeyyfogep.supabase.co"
+          TS=$(python3 -c "import time; print(int(int(time.time())/300)*300)")
+          TS15=$(python3 -c "import time; print(int(int(time.time())/900)*900)")
+          LOG="_diag_result.txt"
+          
+          echo "=== DIAGNOSTIC $(date -u) ===" | tee $LOG
+
+          echo "" | tee -a $LOG
+          echo "--- 1. BINANCE REST ---" | tee -a $LOG
+          for sym in BTCUSDT ETHUSDT SOLUSDT; do
+            R=$(curl -sf "https://data-stream.binance.com/api/v3/ticker/price?symbol=$sym" -H "User-Agent: curl/8.0" || echo "FAIL")
+            echo "  $sym: $R" | tee -a $LOG
+          done
+
+          echo "" | tee -a $LOG
+          echo "--- 2. POLYMARKET gamma-api direct ---" | tee -a $LOG
+          for SLUG in "btc-updown-5m-${TS}" "eth-updown-5m-${TS}" "sol-updown-5m-${TS}" "btc-updown-15m-${TS15}"; do
+            R=$(curl -sf -w " HTTP:%{http_code}" "https://gamma-api.polymarket.com/markets?slug=$SLUG" -H "User-Agent: curl/8.0" || echo "FAIL")
+            echo "  $SLUG: $R" | tee -a $LOG
+          done
+          
+          echo "" | tee -a $LOG
+          echo "--- 3. ACTIVE CRYPTO MARKETS on Polymarket ---" | tee -a $LOG
+          curl -sf "https://gamma-api.polymarket.com/markets?active=true&closed=false&limit=20&tag_slug=crypto" -H "User-Agent: curl/8.0" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+print(f'Total returned: {len(d)}')
+for m in d[:10]:
+    slug=m.get('slug','?')
+    q=m.get('question','?')[:60]
+    active=m.get('active')
+    tokens=m.get('clobTokenIds',[])
+    print(f'  {slug[:50]:50} | active={active} | tokens={len(tokens)}')
+" 2>&1 | tee -a $LOG
+
+          echo "" | tee -a $LOG
+          echo "--- 4. POLYMARKET proxy edge fn ---" | tee -a $LOG
+          SLUG="btc-updown-5m-${TS}"
+          curl -sf "$SB/functions/v1/polymarket-proxy?endpoint=markets&params=slug=$SLUG"             -H "Authorization: Bearer $ANON" -H "apikey: $ANON"             -w " HTTP:%{http_code}" 2>&1 | tee -a $LOG
+          echo "" | tee -a $LOG
+
+          echo "" | tee -a $LOG
+          echo "--- 5. SUPABASE delta_arb_trades (anon) ---" | tee -a $LOG
+          curl -sf "$SB/rest/v1/delta_arb_trades?select=id,mode,status&limit=5&order=created_at.desc"             -H "apikey: $ANON" -H "Authorization: Bearer $ANON" -w " HTTP:%{http_code}" | tee -a $LOG
+          echo "" | tee -a $LOG
+
+          echo "" | tee -a $LOG
+          echo "--- 6. SUPABASE delta_arb_trades (service key) ---" | tee -a $LOG
+          curl -sf "$SB/rest/v1/delta_arb_trades?select=id,mode,status,created_at&limit=5&order=created_at.desc"             -H "apikey: $SK" -H "Authorization: Bearer $SK"             -H "Prefer: count=exact" -w " HTTP:%{http_code}" | tee -a $LOG
+          echo "" | tee -a $LOG
+
+          echo "" | tee -a $LOG
+          echo "--- 7. DELTA-ARB PROXY health ---" | tee -a $LOG
+          curl -sf "$SB/functions/v1/delta-arb-proxy?endpoint=health"             -H "Authorization: Bearer $ANON" -H "apikey: $ANON" | python3 -m json.tool 2>&1 | tee -a $LOG
+
+          cat $LOG
+          git config user.email "bot@sqi.app"
+          git config user.name "SQI-Bot"
+          git add $LOG
+          git commit -m "ci: full diagnostic result $(date -u +%Y%m%d-%H%M)" || true
+          git push "https://x-access-token:${{ secrets.GH_ADMIN_PAT }}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
