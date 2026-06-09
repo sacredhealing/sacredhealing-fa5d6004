@@ -1,5 +1,14 @@
-Total trades: 30
-Won: 22 | Lost: 8 | Null pnl: 0
-Fixed pnl on 0 trades
-Won=22 Lost=8 Total PnL=+290.54
-BALANCE: $390.54
+Last 10 trades:
+  2026-06-09T09:29 | PAPER | won   | $1.65 | +1.38
+  2026-06-09T09:29 | PAPER | lost  | $1.95 | -1.99
+  2026-06-09T09:29 | PAPER | won   | $1.71 | +1.61
+  2026-06-09T09:29 | PAPER | won   | $1.50 | +1.38
+  2026-06-09T09:24 | PAPER | won   | $1.50 | +1.41
+  2026-06-09T09:14 | PAPER | won   | $1.84 | +1.79
+  2026-06-09T09:14 | PAPER | won   | $1.84 | +1.59
+  2026-06-09T08:59 | PAPER | lost  | $2.18 | -2.22
+  2026-06-09T08:59 | PAPER | won   | $1.93 | +1.63
+  2026-06-09T08:54 | PAPER | won   | $1.71 | +1.50
+
+LIVE trades: 0
+Still PAPER mode
