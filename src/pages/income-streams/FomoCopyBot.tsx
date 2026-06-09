@@ -1072,7 +1072,29 @@ function FomoCopyBotInner() {
         if (lastSigRef.current[tw.address] === newest) continue; // no new txs
         const prev = lastSigRef.current[tw.address];
         lastSigRef.current[tw.address] = newest;
-        if (!prev) continue; // first poll — just record baseline
+        if (!prev) {
+          // First poll — process trades from last 10 min so user sees immediate activity
+          const recentSigs = sigs.filter((s: any) => !s.err &&
+            (Date.now() / 1000 - (s.blockTime || 0)) < 600); // last 10 min
+          if (!recentSigs.length) continue;
+          // Process them below instead of skipping
+          for (const sigInfo of recentSigs.slice(0, 2)) {
+            try {
+              const txData = await rpcCall('getTransaction', [sigInfo.signature, {
+                encoding: 'jsonParsed', maxSupportedTransactionVersion: 0, commitment: 'confirmed',
+              }]);
+              if (!txData.result) continue;
+              const trade = parseTradeFromTx(txData.result, tw.address, sigInfo.signature);
+              if (!trade) continue;
+              rawCountRef.current += 1; setRawMsgCount(rawCountRef.current);
+              txCountRef.current += 1; setTxCount(txCountRef.current);
+              setLastMsgTime(new Date().toLocaleTimeString());
+              handleWhaleTrade(trade, 0, tw.label,
+                { isVIP: tw.isVIP, riskMult: tw.riskMult, priorityMult: tw.priorityMult });
+            } catch {}
+          }
+          continue;
+        }
         // Fetch new transactions since last seen sig
         const newSigs = sigs.filter((s: any) => s.signature !== prev && !s.err);
         for (const sigInfo of newSigs.slice(0, 3)) {
@@ -1129,7 +1151,7 @@ function FomoCopyBotInner() {
     // ── Start HTTP polling immediately as reliable fallback ──
     // Records baseline signatures on first poll, then catches new ones every 15s
     clearInterval(pollingRef.current);
-    pollingRef.current = setInterval(() => pollWallets(), 15_000);
+    pollingRef.current = setInterval(() => pollWallets(), 5_000);
     // Baseline poll immediately
     setTimeout(() => pollWallets(), 2000);
 
@@ -1255,7 +1277,34 @@ function FomoCopyBotInner() {
     setStatus(`✓ Verification done — ${active}/${toCheck.length} wallets have real on-chain activity`);
   };
 
-  useEffect(() => () => { monitorRef.current?.disconnect(); clearInterval(pollingRef.current); }, []);
+  // Auto-restart when mobile screen wakes up or tab becomes visible
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && isMonitoring) {
+        // Reconnect WebSocket if it died in background
+        if (!monitorRef.current || monitorRef.current.killed) return;
+        const ws = (monitorRef.current as any).ws;
+        if (!ws || ws.readyState === WebSocket.CLOSED) {
+          monitorRef.current.killed = false;
+          monitorRef.current.connect();
+          setStatus('📱 Screen woke — reconnecting…');
+        }
+        // Restart polling if it stopped
+        if (!pollingRef.current) {
+          pollingRef.current = setInterval(() => pollWallets(), 5_000);
+        }
+        // Immediate poll on wake
+        pollWallets();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      monitorRef.current?.disconnect();
+      clearInterval(pollingRef.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMonitoring, pollWallets]);
 
   // ─────────────────────────────────────────────────────────
   //  RENDER
@@ -1416,6 +1465,15 @@ function FomoCopyBotInner() {
           }}>
             SIM
           </button>
+          {isMonitoring && (
+            <button onClick={() => { pollWallets(); setStatus('🔍 Scanning all wallets now…'); }} style={{
+              padding: '14px 14px', borderRadius: 14, cursor: 'pointer',
+              background: 'rgba(34,211,238,0.06)', border: `1px solid rgba(34,211,238,0.2)`,
+              color: COLORS.cyan, fontSize: 9, fontWeight: 800, letterSpacing: '0.15em',
+            }}>
+              SCAN
+            </button>
+          )}
         </div>
       </div>
 
