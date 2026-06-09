@@ -55,8 +55,8 @@ export default function DeltaArbBot() {
   const won      = trades.filter(t => t.status === 'won');
   const lost     = trades.filter(t => t.status === 'lost');
   const totalPnl = trades.reduce((s, t) => s + (parseFloat(t.pnl_usdc) || 0), 0);
-  const bal      = Math.round((100 + totalPnl) * 100) / 100;
-  const pnl      = bal - 100;
+  const bal      = Math.round((10 + totalPnl) * 100) / 100;
+  const pnl      = bal - 10;
   const pc       = pnl >= 0 ? GREEN : RED;
   const wr       = won.length + lost.length > 0
     ? ((won.length / (won.length + lost.length)) * 100).toFixed(1) + '%'
