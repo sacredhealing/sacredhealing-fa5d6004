@@ -1,20 +1,18 @@
-=== LIVE SIM RESULTS (€10 start) ===
-Total trades: 17
-Won:          15
-Lost:         2
-Win rate:     88.2%
-Balance:      $43.91
-Total PnL:    +$33.91
-Running for:  0.7 hours
-Avg win:      +$2.47
-Avg loss:     $-1.58
-Trades/hour:  25.5
-Return/hour:  50.84 USDC/hr
+Last 10 trades:
+  2026-06-09T09:14 | PAPER | won   | size=$1.84 | pnl=+1.79
+  2026-06-09T09:14 | PAPER | won   | size=$1.84 | pnl=+1.59
+  2026-06-09T08:59 | PAPER | lost  | size=$2.18 | pnl=-2.22
+  2026-06-09T08:59 | PAPER | won   | size=$1.93 | pnl=+1.63
+  2026-06-09T08:54 | PAPER | won   | size=$1.71 | pnl=+1.50
+  2026-06-09T08:54 | PAPER | won   | size=$1.50 | pnl=+1.38
+  2026-06-09T08:49 | PAPER | won   | size=$5.00 | pnl=+4.00
+  2026-06-09T08:49 | PAPER | won   | size=$5.00 | pnl=+4.90
+  2026-06-09T08:44 | PAPER | won   | size=$5.00 | pnl=+4.41
+  2026-06-09T08:44 | PAPER | won   | size=$5.00 | pnl=+4.01
 
-Last 5 trades:
-  won   size=$3.56 pnl=+3.45
-  won   size=$4.08 pnl=+4.02
-  won   size=$4.68 pnl=+4.27
-  won   size=$5.00 pnl=+4.01
-  won   size=$5.00 pnl=+4.41
+LIVE trades found: 0
+PAPER trades found: 10
+
+⏳ No LIVE trades yet — bot may still be restarting
+Check again in 2 minutes
 {"data":{"variableCollectionUpsert":true}}
