@@ -21,7 +21,7 @@ export default function DeltaArbBotV2() {
   const load = async () => {
     setSpin(true);
     try {
-      const r = await fetch(`${URL}?select=*&order=created_at.desc&limit=10000`, {
+      const r = await fetch(`${URL}?select=*&order=created_at.desc&limit=10000&mode=eq.LIVE`, {
         headers: { apikey: KEY, Authorization: `Bearer ${KEY}` }
       });
       const txt = await r.text();
