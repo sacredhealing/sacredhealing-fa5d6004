@@ -8,13 +8,51 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_ADMIN_PAT }}
-      - name: Check live trades
+      - name: Set MODE=LIVE and redeploy
         env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
           SK2: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
-          python3 scripts/resolve_trades.py 2>&1 | tee _resolve_result.txt
+          LOG="_resolve_result.txt"
+
+          echo "=== Setting MODE=LIVE in Railway ===" | tee $LOG
+
+          # Set MODE=LIVE
+          curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"query":"mutation { variableCollectionUpsert(input: { projectId: \"4851410d-a6d6-4739-be6b-33e6deb5b6f2\", environmentId: \"5745e241-6e8e-4c3e-a5fd-91efff9a72c2\", serviceId: \"d06cd2df-e657-434f-b8fa-db34c3b3c473\", variables: { MODE: \"LIVE\" } }) }"}' \
+            | tee -a $LOG
+
+          echo "" >> $LOG
+          echo "=== Redeploying bot ===" | tee -a $LOG
+
+          # Redeploy
+          curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"query":"mutation { serviceInstanceRedeploy(environmentId: \"5745e241-6e8e-4c3e-a5fd-91efff9a72c2\", serviceId: \"d06cd2df-e657-434f-b8fa-db34c3b3c473\") }"}' \
+            | tee -a $LOG
+
+          echo "" >> $LOG
+          echo "=== Waiting 60s for bot to restart ===" | tee -a $LOG
+          sleep 60
+
+          echo "=== Checking for LIVE trades ===" | tee -a $LOG
+          KEY="${SK:-$SK2}"
+          curl -s "https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/delta_arb_trades?select=mode,status,pnl_usdc,created_at&order=created_at.desc&limit=5" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" | python3 -c "
+import sys,json
+trades=json.load(sys.stdin)
+for t in trades:
+    print(f'  {t.get("created_at","")[:16]} | {t.get("mode","?"):5} | {t.get("status","?")}')
+live=[t for t in trades if t.get('mode')=='LIVE']
+print(f'LIVE trades: {len(live)}')
+print('BOT IS LIVE!' if live else 'Still waiting...')
+" | tee -a $LOG
+
           git config user.email "bot@sqi.app"; git config user.name "SQI-Bot"
-          git add _resolve_result.txt && git commit -m "ci: live check" || true
+          git add $LOG && git commit -m "ci: set MODE=LIVE + check" || true
           git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
