@@ -5,6 +5,7 @@ import { Loader2, ArrowLeft } from 'lucide-react';
 import { VersionedTransaction } from '@solana/web3.js';
 import { Buffer } from 'buffer';
 import { useAdminRole } from '@/hooks/useAdminRole';
+import { supabase } from '@/integrations/supabase/client';
 
 // ═══════════════════════════════════════════════════════════
 //  SQI 2050 — SOVEREIGN COPY INTELLIGENCE BOT  v10 [2026-06-07 17:04 UTC]
@@ -1277,6 +1278,42 @@ function FomoCopyBotInner() {
     setStatus(`✓ Verification done — ${active}/${toCheck.length} wallets have real on-chain activity`);
   };
 
+  // ── Supabase Realtime — receives webhook signals 24/7 ────
+  // Even when browser is closed, Helius webhook writes to Supabase.
+  // When user opens the app, Realtime delivers any missed signals instantly.
+  useEffect(() => {
+    if (!isMonitoring) return;
+    const channel = supabase
+      .channel('shreem_brzee_signals')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'shreem_brzee_signals',
+      }, (payload: any) => {
+        const sig = payload.new;
+        if (!sig) return;
+        const walletConfig = trackedWallets.find(w => w.address === sig.wallet);
+        if (!walletConfig || !walletConfig.active) return;
+        const trade = {
+          sig:         sig.sig,
+          wallet:      sig.wallet,
+          action:      sig.action as 'BUY' | 'SELL',
+          mint:        sig.mint,
+          symbol:      sig.symbol || undefined,
+          amountSOL:   sig.amount_sol || 0,
+          tokenAmount: sig.token_amount || 0,
+          timestamp:   sig.block_time ? sig.block_time * 1000 : Date.now(),
+          isPumpFun:   sig.is_pump_fun || false,
+        };
+        setStatus(`⚡ WEBHOOK: ${sig.label} ${sig.action} ${sig.symbol || sig.mint.slice(0,6)}`);
+        handleWhaleTrade(trade, 0, sig.label,
+          { isVIP: walletConfig.isVIP, riskMult: walletConfig.riskMult, priorityMult: walletConfig.priorityMult });
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [isMonitoring, trackedWallets, handleWhaleTrade]);
+
   // Auto-restart when mobile screen wakes up or tab becomes visible
   useEffect(() => {
     const onVisible = () => {
@@ -1678,7 +1715,8 @@ function FomoCopyBotInner() {
                   ['TRADES PARSED',  `${myTrades.length} trades`,   myTrades.length > 0 ? COLORS.green : 'rgba(255,255,255,0.5)'],
                   ['LAST SIGNAL',    lastMsgTime,                   'rgba(255,255,255,0.6)'],
                   ['HELIUS KEY',     HAS_HELIUS ? '✓ SET' : '✗ MISSING', HAS_HELIUS ? COLORS.green : COLORS.red],
-                  ['MODE',           wsStatus === 'connected' ? 'WS (50ms)' : 'POLLING (15s)', wsStatus === 'connected' ? COLORS.green : COLORS.cyan],
+                  ['MODE',           wsStatus === 'connected' ? 'WS + Webhook' : 'Polling + Webhook', wsStatus === 'connected' ? COLORS.green : COLORS.cyan],
+                  ['WEBHOOK URL',     'siddhaquantumnexus.com/api/helius-webhook', 'rgba(255,255,255,0.5)'],
                   ['WALLETS',        `${trackedWallets.filter(w => w.active).length} active`, COLORS.gold],
                 ].map(([k, v, col]) => (
                   <div key={k as string} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0',
