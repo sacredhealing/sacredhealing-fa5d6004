@@ -1,58 +1,45 @@
-name: Full Bot Diagnostic
+name: Polymarket Slug Test
 
 on:
   workflow_dispatch:
 
 jobs:
-  diagnose:
+  test:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
     steps:
-      - name: Full layer test
-        env:
-          RT: ${{ secrets.RAILWAY_TOKEN }}
-          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      - name: Test Polymarket
         run: |
-          ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMDQwMDMsImV4cCI6MjA5MzY4MDAwM30.Mkbodv6uEb1yMKA0UIKMzm-cFWfcgNFXr-LLGtqoNcg"
-          SBPROXY="https://fjdzhrdpioxdeyyfogep.supabase.co/functions/v1"
           TS=$(python3 -c "import time; print(int(int(time.time())/300)*300)")
-
-          echo "=== 1. Binance REST ==="
-          for sym in BTCUSDT ETHUSDT SOLUSDT; do
-            R=$(curl -sf "https://data-stream.binance.com/api/v3/ticker/price?symbol=$sym" || echo "FAIL")
-            echo "  $sym: $R"
+          TS15=$(python3 -c "import time; print(int(int(time.time())/900)*900)")
+          echo "5m timestamp: $TS"
+          echo "15m timestamp: $TS15"
+          
+          for SLUG in "btc-updown-5m-${TS}" "eth-updown-5m-${TS}" "sol-updown-5m-${TS}" "btc-updown-15m-${TS15}"; do
+            echo -n "  $SLUG -> "
+            curl -sf "https://gamma-api.polymarket.com/markets?slug=${SLUG}" -H "User-Agent: curl/8.0" -w " HTTP:%{http_code}" && echo "" || echo "FAIL"
           done
-
+          
           echo ""
-          echo "=== 2. Polymarket gamma-api direct ==="
-          SLUG="btc-updown-5m-${TS}"
-          echo "  Testing slug: $SLUG"
-          curl -s -o /tmp/g.json -w "HTTP %{http_code}\n" "https://gamma-api.polymarket.com/markets?slug=$SLUG" -H "User-Agent: curl/7.0"
-          python3 -c "import sys,json; d=json.load(open('/tmp/g.json')); print('  Result:', json.dumps(d)[:300])"
-
+          echo "=== Search any active BTC markets ==="
+          curl -sf "https://gamma-api.polymarket.com/markets?active=true&closed=false&limit=10" -H "User-Agent: curl/8.0" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+btc=[m for m in d if 'btc' in m.get('slug','').lower() or 'bitcoin' in m.get('question','').lower()]
+eth=[m for m in d if 'eth' in m.get('slug','').lower()]
+sol=[m for m in d if 'sol' in m.get('slug','').lower()]
+print(f'Total markets: {len(d)}, BTC: {len(btc)}, ETH: {len(eth)}, SOL: {len(sol)}')
+for m in d[:5]:
+    print(f'  slug={m.get(\"slug\",\"?\")[:50]} q={m.get(\"question\",\"\")[:50]}')
+" || echo "FAILED"
+          
           echo ""
-          echo "=== 3. Search active crypto markets ==="
-          curl -s -o /tmp/s.json -w "HTTP %{http_code}\n" "https://gamma-api.polymarket.com/markets?active=true&closed=false&limit=5&tag_slug=crypto" -H "User-Agent: curl/7.0"
-          python3 -c "
-import json
-try:
-    d=json.load(open('/tmp/s.json'))
-    if isinstance(d,list):
-        for m in d[:5]: print(f'  {m.get(\"slug\",\"?\")[:60]}', 'active=',m.get('active'),'closed=',m.get('closed'))
-    else: print(json.dumps(d)[:300])
-except Exception as e: print('parse error:',e)
-"
-
-          echo ""
-          echo "=== 4. Polymarket proxy edge fn ==="
-          curl -s -o /tmp/p.json -w "HTTP %{http_code}\n" "${SBPROXY}/polymarket-proxy?endpoint=markets&params=slug=${SLUG}" -H "Authorization: Bearer $ANON" -H "apikey: $ANON"
-          python3 -c "import json; print(json.dumps(json.load(open('/tmp/p.json')))[:400])"
-
-          echo ""
-          echo "=== 5. Delta-arb health proxy ==="
-          curl -s "${SBPROXY}/delta-arb-proxy?endpoint=health" -H "Authorization: Bearer $SK" -H "apikey: $SK" | python3 -m json.tool 2>/dev/null | head -20
-
-          echo ""
-          echo "=== 6. Supabase trades count ==="
-          curl -s "${SBPROXY}/../rest/v1/delta_arb_trades?select=id,mode,status&limit=5&order=created_at.desc" -H "apikey: $SK" -H "Authorization: Bearer $SK" -H "Prefer: count=exact" -I 2>/dev/null | grep -i "content-range"
-          curl -s "https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/delta_arb_trades?select=id,mode,status&limit=5&order=created_at.desc" -H "apikey: $SK" -H "Authorization: Bearer $SK" | python3 -m json.tool 2>/dev/null | head -30
+          echo "=== CLOB API ==="
+          curl -sf "https://clob.polymarket.com/markets?next_cursor=&limit=5" -H "User-Agent: curl/8.0" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+print(f'Type: {type(d).__name__}')
+if isinstance(d,dict):
+    print(f'Keys: {list(d.keys())}')
+    data=d.get(\"data\",[])
+    for m in data[:3]: print(f'  {m.get(\"condition_id\",\"\")[:20]} {m.get(\"question\",\"\")[:60]}')
+" || echo "CLOB FAILED"
