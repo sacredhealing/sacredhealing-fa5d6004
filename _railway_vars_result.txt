@@ -1,3 +1,4 @@
-✅ All paper trades cleared
-Trades remaining: 0
-Paper bot resets to $100 on next restart
+{"data":{"variableCollectionUpsert":true}}
+
+STARTING_BALANCE=10 set in Railway
+Bot will restart and simulate €10 live trading
