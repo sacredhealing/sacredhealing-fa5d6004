@@ -1,17 +1,5 @@
-=== REAL TOTAL (ALL TRADES IN DB) ===
-Total trades:  795
-Won:           638
-Lost:          157
-Win rate:      80.3%
-Real balance:  $57201.39
-Total PnL:     +$57101.39
-
-Last 5 trades:
-  2026-06-09T05:39 | won   | size=$16.31 | pnl=+15.56
-  2026-06-09T05:39 | won   | size=$18.64 | pnl=+17.45
-  2026-06-09T05:44 | won   | size=$21.26 | pnl=+20.70
-  2026-06-09T05:49 | won   | size=$24.36 | pnl=+20.58
-  2026-06-09T05:54 | lost  | size=$27.45 | pnl=-27.67
-
-Page shows: last 200 of 795 total trades
-Page balance matches DB: True
+Total trades: 795
+With pnl:     795 — sum=$57101.39
+NULL pnl:     0 — these show as $0 on page
+Fixed: 0 NULL pnl trades
+Won=638 Lost=157 Total PnL=$57101.39 Balance=$57201.39
