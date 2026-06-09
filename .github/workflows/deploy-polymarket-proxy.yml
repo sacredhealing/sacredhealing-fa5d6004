@@ -1,0 +1,24 @@
+name: Deploy Polymarket Proxy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: \${{ secrets.GH_ADMIN_PAT }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Deploy polymarket-proxy to Supabase
+        env:
+          SUPABASE_ACCESS_TOKEN: \${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          npm install -g supabase@latest 2>&1 | tail -2
+          supabase functions deploy polymarket-proxy \\
+            --project-ref fjdzhrdpioxdeyyfogep \\
+            --no-verify-jwt
+          echo "Done"
