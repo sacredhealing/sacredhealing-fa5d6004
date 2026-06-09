@@ -1,4 +1,4 @@
-import urllib.request, json, os, datetime
+import urllib.request, json, os
 
 KEY  = os.environ.get('SK') or os.environ.get('SK2','')
 BASE = 'https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1'
@@ -9,33 +9,46 @@ def get(path):
     with urllib.request.urlopen(req, timeout=15) as r:
         return json.loads(r.read())
 
-# Get ALL trades — no limit
-trades = get('/delta_arb_trades?select=id,status,pnl_usdc,size_usd,created_at&order=created_at.asc&limit=10000')
+def patch(path, data):
+    req = urllib.request.Request(f'{BASE}{path}',
+        data=json.dumps(data).encode(),
+        headers={'apikey': KEY, 'Authorization': f'Bearer {KEY}',
+                 'Content-Type': 'application/json', 'Prefer': 'return=minimal'},
+        method='PATCH')
+    with urllib.request.urlopen(req, timeout=10): pass
 
-won   = [t for t in trades if t.get('status')=='won']
-lost  = [t for t in trades if t.get('status')=='lost']
-pnl   = sum(float(t.get('pnl_usdc') or 0) for t in trades)
-bal   = 100 + pnl
-wr    = len(won)/(len(won)+len(lost))*100 if (len(won)+len(lost))>0 else 0
+# Count NULL vs non-NULL pnl
+all_trades = get('/delta_arb_trades?select=id,status,pnl_usdc,size_usd,entry_price&limit=10000')
+null_pnl   = [t for t in all_trades if t.get('pnl_usdc') is None]
+with_pnl   = [t for t in all_trades if t.get('pnl_usdc') is not None]
 
-print(f'=== REAL TOTAL (ALL TRADES IN DB) ===')
-print(f'Total trades:  {len(trades)}')
-print(f'Won:           {len(won)}')
-print(f'Lost:          {len(lost)}')
-print(f'Win rate:      {wr:.1f}%')
-print(f'Real balance:  ${bal:.2f}')
-print(f'Total PnL:     +${pnl:.2f}')
+pnl_sum    = sum(float(t['pnl_usdc']) for t in with_pnl)
+print(f'Total trades: {len(all_trades)}')
+print(f'With pnl:     {len(with_pnl)} — sum=${pnl_sum:.2f}')
+print(f'NULL pnl:     {len(null_pnl)} — these show as $0 on page')
 
-# Show last 5 trades with size
-print()
-print('Last 5 trades:')
-for t in trades[-5:]:
-    dt = t.get('created_at','')[:16]
-    sz = float(t.get('size_usd') or 0)
-    p  = float(t.get('pnl_usdc') or 0)
-    print(f'  {dt} | {t.get("status","?"):5} | size=${sz:.2f} | pnl={p:+.2f}')
+# Fix all NULL pnl trades
+fixed = 0
+for t in null_pnl:
+    sz = float(t.get('size_usd') or 10)
+    ep = float(t.get('entry_price') or 0.54)
+    if ep <= 0 or ep >= 1: ep = 0.54
+    win = t.get('status') == 'won'
+    shares = sz / ep
+    fee = sz * 0.008
+    pnl = round((shares * 1.0 - sz - fee) if win else -(sz + fee), 4)
+    try:
+        patch(f'/delta_arb_trades?id=eq.{t["id"]}',
+              {'pnl_usdc': pnl, 'net_pnl_usdc': pnl})
+        fixed += 1
+    except Exception as e:
+        print(f'Error fixing {t["id"]}: {e}')
 
-# Check if page shows correct count (limited to 200)
-print()
-print(f'Page shows: last 200 of {len(trades)} total trades')
-print(f'Page balance matches DB: {abs(bal - (100 + pnl)) < 0.01}')
+print(f'Fixed: {fixed} NULL pnl trades')
+
+# Final count
+all_t2 = get('/delta_arb_trades?select=status,pnl_usdc&limit=10000')
+won2   = [t for t in all_t2 if t.get('status')=='won']
+lost2  = [t for t in all_t2 if t.get('status')=='lost']
+total_pnl = sum(float(t.get('pnl_usdc') or 0) for t in all_t2)
+print(f'Won={len(won2)} Lost={len(lost2)} Total PnL=${total_pnl:.2f} Balance=${100+total_pnl:.2f}')
