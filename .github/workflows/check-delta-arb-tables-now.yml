@@ -1,0 +1,55 @@
+name: Check Delta Arb Tables
+on:
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Query both projects both tables
+        env:
+          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SK2: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          LOG="_delta_arb_check_$(date +%s).txt"
+          
+          NEW="https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1"
+          OLD="https://ssygukfdbtehvtndandn.supabase.co/rest/v1"
+          
+          echo "=== NEW PROJECT: fjdzhrdpioxdeyyfogep ===" | tee $LOG
+          echo "--- delta_arb_trades (service key) ---" | tee -a $LOG
+          curl -s "${NEW}/delta_arb_trades?select=id,asset,signal,status,pnl_usdc,mode,created_at&order=created_at.desc&limit=5" \
+            -H "apikey: $SK" -H "Authorization: Bearer $SK" -w " HTTP:%{http_code}" | tee -a $LOG
+          echo "" | tee -a $LOG
+          
+          echo "--- bot_trades (service key) ---" | tee -a $LOG
+          curl -s "${NEW}/bot_trades?select=id,asset,signal,status,pnl_usdc,mode,created_at&order=created_at.desc&limit=5" \
+            -H "apikey: $SK" -H "Authorization: Bearer $SK" -w " HTTP:%{http_code}" | tee -a $LOG
+          echo "" | tee -a $LOG
+          
+          echo "--- delta_arb_trades count ---" | tee -a $LOG
+          curl -s "${NEW}/delta_arb_trades?select=id" \
+            -H "apikey: $SK" -H "Authorization: Bearer $SK" \
+            -H "Prefer: count=exact" -I | grep -i content-range | tee -a $LOG
+          
+          echo "" | tee -a $LOG
+          echo "=== OLD PROJECT: ssygukfdbtehvtndandn ===" | tee -a $LOG
+          echo "--- delta_arb_trades (service key 2) ---" | tee -a $LOG
+          curl -s "${OLD}/delta_arb_trades?select=id,asset,signal,status,pnl_usdc,mode,created_at&order=created_at.desc&limit=5" \
+            -H "apikey: $SK2" -H "Authorization: Bearer $SK2" -w " HTTP:%{http_code}" | tee -a $LOG
+          echo "" | tee -a $LOG
+          
+          echo "--- bot_trades (service key 2) ---" | tee -a $LOG
+          curl -s "${OLD}/bot_trades?select=id,asset,signal,status,pnl_usdc,mode,created_at&order=created_at.desc&limit=5" \
+            -H "apikey: $SK2" -H "Authorization: Bearer $SK2" -w " HTTP:%{http_code}" | tee -a $LOG
+          echo "" | tee -a $LOG
+          
+          cat $LOG
+          
+          git config user.email "bot@sqi.app" && git config user.name "SQI-Bot"
+          git add $LOG
+          git commit -m "ci: delta arb table check $(date +%Y%m%d-%H%M)" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
