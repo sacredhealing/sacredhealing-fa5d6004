@@ -967,7 +967,7 @@ function FomoCopyBotInner() {
         setTotalPnL(newPnL);
 
         // Track per-whale stats
-        if (!result.skipped) {
+        if (!(result as any).skipped) {
           setWhaleStats(prev => {
             const key = label;
             const cur = prev[key] || { label, trades: 0, wins: 0, pnl: 0 };
@@ -994,7 +994,7 @@ function FomoCopyBotInner() {
         }
 
         // Track best/worst trade
-        if (result.pnl !== undefined && result.pnl !== 0 && !result.skipped) {
+        if (result.pnl !== undefined && result.pnl !== 0 && !(result as any).skipped) {
           setBestTrade((prev: any) => (!prev || result.pnl > prev.pnl) ? result : prev);
           setWorstTrade((prev: any) => (!prev || result.pnl < prev.pnl) ? result : prev);
         }
