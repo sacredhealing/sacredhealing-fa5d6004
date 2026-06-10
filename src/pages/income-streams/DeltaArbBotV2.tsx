@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, RefreshCw, Zap, Activity, TrendingUp, Target } from 'lucide-react';
 
-const GOLD  = '#D4AF37';
+const GOLD  = '#D4AF37'; // v4.1
 const BG    = '#050505';
 const CYAN  = '#22D3EE';
 const GREEN = '#22c55e';
