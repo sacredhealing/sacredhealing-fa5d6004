@@ -47,7 +47,7 @@ export default function DeltaArbBotV2() {
     setSpin(true); setErr('');
     try {
       // Build URL — filter by mode only if not ALL
-      let url = `${SB_BASE}/delta_arb_trades?select=id,asset,signal,delta,size_usd,entry_price,status,pnl_usdc,mode,created_at&order=created_at.desc&limit=300`;
+      let url = `${SB_BASE}/bot_trades?select=id,asset,signal,delta,size_usd,entry_price,status,pnl_usdc,mode,created_at&order=created_at.desc&limit=300`;
       if (mode === 'PAPER') url += '&mode=eq.PAPER';
       if (mode === 'LIVE')  url += '&mode=eq.LIVE';
 
