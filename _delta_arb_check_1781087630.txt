@@ -1,0 +1,17 @@
+=== NEW PROJECT: fjdzhrdpioxdeyyfogep ===
+--- delta_arb_trades (service key) ---
+[] HTTP:200
+--- bot_trades (service key) ---
+[{"id":"ecc592a1-c176-4c3e-877d-7ff3918c6402","asset":"BTC","signal":"UP","status":"won","pnl_usdc":287.1092,"mode":"PAPER","created_at":"2026-06-10T10:31:45.777259+00:00"}, 
+ {"id":"a181e1e8-c3f8-4b6e-ad26-0bbb74d7bac2","asset":"BTC","signal":"UP","status":"won","pnl_usdc":316.0086,"mode":"PAPER","created_at":"2026-06-10T10:31:45.299182+00:00"}, 
+ {"id":"0429f977-d34d-4826-ba1c-5ff480efee18","asset":"ETH","signal":"UP","status":"won","pnl_usdc":258.5614,"mode":"PAPER","created_at":"2026-06-10T10:30:33.962343+00:00"}, 
+ {"id":"2022ad41-cf7f-4e1b-8270-6dcd81623817","asset":"ETH","signal":"UP","status":"won","pnl_usdc":234.8705,"mode":"PAPER","created_at":"2026-06-10T10:30:33.782516+00:00"}, 
+ {"id":"53897783-d95a-4937-855a-20e8acae7725","asset":"SOL","signal":"UP","status":"won","pnl_usdc":189.0108,"mode":"PAPER","created_at":"2026-06-10T10:30:31.546547+00:00"}] HTTP:200
+--- delta_arb_trades count ---
+content-range: */0
+
+=== OLD PROJECT: ssygukfdbtehvtndandn ===
+--- delta_arb_trades (service key 2) ---
+{"message":"No API key found in request","hint":"No `apikey` request header or url param was found."} HTTP:401
+--- bot_trades (service key 2) ---
+{"message":"No API key found in request","hint":"No `apikey` request header or url param was found."} HTTP:401
