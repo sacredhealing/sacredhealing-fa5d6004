@@ -994,7 +994,7 @@ function FomoCopyBotInner() {
         }
 
         // Track best/worst trade
-        if (result.pnl !== undefined && result.pnl !== 0 && !result.skipped) {
+        if (result.pnl !== undefined && result.pnl !== 0 && !(result as any).skipped) {
           setBestTrade((prev: any) => (!prev || result.pnl > prev.pnl) ? result : prev);
           setWorstTrade((prev: any) => (!prev || result.pnl < prev.pnl) ? result : prev);
         }
