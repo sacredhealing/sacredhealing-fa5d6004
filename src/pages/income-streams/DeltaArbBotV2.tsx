@@ -9,7 +9,7 @@ const GREEN = '#22c55e';
 const RED   = 'rgba(255,80,80,0.85)';
 const DIM   = 'rgba(255,255,255,0.35)';
 
-const SB      = 'https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/delta_arb_trades';
+const SB      = 'https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/bot_trades';
 const HEALTH  = 'https://fjdzhrdpioxdeyyfogep.supabase.co/functions/v1/delta-arb-proxy?endpoint=health';
 const KEY     = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMDQwMDMsImV4cCI6MjA5MzY4MDAwM30.Mkbodv6uEb1yMKA0UIKMzm-cFWfcgNFXr-LLGtqoNcg';
 const STARTING = 10;
