@@ -1,0 +1,18 @@
+name: Force Redeploy Bot Now
+on:
+  push:
+    paths:
+      - '.github/workflows/force-redeploy-trigger.txt'
+jobs:
+  redeploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Redeploy
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"query":"mutation { serviceInstanceRedeploy(environmentId: \"5745e241-6e8e-4c3e-a5fd-91efff9a72c2\", serviceId: \"d06cd2df-e657-434f-b8fa-db34c3b3c473\") }"}' 
+          echo "Redeployed"
