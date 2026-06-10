@@ -1,0 +1,50 @@
+name: Redeploy Delta-Arb Bot
+on:
+  workflow_dispatch:
+jobs:
+  redeploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Redeploy Railway bot + check status
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          LOG="_railway_redeploy_$(date +%s).txt"
+          SVC="d06cd2df-e657-434f-b8fa-db34c3b3c473"
+          ENV="5745e241-6e8e-4c3e-a5fd-91efff9a72c2"
+          PRJ="4851410d-a6d6-4739-be6b-33e6deb5b6f2"
+
+          echo "=== Redeploying Delta-Arb Bot ===" | tee $LOG
+
+          curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\":\"mutation { serviceInstanceRedeploy(environmentId: \\"$ENV\\", serviceId: \\"$SVC\\") }\"}" \
+            | tee -a $LOG
+
+          echo "" | tee -a $LOG
+          echo "=== Checking Railway variables ===" | tee -a $LOG
+
+          curl -s -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\":\"{ variables(serviceId: \\"$SVC\\", environmentId: \\"$ENV\\", projectId: \\"$PRJ\\") }\"}" \
+            | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+v=d.get('data',{}).get('variables',{})
+for k,val in v.items():
+    if 'SUPABASE' in k or k in ['MODE','STRATEGY','STARTING_BALANCE']:
+        masked = val[:30]+'...' if len(val)>30 else val
+        print(f'  {k} = {masked}')
+" 2>&1 | tee -a $LOG
+
+          cat $LOG
+          git config user.email "bot@sqi.app" && git config user.name "SQI-Bot"
+          git add $LOG
+          git commit -m "ci: redeploy delta-arb bot after DB fix" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
