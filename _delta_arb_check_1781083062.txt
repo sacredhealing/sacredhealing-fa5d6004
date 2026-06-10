@@ -1,0 +1,13 @@
+=== NEW PROJECT: fjdzhrdpioxdeyyfogep ===
+--- delta_arb_trades (service key) ---
+[] HTTP:200
+--- bot_trades (service key) ---
+{"code":"42501","details":null,"hint":"Grant the required privileges to the current role with: GRANT SELECT ON public.bot_trades TO service_role;","message":"permission denied for table bot_trades"} HTTP:403
+--- delta_arb_trades count ---
+content-range: */0
+
+=== OLD PROJECT: ssygukfdbtehvtndandn ===
+--- delta_arb_trades (service key 2) ---
+{"message":"No API key found in request","hint":"No `apikey` request header or url param was found."} HTTP:401
+--- bot_trades (service key 2) ---
+{"message":"No API key found in request","hint":"No `apikey` request header or url param was found."} HTTP:401
