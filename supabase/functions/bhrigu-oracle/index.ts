@@ -297,9 +297,9 @@ serve(async (req) => {
     // Parse birth_context JSON fallback if individual fields empty
     let birthCtx: Record<string,string> = {};
     try { if (body.birth_context) birthCtx = JSON.parse(String(body.birth_context)); } catch {}
-    const dob      = String(chart.dateOfBirth ?? body.birth_date ?? body.dateOfBirth ?? birthCtx.dob ?? "");
-    const tob      = String(chart.timeOfBirth ?? body.birth_time ?? body.timeOfBirth ?? birthCtx.tob ?? "");
-    const pob      = String(chart.placeOfBirth ?? body.birth_place ?? body.placeOfBirth ?? birthCtx.pob ?? "");
+    const dob      = String(chart.dateOfBirth ?? body.birth_date ?? body.dateOfBirth ?? body.dob ?? birthCtx.dob ?? "");
+    const tob      = String(chart.timeOfBirth ?? body.birth_time ?? body.timeOfBirth ?? body.tob ?? birthCtx.tob ?? "");
+    const pob      = String(chart.placeOfBirth ?? body.birth_place ?? body.placeOfBirth ?? body.pob ?? birthCtx.pob ?? "");
     const dosha    = String(body.dosha ?? "");
     const dasha    = String(body.current_dasha ?? "");
     const question = String(body.question ?? "");
