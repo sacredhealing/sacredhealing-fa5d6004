@@ -1,6 +1,6 @@
 ══════════════════════════════════════════════════════════════
   SQI-2050 🦈 CLAWBOT v9.1 — 18 Elite Wallets Active
-  2026-06-10T19:14:35.380Z | PAPER
+  2026-06-10T21:30:56.633Z | PAPER
   S1:InsiderGeo  S2:Confirmation  S3:NoMachine
 ══════════════════════════════════════════════════════════════
 
@@ -13,7 +13,7 @@ Strategy roster:
 Balance: $10.00
 Today: 0/10 mirrors used
 
-🔍 Scanning 88,275,478 → 88,275,928
+🔍 Scanning 88,280,932 → 88,281,382
   0xE111180000: 0 logs → 0 trades ($500+)
   0xe2222d279d: 0 logs → 0 trades ($500+)
 
