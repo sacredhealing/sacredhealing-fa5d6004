@@ -9,13 +9,10 @@ import { VitePWA } from "vite-plugin-pwa";
 // Build: 2026-06-01-v4 cache-bust — force SW update for all users
 export default defineConfig(({ mode }) => {
   const fileEnv = loadEnv(mode, process.cwd(), "");
-  /** Lovable/CI often inject GEMINI_API_KEY; local dev uses VITE_GEMINI_API_KEY in .env */
-  const geminiApiKey =
-    (process.env.VITE_GEMINI_API_KEY || "").trim() ||
-    (process.env.GEMINI_API_KEY || "").trim() ||
-    (fileEnv.VITE_GEMINI_API_KEY || "").trim() ||
-    (fileEnv.GEMINI_API_KEY || "").trim() ||
-    "";  // Key must be set via environment variable only
+  // Gemini API key is server-side only (used by the `gemini-bridge` edge function).
+  // Do NOT inject it into the client bundle — that would expose it to anyone
+  // viewing the built JavaScript in DevTools.
+
 
   /** Lovable Cloud Secrets often use SUPABASE_URL / SUPABASE_ANON_KEY without VITE_ — expose as client env */
   // fileEnv (.env) takes priority so both Vercel and Lovable use .env values
@@ -149,7 +146,6 @@ export default defineConfig(({ mode }) => {
     },
   },
   define: {
-    "import.meta.env.VITE_GEMINI_API_KEY": JSON.stringify(geminiApiKey),
     ...(supabaseUrlForClient
       ? { "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(supabaseUrlForClient) }
       : {}),
