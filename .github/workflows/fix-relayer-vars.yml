@@ -1,0 +1,41 @@
+name: Fix Railway Relayer Vars
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-relayer-trigger.txt'
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Set RELAYER vars + fix FUNDER_ADDRESS
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          SVC="d06cd2df-e657-434f-b8fa-db34c3b3c473"
+          ENV="5745e241-6e8e-4c3e-a5fd-91efff9a72c2"
+          PRJ="4851410d-a6d6-4739-be6b-33e6deb5b6f2"
+          API="https://backboard.railway.app/graphql/v2"
+
+          set_var() {
+            curl -s -X POST "$API" \
+              -H "Authorization: Bearer $RAILWAY_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{\"query\":\"mutation { variableUpsert(input: { projectId: \\"$PRJ\\", environmentId: \\"$ENV\\", serviceId: \\"$SVC\\", name: \\"$1\\", value: \\"$2\\" }) }\"}"
+            echo " -> $1 set"
+          }
+
+          set_var "RELAYER_API_KEY" "019e9956-bd42-79bf-becb-61a856d233cf"
+          set_var "RELAYER_ADDRESS" "0x0Fee4fA97934bbc2E9Fbc8264CD532c9EFA10C09"
+          set_var "POLYMARKET_FUNDER_ADDRESS" "0x0383803aE4f5870d97dDA360E7183AdC879df23f"
+
+          echo "=== Redeploying bot ==="
+          curl -s -X POST "$API" \
+            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\":\"mutation { serviceInstanceRedeploy(environmentId: \\"$ENV\\", serviceId: \\"$SVC\\") }\"}"
+
+          echo "Done"
