@@ -15,6 +15,20 @@ serve(async (req) => {
     { auth: { persistSession: false } }
   );
 
+  // ── Auth gate: admin only ──
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: cors });
+  }
+  const { data: { user } } = await supabase.auth.getUser(authHeader.split(" ")[1]);
+  if (!user) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: cors });
+  }
+  const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
+  if (!isAdmin) {
+    return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: cors });
+  }
+
   const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
   const { table, offset = 0, limit = 500 } = body;
 
