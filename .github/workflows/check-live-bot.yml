@@ -1,0 +1,54 @@
+name: Check Live Bot Status
+on:
+  push:
+    paths:
+      - '.github/workflows/live-check-trigger.txt'
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Get last 50 log lines + test Relayer API
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          SVC="d06cd2df-e657-434f-b8fa-db34c3b3c473"
+          ENV="5745e241-6e8e-4c3e-a5fd-91efff9a72c2"
+          PRJ="4851410d-a6d6-4739-be6b-33e6deb5b6f2"
+          LOG="_live_status_$(date +%s).txt"
+          API="https://backboard.railway.app/graphql/v2"
+
+          echo "=== RAILWAY VARS ===" | tee $LOG
+          curl -s -X POST "$API" \
+            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"query":"{ variables(serviceId: "'$SVC'", environmentId: "'$ENV'", projectId: "'$PRJ'") }"}' \
+            | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+v=d.get('data',{}).get('variables',{}) or {}
+for k,val in v.items():
+    safe = str(val)[:50]
+    print(f'  {k} = {safe}')
+" 2>&1 | tee -a $LOG
+
+          echo "" | tee -a $LOG
+          echo "=== TEST RELAYER API DIRECTLY ===" | tee -a $LOG
+          curl -s -w "HTTP:%{http_code}" "https://relayer.polymarket.com/" | tee -a $LOG
+          echo "" | tee -a $LOG
+
+          echo "=== REDEPLOY BOT WITH LATEST CODE ===" | tee -a $LOG
+          curl -s -X POST "$API" \
+            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"query":"mutation { serviceInstanceRedeploy(environmentId: "'$ENV'", serviceId: "'$SVC'") }"}' \
+            | tee -a $LOG
+
+          cat $LOG
+          git config user.email "bot@sqi.app" && git config user.name "SQI-Bot"
+          git add $LOG
+          git commit -m "ci: live bot status check" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
