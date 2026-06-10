@@ -1,0 +1,73 @@
+name: Full Bot Trades Stats
+on:
+  push:
+    paths:
+      - '.github/workflows/bot-stats-trigger.txt'
+jobs:
+  stats:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Get full bot_trades stats
+        env:
+          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          LOG="_bot_stats_$(date +%s).txt"
+          BASE="https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1"
+
+          echo "=== FULL bot_trades STATS ===" | tee $LOG
+
+          # Get all trades
+          curl -s "${BASE}/bot_trades?select=asset,signal,status,pnl_usdc,size_usd,mode,created_at&order=created_at.asc&limit=1000" \
+            -H "apikey: $SK" -H "Authorization: Bearer $SK" \
+            -H "Prefer: count=exact" | python3 -c "
+import sys, json
+from datetime import datetime
+
+trades = json.load(sys.stdin)
+print(f'Total trades: {len(trades)}')
+
+won = [t for t in trades if t.get('status')=='won']
+lost = [t for t in trades if t.get('status')=='lost']
+pnls = [float(t.get('pnl_usdc') or 0) for t in trades]
+total_pnl = sum(pnls)
+start_bal = 10.0
+current_bal = start_bal + total_pnl
+
+print(f'Won: {len(won)} | Lost: {len(lost)}')
+print(f'Win rate: {len(won)/(len(won)+len(lost))*100:.1f}%' if (len(won)+len(lost)) > 0 else 'Win rate: N/A')
+print(f'Total PnL: +\${total_pnl:.2f}')
+print(f'Balance: \${current_bal:.2f} (from \$10)')
+print(f'Return: {(current_bal/start_bal - 1)*100:.0f}x ({(current_bal/start_bal - 1)*100:.1f}%)')
+
+if won:
+    avg_win = sum(float(t.get('pnl_usdc') or 0) for t in won) / len(won)
+    print(f'Avg win: +\${avg_win:.2f}')
+if lost:
+    avg_loss = sum(float(t.get('pnl_usdc') or 0) for t in lost) / len(lost)
+    print(f'Avg loss: \${avg_loss:.2f}')
+
+# Time range
+if trades:
+    first = trades[0].get('created_at','')[:16]
+    last = trades[-1].get('created_at','')[:16]
+    print(f'First trade: {first}')
+    print(f'Last trade:  {last}')
+
+# Per asset
+for asset in ['BTC','ETH','SOL']:
+    at = [t for t in trades if t.get('asset')==asset]
+    if at:
+        aw = [t for t in at if t.get('status')=='won']
+        ap = sum(float(t.get('pnl_usdc') or 0) for t in at)
+        print(f'{asset}: {len(at)} trades | {len(aw)}/{len(at)} wins | +\${ap:.2f}')
+" 2>&1 | tee -a $LOG
+
+          cat $LOG
+          git config user.email "bot@sqi.app" && git config user.name "SQI-Bot"
+          git add $LOG
+          git commit -m "ci: full bot_trades stats" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
