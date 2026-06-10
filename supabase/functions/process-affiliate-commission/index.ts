@@ -22,6 +22,15 @@ serve(async (req) => {
     { auth: { persistSession: false } }
   );
 
+  // ── Internal-only: require shared secret (called from stripe-webhook) ──
+  const internalSecret = Deno.env.get("INTERNAL_SHARED_SECRET");
+  const providedSecret = req.headers.get("X-Internal-Secret");
+  if (!internalSecret || providedSecret !== internalSecret) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const { userId, purchaseType, purchaseAmount, purchaseId } = await req.json();
     

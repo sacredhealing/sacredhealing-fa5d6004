@@ -45,6 +45,29 @@ serve(async (req) => {
   }
 
   try {
+    // ── Auth gate: require an authenticated user (prevents quota abuse) ──
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    {
+      const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+      const adminClient = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      );
+      const { data: { user }, error: authError } = await adminClient.auth.getUser(
+        authHeader.split(" ")[1]
+      );
+      if (authError || !user) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     if (!GEMINI_API_KEY) {
       return new Response(JSON.stringify({ error: "Gemini API key not configured" }), {

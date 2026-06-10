@@ -27,6 +27,28 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    // ── Auth gate: shared cron secret OR admin JWT ──
+    const cronSecret = Deno.env.get('CRON_SECRET');
+    const providedCron = req.headers.get('X-Cron-Secret');
+    let authorized = !!(cronSecret && providedCron && providedCron === cronSecret);
+    if (!authorized) {
+      const authHeader = req.headers.get('Authorization');
+      if (authHeader?.startsWith('Bearer ')) {
+        const { data: { user } } = await supabaseAdmin.auth.getUser(authHeader.split(' ')[1]);
+        if (user) {
+          const { data: isAdmin } = await supabaseAdmin.rpc('has_role', { _user_id: user.id, _role: 'admin' });
+          authorized = !!isAdmin;
+        }
+      }
+    }
+    if (!authorized) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+
+
     // Get start of last month (we distribute at the start of a new month for the previous month)
     const now = new Date();
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
