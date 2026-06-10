@@ -197,6 +197,235 @@ const LexEntry: React.FC<{ entry: typeof LEXICON[0]; gs: React.CSSProperties }> 
 };
 
 // ── Component ────────────────────────────────────────────────────
+
+// ── DAILY INFLUENCE STRIP ──────────────────────────────────────────────────────
+const GRAHA_DAILY_DATA: Array<{
+  name: string; sym: string; element: string; color: string;
+  dayRule: number | null;
+  quality: string; avoidQuality: string; mantra: string;
+  doKeyword: string; avoidKeyword: string;
+}> = [
+  { name:'Sun', sym:'☉', element:'Fire · Agni', color:'#F59E0B', dayRule:0,
+    quality:'Authority, Clarity, Soul Power, Leadership', avoidQuality:'Ego conflict, excessive heat, pride',
+    mantra:'Om Hrim Suryaya Namah', doKeyword:'Lead · Create · Illuminate', avoidKeyword:'Control · Conflict' },
+  { name:'Moon', sym:'☽', element:'Water · Jala', color:'#94A3B8', dayRule:1,
+    quality:'Intuition, Emotion, Nourishment, Healing', avoidQuality:'Over-sensitivity, instability, fear',
+    mantra:'Om Shrim Chandramase Namah', doKeyword:'Feel · Nurture · Flow', avoidKeyword:'React · Scatter' },
+  { name:'Mars', sym:'♂', element:'Fire · Tejas', color:'#EF4444', dayRule:2,
+    quality:'Courage, Action, Decisive Energy, Protection', avoidQuality:'Aggression, impulsiveness, anger',
+    mantra:'Om Krim Mangalaya Namah', doKeyword:'Act · Protect · Build', avoidKeyword:'Force · Argue' },
+  { name:'Mercury', sym:'☿', element:'Earth · Prithvi', color:'#10B981', dayRule:3,
+    quality:'Intellect, Communication, Commerce, Wit', avoidQuality:'Overthinking, duplicity, gossip',
+    mantra:'Om Budhaya Namah', doKeyword:'Communicate · Learn · Trade', avoidKeyword:'Scatter · Overthink' },
+  { name:'Jupiter', sym:'♃', element:'Ether · Akasha', color:'#F59E0B', dayRule:4,
+    quality:'Wisdom, Expansion, Grace, Dharma, Abundance', avoidQuality:'Over-indulgence, preaching, excess',
+    mantra:'Om Gurave Namaha', doKeyword:'Expand · Bless · Teach', avoidKeyword:'Waste · Overextend' },
+  { name:'Venus', sym:'♀', element:'Water · Jala', color:'#EC4899', dayRule:5,
+    quality:'Love, Beauty, Harmony, Abundance, Arts', avoidQuality:'Attachment, sensual excess, vanity',
+    mantra:'Om Shum Shukraya Namah', doKeyword:'Create · Love · Beautify', avoidKeyword:'Indulge · Cling' },
+  { name:'Saturn', sym:'♄', element:'Air · Vayu', color:'#6366F1', dayRule:6,
+    quality:'Discipline, Karma, Mastery, Longevity, Justice', avoidQuality:'Rigidity, fear, procrastination, delay',
+    mantra:'Om Sham Shanaye Namah', doKeyword:'Commit · Discipline · Endure', avoidKeyword:'Rush · Resist' },
+  { name:'Rahu', sym:'☊', element:'Smoke · Maya', color:'#8B5CF6', dayRule:null,
+    quality:'Transformation, Innovation, Foreign, Amplification', avoidQuality:'Illusion, addiction, obsession',
+    mantra:'Om Ram Rahave Namah', doKeyword:'Innovate · Dare · Transform', avoidKeyword:'Fixate · Deceive' },
+  { name:'Ketu', sym:'☋', element:'Fire · Moksha', color:'#D97706', dayRule:null,
+    quality:'Liberation, Spiritual Insight, Intuition, Past Mastery', avoidQuality:'Confusion, withdrawal, detachment',
+    mantra:'Om Kem Ketave Namah', doKeyword:'Meditate · Release · Purify', avoidKeyword:'Isolate · Scatter' },
+];
+
+function hexToRgbStr(hex: string): string {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.substring(0,2), 16);
+  const g2 = parseInt(h.substring(2,4), 16);
+  const b = parseInt(h.substring(4,6), 16);
+  return `${r},${g2},${b}`;
+}
+
+function getPanchangaData() {
+  const now = new Date();
+  const weekday = now.getDay();
+  const VARA_MAP: Record<number, { name: string; planet: string; sym: string; color: string }> = {
+    0: { name:'Ravivāra', planet:'Sun', sym:'☉', color:'#F59E0B' },
+    1: { name:'Somavāra', planet:'Moon', sym:'☽', color:'#94A3B8' },
+    2: { name:'Mangalavāra', planet:'Mars', sym:'♂', color:'#EF4444' },
+    3: { name:'Budhavāra', planet:'Mercury', sym:'☿', color:'#10B981' },
+    4: { name:'Guruvāra', planet:'Jupiter', sym:'♃', color:'#FBBF24' },
+    5: { name:'Shukravāra', planet:'Venus', sym:'♀', color:'#EC4899' },
+    6: { name:'Shanivāra', planet:'Saturn', sym:'♄', color:'#6366F1' },
+  };
+  const knownNewMoon = new Date('2024-01-11').getTime();
+  const daysSince = (now.getTime() - knownNewMoon) / 86400000;
+  const lunarDay = Math.floor(daysSince % 29.53) + 1;
+  const tithiNames = ['Pratipada','Dvitiya','Tritiya','Chaturthi','Panchami','Shashthi','Saptami','Ashtami','Navami','Dashami','Ekadashi','Dvadashi','Trayodashi','Chaturdashi','Purnima'];
+  const tithiIdx = Math.min((lunarDay - 1) % 15, 14);
+  const paksha = lunarDay <= 15 ? 'Shukla (Waxing)' : 'Krishna (Waning)';
+  const horaSeq = ['Sun','Venus','Mercury','Moon','Saturn','Jupiter','Mars'];
+  const dayPlanetStart: Record<number,number> = {0:0, 1:2, 2:4, 3:6, 4:1, 5:3, 6:5};
+  const horaOffset = Math.floor(((now.getHours() - 6 + 24) % 24));
+  const currentHora = horaSeq[(dayPlanetStart[weekday] + horaOffset) % 7];
+  const rahuSlots: Record<number,number> = {0:7, 1:1, 2:6, 3:4, 4:5, 5:2, 6:3};
+  const slot = rahuSlots[weekday];
+  const rStart = 6 + slot * 1.5;
+  const rEnd = rStart + 1.5;
+  const fmt = (h: number) => `${Math.floor(h)}:${h % 1 === 0.5 ? '30' : '00'}`;
+  const isRahuKala = now.getHours() >= rStart && now.getHours() < rEnd;
+  return {
+    vara: VARA_MAP[weekday], weekday,
+    tithiName: tithiNames[tithiIdx], paksha, lunarDay,
+    currentHora, rahuKala: `${fmt(rStart)}–${fmt(rEnd)}`, isRahuKala
+  };
+}
+
+const DailyInfluenceStrip: React.FC = () => {
+  const panchanga = getPanchangaData();
+  const today = new Date();
+  const [expandedGraha, setExpandedGraha] = React.useState<string | null>(null);
+
+  const gs: React.CSSProperties = {
+    background:'rgba(255,255,255,0.02)',
+    backdropFilter:'blur(40px)',
+    WebkitBackdropFilter:'blur(40px)',
+    border:'1px solid rgba(255,255,255,0.05)',
+    borderRadius:16,
+  };
+  const gm: React.CSSProperties = {
+    background:'rgba(255,255,255,0.03)',
+    backdropFilter:'blur(40px)',
+    WebkitBackdropFilter:'blur(40px)',
+    border:'1px solid rgba(255,255,255,0.07)',
+    borderRadius:20,
+  };
+
+  const todayGraha = GRAHA_DAILY_DATA.find(g => g.dayRule === panchanga.weekday);
+
+  return (
+    <div style={{ marginBottom:24 }}>
+      {/* Header */}
+      <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+        <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)' }}>
+          Today\'s Cosmic Intelligence · {today.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' })}
+        </div>
+        <div style={{ flex:1, height:1, background:'rgba(212,175,55,0.1)' }} />
+        {panchanga.isRahuKala && (
+          <div style={{ padding:'3px 10px', borderRadius:99, border:'1px solid rgba(239,68,68,0.3)', background:'rgba(239,68,68,0.08)', fontSize:6, fontWeight:800, letterSpacing:'0.3em', color:'rgba(239,68,68,0.8)' }}>
+            ⚠ RĀHU KĀLA
+          </div>
+        )}
+      </div>
+
+      {/* Panchanga 5-tile strip */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:6, marginBottom:14 }}>
+        {[
+          { lbl:'Vāra', val:`${panchanga.vara.sym} ${panchanga.vara.planet}`, sub:panchanga.vara.name, color:panchanga.vara.color },
+          { lbl:'Tithi', val:panchanga.tithiName, sub:`Day ${panchanga.lunarDay}`, color:'#D4AF37' },
+          { lbl:'Paksha', val:panchanga.paksha.split(' ')[0], sub:panchanga.paksha.split('(')[1]?.replace(')','') || '', color:'#94A3B8' },
+          { lbl:'Hora Now', val:panchanga.currentHora, sub:'Planetary Hour', color:'#22D3EE' },
+          { lbl:'Rāhu Kāla', val:panchanga.rahuKala, sub:panchanga.isRahuKala ? '⚠ Active Now' : 'Avoid New Starts', color:panchanga.isRahuKala ? '#EF4444' : 'rgba(255,255,255,0.3)' },
+        ].map(s => (
+          <div key={s.lbl} style={{ ...gs, padding:'10px 6px', textAlign:'center' }}>
+            <div style={{ fontSize:6, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.2)', marginBottom:4 }}>{s.lbl}</div>
+            <div style={{ fontSize:9, fontWeight:900, color:s.color, lineHeight:1.2, marginBottom:2 }}>{s.val}</div>
+            <div style={{ fontSize:7, color:'rgba(255,255,255,0.25)', lineHeight:1.3 }}>{s.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Today\'s Ruling Planet Banner */}
+      {todayGraha && (
+        <div style={{ ...gm, padding:'16px 18px', marginBottom:14, borderColor:`rgba(${hexToRgbStr(todayGraha.color)},0.2)`, position:'relative', overflow:'hidden' }}>
+          <div style={{ position:'absolute', top:0, right:0, width:90, height:90, background:`radial-gradient(circle, ${todayGraha.color}12 0%, transparent 70%)`, pointerEvents:'none' }} />
+          <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
+            <div style={{ width:46, height:46, borderRadius:23, border:`1px solid ${todayGraha.color}40`, background:`${todayGraha.color}12`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, flexShrink:0 }}>
+              {todayGraha.sym}
+            </div>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.4)', marginBottom:3 }}>Today\'s Ruling Graha</div>
+              <div style={{ fontSize:17, fontWeight:900, color:todayGraha.color, marginBottom:3 }}>{todayGraha.name} — {panchanga.vara.name}</div>
+              <div style={{ fontSize:11, color:'rgba(255,255,255,0.5)' }}>{todayGraha.quality}</div>
+            </div>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:10 }}>
+            <div style={{ ...gs, padding:'8px 12px', borderRadius:12 }}>
+              <div style={{ fontSize:6, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(34,211,238,0.6)', marginBottom:3 }}>✓ Activate</div>
+              <div style={{ fontSize:11, color:'rgba(255,255,255,0.65)', fontStyle:'italic' }}>{todayGraha.doKeyword}</div>
+            </div>
+            <div style={{ ...gs, padding:'8px 12px', borderRadius:12 }}>
+              <div style={{ fontSize:6, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(239,68,68,0.6)', marginBottom:3 }}>◎ Avoid</div>
+              <div style={{ fontSize:11, color:'rgba(255,255,255,0.65)', fontStyle:'italic' }}>{todayGraha.avoidKeyword}</div>
+            </div>
+          </div>
+          <div style={{ padding:'8px 14px', borderRadius:10, background:'rgba(212,175,55,0.05)', border:'1px solid rgba(212,175,55,0.12)', textAlign:'center', fontSize:11, color:'rgba(212,175,55,0.75)', fontStyle:'italic' }}>
+            🕉 {todayGraha.mantra}
+          </div>
+        </div>
+      )}
+
+      {/* 9 Graha Cards — horizontal scroll */}
+      <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.4)', marginBottom:8 }}>
+        Navagraha Daily Transmissions · Tap to Open
+      </div>
+      <div style={{ display:'flex', gap:7, overflowX:'auto', paddingBottom:6, scrollbarWidth:'none' as const, marginBottom:8, WebkitOverflowScrolling:'touch' as const }}>
+        {GRAHA_DAILY_DATA.map(g => {
+          const isToday = g.dayRule === panchanga.weekday;
+          const isExpanded = expandedGraha === g.name;
+          return (
+            <div key={g.name}
+              onClick={() => setExpandedGraha(isExpanded ? null : g.name)}
+              style={{ flexShrink:0, width:90, padding:'12px 8px', borderRadius:16,
+                border:`1px solid ${isToday ? g.color + '55' : (isExpanded ? g.color + '30' : 'rgba(255,255,255,0.06)')}`,
+                background: isToday ? `${g.color}10` : (isExpanded ? `${g.color}08` : 'rgba(255,255,255,0.02)'),
+                cursor:'pointer', textAlign:'center', position:'relative', transition:'all 0.18s' }}>
+              {isToday && (
+                <div style={{ position:'absolute', top:6, right:6, width:5, height:5, borderRadius:'50%', background:g.color, boxShadow:`0 0 6px ${g.color}` }} />
+              )}
+              <div style={{ fontSize:22, marginBottom:4 }}>{g.sym}</div>
+              <div style={{ fontSize:9, fontWeight:900, color: isToday ? g.color : 'rgba(255,255,255,0.7)', marginBottom:2 }}>{g.name}</div>
+              <div style={{ fontSize:7, color:'rgba(255,255,255,0.28)', lineHeight:1.3 }}>{g.element.split(' ')[0]}</div>
+              {isToday && <div style={{ fontSize:6, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:g.color, marginTop:4 }}>TODAY ●</div>}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Expanded Detail Card */}
+      {expandedGraha && (() => {
+        const g = GRAHA_DAILY_DATA.find(x => x.name === expandedGraha)!;
+        if (!g) return null;
+        return (
+          <div style={{ ...gm, padding:'18px', marginTop:4, borderColor:`${g.color}25`, position:'relative', overflow:'hidden' }}>
+            <div style={{ position:'absolute', top:-20, right:-20, width:110, height:110, background:`radial-gradient(circle, ${g.color}0d 0%, transparent 70%)`, pointerEvents:'none' }} />
+            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
+              <span style={{ fontSize:28 }}>{g.sym}</span>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.4)', marginBottom:2 }}>{g.element} Intelligence</div>
+                <div style={{ fontSize:16, fontWeight:900, color:g.color }}>{g.name} — Daily Influence</div>
+              </div>
+              <button onClick={(e) => { e.stopPropagation(); setExpandedGraha(null); }}
+                style={{ background:'none', border:'none', color:'rgba(255,255,255,0.3)', cursor:'pointer', fontSize:20, padding:4 }}>×</button>
+            </div>
+            <p style={{ fontSize:12, color:'rgba(255,255,255,0.6)', lineHeight:1.65, marginBottom:12 }}>{g.quality}</p>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:10 }}>
+              <div style={{ ...gs, padding:'10px 12px', borderRadius:12 }}>
+                <div style={{ fontSize:6, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(34,211,238,0.6)', marginBottom:4 }}>✓ Do Today</div>
+                <div style={{ fontSize:11, color:'rgba(255,255,255,0.7)', fontStyle:'italic' }}>{g.doKeyword}</div>
+              </div>
+              <div style={{ ...gs, padding:'10px 12px', borderRadius:12 }}>
+                <div style={{ fontSize:6, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(239,68,68,0.6)', marginBottom:4 }}>✗ Avoid</div>
+                <div style={{ fontSize:11, color:'rgba(255,255,255,0.7)', fontStyle:'italic' }}>{g.avoidQuality}</div>
+              </div>
+            </div>
+            <div style={{ padding:'9px 14px', borderRadius:12, background:'rgba(212,175,55,0.05)', border:'1px solid rgba(212,175,55,0.12)', textAlign:'center' }}>
+              <div style={{ fontSize:6, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', marginBottom:3 }}>Beej Mantra — Chant 108x</div>
+              <div style={{ fontSize:12, color:'#D4AF37', fontStyle:'italic' }}>{g.mantra}</div>
+            </div>
+          </div>
+        );
+      })()}
+    </div>
+  );
+};
+
 const JyotishChamber: React.FC = () => {
   const { user } = useAuth();
   const { tier: membershipTier, isAdmin } = useMembership();
@@ -585,6 +814,10 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
             )}
             {birthData && !loading && (
               <>
+
+                {/* ══ DAILY COSMIC INFLUENCES ══ */}
+                <DailyInfluenceStrip />
+
                 {/* Stats row */}
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:18 }}>
                   {[
