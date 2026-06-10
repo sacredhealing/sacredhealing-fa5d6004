@@ -1,0 +1,40 @@
+name: Set POLYGRAM EXTREME vars
+on:
+  push:
+    paths:
+      - '.github/workflows/set-polygram-trigger.txt'
+jobs:
+  set:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Update Railway vars + redeploy
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          SVC="d06cd2df-e657-434f-b8fa-db34c3b3c473"
+          ENV="5745e241-6e8e-4c3e-a5fd-91efff9a72c2"
+          PRJ="4851410d-a6d6-4739-be6b-33e6deb5b6f2"
+          API="https://backboard.railway.app/graphql/v2"
+
+          set_var() {
+            curl -s -X POST "$API" \
+              -H "Authorization: Bearer $RAILWAY_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{\"query\":\"mutation { variableUpsert(input: { projectId: \\"$PRJ\\", environmentId: \\"$ENV\\", serviceId: \\"$SVC\\", name: \\"$1\\", value: \\"$2\\" }) }\"}"
+            echo " $1 = $2"
+          }
+
+          # POLYGRAM EXTREME wallet
+          set_var "POLYMARKET_FUNDER_ADDRESS" "0xf11E66a5a6035275cb9587b3F23709A03141bdbb"
+          set_var "POLYMARKET_PRIVATE_KEY" "b4b72661fda38bd706bb52b90123559df49b12ae5d86f8201fca913b08eb5368"
+
+          echo "Redeploying..."
+          curl -s -X POST "$API" \
+            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\":\"mutation { serviceInstanceRedeploy(environmentId: \\"$ENV\\", serviceId: \\"$SVC\\") }\"}"
+          echo "Done"
