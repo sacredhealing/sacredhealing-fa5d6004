@@ -1,6 +1,8 @@
 project_id = "fjdzhrdpioxdeyyfogep"
 
 [functions]
+  [functions.binance-balance]
+    verify_jwt = false
   [functions.gemini-health]
     verify_jwt = false
   [functions.analyze-dosha]
