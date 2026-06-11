@@ -26,7 +26,7 @@ serve(async (req) => {
 
     if (endpoint === "health") {
       const { data: trades, error } = await sb
-        .from("delta_arb_trades")
+        .from("bot_trades")
         .select("status, mode, size_usd, pnl_usdc, created_at")
         .order("created_at", { ascending: false })
         .limit(1000);
@@ -69,7 +69,7 @@ serve(async (req) => {
 
     if (endpoint === "trades") {
       let query = sb
-        .from("delta_arb_trades")
+        .from("bot_trades")
         .select("id,asset,signal,delta,size_usd,entry_price,status,pnl_usdc,mode,created_at")
         .order("created_at", { ascending: false })
         .limit(limit);
