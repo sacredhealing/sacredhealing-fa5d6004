@@ -485,6 +485,52 @@ const Dashboard: React.FC = () => {
 
       <AchievementPopup achievement={newlyUnlocked} onClose={dismissNewlyUnlocked} />
 
+      {/* ADMIN-ONLY: Delta-Arb Bot dashboard entry (Kritagya + Laila) */}
+      {user && ['bd0b21c9-577a-450b-bb1e-21c9d0423f17', 'a711f099-3d34-456f-8473-8a65eab056d5'].includes(user.id) && (
+        <div style={{ padding: '12px 16px 0' }}>
+          <button
+            onClick={() => navigate('/admin/delta-arb')}
+            style={{
+              width: '100%',
+              display: 'flex', alignItems: 'center', gap: 14,
+              background: 'rgba(255,255,255,0.02)',
+              border: '1px solid rgba(212,175,55,0.25)',
+              borderRadius: 22,
+              padding: '14px 18px',
+              backdropFilter: 'blur(40px)',
+              WebkitBackdropFilter: 'blur(40px)',
+              cursor: 'pointer',
+              textAlign: 'left',
+              color: '#fff',
+            }}
+          >
+            <div style={{
+              width: 38, height: 38, borderRadius: 12,
+              background: 'rgba(212,175,55,0.1)',
+              border: '1px solid rgba(212,175,55,0.3)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 18,
+            }}>⚡</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 13, fontWeight: 900, color: '#D4AF37', letterSpacing: '-0.01em' }}>
+                  Delta-Arb Bot
+                </span>
+                <span style={{
+                  fontSize: 8, fontWeight: 800, letterSpacing: '0.15em',
+                  color: '#22D3EE', border: '1px solid rgba(34,211,238,0.4)',
+                  borderRadius: 99, padding: '1px 6px',
+                }}>ADMIN</span>
+              </div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>
+                Live balance & trade feed
+              </div>
+            </div>
+            <span style={{ color: '#D4AF37', fontSize: 18, fontWeight: 700 }}>→</span>
+          </button>
+        </div>
+      )}
+
       {/* IN SESSION */}
       {flowState === 'in_session' && activeGuidance && (
         <div className="px-4 mb-6 animate-slide-up">
