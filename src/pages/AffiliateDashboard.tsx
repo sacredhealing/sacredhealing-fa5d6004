@@ -78,7 +78,7 @@ export default function AffiliateDashboard() {
     return () => clearInterval(iv);
   }, [isAdmin, load]);
 
-  if (loading) return <div style={{ background: BG, minHeight: '100vh' }} />;
+  if (isLoading) return <div style={{ background: BG, minHeight: '100vh' }} />;
   if (!isAdmin) return <Navigate to="/" replace />;
 
   const mode = status?.mode ?? 'PAPER';
