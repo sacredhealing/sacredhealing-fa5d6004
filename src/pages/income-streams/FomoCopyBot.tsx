@@ -828,6 +828,9 @@ function FomoCopyBotInner() {
     currentValueSOL: number; // updated by price poller
   }>>({});
   const [eurRate, setEurRate] = useState<number>(0.92); // EUR/USD
+  // Fixed trade size mode: if > 0, use this SOL amount instead of riskPct %
+  const [fixedTradeSOL, setFixedTradeSOL] = useState<number>(0);
+  const fixedTradeRef = useRef<number>(0);
 
   // Fetch EUR/USD rate once
   useEffect(() => {
@@ -903,7 +906,7 @@ function FomoCopyBotInner() {
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        trackedWallets, riskPct, startingSOL, slippageBps, pumpFunOnly, autoSellMins, maxPositions,
+        trackedWallets, riskPct, startingSOL, slippageBps, pumpFunOnly, autoSellMins, maxPositions, fixedTradeSOL,
       }));
     } catch {}
   }, [trackedWallets, riskPct, startingSOL, slippageBps, pumpFunOnly, autoSellMins]);
@@ -1023,7 +1026,12 @@ function FomoCopyBotInner() {
       if (trade.action === 'BUY' && trade.amountSOL) {
         whaleEntriesRef.current[trade.mint] = trade.amountSOL;
       }
-      const result = paperRef.current.execute({ ...trade, symbol: cachedSymbol }, riskPct / 100, label, slippageRef.current, whaleMultiplier);
+      // Use fixed SOL amount if set, otherwise use % of portfolio
+      const fixedAmt = fixedTradeRef.current;
+      const effectiveRisk = fixedAmt > 0
+        ? fixedAmt / (paperRef.current.portfolio || startingSOL) // convert fixed SOL → fraction
+        : riskPct / 100;
+      const result = paperRef.current.execute({ ...trade, symbol: cachedSymbol }, effectiveRisk, label, slippageRef.current, whaleMultiplier);
       // Track open positions for live dashboard display
       if (result && !result.skipped && !result.failed) {
         if (trade.action === 'BUY') {
