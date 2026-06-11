@@ -646,61 +646,6 @@ export default function SiddhaPortal() {
         delay={0.1}
       />
       <ToolCard
-        title={t('siddhaPortal.hairGrowthTitle')}
-        desc={t('siddhaPortal.hairGrowthDesc')}
-        cta={t('siddhaPortal.hairGrowthCta')}
-        href="/siddha-hair-growth"
-        badge={t('siddhaPortal.badgeSqi')}
-        accentColor={gold(0.92)}
-        gradientFrom="rgba(180,83,9,0.08)" gradientTo={gold(0.03)}
-        delay={0.15}
-      />
-      <ToolCard
-        title={t('siddhaPortal.shaktiTitle')}
-        desc={t('siddhaPortal.shaktiDesc')}
-        cta={t('siddhaPortal.shaktiCta')}
-        href={
-          hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal)
-            ? '/sovereign-hormonal-alchemy'
-            : '/siddha-quantum'
-        }
-        badge={t('siddhaPortal.badgeNew')}
-        accentColor={pink(0.88)}
-        gradientFrom={pink(0.07)} gradientTo={gold(0.02)}
-        delay={0.2}
-      />
-      <ToolCard
-        title={t('siddhaPortal.aethericTitle')}
-        desc={t('siddhaPortal.aethericDesc')}
-        cta={t('siddhaPortal.aethericCta')}
-        href="/aetheric-heliostat"
-        badge={t('siddhaPortal.badgeSqi')}
-        accentColor={amber(0.88)}
-        gradientFrom={amber(0.06)} gradientTo={gold(0.02)}
-        delay={0.3}
-      />
-      <ToolCard
-        title={t('siddhaPortal.atmosphericTitle')}
-        desc={t('siddhaPortal.atmosphericDesc')}
-        cta={t('siddhaPortal.atmosphericCta')}
-        href="/atmospheric-clearance-engine"
-        badge={t('siddhaPortal.badgeSqi')}
-        accentColor={green(0.88)}
-        gradientFrom={green(0.06)} gradientTo={gold(0.02)}
-        delay={0.35}
-      />
-      <ToolCard
-        title={t('siddhaPortal.wealthBeaconTitle')}
-        desc={t('siddhaPortal.wealthBeaconDesc')}
-        cta={t('siddhaPortal.wealthBeaconCta')}
-        href="/wealth-beacon"
-        badge={t('siddhaPortal.badgeSqi')}
-        isLive
-        accentColor={gold(0.92)}
-        gradientFrom={gold(0.1)} gradientTo="rgba(157,80,187,0.06)"
-        delay={0.4}
-      />
-      <ToolCard
         title={t('siddhaPortal.vajraTitle')}
         desc={t('siddhaPortal.vajraDesc')}
         cta={t('siddhaPortal.vajraCta')}
@@ -722,33 +667,11 @@ export default function SiddhaPortal() {
       </div>
 
       <OracleCard
-        title={t('siddhaPortal.digitalNadiOracleTitle')}
-        desc={t('siddhaPortal.nadiDesc')}
-        cta={t('siddhaPortal.beginScan')}
-        href="/digital-nadi"
-        isLive
-        delay={0.05}
-      />
-      <OracleCard
         title={t('siddhaPortal.sriYantraShield')}
         desc={t('siddhaPortal.sriYantraDesc')}
         cta={t('siddhaPortal.activateShield')}
         href="/sri-yantra-shield"
         delay={0.1}
-      />
-      <OracleCard
-        title={t('siddhaPortal.palmOracleTitle')}
-        desc={t('siddhaPortal.palmOracleDesc')}
-        cta={t('siddhaPortal.palmOracleCta')}
-        href="/hand-analyzer"
-        delay={0.25}
-      />
-      <OracleCard
-        title={t('siddhaPortal.akashicDecoderTitle')}
-        desc={t('siddhaPortal.akashicDecoderDesc')}
-        cta={t('siddhaPortal.akashicDecoderCta')}
-        href="/akashic-records"
-        delay={0.3}
       />
       <OracleCard
         title={t('siddhaPortal.vayuTitle')}
