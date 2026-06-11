@@ -10,7 +10,7 @@ const GREEN = '#22c55e';
 const RED   = '#ef4444';
 const AMBER = '#f59e0b';
 
-// External Supabase project that hosts the delta_arb_trades feed.
+// External Supabase project that hosts the bot_trades feed.
 const FEED_URL = 'https://fjdzhrdpioxdeyyfogep.supabase.co';
 const FEED_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMDQwMDMsImV4cCI6MjA5MzY4MDAwM30.Mkbodv6uEb1yMKA0UIKMzm-cFWfcgNFXr-LLGtqoNcg';
 
@@ -37,7 +37,7 @@ export default function DeltaArbBot() {
   const loadTrades = useCallback(async () => {
     try {
       const res = await fetch(
-        `${FEED_URL}/rest/v1/delta_arb_trades?select=*&order=created_at.desc&limit=10000`,
+        `${FEED_URL}/rest/v1/bot_trades?select=*&order=created_at.desc&limit=10000`,
         {
           headers: {
             apikey: FEED_KEY,
@@ -220,7 +220,7 @@ export default function DeltaArbBot() {
             <div style={{ padding: 32, textAlign: 'center' }}>
               <div style={{ fontSize: 12, color: AMBER, fontWeight: 700, marginBottom: 6 }}>No trades in feed yet</div>
               <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', lineHeight: 1.5 }}>
-                The Railway worker is not writing to <code style={{ color: GOLD }}>delta_arb_trades</code>.<br/>
+                The Railway worker is not writing to <code style={{ color: GOLD }}>bot_trades</code>.<br/>
                 Once it inserts a row it will appear here within 15s.
               </div>
             </div>
@@ -265,7 +265,7 @@ export default function DeltaArbBot() {
           {[
             ['⚡', 'Binance WebSocket streams BTC at sub-50ms'],
             ['📐', 'Bot detects 0.12%+ price movement → direction locked'],
-            ['🎯', 'Signal logged to delta_arb_trades feed'],
+            ['🎯', 'Signal logged to bot_trades feed'],
             ['💰', 'Live trades execute against Binance capital shown above'],
             ['🏆', 'Outcome resolved → win/loss recorded'],
           ].map(([icon, text]) => (
