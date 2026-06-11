@@ -62,12 +62,14 @@ serve(async (req) => {
       return b ? parseFloat(b.free) + parseFloat(b.locked) : 0;
     };
     const usdt = get("USDT");
+    const usdc = get("USDC");
     const btc = get("BTC");
-    const totalUsd = usdt + btc * btcPrice;
+    const totalUsd = usdt + usdc + btc * btcPrice;
 
     return json({
       ok: true,
       usdt: Math.round(usdt * 100) / 100,
+      usdc: Math.round(usdc * 100) / 100,
       btc: Math.round(btc * 1e8) / 1e8,
       btcPrice: Math.round(btcPrice * 100) / 100,
       totalUsd: Math.round(totalUsd * 100) / 100,
