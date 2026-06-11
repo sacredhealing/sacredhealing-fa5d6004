@@ -44,7 +44,7 @@ const card: React.CSSProperties = {
 };
 
 export default function AffiliateDashboard() {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth();
   const [status, setStatus] = useState<BotStatus | null>(null);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [hasStatus, setHasStatus] = useState<boolean | null>(null);
