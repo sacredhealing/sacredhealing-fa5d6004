@@ -205,12 +205,20 @@ export default function DeltaArbBotV2() {
           <div style={{ display: 'flex', gap: 32, alignItems: 'flex-end', marginBottom: 18, flexWrap: 'wrap' }}>
             <div>
               <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.22em', color: 'rgba(255,255,255,0.2)', marginBottom: 5 }}>
-                BALANCE
+                BINANCE CAPITAL {capital?.ok ? '· LIVE' : capErr ? '· OFFLINE' : '· …'}
               </div>
               <div style={{ fontSize: 44, fontWeight: 900, color: GOLD, letterSpacing: '-0.04em',
                 textShadow: `0 0 40px ${GOLD}44` }}>
                 ${balance.toFixed(2)}
               </div>
+              {capital?.ok && (
+                <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginTop: 4, letterSpacing: '0.08em' }}>
+                  USDC ${Number(capital.usdc ?? 0).toFixed(2)} · USDT ${Number(capital.usdt ?? 0).toFixed(2)} · BTC {Number(capital.btc ?? 0).toFixed(6)}
+                </div>
+              )}
+              {!capital?.ok && capErr && (
+                <div style={{ fontSize: 9, color: 'rgba(255,80,80,0.6)', marginTop: 4 }}>{capErr.slice(0, 80)}</div>
+              )}
             </div>
             <div style={{ paddingBottom: 7 }}>
               <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.22em', color: 'rgba(255,255,255,0.2)', marginBottom: 5 }}>
