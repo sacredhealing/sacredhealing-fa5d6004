@@ -821,6 +821,12 @@ function FomoCopyBotInner() {
   const [avgLatency,     setAvgLatency]     = useState<number | null>(null);
   const [walletActivity, setWalletActivity] = useState<Map<string, 'checking' | 'active' | 'inactive'>>(new Map()); // NEW
   const [isVerifying,    setIsVerifying]    = useState(false);
+  // ── Open positions tracker (what's live RIGHT NOW) ────────
+  const [openPositions, setOpenPositions] = useState<Record<string, {
+    mint: string; symbol: string; entrySOL: number; entryTime: number;
+    label: string; riskSOL: number;
+  }>>({});
+
   // ── Diagnostics ─────────────────────────────────────────
   const [rawMsgCount,  setRawMsgCount]  = useState(0);
   const [txCount,      setTxCount]      = useState(0);
@@ -1008,6 +1014,18 @@ function FomoCopyBotInner() {
         whaleEntriesRef.current[trade.mint] = trade.amountSOL;
       }
       const result = paperRef.current.execute({ ...trade, symbol: cachedSymbol }, riskPct / 100, label, slippageRef.current, whaleMultiplier);
+      // Track open positions for live dashboard display
+      if (result && !result.skipped && !result.failed) {
+        if (trade.action === 'BUY') {
+          setOpenPositions(prev => ({ ...prev, [trade.mint]: {
+            mint: trade.mint, symbol: cachedSymbol || trade.mint.slice(0,8),
+            entrySOL: result.riskSOL || 0, entryTime: Date.now(),
+            label, riskSOL: result.netPosition || 0,
+          }}));
+        } else {
+          setOpenPositions(prev => { const n = { ...prev }; delete n[trade.mint]; return n; });
+        }
+      }
       if (result) {
         setMyTrades(prev => [{ ...result, isVIP }, ...prev.slice(0, 49)]);
         setPaperPortfolio(paperRef.current.portfolio);
@@ -1126,7 +1144,7 @@ function FomoCopyBotInner() {
         if (!prev) {
           // First poll — process trades from last 10 min so user sees immediate activity
           const recentSigs = sigs.filter((s: any) => !s.err &&
-            (Date.now() / 1000 - (s.blockTime || 0)) < 14400); // last 4 hours
+            (Date.now() / 1000 - (s.blockTime || 0)) < 600); // last 10 min only
           if (!recentSigs.length) continue;
           // Process them below instead of skipping
           for (const sigInfo of recentSigs.slice(0, 2)) {
