@@ -127,6 +127,7 @@ const SovereignSignalOracle = React.lazy(() => import("./pages/income-streams/Po
 const DeltaArbBot = React.lazy(() => import("./pages/income-streams/DeltaArbBotV2")); // v-20260609-123855
 const PolymarketCopyTradingInfo = React.lazy(() => import("./pages/income-streams/PolymarketCopyTradingInfo"));
 const FomoCopyBot = React.lazy(() => import("./pages/income-streams/FomoCopyBot"));
+const ShreemBrzeePerformance = React.lazy(() => import("./pages/income-streams/ShreemBrzeePerformance"));
 const WhaleIntelligence = React.lazy(() => import("./pages/income-streams/WhaleIntelligence"));
 const SQISovereignBot = React.lazy(() => import("./pages/income-streams/SQISovereignBot"));
 const SniperBot = React.lazy(() => import("./pages/income-streams/SniperBot"));
@@ -345,6 +346,7 @@ function AppRoutes() {
                   <Route path="/income-streams/delta-arb-bot" element={<DeltaArbBot />} />
                   <Route path="/income-streams/polymarket-copy-trading" element={<PolymarketCopyTradingInfo />} />
                   <Route path="/income-streams/fomo-copy-bot" element={<FomoCopyBot />} />
+                  <Route path="/income-streams/shreem-brzee-performance" element={<ShreemBrzeePerformance />} />
                   <Route path="/income-streams/whale-intelligence" element={<WhaleIntelligence />} />
                   <Route path="/income-streams/sqi-sovereign-bot" element={<SQISovereignBot />} />
                   <Route path="/income-streams/sniper-bot" element={<SniperBot />} />
