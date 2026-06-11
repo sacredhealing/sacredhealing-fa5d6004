@@ -645,16 +645,6 @@ export default function SiddhaPortal() {
         gradientFrom={cyan(0.06)} gradientTo={gold(0.02)}
         delay={0.1}
       />
-      <ToolCard
-        title={t('siddhaPortal.vajraTitle')}
-        desc={t('siddhaPortal.vajraDesc')}
-        cta={t('siddhaPortal.vajraCta')}
-        href="/vajra-sky-breaker"
-        badge={t('siddhaPortal.badgeSqi')}
-        accentColor={cyan(0.9)}
-        gradientFrom={cyan(0.06)} gradientTo={gold(0.02)}
-        delay={0.45}
-      />
 
       <Divider />
 
@@ -672,13 +662,6 @@ export default function SiddhaPortal() {
         cta={t('siddhaPortal.activateShield')}
         href="/sri-yantra-shield"
         delay={0.1}
-      />
-      <OracleCard
-        title={t('siddhaPortal.vayuTitle')}
-        desc={t('siddhaPortal.vayuDesc')}
-        cta={t('siddhaPortal.vayuCta')}
-        href="/vayu-protocol"
-        delay={0.35}
       />
 
       {/* ── KEYFRAMES ── */}
