@@ -821,11 +821,21 @@ function FomoCopyBotInner() {
   const [avgLatency,     setAvgLatency]     = useState<number | null>(null);
   const [walletActivity, setWalletActivity] = useState<Map<string, 'checking' | 'active' | 'inactive'>>(new Map()); // NEW
   const [isVerifying,    setIsVerifying]    = useState(false);
-  // ── Open positions tracker (what's live RIGHT NOW) ────────
+  // ── Open positions tracker ──────────────────────────────
   const [openPositions, setOpenPositions] = useState<Record<string, {
     mint: string; symbol: string; entrySOL: number; entryTime: number;
-    label: string; riskSOL: number;
+    label: string; riskSOL: number; tokenAmount: number;
+    currentValueSOL: number; // updated by price poller
   }>>({});
+  const [eurRate, setEurRate] = useState<number>(0.92); // EUR/USD
+
+  // Fetch EUR/USD rate once
+  useEffect(() => {
+    fetch('https://api.exchangerate-api.com/v4/latest/USD')
+      .then(r => r.json())
+      .then(d => { if (d?.rates?.EUR) setEurRate(d.rates.EUR); })
+      .catch(() => {});
+  }, []);
 
   // ── Diagnostics ─────────────────────────────────────────
   const [rawMsgCount,  setRawMsgCount]  = useState(0);
@@ -1021,6 +1031,8 @@ function FomoCopyBotInner() {
             mint: trade.mint, symbol: cachedSymbol || trade.mint.slice(0,8),
             entrySOL: result.riskSOL || 0, entryTime: Date.now(),
             label, riskSOL: result.netPosition || 0,
+            tokenAmount: trade.tokenAmount || 0,
+            currentValueSOL: result.netPosition || 0,
           }}));
         } else {
           setOpenPositions(prev => { const n = { ...prev }; delete n[trade.mint]; return n; });
@@ -1385,6 +1397,69 @@ function FomoCopyBotInner() {
 
     return () => { supabase.removeChannel(channel); };
   }, [isMonitoring, trackedWallets, handleWhaleTrade]);
+
+  // ── Live price poller for open positions ───────────────
+  useEffect(() => {
+    if (Object.keys(openPositions).length === 0) return;
+    const fetchPrices = async () => {
+      const mints = Object.keys(openPositions);
+      try {
+        const url = `https://api.jup.ag/price/v2?ids=${mints.join(',')}&vsToken=So11111111111111111111111111111111111111112`;
+        const res = await fetch(url);
+        const data = await res.json();
+        setOpenPositions(prev => {
+          const updated = { ...prev };
+          mints.forEach(mint => {
+            if (!updated[mint]) return;
+            const priceData = data?.data?.[mint];
+            if (priceData?.price) {
+              const priceInSOL = parseFloat(priceData.price);
+              const tokenAmt = updated[mint].tokenAmount;
+              if (priceInSOL > 0 && tokenAmt > 0) {
+                updated[mint] = { ...updated[mint], currentValueSOL: priceInSOL * tokenAmt };
+              }
+            }
+          });
+          return updated;
+        });
+      } catch {}
+    };
+    fetchPrices();
+    const iv = setInterval(fetchPrices, 30_000);
+    return () => clearInterval(iv);
+  }, [Object.keys(openPositions).join(',')]);
+
+  // ── Manual close handler ─────────────────────────────────
+  const closePosition = useCallback((mint: string) => {
+    const pos = openPositions[mint];
+    if (!pos) return;
+    const slip = pos.currentValueSOL * (slippageRef.current / 10000);
+    const fees = 0.002 + 0.000005;
+    const netReceived = pos.currentValueSOL - slip - fees;
+    const pnl = netReceived - (pos.riskSOL + fees);
+    // Update paper portfolio
+    if (paperRef.current) {
+      paperRef.current.portfolio += netReceived;
+      delete paperRef.current.positions[mint];
+    }
+    setPaperPortfolio(prev => prev + netReceived);
+    setTotalPnL(prev => prev + pnl);
+    // Add to trade history
+    const closeEntry = {
+      action: 'SELL' as const, mint, symbol: pos.symbol,
+      wallet: pos.label, label: pos.label,
+      riskSOL: netReceived, pnl,
+      mult: (pos.currentValueSOL / pos.riskSOL).toFixed(2),
+      multSrc: '🖐 MANUAL',
+      slippagePaid: slip, feesPaid: fees,
+      portfolio: (paperRef.current?.portfolio || 0),
+      token: mint, id: Date.now(), timestamp: Date.now(),
+      costs: `MANUAL CLOSE | slip $${(slip * solUSD * eurRate).toFixed(2)} + fee $${(fees * solUSD * eurRate).toFixed(2)}`,
+    };
+    setMyTrades(prev => [closeEntry, ...prev]);
+    setOpenPositions(prev => { const n = { ...prev }; delete n[mint]; return n; });
+    setStatus(`🖐 Manually closed ${pos.symbol} · ${pnl >= 0 ? '+' : ''}${(pnl * solUSD * eurRate).toFixed(2)}€`);
+  }, [openPositions, solUSD, eurRate]);
 
   // Auto-restart when mobile screen wakes up or tab becomes visible
   useEffect(() => {
@@ -1792,35 +1867,60 @@ function FomoCopyBotInner() {
                 </div>
               ) : Object.values(openPositions).map((pos) => {
                 const ageMin = Math.floor((Date.now() - pos.entryTime) / 60000);
+                const pnlSOL = pos.currentValueSOL - pos.riskSOL;
+                const pnlEur = pnlSOL * solUSD * eurRate;
+                const pnlPct = pos.riskSOL > 0 ? (pnlSOL / pos.riskSOL) * 100 : 0;
+                const isUp   = pnlSOL >= 0;
+                const pnlColor = isUp ? COLORS.green : COLORS.red;
+                const hasPrice = pos.tokenAmount > 0 && pos.currentValueSOL !== pos.riskSOL;
                 return (
                   <div key={pos.mint} style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    padding: '10px 0', borderBottom: `1px solid ${COLORS.glassBorder}`,
+                    padding: '12px 0', borderBottom: `1px solid ${COLORS.glassBorder}`,
                   }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                    {/* Row 1: token name + age + P&L */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ width: 7, height: 7, borderRadius: '50%', background: COLORS.green,
-                          display: 'inline-block', animation: 'pulse 2s infinite',
-                          boxShadow: '0 0 8px rgba(74,222,128,0.7)' }} />
-                        <span style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>
+                          display: 'inline-block', boxShadow: '0 0 8px rgba(74,222,128,0.7)' }} />
+                        <span style={{ fontSize: 15, fontWeight: 900, color: '#fff' }}>
                           {pos.symbol?.toUpperCase()}
                         </span>
                         <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)',
                           background: 'rgba(255,255,255,0.05)', borderRadius: 6, padding: '2px 6px' }}>
-                          {ageMin < 1 ? 'just now' : `${ageMin}m open`}
+                          {ageMin < 1 ? 'just now' : `${ageMin}m`}
                         </span>
                       </div>
-                      <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
-                        copied from {pos.label} · {pos.riskSOL.toFixed(4)} SOL in
-                      </p>
+                      {/* P&L */}
+                      <div style={{ textAlign: 'right' }}>
+                        {hasPrice ? (
+                          <>
+                            <p style={{ fontSize: 14, fontWeight: 900, color: pnlColor, margin: 0 }}>
+                              {isUp ? '+' : ''}{pnlPct.toFixed(1)}%
+                            </p>
+                            <p style={{ fontSize: 10, color: pnlColor, margin: 0, opacity: 0.8 }}>
+                              {isUp ? '+' : ''}{pnlEur.toFixed(2)}€
+                            </p>
+                          </>
+                        ) : (
+                          <p style={{ fontSize: 11, color: COLORS.cyan, margin: 0 }}>fetching price…</p>
+                        )}
+                      </div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <p style={{ fontSize: 11, fontWeight: 700, color: COLORS.cyan, margin: '0 0 2px' }}>
-                        ⏳ waiting sell
+                    {/* Row 2: entry info */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', margin: 0 }}>
+                        {pos.label} · in: {(pos.riskSOL * solUSD * eurRate).toFixed(2)}€
+                        {hasPrice ? ` · now: ${(pos.currentValueSOL * solUSD * eurRate).toFixed(2)}€` : ''}
                       </p>
-                      <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', margin: 0 }}>
-                        exits when whale sells
-                      </p>
+                      {/* Manual close button */}
+                      <button onClick={() => closePosition(pos.mint)} style={{
+                        padding: '5px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 9,
+                        fontWeight: 800, letterSpacing: '0.15em',
+                        background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)',
+                        color: COLORS.red,
+                      }}>
+                        CLOSE
+                      </button>
                     </div>
                   </div>
                 );
