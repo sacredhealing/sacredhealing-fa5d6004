@@ -1,4 +1,3 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
 
 // All 21 tracked whale wallets
@@ -34,71 +33,98 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || ""
 );
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Verify webhook secret if set
-  const secret = process.env.HELIUS_WEBHOOK_SECRET;
-  if (secret) {
-    const auth = req.headers["authorization"];
-    if (auth !== secret) return res.status(401).json({ error: "unauthorized" });
+// Vercel serverless handler — no @vercel/node dependency needed
+export default async function handler(req: Request): Promise<Response> {
+  if (req.method !== "POST") {
+    return new Response("Method not allowed", { status: 405 });
   }
 
-  if (req.method !== "POST") return res.status(405).end();
+  let transactions: any[];
+  try {
+    const body = await req.json();
+    transactions = Array.isArray(body) ? body : [body];
+  } catch {
+    return new Response("Invalid JSON", { status: 400 });
+  }
 
-  const transactions: any[] = Array.isArray(req.body) ? req.body : [req.body];
-  const inserted: string[] = [];
+  let inserted = 0;
 
   for (const tx of transactions) {
     try {
-      const sig       = tx.signature;
-      const feePayer  = tx.feePayer;
-      const label     = WALLET_MAP[feePayer];
-      if (!label || !sig) continue;
+      // Helius enhanced transaction format
+      const sig        = tx.signature;
+      const feePayer   = tx.feePayer;
+      const timestamp  = tx.timestamp;
+      const type       = tx.type; // "SWAP"
+
+      if (!sig || !feePayer) continue;
       if (tx.transactionError) continue;
 
-      // Parse token transfers from Helius enhanced format
-      const transfers: any[] = tx.tokenTransfers || [];
-      const accountKeys: string[] = (tx.accountData || []).map((a: any) => a.account);
-      const isPumpFun = accountKeys.includes(PUMP_FUN);
+      // Match wallet
+      const label = WALLET_MAP[feePayer];
+      if (!label) {
+        // feePayer not in our list — check all accountData addresses
+        const allAccounts: string[] = (tx.accountData || []).map((a: any) => a.account);
+        const matched = allAccounts.find((addr: string) => WALLET_MAP[addr]);
+        if (!matched) continue;
+      }
 
-      for (const t of transfers) {
-        const fromOwner = t.fromUserAccount;
-        const toOwner   = t.toUserAccount;
-        const mint      = t.mint;
+      const walletAddr = WALLET_MAP[feePayer] ? feePayer : 
+        (tx.accountData || []).map((a: any) => a.account).find((addr: string) => WALLET_MAP[addr]);
+      if (!walletAddr) continue;
+      const walletLabel = WALLET_MAP[walletAddr];
 
+      // Detect pump.fun
+      const allAccounts: string[] = (tx.accountData || []).map((a: any) => a.account);
+      const isPumpFun = allAccounts.includes(PUMP_FUN);
+
+      // Parse token transfers
+      const tokenTransfers: any[] = tx.tokenTransfers || [];
+      if (!tokenTransfers.length) continue;
+
+      // Find the transfer involving our wallet
+      for (const transfer of tokenTransfers) {
+        const mint = transfer.mint;
         if (!mint || mint === SOL_MINT) continue;
 
-        const action = toOwner === feePayer ? "BUY" : fromOwner === feePayer ? "SELL" : null;
-        if (!action) continue;
+        const isBuy  = transfer.toUserAccount === walletAddr;
+        const isSell = transfer.fromUserAccount === walletAddr;
+        if (!isBuy && !isSell) continue;
 
-        // SOL amount from native transfers
+        const action = isBuy ? "BUY" : "SELL";
+
+        // Calculate SOL amount from native transfers
         const nativeTransfers: any[] = tx.nativeTransfers || [];
         let amountSol = 0;
         for (const nt of nativeTransfers) {
-          if (action === "BUY" && nt.fromUserAccount === feePayer) amountSol += nt.amount / 1e9;
-          if (action === "SELL" && nt.toUserAccount === feePayer) amountSol += nt.amount / 1e9;
+          if (action === "BUY"  && nt.fromUserAccount === walletAddr) amountSol += (nt.amount || 0) / 1e9;
+          if (action === "SELL" && nt.toUserAccount   === walletAddr) amountSol += (nt.amount || 0) / 1e9;
         }
 
         const { error } = await supabase.from("shreem_brzee_signals").upsert({
           sig,
-          wallet: feePayer,
-          label,
+          wallet:       walletAddr,
+          label:        walletLabel,
           action,
           mint,
-          symbol: t.tokenSymbol || null,
-          amount_sol: amountSol || null,
-          token_amount: t.tokenAmount || null,
-          is_pump_fun: isPumpFun,
-          block_time: tx.timestamp || null,
+          symbol:       transfer.tokenSymbol || null,
+          amount_sol:   amountSol > 0 ? amountSol : null,
+          token_amount: transfer.tokenAmount || null,
+          is_pump_fun:  isPumpFun,
+          block_time:   timestamp || null,
         }, { onConflict: "sig" });
 
-        if (!error) inserted.push(sig);
-        break; // one signal per tx
+        if (!error) inserted++;
+        break; // one signal per transaction
       }
     } catch (e: any) {
-      console.error("webhook parse error:", e.message);
+      console.error("[helius-webhook] parse error:", e?.message);
     }
   }
 
-  console.log(`[shreem-webhook] processed ${transactions.length} txs, inserted ${inserted.length} signals`);
-  return res.status(200).json({ ok: true, inserted: inserted.length });
+  console.log(`[helius-webhook] ${transactions.length} txs received, ${inserted} signals inserted`);
+  return new Response(JSON.stringify({ ok: true, inserted }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
 }
