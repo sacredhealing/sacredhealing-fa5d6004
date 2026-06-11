@@ -1126,7 +1126,7 @@ function FomoCopyBotInner() {
         if (!prev) {
           // First poll — process trades from last 10 min so user sees immediate activity
           const recentSigs = sigs.filter((s: any) => !s.err &&
-            (Date.now() / 1000 - (s.blockTime || 0)) < 600); // last 10 min
+            (Date.now() / 1000 - (s.blockTime || 0)) < 14400); // last 4 hours
           if (!recentSigs.length) continue;
           // Process them below instead of skipping
           for (const sigInfo of recentSigs.slice(0, 2)) {
