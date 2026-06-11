@@ -1,0 +1,4 @@
+=== Searching profiles ===
+[{"id":"a711f099-3d34-456f-8473-8a65eab056d5","full_name":"Laila Amrouche"}]
+=== Searching by name ===
+[{"id":"a711f099-3d34-456f-8473-8a65eab056d5","full_name":"Laila Amrouche","email":"laila.amrouche@gmail.com"}]
