@@ -30,11 +30,32 @@ export default function DeltaArbBotV2() {
   const [ts,      setTs]      = useState('');
   const [err,     setErr]     = useState('');
   const [pulse,   setPulse]   = useState(false);
+  const [capital, setCapital] = useState<any>(null);
+  const [capErr,  setCapErr]  = useState('');
 
   useEffect(() => {
     const iv = setInterval(() => setPulse(p => !p), 2000);
     return () => clearInterval(iv);
   }, []);
+
+  // Live Binance capital — USDT + USDC + BTC valued in USD
+  const loadCapital = useCallback(async () => {
+    try {
+      const r = await fetch(
+        `https://fjdzhrdpioxdeyyfogep.supabase.co/functions/v1/binance-balance`,
+        { headers: HDRS },
+      );
+      const j = await r.json();
+      if (j?.ok) { setCapital(j); setCapErr(''); }
+      else { setCapErr(j?.error ?? 'binance unreachable'); }
+    } catch (e: any) { setCapErr(String(e?.message ?? e)); }
+  }, []);
+
+  useEffect(() => { loadCapital(); }, [loadCapital]);
+  useEffect(() => {
+    const iv = setInterval(loadCapital, 15000);
+    return () => clearInterval(iv);
+  }, [loadCapital]);
 
   const load = useCallback(async () => {
     setSpin(true); setErr('');
@@ -68,8 +89,9 @@ export default function DeltaArbBotV2() {
   const lost      = trades.filter(t => t.status === 'lost');
   const open      = trades.filter(t => t.status !== 'won' && t.status !== 'lost');
   const totalPnl  = trades.reduce((s, t) => s + (parseFloat(t.pnl_usdc) || 0), 0);
-  const startBal  = 10;
-  const balance   = startBal + totalPnl;
+  // Real Binance spot capital (USDT + USDC + BTC in USD). Falls back to 0 while loading.
+  const liveCapital = capital?.ok ? Number(capital.totalUsd ?? 0) : 0;
+  const balance   = liveCapital;
   const wr        = won.length + lost.length > 0
     ? ((won.length / (won.length + lost.length)) * 100).toFixed(1) + '%'
     : '—';
