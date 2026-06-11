@@ -474,7 +474,53 @@ const AffiliateDashboard: React.FC = () => {
                   Your trading earnings: ${commissions.filter(c => c.source?.startsWith('trading')).reduce((s, c) => s + Number(c.commission_amount), 0).toFixed(2)}
                 </span>
               </div>
-            </div>          </div>
+            </div>
+
+            {/* Delta-Arb Bot — Income Stream card */}
+            <div
+              style={{
+                ...glassCard,
+                background: 'rgba(34,211,238,0.03)',
+                border: '1px solid rgba(34,211,238,0.18)',
+                marginTop: 12,
+                cursor: 'pointer',
+              }}
+              onClick={() => navigate('/income-streams/delta-arb-bot')}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 14,
+                  background: 'rgba(34,211,238,0.08)',
+                  border: '1px solid rgba(34,211,238,0.25)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 20, flexShrink: 0,
+                }}>⚡</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' as const }}>
+                    <span style={{ fontSize: 14, fontWeight: 900, color: '#22D3EE', letterSpacing: '-0.02em' }}>
+                      Delta-Arb Bot
+                    </span>
+                    <span style={{
+                      fontSize: 8, fontWeight: 800, letterSpacing: '0.2em',
+                      color: '#22D3EE', border: '1px solid rgba(34,211,238,0.35)',
+                      borderRadius: 99, padding: '2px 8px',
+                    }}>INCOME STREAM</span>
+                  </div>
+                  <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12, margin: '4px 0 0', lineHeight: 1.5 }}>
+                    Polymarket oracle-lag arbitrage · passive Siddha Quantum returns
+                  </p>
+                </div>
+                <span style={{ color: '#22D3EE', fontSize: 20, fontWeight: 700, flexShrink: 0 }}>→</span>
+              </div>
+              <p style={{
+                color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem',
+                lineHeight: 1.6, margin: '14px 0 0',
+                borderTop: '1px solid rgba(34,211,238,0.08)', paddingTop: 12,
+              }}>
+                Learn how the Delta-Arb Quantum Engine works, view live performance, and share it with your network to earn commissions.
+              </p>
+            </div>
+          </div>
         )}
 
         {/* ── Links tab ──────────────────────────────────────────────────────── */}
