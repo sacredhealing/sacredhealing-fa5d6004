@@ -115,6 +115,7 @@ const AIIncomeEngine = React.lazy(() => import("./pages/AIIncomeEngine"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 const AffiliateDetail = React.lazy(() => import("./pages/income-streams/AffiliateDetail"));
 const AffiliateDashboard = React.lazy(() => import("./pages/AffiliateDashboard"));
+const DeltaArbAdminDashboard = React.lazy(() => import("./pages/admin/DeltaArbAdminDashboard"));
 const AffiliateLanding = React.lazy(() => import("./pages/AffiliateLanding"));
 const QROnboarding = React.lazy(() => import("./pages/QROnboarding"));
 const SHCCoinDetail = React.lazy(() => import("./pages/income-streams/SHCCoinDetail"));
