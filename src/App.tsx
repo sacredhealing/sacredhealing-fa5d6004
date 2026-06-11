@@ -333,6 +333,7 @@ function AppRoutes() {
                   <Route path="/income-streams" element={<IncomeStreams />} />
                   <Route path="/income-streams/affiliate" element={<AffiliateDetail />} />
                   <Route path="/affiliate/dashboard" element={<AffiliateDashboard />} />
+                  <Route path="/admin/delta-arb" element={<DeltaArbAdminDashboard />} />
                   <Route path="/income-streams/shc-coin" element={<SHCCoinDetail />} />
                   <Route path="/income-streams/copy-trading" element={<CopyTradingDetail />} />
                   <Route path="/income-streams/bitcoin-mining" element={<BitcoinMiningDetail />} />
