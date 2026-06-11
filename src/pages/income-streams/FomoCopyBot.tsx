@@ -555,27 +555,64 @@ class PaperEngine {
     return PaperEngine.PRIORITY_FEE + PaperEngine.NETWORK_FEE;
   }
 
-  // Realistic meme coin exit multiplier based on actual copy trading stats
-  private realisticMultiplier(): number {
+  // ── FIX 1: Competition penalty — simulates being 2-12% late vs other bots ──
+  private competitionPenalty(): number {
     const r = Math.random();
-    if (r < 0.30) return 0.05 + Math.random() * 0.25;   // 30% → rug/dump: -75% to -95%
-    if (r < 0.55) return 0.30 + Math.random() * 0.50;   // 25% → loss: -20% to -70%
-    if (r < 0.75) return 0.92 + Math.random() * 0.11;   // 20% → near break-even: -8% to +3%
-    if (r < 0.90) return 1.10 + Math.random() * 0.90;   // 15% → win: +10% to +100%
-    return 2.00 + Math.random() * 4.00;                   // 10% → big win: +100% to +500%
+    if (r < 0.20) return 0.00;               // 20%: got in same time as whale
+    if (r < 0.70) return 0.02 + Math.random() * 0.03;  // 50%: 2-5% late
+    return 0.05 + Math.random() * 0.07;      // 30%: 5-12% late (significant price move)
   }
 
-  execute(trade: ParsedTrade, riskPct = 0.05, label?: string, slippageBps?: number) {
+  // ── FIX 2: Transaction failure simulation (12% failure rate) ──
+  private txFailed(): boolean {
+    return Math.random() < 0.12;
+  }
+
+  // ── FIX 3: Real exit — uses whale actual multiplier when available ──
+  // Falls back to realistic distribution only if no whale data
+  private exitMultiplier(whaleMultiplier?: number): number {
+    if (whaleMultiplier && whaleMultiplier > 0 && whaleMultiplier < 100) {
+      // Use the whale actual P&L ratio — this is what live trading would achieve
+      // Add small noise (±3%) for price impact of our own sell
+      const noise = 0.97 + Math.random() * 0.06;
+      return whaleMultiplier * noise;
+    }
+    // Fallback: statistical model (only used when whale sell data unavailable)
+    const r = Math.random();
+    if (r < 0.30) return 0.05 + Math.random() * 0.25;
+    if (r < 0.55) return 0.30 + Math.random() * 0.50;
+    if (r < 0.75) return 0.92 + Math.random() * 0.11;
+    if (r < 0.90) return 1.10 + Math.random() * 0.90;
+    return 2.00 + Math.random() * 4.00;
+  }
+
+  execute(trade: ParsedTrade, riskPct = 0.05, label?: string, slippageBps?: number, whaleMultiplier?: number) {
     if (slippageBps !== undefined) this.slippageBps = slippageBps;
 
     if (trade.action === 'BUY') {
-      const gross   = Math.min(this.portfolio * riskPct, this.portfolio);
+      const gross = Math.min(this.portfolio * riskPct, this.portfolio);
       if (gross <= 0) return null;
 
-      const slip    = this.slippageCost(gross);   // slippage on entry
-      const fees    = this.txFees();               // priority + network fee
-      const net     = gross - slip - fees;         // actual position value after costs
-      const total   = gross + fees;               // total SOL deducted from portfolio
+      // FIX 2: Simulate failed transaction (12% chance)
+      if (this.txFailed()) {
+        const fees = this.txFees(); // still pay gas on failed tx
+        this.portfolio -= fees;
+        const entry = {
+          ...trade, riskSOL: 0, netPosition: 0, slippagePaid: 0, feesPaid: fees,
+          portfolio: this.portfolio, token: trade.mint, pnl: -fees, label, id: Date.now(),
+          failed: true, failReason: Math.random() < 0.6 ? 'Slippage exceeded' : 'RPC timeout',
+          costs: `FAILED — fee $${(fees * 65).toFixed(2)}`,
+        };
+        this.trades.unshift(entry);
+        return entry;
+      }
+
+      // FIX 3: Competition penalty on top of slippage
+      const competitionSlip = gross * this.competitionPenalty();
+      const slip  = this.slippageCost(gross) + competitionSlip;
+      const fees  = this.txFees();
+      const net   = gross - slip - fees;
+      const total = gross + fees;
 
       if (total > this.portfolio) return null;
 
@@ -586,7 +623,7 @@ class PaperEngine {
         ...trade, riskSOL: gross, netPosition: net, slippagePaid: slip,
         feesPaid: fees, portfolio: this.portfolio, token: trade.mint,
         pnl: 0, label, id: Date.now(),
-        costs: `slip $${(slip * 150).toFixed(2)} + fee $${(fees * 150).toFixed(2)}`,
+        costs: `slip $${(slip * 65).toFixed(2)} + fee $${(fees * 65).toFixed(2)}`,
       };
       this.trades.unshift(entry);
       return entry;
@@ -600,21 +637,23 @@ class PaperEngine {
         return entry;
       }
 
-      const mult      = this.realisticMultiplier();
-      const gross     = pos.cost * mult;           // exit value before costs
-      const slip      = this.slippageCost(gross);  // slippage on exit
-      const fees      = this.txFees();             // priority + network fee
-      const net       = gross - slip - fees;       // actual SOL received
-      const pnl       = net - (pos.cost + fees);   // true P&L (vs all-in cost)
+      // FIX 1: Use real whale multiplier when available
+      const mult  = this.exitMultiplier(whaleMultiplier);
+      const gross = pos.cost * mult;
+      const slip  = this.slippageCost(gross);
+      const fees  = this.txFees();
+      const net   = gross - slip - fees;
+      const pnl   = net - (pos.cost + fees);
 
       this.portfolio += net;
       delete this.positions[trade.mint];
 
+      const multSrc = whaleMultiplier ? '🔴 REAL' : '📊 EST';
       const entry = {
-        ...trade, riskSOL: net, mult: mult.toFixed(2), slippagePaid: slip,
-        feesPaid: fees, portfolio: this.portfolio, token: trade.mint,
-        pnl, label, id: Date.now(),
-        costs: `slip $${(slip * 150).toFixed(2)} + fee $${(fees * 150).toFixed(2)}`,
+        ...trade, riskSOL: net, mult: mult.toFixed(2), multSrc,
+        slippagePaid: slip, feesPaid: fees, portfolio: this.portfolio,
+        token: trade.mint, pnl, label, id: Date.now(),
+        costs: `${multSrc} ${mult.toFixed(2)}x | slip $${(slip * 65).toFixed(2)} + fee $${(fees * 65).toFixed(2)}`,
       };
       this.trades.unshift(entry);
       return entry;
@@ -959,7 +998,16 @@ function FomoCopyBotInner() {
     }
 
     if (mode === 'paper') {
-      const result = paperRef.current.execute({ ...trade, symbol: cachedSymbol }, riskPct / 100, label, slippageRef.current);
+      // Compute real whale multiplier for SELL (FIX 1)
+      let whaleMultiplier: number | undefined;
+      if (trade.action === 'SELL' && trade.amountSOL && whaleEntriesRef.current[trade.mint]) {
+        whaleMultiplier = trade.amountSOL / whaleEntriesRef.current[trade.mint];
+        delete whaleEntriesRef.current[trade.mint]; // cleanup
+      }
+      if (trade.action === 'BUY' && trade.amountSOL) {
+        whaleEntriesRef.current[trade.mint] = trade.amountSOL;
+      }
+      const result = paperRef.current.execute({ ...trade, symbol: cachedSymbol }, riskPct / 100, label, slippageRef.current, whaleMultiplier);
       if (result) {
         setMyTrades(prev => [{ ...result, isVIP }, ...prev.slice(0, 49)]);
         setPaperPortfolio(paperRef.current.portfolio);
@@ -1060,6 +1108,8 @@ function FomoCopyBotInner() {
   // ── Start/Stop Monitoring ───────────────────────────────
   // ── POLLING ENGINE — fallback when WebSocket fails ───────
   const pollingRef      = useRef<any>(null);
+  // Tracks whale's entry SOL per mint — used to compute real exit multiplier
+  const whaleEntriesRef = useRef<Record<string, number>>({});
   const lastSigRef      = useRef<Record<string, string>>({});
 
   const pollWallets = useCallback(async () => {
@@ -1305,6 +1355,10 @@ function FomoCopyBotInner() {
           timestamp:   sig.block_time ? sig.block_time * 1000 : Date.now(),
           isPumpFun:   sig.is_pump_fun || false,
         };
+        // Track whale entry for real exit multiplier
+        if (sig.action === 'BUY' && sig.amount_sol) {
+          whaleEntriesRef.current[sig.mint] = sig.amount_sol;
+        }
         setStatus(`⚡ WEBHOOK: ${sig.label} ${sig.action} ${sig.symbol || sig.mint.slice(0,6)}`);
         handleWhaleTrade(trade, 0, sig.label,
           { isVIP: walletConfig.isVIP, riskMult: walletConfig.riskMult, priorityMult: walletConfig.priorityMult });
