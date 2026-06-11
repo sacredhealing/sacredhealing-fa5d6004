@@ -1326,6 +1326,42 @@ export type Database = {
         }
         Relationships: []
       }
+      bot_status: {
+        Row: {
+          balance: number | null
+          bot_id: string
+          mode: string | null
+          pnl: number | null
+          trades_lost: number | null
+          trades_won: number | null
+          updated_at: string | null
+          user_id: string
+          win_rate: number | null
+        }
+        Insert: {
+          balance?: number | null
+          bot_id: string
+          mode?: string | null
+          pnl?: number | null
+          trades_lost?: number | null
+          trades_won?: number | null
+          updated_at?: string | null
+          user_id: string
+          win_rate?: number | null
+        }
+        Update: {
+          balance?: number | null
+          bot_id?: string
+          mode?: string | null
+          pnl?: number | null
+          trades_lost?: number | null
+          trades_won?: number | null
+          updated_at?: string | null
+          user_id?: string
+          win_rate?: number | null
+        }
+        Relationships: []
+      }
       bot_trade_signals: {
         Row: {
           bot_type: string
