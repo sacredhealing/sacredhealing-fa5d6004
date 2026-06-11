@@ -1,0 +1,34 @@
+name: Get Laila UUID
+on:
+  push:
+    paths:
+      - '.github/workflows/get-laila-trigger.txt'
+jobs:
+  get:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+      - name: Find Laila UUID
+        env:
+          SK: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          LOG="_laila_uuid_$(date +%s).txt"
+          BASE="https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1"
+
+          echo "=== Searching profiles ===" | tee $LOG
+          curl -s "${BASE}/profiles?select=id,full_name&email=eq.laila.amrouche@gmail.com" \
+            -H "apikey: $SK" -H "Authorization: Bearer $SK" | tee -a $LOG
+
+          echo "" | tee -a $LOG
+          echo "=== Searching by name ===" | tee -a $LOG
+          curl -s "${BASE}/profiles?select=id,full_name,email&full_name=ilike.*laila*" \
+            -H "apikey: $SK" -H "Authorization: Bearer $SK" | tee -a $LOG
+
+          cat $LOG
+          git config user.email "bot@sqi.app" && git config user.name "SQI-Bot"
+          git add $LOG
+          git commit -m "ci: find laila uuid" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
