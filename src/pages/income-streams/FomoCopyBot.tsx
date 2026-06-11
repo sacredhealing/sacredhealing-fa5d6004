@@ -1773,45 +1773,87 @@ function FomoCopyBotInner() {
               </div>
             )}
 
-            {/* ── Connection Diagnostics ── */}
-            {isMonitoring && (
-              <div style={{ ...glassCard, padding: 16, marginBottom: 12,
-                border: `1px solid ${rawMsgCount > 0 ? 'rgba(74,222,128,0.2)' : 'rgba(255,165,0,0.2)'}` }}>
-                <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.45em', color: COLORS.gold, textTransform: 'uppercase', marginBottom: 12 }}>
-                  🔌 CONNECTION DIAGNOSTICS
+            {/* ── OPEN POSITIONS — live right now ───────────── */}
+            <div style={{ ...glassCard, marginBottom: 12,
+              border: `1px solid ${Object.keys(openPositions).length > 0 ? 'rgba(74,222,128,0.2)' : COLORS.glassBorder}` }}>
+              <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.45em',
+                color: Object.keys(openPositions).length > 0 ? COLORS.green : COLORS.gold,
+                marginBottom: 12 }}>
+                📂 OPEN POSITIONS ({Object.keys(openPositions).length})
+              </div>
+              {Object.keys(openPositions).length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', margin: '0 0 4px' }}>
+                    {isMonitoring ? '👀 Watching 21 whales — no open positions yet' : 'Press START to begin monitoring'}
+                  </p>
+                  <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', margin: 0 }}>
+                    When a whale BUYs, your position opens here instantly
+                  </p>
                 </div>
+              ) : Object.values(openPositions).map((pos) => {
+                const ageMin = Math.floor((Date.now() - pos.entryTime) / 60000);
+                return (
+                  <div key={pos.mint} style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    padding: '10px 0', borderBottom: `1px solid ${COLORS.glassBorder}`,
+                  }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                        <span style={{ width: 7, height: 7, borderRadius: '50%', background: COLORS.green,
+                          display: 'inline-block', animation: 'pulse 2s infinite',
+                          boxShadow: '0 0 8px rgba(74,222,128,0.7)' }} />
+                        <span style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>
+                          {pos.symbol?.toUpperCase()}
+                        </span>
+                        <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)',
+                          background: 'rgba(255,255,255,0.05)', borderRadius: 6, padding: '2px 6px' }}>
+                          {ageMin < 1 ? 'just now' : `${ageMin}m open`}
+                        </span>
+                      </div>
+                      <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
+                        copied from {pos.label} · {pos.riskSOL.toFixed(4)} SOL in
+                      </p>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <p style={{ fontSize: 11, fontWeight: 700, color: COLORS.cyan, margin: '0 0 2px' }}>
+                        ⏳ waiting sell
+                      </p>
+                      <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.25)', margin: 0 }}>
+                        exits when whale sells
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* ── BOT STATUS ─────────────────────────────────── */}
+            {isMonitoring && (
+              <div style={{ ...glassCard, marginBottom: 12, padding: '10px 16px',
+                display: 'flex', gap: 20, flexWrap: 'wrap' as const }}>
                 {[
-                  ['WS STATUS',      wsStatus.toUpperCase(),        wsStatus === 'connected' ? COLORS.green : wsStatus === 'error' ? COLORS.red : COLORS.cyan],
-                  ['RAW MESSAGES',   `${rawMsgCount} received`,     rawMsgCount > 0 ? COLORS.green : 'rgba(255,165,0,0.9)'],
-                  ['TX EVENTS',      `${txCount} whale txs`,        txCount > 0 ? COLORS.green : 'rgba(255,255,255,0.5)'],
-                  ['TRADES PARSED',  `${myTrades.length} trades`,   myTrades.length > 0 ? COLORS.green : 'rgba(255,255,255,0.5)'],
-                  ['LAST SIGNAL',    lastMsgTime,                   'rgba(255,255,255,0.6)'],
-                  ['HELIUS KEY',     HAS_HELIUS ? '✓ SET' : '✗ MISSING', HAS_HELIUS ? COLORS.green : COLORS.red],
-                  ['MODE',           wsStatus === 'connected' ? 'WS + Webhook' : 'Polling + Webhook', wsStatus === 'connected' ? COLORS.green : COLORS.cyan],
-                  ['WEBHOOK URL',     'siddhaquantumnexus.com/api/helius-webhook', 'rgba(255,255,255,0.5)'],
-                  ['WALLETS',        `${trackedWallets.filter(w => w.active).length} active`, COLORS.gold],
-                ].map(([k, v, col]) => (
-                  <div key={k as string} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0',
-                    borderBottom: `1px solid ${COLORS.glassBorder}`, fontSize: 10 }}>
-                    <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 8, fontWeight: 700, letterSpacing: '0.2em' }}>{k}</span>
-                    <span style={{ color: col as string, fontWeight: 700 }}>{v}</span>
+                  { label: 'CONNECTION', value: wsStatus === 'connected' ? '● WS LIVE' : '● POLLING',
+                    color: wsStatus === 'connected' ? COLORS.green : COLORS.cyan },
+                  { label: 'SIGNALS', value: `${txCount} today`, color: COLORS.gold },
+                  { label: 'LAST SIGNAL', value: lastMsgTime, color: 'rgba(255,255,255,0.5)' },
+                ].map(item => (
+                  <div key={item.label}>
+                    <p style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.3em',
+                      color: 'rgba(255,255,255,0.3)', margin: '0 0 3px' }}>{item.label}</p>
+                    <p style={{ fontSize: 11, fontWeight: 700, color: item.color, margin: 0 }}>{item.value}</p>
                   </div>
                 ))}
-                {rawMsgCount === 0 && wsStatus === 'connected' && (
-                  <div style={{ fontSize: 9, color: 'rgba(255,165,0,0.8)', marginTop: 10, lineHeight: 1.6 }}>
-                    ⚠ WS connected but no messages yet. Either whales aren't trading right now or Helius subscription is pending. Tap SIM to test paper engine.
-                  </div>
-                )}
-                {wsStatus === 'error' || wsStatus === 'disconnected' ? (
-                  <div style={{ fontSize: 9, color: COLORS.red, marginTop: 10 }}>
-                    ✗ WebSocket not connected. Tap STOP then START to reconnect.
-                  </div>
-                ) : null}
               </div>
             )}
 
-            {/* Recent trades preview */}
-            {myTrades.slice(0, 3).map((x, i) => <TradeRow key={x.id || i} trade={x} showPnL solUSD={solUSD} />)}
+            {/* ── RECENT CLOSED TRADES ───────────────────────── */}
+            {myTrades.length > 0 && (
+              <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.45em',
+                color: 'rgba(255,255,255,0.25)', marginBottom: 8, marginTop: 4 }}>
+                RECENT CLOSED TRADES
+              </div>
+            )}
+            {myTrades.slice(0, 5).map((x, i) => <TradeRow key={x.id || i} trade={x} showPnL solUSD={solUSD} />)}
           </div>
           );
         })()}
