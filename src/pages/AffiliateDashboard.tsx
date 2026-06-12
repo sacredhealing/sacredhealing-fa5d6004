@@ -570,7 +570,6 @@ const AffiliateDashboard: React.FC = () => {
                 Mirror trades from top Solana meme coin whales in real time · Helius webhook · 24/7 server-side monitoring
               </p>
             </div>
-          </div>
 
               {/* CLAWBOT — Polymarket Whale Mirror card */}
               <div
