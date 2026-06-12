@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMembership } from '@/hooks/useMembership';
+import { useAdminRole } from '@/hooks/useAdminRole';
 
 // ─── DESIGN TOKENS ────────────────────────────────────────────────────────────
 const gold  = (a: number) => `rgba(212,175,55,${a})`;
@@ -257,10 +258,11 @@ const CURRICULUM: {
 export default function SiddhaDreamAcademy() {
   const navigate = useNavigate();
   const { tier } = useMembership();
+  const { isAdmin } = useAdminRole();
   const [activeTab, setActiveTab] = useState<'free'|'prana'|'siddha'|'akasha'>('free');
   const [expanded, setExpanded] = useState<string|null>(null);
 
-  const userRank = userTierRank(tier ?? '');
+  const userRank = isAdmin ? 3 : userTierRank(tier ?? '');
   const tabOrder: ('free'|'prana'|'siddha'|'akasha')[] = ['free','prana','siddha','akasha'];
   const modules = CURRICULUM.filter(m => m.tier === activeTab);
   const tm = TIER_META[activeTab];
