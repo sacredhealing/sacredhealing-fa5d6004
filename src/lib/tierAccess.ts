@@ -133,6 +133,9 @@ export const FEATURE_TIER = {
   // Free (rank 0) — Vayu Protocol for all users
   vayuProtocol: 0,
 
+  // Free — Dream Academy accessible to all, admins bypass all tier locks
+  dreamAcademy: 0,
+
   // Akasha-Infinity (rank 3)
   quantumApothecary: 3,
   /** Virtual Pilgrimage + Temple Home — same tier gate */
@@ -175,3 +178,4 @@ export function isAkashaInfinityTier(tier: string | undefined | null): boolean {
     t.includes('templehome')
   );
 }
+
