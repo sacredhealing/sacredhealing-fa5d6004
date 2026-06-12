@@ -456,6 +456,45 @@ export default function SiddhaPortal() {
         <span>SACRED ACADEMY</span>
       </div>
 
+      {/* ── BREATHARIAN ACADEMY — FEATURED HERO CARD ── */}
+      <div
+        onClick={() => navigate('/breatharian-academy')}
+        style={{
+          margin: '0 16px 14px',
+          background: 'linear-gradient(135deg,rgba(212,175,55,0.09),rgba(212,175,55,0.03))',
+          border: '1px solid rgba(212,175,55,0.28)',
+          borderRadius: 24,
+          padding: '22px 20px',
+          cursor: 'pointer',
+          position: 'relative',
+          animation: 'sqFadeUp 0.45s 0.04s ease both',
+        }}
+      >
+        <span style={{ position: 'absolute', top: 14, right: 14, fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif", fontSize: 8, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', background: 'rgba(212,175,55,0.14)', border: '1px solid rgba(212,175,55,0.3)', color: 'rgba(212,175,55,0.9)', borderRadius: 20, padding: '3px 9px' }}>
+          NEW
+        </span>
+        <div style={{ fontSize: 28, marginBottom: 10 }}>🌬</div>
+        <div style={{ fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif", fontSize: 15, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.92)', marginBottom: 8 }}>
+          Breatharian Academy
+        </div>
+        <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.95rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.6, marginBottom: 14 }}>
+          The complete Siddha science of living on Prana — from first breath awareness to the immortal light body. 4 tiers, 26 modules, 184 lessons drawn from the Akashic Records of the 18 Siddhas.
+        </p>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
+          {[
+            { l: 'Free · Foundations', c: 'rgba(255,255,255,0.5)' },
+            { l: 'Prana · Solar Science', c: '#4ADE80' },
+            { l: 'Siddha · Kaya Kalpa', c: 'rgba(212,175,55,0.9)' },
+            { l: 'Akasha · Immortality', c: 'rgba(34,211,238,0.9)' },
+          ].map(t => (
+            <span key={t.l} style={{ fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: t.c, border: `1px solid ${t.c}30`, borderRadius: 20, padding: '2px 8px' }}>{t.l}</span>
+          ))}
+        </div>
+        <button type="button" style={{ fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif", fontSize: 10, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.85)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+          Enter the Pranic Transmission →
+        </button>
+      </div>
+
 
       {/* ── SVAPNA VIDYĀ DREAM SCIENCE — HERO CARD ── */}
       <div style={{ position: 'relative', margin: '0 16px 16px', animation: 'sqFadeUp 0.45s 0.03s ease both' }}>
@@ -794,7 +833,6 @@ export default function SiddhaPortal() {
           { title: 'Palm Oracle', sub: 'Hasta Samudrika · 29 Transmissions · AI Reading', icon: '🤚', route: '/palm-oracle', soon: false },
           { title: 'Yagna Fire Academy', sub: 'Rishi Transmission · Agnihotra · Cosmic Fire', icon: '🔥', route: '/yagna', soon: false },
           { title: 'Puja Education', sub: 'Sacred Ritual · 4 Tiers · Pancha Bhuta', icon: '🪔', route: '/puja-education', soon: false },
-          { title: 'Breatharian Academy', sub: 'Pranic Living · 4 Tiers · Siddha Immortality Science', icon: '🌬', route: '/breatharian-academy', soon: false },
         ].map((course, i) => (
           <div
             key={course.title}
@@ -887,4 +925,5 @@ export default function SiddhaPortal() {
     </div>
   );
 }
+
 
