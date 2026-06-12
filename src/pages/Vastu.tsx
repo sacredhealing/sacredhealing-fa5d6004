@@ -501,7 +501,7 @@ const Vastu = () => {
   // Education is free for all authenticated users
   // Abundance Architect requires Prana-Flow+
   const hasAbundanceAccess = isAdmin || adminGranted || isPremium || getTierRank(tier) >= 1;
-  const userRank = isAdmin || isAdminRole ? 3 : (getTierRank(tier) ?? 0);
+  const userRank = (isAdmin || adminGranted || isAdminRole) ? 3 : Math.max(getTierRank(tier) ?? 0, isPremium ? 1 : 0);
 
   const TABS = [
     { id: 'education' as const, label: 'SIDDHA VASTU EDUCATION', icon: '📚', sub: 'All Tiers' },
