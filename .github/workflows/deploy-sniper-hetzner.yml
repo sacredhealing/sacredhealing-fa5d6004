@@ -1,0 +1,50 @@
+name: Deploy Sniper to Hetzner
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'deploy | restart | status | logs'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+          - deploy
+          - restart
+          - status
+          - logs
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Setup SSH
+        run: |
+          sudo apt-get install -y sshpass
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          ssh-keyscan -p 22 -H 178.105.183.74 >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "SSH ready"
+
+      - name: Write bootstrap
+        run: |
+          echo "IyEvYmluL2Jhc2gKIyBTUUkgU292ZXJlaWduIFNuaXBlciDigJQgSGV0em5lciBCb290c3RyYXAKIyBSdW5zIGFsb25nc2lkZSBDTEFXQk9UIOKAlCBzZXBhcmF0ZSBkaXJlY3RvcnksIHNlcGFyYXRlIFBNMiBwcm9jZXNzCnNldCAtZQoKZWNobyAi4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQIgplY2hvICIgIFNRSSBTT1ZFUkVJR04gU05JUEVSIOKAlCBIZXR6bmVyIERlcGxveSIKZWNobyAiICBTZXJ2ZXI6IDE3OC4xMDUuMTgzLjc0IHwgRnJhbmtmdXJ0IHpvbmUiCmVjaG8gIuKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkCIKCkdIX1RPS0VOPSIkezF9IgppZiBbIC16ICIkR0hfVE9LRU4iIF07IHRoZW4gZWNobyAiW0VSUk9SXSBHaXRIdWIgdG9rZW4gcmVxdWlyZWQiOyBleGl0IDE7IGZpCgojIOKUgOKUgCBOb2RlIDIwIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAppZiAhIGNvbW1hbmQgLXYgbm9kZSAmPi9kZXYvbnVsbDsgdGhlbgogIGVjaG8gIltTUUldIEluc3RhbGxpbmcgTm9kZSAyMC4uLiIKICBjdXJsIC1mc1NMIGh0dHBzOi8vZGViLm5vZGVzb3VyY2UuY29tL3NldHVwXzIwLnggfCBiYXNoIC0KICBhcHQtZ2V0IGluc3RhbGwgLXkgbm9kZWpzCmZpCmVjaG8gIltTUUldIE5vZGU6ICQobm9kZSAtdikgfCBucG06ICQobnBtIC12KSIKCiMg4pSA4pSAIFBNMiDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKaWYgISBjb21tYW5kIC12IHBtMiAmPi9kZXYvbnVsbDsgdGhlbgogIG5wbSBpbnN0YWxsIC1nIHBtMgogIGVudiBQQVRIPSRQQVRIOi91c3IvYmluIHBtMiBzdGFydHVwIHN5c3RlbWQgLXUgcm9vdCAtLWhwIC9yb290IHx8IHRydWUKICBzeXN0ZW1jdGwgZW5hYmxlIHBtMi1yb290IDI+L2Rldi9udWxsIHx8IHRydWUKZmkKZWNobyAiW1NRSV0gUE0yOiAkKHBtMiAtdikiCgojIOKUgOKUgCBDbG9uZSAvIHB1bGwg4oCUIFNFUEFSQVRFIGZyb20gL3Jvb3QvY2xhd2JvdCDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKUkVQT19ESVI9Ii9yb290L3NuaXBlciIKaWYgWyAhIC1kICIkUkVQT19ESVIvLmdpdCIgXTsgdGhlbgogIGVjaG8gIltTUUldIENsb25pbmcgcmVwbyB0byAvcm9vdC9zbmlwZXIuLi4iCiAgZ2l0IGNsb25lICJodHRwczovL3gtYWNjZXNzLXRva2VuOiR7R0hfVE9LRU59QGdpdGh1Yi5jb20vc2FjcmVkaGVhbGluZy9zYWNyZWRoZWFsaW5nLWZhNWQ2MDA0LmdpdCIgIiRSRVBPX0RJUiIKZWxzZQogIGVjaG8gIltTUUldIFB1bGxpbmcgbGF0ZXN0Li4uIgogIGNkICIkUkVQT19ESVIiCiAgZ2l0IHJlbW90ZSBzZXQtdXJsIG9yaWdpbiAiaHR0cHM6Ly94LWFjY2Vzcy10b2tlbjoke0dIX1RPS0VOfUBnaXRodWIuY29tL3NhY3JlZGhlYWxpbmcvc2FjcmVkaGVhbGluZy1mYTVkNjAwNC5naXQiCiAgZ2l0IGZldGNoIG9yaWdpbgogIGdpdCByZXNldCAtLWhhcmQgb3JpZ2luL21haW4KZmkKCiMg4pSA4pSAIFdyaXRlIC5lbnYgZm9yIHNuaXBlciDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKY2QgIiRSRVBPX0RJUi9zbmlwZXItd29ya2VyIgpjYXQgPiAuZW52IDw8ICdFTlZFT0YnClNVUEFCQVNFX1VSTD1odHRwczovL2ZqZHpocmRwaW94ZGV5eWZvZ2VwLnN1cGFiYXNlLmNvClNVUEFCQVNFX1NFUlZJQ0VfS0VZPWV5SmhiR2NpT2lKSVV6STFOaUlzSW5SNWNDSTZJa3BYVkNKOS5leUpwYzNNaU9pSnpkWEJoWW1GelpTSXNJbkpsWmlJNkltWnFaSHBvY21Sd2FXOTRaR1Y1ZVdadloyVndJaXdpY205c1pTSTZJbk5sY25acFkyVmZjbTlzWlNJc0ltbGhkQ0k2TVRjME5UWXdORGN5TWl3aVpYaHdJam95TURZeE1UZ3dOekl5ZlEuSHpBVk5jR0JtTzFGY1hIZlduQTF6TmFQb05wU21GWGxMbXdIUEItTndvbwpIRUxJVVNfQVBJX0tFWT03NzVkM2QxZi02ODAxLTQxZGUtYTA2My04YWVlNDM4MmQwZjQKR0VNSU5JX0FQSV9LRVk9QUl6YUFiOFJONkkxcEVHM0N3TFJRVXJvdW9BR2RYVk9iLS1uOW5pUEJmbkNkdV9PQ1Fua0p3CkJPVF9VU0VSX0lEPWJkMGIyMWM5LTU3N2EtNDUwYi1iYjFlLTIxYzlkMDQyM2YxNwpQQVBFUl9NT0RFPXRydWUKQlVZX0FNT1VOVF9TT0w9MC4wNQpNQVhfT1BFTl9QT1NJVElPTlM9NQpNQVhfREFJTFlfVFJBREVTPTI1Ck1BWF9EQUlMWV9MT1NTX1NPTD0wLjUKVEFLRV9QUk9GSVRfWD0zLjAKTU9PTkJBR19YPTEwLjAKU1RPUF9MT1NTX1BDVD0wLjM1ClRSQUlMSU5HX1NUT1BfUENUPTAuMjUKTUFYX0hPTERfTUlOVVRFUz0zMApNSU5fQUlfU0NPUkU9NjAKSklUT19USVBfU09MPTAuMDAxCkVOVkVPRgplY2hvICJbU1FJXSAuZW52IHdyaXR0ZW4iCgojIOKUgOKUgCBJbnN0YWxsIGRlcGVuZGVuY2llcyDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKbnBtIGluc3RhbGwgLS1vbWl0PWRldgplY2hvICJbU1FJXSBEZXBlbmRlbmNpZXMgaW5zdGFsbGVkIgoKIyDilIDilIAgU3RhcnQvcmVzdGFydCBQTTIg4oCUIG5hbWU6IHNvdmVyZWlnbi1zbmlwZXIg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACmlmIHBtMiBkZXNjcmliZSBzb3ZlcmVpZ24tc25pcGVyID4gL2Rldi9udWxsIDI+JjE7IHRoZW4KICBwbTIgcmVzdGFydCBzb3ZlcmVpZ24tc25pcGVyIC0tdXBkYXRlLWVudgogIGVjaG8gIltTUUldIOKchSBzb3ZlcmVpZ24tc25pcGVyIFJFU1RBUlRFRCIKZWxzZQogIHBtMiBzdGFydCBpbmRleC5qcyAtLW5hbWUgc292ZXJlaWduLXNuaXBlcgogIGVjaG8gIltTUUldIOKchSBzb3ZlcmVpZ24tc25pcGVyIFNUQVJURUQgZnJlc2giCmZpCnBtMiBzYXZlCgojIOKUgOKUgCBTdGF0dXMg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACnNsZWVwIDUKZWNobyAiIgplY2hvICJbU1FJXSDilZDilZDilZAgUE0yIFNUQVRVUyDilZDilZDilZAiCnBtMiBsaXN0CmVjaG8gIiIKZWNobyAiW1NRSV0g4pWQ4pWQ4pWQIFNOSVBFUiBMT0dTIChsYXN0IDMwIGxpbmVzKSDilZDilZDilZAiCnBtMiBsb2dzIHNvdmVyZWlnbi1zbmlwZXIgLS1saW5lcyAzMCAtLW5vc3RyZWFtIDI+L2Rldi9udWxsIHx8IHRydWUKZWNobyAiIgplY2hvICJbU1FJXSDilZDilZDilZAgQ0xBV0JPVCBTVEFUVVMgKHVudG91Y2hlZCkg4pWQ4pWQ4pWQIgpwbTIgZGVzY3JpYmUgY2xhd2JvdCAyPi9kZXYvbnVsbCB8IGdyZXAgLUUgInN0YXR1c3xyZXN0YXJ0fG5hbWUiIHx8IGVjaG8gIkNMQVdCT1Qgbm90IGZvdW5kIG9uIHRoaXMgc2VydmVyIgplY2hvICLilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZAiCmVjaG8gIltTUUktMjA1MF0gU05JUEVSIERFUExPWU1FTlQgQ09NUExFVEUiCmVjaG8gIuKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkCIK" | base64 -d > /tmp/sniper-bootstrap.sh
+          chmod +x /tmp/sniper-bootstrap.sh
+          echo "Bootstrap: $(wc -c < /tmp/sniper-bootstrap.sh) bytes"
+
+      - name: Execute on Hetzner
+        env:
+          HETZNER_PASS: ${{ secrets.HETZNER_ROOT_PASSWORD }}
+          GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+        run: |
+          ACTION="${{ github.event.inputs.action }}"
+          if [ "$ACTION" = "status" ]; then
+            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "pm2 list && pm2 logs sovereign-sniper --lines 30 --nostream 2>/dev/null || true"
+          elif [ "$ACTION" = "restart" ]; then
+            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "pm2 restart sovereign-sniper --update-env && pm2 logs sovereign-sniper --lines 20 --nostream 2>/dev/null"
+          elif [ "$ACTION" = "logs" ]; then
+            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "pm2 logs sovereign-sniper --lines 50 --nostream 2>/dev/null"
+          else
+            sshpass -p "$HETZNER_PASS" scp -o StrictHostKeyChecking=no /tmp/sniper-bootstrap.sh root@178.105.183.74:/root/sniper-bootstrap.sh
+            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "chmod +x /root/sniper-bootstrap.sh && bash /root/sniper-bootstrap.sh '${GH_TOKEN}' 2>&1"
+          fi
