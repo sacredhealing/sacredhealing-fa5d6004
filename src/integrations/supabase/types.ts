@@ -1173,6 +1173,36 @@ export type Database = {
         }
         Relationships: []
       }
+      bhrigu_readings: {
+        Row: {
+          birth_data: Json | null
+          created_at: string
+          id: string
+          question: string | null
+          reading_type: string
+          sections: Json
+          user_id: string
+        }
+        Insert: {
+          birth_data?: Json | null
+          created_at?: string
+          id?: string
+          question?: string | null
+          reading_type?: string
+          sections?: Json
+          user_id: string
+        }
+        Update: {
+          birth_data?: Json | null
+          created_at?: string
+          id?: string
+          question?: string | null
+          reading_type?: string
+          sections?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       blocked_users: {
         Row: {
           blocked_at: string
