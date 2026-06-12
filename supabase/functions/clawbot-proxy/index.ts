@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const RAILWAY = "https://siddha-soma-apothecary-production.up.railway.app";
+const RAILWAY = "http://178.105.183.74:8080"; // Hetzner CPX22 — Nuremberg (migrated from Railway)
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
