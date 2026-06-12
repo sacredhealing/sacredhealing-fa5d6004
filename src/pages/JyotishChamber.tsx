@@ -198,6 +198,319 @@ const LexEntry: React.FC<{ entry: typeof LEXICON[0]; gs: React.CSSProperties }> 
 
 // ── Component ────────────────────────────────────────────────────
 
+
+// ── DAILY KARMA GUIDE — tiered ────────────────────────────────────────────────
+const WEEKDAY_KARMA: Record<number, {
+  planet: string; sym: string; color: string; varName: string;
+  theme: string; planetDesc: string;
+  doItems: string[]; avoidItems: string[];
+  reflection: string; mantra: string;
+  pranaDo: string[]; pranaAvoid: string[]; pranaReflection: string;
+  siddhaDo: string[]; siddhaInsight: string;
+}> = {
+  0: { planet:'Sun', sym:'☉', color:'#F59E0B', varName:'Ravivāra',
+    theme:'Soul Power, Authority & Clarity',
+    planetDesc:'Sunday belongs to the Sun — the soul of our solar system. His energy brings courage, visibility, and life force. A powerful day for prayer, leadership, and healing the father relationship.',
+    doItems:['Offer water to the Sun at sunrise — even a glass held toward the light works','Wear orange, yellow, or gold today — Sun\'s colours amplify his energy','Pray for your father or father figures — living or passed','Begin new projects or leadership roles — Sun blesses bold beginnings today'],
+    avoidItems:['Avoid ego conflicts and power struggles — Sun\'s energy magnifies pride','Do not cut hair or start arguments on Sunday in Vedic tradition','Avoid dark, heavy spaces — go into sunlight as much as possible'],
+    reflection:'"Where in my life am I hiding my true light — and what would it feel like to let myself be seen fully today?"',
+    mantra:'Om Hrim Suryaya Namah',
+    pranaDo:['Your Sun placement in your chart activates extra strongly today — use this for any area where you want to shine or lead','If Sun rules your ascendant or 10th house, today is your most powerful career day of the week'],
+    pranaAvoid:['Your chart\'s Saturn placement may tension with today\'s Sun energy — avoid overworking and rest if you feel depleted'],
+    pranaReflection:'"What does my soul truly want to express and be recognised for — and am I honouring that calling?"',
+    siddhaDo:['Perform Surya Namaskar (Sun salutation) 12 rounds at sunrise for maximum Prana activation','Light a ghee lamp facing east and chant the Aditya Hridayam — this ancient hymn activates Solar Prana at Siddha level'],
+    siddhaInsight:'The Siddhas teach that the Sun is not merely a star — it is a conscious being transmitting life-force through light. When you face the Sun with gratitude, you are communing with a divine intelligence.' },
+  1: { planet:'Moon', sym:'☽', color:'#94A3B8', varName:'Somavāra',
+    theme:'Emotions, Intuition & Healing',
+    planetDesc:'Monday belongs to the Moon — ruler of mind, emotions, and the feminine principle. Her energy is receptive, intuitive, and deeply healing. A perfect day for rest, inner work, and nourishing yourself and others.',
+    doItems:['Drink extra water today — Moon rules all liquids and hydration','Rest, slow down, and listen to your feelings without judgment','Connect with your mother or women in your life — Moon blesses these bonds','Cook a nourishing meal from scratch — Moon loves acts of nourishment'],
+    avoidItems:['Avoid big decisions when emotions are running high — Moon makes feelings intense','Do not start bold new ventures — Monday is for reflection, not aggressive action','Avoid overeating or emotional eating — Moon can trigger this pattern'],
+    reflection:'"What emotion have I been pushing away that is asking for my gentle attention today?"',
+    mantra:'Om Shrim Chandramase Namah',
+    pranaDo:['Your Moon sign is amplified today — check where the Moon sits in your chart for specific guidance','If your Moon is in a water sign (Cancer, Scorpio, Pisces), your intuition is at its sharpest — trust what you feel'],
+    pranaAvoid:['If your natal Moon is afflicted by Saturn or Rahu, Monday can feel emotionally heavy — plan extra self-care'],
+    pranaReflection:'"What does my inner child most need from me today — and how can I offer that to myself with love?"',
+    siddhaDo:['Chant the Chandra Kavacham or simply "Om Som Somaya Namah" 108 times — this pacifies an afflicted Moon','Wear silver or white, and place a silver bowl of water on your altar overnight to absorb Monday\'s lunar frequency'],
+    siddhaInsight:'The Siddhas teach that the Moon is the storehouse of all past-life memory. When her energy is honoured, blocked emotions from many lifetimes begin to gently dissolve.' },
+  2: { planet:'Mars', sym:'♂', color:'#EF4444', varName:'Mangalavāra',
+    theme:'Courage, Action & Protection',
+    planetDesc:'Tuesday belongs to Mars — the warrior planet of courage, energy, and decisive action. His energy is bold, direct, and protective. The best day for physical activity, brave decisions, and standing up for truth.',
+    doItems:['Exercise vigorously — Mars loves physical movement and strength','Make that difficult phone call or conversation you have been avoiding','Begin protective rituals or prayers for your home and family','Do something brave — Mars rewards courage taken today'],
+    avoidItems:['Avoid arguments and aggressive confrontations — Mars energy can escalate quickly','Do not handle sharp objects carelessly — Mars rules blades and accidents','Avoid impulsive financial decisions — Mars can make us act too fast'],
+    reflection:'"Where in my life am I playing it too safe — and what one brave action would my highest self take today?"',
+    mantra:'Om Krim Mangalaya Namah',
+    pranaDo:['If Mars rules your ascendant (Aries or Scorpio rising), Tuesday is your power day — schedule your most demanding tasks now','Mars in a strong house today means physical energy is available — use it for exercise, building, or protection work'],
+    pranaAvoid:['If Mars is in your 6th, 8th, or 12th house natally, Tuesday can bring friction — be extra patient with others'],
+    pranaReflection:'"What am I protecting in my life — and is what I\'m defending truly worth the energy I am giving it?"',
+    siddhaDo:['Offer red flowers to Murugan or Hanuman today — Tuesday is their sacred day in Tamil Siddha tradition','Chant the Hanuman Chalisa for protection of your family — Mars and Hanuman together create an invincible shield'],
+    siddhaInsight:'In Tamil Siddha tradition, Tuesday is the day of Lord Murugan — the divine warrior who defeats all inner demons. When we face our fears on Tuesday, Murugan\'s shakti supports us.' },
+  3: { planet:'Mercury', sym:'☿', color:'#10B981', varName:'Budhavāra',
+    theme:'Communication, Learning & Commerce',
+    planetDesc:'Wednesday belongs to Mercury — the planet of intellect, communication, and commerce. His energy is quick, curious, and versatile. The best day for study, writing, business, and all forms of communication.',
+    doItems:['Write — journal, emails, creative writing, or letters. Mercury blesses the written word today','Study or learn something new — Mercury loves curious minds','Handle business matters, negotiations, and contracts today','Organise your thoughts, clear your inbox, and communicate clearly'],
+    avoidItems:['Avoid gossip and speaking unkindly — Mercury amplifies words both positive and negative','Do not sign contracts without reading every line — Mercury\'s energy makes us move too fast','Avoid scattered thinking — Mercury can make the mind jump between too many things'],
+    reflection:'"What truth have I been unable to express clearly — and what would it feel like to say it with love and confidence?"',
+    mantra:'Om Budhaya Namah',
+    pranaDo:['If Mercury rules your ascendant (Gemini or Virgo rising), Wednesday is your most powerful day for all mental work','Strong Mercury in your chart means today is ideal for negotiations — you will find the right words naturally'],
+    pranaAvoid:['If Mercury is retrograde in your natal chart, Wednesdays can bring communication mix-ups — double-check all messages before sending'],
+    pranaReflection:'"Am I using my words to create or to destroy — and what one conversation could I have today that would bring more clarity and love?"',
+    siddhaDo:['Write your intentions on paper with green ink today — Mercury\'s colour activates the intention through his frequency','Recite the Vishnu Sahasranama or any 1000-name hymn — Mercury rules recitation and these create powerful neural pathways'],
+    siddhaInsight:'The Siddhas considered Mercury the planet of Mantra Vidya — the science of sacred sound. Wednesday is therefore the most powerful day for mantra practice of any kind.' },
+  4: { planet:'Jupiter', sym:'♃', color:'#FBBF24', varName:'Guruvāra',
+    theme:'Wisdom, Grace, Dharma & Abundance',
+    planetDesc:'Thursday belongs to Jupiter — the Guru planet, bringer of wisdom, grace, and abundance. His energy is expansive, generous, and deeply spiritual. The most auspicious day of the week for prayer, teaching, and receiving blessings.',
+    doItems:['Visit a temple, church, mosque, or sacred space — Thursday is the most auspicious day for this','Give generously — to charity, to family, to strangers. Jupiter multiplies what you give today','Wear yellow or gold — Jupiter\'s colours. Eat yellow foods: turmeric, bananas, yellow lentils','Begin spiritual studies or any form of learning — Jupiter is the Guru of all Gurus'],
+    avoidItems:['Avoid wastefulness and excess — Jupiter\'s energy can make us overindulge','Do not disrespect teachers, elders, or wisdom traditions today — Jupiter becomes inauspicious when we are arrogant','Avoid legal disputes — reserve these for Mercury\'s day (Wednesday)'],
+    reflection:'"What is the universe trying to teach me through my current life challenges — and can I receive this lesson as a gift from my Guru?"',
+    mantra:'Om Gurave Namaha',
+    pranaDo:['If Jupiter rules your ascendant (Sagittarius or Pisces rising), Thursday is your most auspicious day of the entire year — make it sacred','Jupiter\'s transit through your chart determines your biggest growth windows — check which house he is in for maximum benefit today'],
+    pranaAvoid:['If Jupiter is afflicted by Rahu or Saturn in your natal chart, guard against overexpansion, false teachers, and blind optimism on Thursdays'],
+    pranaReflection:'"Where is Jupiter calling me to expand beyond my comfort zone — and what belief about my own unworthiness is holding me back from receiving more?"',
+    siddhaDo:['Perform Guru Puja today — light a yellow candle, offer turmeric, and silently thank all teachers who have shaped your path','The Brihaspati Stotra chanted on Thursday morning is one of the most powerful abundance activations in the Vedic tradition'],
+    siddhaInsight:'The 18 Siddhas held Thursday as the most sacred day — it is the day to receive transmission from the Guru lineage. When you sit in meditation on Thursday morning, the gates of the Akashic lineage are most open.' },
+  5: { planet:'Venus', sym:'♀', color:'#EC4899', varName:'Shukravāra',
+    theme:'Love, Beauty, Harmony & Abundance',
+    planetDesc:'Friday belongs to Venus — the goddess of love, beauty, arts, and abundance. Her energy is magnetic, creative, and deeply feminine. The perfect day for all heart-centred activities, creative expression, and receiving blessings of love and prosperity.',
+    doItems:['Call someone you love — a mother, sister, friend, or partner. Venus blesses these connections','Create something beautiful — cooking, art, music, flowers, decorating your altar','Wear pink, white, or pastel colours today — Venus\'s colours attract love and beauty','Offer fresh flowers to your deity or altar — Venus loves floral offerings'],
+    avoidItems:['Avoid arguments with loved ones — Venus magnifies emotional hurt today','Do not start legal matters or sign confrontational contracts','Avoid buying iron, weapons, or heavy machinery — Venus and iron are not harmonious'],
+    reflection:'"Where in my life am I withholding love — from myself or from others — and what would it feel like to soften and open there?"',
+    mantra:'Om Shum Shukraya Namah',
+    pranaDo:['If Venus rules your ascendant (Taurus or Libra rising), Friday is your most magnetic day — wear your best and show up fully','Your Venus house in the natal chart reveals where today\'s blessings will arrive — love, creativity, or material abundance'],
+    pranaAvoid:['If Venus is afflicted by Saturn in your chart, Fridays can bring longing and lack — focus on self-love practices rather than seeking from others'],
+    pranaReflection:'"What would I create, love, or express if I truly believed I deserved to receive as much love as I give?"',
+    siddhaDo:['Perform a Lakshmi puja between 2–4 PM on Friday — Venus Hora in the afternoon is the most powerful wealth window of the week','Begin a 40-day Venus sadhana on any Friday — chant Om Shum Shukraya Namah 108x at sunrise for 40 days for transformation in love and abundance'],
+    siddhaInsight:'In Tamil Siddha tradition, Friday is the day of the Divine Mother — Shakti herself. All creative force, beauty, and abundance flows from her. When we honour beauty today, we are worshipping the Goddess.' },
+  6: { planet:'Saturn', sym:'♄', color:'#6366F1', varName:'Shanivāra',
+    theme:'Karma, Discipline, Mastery & Justice',
+    planetDesc:'Saturday belongs to Saturn — the great karmic teacher, planet of discipline, longevity, and justice. His energy is slow, steady, and deeply purifying. A day for honest self-reflection, service to others, and working through karmic patterns with acceptance.',
+    doItems:['Serve others — volunteer, help the poor, feed the hungry. Saturn\'s karma clears through selfless service','Face something you have been avoiding — Saturn respects those who meet challenges directly','Practice simplicity today — eat simple food, wear simple clothes, reduce excess','Do deep cleaning or organising — Saturn loves order and structure'],
+    avoidItems:['Avoid shortcuts and dishonest actions — Saturn sees everything and will return what we send out','Do not skip responsibilities or ignore duties — Saturday is not for avoidance','Avoid wearing black if you have a Saturn affliction — it can intensify heaviness'],
+    reflection:'"What karmic pattern keeps repeating in my life — and what responsibility am I being asked to fully own and transform?"',
+    mantra:'Om Sham Shanaye Namah',
+    pranaDo:['If Saturn is your ascendant ruler (Capricorn or Aquarius rising), Saturday is your day of power — commit to long-term work','Check if you are in Sade Sati (7.5 years of Saturn over your Moon) — if so, Saturday self-care is essential protection'],
+    pranaAvoid:['Saturn Mahadasha or Antardasha makes Saturdays particularly intense — extra rest, service, and patience are your allies'],
+    pranaReflection:'"Where am I resisting the discipline that would actually set me free — and what would change if I embraced it with joy instead of effort?"',
+    siddhaDo:['Oil your body with sesame oil (Saturn\'s oil) before bathing on Saturday — this is one of the most ancient Vedic Saturn remedies','Feed black sesame seeds or black lentils to birds or the poor on Saturday — this directly reduces Saturn\'s karmic load in your chart'],
+    siddhaInsight:'The Siddhas teach that Saturn is not our enemy — he is our most honest Guru. Every limitation he creates is an invitation to mastery. When we stop resisting and start serving, Saturn transforms from obstacle into blessing.' },
+};
+
+interface DailyKarmaGuideProps {
+  membershipTier: string;
+  isAdmin: boolean;
+  activeMaha: { planet: string; start: string; end: string; years: number } | null;
+  activeAntar: { planet: string; start: string; end: string } | null;
+  moonNakshatra: string | null;
+  navigate: (path: string) => void;
+}
+
+const DailyKarmaGuide: React.FC<DailyKarmaGuideProps> = ({
+  membershipTier, isAdmin, activeMaha, activeAntar, moonNakshatra, navigate
+}) => {
+  const today = new Date();
+  const wd = today.getDay();
+  const data = WEEKDAY_KARMA[wd];
+  const canPrana = isAdmin || ['prana-flow','prana-flow-monthly','siddha-quantum','akasha-infinity','admin'].includes(membershipTier);
+  const canSiddha = isAdmin || ['siddha-quantum','akasha-infinity','admin'].includes(membershipTier);
+  const canAkasha = isAdmin || ['akasha-infinity','admin'].includes(membershipTier);
+
+  const gs: React.CSSProperties = {
+    background:'rgba(255,255,255,0.02)', backdropFilter:'blur(40px)',
+    WebkitBackdropFilter:'blur(40px)', border:'1px solid rgba(255,255,255,0.05)', borderRadius:20,
+  };
+
+  return (
+    <div style={{ marginBottom:24 }}>
+      {/* Section header */}
+      <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:6 }}>
+        <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)' }}>
+          Your Daily Karma Guide
+        </div>
+        <div style={{ flex:1, height:1, background:'rgba(212,175,55,0.1)' }} />
+      </div>
+      <p style={{ fontSize:11, color:'rgba(255,255,255,0.35)', fontStyle:'italic', marginBottom:14, lineHeight:1.5 }}>
+        Every day the universe sends you specific guidance. These cards show what to embrace, what to release, and where to reflect — based on today's cosmic energy.
+      </p>
+
+      {/* Today's planet banner */}
+      <div style={{ background:`rgba(${hexToRgbStr(data.color)},0.07)`, border:`1px solid rgba(${hexToRgbStr(data.color)},0.25)`, borderRadius:24, padding:'18px', marginBottom:12, position:'relative', overflow:'hidden' }}>
+        <div style={{ position:'absolute', top:-20, right:-20, width:100, height:100, background:`radial-gradient(circle, rgba(${hexToRgbStr(data.color)},0.12) 0%, transparent 70%)`, pointerEvents:'none' }} />
+        <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
+          <div style={{ width:50, height:50, borderRadius:25, border:`1px solid rgba(${hexToRgbStr(data.color)},0.4)`, background:`rgba(${hexToRgbStr(data.color)},0.1)`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:26, flexShrink:0 }}>
+            {data.sym}
+          </div>
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.4)', marginBottom:3 }}>Today is ruled by</div>
+            <div style={{ fontSize:19, fontWeight:900, color:data.color, marginBottom:2 }}>{data.planet} — {data.varName}</div>
+            <div style={{ fontSize:10, color:'rgba(255,255,255,0.45)' }}>{data.theme}</div>
+          </div>
+        </div>
+        <p style={{ fontSize:12, color:'rgba(255,255,255,0.6)', lineHeight:1.7, fontFamily:'Georgia,serif', marginBottom:12 }}>{data.planetDesc}</p>
+        <div style={{ padding:'9px 14px', borderRadius:12, background:'rgba(212,175,55,0.05)', border:'1px solid rgba(212,175,55,0.12)', textAlign:'center' }}>
+          <div style={{ fontSize:6, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', marginBottom:3 }}>Today's Mantra — Chant 108 times</div>
+          <div style={{ fontSize:13, color:'#D4AF37', fontStyle:'italic', fontFamily:'Georgia,serif' }}>{data.mantra}</div>
+        </div>
+      </div>
+
+      {/* DO card */}
+      <div style={{ background:'rgba(34,197,94,0.05)', border:'1px solid rgba(34,197,94,0.18)', borderRadius:20, padding:'18px', marginBottom:10 }}>
+        <div style={{ fontSize:22, marginBottom:6 }}>✅</div>
+        <div style={{ fontSize:13, fontWeight:900, color:'#4ADE80', marginBottom:6 }}>Today — Embrace & Do</div>
+        <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
+          {data.doItems.map((item, i) => (
+            <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:10 }}>
+              <div style={{ flexShrink:0, width:20, height:20, borderRadius:'50%', background:'rgba(34,197,94,0.12)', border:'1px solid rgba(34,197,94,0.25)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, marginTop:1 }}>✓</div>
+              <p style={{ fontSize:12, color:'rgba(255,255,255,0.65)', lineHeight:1.6 }}>{item}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* AVOID card */}
+      <div style={{ background:'rgba(239,68,68,0.05)', border:'1px solid rgba(239,68,68,0.18)', borderRadius:20, padding:'18px', marginBottom:10 }}>
+        <div style={{ fontSize:22, marginBottom:6 }}>🚫</div>
+        <div style={{ fontSize:13, fontWeight:900, color:'#F87171', marginBottom:6 }}>Today — Release & Avoid</div>
+        <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
+          {data.avoidItems.map((item, i) => (
+            <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:10 }}>
+              <div style={{ flexShrink:0, width:20, height:20, borderRadius:'50%', background:'rgba(239,68,68,0.12)', border:'1px solid rgba(239,68,68,0.25)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, color:'#F87171', marginTop:1 }}>✗</div>
+              <p style={{ fontSize:12, color:'rgba(255,255,255,0.65)', lineHeight:1.6 }}>{item}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* REFLECTION card */}
+      <div style={{ background:'rgba(212,175,55,0.05)', border:'1px solid rgba(212,175,55,0.18)', borderRadius:20, padding:'18px', marginBottom:14 }}>
+        <div style={{ fontSize:22, marginBottom:6 }}>🪞</div>
+        <div style={{ fontSize:13, fontWeight:900, color:'#D4AF37', marginBottom:8 }}>Today's Karma Mirror</div>
+        <p style={{ fontSize:11, color:'rgba(255,255,255,0.45)', marginBottom:10, lineHeight:1.5 }}>Sit quietly for 5 minutes and ask yourself this question. Write your answer in a journal.</p>
+        <div style={{ background:'rgba(212,175,55,0.07)', borderRadius:14, padding:'14px 16px', borderLeft:'3px solid rgba(212,175,55,0.4)' }}>
+          <p style={{ fontSize:13, color:'#D4AF37', fontFamily:'Georgia,serif', fontStyle:'italic', lineHeight:1.7 }}>{data.reflection}</p>
+        </div>
+      </div>
+
+      {/* PRANA tier — personalised Dasha karma */}
+      {canPrana && activeMaha && (
+        <>
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
+            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(34,211,238,0.6)' }}>🔥 Your Personal Chart — Prāna Reading</div>
+            <div style={{ flex:1, height:1, background:'rgba(34,211,238,0.1)' }} />
+          </div>
+          {/* Dasha context */}
+          <div style={{ ...gs, padding:'16px 18px', marginBottom:10, borderColor:'rgba(212,175,55,0.18)' }}>
+            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:8 }}>Your Current Karmic Chapter</div>
+            <div style={{ display:'flex', gap:12 }}>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.22)', marginBottom:3 }}>Main Period</div>
+                <div style={{ fontSize:18, fontWeight:900, color:'#D4AF37' }}>{activeMaha.planet} {PLANET_INFO[activeMaha.planet]?.sym}</div>
+                <div style={{ fontSize:9, color:'rgba(255,255,255,0.3)', marginTop:1 }}>{activeMaha.start} — {activeMaha.end}</div>
+              </div>
+              {activeAntar && (
+                <div style={{ flex:1, paddingLeft:12, borderLeft:'1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.22)', marginBottom:3 }}>Sub-Period</div>
+                  <div style={{ fontSize:18, fontWeight:900, color:'#fff' }}>{activeAntar.planet} {PLANET_INFO[activeAntar.planet]?.sym}</div>
+                  <div style={{ fontSize:9, color:'rgba(255,255,255,0.3)', marginTop:1 }}>{activeAntar.start} — {activeAntar.end}</div>
+                </div>
+              )}
+            </div>
+            <p style={{ fontSize:12, color:'rgba(255,255,255,0.5)', lineHeight:1.65, marginTop:10, fontFamily:'Georgia,serif' }}>
+              <strong style={{ color:'#D4AF37' }}>{activeMaha.planet} Mahadasha</strong>{activeAntar ? ` / ${activeAntar.planet} Antardasha` : ''}: {DASHA_MEANINGS[activeMaha.planet] || 'This period brings the specific karmic curriculum of this planet into focus.'}
+            </p>
+          </div>
+          {/* Personalised do */}
+          <div style={{ background:'rgba(34,197,94,0.05)', border:'1px solid rgba(34,197,94,0.15)', borderRadius:20, padding:'16px', marginBottom:10 }}>
+            <div style={{ fontSize:12, fontWeight:900, color:'#4ADE80', marginBottom:8 }}>✨ Personalised Actions — Your Dasha Says</div>
+            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+              {data.pranaDo.map((item, i) => (
+                <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:9 }}>
+                  <div style={{ flexShrink:0, width:18, height:18, borderRadius:'50%', background:'rgba(34,197,94,0.12)', border:'1px solid rgba(34,197,94,0.25)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, marginTop:2 }}>♃</div>
+                  <p style={{ fontSize:12, color:'rgba(255,255,255,0.65)', lineHeight:1.6 }}>{item}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Prana reflection */}
+          <div style={{ background:'rgba(212,175,55,0.04)', border:'1px solid rgba(212,175,55,0.15)', borderRadius:20, padding:'16px', marginBottom:14 }}>
+            <div style={{ fontSize:12, fontWeight:900, color:'#D4AF37', marginBottom:8 }}>🔮 Your Dasha Soul Question</div>
+            <div style={{ background:'rgba(212,175,55,0.06)', borderRadius:12, padding:'13px 15px', borderLeft:'3px solid rgba(212,175,55,0.35)' }}>
+              <p style={{ fontSize:13, color:'#D4AF37', fontFamily:'Georgia,serif', fontStyle:'italic', lineHeight:1.7 }}>{data.pranaReflection}</p>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* SIDDHA tier */}
+      {canSiddha && (
+        <>
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
+            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.7)' }}>⭐ Siddha-Level Activation</div>
+            <div style={{ flex:1, height:1, background:'rgba(212,175,55,0.12)' }} />
+          </div>
+          <div style={{ background:'rgba(212,175,55,0.05)', border:'1px solid rgba(212,175,55,0.2)', borderRadius:20, padding:'18px', marginBottom:10 }}>
+            <div style={{ fontSize:12, fontWeight:900, color:'#D4AF37', marginBottom:10 }}>⭐ Siddha Sadhana — Advanced Practices</div>
+            <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
+              {data.siddhaDo.map((item, i) => (
+                <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:9 }}>
+                  <div style={{ flexShrink:0, width:18, height:18, borderRadius:'50%', background:'rgba(212,175,55,0.12)', border:'1px solid rgba(212,175,55,0.25)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, color:'#D4AF37', marginTop:2 }}>★</div>
+                  <p style={{ fontSize:12, color:'rgba(255,255,255,0.65)', lineHeight:1.6 }}>{item}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ ...gs, padding:'16px 18px', marginBottom:14, borderColor:'rgba(212,175,55,0.12)' }}>
+            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:6 }}>Siddha Wisdom — Today's Teaching</div>
+            <p style={{ fontSize:12, color:'rgba(255,255,255,0.55)', lineHeight:1.7, fontFamily:'Georgia,serif', fontStyle:'italic' }}>{data.siddhaInsight}</p>
+          </div>
+        </>
+      )}
+
+      {/* AKASHA tier */}
+      {canAkasha && (
+        <>
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
+            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.5)' }}>∞ Ākāsha — Nadi Oracle Transmission</div>
+            <div style={{ flex:1, height:1, background:'rgba(255,255,255,0.06)' }} />
+          </div>
+          <div style={{ background:'rgba(139,92,246,0.06)', border:'1px solid rgba(139,92,246,0.22)', borderRadius:20, padding:'18px', marginBottom:14 }}>
+            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase' as const, color:'rgba(139,92,246,0.7)', marginBottom:8 }}>📜 Akashic Transmission — {data.varName}</div>
+            <div style={{ position:'relative', padding:'14px 16px', background:'rgba(139,92,246,0.04)', borderRadius:14, border:'1px solid rgba(139,92,246,0.12)' }}>
+              <div style={{ position:'absolute', top:-10, left:12, fontSize:50, fontFamily:'Georgia,serif', color:'rgba(139,92,246,0.1)', lineHeight:1 }}>"</div>
+              <p style={{ fontFamily:'Georgia,serif', fontStyle:'italic', fontSize:13, color:'rgba(255,255,255,0.65)', lineHeight:1.75, position:'relative' }}>
+                The soul reading these words is in alignment with the {data.planet} frequency today. The lessons of {activeMaha?.planet || 'this period'} are preparing you for an expansion that your mind cannot yet fully comprehend. Trust the process unfolding in your life. What appears as obstacle is initiation. What appears as loss is clearing space for what your soul truly called for. Today, receive — do not just give.
+              </p>
+              <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase' as const, color:'rgba(139,92,246,0.4)', marginTop:10 }}>
+                — Akasha-Neural Archive · Bhrigu Transmission 2050→2026
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Unlock nudges for lower tiers */}
+      {!canPrana && (
+        <div style={{ ...gs, padding:'18px', borderColor:'rgba(34,211,238,0.15)', textAlign:'center', marginBottom:14 }}>
+          <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(34,211,238,0.6)', marginBottom:8 }}>🔱 Unlock Personalised Guidance</div>
+          <p style={{ fontSize:12, color:'rgba(255,255,255,0.5)', lineHeight:1.65, marginBottom:12 }}>
+            Upgrade to <strong style={{ color:'#22D3EE' }}>Prāna-Flow (€19/mo)</strong> to receive daily karma cards personalised to your exact birth chart, Dasha timing, and Nakshatra soul blueprint.
+          </p>
+          <button onClick={() => navigate('/membership')} style={{ padding:'10px 22px', borderRadius:99, border:'1px solid rgba(34,211,238,0.3)', background:'rgba(34,211,238,0.08)', color:'#22D3EE', fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, cursor:'pointer' }}>
+            Activate Prāna-Flow →
+          </button>
+        </div>
+      )}
+      {canPrana && !canSiddha && (
+        <div style={{ ...gs, padding:'14px 16px', borderColor:'rgba(212,175,55,0.12)', textAlign:'center', marginBottom:14 }}>
+          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:6 }}>⭐ Unlock Siddha-Level Sadhana</div>
+          <p style={{ fontSize:11, color:'rgba(255,255,255,0.4)', lineHeight:1.55, marginBottom:10 }}>Upgrade to <strong style={{ color:'#D4AF37' }}>Siddha-Quantum (€45/mo)</strong> for advanced Siddha practices, ancient wisdom transmissions, and Akashic oracle access.</p>
+          <button onClick={() => navigate('/membership')} style={{ padding:'9px 18px', borderRadius:99, border:'1px solid rgba(212,175,55,0.25)', background:'rgba(212,175,55,0.06)', color:'#D4AF37', fontFamily:'inherit', fontSize:8, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, cursor:'pointer' }}>
+            Upgrade to Siddha-Quantum →
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ── DAILY INFLUENCE STRIP ──────────────────────────────────────────────────────
 const GRAHA_DAILY_DATA: Array<{
   name: string; sym: string; element: string; color: string;
@@ -814,11 +1127,23 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
             )}
             {birthData && !loading && (
               <>
-
-                {/* ══ DAILY COSMIC INFLUENCES ══ */}
+                {/* ══ DAILY COSMIC INFLUENCES (Panchanga + Graha Cards) ══ */}
                 <DailyInfluenceStrip />
 
+                {/* ══ DAILY KARMA GUIDANCE — tiered ══ */}
+                <DailyKarmaGuide
+                  membershipTier={membershipTier}
+                  isAdmin={isAdmin}
+                  activeMaha={activeMaha}
+                  activeAntar={activeAntar}
+                  moonNakshatra={ephemeris?.moonNakshatra || null}
+                  navigate={navigate}
+                />
+
                 {/* Stats row */}
+                <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:10, marginTop:4 }}>
+                  Your Natal Blueprint
+                </div>
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:18 }}>
                   {[
                     { val: ephemeris?.ascendantSign ? (SIGN_SYMBOLS[ephemeris.ascendantSign] || '?') + ' ' + ephemeris.ascendantSign : calcLoading ? '…' : '—', lbl:'Rising Sign / Lagna' },
@@ -844,7 +1169,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                   </div>
                 </div>
 
-                {/* Current chart summary - beginner friendly */}
+                {/* Current chart summary */}
                 <div style={{ ...gm, padding:22, marginBottom:18 }}>
                   <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:14 }}>
                     Your Vedic Natal Blueprint — {birthData.birth_name}
@@ -858,7 +1183,6 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                     </div>
                   ) : ephemeris ? (
                     <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-                      {/* Lagna */}
                       {ephemeris.ascendantSign && (
                         <div style={{ ...gs, padding:'16px 18px' }}>
                           <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
@@ -872,12 +1196,10 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                             {SIGN_MEANINGS[ephemeris.ascendantSign] || 'Your Lagna shapes your physical body, personality, and the entire lens through which life is experienced.'}
                           </p>
                           <p style={{ fontSize:11, color:'rgba(255,255,255,0.35)', marginTop:8, fontStyle:'italic' }}>
-                            This is the sign that was rising on the eastern horizon at the exact moment of your birth. It is the most important point in your chart.
+                            This is the sign rising on the eastern horizon at the exact moment of your birth — the most important point in your chart.
                           </p>
                         </div>
                       )}
-
-                      {/* Moon Nakshatra */}
                       {ephemeris.moonNakshatra && (
                         <div style={{ ...gs, padding:'16px 18px' }}>
                           <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
@@ -892,8 +1214,6 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                           </p>
                         </div>
                       )}
-
-                      {/* Sun Sign */}
                       {ephemeris.sunSign && (
                         <div style={{ ...gs, padding:'16px 18px' }}>
                           <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
@@ -904,12 +1224,10 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                             </div>
                           </div>
                           <p style={{ fontSize:12, color:'rgba(255,255,255,0.55)', lineHeight:1.6 }}>
-                            Note: Your Vedic Sun sign may differ from your Western Sun sign by approximately 23 days. Vedic astrology uses the actual star positions (sidereal), not a fixed mathematical calculation.
+                            Your Vedic Sun sign may differ from your Western Sun sign by ~23 days. Vedic astrology uses actual star positions (sidereal).
                           </p>
                         </div>
                       )}
-
-                      {/* Dasha */}
                       {activeMaha && (
                         <div style={{ ...gs, padding:'16px 18px', borderColor:'rgba(212,175,55,0.2)' }}>
                           <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:10 }}>
@@ -931,7 +1249,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                           </div>
                           <p style={{ fontSize:12, color:'rgba(255,255,255,0.55)', lineHeight:1.6 }}>
                             <strong style={{ color:'#D4AF37' }}>{activeMaha.planet} Mahadasha:</strong>{" "}
-                            {DASHA_MEANINGS[activeMaha.planet] || 'This period brings the specific karmic curriculum of this planet into focus for its entire duration.'}
+                            {DASHA_MEANINGS[activeMaha.planet] || 'This period brings the specific karmic curriculum of this planet into focus.'}
                           </p>
                           {activeAntar && (
                             <p style={{ fontSize:11, color:'rgba(255,255,255,0.4)', lineHeight:1.55, marginTop:8 }}>
@@ -941,8 +1259,6 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                           )}
                         </div>
                       )}
-
-                      {/* BNN Active Planet */}
                       {activeBNNAge && (
                         <div style={{ ...gs, padding:'14px 18px' }}>
                           <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:6 }}>
@@ -1004,15 +1320,15 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                   ))}
                 </div>
 
-                {/* Free tier note */}
+                {/* Free tier upgrade nudge */}
                 {membershipTier === 'free' && (
-                  <div style={{ ...gs, padding:'14px 18px', borderColor:'rgba(107,114,128,0.2)', marginBottom:16 }}>
-                    <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(107,114,128,0.7)', marginBottom:8 }}>Free Tier · Basic Reading</div>
-                    <p style={{ fontSize:12, color:'rgba(255,255,255,0.55)', lineHeight:1.65 }}>
-                      Your chart is activated. Upgrade to <strong style={{ color:'#22D3EE' }}>Prāna-Flow (€19/mo)</strong> to access the full Bhrigu Oracle chat, advanced dasha analysis, and complete planetary interpretation.
+                  <div style={{ ...gs, padding:'18px', borderColor:'rgba(34,211,238,0.15)', marginBottom:16, textAlign:'center' }}>
+                    <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(34,211,238,0.6)', marginBottom:8 }}>🔱 Unlock Deeper Guidance</div>
+                    <p style={{ fontSize:12, color:'rgba(255,255,255,0.55)', lineHeight:1.65, marginBottom:12 }}>
+                      Upgrade to <strong style={{ color:'#22D3EE' }}>Prāna-Flow (€19/mo)</strong> to unlock personalised daily karma cards based on your exact birth chart, Dasha timing, and Nakshatra soul blueprint.
                     </p>
-                    <button onClick={() => navigate('/membership')} style={{ marginTop:12, padding:'9px 18px', borderRadius:99, border:'1px solid rgba(34,211,238,0.3)', background:'rgba(34,211,238,0.07)', color:'#22D3EE', fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, cursor:'pointer' }}>
-                      Activate Prāna-Flow
+                    <button onClick={() => navigate('/membership')} style={{ padding:'10px 22px', borderRadius:99, border:'1px solid rgba(34,211,238,0.3)', background:'rgba(34,211,238,0.08)', color:'#22D3EE', fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, cursor:'pointer' }}>
+                      Activate Prāna-Flow →
                     </button>
                   </div>
                 )}
