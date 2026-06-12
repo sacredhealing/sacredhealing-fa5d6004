@@ -386,13 +386,16 @@ export type Database = {
       affiliate_commissions: {
         Row: {
           affiliate_user_id: string | null
+          clawbot_trade_id: string | null
           commission_amount: number
           commission_rate: number
           created_at: string
           currency: string
           gross_amount: number
           id: string
+          level: number
           referred_user_id: string | null
+          source: string
           status: string
           stripe_payment_intent_id: string | null
           stripe_session_id: string | null
@@ -400,13 +403,16 @@ export type Database = {
         }
         Insert: {
           affiliate_user_id?: string | null
+          clawbot_trade_id?: string | null
           commission_amount?: number
           commission_rate?: number
           created_at?: string
           currency?: string
           gross_amount?: number
           id?: string
+          level?: number
           referred_user_id?: string | null
+          source?: string
           status?: string
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
@@ -414,19 +420,30 @@ export type Database = {
         }
         Update: {
           affiliate_user_id?: string | null
+          clawbot_trade_id?: string | null
           commission_amount?: number
           commission_rate?: number
           created_at?: string
           currency?: string
           gross_amount?: number
           id?: string
+          level?: number
           referred_user_id?: string | null
+          source?: string
           status?: string
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_commissions_clawbot_trade_id_fkey"
+            columns: ["clawbot_trade_id"]
+            isOneToOne: false
+            referencedRelation: "clawbot_fee_ledger"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       affiliate_earnings: {
         Row: {
@@ -2008,6 +2025,155 @@ export type Database = {
           name?: string
           path_slug?: string | null
           type?: string | null
+        }
+        Relationships: []
+      }
+      clawbot_affiliate_rates: {
+        Row: {
+          l1_pct: number
+          l2_pct: number
+          platform_pct: number
+          tier: string
+        }
+        Insert: {
+          l1_pct: number
+          l2_pct: number
+          platform_pct: number
+          tier: string
+        }
+        Update: {
+          l1_pct?: number
+          l2_pct?: number
+          platform_pct?: number
+          tier?: string
+        }
+        Relationships: []
+      }
+      clawbot_fee_ledger: {
+        Row: {
+          fee_pct: number
+          fee_usdc: number
+          gross_pnl_usdc: number
+          id: string
+          net_pnl_usdc: number
+          paid_at: string | null
+          platform_wallet: string
+          tier: string
+          trade_id: string | null
+          tx_hash: string | null
+          user_id: string
+        }
+        Insert: {
+          fee_pct: number
+          fee_usdc: number
+          gross_pnl_usdc: number
+          id?: string
+          net_pnl_usdc: number
+          paid_at?: string | null
+          platform_wallet?: string
+          tier: string
+          trade_id?: string | null
+          tx_hash?: string | null
+          user_id: string
+        }
+        Update: {
+          fee_pct?: number
+          fee_usdc?: number
+          gross_pnl_usdc?: number
+          id?: string
+          net_pnl_usdc?: number
+          paid_at?: string | null
+          platform_wallet?: string
+          tier?: string
+          trade_id?: string | null
+          tx_hash?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clawbot_fee_ledger_trade_id_fkey"
+            columns: ["trade_id"]
+            isOneToOne: false
+            referencedRelation: "polymarket_trades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clawbot_members: {
+        Row: {
+          balance_usdc: number
+          id: string
+          is_active: boolean
+          joined_at: string | null
+          paper_mode: boolean
+          platform_fee_pct: number
+          poly_api_key: string | null
+          poly_api_passphrase: string | null
+          poly_api_secret: string | null
+          poly_wallet_address: string
+          tier: string
+          total_fees_paid_usdc: number
+          total_won_usdc: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          balance_usdc?: number
+          id?: string
+          is_active?: boolean
+          joined_at?: string | null
+          paper_mode?: boolean
+          platform_fee_pct?: number
+          poly_api_key?: string | null
+          poly_api_passphrase?: string | null
+          poly_api_secret?: string | null
+          poly_wallet_address: string
+          tier?: string
+          total_fees_paid_usdc?: number
+          total_won_usdc?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          balance_usdc?: number
+          id?: string
+          is_active?: boolean
+          joined_at?: string | null
+          paper_mode?: boolean
+          platform_fee_pct?: number
+          poly_api_key?: string | null
+          poly_api_passphrase?: string | null
+          poly_api_secret?: string | null
+          poly_wallet_address?: string
+          tier?: string
+          total_fees_paid_usdc?: number
+          total_won_usdc?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      clawbot_platform_config: {
+        Row: {
+          auto_transfer: boolean
+          id: number
+          min_transfer_usdc: number
+          platform_wallet: string
+          updated_at: string | null
+        }
+        Insert: {
+          auto_transfer?: boolean
+          id?: number
+          min_transfer_usdc?: number
+          platform_wallet?: string
+          updated_at?: string | null
+        }
+        Update: {
+          auto_transfer?: boolean
+          id?: number
+          min_transfer_usdc?: number
+          platform_wallet?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -5321,6 +5487,8 @@ export type Database = {
           is_paper_mode: boolean
           max_trade_size: number | null
           paper_balance: number | null
+          paper_mode: boolean
+          risk_pct: number
           strategies_enabled: Json | null
           total_fees_paid: number | null
           updated_at: string
@@ -5334,6 +5502,8 @@ export type Database = {
           is_paper_mode?: boolean
           max_trade_size?: number | null
           paper_balance?: number | null
+          paper_mode?: boolean
+          risk_pct?: number
           strategies_enabled?: Json | null
           total_fees_paid?: number | null
           updated_at?: string
@@ -5347,6 +5517,8 @@ export type Database = {
           is_paper_mode?: boolean
           max_trade_size?: number | null
           paper_balance?: number | null
+          paper_mode?: boolean
+          risk_pct?: number
           strategies_enabled?: Json | null
           total_fees_paid?: number | null
           updated_at?: string
@@ -5438,6 +5610,27 @@ export type Database = {
         }
         Relationships: []
       }
+      polymarket_seen_trades: {
+        Row: {
+          detected_at: string | null
+          id: string
+          trade_id: string
+          whale_address: string
+        }
+        Insert: {
+          detected_at?: string | null
+          id?: string
+          trade_id: string
+          whale_address: string
+        }
+        Update: {
+          detected_at?: string | null
+          id?: string
+          trade_id?: string
+          whale_address?: string
+        }
+        Relationships: []
+      }
       polymarket_trades: {
         Row: {
           amount_usdc: number
@@ -5455,6 +5648,7 @@ export type Database = {
           pnl: number | null
           pnl_pct: number | null
           pnl_usdc: number | null
+          resolution_source: string | null
           resolved_at: string | null
           shares: number
           status: string
@@ -5480,6 +5674,7 @@ export type Database = {
           pnl?: number | null
           pnl_pct?: number | null
           pnl_usdc?: number | null
+          resolution_source?: string | null
           resolved_at?: string | null
           shares?: number
           status?: string
@@ -5505,6 +5700,7 @@ export type Database = {
           pnl?: number | null
           pnl_pct?: number | null
           pnl_usdc?: number | null
+          resolution_source?: string | null
           resolved_at?: string | null
           shares?: number
           status?: string
@@ -5513,6 +5709,45 @@ export type Database = {
           tx_hash?: string | null
           user_id?: string
           winning_outcome?: string | null
+        }
+        Relationships: []
+      }
+      polymarket_whales: {
+        Row: {
+          address: string
+          alias: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          last_checked: string | null
+          roi_30d: number | null
+          total_profit: number | null
+          trades_tracked: number | null
+          win_rate_30d: number | null
+        }
+        Insert: {
+          address: string
+          alias?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_checked?: string | null
+          roi_30d?: number | null
+          total_profit?: number | null
+          trades_tracked?: number | null
+          win_rate_30d?: number | null
+        }
+        Update: {
+          address?: string
+          alias?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_checked?: string | null
+          roi_30d?: number | null
+          total_profit?: number | null
+          trades_tracked?: number | null
+          win_rate_30d?: number | null
         }
         Relationships: []
       }
@@ -8374,6 +8609,47 @@ export type Database = {
         }
         Relationships: []
       }
+      affiliate_total_earnings: {
+        Row: {
+          affiliate_code: string | null
+          subscription_earnings: number | null
+          total_all_earnings: number | null
+          trading_earnings: number | null
+          trading_l1_count: number | null
+          trading_l2_count: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      clawbot_member_stats: {
+        Row: {
+          balance_usdc: number | null
+          gross_winnings: number | null
+          losses: number | null
+          net_winnings: number | null
+          platform_fee_pct: number | null
+          poly_wallet_address: string | null
+          tier: string | null
+          total_fees_paid: number | null
+          total_trades: number | null
+          user_id: string | null
+          win_rate_pct: number | null
+          wins: number | null
+        }
+        Relationships: []
+      }
+      polymarket_pnl_by_day: {
+        Row: {
+          day: string | null
+          is_paper: boolean | null
+          losses: number | null
+          total_pnl: number | null
+          trades_resolved: number | null
+          win_rate_pct: number | null
+          wins: number | null
+        }
+        Relationships: []
+      }
       public_profiles: {
         Row: {
           avatar_url: string | null
@@ -8413,6 +8689,7 @@ export type Database = {
       }
     }
     Functions: {
+      clawbot_fee_for_tier: { Args: { tier_name: string }; Returns: number }
       cleanup_rate_limit_events: { Args: never; Returns: undefined }
       delete_email: {
         Args: { message_id: number; queue_name: string }
