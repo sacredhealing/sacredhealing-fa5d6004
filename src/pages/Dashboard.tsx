@@ -24,8 +24,7 @@ import { SpiritualPathCard } from '@/components/dashboard/SpiritualPathCard';
 import { AchievementPopup } from '@/components/achievements/AchievementPopup';
 import { LivingPortalTile, PORTAL_CONFIGS } from '@/components/dashboard/LivingPortalTile';
 import BooksV2DashboardWidget from '@/components/books/BooksV2DashboardWidget';
-import BhriguJyotishBook from '@/components/books/BhriguJyotishBook';
-import AyurvedaLifeBook from '@/components/books/AyurvedaLifeBook';
+import SacredBooksWidget from '@/components/books/SacredBooksWidget';
 
 
 import { useAchievements } from '@/hooks/useAchievements';
@@ -923,10 +922,11 @@ const Dashboard: React.FC = () => {
         </div>
       )}
       {user && (
-        <div style={{ margin: '0 16px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <BooksV2DashboardWidget />
-          <BhriguJyotishBook />
-          <AyurvedaLifeBook />
+        <div style={{ margin: '0 0 24px' }}>
+          <div style={{ margin: '0 16px' }}>
+            <BooksV2DashboardWidget />
+          </div>
+          <SacredBooksWidget />
         </div>
       )}
       
