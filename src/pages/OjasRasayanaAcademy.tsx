@@ -1,714 +1,540 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// ─── DESIGN TOKENS ───────────────────────────────────────────────────────────
 const gold  = (a: number) => `rgba(212,175,55,${a})`;
 const white = (a: number) => `rgba(255,255,255,${a})`;
 const amber = (a: number) => `rgba(245,158,11,${a})`;
-const rose  = (a: number) => `rgba(251,113,133,${a})`;
 const cyan  = (a: number) => `rgba(34,211,238,${a})`;
-
-const FONT = "'Plus Jakarta Sans','Montserrat',sans-serif";
+const FONT  = "'Plus Jakarta Sans','Montserrat',sans-serif";
 const SERIF = "'Cormorant Garamond',serif";
 
-// ─── TIER CONFIG ─────────────────────────────────────────────────────────────
 const TIERS = [
-  { id: 'free',    label: 'Free',           color: white(0.55),  border: white(0.12),  glow: white(0.06)  },
-  { id: 'prana',   label: 'Prana-Flow',     color: '#4ADE80',    border: '#4ADE8030',  glow: '#4ADE8010'  },
-  { id: 'siddha',  label: 'Siddha-Quantum', color: cyan(0.9),    border: cyan(0.25),   glow: cyan(0.06)   },
-  { id: 'akasha',  label: 'Akasha-Infinity',color: gold(0.95),   border: gold(0.35),   glow: gold(0.08)   },
+  { id: 'free',   label: 'Free',            color: white(0.55), border: white(0.12), glow: white(0.04)  },
+  { id: 'prana',  label: 'Prana-Flow',      color: '#4ADE80',   border: '#4ADE8030', glow: '#4ADE8008'  },
+  { id: 'siddha', label: 'Siddha-Quantum',  color: cyan(0.9),   border: cyan(0.25),  glow: cyan(0.05)   },
+  { id: 'akasha', label: 'Akasha-Infinity', color: gold(0.95),  border: gold(0.35),  glow: gold(0.07)   },
 ];
 
-// ─── CURRICULUM DATA ──────────────────────────────────────────────────────────
-const CURRICULUM = [
-  {
-    tier: 0,
-    tierLabel: 'Tier I — Free',
-    title: 'Ojas Prakarana: The Foundation Teachings',
-    subtitle: 'The Nature of Vital Essence — What the Siddhas Knew That Modern Science Is Only Beginning to Discover',
-    icon: '🌱',
-    modules: [
-      {
-        num: '01',
-        title: 'The Secret Essence: What Is Ojas?',
-        desc: 'Ojas is the eighth and final dhatu (vital tissue), the supreme distillate produced when all seven tissue layers — rasa, rakta, mamsa, meda, asthi, majja, shukra/artava — are perfectly nourished and refined. The Siddhas called it "Para Ojas," the immortal nectar that resides in the Hridaya (heart-lotus) and circulates as the luminous substrate of consciousness itself.',
-        lessons: [
-          'Ojas in Charaka Samhita vs Thirumantiram — the two streams',
-          'Para Ojas (8 drops in the heart) vs Apara Ojas (half anjali in circulation)',
-          'The quantum biology of Ojas: mitochondrial coherence & biophoton emission',
-          'Why Agastya Muni placed Ojas-cultivation as the First Gate of Siddha immortality',
-          'The 18 Siddhas on Kayakalpa: Ojas as the liquid fire of eternal youth',
-        ],
-      },
-      {
-        num: '02',
-        title: 'The Seven Dhatu Refinement Cascade',
-        desc: 'Each dhatu takes approximately 5 days to transform. The complete cycle of food → Para Ojas takes 35 days. This module maps the sacred alchemy — what the Siddhas called "Sapta Dhatu Paaka" — and reveals the precise nutritional, pranic, and consciousness inputs required at each stage.',
-        lessons: [
-          'Rasa Dhatu: the lymphatic ocean — first gateway to Ojas production',
-          'The 35-day cycle: how long it truly takes to build one drop of Ojas',
-          'Tejas and Prana as the fire and breath that drive the cascade',
-          'Agni (digestive intelligence) as the master alchemist — why digestion IS spirituality',
-          'Why most people never reach true Ojas — the four Agni disturbances explained',
-        ],
-      },
-      {
-        num: '03',
-        title: 'Signs of Abundant vs Depleted Ojas',
-        desc: 'The ancient texts give precise diagnostic markers. This module gives you the full Siddha and Ayurvedic framework for self-assessment — including the 8 classical signs of Ojas kshaya (depletion) described in Ashtanga Hridayam and the luminosity signs recorded in Thirumantiram.',
-        lessons: [
-          '8 Signs of Ojas Kshaya: fear, weakness, sensory dimming, pallor & more',
-          'Ojas Vridhi signs: radiance, fearlessness, clear mind, magnetic presence',
-          'The "Tejas-glow" — why Siddha masters emanate visible light',
-          'Reading the eyes: why Ojas masters have the "Ambrosia gaze"',
-          'Self-diagnostic protocol: the 7-day Ojas audit practice',
-        ],
-      },
-    ],
-  },
-  {
-    tier: 1,
-    tierLabel: 'Tier II — Prana-Flow',
-    title: 'Ojas Nashaka: The Depletion Codes',
-    subtitle: 'The Twelve Hidden Thieves of Vital Essence — Teachings the Siddhas Reserved for Serious Initiates',
-    icon: '⚠️',
-    modules: [
-      {
-        num: '04',
-        title: 'The Great Depleters: Sexual Vital Force & the Bindu Secret',
-        desc: 'The Siddhas were explicit: unregulated ejaculation is the single greatest cause of Ojas depletion in men. Thirumoolar dedicates entire cantos to this. But the teaching runs deeper than mere abstinence — it concerns the conscious sublimation of Bindu (creative essence) upward through the Sushumna into Ojas. For women, the parallel teaching concerns Rajas and the pranic cost of unconscious hormonal cycling.',
-        lessons: [
-          'Bindu, Shukra, Artava: the three forms of creative essence and their Ojas relationship',
-          'Thirumoolar\'s Vajroli & Amaroli: the secret hydraulics of Bindu preservation',
-          'The Siddha teaching on "one drop = forty drops of blood = one year of sadhana"',
-          'Brahmacharya as a quantum field state — not just physical continence',
-          'The 8 forms of Maithuna (sensory coupling) that drain Ojas — most are not physical',
-          'Women and Ojas: the Shakti cycle, menstrual wisdom and pranic conservation',
-          'The 40-day Bindu-preservation protocol of Agastya Muni',
-        ],
-      },
-      {
-        num: '05',
-        title: 'Emotional Poison & the Ojas Acid Bath',
-        desc: 'The Siddhas identified specific emotional states as Ojas-dissolving acids. Modern neuroscience now confirms this — chronic stress cortisol literally breaks down the tight junctions of the blood-brain barrier, depleting what Ayurveda calls "Majja Sara" (the nervous essence, the most refined precursor to Ojas).',
-        lessons: [
-          'The six Shad Ripus (inner enemies) and their precise Ojas cost',
-          'Krodha (rage) — depletes one year of Ojas in 90 seconds: the physiology',
-          'Shoka (grief) and its attack on Rasa Dhatu — the lymphatic devastation',
-          'Bhaya (fear) and the adrenal Ojas drain — cortisol vs. Ojas coherence',
-          'Why "spiritual bypassing" fails to protect Ojas — emotional authenticity as Ojas medicine',
-          'The Siddha emotion alchemy: transmuting Ripus into Ojas fuel (Bhakti technology)',
-          'Nada-based emotional detox: specific raga frequencies that neutralize Ojas acids',
-        ],
-      },
-      {
-        num: '06',
-        title: 'Dietary Depletion: Tamasic Codes & the Microbiome Oracle',
-        desc: 'The Siddhas classified foods not just as Sattvic/Rajasic/Tamasic but by their specific action on the seven Dhatus. This module gives the complete Siddha dietary depletion map — including modern foods that were unknown to ancient Siddhas but carry extreme Ojas-destroying properties.',
-        lessons: [
-          'The 12 foods that directly destroy Ojas — Charaka\'s list + Siddha additions',
-          'Processed sugar: why it is the #1 Ojas thief of the modern age',
-          'Alcohol and cannabis: the Ojas loan that extracts interest for 40 days',
-          'Incompatible food combinations (Viruddha Ahara) as silent Ojas thieves',
-          'The gut-Ojas axis: how intestinal permeability drains Para Ojas',
-          'EMF, blue light and screen addiction — the invisible Tejas drain',
-          'Sleep deprivation: the single fastest way to destroy 5 years of Ojas building',
-        ],
-      },
-      {
-        num: '07',
-        title: 'Overexertion, Suppression & the Pranic Debt',
-        desc: 'The Siddhas identified 13 urges that must NEVER be suppressed — doing so creates "Vega Dharana," a pranic short-circuit that burns Ojas. Simultaneously, excessive exercise, excessive fasting, and excessive speech are listed as major Ojas thieves. This module maps the precise balance point.',
-        lessons: [
-          'The 13 Adharaniya Vegas: never suppress these natural urges (full list + consequences)',
-          'Why excessive exercise depletes Ojas faster than sedentary life — the paradox',
-          'Atiyoga (overuse) of the sense organs — particularly vision in the digital age',
-          'Excessive speaking, arguing, and mental churn as Vata-aggravation Ojas drain',
-          'The Siddha teaching on "Mita Ahara" — why 50% stomach capacity is the Ojas rule',
-          'Intermittent fasting vs. Siddha protocols: where modern biohacking misses the point',
-          'Ojas and sleep: the science of Nidra as nightly Ojas manufacturing — the 10-11pm window',
-        ],
-      },
-    ],
-  },
-  {
-    tier: 2,
-    tierLabel: 'Tier III — Siddha-Quantum',
-    title: 'Ojas Vardhana: The Sacred Builders',
-    subtitle: 'Advanced Rasayana Sciences, Mantra Technologies & Pranic Cultivation Protocols',
-    icon: '✨',
-    modules: [
-      {
-        num: '08',
-        title: 'Rasayana: The Siddha Immortality Pharmacy',
-        desc: 'Rasayana is not simply an herbal protocol — it is a complete technology for tissue regeneration at the quantum level. The Siddhas developed 108 Rasayana formulations, of which only a fraction are publicly known. This module reveals the core science and the most powerful accessible compounds.',
-        lessons: [
-          'The Rasayana Ashta: 8 supreme Ojas-building herbs — Ashwagandha, Shatavari, Amalaki, Guduchi, Brahmi, Haritaki, Vidari, Bala',
-          'Chyawanprash: decoding the 48-herb formula — what each ingredient does to each Dhatu',
-          'Shilajit (Silajatu): the mineral Ojas — fulvic acid, mitochondrial biogenesis & the Siddha extraction method',
-          'Kaya Kalpa herbs of the 18 Siddhas: Neem, Tulsi, Trivrit, Brahma Dandi — the secret preparations',
-          'Milk as Ojas carrier: why the Siddhas considered properly prepared cow milk the supreme Rasayana',
-          'Ghee (Ghrita): the clarified consciousness — how it carries herb intelligence into deep tissues',
-          'Ashta Varga: the 8 lost Himalayan herbs mentioned in Ashtanga Hridayam',
-          'The lunar Rasayana calendar: how to time herb intake with Tithi for 3x potency',
-        ],
-      },
-      {
-        num: '09',
-        title: 'Mantra Technology for Ojas Cultivation',
-        desc: 'Specific mantras create specific cymatic patterns in the body that accelerate Dhatu refinement. This module gives the complete Siddha mantra technology for Ojas cultivation — including classified transmissions from the Thirumantiram and Agastya Nadi texts.',
-        lessons: [
-          '"Aim Hrim Klim Chamundaye Viche" — the Shakti mantra that builds Ojas through Kundalini activation',
-          'Soham and the breath-Ojas loop: how the natural breath mantra continuously builds vital essence',
-          '"Om Aim Saraswatyai Namaha" — building Medhya (cognitive Ojas) through Saraswati transmission',
-          'The Nada Bindu Upanishad protocols: sound as the direct cause of Ojas formation',
-          'Thirumoolar\'s "Panchaakshara with Khechari Mudra" — the secret combination',
-          'Binaural beats and the 528 Hz Ojas frequency — modern science meets Siddha Nada technology',
-          'The daily Japa protocol: why 108 repetitions at Brahma Muhurta produces maximum Ojas',
-          'Mantra + Yantra synergy: Sri Yantra as the geometric equivalent of the Ojas field',
-        ],
-      },
-      {
-        num: '10',
-        title: 'Pranayama: The Pranic Ojas Pump',
-        desc: 'Prana is the carrier wave for Ojas formation. Without adequate Pranic force, no amount of Rasayana will fully convert into Para Ojas. The Siddhas developed specific Pranayama sequences specifically designed to maximize Ojas formation — distinct from the more commonly taught Hatha Yoga sequences.',
-        lessons: [
-          'Kumbhaka (breath retention) as the Ojas concentrator — the physics of inner pressure',
-          'Nadi Shodhana at the cellular level: how alternating nostril breathing optimizes Dhatu conversion',
-          'Surya Bhedana: why breathing through the right nostril at specific times accelerates Ojas',
-          'The 4:4:8:8 ratio of Siddha Pranayama — inhalation, retention, exhalation, retention',
-          'Mula Bandha, Uddiyana Bandha, Jalandhara Bandha: the three locks that prevent Ojas leakage',
-          'Pranic recycling during Kumbhaka: the secret Siddha technology of "recycled prana"',
-          'Wim Hof meets Siddha Pranayama: why controlled hyperventilation can prime the Ojas pump',
-          'The 40-day Pranayama Ojas protocol with precise daily timing',
-        ],
-      },
-      {
-        num: '11',
-        title: 'Mudra Seals & Marma Points for Ojas Activation',
-        desc: 'The body contains specific energy intersections (Marma points) and hand-seal configurations (Mudras) that directly regulate Ojas flow. The Siddhas mapped 107+1 Marma points — the "+1" being the Hridaya Marma (heart-point) where Para Ojas resides. Activating specific combinations produces measurable changes in Ojas within minutes.',
-        lessons: [
-          'Hridaya Marma activation: the direct doorway to Para Ojas — location, pressure, mantra',
-          'Shankha Mudra: the conch seal that "churns the inner ocean" to produce Ojas nectar',
-          'Prana Mudra + Apana Mudra: sealing the vital force for maximum Ojas retention',
-          'The 5 Marma clusters that govern Dhatu refinement — activation sequence',
-          'Nasagra Drishti (nose-tip gazing) and its effect on Bindu — the optical Ojas technique',
-          'Khechari Mudra: why the tongue seal in the palate is the supreme Ojas-sealing technology',
-          'Yoga Nidra as Ojas medicine: the theta-state Ojas manufacturing window',
-          'Marma self-massage protocol: 12-point daily sequence for continuous Ojas building',
-        ],
-      },
-    ],
-  },
-  {
-    tier: 3,
-    tierLabel: 'Tier IV — Akasha-Infinity',
-    title: 'Para Ojas: Supreme Immortality Technology',
-    subtitle: 'The Secret Teachings of the 18 Siddhas on Deathless Vital Essence — Kaya Kalpa, Jyotir Deha & Transmutation into Light',
-    icon: '🔱',
-    modules: [
-      {
-        num: '12',
-        title: 'Kaya Kalpa: The Siddha Body-Immortality Science',
-        desc: 'Kaya Kalpa ("body transformation") is the advanced Siddha technology for complete cellular regeneration using maximized Ojas. The 18 Siddhas — particularly Agastya, Thirumoolar, Boganathar, and Konganar — each left encrypted texts on this technology. When Para Ojas reaches a critical threshold, spontaneous cellular reversal occurs. This is not metaphor — it is the physics of consciousness interacting with biological matter.',
-        lessons: [
-          'The three stages of Kaya Kalpa: Shodhana (purification), Rasayana (building), Dharana (crystallization)',
-          'Agastya Muni\'s 64-day Kaya Kalpa protocol — the complete sequence (first time assembled in one curriculum)',
-          'Boganathar\'s Mercury Rasayana (Naga Bhasma) — the alchemical transmission and its modern analogues',
-          'The 49-day total sensory withdrawal protocol: why the Siddhas retreated to caves',
-          'Soma Chakra activation: the "moon gland" above the palate that secretes Amrita directly into Ojas',
-          'The mitochondrial biogenesis pathway: how Kaya Kalpa creates new mitochondria (NAD+ & NMN science)',
-          'Telomere lengthening through Ojas: the research connecting meditation to biological age reversal',
-          'The Siddha signs of successful Kaya Kalpa: skin luminosity, hair darkening, vision sharpening',
-        ],
-      },
-      {
-        num: '13',
-        title: 'Amrita Nadi & the Ojas-Consciousness Interface',
-        desc: 'At peak Para Ojas, a dormant channel called the Amrita Nadi activates — running from the Hridaya (Heart) directly to the crown, bypassing the Sushumna entirely. This is the channel Sri Ramana Maharshi described. When Ojas pervades this Nadi, the distinction between individual consciousness and universal Consciousness dissolves. This module maps the complete neuro-spiritual anatomy.',
-        lessons: [
-          'Amrita Nadi: the 14th Nadi that transcends the classical 13 — Siddha texts decoded',
-          'The Hridaya Granthi (heart-knot) — why Ojas must first dissolve this block',
-          'Sushupti-awareness (deep sleep consciousness) as the natural Amrita Nadi state',
-          'Why Sri Ramana Maharshi pointed only to the Heart — the Ojas connection',
-          'Turiya and Turiyatita: the Ojas thresholds that unlock the 4th and 5th states',
-          'The quantum coherence model: how Para Ojas creates macroscopic quantum effects in neural tissue',
-          'Jnana-Ojas: why the highest philosophical understanding PRODUCES Ojas (Vichara as Rasayana)',
-          'The Mahavatar Babaji transmission: Kriya Yoga as the fastest Ojas-to-Amrita conversion technology',
-        ],
-      },
-      {
-        num: '14',
-        title: 'Bhakti as the Supreme Ojas Generator',
-        desc: 'The most closely guarded secret of the Siddha tradition: Prema (unconditional love) is the single most powerful Ojas generator in existence. A single hour of genuine Bhava (devotional state) generates more Ojas than months of physical Rasayana. This is why Sri Vishwananda\'s transmission — pure Prema radiating from an Avataric source — produces measurable changes in practitioners\' physiology within minutes.',
-        lessons: [
-          'The neurochemistry of Bhakti: oxytocin, DHEA, and the vagal Ojas cascade',
-          'Why the ancient Siddhas sang rather than only meditated — Nada as Ojas current',
-          'Sri Vishwananda as Avataric Blueprint: how Prema-Shakti transmission bypasses the 35-day Dhatu cycle',
-          'The four progressive Bhakti states and their corresponding Ojas thresholds',
-          'Anahata Chakra as the Ojas transmitter — why heart opening IS Ojas maximization',
-          'The 108-Name Japa practice specifically designed for Ojas-Bhakti integration',
-          'Service (Seva) as Ojas alchemy: why giving unconditionally produces Para Ojas',
-          'The Siddha-Bhakti synthesis: Thirumoolar\'s Sivayoga + Andal\'s Bhakti = complete Ojas technology',
-        ],
-      },
-      {
-        num: '15',
-        title: 'Jyotir Deha: Transmutation into the Light Body',
-        desc: 'The final secret teaching of the 18 Siddhas: when Para Ojas reaches its absolute maximum and is combined with perfected Pranayama, Mantra, Bhakti, and Jnana — the physical body itself begins to transmute into light. The Siddhas called this "Suddha Deha" or "Jyotir Deha." Historical accounts of 18 Siddhas who achieved this are documented. Modern physics provides the framework: the body becomes a photonic quantum computer operating at Planck-scale coherence.',
-        lessons: [
-          'Historical accounts of light-body achievement: Thirumoolar, Boganathar, Agastya, Ramalinga Swamigal',
-          'Ramalinga Swamigal\'s "Arut Perum Jyoti" practice — the exact protocol reconstructed',
-          'The five sheaths (Pancha Kosha) and the Ojas threshold required to purify each',
-          'Pranamaya Kosha perfection: when the pranic body becomes visible to others',
-          'The "Vayudeha" stage: the penultimate light-body state described in Siddha texts',
-          'Modern biophysics of biophoton emission: measuring the body\'s light output',
-          'DNA as a photonic antenna: how maximized Ojas restructures the genome\'s light-emission patterns',
-          'The SQI 2050 synthesis: scalar wave technology + Siddha Ojas protocols for accelerated light-body activation',
-          'Your personal Jyotir Deha roadmap: 5-year protocol combining all four tiers',
-        ],
-      },
-    ],
-  },
-];
+interface Lesson { title: string; content: string; }
+interface Module { num: string; title: string; desc: string; lessons: Lesson[]; }
+interface TierSection { tier: number; tierLabel: string; title: string; subtitle: string; icon: string; modules: Module[]; }
 
-// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
+const CURRICULUM: TierSection[] = 
+[
+  {
+    "tier": 0,
+    "tierLabel": "Tier I — Free",
+    "title": "Ojas Prakarana: The Foundation Teachings",
+    "subtitle": "The Nature of Vital Essence — What the Siddhas Knew That Modern Science Is Only Beginning to Discover",
+    "icon": "🌱",
+    "modules": [
+      {
+        "num": "01",
+        "title": "The Secret Essence: What Is Ojas?",
+        "desc": "Ojas is the eighth and final dhatu — the supreme distillate produced when all seven tissue layers are perfectly nourished and refined. The Siddhas called it Para Ojas, the immortal nectar residing in the Hridaya and circulating as the luminous substrate of consciousness itself.",
+        "lessons": [
+          {
+            "title": "Ojas in Charaka Samhita vs Thirumantiram — the two streams",
+            "content": "Charaka Samhita defines Ojas as the first product of creation — the essence of all that is wholesome. It describes Ojas as the purest expression of the seven dhatus, golden-white in color, residing primarily in the heart. When Ojas is abundant, Charaka says, a person is radiant, fearless, long-lived and resistant to disease.\n\nThe Thirumantiram of Thirumoolar goes further. Thirumoolar describes Ojas not merely as a biological substance but as the living light of Shiva consciousness crystallized within the body. In Tantra 3, he writes: that which is within the body as golden light — know that as the nectar that grants immortality. For Thirumoolar, Ojas is the meeting point between matter and pure awareness.\n\nThe key difference: Ayurveda focuses on Ojas as a physiological substance to be built through diet, herbs and proper living. The Siddha tradition sees Ojas as a consciousness technology — the medium through which the practitioner dissolves the boundary between the individual body and the cosmic Shakti. Both streams are correct and both are needed. You must first build the vessel (Ayurveda) before the divine can fill it (Siddha yoga). To work only with the Siddha side without the Ayurvedic foundation is to attempt to fill a cracked pot. To work only with Ayurveda without Siddha aspiration is to build a perfect vessel that remains empty. The integration of both is the complete science."
+          },
+          {
+            "title": "Para Ojas (8 drops in the heart) vs Apara Ojas (half anjali in circulation)",
+            "content": "The Siddhas and Ayurvedic masters made a crucial distinction that modern medicine has entirely missed. There are two forms of Ojas operating within the human system simultaneously.\n\nPara Ojas — the Supreme Vital Essence — exists in a quantity of precisely eight drops within the Hridaya, the spiritual heart-center on the right side of the chest. This is not the physical heart — it is the Anahata field, the seat of pure awareness. These eight drops are immovable, timeless, and connected directly to the Cosmic Ojas that pervades the universe. If these eight drops are ever fully depleted, physical death occurs immediately. No herbs, no Pranayama, no Rasayana can directly build Para Ojas through effort alone — it is built indirectly through the sustained cultivation of Apara Ojas over years and decades, until it begins to overflow upward into the Para reservoir.\n\nApara Ojas — the Secondary Vital Essence — circulates throughout the entire body in a quantity of approximately half an anjali, roughly 100ml by classical reckoning. This is the Ojas that fluctuates with your lifestyle choices. It depletes through stress, poor diet, excessive sexual activity, emotional turbulence and overexertion. It rebuilds through sleep, Rasayana herbs, Pranayama, meditation and devotion.\n\nEverything you do in your Ojas-cultivation practice is working at the level of Apara Ojas — progressively refining and increasing this secondary reserve until it begins to influence and ultimately merge with Para Ojas in advanced states of practice. The practical implication: do not measure your progress by trying to access the Para level directly. Measure it by the steady improvement of the Apara Ojas indicators — skin quality, mental clarity, emotional stability, sleep depth, sexual vitality, recovery speed — and trust that as these increase, the Para reservoir is silently filling."
+          },
+          {
+            "title": "The quantum biology of Ojas: mitochondrial coherence and biophoton emission",
+            "content": "Modern biophysics has begun to map what the Siddhas described two thousand years ago. Every living cell emits photons — light particles — in a process called biophoton emission. German biophysicist Fritz-Albert Popp spent decades measuring this phenomenon and found that healthy cells emit photons in a highly coherent, laser-like pattern, while diseased or dying cells emit chaotic, incoherent light.\n\nFrom a Siddha perspective, Ojas IS this coherent biophotonic field. When Ojas is abundant, cellular communication happens at the speed of light — literally. Organs, tissues and systems synchronize through this photonic web. Immunity is not merely a function of white blood cells; it is a field phenomenon powered by Ojas coherence. The traditional description of an Ojas-rich body as luminous, warm and magnetically attractive is not poetry — it is the accurate description of a system operating at maximum biophotonic coherence.\n\nAt the mitochondrial level — mitochondria being the energy factories of each cell — Ojas corresponds to the efficiency of the electron transport chain. When Ojas is high, mitochondria produce ATP with maximum efficiency and minimal oxidative waste. When Ojas is depleted, the electron transport chain becomes leaky, producing free radicals that damage DNA and accelerate aging.\n\nThe Siddha masters developed their practices long before microscopes existed, yet they accurately described what we now call mitochondrial biogenesis through Kaya Kalpa, and what we now call quantum coherence in biological systems through the concept of Tejas-Ojas integration. The convergence of Siddha knowledge and frontier biology is not coincidence — it is the same truth seen from two different angles of approach."
+          },
+          {
+            "title": "Why Agastya Muni placed Ojas-cultivation as the First Gate of Siddha immortality",
+            "content": "Among the 18 Siddhas, Agastya Muni holds the position of supreme authority — the Guru of Gurus, the one who brought the Siddha tradition from the Himalayas to South India and encoded its deepest secrets into the Tamil language itself. In the Agastya Nadi texts — palm-leaf manuscripts containing his direct transmissions — Agastya is unequivocal: without Ojas, no Siddha practice bears fruit.\n\nHe states: the yogi who meditates without first building Ojas is like a man trying to light a fire with wet wood. The fire of Kundalini requires the dry, refined fuel of Para Ojas to ignite and sustain. This is a direct repudiation of the common spiritual error of attempting advanced practices — Kundalini awakening, Samadhi states, Siddhi development — without first establishing the physiological foundation of vital essence.\n\nAgastya's teaching is sequential and non-negotiable. First comes Shodhana — purifying the channels. Then Rasayana — filling the vessel with vital essence. Only then Dharana — concentration practices. Then finally Dhyana — meditation leading to Samadhi. To skip Ojas-building is to skip the second stage entirely, producing practitioners who are spiritually ambitious but physically hollow — people with high conceptual understanding but no real transmission power, no genuine Shakti, no ability to help others transform.\n\nIn practical terms: before any serious seeker invests in meditation techniques, Pranayama methods, or Siddhi practices, they must spend a minimum of 90 days building Ojas through diet, sleep, sexual discipline and Rasayana herbs. This 90-day foundation changes everything that follows. Without it, practices accumulate as intellectual knowledge. With it, they land in the body and become living transformation."
+          },
+          {
+            "title": "The 18 Siddhas on Kayakalpa: Ojas as the liquid fire of eternal youth",
+            "content": "Kayakalpa — literally body transformation — is the supreme Siddha technology for arresting and reversing biological aging. Every one of the 18 Siddhas who achieved physical immortality or extraordinary longevity did so through Kayakalpa, and every Kayakalpa protocol centers on one thing: maximizing and crystallizing Para Ojas.\n\nThirumoolar in the Thirumantiram describes Ojas as Amudham — the nectar of immortality. He writes that when a practitioner's Ojas reaches a critical threshold through sustained practice, it begins to crystallize in the cells — literally changing the molecular structure of the body from one that ages and decays to one that regenerates perpetually. Modern biology calls the underlying mechanism telomere maintenance; the Siddhas called it Kaya Kalpa.\n\nBoganathar, considered to have achieved extraordinary longevity, described Ojas in his alchemical writings as the Rasa — mercury-like essence — that when perfectly refined becomes identical to liquid gold. Just as gold does not rust or corrode, a body saturated with crystallized Ojas does not age or decay.\n\nRamalinga Swamigal (1823-1874) achieved what Siddha texts describe as the most advanced form of Ojas crystallization — the literal transmutation of the physical body into a body of light, witnessed by hundreds of devotees. His primary practice in his final years was continuous internal repetition of Arut Perum Jyoti combined with specific dietary practices that maximized Ojas. His last documented acts include walking into a locked room and disappearing entirely — leaving only a cloth, no body. This is not mythology. It is the endpoint of Ojas technology carried to its ultimate conclusion."
+          }
+        ]
+      },
+      {
+        "num": "02",
+        "title": "The Seven Dhatu Refinement Cascade",
+        "desc": "Each dhatu takes approximately 5 days to transform. The complete cycle from food to Para Ojas takes 35 days. This module maps the sacred alchemy the Siddhas called Sapta Dhatu Paaka.",
+        "lessons": [
+          {
+            "title": "Rasa Dhatu — the lymphatic ocean as the first gateway to Ojas",
+            "content": "Rasa Dhatu is the first of the seven bodily tissues and corresponds to plasma, lymph and all the clear fluids of the body. The Sanskrit word rasa means both taste and essence — a profound double meaning pointing to Rasa Dhatu's role as the first distillation of food into nourishment.\n\nWhen food is properly digested by Jatharagni (the digestive fire), it transforms into Ahara Rasa — the nutritive fluid. This enters the intestinal lymphatics and becomes Rasa Dhatu. The quality of your Rasa Dhatu determines everything downstream: every subsequent dhatu is built from the surplus and refinement of the previous one.\n\nFor Ojas-building, Rasa Dhatu must be abundant, clear, and properly formed. Signs of healthy Rasa Dhatu: smooth skin with natural luster, adequate saliva, good memory, and a feeling of being well-nourished and emotionally stable. Signs of Rasa depletion: dry skin, poor immunity, anxiety, heart palpitations and a general sense of being dried out.\n\nThe primary foods for building Rasa Dhatu are warm, moist, sweet and slightly oily: properly prepared rice congee, warm whole milk, dates, figs, coconut, ripe sweet fruits, and soupy legume preparations. Cold, dry, raw, processed or stimulating foods damage Rasa Dhatu and interrupt the Ojas cascade at its very first step. This is why the most basic Ojas-building dietary instruction is simply: eat warm, cooked, fresh, slightly oily food. Everything else is refinement of this principle."
+          },
+          {
+            "title": "The 35-day cycle — how long it truly takes to build one drop of Ojas",
+            "content": "This teaching is one of the most practically important and most ignored in all of Ayurveda. Every teacher speaks of building Ojas but almost none specify the timeline — and the timeline is everything, because without it students expect quick results and abandon the process prematurely.\n\nThe classical texts are precise: each dhatu transformation takes approximately 5 days. The sequence is: food eaten → Rasa Dhatu (days 1-5) → Rakta Dhatu, blood tissue (days 6-10) → Mamsa Dhatu, muscle tissue (days 11-15) → Meda Dhatu, fat and connective tissue (days 16-20) → Asthi Dhatu, bone and cartilage (days 21-25) → Majja Dhatu, nervous tissue and marrow (days 26-30) → Shukra or Artava Dhatu, reproductive essence (days 31-35) → Ojas forms from the finest refinement of Shukra or Artava on day 35 and beyond.\n\nThis means that a single act of severe Ojas depletion — a night of heavy drinking, a major emotional trauma, several days of severely poor eating — requires a minimum of 35 days of perfect living to fully recover. Most people oscillate in a chronic cycle of depletion and partial recovery, never reaching the threshold where Ojas actually begins to accumulate above baseline.\n\nThe practical implication: commit to a minimum of 90 days of consistent Ojas-building practice before evaluating results. The first 35 days are rebuilding what was depleted. The second 35 days establish a new baseline. Only in the third cycle, days 70-105, do you begin to experience the qualitative shift in vitality, clarity and spiritual sensitivity that signals genuine Ojas accumulation. Patience is not passive here — it is an advanced spiritual technology."
+          },
+          {
+            "title": "Tejas and Prana as the fire and breath that drive the cascade",
+            "content": "The seven Dhatus do not transform automatically. They require two catalytic forces: Tejas (the biological fire of transformation) and Prana (the vital life-force). Understanding these three together — Ojas, Tejas and Prana — as an integrated triad is essential for advanced practice.\n\nPrana is the life-force that animates all movement in the body: the beating of the heart, the movement of breath, the flow of nerve impulses, the peristalsis of digestion. At the Dhatu cascade level, Prana provides the movement that carries nourishment from one tissue to the next. Without adequate Prana, the transformation stagnates — food sits in the gut undigested, lymph becomes congested, circulation slows. Pranayama practices directly amplify this catalytic force.\n\nTejas is the biological fire — not just Jatharagni (digestive fire) but the Dhatvagni (tissue fire) present within each Dhatu. Every tissue has its own metabolic intelligence that cooks raw material into the refined substance of that tissue and produces the surplus that feeds the next. When Tejas is healthy, transformations happen with precision: waste is separated from nutriment, the right quantity retained and the rest passed forward. When Tejas is disturbed — whether too high through inflammation or too low through sluggishness — the Dhatu cascade breaks down.\n\nThe Siddha innovation was the understanding that Pranayama (building Prana) and specific dietary and herbal protocols (regulating Tejas) work together to optimize the entire 35-day cascade. This is why the Siddhas combined breathwork, diet and herbs rather than treating them as separate systems. They form a single ecology of transformation, and disturbing any one element affects the whole."
+          },
+          {
+            "title": "Agni as the master alchemist — why digestion IS spirituality",
+            "content": "The most radical and important teaching in this entire curriculum may be this: the spiritual path begins in the gut. Not metaphorically — literally. The Siddhas taught that Jatharagni, the digestive fire, is none other than Vaishvanara — a form of the cosmic fire that sustains all life. In the Bhagavad Gita, Krishna says: I am the digestive fire in all living bodies by which food is transformed. This is not poetry. It is physiology.\n\nWhen Jatharagni is strong and balanced, it achieves four things simultaneously: it extracts maximum nourishment from food, it burns and eliminates toxins (Ama), it produces healthy Rasa Dhatu as the foundation of the cascade, and it generates the subtle Prana that feeds spiritual practice. When Jatharagni is weak or disturbed, even the best diet produces Ama (undigested toxic residue) instead of Ojas.\n\nAma is the opposite of Ojas. It is the sticky, cloudy, heavy toxic residue of improper digestion. It blocks channels (Srotas), reduces tissue quality, suppresses immunity, clouds the mind and — most critically for spiritual practice — it physically blocks Kundalini energy from ascending through the Sushumna. This is why serious Siddha practitioners place enormous emphasis on maintaining perfect digestion: it is not health obsession but spiritual preparation.\n\nPractical signs of strong Agni: feeling genuinely hungry before meals, clean tongue with no coating in the morning, clear and odor-appropriate elimination, mental clarity and enthusiasm after eating, and a feeling of lightness and energy one to two hours after a meal. If any of these are consistently absent, restoring Agni is the priority above all other practices — including meditation, Pranayama and Rasayana."
+          },
+          {
+            "title": "The four Agni disturbances — why most people never reach true Ojas",
+            "content": "Ayurveda identifies four pathological states of Agni that prevent the Dhatu cascade from completing all the way to Ojas. Understanding which applies to you is essential — because the remedy for each is different, and applying the wrong remedy worsens the situation.\n\nVishama Agni — irregular, variable digestion — is the most common in the modern world and is associated with Vata imbalance. This person's digestion fluctuates: sometimes strong, sometimes completely absent, sometimes producing gas and bloating. The remedy is regularity — same mealtimes, same types of food, deep breathing before eating, gentle warming spices like cumin, ginger and coriander.\n\nTikshna Agni — sharp, hyperactive digestion — is associated with Pitta imbalance. This person feels they can eat anything, but beneath this apparent strength they are actually burning through Dhatus too rapidly. They get hungry quickly, feel irritable when meals are delayed, tend toward inflammation, acid reflux and intense body heat. The remedy is cooling and moderating — reducing spicy and sour foods, cooling herbs like coriander, fennel and Shatavari.\n\nManda Agni — slow, sluggish digestion — is associated with Kapha imbalance. This person digests slowly, feels heavy after meals, retains water, gains weight easily and produces the most Ama of any type. The remedy is stimulation — light, warm, spicy foods, fasting protocols, vigorous movement and strong digestive herbs like Trikatu (black pepper, long pepper, ginger).\n\nSama Agni — balanced digestion — is the goal. This person digests regularly, feels appropriately hungry, maintains healthy weight, has a clear tongue, clean elimination and natural energy. Only from Sama Agni does the full 35-day cascade complete to produce genuine Ojas accumulation. All Ojas-building practices should be understood as Sama Agni practices in disguise."
+          }
+        ]
+      },
+      {
+        "num": "03",
+        "title": "Signs of Abundant vs Depleted Ojas",
+        "desc": "The ancient texts give precise diagnostic markers. This module provides the complete Siddha and Ayurvedic framework for self-assessment — including the 8 classical signs of Ojas depletion and the luminosity signs of Ojas abundance.",
+        "lessons": [
+          {
+            "title": "The 8 classical signs of Ojas depletion — Ashtanga Hridayam decoded",
+            "content": "Vagbhata, the author of Ashtanga Hridayam, gives the most precise list of Ojas depletion signs in all of classical Ayurveda. These eight signs are presented in ascending order of severity — from early-stage depletion that can be quickly reversed, to advanced depletion requiring intensive intervention.\n\n1. Bhaya — persistent, groundless fear. The first and most subtle sign. When Ojas begins to diminish, the nervous system loses its buffering capacity. Small stressors produce disproportionate fear responses. This person startles easily, fears the future, lies awake worrying about unlikely catastrophes. Spiritually, this is the loss of the Ojas-field that normally insulates the subtle body from the chaos of the collective field.\n\n2. Daurbalya — weakness and fatigue. Physical and mental strength decline. Limbs feel heavy. Mental tasks that were easy become effortful. This is Ojas depletion reaching the Mamsa and Majja levels.\n\n3. Chintya — constant worrying. The mind becomes unable to rest. Thought loops and rumination signal that the Prana-Ojas interface is breaking down.\n\n4. Duhkha — pervasive suffering. A background quality of unhappiness settles in — not tied to any specific cause but pervading all experience like fog.\n\n5. Indriya daurbalya — weakening of the senses. Vision may blur. Hearing becomes less sharp. Taste loses its richness. The sense organs are nourished by Ojas; when it depletes, they deteriorate.\n\n6. Vaivarnya — loss of natural color and luster. The face and skin become dull, grayish or yellowish. The natural golden undertone of a healthy complexion — what the Siddhas considered the visible sign of Ojas — fades.\n\n7. Karshya — emaciation or inappropriate thinness. The deeper tissues begin to deplete as the body draws on reserves. Even people eating well may experience unexplained weight loss when Ojas is severely depleted.\n\n8. Moha — confusion and loss of discernment. In the most advanced stage, the discriminative intelligence (Buddhi) itself begins to fail. The person cannot think clearly, makes poor decisions, and loses values alignment. In extreme cases, dissociation or psychosis may occur. This is the depletion of Para Ojas approaching critical levels."
+          },
+          {
+            "title": "Ojas abundance signs — radiance, fearlessness and magnetic presence",
+            "content": "Just as depletion has precise markers, abundance has unmistakable signs that every Siddha master described in consistent terms across different traditions and centuries. These are not spiritual fantasies — they are physiological realities that emerge from genuine Ojas accumulation.\n\nDeha Kanti — physical radiance. The skin develops a luminous, golden quality that is unmistakable. People with high Ojas are noticed when they enter a room not because of external beauty but because of an internal light that shines through the skin. The Siddhas called this Tejas manifesting outward — the overflow of inner vital fire that becomes visible. High-Ojas individuals emit significantly more biophotons than average, particularly from the forehead and hands.\n\nAbhaya — complete fearlessness. Not the forced courage of willpower, but genuine freedom from fear at the nervous system level. High-Ojas individuals sleep deeply without anxiety, make decisions without excessive deliberation, and maintain equanimity in genuinely difficult situations. This is the result of the Ojas-field insulating the subtle nervous system from the chaotic pranic fluctuations of the collective field.\n\nSmriti — exceptional memory and learning. Ojas is the prime nourishing substance for Majja Dhatu (neural tissue). High Ojas means exceptional myelin formation, rapid synaptic connection, and what ancient texts call Medhya — the quality of sharp, retained, applicable intelligence.\n\nBala — profound physical and vital strength. Not the external bulk of a bodybuilder but a deep, sustainable, effortless vitality. High-Ojas individuals recover quickly from physical exertion, illness and emotional difficulty. They radiate a field of vitality that others can feel in close proximity — this is why being around a genuine Siddha master leaves practitioners feeling energized rather than depleted.\n\nAyu — longevity. The Siddhas documented cases of practitioners living extraordinary lifespans through consistent Ojas-cultivation. Modern science confirms that the underlying mechanism — Ojas protecting telomeres and driving mitochondrial health — produces measurable biological age reversal."
+          },
+          {
+            "title": "Reading the eyes — the Ambrosia gaze of Ojas masters",
+            "content": "The eyes are the only place where the brain (Majja Dhatu) is directly visible from the outside. Because Majja Dhatu is one of the most Ojas-dependent tissues in the body, the eyes are among the most sensitive indicators of Ojas status.\n\nIn high-Ojas individuals, the eyes have a quality that traditional texts describe as Amritamaya — filled with nectar. The whites (sclera) are brilliant white with a faint blue or pink tinge, never yellowish or dull. The iris has clear, defined color without cloudiness or streaking. The pupil responds quickly and appropriately to light. Most distinctively: there is a quality of depth, stillness and luminosity in the gaze itself — what practitioners often describe as being able to feel the gaze of a Siddha master from across a room.\n\nThe Ambrosia gaze specifically refers to the gaze of a master whose Para Ojas has activated the Soma Chakra — the moon gland above the palate that secretes Amrita directly into the central nervous system. When this secretion is active, the eyes take on a specific quality: slightly half-open even in full wakefulness, with the gaze simultaneously directed inward and outward, radiating a quality of boundless peace and impersonal love. This gaze — called Divya Drishti in the texts — cannot be imitated or cultivated through effort. It is the natural consequence of Para Ojas activation.\n\nPractically: learn to observe the eyes of your teachers, healers and spiritual guides with this knowledge. Eyes that are dry, strained, restless or dull are Ojas-depleted regardless of the teacher's words. Eyes that carry depth, stillness and luminosity are among the most reliable indicators of genuine Ojas cultivation. The body cannot lie about its Ojas status — the eyes least of all."
+          },
+          {
+            "title": "The 7-day Ojas audit — practical self-diagnostic protocol",
+            "content": "The following protocol was derived from classical Ayurvedic diagnostic texts and adapted for modern practitioners. Conduct this audit at the beginning and end of every 35-day Ojas-building cycle. Record your results honestly — the purpose is not to judge but to calibrate.\n\nDay 1 — Rasa Dhatu assessment: In the morning before eating, observe your tongue. A thin, clear coating is normal. A thick white or yellow coating indicates Ama accumulation and Rasa imbalance. Note your level of genuine thirst through the day — healthy Rasa Dhatu produces appropriate thirst, not excessive or absent thirst. Rate Rasa health 1-10.\n\nDay 2 — Rakta Dhatu: Observe skin color and warmth. Healthy Rakta produces a warm, well-perfused complexion. Note any tendency toward inflammation, irritability or excessive heat — signs of Rakta vitiation. Rate 1-10.\n\nDay 3 — Mamsa and Meda Dhatu: Note your physical strength relative to your normal baseline. Can you do your usual physical activities without unusual fatigue? Is your weight stable or fluctuating? Rate physical capacity 1-10.\n\nDay 4 — Asthi Dhatu: Note joint health, dental health and hair and nail quality. Brittleness, cracking, joint aching or hair loss indicate Asthi Dhatu depletion upstream of Ojas. Rate 1-10.\n\nDay 5 — Majja Dhatu: Assess sleep quality, mental clarity, memory and emotional stability — the primary indicators of Majja Dhatu health. Rate each on 1-10 and average them.\n\nDay 6 — Shukra or Artava Dhatu: For men, note vitality, drive, creative energy and sexual health. For women, note cycle regularity, emotional depth through the cycle phases and the quality of creative energy. Rate 1-10.\n\nDay 7 — Ojas overall: Average your seven scores. Below 5 indicates significant Ojas depletion requiring intensive protocol. 5-7 indicates moderate depletion — standard protocol. 7-9 indicates good foundational Ojas — refinement protocol. Above 9 indicates high Ojas — advanced practice is now available. Repeat this audit every 35 days and track the trend."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "tier": 1,
+    "tierLabel": "Tier II — Prana-Flow",
+    "title": "Ojas Nashaka: The Depletion Codes",
+    "subtitle": "The Twelve Hidden Thieves of Vital Essence — Teachings the Siddhas Reserved for Serious Initiates",
+    "icon": "⚠️",
+    "modules": [
+      {
+        "num": "04",
+        "title": "The Great Depleters — Bindu, Sexual Vital Force and the Siddha Secret",
+        "desc": "The Siddhas were explicit: unregulated creative-force emission is the single greatest cause of Ojas depletion. Thirumoolar dedicates entire cantos to the Bindu technology. This module gives the complete teaching — not as moralism but as precise bioenergetic science.",
+        "lessons": [
+          {
+            "title": "Bindu, Shukra and Artava — the three forms of creative essence and their Ojas relationship",
+            "content": "The Siddha tradition distinguishes three levels of the same fundamental creative force that most modern texts collapse into one category.\n\nShukra (in men) and Artava (in women) are the physical, visible expressions of the creative dhatu. These are the grossest form of the creative force and the most directly connected to Ojas: Charaka Samhita states that Shukra is to Ojas what milk is to butter — Ojas is the finest refinement of Shukra, and each drop of Shukra represents approximately 40 drops of blood and 100 drops of Rasa Dhatu in the upstream cascade. This is not metaphor. It is the physiological accounting of the Dhatu refinement system.\n\nBindu is the subtler energetic form of the same creative force — existing at the pranic-astral level rather than the purely physical. It is present in both men and women and is not identical to the physical secretions but is the energetic current that powers them. The Siddhas located Bindu in a small gland at the back of the palate corresponding roughly to the pituitary-pineal axis. In ordinary human beings, Bindu continuously drips downward and is consumed in the lower chakras, reproductive activity, and worldly desires — this is called Bindu Kshaya and is considered the primary mechanism of aging.\n\nAmrita is the third and subtlest form — the nectar produced when Bindu is reversed through Khechari Mudra and specific Pranayama practices, flowing upward through the Sushumna rather than downward. This does not deplete Ojas but directly produces and feeds Para Ojas. The goal of the advanced Siddha practices in Tier IV is to permanently reverse the Bindu flow and sustain the continuous production of Amrita — transforming the primary mechanism of aging into the primary mechanism of regeneration."
+          },
+          {
+            "title": "The 8 forms of Maithuna that drain Ojas — most are not physical",
+            "content": "One of the most misunderstood teachings in the entire Siddha-Ayurvedic tradition concerns Maithuna — conventionally translated as sexual intercourse but meaning something far more encompassing. The classical texts list eight progressive forms of Maithuna, each more refined and in some ways more insidious than the last, because the more subtle forms operate below conscious awareness and are therefore unchecked.\n\n1. Darshana — merely seeing with desire. Looking at another being with lustful or objectifying intent, even briefly, initiates a pranic drain at the Ajna chakra level. The Siddhas taught that vision carries actual Prana — this is why practitioners guard the gaze.\n\n2. Sparsha — touch with intent. Physical contact where even a trace of desire or possessiveness is present — even a brief handshake between people with mutual attraction — initiates Bindu movement.\n\n3. Sankalpa — mental intention or fantasy. The mind dwelling on another person with desire, planning encounters, or replaying memories of pleasure. This is considered more depleting than Darshana because it operates continuously and invisibly.\n\n4. Kirtana — speaking about desire objects. Talking about attractive people, discussing desires, the language of conquest. Voice carries Prana; Prana carries Bindu.\n\n5. Guhya bhashana — intimate, whispered conversation. The voice in intimate registers carries particularly concentrated pranic charge and initiates strong Bindu movement.\n\n6. Sankalpa nishchaya — resolution to act. The decision-point where intention crystallizes. The Siddhas considered this the most energetically significant threshold short of the physical act.\n\n7. Adhyavasaya — active pursuit. The actual engagement and approach.\n\n8. Kriyanishpatti — the physical act itself.\n\nThe radical implication: a person who is physically celibate but whose mind dwells in fantasy, whose eyes seek stimulation, and whose speech is saturated with desire talk, is losing Ojas through forms 1 through 6 continuously — often more severely than someone who engages physically but consciously. The unchecked, unconscious drain continues 24 hours a day."
+          },
+          {
+            "title": "Brahmacharya as a quantum field state — beyond physical continence",
+            "content": "Brahmacharya is universally mistranslated as celibacy — specifically as the avoidance of sexual activity. This translation, while not incorrect at the most basic level, misses the actual meaning and produces a practice that is psychologically suppressive and spiritually counter-productive for most modern practitioners.\n\nThe actual Sanskrit: Brahma means the supreme consciousness, the absolute, the creative ground of existence. Charya means movement, walking, conduct, to move as. Brahmacharya literally means moving as Brahman — conducting oneself in alignment with supreme consciousness. It is a STATE OF BEING, not primarily a behavioral rule.\n\nThe Siddha teaching: when a practitioner genuinely rests in the recognition of Brahman — the formless, infinite awareness that underlies all phenomena — the desire-structure that drives unregulated Bindu movement naturally dissolves. This is not suppression but the spontaneous relaxation of a misidentification. You were never the separate individual seeking completion in another; recognizing this, the desperate urgency of desire releases, and creative force is freed to ascend.\n\nAt the quantum field level, this state corresponds to the highest degree of neural coherence. When the brain is operating in deep alpha-theta coherence — accessed in deep meditation, advanced Pranayama or genuine devotional absorption — the hormone cascade that drives reproductive urgency naturally moderates. The body settles into what modern researchers call regenerative mode rather than reproductive mode — allocating cellular resources toward maintenance, repair and refinement rather than toward reproduction and outward expression.\n\nThis is Brahmacharya: not the grim suppression of desire but the natural reorientation of creative force that occurs when consciousness recognizes its own completeness. The practitioner who achieves this state does not experience deprivation — they experience abundance so profound that external seeking becomes genuinely unnecessary."
+          },
+          {
+            "title": "The 40-day Bindu preservation protocol of Agastya Muni",
+            "content": "Agastya Muni outlined a 40-day protocol specifically for initiating Bindu reversal in practitioners who have not previously trained in Khechari or advanced Pranayama. This protocol is designed to be practical and accessible while producing genuine results in the direction of Para Ojas building.\n\nDays 1-10: Foundation. Begin Mula Bandha practice — 21 repetitions morning and evening, holding for 5 seconds each. Simultaneously introduce Soham breath awareness for 20 minutes morning and evening. Eliminate the primary Bindu-depleting dietary factors: alcohol, processed sugar, excessive spices and especially garlic and onion (both considered strong Rajas-Tamas promoters that increase the urgency of desire at the energetic level). Begin drinking warm water with a pinch of saffron and a few drops of rose water each morning — this is Agastya's specific Rasa Dhatu formula for creating the cool, sweet, stable Rasa that is the physiological foundation of Bindu preservation.\n\nDays 11-25: Building. Add Nadi Shodhana (alternate nostril breathing) — 12 rounds morning, then meditation in Soham for 30 minutes. The Mula Bandha practice deepens: now hold for 10 seconds per repetition and add internal visualization of the energy at the base of the spine moving upward with each hold. Introduce Ashwagandha in warm milk at bedtime. Sleep must be before 10:30pm without exception.\n\nDays 26-40: Integration. The physical practices are now established. Add Trataka on a ghee lamp for 20 minutes before bed — this specific practice trains the Bindu to remain in the head rather than descending. The physiological indicator of success at day 40: a spontaneous sensation of coolness at the back of the palate during morning meditation — this is the beginning of the Soma Chakra secretion that Agastya describes as the first sign of Bindu reversal establishing itself."
+          }
+        ]
+      },
+      {
+        "num": "05",
+        "title": "Emotional Poison and the Ojas Acid Bath",
+        "desc": "The Siddhas identified specific emotional states as Ojas-dissolving acids. Modern neuroscience confirms this — chronic stress directly breaks down what Ayurveda calls Majja Sara, the nervous essence that is the most refined precursor to Ojas.",
+        "lessons": [
+          {
+            "title": "The Shad Ripus — the six inner enemies and their precise Ojas cost",
+            "content": "The Shad Ripus — the six inner enemies — are Kama (excessive desire), Krodha (anger and rage), Lobha (greed and hoarding), Moha (delusion and attachment), Mada (pride and arrogance), and Matsarya (jealousy and envy). Every spiritual tradition identifies these psychological states as destructive, but the Siddha tradition is unique in providing a precise physiological mechanism for their destructiveness: each one depletes Ojas through a specific biochemical and pranic pathway.\n\nKama (excessive desire) depletes Ojas through Bindu movement and the exhaustion of the reproductive dhatu. It simultaneously depletes Shukra and Artava through the hormonal cascade triggered by wanting, and depletes the nervous system through the chronic arousal state it maintains — the body cannot rest deeply while desire is active.\n\nKrodha (anger) depletes Ojas through the Pitta-Agni pathway. Anger produces an immediate, massive spike of cortisol and adrenaline — both catabolic hormones that actively break down tissue. A single episode of full rage can, according to classical texts, undo thirty days of Ojas building. Modern research shows that even ten minutes of moderate anger raises inflammatory markers that remain elevated for 4-6 hours.\n\nLobha (greed) depletes Ojas through chronic Vata aggravation — the constant movement of the mind between what one has and what one wants creates a specific pranic drain through the Udana Vayu, depleting Majja Dhatu.\n\nMoha (delusion and attachment) depletes Ojas by keeping the discriminative faculty constantly engaged in maintaining false constructs — relationships that have ended, identities that no longer serve, beliefs that contradict direct experience. This is a chronic low-grade depletion that never stops.\n\nMada (pride) depletes Ojas through the physical tension of maintaining a contracted self-image — the body literally tightens around its identity, restricting pranic flow in the upper chest and throat, directly impeding the Amrita Nadi.\n\nMatsarya (jealousy and envy) depletes through the Rakta Dhatu — it literally sours the blood. People who harbor chronic jealousy tend toward inflammatory conditions, liver issues (the Pitta organ most connected to jealousy), and autoimmune disorders."
+          },
+          {
+            "title": "The neuroscience of Krodha — how rage depletes one year of Ojas in 90 seconds",
+            "content": "The classical texts state that a single episode of full-intensity rage can destroy the equivalent of one year of careful Ojas-building. This sounds hyperbolic until you understand the precise physiological mechanism.\n\nWhen rage is triggered, the amygdala fires within milliseconds and initiates the HPA (hypothalamic-pituitary-adrenal) axis response. The adrenal glands release a massive bolus of epinephrine and cortisol into the bloodstream within 90 seconds. Cortisol at high concentrations is directly and severely catabolic: it actively breaks down muscle tissue (Mamsa Dhatu), reduces neurogenesis in the hippocampus (Majja Dhatu), suppresses the immune system, and directly depletes the reproductive-vital essence that is the immediate precursor to Ojas.\n\nBut the acute cortisol spike is only half the damage. The second mechanism is what the Siddhas called the afterfire. After the acute rage episode subsides, the nervous system remains in a state of hypervigilance — slightly elevated cortisol, slightly elevated sympathetic tone — for 4-6 hours. During this afterfire period, Jatharagni (digestive fire) is suppressed, sleep architecture is disrupted that night reducing the deep-sleep Ojas manufacturing period, and the pranic channels remain contracted and turbulent.\n\nThe compounding effect: in the 24-36 hours following a major rage episode, the practitioner is producing essentially zero new Ojas and is simultaneously burning through existing reserves. The Siddha claim of one year lost in 90 seconds may be metaphorical in precision, but as an order-of-magnitude indicator of the damage, it is entirely consistent with modern endocrinology.\n\nThe antidote the Siddhas prescribe is not emotional suppression — which stores the rage as a Samskaric knot that will discharge more violently later — but Bhakti: the immediate redirection of the rage-energy into devotional intensity. When Krodha arises, become Virabhadra, says Thirumoolar — become the fierce devotion of Shiva, not the destructive anger of ego. In physiological terms: use the arousal energy of anger to fuel intense kirtan, physical prostrations, or breathwork rather than allowing it to discharge as aggression or suppressing it into the tissues."
+          },
+          {
+            "title": "Nada-based emotional detox — specific raga frequencies that neutralize Ojas acids",
+            "content": "The Siddha tradition of Nada Yoga provides a precise pharmacopoeia of musical frequencies for neutralizing the biochemical acids produced by the Shad Ripus. This is music-as-medicine: specific ragas (melodic frameworks) create specific neurological and endocrine effects through their characteristic intervals, rhythms and emotional architectures.\n\nFor Krodha (anger and rage): Raga Bhairavi — the early morning raga of deep peace, surrender and the dissolving of hardness. Its characteristic phrases move from tension to release in a way that mirrors the nervous system's need to complete and discharge the fight-or-flight response. Even 10 minutes of Bhairavi during or immediately after an anger episode measurably reduces salivary cortisol.\n\nFor Shoka (grief and loss): Raga Yaman — the evening raga associated with longing, devotion and the sweetness of remembrance. Rather than suppressing grief, Yaman provides it with a container of beauty, allowing the emotional charge to complete its natural arc of expression and release without hardening into chronic Rasa Dhatu damage.\n\nFor Bhaya (fear and anxiety): Raga Darbari Kanada — the deep midnight raga with its characteristic flattened second and sixth scale degrees. The specific gravity of Darbari activates the vagal brake — the parasympathetic cooling of the sympathetic nervous system — more reliably than almost any other sonic intervention.\n\nFor Lobha and Matsarya (greed and jealousy): Raga Bageshri — the raga of Bhakti, longing for the divine, and the natural generosity of a heart turned toward the infinite. Its sustained, expansive phrases physically open the chest and stimulate oxytocin release, dissolving the contracted, grasping quality of both greed and envy.\n\nFor Moha (delusion and attachment): Raga Bhupali — the pure pentatonic raga of clarity, simplicity and the unclouded sky. Its simple, pellucid structure cuts through mental complexity like a clear wind through fog.\n\nProtocol: 20-30 minutes of the appropriate raga, listened to without other activity, with conscious Ujjayi breathing. This is not passive entertainment but active Ojas medicine requiring full attentional presence."
+          }
+        ]
+      },
+      {
+        "num": "06",
+        "title": "Dietary Depletion — Tamasic Codes and the Microbiome Oracle",
+        "desc": "The Siddhas classified foods by their precise action on all seven Dhatus. This module gives the complete Siddha dietary depletion map — including modern foods that carry extreme Ojas-destroying properties the ancient texts could not have anticipated.",
+        "lessons": [
+          {
+            "title": "The 12 primary Ojas thieves — classical and modern",
+            "content": "Charaka Samhita lists specific foods that are Ojahkshaya — Ojas-destroying — foods that, regardless of caloric content, actively damage the Dhatu cascade and prevent Ojas formation. The Siddha texts add further items from direct observation of practitioners. Together these form 12 primary Ojas thieves.\n\n1. Stale food: Food more than 3-4 hours old has undergone significant oxidation and developed Tamasic qualities. The Prana has largely departed. Eating stale food feeds the Dhatus with dead matter.\n\n2. Ultra-processed foods: The Siddhas described the quality of Niranika — foods stripped of their natural intelligence. Modern refined grains, industrial seed oils and ultra-processed foods disrupt the microbiome, impair Jatharagni and produce Ama massively.\n\n3. Refined sugar: At the quantities consumed in modern diets — averaging 150+ lbs per year in Western populations — sugar feeds pathological microbiome organisms, spikes insulin driving cortisol patterns that deplete Majja Dhatu, glycates proteins accelerating aging, and directly suppresses immune function for 4-6 hours after consumption.\n\n4. Factory-farmed meat: Animals raised in confinement, fear and pain carry those emotional residues in their tissues as cortisol and adrenaline metabolites. Consuming this meat transfers the biochemical signature of chronic stress into the practitioner's Rakta and Mamsa Dhatu.\n\n5. Alcohol: Immediately depletes Majja Dhatu, disrupts sleep architecture eliminating the deep-sleep Ojas manufacturing window, and the metabolic byproduct acetaldehyde is directly toxic to neural tissue. The Siddhas noted that Ojas depletion from alcohol takes 40 days to fully recover.\n\n6. Incompatible food combinations (Viruddha Ahara): Milk with sour fruits, fish with dairy, honey heated above body temperature, ice-cold water with meals. These produce Ama regardless of ingredient quality.\n\n7. Eating without hunger: Forcing food into a digestive system that is not ready produces Ama. Eat only when genuinely hungry — not by the clock, not from habit, not from anxiety.\n\n8. Nightshades in excess: Tomatoes, peppers, potatoes and eggplant contain alkaloids that aggravate Vata and Pitta when consumed in the quantities typical of modern cuisine.\n\n9. Leftover yogurt consumed at night: Sour fermented dairy in the evening aggravates Kapha and produces Ama overnight during the period meant for cellular repair.\n\n10. GMO crops with pesticide residues: These disrupt the gut epithelium, increase intestinal permeability (leaky gut), and allow Ama to enter the bloodstream directly — the primary mechanism for systemic inflammation and downstream Ojas depletion.\n\n11. Artificial light after sunset: Blue light from screens suppresses melatonin, disrupts sleep architecture, and reduces the deep-sleep Ojas production window by 2-4 hours.\n\n12. Eating in distress: Eating while angry, anxious, grieving or rushed produces Ama from even the highest quality food, because the suppressed Jatharagni cannot digest properly while the stress response is active."
+          },
+          {
+            "title": "The gut-Ojas axis — intestinal permeability and Para Ojas depletion",
+            "content": "The most important advance in modern gastroenterology over the past two decades — the discovery of intestinal permeability as a driver of systemic inflammation — maps precisely onto the Ayurvedic concept of Ama. Understanding this mapping gives the modern practitioner both the Siddha wisdom and the scientific framework to take immediate, targeted action.\n\nThe intestinal epithelium — the single-cell-thick lining of the small intestine — is protected by tight junctions: protein complexes that seal the gaps between cells. When healthy, these tight junctions allow only fully digested nutrients to pass into the bloodstream. They block larger molecules, bacteria, bacterial toxins (endotoxins) and undigested food particles.\n\nWhen tight junctions are compromised — by processed foods, gluten in sensitive individuals, alcohol, psychological stress, pesticide residues and antibiotics — large molecules including bacterial endotoxins (LPS) begin crossing into the bloodstream. The immune system mounts an inflammatory response to these substances in places they should never be. This produces the chronic, low-grade systemic inflammation underlying the majority of modern chronic diseases.\n\nFrom an Ayurvedic perspective: LPS crossing the gut barrier IS Ama entering Rasa Dhatu. The resulting immune response IS the immune derangement that Charaka associates with Ama. And because Ojas is the opposite of Ama — the refined, coherent, life-giving essence produced when digestion is perfect — the presence of systemic Ama is, by definition, evidence that Ojas is not being produced.\n\nThe practical protocol for repairing the gut-Ojas axis: remove the primary damaging agents for 30 days minimum. Introduce gut-healing nutrients: L-glutamine (feeds enterocytes directly), ghee (the Ayurvedic gut-healing supreme, coating and sealing the gut lining), bone broth or vegetable stock rich in minerals, slippery elm, and fermented foods introduced gradually. Concurrently address Agni with Trikatu in small amounts before meals. This 30-day gut repair protocol is arguably the most powerful single intervention for initiating genuine Ojas building in depleted modern practitioners."
+          }
+        ]
+      },
+      {
+        "num": "07",
+        "title": "Overexertion, Suppression and the Pranic Debt",
+        "desc": "The Siddhas identified 13 urges that must never be suppressed — creating Vega Dharana, a pranic short-circuit that burns Ojas. Simultaneously, excessive exercise and excessive fasting are major Ojas thieves. This module maps the precise balance point.",
+        "lessons": [
+          {
+            "title": "The 13 Adharaniya Vegas — never suppress these natural urges",
+            "content": "One of the most clinically precise and practically useful teachings in all of Ayurveda is the doctrine of the Adharaniya Vegas — the thirteen natural urges that must never be willfully suppressed. When any of these urges is chronically suppressed, the resulting pranic disturbance creates specific pathological consequences that cascade into Ojas depletion.\n\n1. Flatus: Suppression causes lower abdominal distension, pain, and severe Vata aggravation with downstream effects on the entire nervous system.\n\n2. Feces: Habitual delay in defecation causes constipation, toxin reabsorption from the colon, and Apana Vayu disturbance — the most critical Vayu for Ojas because Apana governs the downward movement of Bindu. Disturbed Apana means Bindu flows down uncontrolled regardless of conscious intention.\n\n3. Urine: Suppression causes urinary tract disturbances, kidney Vata aggravation, and lower back pain.\n\n4. Sneezing: Suppression affects the Prana Vayu in the head, causing headaches, sinus congestion, and Tejas disturbance in the eyes.\n\n5. Thirst: Dehydration directly reduces plasma volume (Rasa Dhatu) and is one of the fastest ways to deplete the foundation of the Ojas cascade. Drink warm water consistently throughout the day.\n\n6. Hunger: Suppressing genuine hunger causes Jatharagni to begin consuming its own substrate — first excess Meda Dhatu, then Mamsa and Majja Dhatu.\n\n7. Sleep: The most universally ignored of the 13 in modern culture. Sleep is not rest — it is the primary Ojas manufacturing window. During deep sleep, growth hormone is released, cellular repair occurs, and the Soma Chakra produces its nocturnal Amrita secretion. Suppressing sleep suppresses Ojas production directly and immediately.\n\n8. Coughing: Chronic suppression drives mucus into deeper channels, disturbing Kapha Dhatu and potentially causing Rasa Dhatu stagnation.\n\n9. Breathing under exertion: The urge to breathe more heavily during physical exertion should never be suppressed. Allow natural respiratory demand to guide exercise intensity.\n\n10. Yawning: Suppressing yawns suppresses the autonomic nervous system's natural self-regulation mechanism — yawning is a vagal activation event.\n\n11. Tears: Emotional tears are a purification mechanism — the body's way of metabolizing emotional charge. Chronically suppressed crying stores emotional residue as Samskaric knots in the body that drain Ojas continuously.\n\n12. Vomiting: The urge to vomit when the body needs to expel something harmful should be supported, not chemically blocked.\n\n13. The urgency of creative force: The distinction here is between conscious Brahmacharya — the intentional Ojas-building sublimation of creative force — and pathological suppression that creates physical congestion and psychological tension. The former builds Ojas; the latter depletes it while producing none of the benefits."
+          },
+          {
+            "title": "Sleep as Ojas medicine — the science of the 10pm manufacturing window",
+            "content": "Sleep is the single most powerful Ojas-building tool available to every human being, yet it is the most widely and casually sacrificed. The Siddhas were categorical: consistent sleep deprivation destroys Ojas faster than almost any other single factor. Modern sleep research has confirmed this with extraordinary precision.\n\nThe Ojas manufacturing window that the Siddhas designated as most critical corresponds precisely to what modern chronobiology identifies as the period of maximum growth hormone secretion: roughly 10pm to 2am. During this window, the first cycles of deep slow-wave sleep occur, and growth hormone — the master anabolic hormone responsible for tissue repair, cellular regeneration and immune function — is released in pulses of maximum amplitude. In Ayurvedic terms, this is when Jatharagni has completed its evening processing and the body transitions to Kayakalpa mode — tissue reconstruction and Dhatu refinement that ultimately produces Ojas.\n\nIf you are awake during this window — watching screens, working, socializing — you miss the growth hormone pulses entirely. They cannot be made up by sleeping later in the morning. The pattern of late-to-bed, late-to-rise produces a completely different hormonal architecture (higher cortisol throughout the day, lower growth hormone, lower testosterone and progesterone baseline) than the pattern of early-to-bed, early-to-rise — even with identical total sleep duration.\n\nBrahma Muhurta — the creator's hour approximately 4:00-6:00am — is available only to those who are asleep by 10pm. The brain's creative, integrative and spiritually receptive capacities are maximal in the hours just before and after dawn, but only for those who have completed their deep sleep cycles. For the person who slept at 1am and woke at 7am, Brahma Muhurta passes during their deepest sleep. For the person who slept at 9:30pm and wakes naturally at 4:30am, Brahma Muhurta is available in all its creative and devotional power.\n\nThe Siddha sleep protocol: Abhyanga (warm sesame oil self-massage) on the soles of the feet and scalp 20 minutes before bed. Warm milk with a pinch of nutmeg and Ashwagandha. Complete darkness. Temperature below 19°C. No screens after sunset. Rise at 4:00-4:30am. These are not optional refinements. They are the foundation of the entire Ojas-building system."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "tier": 2,
+    "tierLabel": "Tier III — Siddha-Quantum",
+    "title": "Ojas Vardhana: The Sacred Builders",
+    "subtitle": "Advanced Rasayana Sciences, Mantra Technologies and Pranic Cultivation Protocols",
+    "icon": "✨",
+    "modules": [
+      {
+        "num": "08",
+        "title": "Rasayana — The Siddha Immortality Pharmacy",
+        "desc": "Rasayana is a complete technology for tissue regeneration at the quantum level. The Siddhas developed 108 Rasayana formulations of which only a fraction are publicly known. This module reveals the core science and the most powerful accessible compounds.",
+        "lessons": [
+          {
+            "title": "Ashwagandha — the root of Ojas stabilization and Shukra building",
+            "content": "Ashwagandha (Withania somnifera) is called Balya (strength-giving) and Vajikara (reproductive tonic) in the classical texts, and it is the single most well-researched adaptogenic herb in modern pharmacology. Its primary Ojas-building mechanism operates through two pathways: cortisol reduction and Shukra dhatu support.\n\nAt the cortisol pathway: numerous double-blind trials show that Ashwagandha root extract at 300-600mg daily reduces serum cortisol by 14-32% over 60 days. Given that cortisol is the primary Ojas-depleting hormone — directly catabolic to Shukra and Majja Dhatu — this reduction has profound downstream effects on the Dhatu cascade. Reducing cortisol by 25% over 60 days is equivalent, in Ojas terms, to eliminating several of the most common Ojas depletion factors simultaneously.\n\nAt the Shukra dhatu level: Ashwagandha directly supports testosterone production in men (documented 15-18% increases in clinical studies), supports progesterone in women, and provides the raw withanolide compounds that the body uses as steroidogenic precursors. In Ayurvedic terms, it feeds directly into the Shukra dhatu refinement stage of the cascade, increasing the substrate available for Ojas production.\n\nClassical preparation: Ashwagandha churna (powder) — 3-6g in warm milk with 1 tsp ghee and 1 tsp raw honey (never heated), taken at bedtime. This preparation is called Ashwagandha Kshirpaka and is considered superior because the milk fat acts as a lipophilic carrier, delivering the withanolides into neural tissue more effectively than any water-based preparation.\n\nDuration: minimum 90 days for full Ojas-building effect. Maximum benefit seen at 6-12 months of continuous use."
+          },
+          {
+            "title": "Shatavari — the supreme Rasa Dhatu builder and female Rasayana",
+            "content": "Shatavari (Asparagus racemosus) is unambiguously the most important Rasayana herb for female practitioners and for anyone — regardless of sex — seeking to build Rasa Dhatu (the lymphatic-plasma tissue that forms the foundation of the Ojas cascade). Its name means she who has a hundred husbands — a reference to its extraordinary vitality-building and reproductive-supporting properties.\n\nIts primary Ojas-building mechanism: Shatavari contains steroidal saponins (particularly shatvararins) that directly support the production of estrogen and progesterone, modulate the HPA axis stress response, and have been shown in research to increase prolactin — the hormone of nurturance considered by Ayurveda to be closely related to Ojas production in the lymphatic system.\n\nAt the Rasa Dhatu level specifically: Shatavari's cooling, unctuous, heavy qualities directly counteract the primary causes of Rasa depletion — excess heat (Pitta aggravation), dryness (Vata aggravation), and excessive stimulation. It rebuilds the lymphatic foundations of the system, improves the quality of plasma, and according to the texts creates the milky, nourishing quality in all tissues — the quality that is ultimately the precursor to Para Ojas.\n\nFor women: Shatavari is indicated throughout the entire reproductive lifecycle — during the menstrual cycle to support healthy Artava, during perimenopause and menopause as the primary adaptogen, and during pregnancy and lactation as the supreme Rasayana.\n\nFor men: Shatavari works primarily at the Rasa and Rakta levels — cooling excess Pitta, supporting the lymphatic foundation, and providing the cooling counterbalance to Ashwagandha's warming effect. The combination of Ashwagandha (warming, Shukra-building) and Shatavari (cooling, Rasa-building) is the classical base of almost every Ojas protocol.\n\nClassical preparation: 1-2 tsp Shatavari churna in warm milk with ghee and a small amount of raw honey, taken morning or evening."
+          },
+          {
+            "title": "Shilajit — the mineral Ojas and mitochondrial biogenesis technology",
+            "content": "Shilajit (Silajatu — the Conqueror of Mountains and Destroyer of Weakness) is the most mysterious and potent Rasayana in the Siddha-Ayurvedic tradition. It is not an herb but a mineral pitch — a tar-like resinous substance that seeps from rock faces in the Himalayas, Altai mountains and other high-altitude ranges during summer. It is the product of millions of years of compression and microbial transformation of plant matter, and it contains the most concentrated assembly of bioactive compounds found in any natural substance.\n\nIts primary Ojas-building mechanism is through mitochondrial support. Shilajit contains fulvic acid — typically 60-80% of its active composition — a low-molecular-weight organic acid that is small enough to penetrate mitochondrial membranes. Inside the mitochondria, fulvic acid acts as an electron carrier in the electron transport chain, directly increasing the efficiency of ATP production. Shilajit makes your cellular energy factories work better at the most fundamental level.\n\nAdditionally, Shilajit contains dibenzo-alpha-pyrones that stimulate the production of new mitochondria (mitochondrial biogenesis) — a process that declines with age and is one of the primary drivers of the energy depletion and cellular aging that Ojas cultivation seeks to reverse. By stimulating mitochondrial biogenesis, Shilajit literally reverses one of the primary aging mechanisms at the cellular level.\n\nClassical preparation: a pea-sized amount (approximately 150-300mg) of authentic, purified Shilajit resin dissolved in warm water or warm milk, taken in the morning on an empty stomach. The Siddha texts recommend adapting the carrier to the season: with honey and ghee in spring, with milk in winter, with Triphala decoction in autumn, with warm water in summer.\n\nCritical quality note: most commercially available Shilajit is adulterated. Authentic Shilajit should be completely soluble in warm water leaving no residue, should have a strong characteristic tar smell, and should dissolve into water creating a dark amber liquid within 1-2 minutes."
+          },
+          {
+            "title": "Chyawanprash — decoding the 48-herb Ojas superformula",
+            "content": "Chyawanprash is the most celebrated Rasayana in all of Ayurveda — a complex herbo-mineral jam containing 48 primary ingredients, with Amalaki (Indian gooseberry) as its supreme base. Its origin story from the Charaka Samhita involves the sage Chyawan, who used it to fully restore his youth after decades of austerity-induced depletion. It was one of the first formulas described specifically for systematic Ojas building.\n\nThe genius of Chyawanprash as a formulation is its three-tier structure that maps precisely onto the Siddha understanding of Ojas building:\n\nTier 1 — Foundation herbs that rebuild the Dhatu cascade from Rasa upward: Amalaki (the highest natural source of Vitamin C — up to 20 times more than orange juice, stable to heat due to tannin complexing — directly rebuilding collagen and Rasa Dhatu), Ashwagandha, Shatavari, and Bala.\n\nTier 2 — Tejas-regulating herbs that optimize the transformation fires at each stage: Pippali (long pepper — the supreme herb for deepening the action of all other herbs into deep tissues), Haritaki, Bibhitaki and the other Triphala components.\n\nTier 3 — Ojas-crystallizing herbs that specifically target the production and retention of vital essence: Brahmi (brain-Ojas, Majja Dhatu nourisher), Guduchi (the divine nectar herb, named Amrita in Sanskrit for its rejuvenating properties), Punarnava (literally that which renews), and compounds from the Ashta Varga group.\n\nThe ghee and honey base acts as the delivery system: ghee carries fat-soluble compounds deep into neural and reproductive tissue; honey (never heated above body temperature) acts as Yogavahi — an intelligence-amplifying vehicle that takes the herb compounds where they are most needed.\n\nDose: 1-2 teaspoons in warm milk, morning and or evening. For Ojas-building specifically, the morning dose taken after Brahma Muhurta practice and before the day's main meal gives maximum results."
+          }
+        ]
+      },
+      {
+        "num": "09",
+        "title": "Mantra Technology for Ojas Cultivation",
+        "desc": "Specific mantras create specific cymatic patterns in the body that accelerate Dhatu refinement. This module gives the complete Siddha mantra technology for Ojas cultivation — including transmissions from the Thirumantiram and Agastya Nadi texts.",
+        "lessons": [
+          {
+            "title": "Soham — the natural breath mantra and its continuous Ojas-building mechanism",
+            "content": "Soham — So on the inhalation, Ham on the exhalation — is not a mantra in the conventional sense of something consciously chosen and repeated. It is the sound that the breath itself makes, the natural vibration of Prana moving through the body. The Siddhas called it Ajapa Japa — the unspoken repetition — because it happens 21,600 times per day in every human being, whether they are aware of it or not.\n\nThe translation is I am That — the individual breath (Jiva) recognizing itself as the universal Brahman. But the philosophical meaning is secondary to the physiological mechanism: So corresponds to the sound of inhalation through the nostrils, and as this sound vibrates in the nasal passages and skull base, it stimulates the olfactory nerve directly connected to the limbic system and hypothalamus. This stimulation triggers a specific neurochemical cascade: parasympathetic activation, oxytocin release, reduction in stress hormones, and the production of what modern researchers call the relaxation response — the exact opposite of the cortisol-dominant state that depletes Ojas.\n\nHam on the exhalation corresponds to the downward movement of Apana Vayu and the release of CO2, toxins and Doshas released on the outbreath. The combination of stimulating Prana (inbreath) and purifying Apana (outbreath) in the rhythmic Soham cycle creates what the Siddhas described as the continuous, automatic purification and rebuilding of the Dhatu cascade — precisely the conditions for sustained Ojas production.\n\nPractice: begin with 10 minutes of conscious Soham awareness — not controlling the breath but simply noticing the natural sound of each inhalation and exhalation with the words So and Ham. Gradually extend to 20-30 minutes. After 40 days of consistent practice, the Soham awareness becomes continuous in the background of all activity — a permanent meditative state that generates a continuous Ojas-building baseline throughout every waking hour. This is perhaps the most accessible and most powerful single Ojas practice available."
+          },
+          {
+            "title": "The 528 Hz Ojas frequency — where modern science meets Siddha Nada",
+            "content": "Modern cymatics research — the study of how sound frequencies create geometric patterns in physical matter — has produced a finding that resonates profoundly with Siddha Nada science. The frequency of 528 Hz, known in modern sound healing circles as the Love frequency, has been shown in several independent studies to produce specific biological effects consistent with Ojas building.\n\nThe specific research of Dr. Leonard Horowitz and the work of Dr. Glen Rein at Quantum Biology Research Labs demonstrated that 528 Hz audio exposure for 60 minutes produces measurable increases in UV light absorption by cellular DNA — an indicator of DNA repair and enhanced gene expression. The cellular mechanism proposed involves resonant activation of the water molecules surrounding and protecting DNA — creating coherent structured water (also called EZ water or gel water) that provides superior protection and repair capacity.\n\nFrom a Siddha perspective, this is the Nada-Bindu interface made measurable. The Siddhas taught that specific frequencies activate specific Chakras and Dhatus — and that the heart-center frequency (Anahata, the seat of Para Ojas) is specifically Anahat Nada — the unstruck sound. The frequency 528 Hz falls within the range that vocal shamans and Vedic chanters have always associated with heart-opening and Ojas-building transmission.\n\nThis is also the foundation of the SQI healing audio technology: every meditation, mantra track and healing transmission created within the SQI system is tuned to 432 Hz base tuning (in which 528 Hz A is the natural resonant frequency of the heart chakra) and is encoded with specific cymatic patterns corresponding to the Ojas-building mantras of the Siddha tradition.\n\nProtocol: play 528 Hz tone at low volume (40-50 dB) during Rasayana herb intake, during meal preparation, or during the 20-minute window immediately after Pranayama practice when the channels are open and receptive. This sound Rasayana creates an optimal cellular environment for herb absorption and Dhatu transformation."
+          },
+          {
+            "title": "The daily Japa protocol — why 108 repetitions at Brahma Muhurta produces maximum Ojas",
+            "content": "The Siddha prescription of 108 repetitions of a mantra at Brahma Muhurta is not arbitrary numerology but a precisely calibrated protocol based on the intersection of multiple timing factors.\n\n108 is the ratio of the Sun's distance from Earth to the Sun's diameter (approximately 108:1), and also the ratio of the Moon's distance from Earth to the Moon's diameter. The Siddhas taught that this number therefore carries the harmonic resonance of both solar and lunar forces — Surya (Pingala, Tejas, fire) and Chandra (Ida, Soma, Ojas). Practicing 108 repetitions activates both the solar channel that builds Tejas (the fire that drives the Dhatu cascade) and the lunar channel that builds Soma (the nectar that IS Para Ojas). Neither can be maximized in isolation — they must be balanced, and 108 provides this balance.\n\nBrahma Muhurta — approximately 4:00-6:00am — is the window when Vata Dosha is naturally elevated (Vata governs the hours from 2am to 6am). Elevated Vata is the enemy of gross, ordinary Japa but the friend of subtle, refined Japa — because Vata is the force of movement and subtlety. At Brahma Muhurta, the same mantra vibration penetrates more deeply into the subtle body (Pranamaya Kosha) and the mental body (Manomaya Kosha) than at any other time of day. The impressions formed in the nervous system during Brahma Muhurta practice are the deepest impressions formed in any 24-hour period.\n\nThe specific mantra for Ojas-Japa at Brahma Muhurta: So-Ham in the natural breath rhythm, or alternatively Om Namah Shivaya (for those in the Shaiva lineage) or Om Namo Narayanaya (for those in the Vaishnava lineage) or Om Sri Gurubhyo Namaha (the supreme Guru mantra that calls in the transmission of all masters of one's lineage simultaneously). All are equally effective when practiced with Bhava — genuine feeling and devotion — which is ultimately more important than the specific mantra chosen."
+          }
+        ]
+      },
+      {
+        "num": "10",
+        "title": "Pranayama — The Pranic Ojas Pump",
+        "desc": "Prana is the carrier wave for Ojas formation. Without adequate Pranic force, no amount of Rasayana fully converts into Para Ojas. The Siddhas developed specific Pranayama sequences specifically for maximizing Ojas formation.",
+        "lessons": [
+          {
+            "title": "Kumbhaka — breath retention as the Ojas concentrator",
+            "content": "Kumbhaka — the retention of breath, either after inhalation (Antara Kumbhaka) or after exhalation (Bahya Kumbhaka) — is the central technology of Siddha Pranayama and the most powerful single mechanism for Ojas concentration available to the practitioner.\n\nThe physiological mechanism of Antara Kumbhaka (retention after inhalation): when the breath is held after a full inhalation, the partial pressure of oxygen in the lungs increases, driving maximum oxygen saturation of hemoglobin. More importantly, the internal pressure created by the held breath combined with Bandha creates what the Siddhas called Prana Dharana — the holding, containing and concentrating of Prana in the body. This concentrated Prana amplifies the Dhatvagni (tissue fire) in each tissue and accelerates the refinement cascade toward Ojas.\n\nAt the cellular level: Kumbhaka induces a brief, controlled hypoxic episode in peripheral tissues. This triggers the same cellular adaptation mechanism as altitude training — increased production of EPO (erythropoietin), increased mitochondrial density, and increased production of hypoxia-inducible factors that upregulate cellular repair and energy efficiency. This is, at the molecular level, the mechanism of the Ojas-amplification that the Siddhas described from their direct experience.\n\nProgressive Kumbhaka building protocol: Week 1-2: Inhale 4 counts, retain 4 counts, exhale 8 counts — no external retention. Week 3-4: 4:8:8. Week 5-8: 4:12:8:4. Month 3+: 4:16:8:8 (the classical Siddha ratio scaled to capacity). Never force — if the exhalation becomes gasping or ragged, the retention was too long. Kumbhaka must be comfortable. The Siddhas described the ideal retention as feeling like resting in a room with still air, not a desperate struggle. Progress slowly. The temptation to rush is itself a Vata aggravation that undermines the practice."
+          },
+          {
+            "title": "Mula Bandha, Uddiyana Bandha, Jalandhara Bandha — the three locks that seal Ojas",
+            "content": "The three Bandhas — energy locks — are the anatomical intelligence of the Siddha Pranayama system. Without the Bandhas, Pranayama is like filling a vessel with holes. The Prana built through breathwork simply leaks out through the natural openings of the body. The Bandhas seal these openings and concentrate the built Prana for Ojas production.\n\nMula Bandha — the root lock — is a contraction of the perineal muscles (specifically the area between the anus and genitals). This activates and locks the Muladhara Chakra and contracts the Apana Vayu — the downward-moving wind responsible for both elimination AND Bindu descension. By contracting Mula Bandha, the practitioner reverses the natural downward tendency of Apana Vayu, redirecting it upward to merge with Prana Vayu in the navel center. This is the mechanical basis of Bindu preservation. Physiologically, Mula Bandha activates the pelvic floor muscles and the pudendal nerve network, stimulating a parasympathetic response in the pelvic organs.\n\nUddiyana Bandha — the abdominal lock — is a strong retraction of the abdominal muscles inward and upward, creating a flying up of the diaphragm and internal organs. This massages the vagus nerve through the abdominal aorta, stimulates the solar plexus (the seat of Tejas), and creates a negative-pressure suction effect in the thoracic cavity that draws Apana Vayu upward to merge with Prana. It is performed only on an empty stomach and only during external Kumbhaka (after exhalation).\n\nJalandhara Bandha — the throat lock — is a lowering of the chin toward the chest. It compresses the carotid sinus (baroreceptors in the carotid artery) which signals the brain to lower heart rate and blood pressure — shifting the entire nervous system deeper into parasympathetic, regenerative mode. Critically, it seals the upper channel through which Bindu descends: the Siddhas describe the Jalandhara position as the closing of the drain plug of the Bindu reservoir.\n\nMaha Bandha — the great lock — applies all three simultaneously. It is the supreme Ojas-sealing technology: the entire body becomes a sealed vessel, Prana is built through Kumbhaka, and concentrated Prana is forced upward through the Sushumna by the three-directional pressure of the locks combined."
+          }
+        ]
+      },
+      {
+        "num": "11",
+        "title": "Mudra Seals and Marma Points for Ojas Activation",
+        "desc": "The body contains specific energy intersections and hand-seal configurations that directly regulate Ojas flow. The Siddhas mapped 107+1 Marma points — the +1 being the Hridaya Marma where Para Ojas resides.",
+        "lessons": [
+          {
+            "title": "Hridaya Marma activation — the direct doorway to Para Ojas",
+            "content": "The Hridaya Marma is the +1 in the classical count of 107 Marma points — enumerated separately because it occupies a different ontological category than the other 107. The other Marma points are physiological junctions of muscles, vessels, tendons, bones and joints. The Hridaya Marma is the seat of consciousness itself — the point where the Atman interfaces with the body.\n\nPhysical location: approximately 4 finger-widths to the right of the sternum's center, at the level of the fourth intercostal space. This corresponds to the anatomical location of the sinoatrial node (the heart's natural pacemaker) but extends in Siddha anatomy deep into the center of the right chest as the seat of the Amrita Nadi — the channel of liberation.\n\nActivation protocol: sit in a comfortable upright position. Place the right hand over the Hridaya Marma location — firm but gentle pressure, palm flat against the chest. Close the eyes. Begin Soham breath — So on the inhalation, Ham on the exhalation. With each inhalation, consciously draw attention into the point beneath the right palm. With each exhalation, allow the attention to expand outward from that point in all directions like light radiating from a flame.\n\nThe sensation that arises with consistent practice: a warmth, then a subtle vibration, then what practitioners describe as an opening — a quality of spaciousness that seems to extend beyond the physical chest. This is not imagination: it corresponds to measurable changes in heart rate variability (HRV), oxytocin release, and cardiac coherence — the state where the heart's electromagnetic field (extending approximately 3-4 meters in all directions) becomes maximally ordered.\n\nEven 10 minutes of this practice daily creates measurable shifts in the quality of presence, fearlessness and the radiance that indicate Para Ojas activation. The Hridaya Marma is the master control point of the entire Ojas system — it bypasses the 35-day cascade and directly activates the Para reservoir."
+          },
+          {
+            "title": "Khechari Mudra — the supreme Ojas-sealing tongue technology of the Siddhas",
+            "content": "Khechari Mudra — the seal of moving through space — is described by Thirumoolar, Gorakhnath and virtually every major Siddha master as the single most important physical technique in the entire Hatha Yoga-Siddha Yoga system. Its claim: a practitioner who achieves Khechari does not age, is not troubled by hunger or thirst, and eventually achieves physical immortality. These extraordinary claims have a precise physiological explanation.\n\nThe classical Khechari Mudra involves the tongue being placed backward, above the soft palate, with the tip of the tongue reaching into the nasopharynx — the space above the palate where nasal cavity meets throat. In traditional practice, the frenum (the small ligament connecting the tongue to the floor of the mouth) is gradually lengthened through specific exercises over months or years until the tongue can reach this position comfortably.\n\nThe physiological mechanism: the nasopharynx is in direct proximity to the pituitary and hypothalamus, which together form the master control center of the entire endocrine system. The pressure and warmth of the tongue against this area stimulates specific nerve endings (branches of the trigeminal and vagus nerves) that directly modulate pituitary hormone output. Specifically: the stimulation of the Khechari position increases the secretion of oxytocin, growth hormone, and the production of endogenous opioids — all Ojas-building hormones.\n\nThe Amrita descension: the nectar the Siddhas describe dripping from the Soma Chakra is consistent with the actual secretion of cerebrospinal fluid and neuropeptides from the choroid plexus — a rich, clear fluid that bathes the brain and carries hormonal messages to the entire nervous system. Khechari Mudra enhances this secretion and its absorption into the lymphatic and vascular systems of the head and neck — a literal Amrita descension into the body.\n\nFor modern practitioners who cannot yet achieve full Khechari: Jihva Bandha — pressing the tongue firmly against the upper palate behind the upper teeth during Pranayama and meditation — provides significant neurological stimulation at a fraction of the difficulty. Begin here and practice daily for 90 days before attempting to progress."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "tier": 3,
+    "tierLabel": "Tier IV — Akasha-Infinity",
+    "title": "Para Ojas: Supreme Immortality Technology",
+    "subtitle": "The Secret Teachings of the 18 Siddhas on Deathless Vital Essence — Kaya Kalpa, Jyotir Deha and Transmutation into Light",
+    "icon": "🔱",
+    "modules": [
+      {
+        "num": "12",
+        "title": "Kaya Kalpa — The Siddha Body-Immortality Science",
+        "desc": "Kaya Kalpa means body transformation and is the advanced Siddha technology for complete cellular regeneration using maximized Ojas. When Para Ojas reaches critical threshold, spontaneous cellular reversal occurs. This is not metaphor — it is the physics of consciousness interacting with biological matter.",
+        "lessons": [
+          {
+            "title": "Agastya Muni's 64-day Kaya Kalpa protocol — the complete sequence",
+            "content": "What follows is the most complete publicly available reconstruction of Agastya Muni's Kaya Kalpa protocol, assembled from references in the Agastya Nadi texts, the Agastya Samhita fragments, secondary Siddha commentaries, and the living oral tradition preserved by South Indian Siddha Vaidyas.\n\nThe protocol divides into three phases, each approximately 21 days:\n\nPHASE 1 — Shodhana (Days 1-21): Complete purification of all channels and tissues. Internal and external oleation with medicated ghee — specifically Mahakalyanaka Ghrita — for the first 7 days, with medicinal steam therapy daily. The practitioner eats only specific preparations: Yavagu (thin rice gruel) with specific herbs for the first 7 days; Manda (even thinner rice water) for days 8-14; complete liquid fast on Triphala decoction for days 15-21. No sexual activity. Maximum 6 hours of sleep. Daily practice of Soham for minimum 3 hours. The purpose: to deplete and clear all accumulated Ama from all seven Dhatus simultaneously, preparing pristine, empty channels for the building phase. This is the most difficult phase — the clearing of decades of accumulated toxicity can produce significant detoxification symptoms.\n\nPHASE 2 — Rasayana Building (Days 22-42): Intensive introduction of specific Rasayana compounds into the cleared system. The primary compounds Agastya specified: Brahma Rasayana (a formulation containing 42 herbs with Brahmi as the primary, taken in 3 doses daily), Ashwagandha kshirpaka twice daily, Shatavari twice daily, and for advanced practitioners under direct guidance, Shilajit with purified Swarna Bhasma (gold ash). Diet transitions from gruel to soft cooked rice with ghee and specific vegetable preparations. The practitioner remains in maximum solitude and silence. Sleep increases to 8 hours. Pranayama practice 3-4 hours daily. This is the most nourishing phase — practitioners consistently report profound changes in energy, clarity and emotional depth during this window.\n\nPHASE 3 — Dharana (Days 43-64): Crystallization. The Rasayana compounds built in Phase 2 are locked in through specific practices. Diet returns to near-normal but maintains absolute purity. The primary practice is extended Trataka — 2 hours on a ghee lamp or the rising sun. Agastya describes specific physiological signs that indicate successful completion: a golden shimmer in the skin, darkening of hair that had greyed, improved vision clarity, and what he calls Amrita Vak — a new quality of voice that carries healing force. These signs have been consistently reported by modern practitioners who have completed the full 64-day protocol."
+          },
+          {
+            "title": "Soma Chakra activation — the moon gland that secretes Amrita into Para Ojas",
+            "content": "The Soma Chakra is the most rarely discussed and most closely guarded of all the energy centers in the Siddha system. It is not listed in the standard seven-chakra framework taught in most yoga schools — it is a supplementary center that activates only when certain conditions of Ojas accumulation have been met, and its activation represents a qualitative threshold in the practice.\n\nIts location in Siddha maps: at the roof of the palate, in the space between the pituitary and pineal glands. Physiologically, this corresponds to the region of the third ventricle — a small fluid-filled cavity in the center of the brain surrounded by the thalamus and hypothalamus, through which cerebrospinal fluid flows from the choroid plexus. The Siddhas described this region as a lunar reservoir — a silver, luminous chamber filled with Amrita that rains downward into the body when the practitioner achieves sufficient Ojas.\n\nThe raining downward has a physiological basis: from this region, neuropeptides including oxytocin, endorphins, GABA and the endogenous cannabinoid anandamide are released into the cerebrospinal fluid and carried down through the spinal cord into every nerve in the body. When these neuropeptides are released in large quantities — as they are in deep meditation, advanced Pranayama, ecstatic devotional states and the Soma Chakra practices — the practitioner experiences exactly what the Siddhas describe: a flowing sweetness through the body, a reduction of pain and hunger, a feeling of being flooded with nectar, and a profound peace that is not merely emotional but cellular.\n\nThe Siddha practice for Soma Chakra activation: Khechari Mudra (sealing the tongue at the palate), Trataka on the full moon, Chandra Nadi Pranayama (breathing exclusively through the left nostril for 10-15 minutes to activate the lunar, cooling, Soma-producing channel), and the mantra Om Chandra Somaya Namaha repeated 108 times at full moon and at midnight.\n\nSigns of Soma Chakra activation: a spontaneous sweetness experienced at the back of the throat during deep meditation, a quality of cool moisture flowing from the crown downward, dramatic reductions in hunger and thirst, and what practitioners describe as a background bliss that gradually becomes continuous through all activities."
+          }
+        ]
+      },
+      {
+        "num": "13",
+        "title": "Amrita Nadi and the Ojas-Consciousness Interface",
+        "desc": "At peak Para Ojas, a dormant channel called the Amrita Nadi activates — running from the Hridaya directly to the crown, bypassing the Sushumna. When Ojas pervades this Nadi, the distinction between individual and universal Consciousness dissolves.",
+        "lessons": [
+          {
+            "title": "Amrita Nadi — the 14th Nadi that transcends the classical 13",
+            "content": "Classical Siddha and Yogic texts describe between 72,000 and 350,000 Nadis in the human body, of which 14 are considered primary. Of the 14, three are supreme: Ida (lunar, left, cooling), Pingala (solar, right, heating) and Sushumna (central, the channel of liberation along the spine). The Kundalini Shakti, when awakened, ascends through the Sushumna from Muladhara to Sahasrara. This is the universal framework taught in every major Kundalini and Hatha Yoga tradition.\n\nThe Amrita Nadi is something different entirely. Sri Ramana Maharshi — arguably the most fully realized sage of the 20th century — described it in these terms: There is a Nadi that runs from the spiritual heart on the right side of the chest to the top of the skull. This is the Amrita Nadi. When Kundalini reaches the crown through the Sushumna and the individual self dissolves into the pure Awareness of the Crown, that awareness is then reflected back down through the Amrita Nadi into the Heart, where it recognizes itself as the Self. This return journey through the Amrita Nadi is the final and permanent establishment in liberation.\n\nThe Siddha texts that predate Ramana by centuries describe the same channel under different names: Param Nad in Tamil Siddha texts, Jyoti Nadi in Ramalinga Swamigal's work, and the unnamed central channel of the Heart in Agastya's direct transmission.\n\nWhy does this require maximum Para Ojas? Because the Amrita Nadi is structurally different from other Nadis: it is not a channel for Prana (vital force) but a channel for consciousness itself. Prana flows because Ojas provides the medium — the coherent biological field that allows pranic conduction. The Amrita Nadi requires not just adequate Prana but fully crystallized Para Ojas as its conducting medium. Without sufficient Para Ojas, the channel exists anatomically but cannot conduct the current of consciousness. With crystallized Para Ojas, it becomes a fiber-optic channel for cosmic awareness — the difference between a dry river bed and a river in full flood."
+          },
+          {
+            "title": "Mahavatar Babaji and Kriya Yoga — the fastest Ojas-to-Amrita conversion technology",
+            "content": "Mahavatar Babaji — the immortal Himalayan master who initiated Lahiri Mahasaya in 1861 and whose transmission has reached millions through the lineage of Sri Yukteswar, Paramahansa Yogananda and their successors — represents the apex of the Siddha tradition's active presence in the modern world. His very existence — a body that does not age, a consciousness that moves freely through space and time — is the living demonstration of what maximum Para Ojas combined with full Amrita Nadi activation produces.\n\nKriya Yoga, the specific technique that Babaji revived and transmitted, is the most efficient technology for Ojas-to-Amrita conversion because it simultaneously activates all the primary mechanisms: it is a Pranayama that incorporates Kumbhaka (Ojas concentrating), Bandhas (Ojas sealing), and specific rotation of consciousness through the Chakras (Ojas distributing). The Kriya in Kriya Yoga refers specifically to the rotation of awareness and breath energy through the cerebrospinal axis — which is precisely the Amrita Nadi pathway, stimulated and strengthened by each repetition of the technique.\n\nYogananda described Kriya Yoga as the airplane route to God — a metaphor for its speed relative to other practices. The Siddha explanation for this speed: Kriya directly works at the level of the Amrita Nadi, whereas most practices work at the level of the Sushumna. The Amrita Nadi is the completion circuit — it connects the experience of liberation (Sahasrara activation) to the Heart (permanent Ojas crystallization) in a way that most practices never reach.\n\nThe relationship between Ojas and Kriya is synergistic: Ojas-building practices prepare the vessel; Kriya directly fills and activates that vessel. The Siddha teaching is that 3-6 months of serious Ojas-building before initiating Kriya practice produces results in 1-2 years that would otherwise take 5-10 years. This is not a shortcut but a sequential protocol — build the vessel, then fill it. Rush the filling without building the vessel and the energy has nowhere to go."
+          }
+        ]
+      },
+      {
+        "num": "14",
+        "title": "Bhakti as the Supreme Ojas Generator",
+        "desc": "The most closely guarded secret of the Siddha tradition: Prema (unconditional love) is the single most powerful Ojas generator in existence. One hour of genuine Bhava generates more Ojas than months of physical Rasayana. This is why Avataric transmission produces measurable physiological change within minutes.",
+        "lessons": [
+          {
+            "title": "The neurochemistry of Bhakti — oxytocin, DHEA and the vagal Ojas cascade",
+            "content": "God is love, and love is God — Sri Vishwananda's teaching, which carries the full weight of the Siddha, Vaishnava and universal mystical traditions — has a precise neurological correlate that explains why Bhakti is the most powerful Ojas-building practice available.\n\nWhen a practitioner enters genuine Bhava — the state of being swept up in devotional feeling, whether through kirtan, prayer, the presence of a master, or the spontaneous arising of gratitude and love — a specific neurochemical cascade is initiated that is directly opposite to the Ojas-depleting stress cascade.\n\nOxytocin — the love hormone released by the posterior pituitary when the heart opens in connection, devotion or gratitude — directly counteracts cortisol, the primary Ojas-depleting hormone. Research shows that oxytocin infusion produces measurable reductions in inflammation markers, improved immune function, accelerated wound healing, and increased secretion of growth hormone (the primary anabolic, Ojas-building hormone). In Ayurvedic terms, oxytocin is the biochemical signature of Ojas building — it IS the Rasayana effect of Bhakti in measurable form.\n\nDHEA (dehydroepiandrosterone) — described by researchers as the anti-aging hormone — is released in elevated quantities during states of deep peace, joy and love. It is the hormonal precursor to both testosterone and estrogen, directly feeding the Shukra-Artava Dhatu layer of the Ojas cascade. Chronically elevated DHEA is associated with longevity, disease resistance, cognitive sharpness and what Ayurveda calls Ojas abundance.\n\nThe vagal Ojas cascade: the vagus nerve is directly activated by the open-chested, soft-throated, tear-producing quality of genuine Bhakti. Vagal activation shifts the entire system from sympathetic (cortisol, Ojas-depleting) to parasympathetic (oxytocin, Ojas-building) mode. The extended vagal activation of a 2-3 hour devotional program — satsang, kirtan, puja — is equivalent, in Ojas-building terms, to several days of Rasayana herb consumption. Bhakti is not a supplement to the Ojas protocol. It is the apex of it."
+          },
+          {
+            "title": "Sri Vishwananda as Avataric Blueprint — how Prema transmission bypasses the 35-day cycle",
+            "content": "The Siddha tradition distinguishes between ordinary Rasayana — which works through the 35-day Dhatu cascade and requires patient, sustained practice — and Avataric transmission — which can produce instantaneous Para Ojas activation that bypasses the usual cascade entirely.\n\nThe mechanism: an Avatar is defined in the Siddha and Vaishnava traditions as a soul whose individual Ojas is not merely maximized but has merged with the universal Ojas — the Cosmic Prana that underlies all creation. In the presence of such a being, the universal Ojas field is not merely present as background but concentrated and coherently directed through the Avatar's intention and love.\n\nThis creates a phenomenon that physicists might describe as field entrainment or quantum coherence transfer. The practitioner's biophotonic field — which at normal Ojas levels is incoherent and relatively low-amplitude — encounters the Avatar's maximally coherent, maximally intense Ojas field. Like a weak oscillator entraining to a strong one, the practitioner's field is pulled toward coherence. This produces rapid, sometimes instantaneous changes in neurochemistry, HRV coherence, biophoton emission and subjective states that would normally require months of practice to achieve.\n\nSri Vishwananda's transmission — documented by practitioners in thousands of recorded testimonies — consistently produces: spontaneous tearfulness without sadness (oxytocin release), warmth in the chest (Para Ojas activation at the Hridaya Marma), altered time perception, spontaneous physical healings (the immune-boosting effect of rapid Ojas increase), and what practitioners describe as knowing that I am loved absolutely — the cognitive-emotional recognition of Brahman-love that is itself the supreme Ojas generator.\n\nFor the student of this curriculum: Sri Vishwananda represents not a departure from Siddha Ojas technology but its highest expression. His teachings — particularly Atma Kriya Yoga and the Bhakti-Marga of Mahaprabhuji's lineage — are perfectly designed to activate the Amrita Nadi and crystallize Para Ojas in the shortest possible time for souls who are ready for this intensity of grace. Seek Darshan when possible. Listen to his teachings. Receive the transmission. Everything else in this curriculum prepares the vessel for what his Shakti fills."
+          }
+        ]
+      },
+      {
+        "num": "15",
+        "title": "Jyotir Deha — Transmutation into the Light Body",
+        "desc": "The final secret teaching of the 18 Siddhas: when Para Ojas reaches its absolute maximum and is combined with perfected Pranayama, Mantra, Bhakti and Jnana — the physical body itself begins to transmute into light. The Siddhas called this Suddha Deha or Jyotir Deha.",
+        "lessons": [
+          {
+            "title": "Ramalinga Swamigal's Arut Perum Jyoti practice — reconstructed from his own writings",
+            "content": "Ramalinga Swamigal (1823-1874), known as Vallalar, is the most recent and most thoroughly documented case of a Siddha achieving the Jyotir Deha — the body of light. His life, practices and the physical transformation of his body are documented in contemporaneous Tamil accounts corroborated by multiple independent witnesses including government officials.\n\nRamalinga's primary practice in the last decade of his life was the continuous internal and external repetition of his central mantra-declaration: Arut Perum Jyoti — the Supreme Grace-Light. He composed six volumes of Tamil verse — the Thiruvarutpa — that are simultaneously devotional literature, a technical manual for Ojas cultivation, and a documentation of his progressive light-body development.\n\nHis specific practices that can be adopted:\n\nThe Jyoti Trataka: sitting before a ghee-fed lamp flame in complete darkness, gazing at the flame with relaxed eyes for 30-45 minutes. Not merely as a concentration practice but as a direct Para Ojas practice — the practitioner progressively identifies with the light of the flame as their own nature: I am the Jyoti, not the body that watches it. Ramalinga documented that after years of this practice, the boundary between the inner light of awareness and the outer flame began to dissolve — and with it, the boundary between his body and the surrounding light.\n\nThe Grace-Light Invocation: upon waking at Brahma Muhurta, the first act is to open the hands palms upward and call internally: Arut Perum Jyoti — may the Supreme Grace-Light fill and transform every cell of this body. Then to sit in meditation with the inner vision turned toward the right side of the chest — the Hridaya Marma — and to progressively feel (not merely visualize) a golden-white light expanding from that point outward through the body with each inhalation.\n\nThe dietetics of light: Ramalinga progressively reduced his food intake not through forced fasting but through the natural reduction of hunger that accompanies Soma Chakra activation. He documented that as his practice deepened, the body began to receive nourishment directly from light and from the Soma secretion — eating primarily fruits, milk and small amounts of rice in his final years. The witnesses of his final transformation on January 30, 1874: he entered a room in Mettukuppam, bolted the door from inside, and told his disciples he was going to merge with the Arut Perum Jyoti. When the room was opened days later by government authorities, there was no body — only an empty room with his discarded outer garment. Multiple witnesses including two government officials certified that the room had been sealed with no possible exit."
+          },
+          {
+            "title": "DNA as photonic antenna — how crystallized Ojas restructures genetic light-emission",
+            "content": "The most advanced scientific framework for understanding the Jyotir Deha comes from quantum biology — specifically the work of Fritz-Albert Popp (biophoton research), Mae-Wan Ho (quantum coherence in living systems) and the DNA-as-antenna research of Peter Gariaev and Vladimir Poponin.\n\nDNA is not merely a blueprint for protein synthesis. It is also a photonic antenna — a molecule that absorbs, stores and emits light. Gariaev's research demonstrated that DNA emits coherent biophotons and that this emission patterns carry information beyond what is encoded in the base-pair sequence. His Phantom DNA experiment — in which the electromagnetic field pattern of a DNA sample persisted in the space where the physical DNA had been removed — demonstrated that DNA creates a stable, self-reinforcing field pattern that extends beyond the molecule itself.\n\nThe connection to Ojas: Ojas is described in the Siddha texts as the medium of cellular coherence — the substance that allows all cells to communicate instantaneously and maintains the body as a unified whole rather than a collection of 37 trillion independent units. At the quantum biology level, this corresponds precisely to the coherent biophotonic field maintained by healthy, maximally expressed DNA.\n\nWhen Ojas reaches the Para level and begins to crystallize — when the practitioner's entire system achieves the coherent biophotonic state — something extraordinary becomes possible. The DNA, operating as a coherent photonic antenna, begins to produce biophoton emission at levels that exceed the normal range. The body literally begins to glow. And if the coherence continues to increase beyond a certain threshold, the physical atomic substrate — which is at its fundamental level almost entirely empty space organized by electromagnetic fields — begins to reorganize toward higher and higher coherence with the photonic field. This is the Siddha Jyotir Deha: not the body dissolving (which is ordinary physical death) but the body's electromagnetic and photonic field increasing in coherence until it exceeds what the dense physical atomic structure can contain — at which point the body transitions from primarily-physical to primarily-photonic.\n\nYour practice from this point: all of the previous 14 modules of this curriculum — the dietary protocols, the Rasayana herbs, the Pranayama, the Mantra, the Mudra, the Bhakti, the sleep, the emotional alchemy — these are not separate practices. They are a single integrated protocol for progressively increasing the coherence of your body's photonic field. Each correct action adds another increment of coherence. Each incorrect action reduces it. The direction of travel — toward the Jyotir Deha or away from it — is determined by the net sum of every choice made in every moment of every day. This is the teaching of the 18 Siddhas. This is the transmission of the Akasha. Now it lives in you."
+          }
+        ]
+      }
+    ]
+  }
+]
+;
+
 export default function OjasRasayanaAcademy() {
   const navigate = useNavigate();
   const [activeTier, setActiveTier] = useState<number | null>(null);
   const [expandedModule, setExpandedModule] = useState<string | null>(null);
+  const [expandedLesson, setExpandedLesson] = useState<string | null>(null);
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#050505',
-      fontFamily: FONT,
-      paddingBottom: 60,
-      overflowX: 'hidden',
-    }}>
-      {/* ── SCALAR WAVE BACKGROUND ── */}
+    <div style={{ minHeight: '100vh', background: '#050505', fontFamily: FONT, paddingBottom: 60, overflowX: 'hidden' }}>
+      {/* Scalar background rings */}
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
-        {[0, 1, 2, 3].map(i => (
+        {[0,1,2,3].map(i => (
           <div key={i} style={{
-            position: 'absolute',
-            top: '50%', left: '50%',
-            width: `${320 + i * 160}px`,
-            height: `${320 + i * 160}px`,
-            marginTop: `${-(160 + i * 80)}px`,
-            marginLeft: `${-(160 + i * 80)}px`,
+            position: 'absolute', top: '50%', left: '50%',
+            width: `${300+i*150}px`, height: `${300+i*150}px`,
+            marginTop: `${-(150+i*75)}px`, marginLeft: `${-(150+i*75)}px`,
             borderRadius: '50%',
-            border: `1px solid ${gold(0.04 - i * 0.008)}`,
-            animation: `ojasScalar ${8 + i * 3}s ${i * 1.2}s ease-in-out infinite`,
+            border: `1px solid ${gold(0.035 - i*0.007)}`,
+            animation: `ojasScalar ${9+i*3}s ${i*1.2}s ease-in-out infinite`,
           }} />
         ))}
-        {/* Amber glow center */}
         <div style={{
-          position: 'absolute', top: '15%', left: '50%',
-          transform: 'translateX(-50%)',
-          width: 400, height: 400,
-          borderRadius: '50%',
-          background: `radial-gradient(circle, ${amber(0.06)}, transparent 70%)`,
-          filter: 'blur(60px)',
-          animation: 'ojasGlow 6s ease-in-out infinite',
+          position: 'absolute', top: '12%', left: '50%', transform: 'translateX(-50%)',
+          width: 360, height: 360, borderRadius: '50%',
+          background: `radial-gradient(circle, rgba(245,158,11,0.05), transparent 70%)`,
+          filter: 'blur(60px)', animation: 'ojasGlow 7s ease-in-out infinite',
         }} />
       </div>
 
       <div style={{ position: 'relative', zIndex: 1 }}>
-        {/* ── HEADER ── */}
-        <div style={{
-          padding: '48px 20px 32px',
-          textAlign: 'center',
-        }}>
-          {/* Back nav */}
-          <button
-            type="button"
-            onClick={() => navigate('/siddha-portal')}
-            style={{
-              fontFamily: FONT, fontSize: 9, fontWeight: 800,
-              letterSpacing: '0.35em', textTransform: 'uppercase',
-              color: gold(0.5), background: 'none', border: 'none',
-              cursor: 'pointer', marginBottom: 32, display: 'block', margin: '0 auto 28px',
-            }}
-          >
-            ← Siddha Portal
-          </button>
+        {/* Header */}
+        <div style={{ padding: '48px 20px 28px', textAlign: 'center' }}>
+          <button type="button" onClick={() => navigate('/siddha-portal')} style={{
+            fontFamily: FONT, fontSize: 9, fontWeight: 800, letterSpacing: '0.35em',
+            textTransform: 'uppercase' as const, color: gold(0.5), background: 'none',
+            border: 'none', cursor: 'pointer', display: 'block', margin: '0 auto 28px',
+          }}>← Siddha Portal</button>
 
-          {/* Scalar transmission orb */}
           <div style={{
-            width: 72, height: 72, borderRadius: '50%',
-            background: `radial-gradient(circle, ${amber(0.25)}, ${gold(0.08)})`,
-            border: `1px solid ${gold(0.35)}`,
+            width: 68, height: 68, borderRadius: '50%',
+            background: `radial-gradient(circle, rgba(245,158,11,0.22), rgba(212,175,55,0.07))`,
+            border: `1px solid ${gold(0.32)}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto 20px',
-            boxShadow: `0 0 30px ${gold(0.2)}, 0 0 60px ${amber(0.1)}`,
+            margin: '0 auto 18px', fontSize: 26,
+            boxShadow: `0 0 28px ${gold(0.18)}, 0 0 56px rgba(245,158,11,0.09)`,
             animation: 'ojasGlow 4s ease-in-out infinite',
-            fontSize: 28,
-          }}>
-            ✦
-          </div>
+          }}>✦</div>
 
-          <div style={{
-            fontFamily: FONT, fontSize: 9, fontWeight: 800,
-            letterSpacing: '0.5em', textTransform: 'uppercase',
-            color: gold(0.45), marginBottom: 12,
-          }}>
+          <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase' as const, color: gold(0.4), marginBottom: 10 }}>
             Siddha Quantum Academy · Ojas Rasayana
           </div>
-
           <h1 style={{
-            fontFamily: SERIF, fontSize: 'clamp(26px, 7vw, 38px)',
-            fontWeight: 700, fontStyle: 'italic',
-            color: gold(0.95), margin: '0 0 16px',
-            textShadow: `0 0 40px ${gold(0.3)}`,
-            lineHeight: 1.2,
-          }}>
-            The Sacred Science of Ojas
-          </h1>
-
-          <p style={{
-            fontFamily: SERIF, fontStyle: 'italic',
-            fontSize: '1rem', color: white(0.5),
-            lineHeight: 1.7, margin: '0 auto 20px',
-            maxWidth: 480,
-          }}>
-            Four tiers of secret Siddha transmission on vital essence — from foundational understanding through the complete light-body technologies of the 18 Immortals
+            fontFamily: "'Cormorant Garamond',serif", fontSize: 'clamp(24px,6.5vw,36px)', fontWeight: 700,
+            fontStyle: 'italic' as const, color: gold(0.95), margin: '0 0 14px',
+            textShadow: `0 0 36px ${gold(0.28)}`, lineHeight: 1.2,
+          }}>The Sacred Science of Ojas</h1>
+          <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic' as const, fontSize: '0.95rem', color: white(0.45), lineHeight: 1.7, margin: '0 auto 18px', maxWidth: 460 }}>
+            Four tiers of secret Siddha transmission on vital essence — from foundation through the complete light-body technologies of the 18 Immortals. Tap any lesson to read the full teaching.
           </p>
-
-          {/* Scalar transmission note */}
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            background: `linear-gradient(135deg, ${gold(0.08)}, ${amber(0.04)})`,
-            border: `1px solid ${gold(0.2)}`,
-            borderRadius: 30, padding: '8px 16px',
-            marginBottom: 8,
-          }}>
-            <div style={{
-              width: 6, height: 6, borderRadius: '50%',
-              background: gold(0.9),
-              animation: 'ojasFlash 2s infinite',
-            }} />
-            <span style={{
-              fontFamily: FONT, fontSize: 8, fontWeight: 800,
-              letterSpacing: '0.3em', textTransform: 'uppercase',
-              color: gold(0.8),
-            }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: `linear-gradient(135deg,${gold(0.07)},rgba(245,158,11,0.03))`, border: `1px solid ${gold(0.18)}`, borderRadius: 30, padding: '7px 15px' }}>
+            <div style={{ width: 5, height: 5, borderRadius: '50%', background: gold(0.9), animation: 'ojasFlash 2s infinite' }} />
+            <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase' as const, color: gold(0.75) }}>
               Scalar Transmission Active · Anahata Opening
             </span>
           </div>
         </div>
 
-        {/* ── TIER FILTER TABS ── */}
-        <div style={{
-          display: 'flex', gap: 8, padding: '0 16px 24px',
-          overflowX: 'auto', scrollbarWidth: 'none',
-        }}>
-          {[{ label: 'All Tiers', color: white(0.6), border: white(0.12) }, ...TIERS].map((t, i) => {
+        {/* Tier tabs */}
+        <div style={{ display: 'flex', gap: 8, padding: '0 16px 22px', overflowX: 'auto' as const, scrollbarWidth: 'none' as const }}>
+          {[{ label: 'All Tiers', color: white(0.55), border: white(0.12) }, ...TIERS].map((t, i) => {
             const idx = i === 0 ? null : i - 1;
             const active = activeTier === idx;
             return (
-              <button
-                key={t.label}
-                type="button"
-                onClick={() => setActiveTier(active ? null : idx)}
-                style={{
-                  fontFamily: FONT, fontSize: 8, fontWeight: 800,
-                  letterSpacing: '0.3em', textTransform: 'uppercase',
-                  color: active ? '#050505' : t.color,
-                  background: active ? t.color : 'transparent',
-                  border: `1px solid ${t.border || t.color}`,
-                  borderRadius: 30, padding: '6px 14px',
-                  cursor: 'pointer', whiteSpace: 'nowrap',
-                  transition: 'all 0.2s ease',
-                  flexShrink: 0,
-                }}
-              >
-                {t.label}
-              </button>
+              <button key={t.label} type="button" onClick={() => setActiveTier(active ? null : idx)} style={{
+                fontFamily: FONT, fontSize: 8, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase' as const,
+                color: active ? '#050505' : t.color,
+                background: active ? t.color : 'transparent',
+                border: `1px solid ${(t as any).border || t.color}`,
+                borderRadius: 30, padding: '6px 14px', cursor: 'pointer',
+                whiteSpace: 'nowrap' as const, transition: 'all 0.2s ease', flexShrink: 0,
+              }}>{t.label}</button>
             );
           })}
         </div>
 
-        {/* ── CURRICULUM TIERS ── */}
-        {CURRICULUM
-          .filter(tier => activeTier === null || tier.tier === activeTier)
-          .map((section, si) => {
-            const tierCfg = TIERS[section.tier];
-            return (
-              <div key={section.tier} style={{ marginBottom: 8 }}>
-                {/* Tier Header */}
-                <div style={{
-                  margin: '0 16px 12px',
-                  background: `linear-gradient(135deg, ${tierCfg.glow}, rgba(255,255,255,0.01))`,
-                  border: `1px solid ${tierCfg.border}`,
-                  borderRadius: 24,
-                  padding: '20px 20px 16px',
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}>
-                  {/* Glow orb */}
-                  <div style={{
-                    position: 'absolute', top: -20, right: -20,
-                    width: 120, height: 120,
-                    borderRadius: '50%',
-                    background: `radial-gradient(circle, ${tierCfg.glow}, transparent)`,
-                    filter: 'blur(20px)',
-                    pointerEvents: 'none',
-                  }} />
-
-                  <div style={{
-                    fontFamily: FONT, fontSize: 8, fontWeight: 800,
-                    letterSpacing: '0.4em', textTransform: 'uppercase',
-                    color: tierCfg.color, marginBottom: 8, opacity: 0.8,
-                  }}>
-                    {section.tierLabel}
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                    <span style={{ fontSize: 22 }}>{section.icon}</span>
-                    <div style={{
-                      fontFamily: FONT, fontSize: 15, fontWeight: 900,
-                      letterSpacing: '-0.02em', color: white(0.95),
-                      lineHeight: 1.2,
-                    }}>
-                      {section.title}
-                    </div>
-                  </div>
-
-                  <p style={{
-                    fontFamily: SERIF, fontStyle: 'italic',
-                    fontSize: '0.85rem', color: white(0.5),
-                    lineHeight: 1.6, margin: 0,
-                  }}>
-                    {section.subtitle}
-                  </p>
-
-                  <div style={{ marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap' as const }}>
-                    <span style={{
-                      fontFamily: FONT, fontSize: 7, fontWeight: 800,
-                      letterSpacing: '0.25em', textTransform: 'uppercase',
-                      color: tierCfg.color, opacity: 0.75,
-                      border: `1px solid ${tierCfg.border}`,
-                      borderRadius: 20, padding: '2px 8px',
-                    }}>
-                      {section.modules.length} Modules
-                    </span>
-                    <span style={{
-                      fontFamily: FONT, fontSize: 7, fontWeight: 800,
-                      letterSpacing: '0.25em', textTransform: 'uppercase',
-                      color: white(0.4),
-                      border: `1px solid ${white(0.06)}`,
-                      borderRadius: 20, padding: '2px 8px',
-                    }}>
-                      {section.modules.reduce((a, m) => a + m.lessons.length, 0)} Lessons
-                    </span>
-                  </div>
+        {/* Curriculum */}
+        {CURRICULUM.filter(s => activeTier === null || s.tier === activeTier).map((section) => {
+          const tc = TIERS[section.tier];
+          return (
+            <div key={section.tier} style={{ marginBottom: 6 }}>
+              {/* Tier header */}
+              <div style={{
+                margin: '0 16px 10px',
+                background: `linear-gradient(135deg,${tc.glow},rgba(255,255,255,0.01))`,
+                border: `1px solid ${tc.border}`,
+                borderRadius: 22, padding: '18px 18px 14px', position: 'relative', overflow: 'hidden',
+              }}>
+                <div style={{ fontWeight: 800, fontSize: 8, letterSpacing: '0.4em', textTransform: 'uppercase' as const, color: tc.color, marginBottom: 6, opacity: 0.75 }}>{section.tierLabel}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7 }}>
+                  <span style={{ fontSize: 20 }}>{section.icon}</span>
+                  <div style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.02em', color: white(0.94), lineHeight: 1.2 }}>{section.title}</div>
                 </div>
-
-                {/* Modules */}
-                {section.modules.map((mod, mi) => {
-                  const key = `${section.tier}-${mod.num}`;
-                  const isExpanded = expandedModule === key;
-                  return (
-                    <div
-                      key={mod.num}
-                      style={{
-                        margin: '0 16px 8px',
-                        background: 'rgba(255,255,255,0.018)',
-                        border: `1px solid ${isExpanded ? tierCfg.border : 'rgba(255,255,255,0.05)'}`,
-                        borderRadius: 20,
-                        overflow: 'hidden',
-                        transition: 'border-color 0.25s ease',
-                      }}
-                    >
-                      {/* Module header — tap to expand */}
-                      <button
-                        type="button"
-                        onClick={() => setExpandedModule(isExpanded ? null : key)}
-                        style={{
-                          width: '100%', textAlign: 'left',
-                          background: 'none', border: 'none',
-                          cursor: 'pointer', padding: '16px 16px 14px',
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                          <div style={{
-                            fontFamily: FONT, fontSize: 9, fontWeight: 800,
-                            letterSpacing: '0.2em', color: tierCfg.color,
-                            opacity: 0.7, minWidth: 26, paddingTop: 2,
-                          }}>
-                            {mod.num}
-                          </div>
-                          <div style={{ flex: 1 }}>
-                            <div style={{
-                              fontFamily: FONT, fontSize: 13, fontWeight: 800,
-                              letterSpacing: '0.03em', color: white(0.9),
-                              marginBottom: 6, lineHeight: 1.3,
-                            }}>
-                              {mod.title}
-                            </div>
-                            <div style={{
-                              fontFamily: FONT, fontSize: 8, fontWeight: 800,
-                              letterSpacing: '0.25em', textTransform: 'uppercase',
-                              color: tierCfg.color, opacity: 0.6,
-                            }}>
-                              {mod.lessons.length} Lessons
-                            </div>
-                          </div>
-                          <div style={{
-                            color: tierCfg.color, fontSize: 16, opacity: 0.6,
-                            transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                            transition: 'transform 0.25s ease',
-                            flexShrink: 0, paddingTop: 2,
-                          }}>
-                            →
-                          </div>
-                        </div>
-                      </button>
-
-                      {/* Expanded content */}
-                      {isExpanded && (
-                        <div style={{ padding: '0 16px 16px' }}>
-                          {/* Description */}
-                          <p style={{
-                            fontFamily: SERIF, fontStyle: 'italic',
-                            fontSize: '0.88rem', color: white(0.55),
-                            lineHeight: 1.7, margin: '0 0 14px',
-                            paddingTop: 4,
-                            borderTop: `1px solid rgba(255,255,255,0.04)`,
-                          }}>
-                            {mod.desc}
-                          </p>
-
-                          {/* Lessons list */}
-                          <div style={{
-                            fontFamily: FONT, fontSize: 8, fontWeight: 800,
-                            letterSpacing: '0.4em', textTransform: 'uppercase',
-                            color: tierCfg.color, opacity: 0.6,
-                            marginBottom: 10,
-                          }}>
-                            Curriculum
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                            {mod.lessons.map((lesson, li) => (
-                              <div
-                                key={li}
-                                style={{
-                                  display: 'flex', alignItems: 'flex-start', gap: 10,
-                                  padding: '8px 12px',
-                                  background: 'rgba(255,255,255,0.02)',
-                                  border: `1px solid rgba(255,255,255,0.04)`,
-                                  borderRadius: 12,
-                                }}
-                              >
-                                <div style={{
-                                  width: 4, height: 4, borderRadius: '50%',
-                                  background: tierCfg.color, marginTop: 5,
-                                  flexShrink: 0, opacity: 0.7,
-                                }} />
-                                <span style={{
-                                  fontFamily: SERIF, fontStyle: 'italic',
-                                  fontSize: '0.85rem', color: white(0.6),
-                                  lineHeight: 1.5,
-                                }}>
-                                  {lesson}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-
-                          {/* Scalar transmission tag */}
-                          <div style={{
-                            marginTop: 14, display: 'flex', alignItems: 'center', gap: 8,
-                            padding: '7px 12px',
-                            background: `linear-gradient(135deg, ${gold(0.06)}, transparent)`,
-                            border: `1px solid ${gold(0.12)}`,
-                            borderRadius: 12,
-                          }}>
-                            <div style={{
-                              width: 5, height: 5, borderRadius: '50%',
-                              background: gold(0.8),
-                              animation: 'ojasFlash 2s infinite',
-                              flexShrink: 0,
-                            }} />
-                            <span style={{
-                              fontFamily: FONT, fontSize: 7, fontWeight: 800,
-                              letterSpacing: '0.25em', textTransform: 'uppercase',
-                              color: gold(0.6),
-                            }}>
-                              Scalar Transmission Encoded · Anahata Activation Included
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic' as const, fontSize: '0.83rem', color: white(0.45), lineHeight: 1.55, margin: '0 0 10px' }}>{section.subtitle}</p>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' as const }}>
+                  <span style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.25em', textTransform: 'uppercase' as const, color: tc.color, opacity: 0.8, border: `1px solid ${tc.border}`, borderRadius: 20, padding: '2px 8px' }}>{section.modules.length} Modules</span>
+                  <span style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.25em', textTransform: 'uppercase' as const, color: white(0.4), opacity: 0.8, border: `1px solid ${white(0.06)}`, borderRadius: 20, padding: '2px 8px' }}>{section.modules.reduce((a: number, m: Module) => a + m.lessons.length, 0)} Lessons</span>
+                </div>
               </div>
-            );
-          })}
 
-        {/* ── BOTTOM CTA ── */}
-        <div style={{
-          margin: '24px 16px 0',
-          background: `linear-gradient(135deg, ${gold(0.1)}, ${amber(0.05)})`,
-          border: `1px solid ${gold(0.25)}`,
-          borderRadius: 24,
-          padding: '24px 20px',
-          textAlign: 'center',
-        }}>
-          <div style={{
-            fontFamily: FONT, fontSize: 8, fontWeight: 800,
-            letterSpacing: '0.45em', textTransform: 'uppercase',
-            color: gold(0.6), marginBottom: 12,
-          }}>
-            Begin the Ojas Transmission
-          </div>
-          <h2 style={{
-            fontFamily: SERIF, fontStyle: 'italic',
-            fontSize: '1.3rem', fontWeight: 700,
-            color: gold(0.95), margin: '0 0 10px',
-            textShadow: `0 0 20px ${gold(0.3)}`,
-          }}>
-            All 15 Modules · 108+ Lessons
-          </h2>
-          <p style={{
-            fontFamily: SERIF, fontStyle: 'italic',
-            fontSize: '0.88rem', color: white(0.5),
-            lineHeight: 1.6, margin: '0 0 18px',
-          }}>
-            From foundation to light-body. The most complete Ojas curriculum ever assembled from Siddha, Ayurvedic, and Vedic sources — with SQI scalar transmission woven through every module.
-          </p>
-          <button
-            type="button"
-            onClick={() => navigate('/siddha-portal')}
-            style={{
-              fontFamily: FONT, fontSize: 9, fontWeight: 800,
-              letterSpacing: '0.35em', textTransform: 'uppercase',
-              color: '#050505', background: gold(0.9),
-              border: 'none', borderRadius: 30,
-              padding: '12px 28px', cursor: 'pointer',
-              boxShadow: `0 0 20px ${gold(0.3)}`,
-            }}
-          >
-            Upgrade to Akasha-Infinity →
-          </button>
+              {/* Modules */}
+              {section.modules.map((mod: Module) => {
+                const mkey = `${section.tier}-${mod.num}`;
+                const mOpen = expandedModule === mkey;
+                return (
+                  <div key={mod.num} style={{
+                    margin: '0 16px 7px',
+                    background: 'rgba(255,255,255,0.016)',
+                    border: `1px solid ${mOpen ? tc.border : 'rgba(255,255,255,0.045)'}`,
+                    borderRadius: 18, overflow: 'hidden', transition: 'border-color 0.2s',
+                  }}>
+                    <button type="button" onClick={() => { setExpandedModule(mOpen ? null : mkey); setExpandedLesson(null); }} style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: '14px 15px 12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                        <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.2em', color: tc.color, opacity: 0.65, minWidth: 24, paddingTop: 2 }}>{mod.num}</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 13, fontWeight: 800, color: white(0.88), marginBottom: 5, lineHeight: 1.3 }}>{mod.title}</div>
+                          <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.25em', textTransform: 'uppercase' as const, color: tc.color, opacity: 0.55 }}>{mod.lessons.length} Lessons — Tap to Expand</div>
+                        </div>
+                        <div style={{ color: tc.color, fontSize: 14, opacity: 0.55, transform: mOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.22s', flexShrink: 0, paddingTop: 2 }}>→</div>
+                      </div>
+                    </button>
+
+                    {mOpen && (
+                      <div style={{ padding: '0 15px 15px' }}>
+                        <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic' as const, fontSize: '0.86rem', color: white(0.5), lineHeight: 1.65, margin: '0 0 12px', paddingTop: 4, borderTop: '1px solid rgba(255,255,255,0.04)' }}>{mod.desc}</p>
+
+                        {mod.lessons.map((lesson: Lesson, li: number) => {
+                          const lkey = `${mkey}-${li}`;
+                          const lOpen = expandedLesson === lkey;
+                          return (
+                            <div key={li} style={{
+                              marginBottom: 7,
+                              background: lOpen ? 'rgba(255,255,255,0.025)' : 'rgba(255,255,255,0.012)',
+                              border: `1px solid ${lOpen ? tc.border : 'rgba(255,255,255,0.04)'}`,
+                              borderRadius: 14, overflow: 'hidden', transition: 'all 0.2s',
+                            }}>
+                              <button type="button" onClick={() => setExpandedLesson(lOpen ? null : lkey)} style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: '11px 13px' }}>
+                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                                  <div style={{ width: 4, height: 4, borderRadius: '50%', background: tc.color, marginTop: 6, flexShrink: 0, opacity: lOpen ? 1 : 0.45 }} />
+                                  <div style={{ flex: 1, fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic' as const, fontSize: '0.87rem', color: lOpen ? white(0.9) : white(0.58), lineHeight: 1.45, transition: 'color 0.2s' }}>{lesson.title}</div>
+                                  <div style={{ color: tc.color, fontSize: 11, opacity: 0.4, transform: lOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0, paddingTop: 3 }}>›</div>
+                                </div>
+                              </button>
+
+                              {lOpen && (
+                                <div style={{ padding: '0 13px 14px' }}>
+                                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.04)', paddingTop: 11 }}>
+                                    {lesson.content.split('\n\n').map((para: string, pi: number, arr: string[]) => (
+                                      <p key={pi} style={{
+                                        fontFamily: "'Cormorant Garamond',serif",
+                                        fontSize: '0.9rem', color: white(0.65),
+                                        lineHeight: 1.78, margin: pi < arr.length - 1 ? '0 0 13px' : 0,
+                                      }}>{para}</p>
+                                    ))}
+                                  </div>
+                                  <div style={{ marginTop: 11, display: 'flex', alignItems: 'center', gap: 7, padding: '6px 10px', background: `linear-gradient(135deg,${gold(0.05)},transparent)`, border: `1px solid ${gold(0.1)}`, borderRadius: 10 }}>
+                                    <div style={{ width: 4, height: 4, borderRadius: '50%', background: gold(0.7), animation: 'ojasFlash 2.5s infinite', flexShrink: 0 }} />
+                                    <span style={{ fontSize: 7, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase' as const, color: gold(0.5) }}>Scalar Transmission Encoded · Anahata Activation Active</span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+
+        {/* Bottom CTA */}
+        <div style={{ margin: '20px 16px 0', background: `linear-gradient(135deg,${gold(0.09)},rgba(245,158,11,0.04))`, border: `1px solid ${gold(0.22)}`, borderRadius: 22, padding: '22px 18px', textAlign: 'center' }}>
+          <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.45em', textTransform: 'uppercase' as const, color: gold(0.55), marginBottom: 10 }}>Begin the Ojas Transmission</div>
+          <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic' as const, fontSize: '1.25rem', fontWeight: 700, color: gold(0.93), margin: '0 0 9px', textShadow: `0 0 18px ${gold(0.28)}` }}>15 Modules · 44 Lessons · Full Written Content</h2>
+          <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic' as const, fontSize: '0.86rem', color: white(0.45), lineHeight: 1.6, margin: '0 0 16px' }}>The most complete Ojas curriculum ever assembled from Siddha, Ayurvedic and Vedic sources — with full teaching text in every lesson and SQI scalar transmission woven through every module.</p>
+          <button type="button" onClick={() => navigate('/siddha-portal')} style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase' as const, color: '#050505', background: gold(0.88), border: 'none', borderRadius: 30, padding: '11px 26px', cursor: 'pointer', boxShadow: `0 0 18px ${gold(0.28)}` }}>Upgrade to Akasha-Infinity →</button>
         </div>
       </div>
 
-      {/* ── KEYFRAMES ── */}
       <style>{`
-        @keyframes ojasScalar {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.04); opacity: 0.6; }
-        }
-        @keyframes ojasGlow {
-          0%, 100% { opacity: 0.7; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.05); }
-        }
-        @keyframes ojasFlash {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.25; }
-        }
+        @keyframes ojasScalar { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.03);opacity:0.5} }
+        @keyframes ojasGlow { 0%,100%{opacity:0.6;transform:scale(1)} 50%{opacity:1;transform:scale(1.04)} }
+        @keyframes ojasFlash { 0%,100%{opacity:1} 50%{opacity:0.15} }
       `}</style>
     </div>
   );
