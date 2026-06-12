@@ -1027,7 +1027,7 @@ const Mantras = () => {
 
         {/* ── MANTRA NADA ACADEMY BANNER ── */}
         <div
-          onClick={() => navigate('/mantra-nada-academy')}
+          onClick={() => navigate('/mantra-academy')}
           style={{
             margin: '0 var(--page-pad) 20px',
             background: 'rgba(212,175,55,0.04)',
