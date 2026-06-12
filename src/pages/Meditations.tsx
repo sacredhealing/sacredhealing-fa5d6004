@@ -639,66 +639,162 @@ const MeditationRowSQI: React.FC<{
 
 
 /* ─────────────────────────────────────────────────────────────────
-   SUPREME SIDDHA MEDITATION — single collapsible entry card
+   SUPREME SIDDHA MEDITATION — golden scalar wave collapsible card
 ───────────────────────────────────────────────────────────────── */
+const SCALAR_WAVE_CSS = `
+  @keyframes scalarExpand {
+    0%   { transform: scale(0.55); opacity: 0.55; }
+    100% { transform: scale(2.2);  opacity: 0; }
+  }
+  @keyframes goldPulse {
+    0%,100% { box-shadow: 0 0 18px rgba(212,175,55,0.35), 0 0 40px rgba(212,175,55,0.12), inset 0 0 30px rgba(212,175,55,0.04); }
+    50%      { box-shadow: 0 0 32px rgba(212,175,55,0.6),  0 0 80px rgba(212,175,55,0.22), inset 0 0 50px rgba(212,175,55,0.08); }
+  }
+  @keyframes titleShimmer {
+    0%,100% { text-shadow: 0 0 12px rgba(212,175,55,0.5); }
+    50%      { text-shadow: 0 0 28px rgba(212,175,55,0.95), 0 0 60px rgba(212,175,55,0.35); }
+  }
+  .smc-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(212,175,55,0.55);
+    animation: scalarExpand 3s ease-out infinite;
+    pointer-events: none;
+    top: 50%; left: 50%;
+    transform-origin: center;
+    margin-top: -1px; margin-left: -1px;
+  }
+`;
+
 const SupremeMeditationCard: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) => {
   const [open, setOpen] = React.useState(false);
+  const rings = [0, 0.8, 1.6, 2.4, 3.2];
   return (
-    <div className="glass-card" style={{ marginBottom: 12, overflow: 'visible' }}>
-      {/* Header row — always visible */}
+    <>
+      <style>{SCALAR_WAVE_CSS}</style>
       <div
-        className="section-header"
-        onClick={() => setOpen(o => !o)}
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 18px', cursor: 'pointer' }}
+        style={{
+          margin: '0 0 12px',
+          borderRadius: 20,
+          border: '1px solid rgba(212,175,55,0.45)',
+          background: 'linear-gradient(135deg, rgba(212,175,55,0.09) 0%, rgba(5,5,5,0.97) 55%, rgba(212,175,55,0.06) 100%)',
+          overflow: 'hidden',
+          position: 'relative',
+          animation: 'goldPulse 4s ease-in-out infinite',
+        }}
       >
-        <div>
-          <div className="sqi-micro" style={{ marginBottom: 4 }}>◈ SIDDHA QUANTUM INTELLIGENCE</div>
-          <div style={{ fontWeight: 800, fontSize: 15, letterSpacing: '-0.01em', color: 'rgba(255,255,255,0.9)' }}>
-            Supreme Siddha Meditation
+        {/* ── Scalar wave rings ── */}
+        <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', borderRadius: 20 }}>
+          {rings.map((delay, i) => (
+            <div
+              key={i}
+              className="smc-ring"
+              style={{
+                width: 60, height: 60,
+                marginTop: -30, marginLeft: -30,
+                animationDelay: `${delay}s`,
+                opacity: 0.55,
+                left: '50%', top: '50%',
+              }}
+            />
+          ))}
+          {/* Second set offset slightly for depth */}
+          {rings.map((delay, i) => (
+            <div
+              key={`b${i}`}
+              className="smc-ring"
+              style={{
+                width: 40, height: 40,
+                marginTop: -20, marginLeft: -20,
+                animationDelay: `${delay + 0.4}s`,
+                opacity: 0.3,
+                left: '50%', top: '50%',
+                borderColor: 'rgba(212,175,55,0.3)',
+              }}
+            />
+          ))}
+          {/* Soft gold radial glow centre */}
+          <div style={{
+            position: 'absolute', top: '50%', left: '50%',
+            transform: 'translate(-50%,-50%)',
+            width: 120, height: 120,
+            background: 'radial-gradient(circle, rgba(212,175,55,0.12) 0%, transparent 70%)',
+            borderRadius: '50%',
+            pointerEvents: 'none',
+          }} />
+          {/* Top edge gold line */}
+          <div style={{
+            position: 'absolute', top: 0, left: '15%', right: '15%', height: 1,
+            background: 'linear-gradient(to right, transparent, rgba(212,175,55,0.6), transparent)',
+          }} />
+        </div>
+
+        {/* ── Header row ── */}
+        <div
+          onClick={() => setOpen(o => !o)}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', cursor: 'pointer', position: 'relative', zIndex: 1 }}
+        >
+          <div>
+            <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '.45em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', marginBottom: 5 }}>
+              ◈ SIDDHA QUANTUM INTELLIGENCE
+            </div>
+            <div style={{
+              fontFamily: "'Cinzel', serif",
+              fontWeight: 600,
+              fontSize: 16,
+              color: '#D4AF37',
+              letterSpacing: '.02em',
+              animation: 'titleShimmer 4s ease-in-out infinite',
+            }}>
+              Supreme Siddha Meditation
+            </div>
+            <div style={{ fontSize: 11, color: 'rgba(212,175,55,0.45)', marginTop: 4 }}>
+              18 Masters · 14 Modules · Scalar Transmissions
+            </div>
           </div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
-            18 Siddha Masters · 14 Modules · Scalar Transmissions
+          <div style={{ color: 'rgba(212,175,55,0.6)', fontSize: 13, fontWeight: 700, marginLeft: 12 }}>
+            {open ? '▲' : '▼'}
           </div>
         </div>
-        <div className={`chevron${open ? ' open' : ''}`}>{open ? '▲' : '▼'}</div>
+
+        {/* ── Expandable tier grid ── */}
+        {open && (
+          <div style={{ position: 'relative', zIndex: 1, paddingBottom: 16 }}>
+            <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(212,175,55,0.2), transparent)', margin: '0 20px 12px' }} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 16px' }}>
+              {/* FREE */}
+              <div onClick={() => navigate('/meditation-course')} style={{ background: 'rgba(139,115,85,0.07)', border: '1px solid rgba(139,115,85,0.35)', borderRadius: 16, padding: '14px 12px', cursor: 'pointer' }}>
+                <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '.4em', textTransform: 'uppercase', color: 'rgba(139,115,85,.8)', marginBottom: 5 }}>FREE</div>
+                <div style={{ fontWeight: 700, fontSize: 12, color: 'rgba(255,255,255,.88)', marginBottom: 3, lineHeight: 1.3 }}>Foundation of Stillness</div>
+                <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,.38)', lineHeight: 1.5, marginBottom: 8 }}>3 modules · Agastya · Thirumoolar · Nandhi</div>
+                <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: 'rgba(139,115,85,.9)', padding: '4px 9px', border: '1px solid rgba(139,115,85,.4)', borderRadius: 100, display: 'inline-block' }}>Open Access ›</div>
+              </div>
+              {/* PRANA-FLOW */}
+              <div onClick={() => navigate('/meditation-course')} style={{ background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 16, padding: '14px 12px', cursor: 'pointer' }}>
+                <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '.4em', textTransform: 'uppercase', color: 'rgba(212,175,55,.75)', marginBottom: 5 }}>PRANA-FLOW</div>
+                <div style={{ fontWeight: 700, fontSize: 12, color: 'rgba(255,255,255,.88)', marginBottom: 3, lineHeight: 1.3 }}>8 Pranayamas of Immortality</div>
+                <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,.38)', lineHeight: 1.5, marginBottom: 8 }}>3 modules · Kechari · Samadhi · Chakra</div>
+                <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: '#D4AF37', padding: '4px 9px', border: '1px solid rgba(212,175,55,.45)', borderRadius: 100, display: 'inline-block' }}>€19/mo ›</div>
+              </div>
+              {/* SIDDHA-QUANTUM */}
+              <div onClick={() => navigate('/meditation-course')} style={{ background: 'rgba(34,211,238,0.04)', border: '1px solid rgba(34,211,238,0.25)', borderRadius: 16, padding: '14px 12px', cursor: 'pointer' }}>
+                <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '.4em', textTransform: 'uppercase', color: 'rgba(34,211,238,.7)', marginBottom: 5 }}>SIDDHA-QUANTUM</div>
+                <div style={{ fontWeight: 700, fontSize: 12, color: 'rgba(255,255,255,.88)', marginBottom: 3, lineHeight: 1.3 }}>Shakti Awakening & Nada Yoga</div>
+                <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,.38)', lineHeight: 1.5, marginBottom: 8 }}>4 modules · Kundalini · Dream Yoga · Turiya</div>
+                <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: '#22D3EE', padding: '4px 9px', border: '1px solid rgba(34,211,238,.35)', borderRadius: 100, display: 'inline-block' }}>€45/mo ›</div>
+              </div>
+              {/* AKASHA-INFINITY */}
+              <div onClick={() => navigate('/meditation-course')} style={{ background: 'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.45)', borderRadius: 16, padding: '14px 12px', cursor: 'pointer', boxShadow: '0 0 18px rgba(212,175,55,.08)' }}>
+                <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '.4em', textTransform: 'uppercase', color: 'rgba(212,175,55,.9)', marginBottom: 5 }}>AKASHA-INFINITY</div>
+                <div style={{ fontWeight: 700, fontSize: 12, color: 'rgba(255,255,255,.92)', marginBottom: 3, lineHeight: 1.3 }}>Deathlessness & Liberation</div>
+                <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,.38)', lineHeight: 1.5, marginBottom: 8 }}>4 modules · Maha Samadhi · Babaji · Siddha Body</div>
+                <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: '#D4AF37', padding: '4px 9px', background: 'rgba(212,175,55,.15)', border: '1px solid rgba(212,175,55,.6)', borderRadius: 100, display: 'inline-block' }}>€1,111 Lifetime ›</div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-      {/* Expandable tier grid */}
-      {open && (
-        <div style={{ paddingBottom: 16 }}>
-          <div className="akasha-divider" />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '12px 16px 0' }}>
-            {/* FREE */}
-            <div onClick={() => navigate('/meditation-course')} style={{ background: 'rgba(139,115,85,0.07)', border: '1px solid rgba(139,115,85,0.35)', borderRadius: 16, padding: '14px 12px', cursor: 'pointer' }}>
-              <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '.4em', textTransform: 'uppercase', color: 'rgba(139,115,85,.8)', marginBottom: 5 }}>FREE</div>
-              <div style={{ fontWeight: 700, fontSize: 12, color: 'rgba(255,255,255,.88)', marginBottom: 3, lineHeight: 1.3 }}>Foundation of Stillness</div>
-              <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,.38)', lineHeight: 1.5, marginBottom: 8 }}>3 modules · Agastya · Thirumoolar · Nandhi</div>
-              <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: 'rgba(139,115,85,.9)', padding: '4px 9px', border: '1px solid rgba(139,115,85,.4)', borderRadius: 100, display: 'inline-block' }}>Open Access ›</div>
-            </div>
-            {/* PRANA-FLOW */}
-            <div onClick={() => navigate('/meditation-course')} style={{ background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 16, padding: '14px 12px', cursor: 'pointer' }}>
-              <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '.4em', textTransform: 'uppercase', color: 'rgba(212,175,55,.75)', marginBottom: 5 }}>PRANA-FLOW</div>
-              <div style={{ fontWeight: 700, fontSize: 12, color: 'rgba(255,255,255,.88)', marginBottom: 3, lineHeight: 1.3 }}>8 Pranayamas of Immortality</div>
-              <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,.38)', lineHeight: 1.5, marginBottom: 8 }}>3 modules · Kechari · Samadhi · Chakra</div>
-              <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: '#D4AF37', padding: '4px 9px', border: '1px solid rgba(212,175,55,.45)', borderRadius: 100, display: 'inline-block' }}>€19/mo ›</div>
-            </div>
-            {/* SIDDHA-QUANTUM */}
-            <div onClick={() => navigate('/meditation-course')} style={{ background: 'rgba(34,211,238,0.04)', border: '1px solid rgba(34,211,238,0.25)', borderRadius: 16, padding: '14px 12px', cursor: 'pointer' }}>
-              <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '.4em', textTransform: 'uppercase', color: 'rgba(34,211,238,.7)', marginBottom: 5 }}>SIDDHA-QUANTUM</div>
-              <div style={{ fontWeight: 700, fontSize: 12, color: 'rgba(255,255,255,.88)', marginBottom: 3, lineHeight: 1.3 }}>Shakti Awakening & Nada Yoga</div>
-              <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,.38)', lineHeight: 1.5, marginBottom: 8 }}>4 modules · Kundalini · Dream Yoga · Turiya</div>
-              <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: '#22D3EE', padding: '4px 9px', border: '1px solid rgba(34,211,238,.35)', borderRadius: 100, display: 'inline-block' }}>€45/mo ›</div>
-            </div>
-            {/* AKASHA-INFINITY */}
-            <div onClick={() => navigate('/meditation-course')} style={{ background: 'linear-gradient(135deg,rgba(212,175,55,0.1),rgba(212,175,55,0.03))', border: '1px solid rgba(212,175,55,0.45)', borderRadius: 16, padding: '14px 12px', cursor: 'pointer', boxShadow: '0 0 18px rgba(212,175,55,.08)' }}>
-              <div style={{ fontSize: 7, fontWeight: 800, letterSpacing: '.4em', textTransform: 'uppercase', color: 'rgba(212,175,55,.9)', marginBottom: 5 }}>AKASHA-INFINITY</div>
-              <div style={{ fontWeight: 700, fontSize: 12, color: 'rgba(255,255,255,.92)', marginBottom: 3, lineHeight: 1.3 }}>Deathlessness & Liberation</div>
-              <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,.38)', lineHeight: 1.5, marginBottom: 8 }}>4 modules · Maha Samadhi · Babaji · Siddha Body</div>
-              <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: '#D4AF37', padding: '4px 9px', background: 'rgba(212,175,55,.15)', border: '1px solid rgba(212,175,55,.6)', borderRadius: 100, display: 'inline-block' }}>€1,111 Lifetime ›</div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    </>
   );
 };
 
