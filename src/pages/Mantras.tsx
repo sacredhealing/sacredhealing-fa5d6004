@@ -1024,6 +1024,47 @@ const Mantras = () => {
           </p>
         </div>
 
+
+        {/* ── MANTRA NADA ACADEMY BANNER ── */}
+        <div
+          onClick={() => navigate('/mantra-nada-academy')}
+          style={{
+            margin: '0 var(--page-pad) 20px',
+            background: 'rgba(212,175,55,0.04)',
+            border: '1px solid rgba(212,175,55,0.18)',
+            borderRadius: 24,
+            padding: '18px 22px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 16,
+            transition: 'border-color 0.2s',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(212,175,55,0.4)')}
+          onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(212,175,55,0.18)')}
+        >
+          <div style={{
+            width: 44, height: 44, borderRadius: 14, flexShrink: 0,
+            background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.25)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 20,
+          }}>
+            📿
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.5em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.6)', marginBottom: 4 }}>
+              SQI · 24 MODULES · VEDIC LIGHT-CODES
+            </div>
+            <div style={{ fontSize: 15, fontWeight: 900, letterSpacing: '-0.02em', color: '#fff', marginBottom: 3 }}>
+              Mantra Nada Academy
+            </div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>
+              Learn the science behind every mantra you play — from AUM to the secret Siddha transmissions
+            </div>
+          </div>
+          <div style={{ fontSize: 18, color: 'rgba(212,175,55,0.5)', flexShrink: 0 }}>→</div>
+        </div>
+
         {/* ── BHRIGU CARD ── */}
         <div className="m-bhrigu">
           <BhriguCard
