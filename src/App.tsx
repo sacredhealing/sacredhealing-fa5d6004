@@ -81,6 +81,7 @@ const AdminSendEmail = React.lazy(() => import("./pages/AdminSendEmail"));
 const StargateMembership = React.lazy(() => import("./pages/StargateMembership"));
 const PractitionerCertification = React.lazy(() => import("./pages/PractitionerCertification"));
 const KriyaYogaMastery = React.lazy(() => import("./pages/KriyaYogaMastery"));
+const HolyScienceCurriculum = React.lazy(() => import("./pages/HolyScienceCurriculum"));
 const ThirumoolarPranayama = React.lazy(() => import("./pages/ThirumoolarPranayama"));
 const SiddhaWaterAlchemy = React.lazy(() => import("./pages/SiddhaWaterAlchemy"));
 const PalmOracle = React.lazy(() => import("./pages/PalmOracle"));
@@ -357,6 +358,7 @@ function AppRoutes() {
                 <Route path="/income-streams/clawbot-hetzner" element={<ClawbotHetzner />} />
                   <Route path="/sqi-chat" element={<Navigate to="/quantum-apothecary" replace />} />
                   <Route path="/spiritual-education" element={<SpiritualEducation />} />
+                  <Route path="/holy-science" element={<HolyScienceCurriculum />} />
                   <Route path="/community" element={<Community />} />
                   <Route path="/private-sessions" element={<PrivateSessions />} />
                   <Route path="/membership" element={<Membership />} />
