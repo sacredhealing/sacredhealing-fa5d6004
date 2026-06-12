@@ -597,12 +597,9 @@ function parseLaunchEvent(value, launchpad) {
         }
         // Pump.fun v2 emits: "name: symbol: uri:"
         if (raw.includes('name:')) {
-          const nm = raw.match(/name:\s*([^,
-]+)/)?.[1]?.trim();
-          const sy = raw.match(/symbol:\s*([^,
-]+)/)?.[1]?.trim();
-          const ur = raw.match(/uri:\s*([^,
-]+)/)?.[1]?.trim();
+          const nm = raw.match(/name:[^:]*?([A-Za-z0-9 _$]{2,30})/)?.[1]?.trim();
+          const sy = raw.match(/symbol:[^:]*?([A-Z$]{2,10})/)?.[1]?.trim();
+          const ur = raw.match(/uri:[^:]*?(https?:\/\/[^\s,"']+)/)?.[1]?.trim();
           if (nm && nm !== 'UNKNOWN') name   = nm;
           if (sy && sy !== '???')    symbol = sy;
           if (ur)                    uri    = ur;
