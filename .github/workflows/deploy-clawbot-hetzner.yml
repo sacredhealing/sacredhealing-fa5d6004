@@ -19,39 +19,34 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
-    env:
-      HETZNER_IP: 178.105.183.74
-      HETZNER_PASS: ${{ secrets.HETZNER_ROOT_PASSWORD }}
-      GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
-
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Install sshpass + setup known_hosts
+      - name: Install sshpass
         run: |
           sudo apt-get install -y sshpass
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          ssh-keyscan -p 22 -H "$HETZNER_IP" > ~/.ssh/known_hosts 2>/dev/null
-          cat ~/.ssh/known_hosts | wc -l
-          echo "Host key captured"
+          ssh-keyscan -p 22 -H 178.105.183.74 > ~/.ssh/known_hosts 2>/dev/null
+          echo "Host key lines: $(wc -l < ~/.ssh/known_hosts)"
 
-      - name: Upload bootstrap script via SSH pipe
+      - name: Write bootstrap script from repo content
         run: |
-          sshpass -p "$HETZNER_PASS" ssh \
-            -o StrictHostKeyChecking=yes \
-            -o PasswordAuthentication=yes \
-            -o PubkeyAuthentication=no \
-            root@$HETZNER_IP \
-            "mkdir -p /root && cat > /root/hetzner-bootstrap.sh && chmod +x /root/hetzner-bootstrap.sh && echo 'Script uploaded OK'" \
-            < polymarket-worker/scripts/hetzner-bootstrap.sh
+          echo 'IyEvYmluL2Jhc2gKIyBTUUktMjA1MCBDTEFXQk9UIEhldHpuZXIgQm9vdHN0cmFwIFNjcmlwdAojIFJ1bnMgYXMgcm9vdCBvbiB0aGUgSGV0em5lciBzZXJ2ZXIKc2V0IC1lCgplY2hvICLilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZAiCmVjaG8gIiBTUUktMjA1MCDimqEgQ0xBV0JPVCBIZXR6bmVyIEJvb3RzdHJhcCIKZWNobyAi4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQIgoKIyDilIDilIAgQXJncyDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKR0hfVE9LRU49IiR7MX0iCmlmIFsgLXogIiRHSF9UT0tFTiIgXTsgdGhlbgogIGVjaG8gIltFUlJPUl0gR2l0SHViIHRva2VuIHJlcXVpcmVkIGFzIGZpcnN0IGFyZ3VtZW50IgogIGV4aXQgMQpmaQoKIyDilIDilIAgTm9kZSAyMCDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKaW5zdGFsbF9ub2RlKCkgewogIGVjaG8gIltTUUldIEluc3RhbGxpbmcgTm9kZSAyMC4uLiIKICBjdXJsIC1mc1NMIGh0dHBzOi8vZGViLm5vZGVzb3VyY2UuY29tL3NldHVwXzIwLnggfCBiYXNoIC0KICBhcHQtZ2V0IGluc3RhbGwgLXkgbm9kZWpzCn0KCmlmICEgY29tbWFuZCAtdiBub2RlICY+L2Rldi9udWxsOyB0aGVuCiAgaW5zdGFsbF9ub2RlCmVsc2UKICBOT0RFX01BSk9SPSQobm9kZSAtZSAicHJvY2Vzcy5zdGRvdXQud3JpdGUocHJvY2Vzcy52ZXJzaW9uLnNsaWNlKDEpLnNwbGl0KCcuJylbMF0pIikKICBpZiBbICIkTk9ERV9NQUpPUiIgLWx0IDIwIF07IHRoZW4KICAgIGVjaG8gIltTUUldIE5vZGUgJE5PREVfTUFKT1IgdG9vIG9sZCDigJQgdXBncmFkaW5nIHRvIDIwLi4uIgogICAgaW5zdGFsbF9ub2RlCiAgZmkKZmkKZWNobyAiW1NRSV0gTm9kZTogJChub2RlIC12KSB8IG5wbTogJChucG0gLXYpIgoKIyDilIDilIAgUE0yIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAppZiAhIGNvbW1hbmQgLXYgcG0yICY+L2Rldi9udWxsOyB0aGVuCiAgZWNobyAiW1NRSV0gSW5zdGFsbGluZyBQTTIuLi4iCiAgbnBtIGluc3RhbGwgLWcgcG0yCiAgZW52IFBBVEg9JFBBVEg6L3Vzci9iaW4gcG0yIHN0YXJ0dXAgc3lzdGVtZCAtdSByb290IC0taHAgL3Jvb3QgfHwgdHJ1ZQogIHN5c3RlbWN0bCBlbmFibGUgcG0yLXJvb3QgMj4vZGV2L251bGwgfHwgdHJ1ZQpmaQplY2hvICJbU1FJXSBQTTI6ICQocG0yIC12KSIKCiMg4pSA4pSAIEdpdCDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKY29tbWFuZCAtdiBnaXQgJj4vZGV2L251bGwgfHwgYXB0LWdldCBpbnN0YWxsIC15IGdpdAoKIyDilIDilIAgQ2xvbmUgLyBwdWxsIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgApSRVBPX0RJUj0iL3Jvb3QvY2xhd2JvdCIKaWYgWyAhIC1kICIkUkVQT19ESVIvLmdpdCIgXTsgdGhlbgogIGVjaG8gIltTUUldIENsb25pbmcgcmVwby4uLiIKICBnaXQgY2xvbmUgImh0dHBzOi8veC1hY2Nlc3MtdG9rZW46JHtHSF9UT0tFTn1AZ2l0aHViLmNvbS9zYWNyZWRoZWFsaW5nL3NhY3JlZGhlYWxpbmctZmE1ZDYwMDQuZ2l0IiAiJFJFUE9fRElSIgplbHNlCiAgZWNobyAiW1NRSV0gUHVsbGluZyBsYXRlc3QgZnJvbSBtYWluLi4uIgogIGNkICIkUkVQT19ESVIiCiAgZ2l0IHJlbW90ZSBzZXQtdXJsIG9yaWdpbiAiaHR0cHM6Ly94LWFjY2Vzcy10b2tlbjoke0dIX1RPS0VOfUBnaXRodWIuY29tL3NhY3JlZGhlYWxpbmcvc2FjcmVkaGVhbGluZy1mYTVkNjAwNC5naXQiCiAgZ2l0IGZldGNoIG9yaWdpbgogIGdpdCByZXNldCAtLWhhcmQgb3JpZ2luL21haW4KZmkKCiMg4pSA4pSAIFdyaXRlIC5lbnYg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACmNkICIkUkVQT19ESVIvcG9seW1hcmtldC13b3JrZXIiCmNhdCA+IC5lbnYgPDwgJ0VOVkVPRicKUE9SVD04MDgwClNVUEFCQVNFX1VSTD1odHRwczovL2ZqZHpocmRwaW94ZGV5eWZvZ2VwLnN1cGFiYXNlLmNvClNVUEFCQVNFX1NFUlZJQ0VfS0VZPWV5SmhiR2NpT2lKSVV6STFOaUlzSW5SNWNDSTZJa3BYVkNKOS5leUpwYzNNaU9pSnpkWEJoWW1GelpTSXNJbkpsWmlJNkltWnFaSHBvY21Sd2FXOTRaR1Y1ZVdadloyVndJaXdpY205c1pTSTZJbk5sY25acFkyVmZjbTlzWlNJc0ltbGhkQ0k2TVRjME1qSXlOVFU0TkN3aVpYaHdJam95TURVM09EQXhOVGcwZlEuSlpNZEpFZEpGSHlCZ0xaSVd1U0pNWVN3QjBFSzhXRWJVZmhKdkpWYjlrUQpQT0xZR09OX1JQQ19VUkw9aHR0cHM6Ly9wb2x5Z29uLW1haW5uZXQuZy5hbGNoZW15LmNvbS92Mi94VDVpOVRDWDZaX3NVbjVlVmtNWTJrSkNueGxPLU04eApCT1RfUFJJVkFURV9LRVk9ClBPTFlfQVBJX0tFWT0KUE9MWV9BUElfU0VDUkVUPQpQT0xZX0FQSV9QQVNTUEhSQVNFPQpQQVBFUl9NT0RFPXRydWUKUklTS19QQ1Q9MC4wNQpNQVhfUE9TSVRJT05TPTIwCldIQUxFX01JTl9XUj0wLjU1CldIQUxFX01JTl9UUkFERVM9NQpFTlZFT0YKZWNobyAiW1NRSV0gLmVudiB3cml0dGVuIHwgUEFQRVJfTU9ERT10cnVlIHwgOSBlbGl0ZSB3aGFsZXMgcHJlLXNlZWRlZCIKCiMg4pSA4pSAIG5wbSBpbnN0YWxsIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgApucG0gaW5zdGFsbCAtLW9taXQ9ZGV2CgojIOKUgOKUgCBQTTIgc3RhcnQvcmVzdGFydCDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKaWYgcG0yIGRlc2NyaWJlIGNsYXdib3QgPiAvZGV2L251bGwgMj4mMTsgdGhlbgogIHBtMiByZXN0YXJ0IGNsYXdib3QgLS11cGRhdGUtZW52CiAgZWNobyAiW1NRSV0g4pyFIENMQVdCT1QgcmVzdGFydGVkIgplbHNlCiAgcG0yIHN0YXJ0IG5wbSAtLW5hbWUgY2xhd2JvdCAtLSBzdGFydAogIGVjaG8gIltTUUldIOKchSBDTEFXQk9UIHN0YXJ0ZWQgZnJlc2giCmZpCnBtMiBzYXZlCgojIOKUgOKUgCBIZWFsdGggY2hlY2sg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACnNsZWVwIDUKZWNobyAiIgplY2hvICJbU1FJXSDilZDilZDilZAgUE0yIFNUQVRVUyDilZDilZDilZAiCnBtMiBsaXN0CmVjaG8gIiIKZWNobyAiW1NRSV0g4pWQ4pWQ4pWQIEhFQUxUSCBDSEVDSyBodHRwOi8vbG9jYWxob3N0OjgwODAvaGVhbHRoIOKVkOKVkOKVkCIKY3VybCAtc2YgaHR0cDovL2xvY2FsaG9zdDo4MDgwL2hlYWx0aCB8IHB5dGhvbjMgLW0ganNvbi50b29sIDI+L2Rldi9udWxsIHx8IGN1cmwgLXMgaHR0cDovL2xvY2FsaG9zdDo4MDgwL2hlYWx0aCB8fCBlY2hvICJOb3QgcmVhZHkgeWV0IgplY2hvICIiCmVjaG8gIltTUUldIOKVkOKVkOKVkCBMQVNUIDMwIExPRyBMSU5FUyDilZDilZDilZAiCnBtMiBsb2dzIGNsYXdib3QgLS1saW5lcyAzMCAtLW5vc3RyZWFtIDI+L2Rldi9udWxsIHx8IHRydWUKZWNobyAi4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQIgplY2hvICJbU1FJLTIwNTBdIENMQVdCT1QgREVQTE9ZTUVOVCBDT01QTEVURSIKZWNobyAi4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQIgo=' | base64 -d > /tmp/hetzner-bootstrap.sh
+          chmod +x /tmp/hetzner-bootstrap.sh
+          echo "Bootstrap size: $(wc -c < /tmp/hetzner-bootstrap.sh) bytes"
+          head -3 /tmp/hetzner-bootstrap.sh
+
+      - name: Upload script to Hetzner via SSH
+        env:
+          HETZNER_PASS: ${{ secrets.HETZNER_ROOT_PASSWORD }}
+        run: |
+          sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=yes root@178.105.183.74 \
+            'cat > /root/hetzner-bootstrap.sh && chmod +x /root/hetzner-bootstrap.sh && echo "Script uploaded: $(wc -c < /root/hetzner-bootstrap.sh) bytes"' \
+            < /tmp/hetzner-bootstrap.sh
 
       - name: Execute bootstrap on Hetzner
+        env:
+          HETZNER_PASS: ${{ secrets.HETZNER_ROOT_PASSWORD }}
+          GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
         run: |
-          sshpass -p "$HETZNER_PASS" ssh \
-            -o StrictHostKeyChecking=yes \
-            -o PasswordAuthentication=yes \
-            -o PubkeyAuthentication=no \
-            root@$HETZNER_IP \
+          sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=yes root@178.105.183.74 \
             "bash /root/hetzner-bootstrap.sh '$GH_TOKEN' 2>&1"
