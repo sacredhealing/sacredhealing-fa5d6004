@@ -484,7 +484,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ module, tierColor, tierBorder, 
 const BreatharianAcademy: React.FC = () => {
   const navigate = useNavigate();
   const { isAdmin } = useAdminRole();
-  const { membershipTier } = useMembership();
+  const { tier: membershipTier } = useMembership();
   const userRank = getTierRank(membershipTier);
 
   const canAccess = (tierRank: number) => isAdmin || userRank >= tierRank;
@@ -644,4 +644,5 @@ const BreatharianAcademy: React.FC = () => {
 };
 
 export default BreatharianAcademy;
+
 
