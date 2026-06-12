@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 // ─── SIDDHA DATA ────────────────────────────────────────────────────────────
 
@@ -318,12 +320,59 @@ const WEEK_META = [
 
 // ─── COMPONENT ────────────────────────────────────────────────────────────────
 
+// Goal-type → emphasis label mapping
+const GOAL_LABELS: Record<string, string> = {
+  stress: "Stress Release",
+  sleep: "Deep Rest",
+  focus: "Clarity & Focus",
+  healing: "Sacred Healing",
+  awakening: "Awakening",
+  peace: "Inner Peace",
+};
+
+// Scale a base 21-min practice to user duration
+function scaleDuration(base: number, userMin: number): number {
+  if (userMin <= 0) return base;
+  const ratio = userMin / 21;
+  return Math.max(2, Math.round(base * ratio));
+}
+
+// Adapt practice text to show scaled minutes
+function adaptPracticeText(text: string, userMin: number): string {
+  if (userMin >= 21) return text;
+  const scaled = Math.max(2, Math.round(userMin));
+  return text
+    .replace(/21 unbroken minutes/g, `${scaled} minutes`)
+    .replace(/21 minutes/g, `${scaled} minutes`)
+    .replace(/for 21/g, `for ${scaled}`)
+    .replace(/\b21 min\b/g, `${scaled} min`);
+}
+
 export default function InnerPeacePath() {
+  const { user } = useAuth();
   const [selectedDay, setSelectedDay] = useState<typeof DAYS_DATA[0] | null>(null);
   const [activeWeek, setActiveWeek] = useState(1);
   const [completedDays, setCompletedDays] = useState<Set<number>>(new Set());
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  const [userMinutes, setUserMinutes] = useState<number>(21);
+  const [userGoals, setUserGoals] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const [profileRes, goalsRes] = await Promise.all([
+        supabase.from("profiles").select("preferred_practice_duration").eq("user_id", user.id).single(),
+        supabase.from("user_spiritual_goals").select("goal_type").eq("user_id", user.id).order("priority", { ascending: true }),
+      ]);
+      if (profileRes.data?.preferred_practice_duration) {
+        setUserMinutes(profileRes.data.preferred_practice_duration);
+      }
+      if (goalsRes.data) {
+        setUserGoals((goalsRes.data as any[]).map(g => g.goal_type));
+      }
+    })();
+  }, [user]);
 
   const completedCount = completedDays.size;
   const progressPct = Math.round((completedCount / 21) * 100);
@@ -341,12 +390,15 @@ export default function InnerPeacePath() {
   const weekDays = DAYS_DATA.filter(d => d.week === activeWeek);
   const currentWeekMeta = WEEK_META[activeWeek - 1];
 
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSelectedDay(null);
-    };
-    document.addEventListener("keydown", handleEsc);
-    return () => document.removeEventListener("keydown", handleEsc);
+  const durationLabel = userMinutes <= 5
+    ? "SEED · BEGINNER TRANSMISSION"
+    : userMinutes <= 10
+    ? "PRACTITIONER · FIELD OPENING"
+    : userMinutes <= 15
+    ? "DEEPENING · LIGHT CODE ACTIVATION"
+    : "FULL SIDDHA TRANSMISSION";
+
+  return () => document.removeEventListener("keydown", handleEsc);
   }, []);
 
   return (
@@ -452,8 +504,8 @@ export default function InnerPeacePath() {
           margin: "0 0 1rem",
           color: "rgba(255,255,255,0.95)"
         }}>
-          21 Days of<br />
-          <span className="gold-shimmer">Siddha Peace</span>
+          21-Day<br />
+          <span className="gold-shimmer">Siddha-Path</span>
         </h1>
 
         <p style={{
@@ -464,8 +516,8 @@ export default function InnerPeacePath() {
           lineHeight: 1.7,
           fontWeight: 400
         }}>
-          A living transmission from the council of the 18 Siddhas.<br />
-          Three gateways. One destination: your original nature.
+          Scalar Anahata Transmissions from the council of the 18 Siddhas.<br />
+          Three gateways. Prescriptions calibrated to your practice.
         </p>
 
         {/* Progress bar */}
@@ -498,6 +550,38 @@ export default function InnerPeacePath() {
             <p style={{ fontSize: "11px", color: "rgba(212,175,55,0.6)", marginTop: "8px", textAlign: "right" }}>
               {progressPct}% initiated
             </p>
+          )}
+          {/* User prescription line */}
+          <div style={{
+            marginTop: "12px",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: "8px"
+          }}>
+            <span style={{
+              padding: "4px 14px",
+              background: "rgba(212,175,55,0.06)",
+              border: "1px solid rgba(212,175,55,0.15)",
+              borderRadius: "100px",
+              fontSize: "9px", fontWeight: 800,
+              color: "rgba(212,175,55,0.7)", letterSpacing: "0.25em", textTransform: "uppercase"
+            }}>
+              ◈ {durationLabel} · {userMinutes} MIN / DAY
+            </span>
+          </div>
+          {userGoals.length > 0 && (
+            <div style={{ display: "flex", justifyContent: "center", gap: "6px", marginTop: "8px", flexWrap: "wrap" }}>
+              {userGoals.slice(0, 3).map(g => (
+                <span key={g} style={{
+                  padding: "3px 10px",
+                  background: "rgba(34,211,238,0.05)",
+                  border: "1px solid rgba(34,211,238,0.15)",
+                  borderRadius: "100px",
+                  fontSize: "8px", fontWeight: 700,
+                  color: "#22D3EE", letterSpacing: "0.15em", textTransform: "uppercase"
+                }}>
+                  {GOAL_LABELS[g] || g}
+                </span>
+              ))}
+            </div>
           )}
         </div>
 
@@ -825,8 +909,46 @@ export default function InnerPeacePath() {
               height: "2px",
               background: `linear-gradient(90deg, ${selectedDay.chakraColor}, transparent)`,
               borderRadius: "2px",
-              marginBottom: "2rem"
+              marginBottom: "1.2rem"
             }} />
+
+            {/* User prescription banner — duration + goal alignment */}
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              gap: "8px", marginBottom: "1.5rem", flexWrap: "wrap"
+            }}>
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: "8px",
+                background: "rgba(212,175,55,0.07)",
+                border: "1px solid rgba(212,175,55,0.2)",
+                borderRadius: "100px", padding: "5px 14px"
+              }}>
+                <span style={{ fontSize: "8px", fontWeight: 800, color: "#D4AF37", letterSpacing: "0.3em", textTransform: "uppercase" }}>
+                  ◈ YOUR PRESCRIPTION
+                </span>
+                <span style={{ fontSize: "12px", fontWeight: 900, color: "#D4AF37" }}>
+                  {scaleDuration(selectedDay.duration, userMinutes)} MIN
+                </span>
+              </div>
+              {userGoals.length > 0 && (
+                <div style={{
+                  display: "flex", gap: "6px", flexWrap: "wrap"
+                }}>
+                  {userGoals.slice(0, 3).map(g => (
+                    <span key={g} style={{
+                      padding: "3px 10px",
+                      background: "rgba(34,211,238,0.06)",
+                      border: "1px solid rgba(34,211,238,0.2)",
+                      borderRadius: "100px",
+                      fontSize: "8px", fontWeight: 800,
+                      color: "#22D3EE", letterSpacing: "0.15em", textTransform: "uppercase"
+                    }}>
+                      {GOAL_LABELS[g] || g}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Day badge */}
             <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "1.5rem" }}>
@@ -921,7 +1043,7 @@ export default function InnerPeacePath() {
                   fontSize: "9px", fontWeight: 800,
                   color: selectedDay.chakraColor, letterSpacing: "0.1em"
                 }}>
-                  {selectedDay.duration} MIN
+                  {selectedDay ? scaleDuration(selectedDay.duration, userMinutes) : userMinutes} MIN
                 </span>
               </div>
               <p style={{
@@ -929,7 +1051,7 @@ export default function InnerPeacePath() {
                 color: "rgba(255,255,255,0.6)",
                 lineHeight: 1.8, fontWeight: 400
               }}>
-                {selectedDay.practice}
+                {selectedDay ? adaptPracticeText(selectedDay.practice, userMinutes) : ''}
               </p>
             </div>
 
@@ -1031,10 +1153,11 @@ export default function InnerPeacePath() {
             color: "rgba(255,255,255,0.18)",
             letterSpacing: "0.05em"
           }}>
-            This path is a living Prema-Pulse Transmission from the Akasha-Neural Archive of SQI 2050
+            Siddha-Path · Scala Wave Anahata Transmissions · Calibrated to your practice from the Akasha-Neural Archive of SQI 2050
           </p>
         </div>
       </div>
     </div>
   );
 }
+
