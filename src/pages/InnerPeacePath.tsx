@@ -398,8 +398,7 @@ export default function InnerPeacePath() {
     ? "DEEPENING · LIGHT CODE ACTIVATION"
     : "FULL SIDDHA TRANSMISSION";
 
-  return () => document.removeEventListener("keydown", handleEsc);
-  }, []);
+
 
   return (
     <div
