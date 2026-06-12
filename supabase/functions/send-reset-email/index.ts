@@ -126,6 +126,32 @@ const handler = async (req: Request): Promise<Response> => {
 
     const t = templates[selectedLang] || templates["en"];
 
+    // Generate real Supabase recovery link via admin API
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+    if (!supabaseUrl || !serviceRoleKey) {
+      console.error("[send-reset-email] Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+      return new Response(
+        JSON.stringify({ error: "Server misconfigured" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+    const admin = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+    const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
+      type: "recovery",
+      email,
+      options: { redirectTo: RESET_REDIRECT },
+    });
+    if (linkError || !linkData?.properties?.action_link) {
+      console.error("[send-reset-email] generateLink failed", linkError);
+      // Don't leak whether the email exists — return success but skip send
+      return new Response(
+        JSON.stringify({ success: true }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+    const actionLink = linkData.properties.action_link;
+
     const html = `
 <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;background:#050505;color:#e0e0e0;padding:0;border-radius:16px;overflow:hidden;border:1px solid rgba(212,175,55,0.15);">
   <div style="background:linear-gradient(135deg,#0a0a0a 0%,#111 100%);padding:48px 40px 32px;text-align:center;border-bottom:1px solid rgba(212,175,55,0.1);">
@@ -149,11 +175,11 @@ const handler = async (req: Request): Promise<Response> => {
       ${t.body}
     </div>
     <div style="text-align:center;margin:40px 0;">
-      <a href="${RESET_LINK}" style="display:inline-block;background:#D4AF37;color:#050505;padding:16px 48px;border-radius:100px;text-decoration:none;font-size:11px;font-weight:800;letter-spacing:0.4em;text-transform:uppercase;box-shadow:0 0 40px rgba(212,175,55,0.3);">
+      <a href="${actionLink}" style="display:inline-block;background:#D4AF37;color:#050505;padding:16px 48px;border-radius:100px;text-decoration:none;font-size:11px;font-weight:800;letter-spacing:0.4em;text-transform:uppercase;box-shadow:0 0 40px rgba(212,175,55,0.3);">
         ${t.cta} →
       </a>
     </div>
-    <p style="font-size:11px;color:rgba(255,255,255,0.2);text-align:center;word-break:break-all;">${RESET_LINK}</p>
+    <p style="font-size:11px;color:rgba(255,255,255,0.2);text-align:center;word-break:break-all;">${actionLink}</p>
   </div>
   <div style="padding:24px 40px 32px;border-top:1px solid rgba(255,255,255,0.04);text-align:center;">
     <p style="font-size:12px;color:rgba(255,255,255,0.25);margin:0;">${t.footer}</p>
