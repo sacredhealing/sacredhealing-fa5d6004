@@ -1,39 +1,38 @@
-=== Deploy clawbot-proxy Fri Jun  5 18:13:27 UTC 2026 ===
+=== Deploy clawbot-proxy Fri Jun 12 14:07:27 UTC 2026 ===
 
 added 2 packages in 3s
-Supabase CLI: 2.105.0
+Supabase CLI: 2.106.0
 Bundling Function: clawbot-proxy
-v1.74.0: Pulling from supabase/edge-runtime
-ff86ea2e5edc: Pulling fs layer
-6800868e255e: Pulling fs layer
-5c4a6e938da5: Pulling fs layer
-cb0b0573a680: Pulling fs layer
-ede75d680c8d: Pulling fs layer
-1732128487dd: Pulling fs layer
-ede75d680c8d: Waiting
-1732128487dd: Waiting
-cb0b0573a680: Waiting
-5c4a6e938da5: Verifying Checksum
-5c4a6e938da5: Download complete
-ff86ea2e5edc: Verifying Checksum
-ff86ea2e5edc: Download complete
-6800868e255e: Verifying Checksum
-6800868e255e: Download complete
-1732128487dd: Verifying Checksum
-1732128487dd: Download complete
-cb0b0573a680: Verifying Checksum
-cb0b0573a680: Download complete
-ede75d680c8d: Verifying Checksum
-ede75d680c8d: Download complete
-ff86ea2e5edc: Pull complete
-6800868e255e: Pull complete
-5c4a6e938da5: Pull complete
-cb0b0573a680: Pull complete
-ede75d680c8d: Pull complete
-1732128487dd: Pull complete
-Digest: sha256:2781daf92394db91f7e94129cc3d04ec474ad16a8fe64b3fbeef6e7d557ab120
-Status: Downloaded newer image for public.ecr.aws/supabase/edge-runtime:v1.74.0
-No change found in Function: clawbot-proxy
+v1.74.1: Pulling from supabase/edge-runtime
+068fedd6b0f1: Pulling fs layer
+9af3c2dc4120: Pulling fs layer
+895c12cb16c4: Pulling fs layer
+6c56faff70a9: Pulling fs layer
+f0184c725f12: Pulling fs layer
+3f86a4e67f45: Pulling fs layer
+6c56faff70a9: Waiting
+f0184c725f12: Waiting
+3f86a4e67f45: Waiting
+895c12cb16c4: Verifying Checksum
+895c12cb16c4: Download complete
+068fedd6b0f1: Verifying Checksum
+068fedd6b0f1: Download complete
+9af3c2dc4120: Download complete
+6c56faff70a9: Verifying Checksum
+6c56faff70a9: Download complete
+3f86a4e67f45: Verifying Checksum
+3f86a4e67f45: Download complete
+f0184c725f12: Verifying Checksum
+f0184c725f12: Download complete
+068fedd6b0f1: Pull complete
+9af3c2dc4120: Pull complete
+895c12cb16c4: Pull complete
+6c56faff70a9: Pull complete
+f0184c725f12: Pull complete
+3f86a4e67f45: Pull complete
+Digest: sha256:ac1fdaad6d62b892f3309578006ce208f4150bf2c484113cf2c32655ec7e6893
+Status: Downloaded newer image for public.ecr.aws/supabase/edge-runtime:v1.74.1
+Deploying Function: clawbot-proxy (script size: 20.86kB)
 Deployed Functions on project fjdzhrdpioxdeyyfogep: clawbot-proxy
 You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/fjdzhrdpioxdeyyfogep/functions
 Done.
