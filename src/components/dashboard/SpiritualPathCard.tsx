@@ -48,7 +48,7 @@ if (typeof document !== 'undefined' && !document.getElementById('sq-scalar-keyfr
       0%,100% { box-shadow: 0 0 14px rgba(212,175,55,0.18), 0 0 35px rgba(212,175,55,0.08), inset 0 0 18px rgba(212,175,55,0.05); border-color: rgba(212,175,55,0.3); }
       50%      { box-shadow: 0 0 24px rgba(212,175,55,0.32), 0 0 60px rgba(212,175,55,0.15), inset 0 0 28px rgba(212,175,55,0.09); border-color: rgba(212,175,55,0.5); }
     }
-  \`;
+  `;
   document.head.appendChild(s);
 }
 
