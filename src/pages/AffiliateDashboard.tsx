@@ -620,6 +620,7 @@ const AffiliateDashboard: React.FC = () => {
                   Mirror the top 9 Polymarket whales (BAA2BC, ED107A, A7A8C1 and 6 more) · Paper mode active · Live dashboard on sovereign Hetzner server
                 </p>
               </div>
+          </div>
         )}
 
         {/* ── Links tab ──────────────────────────────────────────────────────── */}
