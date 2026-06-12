@@ -4,119 +4,44 @@ on:
   workflow_dispatch:
     inputs:
       action:
-        description: 'Action: deploy | restart | stop | status | logs'
+        description: 'deploy | restart | status | logs'
         required: true
         default: 'deploy'
         type: choice
         options:
           - deploy
           - restart
-          - stop
           - status
           - logs
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
-      - name: Install sshpass
-        run: sudo apt-get install -y sshpass
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-      - name: Accept Hetzner host key
+      - name: Install ssh tools
         run: |
+          sudo apt-get install -y sshpass
           mkdir -p ~/.ssh
           ssh-keyscan -H 178.105.183.74 >> ~/.ssh/known_hosts 2>/dev/null || true
 
-      - name: Deploy CLAWBOT on Hetzner
+      - name: Copy bootstrap script to Hetzner
+        env:
+          HETZNER_PASS: ${{ secrets.HETZNER_ROOT_PASSWORD }}
+        run: |
+          chmod +x polymarket-worker/scripts/hetzner-bootstrap.sh
+          sshpass -p "$HETZNER_PASS" scp -o StrictHostKeyChecking=no \
+            polymarket-worker/scripts/hetzner-bootstrap.sh \
+            root@178.105.183.74:/root/hetzner-bootstrap.sh
+
+      - name: Run bootstrap on Hetzner
         env:
           HETZNER_PASS: ${{ secrets.HETZNER_ROOT_PASSWORD }}
           GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
         run: |
-          ACTION="${{ github.event.inputs.action }}"
-          echo "[SQI] Action: $ACTION"
-
-          sshpass -p "$HETZNER_PASS" ssh -o StrictHostKeyChecking=no root@178.105.183.74 /bin/bash << REMOTESCRIPT
-
-          set -e
-          echo "[SQI-2050] ⚡ CLAWBOT Hetzner Bootstrap"
-
-          # ── Node 20 ──────────────────────────────────────────────────────
-          if ! command -v node &>/dev/null || [ "\$(node -e 'process.stdout.write(process.version.slice(1).split(\".\")[0])')" -lt 20 ]; then
-            echo "[SQI] Installing Node 20..."
-            curl -fsSL https://deb.nodesource.com/setup_20.x | bash - 2>&1 | tail -3
-            apt-get install -y nodejs 2>&1 | tail -3
-          fi
-          echo "[SQI] Node: \$(node -v)"
-
-          # ── PM2 ───────────────────────────────────────────────────────────
-          if ! command -v pm2 &>/dev/null; then
-            echo "[SQI] Installing PM2..."
-            npm install -g pm2
-            env PATH=\$PATH:/usr/bin pm2 startup systemd -u root --hp /root 2>&1 | tail -3
-            systemctl enable pm2-root 2>/dev/null || true
-          fi
-          echo "[SQI] PM2: \$(pm2 -v)"
-
-          # ── Git ───────────────────────────────────────────────────────────
-          command -v git &>/dev/null || apt-get install -y git
-
-          # ── Clone / pull ──────────────────────────────────────────────────
-          REPO_DIR="/root/clawbot"
-          if [ ! -d "\$REPO_DIR/.git" ]; then
-            echo "[SQI] Cloning repo..."
-            git clone https://x-access-token:${GH_TOKEN}@github.com/sacredhealing/sacredhealing-fa5d6004.git "\$REPO_DIR"
-          else
-            echo "[SQI] Pulling latest..."
-            cd "\$REPO_DIR" && git fetch origin && git reset --hard origin/main
-          fi
-
-          cd "\$REPO_DIR/polymarket-worker"
-
-          # ── .env ──────────────────────────────────────────────────────────
-          cat > .env << 'ENVEOF'
-PORT=8080
-SUPABASE_URL=https://fjdzhrdpioxdeyyfogep.supabase.co
-SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MjIyNTU4NCwiZXhwIjoyMDU3ODAxNTg0fQ.JZMdJEdJFHyBgLZIWuSJMYSwB0EK8WEbUfhJvJVb9kQ
-POLYGON_RPC_URL=https://polygon-mainnet.g.alchemy.com/v2/xT5i9TCX6Z_sUn5eVkMY2kJCnxlO-M8x
-BOT_PRIVATE_KEY=
-POLY_API_KEY=
-POLY_API_SECRET=
-POLY_API_PASSPHRASE=
-PAPER_MODE=true
-RISK_PCT=0.05
-MAX_POSITIONS=20
-WHALE_MIN_WR=0.55
-WHALE_MIN_TRADES=5
-ENVEOF
-
-          echo "[SQI] .env written | PAPER_MODE=true | 9 elite whales pre-seeded"
-
-          # ── npm install ───────────────────────────────────────────────────
-          npm install --omit=dev 2>&1 | tail -5
-
-          # ── PM2 start/restart ─────────────────────────────────────────────
-          if pm2 describe clawbot > /dev/null 2>&1; then
-            pm2 restart clawbot --update-env
-            echo "[SQI] ✅ CLAWBOT restarted"
-          else
-            pm2 start npm --name clawbot -- start
-            echo "[SQI] ✅ CLAWBOT started fresh"
-          fi
-
-          pm2 save
-          sleep 5
-
-          echo ""
-          echo "[SQI] ═══ PM2 STATUS ═══"
-          pm2 list
-
-          echo ""
-          echo "[SQI] ═══ HEALTH CHECK ═══"
-          curl -sf http://localhost:8080/health || echo "Not ready yet — check: pm2 logs clawbot --lines 30"
-
-          echo ""
-          echo "[SQI] ═══ LAST 20 LOG LINES ═══"
-          pm2 logs clawbot --lines 20 --nostream 2>/dev/null || true
-
-          REMOTESCRIPT
+          sshpass -p "$HETZNER_PASS" ssh -o StrictHostKeyChecking=no \
+            root@178.105.183.74 \
+            "chmod +x /root/hetzner-bootstrap.sh && bash /root/hetzner-bootstrap.sh '$GH_TOKEN'"
