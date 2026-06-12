@@ -100,23 +100,9 @@ const SECTION_CONFIG = [
   { key: 'transmission', title: "Bhrigu's Transmission", subtitle: 'Direct Blessing from the Rishi', icon: '✦', color: '#D4AF37' },
 ];
 
-// ── History helpers (localStorage) ───────────────────────────────
-const HISTORY_KEY = 'sqi:bhrigu:history:v2';
-
-function loadHistory(): BhriguHistoryEntry[] {
-  try {
-    const raw = localStorage.getItem(HISTORY_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
-}
-
-function saveToHistory(entry: BhriguHistoryEntry) {
-  try {
-    const hist = loadHistory();
-    const updated = [entry, ...hist].slice(0, 20); // keep last 20
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
-  } catch { /* quota */ }
-}
+// ── History helpers (Supabase) ───────────────────────────────────
+// localStorage fully replaced by bhrigu_readings table
+// Migration happens in BhriguJyotishBook dashboard component
 
 // ── Main Component ────────────────────────────────────────────────
 export const BhriguOraclePanel: React.FC<Props> = ({ user, onUpgrade, membershipTier = 'free' }) => {
@@ -137,7 +123,28 @@ export const BhriguOraclePanel: React.FC<Props> = ({ user, onUpgrade, membership
   const isPaid = ['prana-flow', 'siddha-quantum', 'akasha-infinity', 'premium', 'premium-monthly', 'premium-annual', 'lifetime', 'compass', 'master'].includes(membershipTier);
 
   useEffect(() => {
-    setHistory(loadHistory());
+    // Load from Supabase
+    (async () => {
+      const { data: { user: authU } } = await (supabase as any).auth.getUser();
+      if (!authU) return;
+      const { data } = await (supabase as any)
+        .from('bhrigu_readings')
+        .select('id, reading_type, question, sections, birth_data, created_at')
+        .eq('user_id', authU.id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (data) {
+        // Map Supabase shape to local BhriguHistoryEntry shape
+        setHistory(data.map((r: any) => ({
+          id: r.id,
+          date: r.created_at,
+          readingType: r.reading_type,
+          question: r.question,
+          sections: r.sections,
+          birthData: r.birth_data,
+        })));
+      }
+    })();
   }, []);
 
   const callOracle = useCallback(async () => {
@@ -190,8 +197,19 @@ export const BhriguOraclePanel: React.FC<Props> = ({ user, onUpgrade, membership
           sections: secs,
           birthData: { dob: user.birthDate, tob: user.birthTime, pob: user.birthPlace },
         };
-        saveToHistory(entry);
-        setHistory(loadHistory());
+        // Save to Supabase bhrigu_readings
+        const { data: { user: authU } } = await (supabase as any).auth.getUser();
+        if (authU) {
+          await (supabase as any).from('bhrigu_readings').insert({
+            user_id: authU.id,
+            reading_type: entry.readingType,
+            question: entry.question || null,
+            sections: entry.sections,
+            birth_data: entry.birthData,
+            created_at: entry.date,
+          });
+        }
+        setHistory(prev => [entry, ...prev].slice(0, 20));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Transmission interrupted. Please try again.');
@@ -539,3 +557,4 @@ export const BhriguOraclePanel: React.FC<Props> = ({ user, onUpgrade, membership
 };
 
 export default BhriguOraclePanel;
+
