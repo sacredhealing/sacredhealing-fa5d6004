@@ -382,16 +382,18 @@ const TIERS = [
       },
       {
         id: 'AI7',
-        title: 'LIVE INITIATIONS — Kritagya\'s Direct Siddha Nada Transmissions',
+        title: 'The Breatharian Integration — Living the Full Pranic Life',
         lessons: [
-          'Monthly Live Breatharian Circle — Siddha Nada Transmission',
-          'Personal Pranic Assessment Session (1:1 with Kritagya)',
-          'Akashic Reading: Your Personal Pranic Blueprint',
-          'Shaktipath Initiation: Direct Pranic Energy Transmission',
-          'The SQI Breatharian Certification — 108-Day Program',
-          'Community of Advanced Practitioners — Private Sanctuary',
-          'Weekly Pranic Activation Audio Transmissions (New Each Week)',
-          'Akasha Infinity Breatharian Immersion (Annual Retreat)',
+          'Designing Your Personal Pranic Sadhana — Morning, Noon & Night',
+          'The 108-Day Self-Initiation Protocol — From Seeker to Pranic Adept',
+          'Navigating Social & Family Life as a Pranic Practitioner',
+          'Seasonal Pranic Protocols — Spring, Summer, Autumn, Winter',
+          'Pranic Living in Cities — Absorbing Prana in Urban Environments',
+          'Advanced Dream Yoga — Absorbing Prana During Sleep',
+          'Documenting Your Pranic Journey — The Sacred Self-Study Journal',
+          'Signs of Pranic Awakening — What to Expect at Each Stage',
+          'The Final Veil — Surrendering the Need to Eat as Identity',
+          'Mauna (Sacred Silence) as the Highest Pranic Practice',
         ],
       },
     ],
@@ -642,3 +644,4 @@ const BreatharianAcademy: React.FC = () => {
 };
 
 export default BreatharianAcademy;
+
