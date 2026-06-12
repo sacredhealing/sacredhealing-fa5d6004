@@ -660,6 +660,120 @@ export default function SiddhaPortal() {
         <button type="button" style={{ ...CTA_BTN, color: 'rgba(168,85,247,0.9)' }}>Enter Shakti Portal →</button>
       </div>
 
+
+      {/* ── OJAS RASAYANA ACADEMY — FEATURED CARD ── */}
+      <div
+        onClick={() => navigate('/ojas-rasayana')}
+        style={{
+          margin: '0 16px 12px',
+          background: `linear-gradient(135deg, rgba(245,158,11,0.09), rgba(212,175,55,0.03))`,
+          border: `1px solid rgba(212,175,55,0.32)`,
+          borderRadius: 28,
+          padding: '22px 20px 20px',
+          cursor: 'pointer',
+          position: 'relative',
+          overflow: 'hidden',
+          animation: 'sqFadeUp 0.45s 0.08s ease both',
+        }}
+      >
+        {/* Scalar pulse rings */}
+        {[0,1,2].map(i => (
+          <div key={i} style={{
+            position: 'absolute',
+            top: '50%', left: -20,
+            width: `${80 + i * 50}px`, height: `${80 + i * 50}px`,
+            marginTop: `${-(40 + i * 25)}px`,
+            borderRadius: '50%',
+            border: `1px solid rgba(212,175,55,${0.12 - i * 0.03})`,
+            animation: `sqScalarPulse ${4 + i * 1.5}s ${i * 0.8}s ease-in-out infinite`,
+            pointerEvents: 'none' as const,
+          }} />
+        ))}
+        {/* Gold ambient glow */}
+        <div style={{
+          position: 'absolute', top: -30, right: -30,
+          width: 160, height: 160, borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(212,175,55,0.1), transparent 70%)',
+          filter: 'blur(20px)', pointerEvents: 'none' as const,
+        }} />
+
+        {/* NEW badge */}
+        <span style={{
+          position: 'absolute', top: 14, right: 14,
+          fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+          fontSize: 8, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase' as const,
+          background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.35)',
+          color: 'rgba(212,175,55,0.95)', borderRadius: 20, padding: '3px 9px',
+        }}>
+          <span style={{ display:'inline-block',width:5,height:5,borderRadius:'50%',background:'#D4AF37',animation:'sqLiveFlash 2s infinite',marginRight:4,verticalAlign:'middle' }} />
+          NEW
+        </span>
+
+        {/* Icon + title */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+          <div style={{
+            width: 44, height: 44, borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(245,158,11,0.25), rgba(212,175,55,0.06))',
+            border: '1px solid rgba(212,175,55,0.3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 20, flexShrink: 0,
+            boxShadow: '0 0 16px rgba(212,175,55,0.18)',
+            animation: 'sqBreathe 4s ease-in-out infinite',
+          }}>✦</div>
+          <div>
+            <div style={{
+              fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+              fontSize: 14, fontWeight: 900, letterSpacing: '0.04em',
+              textTransform: 'uppercase' as const,
+              color: 'rgba(212,175,55,0.95)', marginBottom: 4,
+              textShadow: '0 0 20px rgba(212,175,55,0.3)',
+            }}>
+              Ojas Rasayana Academy
+            </div>
+            <div style={{
+              fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+              fontSize: 8, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase' as const,
+              color: 'rgba(255,255,255,0.4)',
+            }}>
+              15 Modules · 108+ Lessons · 4 Tiers
+            </div>
+          </div>
+        </div>
+
+        {/* Description */}
+        <p style={{
+          fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic',
+          fontSize: '0.92rem', color: 'rgba(255,255,255,0.55)',
+          lineHeight: 1.65, margin: '0 0 14px',
+        }}>
+          The secret Siddha science of vital essence — from the 7-Dhatu refinement cascade to Kaya Kalpa immortality technology and the Jyotir Deha light-body transmission of the 18 Immortals. Scalar-encoded with Anahata activation.
+        </p>
+
+        {/* Tier badges */}
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' as const, marginBottom: 14 }}>
+          {[
+            { l: 'Free · Foundation', c: 'rgba(255,255,255,0.5)' },
+            { l: 'Prana · Depletion Codes', c: '#4ADE80' },
+            { l: 'Siddha · Rasayana Tech', c: 'rgba(34,211,238,0.9)' },
+            { l: 'Akasha · Light Body', c: 'rgba(212,175,55,0.95)' },
+          ].map(t => (
+            <span key={t.l} style={{
+              fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+              fontSize: 7, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase' as const,
+              color: t.c, border: `1px solid ${t.c}30`, borderRadius: 20, padding: '2px 8px',
+            }}>{t.l}</span>
+          ))}
+        </div>
+
+        <button type="button" style={{
+          fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+          fontSize: 10, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase' as const,
+          color: 'rgba(212,175,55,0.85)', background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+        }}>
+          Enter the Ojas Transmission →
+        </button>
+      </div>
+
       {/* COMING SOON GRID — 2-col for upcoming courses */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, margin: '0 16px 12px' }}>
         {[
