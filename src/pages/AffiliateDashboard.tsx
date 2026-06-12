@@ -620,6 +620,56 @@ const AffiliateDashboard: React.FC = () => {
                   Mirror the top 9 Polymarket whales (BAA2BC, ED107A, A7A8C1 and 6 more) · Paper mode active · Live dashboard on sovereign Hetzner server
                 </p>
               </div>
+
+              {/* SOVEREIGN SNIPER — Solana Memecoin Sniper card */}
+              <div
+                style={{
+                  ...glassCard,
+                  background: 'rgba(168,85,247,0.03)',
+                  border: '1px solid rgba(168,85,247,0.22)',
+                  marginTop: 12,
+                  cursor: 'pointer',
+                }}
+                onClick={() => navigate('/income-streams/sniper-bot')}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: 14,
+                    background: 'rgba(168,85,247,0.08)',
+                    border: '1px solid rgba(168,85,247,0.3)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 20, flexShrink: 0,
+                  }}>🎯</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' as const }}>
+                      <span style={{ fontSize: 14, fontWeight: 900, color: '#A855F7', letterSpacing: '-0.02em' }}>
+                        SOVEREIGN SNIPER
+                      </span>
+                      <span style={{
+                        fontSize: 8, fontWeight: 800, letterSpacing: '0.2em',
+                        color: '#A855F7', border: '1px solid rgba(168,85,247,0.35)',
+                        borderRadius: 99, padding: '2px 8px',
+                      }}>SOLANA</span>
+                      <span style={{
+                        fontSize: 8, fontWeight: 800, letterSpacing: '0.2em',
+                        color: 'rgba(74,222,128,0.9)', border: '1px solid rgba(74,222,128,0.3)',
+                        borderRadius: 99, padding: '2px 8px',
+                      }}>● LIVE</span>
+                    </div>
+                    <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12, margin: '4px 0 0', lineHeight: 1.5 }}>
+                      Pump.fun 7-launchpad sniper · 12-signal Gemini AI · Jito MEV · Hetzner 24/7
+                    </p>
+                  </div>
+                  <span style={{ color: '#A855F7', fontSize: 20, fontWeight: 700, flexShrink: 0 }}>→</span>
+                </div>
+                <p style={{
+                  color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem',
+                  lineHeight: 1.6, margin: '14px 0 0',
+                  borderTop: '1px solid rgba(168,85,247,0.08)', paddingTop: 12,
+                }}>
+                  7 launchpads · 97.8% rugs filtered · Gemini AI scorer · 0.05 SOL per snipe · Dev wallet monitor · Start earning sniper affiliate commissions
+                </p>
+              </div>
           </div>
         )}
 
@@ -899,3 +949,4 @@ const inputStyle: React.CSSProperties = {
 };
 
 export default AffiliateDashboard;
+
