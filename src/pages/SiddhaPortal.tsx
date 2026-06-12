@@ -456,6 +456,85 @@ export default function SiddhaPortal() {
         <span>SACRED ACADEMY</span>
       </div>
 
+
+      {/* ── SVAPNA VIDYĀ DREAM SCIENCE — HERO CARD ── */}
+      <div style={{ position: 'relative', margin: '0 16px 16px', animation: 'sqFadeUp 0.45s 0.03s ease both' }}>
+        {/* Scalar wave rings */}
+        {[200,270,340,410].map((s, i) => (
+          <div key={i} aria-hidden style={{
+            position: 'absolute',
+            left: '50%', top: '50%',
+            width: s, height: s,
+            marginLeft: -s/2, marginTop: -s/2,
+            borderRadius: '50%',
+            border: `1px solid ${gold(0.08 - i * 0.015)}`,
+            animation: `sqScalarPulse ${3.2 + i * 0.7}s ease-in-out ${i * 0.5}s infinite`,
+            pointerEvents: 'none',
+            zIndex: 0,
+          }} />
+        ))}
+        {/* Glow backdrop */}
+        <div aria-hidden style={{
+          position: 'absolute', inset: -18, borderRadius: 36,
+          background: `radial-gradient(55% 55% at 30% 40%, ${gold(0.32)}, transparent 65%),
+                       radial-gradient(55% 55% at 72% 62%, rgba(167,139,250,0.22), transparent 65%)`,
+          filter: 'blur(24px)',
+          animation: 'sqGlowPulse 4s ease-in-out infinite',
+          pointerEvents: 'none', zIndex: 0,
+        }} />
+        <div
+          onClick={() => navigate('/dream-academy')}
+          style={{
+            position: 'relative', zIndex: 1, cursor: 'pointer',
+            background: `linear-gradient(135deg, rgba(212,175,55,0.11), rgba(167,139,250,0.07) 55%, rgba(5,5,5,0.65))`,
+            border: `1px solid ${gold(0.5)}`,
+            borderRadius: 24,
+            padding: '24px 20px 22px',
+            boxShadow: `0 0 44px ${gold(0.22)}, 0 0 90px rgba(167,139,250,0.12), inset 0 0 28px rgba(212,175,55,0.05)`,
+          }}
+        >
+          <div style={{ ...LABEL_STYLE, fontSize: 9, color: gold(0.75), marginBottom: 10, display: 'flex', alignItems: 'center', gap: 7 }}>
+            <span style={{ display: 'inline-block', width: 5, height: 5, borderRadius: '50%', background: gold(0.9), animation: 'sqLiveFlash 2s infinite' }} />
+            DREAM SCIENCE · 15 MODULES · SCALAR TRANSMISSION
+          </div>
+          <h2 style={{
+            fontFamily: "'Cormorant Garamond',serif",
+            fontSize: '1.85rem', fontWeight: 600,
+            color: white(0.97), lineHeight: 1.1, margin: 0,
+            textShadow: `0 0 20px ${gold(0.4)}`,
+          }}>
+            Svapna Vidyā
+          </h2>
+          <p style={{ ...CARD_DESC, marginTop: 8, marginBottom: 14, color: white(0.62) }}>
+            The world's most advanced Siddha dream science — from Taijasa & dream anatomy to Turīya-Svapna, Bardo preparation, prophetic timing & the 40-night Tapas.
+          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 16, flexWrap: 'wrap' }}>
+            {[
+              { label: 'Free · M1–2',    color: white(0.55) },
+              { label: 'Prana · M3–6',   color: '#4ADE80' },
+              { label: 'Siddha · M7–9',  color: '#a78bfa' },
+              { label: 'Akasha · M10–15',color: gold(0.95) },
+            ].map(t => (
+              <div key={t.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: t.color, boxShadow: `0 0 6px ${t.color}` }} />
+                <span style={{ ...LABEL_STYLE, fontSize: 7, color: t.color, letterSpacing: '0.2em' }}>{t.label}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            padding: '10px 18px', borderRadius: 999,
+            background: `linear-gradient(135deg, ${gold(0.22)}, ${gold(0.07)})`,
+            border: `1px solid ${gold(0.5)}`,
+            color: gold(0.98),
+            fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+            fontSize: 10, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase',
+          }}>
+            Enter the Dream Stream →
+          </div>
+        </div>
+      </div>
+
       {/* KRIYA YOGA — live */}
       <div
         onClick={() => navigate('/kriya-yoga')}
@@ -677,6 +756,12 @@ export default function SiddhaPortal() {
         @keyframes sqLiveFlash {
           0%, 100% { opacity: 1; }
           50%       { opacity: 0.2; }
+        }
+        @keyframes sqScalarPulse {
+          0% { opacity: 0; transform: scale(0.65); }
+          35% { opacity: 0.9; }
+          75% { opacity: 0.15; transform: scale(1.18); }
+          100% { opacity: 0; transform: scale(1.35); }
         }
         @keyframes sqGlowPulse {
           0%, 100% { opacity: 0.55; transform: scale(1); }
