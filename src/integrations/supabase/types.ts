@@ -6606,6 +6606,179 @@ export type Database = {
         }
         Relationships: []
       }
+      sniper_affiliate_rates: {
+        Row: {
+          fee_pct: number
+          l1_pct: number
+          l2_pct: number
+          tier: string
+          updated_at: string
+          you_keep: number
+        }
+        Insert: {
+          fee_pct: number
+          l1_pct: number
+          l2_pct: number
+          tier: string
+          updated_at?: string
+          you_keep: number
+        }
+        Update: {
+          fee_pct?: number
+          l1_pct?: number
+          l2_pct?: number
+          tier?: string
+          updated_at?: string
+          you_keep?: number
+        }
+        Relationships: []
+      }
+      sniper_fee_ledger: {
+        Row: {
+          created_at: string
+          fee_pct: number
+          fee_sol: number
+          gross_sol: number
+          id: string
+          net_sol: number
+          tier: string
+          trade_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          fee_pct: number
+          fee_sol?: number
+          gross_sol?: number
+          id?: string
+          net_sol?: number
+          tier: string
+          trade_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          fee_pct?: number
+          fee_sol?: number
+          gross_sol?: number
+          id?: string
+          net_sol?: number
+          tier?: string
+          trade_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sniper_fee_ledger_trade_id_fkey"
+            columns: ["trade_id"]
+            isOneToOne: false
+            referencedRelation: "sniper_trades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sniper_members: {
+        Row: {
+          balance: number
+          created_at: string
+          id: string
+          is_active: boolean
+          paper_mode: boolean
+          platform_fee_pct: number
+          tier: string
+          total_earned: number
+          updated_at: string
+          user_id: string
+          wallet_address: string | null
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          paper_mode?: boolean
+          platform_fee_pct?: number
+          tier?: string
+          total_earned?: number
+          updated_at?: string
+          user_id: string
+          wallet_address?: string | null
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          paper_mode?: boolean
+          platform_fee_pct?: number
+          tier?: string
+          total_earned?: number
+          updated_at?: string
+          user_id?: string
+          wallet_address?: string | null
+        }
+        Relationships: []
+      }
+      sniper_trades: {
+        Row: {
+          action: string
+          ai_score: number | null
+          closed_at: string | null
+          created_at: string
+          entry_price: number | null
+          exit_price: number | null
+          id: string
+          launchpad: string
+          mint: string
+          mode: string
+          multiplier_x: number | null
+          pnl_sol: number | null
+          rug_score: number | null
+          size_sol: number | null
+          status: string
+          symbol: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action?: string
+          ai_score?: number | null
+          closed_at?: string | null
+          created_at?: string
+          entry_price?: number | null
+          exit_price?: number | null
+          id?: string
+          launchpad?: string
+          mint: string
+          mode?: string
+          multiplier_x?: number | null
+          pnl_sol?: number | null
+          rug_score?: number | null
+          size_sol?: number | null
+          status?: string
+          symbol?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          ai_score?: number | null
+          closed_at?: string | null
+          created_at?: string
+          entry_price?: number | null
+          exit_price?: number | null
+          id?: string
+          launchpad?: string
+          mint?: string
+          mode?: string
+          multiplier_x?: number | null
+          pnl_sol?: number | null
+          rug_score?: number | null
+          size_sol?: number | null
+          status?: string
+          symbol?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       social_shares: {
         Row: {
           content_id: string | null
@@ -8611,12 +8784,11 @@ export type Database = {
       }
       affiliate_total_earnings: {
         Row: {
-          affiliate_code: string | null
-          subscription_earnings: number | null
-          total_all_earnings: number | null
-          trading_earnings: number | null
-          trading_l1_count: number | null
-          trading_l2_count: number | null
+          clawbot_earnings: number | null
+          sniper_earnings: number | null
+          sniper_l1_referrals: number | null
+          sniper_l2_referrals: number | null
+          total_earnings: number | null
           user_id: string | null
         }
         Relationships: []
@@ -8729,6 +8901,10 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      record_sniper_commission: {
+        Args: { _fee_sol: number; _trade_id: string; _user_id: string }
+        Returns: undefined
       }
       search_app_users: {
         Args: { search_term: string }
