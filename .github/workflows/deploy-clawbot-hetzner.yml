@@ -18,30 +18,40 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+
+    env:
+      HETZNER_IP: 178.105.183.74
+      HETZNER_PASS: ${{ secrets.HETZNER_ROOT_PASSWORD }}
+      GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install ssh tools
+      - name: Install sshpass + setup known_hosts
         run: |
           sudo apt-get install -y sshpass
           mkdir -p ~/.ssh
-          ssh-keyscan -H 178.105.183.74 >> ~/.ssh/known_hosts 2>/dev/null || true
+          chmod 700 ~/.ssh
+          ssh-keyscan -p 22 -H "$HETZNER_IP" > ~/.ssh/known_hosts 2>/dev/null
+          cat ~/.ssh/known_hosts | wc -l
+          echo "Host key captured"
 
-      - name: Copy bootstrap script to Hetzner
-        env:
-          HETZNER_PASS: ${{ secrets.HETZNER_ROOT_PASSWORD }}
+      - name: Upload bootstrap script via SSH pipe
         run: |
-          chmod +x polymarket-worker/scripts/hetzner-bootstrap.sh
-          sshpass -p "$HETZNER_PASS" scp -o StrictHostKeyChecking=no \
-            polymarket-worker/scripts/hetzner-bootstrap.sh \
-            root@178.105.183.74:/root/hetzner-bootstrap.sh
+          sshpass -p "$HETZNER_PASS" ssh \
+            -o StrictHostKeyChecking=yes \
+            -o PasswordAuthentication=yes \
+            -o PubkeyAuthentication=no \
+            root@$HETZNER_IP \
+            "mkdir -p /root && cat > /root/hetzner-bootstrap.sh && chmod +x /root/hetzner-bootstrap.sh && echo 'Script uploaded OK'" \
+            < polymarket-worker/scripts/hetzner-bootstrap.sh
 
-      - name: Run bootstrap on Hetzner
-        env:
-          HETZNER_PASS: ${{ secrets.HETZNER_ROOT_PASSWORD }}
-          GH_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
+      - name: Execute bootstrap on Hetzner
         run: |
-          sshpass -p "$HETZNER_PASS" ssh -o StrictHostKeyChecking=no \
-            root@178.105.183.74 \
-            "chmod +x /root/hetzner-bootstrap.sh && bash /root/hetzner-bootstrap.sh '$GH_TOKEN'"
+          sshpass -p "$HETZNER_PASS" ssh \
+            -o StrictHostKeyChecking=yes \
+            -o PasswordAuthentication=yes \
+            -o PubkeyAuthentication=no \
+            root@$HETZNER_IP \
+            "bash /root/hetzner-bootstrap.sh '$GH_TOKEN' 2>&1"
