@@ -56,7 +56,7 @@ export default function ShreemBrzeePerformance() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      let query = supabase
+      let query = (supabase as any)
         .from('shreem_brzee_signals')
         .select('*')
         .order('created_at', { ascending: false })

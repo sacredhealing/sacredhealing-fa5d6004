@@ -1031,7 +1031,7 @@ function FomoCopyBotInner() {
       const effectiveRisk = fixedAmt > 0
         ? fixedAmt / (paperRef.current.portfolio || startingSOL) // convert fixed SOL → fraction
         : riskPct / 100;
-      const result = paperRef.current.execute({ ...trade, symbol: cachedSymbol }, effectiveRisk, label, slippageRef.current, whaleMultiplier);
+      const result: any = paperRef.current.execute({ ...trade, symbol: cachedSymbol }, effectiveRisk, label, slippageRef.current, whaleMultiplier);
       // Track open positions for live dashboard display
       if (result && !result.skipped && !result.failed) {
         if (trade.action === 'BUY') {
