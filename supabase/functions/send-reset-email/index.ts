@@ -31,7 +31,7 @@ function isLocalIp(ip: string): boolean {
   return !ip || ip === "127.0.0.1" || ip === "::1" || ip.startsWith("192.168.") || ip.startsWith("10.") || ip.startsWith("172.");
 }
 
-const RESET_LINK = "https://siddhaquantumnexus.com/reset-password";
+const RESET_REDIRECT = "https://siddhaquantumnexus.com/reset-password";
 
 const templates: Record<string, { subject: string; greeting: string; cta: string; body: string; footer: string }> = {
   sv: {
