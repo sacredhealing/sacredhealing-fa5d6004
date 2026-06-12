@@ -486,10 +486,12 @@ const Auth: React.FC = () => {
                         }
                         setResetSending(true);
                         try {
-                          const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-                            redirectTo: `${window.location.origin}/reset-password`,
+                          const lang = (typeof navigator !== 'undefined' && navigator.language) || 'en';
+                          const { data, error } = await supabase.functions.invoke('send-reset-email', {
+                            body: { email: resetEmail, language: lang },
                           });
                           if (error) throw error;
+                          if (data?.error) throw new Error(data.error);
                           setResetSent(true);
                           toast({ title: '✉ Reset link sent', description: 'Check your inbox.' });
                         } catch (err: any) {
