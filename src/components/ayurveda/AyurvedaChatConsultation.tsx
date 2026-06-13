@@ -658,6 +658,9 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
     } finally {
       setIsLoading(false);
       setStreamingAssistant(null);
+      // Sync DB state after stream — replaces optimistic assistant msg with real persisted record
+      // This prevents the "connect then black" race condition
+      refreshMessages().catch(() => {});
     }
   };
 
