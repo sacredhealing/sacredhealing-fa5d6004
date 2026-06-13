@@ -741,9 +741,9 @@ function ModuleCard({ mod, userTier }: { mod: Module; userTier: string }) {
 
 export default function KayakalpaAcademy() {
   const navigate = useNavigate();
-  const { membership } = useMembership();
+  const { tier, isAdmin } = useMembership();
   const [filter, setFilter] = useState('all');
-  const userTier = (membership?.tier as string) ?? 'free';
+  const userTier: string = isAdmin ? 'akasha' : (tier ?? 'free');
   const totalLessons = MODULES.reduce((s, m) => s + m.lessons.length, 0);
   const displayed = filter === 'all' ? MODULES : MODULES.filter(m => m.tier === filter);
 
