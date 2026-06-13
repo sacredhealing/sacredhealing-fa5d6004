@@ -10,11 +10,6 @@ import { useAdminRole } from '@/hooks/useAdminRole';
 import { useMembership } from '@/hooks/useMembership';
 import { getSalesPageForRank, getTierRank } from '@/lib/tierAccess';
 
-interface Lesson { title: string; content: string; }
-interface Module { num: string; title: string; desc: string; lessons: Lesson[]; }
-interface TierSection { tier: number; label: string; subtitle: string; icon: string; color: string; border: string; glow: string; modules: Module[]; }
-
-const CURRICULUM: TierSection[] = [
 
 
 const g  = (a: number) => `rgba(212,175,55,${a})`;
