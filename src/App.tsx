@@ -3,6 +3,7 @@
 import React, { Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 const PolymarketOracle = React.lazy(() => import("@/pages/PolymarketOracle"));
+import NadiLeaf from "@/pages/NadiLeaf";
 import { Toaster } from "@/components/ui/toaster";
 import { setNavigator } from "@/utils/navigation";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -398,7 +399,8 @@ function AppRoutes() {
                   <Route path="/yagna" element={<YagnyaModule />} />
                   <Route path="/yogananda-codex" element={<YoganandaCodex />} />
                   <Route path="/sacred-water" element={<SiddhaWaterAlchemy />} />
-                  <Route path="/palm-oracle" element={<PalmOracle />} />
+                  <Route path="/nadi-leaf" element={<NadiLeaf />} />
+              <Route path="/palm-oracle" element={<PalmOracle />} />
                   <Route path="/shakti-alchemy" element={<SovereignHormonalAlchemy />} />
                   <Route path="/mantra-reference" element={<SiddhaMantraReference />} />
                   <Route path="/practice-journal" element={<SiddhaQuantumPracticeJournal />} />
