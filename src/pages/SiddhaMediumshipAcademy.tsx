@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMembership } from '@/hooks/useMembership';
 import { useAdminRole } from '@/hooks/useAdminRole';
 
 const gold   = (a: number) => `rgba(212,175,55,${a})`;
 const white  = (a: number) => `rgba(255,255,255,${a})`;
-const violet = (a: number) => `rgba(167,139,250,${a})`;
 
 const TIER_META = {
   free:   { label:'FREE · SEEKER',      color: white(0.55),  glow: white(0.08),              badge:'⬡', price: null },
