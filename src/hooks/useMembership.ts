@@ -103,6 +103,16 @@ export const useMembership = () => {
     setStatus({ ...initial, loading: true });
     setSettled(false);
 
+    // FIX 2026-06-13: 10s safety timeout — settled=true with cached/free if DB is slow
+    // Prevents users seeing locked chat due to membership query stall
+    const safetyTimer = setTimeout(() => {
+      if (mountedRef.current) {
+        console.warn('[useMembership] timeout — settling with cached/free');
+        setStatus(s => ({ ...s, loading: false }));
+        setSettled(true);
+      }
+    }, 10000);
+
     try {
       const [adminRes, membershipRes] = await Promise.all([
         supabase.rpc('has_role', {
@@ -157,6 +167,7 @@ export const useMembership = () => {
       if (!mountedRef.current) return;
       setStatus({ ...initial, loading: false });
     } finally {
+      clearTimeout(safetyTimer);
       if (mountedRef.current) setSettled(true);
     }
   }, [authLoading, user]);
