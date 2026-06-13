@@ -752,9 +752,7 @@ const JyotishChamber: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [calcLoading, setCalcLoading] = useState(false);
   const [birthDialogOpen, setBirthDialogOpen] = useState(false);
-  const [chatMessages, setChatMessages] = useState<Array<{role:'user'|'oracle', text:string}>>([
-    { role: 'oracle', text: "I sense your presence across the ages. I have many leaves before me — your soul's record is vast. To find your leaf and open the Akashic channel, tell me your birth name, date, and place of birth." }
-  ]);
+  const [chatMessages, setChatMessages] = useState<Array<{role:'user'|'oracle', text:string}>>([]);
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
   const [oracleOpen, setOracleOpen] = useState(true);
