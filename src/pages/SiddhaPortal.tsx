@@ -504,7 +504,7 @@ export default function SiddhaPortal() {
       >
         <HeroCard
           emoji="👁" label="8 Modules · 30 Transmissions · Siddha"
-          title={<>Siddha Mediumship<br /><span style={{ color: gold(0.92) }}>Academy</span></> as unknown as string}
+          title="Siddha Mediumship Academy"
           desc="The world's most comprehensive mediumship education — rooted in the living technology of the 18 Tamil Siddhas. Third Eye activation, Loka maps, ancestor communication, Deva contact, Akashic Record access, and Siddhi development."
           tiers={[{ l: 'Free · M1–2', c: white(0.5) }, { l: 'Prana · M3–4', c: green(0.85) }, { l: 'Siddha · M5–6', c: violet(0.9) }, { l: 'Akasha · M7–8', c: gold(0.95) }]}
           cta="Enter the Akasha Transmission" href="/siddha-mediumship-academy" accentColor={violet(0.9)} badge="LIVE"
