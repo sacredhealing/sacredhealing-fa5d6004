@@ -145,7 +145,16 @@ export const useMembership = () => {
         .limit(1)
         .maybeSingle();
 
-      const grantTier = (grant as any)?.tier || (grant as any)?.access_id || null;
+      // FALLBACK: profiles.membership_tier — this is set by Stripe webhook + manual grants
+      // Catches all users who have tier set in profiles but not in user_memberships
+      const { data: profileRow } = await supabase
+        .from('profiles')
+        .select('membership_tier')
+        .eq('id', user.id)
+        .maybeSingle();
+      const profileTier = (profileRow as any)?.membership_tier ?? null;
+
+      const grantTier = (grant as any)?.tier || (grant as any)?.access_id || profileTier || null;
       const bestTier = isAdmin
         ? 'akasha-infinity'
         : [tierSlug, grantTier || 'free'].sort((a: string, b: string) => getTierRank(b) - getTierRank(a))[0];
