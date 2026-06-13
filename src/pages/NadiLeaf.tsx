@@ -316,44 +316,52 @@ function ThumbBiometricScanner({
 }
 
 // ── LESSON MODAL ─────────────────────────────────────────────────────────────
+function renderBody(bodyText: string) {
+  const paras = bodyText.split('\n\n');
+  return paras.map((para, i) => {
+    const colonIdx = para.indexOf(':');
+    const isHeading = colonIdx > 0 && colonIdx < 60 && para.slice(0, colonIdx) === para.slice(0, colonIdx).toUpperCase();
+    if (isHeading) {
+      const head = para.slice(0, colonIdx);
+      const rest = para.slice(colonIdx + 1);
+      return (
+        <div key={i} style={{ marginBottom: 20 }}>
+          <div style={{ color: GOLD, fontWeight: 800, fontSize: 11, letterSpacing: '0.12em', marginBottom: 6 }}>{head.trim()}</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 1.8 }}>{rest.trim()}</div>
+        </div>
+      );
+    }
+    return <p key={i} style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 1.8, marginBottom: 16 }}>{para}</p>;
+  });
+}
+
 function LessonModal({ lesson, onClose }: { lesson: NadiLeafLesson; onClose: () => void }) {
   const tc = TIER_COLOR[lesson.tier];
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(5,5,5,0.96)', zIndex: 900, overflowY: 'auto', padding: '20px 16px' }}>
+    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, minHeight: '100vh', background: '#050505', zIndex: 900, padding: '20px 16px 60px' }}>
       <div style={{ maxWidth: 680, margin: '0 auto' }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
           <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.4em', color: tc }}>{lesson.tierLabel} · MODULE {lesson.module}</span>
-          <button onClick={onClose} style={{ background: GLASS, border: `1px solid ${BORDER}`, borderRadius: 99, padding: '8px 18px', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.2em' }}>← BACK</button>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 99, padding: '8px 18px', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.2em' }}>← BACK</button>
         </div>
 
-        <div style={{ background: GLASS, border: `1px solid ${BORDER}`, borderRadius: 40, padding: '32px 28px' }}>
+        <div style={{ border: '1px solid rgba(255,255,255,0.06)', borderRadius: 32, padding: '28px 20px' }}>
           <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.35em', color: tc, marginBottom: 8 }}>{lesson.siddha}</div>
-          <div style={{ fontSize: 26, fontWeight: 900, color: '#fff', letterSpacing: '-0.03em', marginBottom: 8, lineHeight: 1.2 }}>{lesson.title}</div>
+          <div style={{ fontSize: 24, fontWeight: 900, color: '#fff', letterSpacing: '-0.03em', marginBottom: 8, lineHeight: 1.2 }}>{lesson.title}</div>
           <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.35em', color: 'rgba(255,255,255,0.3)', marginBottom: 24 }}>{lesson.duration} TRANSMISSION</div>
 
           <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)', lineHeight: 1.7, marginBottom: 28 }}>{lesson.overview}</p>
 
           {/* Quote */}
-          <div style={{ borderLeft: `2px solid ${GOLD}`, paddingLeft: 20, marginBottom: 28, opacity: 0.85 }}>
+          <div style={{ borderLeft: '2px solid ' + GOLD, paddingLeft: 20, marginBottom: 28 }}>
             <p style={{ fontSize: 14, fontStyle: 'italic', color: 'rgba(255,255,255,0.75)', lineHeight: 1.7, marginBottom: 8 }}>"{lesson.quote}"</p>
             <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.3em', color: GOLD }}>— {lesson.quoteSource}</p>
           </div>
 
           {/* Body */}
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.8, marginBottom: 28 }}>
-            {lesson.bodyText.split('\n\n').map((para, i) => {
-              if (para.startsWith('THE ') || para.match(/^[A-Z\s']+:/)) {
-                const [head, ...rest] = para.split(':');
-                return (
-                  <div key={i} style={{ marginBottom: 18 }}>
-                    <span style={{ color: GOLD, fontWeight: 800, fontSize: 11, letterSpacing: '0.1em' }}>{head.trim()}</span>
-                    {rest.length > 0 && <span>: {rest.join(':')}</span>}
-                  </div>
-                );
-              }
-              return <p key={i} style={{ marginBottom: 16 }}>{para}</p>;
-            })}
+          <div style={{ marginBottom: 28 }}>
+            {renderBody(lesson.bodyText)}
           </div>
 
           {/* Mantra */}
