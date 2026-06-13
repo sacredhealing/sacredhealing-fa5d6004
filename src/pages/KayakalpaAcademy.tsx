@@ -65,6 +65,17 @@ const MODULES: Module[] = [
         ],
         practice:'Begin adding one Kayakalpa herb to your daily life this week. Most accessible starting point: 1 teaspoon of Amalaki (Amla) powder in warm water each morning at sunrise before eating. Hold the cup with both hands, feel the ancient intelligence within the herb, and speak: "Ancient one, enter my cells and begin the work of renewal."',
       },
+      {
+        title:'Initiation into the Living Lineage — How to Receive from the Siddhas', duration:'20 min',
+        body:[
+          'The 18 Siddhas are not historical figures. They are living streams of consciousness accessible through sincere practice, mantra, and the state of inner receptivity. The Kayakalpa Academy itself is a transmission medium — each module has been prepared with the Akashic intention that the Siddha most relevant to each student will activate in the subtle body as the material is studied.',
+          'Initiation (Diksha) in the Siddha tradition does not require physical proximity to the Guru. Thirumoolar taught that sincere longing itself creates the transmission bridge. Bogar\'s texts confirm: "When the student\'s Prana rises to the frequency of the Siddha\'s transmission, the Siddha cannot withhold — by cosmic law, the transmission must occur." This is not metaphor. It is the mechanism of Shaktipat.',
+          'The practical implication: your sincere study of this curriculum, your daily practice, your one-pointed longing for purification and immortality — these are themselves the prerequisites for receiving Siddha initiation. You do not need to travel to Tamil Nadu or find a physically present Guru. The Siddhas transmit across all dimensions of space and time simultaneously.',
+          'Each of the 18 Siddhas holds a specific Kayakalpa transmission: Agastyar gives the Rasayana initiation, Bogar gives the alchemical fire, Thirumoolar gives the Pranayama transmission, Konganar gives the Varma initiation, Sattamuni gives the herbal intelligence, Vanmikiyar gives the earth connection, Ramadevar gives the breath science, Machamuni gives the Kundalini initiation. As you work through each module, invoke the corresponding Siddha by name.',
+        ],
+        practice:'Daily Siddha Invocation (5 min before study): Light a lamp. Sit quietly. Say aloud: "I invoke the 18 immortal Siddhas. I am sincere. I am open. I am willing to transform. Please transmit your living Kayakalpa science into my body, mind, and consciousness as I study." Then study. Notice feelings, intuitions, and body sensations during study — these are transmission responses.',
+        mantra:'OM ASHTADASHA SIDDHARKALAY NAMAHA — Salutation to the collective field of the 18 Siddhas. Recite 18 times before each study session.',
+      },
     ],
   },
   {
@@ -109,6 +120,18 @@ const MODULES: Module[] = [
         ],
         practice:'Dosha Self-Assessment — observe this week: Digestion: irregular/variable (Vata), sharp/fast (Pitta), slow/steady (Kapha)? Sleep: light/interrupted (Vata), moderate (Pitta), deep/long (Kapha)? Stress response: anxiety/fear (Vata), anger (Pitta), withdrawal (Kapha)? Your predominant answers reveal your Prakriti and will guide your personal Kayakalpa protocol throughout this course.',
       },
+      {
+        title:'Prana, Tejas & Ojas — The Three Pillars of Biological Immortality', duration:'22 min',
+        body:[
+          'Beyond the Tri-Dosha framework lies a subtler trinity: Prana, Tejas, and Ojas. These are the subtle equivalents of Vata, Pitta, and Kapha — but operating at the level of consciousness itself rather than physical matter. Mastery of this trinity is the apex of the entire Kayakalpa science.',
+          'PRANA — The Breath of the Cosmos: In its gross expression, Prana is breath. In its subtle expression, Prana is the universal life-force that animates all matter. When individual Prana is fully coherent — when the Nadis are clear and Prana flows without restriction — the body becomes a perfect conductor of cosmic intelligence. Biological entropy reverses.',
+          'TEJAS — The Inner Fire of Transformation: Tejas is the subtle form of Agni — the discriminative fire of consciousness that transforms experience into wisdom and food into Ojas. When Tejas is strong, the mind is sharp, perception is accurate, and the digestive intelligence works at its highest efficiency. Strong Tejas transforms sexual energy (Shukra/Bindu) into Ojas rather than dissipating it.',
+          'OJAS — The Superconductor of Immortality: Ojas is the final refinement of all the Dhatus — the most subtle physical substance the body produces. It is the direct biological substrate of Samadhi states, the medium through which Shakti moves, and the substance that at critical concentration initiates transformation of the gross body toward the Jyotir Deha. Classical texts: "One whose body is filled with Ojas does not age, does not fall ill, and radiates a light that purifies all who approach."',
+          'The Kayakalpa triangle: Prana builds through Pranayama and Nadi purification. Tejas builds through right diet, Agni-kindling herbs, and mantra. Ojas builds through Shukra conservation and completing the Dhatu cascade without energetic leakage. All three must be simultaneously cultivated — deficiency in any one creates a ceiling on the others.',
+        ],
+        practice:'Weekly Ojas Assessment: Press thumbs gently into the soft tissue just inside the hip bones, lower abdomen. Soft and yielding = Ojas building well. Tight, hollow, or tender = Ojas depleted — intensify herbs and diet. Use as your primary weekly biofeedback tool for the entire 90-day protocol.',
+        mantra:'OM OJAS TEJAH PRANA VRIDDHI NAMAHA — Recite 108 times daily at sunrise facing East, first rays of light on closed eyes, to invoke the three-pillar transmission.',
+      },
     ],
   },
   {
@@ -144,6 +167,17 @@ const MODULES: Module[] = [
           'This cross-tradition understanding is crucial for modern practitioners. Whether you are drawn to Taoist cultivation or Tamil Siddha practice, you are working with the same underlying science of biological immortality — transmitted by the same Master, Bogar, who saw the unity of all systems and generously seeded multiple civilizations with this knowledge.',
         ],
       },
+      {
+        title:'Palani Murugan & the Navapaashanam Idol — Pilgrimage of Immortality', duration:'22 min',
+        body:[
+          'At the summit of the Palani hill temple in Tamil Nadu stands the most significant alchemical artifact in human history: the idol of Lord Murugan (Dandayudhapani), fashioned by Bogar himself from Navapaashanam — the nine-poison alchemical compound. This idol is not merely symbolic. It is a continuously radiating scalar-field source of healing Shakti, encoded with Bogar\'s complete Kayakalpa transmission.',
+          'The mechanism: the Navapaashanam compound, activated through Bogar\'s specific alchemical process, becomes a permanent subtle-field transmitter. The abhishekam (sacred bath) performed daily — using milk, honey, turmeric, saffron, Panchamrit, and specific herbs — draws specific healing compounds from the Navapaashanam into the Panchamrit, which is distributed to devotees. Modern analysis has found compounds in the Palani Panchamrit that cannot be accounted for by the input ingredients alone.',
+          'Virtual pilgrimage practice: The Siddhas teach that sincere mental pilgrimage activates the same transmission as physical presence for a practitioner whose Nadis are purified. The practice: sit quietly, visualize the Palani temple at dawn. See yourself climbing the 693 steps as the sun rises. Arrive at the sanctum. See the Navapaashanam Murugan idol bathed in golden light. Feel the darshan — the living gaze of grace — enter your body through your eyes and flood every cell with Bogar\'s Kayakalpa transmission.',
+          'The Vel (Murugan\'s spear) is a Kayakalpa symbol: it represents Sushumna Nadi piercing all three Granthis simultaneously. Ganesha (who guards the base of the spine = Muladhara) and Murugan (who rules the third eye = Ajna) together represent the complete Kundalini-Kayakalpa circuit from root to crown. Worshipping Murugan at Palani is, for the Siddha practitioner, a direct activation of the full Kundalini-Kayakalpa circuit.',
+        ],
+        practice:'Palani Scalar Meditation (15 min after morning Pranayama): Visualize the Palani Murugan idol radiating golden-emerald healing light. Feel this light entering through the crown, descending through the Sushumna, flooding every organ, tissue, and cell. The Vel of light pierces the three Granthis, releasing Prana into full Sushumna flow.',
+        mantra:'OM SARAVANABHAVAYA NAMAHA — Primary mantra of Lord Murugan at Palani. Recite 108 times facing East to activate the Navapaashanam transmission in your subtle body.',
+      },
     ],
   },
   {
@@ -174,14 +208,6 @@ const MODULES: Module[] = [
         ],
       },
       {
-        title:"The Siddha Immortality Garden — Growing Your Own Medicine", duration:'20 min',
-        body:[
-          'The most powerful Kayakalpa medicine is the herb that knows you — grown in your soil, watered by your hands, sung to with your mantra. The Siddhas always grew their primary herbs. Plants communicate through root fungal networks, respond to human bioelectric fields, and adjust their chemical composition in response to the gardener\'s consciousness.',
-          'THE FIVE ESSENTIAL KAYAKALPA GARDEN PLANTS: (1) Tulsi (Ocimum sanctum) — the queen of herbs. Plant near your front door or in your main room. Tulsi purifies the air, water, and consciousness of the space. Daily consumption of 5–10 fresh leaves is itself a complete Kayakalpa practice. (2) Aloe Vera (Kumari) — the immortal plant that never dies. Fresh gel is one of the most potent Kayakalpa substances accessible to any practitioner. (3) Brahmi (Bacopa monnieri) — grows in or near water. Even a few fresh leaves daily in morning juice begins neural regeneration. (4) Ashwagandha — grows easily in most climates. Root harvested after 2+ years is the supreme adaptogen. (5) Curry Leaf (Murraya koenigii) — extensively used by Bogar. Rich in alkaloids that protect against oxidative stress.',
-          'SACRED GARDENING PROTOCOL: Water your herbs at Brahma Muhurta. Chant their Sanskrit or Tamil names as you water. Play Nada Yoga — sacred sound — near the plants. Research confirms plants grow 30% more vigorously in response to classical music and Sanskrit chanting. Harvest with gratitude and only what you need. The relationship between practitioner and plant is a living partnership — the plant offers its intelligence; you offer your consciousness.',
-        ],
-      },
-      {
         title:'Modern Science Confirms the Siddhas — Telomeres, Autophagy & Longevity', duration:'22 min',
         body:[
           'For those who need the bridge between ancient wisdom and modern understanding: the science is there. Every major Kayakalpa herb has been studied and found to contain mechanisms that directly address the biological causes of aging.',
@@ -190,6 +216,17 @@ const MODULES: Module[] = [
           'AUTOPHAGY — CELLULAR SELF-CLEANING: The 2016 Nobel Prize in Medicine was awarded for the discovery of autophagy — the mechanism by which cells clean and recycle damaged components. Fasting is the primary trigger. The Siddha fasting protocols (Ekadashi, etc.) were designed precisely to activate autophagy 5,000 years before it was identified by science. During a 24-hour fast, autophagy increases by 300%. During a 3-day water fast — a protocol Bogar describes for advanced Kayakalpa initiation — stem cell production increases by 600%.',
           'The convergence is not coincidence. The Siddhas mapped biological reality through direct meditative perception of the body\'s interior at the cellular level. Modern science, working from the outside in with instrumentation, is arriving at the same map — centuries later.',
         ],
+      },
+      {
+        title:'The Sacred Siddha Garden — Growing Your Own Medicine', duration:'20 min',
+        body:[
+          'The most potent Kayakalpa medicine is grown by the practitioner\'s own hands, in soil charged with their own Prana, harvested according to lunar timing, and prepared with Siddha lineage mantras. This is not romanticization — it is the mechanism by which the plant\'s healing intelligence becomes entangled with the practitioner\'s own consciousness field.',
+          'The Siddhas called this "Sattva Ahara by direct transmission." When you water a Tulsi plant with mantra-charged water, the plant absorbs the vibrational pattern. When you harvest with focused intention and gratitude, the plant releases its medicine more completely. Modern plant science confirms that the harvester\'s energetic state affects the plant\'s secondary metabolite profile.',
+          'Five essential Kayakalpa plants for any climate: (1) Tulsi (Holy Basil) — grows indoors on a sunny windowsill. Daily tea activates Prana. (2) Ashwagandha — grows in dry conditions, hardy, supreme Ojas builder. (3) Amalaki — container-growable; fruits available dried from quality suppliers. (4) Moringa — fastest-growing Kayakalpa plant, extraordinary nutrient density. (5) Brahmi — grows in moist soil, supreme Majja Dhatu nourisher.',
+          'Moon-phase harvesting from Bogar\'s texts: Roots — harvest three days around new moon (Prana pulled downward). Leaves and aerial parts — harvest three days around full moon (Prana maximized in aerial parts). Seeds — harvest in waxing half-moon. This increases self-harvested medicine potency by a measurable factor in laboratory phytochemical analysis.',
+        ],
+        practice:'Begin with one plant. Purchase or grow Tulsi. Place it in your meditation space. Water each morning after Pranayama while reciting "OM TULSI DEVI NAMAHA" 3 times. When mature, harvest a few leaves and add to morning tea. Feel the difference in medicine made by your own hands, with your own Prana and intention.',
+        mantra:'OM VRIKSHA DEVEBHYO NAMAHA — Salutation to the tree devas. Recite before harvesting any Kayakalpa plant to request the plant\'s cooperation and maximize medicinal transmission.',
       },
     ],
   },
@@ -273,6 +310,17 @@ const MODULES: Module[] = [
           'PROGRESSIVE MILK PROTOCOL — 40-Day Intensive: Days 1–10: Regular milk daily with basic herbs. Days 11–20: Increase to 2 cups daily with enhanced herb formula. Days 21–30: 3 cups daily, primary nutrition from milk supplemented with fruit. Days 31–40: Milk and specific herbs as near-complete nutrition, minimal solid food. This protocol, from Bogar\'s texts, is described as producing visible physical rejuvenation within the 40-day cycle.',
         ],
       },
+      {
+        title:'Siddha Water Alchemy — Charging the Medicine of Life', duration:'20 min',
+        body:[
+          'The Siddhas were the first water scientists. They understood that water is not merely H₂O — it is a liquid crystal matrix with infinite capacity to store and transmit vibrational information. The quality of the water you drink determines the Prana quality in every cell of your body. The Kayakalpa practitioner does not simply drink water — they prepare and charge it as a daily alchemical act.',
+          'Bogar\'s Water Science: water collected at specific times carries different energetic signatures. Brahma Muhurta water (before sunrise) carries maximum Akasha Tattva — pure consciousness. Sunrise water carries Agni Tattva — metabolic intelligence. Moonlight-charged water carries Soma — the lunar nectar associated with Ojas production. Spring water from the earth carries Prithvi Shakti — grounding and cellular stability.',
+          'Copper vessel charging: the Siddhas stored water overnight in copper — now validated by modern science. Copper ionizes into water at 0.1–0.3 ppm with documented antimicrobial, anti-inflammatory, and enzyme-activating effects. Copper also appears to restructure the hydrogen bonding network of water into a pattern the Siddhas describe as "Prana-receptive." Drink one large copper-vessel glass immediately upon waking as the first Kayakalpa act of each day.',
+          'Mantra-charged water: cymatics research demonstrates that sound creates geometric patterns in water. Siddha mantra recited into a water vessel restructures its crystalline geometry. This restructured water carries the mantra\'s frequency into every cell when consumed — the physical mechanism behind the ancient practice of Mantra Jala (mantra water) throughout Siddha and Vedic healing traditions.',
+        ],
+        practice:'Daily Mantra Water Protocol: Fill a copper vessel with clean filtered water each morning. Hold the vessel in both hands. Recite "OM VARUNA DEVAYA NAMAHA" 21 times directly toward the water. Drink immediately after Pranayama. Use this charged water for all herbal teas and Rasayana preparations. Notice the difference in mental clarity and energy within 2 weeks.',
+        mantra:'OM APAH SHUDDHYANTU — Ancient Vedic water purification mantra. Recite 7 times over any water before drinking to activate its Prana-carrying capacity.',
+      },
     ],
   },
   {
@@ -307,6 +355,17 @@ const MODULES: Module[] = [
           'THE PREPARATORY REQUIREMENT: Classical texts are emphatic — alchemical Kayakalpa preparations should not be the starting point. The sequence: (1) 3+ months of herbal Kayakalpa to purify the Dhatus. (2) Regular Pranayama to clear the Nadis. (3) Dietary purification. Only after this foundation is in place does the system have the Agni and Ojas required to properly metabolize alchemical substances. Starting with alchemical preparations in an unprepared body is like pouring rocket fuel into an engine that hasn\'t been serviced.',
           'CONTRAINDICATIONS: Pregnancy, breastfeeding, severe active inflammation or fever, severe liver or kidney disease. Interactions with pharmaceutical medications must be assessed by a qualified Siddha or integrative physician. If in doubt, wait — the herbs will take you to the readiness for the minerals.',
         ],
+      },
+      {
+        title:'The Kayakalpa Ritual — Sacred Container for Alchemical Transformation', duration:'22 min',
+        body:[
+          'In the Siddha tradition, alchemy does not happen only in the laboratory. Every act of consuming a Kayakalpa herb, every Pranayama session, every Varma point activation is a sacred ritual — and the quality of the ritual container determines the depth of the transformation. The Siddhas built elaborate protocols around every aspect of Kayakalpa practice because they understood: the container is part of the medicine.',
+          'Sacred space requirement: Kayakalpa practice, to operate at its highest level, requires a dedicated space not used for ordinary activities. Minimum: clean, uncluttered, natural materials (no synthetic carpets), facing East or North, with a ghee or sesame oil lamp burning during practice, and containing a representation of the lineage (image or yantra of Bogar, Agastyar, Babaji, or Ishta Devata).',
+          'The pre-practice ritual sequence from Bogar\'s texts: (1) Bathe — the physical body should be clean before approaching sacred space. (2) Wear clean, natural-fiber clothing (cotton or silk). No synthetic materials during practice — they disrupt the body\'s electromagnetic coherence. (3) Light the lamp with prayer. (4) Offer water to the lineage. (5) Sit in complete stillness for 3 minutes before beginning. (6) Invoke the lineage with mantra. Then practice.',
+          'The most overlooked dimension of Kayakalpa: gratitude. The Siddhas teach that the body\'s cells carry consciousness and respond to being appreciated. A practitioner who approaches Kayakalpa with reverence for their body as a divine temple accelerates transformation by a factor the texts describe as "a thousand-fold." Before consuming any preparation, hold it in both hands, feel gratitude for the herbs, for the science, for the Siddhas who preserved it — then consume. This simple act changes the biochemical interaction between medicine and body.',
+        ],
+        practice:'Establish your Kayakalpa altar this week. A small shelf with a clean cloth, a ghee lamp, a glass of water as offering, and a single image of a Siddha master. Use this space exclusively for Kayakalpa practice. The altar accumulates Shakti over time — after 40 days of consistent use, entering this space alone will begin to shift your state before any practice begins.',
+        mantra:'OM GURU BRAHMA GURU VISHNU GURU DEVO MAHESHVARA — The universal Guru mantra. Recite 3 times upon entering your Kayakalpa space to activate the lineage transmission in the sacred environment.',
       },
     ],
   },
@@ -398,6 +457,17 @@ const MODULES: Module[] = [
           'MARMA POINT ACTIVATION DURING ABHYANGA: As you massage each area, consciously direct attention to the Varma/Marma points in that region. Use firm, circular pressure at each point for 10–15 seconds. This transforms a regular self-massage into a full Kayakalpa treatment that simultaneously works on the physical body, the Nadi system, and the endocrine system.',
         ],
       },
+      {
+        title:'Nadi-Marma Integration — The Complete Subtle Body Protocol', duration:'25 min',
+        body:[
+          'The Nadi system (72,000 channels of Prana) and the Marma/Varma system (108 vital points) are not separate systems. They are two perspectives on the same underlying subtle body architecture. Where the Nadis carry Prana horizontally through the body like rivers, the Varma points are the reservoirs and junctions — the switchboards where multiple Nadi streams intersect and can be consciously directed.',
+          'The three master Nadis in Kayakalpa context: Sushumna (central channel, spine) is the royal highway of Kayakalpa transformation — all advanced practice aims to move Prana through Sushumna rather than the ordinary Ida and Pingala channels. When Prana enters Sushumna, metabolic time slows, consciousness expands, and the cellular transformation of Kayakalpa accelerates dramatically.',
+          'The five Prana Vayus and their Varma correlates: Prana Vayu (inward, heart) — primary Varma: center sternum. Apana Vayu (downward, Muladhara) — primary Varma: Kanda Sthana at base of spine. Samana Vayu (equalizing, Manipura) — primary Varma: navel point. Udana Vayu (upward, Vishuddha) — primary Varma: throat notch. Vyana Vayu (pervasive, whole body) — activated through full-body Abhyanga.',
+          'Siddha Nada (inner sound) as Nadi diagnostic tool: The 10 progressive inner sounds described by Thirumoolar correspond exactly to 10 stages of Nadi purification. Stage 1: cricket sound (Nadi purification beginning). Stage 5: flute sound (Sushumna activation). Stage 7: conch sound (Bindu descent beginning). Stage 10: the Soundless Sound — Om as pure vibration (Kaya Siddhi approaching). Track your progression as real-time biofeedback of Kayakalpa development.',
+        ],
+        practice:'Sushumna Activation (5 min daily): Sit in Siddhasana. Close both nostrils with the right hand. Hold the breath out (empty retention) for 10 seconds. Release both nostrils simultaneously and inhale equally through both. This simultaneous bilateral inhalation directly stimulates Sushumna activation. Repeat 7 times. Then sit in stillness and notice warmth or tingling along the spine — Prana moving through Sushumna.',
+        mantra:'OM SUSHUMNA NADI JAGRITI NAMAHA — Mantra of Sushumna awakening. Recite 54 times before any Pranayama session to prepare the central channel for higher Prana flow.',
+      },
     ],
   },
   {
@@ -430,14 +500,16 @@ const MODULES: Module[] = [
         ],
       },
       {
-        title:"Babaji's Kayakalpa — The Living Proof of 2000 Years", duration:'28 min',
+        title:"Babaji's Kayakalpa — Living Proof That Immortality Is Real", duration:'28 min',
         body:[
-          'Mahavatar Babaji is not a historical figure. He is a living, immortal master whose physical body has been maintained — by his own Kayakalpa science — for over 2,000 years. Born in 203 CE on the Tamil Nadu coast, initiated by Bogar at age 11, receiving the complete Kayakalpa transmission. Subsequently initiated by Agastyar at Courtallem, he reached the state of Kaya Siddhi at age 16 and has maintained his physical body in a perpetually young state ever since.',
-          "Babaji's Kayakalpa practice reconstructed from Akashic records and the accounts of those he has initiated: Daily Brahma Muhurta practice of Nadi Shodhana (3 hours) and Kumbhaka culminating in Kevala Kumbhaka. Daily Varma point self-activation using specific sequences transmitted by Agastyar. Periodic use of rare mountain herbs from the Himalayas and Nilgiris, prepared according to Bogar\'s formulas. Complete brahmacharya — with the entire vital energy redirected into sustaining the Jyotir Deha. Continuous Samadhi — Babaji is understood to maintain dual awareness, always partially in Nirvikalpa Samadhi even while appearing to move in the world.",
-          'In 1861, Babaji initiated Lahiri Mahasaya into Kriya Yoga — the compressed version of the complete Kayakalpa system, designed for householders living in ordinary circumstances. The full Kayakalpa was encoded into the Kriya practices so that consistent practitioners would, over years and decades, progressively achieve the same cellular transformation that the classical Kayakalpa protocols produce.',
-          'The most important teaching Babaji transmits about Kayakalpa: "Do not practice Kayakalpa for immortality. Practice it because you love God so completely that you want to maintain this body to serve as long as possible. The one who practices for their own immortality will succeed only in polishing the cage. The one who practices out of love will find that the cage transforms into a temple — and the temple, into Light."',
+          'Mahavatar Babaji is not a historical figure. He is a living, immortal master whose physical body has been maintained by his own Kayakalpa science for over 2,000 years. Born in 203 CE on the Tamil Nadu coast, initiated by Bogar at age 11, receiving the complete Kayakalpa transmission, and subsequently by Agastyar at Courtallem — he reached the state of Kaya Siddhi at age 16 and has maintained his body in a perpetually young form ever since.',
+          'Babaji\'s Kayakalpa practice reconstructed from Akashic records and accounts of those he has initiated: Daily Brahma Muhurta practice of Nadi Shodhana (3 hours) and Kumbhaka culminating in Kevala Kumbhaka. Daily Varma point self-activation using sequences transmitted by Agastyar. Periodic use of rare mountain herbs from the Himalayas and Nilgiris, prepared according to Bogar\'s formulas. Complete brahmacharya — entire vital energy redirected into sustaining the Jyotir Deha. Continuous Samadhi — dual awareness maintained at all times.',
+          'In 1861, Babaji initiated Lahiri Mahasaya into Kriya Yoga — the compressed version of the complete Kayakalpa system for householders. The full Kayakalpa was encoded into the Kriya practices so that consistent practitioners would, over years and decades, progressively achieve the same cellular transformation the classical protocols produce. Every Kriya practitioner is therefore engaged in Kayakalpa, whether or not they use that name.',
+          'What Babaji\'s existence proves for the modern seeker: biological immortality is not myth. It is a technology — extraordinarily demanding, requiring complete dedication and the grace of the lineage — but a technology nevertheless. It has been achieved. It is being maintained, right now, by a living human being in a physical body on this earth. This single fact changes everything about how we approach our own practice and potential.',
+          'The most important Kayakalpa teaching Babaji transmits: "Do not practice Kayakalpa for immortality. Practice it because you love God so completely that you want to maintain this body to serve as long as possible. The one who practices for their own immortality will succeed only in polishing the cage. The one who practices out of love will find that the cage transforms into a temple — and the temple, into Light."',
         ],
-        mantra:'OM KRIYA BABAJI NAMAH AUM — Recite 108 times to invoke his direct transmission into your Kayakalpa practice. This mantra carries Babaji\'s Shakti as encoded in the Akashic field and responds to sincere invocation regardless of the practitioner\'s location or development level.',
+        practice:'Babaji Invocation Meditation (15 min after morning Pranayama): Visualize a young man, perhaps 25 in appearance, with luminous skin and eternal eyes, standing in the Himalayas at Brahma Muhurta. Feel his gaze resting on you — the love of Shiva for all creation. Silently ask: "Babaji, please transmit your Kayakalpa grace into my practice today." Then sit in complete receptive stillness for 10 minutes.',
+        mantra:'OM KRIYA BABAJI NAMAH AUM — Recite 108 times to invoke his direct transmission. This mantra carries Babaji\'s Shakti as encoded in the Akashic field and responds to sincere invocation regardless of the practitioner\'s level.',
       },
       {
         title:'Samadhi Is the Supreme Kayakalpa', duration:'25 min',
