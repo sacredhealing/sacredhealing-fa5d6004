@@ -18,7 +18,7 @@ const BINANCE_SEC   = process.env.BINANCE_API_SECRET || '';
 const MODE          = (process.env.BOT_MODE || 'PAPER').toUpperCase();
 const PORT          = parseInt(process.env.PORT || '8081');
 const DELTA_THRESH  = parseFloat(process.env.DELTA_THRESHOLD || '0.0012'); // 0.12%
-const SIZE_USD      = parseFloat(process.env.TRADE_SIZE_USD || '10');
+const RISK_PCT      = parseFloat(process.env.RISK_PCT || '0.02'); // 2% per trade
 const SCAN_MS       = parseInt(process.env.SCAN_INTERVAL_MS || '15000');
 
 const SYMBOLS = ['BTCUSDC', 'ETHUSDC', 'SOLUSDC'];
@@ -110,15 +110,46 @@ async function scanAndTrade() {
 }
 
 // ── TRADE EXECUTION ──────────────────────────────────────────────────────────
+async function getLiveBalance() {
+  try {
+    const ts  = Date.now();
+    const qs  = `timestamp=${ts}&recvWindow=5000`;
+    const sig = require('crypto').createHmac('sha256', BINANCE_SEC).update(qs).digest('hex');
+    const res = await new Promise((resolve, reject) => {
+      const req = require('https').request(
+        `https://api.binance.com/api/v3/account?${qs}&signature=${sig}`,
+        { headers: { 'X-MBX-APIKEY': BINANCE_KEY } },
+        res => { let b=''; res.on('data',d=>b+=d); res.on('end',()=>resolve(JSON.parse(b))); }
+      );
+      req.on('error', reject); req.end();
+    });
+    const usdc = res.balances?.find(b => b.asset === 'USDC');
+    return usdc ? parseFloat(usdc.free) : 0;
+  } catch(e) {
+    console.error('[SQI] Balance fetch failed:', e.message);
+    return 0;
+  }
+}
+
 async function openTrade(sym, asset, signal, delta, deltaRaw) {
   const currentPrice = prices[sym]?.[prices[sym].length - 1]?.price;
   if (!currentPrice) return;
+
+  // Dynamic 2% risk sizing
+  let tradeSize = 10; // fallback
+  if (MODE === 'LIVE' && BINANCE_KEY) {
+    const balance = await getLiveBalance();
+    tradeSize = Math.max(1, Math.floor(balance * RISK_PCT * 100) / 100);
+    console.log(`[SQI] Balance: $${balance.toFixed(2)} | Trade size (2%): $${tradeSize.toFixed(2)}`);
+  } else {
+    tradeSize = 10 * RISK_PCT / 0.02; // paper uses $10 base
+  }
 
   let orderId = null;
 
   if (MODE === 'LIVE' && BINANCE_KEY && BINANCE_SEC) {
     try {
-      orderId = await binanceOrder(sym, signal === 'UP' ? 'BUY' : 'SELL', SIZE_USD);
+      orderId = await binanceOrder(sym, signal === 'UP' ? 'BUY' : 'SELL', tradeSize);
     } catch(e) {
       console.error('[SQI] Binance order failed:', e.message);
       return;
@@ -129,7 +160,7 @@ async function openTrade(sym, asset, signal, delta, deltaRaw) {
     asset,
     signal,
     delta,
-    size_usd: SIZE_USD,
+    size_usd: tradeSize,
     entry_price: currentPrice,
     status: 'open',
     pnl_usdc: 0,
@@ -139,7 +170,7 @@ async function openTrade(sym, asset, signal, delta, deltaRaw) {
 
   if (error) { console.error('[SQI] Insert error:', error.message); return; }
 
-  openTrades[sym] = { id: data.id, entry: currentPrice, direction: signal, ts: Date.now() };
+  openTrades[sym] = { id: data.id, entry: currentPrice, direction: signal, ts: Date.now(), size: tradeSize };
   tradeCount++;
   console.log(`[SQI] ⚡ OPEN ${asset} ${signal} | delta=${delta} | $${currentPrice.toFixed(2)} | mode=${MODE} | id=${data.id}`);
 }
@@ -151,8 +182,8 @@ async function closeTrade(sym, asset, newDirection) {
   if (!currentPrice) return;
 
   const pnl = trade.direction === 'UP'
-    ? ((currentPrice - trade.entry) / trade.entry) * SIZE_USD
-    : ((trade.entry - currentPrice) / trade.entry) * SIZE_USD;
+    ? ((currentPrice - trade.entry) / trade.entry) * trade.size
+    : ((trade.entry - currentPrice) / trade.entry) * trade.size;
 
   const status = pnl >= 0 ? 'won' : 'lost';
 
@@ -231,7 +262,7 @@ http.createServer((req, res) => {
 // ── MAIN ─────────────────────────────────────────────────────────────────────
 console.log('');
 console.log('⚡ SQI DELTA-ARB BOT — HETZNER ENGINE ONLINE');
-console.log(`📡 Mode: ${MODE} | Threshold: ${(DELTA_THRESH*100).toFixed(2)}% | Size: $${SIZE_USD}`);
+console.log(`📡 Mode: ${MODE} | Threshold: ${(DELTA_THRESH*100).toFixed(2)}% | Size: $${tradeSize || (10 * RISK_PCT / 0.02)}`);
 console.log(`🔑 Binance: ${BINANCE_KEY ? '✅ configured' : '❌ MISSING — PAPER only'}`);
 console.log(`🗄  Supabase: ${SUPABASE_URL}`);
 console.log('──────────────────────────────────────────────');
