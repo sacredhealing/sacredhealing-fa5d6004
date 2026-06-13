@@ -831,7 +831,7 @@ export default function SiddhaPortal() {
         </LibSection>
 
         {/* ── LIBRARY CATEGORY 5: CONSCIOUSNESS & MYSTICAL ARTS ── */}
-        <LibSection SvgIcon={Icon.ThirdEye} title="Consciousness & Mystical Arts" subtitle="Mediumship · Dream Science · Palm Oracle · Sacred Geometry" ac={violet(0.9)} count={4} delay={0.18}>
+        <LibSection SvgIcon={Icon.ThirdEye} title="Consciousness & Mystical Arts" subtitle="Mediumship · Dream Science · Palm Oracle · Nadi Leaf · Sacred Geometry" ac={violet(0.9)} count={5} delay={0.18}>
           <HeroCard SvgIcon={Icon.ThirdEye} label="8 Modules · 30 Transmissions · 18 Siddhas" title="Siddha Mediumship Academy"
             desc="The world's most comprehensive mediumship education — Third Eye activation, Loka maps, ancestor communication, Deva contact, Akashic Record access, and Siddhi development."
             tiers={[{l:'Free · M1–2',c:white(0.5)},{l:'Prana · M3–4',c:green(0.85)},{l:'Siddha · M5–6',c:violet(0.9)},{l:'Akasha · M7–8',c:gold(0.95)}]}
@@ -845,6 +845,10 @@ export default function SiddhaPortal() {
             desc="Sri Yantra, Merkaba, Platonic Solids, Flower of Life — the complete Siddha science of sacred form and its direct activation of consciousness fields."
             tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:cyan(0.9)},{l:'Akasha',c:gold(0.95)}]}
             cta="Enter the Transmission" href="/sacred-geometry" ac={gold(0.9)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.Lotus} label="12 Transmissions · Agastiya Nadi · Angushtha Biometric" title="Nadi Leaf Oracle"
+            desc="5,000 years of Agastiya Muni's Akashic Records — scan your thumb, receive your karma classification, and enter the complete Nadi Shastra education across all 4 tiers."
+            tiers={[{l:'Free · M1',c:white(0.5)},{l:'Prana · M2',c:green(0.85)},{l:'Siddha · M3',c:gold(0.95)},{l:'Akasha · M4',c:'#F59E0B'}]}
+            cta="Begin Angushtha Scan" href="/nadi-leaf" ac={gold(0.9)} badge="LIVE"/>
           <HeroCard SvgIcon={Icon.Mudra} label="29 Transmissions · 18 Siddhas · Hasta Science" title="Palm Oracle"
             desc="Hasta Samudrika — the complete Tamil Siddha science of palm reading as a living transmission from 18 masters, each finger a cosmic map."
             tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:violet(0.9)},{l:'Akasha',c:gold(0.95)}]}
