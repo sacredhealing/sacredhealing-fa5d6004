@@ -604,10 +604,17 @@ export const AyurvedaChatConsultation: React.FC<AyurvedaChatConsultationProps> =
         body: JSON.stringify({ messages: apiMessages, profile, dosha, language, jyotishProfile }),
       });
       if (!response.ok || !response.body) {
-        if (response.status === 429) toast.error(t('ayurvedaChat.rateLimit', 'Rate limit exceeded.'));
-        else if (response.status === 402) toast.error(t('ayurvedaChat.usageLimit', 'Usage limits reached.'));
-        else toast.error(t('ayurvedaChat.connectFail', 'Failed to connect. Please try again.'));
-        setIsLoading(false); setStreamingAssistant(null); return;
+        let errMsg = 'The transmission channel is temporarily resting. Please try again in a moment.';
+        if (response.status === 429) errMsg = 'The Oracle is receiving too many seekers at once. Please wait a moment and try again.';
+        else if (response.status === 402) errMsg = 'The Akasha channel is recharging. Please try again shortly.';
+        else if (response.status === 503 || response.status === 500) errMsg = 'The transmission was briefly interrupted. Please send your question again.';
+        // Show error as assistant message so screen never goes black
+        const errChatMsg = { role: 'assistant' as const, content: errMsg };
+        await saveMessage(errChatMsg);
+        setPendingUserMsg(null);
+        setIsLoading(false);
+        setStreamingAssistant(null);
+        return;
       }
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
