@@ -413,7 +413,7 @@ export async function streamChatWithSQI(
         onDelta(finalText);
         onDone();
         completed = true;
-
+      }
     },
   });
 
