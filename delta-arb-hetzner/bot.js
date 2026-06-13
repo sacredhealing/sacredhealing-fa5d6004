@@ -11,8 +11,8 @@ const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
 
 // ── ENV ──────────────────────────────────────────────────────────────────────
-const SUPABASE_URL  = process.env.SUPABASE_URL  || 'https://fjdzhrdpioxdeyyfogep.supabase.co';
-const SUPABASE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const SUPABASE_URL  = process.env.SUPABASE_URL  || 'https://ssygukfdbtehvtndandn.supabase.co';
+const SUPABASE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || '';
 const BINANCE_KEY   = process.env.BINANCE_API_KEY    || '';
 const BINANCE_SEC   = process.env.BINANCE_API_SECRET || '';
 const MODE          = (process.env.BOT_MODE || 'PAPER').toUpperCase();
