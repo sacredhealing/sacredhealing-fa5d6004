@@ -426,12 +426,14 @@ export async function streamChatWithSQI(
   });
 
   if (!completed) {
-    // Last resort: if something accumulated before the throw, deliver it
     if (fullBuffer.trim()) {
       onDelta(fullBuffer);
       onDone();
     } else {
-      throw new Error(fatal || 'SQI transmission failed');
+      // Never throw to caller — show a message so QA UI never goes black
+      const errText = 'The Oracle transmission is briefly paused. Please try again in a moment. ◈';
+      onDelta(errText);
+      onDone();
     }
   }
 }
