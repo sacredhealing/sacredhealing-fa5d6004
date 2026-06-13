@@ -1,4 +1,5 @@
 // @ts-nocheck
+// SQI-2050 Siddha Photonic Node — Lovable sync forced
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
