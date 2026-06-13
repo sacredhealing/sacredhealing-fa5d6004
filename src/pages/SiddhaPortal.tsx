@@ -818,6 +818,188 @@ export default function SiddhaPortal() {
         </div>
       </div>
 
+
+      {/* ── BRAHMACHARYA SIDDHA ACADEMY — FEATURED HERO CARD ── */}
+      <div style={{ position: 'relative', margin: '0 16px 16px', animation: 'sqFadeUp 0.45s 0.06s ease both' }}>
+        {/* Scalar wave rings */}
+        {[160,230,310,400].map((s, i) => (
+          <div key={i} aria-hidden style={{
+            position: 'absolute',
+            left: '50%', top: '50%',
+            width: s, height: s,
+            marginLeft: -s/2, marginTop: -s/2,
+            borderRadius: '50%',
+            border: `1px solid ${gold(0.09 - i * 0.017)}`,
+            animation: `sqScalarPulse ${3.4 + i * 0.75}s ease-in-out ${i * 0.55}s infinite`,
+            pointerEvents: 'none',
+            zIndex: 0,
+          }} />
+        ))}
+        {/* Deep gold-amber glow backdrop */}
+        <div aria-hidden style={{
+          position: 'absolute', inset: -18, borderRadius: 36,
+          background: [
+            `radial-gradient(55% 55% at 28% 38%, ${gold(0.42)}, transparent 65%)`,
+            `radial-gradient(45% 45% at 76% 66%, rgba(245,158,11,0.22), transparent 65%)`,
+            `radial-gradient(35% 35% at 52% 52%, ${gold(0.15)}, transparent 55%)`,
+          ].join(','),
+          filter: 'blur(26px)',
+          animation: 'sqGlowPulse 4.5s ease-in-out infinite',
+          pointerEvents: 'none', zIndex: 0,
+        }} />
+
+        <div
+          onClick={() => navigate('/brahmacharya-academy')}
+          style={{
+            position: 'relative', zIndex: 1, cursor: 'pointer',
+            background: `linear-gradient(140deg, rgba(212,175,55,0.12), rgba(245,158,11,0.06) 55%, rgba(5,5,5,0.72))`,
+            border: `1px solid ${gold(0.55)}`,
+            borderRadius: 28,
+            padding: '26px 22px 24px',
+            boxShadow: [
+              `0 0 50px ${gold(0.28)}`,
+              `0 0 110px ${gold(0.08)}`,
+              `inset 0 0 32px ${gold(0.06)}`,
+            ].join(','),
+            overflow: 'hidden',
+          }}
+        >
+          {/* Top shimmer line */}
+          <div aria-hidden style={{
+            position: 'absolute', top: 0, left: 0, right: 0, height: 1,
+            background: `linear-gradient(90deg, transparent, ${gold(0.9)}, rgba(245,158,11,0.7), ${gold(0.9)}, transparent)`,
+            opacity: 0.65,
+          }} />
+
+          {/* Live badge */}
+          <span style={{
+            position: 'absolute', top: 14, right: 14,
+            fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+            fontSize: 8, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase' as const,
+            background: gold(0.14), border: `1px solid ${gold(0.4)}`,
+            color: gold(0.95), borderRadius: 20, padding: '3px 9px',
+            display: 'flex', alignItems: 'center', gap: 5,
+          }}>
+            <span style={{ display: 'inline-block', width: 5, height: 5, borderRadius: '50%', background: gold(0.9), animation: 'sqLiveFlash 2s infinite' }} />
+            NEW
+          </span>
+
+          {/* Overline label */}
+          <div style={{ ...LABEL_STYLE, fontSize: 9, color: gold(0.7), marginBottom: 12, display: 'flex', alignItems: 'center', gap: 7 }}>
+            <span style={{ display: 'inline-block', width: 5, height: 5, borderRadius: '50%', background: gold(0.85), animation: 'sqLiveFlash 2.5s infinite' }} />
+            SIDDHA ENERGY SCIENCE · 8 MODULES · 53 LESSONS
+          </div>
+
+          {/* Icon + title row */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
+            <div style={{
+              width: 52, height: 52, borderRadius: '50%',
+              background: `radial-gradient(circle, ${gold(0.3)}, rgba(245,158,11,0.08))`,
+              border: `1px solid ${gold(0.4)}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 24, flexShrink: 0,
+              boxShadow: `0 0 22px ${gold(0.35)}`,
+              animation: 'sqBreathe 5s ease-in-out infinite',
+            }}>🔱</div>
+            <div>
+              <h2 style={{
+                fontFamily: "'Cormorant Garamond',serif",
+                fontSize: '1.8rem', fontWeight: 600,
+                color: 'rgba(255,255,255,0.97)', lineHeight: 1.05, margin: 0,
+                textShadow: `0 0 24px ${gold(0.5)}`,
+              }}>
+                Brahmacharya<br />Siddha Academy
+              </h2>
+              <div style={{
+                fontFamily: "'Cormorant Garamond',serif",
+                fontStyle: 'italic', fontSize: '0.84rem',
+                color: gold(0.6), marginTop: 4,
+              }}>
+                Ojas · Tejas · Prana · Amrita · The 18 Siddhas
+              </div>
+            </div>
+          </div>
+
+          {/* Description */}
+          <p style={{ ...CARD_DESC, color: white(0.62), marginBottom: 16, lineHeight: 1.7 }}>
+            The complete Siddha science of sacred energy alchemy — from the foundational teaching on Ojas and Brahmacharya through Pranayama, mantra codes, Siddha yoga, psychology of desire, Siddhi activation, and the supreme teaching of Sacred Union. Every lesson a full transmission. Every module a life-changing initiation.
+          </p>
+
+          {/* Tier access pills */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18, flexWrap: 'wrap' as const }}>
+            {[
+              { label: 'Free · Module 1',          color: white(0.55) },
+              { label: 'Prana · Modules 2–3',      color: '#4ADE80' },
+              { label: 'Siddha · Modules 4–6',     color: cyan(0.9) },
+              { label: 'Akasha · Modules 7–8',     color: gold(0.95) },
+            ].map(t => (
+              <div key={t.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: t.color, boxShadow: `0 0 6px ${t.color}` }} />
+                <span style={{ ...LABEL_STYLE, fontSize: 7, color: t.color, letterSpacing: '0.2em' }}>{t.label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Stats row */}
+          <div style={{
+            display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr',
+            gap: 8, marginBottom: 20,
+            padding: '12px 0',
+            borderTop: `1px solid ${gold(0.1)}`,
+            borderBottom: `1px solid ${gold(0.1)}`,
+          }}>
+            {[
+              { v: '8',  l: 'Modules'  },
+              { v: '53', l: 'Lessons'  },
+              { v: '18', l: 'Siddhas'  },
+              { v: '4',  l: 'Tiers'    },
+            ].map(s => (
+              <div key={s.l} style={{ textAlign: 'center' }}>
+                <div style={{
+                  fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+                  fontSize: 20, fontWeight: 900, letterSpacing: '-0.04em',
+                  color: gold(0.9),
+                  textShadow: `0 0 12px ${gold(0.35)}`,
+                }}>{s.v}</div>
+                <div style={{ ...LABEL_STYLE, fontSize: 7, color: white(0.28), marginTop: 2 }}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Feature tags */}
+          <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' as const, marginBottom: 20 }}>
+            {['Pranayama & Bandha', 'Mantra Codes', 'Siddha Yoga', 'Vasana Science', 'Siddhi Activation', 'Sacred Union'].map(f => (
+              <span key={f} style={{
+                fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+                fontSize: 7, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase' as const,
+                color: gold(0.55), border: `1px solid ${gold(0.18)}`,
+                borderRadius: 20, padding: '2px 8px',
+              }}>{f}</span>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            padding: '11px 22px', borderRadius: 999,
+            background: `linear-gradient(135deg, ${gold(0.26)}, ${gold(0.09)})`,
+            border: `1px solid ${gold(0.56)}`,
+            color: gold(0.98),
+            fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+            fontSize: 10, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase' as const,
+          }}>
+            Enter the Academy →
+          </div>
+
+          {/* Bottom shimmer */}
+          <div aria-hidden style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0, height: 1,
+            background: `linear-gradient(90deg, transparent, ${gold(0.7)}, rgba(245,158,11,0.5), ${gold(0.7)}, transparent)`,
+            opacity: 0.5,
+          }} />
+        </div>
+      </div>
+
       {/* ── KAYAKALPA IMMORTALITY ACADEMY — FEATURED CARD ── */}
       <div
         onClick={() => navigate('/kayakalpa-academy')}
@@ -1344,6 +1526,7 @@ export default function SiddhaPortal() {
     </div>
   );
 }
+
 
 
 
