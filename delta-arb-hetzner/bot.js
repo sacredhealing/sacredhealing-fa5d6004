@@ -18,11 +18,11 @@ const BINANCE_SEC   = process.env.BINANCE_API_SECRET || '';
 const MODE          = (process.env.BOT_MODE || 'PAPER').toUpperCase();
 const PORT          = parseInt(process.env.PORT || '8081');
 const DELTA_THRESH  = parseFloat(process.env.DELTA_THRESHOLD || '0.0012'); // 0.12%
-const SIZE_USD      = parseFloat(process.env.TRADE_SIZE_USD || '15');
+const SIZE_USD      = parseFloat(process.env.TRADE_SIZE_USD || '10');
 const SCAN_MS       = parseInt(process.env.SCAN_INTERVAL_MS || '15000');
 
-const SYMBOLS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
-const ASSETS  = { BTCUSDT: 'BTC', ETHUSDT: 'ETH', SOLUSDT: 'SOL' };
+const SYMBOLS = ['BTCUSDC', 'ETHUSDC', 'SOLUSDC'];
+const ASSETS  = { BTCUSDC: 'BTC', ETHUSDC: 'ETH', SOLUSDC: 'SOL' };
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
