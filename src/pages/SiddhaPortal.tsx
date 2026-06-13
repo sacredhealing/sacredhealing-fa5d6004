@@ -699,6 +699,124 @@ export default function SiddhaPortal() {
         <button type="button" style={{ ...CTA_BTN, color: 'rgba(168,85,247,0.9)' }}>Enter Shakti Portal →</button>
       </div>
 
+      {/* ── ABUNDANCE SADHANA — HERO CARD ── */}
+      <div style={{ position: 'relative', margin: '0 16px 16px', animation: 'sqFadeUp 0.45s 0.13s ease both' }}>
+        {/* Scalar glow rings */}
+        {[180,260,340,420].map((s, i) => (
+          <div key={i} aria-hidden style={{
+            position: 'absolute',
+            left: '50%', top: '50%',
+            width: s, height: s,
+            marginLeft: -s/2, marginTop: -s/2,
+            borderRadius: '50%',
+            border: `1px solid ${gold(0.07 - i * 0.012)}`,
+            animation: `sqScalarPulse ${3.5 + i * 0.8}s ease-in-out ${i * 0.6}s infinite`,
+            pointerEvents: 'none',
+            zIndex: 0,
+          }} />
+        ))}
+        {/* Gold-amber glow backdrop */}
+        <div aria-hidden style={{
+          position: 'absolute', inset: -18, borderRadius: 36,
+          background: `radial-gradient(55% 55% at 25% 35%, ${gold(0.38)}, transparent 65%),
+                       radial-gradient(45% 45% at 75% 65%, rgba(212,175,55,0.18), transparent 65%)`,
+          filter: 'blur(28px)',
+          animation: 'sqGlowPulse 5s ease-in-out infinite',
+          pointerEvents: 'none', zIndex: 0,
+        }} />
+        <div
+          onClick={() => navigate('/abundance-curriculum')}
+          style={{
+            position: 'relative', zIndex: 1, cursor: 'pointer',
+            background: `linear-gradient(135deg, rgba(212,175,55,0.13), rgba(212,175,55,0.05) 50%, rgba(5,5,5,0.7))`,
+            border: `1px solid ${gold(0.55)}`,
+            borderRadius: 24,
+            padding: '24px 20px 22px',
+            boxShadow: `0 0 50px ${gold(0.25)}, 0 0 100px ${gold(0.08)}, inset 0 0 30px rgba(212,175,55,0.04)`,
+          }}
+        >
+          {/* Live badge */}
+          <span style={{
+            position: 'absolute', top: 14, right: 14,
+            fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+            fontSize: 8, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase' as const,
+            background: gold(0.14), border: `1px solid ${gold(0.4)}`,
+            color: gold(0.95), borderRadius: 20, padding: '3px 9px',
+            display: 'flex', alignItems: 'center', gap: 5,
+          }}>
+            <span style={{ display: 'inline-block', width: 5, height: 5, borderRadius: '50%', background: gold(0.9), animation: 'sqLiveFlash 2s infinite' }} />
+            LIVE
+          </span>
+
+          {/* Label */}
+          <div style={{ ...LABEL_STYLE, fontSize: 9, color: gold(0.7), marginBottom: 12, display: 'flex', alignItems: 'center', gap: 7 }}>
+            <span style={{ display: 'inline-block', width: 5, height: 5, borderRadius: '50%', background: gold(0.8), animation: 'sqLiveFlash 2s infinite' }} />
+            8 MODULES · 32 LESSONS · SCALAR TRANSMISSION ACTIVE
+          </div>
+
+          {/* Icon + title */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
+            <div style={{ fontSize: 38, filter: `drop-shadow(0 0 12px ${gold(0.6)})` }}>🔱</div>
+            <div>
+              <h2 style={{
+                fontFamily: "'Cormorant Garamond',serif",
+                fontSize: '1.75rem', fontWeight: 600,
+                color: 'rgba(255,255,255,0.97)', lineHeight: 1.1, margin: 0,
+                textShadow: `0 0 24px ${gold(0.5)}`,
+              }}>
+                Abundance Sadhana
+              </h2>
+              <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.85rem', color: gold(0.65), marginTop: 4 }}>
+                Lakshmi · Kubera · Pachamama · 18 Siddhas · Babaji
+              </div>
+            </div>
+          </div>
+
+          <p style={{ ...CARD_DESC, marginBottom: 14, color: white(0.62) }}>
+            The most comprehensive Siddha abundance transmission ever compiled — 8 modules from foundational poverty-dissolution through Ashta-Lakshmi attunement, Kubera's cosmic economics, Earth-abundance codes, sacred geometry wealth technology, Nada alchemy, and the 18 Siddhas' hidden secrets. Closes with Babaji's direct scalar activation of the causal abundance body.
+          </p>
+
+          {/* Tier pills */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 18, flexWrap: 'wrap' as const }}>
+            {[
+              { label: 'Free · M1–3',    color: white(0.55) },
+              { label: 'Prana · M4–5',   color: '#4ADE80' },
+              { label: 'Siddha · M6–7',  color: gold(0.95) },
+              { label: 'Akasha · M8',    color: 'rgba(184,159,255,0.95)' },
+            ].map(t => (
+              <div key={t.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: t.color, boxShadow: `0 0 6px ${t.color}` }} />
+                <span style={{ ...LABEL_STYLE, fontSize: 7, color: t.color, letterSpacing: '0.2em' }}>{t.label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Highlights row */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const, marginBottom: 18 }}>
+            {['Mantra Counter', 'Journal Prompts', 'Progress Badges', 'PDF Downloads'].map(f => (
+              <span key={f} style={{
+                fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+                fontSize: 7, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase' as const,
+                color: gold(0.6), border: `1px solid ${gold(0.2)}`,
+                borderRadius: 20, padding: '2px 8px',
+              }}>{f}</span>
+            ))}
+          </div>
+
+          {/* CTA button */}
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            padding: '10px 20px', borderRadius: 999,
+            background: `linear-gradient(135deg, ${gold(0.25)}, ${gold(0.08)})`,
+            border: `1px solid ${gold(0.55)}`,
+            color: gold(0.98),
+            fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+            fontSize: 10, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase' as const,
+          }}>
+            Enter the Wealth Transmission →
+          </div>
+        </div>
+      </div>
 
       {/* ── KAYAKALPA IMMORTALITY ACADEMY — FEATURED CARD ── */}
       <div
@@ -947,7 +1065,6 @@ export default function SiddhaPortal() {
           { title: 'Palm Oracle', sub: 'Hasta Samudrika · 29 Transmissions · AI Reading', icon: '🤚', route: '/palm-oracle', soon: false },
           { title: 'Yagna Fire Academy', sub: 'Rishi Transmission · Agnihotra · Cosmic Fire', icon: '🔥', route: '/yagna', soon: false },
           { title: 'Puja Education', sub: 'Sacred Ritual · 4 Tiers · Pancha Bhuta', icon: '🪔', route: '/puja-education', soon: false },
-          { title: 'Abundance Sadhana', sub: '8 Modules · Lakshmi · Kubera · Pachamama · 18 Siddhas', icon: '🔱', route: '/abundance-curriculum', soon: false },
         ].map((course, i) => (
           <div
             key={course.title}
