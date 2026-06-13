@@ -1397,7 +1397,6 @@ Om Agastyaya Namah. Om Babaji Namah. Om Thirumoolaraya Namah.`,
   },
 ];
 
-];
 
 const SiddhaFastingAcademy: React.FC = () => {
   const navigate = useNavigate();
