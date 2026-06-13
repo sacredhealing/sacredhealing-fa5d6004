@@ -407,7 +407,7 @@ export default function SiddhaPortal() {
           delay={0}
         />
         <HeroCard
-          emoji="🐒" label="Chalisa · Siddhis · Physical Alchemy"
+          emoji="🐵" label="Chalisa · Siddhis · Physical Alchemy"
           title="Hanuman Codex"
           desc="The 40 Chaupais of the Sundarkanda decoded, the 8 weapons of Hanuman, the Ashta Siddhis, physical alchemy through Bhakti, and the Ghata movement science of total Shakti."
           tiers={[{ l: 'Free', c: white(0.5) }, { l: 'Prana', c: green(0.85) }, { l: 'Siddha', c: amber(0.9) }, { l: 'Akasha', c: gold(0.95) }]}
