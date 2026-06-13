@@ -31,7 +31,25 @@ jobs:
         if: inputs.action == 'status'
         env:
           HP: ${{ secrets.HETZNER_ROOT_PASSWORD }}
-        run: sshpass -p "$HP" ssh -T root@178.105.183.74 "pm2 list && curl -s http://localhost:8081/health | python3 -m json.tool 2>/dev/null || echo offline"
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
+        run: |
+          OUT=$(sshpass -p "$HP" ssh -T root@178.105.183.74 "
+            echo '=== PM2 LIST ===' && pm2 list &&
+            echo '=== PM2 LOGS delta-arb (last 50) ===' && pm2 logs delta-arb --lines 50 --nostream 2>/dev/null || echo 'no delta-arb process' &&
+            echo '=== HEALTH ===' && curl -s http://localhost:8081/health || echo 'health: offline' &&
+            echo '=== NODE VERSION ===' && node -v &&
+            echo '=== DIR ===' && ls /root/delta-arb/delta-arb-hetzner/ 2>/dev/null || echo 'dir missing'
+          " 2>&1)
+          echo "$OUT"
+          LOG="_delta_arb_status_$(date +%s).txt"
+          echo "$OUT" > $LOG
+          git config user.email "bot@sqi.app" && git config user.name "SQI-Bot"
+          git clone "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" repo_out
+          cp $LOG repo_out/$LOG
+          cd repo_out
+          git add $LOG
+          git commit -m "diag: delta-arb hetzner status" || true
+          git push "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" main || true
 
       - name: Logs
         if: inputs.action == 'logs'
