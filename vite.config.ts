@@ -47,10 +47,6 @@ export default defineConfig(({ mode }) => {
       include: [/ethers/, /node_modules/],
     },
     rollupOptions: {
-      treeshake: {
-        moduleSideEffects: false,
-        propertyReadSideEffects: false,
-      },
       output: {
         // Granular vendor splitting for maximum long-term caching
         manualChunks(id) {
@@ -117,7 +113,7 @@ export default defineConfig(({ mode }) => {
             urlPattern: ({ request }) => request.destination === "document",
             handler: "NetworkFirst",
             options: {
-              cacheName: "html-shell",
+              cacheName: "html-shell-v2",
               networkTimeoutSeconds: 2,
               expiration: { maxEntries: 8, maxAgeSeconds: 5 * 60 },
               cacheableResponse: { statuses: [200] },
@@ -129,22 +125,20 @@ export default defineConfig(({ mode }) => {
             handler: "CacheFirst",
             method: "GET",
             options: {
-              cacheName: "assets-immutable",
+              cacheName: "assets-immutable-v2",
               expiration: { maxEntries: 200, maxAgeSeconds: 30 * 24 * 60 * 60 },
               cacheableResponse: { statuses: [200] },
             },
           },
-          // Cache Supabase API responses for fast re-renders
           {
             urlPattern: ({ url }) => url.hostname.includes("supabase.co") && url.pathname.startsWith("/rest/"),
             handler: "StaleWhileRevalidate",
             options: {
-              cacheName: "supabase-api",
+              cacheName: "supabase-api-v2",
               expiration: { maxEntries: 50, maxAgeSeconds: 5 * 60 },
               cacheableResponse: { statuses: [200] },
             },
           },
-          // Cache Google Fonts
           {
             urlPattern: ({ url }) => url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com",
             handler: "CacheFirst",
