@@ -10,22 +10,7 @@ import { useAdminRole } from '@/hooks/useAdminRole';
 import { useMembership } from '@/hooks/useMembership';
 import { getSalesPageForRank, getTierRank } from '@/lib/tierAccess';
 
-interface Lesson { title: string; content: string; }
-interface Module { num: string; title: string; desc: string; lessons: Lesson[]; }
-interface TierSection { tier: number; label: string; subtitle: string; icon: string; color: string; border: string; glow: string; modules: Module[]; }
 
-const CURRICULUM: TierSection[] = [
-// src/pages/SiddhaFastingAcademy.tsx
-// ⟡ SQI 2050 — Siddha Fasting Academy — Complete Curriculum Edition ⟡
-// Full written content for every lesson across all 4 tiers
-// 23 modules · 202+ lessons · 5,000 years of Siddha Tapas wisdom
-
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Lock } from 'lucide-react';
-import { useAdminRole } from '@/hooks/useAdminRole';
-import { useMembership } from '@/hooks/useMembership';
-import { getSalesPageForRank, getTierRank } from '@/lib/tierAccess';
 
 const g  = (a: number) => `rgba(212,175,55,${a})`;
 const w  = (a: number) => `rgba(255,255,255,${a})`;
@@ -1412,7 +1397,6 @@ Om Agastyaya Namah. Om Babaji Namah. Om Thirumoolaraya Namah.`,
   },
 ];
 
-];
 
 const SiddhaFastingAcademy: React.FC = () => {
   const navigate = useNavigate();

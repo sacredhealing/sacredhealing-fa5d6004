@@ -358,7 +358,7 @@ const ModuleCard = ({ mod, userTier }: { mod: typeof MODULES[0]; userTier: strin
 
 export default function KayakalpaAcademy() {
   const navigate = useNavigate();
-  const { membership } = useMembership();
+  const membership = useMembership();
   const [activeFilter, setActiveFilter] = useState<string>('all');
 
   const tierRank: Record<string, number> = { free: 0, prana: 1, siddha: 2, akasha: 3 };
