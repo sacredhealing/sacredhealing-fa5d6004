@@ -457,8 +457,6 @@ export default function Explore() {
         {([
           { k: 'converge.connectStargate' as const, sk: 'converge.connectStargateSub' as const, h: '/stargate', b: t('converge.badgeSwedish') },
           { k: 'converge.connectPodcast' as const, sk: 'converge.connectPodcastSub' as const, h: '/podcast', b: undefined },
-          { k: 'converge.connectLeaderboard' as const, sk: 'converge.connectLeaderboardSub' as const, h: '/leaderboard', b: t('converge.badge5kShc') },
-          { k: 'converge.connectAffiliate' as const, sk: 'converge.connectAffiliateSub' as const, h: '/invite-friends', b: t('converge.badge30pct') },
         ]).map(({ k, sk, h, b }) => (
           <div key={k} onClick={() => navigate(h)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'rgba(212,175,55,0.4)', flexShrink: 0 }}/>
