@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useMembershipTier } from '@/hooks/useMembershipTier';
+import { useMembershipTier } from '@/features/membership';
 import {
   NADI_LEAF_LESSONS,
   THUMB_SCAN_READINGS,
