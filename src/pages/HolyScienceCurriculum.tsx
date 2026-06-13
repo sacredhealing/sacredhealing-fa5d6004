@@ -709,7 +709,7 @@ const LockGate: React.FC<{ tier: TierSlug }> = ({ tier }) => {
 const HolyScienceCurriculum: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { status } = useMembership();
+  const status = useMembership();
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [expandedModules, setExpandedModules] = useState<Set<number>>(new Set([1]));
