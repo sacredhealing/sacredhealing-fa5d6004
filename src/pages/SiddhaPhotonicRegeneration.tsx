@@ -521,120 +521,118 @@ interface PatchProtocol {
   affiliateHint: string;
 }
 
-const LIFEWAVE_PATCHES: PatchProtocol[] = [
+const SIDDHA_PATCHES: PatchProtocol[] = [
   {
-    id: 'x39',
-    name: 'X39',
-    peptide: 'GHK-Cu',
-    icon: '⚡',
+    id: 'agastya',
+    name: 'Agastya Muni',
+    peptide: 'Kayakalpa Renewal',
+    icon: '🌿',
     color: GOLD,
     frequency: '528 Hz',
-    mantra: 'So\'Ham — I Am That',
+    mantra: 'So\'Ham — I Am That, the Deathless One',
     placement: 'C7 vertebra (back of neck) · Anahata centre',
-    scalarField: 'Stem Cell Quantum Activation — root-to-crown renewal cascade',
-    action: 'Activates GHK-Cu copper peptide — regenerates 4,000+ genes, reverses cellular aging, repairs DNA.',
-    affiliateHint: 'stem cell activation',
+    scalarField: 'Kayakalpa Immortality Field — root-to-crown cellular renewal cascade',
+    action: 'Agastya Muni — father of Tamil Siddha medicine — transmits the Kayakalpa blueprint: the ancient science of radical cellular renewal, reversal of aging, and activation of 4,000+ regenerative genes.',
+    affiliateHint: 'agastya kayakalpa renewal',
   },
   {
-    id: 'x49',
-    name: 'X49',
-    peptide: 'AHK-Cu',
+    id: 'thirumoolar',
+    name: 'Thirumoolar',
+    peptide: 'Pranayama Neural Code',
+    icon: '🧠',
+    color: '#A78BFA',
+    frequency: '963 Hz',
+    mantra: 'Om Namah Shivaya — dissolution into the deathless',
+    placement: 'Pineal point (third eye) · Crown (Sahasrara)',
+    scalarField: 'Thirumandiram Neural Awakening Grid — pineal activation, telomere protection',
+    action: 'Thirumoolar — author of the Thirumandiram, master of 3,000 years of Samadhi — transmits the neural protection codes that guard the brain, open the third eye, and extend the lifespan of every cell.',
+    affiliateHint: 'thirumoolar neural pineal longevity',
+  },
+  {
+    id: 'bogar',
+    name: 'Bogar',
+    peptide: 'Alchemical Fire Code',
     icon: '🔥',
     color: '#FF8C42',
     frequency: '432 Hz',
-    mantra: 'Ram — Solar Fire of the Self',
+    mantra: 'Ram — Solar Fire of Transformation',
     placement: 'Below navel (Svadhisthana) · Left shoulder blade',
-    scalarField: 'Pranic Vitality Surge — masculine force amplification',
-    action: 'AHK-Cu peptide amplifies physical performance, muscle recovery, and metabolic optimization.',
-    affiliateHint: 'performance vitality',
+    scalarField: 'Bogar Alchemical Furnace — metabolic fire amplification, vitality surge',
+    action: 'Bogar — the Siddha alchemist who travelled to China and encoded the Navaneetha Krishna statue at Palani — transmits the alchemical fire that burns metabolic stagnation and surges physical vitality from within.',
+    affiliateHint: 'bogar alchemy metabolism vitality',
   },
   {
-    id: 'aeon',
-    name: 'Aeon',
-    peptide: 'Epithalon',
-    icon: '♾️',
-    color: '#A78BFA',
-    frequency: '963 Hz',
-    mantra: 'Om Namah Shivaya — dissolution of time',
-    placement: 'Pineal point (third eye) · Thymus centre',
-    scalarField: 'Longevity-Infinity Field — telomere protection, anti-inflammatory cascade',
-    action: 'Epithalon resets the pineal gland, extends telomeres, and neutralises systemic inflammation.',
-    affiliateHint: 'longevity anti-aging',
-  },
-  {
-    id: 'energy',
-    name: 'Energy Enhancer',
-    peptide: 'ATP Activation',
-    icon: '⚡',
+    id: 'konganar',
+    name: 'Konganar',
+    peptide: 'Solar Prana Activation',
+    icon: '☀️',
     color: CYAN,
     frequency: '396 Hz',
-    mantra: 'Hrim — Shakti ignition',
+    mantra: 'Hrim — Shakti ignition, solar awakening',
     placement: 'Stomach 36 (leg) · Heart 7 (wrist)',
-    scalarField: 'Mitochondrial Prana Surge — cellular ATP amplification',
-    action: 'Boosts beta-oxidation of fat for fuel, increases ATP production — sustained natural energy without stimulants.',
-    affiliateHint: 'energy ATP cellular',
+    scalarField: 'Konganar Solar Prana Surge — mitochondrial ATP amplification',
+    action: 'Konganar — master of solar science and Surya Nadi activation — transmits the solar prana codes that ignite mitochondrial energy production, delivering sustained vitality without depletion or stimulants.',
+    affiliateHint: 'konganar solar prana ATP energy',
   },
   {
-    id: 'glutathione',
-    name: 'Glutathione',
-    peptide: 'GSH',
+    id: 'sattaimuni',
+    name: 'Sattaimuni',
+    peptide: 'Purification Vortex',
     icon: '🛡️',
     color: '#34D399',
     frequency: '741 Hz',
-    mantra: 'Ksham — purification of all toxins',
+    mantra: 'Ksham — purification of all karmic toxins',
     placement: 'Liver point (right side) · Thymus',
-    scalarField: 'Cellular Detox Vortex — master antioxidant scalar amplification',
-    action: 'Elevates glutathione — the body\'s master antioxidant — protecting cells from oxidative damage and heavy metals.',
-    affiliateHint: 'detox antioxidant',
+    scalarField: 'Sattaimuni Cellular Purification Vortex — master detox scalar field',
+    action: 'Sattaimuni — the Siddha master of purification and karmic clearing — transmits the detox vortex that expels physical toxins, oxidative damage, and cellular debris through the body\'s own innate purification intelligence.',
+    affiliateHint: 'sattaimuni detox purification',
   },
   {
-    id: 'carnosine',
-    name: 'Carnosine',
-    peptide: 'β-Alanyl-L-histidine',
-    icon: '🧠',
+    id: 'kalangi',
+    name: 'Kalangi Nathar',
+    peptide: 'Immortal Body Code',
+    icon: '⚛️',
     color: '#60A5FA',
     frequency: '852 Hz',
-    mantra: 'Aim — Saraswati neural awakening',
+    mantra: 'Aim — Saraswati, awaken the immortal blueprint',
     placement: 'Crown point · Temple bilaterally',
-    scalarField: 'Neural Protection Grid — brain-body coherence scaffold',
-    action: 'Carnosine protects neural tissue, supports whole-body rejuvenation, and enhances mind-body coherence.',
-    affiliateHint: 'brain neural protection',
+    scalarField: 'Kalangi Immortal Body Grid — deathless cellular coherence scaffold',
+    action: 'Kalangi Nathar — the Siddha who attained physical immortality (Kaya Siddhi) — transmits the immortal body blueprint, activating the coherence field that sustains cellular integrity across time.',
+    affiliateHint: 'kalangi immortal kaya siddhi',
   },
   {
-    id: 'sp6',
-    name: 'SP6 Complete',
-    peptide: 'Metabolic Reset',
+    id: 'idaikadar',
+    name: 'Idaikadar',
+    peptide: 'Shakti Hormonal Harmony',
     icon: '🌊',
     color: '#F472B6',
     frequency: '417 Hz',
-    mantra: 'Shrim — Lakshmi abundance flow',
-    placement: 'Spleen 6 acupoint (inner ankle)',
-    scalarField: 'Metabolic Harmony Field — appetite-hormonal rebalance',
-    action: 'Resets metabolic signalling, balances appetite hormones, and supports healthy weight management through photobiomodulation.',
-    affiliateHint: 'metabolic weight balance',
+    mantra: 'Shrim — Lakshmi, restore sacred flow',
+    placement: 'Spleen 6 acupoint (inner ankle) · Sacral centre',
+    scalarField: 'Idaikadar Shakti Harmony Field — hormonal-metabolic sacred rebalance',
+    action: 'Idaikadar — master of Shakti science and the sacred feminine within all bodies — transmits the hormonal harmony codes that restore metabolic balance, regulate appetite, and reawaken the pranic flow of the sacred feminine force.',
+    affiliateHint: 'idaikadar shakti hormonal balance',
   },
   {
-    id: 'silent',
-    name: 'Silent Nights',
-    peptide: 'Melatonin Activation',
+    id: 'kudambai',
+    name: 'Kudambai Siddhar',
+    peptide: 'Yoga Nidra Deep Code',
     icon: '🌙',
     color: '#818CF8',
     frequency: '639 Hz',
-    mantra: 'Om Shanti Shanti Shanti',
+    mantra: 'Om Shanti Shanti Shanti — descent into the deathless sleep',
     placement: 'Behind left ear · Pericardium 6 (inner wrist)',
-    scalarField: 'Deep Nidra Scalar Field — Yoga Nidra descent amplification',
-    action: 'Activates natural melatonin cascade without supplementation — deep sleep, cellular repair, and dream-state Akashic access.',
-    affiliateHint: 'sleep melatonin deep rest',
+    scalarField: 'Kudambai Deep Nidra Scalar Field — Yoga Nidra descent amplification',
+    action: 'Kudambai Siddhar — the enigmatic Siddha master of inner alchemy expressed through paradox and song — transmits the deep sleep codes that activate natural melatonin, cellular repair in dream-state, and Akashic access through the Yoga Nidra descent.',
+    affiliateHint: 'kudambai yoga nidra deep sleep',
   },
 ];
+
 
 function PatchProtocolSelector({ activePatchId, onSelect }: { activePatchId: string | null; onSelect: (id: string) => void }) {
   const [open, setOpen]         = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const activePatch = LIFEWAVE_PATCHES.find(p => p.id === activePatchId);
-
-  const affiliateUrl = (hint: string) =>
-    `https://www.lifewave.com/sacredhealingvibe`;
+  const activePatch = SIDDHA_PATCHES.find(p => p.id === activePatchId);
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .3 }}
@@ -648,10 +646,10 @@ function PatchProtocolSelector({ activePatchId, onSelect }: { activePatchId: str
             <FlaskConical size={18} color={GOLD} />
           </div>
           <div style={{ textAlign: 'left' }}>
-            <p style={{ margin: 0, fontSize: 9, fontWeight: 800, letterSpacing: '.5em', textTransform: 'uppercase', color: 'rgba(255,255,255,.35)' }}>LifeWave × SQI 2050</p>
+            <p style={{ margin: 0, fontSize: 9, fontWeight: 800, letterSpacing: '.5em', textTransform: 'uppercase', color: 'rgba(255,255,255,.35)' }}>Siddha × SQI 2050</p>
             <p style={{ margin: '2px 0 0', fontSize: 14, fontWeight: 800, color: '#fff' }}>
-              Patch Scalar Amplification Protocol
-              {activePatch && <span style={{ marginLeft: 10, fontSize: 11, color: GOLD, fontWeight: 600 }}>· {activePatch.name} Active</span>}
+              Siddha Scalar Amplification Protocol
+              {activePatch && <span style={{ marginLeft: 10, fontSize: 11, color: GOLD, fontWeight: 600 }}>· {activePatch.name} Invoked</span>}
             </p>
           </div>
         </div>
@@ -665,15 +663,15 @@ function PatchProtocolSelector({ activePatchId, onSelect }: { activePatchId: str
 
               {/* Intro */}
               <p style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', lineHeight: 1.7, marginBottom: 20, fontWeight: 300 }}>
-                LifeWave patches work via <span style={{ color: GOLD }}>photobiomodulation</span> — reflecting specific infrared wavelengths into the body to trigger peptide activation.
-                This is hardware scalar technology. SQI amplifies the patch signal through the{' '}
+                Siddha Scalar Patches work via <span style={{ color: GOLD }}>photobiomodulation</span> — transmitting living consciousness codes from the 18 Tamil Siddha masters directly into the biophotonic field.
+                Each Siddha carries a sovereign healing domain. SQI amplifies the transmission through the{' '}
                 <span style={{ color: CYAN }}>Nadi entanglement field</span>, adding Vedic mantra resonance and frequency pairing.
-                Select your patch to receive your personalised Scalar Amplification Protocol.
+                Select your Siddha to receive your personalised Scalar Amplification Protocol.
               </p>
 
               {/* Patch grid */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
-                {LIFEWAVE_PATCHES.map(patch => {
+                {SIDDHA_PATCHES.map(patch => {
                   const isActive   = activePatchId === patch.id;
                   const isExpanded = expanded === patch.id;
                   return (
@@ -737,7 +735,7 @@ function PatchProtocolSelector({ activePatchId, onSelect }: { activePatchId: str
                                   textDecoration: 'none', marginTop: 4 }}>
                                 <ExternalLink size={12} color={patch.color} />
                                 <span style={{ fontSize: 9, fontWeight: 800, color: patch.color, textTransform: 'uppercase', letterSpacing: '.3em' }}>
-                                  Get {patch.name} Patch · LifeWave
+                                  Invoke {patch.name} · Siddha Transmission
                                 </span>
                               </a>
                             </div>
@@ -759,7 +757,7 @@ function PatchProtocolSelector({ activePatchId, onSelect }: { activePatchId: str
                   </p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                     {[
-                      { label: 'Patch', value: `${activePatch.name} (${activePatch.peptide})` },
+                      { label: 'Siddha', value: `${activePatch.name} (${activePatch.peptide})` },
                       { label: 'Frequency', value: activePatch.frequency },
                       { label: 'Mantra', value: activePatch.mantra },
                     ].map(item => (
@@ -1241,7 +1239,7 @@ export default function SiddhaPhotonicRegeneration() {
             <span style={{ background: `linear-gradient(100deg,${GOLD} 5%,#fffbe6 40%,${CYAN} 95%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>REGENERATION NODE</span>
           </h1>
           <p style={{ maxWidth: 580, margin: '0 auto', fontSize: 14.5, lineHeight: 1.65, color: 'rgba(255,255,255,.4)', fontWeight: 300 }}>
-            Synthesizing 2026 LifeWave nanocrystal technology with the 2050 <span style={{ color: GOLD }}>Bhakti-Algorithm</span>.
+            Synthesizing 2026 Siddha photobiomodulation science with the 2050 <span style={{ color: GOLD }}>Bhakti-Algorithm</span>.
             Your 72-hour scalar transmission persists offline, across sessions, and on any device.
           </p>
         </motion.header>
@@ -1309,3 +1307,4 @@ export default function SiddhaPhotonicRegeneration() {
     </div>
   );
 }
+
