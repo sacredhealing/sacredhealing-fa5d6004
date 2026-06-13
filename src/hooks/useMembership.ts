@@ -145,14 +145,22 @@ export const useMembership = () => {
         .limit(1)
         .maybeSingle();
 
-      // FALLBACK: profiles.membership_tier — this is set by Stripe webhook + manual grants
-      // Catches all users who have tier set in profiles but not in user_memberships
-      const { data: profileRow } = await supabase
+      // FALLBACK: profiles.membership_tier — set by Stripe webhook + manual grants
+      // Query both id and user_id columns since profiles schema uses both
+      const { data: profileById } = await supabase
         .from('profiles')
         .select('membership_tier')
         .eq('id', user.id)
         .maybeSingle();
-      const profileTier = (profileRow as any)?.membership_tier ?? null;
+      const { data: profileByUserId } = await supabase
+        .from('profiles')
+        .select('membership_tier')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      const profileTier =
+        (profileById as any)?.membership_tier ||
+        (profileByUserId as any)?.membership_tier ||
+        null;
 
       const grantTier = (grant as any)?.tier || (grant as any)?.access_id || profileTier || null;
       const bestTier = isAdmin
