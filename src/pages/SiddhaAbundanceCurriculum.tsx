@@ -537,7 +537,7 @@ function LessonView({ lesson, module: mod, state, onStateChange, onBack }) {
         <button
           onClick={() => update("completed", true)}
           style={{
-            width: "100%", padding: "16px 0", borderRadius: 24, border: "none", cursor: "pointer",
+            width: "100%", padding: "16px 0", borderRadius: 24, cursor: "pointer",
             background: ls.completed
               ? "rgba(126,200,164,0.15)"
               : `linear-gradient(135deg, ${mod.color}30, ${mod.color}10)`,
