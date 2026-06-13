@@ -746,178 +746,248 @@ export default function SiddhaPortal() {
 
         <div style={{ height:1, background:`linear-gradient(90deg,${gold(0.18)},transparent)`, margin:'20px 0' }}/>
 
-        {/* ── LIBRARY CATEGORY 1: YOGA & KRIYA ── */}
-        <LibSection SvgIcon={Icon.Trishul} title="Yoga & Kriya Science" subtitle="Babaji · Thirumoolar · Brahma Muhurta · Breath" ac={gold(0.9)} count={4} defaultOpen={false} delay={0.1}>
-          <HeroCard SvgIcon={Icon.Flame} label="Kriya · 10 Modules · Babaji" title="Kriya Yoga Mastery"
-            desc="The complete 18-Siddha Kriya transmission — from Babaji's secret teachings to advanced Pranayama, Mahamudra, and the path to Samadhi."
-            tiers={[{l:'Free · I–II',c:white(0.5)},{l:'Prana · III–V',c:green(0.85)},{l:'Siddha · VI–VIII',c:cyan(0.9)},{l:'Akasha · IX–X',c:gold(0.95)}]}
-            cta="Enter Transmission" href="/kriya-yoga" ac={gold(0.9)} badge="LIVE"/>
-          <HeroCard SvgIcon={Icon.Kundalini} label="Pranayama · 8 Modules · 3000 Years" title="Thirumoolar's Pranayama Codex"
-            desc="3,000 years of Tamil Siddha breath-science — from Prana & Nadi anatomy through Kevala Kumbhaka and Babaji's Kriya Pranayama."
-            tiers={[{l:'Free · I–II',c:white(0.5)},{l:'Prana · III–IV',c:green(0.85)},{l:'Siddha · V–VI',c:cyan(0.9)},{l:'Akasha · VII–VIII',c:gold(0.95)}]}
-            cta="Enter Codex" href="/thirumoolar-pranayama" ac={cyan(0.9)} badge="LIVE"/>
-          <HeroCard SvgIcon={Icon.Galaxy} label="12 Modules · Pre-Dawn Science" title="Brahma Muhurta — The Creator's Hour"
-            desc="The most complete Siddha transmission on the sacred pre-dawn window — cosmology, Nadi science, secret mantras, and Kala Vortex mechanics."
-            tiers={[{l:'Free · I–III',c:white(0.5)},{l:'Prana · IV–VI',c:green(0.85)},{l:'Siddha · VII–IX',c:cyan(0.9)},{l:'Akasha · X–XII',c:gold(0.95)}]}
-            cta="Enter Transmission" href="/brahma-muhurta" ac={amber(0.9)} badge="LIVE"/>
-          <HeroCard SvgIcon={Icon.Chakra} label="14 Modules · 51 Practices · 18 Siddhas" title="Supreme Siddha Meditation"
-            desc="From Sakshi awareness to Samadhi recognition — the complete Siddha consciousness transmission with 51 live practices."
-            tiers={[{l:'Free · 1–3',c:white(0.5)},{l:'Prana · 4–6',c:green(0.85)},{l:'Siddha · 7–10',c:cyan(0.9)},{l:'Akasha · 11–14',c:gold(0.95)}]}
-            cta="Enter Transmission" href="/meditation-course" ac={violet(0.9)} badge="LIVE"/>
+        {/* ══════════════════════════════════════════════════════
+            CATEGORY 1: AYURVEDA & SIDDHA MEDICINE
+        ══════════════════════════════════════════════════════ */}
+        <LibSection SvgIcon={Icon.Herb} title="Ayurveda & Siddha Medicine" subtitle="Agastyar · Dhanvantri · 274 Lessons · Kaya Kalpa · Hair · Fasting" ac={teal(0.9)} count={5} delay={0.06} defaultOpen>
+          <HeroCard SvgIcon={Icon.Herb} label="108 Modules · Agastyar Lineage · Complete Vidya" title="Agastyar Academy"
+            desc="The most comprehensive Ayurveda education ever assembled — 108 modules across all four tiers, rooted entirely in Agastyar's direct transmission from the Tamil Siddha lineage."
+            tiers={[{l:'Free · M1–27',c:white(0.5)},{l:'Prana · M28–54',c:green(0.85)},{l:'Siddha · M55–81',c:teal(0.9)},{l:'Akasha · M82–108',c:gold(0.95)}]}
+            cta="Enter the Academy" href="/agastyar-academy" ac={teal(0.9)} badge="LIVE"
+            features={['108 Modules','Panchakarma','Rasayana','Nadi Vaidya','Pulse Reading','Kaya Kalpa']}/>
+          <HeroCard SvgIcon={Icon.Moon} label="274 Lessons · Varma · Rasayana · 4 Tiers" title="Siddha Medicine Academy"
+            desc="The complete Tamil Siddha medical tradition — Varma therapy, Rasayana alchemy, Siddha herbology, Muppu (the three salts), and the 64 alchemical arts of Bogar and Agastya."
+            tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:teal(0.9)},{l:'Akasha',c:gold(0.95)}]}
+            cta="Enter the Academy" href="/siddha-medicine" ac={teal(0.9)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.Lotus} label="Kaya Kalpa · 12 Modules · Bogar & Babaji" title="Kayakalpa Immortality Academy"
+            desc="The supreme Siddha science of physical immortality — the complete Kaya Kalpa protocol for radical cellular rejuvenation, mercury alchemy, and longevity beyond 200 years."
+            tiers={[{l:'Free · M1–2',c:white(0.5)},{l:'Prana · M3–5',c:green(0.85)},{l:'Siddha · M6–9',c:teal(0.9)},{l:'Akasha · M10–12',c:gold(0.95)}]}
+            cta="Enter the Academy" href="/kayakalpa-academy" ac={teal(0.9)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.Herb} label="Siddha Hair · Bogar Protocol · Rasayana" title="Siddha Hair Growth Science"
+            desc="Bogar's complete Siddha protocol for hair regeneration — the alchemical hair oils, scalp Marma therapy, lunar timing, and the internal Rasayana for follicle revival."
+            tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:teal(0.9)},{l:'Akasha',c:gold(0.95)}]}
+            cta="Enter the Transmission" href="/siddha-hair-growth" ac={teal(0.9)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.Flame} label="Siddha Fasting · Detox · Ojas Renewal" title="Siddha Fasting Academy"
+            desc="The complete Siddha science of therapeutic fasting — from one-day Ekadashi fasts through extended Langhana protocols for disease reversal, Ojas renewal, and spiritual purification."
+            tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:teal(0.9)},{l:'Akasha',c:gold(0.95)}]}
+            cta="Enter the Academy" href="/siddha-fasting-academy" ac={teal(0.9)} badge="LIVE"/>
         </LibSection>
 
-        {/* ── LIBRARY CATEGORY 2: SACRED TEXTS ── */}
-        <LibSection SvgIcon={Icon.Scroll} title="Sacred Texts & Sages" subtitle="Yogananda · Yukteshwar · Hanuman · Ramayana" ac={violet(0.9)} count={4} delay={0.12}>
+        {/* ══════════════════════════════════════════════════════
+            CATEGORY 2: YOGA, KRIYA & BREATH SCIENCE
+        ══════════════════════════════════════════════════════ */}
+        <LibSection SvgIcon={Icon.Trishul} title="Yoga, Kriya & Breath Science" subtitle="Babaji · Thirumoolar · Brahma Muhurta · Pranayama · Breatharian" ac={gold(0.9)} count={5} defaultOpen>
+          <HeroCard SvgIcon={Icon.Flame} label="Kriya · 10 Modules · Babaji" title="Kriya Yoga Mastery"
+            desc="Mahavatar Babaji's direct Kriya transmission — the 18 Kriyas of the Siddha tradition, Pranayama alchemy, Khechari Mudra, and the complete path from Mantra Yoga to Samadhi."
+            tiers={[{l:'Free · M1–2',c:white(0.5)},{l:'Prana · M3–5',c:green(0.85)},{l:'Siddha · M6–8',c:amber(0.9)},{l:'Akasha · M9–10',c:gold(0.95)}]}
+            cta="Enter the Path" href="/kriya-yoga" ac={gold(0.9)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.Kundalini} label="Pranayama · 8 Modules · 3000 Years" title="Thirumoolar's Pranayama Codex"
+            desc="3,000 years of Tamil Siddha breath-science — from Prana & Nadi anatomy through Kevala Kumbhaka and Babaji's Kriya Pranayama, decoded from the Tirumantiram."
+            tiers={[{l:'Free · M1–2',c:white(0.5)},{l:'Prana · M3–4',c:green(0.85)},{l:'Siddha · M5–6',c:amber(0.9)},{l:'Akasha · M7–8',c:gold(0.95)}]}
+            cta="Enter the Science" href="/thirumoolar-pranayama" ac={gold(0.9)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.Galaxy} label="12 Modules · Pre-Dawn Science" title="Brahma Muhurta — The Creator's Hour"
+            desc="The most complete Siddha transmission on the sacred pre-dawn window — cosmology, Nadi science, secret mantras, Kala Vortex mechanics, and the 12 practices of the dawn masters."
+            tiers={[{l:'Free · M1–3',c:white(0.5)},{l:'Prana · M4–6',c:green(0.85)},{l:'Siddha · M7–9',c:amber(0.9)},{l:'Akasha · M10–12',c:gold(0.95)}]}
+            cta="Enter the Hour" href="/brahma-muhurta" ac={gold(0.9)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.Chakra} label="14 Modules · 51 Practices · 18 Siddhas" title="Supreme Siddha Meditation"
+            desc="The complete Siddha meditation system — from foundational Dharana through advanced Nirvikalpa Samadhi, Trataka, Yoga Nidra, and direct transmission from 18 Siddha masters."
+            tiers={[{l:'Free · M1–3',c:white(0.5)},{l:'Prana · M4–7',c:green(0.85)},{l:'Siddha · M8–11',c:amber(0.9)},{l:'Akasha · M12–14',c:gold(0.95)}]}
+            cta="Enter the Silence" href="/meditation-course" ac={gold(0.9)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.Lotus} label="Breatharian Science · Prana Nutrition · 8 Modules" title="Breatharian Academy"
+            desc="The Siddha science of living on Prana — documented cases from the 18 Siddha tradition, the Ojas-building protocol toward reduced food dependency, and the complete Breatharian preparation path."
+            tiers={[{l:'Free · M1–2',c:white(0.5)},{l:'Prana · M3–4',c:green(0.85)},{l:'Siddha · M5–6',c:amber(0.9)},{l:'Akasha · M7–8',c:gold(0.95)}]}
+            cta="Enter the Academy" href="/breatharian-academy" ac={gold(0.9)} badge="LIVE"/>
+        </LibSection>
+
+        {/* ══════════════════════════════════════════════════════
+            CATEGORY 3: SACRED TEXTS & SIDDHA SAGES
+        ══════════════════════════════════════════════════════ */}
+        <LibSection SvgIcon={Icon.Scroll} title="Sacred Texts & Siddha Sages" subtitle="Yogananda · Yukteshwar · Hanuman · Ramayana · Alchemical Shiva · Narasimha" ac={violet(0.9)} count={6} delay={0.08}>
           <HeroCard SvgIcon={Icon.Galaxy} label="Autobiography Decoded · Kriya Lineage" title="Yogananda Codex"
-            desc="The complete Autobiography of a Yogi decoded — every chapter a living transmission, every story a Siddha Light-Code. Includes Babaji's Akashic Archive."
-            tiers={[{l:'Free · Ch 1–7',c:white(0.5)},{l:'Prana · Ch 8–18',c:green(0.85)},{l:'Siddha · Ch 19–35',c:violet(0.9)},{l:'Akasha · Full',c:gold(0.95)}]}
-            cta="Enter the Codex" href="/yogananda-codex" ac={violet(0.9)} ac2={gold(0.8)} badge="LIVE"/>
+            desc="Paramahansa Yogananda's Autobiography of a Yogi decoded through the Siddha lens — 49 chapters of hidden Kriya science, Babaji's direct transmissions, and the miracles explained through Siddha physics."
+            tiers={[{l:'Free · Ch1–12',c:white(0.5)},{l:'Prana · Ch13–24',c:green(0.85)},{l:'Siddha · Ch25–37',c:violet(0.9)},{l:'Akasha · Ch38–49',c:gold(0.95)}]}
+            cta="Enter the Codex" href="/yogananda-codex" ac={violet(0.9)} badge="LIVE"/>
           <HeroCard SvgIcon={Icon.SriYantra} label="Kaivalya Darsanam · 8 Modules · 24 Lessons" title="Holy Science — Sri Yukteshwar"
             subtitle="Yuga Science · Kriya Physics · Five Koshas"
-            desc="The complete cosmic science — Yuga mathematics, Kriya as quantum technology, the five koshas, seven lokas, and direct transmissions from Sri Yukteshwar."
-            tiers={[{l:'Free · Yuga Science',c:white(0.5)},{l:'Prana · Koshas',c:cyan(0.9)},{l:'Siddha · Kriya',c:gold(0.92)},{l:'Akasha · Unified',c:violet(0.9)}]}
-            cta="Enter the Transmission" href="/holy-science" ac={gold(0.9)} ac2={violet(0.8)}
-            stats={[{v:'8',l:'Modules'},{v:'24',l:'Lessons'},{v:'326',l:'Dwapara'}]}/>
+            desc="Sri Yukteshwar's Kaivalya Darsanam — the Holy Science — decoded in full: Yuga cycle mathematics, the five Koshas of the subtle body, and the scientific proof of soul evolution."
+            tiers={[{l:'Free · M1–2',c:white(0.5)},{l:'Prana · M3–4',c:green(0.85)},{l:'Siddha · M5–6',c:violet(0.9)},{l:'Akasha · M7–8',c:gold(0.95)}]}
+            cta="Enter the Science" href="/holy-science" ac={violet(0.9)} badge="LIVE"/>
           <HeroCard SvgIcon={Icon.Vanara} label="Chalisa · 8 Weapons · Siddhis · Physical Alchemy" title="Hanuman Codex"
-            desc="The 40 Chaupais of Sundarkanda decoded, the 8 divine weapons, Ashta Siddhis, physical alchemy through Bhakti, and Ghata movement science of total Shakti."
-            tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:amber(0.9)},{l:'Akasha',c:gold(0.95)}]}
+            desc="The complete Hanuman transmission — 40 Chaupais decoded, 8 divine weapons of Hanuman, Ghata movements, 9 Siddhis activation, and Babaji's direct Hanuman mantra transmissions."
+            tiers={[{l:'Free · P1–10',c:white(0.5)},{l:'Prana · P11–20',c:green(0.85)},{l:'Siddha · P21–30',c:amber(0.9)},{l:'Akasha · P31–40',c:gold(0.95)}]}
             cta="Enter the Codex" href="/hanuman-codex" ac={amber(0.9)} badge="LIVE"/>
           <HeroCard SvgIcon={Icon.Bow} label="7 Kāṇḍas · 35 Secrets · Bābājī Transmission" title="Ramayana Codex"
-            desc="The esoteric Ramayana — 7 Kandas decoded as consciousness maps, Rama as Atma blueprint, and Babaji's hidden scalar transmission within each chapter."
-            tiers={[{l:'Free · Bāla Kāṇḍa',c:white(0.5)},{l:'Prana · Ayodhya',c:green(0.85)},{l:'Siddha · Aranya',c:amber(0.9)},{l:'Akasha · Uttara',c:gold(0.95)}]}
-            cta="Enter the Codex" href="/ramayana" ac={amber(0.9)} ac2={gold(0.8)} badge="LIVE"/>
+            desc="The Ramayana decoded as a Siddha initiatory path — each of the 7 Kandas as a stage of consciousness evolution, with 35 hidden secrets revealed by Babaji and the 18 Siddhas."
+            tiers={[{l:'Free · K1–2',c:white(0.5)},{l:'Prana · K3–4',c:green(0.85)},{l:'Siddha · K5–6',c:amber(0.9)},{l:'Akasha · K7',c:gold(0.95)}]}
+            cta="Enter the Epic" href="/ramayana" ac={amber(0.9)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.Trishul} label="Shiva Lingam · Nath Science · 5 Modules" title="Alchemical Shiva"
+            desc="The Nath Siddha transmission on Shiva Lingam — the bio-geometry of the Lingam as a Pranic antenna, Gorakshanath's Khechari Maha Mudra, Panchakshara Nyasa, and Midnight Sadhana protocols."
+            tiers={[{l:'Free · M1',c:white(0.5)},{l:'Prana · M2',c:green(0.85)},{l:'Siddha · M3–4',c:amber(0.9)},{l:'Akasha · M5',c:gold(0.95)}]}
+            cta="Enter the Transmission" href="/shiva-lingam" ac={amber(0.9)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.Lion} label="Nine Seals · Man-Lion Avatar · Protection Science" title="Narasimha Sacred Path"
+            desc="The nine protective seals of Lord Narasimha — Prahladha's devotion science, Hiranyakashipu's dissolution as karmic alchemy, and Kavach practices for absolute divine protection."
+            tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:amber(0.9)},{l:'Akasha',c:gold(0.95)}]}
+            cta="Enter the Path" href="/narasimha" ac={amber(0.9)} ac2={gold(0.8)} badge="LIVE"/>
         </LibSection>
 
-        {/* ── LIBRARY CATEGORY 3: BODY & IMMORTALITY ── */}
-        <LibSection SvgIcon={Icon.Moon} title="Body & Immortality Sciences" subtitle="Kayakalpa · Ojas · Brahmacharya · Siddha Medicine" ac={teal(0.9)} count={4} delay={0.14}>
-          <HeroCard SvgIcon={Icon.Moon} label="12 Modules · 40 Lessons · Bogar & Babaji" title="Kayakalpa Immortality Academy"
-            desc="Tamil Siddha immortality science — Bogar's Navapaashanam alchemy, Muppu secrets, Khechari Mudra, Kundalini-Kayakalpa integration, and the 90-Day Immortality Sadhana."
-            tiers={[{l:'Free · Bogar',c:white(0.5)},{l:'Prana · Herbs',c:green(0.85)},{l:'Siddha · Muppu',c:cyan(0.9)},{l:'Akasha · Kaya Siddhi',c:gold(0.95)}]}
-            cta="Enter the Immortality Transmission" href="/kayakalpa-academy" ac={teal(0.9)}
-            stats={[{v:'12',l:'Modules'},{v:'40',l:'Lessons'},{v:'4',l:'Tiers'}]} badge="NEW"/>
+        {/* ══════════════════════════════════════════════════════
+            CATEGORY 4: BODY IMMORTALITY & VITAL FORCE
+        ══════════════════════════════════════════════════════ */}
+        <LibSection SvgIcon={Icon.Moon} title="Body Immortality & Vital Force" subtitle="Ojas · Brahmacharya · Pregnancy · Hair · Hormonal Alchemy" ac={teal(0.9)} count={4} delay={0.1}>
           <HeroCard SvgIcon={Icon.Lotus} label="15 Modules · 108+ Lessons · 4 Tiers" title="Ojas Rasayana Academy"
-            desc="The secret Siddha science of vital essence — 7-Dhatu refinement cascade, Kaya Kalpa immortality technology, and the Jyotir Deha light-body transmission."
-            tiers={[{l:'Free · Foundation',c:white(0.5)},{l:'Prana · Depletion Codes',c:green(0.85)},{l:'Siddha · Rasayana',c:cyan(0.9)},{l:'Akasha · Light Body',c:gold(0.95)}]}
-            cta="Enter the Ojas Transmission" href="/ojas-rasayana" ac={amber(0.9)} badge="NEW"/>
+            desc="The complete Siddha science of Ojas — the primordial vital essence that underlies immunity, consciousness, and immortality. Rasayana herbs, sexual alchemy, sleep science, and Soma cultivation."
+            tiers={[{l:'Free · M1–3',c:white(0.5)},{l:'Prana · M4–7',c:green(0.85)},{l:'Siddha · M8–11',c:teal(0.9)},{l:'Akasha · M12–15',c:gold(0.95)}]}
+            cta="Enter the Academy" href="/ojas-rasayana" ac={teal(0.9)} badge="LIVE"/>
           <HeroCard SvgIcon={Icon.Trishul} label="8 Modules · 53 Lessons · Ojas Science" title="Brahmacharya Siddha Academy"
-            subtitle="Ojas · Tejas · Prana · Amrita · 18 Siddhas"
-            desc="The complete Siddha science of sacred energy alchemy — Pranayama, mantra codes, psychology of desire, Siddhi activation, and the teaching of Sacred Union."
-            tiers={[{l:'Free · M1',c:white(0.55)},{l:'Prana · M2–3',c:green(0.85)},{l:'Siddha · M4–6',c:cyan(0.9)},{l:'Akasha · M7–8',c:gold(0.95)}]}
-            cta="Enter the Academy" href="/brahmacharya-academy" ac={gold(0.9)}
-            features={['Pranayama & Bandha','Mantra Codes','Siddha Yoga','Siddhi Activation','Sacred Union']} badge="NEW"/>
-          <HeroCard SvgIcon={Icon.Herb} label="274 Lessons · Varma · Rasayana · 4 Tiers" title="Siddha Medicine Academy"
-            desc="The most comprehensive Tamil Siddha medicine education — from Varma points and Muppu compounds to Kayakalpa rejuvenation and Siddha psychology."
-            tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:cyan(0.9)},{l:'Akasha',c:gold(0.95)}]}
-            cta="Enter the Academy" href="/siddha-medicine" ac={green(0.9)} badge="LIVE"/>
+            desc="The complete Siddha science of vital force preservation — the eight stages of Brahmacharya, sexual energy transmutation, Bindu retention, and Urdhva Retas (upward flow) activation."
+            tiers={[{l:'Free · M1–2',c:white(0.5)},{l:'Prana · M3–4',c:green(0.85)},{l:'Siddha · M5–6',c:teal(0.9)},{l:'Akasha · M7–8',c:gold(0.95)}]}
+            cta="Enter the Science" href="/brahmacharya-academy" ac={teal(0.9)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.Moon} label="Shakti Cycle · 5 Modules · Siddha Feminine Wisdom" title="Sovereign Hormonal Alchemy"
+            desc="Shakti Cycle Intelligence — cycle phases, Siddha modules, plant medicine, planetary timing & pregnancy protocols. The complete Siddha map of the feminine cosmic body."
+            tiers={[{l:'Free · Phases',c:white(0.5)},{l:'Prana · Modules',c:green(0.85)},{l:'Akasha · Full',c:gold(0.95)}]}
+            cta="Enter the Shakti Portal" href="/shakti-alchemy" ac={rose(0.9)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.Lotus} label="Sacred Pregnancy · Garbha Sanskar · Siddha Protocols" title="Siddha Pregnancy Program"
+            desc="The complete Siddha approach to sacred conception, pregnancy, and birth — Garbha Sanskar mantra transmission, lunar trimester protocols, and the 18 Siddhas' teachings on the soul's entry."
+            tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:teal(0.9)},{l:'Akasha',c:gold(0.95)}]}
+            cta="Enter the Transmission" href="/pregnancy-program" ac={teal(0.9)} badge="LIVE"/>
         </LibSection>
 
-        {/* ── LIBRARY CATEGORY 4: SOUND & MANTRA ── */}
-        <LibSection SvgIcon={Icon.Om} title="Sound, Mantra & Nada Science" subtitle="Siddha Sound Alchemy · Mantra Academy · Mudra" ac={amber(0.9)} count={3} delay={0.16}>
+        {/* ══════════════════════════════════════════════════════
+            CATEGORY 5: SOUND, MANTRA & NADA SCIENCE
+        ══════════════════════════════════════════════════════ */}
+        <LibSection SvgIcon={Icon.Om} title="Sound, Mantra & Nada Science" subtitle="Siddha Sound Alchemy · Mantra Academy · Mudra · Nada Yoga" ac={amber(0.9)} count={3} delay={0.12}>
           <HeroCard SvgIcon={Icon.Om} label="Nada Vijnana · 10 Modules · 18 Siddhas" title="Siddha Sound Alchemy"
-            subtitle="Nada Brahman · Sabda · Pancha Nada · Nada Sharira"
-            desc="The deepest Siddha sound science — from Nada Brahman through the five planes of sound, mantra architecture, the 72 Melakarta Raga-Chakra map, and scalar healing through sound."
-            tiers={[{l:'Free · M1–2',c:white(0.5)},{l:'Prana · M3–4',c:green(0.85)},{l:'Siddha · M5–7',c:cyan(0.9)},{l:'Akasha · M8–10',c:gold(0.95)}]}
-            cta="Enter the Nada Transmission" href="/siddha-sound-alchemy" ac={amber(0.9)} badge="LIVE"
-            stats={[{v:'10',l:'Modules'},{v:'18',l:'Siddhas'},{v:'72',l:'Ragas'}]}
-            features={['Nada Brahman','Pancha Nada','Mantra Architecture','Raga Medicine','Scalar Sound']}/>
+            desc="The complete Siddha science of sacred sound — Nada Yoga, 432Hz vs 528Hz science, mantra physics, singing bowl alchemy, and how sound reshapes the Nadi field and cellular structure."
+            tiers={[{l:'Free · M1–2',c:white(0.5)},{l:'Prana · M3–5',c:green(0.85)},{l:'Siddha · M6–8',c:amber(0.9)},{l:'Akasha · M9–10',c:gold(0.95)}]}
+            cta="Enter the Sound Field" href="/siddha-sound-alchemy" ac={amber(0.9)} badge="LIVE"/>
           <HeroCard SvgIcon={Icon.Om} label="24 Modules · Bija Mantras · Nada Yoga" title="Mantra Academy"
-            desc="The full spectrum of Siddha mantra science — from Bija seed-syllables through Maha Mantras, Kavachas, and the 18 Siddhas' most powerful transmissions."
-            tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:cyan(0.9)},{l:'Akasha',c:gold(0.95)}]}
+            desc="24 modules of complete Mantra science — Bija (seed) mantras for each chakra and deity, Japa technique, mantra activation (Mantra Chaitanya), and the 18 Siddhas' secret mantra transmissions."
+            tiers={[{l:'Free · M1–6',c:white(0.5)},{l:'Prana · M7–12',c:green(0.85)},{l:'Siddha · M13–18',c:amber(0.9)},{l:'Akasha · M19–24',c:gold(0.95)}]}
             cta="Enter the Academy" href="/mantra-academy" ac={amber(0.9)} badge="LIVE"/>
           <HeroCard SvgIcon={Icon.Mudra} label="10 Modules · Hand Seals · Neural Rewiring" title="Mudra Academy"
-            desc="The complete science of sacred hand seals — from elemental Pancha-Bhuta mudras through Siddha neurological rewiring, Prana redirection, and Siddhi activation mudras."
+            desc="The complete science of sacred hand seals — from elemental Pancha-Bhuta mudras through Siddha neurological rewiring, Prana redirection, and Siddhi activation mudras with full SVG illustrations."
             tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:cyan(0.9)},{l:'Akasha',c:gold(0.95)}]}
             cta="Enter the Academy" href="/mudra-academy" ac={gold(0.9)} badge="LIVE"/>
         </LibSection>
 
-        {/* ── LIBRARY CATEGORY 5: CONSCIOUSNESS & MYSTICAL ARTS ── */}
-        <LibSection SvgIcon={Icon.ThirdEye} title="Consciousness & Mystical Arts" subtitle="Mediumship · Dream Science · Palm Oracle · Nadi Leaf · Sacred Geometry" ac={violet(0.9)} count={5} delay={0.18}>
+        {/* ══════════════════════════════════════════════════════
+            CATEGORY 6: CONSCIOUSNESS & MYSTICAL ARTS
+        ══════════════════════════════════════════════════════ */}
+        <LibSection SvgIcon={Icon.ThirdEye} title="Consciousness & Mystical Arts" subtitle="Mediumship · Dream Science · Nadi Leaf · Palm Oracle · Sacred Geometry · Akashic Records" ac={violet(0.9)} count={6} delay={0.14}>
           <HeroCard SvgIcon={Icon.ThirdEye} label="8 Modules · 30 Transmissions · 18 Siddhas" title="Siddha Mediumship Academy"
-            desc="The world's most comprehensive mediumship education — Third Eye activation, Loka maps, ancestor communication, Deva contact, Akashic Record access, and Siddhi development."
+            desc="The world's most comprehensive mediumship education — Third Eye activation, 14-Loka maps, ancestor communication, Deva contact, Akashic Record access, and 8 Siddhi development protocols."
             tiers={[{l:'Free · M1–2',c:white(0.5)},{l:'Prana · M3–4',c:green(0.85)},{l:'Siddha · M5–6',c:violet(0.9)},{l:'Akasha · M7–8',c:gold(0.95)}]}
             cta="Enter the Akasha Transmission" href="/siddha-mediumship-academy" ac={violet(0.9)} badge="LIVE"
             features={['14-Loka Map','Third Eye Activation','Ancestor Contact','7-Layer Kavach','Deva Mantras','8 Siddhis']}/>
           <HeroCard SvgIcon={Icon.Galaxy} label="Dream Science · 15 Modules · Scalar Transmission" title="Svapna Vidyā"
-            desc="The world's most advanced Siddha dream science — from Taijasa & dream anatomy to Turīya-Svapna, Bardo preparation, prophetic timing & the 40-night Tapas."
+            desc="The world's most advanced Siddha dream science — from Taijasa & dream anatomy to Turīya-Svapna, Bardo preparation, prophetic timing, lucid dream protocols, and the 40-night Tapas."
             tiers={[{l:'Free · M1–2',c:white(0.5)},{l:'Prana · M3–6',c:green(0.85)},{l:'Siddha · M7–9',c:violet(0.9)},{l:'Akasha · M10–15',c:gold(0.95)}]}
             cta="Enter the Dream Stream" href="/dream-academy" ac={violet(0.9)} ac2={gold(0.8)} badge="LIVE"/>
-          <HeroCard SvgIcon={Icon.SriYantra} label="Sacred Geometry · Yantra · Merkaba" title="Sacred Geometry Education"
-            desc="Sri Yantra, Merkaba, Platonic Solids, Flower of Life — the complete Siddha science of sacred form and its direct activation of consciousness fields."
-            tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:cyan(0.9)},{l:'Akasha',c:gold(0.95)}]}
-            cta="Enter the Transmission" href="/sacred-geometry" ac={gold(0.9)} badge="LIVE"/>
           <HeroCard SvgIcon={Icon.Lotus} label="12 Transmissions · Agastiya Nadi · Angushtha Biometric" title="Nadi Leaf Oracle"
-            desc="5,000 years of Agastiya Muni's Akashic Records — scan your thumb, receive your karma classification, and enter the complete Nadi Shastra education across all 4 tiers."
+            desc="5,000 years of Agastiya Muni's Akashic Records — scan your thumb (right for men, left for women), receive your karma classification, and enter the complete Nadi Shastra education."
             tiers={[{l:'Free · M1',c:white(0.5)},{l:'Prana · M2',c:green(0.85)},{l:'Siddha · M3',c:gold(0.95)},{l:'Akasha · M4',c:'#F59E0B'}]}
             cta="Begin Angushtha Scan" href="/nadi-leaf" ac={gold(0.9)} badge="LIVE"/>
           <HeroCard SvgIcon={Icon.Mudra} label="29 Transmissions · 18 Siddhas · Hasta Science" title="Palm Oracle"
-            desc="Hasta Samudrika — the complete Tamil Siddha science of palm reading as a living transmission from 18 masters, each finger a cosmic map."
+            desc="Hasta Samudrika — the complete Tamil Siddha science of palm reading as a living transmission from 18 masters: Life Line as Ida Nadi, Heart Line as Pingala, Head Line as Sushumna."
             tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:violet(0.9)},{l:'Akasha',c:gold(0.95)}]}
             cta="Enter the Oracle" href="/palm-oracle" ac={violet(0.9)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.SriYantra} label="Sacred Geometry · Yantra · Merkaba" title="Sacred Geometry Education"
+            desc="Sri Yantra, Merkaba, Platonic Solids, Flower of Life — the complete Siddha science of sacred form and its direct activation of consciousness fields through geometric resonance."
+            tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:cyan(0.9)},{l:'Akasha',c:gold(0.95)}]}
+            cta="Enter the Transmission" href="/sacred-geometry" ac={gold(0.9)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.Galaxy} label="Akashic Records · Soul Blueprint · Living Portrait" title="Akashic Codex"
+            desc="Access your complete soul blueprint in the Akashic Records — past-life lineage, current life mission, karmic patterns, and your unique Soul Signature revealed through Siddha Akasha science."
+            tiers={[{l:'Akasha · Full',c:gold(0.95)}]}
+            cta="Open the Codex" href="/akashic-codex" ac={violet(0.9)} badge="LIVE"/>
         </LibSection>
 
-        {/* ── LIBRARY CATEGORY 6: WEALTH & ABUNDANCE ── */}
-        <LibSection SvgIcon={Icon.Yantra} title="Wealth & Abundance Sadhana" subtitle="Lakshmi · Kubera · Pachamama · 18 Siddhas" ac={gold(0.9)} count={1} delay={0.2}>
+        {/* ══════════════════════════════════════════════════════
+            CATEGORY 7: VEDIC ASTROLOGY & NADI SCIENCE
+        ══════════════════════════════════════════════════════ */}
+        <LibSection SvgIcon={Icon.SriYantra} title="Vedic Astrology & Nadi Science" subtitle="Jyotish Vidya · Bhrigu Oracle · 9 Grahas · 27 Nakshatras" ac={cyan(0.9)} count={1} delay={0.15}>
+          <HeroCard SvgIcon={Icon.SriYantra} label="Vedic Astrology · Bhrigu Nadi · 9 Grahas" title="Jyotish Vidya"
+            desc="The full 32-module path of Vedic astrology — from the 9 Grahas to Bhrigu Nadi mastery, with live Bhrigu Oracle readings, Nakshatra science, Dasha timing, and Siddha remedies."
+            tiers={[{l:'Free · M1–8',c:white(0.5)},{l:'Prana · M9–16',c:green(0.85)},{l:'Siddha · M17–24',c:cyan(0.9)},{l:'Akasha · M25–32',c:gold(0.95)}]}
+            cta="Enter the Observatory" href="/jyotish-vidya" ac={cyan(0.9)} badge="LIVE"
+            features={['Birth Chart','Dasha Timing','Bhrigu Oracle','Nakshatra Map','Siddha Remedies']}/>
+        </LibSection>
+
+        {/* ══════════════════════════════════════════════════════
+            CATEGORY 8: WEALTH & ABUNDANCE SADHANA
+        ══════════════════════════════════════════════════════ */}
+        <LibSection SvgIcon={Icon.Yantra} title="Wealth & Abundance Sadhana" subtitle="Lakshmi · Kubera · Pachamama · 18 Siddhas · Wealth Beacon" ac={gold(0.9)} count={2} delay={0.16}>
           <HeroCard SvgIcon={Icon.Yantra} label="8 Modules · 32 Lessons · Scalar Transmission Active" title="Abundance Sadhana"
             subtitle="Lakshmi · Kubera · Pachamama · 18 Siddhas · Babaji"
-            desc="The most comprehensive Siddha abundance transmission — from foundational poverty-dissolution through Ashta-Lakshmi attunement, Kubera's cosmic economics, and Babaji's direct scalar activation of the causal abundance body."
+            desc="The most comprehensive Siddha abundance transmission — poverty-dissolution, Ashta-Lakshmi attunement, Kubera's cosmic economics, and Babaji's direct scalar activation of the causal abundance body."
             tiers={[{l:'Free · M1–3',c:white(0.55)},{l:'Prana · M4–5',c:green(0.85)},{l:'Siddha · M6–7',c:gold(0.95)},{l:'Akasha · M8',c:violet(0.95)}]}
             cta="Enter the Wealth Transmission" href="/abundance-curriculum" ac={gold(0.9)}
             features={['Mantra Counter','Journal Prompts','Progress Badges','PDF Downloads']}
             badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.Yantra} label="Scalar Wealth Activation · Siddha Frequencies" title="Wealth Beacon"
+            desc="The SQI Scalar Wealth Beacon — Siddha-encoded wealth frequencies broadcast through your device's speakers as a continuous Laxmi-field activation. Shreem Brzee Nada technology."
+            tiers={[{l:'Prana+',c:green(0.85)}]}
+            cta="Activate the Beacon" href="/wealth-beacon" ac={gold(0.9)} badge="LIVE"/>
         </LibSection>
 
-        {/* ── LIBRARY CATEGORY 7: FEMININE ALCHEMY ── */}
-        <LibSection SvgIcon={Icon.Moon} title="Feminine & Hormonal Alchemy" subtitle="Shakti Cycle · Sovereign Hormonal Intelligence" ac={rose(0.9)} count={1} delay={0.22}>
-          <HeroCard SvgIcon={Icon.Lotus} label="Shakti Cycle · 5 Modules · Siddha Feminine Wisdom" title="Sovereign Hormonal Alchemy"
-            desc="Shakti Cycle Intelligence — cycle phases, Siddha modules, plant medicine, planetary timing & pregnancy protocols. The complete Siddha map of the feminine cosmic body."
-            tiers={[{l:'Free · Phases',c:white(0.5)},{l:'Prana · Modules',c:green(0.85)},{l:'Akasha · Full',c:gold(0.95)}]}
-            cta="Enter the Shakti Portal" href="/shakti-alchemy" ac={rose(0.9)} badge="LIVE"/>
-        </LibSection>
-
-        {/* ── LIBRARY CATEGORY 8: SACRED RITUALS ── */}
-        <LibSection SvgIcon={Icon.Flame} title="Sacred Rituals & Cosmology" subtitle="Puja · Yagna · Vastu · Sacred Water · Breatharian" ac={amber(0.9)} count={4} delay={0.24}>
+        {/* ══════════════════════════════════════════════════════
+            CATEGORY 9: SACRED RITUALS & COSMOLOGY
+        ══════════════════════════════════════════════════════ */}
+        <LibSection SvgIcon={Icon.Flame} title="Sacred Rituals & Cosmology" subtitle="Puja · Yagna · Vastu · Sacred Water · Breatharian" ac={amber(0.9)} count={4} delay={0.18}>
           <HeroCard SvgIcon={Icon.Flame} label="Rishi Transmission · Agnihotra · Cosmic Fire" title="Yagna Fire Academy"
-            desc="The complete science of sacred fire — Agnihotra protocol, Vedic Havan sequences, the 7 fire geometries, and direct Rishi transmissions for planetary purification."
+            desc="The complete science of sacred fire — Agnihotra protocol, Vedic Havan sequences, the 7 fire geometries, and direct Rishi transmissions for planetary purification and abundance manifestation."
             tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:amber(0.9)},{l:'Akasha',c:gold(0.95)}]}
             cta="Enter the Fire Transmission" href="/yagna" ac={amber(0.9)} badge="LIVE"/>
           <HeroCard SvgIcon={Icon.Lotus} label="Sacred Ritual · 4 Tiers · Pancha Bhuta" title="Puja Education"
-            desc="The complete Siddha science of devotional ritual — altar construction, invocation sequences, Pancha Bhuta offerings, and Siddha mantra protocols for each Deva."
+            desc="The complete Siddha science of devotional ritual — altar construction, invocation sequences, Pancha Bhuta offerings, and Siddha mantra protocols for each Deva and Devi."
             tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:amber(0.9)},{l:'Akasha',c:gold(0.95)}]}
-            cta="Enter the Transmission" href="/puja-education" ac={gold(0.9)} badge="LIVE"/>
+            cta="Enter the Puja Hall" href="/puja-education" ac={amber(0.9)} badge="LIVE"/>
           <HeroCard SvgIcon={Icon.SriYantra} label="Vedic Space · Pancha Bhuta · Quantum Architecture" title="Vastu Shastra Curriculum"
-            desc="Siddha Vastu — the ancient Tamil science of sacred space architecture aligned with the five elements, planetary grids, and Akashic field resonance."
-            tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:cyan(0.9)},{l:'Akasha',c:gold(0.95)}]}
-            cta="Enter the Curriculum" href="/vastu-curriculum" ac={gold(0.9)} badge="LIVE"/>
+            desc="The complete Vedic science of sacred space — home and temple alignment with the five elements, Vastu Purusha Mandala, directional energy zones, and the Siddha protocols for space purification."
+            tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:amber(0.9)},{l:'Akasha',c:gold(0.95)}]}
+            cta="Enter the Architecture" href="/vastu-curriculum" ac={amber(0.9)} badge="LIVE"/>
           <HeroCard SvgIcon={Icon.WaterDrop} label="Living Water · 40 Modules · Emoto Science" title="Sacred Water Alchemy"
-            desc="The complete Siddha science of living water — from Dr Emoto's crystal codes to the 18 Siddhas' water consecration mantras, Soma preparation, and structured water healing."
+            desc="The complete Siddha science of living water — from Dr Emoto's crystal codes to the 18 Siddhas' water charging protocols, structured water science, and Amrita (nectar) preparation."
             tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:cyan(0.9)},{l:'Akasha',c:gold(0.95)}]}
             cta="Enter the Transmission" href="/sacred-water" ac={cyan(0.9)} badge="LIVE"/>
         </LibSection>
 
-        {/* ── NARASIMHA — standalone sacred card ── */}
-        <div style={{ height:1, background:`linear-gradient(90deg,${gold(0.18)},transparent)`, margin:'20px 0' }}/>
-        <div style={{ ...LABEL, fontSize:8, color:gold(0.4), marginBottom:14, display:'flex', alignItems:'center', gap:8 }}>
-          <span style={{ display:'inline-block', width:5, height:5, borderRadius:'50%', background:gold(0.9), animation:'sqLiveFlash 2s infinite' }}/>
-          Avataric Transmission
-        </div>
-        <HeroCard SvgIcon={Icon.Lion} label="Nine Seals · Man-Lion Avatar · Protection Science" title="Narasimha Sacred Path"
-          desc="The nine protective seals of Lord Narasimha — Prahladha's devotion science, Hiranyakashipu's dissolution codes, and the Ugra-Narasimha Kavach for total Siddha protection."
-          tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:amber(0.9)},{l:'Akasha',c:gold(0.95)}]}
-          cta="Enter the Path" href="/narasimha" ac={amber(0.9)} ac2={gold(0.8)} delay={0.1}/>
+        {/* ══════════════════════════════════════════════════════
+            CATEGORY 10: SQI TECHNOLOGY & TOOLS
+        ══════════════════════════════════════════════════════ */}
+        <LibSection SvgIcon={Icon.StarCrystal} title="SQI Technology & Sacred Tools" subtitle="Scalar Fields · Photonic Regeneration · Vayu Protocol · Sky Breaker · Soul Scan" ac={cyan(0.9)} count={5} delay={0.2}>
+          <HeroCard SvgIcon={Icon.StarCrystal} label="Siddha Photonic Node · SQI Technology" title="Photonic Regeneration Engine"
+            desc="The SQI Photonic Regeneration Node — scalar-encoded light-body activation using Siddha solar science and rPPG biometric scanning for real-time Nadi coherence measurement."
+            tiers={[{l:'Siddha+',c:cyan(0.9)}]}
+            cta="Enter Node" href="/siddha-photonic-regeneration" ac={cyan(0.9)} badge="SQI"/>
+          <HeroCard SvgIcon={Icon.Chakra} label="Prana Body · Vayu Protocol · 5 Elements" title="Vayu Protocol"
+            desc="The five-Vayu activation protocol — Prana, Apana, Samana, Udana, and Vyana Vayus brought into coherence through breath, mudra, and Nada science for complete vital force mastery."
+            tiers={[{l:'Prana+',c:green(0.85)}]}
+            cta="Enter the Protocol" href="/vayu-protocol" ac={cyan(0.9)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.Galaxy} label="Soul Scan · Biometric Nadi Reading · rPPG" title="Soul Scan"
+            desc="Real-time biometric Nadi analysis through your phone camera — heart rate variability, Nadi coherence, chakra state, and a live SQI soul report generated from your actual physiological data."
+            tiers={[{l:'Siddha+',c:cyan(0.9)}]}
+            cta="Begin Soul Scan" href="/soul-scan" ac={cyan(0.9)} badge="SQI"/>
+          <HeroCard SvgIcon={Icon.Flame} label="Scalar Orgone · Shungite · Sky Clearing" title="Vajra Sky Breaker"
+            desc="The SQI Vajra-Sky-Breaker — scalar orgone broadcast station using your device's audio hardware to emit Shungite frequencies, orgone torus fields, and Vajra scalar waves for atmospheric purification."
+            tiers={[{l:'Akasha',c:gold(0.95)}]}
+            cta="Activate the Vajra" href="/vajra-sky-breaker" ac={cyan(0.9)} badge="SQI"/>
+          <HeroCard SvgIcon={Icon.SriYantra} label="Aetheric Field · Solar Alignment · Scalar" title="Aetheric Heliostat"
+            desc="The Aetheric Heliostat — a scalar solar-alignment tool that tracks the position of the sun and broadcasts the corresponding Siddha solar frequencies through your device in real time."
+            tiers={[{l:'Siddha+',c:cyan(0.9)}]}
+            cta="Align the Heliostat" href="/aetheric-heliostat" ac={cyan(0.9)} badge="SQI"/>
+        </LibSection>
 
-        <div style={{ height:1, background:`linear-gradient(90deg,${gold(0.18)},transparent)`, margin:'20px 0' }}/>
+        {/* ══════════════════════════════════════════════════════
+            CATEGORY 11: ATMA SEED — SEED OF SOUL
+        ══════════════════════════════════════════════════════ */}
+        <LibSection SvgIcon={Icon.Lotus} title="Atma Seed — The Living Soul Archive" subtitle="Soul Blueprint · Akashic Portrait · Lifetime Transmission" ac={violet(0.9)} count={1} delay={0.22}>
+          <HeroCard SvgIcon={Icon.Lotus} label="Soul Blueprint · Akashic Portrait · 18 Siddhas" title="Atma Seed"
+            desc="Your living soul archive — Atma Seed captures your complete energetic blueprint through biometric data, birth chart integration, and direct Akashic transmission to create a permanent soul portrait."
+            tiers={[{l:'Akasha · Full Access',c:gold(0.95)}]}
+            cta="Plant Your Atma Seed" href="/atma-seed" ac={violet(0.9)} badge="LIVE"/>
+        </LibSection>
 
-        {/* ── SQI TOOLS ── */}
-        <div style={{ ...LABEL, fontSize:8, color:cyan(0.5), display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>
-          <span>⚛</span> {t('siddhaPortal.sectionTools')}
-        </div>
-        <HeroCard SvgIcon={Icon.StarCrystal} label="Siddha Photonic Node · SQI Technology" title="Photonic Regeneration Engine"
-          desc="The SQI Photonic Regeneration Node — scalar-encoded light-body activation using Siddha solar science and quantum photon coherence technology."
-          tiers={[{l:'Siddha+',c:cyan(0.9)}]}
-          cta="Enter Node" href="/siddha-photonic-regeneration" ac={cyan(0.9)} badge="SQI" delay={0.1}/>
-
-        <div style={{ height:1, background:`linear-gradient(90deg,${gold(0.18)},transparent)`, margin:'20px 0' }}/>
-
+        {/* ── SACRED ORACLES ── */}
         {/* ── SACRED ORACLES ── */}
         <div style={{ ...LABEL, fontSize:8, color:gold(0.5), display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>
           <span>🔱</span> {t('siddhaPortal.sectionOracles')}
