@@ -413,27 +413,17 @@ export async function streamChatWithSQI(
         onDelta(finalText);
         onDone();
         completed = true;
-      } else {
-        // No buffer at all — quota/network error. Deliver a visible message so UI never blacks out.
-        const errText = msg?.includes('429') || msg?.includes('quota') || msg?.includes('limit')
-          ? 'The Oracle transmission is briefly paused — the Akasha channel is at capacity. Please try again in a moment. ◈'
-          : 'The transmission was briefly interrupted. Please send your question again. ◈';
-        onDelta(errText);
-        onDone();
-        completed = true;
-      }
+
     },
   });
 
   if (!completed) {
+    // Last resort: if something accumulated before the throw, deliver it
     if (fullBuffer.trim()) {
       onDelta(fullBuffer);
       onDone();
     } else {
-      // Never throw to caller — show a message so QA UI never goes black
-      const errText = 'The Oracle transmission is briefly paused. Please try again in a moment. ◈';
-      onDelta(errText);
-      onDone();
+      throw new Error(fatal || 'SQI transmission failed');
     }
   }
 }
