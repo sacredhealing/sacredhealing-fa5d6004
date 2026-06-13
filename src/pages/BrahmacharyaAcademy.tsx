@@ -369,7 +369,6 @@ const CURRICULUM: Module[] = [
     },
   ]
 },
-,
 // MODULE 5 — SIDDHA-QUANTUM
 {
   id:"module_5",tier:"siddha-quantum",number:"05",glyph:"⚡",
@@ -415,7 +414,6 @@ const CURRICULUM: Module[] = [
     },
   ]
 },
-,
 // MODULE 6 — SIDDHA-QUANTUM
 {
   id:"module_6",tier:"siddha-quantum",number:"06",glyph:"🧠",
@@ -456,7 +454,6 @@ const CURRICULUM: Module[] = [
     },
   ]
 },
-,
 // MODULE 7 — AKASHA-INFINITY
 {
   id:"module_7",tier:"akasha-infinity",number:"07",glyph:"👁️",
@@ -498,7 +495,6 @@ const CURRICULUM: Module[] = [
     },
   ]
 },
-,
 // MODULE 8 — AKASHA-INFINITY
 {
   id:"module_8",tier:"akasha-infinity",number:"08",glyph:"∞",
