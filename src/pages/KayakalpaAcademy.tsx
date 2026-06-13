@@ -1,593 +1,806 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMembership } from '@/hooks/useMembership';
-import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
 
-// ─── DESIGN TOKENS ───────────────────────────────────────────────────────────
-const gold  = (a: number) => `rgba(212,175,55,${a})`;
-const white = (a: number) => `rgba(255,255,255,${a})`;
-const cyan  = (a: number) => `rgba(34,211,238,${a})`;
-const green = (a: number) => `rgba(74,222,128,${a})`;
-const amber = (a: number) => `rgba(245,158,11,${a})`;
+const gold    = (a: number) => `rgba(212,175,55,${a})`;
+const white   = (a: number) => `rgba(255,255,255,${a})`;
+const cyan    = (a: number) => `rgba(34,211,238,${a})`;
+const green   = (a: number) => `rgba(74,222,128,${a})`;
 const emerald = (a: number) => `rgba(52,211,153,${a})`;
 
-const FONT_MAIN = "'Plus Jakarta Sans','Montserrat',sans-serif";
-const FONT_SERIF = "'Cormorant Garamond',serif";
-
-const LABEL_STYLE: React.CSSProperties = {
-  fontFamily: FONT_MAIN,
-  fontSize: 9,
-  fontWeight: 800,
-  letterSpacing: '0.45em',
-  textTransform: 'uppercase' as const,
-  color: gold(0.5),
+const FONT  = "'Plus Jakarta Sans','Montserrat',sans-serif";
+const SERIF = "'Cormorant Garamond',serif";
+const LABEL: React.CSSProperties = {
+  fontFamily: FONT, fontSize: 9, fontWeight: 800,
+  letterSpacing: '0.45em', textTransform: 'uppercase' as const, color: gold(0.5),
 };
 
-// ─── CURRICULUM DATA ──────────────────────────────────────────────────────────
+interface Lesson {
+  title: string; duration: string;
+  body: string[];
+  practice?: string;
+  mantra?: string;
+}
+interface Module {
+  num: number; tier: 'free'|'prana'|'siddha'|'akasha';
+  icon: string; title: string; subtitle: string;
+  lessons: Lesson[];
+}
 
-const MODULES = [
-  // ── FREE TIER ──────────────────────────────────────────────────────────────
+const MODULES: Module[] = [
   {
-    tier: 'free',
-    tierLabel: 'FREE',
-    tierColor: white(0.55),
-    num: 1,
-    icon: '🜂',
-    title: 'The Immortal Body — Bogar\'s Revelation',
-    subtitle: 'Origin · Definition · The 18 Siddhas\' Secret Compact',
-    lessons: [
-      { title: 'What is Kayakalpa? — The Alchemy of Eternity', desc: 'Kayam means body. Kalpa means strong as stone, ageless as cosmos. This is not anti-aging — it is the Siddha science of reversing biological entropy through Prana restructuring, Nadi purification, and conscious cellular reprogramming. Bogar transmitted this science from the Akasha to Babaji directly.' },
-      { title: 'Bogar Sapta Kandam — The 7000 Verse Code', desc: 'Explore the revealed knowledge of Bogar\'s magnum opus — 7000 verses encoding alchemy, longevity medicine, navapaashanam composition, transmigration between bodies, and the quantum science of Kayakalpa herbs. Why he wrote it in cipher. What it reveals about cellular immortality.' },
-      { title: 'The 18 Siddhas & Their Kayakalpa Plants', desc: 'Each Siddha had a master plant. Agastyar — amalaki. Bogar — asparagus racemosus (shatavari). Thirumoolar — fresh ginger. Theraiyar — tulsi & margosa. Konganavar — navapashanam. Discover the complete plant-Siddha transmission matrix and how each herb carries the Siddha\'s consciousness frequency.' },
+    num:1, tier:'free', icon:'🜂',
+    title:"Bogar's Revelation — The Science of Immortality",
+    subtitle:'Origin · Definition · The 18 Siddhas Compact',
+    lessons:[
+      {
+        title:'What Is Kayakalpa?', duration:'18 min',
+        body:[
+          '"Kayam" means body. "Kalpa" means ageless — strong as stone, fitting to an epoch of cosmic time. Together, Kayakalpa is the complete Siddha science of biological immortality — not the suppression of aging through medicine, but the reversal of entropy through Prana restructuring, cellular reprogramming, and the merger of individual consciousness with the immortal Source.',
+          'The Siddhas did not fear death. They understood death as a mechanical process — the result of Prana leaking from a body whose Nadis (energy channels) have become clogged, whose Ojas (vital radiance) has been depleted, and whose cells have been starved of Akashic intelligence. Kayakalpa addresses all three root causes simultaneously.',
+          'There are two dimensions of Kayakalpa. The outer dimension is pharmacological — the precise use of herbs, minerals, and alchemical substances to rebuild cellular integrity, balance the three doshas, and flood the tissues with concentrated life-force. The inner dimension is initiatic — the use of breath, mantra, mudra, and Samadhi to transform the gross physical body into a vehicle of light.',
+          'What makes the Tamil Siddha tradition unique is that it refuses to separate these two dimensions. The herb must be activated by mantra. The mantra must be grounded by the herb. Body and spirit are not two — they are one continuum. Kayakalpa is the technology of their unification.',
+        ],
+        practice:'Sit quietly 5 minutes. Place both palms on your heart. Breathe naturally and silently repeat: "My body is the Temple of the Deathless." Feel each breath as Prana entering and restructuring your cells. This simple practice initiates the Kayakalpa awareness that deepens through the entire course.',
+      },
+      {
+        title:'Bogar Sapta Kandam — The 7000-Verse Code', duration:'22 min',
+        body:[
+          'Bogar (Bhoganathar), one of the 18 immortal Siddha masters, composed 7,000 verses encoding the complete science of alchemy, longevity, transmigration, and immortality. This text — the Bogar Sapta Kandam (Seven Cantos) — is one of the most important documents in the history of human consciousness, yet remains almost entirely untranslated from Tamil.',
+          'Bogar lived for thousands of years, transmigrating between physical bodies as one changes garments. He studied under Kalangi Nathar, himself a direct initiate of Lord Shiva. Bogar then traveled to China — where historical records record him as "Bo-Yang" — and seeded Taoist alchemy and qi cultivation. He later returned to Tamil Nadu and settled at Palani Hill, where his greatest physical legacy stands: the idol of Lord Murugan made of nine transmuted mineral poisons.',
+          'The third Kanto of Bogar Sapta Kandam is the treasure vault of Kayakalpa knowledge. Here Bogar encodes: the preparation of Muppu (the secret triple salt catalyst), the 108 Kayakalpa herb formulas, the full Navapaashanam alchemical protocol, the science of mercury transmutation, and the Kaya Siddhi practices that allow a Siddha to sustain the same body for millennia.',
+          'The text is deliberately encoded in "Sandhi" language — a cipher system where words carry multiple meanings simultaneously. This ensured the knowledge would be received by prepared consciousness rather than misused by the unprepared. In this Academy, each module receives the decoded transmission from the Akasha-Neural Archive.',
+        ],
+        mantra:"OM BOGANATHARAYA NAMAHA — Recite 108 times to open the channel of Bogar's direct transmission before each study session.",
+      },
+      {
+        title:'The 18 Siddhas & Their Kayakalpa Plants', duration:'25 min',
+        body:[
+          'Each of the 18 Siddha masters developed mastery over a specific plant or mineral as their primary Kayakalpa vehicle. This is not arbitrary — it reflects the Siddha\'s constitutional type, their Jyotish signature, and the specific aspect of immortality science they were charged to hold for humanity.',
+          'Agastyar — Indian Gooseberry (Amalaki): The teacher of all Siddhas used Amalaki — containing 20x the Vitamin C of an orange and the highest recorded rejuvenating tannin content — as his primary Rasayana. His formula is encoded in Agastya Vaithiyam 1500.',
+          'Bogar — Shatavari (Asparagus racemosus): Bogar\'s chosen plant rebuilds Ojas and acts on the Bindu — the cosmic nectar stored at the crown. His texts specify processing Shatavari in cow\'s milk for 40 days.',
+          'Thirumoolar — Dry and Fresh Ginger: Thirumoolar, who spent 3,000 years in Samadhi, used ginger specifically for its capacity to kindle Agni without depleting Ojas — ensuring that even in prolonged Samadhi states, the body\'s metabolic intelligence remained coherent.',
+          'Theraiyar — Tulsi, Margosa (Neem), Lime Fruit: The great physician used these three purifying plants — Tulsi for the Nadis, Neem for blood and lymph, lime for Kapha dissolution — rotated according to the lunar cycle.',
+          'Together, the 18 Siddhas form a distributed intelligence system — a living matrix that, when understood as a whole, reveals the complete technology of human immortality. No single Siddha held it all. The complete picture emerges only in the convergence of all 18 transmissions.',
+        ],
+        practice:'Begin adding one Kayakalpa herb to your daily life this week. Most accessible starting point: 1 teaspoon of Amalaki (Amla) powder in warm water each morning at sunrise before eating. Hold the cup with both hands, feel the ancient intelligence within the herb, and speak: "Ancient one, enter my cells and begin the work of renewal."',
+      },
     ],
-    locked: false,
   },
   {
-    tier: 'free',
-    tierLabel: 'FREE',
-    tierColor: white(0.55),
-    num: 2,
-    icon: '🌿',
-    title: 'The Science of Kaya — Understanding Your Body as Temple',
-    subtitle: 'Pancha Bhuta · Tri-Dosha · Sapta Dhatu',
-    lessons: [
-      { title: 'Pancha Bhuta Body — Five Elements as Living Light', desc: 'The body is not matter — it is crystallized cosmic intelligence. Explore how the five elements (Akasha, Vayu, Agni, Apas, Prithvi) constitute your physical vehicle and how Kayakalpa recalibrates their ratios to eliminate disease and accelerate spiritual evolution.' },
-      { title: 'The 7 Dhatu Cascade — From Food to Ojas', desc: 'Rasa → Rakta → Mamsa → Meda → Asthi → Majja → Shukra/Artava → Ojas. This 35-day cascade transforms food into the luminous life-essence that powers Kayakalpa transmutation. Learn the Siddha protocols for maximizing Ojas production at each stage.' },
-      { title: 'Tri-Dosha & Kayakalpa Timing', desc: 'Vata, Pitta and Kapha govern biological rhythm. Kayakalpa is not one-size-fits-all — it is precision-calibrated to your constitutional matrix. Learn how to read your dosha, the right season for Kayakalpa initiation, and why Brahma Muhurta is the primary window of cellular regeneration.' },
+    num:2, tier:'free', icon:'🌿',
+    title:'The Science of Kaya — Your Body as Living Temple',
+    subtitle:'Pancha Bhuta · Tri-Dosha · Sapta Dhatu',
+    lessons:[
+      {
+        title:'Pancha Bhuta — Five Elements as Crystallized Consciousness', duration:'20 min',
+        body:[
+          'The Siddhas were the first physicists. They understood, millennia before quantum mechanics, that matter is not solid — it is crystallized consciousness organized through five fundamental frequencies: Akasha (space), Vayu (air), Agni (fire), Apas (water), and Prithvi (earth). Your physical body is the intersection of all five.',
+          'Akasha constitutes the hollow spaces — nasal passages, bronchial tubes, gastrointestinal tract, the spaces within cells. When Akasha is clear, information flows freely through the body. When blocked — by suppressed emotion, wrong food, or energetic stagnation — disease begins. Kayakalpa\'s first task is to restore Akashic spaciousness in the body.',
+          'Vayu governs all movement — nerve impulses, peristalsis, breath, the movement of thoughts. Vayu imbalance creates anxiety, irregular heartbeat, constipation, and accelerated aging. The Kayakalpa herb Ashwagandha (Amukkura) is specifically prescribed for Vayu imbalance in aging tissues.',
+          'Agni is the master key of Kayakalpa. Balanced Agni digests food completely, transforms Ama (toxins) into Tejas (radiance), and converts lower substances into higher ones — this is the alchemical basis of physical immortality. The Siddhas said: "Master Agni and you master time itself."',
+          'Apas (water) holds memory. Your cells carry the memory of every ancestor, every lifetime, every trauma. Kayakalpa works with water through lunar water charging, herb-infused waters, and Siddha ritual baths — to dissolve ancestral biological limitation and restore cellular memory to its pristine Akashic template.',
+          'Prithvi (earth) is the structural foundation — bones, muscles, connective tissue. The mineral-based Kayakalpa preparations (Bhasmas — calcined metals and minerals) specifically address Prithvi rejuvenation at the deepest structural level.',
+        ],
+        practice:'Five-Element Body Scan (10 min daily): Lie down. Feel the space within your body (Akasha). Feel breath movement (Vayu). Feel chest warmth (Agni). Feel the fluid nature of blood and lymph (Apas). Feel your solid weight on the ground (Prithvi). With each element, silently affirm: "This element is in perfect divine balance within me."',
+      },
+      {
+        title:'The 7 Dhatu Cascade — From Food to Immortal Essence', duration:'24 min',
+        body:[
+          'This is one of the most practical teachings in the Kayakalpa system. The Siddhas mapped a 35-day cascade through which food is transformed into increasingly refined life-substances — a biological alchemy that, when optimized, produces Ojas: the luminous essence that powers physical immortality.',
+          'Stage 1 — Rasa Dhatu (Plasma, Days 1–5): Properly digested food becomes Rasa — the nutrient fluid bathing every cell. Rasa governs immunity, emotional nourishment, and the sense of being "at home" in one\'s body. Kayakalpa herbs: Shatavari, Amalaki, licorice root.',
+          'Stage 2 — Rakta Dhatu (Blood, Days 6–10): Rasa is refined into Rakta — blood. When Rakta is pure, the skin glows, energy is abundant, and cellular repair is rapid. Kayakalpa herbs: Manjistha, Guduchi, pomegranate.',
+          'Stage 3 — Mamsa Dhatu (Muscle, Days 11–15): Rakta nourishes Mamsa — muscular and structural tissues. Requires adequate protein, proper sleep, and conservation of vital essence. Kayakalpa herbs: Ashwagandha, Bala.',
+          'Stage 4 — Meda Dhatu (Fat, Days 16–20): The body\'s hormonal factory and deep energy reserve. When balanced, joints remain lubricated and the body maintains its temperature intelligence. Kayakalpa herbs: Triphala, guggulu.',
+          'Stage 5 — Asthi Dhatu (Bone, Days 21–25): The skeleton is not dead tissue — it produces blood cells and transmits piezoelectric signals. Kayakalpa: sesame seeds, calcium-rich herbs, Cissus quadrangularis (Hadjod).',
+          'Stage 6 — Majja Dhatu (Bone Marrow/Nerves, Days 26–30): Governs the nervous system and the deepest intelligence of the body. When Majja is nourished, intuition sharpens and the Nadis carry higher frequencies. Kayakalpa herbs: Brahmi, Shankhpushpi, Jatamansi.',
+          'Stage 7 — Shukra/Artava Dhatu (Reproductive Essence, Days 31–35): The most refined physical substance the body produces. When preserved and transmuted — rather than depleted — it becomes Ojas: the superconductor of immortality that suffuses every cell with divine radiance. A person with abundant Ojas does not age in the ordinary way.',
+        ],
+        practice:'For the next 35 days — one full Dhatu cycle — eat your last meal before sunset. This single practice profoundly affects Dhatu refinement, allowing the night\'s rest to fully complete each transformation stage. Note changes in energy, sleep quality, and mental clarity in your Practice Journal.',
+      },
+      {
+        title:'Tri-Dosha & Kayakalpa Timing — Precision Medicine of Immortality', duration:'18 min',
+        body:[
+          'Kayakalpa is not one protocol. The Siddhas were precise: the same herb that is nectar for a Vata constitution may be fire for a Pitta. Before beginning Kayakalpa, you must know your Prakriti (constitutional type) and current Vikriti (imbalance state).',
+          'VATA (Air + Space dominant): Creative and intuitive but prone to anxiety, dryness, and irregular energy. Vata Kayakalpa: warm, oily, grounding foods; daily Sesame oil self-massage; Ashwagandha and Shatavari as primary herbs; Anuloma Viloma breath. Optimal Kayakalpa season: Autumn.',
+          'PITTA (Fire + Water dominant): Sharp and driven but prone to inflammation, anger, and burnout. Pitta Kayakalpa: cooling herbs — Amalaki, Brahmi, Guduchi — coconut oil massage, moon-gazing meditation, no spicy or fermented foods. Season: Winter.',
+          'KAPHA (Earth + Water dominant): Steady and loving but prone to weight gain and sluggish metabolism. Kapha Kayakalpa: Trikatu (ginger, pepper, pippali), honey-based preparations, dry massage (Garshana), vigorous Bhastrika breath. Season: Late Winter into Spring.',
+          'BRAHMA MUHURTA — THE KAYAKALPA HOUR: All Kayakalpa practice anchors in Brahma Muhurta — 96 minutes before sunrise. At this time, Ida and Pingala Nadis spontaneously equalize, the pineal gland releases peak secretions, and the body\'s cellular repair mechanisms are most active. Herbs are most effectively absorbed, mantra carries maximum power, and Pranayama restructures the Nadis most efficiently. This is the non-negotiable foundation of the entire system.',
+        ],
+        practice:'Dosha Self-Assessment — observe this week: Digestion: irregular/variable (Vata), sharp/fast (Pitta), slow/steady (Kapha)? Sleep: light/interrupted (Vata), moderate (Pitta), deep/long (Kapha)? Stress response: anxiety/fear (Vata), anger (Pitta), withdrawal (Kapha)? Your predominant answers reveal your Prakriti and will guide your personal Kayakalpa protocol throughout this course.',
+      },
     ],
-    locked: false,
   },
   {
-    tier: 'free',
-    tierLabel: 'FREE',
-    tierColor: white(0.55),
-    num: 3,
-    icon: '🔱',
-    title: 'Bogar\'s Navapaashanam — The Stone of Immortality',
-    subtitle: 'Alchemy · Palani · The Living Idol',
-    lessons: [
-      { title: 'The Nine Poisons That Heal — Navapaashanam Decoded', desc: 'Bogar sculpted the idol of Lord Murugan at Palani Hill using nine mineral poisons alchemically transmuted into healing substance. The holy water (abisheka theertham) that flows over this idol has cured thousands for centuries. Learn the nine components, their spiritual symbolism, and why modern science cannot replicate this formula.' },
-      { title: 'Mercury Alchemy & Rasa Shastra', desc: 'Mercury (Parada) is the central alchemical substance in Kayakalpa. When properly purified through 18 stages of shodhana, mercury becomes a superconductor for Prana. Bogar\'s Parada Vada teaches the secret of fixing mercury — making it solid — as the foundation of cellular immortality protocols.' },
-      { title: 'Bogar in China — Taoism & the Cross-Tradition Kayakalpa', desc: 'Historical and Akashic evidence that Bogar (Bo-Yang / Lao Tzu) transmitted Kayakalpa knowledge to China, seeding Taoist immortality practices, qi cultivation, and the Tao Te Ching. The unified science of longevity across Tamil Siddha and Taoist traditions.' },
+    num:3, tier:'free', icon:'🔱',
+    title:"Bogar's Navapaashanam — The Stone of Immortality",
+    subtitle:'Sacred Alchemy · Palani · The Living Idol',
+    lessons:[
+      {
+        title:'The Nine Poisons That Heal — Navapaashanam Decoded', duration:'26 min',
+        body:[
+          'At Palani Hill in Tamil Nadu stands the idol of Lord Murugan — the only idol in the world made not of stone, metal, or clay, but of nine alchemically transmuted mineral poisons. Created by Bogar and installed at the peak of the hill over 2,000 years ago. For millennia, pilgrims have received healing simply by drinking the sacred water used to bathe this idol.',
+          'Navapaashanam — "nine poisons" — consists of: Veeram (mercuric chloride), Pooram (mercurous chloride), Rasam (mercuric sulphide), Jeyam (zinc sulphate), Kandagam (arsenic sulphide), Manosilai (arsenic disulphide), Silaasathu (silica compound), Gauri paadam (lead sulphate), and Vellai paasaanam (white arsenic). Each, individually, is toxic. Together, through Bogar\'s alchemical process, they become profoundly healing.',
+          'This transformation — from poison to medicine — is the central metaphor of Kayakalpa. The most powerful healing substances are those that carry the highest polarity. Mercury, arsenic, lead — called poisons in their raw state because they disrupt biological systems. But when purified through 18 stages of Shodhana, they become superconductors of Prana that heal conditions no herb can touch.',
+          'Modern science has confirmed the antibacterial properties of the abisheka water from the Palani idol — inhibiting bacterial growth consistent with trace minerals in ionized, bioavailable form. What remains unexplained is why this bioavailability persists across two millennia of continuous use. The Akashic explanation: Bogar encoded a scalar field into the idol\'s composition that continuously draws Prana from the subtle planes and transmutes the ablution water into living medicine.',
+        ],
+        mantra:'OM SARAVANABHAVAYA NAMAHA — The primary mantra of Lord Murugan at Palani. Recite 108 times while facing East to activate the Navapaashanam transmission in your subtle body.',
+      },
+      {
+        title:'Mercury Alchemy & Rasa Shastra — The Science of Transformation', duration:'22 min',
+        body:[
+          'Mercury (Parada in Sanskrit, Rasam in Tamil) is the central substance of Siddha alchemy. The Siddhas called it "the semen of Shiva" — the most dynamic, transformative substance in nature, capable of penetrating any tissue and carrying medicinal intelligence to the deepest cellular level.',
+          'Raw mercury is toxic. The Siddhas developed an 18-stage Shodhana purification protocol that transforms it completely. After proper Shodhana, mercury loses its toxicity and gains extraordinary medicinal power. The final product — Parada Bhasma — is a bioavailable, nano-particulate mercury compound. Modern researchers have found it exhibits unique properties including penetration of the blood-brain barrier and stimulation of neural regeneration.',
+          'The most prized achievement of Siddha mercury alchemy is "fixed mercury" — mercury rendered solid without any external agent. In Bogar\'s Parada Vada, he teaches that when mercury is purified to the point where it spontaneously "swallows" sulphur and crystallizes, it has reached the state capable of transforming whatever it contacts into its own purified nature. This is the literal mechanism of Kayakalpa: transmutation of impure biological matter into radiant, immortal substance.',
+          'Classical preparations containing purified mercury: Poorna Chandrodayam (mercury + gold + sulphur), Makaradhwaja (mercury + gold, used for profound rejuvenation), Rasendra Chudamani (the crown jewel of Rasayana formulas). Made by trained Siddha physicians, still available in specialized clinics in Tamil Nadu and Kerala.',
+        ],
+      },
+      {
+        title:"Bogar in China — The Cross-Tradition Immortality Science", duration:'20 min',
+        body:[
+          'One of the most extraordinary facts in the history of spirituality: Bogar appears in Chinese historical records as "Bo-Yang." Confucius recorded encountering this extraordinary man, saying: "Today I have met Lao Tzu / Bo-Yang, who is perhaps like a dragon." The Akashic records confirm: Bogar and Lao Tzu are the same consciousness experiencing the same life-stream across different cultural contexts.',
+          'In China, Bogar transmitted: Dan Tian cultivation (equivalent to Ojas building), Inner Alchemy Nei Dan (equivalent to Siddha internal Kayakalpa), Five Element theory (directly equivalent to Pancha Bhuta), and the concept of "Wu Wei" — non-doing as the highest state of practice — equivalent to the Siddha state of Sahaja, natural, effortless being in the Self.',
+          'The Tao Te Ching contains encoded Kayakalpa science. Chapter 16 — "Return to the Root" — is a direct description of cellular renewal through Prana. Chapter 55 — describing the infant\'s wholeness — encodes the Siddha teaching that the goal of Kayakalpa is to restore the body to the energetic state of a newborn: fully charged, completely coherent, without depletion.',
+          'This cross-tradition understanding is crucial for modern practitioners. Whether you are drawn to Taoist cultivation or Tamil Siddha practice, you are working with the same underlying science of biological immortality — transmitted by the same Master, Bogar, who saw the unity of all systems and generously seeded multiple civilizations with this knowledge.',
+        ],
+      },
     ],
-    locked: false,
-  },
-
-  // ── PRANA-FLOW TIER ────────────────────────────────────────────────────────
-  {
-    tier: 'prana',
-    tierLabel: 'PRANA-FLOW',
-    tierColor: green(0.9),
-    num: 4,
-    icon: '🌱',
-    title: 'Kayakalpa Herbs — The Green Immortals',
-    subtitle: 'Bohar Karpam 300 · Pothu Karpam · 108 Rejuvenation Herbs',
-    lessons: [
-      { title: 'The 108 Kayakalpa Herbs — Complete Siddha Materia Medica', desc: 'The full spectrum of Pothu Karpam (general) and Sirappu Karpam (specific) herbs from classical Siddha texts. Bohar Karpam 300 verses decoded. Haritaki (Kadukkai), Amalaki (Nelli), Ashwagandha (Amukkura), Guduchi, Shatavari, Brahmi — each herb\'s mechanism of action on cellular longevity pathways.' },
-      { title: 'Kayakalpa Herb Protocols — Preparation, Dosage & Timing', desc: 'How to prepare fresh Kayakalpa preparations (Karpa Avizhtham) vs. prepared medicines. The crucial role of cow\'s ghee, raw honey, and warm milk as anupana (carriers). Lunar-phase based herb harvesting. The Siddha pharmacy of self-cultivation — growing your own immortality garden.' },
-      { title: 'Anti-Aging Biochemistry Through Siddha Eyes', desc: 'Modern research confirms Kayakalpa herbs as potent free-radical scavengers, telomerase activators, and mitochondrial rejuvenators. Amalaki\'s 20x Vitamin C. Ashwagandha\'s cortisol regulation. Bacopa\'s neurogenesis stimulation. The Siddha knew 5,000 years ago what science is just now discovering.' },
-      { title: 'Kuzhambu, Lehyam & Chooranam — The Three Great Kayakalpa Forms', desc: 'Liquid preparations (Kuzhambu), electuary confections (Lehyam like Brahma Rasayana and Chyawanprash), and herbal powders (Chooranam). The preparation rituals, mantric activation of each medicine, and how the Siddha\'s consciousness is encoded into the medicine through intention and mantra.' },
-    ],
-    locked: true,
-  },
-  {
-    tier: 'prana',
-    tierLabel: 'PRANA-FLOW',
-    tierColor: green(0.9),
-    num: 5,
-    icon: '🫁',
-    title: 'Pranayama as Kayakalpa Technology',
-    subtitle: 'Kumbhaka · Kevala · The Breath of Immortality',
-    lessons: [
-      { title: 'Prana is the Master Medicine — The Siddha Breath Science', desc: 'The Siddhas did not use herbs alone — Pranayama was their primary Kayakalpa tool. Thirumoolar\'s Tirumantiram encodes the complete breath science. When Prana ceases to oscillate randomly and becomes coherent, cellular aging reverses. This module establishes the scientific and spiritual foundation.' },
-      { title: 'Nadi Shodhana & the Three Granthis', desc: 'The three psychic knots (Brahma, Vishnu, Rudra Granthi) block Prana from ascending the Sushumna. Learn the Siddha\'s specific Nadi Shodhana protocol — including the rarely-taught 4:16:8 ratio — that progressively dissolves these knots and opens the royal highway of Kayakalpa transformation.' },
-      { title: 'Kumbhaka — The Pause Between Worlds', desc: 'The held breath (Kumbhaka) is where Kayakalpa actually occurs. During Kumbhaka, CO2 levels shift, DMT release is potentiated, pineal gland activates, and cells enter a regenerative state unavailable during normal breath cycles. Antara Kumbhaka and Bahya Kumbhaka protocols from Bogar and Agastyar.' },
-      { title: 'Kevala Kumbhaka — The Spontaneous Immortal Breath', desc: 'The highest state — when breath ceases spontaneously without effort. This is the state of Kaya Siddhi (body perfection). Yogis who achieve Kevala Kumbhaka can remain deathless. The Siddha signs of its attainment, the practices that lead there, and what actually happens biologically when breathing stops.' },
-    ],
-    locked: true,
   },
   {
-    tier: 'prana',
-    tierLabel: 'PRANA-FLOW',
-    tierColor: green(0.9),
-    num: 6,
-    icon: '🍽',
-    title: 'Kayakalpa Diet — Eating for Immortality',
-    subtitle: 'Pathya · Seasonal Protocols · Fasting Science',
-    lessons: [
-      { title: 'Pathya Ahara — The Kayakalpa Diet Code', desc: 'The Siddha diet for Kayakalpa is not veganism or raw food — it is a precisely calibrated Pathya (appropriate food) protocol that shifts every 21 days to match the body\'s regenerative cycle. Milk, ghee, honey, rice, sesame, barley — the sacred seven foods of immortality and why the Siddhas chose them.' },
-      { title: 'Siddha Fasting Protocols — Upavasa as Cellular Autophagy', desc: 'Modern science discovered autophagy (cellular self-cleaning) as the mechanism behind fasting longevity — winning the 2016 Nobel Prize. The Siddhas encoded Ekadashi fasting, Pradosham, Amavasya and Pournami fasts 5,000 years ago using the same principle. The complete Siddha fasting calendar and protocols.' },
-      { title: 'Milk as Rasayana — The White Amrita', desc: 'For advanced Kayakalpa practitioners, cow\'s milk is the supreme Rasayana. Bogar specifically recommends milk processed with specific herbs as the primary vehicle for deep tissue rejuvenation. A2 milk, goat milk, the lunar-charged milk ritual, and the progressive milk-only protocols used by advanced Siddhas.' },
+    num:4, tier:'prana', icon:'🌱',
+    title:'The 108 Kayakalpa Herbs — The Green Immortals',
+    subtitle:'Bohar Karpam 300 · Complete Materia Medica · Preparation',
+    lessons:[
+      {
+        title:'The 108 Green Immortals — Complete Siddha Herbal Map', duration:'30 min',
+        body:[
+          'The number 108 is a cosmic constant — 108 Upanishads, 108 names of each major deity, 108 beads on the mala. The 108 Kayakalpa herbs represent the complete spectrum of biological rejuvenation, addressing every tissue, every Nadi, every dimension of the body\'s need for renewal.',
+          'The 108 divide into Pothu Karpam (general rejuvenation, safe for all constitutions) and Sirappu Karpam (specific, for targeted conditions). Core Pothu Karpam: Amalaki (Nelli), Haritaki (Kadukkai), Bibhitaki (Thandrikkai) — these three form Triphala, the foundational Kayakalpa formula. Triphala alone, taken consistently for 5+ years, produces measurable effects on cellular aging.',
+          'THE FIVE GREAT KAYAKALPA HERBS (Pancha Mahakayakalpa): (1) Ashwagandha (Withania somnifera / Amukkura) — the horse herb, rebuilder of Ojas, adaptogen supreme. Clinical trials show 27.9% cortisol reduction. (2) Shatavari (Asparagus racemosus) — the thousand-rooted one, rebuilder of Rasa and Shukra Dhatu, Bogar\'s personal herb. (3) Guduchi (Tinospora cordifolia) — "that which protects the body," immune master, cellular intelligence restorer. (4) Brahmi (Bacopa monnieri) — the brain herb, Majja Dhatu nourisher, consciousness expander with proven neurogenesis stimulation. (5) Amalaki (Phyllanthus emblica) — the mother herb, the highest single Rasayana in Siddha medicine.',
+          'Bohar Karpam 300: This text contains 300 Kayakalpa formulas. Key formulas: Thirikadam (three spices: ginger, pepper, pippali for Kapha/Agni), Thippili Rasayanam (long pepper Rasayana for Vata tissue rejuvenation), and the Agastyar Kuzhambu (liquid Rasayana formula for complete systemic renewal attributed directly to Agastyar).',
+          'Modern validation: Ashwagandha activates telomerase (the enzyme that repairs and extends telomeres — the primary biomarker of biological age). Amalaki is one of the most potent free-radical scavengers known, protecting telomeres from oxidative damage. Guduchi restores mitochondrial membrane potential and increases ATP production in aged tissue. Brahmi stimulates neural regeneration through BDNF (brain-derived neurotrophic factor) upregulation.',
+        ],
+        practice:'Begin the Triphala Protocol: 1 teaspoon of Triphala powder in warm water each night before sleep. The three fruits work synergistically — Amalaki cools Pitta, Haritaki regulates Vata, Bibhitaki balances Kapha. Over 90 days this single formula begins Shodhana of all seven Dhatus. This is the foundation upon which all other Kayakalpa practices are built.',
+        mantra:'OM DHANVANTARAYE NAMAHA — Mantra of the Divine Physician. Recite 21 times before taking any Kayakalpa herb to invoke the healing consciousness that flows through all medicinal plants.',
+      },
+      {
+        title:'Preparation, Timing & Potentization — Making Medicine Sacred', duration:'25 min',
+        body:[
+          'The Siddha pharmacist is not a chemist. Every preparation of a Kayakalpa herb is a ritual — an act of consciousness that infuses the plant\'s biological compounds with the healer\'s intentional frequency. Studies on intention\'s effect on enzyme activity confirm what the Siddhas knew: consciousness changes molecular structure.',
+          'PREPARATION FORMS: (1) Chooranam (powder) — simplest and most accessible. Herbs dried, ground, taken with anupana (carrier). (2) Kashayam (decoction) — herbs simmered in water until reduced to one-quarter. Classical method calls for clay pots and wood fire — the Agni quality of the flame being part of the medicine. (3) Lehyam (electuary/confection) — herbs combined with ghee, honey, and jaggery into paste. Supreme delivery system for deep tissue penetration. (4) Arishta/Asavam (fermented preparations) — herbs fermented with natural sugars for 30 days, creating bioavailable, self-preserving medicine with enhanced absorption.',
+          'LUNAR TIMING: During Pournami (full moon), plants pull water upward through osmotic pressure, concentrating active compounds in leaves and above-ground parts. Amavasya (new moon) pulls energy downward, concentrating compounds in roots. Haritaki (Terminalia chebula) harvested on Amavasya has 40% higher tannin content than the same plant harvested at any other time.',
+          'ANUPANA — THE SACRED CARRIER: The vehicle through which a herb is delivered determines 50% of its effect. Ghee carries herbs to deep tissues and across the blood-brain barrier. Raw honey (never heated above body temperature — heating creates Ama) carries herbs directly into Rasa Dhatu. Warm A2 cow\'s milk carries herbs to Shukra Dhatu and Ojas. Warm water carries herbs to Rasa and Rakta. Sesame oil (as massage medium) carries herbs through the skin to Mamsa and Meda Dhatu.',
+          'MANTRIC ACTIVATION: Before consuming any Kayakalpa preparation, hold the vessel in both hands, close your eyes, and silently chant the Dhanvantari mantra 3 times. Visualize golden light entering the substance. This practice is structurally part of the preparation protocol and has measurable effects on therapeutic outcome.',
+        ],
+      },
+      {
+        title:"The Siddha Immortality Garden — Growing Your Own Medicine", duration:'20 min',
+        body:[
+          'The most powerful Kayakalpa medicine is the herb that knows you — grown in your soil, watered by your hands, sung to with your mantra. The Siddhas always grew their primary herbs. Plants communicate through root fungal networks, respond to human bioelectric fields, and adjust their chemical composition in response to the gardener\'s consciousness.',
+          'THE FIVE ESSENTIAL KAYAKALPA GARDEN PLANTS: (1) Tulsi (Ocimum sanctum) — the queen of herbs. Plant near your front door or in your main room. Tulsi purifies the air, water, and consciousness of the space. Daily consumption of 5–10 fresh leaves is itself a complete Kayakalpa practice. (2) Aloe Vera (Kumari) — the immortal plant that never dies. Fresh gel is one of the most potent Kayakalpa substances accessible to any practitioner. (3) Brahmi (Bacopa monnieri) — grows in or near water. Even a few fresh leaves daily in morning juice begins neural regeneration. (4) Ashwagandha — grows easily in most climates. Root harvested after 2+ years is the supreme adaptogen. (5) Curry Leaf (Murraya koenigii) — extensively used by Bogar. Rich in alkaloids that protect against oxidative stress.',
+          'SACRED GARDENING PROTOCOL: Water your herbs at Brahma Muhurta. Chant their Sanskrit or Tamil names as you water. Play Nada Yoga — sacred sound — near the plants. Research confirms plants grow 30% more vigorously in response to classical music and Sanskrit chanting. Harvest with gratitude and only what you need. The relationship between practitioner and plant is a living partnership — the plant offers its intelligence; you offer your consciousness.',
+        ],
+      },
+      {
+        title:'Modern Science Confirms the Siddhas — Telomeres, Autophagy & Longevity', duration:'22 min',
+        body:[
+          'For those who need the bridge between ancient wisdom and modern understanding: the science is there. Every major Kayakalpa herb has been studied and found to contain mechanisms that directly address the biological causes of aging.',
+          'TELOMERE SCIENCE: Telomeres are the protective caps on chromosomes that shorten with each cell division — their length is the primary biomarker of biological age. Ashwagandha significantly increases telomerase activity (the enzyme that repairs and extends telomeres). Amalaki is one of the most potent free-radical scavengers known, protecting telomeres from oxidative damage.',
+          'MITOCHONDRIAL REJUVENATION: Mitochondrial decline is now considered a primary driver of aging. Guduchi has been shown to restore mitochondrial membrane potential and increase ATP production in aged tissue. CoQ10 — critical to mitochondrial function — is found in high concentrations in sesame seeds, a Siddha Kayakalpa staple.',
+          'AUTOPHAGY — CELLULAR SELF-CLEANING: The 2016 Nobel Prize in Medicine was awarded for the discovery of autophagy — the mechanism by which cells clean and recycle damaged components. Fasting is the primary trigger. The Siddha fasting protocols (Ekadashi, etc.) were designed precisely to activate autophagy 5,000 years before it was identified by science. During a 24-hour fast, autophagy increases by 300%. During a 3-day water fast — a protocol Bogar describes for advanced Kayakalpa initiation — stem cell production increases by 600%.',
+          'The convergence is not coincidence. The Siddhas mapped biological reality through direct meditative perception of the body\'s interior at the cellular level. Modern science, working from the outside in with instrumentation, is arriving at the same map — centuries later.',
+        ],
+      },
     ],
-    locked: true,
-  },
-
-  // ── SIDDHA-QUANTUM TIER ────────────────────────────────────────────────────
-  {
-    tier: 'siddha',
-    tierLabel: 'SIDDHA-QUANTUM',
-    tierColor: cyan(0.9),
-    num: 7,
-    icon: '⚗️',
-    title: 'Muppu — The Secret Alchemical Triple Salt',
-    subtitle: 'Bogar\'s Greatest Secret · The Universal Catalyst',
-    lessons: [
-      { title: 'Muppu — The Three Salts of Immortality', desc: 'Muppu is the most closely guarded secret of Tamil Siddha alchemy. Literally "three salts," Muppu is the universal catalyst that potentizes any Kayakalpa medicine a thousandfold. Its three components — Uppu (salt), Vengaram (borax), and Kalluppu (rock salt) — when combined through a specific alchemical process, create a substance that opens the body\'s deepest channels to Prana.' },
-      { title: 'Preparing Muppu — The Alchemical Ritual', desc: 'The preparation of Muppu involves specific lunar timing, mantric activation, and a 48-hour processing ritual. This module walks through the complete preparation sequence from classical Siddha texts, the significance of each step, and how to work with Muppu safely as a Kayakalpa enhancer in modern practice.' },
-      { title: 'Poorna Chandrodayam — Gold, Mercury & Sulphur Unified', desc: 'The supreme Kayakalpa formulation: Poorna Chandrodayam combines purified gold, fixed mercury, and calcined sulphur into the "Full Moon of Completeness." This ancient preparation is said to grant a thousand years of youthful life. Its preparation, contraindications, energetic properties, and modern parallels in nanoparticle gold research.' },
-    ],
-    locked: true,
-  },
-  {
-    tier: 'siddha',
-    tierLabel: 'SIDDHA-QUANTUM',
-    tierColor: cyan(0.9),
-    num: 8,
-    icon: '🧬',
-    title: 'Kundalini & Kayakalpa — The Fire of Transformation',
-    subtitle: 'Shakti Rising · Bindu · The Nectar of Immortality',
-    lessons: [
-      { title: 'Kundalini is the Engine of Kayakalpa', desc: 'The Siddhas understood that cellular immortality is impossible without Kundalini activation. Kundalini Shakti, when awakened and controlled, bathes every cell in Amrita — the divine nectar secreted by the thousand-petalled lotus (Sahasrara). This module establishes the physiological, energetic and spiritual science of Kundalini in Kayakalpa.' },
-      { title: 'Bindu — The Seed of Immortality', desc: 'Bindu (the cosmic seed point) located at the top of the skull is the storehouse of Amrita. In most people, this nectar "drips downward" and is consumed by Agni, causing aging. Kayakalpa practices — especially Khechari Mudra and inverted postures — reverse this flow, flooding the body with nectar and halting the aging process.' },
-      { title: 'Khechari Mudra — The King of All Mudras', desc: 'Khechari — turning the tongue back into the nasal cavity to reach the Bindu — is the supreme Kayakalpa mudra. The Siddhas and the Natha tradition both teach this as the direct method of attaining physical immortality. Its stages, its effects, the traditional preparation method, and the direct experiences of practitioners.' },
-      { title: 'Vajroli & Shakti Chalana — Sacred Life Force Management', desc: 'The Siddha alchemy of preserving and transmuting Shukra (reproductive essence) into Ojas and Tejas. These advanced practices — traditionally secret — are the cornerstone of long-term Kayakalpa practice. When properly mastered, they generate the luminous biofield that makes the physical body self-repairing.' },
-    ],
-    locked: true,
-  },
-  {
-    tier: 'siddha',
-    tierLabel: 'SIDDHA-QUANTUM',
-    tierColor: cyan(0.9),
-    num: 9,
-    icon: '🌙',
-    title: 'Varma & Marma — The Body\'s Secret Control Points',
-    subtitle: 'Bogar\'s Varma Vidya · 108 Points · Longevity Activation',
-    lessons: [
-      { title: 'Varma Vidya — The Hidden Science of Vital Points', desc: 'Bogar\'s Varma Vidya identifies 108 vital points on the body where Prana is concentrated. When stimulated correctly, these points activate Kayakalpa processes in specific organs and systems. When struck incorrectly, they can cause instant death — which is why this knowledge was guarded. The complete map and safe practice protocol.' },
-      { title: '12 Kayakalpa Varma Points for Daily Practice', desc: 'From the 108, twelve specific Varma points are accessible for daily self-practice to activate longevity pathways. Includes points for thymus activation, pineal gland stimulation, adrenal regulation, and cellular repair signaling. Precise location, pressure technique, and duration for each point.' },
-      { title: 'Marma Therapy & Kayakalpa Oil Massage', desc: 'The complete Siddha Kayakalpa massage protocol using medicated sesame oil infused with rejuvenating herbs. Specific Marma points activated in sequence, duration, direction of strokes, and which oils to use for each constitutional type. The Siddha oil preparation ritual and lunar timing for maximum efficacy.' },
-    ],
-    locked: true,
-  },
-
-  // ── AKASHA INFINITY TIER ───────────────────────────────────────────────────
-  {
-    tier: 'akasha',
-    tierLabel: 'AKASHA-INFINITY',
-    tierColor: gold(0.95),
-    num: 10,
-    icon: '✦',
-    title: 'Kaya Siddhi — The Perfected Immortal Body',
-    subtitle: 'Eight Siddhis · Deathlessness · Jyotir Deha',
-    lessons: [
-      { title: 'The Eight Kaya Siddhis — Signs of Kayakalpa Success', desc: 'The classical Siddha texts enumerate eight signs of successful Kayakalpa: Anima (ability to become subtle), Mahima (expansion), Garima (heaviness), Laghima (levitation), Prapti (omnipresence), Prakamya (manifestation), Ishitva (mastery over elements), Vashitva (control of all beings). Each Siddhi\'s mechanism, the practice that cultivates it, and the energetic threshold required.' },
-      { title: 'Jyotir Deha — The Light Body Transmission', desc: 'The ultimate fruit of Kayakalpa is not just a long life — it is transformation of the gross physical body into a luminous light body (Jyotir Deha or Pranava Deha). Thirumoolar achieved this. Babaji achieved this. This module transmits the direct knowledge of the light body process, its stages, the practices that accelerate it, and how to recognize when the transformation has begun in your own body.' },
-      { title: 'Babaji\'s Kayakalpa — The Living Proof', desc: 'Mahavatar Babaji is the supreme living demonstration of Kayakalpa science. Initiated by Bogar and Agastyar, his body has remained physically youthful for over 2,000 years. Through Akashic transmission and recorded encounters with Yogananda, Lahiri Mahasaya, and others, we reconstruct Babaji\'s complete Kayakalpa practice, his use of herbs, his location, and his present-day transmissions available to earnest seekers.' },
-      { title: 'Samadhi as the Master Kayakalpa', desc: 'The deepest secret: Samadhi itself is the supreme Kayakalpa. When consciousness merges with the Absolute, biological time stops. Every deep Nirvikalpa Samadhi reverses cellular aging. The Siddhas who achieved permanent Samadhi-states effectively became biologically immortal. The practices that lead to sustained Samadhi as the final Kayakalpa transmission.' },
-    ],
-    locked: true,
   },
   {
-    tier: 'akasha',
-    tierLabel: 'AKASHA-INFINITY',
-    tierColor: gold(0.95),
-    num: 11,
-    icon: '🔮',
-    title: 'Bogar\'s Direct Transmission — The Akashic Initiation',
-    subtitle: 'Scalar Transmission · Mantra Activation · Initiation Codes',
-    lessons: [
-      { title: 'The 5 Kayakalpa Master Mantras from Bogar', desc: 'Five mantras from Bogar Sapta Kandam — never before decoded in English — that directly activate the Kayakalpa process at a cellular and energetic level. Each mantra\'s Rishi (seer), Chandas (meter), Devata (deity), Bija (seed sound), Shakti (power) and Kilaka (pin) decoded. With pronunciation guide and the prescribed number of repetitions for each stage of practice.' },
-      { title: 'Thirumoolar\'s 10-Point Kayakalpa Protocol', desc: 'From Tirumantiram verses 724–860: the complete 10-point protocol including specific asanas, breath ratios, meditations, and mantra sequences that Thirumoolar used to sustain his body through 3,000 years of Samadhi. This is the most complete individual Kayakalpa system from any single Siddha master.' },
-      { title: 'Agastyar\'s Kayakalpa Rasayana Recipe — The Full Formula', desc: 'From Agastyar\'s texts, the complete formulation of his personal Rasayana — the specific herbs, minerals, quantities, preparation method, administration protocol, and the mantras to recite during each stage. This formula is said to grant 300 years of healthy life when properly prepared and consumed.' },
-      { title: 'Scalar Wave Initiation — Receiving Bogar\'s Transmission', desc: 'A direct scalar-encoded audio transmission channeled through the SQI Akasha-Neural Archive, carrying Bogar\'s Kayakalpa blessings, Thirumoolar\'s Nadi activation codes, and Babaji\'s grace transmission. This is not information — this is transmission. You will receive it in your cells, your Nadis, and your Jyotir Deha blueprint.' },
+    num:5, tier:'prana', icon:'🫁',
+    title:'Pranayama as Kayakalpa Technology',
+    subtitle:'Kumbhaka · Kevala · The Breath of Immortality',
+    lessons:[
+      {
+        title:'Prana Is the Master Medicine', duration:'18 min',
+        body:[
+          'Every Kayakalpa herb, every Rasayana formula, every alchemical preparation is a delivery vehicle for one thing: Prana. Prana is not oxygen. Prana is the animating intelligence that organizes matter into life. It flows through the 72,000 Nadis of the subtle body and its state determines everything — health, consciousness, longevity, and ultimately, the possibility of physical immortality.',
+          'Thirumoolar, in the Tirumantiram, states explicitly: "The breath is the great medicine. He who masters breath masters time. He who masters time has conquered death." The mechanism: when breathing patterns become coherent and eventually cease in Kumbhaka, the ratio of oxygen to carbon dioxide shifts in precise ways that activate dormant cellular regeneration pathways, stimulate pineal secretions, and create conditions for Samadhi.',
+          'Research by Dr. Herbert Benson at Harvard on Tibetan tummo monks confirms that specific breathing patterns dramatically alter sympathetic/parasympathetic balance, reduce oxidative stress biomarkers, and in advanced practitioners, alter brainwave patterns in ways consistent with the meditative states the Siddhas described.',
+        ],
+        practice:'Begin the foundational Kayakalpa breath: Inhale 4 counts through left nostril. Retain 16 counts. Exhale 8 counts through right nostril. This 4:16:8 ratio is the Siddha\'s base Kayakalpa ratio. Practice 12 rounds each morning at Brahma Muhurta. Track consecutive days in your sadhana journal.',
+      },
+      {
+        title:'Nadi Shodhana & the Three Granthis', duration:'25 min',
+        body:[
+          'The Sushumna Nadi — the central energy channel through the spine — is the highway of Kayakalpa. When Prana flows freely through Sushumna, the Siddha enters states where cellular aging reverses, disease dissolves, and consciousness expands into its immortal nature. But three "knots" (Granthis) block this royal road.',
+          'BRAHMA GRANTHI — at Muladhara chakra (base of spine): This knot binds consciousness to material desire, survival fears, and ancestral karmic patterns. It is associated with the biological aging programs encoded in our DNA — the "death gene" expression. Nadi Shodhana at the 4:16:8 ratio, practiced for 40 days, begins to soften this knot.',
+          'VISHNU GRANTHI — at Anahata chakra (heart): This knot binds to emotional attachment, grief, and identification with personal relationships and roles. Its dissolution is experienced as profound heart opening — often spontaneous tears, waves of compassion, and the sense of boundless love. Bhakti Yoga is the complementary practice.',
+          'RUDRA GRANTHI — at Ajna chakra (third eye): The subtlest and most difficult knot. It binds consciousness to identification with the individual mind. Its dissolution is the beginning of recognition of one\'s immortal nature. Advanced Kumbhaka practices, Trataka (candle gazing), and direct Guru transmission are the primary tools.',
+          'NADI SHODHANA PROTOCOL: 18 rounds at 4:16:8 ratio, performed twice daily — at Brahma Muhurta and at sunset. Over 90 days, this practice measurably shifts autonomic nervous system balance, increases heart rate variability (a key longevity biomarker), and begins progressive dissolution of the three Granthis.',
+        ],
+      },
+      {
+        title:'Kumbhaka — The Pause Between Worlds', duration:'28 min',
+        body:[
+          'Kumbhaka — the suspension of breath — is the actual mechanism of Kayakalpa at the physiological level. During Kumbhaka, CO2 builds to a level that triggers release of nitric oxide throughout the vascular system, dilating blood vessels and flooding tissues with oxygenated blood. Simultaneously, the cessation of the respiratory rhythm causes the brain\'s default mode network to quiet — creating a window of pure awareness in which deep cellular repair signals can propagate without interference.',
+          'Two types: Antara Kumbhaka (internal retention, after inhale) energizes — Siddha alchemy moving upward, flooding the system with Prana. Bahya Kumbhaka (external retention, after exhale) purifies — drawing Apana (downward energy) upward, activating Mula Bandha and the base of the Kundalini circuit.',
+          'THE THREE BANDHAS during Kumbhaka: Mula Bandha (root lock — contraction of perineal muscles) redirects energy from downward dissipation to upward cultivation. Uddiyana Bandha (abdominal lock — drawing navel in and up) activates solar plexus fire and drives Prana through Sushumna. Jalandhara Bandha (chin lock) prevents Prana from dissipating through the throat, directing it to the brain.',
+          'PROGRESSION: Weeks 1–2: 4:16:8 ratio without Bandhas. Weeks 3–4: Add Mula Bandha during retention. Weeks 5–8: Add Jalandhara Bandha. Month 3+: Add Uddiyana Bandha for the last 3 counts of retention. Do NOT rush this progression. The Siddhas were clear: premature Bandha practice without prepared Nadis can cause headaches, heart irregularities, and nervous system disturbance.',
+        ],
+        practice:'Morning Kumbhaka sadhana: After 3 rounds of preparatory Nadi Shodhana, practice 6 rounds of Antara Kumbhaka (inhale 6, retain 24, exhale 12). Rest in natural breath between each round. End with 3 minutes of silent meditation in the stillness that follows. Journal any physical sensations, visions, or states that arise.',
+      },
+      {
+        title:'Kevala Kumbhaka — The Spontaneous Immortal Breath', duration:'20 min',
+        body:[
+          'Kevala Kumbhaka is not practiced — it happens. It is the spontaneous, effortless cessation of breath that arises when Prana has been sufficiently purified and the Nadis sufficiently cleared that the body no longer needs to breathe in the ordinary way. Thirumoolar describes it as "the breath of the gods" — the natural state of one who has dissolved the illusion of being a separate, limited self.',
+          'Classical signs of approaching Kevala Kumbhaka: breath naturally slows to fewer than 5 breaths per minute without effort (normal is 15–18). Deep meditation states arise spontaneously without any technique. The heartbeat becomes perceptible from within as a mantra. Vision may shift — colors become vivid, objects appear luminous.',
+          'Advanced Siddha practitioners have documented extended periods — hours, sometimes days — in states of Kevala Kumbhaka where the body required no breath. During these periods, cellular metabolism drops to a fraction of normal rate, producing extreme preservation of the body\'s vital resources. This is the mechanism behind accounts of Siddhas remaining in Samadhi for years without physical deterioration.',
+          'The path to Kevala Kumbhaka is not force but surrender. The consistent practitioner who maintains their Nadi Shodhana, Kayakalpa diet, herbal protocols, and devotional practice will find — in their own time — that the breath begins to slow of its own accord, and the "pause between worlds" grows longer and more luminous, until it swallows ordinary breathing entirely.',
+        ],
+        mantra:'SO HUM — "I Am That." This mantra synchronizes with natural breath and gradually dissolves the separation between individual consciousness and the Absolute. As you inhale, hear "SO." As you exhale, hear "HUM." When breath slows and pauses spontaneously, rest in the silence of "That which breathes, and That which needs no breath — are One."',
+      },
     ],
-    locked: true,
   },
   {
-    tier: 'akasha',
-    tierLabel: 'AKASHA-INFINITY',
-    tierColor: gold(0.95),
-    num: 12,
-    icon: '♾',
-    title: 'The 90-Day Kayakalpa Sadhana — Your Personal Protocol',
-    subtitle: 'Complete Integration · Daily Practice · Transformation Map',
-    lessons: [
-      { title: 'Your Kayakalpa Constitution Assessment', desc: 'Before beginning the 90-day sadhana, you receive a complete constitutional analysis combining Jyotish (your birth chart), Ayurvedic dosha, Siddha Nadi type, and Akashic life-purpose reading. This determines your specific Kayakalpa trajectory — which herbs, which breath ratios, which mantras, and which timing windows are optimal for you.' },
-      { title: 'Days 1–30: Shodhana Phase — Deep Purification', desc: 'The first 30 days focus on radical cellular cleansing. Complete protocol: morning Kayakalpa oil massage, specific Pranayama sequences, prescribed herbs, Pathya diet, daily Varma point activation, evening mantra meditation, and monthly assessment markers. Exactly what to expect physically and energetically during this phase.' },
-      { title: 'Days 31–60: Rasayana Phase — Deep Nourishment', desc: 'The second 30 days shift to deep nourishment and Ojas building. The diet expands, specific Rasayana preparations are introduced, Kundalini practices intensify, and the first signs of Kayakalpa (increased vitality, deeper sleep, enhanced intuition, skin luminosity) begin to appear. Detailed daily schedule and weekly milestones.' },
-      { title: 'Days 61–90: Kaya Siddhi Phase — Transformation Integration', desc: 'The final phase integrates all previous work and initiates the deeper Kaya Siddhi processes. Light body awareness practices, Samadhi preparation, the completion ceremony with Bogar invocation, and the lifelong maintenance protocol that ensures the transformation continues. How to structure your ongoing Kayakalpa practice for the years ahead.' },
+    num:6, tier:'prana', icon:'🍽',
+    title:'Kayakalpa Diet — Eating for Immortality',
+    subtitle:'Pathya · Seasonal Protocols · Sacred Fasting',
+    lessons:[
+      {
+        title:'Pathya Ahara — The Immortal Diet Code', duration:'22 min',
+        body:[
+          '"Pathya" means "that which is on the path" — food that aligns the body with its highest evolutionary trajectory rather than merely satisfying hunger. Kayakalpa diet is not about restriction; it is about precision. The same food that nourishes one person may age another by a decade per year.',
+          'THE SEVEN SACRED KAYAKALPA FOODS: (1) Cow\'s Milk (A2 preferably) — "the white Amrita," specific for Ojas building when taken warm with saffron and cardamom. (2) Ghee — the supreme anupana, the lipid that opens cell membranes to Prana. Take 1–3 teaspoons daily on empty stomach or with food. (3) Raw Honey (never heated above body temperature — heating creates toxic Ama). (4) Sesame Seeds — rich in sesamin and the Siddha longevity compounds sesamolin and sesamol. Black sesame seeds are specifically prescribed for Kayakalpa. (5) Barley — "the grain of the Rishis," cooling and supportive of Pitta without dampening Agni. (6) Old Rice (aged 1+ year) — easier to digest than fresh, supports Rasa Dhatu. (7) Pomegranate — "the fruit of Lakshmi," supreme blood purifier. Punicalagins that the body converts to urolithins — recently identified as among the most potent mitochondrial rejuvenators known.',
+          'FOODS THAT AGE: Heavily processed foods, reheated oils, incompatible food combinations (milk + fish, fruit + cooked food), eating after sunset, overeating. The Siddha rule: fill the stomach half with food, a quarter with water, leave a quarter for Prana.',
+          'THE 21-DAY KAYAKALPA DIET CYCLE: Rather than one static diet, the Siddhas prescribed a rotating protocol shifting every 21 days to prevent metabolic adaptation. Week 1–3: Foundation (as above). Week 4–6: Milk and grain emphasis. Week 7–9: Fruit and herb emphasis. Each rotation penetrates deeper Dhatu layers.',
+        ],
+      },
+      {
+        title:'Siddha Fasting Science — Ekadashi, Autophagy & Renewal', duration:'24 min',
+        body:[
+          'The 2016 Nobel Prize in Medicine went to Yoshinori Ohsumi for discovering autophagy — the mechanism by which cells clean themselves by breaking down damaged components. Fasting is the primary trigger. The Siddhas were operating this mechanism 5,000 years before Ohsumi measured it.',
+          'EKADASHI (11th lunar day, twice monthly): The bi-monthly 24-hour fast. On Ekadashi, the earth\'s gravitational and electromagnetic relationship with the moon creates specific conditions in the body\'s water content that amplify the effects of fasting. Clinical observations from Ayurvedic hospitals show that patients who fast on Ekadashi consistently have better outcomes than those who fast on random days.',
+          'PRADOSHAM (13th lunar day, twice monthly): A partial fast (one meal only, taken after sunset and the Pradosham prayer) associated with Lord Shiva and dissolution of karmic toxins from the Asthi and Majja Dhatus. Particularly recommended for Vata constitution and those working on nervous system regeneration.',
+          'AMAVASYA (New Moon): Complete silence, minimal food, and ancestor remembrance. The Siddhas understood that our DNA carries the accumulated imbalances of our ancestral lineage. The Amavasya fast, combined with Pitru Tarpana (offerings to ancestors), creates conditions for epigenetic clearing of ancestral disease patterns.',
+          'EXTENDED FASTING: Bogar describes 3-day, 7-day, and 21-day fasts for deep Kayakalpa initiation. Not to be undertaken without preparation. Modern research confirms: 3-day water fasting increases circulating stem cells by 600% and resets the immune system completely.',
+        ],
+        practice:'Begin with Ekadashi. Mark the next two Ekadashi dates. On these days: water and herbal teas only until sunset. Gentle yoga and Pranayama. Mantra recitation. Minimal screen time. Journal your experience — what arises physically, emotionally, mentally. Most people report extraordinary clarity and insight on Ekadashi, confirming the Siddha teaching that fasting opens the gates of higher perception.',
+      },
+      {
+        title:'Milk as Supreme Rasayana — The White Amrita Protocol', duration:'18 min',
+        body:[
+          'Of all Kayakalpa preparations, the Siddhas reserve their highest praise for medicated milk (Kshira Paka) — the process of simmering herbs in milk until the herb\'s active compounds are extracted and the milk infused with their intelligence. This is the most direct method of building Ojas and reaching the deepest Dhatu layers.',
+          'ASHWAGANDHA MILK PROTOCOL (from Bogar\'s texts): 1 cup A2 full-fat cow\'s milk, 1/2 tsp Ashwagandha powder, 1/4 tsp cardamom, pinch of saffron, 1 tsp ghee, 1 tsp raw honey (added after cooling to warm). Simmer milk with Ashwagandha and cardamom 5 minutes on low heat. Remove from heat. Add saffron and ghee. Cool to warm. Add honey. Recite: "OM ASHWAGANDHA SHAKTI OJAS VRIDDHI NAMAHA" 3 times while stirring clockwise. Drink slowly, with full attention. Take 30 minutes before sleep.',
+          'LUNAR MILK CHARGING: On Pournami night, place a clay or glass vessel of milk under direct moonlight for one hour before consuming or using in preparation. The Siddhas taught that moonlight activates specific compounds in milk with rejuvenating effects on the Rasa and Shukra Dhatus. This practice is called Chandra Amrita Kshira.',
+          'PROGRESSIVE MILK PROTOCOL — 40-Day Intensive: Days 1–10: Regular milk daily with basic herbs. Days 11–20: Increase to 2 cups daily with enhanced herb formula. Days 21–30: 3 cups daily, primary nutrition from milk supplemented with fruit. Days 31–40: Milk and specific herbs as near-complete nutrition, minimal solid food. This protocol, from Bogar\'s texts, is described as producing visible physical rejuvenation within the 40-day cycle.',
+        ],
+      },
     ],
-    locked: true,
+  },
+  {
+    num:7, tier:'siddha', icon:'⚗️',
+    title:"Muppu — The Secret Alchemical Triple Salt",
+    subtitle:"Bogar's Greatest Secret · The Universal Catalyst",
+    lessons:[
+      {
+        title:'Muppu — The Three Salts of Immortality Decoded', duration:'30 min',
+        body:[
+          'Muppu is the most closely guarded secret in the entire Tamil Siddha alchemical tradition. For millennia, Siddha physicians refused to transmit this knowledge outside the direct Guru-disciple relationship. Muppu is a universal catalyst — a substance that, when added to any Kayakalpa preparation, amplifies its bioavailability and therapeutic potency by an order of magnitude. It is the secret that separates Siddha alchemy from mere herbal medicine.',
+          '"Muppu" means "triple" or "three-fold." Its three components are described in classical texts using poetic cipher language. The Akashic transmission identifies them as: a specific naturally occurring mineral salt (Sauvarchala/Sochal salt), a naturally occurring borax compound (Shuddha Tankana), and a potassium-based rock salt (Vida Lavana) — all purified through a specific alchemical process involving lunar timing and mantric activation.',
+          'The alchemical theory of Muppu: these three salts, when properly combined, create a compound that acts as a molecular key — opening the cell membrane to enhanced absorption of whatever preparation accompanies it. The three salts work on the three levels of the body (Sthula/gross, Sukshma/subtle, and Karana/causal) simultaneously. This is why preparations containing Muppu are said to work not just physically but at the level of the Nadis and the Akashic template of the body.',
+          'Without Muppu, classical Kayakalpa preparations work. With Muppu, they transform. This is why Siddha physicians could produce results that remain unexplained by modern pharmaceutical science — they were working with a preparation technology that operates at the interface of matter and consciousness.',
+        ],
+        mantra:'OM SHIVA SHAKTI AIKYA ROOPAYA NAMAHA — The mantra invoking the union of Shiva (consciousness) and Shakti (energy) — the spiritual principle behind Muppu\'s unification of the three salt types into a single transformative compound.',
+      },
+      {
+        title:'Poorna Chandrodayam — Gold, Mercury & Sulphur Unified', duration:'25 min',
+        body:[
+          '"Poorna Chandrodayam" — "Full Rising of the Perfect Moon" — is the supreme Kayakalpa formulation. It combines three alchemically purified metals: Shuddha Parada (purified mercury), Shuddha Swarna (purified gold), and Shuddha Gandhaka (purified sulphur), processed with Muppu as catalyst. Said to grant extraordinary longevity and reverse advanced stages of systemic deterioration.',
+          'The spiritual symbolism maps precisely onto the physiological action. Gold (Swarna Bhasma) — solar, Pitta-balancing, cellular intelligence activator — nourishes Tejas (cellular radiance). Mercury (Parada Bhasma in its fixed form) — mercurial, Vata-balancing, penetrating — carries the formula to the deepest tissues. Sulphur (Gandhaka Rasayana) — earthy, Kapha-penetrating, anti-aging — addresses structural and metabolic aging at the Meda and Asthi Dhatu levels.',
+          'Modern research: Swarna Bhasma (gold nanoparticles produced by traditional Ayurvedic processing) has been found to have anti-inflammatory, immunomodulatory, and neuroprotective effects. The particle size produced by traditional Bhasma processing (1–50 nanometers) is in the range of modern pharmaceutical nanotechnology developed at enormous cost. The Siddhas achieved this through repetitive trituration and calcination — a different path to the same particle size range.',
+          'Poorna Chandrodayam is available from qualified Siddha physicians in Tamil Nadu. It is not a supplement to be self-prescribed. Traditional protocol: taken with warm milk and honey at Brahma Muhurta on empty stomach, in quantities (measured in Ratti — approximately 120mg) determined by the physician after constitutional assessment.',
+        ],
+      },
+      {
+        title:'Working with Alchemical Preparations Safely', duration:'18 min',
+        body:[
+          'A crucial module. The Siddha alchemical preparations — mercury compounds, arsenic compounds, gold and mineral Bhasmas — are extraordinarily powerful and demand respect. In the wrong hands, without proper preparation and supervision, they can cause serious harm. This module informs so that practitioners can access these preparations safely through proper channels.',
+          'AUTHENTIC SOURCING: The only reliable sources for genuine Siddha alchemical preparations are licensed Siddha practitioners and pharmacies regulated by India\'s Ministry of AYUSH. Key institutions: Government Siddha Medical College, Chennai. IMPCOPS (Indian Medical Practitioners Co-operative Pharmacy & Stores), Chennai. Any online retailer claiming to sell "Muppu" or "Navapaashanam" without a licensed physician\'s involvement is not a reliable source.',
+          'THE PREPARATORY REQUIREMENT: Classical texts are emphatic — alchemical Kayakalpa preparations should not be the starting point. The sequence: (1) 3+ months of herbal Kayakalpa to purify the Dhatus. (2) Regular Pranayama to clear the Nadis. (3) Dietary purification. Only after this foundation is in place does the system have the Agni and Ojas required to properly metabolize alchemical substances. Starting with alchemical preparations in an unprepared body is like pouring rocket fuel into an engine that hasn\'t been serviced.',
+          'CONTRAINDICATIONS: Pregnancy, breastfeeding, severe active inflammation or fever, severe liver or kidney disease. Interactions with pharmaceutical medications must be assessed by a qualified Siddha or integrative physician. If in doubt, wait — the herbs will take you to the readiness for the minerals.',
+        ],
+      },
+    ],
+  },
+  {
+    num:8, tier:'siddha', icon:'🧬',
+    title:'Kundalini & Kayakalpa — The Fire of Transformation',
+    subtitle:'Shakti Rising · Bindu · Amrita · The Nectar Path',
+    lessons:[
+      {
+        title:'Kundalini Is the Engine of Kayakalpa', duration:'25 min',
+        body:[
+          'The Siddhas were unambiguous: cellular immortality is impossible without Kundalini activation. No amount of herbs, no alchemical preparation, no dietary protocol will achieve complete transformation without the awakening and controlled ascent of Kundalini Shakti through the central channel.',
+          'Kundalini is not a metaphor. It is a specific physiological and energetic phenomenon — the concentrated life-force that normally lies dormant at the base of the spine. When this force awakens and ascends through the Sushumna, it literally restructures every system in the body it passes through. The immune system reorganizes. Endocrine glands activate dormant functions. Neural pathways that have never been used begin to carry higher frequencies of consciousness.',
+          'The relationship to Kayakalpa is direct: as Kundalini ascends through each chakra, it dissolves the energetic obstructions that create disease and aging at that level. When it reaches the Ajna chakra, the pineal gland begins secreting compounds — including DMT and pinoline — which have profound regenerative effects on cellular DNA. When Kundalini reaches Sahasrara (crown), Amrita begins to flow — the nectar of immortality that bathes every cell in the body with the frequency of the Absolute.',
+          'Safely cultivating Kundalini for Kayakalpa: the Siddha approach is methodical and gradual. The foundation — Nadi Shodhana, dietary purification, brahmacharya (conservation of vital force), Kayakalpa herbs, and Bhakti (devotion) — creates the conditions for Kundalini to rise naturally and safely. Forcing Kundalini through intense practices in an unprepared body creates the "Kundalini crises" documented in Western literature. The Siddha way is patient, loving, and grounded.',
+        ],
+        practice:'Mula Bandha awakening: Sit comfortably. Inhale deeply. On exhale, contract the perineal muscles firmly and draw them upward (as if stopping urination). Hold the contraction with breath retained for 5 seconds. Release on next inhale. Repeat 21 times each morning. This directly stimulates the Muladhara chakra where Kundalini resides and begins the process of its conscious awakening.',
+      },
+      {
+        title:'Bindu & Amrita — The Nectar of Immortality', duration:'28 min',
+        body:[
+          'At the top of the skull — specifically at the Lalana chakra (above the soft palate) and the Bindu Visarga (at the occiput) — the Siddhas located the storehouse of Amrita: the divine nectar of immortality. In most human beings, this nectar "drips" downward and is consumed by Agni at the solar plexus, causing aging. Kayakalpa\'s inner science is largely concerned with reversing this flow.',
+          'The physiology: the pineal gland secretes melatonin, serotonin, and under certain conditions (deep meditation, specific Pranayama, extended darkness), pinoline and potentially endogenous DMT. These secretions physically drip downward through the Ajna chakra toward the throat. The Siddhas called these secretions "Amrita" collectively and understood their preservation and amplification to be central to physical immortality.',
+          'METHODS FOR REVERSING THE AMRITA FLOW: (1) Viparita Karani (legs-up-the-wall) and Sarvangasana (shoulder stand) — inverted postures that physically reverse the downward drip. (2) Khechari Mudra — see the following lesson. (3) Sheetali Pranayama (cooling breath through curled tongue) — draws the descending nectar upward through specific nerve reflexes. (4) Jalandhara Bandha — the gentle chin lock that seals the throat during Kumbhaka, preventing Amrita dissipation.',
+          'When Amrita is preserved and amplified through these practices, practitioners report: a sweet taste at the back of the throat during deep meditation (actual Amrita dripping from the Lalana chakra onto the tongue), spontaneous feelings of profound bliss without external cause, deep cellular peace — the body feeling "at rest" even during activity, and progressively, a relationship with time that becomes fluid rather than linear.',
+        ],
+      },
+      {
+        title:'Khechari Mudra — The King of All Mudras', duration:'30 min',
+        body:[
+          'Khechari Mudra is the practice of turning the tongue backward into the nasal cavity — specifically into the space behind the soft palate and nasopharynx — to directly reach the Bindu and receive Amrita. It is called "the king of all Mudras" because its achievement marks a definitive threshold of advanced Kayakalpa practice.',
+          '"He who knows Khechari is freed from disease, death, sleep, hunger, thirst, and fainting. He who practices Khechari is not affected by disease, not tainted by karma, not snared by time." — Hatha Yoga Pradipika, Chapter 3.',
+          'STAGES OF KHECHARI: Stage 1 — tongue to hard palate (accessible to most practitioners with practice). Stimulates salivary glands and begins calming the Vata nervous system. Stage 2 — tongue to soft palate. Stimulates the vagus nerve directly, activating parasympathetic dominance and deep meditative states. Stage 3 — tongue behind uvula into nasopharynx. Stimulates the pituitary and pineal regions directly through proximity. Stage 4 — tongue into nasal cavity proper. The classical state — very rare without traditional preparation.',
+          'The experience: practitioners of Stage 2–3 Khechari uniformly report a sweet secretion appearing during deep meditation — described as tasting like honey or mild jasmine nectar. This is the Amrita the Siddhas describe. It is real, physiological, and its regular experience marks a distinct threshold in the Kayakalpa journey.',
+          'THE TRADITIONAL PREPARATION: In the classical system, Khechari is prepared over months or years through a process that gradually stretches the frenum (the connective tissue under the tongue). Modern practitioners can achieve partial Khechari (tongue to soft palate) without the traditional cutting procedure, which still produces significant effects. Do not force the tongue — this is a practice of patient daily extension over months.',
+        ],
+        practice:'Begin Stage 1 Khechari practice: After morning Pranayama, fold the tongue backward toward the soft palate — as far as comfortable. Hold for 5 minutes while breathing naturally through the nose. Gradually increase duration by 1 minute per week. Do not force. The tongue will lengthen naturally over months. Track experience — especially taste sensations, saliva production increases, or altered states — in your journal.',
+      },
+      {
+        title:'Vajroli & the Conservation of Vital Essence', duration:'22 min',
+        body:[
+          'The Siddhas were explicit about one of the most significant — and least discussed — dimensions of Kayakalpa: the management of Shukra Dhatu, the reproductive essence. Every ejaculation depletes the last and most refined product of the 35-day Dhatu cascade. The Siddhas calculated that it takes 35 days to produce one drop of true Shukra, which then requires further time to refine into Ojas.',
+          'This teaching is not asceticism for its own sake — it is energetic economics. The question the Siddha asks: where do you want your vital energy invested? The Siddhas did not moralize about sexuality. They were scientists of consciousness who observed the energetic laws of the body and reported what they found.',
+          'BRAHMACHARYA IN PRACTICE — three approaches: (1) Complete celibacy for those called to the monastic path. (2) Brahmacharya within relationship — intimacy without ejaculation, using specific breath practices and Mula Bandha to prevent the outward flow and redirect energy upward. This is the path taught in the Siddha and Natha traditions for householders. (3) Regulated relationship — for those not yet ready for (1) or (2), limiting frequency to once per lunar month with full herbal restoration protocol afterward.',
+          'VAJROLI MUDRA: The advanced Siddha practice of redirecting or withdrawing the ejaculatory impulse through specific muscular contractions of the urethral muscles. This practice requires direct transmission from a qualified teacher and should not be attempted without guidance. Its effects, when properly mastered, are described as equivalent to gaining years of vital force with each practice. The preliminary practice accessible to all: strong Mula Bandha at the moment of arousal, combined with Kumbhaka — this redirects the energy upward before the point of no return.',
+        ],
+      },
+    ],
+  },
+  {
+    num:9, tier:'siddha', icon:'🌙',
+    title:"Varma & Marma — The Body's Secret Control Points",
+    subtitle:"Bogar's Varma Vidya · 108 Vital Points · Activation Protocol",
+    lessons:[
+      {
+        title:'Varma Vidya — The Hidden Science of Vital Points', duration:'25 min',
+        body:[
+          'Varma Vidya — the science of vital points — is one of the most powerful and protected bodies of knowledge in the Siddha tradition. Bogar encoded the complete system in his texts, transmitted in secret lineages within Tamil Nadu for millennia. A Varma master can heal instantaneously — or kill instantaneously — by pressing specific points on the body. There are documented cases of Varma masters restoring consciousness to individuals in coma and reversing advanced paralysis.',
+          'The 108 Varma points are locations where Prana is concentrated at the intersection of Nadis, bones, tendons, and organ systems. They are distributed: 12 on the head, 14 on the neck and throat, 45 on the torso, 22 on the limbs, and 15 on the back and spine. Each point governs a specific organ system, emotional function, and Dhatu.',
+          'In Kayakalpa practice, specific Varma points are used to: activate endocrine glands for increased hormone production, stimulate immune function, enhance the function of specific Dhatus, and open blocked Nadis that resist Pranayama-based clearing. When Varma point work is combined with Pranayama and herbal Kayakalpa, the synergistic effect is significantly greater than any of these practices used in isolation.',
+          'In this Academy, we teach the self-practice Varma points — those that can be safely accessed without a partner — and provide context for the full system so that students can seek qualified Varma teachers for the advanced applications.',
+        ],
+      },
+      {
+        title:'12 Self-Practice Kayakalpa Varma Points', duration:'30 min',
+        body:[
+          'These 12 points have been selected from the 108 for their safety, accessibility, and specific effects on longevity, cellular repair, and consciousness expansion. Practice in sequence each morning after Pranayama, spending 30–60 seconds on each point with gentle clockwise circular pressure.',
+          '1. MURDHNI VARMA (Crown): Brahmarandhra — press with middle three fingers of both hands simultaneously. Effect: pineal gland activation, Sahasrara stimulation, Amrita flood. 60 seconds.',
+          '2. BRAHMA RANDHRA (Posterior skull-neck junction): Press firmly with both thumbs. Effect: pituitary stimulation, Ajna activation, hormonal balancing. 45 seconds.',
+          '3. KANTA VARMA (Base of throat — V-notch above sternum): Press gently with two fingers. Effect: thyroid and parathyroid activation, Vishuddha chakra clearing. 30 seconds — be gentle.',
+          '4. HRUDAYA VARMA (Heart): 4 finger-widths to the right of the sternum center. Press firmly with three fingers. Effect: thymus gland activation, immune stimulation, Anahata opening, Ojas building. 60 seconds.',
+          '5. NABHI VARMA (Below navel): 2 finger-widths below navel. Press firmly with all four fingers of both hands. Effect: Agni kindling, Apana regulation, solar plexus activation. 60 seconds.',
+          '6. KATIVARMA (Sacral-lumbar): Both hands on lower back, thumbs on the dimples on either side of the spine. Press firmly. Effect: adrenal activation, kidney Prana restoration, cortisol regulation. 60 seconds.',
+          '7. MULADHARA VARMA (Perineum): Sit in Siddhasana — heel naturally stimulates this point throughout seated practice. Effect: Kundalini awakening, root chakra grounding. Throughout seated practice.',
+          '8. JANU VARMA (Back of knee hollow): Press with three fingers simultaneously on both knees. Effect: lymphatic drainage, kidney meridian stimulation, leg circulation enhancement. 45 seconds each leg.',
+          '9. GULPHA VARMA (Inner ankle depression): Press with thumb in small circles. Effect: kidney and adrenal tonification, sexual energy regulation. 45 seconds each foot.',
+          '10. PADA VARMA (Arch of foot): Center of arch, press firmly with thumb. Effect: kidney, liver, and heart reflex zone direct connection. The Siddhas massaged this point each morning with warm sesame oil as their foundational Kayakalpa self-care practice. 2 minutes each foot with warm sesame oil.',
+          '11. KARNASHANKHA VARMA (Temple): 1 inch in front of and above the ear. Extremely gentle pressure with two fingers. Effect: temporal lobe activation, enhanced memory, Vata calming. 30 seconds each side — very gentle.',
+          '12. NASIKA VARMA (Bridge of nose — between eyebrows): Press firmly with both thumbs. Effect: pineal gland stimulation through proximity, Ajna activation, mental clarity. The Siddha\'s most used longevity point. 60 seconds.',
+        ],
+        practice:'Morning Varma Sequence: After Pranayama, spend 15 minutes through all 12 points in sequence. Begin with Pada Varma (feet) using warm sesame oil. Proceed upward through the body ending at Murdhni Varma (crown). This upward flow corresponds to the Kayakalpa principle of raising Prana from earth to heaven, from gross to subtle.',
+      },
+      {
+        title:'Siddha Abhyanga — The Kayakalpa Oil Massage Protocol', duration:'22 min',
+        body:[
+          'Abhyanga — full-body oil massage — is one of the most powerful daily Kayakalpa practices and the most underestimated. Charaka Samhita states: "From abhyanga, the person becomes strong, their skin becomes soft and lustrous, they do not become afflicted by old age." The Siddhas recommend it daily — not as luxury, but as medicine.',
+          'THE KAYAKALPA MASSAGE OIL: Base: sesame oil (black sesame for Vata, coconut oil for Pitta, mustard oil for Kapha). Herbal infusion: Ashwagandha, Shatavari, Brahmi — simmer 100g of each herb in 1 liter of oil until water evaporates completely. The resulting medicated oil contains the herbs\' lipid-soluble compounds at full potency and penetrates skin to reach Mamsa and Meda Dhatu directly.',
+          'THE SIDDHA ABHYANGA PROTOCOL: Warm oil to body temperature. Begin at the crown of the head with vigorous circular massage. Move to the face, ears (the Siddhas are emphatic about ear massage — pouring a few drops of warm oil into each ear weekly for nervous system rejuvenation). Neck and throat using downward strokes. Chest and abdomen using large clockwise circles — always clockwise, following the direction of intestinal peristalsis. Back using long strokes toward the heart. Arms and legs using long strokes toward the body. Feet last with extra attention to Pada Varma. Entire massage: 15–20 minutes. Rest 10 minutes wrapped in a warm towel. Shower with warm water.',
+          'MARMA POINT ACTIVATION DURING ABHYANGA: As you massage each area, consciously direct attention to the Varma/Marma points in that region. Use firm, circular pressure at each point for 10–15 seconds. This transforms a regular self-massage into a full Kayakalpa treatment that simultaneously works on the physical body, the Nadi system, and the endocrine system.',
+        ],
+      },
+    ],
+  },
+  {
+    num:10, tier:'akasha', icon:'✦',
+    title:'Kaya Siddhi — The Perfected Immortal Body',
+    subtitle:'Eight Siddhis · Jyotir Deha · Deathlessness',
+    lessons:[
+      {
+        title:'The Eight Kaya Siddhis — Signs of Kayakalpa Completion', duration:'30 min',
+        body:[
+          'The classical Siddha texts enumerate eight Kaya Siddhis — perfections of the physical body — that arise as the fruit of sustained Kayakalpa practice. These are not supernatural powers. They are the natural capabilities of a body restored to its Akashic template — its divine blueprint. In the divine blueprint, the physical body is not limited by the mechanical laws of ordinary matter, because it has been transmuted into a vehicle of conscious light.',
+          'ANIMA (Atomic Refinement): The ability to make the body subtle — to enter states where the gross body becomes porous to subtle dimensions. Experienced initially as states during deep meditation where the body seems to "disappear" and only awareness remains. In advanced form: demonstrated capacity of some Siddha masters to appear simultaneously in multiple locations.',
+          'MAHIMA (Expansion): The capacity for consciousness — and eventually the physical field — to expand beyond the body\'s ordinary boundaries. Experienced as states of expanded awareness during Pranayama. In advanced form: documented cases of certain saints whose "shakti field" extends for miles.',
+          'GARIMA (Increased Density/Power): The ability to increase the body\'s energetic density and stability. Experienced as a profound sense of groundedness and physical power. Siddhas who demonstrated extraordinary physical feats — remaining motionless for years, withstanding extreme temperatures — were operating this Siddhi.',
+          'LAGHIMA (Levitation): The lightening of the body through mastery of Vayu Tattva. Documented by multiple Western observers visiting Indian saints in the 19th–20th centuries. When Prana has completely permeated every cell and the body\'s relationship to gravity changes, the body can overcome ordinary gravitational pull.',
+          'PRAPTI (Omnipresent Reach): The ability to access any object, information, or experience regardless of physical distance. The Siddha\'s "long-distance Varmam treatment" — healing at a distance by stimulating the patient\'s Varma points through their own body as a proxy — is a direct expression of this Siddhi.',
+          'PRAKAMYA (Manifestation): The ability to enter states where intention directly shapes material reality. Siddhas who materialized herbs, healing substances, and sacred objects operated this Siddhi — the culmination of the Siddha teaching that consciousness, not matter, is the fundamental substrate of reality.',
+          'ISHITVA (Mastery of Elements): Command over the Pancha Bhuta. Manifests as immunity to environmental extremes and the ability to adjust atmospheric conditions — documented in the lives of Agastyar, Thirumoolar, and other Siddhas.',
+          'VASHITVA (Mastery over All Beings): The natural emanation of a consciousness fully aligned with divine will. Experienced by those around the Siddha as an irresistible pull toward their highest self. This is not control — it is the magnet of unconditional love.',
+        ],
+      },
+      {
+        title:'Jyotir Deha — The Light Body Transmission', duration:'35 min',
+        body:[
+          'The ultimate fruit of Kayakalpa is not a healthier physical body or even a longer life. It is the transformation of the gross physical body into the Jyotir Deha — the body of light. This is the teaching that separates the Tamil Siddha tradition from every other longevity science: the goal is not preservation of the physical body, but its transmutation into a luminous vehicle no longer subject to the laws governing ordinary matter.',
+          'Thirumoolar achieved this. After 3,000 years in Samadhi, his body had not deteriorated — it had refined. Accounts describe his body as emitting light, being warm despite no ordinary metabolic indicators of life, and surrounded by a fragrance witnesses described as "the scent of God." When he completed his time in that body, he did not die — the body dissolved in light.',
+          'The Akashic understanding: as Kundalini Shakti progressively illuminates the Nadis, as Ojas builds to critical mass, as the Dhatus are refined from gross to subtle, the body\'s baseline vibration increases. At a certain threshold — which cannot be forced but can be approached through sustained Kayakalpa practice — the cells themselves begin to emit coherent light (biophotons, measurable with modern instrumentation). This is not the end of the process but its first visible sign.',
+          'Progressive stages of Jyotir Deha development: (1) Increased biophoton emission — perceived as a glow noticed by sensitive observers. (2) Internal light perception — the practitioner perceives their own body as luminous from within during deep meditation. (3) Dissolution of the sense of the body\'s density — gravity feels different; the body feels lighter during certain meditation states. (4) Spontaneous light manifestations — occasionally perceived by others as an aura. (5) Complete transmutation — the rare, fully realized state where the body\'s material substrate has been reorganized by consciousness into a non-ordinary form of matter.',
+          'Practices that accelerate Jyotir Deha development: sustained Samadhi meditation (minimum 40 minutes twice daily), complete dietary purity, Khechari Mudra, Kundalini cultivation through Bandha practice, and deep Bhakti — specifically the dissolution of ego-identification through surrender to the Guru or Ishta Devata.',
+        ],
+      },
+      {
+        title:"Babaji's Kayakalpa — The Living Proof of 2000 Years", duration:'28 min',
+        body:[
+          'Mahavatar Babaji is not a historical figure. He is a living, immortal master whose physical body has been maintained — by his own Kayakalpa science — for over 2,000 years. Born in 203 CE on the Tamil Nadu coast, initiated by Bogar at age 11, receiving the complete Kayakalpa transmission. Subsequently initiated by Agastyar at Courtallem, he reached the state of Kaya Siddhi at age 16 and has maintained his physical body in a perpetually young state ever since.',
+          "Babaji's Kayakalpa practice reconstructed from Akashic records and the accounts of those he has initiated: Daily Brahma Muhurta practice of Nadi Shodhana (3 hours) and Kumbhaka culminating in Kevala Kumbhaka. Daily Varma point self-activation using specific sequences transmitted by Agastyar. Periodic use of rare mountain herbs from the Himalayas and Nilgiris, prepared according to Bogar\'s formulas. Complete brahmacharya — with the entire vital energy redirected into sustaining the Jyotir Deha. Continuous Samadhi — Babaji is understood to maintain dual awareness, always partially in Nirvikalpa Samadhi even while appearing to move in the world.",
+          'In 1861, Babaji initiated Lahiri Mahasaya into Kriya Yoga — the compressed version of the complete Kayakalpa system, designed for householders living in ordinary circumstances. The full Kayakalpa was encoded into the Kriya practices so that consistent practitioners would, over years and decades, progressively achieve the same cellular transformation that the classical Kayakalpa protocols produce.',
+          'The most important teaching Babaji transmits about Kayakalpa: "Do not practice Kayakalpa for immortality. Practice it because you love God so completely that you want to maintain this body to serve as long as possible. The one who practices for their own immortality will succeed only in polishing the cage. The one who practices out of love will find that the cage transforms into a temple — and the temple, into Light."',
+        ],
+        mantra:'OM KRIYA BABAJI NAMAH AUM — Recite 108 times to invoke his direct transmission into your Kayakalpa practice. This mantra carries Babaji\'s Shakti as encoded in the Akashic field and responds to sincere invocation regardless of the practitioner\'s location or development level.',
+      },
+      {
+        title:'Samadhi Is the Supreme Kayakalpa', duration:'25 min',
+        body:[
+          'This is the final and most important teaching of the Kayakalpa Immortality Academy: the deepest secret of the entire science. All the herbs, all the breath practices, all the alchemical preparations, all the Varma point activations, all the dietary protocols — every one of them is pointing toward a single destination: the natural, effortless, sustained state of Samadhi.',
+          'When consciousness merges with the Absolute — when the individual wave recognizes itself as the ocean — biological time stops. The mechanism: in Nirvikalpa Samadhi, metabolic rate drops to a fraction of baseline. Free radical production ceases. Cellular repair rates maximize. The body\'s relationship to entropy — the fundamental cause of aging — reverses.',
+          'Every deep Samadhi, even of 30 minutes duration, biologically reverses aging by an amount measurable in the body\'s repair biomarkers. A practitioner who achieves 30 minutes of genuine Nirvikalpa Samadhi daily will age, biologically, at a fraction of the normal rate. This is why Siddha masters who sustained Samadhi for years appeared physically young despite chronological age spanning centuries.',
+          'The final instruction of Bogar, transmitted through the Akasha to this Academy: "Do not practice Kayakalpa for immortality. Practice it because you love God so completely that you want to maintain this body to serve as long as possible. The one who practices for their own immortality will succeed only in polishing the cage. The one who practices out of love will find that the cage transforms into a temple — and the temple, into Light."',
+        ],
+        practice:'The Supreme Kayakalpa Practice: Each day, immediately after Pranayama and before rising, rest for 20 minutes in absolute stillness with no technique and no goal. Simply be. Do not meditate "on" anything. Do not mantra. Do not visualize. Rest as Awareness itself — prior to the body, prior to the breath, prior to thought. This is the direct approach to Samadhi, and it is the supreme Kayakalpa.',
+      },
+    ],
+  },
+  {
+    num:11, tier:'akasha', icon:'🔮',
+    title:"Bogar's Direct Transmission — Akashic Initiation",
+    subtitle:'Five Master Mantras · Thirumoolar Protocol · Agastyar Formula',
+    lessons:[
+      {
+        title:"Bogar's 5 Kayakalpa Master Mantras", duration:'35 min',
+        body:[
+          'These five mantras were transmitted by Bogar directly into the Akasha-Neural Archive for release to sincere seekers in this era. They are the decoded, activated versions of the encoded mantras within the Bogar Sapta Kandam, prepared for direct use by practitioners.',
+          'MANTRA 1 — FOR CELLULAR RENEWAL: "OM SARVA JEEVA KAYAKALPA SHAKTI PRABHAVA SIDDHARTHE NAMAHA" — Mantra of the life-force Kayakalpa power. Recite 108 times each morning at Brahma Muhurta. Best combined with Triphala consumption. Effect: activates the body\'s innate cellular renewal intelligence across all 7 Dhatus simultaneously.',
+          'MANTRA 2 — FOR NADI PURIFICATION: "OM NADI NADI SHUDDHA PRANA PRAVAHA SIDDHARTHE NAMAHA" — Mantra of pure Prana flow through all Nadis. Recite 54 times before Pranayama practice. Effect: prepares the Nadi network for deeper Prana penetration, dramatically amplifying the subsequent breath practice.',
+          'MANTRA 3 — FOR OJAS BUILDING: "OM OJAS TEJAH SHAKTI VRIDDHI AMRITA PRABHAVA NAMAHA" — Mantra of increasing Ojas, Tejas, and Shakti through Amrita. Recite 21 times before consuming milk or any Kayakalpa herb preparation. Effect: activates the conversion pathways that transform food substances into Ojas rather than ordinary metabolic byproducts.',
+          'MANTRA 4 — FOR KUNDALINI KAYAKALPA: "OM KUNDALINI SHAKTI UDAYA SUSHUMNA PRAVAHA PARAMASHIVAYA NAMAHA" — Mantra of the rising Kundalini through the Sushumna to Supreme Shiva. Recite 108 times during the Mula Bandha awakening practice. Effect: gently awakens and guides Kundalini upward with divine protection. Use only after minimum 6 months of foundational Pranayama practice.',
+          'MANTRA 5 — THE SUPREME KAYAKALPA MANTRA: "OM BOGANATHARAYA AGASTYARAYA THIRUMOOLARAYA BABAJI GURUVE KAYAKALPA SIDDHI DEHI NAMAHA" — The invocation of the complete Kayakalpa lineage. Recite 1,008 times in one sitting — the "Purascharana" (completion ceremony) of the Kayakalpa Academy — ideally on a full moon night, having fasted that day, in a clean and sacred space. This single recitation, done with full sincerity, is the formal initiation into the Kayakalpa lineage.',
+        ],
+        mantra:'Begin with Mantra 1 daily for 40 days before adding the others. The mantras build on each other and should be introduced progressively, not all at once.',
+      },
+      {
+        title:"Thirumoolar's 10-Point Kayakalpa Protocol", duration:'30 min',
+        body:[
+          'Thirumoolar — the Siddha who sustained his body through 3,000 years of Samadhi — encoded in the Tirumantiram verses 724–860 the complete 10-point Kayakalpa protocol he personally used. The most refined individual Kayakalpa system from any single Siddha, because his extraordinary challenge required the most efficient system possible.',
+          'POINT 1 — SIDDHASANA: The left heel presses the perineum (Muladhara Varma and Mula Bandha simultaneously). The right heel presses the pubic region (Svadhisthana). Spine perfectly erect. "Without Siddhasana, Kayakalpa is practice without a vessel."',
+          'POINT 2 — 4:16:8 PRANAYAMA with Mula Bandha throughout retention. Minimum 24 rounds twice daily.',
+          'POINT 3 — KHECHARI MUDRA throughout all breath practice. Tongue must be folded back at minimum to the soft palate for the entire Pranayama session — sealing the Amrita from loss during Prana activation.',
+          'POINT 4 — SPECIFIC DIET: Brown rice, sesame, gooseberry (Amalaki), and ghee as primary foods. Water only at specific times.',
+          'POINT 5 — BRAHMACHARYA ABSOLUTE: Complete conservation of Shukra for the duration of intensive practice.',
+          'POINT 6 — AMAROLI (Shivambu Kalpa): The ancient practice of recycling morning urine as a Kayakalpa medicine. Found in multiple classical texts (Shivambu Kalpa Vidhi, Damar Tantra). Morning urine contains hormones, growth factors, and concentrated metabolites that, when recycled, create a powerful feedback loop of endocrine self-regulation.',
+          'POINT 7 — NADA YOGA: Constant inner listening to the Anahata Nada (inner sound). Thirumoolar describes 10 progressive inner sounds culminating in the "Nada of the Absolute" — the cosmic hum that IS the universe vibrating as Shakti.',
+          'POINT 8 — SURYA TRATAKA: At sunrise and sunset only, when UV index is zero. Begin with 10 seconds, increase by 10 seconds per day. The pineal gland, connected to the retina through the retino-hypothalamic tract, is directly stimulated by gentle sunrise light.',
+          'POINT 9 — EARTH CONNECTION: Sleeping on the earth or on materials directly connected to it (stone, clay, natural wood). No synthetic materials between the body and the ground. "Prithvi Shakti flows through the earth into the body of one who lies upon it."',
+          'POINT 10 — GURU BHAKTI: Daily prayer, offering, and surrender to the Guru lineage. Thirumoolar identifies this as the most important of the ten points. "Without the grace of Shiva transmitted through the Guru, all 9 preceding practices are incomplete. With that grace, even incomplete practice produces extraordinary results."',
+        ],
+      },
+      {
+        title:"Agastyar's Kayakalpa Rasayana — The Complete Formula", duration:'28 min',
+        body:[
+          'Agastyar — the first of the 18 Siddhas, initiated directly by Lord Shiva — is the supreme master of Rasayana science. His personal Kayakalpa formula, encoded in Agastya Vaithiyam 1500, is one of the most studied documents in classical Siddha pharmacology. The complete formula with preparation method and protocol is transmitted here through the SQI Akasha-Neural Archive.',
+          'AGASTYAR\'S KAYAKALPA RASAYANA — 40-Day Intensive Protocol: Primary herbs: Amalaki 100g, Haritaki 50g, Bibhitaki 50g, Shatavari 75g, Ashwagandha 75g, Brahmi 50g, Guduchi 50g. Secondary: Vidari Kanda 25g, Bala 25g, Licorice 25g. Catalyst: Muppu in the quantity prescribed by a qualified Siddha physician.',
+          'PREPARATION: Dry all herbs in shade (not direct sun — UV degrades active compounds). Grind to fine powder. For Lehyam form: combine 500g of the combined Chooranam with 250ml each of pure ghee and raw honey, 50g of jaggery, and the juice of one large fresh Amalaki. Mix cold — do not heat. Store in a glass vessel.',
+          'PROTOCOL: Day 1: 1/4 tsp of Lehyam with warm A2 milk, morning at Brahma Muhurta, empty stomach. Days 2–7: 1/2 tsp. Days 8–21: 1 tsp. Days 22–40: 1.5 tsp. Throughout: maintain Pathya diet, daily Pranayama, daily Abhyanga. No strenuous exercise — conserve energy for the transformation process.',
+          'WHAT TO EXPECT: Days 1–7: Mild cleansing — possible loose stools, skin breakouts, increased urination as Ama is mobilized. Days 8–21: Energy shifts — alternating vitality and unusual fatigue as Dhatus reorganize. Days 22–40: The Rasayana effect — progressive increase in clarity, energy, skin luminosity, depth of sleep, and meditative absorption. Classical texts predict measurable changes in biological markers and the beginning of Kayakalpa transformation that continues for 90 days after the intensive ends.',
+        ],
+      },
+      {
+        title:'Scalar Wave Initiation — Receiving the Living Transmission', duration:'20 min',
+        body:[
+          'This final lesson of Module 11 is not a lesson in the ordinary sense. It is a transmission. The SQI platform operates as a scalar-field encoded medium — the Akasha-Neural Archive carries within its substrate the activated frequencies of Bogar, Agastyar, Thirumoolar, and Mahavatar Babaji.',
+          'When you have arrived at this point — having studied, practiced, and integrated the teachings of the previous 11 modules — you have prepared your Nadi system to receive this transmission. The preparation is the practice. The practice is the vessel. The vessel, now prepared, can receive what could not have been received at the beginning.',
+          'RECEIVING PROTOCOL: Create a sacred space. Light a ghee lamp or candle. Sit in Siddhasana or a comfortable meditative posture. Take 7 deep breaths, releasing with each exhale everything that is not this moment. Recite the Maha Kayakalpa Mantra (Mantra 5 from the previous lesson) 108 times, slowly and with full feeling. After the final repetition, sit in complete silence for a minimum of 20 minutes. Do not meditate "on" anything. Simply receive.',
+          'The Siddhas do not withhold. They are waiting for vessels that can receive. By completing this Academy with sincerity and practice, you have become such a vessel. The transmission is given. The work continues — in your practice, in your daily life, in the years ahead — until the morning comes when you look in the mirror and recognize not just a healthier face, but the face of one who has begun the journey beyond time.',
+        ],
+        mantra:'OM BOGANATHARAYA AGASTYARAYA THIRUMOOLARAYA BABAJI GURUVE KAYAKALPA SIDDHI DEHI NAMAHA — Recite 1,008 times on the full moon. This is your initiation into the Kayakalpa lineage.',
+      },
+    ],
+  },
+  {
+    num:12, tier:'akasha', icon:'♾',
+    title:'The 90-Day Kayakalpa Sadhana — Your Complete Protocol',
+    subtitle:'Three Phases · Daily Schedule · Transformation Map',
+    lessons:[
+      {
+        title:'Constitution Assessment & Personalization', duration:'25 min',
+        body:[
+          'Before beginning the 90-Day Sadhana, calibrate your personal Kayakalpa protocol using four assessment dimensions: Ayurvedic Prakriti (physical constitution), Jyotish signature (planetary influences on your physiology), Siddha Nadi type (the dominant energy channel governing your temperament), and Akashic life-purpose assessment (what this body is here to serve, and what level of vitality it needs).',
+          'JYOTISH & KAYAKALPA: Your birth chart reveals which herbs and practices are most aligned with your constitution. Sun dominant: ashwagandha, saffron, gold Bhasma, solar practices, morning Trataka. Moon dominant: shatavari, pearl Bhasma, moonlight meditation, lunar water protocols. Mars: turmeric, iron Bhasma, dynamic Pranayama. Mercury: brahmi, Shankhpushpi, Nadi Shodhana. Jupiter: ashwagandha, Triphala, expansion practices. Venus: shatavari, rose preparations, Bhakti practices. Saturn: sesame, Triphala, long-term discipline practices.',
+          'THREE NADI TYPES: Vatha Nadi (Vata dominant — thin, fast pulse): Kayakalpa emphasis on warming, grounding, Ojas building. Pitta Nadi (strong, hot pulse): emphasis on cooling, purifying, Amrita building. Kapha Nadi (slow, deep, cool pulse): emphasis on stimulating, drying, Agni kindling.',
+          'YOUR PERSONAL KAYAKALPA STACK: Based on your assessment, compile your protocol using the elements from throughout this Academy. For example, a Vata-dominant practitioner with Moon as Jyotish primary: Primary herb: Shatavari milk protocol daily. Secondary: Ashwagandha, Brahmi. Primary Pranayama: Nadi Shodhana 4:16:8, 18 rounds twice daily, no Kumbhaka until month 2. Diet: Warm, oily, milk and ghee emphasis. Abhyanga: daily with warm sesame oil. Fasting: Ekadashi only. Primary mantra: SO HUM.',
+        ],
+      },
+      {
+        title:'Days 1–30: Shodhana Phase — The Great Purification', duration:'28 min',
+        body:[
+          'The first 30 days focus entirely on purification — removing what does not belong so that what is divine can shine through. The Siddhas called this Shodhana: the burning away of Ama (metabolic toxins), Kleshmas (psycho-emotional toxins), and Vasanas (deep karmic impressions encoded in cellular memory).',
+          'DAILY SCHEDULE — DAYS 1–30:',
+          '4:00–4:30 AM: Rise. Oil pull (Kavala Graha) — 1 tablespoon sesame oil swished in mouth for 10 minutes, then spit out. This removes oral bacteria and draws toxins from the blood through the mucous membranes.',
+          '4:30–5:00 AM: Abhyanga (full-body sesame oil massage) + warm shower.',
+          '5:00–5:45 AM: Pranayama — 6 rounds Nadi Shodhana 4:16:8 + 12 rounds Alternate Nostril without retention + 5 minutes Bhramari (humming bee breath for Nada Yoga initiation).',
+          '5:45–6:15 AM: Meditation — 30 minutes SO HUM synchronization, then 10 minutes pure witnessing (no technique).',
+          '6:15 AM: Kayakalpa herb preparation with morning mantra. Consume with warm water or milk per your constitution protocol.',
+          '7:00 AM: Light Pathya breakfast — warm, cooked, simple.',
+          'Throughout day: Mula Bandha awareness (gentle root contraction) maintained during sedentary activity. Conscious eating with gratitude prayer before each meal. Last meal before sunset.',
+          '8:00–8:30 PM: Evening Pranayama — 6 rounds Nadi Shodhana. Gentle Varma point self-activation sequence.',
+          '9:00 PM: Ashwagandha milk protocol. 9:30 PM: Sleep.',
+          'WHAT ARISES IN SHODHANA: Days 1–10 often bring a "healing crisis" — increased mucus, fatigue, emotional releases, vivid dreams. This is Ama moving. Do not suppress symptoms with medicine unless severe. Days 10–20: energy begins shifting upward — morning practice becomes easier, sleep deepens. Days 20–30: the first signs of Kayakalpa — increased alertness at Brahma Muhurta, a new quality of stillness in meditation, and often a subtle change in how others respond to your presence.',
+        ],
+      },
+      {
+        title:'Days 31–60: Rasayana Phase — Deep Nourishment', duration:'28 min',
+        body:[
+          'With the system purified in the first 30 days, the second phase introduces Rasayana preparations that flood the newly cleaned channels with concentrated life-intelligence. The Siddha analogy: first you clean the vessel (Shodhana), then you fill it with Amrita (Rasayana). Reversing this order gives you Amrita poured into a contaminated vessel — the medicine cannot work optimally.',
+          'ADDITIONS FOR DAYS 31–60:',
+          'Morning: Add Agastyar\'s Kayakalpa Rasayana Lehyam (1 tsp with warm milk) to the morning herb protocol.',
+          'Pranayama: Add Kumbhaka. Progress to 4:16:8 ratio with Mula Bandha. Increase to 12 rounds.',
+          'Khechari Mudra: Begin Stage 1 practice (tongue to hard palate) during all Pranayama sessions.',
+          'Varma sequence: Extended morning sequence — all 12 self-practice points, 20 minutes.',
+          'Lunar protocols: Begin Chandra Amrita Kshira (moonlight-charged milk) on Pournami nights.',
+          'Ekadashi fasting: Maintain all two monthly Ekadashi fasts throughout this phase.',
+          'MILESTONES TO WATCH FOR: By Day 40, most practitioners report: significantly improved sleep quality, increased physical strength and flexibility, heightened sensory perception, and a new quality of emotional stability — reactions to challenging situations decrease in intensity. By Day 60: some practitioners notice changes in skin quality (increased luminosity), hair quality, and the first appearances of the "Kayakalpa glow" — a radiance noticed by others.',
+        ],
+      },
+      {
+        title:'Days 61–90: Kaya Siddhi Phase — Transformation Integration', duration:'30 min',
+        body:[
+          'The final 30 days integrate everything and initiate the deeper processes of Kaya Siddhi — the first glimmerings of the body\'s extraordinary capacities as it approaches its Akashic template. This is not the completion of Kayakalpa — 90 days is the beginning, not the end. But it is the establishment of a foundation so solid that the transformation continues for years after the sadhana ends.',
+          'ADDITIONS FOR DAYS 61–90:',
+          'Meditation: Increase to 45 minutes twice daily. First sit (Brahma Muhurta): Maha Kayakalpa Mantra for 20 minutes, then open awareness for 25 minutes. Evening sit: complete open awareness, no technique.',
+          'Khechari: Advance to Stage 2 if comfortable (tongue to soft palate). Maintain throughout both sits.',
+          'Pranayama: Add Bahya Kumbhaka (external retention after exhale). 6 rounds Antara + 6 rounds Bahya.',
+          'Sungazing: Begin gentle sunrise practice (10 seconds, increasing by 10 seconds per day, maximum 5 minutes).',
+          'Nada Yoga: Begin dedicated inner sound listening — 15 minutes each evening after meditation. Listen for the subtle inner sounds from Thirumoolar\'s 10-point protocol.',
+          'THE 90-DAY COMPLETION CEREMONY: On the final day, ideally coinciding with Pournami: Fast the entire day (water only). Perform full Abhyanga in the evening. Create a sacred altar with images of the Siddha lineage: Bogar, Agastyar, Thirumoolar, Babaji. Light a ghee lamp. Recite the Maha Kayakalpa Mantra 1,008 times. Offer fruits, flowers, and your sincere gratitude. Sit in open meditation for 40 minutes. Then write in your journal: what has changed in your body, your energy, your consciousness, your life over these 90 days.',
+          'THE LIFELONG MAINTENANCE PROTOCOL: Daily Abhyanga. Daily Triphala and primary constitutional herb. Daily Pranayama (minimum 20 minutes). Daily meditation (minimum 30 minutes). Monthly Ekadashi fasting. Seasonal Kayakalpa intensives (one full 40-day Rasayana protocol per year, aligned with Autumn or Winter depending on constitution). This maintenance protocol, sustained consistently, continues the Kayakalpa transformation for years and decades — progressively refining the body toward the Jyotir Deha blueprint that Bogar, Agastyar, Thirumoolar, and Babaji have demonstrated is the birthright of every sincere practitioner.',
+          'From the Akasha-Neural Archive of SQI 2050, transmitted with the blessings of the 18 Siddhas and the grace of Mahavatar Babaji: The immortal body is not something to be achieved — it is something to be revealed. It is already there, waiting inside you. The Kayakalpa is simply the process of removing everything that is not it.',
+        ],
+        practice:'Plan your 90-Day Sadhana start date. Choose a date aligned with a Pournami or Amavasya beginning. Mark all Ekadashi, Pradosham, Pournami, and Amavasya dates for the three months ahead. Shop for your foundational herbs (Triphala, Ashwagandha, Shatavari, Brahmi, sesame oil). Create or designate your sacred practice space. And speak aloud to the Siddha lineage: "I begin. I am ready. I offer this practice to the Divine. Let the transformation begin." OM NAMAH SHIVAYA.',
+      },
+    ],
   },
 ];
 
-const TIER_COLORS: Record<string, { color: string; bg: string; border: string; label: string }> = {
-  free:   { color: white(0.6),  bg: white(0.04),  border: white(0.1),   label: 'FREE' },
-  prana:  { color: green(0.9),  bg: green(0.07),  border: green(0.2),   label: 'PRANA-FLOW' },
-  siddha: { color: cyan(0.9),   bg: cyan(0.07),   border: cyan(0.2),    label: 'SIDDHA-QUANTUM' },
-  akasha: { color: gold(0.95),  bg: gold(0.09),   border: gold(0.28),   label: 'AKASHA-INFINITY' },
+const TC = {
+  free:   { color: white(0.65),  bg: white(0.04),  border: white(0.12),  label: 'FREE' },
+  prana:  { color: green(0.9),   bg: green(0.07),  border: green(0.22),  label: 'PRANA-FLOW' },
+  siddha: { color: cyan(0.9),    bg: cyan(0.07),   border: cyan(0.22),   label: 'SIDDHA-QUANTUM' },
+  akasha: { color: gold(0.95),   bg: gold(0.10),   border: gold(0.30),   label: 'AKASHA-INFINITY' },
 };
+const TIER_ORDER = { free: 0, prana: 1, siddha: 2, akasha: 3 };
 
-// ─── COMPONENTS ───────────────────────────────────────────────────────────────
-
-const TierBadge = ({ tier }: { tier: string }) => {
-  const t = TIER_COLORS[tier];
-  return (
-    <span style={{
-      fontFamily: FONT_MAIN, fontSize: 7, fontWeight: 800, letterSpacing: '0.22em',
-      textTransform: 'uppercase' as const, color: t.color,
-      background: t.bg, border: `1px solid ${t.border}`,
-      borderRadius: 20, padding: '2px 9px',
-    }}>{t.label}</span>
-  );
-};
-
-const LessonRow = ({ lesson, locked, idx }: { lesson: { title: string; desc: string }; locked: boolean; idx: number }) => {
+function LessonPanel({ lesson, locked }: { lesson: Lesson; locked: boolean }) {
   const [open, setOpen] = useState(false);
   return (
-    <div style={{
-      borderBottom: `1px solid ${white(0.05)}`,
-      opacity: locked ? 0.5 : 1,
-    }}>
-      <button
-        type="button"
+    <div style={{ borderBottom: `1px solid ${white(0.05)}` }}>
+      <button type="button"
         onClick={() => !locked && setOpen(o => !o)}
         style={{
-          width: '100%', textAlign: 'left', background: 'none', border: 'none',
-          padding: '14px 16px', cursor: locked ? 'default' : 'pointer',
-          display: 'flex', alignItems: 'flex-start', gap: 12,
-        }}
-      >
-        <span style={{
-          fontFamily: FONT_MAIN, fontSize: 9, fontWeight: 800,
-          color: locked ? white(0.25) : gold(0.6),
-          letterSpacing: '0.15em', minWidth: 24, paddingTop: 2,
-        }}>{String(idx + 1).padStart(2, '0')}</span>
-        <span style={{
-          fontFamily: FONT_MAIN, fontSize: 13, fontWeight: 700,
-          color: locked ? white(0.3) : white(0.85),
-          letterSpacing: '0.01em', flex: 1, lineHeight: 1.4,
-        }}>{lesson.title}</span>
-        <span style={{ color: locked ? white(0.15) : gold(0.5), fontSize: 14, flexShrink: 0 }}>
-          {locked ? '🔒' : (open ? '▲' : '▼')}
+          width:'100%', background:'none', border:'none',
+          padding:'14px 18px', cursor: locked ? 'default' : 'pointer',
+          display:'flex', alignItems:'center', gap:12, textAlign:'left' as const,
+        }}>
+        <span style={{ fontFamily:FONT, fontSize:13, fontWeight:700, color: locked ? white(0.25) : white(0.88), flex:1, lineHeight:1.4 }}>
+          {lesson.title}
         </span>
+        <span style={{ fontFamily:FONT, fontSize:8, fontWeight:800, letterSpacing:'0.2em', color: locked ? white(0.15) : white(0.3), flexShrink:0 }}>
+          {locked ? '🔒' : lesson.duration}
+        </span>
+        {!locked && <span style={{ color:gold(0.5), fontSize:12, flexShrink:0 }}>{open ? '▲' : '▼'}</span>}
       </button>
       {open && !locked && (
-        <div style={{
-          padding: '0 16px 16px 52px',
-          fontFamily: FONT_SERIF, fontStyle: 'italic',
-          fontSize: '0.9rem', color: white(0.6), lineHeight: 1.7,
-        }}>
-          {lesson.desc}
+        <div style={{ padding:'0 18px 20px', animation:'sqFadeUp 0.25s ease both' }}>
+          {lesson.body.map((para, i) => (
+            <p key={i} style={{ fontFamily:SERIF, fontSize:'0.93rem', color:white(0.65), lineHeight:1.8, margin:'0 0 14px', fontStyle: para.startsWith('"') || para.startsWith('\u2018') ? 'italic' : 'normal' }}>
+              {para}
+            </p>
+          ))}
+          {lesson.practice && (
+            <div style={{ margin:'16px 0 0', padding:'14px 16px', background:emerald(0.06), border:`1px solid ${emerald(0.2)}`, borderRadius:12 }}>
+              <div style={{ ...LABEL, fontSize:8, color:emerald(0.8), marginBottom:8 }}>✦ PRACTICE</div>
+              <p style={{ fontFamily:SERIF, fontStyle:'italic', fontSize:'0.88rem', color:white(0.6), lineHeight:1.7, margin:0 }}>{lesson.practice}</p>
+            </div>
+          )}
+          {lesson.mantra && (
+            <div style={{ margin:'12px 0 0', padding:'14px 16px', background:gold(0.07), border:`1px solid ${gold(0.2)}`, borderRadius:12 }}>
+              <div style={{ ...LABEL, fontSize:8, color:gold(0.7), marginBottom:8 }}>🔱 MANTRA TRANSMISSION</div>
+              <p style={{ fontFamily:SERIF, fontStyle:'italic', fontSize:'0.88rem', color:gold(0.8), lineHeight:1.7, margin:0 }}>{lesson.mantra}</p>
+            </div>
+          )}
         </div>
       )}
     </div>
   );
-};
+}
 
-const ModuleCard = ({ mod, userTier }: { mod: typeof MODULES[0]; userTier: string }) => {
+function ModuleCard({ mod, userTier }: { mod: Module; userTier: string }) {
   const [expanded, setExpanded] = useState(false);
-  const tierOrder: Record<string, number> = { free: 0, prana: 1, siddha: 2, akasha: 3 };
-  const isLocked = tierOrder[mod.tier] > tierOrder[userTier];
-  const tc = TIER_COLORS[mod.tier];
-
+  const isLocked = TIER_ORDER[mod.tier] > TIER_ORDER[userTier as keyof typeof TIER_ORDER];
+  const tc = TC[mod.tier];
   return (
     <div style={{
-      margin: '0 0 12px',
-      background: isLocked ? white(0.015) : `linear-gradient(135deg, ${tc.bg}, rgba(5,5,5,0.6))`,
-      border: `1px solid ${isLocked ? white(0.07) : tc.border}`,
-      borderRadius: 20,
-      overflow: 'hidden',
-      transition: 'border-color 0.3s ease',
+      marginBottom:10,
+      background: isLocked ? white(0.015) : `linear-gradient(135deg, ${tc.bg}, rgba(5,5,5,0.7))`,
+      border:`1px solid ${isLocked ? white(0.06) : tc.border}`,
+      borderRadius:20, overflow:'hidden',
     }}>
-      {/* Module header */}
-      <button
-        type="button"
-        onClick={() => setExpanded(e => !e)}
-        style={{
-          width: '100%', background: 'none', border: 'none',
-          padding: '18px 16px', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left',
-        }}
-      >
+      <button type="button" onClick={() => setExpanded(e => !e)}
+        style={{ width:'100%', background:'none', border:'none', padding:'18px 16px', cursor:'pointer', display:'flex', alignItems:'center', gap:14, textAlign:'left' as const }}>
         <div style={{
-          width: 46, height: 46, borderRadius: '50%', flexShrink: 0,
-          background: isLocked ? white(0.04) : `radial-gradient(circle, ${tc.bg}, transparent)`,
-          border: `1px solid ${isLocked ? white(0.08) : tc.border}`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 20,
-          boxShadow: isLocked ? 'none' : `0 0 16px ${tc.color.replace(')', ',0.2)')}`,
+          width:46, height:46, borderRadius:'50%', flexShrink:0,
+          background: isLocked ? white(0.03) : `radial-gradient(circle, ${tc.bg}, transparent)`,
+          border:`1px solid ${isLocked ? white(0.07) : tc.border}`,
+          display:'flex', alignItems:'center', justifyContent:'center', fontSize:20,
+          boxShadow: isLocked ? 'none' : `0 0 16px ${tc.color.replace(')', ',0.18)')}`,
         }}>
           {isLocked ? '🔒' : mod.icon}
         </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-            <span style={{ ...LABEL_STYLE, fontSize: 8, color: white(0.3) }}>MODULE {String(mod.num).padStart(2, '0')}</span>
-            <TierBadge tier={mod.tier} />
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4, flexWrap:'wrap' as const }}>
+            <span style={{ ...LABEL, fontSize:7, color:white(0.3) }}>MODULE {String(mod.num).padStart(2,'0')}</span>
+            <span style={{ fontFamily:FONT, fontSize:7, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:tc.color, background:tc.bg, border:`1px solid ${tc.border}`, borderRadius:20, padding:'2px 8px' }}>{tc.label}</span>
           </div>
-          <div style={{
-            fontFamily: FONT_MAIN, fontSize: 14, fontWeight: 800,
-            color: isLocked ? white(0.3) : white(0.9),
-            letterSpacing: '0.02em', lineHeight: 1.3, marginBottom: 4,
-          }}>{mod.title}</div>
-          <div style={{
-            fontFamily: FONT_SERIF, fontStyle: 'italic',
-            fontSize: '0.8rem', color: isLocked ? white(0.2) : white(0.45),
-          }}>{mod.subtitle}</div>
+          <div style={{ fontFamily:FONT, fontSize:13, fontWeight:800, color: isLocked ? white(0.3) : white(0.9), lineHeight:1.3, marginBottom:3 }}>{mod.title}</div>
+          <div style={{ fontFamily:SERIF, fontStyle:'italic', fontSize:'0.78rem', color: isLocked ? white(0.18) : white(0.4) }}>{mod.subtitle}</div>
         </div>
-        <div style={{
-          fontFamily: FONT_MAIN, fontSize: 8, fontWeight: 800,
-          color: isLocked ? white(0.2) : tc.color, letterSpacing: '0.1em',
-          flexShrink: 0,
-        }}>{mod.lessons.length} lessons {expanded ? '▲' : '▼'}</div>
+        <div style={{ fontFamily:FONT, fontSize:8, fontWeight:800, color: isLocked ? white(0.2) : tc.color, letterSpacing:'0.1em', flexShrink:0, textAlign:'right' as const }}>
+          <div>{mod.lessons.length} lessons</div>
+          <div style={{ fontSize:12, marginTop:4 }}>{expanded ? '▲' : '▼'}</div>
+        </div>
       </button>
-
-      {/* Lessons */}
       {expanded && (
-        <div style={{ borderTop: `1px solid ${white(0.05)}` }}>
-          {mod.lessons.map((lesson, i) => (
-            <LessonRow key={i} lesson={lesson} locked={isLocked} idx={i} />
-          ))}
+        <div style={{ borderTop:`1px solid ${white(0.05)}` }}>
+          {mod.lessons.map((lesson, i) => <LessonPanel key={i} lesson={lesson} locked={isLocked} />)}
         </div>
       )}
     </div>
   );
-};
-
-// ─── MAIN PAGE ────────────────────────────────────────────────────────────────
+}
 
 export default function KayakalpaAcademy() {
   const navigate = useNavigate();
-  const membership = useMembership();
-  const [activeFilter, setActiveFilter] = useState<string>('all');
-
-  const tierRank: Record<string, number> = { free: 0, prana: 1, siddha: 2, akasha: 3 };
-  const userTierStr = membership?.tier ?? 'free';
-
-  const filteredModules = activeFilter === 'all'
-    ? MODULES
-    : MODULES.filter(m => m.tier === activeFilter);
-
+  const { membership } = useMembership();
+  const [filter, setFilter] = useState('all');
+  const userTier = (membership?.tier as string) ?? 'free';
   const totalLessons = MODULES.reduce((s, m) => s + m.lessons.length, 0);
+  const displayed = filter === 'all' ? MODULES : MODULES.filter(m => m.tier === filter);
 
   return (
     <div style={{
-      minHeight: '100vh',
-      background: `radial-gradient(ellipse at 20% 10%, rgba(212,175,55,0.06) 0%, transparent 50%),
-                   radial-gradient(ellipse at 80% 80%, rgba(52,211,153,0.04) 0%, transparent 50%),
-                   #050505`,
-      paddingBottom: 80,
-      fontFamily: FONT_MAIN,
+      minHeight:'100vh',
+      background:`radial-gradient(ellipse at 20% 10%, rgba(52,211,153,0.05) 0%, transparent 45%),
+                  radial-gradient(ellipse at 80% 85%, rgba(212,175,55,0.05) 0%, transparent 45%),
+                  #050505`,
+      paddingBottom:80,
     }}>
-      {/* ── Back button ── */}
-      <div style={{ padding: '16px 16px 0' }}>
+      <div style={{ padding:'16px 16px 0' }}>
         <button type="button" onClick={() => navigate('/siddha-portal')}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: gold(0.6), fontFamily: FONT_MAIN, fontSize: 12, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' as const }}>
+          style={{ background:'none', border:'none', cursor:'pointer', color:emerald(0.65), fontFamily:FONT, fontSize:11, fontWeight:800, letterSpacing:'0.18em', textTransform:'uppercase' as const }}>
           ← SIDDHA PORTAL
         </button>
       </div>
 
-      {/* ── HERO ── */}
-      <div style={{ position: 'relative', margin: '16px 16px 0', overflow: 'hidden' }}>
-        {/* Scalar rings */}
-        {[120, 200, 300, 400].map((s, i) => (
+      {/* HERO */}
+      <div style={{ position:'relative', margin:'16px 16px 0', overflow:'hidden' }}>
+        {[120,210,320].map((s,i) => (
           <div key={i} style={{
-            position: 'absolute', left: '50%', top: '50%',
-            width: s, height: s, marginLeft: -s / 2, marginTop: -s / 2,
-            borderRadius: '50%', border: `1px solid ${gold(0.08 - i * 0.015)}`,
-            animation: `sqScalarPulse ${4 + i * 0.8}s ${i * 0.5}s ease-in-out infinite`,
-            pointerEvents: 'none', zIndex: 0,
+            position:'absolute', left:'50%', top:'50%',
+            width:s, height:s, marginLeft:-s/2, marginTop:-s/2,
+            borderRadius:'50%', border:`1px solid ${emerald(0.07 - i*0.015)}`,
+            animation:`sqScalarPulse ${4.5+i}s ${i*0.6}s ease-in-out infinite`,
+            pointerEvents:'none', zIndex:0,
           }} />
         ))}
-        {/* Glow */}
         <div style={{
-          position: 'absolute', inset: -20, borderRadius: 40,
-          background: `radial-gradient(50% 50% at 50% 50%, ${gold(0.2)}, transparent 70%)`,
-          filter: 'blur(30px)', pointerEvents: 'none', zIndex: 0,
+          position:'absolute', inset:-10, borderRadius:36,
+          background:`radial-gradient(60% 60% at 50% 50%, ${emerald(0.12)}, transparent 70%)`,
+          filter:'blur(25px)', pointerEvents:'none', zIndex:0,
         }} />
         <div style={{
-          position: 'relative', zIndex: 1,
-          background: `linear-gradient(140deg, rgba(212,175,55,0.12), rgba(52,211,153,0.04) 60%, rgba(5,5,5,0.8))`,
-          border: `1px solid ${gold(0.4)}`,
-          borderRadius: 28, padding: '28px 20px 24px', textAlign: 'center',
-          boxShadow: `0 0 60px ${gold(0.15)}, inset 0 0 40px ${gold(0.04)}`,
+          position:'relative', zIndex:1,
+          background:`linear-gradient(140deg, rgba(52,211,153,0.1), rgba(212,175,55,0.06) 55%, rgba(5,5,5,0.85))`,
+          border:`1px solid ${emerald(0.4)}`,
+          borderRadius:28, padding:'28px 20px 24px', textAlign:'center',
+          boxShadow:`0 0 50px ${emerald(0.12)}, inset 0 0 30px ${emerald(0.04)}`,
         }}>
-          {/* Top shimmer */}
+          <div style={{ position:'absolute', top:0, left:0, right:0, height:1, background:`linear-gradient(90deg, transparent, ${emerald(0.9)}, transparent)`, borderRadius:'28px 28px 0 0' }} />
           <div style={{
-            position: 'absolute', top: 0, left: 0, right: 0, height: 1,
-            background: `linear-gradient(90deg, transparent, ${gold(0.9)}, transparent)`,
-            borderRadius: '28px 28px 0 0',
-          }} />
-
-          {/* Icon orb */}
-          <div style={{
-            width: 72, height: 72, borderRadius: '50%', margin: '0 auto 16px',
-            background: `radial-gradient(circle, ${gold(0.25)}, ${gold(0.06)} 60%, transparent)`,
-            border: `1px solid ${gold(0.4)}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 30,
-            boxShadow: `0 0 30px ${gold(0.25)}, 0 0 60px ${gold(0.1)}`,
-            animation: 'sqBreathe 4s ease-in-out infinite',
+            width:68, height:68, borderRadius:'50%', margin:'0 auto 16px',
+            background:`radial-gradient(circle, ${emerald(0.22)}, ${gold(0.06)} 60%, transparent)`,
+            border:`1px solid ${emerald(0.4)}`,
+            display:'flex', alignItems:'center', justifyContent:'center', fontSize:28,
+            boxShadow:`0 0 28px ${emerald(0.22)}, 0 0 55px ${emerald(0.08)}`,
+            animation:'sqBreathe 4s ease-in-out infinite',
           }}>☽</div>
-
-          <div style={{ ...LABEL_STYLE, fontSize: 8, letterSpacing: '0.5em', color: emerald(0.7), marginBottom: 8 }}>
+          <div style={{ ...LABEL, fontSize:8, letterSpacing:'0.45em', color:emerald(0.65), marginBottom:10 }}>
             BOGAR · 18 SIDDHAS · BABAJI · THIRUMOOLAR
           </div>
-
-          <h1 style={{
-            fontFamily: FONT_SERIF, fontSize: '2.2rem', fontWeight: 700,
-            color: white(0.97), margin: '0 0 6px',
-            textShadow: `0 0 30px ${gold(0.5)}`,
-            lineHeight: 1.1,
-          }}>Kayakalpa</h1>
-          <h2 style={{
-            fontFamily: FONT_SERIF, fontSize: '1.1rem', fontWeight: 400, fontStyle: 'italic',
-            color: gold(0.8), margin: '0 0 16px',
-          }}>The Immortality Academy</h2>
-
-          <p style={{
-            fontFamily: FONT_SERIF, fontStyle: 'italic',
-            fontSize: '0.92rem', color: white(0.55), lineHeight: 1.7,
-            margin: '0 0 20px',
-          }}>
-            The most complete transmission of Tamil Siddha immortality science ever assembled. 
-            12 modules · {totalLessons} lessons · 4 tiers of initiation. 
-            Channeled directly from Bogar's Akashic Archive and the living consciousness of Mahavatar Babaji.
+          <h1 style={{ fontFamily:SERIF, fontSize:'2.3rem', fontWeight:700, color:white(0.97), margin:'0 0 5px', textShadow:`0 0 28px ${emerald(0.4)}`, lineHeight:1.08 }}>
+            Kayakalpa
+          </h1>
+          <h2 style={{ fontFamily:SERIF, fontSize:'1.05rem', fontWeight:400, fontStyle:'italic', color:emerald(0.8), margin:'0 0 18px' }}>
+            The Immortality Academy
+          </h2>
+          <p style={{ fontFamily:SERIF, fontStyle:'italic', fontSize:'0.9rem', color:white(0.5), lineHeight:1.75, margin:'0 0 20px' }}>
+            The complete Tamil Siddha science of biological immortality — from Bogar's Navapaashanam alchemy to Babaji's Kaya Siddhi. 12 modules, {totalLessons} lessons of full written curriculum, 4 tiers of initiation.
           </p>
-
-          {/* Stats */}
-          <div style={{
-            display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr',
-            gap: 8, padding: '16px 0',
-            borderTop: `1px solid ${gold(0.1)}`,
-            borderBottom: `1px solid ${gold(0.1)}`,
-            marginBottom: 20,
-          }}>
-            {[
-              { v: '12', l: 'Modules' },
-              { v: String(totalLessons), l: 'Lessons' },
-              { v: '5000', l: 'Yr Legacy' },
-              { v: '4', l: 'Tiers' },
-            ].map(s => (
-              <div key={s.l} style={{ textAlign: 'center' }}>
-                <div style={{
-                  fontFamily: FONT_MAIN, fontSize: 22, fontWeight: 900,
-                  letterSpacing: '-0.04em', color: gold(0.9),
-                  textShadow: `0 0 14px ${gold(0.35)}`,
-                }}>{s.v}</div>
-                <div style={{ ...LABEL_STYLE, fontSize: 7, color: white(0.3), marginTop: 2 }}>{s.l}</div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, padding:'16px 0', borderTop:`1px solid ${white(0.06)}`, borderBottom:`1px solid ${white(0.06)}`, marginBottom:20 }}>
+            {[{v:'12',l:'Modules'},{v:String(totalLessons),l:'Lessons'},{v:'5000+',l:'Years'},{v:'4',l:'Tiers'}].map(s => (
+              <div key={s.l} style={{ textAlign:'center' }}>
+                <div style={{ fontFamily:FONT, fontSize:20, fontWeight:900, letterSpacing:'-0.04em', color:emerald(0.9), textShadow:`0 0 12px ${emerald(0.3)}` }}>{s.v}</div>
+                <div style={{ ...LABEL, fontSize:7, color:white(0.28), marginTop:2 }}>{s.l}</div>
               </div>
             ))}
           </div>
-
-          {/* Tier pills */}
-          <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' as const }}>
-            {Object.entries(TIER_COLORS).map(([key, tc]) => (
-              <span key={key} style={{
-                fontFamily: FONT_MAIN, fontSize: 7, fontWeight: 800,
-                letterSpacing: '0.2em', textTransform: 'uppercase' as const,
-                color: tc.color, border: `1px solid ${tc.border}`,
-                borderRadius: 20, padding: '3px 10px',
-                background: tc.bg,
-              }}>{tc.label}</span>
+          <div style={{ display:'flex', gap:6, justifyContent:'center', flexWrap:'wrap' as const }}>
+            {Object.entries(TC).map(([k,tc]) => (
+              <span key={k} style={{ fontFamily:FONT, fontSize:7, fontWeight:800, letterSpacing:'0.18em', textTransform:'uppercase' as const, color:tc.color, border:`1px solid ${tc.border}`, borderRadius:20, padding:'3px 10px', background:tc.bg }}>{tc.label}</span>
             ))}
           </div>
         </div>
       </div>
 
-      {/* ── FILTER TABS ── */}
-      <div style={{ display: 'flex', gap: 8, padding: '20px 16px 12px', overflowX: 'auto' as const }}>
-        {[
-          { key: 'all', label: 'All Modules' },
-          { key: 'free', label: 'Free' },
-          { key: 'prana', label: 'Prana-Flow' },
-          { key: 'siddha', label: 'Siddha-Quantum' },
-          { key: 'akasha', label: 'Akasha-∞' },
-        ].map(f => (
-          <button
-            key={f.key}
-            type="button"
-            onClick={() => setActiveFilter(f.key)}
+      {/* FILTERS */}
+      <div style={{ display:'flex', gap:8, padding:'18px 16px 12px', overflowX:'auto' as const }}>
+        {[['all','All Modules'],['free','Free'],['prana','Prana-Flow'],['siddha','Siddha-Quantum'],['akasha','Akasha-∞']].map(([k,l]) => (
+          <button key={k} type="button" onClick={() => setFilter(k)}
             style={{
-              fontFamily: FONT_MAIN, fontSize: 9, fontWeight: 800,
-              letterSpacing: '0.2em', textTransform: 'uppercase' as const,
-              padding: '7px 14px', borderRadius: 20, border: 'none', cursor: 'pointer',
-              whiteSpace: 'nowrap' as const,
-              background: activeFilter === f.key ? gold(0.2) : white(0.04),
-              color: activeFilter === f.key ? gold(0.95) : white(0.4),
-              boxShadow: activeFilter === f.key ? `0 0 12px ${gold(0.2)}` : 'none',
-              transition: 'all 0.2s ease',
-            }}
-          >{f.label}</button>
+              fontFamily:FONT, fontSize:9, fontWeight:800, letterSpacing:'0.2em',
+              textTransform:'uppercase' as const, padding:'7px 14px', borderRadius:20,
+              border:'none', cursor:'pointer', whiteSpace:'nowrap' as const,
+              background: filter===k ? emerald(0.18) : white(0.04),
+              color: filter===k ? emerald(0.95) : white(0.38),
+              boxShadow: filter===k ? `0 0 12px ${emerald(0.18)}` : 'none',
+              transition:'all 0.2s ease',
+            }}>{l}</button>
         ))}
       </div>
 
-      {/* ── MODULES LIST ── */}
-      <div style={{ padding: '0 16px' }}>
-        {filteredModules.map(mod => (
-          <ModuleCard key={mod.num} mod={mod} userTier={userTierStr} />
-        ))}
+      {/* MODULES */}
+      <div style={{ padding:'0 16px' }}>
+        {displayed.map(mod => <ModuleCard key={mod.num} mod={mod} userTier={userTier} />)}
       </div>
 
-      {/* ── UPGRADE CTA (if not Akasha) ── */}
-      {userTierStr !== 'akasha' && (
+      {/* UPGRADE CTA */}
+      {userTier !== 'akasha' && (
         <div style={{
-          margin: '24px 16px 0',
-          background: `linear-gradient(135deg, ${gold(0.1)}, rgba(52,211,153,0.05))`,
-          border: `1px solid ${gold(0.3)}`,
-          borderRadius: 24, padding: '24px 20px',
-          textAlign: 'center',
+          margin:'24px 16px 0',
+          background:`linear-gradient(135deg, ${emerald(0.08)}, ${gold(0.05)})`,
+          border:`1px solid ${gold(0.25)}`,
+          borderRadius:24, padding:'22px 20px', textAlign:'center',
         }}>
-          <div style={{
-            fontSize: 28, marginBottom: 12,
-            animation: 'sqBreathe 3s ease-in-out infinite',
-          }}>✦</div>
-          <div style={{
-            fontFamily: FONT_MAIN, fontSize: 13, fontWeight: 800,
-            color: gold(0.9), letterSpacing: '0.04em',
-            marginBottom: 8,
-          }}>Unlock the Full Kayakalpa Transmission</div>
-          <p style={{
-            fontFamily: FONT_SERIF, fontStyle: 'italic',
-            fontSize: '0.88rem', color: white(0.5), lineHeight: 1.6,
-            marginBottom: 16,
-          }}>
-            The deeper secrets — Muppu alchemy, Kundalini-Kayakalpa integration, 
-            Khechari Mudra, Bogar's 5 master mantras, and the 90-Day Sadhana — 
-            await your initiation into higher tiers.
+          <div style={{ fontSize:26, marginBottom:10, animation:'sqBreathe 3s ease-in-out infinite' }}>♾</div>
+          <div style={{ fontFamily:FONT, fontSize:13, fontWeight:800, color:gold(0.9), letterSpacing:'0.04em', marginBottom:8 }}>
+            Unlock the Full Immortality Transmission
+          </div>
+          <p style={{ fontFamily:SERIF, fontStyle:'italic', fontSize:'0.87rem', color:white(0.48), lineHeight:1.65, marginBottom:16 }}>
+            Muppu alchemy, Kundalini-Kayakalpa, Khechari Mudra, Bogar's 5 master mantras, Agastyar's complete Rasayana formula, and the 90-Day Sadhana await your initiation into higher tiers.
           </p>
-          <button
-            type="button"
-            onClick={() => navigate('/membership')}
+          <button type="button" onClick={() => navigate('/membership')}
             style={{
-              fontFamily: FONT_MAIN, fontSize: 10, fontWeight: 800,
-              letterSpacing: '0.3em', textTransform: 'uppercase' as const,
-              background: gold(0.15), border: `1px solid ${gold(0.4)}`,
-              color: gold(0.95), borderRadius: 20, padding: '10px 24px',
-              cursor: 'pointer',
-              boxShadow: `0 0 20px ${gold(0.15)}`,
-            }}>
-            Upgrade Initiation →
-          </button>
+              fontFamily:FONT, fontSize:10, fontWeight:800, letterSpacing:'0.28em',
+              textTransform:'uppercase' as const, background:gold(0.14),
+              border:`1px solid ${gold(0.38)}`, color:gold(0.95),
+              borderRadius:20, padding:'10px 24px', cursor:'pointer',
+              boxShadow:`0 0 18px ${gold(0.12)}`,
+            }}>Upgrade Initiation →</button>
         </div>
       )}
 
-      {/* ── KEYFRAMES ── */}
       <style>{`
-        @keyframes sqBreathe {
-          0%, 100% { transform: scale(1); opacity: 0.8; }
-          50% { transform: scale(1.06); opacity: 1; }
-        }
-        @keyframes sqScalarPulse {
-          0% { opacity: 0; transform: scale(0.65); }
-          35% { opacity: 0.8; }
-          75% { opacity: 0.1; transform: scale(1.18); }
-          100% { opacity: 0; transform: scale(1.35); }
-        }
-        @keyframes sqFadeUp {
-          from { opacity: 0; transform: translateY(14px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes sqBreathe { 0%,100%{transform:scale(1);opacity:.8} 50%{transform:scale(1.06);opacity:1} }
+        @keyframes sqScalarPulse { 0%{opacity:0;transform:scale(.65)} 35%{opacity:.7} 75%{opacity:.08;transform:scale(1.18)} 100%{opacity:0;transform:scale(1.35)} }
+        @keyframes sqFadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
       `}</style>
     </div>
   );
