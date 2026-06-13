@@ -103,16 +103,6 @@ export const useMembership = () => {
     setStatus({ ...initial, loading: true });
     setSettled(false);
 
-    // FIX 2026-06-13: 10s safety timeout — settled=true with cached/free if DB is slow
-    // Prevents users seeing locked chat due to membership query stall
-    const safetyTimer = setTimeout(() => {
-      if (mountedRef.current) {
-        console.warn('[useMembership] timeout — settling with cached/free');
-        setStatus(s => ({ ...s, loading: false }));
-        setSettled(true);
-      }
-    }, 10000);
-
     try {
       const [adminRes, membershipRes] = await Promise.all([
         supabase.rpc('has_role', {
@@ -145,24 +135,7 @@ export const useMembership = () => {
         .limit(1)
         .maybeSingle();
 
-      // FALLBACK: profiles.membership_tier — set by Stripe webhook + manual grants
-      // Query both id and user_id columns since profiles schema uses both
-      const { data: profileById } = await supabase
-        .from('profiles')
-        .select('membership_tier')
-        .eq('id', user.id)
-        .maybeSingle();
-      const { data: profileByUserId } = await supabase
-        .from('profiles')
-        .select('membership_tier')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      const profileTier =
-        (profileById as any)?.membership_tier ||
-        (profileByUserId as any)?.membership_tier ||
-        null;
-
-      const grantTier = (grant as any)?.tier || (grant as any)?.access_id || profileTier || null;
+      const grantTier = (grant as any)?.tier || (grant as any)?.access_id || null;
       const bestTier = isAdmin
         ? 'akasha-infinity'
         : [tierSlug, grantTier || 'free'].sort((a: string, b: string) => getTierRank(b) - getTierRank(a))[0];
@@ -184,7 +157,6 @@ export const useMembership = () => {
       if (!mountedRef.current) return;
       setStatus({ ...initial, loading: false });
     } finally {
-      clearTimeout(safetyTimer);
       if (mountedRef.current) setSettled(true);
     }
   }, [authLoading, user]);
