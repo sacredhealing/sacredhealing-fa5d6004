@@ -1449,77 +1449,95 @@ export type Database = {
         Row: {
           action: string | null
           ai_probability: number | null
+          asset: string | null
           bot_type: string
           closed_at: string | null
           created_at: string
+          delta: string | null
           edge_pct: number | null
           entry_price: number | null
           exit_price: number | null
           id: string
           market_id: string | null
           market_question: string | null
+          mode: string
+          order_id: string | null
           pnl_pct: number
           pnl_usd: number
+          pnl_usdc: number | null
           price: number | null
           reasoning: string | null
           seed_balance: number | null
           session_id: string | null
           settled_at: string | null
           side: string | null
+          signal: string | null
           size_usd: number | null
           status: string
           strategy: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           action?: string | null
           ai_probability?: number | null
+          asset?: string | null
           bot_type?: string
           closed_at?: string | null
           created_at?: string
+          delta?: string | null
           edge_pct?: number | null
           entry_price?: number | null
           exit_price?: number | null
           id?: string
           market_id?: string | null
           market_question?: string | null
+          mode?: string
+          order_id?: string | null
           pnl_pct?: number
           pnl_usd?: number
+          pnl_usdc?: number | null
           price?: number | null
           reasoning?: string | null
           seed_balance?: number | null
           session_id?: string | null
           settled_at?: string | null
           side?: string | null
+          signal?: string | null
           size_usd?: number | null
           status?: string
           strategy?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           action?: string | null
           ai_probability?: number | null
+          asset?: string | null
           bot_type?: string
           closed_at?: string | null
           created_at?: string
+          delta?: string | null
           edge_pct?: number | null
           entry_price?: number | null
           exit_price?: number | null
           id?: string
           market_id?: string | null
           market_question?: string | null
+          mode?: string
+          order_id?: string | null
           pnl_pct?: number
           pnl_usd?: number
+          pnl_usdc?: number | null
           price?: number | null
           reasoning?: string | null
           seed_balance?: number | null
           session_id?: string | null
           settled_at?: string | null
           side?: string | null
+          signal?: string | null
           size_usd?: number | null
           status?: string
           strategy?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
