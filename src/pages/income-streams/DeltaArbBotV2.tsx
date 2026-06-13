@@ -8,8 +8,8 @@ const CYAN  = '#22D3EE';
 const GREEN = '#22c55e';
 const RED   = 'rgba(255,80,80,0.9)';
 
-const SB    = 'https://fjdzhrdpioxdeyyfogep.supabase.co/rest/v1/bot_trades';
-const KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMDQwMDMsImV4cCI6MjA5MzY4MDAwM30.Mkbodv6uEb1yMKA0UIKMzm-cFWfcgNFXr-LLGtqoNcg';
+const SB    = 'https://ssygukfdbtehvtndandn.supabase.co/rest/v1/bot_trades';
+const KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzeWd1a2ZkYnRlaHZ0bmRhbmRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2MDMxMDMsImV4cCI6MjA4MDE3OTEwM30.XXwg0F7kXR4-OFRu4A2RARfhbEXurwHp5HzMOMBAiy4';
 const HDRS  = { apikey: KEY, Authorization: `Bearer ${KEY}` };
 
 const glass = (extra: React.CSSProperties = {}): React.CSSProperties => ({
@@ -42,7 +42,7 @@ export default function DeltaArbBotV2() {
   const loadCapital = useCallback(async () => {
     try {
       const r = await fetch(
-        `https://fjdzhrdpioxdeyyfogep.supabase.co/functions/v1/binance-balance`,
+        `https://ssygukfdbtehvtndandn.supabase.co/functions/v1/binance-balance`,
         { headers: HDRS },
       );
       const j = await r.json();
