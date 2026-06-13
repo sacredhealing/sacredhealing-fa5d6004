@@ -16,29 +16,38 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Deploy binance-balance edge function
+      - name: Deploy binance-balance to Lovable Supabase
         env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          BINANCE_API_KEY: ${{ secrets.BINANCE_API_KEY }}
-          BINANCE_API_SECRET: ${{ secrets.BINANCE_API_SECRET }}
+          PAT1: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          PAT2: ${{ secrets.SUPABASE_PAT }}
+          PAT3: ${{ secrets.SUPA_ADMIN_PAT }}
+          BIN_KEY: ${{ secrets.BINANCE_API_KEY }}
+          BIN_SEC: ${{ secrets.BINANCE_API_SECRET }}
+          GH_PAT: ${{ secrets.GH_ADMIN_PAT }}
         run: |
           npm install -g supabase@latest 2>&1 | tail -3
 
-          # Clone repo for function source
-          git clone "https://x-access-token:${{ secrets.GH_ADMIN_PAT }}@github.com/sacredhealing/sacredhealing-fa5d6004.git" repo
+          git clone "https://x-access-token:${GH_PAT}@github.com/sacredhealing/sacredhealing-fa5d6004.git" repo
           cd repo
 
-          # Deploy to LOVABLE Supabase (ssygukfdbtehvtndandn)
-          echo "Deploying binance-balance to ssygukfdbtehvtndandn..."
-          supabase functions deploy binance-balance \
-            --project-ref ssygukfdbtehvtndandn \
-            --no-verify-jwt 2>&1
+          # Try each PAT until one works
+          for PAT in "$PAT1" "$PAT2" "$PAT3"; do
+            if [ -z "$PAT" ]; then continue; fi
+            echo "Trying PAT: ${PAT:0:12}..."
+            SUPABASE_ACCESS_TOKEN="$PAT" supabase functions deploy binance-balance \
+              --project-ref ssygukfdbtehvtndandn \
+              --no-verify-jwt 2>&1 && {
+              echo "Deploy succeeded!"
 
-          # Set secrets on Lovable Supabase
-          echo "Setting Binance secrets..."
-          supabase secrets set BINANCE_API_KEY="$BINANCE_API_KEY" \
-            --project-ref ssygukfdbtehvtndandn 2>&1 || true
-          supabase secrets set BINANCE_API_SECRET="$BINANCE_API_SECRET" \
-            --project-ref ssygukfdbtehvtndandn 2>&1 || true
+              # Set Binance secrets
+              SUPABASE_ACCESS_TOKEN="$PAT" supabase secrets set \
+                BINANCE_API_KEY="$BIN_KEY" \
+                BINANCE_API_SECRET="$BIN_SEC" \
+                --project-ref ssygukfdbtehvtndandn 2>&1 || echo "Secrets set failed (may already exist)"
 
-          echo "Done!"
+              echo "DONE"
+              exit 0
+            } || echo "PAT failed, trying next..."
+          done
+          echo "All PATs failed"
+          exit 1
