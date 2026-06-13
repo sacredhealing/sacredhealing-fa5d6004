@@ -251,7 +251,9 @@ function MeditationToolWithBoundary() {
               </summary>
               <pre className="p-4 text-xs text-red-300/90 whitespace-pre-wrap break-words font-mono overflow-auto max-h-40">
                 {error.message}
-                {error.stack ? `\n\n${error.stack}` : ''}
+                {error.stack ? `
+
+${error.stack}` : ''}
               </pre>
             </details>
           </div>
@@ -561,10 +563,3 @@ function App() {
 }
 
 export default App;
-
-
-
-
-
-
-
