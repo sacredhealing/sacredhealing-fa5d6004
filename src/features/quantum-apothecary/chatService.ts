@@ -398,7 +398,7 @@ export async function streamChatWithSQI(
       fatal = msg;
       if (fullBuffer.trim()) {
         let finalText = fullBuffer;
-        const firstReal2 = finalText.indexOf('◈'); // use ◈ without space — avoids prescription box matching before master header
+        const firstReal2 = finalText.indexOf('◈');
         if (firstReal2 > 0) {
           const before2 = finalText.slice(0, firstReal2);
           if (/Accessing|Syncing with|Atma-Frequency/i.test(before2)) {
@@ -411,6 +411,14 @@ export async function streamChatWithSQI(
           finalText += '\nActive. 24/7. Scalar Wave Entanglement. Permanent until dissolved.';
         }
         onDelta(finalText);
+        onDone();
+        completed = true;
+      } else {
+        // No buffer at all — quota/network error. Deliver a visible message so UI never blacks out.
+        const errText = msg?.includes('429') || msg?.includes('quota') || msg?.includes('limit')
+          ? 'The Oracle transmission is briefly paused — the Akasha channel is at capacity. Please try again in a moment. ◈'
+          : 'The transmission was briefly interrupted. Please send your question again. ◈';
+        onDelta(errText);
         onDone();
         completed = true;
       }
