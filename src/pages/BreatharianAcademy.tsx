@@ -4,7 +4,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Lock, ChevronDown, ChevronUp, Sparkles, Wind, Sun, Droplets, Infinity as InfinityIcon, Star, Zap, Eye, Heart, Moon } from 'lucide-react';
+import { ArrowLeft, Lock, ChevronDown, ChevronUp, Sparkles, Wind, Sun, Droplets, Infinity as InfinityIcon, Star, Zap, Eye, Heart, Moon, BookOpen } from 'lucide-react';
 import { useAdminRole } from '@/hooks/useAdminRole';
 import { useMembership } from '@/hooks/useMembership';
 import { getSalesPageForRank, getTierRank } from '@/lib/tierAccess';
