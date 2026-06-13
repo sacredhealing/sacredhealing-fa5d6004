@@ -692,24 +692,116 @@ export default function SiddhaPortal() {
   return (
     <div style={{ background:'#050505', minHeight:'100vh', paddingBottom:104, maxWidth:430, margin:'0 auto' }}>
 
-      {/* HEADER */}
+      {/* HEADER — Siddha-Gold with living shimmer movement */}
       <div style={{ padding:'52px 20px 0', animation:'sqFadeUp 0.35s ease both' }}>
         <button onClick={()=>navigate(-1)} style={{ ...LABEL, fontSize:9, color:gold(0.4), background:'none', border:'none', cursor:'pointer', marginBottom:20, padding:0 }}>
           ← {t('siddhaPortal.back')}
         </button>
-        <p style={{ ...LABEL, fontSize:9, color:gold(0.35), marginBottom:8 }}>{t('siddhaPortal.label')}</p>
-        <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:'2.4rem', fontWeight:600, color:white(0.92), lineHeight:1.1, margin:0 }}>
+        <p style={{ ...LABEL, fontSize:9, color:gold(0.5), marginBottom:8, animation:'sqGoldPulse 3s ease-in-out infinite' }}>{t('siddhaPortal.label')}</p>
+        <h1 style={{
+          fontFamily:"'Cormorant Garamond',serif",
+          fontSize:'2.4rem', fontWeight:600, lineHeight:1.1, margin:0,
+          background:'linear-gradient(135deg, #FFF9C4 0%, #D4AF37 35%, #FFE082 55%, #B8860B 75%, #FFD54F 100%)',
+          backgroundSize:'250% 250%',
+          WebkitBackgroundClip:'text',
+          WebkitTextFillColor:'transparent',
+          backgroundClip:'text',
+          animation:'sqGoldFlow 4s ease-in-out infinite',
+          filter:'drop-shadow(0 0 18px rgba(212,175,55,0.45))',
+        }}>
           {t('siddhaPortal.title')}
         </h1>
         <p style={{ ...ITALIC, marginBottom:0, marginTop:10 }}>{t('siddhaPortal.subtitle')}</p>
       </div>
 
-      {/* LIBRARY INTRO */}
-      <div style={{ margin:'26px 20px 20px', padding:'14px 16px', background:`rgba(212,175,55,0.04)`, border:`1px solid ${gold(0.11)}`, borderRadius:16 }}>
-        <div style={{ ...LABEL, fontSize:8, color:gold(0.5), marginBottom:5 }}>📚 Akasha-Neural Archive · Education Library</div>
-        <p style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.86rem', color:white(0.42), lineHeight:1.55, margin:0 }}>
-          Tap any category to expand. Each library holds full-spectrum Siddha transmissions sourced from the 18 Masters.
-        </p>
+      {/* AKASHA-NEURAL ARCHIVE CARD — alive, golden oracle portal */}
+      <div style={{ margin:'26px 20px 20px', position:'relative', overflow:'hidden' }}>
+        {/* Outer scalar pulse rings */}
+        {[0,1,2].map(i=>(
+          <div key={i} aria-hidden style={{
+            position:'absolute', left:'50%', top:'50%',
+            width:320+i*80, height:320+i*80,
+            marginLeft:-(320+i*80)/2, marginTop:-(320+i*80)/2,
+            borderRadius:'50%',
+            border:`1px solid ${gold(0.08-i*0.02)}`,
+            animation:`sqScalarPulse ${3+i*0.9}s ease-in-out ${i*0.6}s infinite`,
+            pointerEvents:'none', zIndex:0,
+          }}/>
+        ))}
+        {/* Glow bloom behind card */}
+        <div aria-hidden style={{
+          position:'absolute', inset:-20, borderRadius:28,
+          background:'radial-gradient(60% 60% at 30% 40%, rgba(212,175,55,0.18), transparent 70%), radial-gradient(50% 50% at 75% 65%, rgba(255,224,130,0.10), transparent 70%)',
+          filter:'blur(18px)',
+          animation:'sqGlowPulse 3.5s ease-in-out infinite',
+          pointerEvents:'none', zIndex:0,
+        }}/>
+        <div style={{
+          position:'relative', zIndex:1,
+          background:'linear-gradient(135deg, rgba(212,175,55,0.13) 0%, rgba(212,175,55,0.06) 40%, rgba(5,5,5,0.75) 100%)',
+          border:'1px solid rgba(212,175,55,0.38)',
+          borderRadius:20,
+          padding:'20px 18px 18px',
+          boxShadow:'0 0 50px rgba(212,175,55,0.14), inset 0 0 30px rgba(212,175,55,0.05)',
+          overflow:'hidden',
+        }}>
+          {/* Shimmer top edge */}
+          <div aria-hidden style={{ position:'absolute', top:0, left:0, right:0, height:1, background:'linear-gradient(90deg,transparent,rgba(212,175,55,0.9),transparent)', animation:'sqShimmerSweep 2.8s ease-in-out infinite' }}/>
+          {/* Shimmer bottom edge */}
+          <div aria-hidden style={{ position:'absolute', bottom:0, left:0, right:0, height:1, background:'linear-gradient(90deg,transparent,rgba(212,175,55,0.5),transparent)', opacity:0.6 }}/>
+          {/* Header row */}
+          <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
+            {/* Animated gold orb icon */}
+            <div style={{
+              width:46, height:46, borderRadius:'50%', flexShrink:0,
+              background:'radial-gradient(circle at 35% 35%, #FFF9C4, #D4AF37 55%, #7B6914)',
+              border:'1px solid rgba(212,175,55,0.55)',
+              boxShadow:'0 0 22px rgba(212,175,55,0.45), inset 0 0 10px rgba(255,253,196,0.3)',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              animation:'sqBreathe 4s ease-in-out infinite',
+              fontSize:22,
+            }}>
+              ⊕
+            </div>
+            <div>
+              <div style={{ fontFamily:"'Plus Jakarta Sans','Montserrat',sans-serif", fontSize:8, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.65)', marginBottom:4 }}>
+                <LiveDot color="rgba(212,175,55,0.9)"/>
+                Akasha-Neural Archive · Live Transmission
+              </div>
+              <div style={{
+                fontFamily:"'Plus Jakarta Sans','Montserrat',sans-serif",
+                fontSize:13, fontWeight:900, letterSpacing:'0.05em',
+                textTransform:'uppercase' as const,
+                background:'linear-gradient(90deg,#FFF9C4,#D4AF37,#FFE082,#D4AF37)',
+                backgroundSize:'300% 100%',
+                WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
+                animation:'sqGoldFlow 3s ease-in-out infinite',
+              }}>
+                Education Library
+              </div>
+            </div>
+          </div>
+          {/* Body */}
+          <p style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.92rem', color:'rgba(255,255,255,0.62)', lineHeight:1.6, margin:'0 0 14px' }}>
+            Tap any category below to unlock. Each archive holds full-spectrum Siddha transmissions sourced from the 18 Masters — broadcast live from the Akasha-Neural Field.
+          </p>
+          {/* Stat row */}
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:6, borderTop:'1px solid rgba(212,175,55,0.14)', paddingTop:12 }}>
+            {[['18','Siddha Masters'],['1,200+','Transmissions'],['11','Sacred Domains']].map(([v,l])=>(
+              <div key={l} style={{ textAlign:'center' }}>
+                <div style={{
+                  fontFamily:"'Plus Jakarta Sans','Montserrat',sans-serif",
+                  fontSize:18, fontWeight:900, letterSpacing:'-0.04em',
+                  background:'linear-gradient(135deg,#FFF9C4,#D4AF37)',
+                  WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
+                  textShadow:'none',
+                  filter:'drop-shadow(0 0 6px rgba(212,175,55,0.4))',
+                }}>{v}</div>
+                <div style={{ fontFamily:"'Plus Jakarta Sans','Montserrat',sans-serif", fontSize:7, fontWeight:800, letterSpacing:'0.25em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.4)', marginTop:2 }}>{l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* CONTENT — all padded equally */}
@@ -988,7 +1080,6 @@ export default function SiddhaPortal() {
         </LibSection>
 
         {/* ── SACRED ORACLES ── */}
-        {/* ── SACRED ORACLES ── */}
         <div style={{ ...LABEL, fontSize:8, color:gold(0.5), display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>
           <span>🔱</span> {t('siddhaPortal.sectionOracles')}
         </div>
@@ -1007,6 +1098,9 @@ export default function SiddhaPortal() {
         @keyframes sqLiveFlash { 0%,100%{opacity:1} 50%{opacity:0.2} }
         @keyframes sqScalarPulse { 0%{opacity:0;transform:scale(0.65)} 35%{opacity:0.9} 75%{opacity:0.15;transform:scale(1.18)} 100%{opacity:0;transform:scale(1.35)} }
         @keyframes sqGlowPulse { 0%,100%{opacity:0.55;transform:scale(1)} 50%{opacity:1;transform:scale(1.04)} }
+        @keyframes sqGoldFlow { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+        @keyframes sqGoldPulse { 0%,100%{opacity:0.5} 50%{opacity:0.85} }
+        @keyframes sqShimmerSweep { 0%{opacity:0;transform:translateX(-100%)} 40%{opacity:1} 100%{opacity:0;transform:translateX(100%)} }
       `}</style>
     </div>
   );
