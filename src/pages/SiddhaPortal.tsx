@@ -574,6 +574,161 @@ export default function SiddhaPortal() {
         </div>
       </div>
 
+
+      {/* ══════════════════════════════════════════════════════════
+          SIDDHA MEDIUMSHIP ACADEMY — FEATURED PORTAL CARD
+      ══════════════════════════════════════════════════════════ */}
+      <div style={{ position: 'relative', margin: '0 16px 16px', animation: 'sqFadeUp 0.45s 0.035s ease both' }}>
+        {/* Scalar pulse rings */}
+        {[180,260,340,420].map((s, i) => (
+          <div key={i} aria-hidden style={{
+            position: 'absolute',
+            left: '50%', top: '50%',
+            width: s, height: s,
+            marginLeft: -s/2, marginTop: -s/2,
+            borderRadius: '50%',
+            border: `1px solid ${gold(0.07 - i * 0.012)}`,
+            animation: `sqScalarPulse ${3.5 + i * 0.8}s ease-in-out ${i * 0.6}s infinite`,
+            pointerEvents: 'none', zIndex: 0,
+          }} />
+        ))}
+        {/* Deep violet-gold glow backdrop */}
+        <div aria-hidden style={{
+          position: 'absolute', inset: -20, borderRadius: 36,
+          background: `radial-gradient(55% 55% at 28% 38%, rgba(167,139,250,0.28), transparent 65%),
+                       radial-gradient(50% 50% at 72% 65%, ${gold(0.25)}, transparent 60%)`,
+          filter: 'blur(28px)',
+          animation: 'sqGlowPulse 4.5s ease-in-out infinite',
+          pointerEvents: 'none', zIndex: 0,
+        }} />
+
+        <div
+          onClick={() => navigate('/siddha-mediumship-academy')}
+          style={{
+            position: 'relative', zIndex: 1, cursor: 'pointer',
+            background: `linear-gradient(135deg,
+              rgba(167,139,250,0.10) 0%,
+              rgba(212,175,55,0.08) 45%,
+              rgba(5,5,5,0.70) 100%)`,
+            border: `1px solid rgba(167,139,250,0.45)`,
+            borderRadius: 24,
+            padding: '26px 22px 22px',
+            boxShadow: `0 0 50px rgba(167,139,250,0.20), 0 0 100px rgba(212,175,55,0.10), inset 0 0 30px rgba(167,139,250,0.05)`,
+          }}
+        >
+          {/* LIVE badge */}
+          <span style={{
+            position: 'absolute', top: 14, right: 14,
+            fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+            fontSize: 8, fontWeight: 800, letterSpacing: '0.22em', textTransform: 'uppercase',
+            background: 'rgba(167,139,250,0.15)', border: '1px solid rgba(167,139,250,0.4)',
+            color: 'rgba(167,139,250,0.95)', borderRadius: 20, padding: '3px 10px',
+            display: 'flex', alignItems: 'center', gap: 5,
+          }}>
+            <span style={{ display: 'inline-block', width: 5, height: 5, borderRadius: '50%',
+              background: 'rgba(167,139,250,0.95)', animation: 'sqLiveFlash 2s infinite' }} />
+            LIVE
+          </span>
+
+          {/* Header row */}
+          <div style={{
+            fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+            fontSize: 9, fontWeight: 800, letterSpacing: '0.35em', textTransform: 'uppercase',
+            color: 'rgba(167,139,250,0.75)', marginBottom: 12,
+            display: 'flex', alignItems: 'center', gap: 8,
+          }}>
+            <span>👁</span>
+            SIDDHA MEDIUMSHIP ACADEMY · 8 MODULES · 30 TRANSMISSIONS
+          </div>
+
+          {/* Title */}
+          <h2 style={{
+            fontFamily: "'Cormorant Garamond',serif",
+            fontSize: 'clamp(1.5rem,3.5vw,2rem)', fontWeight: 600,
+            color: 'rgba(255,255,255,0.97)', lineHeight: 1.1, margin: '0 0 10px',
+            textShadow: `0 0 24px rgba(167,139,250,0.45)`,
+          }}>
+            Siddha Mediumship<br />
+            <span style={{ color: gold(0.92) }}>Academy</span>
+          </h2>
+
+          {/* Description */}
+          <p style={{
+            fontFamily: "'Cormorant Garamond',serif",
+            fontStyle: 'italic', fontSize: '0.94rem',
+            color: 'rgba(255,255,255,0.58)', lineHeight: 1.65, marginBottom: 16,
+          }}>
+            The world's most comprehensive mediumship education — rooted in the living technology of the 18 Tamil Siddhas. Third Eye activation, Loka maps, ancestor communication, Deva contact, Akashic Record access, and Siddhi development. Not theory. Transmission.
+          </p>
+
+          {/* Tier dots */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18, flexWrap: 'wrap' }}>
+            {[
+              { label: 'Free · M1–2',   color: 'rgba(255,255,255,0.55)' },
+              { label: 'Prana · M3–4',  color: '#4ADE80' },
+              { label: 'Siddha · M5–6', color: '#a78bfa' },
+              { label: 'Akasha · M7–8', color: gold(0.95) },
+            ].map(t => (
+              <div key={t.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{
+                  width: 5, height: 5, borderRadius: '50%',
+                  background: t.color, boxShadow: `0 0 6px ${t.color}`,
+                  flexShrink: 0,
+                }} />
+                <span style={{
+                  fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+                  fontSize: 7, fontWeight: 800, letterSpacing: '0.2em',
+                  textTransform: 'uppercase', color: t.color,
+                }}>{t.label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* What's inside grid */}
+          <div style={{
+            display: 'grid', gridTemplateColumns: '1fr 1fr',
+            gap: 8, marginBottom: 18,
+          }}>
+            {[
+              { icon: '🌌', text: 'The 14-Loka Map' },
+              { icon: '🔮', text: 'Third Eye Activation' },
+              { icon: '🕉️', text: 'Ancestor Contact Rituals' },
+              { icon: '🛡', text: '7-Layer Siddha Kavach' },
+              { icon: '📿', text: 'Deva Contact Mantras' },
+              { icon: '⚡', text: '8 Classical Siddhis' },
+            ].map(item => (
+              <div key={item.text} style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.06)',
+                borderRadius: 10, padding: '7px 10px',
+              }}>
+                <span style={{ fontSize: 13 }}>{item.icon}</span>
+                <span style={{
+                  fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+                  fontSize: 9, fontWeight: 700, letterSpacing: '0.1em',
+                  color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase',
+                }}>{item.text}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            padding: '11px 20px', borderRadius: 999,
+            background: `linear-gradient(135deg, rgba(167,139,250,0.22), rgba(167,139,250,0.07))`,
+            border: `1px solid rgba(167,139,250,0.5)`,
+            color: 'rgba(167,139,250,0.95)',
+            fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+            fontSize: 10, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase',
+            boxShadow: '0 0 20px rgba(167,139,250,0.15)',
+          }}>
+            <span>👁</span> Enter the Akasha Transmission →
+          </div>
+        </div>
+      </div>
+
       {/* KRIYA YOGA — live */}
       <div
         onClick={() => navigate('/kriya-yoga')}
