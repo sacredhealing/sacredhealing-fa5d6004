@@ -54,7 +54,7 @@ async function callAI(payload: { messages: any[]; max_tokens: number; temperatur
   return await fetch(GEMINI_URL, {
     method: "POST",
     headers: { Authorization: `Bearer ${GEMINI_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "gemini-2.5-flash", ...payload }),
+    body: JSON.stringify({ model: "gemini-2.0-flash", ...payload }),
   });
 }
 
