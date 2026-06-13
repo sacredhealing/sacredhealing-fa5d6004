@@ -36,42 +36,110 @@ jobs:
           ssh-keyscan -p 22 -H 178.105.183.74 > ~/.ssh/known_hosts 2>/dev/null
           echo "Host key lines: $(wc -l < ~/.ssh/known_hosts)"
 
-      - name: Status / Logs / Restart (quick actions)
+      - name: Quick actions (status / logs / restart)
         if: ${{ inputs.action != 'deploy' }}
         env:
           HETZNER_PASS: ${{ secrets.HETZNER_ROOT_PASSWORD }}
         run: |
           ACTION="${{ inputs.action }}"
           if [ "$ACTION" = "status" ]; then
-            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=yes root@178.105.183.74               "pm2 list && echo '---' && curl -s http://localhost:8081/health | python3 -m json.tool 2>/dev/null || echo 'health: not running'"
+            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=yes root@178.105.183.74 \
+              "pm2 list && echo '---HEALTH---' && curl -s http://localhost:8081/health | python3 -m json.tool 2>/dev/null || curl -s http://localhost:8081/health"
           elif [ "$ACTION" = "logs" ]; then
-            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=yes root@178.105.183.74               "pm2 logs delta-arb --lines 80 --nostream 2>/dev/null || echo 'No delta-arb process'"
+            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=yes root@178.105.183.74 \
+              "pm2 logs delta-arb --lines 80 --nostream 2>/dev/null || echo 'No delta-arb process'"
           elif [ "$ACTION" = "restart" ]; then
-            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=yes root@178.105.183.74               "pm2 restart delta-arb --update-env && sleep 5 && pm2 list && curl -s http://localhost:8081/health"
+            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=yes root@178.105.183.74 \
+              "pm2 restart delta-arb --update-env && sleep 5 && pm2 list && curl -s http://localhost:8081/health"
           fi
 
-      - name: Write bootstrap script
-        if: ${{ inputs.action == 'deploy' }}
-        run: |
-          echo 'IyEvYmluL2Jhc2gKIyBTUUktMjA1MCBERUxUQS1BUkIgQk9UIEhldHpuZXIgQm9vdHN0cmFwCnNldCAtZQoKZWNobyAi4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paIIgplY2hvICIgU1FJLTIwNTAg4pqhIERFTFRBLUFSQiBCT1QgSGV0em5lciBCb290c3RyYXAiCmVjaG8gIuKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiOKWiCIKCkdIX1RPS0VOPSIkezF9IgppZiBbIC16ICIkR0hfVE9LRU4iIF07IHRoZW4KICBlY2hvICJbRVJST1JdIEdpdEh1YiB0b2tlbiByZXF1aXJlZCBhcyBmaXJzdCBhcmd1bWVudCIKICBleGl0IDEKZmkKCiMg4pSA4pSAIE5vZGUgMjAg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACmluc3RhbGxfbm9kZSgpIHsKICBlY2hvICJbU1FJXSBJbnN0YWxsaW5nIE5vZGUgMjAuLi4iCiAgY3VybCAtZnNTTCBodHRwczovL2RlYi5ub2Rlc291cmNlLmNvbS9zZXR1cF8yMC54IHwgYmFzaCAtCiAgYXB0LWdldCBpbnN0YWxsIC15IG5vZGVqcwp9CmlmICEgY29tbWFuZCAtdiBub2RlICY+L2Rldi9udWxsOyB0aGVuCiAgaW5zdGFsbF9ub2RlCmVsc2UKICBOT0RFX01BSk9SPSQobm9kZSAtZSAicHJvY2Vzcy5zdGRvdXQud3JpdGUocHJvY2Vzcy52ZXJzaW9uLnNsaWNlKDEpLnNwbGl0KCcuJylbMF0pIikKICBpZiBbICIkTk9ERV9NQUpPUiIgLWx0IDIwIF07IHRoZW4KICAgIGVjaG8gIltTUUldIE5vZGUgJE5PREVfTUFKT1IgdG9vIG9sZCDigJQgdXBncmFkaW5nIHRvIDIwLi4uIgogICAgaW5zdGFsbF9ub2RlCiAgZmkKZmkKZWNobyAiW1NRSV0gTm9kZTogJChub2RlIC12KSB8IG5wbTogJChucG0gLXYpIgoKIyDilIDilIAgUE0yIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAppZiAhIGNvbW1hbmQgLXYgcG0yICY+L2Rldi9udWxsOyB0aGVuCiAgZWNobyAiW1NRSV0gSW5zdGFsbGluZyBQTTIuLi4iCiAgbnBtIGluc3RhbGwgLWcgcG0yCiAgZW52IFBBVEg9JFBBVEg6L3Vzci9iaW4gcG0yIHN0YXJ0dXAgc3lzdGVtZCAtdSByb290IC0taHAgL3Jvb3QgfHwgdHJ1ZQogIHN5c3RlbWN0bCBlbmFibGUgcG0yLXJvb3QgMj4vZGV2L251bGwgfHwgdHJ1ZQpmaQplY2hvICJbU1FJXSBQTTI6ICQocG0yIC12KSIKCiMg4pSA4pSAIEdpdCDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKY29tbWFuZCAtdiBnaXQgJj4vZGV2L251bGwgfHwgYXB0LWdldCBpbnN0YWxsIC15IGdpdAoKIyDilIDilIAgQ2xvbmUgLyBwdWxsIHJlcG8g4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSAClJFUE9fRElSPSIvcm9vdC9kZWx0YS1hcmIiCmlmIFsgISAtZCAiJFJFUE9fRElSLy5naXQiIF07IHRoZW4KICBlY2hvICJbU1FJXSBDbG9uaW5nIHJlcG8uLi4iCiAgZ2l0IGNsb25lICJodHRwczovL3gtYWNjZXNzLXRva2VuOiR7R0hfVE9LRU59QGdpdGh1Yi5jb20vc2FjcmVkaGVhbGluZy9zYWNyZWRoZWFsaW5nLWZhNWQ2MDA0LmdpdCIgIiRSRVBPX0RJUiIKZWxzZQogIGVjaG8gIltTUUldIFB1bGxpbmcgbGF0ZXN0IGZyb20gbWFpbi4uLiIKICBjZCAiJFJFUE9fRElSIgogIGdpdCByZW1vdGUgc2V0LXVybCBvcmlnaW4gImh0dHBzOi8veC1hY2Nlc3MtdG9rZW46JHtHSF9UT0tFTn1AZ2l0aHViLmNvbS9zYWNyZWRoZWFsaW5nL3NhY3JlZGhlYWxpbmctZmE1ZDYwMDQuZ2l0IgogIGdpdCBmZXRjaCBvcmlnaW4KICBnaXQgcmVzZXQgLS1oYXJkIG9yaWdpbi9tYWluCmZpCgojIOKUgOKUgCBJbnN0YWxsIGRlcHMg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACmNkICIkUkVQT19ESVIvZGVsdGEtYXJiLWhldHpuZXIiCm5wbSBpbnN0YWxsIC0tb21pdD1kZXYKCiMg4pSA4pSAIFdyaXRlIC5lbnYg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACmNhdCA+IC5lbnYgPDwgRU5WRU9GClNVUEFCQVNFX1VSTD1odHRwczovL2ZqZHpocmRwaW94ZGV5eWZvZ2VwLnN1cGFiYXNlLmNvClNVUEFCQVNFX1NFUlZJQ0VfUk9MRV9LRVk9JHtTVVBBQkFTRV9LRVl9CkJJTkFOQ0VfQVBJX0tFWT0ke0JJTkFOQ0VfQVBJX0tFWX0KQklOQU5DRV9BUElfU0VDUkVUPSR7QklOQU5DRV9BUElfU0VDUkVUfQpCT1RfTU9ERT0ke0JPVF9NT0RFOi1QQVBFUn0KUE9SVD04MDgxCkRFTFRBX1RIUkVTSE9MRD0wLjAwMTIKVFJBREVfU0laRV9VU0Q9MTUKU0NBTl9JTlRFUlZBTF9NUz0xNTAwMApFTlZFT0YKZWNobyAiW1NRSV0gLmVudiB3cml0dGVuIHwgTU9ERT0ke0JPVF9NT0RFOi1QQVBFUn0iCgojIOKUgOKUgCBQTTIgc3RhcnQvcmVzdGFydCDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKaWYgcG0yIGRlc2NyaWJlIGRlbHRhLWFyYiA+IC9kZXYvbnVsbCAyPiYxOyB0aGVuCiAgcG0yIHJlc3RhcnQgZGVsdGEtYXJiIC0tdXBkYXRlLWVudgogIGVjaG8gIltTUUldIOKchSBERUxUQS1BUkIgcmVzdGFydGVkIgplbHNlCiAgcG0yIHN0YXJ0IGJvdC5qcyAtLW5hbWUgZGVsdGEtYXJiIC0tY3dkIC9yb290L2RlbHRhLWFyYi9kZWx0YS1hcmItaGV0em5lcgogIGVjaG8gIltTUUldIOKchSBERUxUQS1BUkIgc3RhcnRlZCBmcmVzaCIKZmkKcG0yIHNhdmUKCiMg4pSA4pSAIEhlYWx0aCBjaGVjayDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKc2xlZXAgOAplY2hvICIiCmVjaG8gIltTUUldIOKWiOKWiOKWiCBQTTIgU1RBVFVTIOKWiOKWiOKWiCIKcG0yIGxpc3QKZWNobyAiIgplY2hvICJbU1FJXSDilojilojiloggSEVBTFRIIENIRUNLIGh0dHA6Ly9sb2NhbGhvc3Q6ODA4MS9oZWFsdGgg4paI4paI4paIIgpjdXJsIC1zZiBodHRwOi8vbG9jYWxob3N0OjgwODEvaGVhbHRoIHwgcHl0aG9uMyAtbSBqc29uLnRvb2wgMj4vZGV2L251bGwgfHwgY3VybCAtcyBodHRwOi8vbG9jYWxob3N0OjgwODEvaGVhbHRoIHx8IGVjaG8gIk5vdCByZWFkeSB5ZXQgKHN0YXJ0aW5nIHVwKSIKZWNobyAiIgplY2hvICJbU1FJXSDilojilojiloggTEFTVCA0MCBMT0cgTElORVMg4paI4paI4paIIgpwbTIgbG9ncyBkZWx0YS1hcmIgLS1saW5lcyA0MCAtLW5vc3RyZWFtIDI+L2Rldi9udWxsIHx8IHRydWUKZWNobyAi4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paI4paIIgplY2hvICJbU1FJLTIwNTBdIERFTFRBLUFSQiBERVBMT1lNRU5UIENPTVBMRVRFIgplY2hvICLilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilojilogiCg==' | base64 -d > /tmp/bootstrap-delta-arb.sh
-          chmod +x /tmp/bootstrap-delta-arb.sh
-          echo "Bootstrap size: $(wc -c < /tmp/bootstrap-delta-arb.sh) bytes"
-
-      - name: Upload bootstrap to Hetzner
-        if: ${{ inputs.action == 'deploy' }}
-        env:
-          HETZNER_PASS: ${{ secrets.HETZNER_ROOT_PASSWORD }}
-        run: |
-          sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=yes root@178.105.183.74             'cat > /root/bootstrap-delta-arb.sh && chmod +x /root/bootstrap-delta-arb.sh && echo "Script uploaded: $(wc -c < /root/bootstrap-delta-arb.sh) bytes"'             < /tmp/bootstrap-delta-arb.sh
-
-      - name: Execute bootstrap on Hetzner
+      - name: Upload bootstrap + deploy
         if: ${{ inputs.action == 'deploy' }}
         env:
           HETZNER_PASS: ${{ secrets.HETZNER_ROOT_PASSWORD }}
           GH_TOKEN: ${{ secrets.GH_ADMIN_PAT }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           BINANCE_API_KEY: ${{ secrets.BINANCE_API_KEY }}
           BINANCE_API_SECRET: ${{ secrets.BINANCE_API_SECRET }}
           BOT_MODE: ${{ inputs.bot_mode }}
         run: |
-          sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=yes root@178.105.183.74             "SUPABASE_KEY='$SUPABASE_KEY' BINANCE_API_KEY='$BINANCE_API_KEY' BINANCE_API_SECRET='$BINANCE_API_SECRET' BOT_MODE='$BOT_MODE' bash /root/bootstrap-delta-arb.sh '$GH_TOKEN' 2>&1"
+          # Inline bootstrap - no base64 needed
+          cat > /tmp/bootstrap-delta-arb.sh << 'BOOTEOF'
+#!/bin/bash
+set -e
+GH_TOKEN="${1}"
+echo "=== SQI DELTA-ARB BOT — HETZNER BOOTSTRAP ==="
+
+# Node 20
+install_node() { curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs; }
+if ! command -v node &>/dev/null; then install_node
+else
+  NM=$(node -e "process.stdout.write(process.version.slice(1).split('.')[0])")
+  [ "$NM" -lt 20 ] && install_node
+fi
+echo "Node: $(node -v)"
+
+# PM2
+if ! command -v pm2 &>/dev/null; then
+  npm install -g pm2
+  env PATH=$PATH:/usr/bin pm2 startup systemd -u root --hp /root || true
+fi
+
+# Git
+command -v git &>/dev/null || apt-get install -y git
+
+# Clone/pull
+REPO="/root/delta-arb"
+if [ ! -d "$REPO/.git" ]; then
+  git clone "https://x-access-token:${GH_TOKEN}@github.com/sacredhealing/sacredhealing-fa5d6004.git" "$REPO"
+else
+  cd "$REPO"
+  git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/sacredhealing/sacredhealing-fa5d6004.git"
+  git fetch origin && git reset --hard origin/main
+fi
+
+# Install deps
+cd "$REPO/delta-arb-hetzner"
+npm install --omit=dev
+
+# Write .env (vars injected by GitHub Actions)
+cat > .env << ENVEOF
+SUPABASE_URL=https://fjdzhrdpioxdeyyfogep.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_KEY}
+BINANCE_API_KEY=${BINANCE_API_KEY}
+BINANCE_API_SECRET=${BINANCE_API_SECRET}
+BOT_MODE=${BOT_MODE:-PAPER}
+PORT=8081
+DELTA_THRESHOLD=0.0012
+TRADE_SIZE_USD=15
+SCAN_INTERVAL_MS=15000
+ENVEOF
+echo ".env written | MODE=${BOT_MODE:-PAPER} | BINANCE=$([ -n "$BINANCE_API_KEY" ] && echo 'SET' || echo 'MISSING')"
+
+# PM2 manage
+if pm2 describe delta-arb > /dev/null 2>&1; then
+  pm2 restart delta-arb --update-env && echo "✅ DELTA-ARB restarted"
+else
+  pm2 start bot.js --name delta-arb --cwd /root/delta-arb/delta-arb-hetzner
+  echo "✅ DELTA-ARB started fresh"
+fi
+pm2 save
+
+sleep 8
+echo "=== PM2 STATUS ==="
+pm2 list
+echo "=== HEALTH CHECK ==="
+curl -sf http://localhost:8081/health | python3 -m json.tool 2>/dev/null || curl -s http://localhost:8081/health || echo "Starting up..."
+echo "=== LAST 30 LINES ==="
+pm2 logs delta-arb --lines 30 --nostream 2>/dev/null || true
+echo "=== DELTA-ARB DEPLOYED ==="
+BOOTEOF
+
+          chmod +x /tmp/bootstrap-delta-arb.sh
+
+          sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=yes root@178.105.183.74 \
+            'cat > /root/bootstrap-delta-arb.sh && chmod +x /root/bootstrap-delta-arb.sh' \
+            < /tmp/bootstrap-delta-arb.sh
+
+          sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=yes root@178.105.183.74 \
+            "SUPABASE_KEY='$SUPABASE_KEY' BINANCE_API_KEY='$BINANCE_API_KEY' BINANCE_API_SECRET='$BINANCE_API_SECRET' BOT_MODE='$BOT_MODE' bash /root/bootstrap-delta-arb.sh '$GH_TOKEN' 2>&1"
