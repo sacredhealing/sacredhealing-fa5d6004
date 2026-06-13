@@ -5,17 +5,10 @@ import { componentTagger } from "lovable-tagger";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 
-// https://vitejs.dev/config/
-// Build: 2026-06-01-v4 cache-bust — force SW update for all users
+// SQI 2050 — Performance-optimised Vite config
 export default defineConfig(({ mode }) => {
   const fileEnv = loadEnv(mode, process.cwd(), "");
-  // Gemini API key is server-side only (used by the `gemini-bridge` edge function).
-  // Do NOT inject it into the client bundle — that would expose it to anyone
-  // viewing the built JavaScript in DevTools.
 
-
-  /** Lovable Cloud Secrets often use SUPABASE_URL / SUPABASE_ANON_KEY without VITE_ — expose as client env */
-  // fileEnv (.env) takes priority so both Vercel and Lovable use .env values
   const supabaseUrlForClient =
     (fileEnv.VITE_SUPABASE_URL || "").trim() ||
     (fileEnv.SUPABASE_URL || "").trim() ||
@@ -23,7 +16,6 @@ export default defineConfig(({ mode }) => {
     (process.env.SUPABASE_URL || "").trim() ||
     "";
 
-  // fileEnv (.env) takes priority — both Vercel and Lovable use .env values
   const supabasePublishableForClient =
     (fileEnv.VITE_SUPABASE_PUBLISHABLE_KEY || "").trim() ||
     (fileEnv.VITE_SUPABASE_ANON_KEY || "").trim() ||
@@ -45,25 +37,47 @@ export default defineConfig(({ mode }) => {
     include: ["ethers", "@solana/web3.js", "buffer"],
   },
   build: {
+    // Target modern browsers — smaller, faster output
+    target: "es2020",
+    // Enable minification with esbuild (faster than terser, still very small)
+    minify: "esbuild",
+    // Raise chunk warning threshold (many large spiritual pages are expected)
+    chunkSizeWarningLimit: 1000,
     commonjsOptions: {
       include: [/ethers/, /node_modules/],
     },
     rollupOptions: {
+      treeshake: {
+        moduleSideEffects: false,
+        propertyReadSideEffects: false,
+      },
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-query': ['@tanstack/react-query'],
-          'vendor-ui': [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-tabs',
-            '@radix-ui/react-tooltip',
-            '@radix-ui/react-popover',
-          ],
-          'vendor-charts': ['recharts'],
-          'vendor-motion': ['framer-motion'],
-          'vendor-crypto': ['ethers'],
-          'vendor-i18n': ['i18next', 'react-i18next'],
+        // Granular vendor splitting for maximum long-term caching
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            // Core React — always tiny, loaded first
+            if (id.includes("/react/") || id.includes("/react-dom/") || id.includes("/react-router")) {
+              return "vendor-react";
+            }
+            // Query
+            if (id.includes("@tanstack")) return "vendor-query";
+            // Radix UI
+            if (id.includes("@radix-ui")) return "vendor-radix";
+            // Charts — heavy, rarely needed on first load
+            if (id.includes("recharts") || id.includes("d3")) return "vendor-charts";
+            // Animation
+            if (id.includes("framer-motion")) return "vendor-motion";
+            // Crypto libs — very heavy, split out
+            if (id.includes("ethers") || id.includes("@solana") || id.includes("buffer")) return "vendor-crypto";
+            // i18n
+            if (id.includes("i18next")) return "vendor-i18n";
+            // Stripe
+            if (id.includes("stripe")) return "vendor-stripe";
+            // Supabase
+            if (id.includes("@supabase")) return "vendor-supabase";
+            // Lucide icons — keep separate (large)
+            if (id.includes("lucide")) return "vendor-icons";
+          }
         },
       },
     },
@@ -72,8 +86,6 @@ export default defineConfig(({ mode }) => {
     react(), 
     tailwindcss(),
     VitePWA({
-      // prompt + manual register in main.tsx (no auto-inject): avoids reload loops on Lovable
-      // and never full-page reloads when a new SW is waiting.
       registerType: "autoUpdate",
       injectRegister: null,
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "masked-icon.svg"],
@@ -94,14 +106,10 @@ export default defineConfig(({ mode }) => {
       workbox: {
         cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        // Take over immediately on new deploy — users get updates without closing all tabs
         clientsClaim: true,
         skipWaiting: true,
-        // Do not precache HTML or hashed JS/CSS assets — immutable files served by Vercel CDN directly
-        // Precaching hashed chunks causes stale bundle delivery to all users after deploys
         globIgnores: ["**/index.html", "index.html", "assets/**"],
         globPatterns: ["**/{icon-192x192,icon-512x512,favicon}.{png,ico}", "manifest.webmanifest"],
-        // SPA offline: still serve app shell when network fails (filled after first online visit).
         navigateFallback: "index.html",
         navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
@@ -111,26 +119,38 @@ export default defineConfig(({ mode }) => {
             options: {
               cacheName: "html-shell",
               networkTimeoutSeconds: 2,
-              expiration: {
-                maxEntries: 8,
-                maxAgeSeconds: 5 * 60, // 5 min — pick up new deploys quickly when online
-              },
+              expiration: { maxEntries: 8, maxAgeSeconds: 5 * 60 },
               cacheableResponse: { statuses: [200] },
             },
           },
-          // Lazy chunks under /assets/: prefer network so new route bundles load after deploy
           {
             urlPattern: ({ sameOrigin, url }) =>
               sameOrigin && url.pathname.startsWith("/assets/"),
-            handler: "NetworkFirst",
+            handler: "CacheFirst",
             method: "GET",
             options: {
-              cacheName: "assets-network-first",
-              networkTimeoutSeconds: 8,
-              expiration: {
-                maxEntries: 120,
-                maxAgeSeconds: 7 * 24 * 60 * 60,
-              },
+              cacheName: "assets-immutable",
+              expiration: { maxEntries: 200, maxAgeSeconds: 30 * 24 * 60 * 60 },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
+          // Cache Supabase API responses for fast re-renders
+          {
+            urlPattern: ({ url }) => url.hostname.includes("supabase.co") && url.pathname.startsWith("/rest/"),
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "supabase-api",
+              expiration: { maxEntries: 50, maxAgeSeconds: 5 * 60 },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
+          // Cache Google Fonts
+          {
+            urlPattern: ({ url }) => url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com",
+            handler: "CacheFirst",
+            options: {
+              cacheName: "google-fonts",
+              expiration: { maxEntries: 10, maxAgeSeconds: 365 * 24 * 60 * 60 },
               cacheableResponse: { statuses: [200] },
             },
           },
@@ -159,4 +179,3 @@ export default defineConfig(({ mode }) => {
   },
 };
 });
-
