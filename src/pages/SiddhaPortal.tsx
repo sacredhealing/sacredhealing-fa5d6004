@@ -8,258 +8,667 @@ import { hasFeatureAccess, FEATURE_TIER } from '@/lib/tierAccess';
 import { ChevronDown } from 'lucide-react';
 
 // ─── DESIGN TOKENS ───────────────────────────────────────────────────────────
-const gold  = (a: number) => `rgba(212,175,55,${a})`;
-const white = (a: number) => `rgba(255,255,255,${a})`;
-const cyan  = (a: number) => `rgba(34,211,238,${a})`;
-const green = (a: number) => `rgba(74,222,128,${a})`;
+const gold   = (a: number) => `rgba(212,175,55,${a})`;
+const white  = (a: number) => `rgba(255,255,255,${a})`;
+const cyan   = (a: number) => `rgba(34,211,238,${a})`;
+const green  = (a: number) => `rgba(74,222,128,${a})`;
 const violet = (a: number) => `rgba(167,139,250,${a})`;
-const amber = (a: number) => `rgba(245,158,11,${a})`;
-const teal  = (a: number) => `rgba(52,211,153,${a})`;
+const amber  = (a: number) => `rgba(245,158,11,${a})`;
+const teal   = (a: number) => `rgba(52,211,153,${a})`;
+const rose   = (a: number) => `rgba(251,113,133,${a})`;
 
 // ─── SHARED STYLES ────────────────────────────────────────────────────────────
-const LABEL_STYLE: React.CSSProperties = {
-  fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
-  fontSize: 10,
-  fontWeight: 800,
-  letterSpacing: '0.45em',
-  textTransform: 'uppercase' as const,
-  color: gold(0.45),
+const LABEL: React.CSSProperties = {
+  fontFamily:"'Plus Jakarta Sans','Montserrat',sans-serif",
+  fontSize:10, fontWeight:800, letterSpacing:'0.45em',
+  textTransform:'uppercase' as const, color:gold(0.45),
 };
-
-const CARD_BASE: React.CSSProperties = {
-  background: `rgba(255,255,255,0.025)`,
-  border: `1px solid ${gold(0.13)}`,
-  borderRadius: 24,
-  padding: '20px 18px',
-  cursor: 'pointer',
-  position: 'relative',
-  transition: 'border-color 0.25s ease, background 0.25s ease',
-};
-
 const CARD_TITLE: React.CSSProperties = {
-  fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
-  fontSize: 15,
-  fontWeight: 800,
-  letterSpacing: '0.08em',
-  textTransform: 'uppercase' as const,
-  color: gold(0.92),
-  marginBottom: 8,
+  fontFamily:"'Plus Jakarta Sans','Montserrat',sans-serif",
+  fontSize:15, fontWeight:800, letterSpacing:'0.08em',
+  textTransform:'uppercase' as const, color:gold(0.92), marginBottom:8,
+};
+const ITALIC: React.CSSProperties = {
+  fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic',
+  fontSize:'0.93rem', color:white(0.52), lineHeight:1.65, marginBottom:14,
+};
+const CTA: React.CSSProperties = {
+  fontFamily:"'Plus Jakarta Sans','Montserrat',sans-serif",
+  fontSize:10, fontWeight:800, letterSpacing:'0.3em',
+  textTransform:'uppercase' as const,
+  color:gold(0.85), background:'none', border:'none', cursor:'pointer', padding:0,
 };
 
-const CARD_DESC: React.CSSProperties = {
-  fontFamily: "'Cormorant Garamond',serif",
-  fontStyle: 'italic',
-  fontSize: '0.95rem',
-  color: white(0.5),
-  lineHeight: 1.6,
-  marginBottom: 14,
+// ─── SVG SACRED ICONS — 3D organic gold renders ──────────────────────────────
+// Each is a 48×48 inline SVG with layered gradients for depth
+
+const Icon = {
+
+  // LOTUS — petals with golden depth
+  Lotus: () => (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <defs>
+        <radialGradient id="lg1" cx="50%" cy="60%" r="50%">
+          <stop offset="0%" stopColor="#FFE082"/>
+          <stop offset="100%" stopColor="#B8860B"/>
+        </radialGradient>
+        <radialGradient id="lg2" cx="50%" cy="40%" r="50%">
+          <stop offset="0%" stopColor="#FFF9C4"/>
+          <stop offset="100%" stopColor="#D4AF37"/>
+        </radialGradient>
+      </defs>
+      {/* Center */}
+      <ellipse cx="24" cy="26" rx="7" ry="6" fill="url(#lg1)" opacity="0.95"/>
+      {/* Inner petals */}
+      {[0,60,120,180,240,300].map((a,i) => (
+        <ellipse key={i} cx={24+Math.sin(a*Math.PI/180)*9} cy={26-Math.cos(a*Math.PI/180)*8}
+          rx="4" ry="7" fill="url(#lg2)" opacity="0.8"
+          transform={`rotate(${a},${24+Math.sin(a*Math.PI/180)*9},${26-Math.cos(a*Math.PI/180)*8})`}/>
+      ))}
+      {/* Outer petals */}
+      {[30,90,150,210,270,330].map((a,i) => (
+        <ellipse key={i} cx={24+Math.sin(a*Math.PI/180)*15} cy={26-Math.cos(a*Math.PI/180)*13}
+          rx="3" ry="6" fill={`rgba(212,175,55,0.5)`} opacity="0.65"
+          transform={`rotate(${a},${24+Math.sin(a*Math.PI/180)*15},${26-Math.cos(a*Math.PI/180)*13})`}/>
+      ))}
+      {/* Glow center dot */}
+      <circle cx="24" cy="26" r="3" fill="#FFF9C4" opacity="0.9"/>
+    </svg>
+  ),
+
+  // FLAME — Agni sacred fire
+  Flame: () => (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <defs>
+        <radialGradient id="fg1" cx="50%" cy="80%" r="60%">
+          <stop offset="0%" stopColor="#FFD54F"/>
+          <stop offset="40%" stopColor="#FF8F00"/>
+          <stop offset="100%" stopColor="#BF360C" stopOpacity="0"/>
+        </radialGradient>
+        <radialGradient id="fg2" cx="50%" cy="90%" r="40%">
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.9"/>
+          <stop offset="100%" stopColor="#FFD54F" stopOpacity="0"/>
+        </radialGradient>
+      </defs>
+      <path d="M24 44 C14 44 8 36 8 28 C8 20 14 16 18 10 C19 14 20 16 24 18 C22 12 26 4 30 2 C32 10 28 16 32 22 C36 18 36 14 34 8 C40 14 42 22 40 30 C38 38 32 44 24 44Z" fill="url(#fg1)"/>
+      <path d="M24 40 C18 40 16 34 18 28 C20 24 22 22 24 20 C26 24 24 28 28 30 C30 26 28 22 26 18 C32 22 34 28 32 34 C30 38 28 40 24 40Z" fill="url(#fg2)" opacity="0.8"/>
+      <ellipse cx="24" cy="38" rx="5" ry="2.5" fill="#FFD54F" opacity="0.4"/>
+    </svg>
+  ),
+
+  // STAR OF DAVID / SRI YANTRA fragment — sacred geometry
+  SriYantra: () => (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <defs>
+        <linearGradient id="sy1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FFE082"/>
+          <stop offset="100%" stopColor="#B8860B"/>
+        </linearGradient>
+      </defs>
+      <polygon points="24,4 44,38 4,38" stroke="url(#sy1)" strokeWidth="1.5" fill="rgba(212,175,55,0.06)"/>
+      <polygon points="24,44 4,10 44,10" stroke="url(#sy1)" strokeWidth="1.5" fill="rgba(212,175,55,0.04)" opacity="0.8"/>
+      <polygon points="24,10 38,32 10,32" stroke={gold(0.5)} strokeWidth="1" fill="rgba(212,175,55,0.08)"/>
+      <polygon points="24,38 10,16 38,16" stroke={gold(0.4)} strokeWidth="1" fill="rgba(212,175,55,0.05)" opacity="0.7"/>
+      <circle cx="24" cy="24" r="4" fill="#FFE082" opacity="0.9"/>
+      <circle cx="24" cy="24" r="7" stroke={gold(0.6)} strokeWidth="0.8" fill="none"/>
+      <circle cx="24" cy="24" r="18" stroke={gold(0.2)} strokeWidth="0.6" fill="none"/>
+    </svg>
+  ),
+
+  // MOON — Soma / Chandra
+  Moon: () => (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <defs>
+        <radialGradient id="mn1" cx="35%" cy="35%" r="55%">
+          <stop offset="0%" stopColor="#FFFDE7"/>
+          <stop offset="60%" stopColor="#D4AF37"/>
+          <stop offset="100%" stopColor="#7B6914"/>
+        </radialGradient>
+      </defs>
+      <path d="M28 8 C18 8 10 16 10 26 C10 36 18 44 28 44 C34 44 40 40 43 34 C38 36 32 35 28 31 C22 27 20 20 24 14 C25 11 26 9 28 8Z" fill="url(#mn1)"/>
+      {/* Stars */}
+      {[[38,12,1.5],[42,20,1],[36,8,1],[40,28,0.8]].map(([x,y,r],i)=>(
+        <circle key={i} cx={x} cy={y} r={r} fill="#FFE082" opacity={0.8-i*0.1}/>
+      ))}
+      <circle cx="28" cy="26" r="3" fill="rgba(255,253,231,0.3)"/>
+    </svg>
+  ),
+
+  // OM SYMBOL — Nada / Mantra
+  Om: () => (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <defs>
+        <linearGradient id="om1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FFF9C4"/>
+          <stop offset="50%" stopColor="#D4AF37"/>
+          <stop offset="100%" stopColor="#8B6914"/>
+        </linearGradient>
+      </defs>
+      <text x="24" y="34" textAnchor="middle" fontSize="30" fontFamily="serif"
+        fill="url(#om1)" style={{filter:'drop-shadow(0 0 6px rgba(212,175,55,0.7))'}}>ॐ</text>
+    </svg>
+  ),
+
+  // EYE OF SHIVA — Third Eye / Consciousness
+  ThirdEye: () => (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <defs>
+        <radialGradient id="te1" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#A78BFA"/>
+          <stop offset="60%" stopColor="#7C3AED"/>
+          <stop offset="100%" stopColor="#2D1B69"/>
+        </radialGradient>
+        <radialGradient id="te2" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#FFF9C4"/>
+          <stop offset="100%" stopColor="#D4AF37"/>
+        </radialGradient>
+      </defs>
+      {/* Eye shape */}
+      <path d="M6 24 C12 14 36 14 42 24 C36 34 12 34 6 24Z" fill="rgba(167,139,250,0.15)" stroke={violet(0.7)} strokeWidth="1.2"/>
+      {/* Iris */}
+      <circle cx="24" cy="24" r="8" fill="url(#te1)"/>
+      {/* Pupil */}
+      <circle cx="24" cy="24" r="4" fill="#0D0D1A"/>
+      {/* Gold spark */}
+      <circle cx="24" cy="24" r="1.5" fill="url(#te2)"/>
+      {/* Light rays */}
+      {[0,45,90,135,180,225,270,315].map((a,i)=>(
+        <line key={i} x1={24+Math.cos(a*Math.PI/180)*10} y1={24+Math.sin(a*Math.PI/180)*10}
+          x2={24+Math.cos(a*Math.PI/180)*14} y2={24+Math.sin(a*Math.PI/180)*14}
+          stroke={gold(0.4)} strokeWidth="0.8" opacity="0.6"/>
+      ))}
+      {/* Third eye mark at top */}
+      <ellipse cx="24" cy="10" rx="2" ry="3" fill={gold(0.6)} opacity="0.7"/>
+    </svg>
+  ),
+
+  // TRISHUL — Shiva's Trident
+  Trishul: () => (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <defs>
+        <linearGradient id="tr1" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#FFF9C4"/>
+          <stop offset="50%" stopColor="#D4AF37"/>
+          <stop offset="100%" stopColor="#8B6914"/>
+        </linearGradient>
+      </defs>
+      {/* Center prong */}
+      <path d="M24 6 L21 18 L24 22 L27 18 Z" fill="url(#tr1)"/>
+      {/* Left prong */}
+      <path d="M14 6 L12 14 L16 17 L18 14 Z" fill="url(#tr1)" opacity="0.85"/>
+      {/* Right prong */}
+      <path d="M34 6 L36 14 L32 17 L30 14 Z" fill="url(#tr1)" opacity="0.85"/>
+      {/* Cross bar */}
+      <rect x="12" y="17" width="24" height="2.5" rx="1" fill="url(#tr1)" opacity="0.7"/>
+      {/* Handle */}
+      <rect x="22.5" y="22" width="3" height="22" rx="1.5" fill="url(#tr1)" opacity="0.8"/>
+      {/* Base */}
+      <ellipse cx="24" cy="44" rx="4" ry="1.5" fill={gold(0.5)}/>
+    </svg>
+  ),
+
+  // LION HEAD — Narasimha the Man-Lion Avatar
+  Lion: () => (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <defs>
+        <radialGradient id="li1" cx="50%" cy="45%" r="55%">
+          <stop offset="0%" stopColor="#FFD54F"/>
+          <stop offset="70%" stopColor="#D4AF37"/>
+          <stop offset="100%" stopColor="#7B5E00"/>
+        </radialGradient>
+        <radialGradient id="li2" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#FFF9C4"/>
+          <stop offset="100%" stopColor="#FF8F00"/>
+        </radialGradient>
+      </defs>
+      {/* Mane */}
+      {[0,30,60,90,120,150,180,210,240,270,300,330].map((a,i)=>(
+        <ellipse key={i} cx={24+Math.cos(a*Math.PI/180)*16} cy={24+Math.sin(a*Math.PI/180)*14}
+          rx="4.5" ry="7" fill={`rgba(${i%2===0?'212,140,20':'180,100,10'},0.7)`}
+          transform={`rotate(${a},${24+Math.cos(a*Math.PI/180)*16},${24+Math.sin(a*Math.PI/180)*14})`}/>
+      ))}
+      {/* Face */}
+      <circle cx="24" cy="24" r="13" fill="url(#li1)"/>
+      {/* Eyes */}
+      <circle cx="19.5" cy="21" r="3.5" fill="#1A1A00"/>
+      <circle cx="28.5" cy="21" r="3.5" fill="#1A1A00"/>
+      <circle cx="20" cy="20.5" r="1.5" fill="url(#li2)"/>
+      <circle cx="29" cy="20.5" r="1.5" fill="url(#li2)"/>
+      {/* Nose */}
+      <ellipse cx="24" cy="26" rx="2.5" ry="1.8" fill="#8B4513" opacity="0.8"/>
+      {/* Mouth */}
+      <path d="M20 29 Q24 33 28 29" stroke="#8B4513" strokeWidth="1.5" fill="none"/>
+      {/* Whiskers */}
+      <line x1="8" y1="25" x2="18" y2="27" stroke={gold(0.5)} strokeWidth="0.8"/>
+      <line x1="8" y1="28" x2="18" y2="28" stroke={gold(0.4)} strokeWidth="0.8"/>
+      <line x1="30" y1="27" x2="40" y2="25" stroke={gold(0.5)} strokeWidth="0.8"/>
+      <line x1="30" y1="28" x2="40" y2="28" stroke={gold(0.4)} strokeWidth="0.8"/>
+    </svg>
+  ),
+
+  // VANARA — Hanuman divine monkey face, devotional
+  Vanara: () => (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <defs>
+        <radialGradient id="va1" cx="50%" cy="45%" r="55%">
+          <stop offset="0%" stopColor="#FFB74D"/>
+          <stop offset="60%" stopColor="#E65100"/>
+          <stop offset="100%" stopColor="#7B2D00"/>
+        </radialGradient>
+        <radialGradient id="va2" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#FFD54F"/>
+          <stop offset="100%" stopColor="#FF6F00"/>
+        </radialGradient>
+      </defs>
+      {/* Ears */}
+      <circle cx="12" cy="18" r="7" fill="url(#va1)" opacity="0.9"/>
+      <circle cx="36" cy="18" r="7" fill="url(#va1)" opacity="0.9"/>
+      <circle cx="12" cy="18" r="4" fill="url(#va2)" opacity="0.6"/>
+      <circle cx="36" cy="18" r="4" fill="url(#va2)" opacity="0.6"/>
+      {/* Face */}
+      <ellipse cx="24" cy="26" rx="14" ry="15" fill="url(#va1)"/>
+      {/* Eyes — devotional, upward looking */}
+      <ellipse cx="19" cy="22" rx="3.5" ry="4" fill="#1A0A00"/>
+      <ellipse cx="29" cy="22" rx="3.5" ry="4" fill="#1A0A00"/>
+      <circle cx="19.5" cy="21" r="1.5" fill="#FFF9C4" opacity="0.9"/>
+      <circle cx="29.5" cy="21" r="1.5" fill="#FFF9C4" opacity="0.9"/>
+      {/* Snout */}
+      <ellipse cx="24" cy="30" rx="6" ry="4.5" fill="url(#va2)" opacity="0.7"/>
+      <ellipse cx="24" cy="28.5" rx="3" ry="2" fill="#8B3A0A" opacity="0.6"/>
+      {/* Smile — devotional bliss */}
+      <path d="M19 33 Q24 37 29 33" stroke="#7B2D00" strokeWidth="1.5" fill="none"/>
+      {/* Gold tilak on forehead */}
+      <ellipse cx="24" cy="14" rx="2" ry="3.5" fill="#FFD54F" opacity="0.9"/>
+      <ellipse cx="24" cy="14" rx="0.8" ry="2" fill="#FF6F00" opacity="0.8"/>
+    </svg>
+  ),
+
+  // YANTRA STAR — abundance / Lakshmi  
+  Yantra: () => (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <defs>
+        <radialGradient id="yn1" cx="50%" cy="50%" r="60%">
+          <stop offset="0%" stopColor="#FFF9C4"/>
+          <stop offset="50%" stopColor="#D4AF37"/>
+          <stop offset="100%" stopColor="#7B6914" stopOpacity="0.3"/>
+        </radialGradient>
+      </defs>
+      {/* Outer circle */}
+      <circle cx="24" cy="24" r="21" stroke={gold(0.3)} strokeWidth="0.8" fill="none"/>
+      {/* 8-pointed star */}
+      {[0,22.5,45,67.5,90,112.5,135,157.5,180,202.5,225,247.5,270,292.5,315,337.5].map((a,i)=>{
+        const r1=i%2===0?19:12, r2=i%2===0?12:19;
+        return <line key={i} x1={24+Math.cos(a*Math.PI/180)*r1} y1={24+Math.sin(a*Math.PI/180)*r1} x2={24+Math.cos((a+22.5)*Math.PI/180)*r2} y2={24+Math.sin((a+22.5)*Math.PI/180)*r2} stroke="url(#yn1)" strokeWidth="1.2" opacity="0.8"/>;
+      })}
+      {/* Inner lotus */}
+      {[0,60,120,180,240,300].map((a,i)=>(
+        <ellipse key={i} cx={24+Math.cos(a*Math.PI/180)*7} cy={24+Math.sin(a*Math.PI/180)*7}
+          rx="2.5" ry="4.5" fill={gold(0.6)}
+          transform={`rotate(${a},${24+Math.cos(a*Math.PI/180)*7},${24+Math.sin(a*Math.PI/180)*7})`}/>
+      ))}
+      <circle cx="24" cy="24" r="3.5" fill="url(#yn1)"/>
+    </svg>
+  ),
+
+  // WATER DROP — Sacred Water
+  WaterDrop: () => (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <defs>
+        <linearGradient id="wd1" x1="30%" y1="0%" x2="70%" y2="100%">
+          <stop offset="0%" stopColor="#B2EBF2"/>
+          <stop offset="40%" stopColor="#22D3EE"/>
+          <stop offset="100%" stopColor="#0369A1"/>
+        </linearGradient>
+        <radialGradient id="wd2" cx="35%" cy="30%" r="40%">
+          <stop offset="0%" stopColor="white" stopOpacity="0.6"/>
+          <stop offset="100%" stopColor="white" stopOpacity="0"/>
+        </radialGradient>
+      </defs>
+      <path d="M24 4 C24 4 8 22 8 31 C8 40 15 46 24 46 C33 46 40 40 40 31 C40 22 24 4 24 4Z" fill="url(#wd1)"/>
+      <path d="M24 4 C24 4 8 22 8 31 C8 40 15 46 24 46 C33 46 40 40 40 31 C40 22 24 4 24 4Z" fill="url(#wd2)"/>
+      {/* Ripple inside */}
+      <ellipse cx="20" cy="28" rx="5" ry="3" stroke="white" strokeWidth="0.8" fill="none" opacity="0.35"/>
+    </svg>
+  ),
+
+  // CHAKRA WHEEL — Meditation / Consciousness
+  Chakra: () => (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <defs>
+        <linearGradient id="ch1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#A78BFA"/>
+          <stop offset="100%" stopColor="#D4AF37"/>
+        </linearGradient>
+      </defs>
+      {/* Outer ring */}
+      <circle cx="24" cy="24" r="20" stroke="url(#ch1)" strokeWidth="1.5" fill="none"/>
+      <circle cx="24" cy="24" r="15" stroke={gold(0.4)} strokeWidth="0.8" fill="none"/>
+      {/* Spokes */}
+      {[0,30,60,90,120,150,180,210,240,270,300,330].map((a,i)=>(
+        <line key={i} x1={24+Math.cos(a*Math.PI/180)*5} y1={24+Math.sin(a*Math.PI/180)*5}
+          x2={24+Math.cos(a*Math.PI/180)*15} y2={24+Math.sin(a*Math.PI/180)*15}
+          stroke={i%2===0?gold(0.7):violet(0.6)} strokeWidth="1.2"/>
+      ))}
+      {/* Center hub */}
+      <circle cx="24" cy="24" r="5" fill="url(#ch1)" opacity="0.8"/>
+      <circle cx="24" cy="24" r="2" fill="#FFF9C4"/>
+    </svg>
+  ),
+
+  // HAND MUDRA — sacred gesture
+  Mudra: () => (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <defs>
+        <linearGradient id="mu1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FFE082"/>
+          <stop offset="100%" stopColor="#D4AF37"/>
+        </linearGradient>
+      </defs>
+      {/* Palm */}
+      <ellipse cx="22" cy="32" rx="10" ry="12" fill="url(#mu1)" opacity="0.9"/>
+      {/* Thumb */}
+      <ellipse cx="10" cy="30" rx="4.5" ry="7" fill="url(#mu1)" opacity="0.85" transform="rotate(-20,10,30)"/>
+      {/* Index — pointing up (Jnana mudra) */}
+      <rect x="19" y="8" width="5" height="16" rx="2.5" fill="url(#mu1)" opacity="0.9"/>
+      {/* Middle — slightly bent */}
+      <rect x="25" y="10" width="5" height="15" rx="2.5" fill="url(#mu1)" opacity="0.85"/>
+      {/* Ring */}
+      <rect x="31" y="14" width="4.5" height="13" rx="2.25" fill="url(#mu1)" opacity="0.8"/>
+      {/* Pinky */}
+      <rect x="36" y="17" width="4" height="11" rx="2" fill="url(#mu1)" opacity="0.75"/>
+      {/* Thumb tip meets index (Chin Mudra) */}
+      <ellipse cx="12.5" cy="22" rx="2.5" ry="2" fill={gold(0.9)}/>
+      {/* Gold glow aura */}
+      <ellipse cx="22" cy="28" rx="14" ry="16" stroke={gold(0.2)} strokeWidth="0.8" fill="none"/>
+    </svg>
+  ),
+
+  // STAR CRYSTAL — Jyotish / Stars
+  StarCrystal: () => (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <defs>
+        <linearGradient id="sc1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#B2EBF2"/>
+          <stop offset="50%" stopColor="#22D3EE"/>
+          <stop offset="100%" stopColor="#0284C7"/>
+        </linearGradient>
+        <linearGradient id="sc2" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FFF9C4"/>
+          <stop offset="100%" stopColor="#D4AF37"/>
+        </linearGradient>
+      </defs>
+      {/* 8-pointed star */}
+      <polygon points="24,3 27,20 44,24 27,28 24,45 21,28 4,24 21,20" fill="url(#sc1)" opacity="0.9"/>
+      <polygon points="24,3 27,20 44,24 27,28 24,45 21,28 4,24 21,20" fill="url(#sc2)" opacity="0.25"/>
+      {/* Inner diamond */}
+      <polygon points="24,13 30,24 24,35 18,24" fill="url(#sc2)" opacity="0.7"/>
+      {/* Center point */}
+      <circle cx="24" cy="24" r="4" fill="#FFF9C4" opacity="0.9"/>
+      {/* Sparkles */}
+      {[[8,8],[40,8],[8,40],[40,40]].map(([x,y],i)=>(
+        <circle key={i} cx={x} cy={y} r="1.5" fill="#FFF9C4" opacity={0.6-i*0.1}/>
+      ))}
+    </svg>
+  ),
+
+  // SNAKE KUNDALINI — energy rising
+  Kundalini: () => (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <defs>
+        <linearGradient id="ku1" x1="0%" y1="100%" x2="0%" y2="0%">
+          <stop offset="0%" stopColor="#4ADE80"/>
+          <stop offset="50%" stopColor="#22D3EE"/>
+          <stop offset="100%" stopColor="#D4AF37"/>
+        </linearGradient>
+      </defs>
+      {/* Coiled snake rising — simplified elegant path */}
+      <path d="M24 44 C18 44 12 40 12 33 C12 26 20 24 20 18 C20 14 16 12 18 8 C20 4 24 6 24 10 C24 14 18 16 20 22 C22 28 30 28 30 34 C30 40 26 44 24 44Z" 
+        stroke="url(#ku1)" strokeWidth="3" fill="none" strokeLinecap="round"/>
+      {/* Hood */}
+      <ellipse cx="24" cy="8" rx="8" ry="5" fill="rgba(74,222,128,0.2)" stroke={teal(0.7)} strokeWidth="1"/>
+      {/* Eyes */}
+      <circle cx="20.5" cy="7" r="1.5" fill="#FFD54F"/>
+      <circle cx="27.5" cy="7" r="1.5" fill="#FFD54F"/>
+      {/* Tongue */}
+      <path d="M22 11 L24 13 L26 11" stroke="#FF6B6B" strokeWidth="1" fill="none"/>
+    </svg>
+  ),
+
+  // LEAF HERB — Siddha Medicine
+  Herb: () => (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <defs>
+        <linearGradient id="hb1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#A7F3D0"/>
+          <stop offset="50%" stopColor="#4ADE80"/>
+          <stop offset="100%" stopColor="#065F46"/>
+        </linearGradient>
+        <linearGradient id="hb2" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#D4AF37"/>
+          <stop offset="100%" stopColor="#7B6914"/>
+        </linearGradient>
+      </defs>
+      {/* Large leaf */}
+      <path d="M24 42 C16 38 6 28 8 16 C10 8 18 4 26 8 C34 12 42 22 38 34 C36 40 30 44 24 42Z" fill="url(#hb1)"/>
+      {/* Veins */}
+      <path d="M24 42 L20 22" stroke="url(#hb2)" strokeWidth="1.2" opacity="0.6"/>
+      <path d="M20 28 L12 22" stroke={green(0.5)} strokeWidth="0.8" opacity="0.5"/>
+      <path d="M21 24 L14 18" stroke={green(0.5)} strokeWidth="0.8" opacity="0.5"/>
+      <path d="M22 20 L17 14" stroke={green(0.5)} strokeWidth="0.8" opacity="0.5"/>
+      {/* Small leaf */}
+      <path d="M28 20 C30 12 38 8 40 14 C42 20 36 26 28 20Z" fill="url(#hb1)" opacity="0.7"/>
+      {/* Gold dewdrop */}
+      <ellipse cx="30" cy="34" rx="2" ry="2.5" fill={gold(0.8)}/>
+    </svg>
+  ),
+
+  // SPIRAL GALAXY — Cosmos / Akasha
+  Galaxy: () => (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <defs>
+        <radialGradient id="gx1" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#FFF9C4" stopOpacity="1"/>
+          <stop offset="30%" stopColor="#D4AF37" stopOpacity="0.8"/>
+          <stop offset="70%" stopColor="#A78BFA" stopOpacity="0.4"/>
+          <stop offset="100%" stopColor="#050505" stopOpacity="0"/>
+        </radialGradient>
+      </defs>
+      {/* Arms */}
+      <path d="M24 24 C28 18 36 16 40 10" stroke={gold(0.6)} strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+      <path d="M24 24 C20 30 12 32 8 38" stroke={gold(0.5)} strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+      <path d="M24 24 C30 28 34 36 38 40" stroke={violet(0.5)} strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+      <path d="M24 24 C18 20 14 12 10 8" stroke={violet(0.4)} strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+      {/* Stars scattered */}
+      {[[8,10,1],[40,10,1.2],[8,38,0.9],[40,38,1],[16,8,0.8],[32,40,0.8],[6,24,0.7],[42,24,0.7]].map(([x,y,r],i)=>(
+        <circle key={i} cx={x} cy={y} r={r} fill="#FFF9C4" opacity={0.7-i*0.05}/>
+      ))}
+      {/* Core glow */}
+      <circle cx="24" cy="24" r="6" fill="url(#gx1)"/>
+      <circle cx="24" cy="24" r="2.5" fill="#FFF9C4"/>
+    </svg>
+  ),
+
+  // SCROLL / BOOK — Sacred Texts
+  Scroll: () => (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <defs>
+        <linearGradient id="sr1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FFE082"/>
+          <stop offset="100%" stopColor="#8B6914"/>
+        </linearGradient>
+      </defs>
+      {/* Scroll rolls */}
+      <ellipse cx="24" cy="8" rx="16" ry="5" fill="url(#sr1)" opacity="0.9"/>
+      <ellipse cx="24" cy="40" rx="16" ry="5" fill="url(#sr1)" opacity="0.9"/>
+      {/* Body */}
+      <rect x="8" y="8" width="32" height="32" fill={`rgba(212,175,55,0.08)`} stroke="url(#sr1)" strokeWidth="1.2"/>
+      {/* Text lines */}
+      {[14,19,24,29,34].map((y,i)=>(
+        <line key={i} x1="14" y1={y} x2={i%2===0?34:28} y2={y} stroke={gold(0.5)} strokeWidth="1.2" strokeLinecap="round"/>
+      ))}
+      {/* Om on scroll */}
+      <text x="24" y="26" textAnchor="middle" fontSize="10" fontFamily="serif" fill={gold(0.7)}>ॐ</text>
+    </svg>
+  ),
+
+  // BOW & ARROW — Ramayana / Dharma
+  Bow: () => (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <defs>
+        <linearGradient id="bw1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FFE082"/>
+          <stop offset="100%" stopColor="#8B6914"/>
+        </linearGradient>
+      </defs>
+      {/* Bow arc */}
+      <path d="M10 6 C4 18 4 30 10 42" stroke="url(#bw1)" strokeWidth="3" fill="none" strokeLinecap="round"/>
+      {/* String */}
+      <line x1="10" y1="6" x2="10" y2="42" stroke={gold(0.5)} strokeWidth="1"/>
+      {/* Arrow */}
+      <line x1="10" y1="24" x2="42" y2="24" stroke="url(#bw1)" strokeWidth="2" strokeLinecap="round"/>
+      {/* Arrowhead */}
+      <polygon points="42,24 36,20 36,28" fill="url(#bw1)"/>
+      {/* Fletching */}
+      <path d="M14 24 L10 18 M14 24 L10 30" stroke={gold(0.6)} strokeWidth="1.2" strokeLinecap="round"/>
+      {/* Decorative notch */}
+      <circle cx="10" cy="24" r="3" fill={gold(0.4)} stroke="url(#bw1)" strokeWidth="1"/>
+    </svg>
+  ),
+
 };
 
-const CTA_BTN: React.CSSProperties = {
-  fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
-  fontSize: 10,
-  fontWeight: 800,
-  letterSpacing: '0.3em',
-  textTransform: 'uppercase' as const,
-  color: gold(0.85),
-  background: 'none',
-  border: 'none',
-  cursor: 'pointer',
-  padding: 0,
-};
-
-const BADGE = (bg: string, border: string, color: string): React.CSSProperties => ({
-  position: 'absolute',
-  top: 14,
-  right: 14,
-  fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
-  fontSize: 8,
-  fontWeight: 800,
-  letterSpacing: '0.2em',
-  textTransform: 'uppercase' as const,
-  background: bg,
-  border: `1px solid ${border}`,
-  color,
-  borderRadius: 20,
-  padding: '3px 9px',
-  display: 'flex',
-  alignItems: 'center',
-  gap: 5,
-});
-
-const LIVE_DOT: React.CSSProperties = {
-  display: 'inline-block',
-  width: 5,
-  height: 5,
-  borderRadius: '50%',
-  background: '#D4AF37',
-  animation: 'sqLiveFlash 2s infinite',
-  marginRight: 5,
-  verticalAlign: 'middle',
-};
-
-// ─── DIVIDER ─────────────────────────────────────────────────────────────────
-const Divider = () => (
-  <div style={{ margin: '8px 20px', height: 1, background: `linear-gradient(90deg,${gold(0.18)},transparent)` }} />
+// ─── LIVE DOT ─────────────────────────────────────────────────────────────────
+const LiveDot = ({ color = gold(0.9) }: { color?: string }) => (
+  <span style={{ display:'inline-block', width:5, height:5, borderRadius:'50%', background:color, animation:'sqLiveFlash 2s infinite', marginRight:5, verticalAlign:'middle' }}/>
 );
 
-// ─── TIER PILLS COMPONENT ─────────────────────────────────────────────────────
-interface TierPillsProps {
-  tiers: { l: string; c: string }[];
-}
-const TierPills = ({ tiers }: TierPillsProps) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' as const, marginBottom: 14 }}>
+// ─── TIER PILLS ───────────────────────────────────────────────────────────────
+const TierPills = ({ tiers }: { tiers: { l: string; c: string }[] }) => (
+  <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' as const, marginBottom:14 }}>
     {tiers.map(t => (
-      <div key={t.l} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-        <span style={{ width: 5, height: 5, borderRadius: '50%', background: t.c, boxShadow: `0 0 6px ${t.c}`, flexShrink: 0 }} />
-        <span style={{ fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase' as const, color: t.c }}>{t.l}</span>
+      <div key={t.l} style={{ display:'flex', alignItems:'center', gap:4 }}>
+        <span style={{ width:5, height:5, borderRadius:'50%', background:t.c, boxShadow:`0 0 6px ${t.c}`, flexShrink:0 }}/>
+        <span style={{ fontFamily:"'Plus Jakarta Sans','Montserrat',sans-serif", fontSize:7, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, color:t.c }}>{t.l}</span>
       </div>
     ))}
   </div>
 );
 
-// ─── HERO CARD (large full-width with glow) ───────────────────────────────────
+// ─── HERO CARD ────────────────────────────────────────────────────────────────
 interface HeroCardProps {
-  emoji: string;
+  SvgIcon: React.FC;
   label: string;
   title: string;
-  titleColor?: string;
   subtitle?: string;
   desc: string;
   tiers: { l: string; c: string }[];
   cta: string;
   href: string;
-  accentColor: string;
-  accentColor2?: string;
+  ac: string;   // accent color full rgba string
+  ac2?: string;
   badge?: string;
   stats?: { v: string; l: string }[];
   features?: string[];
   delay?: number;
 }
-const HeroCard = ({ emoji, label, title, titleColor, subtitle, desc, tiers, cta, href, accentColor, accentColor2, badge, stats, features, delay = 0 }: HeroCardProps) => {
+const HeroCard = ({ SvgIcon, label, title, subtitle, desc, tiers, cta, href, ac, ac2, badge, stats, features, delay = 0 }: HeroCardProps) => {
   const navigate = useNavigate();
-  const ac2 = accentColor2 ?? accentColor;
+  const acFaint = ac.replace(/[\d.]+\)$/, '0.1)');
+  const acGlow  = ac.replace(/[\d.]+\)$/, '0.22)');
+  const acBorder = ac.replace(/[\d.]+\)$/, '0.42)');
+  const ac2g = (ac2 ?? ac).replace(/[\d.]+\)$/, '0.08)');
   return (
-    <div style={{ position: 'relative', margin: '0 16px 14px', animation: `sqFadeUp 0.45s ${delay}s ease both` }}>
-      {/* Glow rings */}
-      {[180, 260, 340, 420].map((s, i) => (
-        <div key={i} aria-hidden style={{ position: 'absolute', left: '50%', top: '50%', width: s, height: s, marginLeft: -s / 2, marginTop: -s / 2, borderRadius: '50%', border: `1px solid ${accentColor.replace(/[\d.]+\)$/, `${0.07 - i * 0.012})`)}`, animation: `sqScalarPulse ${3.2 + i * 0.7}s ease-in-out ${i * 0.5}s infinite`, pointerEvents: 'none', zIndex: 0 }} />
+    <div style={{ position:'relative', margin:'0 0 14px', animation:`sqFadeUp 0.45s ${delay}s ease both` }}>
+      {/* Scalar rings */}
+      {[160,240,330].map((s,i)=>(
+        <div key={i} aria-hidden style={{ position:'absolute', left:'50%', top:'50%', width:s, height:s, marginLeft:-s/2, marginTop:-s/2, borderRadius:'50%', border:`1px solid ${ac.replace(/[\d.]+\)$/, `${0.07-i*0.02})`)}`, animation:`sqScalarPulse ${3.2+i*0.8}s ease-in-out ${i*0.5}s infinite`, pointerEvents:'none', zIndex:0 }}/>
       ))}
-      {/* Glow backdrop */}
-      <div aria-hidden style={{ position: 'absolute', inset: -18, borderRadius: 36, background: `radial-gradient(55% 55% at 30% 40%, ${accentColor.replace(/[\d.]+\)$/, '0.3)')}, transparent 65%), radial-gradient(50% 50% at 72% 65%, ${ac2.replace(/[\d.]+\)$/, '0.2)')}, transparent 65%)`, filter: 'blur(24px)', animation: 'sqGlowPulse 4s ease-in-out infinite', pointerEvents: 'none', zIndex: 0 }} />
-      <div onClick={() => navigate(href)} style={{ position: 'relative', zIndex: 1, cursor: 'pointer', background: `linear-gradient(135deg, ${accentColor.replace(/[\d.]+\)$/, '0.11)')}, ${ac2.replace(/[\d.]+\)$/, '0.05)')} 55%, rgba(5,5,5,0.7))`, border: `1px solid ${accentColor.replace(/[\d.]+\)$/, '0.45)')}`, borderRadius: 24, padding: '24px 20px 22px', boxShadow: `0 0 44px ${accentColor.replace(/[\d.]+\)$/, '0.22)')}, 0 0 90px ${ac2.replace(/[\d.]+\)$/, '0.1)')}, inset 0 0 28px ${accentColor.replace(/[\d.]+\)$/, '0.05)')}` }}>
-        {/* Top shimmer */}
-        <div aria-hidden style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: `linear-gradient(90deg, transparent, ${accentColor.replace(/[\d.]+\)$/, '0.9)')}, transparent)`, opacity: 0.6 }} />
+      {/* Glow */}
+      <div aria-hidden style={{ position:'absolute', inset:-16, borderRadius:34, background:`radial-gradient(50% 50% at 30% 40%, ${acGlow}, transparent 65%), radial-gradient(45% 45% at 72% 65%, ${ac2g}, transparent 65%)`, filter:'blur(22px)', animation:'sqGlowPulse 4s ease-in-out infinite', pointerEvents:'none', zIndex:0 }}/>
+      <div onClick={()=>navigate(href)} style={{ position:'relative', zIndex:1, cursor:'pointer', background:`linear-gradient(135deg, ${acFaint}, ${ac2g} 55%, rgba(5,5,5,0.72))`, border:`1px solid ${acBorder}`, borderRadius:22, padding:'22px 18px 20px', boxShadow:`0 0 40px ${acGlow}, inset 0 0 24px ${ac.replace(/[\d.]+\)$/, '0.04)')}`, overflow:'hidden' }}>
+        {/* Shimmer top */}
+        <div aria-hidden style={{ position:'absolute', top:0, left:0, right:0, height:1, background:`linear-gradient(90deg,transparent,${ac.replace(/[\d.]+\)$/, '0.85)')},transparent)`, opacity:0.7 }}/>
         {badge && (
-          <span style={{ ...BADGE(accentColor.replace(/[\d.]+\)$/, '0.14)'), accentColor.replace(/[\d.]+\)$/, '0.4)'), accentColor.replace(/[\d.]+\)$/, '0.95)')) }}>
-            <span style={{ display: 'inline-block', width: 5, height: 5, borderRadius: '50%', background: accentColor.replace(/[\d.]+\)$/, '0.95)'), animation: 'sqLiveFlash 2s infinite' }} />
+          <span style={{ position:'absolute', top:12, right:12, fontFamily:"'Plus Jakarta Sans','Montserrat',sans-serif", fontSize:7, fontWeight:800, letterSpacing:'0.2em', textTransform:'uppercase' as const, background:acFaint, border:`1px solid ${acBorder}`, color:ac.replace(/[\d.]+\)$/, '0.95)'), borderRadius:20, padding:'3px 9px', display:'flex', alignItems:'center', gap:4 }}>
+            <LiveDot color={ac.replace(/[\d.]+\)$/, '0.95)')}/>
             {badge}
           </span>
         )}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
-          <div style={{ width: 52, height: 52, borderRadius: '50%', background: `radial-gradient(circle, ${accentColor.replace(/[\d.]+\)$/, '0.28)')}, transparent)`, border: `1px solid ${accentColor.replace(/[\d.]+\)$/, '0.38)')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0, boxShadow: `0 0 20px ${accentColor.replace(/[\d.]+\)$/, '0.32)')}`, animation: 'sqBreathe 5s ease-in-out infinite' }}>{emoji}</div>
+        <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:12 }}>
+          <div style={{ width:52, height:52, borderRadius:'50%', background:`radial-gradient(circle, ${acGlow}, rgba(5,5,5,0.8))`, border:`1px solid ${acBorder}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, boxShadow:`0 0 18px ${acGlow}`, animation:'sqBreathe 5s ease-in-out infinite' }}>
+            <SvgIcon/>
+          </div>
           <div>
-            <div style={{ ...LABEL_STYLE, fontSize: 9, color: accentColor.replace(/[\d.]+\)$/, '0.7)'), marginBottom: 5 }}>{label}</div>
-            <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '1.75rem', fontWeight: 600, color: titleColor ?? white(0.97), lineHeight: 1.05, margin: 0, textShadow: `0 0 22px ${accentColor.replace(/[\d.]+\)$/, '0.45)')}` }}>{title}</h2>
-            {subtitle && <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.83rem', color: accentColor.replace(/[\d.]+\)$/, '0.6)'), marginTop: 4 }}>{subtitle}</div>}
+            <div style={{ ...LABEL, fontSize:8, color:ac.replace(/[\d.]+\)$/, '0.65)'), marginBottom:5 }}>{label}</div>
+            <h3 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:'1.65rem', fontWeight:600, color:white(0.97), lineHeight:1.05, margin:0, textShadow:`0 0 20px ${acGlow}` }}>{title}</h3>
+            {subtitle && <div style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.82rem', color:ac.replace(/[\d.]+\)$/, '0.58)'), marginTop:4 }}>{subtitle}</div>}
           </div>
         </div>
-        <p style={{ ...CARD_DESC, color: white(0.62), marginBottom: 14, lineHeight: 1.7 }}>{desc}</p>
-        <TierPills tiers={tiers} />
+        <p style={{ ...ITALIC, color:white(0.6), lineHeight:1.7, marginBottom:12 }}>{desc}</p>
+        <TierPills tiers={tiers}/>
         {stats && (
-          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${stats.length}, 1fr)`, gap: 8, marginBottom: 16, padding: '10px 0', borderTop: `1px solid ${accentColor.replace(/[\d.]+\)$/, '0.1)')}`, borderBottom: `1px solid ${accentColor.replace(/[\d.]+\)$/, '0.1)')}` }}>
-            {stats.map(s => (
-              <div key={s.l} style={{ textAlign: 'center' }}>
-                <div style={{ fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif", fontSize: 20, fontWeight: 900, letterSpacing: '-0.04em', color: accentColor.replace(/[\d.]+\)$/, '0.9)'), textShadow: `0 0 12px ${accentColor.replace(/[\d.]+\)$/, '0.35)')}` }}>{s.v}</div>
-                <div style={{ ...LABEL_STYLE, fontSize: 7, color: white(0.28), marginTop: 2 }}>{s.l}</div>
+          <div style={{ display:'grid', gridTemplateColumns:`repeat(${stats.length},1fr)`, gap:8, marginBottom:14, padding:'10px 0', borderTop:`1px solid ${ac.replace(/[\d.]+\)$/, '0.1)')}`, borderBottom:`1px solid ${ac.replace(/[\d.]+\)$/, '0.1)')}` }}>
+            {stats.map(s=>(
+              <div key={s.l} style={{ textAlign:'center' }}>
+                <div style={{ fontFamily:"'Plus Jakarta Sans','Montserrat',sans-serif", fontSize:20, fontWeight:900, letterSpacing:'-0.04em', color:ac.replace(/[\d.]+\)$/, '0.9)'), textShadow:`0 0 10px ${acGlow}` }}>{s.v}</div>
+                <div style={{ ...LABEL, fontSize:7, color:white(0.28), marginTop:2 }}>{s.l}</div>
               </div>
             ))}
           </div>
         )}
         {features && (
-          <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' as const, marginBottom: 16 }}>
-            {features.map(f => (
-              <span key={f} style={{ fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase' as const, color: accentColor.replace(/[\d.]+\)$/, '0.55)'), border: `1px solid ${accentColor.replace(/[\d.]+\)$/, '0.18)')}`, borderRadius: 20, padding: '2px 8px' }}>{f}</span>
+          <div style={{ display:'flex', gap:6, flexWrap:'wrap' as const, marginBottom:14 }}>
+            {features.map(f=>(
+              <span key={f} style={{ fontFamily:"'Plus Jakarta Sans','Montserrat',sans-serif", fontSize:7, fontWeight:800, letterSpacing:'0.15em', textTransform:'uppercase' as const, color:ac.replace(/[\d.]+\)$/, '0.55)'), border:`1px solid ${ac.replace(/[\d.]+\)$/, '0.18)')}`, borderRadius:20, padding:'2px 8px' }}>{f}</span>
             ))}
           </div>
         )}
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 999, background: `linear-gradient(135deg, ${accentColor.replace(/[\d.]+\)$/, '0.22)')}, ${accentColor.replace(/[\d.]+\)$/, '0.07)')}`, border: `1px solid ${accentColor.replace(/[\d.]+\)$/, '0.5)')}`, color: accentColor.replace(/[\d.]+\)$/, '0.98)'), fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif", fontSize: 10, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase' as const }}>
+        <div style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'9px 16px', borderRadius:999, background:`linear-gradient(135deg,${acGlow},${ac.replace(/[\d.]+\)$/, '0.07)')}`, border:`1px solid ${acBorder}`, color:ac.replace(/[\d.]+\)$/, '0.98)'), fontFamily:"'Plus Jakarta Sans','Montserrat',sans-serif", fontSize:9, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const }}>
           {cta} →
         </div>
-        <div aria-hidden style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 1, background: `linear-gradient(90deg, transparent, ${accentColor.replace(/[\d.]+\)$/, '0.7)')}, transparent)`, opacity: 0.5 }} />
+        <div aria-hidden style={{ position:'absolute', bottom:0, left:0, right:0, height:1, background:`linear-gradient(90deg,transparent,${ac.replace(/[\d.]+\)$/, '0.65)')},transparent)`, opacity:0.5 }}/>
       </div>
     </div>
   );
 };
 
-// ─── GRID CARD (2-col) ────────────────────────────────────────────────────────
-interface GridCardProps {
-  emoji: string;
-  title: string;
-  sub: string;
-  href: string;
-  soon?: boolean;
-  accentColor?: string;
-  badge?: string;
-  delay?: number;
-}
-const GridCard = ({ emoji, title, sub, href, soon, accentColor, badge, delay = 0 }: GridCardProps) => {
-  const navigate = useNavigate();
-  const ac = accentColor ?? gold(0.92);
-  return (
-    <div
-      onClick={() => !soon && navigate(href)}
-      style={{ ...CARD_BASE, padding: '16px 14px 18px', cursor: soon ? 'default' : 'pointer', opacity: soon ? 0.65 : 1, animation: `sqFadeUp 0.45s ${delay}s ease both`, border: `1px solid ${accentColor ? accentColor.replace(/[\d.]+\)$/, '0.2)') : gold(0.13)}` }}
-    >
-      {badge && !soon && (
-        <span style={{ position: 'absolute', top: 10, right: 10, fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif", fontSize: 7, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase' as const, background: accentColor ? accentColor.replace(/[\d.]+\)$/, '0.13)') : gold(0.13), border: `1px solid ${accentColor ? accentColor.replace(/[\d.]+\)$/, '0.3)') : gold(0.3)}`, color: ac, borderRadius: 20, padding: '2px 7px' }}>{badge}</span>
-      )}
-      <div style={{ fontSize: 22, marginBottom: 8 }}>{emoji}</div>
-      <div style={{ ...CARD_TITLE, fontSize: 11, color: ac, marginBottom: 5 }}>{title}</div>
-      <div style={{ ...CARD_DESC, fontSize: '0.8rem', marginBottom: soon ? 8 : 0, lineHeight: 1.4 }}>{sub}</div>
-      {soon && <span style={{ ...LABEL_STYLE, fontSize: 7, color: gold(0.4), border: `1px solid ${gold(0.15)}`, borderRadius: 20, padding: '2px 7px' }}>COMING SOON</span>}
-      {!soon && <span style={{ position: 'absolute', bottom: 12, right: 14, color: ac, fontSize: 13, opacity: 0.4 }}>→</span>}
-    </div>
-  );
-};
-
-// ─── LIBRARY SECTION (collapsible category) ───────────────────────────────────
-interface LibrarySectionProps {
-  emoji: string;
+// ─── LIBRARY SECTION ──────────────────────────────────────────────────────────
+interface LibSectionProps {
+  SvgIcon: React.FC;
   title: string;
   subtitle: string;
-  accentColor: string;
+  ac: string;
   children: React.ReactNode;
   defaultOpen?: boolean;
   count: number;
   delay?: number;
 }
-const LibrarySection = ({ emoji, title, subtitle, accentColor, children, defaultOpen = false, count, delay = 0 }: LibrarySectionProps) => {
+const LibSection = ({ SvgIcon, title, subtitle, ac, children, defaultOpen=false, count, delay=0 }: LibSectionProps) => {
   const [open, setOpen] = useState(defaultOpen);
+  const acFaint = ac.replace(/[\d.]+\)$/, '0.08)');
+  const acBorder = ac.replace(/[\d.]+\)$/, '0.22)');
+  const acDeep = ac.replace(/[\d.]+\)$/, '0.12)');
   return (
-    <div style={{ margin: '0 16px 12px', animation: `sqFadeUp 0.45s ${delay}s ease both` }}>
-      {/* Category Header — clickable */}
-      <div
-        onClick={() => setOpen(!open)}
-        style={{ background: `linear-gradient(135deg, ${accentColor.replace(/[\d.]+\)$/, '0.08)')}, rgba(5,5,5,0.4))`, border: `1px solid ${accentColor.replace(/[\d.]+\)$/, '0.22)')}`, borderRadius: open ? '20px 20px 0 0' : 20, padding: '18px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'border-radius 0.25s ease' }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 42, height: 42, borderRadius: 12, background: `radial-gradient(circle, ${accentColor.replace(/[\d.]+\)$/, '0.22)')}, transparent)`, border: `1px solid ${accentColor.replace(/[\d.]+\)$/, '0.3)')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, boxShadow: `0 0 14px ${accentColor.replace(/[\d.]+\)$/, '0.18)')}` }}>{emoji}</div>
+    <div style={{ margin:'0 0 10px', animation:`sqFadeUp 0.45s ${delay}s ease both` }}>
+      <div onClick={()=>setOpen(!open)} style={{ background:`linear-gradient(135deg,${acDeep},rgba(5,5,5,0.5))`, border:`1px solid ${acBorder}`, borderRadius:open?'18px 18px 0 0':18, padding:'16px 18px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'space-between', transition:'border-radius 0.25s ease' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+          <div style={{ width:40, height:40, borderRadius:12, background:`radial-gradient(circle,${ac.replace(/[\d.]+\)$/, '0.18)')},rgba(5,5,5,0.6))`, border:`1px solid ${acBorder}`, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:`0 0 12px ${ac.replace(/[\d.]+\)$/, '0.15)')}` }}>
+            <SvgIcon/>
+          </div>
           <div>
-            <div style={{ fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif", fontSize: 13, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase' as const, color: accentColor.replace(/[\d.]+\)$/, '0.92)'), marginBottom: 3 }}>{title}</div>
-            <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.82rem', color: white(0.45), lineHeight: 1.3 }}>{subtitle}</div>
+            <div style={{ fontFamily:"'Plus Jakarta Sans','Montserrat',sans-serif", fontSize:12, fontWeight:800, letterSpacing:'0.06em', textTransform:'uppercase' as const, color:ac.replace(/[\d.]+\)$/, '0.92)'), marginBottom:3 }}>{title}</div>
+            <div style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.8rem', color:white(0.4), lineHeight:1.3 }}>{subtitle}</div>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif", fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', color: accentColor.replace(/[\d.]+\)$/, '0.5)'), background: accentColor.replace(/[\d.]+\)$/, '0.1)'), border: `1px solid ${accentColor.replace(/[\d.]+\)$/, '0.2)')}`, borderRadius: 20, padding: '3px 9px' }}>{count}</span>
-          <div style={{ width: 28, height: 28, borderRadius: '50%', background: accentColor.replace(/[\d.]+\)$/, '0.1)'), border: `1px solid ${accentColor.replace(/[\d.]+\)$/, '0.2)')}`, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'transform 0.25s ease', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}>
-            <ChevronDown size={14} color={accentColor.replace(/[\d.]+\)$/, '0.7)')} />
+        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          <span style={{ fontFamily:"'Plus Jakarta Sans','Montserrat',sans-serif", fontSize:8, fontWeight:800, letterSpacing:'0.15em', color:ac.replace(/[\d.]+\)$/, '0.5)'), background:acFaint, border:`1px solid ${acBorder}`, borderRadius:20, padding:'2px 8px' }}>{count}</span>
+          <div style={{ width:26, height:26, borderRadius:'50%', background:acFaint, border:`1px solid ${acBorder}`, display:'flex', alignItems:'center', justifyContent:'center', transition:'transform 0.25s ease', transform:open?'rotate(180deg)':'rotate(0deg)' }}>
+            <ChevronDown size={13} color={ac.replace(/[\d.]+\)$/, '0.7)')}/>
           </div>
         </div>
       </div>
-      {/* Expandable content */}
       {open && (
-        <div style={{ background: 'rgba(255,255,255,0.008)', border: `1px solid ${accentColor.replace(/[\d.]+\)$/, '0.12)')}`, borderTop: 'none', borderRadius: '0 0 20px 20px', padding: '16px 12px 12px' }}>
+        <div style={{ background:'rgba(255,255,255,0.007)', border:`1px solid ${acBorder}`, borderTop:'none', borderRadius:'0 0 18px 18px', padding:'14px 14px 10px' }}>
           {children}
         </div>
       )}
@@ -269,8 +678,8 @@ const LibrarySection = ({ emoji, title, subtitle, accentColor, children, default
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 export default function SiddhaPortal() {
-  const navigate  = useNavigate();
-  const { t }     = useTranslation();
+  const navigate = useNavigate();
+  const { t } = useTranslation();
   const { tier, loading, settled } = useMembership();
   const { isAdmin, isLoading: adminLoading } = useAdminRole();
 
@@ -281,364 +690,249 @@ export default function SiddhaPortal() {
   }, [isAdmin, tier, loading, settled, adminLoading, navigate]);
 
   return (
-    <div style={{ background: '#050505', minHeight: '100vh', paddingBottom: 104, maxWidth: 430, margin: '0 auto' }}>
+    <div style={{ background:'#050505', minHeight:'100vh', paddingBottom:104, maxWidth:430, margin:'0 auto' }}>
 
-      {/* ── HEADER ── */}
-      <div style={{ padding: '52px 20px 0', animation: 'sqFadeUp 0.35s ease both' }}>
-        <button onClick={() => navigate(-1)} style={{ ...LABEL_STYLE, fontSize: 9, color: gold(0.4), background: 'none', border: 'none', cursor: 'pointer', marginBottom: 20, padding: 0 }}>
+      {/* HEADER */}
+      <div style={{ padding:'52px 20px 0', animation:'sqFadeUp 0.35s ease both' }}>
+        <button onClick={()=>navigate(-1)} style={{ ...LABEL, fontSize:9, color:gold(0.4), background:'none', border:'none', cursor:'pointer', marginBottom:20, padding:0 }}>
           ← {t('siddhaPortal.back')}
         </button>
-        <p style={{ ...LABEL_STYLE, fontSize: 9, color: gold(0.35), marginBottom: 8 }}>{t('siddhaPortal.label')}</p>
-        <h1 style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '2.4rem', fontWeight: 600, color: white(0.92), lineHeight: 1.1, margin: 0 }}>
+        <p style={{ ...LABEL, fontSize:9, color:gold(0.35), marginBottom:8 }}>{t('siddhaPortal.label')}</p>
+        <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:'2.4rem', fontWeight:600, color:white(0.92), lineHeight:1.1, margin:0 }}>
           {t('siddhaPortal.title')}
         </h1>
-        <p style={{ ...CARD_DESC, marginBottom: 0, marginTop: 10 }}>{t('siddhaPortal.subtitle')}</p>
+        <p style={{ ...ITALIC, marginBottom:0, marginTop:10 }}>{t('siddhaPortal.subtitle')}</p>
       </div>
 
-      {/* ── LIBRARY INTRO ── */}
-      <div style={{ margin: '28px 16px 8px', padding: '16px 18px', background: 'rgba(212,175,55,0.04)', border: `1px solid ${gold(0.12)}`, borderRadius: 18 }}>
-        <div style={{ ...LABEL_STYLE, fontSize: 8, color: gold(0.5), marginBottom: 6 }}>📚 Akasha-Neural Archive · Education Library</div>
-        <p style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.88rem', color: white(0.45), lineHeight: 1.55, margin: 0 }}>
-          Tap any category to expand the Akashic transmission grid. Each library holds full-spectrum education, sourced from the 18 Siddhas and the Masters of every lineage.
+      {/* LIBRARY INTRO */}
+      <div style={{ margin:'26px 20px 20px', padding:'14px 16px', background:`rgba(212,175,55,0.04)`, border:`1px solid ${gold(0.11)}`, borderRadius:16 }}>
+        <div style={{ ...LABEL, fontSize:8, color:gold(0.5), marginBottom:5 }}>📚 Akasha-Neural Archive · Education Library</div>
+        <p style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.86rem', color:white(0.42), lineHeight:1.55, margin:0 }}>
+          Tap any category to expand. Each library holds full-spectrum Siddha transmissions sourced from the 18 Masters.
         </p>
       </div>
 
-      {/* ══════════════════════════════════════════════════════════
-          FEATURED PINNACLES — Always visible at top
-      ══════════════════════════════════════════════════════════ */}
-      <div style={{ padding: '20px 20px 8px' }}>
-        <div style={{ ...LABEL_STYLE, fontSize: 8, color: gold(0.5), display: 'flex', alignItems: 'center', gap: 8 }}>
+      {/* CONTENT — all padded equally */}
+      <div style={{ padding:'0 16px' }}>
+
+        {/* ── PINNACLE ACADEMIES ── */}
+        <div style={{ ...LABEL, fontSize:8, color:gold(0.45), display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>
           <span>⚜</span> Pinnacle Academies
         </div>
-      </div>
 
-      {/* AGASTYAR ACADEMY — pinnacle hero */}
-      <HeroCard
-        emoji="🌿" label="Academy · 108 Modules"
-        title="Agastyar Academy" subtitle="Ayurveda · Siddha Medicine · 18 Masters"
-        desc="The complete path of Ayurvedic mastery — from Atma-Seed to Akasha-Infinity. 108 modules across all 4 tiers."
-        tiers={[{ l: 'Free', c: white(0.55) }, { l: 'Prana', c: green(0.85) }, { l: 'Siddha', c: cyan(0.9) }, { l: 'Akasha', c: gold(0.95) }]}
-        cta="Enter Academy" href="/agastyar-academy" accentColor={gold(0.9)} accentColor2={cyan(0.8)}
-        badge="LIVE" stats={[{ v: '108', l: 'Modules' }, { v: '18', l: 'Masters' }, { v: '4', l: 'Tiers' }]}
-        delay={0.05}
-      />
+        <HeroCard
+          SvgIcon={Icon.Lotus}
+          label="Academy · 108 Modules · Siddha Ayurveda"
+          title="Agastyar Academy"
+          subtitle="The Supreme Ayurvedic Path of the 18 Siddhas"
+          desc="The complete path of Ayurvedic mastery — from Atma-Seed to Akasha-Infinity. Scalar-encoded with Agastyar's living consciousness."
+          tiers={[{l:'Free',c:white(0.55)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:cyan(0.9)},{l:'Akasha',c:gold(0.95)}]}
+          cta="Enter Academy" href="/agastyar-academy" ac={gold(0.9)} ac2={cyan(0.8)}
+          badge="LIVE" stats={[{v:'108',l:'Modules'},{v:'18',l:'Masters'},{v:'4',l:'Tiers'}]}
+          delay={0.05}
+        />
 
-      {/* SOVEREIGN JYOTISH VIDYA — pinnacle hero */}
-      <HeroCard
-        emoji="✦" label="Vidya · 32 Modules · Bhrigu Oracle"
-        title="Sovereign Jyotish Vidya" subtitle="Vedic Astrology · Bhrigu Nadi · Grahas"
-        desc="The full 32-module path of Vedic astrology — from the 9 Grahas to Bhrigu Nadi mastery. Scalar-encoded with the living transmission of Parashara."
-        tiers={[{ l: 'Free 1–6', c: white(0.55) }, { l: 'Prana 7–14', c: green(0.85) }, { l: 'Siddha 15–22', c: cyan(0.9) }, { l: 'Akasha 23–32', c: gold(0.95) }]}
-        cta="Enter Vidya" href="/jyotish-vidya" accentColor={cyan(0.9)} accentColor2={gold(0.8)}
-        badge="LIVE" stats={[{ v: '32', l: 'Modules' }, { v: '9', l: 'Grahas' }, { v: '4', l: 'Tiers' }]}
-        delay={0.08}
-      />
+        <HeroCard
+          SvgIcon={Icon.StarCrystal}
+          label="Vidya · 32 Modules · Bhrigu Oracle"
+          title="Sovereign Jyotish Vidya"
+          subtitle="Vedic Astrology · Bhrigu Nadi · 9 Grahas"
+          desc="The full 32-module path of Vedic astrology — from the 9 Grahas to Bhrigu Nadi mastery with live oracle readings."
+          tiers={[{l:'Free 1–6',c:white(0.55)},{l:'Prana 7–14',c:green(0.85)},{l:'Siddha 15–22',c:cyan(0.9)},{l:'Akasha 23–32',c:gold(0.95)}]}
+          cta="Enter Vidya" href="/jyotish-vidya" ac={cyan(0.9)} ac2={gold(0.8)}
+          badge="LIVE" stats={[{v:'32',l:'Modules'},{v:'9',l:'Grahas'},{v:'4',l:'Tiers'}]}
+          delay={0.08}
+        />
 
-      <Divider />
+        <div style={{ height:1, background:`linear-gradient(90deg,${gold(0.18)},transparent)`, margin:'20px 0' }}/>
 
-      {/* ══════════════════════════════════════════════════════════
-          LIBRARY CATEGORY 1 — YOGA & KRIYA SCIENCE
-      ══════════════════════════════════════════════════════════ */}
-      <LibrarySection
-        emoji="🔱" title="Yoga & Kriya Science"
-        subtitle="Babaji · Thirumoolar · Brahma Muhurta · Breath"
-        accentColor={gold(0.9)} count={5} defaultOpen={true} delay={0.1}
-      >
-        <HeroCard
-          emoji="🔱" label="Kriya · 10 Modules · Babaji Transmission"
-          title="Kriya Yoga Mastery"
-          desc="The complete 18-Siddha Kriya transmission — from Babaji's secret teachings to advanced Pranayama, Mahamudra, and the path to Samadhi."
-          tiers={[{ l: 'Free · I–II', c: white(0.5) }, { l: 'Prana · III–V', c: green(0.85) }, { l: 'Siddha · VI–VIII', c: cyan(0.9) }, { l: 'Akasha · IX–X', c: gold(0.95) }]}
-          cta="Enter Transmission" href="/kriya-yoga" accentColor={gold(0.9)} badge="LIVE" delay={0}
-        />
-        <HeroCard
-          emoji="🌬" label="Pranayama · 8 Modules · 3000 Years"
-          title="Thirumoolar's Pranayama Codex"
-          desc="3,000 years of Tamil Siddha breath-science — 8 modules from Prana & Nadi anatomy through Kevala Kumbhaka, Babaji's Kriya Pranayama, and Shiva-Nishvasa."
-          tiers={[{ l: 'Free · I–II', c: white(0.5) }, { l: 'Prana · III–IV', c: green(0.85) }, { l: 'Siddha · V–VI', c: cyan(0.9) }, { l: 'Akasha · VII–VIII', c: gold(0.95) }]}
-          cta="Enter Codex" href="/thirumoolar-pranayama" accentColor={cyan(0.9)} badge="LIVE" delay={0}
-        />
-        <HeroCard
-          emoji="🌅" label="12 Modules · Pre-Dawn Transmission"
-          title="Brahma Muhurta — The Creator's Hour"
-          desc="The most complete Siddha transmission on the sacred pre-dawn window — cosmology, neuroscience, Nadi science, secret mantras, Kala Vortex mechanics."
-          tiers={[{ l: 'Free · I–III', c: white(0.5) }, { l: 'Prana · IV–VI', c: green(0.85) }, { l: 'Siddha · VII–IX', c: cyan(0.9) }, { l: 'Akasha · X–XII', c: gold(0.95) }]}
-          cta="Enter Transmission" href="/brahma-muhurta" accentColor={amber(0.9)} badge="LIVE" delay={0}
-        />
-        <HeroCard
-          emoji="🧘" label="14 Modules · 51 Practices · 18 Siddhas"
-          title="Supreme Siddha Meditation"
-          desc="From Sakshi awareness to Samadhi recognition. The complete Siddha consciousness transmission with 51 live practices."
-          tiers={[{ l: 'Free · 1–3', c: white(0.5) }, { l: 'Prana · 4–6', c: green(0.85) }, { l: 'Siddha · 7–10', c: cyan(0.9) }, { l: 'Akasha · 11–14', c: gold(0.95) }]}
-          cta="Enter Transmission" href="/meditation-course" accentColor={violet(0.9)} badge="LIVE" delay={0}
-        />
-        <HeroCard
-          emoji="🌬" label="Breatharian · 26 Modules · 4 Tiers"
-          title="Breatharian Academy"
-          desc="The complete Siddha science of living on Prana — from first breath awareness to the immortal light body. 26 modules drawn from the Akashic Records of the 18 Siddhas."
-          tiers={[{ l: 'Free · Foundations', c: white(0.5) }, { l: 'Prana · Solar Science', c: green(0.85) }, { l: 'Siddha · Kaya Kalpa', c: gold(0.9) }, { l: 'Akasha · Immortality', c: cyan(0.9) }]}
-          cta="Enter Pranic Transmission" href="/breatharian-academy" accentColor={teal(0.9)} badge="NEW" delay={0}
-        />
-      </LibrarySection>
+        {/* ── LIBRARY CATEGORY 1: YOGA & KRIYA ── */}
+        <LibSection SvgIcon={Icon.Trishul} title="Yoga & Kriya Science" subtitle="Babaji · Thirumoolar · Brahma Muhurta · Breath" ac={gold(0.9)} count={4} defaultOpen={false} delay={0.1}>
+          <HeroCard SvgIcon={Icon.Flame} label="Kriya · 10 Modules · Babaji" title="Kriya Yoga Mastery"
+            desc="The complete 18-Siddha Kriya transmission — from Babaji's secret teachings to advanced Pranayama, Mahamudra, and the path to Samadhi."
+            tiers={[{l:'Free · I–II',c:white(0.5)},{l:'Prana · III–V',c:green(0.85)},{l:'Siddha · VI–VIII',c:cyan(0.9)},{l:'Akasha · IX–X',c:gold(0.95)}]}
+            cta="Enter Transmission" href="/kriya-yoga" ac={gold(0.9)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.Kundalini} label="Pranayama · 8 Modules · 3000 Years" title="Thirumoolar's Pranayama Codex"
+            desc="3,000 years of Tamil Siddha breath-science — from Prana & Nadi anatomy through Kevala Kumbhaka and Babaji's Kriya Pranayama."
+            tiers={[{l:'Free · I–II',c:white(0.5)},{l:'Prana · III–IV',c:green(0.85)},{l:'Siddha · V–VI',c:cyan(0.9)},{l:'Akasha · VII–VIII',c:gold(0.95)}]}
+            cta="Enter Codex" href="/thirumoolar-pranayama" ac={cyan(0.9)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.Galaxy} label="12 Modules · Pre-Dawn Science" title="Brahma Muhurta — The Creator's Hour"
+            desc="The most complete Siddha transmission on the sacred pre-dawn window — cosmology, Nadi science, secret mantras, and Kala Vortex mechanics."
+            tiers={[{l:'Free · I–III',c:white(0.5)},{l:'Prana · IV–VI',c:green(0.85)},{l:'Siddha · VII–IX',c:cyan(0.9)},{l:'Akasha · X–XII',c:gold(0.95)}]}
+            cta="Enter Transmission" href="/brahma-muhurta" ac={amber(0.9)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.Chakra} label="14 Modules · 51 Practices · 18 Siddhas" title="Supreme Siddha Meditation"
+            desc="From Sakshi awareness to Samadhi recognition — the complete Siddha consciousness transmission with 51 live practices."
+            tiers={[{l:'Free · 1–3',c:white(0.5)},{l:'Prana · 4–6',c:green(0.85)},{l:'Siddha · 7–10',c:cyan(0.9)},{l:'Akasha · 11–14',c:gold(0.95)}]}
+            cta="Enter Transmission" href="/meditation-course" ac={violet(0.9)} badge="LIVE"/>
+        </LibSection>
 
-      {/* ══════════════════════════════════════════════════════════
-          LIBRARY CATEGORY 2 — SACRED TEXTS & SAGES
-      ══════════════════════════════════════════════════════════ */}
-      <LibrarySection
-        emoji="📖" title="Sacred Texts & Sages"
-        subtitle="Yogananda · Yukteshwar · Hanuman · Ramayana · Holy Science"
-        accentColor={violet(0.9)} count={5} delay={0.12}
-      >
-        <HeroCard
-          emoji="🌟" label="Autobiography Decoded · Kriya Lineage"
-          title="Yogananda Codex"
-          desc="The complete Autobiography of a Yogi decoded — every chapter a living transmission, every story a Siddha Light-Code. Includes the Kriya lineage map, cosmic consciousness teachings, and Babaji's Akashic Archive."
-          tiers={[{ l: 'Free · Ch 1–7', c: white(0.5) }, { l: 'Prana · Ch 8–18', c: green(0.85) }, { l: 'Siddha · Ch 19–35', c: violet(0.9) }, { l: 'Akasha · Full', c: gold(0.95) }]}
-          cta="Enter the Codex" href="/yogananda-codex" accentColor={violet(0.9)} accentColor2={gold(0.8)} badge="LIVE" delay={0}
-        />
-        <HeroCard
-          emoji="📿" label="Kaivalya Darsanam · 8 Modules · 24 Lessons"
-          title="Holy Science — Sri Yukteshwar"
-          subtitle="Yuga Science · Kriya Physics · Five Koshas"
-          desc="The complete cosmic science — Yuga mathematics, Kriya as quantum technology, the five koshas, seven lokas, cross-tradition unity of Vedic & Biblical wisdom, and direct Akasha-Archive transmissions from Sri Yukteshwar himself."
-          tiers={[{ l: 'Free · Yuga Science', c: white(0.5) }, { l: 'Prana · Koshas', c: cyan(0.9) }, { l: 'Siddha · Kriya & Jyotish', c: gold(0.92) }, { l: 'Akasha · Unified Code', c: violet(0.9) }]}
-          cta="Enter the Transmission" href="/holy-science" accentColor={gold(0.9)} accentColor2={violet(0.8)}
-          stats={[{ v: '8', l: 'Modules' }, { v: '24', l: 'Lessons' }, { v: '326', l: 'Dwapara Yr' }]}
-          delay={0}
-        />
-        <HeroCard
-          emoji="🐵" label="Chalisa · Siddhis · Physical Alchemy"
-          title="Hanuman Codex"
-          desc="The 40 Chaupais of the Sundarkanda decoded, the 8 weapons of Hanuman, the Ashta Siddhis, physical alchemy through Bhakti, and the Ghata movement science of total Shakti."
-          tiers={[{ l: 'Free', c: white(0.5) }, { l: 'Prana', c: green(0.85) }, { l: 'Siddha', c: amber(0.9) }, { l: 'Akasha', c: gold(0.95) }]}
-          cta="Enter the Codex" href="/hanuman-codex" accentColor={amber(0.9)} badge="LIVE" delay={0}
-        />
-        <HeroCard
-          emoji="🏹" label="7 Kāṇḍas · 35 Secrets · Bābājī Transmission"
-          title="Ramayana Codex"
-          desc="The secret esoteric Ramayana — 7 Kandas decoded as consciousness maps, Rama as the Atma blueprint, Ravana as ego-cosmology, and Babaji's hidden scalar transmission within each chapter."
-          tiers={[{ l: 'Free · Bāla Kāṇḍa', c: white(0.5) }, { l: 'Prana · Ayodhya', c: green(0.85) }, { l: 'Siddha · Aranya–Yuddha', c: amber(0.9) }, { l: 'Akasha · Uttara', c: gold(0.95) }]}
-          cta="Enter the Codex" href="/ramayana" accentColor={amber(0.9)} accentColor2={gold(0.8)} badge="LIVE" delay={0}
-        />
-        <HeroCard
-          emoji="🦁" label="Nine Seals · Protection · Liberation"
-          title="Narasimha Sacred Path"
+        {/* ── LIBRARY CATEGORY 2: SACRED TEXTS ── */}
+        <LibSection SvgIcon={Icon.Scroll} title="Sacred Texts & Sages" subtitle="Yogananda · Yukteshwar · Hanuman · Ramayana" ac={violet(0.9)} count={4} delay={0.12}>
+          <HeroCard SvgIcon={Icon.Galaxy} label="Autobiography Decoded · Kriya Lineage" title="Yogananda Codex"
+            desc="The complete Autobiography of a Yogi decoded — every chapter a living transmission, every story a Siddha Light-Code. Includes Babaji's Akashic Archive."
+            tiers={[{l:'Free · Ch 1–7',c:white(0.5)},{l:'Prana · Ch 8–18',c:green(0.85)},{l:'Siddha · Ch 19–35',c:violet(0.9)},{l:'Akasha · Full',c:gold(0.95)}]}
+            cta="Enter the Codex" href="/yogananda-codex" ac={violet(0.9)} ac2={gold(0.8)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.SriYantra} label="Kaivalya Darsanam · 8 Modules · 24 Lessons" title="Holy Science — Sri Yukteshwar"
+            subtitle="Yuga Science · Kriya Physics · Five Koshas"
+            desc="The complete cosmic science — Yuga mathematics, Kriya as quantum technology, the five koshas, seven lokas, and direct transmissions from Sri Yukteshwar."
+            tiers={[{l:'Free · Yuga Science',c:white(0.5)},{l:'Prana · Koshas',c:cyan(0.9)},{l:'Siddha · Kriya',c:gold(0.92)},{l:'Akasha · Unified',c:violet(0.9)}]}
+            cta="Enter the Transmission" href="/holy-science" ac={gold(0.9)} ac2={violet(0.8)}
+            stats={[{v:'8',l:'Modules'},{v:'24',l:'Lessons'},{v:'326',l:'Dwapara'}]}/>
+          <HeroCard SvgIcon={Icon.Vanara} label="Chalisa · 8 Weapons · Siddhis · Physical Alchemy" title="Hanuman Codex"
+            desc="The 40 Chaupais of Sundarkanda decoded, the 8 divine weapons, Ashta Siddhis, physical alchemy through Bhakti, and Ghata movement science of total Shakti."
+            tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:amber(0.9)},{l:'Akasha',c:gold(0.95)}]}
+            cta="Enter the Codex" href="/hanuman-codex" ac={amber(0.9)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.Bow} label="7 Kāṇḍas · 35 Secrets · Bābājī Transmission" title="Ramayana Codex"
+            desc="The esoteric Ramayana — 7 Kandas decoded as consciousness maps, Rama as Atma blueprint, and Babaji's hidden scalar transmission within each chapter."
+            tiers={[{l:'Free · Bāla Kāṇḍa',c:white(0.5)},{l:'Prana · Ayodhya',c:green(0.85)},{l:'Siddha · Aranya',c:amber(0.9)},{l:'Akasha · Uttara',c:gold(0.95)}]}
+            cta="Enter the Codex" href="/ramayana" ac={amber(0.9)} ac2={gold(0.8)} badge="LIVE"/>
+        </LibSection>
+
+        {/* ── LIBRARY CATEGORY 3: BODY & IMMORTALITY ── */}
+        <LibSection SvgIcon={Icon.Moon} title="Body & Immortality Sciences" subtitle="Kayakalpa · Ojas · Brahmacharya · Siddha Medicine" ac={teal(0.9)} count={4} delay={0.14}>
+          <HeroCard SvgIcon={Icon.Moon} label="12 Modules · 40 Lessons · Bogar & Babaji" title="Kayakalpa Immortality Academy"
+            desc="Tamil Siddha immortality science — Bogar's Navapaashanam alchemy, Muppu secrets, Khechari Mudra, Kundalini-Kayakalpa integration, and the 90-Day Immortality Sadhana."
+            tiers={[{l:'Free · Bogar',c:white(0.5)},{l:'Prana · Herbs',c:green(0.85)},{l:'Siddha · Muppu',c:cyan(0.9)},{l:'Akasha · Kaya Siddhi',c:gold(0.95)}]}
+            cta="Enter the Immortality Transmission" href="/kayakalpa-academy" ac={teal(0.9)}
+            stats={[{v:'12',l:'Modules'},{v:'40',l:'Lessons'},{v:'4',l:'Tiers'}]} badge="NEW"/>
+          <HeroCard SvgIcon={Icon.Lotus} label="15 Modules · 108+ Lessons · 4 Tiers" title="Ojas Rasayana Academy"
+            desc="The secret Siddha science of vital essence — 7-Dhatu refinement cascade, Kaya Kalpa immortality technology, and the Jyotir Deha light-body transmission."
+            tiers={[{l:'Free · Foundation',c:white(0.5)},{l:'Prana · Depletion Codes',c:green(0.85)},{l:'Siddha · Rasayana',c:cyan(0.9)},{l:'Akasha · Light Body',c:gold(0.95)}]}
+            cta="Enter the Ojas Transmission" href="/ojas-rasayana" ac={amber(0.9)} badge="NEW"/>
+          <HeroCard SvgIcon={Icon.Trishul} label="8 Modules · 53 Lessons · Ojas Science" title="Brahmacharya Siddha Academy"
+            subtitle="Ojas · Tejas · Prana · Amrita · 18 Siddhas"
+            desc="The complete Siddha science of sacred energy alchemy — Pranayama, mantra codes, psychology of desire, Siddhi activation, and the teaching of Sacred Union."
+            tiers={[{l:'Free · M1',c:white(0.55)},{l:'Prana · M2–3',c:green(0.85)},{l:'Siddha · M4–6',c:cyan(0.9)},{l:'Akasha · M7–8',c:gold(0.95)}]}
+            cta="Enter the Academy" href="/brahmacharya-academy" ac={gold(0.9)}
+            features={['Pranayama & Bandha','Mantra Codes','Siddha Yoga','Siddhi Activation','Sacred Union']} badge="NEW"/>
+          <HeroCard SvgIcon={Icon.Herb} label="274 Lessons · Varma · Rasayana · 4 Tiers" title="Siddha Medicine Academy"
+            desc="The most comprehensive Tamil Siddha medicine education — from Varma points and Muppu compounds to Kayakalpa rejuvenation and Siddha psychology."
+            tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:cyan(0.9)},{l:'Akasha',c:gold(0.95)}]}
+            cta="Enter the Academy" href="/siddha-medicine" ac={green(0.9)} badge="LIVE"/>
+        </LibSection>
+
+        {/* ── LIBRARY CATEGORY 4: SOUND & MANTRA ── */}
+        <LibSection SvgIcon={Icon.Om} title="Sound, Mantra & Nada Science" subtitle="Siddha Sound Alchemy · Mantra Academy · Mudra" ac={amber(0.9)} count={3} delay={0.16}>
+          <HeroCard SvgIcon={Icon.Om} label="Nada Vijnana · 10 Modules · 18 Siddhas" title="Siddha Sound Alchemy"
+            subtitle="Nada Brahman · Sabda · Pancha Nada · Nada Sharira"
+            desc="The deepest Siddha sound science — from Nada Brahman through the five planes of sound, mantra architecture, the 72 Melakarta Raga-Chakra map, and scalar healing through sound."
+            tiers={[{l:'Free · M1–2',c:white(0.5)},{l:'Prana · M3–4',c:green(0.85)},{l:'Siddha · M5–7',c:cyan(0.9)},{l:'Akasha · M8–10',c:gold(0.95)}]}
+            cta="Enter the Nada Transmission" href="/siddha-sound-alchemy" ac={amber(0.9)} badge="LIVE"
+            stats={[{v:'10',l:'Modules'},{v:'18',l:'Siddhas'},{v:'72',l:'Ragas'}]}
+            features={['Nada Brahman','Pancha Nada','Mantra Architecture','Raga Medicine','Scalar Sound']}/>
+          <HeroCard SvgIcon={Icon.Om} label="24 Modules · Bija Mantras · Nada Yoga" title="Mantra Academy"
+            desc="The full spectrum of Siddha mantra science — from Bija seed-syllables through Maha Mantras, Kavachas, and the 18 Siddhas' most powerful transmissions."
+            tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:cyan(0.9)},{l:'Akasha',c:gold(0.95)}]}
+            cta="Enter the Academy" href="/mantra-academy" ac={amber(0.9)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.Mudra} label="10 Modules · Hand Seals · Neural Rewiring" title="Mudra Academy"
+            desc="The complete science of sacred hand seals — from elemental Pancha-Bhuta mudras through Siddha neurological rewiring, Prana redirection, and Siddhi activation mudras."
+            tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:cyan(0.9)},{l:'Akasha',c:gold(0.95)}]}
+            cta="Enter the Academy" href="/mudra-academy" ac={gold(0.9)} badge="LIVE"/>
+        </LibSection>
+
+        {/* ── LIBRARY CATEGORY 5: CONSCIOUSNESS & MYSTICAL ARTS ── */}
+        <LibSection SvgIcon={Icon.ThirdEye} title="Consciousness & Mystical Arts" subtitle="Mediumship · Dream Science · Palm Oracle · Sacred Geometry" ac={violet(0.9)} count={4} delay={0.18}>
+          <HeroCard SvgIcon={Icon.ThirdEye} label="8 Modules · 30 Transmissions · 18 Siddhas" title="Siddha Mediumship Academy"
+            desc="The world's most comprehensive mediumship education — Third Eye activation, Loka maps, ancestor communication, Deva contact, Akashic Record access, and Siddhi development."
+            tiers={[{l:'Free · M1–2',c:white(0.5)},{l:'Prana · M3–4',c:green(0.85)},{l:'Siddha · M5–6',c:violet(0.9)},{l:'Akasha · M7–8',c:gold(0.95)}]}
+            cta="Enter the Akasha Transmission" href="/siddha-mediumship-academy" ac={violet(0.9)} badge="LIVE"
+            features={['14-Loka Map','Third Eye Activation','Ancestor Contact','7-Layer Kavach','Deva Mantras','8 Siddhis']}/>
+          <HeroCard SvgIcon={Icon.Galaxy} label="Dream Science · 15 Modules · Scalar Transmission" title="Svapna Vidyā"
+            desc="The world's most advanced Siddha dream science — from Taijasa & dream anatomy to Turīya-Svapna, Bardo preparation, prophetic timing & the 40-night Tapas."
+            tiers={[{l:'Free · M1–2',c:white(0.5)},{l:'Prana · M3–6',c:green(0.85)},{l:'Siddha · M7–9',c:violet(0.9)},{l:'Akasha · M10–15',c:gold(0.95)}]}
+            cta="Enter the Dream Stream" href="/dream-academy" ac={violet(0.9)} ac2={gold(0.8)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.SriYantra} label="Sacred Geometry · Yantra · Merkaba" title="Sacred Geometry Education"
+            desc="Sri Yantra, Merkaba, Platonic Solids, Flower of Life — the complete Siddha science of sacred form and its direct activation of consciousness fields."
+            tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:cyan(0.9)},{l:'Akasha',c:gold(0.95)}]}
+            cta="Enter the Transmission" href="/sacred-geometry" ac={gold(0.9)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.Mudra} label="29 Transmissions · 18 Siddhas · Hasta Science" title="Palm Oracle"
+            desc="Hasta Samudrika — the complete Tamil Siddha science of palm reading as a living transmission from 18 masters, each finger a cosmic map."
+            tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:violet(0.9)},{l:'Akasha',c:gold(0.95)}]}
+            cta="Enter the Oracle" href="/palm-oracle" ac={violet(0.9)} badge="LIVE"/>
+        </LibSection>
+
+        {/* ── LIBRARY CATEGORY 6: WEALTH & ABUNDANCE ── */}
+        <LibSection SvgIcon={Icon.Yantra} title="Wealth & Abundance Sadhana" subtitle="Lakshmi · Kubera · Pachamama · 18 Siddhas" ac={gold(0.9)} count={1} delay={0.2}>
+          <HeroCard SvgIcon={Icon.Yantra} label="8 Modules · 32 Lessons · Scalar Transmission Active" title="Abundance Sadhana"
+            subtitle="Lakshmi · Kubera · Pachamama · 18 Siddhas · Babaji"
+            desc="The most comprehensive Siddha abundance transmission — from foundational poverty-dissolution through Ashta-Lakshmi attunement, Kubera's cosmic economics, and Babaji's direct scalar activation of the causal abundance body."
+            tiers={[{l:'Free · M1–3',c:white(0.55)},{l:'Prana · M4–5',c:green(0.85)},{l:'Siddha · M6–7',c:gold(0.95)},{l:'Akasha · M8',c:violet(0.95)}]}
+            cta="Enter the Wealth Transmission" href="/abundance-curriculum" ac={gold(0.9)}
+            features={['Mantra Counter','Journal Prompts','Progress Badges','PDF Downloads']}
+            badge="LIVE"/>
+        </LibSection>
+
+        {/* ── LIBRARY CATEGORY 7: FEMININE ALCHEMY ── */}
+        <LibSection SvgIcon={Icon.Moon} title="Feminine & Hormonal Alchemy" subtitle="Shakti Cycle · Sovereign Hormonal Intelligence" ac={rose(0.9)} count={1} delay={0.22}>
+          <HeroCard SvgIcon={Icon.Lotus} label="Shakti Cycle · 5 Modules · Siddha Feminine Wisdom" title="Sovereign Hormonal Alchemy"
+            desc="Shakti Cycle Intelligence — cycle phases, Siddha modules, plant medicine, planetary timing & pregnancy protocols. The complete Siddha map of the feminine cosmic body."
+            tiers={[{l:'Free · Phases',c:white(0.5)},{l:'Prana · Modules',c:green(0.85)},{l:'Akasha · Full',c:gold(0.95)}]}
+            cta="Enter the Shakti Portal" href="/shakti-alchemy" ac={rose(0.9)} badge="LIVE"/>
+        </LibSection>
+
+        {/* ── LIBRARY CATEGORY 8: SACRED RITUALS ── */}
+        <LibSection SvgIcon={Icon.Flame} title="Sacred Rituals & Cosmology" subtitle="Puja · Yagna · Vastu · Sacred Water · Breatharian" ac={amber(0.9)} count={4} delay={0.24}>
+          <HeroCard SvgIcon={Icon.Flame} label="Rishi Transmission · Agnihotra · Cosmic Fire" title="Yagna Fire Academy"
+            desc="The complete science of sacred fire — Agnihotra protocol, Vedic Havan sequences, the 7 fire geometries, and direct Rishi transmissions for planetary purification."
+            tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:amber(0.9)},{l:'Akasha',c:gold(0.95)}]}
+            cta="Enter the Fire Transmission" href="/yagna" ac={amber(0.9)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.Lotus} label="Sacred Ritual · 4 Tiers · Pancha Bhuta" title="Puja Education"
+            desc="The complete Siddha science of devotional ritual — altar construction, invocation sequences, Pancha Bhuta offerings, and Siddha mantra protocols for each Deva."
+            tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:amber(0.9)},{l:'Akasha',c:gold(0.95)}]}
+            cta="Enter the Transmission" href="/puja-education" ac={gold(0.9)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.SriYantra} label="Vedic Space · Pancha Bhuta · Quantum Architecture" title="Vastu Shastra Curriculum"
+            desc="Siddha Vastu — the ancient Tamil science of sacred space architecture aligned with the five elements, planetary grids, and Akashic field resonance."
+            tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:cyan(0.9)},{l:'Akasha',c:gold(0.95)}]}
+            cta="Enter the Curriculum" href="/vastu-curriculum" ac={gold(0.9)} badge="LIVE"/>
+          <HeroCard SvgIcon={Icon.WaterDrop} label="Living Water · 40 Modules · Emoto Science" title="Sacred Water Alchemy"
+            desc="The complete Siddha science of living water — from Dr Emoto's crystal codes to the 18 Siddhas' water consecration mantras, Soma preparation, and structured water healing."
+            tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:cyan(0.9)},{l:'Akasha',c:gold(0.95)}]}
+            cta="Enter the Transmission" href="/sacred-water" ac={cyan(0.9)} badge="LIVE"/>
+        </LibSection>
+
+        {/* ── NARASIMHA — standalone sacred card ── */}
+        <div style={{ height:1, background:`linear-gradient(90deg,${gold(0.18)},transparent)`, margin:'20px 0' }}/>
+        <div style={{ ...LABEL, fontSize:8, color:gold(0.4), marginBottom:14, display:'flex', alignItems:'center', gap:8 }}>
+          <span style={{ display:'inline-block', width:5, height:5, borderRadius:'50%', background:gold(0.9), animation:'sqLiveFlash 2s infinite' }}/>
+          Avataric Transmission
+        </div>
+        <HeroCard SvgIcon={Icon.Lion} label="Nine Seals · Man-Lion Avatar · Protection Science" title="Narasimha Sacred Path"
           desc="The nine protective seals of Lord Narasimha — Prahladha's devotion science, Hiranyakashipu's dissolution codes, and the Ugra-Narasimha Kavach for total Siddha protection."
-          tiers={[{ l: 'Free', c: white(0.5) }, { l: 'Prana', c: green(0.85) }, { l: 'Siddha', c: amber(0.9) }, { l: 'Akasha', c: gold(0.95) }]}
-          cta="Enter the Path" href="/narasimha" accentColor={amber(0.9)} delay={0}
-        />
-      </LibrarySection>
+          tiers={[{l:'Free',c:white(0.5)},{l:'Prana',c:green(0.85)},{l:'Siddha',c:amber(0.9)},{l:'Akasha',c:gold(0.95)}]}
+          cta="Enter the Path" href="/narasimha" ac={amber(0.9)} ac2={gold(0.8)} delay={0.1}/>
 
-      {/* ══════════════════════════════════════════════════════════
-          LIBRARY CATEGORY 3 — BODY IMMORTALITY SCIENCES
-      ══════════════════════════════════════════════════════════ */}
-      <LibrarySection
-        emoji="☽" title="Body & Immortality Sciences"
-        subtitle="Kayakalpa · Ojas · Brahmacharya · Siddha Medicine · Hair Growth"
-        accentColor={teal(0.9)} count={5} delay={0.14}
-      >
-        <HeroCard
-          emoji="☽" label="12 Modules · 40 Lessons · Bogar & Babaji"
-          title="Kayakalpa Immortality Academy"
-          desc="The most complete transmission of Tamil Siddha immortality science — from Bogar's Navapaashanam alchemy and Muppu secrets to Khechari Mudra, Kundalini-Kayakalpa integration, and the 90-Day Immortality Sadhana."
-          tiers={[{ l: 'Free · Bogar Revelation', c: white(0.5) }, { l: 'Prana · Herbs & Breath', c: green(0.85) }, { l: 'Siddha · Muppu & Kundalini', c: cyan(0.9) }, { l: 'Akasha · Kaya Siddhi', c: gold(0.95) }]}
-          cta="Enter the Immortality Transmission" href="/kayakalpa-academy" accentColor={teal(0.9)} badge="NEW"
-          stats={[{ v: '12', l: 'Modules' }, { v: '40', l: 'Lessons' }, { v: '4', l: 'Tiers' }]} delay={0}
-        />
-        <HeroCard
-          emoji="✦" label="15 Modules · 108+ Lessons · 4 Tiers"
-          title="Ojas Rasayana Academy"
-          desc="The secret Siddha science of vital essence — from the 7-Dhatu refinement cascade to Kaya Kalpa immortality technology and the Jyotir Deha light-body transmission of the 18 Immortals."
-          tiers={[{ l: 'Free · Foundation', c: white(0.5) }, { l: 'Prana · Depletion Codes', c: green(0.85) }, { l: 'Siddha · Rasayana Tech', c: cyan(0.9) }, { l: 'Akasha · Light Body', c: gold(0.95) }]}
-          cta="Enter the Ojas Transmission" href="/ojas-rasayana" accentColor={amber(0.9)} badge="NEW" delay={0}
-        />
-        <HeroCard
-          emoji="🔱" label="8 Modules · 53 Lessons · Ojas Science"
-          title="Brahmacharya Siddha Academy"
-          subtitle="Ojas · Tejas · Prana · Amrita · The 18 Siddhas"
-          desc="The complete Siddha science of sacred energy alchemy — from Ojas and Brahmacharya through Pranayama, mantra codes, Siddha yoga, psychology of desire, Siddhi activation, and Sacred Union."
-          tiers={[{ l: 'Free · Module 1', c: white(0.55) }, { l: 'Prana · 2–3', c: green(0.85) }, { l: 'Siddha · 4–6', c: cyan(0.9) }, { l: 'Akasha · 7–8', c: gold(0.95) }]}
-          cta="Enter the Academy" href="/brahmacharya-academy" accentColor={gold(0.9)}
-          features={['Pranayama & Bandha', 'Mantra Codes', 'Siddha Yoga', 'Vasana Science', 'Siddhi Activation', 'Sacred Union']}
-          badge="NEW" delay={0}
-        />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <GridCard emoji="🌿" title="Siddha Medicine" sub="Varma · Rasayana · Kaya Kalpa · 274 Lessons" href="/siddha-medicine" accentColor={green(0.85)} badge="LIVE" delay={0} />
-          <GridCard emoji="💆" title="Siddha Hair Growth" sub="Herbal Science · Chakra Root · Nadi Flow" href="/siddha-hair-growth" accentColor={teal(0.85)} delay={0} />
-        </div>
-      </LibrarySection>
+        <div style={{ height:1, background:`linear-gradient(90deg,${gold(0.18)},transparent)`, margin:'20px 0' }}/>
 
-      {/* ══════════════════════════════════════════════════════════
-          LIBRARY CATEGORY 4 — SOUND, MANTRA & NADA
-      ══════════════════════════════════════════════════════════ */}
-      <LibrarySection
-        emoji="ॐ" title="Sound, Mantra & Nada Science"
-        subtitle="Siddha Sound Alchemy · Mantra Academy · Mudra · Mantra Reference"
-        accentColor={amber(0.9)} count={4} delay={0.16}
-      >
-        <HeroCard
-          emoji="ॐ" label="Nada Vijnana · 10 Modules · 18 Siddhas"
-          title="Siddha Sound Alchemy"
-          subtitle="Nada Brahman · Sabda · Spanda · Pancha Nada · Nada Sharira"
-          desc="The deepest transmission of Siddha sound science ever compiled — from Nada Brahman through the five planes of sound, mantra architecture, the 72 Melakarta Raga-Chakra map, cymatics, Yantra science, and the scalar physics of distance healing through sound."
-          tiers={[{ l: 'Free · M1–2', c: white(0.5) }, { l: 'Prana · M3–4', c: green(0.85) }, { l: 'Siddha · M5–7', c: cyan(0.9) }, { l: 'Akasha · M8–10', c: gold(0.95) }]}
-          cta="Enter the Nada Transmission" href="/siddha-sound-alchemy" accentColor={amber(0.9)} badge="LIVE"
-          stats={[{ v: '10', l: 'Modules' }, { v: '18', l: 'Siddhas' }, { v: '72', l: 'Ragas' }]}
-          features={['Nada Brahman', 'Pancha Nada', 'Mantra Architecture', 'Raga Medicine', 'Cymatics', 'Scalar Sound']} delay={0}
-        />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 8 }}>
-          <GridCard emoji="🔔" title="Mantra Academy" sub="Nada Yoga · 24 Modules · Bija Mantras" href="/mantra-academy" accentColor={amber(0.85)} badge="LIVE" delay={0} />
-          <GridCard emoji="🤲" title="Mudra Academy" sub="Hand Seals · Neural Rewiring · 10 Modules" href="/mudra-academy" accentColor={gold(0.85)} badge="LIVE" delay={0} />
-          <GridCard emoji="📿" title="Mantra Reference" sub="Mantras · Mudras · Chakras · Daily Schedule" href="/mantra-reference" accentColor={amber(0.7)} delay={0} />
-          <GridCard emoji="📓" title="Practice Journal" sub="Track Your Sadhana · 40-Day Protocol" href="/practice-journal" accentColor={gold(0.65)} delay={0} />
-        </div>
-      </LibrarySection>
-
-      {/* ══════════════════════════════════════════════════════════
-          LIBRARY CATEGORY 5 — CONSCIOUSNESS & MYSTICAL ARTS
-      ══════════════════════════════════════════════════════════ */}
-      <LibrarySection
-        emoji="👁" title="Consciousness & Mystical Arts"
-        subtitle="Mediumship · Dream Science · Palm Oracle · Jyotish · Sacred Geometry"
-        accentColor={violet(0.9)} count={6} delay={0.18}
-      >
-        <HeroCard
-          emoji="👁" label="8 Modules · 30 Transmissions · Siddha"
-          title="Siddha Mediumship Academy"
-          desc="The world's most comprehensive mediumship education — rooted in the living technology of the 18 Tamil Siddhas. Third Eye activation, Loka maps, ancestor communication, Deva contact, Akashic Record access, and Siddhi development."
-          tiers={[{ l: 'Free · M1–2', c: white(0.5) }, { l: 'Prana · M3–4', c: green(0.85) }, { l: 'Siddha · M5–6', c: violet(0.9) }, { l: 'Akasha · M7–8', c: gold(0.95) }]}
-          cta="Enter the Akasha Transmission" href="/siddha-mediumship-academy" accentColor={violet(0.9)} badge="LIVE"
-          features={['14-Loka Map', 'Third Eye Activation', 'Ancestor Contact', '7-Layer Kavach', 'Deva Mantras', '8 Classical Siddhis']} delay={0}
-        />
-        <HeroCard
-          emoji="🌙" label="Dream Science · 15 Modules · Scalar Transmission"
-          title="Svapna Vidyā"
-          desc="The world's most advanced Siddha dream science — from Taijasa & dream anatomy to Turīya-Svapna, Bardo preparation, prophetic timing & the 40-night Tapas."
-          tiers={[{ l: 'Free · M1–2', c: white(0.5) }, { l: 'Prana · M3–6', c: green(0.85) }, { l: 'Siddha · M7–9', c: violet(0.9) }, { l: 'Akasha · M10–15', c: gold(0.95) }]}
-          cta="Enter the Dream Stream" href="/dream-academy" accentColor={violet(0.9)} accentColor2={gold(0.8)} badge="LIVE" delay={0}
-        />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 8 }}>
-          <GridCard emoji="✦" title="Sacred Geometry" sub="Sri Yantra · Merkaba · Platonic Solids" href="/sacred-geometry" accentColor={gold(0.85)} badge="LIVE" delay={0} />
-          <GridCard emoji="🤚" title="Palm Oracle" sub="Hasta Samudrika · 29 Transmissions" href="/palm-oracle" accentColor={violet(0.7)} badge="LIVE" delay={0} />
-          <GridCard emoji="🌿" title="Nadi Leaf Oracle" sub="Agastya Nadi · Cosmic Records" href="/nadi-leaf" accentColor={teal(0.7)} soon={true} delay={0} />
-          <GridCard emoji="🔱" title="Shiva Lingam Path" sub="Alchemical Shiva · Jyotirlinga · Liberation" href="/shiva-lingam" accentColor={violet(0.7)} delay={0} />
-        </div>
-      </LibrarySection>
-
-      {/* ══════════════════════════════════════════════════════════
-          LIBRARY CATEGORY 6 — WEALTH & ABUNDANCE
-      ══════════════════════════════════════════════════════════ */}
-      <LibrarySection
-        emoji="🔱" title="Wealth & Abundance Sadhana"
-        subtitle="Abundance Curriculum · Siddha Economics · Sovereign Wealth"
-        accentColor={gold(0.9)} count={1} delay={0.2}
-      >
-        <HeroCard
-          emoji="🔱" label="8 Modules · 32 Lessons · Scalar Transmission Active"
-          title="Abundance Sadhana"
-          subtitle="Lakshmi · Kubera · Pachamama · 18 Siddhas · Babaji"
-          desc="The most comprehensive Siddha abundance transmission ever compiled — 8 modules from foundational poverty-dissolution through Ashta-Lakshmi attunement, Kubera's cosmic economics, Earth-abundance codes, sacred geometry wealth technology, Nada alchemy, and Babaji's direct scalar activation of the causal abundance body."
-          tiers={[{ l: 'Free · M1–3', c: white(0.55) }, { l: 'Prana · M4–5', c: green(0.85) }, { l: 'Siddha · M6–7', c: gold(0.95) }, { l: 'Akasha · M8', c: violet(0.95) }]}
-          cta="Enter the Wealth Transmission" href="/abundance-curriculum" accentColor={gold(0.9)}
-          features={['Mantra Counter', 'Journal Prompts', 'Progress Badges', 'PDF Downloads']}
-          badge="LIVE" delay={0}
-        />
-      </LibrarySection>
-
-      {/* ══════════════════════════════════════════════════════════
-          LIBRARY CATEGORY 7 — FEMININE & HORMONAL ALCHEMY
-      ══════════════════════════════════════════════════════════ */}
-      <LibrarySection
-        emoji="🌸" title="Feminine & Hormonal Alchemy"
-        subtitle="Shakti Cycle · Sovereign Hormonal Intelligence · Sacred Feminine"
-        accentColor={`rgba(168,85,247,0.9)`} count={1} delay={0.22}
-      >
-        <HeroCard
-          emoji="🌸" label="Shakti Cycle · 5 Modules · Siddha Feminine Wisdom"
-          title="Sovereign Hormonal Alchemy"
-          desc="Shakti Cycle Intelligence — 5 tabs of Siddha feminine wisdom: cycle phases, modules, plant medicine, planetary timing & pregnancy protocols. The complete Siddha map of the feminine cosmic body."
-          tiers={[{ l: 'Free · Phases', c: white(0.5) }, { l: 'Prana · Modules', c: green(0.85) }, { l: 'Akasha · Full Access', c: gold(0.95) }]}
-          cta="Enter the Shakti Portal" href="/shakti-alchemy" accentColor={`rgba(168,85,247,0.9)`} badge="LIVE" delay={0}
-        />
-      </LibrarySection>
-
-      {/* ══════════════════════════════════════════════════════════
-          LIBRARY CATEGORY 8 — SACRED RITUALS & COSMOLOGY
-      ══════════════════════════════════════════════════════════ */}
-      <LibrarySection
-        emoji="🔥" title="Sacred Rituals & Cosmology"
-        subtitle="Puja · Yagna · Vastu · Sacred Water · Siddha Vastu"
-        accentColor={amber(0.9)} count={5} delay={0.24}
-      >
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 8 }}>
-          <GridCard emoji="🪔" title="Puja Education" sub="Sacred Ritual · 4 Tiers · Pancha Bhuta" href="/puja-education" accentColor={amber(0.85)} badge="LIVE" delay={0} />
-          <GridCard emoji="🔥" title="Yagna Fire Academy" sub="Rishi Transmission · Agnihotra · Cosmic Fire" href="/yagna" accentColor={amber(0.7)} badge="LIVE" delay={0} />
-          <GridCard emoji="🏛" title="Vastu Shastra" sub="Vedic Space · Pancha Bhuta · Quantum Architecture" href="/vastu-curriculum" accentColor={gold(0.7)} badge="LIVE" delay={0} />
-          <GridCard emoji="💧" title="Sacred Water Alchemy" sub="Living Water · Emoto Science · Siddha Protocols · 40 Modules" href="/sacred-water" accentColor={cyan(0.75)} badge="LIVE" delay={0} />
-          <GridCard emoji="🏛" title="Siddha Vastu Codex" sub="Ancient Tamil Space Science · Yantra Architecture" href="/vastu-curriculum" accentColor={amber(0.6)} delay={0} />
-        </div>
-      </LibrarySection>
-
-      <Divider />
-
-      {/* ══════════════════════════════════════════════════════════
-          SECTION — SQI TOOLS
-      ══════════════════════════════════════════════════════════ */}
-      <div style={{ padding: '20px 20px 8px' }}>
-        <div style={{ ...LABEL_STYLE, fontSize: 8, color: cyan(0.5), display: 'flex', alignItems: 'center', gap: 8 }}>
+        {/* ── SQI TOOLS ── */}
+        <div style={{ ...LABEL, fontSize:8, color:cyan(0.5), display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>
           <span>⚛</span> {t('siddhaPortal.sectionTools')}
         </div>
-      </div>
+        <HeroCard SvgIcon={Icon.StarCrystal} label="Siddha Photonic Node · SQI Technology" title="Photonic Regeneration Engine"
+          desc="The SQI Photonic Regeneration Node — scalar-encoded light-body activation using Siddha solar science and quantum photon coherence technology."
+          tiers={[{l:'Siddha+',c:cyan(0.9)}]}
+          cta="Enter Node" href="/siddha-photonic-regeneration" ac={cyan(0.9)} badge="SQI" delay={0.1}/>
 
-      <HeroCard
-        emoji="☀" label="Siddha Photonic Node · SQI Technology"
-        title="Photonic Regeneration Engine"
-        desc="The SQI Photonic Regeneration Node — scalar-encoded light-body activation using Siddha solar science and quantum photon coherence technology."
-        tiers={[{ l: 'Siddha+', c: cyan(0.9) }]}
-        cta="Enter Node" href="/siddha-photonic-regeneration" accentColor={cyan(0.9)} badge="SQI" delay={0.25}
-      />
+        <div style={{ height:1, background:`linear-gradient(90deg,${gold(0.18)},transparent)`, margin:'20px 0' }}/>
 
-      <Divider />
-
-      {/* ══════════════════════════════════════════════════════════
-          SECTION — SACRED ORACLES
-      ══════════════════════════════════════════════════════════ */}
-      <div style={{ padding: '20px 20px 8px' }}>
-        <div style={{ ...LABEL_STYLE, fontSize: 8, color: gold(0.5), display: 'flex', alignItems: 'center', gap: 8 }}>
+        {/* ── SACRED ORACLES ── */}
+        <div style={{ ...LABEL, fontSize:8, color:gold(0.5), display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>
           <span>🔱</span> {t('siddhaPortal.sectionOracles')}
         </div>
-      </div>
+        <div style={{ background:`linear-gradient(135deg,${gold(0.08)},rgba(5,5,5,0.6))`, border:`1px solid ${gold(0.22)}`, borderRadius:20, padding:'18px', cursor:'pointer', marginBottom:8 }} onClick={()=>navigate('/sri-yantra-shield')}>
+          <div style={CARD_TITLE}>{t('siddhaPortal.sriYantraShield')}</div>
+          <p style={ITALIC}>{t('siddhaPortal.sriYantraDesc')}</p>
+          <button type="button" style={CTA}>{t('siddhaPortal.activateShield')} →</button>
+        </div>
 
-      <div style={{ margin: '0 16px 14px', ...CARD_BASE, background: `linear-gradient(135deg, ${gold(0.08)}, rgba(5,5,5,0.6))`, border: `1px solid ${gold(0.22)}`, cursor: 'pointer' }} onClick={() => navigate('/sri-yantra-shield')}>
-        <div style={CARD_TITLE}>{t('siddhaPortal.sriYantraShield')}</div>
-        <p style={CARD_DESC}>{t('siddhaPortal.sriYantraDesc')}</p>
-        <button type="button" style={CTA_BTN}>{t('siddhaPortal.activateShield')} →</button>
-      </div>
+      </div>{/* end padding wrapper */}
 
-      {/* ── KEYFRAMES ── */}
+      {/* KEYFRAMES */}
       <style>{`
-        @keyframes sqFadeUp {
-          from { opacity: 0; transform: translateY(14px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes sqBreathe {
-          0%, 100% { transform: scale(1);    opacity: 0.75; }
-          50%       { transform: scale(1.07); opacity: 0.95; }
-        }
-        @keyframes sqLiveFlash {
-          0%, 100% { opacity: 1; }
-          50%       { opacity: 0.2; }
-        }
-        @keyframes sqScalarPulse {
-          0% { opacity: 0; transform: scale(0.65); }
-          35% { opacity: 0.9; }
-          75% { opacity: 0.15; transform: scale(1.18); }
-          100% { opacity: 0; transform: scale(1.35); }
-        }
-        @keyframes sqGlowPulse {
-          0%, 100% { opacity: 0.55; transform: scale(1); }
-          50%      { opacity: 1;    transform: scale(1.04); }
-        }
+        @keyframes sqFadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes sqBreathe { 0%,100%{transform:scale(1);opacity:0.75} 50%{transform:scale(1.07);opacity:0.95} }
+        @keyframes sqLiveFlash { 0%,100%{opacity:1} 50%{opacity:0.2} }
+        @keyframes sqScalarPulse { 0%{opacity:0;transform:scale(0.65)} 35%{opacity:0.9} 75%{opacity:0.15;transform:scale(1.18)} 100%{opacity:0;transform:scale(1.35)} }
+        @keyframes sqGlowPulse { 0%,100%{opacity:0.55;transform:scale(1)} 50%{opacity:1;transform:scale(1.04)} }
       `}</style>
     </div>
   );
