@@ -1,0 +1,44 @@
+name: Deploy binance-balance to Lovable Supabase
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ADMIN_PAT }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Deploy binance-balance edge function
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          BINANCE_API_KEY: ${{ secrets.BINANCE_API_KEY }}
+          BINANCE_API_SECRET: ${{ secrets.BINANCE_API_SECRET }}
+        run: |
+          npm install -g supabase@latest 2>&1 | tail -3
+
+          # Clone repo for function source
+          git clone "https://x-access-token:${{ secrets.GH_ADMIN_PAT }}@github.com/sacredhealing/sacredhealing-fa5d6004.git" repo
+          cd repo
+
+          # Deploy to LOVABLE Supabase (ssygukfdbtehvtndandn)
+          echo "Deploying binance-balance to ssygukfdbtehvtndandn..."
+          supabase functions deploy binance-balance \
+            --project-ref ssygukfdbtehvtndandn \
+            --no-verify-jwt 2>&1
+
+          # Set secrets on Lovable Supabase
+          echo "Setting Binance secrets..."
+          supabase secrets set BINANCE_API_KEY="$BINANCE_API_KEY" \
+            --project-ref ssygukfdbtehvtndandn 2>&1 || true
+          supabase secrets set BINANCE_API_SECRET="$BINANCE_API_SECRET" \
+            --project-ref ssygukfdbtehvtndandn 2>&1 || true
+
+          echo "Done!"
