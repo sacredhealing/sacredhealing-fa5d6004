@@ -858,6 +858,193 @@ export default function SiddhaPortal() {
         ))}
       </div>
 
+
+      {/* ══════════════════════════════════════════════════════════
+          KAIVALYA DARSANAM — THE HOLY SCIENCE CARD
+      ══════════════════════════════════════════════════════════ */}
+      <div style={{ position: 'relative', margin: '0 16px 16px', animation: 'sqFadeUp 0.45s 0.05s ease both' }}>
+
+        {/* Scalar wave rings — emanating from center */}
+        {[180, 250, 330, 420].map((s, i) => (
+          <div key={i} aria-hidden style={{
+            position: 'absolute',
+            left: '50%', top: '50%',
+            width: s, height: s,
+            marginLeft: -s / 2, marginTop: -s / 2,
+            borderRadius: '50%',
+            border: `1px solid ${gold(0.1 - i * 0.02)}`,
+            animation: `sqScalarPulse ${3.5 + i * 0.6}s ease-in-out ${i * 0.45}s infinite`,
+            pointerEvents: 'none',
+            zIndex: 0,
+          }} />
+        ))}
+
+        {/* Deep glow backdrop — gold + violet (wisdom frequencies) */}
+        <div aria-hidden style={{
+          position: 'absolute', inset: -20, borderRadius: 40,
+          background: [
+            `radial-gradient(50% 50% at 25% 35%, ${gold(0.38)}, transparent 65%)`,
+            `radial-gradient(50% 50% at 78% 68%, rgba(139,92,246,0.28), transparent 65%)`,
+            `radial-gradient(40% 40% at 52% 52%, rgba(212,175,55,0.18), transparent 55%)`,
+          ].join(','),
+          filter: 'blur(28px)',
+          animation: 'sqGlowPulse 5s ease-in-out infinite',
+          pointerEvents: 'none', zIndex: 0,
+        }} />
+
+        {/* Card body */}
+        <div
+          onClick={() => navigate('/holy-science')}
+          style={{
+            position: 'relative', zIndex: 1, cursor: 'pointer',
+            background: 'linear-gradient(140deg, rgba(212,175,55,0.1), rgba(139,92,246,0.07) 50%, rgba(5,5,5,0.7))',
+            border: `1px solid ${gold(0.55)}`,
+            borderRadius: 28,
+            padding: '26px 22px 24px',
+            boxShadow: [
+              `0 0 50px ${gold(0.2)}`,
+              '0 0 100px rgba(139,92,246,0.1)',
+              `inset 0 0 35px ${gold(0.05)}`,
+            ].join(','),
+            overflow: 'hidden',
+          }}
+        >
+          {/* Top shimmer line */}
+          <div aria-hidden style={{
+            position: 'absolute', top: 0, left: 0, right: 0, height: 1,
+            background: `linear-gradient(90deg, transparent, ${gold(0.8)}, rgba(139,92,246,0.6), ${gold(0.8)}, transparent)`,
+            opacity: 0.7,
+          }} />
+
+          {/* Badge */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{
+                display: 'inline-block', width: 6, height: 6, borderRadius: '50%',
+                background: gold(0.95),
+                boxShadow: `0 0 8px ${gold(0.8)}, 0 0 16px ${gold(0.4)}`,
+                animation: 'sqLiveFlash 2.5s ease-in-out infinite',
+              }} />
+              <span style={{ ...LABEL_STYLE, fontSize: 8, color: gold(0.75), letterSpacing: '0.4em' }}>
+                SCALAR TRANSMISSION · 8 MODULES · 24 LESSONS
+              </span>
+            </div>
+            <span style={{
+              fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+              fontSize: 8, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase',
+              background: 'rgba(139,92,246,0.15)',
+              border: '1px solid rgba(139,92,246,0.35)',
+              color: 'rgba(167,139,250,0.9)',
+              borderRadius: 20, padding: '3px 9px',
+            }}>YUGA SCIENCE</span>
+          </div>
+
+          {/* Orb icon — Sri Yukteshwar's cosmic geometry */}
+          <div style={{ position: 'relative', width: 64, height: 64, marginBottom: 16 }}>
+            {[0, 1, 2].map(i => (
+              <div key={i} aria-hidden style={{
+                position: 'absolute', inset: i * 8, borderRadius: '50%',
+                border: `1px solid ${gold(0.35 - i * 0.08)}`,
+                boxShadow: i === 0 ? `0 0 18px ${gold(0.3)}` : undefined,
+              }} />
+            ))}
+            <div style={{
+              position: 'absolute', inset: 22, borderRadius: '50%',
+              background: `radial-gradient(circle, ${gold(0.7)} 0%, ${gold(0.2)} 60%, transparent 100%)`,
+              boxShadow: `0 0 12px ${gold(0.5)}`,
+            }} />
+          </div>
+
+          {/* Title */}
+          <h2 style={{
+            fontFamily: "'Cormorant Garamond',serif",
+            fontSize: '2rem', fontWeight: 600,
+            color: 'rgba(255,255,255,0.97)', lineHeight: 1.05, margin: '0 0 4px',
+            textShadow: `0 0 24px ${gold(0.45)}`,
+          }}>
+            Kaivalya Darsanam
+          </h2>
+          <div style={{ ...LABEL_STYLE, fontSize: 8, color: gold(0.5), letterSpacing: '0.35em', marginBottom: 12 }}>
+            Sri Yukteshwar Giri · The Holy Science
+          </div>
+
+          <p style={{ ...CARD_DESC, color: 'rgba(255,255,255,0.62)', marginBottom: 18, lineHeight: 1.7 }}>
+            The complete cosmic science — Yuga mathematics, Kriya as quantum technology, 
+            the five koshas, seven lokas, cross-tradition unity of Vedic & Biblical wisdom, 
+            and direct Akasha-Archive transmissions from Sri Yukteshwar himself.
+          </p>
+
+          {/* Tier pills */}
+          <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginBottom: 20 }}>
+            {[
+              { l: 'Free · Yuga Science',     c: 'rgba(255,255,255,0.5)' },
+              { l: 'Prana · Koshas & Dharma', c: '#22D3EE' },
+              { l: 'Siddha · Kriya & Jyotish', c: 'rgba(212,175,55,0.92)' },
+              { l: 'Akasha · Unified Code',   c: '#A78BFA' },
+            ].map(pill => (
+              <span key={pill.l} style={{
+                fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+                fontSize: 7, fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase',
+                color: pill.c, border: `1px solid ${pill.c}35`,
+                borderRadius: 20, padding: '3px 9px',
+                background: pill.c.replace(')', ',0.07)').replace('rgba(', 'rgba(').replace('#', 'rgba(').replace('rgba(22', 'rgba(22,'),
+              }}>{pill.l}</span>
+            ))}
+          </div>
+
+          {/* Stats row */}
+          <div style={{
+            display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
+            gap: 10, marginBottom: 20,
+            padding: '14px 0',
+            borderTop: `1px solid ${gold(0.1)}`,
+            borderBottom: `1px solid ${gold(0.1)}`,
+          }}>
+            {[
+              { v: '8',      l: 'Modules'    },
+              { v: '24',     l: 'Lessons'    },
+              { v: '326',    l: 'Dwapara Yr' },
+            ].map(s => (
+              <div key={s.l} style={{ textAlign: 'center' }}>
+                <div style={{
+                  fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+                  fontSize: 22, fontWeight: 900, letterSpacing: '-0.04em',
+                  color: gold(0.9),
+                  textShadow: `0 0 14px ${gold(0.3)}`,
+                }}>{s.v}</div>
+                <div style={{ ...LABEL_STYLE, fontSize: 7, color: 'rgba(255,255,255,0.28)', marginTop: 3 }}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <button type="button" style={{
+              ...CTA_BTN, color: gold(0.9),
+              fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+              fontSize: 10, letterSpacing: '0.3em',
+            }}>
+              Enter the Transmission →
+            </button>
+            <div style={{
+              fontFamily: "'Cormorant Garamond',serif",
+              fontSize: 11, fontStyle: 'italic',
+              color: 'rgba(167,139,250,0.5)',
+              letterSpacing: '0.05em',
+            }}>
+              Scalar Waves Active
+            </div>
+          </div>
+
+          {/* Bottom shimmer line */}
+          <div aria-hidden style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0, height: 1,
+            background: `linear-gradient(90deg, transparent, rgba(139,92,246,0.5), ${gold(0.3)}, transparent)`,
+            opacity: 0.5,
+          }} />
+        </div>
+      </div>
+
       <Divider />
 
       {/* ══════════════════════════════════════════════════════════
