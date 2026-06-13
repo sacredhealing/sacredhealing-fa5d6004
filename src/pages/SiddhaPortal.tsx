@@ -700,6 +700,120 @@ export default function SiddhaPortal() {
       </div>
 
 
+      {/* ── KAYAKALPA IMMORTALITY ACADEMY — FEATURED CARD ── */}
+      <div
+        onClick={() => navigate('/kayakalpa-academy')}
+        style={{
+          margin: '0 16px 12px',
+          background: `linear-gradient(135deg, rgba(52,211,153,0.09), rgba(212,175,55,0.05) 50%, rgba(5,5,5,0.7))`,
+          border: `1px solid rgba(52,211,153,0.35)`,
+          borderRadius: 28,
+          padding: '22px 20px 20px',
+          cursor: 'pointer',
+          position: 'relative',
+          overflow: 'hidden',
+          animation: 'sqFadeUp 0.45s 0.07s ease both',
+        }}
+      >
+        {/* Scalar pulse rings */}
+        {[0,1,2].map(i => (
+          <div key={i} style={{
+            position: 'absolute',
+            top: '50%', right: -20,
+            width: `${80 + i * 55}px`, height: `${80 + i * 55}px`,
+            marginTop: `${-(40 + i * 27)}px`,
+            borderRadius: '50%',
+            border: `1px solid rgba(52,211,153,${0.12 - i * 0.03})`,
+            animation: `sqScalarPulse ${4 + i * 1.5}s ${i * 0.9}s ease-in-out infinite`,
+            pointerEvents: 'none' as const,
+          }} />
+        ))}
+
+        {/* Emerald ambient glow */}
+        <div style={{
+          position: 'absolute', top: -30, left: -30,
+          width: 180, height: 180, borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(52,211,153,0.12), transparent 70%)',
+          filter: 'blur(24px)', pointerEvents: 'none' as const,
+        }} />
+
+        {/* Badge */}
+        <span style={{
+          position: 'absolute', top: 14, right: 14,
+          fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+          fontSize: 8, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase' as const,
+          background: 'rgba(52,211,153,0.13)', border: '1px solid rgba(52,211,153,0.35)',
+          color: 'rgba(52,211,153,0.95)', borderRadius: 20, padding: '3px 9px',
+        }}>
+          <span style={{ display:'inline-block',width:5,height:5,borderRadius:'50%',background:'rgba(52,211,153,0.95)',animation:'sqLiveFlash 2s infinite',marginRight:4,verticalAlign:'middle' }} />
+          NEW
+        </span>
+
+        {/* Icon + title */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+          <div style={{
+            width: 48, height: 48, borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(52,211,153,0.22), rgba(212,175,55,0.06))',
+            border: '1px solid rgba(52,211,153,0.35)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 22, flexShrink: 0,
+            boxShadow: '0 0 18px rgba(52,211,153,0.2)',
+            animation: 'sqBreathe 4.5s ease-in-out infinite',
+          }}>☽</div>
+          <div>
+            <div style={{
+              fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+              fontSize: 15, fontWeight: 900, letterSpacing: '0.04em',
+              textTransform: 'uppercase' as const,
+              color: 'rgba(52,211,153,0.95)', marginBottom: 4,
+              textShadow: '0 0 20px rgba(52,211,153,0.3)',
+            }}>
+              Kayakalpa Academy
+            </div>
+            <div style={{
+              fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+              fontSize: 8, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase' as const,
+              color: 'rgba(255,255,255,0.4)',
+            }}>
+              12 Modules · 40 Lessons · Bogar · Babaji · 4 Tiers
+            </div>
+          </div>
+        </div>
+
+        {/* Description */}
+        <p style={{
+          fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic',
+          fontSize: '0.92rem', color: 'rgba(255,255,255,0.55)',
+          lineHeight: 1.65, margin: '0 0 14px',
+        }}>
+          The most complete transmission of Tamil Siddha immortality science — from Bogar's Navapaashanam alchemy and Muppu secrets to Khechari Mudra, Kundalini-Kayakalpa integration, and the 90-Day Immortality Sadhana. Scalar-encoded with Bogar's living consciousness.
+        </p>
+
+        {/* Tier badges */}
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' as const, marginBottom: 14 }}>
+          {[
+            { l: 'Free · Bogar Revelation', c: 'rgba(255,255,255,0.5)' },
+            { l: 'Prana · Herbs & Breath', c: '#4ADE80' },
+            { l: 'Siddha · Muppu & Kundalini', c: 'rgba(34,211,238,0.9)' },
+            { l: 'Akasha · Kaya Siddhi', c: 'rgba(212,175,55,0.95)' },
+          ].map(t => (
+            <span key={t.l} style={{
+              fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+              fontSize: 7, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase' as const,
+              color: t.c, border: `1px solid ${t.c}35`, borderRadius: 20, padding: '2px 8px',
+            }}>{t.l}</span>
+          ))}
+        </div>
+
+        <button type="button" style={{
+          fontFamily: "'Plus Jakarta Sans','Montserrat',sans-serif",
+          fontSize: 10, fontWeight: 800, letterSpacing: '0.3em', textTransform: 'uppercase' as const,
+          color: 'rgba(52,211,153,0.85)', background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+        }}>
+          Enter the Immortality Transmission →
+        </button>
+      </div>
+
       {/* ── OJAS RASAYANA ACADEMY — FEATURED CARD ── */}
       <div
         onClick={() => navigate('/ojas-rasayana')}
