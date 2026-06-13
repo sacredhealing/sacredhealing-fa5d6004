@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useMembershipTier } from '@/hooks/useMembershipTier';
+import { useMembershipTier } from '@/features/membership';
 import {
   NADI_LEAF_LESSONS,
   THUMB_SCAN_READINGS,
@@ -445,7 +445,7 @@ function ScanResultCard({ reading, pattern, gender, onRescan }: { reading: Thumb
 export default function NadiLeaf() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { tier } = useMembershipTier();
+  const tier = useMembershipTier();
 
   const isAdmin = user?.id === 'bd0b21c9-577a-450b-bb1e-21c9d0423f17';
   const userRank = getUserTierRank(tier, isAdmin);
