@@ -37,18 +37,14 @@ export default defineConfig(({ mode }) => {
     include: ["ethers", "@solana/web3.js", "buffer"],
   },
   build: {
-    // Target modern browsers — smaller, faster output
     target: "es2020",
-    // Enable minification with esbuild (faster than terser, still very small)
     minify: "esbuild",
-    // Raise chunk warning threshold (many large spiritual pages are expected)
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 1500,
     commonjsOptions: {
       include: [/ethers/, /node_modules/],
     },
     rollupOptions: {
       output: {
-        // Granular vendor splitting for maximum long-term caching
         manualChunks(id) {
           if (id.includes("node_modules")) {
             // Core React — always tiny, loaded first
@@ -59,8 +55,6 @@ export default defineConfig(({ mode }) => {
             if (id.includes("@tanstack")) return "vendor-query";
             // Radix UI
             if (id.includes("@radix-ui")) return "vendor-radix";
-            // Charts — heavy, rarely needed on first load
-            if (id.includes("recharts") || id.includes("d3")) return "vendor-charts";
             // Animation
             if (id.includes("framer-motion")) return "vendor-motion";
             // Crypto libs — very heavy, split out
@@ -73,6 +67,8 @@ export default defineConfig(({ mode }) => {
             if (id.includes("@supabase")) return "vendor-supabase";
             // Lucide icons — keep separate (large)
             if (id.includes("lucide")) return "vendor-icons";
+            // NOTE: recharts and d3 are intentionally NOT split — they have circular
+            // init dependencies that cause TDZ errors when chunked separately
           }
         },
       },
@@ -113,7 +109,7 @@ export default defineConfig(({ mode }) => {
             urlPattern: ({ request }) => request.destination === "document",
             handler: "NetworkFirst",
             options: {
-              cacheName: "html-shell-v2",
+              cacheName: "html-shell-v3",
               networkTimeoutSeconds: 2,
               expiration: { maxEntries: 8, maxAgeSeconds: 5 * 60 },
               cacheableResponse: { statuses: [200] },
@@ -125,7 +121,7 @@ export default defineConfig(({ mode }) => {
             handler: "CacheFirst",
             method: "GET",
             options: {
-              cacheName: "assets-immutable-v2",
+              cacheName: "assets-immutable-v3",
               expiration: { maxEntries: 200, maxAgeSeconds: 30 * 24 * 60 * 60 },
               cacheableResponse: { statuses: [200] },
             },
@@ -134,7 +130,7 @@ export default defineConfig(({ mode }) => {
             urlPattern: ({ url }) => url.hostname.includes("supabase.co") && url.pathname.startsWith("/rest/"),
             handler: "StaleWhileRevalidate",
             options: {
-              cacheName: "supabase-api-v2",
+              cacheName: "supabase-api-v3",
               expiration: { maxEntries: 50, maxAgeSeconds: 5 * 60 },
               cacheableResponse: { statuses: [200] },
             },
