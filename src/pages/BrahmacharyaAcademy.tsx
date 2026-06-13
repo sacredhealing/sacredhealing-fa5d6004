@@ -278,7 +278,6 @@ const CURRICULUM: Module[] = [
     },
   ]
 },
-,
 // MODULE 4 — SIDDHA-QUANTUM
 {
   id:"module_4",tier:"siddha-quantum",number:"04",glyph:"🕉️",
