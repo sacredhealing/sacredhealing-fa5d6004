@@ -6,140 +6,104 @@ on:
       action:
         description: 'deploy | restart | status | logs'
         required: true
-        default: 'deploy'
+        default: deploy
         type: choice
-        options:
-          - deploy
-          - restart
-          - status
-          - logs
+        options: [deploy, restart, status, logs]
       bot_mode:
         description: 'PAPER or LIVE'
         required: false
-        default: 'PAPER'
+        default: PAPER
         type: choice
-        options:
-          - PAPER
-          - LIVE
+        options: [PAPER, LIVE]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-
+    timeout-minutes: 25
     steps:
-      - name: Install sshpass
+      - name: Setup SSH
         run: |
-          sudo apt-get install -y sshpass
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          ssh-keyscan -p 22 -H 178.105.183.74 > ~/.ssh/known_hosts 2>/dev/null
-          echo "Host key lines: $(wc -l < ~/.ssh/known_hosts)"
+          sudo apt-get install -y sshpass -qq
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          ssh-keyscan -H 178.105.183.74 >> ~/.ssh/known_hosts 2>/dev/null
 
-      - name: Quick actions (status / logs / restart)
-        if: ${{ inputs.action != 'deploy' }}
+      - name: Status
+        if: inputs.action == 'status'
         env:
-          HETZNER_PASS: ${{ secrets.HETZNER_ROOT_PASSWORD }}
-        run: |
-          ACTION="${{ inputs.action }}"
-          if [ "$ACTION" = "status" ]; then
-            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=yes root@178.105.183.74 \
-              "pm2 list && echo '---HEALTH---' && curl -s http://localhost:8081/health | python3 -m json.tool 2>/dev/null || curl -s http://localhost:8081/health"
-          elif [ "$ACTION" = "logs" ]; then
-            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=yes root@178.105.183.74 \
-              "pm2 logs delta-arb --lines 80 --nostream 2>/dev/null || echo 'No delta-arb process'"
-          elif [ "$ACTION" = "restart" ]; then
-            sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=yes root@178.105.183.74 \
-              "pm2 restart delta-arb --update-env && sleep 5 && pm2 list && curl -s http://localhost:8081/health"
-          fi
+          HP: ${{ secrets.HETZNER_ROOT_PASSWORD }}
+        run: sshpass -p "$HP" ssh -T root@178.105.183.74 "pm2 list && curl -s http://localhost:8081/health | python3 -m json.tool 2>/dev/null || echo offline"
 
-      - name: Upload bootstrap + deploy
-        if: ${{ inputs.action == 'deploy' }}
+      - name: Logs
+        if: inputs.action == 'logs'
         env:
-          HETZNER_PASS: ${{ secrets.HETZNER_ROOT_PASSWORD }}
+          HP: ${{ secrets.HETZNER_ROOT_PASSWORD }}
+        run: sshpass -p "$HP" ssh -T root@178.105.183.74 "pm2 logs delta-arb --lines 80 --nostream 2>/dev/null || echo not-running"
+
+      - name: Restart
+        if: inputs.action == 'restart'
+        env:
+          HP: ${{ secrets.HETZNER_ROOT_PASSWORD }}
+        run: sshpass -p "$HP" ssh -T root@178.105.183.74 "pm2 restart delta-arb --update-env && sleep 5 && pm2 list && curl -s http://localhost:8081/health"
+
+      - name: Write deploy script
+        if: inputs.action == 'deploy'
+        env:
+          SB_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          BIN_KEY: ${{ secrets.BINANCE_API_KEY }}
+          BIN_SEC: ${{ secrets.BINANCE_API_SECRET }}
           GH_TOKEN: ${{ secrets.GH_ADMIN_PAT }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          BINANCE_API_KEY: ${{ secrets.BINANCE_API_KEY }}
-          BINANCE_API_SECRET: ${{ secrets.BINANCE_API_SECRET }}
           BOT_MODE: ${{ inputs.bot_mode }}
         run: |
-          # Inline bootstrap - no base64 needed
-          cat > /tmp/bootstrap-delta-arb.sh << 'BOOTEOF'
-#!/bin/bash
-set -e
-GH_TOKEN="${1}"
-echo "=== SQI DELTA-ARB BOT — HETZNER BOOTSTRAP ==="
+          cat > /tmp/deploy.sh << SCRIPT
+          #!/bin/bash
+          set -e
+          GH_TOKEN="${GH_TOKEN}"
+          SB_KEY="${SB_KEY}"
+          BIN_KEY="${BIN_KEY}"
+          BIN_SEC="${BIN_SEC}"
+          BOT_MODE="${BOT_MODE:-PAPER}"
 
-# Node 20
-install_node() { curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs; }
-if ! command -v node &>/dev/null; then install_node
-else
-  NM=$(node -e "process.stdout.write(process.version.slice(1).split('.')[0])")
-  [ "$NM" -lt 20 ] && install_node
-fi
-echo "Node: $(node -v)"
+          install_node() { curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs -qq; }
+          if ! command -v node &>/dev/null; then install_node
+          else NM=\$(node -e "process.stdout.write(process.version.slice(1).split('.')[0])"); [ "\$NM" -lt 20 ] && install_node; fi
+          echo "Node: \$(node -v)"
+          command -v pm2 &>/dev/null || npm install -g pm2 -q
+          command -v git &>/dev/null || apt-get install -y git -qq
 
-# PM2
-if ! command -v pm2 &>/dev/null; then
-  npm install -g pm2
-  env PATH=$PATH:/usr/bin pm2 startup systemd -u root --hp /root || true
-fi
+          REPO=/root/delta-arb
+          if [ ! -d "\$REPO/.git" ]; then
+            git clone "https://x-access-token:\${GH_TOKEN}@github.com/sacredhealing/sacredhealing-fa5d6004.git" "\$REPO"
+          else
+            cd "\$REPO"
+            git remote set-url origin "https://x-access-token:\${GH_TOKEN}@github.com/sacredhealing/sacredhealing-fa5d6004.git"
+            git fetch origin && git reset --hard origin/main
+          fi
 
-# Git
-command -v git &>/dev/null || apt-get install -y git
+          cd /root/delta-arb/delta-arb-hetzner
+          npm install --omit=dev -q
 
-# Clone/pull
-REPO="/root/delta-arb"
-if [ ! -d "$REPO/.git" ]; then
-  git clone "https://x-access-token:${GH_TOKEN}@github.com/sacredhealing/sacredhealing-fa5d6004.git" "$REPO"
-else
-  cd "$REPO"
-  git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/sacredhealing/sacredhealing-fa5d6004.git"
-  git fetch origin && git reset --hard origin/main
-fi
+          printf 'SUPABASE_URL=https://fjdzhrdpioxdeyyfogep.supabase.co\nSUPABASE_SERVICE_ROLE_KEY=%s\nBINANCE_API_KEY=%s\nBINANCE_API_SECRET=%s\nBOT_MODE=%s\nPORT=8081\nDELTA_THRESHOLD=0.0012\nTRADE_SIZE_USD=15\nSCAN_INTERVAL_MS=15000\n' "\$SB_KEY" "\$BIN_KEY" "\$BIN_SEC" "\$BOT_MODE" > .env
+          echo ".env written | MODE=\$BOT_MODE | BINANCE=\$([ -n "\$BIN_KEY" ] && echo SET || echo MISSING)"
 
-# Install deps
-cd "$REPO/delta-arb-hetzner"
-npm install --omit=dev
+          if pm2 describe delta-arb > /dev/null 2>&1; then
+            pm2 restart delta-arb --update-env && echo "Restarted"
+          else
+            pm2 start bot.js --name delta-arb --cwd /root/delta-arb/delta-arb-hetzner && echo "Started"
+          fi
+          pm2 save
 
-# Write .env (vars injected by GitHub Actions)
-cat > .env << ENVEOF
-SUPABASE_URL=https://fjdzhrdpioxdeyyfogep.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_KEY}
-BINANCE_API_KEY=${BINANCE_API_KEY}
-BINANCE_API_SECRET=${BINANCE_API_SECRET}
-BOT_MODE=${BOT_MODE:-PAPER}
-PORT=8081
-DELTA_THRESHOLD=0.0012
-TRADE_SIZE_USD=15
-SCAN_INTERVAL_MS=15000
-ENVEOF
-echo ".env written | MODE=${BOT_MODE:-PAPER} | BINANCE=$([ -n "$BINANCE_API_KEY" ] && echo 'SET' || echo 'MISSING')"
+          sleep 10
+          echo "=== PM2 ===" && pm2 list
+          echo "=== HEALTH ===" && curl -sf http://localhost:8081/health | python3 -m json.tool 2>/dev/null || curl -s http://localhost:8081/health || echo "Starting..."
+          echo "=== LOGS ===" && pm2 logs delta-arb --lines 20 --nostream 2>/dev/null || true
+          echo "=== DONE ==="
+          SCRIPT
+          chmod +x /tmp/deploy.sh
 
-# PM2 manage
-if pm2 describe delta-arb > /dev/null 2>&1; then
-  pm2 restart delta-arb --update-env && echo "✅ DELTA-ARB restarted"
-else
-  pm2 start bot.js --name delta-arb --cwd /root/delta-arb/delta-arb-hetzner
-  echo "✅ DELTA-ARB started fresh"
-fi
-pm2 save
-
-sleep 8
-echo "=== PM2 STATUS ==="
-pm2 list
-echo "=== HEALTH CHECK ==="
-curl -sf http://localhost:8081/health | python3 -m json.tool 2>/dev/null || curl -s http://localhost:8081/health || echo "Starting up..."
-echo "=== LAST 30 LINES ==="
-pm2 logs delta-arb --lines 30 --nostream 2>/dev/null || true
-echo "=== DELTA-ARB DEPLOYED ==="
-BOOTEOF
-
-          chmod +x /tmp/bootstrap-delta-arb.sh
-
-          sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=yes root@178.105.183.74 \
-            'cat > /root/bootstrap-delta-arb.sh && chmod +x /root/bootstrap-delta-arb.sh' \
-            < /tmp/bootstrap-delta-arb.sh
-
-          sshpass -p "$HETZNER_PASS" ssh -T -o StrictHostKeyChecking=yes root@178.105.183.74 \
-            "SUPABASE_KEY='$SUPABASE_KEY' BINANCE_API_KEY='$BINANCE_API_KEY' BINANCE_API_SECRET='$BINANCE_API_SECRET' BOT_MODE='$BOT_MODE' bash /root/bootstrap-delta-arb.sh '$GH_TOKEN' 2>&1"
+      - name: Deploy to Hetzner
+        if: inputs.action == 'deploy'
+        env:
+          HP: ${{ secrets.HETZNER_ROOT_PASSWORD }}
+        run: |
+          sshpass -p "$HP" scp -o StrictHostKeyChecking=no /tmp/deploy.sh root@178.105.183.74:/tmp/deploy.sh
+          sshpass -p "$HP" ssh -T -o StrictHostKeyChecking=no root@178.105.183.74 "bash /tmp/deploy.sh 2>&1"
