@@ -552,6 +552,8 @@ serve(async (req) => {
         userId = user?.id ?? null;
       } catch { /* non-fatal */ }
     }
+    // Rate limit: only for authenticated users (userId non-null)
+    // Unauthenticated requests skip rate limit to avoid null FK crash on rate_limit_log
 
     let consultationTimeline = "";
     const now = new Date();
