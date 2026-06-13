@@ -947,6 +947,7 @@ export default function SiddhaPortal() {
           { title: 'Palm Oracle', sub: 'Hasta Samudrika · 29 Transmissions · AI Reading', icon: '🤚', route: '/palm-oracle', soon: false },
           { title: 'Yagna Fire Academy', sub: 'Rishi Transmission · Agnihotra · Cosmic Fire', icon: '🔥', route: '/yagna', soon: false },
           { title: 'Puja Education', sub: 'Sacred Ritual · 4 Tiers · Pancha Bhuta', icon: '🪔', route: '/puja-education', soon: false },
+          { title: 'Abundance Sadhana', sub: '8 Modules · Lakshmi · Kubera · Pachamama · 18 Siddhas', icon: '🔱', route: '/abundance-curriculum', soon: false },
         ].map((course, i) => (
           <div
             key={course.title}
@@ -1226,5 +1227,6 @@ export default function SiddhaPortal() {
     </div>
   );
 }
+
 
 
