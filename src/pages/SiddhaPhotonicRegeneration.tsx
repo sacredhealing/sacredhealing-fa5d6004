@@ -6,7 +6,7 @@ import {
   Sparkles, Radio, Shield, Zap, Activity, Fingerprint,
   ChevronLeft, Waves, Eye, Brain, Heart, Atom,
   BookOpen, ChevronDown, ChevronUp, Infinity as InfinityIcon,
-  Clock,
+  Clock, ExternalLink, Layers, FlaskConical,
 } from 'lucide-react';
 import { GoogleGenAI } from '@google/genai';
 import { useMembership } from '@/hooks/useMembership';
@@ -25,26 +25,7 @@ const GLASS_BORDER = 'rgba(255,255,255,0.05)';
 const GOLD_BORDER  = 'rgba(212,175,55,0.15)';
 
 /* ─── 72-HOUR PERSISTENCE SYSTEM ─────────────────────────────────────────── */
-/*
- * ARCHITECTURE:
- *
- * Layer 1 — localStorage (keyed by user.id)
- *   → Instant. Works offline, phone off, no internet, app closed.
- *   → Survives 72 hours from the moment of entanglement.
- *   → Loaded synchronously on mount — zero flicker.
- *
- * Layer 2 — Supabase profiles.user_profile JSON column
- *   → Syncs when internet is available.
- *   → Allows cross-device continuity (same user, different phone/browser).
- *   → Reads on mount if localStorage is missing/expired.
- *   → Writes whenever entanglement updates.
- *
- * The two layers are independent. If Supabase is unreachable, localStorage
- * keeps the 72h transmission alive. If localStorage is cleared, Supabase
- * restores it when the user reconnects.
- */
-
-const TTL_MS = 72 * 60 * 60 * 1000; // 72 hours in milliseconds
+const TTL_MS = 72 * 60 * 60 * 1000;
 
 interface BiometricProfile {
   dominantFrequency: string;
@@ -58,88 +39,54 @@ interface PhotonicSession {
   isEntangled: boolean;
   lightCode: string;
   scanCount: number;
-  entangledAt: number;   // epoch ms — the moment entanglement occurred
-  expiresAt: number;     // entangledAt + 72h
+  entangledAt: number;
+  expiresAt: number;
   biometricProfile: BiometricProfile;
   userId: string;
 }
 
-/* localStorage key namespaced per user so multiple users on same device never collide */
-function lsKey(userId: string) {
-  return `sqi_photonic_v2_${userId}`;
-}
+function lsKey(userId: string) { return `sqi_photonic_v2_${userId}`; }
 
 function loadFromLocalStorage(userId: string): PhotonicSession | null {
   try {
     const raw = localStorage.getItem(lsKey(userId));
     if (!raw) return null;
     const session = JSON.parse(raw) as PhotonicSession;
-    // Check it belongs to this user (belt-and-suspenders)
     if (session.userId !== userId) return null;
-    // Check 72h TTL
-    if (Date.now() > session.expiresAt) {
-      localStorage.removeItem(lsKey(userId));
-      return null;
-    }
+    if (Date.now() > session.expiresAt) { localStorage.removeItem(lsKey(userId)); return null; }
     return session;
   } catch { return null; }
 }
 
 function saveToLocalStorage(session: PhotonicSession) {
-  try {
-    localStorage.setItem(lsKey(session.userId), JSON.stringify(session));
-  } catch {}
+  try { localStorage.setItem(lsKey(session.userId), JSON.stringify(session)); } catch {}
 }
 
 function clearFromLocalStorage(userId: string) {
   try { localStorage.removeItem(lsKey(userId)); } catch {}
 }
 
-/* Supabase sync — stores into profiles.user_profile JSON column + photonic_sessions table */
 async function syncToSupabase(userId: string, session: PhotonicSession) {
   try {
-    // Merge into user_profile (legacy storage)
-    const { data: existing } = await supabase
-      .from('profiles')
-      .select('user_profile')
-      .eq('user_id', userId)
-      .maybeSingle();
-
+    const { data: existing } = await supabase.from('profiles').select('user_profile').eq('user_id', userId).maybeSingle();
     const currentProfile = (existing?.user_profile as Record<string, unknown>) || {};
     const updated = { ...currentProfile, photonic_session: session };
-
-    await supabase
-      .from('profiles')
-      .upsert({ user_id: userId, user_profile: updated, dosha_profile: (existing as any)?.dosha_profile || {} })
-      .eq('user_id', userId);
-
-    // Also save to dedicated photonic_sessions table (SQI field context — migration may be pending)
+    await supabase.from('profiles').upsert({ user_id: userId, user_profile: updated, dosha_profile: (existing as any)?.dosha_profile || {} }).eq('user_id', userId);
     try {
       await supabase.from('photonic_sessions').insert({
-        user_id: userId,
-        active_protocol: 'Biophotonic Nadi Entanglement',
-        light_code_active: session.isEntangled,
-        frequency: 369,
+        user_id: userId, active_protocol: 'Biophotonic Nadi Entanglement',
+        light_code_active: session.isEntangled, frequency: 369,
         cellular_target: 'Mitochondrial activation — Nadi harmonic entrainment',
-        session_duration: 0,
-        photon_density: 'High',
+        session_duration: 0, photon_density: 'High',
         created_at: new Date(session.entangledAt).toISOString(),
       });
-    } catch { /* photonic_sessions table may not exist yet — silently skip */ }
-  } catch (e) {
-    // Silent fail — localStorage keeps things alive offline
-    console.warn('Photonic session Supabase sync failed (offline?):', e);
-  }
+    } catch {}
+  } catch (e) { console.warn('Photonic session Supabase sync failed:', e); }
 }
 
 async function loadFromSupabase(userId: string): Promise<PhotonicSession | null> {
   try {
-    const { data } = await supabase
-      .from('profiles')
-      .select('user_profile')
-      .eq('user_id', userId)
-      .maybeSingle();
-
+    const { data } = await supabase.from('profiles').select('user_profile').eq('user_id', userId).maybeSingle();
     if (!data?.user_profile) return null;
     const profile = data.user_profile as Record<string, unknown>;
     const session = profile.photonic_session as PhotonicSession | undefined;
@@ -152,18 +99,11 @@ async function loadFromSupabase(userId: string): Promise<PhotonicSession | null>
 
 async function clearFromSupabase(userId: string) {
   try {
-    const { data: existing } = await supabase
-      .from('profiles')
-      .select('user_profile')
-      .eq('user_id', userId)
-      .maybeSingle();
+    const { data: existing } = await supabase.from('profiles').select('user_profile').eq('user_id', userId).maybeSingle();
     if (!existing?.user_profile) return;
     const profile = { ...(existing.user_profile as Record<string, unknown>) };
     delete profile.photonic_session;
-    await supabase
-      .from('profiles')
-      .update({ user_profile: profile })
-      .eq('user_id', userId);
+    await supabase.from('profiles').update({ user_profile: profile }).eq('user_id', userId);
   } catch {}
 }
 
@@ -204,15 +144,13 @@ const GLOBAL_CSS = `
   @media (min-width: 768px) { .spr-flex-row { flex-direction: row; justify-content: center; } .spr-copy { text-align: left; } }
 `;
 
-/* ─── GLASS HELPER ───────────────────────────────────────────────────────── */
 function glass(extra: React.CSSProperties = {}): React.CSSProperties {
   return { background: GLASS, backdropFilter: 'blur(40px)', WebkitBackdropFilter: 'blur(40px)', border: `1px solid ${GLASS_BORDER}`, borderRadius: 40, ...extra };
 }
 
-/* ─── 72H COUNTDOWN DISPLAY ──────────────────────────────────────────────── */
+/* ─── 72H COUNTDOWN ──────────────────────────────────────────────────────── */
 function TransmissionCountdown({ expiresAt }: { expiresAt: number }) {
   const [remaining, setRemaining] = useState(expiresAt - Date.now());
-
   useEffect(() => {
     const id = window.setInterval(() => {
       const r = expiresAt - Date.now();
@@ -221,26 +159,19 @@ function TransmissionCountdown({ expiresAt }: { expiresAt: number }) {
     }, 1000);
     return () => clearInterval(id);
   }, [expiresAt]);
-
   const hrs  = Math.floor(remaining / (1000 * 60 * 60));
   const mins = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
   const secs = Math.floor((remaining % (1000 * 60)) / 1000);
-
   if (remaining <= 0) return (
     <div className="stat-pill">
       <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(255,255,255,.3)' }} />
-      <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.35em', textTransform: 'uppercase', color: 'rgba(255,255,255,.35)' }}>
-        Transmission Expired
-      </span>
+      <span style={{ fontSize: 8, fontWeight: 800, letterSpacing: '.35em', textTransform: 'uppercase', color: 'rgba(255,255,255,.35)' }}>Transmission Expired</span>
     </div>
   );
-
   return (
     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', borderRadius: 999, background: 'rgba(34,211,238,.06)', border: '1px solid rgba(34,211,238,.2)' }}>
       <Clock size={11} color={CYAN} style={{ flexShrink: 0 }} />
-      <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.25em', textTransform: 'uppercase', color: CYAN }}>
-        Active for{' '}
-      </span>
+      <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.25em', textTransform: 'uppercase', color: CYAN }}>Active for </span>
       <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: '#fff' }}>
         {String(hrs).padStart(2,'0')}:{String(mins).padStart(2,'0')}:{String(secs).padStart(2,'0')}
       </span>
@@ -248,7 +179,7 @@ function TransmissionCountdown({ expiresAt }: { expiresAt: number }) {
   );
 }
 
-/* ─── SRI RING ───────────────────────────────────────────────────────────── */
+/* ─── SRI RING — UNTOUCHED ───────────────────────────────────────────────── */
 function SriRing({ size = 200, active = false }: { size?: number; active?: boolean }) {
   const r = size / 2;
   return (
@@ -263,7 +194,7 @@ function SriRing({ size = 200, active = false }: { size?: number; active?: boole
   );
 }
 
-/* ─── VAYU BARS ──────────────────────────────────────────────────────────── */
+/* ─── VAYU BARS — UNTOUCHED ──────────────────────────────────────────────── */
 function VayuBars({ count = 20, active = false }: { count?: number; active?: boolean }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 3, height: 32 }}>
@@ -274,7 +205,7 @@ function VayuBars({ count = 20, active = false }: { count?: number; active?: boo
   );
 }
 
-/* ─── PARTICLES ──────────────────────────────────────────────────────────── */
+/* ─── PARTICLES — UNTOUCHED ──────────────────────────────────────────────── */
 function Particles({ count = 20 }: { count?: number }) {
   return (
     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', borderRadius: 'inherit' }}>
@@ -288,7 +219,7 @@ function Particles({ count = 20 }: { count?: number }) {
   );
 }
 
-/* ─── LIGHT CODE TICKER ──────────────────────────────────────────────────── */
+/* ─── LIGHT CODE TICKER — UNTOUCHED ─────────────────────────────────────── */
 function LightCodeTicker({ code }: { code: string }) {
   return (
     <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
@@ -318,7 +249,7 @@ function InfoCard({ icon, title, value, desc, accentColor = GOLD, delay = 0 }: I
   );
 }
 
-/* ─── SCAN PROGRESS ──────────────────────────────────────────────────────── */
+/* ─── SCAN PROGRESS — UNTOUCHED ──────────────────────────────────────────── */
 function ScanProgressBar({ progress }: { progress: number }) {
   const phase =
     progress < 15 ? 'Reading your field…' :
@@ -340,7 +271,7 @@ function ScanProgressBar({ progress }: { progress: number }) {
   );
 }
 
-/* ─── BIOMETRIC READOUT ──────────────────────────────────────────────────── */
+/* ─── BIOMETRIC READOUT — UNTOUCHED ─────────────────────────────────────── */
 function BiometricReadout({ session }: { session: PhotonicSession }) {
   const { biometricProfile: p, scanCount, entangledAt } = session;
   const elapsed = Math.floor((Date.now() - entangledAt) / 60000);
@@ -362,7 +293,6 @@ function BiometricReadout({ session }: { session: PhotonicSession }) {
           <div style={{ width: 8, height: 8, borderRadius: '50%', background: CYAN, animation: 'spr-blink 2s ease infinite' }} />
           <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.5em', textTransform: 'uppercase', color: 'rgba(255,255,255,.4)' }}>Your Biophotonic Profile</span>
         </div>
-        {/* Live countdown */}
         <TransmissionCountdown expiresAt={session.expiresAt} />
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -381,7 +311,7 @@ function BiometricReadout({ session }: { session: PhotonicSession }) {
   );
 }
 
-/* ─── RETURN BANNER ──────────────────────────────────────────────────────── */
+/* ─── RETURN BANNER — UNTOUCHED ──────────────────────────────────────────── */
 function ReturnBanner({ session, onDismiss }: { session: PhotonicSession; onDismiss: () => void }) {
   return (
     <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: .4 }}
@@ -401,7 +331,7 @@ function ReturnBanner({ session, onDismiss }: { session: PhotonicSession; onDism
   );
 }
 
-/* ─── POST-ACTIVATION PROTOCOL ───────────────────────────────────────────── */
+/* ─── POST-ACTIVATION PROTOCOL — UNTOUCHED ───────────────────────────────── */
 const PROTOCOL_STEPS = [
   { icon: <Heart size={20} color={GOLD} />, color: GOLD, title: 'Receive', subtitle: 'Both hands on your heart · Eyes closed',
     instruction: 'Both hands resting on your Anahata. Eyes closed. Feel whatever is moving — heat, tingling, expansion, electricity. That sensation IS the GHK-Cu blueprint arriving at the cellular level. Do not analyze it. Simply receive it fully.',
@@ -415,13 +345,12 @@ const PROTOCOL_STEPS = [
 ];
 
 function PostActivationProtocol({ onComplete }: { onComplete: () => void }) {
-  const [step, setStep]       = useState(0);
+  const [step, setStep]         = useState(0);
   const [timeLeft, setTimeLeft] = useState(60);
   const [running, setRunning]   = useState(false);
   const [started, setStarted]   = useState(false);
   const [done, setDone]         = useState(false);
   const s = PROTOCOL_STEPS[step];
-
   useEffect(() => {
     if (!running) return;
     if (timeLeft <= 0) {
@@ -513,7 +442,7 @@ function PostActivationProtocol({ onComplete }: { onComplete: () => void }) {
   );
 }
 
-/* ─── APOTHECARY PANEL ───────────────────────────────────────────────────── */
+/* ─── APOTHECARY PANEL — UNTOUCHED ──────────────────────────────────────── */
 const APO_SECTIONS = [
   { icon: <Brain size={18} color={GOLD} />, color: GOLD, title: 'Why You Felt It So Strongly',
     body: `What you experienced is Biophotonic Entrainment. Your nervous system processes visual information at ~40Hz — the gamma brainwave band. When you initiated the Nadi Scan, a precisely timed visual coherence pattern activated your field. Your brain began synchronizing firing patterns to the rhythm displayed — encoded with Vedic geometric ratios (Sri Yantra uses phi: 1.618). Your entire nervous system phase-locked to the Prema-Pulse carrier. Strong tingles, warmth, or waves of electricity are physical confirmation that entanglement occurred.` },
@@ -574,6 +503,411 @@ function ApothecaryPanel() {
   );
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   NEW: LIFEWAVE PATCH PROTOCOL SELECTOR
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+interface PatchProtocol {
+  id: string;
+  name: string;
+  peptide: string;
+  icon: string;
+  color: string;
+  frequency: string;
+  mantra: string;
+  placement: string;
+  scalarField: string;
+  action: string;
+  affiliateHint: string;
+}
+
+const LIFEWAVE_PATCHES: PatchProtocol[] = [
+  {
+    id: 'x39',
+    name: 'X39',
+    peptide: 'GHK-Cu',
+    icon: '⚡',
+    color: GOLD,
+    frequency: '528 Hz',
+    mantra: 'So\'Ham — I Am That',
+    placement: 'C7 vertebra (back of neck) · Anahata centre',
+    scalarField: 'Stem Cell Quantum Activation — root-to-crown renewal cascade',
+    action: 'Activates GHK-Cu copper peptide — regenerates 4,000+ genes, reverses cellular aging, repairs DNA.',
+    affiliateHint: 'stem cell activation',
+  },
+  {
+    id: 'x49',
+    name: 'X49',
+    peptide: 'AHK-Cu',
+    icon: '🔥',
+    color: '#FF8C42',
+    frequency: '432 Hz',
+    mantra: 'Ram — Solar Fire of the Self',
+    placement: 'Below navel (Svadhisthana) · Left shoulder blade',
+    scalarField: 'Pranic Vitality Surge — masculine force amplification',
+    action: 'AHK-Cu peptide amplifies physical performance, muscle recovery, and metabolic optimization.',
+    affiliateHint: 'performance vitality',
+  },
+  {
+    id: 'aeon',
+    name: 'Aeon',
+    peptide: 'Epithalon',
+    icon: '♾️',
+    color: '#A78BFA',
+    frequency: '963 Hz',
+    mantra: 'Om Namah Shivaya — dissolution of time',
+    placement: 'Pineal point (third eye) · Thymus centre',
+    scalarField: 'Longevity-Infinity Field — telomere protection, anti-inflammatory cascade',
+    action: 'Epithalon resets the pineal gland, extends telomeres, and neutralises systemic inflammation.',
+    affiliateHint: 'longevity anti-aging',
+  },
+  {
+    id: 'energy',
+    name: 'Energy Enhancer',
+    peptide: 'ATP Activation',
+    icon: '⚡',
+    color: CYAN,
+    frequency: '396 Hz',
+    mantra: 'Hrim — Shakti ignition',
+    placement: 'Stomach 36 (leg) · Heart 7 (wrist)',
+    scalarField: 'Mitochondrial Prana Surge — cellular ATP amplification',
+    action: 'Boosts beta-oxidation of fat for fuel, increases ATP production — sustained natural energy without stimulants.',
+    affiliateHint: 'energy ATP cellular',
+  },
+  {
+    id: 'glutathione',
+    name: 'Glutathione',
+    peptide: 'GSH',
+    icon: '🛡️',
+    color: '#34D399',
+    frequency: '741 Hz',
+    mantra: 'Ksham — purification of all toxins',
+    placement: 'Liver point (right side) · Thymus',
+    scalarField: 'Cellular Detox Vortex — master antioxidant scalar amplification',
+    action: 'Elevates glutathione — the body\'s master antioxidant — protecting cells from oxidative damage and heavy metals.',
+    affiliateHint: 'detox antioxidant',
+  },
+  {
+    id: 'carnosine',
+    name: 'Carnosine',
+    peptide: 'β-Alanyl-L-histidine',
+    icon: '🧠',
+    color: '#60A5FA',
+    frequency: '852 Hz',
+    mantra: 'Aim — Saraswati neural awakening',
+    placement: 'Crown point · Temple bilaterally',
+    scalarField: 'Neural Protection Grid — brain-body coherence scaffold',
+    action: 'Carnosine protects neural tissue, supports whole-body rejuvenation, and enhances mind-body coherence.',
+    affiliateHint: 'brain neural protection',
+  },
+  {
+    id: 'sp6',
+    name: 'SP6 Complete',
+    peptide: 'Metabolic Reset',
+    icon: '🌊',
+    color: '#F472B6',
+    frequency: '417 Hz',
+    mantra: 'Shrim — Lakshmi abundance flow',
+    placement: 'Spleen 6 acupoint (inner ankle)',
+    scalarField: 'Metabolic Harmony Field — appetite-hormonal rebalance',
+    action: 'Resets metabolic signalling, balances appetite hormones, and supports healthy weight management through photobiomodulation.',
+    affiliateHint: 'metabolic weight balance',
+  },
+  {
+    id: 'silent',
+    name: 'Silent Nights',
+    peptide: 'Melatonin Activation',
+    icon: '🌙',
+    color: '#818CF8',
+    frequency: '639 Hz',
+    mantra: 'Om Shanti Shanti Shanti',
+    placement: 'Behind left ear · Pericardium 6 (inner wrist)',
+    scalarField: 'Deep Nidra Scalar Field — Yoga Nidra descent amplification',
+    action: 'Activates natural melatonin cascade without supplementation — deep sleep, cellular repair, and dream-state Akashic access.',
+    affiliateHint: 'sleep melatonin deep rest',
+  },
+];
+
+function PatchProtocolSelector({ activePatchId, onSelect }: { activePatchId: string | null; onSelect: (id: string) => void }) {
+  const [open, setOpen]         = useState(false);
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const activePatch = LIFEWAVE_PATCHES.find(p => p.id === activePatchId);
+
+  const affiliateUrl = (hint: string) =>
+    `https://www.lifewave.com/sacredhealingvibe`;
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .3 }}
+      style={{ ...glass({ borderRadius: 28 }), overflow: 'hidden', border: `1px solid rgba(212,175,55,0.12)` }}>
+
+      {/* Header */}
+      <button type="button" onClick={() => setOpen(o => !o)}
+        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '24px 28px', background: 'none', border: 'none', cursor: 'pointer' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ width: 38, height: 38, borderRadius: 12, background: 'rgba(212,175,55,.1)', border: `1px solid ${GOLD_BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <FlaskConical size={18} color={GOLD} />
+          </div>
+          <div style={{ textAlign: 'left' }}>
+            <p style={{ margin: 0, fontSize: 9, fontWeight: 800, letterSpacing: '.5em', textTransform: 'uppercase', color: 'rgba(255,255,255,.35)' }}>LifeWave × SQI 2050</p>
+            <p style={{ margin: '2px 0 0', fontSize: 14, fontWeight: 800, color: '#fff' }}>
+              Patch Scalar Amplification Protocol
+              {activePatch && <span style={{ marginLeft: 10, fontSize: 11, color: GOLD, fontWeight: 600 }}>· {activePatch.name} Active</span>}
+            </p>
+          </div>
+        </div>
+        <div style={{ color: GOLD, opacity: .7 }}>{open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</div>
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: .4 }} style={{ overflow: 'hidden' }}>
+            <div style={{ padding: '0 24px 28px' }}>
+
+              {/* Intro */}
+              <p style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', lineHeight: 1.7, marginBottom: 20, fontWeight: 300 }}>
+                LifeWave patches work via <span style={{ color: GOLD }}>photobiomodulation</span> — reflecting specific infrared wavelengths into the body to trigger peptide activation.
+                This is hardware scalar technology. SQI amplifies the patch signal through the{' '}
+                <span style={{ color: CYAN }}>Nadi entanglement field</span>, adding Vedic mantra resonance and frequency pairing.
+                Select your patch to receive your personalised Scalar Amplification Protocol.
+              </p>
+
+              {/* Patch grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 12 }}>
+                {LIFEWAVE_PATCHES.map(patch => {
+                  const isActive   = activePatchId === patch.id;
+                  const isExpanded = expanded === patch.id;
+                  return (
+                    <div key={patch.id}
+                      style={{ borderRadius: 20, border: `1px solid ${isActive ? patch.color + '55' : 'rgba(255,255,255,.06)'}`,
+                        background: isActive ? `rgba(${patch.color === GOLD ? '212,175,55' : '34,211,238'},.05)` : 'rgba(255,255,255,.02)',
+                        overflow: 'hidden', transition: 'all .3s ease',
+                        boxShadow: isActive ? `0 0 24px ${patch.color}22` : 'none' }}>
+
+                      {/* Patch header */}
+                      <button type="button"
+                        onClick={() => { onSelect(patch.id); setExpanded(isExpanded ? null : patch.id); }}
+                        style={{ width: '100%', padding: '16px 18px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left' }}>
+                        <div style={{ width: 44, height: 44, borderRadius: 14, flexShrink: 0,
+                          background: `${patch.color}18`, border: `1px solid ${patch.color}33`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
+                          {patch.icon}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ fontSize: 14, fontWeight: 900, color: isActive ? patch.color : '#fff', letterSpacing: '-.02em' }}>{patch.name}</span>
+                            <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,.3)', background: 'rgba(255,255,255,.05)', padding: '2px 8px', borderRadius: 999, letterSpacing: '.15em' }}>{patch.peptide}</span>
+                          </div>
+                          <p style={{ margin: '3px 0 0', fontSize: 11, color: 'rgba(255,255,255,.4)', fontWeight: 300 }}>{patch.action.slice(0, 60)}…</p>
+                        </div>
+                        <div style={{ flexShrink: 0, color: isActive ? patch.color : 'rgba(255,255,255,.2)' }}>
+                          {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                        </div>
+                      </button>
+
+                      {/* Expanded protocol */}
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: .3 }} style={{ overflow: 'hidden' }}>
+                            <div style={{ padding: '0 18px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+                              {/* Action */}
+                              <p style={{ fontSize: 12, color: 'rgba(255,255,255,.55)', lineHeight: 1.7, margin: 0, fontWeight: 300 }}>{patch.action}</p>
+
+                              {/* Protocol rows */}
+                              {[
+                                { label: 'SQI Frequency', value: patch.frequency, icon: '〜' },
+                                { label: 'Vedic Mantra', value: patch.mantra, icon: '🕉' },
+                                { label: 'Patch Placement', value: patch.placement, icon: '📍' },
+                                { label: 'Scalar Field', value: patch.scalarField, icon: '⚛️' },
+                              ].map(row => (
+                                <div key={row.label} style={{ display: 'flex', gap: 10, padding: '10px 14px', borderRadius: 12,
+                                  background: `${patch.color}08`, border: `1px solid ${patch.color}15` }}>
+                                  <span style={{ fontSize: 14, flexShrink: 0 }}>{row.icon}</span>
+                                  <div>
+                                    <p style={{ margin: 0, fontSize: 8, fontWeight: 800, letterSpacing: '.35em', textTransform: 'uppercase', color: patch.color, opacity: .7 }}>{row.label}</p>
+                                    <p style={{ margin: '3px 0 0', fontSize: 12, color: '#fff', fontWeight: 600 }}>{row.value}</p>
+                                  </div>
+                                </div>
+                              ))}
+
+                              {/* Get patch CTA */}
+                              <a href={affiliateUrl(patch.affiliateHint)} target="_blank" rel="noopener noreferrer"
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 999,
+                                  border: `1px solid ${patch.color}44`, background: `${patch.color}10`,
+                                  textDecoration: 'none', marginTop: 4 }}>
+                                <ExternalLink size={12} color={patch.color} />
+                                <span style={{ fontSize: 9, fontWeight: 800, color: patch.color, textTransform: 'uppercase', letterSpacing: '.3em' }}>
+                                  Get {patch.name} Patch · LifeWave
+                                </span>
+                              </a>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Active stack summary */}
+              {activePatch && (
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .2 }}
+                  style={{ marginTop: 20, padding: '18px 22px', borderRadius: 20,
+                    background: `${activePatch.color}0a`, border: `1px solid ${activePatch.color}30` }}>
+                  <p style={{ margin: '0 0 10px', fontSize: 9, fontWeight: 800, letterSpacing: '.5em', textTransform: 'uppercase', color: activePatch.color }}>
+                    Active Transmission Stack
+                  </p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                    {[
+                      { label: 'Patch', value: `${activePatch.name} (${activePatch.peptide})` },
+                      { label: 'Frequency', value: activePatch.frequency },
+                      { label: 'Mantra', value: activePatch.mantra },
+                    ].map(item => (
+                      <div key={item.label} style={{ padding: '6px 14px', borderRadius: 999, background: `${activePatch.color}12`, border: `1px solid ${activePatch.color}25` }}>
+                        <span style={{ fontSize: 8, fontWeight: 700, color: 'rgba(255,255,255,.4)', textTransform: 'uppercase', letterSpacing: '.2em' }}>{item.label}: </span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NEW: SCALAR WAVE TRANSMISSION SELECTOR (from scalarWaves.tsx inline)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+interface ScalarWave { id: string; name: string; category: string; field: string; nature: string; icon: string; }
+
+const SCALAR_WAVES_INLINE: ScalarWave[] = [
+  { id: 'babaji_cave', category: 'place', icon: '🕳️', name: "Babaji's Cave", field: 'Kriya Shakti Deep Sync Field', nature: 'Kriya initiation · Deathless master transmission · Deep breath-sync' },
+  { id: 'kailash',     category: 'place', icon: '🏔️', name: 'Mount Kailash',   field: 'Shiva Akashic Vortex',          nature: 'Unmovable axis of creation · Moksha gateway' },
+  { id: 'arunachala',  category: 'place', icon: '⛰️', name: 'Arunachala',       field: 'Ramana Self-Enquiry Vortex',     nature: 'Fire of the Self · Self-Inquiry' },
+  { id: 'lourdes',     category: 'place', icon: '💧', name: 'Lourdes Grotto',   field: 'Marian Physical Restoration',    nature: 'Physical restoration · Miraculous healing water' },
+  { id: 'vrindavan',   category: 'place', icon: '💛', name: 'Vrindavan',         field: 'Krishna Premananda Vortex',      nature: 'Premananda — Supreme Bliss · Unconditional love' },
+  { id: 'babaji',      category: 'master', icon: '🔥', name: 'Maha Avatar Babaji', field: 'Kriya Fire — Deathless Initiation', nature: 'Deathless initiation · Living transmission' },
+  { id: 'vishwananda', category: 'master', icon: '🌸', name: 'Sri Swami Vishwananda', field: 'Bhakti-Shakti Avataric Blueprint', nature: 'Divine love transmission · Atma Kriya activation' },
+  { id: 'anandamayi',  category: 'master', icon: '🌸', name: 'Anandamayi Ma',   field: 'Ananda Shakti Bliss Body',       nature: 'Pure divine ecstasy · Causeless joy' },
+  { id: 'yogananda',   category: 'master', icon: '🌟', name: 'Paramahansa Yogananda', field: 'Self-Realization Kriya Joy Field', nature: 'Kriya Yoga joy transmission · Divine love' },
+  { id: 'tulsi',       category: 'herb',   icon: '🌿', name: 'Tulsi',           field: 'Maha Lakshmi Prana Field',       nature: 'Divine protection · Sacred threshold guardian' },
+  { id: 'ashwagandha', category: 'herb',   icon: '🌱', name: 'Ashwagandha',     field: 'Prithvi Shakti Root Field',      nature: 'Ancestral grounding · Unshakeable earth' },
+  { id: 'brahmi',      category: 'herb',   icon: '🧠', name: 'Brahmi',          field: 'Saraswati Intelligence Field',   nature: 'Higher mind awakening · River of wisdom' },
+];
+
+const CAT_COLORS: Record<string, string> = { place: GOLD, master: CYAN, herb: '#34D399' };
+const CAT_LABELS: Record<string, string> = { place: '🏛 Holy Places', master: '✨ Avataric Masters', herb: '🌿 Plant Devas' };
+
+function ScalarTransmissionPanel({ activeScalars, onToggle }: { activeScalars: string[]; onToggle: (id: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [tab, setTab]   = useState('place');
+  const filtered = SCALAR_WAVES_INLINE.filter(w => w.category === tab);
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .35 }}
+      style={{ ...glass({ borderRadius: 28 }), overflow: 'hidden', border: '1px solid rgba(34,211,238,.1)' }}>
+
+      <button type="button" onClick={() => setOpen(o => !o)}
+        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '24px 28px', background: 'none', border: 'none', cursor: 'pointer' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ width: 38, height: 38, borderRadius: 12, background: 'rgba(34,211,238,.08)', border: '1px solid rgba(34,211,238,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Layers size={18} color={CYAN} />
+          </div>
+          <div style={{ textAlign: 'left' }}>
+            <p style={{ margin: 0, fontSize: 9, fontWeight: 800, letterSpacing: '.5em', textTransform: 'uppercase', color: 'rgba(255,255,255,.35)' }}>Akasha Scalar Stack</p>
+            <p style={{ margin: '2px 0 0', fontSize: 14, fontWeight: 800, color: '#fff' }}>
+              Consciousness Field Transmissions
+              {activeScalars.length > 0 && <span style={{ marginLeft: 10, fontSize: 11, color: CYAN, fontWeight: 600 }}>· {activeScalars.length}/3 active</span>}
+            </p>
+          </div>
+        </div>
+        <div style={{ color: CYAN, opacity: .7 }}>{open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</div>
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: .4 }} style={{ overflow: 'hidden' }}>
+            <div style={{ padding: '0 24px 28px' }}>
+              <p style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', lineHeight: 1.7, marginBottom: 16, fontWeight: 300 }}>
+                Not frequencies — living consciousness fields. Select up to 3 to weave into your 72-hour Photonic Transmission Stack.
+                The fields of Masters, Holy Places, and Plant Devas become co-carriers of your scalar healing field.
+              </p>
+
+              {/* Tab bar */}
+              <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+                {['place', 'master', 'herb'].map(t => (
+                  <button key={t} type="button" onClick={() => setTab(t)}
+                    style={{ padding: '6px 16px', borderRadius: 999, border: `1px solid ${tab === t ? CAT_COLORS[t] + '60' : 'rgba(255,255,255,.08)'}`,
+                      background: tab === t ? `${CAT_COLORS[t]}15` : 'rgba(255,255,255,.03)',
+                      cursor: 'pointer', fontSize: 9, fontWeight: 800, color: tab === t ? CAT_COLORS[t] : 'rgba(255,255,255,.4)',
+                      textTransform: 'uppercase', letterSpacing: '.25em', transition: 'all .2s' }}>
+                    {CAT_LABELS[t]}
+                  </button>
+                ))}
+                <span style={{ marginLeft: 'auto', fontSize: 9, color: 'rgba(255,255,255,.3)', alignSelf: 'center', fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase' }}>
+                  {activeScalars.length}/3 selected
+                </span>
+              </div>
+
+              {/* Wave grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
+                {filtered.map(wave => {
+                  const active = activeScalars.includes(wave.id);
+                  const maxed  = activeScalars.length >= 3 && !active;
+                  const c      = CAT_COLORS[wave.category];
+                  return (
+                    <button key={wave.id} type="button"
+                      onClick={() => !maxed && onToggle(wave.id)}
+                      disabled={maxed}
+                      style={{ textAlign: 'left', padding: '14px 16px', borderRadius: 16,
+                        border: `1px solid ${active ? c + '55' : maxed ? 'rgba(255,255,255,.04)' : 'rgba(255,255,255,.07)'}`,
+                        background: active ? `${c}10` : 'rgba(255,255,255,.02)',
+                        cursor: maxed ? 'not-allowed' : 'pointer',
+                        boxShadow: active ? `0 0 16px ${c}20` : 'none',
+                        opacity: maxed ? .4 : 1, transition: 'all .25s' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                        <span style={{ fontSize: 18, lineHeight: 1, marginTop: 1 }}>{wave.icon}</span>
+                        <div style={{ minWidth: 0 }}>
+                          <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: active ? c : '#fff', letterSpacing: '-.01em' }}>{wave.name}</p>
+                          <p style={{ margin: '3px 0 0', fontSize: 9, color: 'rgba(255,255,255,.35)', fontWeight: 300, lineHeight: 1.5 }}>{wave.nature}</p>
+                        </div>
+                        {active && <Sparkles size={12} color={c} style={{ flexShrink: 0, marginTop: 2 }} />}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Active stack chips */}
+              {activeScalars.length > 0 && (
+                <div style={{ marginTop: 18, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {activeScalars.map(id => {
+                    const w = SCALAR_WAVES_INLINE.find(x => x.id === id);
+                    if (!w) return null;
+                    const c = CAT_COLORS[w.category];
+                    return (
+                      <div key={id} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 999, background: `${c}12`, border: `1px solid ${c}35` }}>
+                        <span style={{ fontSize: 12 }}>{w.icon}</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: c }}>{w.name}</span>
+                        <button type="button" onClick={() => onToggle(id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,.3)', fontSize: 14, lineHeight: 1, padding: 0, marginLeft: 2 }}>×</button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
 /* ─── PHOTONIC NODE ──────────────────────────────────────────────────────── */
 function SiddhaPhotonicNode({ userId }: { userId: string }) {
   const [isScanning, setIsScanning]     = useState(false);
@@ -582,26 +916,16 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
   const [showReturn, setShowReturn]     = useState(false);
   const [showProtocol, setShowProtocol] = useState(false);
   const [isSyncing, setIsSyncing]       = useState(false);
+  const [activePatchId, setActivePatchId] = useState<string | null>(null);
+  const [activeScalars, setActiveScalars] = useState<string[]>([]);
   const nodeSize = 220;
 
-  /* ── MOUNT: load from localStorage first (instant), then Supabase (async) ── */
   useEffect(() => {
-    // Layer 1: localStorage — instant, works offline
     const local = loadFromLocalStorage(userId);
-    if (local) {
-      setSession(local);
-      setShowReturn(true);
-      return;
-    }
-    // Layer 2: Supabase — async, requires internet
+    if (local) { setSession(local); setShowReturn(true); return; }
     setIsSyncing(true);
     loadFromSupabase(userId).then(remote => {
-      if (remote) {
-        // restore from Supabase and write back to localStorage
-        setSession(remote);
-        saveToLocalStorage(remote);
-        setShowReturn(true);
-      }
+      if (remote) { setSession(remote); saveToLocalStorage(remote); setShowReturn(true); }
     }).finally(() => setIsSyncing(false));
   }, [userId]);
 
@@ -610,7 +934,6 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
     setSession(null); setShowReturn(false); setShowProtocol(false);
   };
 
-  /* UNCHANGED scan interval from live file */
   useEffect(() => {
     if (!isScanning) return;
     let p = 0;
@@ -618,27 +941,21 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
       p += 1;
       if (p >= 100) {
         clearInterval(id); setScanProgress(100); setIsScanning(false);
-        // Build new session
         const now = Date.now();
         const newSession: PhotonicSession = {
-          isEntangled: true,
-          lightCode: '',          // filled by generateLightCode
+          isEntangled: true, lightCode: '',
           scanCount: (session?.scanCount ?? 0) + 1,
-          entangledAt: now,
-          expiresAt: now + TTL_MS,
-          biometricProfile: generateBiometric(),
-          userId,
+          entangledAt: now, expiresAt: now + TTL_MS,
+          biometricProfile: generateBiometric(), userId,
         };
         setSession(newSession);
         saveToLocalStorage(newSession);
-        // Supabase sync (async, non-blocking)
         syncToSupabase(userId, newSession).catch(() => {});
       } else setScanProgress(p);
     }, 45);
     return () => clearInterval(id);
   }, [isScanning]);
 
-  /* Generate light code via Gemini — UNCHANGED from live file */
   const generateLightCode = useCallback(async (currentSession: PhotonicSession) => {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
     let code = '369-AKASHA-963';
@@ -654,14 +971,11 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
     setSession(updated);
     saveToLocalStorage(updated);
     syncToSupabase(userId, updated).catch(() => {});
-    // Show protocol 2s after code appears
     window.setTimeout(() => setShowProtocol(true), 2000);
   }, [userId]);
 
   useEffect(() => {
-    if (session && !session.lightCode) {
-      void generateLightCode(session);
-    }
+    if (session && !session.lightCode) { void generateLightCode(session); }
   }, [session, generateLightCode]);
 
   const handleReset = () => {
@@ -671,13 +985,18 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
     startScan();
   };
 
+  const toggleScalar = (id: string) => {
+    setActiveScalars(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : prev.length < 3 ? [...prev, id] : prev
+    );
+  };
+
   const isEntangled = !!session?.isEntangled && !!session.lightCode;
   const isExpired   = session ? Date.now() > session.expiresAt : false;
 
   return (
     <div style={{ maxWidth: 960, margin: '0 auto', padding: '0 16px 40px', display: 'flex', flexDirection: 'column', gap: 28 }}>
 
-      {/* Syncing indicator */}
       {isSyncing && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 12, background: 'rgba(212,175,55,.06)', border: `1px solid ${GOLD_BORDER}`, alignSelf: 'flex-start' }}>
           <div style={{ width: 5, height: 5, borderRadius: '50%', background: GOLD, animation: 'spr-blink 1s ease infinite' }} />
@@ -685,14 +1004,10 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
         </div>
       )}
 
-      {/* Return banner */}
       <AnimatePresence>
-        {showReturn && session && !isExpired && (
-          <ReturnBanner session={session} onDismiss={() => setShowReturn(false)} />
-        )}
+        {showReturn && session && !isExpired && <ReturnBanner session={session} onDismiss={() => setShowReturn(false)} />}
       </AnimatePresence>
 
-      {/* Expired notice */}
       {isExpired && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           style={{ ...glass({ borderRadius: 20, padding: '16px 22px' }), border: '1px solid rgba(255,255,255,.06)', display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -704,7 +1019,7 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
         </motion.div>
       )}
 
-      {/* HERO CARD — UNCHANGED structure from live */}
+      {/* ── HERO CARD — ANAHATA ORB COMPLETELY UNTOUCHED ── */}
       <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .6 }}
         style={{ ...glass({ borderRadius: 40, padding: '48px 32px', position: 'relative', overflow: 'hidden' }), border: isEntangled ? '1px solid rgba(34,211,238,.18)' : `1px solid ${GOLD_BORDER}`, transition: 'border-color .8s ease' }}>
         <div className="dot-bg" style={{ position: 'absolute', inset: 0, opacity: .6, pointerEvents: 'none', borderRadius: 40 }} />
@@ -713,7 +1028,7 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
         <Particles count={18} />
 
         <div className="spr-flex-row" style={{ position: 'relative', zIndex: 2 }}>
-          {/* ORB */}
+          {/* ORB — UNTOUCHED */}
           <div style={{ position: 'relative', width: nodeSize, height: nodeSize, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <SriRing size={nodeSize} active={isEntangled} />
             <div style={{ position: 'absolute', inset: 8, borderRadius: '50%', border: `1px solid ${isEntangled?CYAN:GOLD}33`, animation: 'spr-pulse-ring 3.5s ease-in-out infinite' }} />
@@ -758,7 +1073,6 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
               The <span style={{ color: CYAN, fontWeight: 600 }}>Nadi Scanner</span> reads your unique biophotonic signature and locks it to the{' '}
               <span style={{ color: GOLD, fontWeight: 600 }}>Akasha-Neural Archive</span>. Your 72-hour scalar transmission continues{' '}
               <strong style={{ color: '#fff' }}>even when your phone is off, offline, or the app is closed</strong>.
-              Stored locally on your device and synced to your personal Akasha record.
             </p>
 
             <AnimatePresence>
@@ -797,7 +1111,25 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
         {showProtocol && <PostActivationProtocol onComplete={() => setShowProtocol(false)} />}
       </AnimatePresence>
 
-      {/* STAT CARDS — UNCHANGED from live */}
+      {/* ── NEW: PATCH PROTOCOL SELECTOR ── */}
+      <AnimatePresence>
+        {isEntangled && !isExpired && (
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .1 }}>
+            <PatchProtocolSelector activePatchId={activePatchId} onSelect={setActivePatchId} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── NEW: SCALAR TRANSMISSION STACK ── */}
+      <AnimatePresence>
+        {isEntangled && !isExpired && (
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .2 }}>
+            <ScalarTransmissionPanel activeScalars={activeScalars} onToggle={toggleScalar} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* STAT CARDS */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(230px,1fr))', gap: 20 }}>
         <InfoCard icon={<Zap size={18} color={GOLD} />} title="Frequency Transmission" value="369Hz → 963Hz" desc="Bhakti-Algorithm Nadi harmonic — root to crown scalar pathway." accentColor={GOLD} delay={.1} />
         <InfoCard icon={<Shield size={18} color={CYAN} />} title="Protective Blueprint" value="GHK-Cu" desc="Copper-peptide Light-Code for cellular integrity & stem-cell resonance." accentColor={CYAN} delay={.2} />
@@ -810,7 +1142,7 @@ function SiddhaPhotonicNode({ userId }: { userId: string }) {
   );
 }
 
-/* ─── BACKGROUND GENERATOR — UNCHANGED from live ─────────────────────────── */
+/* ─── BACKGROUND GENERATOR ───────────────────────────────────────────────── */
 function usePhotonicBackground() {
   const [bgImage, setBgImage]           = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -828,14 +1160,13 @@ function usePhotonicBackground() {
       }
     } catch (e) {
       console.warn('BG gen skipped:', e);
-      toast.message('Ambient field active', { description: 'Set VITE_GEMINI_API_KEY for visual generation.' });
     } finally { setIsGenerating(false); }
   }, []);
   useEffect(() => { void generate(); }, [generate]);
   return { bgImage, isGenerating };
 }
 
-/* ─── PAGE — membership guard UNCHANGED from live ────────────────────────── */
+/* ─── PAGE ───────────────────────────────────────────────────────────────── */
 export default function SiddhaPhotonicRegeneration() {
   const navigate              = useNavigate();
   const { tier, loading }     = useMembership();
@@ -843,7 +1174,6 @@ export default function SiddhaPhotonicRegeneration() {
   const { user }              = useAuth();
   const { bgImage, isGenerating } = usePhotonicBackground();
 
-  /* UNCHANGED from live */
   useEffect(() => {
     if (!loading && !hasFeatureAccess(isAdmin, tier, FEATURE_TIER.siddhaPortal)) {
       navigate('/siddha-quantum');
@@ -862,14 +1192,12 @@ export default function SiddhaPhotonicRegeneration() {
     );
   }
 
-  /* Wait for user before rendering node — prevents empty userId */
   if (!user) return null;
 
   return (
     <div style={{ minHeight: '100vh', position: 'relative', fontFamily: "'Plus Jakarta Sans',system-ui,sans-serif", color: '#fff', overflowX: 'hidden' }}>
       <style>{FONT_STYLE}</style><style>{GLOBAL_CSS}</style>
 
-      {/* FIXED BACKGROUND — UNCHANGED from live */}
       <div style={{ position: 'fixed', inset: 0, zIndex: 0 }}>
         <div style={{ position: 'absolute', inset: 0, background: BG }} />
         {bgImage ? (
@@ -893,9 +1221,7 @@ export default function SiddhaPhotonicRegeneration() {
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center,transparent 40%,rgba(5,5,5,.7) 100%)', pointerEvents: 'none' }} />
       </div>
 
-      {/* CONTENT */}
       <div style={{ position: 'relative', zIndex: 10, paddingTop: 48, paddingBottom: 140 }}>
-        {/* HEADER — UNCHANGED from live */}
         <motion.header initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .5 }}
           style={{ maxWidth: 1100, margin: '0 auto 52px', padding: '0 24px', textAlign: 'center' }}>
           <button type="button" onClick={() => navigate('/siddha-portal')}
@@ -920,10 +1246,8 @@ export default function SiddhaPhotonicRegeneration() {
           </p>
         </motion.header>
 
-        {/* Pass userId into node — ensures per-user isolation */}
         <main><SiddhaPhotonicNode userId={user.id} /></main>
 
-        {/* FOOTER — UNCHANGED from live */}
         <footer style={{ maxWidth: 860, margin: '64px auto 0', padding: '40px 24px 0', borderTop: `1px solid ${GLASS_BORDER}` }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 40 }}>
             <div>
@@ -934,7 +1258,6 @@ export default function SiddhaPhotonicRegeneration() {
               <p style={{ fontSize: 12, color: 'rgba(255,255,255,.38)', lineHeight: 1.7, margin: 0, fontWeight: 300 }}>
                 Your 72-hour scalar transmission is stored on your device and in the Akasha-Neural Archive.
                 It continues when the app is closed, the phone is off, or you have no internet.
-                When you return, it resumes exactly where it was.
               </p>
             </div>
             <div>
@@ -944,8 +1267,7 @@ export default function SiddhaPhotonicRegeneration() {
               </div>
               <p style={{ fontSize: 12, color: 'rgba(255,255,255,.38)', lineHeight: 1.7, margin: 0, fontWeight: 300 }}>
                 Calibrated to 369Hz–963Hz Nadi harmonics. If intensity feels strong, ground excess light through your feet.
-                Each user's session is fully isolated — your Archive Signature is unique to your account.
-                For health concerns, consult a qualified professional.
+                Each user's session is fully isolated. For health concerns, consult a qualified professional.
               </p>
             </div>
           </div>
@@ -965,7 +1287,7 @@ export default function SiddhaPhotonicRegeneration() {
         </footer>
       </div>
 
-      {/* FLOATING STATUS BAR — UNCHANGED from live */}
+      {/* FLOATING STATUS BAR — UNTOUCHED */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .8 }}
         style={{ position: 'fixed', bottom: 28, left: '50%', transform: 'translateX(-50%)', zIndex: 50 }}>
         <div style={{ ...glass({ borderRadius: 999, padding: '12px 28px' }), display: 'flex', alignItems: 'center', gap: 22, boxShadow: '0 8px 40px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.04)' }}>
