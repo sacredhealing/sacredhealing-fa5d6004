@@ -1,180 +1,161 @@
 /**
- * SQI DELTA-ARB BOT v5.0 — Hetzner 24/7
+ * SQI DELTA-ARB BOT v5.1 — Hetzner 24/7
  * 12 pairs | 0.05% threshold | 1m+3m windows | 2% dynamic sizing
  */
-
+'use strict';
 const https  = require('https');
 const http   = require('http');
 const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
 
-// ── ENV ──────────────────────────────────────────────────────────────────────
 const SUPABASE_URL  = process.env.SUPABASE_URL  || 'https://ssygukfdbtehvtndandn.supabase.co';
 const SUPABASE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || '';
 const BINANCE_KEY   = process.env.BINANCE_API_KEY    || '';
 const BINANCE_SEC   = process.env.BINANCE_API_SECRET || '';
 const MODE          = (process.env.BOT_MODE || 'PAPER').toUpperCase();
 const PORT          = parseInt(process.env.PORT || '8081');
-const RISK_PCT      = parseFloat(process.env.RISK_PCT || '0.02');      // 2% per trade
-const DELTA_THRESH  = parseFloat(process.env.DELTA_THRESHOLD || '0.0005'); // 0.05%
-const SCAN_MS       = parseInt(process.env.SCAN_INTERVAL_MS || '5000');    // 5s scan
+const RISK_PCT      = parseFloat(process.env.RISK_PCT || '0.02');
+const DELTA_THRESH  = parseFloat(process.env.DELTA_THRESHOLD || '0.0005');
+const SCAN_MS       = parseInt(process.env.SCAN_INTERVAL_MS || '5000');
 
-// ── 12 PAIRS ─────────────────────────────────────────────────────────────────
-const SYMBOLS = [
-  'BTCUSDC','ETHUSDC','SOLUSDC','BNBUSDC','XRPUSDC',
-  'DOGEUSDC','ADAUSDC','AVAXUSDC','DOTUSDC','LINKUSDC',
-  'UNIUSDC','MATICUSDC'
-];
-const ASSETS = {};
+const SYMBOLS = ['BTCUSDC','ETHUSDC','SOLUSDC','BNBUSDC','XRPUSDC','DOGEUSDC','ADAUSDC','AVAXUSDC','DOTUSDC','LINKUSDC','UNIUSDC','MATICUSDC'];
+const ASSETS  = {};
 SYMBOLS.forEach(s => { ASSETS[s] = s.replace('USDC',''); });
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// ── STATE ────────────────────────────────────────────────────────────────────
-const prices     = {};   // { BTCUSDC: [{price, ts}] }
-const openTrades = {};   // { BTCUSDC: {id, entry, direction, ts, size} }
-const lastSignal = {};   // debounce per symbol+direction
+const supabase   = createClient(SUPABASE_URL, SUPABASE_KEY);
+const prices     = {};
+const openTrades = {};
+const lastSignal = {};
 let   tradeCount = 0;
-let   wsConn     = null;
 const startTime  = Date.now();
-
 SYMBOLS.forEach(s => { prices[s] = []; });
 
-// ── BINANCE WEBSOCKET ────────────────────────────────────────────────────────
+console.log('');
+console.log('==================================================');
+console.log(' SQI DELTA-ARB BOT v5.1 — STARTING');
+console.log(` Mode: ${MODE} | Pairs: ${SYMBOLS.length} | Threshold: ${(DELTA_THRESH*100).toFixed(3)}%`);
+console.log(` Supabase: ${SUPABASE_URL}`);
+console.log(` Binance key: ${BINANCE_KEY ? BINANCE_KEY.slice(0,8)+'...' : 'NOT SET'}`);
+console.log('==================================================');
+
+// ── WEBSOCKET ────────────────────────────────────────────
 function connectWS() {
-  const streams = SYMBOLS.map(s => `${s.toLowerCase()}@aggTrade`).join('/');
-  const url     = `wss://stream.binance.com:9443/stream?streams=${streams}`;
-  const WebSocket = require('ws');
-  wsConn = new WebSocket(url);
-
-  wsConn.on('open', () => console.log(`[SQI] WS connected — ${SYMBOLS.length} pairs`));
-  wsConn.on('error', e  => console.error('[SQI] WS error:', e.message));
-  wsConn.on('close', () => { console.log('[SQI] WS closed — reconnecting 3s'); setTimeout(connectWS, 3000); });
-
-  wsConn.on('message', raw => {
+  let WebSocket;
+  try { WebSocket = require('ws'); } catch(e) { console.error('FATAL: ws not installed — run: npm install ws'); process.exit(1); }
+  
+  const streams = SYMBOLS.map(s => s.toLowerCase() + '@aggTrade').join('/');
+  const ws = new WebSocket('wss://stream.binance.com:9443/stream?streams=' + streams);
+  
+  ws.on('open', () => console.log('[WS] Connected to Binance — ' + SYMBOLS.length + ' pairs'));
+  ws.on('error', e => console.error('[WS] Error:', e.message));
+  ws.on('close', () => { console.log('[WS] Closed — reconnecting in 3s'); setTimeout(connectWS, 3000); });
+  ws.on('message', raw => {
     try {
-      const data = JSON.parse(raw).data || JSON.parse(raw);
-      if (!data.s || !data.p) return;
-      const sym   = data.s;
-      const price = parseFloat(data.p);
-      const ts    = Date.now();
-      if (!prices[sym]) return;
-      prices[sym].push({ price, ts });
-      // Keep 5 minutes of ticks
+      const d = JSON.parse(raw);
+      const t = d.data || d;
+      if (!t.s || !t.p) return;
+      const ts = Date.now();
+      if (!prices[t.s]) return;
+      prices[t.s].push({ price: parseFloat(t.p), ts });
       const cutoff = ts - 5 * 60 * 1000;
-      prices[sym] = prices[sym].filter(p => p.ts >= cutoff);
+      prices[t.s] = prices[t.s].filter(p => p.ts >= cutoff);
     } catch(e) {}
   });
 }
 
-// ── DELTA CALCULATION ────────────────────────────────────────────────────────
-function getDelta(sym, windowMs) {
+// ── DELTA ────────────────────────────────────────────────
+function getDelta(sym, ms) {
   const arr = prices[sym];
   if (!arr || arr.length < 2) return null;
   const now  = Date.now();
-  const past = arr.find(p => p.ts >= now - windowMs);
+  const past = arr.find(p => p.ts >= now - ms);
   if (!past) return null;
-  const current = arr[arr.length - 1].price;
-  return (current - past.price) / past.price;
+  const cur = arr[arr.length - 1].price;
+  return (cur - past.price) / past.price;
 }
 
-// ── LIVE USDC BALANCE ────────────────────────────────────────────────────────
+// ── BALANCE ──────────────────────────────────────────────
 async function getLiveBalance() {
-  if (!BINANCE_KEY || !BINANCE_SEC) return 100; // paper fallback
+  if (!BINANCE_KEY || !BINANCE_SEC || MODE === 'PAPER') return 100;
   try {
     const ts  = Date.now();
-    const qs  = `timestamp=${ts}&recvWindow=5000`;
+    const qs  = 'timestamp=' + ts + '&recvWindow=5000';
     const sig = crypto.createHmac('sha256', BINANCE_SEC).update(qs).digest('hex');
     const data = await new Promise((resolve, reject) => {
-      const req = https.request(
-        `https://api.binance.com/api/v3/account?${qs}&signature=${sig}`,
+      const req = https.request('https://api.binance.com/api/v3/account?' + qs + '&signature=' + sig,
         { headers: { 'X-MBX-APIKEY': BINANCE_KEY } },
-        res => { let b=''; res.on('data',d=>b+=d); res.on('end',()=>resolve(JSON.parse(b))); }
+        res => { let b=''; res.on('data',d=>b+=d); res.on('end',()=>{ try{resolve(JSON.parse(b));}catch(e){reject(e);} }); }
       );
       req.on('error', reject); req.end();
     });
-    const usdc = data.balances?.find(b => b.asset === 'USDC');
-    return usdc ? parseFloat(usdc.free) : 0;
+    const usdc = (data.balances||[]).find(b => b.asset === 'USDC');
+    const bal  = usdc ? parseFloat(usdc.free) : 0;
+    console.log('[BAL] USDC balance: $' + bal.toFixed(2));
+    return bal;
   } catch(e) {
-    console.error('[SQI] Balance error:', e.message);
-    return 0;
+    console.error('[BAL] Error:', e.message);
+    return 100;
   }
 }
 
-// ── SIGNAL SCANNER ───────────────────────────────────────────────────────────
-async function scan() {
-  for (const sym of SYMBOLS) {
-    const asset = ASSETS[sym];
-    const d1m   = getDelta(sym, 1 * 60 * 1000);   // 1m window
-    const d3m   = getDelta(sym, 3 * 60 * 1000);   // 3m window
-
-    if (d1m === null && d3m === null) continue;
-
-    const best      = [d1m, d3m].filter(x => x !== null).reduce((a,b) => Math.abs(a) > Math.abs(b) ? a : b);
-    const absDelta  = Math.abs(best);
-    const direction = best > 0 ? 'UP' : 'DOWN';
-    const debounce  = `${sym}_${direction}`;
-    const now       = Date.now();
-
-    // Debounce: same symbol+direction can only fire every 90s
-    if (lastSignal[debounce] && now - lastSignal[debounce] < 90 * 1000) continue;
-
-    // Close opposite open trade
-    if (openTrades[sym] && openTrades[sym].direction !== direction && absDelta >= DELTA_THRESH) {
-      await closeTrade(sym, asset);
-    }
-
-    // Open new trade
-    if (!openTrades[sym] && absDelta >= DELTA_THRESH) {
-      const deltaStr = `${best >= 0 ? '+' : ''}${(best * 100).toFixed(4)}%`;
-      lastSignal[debounce] = now;
-      await openTrade(sym, asset, direction, deltaStr);
-    }
-  }
+// ── BINANCE ORDER ────────────────────────────────────────
+async function binanceOrder(symbol, side, quoteQty) {
+  const ts  = Date.now();
+  const qs  = 'symbol='+symbol+'&side='+side+'&type=MARKET&quoteOrderQty='+quoteQty+'&timestamp='+ts+'&recvWindow=5000';
+  const sig = crypto.createHmac('sha256', BINANCE_SEC).update(qs).digest('hex');
+  return new Promise((resolve, reject) => {
+    const req = https.request('https://api.binance.com/api/v3/order?' + qs + '&signature=' + sig,
+      { method: 'POST', headers: { 'X-MBX-APIKEY': BINANCE_KEY } },
+      res => { let b=''; res.on('data',d=>b+=d); res.on('end',()=>{ const j=JSON.parse(b); j.code?reject(new Error(j.msg)):resolve(String(j.orderId||'')); }); }
+    );
+    req.on('error', reject); req.end();
+  });
 }
 
-// ── OPEN TRADE ───────────────────────────────────────────────────────────────
-async function openTrade(sym, asset, signal, delta) {
-  const currentPrice = prices[sym]?.[prices[sym].length - 1]?.price;
+// ── OPEN TRADE ───────────────────────────────────────────
+async function openTrade(sym, asset, signal, deltaStr) {
+  const now          = Date.now();
+  const currentPrice = (prices[sym]||[]).slice(-1)[0]?.price;
   if (!currentPrice) return;
 
   const balance   = await getLiveBalance();
   const tradeSize = Math.max(0.10, Math.round(balance * RISK_PCT * 100) / 100);
-
-  console.log(`[SQI] ⚡ SIGNAL ${asset} ${signal} | delta=${delta} | size=$${tradeSize.toFixed(2)} | balance=$${balance.toFixed(2)}`);
+  
+  console.log('[OPEN] ' + asset + ' ' + signal + ' | delta=' + deltaStr + ' | $' + tradeSize.toFixed(2) + ' | entry=$' + currentPrice.toFixed(4));
 
   let orderId = null;
   if (MODE === 'LIVE' && BINANCE_KEY && BINANCE_SEC) {
     try {
       orderId = await binanceOrder(sym, signal === 'UP' ? 'BUY' : 'SELL', tradeSize);
-      console.log(`[SQI] ✅ Binance order placed: ${orderId}`);
+      console.log('[ORDER] Placed: ' + orderId);
     } catch(e) {
-      console.error('[SQI] ❌ Order failed:', e.message);
+      console.error('[ORDER] Failed:', e.message);
       return;
     }
   }
 
-  const { data, error } = await supabase.from('bot_trades').insert({
-    asset, signal, delta,
-    size_usd:    tradeSize,
-    entry_price: currentPrice,
-    status:      'open',
-    pnl_usdc:    0,
-    mode:        MODE,
-    order_id:    orderId,
-  }).select('id').single();
+  try {
+    const { data, error } = await supabase.from('bot_trades').insert({
+      asset, signal, delta: deltaStr,
+      size_usd: tradeSize, entry_price: currentPrice,
+      status: 'open', pnl_usdc: 0, mode: MODE, order_id: orderId,
+    }).select('id').single();
 
-  if (error) { console.error('[SQI] DB error:', error.message); return; }
+    if (error) { console.error('[DB] Insert error:', error.message); return; }
 
-  openTrades[sym] = { id: data.id, entry: currentPrice, direction: signal, ts: now, size: tradeSize };
-  tradeCount++;
+    openTrades[sym] = { id: data.id, entry: currentPrice, direction: signal, ts: now, size: tradeSize };
+    tradeCount++;
+    console.log('[OPEN] Saved to DB | id=' + data.id + ' | total trades=' + tradeCount);
+  } catch(e) {
+    console.error('[DB] Exception:', e.message);
+  }
 }
 
-// ── CLOSE TRADE ──────────────────────────────────────────────────────────────
+// ── CLOSE TRADE ──────────────────────────────────────────
 async function closeTrade(sym, asset) {
   const trade = openTrades[sym];
   if (!trade) return;
-  const currentPrice = prices[sym]?.[prices[sym].length - 1]?.price;
+  const currentPrice = (prices[sym]||[]).slice(-1)[0]?.price;
   if (!currentPrice) return;
 
   const pnl    = trade.direction === 'UP'
@@ -182,80 +163,82 @@ async function closeTrade(sym, asset) {
     : ((trade.entry - currentPrice) / trade.entry) * trade.size;
   const status = pnl >= 0 ? 'won' : 'lost';
 
-  await supabase.from('bot_trades').update({
-    status,
-    pnl_usdc: Math.round(pnl * 10000) / 10000,
-  }).eq('id', trade.id);
-
-  console.log(`[SQI] 🔒 CLOSE ${asset} | ${status.toUpperCase()} | PnL=${pnl >= 0 ? '+' : ''}$${pnl.toFixed(4)}`);
+  try {
+    await supabase.from('bot_trades').update({ status, pnl_usdc: Math.round(pnl*10000)/10000 }).eq('id', trade.id);
+    console.log('[CLOSE] ' + asset + ' ' + status.toUpperCase() + ' | PnL=' + (pnl>=0?'+':'') + '$' + pnl.toFixed(4));
+  } catch(e) {
+    console.error('[DB] Close error:', e.message);
+  }
   delete openTrades[sym];
 }
 
-// ── AUTO-CLOSE stale > 15min ──────────────────────────────────────────────────
+// ── SCANNER ───────────────────────────────────────────────
+async function scan() {
+  for (const sym of SYMBOLS) {
+    try {
+      const asset = ASSETS[sym];
+      const d1m   = getDelta(sym, 60 * 1000);
+      const d3m   = getDelta(sym, 3 * 60 * 1000);
+
+      if (d1m === null && d3m === null) continue;
+
+      const vals    = [d1m, d3m].filter(x => x !== null);
+      const best    = vals.reduce((a,b) => Math.abs(a) > Math.abs(b) ? a : b);
+      const absD    = Math.abs(best);
+      const dir     = best > 0 ? 'UP' : 'DOWN';
+      const key     = sym + '_' + dir;
+      const now     = Date.now();
+
+      if (lastSignal[key] && now - lastSignal[key] < 90000) continue;
+      if (absD < DELTA_THRESH) continue;
+
+      if (openTrades[sym] && openTrades[sym].direction !== dir) await closeTrade(sym, asset);
+      if (!openTrades[sym]) {
+        const deltaStr = (best >= 0 ? '+' : '') + (best * 100).toFixed(4) + '%';
+        lastSignal[key] = now;
+        await openTrade(sym, asset, dir, deltaStr);
+      }
+    } catch(e) {
+      console.error('[SCAN] Error on ' + sym + ':', e.message);
+    }
+  }
+}
+
+// ── AUTO-CLOSE ────────────────────────────────────────────
 async function autoClose() {
   const now = Date.now();
   for (const sym of SYMBOLS) {
     if (openTrades[sym] && now - openTrades[sym].ts > 15 * 60 * 1000) {
-      console.log(`[SQI] ⏰ Auto-closing stale ${ASSETS[sym]}`);
+      console.log('[AUTO] Closing stale ' + ASSETS[sym]);
       await closeTrade(sym, ASSETS[sym]);
     }
   }
 }
 
-// ── BINANCE ORDER ─────────────────────────────────────────────────────────────
-async function binanceOrder(symbol, side, quoteQty) {
-  const ts  = Date.now();
-  const qs  = `symbol=${symbol}&side=${side}&type=MARKET&quoteOrderQty=${quoteQty}&timestamp=${ts}&recvWindow=5000`;
-  const sig = crypto.createHmac('sha256', BINANCE_SEC).update(qs).digest('hex');
-  return new Promise((resolve, reject) => {
-    const req = https.request(
-      `https://api.binance.com/api/v3/order?${qs}&signature=${sig}`,
-      { method: 'POST', headers: { 'X-MBX-APIKEY': BINANCE_KEY } },
-      res => { let b=''; res.on('data',d=>b+=d); res.on('end',()=>{
-        const j = JSON.parse(b);
-        if (j.code) reject(new Error(j.msg)); else resolve(j.orderId?.toString());
-      }); }
-    );
-    req.on('error', reject); req.end();
-  });
-}
-
-// ── HEALTH SERVER ─────────────────────────────────────────────────────────────
+// ── HEALTH ────────────────────────────────────────────────
 http.createServer((req, res) => {
-  if (req.url === '/health' || req.url === '/') {
-    const uptime = Math.floor((Date.now() - startTime) / 1000);
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({
-      status:    'running',
-      bot:       'SQI Delta-Arb v5.0',
-      mode:      MODE,
-      pairs:     SYMBOLS.length,
-      threshold: `${(DELTA_THRESH * 100).toFixed(2)}%`,
-      windows:   '1m + 3m',
-      risk:      '2% per trade',
-      trades:    tradeCount,
-      open:      Object.keys(openTrades).length,
-      uptime:    `${Math.floor(uptime/60)}m ${uptime%60}s`,
-      ticks:     Object.fromEntries(SYMBOLS.map(s => [ASSETS[s], prices[s]?.length || 0])),
-      ts:        new Date().toISOString(),
-    }));
-  } else { res.writeHead(404); res.end('nf'); }
-}).listen(PORT, () => console.log(`[SQI] Health :${PORT}`));
+  const uptime = Math.floor((Date.now() - startTime) / 1000);
+  const tickCounts = {};
+  SYMBOLS.forEach(s => { tickCounts[ASSETS[s]] = (prices[s]||[]).length; });
+  res.writeHead(200, {'Content-Type':'application/json'});
+  res.end(JSON.stringify({
+    status:'running', version:'5.1', mode:MODE,
+    pairs:SYMBOLS.length, threshold:(DELTA_THRESH*100).toFixed(3)+'%',
+    trades:tradeCount, open:Object.keys(openTrades).length,
+    uptime:Math.floor(uptime/60)+'m '+uptime%60+'s',
+    ticks: tickCounts, ts: new Date().toISOString()
+  }, null, 2));
+}).listen(PORT, () => console.log('[HEALTH] Listening on :' + PORT));
 
-// ── BOOT ──────────────────────────────────────────────────────────────────────
-console.log('');
-console.log('⚡ SQI DELTA-ARB BOT v5.0 — ONLINE');
-console.log(`📊 Pairs: ${SYMBOLS.length} | Threshold: ${(DELTA_THRESH*100).toFixed(2)}% | Windows: 1m+3m | Risk: 2%`);
-console.log(`🔑 Mode: ${MODE} | Binance: ${BINANCE_KEY ? 'configured' : 'MISSING'}`);
-console.log('─────────────────────────────────────────────────────');
-
-try { require('ws'); } catch(e) { console.error('Missing: ws — run npm install'); process.exit(1); }
-
+// ── START ─────────────────────────────────────────────────
 connectWS();
 setInterval(scan, SCAN_MS);
-setInterval(autoClose, 60 * 1000);
+setInterval(autoClose, 60000);
 setInterval(() => {
-  const open   = Object.keys(openTrades).map(s => ASSETS[s]).join(',') || 'none';
-  const ticks  = SYMBOLS.map(s => `${ASSETS[s]}:${prices[s]?.length||0}`).join(' ');
-  console.log(`[SQI] 💚 ${new Date().toISOString()} | trades:${tradeCount} | open:[${open}] | ${ticks}`);
-}, 5 * 60 * 1000);
+  const open  = Object.keys(openTrades).map(s=>ASSETS[s]).join(',') || 'none';
+  const ticks = SYMBOLS.slice(0,3).map(s=>ASSETS[s]+':'+(prices[s]||[]).length).join(' ');
+  console.log('[ALIVE] ' + new Date().toISOString() + ' | trades:' + tradeCount + ' | open:[' + open + '] | ticks:' + ticks + '...');
+}, 300000);
+
+process.on('uncaughtException', e => console.error('[UNCAUGHT]', e.message, e.stack));
+process.on('unhandledRejection', e => console.error('[UNHANDLED]', e));
