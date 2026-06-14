@@ -7,7 +7,7 @@ const CORS = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "https://fjdzhrdpioxdeyyfogep.supabase.co";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "https://ssygukfdbtehvtndandn.supabase.co";
 const SERVICE_KEY  = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SERVICE_KEY") ?? "";
 
 const LIVE_START  = 10;   // POLYGRAM EXTREME starting balance
