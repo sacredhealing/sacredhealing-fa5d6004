@@ -966,7 +966,7 @@ const JyotishChamber: React.FC = () => {
   const navigate = useNavigate();
 
   // State
-  const [activeTab, setActiveTab] = useState<'overview'|'chart'|'oracle'|'nadi'|'vidya'|'hora'|'lexicon'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview'|'chart'|'oracle'|'nadi'|'vidya'|'hora'>('overview');
   const [birthData, setBirthData] = useState<BirthData | null>(null);
   const [ephemeris, setEphemeris] = useState<EphemerisData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -1296,77 +1296,110 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
 
       <div style={{ position:'relative', zIndex:1, maxWidth:740, margin:'0 auto', padding:'0 14px 120px' }}>
 
-        {/* ── HEADER ── */}
-        <header style={{ textAlign:'center', padding:'44px 0 32px' }}>
-          <div style={{ width:80, height:80, margin:'0 auto 16px' }}>
-            <svg viewBox="0 0 100 100" fill="none" className="sqi-rot" style={{ width:'100%', height:'100%' }}>
-              <circle cx="50" cy="50" r="46" stroke="rgba(212,175,55,.14)" strokeWidth=".8"/>
-              <circle cx="50" cy="50" r="36" stroke="rgba(212,175,55,.09)" strokeWidth=".8" strokeDasharray="3 3"/>
-              <circle cx="50" cy="50" r="24" stroke="rgba(212,175,55,.16)" strokeWidth=".8"/>
-              <circle cx="50" cy="50" r="12" stroke="rgba(212,175,55,.22)" strokeWidth=".8"/>
-              <path d="M50 4 L53 47 L50 50 L47 47Z" fill="rgba(212,175,55,.28)"/>
-              <path d="M96 50 L53 53 L50 50 L53 47Z" fill="rgba(212,175,55,.18)"/>
-              <path d="M50 96 L47 53 L50 50 L53 53Z" fill="rgba(212,175,55,.23)"/>
-              <path d="M4 50 L47 47 L50 50 L47 53Z" fill="rgba(212,175,55,.18)"/>
-              <circle cx="50" cy="50" r="4" fill="rgba(212,175,55,.6)"/>
-            </svg>
-          </div>
-          <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:9 }}>
-            Bhrigu Nadi Chamber · SQI 2050 · Akasha-Neural Archive
-          </div>
-          <h1 className="sqi-shimmer" style={{ fontSize:'clamp(2rem,6vw,3rem)', fontWeight:900, letterSpacing:'-0.05em', lineHeight:1.1, marginBottom:10 }}>
-            Jyotish Vidya
-          </h1>
-          <p style={{ fontFamily:'Georgia,serif', fontStyle:'italic', fontSize:15, color:'rgba(255,255,255,0.4)', marginBottom:18 }}>
-            "The stars do not imprison you. They reveal the karma you came to transform." — Maharishi Bhrigu
-          </p>
-          {birthData && (
-            <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'5px 16px', borderRadius:99, border:'1px solid rgba(212,175,55,0.18)', background:'rgba(212,175,55,0.07)', fontSize:9, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'#D4AF37' }}>
-              ⬡ Natal Blueprint Active · {birthData.birth_name}
-            </div>
-          )}
-        </header>
 
-        {/* ── SECTION GRID — all sections visible as cards ── */}
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:22 }}>
+        {/* ── SACRED ENTRY HERO — like SiddhaPortal but Jyotish ── */}
+        <div style={{ position:'relative', margin:'0 0 20px', animation:'fadUp 0.5s ease both' }}>
+          {/* Scalar pulse rings */}
+          {[180,260,350].map((s,i) => (
+            <div key={i} aria-hidden style={{ position:'absolute', left:'50%', top:'50%', width:s, height:s, marginLeft:-s/2, marginTop:-s/2, borderRadius:'50%', border:`1px solid rgba(212,175,55,${0.07-i*0.02})`, animation:`swP ${3.2+i*0.8}s ease-in-out ${i*0.5}s infinite`, pointerEvents:'none', zIndex:0 }}/>
+          ))}
+          {/* Gold glow bloom */}
+          <div aria-hidden style={{ position:'absolute', inset:-16, borderRadius:34, background:'radial-gradient(50% 50% at 30% 40%, rgba(212,175,55,0.18), transparent 65%)', filter:'blur(22px)', animation:'swP 4s ease-in-out infinite', pointerEvents:'none', zIndex:0 }}/>
+          {/* Card */}
+          <div style={{ position:'relative', zIndex:1, background:'linear-gradient(135deg, rgba(212,175,55,0.07), rgba(5,5,5,0.85))', border:'1px solid rgba(212,175,55,0.38)', borderRadius:22, padding:'22px 20px 20px', boxShadow:'0 0 40px rgba(212,175,55,0.14), inset 0 0 24px rgba(212,175,55,0.03)', overflow:'hidden' }}>
+            {/* Top shimmer line */}
+            <div aria-hidden style={{ position:'absolute', top:0, left:0, right:0, height:1, background:'linear-gradient(90deg,transparent,rgba(212,175,55,0.8),transparent)', opacity:0.6 }}/>
+            {/* Header row */}
+            <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:14 }}>
+              <div style={{ width:52, height:52, borderRadius:'50%', background:'radial-gradient(circle, rgba(212,175,55,0.2), rgba(5,5,5,0.8))', border:'1px solid rgba(212,175,55,0.4)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, boxShadow:'0 0 18px rgba(212,175,55,0.2)', animation:'sqBreathe 5s ease-in-out infinite' }}>
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                  <circle cx="14" cy="14" r="12" stroke="rgba(212,175,55,0.6)" strokeWidth="0.8"/>
+                  <circle cx="14" cy="14" r="8"  stroke="rgba(212,175,55,0.4)" strokeWidth="0.8" strokeDasharray="2 3"/>
+                  <path d="M14 2 L15.2 13 L14 14 L12.8 13Z" fill="rgba(212,175,55,0.7)"/>
+                  <path d="M26 14 L15.2 15.2 L14 14 L15.2 12.8Z" fill="rgba(212,175,55,0.4)"/>
+                  <path d="M14 26 L12.8 15 L14 14 L15.2 15Z" fill="rgba(212,175,55,0.55)"/>
+                  <path d="M2 14 L12.8 12.8 L14 14 L12.8 15.2Z" fill="rgba(212,175,55,0.4)"/>
+                  <circle cx="14" cy="14" r="2.5" fill="rgba(212,175,55,0.85)"/>
+                </svg>
+              </div>
+              <div>
+                <div style={{ fontFamily:"'Plus Jakarta Sans','Montserrat',sans-serif", fontSize:8, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.55)', marginBottom:5 }}>
+                  Bhrigu Nadi Chamber · SQI 2050
+                </div>
+                <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:'1.75rem', fontWeight:600, color:'rgba(255,255,255,0.96)', lineHeight:1.05, margin:0, textShadow:'0 0 20px rgba(212,175,55,0.25)' }}>
+                  Jyotish Vidya
+                </h1>
+                {birthData && (
+                  <div style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.82rem', color:'rgba(212,175,55,0.55)', marginTop:4 }}>
+                    ⬡ {birthData.birth_name} · Blueprint Active
+                  </div>
+                )}
+              </div>
+            </div>
+            <p style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.95rem', color:'rgba(255,255,255,0.48)', lineHeight:1.7, marginBottom:16, margin:'0 0 16px' }}>
+              "The stars do not imprison you. They reveal the karma you came to transform."
+            </p>
+            {/* 4 quick stats if chart calculated */}
+            {ephemeris && (
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, paddingTop:14, borderTop:'1px solid rgba(212,175,55,0.1)' }}>
+                {[
+                  { v: ephemeris.ascendantSign ? (SIGN_SYMBOLS[ephemeris.ascendantSign]||'') + ' ' + ephemeris.ascendantSign : '—', l:'Lagna' },
+                  { v: ephemeris.moonNakshatra || '—', l:'Nakshatra' },
+                  { v: activeMaha?.planet || '—', l:'Mahadasha' },
+                  { v: activeAntar?.planet || '—', l:'Antardasha' },
+                ].map(s => (
+                  <div key={s.l} style={{ textAlign:'center' }}>
+                    <div style={{ fontSize:s.v.length > 8 ? 9 : 13, fontWeight:900, color:'#D4AF37', lineHeight:1.1, marginBottom:3, letterSpacing:'-0.02em' }}>{s.v}</div>
+                    <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.22)' }}>{s.l}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── 4 SACRED DOORS — each a portal card ── */}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:20 }}>
           {([
-            { tab:'overview', icon:'✦', label:'My Overview', sub:'Daily field & guidance' },
-            { tab:'chart',    icon:'☽', label:'My Chart',    sub:'Natal blueprint & dashas' },
-            { tab:'oracle',   icon:'🔱', label:'Bhrigu Oracle', sub:'Ask your question' },
-            { tab:'nadi',     icon:'🌿', label:'Nadi Leaf',   sub:'Ancient palm leaf' },
-            { tab:'vidya',    icon:'◈',  label:'Jyotish Vidya', sub:'32 learning modules' },
-            { tab:'hora',     icon:'⏱', label:'Hora Watch',  sub:'Live planetary clock' },
-            { tab:'lexicon',  icon:'📖', label:'Lexicon',     sub:'Vedic glossary' },
-          ] as const).map(({ tab, icon, label, sub }) => {
+            { tab:'overview' as const, icon:'✦', label:'My Overview',    sub:'Daily guidance & karma field',  ac:'rgba(212,175,55,' },
+            { tab:'chart'    as const, icon:'☽', label:'My Natal Chart', sub:'Blueprint, Dasha & positions',  ac:'rgba(192,200,232,' },
+            { tab:'oracle'   as const, icon:'🔱', label:'Bhrigu Oracle',  sub:'Ask the Rishi your question',   ac:'rgba(212,175,55,' },
+            { tab:'vidya'    as const, icon:'◈',  label:'Jyotish Vidya',  sub:'32 sacred learning modules',    ac:'rgba(167,139,250,' },
+            { tab:'nadi'     as const, icon:'🌿', label:'Nadi Leaf',      sub:'Ancient palm-leaf science',     ac:'rgba(74,222,128,' },
+            { tab:'hora'     as const, icon:'⏱', label:'Hora Watch',     sub:'Live planetary hour clock',     ac:'rgba(251,191,36,' },
+          ] as const).map(({ tab, icon, label, sub, ac }) => {
             const active = activeTab === tab;
+            const acBorder = active ? `${ac}0.45)` : `${ac}0.12)`;
+            const acGlow   = `${ac}0.14)`;
+            const acFaint  = active ? `${ac}0.09)` : `${ac}0.03)`;
             return (
               <button key={tab} onClick={() => switchTab(tab)} style={{
                 display:'flex', flexDirection:'column', alignItems:'flex-start',
-                gap:0, padding:'14px 16px',
-                background: active ? 'rgba(212,175,55,0.08)' : 'rgba(255,255,255,0.02)',
-                border: active ? '1px solid rgba(212,175,55,0.35)' : '1px solid rgba(255,255,255,0.07)',
-                borderRadius:20, cursor:'pointer', textAlign:'left',
-                boxShadow: active ? '0 0 20px rgba(212,175,55,0.12)' : 'none',
-                transition:'all 0.22s',
+                padding:'16px 15px', textAlign:'left',
+                background: active
+                  ? `linear-gradient(135deg, ${ac}0.1), rgba(5,5,5,0.85))`
+                  : `linear-gradient(135deg, ${ac}0.03), rgba(5,5,5,0.9))`,
+                border:`1px solid ${acBorder}`,
+                borderRadius:18, cursor:'pointer',
+                boxShadow: active ? `0 0 22px ${acGlow}` : 'none',
+                transition:'all 0.25s',
+                position:'relative', overflow:'hidden',
               }}>
-                <span style={{ fontSize:20, marginBottom:8, display:'block',
-                  filter: active ? 'drop-shadow(0 0 6px rgba(212,175,55,0.5))' : 'none',
-                  transition:'filter 0.22s',
-                }}>{icon}</span>
-                <div style={{
-                  fontFamily:'Plus Jakarta Sans, sans-serif', fontSize:11, fontWeight:800,
-                  color: active ? '#D4AF37' : 'rgba(255,255,255,0.75)',
-                  letterSpacing:'0.01em', marginBottom:3, transition:'color 0.22s',
-                }}>{label}</div>
-                <div style={{
-                  fontFamily:'Plus Jakarta Sans, sans-serif', fontSize:9,
-                  color: active ? 'rgba(212,175,55,0.55)' : 'rgba(255,255,255,0.28)',
-                  letterSpacing:'0.01em', lineHeight:1.4, transition:'color 0.22s',
-                }}>{sub}</div>
+                {active && <div aria-hidden style={{ position:'absolute', top:0, left:0, right:0, height:1, background:`linear-gradient(90deg,transparent,${ac}0.8),transparent)`, opacity:0.7 }}/>}
+                {/* Icon orb */}
+                <div style={{ width:38, height:38, borderRadius:'50%', background:`radial-gradient(circle, ${ac}0.15), rgba(5,5,5,0.8))`, border:`1px solid ${acBorder}`, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:10, fontSize:18, boxShadow: active ? `0 0 14px ${acGlow}` : 'none', transition:'box-shadow 0.25s', flexShrink:0 }}>
+                  {icon}
+                </div>
+                <div style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:11.5, fontWeight:800, color: active ? '#D4AF37' : 'rgba(255,255,255,0.72)', marginBottom:4, letterSpacing:'0.01em', transition:'color 0.25s' }}>{label}</div>
+                <div style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.78rem', color: active ? `${ac}0.55)` : 'rgba(255,255,255,0.28)', lineHeight:1.45, transition:'color 0.25s' }}>{sub}</div>
               </button>
             );
           })}
         </div>
+
+        {/* ── LEXICON note — lives inside Oracle ── */}
+
+
 
         {/* ══════════════ OVERVIEW ══════════════ */}
         {activeTab === 'overview' && (
@@ -1763,6 +1796,27 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
           </motion.div>
         )}
 
+            {/* ── VEDIC LEXICON ── */}
+            <div style={{ marginTop:24, paddingTop:16, borderTop:'1px solid rgba(212,175,55,0.08)' }}>
+              <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', marginBottom:12 }}>📖 Vedic Lexicon</div>
+              <div style={{ display:'flex', gap:6, marginBottom:12, flexWrap:'wrap' as const }}>
+                {['All',...[...new Set(LEXICON.map(e=>e.cat))]].map(c => (
+                  <button key={c} onClick={() => setLexCat(c)} style={{ padding:'5px 12px', borderRadius:99, border: lexCat===c ? '1px solid rgba(212,175,55,0.4)' : '1px solid rgba(255,255,255,0.07)', background: lexCat===c ? 'rgba(212,175,55,0.1)' : 'rgba(255,255,255,0.02)', color: lexCat===c ? '#D4AF37' : 'rgba(255,255,255,0.35)', fontFamily:'inherit', fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, cursor:'pointer' }}>{c}</button>
+                ))}
+              </div>
+              <input value={lexSearch} onChange={e=>setLexSearch(e.target.value)} placeholder="Search Sanskrit or term…" style={{ width:'100%', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, padding:'10px 14px', color:'rgba(255,255,255,0.7)', fontSize:12, fontFamily:'inherit', outline:'none', marginBottom:12 }}/>
+              <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                {LEXICON.filter(e => {
+                  const q = lexSearch.toLowerCase();
+                  const catOk = lexCat==='All' || e.cat===lexCat;
+                  const searchOk = !q || e.term.toLowerCase().includes(q) || (e.skt||'').includes(q) || e.m.toLowerCase().includes(q);
+                  return catOk && searchOk;
+                }).map(e => <LexEntry key={e.term} entry={e} gs={gs}/>)}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ══════════════ NADI LEAF ══════════════ */}
         {activeTab === 'nadi' && builtTabs.has('nadi') && (
           <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}>
@@ -1924,33 +1978,6 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
           </motion.div>
         )}
 
-        {/* ══════════════ LEXICON ══════════════ */}
-        {activeTab === 'lexicon' && builtTabs.has('lexicon') && (
-          <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}>
-            <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:12, textAlign:'center' }}>Vedic Glossary — Tap any term to learn</div>
-            <input
-              value={lexSearch} onChange={e => setLexSearch(e.target.value)}
-              placeholder="Search Vedic terms… (Rahu, Nakshatra, Dasha, Lagna…)"
-              style={{ width:'100%', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(212,175,55,0.14)', borderRadius:14, padding:'11px 16px', color:'#fff', fontFamily:'inherit', fontSize:13, outline:'none', marginBottom:12 }}
-            />
-            <div style={{ display:'flex', gap:6, overflowX:'auto', scrollbarWidth:'none', marginBottom:12 }}>
-              {['All',...[...new Set(LEXICON.map(e=>e.cat))]].map(c => (
-                <button key={c} onClick={() => setLexCat(c)} style={{ flexShrink:0, padding:'5px 13px', borderRadius:99, border: lexCat===c ? '1px solid rgba(212,175,55,0.25)' : '1px solid rgba(255,255,255,0.07)', background: lexCat===c ? 'rgba(212,175,55,0.1)' : 'rgba(255,255,255,0.02)', color: lexCat===c ? '#D4AF37' : 'rgba(255,255,255,0.4)', fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, cursor:'pointer' }}>{c}</button>
-              ))}
-            </div>
-            {LEXICON.filter(e => {
-              const mq = !lexSearch || e.term.toLowerCase().includes(lexSearch.toLowerCase()) || e.m.toLowerCase().includes(lexSearch.toLowerCase()) || (e.skt||'').includes(lexSearch);
-              const mc = lexCat==='All' || e.cat===lexCat;
-              return mq && mc;
-            }).map(e => (
-              <LexEntry key={e.term} entry={e} gs={gs} />
-            ))}
-          </motion.div>
-        )}
-
-        <footer style={{ textAlign:'center', padding:'28px 0 8px', fontSize:8, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.18)' }}>
-          ✦ Transmitted by Maharishi Bhrigu · SQI 2050 → 2026 · Jai Jyotish ✦
-        </footer>
 
       </div>
     </div>
