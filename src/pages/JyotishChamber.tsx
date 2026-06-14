@@ -978,9 +978,9 @@ const JyotishChamber: React.FC = () => {
   const [gitaOracleOpen, setGitaOracleOpen] = useState(false);
   const [openCards, setOpenCards] = useState<Record<string,boolean>>({
     dailyInfluence: false,
-    karmaGuide: false,
+    karmaGuide: true,
     gitaOracle: false,
-    natalBlueprint: true,   // open by default so user sees their data
+    natalBlueprint: false,
     dasha: false,
     navagraha: false,
     bnn: false,
@@ -1299,110 +1299,141 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
 
       <div style={{ position:'relative', zIndex:1, maxWidth:740, margin:'0 auto', padding:'0 14px 120px' }}>
 
-
-        {/* ── SACRED ENTRY HERO — like SiddhaPortal but Jyotish ── */}
-        <div style={{ position:'relative', margin:'0 0 20px', animation:'fadUp 0.5s ease both' }}>
-          {/* Scalar pulse rings */}
-          {[180,260,350].map((s,i) => (
-            <div key={i} aria-hidden style={{ position:'absolute', left:'50%', top:'50%', width:s, height:s, marginLeft:-s/2, marginTop:-s/2, borderRadius:'50%', border:`1px solid rgba(212,175,55,${0.07-i*0.02})`, animation:`swP ${3.2+i*0.8}s ease-in-out ${i*0.5}s infinite`, pointerEvents:'none', zIndex:0 }}/>
-          ))}
-          {/* Gold glow bloom */}
-          <div aria-hidden style={{ position:'absolute', inset:-16, borderRadius:34, background:'radial-gradient(50% 50% at 30% 40%, rgba(212,175,55,0.18), transparent 65%)', filter:'blur(22px)', animation:'swP 4s ease-in-out infinite', pointerEvents:'none', zIndex:0 }}/>
-          {/* Card */}
-          <div style={{ position:'relative', zIndex:1, background:'linear-gradient(135deg, rgba(212,175,55,0.07), rgba(5,5,5,0.85))', border:'1px solid rgba(212,175,55,0.38)', borderRadius:22, padding:'22px 20px 20px', boxShadow:'0 0 40px rgba(212,175,55,0.14), inset 0 0 24px rgba(212,175,55,0.03)', overflow:'hidden' }}>
-            {/* Top shimmer line */}
-            <div aria-hidden style={{ position:'absolute', top:0, left:0, right:0, height:1, background:'linear-gradient(90deg,transparent,rgba(212,175,55,0.8),transparent)', opacity:0.6 }}/>
-            {/* Header row */}
-            <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:14 }}>
-              <div style={{ width:52, height:52, borderRadius:'50%', background:'radial-gradient(circle, rgba(212,175,55,0.2), rgba(5,5,5,0.8))', border:'1px solid rgba(212,175,55,0.4)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, boxShadow:'0 0 18px rgba(212,175,55,0.2)', animation:'sqBreathe 5s ease-in-out infinite' }}>
-                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                  <circle cx="14" cy="14" r="12" stroke="rgba(212,175,55,0.6)" strokeWidth="0.8"/>
-                  <circle cx="14" cy="14" r="8"  stroke="rgba(212,175,55,0.4)" strokeWidth="0.8" strokeDasharray="2 3"/>
-                  <path d="M14 2 L15.2 13 L14 14 L12.8 13Z" fill="rgba(212,175,55,0.7)"/>
-                  <path d="M26 14 L15.2 15.2 L14 14 L15.2 12.8Z" fill="rgba(212,175,55,0.4)"/>
-                  <path d="M14 26 L12.8 15 L14 14 L15.2 15Z" fill="rgba(212,175,55,0.55)"/>
-                  <path d="M2 14 L12.8 12.8 L14 14 L12.8 15.2Z" fill="rgba(212,175,55,0.4)"/>
-                  <circle cx="14" cy="14" r="2.5" fill="rgba(212,175,55,0.85)"/>
-                </svg>
-              </div>
-              <div>
-                <div style={{ fontFamily:"'Plus Jakarta Sans','Montserrat',sans-serif", fontSize:8, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.55)', marginBottom:5 }}>
-                  Bhrigu Nadi Chamber · SQI 2050
-                </div>
-                <h1 style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:'1.75rem', fontWeight:600, color:'rgba(255,255,255,0.96)', lineHeight:1.05, margin:0, textShadow:'0 0 20px rgba(212,175,55,0.25)' }}>
-                  Jyotish Vidya
-                </h1>
-                {birthData && (
-                  <div style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.82rem', color:'rgba(212,175,55,0.55)', marginTop:4 }}>
-                    ⬡ {birthData.birth_name} · Blueprint Active
-                  </div>
-                )}
-              </div>
+        {/* ── PAGE HEADER ── */}
+        <div style={{ padding:'28px 0 0', textAlign:'center', animation:'fadUp 0.4s ease both' }}>
+          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.38)', marginBottom:8 }}>
+            Bhrigu Nadi Chamber · SQI 2050 · Akasha-Neural Archive
+          </div>
+          <h1 className="sqi-shimmer" style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:'clamp(2rem,6vw,2.6rem)', fontWeight:700, lineHeight:1, marginBottom:6, letterSpacing:'-0.02em' }}>
+            Jyotish Vidya
+          </h1>
+          <p style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.87rem', color:'rgba(255,255,255,0.28)', lineHeight:1.6, marginBottom:16 }}>
+            "The stars do not imprison you. They reveal the karma you came to transform." — Maharishi Bhrigu
+          </p>
+          {birthData && (
+            <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'5px 16px', borderRadius:99, border:'1px solid rgba(212,175,55,0.2)', background:'rgba(212,175,55,0.06)', fontSize:7.5, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'#D4AF37', marginBottom:24 }}>
+              <div style={{ width:6, height:6, borderRadius:'50%', background:'#D4AF37', boxShadow:'0 0 8px rgba(212,175,55,0.8)', animation:'sqDotPulse 2s ease-in-out infinite' }}/>
+              {birthData.birth_name} · Blueprint Active
             </div>
-            <p style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.95rem', color:'rgba(255,255,255,0.48)', lineHeight:1.7, marginBottom:16, margin:'0 0 16px' }}>
-              "The stars do not imprison you. They reveal the karma you came to transform."
-            </p>
-            {/* 4 quick stats if chart calculated */}
-            {ephemeris && (
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, paddingTop:14, borderTop:'1px solid rgba(212,175,55,0.1)' }}>
+          )}
+          {!birthData && <div style={{ marginBottom:24 }}/>}
+        </div>
+
+        {/* ══ 1. BHRIGU ORACLE HERO ══ */}
+        <div style={{ position:'relative', margin:'0 0 20px', animation:'fadUp 0.45s 0.05s ease both' }}>
+          {[230,330,430].map((s,i) => (
+            <div key={i} aria-hidden style={{ position:'absolute', left:'50%', top:'50%', width:s, height:s, marginLeft:-s/2, marginTop:-s/2, borderRadius:'50%', border:`1px solid rgba(212,175,55,${0.055-i*0.015})`, animation:`swP ${3.5+i}s ease-in-out ${i*0.9}s infinite`, pointerEvents:'none', zIndex:0 }}/>
+          ))}
+          <div aria-hidden style={{ position:'absolute', inset:-20, borderRadius:40, background:'radial-gradient(55% 55% at 50% 48%, rgba(212,175,55,0.2), rgba(160,80,30,0.06) 55%, transparent 80%)', filter:'blur(28px)', animation:'swP 3s ease-in-out infinite', pointerEvents:'none', zIndex:0 }}/>
+          <div style={{ position:'relative', zIndex:1, background:'linear-gradient(160deg, rgba(48,22,0,0.98) 0%, rgba(22,10,0,0.99) 50%, rgba(5,5,5,1) 100%)', border:'1px solid rgba(212,175,55,0.48)', borderRadius:28, overflow:'hidden', boxShadow:'0 0 60px rgba(212,175,55,0.16), inset 0 0 40px rgba(212,175,55,0.04)' }}>
+            <div aria-hidden style={{ position:'absolute', top:0, left:0, right:0, height:1, background:'linear-gradient(90deg, transparent, rgba(212,175,55,0.9), transparent)', opacity:0.8 }}/>
+            {/* Sacred geometry watermark */}
+            <div aria-hidden style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', opacity:0.055, pointerEvents:'none' }}>
+              <svg viewBox="0 0 300 300" width="300" height="300" fill="none">
+                <polygon points="150,18 275,235 25,235" stroke="#D4AF37" strokeWidth="1"/>
+                <polygon points="150,282 25,65 275,65" stroke="#D4AF37" strokeWidth="1"/>
+                <circle cx="150" cy="150" r="115" stroke="#D4AF37" strokeWidth="0.7"/>
+                <circle cx="150" cy="150" r="82" stroke="#D4AF37" strokeWidth="0.55" strokeDasharray="3 6"/>
+                <circle cx="150" cy="150" r="52" stroke="#D4AF37" strokeWidth="0.45"/>
+                <circle cx="150" cy="150" r="22" stroke="#D4AF37" strokeWidth="0.8"/>
+                <circle cx="150" cy="150" r="7" fill="#D4AF37" opacity="0.55"/>
+              </svg>
+            </div>
+            <div style={{ position:'relative', zIndex:2, padding:'28px 22px 24px' }}>
+              <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.55)', marginBottom:16, display:'flex', alignItems:'center', gap:10 }}>
+                <div style={{ flex:1, height:1, background:'rgba(212,175,55,0.2)' }}/> BHAGAVAD GITA · JYOTISH ORACLE <div style={{ flex:1, height:1, background:'rgba(212,175,55,0.2)' }}/>
+              </div>
+              <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:'4rem', lineHeight:1, color:'#D4AF37', textAlign:'center', marginBottom:4, textShadow:'0 0 28px rgba(212,175,55,0.6), 0 0 55px rgba(212,175,55,0.2)', animation:'swP 3.5s ease-in-out infinite' }}>ॐ</div>
+              <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:'1.9rem', fontWeight:700, color:'rgba(255,255,255,0.96)', textAlign:'center', lineHeight:1.1 }}>Bhrigu Oracle</div>
+              <div style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.95rem', color:'rgba(212,175,55,0.6)', textAlign:'center', marginTop:5, marginBottom:16 }}>Ask the Rishi. Receive Vedic Light-Codes.</div>
+              <p style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.97rem', color:'rgba(255,255,255,0.48)', lineHeight:1.75, textAlign:'center', marginBottom:18, padding:'0 4px' }}>
+                Channel Maharishi Bhrigu — the ancient Vedic sage who inscribed 500,000 horoscopes for souls across time. Your chart, your dasha, your karma — decoded through direct akashic transmission.
+              </p>
+              {/* Dasha stats */}
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:1, background:'rgba(212,175,55,0.1)', borderRadius:14, overflow:'hidden', marginBottom:18 }}>
                 {[
-                  { v: ephemeris.ascendantSign ? (SIGN_SYMBOLS[ephemeris.ascendantSign]||'') + ' ' + ephemeris.ascendantSign : '—', l:'Lagna' },
-                  { v: ephemeris.moonNakshatra || '—', l:'Nakshatra' },
                   { v: activeMaha?.planet || '—', l:'Mahadasha' },
                   { v: activeAntar?.planet || '—', l:'Antardasha' },
+                  { v: ephemeris?.ascendantSign ? (SIGN_SYMBOLS[ephemeris.ascendantSign]||'') + ' ' + ephemeris.ascendantSign : '—', l:'Lagna' },
                 ].map(s => (
-                  <div key={s.l} style={{ textAlign:'center' }}>
-                    <div style={{ fontSize:s.v.length > 8 ? 9 : 13, fontWeight:900, color:'#D4AF37', lineHeight:1.1, marginBottom:3, letterSpacing:'-0.02em' }}>{s.v}</div>
-                    <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.22)' }}>{s.l}</div>
+                  <div key={s.l} style={{ background:'rgba(5,5,5,0.96)', padding:'11px 6px', textAlign:'center' }}>
+                    <div style={{ fontSize:11, fontWeight:900, color:'#D4AF37', marginBottom:3, lineHeight:1 }}>{s.v}</div>
+                    <div style={{ fontSize:6, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.22)' }}>{s.l}</div>
                   </div>
                 ))}
               </div>
-            )}
+              {/* CTA */}
+              <button
+                onClick={() => switchTab('oracle')}
+                style={{ width:'100%', padding:'15px 24px', borderRadius:99, border:'1px solid rgba(212,175,55,0.45)', background:'linear-gradient(135deg, rgba(212,175,55,0.14), rgba(212,175,55,0.05))', color:'#D4AF37', fontFamily:'inherit', fontSize:9.5, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:10, boxShadow:'0 0 24px rgba(212,175,55,0.1)' }}
+              >
+                <div style={{ width:7, height:7, borderRadius:'50%', background:'#D4AF37', boxShadow:'0 0 10px rgba(212,175,55,0.9)', animation:'sqDotPulse 1.5s ease-in-out infinite' }}/>
+                Enter the Oracle Chamber
+                <div style={{ width:7, height:7, borderRadius:'50%', background:'#D4AF37', boxShadow:'0 0 10px rgba(212,175,55,0.9)', animation:'sqDotPulse 1.5s ease-in-out infinite' }}/>
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* ── 4 SACRED DOORS — each a portal card ── */}
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:20 }}>
-          {([
-            { tab:'overview' as const, icon:'✦', label:'My Overview',    sub:'Daily guidance & karma field',  ac:'rgba(212,175,55,' },
-            { tab:'chart'    as const, icon:'☽', label:'My Natal Chart', sub:'Blueprint, Dasha & positions',  ac:'rgba(192,200,232,' },
-            { tab:'oracle'   as const, icon:'🔱', label:'Bhrigu Oracle',  sub:'Ask the Rishi your question',   ac:'rgba(212,175,55,' },
-            { tab:'vidya'    as const, icon:'◈',  label:'Jyotish Vidya',  sub:'32 sacred learning modules',    ac:'rgba(167,139,250,' },
-            { tab:'nadi'     as const, icon:'🌿', label:'Nadi Leaf',      sub:'Ancient palm-leaf science',     ac:'rgba(74,222,128,' },
-            { tab:'hora'     as const, icon:'⏱', label:'Hora Watch',     sub:'Live planetary hour clock',     ac:'rgba(251,191,36,' },
-          ] as const).map(({ tab, icon, label, sub, ac }) => {
-            const active = activeTab === tab;
-            const acBorder = active ? `${ac}0.45)` : `${ac}0.12)`;
-            const acGlow   = `${ac}0.14)`;
-            const acFaint  = active ? `${ac}0.09)` : `${ac}0.03)`;
-            return (
-              <button key={tab} onClick={() => switchTab(tab)} style={{
-                display:'flex', flexDirection:'column', alignItems:'flex-start',
-                padding:'16px 15px', textAlign:'left',
-                background: active
-                  ? `linear-gradient(135deg, ${ac}0.1), rgba(5,5,5,0.85))`
-                  : `linear-gradient(135deg, ${ac}0.03), rgba(5,5,5,0.9))`,
-                border:`1px solid ${acBorder}`,
-                borderRadius:18, cursor:'pointer',
-                boxShadow: active ? `0 0 22px ${acGlow}` : 'none',
-                transition:'all 0.25s',
-                position:'relative', overflow:'hidden',
-              }}>
-                {active && <div aria-hidden style={{ position:'absolute', top:0, left:0, right:0, height:1, background:`linear-gradient(90deg,transparent,${ac}0.8),transparent)`, opacity:0.7 }}/>}
-                {/* Icon orb */}
-                <div style={{ width:38, height:38, borderRadius:'50%', background:`radial-gradient(circle, ${ac}0.15), rgba(5,5,5,0.8))`, border:`1px solid ${acBorder}`, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:10, fontSize:18, boxShadow: active ? `0 0 14px ${acGlow}` : 'none', transition:'box-shadow 0.25s', flexShrink:0 }}>
-                  {icon}
-                </div>
-                <div style={{ fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:11.5, fontWeight:800, color: active ? '#D4AF37' : 'rgba(255,255,255,0.72)', marginBottom:4, letterSpacing:'0.01em', transition:'color 0.25s' }}>{label}</div>
-                <div style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.78rem', color: active ? `${ac}0.55)` : 'rgba(255,255,255,0.28)', lineHeight:1.45, transition:'color 0.25s' }}>{sub}</div>
-              </button>
-            );
-          })}
+        {/* ══ 2. JYOTISH VIDYA EDUCATION HERO CARD ══ */}
+        <div style={{ position:'relative', margin:'0 0 20px', animation:'fadUp 0.45s 0.08s ease both' }}>
+          <div aria-hidden style={{ position:'absolute', inset:-16, borderRadius:34, background:'radial-gradient(50% 50% at 30% 40%, rgba(167,139,250,0.16), transparent 65%)', filter:'blur(22px)', animation:'swP 4s ease-in-out infinite', pointerEvents:'none' }}/>
+          <div style={{ position:'relative', zIndex:1, background:'linear-gradient(135deg, rgba(167,139,250,0.09), rgba(80,40,180,0.04) 55%, rgba(5,5,5,0.9) 100%)', border:'1px solid rgba(167,139,250,0.4)', borderRadius:22, padding:'22px 20px 20px', boxShadow:'0 0 36px rgba(167,139,250,0.12), inset 0 0 24px rgba(167,139,250,0.03)', overflow:'hidden' }}>
+            <div aria-hidden style={{ position:'absolute', top:0, left:0, right:0, height:1, background:'linear-gradient(90deg, transparent, rgba(167,139,250,0.8), transparent)', opacity:0.7 }}/>
+            <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:12 }}>
+              <div style={{ width:50, height:50, borderRadius:'50%', background:'radial-gradient(circle, rgba(167,139,250,0.2), rgba(5,5,5,0.85))', border:'1px solid rgba(167,139,250,0.42)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:22, boxShadow:'0 0 18px rgba(167,139,250,0.18)', animation:'sqBreathe 5s ease-in-out infinite' }}>◈</div>
+              <div>
+                <div style={{ fontSize:7.5, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase' as const, color:'rgba(167,139,250,0.6)', marginBottom:4 }}>32 Sacred Modules · Free to Akasha</div>
+                <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:'1.6rem', fontWeight:700, color:'rgba(255,255,255,0.95)', lineHeight:1.05 }}>Jyotish Vidya</div>
+              </div>
+            </div>
+            <p style={{ fontFamily:"'Cormorant Garamond',serif", fontStyle:'italic', fontSize:'0.92rem', color:'rgba(255,255,255,0.45)', lineHeight:1.7, marginBottom:14 }}>
+              From the Eye of the Veda to reading charts as Bhrigu would — a complete initiation into the sacred science of Vedic astrology across four sovereign tiers.
+            </p>
+            {/* Progress bar */}
+            <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(167,139,250,0.45)', marginBottom:5 }}>Your Progress</div>
+            <div style={{ background:'rgba(255,255,255,0.04)', borderRadius:99, height:4, overflow:'hidden', marginBottom:6 }}>
+              <div style={{ height:'100%', background:'linear-gradient(90deg, rgba(167,139,250,0.6), rgba(200,180,255,0.9))', borderRadius:99, width:'25%' }}/>
+            </div>
+            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:12 }}>
+              <span style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(167,139,250,0.4)' }}>8 / 32 modules</span>
+              <span style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(167,139,250,0.4)' }}>25%</span>
+            </div>
+            {/* Tier pills */}
+            <div style={{ display:'flex', gap:6, flexWrap:'wrap' as const, marginBottom:14 }}>
+              {[
+                { label:'📖 Free', bg:'rgba(107,114,128,0.1)', border:'rgba(107,114,128,0.3)', color:'rgba(180,185,195,0.8)' },
+                { label:'🔥 Prāna', bg:'rgba(34,211,238,0.08)', border:'rgba(34,211,238,0.25)', color:'rgba(34,211,238,0.8)' },
+                { label:'⭐ Siddha', bg:'rgba(212,175,55,0.08)', border:'rgba(212,175,55,0.25)', color:'rgba(212,175,55,0.8)' },
+                { label:'∞ Ākāsha', bg:'rgba(255,255,255,0.06)', border:'rgba(255,255,255,0.18)', color:'rgba(255,255,255,0.75)' },
+              ].map(t => (
+                <div key={t.label} style={{ padding:'3px 10px', borderRadius:99, fontSize:7, fontWeight:800, letterSpacing:'0.18em', textTransform:'uppercase' as const, background:t.bg, border:`1px solid ${t.border}`, color:t.color }}>{t.label}</div>
+              ))}
+            </div>
+            <button onClick={() => switchTab('vidya')} style={{ width:'100%', padding:'13px 20px', borderRadius:99, border:'1px solid rgba(167,139,250,0.4)', background:'rgba(167,139,250,0.1)', color:'rgba(200,180,255,0.9)', fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, cursor:'pointer' }}>
+              Open Jyotish Vidya →
+            </button>
+          </div>
         </div>
 
-        {/* ── LEXICON note — lives inside Oracle ── */}
-
-
+        {/* ── NAV TABS (hidden but functional) ── */}
+        <nav style={{ display:'flex', gap:5, padding:5, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:99, marginBottom:22, overflowX:'auto', scrollbarWidth:'none' }}>
+          {(['overview','chart','oracle','nadi','vidya','hora'] as const).map((tab, i) => {
+            const labels = ['✦ Overview','☽ My Chart','🔱 Oracle','🌿 Nadi Leaf','◈ Vidya','⏱ Hora'];
+            const active = activeTab === tab;
+            return (
+              <button key={tab} onClick={() => switchTab(tab)} style={{
+                flexShrink:0, padding:'9px 15px', borderRadius:99,
+                border: active ? '1px solid rgba(212,175,55,0.3)' : 'none',
+                background: active ? 'rgba(212,175,55,0.12)' : 'transparent',
+                color: active ? '#D4AF37' : 'rgba(255,255,255,0.4)',
+                fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.28em',
+                textTransform:'uppercase' as const, cursor:'pointer', whiteSpace:'nowrap',
+                transition:'all 0.22s'
+              }}>{labels[i]}</button>
+            );
+          })}
+        </nav>
 
         {/* ══════════════ OVERVIEW ══════════════ */}
         {activeTab === 'overview' && (
@@ -1416,97 +1447,55 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
             )}
             {birthData && !loading && (
               <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+                {/* Stat strip */}
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:6 }}>
+                  {[
+                    { v: ephemeris?.ascendantSign ? (SIGN_SYMBOLS[ephemeris.ascendantSign]||'?')+' '+ephemeris.ascendantSign : calcLoading ? '…' : '—', l:'Lagna' },
+                    { v: ephemeris?.moonNakshatra || (calcLoading ? '…' : '—'), l:'Nakshatra' },
+                    { v: activeMaha?.planet || (calcLoading ? '…' : '—'), l:'Mahadasha' },
+                    { v: activeAntar?.planet || (calcLoading ? '…' : '—'), l:'Antardasha' },
+                  ].map(s => (
+                    <div key={s.l} style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:'11px 6px', textAlign:'center' }}>
+                      <div style={{ fontSize:s.v.length > 8 ? 9 : 11, fontWeight:900, color:'#D4AF37', lineHeight:1.1, marginBottom:3 }}>{s.v}</div>
+                      <div style={{ fontSize:6, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.2)' }}>{s.l}</div>
+                    </div>
+                  ))}
+                </div>
 
-                {/* ── 1. DAILY COSMIC FIELD ── */}
-                <OracleCard
-                  icon="🌅" label="DAILY COSMIC FIELD" title="Today's Panchanga & Planetary Hour"
-                  glow="rgba(212,175,55,0.18)" open={openCards.dailyInfluence}
-                  onToggle={() => toggleCard('dailyInfluence')}
-                >
-                  <DailyInfluenceStrip />
+                <OracleCard icon="☉" label="DAILY KARMA GUIDE" title={`${['Sun','Moon','Mars','Mercury','Jupiter','Venus','Saturn'][new Date().getDay() % 7]} — Today's Cosmic Intelligence`} glow="rgba(212,175,55,0.18)" open={openCards.karmaGuide} onToggle={() => toggleCard('karmaGuide')}>
+                  <DailyKarmaGuide membershipTier={membershipTier} isAdmin={isAdmin} activeMaha={activeMaha} activeAntar={activeAntar} moonNakshatra={ephemeris?.moonNakshatra || null} navigate={navigate} />
                 </OracleCard>
 
-                {/* ── 2. KARMA GUIDANCE ── */}
-                <OracleCard
-                  icon="🔱" label="KARMA GUIDANCE" title={`${activeMaha?.planet || 'Vedic'} Dasha · Daily Transmission`}
-                  glow="rgba(212,175,55,0.15)" open={openCards.karmaGuide}
-                  onToggle={() => toggleCard('karmaGuide')}
-                >
-                  <DailyKarmaGuide
-                    membershipTier={membershipTier}
-                    isAdmin={isAdmin}
-                    activeMaha={activeMaha}
-                    activeAntar={activeAntar}
-                    moonNakshatra={ephemeris?.moonNakshatra || null}
-                    navigate={navigate}
-                  />
+                <OracleCard icon="📖" label="BHAGAVAD GITA · JYOTISH ORACLE" title={activeMaha ? `${activeMaha.planet} Dasha Light-Code · Ch.${getGitaVerseForCycle(activeMaha.planet).chapter}:${getGitaVerseForCycle(activeMaha.planet).verse}` : 'Daily Vedic Verse'} glow="rgba(212,175,55,0.2)" open={openCards.gitaOracle} onToggle={() => toggleCard('gitaOracle')}>
+                  <GitaOraclePanel open={true} onToggle={() => {}} activeMaha={activeMaha} activeAntar={activeAntar} inline />
                 </OracleCard>
 
-                {/* ── 3. BHAGAVAD GITA ORACLE ── */}
-                <OracleCard
-                  icon="📖" label="BHAGAVAD GITA · JYOTISH ORACLE"
-                  title={activeMaha ? `${activeMaha.planet} Dasha Light-Code · Ch.${getGitaVerseForCycle(activeMaha.planet).chapter}:${getGitaVerseForCycle(activeMaha.planet).verse}` : 'Daily Vedic Verse'}
-                  glow="rgba(212,175,55,0.2)" open={openCards.gitaOracle}
-                  onToggle={() => toggleCard('gitaOracle')}
-                >
-                  <GitaOraclePanel
-                    open={true}
-                    onToggle={() => {}}
-                    activeMaha={activeMaha}
-                    activeAntar={activeAntar}
-                    inline
-                  />
-                </OracleCard>
-
-                {/* ── 4. YOUR NATAL BLUEPRINT ── */}
-                <OracleCard
-                  icon="✦" label="NATAL BLUEPRINT"
-                  title={`${birthData.birth_name} · Lagna ${ephemeris?.ascendantSign || '—'} · ${ephemeris?.moonNakshatra || '—'} Nakshatra`}
-                  glow="rgba(212,175,55,0.15)" open={openCards.natalBlueprint}
-                  onToggle={() => toggleCard('natalBlueprint')}
-                >
-                  {/* 4-stat row */}
-                  <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:14 }}>
-                    {[
-                      { val: ephemeris?.ascendantSign ? (SIGN_SYMBOLS[ephemeris.ascendantSign] || '?') + ' ' + ephemeris.ascendantSign : calcLoading ? '…' : '—', lbl:'Lagna' },
-                      { val: ephemeris?.moonNakshatra || (calcLoading ? '…' : '—'), lbl:'Nakshatra' },
-                      { val: activeMaha?.planet || (calcLoading ? '…' : '—'), lbl:'Mahadasha' },
-                      { val: activeAntar?.planet || (calcLoading ? '…' : '—'), lbl:'Antardasha' },
-                    ].map(s => (
-                      <div key={s.lbl} style={{ background:'rgba(212,175,55,0.04)', border:'1px solid rgba(212,175,55,0.1)', borderRadius:14, padding:'12px 8px', textAlign:'center' }}>
-                        <div style={{ fontSize:s.val.length > 8 ? 10 : 15, fontWeight:900, color:'#D4AF37', lineHeight:1.1, marginBottom:4, letterSpacing:'-0.02em' }}>{s.val}</div>
-                        <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.22)' }}>{s.lbl}</div>
-                      </div>
-                    ))}
-                  </div>
-                  {/* Lagna */}
+                <OracleCard icon="✦" label="NATAL BLUEPRINT" title={`${birthData.birth_name} · ${ephemeris?.ascendantSign || '—'} Rising · ${ephemeris?.moonNakshatra || '—'}`} glow="rgba(212,175,55,0.15)" open={openCards.natalBlueprint} onToggle={() => toggleCard('natalBlueprint')}>
                   {ephemeris?.ascendantSign && (
-                    <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:'14px 16px', marginBottom:8 }}>
+                    <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:'13px 15px', marginBottom:8 }}>
                       <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:6 }}>
-                        <span style={{ fontSize:22 }}>{SIGN_SYMBOLS[ephemeris.ascendantSign] || '♏'}</span>
+                        <span style={{ fontSize:20 }}>{SIGN_SYMBOLS[ephemeris.ascendantSign]||'♏'}</span>
                         <div>
                           <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:2 }}>Lagna — Rising Sign</div>
-                          <div style={{ fontSize:16, fontWeight:900, color:'#D4AF37' }}>{ephemeris.ascendantSign}</div>
+                          <div style={{ fontSize:15, fontWeight:900, color:'#D4AF37' }}>{ephemeris.ascendantSign}</div>
                         </div>
                       </div>
-                      <p style={{ fontSize:11.5, color:'rgba(255,255,255,0.5)', lineHeight:1.6, margin:0 }}>{SIGN_MEANINGS[ephemeris.ascendantSign] || ''}</p>
+                      <p style={{ fontSize:11.5, color:'rgba(255,255,255,0.48)', lineHeight:1.6 }}>{SIGN_MEANINGS[ephemeris.ascendantSign]||''}</p>
                     </div>
                   )}
-                  {/* Moon Nakshatra */}
                   {ephemeris?.moonNakshatra && (
-                    <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:'14px 16px', marginBottom:8 }}>
+                    <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:'13px 15px', marginBottom:8 }}>
                       <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:6 }}>
-                        <span style={{ fontSize:22 }}>☽</span>
+                        <span style={{ fontSize:20 }}>☽</span>
                         <div>
                           <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:2 }}>Birth Star · Janma Nakshatra</div>
-                          <div style={{ fontSize:16, fontWeight:900, color:'#D4AF37' }}>{ephemeris.moonNakshatra}</div>
+                          <div style={{ fontSize:15, fontWeight:900, color:'#D4AF37' }}>{ephemeris.moonNakshatra}</div>
                         </div>
                       </div>
-                      <p style={{ fontSize:11.5, color:'rgba(255,255,255,0.5)', lineHeight:1.6, margin:0 }}>Your soul's original frequency. Determines Dasha timing and deepest psychological nature.</p>
+                      <p style={{ fontSize:11.5, color:'rgba(255,255,255,0.48)', lineHeight:1.6 }}>Your soul's original frequency. Determines Dasha timing and deepest psychological nature.</p>
                     </div>
                   )}
-                  {/* Edit link */}
-                  <div style={{ textAlign:'center', marginTop:10 }}>
+                  <div style={{ textAlign:'center', marginTop:8 }}>
                     <Dialog open={birthDialogOpen} onOpenChange={setBirthDialogOpen}>
                       <DialogTrigger asChild>
                         <button style={{ fontSize:11, color:'rgba(212,175,55,0.45)', background:'none', border:'none', cursor:'pointer', textDecoration:'underline' }}>
@@ -1514,114 +1503,67 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                         </button>
                       </DialogTrigger>
                       <DialogContent style={{ background:'#0a0a0f', border:'1px solid rgba(212,175,55,0.20)', borderRadius:24, maxWidth:640, maxHeight:'90vh', overflowY:'auto' }}>
-                        <DialogHeader>
-                          <DialogTitle style={{ color:'#D4AF37', fontWeight:900 }}>Update Birth Details</DialogTitle>
-                        </DialogHeader>
+                        <DialogHeader><DialogTitle style={{ color:'#D4AF37', fontWeight:900 }}>Update Birth Details</DialogTitle></DialogHeader>
                         <BirthDetailsForm initialData={birthData} onSaved={async () => { setBirthDialogOpen(false); await loadBirthData(); }} />
                       </DialogContent>
                     </Dialog>
                   </div>
                 </OracleCard>
 
-                {/* ── 5. ACTIVE DASHA ── */}
-                {activeMaha && (
-                  <OracleCard
-                    icon={PLANET_INFO[activeMaha.planet]?.sym || '♃'} label="VIMSHOTTARI DASHA"
-                    title={`${activeMaha.planet} Mahadasha${activeAntar ? ` · ${activeAntar.planet} Antardasha` : ''}`}
-                    glow={`rgba(${activeMaha.planet === 'Rahu' ? '212,175,55' : activeMaha.planet === 'Moon' ? '192,200,232' : activeMaha.planet === 'Mars' ? '255,68,68' : activeMaha.planet === 'Sun' ? '255,165,0' : '212,175,55'},0.18)`}
-                    open={openCards.dasha} onToggle={() => toggleCard('dasha')}
-                  >
-                    <div style={{ display:'flex', alignItems:'flex-start', gap:12, marginBottom:14 }}>
-                      <div style={{ flex:1 }}>
-                        <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.25)', marginBottom:4 }}>Main Period (Mahadasha)</div>
-                        <div style={{ fontSize:20, fontWeight:900, color:'#D4AF37' }}>{activeMaha.planet} {PLANET_INFO[activeMaha.planet]?.sym}</div>
-                        <div style={{ fontSize:10, color:'rgba(255,255,255,0.35)', marginTop:2 }}>{activeMaha.start} — {activeMaha.end} · {activeMaha.years} yrs</div>
-                      </div>
-                      {activeAntar && (
-                        <div style={{ flex:1, paddingLeft:12, borderLeft:'1px solid rgba(255,255,255,0.06)' }}>
-                          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.25)', marginBottom:4 }}>Sub-Period (Antardasha)</div>
-                          <div style={{ fontSize:20, fontWeight:900, color:'rgba(255,255,255,0.85)' }}>{activeAntar.planet} {PLANET_INFO[activeAntar.planet]?.sym}</div>
-                          <div style={{ fontSize:10, color:'rgba(255,255,255,0.35)', marginTop:2 }}>{activeAntar.start} — {activeAntar.end}</div>
+                <OracleCard icon="⬡" label="VIMSHOTTARI DASHA" title={activeMaha ? `${activeMaha.planet} Mahadasha${activeAntar ? ` · ${activeAntar.planet} Antardasha` : ''}` : 'Dasha Timeline'} glow="rgba(212,175,55,0.15)" open={openCards.dasha} onToggle={() => toggleCard('dasha')}>
+                  {activeMaha && (
+                    <>
+                      <div style={{ display:'flex', gap:10, marginBottom:12 }}>
+                        <div style={{ flex:1, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:13, padding:12 }}>
+                          <div style={{ fontSize:6.5, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.22)', marginBottom:3 }}>Main Period</div>
+                          <div style={{ fontSize:17, fontWeight:900, color:'#D4AF37' }}>{activeMaha.planet} {PLANET_INFO[activeMaha.planet]?.sym}</div>
+                          <div style={{ fontSize:9, color:'rgba(255,255,255,0.28)', marginTop:2 }}>{activeMaha.start} — {activeMaha.end}</div>
                         </div>
-                      )}
-                    </div>
-                    <p style={{ fontSize:12, color:'rgba(255,255,255,0.55)', lineHeight:1.65, margin:0 }}>
-                      <strong style={{ color:'#D4AF37' }}>{activeMaha.planet}:</strong>{' '}{DASHA_MEANINGS[activeMaha.planet] || ''}
-                    </p>
-                    {activeAntar && (
-                      <p style={{ fontSize:11, color:'rgba(255,255,255,0.38)', lineHeight:1.55, marginTop:8, marginBottom:0 }}>
-                        <strong style={{ color:'rgba(255,255,255,0.55)' }}>{activeAntar.planet} adds:</strong>{' '}{DASHA_MEANINGS[activeAntar.planet] || ''}
+                        {activeAntar && (
+                          <div style={{ flex:1, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:13, padding:12 }}>
+                            <div style={{ fontSize:6.5, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.22)', marginBottom:3 }}>Sub-Period</div>
+                            <div style={{ fontSize:17, fontWeight:900, color:'rgba(255,255,255,0.8)' }}>{activeAntar.planet} {PLANET_INFO[activeAntar.planet]?.sym}</div>
+                            <div style={{ fontSize:9, color:'rgba(255,255,255,0.28)', marginTop:2 }}>{activeAntar.start} — {activeAntar.end}</div>
+                          </div>
+                        )}
+                      </div>
+                      <p style={{ fontSize:12, color:'rgba(255,255,255,0.5)', lineHeight:1.65 }}>
+                        <strong style={{ color:'#D4AF37' }}>{activeMaha.planet}:</strong>{' '}{DASHA_MEANINGS[activeMaha.planet]||''}
                       </p>
-                    )}
-                  </OracleCard>
-                )}
-
-                {/* ── 6. NAVAGRAHA ── */}
-                <OracleCard
-                  icon="⬡" label="NAVAGRAHA" title="Nine Cosmic Intelligences"
-                  glow="rgba(212,175,55,0.12)" open={openCards.navagraha}
-                  onToggle={() => toggleCard('navagraha')}
-                >
-                  <div style={{ display:'flex', gap:7, overflowX:'auto', paddingBottom:4, scrollbarWidth:'none' }}>
-                    {Object.entries(PLANET_INFO).map(([p, info]) => (
-                      <div key={p} style={{ flexShrink:0, padding:'8px 12px', borderRadius:99, border:activeMaha?.planet === p ? '1px solid rgba(212,175,55,0.35)' : '1px solid rgba(255,255,255,0.06)', background:activeMaha?.planet === p ? 'rgba(212,175,55,0.08)' : 'rgba(255,255,255,0.02)', textAlign:'center' }}>
-                        <span style={{ fontSize:15, display:'block', marginBottom:2 }}>{info.sym}</span>
-                        <span style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:activeMaha?.planet === p ? '#D4AF37' : 'rgba(255,255,255,0.25)' }}>{p}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ marginTop:12, display:'flex', flexDirection:'column', gap:6 }}>
-                    {Object.entries(PLANET_INFO).slice(0, 3).map(([p, info]) => (
-                      <div key={p} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', borderRadius:12, background:'rgba(255,255,255,0.015)', border:'1px solid rgba(255,255,255,0.05)' }}>
-                        <span style={{ fontSize:16, flexShrink:0 }}>{info.sym}</span>
-                        <div>
-                          <span style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.65)' }}>{p} — </span>
-                          <span style={{ fontSize:11, color:'rgba(255,255,255,0.38)' }}>{info.meaning}</span>
-                        </div>
-                      </div>
-                    ))}
-                    <div style={{ fontSize:10, color:'rgba(212,175,55,0.35)', textAlign:'center', paddingTop:4 }}>→ Full planetary details in the Vidya tab</div>
-                  </div>
+                    </>
+                  )}
                 </OracleCard>
 
-                {/* ── 7. BNN ACTIVATION (if exists) ── */}
+                <OracleCard icon="🌅" label="DAILY COSMIC FIELD" title="Today's Panchanga & Planetary Hour" glow="rgba(212,175,55,0.14)" open={openCards.dailyInfluence} onToggle={() => toggleCard('dailyInfluence')}>
+                  <DailyInfluenceStrip />
+                </OracleCard>
+
                 {activeBNNAge && (
-                  <OracleCard
-                    icon={PLANET_INFO[activeBNNAge.planet]?.sym || '◈'} label="BHRIGU NANDI NADI"
-                    title={`Age ${age} Activation · ${activeBNNAge.planet} Intelligence`}
-                    glow="rgba(212,175,55,0.14)" open={openCards.bnn}
-                    onToggle={() => toggleCard('bnn')}
-                  >
-                    <p style={{ fontSize:12.5, color:'rgba(255,255,255,0.6)', lineHeight:1.7, margin:0 }}>
+                  <OracleCard icon={PLANET_INFO[activeBNNAge.planet]?.sym||'◈'} label="BHRIGU NANDI NADI" title={`Age ${age} Activation · ${activeBNNAge.planet} Intelligence`} glow="rgba(212,175,55,0.14)" open={openCards.bnn} onToggle={() => toggleCard('bnn')}>
+                    <p style={{ fontSize:12.5, color:'rgba(255,255,255,0.6)', lineHeight:1.7 }}>
                       At age {age}, the <strong style={{ color:'#D4AF37' }}>{activeBNNAge.planet}</strong> intelligence is your primary karmic teacher.{' '}{PLANET_INFO[activeBNNAge.planet]?.meaning}
                     </p>
                   </OracleCard>
                 )}
 
-                {/* ── 8. UPGRADE (free tier only) ── */}
                 {membershipTier === 'free' && (
                   <div onClick={() => navigate('/membership')} style={{ background:'rgba(34,211,238,0.04)', border:'1px solid rgba(34,211,238,0.14)', borderRadius:20, padding:'16px 18px', cursor:'pointer', textAlign:'center' }}>
                     <div style={{ fontSize:7.5, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase' as const, color:'rgba(34,211,238,0.6)', marginBottom:6 }}>🔱 Unlock Deeper Guidance</div>
-                    <p style={{ fontSize:12, color:'rgba(255,255,255,0.45)', lineHeight:1.6, marginBottom:10 }}>
-                      Upgrade to <strong style={{ color:'#22D3EE' }}>Prāna-Flow (€19/mo)</strong> for personalised daily karma cards, Dasha timing & Nakshatra blueprint.
-                    </p>
+                    <p style={{ fontSize:12, color:'rgba(255,255,255,0.45)', lineHeight:1.6, marginBottom:10 }}>Upgrade to <strong style={{ color:'#22D3EE' }}>Prāna-Flow (€19/mo)</strong> for personalised daily karma cards, Dasha timing &amp; Nakshatra blueprint.</p>
                     <span style={{ fontSize:9, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'#22D3EE' }}>Activate Prāna-Flow →</span>
                   </div>
                 )}
-
               </div>
             )}
           </motion.div>
         )}
 
-
-                {/* ══════════════ CHART ══════════════ */}
+        {/* ══════════════ CHART ══════════════ */}
         {activeTab === 'chart' && (
           <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}>
             {!birthData ? <BirthPrompt /> : (
               <>
-                {/* Dasha tree */}
-                <div style={{ ...gm, padding:22, marginBottom:14 }}>
+                <div style={{ background:'rgba(255,255,255,0.025)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:24, padding:22, marginBottom:14 }}>
                   <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:14 }}>Vimshottari Dasha Tree · Your Complete Life Timeline</div>
                   {ephemeris?.dashaData?.dashaTree ? (
                     <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
@@ -1657,15 +1599,12 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                     </div>
                   ) : (
                     <p style={{ fontSize:12, color:'rgba(255,255,255,0.35)', textAlign:'center', padding:20, fontStyle:'italic' }}>
-                      {calcLoading ? 'Calculating your dasha timeline…' : 'Dasha data not yet calculated. Open Overview tab to trigger calculation.'}
+                      {calcLoading ? 'Calculating your dasha timeline…' : 'Open Overview tab to trigger chart calculation.'}
                     </p>
                   )}
                 </div>
-
-                {/* BNN age-planet activations */}
-                <div style={{ ...gm, padding:22, marginBottom:14 }}>
-                  <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:6 }}>Bhrigu Nandi Nadi · Age-Planet Activations</div>
-                  <p style={{ fontSize:11, color:'rgba(255,255,255,0.4)', lineHeight:1.5, marginBottom:12 }}>Each age activates a specific planetary intelligence. This is your current primary karmic teacher according to BNN.</p>
+                <div style={{ background:'rgba(255,255,255,0.025)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:24, padding:22, marginBottom:14 }}>
+                  <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:14 }}>Bhrigu Nandi Nadi · Age-Planet Activations</div>
                   <div style={{ display:'flex', gap:7, overflowX:'auto', scrollbarWidth:'none', marginBottom:14 }}>
                     {BNN_AGES.map(a => {
                       const isActive = age !== null && age >= a.age && (BNN_AGES[BNN_AGES.indexOf(a)+1] === undefined || age < BNN_AGES[BNN_AGES.indexOf(a)+1].age);
@@ -1678,15 +1617,6 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                       );
                     })}
                   </div>
-                  {activeBNNAge && (
-                    <div style={{ ...gs, padding:'13px 16px', borderColor:'rgba(212,175,55,0.14)' }}>
-                      <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.6)', marginBottom:4 }}>Active: {activeBNNAge.planet}</div>
-                      <p style={{ fontSize:12, color:'rgba(255,255,255,0.6)', lineHeight:1.6 }}>
-                        {PLANET_INFO[activeBNNAge.planet]?.meaning}. <strong style={{ color:'rgba(255,255,255,0.5)' }}>Mantra:</strong>{" "}
-                        <em>{PLANET_INFO[activeBNNAge.planet]?.mantra}</em>
-                      </p>
-                    </div>
-                  )}
                 </div>
               </>
             )}
@@ -1698,197 +1628,62 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
           <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}>
             {!birthData ? <BirthPrompt /> : (
               <>
-                {/* Quick readings */}
-                <div style={{ ...gm, padding:20, marginBottom:14 }}>
-                  <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:12 }}>Quick Readings — Tap to Activate</div>
-                  <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:7 }}>
-                    {[
-                      { icon:'☊', label:'Rahu Cycle', q:'Read my Rahu Mahadasha — karmic curriculum, breakthrough windows, and what to navigate carefully.' },
-                      { icon:'♄', label:'Financial Verdict', q:'Financial verdict for my current dasha period. Best action months and what to avoid.' },
-                      { icon:'♀', label:'Relationship Karma', q:'Analyse my relationship karma from Venus and 7th house. What soul-pattern is being resolved?' },
-                      { icon:'🕉', label:'Soul Mission', q:'What is my Atmakaraka and what does it reveal about my soul mission in this incarnation?' },
-                      { icon:'♃', label:'Dharma Path', q:'Read my 10th house and Saturn for dharmic career direction and timing.' },
-                      { icon:'🔱', label:'Bhrigu Remedy', q:'Identify the primary karmic obstacle and prescribe the Bhrigu remedy with mantra.' },
-                      { icon:'☋', label:'Ketu Karma', q:'What does my Ketu reveal about past-life mastery and what I came to release this life?' },
-                      { icon:'⭐', label:'Timing Oracle', q:'Is my current dasha period auspicious for my spiritual platform? Precise timing.' },
-                      { icon:'📿', label:'Graha Sādhana', q:'Prescribe the optimal Graha sādhana — mantra, gem, and practice — for my weakest planet.' },
-                    ].map(qa => (
-                      <button key={qa.label} onClick={() => { setChatInput(qa.q); setOracleOpen(true); }} style={{
-                        padding:'10px 8px', borderRadius:14, border:'1px solid rgba(212,175,55,0.12)',
-                        background:'rgba(212,175,55,0.04)', color:'rgba(255,255,255,0.6)',
-                        fontFamily:'inherit', fontSize:9, fontWeight:800, textAlign:'left' as const,
-                        cursor:'pointer', lineHeight:1.4, transition:'all 0.2s'
-                      }}>
-                        <span style={{ display:'block', fontSize:14, marginBottom:3 }}>{qa.icon}</span>
-                        {qa.label}
-                      </button>
+                <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:20, padding:20, marginBottom:16 }}>
+                  <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:12 }}>🔱 Ask Maharishi Bhrigu</div>
+                  <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:12 }}>
+                    {chatMessages.map((m, i) => (
+                      <div key={i} style={{ padding:'12px 14px', borderRadius:14, fontSize:12, lineHeight:1.65, background: m.role==='oracle' ? 'rgba(212,175,55,0.04)' : 'rgba(255,255,255,0.03)', border: m.role==='oracle' ? '1px solid rgba(212,175,55,0.1)' : '1px solid rgba(255,255,255,0.07)', fontFamily: m.role==='oracle' ? "'Cormorant Garamond',serif" : 'inherit', fontStyle: m.role==='oracle' ? 'italic' : 'normal', color: m.role==='oracle' ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.75)' }}>
+                        {m.text}
+                      </div>
                     ))}
+                    {chatLoading && (
+                      <div style={{ display:'flex', gap:4, padding:'12px 14px' }}>
+                        {[0,1,2].map(i => <div key={i} className="sqi-dot" style={{ width:6, height:6, borderRadius:'50%', background:'#D4AF37', animationDelay:`${i*0.15}s` }}/>)}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ display:'flex', gap:8 }}>
+                    <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key==='Enter' && handleChatSubmit()} placeholder="Ask Maharishi Bhrigu your question…" style={{ flex:1, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(212,175,55,0.22)', borderRadius:12, padding:'11px 14px', color:'rgba(255,255,255,0.7)', fontSize:12, fontFamily:'inherit', outline:'none' }}/>
+                    <button onClick={handleChatSubmit} disabled={chatLoading} style={{ width:42, height:42, borderRadius:12, background:'rgba(212,175,55,0.12)', border:'1px solid rgba(212,175,55,0.3)', color:'#D4AF37', fontSize:17, cursor:'pointer', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}>→</button>
                   </div>
                 </div>
-
-                {/* Tier note */}
-                {membershipTier === 'free' && (
-                  <div style={{ ...gs, padding:'13px 18px', marginBottom:14, borderColor:'rgba(34,211,238,0.15)', background:'rgba(34,211,238,0.03)', display:'flex', alignItems:'center', gap:12 }}>
-                    <span style={{ fontSize:20 }}>🔥</span>
-                    <div style={{ flex:1 }}>
-                      <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(34,211,238,0.7)', marginBottom:3 }}>Prāna-Flow · Full Oracle Access</div>
-                      <p style={{ fontSize:11, color:'rgba(255,255,255,0.4)' }}>Birth-chart aware Oracle. 10 consultations/month. Deep personalised readings.</p>
-                    </div>
-                    <button onClick={() => navigate('/membership')} style={{ padding:'6px 13px', borderRadius:99, border:'1px solid rgba(34,211,238,0.3)', background:'rgba(34,211,238,0.07)', color:'#22D3EE', fontSize:9, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, cursor:'pointer', flexShrink:0 }}>€19/mo</button>
+                {/* Vedic Lexicon inside Oracle */}
+                <div style={{ marginTop:20, paddingTop:16, borderTop:'1px solid rgba(212,175,55,0.08)' }}>
+                  <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', marginBottom:12 }}>📖 Vedic Lexicon</div>
+                  <div style={{ display:'flex', gap:6, marginBottom:12, flexWrap:'wrap' as const }}>
+                    {['All',...[...new Set(LEXICON.map(e=>e.cat))]].map(c => (
+                      <button key={c} onClick={() => setLexCat(c)} style={{ padding:'5px 12px', borderRadius:99, border: lexCat===c ? '1px solid rgba(212,175,55,0.4)' : '1px solid rgba(255,255,255,0.07)', background: lexCat===c ? 'rgba(212,175,55,0.1)' : 'rgba(255,255,255,0.02)', color: lexCat===c ? '#D4AF37' : 'rgba(255,255,255,0.35)', fontFamily:'inherit', fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, cursor:'pointer' }}>{c}</button>
+                    ))}
                   </div>
-                )}
-
-                {/* Oracle chat */}
-                <div style={{ ...g, marginBottom:14 }}>
-                  <div style={{ padding:'16px 16px 0', display:'flex', alignItems:'center', gap:10, borderBottom:'1px solid rgba(255,255,255,0.04)', paddingBottom:12, marginBottom:0 }}>
-                    <div style={{ width:38, height:38, borderRadius:99, border:'1px solid rgba(212,175,55,0.3)', background:'rgba(212,175,55,0.07)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, position:'relative', flexShrink:0 }}>
-                      🔱<div className="sqi-pulse" style={{ position:'absolute', width:8, height:8, background:'#D4AF37', borderRadius:'50%', bottom:0, right:0 }}/>
-                    </div>
-                    <div>
-                      <div style={{ fontSize:12, fontWeight:900, letterSpacing:'-0.02em' }}>Maharishi Bhrigu</div>
-                      <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'#D4AF37', marginTop:1 }}>◉ Vedic Light-Codes Streaming</div>
-                    </div>
+                  <input value={lexSearch} onChange={e=>setLexSearch(e.target.value)} placeholder="Search Sanskrit or term…" style={{ width:'100%', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, padding:'10px 14px', color:'rgba(255,255,255,0.7)', fontSize:12, fontFamily:'inherit', outline:'none', marginBottom:12 }}/>
+                  <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                    {LEXICON.filter(e => {
+                      const q = lexSearch.toLowerCase();
+                      const catOk = lexCat==='All' || e.cat===lexCat;
+                      const searchOk = !q || e.term.toLowerCase().includes(q) || (e.skt||'').includes(q) || e.m.toLowerCase().includes(q);
+                      return catOk && searchOk;
+                    }).map(e => <LexEntry key={e.term} entry={e} gs={gs}/>)}
                   </div>
-                  {(
-                    <>
-                      <div style={{ padding:'0 0 12px', display:'flex', flexDirection:'column', gap:0 }}>
-                        {chatMessages.map((m, i) => (
-                          <React.Fragment key={i}>{m.role === 'user' ? (
-                            <div style={{ display:'flex', justifyContent:'flex-end', width:'100%', padding:'8px 16px' }}>
-                              <div style={{ maxWidth:'88%', position:'relative', padding:'14px 20px', background:'rgba(212,175,55,0.03)', borderTop:'1px solid rgba(255,255,255,0.05)', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
-                                <div style={{ position:'absolute', top:5, right:5, width:10, height:10, borderTop:'1px solid rgba(212,175,55,0.2)', borderRight:'1px solid rgba(212,175,55,0.2)'}} />
-                                <p style={{ fontFamily:"'Cinzel', serif", fontSize:7, letterSpacing:'0.4em', color:'rgba(212,175,55,0.28)', textTransform:'uppercase' as const, marginBottom:8 }}>The Seeker inquires</p>
-                                <div style={{ fontFamily:"'IM Fell English', Georgia, serif", fontStyle:'italic', fontSize:13, color:'rgba(200,184,154,0.75)', lineHeight:1.6, wordBreak:'break-word' as const }}>{m.text}</div>
-                              </div>
-                            </div>
-                          ) : (
-                            <div style={{ width:'100%', position:'relative', padding:'20px 16px 14px', background:'rgba(255,255,255,0.016)', borderTop:'1px solid rgba(255,255,255,0.05)', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
-                              <p style={{ fontFamily:"'Cinzel', serif", fontSize:7, letterSpacing:'0.45em', color:'rgba(212,175,55,0.5)', textTransform:'uppercase' as const, marginBottom:10 }}>◈ Maharishi Bhrigu Transmits</p>
-                              <div style={{ fontFamily:"'IM Fell English', Georgia, serif", fontSize:14, lineHeight:1.75, color:'rgba(225,210,185,0.9)', letterSpacing:'0.008em', wordBreak:'break-word' as const }}>{m.text}</div>
-                            </div>
-                          )}</React.Fragment>
-                        ))}
-                        {chatLoading && (
-                          <div style={{ width:'100%', padding:'20px 16px', background:'rgba(255,255,255,0.016)', borderTop:'1px solid rgba(255,255,255,0.05)', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
-                            <p style={{ fontFamily:"'Cinzel', serif", fontSize:7, letterSpacing:'0.45em', color:'rgba(212,175,55,0.5)', textTransform:'uppercase' as const, marginBottom:12 }}>◈ Maharishi Bhrigu Transmits</p>
-                            <div style={{ display:'flex', gap:5, alignItems:'center' }}>
-                              {[0,1,2].map(i => <div key={i} className="sqi-dot" style={{ width:7, height:7, borderRadius:'50%', background:'#D4AF37', animationDelay:`${i*0.15}s` }}/>)}
-                            </div>
-                          </div>
-                        )}
-                        <div ref={messagesEnd}/>
-                      </div>
-                      <div style={{ display:'flex', gap:8, padding:'12px 16px 20px', alignItems:'flex-end', borderTop:'1px solid rgba(212,175,55,0.08)', background:'rgba(0,0,0,0.3)', backdropFilter:'blur(20px)' }}>
-                        <div style={{ flex:1, display:'flex', alignItems:'center', background:'rgba(212,175,55,0.04)', border:'1px solid rgba(212,175,55,0.14)', borderRadius:14, padding:'4px 14px', minHeight:44 }}>
-                        <textarea
-                          value={chatInput}
-                          onChange={e => setChatInput(e.target.value)}
-                          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }}}
-                          placeholder="Ask Maharishi Bhrigu…"
-                          rows={1}
-                          style={{ flex:1, maxHeight:120, resize:'none' as const, background:'transparent', border:'none', outline:'none', color:'rgba(255,255,255,0.9)', fontFamily:"'Plus Jakarta Sans',sans-serif", fontSize:15, lineHeight:1.55, fontWeight:400, padding:'6px 8px', minHeight:36, alignSelf:'center' as const }}
-                        />
-                        </div>
-                        <button onClick={sendMessage} style={{ width:44, height:44, borderRadius:99, border:'none', background:'linear-gradient(135deg,rgba(212,175,55,0.5),rgba(212,175,55,0.22))', color:'#D4AF37', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>➤</button>
-                      </div>
-                    </>
-                  )}
                 </div>
               </>
             )}
-
-            {/* ── VEDIC LEXICON ── */}
-            <div style={{ marginTop:24, paddingTop:16, borderTop:'1px solid rgba(212,175,55,0.08)' }}>
-              <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.45)', marginBottom:12 }}>📖 Vedic Lexicon</div>
-              <div style={{ display:'flex', gap:6, marginBottom:12, flexWrap:'wrap' as const }}>
-                {['All',...[...new Set(LEXICON.map(e=>e.cat))]].map(c => (
-                  <button key={c} onClick={() => setLexCat(c)} style={{ padding:'5px 12px', borderRadius:99, border: lexCat===c ? '1px solid rgba(212,175,55,0.4)' : '1px solid rgba(255,255,255,0.07)', background: lexCat===c ? 'rgba(212,175,55,0.1)' : 'rgba(255,255,255,0.02)', color: lexCat===c ? '#D4AF37' : 'rgba(255,255,255,0.35)', fontFamily:'inherit', fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, cursor:'pointer' }}>{c}</button>
-                ))}
-              </div>
-              <input value={lexSearch} onChange={e=>setLexSearch(e.target.value)} placeholder="Search Sanskrit or term…" style={{ width:'100%', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, padding:'10px 14px', color:'rgba(255,255,255,0.7)', fontSize:12, fontFamily:'inherit', outline:'none', marginBottom:12 }}/>
-              <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                {LEXICON.filter(e => {
-                  const q = lexSearch.toLowerCase();
-                  const catOk = lexCat==='All' || e.cat===lexCat;
-                  const searchOk = !q || e.term.toLowerCase().includes(q) || (e.skt||'').includes(q) || e.m.toLowerCase().includes(q);
-                  return catOk && searchOk;
-                }).map(e => <LexEntry key={e.term} entry={e} gs={gs}/>)}
-              </div>
-            </div>
           </motion.div>
         )}
 
         {/* ══════════════ NADI LEAF ══════════════ */}
         {activeTab === 'nadi' && builtTabs.has('nadi') && (
           <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}>
-            <div style={{ ...g, padding:26, textAlign:'center', marginBottom:16 }}>
+            <div style={{ background:'rgba(255,255,255,0.025)', borderRadius:40, padding:26, textAlign:'center', marginBottom:16, border:'1px solid rgba(74,222,128,0.15)' }}>
               <div style={{ fontSize:36, marginBottom:12 }}>🌿</div>
-              <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:8 }}>Ākāsha-Infinity · Sacred Nadi Leaf System</div>
+              <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(74,222,128,0.5)', marginBottom:8 }}>Ākāsha-Infinity · Sacred Nadi Leaf System</div>
               <h2 style={{ fontSize:22, fontWeight:900, letterSpacing:'-0.04em', marginBottom:10 }}>The 18 Siddhar Nadi Transmissions</h2>
-              <p style={{ fontSize:13, color:'rgba(255,255,255,0.5)', lineHeight:1.65, maxWidth:480, margin:'0 auto' }}>
-                Encoded 5,000 years ago by Tamil Siddhars who accessed all future timelines through the Akasha. Each lineage holds a unique key to the soul's karmic record. Select a lineage to open its transmission.
+              <p style={{ fontSize:13, color:'rgba(255,255,255,0.5)', lineHeight:1.65, maxWidth:480, margin:'0 auto 16px' }}>
+                The Siddhars of Tamil Nadu inscribed 500,000 horoscopes across millennia. Each palm leaf holds the precise karma of a soul destined to find it.
               </p>
+              <button onClick={() => navigate('/nadi-leaf')} style={{ padding:'11px 22px', borderRadius:99, border:'1px solid rgba(74,222,128,0.3)', background:'rgba(74,222,128,0.07)', color:'rgba(74,222,128,0.85)', fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, cursor:'pointer' }}>
+                Access Nadi Leaf →
+              </button>
             </div>
-            <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', textAlign:'center', marginBottom:12 }}>Select a Nadi Lineage</div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, marginBottom:14 }}>
-              {[
-                { id:'agastya', ico:'🌊', nm:'Agastya Nadi', desc:'Root of all Nadi science' },
-                { id:'bhrigu', ico:'📜', nm:'Bhrigu Samhitā', desc:'500,000 horoscopes · Bhrigu Bindu' },
-                { id:'bnn', ico:'🔮', nm:'Bhrigu Nandi Nadi', desc:'Conjunction grammar · event prediction' },
-                { id:'saptarishi', ico:'⭐', nm:'Saptarishi Nadi', desc:'Seven Rishis · 16 Kāṇḍas' },
-                { id:'thirumoolar', ico:'🔱', nm:'Thirumoolar Nadi', desc:'Tantric patterns · Kundalini' },
-                { id:'svara', ico:'🌬', nm:'Svara Shāstra', desc:'Breath Oracle · no chart needed' },
-              ].map(n => (
-                <div key={n.id} style={{ ...gs, padding:'16px 12px', textAlign:'center', cursor:'pointer' }} onClick={() => setOpenNadi(openNadi === n.id ? null : n.id)}>
-                  <div style={{ fontSize:22, marginBottom:7 }}>{n.ico}</div>
-                  <div style={{ fontSize:10, fontWeight:900, marginBottom:3 }}>{n.nm}</div>
-                  <div style={{ fontSize:9, color:'rgba(255,255,255,0.4)', lineHeight:1.4 }}>{n.desc}</div>
-                </div>
-              ))}
-            </div>
-            {/* Bhrigu Bindu calculator always visible */}
-            <div style={{ ...gm, padding:22, marginBottom:14 }}>
-              <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:10 }}>Bhrigu Bindu Calculator</div>
-              <p style={{ fontSize:12, color:'rgba(255,255,255,0.5)', lineHeight:1.6, marginBottom:14 }}>
-                The Bhrigu Bindu is the midpoint between your Rahu and Moon longitudes (0–360°). Any slow planet transiting this degree triggers the most significant events of your life.
-              </p>
-              {birthData && ephemeris?.moonLongitude && ephemeris.moonLongitude > 0 ? (
-                <div style={{ ...gs, padding:'14px 16px', borderColor:'rgba(212,175,55,0.2)' }}>
-                  <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.6)', marginBottom:5 }}>Auto-Calculated from Your Chart</div>
-                  <p style={{ fontSize:12, color:'rgba(255,255,255,0.55)', lineHeight:1.6 }}>
-                    Your Moon longitude is {ephemeris.moonLongitude.toFixed(2)}°. Enter your Rahu longitude below to calculate your Bhrigu Bindu.
-                  </p>
-                </div>
-              ) : null}
-            </div>
-            {openNadi === 'svara' && (
-              <div style={{ ...g, padding:26, marginBottom:14 }}>
-                <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:10 }}>Svara Shāstra · Module 28 · Deepest Siddha Secret</div>
-                <div style={{ display:'inline-block', padding:'2px 7px', borderRadius:99, border:'1px solid rgba(212,175,55,0.2)', background:'rgba(212,175,55,0.06)', fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'#D4AF37', marginBottom:12 }}>⬡ Ākāsha-Infinity Only</div>
-                <h3 style={{ fontSize:16, fontWeight:900, letterSpacing:'-0.03em', marginBottom:8 }}>Predicting Without a Chart — The Breath Alone</h3>
-                <p style={{ fontFamily:'Georgia,serif', fontStyle:'italic', fontSize:13, color:'rgba(255,255,255,0.4)', lineHeight:1.65, marginBottom:14 }}>"When the left nostril flows — Moon is active, water, success in travel. When the right — Sun, fire, success in physical work. When both flow equally — Suṣumnā — do nothing material. Meditate." — Śiva Svarodaya</p>
-                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-                  <div>
-                    <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.25)', marginBottom:8 }}>Three Svara Nādīs</div>
-                    {['Iḍā (Left) — Moon, cool, feminine','Piṅgalā (Right) — Sun, hot, masculine','Suṣumnā (Both) — neutral, meditate only'].map(t => (
-                      <div key={t} style={{ display:'flex', gap:7, fontSize:11, color:'rgba(255,255,255,0.6)', lineHeight:1.45, marginBottom:6 }}><span style={{ color:'rgba(212,175,55,0.35)' }}>◈</span>{t}</div>
-                    ))}
-                  </div>
-                  <div>
-                    <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.25)', marginBottom:8 }}>Five Elements in Breath</div>
-                    {['Earth — 20 counts','Water — 16 counts','Fire — 12 counts','Air — 8 counts','Space — 4 counts'].map(t => (
-                      <div key={t} style={{ display:'flex', gap:7, fontSize:11, color:'rgba(255,255,255,0.6)', lineHeight:1.45, marginBottom:6 }}><span style={{ color:'rgba(212,175,55,0.35)' }}>◈</span>{t}</div>
-                    ))}
-                  </div>
-                </div>
-                {!canAccess('akasha') && (
-                  <div style={{ display:'flex', alignItems:'center', gap:9, padding:'10px 13px', borderRadius:14, border:'1px solid rgba(255,255,255,0.04)', background:'rgba(255,255,255,0.01)', marginTop:14 }}>
-                    <span>🔒</span><p style={{ fontSize:10.5, color:'rgba(255,255,255,0.4)', flex:1 }}>Full Svara Shāstra requires Ākāsha-Infinity · €1,111 lifetime</p>
-                    <button onClick={() => navigate('/membership')} style={{ padding:'6px 13px', borderRadius:99, border:'1px solid rgba(212,175,55,0.22)', background:'rgba(212,175,55,0.07)', color:'#D4AF37', fontSize:9, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, cursor:'pointer', flexShrink:0 }}>Activate</button>
-                  </div>
-                )}
-              </div>
-            )}
           </motion.div>
         )}
 
@@ -1917,7 +1712,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
               const isOpen = openModules.has(m.id);
               const tierCol = { free:'#6B7280', prana:'#22D3EE', siddha:'#D4AF37', akasha:'#ffffff' }[m.tier] || '#D4AF37';
               return (
-                <div key={m.id} style={{ ...gs, padding:'16px 18px', marginBottom:7, opacity: ok ? 1 : 0.55 }}>
+                <div key={m.id} style={{ background:'rgba(255,255,255,0.02)', backdropFilter:'blur(40px)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:20, padding:'16px 18px', marginBottom:7, opacity: ok ? 1 : 0.55 }}>
                   <div style={{ display:'flex', alignItems:'flex-start', gap:10, cursor: ok ? 'pointer' : 'default' }} onClick={() => ok && toggleModule(m.id)}>
                     <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', color:'rgba(212,175,55,0.38)', flexShrink:0, marginTop:2, minWidth:28 }}>{String(m.id).padStart(2,'0')}</div>
                     <div style={{ flex:1 }}>
@@ -1943,18 +1738,14 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                           </li>
                         ))}
                       </ul>
-                      <div style={{ display:'flex', flexDirection:'column', gap:6, marginTop:14 }}>
-                        <button style={{ padding:'8px 14px', borderRadius:10, fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, cursor:'pointer', border:'1px solid rgba(255,255,255,0.07)', background:'rgba(255,255,255,0.02)', color:'rgba(255,255,255,0.4)' }}>● In Progress</button>
-                        <button style={{ padding:'8px 14px', borderRadius:10, fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, cursor:'pointer', border:'1px solid rgba(212,175,55,0.25)', background:'rgba(212,175,55,0.08)', color:'#D4AF37' }}>✓ Mark Complete</button>
-                        <button style={{ padding:'11px', borderRadius:99, border:'1px solid rgba(212,175,55,0.28)', background:'rgba(212,175,55,0.07)', color:'#D4AF37', fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, cursor:'pointer' }}>✦ Open Full Module</button>
-                      </div>
+                      <button style={{ width:'100%', marginTop:14, padding:'11px', borderRadius:99, border:'1px solid rgba(212,175,55,0.28)', background:'rgba(212,175,55,0.07)', color:'#D4AF37', fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.28em', textTransform:'uppercase' as const, cursor:'pointer' }}>✦ Open Full Module</button>
                     </div>
                   )}
                   {!ok && (
                     <div style={{ display:'flex', alignItems:'center', gap:9, padding:'10px 13px', borderRadius:14, border:'1px solid rgba(255,255,255,0.04)', background:'rgba(255,255,255,0.01)', marginTop:10 }}>
                       <span>🔒</span>
                       <p style={{ fontSize:10.5, color:'rgba(255,255,255,0.4)', flex:1 }}>
-                        Requires {{prana:'Prāna-Flow (€19/mo)',siddha:'Siddha-Quantum (€45/mo)',akasha:'Ākāsha-Infinity (€1,111 lifetime)'}[m.tier]}
+                        Requires { {prana:'Prāna-Flow (€19/mo)',siddha:'Siddha-Quantum (€45/mo)',akasha:'Ākāsha-Infinity (€1,111 lifetime)'}[m.tier as 'prana'|'siddha'|'akasha'] }
                       </p>
                       <button onClick={() => navigate('/membership')} style={{ padding:'6px 13px', borderRadius:99, border:'1px solid rgba(212,175,55,0.22)', background:'rgba(212,175,55,0.07)', color:'#D4AF37', fontSize:9, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, cursor:'pointer', flexShrink:0 }}>Upgrade</button>
                     </div>
@@ -1980,12 +1771,14 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
         )}
 
 
+
       </div>
     </div>
   );
 };
 
 export default JyotishChamber;
+
 
 
 
