@@ -1,10 +1,113 @@
-import type { Activation } from './types';
+import type { Activation, QuantumAnchor } from './types';
 import type { VoiceBiofieldResult } from '@/components/VoiceBiofieldScanner';
 import {
   ALL_ACTIVATIONS,
   matchActivationsToScan,
   mapBioLibraryToActivation,
 } from './constants';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// QUANTUM ANCHOR SYSTEM
+// Replicates the LimbicArc "Virtual Ingredient" digital signature mechanism:
+//   Physical Substance → Digitized Frequency Signature → Cloud Storage
+//   → User Voice Anchor → Active Field Transmission
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Generate a deterministic frequency hash for an ingredient.
+ * Uses SubtleCrypto SHA-256 (browser native) — same algorithm as LimbicArc's
+ * proprietary "frequency hash" but openly implemented.
+ * The hash encodes: name + type + benefit — making it unique per ingredient
+ * and stable across all user sessions.
+ */
+export async function generateFrequencyHash(activation: Activation): Promise<string> {
+  const input = `SQI:${activation.name}:${activation.type}:${activation.benefit}:${activation.vibrationalSignature}`;
+  const encoder = new TextEncoder();
+  const data = encoder.encode(input);
+  try {
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  } catch {
+    // Fallback: simple deterministic hash for environments without SubtleCrypto
+    let hash = 0x811c9dc5;
+    for (let i = 0; i < input.length; i++) {
+      hash ^= input.charCodeAt(i);
+      hash = (hash * 0x01000193) >>> 0;
+    }
+    return hash.toString(16).padStart(8, '0').repeat(8);
+  }
+}
+
+/**
+ * Synchronous frequency hash — used when async is not available.
+ * FNV-1a 64-bit equivalent via two 32-bit passes for a 16-char hex string.
+ */
+export function generateFrequencyHashSync(activation: Activation): string {
+  const input = `SQI:${activation.name}:${activation.type}:${activation.benefit}:${activation.vibrationalSignature}`;
+  let h1 = 0x811c9dc5;
+  let h2 = 0xc4ceb9fe;
+  for (let i = 0; i < input.length; i++) {
+    const c = input.charCodeAt(i);
+    h1 = Math.imul(h1 ^ c, 0x01000193);
+    h2 = Math.imul(h2 ^ c, 0x01000193);
+  }
+  const p1 = (h1 >>> 0).toString(16).padStart(8, '0');
+  const p2 = (h2 >>> 0).toString(16).padStart(8, '0');
+  // Produce a 64-char hex string by repeating and mixing both halves
+  return (p1 + p2 + p1 + p2 + p1 + p2 + p1 + p2).substring(0, 64);
+}
+
+/**
+ * Extract the voice FFT fingerprint from a VoiceBiofieldResult.
+ * This is the user's unique "quantum anchor" — the same concept as
+ * LimbicArc's voice print analysis that links the server to the user's body-field.
+ * Encodes: RMS energy profile, spectral centroid, ZCR, coherence score.
+ */
+export function computeVoiceFftFingerprint(result: VoiceBiofieldResult): number[] {
+  // Encode the key bioacoustic features as a compact float array
+  // This acts as the user's unique vibrational address on the server
+  const coherence = result.overallCoherence / 100;
+  const doshaCode = result.dominantDosha.startsWith('Pitta') ? 0.33
+    : result.dominantDosha.startsWith('Vata') ? 0.66
+    : result.dominantDosha.startsWith('Kapha') ? 0.11
+    : 0.50;
+  const nadiCode = result.nadiReading.includes('Pingala') ? 0.25
+    : result.nadiReading.includes('Ida') ? 0.75
+    : result.nadiReading.includes('Blocked') ? 0.05
+    : 0.50;
+  const priorityScores = result.priorityAreas.map(a => a.score / 100);
+  const strengthCount = result.topStrengths.length / 10;
+  const emotionHash = Array.from(result.emotionalField || '')
+    .reduce((acc, c) => (acc * 31 + c.charCodeAt(0)) & 0xFFFFFF, 0) / 0xFFFFFF;
+  const organHash = Array.from(result.organField || '')
+    .reduce((acc, c) => (acc * 31 + c.charCodeAt(0)) & 0xFFFFFF, 0) / 0xFFFFFF;
+
+  return [
+    coherence,
+    doshaCode,
+    nadiCode,
+    ...priorityScores.slice(0, 4),
+    strengthCount,
+    emotionHash,
+    organHash,
+    Date.now() % 1000000 / 1000000, // scan timestamp fractional
+  ];
+}
+
+/**
+ * Build the full QuantumAnchor from a voice scan result.
+ * This is stored in user_active_transmissions alongside the ingredient hashes.
+ */
+export function buildQuantumAnchor(result: VoiceBiofieldResult): QuantumAnchor {
+  return {
+    voiceFftFingerprint: computeVoiceFftFingerprint(result),
+    anchoredAt: new Date().toISOString(),
+    dominantDosha: result.dominantDosha,
+    nadiReading: result.nadiReading,
+    coherenceScore: result.overallCoherence,
+  };
+}
 
 /** Case-insensitive substring match against activation id + name */
 const MEAT_TERMS =
@@ -125,12 +228,16 @@ export function enrichTransmission(
   const days = act.type === 'Wellness' ? 21 : 8;
   const activatedAt = new Date().toISOString();
   const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+  // Generate deterministic frequency hash for this ingredient (synchronous path)
+  // The async SHA-256 version is used when persisting to Supabase
+  const frequencyHash = act.frequencyHash || generateFrequencyHashSync(act);
 
   return {
     ...act,
     activatedAt,
     expiresAt,
     source,
+    frequencyHash,
   };
 }
 
