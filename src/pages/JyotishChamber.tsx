@@ -1338,12 +1338,16 @@ const JyotishChamber: React.FC = () => {
       const confirmed = Boolean((jp as any)?.bhrigu_leaf_confirmed);
       if (confirmed) setLeafConfirmed(true);
       const firstName = profile?.birth_name?.split(' ')[0] || 'Seeker';
-      setChatMessages([{
-        role: 'oracle',
-        text: confirmed
-          ? `${firstName}, your leaf is before me. The Akashic record is open. What do you seek to understand?`
-          : `${firstName}, I sense your presence across the ages. I have many leaves before me. To find yours, I must ask a few things first.`
-      }]);
+      setChatMessages(prev => {
+        // Don't reset if conversation already started this session
+        if (prev.length > 0) return prev;
+        return [{
+          role: 'oracle',
+          text: confirmed
+            ? `${firstName}, your leaf is before me. The Akashic record is open. What do you seek to understand?`
+            : `${firstName}, I sense your presence across the ages. The field opens. What do you wish to bring before the Akasha today?`
+        }];
+      });
     } catch (e) {
       console.error('loadBirthData error:', e);
     } finally {
@@ -1434,6 +1438,8 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
 ` : 'Birth data not yet entered.';
 
       // Call bhrigu-oracle via Supabase client (uses current project)
+      // Count only user messages to detect if this is truly a first exchange
+      const userMsgCount = chatMessages.filter(m => m.role === 'user').length;
       const { data, error: _bhriguErr } = await supabase.functions.invoke('bhrigu-oracle', {
         body: {
           mode: 'chat',
@@ -1443,7 +1449,9 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
           tob: birthData?.birth_time || '',
           pob: birthData?.birth_place || '',
           readingType: 'general',
-          leaf_confirmed: leafConfirmed,
+          // If user has already sent messages this session, treat as confirmed
+          // so Bhrigu doesn't restart intro questions
+          leaf_confirmed: leafConfirmed || userMsgCount > 0,
           history: chatMessages
             .filter((_m, idx) => idx > 0)
             .map(m => ({ role: m.role === 'oracle' ? 'assistant' : 'user', content: m.text })),
@@ -1452,11 +1460,16 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
       if (_bhriguErr) throw new Error(`Oracle: ${_bhriguErr.message}`);
 
       // If Bhrigu just confirmed the leaf — save it permanently
-      if (data?.ready_for_reading && !leafConfirmed && user) {
+      // Also: after any exchange with real history, mark as confirmed so
+      // Bhrigu never runs intro questions again in future sessions
+      const shouldConfirmLeaf = data?.ready_for_reading || chatMessages.filter(m => m.role === 'user').length >= 1;
+      if (shouldConfirmLeaf && !leafConfirmed && user) {
         setLeafConfirmed(true);
         await supabase.from('jyotish_profiles')
-          .update({ bhrigu_leaf_confirmed: true } as any)
-          .eq('user_id', user.id);
+          .upsert({ 
+            user_id: user.id,
+            bhrigu_leaf_confirmed: true 
+          } as any, { onConflict: 'user_id' });
       }
 
       // bhrigu-oracle returns { reply } for chat mode or { sections } for full reading
@@ -2111,6 +2124,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
 };
 
 export default JyotishChamber;
+
 
 
 
