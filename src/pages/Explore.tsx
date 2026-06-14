@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ParamahamsaVishwanandaDailyCard } from "@/components/dashboard/ParamahamsaVishwanandaDailyCard";
-import { GitaCard } from "@/components/dashboard/GitaCard";
 import AkashicSiddhaReading from "@/components/vedic/AkashicSiddhaReading";
 import { useQuickActionItems } from "@/features/library/useQuickActionItems";
 import { resolveQuickActionItem } from "@/features/library/quickActionResolver";
@@ -44,7 +43,6 @@ export default function Explore() {
   const { tier } = useMembership();
   const { user } = useAuth();
   const { isAdmin } = useAdminRole();
-  const [gitaOpen, setGitaOpen] = useState(false);
   const [akashicOpen, setAkashicOpen] = useState(false);
   const [sacredRevealOpen, setSacredRevealOpen] = useState(false);
   const userHouse = 12;
@@ -502,18 +500,6 @@ export default function Explore() {
         </div>
       </div>
 
-      {/* ══ VEDIC / GITA ══ */}
-      <SL label={t('converge.secVedic')} delay="0.26s"/>
-      <div style={{ padding: '0 16px', animation: 'fadeUp 0.4s 0.28s ease both' }}>
-        <div onClick={() => setGitaOpen(!gitaOpen)} style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,175,55,0.13)', borderRadius: 18, padding: '16px 14px', cursor: 'pointer', position: 'relative' }}>
-          <RingIcon><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="14" height="18" rx="2" stroke="rgba(212,175,55,0.8)" strokeWidth="1.4"/><line x1="8" y1="8" x2="16" y2="8" stroke="rgba(212,175,55,0.42)" strokeWidth="1.1"/><line x1="8" y1="11" x2="16" y2="11" stroke="rgba(212,175,55,0.42)" strokeWidth="1.1"/><line x1="8" y1="14" x2="13" y2="14" stroke="rgba(212,175,55,0.42)" strokeWidth="1.1"/></svg></RingIcon>
-          <div style={{ fontFamily: "'Montserrat',sans-serif", fontSize: 7.5, fontWeight: 800, letterSpacing: '0.38em', textTransform: 'uppercase', color: 'rgba(212,175,55,0.65)', marginBottom: 5 }}>{t('converge.wisdomGita')}</div>
-          <div style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: 'italic', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.4 }}>{t('converge.wisdomGitaSub')}</div>
-          <span style={{ position: 'absolute', bottom: 12, right: 13, color: 'rgba(212,175,55,0.18)', fontSize: 11 }}>→</span>
-        </div>
-        {gitaOpen && <div style={{ marginTop: 10 }}><GitaCard /></div>}
-      </div>
-
       {/* ══ CREATIVE SOUL + SHOP ══ */}
       <SL label={t('converge.secAbundance')} delay="0.32s"/>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '0 16px', animation: 'fadeUp 0.4s 0.34s ease both' }}>
@@ -629,3 +615,4 @@ export default function Explore() {
     </div>
   );
 }
+
