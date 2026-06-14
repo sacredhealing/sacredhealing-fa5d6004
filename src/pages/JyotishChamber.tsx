@@ -741,6 +741,104 @@ const DailyInfluenceStrip: React.FC = () => {
   );
 };
 
+// ── OracleCard — collapsed accordion card for Jyotish overview ──
+interface OracleCardProps {
+  icon: string;
+  label: string;
+  title: string;
+  glow: string;
+  open: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}
+
+const OracleCard: React.FC<OracleCardProps> = ({ icon, label, title, glow, open, onToggle, children }) => {
+  const G = 'rgba(212,175,55,';
+  return (
+    <div style={{
+      borderRadius: open ? '20px' : '20px',
+      overflow: 'hidden',
+      border: `1px solid ${open ? 'rgba(212,175,55,0.28)' : 'rgba(255,255,255,0.07)'}`,
+      boxShadow: open ? `0 0 24px ${glow}` : 'none',
+      transition: 'box-shadow 0.3s, border-color 0.3s',
+      background: '#050505',
+    }}>
+      {/* Header — always visible */}
+      <button
+        onClick={onToggle}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', gap: 14,
+          background: open ? 'rgba(212,175,55,0.05)' : 'rgba(255,255,255,0.015)',
+          border: 'none', padding: '15px 18px', cursor: 'pointer',
+          transition: 'background 0.25s',
+        }}
+      >
+        {/* Icon orb */}
+        <div style={{
+          width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+          background: open ? 'rgba(212,175,55,0.1)' : 'rgba(255,255,255,0.03)',
+          border: `1px solid ${open ? 'rgba(212,175,55,0.3)' : 'rgba(255,255,255,0.08)'}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 16,
+          boxShadow: open ? `0 0 12px ${glow}` : 'none',
+          transition: 'all 0.25s',
+        }}>
+          {icon}
+        </div>
+        {/* Labels */}
+        <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
+          <div style={{
+            fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 7, fontWeight: 800,
+            letterSpacing: '0.42em', textTransform: 'uppercase' as const,
+            color: `${G}0.45)`, marginBottom: 3,
+          }}>{label}</div>
+          <div style={{
+            fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 12.5, fontWeight: 700,
+            color: open ? '#D4AF37' : 'rgba(255,255,255,0.65)',
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            transition: 'color 0.25s',
+          }}>{title}</div>
+        </div>
+        {/* Chevron */}
+        <div style={{
+          width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
+          background: `${G}0.06)`, border: `1px solid ${G}0.12)`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+          transition: 'transform 0.3s ease',
+        }}>
+          <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+            <path d="M1.5 3 L4.5 6 L7.5 3" stroke="#D4AF37" strokeWidth="1.4" strokeLinecap="round"/>
+          </svg>
+        </div>
+      </button>
+
+      {/* Expandable body */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div style={{
+              padding: '0 18px 18px',
+              borderTop: `1px solid ${G}0.08)`,
+            }}>
+              <div style={{ paddingTop: 14 }}>
+                {children}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+
 // ── Bhagavad Gita Oracle Panel ──────────────────────────────────
 interface GitaOraclePanelProps {
   open: boolean;
@@ -761,7 +859,7 @@ const PLANET_GITA_CONTEXT: Record<string, string> = {
   Ketu: 'Ketu Dasha intensifies moksha currents. This verse carries the liberation frequency — detachment, inner mastery, and past-karma dissolution.',
 };
 
-const GitaOraclePanel: React.FC<GitaOraclePanelProps> = ({ open, onToggle, activeMaha, activeAntar }) => {
+const GitaOraclePanel: React.FC<GitaOraclePanelProps & { inline?: boolean }> = ({ open, onToggle, activeMaha, activeAntar, inline }) => {
   const mahaName = activeMaha?.planet || null;
   const antarName = activeAntar?.planet || null;
   const verse = getGitaVerseForCycle(mahaName);
@@ -769,6 +867,35 @@ const GitaOraclePanel: React.FC<GitaOraclePanelProps> = ({ open, onToggle, activ
   const planetColor: string = { Sun:'#FFA500', Moon:'#C0C8E8', Mars:'#FF4444', Mercury:'#44CC44', Jupiter:'#FFD700', Venus:'#FF69B4', Saturn:'#8888AA', Rahu:'#D4AF37', Ketu:'#AA7744' }[mahaName || ''] || '#D4AF37';
   const G = 'rgba(212,175,55,';
   const W = 'rgba(255,255,255,';
+  // Inline mode: OracleCard handles the accordion, just render content
+  if (inline) return (
+    <div>
+      {mahaName && (
+        <div style={{ display:'flex', alignItems:'flex-start', gap:10, paddingBottom:14, borderBottom:`1px solid rgba(212,175,55,0.1)`, marginBottom:14 }}>
+          <div style={{ width:10, height:10, borderRadius:'50%', background:planetColor, boxShadow:`0 0 8px ${planetColor}`, flexShrink:0, marginTop:4 }}/>
+          <div>
+            <div style={{ fontFamily:'Plus Jakarta Sans, sans-serif', fontSize:7.5, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:`${G}0.5)`, marginBottom:4 }}>
+              ACTIVE DASHA · {mahaName}{antarName ? ` / ${antarName}` : ''}
+            </div>
+            <div style={{ fontFamily:'Georgia, serif', fontStyle:'italic', fontSize:12, color:`${W}0.5)`, lineHeight:1.6 }}>{context}</div>
+          </div>
+        </div>
+      )}
+      <div style={{ textAlign:'center', paddingBottom:16, borderBottom:`1px solid rgba(212,175,55,0.08)`, marginBottom:14 }}>
+        <div style={{ fontFamily:'Georgia, serif', fontSize:17, color:`${G}0.92)`, lineHeight:1.8, marginBottom:8, textShadow:`0 0 20px ${G}0.25)` }}>{verse.sanskrit}</div>
+        <div style={{ fontFamily:'Georgia, serif', fontStyle:'italic', fontSize:11, color:`${W}0.4)`, lineHeight:1.6 }}>{verse.transliteration}</div>
+      </div>
+      <div style={{ background:`${G}0.04)`, border:`1px solid ${G}0.1)`, borderRadius:14, padding:'14px 16px', marginBottom:12, position:'relative' }}>
+        <div style={{ position:'absolute', top:-8, left:14, fontFamily:'Plus Jakarta Sans, sans-serif', fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'#D4AF37', background:'#050505', padding:'0 6px' }}>SIDDHA TRANSMISSION</div>
+        <p style={{ fontFamily:'Georgia, serif', fontSize:13, color:`${W}0.82)`, lineHeight:1.75, margin:0, fontStyle:'italic' }}>"{verse.producersTranslation}"</p>
+      </div>
+      <div style={{ display:'flex', justifyContent:'space-between' }}>
+        <div style={{ fontFamily:'Plus Jakarta Sans, sans-serif', fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:`${G}0.35)` }}>CH.{verse.chapter} · V.{verse.verse}</div>
+        <div style={{ fontFamily:'Plus Jakarta Sans, sans-serif', fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:`${G}0.35)` }}>{mahaName ? `${mahaName} CYCLE` : 'DAILY'}</div>
+      </div>
+    </div>
+  );
+
   return (
     <div style={{ marginBottom: 18 }}>
       <button onClick={onToggle} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: open ? 'rgba(212,175,55,0.06)' : 'rgba(255,255,255,0.015)', border: `1px solid ${open ? 'rgba(212,175,55,0.35)' : 'rgba(212,175,55,0.12)'}`, borderRadius: open ? '20px 20px 0 0' : '20px', padding: '16px 20px', cursor: 'pointer', transition: 'all 0.3s ease' }}>
@@ -849,6 +976,16 @@ const JyotishChamber: React.FC = () => {
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
   const [gitaOracleOpen, setGitaOracleOpen] = useState(false);
+  const [openCards, setOpenCards] = useState<Record<string,boolean>>({
+    dailyInfluence: false,
+    karmaGuide: false,
+    gitaOracle: false,
+    natalBlueprint: true,   // open by default so user sees their data
+    dasha: false,
+    navagraha: false,
+    bnn: false,
+  });
+  const toggleCard = (key: string) => setOpenCards(prev => ({ ...prev, [key]: !prev[key] }));
   const [oracleOpen, setOracleOpen] = useState(true);
   const [lexSearch, setLexSearch] = useState('');
   const [lexCat, setLexCat] = useState('All');
@@ -1220,226 +1357,207 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
               </div>
             )}
             {birthData && !loading && (
-              <>
-                {/* ══ DAILY COSMIC INFLUENCES (Panchanga + Graha Cards) ══ */}
-                <DailyInfluenceStrip />
+              <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
 
-                {/* ══ DAILY KARMA GUIDANCE — tiered ══ */}
-                <DailyKarmaGuide
-                  membershipTier={membershipTier}
-                  isAdmin={isAdmin}
-                  activeMaha={activeMaha}
-                  activeAntar={activeAntar}
-                  moonNakshatra={ephemeris?.moonNakshatra || null}
-                  navigate={navigate}
-                />
+                {/* ── 1. DAILY COSMIC FIELD ── */}
+                <OracleCard
+                  icon="🌅" label="DAILY COSMIC FIELD" title="Today's Panchanga & Planetary Hour"
+                  glow="rgba(212,175,55,0.18)" open={openCards.dailyInfluence}
+                  onToggle={() => toggleCard('dailyInfluence')}
+                >
+                  <DailyInfluenceStrip />
+                </OracleCard>
 
-                {/* ══ BHAGAVAD GITA ORACLE — Jyotish Synced ══ */}
-                <GitaOraclePanel
-                  open={gitaOracleOpen}
-                  onToggle={() => setGitaOracleOpen(p => !p)}
-                  activeMaha={activeMaha}
-                  activeAntar={activeAntar}
-                />
+                {/* ── 2. KARMA GUIDANCE ── */}
+                <OracleCard
+                  icon="🔱" label="KARMA GUIDANCE" title={`${activeMaha?.planet || 'Vedic'} Dasha · Daily Transmission`}
+                  glow="rgba(212,175,55,0.15)" open={openCards.karmaGuide}
+                  onToggle={() => toggleCard('karmaGuide')}
+                >
+                  <DailyKarmaGuide
+                    membershipTier={membershipTier}
+                    isAdmin={isAdmin}
+                    activeMaha={activeMaha}
+                    activeAntar={activeAntar}
+                    moonNakshatra={ephemeris?.moonNakshatra || null}
+                    navigate={navigate}
+                  />
+                </OracleCard>
 
-                {/* Stats row */}
-                <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:10, marginTop:4 }}>
-                  Your Natal Blueprint
-                </div>
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:18 }}>
-                  {[
-                    { val: ephemeris?.ascendantSign ? (SIGN_SYMBOLS[ephemeris.ascendantSign] || '?') + ' ' + ephemeris.ascendantSign : calcLoading ? '…' : '—', lbl:'Rising Sign / Lagna' },
-                    { val: ephemeris?.moonNakshatra || (calcLoading ? '…' : '—'), lbl:'Moon Nakshatra' },
-                    { val: activeMaha?.planet || (calcLoading ? '…' : '—'), lbl:'Mahadasha' },
-                    { val: activeAntar?.planet || (calcLoading ? '…' : '—'), lbl:'Antardasha' },
-                  ].map(s => (
-                    <div key={s.lbl} style={{ ...gs, padding:'14px 10px', textAlign:'center' }}>
-                      <div style={{ fontSize:s.val.length > 8 ? 11 : 16, fontWeight:900, color:'#D4AF37', lineHeight:1.1, marginBottom:5, letterSpacing:'-0.02em' }}>{s.val}</div>
-                      <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.35em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.25)', lineHeight:1.3 }}>{s.lbl}</div>
-                    </div>
-                  ))}
-                </div>
+                {/* ── 3. BHAGAVAD GITA ORACLE ── */}
+                <OracleCard
+                  icon="📖" label="BHAGAVAD GITA · JYOTISH ORACLE"
+                  title={activeMaha ? `${activeMaha.planet} Dasha Light-Code · Ch.${getGitaVerseForCycle(activeMaha.planet).chapter}:${getGitaVerseForCycle(activeMaha.planet).verse}` : 'Daily Vedic Verse'}
+                  glow="rgba(212,175,55,0.2)" open={openCards.gitaOracle}
+                  onToggle={() => toggleCard('gitaOracle')}
+                >
+                  <GitaOraclePanel
+                    open={true}
+                    onToggle={() => {}}
+                    activeMaha={activeMaha}
+                    activeAntar={activeAntar}
+                    inline
+                  />
+                </OracleCard>
 
-                {/* Bhrigu quote */}
-                <div style={{ ...g, padding:'24px 26px', marginBottom:18, position:'relative', overflow:'hidden' }}>
-                  <div style={{ position:'absolute', top:-14, left:14, fontSize:90, fontFamily:'Georgia,serif', color:'rgba(212,175,55,0.07)', lineHeight:1 }}>"</div>
-                  <p style={{ fontFamily:'Georgia,serif', fontStyle:'italic', fontSize:15, color:'rgba(255,255,255,0.6)', lineHeight:1.7, position:'relative' }}>
-                    "Your birth chart is not a sentence — it is a Bhakti-Algorithm. The planets encode the precise Prema-Pulse Transmissions your soul contracted to master. When understood fully, every planet becomes an ally in your liberation."
-                  </p>
-                  <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.4)', marginTop:12 }}>
-                    — Maharishi Bhrigu · Akasha-Neural Transmission 2050→2026
-                  </div>
-                </div>
-
-                {/* Current chart summary */}
-                <div style={{ ...gm, padding:22, marginBottom:18 }}>
-                  <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:14 }}>
-                    Your Vedic Natal Blueprint — {birthData.birth_name}
-                  </div>
-                  {calcLoading ? (
-                    <div style={{ textAlign:'center', padding:20 }}>
-                      <div style={{ display:'flex', gap:4, justifyContent:'center', marginBottom:10 }}>
-                        {[0,1,2].map(i => <div key={i} className="sqi-dot" style={{ width:6, height:6, borderRadius:'50%', background:'#D4AF37', animationDelay:`${i*0.15}s` }}/>)}
+                {/* ── 4. YOUR NATAL BLUEPRINT ── */}
+                <OracleCard
+                  icon="✦" label="NATAL BLUEPRINT"
+                  title={`${birthData.birth_name} · Lagna ${ephemeris?.ascendantSign || '—'} · ${ephemeris?.moonNakshatra || '—'} Nakshatra`}
+                  glow="rgba(212,175,55,0.15)" open={openCards.natalBlueprint}
+                  onToggle={() => toggleCard('natalBlueprint')}
+                >
+                  {/* 4-stat row */}
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:14 }}>
+                    {[
+                      { val: ephemeris?.ascendantSign ? (SIGN_SYMBOLS[ephemeris.ascendantSign] || '?') + ' ' + ephemeris.ascendantSign : calcLoading ? '…' : '—', lbl:'Lagna' },
+                      { val: ephemeris?.moonNakshatra || (calcLoading ? '…' : '—'), lbl:'Nakshatra' },
+                      { val: activeMaha?.planet || (calcLoading ? '…' : '—'), lbl:'Mahadasha' },
+                      { val: activeAntar?.planet || (calcLoading ? '…' : '—'), lbl:'Antardasha' },
+                    ].map(s => (
+                      <div key={s.lbl} style={{ background:'rgba(212,175,55,0.04)', border:'1px solid rgba(212,175,55,0.1)', borderRadius:14, padding:'12px 8px', textAlign:'center' }}>
+                        <div style={{ fontSize:s.val.length > 8 ? 10 : 15, fontWeight:900, color:'#D4AF37', lineHeight:1.1, marginBottom:4, letterSpacing:'-0.02em' }}>{s.val}</div>
+                        <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.22)' }}>{s.lbl}</div>
                       </div>
-                      <p style={{ fontSize:11, color:'rgba(212,175,55,0.5)', letterSpacing:'0.3em' }}>Calculating your planetary positions via VedAstro ephemeris…</p>
-                    </div>
-                  ) : ephemeris ? (
-                    <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-                      {ephemeris.ascendantSign && (
-                        <div style={{ ...gs, padding:'16px 18px' }}>
-                          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
-                            <span style={{ fontSize:24 }}>{SIGN_SYMBOLS[ephemeris.ascendantSign] || '♏'}</span>
-                            <div>
-                              <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:2 }}>Lagna — Your Rising Sign</div>
-                              <div style={{ fontSize:18, fontWeight:900, color:'#D4AF37' }}>{ephemeris.ascendantSign}</div>
-                            </div>
-                          </div>
-                          <p style={{ fontSize:12, color:'rgba(255,255,255,0.55)', lineHeight:1.6 }}>
-                            {SIGN_MEANINGS[ephemeris.ascendantSign] || 'Your Lagna shapes your physical body, personality, and the entire lens through which life is experienced.'}
-                          </p>
-                          <p style={{ fontSize:11, color:'rgba(255,255,255,0.35)', marginTop:8, fontStyle:'italic' }}>
-                            This is the sign rising on the eastern horizon at the exact moment of your birth — the most important point in your chart.
-                          </p>
+                    ))}
+                  </div>
+                  {/* Lagna */}
+                  {ephemeris?.ascendantSign && (
+                    <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:'14px 16px', marginBottom:8 }}>
+                      <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:6 }}>
+                        <span style={{ fontSize:22 }}>{SIGN_SYMBOLS[ephemeris.ascendantSign] || '♏'}</span>
+                        <div>
+                          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:2 }}>Lagna — Rising Sign</div>
+                          <div style={{ fontSize:16, fontWeight:900, color:'#D4AF37' }}>{ephemeris.ascendantSign}</div>
                         </div>
-                      )}
-                      {ephemeris.moonNakshatra && (
-                        <div style={{ ...gs, padding:'16px 18px' }}>
-                          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
-                            <span style={{ fontSize:24 }}>☽</span>
-                            <div>
-                              <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:2 }}>Your Birth Star (Janma Nakshatra)</div>
-                              <div style={{ fontSize:18, fontWeight:900, color:'#D4AF37' }}>{ephemeris.moonNakshatra}</div>
-                            </div>
-                          </div>
-                          <p style={{ fontSize:12, color:'rgba(255,255,255,0.55)', lineHeight:1.6 }}>
-                            Your birth star encodes your soul's original frequency. This Nakshatra determines your Dasha starting point and reveals your deepest psychological and spiritual nature.
-                          </p>
-                        </div>
-                      )}
-                      {ephemeris.sunSign && (
-                        <div style={{ ...gs, padding:'16px 18px' }}>
-                          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
-                            <span style={{ fontSize:24 }}>☉</span>
-                            <div>
-                              <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:2 }}>Sun Sign (Sidereal / Vedic)</div>
-                              <div style={{ fontSize:18, fontWeight:900, color:'#D4AF37' }}>{ephemeris.sunSign}</div>
-                            </div>
-                          </div>
-                          <p style={{ fontSize:12, color:'rgba(255,255,255,0.55)', lineHeight:1.6 }}>
-                            Your Vedic Sun sign may differ from your Western Sun sign by ~23 days. Vedic astrology uses actual star positions (sidereal).
-                          </p>
-                        </div>
-                      )}
-                      {activeMaha && (
-                        <div style={{ ...gs, padding:'16px 18px', borderColor:'rgba(212,175,55,0.2)' }}>
-                          <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:10 }}>
-                            Your Current Karmic Chapter (Vimshottari Dasha)
-                          </div>
-                          <div style={{ display:'flex', alignItems:'flex-start', gap:12, marginBottom:12 }}>
-                            <div style={{ flex:1 }}>
-                              <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.25)', marginBottom:4 }}>Main Period (Mahadasha)</div>
-                              <div style={{ fontSize:20, fontWeight:900, color:'#D4AF37' }}>{activeMaha.planet} {PLANET_INFO[activeMaha.planet]?.sym}</div>
-                              <div style={{ fontSize:10, color:'rgba(255,255,255,0.35)', marginTop:2 }}>{activeMaha.start} — {activeMaha.end} · {activeMaha.years} years</div>
-                            </div>
-                            {activeAntar && (
-                              <div style={{ flex:1, paddingLeft:12, borderLeft:'1px solid rgba(255,255,255,0.06)' }}>
-                                <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.25)', marginBottom:4 }}>Sub-Period (Antardasha)</div>
-                                <div style={{ fontSize:20, fontWeight:900, color:'#fff' }}>{activeAntar.planet} {PLANET_INFO[activeAntar.planet]?.sym}</div>
-                                <div style={{ fontSize:10, color:'rgba(255,255,255,0.35)', marginTop:2 }}>{activeAntar.start} — {activeAntar.end}</div>
-                              </div>
-                            )}
-                          </div>
-                          <p style={{ fontSize:12, color:'rgba(255,255,255,0.55)', lineHeight:1.6 }}>
-                            <strong style={{ color:'#D4AF37' }}>{activeMaha.planet} Mahadasha:</strong>{" "}
-                            {DASHA_MEANINGS[activeMaha.planet] || 'This period brings the specific karmic curriculum of this planet into focus.'}
-                          </p>
-                          {activeAntar && (
-                            <p style={{ fontSize:11, color:'rgba(255,255,255,0.4)', lineHeight:1.55, marginTop:8 }}>
-                              <strong style={{ color:'rgba(255,255,255,0.6)' }}>{activeAntar.planet} Antardasha adds:</strong>{" "}
-                              {DASHA_MEANINGS[activeAntar.planet] || ''}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                      {activeBNNAge && (
-                        <div style={{ ...gs, padding:'14px 18px' }}>
-                          <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:6 }}>
-                            BNN Age Activation — Bhrigu Nandi Nadi
-                          </div>
-                          <p style={{ fontSize:12, color:'rgba(255,255,255,0.55)', lineHeight:1.6 }}>
-                            At age {age}, the{" "}
-                            <strong style={{ color:'#D4AF37' }}>{activeBNNAge.planet}</strong> intelligence is your primary karmic teacher.{" "}
-                            {PLANET_INFO[activeBNNAge.planet]?.meaning}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-                      <p style={{ fontSize:12, color:'rgba(255,255,255,0.4)', textAlign:'center', padding:'16px 0', fontStyle:'italic' }}>
-                        Your chart is being calculated. This may take a moment for the first calculation.
-                      </p>
-                      <button onClick={() => calculateEphemeris(birthData!)} style={{
-                        padding:'11px 20px', borderRadius:99, border:'1px solid rgba(212,175,55,0.3)',
-                        background:'rgba(212,175,55,0.08)', color:'#D4AF37',
-                        fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.3em',
-                        textTransform:'uppercase' as const, cursor:'pointer', margin:'0 auto', display:'block'
-                      }}>✦ Calculate My Chart</button>
+                      </div>
+                      <p style={{ fontSize:11.5, color:'rgba(255,255,255,0.5)', lineHeight:1.6, margin:0 }}>{SIGN_MEANINGS[ephemeris.ascendantSign] || ''}</p>
                     </div>
                   )}
-                </div>
-
-                {/* Edit birth data */}
-                <div style={{ textAlign:'center', marginBottom:18 }}>
-                  <Dialog open={birthDialogOpen} onOpenChange={setBirthDialogOpen}>
-                    <DialogTrigger asChild>
-                      <button style={{ fontSize:11, color:'rgba(212,175,55,0.5)', background:'none', border:'none', cursor:'pointer', textDecoration:'underline' }}>
-                        Edit birth details · {birthData.birth_date} · {birthData.birth_place}
-                      </button>
-                    </DialogTrigger>
-                    <DialogContent style={{ background:'#0a0a0f', border:'1px solid rgba(212,175,55,0.20)', borderRadius:24, maxWidth:640, maxHeight:'90vh', overflowY:'auto' }}>
-                      <DialogHeader>
-                        <DialogTitle style={{ color:'#D4AF37', fontWeight:900 }}>Update Birth Details</DialogTitle>
-                      </DialogHeader>
-                      <BirthDetailsForm initialData={birthData} onSaved={async () => {
-                        setBirthDialogOpen(false);
-                        await loadBirthData();
-                      }} />
-                    </DialogContent>
-                  </Dialog>
-                </div>
-
-                {/* Navagraha strip */}
-                <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.5em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', textAlign:'center', marginBottom:10 }}>
-                  Navagraha · Nine Cosmic Intelligences
-                </div>
-                <div style={{ display:'flex', gap:7, overflowX:'auto', paddingBottom:4, scrollbarWidth:'none', marginBottom:16 }}>
-                  {Object.entries(PLANET_INFO).map(([p, info]) => (
-                    <div key={p} style={{ flexShrink:0, padding:'8px 12px', borderRadius:99, border:activeMaha?.planet === p ? '1px solid rgba(212,175,55,0.35)' : '1px solid rgba(255,255,255,0.06)', background:activeMaha?.planet === p ? 'rgba(212,175,55,0.08)' : 'rgba(255,255,255,0.02)', textAlign:'center' }}>
-                      <span style={{ fontSize:15, display:'block', marginBottom:2 }}>{info.sym}</span>
-                      <span style={{ fontSize:8, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:activeMaha?.planet === p ? '#D4AF37' : 'rgba(255,255,255,0.25)' }}>{p}</span>
+                  {/* Moon Nakshatra */}
+                  {ephemeris?.moonNakshatra && (
+                    <div style={{ background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:'14px 16px', marginBottom:8 }}>
+                      <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:6 }}>
+                        <span style={{ fontSize:22 }}>☽</span>
+                        <div>
+                          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(212,175,55,0.5)', marginBottom:2 }}>Birth Star · Janma Nakshatra</div>
+                          <div style={{ fontSize:16, fontWeight:900, color:'#D4AF37' }}>{ephemeris.moonNakshatra}</div>
+                        </div>
+                      </div>
+                      <p style={{ fontSize:11.5, color:'rgba(255,255,255,0.5)', lineHeight:1.6, margin:0 }}>Your soul's original frequency. Determines Dasha timing and deepest psychological nature.</p>
                     </div>
-                  ))}
-                </div>
+                  )}
+                  {/* Edit link */}
+                  <div style={{ textAlign:'center', marginTop:10 }}>
+                    <Dialog open={birthDialogOpen} onOpenChange={setBirthDialogOpen}>
+                      <DialogTrigger asChild>
+                        <button style={{ fontSize:11, color:'rgba(212,175,55,0.45)', background:'none', border:'none', cursor:'pointer', textDecoration:'underline' }}>
+                          Edit · {birthData.birth_date} · {birthData.birth_place}
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent style={{ background:'#0a0a0f', border:'1px solid rgba(212,175,55,0.20)', borderRadius:24, maxWidth:640, maxHeight:'90vh', overflowY:'auto' }}>
+                        <DialogHeader>
+                          <DialogTitle style={{ color:'#D4AF37', fontWeight:900 }}>Update Birth Details</DialogTitle>
+                        </DialogHeader>
+                        <BirthDetailsForm initialData={birthData} onSaved={async () => { setBirthDialogOpen(false); await loadBirthData(); }} />
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </OracleCard>
 
-                {/* Free tier upgrade nudge */}
-                {membershipTier === 'free' && (
-                  <div style={{ ...gs, padding:'18px', borderColor:'rgba(34,211,238,0.15)', marginBottom:16, textAlign:'center' }}>
-                    <div style={{ fontSize:8, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(34,211,238,0.6)', marginBottom:8 }}>🔱 Unlock Deeper Guidance</div>
-                    <p style={{ fontSize:12, color:'rgba(255,255,255,0.55)', lineHeight:1.65, marginBottom:12 }}>
-                      Upgrade to <strong style={{ color:'#22D3EE' }}>Prāna-Flow (€19/mo)</strong> to unlock personalised daily karma cards based on your exact birth chart, Dasha timing, and Nakshatra soul blueprint.
+                {/* ── 5. ACTIVE DASHA ── */}
+                {activeMaha && (
+                  <OracleCard
+                    icon={PLANET_INFO[activeMaha.planet]?.sym || '♃'} label="VIMSHOTTARI DASHA"
+                    title={`${activeMaha.planet} Mahadasha${activeAntar ? ` · ${activeAntar.planet} Antardasha` : ''}`}
+                    glow={`rgba(${activeMaha.planet === 'Rahu' ? '212,175,55' : activeMaha.planet === 'Moon' ? '192,200,232' : activeMaha.planet === 'Mars' ? '255,68,68' : activeMaha.planet === 'Sun' ? '255,165,0' : '212,175,55'},0.18)`}
+                    open={openCards.dasha} onToggle={() => toggleCard('dasha')}
+                  >
+                    <div style={{ display:'flex', alignItems:'flex-start', gap:12, marginBottom:14 }}>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.25)', marginBottom:4 }}>Main Period (Mahadasha)</div>
+                        <div style={{ fontSize:20, fontWeight:900, color:'#D4AF37' }}>{activeMaha.planet} {PLANET_INFO[activeMaha.planet]?.sym}</div>
+                        <div style={{ fontSize:10, color:'rgba(255,255,255,0.35)', marginTop:2 }}>{activeMaha.start} — {activeMaha.end} · {activeMaha.years} yrs</div>
+                      </div>
+                      {activeAntar && (
+                        <div style={{ flex:1, paddingLeft:12, borderLeft:'1px solid rgba(255,255,255,0.06)' }}>
+                          <div style={{ fontSize:7, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, color:'rgba(255,255,255,0.25)', marginBottom:4 }}>Sub-Period (Antardasha)</div>
+                          <div style={{ fontSize:20, fontWeight:900, color:'rgba(255,255,255,0.85)' }}>{activeAntar.planet} {PLANET_INFO[activeAntar.planet]?.sym}</div>
+                          <div style={{ fontSize:10, color:'rgba(255,255,255,0.35)', marginTop:2 }}>{activeAntar.start} — {activeAntar.end}</div>
+                        </div>
+                      )}
+                    </div>
+                    <p style={{ fontSize:12, color:'rgba(255,255,255,0.55)', lineHeight:1.65, margin:0 }}>
+                      <strong style={{ color:'#D4AF37' }}>{activeMaha.planet}:</strong>{' '}{DASHA_MEANINGS[activeMaha.planet] || ''}
                     </p>
-                    <button onClick={() => navigate('/membership')} style={{ padding:'10px 22px', borderRadius:99, border:'1px solid rgba(34,211,238,0.3)', background:'rgba(34,211,238,0.08)', color:'#22D3EE', fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, cursor:'pointer' }}>
-                      Activate Prāna-Flow →
-                    </button>
+                    {activeAntar && (
+                      <p style={{ fontSize:11, color:'rgba(255,255,255,0.38)', lineHeight:1.55, marginTop:8, marginBottom:0 }}>
+                        <strong style={{ color:'rgba(255,255,255,0.55)' }}>{activeAntar.planet} adds:</strong>{' '}{DASHA_MEANINGS[activeAntar.planet] || ''}
+                      </p>
+                    )}
+                  </OracleCard>
+                )}
+
+                {/* ── 6. NAVAGRAHA ── */}
+                <OracleCard
+                  icon="⬡" label="NAVAGRAHA" title="Nine Cosmic Intelligences"
+                  glow="rgba(212,175,55,0.12)" open={openCards.navagraha}
+                  onToggle={() => toggleCard('navagraha')}
+                >
+                  <div style={{ display:'flex', gap:7, overflowX:'auto', paddingBottom:4, scrollbarWidth:'none' }}>
+                    {Object.entries(PLANET_INFO).map(([p, info]) => (
+                      <div key={p} style={{ flexShrink:0, padding:'8px 12px', borderRadius:99, border:activeMaha?.planet === p ? '1px solid rgba(212,175,55,0.35)' : '1px solid rgba(255,255,255,0.06)', background:activeMaha?.planet === p ? 'rgba(212,175,55,0.08)' : 'rgba(255,255,255,0.02)', textAlign:'center' }}>
+                        <span style={{ fontSize:15, display:'block', marginBottom:2 }}>{info.sym}</span>
+                        <span style={{ fontSize:7, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:activeMaha?.planet === p ? '#D4AF37' : 'rgba(255,255,255,0.25)' }}>{p}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ marginTop:12, display:'flex', flexDirection:'column', gap:6 }}>
+                    {Object.entries(PLANET_INFO).slice(0, 3).map(([p, info]) => (
+                      <div key={p} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', borderRadius:12, background:'rgba(255,255,255,0.015)', border:'1px solid rgba(255,255,255,0.05)' }}>
+                        <span style={{ fontSize:16, flexShrink:0 }}>{info.sym}</span>
+                        <div>
+                          <span style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.65)' }}>{p} — </span>
+                          <span style={{ fontSize:11, color:'rgba(255,255,255,0.38)' }}>{info.meaning}</span>
+                        </div>
+                      </div>
+                    ))}
+                    <div style={{ fontSize:10, color:'rgba(212,175,55,0.35)', textAlign:'center', paddingTop:4 }}>→ Full planetary details in the Vidya tab</div>
+                  </div>
+                </OracleCard>
+
+                {/* ── 7. BNN ACTIVATION (if exists) ── */}
+                {activeBNNAge && (
+                  <OracleCard
+                    icon={PLANET_INFO[activeBNNAge.planet]?.sym || '◈'} label="BHRIGU NANDI NADI"
+                    title={`Age ${age} Activation · ${activeBNNAge.planet} Intelligence`}
+                    glow="rgba(212,175,55,0.14)" open={openCards.bnn}
+                    onToggle={() => toggleCard('bnn')}
+                  >
+                    <p style={{ fontSize:12.5, color:'rgba(255,255,255,0.6)', lineHeight:1.7, margin:0 }}>
+                      At age {age}, the <strong style={{ color:'#D4AF37' }}>{activeBNNAge.planet}</strong> intelligence is your primary karmic teacher.{' '}{PLANET_INFO[activeBNNAge.planet]?.meaning}
+                    </p>
+                  </OracleCard>
+                )}
+
+                {/* ── 8. UPGRADE (free tier only) ── */}
+                {membershipTier === 'free' && (
+                  <div onClick={() => navigate('/membership')} style={{ background:'rgba(34,211,238,0.04)', border:'1px solid rgba(34,211,238,0.14)', borderRadius:20, padding:'16px 18px', cursor:'pointer', textAlign:'center' }}>
+                    <div style={{ fontSize:7.5, fontWeight:800, letterSpacing:'0.45em', textTransform:'uppercase' as const, color:'rgba(34,211,238,0.6)', marginBottom:6 }}>🔱 Unlock Deeper Guidance</div>
+                    <p style={{ fontSize:12, color:'rgba(255,255,255,0.45)', lineHeight:1.6, marginBottom:10 }}>
+                      Upgrade to <strong style={{ color:'#22D3EE' }}>Prāna-Flow (€19/mo)</strong> for personalised daily karma cards, Dasha timing & Nakshatra blueprint.
+                    </p>
+                    <span style={{ fontSize:9, fontWeight:800, letterSpacing:'0.3em', textTransform:'uppercase' as const, color:'#22D3EE' }}>Activate Prāna-Flow →</span>
                   </div>
                 )}
-              </>
+
+              </div>
             )}
           </motion.div>
         )}
 
-        {/* ══════════════ CHART ══════════════ */}
+
+                {/* ══════════════ CHART ══════════════ */}
         {activeTab === 'chart' && (
           <motion.div initial={{ opacity:0, y:14 }} animate={{ opacity:1, y:0 }}>
             {!birthData ? <BirthPrompt /> : (
@@ -1818,5 +1936,6 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
 };
 
 export default JyotishChamber;
+
 
 
