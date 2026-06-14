@@ -4169,50 +4169,170 @@ LOCAL DAY PHASE: ${dayPhase} — align tone and greetings with morning / midday 
                 </div>
                 <div style={{ maxHeight: cardLibOpen ? 2400 : 0, overflow: 'hidden' as const, transition: 'max-height 0.45s cubic-bezier(0.4,0,0.2,1)' }}>
                 {selectedActivations.length > 0 && (
-                  <div
-                    className="rounded-[28px] p-6 sm:p-7 qa-card-hover"
-                    style={{
-                      background: 'rgba(255,255,255,0.02)',
-                      backdropFilter: 'blur(40px)',
-                      WebkitBackdropFilter: 'blur(40px)',
-                      border: '1px solid rgba(255,255,255,0.06)',
-                    }}
-                  >
-                    <div style={{ height: 2, background: 'linear-gradient(90deg,transparent,#D4AF37,transparent)', marginBottom: 20, opacity: 0.4, borderRadius: 1 }} />
-                    <div className="mb-4 flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <div style={{ width:28, height:28, background:'rgba(212,175,55,0.12)', border:'1px solid rgba(212,175,55,0.25)', borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>⚙</div>
-                        <h2 className="text-sm font-black tracking-[-0.03em]">{t('quantumApothecary.mixer.title')}</h2>
-                      </div>
-                      <span className="text-[13px] font-bold uppercase tracking-[0.12em] text-[#D4AF37]/55">
-                        {t('quantumApothecary.mixer.slotsProgress', {
-                          current: selectedActivations.length,
-                          max: AETHERIC_MIXER_MAX_SLOTS,
-                        })}
-                      </span>
+                  <div style={{
+                    position: 'relative',
+                    borderRadius: 32,
+                    overflow: 'hidden',
+                    background: 'rgba(5,5,5,0.85)',
+                    border: '1px solid rgba(212,175,55,0.25)',
+                    boxShadow: '0 0 0 1px rgba(212,175,55,0.12), 0 0 40px rgba(212,175,55,0.15), 0 0 80px rgba(212,175,55,0.07), inset 0 0 60px rgba(212,175,55,0.03)',
+                    animation: 'mixerPulse 3s ease-in-out infinite',
+                  }}>
+                    <style>{`
+                      @keyframes mixerPulse {
+                        0%,100% { box-shadow: 0 0 0 1px rgba(212,175,55,0.12), 0 0 40px rgba(212,175,55,0.15), 0 0 80px rgba(212,175,55,0.07), inset 0 0 60px rgba(212,175,55,0.03); }
+                        50%     { box-shadow: 0 0 0 1px rgba(212,175,55,0.28), 0 0 60px rgba(212,175,55,0.28), 0 0 120px rgba(212,175,55,0.14), inset 0 0 80px rgba(212,175,55,0.06); }
+                      }
+                      @keyframes orbFloat {
+                        0%,100% { transform: translateY(0px) scale(1); opacity: 0.7; }
+                        50%     { transform: translateY(-4px) scale(1.04); opacity: 1; }
+                      }
+                      @keyframes ringRotate {
+                        from { transform: rotate(0deg); }
+                        to   { transform: rotate(360deg); }
+                      }
+                      @keyframes ringRotateR {
+                        from { transform: rotate(0deg); }
+                        to   { transform: rotate(-360deg); }
+                      }
+                      @keyframes transmitShine {
+                        0%   { background-position: -200% center; }
+                        100% { background-position: 200% center; }
+                      }
+                      .mixer-freq-orb {
+                        position: relative;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 8px;
+                        padding: 10px 16px;
+                        border-radius: 100px;
+                        font-size: 13px;
+                        font-weight: 700;
+                        color: rgba(255,255,255,0.92);
+                        background: rgba(212,175,55,0.06);
+                        border: 1px solid rgba(212,175,55,0.22);
+                        animation: orbFloat 3s ease-in-out infinite;
+                        backdrop-filter: blur(12px);
+                        transition: all 0.25s;
+                      }
+                      .mixer-freq-orb::before {
+                        content: '';
+                        position: absolute;
+                        inset: -1px;
+                        border-radius: 100px;
+                        background: linear-gradient(135deg, rgba(212,175,55,0.18), transparent, rgba(212,175,55,0.08));
+                        pointer-events: none;
+                      }
+                      .mixer-remove-btn {
+                        display: flex; align-items: center; justify-content: center;
+                        width: 18px; height: 18px; border-radius: 50%;
+                        background: rgba(255,255,255,0.06); border: none;
+                        cursor: pointer; color: rgba(255,255,255,0.35);
+                        transition: all 0.2s; flex-shrink: 0;
+                      }
+                      .mixer-remove-btn:hover { background: rgba(239,68,68,0.2); color: #ef4444; }
+                    `}</style>
+
+                    {/* Sacred geometry background rings */}
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', overflow: 'hidden' }}>
+                      <div style={{ width: 300, height: 300, borderRadius: '50%', border: '1px solid rgba(212,175,55,0.06)', animation: 'ringRotate 20s linear infinite', position: 'absolute' }} />
+                      <div style={{ width: 220, height: 220, borderRadius: '50%', border: '1px solid rgba(212,175,55,0.05)', animation: 'ringRotateR 15s linear infinite', position: 'absolute' }} />
+                      <div style={{ width: 140, height: 140, borderRadius: '50%', border: '1px solid rgba(212,175,55,0.08)', animation: 'ringRotate 10s linear infinite', position: 'absolute' }} />
+                      {/* Central Sri Yantra dot */}
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#D4AF37', boxShadow: '0 0 12px rgba(212,175,55,0.9), 0 0 30px rgba(212,175,55,0.5)', position: 'absolute', opacity: 0.6 }} />
+                      {/* Radial glow */}
+                      <div style={{ width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%)', position: 'absolute' }} />
                     </div>
-                    <div className="mb-4 flex flex-wrap gap-2">
-                      {selectedActivations.map((act) => (
+
+                    {/* Header */}
+                    <div style={{ position: 'relative', zIndex: 1, padding: '18px 20px 12px', borderBottom: '1px solid rgba(212,175,55,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        {/* Yantra icon */}
+                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(212,175,55,0.10)', border: '1px solid rgba(212,175,55,0.30)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 12px rgba(212,175,55,0.20)' }}>
+                          <svg width="16" height="16" viewBox="0 0 100 100" fill="none">
+                            <polygon points="50,8 92,72 8,72" fill="none" stroke="#D4AF37" strokeWidth="4" strokeLinejoin="round"/>
+                            <polygon points="50,92 8,28 92,28" fill="none" stroke="#D4AF37" strokeWidth="4" strokeLinejoin="round"/>
+                            <circle cx="50" cy="50" r="5" fill="#D4AF37"/>
+                          </svg>
+                        </div>
+                        <div>
+                          <p style={{ fontSize: 14, fontWeight: 900, letterSpacing: '-0.02em', color: '#D4AF37', textShadow: '0 0 12px rgba(212,175,55,0.4)', margin: 0 }}>
+                            Aetheric Mixer
+                          </p>
+                          <p style={{ fontSize: 8, fontWeight: 800, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', margin: 0 }}>
+                            Quantum Blend Chamber
+                          </p>
+                        </div>
+                      </div>
+                      {/* Slot counter as glowing orbs */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        {Array.from({ length: AETHERIC_MIXER_MAX_SLOTS }).map((_, i) => (
+                          <div key={i} style={{
+                            width: 6, height: 6, borderRadius: '50%',
+                            background: i < selectedActivations.length ? '#D4AF37' : 'rgba(255,255,255,0.08)',
+                            boxShadow: i < selectedActivations.length ? '0 0 6px rgba(212,175,55,0.8)' : 'none',
+                            transition: 'all 0.3s',
+                          }} />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Frequency orbs */}
+                    <div style={{ position: 'relative', zIndex: 1, padding: '16px 16px 12px', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                      {selectedActivations.map((act, idx) => (
                         <span
                           key={act.id}
-                          className="inline-flex items-center gap-2 rounded-full border border-[#22D3EE]/25 px-3 py-2 text-[13px] font-semibold text-white/85"
-                          style={{ background: 'rgba(34,211,238,0.06)' }}
+                          className="mixer-freq-orb"
+                          style={{ animationDelay: `${idx * 0.18}s`, borderColor: `${act.color}40` }}
                         >
+                          {/* Type color dot */}
+                          <span style={{ width: 7, height: 7, borderRadius: '50%', background: act.color, boxShadow: `0 0 6px ${act.color}`, flexShrink: 0, display: 'inline-block' }} />
                           {act.name}
-                          <button type="button" onClick={() => removeActivation(act.id)} className="text-white/35 hover:text-red-400" aria-label="Remove">
-                            <X size={14} />
+                          <button
+                            type="button"
+                            onClick={() => removeActivation(act.id)}
+                            className="mixer-remove-btn"
+                            aria-label="Remove"
+                          >
+                            <X size={10} />
                           </button>
                         </span>
                       ))}
                     </div>
-                    <button
-                      type="button"
-                      onClick={transmitCocktail}
-                      disabled={selectedActivations.length === 0}
-                      className="w-full rounded-[40px] border border-[#D4AF37]/45 bg-gradient-to-b from-[#F5E17A] to-[#B8960C] py-4 text-[13px] font-black uppercase tracking-[0.2em] text-[#050505] shadow-[0_8px_32px_rgba(212,175,55,0.3)] transition-all hover:shadow-[0_12px_40px_rgba(212,175,55,0.4)] disabled:opacity-20"
-                    >
-                      Activate All to Field
-                    </button>
+
+                    {/* Transmit button */}
+                    <div style={{ position: 'relative', zIndex: 1, padding: '4px 16px 18px' }}>
+                      <button
+                        type="button"
+                        onClick={transmitCocktail}
+                        disabled={selectedActivations.length === 0}
+                        style={{
+                          width: '100%',
+                          padding: '16px',
+                          borderRadius: 100,
+                          border: '1px solid rgba(212,175,55,0.5)',
+                          background: 'linear-gradient(135deg, #D4AF37 0%, #F5E17A 40%, #B8960C 100%)',
+                          backgroundSize: '200% auto',
+                          animation: 'transmitShine 3s linear infinite',
+                          color: '#050505',
+                          fontSize: 12,
+                          fontWeight: 900,
+                          letterSpacing: '0.22em',
+                          textTransform: 'uppercase',
+                          cursor: selectedActivations.length === 0 ? 'default' : 'pointer',
+                          opacity: selectedActivations.length === 0 ? 0.2 : 1,
+                          boxShadow: '0 0 20px rgba(212,175,55,0.35), 0 0 50px rgba(212,175,55,0.18)',
+                          fontFamily: 'inherit',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 10,
+                        }}
+                      >
+                        <span style={{ fontSize: 16 }}>⟁</span>
+                        Transmit to Field
+                      </button>
+                    </div>
                   </div>
                 )}
                 <div className="relative">
