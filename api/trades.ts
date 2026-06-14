@@ -1,6 +1,6 @@
 export const config = { runtime: 'edge' };
 
-const SUPABASE_URL = 'https://fjdzhrdpioxdeyyfogep.supabase.co';
+const SUPABASE_URL = 'https://ssygukfdbtehvtndandn.supabase.co';
 const SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqZHpocmRwaW94ZGV5eWZvZ2VwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NDczMTk0NSwiZXhwIjoyMDYwMzA3OTQ1fQ.supabase-service-role-placeholder';
 
 export default async function handler(req: Request) {
