@@ -35,6 +35,7 @@ export function voiceResultToScanPayload(result: VoiceBiofieldResult): ScanSnaps
     priorityChakra: result.priorityAreas[0]?.name || 'Anahata',
     emotionalField: result.emotionalField,
     organField: result.organField,
+    spokenKeywords: result.spokenKeywords ?? [],
   };
 }
 
@@ -91,6 +92,31 @@ export function buildTop33Rankings(
   }));
 }
 
+/** Auto-assign expiresAt to legacy transmissions that have activatedAt but no expiresAt.
+ * Also removes any transmission that is already expired (daysRemaining < 0).
+ * Call this when loading activeTransmissions from Supabase or localStorage. */
+export function purgeExpiredAndLegacy(transmissions: Activation[]): Activation[] {
+  const now = Date.now();
+  return transmissions
+    .map((act) => {
+      // Legacy item: has activatedAt but no expiresAt — assign expiry retroactively
+      if (!act.expiresAt && act.activatedAt) {
+        const days = act.type === 'Wellness' ? 21 : 8;
+        const activatedMs = new Date(act.activatedAt).getTime();
+        if (!Number.isNaN(activatedMs)) {
+          const expiresAt = new Date(activatedMs + days * 24 * 60 * 60 * 1000).toISOString();
+          return { ...act, expiresAt };
+        }
+      }
+      return act;
+    })
+    .filter((act) => {
+      const days = daysRemaining(act.expiresAt);
+      // null = no expiresAt = permanent (manual activations with no activatedAt)
+      return days === null || days > 0;
+    });
+}
+
 export function enrichTransmission(
   act: Activation,
   source: NonNullable<Activation['source']>,
@@ -121,5 +147,5 @@ export function daysRemaining(expiresAt?: string): number | null {
   if (!expiresAt) return null;
   const t = new Date(expiresAt).getTime();
   if (Number.isNaN(t)) return null;
-  return Math.max(0, Math.ceil((t - Date.now()) / (24 * 60 * 60 * 1000)));
+  return Math.ceil((t - Date.now()) / (24 * 60 * 60 * 1000));
 }
