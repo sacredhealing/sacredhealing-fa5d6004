@@ -1,0 +1,25 @@
+name: Deploy palm-oracle-reading to Lovable Supabase
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        run: |
+          git clone https://x-access-token:${{ secrets.GH_ADMIN_PAT }}@github.com/sacredhealing/sacredhealing-fa5d6004.git repo
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy palm-oracle-reading to ssygukfdbtehvtndandn
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        working-directory: repo
+        run: |
+          supabase functions deploy palm-oracle-reading --project-ref ssygukfdbtehvtndandn --no-verify-jwt
+          echo "Done at $(date)"
