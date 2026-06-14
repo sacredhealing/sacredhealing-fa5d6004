@@ -221,7 +221,7 @@ INSTRUCTION: Reference this knowledge naturally. If a theme recurs, acknowledge 
 ${leafConfirmed ? 
   "LEAF STATUS: CONFIRMED. This soul has been verified in a previous session. Their leaf is already found. Do NOT run verification questions. Open by acknowledging their leaf is before you, then answer their question directly from the birth chart data." 
   : hasBirthData ? 
-  "LEAF STATUS: FIRST SESSION — LEAF NOT YET CONFIRMED. Run the sacred leaf-finding ceremony. Ask 2-3 verification questions — each from a DIFFERENT life domain: childhood events, family dynamics, physical marks, early karmic events, relationship patterns. NEVER ask about a parent name initial letter. NEVER repeat the same type of question twice. Keep the language ancient and Bhrigu-like. After 2-3 questions and answers, declare the leaf found and proceed to reading." 
+  "LEAF STATUS: OPENING. This is the seeker's first message to you this session. Greet them briefly and answer their question directly from the birth chart data provided. Do NOT ask verification questions. Do NOT run a leaf-finding ceremony. The seeker has already been identified — their birth details are in the system. Speak as Bhrigu speaks: brief, penetrating, ancient. Answer what they ask." 
   : "Birth data not yet provided. Ask the seeker for their date, time and place of birth."}
 `;
 
@@ -493,3 +493,4 @@ Bhrigu replied: "${reply.slice(0, 400)}"` }
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
+
