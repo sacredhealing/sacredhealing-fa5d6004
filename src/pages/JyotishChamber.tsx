@@ -998,7 +998,7 @@ const JyotishChamber: React.FC = () => {
 
   // Tier access
   const userTier = isAdmin ? 'admin' : (membershipTier || 'free');
-  const accessibleTiers = TIER_ACCESS[userTier] || ['free'];
+  const accessibleTiers = TIER_ACCESS[userTier] || TIER_ACCESS[membershipTier] || ['free'];
   const canAccess = (modTier: string) => accessibleTiers.includes(modTier);
 
   // ── Load birth data ──────────────────────────────────────────
@@ -1103,7 +1103,6 @@ const JyotishChamber: React.FC = () => {
   const switchTab = (tab: typeof activeTab) => {
     setActiveTab(tab);
     setBuiltTabs(prev => new Set([...prev, tab]));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // ── Chat ─────────────────────────────────────────────────────
@@ -1364,7 +1363,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
               </div>
               {/* CTA */}
               <button
-                onClick={() => switchTab('oracle')}
+                onClick={() => { switchTab('oracle'); setTimeout(() => { document.getElementById('jc-nav')?.scrollIntoView({ behavior:'smooth', block:'start' }); }, 50); }}
                 style={{ width:'100%', padding:'15px 24px', borderRadius:99, border:'1px solid rgba(212,175,55,0.45)', background:'linear-gradient(135deg, rgba(212,175,55,0.14), rgba(212,175,55,0.05))', color:'#D4AF37', fontFamily:'inherit', fontSize:9.5, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:10, boxShadow:'0 0 24px rgba(212,175,55,0.1)' }}
               >
                 <div style={{ width:7, height:7, borderRadius:'50%', background:'#D4AF37', boxShadow:'0 0 10px rgba(212,175,55,0.9)', animation:'sqDotPulse 1.5s ease-in-out infinite' }}/>
@@ -1410,14 +1409,14 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
                 <div key={t.label} style={{ padding:'3px 10px', borderRadius:99, fontSize:7, fontWeight:800, letterSpacing:'0.18em', textTransform:'uppercase' as const, background:t.bg, border:`1px solid ${t.border}`, color:t.color }}>{t.label}</div>
               ))}
             </div>
-            <button onClick={() => switchTab('vidya')} style={{ width:'100%', padding:'13px 20px', borderRadius:99, border:'1px solid rgba(167,139,250,0.4)', background:'rgba(167,139,250,0.1)', color:'rgba(200,180,255,0.9)', fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, cursor:'pointer' }}>
+            <button onClick={() => { switchTab('vidya'); setTimeout(() => { document.getElementById('jc-nav')?.scrollIntoView({ behavior:'smooth', block:'start' }); }, 50); }} style={{ width:'100%', padding:'13px 20px', borderRadius:99, border:'1px solid rgba(167,139,250,0.4)', background:'rgba(167,139,250,0.1)', color:'rgba(200,180,255,0.9)', fontFamily:'inherit', fontSize:9, fontWeight:800, letterSpacing:'0.4em', textTransform:'uppercase' as const, cursor:'pointer' }}>
               Open Jyotish Vidya →
             </button>
           </div>
         </div>
 
         {/* ── NAV TABS (hidden but functional) ── */}
-        <nav style={{ display:'flex', gap:5, padding:5, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:99, marginBottom:22, overflowX:'auto', scrollbarWidth:'none' }}>
+        <nav id="jc-nav" style={{ display:'flex', gap:5, padding:5, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:99, marginBottom:22, overflowX:'auto', scrollbarWidth:'none' }}>
           {(['overview','chart','oracle','nadi','vidya','hora'] as const).map((tab, i) => {
             const labels = ['✦ Overview','☽ My Chart','🔱 Oracle','🌿 Nadi Leaf','◈ Vidya','⏱ Hora'];
             const active = activeTab === tab;
@@ -1778,6 +1777,7 @@ Current Antardasha: ${ephemeris?.dashaData?.activeAntar?.planet || 'unknown'}
 };
 
 export default JyotishChamber;
+
 
 
 
